@@ -41,22 +41,19 @@ jobs:
           VITE_VOSK_MODEL_MIN_BYTES: ${{ vars.VITE_VOSK_MODEL_MIN_BYTES }}
 
       - name: Deploy RehabTrainerHub
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy apps/rehabtrainerhub/out --project-name=rehabtrainerhub --branch=${{ github.ref_name }}
+        run: npx --yes wrangler@4 pages deploy apps/rehabtrainerhub/out --project-name=rehabtrainerhub --branch=${{ github.ref_name }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Deploy StrokeTrainer
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy apps/stroketrainer/dist --project-name=stroketrainer --branch=${{ github.ref_name }}
+        run: npx --yes wrangler@4 pages deploy apps/stroketrainer/dist --project-name=stroketrainer --branch=${{ github.ref_name }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Deploy VisionTrainer
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy apps/visiontrainer/dist --project-name=visiontrainer --branch=${{ github.ref_name }}
+        run: npx --yes wrangler@4 pages deploy apps/visiontrainer/dist --project-name=visiontrainer --branch=${{ github.ref_name }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
