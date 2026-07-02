@@ -1,0 +1,610 @@
+{
+"story_id": "en_story_",
+"language": "en",
+"title": "The Legend of the Lost Core",
+"content_array": [
+"Elara", "was", "a", "nineteen-year-old", "mechanic", "living", "in", "the", "floating", "city", "of", "Aethelgard.", "She", "spent", "her", "days", "fixing", "broken", "airships", "in", "Sector", "Seven.", "Her", "best", "friend", "was", "a", "small", "companion", "robot", "named", "Pip.", "Pip", "was", "an", "XR-7", "model", "with", "a", "rusty", "iron", "exterior", "and", "a", "single", "blue", "glowing", "eye.", "One", "chilly", "Tuesday", "morning,", "Elara", "ate", "a", "bowl", "of", "oatmeal", "with", "sweet", "honey", "for", "breakfast.", "Afterward,", "she", "visited", "Stall", "forty-two", "in", "the", "busy", "Brass", "Market.", "There,", "she", "bought", "a", "broken", "wooden", "clock", "from", "a", "grumpy", "merchant", "named", "Kael.", "Inside", "the", "clock's", "secret", "compartment,", "she", "discovered", "a", "dusty,", "folded", "parchment.", "It", "was", "an", "ancient", "map", "leading", "to", "the", "legendary", "Lost", "Core.", "The", "Lost", "Core", "was", "a", "mythical", "artifact", "said", "to", "possess", "endless", "clean", "energy.", "Elara", "decided", "to", "find", "it.", "She", "packed", "her", "trusty", "brown", "leather", "bag", "with", "exactly", "three", "tools:", "a", "silver", "hydro-wrench,", "a", "copper", "heavy-hammer,", "and", "a", "plasma", "laser", "torch.", "She", "and", "Pip", "boarded", "her", "custom", "ship,", "the", "Crimson", "Hawk.", "The", "ship", "was", "painted", "bright", "red", "with", "two", "sleek", "silver", "stripes", "on", "its", "wings.", "Its", "top", "speed", "was", "two", "hundred", "knots.", "They", "launched", "into", "the", "sky", "at", "exactly", "noon.", "To", "reach", "the", "surface", "below,", "they", "had", "to", "dive", "through", "the", "dangerous", "Cloud", "Sea.", "Thick", "white", "fog", "surrounded", "their", "ship.", "Suddenly,", "five", "Razor-Gulls", "attacked", "the", "windshield.", "These", "aggressive", "birds", "had", "metallic", "feathers", "and", "razor-sharp", "steel", "beaks.", "Pip", "bravely", "fired", "a", "bright", "yellow", "flare", "from", "his", "wrist", "into", "the", "sky.", "The", "blinding", "light", "scared", "the", "birds", "away", "immediately.", "They", "landed", "safely", "near", "the", "Silent", "Ocean", "on", "the", "forgotten", "surface", "world.", "The", "damp", "ground", "was", "completely", "covered", "in", "giant", "purple", "vines.", "In", "the", "distance,", "Elara", "saw", "the", "famous", "Cobalt", "Temple.", "The", "temple", "was", "built", "from", "smooth", "dark", "blue", "stone.", "They", "walked", "carefully", "for", "forty", "minutes", "to", "reach", "its", "heavy", "iron", "doors.", "Inside", "the", "temple,", "the", "air", "smelled", "dusty", "and", "felt", "extremely", "cold.", "They", "entered", "a", "large", "circular", "room.", "In", "the", "exact", "center", "stood", "a", "marble", "pedestal", "with", "three", "empty", "triangular", "slots.", "Scattered", "on", "the", "floor", "were", "three", "glowing", "crystals:", "one", "ruby", "red,", "one", "emerald", "green,", "and", "one", "topaz", "yellow.", "A", "faded", "inscription", "carved", "on", "the", "wall", "read,", "Nature", "first,", "fire", "second,", "sun", "last.", "Elara", "carefully", "placed", "the", "green", "crystal", "first,", "then", "the", "red", "crystal,", "and", "finally", "the", "yellow", "crystal", "into", "the", "slots.", "A", "hidden", "stone", "door", "groaned", "open", "loudly.", "Behind", "it", "stood", "a", "massive", "guardian.", "The", "guardian", "was", "ten", "feet", "tall", "and", "carved", "from", "shiny", "black", "obsidian.", "It", "raised", "its", "heavy", "right", "arm", "to", "strike", "the", "intruders.", "Elara", "quickly", "noticed", "a", "glowing", "blue", "power", "cable", "attached", "to", "its", "left", "ankle.", "She", "grabbed", "her", "silver", "hydro-wrench", "and", "swiftly", "unscrewed", "the", "metal", "cable.", "The", "terrifying", "guardian", "froze", "instantly", "like", "a", "statue.", "Behind", "the", "frozen", "giant", "sat", "the", "Lost", "Core.", "It", "was", "a", "perfect", "glass", "orb", "floating", "silently", "in", "the", "air.", "It", "pulsed", "with", "a", "brilliant", "white", "light", "and", "smelled", "strongly", "like", "fresh", "ozone.", "Elara", "gently", "placed", "the", "precious", "core", "into", "her", "brown", "bag.", "They", "flew", "back", "up", "to", "Aethelgard", "just", "as", "the", "sun", "set,", "painting", "the", "evening", "sky", "pink", "and", "orange.", "The", "mayor,", "a", "tall", "man", "named", "Silas", "wearing", "a", "ridiculous", "purple", "top", "hat,", "greeted", "them", "at", "the", "docks.", "It", "was", "exactly", "six-fifteen", "in", "the", "evening.", "Elara", "proudly", "gave", "the", "core", "to", "the", "grateful", "city.", "Aethelgard's", "power", "grid", "was", "fully", "restored,", "ensuring", "peace", "and", "warmth", "for", "another", "thousand", "years.", "Pip", "beeped", "happily,", "and", "Elara", "smiled,", "already", "ready", "for", "her", "next", "grand", "adventure."
+],
+"questions": [
+{
+"q_id": 1,
+"question": "What is the main character's name?",
+"options": ["Silas", "Kael", "Elara", "Pip"],
+"correct_index": 2
+},
+{
+"q_id": 2,
+"question": "How old is Elara?",
+"options": ["Fifteen", "Seventeen", "Nineteen", "Twenty-one"],
+"correct_index": 2
+},
+{
+"q_id": 3,
+"question": "What is Elara's profession?",
+"options": ["Pilot", "Mechanic", "Merchant", "Mayor"],
+"correct_index": 1
+},
+{
+"q_id": 4,
+"question": "What is the name of the floating city?",
+"options": ["Cobalt Temple", "Sector Seven", "Aethelgard", "Silent Ocean"],
+"correct_index": 2
+},
+{
+"q_id": 5,
+"question": "Which sector does Elara work in?",
+"options": ["Sector Three", "Sector Five", "Sector Seven", "Sector Nine"],
+"correct_index": 2
+},
+{
+"q_id": 6,
+"question": "What does Elara fix for a living?",
+"options": ["Airships", "Robots", "Clocks", "Trains"],
+"correct_index": 0
+},
+{
+"q_id": 7,
+"question": "What is the name of Elara's best friend?",
+"options": ["Silas", "Pip", "Kael", "Hawk"],
+"correct_index": 1
+},
+{
+"q_id": 8,
+"question": "What kind of creature or thing is Pip?",
+"options": ["A dog", "A companion robot", "A bird", "A guardian"],
+"correct_index": 1
+},
+{
+"q_id": 9,
+"question": "What model is Pip?",
+"options": ["XR-5", "XR-7", "R2-D2", "T-800"],
+"correct_index": 1
+},
+{
+"q_id": 10,
+"question": "What is Pip's exterior made of?",
+"options": ["Shiny silver", "Rusty iron", "Solid gold", "Dark obsidian"],
+"correct_index": 1
+},
+{
+"q_id": 11,
+"question": "What color is Pip's glowing eye?",
+"options": ["Red", "Green", "Blue", "Yellow"],
+"correct_index": 2
+},
+{
+"q_id": 12,
+"question": "How many eyes does Pip have?",
+"options": ["One", "Two", "Three", "Four"],
+"correct_index": 0
+},
+{
+"q_id": 13,
+"question": "What day of the week did the story begin on?",
+"options": ["Monday", "Tuesday", "Wednesday", "Friday"],
+"correct_index": 1
+},
+{
+"q_id": 14,
+"question": "How was the weather described on that morning?",
+"options": ["Hot", "Rainy", "Chilly", "Windy"],
+"correct_index": 2
+},
+{
+"q_id": 15,
+"question": "What did Elara eat for breakfast?",
+"options": ["Eggs", "Pancakes", "Oatmeal", "Toast"],
+"correct_index": 2
+},
+{
+"q_id": 16,
+"question": "What did Elara add to her breakfast?",
+"options": ["Berries", "Sweet honey", "Milk", "Sugar"],
+"correct_index": 1
+},
+{
+"q_id": 17,
+"question": "Which market did Elara visit?",
+"options": ["Brass Market", "Silver Market", "Iron Market", "Gold Market"],
+"correct_index": 0
+},
+{
+"q_id": 18,
+"question": "What stall number did she visit?",
+"options": ["Stall twenty", "Stall thirty-one", "Stall forty-two", "Stall fifty"],
+"correct_index": 2
+},
+{
+"q_id": 19,
+"question": "What item did she buy at the market?",
+"options": ["A rusty sword", "A broken wooden clock", "A glass orb", "A copper hammer"],
+"correct_index": 1
+},
+{
+"q_id": 20,
+"question": "Who was the merchant she bought it from?",
+"options": ["Silas", "Pip", "Kael", "Aethel"],
+"correct_index": 2
+},
+{
+"q_id": 21,
+"question": "What was the merchant's mood?",
+"options": ["Happy", "Grumpy", "Sad", "Excited"],
+"correct_index": 1
+},
+{
+"q_id": 22,
+"question": "Where was the map hidden?",
+"options": ["In her bag", "Under her bed", "In the clock's secret compartment", "In the temple"],
+"correct_index": 2
+},
+{
+"q_id": 23,
+"question": "What did she find in the compartment?",
+"options": ["A gold coin", "A dusty, folded parchment", "A silver ring", "A glowing crystal"],
+"correct_index": 1
+},
+{
+"q_id": 24,
+"question": "What was the parchment covered in?",
+"options": ["Mud", "Dust", "Water", "Blood"],
+"correct_index": 1
+},
+{
+"q_id": 25,
+"question": "What was the ancient map leading to?",
+"options": ["The Secret Treasury", "The Lost Core", "The Hidden City", "The Golden Throne"],
+"correct_index": 1
+},
+{
+"q_id": 26,
+"question": "What kind of object was the Lost Core considered to be?",
+"options": ["A mythical artifact", "A deadly weapon", "A simple toy", "A normal rock"],
+"correct_index": 0
+},
+{
+"q_id": 27,
+"question": "What did the Lost Core possess?",
+"options": ["Dark magic", "Endless clean energy", "The power of flight", "Infinite water"],
+"correct_index": 1
+},
+{
+"q_id": 28,
+"question": "What color was Elara's bag?",
+"options": ["Black", "Brown", "Red", "Blue"],
+"correct_index": 1
+},
+{
+"q_id": 29,
+"question": "What material was Elara's bag made of?",
+"options": ["Canvas", "Silk", "Leather", "Cotton"],
+"correct_index": 2
+},
+{
+"q_id": 30,
+"question": "How many tools did Elara pack?",
+"options": ["One", "Two", "Three", "Four"],
+"correct_index": 2
+},
+{
+"q_id": 31,
+"question": "What color was the hydro-wrench?",
+"options": ["Copper", "Silver", "Gold", "Black"],
+"correct_index": 1
+},
+{
+"q_id": 32,
+"question": "What type of hammer did she pack?",
+"options": ["Light-hammer", "Heavy-hammer", "Claw-hammer", "Sledge-hammer"],
+"correct_index": 1
+},
+{
+"q_id": 33,
+"question": "What material was the heavy-hammer made of?",
+"options": ["Iron", "Steel", "Copper", "Wood"],
+"correct_index": 2
+},
+{
+"q_id": 34,
+"question": "What type of torch did she bring?",
+"options": ["Fire torch", "Plasma laser torch", "Electric flashlight", "Oil lantern"],
+"correct_index": 1
+},
+{
+"q_id": 35,
+"question": "What was the name of Elara's custom ship?",
+"options": ["Blue Falcon", "Crimson Hawk", "Iron Eagle", "Golden Sparrow"],
+"correct_index": 1
+},
+{
+"q_id": 36,
+"question": "What was the main color of the ship?",
+"options": ["Bright red", "Dark blue", "Shiny silver", "Emerald green"],
+"correct_index": 0
+},
+{
+"q_id": 37,
+"question": "How many stripes were on the ship's wings?",
+"options": ["One", "Two", "Three", "Four"],
+"correct_index": 1
+},
+{
+"q_id": 38,
+"question": "What color were the stripes on the wings?",
+"options": ["Gold", "Black", "Silver", "White"],
+"correct_index": 2
+},
+{
+"q_id": 39,
+"question": "What was the ship's top speed?",
+"options": ["One hundred knots", "Two hundred knots", "Three hundred knots", "Four hundred knots"],
+"correct_index": 1
+},
+{
+"q_id": 40,
+"question": "At what time did they launch into the sky?",
+"options": ["Dawn", "Midnight", "Noon", "Sunset"],
+"correct_index": 2
+},
+{
+"q_id": 41,
+"question": "What did they have to dive through to reach the surface?",
+"options": ["Cloud Sea", "Fire Ring", "Ice Wall", "Storm Front"],
+"correct_index": 0
+},
+{
+"q_id": 42,
+"question": "What surrounded their ship during the dive?",
+"options": ["Black smoke", "Thick white fog", "Heavy rain", "Swarm of insects"],
+"correct_index": 1
+},
+{
+"q_id": 43,
+"question": "What creature attacked the ship?",
+"options": ["Sky-Dragons", "Razor-Gulls", "Cloud-Bats", "Storm-Hawks"],
+"correct_index": 1
+},
+{
+"q_id": 44,
+"question": "How many birds attacked them?",
+"options": ["Three", "Four", "Five", "Six"],
+"correct_index": 2
+},
+{
+"q_id": 45,
+"question": "What part of the ship did the birds attack?",
+"options": ["The engine", "The wings", "The windshield", "The tail"],
+"correct_index": 2
+},
+{
+"q_id": 46,
+"question": "What kind of feathers did the aggressive birds have?",
+"options": ["Soft feathers", "Metallic feathers", "Flaming feathers", "Invisible feathers"],
+"correct_index": 1
+},
+{
+"q_id": 47,
+"question": "What were the birds' beaks made of?",
+"options": ["Wood", "Bone", "Steel", "Glass"],
+"correct_index": 2
+},
+{
+"q_id": 48,
+"question": "What did Pip fire to defend the ship?",
+"options": ["A yellow flare", "A laser beam", "A missile", "A net"],
+"correct_index": 0
+},
+{
+"q_id": 49,
+"question": "Where did Pip fire the flare from?",
+"options": ["His eye", "His chest", "His wrist", "His mouth"],
+"correct_index": 2
+},
+{
+"q_id": 50,
+"question": "What exactly scared the birds away?",
+"options": ["The loud noise", "The blinding light", "The bad smell", "The ship's speed"],
+"correct_index": 1
+},
+{
+"q_id": 51,
+"question": "Near which ocean did they land?",
+"options": ["Loud Ocean", "Silent Ocean", "Deep Ocean", "Lost Ocean"],
+"correct_index": 1
+},
+{
+"q_id": 52,
+"question": "What was the condition of the ground when they landed?",
+"options": ["Dry", "Sandy", "Damp", "Frozen"],
+"correct_index": 2
+},
+{
+"q_id": 53,
+"question": "What was the ground completely covered in?",
+"options": ["Snow", "Giant vines", "Thick mud", "Sharp rocks"],
+"correct_index": 1
+},
+{
+"q_id": 54,
+"question": "What color were the giant vines?",
+"options": ["Green", "Purple", "Red", "Black"],
+"correct_index": 1
+},
+{
+"q_id": 55,
+"question": "What was the name of the temple they saw in the distance?",
+"options": ["Ruby Temple", "Emerald Temple", "Cobalt Temple", "Obsidian Temple"],
+"correct_index": 2
+},
+{
+"q_id": 56,
+"question": "What was the temple built from?",
+"options": ["Smooth dark blue stone", "Rough grey rock", "White marble", "Red bricks"],
+"correct_index": 0
+},
+{
+"q_id": 57,
+"question": "How long did they walk to reach the temple?",
+"options": ["Ten minutes", "Twenty minutes", "Forty minutes", "An hour"],
+"correct_index": 2
+},
+{
+"q_id": 58,
+"question": "What were the doors of the temple made of?",
+"options": ["Wood", "Glass", "Heavy iron", "Solid gold"],
+"correct_index": 2
+},
+{
+"q_id": 59,
+"question": "How did the air inside the temple smell?",
+"options": ["Fresh", "Dusty", "Like flowers", "Like smoke"],
+"correct_index": 1
+},
+{
+"q_id": 60,
+"question": "How did the air inside the temple feel?",
+"options": ["Extremely hot", "Warm", "Extremely cold", "Humid"],
+"correct_index": 2
+},
+{
+"q_id": 61,
+"question": "What shape was the room they entered?",
+"options": ["Square", "Triangular", "Circular", "Rectangular"],
+"correct_index": 2
+},
+{
+"q_id": 62,
+"question": "What was located in the exact center of the room?",
+"options": ["A treasure chest", "A marble pedestal", "A fountain", "A statue"],
+"correct_index": 1
+},
+{
+"q_id": 63,
+"question": "How many slots were on the pedestal?",
+"options": ["Two", "Three", "Four", "Five"],
+"correct_index": 1
+},
+{
+"q_id": 64,
+"question": "What shape were the empty slots?",
+"options": ["Square", "Circular", "Triangular", "Star-shaped"],
+"correct_index": 2
+},
+{
+"q_id": 65,
+"question": "Where were the glowing crystals scattered?",
+"options": ["On the ceiling", "On the walls", "On the floor", "On the pedestal"],
+"correct_index": 2
+},
+{
+"q_id": 66,
+"question": "What specific shade of red was the first crystal?",
+"options": ["Crimson", "Ruby", "Scarlet", "Maroon"],
+"correct_index": 1
+},
+{
+"q_id": 67,
+"question": "What specific shade of green was the second crystal?",
+"options": ["Mint", "Olive", "Emerald", "Lime"],
+"correct_index": 2
+},
+{
+"q_id": 68,
+"question": "What specific shade of yellow was the third crystal?",
+"options": ["Topaz", "Lemon", "Gold", "Mustard"],
+"correct_index": 0
+},
+{
+"q_id": 69,
+"question": "Where was the faded inscription carved?",
+"options": ["On the pedestal", "On the floor", "On the ceiling", "On the wall"],
+"correct_index": 3
+},
+{
+"q_id": 70,
+"question": "According to the inscription, what comes first?",
+"options": ["Sun", "Nature", "Fire", "Water"],
+"correct_index": 1
+},
+{
+"q_id": 71,
+"question": "According to the inscription, what comes second?",
+"options": ["Nature", "Sun", "Fire", "Wind"],
+"correct_index": 2
+},
+{
+"q_id": 72,
+"question": "According to the inscription, what comes last?",
+"options": ["Sun", "Nature", "Fire", "Earth"],
+"correct_index": 0
+},
+{
+"q_id": 73,
+"question": "Which crystal did Elara place first?",
+"options": ["Red", "Yellow", "Green", "Blue"],
+"correct_index": 2
+},
+{
+"q_id": 74,
+"question": "Which crystal did Elara place second?",
+"options": ["Green", "Yellow", "Red", "Blue"],
+"correct_index": 2
+},
+{
+"q_id": 75,
+"question": "Which crystal did Elara place last?",
+"options": ["Green", "Red", "Yellow", "White"],
+"correct_index": 2
+},
+{
+"q_id": 76,
+"question": "What opened loudly after the puzzle was solved?",
+"options": ["A hidden stone door", "A trapdoor", "A glass window", "A wooden gate"],
+"correct_index": 0
+},
+{
+"q_id": 77,
+"question": "How did the door sound when it opened?",
+"options": ["It clicked softly", "It groaned loudly", "It completely silent", "It rang like a bell"],
+"correct_index": 1
+},
+{
+"q_id": 78,
+"question": "Who or what stood behind the door?",
+"options": ["A sleeping dragon", "A massive guardian", "An old king", "A swarm of insects"],
+"correct_index": 1
+},
+{
+"q_id": 79,
+"question": "How tall was the guardian?",
+"options": ["Five feet tall", "Ten feet tall", "Fifteen feet tall", "Twenty feet tall"],
+"correct_index": 1
+},
+{
+"q_id": 80,
+"question": "What material was the guardian carved from?",
+"options": ["Shiny black obsidian", "White marble", "Solid iron", "Blue glass"],
+"correct_index": 0
+},
+{
+"q_id": 81,
+"question": "Which arm did the guardian raise to strike?",
+"options": ["Left arm", "Right arm", "Both arms", "Neither"],
+"correct_index": 1
+},
+{
+"q_id": 82,
+"question": "What color was the power cable on the guardian?",
+"options": ["Red", "Green", "Yellow", "Blue"],
+"correct_index": 3
+},
+{
+"q_id": 83,
+"question": "Where was the power cable attached on the guardian?",
+"options": ["Right wrist", "Left ankle", "Neck", "Chest"],
+"correct_index": 1
+},
+{
+"q_id": 84,
+"question": "Which tool did Elara use against the guardian?",
+"options": ["Plasma laser torch", "Copper heavy-hammer", "Silver hydro-wrench", "Golden screwdriver"],
+"correct_index": 2
+},
+{
+"q_id": 85,
+"question": "What did Elara do to the metal cable?",
+"options": ["She cut it", "She burned it", "She smashed it", "She unscrewed it"],
+"correct_index": 3
+},
+{
+"q_id": 86,
+"question": "What happened to the guardian after the cable was detached?",
+"options": ["It exploded", "It froze instantly", "It ran away", "It fell to pieces"],
+"correct_index": 1
+},
+{
+"q_id": 87,
+"question": "What was the frozen guardian compared to?",
+"options": ["A tree", "A statue", "A mountain", "A block of ice"],
+"correct_index": 1
+},
+{
+"q_id": 88,
+"question": "What sat behind the frozen giant?",
+"options": ["A chest of gold", "The Lost Core", "A magical sword", "A pile of bones"],
+"correct_index": 1
+},
+{
+"q_id": 89,
+"question": "What shape was the Lost Core?",
+"options": ["A cube", "A pyramid", "A perfect glass orb", "A cylinder"],
+"correct_index": 2
+},
+{
+"q_id": 90,
+"question": "What color light did the Core pulse with?",
+"options": ["Brilliant white", "Deep red", "Neon green", "Dark purple"],
+"correct_index": 0
+},
+{
+"q_id": 91,
+"question": "What did the Core strongly smell like?",
+"options": ["Vanilla", "Fresh ozone", "Burning wood", "Saltwater"],
+"correct_index": 1
+},
+{
+"q_id": 92,
+"question": "Where did Elara gently place the precious core?",
+"options": ["In her pocket", "In a metal box", "Into her brown bag", "On the pedestal"],
+"correct_index": 2
+},
+{
+"q_id": 93,
+"question": "At what time of day did they fly back up to Aethelgard?",
+"options": ["Dawn", "Noon", "Midnight", "Sunset"],
+"correct_index": 3
+},
+{
+"q_id": 94,
+"question": "What colors painted the evening sky?",
+"options": ["Blue and green", "Pink and orange", "Red and black", "Yellow and purple"],
+"correct_index": 1
+},
+{
+"q_id": 95,
+"question": "Who greeted them at the docks?",
+"options": ["Kael", "Mayor Silas", "Sector Guards", "No one"],
+"correct_index": 1
+},
+{
+"q_id": 96,
+"question": "What color was the mayor's hat?",
+"options": ["Black", "Red", "Purple", "White"],
+"correct_index": 2
+},
+{
+"q_id": 97,
+"question": "What type of hat was the mayor wearing?",
+"options": ["Top hat", "Cowboy hat", "Beanie", "Helmet"],
+"correct_index": 0
+},
+{
+"q_id": 98,
+"question": "What was the exact time when they arrived back?",
+"options": ["Five o'clock", "Six-fifteen in the evening", "Seven-thirty", "Midnight"],
+"correct_index": 1
+},
+{
+"q_id": 99,
+"question": "What was fully restored for the city?",
+"options": ["The water supply", "The power grid", "The air filters", "The food farms"],
+"correct_index": 1
+},
+{
+"q_id": 100,
+"question": "How long will the peace and warmth be ensured?",
+"options": ["A hundred years", "Five hundred years", "A thousand years", "Ten thousand years"],
+"correct_index": 2
+}
+]
+}

@@ -1,0 +1,890 @@
+.hart-page {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  padding: 12px;
+  background:
+    radial-gradient(circle at top left, rgba(0, 94, 184, 0.08), transparent 34%),
+    var(--bg);
+}
+
+.hart-topbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-ambient);
+}
+
+.hart-topbar-leading,
+.hart-topbar-controls {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.hart-topbar-leading {
+  gap: 12px;
+}
+
+.hart-topbar-controls {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hart-back-button {
+  min-height: 42px;
+  padding: 8px 14px;
+  flex: 0 0 auto;
+}
+
+.hart-title-block {
+  min-width: 0;
+}
+
+.hart-title-block h1 {
+  margin: 0;
+  font-size: clamp(20px, 2vw, 28px);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.hart-title-block p {
+  margin: 3px 0 0;
+  max-width: 460px;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hart-scale-control {
+  display: grid;
+  grid-template-columns: auto minmax(100px, 180px) 48px;
+  align-items: center;
+  gap: 8px;
+  min-width: 230px;
+  padding: 0 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.hart-scale-control input {
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.hart-scale-control output {
+  color: var(--accent-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.hart-tool-button {
+  min-height: 42px;
+  padding: 8px 14px;
+  border-radius: var(--radius-m);
+  font-size: 14px;
+}
+
+.hart-tool-button.active {
+  border-color: var(--accent);
+  background: rgba(0, 94, 184, 0.12);
+  color: var(--accent-dark);
+}
+
+.hart-workspace {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "chart";
+  gap: 12px;
+  padding-top: 12px;
+  overflow: hidden;
+}
+
+.hart-decoder-dock-left .hart-workspace {
+  grid-template-columns: clamp(340px, 33vw, 480px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "decoder chart";
+}
+
+.hart-decoder-dock-right .hart-workspace {
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 33vw, 480px);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "chart decoder";
+}
+
+.hart-decoder-dock-top .hart-workspace {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: clamp(210px, 35%, 300px) minmax(0, 1fr);
+  grid-template-areas:
+    "decoder"
+    "chart";
+}
+
+.hart-decoder-dock-bottom .hart-workspace {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) clamp(210px, 35%, 300px);
+  grid-template-areas:
+    "chart"
+    "decoder";
+}
+
+.hart-page-decoder-open .hart-workspace.hart-workspace-is-dragging {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "chart";
+}
+
+.hart-chart-stage {
+  grid-area: chart;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-ambient);
+}
+
+.hart-chart-grid {
+  --hart-font-min: 22px;
+  --hart-font-fluid: 5.1vmin;
+  --hart-font-max: 47px;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  grid-template-rows: repeat(10, minmax(0, 1fr));
+  padding: clamp(8px, 1.5vmin, 18px);
+  border: 1px solid #d6d8dc;
+  border-radius: 16px;
+  background: #fff;
+  color: #111;
+  font-family: "Times New Roman", Times, serif;
+  box-shadow: inset 0 0 0 7px #f6f7f8;
+}
+
+.hart-chart-cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  line-height: 1;
+  font-size: clamp(var(--hart-font-min), var(--hart-font-fluid), var(--hart-font-max));
+  font-weight: 700;
+  transition: color 120ms ease, background 120ms ease, transform 120ms ease;
+}
+
+.hart-chart-cell-axis {
+  color: #005eb8;
+  background: rgba(0, 94, 184, 0.08);
+}
+
+.hart-chart-cell-target {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  background: #005eb8;
+  border-radius: 8px;
+  transform: scale(1.08);
+}
+
+.hart-decoder-panel {
+  grid-area: decoder;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  padding: clamp(14px, 2vw, 22px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-ambient);
+}
+
+.hart-decoder-panel-dragging {
+  position: fixed;
+  z-index: 1100;
+  min-width: min(320px, calc(100vw - 16px));
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  opacity: 0.96;
+  transform: rotate(0.4deg);
+  box-shadow: 0 28px 80px rgba(17, 24, 39, 0.34);
+  pointer-events: auto;
+}
+
+.hart-decoder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+}
+
+.hart-decoder-drag-handle {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px 5px 5px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  text-align: left;
+  cursor: grab;
+  touch-action: none;
+}
+
+.hart-decoder-drag-handle:hover,
+.hart-decoder-drag-handle:focus-visible {
+  border-color: rgba(0, 94, 184, 0.24);
+  background: rgba(0, 94, 184, 0.07);
+  outline: none;
+}
+
+.hart-decoder-drag-handle:active {
+  cursor: grabbing;
+}
+
+.hart-decoder-drag-handle > span:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.hart-decoder-drag-handle strong {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.hart-decoder-drag-handle small {
+  margin-top: 2px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.hart-drag-grip {
+  width: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, 5px);
+  gap: 3px;
+  flex: 0 0 auto;
+}
+
+.hart-drag-grip i {
+  width: 5px;
+  height: 5px;
+  display: block;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.hart-hints-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  min-height: 38px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hart-hints-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+.hart-decoder-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.hart-code-output {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+  gap: 6px 3px;
+  min-height: 100%;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-l);
+  background: var(--bg-panel);
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.hart-code-output-complete {
+  border-color: #24844f;
+  background: rgba(36, 132, 79, 0.1);
+}
+
+.hart-code-input {
+  width: 49px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--text-primary);
+  font: 700 17px/1 var(--font-family);
+  text-align: center;
+  text-transform: uppercase;
+  outline: none;
+}
+
+.hart-code-input::placeholder {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.hart-code-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.12);
+}
+
+.hart-code-input.is-correct {
+  border-color: #24844f;
+  background: rgba(36, 132, 79, 0.1);
+  color: #176238;
+}
+
+.hart-code-static {
+  min-width: 7px;
+  font-weight: 700;
+}
+
+.hart-decoder-status {
+  margin: 10px 2px 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.hart-dock-zones {
+  position: absolute;
+  inset: 12px 0 0;
+  z-index: 1050;
+  pointer-events: none;
+}
+
+.hart-dock-zone {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border: 2px dashed rgba(0, 94, 184, 0.28);
+  border-radius: var(--radius-l);
+  background: rgba(255, 255, 255, 0.56);
+  color: var(--accent-dark);
+  font-size: 14px;
+  font-weight: 800;
+  opacity: 0.72;
+  transition: border-color 120ms ease, background 120ms ease, opacity 120ms ease, transform 120ms ease;
+}
+
+.hart-dock-zone span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 3px 12px rgba(17, 24, 39, 0.1);
+}
+
+.hart-dock-zone.active {
+  border-color: var(--accent);
+  background: rgba(0, 94, 184, 0.2);
+  opacity: 1;
+  transform: scale(1.015);
+}
+
+.hart-dock-zone-left,
+.hart-dock-zone-right {
+  top: 22%;
+  bottom: 22%;
+  width: min(24%, 260px);
+}
+
+.hart-dock-zone-left {
+  left: 8px;
+}
+
+.hart-dock-zone-right {
+  right: 8px;
+}
+
+.hart-dock-zone-top,
+.hart-dock-zone-bottom {
+  left: 27%;
+  right: 27%;
+  height: min(22%, 180px);
+}
+
+.hart-dock-zone-top {
+  top: 8px;
+}
+
+.hart-dock-zone-bottom {
+  bottom: 8px;
+}
+
+.hart-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(17, 24, 39, 0.52);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.hart-instructions-dialog,
+.hart-qr-dialog {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-xl);
+  background: #fff;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.3);
+}
+
+.hart-instructions-dialog {
+  width: min(820px, 100%);
+  max-height: min(86dvh, 820px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.hart-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hart-dialog-header h2 {
+  margin: 0;
+  color: var(--accent-dark);
+  font-size: 25px;
+}
+
+.hart-dialog-close {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hart-dialog-close:hover {
+  background: rgba(0, 94, 184, 0.1);
+  color: var(--accent-dark);
+}
+
+.hart-instructions-content {
+  overflow-y: auto;
+  padding: 22px 28px 28px;
+  color: var(--text-secondary);
+}
+
+.hart-instructions-content h3 {
+  margin: 26px 0 12px;
+  color: var(--accent-dark);
+  font-size: 20px;
+}
+
+.hart-instructions-content ol {
+  padding-left: 24px;
+}
+
+.hart-instructions-content li {
+  margin-bottom: 9px;
+  padding-left: 5px;
+}
+
+.hart-instructions-note {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius-m) var(--radius-m) 0;
+  background: rgba(0, 94, 184, 0.08);
+  color: var(--text-secondary);
+}
+
+.hart-qr-dialog {
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px;
+  text-align: center;
+}
+
+.hart-qr-dialog h2,
+.hart-qr-dialog p {
+  margin: 0;
+}
+
+.hart-qr-dialog p {
+  color: var(--text-secondary);
+}
+
+.hart-qr-dialog img {
+  width: min(320px, 100%);
+  aspect-ratio: 1;
+}
+
+.hart-qr-dialog a {
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.hart-qr-loading {
+  width: 48px;
+  height: 48px;
+  margin: 80px 0;
+  border: 4px solid rgba(0, 94, 184, 0.16);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.hart-display-page {
+  width: 100vw;
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #fff;
+  touch-action: manipulation;
+}
+
+.hart-chart-grid-only {
+  width: min(96vw, 96dvh);
+  max-height: 96dvh;
+  padding: min(2vw, 2dvh);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 1180px) {
+  .hart-topbar {
+    align-items: flex-start;
+  }
+
+  .hart-topbar-controls {
+    flex-wrap: wrap;
+  }
+
+  .hart-title-block p {
+    display: none;
+  }
+
+  .hart-scale-control {
+    min-width: 210px;
+  }
+}
+
+@media (max-width: 920px), (orientation: portrait) and (max-width: 1180px) {
+  .hart-page {
+    padding: 8px;
+  }
+
+  .hart-topbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 12px;
+    padding: 8px;
+  }
+
+  .hart-topbar-leading {
+    grid-column: 1 / -1;
+  }
+
+  .hart-title-block {
+    flex: 1;
+    text-align: center;
+  }
+
+  .hart-title-block h1 {
+    font-size: 20px;
+  }
+
+  .hart-topbar-controls {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+
+  .hart-scale-control {
+    flex: 1 1 240px;
+    max-width: 360px;
+  }
+
+  .hart-tool-button {
+    flex: 1 1 auto;
+  }
+
+  .hart-workspace {
+    padding-top: 8px;
+  }
+
+  .hart-decoder-dock-left .hart-workspace {
+    grid-template-columns: clamp(260px, 42vw, 340px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "decoder chart";
+  }
+
+  .hart-decoder-dock-right .hart-workspace {
+    grid-template-columns: minmax(0, 1fr) clamp(260px, 42vw, 340px);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "chart decoder";
+  }
+
+  .hart-decoder-dock-top .hart-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: clamp(190px, 40%, 260px) minmax(0, 1fr);
+    grid-template-areas:
+      "decoder"
+      "chart";
+  }
+
+  .hart-decoder-dock-bottom .hart-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) clamp(190px, 40%, 260px);
+    grid-template-areas:
+      "chart"
+      "decoder";
+  }
+
+  .hart-chart-stage {
+    padding: 5px;
+  }
+
+  .hart-chart-grid {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .hart-decoder-panel {
+    padding: 12px;
+  }
+
+  .hart-decoder-header {
+    align-items: center;
+    padding-bottom: 8px;
+  }
+
+  .hart-decoder-drag-handle strong {
+    font-size: 17px;
+  }
+
+  .hart-decoder-drag-handle small {
+    display: none;
+  }
+
+  .hart-code-output {
+    min-height: 0;
+    padding: 9px;
+  }
+
+  .hart-code-input {
+    width: 45px;
+    height: 34px;
+    font-size: 16px;
+  }
+
+  .hart-decoder-status {
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hart-page {
+    padding: 5px;
+  }
+
+  .hart-topbar {
+    border-radius: var(--radius-m);
+  }
+
+  .hart-back-button {
+    min-height: 36px;
+    padding: 5px 8px;
+    font-size: 0;
+  }
+
+  .hart-back-button svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .hart-title-block h1 {
+    font-size: 18px;
+  }
+
+  .hart-scale-control {
+    grid-template-columns: auto minmax(80px, 1fr) 42px;
+    flex-basis: 100%;
+    max-width: none;
+    min-width: 0;
+    padding: 0 4px;
+  }
+
+  .hart-tool-button {
+    min-height: 36px;
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+
+  .hart-decoder-dock-left .hart-workspace {
+    grid-template-columns: minmax(210px, 46vw) minmax(0, 1fr);
+  }
+
+  .hart-decoder-dock-right .hart-workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 46vw);
+  }
+
+  .hart-decoder-dock-top .hart-workspace {
+    grid-template-rows: minmax(180px, 44%) minmax(0, 1fr);
+  }
+
+  .hart-decoder-dock-bottom .hart-workspace {
+    grid-template-rows: minmax(0, 1fr) minmax(180px, 44%);
+  }
+
+  .hart-decoder-header {
+    gap: 8px;
+  }
+
+  .hart-hints-toggle {
+    min-height: 32px;
+    font-size: 12px;
+  }
+
+  .hart-code-input {
+    width: 42px;
+    height: 32px;
+  }
+
+  .hart-dock-zone-left,
+  .hart-dock-zone-right {
+    top: 26%;
+    bottom: 26%;
+    width: 27%;
+  }
+
+  .hart-dock-zone-top,
+  .hart-dock-zone-bottom {
+    left: 29%;
+    right: 29%;
+    height: 24%;
+  }
+
+  .hart-modal-overlay {
+    padding: 10px;
+  }
+
+  .hart-dialog-header {
+    padding: 14px 16px;
+  }
+
+  .hart-dialog-header h2 {
+    font-size: 21px;
+  }
+
+  .hart-instructions-content {
+    padding: 16px 18px 20px;
+    font-size: 15px;
+  }
+}
+
+@media (max-height: 650px) and (min-width: 921px) {
+  .hart-page {
+    padding: 6px;
+  }
+
+  .hart-topbar {
+    padding: 6px 8px;
+  }
+
+  .hart-title-block p {
+    display: none;
+  }
+
+  .hart-back-button,
+  .hart-tool-button {
+    min-height: 36px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .hart-workspace {
+    padding-top: 6px;
+  }
+
+  .hart-chart-grid {
+    width: auto;
+    height: 100%;
+  }
+
+  .hart-decoder-panel {
+    padding: 10px;
+  }
+
+  .hart-decoder-header {
+    padding-bottom: 7px;
+  }
+
+  .hart-decoder-drag-handle small {
+    display: none;
+  }
+
+  .hart-code-input {
+    width: 44px;
+    height: 32px;
+  }
+}

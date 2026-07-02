@@ -1,0 +1,610 @@
+{
+  "story_id": "en_story_02",
+  "language": "en",
+  "title": "The Mystery of Whispering Woods",
+  "content_array": [
+    "In", "the", "bustling", "seaside", "town", "of", "Port", "Maris,", "a", "young", "girl", "named", "Lily", "lived", "in", "a", "blue", "house", "with", "a", "red", "roof", "on", "cobblestone-paved", "Maple", "Street.", "Her", "mother,", "Mrs.", "Higgins,", "was", "a", "baker", "who", "made", "the", "best", "chocolate", "chip", "cookies.", "Her", "father,", "Thomas,", "was", "a", "fisherman", "who", "sailed", "a", "boat", "named", "The", "Salty", "Mermaid.", "The", "boat", "was", "painted", "white", "and", "green.", "Barnaby", "the", "cat", "had", "a", "white", "patch", "on", "his", "left", "ear", "and", "loved", "to", "sleep", "on", "a", "green", "velvet", "cushion.", "Lily", "was", "ten", "years", "old.", "Her", "favorite", "hobby", "was", "collecting", "smooth", "sea", "glass", "on", "the", "sandy", "beach.", "Every", "morning", "at", "seven", "o'clock,", "she", "would", "eat", "a", "bowl", "of", "warm", "oatmeal", "with", "honey", "and", "blueberries.", "Her", "best", "friend,", "Sam,", "lived", "next", "door", "in", "a", "yellow", "house.", "Sam", "was", "eleven", "and", "wore", "round", "spectacles.", "Sam", "wore", "a", "blue", "striped", "shirt", "and", "brown", "corduroy", "pants.", "His", "favorite", "subject", "in", "school", "was", "history,", "while", "Lily", "loved", "science.", "One", "sunny", "Friday,", "they", "discovered", "an", "old", "map", "inside", "a", "green", "glass", "bottle.", "The", "bottle", "was", "sealed", "with", "a", "cork.", "The", "map", "showed", "a", "hidden", "path", "to", "the", "Whispering", "Woods,", "located", "north", "of", "the", "town.", "The", "green", "bottle", "was", "found", "exactly", "at", "9:15", "AM", "near", "the", "old", "lighthouse.", "The", "lighthouse", "was", "fifty", "feet", "tall", "and", "had", "a", "broken", "window", "on", "the", "third", "floor.", "The", "map", "was", "drawn", "on", "parchment", "paper", "with", "black", "ink.", "It", "had", "a", "drawing", "of", "a", "smiling", "sun", "in", "the", "top", "right", "corner.", "They", "packed", "a", "picnic", "basket", "made", "of", "woven", "willow.", "It", "contained", "three", "apple", "sandwiches", "on", "rye", "bread,", "two", "slices", "of", "cherry", "pie", "baked", "by", "grandmother", "Betty,", "and", "a", "flask", "of", "cold", "lemonade", "sweetened", "with", "cane", "sugar.", "They", "started", "their", "journey", "at", "noon.", "The", "sun", "was", "shining", "brightly", "in", "the", "clear", "sky.", "First,", "they", "crossed", "an", "old", "wooden", "bridge", "over", "a", "rushing", "river", "named", "the", "Silver", "Stream.", "There", "were", "silver", "trout", "swimming", "in", "it.", "The", "river", "water", "was", "cold", "and", "crystal", "clear.", "Next,", "they", "climbed", "a", "steep,", "grassy", "hill.", "At", "the", "top", "of", "the", "hill,", "stood", "a", "giant", "oak", "tree", "with", "thick", "branches.", "The", "giant", "oak", "tree", "was", "estimated", "to", "be", "two", "hundred", "years", "old.", "Its", "leaves", "were", "a", "vibrant", "autumn", "orange.", "A", "wise", "old", "owl", "with", "silver", "feathers", "sat", "on", "a", "branch.", "The", "owl", "hooted", "three", "times.", "The", "owl's", "name,", "according", "to", "a", "small", "tag", "on", "its", "leg,", "was", "Archimedes.", "The", "map", "indicated", "they", "needed", "to", "walk", "fifty", "paces", "east", "from", "the", "oak", "tree.", "They", "followed", "the", "instruction", "carefully.", "Sam", "counted", "the", "steps", "out", "loud.", "At", "the", "fiftieth", "step,", "Lily", "noticed", "a", "strange", "rock.", "It", "was", "shaped", "like", "a", "star", "and", "colored", "purple.", "The", "rock", "shaped", "like", "a", "star", "was", "smooth", "to", "the", "touch.", "Under", "the", "rock,", "they", "found", "a", "small", "wooden", "box", "with", "a", "brass", "lock.", "The", "wooden", "box", "smelled", "like", "pine", "and", "had", "a", "crack", "on", "the", "lid.", "Lily", "used", "a", "rusty", "key", "she", "found", "in", "her", "pocket", "three", "weeks", "ago", "to", "open", "it.", "Inside", "the", "box,", "there", "were", "ten", "gold", "coins,", "a", "silver", "compass,", "and", "a", "beautiful", "pearl", "necklace.", "The", "ten", "gold", "coins", "had", "a", "king's", "face", "on", "one", "side", "and", "a", "ship", "on", "the", "other."
+  ],
+  "questions": [
+    {
+      "q_id": 1,
+      "question": "What is the name of the town?",
+      "options": ["Oakhaven", "Port Maris", "Silverwood", "Maple Town"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 2,
+      "question": "What kind of town is Port Maris?",
+      "options": ["A mountain town", "A desert town", "A seaside town", "A forest village"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 3,
+      "question": "What is the young girl's name?",
+      "options": ["Lily", "Rose", "Betty", "Clara"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 4,
+      "question": "What color is Lily's house?",
+      "options": ["Red", "Yellow", "Blue", "Green"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 5,
+      "question": "What color is the roof of Lily's house?",
+      "options": ["Black", "Brown", "Red", "White"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 6,
+      "question": "What kind of pavement does Maple Street have?",
+      "options": ["Dirt", "Cobblestone", "Asphalt", "Brick"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 7,
+      "question": "What is the name of Lily's street?",
+      "options": ["Oak Street", "Pine Street", "Elm Street", "Maple Street"],
+      "correct_index": 3
+    },
+    {
+      "q_id": 8,
+      "question": "What is Lily's mother's name?",
+      "options": ["Mrs. Higgins", "Mrs. Jenkins", "Mrs. Smith", "Mrs. Clara"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 9,
+      "question": "What is Lily's mother's job?",
+      "options": ["Teacher", "Baker", "Doctor", "Tailor"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 10,
+      "question": "What kind of cookies does her mother make?",
+      "options": ["Peanut butter", "Oatmeal raisin", "Chocolate chip", "Sugar"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 11,
+      "question": "What is Lily's father's name?",
+      "options": ["Thomas", "Arthur", "Jenkins", "Sam"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 12,
+      "question": "What is Lily's father's job?",
+      "options": ["Farmer", "Blacksmith", "Fisherman", "Carpenter"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 13,
+      "question": "What is the name of the father's boat?",
+      "options": ["The Ocean Breeze", "The Salty Mermaid", "The Silver Lark", "The Blue Wave"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 14,
+      "question": "What is one of the colors of the boat?",
+      "options": ["Red", "Black", "White", "Yellow"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 15,
+      "question": "What is the other color of the boat?",
+      "options": ["Green", "Blue", "Purple", "Orange"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 16,
+      "question": "What is the cat's name?",
+      "options": ["Archimedes", "Barnaby", "Whiskers", "Snowball"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 17,
+      "question": "What color is the patch on the cat?",
+      "options": ["Black", "Orange", "White", "Gray"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 18,
+      "question": "Where is the patch on the cat located?",
+      "options": ["Right ear", "Left ear", "Tail", "Left paw"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 19,
+      "question": "What color is the cat's favorite cushion?",
+      "options": ["Red", "Blue", "Green", "Yellow"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 20,
+      "question": "What material is the cat's cushion made of?",
+      "options": ["Silk", "Cotton", "Wool", "Velvet"],
+      "correct_index": 3
+    },
+    {
+      "q_id": 21,
+      "question": "How old is Lily?",
+      "options": ["Eight", "Nine", "Ten", "Eleven"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 22,
+      "question": "What is Lily's favorite hobby?",
+      "options": ["Reading books", "Collecting sea glass", "Painting", "Fishing"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 23,
+      "question": "What is the texture of the sea glass she collects?",
+      "options": ["Sharp", "Rough", "Smooth", "Bumpy"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 24,
+      "question": "Where does she collect the sea glass?",
+      "options": ["In the river", "On the sandy beach", "In the woods", "Near the lighthouse"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 25,
+      "question": "What time does Lily eat breakfast?",
+      "options": ["Six o'clock", "Seven o'clock", "Eight o'clock", "Nine o'clock"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 26,
+      "question": "What does Lily eat for breakfast?",
+      "options": ["Pancakes", "Toast", "Oatmeal", "Eggs"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 27,
+      "question": "What is the temperature of her breakfast?",
+      "options": ["Cold", "Warm", "Hot", "Freezing"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 28,
+      "question": "What is the first topping on her oatmeal?",
+      "options": ["Sugar", "Cinnamon", "Honey", "Syrup"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 29,
+      "question": "What is the second topping on her oatmeal?",
+      "options": ["Strawberries", "Blueberries", "Bananas", "Apples"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 30,
+      "question": "What is Lily's best friend's name?",
+      "options": ["Tom", "Sam", "Arthur", "Ben"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 31,
+      "question": "Where does Sam live?",
+      "options": ["Next door", "Across town", "In the woods", "By the beach"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 32,
+      "question": "What color is Sam's house?",
+      "options": ["White", "Red", "Yellow", "Blue"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 33,
+      "question": "How old is Sam?",
+      "options": ["Ten", "Eleven", "Twelve", "Thirteen"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 34,
+      "question": "What shape are Sam's spectacles?",
+      "options": ["Square", "Round", "Oval", "Rectangle"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 35,
+      "question": "What pattern is on Sam's shirt?",
+      "options": ["Polka dot", "Plaid", "Striped", "Plain"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 36,
+      "question": "What color is Sam's shirt?",
+      "options": ["Red", "Green", "Blue", "White"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 37,
+      "question": "What material are Sam's pants made of?",
+      "options": ["Denim", "Corduroy", "Cotton", "Linen"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 38,
+      "question": "What color are Sam's pants?",
+      "options": ["Black", "Blue", "Brown", "Gray"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 39,
+      "question": "What is Sam's favorite subject in school?",
+      "options": ["Math", "Science", "History", "Art"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 40,
+      "question": "What is Lily's favorite subject in school?",
+      "options": ["Science", "History", "Music", "English"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 41,
+      "question": "On what day of the week did they make their discovery?",
+      "options": ["Monday", "Wednesday", "Friday", "Sunday"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 42,
+      "question": "What was the weather like on the day of the discovery?",
+      "options": ["Rainy", "Cloudy", "Sunny", "Windy"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 43,
+      "question": "What did they discover?",
+      "options": ["A chest", "An old map", "A key", "A compass"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 44,
+      "question": "Where was the map hidden?",
+      "options": ["Under a rock", "Inside a green glass bottle", "In a book", "In a hollow tree"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 45,
+      "question": "What was the bottle sealed with?",
+      "options": ["Wax", "Tape", "A cork", "A metal cap"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 46,
+      "question": "Where did the hidden path lead?",
+      "options": ["Whispering Woods", "Silver Stream", "Maple Street", "The Old Lighthouse"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 47,
+      "question": "In what direction were the woods located from town?",
+      "options": ["North", "South", "East", "West"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 48,
+      "question": "What time exactly was the bottle found?",
+      "options": ["8:00 AM", "9:15 AM", "10:30 AM", "12:00 PM"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 49,
+      "question": "Where was the bottle found?",
+      "options": ["On the beach", "Near the old lighthouse", "In the river", "On the hill"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 50,
+      "question": "How tall was the lighthouse?",
+      "options": ["Thirty feet", "Forty feet", "Fifty feet", "Sixty feet"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 51,
+      "question": "On which floor was the broken window in the lighthouse?",
+      "options": ["First floor", "Second floor", "Third floor", "Fourth floor"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 52,
+      "question": "What material was the map drawn on?",
+      "options": ["Cardboard", "Parchment paper", "Canvas", "Leaves"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 53,
+      "question": "What color ink was used for the map?",
+      "options": ["Blue", "Red", "Black", "Green"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 54,
+      "question": "What drawing was on the map?",
+      "options": ["A skull", "A smiling sun", "A crescent moon", "A star"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 55,
+      "question": "Where was the drawing located on the map?",
+      "options": ["Top left corner", "Bottom right corner", "Center", "Top right corner"],
+      "correct_index": 3
+    },
+    {
+      "q_id": 56,
+      "question": "What was the picnic basket made of?",
+      "options": ["Plastic", "Woven willow", "Metal", "Fabric"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 57,
+      "question": "How many sandwiches did they pack?",
+      "options": ["Two", "Three", "Four", "Five"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 58,
+      "question": "What kind of sandwiches did they pack?",
+      "options": ["Ham", "Cheese", "Apple", "Peanut butter"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 59,
+      "question": "What kind of bread were the sandwiches made on?",
+      "options": ["White bread", "Wheat bread", "Rye bread", "Sourdough"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 60,
+      "question": "How many slices of pie did they bring?",
+      "options": ["One", "Two", "Three", "Four"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 61,
+      "question": "What flavor was the pie?",
+      "options": ["Apple", "Blueberry", "Cherry", "Pumpkin"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 62,
+      "question": "Who baked the pie?",
+      "options": ["Mrs. Higgins", "Grandmother Betty", "Lily", "Sam"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 63,
+      "question": "What drink did they bring?",
+      "options": ["Water", "Milk", "Cold lemonade", "Hot tea"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 64,
+      "question": "What was the drink kept in?",
+      "options": ["A bottle", "A flask", "A jug", "A cup"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 65,
+      "question": "What was the lemonade sweetened with?",
+      "options": ["Honey", "Cane sugar", "Syrup", "Artificial sweetener"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 66,
+      "question": "What time did they start their journey?",
+      "options": ["Morning", "Noon", "Afternoon", "Evening"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 67,
+      "question": "What was the condition of the sky when they started?",
+      "options": ["Cloudy", "Clear", "Stormy", "Overcast"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 68,
+      "question": "What was the first obstacle they crossed?",
+      "options": ["A mountain", "A deep ditch", "An old wooden bridge", "A stone wall"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 69,
+      "question": "What was the name of the river?",
+      "options": ["Crystal River", "Silver Stream", "Rushing Water", "Whispering River"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 70,
+      "question": "How was the river water described?",
+      "options": ["Warm and murky", "Cold and crystal clear", "Fast and dangerous", "Slow and green"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 71,
+      "question": "What kind of fish were in the river?",
+      "options": ["Silver trout", "Golden carp", "Bluegill", "Salmon"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 72,
+      "question": "What did they climb next?",
+      "options": ["A steep, grassy hill", "A rocky mountain", "A tall tree", "A sand dune"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 73,
+      "question": "What was at the top of the hill?",
+      "options": ["A castle", "A giant oak tree", "A cave", "A well"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 74,
+      "question": "What kind of branches did the tree have?",
+      "options": ["Thin", "Broken", "Thick", "Dead"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 75,
+      "question": "How old was the oak tree estimated to be?",
+      "options": ["Fifty years old", "One hundred years old", "Two hundred years old", "Five hundred years old"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 76,
+      "question": "What color were the tree's leaves?",
+      "options": ["Green", "Vibrant autumn orange", "Yellow", "Brown"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 77,
+      "question": "What animal was sitting on a branch?",
+      "options": ["A squirrel", "A raven", "A wise old owl", "A monkey"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 78,
+      "question": "What color were the owl's feathers?",
+      "options": ["Brown", "White", "Silver", "Black"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 79,
+      "question": "How many times did the owl hoot?",
+      "options": ["Once", "Twice", "Three times", "Four times"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 80,
+      "question": "What was the owl's name?",
+      "options": ["Barnaby", "Archimedes", "Merlin", "Arthur"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 81,
+      "question": "Where was the owl's name written?",
+      "options": ["On its collar", "On a small tag on its leg", "On a sign", "On its wing"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 82,
+      "question": "In what direction did they need to walk from the oak tree?",
+      "options": ["North", "South", "East", "West"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 83,
+      "question": "How many paces did they need to walk?",
+      "options": ["Ten", "Twenty", "Fifty", "One hundred"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 84,
+      "question": "Who counted the steps?",
+      "options": ["Lily", "Sam", "Both of them", "The owl"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 85,
+      "question": "How did Sam count the steps?",
+      "options": ["In his head", "On his fingers", "Out loud", "By writing them down"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 86,
+      "question": "What did Lily notice at the fiftieth step?",
+      "options": ["A strange rock", "A hole", "A chest", "A flower"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 87,
+      "question": "What shape was the rock?",
+      "options": ["Square", "Round", "Star", "Heart"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 88,
+      "question": "What color was the rock?",
+      "options": ["Gray", "Red", "Purple", "Blue"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 89,
+      "question": "How did the rock feel to the touch?",
+      "options": ["Rough", "Smooth", "Sharp", "Cold"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 90,
+      "question": "What was found under the rock?",
+      "options": ["A small wooden box", "A map", "A key", "Gold coins"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 91,
+      "question": "What kind of lock did the box have?",
+      "options": ["Iron", "Gold", "Brass", "Silver"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 92,
+      "question": "What did the box smell like?",
+      "options": ["Cedar", "Pine", "Oak", "Mahogany"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 93,
+      "question": "What flaw did the box have?",
+      "options": ["A missing hinge", "A crack on the lid", "A scratched bottom", "A broken lock"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 94,
+      "question": "What did Lily use to open the box?",
+      "options": ["A hairpin", "A rock", "A rusty key", "A magic spell"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 95,
+      "question": "Where did Lily find the key earlier?",
+      "options": ["In her pocket", "On the beach", "Under a tree", "In the river"],
+      "correct_index": 0
+    },
+    {
+      "q_id": 96,
+      "question": "When did she find the key?",
+      "options": ["That morning", "Three weeks ago", "A year ago", "Yesterday"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 97,
+      "question": "What was NOT inside the box?",
+      "options": ["Gold coins", "A silver compass", "A map", "A pearl necklace"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 98,
+      "question": "How many gold coins were in the box?",
+      "options": ["Five", "Ten", "Fifteen", "Twenty"],
+      "correct_index": 1
+    },
+    {
+      "q_id": 99,
+      "question": "What was on one side of the gold coins?",
+      "options": ["A dragon", "A star", "A king's face", "An eagle"],
+      "correct_index": 2
+    },
+    {
+      "q_id": 100,
+      "question": "What was on the other side of the gold coins?",
+      "options": ["A crown", "A shield", "A sword", "A ship"],
+      "correct_index": 3
+    }
+  ]
+}

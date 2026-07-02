@@ -1,0 +1,37 @@
+{
+  "name": "@rehab-trainer/stroketrainer",
+  "private": true,
+  "version": "3.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build && node scripts/prune-cloudflare-pages-assets.mjs",
+    "build:full": "tsc -b && vite build",
+    "build:cloudflare": "tsc -b && vite build --mode cloudflare && node scripts/prune-cloudflare-pages-assets.mjs --force",
+    "r2:upload-vosk": "node scripts/upload-vosk-to-r2.mjs",
+    "vosk:repair-zh-symbols": "node scripts/repair-zh-vosk-symbols.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.35",
+    "@tensorflow-models/knn-classifier": "^1.2.6",
+    "@tensorflow/tfjs": "^4.22.0",
+    "jspsych": "^8.2.1",
+    "pinyin-pro": "^3.28.1",
+    "pixi.js": "^8.18.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.1",
+    "recharts": "^3.8.1",
+    "three": "^0.184.0",
+    "vosk-browser": "^0.0.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "@types/three": "^0.184.1",
+    "@vitejs/plugin-react": "^4.5.2",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5"
+  }
+}
