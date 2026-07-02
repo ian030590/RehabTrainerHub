@@ -7,13 +7,15 @@ Use this checklist after pushing the monorepo to GitHub.
 - Default branch: `main`.
 - Actions: enabled.
 - CI workflow: `.github/workflows/ci.yml`.
+- Cloudflare Pages deploy workflow: `.github/workflows/deploy-cloudflare-pages.yml`.
 - Package manager: npm, pinned in root `package.json`.
 - Validation command: `npm run build`.
 - Dependabot: root, apps, and `packages/ui` npm metadata.
 
 ## Cloudflare Pages Projects
 
-Create three Cloudflare Pages projects from the same GitHub monorepo.
+Create three Cloudflare Pages projects. GitHub Actions deploys built output with
+Wrangler, so the Pages projects do not need their own Git build settings.
 
 | Project | Root directory | Build command | Output directory |
 | --- | --- | --- | --- |
@@ -22,6 +24,14 @@ Create three Cloudflare Pages projects from the same GitHub monorepo.
 | `visiontrainer` | `/` | `npm ci --workspaces=false && npm run build:vision` | `apps/visiontrainer/dist` |
 
 Set Node.js compatibility to Node 24 or newer.
+
+## GitHub Secrets
+
+Required for `.github/workflows/deploy-cloudflare-pages.yml`:
+
+- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Cloudflare Pages edit access
+  for the account.
+- `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account ID that owns the Pages projects.
 
 ## Environment Variables
 
@@ -63,9 +73,6 @@ single-domain subdirectory deployment. If using subdomains, update
 
 - Configure Cloudflare Bulk Redirects from old `*.pages.dev` URLs to the new
   production paths or subdomains.
-- Update the old `StrokeTrainer` and `VisionTrainer` README files with the new
-  monorepo and production URLs.
-- Archive the old repositories after verifying traffic has moved.
-- Remove nested `apps/stroketrainer/.git` and `apps/visiontrainer/.git`
-  directories before the first root monorepo commit so the apps are tracked as
-  ordinary folders.
+- The old `StrokeTrainer` and `VisionTrainer` repositories are archived.
+- Nested app `.git` and `.github` directories have been removed so the apps are
+  tracked as ordinary monorepo folders.

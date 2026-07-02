@@ -9,6 +9,8 @@ apps/*/dist/
 apps/*/out/
 apps/*/.next/
 .turbo/
+apps/*/.turbo/
+.tmp/
 
 # Logs
 logs/
