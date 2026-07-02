@@ -14,8 +14,9 @@ Use this checklist after pushing the monorepo to GitHub.
 
 ## Cloudflare Pages Projects
 
-Create three Cloudflare Pages projects. GitHub Actions deploys built output with
-Wrangler, so the Pages projects do not need their own Git build settings.
+GitHub Actions discovers Pages apps from `apps/*/wrangler.toml`, creates missing
+Cloudflare Pages projects with Wrangler, and deploys built output. Pages
+projects do not need their own Git build settings.
 
 | Project | Root directory | Build command | Output directory |
 | --- | --- | --- | --- |
@@ -25,12 +26,27 @@ Wrangler, so the Pages projects do not need their own Git build settings.
 
 Set Node.js compatibility to Node 24 or newer.
 
+To add a new Pages app, create `apps/<app>/package.json` with `scripts.build`
+and `apps/<app>/wrangler.toml` with:
+
+```toml
+name = "cloudflare-pages-project-name"
+compatibility_date = "2026-07-02"
+pages_build_output_dir = "dist"
+```
+
+The root `npm run build` command builds every app under `apps/*` that defines a
+build script. The deploy workflow creates the Cloudflare Pages project when it
+does not already exist, uses `main` as the production branch, then deploys
+`apps/<app>/<pages_build_output_dir>`.
+
 ## GitHub Secrets
 
 Required for `.github/workflows/deploy-cloudflare-pages.yml`:
 
-- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Cloudflare Pages edit access
-  for the account.
+- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with account-level Cloudflare
+  Pages edit access so the workflow can list, create, and deploy Pages
+  projects.
 - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account ID that owns the Pages projects.
 
 ## Environment Variables

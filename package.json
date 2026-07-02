@@ -10,7 +10,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build:hub && npm run build:stroke && npm run build:vision",
+    "build": "node scripts/build-apps.mjs",
     "build:hub": "npm --prefix apps/rehabtrainerhub run build",
     "build:stroke": "npm --prefix apps/stroketrainer run build",
     "build:vision": "npm --prefix apps/visiontrainer run build",

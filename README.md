@@ -62,7 +62,14 @@ secrets:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 
-The deploy workflow uploads three Pages projects from this monorepo:
+The deploy workflow discovers Pages apps from `apps/*/wrangler.toml`, creates
+missing Cloudflare Pages projects, and deploys each app's configured output
+directory. A deployable app needs:
+
+- `apps/<app>/package.json` with `scripts.build`.
+- `apps/<app>/wrangler.toml` with `name` and `pages_build_output_dir`.
+
+Current projects:
 
 ```text
 rehabtrainerhub -> apps/rehabtrainerhub/out
