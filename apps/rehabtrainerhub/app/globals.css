@@ -18,7 +18,7 @@
   --card-border: #e0e4e8;
   --focus: #8ed1dd;
   --container-max: 1280px;
-  --page-margin: 48px;
+  --page-margin: 1.5rem;
   --page-margin-mobile: 16px;
   --radius: 8px;
   --radius-large: 16px;
@@ -618,7 +618,7 @@ h3 {
 }
 
 .rehab-footer {
-  padding: 40px var(--page-margin);
+  padding: var(--page-margin);
   border-top: 1px solid var(--outline-variant);
   background: var(--surface-highest);
   color: var(--text-muted);
