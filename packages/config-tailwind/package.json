@@ -1,0 +1,14 @@
+{
+  "name": "@rehab-trainer/config-tailwind",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./tailwind.config.ts",
+    "./tokens": "./tokens.ts"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.3.2",
+    "typescript": "~5.8.3"
+  }
+}

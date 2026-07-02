@@ -1,0 +1,12 @@
+{
+  "name": "@rehab-trainer/config-eslint",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "peerDependencies": {
+    "eslint": ">=9"
+  }
+}

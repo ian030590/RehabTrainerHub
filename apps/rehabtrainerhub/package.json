@@ -1,0 +1,22 @@
+{
+  "name": "@rehab-trainer/rehabtrainerhub",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "node scripts/clean-next-output.mjs && next build",
+    "preview": "npx serve out"
+  },
+  "dependencies": {
+    "next": "^16.2.10",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.2",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "typescript": "~5.8.3"
+  }
+}

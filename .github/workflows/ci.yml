@@ -1,0 +1,40 @@
+name: RehabTrainerHub Monorepo CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "ci-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --workspaces=false
+
+      - name: Build all apps
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          VITE_VOSK_MODEL_ZH_URL: ${{ vars.VITE_VOSK_MODEL_ZH_URL }}
+          VITE_VOSK_MODEL_EN_URL: ${{ vars.VITE_VOSK_MODEL_EN_URL }}
+          VITE_VOSK_MODEL_ZH_VOCAB_URL: ${{ vars.VITE_VOSK_MODEL_ZH_VOCAB_URL }}
+          VITE_VOSK_MODEL_EN_VOCAB_URL: ${{ vars.VITE_VOSK_MODEL_EN_VOCAB_URL }}
+          VITE_VOSK_MODEL_MIN_BYTES: ${{ vars.VITE_VOSK_MODEL_MIN_BYTES }}

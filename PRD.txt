@@ -1,0 +1,85 @@
+# 產品需求文件 (Product Requirements Document - PRD)
+
+## 1. 產品概述
+* **產品名稱：** RehabTrainerHub
+* **產品願景：** 將專業的復健資源從醫療院所延伸至個案家中，提供一個無縫、易用且整合度高的居家復健小遊戲入口平台。
+* **當前痛點：** 目前中風復健 (`stroketrainer`) 與視覺復健 (`visiontrainer`) 分散在不同網址與儲存庫，導致使用者體驗破碎、SEO 權重無法累積，且開發者維護成本高（需管理雙倍的 CI/CD 與共用元件）。
+* **核心解法：** 建立一個統合的 Hub 網站，採用 Monorepo 架構整合現有服務，並利用 301 轉址確保個案不迷路、舊有 GitHub 星星不流失。
+
+## 2. 目標受眾 (Target Audience)
+1. **復健個案：** 需要在家中持續進行中風或視覺復健的患者。介面需直覺、字體清晰、操作防呆。
+2. **個案家屬/照護者：** 協助個案設定網頁與遊戲的人員。需要明確的指引與衛教資訊。
+3. **職能治療師：** 可將此網站作為開立「居家復健處方」的工具，推薦給合適的個案使用。
+
+## 3. 功能需求 (Functional Requirements)
+### 3.1 前台主站 (RehabTrainerHub)
+* **首頁 (Landing Page)：** 介紹平台理念，提供清晰的導覽入口，引導至「中風復健」或「視覺復健」子系統。
+* **共用導覽列與頁尾 (Navbar & Footer)：** 在所有子系統中保持一致的品牌視覺與導覽體驗。
+* **衛教資訊/說明頁 (Option)：** 提供各項小遊戲的復健目的、適用對象與操作說明。
+
+### 3.2 子系統 (Sub-apps)
+* **StrokeTrainer (中風復健)：** 完整移植現有功能，並套用共用 UI 元件。
+* **VisionTrainer (視覺復健)：** 完整移植現有功能，並套用共用 UI 元件。
+
+## 4. 非功能需求 (Non-Functional Requirements)
+* **SEO 與效能：**
+  * 採用 Next.js 靜態匯出 (`output: 'export'`)，達成極致載入速度。
+  * 實作動態 Metadata、`sitemap.xml` 與 `robots.txt`。
+* **架構與部署：**
+  * 使用 Turborepo + pnpm workspaces 建構 Monorepo 架構。
+  * 透過 Cloudflare Pages 進行自動化 CI/CD 部署。
+* **向後相容性：**
+  * 舊網址 (`*.pages.dev`) 必須設定 301 永久轉址至新網域子目錄或子網域。
+  * 舊 GitHub Repo 設定為 Archive，並在 README 留下引導連結。
+
+---
+
+# RehabtrainerHub 開發計畫 (Development Plan)
+
+## 階段一：架構建立與基礎設施 (約 1-2 週)
+**目標：** 建立 Monorepo 環境，確保三個專案能同時在本地端運行。
+* [ ] 初始化 Turborepo 與 pnpm workspaces (`apps/rehabtrainerhub`, `apps/stroketrainer`, `apps/visiontrainer`)。
+* [ ] 建立 `packages/ui`，並設定基本的設計系統 (Tailwind CSS / 共用元件)。
+* [ ] 完成 `rehabtrainerhub` (Next.js) 的基礎框架與首頁靜態版面。
+* [ ] 購買並設定正式網域 (Custom Domain)，並將 DNS 託管至 Cloudflare。
+
+## 階段二：專案遷移與重構 (約 2-3 週)
+**目標：** 將舊有程式碼搬移至新架構，並替換為共用 UI。
+* [ ] 將現有的 `stroketrainer` 邏輯與畫面搬遷至 `apps/stroketrainer`。
+* [ ] 將現有的 `visiontrainer` 邏輯與畫面搬遷至 `apps/visiontrainer`。
+* [ ] 抽取兩個專案中重複的元件 (如按鈕、標題、導覽列) 至 `packages/ui` 並進行替換。
+* [ ] 確保本地端測試所有功能皆與舊版一致。
+
+## 階段三：CI/CD 部署與 SEO 優化 (約 1 週)
+**目標：** 成功部屬至 Cloudflare Pages，並確保 SEO 基礎建設完善。
+* [ ] 於 Next.js 專案中設定 `output: 'export'` 與 Metadata。
+* [ ] 在 Cloudflare Pages 中建立三個對應的專案，並綁定同一個 GitHub Monorepo。
+* [ ] 測試 GitHub push 後，Cloudflare 是否能正確觸發個別專案的建置與發布。
+* [ ] 設定各專案的自訂網域 (例如: `rehabhub.tw`, `stroke.rehabhub.tw`, `vision.rehabhub.tw`)。
+* [ ] 產生並提交 Sitemap 至 Google Search Console。
+
+## 階段四：上線、轉址與舊站封存 (約 2-3 天)
+**目標：** 流量無縫轉移，保障舊使用者權益。
+* [ ] 在 Cloudflare Dashboard 設定舊網址 (`*.pages.dev`) 的 301 Bulk Redirects 至新網址。
+* [ ] 實測點擊舊有書籤與連結，確認跳轉邏輯正確且順暢。
+* [ ] 更新舊 GitHub Repo 的 README.md，加入醒目的搬遷與新站連結聲明。
+* [ ] 將舊 GitHub Repo 設定為 Archive (封存)。
+* [ ] (選擇性) 於復健相關社群發布新平台整合上線消息。
+
+-------
+
+# 資料夾結構：
+
+```text
+rehab-workspace/
+├── apps/
+│   ├── rehabtrainerhub/     # (Next.js) 新的前台主網站
+│   ├── stroketrainer/       # 現有的中風復健網頁
+│   └── visiontrainer/       # 現有的視覺復健網頁
+├── packages/
+│   ├── ui/                  # 共用的 UI 元件庫
+│   ├── config-eslint/       # 共用的 lint 設定
+│   └── config-tailwind/     # 共用的設計系統
+├── package.json             # 定義 workspaces
+└── turbo.json               # Turborepo 的 CI/CD 執行設定
+```

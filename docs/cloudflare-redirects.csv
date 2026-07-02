@@ -1,0 +1,3 @@
+source_url,target_url,status_code
+https://old-stroketrainer.pages.dev/*,https://your-domain.example/StrokeTrainer/${1},301
+https://old-visiontrainer.pages.dev/*,https://your-domain.example/VisionTrainer/${1},301

@@ -1,0 +1,22 @@
+{
+  "name": "@rehab-trainer/ui",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./components/RehabFooter": "./src/components/RehabFooter.tsx",
+    "./components/UserSelector": "./src/components/UserSelector.tsx",
+    "./components/GlobalPortalLinks": "./src/components/GlobalPortalLinks.tsx",
+    "./downloadFile": "./src/downloadFile.ts",
+    "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
+    "./storage/userStore": "./src/storage/userStore.ts"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.4",
+    "typescript": "~5.8.3"
+  }
+}
