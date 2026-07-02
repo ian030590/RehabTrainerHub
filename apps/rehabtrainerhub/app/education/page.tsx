@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -38,7 +39,9 @@ export default function EducationPage() {
     <main>
       <header className="site-header">
         <Link className="brand" href="/">
-          <span className="brand-mark">RH</span>
+          <span className="brand-mark" aria-hidden="true">
+            <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
+          </span>
           <span>
             <strong>RehabTrainerHub</strong>
             <small>Education</small>

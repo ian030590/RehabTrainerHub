@@ -51,7 +51,9 @@ export default function HomePage() {
     <main className="home-page">
       <header className="site-header">
         <Link className="brand" href="/">
-          <span className="brand-mark">+</span>
+          <span className="brand-mark" aria-hidden="true">
+            <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
+          </span>
           <span>
             <strong>RehabTrainerHub</strong>
             <small>Home rehabilitation, simplified</small>
