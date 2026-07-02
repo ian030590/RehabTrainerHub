@@ -925,9 +925,11 @@ export const zh = {
 
   // Links Page
   'links.title': '相關網站',
-  'links.subtitle': '其他實用的訓練與相關資源網站',
-  'links.strokeTrainer.title': 'Vision Trainer',
-  'links.strokeTrainer.desc': '視覺能力訓練系統，提供多種視覺訓練項目',
+  'links.subtitle': 'RehabTrainerHub 生態系的正式網站',
+  'links.hub.title': 'RehabTrainerHub',
+  'links.hub.desc': '居家復健入口平台，整理中風復健與視覺復健系統。',
+  'links.visionTrainer.title': 'VisionTrainer',
+  'links.visionTrainer.desc': '視覺能力訓練系統，提供多種視覺訓練項目。',
 };
 
 export type TranslationKey = keyof typeof zh;

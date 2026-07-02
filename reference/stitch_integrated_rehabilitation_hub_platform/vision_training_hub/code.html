@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VisionTrainer Overview - RehabTrainerHub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Public+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#055f17",
+                        "on-secondary-container": "#531800",
+                        "inverse-primary": "#8ed1dd",
+                        "surface-container-high": "#e8e8ea",
+                        "on-secondary-fixed": "#380d00",
+                        "outline-variant": "#bfc8ca",
+                        "surface-container-highest": "#e2e2e5",
+                        "tertiary-fixed": "#a3f69c",
+                        "secondary-fixed-dim": "#ffb59a",
+                        "primary-fixed": "#a9eef9",
+                        "primary": "#004148",
+                        "surface-bright": "#f9f9fc",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#1a1c1e",
+                        "surface-tint": "#1c6872",
+                        "on-secondary-fixed-variant": "#802a00",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#a83900",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#dadadc",
+                        "secondary-container": "#fc6018",
+                        "on-error": "#ffffff",
+                        "on-background": "#1a1c1e",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f3f3f6",
+                        "tertiary": "#00450d",
+                        "on-primary-container": "#8bcfda",
+                        "inverse-on-surface": "#f0f0f3",
+                        "on-primary-fixed-variant": "#004f58",
+                        "surface": "#f9f9fc",
+                        "primary-fixed-dim": "#8ed1dd",
+                        "on-tertiary-fixed-variant": "#005312",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#86d781",
+                        "error-container": "#ffdad6",
+                        "outline": "#6f797a",
+                        "tertiary-fixed-dim": "#88d982",
+                        "primary-container": "#005a64",
+                        "on-tertiary-fixed": "#002204",
+                        "on-primary-fixed": "#001f24",
+                        "background": "#f9f9fc",
+                        "surface-variant": "#e2e2e5",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#3f484a",
+                        "secondary-fixed": "#ffdbcf",
+                        "surface-container": "#eeeef0",
+                        "inverse-surface": "#2f3133"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px",
+                        "touch-target-min": "48px",
+                        "gutter": "24px",
+                        "container-max": "1280px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Public Sans"],
+                        "display-lg": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "label-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Public Sans"],
+                        "body-lg": ["Inter"],
+                        "instructional": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "instructional": ["20px", { "lineHeight": "30px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-container-low text-primary dark:text-primary-fixed fixed w-full top-0 z-50 border-b border-outline-variant dark:border-outline">
+<div class="flex justify-between items-center px-margin-desktop max-w-container-max mx-auto h-[72px]">
+<div class="text-headline-md font-headline-md text-primary dark:text-primary-fixed">
+                RehabTrainerHub
+            </div>
+<nav class="hidden md:flex gap-8 h-full items-center">
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary cursor-pointer active:opacity-80 h-full flex items-center hover:text-secondary transition-colors duration-200" href="#">
+<span class="font-label-lg text-label-lg">Stroke Recovery</span>
+</a>
+<a class="text-secondary dark:text-secondary-fixed font-bold border-b-2 border-secondary cursor-pointer active:opacity-80 h-full flex items-center hover:text-secondary transition-colors duration-200" href="#">
+<span class="font-label-lg text-label-lg">Vision Training</span>
+</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary cursor-pointer active:opacity-80 h-full flex items-center hover:text-secondary transition-colors duration-200" href="#">
+<span class="font-label-lg text-label-lg">Help/Instructions</span>
+</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="hidden md:flex items-center justify-center min-h-[48px] px-6 bg-secondary text-on-secondary rounded font-label-lg text-label-lg hover:bg-opacity-90 transition-colors focus:ring-2 focus:ring-primary focus:outline-none">
+                    Sign In
+                </button>
+<button aria-label="Menu" class="md:hidden p-2 min-h-[48px] min-w-[48px] flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl">menu</span>
+</button>
+<img alt="User profile" class="w-10 h-10 rounded-full object-cover hidden md:block border border-outline-variant" data-alt="A small, circular, high-contrast user profile placeholder image with a simple geometric avatar on a light teal background, ensuring high legibility for visually impaired users." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCt8DNIQOg6H2wISH1HgXBokwnrpiZOJmmuQGTF2CdM2jj_viwBMZrd6acDY2Z6vVuH7V5AGMf1ZAb05w7FD8nC8obvVp_lQCnmRhWfUSb_0orb29Un636UL1tXp1XQo3zOCP6a6SPGdf3ERstWzFMS5ZMAHhYN0D6dNM01d-0bqhCPVh2-LPCeuG8epEg_1KyuLxJRAASObyN0IpQkEKAsmawXD6vpFjimIeAutN2DWfYs09J6KKYpEA"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow pt-[72px] pb-24 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full">
+<!-- Hero Section -->
+<section class="mt-12 mb-16 rounded-xl overflow-hidden relative border border-outline-variant bg-surface-container-lowest">
+<div class="grid grid-cols-1 md:grid-cols-2">
+<div class="p-8 md:p-12 flex flex-col justify-center">
+<h1 class="font-display-lg text-display-lg text-primary mb-4 md:font-headline-lg-mobile md:text-headline-lg-mobile lg:font-display-lg lg:text-display-lg">
+                        VisionTrainer Program
+                    </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8 max-w-lg">
+                        Structured, high-contrast visual rehabilitation exercises designed to improve tracking, focus, and visual processing speed.
+                    </p>
+<div>
+<button class="min-h-[48px] px-8 bg-secondary text-on-secondary rounded font-label-lg text-label-lg hover:bg-opacity-90 transition-colors focus:ring-2 focus:ring-primary focus:outline-none inline-flex items-center gap-2">
+<span class="material-symbols-outlined">play_arrow</span>
+                            Start Daily Session
+                        </button>
+</div>
+</div>
+<div class="relative h-64 md:h-auto min-h-[300px]">
+<div class="absolute inset-0 bg-cover bg-center w-full h-full" data-alt="A bright, modern, high-contrast medical illustration showing a stylized human eye interacting with bold, geometric tracking patterns on a digital screen. The color palette utilizes crisp whites, deep teal (#004148), and vibrant orange (#a83900) accents to emphasize focus and clarity. The scene is brightly lit, ensuring a clean, accessible aesthetic suitable for vision therapy." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAXw5cqMyNzdGHyq0Yto3nmQW92gkCvRMFsk7Y91E2A8jLDan9vp8hNNYWEwEXRFgRq4QZB3IrwR7hS_UZUlka_nkIi0H9y6HkeObaN8xrc2scLJDAn0Nqk9QYL65wn-K64YeWJUPzzLnMiBcJGtEsayXJATDFRth5280H7i8MwnSZFzlbn6kpNq07QZ3aX6zc8O39CovxoxaTSd0Ke9eCn5tpXSXOeuF_GX1a5VrgsaPtBUVb7XyK9Tg')"></div>
+</div>
+</div>
+</section>
+<!-- Educational Section -->
+<section class="mb-16">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-8 md:font-headline-lg-mobile md:text-headline-lg-mobile lg:font-headline-lg lg:text-headline-lg border-b border-outline-variant pb-4">
+                Understanding Visual Rehabilitation
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed mb-4">
+<span class="material-symbols-outlined fill-icon text-2xl">visibility</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Neuroplasticity</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        The brain's ability to reorganize itself by forming new neural connections. Consistent vision training helps rebuild visual processing pathways.
+                    </p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed mb-4">
+<span class="material-symbols-outlined fill-icon text-2xl">target</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Oculomotor Control</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        Exercises focus on improving eye movements, such as smooth pursuits (following a moving target) and saccades (rapid shifts in focus).
+                    </p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed mb-4">
+<span class="material-symbols-outlined fill-icon text-2xl">contrast</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Contrast Sensitivity</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        Enhancing the ability to distinguish between an object and its background, crucial for daily tasks in varying lighting conditions.
+                    </p>
+</div>
+</div>
+</section>
+<!-- Exercises Bento Grid -->
+<section class="mb-16">
+<div class="flex justify-between items-end mb-8 border-b border-outline-variant pb-4">
+<h2 class="font-headline-lg text-headline-lg text-primary md:font-headline-lg-mobile md:text-headline-lg-mobile lg:font-headline-lg lg:text-headline-lg">
+                    Exercise Library
+                </h2>
+<button class="min-h-[48px] px-4 text-primary font-label-lg text-label-lg hover:bg-surface-container-high rounded transition-colors focus:ring-2 focus:ring-primary focus:outline-none flex items-center gap-2">
+                    View All <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter auto-rows-[200px]">
+<!-- Large Featured Exercise -->
+<a class="group col-span-1 md:col-span-2 row-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 hover:shadow-md transition-shadow relative overflow-hidden flex flex-col" href="#">
+<div class="absolute top-0 right-0 p-4">
+<span class="bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full font-label-lg text-[12px]">Recommended</span>
+</div>
+<div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary mb-auto">
+<span class="material-symbols-outlined fill-icon text-3xl">motion_sensor_active</span>
+</div>
+<div class="mt-4">
+<h3 class="font-headline-lg text-headline-lg text-on-surface mb-2 group-hover:text-primary transition-colors">Smooth Pursuits Tracking</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant line-clamp-2">Follow high-contrast moving targets across the screen to improve sustained visual attention and eye coordination.</p>
+<div class="mt-4 flex items-center gap-4 font-label-lg text-label-lg text-outline">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">schedule</span> 5 mins</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">signal_cellular_alt</span> Beginner</span>
+</div>
+</div>
+</a>
+<!-- Standard Exercises -->
+<a class="group col-span-1 md:col-span-2 row-span-1 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 hover:shadow-md transition-shadow flex items-center gap-6" href="#">
+<div class="w-14 h-14 rounded-full bg-surface-variant flex items-center justify-center text-on-surface flex-shrink-0">
+<span class="material-symbols-outlined text-2xl">grid_4x4</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-primary transition-colors">Saccadic Fixation Grid</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Rapidly shift focus between static points.</p>
+</div>
+</a>
+<a class="group col-span-1 md:col-span-2 row-span-1 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 hover:shadow-md transition-shadow flex items-center gap-6" href="#">
+<div class="w-14 h-14 rounded-full bg-surface-variant flex items-center justify-center text-on-surface flex-shrink-0">
+<span class="material-symbols-outlined text-2xl">zoom_in_map</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-primary transition-colors">Peripheral Awareness</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Expand visual field detection.</p>
+</div>
+</a>
+</div>
+</section>
+<!-- Setup & Safety Instructions -->
+<section class="bg-[#f0f9fa] border-l-4 border-primary rounded-r-xl p-6 md:p-8 flex flex-col md:flex-row gap-8 items-start">
+<div class="w-16 h-16 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary flex-shrink-0 shadow-sm border border-outline-variant">
+<span class="material-symbols-outlined fill-icon text-3xl">desktop_windows</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Environment Setup Guidelines</h3>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-1">lightbulb</span>
+<div>
+<strong class="font-instructional text-instructional text-on-surface block">Optimal Lighting</strong>
+<span class="font-body-md text-body-md text-on-surface-variant">Ensure the room is evenly lit. Avoid direct glare on the screen from windows or overhead lights.</span>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-1">straighten</span>
+<div>
+<strong class="font-instructional text-instructional text-on-surface block">Screen Distance</strong>
+<span class="font-body-md text-body-md text-on-surface-variant">Position yourself approximately 20-24 inches (50-60 cm) from the monitor. Use the calibration tool before starting.</span>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-1">accessibility_new</span>
+<div>
+<strong class="font-instructional text-instructional text-on-surface block">Posture &amp; Comfort</strong>
+<span class="font-body-md text-body-md text-on-surface-variant">Sit comfortably with your head level. If you experience dizziness or fatigue, stop the exercise and rest.</span>
+</div>
+</li>
+</ul>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-highest dark:bg-surface-container-lowest text-on-surface dark:text-on-surface-variant font-body-md text-body-md w-full mt-auto border-t border-outline-variant">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter px-margin-desktop py-12 max-w-container-max mx-auto">
+<div class="flex flex-col gap-4">
+<div class="font-headline-md text-headline-md text-primary">
+                    RehabTrainerHub
+                </div>
+<p class="text-on-surface-variant">
+                    © 2024 RehabTrainerHub. All rights reserved. Medical guidance should be sought before starting any new exercise program.
+                </p>
+</div>
+<div class="flex flex-col md:items-end gap-4">
+<nav class="flex flex-wrap gap-x-6 gap-y-2">
+<a class="text-on-surface-variant hover:underline hover:text-primary transition-all duration-200 min-h-[48px] flex items-center" href="#">Accessibility Statement</a>
+<a class="text-on-surface-variant hover:underline hover:text-primary transition-all duration-200 min-h-[48px] flex items-center" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:underline hover:text-primary transition-all duration-200 min-h-[48px] flex items-center" href="#">Contact Support</a>
+<a class="text-on-surface-variant hover:underline hover:text-primary transition-all duration-200 min-h-[48px] flex items-center" href="#">Terms of Service</a>
+</nav>
+</div>
+</div>
+</footer>
+</body></html>

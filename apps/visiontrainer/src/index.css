@@ -1902,31 +1902,6 @@ body #webgazer-calibrate-container #calibration-point {
   box-shadow: 0 4px 8px rgba(0, 94, 184, 0.08);
 }
 
-.global-portal-links {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg);
-}
-
-.global-portal-link {
-  padding: 6px 8px;
-  border-radius: var(--radius-s);
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.global-portal-link:hover,
-.global-portal-link.active {
-  color: var(--text-primary);
-  background: var(--bg-panel);
-}
-
 .rehab-footer {
   width: 100%;
   margin-top: auto;

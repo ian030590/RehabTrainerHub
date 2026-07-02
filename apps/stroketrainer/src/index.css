@@ -4781,31 +4781,6 @@ body #webgazer-calibrate-container #calibration-point {
   }
 }
 
-.global-portal-links {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg);
-}
-
-.global-portal-link {
-  padding: 6px 8px;
-  border-radius: var(--radius-s);
-  color: var(--text-secondary);
-  font-size: calc(12px * var(--ui-font-scale));
-  font-weight: var(--ui-font-medium-weight);
-  text-decoration: none;
-}
-
-.global-portal-link:hover,
-.global-portal-link.active {
-  color: var(--text-primary);
-  background: var(--bg-panel);
-}
-
 .rehab-footer {
   width: 100%;
   margin-top: auto;

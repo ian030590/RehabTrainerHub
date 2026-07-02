@@ -7,7 +7,6 @@
     ".": "./src/index.ts",
     "./components/RehabFooter": "./src/components/RehabFooter.tsx",
     "./components/UserSelector": "./src/components/UserSelector.tsx",
-    "./components/GlobalPortalLinks": "./src/components/GlobalPortalLinks.tsx",
     "./downloadFile": "./src/downloadFile.ts",
     "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
     "./storage/userStore": "./src/storage/userStore.ts"

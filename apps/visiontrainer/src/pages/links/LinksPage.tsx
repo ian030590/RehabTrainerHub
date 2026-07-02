@@ -1,13 +1,34 @@
-import { useT } from '../../i18n';
+import type { ReactNode } from 'react';
+import { useT, type TranslationKey } from '../../i18n';
+import { siteUrls } from '../../utils/siteUrls';
+
+interface LinkItem {
+  titleKey: TranslationKey;
+  descKey: TranslationKey;
+  url: string;
+  icon: ReactNode;
+}
 
 export function LinksPage() {
   const { t } = useT();
 
-  const links = [
+  const links: LinkItem[] = [
+    {
+      titleKey: 'links.hub.title',
+      descKey: 'links.hub.desc',
+      url: siteUrls.hub,
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 10.5 12 3l9 7.5" />
+          <path d="M5 10v10h14V10" />
+          <path d="M9 20v-6h6v6" />
+        </svg>
+      ),
+    },
     {
       titleKey: 'links.strokeTrainer.title',
       descKey: 'links.strokeTrainer.desc',
-      url: 'https://stroketrainer.pages.dev',
+      url: siteUrls.stroke,
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 19l7-7 3 3-7 7-3-3z" />
@@ -37,9 +58,9 @@ export function LinksPage() {
             <div className="card-icon">
               {link.icon}
             </div>
-            <div className="card-title">{t(link.titleKey as any)}</div>
+            <div className="card-title">{t(link.titleKey)}</div>
             <div className="card-desc">
-              {t(link.descKey as any)}
+              {t(link.descKey)}
             </div>
             <div style={{
               display: 'flex',

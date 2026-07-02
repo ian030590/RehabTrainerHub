@@ -3,6 +3,7 @@ import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
+import { siteUrls } from './utils/siteUrls';
 
 const HomePage = lazy(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })));
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
@@ -55,7 +56,7 @@ function AppLayout() {
     <div className="app-layout">
       <Navbar />
       <Outlet />
-      <RehabFooter appName="VisionTrainer" hubHref="../" />
+      <RehabFooter appName="VisionTrainer" hubHref={siteUrls.hub} />
     </div>
   );
 }

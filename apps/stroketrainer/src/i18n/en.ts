@@ -926,7 +926,9 @@ export const en: Record<TranslationKey, string> = {
 
   // Links Page
   'links.title': 'Related Websites',
-  'links.subtitle': 'Other useful training and related resource websites',
-  'links.strokeTrainer.title': 'Vision Trainer',
-  'links.strokeTrainer.desc': 'Visual training system with various exercises',
+  'links.subtitle': 'Official websites in the RehabTrainerHub ecosystem',
+  'links.hub.title': 'RehabTrainerHub',
+  'links.hub.desc': 'Home rehabilitation portal for StrokeTrainer and VisionTrainer.',
+  'links.visionTrainer.title': 'VisionTrainer',
+  'links.visionTrainer.desc': 'Visual training system with various exercises.',
 };

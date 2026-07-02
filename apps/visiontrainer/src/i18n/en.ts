@@ -412,9 +412,11 @@ export const en: Record<TranslationKey, string> = {
 
   // Links Page
   'links.title': 'Related Websites',
-  'links.subtitle': 'Other useful vision training and related resource websites',
+  'links.subtitle': 'Official websites in the RehabTrainerHub ecosystem',
+  'links.hub.title': 'RehabTrainerHub',
+  'links.hub.desc': 'Home rehabilitation portal for StrokeTrainer and VisionTrainer.',
   'links.strokeTrainer.title': 'StrokeTrainer',
-  'links.strokeTrainer.desc': 'Stroke rehabilitation training platform with various rehab exercise tools',
+  'links.strokeTrainer.desc': 'Stroke rehabilitation training platform with various rehab exercise tools.',
 
   // Hart Chart
   'home.module.hartChart.title': 'Hart Chart Training',

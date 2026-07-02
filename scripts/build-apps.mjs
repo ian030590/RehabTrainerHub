@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appsRoot = join(repoRoot, 'apps');
 const dryRun = process.argv.includes('--dry-run');
+const cloudflarePages = process.argv.includes('--cloudflare-pages');
 
 function toPosixPath(path) {
   return path.replaceAll('\\', '/');
@@ -40,14 +41,15 @@ function runBuild(app) {
   console.log(`\n=== Building ${app.name} (${app.path}) ===`);
 
   if (dryRun) {
-    console.log(`$ npm --prefix ${app.path} run build`);
+    const prefix = cloudflarePages ? 'CF_PAGES=1 ' : '';
+    console.log(`$ ${prefix}npm --prefix ${app.path} run build`);
     return;
   }
 
   const command = getCommand('npm', ['--prefix', app.path, 'run', 'build']);
   const result = spawnSync(command.file, command.args, {
     cwd: repoRoot,
-    env: process.env,
+    env: cloudflarePages ? { ...process.env, CF_PAGES: '1' } : process.env,
     stdio: 'inherit',
   });
 

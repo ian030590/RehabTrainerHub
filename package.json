@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "build": "node scripts/build-apps.mjs",
+    "build:cloudflare": "node scripts/build-apps.mjs --cloudflare-pages",
     "build:hub": "npm --prefix apps/rehabtrainerhub run build",
     "build:stroke": "npm --prefix apps/stroketrainer run build",
     "build:vision": "npm --prefix apps/visiontrainer run build",
@@ -19,6 +20,7 @@
     "dev:hub": "turbo run dev --filter=@rehab-trainer/rehabtrainerhub",
     "dev:stroke": "turbo run dev --filter=@rehab-trainer/stroketrainer",
     "dev:vision": "turbo run dev --filter=@rehab-trainer/visiontrainer",
+    "deploy:cloudflare": "npm run build:cloudflare && node scripts/deploy-cloudflare-pages.mjs",
     "preview:hub": "turbo run preview --filter=@rehab-trainer/rehabtrainerhub",
     "preview:stroke": "turbo run preview --filter=@rehab-trainer/stroketrainer",
     "preview:vision": "turbo run preview --filter=@rehab-trainer/visiontrainer"

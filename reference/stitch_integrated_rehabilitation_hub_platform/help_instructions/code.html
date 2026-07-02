@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Help &amp; Instructions - RehabTrainerHub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#055f17",
+                        "on-secondary-container": "#531800",
+                        "inverse-primary": "#8ed1dd",
+                        "surface-container-high": "#e8e8ea",
+                        "on-secondary-fixed": "#380d00",
+                        "outline-variant": "#bfc8ca",
+                        "surface-container-highest": "#e2e2e5",
+                        "tertiary-fixed": "#a3f69c",
+                        "secondary-fixed-dim": "#ffb59a",
+                        "primary-fixed": "#a9eef9",
+                        "primary": "#004148",
+                        "surface-bright": "#f9f9fc",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#1a1c1e",
+                        "surface-tint": "#1c6872",
+                        "on-secondary-fixed-variant": "#802a00",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#a83900",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#dadadc",
+                        "secondary-container": "#fc6018",
+                        "on-error": "#ffffff",
+                        "on-background": "#1a1c1e",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f3f3f6",
+                        "tertiary": "#00450d",
+                        "on-primary-container": "#8bcfda",
+                        "inverse-on-surface": "#f0f0f3",
+                        "on-primary-fixed-variant": "#004f58",
+                        "surface": "#f9f9fc",
+                        "primary-fixed-dim": "#8ed1dd",
+                        "on-tertiary-fixed-variant": "#005312",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#86d781",
+                        "error-container": "#ffdad6",
+                        "outline": "#6f797a",
+                        "tertiary-fixed-dim": "#88d982",
+                        "primary-container": "#005a64",
+                        "on-tertiary-fixed": "#002204",
+                        "on-primary-fixed": "#001f24",
+                        "background": "#f9f9fc",
+                        "surface-variant": "#e2e2e5",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#3f484a",
+                        "secondary-fixed": "#ffdbcf",
+                        "surface-container": "#eeeef0",
+                        "inverse-surface": "#2f3133"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px",
+                        "touch-target-min": "48px",
+                        "gutter": "24px",
+                        "container-max": "1280px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Public Sans"],
+                        "display-lg": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "label-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Public Sans"],
+                        "body-lg": ["Inter"],
+                        "instructional": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "instructional": ["20px", { "lineHeight": "30px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md pt-[72px]">
+<!-- TopAppBar -->
+<header class="fixed w-full top-0 z-50 bg-surface dark:bg-surface-container-low border-b border-outline-variant dark:border-outline">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-[72px]">
+<a class="text-headline-md font-headline-md text-primary dark:text-primary-fixed focus:outline-none focus:ring-2 focus:ring-primary-container rounded" href="#">
+                RehabTrainerHub
+            </a>
+<nav class="hidden md:flex gap-6 h-full items-center">
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors duration-200 h-full flex items-center px-2 cursor-pointer active:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary-container rounded" href="#">
+                    Stroke Recovery
+                </a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:text-primary transition-colors duration-200 h-full flex items-center px-2 cursor-pointer active:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary-container rounded" href="#">
+                    Vision Training
+                </a>
+<a class="text-secondary dark:text-secondary-fixed font-bold border-b-2 border-secondary h-full flex items-center px-2 cursor-pointer active:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary-container rounded" href="#">
+                    Help/Instructions
+                </a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="hidden md:flex min-h-[48px] items-center justify-center bg-secondary text-on-secondary px-6 rounded-lg font-label-lg text-label-lg hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-container transition-colors">
+                    Sign In
+                </button>
+<div class="md:hidden">
+<span class="material-symbols-outlined text-3xl text-primary" data-icon="menu">menu</span>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12">
+<!-- Page Header -->
+<div class="mb-12">
+<h1 class="font-display-lg text-display-lg text-primary mb-4 md:hidden font-headline-lg-mobile text-headline-lg-mobile">How to Use RehabTrainerHub</h1>
+<h1 class="font-display-lg text-display-lg text-primary mb-4 hidden md:block">How to Use RehabTrainerHub</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl">
+                Welcome to your recovery platform. This guide is designed to help patients and caregivers navigate the site easily and safely.
+            </p>
+</div>
+<!-- Instructional Blocks Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-16">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 relative overflow-hidden group hover:border-primary transition-colors">
+<div class="w-12 h-12 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-2xl filled" data-icon="login">login</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-3">1. Getting Started</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">
+                    Begin by signing into your account. If you are a caregiver logging in for a patient, ensure you select the correct profile. Your dashboard will automatically load today's recommended exercises.
+                </p>
+<div class="bg-primary-fixed border-l-4 border-primary p-4 mt-4">
+<p class="font-instructional text-instructional text-on-primary-fixed-variant">
+                        Tip: Keep your login details secure but easily accessible for daily use.
+                    </p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 relative overflow-hidden group hover:border-primary transition-colors">
+<div class="w-12 h-12 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-2xl filled" data-icon="play_circle">play_circle</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-3">2. Starting an Exercise</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">
+                    Navigate to "Stroke Recovery" or "Vision Training". Click on a card to open an exercise. Each module features a large video demonstration and clear text instructions.
+                </p>
+<div class="bg-primary-fixed border-l-4 border-primary p-4 mt-4">
+<p class="font-instructional text-instructional text-on-primary-fixed-variant">
+                        Safety: Always perform exercises in a clear, well-lit space.
+                    </p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 relative overflow-hidden group hover:border-primary transition-colors">
+<div class="w-12 h-12 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-2xl filled" data-icon="check_circle">check_circle</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-3">3. Tracking Progress</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">
+                    After completing an exercise, click the "Complete" button. Your progress bar will update. Consistent daily practice is key to recovery.
+                </p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 relative overflow-hidden group hover:border-primary transition-colors">
+<div class="w-12 h-12 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-2xl filled" data-icon="support_agent">support_agent</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-3">4. Need Help?</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">
+                    If an exercise feels too difficult, stop immediately. You can contact support or consult your clinical team through the platform.
+                </p>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="mb-16">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-8 md:hidden font-headline-lg-mobile text-headline-lg-mobile">Frequently Asked Questions</h2>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-8 hidden md:block">Frequently Asked Questions</h2>
+<div class="space-y-4">
+<details class="group bg-surface-container-lowest border border-outline-variant rounded-lg [&amp;_summary::-webkit-details-marker]:hidden">
+<summary class="flex cursor-pointer items-center justify-between gap-1.5 p-6 text-on-surface min-h-[48px] focus:outline-none focus:ring-2 focus:ring-primary-container rounded-lg">
+<h3 class="font-headline-md text-headline-md font-medium">Do I need special equipment?</h3>
+<span class="shrink-0 rounded-full bg-surface-container-low p-1.5 text-on-surface-variant group-open:-rotate-180 transition-transform">
+<span class="material-symbols-outlined" data-icon="expand_more">expand_more</span>
+</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant font-body-lg text-body-lg">
+<p>Most exercises are designed to be done with minimal equipment (like a chair or a soft ball). If specific equipment is required, it will be clearly listed at the top of the exercise module.</p>
+</div>
+</details>
+<details class="group bg-surface-container-lowest border border-outline-variant rounded-lg [&amp;_summary::-webkit-details-marker]:hidden">
+<summary class="flex cursor-pointer items-center justify-between gap-1.5 p-6 text-on-surface min-h-[48px] focus:outline-none focus:ring-2 focus:ring-primary-container rounded-lg">
+<h3 class="font-headline-md text-headline-md font-medium">How often should I practice?</h3>
+<span class="shrink-0 rounded-full bg-surface-container-low p-1.5 text-on-surface-variant group-open:-rotate-180 transition-transform">
+<span class="material-symbols-outlined" data-icon="expand_more">expand_more</span>
+</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant font-body-lg text-body-lg">
+<p>Your clinical team usually recommends a specific frequency. As a general guideline, 15-20 minutes of focused practice daily is better than one long session a week. Listen to your body and rest when fatigued.</p>
+</div>
+</details>
+<details class="group bg-surface-container-lowest border border-outline-variant rounded-lg [&amp;_summary::-webkit-details-marker]:hidden">
+<summary class="flex cursor-pointer items-center justify-between gap-1.5 p-6 text-on-surface min-h-[48px] focus:outline-none focus:ring-2 focus:ring-primary-container rounded-lg">
+<h3 class="font-headline-md text-headline-md font-medium">What if I experience pain?</h3>
+<span class="shrink-0 rounded-full bg-surface-container-low p-1.5 text-on-surface-variant group-open:-rotate-180 transition-transform">
+<span class="material-symbols-outlined" data-icon="expand_more">expand_more</span>
+</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant font-body-lg text-body-lg">
+<p><strong>Stop immediately.</strong> Rehabilitation exercises should not cause sharp or severe pain. Mild muscle fatigue is normal, but pain indicates you should stop and consult your medical provider.</p>
+</div>
+</details>
+</div>
+</section>
+<!-- Contact Support Form -->
+<section class="bg-surface-container-low rounded-xl p-8 md:p-12 border border-outline-variant">
+<div class="max-w-2xl mx-auto">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4 text-center md:hidden font-headline-lg-mobile text-headline-lg-mobile">Contact Support</h2>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4 text-center hidden md:block">Contact Support</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant text-center mb-8">
+                    Having trouble with the platform? Send us a message and our support team will assist you.
+                </p>
+<form class="space-y-6">
+<div>
+<label class="block font-label-lg text-label-lg text-on-surface mb-2" for="name">Full Name</label>
+<input class="w-full min-h-[48px] rounded-lg border-outline-variant bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-primary font-body-md text-body-md p-3" id="name" name="name" required="" type="text"/>
+</div>
+<div>
+<label class="block font-label-lg text-label-lg text-on-surface mb-2" for="email">Email Address</label>
+<input class="w-full min-h-[48px] rounded-lg border-outline-variant bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-primary font-body-md text-body-md p-3" id="email" name="email" required="" type="email"/>
+</div>
+<div>
+<label class="block font-label-lg text-label-lg text-on-surface mb-2" for="message">How can we help?</label>
+<textarea class="w-full rounded-lg border-outline-variant bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-primary font-body-md text-body-md p-3 resize-none" id="message" name="message" required="" rows="4"></textarea>
+</div>
+<button class="w-full min-h-[48px] bg-secondary text-on-secondary rounded-lg font-label-lg text-label-lg hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary-container transition-colors flex items-center justify-center gap-2" type="submit">
+<span>Send Message</span>
+<span class="material-symbols-outlined text-[20px]" data-icon="send">send</span>
+</button>
+</form>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-highest dark:bg-surface-container-lowest border-t border-outline-variant w-full mt-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter px-margin-mobile md:px-margin-desktop py-12 max-w-container-max mx-auto">
+<div>
+<p class="font-headline-md text-headline-md text-primary mb-4">RehabTrainerHub</p>
+<p class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant max-w-sm">
+                    © 2024 RehabTrainerHub. All rights reserved. Medical guidance should be sought before starting any new exercise program.
+                </p>
+</div>
+<div class="flex flex-col md:items-end justify-center gap-4 mt-8 md:mt-0">
+<div class="flex flex-col md:flex-row gap-4 md:gap-8 font-body-md text-body-md text-on-surface-variant">
+<a class="hover:text-primary hover:underline transition-all duration-200 min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-primary-container rounded" href="#">Accessibility Statement</a>
+<a class="hover:text-primary hover:underline transition-all duration-200 min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-primary-container rounded" href="#">Privacy Policy</a>
+<a class="hover:text-primary hover:underline transition-all duration-200 min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-primary-container rounded" href="#">Contact Support</a>
+<a class="hover:text-primary hover:underline transition-all duration-200 min-h-[48px] flex items-center focus:outline-none focus:ring-2 focus:ring-primary-container rounded" href="#">Terms of Service</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

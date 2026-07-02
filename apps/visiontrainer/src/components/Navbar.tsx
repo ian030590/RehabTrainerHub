@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { GlobalPortalLinks } from '@rehab-trainer/ui/components/GlobalPortalLinks';
 import { NavLink } from 'react-router-dom';
 import { downloadAllTrainingRecordsCsv } from '../utils/trainingRecords';
 import { useActiveUser } from '../utils/useActiveUser';
@@ -100,7 +99,6 @@ export function Navbar() {
           </div>
 
           <div className="navbar-tools">
-            <GlobalPortalLinks current="vision" strokeHref="../StrokeTrainer/" visionHref="./" />
             <div className="navbar-records">
               <button
                 type="button"

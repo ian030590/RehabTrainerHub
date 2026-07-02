@@ -44,7 +44,10 @@ export default function EducationPage() {
             <small>Education</small>
           </span>
         </Link>
-        <Link className="secondary-action compact" href="/">回首頁</Link>
+        <nav className="header-actions" aria-label="RehabTrainerHub navigation">
+          <Link className="secondary-action compact" href="/">回首頁</Link>
+          <Link className="secondary-action compact" href="/links/">相關網站</Link>
+        </nav>
       </header>
 
       <section className="content-page">

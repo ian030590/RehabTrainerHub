@@ -1,5 +1,3 @@
-export { GlobalPortalLinks } from './components/GlobalPortalLinks';
-export type { GlobalPortalLinksProps } from './components/GlobalPortalLinks';
 export { RehabFooter } from './components/RehabFooter';
 export type { RehabFooterProps } from './components/RehabFooter';
 export { UserSelector } from './components/UserSelector';

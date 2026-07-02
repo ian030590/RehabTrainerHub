@@ -3,6 +3,7 @@ import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
+import { siteUrls } from './utils/siteUrls';
 import {
   DEFAULT_UI_FONT_SIZE_PX,
   SETTINGS_CHANGED_EVENT,
@@ -70,7 +71,7 @@ function AppLayout() {
       <Outlet />
       <RehabFooter
         appName="StrokeTrainer"
-        hubHref="../"
+        hubHref={siteUrls.hub}
         repoHref="https://github.com/ian030590/RehabTrainerHub"
         labels={{ rights: t('app.footer.rights') }}
       />

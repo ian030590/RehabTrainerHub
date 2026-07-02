@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { GlobalPortalLinks } from '@rehab-trainer/ui/components/GlobalPortalLinks';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ACTIVE_USER_CHANGED_EVENT, SETTINGS_CHANGED_EVENT, getActiveUser } from '../utils/settings';
 import { downloadAllTrainingRecordsCsv } from '../utils/trainingRecords';
@@ -158,7 +157,6 @@ export function Navbar() {
           </div>
 
           <div className="navbar-tools">
-            <GlobalPortalLinks current="stroke" strokeHref="./" visionHref="../VisionTrainer/" />
             <div className="navbar-records">
               <button
                 type="button"
@@ -198,7 +196,6 @@ export function Navbar() {
             ))}
           </div>
           <div className="navbar-tools">
-            <GlobalPortalLinks current="stroke" strokeHref="./" visionHref="../VisionTrainer/" />
             <div className="navbar-records">
               <span className="btn btn-primary btn-sm navbar-download-btn">
                 {t('nav.downloadScores')}

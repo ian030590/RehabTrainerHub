@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appsRoot = join(repoRoot, 'apps');
 const wranglerPrefix = ['--yes', 'wrangler@4'];
+const CLOUDFLARE_PAGES_ASSET_LIMIT_BYTES = 25 * 1024 * 1024;
 
 function toPosixPath(path) {
   return path.replaceAll('\\', '/');
@@ -27,6 +28,7 @@ const branch = getArg('--branch') ?? process.env.GITHUB_REF_NAME ?? 'main';
 const productionBranch =
   getArg('--production-branch') ?? process.env.CLOUDFLARE_PAGES_PRODUCTION_BRANCH ?? 'main';
 const dryRun = process.argv.includes('--dry-run');
+const validateOutput = !dryRun || process.argv.includes('--validate-output');
 
 function readTomlString(toml, key) {
   const match = toml.match(new RegExp(`^\\s*${key}\\s*=\\s*["']([^"']+)["']\\s*$`, 'm'));
@@ -207,13 +209,6 @@ function ensureProject(project, existingProjectNames) {
 }
 
 function deployProject(project) {
-  const absoluteOutputPath = join(repoRoot, project.outputPath);
-  if (!dryRun && !existsSync(absoluteOutputPath)) {
-    throw new Error(
-      `${project.outputPath} does not exist. Run npm run build before deploying ${project.projectName}.`,
-    );
-  }
-
   runWrangler([
     'pages',
     'deploy',
@@ -221,6 +216,56 @@ function deployProject(project) {
     `--project-name=${project.projectName}`,
     `--branch=${branch}`,
   ]);
+}
+
+function validateProjectOutput(project) {
+  const absoluteOutputPath = join(repoRoot, project.outputPath);
+  if (!existsSync(absoluteOutputPath)) {
+    throw new Error(
+      `${project.outputPath} does not exist. Run npm run build:cloudflare before deploying ${project.projectName}.`,
+    );
+  }
+
+  const oversizedFiles = findOversizedFiles(absoluteOutputPath);
+  if (oversizedFiles.length > 0) {
+    const details = oversizedFiles
+      .map((file) => `${toPosixPath(relative(repoRoot, file.path))} (${formatMiB(file.size)})`)
+      .join('\n');
+    throw new Error(
+      [
+        `${project.projectName} output contains files larger than Cloudflare Pages' 25 MiB limit:`,
+        details,
+        'Rebuild with npm run build:cloudflare before deploying.',
+      ].join('\n'),
+    );
+  }
+}
+
+function findOversizedFiles(directory) {
+  const entries = readdirSync(directory, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const entryPath = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...findOversizedFiles(entryPath));
+      continue;
+    }
+    if (!entry.isFile()) {
+      continue;
+    }
+
+    const entryStat = statSync(entryPath);
+    if (entryStat.size > CLOUDFLARE_PAGES_ASSET_LIMIT_BYTES) {
+      files.push({ path: entryPath, size: entryStat.size });
+    }
+  }
+
+  return files;
+}
+
+function formatMiB(bytes) {
+  return `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
 }
 
 const projects = discoverPagesProjects();
@@ -232,6 +277,12 @@ if (projects.length === 0) {
 console.log(`Discovered ${projects.length} Cloudflare Pages project(s):`);
 for (const project of projects) {
   console.log(`- ${project.projectName}: ${project.outputPath}`);
+}
+
+if (validateOutput) {
+  for (const project of projects) {
+    validateProjectOutput(project);
+  }
 }
 
 const existingProjectNames = listExistingProjectNames();

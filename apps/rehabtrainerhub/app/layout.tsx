@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
 import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
+import { siteUrls } from './siteUrls';
 import './globals.css';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://rehabtrainerhub.pages.dev';
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(siteUrls.hub),
   title: {
     default: 'RehabTrainerHub',
     template: '%s | RehabTrainerHub',
@@ -32,6 +31,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {children}
         <RehabFooter
           appName="RehabTrainerHub"
+          hubHref={siteUrls.hub}
           labels={{
             disclaimer: '本平台作為居家復健練習與流程原型使用，不能取代醫療診斷或治療建議。',
             hub: '首頁',

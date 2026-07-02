@@ -1,8 +1,7 @@
 import type { MetadataRoute } from 'next';
+import { siteUrls } from './siteUrls';
 
 export const dynamic = 'force-static';
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://rehabtrainerhub.pages.dev';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -10,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
     },
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: `${siteUrls.hub}/sitemap.xml`,
   };
 }
