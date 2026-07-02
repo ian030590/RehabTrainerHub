@@ -152,8 +152,14 @@ main {
   align-items: center;
   min-height: 520px;
   padding: 72px 0 80px;
-  box-shadow: 0 0 0 100vmax var(--surface-lowest);
-  clip-path: inset(0 -100vmax);
+  background: var(--surface-lowest);
+}
+
+.home-page > .hero {
+  width: 100%;
+  max-width: none;
+  padding-right: max(var(--page-margin), calc((100% - var(--container-max)) / 2));
+  padding-left: max(var(--page-margin), calc((100% - var(--container-max)) / 2));
 }
 
 .hero-copy {
@@ -669,6 +675,11 @@ h3 {
   .hero {
     padding-top: 48px;
     min-height: auto;
+  }
+
+  .home-page > .hero {
+    padding-right: var(--page-margin-mobile);
+    padding-left: var(--page-margin-mobile);
   }
 
   .hero-copy {
