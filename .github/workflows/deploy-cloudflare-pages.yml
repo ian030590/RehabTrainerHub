@@ -40,21 +40,21 @@ jobs:
           VITE_VOSK_MODEL_MIN_BYTES: ${{ vars.VITE_VOSK_MODEL_MIN_BYTES }}
 
       - name: Deploy RehabTrainerHub
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy apps/rehabtrainerhub/out --project-name=rehabtrainerhub --branch=${{ github.ref_name }}
 
       - name: Deploy StrokeTrainer
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy apps/stroketrainer/dist --project-name=stroketrainer --branch=${{ github.ref_name }}
 
       - name: Deploy VisionTrainer
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
