@@ -91,17 +91,28 @@ function runWrangler(args, options = {}) {
     return '';
   }
 
+  const shouldCapture = options.capture || options.allowProjectAlreadyExists;
   const command = getCommand('npx', commandArgs);
   const result = spawnSync(command.file, command.args, {
     cwd: repoRoot,
-    encoding: options.capture ? 'utf8' : undefined,
+    encoding: shouldCapture ? 'utf8' : undefined,
     env: process.env,
-    stdio: options.capture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
+    stdio: shouldCapture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
   });
+
+  if (shouldCapture && !options.capture) {
+    process.stdout.write(result.stdout ?? '');
+    process.stderr.write(result.stderr ?? '');
+  }
 
   if (result.status !== 0) {
     if (result.error) {
       throw result.error;
+    }
+
+    const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+    if (options.allowProjectAlreadyExists && isProjectAlreadyExistsOutput(output)) {
+      return result.stdout ?? '';
     }
 
     if (options.capture) {
@@ -113,6 +124,10 @@ function runWrangler(args, options = {}) {
   }
 
   return result.stdout ?? '';
+}
+
+function isProjectAlreadyExistsOutput(output) {
+  return output.includes('8000002') || /project with this name already exists/i.test(output);
 }
 
 function getCommand(file, args) {
@@ -187,7 +202,7 @@ function ensureProject(project, existingProjectNames) {
     args.push(`--compatibility-date=${project.compatibilityDate}`);
   }
 
-  runWrangler(args);
+  runWrangler(args, { allowProjectAlreadyExists: true });
   existingProjectNames.add(project.projectName);
 }
 
