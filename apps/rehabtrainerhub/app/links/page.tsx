@@ -30,6 +30,14 @@ const relatedSites = [
   },
 ];
 
+function CheckIcon() {
+  return (
+    <svg className="check-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function LinksPage() {
   return (
     <main>
@@ -79,7 +87,12 @@ export default function LinksPage() {
               <h2>{site.title}</h2>
               <span>{site.description}</span>
               <ul className="related-points">
-                {site.items.map((item) => <li key={item}>{item}</li>)}
+                {site.items.map((item) => (
+                  <li key={item}>
+                    <CheckIcon />
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
               <span className="related-action">{site.action}</span>
               <strong>{site.href.replace('https://', '')}</strong>

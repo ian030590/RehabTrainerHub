@@ -10,7 +10,7 @@ type Locale = 'zh-TW' | 'en';
 type FontScale = 'standard' | 'large' | 'extra';
 type Theme = 'light' | 'dark';
 type SectionId = 'programs' | 'care' | 'education';
-type IconName = 'brain' | 'eye' | 'arrow' | 'check' | 'menu' | 'close';
+type IconName = 'brain' | 'eye' | 'arrow' | 'check' | 'menu' | 'close' | 'panel';
 
 const storageKeys = {
   locale: 'rehabtrainerhub.locale',
@@ -276,6 +276,15 @@ function Icon({ name, className }: { name: IconName; className?: string }) {
       <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
         <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         <circle cx="12" cy="12" r="2.75" stroke="currentColor" strokeWidth="1.8" />
+      </svg>
+    );
+  }
+
+  if (name === 'panel') {
+    return (
+      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M7 9h10M7 13h4m3 0h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
     );
   }
@@ -624,9 +633,8 @@ export function ReadableHome() {
           <div className="hero-panel" aria-label={copy.hero.visualLabel}>
             <div className="hero-device">
               <div className="device-topbar" aria-hidden="true">
-                <span />
-                <span />
-                <span />
+                <Icon className="icon-sm" name="panel" />
+                <span>RehabTrainerHub</span>
               </div>
               <div className="device-content">
                 {copy.apps.map((app) => {
@@ -641,7 +649,10 @@ export function ReadableHome() {
               </div>
               <div className="hero-checklist">
                 {copy.hero.checklist.map((item) => (
-                  <span key={item}>{item}</span>
+                  <span key={item}>
+                    <Icon className="check-icon" name="check" />
+                    {item}
+                  </span>
                 ))}
               </div>
             </div>
