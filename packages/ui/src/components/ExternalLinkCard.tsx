@@ -23,11 +23,18 @@ export function ExternalLinkCard({
       target="_blank"
       rel="noopener noreferrer"
       className="card card-link fade-in-up external-link-card"
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
     >
-      <div className="card-icon">{icon}</div>
-      <div className="card-title">{title}</div>
-      <div className="card-desc">{description}</div>
-      <div className="card-action">
+      <div className="card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {icon}
+      </div>
+      <div className="card-title" style={{ width: '100%', textAlign: 'left' }}>
+        {title}
+      </div>
+      <div className="card-desc" style={{ width: '100%', textAlign: 'left', flex: 1 }}>
+        {description}
+      </div>
+      <div className="card-action" style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
         {actionIcon}
         <span>{actionLabel}</span>
       </div>
