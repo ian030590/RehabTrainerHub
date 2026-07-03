@@ -82,6 +82,27 @@ export function hasAuthToken(): boolean {
   return Boolean(getAuthToken());
 }
 
+export function getAuthUserNameFromToken(): string | null {
+  const token = getAuthToken();
+  if (!token) return null;
+
+  const [encodedPayload] = token.split('.');
+  if (!encodedPayload) return null;
+
+  try {
+    const normalized = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const payload = JSON.parse(atob(padded)) as { name?: unknown; email?: unknown };
+    return typeof payload.name === 'string' && payload.name.trim()
+      ? payload.name
+      : typeof payload.email === 'string' && payload.email.trim()
+        ? payload.email
+        : null;
+  } catch {
+    return null;
+  }
+}
+
 export function normalizeAuthApiBase(apiBase: string | undefined): string {
   const trimmed = apiBase?.trim() ?? '';
   return trimmed.replace(/\/+$/, '');

@@ -442,10 +442,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   object-fit: contain;
 }
 
-.navbar-user-warning {
-  color: var(--warning);
-}
-
 .font-setting-control {
   min-width: min(420px, 100%);
   display: flex;
@@ -482,11 +478,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   font-weight: var(--ui-font-medium-weight);
 }
 
-.app-layout .navbar-user {
-  font-size: calc(14px * var(--ui-font-scale));
-  font-weight: var(--ui-font-medium-weight);
-}
-
 .app-layout .navbar-backup-reminder {
   font-size: calc(12px * var(--ui-font-scale));
 }
@@ -520,11 +511,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 .app-layout .training-number-input,
 .app-layout .voice-vocabulary-tools input {
   font-size: calc(14px * var(--ui-font-scale));
-  font-weight: var(--ui-font-medium-weight);
-}
-
-.app-layout .user-selector select {
-  font-size: calc(16px * var(--ui-font-scale));
   font-weight: var(--ui-font-medium-weight);
 }
 
@@ -676,22 +662,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   color: var(--accent-dark);
   background: var(--bg-accent-soft);
   font-weight: 600;
-}
-
-.navbar-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-.navbar-user-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--success);
 }
 
 .trainer-auth-panel {
@@ -1120,57 +1090,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   color: var(--text-secondary);
   margin-bottom: 28px;
   text-align: center;
-}
-
-/* ── User Selector ── */
-.user-selector {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 24px;
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-l);
-  margin-bottom: 32px;
-  width: 100%;
-}
-
-.user-selector-group {
-  width: 100%;
-}
-
-.user-selector-add {
-  margin-top: -16px;
-}
-
-.user-selector-icon {
-  flex: 0 0 auto;
-  stroke: var(--accent);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.user-selector select {
-  flex: 1;
-  background: var(--bg);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-m);
-  padding: 8px 12px;
-  font-family: var(--font-family);
-  font-size: 16px;
-  color: var(--text-primary);
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238B949E' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 32px;
-}
-
-.user-selector select:focus {
-  border-color: var(--accent);
 }
 
 /* ── Responsive Card Grids ── */

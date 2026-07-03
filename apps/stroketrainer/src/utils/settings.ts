@@ -4,6 +4,7 @@
  */
 
 // ── Global Constants ──
+import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { createUserStore } from '@rehab-trainer/ui/storage/userStore';
 
 export const CARD_WIDTH_MM = 85.6;
@@ -182,7 +183,7 @@ export const userStore = createUserStore({
 });
 
 export const addUser = userStore.addUser;
-export const getActiveUser = userStore.getActiveUser;
+export const getActiveUser = () => getAuthUserNameFromToken() || userStore.getActiveUser();
 export const getUsers = userStore.getUsers;
 export const removeUser = userStore.removeUser;
 export const setActiveUser = userStore.setActiveUser;

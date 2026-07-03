@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
 import { NavLink } from 'react-router-dom';
 import { downloadAllTrainingRecordsCsv } from '../utils/trainingRecords';
-import { useActiveUser } from '../utils/useActiveUser';
 import { useT } from '../i18n';
 import { siteUrls } from '../utils/siteUrls';
 
@@ -11,7 +10,6 @@ const logoStyle = { width: 'auto', objectFit: 'contain' } as const;
 
 export function Navbar() {
   const { lang, t } = useT();
-  const user = useActiveUser();
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloadingScores, setIsDownloadingScores] = useState(false);
 
@@ -121,16 +119,6 @@ export function Navbar() {
               <span className="navbar-backup-reminder">{t('nav.scoresBackupReminder')}</span>
             </div>
 
-            <div className="navbar-user">
-              {user ? (
-                <>
-                  <span className="navbar-user-dot" />
-                  <span>{user}</span>
-                </>
-              ) : (
-                <span style={{ color: 'var(--warning)' }}>{t('nav.noUser')}</span>
-              )}
-            </div>
           </div>
         </div>
       </div>

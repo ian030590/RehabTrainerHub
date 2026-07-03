@@ -72,6 +72,7 @@ GitHub Actions runs `scripts/sync-cloudflare-auth-env.mjs` during deployment:
 - The Hub project additionally receives:
   `AUTH_BASE_URL`, `AUTH_ALLOWED_ORIGINS`, `AUTH_SESSION_SECRET`, `AUTH_STATE_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`.
 - New Pages apps are discovered from `apps/*/wrangler.toml`, so they are included without editing the workflow.
+- GitHub Actions is the source of truth. The sync uses `wrangler pages secret bulk`, so Cloudflare Pages values are overwritten with the current GitHub Actions secrets and variables on each deployment.
 
 For local or manual sync:
 

@@ -7,7 +7,6 @@ import {
   type ReferenceGameId,
   isReferenceGameId,
 } from './ReferenceCognitiveGame';
-import { TrainingUserSelector } from './TrainingUserSelector';
 import { useGameModuleGuard } from './useGameModuleGuard';
 
 type CognitiveModuleId = 'minesweeper' | ReferenceGameId;
@@ -18,10 +17,8 @@ export function CognitiveTraining() {
   const requestedGameId = searchParams.get('game');
   const requestedModule = getRequestedModule(requestedGameId);
   const { activeModule, openModule, closeModule } = useGameModuleGuard<CognitiveModuleId>({
-    requestedGameId,
     requestedModule,
     basePath: '/cognitive-training',
-    t,
   });
 
   if (activeModule === 'minesweeper') {
@@ -34,7 +31,6 @@ export function CognitiveTraining() {
 
   return (
     <div className="page-content">
-      <TrainingUserSelector />
       <h1 className="section-title fade-in-up">{t('home.module.cognitive.title')}</h1>
       <p className="section-subtitle fade-in-up">{t('training.cognitive.subtitle')}</p>
       <div className="training-grid">

@@ -2,7 +2,6 @@ import { useSearchParams } from 'react-router-dom';
 import { useT } from '../../i18n';
 import { DrawingTowerDefenseGame } from './DrawingTowerDefenseGame';
 import { GestureBattlerGame } from './GestureBattlerGame';
-import { TrainingUserSelector } from './TrainingUserSelector';
 import { useGameModuleGuard } from './useGameModuleGuard';
 
 type MotorModuleId = 'drawing-defense' | 'gesture-battler';
@@ -16,10 +15,8 @@ export function MotorTraining() {
       ? requestedGameId
       : null;
   const { activeModule, openModule, closeModule } = useGameModuleGuard<MotorModuleId>({
-    requestedGameId,
     requestedModule,
     basePath: '/motor-training',
-    t,
   });
 
   if (activeModule === 'drawing-defense') {
@@ -32,8 +29,6 @@ export function MotorTraining() {
 
   return (
     <div className="page-content">
-      <TrainingUserSelector />
-
       <h1 className="section-title fade-in-up">{t('home.module.motor.title')}</h1>
       <p className="section-subtitle fade-in-up">{t('training.motor.subtitle')}</p>
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
 import { NavLink, useLocation } from 'react-router-dom';
-import { ACTIVE_USER_CHANGED_EVENT, SETTINGS_CHANGED_EVENT, getActiveUser } from '../utils/settings';
+import { SETTINGS_CHANGED_EVENT } from '../utils/settings';
 import { downloadAllTrainingRecordsCsv } from '../utils/trainingRecords';
 import { useT } from '../i18n';
 import { siteUrls } from '../utils/siteUrls';
@@ -18,7 +18,6 @@ export function Navbar() {
   const navbarRef = useRef<HTMLElement | null>(null);
   const navbarInnerRef = useRef<HTMLDivElement | null>(null);
   const navbarMeasureRef = useRef<HTMLDivElement | null>(null);
-  const [activeUserName, setActiveUserName] = useState(getActiveUser);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDownloadingScores, setIsDownloadingScores] = useState(false);
   const [useSidebarLayout, setUseSidebarLayout] = useState(false);
@@ -41,16 +40,6 @@ export function Navbar() {
     { to: '/credits', className: navLinkClass, label: t('nav.credits') },
     { to: '/links', className: navLinkClass, label: t('nav.links') },
   ];
-
-  useEffect(() => {
-    const syncUser = () => setActiveUserName(getActiveUser());
-    window.addEventListener('storage', syncUser);
-    window.addEventListener(ACTIVE_USER_CHANGED_EVENT, syncUser);
-    return () => {
-      window.removeEventListener('storage', syncUser);
-      window.removeEventListener(ACTIVE_USER_CHANGED_EVENT, syncUser);
-    };
-  }, []);
 
   const recalculateSidebarLayout = useCallback(() => {
     const inner = navbarInnerRef.current;
@@ -92,12 +81,12 @@ export function Navbar() {
       window.removeEventListener('resize', scheduleMeasure);
       window.removeEventListener(SETTINGS_CHANGED_EVENT, scheduleMeasure);
     };
-  }, [activeUserName, recalculateSidebarLayout, t]);
+  }, [recalculateSidebarLayout, t]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(recalculateSidebarLayout, 0);
     return () => window.clearTimeout(timeoutId);
-  }, [activeUserName, recalculateSidebarLayout, t]);
+  }, [recalculateSidebarLayout, t]);
 
   useEffect(() => {
     if (!useSidebarLayout) setIsMenuOpen(false);
@@ -178,16 +167,6 @@ export function Navbar() {
               <span className="navbar-backup-reminder">{t('nav.scoresBackupReminder')}</span>
             </div>
 
-            <div className="navbar-user">
-              {activeUserName ? (
-                <>
-                  <span className="navbar-user-dot" />
-                  <span>{activeUserName}</span>
-                </>
-              ) : (
-                <span className="navbar-user-warning">{t('nav.noUser')}</span>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -213,10 +192,6 @@ export function Navbar() {
                 {t('nav.downloadScores')}
               </span>
               <span className="navbar-backup-reminder">{t('nav.scoresBackupReminder')}</span>
-            </div>
-            <div className="navbar-user">
-              <span className="navbar-user-dot" />
-              <span>{activeUserName || t('nav.noUser')}</span>
             </div>
           </div>
         </div>

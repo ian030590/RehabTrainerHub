@@ -3,10 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ConfigDialog } from '../../components/ConfigDialog';
 import { NumberPresetSelector } from '../../components/NumberPresetSelector';
 import { SelectionCard } from '../../components/SelectionCard';
-import { UserSelector } from '../../components/UserSelector';
 import { useT } from '../../i18n';
 import { isAssessmentCalibrationAtDefaults } from '../../utils/settings';
-import { useActiveUser } from '../../utils/useActiveUser';
 import { useAppSetting } from '../../utils/useAppSetting';
 import { ASSESSMENTS } from './assessmentDefinitions';
 import type { TestType } from './logic/optotypeRenderer';
@@ -14,7 +12,6 @@ import type { TestType } from './logic/optotypeRenderer';
 export function AssessmentPage() {
   const { t } = useT();
   const navigate = useNavigate();
-  const activeUser = useActiveUser();
   const [distanceCM] = useAppSetting('distanceInCM');
 
   const [expandedTest, setExpandedTest] = useState<TestType | null>(null);
@@ -24,10 +21,6 @@ export function AssessmentPage() {
   const [plInputMode, setPlInputMode] = useAppSetting('preferentialLookingInputMode');
 
   const handleCardClick = (testId: TestType) => {
-    if (!activeUser) {
-      alert(t('home.pleaseSelectUser'));
-      return;
-    }
     if (expandedTest === testId) {
       setExpandedTest(null);
     } else {
@@ -55,7 +48,7 @@ export function AssessmentPage() {
   };
 
   const handleStartTest = () => {
-    if (!expandedTest || !activeUser) return;
+    if (!expandedTest) return;
     if (isAssessmentCalibrationAtDefaults()) {
       setShowCalibrationWarning(true);
       return;
@@ -95,8 +88,6 @@ export function AssessmentPage() {
 
   return (
     <div className="page-content">
-      <UserSelector />
-
       {/* Disclaimer */}
       <div className="assessment-disclaimer fade-in">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

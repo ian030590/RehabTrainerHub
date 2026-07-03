@@ -6,10 +6,8 @@ import {
   DRIVING_DURATION_MIN_SEC,
   DRIVING_DURATION_MAX_SEC,
 } from '../utils/settings';
-import { UserSelector } from '../components/UserSelector';
 import { pixiAppManager } from '../utils/pixiPool';
 import { SoundManager } from '../utils/soundManager';
-import { useActiveUser } from '../utils/useActiveUser';
 import { useAppSetting } from '../utils/useAppSetting';
 import { ConfigDialog } from '../components/ConfigDialog';
 import { NumberPresetSelector } from '../components/NumberPresetSelector';
@@ -42,7 +40,6 @@ function preloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknown> {
 export function HomePage() {
   const { t } = useT();
   const navigate = useNavigate();
-  const activeUser = useActiveUser();
 
   // ── Module expansion state ──
   const [expandedModule, setExpandedModule] = useState<TrainingModuleId | null>(null);
@@ -104,15 +101,11 @@ export function HomePage() {
   // ── Handlers ──
   const handleCardClick = (moduleId: TrainingModuleId) => {
     if (isStartingTraining) return;
-    if (!activeUser) {
-      alert(t('home.pleaseSelectUser'));
-      return;
-    }
     setExpandedModule(expandedModule === moduleId ? null : moduleId);
   };
 
   const handleStartTraining = async () => {
-    if (!expandedModule || !activeUser || isStartingTraining) return;
+    if (!expandedModule || isStartingTraining) return;
     const moduleToStart = expandedModule;
     setIsStartingTraining(true);
 
@@ -289,9 +282,6 @@ export function HomePage() {
 
   return (
     <div className="page-content">
-      {/* ── User Selector ── */}
-      <UserSelector />
-
       {/* ── Calibration Notice ── */}
       {!calibrated && (
         <div style={{

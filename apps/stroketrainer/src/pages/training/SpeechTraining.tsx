@@ -1,7 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { useT } from '../../i18n';
 import { MainConceptTraining } from './MainConceptTraining';
-import { TrainingUserSelector } from './TrainingUserSelector';
 import { TongueCatchGame } from './TongueCatchGame';
 import { useGameModuleGuard } from './useGameModuleGuard';
 import { VoiceDefenderGame } from './VoiceDefenderGame';
@@ -16,10 +15,8 @@ export function SpeechTraining() {
     ? requestedGameId
     : null;
   const { activeModule, openModule, closeModule } = useGameModuleGuard<SpeechModuleId>({
-    requestedGameId,
     requestedModule,
     basePath: '/speech-training',
-    t,
   });
 
   if (activeModule === 'voice-defender') {
@@ -36,7 +33,6 @@ export function SpeechTraining() {
 
   return (
     <div className="page-content">
-      <TrainingUserSelector />
       <h1 className="section-title fade-in-up">{t('home.module.speech.title')}</h1>
       <p className="section-subtitle fade-in-up">{t('training.speech.subtitle')}</p>
       <div className="training-grid">

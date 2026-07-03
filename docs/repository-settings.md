@@ -62,8 +62,11 @@ Required for `.github/workflows/deploy-cloudflare-pages.yml`:
 The deploy workflow syncs auth environment secrets to Cloudflare Pages before
 deploying. Every Pages project discovered from `apps/*/wrangler.toml` receives
 the shared client auth base URL. The `rehabtrainerhub` project also receives
-the Google OAuth and session signing secrets. This keeps future Pages apps on
-the same login system without adding per-site Cloudflare settings by hand.
+the Google OAuth and session signing secrets. GitHub Actions is the source of
+truth for these values; each deploy overwrites the corresponding Cloudflare
+Pages secrets and variables through `wrangler pages secret bulk`. This keeps
+future Pages apps on the same login system without adding per-site Cloudflare
+settings by hand.
 
 ## Environment Variables
 
