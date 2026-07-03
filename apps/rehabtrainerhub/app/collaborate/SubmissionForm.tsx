@@ -39,7 +39,7 @@ export function SubmissionForm() {
       setFileName('');
       setSubmissionType('idea');
       setStatus('success');
-      setMessage('已送出。HTML 投稿已通過安全檢查後才轉送。');
+      setMessage('投稿已送出。HTML 投稿會在通過安全檢查後才轉送。');
     } catch (error) {
       setStatus('error');
       setMessage(error instanceof Error ? error.message : '投稿失敗，請稍後再試。');
@@ -73,12 +73,12 @@ export function SubmissionForm() {
 
       <div className="form-grid">
         <label className="field">
-          <span>標題</span>
+          <span>投稿標題</span>
           <input maxLength={80} name="title" required type="text" />
         </label>
 
         <label className="field">
-          <span>姓名或單位</span>
+          <span>投稿人員</span>
           <input maxLength={80} name="name" type="text" />
         </label>
 
@@ -102,7 +102,7 @@ export function SubmissionForm() {
       ) : (
         <>
           <label className="field">
-            <span>Demo 說明</span>
+            <span>範例說明</span>
             <textarea
               maxLength={1500}
               minLength={20}
@@ -136,7 +136,7 @@ export function SubmissionForm() {
       <input aria-hidden="true" autoComplete="off" className="submission-honey" name="website" tabIndex={-1} />
 
       <button className="primary-action" disabled={status === 'submitting'} type="submit">
-        {status === 'submitting' ? '送出中' : '送出投稿'}
+        {status === 'submitting' ? '正在送出' : '送出投稿'}
       </button>
 
       {message && (

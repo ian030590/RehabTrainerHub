@@ -129,20 +129,20 @@ export default function PrivacyPage() {
           </span>
         </Link>
         <nav className="header-actions" aria-label="RehabTrainerHub navigation">
-          <Link className="nav-link" href="/#programs">工具</Link>
-          <Link className="nav-link" href="/#care">安全</Link>
-          <Link className="nav-link" href="/education/">衛教</Link>
-          <Link className="nav-link" href="/links/">連結</Link>
-          <Link className="nav-link" href="/collaborate/">投稿</Link>
+          <Link className="nav-link" href="/#apps-title">復健工具</Link>
+          <Link className="nav-link" href="/#care-title">安全提醒</Link>
+          <Link className="nav-link" href="/education/">衛教資訊</Link>
+          <Link className="nav-link" href="/links/">相關連結</Link>
+          <Link className="nav-link" href="/collaborate/">合作投稿</Link>
         </nav>
       </header>
 
       <nav className="bottom-nav" aria-label="RehabTrainerHub navigation">
-        <Link href="/#programs">工具</Link>
-        <Link href="/#care">安全</Link>
-        <Link href="/education/">衛教</Link>
-        <Link href="/links/">連結</Link>
-        <Link href="/collaborate/">投稿</Link>
+        <Link href="/#apps-title">復健工具</Link>
+        <Link href="/#care-title">安全提醒</Link>
+        <Link href="/education/">衛教資訊</Link>
+        <Link href="/links/">相關連結</Link>
+        <Link href="/collaborate/">合作投稿</Link>
       </nav>
 
       <section className="content-page">

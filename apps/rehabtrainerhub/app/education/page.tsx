@@ -11,33 +11,33 @@ const sections = [
   {
     title: '我可以開始練嗎？',
     items: [
-      '醫師或治療師同意後再練。',
-      '第一次請家人陪。',
-      '光線要足，椅子要穩。',
+      '請先確認醫師或治療師同意你在家練習。',
+      '第一次使用時，建議家人或照顧者在旁協助。',
+      '請在光線足夠、椅子穩定的地方使用。',
     ],
   },
   {
     title: '什麼狀況要停止？',
     items: [
-      '頭暈、痛、喘、噁心就停。',
-      '太累或看不懂，也先停。',
-      '沒有改善，請聯絡專業人員。',
+      '如果頭暈、疼痛、喘或噁心，請立刻停止。',
+      '如果太累或看不懂步驟，也請先停下來。',
+      '不舒服沒有改善時，請聯絡醫師或治療師。',
     ],
   },
   {
     title: '中風復健可以練什麼？',
     items: [
-      '動作：手眼協調、描繪、手勢。',
-      '認知：注意力、反應、記憶。',
-      '語音：發音、口腔動作。',
+      '動作練習：手眼協調、描繪與手勢控制。',
+      '認知練習：注意力、反應速度與記憶。',
+      '語音練習：發音、口腔動作與聽辨任務。',
     ],
   },
   {
     title: '視覺訓練可以練什麼？',
     items: [
-      '搜尋：找目標。',
-      '閱讀：看字與追視。',
-      '對比：分辨深淺。',
+      '視覺搜尋：練習找目標與維持注意力。',
+      '閱讀眼動：練習看字、追視與移動視線。',
+      '對比辨識：練習分辨深淺與清楚度。',
     ],
   },
 ];
@@ -56,27 +56,27 @@ export default function EducationPage() {
           </span>
         </Link>
         <nav className="header-actions" aria-label="RehabTrainerHub navigation">
-          <Link className="nav-link" href="/#programs">工具</Link>
-          <Link className="nav-link" href="/#care">安全</Link>
-          <Link className="nav-link is-active" href="/education/">衛教</Link>
-          <Link className="nav-link" href="/links/">連結</Link>
-          <Link className="nav-link" href="/collaborate/">投稿</Link>
+          <Link className="nav-link" href="/#apps-title">復健工具</Link>
+          <Link className="nav-link" href="/#care-title">安全提醒</Link>
+          <Link className="nav-link is-active" href="/education/">衛教資訊</Link>
+          <Link className="nav-link" href="/links/">相關連結</Link>
+          <Link className="nav-link" href="/collaborate/">合作投稿</Link>
         </nav>
       </header>
 
       <nav className="bottom-nav" aria-label="RehabTrainerHub navigation">
-        <Link href="/#programs">工具</Link>
-        <Link href="/#care">安全</Link>
-        <Link className="is-active" href="/education/">衛教</Link>
-        <Link href="/links/">連結</Link>
-        <Link href="/collaborate/">投稿</Link>
+        <Link href="/#apps-title">復健工具</Link>
+        <Link href="/#care-title">安全提醒</Link>
+        <Link className="is-active" href="/education/">衛教資訊</Link>
+        <Link href="/links/">相關連結</Link>
+        <Link href="/collaborate/">合作投稿</Link>
       </nav>
 
       <section className="content-page">
         <p className="eyebrow">衛教資訊</p>
         <h1>在家練習前，先看這 4 件事。</h1>
         <p className="content-intro">
-          不確定能不能做，先問醫師或治療師。
+          如果不確定自己能不能做，請先詢問醫師或治療師。
         </p>
         <div className="education-list">
           {sections.map((section) => (

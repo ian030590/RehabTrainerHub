@@ -25,27 +25,27 @@ export default function CollaboratePage() {
           </span>
         </Link>
         <nav className="header-actions" aria-label="RehabTrainerHub navigation">
-          <Link className="nav-link" href="/#programs">工具</Link>
-          <Link className="nav-link" href="/#care">安全</Link>
-          <Link className="nav-link" href="/education/">衛教</Link>
-          <Link className="nav-link" href="/links/">連結</Link>
-          <Link className="nav-link is-active" href="/collaborate/">投稿</Link>
+          <Link className="nav-link" href="/#apps-title">復健工具</Link>
+          <Link className="nav-link" href="/#care-title">安全提醒</Link>
+          <Link className="nav-link" href="/education/">衛教資訊</Link>
+          <Link className="nav-link" href="/links/">相關連結</Link>
+          <Link className="nav-link is-active" href="/collaborate/">合作投稿</Link>
         </nav>
       </header>
 
       <nav className="bottom-nav" aria-label="RehabTrainerHub navigation">
-        <Link href="/#programs">工具</Link>
-        <Link href="/#care">安全</Link>
-        <Link href="/education/">衛教</Link>
-        <Link href="/links/">連結</Link>
-        <Link className="is-active" href="/collaborate/">投稿</Link>
+        <Link href="/#apps-title">復健工具</Link>
+        <Link href="/#care-title">安全提醒</Link>
+        <Link href="/education/">衛教資訊</Link>
+        <Link href="/links/">相關連結</Link>
+        <Link className="is-active" href="/collaborate/">合作投稿</Link>
       </nav>
 
       <section className="content-page submission-page">
         <p className="eyebrow">合作投稿</p>
         <h1>分享治療活動想法。</h1>
         <p className="content-intro">
-          可投稿文字想法，或上傳單一 HTML demo。HTML 通過安全檢查後才會轉送。
+          你可以投稿文字想法，也可以上傳單一 HTML demo。HTML 通過安全檢查後才會轉送。
         </p>
 
         <div className="submission-layout">
@@ -56,7 +56,7 @@ export default function CollaboratePage() {
             <ul>
               <li>活動想法會轉成 txt 送出。</li>
               <li>Demo 只接受一個 .html 檔。</li>
-              <li>HTML 不可連外、要權限或送資料。</li>
+              <li>HTML 不可連外、要求權限或傳送資料。</li>
               <li>可疑內容會被擋下，不會轉送。</li>
             </ul>
           </aside>

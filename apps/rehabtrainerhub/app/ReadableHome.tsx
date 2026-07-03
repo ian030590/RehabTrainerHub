@@ -27,36 +27,36 @@ const content = {
     brandSubtitle: '居家復健入口',
     navigationLabel: 'RehabTrainerHub 導覽',
     nav: {
-      programs: '工具',
-      care: '安全',
-      education: '衛教',
-      links: '連結',
-      submit: '投稿',
+      programs: '復健工具',
+      care: '安全提醒',
+      education: '衛教資訊',
+      links: '相關連結',
+      submit: '合作投稿',
     },
     hero: {
       eyebrow: '居家復健入口',
       title: '我想找中風後在家可以練習的工具',
       body:
-        '先選中風復健或視覺訓練。工具不能取代醫師或治療師。',
-      primaryAction: '找工具',
-      secondaryAction: '看安全提醒',
+        '請依目前需要選擇中風復健或視覺訓練。這些工具可輔助居家練習，但不能取代醫師或治療師的評估。',
+      primaryAction: '選擇工具',
+      secondaryAction: '查看安全提醒',
       visualLabel: 'RehabTrainerHub 工具總覽',
       checklist: ['中風練習', '視覺訓練', '字體可放大'],
     },
     controls: {
       settingsLabel: '閱讀設定',
       settingsButton: '閱讀設定',
-      settingsClose: '關閉',
+      settingsClose: '關閉設定',
       languageLabel: '介面語言',
-      zh: '繁中',
+      zh: '繁體中文',
       en: 'EN',
       fontLabel: '字型大小',
       standard: 'A',
       large: 'A+',
       extra: 'A++',
       themeLabel: '色彩模式',
-      light: '淺色',
-      dark: '深色',
+      light: '淺色模式',
+      dark: '深色模式',
       contrastLabel: '對比度',
       contrastLoading: '檢查中',
       contrastPass: '通過 WCAG AAA',
@@ -67,23 +67,23 @@ const content = {
       eyebrow: '先選工具',
       title: '你現在想練什麼？',
       intro:
-        '中風後想練動作、認知或說話，選中風復健。看字或閱讀困難，選視覺訓練。',
+        '如果想練動作、認知或說話，請選中風復健；如果看字、閱讀或眼睛移動比較困難，請選視覺訓練。',
     },
     care: {
       eyebrow: '安全提醒',
       title: '開始前先確認安全',
       quote:
-        '不舒服就停止。網站不提供診斷。',
+        '練習時如果感到不舒服，請先停止。網站提供工具與說明，不提供診斷。',
       body:
-        '第一次使用請家人陪同。先短時間練習。',
+        '第一次使用建議家人陪同，先短時間練習，再依治療師建議調整。',
     },
     education: {
       eyebrow: '衛教資訊',
       title: '看不懂時，先看簡短說明',
       intro:
-        '衛教頁說明使用前、何時停止、各訓練用途。',
-      educationLink: '看衛教',
-      linksLink: '看連結',
+        '衛教頁整理開始前要注意的事、何時需要停止，以及每種訓練的用途。',
+      educationLink: '閱讀衛教',
+      linksLink: '相關連結',
     },
     apps: [
       {
@@ -93,9 +93,9 @@ const content = {
         name: 'StrokeTrainer',
         bestFor: '適合：動作、認知、說話練習',
         description:
-          '把治療師交代的方向，變成家中短練習。',
+          '將治療師交代的方向，整理成適合在家短時間練習的任務。',
         points: ['動作協調', '注意力記憶', '口腔語音'],
-        action: '開啟',
+        action: '開啟中風',
         logoAlt: 'StrokeTrainer 標誌',
       },
       {
@@ -105,32 +105,32 @@ const content = {
         name: 'VisionTrainer',
         bestFor: '適合：看字、閱讀、眼動練習',
         description:
-          '練視覺搜尋、閱讀、眼動與對比辨識。',
+          '提供視覺搜尋、閱讀眼動與對比辨識練習，適合依專業建議使用。',
         points: ['視覺搜尋', '閱讀眼動', '對比辨識'],
-        action: '開啟',
+        action: '開啟視覺',
         logoAlt: 'VisionTrainer 標誌',
       },
     ],
     features: [
       {
-        title: '先有人陪',
+        title: '有人陪同',
         text:
-          '第一次使用請家人在旁邊。',
+          '第一次使用時，請家人在旁協助選工具與確認安全。',
       },
       {
-        title: '先問治療師',
+        title: '專業確認',
         text:
-          '不確定適不適合，先問醫師或治療師。',
+          '不確定適不適合時，請先詢問醫師或治療師。',
       },
       {
-        title: '每次短一點',
+        title: '短時練習',
         text:
-          '先短時間練。累、暈、痛就停。',
+          '每次先短時間練習；如果累、暈或痛，請立刻停止。',
       },
       {
-        title: '看不懂就停',
+        title: '步驟確認',
         text:
-          '看不懂步驟，先不要做。',
+          '如果看不懂步驟，請先停下來，找家人或治療師確認。',
       },
     ],
   },
@@ -160,7 +160,7 @@ const content = {
       settingsButton: 'Reading',
       settingsClose: 'Close',
       languageLabel: 'Interface language',
-      zh: '繁中',
+      zh: '繁體中文',
       en: 'EN',
       fontLabel: 'Font size',
       standard: 'A',
@@ -398,7 +398,6 @@ export function ReadableHome() {
       return {
         ratio: '--',
         status: copy.controls.contrastLoading,
-        tone: 'pending',
       };
     }
 
@@ -406,7 +405,6 @@ export function ReadableHome() {
       return {
         ratio: `${contrastRatio.toFixed(1)}:1`,
         status: copy.controls.contrastPass,
-        tone: 'pass',
       };
     }
 
@@ -414,14 +412,12 @@ export function ReadableHome() {
       return {
         ratio: `${contrastRatio.toFixed(1)}:1`,
         status: copy.controls.contrastWarn,
-        tone: 'warn',
       };
     }
 
     return {
       ratio: `${contrastRatio.toFixed(1)}:1`,
       status: copy.controls.contrastFail,
-      tone: 'fail',
     };
   }, [
     contrastRatio,
@@ -477,9 +473,9 @@ export function ReadableHome() {
 
         <div className={`header-stack ${isMenuOpen ? 'is-open' : ''}`} id="site-menu">
           <nav className="header-actions" aria-label={copy.navigationLabel}>
-            <a className={sectionLinkClass('programs')} href="#programs" onClick={closeHeaderPanels}>{copy.nav.programs}</a>
-            <a className={sectionLinkClass('care')} href="#care" onClick={closeHeaderPanels}>{copy.nav.care}</a>
-            <a className={sectionLinkClass('education')} href="#education" onClick={closeHeaderPanels}>{copy.nav.education}</a>
+            <a className={sectionLinkClass('programs')} href="#apps-title" onClick={closeHeaderPanels}>{copy.nav.programs}</a>
+            <a className={sectionLinkClass('care')} href="#care-title" onClick={closeHeaderPanels}>{copy.nav.care}</a>
+            <a className={sectionLinkClass('education')} href="#education-title" onClick={closeHeaderPanels}>{copy.nav.education}</a>
             <Link className="nav-link" href="/links/" onClick={closeHeaderPanels}>{copy.nav.links}</Link>
             <Link className="nav-link" href="/collaborate/" onClick={closeHeaderPanels}>{copy.nav.submit}</Link>
           </nav>
@@ -557,7 +553,7 @@ export function ReadableHome() {
             </div>
 
             </div>
-            <p className={`contrast-status tone-${contrastText.tone}`}>
+            <p className="contrast-status">
               {copy.controls.contrastLabel} {contrastText.ratio} {contrastText.status}
             </p>
             <button className="text-button" type="button" onClick={() => setIsSettingsOpen(false)}>
@@ -569,9 +565,9 @@ export function ReadableHome() {
       </header>
 
       <nav className="bottom-nav" aria-label={copy.navigationLabel}>
-        <a className={sectionLinkClass('programs')} href="#programs">{copy.nav.programs}</a>
-        <a className={sectionLinkClass('care')} href="#care">{copy.nav.care}</a>
-        <a className={sectionLinkClass('education')} href="#education">{copy.nav.education}</a>
+        <a className={sectionLinkClass('programs')} href="#apps-title">{copy.nav.programs}</a>
+        <a className={sectionLinkClass('care')} href="#care-title">{copy.nav.care}</a>
+        <a className={sectionLinkClass('education')} href="#education-title">{copy.nav.education}</a>
         <Link href="/links/">{copy.nav.links}</Link>
         <Link href="/collaborate/">{copy.nav.submit}</Link>
       </nav>
@@ -582,10 +578,10 @@ export function ReadableHome() {
           <h1>{copy.hero.title}</h1>
           <p>{copy.hero.body}</p>
           <div className="hero-actions">
-            <a className="primary-action" href="#programs">
+            <a className="primary-action" href="#apps-title">
               {copy.hero.primaryAction}
             </a>
-            <a className="secondary-action" href="#care">
+            <a className="secondary-action" href="#care-title">
               {copy.hero.secondaryAction}
             </a>
           </div>
