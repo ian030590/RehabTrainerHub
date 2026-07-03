@@ -1176,7 +1176,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   }, []);
 
   const startGame = useCallback(async () => {
-    if (!verifySelectedTrainingUser(t)) return;
+    if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
     if (!recognitionReady || activeWords.length === 0) return;
     if (phaseRef.current === 'editor' && !microphoneReady) return;

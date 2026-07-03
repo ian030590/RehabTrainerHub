@@ -214,7 +214,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
   finishGameRef.current = finishGame;
 
   const startGame = useCallback(() => {
-    if (!verifySelectedTrainingUser(t)) return;
+    if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
 
     metricsRef.current = { elapsed: 0 };

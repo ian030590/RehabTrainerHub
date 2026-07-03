@@ -369,7 +369,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, [classifyFeature, finishCalibrationStep, setPhase, stopVision, syncRecognition, t]);
 
   const startSession = useCallback(async () => {
-    if (!verifySelectedTrainingUser(t)) return;
+    if (!verifySelectedTrainingUser()) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       setVisionError(t('tongue.error.unsupported'));
       setShowVisionError(true);

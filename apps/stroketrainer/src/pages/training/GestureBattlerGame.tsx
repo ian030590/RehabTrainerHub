@@ -598,7 +598,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   }, [handleCalibrationHand, handleCombatHand, handleNoHand, setPhase, stopVision, t]);
 
   const startCalibration = useCallback(async () => {
-    if (!verifySelectedTrainingUser(t)) return;
+    if (!verifySelectedTrainingUser()) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       setVisionError(t('gesture.error.unsupported'));
       setShowVisionError(true);

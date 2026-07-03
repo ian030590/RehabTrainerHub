@@ -334,7 +334,7 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
   const locked = Boolean(acceptedTrial);
 
   const openInstructions = () => {
-    if (!verifySelectedTrainingUser(t)) return;
+    if (!verifySelectedTrainingUser()) return;
     setFeedback(null);
     setAcceptedTrial(null);
     setSummary(null);
@@ -342,7 +342,7 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
   };
 
   const startSession = () => {
-    if (!verifySelectedTrainingUser(t)) return;
+    if (!verifySelectedTrainingUser()) return;
     const firstQuestion = activeSet.questions[0];
     setCurrentIndex(0);
     setAnswer(createEmptyAnswer(firstQuestion));

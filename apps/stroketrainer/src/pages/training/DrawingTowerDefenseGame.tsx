@@ -478,7 +478,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   }, [queueDrawingSampleUpload, recordEnemyOutcome, t]);
 
   const startGame = useCallback(() => {
-    if (!verifySelectedTrainingUser(t)) return;
+    if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
 
     const app = appRef.current;

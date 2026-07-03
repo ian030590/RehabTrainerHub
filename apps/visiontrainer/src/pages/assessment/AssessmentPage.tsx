@@ -6,12 +6,14 @@ import { SelectionCard } from '../../components/SelectionCard';
 import { useT } from '../../i18n';
 import { isAssessmentCalibrationAtDefaults } from '../../utils/settings';
 import { useAppSetting } from '../../utils/useAppSetting';
+import { useActiveUser } from '../../utils/useActiveUser';
 import { ASSESSMENTS } from './assessmentDefinitions';
 import type { TestType } from './logic/optotypeRenderer';
 
 export function AssessmentPage() {
   const { t } = useT();
   const navigate = useNavigate();
+  const activeUser = useActiveUser();
   const [distanceCM] = useAppSetting('distanceInCM');
 
   const [expandedTest, setExpandedTest] = useState<TestType | null>(null);

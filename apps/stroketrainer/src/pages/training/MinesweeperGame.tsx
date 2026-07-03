@@ -177,7 +177,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   }, [boardCols, boardRows, difficulty, gameTitle, mineCount, selectedBoardConfig.label]);
 
   const startGame = useCallback(() => {
-    if (!verifySelectedTrainingUser(t)) return;
+    if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
 
     const nextRows = selectedBoardConfig.rows;

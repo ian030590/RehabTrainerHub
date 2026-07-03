@@ -9,6 +9,7 @@ import {
 import { pixiAppManager } from '../utils/pixiPool';
 import { SoundManager } from '../utils/soundManager';
 import { useAppSetting } from '../utils/useAppSetting';
+import { useActiveUser } from '../utils/useActiveUser';
 import { ConfigDialog } from '../components/ConfigDialog';
 import { NumberPresetSelector } from '../components/NumberPresetSelector';
 import { SelectionCard } from '../components/SelectionCard';
@@ -40,6 +41,7 @@ function preloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknown> {
 export function HomePage() {
   const { t } = useT();
   const navigate = useNavigate();
+  const activeUser = useActiveUser();
 
   // ── Module expansion state ──
   const [expandedModule, setExpandedModule] = useState<TrainingModuleId | null>(null);
