@@ -169,8 +169,8 @@ main {
   display: inline-flex;
   align-items: center;
   color: var(--text-muted);
-  font-size: 0.875rem;
-  font-weight: var(--fw-bold-plus);
+  font-size: 1rem;
+  font-weight: var(--fw-medium);
   text-decoration: none;
 }
 
@@ -1212,9 +1212,6 @@ h3 {
 
 /* 1. Buttons (Fitts' Law, 48x48 hit area, 5 states, Spring Animation) */
 .auth-button, .btn, .card-link, .secondary-action {
-  min-height: 48px;
-  min-width: 48px;
-  padding: 12px 24px;
   transition: transform 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out, box-shadow 200ms ease-out;
   display: inline-flex;
   align-items: center;
@@ -1257,19 +1254,20 @@ h3 {
 
 /* 3. Navigation Bars (Active state, hit area) */
 .header-actions a {
-  min-height: 48px;
+  padding: 8px 16px;
+  border-radius: var(--radius, 8px);
   display: inline-flex;
   align-items: center;
   transition: color 200ms ease-out, background-color 200ms ease-out;
-  border-radius: 24px;
 }
 .header-actions a.is-active, .header-actions a:hover {
-  font-weight: var(--fw-bold, 700);
-  background-color: rgba(0, 0, 0, 0.04);
+  font-weight: var(--fw-semibold, 600);
+  color: var(--primary);
+  background-color: var(--primary-container);
 }
 :root[data-theme="dark"] .header-actions a.is-active, 
 :root[data-theme="dark"] .header-actions a:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--primary-container);
 }
 
 /* 4. Reduce Motion (Accessibility) */

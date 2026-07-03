@@ -2101,9 +2101,6 @@ body #webgazer-calibrate-container #calibration-point {
 
 /* 1. Buttons (Fitts' Law, 48x48 hit area, 5 states, Spring Animation) */
 .auth-button, .btn, .card-link, .secondary-action {
-  min-height: 48px;
-  min-width: 48px;
-  padding: 12px 24px;
   transition: transform 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out, box-shadow 200ms ease-out;
   display: inline-flex;
   align-items: center;
