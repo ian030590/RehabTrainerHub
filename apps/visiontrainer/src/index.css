@@ -2094,3 +2094,80 @@ body #webgazer-calibrate-container #calibration-point {
     white-space: normal;
   }
 }
+\n
+/* =========================================================
+   UI/UX Core Design Guideline Overrides
+   ========================================================= */
+
+/* 1. Buttons (Fitts' Law, 48x48 hit area, 5 states, Spring Animation) */
+.auth-button, .btn, .card-link, .secondary-action {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 12px 24px;
+  transition: transform 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out, box-shadow 200ms ease-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-button:not(:disabled):hover, .btn:not(:disabled):hover, .card-link:not(:disabled):hover, .secondary-action:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.auth-button:not(:disabled):active, .btn:not(:disabled):active, .card-link:not(:disabled):active, .secondary-action:not(:disabled):active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.auth-button:disabled, .btn:disabled, .card-link:disabled, .secondary-action:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 2. Cards & Elevation (Progressive Disclosure, Whitespace, Shadow hierarchy) */
+.card, .content-page article, .auth-dialog {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: transform 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 300ms ease-out;
+  padding: 24px;
+}
+
+.card:hover, .content-page article:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.auth-dialog {
+  /* Modals require larger, softer shadows */
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* 3. Navigation Bars (Active state, hit area) */
+.header-actions a {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 200ms ease-out, background-color 200ms ease-out;
+  border-radius: 24px;
+}
+.header-actions a.is-active, .header-actions a:hover {
+  font-weight: var(--fw-bold, 700);
+  background-color: rgba(0, 0, 0, 0.04);
+}
+:root[data-theme="dark"] .header-actions a.is-active, 
+:root[data-theme="dark"] .header-actions a:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* 4. Reduce Motion (Accessibility) */
+@media (prefers-reduced-motion: reduce) {
+  .auth-button, .btn, .card-link, .secondary-action, .card, .content-page article, .auth-dialog, .header-actions a {
+    transition: opacity 200ms ease-in-out !important;
+    transform: none !important;
+  }
+  .auth-button:hover, .btn:hover, .card-link:hover, .secondary-action:hover, .card:hover, .content-page article:hover {
+    transform: none !important;
+  }
+}

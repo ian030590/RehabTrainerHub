@@ -324,6 +324,7 @@ export function ReadableHome() {
   );
   const [theme, setTheme] = useStoredSetting<Theme>(storageKeys.theme, 'light', isTheme);
   const [contrastRatio, setContrastRatio] = useState<number | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const copy = content[locale];
 
   useEffect(() => {
@@ -392,22 +393,41 @@ export function ReadableHome() {
   return (
     <main className="home-page">
       <header className="site-header">
-        <Link className="brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
-          </span>
-          <span>
-            <strong>RehabTrainerHub</strong>
-            <small>{copy.brandSubtitle}</small>
-          </span>
-        </Link>
+        <div className="site-header-inner">
+          <Link className="brand" href="/" onClick={() => setIsMenuOpen(false)}>
+            <span className="brand-mark" aria-hidden="true">
+              <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
+            </span>
+            <span>
+              <strong>RehabTrainerHub</strong>
+              <small>{copy.brandSubtitle}</small>
+            </span>
+          </Link>
 
-        <div className="header-stack">
+          <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {isMenuOpen ? (
+                <>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </>
+              )}
+            </svg>
+          </button>
+        </div>
+
+        <div className={`header-stack ${isMenuOpen ? 'is-open' : ''}`}>
           <nav className="header-actions" aria-label={copy.navigationLabel}>
-            <a href="#programs">{copy.nav.programs}</a>
-            <a href="#care">{copy.nav.care}</a>
-            <Link href="/education/">{copy.nav.education}</Link>
-            <Link href="/links/">{copy.nav.links}</Link>
+            <a href="#programs" onClick={() => setIsMenuOpen(false)}>{copy.nav.programs}</a>
+            <a href="#care" onClick={() => setIsMenuOpen(false)}>{copy.nav.care}</a>
+            <Link href="/education/" onClick={() => setIsMenuOpen(false)}>{copy.nav.education}</Link>
+            <Link href="/links/" onClick={() => setIsMenuOpen(false)}>{copy.nav.links}</Link>
           </nav>
 
           <div className="readability-toolbar" role="region" aria-label={copy.controls.settingsLabel}>
@@ -467,6 +487,7 @@ export function ReadableHome() {
             locale={locale === 'en' ? 'en' : 'zh-TW'}
           />
         </div>
+        {isMenuOpen && <div className="navbar-overlay" onClick={() => setIsMenuOpen(false)} />}
       </header>
 
       <section className="hero">
