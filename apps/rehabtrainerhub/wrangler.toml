@@ -3,7 +3,7 @@ compatibility_date = "2026-07-02"
 pages_build_output_dir = "out"
 
 [[d1_databases]]
-binding = "rehab_db"
+binding = "REHAB_DB"
 database_name = "rehabtrainerhub"
 database_id = "0f4e6bb2-cf41-4051-ad74-19bb501fe9dd"
 migrations_dir = "migrations"

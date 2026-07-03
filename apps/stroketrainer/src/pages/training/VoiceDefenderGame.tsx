@@ -1141,7 +1141,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       text: word,
       style: {
         fill: 0x1a1c1e,
-        fontFamily: 'Inter, Noto Sans TC, Arial, sans-serif',
+        fontFamily: 'Inter, M PLUS Rounded 1c, Noto Sans TC, Arial, sans-serif',
         fontSize: cardTypography.fontSize,
         fontWeight: cardTypography.fontWeight,
         align: 'center',

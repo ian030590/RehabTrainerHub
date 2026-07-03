@@ -26,12 +26,12 @@
   --bg-accent-soft-hover: rgba(0, 94, 184, 0.12);
   --bg-error-soft: color-mix(in srgb, var(--error) 10%, var(--bg-card));
   --bg-warning-soft: color-mix(in srgb, var(--warning) 14%, var(--bg-card));
-  --font-family:   'Inter', 'Noto Sans TC', sans-serif;
+  --font-family:   'Inter', 'M PLUS Rounded 1c', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
   --ui-font-size: 18px;
   --ui-font-scale: 1;
-  --ui-font-weight: 400;
-  --ui-font-medium-weight: 600;
-  --ui-font-heading-weight: 700;
+  --ui-font-weight: 500;
+  --ui-font-medium-weight: 700;
+  --ui-font-heading-weight: 800;
   --radius-s:  8px;
   --radius-m:  8px;
   --radius-l:  16px;
@@ -548,7 +548,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   display: grid;
   gap: 8px;
   color: var(--text-primary, #1A1C1E);
-  font-family: var(--font-family, 'Inter', 'Noto Sans TC', sans-serif);
+  font-family: var(--font-family, 'Inter', 'M PLUS Rounded 1c', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif);
 }
 
 .auth-panel-status,
@@ -735,7 +735,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
 /* ── Cards ── */
 .card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius-l);
   padding: 32px;
   transition: all var(--transition-fast);
@@ -747,7 +747,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
 .card:hover {
   background: var(--bg-card);
-  border-color: var(--border-hover);
+  border-color: color-mix(in srgb, var(--accent) 18%, transparent);
   transform: translateY(-2px);
   box-shadow: var(--shadow-ambient);
 }

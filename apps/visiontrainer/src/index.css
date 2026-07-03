@@ -5,11 +5,11 @@
   color-scheme: light;
 
   /* Font weights */
-  --fw-regular: 400;
-  --fw-medium: 500;
-  --fw-semibold: 600;
-  --fw-bold: 700;
-  --fw-extrabold: 800;
+  --fw-regular: 500;
+  --fw-medium: 600;
+  --fw-semibold: 700;
+  --fw-bold: 800;
+  --fw-extrabold: 900;
 }
 
 * {
@@ -26,6 +26,7 @@ html, body, #root {
   color: var(--text-primary);
   font-family: var(--font-family);
   font-size: 18px; /* Increased from 14px to 18px */
+  font-weight: var(--fw-regular);
   line-height: 1.5; /* 1.5x line height for readability */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -314,7 +315,7 @@ html, body, #root {
   display: grid;
   gap: 8px;
   color: var(--text-primary, #1A1C1E);
-  font-family: var(--font-family, 'Inter', 'Noto Sans TC', sans-serif);
+  font-family: var(--font-family, 'Inter', 'M PLUS Rounded 1c', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif);
 }
 
 .auth-panel-status,
@@ -501,7 +502,7 @@ html, body, #root {
 /* ── Cards ── */
 .card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius-l);
   padding: 32px;
   transition: all var(--transition-fast);
@@ -521,7 +522,7 @@ html, body, #root {
 
 .card:hover {
   background: var(--bg-card);
-  border-color: var(--border-hover);
+  border-color: color-mix(in srgb, var(--accent) 18%, transparent);
   transform: translateY(-2px);
   box-shadow: var(--shadow-ambient);
 }

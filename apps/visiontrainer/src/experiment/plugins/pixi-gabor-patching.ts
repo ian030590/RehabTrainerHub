@@ -7,6 +7,7 @@ import {
   createPixiTrialContainer,
   runPixiTrial,
 } from '../../utils/pixiPool';
+import { typography } from '../../theme';
 import { SoundManager } from '../../utils/soundManager';
 
 const info = {
@@ -159,7 +160,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     HUD.style.display = 'flex';
     HUD.style.justifyContent = 'space-between';
     HUD.style.pointerEvents = 'none';
-    HUD.style.fontFamily = 'Inter, sans-serif';
+    HUD.style.fontFamily = typography.fontFamily;
     HUD.style.fontSize = '24px';
     HUD.style.fontWeight = 'bold';
     HUD.style.color = '#FFFFFF';
@@ -333,7 +334,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     const floatText = new Text({
       text: finalPoints.toString(),
       style: {
-        fontFamily: 'Inter',
+        fontFamily: typography.fontFamily,
         fontSize: 24,
         fontWeight: 'bold',
         fill: 0xFFFFFF,

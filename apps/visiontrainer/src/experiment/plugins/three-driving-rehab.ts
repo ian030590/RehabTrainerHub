@@ -191,7 +191,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       overflow: 'hidden',
       background: '#0f1720',
       color: '#fff',
-      fontFamily: 'Inter, Noto Sans TC, sans-serif',
+      fontFamily: 'Inter, M PLUS Rounded 1c, Noto Sans TC, sans-serif',
       userSelect: 'none',
     });
     display_element.appendChild(root);
@@ -1214,7 +1214,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       cursor: 'pointer',
       pointerEvents: 'auto',
       textAlign: 'center',
-      fontFamily: 'Inter, Noto Sans TC, sans-serif',
+      fontFamily: 'Inter, M PLUS Rounded 1c, Noto Sans TC, sans-serif',
     });
     overlay.innerHTML = `
       <div style="display:grid; gap:14px; justify-items:center; padding:32px;">

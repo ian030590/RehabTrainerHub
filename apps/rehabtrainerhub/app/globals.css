@@ -64,8 +64,8 @@
   --shadow-md: 0 8px 22px rgba(23, 43, 77, 0.1);
   --shadow-lg: 0 18px 38px rgba(23, 43, 77, 0.16);
   --focus: #7aa7ff;
-  --font-body: Inter, "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-heading: Manrope, "Noto Serif TC", "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", ui-sans-serif, system-ui, sans-serif;
+  --font-body: Inter, "M PLUS Rounded 1c", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: Manrope, "M PLUS Rounded 1c", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
   font-family: var(--font-body);
   --fw-regular: 400;
   --fw-medium: 500;
@@ -114,8 +114,13 @@
 }
 
 :root[data-locale="zh-TW"] {
-  --font-body: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", Inter, ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "LXGW WenKai TC", "Noto Serif TC", "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "M PLUS Rounded 1c", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "M PLUS Rounded 1c", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Manrope, ui-sans-serif, system-ui, sans-serif;
+  --fw-regular: 500;
+  --fw-medium: 600;
+  --fw-semibold: 700;
+  --fw-bold: 800;
+  --fw-extrabold: 900;
 }
 
 * {
@@ -607,11 +612,7 @@ body > main:not(.home-page) .site-header {
 
 .hero-copy {
   max-width: 650px;
-  padding: 28px;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-xl);
-  background: var(--surface-white);
-  box-shadow: var(--shadow-sm);
+  padding: 12px 0;
 }
 
 .eyebrow {
@@ -650,10 +651,9 @@ body > main:not(.home-page) .site-header {
   position: relative;
   min-height: 360px;
   padding: 32px;
-  border: 1px solid var(--outline-variant);
   border-radius: var(--radius-xl);
   background: var(--surface-container-low);
-  box-shadow: inset 0 2px 10px rgba(23, 43, 77, 0.06);
+  box-shadow: inset 0 2px 10px rgba(23, 43, 77, 0.06), var(--shadow-sm);
 }
 
 .hero-device {
@@ -744,11 +744,7 @@ body > main:not(.home-page) .site-header {
 .section-heading {
   max-width: 760px;
   margin: 0 auto 40px;
-  padding: 28px;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-xl);
-  background: var(--surface-white);
-  box-shadow: var(--shadow-sm);
+  padding: 0 28px;
   text-align: center;
 }
 
@@ -774,7 +770,7 @@ body > main:not(.home-page) .site-header {
   flex-direction: column;
   min-height: 100%;
   padding: 32px;
-  border: 1px solid var(--outline-variant);
+  border: 0;
   border-top: 4px solid var(--primary);
   border-radius: var(--radius-xl);
   background: var(--surface-white);
@@ -920,10 +916,8 @@ body > main:not(.home-page) .site-header {
 
 .care-copy {
   padding: 28px;
-  border: 1px solid var(--outline-variant);
   border-radius: var(--radius-xl);
-  background: var(--surface-container-lowest);
-  box-shadow: var(--shadow-sm);
+  background: var(--surface-container-low);
 }
 
 .care-copy blockquote {
@@ -953,7 +947,6 @@ body > main:not(.home-page) .site-header {
   align-items: center;
   gap: 24px;
   padding: 24px;
-  border: 1px solid var(--outline-variant);
   border-radius: var(--radius-xl);
   background: var(--surface-white);
   box-shadow: var(--shadow-sm);
@@ -1000,7 +993,6 @@ body > main:not(.home-page) .site-header {
   width: min(760px, 100%);
   margin: 0 auto;
   padding: 40px;
-  border: 1px solid var(--outline-variant);
   border-radius: var(--radius-xl);
   background: var(--surface-white);
   box-shadow: var(--shadow-sm);
@@ -1018,7 +1010,6 @@ body > main:not(.home-page) .site-header {
 .content-page {
   margin-top: 0;
   padding: 40px;
-  border: 1px solid var(--outline-variant);
   border-radius: var(--radius-xl);
   background: var(--surface-white);
   box-shadow: var(--shadow-sm);
@@ -1040,7 +1031,6 @@ body > main:not(.home-page) .site-header {
 
 .education-list article {
   padding: 24px;
-  border: 1px solid var(--outline-variant);
   border-radius: var(--radius-xl);
   background: var(--surface-container-lowest);
 }
@@ -1077,7 +1067,7 @@ body > main:not(.home-page) .site-header {
   align-items: center;
   min-height: 180px;
   padding: 28px;
-  border: 1px solid var(--outline-variant);
+  border: 1px solid transparent;
   border-radius: var(--radius-xl);
   background: var(--surface-container-lowest);
   color: inherit;
@@ -1171,7 +1161,6 @@ body > main:not(.home-page) .site-header {
 .submission-form,
 .submission-rules {
   padding: 28px;
-  border: 1px solid var(--outline-variant);
   border-radius: var(--radius-xl);
   background: var(--surface-container-lowest);
   box-shadow: var(--shadow-sm);
