@@ -10,8 +10,10 @@ import {
   clearAuthToken,
   consumeAuthTokenFromUrl,
   fetchCurrentAuthUser,
+  fetchSharedAuthSession,
   getAuthApiOrigin,
   isAuthSessionMessage,
+  logoutAuthSession,
   openAuthPopup,
   saveAuthProfile,
   setAuthToken,
@@ -42,13 +44,12 @@ const text = {
     statusSignedIn: '已登入',
     loading: '檢查登入狀態中',
     loginGoogle: '使用 Google 登入',
-    loginFacebook: '使用 Facebook 登入',
     logout: '登出',
     completeProfile: '完成基本資料',
     profileNeeded: '登入後請先完成匿名基本資料，之後的使用紀錄會儲存在 D1 database。',
     privacyTitle: '隱私權政策與資料蒐集說明',
     privacyIntro:
-      '登入代表你同意 RehabTrainerHub 使用 Google 或 Facebook 提供的帳號識別資訊建立登入狀態，並蒐集匿名基本資料與訓練紀錄，用於復健工具使用分析與服務改善。',
+      '登入代表你同意 RehabTrainerHub 使用 Google 提供的帳號識別資訊建立登入狀態，並蒐集匿名基本資料與訓練紀錄，用於復健工具使用分析與服務改善。',
     privacyItems: [
       '匿名基本資料包含年齡、性別、國籍等。',
       '慢性病診斷、抽菸與喝酒習慣會用於使用紀錄分組分析。',
@@ -101,13 +102,12 @@ const text = {
     statusSignedIn: 'Signed in',
     loading: 'Checking sign-in status',
     loginGoogle: 'Sign in with Google',
-    loginFacebook: 'Sign in with Facebook',
     logout: 'Sign out',
     completeProfile: 'Complete profile',
     profileNeeded: 'After sign-in, complete the anonymous profile. Future records will be saved to D1.',
     privacyTitle: 'Privacy Policy and Data Collection Notice',
     privacyIntro:
-      'By signing in, you agree that RehabTrainerHub may use account identifiers from Google or Facebook to create a session, and collect anonymous profile data and training records for usage analysis and service improvement.',
+      'By signing in, you agree that RehabTrainerHub may use account identifiers from Google to create a session, and collect anonymous profile data and training records for usage analysis and service improvement.',
     privacyItems: [
       'Anonymous profile data includes age, gender, nationality, and similar basics.',
       'Chronic diagnosis, smoking, and alcohol habits are used for grouped record analysis.',
@@ -231,7 +231,14 @@ export function AuthPanel({
     setIsLoading(true);
     setError('');
     try {
-      const nextUser = await fetchCurrentAuthUser(apiBase);
+      let nextUser = await fetchCurrentAuthUser(apiBase);
+      if (!nextUser) {
+        const sharedSession = await fetchSharedAuthSession(apiBase);
+        if (sharedSession) {
+          setAuthToken(sharedSession.token, false);
+          nextUser = sharedSession.user;
+        }
+      }
       setUser(nextUser);
       onAuthChange?.(nextUser);
       if (nextUser && !nextUser.profileCompleted) {
@@ -301,9 +308,12 @@ export function AuthPanel({
   };
 
   const handleLogout = () => {
-    clearAuthToken();
     setUser(null);
     onAuthChange?.(null);
+    void logoutAuthSession(apiBase).catch((logoutError) => {
+      console.warn('Unable to clear shared auth session.', logoutError);
+      clearAuthToken();
+    });
   };
 
   const updateProfile = <K extends keyof RehabProfile>(key: K, value: RehabProfile[K]) => {
@@ -382,9 +392,6 @@ export function AuthPanel({
           <>
             <button className="auth-button auth-button-primary" type="button" onClick={() => requestLogin('google')}>
               {labels.loginGoogle}
-            </button>
-            <button className="auth-button auth-button-secondary" type="button" onClick={() => requestLogin('facebook')}>
-              {labels.loginFacebook}
             </button>
           </>
         )}

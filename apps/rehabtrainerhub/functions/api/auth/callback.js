@@ -1,5 +1,6 @@
 import {
   authPopupHtml,
+  createSessionCookie,
   createSessionForUser,
   errorResponse,
   getAuthBaseUrl,
@@ -33,9 +34,7 @@ export async function onRequestGet({ request, env }) {
   const redirectUri = `${authBaseUrl}/api/auth/callback`;
   const identity = state.provider === 'google'
     ? await getGoogleIdentity(env, code, redirectUri)
-    : state.provider === 'facebook'
-      ? await getFacebookIdentity(env, code, redirectUri)
-      : null;
+    : null;
 
   if (!identity) {
     return errorResponse(request, env, 'Unsupported auth provider.', 400);
@@ -93,7 +92,11 @@ export async function onRequestGet({ request, env }) {
 
   const userRow = await db.prepare('SELECT * FROM app_users WHERE id = ?').bind(userId).first();
   const token = await createSessionForUser(env, userRow);
-  return authPopupHtml(state.returnTo, token, toPublicUser(userRow));
+  return authPopupHtml(state.returnTo, token, toPublicUser(userRow), {
+    headers: {
+      'Set-Cookie': createSessionCookie(request, token),
+    },
+  });
 }
 
 async function getGoogleIdentity(env, code, redirectUri) {
@@ -126,36 +129,5 @@ async function getGoogleIdentity(env, code, redirectUri) {
     displayName: profile.name || profile.email || 'Google User',
     email: profile.email || null,
     avatarUrl: profile.picture || null,
-  };
-}
-
-async function getFacebookIdentity(env, code, redirectUri) {
-  const clientId = env.FACEBOOK_CLIENT_ID;
-  const clientSecret = env.FACEBOOK_CLIENT_SECRET;
-  if (!clientId || !clientSecret) throw new Error('Facebook OAuth credentials are not configured.');
-
-  const tokenUrl = new URL('https://graph.facebook.com/v19.0/oauth/access_token');
-  tokenUrl.searchParams.set('client_id', clientId);
-  tokenUrl.searchParams.set('client_secret', clientSecret);
-  tokenUrl.searchParams.set('redirect_uri', redirectUri);
-  tokenUrl.searchParams.set('code', code);
-
-  const tokenResponse = await fetch(tokenUrl.toString());
-  if (!tokenResponse.ok) throw new Error('Facebook token exchange failed.');
-
-  const tokenPayload = await tokenResponse.json();
-  const profileUrl = new URL('https://graph.facebook.com/me');
-  profileUrl.searchParams.set('fields', 'id,name,email,picture.type(large)');
-  profileUrl.searchParams.set('access_token', tokenPayload.access_token);
-
-  const userResponse = await fetch(profileUrl.toString());
-  if (!userResponse.ok) throw new Error('Facebook profile request failed.');
-
-  const profile = await userResponse.json();
-  return {
-    providerUserId: String(profile.id),
-    displayName: profile.name || profile.email || 'Facebook User',
-    email: profile.email || null,
-    avatarUrl: profile.picture?.data?.url || null,
   };
 }

@@ -52,19 +52,37 @@ Required for `.github/workflows/deploy-cloudflare-pages.yml`:
   Pages edit access so the workflow can list, create, and deploy Pages
   projects.
 - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account ID that owns the Pages projects.
+- `AUTH_SESSION_SECRET`: long random app-owned session signing secret for the
+  Hub auth API.
+- `AUTH_STATE_SECRET`: long random app-owned OAuth state signing secret for the
+  Hub auth API.
+- `GOOGLE_CLIENT_ID`: Google OAuth client ID for the Hub callback URL.
+- `GOOGLE_CLIENT_SECRET`: Google OAuth client secret for the Hub callback URL.
+
+The deploy workflow syncs auth environment secrets to Cloudflare Pages before
+deploying. Every Pages project discovered from `apps/*/wrangler.toml` receives
+the shared client auth base URL. The `rehabtrainerhub` project also receives
+the Google OAuth and session signing secrets. This keeps future Pages apps on
+the same login system without adding per-site Cloudflare settings by hand.
 
 ## Environment Variables
 
 Canonical production URLs:
 
+- `AUTH_API_BASE=https://rehabtrainerhub.pages.dev`
 - `REHABTRAINERHUB_URL=https://rehabtrainerhub.pages.dev`
 - `STROKETRAINER_URL=https://stroketrainer.pages.dev`
 - `VISIONTRAINER_URL=https://visiontrainer.pages.dev`
+- `AUTH_ALLOWED_ORIGINS=https://rehabtrainerhub.pages.dev,https://stroketrainer.pages.dev,https://visiontrainer.pages.dev`
 
 Use custom domains here when they are ready. These values drive Hub CTA links,
 each app's related-sites page, Vite canonical metadata, and the Hub sitemap.
 Avoid preview deployment URLs such as `https://<hash>.<project>.pages.dev` for
 these variables.
+
+`AUTH_ALLOWED_ORIGINS` is optional when only `*.pages.dev` project URLs are in
+use, because the deploy script also includes every discovered Pages project as
+`https://<project>.pages.dev`. Add custom domains here when they are active.
 
 StrokeTrainer optional external Vosk model URLs:
 

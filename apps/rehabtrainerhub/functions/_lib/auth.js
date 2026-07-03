@@ -11,6 +11,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
 ];
 
 export const AUTH_MESSAGE_TYPE = 'rehabtrainerhub-auth-session';
+export const AUTH_COOKIE_NAME = 'rehabtrainerhub_session';
 
 export function getAuthBaseUrl(request, env) {
   const configured = env.AUTH_BASE_URL || env.NEXT_PUBLIC_REHABTRAINERHUB_URL;
@@ -43,6 +44,7 @@ export function corsHeaders(request, env) {
 
   if (getAllowedOrigins(env).has(origin.replace(/\/+$/, ''))) {
     headers['Access-Control-Allow-Origin'] = origin;
+    headers['Access-Control-Allow-Credentials'] = 'true';
   }
 
   return headers;
@@ -105,6 +107,57 @@ export async function requireSession(request, env) {
   } catch {
     return null;
   }
+}
+
+export function getCookieValue(request, name) {
+  const cookieHeader = request.headers.get('Cookie') || '';
+  const cookies = cookieHeader.split(';').map((cookie) => cookie.trim()).filter(Boolean);
+  for (const cookie of cookies) {
+    const separatorIndex = cookie.indexOf('=');
+    if (separatorIndex < 0) continue;
+    const cookieName = cookie.slice(0, separatorIndex);
+    if (cookieName === name) return decodeURIComponent(cookie.slice(separatorIndex + 1));
+  }
+  return null;
+}
+
+export async function getCookieSession(request, env) {
+  const token = getCookieValue(request, AUTH_COOKIE_NAME);
+  if (!token) return null;
+  try {
+    return {
+      token,
+      payload: await verifySignedValue(token, getSessionSecret(env)),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function createSessionCookie(request, token) {
+  const secureAttributes = new URL(request.url).protocol === 'https:'
+    ? 'SameSite=None; Secure'
+    : 'SameSite=Lax';
+  return [
+    `${AUTH_COOKIE_NAME}=${encodeURIComponent(token)}`,
+    'Path=/',
+    'Max-Age=2592000',
+    'HttpOnly',
+    secureAttributes,
+  ].join('; ');
+}
+
+export function clearSessionCookie(request) {
+  const secureAttributes = new URL(request.url).protocol === 'https:'
+    ? 'SameSite=None; Secure'
+    : 'SameSite=Lax';
+  return [
+    `${AUTH_COOKIE_NAME}=`,
+    'Path=/',
+    'Max-Age=0',
+    'HttpOnly',
+    secureAttributes,
+  ].join('; ');
 }
 
 export async function createSignedValue(payload, secret, ttlSeconds) {
@@ -223,7 +276,7 @@ export async function createSessionForUser(env, user) {
   );
 }
 
-export function authPopupHtml(returnTo, token, user) {
+export function authPopupHtml(returnTo, token, user, init = {}) {
   const targetOrigin = new URL(returnTo).origin;
   const fallback = new URL(returnTo);
   fallback.searchParams.set('auth_token', token);
@@ -262,9 +315,11 @@ export function authPopupHtml(returnTo, token, user) {
   </script>
 </body>
 </html>`, {
+    ...init,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'no-store',
+      ...(init.headers || {}),
     },
   });
 }

@@ -206,7 +206,7 @@ export function Navbar() {
           </div>
           <div className="navbar-tools">
             <div className="trainer-auth-measure">
-              {lang === 'en' ? 'Sign in with Google Sign in with Facebook' : '使用 Google 登入 使用 Facebook 登入'}
+              {lang === 'en' ? 'Sign in with Google' : '使用 Google 登入'}
             </div>
             <div className="navbar-records">
               <span className="btn btn-primary btn-sm navbar-download-btn">

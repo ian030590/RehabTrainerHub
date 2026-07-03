@@ -1,10 +1,14 @@
 import {
+  authPopupHtml,
   createSignedValue,
   errorResponse,
   getAuthBaseUrl,
+  getCookieSession,
   getStateSecret,
+  getUserById,
   isSafeReturnTo,
   optionsResponse,
+  toPublicUser,
 } from '../../_lib/auth.js';
 
 const providers = {
@@ -12,11 +16,6 @@ const providers = {
     clientId: 'GOOGLE_CLIENT_ID',
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     scope: 'openid email profile',
-  },
-  facebook: {
-    clientId: 'FACEBOOK_CLIENT_ID',
-    authUrl: 'https://www.facebook.com/v19.0/dialog/oauth',
-    scope: 'email,public_profile',
   },
 };
 
@@ -39,6 +38,14 @@ export async function onRequestGet({ request, env }) {
   }
   if (!isSafeReturnTo(returnTo, env)) {
     return errorResponse(request, env, 'Return URL is not allowed.', 400);
+  }
+
+  const existingSession = await getCookieSession(request, env);
+  if (existingSession?.payload?.sub) {
+    const existingUser = await getUserById(env, existingSession.payload.sub);
+    if (existingUser) {
+      return authPopupHtml(returnTo, existingSession.token, toPublicUser(existingUser));
+    }
   }
 
   const config = providers[provider];
@@ -67,9 +74,7 @@ export async function onRequestGet({ request, env }) {
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('scope', config.scope);
   authUrl.searchParams.set('state', state);
-  if (provider === 'google') {
-    authUrl.searchParams.set('prompt', 'select_account');
-  }
+  authUrl.searchParams.set('prompt', 'select_account');
 
   return Response.redirect(authUrl.toString(), 302);
 }

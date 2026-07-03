@@ -29,6 +29,7 @@ const productionBranch =
   getArg('--production-branch') ?? process.env.CLOUDFLARE_PAGES_PRODUCTION_BRANCH ?? 'main';
 const dryRun = process.argv.includes('--dry-run');
 const validateOutput = !dryRun || process.argv.includes('--validate-output');
+const syncAuthEnv = !process.argv.includes('--skip-auth-env-sync');
 
 function readTomlString(toml, key) {
   const match = toml.match(new RegExp(`^\\s*${key}\\s*=\\s*["']([^"']+)["']\\s*$`, 'm'));
@@ -220,6 +221,41 @@ function deployProject(project) {
   ]);
 }
 
+function syncAuthEnvironment() {
+  if (!syncAuthEnv) {
+    console.log('Skipping auth environment sync.');
+    return;
+  }
+
+  const args = ['scripts/sync-cloudflare-auth-env.mjs'];
+  if (dryRun) args.push('--dry-run');
+  console.log(`$ node ${args.map(shellQuote).join(' ')}`);
+  if (dryRun) {
+    const result = spawnSync(process.execPath, args, {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      env: process.env,
+      stdio: 'inherit',
+    });
+    if (result.status !== 0) {
+      if (result.error) throw result.error;
+      throw new Error(`Auth environment dry-run failed with exit code ${result.status}.`);
+    }
+    return;
+  }
+
+  const result = spawnSync(process.execPath, args, {
+    cwd: repoRoot,
+    env: process.env,
+    stdio: 'inherit',
+  });
+
+  if (result.status !== 0) {
+    if (result.error) throw result.error;
+    throw new Error(`Auth environment sync failed with exit code ${result.status}.`);
+  }
+}
+
 function validateProjectOutput(project) {
   const absoluteOutputPath = join(repoRoot, project.outputPath);
   if (!existsSync(absoluteOutputPath)) {
@@ -291,5 +327,10 @@ const existingProjectNames = listExistingProjectNames();
 
 for (const project of projects) {
   ensureProject(project, existingProjectNames);
+}
+
+syncAuthEnvironment();
+
+for (const project of projects) {
   deployProject(project);
 }

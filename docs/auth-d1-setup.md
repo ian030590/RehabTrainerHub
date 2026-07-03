@@ -3,11 +3,12 @@
 RehabTrainerHub uses the Hub Pages project as the central auth API for:
 
 - Google OAuth login
-- Facebook OAuth login
 - Anonymous profile collection after login
 - Signed-in training record storage in Cloudflare D1
 
-StrokeTrainer and VisionTrainer call the Hub API with a bearer token. If there is no token, records stay in each browser's IndexedDB.
+StrokeTrainer, VisionTrainer, and future Pages apps call the Hub API with a bearer token. If there is no token, records stay in each browser's IndexedDB.
+
+The Hub also sets a first-party session cookie. Other sites try to restore that shared Hub session on load, and the login popup can reuse the same Hub session when browser third-party cookie rules block silent restoration.
 
 ## Cloudflare D1
 
@@ -27,7 +28,7 @@ npx --yes wrangler@4 d1 migrations apply rehabtrainerhub --config apps/rehabtrai
 
 ## OAuth Redirect URI
 
-Register this callback URL in both Google and Facebook developer consoles:
+Register this callback URL in the Google Cloud Console OAuth client:
 
 ```text
 https://rehabtrainerhub.pages.dev/api/auth/callback
@@ -35,31 +36,58 @@ https://rehabtrainerhub.pages.dev/api/auth/callback
 
 For custom domains, register the equivalent custom-domain callback and set `AUTH_BASE_URL`.
 
-## Hub Environment Variables
+## GitHub Actions Secrets
 
-Set these on the `rehabtrainerhub` Cloudflare Pages project:
+Set these GitHub Actions secrets in the repository or in the `cloudflare-pages` environment:
 
 ```text
-AUTH_BASE_URL=https://rehabtrainerhub.pages.dev
-AUTH_ALLOWED_ORIGINS=https://rehabtrainerhub.pages.dev,https://stroketrainer.pages.dev,https://visiontrainer.pages.dev
 AUTH_SESSION_SECRET=<random 32+ character secret>
 AUTH_STATE_SECRET=<random 32+ character secret>
 GOOGLE_CLIENT_ID=<google oauth client id>
 GOOGLE_CLIENT_SECRET=<google oauth client secret>
-FACEBOOK_CLIENT_ID=<facebook app id>
-FACEBOOK_CLIENT_SECRET=<facebook app secret>
 ```
 
-`AUTH_SESSION_SECRET` and `AUTH_STATE_SECRET` are app-owned random signing secrets. They are not Google or Facebook values. Generate long random strings and keep them only in Cloudflare environment variables or secrets.
+`AUTH_SESSION_SECRET` and `AUTH_STATE_SECRET` are app-owned random signing secrets. They are not Google values. Generate long random strings and keep them only in GitHub Actions secrets or Cloudflare environment variables.
 
-If `AUTH_STATE_SECRET` is omitted, the app falls back to `AUTH_SESSION_SECRET`.
+## GitHub Actions Variables
 
-## Trainer Environment Variables
+Recommended repository or `cloudflare-pages` environment variables:
 
-Set this on StrokeTrainer and VisionTrainer only if the auth API is not the default Hub URL:
+```text
+AUTH_API_BASE=https://rehabtrainerhub.pages.dev
+REHABTRAINERHUB_URL=https://rehabtrainerhub.pages.dev
+STROKETRAINER_URL=https://stroketrainer.pages.dev
+VISIONTRAINER_URL=https://visiontrainer.pages.dev
+AUTH_ALLOWED_ORIGINS=https://rehabtrainerhub.pages.dev,https://stroketrainer.pages.dev,https://visiontrainer.pages.dev
+```
+
+`AUTH_ALLOWED_ORIGINS` is optional. The deploy script also includes every discovered `apps/*/wrangler.toml` Pages project as `https://<project>.pages.dev`, so future sites are included automatically when they are added to the monorepo.
+
+## Cloudflare Pages Environment Sync
+
+GitHub Actions runs `scripts/sync-cloudflare-auth-env.mjs` during deployment:
+
+- Every Pages project receives shared client auth config:
+  `AUTH_API_BASE`, `NEXT_PUBLIC_AUTH_API_BASE`, `NEXT_PUBLIC_REHABTRAINERHUB_URL`, `VITE_AUTH_API_BASE`, and `VITE_REHABTRAINERHUB_URL`.
+- The Hub project additionally receives:
+  `AUTH_BASE_URL`, `AUTH_ALLOWED_ORIGINS`, `AUTH_SESSION_SECRET`, `AUTH_STATE_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`.
+- New Pages apps are discovered from `apps/*/wrangler.toml`, so they are included without editing the workflow.
+
+For local or manual sync:
+
+```bash
+AUTH_SESSION_SECRET=<secret> AUTH_STATE_SECRET=<secret> GOOGLE_CLIENT_ID=<id> GOOGLE_CLIENT_SECRET=<secret> node scripts/sync-cloudflare-auth-env.mjs
+```
+
+The runtime code can fall back to `AUTH_SESSION_SECRET` if `AUTH_STATE_SECRET` is absent, but the CI/CD sync script requires both secrets so production deployments stay explicit.
+
+## Trainer And Future App Environment Variables
+
+Shared auth client code should use:
 
 ```text
 VITE_AUTH_API_BASE=https://rehabtrainerhub.pages.dev
+NEXT_PUBLIC_AUTH_API_BASE=https://rehabtrainerhub.pages.dev
 ```
 
 ## Privacy and Profile Fields

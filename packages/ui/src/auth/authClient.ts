@@ -1,4 +1,4 @@
-export type AuthProvider = 'google' | 'facebook';
+export type AuthProvider = 'google';
 export type AuthLocale = 'zh-TW' | 'en';
 export type HabitStatus = 'none' | 'current' | 'former';
 export type HabitInterval = 'week' | 'month';
@@ -43,6 +43,11 @@ export interface AuthSessionMessage {
   user: AuthUser;
 }
 
+export interface SharedAuthSession {
+  token: string;
+  user: AuthUser;
+}
+
 export interface RemoteTrainingRecord {
   id: string;
   savedAt: string;
@@ -63,9 +68,9 @@ export function getAuthToken(): string | null {
   return window.localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
-export function setAuthToken(token: string): void {
+export function setAuthToken(token: string, dispatchEvent = true): void {
   window.localStorage.setItem(AUTH_TOKEN_KEY, token);
-  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+  if (dispatchEvent) window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }
 
 export function clearAuthToken(): void {
@@ -169,6 +174,32 @@ export async function fetchCurrentAuthUser(apiBase?: string): Promise<AuthUser |
 
   const payload = await response.json() as { user?: AuthUser };
   return payload.user ?? null;
+}
+
+export async function fetchSharedAuthSession(apiBase?: string): Promise<SharedAuthSession | null> {
+  const response = await fetch(buildApiUrl(apiBase, '/api/auth/session'), {
+    credentials: 'include',
+  });
+
+  if (response.status === 401) return null;
+
+  if (!response.ok) {
+    throw new Error(`Unable to load shared auth session. Status ${response.status}`);
+  }
+
+  const payload = await response.json() as Partial<SharedAuthSession>;
+  return payload.token && payload.user ? { token: payload.token, user: payload.user } : null;
+}
+
+export async function logoutAuthSession(apiBase?: string): Promise<void> {
+  try {
+    await fetch(buildApiUrl(apiBase, '/api/auth/logout'), {
+      method: 'POST',
+      credentials: 'include',
+    });
+  } finally {
+    clearAuthToken();
+  }
 }
 
 export async function saveAuthProfile(apiBase: string | undefined, profile: RehabProfile): Promise<AuthUser> {
