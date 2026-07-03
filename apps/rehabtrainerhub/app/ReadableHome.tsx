@@ -9,6 +9,8 @@ import { siteUrls } from './siteUrls';
 type Locale = 'zh-TW' | 'en';
 type FontScale = 'standard' | 'large' | 'extra';
 type Theme = 'light' | 'dark';
+type SectionId = 'programs' | 'care' | 'education';
+type IconName = 'brain' | 'eye' | 'arrow' | 'check' | 'menu' | 'close';
 
 const storageKeys = {
   locale: 'rehabtrainerhub.locale',
@@ -18,7 +20,6 @@ const storageKeys = {
 
 const fontScales: FontScale[] = ['standard', 'large', 'extra'];
 const themes: Theme[] = ['light', 'dark'];
-type SectionId = 'programs' | 'care' | 'education';
 const homeSectionIds: SectionId[] = ['programs', 'care', 'education'];
 
 const content = {
@@ -40,7 +41,7 @@ const content = {
         '請依目前需要選擇中風復健或視覺訓練。這些工具可輔助居家練習，但不能取代醫師或治療師的評估。',
       primaryAction: '選擇工具',
       secondaryAction: '查看安全提醒',
-      visualLabel: 'RehabTrainerHub 工具總覽',
+      visualLabel: 'RehabTrainerHub 工具選擇示意',
       checklist: ['中風練習', '視覺訓練', '字體可放大'],
     },
     controls: {
@@ -48,16 +49,16 @@ const content = {
       settingsButton: '閱讀設定',
       settingsClose: '關閉設定',
       languageLabel: '介面語言',
-      zh: '繁體中文',
+      zh: '繁中',
       en: 'EN',
-      fontLabel: '字型大小',
+      fontLabel: '字體大小',
       standard: 'A',
       large: 'A+',
       extra: 'A++',
       themeLabel: '色彩模式',
-      light: '淺色模式',
-      dark: '深色模式',
-      contrastLabel: '對比度',
+      light: '淺色',
+      dark: '深色',
+      contrastLabel: '對比',
       contrastLoading: '檢查中',
       contrastPass: '通過 WCAG AAA',
       contrastWarn: '通過 WCAG AA',
@@ -95,7 +96,7 @@ const content = {
         description:
           '將治療師交代的方向，整理成適合在家短時間練習的任務。',
         points: ['動作協調', '注意力記憶', '口腔語音'],
-        action: '開啟中風',
+        action: '開啟中風復健',
         logoAlt: 'StrokeTrainer 標誌',
       },
       {
@@ -107,30 +108,26 @@ const content = {
         description:
           '提供視覺搜尋、閱讀眼動與對比辨識練習，適合依專業建議使用。',
         points: ['視覺搜尋', '閱讀眼動', '對比辨識'],
-        action: '開啟視覺',
+        action: '開啟視覺訓練',
         logoAlt: 'VisionTrainer 標誌',
       },
     ],
-    features: [
+    safetySteps: [
       {
         title: '有人陪同',
-        text:
-          '第一次使用時，請家人在旁協助選工具與確認安全。',
+        text: '第一次使用時，請家人在旁協助選工具與確認安全。',
       },
       {
         title: '專業確認',
-        text:
-          '不確定適不適合時，請先詢問醫師或治療師。',
+        text: '不確定適不適合時，請先詢問醫師或治療師。',
       },
       {
         title: '短時練習',
-        text:
-          '每次先短時間練習；如果累、暈或痛，請立刻停止。',
+        text: '每次先短時間練習；如果累、暈或痛，請立刻停止。',
       },
       {
         title: '步驟確認',
-        text:
-          '如果看不懂步驟，請先停下來，找家人或治療師確認。',
+        text: '如果看不懂步驟，請先停下來，找家人或治療師確認。',
       },
     ],
   },
@@ -146,21 +143,21 @@ const content = {
       submit: 'Submit',
     },
     hero: {
-      eyebrow: 'Integrated home rehabilitation portal',
-      title: 'A clearer entry point for home rehabilitation tools',
+      eyebrow: 'Home rehabilitation hub',
+      title: 'Find home practice tools after stroke',
       body:
-        'Choose stroke recovery or vision training. These tools support home practice and do not replace clinical care.',
-      primaryAction: 'View programs',
-      secondaryAction: 'Read guidance',
-      visualLabel: 'RehabTrainerHub tool overview',
+        'Choose stroke rehabilitation or vision training based on your current need. These tools support home practice and do not replace evaluation by a physician or therapist.',
+      primaryAction: 'Choose a tool',
+      secondaryAction: 'View safety notes',
+      visualLabel: 'RehabTrainerHub tool selection preview',
       checklist: ['Stroke practice', 'Vision training', 'Larger text'],
     },
     controls: {
       settingsLabel: 'Reading settings',
       settingsButton: 'Reading',
-      settingsClose: 'Close',
+      settingsClose: 'Close settings',
       languageLabel: 'Interface language',
-      zh: '繁體中文',
+      zh: '繁中',
       en: 'EN',
       fontLabel: 'Font size',
       standard: 'A',
@@ -176,36 +173,36 @@ const content = {
       contrastFail: 'Below AA',
     },
     programs: {
-      eyebrow: 'Targeted recovery programs',
-      title: 'Choose stroke recovery or vision training by need',
+      eyebrow: 'Choose first',
+      title: 'What do you want to practice now?',
       intro:
-        'For movement, cognition, or speech after stroke, choose StrokeTrainer. For reading or eye movement, choose VisionTrainer.',
+        'For movement, cognition, or speech, choose stroke rehabilitation. For reading, seeing text, or eye movement, choose vision training.',
     },
     care: {
-      eyebrow: 'Clinical care at home',
-      title: 'Turn professional guidance into daily practice',
+      eyebrow: 'Safety notes',
+      title: 'Confirm safety before starting',
       quote:
-        'Stop if you feel unwell. This site does not diagnose or treat.',
+        'Stop if you feel unwell during practice. This website provides tools and guidance, not diagnosis.',
       body:
-        'Use it first with a family member or caregiver. Keep each session short.',
+        'Use it with a family member the first time. Keep each session short and adjust only with professional guidance.',
     },
     education: {
-      eyebrow: 'Guidance and related resources',
-      title: 'Understand safety principles before training',
+      eyebrow: 'Education',
+      title: 'Read a short guide when something is unclear',
       intro:
-        'Review setup, stop signs, and what each exercise trains.',
-      educationLink: 'Read education materials',
-      linksLink: 'View related links',
+        'The education page summarizes setup notes, stop signs, and the purpose of each training type.',
+      educationLink: 'Read education',
+      linksLink: 'Related links',
     },
     apps: [
       {
         id: 'stroke',
         title: 'StrokeTrainer',
-        localTitle: 'Stroke rehabilitation',
+        localTitle: 'Stroke rehabilitation practice',
         name: 'StrokeTrainer',
         bestFor: 'Best for movement, cognition, and speech',
         description:
-          'Short home exercises based on therapist goals.',
+          'Turns therapist-directed goals into short home practice tasks.',
         points: ['Coordination', 'Attention and memory', 'Oral speech'],
         action: 'Open StrokeTrainer',
         logoAlt: 'StrokeTrainer logo',
@@ -213,36 +210,32 @@ const content = {
       {
         id: 'vision',
         title: 'VisionTrainer',
-        localTitle: 'Vision rehabilitation',
+        localTitle: 'Vision training practice',
         name: 'VisionTrainer',
-        bestFor: 'Best for reading and eye movement',
+        bestFor: 'Best for text, reading, and eye movement',
         description:
-          'Practice visual search, reading, eye movement, and contrast.',
-        points: ['Visual search', 'Reading and eye movement', 'Contrast'],
+          'Provides visual search, reading eye movement, and contrast practice for professional-guided use.',
+        points: ['Visual search', 'Reading eye movement', 'Contrast'],
         action: 'Open VisionTrainer',
         logoAlt: 'VisionTrainer logo',
       },
     ],
-    features: [
+    safetySteps: [
       {
-        title: 'Clear usage limitations',
-        text:
-          'Each tool states when it should be used.',
+        title: 'Have support nearby',
+        text: 'Ask a family member to help choose tools and check safety the first time.',
       },
       {
-        title: 'Taiwan-ready Traditional Chinese',
-        text:
-          'Chinese copy uses Taiwan Traditional Chinese.',
+        title: 'Confirm professionally',
+        text: 'If you are unsure whether a tool fits you, ask a physician or therapist first.',
       },
       {
-        title: 'Bilingual interface',
-        text:
-          'Switch between Traditional Chinese and English.',
+        title: 'Practice briefly',
+        text: 'Start with short sessions. Stop immediately if you feel tired, dizzy, or painful.',
       },
       {
-        title: 'Readability settings',
-        text:
-          'Use larger text, dark mode, and contrast checks.',
+        title: 'Check the steps',
+        text: 'If instructions are unclear, stop and ask a family member or therapist to confirm.',
       },
     ],
   },
@@ -252,12 +245,64 @@ const appAssets = {
   stroke: {
     href: siteUrls.stroke,
     image: '/assets/stroke-logo.png',
+    icon: 'brain',
   },
   vision: {
     href: siteUrls.vision,
     image: '/assets/vision-logo.png',
+    icon: 'eye',
   },
 } as const;
+
+function Icon({ name, className }: { name: IconName; className?: string }) {
+  if (name === 'menu') {
+    return (
+      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === 'close') {
+    return (
+      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === 'eye') {
+    return (
+      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="12" cy="12" r="2.75" stroke="currentColor" strokeWidth="1.8" />
+      </svg>
+    );
+  }
+
+  if (name === 'brain') {
+    return (
+      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path d="M8.5 5.5A3.5 3.5 0 0 1 12 2a3.5 3.5 0 0 1 3.45 3 3.45 3.45 0 0 1 2.8 5.45A3.7 3.7 0 0 1 16 17.4V19a3 3 0 0 1-6 0v-1.6a3.7 3.7 0 0 1-2.25-6.95A3.45 3.45 0 0 1 8.5 5.5Z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 2v20M8.2 8.2c1.1.4 2 .4 3-.2M15.8 8.2c-1.1.4-2 .4-3-.2M8.3 14.4c1 .35 1.9.25 2.7-.3M15.7 14.4c-1 .35-1.9.25-2.7-.3" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === 'check') {
+    return (
+      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 function isLocale(value: string | null): value is Locale {
   return value === 'zh-TW' || value === 'en';
@@ -354,9 +399,9 @@ export function ReadableHome() {
   useEffect(() => {
     const checkContrast = () => {
       const pairs = [
-        [getCssVariable('--text'), getCssVariable('--background')],
-        [getCssVariable('--primary'), getCssVariable('--surface-lowest')],
-        [getCssVariable('--on-secondary'), getCssVariable('--secondary')],
+        [getCssVariable('--on-background'), getCssVariable('--background')],
+        [getCssVariable('--primary'), getCssVariable('--surface-white')],
+        [getCssVariable('--on-primary'), getCssVariable('--primary')],
       ] as const;
       const ratios = pairs
         .map(([foreground, background]) => getContrastRatio(foreground, background))
@@ -431,6 +476,7 @@ export function ReadableHome() {
     setIsMenuOpen(false);
     setIsSettingsOpen(false);
   };
+
   const sectionLinkClass = (sectionId: SectionId) => `nav-link ${currentSection === sectionId ? 'is-active' : ''}`;
 
   return (
@@ -453,21 +499,9 @@ export function ReadableHome() {
             aria-controls="site-menu"
             aria-expanded={isMenuOpen}
             aria-label="Toggle menu"
+            type="button"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {isMenuOpen ? (
-                <>
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </>
-              ) : (
-                <>
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </>
-              )}
-            </svg>
+            <Icon className="icon-md" name={isMenuOpen ? 'close' : 'menu'} />
           </button>
         </div>
 
@@ -505,53 +539,52 @@ export function ReadableHome() {
             aria-label={copy.controls.settingsLabel}
           >
             <div className="readability-toolbar">
-            <div className="control-group" role="group" aria-label={copy.controls.languageLabel}>
-              <button
-                aria-pressed={locale === 'zh-TW'}
-                className={locale === 'zh-TW' ? 'is-active' : ''}
-                onClick={() => setLocale('zh-TW')}
-                type="button"
-              >
-                {copy.controls.zh}
-              </button>
-              <button
-                aria-pressed={locale === 'en'}
-                className={locale === 'en' ? 'is-active' : ''}
-                onClick={() => setLocale('en')}
-                type="button"
-              >
-                {copy.controls.en}
-              </button>
-            </div>
-
-            <div className="control-group" role="group" aria-label={copy.controls.fontLabel}>
-              {fontScales.map((scale) => (
+              <div className="control-group" role="group" aria-label={copy.controls.languageLabel}>
                 <button
-                  aria-pressed={fontScale === scale}
-                  className={fontScale === scale ? 'is-active' : ''}
-                  key={scale}
-                  onClick={() => setFontScale(scale)}
+                  aria-pressed={locale === 'zh-TW'}
+                  className={locale === 'zh-TW' ? 'is-active' : ''}
+                  onClick={() => setLocale('zh-TW')}
                   type="button"
                 >
-                  {copy.controls[scale]}
+                  {copy.controls.zh}
                 </button>
-              ))}
-            </div>
-
-            <div className="control-group" role="group" aria-label={copy.controls.themeLabel}>
-              {themes.map((mode) => (
                 <button
-                  aria-pressed={theme === mode}
-                  className={theme === mode ? 'is-active' : ''}
-                  key={mode}
-                  onClick={() => setTheme(mode)}
+                  aria-pressed={locale === 'en'}
+                  className={locale === 'en' ? 'is-active' : ''}
+                  onClick={() => setLocale('en')}
                   type="button"
                 >
-                {copy.controls[mode]}
-              </button>
-            ))}
-            </div>
+                  {copy.controls.en}
+                </button>
+              </div>
 
+              <div className="control-group" role="group" aria-label={copy.controls.fontLabel}>
+                {fontScales.map((scale) => (
+                  <button
+                    aria-pressed={fontScale === scale}
+                    className={fontScale === scale ? 'is-active' : ''}
+                    key={scale}
+                    onClick={() => setFontScale(scale)}
+                    type="button"
+                  >
+                    {copy.controls[scale]}
+                  </button>
+                ))}
+              </div>
+
+              <div className="control-group" role="group" aria-label={copy.controls.themeLabel}>
+                {themes.map((mode) => (
+                  <button
+                    aria-pressed={theme === mode}
+                    className={theme === mode ? 'is-active' : ''}
+                    key={mode}
+                    onClick={() => setTheme(mode)}
+                    type="button"
+                  >
+                    {copy.controls[mode]}
+                  </button>
+                ))}
+              </div>
             </div>
             <p className="contrast-status">
               {copy.controls.contrastLabel} {contrastText.ratio} {contrastText.status}
@@ -573,103 +606,131 @@ export function ReadableHome() {
       </nav>
 
       <section className="hero">
-        <div className="hero-copy">
-          <p className="eyebrow">{copy.hero.eyebrow}</p>
-          <h1>{copy.hero.title}</h1>
-          <p>{copy.hero.body}</p>
-          <div className="hero-actions">
-            <a className="primary-action" href="#apps-title">
-              {copy.hero.primaryAction}
-            </a>
-            <a className="secondary-action" href="#care-title">
-              {copy.hero.secondaryAction}
-            </a>
-          </div>
-        </div>
-        <div className="hero-panel" aria-label={copy.hero.visualLabel}>
-          <div className="hero-device">
-            <div className="device-topbar" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
-            <div className="device-content">
-              <Image src="/assets/stroke-logo.png" alt="" width={112} height={74} priority />
-              <Image src="/assets/vision-logo.png" alt="" width={112} height={74} priority />
+        <div className="section-inner hero-grid">
+          <div className="hero-copy">
+            <p className="eyebrow pill">{copy.hero.eyebrow}</p>
+            <h1>{copy.hero.title}</h1>
+            <p>{copy.hero.body}</p>
+            <div className="hero-actions">
+              <a className="primary-action" href="#apps-title">
+                {copy.hero.primaryAction}
+              </a>
+              <a className="secondary-action" href="#care-title">
+                {copy.hero.secondaryAction}
+              </a>
             </div>
           </div>
-          <div className="hero-checklist">
-            {copy.hero.checklist.map((item) => (
-              <span key={item}>{item}</span>
-            ))}
+
+          <div className="hero-panel" aria-label={copy.hero.visualLabel}>
+            <div className="hero-device">
+              <div className="device-topbar" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="device-content">
+                {copy.apps.map((app) => {
+                  const asset = appAssets[app.id];
+                  return (
+                    <div className={`device-tile device-tile-${app.id}`} key={app.id}>
+                      <Icon className="device-icon" name={asset.icon} />
+                      <span>{app.localTitle}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="hero-checklist">
+                {copy.hero.checklist.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       <section className="app-section" id="programs" aria-labelledby="apps-title">
-        <div className="section-heading">
-          <p className="eyebrow">{copy.programs.eyebrow}</p>
-          <h2 id="apps-title">{copy.programs.title}</h2>
-          <span>{copy.programs.intro}</span>
-        </div>
-        <div className="app-grid">
-          {copy.apps.map((app) => {
-            const asset = appAssets[app.id];
-            return (
-              <article className="app-card" key={app.id}>
-                <div className="app-card-media">
-                  <Image src={asset.image} alt={app.logoAlt} width={144} height={92} />
-                </div>
-                <div className="app-body">
-                  <p>{app.name}</p>
-                  <h3>{app.localTitle}</h3>
-                  <strong>{app.bestFor}</strong>
-                  <span>{app.description}</span>
+        <div className="section-inner">
+          <div className="section-heading">
+            <p className="eyebrow">{copy.programs.eyebrow}</p>
+            <h2 id="apps-title">{copy.programs.title}</h2>
+            <p>{copy.programs.intro}</p>
+          </div>
+
+          <div className="app-grid">
+            {copy.apps.map((app) => {
+              const asset = appAssets[app.id];
+              return (
+                <article className={`app-card app-card-${app.id}`} key={app.id}>
+                  <div className="app-card-heading">
+                    <div>
+                      <span>{app.name}</span>
+                      <h3>{app.localTitle}</h3>
+                    </div>
+                    <div className="app-icon">
+                      <Icon className="icon-lg" name={asset.icon} />
+                    </div>
+                  </div>
+
+                  <p className="app-best-for">{app.bestFor}</p>
+                  <p className="app-description">{app.description}</p>
+
                   <ul className="app-points">
-                    {app.points.map((point) => <li key={point}>{point}</li>)}
+                    {app.points.map((point) => (
+                      <li key={point}>
+                        <Icon className="check-icon" name="check" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
                   </ul>
-                </div>
-                <a className="app-link" href={asset.href}>
-                  {app.action}
-                  <span aria-hidden="true">-&gt;</span>
-                </a>
-              </article>
-            );
-          })}
+
+                  <a className="app-link" href={asset.href}>
+                    {app.action}
+                    <Icon className="icon-sm" name="arrow" />
+                  </a>
+                </article>
+              );
+            })}
+          </div>
         </div>
       </section>
 
       <section className="care-section" id="care" aria-labelledby="care-title">
-        <div className="care-copy">
-          <p className="eyebrow">{copy.care.eyebrow}</p>
-          <h2 id="care-title">{copy.care.title}</h2>
-          <blockquote>{copy.care.quote}</blockquote>
-          <p>{copy.care.body}</p>
-        </div>
-        <div className="feature-grid">
-          {copy.features.map((card, index) => (
-            <article className="feature-card" key={card.title}>
-              <span aria-hidden="true">{index + 1}</span>
-              <h3>{card.title}</h3>
-              <p>{card.text}</p>
-            </article>
-          ))}
+        <div className="section-inner care-grid">
+          <div className="care-copy">
+            <p className="eyebrow">{copy.care.eyebrow}</p>
+            <h2 id="care-title">{copy.care.title}</h2>
+            <blockquote>{copy.care.quote}</blockquote>
+            <p>{copy.care.body}</p>
+          </div>
+
+          <div className="safety-list">
+            {copy.safetySteps.map((card, index) => (
+              <article className="feature-card" key={card.title}>
+                <span aria-hidden="true">{index + 1}</span>
+                <div>
+                  <h3>{card.title}</h3>
+                  <p>{card.text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="education-section" id="education" aria-labelledby="education-title">
-        <div className="section-heading">
+        <div className="education-card">
           <p className="eyebrow">{copy.education.eyebrow}</p>
           <h2 id="education-title">{copy.education.title}</h2>
-          <span>{copy.education.intro}</span>
-        </div>
-        <div className="section-links">
-          <Link className="text-link" href="/education/">
-            {copy.education.educationLink}
-          </Link>
-          <Link className="text-link" href="/links/">
-            {copy.education.linksLink}
-          </Link>
+          <p>{copy.education.intro}</p>
+          <div className="section-links">
+            <Link className="primary-action" href="/education/">
+              {copy.education.educationLink}
+            </Link>
+            <Link className="text-link" href="/links/">
+              {copy.education.linksLink}
+            </Link>
+          </div>
         </div>
       </section>
     </main>
