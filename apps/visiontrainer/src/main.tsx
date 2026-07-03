@@ -6,6 +6,7 @@ import { LanguageProvider } from './i18n';
 import { applyThemeTokens } from './theme';
 import { initializeTrainingRecords } from './utils/trainingRecords';
 import 'jspsych/css/jspsych.css';
+import '@rehab-trainer/ui/components/GridPageLayout.css';
 import './index.css';
 
 applyThemeTokens();

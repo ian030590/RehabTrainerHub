@@ -5,6 +5,7 @@ import { HashRouter } from 'react-router-dom';
 import { App } from './App';
 import { LanguageProvider } from './i18n';
 import 'jspsych/css/jspsych.css';
+import '@rehab-trainer/ui/components/GridPageLayout.css';
 import './index.css';
 
 applyThemeTokens();
