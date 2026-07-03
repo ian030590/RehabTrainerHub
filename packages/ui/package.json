@@ -8,6 +8,8 @@
     "./auth/authClient": "./src/auth/authClient.ts",
     "./components/AuthPanel": "./src/components/AuthPanel.tsx",
     "./components/ExternalLinkCard": "./src/components/ExternalLinkCard.tsx",
+    "./components/GridPageLayout": "./src/components/GridPageLayout.tsx",
+    "./components/Icons": "./src/components/Icons.tsx",
     "./components/RehabFooter": "./src/components/RehabFooter.tsx",
     "./components/TrainerNavbar": "./src/components/TrainerNavbar.tsx",
     "./components/UserSelector": "./src/components/UserSelector.tsx",
