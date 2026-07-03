@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLinkCard } from '../../components/ExternalLinkCard';
+import { ExternalLinkCard } from '@rehab-trainer/ui/components/ExternalLinkCard';
 import { useT, type TranslationKey } from '../../i18n';
 
 interface CreditItem {

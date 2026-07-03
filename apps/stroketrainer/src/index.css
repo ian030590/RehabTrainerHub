@@ -7,9 +7,9 @@
   --bg-card:       #FFFFFF; /* White */
   --bg-card-hover: #F9F9FC; /* Surface */
   --accent:        #005EB8; /* Medical Blue */
-  --accent-dark:   #005EB8; /* Medical Blue */
-  --accent-hover:  #005EB8; /* Medical Blue */
-  --success:       #005EB8; /* Medical Blue */
+  --accent-dark:   #00478D; /* Medical Blue */
+  --accent-hover:  #005DB6; /* Medical Blue */
+  --success:       #8BA88E; /* Success */
   --error:         #BA1A1A; /* Error */
   --error-hover:   #93000A;
   --warning:       #D29922;
@@ -121,25 +121,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   width: 100vw;
   height: 100vh;
   background: var(--bg);
-}
-
-.app-footer {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  padding: 6px 12px 8px;
-  font-size: 12px;
-  color: var(--text-muted);
-  background: var(--bg);
-}
-
-.app-footer a {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.app-footer a:hover {
-  text-decoration: underline;
 }
 
 .page-content {
@@ -323,105 +304,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   }
 }
 
-.navbar.navbar-sidebar {
-  padding: 0 20px;
-}
-
-.navbar.navbar-sidebar .navbar-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 102;
-}
-
-.navbar.navbar-sidebar .navbar-menu {
-  position: fixed;
-  top: 0;
-  right: -280px;
-  width: 280px;
-  height: 100vh;
-  background: var(--bg-card);
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 80px 24px 24px;
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
-  transition: right 0.3s ease;
-  z-index: 101;
-  gap: 32px;
-}
-
-.navbar.navbar-sidebar .navbar-menu.is-open {
-  right: 0;
-}
-
-.navbar.navbar-sidebar .navbar-overlay {
-  display: block;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 100;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.navbar.navbar-sidebar .navbar-menu .navbar-links {
-  flex-direction: column;
-  width: 100%;
-}
-
-.navbar.navbar-sidebar .navbar-menu .navbar-tools {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 16px;
-  width: 100%;
-}
-
-.navbar.navbar-sidebar .navbar-menu .navbar-records {
-  flex-direction: column;
-  align-items: flex-start;
-  max-width: none;
-  width: 100%;
-}
-
-.navbar.navbar-sidebar .navbar-menu .navbar-download-btn {
-  width: 100%;
-}
-
-.navbar.navbar-sidebar .navbar-menu .navbar-backup-reminder {
-  display: block;
-  max-width: none;
-  font-size: calc(13px * var(--ui-font-scale));
-  line-height: 1.5;
-}
-
-.navbar.navbar-sidebar .navbar-menu .navbar-link {
-  width: 100%;
-  text-align: left;
-  padding: 12px 16px;
-}
-
-.navbar-measure {
-  position: fixed;
-  top: -1000px;
-  left: -1000px;
-  z-index: -1;
-  width: max-content;
-  max-width: none;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  visibility: hidden;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-.navbar-measure-menu {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
 .navbar-brand {
   display: flex;
   align-items: center;
@@ -435,11 +317,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
 .navbar-brand svg {
   color: var(--accent);
-}
-
-.navbar-brand-logo {
-  width: auto;
-  object-fit: contain;
 }
 
 .font-setting-control {
@@ -482,7 +359,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   font-size: calc(12px * var(--ui-font-scale));
 }
 
-.app-layout .app-footer,
 .app-layout .key-hint,
 .app-layout .webgazer-calibration-message,
 .app-layout .webgazer-pl-message,
@@ -666,12 +542,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
 .trainer-auth-panel {
   max-width: 360px;
-}
-
-.trainer-auth-measure {
-  white-space: nowrap;
-  font-size: calc(13px * var(--ui-font-scale));
-  font-weight: var(--ui-font-heading-weight);
 }
 
 .auth-panel {
@@ -890,26 +760,31 @@ body[data-ui-font-bold="true"] .app-layout :where(
 }
 
 .card-title {
+  display: block;
   font-size: 24px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   margin-bottom: 12px;
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
 .card-desc {
+  display: block;
   font-size: 16px;
   color: var(--text-secondary);
   line-height: 1.5;
 }
 
 .card-icon {
+  display: block;
   font-size: 32px;
   margin-bottom: 16px;
   color: var(--accent);
 }
 
 .card-link {
+  display: block;
+  height: 100%;
   color: inherit;
   text-decoration: none;
 }
@@ -920,8 +795,8 @@ body[data-ui-font-bold="true"] .app-layout :where(
   gap: 8px;
   margin-top: 16px;
   color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: var(--fw-semibold);
 }
 
 .content-grid-spaced {

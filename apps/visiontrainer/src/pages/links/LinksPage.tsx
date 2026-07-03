@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ExternalLinkCard } from '@rehab-trainer/ui/components/ExternalLinkCard';
 import { useT, type TranslationKey } from '../../i18n';
 import { siteUrls } from '../../utils/siteUrls';
 
@@ -45,40 +46,23 @@ export function LinksPage() {
       <h1 className="section-title fade-in-up">{t('links.title')}</h1>
       <p className="section-subtitle fade-in-up">{t('links.subtitle')}</p>
 
-      <div className="selection-grid" style={{ marginTop: 32 }}>
-        {links.map((link, i) => (
-          <a
-            key={i}
+      <div className="selection-grid content-grid-spaced">
+        {links.map((link) => (
+          <ExternalLinkCard
+            key={link.url}
             href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="card fade-in-up"
-            style={{ textDecoration: 'none', color: 'inherit' }}
-          >
-            <div className="card-icon">
-              {link.icon}
-            </div>
-            <div className="card-title">{t(link.titleKey)}</div>
-            <div className="card-desc">
-              {t(link.descKey)}
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              marginTop: 16,
-              fontSize: 13,
-              color: 'var(--accent)',
-              fontWeight: 600,
-            }}>
+            icon={link.icon}
+            title={t(link.titleKey)}
+            description={t(link.descKey)}
+            actionLabel={link.url.replace('https://', '')}
+            actionIcon={(
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                 <polyline points="15 3 21 3 21 9" />
                 <line x1="10" y1="14" x2="21" y2="3" />
               </svg>
-              {link.url.replace('https://', '')}
-            </div>
-          </a>
+            )}
+          />
         ))}
       </div>
     </div>

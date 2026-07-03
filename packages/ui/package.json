@@ -7,14 +7,18 @@
     ".": "./src/index.ts",
     "./auth/authClient": "./src/auth/authClient.ts",
     "./components/AuthPanel": "./src/components/AuthPanel.tsx",
+    "./components/ExternalLinkCard": "./src/components/ExternalLinkCard.tsx",
     "./components/RehabFooter": "./src/components/RehabFooter.tsx",
+    "./components/TrainerNavbar": "./src/components/TrainerNavbar.tsx",
     "./components/UserSelector": "./src/components/UserSelector.tsx",
     "./downloadFile": "./src/downloadFile.ts",
     "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
-    "./storage/userStore": "./src/storage/userStore.ts"
+    "./storage/userStore": "./src/storage/userStore.ts",
+    "./trainerTheme": "./src/trainerTheme.ts"
   },
   "peerDependencies": {
-    "react": "^19.1.0"
+    "react": "^19.1.0",
+    "react-router-dom": "^7.6.1"
   },
   "devDependencies": {
     "@types/react": "^19.1.4",

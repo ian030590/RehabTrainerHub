@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-interface ExternalLinkCardProps {
+export interface ExternalLinkCardProps {
   href: string;
   icon: ReactNode;
   title: string;
@@ -22,7 +22,7 @@ export function ExternalLinkCard({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="card card-link fade-in-up"
+      className="card card-link fade-in-up external-link-card"
     >
       <div className="card-icon">{icon}</div>
       <div className="card-title">{title}</div>

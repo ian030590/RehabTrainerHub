@@ -40,7 +40,22 @@ export function App() {
 }
 
 function AppLayout() {
-  const { t } = useT();
+  const { lang } = useT();
+  const footerLabels = lang === 'en'
+    ? {
+        hub: 'Hub',
+        privacy: 'Privacy',
+        repo: 'GitHub',
+        disclaimer: 'For rehabilitation practice workflow prototyping, not medical advice.',
+        rights: 'All rights reserved.',
+      }
+    : {
+        hub: 'Hub',
+        privacy: '隱私權政策',
+        repo: 'GitHub',
+        disclaimer: '復健練習流程原型，不能取代醫療建議。',
+        rights: '保留所有權利。',
+      };
 
   useLayoutEffect(() => {
     const applyFontSettings = () => {
@@ -74,7 +89,7 @@ function AppLayout() {
         hubHref={siteUrls.hub}
         privacyHref={`${siteUrls.hub}/privacy/`}
         repoHref="https://github.com/ian030590/RehabTrainerHub"
-        labels={{ privacy: '隱私權政策', rights: t('app.footer.rights') }}
+        labels={footerLabels}
       />
     </div>
   );
