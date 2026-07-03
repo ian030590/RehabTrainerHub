@@ -69,9 +69,7 @@
   font-family: var(--font-body);
   --fw-regular: 400;
   --fw-medium: 500;
-  --fw-semibold: 600;
   --fw-bold: 700;
-  --fw-extrabold: 800;
 }
 
 :root[data-theme="dark"] {
@@ -118,9 +116,7 @@
   --font-heading: "M PLUS Rounded 1c", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Manrope, ui-sans-serif, system-ui, sans-serif;
   --fw-regular: 500;
   --fw-medium: 600;
-  --fw-semibold: 700;
-  --fw-bold: 800;
-  --fw-extrabold: 900;
+  --fw-bold: 700;
 }
 
 * {
@@ -186,7 +182,7 @@ h1 {
   margin-bottom: 20px;
   color: var(--text-heading);
   font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: var(--fw-extrabold);
+  font-weight: var(--fw-bold);
   line-height: 1.16;
   letter-spacing: 0;
 }
@@ -195,7 +191,7 @@ h2 {
   margin-bottom: 16px;
   color: var(--text-heading);
   font-size: clamp(1.75rem, 3vw, 2rem);
-  font-weight: var(--fw-extrabold);
+  font-weight: var(--fw-bold);
   line-height: 1.25;
   letter-spacing: 0;
 }
@@ -317,7 +313,7 @@ body > main:not(.home-page) .site-header {
 .brand small {
   color: var(--on-surface-variant);
   font-size: 0.75rem;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   letter-spacing: 0.05em;
 }
 
@@ -511,7 +507,7 @@ body > main:not(.home-page) .site-header {
   margin: 0;
   color: var(--on-surface-variant);
   font-size: 0.875rem;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .auth-panel-error,
@@ -582,7 +578,7 @@ body > main:not(.home-page) .site-header {
   margin: 0;
   color: var(--on-surface-variant);
   font-size: 0.875rem;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .text-button {
@@ -860,7 +856,7 @@ body > main:not(.home-page) .site-header {
   align-items: center;
   gap: 12px;
   color: var(--text-heading);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .check-icon {
@@ -1124,7 +1120,7 @@ body > main:not(.home-page) .site-header {
   align-items: center;
   gap: 8px;
   color: var(--text-heading);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .related-action {
@@ -1190,7 +1186,7 @@ body > main:not(.home-page) .site-header {
   border-radius: var(--radius);
   color: var(--on-surface-variant);
   background: var(--surface-white);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .submission-type label.is-selected {
@@ -1210,7 +1206,7 @@ body > main:not(.home-page) .site-header {
   display: grid;
   gap: 8px;
   color: var(--text-heading);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .field input,
@@ -1262,7 +1258,7 @@ body > main:not(.home-page) .site-header {
   margin: 0;
   padding: 12px 14px;
   border-radius: var(--radius);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .submission-status.is-success {
@@ -1316,7 +1312,7 @@ body > main:not(.home-page) .site-header {
   display: grid;
   gap: 6px;
   color: var(--text-heading);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .auth-checkbox-row,
@@ -1419,7 +1415,7 @@ body > main:not(.home-page) .site-header {
 
 .rehab-footer a {
   color: var(--outline-variant);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   text-decoration: none;
 }
 
@@ -1613,7 +1609,7 @@ body > main:not(.home-page) .site-header {
     border-radius: var(--radius);
     color: var(--on-surface-variant);
     font-size: 0.875rem;
-    font-weight: var(--fw-semibold);
+    font-weight: var(--fw-bold);
     line-height: 1.2;
     text-align: center;
     text-decoration: none;

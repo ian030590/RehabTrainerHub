@@ -7,9 +7,7 @@
   /* Font weights */
   --fw-regular: 500;
   --fw-medium: 600;
-  --fw-semibold: 700;
-  --fw-bold: 800;
-  --fw-extrabold: 900;
+  --fw-bold: 700;
 }
 
 * {
@@ -79,7 +77,7 @@ html, body, #root {
 
 .app-loading-text {
   font-size: 15px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .page-content {
@@ -304,7 +302,7 @@ html, body, #root {
 .navbar-link.active {
   color: var(--accent-dark);
   background: rgba(0, 94, 184, 0.08);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .trainer-auth-panel {
@@ -332,12 +330,12 @@ html, body, #root {
 .auth-panel-error,
 .auth-panel-warning {
   color: var(--error, #BA1A1A);
-  font-weight: var(--fw-extrabold);
+  font-weight: var(--fw-bold);
 }
 
 .auth-privacy-link {
   color: var(--accent);
-  font-weight: var(--fw-extrabold);
+  font-weight: var(--fw-bold);
   text-underline-offset: 3px;
 }
 
@@ -356,7 +354,7 @@ html, body, #root {
   border-radius: var(--radius-s, 8px);
   font: inherit;
   font-size: 13px;
-  font-weight: var(--fw-extrabold);
+  font-weight: var(--fw-bold);
   line-height: 1.25;
   cursor: pointer;
 }
@@ -417,7 +415,7 @@ html, body, #root {
 .auth-dialog p,
 .auth-dialog li {
   color: var(--text-secondary, #424752);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   line-height: 1.65;
 }
 
@@ -446,7 +444,7 @@ html, body, #root {
   color: var(--text-primary, #1A1C1E);
   background: var(--bg-card, #FFFFFF);
   font: inherit;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .auth-dialog input[type="checkbox"],
@@ -480,7 +478,7 @@ html, body, #root {
 .auth-fieldset legend {
   padding: 0 8px;
   color: var(--accent, #005EB8);
-  font-weight: var(--fw-extrabold);
+  font-weight: var(--fw-bold);
 }
 
 @media (max-width: 780px) {
@@ -537,7 +535,7 @@ html, body, #root {
 .card-title {
   display: block;
   font-size: 24px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   margin-bottom: 12px;
   color: var(--text-primary);
   letter-spacing: -0.01em;
@@ -579,7 +577,7 @@ html, body, #root {
   border-radius: var(--radius-l); /* Rounded larger for primary interaction */
   font-family: var(--font-family);
   font-size: 16px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   cursor: pointer;
   border: 2px solid transparent;
   transition: all var(--transition-fast);
@@ -676,7 +674,7 @@ html, body, #root {
 
 .label {
   font-size: 13px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   color: var(--text-secondary);
   margin-bottom: 6px;
   display: block;
@@ -696,7 +694,7 @@ html, body, #root {
 
 .setting-info h3 {
   font-size: 14px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   margin-bottom: 2px;
 }
 
@@ -791,7 +789,7 @@ html, body, #root {
 
 .config-label {
   font-size: 12px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   color: var(--text-muted);
   margin-bottom: 10px;
   text-transform: uppercase;
@@ -867,7 +865,7 @@ html, body, #root {
   color: var(--text-secondary);
   font-family: var(--font-family);
   font-size: 16px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -931,7 +929,7 @@ html, body, #root {
   background: var(--bg-card);
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .color-field input[type="color"] {
@@ -958,7 +956,7 @@ html, body, #root {
   color: var(--text-secondary);
   font-family: var(--font-family);
   font-size: 14px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -1131,7 +1129,7 @@ html, body, #root {
   background: var(--bg-panel);
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   text-align: center;
   border: 1px solid var(--border);
 }
@@ -1147,7 +1145,7 @@ html, body, #root {
 
 .results-table td.rt-fast {
   color: var(--success);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .results-table td.rt-slow {
@@ -1251,7 +1249,7 @@ html, body, #root {
   background: rgba(0, 94, 184, 0.08);
   color: var(--accent-dark);
   border-color: var(--accent);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .webgazer-calibration-panel {
@@ -1446,7 +1444,7 @@ body #webgazer-calibrate-container #calibration-point {
   padding: 10px 28px;
   border-radius: 8px;
   font-size: 15px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -1553,7 +1551,7 @@ body #webgazer-calibrate-container #calibration-point {
   margin-top: 16px;
   font-size: 16px;
   color: var(--accent);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .card-action-icon {
@@ -1630,7 +1628,7 @@ body #webgazer-calibrate-container #calibration-point {
   background: rgba(255, 255, 255, 0.28);
   color: rgba(75, 85, 99, 0.72);
   font-size: 12px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   pointer-events: none;
 }
 
@@ -1675,7 +1673,7 @@ body #webgazer-calibrate-container #calibration-point {
   gap: 10px;
   padding: 0 12px;
   font-size: 14px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .picture-key-number {
@@ -1701,7 +1699,7 @@ body #webgazer-calibrate-container #calibration-point {
   background: var(--bg-card);
   color: var(--text-primary);
   font-size: 20px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .key-hint-empty {
@@ -1775,7 +1773,7 @@ body #webgazer-calibrate-container #calibration-point {
   background: var(--acuity-overlay-bg);
   color: var(--acuity-overlay-color);
   font-size: var(--acuity-overlay-font-size);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1951,7 +1949,7 @@ body #webgazer-calibrate-container #calibration-point {
 
 .acuity-result-label {
   font-size: 12px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -2017,7 +2015,7 @@ body #webgazer-calibrate-container #calibration-point {
   width: 100%;
   padding: 20px 24px;
   font-size: 18px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   color: var(--text-secondary);
   background: var(--bg-card);
   border: 2px solid var(--border);

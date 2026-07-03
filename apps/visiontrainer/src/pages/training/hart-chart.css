@@ -367,7 +367,7 @@
 .hart-code-input::placeholder {
   color: var(--text-muted);
   font-size: 10px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .hart-code-input:focus {
