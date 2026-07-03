@@ -5,7 +5,7 @@ import { siteUrls } from '../siteUrls';
 
 export const metadata: Metadata = {
   title: '相關網站',
-  description: 'RehabTrainerHub、StrokeTrainer 與 VisionTrainer 的正式網站連結。',
+  description: 'StrokeTrainer 與 VisionTrainer 入口。',
   alternates: {
     canonical: '/links',
   },
@@ -14,14 +14,18 @@ export const metadata: Metadata = {
 const relatedSites = [
   {
     name: 'StrokeTrainer',
-    title: '中風復健',
-    description: '動作、認知與語音復健練習，協助個案在家延續訓練。',
+    title: '中風復健練習',
+    description: '中風後想練動作、認知或說話，先開這個。',
+    items: ['動作協調', '注意力記憶', '口腔語音'],
+    action: '開啟中風復健',
     href: siteUrls.stroke,
   },
   {
     name: 'VisionTrainer',
-    title: '視覺復健',
-    description: '視覺評估、眼動、閱讀與視覺注意力訓練工具。',
+    title: '視覺訓練練習',
+    description: '想練看字、閱讀或眼動，開這個。',
+    items: ['視覺搜尋', '閱讀眼動', '對比辨識'],
+    action: '開啟視覺訓練',
     href: siteUrls.vision,
   },
 ];
@@ -39,12 +43,29 @@ export default function LinksPage() {
             <small>Related websites</small>
           </span>
         </Link>
-        <Link className="secondary-action compact" href="/">回首頁</Link>
+        <nav className="header-actions" aria-label="RehabTrainerHub navigation">
+          <Link className="nav-link" href="/#programs">工具</Link>
+          <Link className="nav-link" href="/#care">安全</Link>
+          <Link className="nav-link" href="/education/">衛教</Link>
+          <Link className="nav-link is-active" href="/links/">連結</Link>
+          <Link className="nav-link" href="/collaborate/">投稿</Link>
+        </nav>
       </header>
+
+      <nav className="bottom-nav" aria-label="RehabTrainerHub navigation">
+        <Link href="/#programs">工具</Link>
+        <Link href="/#care">安全</Link>
+        <Link href="/education/">衛教</Link>
+        <Link className="is-active" href="/links/">連結</Link>
+        <Link href="/collaborate/">投稿</Link>
+      </nav>
 
       <section className="content-page">
         <p className="eyebrow">相關網站</p>
-        <h1>RehabTrainerHub 生態系的正式網站。</h1>
+        <h1>選你要用的工具。</h1>
+        <p className="content-intro">
+          不確定時，先選中風復健。視覺或閱讀困難，再選視覺訓練。
+        </p>
         <div className="related-grid">
           {relatedSites.map((site) => (
             <a
@@ -57,6 +78,10 @@ export default function LinksPage() {
               <p>{site.name}</p>
               <h2>{site.title}</h2>
               <span>{site.description}</span>
+              <ul className="related-points">
+                {site.items.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+              <span className="related-action">{site.action}</span>
               <strong>{site.href.replace('https://', '')}</strong>
             </a>
           ))}

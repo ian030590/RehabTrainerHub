@@ -4,32 +4,40 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: '衛教與使用說明',
-  description: '了解 StrokeTrainer 與 VisionTrainer 各類居家復健小遊戲的目的、適用情境與使用注意事項。',
+  description: '了解居家復健工具的用途與安全提醒。',
 };
 
 const sections = [
   {
-    title: '使用前提醒',
+    title: '我可以開始練嗎？',
     items: [
-      '請在安全、光線充足、可穩定操作滑鼠或觸控螢幕的環境中使用。',
-      '若出現疼痛、頭暈、明顯疲勞或不適，應立即停止並諮詢專業人員。',
-      '本平台不能取代醫師、職能治療師或視光相關專業評估。',
+      '醫師或治療師同意後再練。',
+      '第一次請家人陪。',
+      '光線要足，椅子要穩。',
     ],
   },
   {
-    title: '中風復健小遊戲',
+    title: '什麼狀況要停止？',
     items: [
-      '動作訓練聚焦手眼協調、描繪與手勢控制。',
-      '認知訓練聚焦注意力、反應速度、工作記憶與問題解決。',
-      '語音訓練提供發音與口腔動作練習情境。',
+      '頭暈、痛、喘、噁心就停。',
+      '太累或看不懂，也先停。',
+      '沒有改善，請聯絡專業人員。',
     ],
   },
   {
-    title: '視覺復健小遊戲',
+    title: '中風復健可以練什麼？',
     items: [
-      '視覺評估模組協助紀錄視力與對比敏感度練習結果。',
-      '眼動與閱讀訓練可調整速度、大小、背景與難度。',
-      '開始訓練前建議完成螢幕尺寸與觀看距離校正。',
+      '動作：手眼協調、描繪、手勢。',
+      '認知：注意力、反應、記憶。',
+      '語音：發音、口腔動作。',
+    ],
+  },
+  {
+    title: '視覺訓練可以練什麼？',
+    items: [
+      '搜尋：找目標。',
+      '閱讀：看字與追視。',
+      '對比：分辨深淺。',
     ],
   },
 ];
@@ -48,14 +56,28 @@ export default function EducationPage() {
           </span>
         </Link>
         <nav className="header-actions" aria-label="RehabTrainerHub navigation">
-          <Link className="secondary-action compact" href="/">回首頁</Link>
-          <Link className="secondary-action compact" href="/links/">相關網站</Link>
+          <Link className="nav-link" href="/#programs">工具</Link>
+          <Link className="nav-link" href="/#care">安全</Link>
+          <Link className="nav-link is-active" href="/education/">衛教</Link>
+          <Link className="nav-link" href="/links/">連結</Link>
+          <Link className="nav-link" href="/collaborate/">投稿</Link>
         </nav>
       </header>
 
+      <nav className="bottom-nav" aria-label="RehabTrainerHub navigation">
+        <Link href="/#programs">工具</Link>
+        <Link href="/#care">安全</Link>
+        <Link className="is-active" href="/education/">衛教</Link>
+        <Link href="/links/">連結</Link>
+        <Link href="/collaborate/">投稿</Link>
+      </nav>
+
       <section className="content-page">
         <p className="eyebrow">衛教資訊</p>
-        <h1>在家練習前，先確認目的與安全界線。</h1>
+        <h1>在家練習前，先看這 4 件事。</h1>
+        <p className="content-intro">
+          不確定能不能做，先問醫師或治療師。
+        </p>
         <div className="education-list">
           {sections.map((section) => (
             <article key={section.title}>

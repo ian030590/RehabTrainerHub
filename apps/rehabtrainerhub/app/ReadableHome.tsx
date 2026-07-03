@@ -18,6 +18,8 @@ const storageKeys = {
 
 const fontScales: FontScale[] = ['standard', 'large', 'extra'];
 const themes: Theme[] = ['light', 'dark'];
+type SectionId = 'programs' | 'care' | 'education';
+const homeSectionIds: SectionId[] = ['programs', 'care', 'education'];
 
 const content = {
   'zh-TW': {
@@ -25,23 +27,26 @@ const content = {
     brandSubtitle: '居家復健入口',
     navigationLabel: 'RehabTrainerHub 導覽',
     nav: {
-      programs: '復健工具',
-      care: '照護原則',
-      education: '衛教資訊',
-      links: '相關連結',
+      programs: '工具',
+      care: '安全',
+      education: '衛教',
+      links: '連結',
+      submit: '投稿',
     },
     hero: {
-      eyebrow: '居家復健整合入口',
-      title: '把居家復健工具整理成清楚好用的入口',
+      eyebrow: '居家復健入口',
+      title: '我想找中風後在家可以練習的工具',
       body:
-        'RehabTrainerHub 匯集中風復健與視覺訓練工具，協助個案、家屬與治療師在家安排練習、理解使用限制，並快速前往合適的訓練系統。',
-      primaryAction: '查看復健工具',
-      secondaryAction: '閱讀衛教資訊',
+        '先選中風復健或視覺訓練。工具不能取代醫師或治療師。',
+      primaryAction: '找工具',
+      secondaryAction: '看安全提醒',
       visualLabel: 'RehabTrainerHub 工具總覽',
-      checklist: ['繁體中文與英文介面', '可調整字型大小', '深色模式與對比檢查'],
+      checklist: ['中風練習', '視覺訓練', '字體可放大'],
     },
     controls: {
       settingsLabel: '閱讀設定',
+      settingsButton: '閱讀設定',
+      settingsClose: '關閉',
       languageLabel: '介面語言',
       zh: '繁中',
       en: 'EN',
@@ -59,69 +64,73 @@ const content = {
       contrastFail: '未達 AA',
     },
     programs: {
-      eyebrow: '分項復健工具',
-      title: '依需要選擇中風復健或視覺訓練',
+      eyebrow: '先選工具',
+      title: '你現在想練什麼？',
       intro:
-        '兩個訓練系統各自部署，主頁提供清楚入口、用途說明與使用限制，方便個案與照護者快速找到合適工具。',
+        '中風後想練動作、認知或說話，選中風復健。看字或閱讀困難，選視覺訓練。',
     },
     care: {
-      eyebrow: '居家照護原則',
-      title: '把專業建議轉成每天做得到的練習',
+      eyebrow: '安全提醒',
+      title: '開始前先確認安全',
       quote:
-        '本平台協助安排與紀錄居家練習，不提供醫療診斷，也不取代醫師或治療師的評估。',
+        '不舒服就停止。網站不提供診斷。',
       body:
-        '使用前請先確認治療目標、身體狀況與安全環境。若訓練中出現疼痛、暈眩、視覺不適或其他不舒服，應立即停止並諮詢專業人員。',
+        '第一次使用請家人陪同。先短時間練習。',
     },
     education: {
-      eyebrow: '衛教與延伸資料',
-      title: '先理解安全原則，再開始訓練',
+      eyebrow: '衛教資訊',
+      title: '看不懂時，先看簡短說明',
       intro:
-        '整理復健練習前的注意事項、使用限制與相關資源，讓家人和照護者可以用同一套語言溝通。',
-      educationLink: '閱讀衛教資料',
-      linksLink: '查看相關連結',
+        '衛教頁說明使用前、何時停止、各訓練用途。',
+      educationLink: '看衛教',
+      linksLink: '看連結',
     },
     apps: [
       {
         id: 'stroke',
-        title: 'Stroke Recovery',
-        localTitle: '中風復健',
+        title: 'StrokeTrainer',
+        localTitle: '中風復健練習',
         name: 'StrokeTrainer',
+        bestFor: '適合：動作、認知、說話練習',
         description:
-          '依照居家復健情境設計動作、語言與認知練習，讓中風後的日常訓練更容易開始、追蹤與維持。',
-        action: '前往中風復健',
+          '把治療師交代的方向，變成家中短練習。',
+        points: ['動作協調', '注意力記憶', '口腔語音'],
+        action: '開啟',
         logoAlt: 'StrokeTrainer 標誌',
       },
       {
         id: 'vision',
-        title: 'Vision Training',
-        localTitle: '視覺訓練',
+        title: 'VisionTrainer',
+        localTitle: '視覺訓練練習',
         name: 'VisionTrainer',
+        bestFor: '適合：看字、閱讀、眼動練習',
         description:
-          '提供視覺搜尋、閱讀、眼動與對比敏感度練習，適合在治療師建議下安排居家視覺訓練。',
-        action: '前往視覺訓練',
+          '練視覺搜尋、閱讀、眼動與對比辨識。',
+        points: ['視覺搜尋', '閱讀眼動', '對比辨識'],
+        action: '開啟',
         logoAlt: 'VisionTrainer 標誌',
       },
     ],
     features: [
       {
-        title: '清楚的使用限制',
+        title: '先有人陪',
         text:
-          '每項工具都標示適用情境與使用限制，提醒使用者依醫療專業建議調整，不取代診斷或治療。',
+          '第一次使用請家人在旁邊。',
       },
       {
-        title: '台灣常用詞彙',
+        title: '先問治療師',
         text:
-          '中文文案採繁體中文與台灣慣用說法，例如「使用限制」、「復健」、「治療師」、「居家練習」。',
+          '不確定適不適合，先問醫師或治療師。',
       },
       {
-        title: '雙語介面',
+        title: '每次短一點',
         text:
-          '主頁支援繁體中文與英文切換，連結、按鈕、狀態與輔助文字都會同步更新。',
+          '先短時間練。累、暈、痛就停。',
       },
       {
-        title: '可讀性設定',
+        title: '看不懂就停',
         text:
-          '提供字級、深色模式與即時對比度檢查，讓長輩、個案與照顧者都能更舒服地閱讀。',
+          '看不懂步驟，先不要做。',
       },
     ],
   },
@@ -131,22 +140,25 @@ const content = {
     navigationLabel: 'RehabTrainerHub navigation',
     nav: {
       programs: 'Programs',
-      care: 'Care principles',
+      care: 'Safety',
       education: 'Education',
       links: 'Links',
+      submit: 'Submit',
     },
     hero: {
       eyebrow: 'Integrated home rehabilitation portal',
       title: 'A clearer entry point for home rehabilitation tools',
       body:
-        'RehabTrainerHub brings stroke recovery and vision training tools together so clients, families, and therapists can plan home practice, understand usage limitations, and move quickly to the right training system.',
+        'Choose stroke recovery or vision training. These tools support home practice and do not replace clinical care.',
       primaryAction: 'View programs',
       secondaryAction: 'Read guidance',
       visualLabel: 'RehabTrainerHub tool overview',
-      checklist: ['Traditional Chinese and English', 'Adjustable font size', 'Dark mode and contrast check'],
+      checklist: ['Stroke practice', 'Vision training', 'Larger text'],
     },
     controls: {
       settingsLabel: 'Reading settings',
+      settingsButton: 'Reading',
+      settingsClose: 'Close',
       languageLabel: 'Interface language',
       zh: '繁中',
       en: 'EN',
@@ -167,42 +179,46 @@ const content = {
       eyebrow: 'Targeted recovery programs',
       title: 'Choose stroke recovery or vision training by need',
       intro:
-        'Each training system is deployed separately. This home page provides clear entry points, purpose statements, and usage limitations so clients and caregivers can find the right tool faster.',
+        'For movement, cognition, or speech after stroke, choose StrokeTrainer. For reading or eye movement, choose VisionTrainer.',
     },
     care: {
       eyebrow: 'Clinical care at home',
       title: 'Turn professional guidance into daily practice',
       quote:
-        'This platform helps organize and record home practice. It does not provide medical diagnosis and does not replace assessment by a physician or therapist.',
+        'Stop if you feel unwell. This site does not diagnose or treat.',
       body:
-        'Before using the tools, confirm the treatment goal, physical condition, and safe practice environment. Stop immediately and consult a professional if pain, dizziness, visual discomfort, or other symptoms occur.',
+        'Use it first with a family member or caregiver. Keep each session short.',
     },
     education: {
       eyebrow: 'Guidance and related resources',
       title: 'Understand safety principles before training',
       intro:
-        'Review preparation notes, usage limitations, and related resources so family members and caregivers can discuss practice with the same terms.',
+        'Review setup, stop signs, and what each exercise trains.',
       educationLink: 'Read education materials',
       linksLink: 'View related links',
     },
     apps: [
       {
         id: 'stroke',
-        title: 'Stroke Recovery',
+        title: 'StrokeTrainer',
         localTitle: 'Stroke rehabilitation',
         name: 'StrokeTrainer',
+        bestFor: 'Best for movement, cognition, and speech',
         description:
-          'Home-practice exercises for movement, speech, and cognition after stroke, designed to make daily training easier to start, track, and maintain.',
+          'Short home exercises based on therapist goals.',
+        points: ['Coordination', 'Attention and memory', 'Oral speech'],
         action: 'Open StrokeTrainer',
         logoAlt: 'StrokeTrainer logo',
       },
       {
         id: 'vision',
-        title: 'Vision Training',
+        title: 'VisionTrainer',
         localTitle: 'Vision rehabilitation',
         name: 'VisionTrainer',
+        bestFor: 'Best for reading and eye movement',
         description:
-          'Visual search, reading, eye movement, and contrast sensitivity exercises for home practice under therapist guidance.',
+          'Practice visual search, reading, eye movement, and contrast.',
+        points: ['Visual search', 'Reading and eye movement', 'Contrast'],
         action: 'Open VisionTrainer',
         logoAlt: 'VisionTrainer logo',
       },
@@ -211,22 +227,22 @@ const content = {
       {
         title: 'Clear usage limitations',
         text:
-          'Each tool states its intended use and usage limitations, reminding users to adjust practice with professional guidance rather than replacing diagnosis or treatment.',
+          'Each tool states when it should be used.',
       },
       {
         title: 'Taiwan-ready Traditional Chinese',
         text:
-          'The Chinese copy uses Traditional Chinese and terms commonly used in Taiwan, including 使用限制, 復健, 治療師, and 居家練習.',
+          'Chinese copy uses Taiwan Traditional Chinese.',
       },
       {
         title: 'Bilingual interface',
         text:
-          'The home page supports Traditional Chinese and English switching, including links, buttons, statuses, and assistive labels.',
+          'Switch between Traditional Chinese and English.',
       },
       {
         title: 'Readability settings',
         text:
-          'Font size controls, dark mode, and a live contrast check make the page easier to read for older adults, clients, and caregivers.',
+          'Use larger text, dark mode, and contrast checks.',
       },
     ],
   },
@@ -236,12 +252,10 @@ const appAssets = {
   stroke: {
     href: siteUrls.stroke,
     image: '/assets/stroke-logo.png',
-    iconLabel: 'ST',
   },
   vision: {
     href: siteUrls.vision,
     image: '/assets/vision-logo.png',
-    iconLabel: 'VT',
   },
 } as const;
 
@@ -325,6 +339,8 @@ export function ReadableHome() {
   const [theme, setTheme] = useStoredSetting<Theme>(storageKeys.theme, 'light', isTheme);
   const [contrastRatio, setContrastRatio] = useState<number | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [currentSection, setCurrentSection] = useState<SectionId>('programs');
   const copy = content[locale];
 
   useEffect(() => {
@@ -351,6 +367,31 @@ export function ReadableHome() {
 
     window.requestAnimationFrame(checkContrast);
   }, [theme]);
+
+  useEffect(() => {
+    const sections = homeSectionIds
+      .map((sectionId) => document.getElementById(sectionId))
+      .filter((section): section is HTMLElement => Boolean(section));
+
+    if (!sections.length || !('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
+
+        if (visibleEntry) setCurrentSection(visibleEntry.target.id as SectionId);
+      },
+      {
+        rootMargin: '-32% 0px -48% 0px',
+        threshold: [0.1, 0.35, 0.65],
+      },
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
 
   const contrastText = useMemo(() => {
     if (contrastRatio === null) {
@@ -390,11 +431,17 @@ export function ReadableHome() {
     copy.controls.contrastWarn,
   ]);
 
+  const closeHeaderPanels = () => {
+    setIsMenuOpen(false);
+    setIsSettingsOpen(false);
+  };
+  const sectionLinkClass = (sectionId: SectionId) => `nav-link ${currentSection === sectionId ? 'is-active' : ''}`;
+
   return (
-    <main className="home-page">
+    <main className="home-page" id="top">
       <header className="site-header">
         <div className="site-header-inner">
-          <Link className="brand" href="/" onClick={() => setIsMenuOpen(false)}>
+          <Link className="brand" href="/" onClick={closeHeaderPanels}>
             <span className="brand-mark" aria-hidden="true">
               <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
             </span>
@@ -404,7 +451,13 @@ export function ReadableHome() {
             </span>
           </Link>
 
-          <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+          <button
+            className="navbar-toggle"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-controls="site-menu"
+            aria-expanded={isMenuOpen}
+            aria-label="Toggle menu"
+          >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               {isMenuOpen ? (
                 <>
@@ -422,15 +475,40 @@ export function ReadableHome() {
           </button>
         </div>
 
-        <div className={`header-stack ${isMenuOpen ? 'is-open' : ''}`}>
+        <div className={`header-stack ${isMenuOpen ? 'is-open' : ''}`} id="site-menu">
           <nav className="header-actions" aria-label={copy.navigationLabel}>
-            <a href="#programs" onClick={() => setIsMenuOpen(false)}>{copy.nav.programs}</a>
-            <a href="#care" onClick={() => setIsMenuOpen(false)}>{copy.nav.care}</a>
-            <Link href="/education/" onClick={() => setIsMenuOpen(false)}>{copy.nav.education}</Link>
-            <Link href="/links/" onClick={() => setIsMenuOpen(false)}>{copy.nav.links}</Link>
+            <a className={sectionLinkClass('programs')} href="#programs" onClick={closeHeaderPanels}>{copy.nav.programs}</a>
+            <a className={sectionLinkClass('care')} href="#care" onClick={closeHeaderPanels}>{copy.nav.care}</a>
+            <a className={sectionLinkClass('education')} href="#education" onClick={closeHeaderPanels}>{copy.nav.education}</a>
+            <Link className="nav-link" href="/links/" onClick={closeHeaderPanels}>{copy.nav.links}</Link>
+            <Link className="nav-link" href="/collaborate/" onClick={closeHeaderPanels}>{copy.nav.submit}</Link>
           </nav>
 
-          <div className="readability-toolbar" role="region" aria-label={copy.controls.settingsLabel}>
+          <div className="header-tools">
+            <button
+              aria-controls="readability-panel"
+              aria-expanded={isSettingsOpen}
+              className={`settings-toggle secondary-action compact ${isSettingsOpen ? 'is-active' : ''}`}
+              onClick={() => setIsSettingsOpen((open) => !open)}
+              type="button"
+            >
+              {copy.controls.settingsButton}
+            </button>
+
+            <AuthPanel
+              appName="RehabTrainerHub"
+              className="home-auth-panel"
+              locale={locale === 'en' ? 'en' : 'zh-TW'}
+            />
+          </div>
+
+          <div
+            className={`readability-panel ${isSettingsOpen ? 'is-open' : ''}`}
+            id="readability-panel"
+            role="region"
+            aria-label={copy.controls.settingsLabel}
+          >
+            <div className="readability-toolbar">
             <div className="control-group" role="group" aria-label={copy.controls.languageLabel}>
               <button
                 aria-pressed={locale === 'zh-TW'}
@@ -473,22 +551,30 @@ export function ReadableHome() {
                   onClick={() => setTheme(mode)}
                   type="button"
                 >
-                  {copy.controls[mode]}
-                </button>
-              ))}
+                {copy.controls[mode]}
+              </button>
+            ))}
             </div>
 
-
+            </div>
+            <p className={`contrast-status tone-${contrastText.tone}`}>
+              {copy.controls.contrastLabel} {contrastText.ratio} {contrastText.status}
+            </p>
+            <button className="text-button" type="button" onClick={() => setIsSettingsOpen(false)}>
+              {copy.controls.settingsClose}
+            </button>
           </div>
-
-          <AuthPanel
-            appName="RehabTrainerHub"
-            className="home-auth-panel"
-            locale={locale === 'en' ? 'en' : 'zh-TW'}
-          />
         </div>
-        {isMenuOpen && <div className="navbar-overlay" onClick={() => setIsMenuOpen(false)} />}
+        {isMenuOpen && <div className="navbar-overlay" onClick={closeHeaderPanels} />}
       </header>
+
+      <nav className="bottom-nav" aria-label={copy.navigationLabel}>
+        <a className={sectionLinkClass('programs')} href="#programs">{copy.nav.programs}</a>
+        <a className={sectionLinkClass('care')} href="#care">{copy.nav.care}</a>
+        <a className={sectionLinkClass('education')} href="#education">{copy.nav.education}</a>
+        <Link href="/links/">{copy.nav.links}</Link>
+        <Link href="/collaborate/">{copy.nav.submit}</Link>
+      </nav>
 
       <section className="hero">
         <div className="hero-copy">
@@ -499,9 +585,9 @@ export function ReadableHome() {
             <a className="primary-action" href="#programs">
               {copy.hero.primaryAction}
             </a>
-            <Link className="secondary-action" href="/education/">
+            <a className="secondary-action" href="#care">
               {copy.hero.secondaryAction}
-            </Link>
+            </a>
           </div>
         </div>
         <div className="hero-panel" aria-label={copy.hero.visualLabel}>
@@ -535,17 +621,17 @@ export function ReadableHome() {
             const asset = appAssets[app.id];
             return (
               <article className="app-card" key={app.id}>
-                <div className="app-icon" aria-hidden="true">
-                  {asset.iconLabel}
+                <div className="app-card-media">
+                  <Image src={asset.image} alt={app.logoAlt} width={144} height={92} />
                 </div>
                 <div className="app-body">
                   <p>{app.name}</p>
-                  <h3>{app.title}</h3>
-                  <strong>{app.localTitle}</strong>
+                  <h3>{app.localTitle}</h3>
+                  <strong>{app.bestFor}</strong>
                   <span>{app.description}</span>
-                  <div className="app-logo-strip">
-                    <Image src={asset.image} alt={app.logoAlt} width={128} height={82} />
-                  </div>
+                  <ul className="app-points">
+                    {app.points.map((point) => <li key={point}>{point}</li>)}
+                  </ul>
                 </div>
                 <a className="app-link" href={asset.href}>
                   {app.action}
@@ -575,7 +661,7 @@ export function ReadableHome() {
         </div>
       </section>
 
-      <section className="education-section" aria-labelledby="education-title">
+      <section className="education-section" id="education" aria-labelledby="education-title">
         <div className="section-heading">
           <p className="eyebrow">{copy.education.eyebrow}</p>
           <h2 id="education-title">{copy.education.title}</h2>

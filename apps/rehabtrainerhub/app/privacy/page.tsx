@@ -129,10 +129,21 @@ export default function PrivacyPage() {
           </span>
         </Link>
         <nav className="header-actions" aria-label="RehabTrainerHub navigation">
-          <Link className="secondary-action compact" href="/">回首頁</Link>
-          <Link className="secondary-action compact" href="/education/">衛教資訊</Link>
+          <Link className="nav-link" href="/#programs">工具</Link>
+          <Link className="nav-link" href="/#care">安全</Link>
+          <Link className="nav-link" href="/education/">衛教</Link>
+          <Link className="nav-link" href="/links/">連結</Link>
+          <Link className="nav-link" href="/collaborate/">投稿</Link>
         </nav>
       </header>
+
+      <nav className="bottom-nav" aria-label="RehabTrainerHub navigation">
+        <Link href="/#programs">工具</Link>
+        <Link href="/#care">安全</Link>
+        <Link href="/education/">衛教</Link>
+        <Link href="/links/">連結</Link>
+        <Link href="/collaborate/">投稿</Link>
+      </nav>
 
       <section className="content-page">
         <p className="eyebrow">隱私權政策 / Privacy Policy</p>
