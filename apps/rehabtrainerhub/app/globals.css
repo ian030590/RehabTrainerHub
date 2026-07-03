@@ -270,7 +270,7 @@ main {
 .auth-panel {
   display: grid;
   gap: 8px;
-  max-width: min(100%, 680px);
+  max-width: max-content;
   color: var(--text);
   font-family: "Noto Sans TC", "Microsoft JhengHei", Inter, ui-sans-serif, system-ui, sans-serif;
 }
