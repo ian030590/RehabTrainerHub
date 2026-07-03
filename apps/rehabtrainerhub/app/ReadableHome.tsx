@@ -458,11 +458,7 @@ export function ReadableHome() {
               ))}
             </div>
 
-            <div className="contrast-status" role="status" aria-live="polite">
-              <span>{copy.controls.contrastLabel}</span>
-              <strong>{contrastText.ratio}</strong>
-              <small>{contrastText.status}</small>
-            </div>
+
           </div>
 
           <AuthPanel

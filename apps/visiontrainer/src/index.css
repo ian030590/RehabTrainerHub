@@ -3,6 +3,13 @@
 
 :root {
   color-scheme: light;
+
+  /* Font weights */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
 }
 
 * {
@@ -71,7 +78,7 @@ html, body, #root {
 
 .app-loading-text {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .page-content {
@@ -260,7 +267,7 @@ html, body, #root {
   align-items: center;
   gap: 12px;
   font-size: 20px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: var(--accent-dark);
   text-decoration: none;
   letter-spacing: -0.01em;
@@ -280,7 +287,7 @@ html, body, #root {
   padding: 8px 16px;
   border-radius: var(--radius-m);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--text-secondary);
   text-decoration: none;
   white-space: nowrap;
@@ -296,7 +303,7 @@ html, body, #root {
 .navbar-link.active {
   color: var(--accent-dark);
   background: rgba(0, 94, 184, 0.08);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .trainer-auth-panel {
@@ -316,7 +323,7 @@ html, body, #root {
   margin: 0;
   color: var(--text-secondary, #424752);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -324,12 +331,12 @@ html, body, #root {
 .auth-panel-error,
 .auth-panel-warning {
   color: var(--error, #BA1A1A);
-  font-weight: 800;
+  font-weight: var(--fw-extrabold);
 }
 
 .auth-privacy-link {
   color: var(--accent);
-  font-weight: 800;
+  font-weight: var(--fw-extrabold);
   text-underline-offset: 3px;
 }
 
@@ -348,7 +355,7 @@ html, body, #root {
   border-radius: var(--radius-s, 8px);
   font: inherit;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: var(--fw-extrabold);
   line-height: 1.25;
   cursor: pointer;
 }
@@ -409,7 +416,7 @@ html, body, #root {
 .auth-dialog p,
 .auth-dialog li {
   color: var(--text-secondary, #424752);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   line-height: 1.65;
 }
 
@@ -419,7 +426,7 @@ html, body, #root {
   display: grid;
   gap: 6px;
   color: var(--text-primary, #1A1C1E);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 .auth-checkbox-row,
@@ -438,7 +445,7 @@ html, body, #root {
   color: var(--text-primary, #1A1C1E);
   background: var(--bg-card, #FFFFFF);
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .auth-dialog input[type="checkbox"],
@@ -472,7 +479,7 @@ html, body, #root {
 .auth-fieldset legend {
   padding: 0 8px;
   color: var(--accent, #005EB8);
-  font-weight: 800;
+  font-weight: var(--fw-extrabold);
 }
 
 @media (max-width: 780px) {
@@ -529,7 +536,7 @@ html, body, #root {
 .card-title {
   display: block;
   font-size: 24px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   margin-bottom: 12px;
   color: var(--text-primary);
   letter-spacing: -0.01em;
@@ -560,7 +567,7 @@ html, body, #root {
   border-radius: var(--radius-l); /* Rounded larger for primary interaction */
   font-family: var(--font-family);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   border: 2px solid transparent;
   transition: all var(--transition-fast);
@@ -657,7 +664,7 @@ html, body, #root {
 
 .label {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--text-secondary);
   margin-bottom: 6px;
   display: block;
@@ -677,7 +684,7 @@ html, body, #root {
 
 .setting-info h3 {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   margin-bottom: 2px;
 }
 
@@ -688,14 +695,14 @@ html, body, #root {
 
 .setting-value {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: var(--accent);
 }
 
 /* ── Section Headers ── */
 .section-title {
   font-size: 28px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   margin-bottom: 8px;
   letter-spacing: 0.5px;
   text-align: center;
@@ -772,7 +779,7 @@ html, body, #root {
 
 .config-label {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--text-muted);
   margin-bottom: 10px;
   text-transform: uppercase;
@@ -813,7 +820,7 @@ html, body, #root {
 
 .diff-btn-label {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: var(--text-primary);
 }
 
@@ -848,7 +855,7 @@ html, body, #root {
   color: var(--text-secondary);
   font-family: var(--font-family);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -912,7 +919,7 @@ html, body, #root {
   background: var(--bg-card);
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .color-field input[type="color"] {
@@ -939,7 +946,7 @@ html, body, #root {
   color: var(--text-secondary);
   font-family: var(--font-family);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -1095,7 +1102,7 @@ html, body, #root {
 
 .results-score {
   font-size: 64px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: var(--accent);
   margin: 16px 0;
 }
@@ -1112,7 +1119,7 @@ html, body, #root {
   background: var(--bg-panel);
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   text-align: center;
   border: 1px solid var(--border);
 }
@@ -1128,7 +1135,7 @@ html, body, #root {
 
 .results-table td.rt-fast {
   color: var(--success);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .results-table td.rt-slow {
@@ -1214,7 +1221,7 @@ html, body, #root {
   padding: 10px 24px;
   border-radius: var(--radius-l);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   cursor: pointer;
   border: 2px solid transparent;
   background: var(--bg-card);
@@ -1232,7 +1239,7 @@ html, body, #root {
   background: rgba(0, 94, 184, 0.08);
   color: var(--accent-dark);
   border-color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .webgazer-calibration-panel {
@@ -1249,7 +1256,7 @@ html, body, #root {
 .webgazer-calibration-steps h4 {
   margin-bottom: 8px;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 .webgazer-calibration-steps ol {
@@ -1427,7 +1434,7 @@ body #webgazer-calibrate-container #calibration-point {
   padding: 10px 28px;
   border-radius: 8px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -1453,7 +1460,7 @@ body #webgazer-calibrate-container #calibration-point {
   padding: 8px 18px;
   border-radius: 8px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1534,7 +1541,7 @@ body #webgazer-calibrate-container #calibration-point {
   margin-top: 16px;
   font-size: 16px;
   color: var(--accent);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .card-action-icon {
@@ -1559,7 +1566,7 @@ body #webgazer-calibrate-container #calibration-point {
 
 .acuity-intro h1 {
   font-size: 36px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   margin-bottom: 16px;
 }
 
@@ -1611,7 +1618,7 @@ body #webgazer-calibrate-container #calibration-point {
   background: rgba(255, 255, 255, 0.28);
   color: rgba(75, 85, 99, 0.72);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   pointer-events: none;
 }
 
@@ -1656,7 +1663,7 @@ body #webgazer-calibrate-container #calibration-point {
   gap: 10px;
   padding: 0 12px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .picture-key-number {
@@ -1682,7 +1689,7 @@ body #webgazer-calibrate-container #calibration-point {
   background: var(--bg-card);
   color: var(--text-primary);
   font-size: 20px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .key-hint-empty {
@@ -1756,7 +1763,7 @@ body #webgazer-calibrate-container #calibration-point {
   background: var(--acuity-overlay-bg);
   color: var(--acuity-overlay-color);
   font-size: var(--acuity-overlay-font-size);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1827,7 +1834,7 @@ body #webgazer-calibrate-container #calibration-point {
   gap: 8px;
   padding: 4px 10px 4px 6px;
   font-size: var(--acuity-overlay-font-size);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   line-height: 1.1;
   cursor: pointer;
   backdrop-filter: blur(8px);
@@ -1903,7 +1910,7 @@ body #webgazer-calibrate-container #calibration-point {
 
 .acuity-results h1 {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   margin-bottom: 24px;
 }
 
@@ -1932,7 +1939,7 @@ body #webgazer-calibrate-container #calibration-point {
 
 .acuity-result-label {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -1941,7 +1948,7 @@ body #webgazer-calibrate-container #calibration-point {
 
 .acuity-result-value {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: var(--accent);
 }
 
@@ -1975,7 +1982,7 @@ body #webgazer-calibrate-container #calibration-point {
 
 .reading-qa-question {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: var(--text-primary);
   margin-bottom: 48px;
   text-align: center;
@@ -1998,7 +2005,7 @@ body #webgazer-calibrate-container #calibration-point {
   width: 100%;
   padding: 20px 24px;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--text-secondary);
   background: var(--bg-card);
   border: 2px solid var(--border);
@@ -2059,7 +2066,7 @@ body #webgazer-calibrate-container #calibration-point {
 
 .rehab-footer a {
   color: var(--accent);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   text-decoration: none;
 }
 

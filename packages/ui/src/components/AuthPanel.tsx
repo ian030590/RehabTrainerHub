@@ -214,7 +214,7 @@ export function AuthPanel({
 }: AuthPanelProps) {
   const labels = text[toTextKey(locale)];
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+
   const [error, setError] = useState('');
   const [privacyProvider, setPrivacyProvider] = useState<AuthProvider | null>(null);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
@@ -228,7 +228,7 @@ export function AuthPanel({
   }, [authOrigin, privacyHref]);
 
   const loadUser = useCallback(async () => {
-    setIsLoading(true);
+
     setError('');
     try {
       let nextUser = await fetchCurrentAuthUser(apiBase);
@@ -250,7 +250,7 @@ export function AuthPanel({
       setUser(null);
       onAuthChange?.(null);
     } finally {
-      setIsLoading(false);
+
     }
   }, [apiBase, onAuthChange]);
 
@@ -372,9 +372,7 @@ export function AuthPanel({
 
   return (
     <section className={`auth-panel ${className ?? ''}`} aria-label={`${appName} account`}>
-      <div className="auth-panel-status" role="status" aria-live="polite">
-        {isLoading ? labels.loading : user ? `${labels.statusSignedIn}: ${user.displayName}` : labels.statusGuest}
-      </div>
+
 
       <div className="auth-panel-actions">
         {user ? (
