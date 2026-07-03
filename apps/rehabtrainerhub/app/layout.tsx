@@ -9,14 +9,14 @@ export const metadata: Metadata = {
     default: 'RehabTrainerHub',
     template: '%s | RehabTrainerHub',
   },
-  description: '居家中風復健與視覺復健小遊戲入口平台，整合 StrokeTrainer 與 VisionTrainer。',
+  description: 'RehabTrainerHub 是整合中風復健與視覺訓練的居家復健入口，提供清楚導覽、使用限制與相關衛教資源。',
   applicationName: 'RehabTrainerHub',
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'RehabTrainerHub',
-    description: '整合中風復健、視覺復健與衛教資訊的居家復健入口平台。',
+    description: '整合中風復健與視覺訓練的居家復健入口，提供清楚導覽、使用限制與衛教資源。',
     url: '/',
     siteName: 'RehabTrainerHub',
     locale: 'zh_TW',
@@ -26,17 +26,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-Hant">
+    <html lang="zh-Hant-TW">
       <body>
         {children}
         <RehabFooter
           appName="RehabTrainerHub"
           hubHref={siteUrls.hub}
           labels={{
-            disclaimer: '本平台作為居家復健練習與流程原型使用，不能取代醫療診斷或治療建議。',
+            disclaimer: '本平台用於居家復健練習與流程原型展示，不提供醫療診斷或治療建議。使用前請諮詢醫師或治療師。',
             hub: '首頁',
             repo: 'GitHub',
-            rights: '保留所有權利。',
+            rights: '保留所有權利',
           }}
         />
       </body>
