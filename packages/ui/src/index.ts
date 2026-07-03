@@ -1,3 +1,5 @@
+export { AuthPanel } from './components/AuthPanel';
+export type { AuthLocale, AuthProvider, AuthUser, RehabProfile } from './auth/authClient';
 export { RehabFooter } from './components/RehabFooter';
 export type { RehabFooterProps } from './components/RehabFooter';
 export { UserSelector } from './components/UserSelector';

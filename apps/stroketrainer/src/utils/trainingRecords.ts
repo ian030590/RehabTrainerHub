@@ -1,7 +1,13 @@
+import {
+  getRemoteTrainingRecords,
+  hasAuthToken,
+  saveRemoteTrainingRecord,
+} from '@rehab-trainer/ui/auth/authClient';
 import type { TranslationKey } from '../i18n';
 import type { TrialData } from '../pages/training/types';
 import { downloadCsvFile } from './downloadFile';
 import { getSetting, STORAGE_PREFIX } from './settings';
+import { siteUrls } from './siteUrls';
 
 type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;
 
@@ -11,6 +17,8 @@ const TRAINING_RECORDS_KEY = `${STORAGE_PREFIX}training_records_v1`;
 const TRAINING_RECORDS_DATABASE_NAME = 'stroke-trainer-training-records';
 const TRAINING_RECORDS_DATABASE_VERSION = 1;
 const TRAINING_RECORDS_STORE_NAME = 'records';
+const REMOTE_APP_ID = 'stroketrainer';
+const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
 let legacyMigrationPromise: Promise<void> | null = null;
 
 const MODULE_TITLE_KEYS: Record<string, TranslationKey> = {
@@ -104,6 +112,20 @@ const BASE_CSV_COLUMNS: CsvColumn[] = [
 ];
 
 export async function getTrainingRecords(): Promise<TrainingRecord[]> {
+  if (hasAuthToken()) {
+    try {
+      const remoteRecords = await getRemoteTrainingRecords(AUTH_API_BASE, REMOTE_APP_ID);
+      if (remoteRecords) {
+        return remoteRecords
+          .map(toTrainingRecord)
+          .filter((record): record is TrainingRecord => record !== null)
+          .sort((left, right) => left.savedAt.localeCompare(right.savedAt));
+      }
+    } catch (error) {
+      console.warn('Unable to read remote training records. Falling back to IndexedDB.', error);
+    }
+  }
+
   try {
     await ensureLegacyTrainingRecordsMigrated();
     const storedRecords = await readAllTrainingRecords();
@@ -163,6 +185,21 @@ export async function saveTrainingSessionRecord(args: SaveTrainingSessionRecordA
 }
 
 async function appendTrainingRecord(record: TrainingRecord): Promise<TrainingRecord | null> {
+  if (hasAuthToken()) {
+    try {
+      const saved = await saveRemoteTrainingRecord(AUTH_API_BASE, {
+        appId: REMOTE_APP_ID,
+        record,
+      });
+      if (saved) {
+        window.dispatchEvent(new Event(TRAINING_RECORDS_CHANGED_EVENT));
+        return record;
+      }
+    } catch (error) {
+      console.warn('Unable to save remote training record. Falling back to IndexedDB.', error);
+    }
+  }
+
   try {
     await ensureLegacyTrainingRecordsMigrated();
     await writeTrainingRecord(record);

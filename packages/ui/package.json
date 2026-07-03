@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./auth/authClient": "./src/auth/authClient.ts",
+    "./components/AuthPanel": "./src/components/AuthPanel.tsx",
     "./components/RehabFooter": "./src/components/RehabFooter.tsx",
     "./components/UserSelector": "./src/components/UserSelector.tsx",
     "./downloadFile": "./src/downloadFile.ts",

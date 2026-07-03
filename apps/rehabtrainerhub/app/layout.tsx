@@ -32,9 +32,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <RehabFooter
           appName="RehabTrainerHub"
           hubHref={siteUrls.hub}
+          privacyHref={`${siteUrls.hub}/privacy/`}
           labels={{
             disclaimer: '本平台用於居家復健練習與流程原型展示，不提供醫療診斷或治療建議。使用前請諮詢醫師或治療師。',
             hub: '首頁',
+            privacy: '隱私權政策',
             repo: 'GitHub',
             rights: '保留所有權利',
           }}

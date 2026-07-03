@@ -128,9 +128,13 @@ main {
 
 .header-stack {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
+  flex: 1 1 auto;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 16px;
+  min-width: 0;
   padding: 12px 0;
 }
 
@@ -207,7 +211,7 @@ main {
   justify-content: flex-end;
   align-items: center;
   gap: 8px;
-  max-width: 820px;
+  max-width: none;
 }
 
 .control-group {
@@ -279,13 +283,191 @@ main {
   font: inherit;
 }
 
-.contrast-status.pass strong {
-  color: var(--tertiary);
-}
-
 .contrast-status.warn strong,
 .contrast-status.fail strong {
   color: var(--secondary);
+}
+
+.auth-panel {
+  display: grid;
+  gap: 8px;
+  max-width: min(100%, 680px);
+  color: var(--text);
+  font-family: "Noto Sans TC", "Microsoft JhengHei", Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.home-auth-panel {
+  flex: 1 1 100%;
+  justify-items: end;
+}
+
+.auth-panel-status,
+.auth-panel-note,
+.auth-panel-error {
+  max-width: 100%;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 750;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.auth-panel-error,
+.auth-panel-warning {
+  color: var(--secondary);
+  font-weight: 850;
+}
+
+.auth-privacy-link {
+  color: var(--primary);
+  font-weight: 900;
+  text-underline-offset: 3px;
+}
+
+.auth-panel-actions,
+.auth-dialog-actions,
+.auth-radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.auth-panel-actions {
+  justify-content: flex-end;
+}
+
+.auth-button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 900;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.auth-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.auth-button-primary {
+  border-color: var(--secondary);
+  color: var(--on-secondary);
+  background: var(--secondary);
+}
+
+.auth-button-secondary {
+  color: var(--primary);
+  background: var(--surface-lowest);
+}
+
+.auth-button:focus-visible,
+.auth-dialog input:focus-visible,
+.auth-dialog select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.auth-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.auth-dialog {
+  width: min(680px, 100%);
+  max-height: min(90vh, 920px);
+  overflow: auto;
+  padding: 28px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-large);
+  background: var(--surface-lowest);
+  box-shadow: 0 24px 70px var(--panel-shadow);
+}
+
+.auth-profile-dialog {
+  width: min(860px, 100%);
+}
+
+.auth-dialog h2 {
+  margin: 0 0 12px;
+}
+
+.auth-dialog p,
+.auth-dialog li {
+  color: var(--text-muted);
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.auth-checkbox-row,
+.auth-radio-row label,
+.auth-profile-grid label {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.auth-checkbox-row,
+.auth-radio-row label {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+
+.auth-dialog input,
+.auth-dialog select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--surface-lowest);
+  font: inherit;
+  font-weight: 650;
+}
+
+.auth-dialog input[type="checkbox"],
+.auth-dialog input[type="radio"] {
+  width: 20px;
+  min-height: 20px;
+  margin-top: 3px;
+}
+
+.auth-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.auth-frequency-grid {
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  margin-bottom: 0;
+}
+
+.auth-fieldset {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+}
+
+.auth-fieldset legend {
+  padding: 0 8px;
+  color: var(--primary);
+  font-weight: 900;
 }
 
 .hero {
@@ -772,7 +954,7 @@ h3 {
 }
 
 .rehab-footer {
-  padding: var(--page-margin);
+  padding: 20px clamp(12px, 2vw, 24px);
   border-top: 1px solid var(--outline-variant);
   background: var(--surface-highest);
   color: var(--text-muted);
@@ -784,12 +966,17 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 16px 28px;
-  max-width: var(--container-max);
+  width: min(100%, calc(var(--container-max) + 160px));
+  max-width: none;
   margin: 0 auto;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 0.875rem;
   font-weight: 650;
   line-height: 1.6;
+}
+
+.rehab-footer-inner > span {
+  flex: 1 1 360px;
 }
 
 .rehab-footer strong {
@@ -798,9 +985,19 @@ h3 {
   font-weight: 900;
 }
 
+.rehab-footer-meta {
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 18px;
+  white-space: nowrap;
+}
+
 .rehab-footer nav {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 18px;
 }
 
@@ -823,9 +1020,13 @@ h3 {
     gap: 12px;
   }
 
-  .header-stack,
-  .readability-toolbar {
+  .header-stack {
     align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .readability-toolbar {
+    align-items: center;
     justify-content: flex-start;
   }
 
@@ -878,20 +1079,42 @@ h3 {
     justify-content: flex-start;
   }
 
+  .header-stack {
+    width: 100%;
+  }
+
   .readability-toolbar {
     width: 100%;
+  }
+
+  .home-auth-panel,
+  .auth-panel-actions {
+    justify-items: start;
+    justify-content: flex-start;
+  }
+
+  .auth-profile-grid,
+  .auth-frequency-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-dialog {
+    padding: 22px;
   }
 
   .control-group {
     grid-auto-columns: minmax(42px, max-content);
   }
 
-  .contrast-status {
-    flex-wrap: wrap;
-  }
-
   .header-actions > a:not(.secondary-action) {
     min-height: 40px;
+  }
+
+  .rehab-footer-meta {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    white-space: normal;
   }
 
   h1 {

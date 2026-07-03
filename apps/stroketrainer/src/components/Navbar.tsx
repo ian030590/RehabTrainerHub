@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ACTIVE_USER_CHANGED_EVENT, SETTINGS_CHANGED_EVENT, getActiveUser } from '../utils/settings';
 import { downloadAllTrainingRecordsCsv } from '../utils/trainingRecords';
 import { useT } from '../i18n';
+import { siteUrls } from '../utils/siteUrls';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) => `navbar-link ${isActive ? 'active' : ''}`;
 const NAVBAR_SIDEBAR_BREAKPOINT_PX = 1120;
@@ -11,7 +13,7 @@ const NAVBAR_INNER_MAX_WIDTH_PX = 1440;
 const NAVBAR_LAYOUT_BUFFER_PX = 12;
 
 export function Navbar() {
-  const { t } = useT();
+  const { lang, t } = useT();
   const location = useLocation();
   const navbarRef = useRef<HTMLElement | null>(null);
   const navbarInnerRef = useRef<HTMLDivElement | null>(null);
@@ -157,6 +159,13 @@ export function Navbar() {
           </div>
 
           <div className="navbar-tools">
+            <AuthPanel
+              apiBase={import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub}
+              appName="StrokeTrainer"
+              className="trainer-auth-panel"
+              locale={lang === 'en' ? 'en' : 'zh-TW'}
+            />
+
             <div className="navbar-records">
               <button
                 type="button"
@@ -196,6 +205,9 @@ export function Navbar() {
             ))}
           </div>
           <div className="navbar-tools">
+            <div className="trainer-auth-measure">
+              {lang === 'en' ? 'Sign in with Google Sign in with Facebook' : '使用 Google 登入 使用 Facebook 登入'}
+            </div>
             <div className="navbar-records">
               <span className="btn btn-primary btn-sm navbar-download-btn">
                 {t('nav.downloadScores')}

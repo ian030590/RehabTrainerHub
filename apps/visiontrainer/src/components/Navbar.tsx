@@ -1,14 +1,16 @@
 import { useState } from 'react';
+import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
 import { NavLink } from 'react-router-dom';
 import { downloadAllTrainingRecordsCsv } from '../utils/trainingRecords';
 import { useActiveUser } from '../utils/useActiveUser';
 import { useT } from '../i18n';
+import { siteUrls } from '../utils/siteUrls';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) => `navbar-link ${isActive ? 'active' : ''}`;
 const logoStyle = { width: 'auto', objectFit: 'contain' } as const;
 
 export function Navbar() {
-  const { t } = useT();
+  const { lang, t } = useT();
   const user = useActiveUser();
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloadingScores, setIsDownloadingScores] = useState(false);
@@ -99,6 +101,13 @@ export function Navbar() {
           </div>
 
           <div className="navbar-tools">
+            <AuthPanel
+              apiBase={import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub}
+              appName="VisionTrainer"
+              className="trainer-auth-panel"
+              locale={lang === 'en' ? 'en' : 'zh-TW'}
+            />
+
             <div className="navbar-records">
               <button
                 type="button"

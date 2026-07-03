@@ -1,3 +1,9 @@
 name = "rehabtrainerhub"
 compatibility_date = "2026-07-02"
 pages_build_output_dir = "out"
+
+[[d1_databases]]
+binding = "REHAB_DB"
+database_name = "rehabtrainerhub"
+database_id = "493ad6de-0e9e-41b2-96a6-6af93c67fce2"
+migrations_dir = "migrations"

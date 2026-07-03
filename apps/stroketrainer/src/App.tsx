@@ -72,8 +72,9 @@ function AppLayout() {
       <RehabFooter
         appName="StrokeTrainer"
         hubHref={siteUrls.hub}
+        privacyHref={`${siteUrls.hub}/privacy/`}
         repoHref="https://github.com/ian030590/RehabTrainerHub"
-        labels={{ rights: t('app.footer.rights') }}
+        labels={{ privacy: '隱私權政策', rights: t('app.footer.rights') }}
       />
     </div>
   );

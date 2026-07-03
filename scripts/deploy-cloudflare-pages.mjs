@@ -73,6 +73,7 @@ function discoverPagesProjects() {
       return {
         appPath,
         compatibilityDate,
+        outputDir,
         outputPath: toPosixPath(join(appPath, outputDir)),
         projectName,
       };
@@ -210,9 +211,10 @@ function ensureProject(project, existingProjectNames) {
 
 function deployProject(project) {
   runWrangler([
+    `--cwd=${project.appPath}`,
     'pages',
     'deploy',
-    project.outputPath,
+    project.outputDir,
     `--project-name=${project.projectName}`,
     `--branch=${branch}`,
   ]);

@@ -56,7 +56,12 @@ function AppLayout() {
     <div className="app-layout">
       <Navbar />
       <Outlet />
-      <RehabFooter appName="VisionTrainer" hubHref={siteUrls.hub} />
+      <RehabFooter
+        appName="VisionTrainer"
+        hubHref={siteUrls.hub}
+        privacyHref={`${siteUrls.hub}/privacy/`}
+        labels={{ privacy: '隱私權政策' }}
+      />
     </div>
   );
 }

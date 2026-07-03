@@ -1,0 +1,99 @@
+import type { Metadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: '隱私權政策',
+  description: 'RehabTrainerHub 登入、匿名基本資料、訓練紀錄與本機 IndexedDB 儲存說明。',
+  alternates: {
+    canonical: '/privacy',
+  },
+};
+
+const sections = [
+  {
+    title: '我們蒐集哪些資料',
+    items: [
+      '使用 Google 或 Facebook 登入時，系統會使用 provider 提供的帳號識別資訊、顯示名稱、電子郵件與頭像建立登入狀態。',
+      '登入後會請你填寫匿名基本資料，包含年齡、性別、國籍等。',
+      '登入後會請你填寫是否有醫師診斷的慢性病類別，包含中樞神經疾患、新陳代謝疾患、發展性疾患、精神病與精神官能症。',
+      '登入後會請你填寫抽菸與喝酒習慣，選項包含無、有、已經戒掉；若選擇有，會記錄每週或每月的數量與單位。',
+      '訓練紀錄可能包含使用的工具、模組、難度、訓練時間、分數、互動結果與瀏覽器送出的紀錄內容。',
+    ],
+  },
+  {
+    title: '我們如何使用資料',
+    items: [
+      '登入資料只用於建立登入狀態、辨識同一位使用者與同步訓練紀錄。',
+      '匿名基本資料、慢性病類別、抽菸與喝酒習慣用於分組分析復健工具的使用情形與改善服務。',
+      '本平台不提供醫療診斷，也不會依填寫內容提供個別醫療建議。',
+      '慢性病欄位只應填寫醫師已診斷的狀況；若沒有醫師診斷，請勿自行猜測填寫。',
+    ],
+  },
+  {
+    title: '資料儲存位置',
+    items: [
+      '登入使用時，匿名基本資料與訓練紀錄會儲存在 RehabTrainerHub 的 Cloudflare D1 database。',
+      '未登入使用時，訓練紀錄只會儲存在目前瀏覽器的 IndexedDB，不會同步到 D1 database。',
+      'StrokeTrainer 與 VisionTrainer 的登入流程會連到 RehabTrainerHub 的登入 API，並使用同一份登入狀態。',
+    ],
+  },
+  {
+    title: '攝影機與本機推論',
+    items: [
+      '部分 trainer 功能可能使用攝影機或本機 AI 推論進行即時訓練判斷。',
+      '除非頁面功能另有明確說明，本平台不會上傳或保存攝影機影像。',
+      '若你不想使用攝影機功能，可以不授權攝影機權限，或改用不需要攝影機的訓練項目。',
+    ],
+  },
+  {
+    title: '你的選擇',
+    items: [
+      '你可以選擇不登入並繼續使用支援本機紀錄的功能。',
+      '你可以在任一主頁或 trainer 頁面登出；登出後新的紀錄會回到本機 IndexedDB 儲存。',
+      '你可以使用瀏覽器設定清除 IndexedDB 本機紀錄。',
+    ],
+  },
+];
+
+export default function PrivacyPage() {
+  return (
+    <main>
+      <header className="site-header">
+        <Link className="brand" href="/">
+          <span className="brand-mark" aria-hidden="true">
+            <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
+          </span>
+          <span>
+            <strong>RehabTrainerHub</strong>
+            <small>Privacy Policy</small>
+          </span>
+        </Link>
+        <nav className="header-actions" aria-label="RehabTrainerHub navigation">
+          <Link className="secondary-action compact" href="/">回首頁</Link>
+          <Link className="secondary-action compact" href="/education/">衛教資訊</Link>
+        </nav>
+      </header>
+
+      <section className="content-page">
+        <p className="eyebrow">隱私權政策</p>
+        <h1>登入、匿名資料與訓練紀錄的使用說明。</h1>
+        <p>
+          本政策適用於 RehabTrainerHub、StrokeTrainer 與 VisionTrainer 的登入、基本資料填寫與訓練紀錄儲存。
+          本平台以居家復健練習與流程原型為目的，不取代醫師、治療師或其他專業人員的評估。
+        </p>
+
+        <div className="education-list">
+          {sections.map((section) => (
+            <article key={section.title}>
+              <h2>{section.title}</h2>
+              <ul>
+                {section.items.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}

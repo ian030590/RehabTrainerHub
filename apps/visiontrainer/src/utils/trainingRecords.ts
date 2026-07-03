@@ -1,7 +1,13 @@
+import {
+  getRemoteTrainingRecords,
+  hasAuthToken,
+  saveRemoteTrainingRecord,
+} from '@rehab-trainer/ui/auth/authClient';
 import type { TranslationKey } from '../i18n';
 import type { TrialData } from '../pages/training/types';
 import { downloadCsvFile } from './downloadFile';
 import { getSetting, STORAGE_PREFIX } from './settings';
+import { siteUrls } from './siteUrls';
 
 type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;
 
@@ -12,6 +18,8 @@ const TRAINING_HIGH_SCORES_KEY = `${STORAGE_PREFIX}training_high_scores_v1`;
 const TRAINING_RECORDS_DB_NAME = `${STORAGE_PREFIX}training_records`;
 const TRAINING_RECORDS_DB_VERSION = 1;
 const TRAINING_RECORDS_STORE = 'records';
+const REMOTE_APP_ID = 'visiontrainer';
+const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
 
 const MODULE_TITLE_KEYS: Record<string, TranslationKey> = {
   'moving-card': 'home.module.movingCard.title',
@@ -79,6 +87,20 @@ export function initializeTrainingRecords(): Promise<void> {
 }
 
 export async function getTrainingRecords(): Promise<TrainingRecord[]> {
+  if (hasAuthToken()) {
+    try {
+      const remoteRecords = await getRemoteTrainingRecords(AUTH_API_BASE, REMOTE_APP_ID);
+      if (remoteRecords) {
+        return remoteRecords
+          .map(toTrainingRecord)
+          .filter((record): record is TrainingRecord => record !== null)
+          .sort((left, right) => left.savedAt.localeCompare(right.savedAt));
+      }
+    } catch (error) {
+      console.warn('Unable to read remote training records. Falling back to IndexedDB.', error);
+    }
+  }
+
   try {
     const database = await getTrainingRecordsDatabase();
     await ensureLegacyRecordsMigrated(database);
@@ -99,6 +121,15 @@ export async function getTrainingRecords(): Promise<TrainingRecord[]> {
 }
 
 export async function getTrainingRecordCount(): Promise<number> {
+  if (hasAuthToken()) {
+    try {
+      const remoteRecords = await getRemoteTrainingRecords(AUTH_API_BASE, REMOTE_APP_ID);
+      if (remoteRecords) return remoteRecords.length;
+    } catch (error) {
+      console.warn('Unable to count remote training records. Falling back to IndexedDB.', error);
+    }
+  }
+
   try {
     const database = await getTrainingRecordsDatabase();
     await ensureLegacyRecordsMigrated(database);
@@ -128,6 +159,22 @@ export async function saveTrainingRecord(args: SaveTrainingRecordArgs): Promise<
     config: args.config,
     results: args.results,
   };
+
+  if (hasAuthToken()) {
+    try {
+      const saved = await saveRemoteTrainingRecord(AUTH_API_BASE, {
+        appId: REMOTE_APP_ID,
+        record,
+      });
+      if (saved) {
+        updateTrainingHighScores([record]);
+        window.dispatchEvent(new Event(TRAINING_RECORDS_CHANGED_EVENT));
+        return record;
+      }
+    } catch (error) {
+      console.warn('Unable to save remote training record. Falling back to IndexedDB.', error);
+    }
+  }
 
   try {
     const database = await getTrainingRecordsDatabase();
