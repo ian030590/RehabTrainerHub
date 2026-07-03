@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
-import Link from 'next/link';
+import { HubBottomNav, HubSiteHeader } from '../HubNavigation';
 
 export const metadata: Metadata = {
   title: '隱私權政策 Privacy Policy',
@@ -118,32 +117,8 @@ const sections = [
 export default function PrivacyPage() {
   return (
     <main>
-      <header className="site-header">
-        <Link className="brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
-          </span>
-          <span>
-            <strong>RehabTrainerHub</strong>
-            <small>Privacy Policy</small>
-          </span>
-        </Link>
-        <nav className="header-actions" aria-label="RehabTrainerHub navigation">
-          <Link className="nav-link" href="/#apps-title">復健工具</Link>
-          <Link className="nav-link" href="/#care-title">安全提醒</Link>
-          <Link className="nav-link" href="/education/">衛教資訊</Link>
-          <Link className="nav-link" href="/links/">相關連結</Link>
-          <Link className="nav-link" href="/collaborate/">合作投稿</Link>
-        </nav>
-      </header>
-
-      <nav className="bottom-nav" aria-label="RehabTrainerHub navigation">
-        <Link href="/#apps-title">復健工具</Link>
-        <Link href="/#care-title">安全提醒</Link>
-        <Link href="/education/">衛教資訊</Link>
-        <Link href="/links/">相關連結</Link>
-        <Link href="/collaborate/">合作投稿</Link>
-      </nav>
+      <HubSiteHeader brandSubtitle="Privacy Policy" />
+      <HubBottomNav />
 
       <section className="content-page">
         <p className="eyebrow">隱私權政策 / Privacy Policy</p>

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
-import Link from 'next/link';
+import { HubBottomNav, HubSiteHeader } from '../HubNavigation';
 import { SubmissionForm } from './SubmissionForm';
 
 export const metadata: Metadata = {
@@ -14,32 +13,8 @@ export const metadata: Metadata = {
 export default function CollaboratePage() {
   return (
     <main>
-      <header className="site-header">
-        <Link className="brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
-          </span>
-          <span>
-            <strong>RehabTrainerHub</strong>
-            <small>Collaboration</small>
-          </span>
-        </Link>
-        <nav className="header-actions" aria-label="RehabTrainerHub navigation">
-          <Link className="nav-link" href="/#apps-title">復健工具</Link>
-          <Link className="nav-link" href="/#care-title">安全提醒</Link>
-          <Link className="nav-link" href="/education/">衛教資訊</Link>
-          <Link className="nav-link" href="/links/">相關連結</Link>
-          <Link className="nav-link is-active" href="/collaborate/">合作投稿</Link>
-        </nav>
-      </header>
-
-      <nav className="bottom-nav" aria-label="RehabTrainerHub navigation">
-        <Link href="/#apps-title">復健工具</Link>
-        <Link href="/#care-title">安全提醒</Link>
-        <Link href="/education/">衛教資訊</Link>
-        <Link href="/links/">相關連結</Link>
-        <Link className="is-active" href="/collaborate/">合作投稿</Link>
-      </nav>
+      <HubSiteHeader activeKey="submit" brandSubtitle="Collaboration" />
+      <HubBottomNav activeKey="submit" />
 
       <section className="content-page submission-page">
         <p className="eyebrow">合作投稿</p>

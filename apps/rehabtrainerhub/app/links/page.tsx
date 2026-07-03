@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
-import Link from 'next/link';
+import { HubBottomNav, HubSiteHeader } from '../HubNavigation';
 import { siteUrls } from '../siteUrls';
 
 export const metadata: Metadata = {
@@ -41,32 +40,8 @@ function CheckIcon() {
 export default function LinksPage() {
   return (
     <main>
-      <header className="site-header">
-        <Link className="brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
-          </span>
-          <span>
-            <strong>RehabTrainerHub</strong>
-            <small>Related websites</small>
-          </span>
-        </Link>
-        <nav className="header-actions" aria-label="RehabTrainerHub navigation">
-          <Link className="nav-link" href="/#apps-title">復健工具</Link>
-          <Link className="nav-link" href="/#care-title">安全提醒</Link>
-          <Link className="nav-link" href="/education/">衛教資訊</Link>
-          <Link className="nav-link is-active" href="/links/">相關連結</Link>
-          <Link className="nav-link" href="/collaborate/">合作投稿</Link>
-        </nav>
-      </header>
-
-      <nav className="bottom-nav" aria-label="RehabTrainerHub navigation">
-        <Link href="/#apps-title">復健工具</Link>
-        <Link href="/#care-title">安全提醒</Link>
-        <Link href="/education/">衛教資訊</Link>
-        <Link className="is-active" href="/links/">相關連結</Link>
-        <Link href="/collaborate/">合作投稿</Link>
-      </nav>
+      <HubSiteHeader activeKey="links" brandSubtitle="Related websites" />
+      <HubBottomNav activeKey="links" />
 
       <section className="content-page">
         <p className="eyebrow">相關網站</p>

@@ -1569,10 +1569,6 @@ body > main:not(.home-page) .site-header {
     top: 8px;
   }
 
-  body > main:not(.home-page) .site-header .header-actions {
-    display: none;
-  }
-
   .brand strong {
     max-width: 210px;
     font-size: 1.3rem;

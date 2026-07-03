@@ -4,13 +4,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
 import { useEffect, useMemo, useState } from 'react';
+import { HubBottomNav, HubSiteHeader, type HubNavKey } from './HubNavigation';
 import { siteUrls } from './siteUrls';
 
 type Locale = 'zh-TW' | 'en';
 type FontScale = 'standard' | 'large' | 'extra';
 type Theme = 'light' | 'dark';
 type SectionId = 'programs' | 'care' | 'education';
-type IconName = 'brain' | 'eye' | 'arrow' | 'check' | 'menu' | 'close' | 'panel';
+type IconName = 'brain' | 'eye' | 'arrow' | 'check' | 'panel';
 
 const storageKeys = {
   locale: 'rehabtrainerhub.locale',
@@ -255,22 +256,6 @@ const appAssets = {
 } as const;
 
 function Icon({ name, className }: { name: IconName; className?: string }) {
-  if (name === 'menu') {
-    return (
-      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
-        <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  if (name === 'close') {
-    return (
-      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
-        <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
   if (name === 'eye') {
     return (
       <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
@@ -392,7 +377,6 @@ export function ReadableHome() {
   );
   const [theme, setTheme] = useStoredSetting<Theme>(storageKeys.theme, 'light', isTheme);
   const [contrastRatio, setContrastRatio] = useState<number | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState<SectionId>('programs');
   const copy = content[locale];
@@ -482,137 +466,106 @@ export function ReadableHome() {
   ]);
 
   const closeHeaderPanels = () => {
-    setIsMenuOpen(false);
     setIsSettingsOpen(false);
   };
 
-  const sectionLinkClass = (sectionId: SectionId) => `nav-link ${currentSection === sectionId ? 'is-active' : ''}`;
+  const activeNavKey: HubNavKey | undefined =
+    currentSection === 'programs' || currentSection === 'care' ? currentSection : undefined;
 
   return (
     <main className="home-page" id="top">
-      <header className="site-header">
-        <div className="site-header-inner">
-          <Link className="brand" href="/" onClick={closeHeaderPanels}>
-            <span className="brand-mark" aria-hidden="true">
-              <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
-            </span>
-            <span>
-              <strong>RehabTrainerHub</strong>
-              <small>{copy.brandSubtitle}</small>
-            </span>
-          </Link>
+      <HubSiteHeader
+        activeKey={activeNavKey}
+        brandSubtitle={copy.brandSubtitle}
+        labels={copy.nav}
+        navigationLabel={copy.navigationLabel}
+        onNavigate={closeHeaderPanels}
+        tools={(
+          <>
+            <div className="header-tools">
+              <button
+                aria-controls="readability-panel"
+                aria-expanded={isSettingsOpen}
+                className={`settings-toggle secondary-action compact ${isSettingsOpen ? 'is-active' : ''}`}
+                onClick={() => setIsSettingsOpen((open) => !open)}
+                type="button"
+              >
+                {copy.controls.settingsButton}
+              </button>
 
-          <button
-            className="navbar-toggle"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-controls="site-menu"
-            aria-expanded={isMenuOpen}
-            aria-label="Toggle menu"
-            type="button"
-          >
-            <Icon className="icon-md" name={isMenuOpen ? 'close' : 'menu'} />
-          </button>
-        </div>
-
-        <div className={`header-stack ${isMenuOpen ? 'is-open' : ''}`} id="site-menu">
-          <nav className="header-actions" aria-label={copy.navigationLabel}>
-            <a className={sectionLinkClass('programs')} href="#apps-title" onClick={closeHeaderPanels}>{copy.nav.programs}</a>
-            <a className={sectionLinkClass('care')} href="#care-title" onClick={closeHeaderPanels}>{copy.nav.care}</a>
-            <a className={sectionLinkClass('education')} href="#education-title" onClick={closeHeaderPanels}>{copy.nav.education}</a>
-            <Link className="nav-link" href="/links/" onClick={closeHeaderPanels}>{copy.nav.links}</Link>
-            <Link className="nav-link" href="/collaborate/" onClick={closeHeaderPanels}>{copy.nav.submit}</Link>
-          </nav>
-
-          <div className="header-tools">
-            <button
-              aria-controls="readability-panel"
-              aria-expanded={isSettingsOpen}
-              className={`settings-toggle secondary-action compact ${isSettingsOpen ? 'is-active' : ''}`}
-              onClick={() => setIsSettingsOpen((open) => !open)}
-              type="button"
-            >
-              {copy.controls.settingsButton}
-            </button>
-
-            <AuthPanel
-              appName="RehabTrainerHub"
-              className="home-auth-panel"
-              locale={locale === 'en' ? 'en' : 'zh-TW'}
-            />
-          </div>
-
-          <div
-            className={`readability-panel ${isSettingsOpen ? 'is-open' : ''}`}
-            id="readability-panel"
-            role="region"
-            aria-label={copy.controls.settingsLabel}
-          >
-            <div className="readability-toolbar">
-              <div className="control-group" role="group" aria-label={copy.controls.languageLabel}>
-                <button
-                  aria-pressed={locale === 'zh-TW'}
-                  className={locale === 'zh-TW' ? 'is-active' : ''}
-                  onClick={() => setLocale('zh-TW')}
-                  type="button"
-                >
-                  {copy.controls.zh}
-                </button>
-                <button
-                  aria-pressed={locale === 'en'}
-                  className={locale === 'en' ? 'is-active' : ''}
-                  onClick={() => setLocale('en')}
-                  type="button"
-                >
-                  {copy.controls.en}
-                </button>
-              </div>
-
-              <div className="control-group" role="group" aria-label={copy.controls.fontLabel}>
-                {fontScales.map((scale) => (
-                  <button
-                    aria-pressed={fontScale === scale}
-                    className={fontScale === scale ? 'is-active' : ''}
-                    key={scale}
-                    onClick={() => setFontScale(scale)}
-                    type="button"
-                  >
-                    {copy.controls[scale]}
-                  </button>
-                ))}
-              </div>
-
-              <div className="control-group" role="group" aria-label={copy.controls.themeLabel}>
-                {themes.map((mode) => (
-                  <button
-                    aria-pressed={theme === mode}
-                    className={theme === mode ? 'is-active' : ''}
-                    key={mode}
-                    onClick={() => setTheme(mode)}
-                    type="button"
-                  >
-                    {copy.controls[mode]}
-                  </button>
-                ))}
-              </div>
+              <AuthPanel
+                appName="RehabTrainerHub"
+                className="home-auth-panel"
+                locale={locale === 'en' ? 'en' : 'zh-TW'}
+              />
             </div>
-            <p className="contrast-status">
-              {copy.controls.contrastLabel} {contrastText.ratio} {contrastText.status}
-            </p>
-            <button className="text-button" type="button" onClick={() => setIsSettingsOpen(false)}>
-              {copy.controls.settingsClose}
-            </button>
-          </div>
-        </div>
-        {isMenuOpen && <div className="navbar-overlay" onClick={closeHeaderPanels} />}
-      </header>
 
-      <nav className="bottom-nav" aria-label={copy.navigationLabel}>
-        <a className={sectionLinkClass('programs')} href="#apps-title">{copy.nav.programs}</a>
-        <a className={sectionLinkClass('care')} href="#care-title">{copy.nav.care}</a>
-        <a className={sectionLinkClass('education')} href="#education-title">{copy.nav.education}</a>
-        <Link href="/links/">{copy.nav.links}</Link>
-        <Link href="/collaborate/">{copy.nav.submit}</Link>
-      </nav>
+            <div
+              className={`readability-panel ${isSettingsOpen ? 'is-open' : ''}`}
+              id="readability-panel"
+              role="region"
+              aria-label={copy.controls.settingsLabel}
+            >
+              <div className="readability-toolbar">
+                <div className="control-group" role="group" aria-label={copy.controls.languageLabel}>
+                  <button
+                    aria-pressed={locale === 'zh-TW'}
+                    className={locale === 'zh-TW' ? 'is-active' : ''}
+                    onClick={() => setLocale('zh-TW')}
+                    type="button"
+                  >
+                    {copy.controls.zh}
+                  </button>
+                  <button
+                    aria-pressed={locale === 'en'}
+                    className={locale === 'en' ? 'is-active' : ''}
+                    onClick={() => setLocale('en')}
+                    type="button"
+                  >
+                    {copy.controls.en}
+                  </button>
+                </div>
+
+                <div className="control-group" role="group" aria-label={copy.controls.fontLabel}>
+                  {fontScales.map((scale) => (
+                    <button
+                      aria-pressed={fontScale === scale}
+                      className={fontScale === scale ? 'is-active' : ''}
+                      key={scale}
+                      onClick={() => setFontScale(scale)}
+                      type="button"
+                    >
+                      {copy.controls[scale]}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="control-group" role="group" aria-label={copy.controls.themeLabel}>
+                  {themes.map((mode) => (
+                    <button
+                      aria-pressed={theme === mode}
+                      className={theme === mode ? 'is-active' : ''}
+                      key={mode}
+                      onClick={() => setTheme(mode)}
+                      type="button"
+                    >
+                      {copy.controls[mode]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="contrast-status">
+                {copy.controls.contrastLabel} {contrastText.ratio} {contrastText.status}
+              </p>
+              <button className="text-button" type="button" onClick={() => setIsSettingsOpen(false)}>
+                {copy.controls.settingsClose}
+              </button>
+            </div>
+          </>
+        )}
+      />
+
+      <HubBottomNav activeKey={activeNavKey} labels={copy.nav} navigationLabel={copy.navigationLabel} />
 
       <section className="hero">
         <div className="section-inner hero-grid">
