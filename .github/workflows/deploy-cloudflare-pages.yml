@@ -15,6 +15,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment: cloudflare-pages
     steps:
       - name: Checkout
@@ -48,6 +49,7 @@ jobs:
           VITE_VOSK_MODEL_MIN_BYTES: ${{ vars.VITE_VOSK_MODEL_MIN_BYTES }}
 
       - name: Ensure and deploy Cloudflare Pages projects
+        timeout-minutes: 15
         run: node scripts/deploy-cloudflare-pages.mjs --branch=${{ github.ref_name }} --production-branch=main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

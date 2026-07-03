@@ -8,6 +8,7 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appsRoot = join(repoRoot, 'apps');
 const wranglerPrefix = ['--yes', 'wrangler@4'];
 const CLOUDFLARE_PAGES_ASSET_LIMIT_BYTES = 25 * 1024 * 1024;
+const DEPLOY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes per deploy
 
 function toPosixPath(path) {
   return path.replaceAll('\\', '/');
@@ -97,22 +98,36 @@ function runWrangler(args, options = {}) {
 
   const shouldCapture = options.capture || options.allowProjectAlreadyExists;
   const command = getCommand('npx', commandArgs);
-  const result = spawnSync(command.file, command.args, {
+  const spawnOptions = {
     cwd: repoRoot,
     encoding: shouldCapture ? 'utf8' : undefined,
     env: process.env,
     stdio: shouldCapture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
-  });
+  };
+
+  if (options.timeout) {
+    spawnOptions.timeout = options.timeout;
+  }
+
+  const result = spawnSync(command.file, command.args, spawnOptions);
 
   if (shouldCapture && !options.capture) {
     process.stdout.write(result.stdout ?? '');
     process.stderr.write(result.stderr ?? '');
   }
 
-  if (result.status !== 0) {
-    if (result.error) {
-      throw result.error;
+  if (result.error) {
+    // spawnSync sets result.error for ETIMEDOUT, spawn failures, etc.
+    if (result.error.code === 'ETIMEDOUT') {
+      throw new Error(`Wrangler timed out after ${options.timeout / 1000}s: npx ${commandArgs.join(' ')}`);
     }
+    throw result.error;
+  }
+
+  if (result.status !== 0 || result.signal) {
+    const exitInfo = result.signal
+      ? `killed by signal ${result.signal}`
+      : `exit code ${result.status}`;
 
     const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
     if (options.allowProjectAlreadyExists && isProjectAlreadyExistsOutput(output)) {
@@ -124,7 +139,7 @@ function runWrangler(args, options = {}) {
       process.stderr.write(result.stderr ?? '');
     }
 
-    throw new Error(`Wrangler failed with exit code ${result.status}: npx ${commandArgs.join(' ')}`);
+    throw new Error(`Wrangler failed (${exitInfo}): npx ${commandArgs.join(' ')}`);
   }
 
   return result.stdout ?? '';
@@ -178,14 +193,25 @@ function listExistingProjectNames() {
     return new Set();
   }
 
-  const output = runWrangler(['pages', 'project', 'list', '--json'], { capture: true });
-  const items = getProjectItems(parseJsonOutput(output));
+  try {
+    const output = runWrangler(['pages', 'project', 'list', '--json'], { capture: true });
+    const items = getProjectItems(parseJsonOutput(output));
 
-  return new Set(
-    items
-      .map((item) => item?.name ?? item?.project_name)
-      .filter((name) => typeof name === 'string' && name.length > 0),
-  );
+    const names = new Set(
+      items
+        .map((item) => item?.name ?? item?.project_name)
+        .filter((name) => typeof name === 'string' && name.length > 0),
+    );
+
+    if (names.size > 0) {
+      console.log(`Found ${names.size} existing project(s): ${[...names].join(', ')}`);
+    }
+
+    return names;
+  } catch (error) {
+    console.warn(`⚠ Failed to list existing projects (will try create): ${error.message}`);
+    return new Set();
+  }
 }
 
 function ensureProject(project, existingProjectNames) {
@@ -210,15 +236,31 @@ function ensureProject(project, existingProjectNames) {
   existingProjectNames.add(project.projectName);
 }
 
-function deployProject(project) {
-  runWrangler([
+function deployProject(project, attempt = 1) {
+  const maxAttempts = 3;
+  const args = [
     `--cwd=${project.appPath}`,
     'pages',
     'deploy',
     project.outputDir,
     `--project-name=${project.projectName}`,
     `--branch=${branch}`,
-  ]);
+  ];
+
+  try {
+    runWrangler(args, { timeout: DEPLOY_TIMEOUT_MS });
+  } catch (error) {
+    console.error(`\n❌ Deploy failed for ${project.projectName} (attempt ${attempt}/${maxAttempts}): ${error.message}`);
+
+    if (attempt < maxAttempts) {
+      const delaySec = attempt * 10;
+      console.log(`⏳ Retrying in ${delaySec}s...`);
+      spawnSync(process.platform === 'win32' ? 'timeout' : 'sleep', [String(delaySec)], { stdio: 'ignore' });
+      return deployProject(project, attempt + 1);
+    }
+
+    throw error;
+  }
 }
 
 function syncAuthEnvironment() {
