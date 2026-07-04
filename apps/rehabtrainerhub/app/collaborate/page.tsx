@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { HubBottomNav, HubSiteHeader } from '../HubNavigation';
 import { SubmissionForm } from './SubmissionForm';
 
 export const metadata: Metadata = {
@@ -13,9 +12,6 @@ export const metadata: Metadata = {
 export default function CollaboratePage() {
   return (
     <main>
-      <HubSiteHeader activeKey="submit" brandSubtitle="Collaboration" />
-      <HubBottomNav activeKey="submit" />
-
       <section className="content-page submission-page">
         <p className="eyebrow">合作投稿</p>
         <h1>分享治療活動想法。</h1>

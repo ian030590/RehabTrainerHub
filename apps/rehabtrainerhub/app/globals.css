@@ -330,15 +330,16 @@ body > main:not(.home-page) {
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  padding: 8px 2px;
+  padding: 8px 14px;
   border-bottom: 2px solid transparent;
+  border-radius: var(--radius);
   color: var(--on-surface-variant);
   font-size: 0.875rem;
   font-weight: var(--fw-medium);
   line-height: 1.4;
   text-decoration: none;
   white-space: nowrap;
-  transition: color 180ms ease-out, border-color 180ms ease-out;
+  transition: color 180ms ease-out, border-color 180ms ease-out, background-color 180ms ease-out;
 }
 
 .nav-link:hover,
@@ -348,7 +349,8 @@ body > main:not(.home-page) {
 }
 
 .nav-link.is-active {
-  border-color: var(--primary);
+  border-color: transparent;
+  background: rgba(0, 82, 204, 0.08);
   font-weight: var(--fw-bold);
 }
 
@@ -1498,7 +1500,7 @@ body > main:not(.home-page) {
   .header-actions > a:not(.secondary-action) {
     justify-content: flex-start;
     border-bottom: 0;
-    padding: 8px 0;
+    padding: 8px 12px;
   }
 
   .readability-panel {

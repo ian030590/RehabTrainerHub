@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { HubBottomNav, HubSiteHeader } from '../HubNavigation';
 
 export const metadata: Metadata = {
   title: '衛教與使用說明',
@@ -44,9 +43,6 @@ const sections = [
 export default function EducationPage() {
   return (
     <main>
-      <HubSiteHeader activeKey="education" brandSubtitle="Education" />
-      <HubBottomNav activeKey="education" />
-
       <section className="content-page">
         <p className="eyebrow">衛教資訊</p>
         <h1>在家練習前，先看這 4 件事。</h1>

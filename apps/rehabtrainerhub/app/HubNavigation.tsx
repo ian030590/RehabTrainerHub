@@ -2,10 +2,35 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, type ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
+import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
 
 export type HubNavKey = 'programs' | 'care' | 'education' | 'links' | 'submit';
+export type HubLocale = 'zh-TW' | 'en';
+type FontScale = 'standard' | 'large' | 'extra';
+type Theme = 'light' | 'dark';
+type SectionId = 'programs' | 'care' | 'education';
 type HubNavLabels = Record<HubNavKey, string>;
+
+const storageKeys = {
+  locale: 'rehabtrainerhub.locale',
+  fontScale: 'rehabtrainerhub.fontScale',
+  theme: 'rehabtrainerhub.theme',
+} as const;
+
+const fontScales: FontScale[] = ['standard', 'large', 'extra'];
+const themes: Theme[] = ['light', 'dark'];
+const homeSectionIds: SectionId[] = ['programs', 'care', 'education'];
 
 const defaultLabels: HubNavLabels = {
   programs: '復健工具',
@@ -23,6 +48,79 @@ const navItems: Array<{ key: HubNavKey; href: string }> = [
   { key: 'submit', href: '/collaborate/' },
 ];
 
+const headerContent = {
+  'zh-TW': {
+    documentLanguage: 'zh-Hant-TW',
+    brandSubtitle: {
+      home: '居家復健入口',
+      education: '衛教資訊',
+      links: '相關網站',
+      submit: '合作投稿',
+      privacy: '隱私權政策',
+    },
+    navigationLabel: 'RehabTrainerHub 導覽',
+    nav: defaultLabels,
+    controls: {
+      settingsLabel: '閱讀設定',
+      settingsButton: '閱讀設定',
+      settingsClose: '關閉設定',
+      languageLabel: '介面語言',
+      zh: '繁中',
+      en: 'EN',
+      fontLabel: '字體大小',
+      standard: 'A',
+      large: 'A+',
+      extra: 'A++',
+      themeLabel: '色彩模式',
+      light: '淺色',
+      dark: '深色',
+      contrastLabel: '對比',
+      contrastLoading: '檢查中',
+      contrastPass: '通過 WCAG AAA',
+      contrastWarn: '通過 WCAG AA',
+      contrastFail: '未達 AA',
+    },
+  },
+  en: {
+    documentLanguage: 'en',
+    brandSubtitle: {
+      home: 'Home rehabilitation hub',
+      education: 'Education',
+      links: 'Related websites',
+      submit: 'Collaboration',
+      privacy: 'Privacy Policy',
+    },
+    navigationLabel: 'RehabTrainerHub navigation',
+    nav: {
+      programs: 'Programs',
+      care: 'Safety',
+      education: 'Education',
+      links: 'Links',
+      submit: 'Submit',
+    },
+    controls: {
+      settingsLabel: 'Reading settings',
+      settingsButton: 'Reading',
+      settingsClose: 'Close settings',
+      languageLabel: 'Interface language',
+      zh: '繁中',
+      en: 'EN',
+      fontLabel: 'Font size',
+      standard: 'A',
+      large: 'A+',
+      extra: 'A++',
+      themeLabel: 'Color mode',
+      light: 'Light',
+      dark: 'Dark',
+      contrastLabel: 'Contrast',
+      contrastLoading: 'Checking',
+      contrastPass: 'WCAG AAA pass',
+      contrastWarn: 'WCAG AA pass',
+      contrastFail: 'Below AA',
+    },
+  },
+} as const;
+
 interface HubNavigationProps {
   activeKey?: HubNavKey;
   labels?: Partial<HubNavLabels>;
@@ -35,8 +133,110 @@ interface HubSiteHeaderProps extends HubNavigationProps {
   tools?: ReactNode;
 }
 
+interface HubReadabilityState {
+  locale: HubLocale;
+  fontScale: FontScale;
+  theme: Theme;
+  setLocale: Dispatch<SetStateAction<HubLocale>>;
+  setFontScale: Dispatch<SetStateAction<FontScale>>;
+  setTheme: Dispatch<SetStateAction<Theme>>;
+}
+
+const HubReadabilityContext = createContext<HubReadabilityState | null>(null);
+
 function labelFor(labels: Partial<HubNavLabels> | undefined, key: HubNavKey) {
   return labels?.[key] ?? defaultLabels[key];
+}
+
+function isLocale(value: string | null): value is HubLocale {
+  return value === 'zh-TW' || value === 'en';
+}
+
+function isFontScale(value: string | null): value is FontScale {
+  return value === 'standard' || value === 'large' || value === 'extra';
+}
+
+function isTheme(value: string | null): value is Theme {
+  return value === 'light' || value === 'dark';
+}
+
+function hexToRgb(hex: string) {
+  const normalized = hex.trim().replace('#', '');
+  if (!/^[0-9a-f]{6}$/i.test(normalized)) return null;
+
+  return {
+    r: Number.parseInt(normalized.slice(0, 2), 16),
+    g: Number.parseInt(normalized.slice(2, 4), 16),
+    b: Number.parseInt(normalized.slice(4, 6), 16),
+  };
+}
+
+function getRelativeLuminance(value: number) {
+  const channel = value / 255;
+  return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+}
+
+function getContrastRatio(foreground: string, background: string) {
+  const foregroundRgb = hexToRgb(foreground);
+  const backgroundRgb = hexToRgb(background);
+  if (!foregroundRgb || !backgroundRgb) return null;
+
+  const foregroundLuminance =
+    0.2126 * getRelativeLuminance(foregroundRgb.r) +
+    0.7152 * getRelativeLuminance(foregroundRgb.g) +
+    0.0722 * getRelativeLuminance(foregroundRgb.b);
+  const backgroundLuminance =
+    0.2126 * getRelativeLuminance(backgroundRgb.r) +
+    0.7152 * getRelativeLuminance(backgroundRgb.g) +
+    0.0722 * getRelativeLuminance(backgroundRgb.b);
+
+  const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+  const darker = Math.min(foregroundLuminance, backgroundLuminance);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function getCssVariable(name: string) {
+  return window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function useStoredSetting<T extends string>(
+  key: string,
+  fallback: T,
+  validator: (value: string | null) => value is T,
+) {
+  const [value, setValue] = useState<T>(fallback);
+
+  useEffect(() => {
+    const storedValue = window.localStorage.getItem(key);
+    if (validator(storedValue)) setValue(storedValue);
+  }, [key, validator]);
+
+  useEffect(() => {
+    window.localStorage.setItem(key, value);
+  }, [key, value]);
+
+  return [value, setValue] as const;
+}
+
+function getRouteNavKey(pathname: string): HubNavKey | undefined {
+  if (pathname.startsWith('/education')) return 'education';
+  if (pathname.startsWith('/links')) return 'links';
+  if (pathname.startsWith('/collaborate')) return 'submit';
+  return undefined;
+}
+
+function getBrandSubtitle(pathname: string, copy: (typeof headerContent)[HubLocale]) {
+  if (pathname.startsWith('/education')) return copy.brandSubtitle.education;
+  if (pathname.startsWith('/links')) return copy.brandSubtitle.links;
+  if (pathname.startsWith('/collaborate')) return copy.brandSubtitle.submit;
+  if (pathname.startsWith('/privacy')) return copy.brandSubtitle.privacy;
+  return copy.brandSubtitle.home;
+}
+
+export function useHubReadability() {
+  const context = useContext(HubReadabilityContext);
+  if (!context) throw new Error('useHubReadability must be used inside HubShell.');
+  return context;
 }
 
 function MenuIcon({ isOpen }: { isOpen: boolean }) {
@@ -131,5 +331,216 @@ export function HubBottomNav({ activeKey, labels, navigationLabel }: HubNavigati
         </Link>
       ))}
     </nav>
+  );
+}
+
+export function HubShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const [locale, setLocale] = useStoredSetting<HubLocale>(storageKeys.locale, 'zh-TW', isLocale);
+  const [fontScale, setFontScale] = useStoredSetting<FontScale>(
+    storageKeys.fontScale,
+    'standard',
+    isFontScale,
+  );
+  const [theme, setTheme] = useStoredSetting<Theme>(storageKeys.theme, 'light', isTheme);
+  const [contrastRatio, setContrastRatio] = useState<number | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [currentSection, setCurrentSection] = useState<SectionId>('programs');
+  const copy = headerContent[locale];
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.lang = copy.documentLanguage;
+    root.dataset.locale = locale;
+    root.dataset.fontScale = fontScale;
+    root.dataset.theme = theme;
+  }, [copy.documentLanguage, fontScale, locale, theme]);
+
+  useEffect(() => {
+    const checkContrast = () => {
+      const pairs = [
+        [getCssVariable('--on-background'), getCssVariable('--background')],
+        [getCssVariable('--primary'), getCssVariable('--surface-white')],
+        [getCssVariable('--on-primary'), getCssVariable('--primary')],
+      ] as const;
+      const ratios = pairs
+        .map(([foreground, background]) => getContrastRatio(foreground, background))
+        .filter((ratio): ratio is number => ratio !== null);
+
+      setContrastRatio(ratios.length ? Math.min(...ratios) : null);
+    };
+
+    window.requestAnimationFrame(checkContrast);
+  }, [theme]);
+
+  useEffect(() => {
+    if (pathname !== '/') return;
+
+    const sections = homeSectionIds
+      .map((sectionId) => document.getElementById(sectionId))
+      .filter((section): section is HTMLElement => Boolean(section));
+
+    if (!sections.length || !('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
+
+        if (visibleEntry) setCurrentSection(visibleEntry.target.id as SectionId);
+      },
+      {
+        rootMargin: '-32% 0px -48% 0px',
+        threshold: [0.1, 0.35, 0.65],
+      },
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [pathname]);
+
+  const contrastText = useMemo(() => {
+    if (contrastRatio === null) {
+      return {
+        ratio: '--',
+        status: copy.controls.contrastLoading,
+      };
+    }
+
+    if (contrastRatio >= 7) {
+      return {
+        ratio: `${contrastRatio.toFixed(1)}:1`,
+        status: copy.controls.contrastPass,
+      };
+    }
+
+    if (contrastRatio >= 4.5) {
+      return {
+        ratio: `${contrastRatio.toFixed(1)}:1`,
+        status: copy.controls.contrastWarn,
+      };
+    }
+
+    return {
+      ratio: `${contrastRatio.toFixed(1)}:1`,
+      status: copy.controls.contrastFail,
+    };
+  }, [
+    contrastRatio,
+    copy.controls.contrastFail,
+    copy.controls.contrastLoading,
+    copy.controls.contrastPass,
+    copy.controls.contrastWarn,
+  ]);
+
+  const activeKey = pathname === '/'
+    ? currentSection === 'programs' || currentSection === 'care'
+      ? currentSection
+      : undefined
+    : getRouteNavKey(pathname);
+
+  const contextValue = useMemo(
+    () => ({ locale, fontScale, theme, setLocale, setFontScale, setTheme }),
+    [fontScale, locale, theme],
+  );
+
+  const closeHeaderPanels = () => setIsSettingsOpen(false);
+
+  return (
+    <HubReadabilityContext.Provider value={contextValue}>
+      <HubSiteHeader
+        activeKey={activeKey}
+        brandSubtitle={getBrandSubtitle(pathname, copy)}
+        labels={copy.nav}
+        navigationLabel={copy.navigationLabel}
+        onNavigate={closeHeaderPanels}
+        tools={(
+          <>
+            <div className="header-tools">
+              <button
+                aria-controls="readability-panel"
+                aria-expanded={isSettingsOpen}
+                className={`settings-toggle secondary-action compact ${isSettingsOpen ? 'is-active' : ''}`}
+                onClick={() => setIsSettingsOpen((open) => !open)}
+                type="button"
+              >
+                {copy.controls.settingsButton}
+              </button>
+
+              <AuthPanel
+                appName="RehabTrainerHub"
+                className="home-auth-panel"
+                locale={locale === 'en' ? 'en' : 'zh-TW'}
+              />
+            </div>
+
+            <div
+              className={`readability-panel ${isSettingsOpen ? 'is-open' : ''}`}
+              id="readability-panel"
+              role="region"
+              aria-label={copy.controls.settingsLabel}
+            >
+              <div className="readability-toolbar">
+                <div className="control-group" role="group" aria-label={copy.controls.languageLabel}>
+                  <button
+                    aria-pressed={locale === 'zh-TW'}
+                    className={locale === 'zh-TW' ? 'is-active' : ''}
+                    onClick={() => setLocale('zh-TW')}
+                    type="button"
+                  >
+                    {copy.controls.zh}
+                  </button>
+                  <button
+                    aria-pressed={locale === 'en'}
+                    className={locale === 'en' ? 'is-active' : ''}
+                    onClick={() => setLocale('en')}
+                    type="button"
+                  >
+                    {copy.controls.en}
+                  </button>
+                </div>
+
+                <div className="control-group" role="group" aria-label={copy.controls.fontLabel}>
+                  {fontScales.map((scale) => (
+                    <button
+                      aria-pressed={fontScale === scale}
+                      className={fontScale === scale ? 'is-active' : ''}
+                      key={scale}
+                      onClick={() => setFontScale(scale)}
+                      type="button"
+                    >
+                      {copy.controls[scale]}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="control-group" role="group" aria-label={copy.controls.themeLabel}>
+                  {themes.map((mode) => (
+                    <button
+                      aria-pressed={theme === mode}
+                      className={theme === mode ? 'is-active' : ''}
+                      key={mode}
+                      onClick={() => setTheme(mode)}
+                      type="button"
+                    >
+                      {copy.controls[mode]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="contrast-status">
+                {copy.controls.contrastLabel} {contrastText.ratio} {contrastText.status}
+              </p>
+              <button className="text-button" type="button" onClick={() => setIsSettingsOpen(false)}>
+                {copy.controls.settingsClose}
+              </button>
+            </div>
+          </>
+        )}
+      />
+      <HubBottomNav activeKey={activeKey} labels={copy.nav} navigationLabel={copy.navigationLabel} />
+      {children}
+    </HubReadabilityContext.Provider>
   );
 }

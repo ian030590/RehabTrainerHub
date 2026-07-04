@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { HubBottomNav, HubSiteHeader } from '../HubNavigation';
 import { siteUrls } from '../siteUrls';
 
 export const metadata: Metadata = {
@@ -40,9 +39,6 @@ function CheckIcon() {
 export default function LinksPage() {
   return (
     <main>
-      <HubSiteHeader activeKey="links" brandSubtitle="Related websites" />
-      <HubBottomNav activeKey="links" />
-
       <section className="content-page">
         <p className="eyebrow">相關網站</p>
         <h1>選擇你現在要使用的工具。</h1>

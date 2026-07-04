@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
+import { HubShell } from './HubNavigation';
 import { siteUrls } from './siteUrls';
 import './globals.css';
 
@@ -39,7 +40,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
       </head>
       <body>
-        {children}
+        <HubShell>{children}</HubShell>
         <RehabFooter
           appName="RehabTrainerHub"
           hubHref={siteUrls.hub}

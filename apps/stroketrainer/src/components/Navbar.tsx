@@ -24,7 +24,7 @@ export function Navbar() {
   return (
     <TrainerNavbar
       brandLabel={t('nav.brand')}
-      logoSrc={`${import.meta.env.BASE_URL}assets/logo.svg`}
+      logoSrc={`${import.meta.env.BASE_URL}assets/logo.png`}
       logoAlt="Stroke Trainer Logo"
       navItems={[
         { to: '/motor-training', className: () => trainingLinkClass('motor-training'), label: t('home.module.motor.title') },

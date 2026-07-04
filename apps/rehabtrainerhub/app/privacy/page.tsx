@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { HubBottomNav, HubSiteHeader } from '../HubNavigation';
 
 export const metadata: Metadata = {
   title: '隱私權政策 Privacy Policy',
@@ -117,9 +116,6 @@ const sections = [
 export default function PrivacyPage() {
   return (
     <main>
-      <HubSiteHeader brandSubtitle="Privacy Policy" />
-      <HubBottomNav />
-
       <section className="content-page">
         <p className="eyebrow">隱私權政策 / Privacy Policy</p>
         <h1 style={{ lineHeight: 1.4 }}>
