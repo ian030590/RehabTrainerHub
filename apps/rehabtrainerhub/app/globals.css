@@ -472,7 +472,6 @@ body > main:not(.home-page) .site-header {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 1rem;
 }
 
 .auth-button {
@@ -1314,6 +1313,7 @@ body > main:not(.home-page) .site-header {
   gap: 6px;
   color: var(--text-heading);
   font-weight: var(--fw-bold);
+  margin-bottom: 1rem;
 }
 
 .auth-checkbox-row,
