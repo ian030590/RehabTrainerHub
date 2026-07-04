@@ -16,11 +16,11 @@ The production D1 database has been created:
 
 ```text
 name: rehabtrainerhub
-database_id: 493ad6de-0e9e-41b2-96a6-6af93c67fce2
+database_id: 0f4e6bb2-cf41-4051-ad74-19bb501fe9dd
 region: APAC
 ```
 
-Apply migrations:
+Deployments apply migrations automatically before publishing Pages. To apply them manually:
 
 ```bash
 npx --yes wrangler@4 d1 migrations apply rehabtrainerhub --config apps/rehabtrainerhub/wrangler.toml --remote
@@ -71,6 +71,7 @@ GitHub Actions runs `scripts/sync-cloudflare-auth-env.mjs` during deployment:
   `AUTH_API_BASE`, `NEXT_PUBLIC_AUTH_API_BASE`, `NEXT_PUBLIC_REHABTRAINERHUB_URL`, `VITE_AUTH_API_BASE`, and `VITE_REHABTRAINERHUB_URL`.
 - The Hub project additionally receives:
   `AUTH_BASE_URL`, `AUTH_ALLOWED_ORIGINS`, `AUTH_SESSION_SECRET`, `AUTH_STATE_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`.
+- D1 migrations are applied for projects that define `database_name` and `migrations_dir` in `wrangler.toml`.
 - New Pages apps are discovered from `apps/*/wrangler.toml`, so they are included without editing the workflow.
 - GitHub Actions is the source of truth. The sync uses `wrangler pages secret bulk`, so Cloudflare Pages values are overwritten with the current GitHub Actions secrets and variables on each deployment.
 

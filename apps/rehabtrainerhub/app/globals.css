@@ -207,9 +207,9 @@ h3 {
 
 body > main:not(.home-page) {
   flex: 1 0 auto;
-  width: min(var(--container-max), calc(100% - clamp(40px, 7vw, 112px)));
+  width: 100%;
   margin: 0 auto;
-  padding: 24px 0 64px;
+  padding: 0 0 64px;
 }
 
 .home-page {
@@ -217,7 +217,7 @@ body > main:not(.home-page) {
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-x: clip;
 }
 
 .section-inner {
@@ -253,14 +253,6 @@ body > main:not(.home-page) {
   border-bottom: 1px solid rgba(0, 82, 204, 0.2);
   background: var(--surface-white);
   box-shadow: var(--shadow-sm);
-}
-
-body > main:not(.home-page) .site-header {
-  top: 12px;
-  margin-bottom: 32px;
-  padding: 12px 20px;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-lg);
 }
 
 .site-header-inner {
@@ -1004,7 +996,8 @@ body > main:not(.home-page) .site-header {
 }
 
 .content-page {
-  margin-top: 0;
+  width: min(var(--container-max), calc(100% - clamp(40px, 7vw, 112px)));
+  margin: 32px auto 0;
   padding: 40px;
   border-radius: var(--radius-xl);
   background: var(--surface-white);
@@ -1562,12 +1555,8 @@ body > main:not(.home-page) .site-header {
   }
 
   body > main:not(.home-page) {
-    width: min(100% - 32px, var(--container-max));
-    padding-top: 16px;
-  }
-
-  body > main:not(.home-page) .site-header {
-    top: 8px;
+    width: 100%;
+    padding-top: 0;
   }
 
   .brand strong {

@@ -113,13 +113,14 @@ async function handleCallback(request, env) {
 function oauthFailureResponse(error) {
   const message = error instanceof Error ? error.message : '';
   const setupError = /not configured|D1 binding|must be configured/i.test(message);
-  const databaseError = /D1|SQLITE|database|no such table|provider_accounts|app_users/i.test(message);
+  const databaseError = /D1_ERROR|SQLITE|no such table|provider_accounts|app_users/i.test(message);
   const googleError = /Google/i.test(message);
+  const googleCode = message.match(/"error"\s*:\s*"([a-z_]+)"/i)?.[1];
   const status = setupError ? 503 : googleError ? 502 : 500;
   let copy = '登入暫時失敗，請稍後再試。';
   if (setupError) copy = '登入設定尚未完成，請檢查 Cloudflare Pages 環境變數與 D1 binding。';
   if (databaseError) copy = '登入資料庫尚未初始化，請套用 D1 migrations 後再試。';
-  if (googleError) copy = 'Google OAuth 設定不一致，請確認 client secret 與 redirect URI。';
+  if (googleError) copy = `Google OAuth 設定不一致${googleCode ? `（${googleCode}）` : ''}，請確認 client secret 與 redirect URI。`;
 
   return new Response(`<!doctype html>
 <html lang="zh-Hant-TW">

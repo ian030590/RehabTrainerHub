@@ -64,8 +64,9 @@ secrets:
 - `CLOUDFLARE_ACCOUNT_ID`
 
 The deploy workflow runs `npm run build:cloudflare`, discovers Pages apps from
-`apps/*/wrangler.toml`, creates missing Cloudflare Pages projects, and deploys
-each app's configured output directory. The Cloudflare build removes bundled
+`apps/*/wrangler.toml`, applies configured D1 migrations, creates missing
+Cloudflare Pages projects, and deploys each app's configured output directory.
+The Cloudflare build removes bundled
 StrokeTrainer Vosk model archives that exceed Cloudflare Pages' per-file limit;
 serve those models from the configured external model URLs instead. A
 deployable app needs:

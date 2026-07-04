@@ -49,8 +49,8 @@ uses `main` as the production branch, then deploys
 Required for `.github/workflows/deploy-cloudflare-pages.yml`:
 
 - `CLOUDFLARE_API_TOKEN`: Cloudflare API token with account-level Cloudflare
-  Pages edit access so the workflow can list, create, and deploy Pages
-  projects.
+  Pages edit access and D1 edit access so the workflow can list, create, deploy
+  Pages projects, and apply D1 migrations.
 - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account ID that owns the Pages projects.
 - `AUTH_SESSION_SECRET`: long random app-owned session signing secret for the
   Hub auth API.
