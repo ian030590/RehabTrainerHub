@@ -472,6 +472,7 @@ body > main:not(.home-page) .site-header {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 1rem;
 }
 
 .auth-button {
