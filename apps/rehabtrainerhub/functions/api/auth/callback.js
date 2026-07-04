@@ -15,7 +15,7 @@ export async function onRequestGet({ request, env }) {
     return await handleCallback(request, env);
   } catch (error) {
     console.error('OAuth callback failed.', error);
-    return oauthFailureResponse(error);
+    return oauthFailureResponse(request, error);
   }
 }
 
@@ -110,24 +110,39 @@ async function handleCallback(request, env) {
   });
 }
 
-function oauthFailureResponse(error) {
+function oauthFailureResponse(request, error) {
   const message = error instanceof Error ? error.message : '';
   const setupError = /not configured|D1 binding|must be configured/i.test(message);
   const databaseError = /D1_ERROR|SQLITE|no such table|provider_accounts|app_users/i.test(message);
   const googleError = /Google/i.test(message);
   const googleCode = message.match(/"error"\s*:\s*"([a-z_]+)"/i)?.[1];
   const status = setupError ? 503 : googleError ? 502 : 500;
-  let copy = '登入暫時失敗，請稍後再試。';
-  if (setupError) copy = '登入設定尚未完成，請檢查 Cloudflare Pages 環境變數與 D1 binding。';
-  if (databaseError) copy = '登入資料庫尚未初始化，請套用 D1 migrations 後再試。';
-  if (googleError) copy = `Google OAuth 設定不一致${googleCode ? `（${googleCode}）` : ''}，請確認 client secret 與 redirect URI。`;
+  const isEnglish = request.headers.get('Accept-Language')?.toLowerCase().startsWith('en');
+  const htmlLang = isEnglish ? 'en' : 'zh-Hant-TW';
+  const copies = isEnglish
+    ? {
+        fallback: 'Sign-in failed temporarily. Please try again later.',
+        setup: 'Sign-in setup is incomplete. Check Cloudflare Pages environment variables and the D1 binding.',
+        database: 'The sign-in database is not initialized. Apply the D1 migrations and try again.',
+        google: `Google OAuth settings do not match${googleCode ? ` (${googleCode})` : ''}. Check the client secret and redirect URI.`,
+      }
+    : {
+        fallback: '登入暫時失敗，請稍後再試。',
+        setup: '登入設定尚未完成，請檢查 Cloudflare Pages 環境變數與 D1 binding。',
+        database: '登入資料庫尚未初始化，請套用 D1 migrations 後再試。',
+        google: `Google OAuth 設定不一致${googleCode ? `（${googleCode}）` : ''}，請確認 client secret 與 redirect URI。`,
+      };
+  let copy = copies.fallback;
+  if (setupError) copy = copies.setup;
+  if (databaseError) copy = copies.database;
+  if (googleError) copy = copies.google;
 
   return new Response(`<!doctype html>
-<html lang="zh-Hant-TW">
+<html lang="${htmlLang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RehabTrainerHub Login Error</title>
+  <title>Rehab Trainer Hub Login Error</title>
   <style>
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; font: 700 18px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1a1c1e; background: #f9f9fc; }
     main { width: min(520px, calc(100% - 32px)); padding: 24px; border-radius: 8px; background: #fff; }

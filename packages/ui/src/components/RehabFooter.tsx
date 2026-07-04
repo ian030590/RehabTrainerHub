@@ -9,11 +9,12 @@ export interface RehabFooterProps {
     repo?: string;
     disclaimer?: string;
     rights?: string;
+    navigation?: string;
   };
 }
 
 export function RehabFooter({
-  appName = 'RehabTrainerHub',
+  appName = 'Rehab Trainer Hub',
   hubHref = '/',
   privacyHref,
   repoHref = 'https://github.com/ian030590/RehabTrainerHub',
@@ -25,7 +26,7 @@ export function RehabFooter({
         <strong>{appName}</strong>
         <span>{labels?.disclaimer ?? 'For rehabilitation practice workflow prototyping, not medical advice.'}</span>
         <div className="rehab-footer-meta">
-          <nav aria-label="Footer navigation">
+          <nav aria-label={labels?.navigation ?? 'Footer navigation'}>
             <a href={hubHref}>{labels?.hub ?? 'Hub'}</a>
             {privacyHref && <a href={privacyHref}>{labels?.privacy ?? 'Privacy'}</a>}
             <a href={repoHref} target="_blank" rel="noopener noreferrer">{labels?.repo ?? 'GitHub'}</a>

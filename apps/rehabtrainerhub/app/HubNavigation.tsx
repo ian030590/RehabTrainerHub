@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
+import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
 import {
   createContext,
   useContext,
@@ -14,6 +15,8 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react';
+import { HUB_NAME } from './hubBrand';
+import { siteUrls } from './siteUrls';
 
 export type HubNavKey = 'programs' | 'care' | 'education' | 'links' | 'submit';
 export type HubLocale = 'zh-TW' | 'en';
@@ -58,8 +61,17 @@ const headerContent = {
       submit: '合作投稿',
       privacy: '隱私權政策',
     },
-    navigationLabel: 'RehabTrainerHub 導覽',
+    navigationLabel: 'Rehab Trainer Hub 導覽',
+    toggleMenuLabel: '切換選單',
     nav: defaultLabels,
+    footer: {
+      hub: '首頁',
+      privacy: '隱私權政策',
+      repo: 'GitHub',
+      disclaimer: '本平台用於居家復健練習與流程原型展示，不提供醫療診斷或治療建議。使用前請諮詢醫師或治療師。',
+      rights: '保留所有權利。',
+      navigation: '頁尾導覽',
+    },
     controls: {
       settingsLabel: '閱讀設定',
       settingsButton: '閱讀設定',
@@ -90,13 +102,22 @@ const headerContent = {
       submit: 'Collaboration',
       privacy: 'Privacy Policy',
     },
-    navigationLabel: 'RehabTrainerHub navigation',
+    navigationLabel: 'Rehab Trainer Hub navigation',
+    toggleMenuLabel: 'Toggle menu',
     nav: {
       programs: 'Programs',
       care: 'Safety',
       education: 'Education',
       links: 'Links',
       submit: 'Submit',
+    },
+    footer: {
+      hub: 'Home',
+      privacy: 'Privacy',
+      repo: 'GitHub',
+      disclaimer: 'For home rehabilitation practice and workflow prototyping, not medical advice. Consult a physician or therapist before use.',
+      rights: 'All rights reserved.',
+      navigation: 'Footer navigation',
     },
     controls: {
       settingsLabel: 'Reading settings',
@@ -131,6 +152,7 @@ interface HubSiteHeaderProps extends HubNavigationProps {
   brandSubtitle: string;
   onNavigate?: () => void;
   tools?: ReactNode;
+  toggleMenuLabel?: string;
 }
 
 interface HubReadabilityState {
@@ -253,7 +275,7 @@ function MenuIcon({ isOpen }: { isOpen: boolean }) {
 
 function HubNavLinks({ activeKey, labels, navigationLabel, onNavigate }: HubNavigationProps & { onNavigate?: () => void }) {
   return (
-    <nav className="header-actions" aria-label={navigationLabel ?? 'RehabTrainerHub navigation'}>
+    <nav className="header-actions" aria-label={navigationLabel ?? 'Rehab Trainer Hub navigation'}>
       {navItems.map((item) => (
         <Link
           className={`nav-link ${activeKey === item.key ? 'is-active' : ''}`}
@@ -274,6 +296,7 @@ export function HubSiteHeader({
   labels,
   navigationLabel,
   onNavigate,
+  toggleMenuLabel,
   tools,
 }: HubSiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -290,7 +313,7 @@ export function HubSiteHeader({
             <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
           </span>
           <span>
-            <strong>RehabTrainerHub</strong>
+            <strong>{HUB_NAME}</strong>
             <small>{brandSubtitle}</small>
           </span>
         </Link>
@@ -300,7 +323,7 @@ export function HubSiteHeader({
           onClick={() => setIsMenuOpen((open) => !open)}
           aria-controls="site-menu"
           aria-expanded={isMenuOpen}
-          aria-label="Toggle menu"
+          aria-label={toggleMenuLabel ?? 'Toggle menu'}
           type="button"
         >
           <MenuIcon isOpen={isMenuOpen} />
@@ -324,7 +347,7 @@ export function HubSiteHeader({
 
 export function HubBottomNav({ activeKey, labels, navigationLabel }: HubNavigationProps) {
   return (
-    <nav className="bottom-nav" aria-label={navigationLabel ?? 'RehabTrainerHub navigation'}>
+    <nav className="bottom-nav" aria-label={navigationLabel ?? 'Rehab Trainer Hub navigation'}>
       {navItems.map((item) => (
         <Link className={activeKey === item.key ? 'is-active' : ''} href={item.href} key={item.key}>
           {labelFor(labels, item.key)}
@@ -455,6 +478,7 @@ export function HubShell({ children }: { children: ReactNode }) {
         labels={copy.nav}
         navigationLabel={copy.navigationLabel}
         onNavigate={closeHeaderPanels}
+        toggleMenuLabel={copy.toggleMenuLabel}
         tools={(
           <>
             <div className="header-tools">
@@ -469,7 +493,7 @@ export function HubShell({ children }: { children: ReactNode }) {
               </button>
 
               <AuthPanel
-                appName="RehabTrainerHub"
+                appName={HUB_NAME}
                 className="home-auth-panel"
                 locale={locale === 'en' ? 'en' : 'zh-TW'}
               />
@@ -541,6 +565,12 @@ export function HubShell({ children }: { children: ReactNode }) {
       />
       <HubBottomNav activeKey={activeKey} labels={copy.nav} navigationLabel={copy.navigationLabel} />
       {children}
+      <RehabFooter
+        appName={HUB_NAME}
+        hubHref={siteUrls.hub}
+        privacyHref={`${siteUrls.hub}/privacy/`}
+        labels={copy.footer}
+      />
     </HubReadabilityContext.Provider>
   );
 }

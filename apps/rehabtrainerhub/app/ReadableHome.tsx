@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useHubReadability, type HubLocale } from './HubNavigation';
+import { HUB_NAME } from './hubBrand';
 import { siteUrls } from './siteUrls';
 
 type Locale = HubLocale;
@@ -12,7 +13,7 @@ const content = {
   'zh-TW': {
     documentLanguage: 'zh-Hant-TW',
     brandSubtitle: '居家復健入口',
-    navigationLabel: 'RehabTrainerHub 導覽',
+    navigationLabel: `${HUB_NAME} 導覽`,
     nav: {
       programs: '復健工具',
       care: '安全提醒',
@@ -27,7 +28,7 @@ const content = {
         '請依目前需要選擇中風復健或視覺訓練。這些工具可輔助居家練習，但不能取代醫師或治療師的評估。',
       primaryAction: '選擇工具',
       secondaryAction: '查看安全提醒',
-      visualLabel: 'RehabTrainerHub 工具選擇示意',
+      visualLabel: `${HUB_NAME} 工具選擇示意`,
       checklist: ['中風練習', '視覺訓練', '字體可放大'],
     },
     controls: {
@@ -120,7 +121,7 @@ const content = {
   en: {
     documentLanguage: 'en',
     brandSubtitle: 'Home rehabilitation hub',
-    navigationLabel: 'RehabTrainerHub navigation',
+    navigationLabel: `${HUB_NAME} navigation`,
     nav: {
       programs: 'Programs',
       care: 'Safety',
@@ -135,7 +136,7 @@ const content = {
         'Choose stroke rehabilitation or vision training based on your current need. These tools support home practice and do not replace evaluation by a physician or therapist.',
       primaryAction: 'Choose a tool',
       secondaryAction: 'View safety notes',
-      visualLabel: 'RehabTrainerHub tool selection preview',
+      visualLabel: `${HUB_NAME} tool selection preview`,
       checklist: ['Stroke practice', 'Vision training', 'Larger text'],
     },
     controls: {
@@ -309,7 +310,7 @@ export function ReadableHome() {
             <div className="hero-device">
               <div className="device-topbar" aria-hidden="true">
                 <Icon className="icon-sm" name="panel" />
-                <span>RehabTrainerHub</span>
+                <span>{HUB_NAME}</span>
               </div>
               <div className="device-content">
                 {copy.apps.map((app) => {

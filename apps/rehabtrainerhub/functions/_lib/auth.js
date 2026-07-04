@@ -241,7 +241,7 @@ export function toPublicUser(row) {
   const profile = row.profile_json ? safeJsonParse(row.profile_json) : undefined;
   return {
     id: row.id,
-    displayName: row.display_name || row.email || 'RehabTrainerHub User',
+    displayName: row.display_name || row.email || 'Rehab Trainer Hub User',
     email: row.email || undefined,
     avatarUrl: row.avatar_url || undefined,
     profileCompleted: Boolean(row.profile_completed_at),
@@ -269,7 +269,7 @@ export async function createSessionForUser(env, user) {
   return createSignedValue(
     {
       sub: user.id,
-      name: user.display_name || user.email || 'RehabTrainerHub User',
+      name: user.display_name || user.email || 'Rehab Trainer Hub User',
       email: user.email || undefined,
     },
     getSessionSecret(env),
@@ -290,7 +290,7 @@ export function authPopupHtml(returnTo, token, user, init = {}) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RehabTrainerHub Login</title>
+  <title>Rehab Trainer Hub Login</title>
   <style>
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; font: 700 18px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1a1c1e; background: #f9f9fc; }
     main { width: min(520px, calc(100% - 32px)); padding: 24px; border: 1px solid #bfc8ca; border-radius: 8px; background: #fff; }
@@ -299,10 +299,15 @@ export function authPopupHtml(returnTo, token, user, init = {}) {
 </head>
 <body>
   <main>
-    <p>登入完成。視窗會自動關閉，或返回原本頁面。</p>
-    <p><a id="fallback" href="#">回到 RehabTrainerHub</a></p>
+    <p id="auth-status" data-zh="登入完成。視窗會自動關閉，或返回原本頁面。" data-en="Sign-in complete. This window will close automatically, or return to the original page.">登入完成。視窗會自動關閉，或返回原本頁面。</p>
+    <p><a id="fallback" href="#" data-zh="回到 Rehab Trainer Hub" data-en="Return to Rehab Trainer Hub">回到 Rehab Trainer Hub</a></p>
   </main>
   <script>
+    const locale = navigator.language && navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh';
+    document.documentElement.lang = locale === 'en' ? 'en' : 'zh-Hant-TW';
+    for (const element of document.querySelectorAll('[data-' + locale + ']')) {
+      element.textContent = element.dataset[locale];
+    }
     const message = ${message};
     const targetOrigin = ${targetOriginJson};
     const fallback = ${fallbackJson};

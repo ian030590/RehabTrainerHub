@@ -49,7 +49,7 @@ const text = {
     profileNeeded: '登入後請先完成匿名基本資料，之後的使用紀錄會儲存在 D1 database。',
     privacyTitle: '隱私權政策與資料蒐集說明',
     privacyIntro:
-      '登入代表你同意 RehabTrainerHub 使用 Google 提供的帳號識別資訊建立登入狀態，並蒐集匿名基本資料與訓練紀錄，用於復健工具使用分析與服務改善。',
+      '登入代表你同意 Rehab Trainer Hub 使用 Google 提供的帳號識別資訊建立登入狀態，並蒐集匿名基本資料與訓練紀錄，用於復健工具使用分析與服務改善。',
     privacyItems: [
       '匿名基本資料包含年齡、性別、國籍等。',
       '慢性病診斷、抽菸與喝酒習慣會用於使用紀錄分組分析。',
@@ -107,7 +107,7 @@ const text = {
     profileNeeded: 'After sign-in, complete the anonymous profile. Future records will be saved to D1.',
     privacyTitle: 'Privacy Policy and Data Collection Notice',
     privacyIntro:
-      'By signing in, you agree that RehabTrainerHub may use account identifiers from Google to create a session, and collect anonymous profile data and training records for usage analysis and service improvement.',
+      'By signing in, you agree that Rehab Trainer Hub may use account identifiers from Google to create a session, and collect anonymous profile data and training records for usage analysis and service improvement.',
     privacyItems: [
       'Anonymous profile data includes age, gender, nationality, and similar basics.',
       'Chronic diagnosis, smoking, and alcohol habits are used for grouped record analysis.',
@@ -206,7 +206,7 @@ function normalizeProfile(profile: RehabProfile | undefined): RehabProfile {
 
 export function AuthPanel({
   apiBase,
-  appName = 'RehabTrainerHub',
+  appName = 'Rehab Trainer Hub',
   className,
   locale,
   privacyHref,

@@ -8,29 +8,108 @@ const MAX_IDEA_LENGTH = 4000;
 const MAX_HTML_BYTES = 180 * 1024;
 const WEBHOOK_ENV_NAME = 'REHAB_SUBMISSION_WEBHOOK_URL';
 
+const submissionMessages = {
+  'zh-TW': {
+    invalidForm: '投稿格式不正確。',
+    invalidType: '投稿類型不正確。',
+    titleRequired: '請填寫標題。',
+    ideaTooShort: '活動想法至少需要 20 個字。',
+    descriptionTooShort: 'Demo 說明至少需要 20 個字。',
+    fileRequired: '請上傳一個 HTML 檔。',
+    fileType: '只接受 .html 檔。',
+    fileSize: 'HTML 檔案需小於 180 KB。',
+    htmlFailed: 'HTML 安全檢查未通過。',
+    webhookMissing: '投稿尚未送出。請確認 Discord webhook secret 已設定。',
+    emptyHtml: 'HTML 內容是空的',
+    missingHtmlStructure: '缺少基本 HTML 結構',
+    scanPassed: (size) => `HTML 安全檢查通過。檔案 ${size} bytes。`,
+    forbidden: {
+      script: '包含 script 標籤',
+      inlineEvent: '包含 inline 事件處理器',
+      javascriptUrl: '包含 javascript: 連結',
+      embeddedContent: '包含可送出資料或嵌入外部內容的標籤',
+      formAction: '包含表單送出目標',
+      fileInput: '包含檔案讀取欄位',
+      link: '包含外部資源 link 標籤',
+      base: '包含 base 標籤',
+      httpEquiv: '包含 http-equiv meta 標籤',
+      cssImport: '包含 CSS import',
+      cssUrl: '包含 CSS url() 資源',
+      fetch: '包含 fetch 連線程式',
+      xhr: '包含 XMLHttpRequest 連線程式',
+      realtime: '包含即時連線程式',
+      browserStorage: '嘗試讀寫瀏覽器資料',
+      permission: '嘗試使用瀏覽器權限',
+      devicePermission: '嘗試取得裝置或通知權限',
+      worker: '包含背景執行程式',
+      postMessage: '包含跨視窗訊息程式',
+      url: '包含外部或特殊網址',
+      protocolRelative: '包含 protocol-relative URL',
+    },
+  },
+  en: {
+    invalidForm: 'The submission format is invalid.',
+    invalidType: 'The submission type is invalid.',
+    titleRequired: 'Please enter a title.',
+    ideaTooShort: 'Activity ideas must be at least 20 characters.',
+    descriptionTooShort: 'Demo descriptions must be at least 20 characters.',
+    fileRequired: 'Please upload one HTML file.',
+    fileType: 'Only .html files are accepted.',
+    fileSize: 'HTML files must be smaller than 180 KB.',
+    htmlFailed: 'The HTML safety check did not pass.',
+    webhookMissing: 'The submission was not sent. Please confirm the Discord webhook secret is configured.',
+    emptyHtml: 'HTML content is empty',
+    missingHtmlStructure: 'Basic HTML structure is missing',
+    scanPassed: (size) => `HTML safety check passed. File size: ${size} bytes.`,
+    forbidden: {
+      script: 'Contains a script tag',
+      inlineEvent: 'Contains an inline event handler',
+      javascriptUrl: 'Contains a javascript: link',
+      embeddedContent: 'Contains a tag that can submit data or embed external content',
+      formAction: 'Contains a form submission target',
+      fileInput: 'Contains a file input field',
+      link: 'Contains an external resource link tag',
+      base: 'Contains a base tag',
+      httpEquiv: 'Contains an http-equiv meta tag',
+      cssImport: 'Contains a CSS import',
+      cssUrl: 'Contains a CSS url() resource',
+      fetch: 'Contains fetch networking code',
+      xhr: 'Contains XMLHttpRequest networking code',
+      realtime: 'Contains realtime connection code',
+      browserStorage: 'Attempts to read or write browser data',
+      permission: 'Attempts to use browser permissions',
+      devicePermission: 'Attempts to request device or notification permissions',
+      worker: 'Contains background worker code',
+      postMessage: 'Contains cross-window messaging code',
+      url: 'Contains an external or special URL',
+      protocolRelative: 'Contains a protocol-relative URL',
+    },
+  },
+};
+
 const forbiddenHtmlPatterns = [
-  { pattern: /<\s*script\b/i, message: '包含 script 標籤' },
-  { pattern: /\son[a-z0-9_-]+\s*=/i, message: '包含 inline 事件處理器' },
-  { pattern: /javascript\s*:/i, message: '包含 javascript: 連結' },
-  { pattern: /<\s*(iframe|object|embed|applet|form)\b/i, message: '包含可送出資料或嵌入外部內容的標籤' },
-  { pattern: /\s(formaction|action)\s*=/i, message: '包含表單送出目標' },
-  { pattern: /<\s*input\b[^>]*\btype\s*=\s*["']?file/i, message: '包含檔案讀取欄位' },
-  { pattern: /<\s*link\b/i, message: '包含外部資源 link 標籤' },
-  { pattern: /<\s*base\b/i, message: '包含 base 標籤' },
-  { pattern: /<\s*meta\b[^>]*http-equiv\s*=/i, message: '包含 http-equiv meta 標籤' },
-  { pattern: /@\s*import\b/i, message: '包含 CSS import' },
-  { pattern: /url\s*\(/i, message: '包含 CSS url() 資源' },
-  { pattern: /\bfetch\s*\(/i, message: '包含 fetch 連線程式' },
-  { pattern: /\bXMLHttpRequest\b/i, message: '包含 XMLHttpRequest 連線程式' },
-  { pattern: /\bnavigator\.sendBeacon\b/i, message: '包含 sendBeacon 傳送程式' },
-  { pattern: /\b(WebSocket|EventSource|RTCPeerConnection)\b/i, message: '包含即時連線程式' },
-  { pattern: /\b(localStorage|sessionStorage|indexedDB|document\.cookie)\b/i, message: '嘗試讀寫瀏覽器資料' },
-  { pattern: /\bnavigator\.(geolocation|mediaDevices|clipboard|permissions)\b/i, message: '嘗試使用瀏覽器權限' },
-  { pattern: /\b(getUserMedia|Notification\.requestPermission)\b/i, message: '嘗試取得裝置或通知權限' },
-  { pattern: /\b(serviceWorker|Worker|SharedWorker|importScripts)\b/i, message: '包含背景執行程式' },
-  { pattern: /\bpostMessage\s*\(/i, message: '包含跨視窗訊息程式' },
-  { pattern: /\b(?:https?:|wss?:|ftp:|file:|data:|blob:|mailto:|tel:|sms:)/i, message: '包含外部或特殊網址' },
-  { pattern: /(^|["'(\s])\/\//i, message: '包含 protocol-relative URL' },
+  { pattern: /<\s*script\b/i, key: 'script' },
+  { pattern: /\son[a-z0-9_-]+\s*=/i, key: 'inlineEvent' },
+  { pattern: /javascript\s*:/i, key: 'javascriptUrl' },
+  { pattern: /<\s*(iframe|object|embed|applet|form)\b/i, key: 'embeddedContent' },
+  { pattern: /\s(formaction|action)\s*=/i, key: 'formAction' },
+  { pattern: /<\s*input\b[^>]*\btype\s*=\s*["']?file/i, key: 'fileInput' },
+  { pattern: /<\s*link\b/i, key: 'link' },
+  { pattern: /<\s*base\b/i, key: 'base' },
+  { pattern: /<\s*meta\b[^>]*http-equiv\s*=/i, key: 'httpEquiv' },
+  { pattern: /@\s*import\b/i, key: 'cssImport' },
+  { pattern: /url\s*\(/i, key: 'cssUrl' },
+  { pattern: /\bfetch\s*\(/i, key: 'fetch' },
+  { pattern: /\bXMLHttpRequest\b/i, key: 'xhr' },
+  { pattern: /\bnavigator\.sendBeacon\b/i, key: 'fetch' },
+  { pattern: /\b(WebSocket|EventSource|RTCPeerConnection)\b/i, key: 'realtime' },
+  { pattern: /\b(localStorage|sessionStorage|indexedDB|document\.cookie)\b/i, key: 'browserStorage' },
+  { pattern: /\bnavigator\.(geolocation|mediaDevices|clipboard|permissions)\b/i, key: 'permission' },
+  { pattern: /\b(getUserMedia|Notification\.requestPermission)\b/i, key: 'devicePermission' },
+  { pattern: /\b(serviceWorker|Worker|SharedWorker|importScripts)\b/i, key: 'worker' },
+  { pattern: /\bpostMessage\s*\(/i, key: 'postMessage' },
+  { pattern: /\b(?:https?:|wss?:|ftp:|file:|data:|blob:|mailto:|tel:|sms:)/i, key: 'url' },
+  { pattern: /(^|["'(\s])\/\//i, key: 'protocolRelative' },
 ];
 
 export function onRequestOptions({ request, env }) {
@@ -39,7 +118,9 @@ export function onRequestOptions({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   const form = await request.formData().catch(() => null);
-  if (!form) return errorResponse(request, env, '投稿格式不正確。', 400);
+  if (!form) return errorResponse(request, env, submissionMessages['zh-TW'].invalidForm, 400);
+  const locale = getLocale(form);
+  const copy = submissionMessages[locale];
 
   if (cleanText(form.get('website'), 80)) {
     return jsonResponse(request, env, { ok: true, ignored: true });
@@ -50,17 +131,17 @@ export async function onRequestPost({ request, env }) {
   const name = cleanText(form.get('name'), MAX_NAME_LENGTH);
   const contact = cleanText(form.get('contact'), MAX_CONTACT_LENGTH);
 
-  if (!['idea', 'demo'].includes(type)) return errorResponse(request, env, '投稿類型不正確。', 400);
-  if (!title) return errorResponse(request, env, '請填寫標題。', 400);
+  if (!['idea', 'demo'].includes(type)) return errorResponse(request, env, copy.invalidType, 400);
+  if (!title) return errorResponse(request, env, copy.titleRequired, 400);
 
   if (type === 'idea') {
     const ideaText = cleanText(form.get('ideaText'), MAX_IDEA_LENGTH);
-    if (ideaText.length < 20) return errorResponse(request, env, '活動想法至少需要 20 個字。', 400);
+    if (ideaText.length < 20) return errorResponse(request, env, copy.ideaTooShort, 400);
 
     const txt = buildIdeaText({ title, name, contact, ideaText });
     const sendResult = await trySendDiscord(env, {
       content: buildDiscordContent({
-        heading: 'RehabTrainerHub 活動想法投稿',
+        heading: 'Rehab Trainer Hub 活動想法投稿',
         title,
         name,
         contact,
@@ -71,62 +152,67 @@ export async function onRequestPost({ request, env }) {
         contentType: 'text/plain;charset=utf-8',
         body: txt,
       },
-    });
+    }, copy.webhookMissing);
     if (!sendResult.ok) return errorResponse(request, env, sendResult.message, 502);
 
     return jsonResponse(request, env, { ok: true });
   }
 
   const description = cleanText(form.get('description'), MAX_DESCRIPTION_LENGTH);
-  if (description.length < 20) return errorResponse(request, env, 'Demo 說明至少需要 20 個字。', 400);
+  if (description.length < 20) return errorResponse(request, env, copy.descriptionTooShort, 400);
 
   const file = form.get('demoFile');
-  if (!isUploadedFile(file)) return errorResponse(request, env, '請上傳一個 HTML 檔。', 400);
-  if (!file.name.toLowerCase().endsWith('.html')) return errorResponse(request, env, '只接受 .html 檔。', 400);
-  if (!file.size || file.size > MAX_HTML_BYTES) return errorResponse(request, env, 'HTML 檔案需小於 180 KB。', 400);
+  if (!isUploadedFile(file)) return errorResponse(request, env, copy.fileRequired, 400);
+  if (!file.name.toLowerCase().endsWith('.html')) return errorResponse(request, env, copy.fileType, 400);
+  if (!file.size || file.size > MAX_HTML_BYTES) return errorResponse(request, env, copy.fileSize, 400);
 
   const html = await file.text();
-  const scan = scanHtml(html);
+  const scan = scanHtml(html, locale);
   if (!scan.ok) {
     return jsonResponse(request, env, {
-      error: 'HTML 安全檢查未通過。',
+      error: copy.htmlFailed,
       details: scan.messages,
     }, { status: 400 });
   }
 
   const sendResult = await trySendDiscord(env, {
     content: buildDiscordContent({
-      heading: 'RehabTrainerHub HTML Demo 投稿',
+      heading: 'Rehab Trainer Hub HTML Demo 投稿',
       title,
       name,
       contact,
       summary: description,
-      scanSummary: `HTML 安全檢查通過。檔案 ${file.size} bytes。`,
+      scanSummary: copy.scanPassed(file.size),
     }),
     attachment: {
       filename: `${safeFileBase(title)}.html`,
       contentType: 'text/html;charset=utf-8',
       body: html,
     },
-  });
+  }, copy.webhookMissing);
   if (!sendResult.ok) return errorResponse(request, env, sendResult.message, 502);
 
   return jsonResponse(request, env, { ok: true, scan });
 }
 
-export function scanHtml(html) {
+export function scanHtml(html, locale = 'zh-TW') {
+  const copy = submissionMessages[locale] || submissionMessages['zh-TW'];
   const messages = [];
-  if (!html || !html.trim()) messages.push('HTML 內容是空的');
-  if (!/<!doctype\s+html|<html[\s>]/i.test(html)) messages.push('缺少基本 HTML 結構');
+  if (!html || !html.trim()) messages.push(copy.emptyHtml);
+  if (!/<!doctype\s+html|<html[\s>]/i.test(html)) messages.push(copy.missingHtmlStructure);
 
   for (const rule of forbiddenHtmlPatterns) {
-    if (rule.pattern.test(html)) messages.push(rule.message);
+    if (rule.pattern.test(html)) messages.push(copy.forbidden[rule.key]);
   }
 
   return {
     ok: messages.length === 0,
     messages: Array.from(new Set(messages)).slice(0, 10),
   };
+}
+
+function getLocale(form) {
+  return cleanText(form.get('locale'), 16) === 'en' ? 'en' : 'zh-TW';
 }
 
 function cleanText(value, maxLength) {
@@ -197,14 +283,14 @@ async function sendDiscordSubmission(env, { content, attachment }) {
   }
 }
 
-async function trySendDiscord(env, payload) {
+async function trySendDiscord(env, payload, errorMessage = submissionMessages['zh-TW'].webhookMissing) {
   try {
     await sendDiscordSubmission(env, payload);
     return { ok: true };
   } catch {
     return {
       ok: false,
-      message: '投稿尚未送出。請確認 Discord webhook secret 已設定。',
+      message: errorMessage,
     };
   }
 }
@@ -230,7 +316,7 @@ function safeFileBase(value) {
     .replace(/[^\p{Letter}\p{Number}]+/gu, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 48);
-  return normalized || 'rehabtrainerhub-submission';
+  return normalized || 'rehab-trainer-hub-submission';
 }
 
 function escapeDiscord(value) {
