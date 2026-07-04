@@ -11,6 +11,15 @@ import {
 } from '../../_lib/auth.js';
 
 export async function onRequestGet({ request, env }) {
+  try {
+    return await handleCallback(request, env);
+  } catch (error) {
+    console.error('OAuth callback failed.', error);
+    return oauthFailureResponse(error);
+  }
+}
+
+async function handleCallback(request, env) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const stateToken = url.searchParams.get('state');
@@ -91,10 +100,46 @@ export async function onRequestGet({ request, env }) {
     .run();
 
   const userRow = await db.prepare('SELECT * FROM app_users WHERE id = ?').bind(userId).first();
+  if (!userRow) throw new Error('User row was not found after OAuth login.');
+
   const token = await createSessionForUser(env, userRow);
   return authPopupHtml(state.returnTo, token, toPublicUser(userRow), {
     headers: {
       'Set-Cookie': createSessionCookie(request, token),
+    },
+  });
+}
+
+function oauthFailureResponse(error) {
+  const message = error instanceof Error ? error.message : '';
+  const setupError = /not configured|D1 binding|must be configured/i.test(message);
+  const googleError = /Google/i.test(message);
+  const status = setupError ? 503 : googleError ? 502 : 500;
+  const copy = setupError
+    ? '登入設定尚未完成，請檢查 Cloudflare Pages 環境變數與 D1 binding。'
+    : 'Google 登入暫時失敗，請稍後再試。';
+
+  return new Response(`<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RehabTrainerHub Login Error</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font: 700 18px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1a1c1e; background: #f9f9fc; }
+    main { width: min(520px, calc(100% - 32px)); padding: 24px; border-radius: 8px; background: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <p>${copy}</p>
+  </main>
+</body>
+</html>`, {
+    status,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store',
     },
   });
 }
@@ -115,15 +160,25 @@ async function getGoogleIdentity(env, code, redirectUri) {
       grant_type: 'authorization_code',
     }),
   });
-  if (!tokenResponse.ok) throw new Error('Google token exchange failed.');
+  if (!tokenResponse.ok) {
+    const body = await tokenResponse.text().catch(() => '');
+    throw new Error(`Google token exchange failed (${tokenResponse.status}): ${body.slice(0, 500)}`);
+  }
 
   const tokenPayload = await tokenResponse.json();
+  if (!tokenPayload.access_token) throw new Error('Google token response did not include an access token.');
+
   const userResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
     headers: { Authorization: `Bearer ${tokenPayload.access_token}` },
   });
-  if (!userResponse.ok) throw new Error('Google userinfo request failed.');
+  if (!userResponse.ok) {
+    const body = await userResponse.text().catch(() => '');
+    throw new Error(`Google userinfo request failed (${userResponse.status}): ${body.slice(0, 500)}`);
+  }
 
   const profile = await userResponse.json();
+  if (!profile.sub) throw new Error('Google userinfo response did not include a subject.');
+
   return {
     providerUserId: String(profile.sub),
     displayName: profile.name || profile.email || 'Google User',

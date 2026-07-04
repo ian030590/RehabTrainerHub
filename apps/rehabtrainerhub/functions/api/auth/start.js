@@ -24,6 +24,15 @@ export function onRequestOptions({ request, env }) {
 }
 
 export async function onRequestGet({ request, env }) {
+  try {
+    return await startOAuth(request, env);
+  } catch (error) {
+    console.error('OAuth start failed.', error);
+    return errorResponse(request, env, 'Unable to start OAuth login.', 500);
+  }
+}
+
+async function startOAuth(request, env) {
   const url = new URL(request.url);
   const provider = url.searchParams.get('provider');
   const returnTo = url.searchParams.get('returnTo') || '';
@@ -40,12 +49,16 @@ export async function onRequestGet({ request, env }) {
     return errorResponse(request, env, 'Return URL is not allowed.', 400);
   }
 
-  const existingSession = await getCookieSession(request, env);
-  if (existingSession?.payload?.sub) {
-    const existingUser = await getUserById(env, existingSession.payload.sub);
-    if (existingUser) {
-      return authPopupHtml(returnTo, existingSession.token, toPublicUser(existingUser));
+  try {
+    const existingSession = await getCookieSession(request, env);
+    if (existingSession?.payload?.sub) {
+      const existingUser = await getUserById(env, existingSession.payload.sub);
+      if (existingUser) {
+        return authPopupHtml(returnTo, existingSession.token, toPublicUser(existingUser));
+      }
     }
+  } catch (error) {
+    console.warn('Existing auth session lookup failed.', error);
   }
 
   const config = providers[provider];
@@ -56,17 +69,23 @@ export async function onRequestGet({ request, env }) {
 
   const authBaseUrl = getAuthBaseUrl(request, env);
   const redirectUri = `${authBaseUrl}/api/auth/callback`;
-  const state = await createSignedValue(
-    {
-      provider,
-      returnTo,
-      privacyAccepted,
-      locale,
-      nonce: crypto.randomUUID(),
-    },
-    getStateSecret(env),
-    10 * 60,
-  );
+  let state;
+  try {
+    state = await createSignedValue(
+      {
+        provider,
+        returnTo,
+        privacyAccepted,
+        locale,
+        nonce: crypto.randomUUID(),
+      },
+      getStateSecret(env),
+      10 * 60,
+    );
+  } catch (error) {
+    console.error('OAuth state creation failed.', error);
+    return errorResponse(request, env, 'Auth signing secret is not configured.', 503);
+  }
 
   const authUrl = new URL(config.authUrl);
   authUrl.searchParams.set('client_id', clientId);

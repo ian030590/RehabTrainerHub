@@ -73,8 +73,9 @@ export function errorResponse(request, env, message, status = 400) {
 }
 
 export function requireDatabase(env) {
-  if (!env.REHAB_DB) throw new Error('REHAB_DB D1 binding is not configured.');
-  return env.REHAB_DB;
+  const db = env.REHAB_DB || env.rehab_db;
+  if (!db) throw new Error('REHAB_DB D1 binding is not configured.');
+  return db;
 }
 
 export function requireSecret(env, name) {
