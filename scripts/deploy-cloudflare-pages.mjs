@@ -61,6 +61,8 @@ function discoverPagesProjects() {
       const projectName = readTomlString(toml, 'name');
       const outputDir = readTomlString(toml, 'pages_build_output_dir');
       const compatibilityDate = readTomlString(toml, 'compatibility_date');
+      const databaseName = readTomlString(toml, 'database_name');
+      const migrationsDir = readTomlString(toml, 'migrations_dir');
 
       if (!projectName) {
         throw new Error(`${toPosixPath(relative(repoRoot, wranglerPath))} must define name.`);
@@ -75,6 +77,8 @@ function discoverPagesProjects() {
       return {
         appPath,
         compatibilityDate,
+        databaseName,
+        hasD1Migrations: Boolean(databaseName && migrationsDir),
         outputDir,
         outputPath: toPosixPath(join(appPath, outputDir)),
         projectName,
@@ -263,6 +267,19 @@ function deployProject(project, attempt = 1) {
   }
 }
 
+function applyProjectMigrations(project) {
+  if (!project.hasD1Migrations) return;
+
+  runWrangler([
+    `--cwd=${project.appPath}`,
+    'd1',
+    'migrations',
+    'apply',
+    project.databaseName,
+    '--remote',
+  ]);
+}
+
 function syncAuthEnvironment() {
   if (!syncAuthEnv) {
     console.log('Skipping auth environment sync.');
@@ -372,6 +389,10 @@ for (const project of projects) {
 }
 
 syncAuthEnvironment();
+
+for (const project of projects) {
+  applyProjectMigrations(project);
+}
 
 for (const project of projects) {
   deployProject(project);
