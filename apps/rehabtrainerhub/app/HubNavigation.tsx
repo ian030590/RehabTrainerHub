@@ -105,8 +105,8 @@ const headerContent = {
     navigationLabel: 'Rehab Trainer Hub navigation',
     toggleMenuLabel: 'Toggle menu',
     nav: {
-      programs: 'Programs',
-      care: 'Safety',
+      programs: 'Rehab Tools',
+      care: 'Safety Notes',
       education: 'Education',
       links: 'Education Videos',
       submit: 'Collaboration',

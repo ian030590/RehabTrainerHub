@@ -23,9 +23,9 @@ const content = {
     },
     hero: {
       eyebrow: '居家復健入口',
-      title: '我想找中風後在家可以練習的工具',
+      title: '職能治療師開發的居家復健工具',
       body:
-        '請依目前需要選擇中風復健或視覺訓練。這些工具可輔助居家練習，但不能取代醫師或治療師的評估。',
+        '透過網頁，在家中使用電腦、手機或平板進行居家復健練習。請在治療師的指導下使用。',
       primaryAction: '選擇工具',
       secondaryAction: '查看安全提醒',
       visualLabel: `${HUB_NAME} 工具選擇示意`,
@@ -45,31 +45,26 @@ const content = {
       themeLabel: '色彩模式',
       light: '淺色',
       dark: '深色',
-      contrastLabel: '對比',
-      contrastLoading: '檢查中',
-      contrastPass: '通過 WCAG AAA',
-      contrastWarn: '通過 WCAG AA',
-      contrastFail: '未達 AA',
     },
     programs: {
-      eyebrow: '先選工具',
+      eyebrow: '選擇復健項目',
       title: '你現在想練什麼？',
       intro:
-        '如果想練動作、認知或說話，請選中風復健；如果看字、閱讀或眼睛移動比較困難，請選視覺訓練。',
+        '請根據自己的需求以及職能治療師的指導下選擇復健項目。',
     },
     care: {
-      eyebrow: '安全提醒',
-      title: '開始前先確認安全',
+      eyebrow: '使用方法',
+      title: '如何使用這個網站？',
       quote:
-        '練習時如果感到不舒服，請先停止。網站提供工具與說明，不提供診斷。',
+        '練習時請密切關注自己的身體狀況，若有不適請立即停止練習。',
       body:
-        '第一次使用建議家人陪同，先短時間練習，再依治療師建議調整。',
+        '網站提供工具與指引，並非診斷。請務必在治療師的指導下使用，以免發生危險。',
     },
     education: {
       eyebrow: '衛教資訊',
-      title: '看不懂時，先看簡短說明',
+      title: '復健相關衛教資訊，歡迎參考',
       intro:
-        '衛教頁整理開始前要注意的事、何時需要停止，以及每種訓練的用途。',
+        '了解復健如何進行？自己在家可以如何訓練？',
       educationLink: '閱讀衛教',
       linksLink: '衛教影片',
     },
@@ -101,20 +96,20 @@ const content = {
     ],
     safetySteps: [
       {
-        title: '有人陪同',
-        text: '第一次使用時，請家人在旁協助選工具與確認安全。',
+        title: '確認疼痛狀況',
+        text: '若是疼痛或不適，請務必停止練習，並尋求醫療建議。',
       },
       {
-        title: '專業確認',
-        text: '不確定適不適合時，請先詢問醫師或治療師。',
+        title: '家人安全陪同',
+        text: '進行需要走動、平衡的練習時，建議有家人在旁協助。確保安全性。',
       },
       {
-        title: '短時練習',
-        text: '每次先短時間練習；如果累、暈或痛，請立刻停止。',
+        title: '持續不斷練習',
+        text: '復健是一場馬拉松，只有堅持才能看到效果。',
       },
       {
-        title: '步驟確認',
-        text: '如果看不懂步驟，請先停下來，找家人或治療師確認。',
+        title: '與身邊人一起進步',
+        text: '網站提供評分榜，讓你能夠看到其他使用者進行的狀況，一起努力進步。',
       },
     ],
   },
@@ -131,9 +126,9 @@ const content = {
     },
     hero: {
       eyebrow: 'Home rehabilitation hub',
-      title: 'I want to find tools for practicing at home after stroke',
+      title: 'Home rehabilitation tools developed by occupational therapists',
       body:
-        'Choose stroke rehabilitation or vision training based on what you need now. These tools can support home practice, but they do not replace evaluation by a physician or therapist.',
+        'Practice home rehabilitation through the website on a computer, phone, or tablet at home. Use it under therapist guidance.',
       primaryAction: 'Choose a tool',
       secondaryAction: 'View safety notes',
       visualLabel: `${HUB_NAME} tool selection preview`,
@@ -160,24 +155,24 @@ const content = {
       contrastFail: 'Below AA',
     },
     programs: {
-      eyebrow: 'Choose a tool first',
+      eyebrow: 'Choose a rehabilitation item',
       title: 'What do you want to practice now?',
       intro:
-        'For movement, cognition, or speech, choose stroke rehabilitation. If seeing text, reading, or eye movement is harder, choose vision training.',
+        'Choose rehabilitation items based on your needs and occupational therapist guidance.',
     },
     care: {
-      eyebrow: 'Safety Notes',
-      title: 'Confirm safety before starting',
+      eyebrow: 'How to use',
+      title: 'How do I use this website?',
       quote:
-        'Stop if you feel unwell during practice. This website provides tools and guidance, not diagnosis.',
+        'Pay close attention to your physical condition during practice. If you feel unwell, stop practicing immediately.',
       body:
-        'Use it with a family member the first time. Keep each session short and adjust only with professional guidance.',
+        'The website provides tools and guidance, not diagnosis. Use it under therapist guidance to avoid danger.',
     },
     education: {
       eyebrow: 'Education',
-      title: 'If something is unclear, read the short guide first',
+      title: 'Rehabilitation education information for reference',
       intro:
-        'The education page organizes what to note before starting, when to stop, and the purpose of each training type.',
+        'How does rehabilitation work? How can you train at home?',
       educationLink: 'Read education',
       linksLink: 'Education videos',
     },
@@ -189,7 +184,7 @@ const content = {
         name: 'StrokeTrainer',
         bestFor: 'Good for movement, cognition, and speech practice',
         description:
-          'Organizes therapist-directed goals into short tasks that fit home practice.',
+          'Turns therapist-directed goals into short home practice tasks.',
         points: ['Coordination', 'Attention and memory', 'Oral speech'],
         action: 'Open StrokeTrainer',
         logoAlt: 'StrokeTrainer logo',
@@ -201,7 +196,7 @@ const content = {
         name: 'VisionTrainer',
         bestFor: 'Good for seeing text, reading, and eye movement practice',
         description:
-          'Provides visual search, reading eye movement, and contrast recognition practice for use with professional guidance.',
+          'Provides visual search, reading eye movement, and contrast practice for professional-guided use.',
         points: ['Visual search', 'Reading eye movement', 'Contrast'],
         action: 'Open VisionTrainer',
         logoAlt: 'VisionTrainer logo',
@@ -209,20 +204,20 @@ const content = {
     ],
     safetySteps: [
       {
-        title: 'Have someone nearby',
-        text: 'Ask a family member to help choose tools and check safety the first time.',
+        title: 'Check pain status',
+        text: 'If there is pain or discomfort, stop practicing and seek medical advice.',
       },
       {
-        title: 'Confirm professionally',
-        text: 'If you are unsure whether a tool fits you, ask a physician or therapist first.',
+        title: 'Have family support for safety',
+        text: 'For practice that involves walking or balance, ask a family member to assist nearby and keep it safe.',
       },
       {
-        title: 'Keep practice short',
-        text: 'Start with short sessions. Stop immediately if you feel tired, dizzy, or painful.',
+        title: 'Keep practicing consistently',
+        text: 'Rehabilitation is a marathon. You only see results by staying consistent.',
       },
       {
-        title: 'Confirm the steps',
-        text: 'If instructions are unclear, stop and ask a family member or therapist to confirm.',
+        title: 'Improve with people around you',
+        text: 'The website provides leaderboards so you can see how other users are doing and keep improving together.',
       },
     ],
   },
