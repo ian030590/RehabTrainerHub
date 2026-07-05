@@ -54,13 +54,6 @@ const navItems: Array<{ key: HubNavKey; href: string }> = [
 const headerContent = {
   'zh-TW': {
     documentLanguage: 'zh-Hant-TW',
-    brandSubtitle: {
-      home: '居家復健入口',
-      education: '衛教資訊',
-      links: '衛教影片',
-      submit: '合作投稿',
-      privacy: '隱私權政策',
-    },
     navigationLabel: 'Rehab Trainer Hub 導覽',
     toggleMenuLabel: '切換選單',
     nav: defaultLabels,
@@ -86,22 +79,10 @@ const headerContent = {
       themeLabel: '色彩模式',
       light: '淺色',
       dark: '深色',
-      contrastLabel: '對比',
-      contrastLoading: '檢查中',
-      contrastPass: '通過 WCAG AAA',
-      contrastWarn: '通過 WCAG AA',
-      contrastFail: '未達 AA',
     },
   },
   en: {
     documentLanguage: 'en',
-    brandSubtitle: {
-      home: 'Home rehabilitation hub',
-      education: 'Education',
-      links: 'Education Videos',
-      submit: 'Collaboration',
-      privacy: 'Privacy Policy',
-    },
     navigationLabel: 'Rehab Trainer Hub navigation',
     toggleMenuLabel: 'Toggle menu',
     nav: {
@@ -133,11 +114,6 @@ const headerContent = {
       themeLabel: 'Color mode',
       light: 'Light',
       dark: 'Dark',
-      contrastLabel: 'Contrast',
-      contrastLoading: 'Checking',
-      contrastPass: 'WCAG AAA pass',
-      contrastWarn: 'WCAG AA pass',
-      contrastFail: 'Below AA',
     },
   },
 } as const;
@@ -149,9 +125,9 @@ interface HubNavigationProps {
 }
 
 interface HubSiteHeaderProps extends HubNavigationProps {
-  brandSubtitle: string;
+  headerTools?: ReactNode;
+  menuTools?: ReactNode;
   onNavigate?: () => void;
-  tools?: ReactNode;
   toggleMenuLabel?: string;
 }
 
@@ -182,45 +158,6 @@ function isTheme(value: string | null): value is Theme {
   return value === 'light' || value === 'dark';
 }
 
-function hexToRgb(hex: string) {
-  const normalized = hex.trim().replace('#', '');
-  if (!/^[0-9a-f]{6}$/i.test(normalized)) return null;
-
-  return {
-    r: Number.parseInt(normalized.slice(0, 2), 16),
-    g: Number.parseInt(normalized.slice(2, 4), 16),
-    b: Number.parseInt(normalized.slice(4, 6), 16),
-  };
-}
-
-function getRelativeLuminance(value: number) {
-  const channel = value / 255;
-  return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-}
-
-function getContrastRatio(foreground: string, background: string) {
-  const foregroundRgb = hexToRgb(foreground);
-  const backgroundRgb = hexToRgb(background);
-  if (!foregroundRgb || !backgroundRgb) return null;
-
-  const foregroundLuminance =
-    0.2126 * getRelativeLuminance(foregroundRgb.r) +
-    0.7152 * getRelativeLuminance(foregroundRgb.g) +
-    0.0722 * getRelativeLuminance(foregroundRgb.b);
-  const backgroundLuminance =
-    0.2126 * getRelativeLuminance(backgroundRgb.r) +
-    0.7152 * getRelativeLuminance(backgroundRgb.g) +
-    0.0722 * getRelativeLuminance(backgroundRgb.b);
-
-  const lighter = Math.max(foregroundLuminance, backgroundLuminance);
-  const darker = Math.min(foregroundLuminance, backgroundLuminance);
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-function getCssVariable(name: string) {
-  return window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
-
 function useStoredSetting<T extends string>(
   key: string,
   fallback: T,
@@ -245,14 +182,6 @@ function getRouteNavKey(pathname: string): HubNavKey | undefined {
   if (pathname.startsWith('/videos') || pathname.startsWith('/links')) return 'links';
   if (pathname.startsWith('/collaborate')) return 'submit';
   return undefined;
-}
-
-function getBrandSubtitle(pathname: string, copy: (typeof headerContent)[HubLocale]) {
-  if (pathname.startsWith('/education')) return copy.brandSubtitle.education;
-  if (pathname.startsWith('/videos') || pathname.startsWith('/links')) return copy.brandSubtitle.links;
-  if (pathname.startsWith('/collaborate')) return copy.brandSubtitle.submit;
-  if (pathname.startsWith('/privacy')) return copy.brandSubtitle.privacy;
-  return copy.brandSubtitle.home;
 }
 
 export function useHubReadability() {
@@ -290,14 +219,45 @@ function HubNavLinks({ activeKey, labels, navigationLabel, onNavigate }: HubNavi
   );
 }
 
+function LanguageSwitch({
+  copy,
+  locale,
+  setLocale,
+}: {
+  copy: (typeof headerContent)[HubLocale]['controls'];
+  locale: HubLocale;
+  setLocale: Dispatch<SetStateAction<HubLocale>>;
+}) {
+  return (
+    <div className="control-group language-switch" role="group" aria-label={copy.languageLabel}>
+      <button
+        aria-pressed={locale === 'zh-TW'}
+        className={locale === 'zh-TW' ? 'is-active' : ''}
+        onClick={() => setLocale('zh-TW')}
+        type="button"
+      >
+        {copy.zh}
+      </button>
+      <button
+        aria-pressed={locale === 'en'}
+        className={locale === 'en' ? 'is-active' : ''}
+        onClick={() => setLocale('en')}
+        type="button"
+      >
+        {copy.en}
+      </button>
+    </div>
+  );
+}
+
 export function HubSiteHeader({
   activeKey,
-  brandSubtitle,
+  headerTools,
   labels,
+  menuTools,
   navigationLabel,
   onNavigate,
   toggleMenuLabel,
-  tools,
 }: HubSiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const closeMenu = () => {
@@ -315,7 +275,6 @@ export function HubSiteHeader({
           <span>
             <strong>{HUB_NAME}</strong>
             <span className="brand-local-name">{HUB_LOCAL_NAME}</span>
-            <small>{brandSubtitle}</small>
           </span>
         </Link>
 
@@ -338,8 +297,10 @@ export function HubSiteHeader({
           navigationLabel={navigationLabel}
           onNavigate={closeMenu}
         />
-        {tools}
+        {menuTools}
       </div>
+
+      {headerTools}
 
       {isMenuOpen && <div className="navbar-overlay" onClick={closeMenu} />}
     </header>
@@ -367,7 +328,6 @@ export function HubShell({ children }: { children: ReactNode }) {
     isFontScale,
   );
   const [theme, setTheme] = useStoredSetting<Theme>(storageKeys.theme, 'light', isTheme);
-  const [contrastRatio, setContrastRatio] = useState<number | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState<SectionId>('programs');
   const copy = headerContent[locale];
@@ -379,23 +339,6 @@ export function HubShell({ children }: { children: ReactNode }) {
     root.dataset.fontScale = fontScale;
     root.dataset.theme = theme;
   }, [copy.documentLanguage, fontScale, locale, theme]);
-
-  useEffect(() => {
-    const checkContrast = () => {
-      const pairs = [
-        [getCssVariable('--on-background'), getCssVariable('--background')],
-        [getCssVariable('--primary'), getCssVariable('--surface-white')],
-        [getCssVariable('--on-primary'), getCssVariable('--primary')],
-      ] as const;
-      const ratios = pairs
-        .map(([foreground, background]) => getContrastRatio(foreground, background))
-        .filter((ratio): ratio is number => ratio !== null);
-
-      setContrastRatio(ratios.length ? Math.min(...ratios) : null);
-    };
-
-    window.requestAnimationFrame(checkContrast);
-  }, [theme]);
 
   useEffect(() => {
     if (pathname !== '/') return;
@@ -424,40 +367,6 @@ export function HubShell({ children }: { children: ReactNode }) {
     return () => observer.disconnect();
   }, [pathname]);
 
-  const contrastText = useMemo(() => {
-    if (contrastRatio === null) {
-      return {
-        ratio: '--',
-        status: copy.controls.contrastLoading,
-      };
-    }
-
-    if (contrastRatio >= 7) {
-      return {
-        ratio: `${contrastRatio.toFixed(1)}:1`,
-        status: copy.controls.contrastPass,
-      };
-    }
-
-    if (contrastRatio >= 4.5) {
-      return {
-        ratio: `${contrastRatio.toFixed(1)}:1`,
-        status: copy.controls.contrastWarn,
-      };
-    }
-
-    return {
-      ratio: `${contrastRatio.toFixed(1)}:1`,
-      status: copy.controls.contrastFail,
-    };
-  }, [
-    contrastRatio,
-    copy.controls.contrastFail,
-    copy.controls.contrastLoading,
-    copy.controls.contrastPass,
-    copy.controls.contrastWarn,
-  ]);
-
   const activeKey = pathname === '/'
     ? currentSection === 'programs' || currentSection === 'care'
       ? currentSection
@@ -475,30 +384,28 @@ export function HubShell({ children }: { children: ReactNode }) {
     <HubReadabilityContext.Provider value={contextValue}>
       <HubSiteHeader
         activeKey={activeKey}
-        brandSubtitle={getBrandSubtitle(pathname, copy)}
+        headerTools={(
+          <div className="header-tools">
+            <AuthPanel
+              appName={HUB_NAME}
+              className="home-auth-panel"
+              locale={locale === 'en' ? 'en' : 'zh-TW'}
+            />
+            <LanguageSwitch copy={copy.controls} locale={locale} setLocale={setLocale} />
+          </div>
+        )}
         labels={copy.nav}
-        navigationLabel={copy.navigationLabel}
-        onNavigate={closeHeaderPanels}
-        toggleMenuLabel={copy.toggleMenuLabel}
-        tools={(
-          <>
-            <div className="header-tools">
-              <button
-                aria-controls="readability-panel"
-                aria-expanded={isSettingsOpen}
-                className={`settings-toggle secondary-action compact ${isSettingsOpen ? 'is-active' : ''}`}
-                onClick={() => setIsSettingsOpen((open) => !open)}
-                type="button"
-              >
-                {copy.controls.settingsButton}
-              </button>
-
-              <AuthPanel
-                appName={HUB_NAME}
-                className="home-auth-panel"
-                locale={locale === 'en' ? 'en' : 'zh-TW'}
-              />
-            </div>
+        menuTools={(
+          <div className="menu-tools">
+            <button
+              aria-controls="readability-panel"
+              aria-expanded={isSettingsOpen}
+              className={`settings-toggle secondary-action compact ${isSettingsOpen ? 'is-active' : ''}`}
+              onClick={() => setIsSettingsOpen((open) => !open)}
+              type="button"
+            >
+              {copy.controls.settingsButton}
+            </button>
 
             <div
               className={`readability-panel ${isSettingsOpen ? 'is-open' : ''}`}
@@ -507,25 +414,6 @@ export function HubShell({ children }: { children: ReactNode }) {
               aria-label={copy.controls.settingsLabel}
             >
               <div className="readability-toolbar">
-                <div className="control-group" role="group" aria-label={copy.controls.languageLabel}>
-                  <button
-                    aria-pressed={locale === 'zh-TW'}
-                    className={locale === 'zh-TW' ? 'is-active' : ''}
-                    onClick={() => setLocale('zh-TW')}
-                    type="button"
-                  >
-                    {copy.controls.zh}
-                  </button>
-                  <button
-                    aria-pressed={locale === 'en'}
-                    className={locale === 'en' ? 'is-active' : ''}
-                    onClick={() => setLocale('en')}
-                    type="button"
-                  >
-                    {copy.controls.en}
-                  </button>
-                </div>
-
                 <div className="control-group" role="group" aria-label={copy.controls.fontLabel}>
                   {fontScales.map((scale) => (
                     <button
@@ -554,15 +442,15 @@ export function HubShell({ children }: { children: ReactNode }) {
                   ))}
                 </div>
               </div>
-              <p className="contrast-status">
-                {copy.controls.contrastLabel} {contrastText.ratio} {contrastText.status}
-              </p>
               <button className="text-button" type="button" onClick={() => setIsSettingsOpen(false)}>
                 {copy.controls.settingsClose}
               </button>
             </div>
-          </>
+          </div>
         )}
+        navigationLabel={copy.navigationLabel}
+        onNavigate={closeHeaderPanels}
+        toggleMenuLabel={copy.toggleMenuLabel}
       />
       <HubBottomNav activeKey={activeKey} labels={copy.nav} navigationLabel={copy.navigationLabel} />
       {children}
