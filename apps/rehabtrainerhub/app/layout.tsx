@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   },
   description: 'Rehab Trainer Hub 是整合中風復健與視覺訓練的居家復健入口，提供清楚導覽、使用限制與相關衛教資源。',
   applicationName: HUB_NAME,
+  icons: {
+    icon: '/rehabtrainerhub.png',
+    apple: '/rehabtrainerhub.png',
+  },
   verification: {
     google: '_ZdVR2kZ9xg_TnPtv5tLda3-fJWHLArBNDMpgE5NkZA',
   },
