@@ -39,7 +39,7 @@ const defaultLabels: HubNavLabels = {
   programs: '復健工具',
   care: '安全提醒',
   education: '衛教資訊',
-  links: '相關連結',
+  links: '衛教影片',
   submit: '合作投稿',
 };
 
@@ -47,7 +47,7 @@ const navItems: Array<{ key: HubNavKey; href: string }> = [
   { key: 'programs', href: '/#apps-title' },
   { key: 'care', href: '/#care-title' },
   { key: 'education', href: '/education/' },
-  { key: 'links', href: '/links/' },
+  { key: 'links', href: '/videos/' },
   { key: 'submit', href: '/collaborate/' },
 ];
 
@@ -57,7 +57,7 @@ const headerContent = {
     brandSubtitle: {
       home: '居家復健入口',
       education: '衛教資訊',
-      links: '相關網站',
+      links: '衛教影片',
       submit: '合作投稿',
       privacy: '隱私權政策',
     },
@@ -98,7 +98,7 @@ const headerContent = {
     brandSubtitle: {
       home: 'Home rehabilitation hub',
       education: 'Education',
-      links: 'Related websites',
+      links: 'Education Videos',
       submit: 'Collaboration',
       privacy: 'Privacy Policy',
     },
@@ -108,8 +108,8 @@ const headerContent = {
       programs: 'Programs',
       care: 'Safety',
       education: 'Education',
-      links: 'Links',
-      submit: 'Submit',
+      links: 'Education Videos',
+      submit: 'Collaboration',
     },
     footer: {
       hub: 'Home',
@@ -242,14 +242,14 @@ function useStoredSetting<T extends string>(
 
 function getRouteNavKey(pathname: string): HubNavKey | undefined {
   if (pathname.startsWith('/education')) return 'education';
-  if (pathname.startsWith('/links')) return 'links';
+  if (pathname.startsWith('/videos') || pathname.startsWith('/links')) return 'links';
   if (pathname.startsWith('/collaborate')) return 'submit';
   return undefined;
 }
 
 function getBrandSubtitle(pathname: string, copy: (typeof headerContent)[HubLocale]) {
   if (pathname.startsWith('/education')) return copy.brandSubtitle.education;
-  if (pathname.startsWith('/links')) return copy.brandSubtitle.links;
+  if (pathname.startsWith('/videos') || pathname.startsWith('/links')) return copy.brandSubtitle.links;
   if (pathname.startsWith('/collaborate')) return copy.brandSubtitle.submit;
   if (pathname.startsWith('/privacy')) return copy.brandSubtitle.privacy;
   return copy.brandSubtitle.home;

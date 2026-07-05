@@ -18,7 +18,7 @@ const content = {
       programs: '復健工具',
       care: '安全提醒',
       education: '衛教資訊',
-      links: '相關連結',
+      links: '衛教影片',
       submit: '合作投稿',
     },
     hero: {
@@ -71,7 +71,7 @@ const content = {
       intro:
         '衛教頁整理開始前要注意的事、何時需要停止，以及每種訓練的用途。',
       educationLink: '閱讀衛教',
-      linksLink: '相關連結',
+      linksLink: '衛教影片',
     },
     apps: [
       {
@@ -123,17 +123,17 @@ const content = {
     brandSubtitle: 'Home rehabilitation hub',
     navigationLabel: `${HUB_NAME} navigation`,
     nav: {
-      programs: 'Programs',
-      care: 'Safety',
+      programs: 'Rehab Tools',
+      care: 'Safety Notes',
       education: 'Education',
-      links: 'Links',
-      submit: 'Submit',
+      links: 'Education Videos',
+      submit: 'Collaboration',
     },
     hero: {
       eyebrow: 'Home rehabilitation hub',
-      title: 'Find home practice tools after stroke',
+      title: 'I want to find tools for practicing at home after stroke',
       body:
-        'Choose stroke rehabilitation or vision training based on your current need. These tools support home practice and do not replace evaluation by a physician or therapist.',
+        'Choose stroke rehabilitation or vision training based on what you need now. These tools can support home practice, but they do not replace evaluation by a physician or therapist.',
       primaryAction: 'Choose a tool',
       secondaryAction: 'View safety notes',
       visualLabel: `${HUB_NAME} tool selection preview`,
@@ -160,13 +160,13 @@ const content = {
       contrastFail: 'Below AA',
     },
     programs: {
-      eyebrow: 'Choose first',
+      eyebrow: 'Choose a tool first',
       title: 'What do you want to practice now?',
       intro:
-        'For movement, cognition, or speech, choose stroke rehabilitation. For reading, seeing text, or eye movement, choose vision training.',
+        'For movement, cognition, or speech, choose stroke rehabilitation. If seeing text, reading, or eye movement is harder, choose vision training.',
     },
     care: {
-      eyebrow: 'Safety notes',
+      eyebrow: 'Safety Notes',
       title: 'Confirm safety before starting',
       quote:
         'Stop if you feel unwell during practice. This website provides tools and guidance, not diagnosis.',
@@ -175,11 +175,11 @@ const content = {
     },
     education: {
       eyebrow: 'Education',
-      title: 'Read a short guide when something is unclear',
+      title: 'If something is unclear, read the short guide first',
       intro:
-        'The education page summarizes setup notes, stop signs, and the purpose of each training type.',
+        'The education page organizes what to note before starting, when to stop, and the purpose of each training type.',
       educationLink: 'Read education',
-      linksLink: 'Related links',
+      linksLink: 'Education videos',
     },
     apps: [
       {
@@ -187,9 +187,9 @@ const content = {
         title: 'StrokeTrainer',
         localTitle: 'Stroke rehabilitation practice',
         name: 'StrokeTrainer',
-        bestFor: 'Best for movement, cognition, and speech',
+        bestFor: 'Good for movement, cognition, and speech practice',
         description:
-          'Turns therapist-directed goals into short home practice tasks.',
+          'Organizes therapist-directed goals into short tasks that fit home practice.',
         points: ['Coordination', 'Attention and memory', 'Oral speech'],
         action: 'Open StrokeTrainer',
         logoAlt: 'StrokeTrainer logo',
@@ -199,9 +199,9 @@ const content = {
         title: 'VisionTrainer',
         localTitle: 'Vision training practice',
         name: 'VisionTrainer',
-        bestFor: 'Best for text, reading, and eye movement',
+        bestFor: 'Good for seeing text, reading, and eye movement practice',
         description:
-          'Provides visual search, reading eye movement, and contrast practice for professional-guided use.',
+          'Provides visual search, reading eye movement, and contrast recognition practice for use with professional guidance.',
         points: ['Visual search', 'Reading eye movement', 'Contrast'],
         action: 'Open VisionTrainer',
         logoAlt: 'VisionTrainer logo',
@@ -209,7 +209,7 @@ const content = {
     ],
     safetySteps: [
       {
-        title: 'Have support nearby',
+        title: 'Have someone nearby',
         text: 'Ask a family member to help choose tools and check safety the first time.',
       },
       {
@@ -217,11 +217,11 @@ const content = {
         text: 'If you are unsure whether a tool fits you, ask a physician or therapist first.',
       },
       {
-        title: 'Practice briefly',
+        title: 'Keep practice short',
         text: 'Start with short sessions. Stop immediately if you feel tired, dizzy, or painful.',
       },
       {
-        title: 'Check the steps',
+        title: 'Confirm the steps',
         text: 'If instructions are unclear, stop and ask a family member or therapist to confirm.',
       },
     ],
@@ -414,7 +414,7 @@ export function ReadableHome() {
             <Link className="primary-action" href="/education/">
               {copy.education.educationLink}
             </Link>
-            <Link className="text-link" href="/links/">
+            <Link className="text-link" href="/videos/">
               {copy.education.linksLink}
             </Link>
           </div>

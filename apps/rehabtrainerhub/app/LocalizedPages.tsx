@@ -1,7 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useHubReadability } from './HubNavigation';
-import { siteUrls } from './siteUrls';
 import { SubmissionForm } from './collaborate/SubmissionForm';
 
 const pageCopy = {
@@ -45,28 +45,16 @@ const pageCopy = {
         },
       ],
     },
-    links: {
-      eyebrow: '相關網站',
-      title: '選擇你現在要使用的工具。',
-      intro: '不確定時，可先選中風復健；如果主要困難是視覺或閱讀，再選視覺訓練。',
-      sites: [
-        {
-          name: 'StrokeTrainer',
-          title: '中風復健練習',
-          description: '中風後想練動作、認知或說話，可先使用這個工具。',
-          items: ['動作協調', '注意力記憶', '口腔語音'],
-          action: '開啟中風復健',
-          href: siteUrls.stroke,
-        },
-        {
-          name: 'VisionTrainer',
-          title: '視覺訓練練習',
-          description: '如果想練看字、閱讀或眼動，可使用這個工具。',
-          items: ['視覺搜尋', '閱讀眼動', '對比辨識'],
-          action: '開啟視覺訓練',
-          href: siteUrls.vision,
-        },
-      ],
+    videos: {
+      eyebrow: '衛教影片',
+      title: '觀看復健與居家練習影片。',
+      intro: '這裡會從 YouTube 頻道載入最新衛教影片。觀看前仍請依醫師或治療師建議選擇內容。',
+      loading: '正在載入影片',
+      error: '影片暫時無法載入，請稍後再試。',
+      empty: '目前沒有可顯示的影片。',
+      action: '在 YouTube 開啟',
+      published: '發布日期',
+      noDescription: '此影片未提供文字說明。',
     },
     collaborate: {
       eyebrow: '合作投稿',
@@ -137,27 +125,27 @@ const pageCopy = {
   en: {
     education: {
       eyebrow: 'Education',
-      title: 'Read these 4 notes before practicing at home.',
-      intro: 'If you are not sure whether a practice is appropriate, ask your physician or therapist first.',
+      title: 'Before practicing at home, read these 4 things first.',
+      intro: 'If you are not sure whether you can do a practice, ask your physician or therapist first.',
       sections: [
         {
           title: 'Can I start practicing?',
           items: [
-            'Confirm that your physician or therapist agrees that home practice is appropriate.',
-            'Ask a family member or caregiver to help the first time.',
-            'Use the tools in a well-lit area with a stable chair.',
+            'First confirm that your physician or therapist agrees you can practice at home.',
+            'The first time you use it, ask a family member or caregiver to assist nearby.',
+            'Use it in a well-lit place with a stable chair.',
           ],
         },
         {
           title: 'When should I stop?',
           items: [
             'Stop immediately if you feel dizzy, painful, short of breath, or nauseated.',
-            'Stop if you are too tired or cannot understand the steps.',
-            'Contact a physician or therapist if discomfort does not improve.',
+            'Also stop first if you are too tired or cannot understand the steps.',
+            'If discomfort does not improve, contact your physician or therapist.',
           ],
         },
         {
-          title: 'What can stroke rehabilitation practice train?',
+          title: 'What can stroke rehabilitation train?',
           items: [
             'Motor practice: hand-eye coordination, tracing, and gesture control.',
             'Cognitive practice: attention, reaction speed, and memory.',
@@ -165,48 +153,36 @@ const pageCopy = {
           ],
         },
         {
-          title: 'What can vision training practice train?',
+          title: 'What can vision training train?',
           items: [
             'Visual search: finding targets and sustaining attention.',
             'Reading eye movement: seeing text, tracking, and shifting gaze.',
-            'Contrast recognition: distinguishing clarity and shade differences.',
+            'Contrast recognition: distinguishing differences in shade and clarity.',
           ],
         },
       ],
     },
-    links: {
-      eyebrow: 'Related Websites',
-      title: 'Choose the tool you want to use now.',
-      intro: 'If you are unsure, start with stroke rehabilitation. Choose vision training when the main difficulty is vision or reading.',
-      sites: [
-        {
-          name: 'StrokeTrainer',
-          title: 'Stroke rehabilitation practice',
-          description: 'Use this tool for movement, cognition, or speech practice after stroke.',
-          items: ['Coordination', 'Attention and memory', 'Oral speech'],
-          action: 'Open StrokeTrainer',
-          href: siteUrls.stroke,
-        },
-        {
-          name: 'VisionTrainer',
-          title: 'Vision training practice',
-          description: 'Use this tool for text, reading, or eye movement practice.',
-          items: ['Visual search', 'Reading eye movement', 'Contrast'],
-          action: 'Open VisionTrainer',
-          href: siteUrls.vision,
-        },
-      ],
+    videos: {
+      eyebrow: 'Education Videos',
+      title: 'Watch rehabilitation and home practice videos.',
+      intro: 'This page loads the latest education videos from the YouTube channel. Before watching, still choose content according to your physician or therapist guidance.',
+      loading: 'Loading videos',
+      error: 'Videos cannot be loaded right now. Please try again later.',
+      empty: 'There are no videos to show right now.',
+      action: 'Open on YouTube',
+      published: 'Published',
+      noDescription: 'This video does not include a text description.',
     },
     collaborate: {
       eyebrow: 'Collaboration',
       title: 'Share a therapy activity idea.',
-      intro: 'You can submit a written idea or upload a single HTML demo. HTML demos are forwarded only after the safety check passes.',
-      rulesLabel: 'Submission Rules',
+      intro: 'You can submit a text idea or upload a single HTML demo. HTML is forwarded only after passing the safety check.',
+      rulesLabel: 'Submission rules',
       rules: [
-        'Activity ideas are sent as a txt file.',
-        'Demos must be a single .html file.',
-        'HTML may not connect externally, request permissions, or transmit data.',
-        'Suspicious content is blocked and will not be forwarded.',
+        'Activity ideas are converted to txt and sent.',
+        'Demos accept only one .html file.',
+        'HTML may not connect externally, request permissions, or send data.',
+        'Suspicious content is blocked and is not forwarded.',
       ],
     },
     privacy: {
@@ -218,7 +194,7 @@ const pageCopy = {
       ],
       sections: [
         {
-          title: 'What Data We Collect',
+          title: 'What data we collect',
           items: [
             'When signing in with Google, the system uses the account identifier, display name, email, and avatar provided by Google to create your login state.',
             'After signing in, you will be asked to fill in anonymous basic information, including age, gender, and nationality.',
@@ -228,7 +204,7 @@ const pageCopy = {
           ],
         },
         {
-          title: 'How We Use the Data',
+          title: 'How we use the data',
           items: [
             'Login data is solely used to establish the login state, identify the same user, and synchronize training records.',
             'Anonymous basic information, chronic condition categories, and smoking and drinking habits are used for group analysis of rehabilitation tool usage and to improve our services.',
@@ -237,7 +213,7 @@ const pageCopy = {
           ],
         },
         {
-          title: 'Data Storage Location',
+          title: 'Where data is stored',
           items: [
             'When using the service while signed in, anonymous basic information and training records are stored in Rehab Trainer Hub Cloudflare D1 database.',
             'When using the service without signing in, training records are only stored in the current browser IndexedDB and will not be synchronized to the D1 database.',
@@ -245,7 +221,7 @@ const pageCopy = {
           ],
         },
         {
-          title: 'Camera and Local Inference',
+          title: 'Camera and local inference',
           items: [
             'Some trainer features may use a camera or local AI inference for real-time training assessment.',
             'Unless explicitly stated otherwise on the page, this platform does not upload or save camera images.',
@@ -253,7 +229,7 @@ const pageCopy = {
           ],
         },
         {
-          title: 'Your Choices',
+          title: 'Your choices',
           items: [
             'You can choose not to sign in and continue using features that support local records.',
             'You can sign out on any homepage or trainer page; after signing out, new records will revert to local IndexedDB storage.',
@@ -265,13 +241,17 @@ const pageCopy = {
   },
 } as const;
 
-function CheckIcon() {
-  return (
-    <svg className="check-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none">
-      <path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+const youtubeChannelId = 'UCHE7xFZ9I8rJzbrFXA-3L3w';
+
+type YoutubeVideo = {
+  id: string;
+  title: string;
+  description: string;
+  publishedAt: string;
+  url: string;
+};
+
+type VideoStatus = 'loading' | 'success' | 'error';
 
 export function EducationContent() {
   const { locale } = useHubReadability();
@@ -296,42 +276,78 @@ export function EducationContent() {
   );
 }
 
-export function LinksContent() {
+export function VideosContent() {
   const { locale } = useHubReadability();
-  const copy = pageCopy[locale].links;
+  const copy = pageCopy[locale].videos;
+  const [status, setStatus] = useState<VideoStatus>('loading');
+  const [videos, setVideos] = useState<YoutubeVideo[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetch(`/api/youtube-videos?channelId=${youtubeChannelId}`)
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error('Unable to load videos.')))
+      .then((data: { videos?: YoutubeVideo[] }) => {
+        if (ignore) return;
+        setVideos(data.videos ?? []);
+        setStatus('success');
+      })
+      .catch(() => {
+        if (!ignore) setStatus('error');
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const dateFormatter = new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'zh-TW', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 
   return (
     <section className="content-page">
       <p className="eyebrow">{copy.eyebrow}</p>
       <h1>{copy.title}</h1>
       <p className="content-intro">{copy.intro}</p>
-      <div className="related-grid">
-        {copy.sites.map((site) => (
-          <a
-            className="related-card"
-            href={site.href}
-            key={site.name}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <p>{site.name}</p>
-            <h2>{site.title}</h2>
-            <span>{site.description}</span>
-            <ul className="related-points">
-              {site.items.map((item) => (
-                <li key={item}>
-                  <CheckIcon />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <span className="related-action">{site.action}</span>
-            <strong>{site.href.replace('https://', '')}</strong>
-          </a>
+
+      {status === 'loading' && <p className="video-status">{copy.loading}</p>}
+      {status === 'error' && <p className="video-status is-error">{copy.error}</p>}
+      {status === 'success' && videos.length === 0 && <p className="video-status">{copy.empty}</p>}
+
+      <div className="video-grid">
+        {videos.map((video) => (
+          <article className="video-card" key={video.id}>
+            <div className="video-frame">
+              <iframe
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                loading="lazy"
+                src={`https://www.youtube.com/embed/${video.id}`}
+                title={video.title}
+              />
+            </div>
+            <div className="video-copy">
+              <p className="video-meta">
+                {copy.published} {dateFormatter.format(new Date(video.publishedAt))}
+              </p>
+              <h2>{video.title}</h2>
+              <p>{video.description || copy.noDescription}</p>
+              <a className="video-link" href={video.url} rel="noopener noreferrer" target="_blank">
+                {copy.action}
+              </a>
+            </div>
+          </article>
         ))}
       </div>
     </section>
   );
+}
+
+export function LinksContent() {
+  return <VideosContent />;
 }
 
 export function CollaborateContent() {

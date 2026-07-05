@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LinksPage() {
+export default function VideosPage() {
   return (
     <main>
       <VideosContent />
