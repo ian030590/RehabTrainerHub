@@ -15,7 +15,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react';
-import { HUB_NAME } from './hubBrand';
+import { HUB_LOCAL_NAME, HUB_NAME } from './hubBrand';
 import { siteUrls } from './siteUrls';
 
 export type HubNavKey = 'programs' | 'care' | 'education' | 'links' | 'submit';
@@ -314,6 +314,7 @@ export function HubSiteHeader({
           </span>
           <span>
             <strong>{HUB_NAME}</strong>
+            <span className="brand-local-name">{HUB_LOCAL_NAME}</span>
             <small>{brandSubtitle}</small>
           </span>
         </Link>

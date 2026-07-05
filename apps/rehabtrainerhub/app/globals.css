@@ -287,6 +287,7 @@ body > main:not(.home-page) {
 }
 
 .brand strong,
+.brand-local-name,
 .brand small {
   display: block;
 }
@@ -307,6 +308,13 @@ body > main:not(.home-page) {
   font-size: 0.75rem;
   font-weight: var(--fw-bold);
   letter-spacing: 0.05em;
+}
+
+.brand-local-name {
+  color: var(--text-heading);
+  font-size: 0.95rem;
+  font-weight: var(--fw-bold);
+  line-height: 1.25;
 }
 
 .header-stack {

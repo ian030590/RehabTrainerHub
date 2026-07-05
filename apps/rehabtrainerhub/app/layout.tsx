@@ -1,17 +1,26 @@
 import type { Metadata } from 'next';
 import { HubShell } from './HubNavigation';
-import { HUB_NAME } from './hubBrand';
+import { HUB_FULL_NAME, HUB_LOCAL_NAME } from './hubBrand';
+import { createSeoMetadata, organizationJsonLd, siteDescription, websiteJsonLd } from './seo';
 import { siteUrls } from './siteUrls';
 import './globals.css';
 
+const rootMetadata = createSeoMetadata({
+  title: HUB_FULL_NAME,
+  description: siteDescription,
+  path: '/',
+  absoluteTitle: true,
+});
+
 export const metadata: Metadata = {
+  ...rootMetadata,
   metadataBase: new URL(siteUrls.hub),
   title: {
-    default: HUB_NAME,
-    template: `%s | ${HUB_NAME}`,
+    default: HUB_FULL_NAME,
+    template: `%s | ${HUB_LOCAL_NAME}`,
   },
-  description: 'Rehab Trainer Hub 是整合中風復健與視覺訓練的居家復健入口，提供清楚導覽、使用限制與相關衛教資源。',
-  applicationName: HUB_NAME,
+  applicationName: HUB_FULL_NAME,
+  keywords: ['居家復健', '中風復健', '視覺訓練', '職能治療', '衛教影片', 'Rehab Trainer Hub'],
   icons: {
     icon: '/rehabtrainerhub.png',
     apple: '/rehabtrainerhub.png',
@@ -19,23 +28,20 @@ export const metadata: Metadata = {
   verification: {
     google: '_ZdVR2kZ9xg_TnPtv5tLda3-fJWHLArBNDMpgE5NkZA',
   },
-  alternates: {
-    canonical: '/',
-  },
-  openGraph: {
-    title: HUB_NAME,
-    description: '整合中風復健與視覺訓練的居家復健入口，提供清楚導覽、使用限制與衛教資源。',
-    url: '/',
-    siteName: HUB_NAME,
-    locale: 'zh_TW',
-    type: 'website',
-  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-Hant-TW" data-locale="zh-TW">
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

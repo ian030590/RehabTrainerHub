@@ -4,11 +4,18 @@ import { siteUrls } from './siteUrls';
 export const dynamic = 'force-static';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = ['', '/education', '/videos', '/collaborate', '/privacy'];
-  return routes.map((route) => ({
+  const routes = [
+    { route: '', changeFrequency: 'weekly', priority: 1 },
+    { route: '/education', changeFrequency: 'monthly', priority: 0.85 },
+    { route: '/videos', changeFrequency: 'weekly', priority: 0.85 },
+    { route: '/collaborate', changeFrequency: 'monthly', priority: 0.65 },
+    { route: '/privacy', changeFrequency: 'yearly', priority: 0.35 },
+  ] as const;
+
+  return routes.map(({ route, changeFrequency, priority }) => ({
     url: `${siteUrls.hub}${route}`,
-    lastModified: new Date('2026-07-04'),
-    changeFrequency: route === '' ? 'weekly' : 'monthly',
-    priority: route === '' ? 1 : 0.8,
+    lastModified: new Date('2026-07-05'),
+    changeFrequency,
+    priority,
   }));
 }
