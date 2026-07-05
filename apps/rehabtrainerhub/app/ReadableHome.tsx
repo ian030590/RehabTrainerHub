@@ -7,7 +7,7 @@ import { HUB_NAME } from './hubBrand';
 import { siteUrls } from './siteUrls';
 
 type Locale = HubLocale;
-type IconName = 'brain' | 'eye' | 'arrow' | 'check' | 'panel';
+type IconName = 'arrow' | 'check' | 'panel';
 
 const content = {
   'zh-TW': {
@@ -227,39 +227,19 @@ const appAssets = {
   stroke: {
     href: siteUrls.stroke,
     image: '/assets/stroke-logo.png',
-    icon: 'brain',
   },
   vision: {
     href: siteUrls.vision,
     image: '/assets/vision-logo.png',
-    icon: 'eye',
   },
 } as const;
 
 function Icon({ name, className }: { name: IconName; className?: string }) {
-  if (name === 'eye') {
-    return (
-      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
-        <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="12" cy="12" r="2.75" stroke="currentColor" strokeWidth="1.8" />
-      </svg>
-    );
-  }
-
   if (name === 'panel') {
     return (
       <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
         <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
         <path d="M7 9h10M7 13h4m3 0h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  if (name === 'brain') {
-    return (
-      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
-        <path d="M8.5 5.5A3.5 3.5 0 0 1 12 2a3.5 3.5 0 0 1 3.45 3 3.45 3.45 0 0 1 2.8 5.45A3.7 3.7 0 0 1 16 17.4V19a3 3 0 0 1-6 0v-1.6a3.7 3.7 0 0 1-2.25-6.95A3.45 3.45 0 0 1 8.5 5.5Z" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M12 2v20M8.2 8.2c1.1.4 2 .4 3-.2M15.8 8.2c-1.1.4-2 .4-3-.2M8.3 14.4c1 .35 1.9.25 2.7-.3M15.7 14.4c-1 .35-1.9.25-2.7-.3" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" />
       </svg>
     );
   }
@@ -312,7 +292,7 @@ export function ReadableHome() {
                   const asset = appAssets[app.id];
                   return (
                     <div className={`device-tile device-tile-${app.id}`} key={app.id}>
-                      <Icon className="device-icon" name={asset.icon} />
+                      <Image className="device-logo" src={asset.image} alt={app.logoAlt} width={96} height={64} />
                       <span>{app.localTitle}</span>
                     </div>
                   );
@@ -350,7 +330,7 @@ export function ReadableHome() {
                       <h3>{app.localTitle}</h3>
                     </div>
                     <div className="app-icon">
-                      <Icon className="icon-lg" name={asset.icon} />
+                      <Image className="app-logo" src={asset.image} alt={app.logoAlt} width={86} height={54} />
                     </div>
                   </div>
 

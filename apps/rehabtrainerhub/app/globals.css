@@ -694,15 +694,11 @@ body > main:not(.home-page) {
   border-color: rgba(0, 82, 204, 0.16);
 }
 
-.device-icon {
-  width: 42px;
-  height: 42px;
+.device-logo {
+  width: min(96px, 100%);
+  height: 58px;
   margin-bottom: 8px;
-  color: var(--primary);
-}
-
-.device-tile-vision .device-icon {
-  color: var(--secondary);
+  object-fit: contain;
 }
 
 .hero-checklist {
@@ -803,10 +799,10 @@ body > main:not(.home-page) {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 58px;
-  height: 58px;
+  width: 88px;
+  height: 60px;
   border: 1px solid rgba(0, 82, 204, 0.2);
-  border-radius: 999px;
+  border-radius: var(--radius);
   color: var(--primary);
   background: rgba(0, 82, 204, 0.08);
 }
@@ -815,6 +811,12 @@ body > main:not(.home-page) {
   border-color: rgba(0, 108, 71, 0.2);
   color: var(--secondary);
   background: rgba(138, 245, 190, 0.2);
+}
+
+.app-logo {
+  width: min(72px, 100%);
+  height: 46px;
+  object-fit: contain;
 }
 
 .app-best-for {
@@ -1623,8 +1625,8 @@ body > main:not(.home-page) {
   }
 
   .app-icon {
-    width: 52px;
-    height: 52px;
+    width: 78px;
+    height: 54px;
   }
 
   .feature-card {
