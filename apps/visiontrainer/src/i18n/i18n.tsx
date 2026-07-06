@@ -16,10 +16,20 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 const LANGUAGE_KEY = 'vision_trainer_language';
 
+function detectPreferredLanguage(): Language {
+  const candidates = navigator.languages?.length ? navigator.languages : [navigator.language];
+  for (const candidate of candidates) {
+    const normalized = candidate.toLowerCase();
+    if (normalized.startsWith('zh')) return 'zh';
+    if (normalized.startsWith('en')) return 'en';
+  }
+  return 'zh';
+}
+
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [lang, setLangState] = useState<Language>(() => {
     const saved = localStorage.getItem(LANGUAGE_KEY);
-    return (saved === 'en' || saved === 'zh') ? saved : 'zh';
+    return (saved === 'en' || saved === 'zh') ? saved : detectPreferredLanguage();
   });
 
   const setLang = useCallback((newLang: Language) => {

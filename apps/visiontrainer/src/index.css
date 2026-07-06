@@ -125,7 +125,7 @@ html, body, #root {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 1440px;
+  max-width: 1600px;
 }
 
 .navbar-toggle {

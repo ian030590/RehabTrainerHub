@@ -8,8 +8,8 @@ export const en: Record<TranslationKey, string> = {
   // Navigation
   'nav.trainingList': 'Visual Training',
   'nav.assessment': 'Visual Assessment',
-  'nav.settings': 'Settings',
-  'nav.credits': 'Credits',
+  'nav.settings': 'Web Settings',
+  'nav.credits': 'References',
   'nav.links': 'Related Sites',
   'nav.noUser': 'No User Selected',
   'nav.downloadScores': 'Download Scores',

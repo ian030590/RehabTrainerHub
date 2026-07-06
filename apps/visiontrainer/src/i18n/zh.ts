@@ -6,8 +6,8 @@ export const zh = {
   // Navigation
   'nav.trainingList': '視覺訓練',
   'nav.assessment': '視覺評估',
-  'nav.settings': '設定與校正',
-  'nav.credits': '致謝',
+  'nav.settings': '網頁設定',
+  'nav.credits': '參考資料',
   'nav.links': '相關網站',
   'nav.noUser': '未選擇使用者',
   'nav.downloadScores': '下載成績',
