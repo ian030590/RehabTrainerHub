@@ -339,9 +339,7 @@ body > main:not(.home-page) {
   justify-content: center;
   min-height: 40px;
   padding: 8px 16px;
-  border: 1px solid var(--primary);
-  border-radius: var(--radius);
-  color: var(--primary);
+  color: var(--on-tertiary-fixed);
   font-size: 1rem;
   font-weight: var(--fw-bold);
   line-height: 1.3;
