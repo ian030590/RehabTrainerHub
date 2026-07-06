@@ -334,6 +334,7 @@ body > main:not(.home-page) {
 
 .nav-link,
 .header-actions > a:not(.secondary-action) {
+  border-radius: var(--radius);
   display: inline-flex;
   align-items: center;
   justify-content: center;
