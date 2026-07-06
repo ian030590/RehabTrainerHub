@@ -58,14 +58,14 @@ const pageCopy = {
     },
     collaborate: {
       eyebrow: '合作投稿',
-      title: '分享治療活動想法。',
-      intro: '你可以投稿文字想法，也可以上傳單一 HTML demo。HTML 通過安全檢查後才會轉送。',
+      title: '希望網頁增加活動種類嗎？',
+      intro: '你可以透過文字說明想法，也可以直接上傳單一 HTML 檔案。',
       rulesLabel: '投稿規則',
       rules: [
-        '活動想法會轉成 txt 送出。',
-        'Demo 只接受一個 .html 檔。',
-        'HTML 不可連外、要求權限或傳送資料。',
-        '可疑內容會被擋下，不會轉送。',
+        'HTML可以透過Vibe Coding完成，但需要可以執行',
+        '不限治療師皆可參與',
+        '活動可行性與治療性會由團隊審核',
+        '審核通過者將會透過聯絡方式詢問您期望被網站提起的名稱',
       ],
     },
     privacy: {
@@ -175,14 +175,14 @@ const pageCopy = {
     },
     collaborate: {
       eyebrow: 'Collaboration',
-      title: 'Share a therapy activity idea.',
-      intro: 'You can submit a text idea or upload a single HTML demo. HTML is forwarded only after passing the safety check.',
+      title: 'Share your theraputic activity ideas.',
+      intro: 'You can share your idea with text or upload a single HTML demo file.',
       rulesLabel: 'Submission rules',
       rules: [
-        'Activity ideas are converted to txt and sent.',
-        'Demos accept only one .html file.',
-        'HTML may not connect externally, request permissions, or send data.',
-        'Suspicious content is blocked and is not forwarded.',
+        'HTML can be vibe coded, but has to be functional.',
+        'Not limited to therapists only.',
+        'The therapeutic value and feasibility of the activity will be evaluated by the team.',
+        'If your application is approved, we will contact you regarding the name you would like to be published.',
       ],
     },
     privacy: {
