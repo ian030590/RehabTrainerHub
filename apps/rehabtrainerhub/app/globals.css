@@ -342,7 +342,7 @@ body > main:not(.home-page) {
   border-bottom: 2px solid transparent;
   border-radius: var(--radius);
   color: var(--on-surface-variant);
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: var(--fw-medium);
   line-height: 1.4;
   text-decoration: none;
@@ -397,7 +397,7 @@ body > main:not(.home-page) {
   gap: 8px;
   min-height: 44px;
   border-radius: var(--radius);
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: var(--fw-bold);
   line-height: 1.3;
   text-decoration: none;
@@ -519,7 +519,7 @@ body > main:not(.home-page) {
 .auth-panel-warning {
   margin: 0;
   color: var(--on-surface-variant);
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: var(--fw-bold);
 }
 
@@ -675,7 +675,7 @@ body > main:not(.home-page) {
   padding: 14px 18px;
   border-bottom: 1px solid var(--surface-container-highest);
   color: var(--primary);
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: var(--fw-bold);
 }
 
@@ -1380,7 +1380,7 @@ body > main:not(.home-page) {
 .rehab-footer-inner > span {
   max-width: 560px;
   color: var(--outline-variant);
-  font-size: 0.875rem;
+  font-size: 1rem;
   line-height: 1.6;
 }
 
@@ -1429,7 +1429,7 @@ body > main:not(.home-page) {
   }
 
   .brand-local-name {
-    font-size: 0.875rem;
+    font-size: 1rem;
   }
 
   .nav-link,
@@ -1653,7 +1653,7 @@ body > main:not(.home-page) {
     padding: 8px 6px;
     border-radius: var(--radius);
     color: var(--on-surface-variant);
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: var(--fw-bold);
     line-height: 1.2;
     text-align: center;
