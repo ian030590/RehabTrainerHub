@@ -11,7 +11,6 @@ export const zh = {
   'nav.links': '相關網站',
   'nav.noUser': '未選擇使用者',
   'nav.downloadScores': '下載成績',
-  'nav.scoresBackupReminder': '成績保存在瀏覽器，請定期下載備份',
   'nav.noScores': '目前沒有可下載的訓練成績。',
   'nav.scoresDownloadError': '無法讀取已儲存的訓練成績，請稍後再試。',
 
@@ -136,7 +135,7 @@ export const zh = {
   'settings.train.wgDesc': '自動追蹤眼動並給予準確度評分',
   'settings.train.mode': '訓練模式',
   'settings.tab.crowding': '擁擠效應',
-  'settings.title': '設定與校正',
+  'settings.title': '網頁設定',
   'settings.subtitle': '調整訓練參數與螢幕校正',
   'settings.distance.title': '觀看距離',
   'settings.distance.desc': '受試者眼睛至螢幕的距離（公分）',
@@ -371,7 +370,7 @@ export const zh = {
   'preset.path.peekaboo': '躲貓貓',
 
   // Credits Page
-  'credits.title': '致謝',
+  'credits.title': '參考來源',
   'credits.subtitle': '參考的開源專案與資源',
   'credits.webgazer.title': 'WebGazer.js',
   'credits.webgazer.desc': '提供基於攝影機的視線追蹤功能，使用機器學習模型估計使用者注視位置。',

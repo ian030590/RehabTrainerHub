@@ -7,7 +7,6 @@ export const en: Record<TranslationKey, string> = {
   'nav.links': 'Related Sites',
   'nav.noUser': 'No User Selected',
   'nav.downloadScores': 'Download Scores',
-  'nav.scoresBackupReminder': 'Records stay in this browser. \nDownload backups regularly.',
   'nav.noScores': 'No saved training scores are available yet.',
 
   // Common Buttons & Actions
@@ -129,7 +128,7 @@ export const en: Record<TranslationKey, string> = {
   'settings.train.wgDesc': 'Automatically track eye movement and provide accuracy score',
   'settings.train.mode': 'Training Mode',
   'settings.tab.crowding': 'Crowding',
-  'settings.title': 'Settings & Calibration',
+  'settings.title': 'Web Settings',
   'settings.subtitle': 'Adjust training parameters and screen calibration',
   'settings.distance.title': 'Viewing Distance',
   'settings.distance.desc': 'Distance from subject eyes to screen (cm)',
@@ -374,7 +373,7 @@ export const en: Record<TranslationKey, string> = {
   'preset.path.peekaboo': 'Peek-a-boo',
 
   // Credits Page
-  'credits.title': 'Credits',
+  'credits.title': 'References',
   'credits.subtitle': 'Referenced open source projects and resources',
   'credits.webgazer.title': 'WebGazer.js',
   'credits.webgazer.desc': 'Provides webcam-based eye tracking using machine learning models to estimate user gaze location.',
