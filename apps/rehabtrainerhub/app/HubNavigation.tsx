@@ -278,6 +278,8 @@ export function HubSiteHeader({
           </span>
         </Link>
 
+        {headerTools}
+
         <button
           className="navbar-toggle"
           onClick={() => setIsMenuOpen((open) => !open)}
@@ -299,8 +301,6 @@ export function HubSiteHeader({
         />
         {menuTools}
       </div>
-
-      {headerTools}
 
       {isMenuOpen && <div className="navbar-overlay" onClick={closeMenu} />}
     </header>
@@ -386,17 +386,18 @@ export function HubShell({ children }: { children: ReactNode }) {
         activeKey={activeKey}
         headerTools={(
           <div className="header-tools">
-            <AuthPanel
-              appName={HUB_NAME}
-              className="home-auth-panel"
-              locale={locale === 'en' ? 'en' : 'zh-TW'}
-            />
             <LanguageSwitch copy={copy.controls} locale={locale} setLocale={setLocale} />
           </div>
         )}
         labels={copy.nav}
         menuTools={(
           <div className="menu-tools">
+            <AuthPanel
+              appName={HUB_NAME}
+              className="home-auth-panel"
+              locale={locale === 'en' ? 'en' : 'zh-TW'}
+            />
+
             <button
               aria-controls="readability-panel"
               aria-expanded={isSettingsOpen}

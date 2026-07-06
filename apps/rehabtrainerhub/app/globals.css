@@ -247,7 +247,7 @@ body > main:not(.home-page) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: clamp(10px, 1.6vw, 24px);
   min-height: 76px;
   padding: 14px max(var(--page-margin), calc((100vw - var(--container-max)) / 2));
   border-bottom: 1px solid rgba(0, 82, 204, 0.2);
@@ -256,16 +256,15 @@ body > main:not(.home-page) {
 }
 
 .site-header-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-width: 0;
+  display: contents;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 12px;
+  order: 1;
+  flex: 0 1 auto;
   min-width: 0;
   color: var(--primary);
   text-decoration: none;
@@ -291,6 +290,10 @@ body > main:not(.home-page) {
   display: block;
 }
 
+.brand > span:last-child {
+  min-width: 0;
+}
+
 .brand strong {
   max-width: 280px;
   color: var(--primary);
@@ -313,14 +316,19 @@ body > main:not(.home-page) {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 24px;
+  gap: clamp(8px, 1.4vw, 24px);
+  order: 2;
+  flex: 1 1 0;
   min-width: 0;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 24px;
+  justify-content: flex-end;
+  gap: 4px clamp(8px, 1.3vw, 24px);
+  flex: 1 1 auto;
+  flex-wrap: wrap;
   min-width: 0;
 }
 
@@ -358,16 +366,21 @@ body > main:not(.home-page) {
   display: flex;
   align-items: center;
   gap: 8px;
+  order: 3;
   flex: 0 0 auto;
 }
 
 .menu-tools {
   display: flex;
   align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .navbar-toggle,
 .navbar-overlay {
+  order: 4;
   display: none;
 }
 
@@ -1400,6 +1413,44 @@ body > main:not(.home-page) {
   display: none;
 }
 
+@media (min-width: 981px) and (max-width: 1180px) {
+  .site-header {
+    gap: 12px;
+    padding-inline: 24px;
+  }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .brand strong {
+    max-width: 220px;
+    font-size: 1.25rem;
+  }
+
+  .brand-local-name {
+    font-size: 0.875rem;
+  }
+
+  .nav-link,
+  .header-actions > a:not(.secondary-action) {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 0.8125rem;
+  }
+
+  .secondary-action.compact,
+  .auth-button,
+  .control-group button {
+    min-height: 40px;
+  }
+
+  .secondary-action.compact,
+  .auth-button {
+    padding-inline: 12px;
+  }
+}
+
 @media (max-width: 980px) {
   .site-header {
     align-items: center;
@@ -1410,8 +1461,16 @@ body > main:not(.home-page) {
   }
 
   .site-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
     flex: 1 1 auto;
-    width: auto;
+    width: 100%;
+  }
+
+  .brand {
+    flex: 1 1 auto;
   }
 
   .navbar-toggle {
@@ -1475,7 +1534,18 @@ body > main:not(.home-page) {
   }
 
   .header-tools {
-    justify-content: flex-end;
+    justify-content: flex-start;
+    width: auto;
+  }
+
+  .header-tools .control-group {
+    width: auto;
+    grid-auto-columns: auto;
+  }
+
+  .menu-tools .home-auth-panel,
+  .menu-tools .auth-panel-actions,
+  .menu-tools .auth-button {
     width: 100%;
   }
 
