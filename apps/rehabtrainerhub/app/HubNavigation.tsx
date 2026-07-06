@@ -21,7 +21,7 @@ import { siteUrls } from './siteUrls';
 export type HubNavKey = 'programs' | 'care' | 'education' | 'links' | 'submit';
 export type HubLocale = 'zh-TW' | 'en';
 type FontScale = 'standard' | 'large' | 'extra';
-type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark' | 'contrast';
 type SectionId = 'programs' | 'care' | 'education';
 type HubNavLabels = Record<HubNavKey, string>;
 
@@ -32,7 +32,7 @@ const storageKeys = {
 } as const;
 
 const fontScales: FontScale[] = ['standard', 'large', 'extra'];
-const themes: Theme[] = ['light', 'dark'];
+const themes: Theme[] = ['light', 'dark', 'contrast'];
 const homeSectionIds: SectionId[] = ['programs', 'care', 'education'];
 
 const defaultLabels: HubNavLabels = {
@@ -79,6 +79,7 @@ const headerContent = {
       themeLabel: '色彩模式',
       light: '淺色',
       dark: '深色',
+      contrast: '高對比',
     },
   },
   en: {
@@ -114,6 +115,7 @@ const headerContent = {
       themeLabel: 'Color mode',
       light: 'Light',
       dark: 'Dark',
+      contrast: 'High contrast',
     },
   },
 } as const;
@@ -155,7 +157,7 @@ function isFontScale(value: string | null): value is FontScale {
 }
 
 function isTheme(value: string | null): value is Theme {
-  return value === 'light' || value === 'dark';
+  return value === 'light' || value === 'dark' || value === 'contrast';
 }
 
 function useStoredSetting<T extends string>(

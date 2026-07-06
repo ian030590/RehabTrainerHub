@@ -74,36 +74,70 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --background: #020617;
-  --background-muted: #020617;
-  --surface: #020617;
-  --surface-white: #202b3d;
-  --surface-bright: #202b3d;
-  --surface-container-lowest: #020617;
-  --surface-container-low: #020617;
-  --surface-container: #020617;
-  --surface-container-high: #303b4c;
-  --surface-container-highest: #8a94a8;
-  --surface-variant: #8a94a8;
-  --surface-dim: #020617;
-  --text-heading: #f6f8fb;
-  --on-background: #f6f8fb;
-  --on-surface: #f6f8fb;
-  --on-surface-variant: #d7e2ff;
-  --primary: #b2c5ff;
-  --primary-container: #8ea8ff;
-  --on-primary: #001848;
-  --secondary: #8af5be;
-  --secondary-container: #8af5be;
-  --on-secondary: #002113;
-  --outline: #aebad0;
-  --outline-variant: #8a94a8;
-  --error-container: #5f2020;
+  --background: #1e1e1e;
+  --background-muted: #242424;
+  --surface: #1e1e1e;
+  --surface-white: #242424;
+  --surface-bright: #242424;
+  --surface-container-lowest: #1a1a1a;
+  --surface-container-low: #2a2a2a;
+  --surface-container: #303030;
+  --surface-container-high: #383838;
+  --surface-container-highest: #555555;
+  --surface-variant: #333333;
+  --surface-dim: #181818;
+  --text-heading: #d0d0d0;
+  --on-background: #c7c7c7;
+  --on-surface: #c7c7c7;
+  --on-surface-variant: #c7c7c7;
+  --primary: #9bbcff;
+  --primary-container: #6f90d8;
+  --on-primary: #061326;
+  --secondary: #90d8ad;
+  --secondary-container: #90d8ad;
+  --on-secondary: #052014;
+  --outline: #9a9a9a;
+  --outline-variant: #909090;
+  --error-container: #4a2624;
   --error: #ffb4ab;
-  --focus: #d7e2ff;
-  --on-primary-fixed-variant: #d7e2ff;
-  --on-tertiary-fixed: #d7e2ff;
-  --on-secondary-container: #8af5be;
+  --focus: #9bbcff;
+  --on-primary-fixed-variant: #a9c5ff;
+  --on-tertiary-fixed: #c7c7c7;
+  --on-secondary-container: #90d8ad;
+}
+
+:root[data-theme="contrast"] {
+  color-scheme: dark;
+  --background: #000000;
+  --background-muted: #000000;
+  --surface: #000000;
+  --surface-white: #000000;
+  --surface-bright: #000000;
+  --surface-container-lowest: #000000;
+  --surface-container-low: #000000;
+  --surface-container: #000000;
+  --surface-container-high: #000000;
+  --surface-container-highest: #ffffff;
+  --surface-variant: #ffffff;
+  --surface-dim: #000000;
+  --text-heading: #ffffff;
+  --on-background: #ffffff;
+  --on-surface: #ffffff;
+  --on-surface-variant: #ffffff;
+  --primary: #ffff00;
+  --primary-container: #ffff00;
+  --on-primary: #000000;
+  --secondary: #ffff00;
+  --secondary-container: #ffff00;
+  --on-secondary: #000000;
+  --outline: #ffffff;
+  --outline-variant: #ffffff;
+  --error-container: #000000;
+  --error: #ffb4ab;
+  --focus: #ffff00;
+  --on-primary-fixed-variant: #ffff00;
+  --on-tertiary-fixed: #ffffff;
+  --on-secondary-container: #ffff00;
 }
 
 :root[data-font-scale="large"] {
@@ -1301,6 +1335,86 @@ body > main:not(.home-page) {
   background: var(--surface-container-lowest);
 }
 
+:root[data-theme="contrast"] .site-header,
+:root[data-theme="contrast"] .brand-mark,
+:root[data-theme="contrast"] .readability-panel,
+:root[data-theme="contrast"] .control-group,
+:root[data-theme="contrast"] .hero,
+:root[data-theme="contrast"] .hero-panel,
+:root[data-theme="contrast"] .hero-device,
+:root[data-theme="contrast"] .device-tile,
+:root[data-theme="contrast"] .hero-checklist,
+:root[data-theme="contrast"] .app-card,
+:root[data-theme="contrast"] .app-icon,
+:root[data-theme="contrast"] .app-points,
+:root[data-theme="contrast"] .care-copy,
+:root[data-theme="contrast"] .feature-card,
+:root[data-theme="contrast"] .education-card,
+:root[data-theme="contrast"] .content-page,
+:root[data-theme="contrast"] .education-list article,
+:root[data-theme="contrast"] .video-status,
+:root[data-theme="contrast"] .video-card,
+:root[data-theme="contrast"] .submission-form,
+:root[data-theme="contrast"] .submission-rules,
+:root[data-theme="contrast"] .submission-type label,
+:root[data-theme="contrast"] .field input,
+:root[data-theme="contrast"] .field textarea,
+:root[data-theme="contrast"] .file-field,
+:root[data-theme="contrast"] .auth-dialog,
+:root[data-theme="contrast"] .auth-dialog input,
+:root[data-theme="contrast"] .auth-dialog select,
+:root[data-theme="contrast"] .auth-fieldset {
+  border: 2px solid var(--outline-variant);
+  box-shadow: none;
+}
+
+:root[data-theme="contrast"] .nav-link:hover,
+:root[data-theme="contrast"] .nav-link.is-active,
+:root[data-theme="contrast"] .header-actions > a:hover,
+:root[data-theme="contrast"] .primary-action,
+:root[data-theme="contrast"] .primary-action:hover,
+:root[data-theme="contrast"] .app-link,
+:root[data-theme="contrast"] .app-link:hover,
+:root[data-theme="contrast"] .app-card-vision .app-link,
+:root[data-theme="contrast"] .app-card-vision .app-link:hover,
+:root[data-theme="contrast"] .auth-button-primary,
+:root[data-theme="contrast"] .auth-button-primary:hover,
+:root[data-theme="contrast"] .control-group button:hover,
+:root[data-theme="contrast"] .control-group button.is-active,
+:root[data-theme="contrast"] .feature-card > span {
+  border-color: var(--primary);
+  color: var(--on-primary);
+  background: var(--primary);
+  box-shadow: none;
+}
+
+:root[data-theme="contrast"] .secondary-action,
+:root[data-theme="contrast"] .text-link,
+:root[data-theme="contrast"] .auth-button,
+:root[data-theme="contrast"] .text-button,
+:root[data-theme="contrast"] .secondary-action:hover,
+:root[data-theme="contrast"] .text-link:hover,
+:root[data-theme="contrast"] .auth-button-secondary:hover,
+:root[data-theme="contrast"] .text-button:hover,
+:root[data-theme="contrast"] .eyebrow.pill,
+:root[data-theme="contrast"] .submission-type label.is-selected {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--surface-white);
+}
+
+:root[data-theme="contrast"] .care-copy blockquote,
+:root[data-theme="contrast"] .video-status.is-error,
+:root[data-theme="contrast"] .submission-status.is-error {
+  border: 2px solid var(--error);
+  background: var(--surface-white);
+}
+
+:root[data-theme="contrast"] .submission-status.is-success {
+  border: 2px solid var(--secondary);
+  background: var(--surface-white);
+}
+
 .auth-dialog-backdrop {
   position: fixed;
   inset: 0;
@@ -1468,6 +1582,23 @@ body > main:not(.home-page) {
 :root[data-theme="dark"] .rehab-footer-meta,
 :root[data-theme="dark"] .rehab-footer a {
   color: var(--outline-variant);
+}
+
+:root[data-theme="contrast"] .rehab-footer {
+  border-top: 2px solid var(--outline-variant);
+  background: var(--surface-white);
+  color: var(--on-surface);
+}
+
+:root[data-theme="contrast"] .rehab-footer strong,
+:root[data-theme="contrast"] .rehab-footer-inner > span,
+:root[data-theme="contrast"] .rehab-footer-meta,
+:root[data-theme="contrast"] .rehab-footer a {
+  color: var(--on-surface);
+}
+
+:root[data-theme="contrast"] .rehab-footer a:hover {
+  color: var(--primary);
 }
 
 .bottom-nav {
