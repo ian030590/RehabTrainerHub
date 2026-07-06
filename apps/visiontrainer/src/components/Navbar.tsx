@@ -27,7 +27,6 @@ export function Navbar() {
       }}
       download={{
         label: t('nav.downloadScores'),
-        backupReminder: t('nav.scoresBackupReminder'),
         noScoresMessage: t('nav.noScores'),
         errorMessage: t('nav.scoresDownloadError'),
         onDownload: () => downloadAllTrainingRecordsCsv(t),

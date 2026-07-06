@@ -41,7 +41,6 @@ export function Navbar() {
       }}
       download={{
         label: t('nav.downloadScores'),
-        backupReminder: t('nav.scoresBackupReminder'),
         noScoresMessage: t('nav.noScores'),
         errorMessage: lang === 'en'
           ? 'Unable to read saved training scores. Please try again.'

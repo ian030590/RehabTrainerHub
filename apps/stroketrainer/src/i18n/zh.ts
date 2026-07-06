@@ -6,7 +6,6 @@ export const zh = {
   'nav.noUser': '未選擇使用者',
   'nav.downloadScores': '下載成績',
   'nav.noScores': '目前沒有可下載的訓練成績。',
-  'nav.scoresBackupReminder': '',
 
   // Common Buttons & Actions
   'btn.cancel': '取消',

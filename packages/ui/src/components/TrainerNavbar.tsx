@@ -26,7 +26,6 @@ export interface TrainerNavbarProps {
   };
   download: {
     label: string;
-    backupReminder: string;
     noScoresMessage: string;
     errorMessage: string;
     onDownload: () => Promise<boolean>;
@@ -129,7 +128,6 @@ export function TrainerNavbar({
               >
                 {download.label}
               </button>
-              <span className="navbar-backup-reminder">{download.backupReminder}</span>
             </div>
           </div>
         </div>

@@ -8,7 +8,6 @@ export const en: Record<TranslationKey, string> = {
   'nav.noUser': 'No User Selected',
   'nav.downloadScores': 'Download Scores',
   'nav.noScores': 'No saved training scores are available yet.',
-  'nav.scoresBackupReminder': '',
 
   // Common Buttons & Actions
   'btn.cancel': 'Cancel',
