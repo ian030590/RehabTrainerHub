@@ -3,13 +3,32 @@
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { useHubReadability } from '../HubNavigation';
+import type { HubLocale } from '../i18n/types';
 
 type SubmissionType = 'idea' | 'demo';
 type SubmissionStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 const maxHtmlBytes = 180 * 1024;
 
-const formCopy = {
+type FormCopyEntry = {
+  typeLabel: string;
+  ideaType: string;
+  demoType: string;
+  title: string;
+  name: string;
+  contact: string;
+  ideaText: string;
+  description: string;
+  htmlFile: string;
+  fileHint: string;
+  fileTooLarge: string;
+  submit: string;
+  submitting: string;
+  success: string;
+  fallbackError: string;
+};
+
+const formCopy: Record<HubLocale, FormCopyEntry> = {
   'zh-TW': {
     typeLabel: '投稿類型',
     ideaType: '文字說明',
@@ -44,7 +63,7 @@ const formCopy = {
     success: 'The submission has been sent. HTML submissions are forwarded only after passing the safety check.',
     fallbackError: 'The submission failed. Please try again later.',
   },
-} as const;
+};
 
 export function SubmissionForm() {
   const { locale } = useHubReadability();

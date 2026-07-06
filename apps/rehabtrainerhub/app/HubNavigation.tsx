@@ -17,9 +17,11 @@ import {
 } from 'react';
 import { HUB_LOCAL_NAME, HUB_NAME } from './hubBrand';
 import { siteUrls } from './siteUrls';
+import { zhTW, en as enTranslations } from './i18n';
+import type { HubLocale } from './i18n/types';
 
 export type HubNavKey = 'programs' | 'care' | 'education' | 'links' | 'submit';
-export type HubLocale = 'zh-TW' | 'en';
+export type { HubLocale };
 type FontScale = 'standard' | 'large' | 'extra';
 type Theme = 'light' | 'dark' | 'contrast';
 type SectionId = 'programs' | 'care' | 'education';
@@ -51,74 +53,10 @@ const navItems: Array<{ key: HubNavKey; href: string }> = [
   { key: 'submit', href: '/collaborate/' },
 ];
 
-const headerContent = {
-  'zh-TW': {
-    documentLanguage: 'zh-Hant-TW',
-    navigationLabel: 'Rehab Trainer Hub 導覽',
-    toggleMenuLabel: '切換選單',
-    nav: defaultLabels,
-    footer: {
-      hub: '首頁',
-      privacy: '隱私權政策',
-      repo: 'GitHub',
-      disclaimer: '本平台用於居家復健練習與流程原型展示，不提供醫療診斷或治療建議。使用前請諮詢醫師或治療師。',
-      rights: '保留所有權利。',
-      navigation: '頁尾導覽',
-    },
-    controls: {
-      settingsLabel: '閱讀設定',
-      settingsButton: '閱讀設定',
-      settingsClose: '關閉設定',
-      languageLabel: '介面語言',
-      zh: '繁中',
-      en: 'EN',
-      fontLabel: '字體大小',
-      standard: 'A',
-      large: 'A+',
-      extra: 'A++',
-      themeLabel: '色彩模式',
-      light: '淺色',
-      dark: '深色',
-      contrast: '高對比',
-    },
-  },
-  en: {
-    documentLanguage: 'en',
-    navigationLabel: 'Rehab Trainer Hub navigation',
-    toggleMenuLabel: 'Toggle menu',
-    nav: {
-      programs: 'Rehab Tools',
-      care: 'Safety Notes',
-      education: 'Education',
-      links: 'Education Videos',
-      submit: 'Collaboration',
-    },
-    footer: {
-      hub: 'Home',
-      privacy: 'Privacy',
-      repo: 'GitHub',
-      disclaimer: 'For home rehabilitation practice and workflow prototyping, not medical advice. Consult a physician or therapist before use.',
-      rights: 'All rights reserved.',
-      navigation: 'Footer navigation',
-    },
-    controls: {
-      settingsLabel: 'Reading settings',
-      settingsButton: 'Reading',
-      settingsClose: 'Close settings',
-      languageLabel: 'Interface language',
-      zh: '繁中',
-      en: 'EN',
-      fontLabel: 'Font size',
-      standard: 'A',
-      large: 'A+',
-      extra: 'A++',
-      themeLabel: 'Color mode',
-      light: 'Light',
-      dark: 'Dark',
-      contrast: 'High contrast',
-    },
-  },
-} as const;
+const headerContent: { [K in HubLocale]: typeof zhTW.hub | typeof enTranslations.hub } = {
+  'zh-TW': zhTW.hub,
+  en: enTranslations.hub,
+};
 
 interface HubNavigationProps {
   activeKey?: HubNavKey;
