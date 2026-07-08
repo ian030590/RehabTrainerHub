@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- House roof -->
+  <path d="M100 18 L168 76 L168 72 L158 72 L158 40 L142 40 L142 60 L100 22 Z"
+        fill="#1A5C6B"/>
+  <!-- Roof peak -->
+  <path d="M100 18 L168 76 L32 76 Z"
+        stroke="#1A5C6B" stroke-width="6" stroke-linejoin="round" fill="#1A5C6B"/>
+
+  <!-- House body -->
+  <rect x="42" y="74" width="116" height="72" rx="4" fill="white" stroke="#1A5C6B" stroke-width="5"/>
+
+  <!-- Window (grid 2x2) -->
+  <rect x="86" y="84" width="28" height="28" rx="3" fill="#1A5C6B" opacity="0.15" stroke="#1A5C6B" stroke-width="2"/>
+  <line x1="100" y1="84" x2="100" y2="112" stroke="#1A5C6B" stroke-width="2"/>
+  <line x1="86" y1="98" x2="114" y2="98" stroke="#1A5C6B" stroke-width="2"/>
+
+  <!-- Person figure (left side of house, raised arm) -->
+  <circle cx="58" cy="58" r="12" fill="#1A5C6B"/>
+  <path d="M50 72 Q58 90 66 72" stroke="#1A5C6B" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M50 76 L40 60" stroke="#1A5C6B" stroke-width="6" stroke-linecap="round"/>
+  <path d="M66 76 L74 62" stroke="#1A5C6B" stroke-width="6" stroke-linecap="round"/>
+  <path d="M54 90 L50 108" stroke="#1A5C6B" stroke-width="6" stroke-linecap="round"/>
+  <path d="M62 90 L66 108" stroke="#1A5C6B" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- App icons inside house -->
+  <!-- Brain icon (teal bg) -->
+  <rect x="48" y="118" width="30" height="24" rx="5" fill="#5AABB8" opacity="0.85"/>
+  <path d="M57 130 C57 126, 60 124, 63 125 C66 126, 67 129, 65 131 C67 133, 66 136, 63 135 C60 136, 57 134, 57 130Z"
+        fill="white" stroke="white" stroke-width="0.5"/>
+
+  <!-- Eye icon (orange bg) -->
+  <rect x="83" y="118" width="30" height="24" rx="5" fill="#C84B0C" opacity="0.85"/>
+  <ellipse cx="98" cy="130" rx="9" ry="6" fill="none" stroke="white" stroke-width="2"/>
+  <circle cx="98" cy="130" r="3" fill="white"/>
+
+  <!-- More icon (...) placeholder bg -->
+  <rect x="118" y="118" width="30" height="24" rx="5" fill="#9ABA7A" opacity="0.55"/>
+  <circle cx="126" cy="130" r="2.5" fill="#1A5C6B"/>
+  <circle cx="133" cy="130" r="2.5" fill="#1A5C6B"/>
+  <circle cx="140" cy="130" r="2.5" fill="#1A5C6B"/>
+
+  <!-- Curved arm / embrace shape at bottom -->
+  <path d="M30 140 C20 120, 22 90, 42 76"
+        stroke="#1A5C6B" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <path d="M170 140 C180 120, 178 90, 158 76"
+        stroke="#1A5C6B" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Hand at bottom center -->
+  <path d="M30 140 Q100 180 170 140"
+        stroke="#1A5C6B" stroke-width="8" stroke-linecap="round" fill="none"/>
+</svg>

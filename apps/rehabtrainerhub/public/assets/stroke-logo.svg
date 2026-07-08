@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 300" fill="none">
+  <!-- Brain left hemisphere outline -->
+  <path d="M90 175
+           C70 175, 55 160, 55 143
+           C55 130, 62 120, 73 115
+           C68 108, 66 100, 70 93
+           C74 86, 82 82, 90 83
+           C90 74, 96 67, 105 65
+           C114 63, 122 67, 126 74
+           C132 68, 141 65, 150 67
+           C159 69, 165 76, 166 85
+           C172 87, 176 93, 175 100
+           C180 103, 183 109, 182 116
+           C187 120, 190 127, 188 135
+           C192 140, 192 148, 188 154
+           C183 161, 175 165, 166 164
+           C160 170, 152 175, 143 175
+           Z"
+        stroke="#5AABB8" stroke-width="7" stroke-linejoin="round" fill="none"/>
+
+  <!-- Brain wrinkle lines left hemisphere -->
+  <path d="M100 95 C108 90, 118 92, 122 100 C126 108, 122 118, 114 122"
+        stroke="#5AABB8" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M80 120 C88 112, 100 112, 106 120 C112 128, 108 140, 98 143"
+        stroke="#5AABB8" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M128 130 C136 124, 148 126, 152 135"
+        stroke="#5AABB8" stroke-width="5" stroke-linecap="round" fill="none"/>
+
+  <!-- Divider line between brain hemispheres -->
+  <line x1="176" y1="85" x2="200" y2="175" stroke="#5AABB8" stroke-width="5" stroke-dasharray="6,4"/>
+
+  <!-- Person figure - right side of brain -->
+  <!-- Head -->
+  <circle cx="252" cy="95" r="18" fill="#F5A623"/>
+  <!-- Body gradient torso -->
+  <path d="M235 115 L245 170 L260 170 L270 115 Z"
+        fill="url(#orangeGrad)"/>
+  <!-- Left arm raised -->
+  <path d="M235 125 L210 100" stroke="#F5A623" stroke-width="10" stroke-linecap="round"/>
+  <!-- Right arm raised -->
+  <path d="M270 125 L295 100" stroke="#F9C74F" stroke-width="10" stroke-linecap="round"/>
+  <!-- Left leg -->
+  <path d="M246 170 L236 200" stroke="#F5A623" stroke-width="10" stroke-linecap="round"/>
+  <!-- Right leg -->
+  <path d="M258 170 L268 200" stroke="#F9C74F" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Background leaf/wing shapes behind person -->
+  <path d="M220 130 C210 115, 205 95, 215 82 C225 70, 248 70, 252 82"
+        fill="#5AABB8" opacity="0.3"/>
+  <path d="M283 130 C293 115, 298 95, 288 82 C278 70, 255 70, 252 82"
+        fill="#F5A623" opacity="0.3"/>
+
+  <!-- Sparkle star -->
+  <path d="M305 55 L308 66 L320 69 L308 72 L305 83 L302 72 L290 69 L302 66 Z"
+        fill="#F9C74F"/>
+
+  <!-- Decorative dots -->
+  <circle cx="332" cy="50" r="9" fill="#F5A623"/>
+  <circle cx="356" cy="36" r="7" fill="#9ABA7A"/>
+  <circle cx="318" cy="32" r="6" fill="#5AABB8"/>
+
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="orangeGrad" x1="235" y1="115" x2="270" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#5AABB8"/>
+      <stop offset="100%" stop-color="#F5A623"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Text: Stroke -->
+  <text x="22" y="268" font-family="'Segoe UI', Arial, sans-serif" font-size="54"
+        font-weight="700" fill="#1A3A5C" letter-spacing="-1">Stroke</text>
+  <!-- Text: Trainer -->
+  <text x="202" y="268" font-family="'Segoe UI', Arial, sans-serif" font-size="54"
+        font-weight="700" fill="#F5A623" letter-spacing="-1"> Trainer</text>
+</svg>

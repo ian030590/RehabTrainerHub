@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" fill="none">
+  <!-- Eye outline - upper lid -->
+  <path d="M40 140 C80 80, 160 50, 240 60 C280 65, 320 80, 360 140"
+        stroke="#5AABB8" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <!-- Eye outline - lower lid -->
+  <path d="M40 140 C80 185, 155 210, 230 200 C270 194, 320 178, 360 140"
+        stroke="#5AABB8" stroke-width="14" stroke-linecap="round" fill="none"/>
+
+  <!-- Eyeball outer circle -->
+  <circle cx="200" cy="133" r="52" fill="#5AABB8"/>
+  <!-- Iris -->
+  <circle cx="200" cy="133" r="36" fill="#2E7D96"/>
+  <!-- Pupil -->
+  <circle cx="200" cy="133" r="20" fill="#1A3A5C"/>
+  <!-- Highlight -->
+  <circle cx="212" cy="122" r="7" fill="white"/>
+
+  <!-- Person figure inside eye - body -->
+  <circle cx="230" cy="108" r="8" fill="#5AABB8"/>
+  <!-- Person torso / arms raised -->
+  <path d="M222 116 Q230 128 238 116" stroke="#5AABB8" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- Left arm up -->
+  <path d="M222 116 L215 104" stroke="#5AABB8" stroke-width="5" stroke-linecap="round"/>
+  <!-- Right arm up -->
+  <path d="M238 116 L248 106" stroke="#5AABB8" stroke-width="5" stroke-linecap="round"/>
+  <!-- Legs -->
+  <path d="M226 128 L222 142" stroke="#5AABB8" stroke-width="5" stroke-linecap="round"/>
+  <path d="M234 128 L238 142" stroke="#5AABB8" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Sparkle star -->
+  <path d="M280 52 L283 62 L293 65 L283 68 L280 78 L277 68 L267 65 L277 62 Z"
+        fill="#F5C842"/>
+
+  <!-- Decorative dots -->
+  <circle cx="308" cy="48" r="8" fill="#F5A623"/>
+  <circle cx="330" cy="35" r="6" fill="#9ABA7A"/>
+  <circle cx="295" cy="30" r="5" fill="#5AABB8"/>
+
+  <!-- Text: Vision -->
+  <text x="30" y="248" font-family="'Segoe UI', Arial, sans-serif" font-size="52"
+        font-weight="700" fill="#1A3A5C" letter-spacing="-1">Vision</text>
+  <!-- Text: Trainer -->
+  <text x="183" y="248" font-family="'Segoe UI', Arial, sans-serif" font-size="52"
+        font-weight="700" fill="#5AABB8" letter-spacing="-1"> Trainer</text>
+</svg>

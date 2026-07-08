@@ -210,7 +210,7 @@ export function HubSiteHeader({
       <div className="site-header-inner">
         <Link className="brand" href="/" onClick={closeMenu}>
           <span className="brand-mark" aria-hidden="true">
-            <Image src="/rehabtrainerhub.png" alt="" width={44} height={44} priority />
+            <Image src="/rehabtrainerhub.svg" alt="" width={44} height={44} priority />
           </span>
           <span>
             <strong>{HUB_NAME}</strong>

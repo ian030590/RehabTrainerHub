@@ -18,11 +18,11 @@ const content: { [K in HubLocale]: typeof zhTW.home | typeof enTranslations.home
 const appAssets = {
   stroke: {
     href: siteUrls.stroke,
-    image: '/assets/stroke-logo.png',
+    image: '/assets/stroke-logo.svg',
   },
   vision: {
     href: siteUrls.vision,
-    image: '/assets/vision-logo.png',
+    image: '/assets/vision-logo.svg',
   },
 } as const;
 
