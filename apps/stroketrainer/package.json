@@ -23,7 +23,7 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.1",
     "recharts": "^3.8.1",
-    "three": "^0.184.0",
+    "three": "^0.185.1",
     "vosk-browser": "^0.0.8"
   },
   "devDependencies": {
