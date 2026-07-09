@@ -41,7 +41,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.1",
-    "recharts": "^3.8.1",
+    "recharts": "^3.9.2",
     "three": "^0.184.0",
     "vosk-browser": "^0.0.8"
   },
