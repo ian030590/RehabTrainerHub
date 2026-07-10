@@ -6,9 +6,9 @@ export const siteDescription =
   '居家復健網 Rehab Trainer Hub 提供職能治療師設計的居家復健工具，整合中風復健、視覺訓練、衛教資訊與衛教影片。';
 
 export const seoImage = {
-  url: '/rehabtrainerhub.png',
-  width: 1254,
-  height: 1254,
+  url: '/rehabtrainerhub.svg',
+  width: 840,
+  height: 840,
   alt: `${HUB_FULL_NAME} logo`,
 } as const;
 

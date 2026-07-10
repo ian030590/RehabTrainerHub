@@ -1,6 +1,6 @@
 # Vision Trainer
 
-![Vision Trainer logo](./public/assets/logo2.png)
+![Vision Trainer logo](./public/assets/logo.svg)
 
 Vision Trainer is a browser-based visual training and assessment app built with React, TypeScript, Vite, jsPsych, PixiJS, Three.js, and WebGazer.
 

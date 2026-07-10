@@ -22,8 +22,8 @@ export const metadata: Metadata = {
   applicationName: HUB_FULL_NAME,
   keywords: ['居家復健', '中風復健', '視覺訓練', '職能治療', '衛教影片', 'Rehab Trainer Hub'],
   icons: {
-    icon: '/rehabtrainerhub.png',
-    apple: '/rehabtrainerhub.png',
+    icon: '/rehabtrainerhub.svg',
+    apple: '/rehabtrainerhub.svg',
   },
   verification: {
     google: '_ZdVR2kZ9xg_TnPtv5tLda3-fJWHLArBNDMpgE5NkZA',

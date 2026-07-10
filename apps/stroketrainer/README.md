@@ -1,4 +1,4 @@
-![StrokeTrainerLogo](./public/assets/logo2.png)
+![StrokeTrainerLogo](./public/assets/logo.svg)
 
 # StrokeTrainer
 
