@@ -332,6 +332,10 @@ export function HubShell({ children }: { children: ReactNode }) {
         labels={copy.nav}
         menuTools={(
           <div className="menu-tools">
+            <div className="menu-language-switch">
+              <LanguageSwitch copy={copy.controls} locale={locale} setLocale={setLocale} />
+            </div>
+
             <AuthPanel
               appName={HUB_NAME}
               className="home-auth-panel"

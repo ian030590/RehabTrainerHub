@@ -3,12 +3,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useHubReadability } from './HubNavigation';
-import { HUB_NAME } from './hubBrand';
 import { siteUrls } from './siteUrls';
 import { zhTW, en as enTranslations } from './i18n';
 import type { HubLocale } from './i18n/types';
 
-type IconName = 'arrow' | 'check' | 'panel';
+type IconName = 'arrow' | 'check';
 
 const content: { [K in HubLocale]: typeof zhTW.home | typeof enTranslations.home } = {
   'zh-TW': zhTW.home,
@@ -27,15 +26,6 @@ const appAssets = {
 } as const;
 
 function Icon({ name, className }: { name: IconName; className?: string }) {
-  if (name === 'panel') {
-    return (
-      <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
-        <path d="M7 9h10M7 13h4m3 0h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
   if (name === 'check') {
     return (
       <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
@@ -74,31 +64,14 @@ export function ReadableHome() {
           </div>
 
           <div className="hero-panel" aria-label={copy.hero.visualLabel}>
-            <div className="hero-device">
-              <div className="device-topbar" aria-hidden="true">
-                <Icon className="icon-sm" name="panel" />
-                <span>{HUB_NAME}</span>
-              </div>
-              <div className="device-content">
-                {copy.apps.map((app) => {
-                  const asset = appAssets[app.id];
-                  return (
-                    <div className={`device-tile device-tile-${app.id}`} key={app.id}>
-                      <Image className="device-logo" src={asset.image} alt={app.logoAlt} width={96} height={64} />
-                      <span>{app.localTitle}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="hero-checklist">
-                {copy.hero.checklist.map((item) => (
-                  <span key={item}>
-                    <Icon className="check-icon" name="check" />
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <Image
+              className="hero-illustration"
+              src="/assets/hero-rehab-training.svg"
+              alt=""
+              width={1200}
+              height={620}
+              priority
+            />
           </div>
         </div>
       </section>

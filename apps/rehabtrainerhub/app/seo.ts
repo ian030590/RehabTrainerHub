@@ -3,7 +3,7 @@ import { HUB_FULL_NAME, HUB_LOCAL_NAME, HUB_NAME } from './hubBrand';
 import { siteUrls } from './siteUrls';
 
 export const siteDescription =
-  '居家復健網 Rehab Trainer Hub 提供職能治療師設計的居家復健工具，整合中風復健、視覺訓練、衛教資訊與衛教影片。';
+  '居家訓練網 Rehab Trainer Hub 提供職能治療師設計的居家訓練工具，整合中風復健、視覺訓練、衛教資訊與衛教影片。';
 
 export const seoImage = {
   url: '/rehabtrainerhub.svg',
@@ -79,6 +79,11 @@ export const organizationJsonLd = {
   name: HUB_FULL_NAME,
   alternateName: [HUB_LOCAL_NAME, HUB_NAME],
   url: siteUrls.hub,
-  logo: `${siteUrls.hub}${seoImage.url}`,
+  logo: {
+    '@type': 'ImageObject',
+    url: `${siteUrls.hub}${seoImage.url}`,
+    width: seoImage.width,
+    height: seoImage.height,
+  },
   description: siteDescription,
 };

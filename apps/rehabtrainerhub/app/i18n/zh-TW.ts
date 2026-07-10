@@ -39,12 +39,12 @@ export const zhTW = {
   },
   home: {
     documentLanguage: 'zh-Hant-TW',
-    brandSubtitle: '居家復健入口',
+    brandSubtitle: '居家訓練入口',
     navigationLabel: `${HUB_NAME} 導覽`,
     hero: {
-      eyebrow: '居家復健入口',
-      title: '職能治療師開發的居家復健工具',
-      body: '透過網頁，在家中使用電腦、手機或平板進行居家復健練習。請在治療師的指導下使用。',
+      eyebrow: '居家訓練入口',
+      title: '職能治療師開發的居家訓練工具',
+      body: '透過網頁，在家中使用電腦、手機或平板進行居家訓練練習。請在治療師的指導下使用。',
       primaryAction: '選擇工具',
       secondaryAction: '查看安全提醒',
       visualLabel: `${HUB_NAME} 工具選擇示意`,
