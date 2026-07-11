@@ -17,6 +17,9 @@ import {
   CAL_BAR_LENGTH_PX,
   CARD_WIDTH_MM,
   CARD_HEIGHT_MM,
+  DEFAULT_UI_FONT_SIZE_PX,
+  MAX_UI_FONT_SIZE_PX,
+  MIN_UI_FONT_SIZE_PX,
 } from '../../utils/settings';
 import { pixelFromMillimeter } from '../../utils/spatialUtils';
 
@@ -57,6 +60,13 @@ export function SettingsPage() {
 /* ── General Tab ── */
 function GeneralTab({ refresh }: { refresh: () => void }) {
   const { t, lang, setLang } = useT();
+  const uiFontSizePx = getSetting('uiFontSizePx');
+  const uiFontBold = getSetting('uiFontBold');
+  const setUiFontSize = (nextSizePx: number) => {
+    const clampedSizePx = Math.min(MAX_UI_FONT_SIZE_PX, Math.max(MIN_UI_FONT_SIZE_PX, nextSizePx));
+    setSetting('uiFontSizePx', clampedSizePx);
+    refresh();
+  };
 
   return (
     <div className="fade-in">
@@ -78,6 +88,57 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
             onClick={() => { setLang('en'); refresh(); }}
           >
             {lang === 'zh' ? '英文' : 'English'}
+          </button>
+        </div>
+      </div>
+
+      {/* UI Typography */}
+      <div className="setting-row">
+        <div className="setting-info">
+          <h3>{t('settings.fontSize.title')}</h3>
+          <p>
+            {t('settings.fontSize.desc')}<br />
+            {t('settings.fontBold.desc')}
+          </p>
+        </div>
+        <div className="font-setting-control typography-setting-control">
+          <button
+            type="button"
+            className="btn btn-sm btn-secondary"
+            disabled={uiFontSizePx <= MIN_UI_FONT_SIZE_PX}
+            aria-label={t('settings.fontSize.decrease')}
+            onClick={() => setUiFontSize(uiFontSizePx - 1)}
+          >
+            {t('settings.fontSize.decrease')}
+          </button>
+          <span className="setting-value">
+            {t('settings.fontSize.value', { value: uiFontSizePx })}
+          </span>
+          <button
+            type="button"
+            className="btn btn-sm btn-secondary"
+            disabled={uiFontSizePx >= MAX_UI_FONT_SIZE_PX}
+            aria-label={t('settings.fontSize.increase')}
+            onClick={() => setUiFontSize(uiFontSizePx + 1)}
+          >
+            {t('settings.fontSize.increase')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            onClick={() => setUiFontSize(DEFAULT_UI_FONT_SIZE_PX)}
+          >
+            {t('settings.fontSize.reset')}
+          </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${uiFontBold ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => {
+              setSetting('uiFontBold', !uiFontBold);
+              refresh();
+            }}
+          >
+            {uiFontBold ? t('settings.fontBold.on') : t('settings.fontBold.off')}
           </button>
         </div>
       </div>
@@ -427,7 +488,7 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
           <h3>{t('settings.wg.title')}</h3>
           <p>{t('settings.wg.desc')}</p>
         </div>
-        <span className="setting-value" style={{ fontSize: 14 }}>
+        <span className="setting-value">
           {calibratedAt ? new Date(calibratedAt).toLocaleString() : t('settings.wg.notCalibrated')}
         </span>
       </div>
@@ -517,7 +578,7 @@ function GammaTab({ refresh }: { refresh: () => void }) {
         <GammaCheckerboard gammaVal={gammaVal} size={100} />
       </div>
 
-      <div style={{ marginTop: 20, fontSize: 18, fontWeight: 700, color: 'var(--accent)' }}>
+      <div className="setting-value" style={{ marginTop: 20 }}>
         {t('settings.tab.gamma')}: {gammaVal.toFixed(2)}
       </div>
 
@@ -601,7 +662,7 @@ function CrowdingTab({ refresh }: { refresh: () => void }) {
           <p>{t('settings.crowd.typeDesc')}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span className="setting-value" style={{ fontSize: 14 }}>
+          <span className="setting-value">
             {crowdTypes[getSetting('crowdingType')]}
           </span>
           <button
@@ -622,7 +683,7 @@ function CrowdingTab({ refresh }: { refresh: () => void }) {
           <p>{t('settings.crowd.distDesc')}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span className="setting-value" style={{ fontSize: 14 }}>
+          <span className="setting-value">
             {distTypes[getSetting('crowdingDistanceType')]}
           </span>
           <button

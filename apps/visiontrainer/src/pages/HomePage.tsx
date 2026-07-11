@@ -580,7 +580,7 @@ export function HomePage() {
                     accept="image/*"
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => handleBackgroundImageChange(e.target.files?.[0])}
-                    style={{ fontSize: 12, width: '100%' }}
+                    style={{ width: '100%' }}
                   />
                   {oculomotorBackgroundImage && (
                     <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setOculomotorBackgroundImage(''); }}>
@@ -595,7 +595,7 @@ export function HomePage() {
                     accept="audio/*"
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => handleAudioChange(e.target.files?.[0])}
-                    style={{ fontSize: 12, width: '100%' }}
+                    style={{ width: '100%' }}
                   />
                   {oculomotorAudio && (
                     <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setOculomotorAudio(''); }}>
@@ -626,7 +626,7 @@ export function HomePage() {
               <label className="diff-btn" style={{ cursor: 'pointer', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span className="diff-btn-label">{t('settings.train.wgToggle')}</span>
-                  <span className="diff-btn-desc" style={{ fontSize: '0.85em' }}>{t('settings.train.wgDesc')}</span>
+                  <span className="diff-btn-desc">{t('settings.train.wgDesc')}</span>
                 </div>
                 <input
                   type="checkbox"
@@ -863,7 +863,7 @@ export function HomePage() {
                     onChange={(e) => setReadingContrast(parseFloat(e.target.value))}
                     style={{ width: '100%', marginTop: 'auto' }}
                   />
-                  <div style={{ textAlign: 'center', fontSize: 12 }}>{readingContrast.toFixed(1)}</div>
+                  <div className="config-summary">{readingContrast.toFixed(1)}</div>
                 </label>
               </div>
             </div>

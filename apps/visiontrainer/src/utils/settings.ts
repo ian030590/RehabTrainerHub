@@ -17,6 +17,9 @@ export const CAL_BAR_LENGTH_PX = 700;
 export const APP_VERSION = '3.0.0';
 export const STORAGE_PREFIX = 'vision_trainer_';
 export const APP_SETTINGS_CHANGED_EVENT = 'vision-trainer-settings-changed';
+export const DEFAULT_UI_FONT_SIZE_PX = 18;
+export const MIN_UI_FONT_SIZE_PX = 14;
+export const MAX_UI_FONT_SIZE_PX = 30;
 
 export const DRIVING_DURATION_MIN_SEC = 80;
 export const DRIVING_DURATION_MAX_SEC = 240;
@@ -65,6 +68,8 @@ export interface AppSettings {
   drivingRedFlashEnabled: boolean;
   drivingDifficulty: 'beginner' | 'intermediate' | 'advanced';
   drivingControlMode: DrivingControlMode;
+  uiFontSizePx: number;
+  uiFontBold: boolean;
 }
 
 interface SettingMeta<T> {
@@ -115,6 +120,8 @@ const META: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> } = {
   drivingRedFlashEnabled: { dflt: true },
   drivingDifficulty: { dflt: 'beginner' },
   drivingControlMode: { dflt: 'arrow' },
+  uiFontSizePx: { dflt: DEFAULT_UI_FONT_SIZE_PX, min: MIN_UI_FONT_SIZE_PX, max: MAX_UI_FONT_SIZE_PX },
+  uiFontBold: { dflt: false },
 };
 
 function storageKey(name: string): string {

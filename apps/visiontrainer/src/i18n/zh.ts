@@ -151,6 +151,15 @@ export const zh = {
   'settings.prefix.placeholder': '輸入前綴',
   'settings.language.title': '語言',
   'settings.language.desc': '切換介面顯示語言',
+  'settings.fontSize.title': '介面字體大小',
+  'settings.fontSize.desc': '調整各類 UI 顯示文字的字體大小',
+  'settings.fontSize.value': '{value}px',
+  'settings.fontSize.decrease': '字體變小',
+  'settings.fontSize.increase': '字體變大',
+  'settings.fontSize.reset': '重設',
+  'settings.fontBold.desc': '將各類 UI 顯示文字改為粗體',
+  'settings.fontBold.on': '✓ 已開啟',
+  'settings.fontBold.off': '✗ 已關閉',
 
   // Calibration
   'settings.cal.rulerMode': '尺規校正',

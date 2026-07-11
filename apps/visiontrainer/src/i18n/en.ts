@@ -153,6 +153,15 @@ export const en: Record<TranslationKey, string> = {
   'settings.prefix.placeholder': 'Enter prefix',
   'settings.language.title': 'Language (語言)',
   'settings.language.desc': 'Switch interface language',
+  'settings.fontSize.title': 'Interface Font Size',
+  'settings.fontSize.desc': 'Adjust UI display text size',
+  'settings.fontSize.value': '{value}px',
+  'settings.fontSize.decrease': 'Decrease Font',
+  'settings.fontSize.increase': 'Increase Font',
+  'settings.fontSize.reset': 'Reset',
+  'settings.fontBold.desc': 'Use bold text for UI display text',
+  'settings.fontBold.on': '✓ Enabled',
+  'settings.fontBold.off': '✗ Disabled',
 
   // Calibration
   'settings.cal.rulerMode': 'Ruler Calibration',

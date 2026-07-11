@@ -261,7 +261,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
 }
 
 .app-loading-text {
-  font-size: 15px;
+  font-size: calc(15px * var(--ui-font-scale, 1));
   font-weight: var(--fw-bold, 700);
 }
 
@@ -375,7 +375,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   display: block;
   margin-bottom: 12px;
   color: var(--text-primary);
-  font-size: 24px;
+  font-size: calc(24px * var(--ui-font-scale, 1));
   font-weight: var(--fw-bold, 700);
   letter-spacing: 0;
 }
@@ -383,7 +383,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
 .card-desc {
   display: block;
   color: var(--text-secondary);
-  font-size: 16px;
+  font-size: calc(16px * var(--ui-font-scale, 1));
   line-height: 1.5;
 }
 
@@ -396,7 +396,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   border-radius: var(--radius-m);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: var(--accent);
-  font-size: 22px;
+  font-size: calc(22px * var(--ui-font-scale, 1));
   font-weight: var(--fw-bold, 700);
 }
 
@@ -406,7 +406,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   gap: 8px;
   margin-top: 16px;
   color: var(--accent);
-  font-size: 16px;
+  font-size: calc(16px * var(--ui-font-scale, 1));
   font-weight: var(--fw-bold, 700);
 }
 
@@ -423,7 +423,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   color: var(--text-primary);
   cursor: pointer;
   font-family: var(--font-family);
-  font-size: 16px;
+  font-size: calc(16px * var(--ui-font-scale, 1));
   font-weight: var(--fw-bold, 700);
   text-decoration: none;
   transition: all var(--transition-fast);
@@ -486,13 +486,13 @@ body[data-ui-font-bold="true"] .app-layout :where(
   min-height: 40px;
   padding: 8px 16px;
   border-radius: var(--radius-m);
-  font-size: 14px;
+  font-size: calc(14px * var(--ui-font-scale, 1));
 }
 
 .btn-lg {
   min-height: 56px;
   padding: 16px 32px;
-  font-size: 18px;
+  font-size: calc(18px * var(--ui-font-scale, 1));
 }
 
 .input {
@@ -504,7 +504,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   color: var(--text-primary);
   outline: none;
   font-family: var(--font-family);
-  font-size: 14px;
+  font-size: calc(14px * var(--ui-font-scale, 1));
   transition: border-color var(--transition-fast);
 }
 
@@ -520,7 +520,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   display: block;
   margin-bottom: 6px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
   font-weight: var(--fw-bold, 700);
 }
 
@@ -546,7 +546,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   background: var(--bg-card);
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 16px;
+  font-size: calc(16px * var(--ui-font-scale, 1));
   font-weight: var(--fw-medium, 600);
   text-align: center;
   text-decoration: none;
@@ -580,23 +580,46 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
 .setting-info h3 {
   margin-bottom: 2px;
-  font-size: 14px;
+  font-size: calc(14px * var(--ui-font-scale, 1));
   font-weight: var(--fw-bold, 700);
 }
 
 .setting-info p {
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
 }
 
 .setting-value {
   color: var(--accent);
-  font-size: 18px;
+  font-size: calc(18px * var(--ui-font-scale, 1));
   font-weight: var(--fw-bold, 700);
+}
+
+.config-label,
+.config-summary,
+.number-preset-input::placeholder,
+.diff-btn-desc {
+  font-size: calc(12px * var(--ui-font-scale, 1));
+}
+
+.color-field,
+.shape-btn,
+.number-preset-input {
+  font-size: calc(14px * var(--ui-font-scale, 1));
+}
+
+.diff-btn-label,
+.number-preset-button {
+  font-size: calc(16px * var(--ui-font-scale, 1));
+}
+
+.calibration-warning-message {
+  font-size: calc(18px * var(--ui-font-scale, 1));
 }
 
 .setting-actions,
 .setting-value-actions,
+.font-setting-control,
 .segmented-control {
   display: flex;
   flex-wrap: wrap;
@@ -606,6 +629,22 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
 .setting-value-actions {
   gap: 12px;
+}
+
+.font-setting-control {
+  justify-content: flex-end;
+  min-width: min(420px, 100%);
+  gap: 10px;
+}
+
+.font-setting-control .setting-value {
+  min-width: 64px;
+  text-align: center;
+}
+
+.typography-setting-control,
+.sound-setting-control {
+  min-width: min(560px, 100%);
 }
 
 .setting-edit-input {
@@ -789,6 +828,22 @@ body[data-ui-font-bold="true"] .app-layout :where(
   .segmented-control,
   .range-control {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .font-setting-control {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .font-setting-control .setting-value {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .font-setting-control .btn {
+    flex: 1 1 auto;
   }
 }
 

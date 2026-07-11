@@ -1,10 +1,16 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useLayoutEffect } from 'react';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
+import { applyDisplaySettings } from '@rehab-trainer/ui/settings/displaySettings';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
 import { siteUrls } from './utils/siteUrls';
+import {
+  APP_SETTINGS_CHANGED_EVENT,
+  DEFAULT_UI_FONT_SIZE_PX,
+  getSetting,
+} from './utils/settings';
 
 const HomePage = lazy(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })));
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
@@ -60,6 +66,24 @@ function AppLayout() {
         disclaimer: '復健練習流程原型，不能取代醫療建議。',
         rights: '保留所有權利。',
       };
+
+  useLayoutEffect(() => {
+    const applySettings = () => {
+      applyDisplaySettings({
+        fontSizePx: getSetting('uiFontSizePx'),
+        defaultFontSizePx: DEFAULT_UI_FONT_SIZE_PX,
+        fontBold: getSetting('uiFontBold'),
+      });
+    };
+
+    applySettings();
+    window.addEventListener(APP_SETTINGS_CHANGED_EVENT, applySettings);
+    window.addEventListener('storage', applySettings);
+    return () => {
+      window.removeEventListener(APP_SETTINGS_CHANGED_EVENT, applySettings);
+      window.removeEventListener('storage', applySettings);
+    };
+  }, []);
 
   return (
     <TrainerAppLayout
