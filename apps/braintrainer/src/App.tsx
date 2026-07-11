@@ -17,7 +17,7 @@ export function App() {
   const { t } = useT();
 
   return (
-    <Suspense fallback={<div className="app-loading" role="status" aria-live="polite">{t('app.loading')}</div>}>
+    <Suspense fallback={<AppLoading label={t('app.loading')} />}>
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Navigate to="/attention-training" replace />} />
@@ -29,6 +29,15 @@ export function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
+  );
+}
+
+function AppLoading({ label }: { label: string }) {
+  return (
+    <div className="app-loading" role="status" aria-live="polite">
+      <div className="app-loading-indicator" />
+      <div className="app-loading-text">{label}</div>
+    </div>
   );
 }
 

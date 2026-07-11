@@ -68,35 +68,31 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
 
   return (
     <main className="page-content brain-page" id="main-content">
-      <section className="brain-hero" aria-labelledby="module-title">
-        <div>
-          <p className="eyebrow">{t(module.eyebrowKey)}</p>
-          <h1 id="module-title">{t(module.titleKey)}</h1>
-          <p>{t(module.introKey)}</p>
-        </div>
-      </section>
+      <h1 className="section-title fade-in-up" id="module-title">{t(module.titleKey)}</h1>
+      <p className="section-subtitle fade-in-up">{t(module.introKey)}</p>
 
-      <nav className="module-tabs" aria-label={t('tabs.label')} role="tablist">
+      <nav className="settings-tabs brain-tabs" aria-label={t('tabs.label')} role="tablist">
         {modules.map((item) => (
           <NavLink
             key={item.id}
             to={item.path}
             role="tab"
             aria-selected={item.id === module.id}
-            className={({ isActive }) => `module-tab ${isActive ? 'active' : ''}`}
+            className={({ isActive }) => `settings-tab ${isActive ? 'active' : ''}`}
           >
             {t(item.navKey)}
           </NavLink>
         ))}
       </nav>
 
-      <section className="placeholder-grid" aria-label={t(module.titleKey)}>
-        {module.cards.map((card) => (
-          <article className="placeholder-card" aria-disabled="true" key={card.titleKey}>
+      <section className="selection-grid content-grid-spaced" aria-label={t(module.titleKey)}>
+        {module.cards.map((card, index) => (
+          <article className="card selection-card placeholder-card fade-in-up" aria-disabled="true" key={card.titleKey}>
+            <span className="card-icon" aria-hidden="true">{index + 1}</span>
             <span className="status-pill">{t('module.status')}</span>
-            <h2>{t(card.titleKey)}</h2>
-            <p>{t(card.bodyKey)}</p>
-            <button className="btn btn-secondary" type="button" disabled>
+            <span className="card-title">{t(card.titleKey)}</span>
+            <span className="card-desc">{t(card.bodyKey)}</span>
+            <button className="btn btn-secondary btn-sm placeholder-action" type="button" disabled>
               {t('module.placeholderAction')}
             </button>
           </article>

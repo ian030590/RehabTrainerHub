@@ -44,28 +44,25 @@ export function SettingsPage() {
 
   return (
     <main className="page-content settings-page" id="main-content">
-      <section className="settings-header" aria-labelledby="settings-title">
-        <p className="eyebrow">{t('nav.settings')}</p>
-        <h1 id="settings-title">{t('settings.title')}</h1>
-        <p>{t('settings.intro')}</p>
-      </section>
+      <h1 className="section-title fade-in-up" id="settings-title">{t('settings.title')}</h1>
+      <p className="section-subtitle fade-in-up">{t('settings.intro')}</p>
 
-      <section className="settings-panel" aria-label={t('settings.title')}>
+      <section className="settings-container" aria-label={t('settings.title')}>
         <div className="setting-row">
-          <div>
-            <h2>{t('settings.language')}</h2>
+          <div className="setting-info">
+            <h3>{t('settings.language')}</h3>
           </div>
           <div className="segmented-control" role="group" aria-label={t('settings.language')}>
             <button
               type="button"
-              className={lang === 'zh' ? 'active' : ''}
+              className={`btn btn-sm ${lang === 'zh' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => updateLanguage('zh')}
             >
               {t('settings.language.zh')}
             </button>
             <button
               type="button"
-              className={lang === 'en' ? 'active' : ''}
+              className={`btn btn-sm ${lang === 'en' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => updateLanguage('en')}
             >
               {t('settings.language.en')}
@@ -74,8 +71,8 @@ export function SettingsPage() {
         </div>
 
         <div className="setting-row">
-          <div>
-            <h2>{t('settings.fontSize')}</h2>
+          <div className="setting-info">
+            <h3>{t('settings.fontSize')}</h3>
           </div>
           <div className="range-control">
             <input
@@ -91,8 +88,8 @@ export function SettingsPage() {
         </div>
 
         <label className="setting-row setting-row-clickable">
-          <div>
-            <h2>{t('settings.bold')}</h2>
+          <div className="setting-info">
+            <h3>{t('settings.bold')}</h3>
             <p>{t('settings.boldDescription')}</p>
           </div>
           <input
@@ -103,14 +100,14 @@ export function SettingsPage() {
         </label>
 
         <div className="setting-row">
-          <div>
-            <h2>{t('settings.theme')}</h2>
+          <div className="setting-info">
+            <h3>{t('settings.theme')}</h3>
           </div>
           <div className="segmented-control" role="group" aria-label={t('settings.theme')}>
             {themes.map((item) => (
               <button
                 type="button"
-                className={theme === item ? 'active' : ''}
+                className={`btn btn-sm ${theme === item ? 'btn-primary' : 'btn-secondary'}`}
                 key={item}
                 onClick={() => updateTheme(item)}
               >
@@ -120,8 +117,8 @@ export function SettingsPage() {
           </div>
         </div>
 
-        <article className="settings-preview">
-          <h2>{t('settings.previewTitle')}</h2>
+        <article className="settings-preview card">
+          <h3>{t('settings.previewTitle')}</h3>
           <p>{t('settings.previewBody')}</p>
         </article>
 
