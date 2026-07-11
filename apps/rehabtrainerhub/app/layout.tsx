@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: `%s | ${HUB_LOCAL_NAME}`,
   },
   applicationName: HUB_FULL_NAME,
-  keywords: ['居家訓練網', '居家訓練', '居家復健', '中風復健', '視覺訓練', '職能治療', '衛教影片', 'Rehab Trainer Hub', 'rehab trainer hub'],
+  keywords: ['居家訓練網', '居家訓練', '居家復健', '中風復健', '視覺訓練', '認知訓練', 'BrainTrainer', 'brain trainer', '職能治療', '衛教影片', 'Rehab Trainer Hub', 'rehab trainer hub'],
   icons: {
     icon: '/rehabtrainerhub.svg',
     apple: '/rehabtrainerhub.svg',

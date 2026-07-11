@@ -10,4 +10,5 @@ export const siteUrls = {
   ),
   stroke: normalizeSiteUrl(process.env.NEXT_PUBLIC_STROKETRAINER_URL, 'https://stroketrainer.pages.dev'),
   vision: normalizeSiteUrl(process.env.NEXT_PUBLIC_VISIONTRAINER_URL, 'https://visiontrainer.pages.dev'),
+  brain: normalizeSiteUrl(process.env.NEXT_PUBLIC_BRAINTRAINER_URL, 'https://braintrainer.pages.dev'),
 };

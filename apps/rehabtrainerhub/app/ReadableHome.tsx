@@ -23,6 +23,10 @@ const appAssets = {
     href: siteUrls.vision,
     image: '/assets/vision-logo.svg',
   },
+  brain: {
+    href: siteUrls.brain,
+    image: '/assets/brain-logo.svg',
+  },
 } as const;
 
 function Icon({ name, className }: { name: IconName; className?: string }) {

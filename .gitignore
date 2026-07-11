@@ -8,6 +8,7 @@ packages/*/dist/
 apps/*/dist/
 apps/*/out/
 apps/*/.next/
+apps/*/tsconfig.tsbuildinfo
 .turbo/
 apps/*/.turbo/
 .tmp/

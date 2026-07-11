@@ -60,6 +60,15 @@ function getAuthBaseUrl() {
   );
 }
 
+function getPublicAppUrl(name, fallback) {
+  return normalizeUrl(
+    process.env[name] ||
+      process.env[`NEXT_PUBLIC_${name}`] ||
+      process.env[`VITE_${name}`] ||
+      fallback,
+  );
+}
+
 function collectAllowedOrigins(projects, authBaseUrl) {
   const origins = new Set([
     authBaseUrl,
@@ -91,12 +100,22 @@ function requireEnv(name) {
 }
 
 function getProjectSecrets(project, authBaseUrl, allowedOrigins) {
+  const hubUrl = getPublicAppUrl('REHABTRAINERHUB_URL', 'https://rehabtrainerhub.pages.dev');
+  const strokeUrl = getPublicAppUrl('STROKETRAINER_URL', 'https://stroketrainer.pages.dev');
+  const visionUrl = getPublicAppUrl('VISIONTRAINER_URL', 'https://visiontrainer.pages.dev');
+  const brainUrl = getPublicAppUrl('BRAINTRAINER_URL', 'https://braintrainer.pages.dev');
   const sharedClientConfig = {
     AUTH_API_BASE: authBaseUrl,
     NEXT_PUBLIC_AUTH_API_BASE: authBaseUrl,
-    NEXT_PUBLIC_REHABTRAINERHUB_URL: authBaseUrl,
+    NEXT_PUBLIC_REHABTRAINERHUB_URL: hubUrl,
+    NEXT_PUBLIC_STROKETRAINER_URL: strokeUrl,
+    NEXT_PUBLIC_VISIONTRAINER_URL: visionUrl,
+    NEXT_PUBLIC_BRAINTRAINER_URL: brainUrl,
     VITE_AUTH_API_BASE: authBaseUrl,
-    VITE_REHABTRAINERHUB_URL: authBaseUrl,
+    VITE_REHABTRAINERHUB_URL: hubUrl,
+    VITE_STROKETRAINER_URL: strokeUrl,
+    VITE_VISIONTRAINER_URL: visionUrl,
+    VITE_BRAINTRAINER_URL: brainUrl,
   };
 
   if (project.projectName !== 'rehabtrainerhub') {

@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "packageManager": "npm@11.18.0",
-  "description": "Turborepo monorepo for RehabTrainerHub, StrokeTrainer, and VisionTrainer.",
+  "description": "Turborepo monorepo for RehabTrainerHub, StrokeTrainer, VisionTrainer, and BrainTrainer.",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -12,15 +12,18 @@
   "scripts": {
     "build": "node scripts/build-apps.mjs",
     "build:cloudflare": "node scripts/build-apps.mjs --cloudflare-pages",
+    "build:brain": "npm --prefix apps/braintrainer run build",
     "build:hub": "npm --prefix apps/rehabtrainerhub run build",
     "build:stroke": "npm --prefix apps/stroketrainer run build",
     "build:vision": "npm --prefix apps/visiontrainer run build",
     "build:turbo": "turbo run build",
     "dev": "turbo run dev --parallel",
+    "dev:brain": "turbo run dev --filter=@rehab-trainer/braintrainer",
     "dev:hub": "turbo run dev --filter=@rehab-trainer/rehabtrainerhub",
     "dev:stroke": "turbo run dev --filter=@rehab-trainer/stroketrainer",
     "dev:vision": "turbo run dev --filter=@rehab-trainer/visiontrainer",
     "deploy:cloudflare": "npm run build:cloudflare && node scripts/deploy-cloudflare-pages.mjs",
+    "preview:brain": "turbo run preview --filter=@rehab-trainer/braintrainer",
     "preview:hub": "turbo run preview --filter=@rehab-trainer/rehabtrainerhub",
     "preview:stroke": "turbo run preview --filter=@rehab-trainer/stroketrainer",
     "preview:vision": "turbo run preview --filter=@rehab-trainer/visiontrainer"

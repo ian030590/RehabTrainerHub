@@ -91,6 +91,17 @@ export const zhTW = {
         action: '開啟視覺訓練',
         logoAlt: 'VisionTrainer 標誌',
       },
+      {
+        id: 'brain',
+        title: 'BrainTrainer',
+        localTitle: '認知訓練練習',
+        name: 'BrainTrainer',
+        bestFor: '適合：注意、記憶、思考練習',
+        description: '先提供注意訓練、記憶訓練與思考訓練入口，後續可加入正式訓練模組。',
+        points: ['注意訓練', '記憶訓練', '思考訓練'],
+        action: '開啟認知訓練',
+        logoAlt: 'BrainTrainer 標誌',
+      },
     ],
     safetySteps: [
       {
@@ -178,7 +189,7 @@ export const zhTW = {
       eyebrow: '隱私權政策',
       title: '登入、匿名資料與訓練紀錄的使用說明。',
       intro: [
-        '本政策適用於 Rehab Trainer Hub、StrokeTrainer 與 VisionTrainer 的登入、基本資料填寫與訓練紀錄儲存。',
+        '本政策適用於 Rehab Trainer Hub、StrokeTrainer、VisionTrainer 與 BrainTrainer 的登入、基本資料填寫與訓練紀錄儲存。',
         '本平台以居家復健練習與流程原型為目的，不取代醫師、治療師或其他專業人員的評估。',
       ],
       sections: [
@@ -206,7 +217,7 @@ export const zhTW = {
           items: [
             '登入使用時，匿名基本資料與訓練紀錄會儲存在 Rehab Trainer Hub 的 Cloudflare D1 database。',
             '未登入使用時，訓練紀錄只會儲存在目前瀏覽器的 IndexedDB，不會同步到 D1 database。',
-            'StrokeTrainer 與 VisionTrainer 的登入流程會連到 Rehab Trainer Hub 的登入 API，並使用同一份登入狀態。',
+            'StrokeTrainer、VisionTrainer 與 BrainTrainer 的登入流程會連到 Rehab Trainer Hub 的登入 API，並使用同一份登入狀態。',
           ],
         },
         {

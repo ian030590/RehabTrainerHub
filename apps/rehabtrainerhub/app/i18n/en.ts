@@ -91,6 +91,17 @@ export const en = {
         action: 'Open VisionTrainer',
         logoAlt: 'VisionTrainer logo',
       },
+      {
+        id: 'brain',
+        title: 'BrainTrainer',
+        localTitle: 'Cognitive training practice',
+        name: 'BrainTrainer',
+        bestFor: 'Good for attention, memory, and thinking practice',
+        description: 'Starts with attention, memory, and thinking training entrances so formal modules can be added later.',
+        points: ['Attention training', 'Memory training', 'Thinking training'],
+        action: 'Open BrainTrainer',
+        logoAlt: 'BrainTrainer logo',
+      },
     ],
     safetySteps: [
       {
@@ -178,7 +189,7 @@ export const en = {
       eyebrow: 'Privacy Policy',
       title: 'How login, anonymous data, and training records are used.',
       intro: [
-        'This policy applies to login, basic profile entry, and training record storage for Rehab Trainer Hub, StrokeTrainer, and VisionTrainer.',
+        'This policy applies to login, basic profile entry, and training record storage for Rehab Trainer Hub, StrokeTrainer, VisionTrainer, and BrainTrainer.',
         'This platform is intended for home rehabilitation practice and workflow prototyping, and does not replace evaluation by a physician, therapist, or other professional.',
       ],
       sections: [
@@ -206,7 +217,7 @@ export const en = {
           items: [
             'When using the service while signed in, anonymous basic information and training records are stored in Rehab Trainer Hub Cloudflare D1 database.',
             'When using the service without signing in, training records are only stored in the current browser IndexedDB and will not be synchronized to the D1 database.',
-            'The login flows for StrokeTrainer and VisionTrainer connect to the Rehab Trainer Hub login API and use the same login state.',
+            'The login flows for StrokeTrainer, VisionTrainer, and BrainTrainer connect to the Rehab Trainer Hub login API and use the same login state.',
           ],
         },
         {
