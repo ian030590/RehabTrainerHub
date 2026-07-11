@@ -109,6 +109,7 @@
 }
 
 .auth-button:focus-visible,
+.auth-tab:focus-visible,
 .auth-dialog input:focus-visible,
 .auth-dialog select:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent) 50%, white);
@@ -143,7 +144,7 @@
 }
 
 .auth-account-dialog {
-  width: min(calc(560px * var(--ui-font-scale, 1)), 100%);
+  width: min(calc(680px * var(--ui-font-scale, 1)), 100%);
 }
 
 .auth-dialog h2 {
@@ -160,6 +161,7 @@
 
 .auth-checkbox-row,
 .auth-radio-row label,
+.auth-login-methods label,
 .auth-profile-grid label,
 .auth-account-form label {
   display: grid;
@@ -169,7 +171,8 @@
 }
 
 .auth-checkbox-row,
-.auth-radio-row label {
+.auth-radio-row label,
+.auth-login-methods label {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
 }
@@ -211,6 +214,37 @@
   display: grid;
   gap: 14px;
   margin-top: 18px;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.auth-tab {
+  min-height: 44px;
+  padding: calc(8px * var(--ui-font-scale, 1)) calc(12px * var(--ui-font-scale, 1));
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-s);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: var(--fw-bold, 700);
+}
+
+.auth-tab.active {
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+  color: var(--text-on-accent);
+}
+
+.auth-login-methods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .auth-fieldset {
