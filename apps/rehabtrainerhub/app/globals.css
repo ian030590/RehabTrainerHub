@@ -76,6 +76,19 @@
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-bold: 700;
+  --font-family: var(--font-body);
+  --bg-card: var(--surface-white);
+  --bg-overlay: rgba(0, 0, 0, 0.45);
+  --accent: var(--primary);
+  --accent-dark: var(--primary);
+  --text-on-accent: var(--on-primary);
+  --text-primary: var(--on-surface);
+  --text-secondary: var(--on-surface-variant);
+  --border: var(--outline-variant);
+  --border-hover: var(--outline);
+  --radius-s: var(--radius);
+  --radius-l: var(--radius-lg);
+  --shadow-floating: var(--shadow-lg);
 }
 
 :root[data-theme="dark"] {
@@ -466,7 +479,6 @@ body > main:not(.home-page) {
 .secondary-action,
 .app-link,
 .text-link,
-.auth-button,
 .text-button,
 .control-group button {
   display: inline-flex;
@@ -524,7 +536,6 @@ body > main:not(.home-page) {
 .secondary-action:active,
 .app-link:active,
 .text-link:active,
-.auth-button:active,
 .text-button:active,
 .control-group button:active {
   transform: translateY(1px);
@@ -534,82 +545,13 @@ body > main:not(.home-page) {
 .secondary-action:focus-visible,
 .app-link:focus-visible,
 .text-link:focus-visible,
-.auth-button:focus-visible,
 .text-button:focus-visible,
 .control-group button:focus-visible,
 .nav-link:focus-visible,
 .header-actions a:focus-visible,
-.navbar-toggle:focus-visible,
-.auth-dialog input:focus-visible,
-.auth-dialog select:focus-visible {
+.navbar-toggle:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
-}
-
-.auth-panel {
-  display: grid;
-  gap: 8px;
-  color: var(--on-surface);
-}
-
-.home-auth-panel .auth-panel-actions {
-  display: flex;
-  flex-wrap: nowrap;
-}
-
-.auth-panel-actions,
-.auth-dialog-actions,
-.auth-radio-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.auth-button {
-  padding: 8px 16px;
-  border: 1px solid var(--outline);
-  background: var(--surface-white);
-  color: var(--primary);
-}
-
-.auth-button-primary {
-  border-color: var(--primary);
-  color: var(--on-primary);
-  background: var(--primary);
-}
-
-.auth-button-primary:hover {
-  border-color: var(--on-primary-fixed-variant);
-  background: var(--on-primary-fixed-variant);
-}
-
-.auth-button-secondary:hover {
-  background: rgba(0, 82, 204, 0.08);
-}
-
-.auth-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.auth-panel-note,
-.auth-panel-error,
-.auth-panel-warning {
-  margin: 0;
-  color: var(--on-surface-variant);
-  font-size: 1rem;
-  font-weight: var(--fw-bold);
-}
-
-.auth-panel-error,
-.auth-panel-warning {
-  color: var(--error);
-}
-
-.auth-privacy-link {
-  color: var(--primary);
-  font-weight: var(--fw-bold);
-  text-underline-offset: 3px;
 }
 
 .readability-panel {
@@ -1306,7 +1248,6 @@ body > main:not(.home-page) {
 :root[data-theme="dark"] .secondary-action:hover,
 :root[data-theme="dark"] .text-link:hover,
 :root[data-theme="dark"] .settings-toggle.is-active,
-:root[data-theme="dark"] .auth-button-secondary:hover,
 :root[data-theme="dark"] .text-button:hover,
 :root[data-theme="dark"] .eyebrow.pill,
 :root[data-theme="dark"] .app-icon,
@@ -1361,11 +1302,7 @@ body > main:not(.home-page) {
 :root[data-theme="contrast"] .submission-type label,
 :root[data-theme="contrast"] .field input,
 :root[data-theme="contrast"] .field textarea,
-:root[data-theme="contrast"] .file-field,
-:root[data-theme="contrast"] .auth-dialog,
-:root[data-theme="contrast"] .auth-dialog input,
-:root[data-theme="contrast"] .auth-dialog select,
-:root[data-theme="contrast"] .auth-fieldset {
+:root[data-theme="contrast"] .file-field {
   border: 2px solid var(--outline-variant);
   box-shadow: none;
 }
@@ -1381,8 +1318,6 @@ body > main:not(.home-page) {
 :root[data-theme="contrast"] .app-card-vision .app-link:hover,
 :root[data-theme="contrast"] .app-card-brain .app-link,
 :root[data-theme="contrast"] .app-card-brain .app-link:hover,
-:root[data-theme="contrast"] .auth-button-primary,
-:root[data-theme="contrast"] .auth-button-primary:hover,
 :root[data-theme="contrast"] .control-group button:hover,
 :root[data-theme="contrast"] .control-group button.is-active,
 :root[data-theme="contrast"] .feature-card > span {
@@ -1394,11 +1329,9 @@ body > main:not(.home-page) {
 
 :root[data-theme="contrast"] .secondary-action,
 :root[data-theme="contrast"] .text-link,
-:root[data-theme="contrast"] .auth-button,
 :root[data-theme="contrast"] .text-button,
 :root[data-theme="contrast"] .secondary-action:hover,
 :root[data-theme="contrast"] .text-link:hover,
-:root[data-theme="contrast"] .auth-button-secondary:hover,
 :root[data-theme="contrast"] .text-button:hover,
 :root[data-theme="contrast"] .eyebrow.pill,
 :root[data-theme="contrast"] .submission-type label.is-selected {
@@ -1417,103 +1350,6 @@ body > main:not(.home-page) {
 :root[data-theme="contrast"] .submission-status.is-success {
   border: 2px solid var(--secondary);
   background: var(--surface-white);
-}
-
-.auth-dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.45);
-}
-
-.auth-dialog {
-  width: min(680px, 100%);
-  max-height: min(90vh, 920px);
-  overflow: auto;
-  padding: 28px;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-xl);
-  background: var(--surface-white);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.22);
-}
-
-.auth-profile-dialog {
-  width: min(860px, 100%);
-}
-
-.auth-dialog h2 {
-  margin-bottom: 12px;
-}
-
-.auth-dialog p,
-.auth-dialog li {
-  color: var(--on-surface-variant);
-  line-height: 1.65;
-}
-
-.auth-checkbox-row,
-.auth-radio-row label,
-.auth-profile-grid label {
-  display: grid;
-  gap: 6px;
-  color: var(--text-heading);
-  font-weight: var(--fw-bold);
-  margin-bottom: 1rem;
-}
-
-.auth-checkbox-row,
-.auth-radio-row label {
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-}
-
-.auth-dialog input,
-.auth-dialog select {
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--outline);
-  border-radius: var(--radius);
-  color: var(--on-surface);
-  background: var(--surface-white);
-}
-
-.auth-dialog input[type="checkbox"],
-.auth-dialog input[type="radio"] {
-  width: 20px;
-  min-height: 20px;
-  margin-top: 3px;
-  accent-color: var(--primary);
-}
-
-.auth-profile-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin: 20px 0;
-}
-
-.auth-frequency-grid {
-  grid-template-columns: repeat(3, minmax(120px, 1fr));
-  margin-bottom: 0;
-}
-
-.auth-fieldset {
-  display: grid;
-  gap: 10px;
-  margin: 18px 0;
-  padding: 18px;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius);
-}
-
-.auth-fieldset legend {
-  padding: 0 8px;
-  color: var(--primary);
-  font-weight: var(--fw-bold);
 }
 
 .rehab-footer {
@@ -1636,13 +1472,11 @@ body > main:not(.home-page) {
   }
 
   .secondary-action.compact,
-  .auth-button,
   .control-group button {
     min-height: 40px;
   }
 
-  .secondary-action.compact,
-  .auth-button {
+  .secondary-action.compact {
     padding-inline: 12px;
   }
 }
@@ -2083,9 +1917,7 @@ body > main:not(.home-page) {
   }
 
   .form-grid,
-  .submission-type,
-  .auth-profile-grid,
-  .auth-frequency-grid {
+  .submission-type {
     grid-template-columns: 1fr;
   }
 

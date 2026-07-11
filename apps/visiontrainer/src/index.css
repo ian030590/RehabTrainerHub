@@ -305,198 +305,6 @@ html, body, #root {
   font-weight: var(--fw-bold);
 }
 
-.trainer-auth-panel {
-  max-width: 360px;
-}
-
-.auth-panel {
-  display: grid;
-  gap: 8px;
-  color: var(--text-primary);
-  font-family: var(--font-family, 'Inter', 'M PLUS Rounded 1c', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif);
-}
-
-.auth-panel-status,
-.auth-panel-note,
-.auth-panel-error {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: var(--fw-bold);
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-
-.auth-panel-error,
-.auth-panel-warning {
-  color: var(--error);
-  font-weight: var(--fw-bold);
-}
-
-.auth-privacy-link {
-  color: var(--accent);
-  font-weight: var(--fw-bold);
-  text-underline-offset: 3px;
-}
-
-.auth-panel-actions,
-.auth-dialog-actions,
-.auth-radio-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.auth-button {
-  min-height: 40px;
-  padding: 8px 12px;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-s);
-  font: inherit;
-  font-size: 13px;
-  font-weight: var(--fw-bold);
-  line-height: 1.25;
-  cursor: pointer;
-}
-
-.auth-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.auth-button-primary {
-  border-color: var(--accent-dark);
-  color: var(--text-on-accent);
-  background: var(--accent-dark);
-}
-
-.auth-button-secondary {
-  color: var(--accent-dark);
-  background: var(--bg-card);
-}
-
-.auth-button:focus-visible,
-.auth-dialog input:focus-visible,
-.auth-dialog select:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--accent) 50%, white);
-  outline-offset: 2px;
-}
-
-.auth-dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(15, 23, 42, 0.58);
-}
-
-.auth-dialog {
-  width: min(680px, 100%);
-  max-height: min(90vh, 920px);
-  overflow: auto;
-  padding: 28px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-l, 16px);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-modal);
-}
-
-.auth-profile-dialog {
-  width: min(860px, 100%);
-}
-
-.auth-dialog h2 {
-  margin: 0 0 12px;
-  color: var(--text-primary);
-}
-
-.auth-dialog p,
-.auth-dialog li {
-  color: var(--text-secondary);
-  font-weight: var(--fw-bold);
-  line-height: 1.65;
-}
-
-.auth-checkbox-row,
-.auth-radio-row label,
-.auth-profile-grid label {
-  display: grid;
-  gap: 6px;
-  color: var(--text-primary);
-  font-weight: var(--fw-bold);
-}
-
-.auth-checkbox-row,
-.auth-radio-row label {
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-}
-
-.auth-dialog input,
-.auth-dialog select {
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-s);
-  color: var(--text-primary);
-  background: var(--bg-card);
-  font: inherit;
-  font-weight: var(--fw-bold);
-}
-
-.auth-dialog input[type="checkbox"],
-.auth-dialog input[type="radio"] {
-  width: 20px;
-  min-height: 20px;
-  margin-top: 3px;
-}
-
-.auth-profile-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin: 20px 0;
-}
-
-.auth-frequency-grid {
-  grid-template-columns: repeat(3, minmax(120px, 1fr));
-  margin-bottom: 0;
-}
-
-.auth-fieldset {
-  display: grid;
-  gap: 10px;
-  margin: 18px 0;
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-s);
-}
-
-.auth-fieldset legend {
-  padding: 0 8px;
-  color: var(--accent);
-  font-weight: var(--fw-bold);
-}
-
-@media (max-width: 780px) {
-  .trainer-auth-panel,
-  .auth-panel-actions {
-    width: 100%;
-  }
-
-  .auth-profile-grid,
-  .auth-frequency-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .auth-dialog {
-    padding: 22px;
-  }
-}
-
 /* ── Cards ── */
 .card {
   background: var(--bg-card);
@@ -2054,24 +1862,24 @@ body #webgazer-calibrate-container #calibration-point {
    ========================================================= */
 
 /* 1. Buttons (Fitts' Law, 48x48 hit area, 5 states, Spring Animation) */
-.auth-button, .btn, .card-link, .secondary-action {
+.btn, .card-link, .secondary-action {
   transition: transform 200ms cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out, box-shadow 200ms ease-out;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.auth-button:not(:disabled):hover, .btn:not(:disabled):hover, .card-link:not(:disabled):hover, .secondary-action:not(:disabled):hover {
+.btn:not(:disabled):hover, .card-link:not(:disabled):hover, .secondary-action:not(:disabled):hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.auth-button:not(:disabled):active, .btn:not(:disabled):active, .card-link:not(:disabled):active, .secondary-action:not(:disabled):active {
+.btn:not(:disabled):active, .card-link:not(:disabled):active, .secondary-action:not(:disabled):active {
   transform: translateY(1px) scale(0.97);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.auth-button:disabled, .btn:disabled, .card-link:disabled, .secondary-action:disabled {
+.btn:disabled, .card-link:disabled, .secondary-action:disabled {
   opacity: 0.38;
   cursor: not-allowed;
   transform: none;
@@ -2079,7 +1887,7 @@ body #webgazer-calibrate-container #calibration-point {
 }
 
 /* 2. Cards & Elevation (Progressive Disclosure, Whitespace, Shadow hierarchy) */
-.card, .content-page article, .auth-dialog {
+.card, .content-page article {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: transform 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 300ms ease-out;
   padding: 24px;
@@ -2088,11 +1896,6 @@ body #webgazer-calibrate-container #calibration-point {
 .card:hover, .content-page article:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.05);
-}
-
-.auth-dialog {
-  /* Modals require larger, softer shadows */
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08);
 }
 
 /* 3. Navigation Bars (Active state, hit area) */
@@ -2114,11 +1917,11 @@ body #webgazer-calibrate-container #calibration-point {
 
 /* 4. Reduce Motion (Accessibility) */
 @media (prefers-reduced-motion: reduce) {
-  .auth-button, .btn, .card-link, .secondary-action, .card, .content-page article, .auth-dialog, .header-actions a {
+  .btn, .card-link, .secondary-action, .card, .content-page article, .header-actions a {
     transition: opacity 200ms ease-in-out !important;
     transform: none !important;
   }
-  .auth-button:hover, .btn:hover, .card-link:hover, .secondary-action:hover, .card:hover, .content-page article:hover {
+  .btn:hover, .card-link:hover, .secondary-action:hover, .card:hover, .content-page article:hover {
     transform: none !important;
   }
 }

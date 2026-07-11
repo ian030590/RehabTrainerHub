@@ -4,6 +4,7 @@ import { HUB_FULL_NAME, HUB_LOCAL_NAME } from './hubBrand';
 import { createSeoMetadata, organizationJsonLd, siteDescription, websiteJsonLd } from './seo';
 import { siteUrls } from './siteUrls';
 import './globals.css';
+import '@rehab-trainer/ui/components/AuthPanel.css';
 
 const rootMetadata = createSeoMetadata({
   title: HUB_FULL_NAME,

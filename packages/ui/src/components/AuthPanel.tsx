@@ -227,8 +227,20 @@ export function AuthPanel({
     return authOrigin ? `${authOrigin}/privacy/` : '/privacy/';
   }, [authOrigin, privacyHref]);
 
-  const loadUser = useCallback(async () => {
+  const applyLoadedUser = useCallback((nextUser: AuthUser | null) => {
+    setUser(nextUser);
+    onAuthChange?.(nextUser);
+    if (!nextUser) return;
 
+    setPrivacyProvider(null);
+    setPrivacyAccepted(false);
+    if (!nextUser.profileCompleted) {
+      setProfile(normalizeProfile(nextUser.profile));
+      setIsProfileOpen(true);
+    }
+  }, [onAuthChange]);
+
+  const loadUser = useCallback(async (): Promise<AuthUser | null> => {
     setError('');
     try {
       let nextUser = await fetchCurrentAuthUser(apiBase);
@@ -239,20 +251,14 @@ export function AuthPanel({
           nextUser = sharedSession.user;
         }
       }
-      setUser(nextUser);
-      onAuthChange?.(nextUser);
-      if (nextUser && !nextUser.profileCompleted) {
-        setProfile(normalizeProfile(nextUser.profile));
-        setIsProfileOpen(true);
-      }
+      applyLoadedUser(nextUser);
+      return nextUser;
     } catch (loadError) {
       console.warn('Unable to load auth user.', loadError);
-      setUser(null);
-      onAuthChange?.(null);
-    } finally {
-
+      applyLoadedUser(null);
+      return null;
     }
-  }, [apiBase, onAuthChange]);
+  }, [apiBase, applyLoadedUser]);
 
   useEffect(() => {
     const consumed = consumeAuthTokenFromUrl();
@@ -266,12 +272,7 @@ export function AuthPanel({
       if (authOrigin && event.origin !== authOrigin) return;
       if (!isAuthSessionMessage(event.data)) return;
       setAuthToken(event.data.token);
-      setUser(event.data.user);
-      onAuthChange?.(event.data.user);
-      if (!event.data.user.profileCompleted) {
-        setProfile(normalizeProfile(event.data.user.profile));
-        setIsProfileOpen(true);
-      }
+      applyLoadedUser(event.data.user);
     };
 
     window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChange);
@@ -280,10 +281,13 @@ export function AuthPanel({
       window.removeEventListener(AUTH_CHANGED_EVENT, handleAuthChange);
       window.removeEventListener('message', handleMessage);
     };
-  }, [authOrigin, loadUser, onAuthChange]);
+  }, [applyLoadedUser, authOrigin, loadUser]);
 
-  const requestLogin = (provider: AuthProvider) => {
+  const requestLogin = async (provider: AuthProvider) => {
     setError('');
+    if (user) return;
+    const existingUser = await loadUser();
+    if (existingUser) return;
     setPrivacyAccepted(false);
     setPrivacyProvider(provider);
   };
@@ -388,7 +392,7 @@ export function AuthPanel({
           </>
         ) : (
           <>
-            <button className="auth-button auth-button-primary" type="button" onClick={() => requestLogin('google')}>
+            <button className="auth-button auth-button-primary" type="button" onClick={() => void requestLogin('google')}>
               {labels.loginGoogle}
             </button>
           </>

@@ -1,3 +1,5 @@
+@import './AuthPanel.css';
+
 * {
   box-sizing: border-box;
 }
@@ -235,112 +237,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
 .navbar-overlay {
   display: none;
-}
-
-.trainer-auth-panel {
-  min-width: 0;
-  max-width: 360px;
-}
-
-.trainer-auth-panel :where(button, a, input) {
-  font-size: 0.86rem;
-}
-
-.auth-panel {
-  display: grid;
-  gap: 8px;
-  color: var(--text-primary);
-  font-family: var(--font-family);
-}
-
-.auth-panel-status,
-.auth-panel-note,
-.auth-panel-error {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: var(--fw-bold, 700);
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-
-.auth-panel-error,
-.auth-panel-warning {
-  color: var(--error);
-  font-weight: var(--fw-bold, 700);
-}
-
-.auth-privacy-link {
-  color: var(--accent);
-  font-weight: var(--fw-bold, 700);
-  text-underline-offset: 3px;
-}
-
-.auth-panel-actions,
-.auth-dialog-actions,
-.auth-radio-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.auth-button {
-  min-height: 40px;
-  padding: 8px 12px;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-s);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: var(--fw-bold, 700);
-  line-height: 1.25;
-}
-
-.auth-button-primary {
-  border-color: var(--accent-dark);
-  background: var(--accent-dark);
-  color: var(--text-on-accent);
-}
-
-.auth-button-secondary {
-  background: var(--bg-card);
-  color: var(--accent-dark);
-}
-
-.auth-dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: var(--bg-overlay);
-}
-
-.auth-dialog {
-  width: min(680px, 100%);
-  max-height: min(90vh, 920px);
-  overflow: auto;
-  padding: 28px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-l);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-floating);
-}
-
-.auth-dialog input,
-.auth-dialog select {
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-s);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font: inherit;
-  font-weight: var(--fw-bold, 700);
 }
 
 .app-loading {

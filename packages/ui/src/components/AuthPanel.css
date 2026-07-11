@@ -1,0 +1,216 @@
+.trainer-auth-panel {
+  max-width: 360px;
+}
+
+.auth-panel {
+  display: grid;
+  gap: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.home-auth-panel .auth-panel-actions {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.auth-panel-status,
+.auth-panel-note,
+.auth-panel-error,
+.auth-panel-warning {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: var(--fw-bold, 700);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.auth-panel-error,
+.auth-panel-warning {
+  color: var(--error);
+}
+
+.auth-privacy-link {
+  color: var(--accent);
+  font-weight: var(--fw-bold, 700);
+  text-underline-offset: 3px;
+}
+
+.auth-panel-actions,
+.auth-dialog-actions,
+.auth-radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.auth-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-s);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: var(--fw-bold, 700);
+  line-height: 1.25;
+}
+
+.auth-button-primary {
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+  color: var(--text-on-accent);
+}
+
+.auth-button-secondary {
+  background: var(--bg-card);
+  color: var(--accent-dark);
+}
+
+.auth-button-primary:hover:not(:disabled) {
+  border-color: var(--accent-hover, var(--accent-dark));
+  background: var(--accent-hover, var(--accent-dark));
+}
+
+.auth-button-secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.auth-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.auth-button:active {
+  transform: none;
+}
+
+.auth-button:focus-visible,
+.auth-dialog input:focus-visible,
+.auth-dialog select:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 50%, white);
+  outline-offset: 2px;
+}
+
+.auth-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: var(--bg-overlay, rgba(15, 23, 42, 0.58));
+}
+
+.auth-dialog {
+  width: min(680px, 100%);
+  max-height: min(90vh, 920px);
+  overflow: auto;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-floating);
+}
+
+.auth-profile-dialog {
+  width: min(860px, 100%);
+}
+
+.auth-dialog h2 {
+  margin: 0 0 12px;
+  color: var(--text-primary);
+}
+
+.auth-dialog p,
+.auth-dialog li {
+  color: var(--text-secondary);
+  font-weight: var(--fw-bold, 700);
+  line-height: 1.65;
+}
+
+.auth-checkbox-row,
+.auth-radio-row label,
+.auth-profile-grid label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-primary);
+  font-weight: var(--fw-bold, 700);
+}
+
+.auth-checkbox-row,
+.auth-radio-row label {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+
+.auth-dialog input,
+.auth-dialog select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-s);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: var(--fw-bold, 700);
+}
+
+.auth-dialog input[type="checkbox"],
+.auth-dialog input[type="radio"] {
+  width: 20px;
+  min-height: 20px;
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+.auth-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.auth-frequency-grid {
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  margin-bottom: 0;
+}
+
+.auth-fieldset {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+}
+
+.auth-fieldset legend {
+  padding: 0 8px;
+  color: var(--accent);
+  font-weight: var(--fw-bold, 700);
+}
+
+@media (max-width: 780px) {
+  .trainer-auth-panel,
+  .auth-panel-actions {
+    width: 100%;
+  }
+
+  .auth-profile-grid,
+  .auth-frequency-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-dialog {
+    padding: 22px;
+  }
+}
