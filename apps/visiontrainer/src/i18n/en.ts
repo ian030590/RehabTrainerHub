@@ -1,7 +1,7 @@
 import type { TranslationKey } from './zh';
 
 export const en: Record<TranslationKey, string> = {
-  'app.loading': 'Loading...',
+  'app.loading': 'Loading VisionTrainer...',
   'btn.preparingTraining': 'Preparing...',
   'home.trainingLoadError': 'Training resources failed to load. Check the network and try again.',
 
@@ -14,7 +14,9 @@ export const en: Record<TranslationKey, string> = {
   'nav.noUser': 'No User Selected',
   'nav.downloadScores': 'Download Scores',
   'nav.noScores': 'No saved training scores are available yet.',
+  'nav.logoAlt': 'VisionTrainer logo',
   'nav.scoresDownloadError': 'Unable to read saved training scores. Please try again.',
+  'nav.toggleMenu': 'Toggle menu',
 
   // Common Buttons & Actions
   'btn.cancel': 'Cancel',

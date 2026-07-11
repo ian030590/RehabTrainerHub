@@ -7,23 +7,28 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) => `navbar-link ${isA
 
 export function Navbar() {
   const { lang, t } = useT();
+  const appName = 'VisionTrainer';
+  const apiBase = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
+  const locale = lang === 'en' ? 'en' : 'zh-TW';
+  const logoSrc = `${import.meta.env.BASE_URL}assets/logo.svg`;
+  const navItems = [
+    { to: '/', end: true, className: navLinkClass, label: t('nav.trainingList') },
+    { to: '/assessment', className: navLinkClass, label: t('nav.assessment') },
+    { to: '/settings', className: navLinkClass, label: t('nav.settings') },
+    { to: '/credits', className: navLinkClass, label: t('nav.credits') },
+    { to: '/links', className: navLinkClass, label: t('nav.links') },
+  ];
 
   return (
     <TrainerNavbar
       brandLabel={t('nav.brand')}
-      logoSrc={`${import.meta.env.BASE_URL}assets/logo.svg`}
-      logoAlt="Vision Trainer Logo"
-      navItems={[
-        { to: '/', end: true, className: navLinkClass, label: t('nav.trainingList') },
-        { to: '/assessment', className: navLinkClass, label: t('nav.assessment') },
-        { to: '/settings', className: navLinkClass, label: t('nav.settings') },
-        { to: '/credits', className: navLinkClass, label: t('nav.credits') },
-        { to: '/links', className: navLinkClass, label: t('nav.links') },
-      ]}
+      logoSrc={logoSrc}
+      logoAlt={t('nav.logoAlt')}
+      navItems={navItems}
       auth={{
-        apiBase: import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub,
-        appName: 'VisionTrainer',
-        locale: lang === 'en' ? 'en' : 'zh-TW',
+        apiBase,
+        appName,
+        locale,
       }}
       download={{
         label: t('nav.downloadScores'),
@@ -31,6 +36,7 @@ export function Navbar() {
         errorMessage: t('nav.scoresDownloadError'),
         onDownload: () => downloadAllTrainingRecordsCsv(t),
       }}
+      toggleMenuLabel={t('nav.toggleMenu')}
     />
   );
 }

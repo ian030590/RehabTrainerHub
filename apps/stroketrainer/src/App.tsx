@@ -1,5 +1,7 @@
 import { Suspense, lazy, useLayoutEffect } from 'react';
+import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
+import { applyDisplaySettings } from '@rehab-trainer/ui/settings/displaySettings';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
@@ -19,8 +21,10 @@ const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((modul
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 
 export function App() {
+  const { t } = useT();
+
   return (
-    <Suspense fallback={<div className="app-loading" />}>
+    <Suspense fallback={<AppLoading label={t('app.loading')} />}>
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Navigate to="/motor-training" replace />} />
@@ -58,25 +62,20 @@ function AppLayout() {
       };
 
   useLayoutEffect(() => {
-    const applyFontSettings = () => {
-      const fontSizePx = getSetting('uiFontSizePx');
-      const fontScale = fontSizePx / DEFAULT_UI_FONT_SIZE_PX;
-      const isBold = getSetting('uiFontBold');
-      document.documentElement.style.setProperty('--ui-font-size', `${fontSizePx}px`);
-      document.documentElement.style.setProperty('--ui-font-scale', String(fontScale));
-      document.documentElement.style.setProperty('--ui-font-weight', isBold ? '700' : '500');
-      document.documentElement.style.setProperty('--ui-font-medium-weight', isBold ? '800' : '700');
-      document.documentElement.style.setProperty('--ui-font-heading-weight', isBold ? '900' : '800');
-      document.body.dataset.uiFontBold = isBold ? 'true' : 'false';
-      document.body.dataset.uiFontSize = String(fontSizePx);
+    const applySettings = () => {
+      applyDisplaySettings({
+        fontSizePx: getSetting('uiFontSizePx'),
+        defaultFontSizePx: DEFAULT_UI_FONT_SIZE_PX,
+        fontBold: getSetting('uiFontBold'),
+      });
     };
 
-    applyFontSettings();
-    window.addEventListener(SETTINGS_CHANGED_EVENT, applyFontSettings);
-    window.addEventListener('storage', applyFontSettings);
+    applySettings();
+    window.addEventListener(SETTINGS_CHANGED_EVENT, applySettings);
+    window.addEventListener('storage', applySettings);
     return () => {
-      window.removeEventListener(SETTINGS_CHANGED_EVENT, applyFontSettings);
-      window.removeEventListener('storage', applyFontSettings);
+      window.removeEventListener(SETTINGS_CHANGED_EVENT, applySettings);
+      window.removeEventListener('storage', applySettings);
     };
   }, []);
 

@@ -6,6 +6,9 @@ export const zh = {
   'nav.noUser': '未選擇使用者',
   'nav.downloadScores': '下載成績',
   'nav.noScores': '目前沒有可下載的訓練成績。',
+  'nav.logoAlt': 'StrokeTrainer 標誌',
+  'nav.scoresDownloadError': '無法讀取已儲存的訓練成績，請稍後再試。',
+  'nav.toggleMenu': '開關選單',
 
   // Common Buttons & Actions
   'btn.cancel': '取消',
@@ -25,6 +28,7 @@ export const zh = {
   'common.off': '關閉',
 
   // App
+  'app.loading': '載入 StrokeTrainer...',
   'app.footer.rights': '保留所有權利。',
 
   // HomePage

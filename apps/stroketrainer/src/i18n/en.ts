@@ -8,6 +8,9 @@ export const en: Record<TranslationKey, string> = {
   'nav.noUser': 'No User Selected',
   'nav.downloadScores': 'Download Scores',
   'nav.noScores': 'No saved training scores are available yet.',
+  'nav.logoAlt': 'StrokeTrainer logo',
+  'nav.scoresDownloadError': 'Unable to read saved training scores. Please try again.',
+  'nav.toggleMenu': 'Toggle menu',
 
   // Common Buttons & Actions
   'btn.cancel': 'Cancel',
@@ -27,6 +30,7 @@ export const en: Record<TranslationKey, string> = {
   'common.off': 'Off',
 
   // App
+  'app.loading': 'Loading StrokeTrainer...',
   'app.footer.rights': 'All rights reserved.',
 
   // HomePage

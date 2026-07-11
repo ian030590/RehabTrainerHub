@@ -1,5 +1,7 @@
 import { Suspense, lazy, useLayoutEffect } from 'react';
+import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
+import { applyDisplaySettings } from '@rehab-trainer/ui/settings/displaySettings';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
@@ -12,6 +14,8 @@ import {
 } from './utils/settings';
 
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })));
+const ReferencesPage = lazy(() => import('./pages/ReferencesPage').then((module) => ({ default: module.ReferencesPage })));
+const RelatedLinksPage = lazy(() => import('./pages/RelatedLinksPage').then((module) => ({ default: module.RelatedLinksPage })));
 
 export function App() {
   const { t } = useT();
@@ -24,20 +28,13 @@ export function App() {
           <Route path="/attention-training" element={<ModulePage moduleId="attention" />} />
           <Route path="/memory-training" element={<ModulePage moduleId="memory" />} />
           <Route path="/thinking-training" element={<ModulePage moduleId="thinking" />} />
+          <Route path="/references" element={<ReferencesPage />} />
+          <Route path="/links" element={<RelatedLinksPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
-  );
-}
-
-function AppLoading({ label }: { label: string }) {
-  return (
-    <div className="app-loading" role="status" aria-live="polite">
-      <div className="app-loading-indicator" />
-      <div className="app-loading-text">{label}</div>
-    </div>
   );
 }
 
@@ -61,16 +58,12 @@ function AppLayout() {
 
   useLayoutEffect(() => {
     const applySettings = () => {
-      const fontSizePx = getSetting('uiFontSizePx');
-      const fontScale = fontSizePx / DEFAULT_UI_FONT_SIZE_PX;
-      const isBold = getSetting('uiFontBold');
-      document.documentElement.style.setProperty('--ui-font-size', `${fontSizePx}px`);
-      document.documentElement.style.setProperty('--ui-font-scale', String(fontScale));
-      document.documentElement.style.setProperty('--ui-font-weight', isBold ? '700' : '500');
-      document.documentElement.style.setProperty('--ui-font-medium-weight', isBold ? '800' : '700');
-      document.documentElement.style.setProperty('--ui-font-heading-weight', isBold ? '900' : '800');
-      document.body.dataset.uiFontBold = isBold ? 'true' : 'false';
-      document.body.dataset.uiTheme = getSetting('uiTheme');
+      applyDisplaySettings({
+        fontSizePx: getSetting('uiFontSizePx'),
+        defaultFontSizePx: DEFAULT_UI_FONT_SIZE_PX,
+        fontBold: getSetting('uiFontBold'),
+        uiTheme: getSetting('uiTheme'),
+      });
     };
 
     applySettings();

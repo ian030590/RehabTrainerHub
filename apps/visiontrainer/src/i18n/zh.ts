@@ -1,5 +1,5 @@
 export const zh = {
-  'app.loading': '載入中...',
+  'app.loading': '載入 VisionTrainer...',
   'btn.preparingTraining': '準備中...',
   'home.trainingLoadError': '訓練資源載入失敗，請檢查網路後再試一次。',
 
@@ -12,7 +12,9 @@ export const zh = {
   'nav.noUser': '未選擇使用者',
   'nav.downloadScores': '下載成績',
   'nav.noScores': '目前沒有可下載的訓練成績。',
+  'nav.logoAlt': 'VisionTrainer 標誌',
   'nav.scoresDownloadError': '無法讀取已儲存的訓練成績，請稍後再試。',
+  'nav.toggleMenu': '開關選單',
 
   // Common Buttons & Actions
   'btn.cancel': '取消',
