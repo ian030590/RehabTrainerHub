@@ -109,7 +109,8 @@
 }
 
 .auth-button:focus-visible,
-.auth-tab:focus-visible,
+.auth-provider-button:focus-visible,
+.auth-link-button:focus-visible,
 .auth-dialog input:focus-visible,
 .auth-dialog select:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent) 50%, white);
@@ -144,7 +145,7 @@
 }
 
 .auth-account-dialog {
-  width: min(calc(680px * var(--ui-font-scale, 1)), 100%);
+  width: min(calc(480px * var(--ui-font-scale, 1)), 100%);
 }
 
 .auth-dialog h2 {
@@ -159,9 +160,18 @@
   line-height: 1.65;
 }
 
+.auth-dialog ul {
+  margin: 10px 0 12px;
+  padding-inline-start: 0;
+  list-style-position: inside;
+}
+
+.auth-dialog li {
+  padding-inline-start: 0;
+}
+
 .auth-checkbox-row,
 .auth-radio-row label,
-.auth-login-methods label,
 .auth-profile-grid label,
 .auth-account-form label {
   display: grid;
@@ -171,8 +181,7 @@
 }
 
 .auth-checkbox-row,
-.auth-radio-row label,
-.auth-login-methods label {
+.auth-radio-row label {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
 }
@@ -212,20 +221,18 @@
 
 .auth-account-form {
   display: grid;
-  gap: 14px;
-  margin-top: 18px;
+  gap: 16px;
+  margin-top: 20px;
 }
 
-.auth-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin: 16px 0;
-}
-
-.auth-tab {
+.auth-provider-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
   min-height: 44px;
-  padding: calc(8px * var(--ui-font-scale, 1)) calc(12px * var(--ui-font-scale, 1));
+  padding: calc(10px * var(--ui-font-scale, 1)) calc(14px * var(--ui-font-scale, 1));
   border: 1px solid var(--border-hover);
   border-radius: var(--radius-s);
   background: var(--bg-card);
@@ -235,16 +242,69 @@
   font-weight: var(--fw-bold, 700);
 }
 
-.auth-tab.active {
-  border-color: var(--accent-dark);
-  background: var(--accent-dark);
-  color: var(--text-on-accent);
+.auth-provider-button:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-.auth-login-methods {
+.auth-provider-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--accent-dark);
+  font-weight: 900;
+}
+
+.auth-divider {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted, var(--text-secondary));
+  font-size: calc(13px * var(--ui-font-scale, 1));
+  font-weight: var(--fw-regular, 500);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  height: 1px;
+  background: var(--border);
+}
+
+.auth-account-form .auth-dialog-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-account-form .auth-button-primary {
+  width: 100%;
+  min-height: 44px;
+}
+
+.auth-switch-line {
+  margin: 6px 0 0;
+  text-align: center;
+}
+
+.auth-link-button {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-dark);
+  cursor: pointer;
+  font: inherit;
+  font-weight: var(--fw-bold, 700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-cancel-link {
+  justify-self: center;
+  margin-top: -4px;
+  color: var(--text-muted, var(--text-secondary));
 }
 
 .auth-fieldset {

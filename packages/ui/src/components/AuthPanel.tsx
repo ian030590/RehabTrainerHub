@@ -31,7 +31,6 @@ interface AuthPanelProps {
 
 type AuthText = (typeof text)[keyof typeof text];
 type AccountDialogMode = 'register' | 'login';
-type LoginMethod = 'password' | 'google';
 
 const chronicOptions = [
   'centralNervousSystem',
@@ -64,20 +63,22 @@ const text = {
       '慢性病欄位請只填寫已由醫師診斷的狀況；若沒有醫師診斷，請勿自行猜測填寫。',
     privacyPolicyLink: '開啟完整隱私權政策',
     agree: '我已閱讀並同意',
-    authTitle: '註冊 / 登入',
-    registerTab: '註冊',
-    loginTab: '登入',
+    authTitleRegister: '註冊 Rehab Trainer Hub',
+    authTitleLogin: '登入 Rehab Trainer Hub',
+    dividerOr: '或',
     cancel: '取消',
     accountIntroRegister: '建立帳號後會立即登入，不需要綁定 Google。',
     accountIntroLogin: '使用 email 與密碼登入，或改用 Google 登入。',
-    loginMethodPassword: '帳號密碼',
-    loginMethodGoogle: 'Google',
     accountDisplayName: '姓名',
     accountEmail: 'Email',
     accountPassword: '密碼',
     accountPasswordHelp: '密碼至少 8 個字元，僅會送到後端驗證。',
     accountCreateSubmit: '註冊',
     accountLoginSubmit: '登入',
+    switchToLogin: '已有帳號？',
+    switchToLoginAction: '登入',
+    switchToRegister: '還沒有帳號？',
+    switchToRegisterAction: '註冊',
     accountInvalid: '請填寫姓名、有效 email 與至少 8 個字元的密碼。',
     accountFailed: '帳號登入或建立失敗，請確認資料後再試一次。',
     profileTitle: '匿名基本資料',
@@ -137,20 +138,22 @@ const text = {
       'For chronic condition fields, only select conditions diagnosed by a physician. Do not guess or self-diagnose.',
     privacyPolicyLink: 'Open full privacy policy',
     agree: 'I have read and agree',
-    authTitle: 'Sign up / sign in',
-    registerTab: 'Sign up',
-    loginTab: 'Sign in',
+    authTitleRegister: 'Sign up for Rehab Trainer Hub',
+    authTitleLogin: 'Sign in to Rehab Trainer Hub',
+    dividerOr: 'or',
     cancel: 'Cancel',
     accountIntroRegister: 'Create an account and sign in without connecting Google.',
     accountIntroLogin: 'Sign in with email and password, or use Google.',
-    loginMethodPassword: 'Email and password',
-    loginMethodGoogle: 'Google',
     accountDisplayName: 'Name',
     accountEmail: 'Email',
     accountPassword: 'Password',
     accountPasswordHelp: 'Use at least 8 characters. Passwords are sent only to the backend for verification.',
     accountCreateSubmit: 'Sign up',
     accountLoginSubmit: 'Sign in',
+    switchToLogin: 'Already have an account?',
+    switchToLoginAction: 'Sign in',
+    switchToRegister: "Don't have an account?",
+    switchToRegisterAction: 'Sign up',
     accountInvalid: 'Enter a name, valid email, and a password with at least 8 characters.',
     accountFailed: 'Account sign-in or creation failed. Check the details and try again.',
     profileTitle: 'Anonymous Profile',
@@ -259,7 +262,6 @@ export function AuthPanel({
   const [error, setError] = useState('');
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [accountDialogMode, setAccountDialogMode] = useState<AccountDialogMode | null>(null);
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>('password');
   const [accountForm, setAccountForm] = useState(createEmptyAccountForm);
   const [accountError, setAccountError] = useState('');
   const [isSubmittingAccount, setIsSubmittingAccount] = useState(false);
@@ -337,7 +339,6 @@ export function AuthPanel({
     const existingUser = await loadUser();
     if (existingUser) return;
     setPrivacyAccepted(false);
-    setLoginMethod('password');
     setAccountDialogMode(mode);
   };
 
@@ -360,7 +361,6 @@ export function AuthPanel({
 
   const closeAccountDialog = () => {
     setAccountDialogMode(null);
-    setLoginMethod('password');
     setPrivacyAccepted(false);
     setAccountForm(createEmptyAccountForm());
     setAccountError('');
@@ -374,11 +374,6 @@ export function AuthPanel({
     const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     if (!accountDialogMode) return;
-    if (accountDialogMode === 'login' && loginMethod === 'google') {
-      startGoogleLogin();
-      return;
-    }
-
     if (
       !emailIsValid
       || password.length < 8
@@ -477,8 +472,7 @@ export function AuthPanel({
     && accountEmailIsValid
     && accountForm.password.length >= 8
     && privacyAccepted;
-  const canLoginAccount = loginMethod === 'google'
-    || (accountEmailIsValid && accountForm.password.length >= 8);
+  const canLoginAccount = accountEmailIsValid && accountForm.password.length >= 8;
   const canSubmitAccount = accountDialogMode === 'register' ? canRegisterAccount : canLoginAccount;
 
   return (
@@ -508,97 +502,56 @@ export function AuthPanel({
       {accountDialogMode && (
         <div className="auth-dialog-backdrop">
           <div className="auth-dialog auth-account-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-account-title">
-            <h2 id="auth-account-title">{labels.authTitle}</h2>
-            <div className="auth-tabs" role="tablist" aria-label={labels.authTitle}>
-              <button
-                aria-selected={accountDialogMode === 'register'}
-                className={`auth-tab ${accountDialogMode === 'register' ? 'active' : ''}`}
-                role="tab"
-                type="button"
-                onClick={() => {
-                  setAccountDialogMode('register');
-                  setAccountError('');
-                }}
-              >
-                {labels.registerTab}
-              </button>
-              <button
-                aria-selected={accountDialogMode === 'login'}
-                className={`auth-tab ${accountDialogMode === 'login' ? 'active' : ''}`}
-                role="tab"
-                type="button"
-                onClick={() => {
-                  setAccountDialogMode('login');
-                  setAccountError('');
-                }}
-              >
-                {labels.loginTab}
-              </button>
-            </div>
+            <h2 id="auth-account-title">
+              {accountDialogMode === 'register' ? labels.authTitleRegister : labels.authTitleLogin}
+            </h2>
             <p>{accountDialogMode === 'register' ? labels.accountIntroRegister : labels.accountIntroLogin}</p>
             <form className="auth-account-form" onSubmit={submitAccount}>
-              {accountDialogMode === 'register' && (
-                <>
-                  <label>
-                    <span>{labels.accountDisplayName}</span>
-                    <input
-                      autoComplete="name"
-                      required
-                      type="text"
-                      value={accountForm.displayName}
-                      onChange={(event) => setAccountForm((current) => ({ ...current, displayName: event.target.value }))}
-                    />
-                  </label>
-                </>
-              )}
               {accountDialogMode === 'login' && (
-                <div className="auth-login-methods" role="radiogroup" aria-label={labels.loginTab}>
-                  <label>
-                    <input
-                      checked={loginMethod === 'password'}
-                      name="auth-login-method"
-                      onChange={() => setLoginMethod('password')}
-                      type="radio"
-                    />
-                    <span>{labels.loginMethodPassword}</span>
-                  </label>
-                  <label>
-                    <input
-                      checked={loginMethod === 'google'}
-                      name="auth-login-method"
-                      onChange={() => setLoginMethod('google')}
-                      type="radio"
-                    />
-                    <span>{labels.loginMethodGoogle}</span>
-                  </label>
-                </div>
-              )}
-              {(accountDialogMode === 'register' || loginMethod === 'password') && (
                 <>
-                  <label>
-                    <span>{labels.accountEmail}</span>
-                    <input
-                      autoComplete="email"
-                      required
-                      type="email"
-                      value={accountForm.email}
-                      onChange={(event) => setAccountForm((current) => ({ ...current, email: event.target.value }))}
-                    />
-                  </label>
-                  <label>
-                    <span>{labels.accountPassword}</span>
-                    <input
-                      autoComplete={accountDialogMode === 'register' ? 'new-password' : 'current-password'}
-                      minLength={8}
-                      required
-                      type="password"
-                      value={accountForm.password}
-                      onChange={(event) => setAccountForm((current) => ({ ...current, password: event.target.value }))}
-                    />
-                  </label>
-                  <p className="auth-panel-note">{labels.accountPasswordHelp}</p>
+                  <button className="auth-provider-button" type="button" onClick={startGoogleLogin}>
+                    <span aria-hidden="true" className="auth-provider-mark">G</span>
+                    <span>{labels.loginGoogle}</span>
+                  </button>
+                  <div className="auth-divider" role="separator">
+                    <span>{labels.dividerOr}</span>
+                  </div>
                 </>
               )}
+              {accountDialogMode === 'register' && (
+                <label>
+                  <span>{labels.accountDisplayName}</span>
+                  <input
+                    autoComplete="name"
+                    required
+                    type="text"
+                    value={accountForm.displayName}
+                    onChange={(event) => setAccountForm((current) => ({ ...current, displayName: event.target.value }))}
+                  />
+                </label>
+              )}
+              <label>
+                <span>{labels.accountEmail}</span>
+                <input
+                  autoComplete="email"
+                  required
+                  type="email"
+                  value={accountForm.email}
+                  onChange={(event) => setAccountForm((current) => ({ ...current, email: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>{labels.accountPassword}</span>
+                <input
+                  autoComplete={accountDialogMode === 'register' ? 'new-password' : 'current-password'}
+                  minLength={8}
+                  required
+                  type="password"
+                  value={accountForm.password}
+                  onChange={(event) => setAccountForm((current) => ({ ...current, password: event.target.value }))}
+                />
+              </label>
+              <p className="auth-panel-note">{labels.accountPasswordHelp}</p>
               {accountDialogMode === 'register' && (
                 <>
                   <p>{labels.privacyIntro}</p>
@@ -623,13 +576,27 @@ export function AuthPanel({
               )}
               {accountError && <p className="auth-panel-error">{accountError}</p>}
               <div className="auth-dialog-actions">
-                <button className="auth-button auth-button-secondary" type="button" onClick={closeAccountDialog}>
-                  {labels.cancel}
-                </button>
                 <button className="auth-button auth-button-primary" disabled={!canSubmitAccount || isSubmittingAccount} type="submit">
                   {accountDialogMode === 'register' ? labels.accountCreateSubmit : labels.accountLoginSubmit}
                 </button>
               </div>
+              <p className="auth-switch-line">
+                <span>{accountDialogMode === 'register' ? labels.switchToLogin : labels.switchToRegister}</span>{' '}
+                <button
+                  className="auth-link-button"
+                  type="button"
+                  onClick={() => {
+                    setAccountDialogMode(accountDialogMode === 'register' ? 'login' : 'register');
+                    setAccountError('');
+                    setPrivacyAccepted(false);
+                  }}
+                >
+                  {accountDialogMode === 'register' ? labels.switchToLoginAction : labels.switchToRegisterAction}
+                </button>
+              </p>
+              <button className="auth-link-button auth-cancel-link" type="button" onClick={closeAccountDialog}>
+                {labels.cancel}
+              </button>
             </form>
           </div>
         </div>
