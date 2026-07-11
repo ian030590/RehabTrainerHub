@@ -72,32 +72,50 @@ export function SettingsPage() {
 
         <div className="setting-row">
           <div className="setting-info">
-            <h3>{t('settings.fontSize')}</h3>
+            <h3>{t('settings.fontSize.title')}</h3>
+            <p>
+              {t('settings.fontSize.desc')}<br />
+              {t('settings.fontBold.desc')}
+            </p>
           </div>
-          <div className="range-control">
-            <input
-              aria-label={t('settings.fontSize')}
-              type="range"
-              min={MIN_UI_FONT_SIZE_PX}
-              max={MAX_UI_FONT_SIZE_PX}
-              value={fontSize}
-              onChange={(event) => updateFontSize(Number(event.currentTarget.value))}
-            />
-            <output>{t('settings.fontSizeValue', { size: fontSize })}</output>
+          <div className="font-setting-control typography-setting-control">
+            <button
+              type="button"
+              className="btn btn-sm btn-secondary"
+              disabled={fontSize <= MIN_UI_FONT_SIZE_PX}
+              aria-label={t('settings.fontSize.decrease')}
+              onClick={() => updateFontSize(fontSize - 1)}
+            >
+              {t('settings.fontSize.decrease')}
+            </button>
+            <span className="setting-value">
+              {t('settings.fontSize.value', { value: fontSize })}
+            </span>
+            <button
+              type="button"
+              className="btn btn-sm btn-secondary"
+              disabled={fontSize >= MAX_UI_FONT_SIZE_PX}
+              aria-label={t('settings.fontSize.increase')}
+              onClick={() => updateFontSize(fontSize + 1)}
+            >
+              {t('settings.fontSize.increase')}
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-ghost"
+              onClick={() => updateFontSize(DEFAULT_UI_FONT_SIZE_PX)}
+            >
+              {t('settings.fontSize.reset')}
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${bold ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => updateBold(!bold)}
+            >
+              {bold ? t('settings.fontBold.on') : t('settings.fontBold.off')}
+            </button>
           </div>
         </div>
-
-        <label className="setting-row setting-row-clickable">
-          <div className="setting-info">
-            <h3>{t('settings.bold')}</h3>
-            <p>{t('settings.boldDescription')}</p>
-          </div>
-          <input
-            type="checkbox"
-            checked={bold}
-            onChange={(event) => updateBold(event.currentTarget.checked)}
-          />
-        </label>
 
         <div className="setting-row">
           <div className="setting-info">

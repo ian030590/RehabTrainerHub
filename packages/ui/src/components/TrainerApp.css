@@ -578,6 +578,11 @@ body[data-ui-font-bold="true"] .app-layout :where(
   background: var(--bg-card);
 }
 
+.setting-info {
+  display: grid;
+  align-content: center;
+}
+
 .setting-info h3 {
   margin-bottom: 2px;
   font-size: calc(14px * var(--ui-font-scale, 1));
