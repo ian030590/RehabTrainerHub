@@ -640,22 +640,25 @@ body[data-ui-font-bold="true"] .app-layout :where(
 }
 
 .setting-info h3 {
-  margin-bottom: 2px;
+  margin: 0 0 2px;
   font-size: calc(16px * var(--ui-font-scale, 1));
   font-weight: var(--ui-font-heading-weight, var(--fw-bold, 700));
 }
 
 .setting-info p {
+  margin: 0;
   color: var(--text-muted);
   font-size: calc(13px * var(--ui-font-scale, 1));
 }
 
 .app-layout .setting-info h3 {
+  margin: 0 0 2px;
   font-size: calc(16px * var(--ui-font-scale, 1));
   font-weight: var(--ui-font-heading-weight, var(--fw-bold, 700));
 }
 
 .app-layout .setting-info p {
+  margin: 0;
   font-size: calc(13px * var(--ui-font-scale, 1));
 }
 
