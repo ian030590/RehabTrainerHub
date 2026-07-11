@@ -12,6 +12,12 @@ export interface TrainerNavbarItem {
   end?: boolean;
 }
 
+interface TrainerNavbarFooterLink {
+  href: string;
+  label: string;
+  external?: boolean;
+}
+
 export interface TrainerNavbarProps {
   brandLabel: string;
   brandHref?: string;
@@ -49,6 +55,11 @@ export function TrainerNavbar({
 }: TrainerNavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloadingScores, setIsDownloadingScores] = useState(false);
+  const footerLinks: TrainerNavbarFooterLink[] = [
+    { href: auth.apiBase, label: 'Hub' },
+    { href: `${auth.apiBase.replace(/\/+$/, '')}/privacy/`, label: auth.locale === 'en' ? 'Privacy' : '隱私權政策' },
+    { href: 'https://github.com/ian030590/RehabTrainerHub', label: 'GitHub', external: true },
+  ];
 
   const toggleMenu = () => setIsOpen((open) => !open);
   const closeMenu = () => setIsOpen(false);
@@ -130,6 +141,23 @@ export function TrainerNavbar({
               </button>
             </div>
           </div>
+
+          {footerLinks.length > 0 && (
+            <div className="navbar-footer-links">
+              {footerLinks.map((link) => (
+                <a
+                  className="navbar-footer-link"
+                  href={link.href}
+                  key={`${link.label}-${link.href}`}
+                  onClick={closeMenu}
+                  rel={link.external ? 'noopener noreferrer' : undefined}
+                  target={link.external ? '_blank' : undefined}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       {isOpen && <div className="navbar-overlay" onClick={closeMenu} />}
