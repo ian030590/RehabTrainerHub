@@ -24,6 +24,7 @@ export const MAX_UI_FONT_SIZE_PX = 30;
 export const DRIVING_DURATION_MIN_SEC = 80;
 export const DRIVING_DURATION_MAX_SEC = 240;
 export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel';
+export type UiTheme = 'light' | 'dark' | 'contrast';
 
 // ── Settings ──
 export interface AppSettings {
@@ -70,6 +71,7 @@ export interface AppSettings {
   drivingControlMode: DrivingControlMode;
   uiFontSizePx: number;
   uiFontBold: boolean;
+  uiTheme: UiTheme;
 }
 
 interface SettingMeta<T> {
@@ -122,6 +124,7 @@ const META: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> } = {
   drivingControlMode: { dflt: 'arrow' },
   uiFontSizePx: { dflt: DEFAULT_UI_FONT_SIZE_PX, min: MIN_UI_FONT_SIZE_PX, max: MAX_UI_FONT_SIZE_PX },
   uiFontBold: { dflt: false },
+  uiTheme: { dflt: 'light' },
 };
 
 function storageKey(name: string): string {
@@ -129,6 +132,10 @@ function storageKey(name: string): string {
 }
 
 export const ACTIVE_USER_CHANGED_EVENT = 'vision-trainer-active-user-changed';
+
+function isUiTheme(value: string): value is UiTheme {
+  return value === 'light' || value === 'dark' || value === 'contrast';
+}
 
 export function getSetting<K extends keyof AppSettings>(key: K): AppSettings[K] {
   const raw = localStorage.getItem(storageKey(key));
@@ -143,6 +150,9 @@ export function getSetting<K extends keyof AppSettings>(key: K): AppSettings[K] 
     if (meta.min !== undefined && num < meta.min) return meta.dflt;
     if (meta.max !== undefined && num > meta.max) return meta.dflt;
     return num as AppSettings[K];
+  }
+  if (key === 'uiTheme') {
+    return (isUiTheme(raw) ? raw : meta.dflt) as AppSettings[K];
   }
   return raw as unknown as AppSettings[K];
 }

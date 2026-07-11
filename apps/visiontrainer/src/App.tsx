@@ -73,6 +73,7 @@ function AppLayout() {
         fontSizePx: getSetting('uiFontSizePx'),
         defaultFontSizePx: DEFAULT_UI_FONT_SIZE_PX,
         fontBold: getSetting('uiFontBold'),
+        uiTheme: getSetting('uiTheme'),
       });
     };
 

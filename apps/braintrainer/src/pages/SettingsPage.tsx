@@ -16,6 +16,7 @@ export function SettingsPage() {
   const [fontSize, setFontSize] = useState(() => getSetting('uiFontSizePx'));
   const [bold, setBold] = useState(() => getSetting('uiFontBold'));
   const [theme, setTheme] = useState(() => getSetting('uiTheme'));
+  const [auditoryFeedbackEnabled, setAuditoryFeedbackEnabled] = useState(() => getSetting('auditoryFeedbackEnabled'));
 
   const updateLanguage = (nextLang: Language) => {
     setLang(nextLang);
@@ -36,10 +37,16 @@ export function SettingsPage() {
     setSetting('uiTheme', nextTheme);
   };
 
+  const updateAuditoryFeedback = (nextEnabled: boolean) => {
+    setAuditoryFeedbackEnabled(nextEnabled);
+    setSetting('auditoryFeedbackEnabled', nextEnabled);
+  };
+
   const resetSettings = () => {
     updateFontSize(DEFAULT_UI_FONT_SIZE_PX);
     updateBold(false);
     updateTheme('light');
+    updateAuditoryFeedback(true);
   };
 
   return (
@@ -119,9 +126,10 @@ export function SettingsPage() {
 
         <div className="setting-row">
           <div className="setting-info">
-            <h3>{t('settings.theme')}</h3>
+            <h3>{t('settings.theme.title')}</h3>
+            <p>{t('settings.theme.desc')}</p>
           </div>
-          <div className="segmented-control" role="group" aria-label={t('settings.theme')}>
+          <div className="segmented-control" role="group" aria-label={t('settings.theme.title')}>
             {themes.map((item) => (
               <button
                 type="button"
@@ -135,10 +143,19 @@ export function SettingsPage() {
           </div>
         </div>
 
-        <article className="settings-preview card">
-          <h3>{t('settings.previewTitle')}</h3>
-          <p>{t('settings.previewBody')}</p>
-        </article>
+        <div className="setting-row">
+          <div className="setting-info">
+            <h3>{t('settings.sound.title')}</h3>
+            <p>{t('settings.sound.desc')}</p>
+          </div>
+          <button
+            type="button"
+            className={`btn btn-sm ${auditoryFeedbackEnabled ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => updateAuditoryFeedback(!auditoryFeedbackEnabled)}
+          >
+            {auditoryFeedbackEnabled ? t('settings.sound.on') : t('settings.sound.off')}
+          </button>
+        </div>
 
         <button className="btn btn-secondary reset-button" type="button" onClick={resetSettings}>
           {t('settings.reset')}

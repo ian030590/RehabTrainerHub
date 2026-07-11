@@ -20,10 +20,12 @@ import {
   DEFAULT_UI_FONT_SIZE_PX,
   MAX_UI_FONT_SIZE_PX,
   MIN_UI_FONT_SIZE_PX,
+  type UiTheme,
 } from '../../utils/settings';
 import { pixelFromMillimeter } from '../../utils/spatialUtils';
 
 type Tab = 'general' | 'calibration' | 'webgazer' | 'gamma' | 'crowding';
+const themes: UiTheme[] = ['light', 'dark', 'contrast'];
 
 export function SettingsPage() {
   const { t } = useT();
@@ -62,6 +64,7 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
   const { t, lang, setLang } = useT();
   const uiFontSizePx = getSetting('uiFontSizePx');
   const uiFontBold = getSetting('uiFontBold');
+  const uiTheme = getSetting('uiTheme');
   const setUiFontSize = (nextSizePx: number) => {
     const clampedSizePx = Math.min(MAX_UI_FONT_SIZE_PX, Math.max(MIN_UI_FONT_SIZE_PX, nextSizePx));
     setSetting('uiFontSizePx', clampedSizePx);
@@ -143,6 +146,28 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
         </div>
       </div>
 
+      <div className="setting-row">
+        <div className="setting-info">
+          <h3>{t('settings.theme.title')}</h3>
+          <p>{t('settings.theme.desc')}</p>
+        </div>
+        <div className="segmented-control" role="group" aria-label={t('settings.theme.title')}>
+          {themes.map((theme) => (
+            <button
+              type="button"
+              className={`btn btn-sm ${uiTheme === theme ? 'btn-primary' : 'btn-secondary'}`}
+              key={theme}
+              onClick={() => {
+                setSetting('uiTheme', theme);
+                refresh();
+              }}
+            >
+              {t(`settings.theme.${theme}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Viewing Distance */}
       <SettingRow
         title={t('settings.distance.title')}
@@ -157,7 +182,9 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
           }
         }}
         editPlaceholder="60"
-      />      {/* Sound Toggle */}
+      />
+
+      {/* Sound Toggle */}
       <div className="setting-row">
         <div className="setting-info">
           <h3>{t('settings.sound.title')}</h3>
@@ -169,22 +196,10 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
             setSetting('auditoryFeedbackEnabled', !getSetting('auditoryFeedbackEnabled'));
             refresh();
           }}
-        >
-          {getSetting('auditoryFeedbackEnabled') ? t('settings.sound.on') : t('settings.sound.off')}
-        </button>
+      >
+        {getSetting('auditoryFeedbackEnabled') ? t('settings.sound.on') : t('settings.sound.off')}
+      </button>
       </div>
-
-      {/* Download Prefix */}
-      <SettingRow
-        title={t('settings.prefix.title')}
-        desc={t('settings.prefix.desc')}
-        value={getSetting('downloadDirectory') || t('settings.prefix.notSet')}
-        onEdit={(val) => {
-          setSetting('downloadDirectory', val);
-          refresh();
-        }}
-        editPlaceholder={t('settings.prefix.placeholder')}
-      />
     </div>
   );
 }

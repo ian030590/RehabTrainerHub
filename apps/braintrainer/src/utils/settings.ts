@@ -11,6 +11,7 @@ export interface AppSettings {
   uiFontSizePx: number;
   uiFontBold: boolean;
   uiTheme: UiTheme;
+  auditoryFeedbackEnabled: boolean;
 }
 
 interface SettingMeta<T> {
@@ -23,6 +24,7 @@ const META: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> } = {
   uiFontSizePx: { dflt: DEFAULT_UI_FONT_SIZE_PX, min: MIN_UI_FONT_SIZE_PX, max: MAX_UI_FONT_SIZE_PX },
   uiFontBold: { dflt: false },
   uiTheme: { dflt: 'light' },
+  auditoryFeedbackEnabled: { dflt: true },
 };
 
 function storageKey(name: string) {

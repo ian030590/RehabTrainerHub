@@ -19,6 +19,58 @@ body,
   -moz-osx-font-smoothing: grayscale;
 }
 
+body[data-ui-theme="dark"] {
+  color-scheme: dark;
+  --bg: var(--theme-dark-bg);
+  --bg-panel: var(--theme-dark-bg-panel);
+  --bg-card: var(--theme-dark-bg-card);
+  --bg-card-hover: var(--theme-dark-bg-card-hover);
+  --accent: var(--theme-dark-accent);
+  --accent-dark: var(--theme-dark-accent-dark);
+  --accent-hover: var(--theme-dark-accent-hover);
+  --success: var(--theme-dark-success);
+  --error: var(--theme-dark-error);
+  --warning: var(--theme-dark-warning);
+  --text-on-accent: var(--theme-dark-text-on-accent);
+  --text-primary: var(--theme-dark-text-primary);
+  --text-secondary: var(--theme-dark-text-secondary);
+  --text-muted: var(--theme-dark-text-muted);
+  --border: var(--theme-dark-border);
+  --border-hover: var(--theme-dark-border-hover);
+  --bg-elevated: var(--theme-dark-bg-elevated);
+  --bg-overlay: var(--theme-dark-bg-overlay);
+  --bg-accent-soft: var(--theme-dark-bg-accent-soft);
+  --logo-filter: var(--theme-dark-logo-filter);
+  --shadow-card: var(--theme-dark-shadow-card);
+  --shadow-floating: var(--theme-dark-shadow-floating);
+}
+
+body[data-ui-theme="contrast"] {
+  color-scheme: dark;
+  --bg: var(--theme-contrast-bg);
+  --bg-panel: var(--theme-contrast-bg);
+  --bg-card: var(--theme-contrast-bg);
+  --bg-card-hover: var(--theme-contrast-bg-card-hover);
+  --accent: var(--theme-contrast-accent);
+  --accent-dark: var(--theme-contrast-accent-dark);
+  --accent-hover: var(--theme-contrast-accent-dark);
+  --success: var(--theme-contrast-accent);
+  --error: var(--theme-contrast-accent);
+  --warning: var(--theme-contrast-accent);
+  --text-on-accent: var(--theme-contrast-text-on-accent);
+  --text-primary: var(--theme-contrast-text-primary);
+  --text-secondary: var(--theme-contrast-text-primary);
+  --text-muted: var(--theme-contrast-text-muted);
+  --border: var(--theme-contrast-border);
+  --border-hover: var(--theme-contrast-accent);
+  --bg-elevated: var(--theme-contrast-bg);
+  --bg-overlay: var(--theme-contrast-bg-overlay);
+  --bg-accent-soft: var(--theme-contrast-bg-accent-soft);
+  --logo-filter: var(--theme-contrast-logo-filter);
+  --shadow-card: none;
+  --shadow-floating: none;
+}
+
 body {
   margin: 0;
   overflow: hidden;

@@ -7,13 +7,17 @@ import {
   MIN_UI_FONT_SIZE_PX,
   DEFAULT_UI_FONT_SIZE_PX
 } from '../../utils/settings';
+import type { UiTheme } from '../../utils/settings';
 import { SettingRow } from './SettingRow';
+
+const themes: UiTheme[] = ['light', 'dark', 'contrast'];
 
 /* ── General Tab ── */
 export function GeneralTab({ refresh }: { refresh: () => void }) {
   const { t, lang, setLang } = useT();
   const uiFontSizePx = getSetting('uiFontSizePx');
   const uiFontBold = getSetting('uiFontBold');
+  const uiTheme = getSetting('uiTheme');
   const auditoryFeedbackEnabled = getSetting('auditoryFeedbackEnabled');
   const soundVolume = getSetting('soundVolume');
   const setUiFontSize = (nextSizePx: number) => {
@@ -102,6 +106,28 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
         </div>
       </div>
 
+      <div className="setting-row">
+        <div className="setting-info">
+          <h3>{t('settings.theme.title')}</h3>
+          <p>{t('settings.theme.desc')}</p>
+        </div>
+        <div className="segmented-control" role="group" aria-label={t('settings.theme.title')}>
+          {themes.map((theme) => (
+            <button
+              type="button"
+              className={`btn btn-sm ${uiTheme === theme ? 'btn-primary' : 'btn-secondary'}`}
+              key={theme}
+              onClick={() => {
+                setSetting('uiTheme', theme);
+                refresh();
+              }}
+            >
+              {t(`settings.theme.${theme}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Viewing Distance */}
       <SettingRow
         title={t('settings.distance.title')}
@@ -116,7 +142,9 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
           }
         }}
         editPlaceholder="60"
-      />      {/* Sound Toggle */}
+      />
+
+      {/* Sound Toggle */}
       <div className="setting-row">
         <div className="setting-info">
           <h3>{t('settings.sound.title')}</h3>
@@ -156,18 +184,6 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
           </button>
         </div>
       </div>
-
-      {/* Download Prefix */}
-      <SettingRow
-        title={t('settings.prefix.title')}
-        desc={t('settings.prefix.desc')}
-        value={getSetting('downloadDirectory') || t('settings.prefix.notSet')}
-        onEdit={(val: string) => {
-          setSetting('downloadDirectory', val);
-          refresh();
-        }}
-        editPlaceholder={t('settings.prefix.placeholder')}
-      />
     </div>
   );
 }

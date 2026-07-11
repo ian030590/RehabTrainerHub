@@ -21,6 +21,7 @@ export const MAX_UI_FONT_SIZE_PX = 30;
 export const DRIVING_DURATION_MIN_SEC = 80;
 export const DRIVING_DURATION_MAX_SEC = 240;
 export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel';
+export type UiTheme = 'light' | 'dark' | 'contrast';
 
 // ── Settings ──
 export interface AppSettings {
@@ -59,6 +60,7 @@ export interface AppSettings {
   drivingControlMode: DrivingControlMode;
   uiFontSizePx: number;
   uiFontBold: boolean;
+  uiTheme: UiTheme;
 }
 
 interface SettingMeta<T> {
@@ -103,6 +105,7 @@ const META: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> } = {
   drivingControlMode: { dflt: 'arrow' },
   uiFontSizePx: { dflt: DEFAULT_UI_FONT_SIZE_PX, min: MIN_UI_FONT_SIZE_PX, max: MAX_UI_FONT_SIZE_PX },
   uiFontBold: { dflt: false },
+  uiTheme: { dflt: 'light' },
 };
 
 function storageKey(name: string): string {
@@ -113,6 +116,10 @@ export const ACTIVE_USER_CHANGED_EVENT = 'stroke-trainer-active-user-changed';
 export const SETTINGS_CHANGED_EVENT = 'stroke-trainer-settings-changed';
 
 const settingCache: Partial<AppSettings> = {};
+
+function isUiTheme(value: string): value is UiTheme {
+  return value === 'light' || value === 'dark' || value === 'contrast';
+}
 
 export function getSetting<K extends keyof AppSettings>(key: K): AppSettings[K] {
   if (Object.prototype.hasOwnProperty.call(settingCache, key)) {
@@ -139,6 +146,11 @@ export function getSetting<K extends keyof AppSettings>(key: K): AppSettings[K] 
     }
     settingCache[key] = num as AppSettings[K];
     return settingCache[key] as AppSettings[K];
+  }
+  if (key === 'uiTheme') {
+    const value = (isUiTheme(raw) ? raw : meta.dflt) as AppSettings[K];
+    settingCache[key] = value;
+    return value;
   }
   settingCache[key] = raw as unknown as AppSettings[K];
   return settingCache[key] as AppSettings[K];
