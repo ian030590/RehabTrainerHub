@@ -77,10 +77,16 @@
   --fw-medium: 500;
   --fw-bold: 700;
   --font-family: var(--font-body);
+  --ui-font-size: 1rem;
+  --ui-font-scale: 1;
+  --ui-font-weight: var(--fw-medium);
+  --ui-font-medium-weight: var(--fw-bold);
+  --ui-font-heading-weight: var(--fw-bold);
   --bg-card: var(--surface-white);
   --bg-overlay: rgba(0, 0, 0, 0.45);
   --accent: var(--primary);
   --accent-dark: var(--primary);
+  --warning: #946200;
   --text-on-accent: var(--on-primary);
   --text-primary: var(--on-surface);
   --text-secondary: var(--on-surface-variant);
@@ -121,6 +127,7 @@
   --outline-variant: #909090;
   --error-container: #4a2624;
   --error: #ffb4ab;
+  --warning: #f2b866;
   --focus: #9bbcff;
   --on-primary-fixed-variant: #a9c5ff;
   --on-tertiary-fixed: #c7c7c7;
@@ -160,6 +167,7 @@
   --outline-variant: #ffffff;
   --error-container: #000000;
   --error: #ffb4ab;
+  --warning: #ffff00;
   --focus: #ffff00;
   --on-primary-fixed-variant: #ffff00;
   --on-tertiary-fixed: #ffffff;
@@ -171,10 +179,12 @@
 
 :root[data-font-scale="large"] {
   font-size: 18px;
+  --ui-font-scale: 1.125;
 }
 
 :root[data-font-scale="extra"] {
   font-size: 20px;
+  --ui-font-scale: 1.25;
 }
 
 :root[data-locale="zh-TW"] {
@@ -189,6 +199,7 @@
   :root {
     --brain-accent: LinkText;
     --brain-accent-hover: Highlight;
+    --warning: CanvasText;
     --logo-border: CanvasText;
     --logo-filter: grayscale(1) contrast(1.8);
     --hero-image-filter: grayscale(1) invert(1) contrast(1.45);

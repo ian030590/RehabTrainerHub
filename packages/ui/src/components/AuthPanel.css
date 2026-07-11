@@ -31,6 +31,22 @@
   color: var(--error);
 }
 
+.auth-sensitive-warning,
+.auth-dialog .auth-sensitive-warning {
+  --auth-warning: var(--warning, var(--error));
+
+  margin: 12px 0;
+  padding: clamp(12px, calc(12px * var(--ui-font-scale, 1)), 20px) clamp(14px, calc(16px * var(--ui-font-scale, 1)), 24px);
+  border: 2px solid var(--auth-warning);
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--auth-warning) 14%, var(--bg-card));
+  color: var(--text-primary);
+  font-size: calc(16px * var(--ui-font-scale, 1));
+  font-weight: var(--ui-font-heading-weight, var(--fw-bold, 700));
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
 .auth-privacy-link {
   color: var(--accent);
   font-weight: var(--fw-bold, 700);
@@ -105,23 +121,25 @@
   z-index: 1000;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding-block: clamp(20px, 4vh, 40px);
+  padding-inline: clamp(24px, 5vw, 56px);
   background: var(--bg-overlay, rgba(15, 23, 42, 0.58));
 }
 
 .auth-dialog {
-  width: min(680px, 100%);
-  max-height: min(90vh, 920px);
+  width: min(calc(680px * var(--ui-font-scale, 1)), 100%);
+  max-height: min(90vh, calc(920px * var(--ui-font-scale, 1)));
   overflow: auto;
-  padding: 28px;
+  padding: clamp(24px, calc(28px * var(--ui-font-scale, 1)), 44px);
   border: 1px solid var(--border);
   border-radius: var(--radius-l);
   background: var(--bg-card);
   box-shadow: var(--shadow-floating);
+  font-size: var(--ui-font-size, 1rem);
 }
 
 .auth-profile-dialog {
-  width: min(860px, 100%);
+  width: min(calc(860px * var(--ui-font-scale, 1)), 100%);
 }
 
 .auth-dialog h2 {
@@ -211,6 +229,16 @@
   }
 
   .auth-dialog {
-    padding: 22px;
+    padding: clamp(22px, calc(24px * var(--ui-font-scale, 1)), 34px);
+  }
+}
+
+@media (forced-colors: active) {
+  .auth-sensitive-warning,
+  .auth-dialog .auth-sensitive-warning {
+    --auth-warning: CanvasText;
+
+    background: Canvas;
+    color: CanvasText;
   }
 }

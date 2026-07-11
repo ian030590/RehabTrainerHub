@@ -70,7 +70,7 @@ const text = {
     selectPlaceholder: '請選擇',
     nationalityPlaceholder: '例如：台灣',
     chronicTitle: '是否有以下慢性病診斷',
-    chronicReminder: '提醒：若沒有醫師診斷，請勿自行猜測填寫。',
+    chronicReminder: '慢性病欄位請只填寫已由醫師診斷的狀況；若沒有醫師診斷，請勿自行猜測填寫。',
     centralNervousSystem: '中樞神經疾患（包含：腦傷、中風、腦腫瘤等）',
     metabolic: '新陳代謝疾患（包含：糖尿病、甲狀腺機能異常、慢性腎臟、肝臟疾病等）',
     developmental: '發展性疾患（包含：自閉症、亞斯伯格、過動症、發展遲緩等）',
@@ -128,7 +128,7 @@ const text = {
     selectPlaceholder: 'Select',
     nationalityPlaceholder: 'For example: Taiwan',
     chronicTitle: 'Physician-diagnosed chronic conditions',
-    chronicReminder: 'Reminder: do not guess or self-diagnose without a physician diagnosis.',
+    chronicReminder: 'Only select chronic conditions diagnosed by a physician. Do not guess or self-diagnose.',
     centralNervousSystem: 'Central nervous system conditions, including brain injury, stroke, or brain tumor',
     metabolic: 'Metabolic conditions, including diabetes, thyroid disorders, chronic kidney or liver disease',
     developmental: 'Developmental conditions, including autism, Asperger syndrome, ADHD, or developmental delay',
@@ -410,7 +410,7 @@ export function AuthPanel({
             <ul>
               {labels.privacyItems.map((item) => <li key={item}>{item}</li>)}
             </ul>
-            <p className="auth-panel-warning">{labels.privacySensitive}</p>
+            <p className="auth-sensitive-warning">{labels.privacySensitive}</p>
             <p>
               <a className="auth-privacy-link" href={resolvedPrivacyHref} target="_blank" rel="noopener noreferrer">
                 {labels.privacyPolicyLink}
@@ -476,7 +476,7 @@ export function AuthPanel({
 
             <fieldset className="auth-fieldset">
               <legend>{labels.chronicTitle}</legend>
-              <p className="auth-panel-warning">{labels.chronicReminder}</p>
+              <p className="auth-sensitive-warning">{labels.chronicReminder}</p>
               {chronicOptions.map((option) => (
                 <label className="auth-checkbox-row" key={option}>
                   <input
