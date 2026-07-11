@@ -423,7 +423,7 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
         setMessage(t('settings.wg.errorContainer'));
         return;
       }
-      container.innerHTML = '';
+      container.replaceChildren();
 
       try {
         const jsPsych = initJsPsych({

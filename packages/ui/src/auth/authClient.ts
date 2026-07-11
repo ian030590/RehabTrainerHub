@@ -9,6 +9,19 @@ export const AUTH_CHANGED_EVENT = 'rehab-auth-changed';
 export const AUTH_MESSAGE_TYPE = 'rehabtrainerhub-auth-session';
 
 const AUTH_TOKEN_KEY = 'rehabtrainerhub.auth.token';
+const LOCAL_TRAINING_STORAGE_KEYS = [
+  'stroke_trainer_training_records_v1',
+  'stroke_trainer_users',
+  'stroke_trainer_active_user',
+  'vision_trainer_training_records_v1',
+  'vision_trainer_training_high_scores_v1',
+  'vision_trainer_users',
+  'vision_trainer_active_user',
+];
+const LOCAL_TRAINING_DATABASES = [
+  'stroke-trainer-training-records',
+  'vision_trainer_training_records',
+];
 
 export interface HabitFrequency<Unit extends string> {
   interval: HabitInterval;
@@ -167,19 +180,6 @@ export function openAuthPopup(url: string): Window | null {
   );
 }
 
-export function consumeAuthTokenFromUrl(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  const url = new URL(window.location.href);
-  const token = url.searchParams.get('auth_token');
-  if (!token) return false;
-
-  setAuthToken(token);
-  url.searchParams.delete('auth_token');
-  window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
-  return true;
-}
-
 export function isAuthSessionMessage(value: unknown): value is AuthSessionMessage {
   if (!value || typeof value !== 'object') return false;
   const message = value as Record<string, unknown>;
@@ -231,8 +231,35 @@ export async function logoutAuthSession(apiBase?: string): Promise<void> {
       credentials: 'include',
     });
   } finally {
+    await clearLocalTrainerData();
     clearAuthToken();
   }
+}
+
+export async function clearLocalTrainerData(): Promise<void> {
+  if (typeof window === 'undefined') return;
+
+  try {
+    for (const key of LOCAL_TRAINING_STORAGE_KEYS) {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // Best-effort shared-device cleanup; logout must still clear the auth token.
+  }
+  await Promise.allSettled(LOCAL_TRAINING_DATABASES.map(deleteIndexedDatabase));
+}
+
+function deleteIndexedDatabase(name: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (!('indexedDB' in window)) {
+      resolve();
+      return;
+    }
+    const request = window.indexedDB.deleteDatabase(name);
+    request.onsuccess = () => resolve();
+    request.onerror = () => resolve();
+    request.onblocked = () => resolve();
+  });
 }
 
 async function parseAuthSessionResponse(response: Response, fallbackMessage: string): Promise<SharedAuthSession> {
@@ -251,7 +278,7 @@ async function parseAuthSessionResponse(response: Response, fallbackMessage: str
 export async function registerPasswordAccount(
   apiBase: string | undefined,
   payload: PasswordAccountRegisterPayload,
-): Promise<SharedAuthSession> {
+): Promise<void> {
   const response = await fetch(buildApiUrl(apiBase, '/api/auth/password/register'), {
     method: 'POST',
     credentials: 'include',
@@ -261,7 +288,9 @@ export async function registerPasswordAccount(
     body: JSON.stringify(payload),
   });
 
-  return parseAuthSessionResponse(response, 'Unable to create account');
+  if (!response.ok) {
+    throw new Error(`Unable to create account. Status ${response.status}`);
+  }
 }
 
 export async function loginPasswordAccount(

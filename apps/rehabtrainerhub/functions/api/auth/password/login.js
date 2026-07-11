@@ -6,6 +6,8 @@ import {
   jsonResponse,
   normalizeEmail,
   optionsResponse,
+  rateLimitResponse,
+  rejectDisallowedOrigin,
   requireDatabase,
   toPublicUser,
   verifyPassword,
@@ -16,6 +18,9 @@ export function onRequestOptions({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
+  const originError = rejectDisallowedOrigin(request, env);
+  if (originError) return originError;
+
   let payload;
   try {
     payload = await request.json();
@@ -28,6 +33,15 @@ export async function onRequestPost({ request, env }) {
   if (!isValidEmail(email) || !password) {
     return errorResponse(request, env, 'Invalid email or password.', 401);
   }
+
+  const ipLimit = await rateLimitResponse(request, env, 'password-login', { limit: 10, windowSeconds: 60 });
+  if (ipLimit) return ipLimit;
+  const accountLimit = await rateLimitResponse(request, env, 'password-login-account', {
+    identity: email,
+    limit: 20,
+    windowSeconds: 15 * 60,
+  });
+  if (accountLimit) return accountLimit;
 
   try {
     const account = await requireDatabase(env)

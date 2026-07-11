@@ -7,7 +7,6 @@ import {
   type RehabProfile,
   buildAuthStartUrl,
   clearAuthToken,
-  consumeAuthTokenFromUrl,
   fetchCurrentAuthUser,
   fetchSharedAuthSession,
   getAuthApiOrigin,
@@ -82,6 +81,7 @@ const text = {
     switchToRegisterAction: '註冊',
     accountInvalid: '請填寫姓名、有效 email 與至少 8 個字元的密碼。',
     accountFailed: '帳號登入或建立失敗，請確認資料後再試一次。',
+    accountCreated: '帳號建立完成，請使用同一組 email 與密碼登入。',
     profileTitle: '匿名基本資料',
     profileIntro: '這些資料會和登入後的成績一起保存。請填寫已知資料，不確定時選擇不提供或不勾選。',
     ageRange: '年齡',
@@ -158,6 +158,7 @@ const text = {
     switchToRegisterAction: 'Sign up',
     accountInvalid: 'Enter a name, valid email, and a password with at least 8 characters.',
     accountFailed: 'Account sign-in or creation failed. Check the details and try again.',
+    accountCreated: 'Account created. Sign in with the same email and password.',
     profileTitle: 'Anonymous Profile',
     profileIntro: 'These fields are saved with signed-in scores. Fill in known data only.',
     ageRange: 'Age',
@@ -312,9 +313,7 @@ export function AuthPanel({
   }, [apiBase, applyLoadedUser]);
 
   useEffect(() => {
-    const consumed = consumeAuthTokenFromUrl();
     void loadUser();
-    if (consumed) window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
   }, [loadUser]);
 
   useEffect(() => {
@@ -388,14 +387,19 @@ export function AuthPanel({
     setIsSubmittingAccount(true);
     setAccountError('');
     try {
-      const session = accountDialogMode === 'register'
-        ? await registerPasswordAccount(apiBase, {
-            displayName,
-            email,
-            password,
-            privacyAccepted: true,
-          })
-        : await loginPasswordAccount(apiBase, { email, password });
+      if (accountDialogMode === 'register') {
+        await registerPasswordAccount(apiBase, {
+          displayName,
+          email,
+          password,
+          privacyAccepted: true,
+        });
+        setAccountDialogMode('login');
+        setAccountForm({ displayName: '', email, password: '' });
+        setAccountError(labels.accountCreated);
+        return;
+      }
+      const session = await loginPasswordAccount(apiBase, { email, password });
       setAuthToken(session.token);
       applyLoadedUser(session.user);
     } catch (submitError) {

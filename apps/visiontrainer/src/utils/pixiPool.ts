@@ -144,7 +144,7 @@ export function createPixiTrialContainer(
   displayElement: HTMLElement,
   styleText = DEFAULT_TRIAL_CONTAINER_STYLE,
 ): HTMLDivElement {
-  displayElement.innerHTML = '';
+  displayElement.replaceChildren();
   const container = document.createElement('div');
   container.style.cssText = styleText;
   displayElement.appendChild(container);
@@ -159,7 +159,7 @@ export function attachPixiTrialCanvas(container: HTMLElement): void {
 export function cleanupPixiTrial(displayElement: HTMLElement): void {
   pixiAppManager.clearStage();
   pixiAppManager.detachCanvas();
-  displayElement.innerHTML = '';
+  displayElement.replaceChildren();
 }
 
 export function runPixiTrial(displayElement: HTMLElement, runWithApp: (app: Application) => void): void {
@@ -174,7 +174,7 @@ export function runPixiTrial(displayElement: HTMLElement, runWithApp: (app: Appl
   pixiAppManager.ensureReady().then(runWithApp).catch((error) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error('PixiJS init failed:', error);
-    displayElement.innerHTML = '';
+    displayElement.replaceChildren();
     const errorElement = document.createElement('div');
     errorElement.style.cssText = 'color:red;padding:20px;';
     errorElement.textContent = `PixiJS initialization failed: ${message}`;

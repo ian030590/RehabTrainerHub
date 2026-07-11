@@ -177,7 +177,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   trial(display_element: HTMLElement, trial: TrialType<Info>) {
-    display_element.innerHTML = '';
+    display_element.replaceChildren();
     this.resetTrialState(trial);
     SoundManager.init();
 
@@ -318,56 +318,158 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const text = this.text;
     const diffKey = this.getDifficultyLabel();
 
-    overlay.innerHTML = `
-      <div style="width:min(760px, 100%); border:1px solid rgba(255,255,255,0.18); border-radius:24px; padding:40px 36px 32px; background:rgba(255,255,255,0.06); box-shadow:0 30px 90px rgba(0,0,0,0.36);">
+    const card = document.createElement('div');
+    Object.assign(card.style, {
+      width: 'min(760px, 100%)',
+      border: '1px solid rgba(255,255,255,0.18)',
+      borderRadius: '24px',
+      padding: '40px 36px 32px',
+      background: 'rgba(255,255,255,0.06)',
+      boxShadow: '0 30px 90px rgba(0,0,0,0.36)',
+    });
 
-        <div style="font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#7dd3fc; font-weight:700; margin-bottom:6px;">${text.eyebrow}</div>
-        <h1 style="font-size:34px; line-height:1.15; margin:0 0 16px; font-weight:800;">${text.title}</h1>
+    const eyebrow = document.createElement('div');
+    Object.assign(eyebrow.style, {
+      fontSize: '13px',
+      letterSpacing: '2px',
+      textTransform: 'uppercase',
+      color: '#7dd3fc',
+      fontWeight: '700',
+      marginBottom: '6px',
+    });
+    eyebrow.textContent = text.eyebrow;
 
-        <p style="font-size:15px; line-height:1.85; color:rgba(255,255,255,0.75); margin:0 0 28px;">
-          ${text.introA}<b style="color:#7dd3fc;">${text.routeMap}</b>${text.introB}<br>
-          ${text.hazardIntroA}<b style="color:#fbbf24;">${text.randomHazards}</b>${text.hazardIntroB}
-          ${text.difficultyLabel}: <b style="color:#38bdf8;">${diffKey}</b>
-        </p>
+    const title = document.createElement('h1');
+    Object.assign(title.style, {
+      fontSize: '34px',
+      lineHeight: '1.15',
+      margin: '0 0 16px',
+      fontWeight: '800',
+    });
+    title.textContent = text.title;
 
-        <!-- Controls info — styled as plain info, NOT as clickable buttons -->
-        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:28px;">
-          <div style="padding:16px 14px; border-radius:14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);">
-            <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#7dd3fc; font-weight:700; margin-bottom:6px;">${text.steering}</div>
-            <div style="font-size:14px; color:rgba(255,255,255,0.62);">${this.getSteeringHint()}</div>
-          </div>
-          <div style="padding:16px 14px; border-radius:14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);">
-            <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#7dd3fc; font-weight:700; margin-bottom:6px;">${text.throttle}</div>
-            <div style="font-size:14px; color:rgba(255,255,255,0.62);">${this.getThrottleHint()}</div>
-          </div>
-          <div style="padding:16px 14px; border-radius:14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);">
-            <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#7dd3fc; font-weight:700; margin-bottom:6px;">${text.emergencyBrake}</div>
-            <div style="font-size:14px; color:rgba(255,255,255,0.62);">${this.getBrakeHint()}</div>
-          </div>
-        </div>
+    const intro = document.createElement('p');
+    Object.assign(intro.style, {
+      fontSize: '15px',
+      lineHeight: '1.85',
+      color: 'rgba(255,255,255,0.75)',
+      margin: '0 0 28px',
+    });
+    intro.append(
+      text.introA,
+      this.createInlineStrong(text.routeMap, '#7dd3fc'),
+      text.introB,
+      document.createElement('br'),
+      text.hazardIntroA,
+      this.createInlineStrong(text.randomHazards, '#fbbf24'),
+      text.hazardIntroB,
+      `${text.difficultyLabel}: `,
+      this.createInlineStrong(diffKey, '#38bdf8'),
+    );
 
-        <div data-driving-input-bars style="display:grid; gap:10px; margin-bottom:22px;"></div>
-        <div data-driving-ready style="font-size:13px; color:rgba(255,255,255,0.55); margin-bottom:22px;">${text.loading3d}</div>
+    const controls = document.createElement('div');
+    Object.assign(controls.style, {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gap: '14px',
+      marginBottom: '28px',
+    });
+    controls.append(
+      this.createControlInfo(text.steering, this.getSteeringHint()),
+      this.createControlInfo(text.throttle, this.getThrottleHint()),
+      this.createControlInfo(text.emergencyBrake, this.getBrakeHint()),
+    );
 
-        <button data-driving-start style="
-          width:100%; min-height:58px; border:0; border-radius:16px;
-          background:linear-gradient(135deg, #38bdf8, #0ea5e9);
-          color:#062338; font-size:18px; font-weight:800; cursor:pointer;
-          box-shadow:0 4px 20px rgba(56, 189, 248, 0.35);
-          transition: transform 0.12s, box-shadow 0.12s;
-        " onmouseenter="this.style.transform='scale(1.02)'; this.style.boxShadow='0 6px 28px rgba(56, 189, 248, 0.45)';"
-           onmouseleave="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 20px rgba(56, 189, 248, 0.35)';"
-        >${text.startMission}</button>
+    const inputBars = document.createElement('div');
+    inputBars.dataset.drivingInputBars = '';
+    Object.assign(inputBars.style, { display: 'grid', gap: '10px', marginBottom: '22px' });
 
-        <div style="margin-top:14px; text-align:center; font-size:12px; color:rgba(255,255,255,0.42);">${text.startHint}</div>
-      </div>
-    `;
+    const ready = document.createElement('div');
+    ready.dataset.drivingReady = '';
+    Object.assign(ready.style, {
+      fontSize: '13px',
+      color: 'rgba(255,255,255,0.55)',
+      marginBottom: '22px',
+    });
+    ready.textContent = text.loading3d;
 
-    const inputBars = overlay.querySelector<HTMLDivElement>('[data-driving-input-bars]');
+    const start = document.createElement('button');
+    start.dataset.drivingStart = '';
+    start.type = 'button';
+    Object.assign(start.style, {
+      width: '100%',
+      minHeight: '58px',
+      border: '0',
+      borderRadius: '16px',
+      background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)',
+      color: '#062338',
+      fontSize: '18px',
+      fontWeight: '800',
+      cursor: 'pointer',
+      boxShadow: '0 4px 20px rgba(56, 189, 248, 0.35)',
+      transition: 'transform 0.12s, box-shadow 0.12s',
+    });
+    start.textContent = text.startMission;
+    start.addEventListener('mouseenter', () => {
+      start.style.transform = 'scale(1.02)';
+      start.style.boxShadow = '0 6px 28px rgba(56, 189, 248, 0.45)';
+    });
+    start.addEventListener('mouseleave', () => {
+      start.style.transform = 'scale(1)';
+      start.style.boxShadow = '0 4px 20px rgba(56, 189, 248, 0.35)';
+    });
+
+    const hint = document.createElement('div');
+    Object.assign(hint.style, {
+      marginTop: '14px',
+      textAlign: 'center',
+      fontSize: '12px',
+      color: 'rgba(255,255,255,0.42)',
+    });
+    hint.textContent = text.startHint;
+
+    card.append(eyebrow, title, intro, controls, inputBars, ready, start, hint);
+    overlay.appendChild(card);
+
     if (inputBars) this.hud = { status: document.createElement('div'), speed: document.createElement('div'), distance: document.createElement('div'), event: document.createElement('div'), redFlash: document.createElement('div'), inputBars };
 
     root.appendChild(overlay);
     return overlay;
+  }
+
+  private createInlineStrong(text: string, color: string): HTMLElement {
+    const strong = document.createElement('b');
+    strong.style.color = color;
+    strong.textContent = text;
+    return strong;
+  }
+
+  private createControlInfo(label: string, hint: string): HTMLElement {
+    const item = document.createElement('div');
+    Object.assign(item.style, {
+      padding: '16px 14px',
+      borderRadius: '14px',
+      background: 'rgba(255,255,255,0.05)',
+      border: '1px solid rgba(255,255,255,0.08)',
+    });
+    const title = document.createElement('div');
+    Object.assign(title.style, {
+      fontSize: '11px',
+      letterSpacing: '1px',
+      textTransform: 'uppercase',
+      color: '#7dd3fc',
+      fontWeight: '700',
+      marginBottom: '6px',
+    });
+    title.textContent = label;
+    const body = document.createElement('div');
+    Object.assign(body.style, {
+      fontSize: '14px',
+      color: 'rgba(255,255,255,0.62)',
+    });
+    body.textContent = hint;
+    item.append(title, body);
+    return item;
   }
 
   private startCalibrationPreview(overlay: HTMLDivElement) {
@@ -376,7 +478,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const inputBars = overlay.querySelector<HTMLDivElement>('[data-driving-input-bars]');
       if (inputBars) {
         const input = this.readInput();
-        inputBars.innerHTML = '';
+        inputBars.replaceChildren();
         inputBars.appendChild(this.createInputBar(this.text.steering, input.steering, -1, 1));
         inputBars.appendChild(this.createInputBar(this.text.throttle, input.throttle, 0, 1));
         inputBars.appendChild(this.createInputBar(this.text.brake, input.brake, 0, 1));
@@ -394,14 +496,36 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private createInputBar(label: string, value: number, min: number, max: number): HTMLDivElement {
     const wrapper = document.createElement('div');
     const normalized = Math.max(0, Math.min(1, (value - min) / (max - min)));
-    wrapper.innerHTML = `
-      <div style="display:flex; justify-content:space-between; font-size:12px; color:rgba(255,255,255,0.60); margin-bottom:4px;">
-        <span>${label}</span><span>${value.toFixed(2)}</span>
-      </div>
-      <div style="height:6px; border-radius:999px; background:rgba(255,255,255,0.10); overflow:hidden;">
-        <div style="height:100%; width:${normalized * 100}%; background:#38bdf8; border-radius:999px;"></div>
-      </div>
-    `;
+    const header = document.createElement('div');
+    Object.assign(header.style, {
+      display: 'flex',
+      justifyContent: 'space-between',
+      fontSize: '12px',
+      color: 'rgba(255,255,255,0.60)',
+      marginBottom: '4px',
+    });
+    const labelElement = document.createElement('span');
+    labelElement.textContent = label;
+    const valueElement = document.createElement('span');
+    valueElement.textContent = value.toFixed(2);
+    header.append(labelElement, valueElement);
+
+    const track = document.createElement('div');
+    Object.assign(track.style, {
+      height: '6px',
+      borderRadius: '999px',
+      background: 'rgba(255,255,255,0.10)',
+      overflow: 'hidden',
+    });
+    const fill = document.createElement('div');
+    Object.assign(fill.style, {
+      height: '100%',
+      width: `${normalized * 100}%`,
+      background: '#38bdf8',
+      borderRadius: '999px',
+    });
+    track.appendChild(fill);
+    wrapper.append(header, track);
     return wrapper;
   }
 
@@ -603,12 +727,21 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       color: '#7dd3fc',
       letterSpacing: '0.5px',
     });
-    titleBar.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-      </svg>
-      <span>${this.text.navigation}</span>
-    `;
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('width', '14');
+    icon.setAttribute('height', '14');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', '#38bdf8');
+    icon.setAttribute('stroke-width', '2.5');
+    icon.setAttribute('stroke-linecap', 'round');
+    icon.setAttribute('stroke-linejoin', 'round');
+    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    polygon.setAttribute('points', '3 11 22 2 13 21 11 13 3 11');
+    icon.appendChild(polygon);
+    const titleText = document.createElement('span');
+    titleText.textContent = this.text.navigation;
+    titleBar.append(icon, titleText);
 
     // Direction instruction
     const dirLabel = document.createElement('div');
@@ -1216,17 +1349,38 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       textAlign: 'center',
       fontFamily: 'Inter, M PLUS Rounded 1c, Noto Sans TC, sans-serif',
     });
-    overlay.innerHTML = `
-      <div style="display:grid; gap:14px; justify-items:center; padding:32px;">
-        <div style="font-size:clamp(54px, 10vw, 112px); line-height:0.9; font-weight:900; letter-spacing:0; color:#f87171; text-shadow:0 10px 40px rgba(248,113,113,0.32);">${this.text.timeUp}</div>
-        <div style="font-size:18px; font-weight:700; color:rgba(255,255,255,0.88);">
-          ${this.text.timeoutMessage}
-        </div>
-        <div style="font-size:14px; color:rgba(255,255,255,0.58);">
-          ${this.text.timeoutHint}
-        </div>
-      </div>
-    `;
+    const panel = document.createElement('div');
+    Object.assign(panel.style, {
+      display: 'grid',
+      gap: '14px',
+      justifyItems: 'center',
+      padding: '32px',
+    });
+    const title = document.createElement('div');
+    Object.assign(title.style, {
+      fontSize: 'clamp(54px, 10vw, 112px)',
+      lineHeight: '0.9',
+      fontWeight: '900',
+      letterSpacing: '0',
+      color: '#f87171',
+      textShadow: '0 10px 40px rgba(248,113,113,0.32)',
+    });
+    title.textContent = this.text.timeUp;
+    const message = document.createElement('div');
+    Object.assign(message.style, {
+      fontSize: '18px',
+      fontWeight: '700',
+      color: 'rgba(255,255,255,0.88)',
+    });
+    message.textContent = this.text.timeoutMessage;
+    const hint = document.createElement('div');
+    Object.assign(hint.style, {
+      fontSize: '14px',
+      color: 'rgba(255,255,255,0.58)',
+    });
+    hint.textContent = this.text.timeoutHint;
+    panel.append(title, message, hint);
+    overlay.appendChild(panel);
 
     const finishTimeout = () => {
       overlay.removeEventListener('pointerdown', finishTimeout);
@@ -2082,7 +2236,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     this.detachGlobalListeners();
     this.cleanupRenderResources();
-    display_element.innerHTML = '';
+    display_element.replaceChildren();
 
     this.jsPsych.finishTrial({
       rt: averageRt,

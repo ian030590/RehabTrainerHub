@@ -3,6 +3,7 @@ import {
   getUserById,
   jsonResponse,
   optionsResponse,
+  rejectDisallowedOrigin,
   requireDatabase,
   requireSession,
   toPublicUser,
@@ -26,6 +27,9 @@ export function onRequestOptions({ request, env }) {
 }
 
 export async function onRequestPut({ request, env }) {
+  const originError = rejectDisallowedOrigin(request, env);
+  if (originError) return originError;
+
   const session = await requireSession(request, env);
   if (!session?.sub) return errorResponse(request, env, 'Unauthorized.', 401);
 

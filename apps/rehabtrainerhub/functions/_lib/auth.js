@@ -3,6 +3,9 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'https://stroketrainer.pages.dev',
   'https://visiontrainer.pages.dev',
   'https://braintrainer.pages.dev',
+];
+
+const LOCAL_ALLOWED_ORIGINS = [
   'http://localhost:3010',
   'http://127.0.0.1:3010',
   'http://localhost:5173',
@@ -17,6 +20,8 @@ export const AUTH_MESSAGE_TYPE = 'rehabtrainerhub-auth-session';
 export const AUTH_COOKIE_NAME = 'rehabtrainerhub_session';
 const PASSWORD_HASH_ALGORITHM = 'pbkdf2-sha256';
 const PASSWORD_HASH_ITERATIONS = 150000;
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
+let rateLimitTableReady = false;
 
 export function getAuthBaseUrl(request, env) {
   const configured = env.AUTH_BASE_URL || env.NEXT_PUBLIC_REHABTRAINERHUB_URL;
@@ -25,12 +30,42 @@ export function getAuthBaseUrl(request, env) {
   return `${url.protocol}//${url.host}`;
 }
 
-export function getAllowedOrigins(env) {
+export function getAllowedOrigins(env, request) {
   const configured = (env.AUTH_ALLOWED_ORIGINS || '')
     .split(',')
     .map((origin) => origin.trim().replace(/\/+$/, ''))
     .filter(Boolean);
-  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...configured]);
+  const localOrigins = shouldAllowLocalOrigins(env, request) ? LOCAL_ALLOWED_ORIGINS : [];
+  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...localOrigins, ...configured]);
+}
+
+function shouldAllowLocalOrigins(env, request) {
+  if (env.AUTH_ALLOW_LOCAL_ORIGINS === '1') return true;
+  if (!request) return false;
+
+  try {
+    return isLocalHostname(new URL(request.url).hostname);
+  } catch {
+    return false;
+  }
+}
+
+function isLocalHostname(hostname) {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+}
+
+export function isAllowedOrigin(request, env) {
+  const origin = request.headers.get('Origin');
+  if (!origin) return true;
+  return getAllowedOrigins(env, request).has(origin.replace(/\/+$/, ''));
+}
+
+export function rejectDisallowedOrigin(request, env) {
+  if (isAllowedOrigin(request, env)) return null;
+  return new Response('Origin is not allowed.', {
+    status: 403,
+    headers: corsHeaders(request, env),
+  });
 }
 
 export function corsHeaders(request, env) {
@@ -43,11 +78,10 @@ export function corsHeaders(request, env) {
   };
 
   if (!origin) {
-    headers['Access-Control-Allow-Origin'] = '*';
     return headers;
   }
 
-  if (getAllowedOrigins(env).has(origin.replace(/\/+$/, ''))) {
+  if (getAllowedOrigins(env, request).has(origin.replace(/\/+$/, ''))) {
     headers['Access-Control-Allow-Origin'] = origin;
     headers['Access-Control-Allow-Credentials'] = 'true';
   }
@@ -56,8 +90,7 @@ export function corsHeaders(request, env) {
 }
 
 export function optionsResponse(request, env) {
-  const origin = request.headers.get('Origin');
-  if (origin && !getAllowedOrigins(env).has(origin.replace(/\/+$/, ''))) {
+  if (!isAllowedOrigin(request, env)) {
     return new Response('Origin is not allowed.', { status: 403 });
   }
   return new Response(null, { status: 204, headers: corsHeaders(request, env) });
@@ -203,7 +236,7 @@ export function createSessionCookie(request, token) {
   return [
     `${AUTH_COOKIE_NAME}=${encodeURIComponent(token)}`,
     'Path=/',
-    'Max-Age=2592000',
+    `Max-Age=${SESSION_TTL_SECONDS}`,
     'HttpOnly',
     secureAttributes,
   ].join('; ');
@@ -292,17 +325,16 @@ function base64UrlDecodeBytes(value) {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
-export function isSafeReturnTo(returnTo, env) {
+export function isSafeReturnTo(returnTo, env, request) {
   try {
     const url = new URL(returnTo);
-    return getAllowedOrigins(env).has(url.origin);
+    return getAllowedOrigins(env, request).has(url.origin);
   } catch {
     return false;
   }
 }
 
 export function toPublicUser(row) {
-  const profile = row.profile_json ? safeJsonParse(row.profile_json) : undefined;
   return {
     id: row.id,
     displayName: row.display_name || row.email || 'Rehab Trainer Hub User',
@@ -310,7 +342,6 @@ export function toPublicUser(row) {
     avatarUrl: row.avatar_url || undefined,
     profileCompleted: Boolean(row.profile_completed_at),
     privacyAcceptedAt: row.privacy_accepted_at || undefined,
-    profile,
   };
 }
 
@@ -337,17 +368,15 @@ export async function createSessionForUser(env, user) {
       email: user.email || undefined,
     },
     getSessionSecret(env),
-    60 * 60 * 24 * 30,
+    SESSION_TTL_SECONDS,
   );
 }
 
 export function authPopupHtml(returnTo, token, user, init = {}) {
   const targetOrigin = new URL(returnTo).origin;
-  const fallback = new URL(returnTo);
-  fallback.searchParams.set('auth_token', token);
   const message = JSON.stringify({ type: AUTH_MESSAGE_TYPE, token, user }).replace(/</g, '\\u003c');
-  const targetOriginJson = JSON.stringify(targetOrigin);
-  const fallbackJson = JSON.stringify(fallback.toString());
+  const targetOriginJson = JSON.stringify(targetOrigin).replace(/</g, '\\u003c');
+  const fallbackJson = JSON.stringify(returnTo).replace(/</g, '\\u003c');
 
   return new Response(`<!doctype html>
 <html lang="zh-Hant-TW">
@@ -392,4 +421,74 @@ export function authPopupHtml(returnTo, token, user, init = {}) {
       ...(init.headers || {}),
     },
   });
+}
+
+export async function rateLimitResponse(request, env, name, options = {}) {
+  const result = await checkRateLimit(request, env, name, options);
+  if (result.allowed) return null;
+  return jsonResponse(request, env, { error: 'Too many requests.' }, {
+    status: 429,
+    headers: {
+      'Retry-After': String(result.retryAfter),
+    },
+  });
+}
+
+async function checkRateLimit(request, env, name, options = {}) {
+  const limit = options.limit ?? 10;
+  const windowSeconds = options.windowSeconds ?? 60;
+  const now = Math.floor(Date.now() / 1000);
+  const windowId = Math.floor(now / windowSeconds);
+  const resetAt = (windowId + 1) * windowSeconds;
+  const client = request.headers.get('CF-Connecting-IP')
+    || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim()
+    || 'unknown';
+  const identity = options.identity ? `:${options.identity}` : '';
+  const key = await sha256Base64Url(`${name}:${client}${identity}:${windowId}`);
+  const db = requireDatabase(env);
+
+  await ensureRateLimitTable(db);
+  await db
+    .prepare('DELETE FROM rate_limits WHERE reset_at < ?')
+    .bind(now - 60 * 60)
+    .run();
+  await db
+    .prepare(`
+      INSERT INTO rate_limits (key, count, reset_at, updated_at)
+      VALUES (?, 1, ?, ?)
+      ON CONFLICT(key) DO UPDATE SET
+        count = count + 1,
+        updated_at = excluded.updated_at
+    `)
+    .bind(key, resetAt, new Date(now * 1000).toISOString())
+    .run();
+
+  const row = await db
+    .prepare('SELECT count, reset_at FROM rate_limits WHERE key = ?')
+    .bind(key)
+    .first();
+  const count = Number(row?.count || 0);
+  return {
+    allowed: count <= limit,
+    retryAfter: Math.max(1, Number(row?.reset_at || resetAt) - now),
+  };
+}
+
+async function ensureRateLimitTable(db) {
+  if (rateLimitTableReady) return;
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      key TEXT PRIMARY KEY,
+      count INTEGER NOT NULL,
+      reset_at INTEGER NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `).run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_rate_limits_reset_at ON rate_limits(reset_at)').run();
+  rateLimitTableReady = true;
+}
+
+async function sha256Base64Url(value) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return base64UrlEncodeBytes(new Uint8Array(digest));
 }

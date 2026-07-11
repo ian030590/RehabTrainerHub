@@ -121,6 +121,7 @@ const RDP_CLOSED_ENDPOINT_DISTANCE_PX = 30;
 const RDP_STRAIGHT_ANGLE_DEGREES = 160;
 const starSkyBackgroundImage = `url(${import.meta.env.BASE_URL}assets/StarSky.png)`;
 const DRAWING_SAMPLE_UPLOAD_ENDPOINT = import.meta.env.VITE_DRAWING_SAMPLE_UPLOAD_URL?.trim() || '/api/drawing-samples';
+const DRAWING_SAMPLE_UPLOAD_TOKEN = import.meta.env.VITE_DRAWING_SAMPLE_UPLOAD_TOKEN?.trim() || '';
 const DRAWING_SAMPLE_IMAGE_SIZE = 256;
 const DRAWING_SAMPLE_IMAGE_PADDING = 24;
 const DRAWING_SAMPLE_STROKE_WIDTH = 14;
@@ -1127,6 +1128,7 @@ async function uploadDrawingSample(blob: Blob, metadata: DrawingSampleMetadata):
 
   const response = await fetch(DRAWING_SAMPLE_UPLOAD_ENDPOINT, {
     method: 'POST',
+    headers: DRAWING_SAMPLE_UPLOAD_TOKEN ? { 'x-drawing-upload-token': DRAWING_SAMPLE_UPLOAD_TOKEN } : undefined,
     body,
   });
 

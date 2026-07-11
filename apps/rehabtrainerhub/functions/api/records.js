@@ -2,18 +2,22 @@ import {
   errorResponse,
   jsonResponse,
   optionsResponse,
+  rejectDisallowedOrigin,
   requireDatabase,
   requireSession,
   safeJsonParse,
 } from '../_lib/auth.js';
 
-const appIds = new Set(['rehabtrainerhub', 'stroketrainer', 'visiontrainer']);
+const appIds = new Set(['rehabtrainerhub', 'stroketrainer', 'visiontrainer', 'braintrainer']);
 
 export function onRequestOptions({ request, env }) {
   return optionsResponse(request, env);
 }
 
 export async function onRequestGet({ request, env }) {
+  const originError = rejectDisallowedOrigin(request, env);
+  if (originError) return originError;
+
   const session = await requireSession(request, env);
   if (!session?.sub) return errorResponse(request, env, 'Unauthorized.', 401);
 
@@ -36,6 +40,9 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
+  const originError = rejectDisallowedOrigin(request, env);
+  if (originError) return originError;
+
   const session = await requireSession(request, env);
   if (!session?.sub) return errorResponse(request, env, 'Unauthorized.', 401);
 

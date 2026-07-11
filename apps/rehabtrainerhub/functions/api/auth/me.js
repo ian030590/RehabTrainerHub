@@ -3,6 +3,7 @@ import {
   getUserById,
   jsonResponse,
   optionsResponse,
+  rejectDisallowedOrigin,
   requireSession,
   toPublicUser,
 } from '../../_lib/auth.js';
@@ -12,6 +13,9 @@ export function onRequestOptions({ request, env }) {
 }
 
 export async function onRequestGet({ request, env }) {
+  const originError = rejectDisallowedOrigin(request, env);
+  if (originError) return originError;
+
   const session = await requireSession(request, env);
   if (!session?.sub) return errorResponse(request, env, 'Unauthorized.', 401);
 

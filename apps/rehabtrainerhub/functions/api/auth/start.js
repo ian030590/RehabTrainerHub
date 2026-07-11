@@ -8,6 +8,7 @@ import {
   getUserById,
   isSafeReturnTo,
   optionsResponse,
+  rejectDisallowedOrigin,
   toPublicUser,
 } from '../../_lib/auth.js';
 
@@ -24,6 +25,9 @@ export function onRequestOptions({ request, env }) {
 }
 
 export async function onRequestGet({ request, env }) {
+  const originError = rejectDisallowedOrigin(request, env);
+  if (originError) return originError;
+
   try {
     return await startOAuth(request, env);
   } catch (error) {
@@ -45,7 +49,7 @@ async function startOAuth(request, env) {
   if (!privacyAccepted) {
     return errorResponse(request, env, 'Privacy policy acceptance is required before sign-in.', 400);
   }
-  if (!isSafeReturnTo(returnTo, env)) {
+  if (!isSafeReturnTo(returnTo, env, request)) {
     return errorResponse(request, env, 'Return URL is not allowed.', 400);
   }
 

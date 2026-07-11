@@ -1,6 +1,7 @@
 const MAX_IMAGE_BYTES = 1024 * 1024;
 const MAX_REQUEST_BYTES = MAX_IMAGE_BYTES + 128 * 1024;
 const SHAPES = new Set(['circle', 'cross', 'square', 'triangle', 'vertical-line', 'horizontal-line']);
+const UPLOAD_TOKEN_HEADER = 'x-drawing-upload-token';
 
 export async function onRequestOptions(context) {
   return new Response(null, {
@@ -16,6 +17,10 @@ export async function onRequestPost(context) {
 
   if (!isAllowedOrigin(context)) {
     return json({ error: 'Origin is not allowed.' }, 403, headers);
+  }
+
+  if (!hasValidUploadToken(request, env)) {
+    return json({ error: 'Upload is not allowed.' }, 403, headers);
   }
 
   if (!webhookUrl) {
@@ -170,7 +175,7 @@ function corsHeaders({ request, env }) {
   const origin = request.headers.get('Origin');
   const headers = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'content-type',
+    'Access-Control-Allow-Headers': `content-type, ${UPLOAD_TOKEN_HEADER}`,
     'Access-Control-Max-Age': '86400',
     vary: 'Origin',
   };
@@ -186,7 +191,7 @@ function corsHeaders({ request, env }) {
 
 function isAllowedOrigin({ request, env }) {
   const origin = request.headers.get('Origin');
-  if (!origin) return true;
+  if (!origin) return false;
 
   return isOriginAllowed(origin, request, env);
 }
@@ -201,4 +206,19 @@ function getAllowedOrigins(env) {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function hasValidUploadToken(request, env) {
+  const token = String(env.DRAWING_UPLOAD_TOKEN || '');
+  if (!token) return true;
+  return constantTimeEqual(request.headers.get(UPLOAD_TOKEN_HEADER) || '', token);
+}
+
+function constantTimeEqual(left, right) {
+  if (left.length !== right.length) return false;
+  let result = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    result |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  }
+  return result === 0;
 }

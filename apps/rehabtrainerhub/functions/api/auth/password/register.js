@@ -1,21 +1,25 @@
 import {
-  createSessionCookie,
-  createSessionForUser,
   errorResponse,
   hashPassword,
   isValidEmail,
   jsonResponse,
   normalizeEmail,
   optionsResponse,
+  rateLimitResponse,
+  rejectDisallowedOrigin,
   requireDatabase,
-  toPublicUser,
 } from '../../../_lib/auth.js';
+
+const REGISTER_ACCEPTED = { ok: true };
 
 export function onRequestOptions({ request, env }) {
   return optionsResponse(request, env);
 }
 
 export async function onRequestPost({ request, env }) {
+  const originError = rejectDisallowedOrigin(request, env);
+  if (originError) return originError;
+
   let payload;
   try {
     payload = await request.json();
@@ -35,6 +39,9 @@ export async function onRequestPost({ request, env }) {
     return errorResponse(request, env, 'Invalid account details.', 400);
   }
 
+  const limitError = await rateLimitResponse(request, env, 'password-register', { limit: 5, windowSeconds: 60 });
+  if (limitError) return limitError;
+
   try {
     const db = requireDatabase(env);
     const existingAccount = await db
@@ -42,7 +49,7 @@ export async function onRequestPost({ request, env }) {
       .bind(email)
       .first();
     if (existingAccount) {
-      return errorResponse(request, env, 'Account already exists.', 409);
+      return jsonResponse(request, env, REGISTER_ACCEPTED, { status: 202 });
     }
 
     const now = new Date().toISOString();
@@ -70,20 +77,12 @@ export async function onRequestPost({ request, env }) {
       ]);
     } catch (insertError) {
       if (String(insertError).includes('UNIQUE')) {
-        return errorResponse(request, env, 'Account already exists.', 409);
+        return jsonResponse(request, env, REGISTER_ACCEPTED, { status: 202 });
       }
       throw insertError;
     }
 
-    const token = await createSessionForUser(env, user);
-    return jsonResponse(request, env, {
-      token,
-      user: toPublicUser(user),
-    }, {
-      headers: {
-        'Set-Cookie': createSessionCookie(request, token),
-      },
-    });
+    return jsonResponse(request, env, REGISTER_ACCEPTED, { status: 202 });
   } catch (error) {
     console.error('Password account registration failed.', error);
     return errorResponse(request, env, 'Unable to create account.', 500);

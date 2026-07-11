@@ -1,4 +1,4 @@
-import { errorResponse, jsonResponse, optionsResponse } from '../_lib/auth.js';
+import { errorResponse, jsonResponse, optionsResponse, rateLimitResponse, rejectDisallowedOrigin } from '../_lib/auth.js';
 
 const MAX_TITLE_LENGTH = 80;
 const MAX_NAME_LENGTH = 80;
@@ -117,6 +117,11 @@ export function onRequestOptions({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
+  const originError = rejectDisallowedOrigin(request, env);
+  if (originError) return originError;
+  const limitError = await rateLimitResponse(request, env, 'submissions', { limit: 5, windowSeconds: 60 });
+  if (limitError) return limitError;
+
   const form = await request.formData().catch(() => null);
   if (!form) return errorResponse(request, env, submissionMessages['zh-TW'].invalidForm, 400);
   const locale = getLocale(form);

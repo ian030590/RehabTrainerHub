@@ -1,4 +1,4 @@
-import { errorResponse, jsonResponse, optionsResponse } from '../_lib/auth.js';
+import { errorResponse, jsonResponse, optionsResponse, rateLimitResponse, rejectDisallowedOrigin } from '../_lib/auth.js';
 
 const DEFAULT_CHANNEL_ID = 'UCHE7xFZ9I8rJzbrFXA-3L3w';
 const DEFAULT_MAX_RESULTS = 12;
@@ -8,6 +8,11 @@ export function onRequestOptions({ request, env }) {
 }
 
 export async function onRequestGet({ request, env }) {
+  const originError = rejectDisallowedOrigin(request, env);
+  if (originError) return originError;
+  const limitError = await rateLimitResponse(request, env, 'youtube-videos', { limit: 20, windowSeconds: 60 });
+  if (limitError) return limitError;
+
   const apiKey = env.YOUTUBE_API_KEY;
   if (!apiKey) return errorResponse(request, env, 'YOUTUBE_API_KEY is not configured.', 500);
 
