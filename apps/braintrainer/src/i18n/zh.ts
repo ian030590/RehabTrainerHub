@@ -12,7 +12,6 @@ export const zh = {
   'nav.noScores': '目前還沒有 BrainTrainer 訓練紀錄。',
   'nav.scoresDownloadError': '無法讀取 BrainTrainer 訓練紀錄，請稍後再試。',
   'nav.toggleMenu': '開關選單',
-  'tabs.label': '訓練類別',
   'module.placeholderAction': '模組尚未開放',
   'module.attention.title': '注意訓練',
   'module.attention.intro': '選擇性注意、持續注意與分配注意相關練習分類。',

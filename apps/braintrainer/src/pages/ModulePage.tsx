@@ -1,12 +1,9 @@
-import { NavLink } from 'react-router-dom';
 import { useT, type TranslationKey } from '../i18n';
 
 export type ModuleId = 'attention' | 'memory' | 'thinking';
 
 interface ModuleDefinition {
   id: ModuleId;
-  path: string;
-  navKey: TranslationKey;
   titleKey: TranslationKey;
   introKey: TranslationKey;
   cards: Array<{
@@ -18,8 +15,6 @@ interface ModuleDefinition {
 const modules: ModuleDefinition[] = [
   {
     id: 'attention',
-    path: '/attention-training',
-    navKey: 'nav.attention',
     titleKey: 'module.attention.title',
     introKey: 'module.attention.intro',
     cards: [
@@ -30,8 +25,6 @@ const modules: ModuleDefinition[] = [
   },
   {
     id: 'memory',
-    path: '/memory-training',
-    navKey: 'nav.memory',
     titleKey: 'module.memory.title',
     introKey: 'module.memory.intro',
     cards: [
@@ -42,8 +35,6 @@ const modules: ModuleDefinition[] = [
   },
   {
     id: 'thinking',
-    path: '/thinking-training',
-    navKey: 'nav.thinking',
     titleKey: 'module.thinking.title',
     introKey: 'module.thinking.intro',
     cards: [
@@ -66,20 +57,6 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
     <main className="page-content" id="main-content">
       <h1 className="section-title fade-in-up" id="module-title">{t(module.titleKey)}</h1>
       <p className="section-subtitle fade-in-up">{t(module.introKey)}</p>
-
-      <nav className="module-tabs" aria-label={t('tabs.label')} role="tablist">
-        {modules.map((item) => (
-          <NavLink
-            key={item.id}
-            to={item.path}
-            role="tab"
-            aria-selected={item.id === module.id}
-            className={({ isActive }) => `module-tab ${isActive ? 'active' : ''}`}
-          >
-            {t(item.navKey)}
-          </NavLink>
-        ))}
-      </nav>
 
       <section className="selection-grid content-grid-spaced" aria-label={t(module.titleKey)}>
         {module.cards.map((card, index) => (

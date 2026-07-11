@@ -10,7 +10,7 @@ const colorTokens = {
   accent: '#005EB8',
   accentDark: '#00478D',
   accentHover: '#005DB6',
-  success: '#8BA88E',
+  success: '#005EB8',
   error: '#BA1A1A',
   warning: '#D29922',
   textPrimary: '#1A1C1E',

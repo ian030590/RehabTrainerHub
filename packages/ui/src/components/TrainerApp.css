@@ -631,24 +631,14 @@ body[data-ui-font-bold="true"] .app-layout :where(
   width: 100%;
 }
 
-.settings-tabs,
-.module-tabs {
+.settings-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 32px;
 }
 
-.module-tabs {
-  margin-top: 24px;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-l);
-  background: var(--bg-card);
-}
-
-.settings-tab,
-.module-tab {
+.settings-tab {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -667,19 +657,12 @@ body[data-ui-font-bold="true"] .app-layout :where(
   white-space: nowrap;
 }
 
-.module-tab {
-  flex: 1 1 180px;
-  border-radius: var(--radius-m);
-}
-
-.settings-tab:hover,
-.module-tab:hover {
+.settings-tab:hover {
   background: var(--bg-panel);
   color: var(--text-primary);
 }
 
-.settings-tab.active,
-.module-tab.active {
+.settings-tab.active {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
   color: var(--accent-dark);
@@ -782,6 +765,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
 .rehab-footer {
   flex: 0 0 auto;
+  padding: 0;
   border-top: 1px solid var(--border);
   background: var(--bg-card);
   color: var(--text-secondary);
@@ -794,7 +778,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   max-width: 1500px;
   margin: 0 auto;
   gap: 16px;
-  padding: 16px 24px;
+  padding: 0;
   font-size: 0.82rem;
 }
 
@@ -911,8 +895,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
 }
 
 @media (max-width: 520px) {
-  .settings-tab,
-  .module-tab {
+  .settings-tab {
     flex: 1 1 100%;
   }
 }

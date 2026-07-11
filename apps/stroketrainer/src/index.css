@@ -4759,62 +4759,6 @@ body #webgazer-calibrate-container #calibration-point {
   }
 }
 
-.rehab-footer {
-  width: 100%;
-  margin-top: auto;
-  padding: 20px clamp(12px, 2vw, 24px);
-  border-top: 1px solid var(--border);
-  background: var(--bg-panel);
-  color: var(--text-secondary);
-}
-
-.rehab-footer-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 12px 18px;
-  width: min(100%, 1360px);
-  max-width: none;
-  margin: 0 auto;
-  font-size: calc(13px * var(--ui-font-scale));
-}
-
-.rehab-footer-inner > span {
-  flex: 1 1 320px;
-}
-
-.rehab-footer a {
-  color: var(--accent);
-  font-weight: var(--ui-font-medium-weight);
-  text-decoration: none;
-}
-
-.rehab-footer-meta {
-  display: inline-flex;
-  flex: 0 0 auto;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px 14px;
-  white-space: nowrap;
-}
-
-.rehab-footer nav {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  gap: 12px;
-}
-
-@media (max-width: 720px) {
-  .rehab-footer-meta {
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: center;
-    white-space: normal;
-  }
-}
-
 /* =========================================================
    UI/UX Core Design Guideline Overrides
    ========================================================= */
