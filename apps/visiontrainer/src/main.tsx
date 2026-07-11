@@ -8,6 +8,7 @@ import { initializeTrainingRecords } from './utils/trainingRecords';
 import 'jspsych/css/jspsych.css';
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import './index.css';
+import '@rehab-trainer/ui/components/TrainerApp.css';
 
 applyThemeTokens();
 

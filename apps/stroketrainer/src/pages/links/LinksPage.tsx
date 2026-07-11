@@ -1,54 +1,37 @@
-import type { ReactNode } from 'react';
-import { ExternalLinkCard } from '@rehab-trainer/ui/components/ExternalLinkCard';
-import { GridPageLayout } from '@rehab-trainer/ui/components/GridPageLayout';
+import { RelatedLinksGridPage } from '@rehab-trainer/ui/components/RelatedLinksGridPage';
 import { Icons } from '@rehab-trainer/ui/components/Icons';
-import { useT, type TranslationKey } from '../../i18n';
+import { useT } from '../../i18n';
 import { siteUrls } from '../../utils/siteUrls';
-
-interface LinkItem {
-  titleKey: TranslationKey;
-  descKey: TranslationKey;
-  url: string;
-  icon: ReactNode;
-}
 
 export function LinksPage() {
   const { t } = useT();
 
-  const links: LinkItem[] = [
+  const links = [
     {
-      titleKey: 'links.hub.title',
-      descKey: 'links.hub.desc',
-      url: siteUrls.hub,
+      href: siteUrls.hub,
       icon: <Icons.Hub />,
+      title: t('links.hub.title'),
+      description: t('links.hub.desc'),
     },
     {
-      titleKey: 'links.visionTrainer.title',
-      descKey: 'links.visionTrainer.desc',
-      url: siteUrls.vision,
+      href: siteUrls.vision,
       icon: <Icons.AppTrainer />,
+      title: t('links.visionTrainer.title'),
+      description: t('links.visionTrainer.desc'),
     },
     {
-      titleKey: 'links.brainTrainer.title',
-      descKey: 'links.brainTrainer.desc',
-      url: siteUrls.brain,
+      href: siteUrls.brain,
       icon: <Icons.AppTrainer />,
+      title: t('links.brainTrainer.title'),
+      description: t('links.brainTrainer.desc'),
     },
   ];
 
   return (
-    <GridPageLayout title={t('links.title')} subtitle={t('links.subtitle')}>
-      {links.map((link) => (
-        <ExternalLinkCard
-          key={link.url}
-          href={link.url}
-          icon={link.icon}
-          title={t(link.titleKey)}
-          description={t(link.descKey)}
-          actionLabel={link.url.replace('https://', '')}
-          actionIcon={<Icons.ExternalLink />}
-        />
-      ))}
-    </GridPageLayout>
+    <RelatedLinksGridPage
+      title={t('links.title')}
+      subtitle={t('links.subtitle')}
+      links={links}
+    />
   );
 }

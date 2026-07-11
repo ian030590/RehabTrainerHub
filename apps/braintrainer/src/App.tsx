@@ -1,6 +1,6 @@
 import { Suspense, lazy, useLayoutEffect } from 'react';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
-import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
+import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
 import { applyDisplaySettings } from '@rehab-trainer/ui/settings/displaySettings';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
@@ -76,19 +76,18 @@ function AppLayout() {
   }, []);
 
   return (
-    <div className="app-layout">
-      <a className="skip-link" href="#main-content">
-        {lang === 'en' ? 'Skip to content' : '跳到主要內容'}
-      </a>
-      <Navbar />
+    <TrainerAppLayout
+      navbar={<Navbar />}
+      skipLinkLabel={lang === 'en' ? 'Skip to content' : '跳到主要內容'}
+      footer={{
+        appName: 'BrainTrainer',
+        hubHref: siteUrls.hub,
+        privacyHref: `${siteUrls.hub}/privacy/`,
+        repoHref: 'https://github.com/ian030590/RehabTrainerHub',
+        labels: footerLabels,
+      }}
+    >
       <Outlet />
-      <RehabFooter
-        appName="BrainTrainer"
-        hubHref={siteUrls.hub}
-        privacyHref={`${siteUrls.hub}/privacy/`}
-        repoHref="https://github.com/ian030590/RehabTrainerHub"
-        labels={footerLabels}
-      />
-    </div>
+    </TrainerAppLayout>
   );
 }

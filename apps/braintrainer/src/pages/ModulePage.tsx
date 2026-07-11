@@ -7,7 +7,6 @@ interface ModuleDefinition {
   id: ModuleId;
   path: string;
   navKey: TranslationKey;
-  eyebrowKey: TranslationKey;
   titleKey: TranslationKey;
   introKey: TranslationKey;
   cards: Array<{
@@ -21,7 +20,6 @@ const modules: ModuleDefinition[] = [
     id: 'attention',
     path: '/attention-training',
     navKey: 'nav.attention',
-    eyebrowKey: 'module.attention.eyebrow',
     titleKey: 'module.attention.title',
     introKey: 'module.attention.intro',
     cards: [
@@ -34,7 +32,6 @@ const modules: ModuleDefinition[] = [
     id: 'memory',
     path: '/memory-training',
     navKey: 'nav.memory',
-    eyebrowKey: 'module.memory.eyebrow',
     titleKey: 'module.memory.title',
     introKey: 'module.memory.intro',
     cards: [
@@ -47,7 +44,6 @@ const modules: ModuleDefinition[] = [
     id: 'thinking',
     path: '/thinking-training',
     navKey: 'nav.thinking',
-    eyebrowKey: 'module.thinking.eyebrow',
     titleKey: 'module.thinking.title',
     introKey: 'module.thinking.intro',
     cards: [
@@ -67,7 +63,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const module = getModule(moduleId);
 
   return (
-    <main className="page-content brain-page" id="main-content">
+    <main className="page-content" id="main-content">
       <h1 className="section-title fade-in-up" id="module-title">{t(module.titleKey)}</h1>
       <p className="section-subtitle fade-in-up">{t(module.introKey)}</p>
 
@@ -89,12 +85,13 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
         {module.cards.map((card, index) => (
           <article className="card selection-card placeholder-card fade-in-up" aria-disabled="true" key={card.titleKey}>
             <span className="card-icon" aria-hidden="true">{index + 1}</span>
-            <span className="status-pill">{t('module.status')}</span>
             <span className="card-title">{t(card.titleKey)}</span>
             <span className="card-desc">{t(card.bodyKey)}</span>
-            <button className="btn btn-secondary btn-sm placeholder-action" type="button" disabled>
-              {t('module.placeholderAction')}
-            </button>
+            <div className="card-action">
+              <button className="btn btn-secondary btn-sm" type="button" disabled>
+                {t('module.placeholderAction')}
+              </button>
+            </div>
           </article>
         ))}
       </section>

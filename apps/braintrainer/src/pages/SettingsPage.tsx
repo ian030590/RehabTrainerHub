@@ -43,7 +43,7 @@ export function SettingsPage() {
   };
 
   return (
-    <main className="page-content settings-page" id="main-content">
+    <main className="page-content" id="main-content">
       <h1 className="section-title fade-in-up" id="settings-title">{t('settings.title')}</h1>
       <p className="section-subtitle fade-in-up">{t('settings.intro')}</p>
 

@@ -6,6 +6,7 @@ import { LanguageProvider } from './i18n';
 import { applyThemeTokens } from './theme';
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import './index.css';
+import '@rehab-trainer/ui/components/TrainerApp.css';
 
 applyThemeTokens();
 

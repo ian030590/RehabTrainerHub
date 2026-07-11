@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
-import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
+import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
@@ -62,15 +62,16 @@ function AppLayout() {
       };
 
   return (
-    <div className="app-layout">
-      <Navbar />
+    <TrainerAppLayout
+      navbar={<Navbar />}
+      footer={{
+        appName: 'VisionTrainer',
+        hubHref: siteUrls.hub,
+        privacyHref: `${siteUrls.hub}/privacy/`,
+        labels: footerLabels,
+      }}
+    >
       <Outlet />
-      <RehabFooter
-        appName="VisionTrainer"
-        hubHref={siteUrls.hub}
-        privacyHref={`${siteUrls.hub}/privacy/`}
-        labels={footerLabels}
-      />
-    </div>
+    </TrainerAppLayout>
   );
 }

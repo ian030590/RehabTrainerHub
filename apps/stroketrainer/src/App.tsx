@@ -1,6 +1,6 @@
 import { Suspense, lazy, useLayoutEffect } from 'react';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
-import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
+import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
 import { applyDisplaySettings } from '@rehab-trainer/ui/settings/displaySettings';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
@@ -80,16 +80,17 @@ function AppLayout() {
   }, []);
 
   return (
-    <div className="app-layout">
-      <Navbar />
+    <TrainerAppLayout
+      navbar={<Navbar />}
+      footer={{
+        appName: 'StrokeTrainer',
+        hubHref: siteUrls.hub,
+        privacyHref: `${siteUrls.hub}/privacy/`,
+        repoHref: 'https://github.com/ian030590/RehabTrainerHub',
+        labels: footerLabels,
+      }}
+    >
       <Outlet />
-      <RehabFooter
-        appName="StrokeTrainer"
-        hubHref={siteUrls.hub}
-        privacyHref={`${siteUrls.hub}/privacy/`}
-        repoHref="https://github.com/ian030590/RehabTrainerHub"
-        labels={footerLabels}
-      />
-    </div>
+    </TrainerAppLayout>
   );
 }

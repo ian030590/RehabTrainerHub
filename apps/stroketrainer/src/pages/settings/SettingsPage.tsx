@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SettingsTabs } from '@rehab-trainer/ui/components/SettingsTabs';
 import { useT } from '../../i18n';
 import { GeneralTab } from './GeneralTab';
 import { CalibrationTab } from './CalibrationTab';
@@ -22,20 +23,8 @@ export function SettingsPage() {
       <p className="section-subtitle fade-in-up">{t('settings.subtitle')}</p>
 
       <div className="settings-container">
-        {/* Tabs */}
-        <div className="settings-tabs">
-          {tabs.map((tabItem) => (
-            <button
-              key={tabItem.tab}
-              className={`settings-tab ${activeTab === tabItem.tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tabItem.tab)}
-            >
-              {tabItem.label}
-            </button>
-          ))}
-        </div>
+        <SettingsTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
-        {/* Tab Content */}
         {activeTab === 'general' && <GeneralTab refresh={refresh} />}
         {activeTab === 'calibration' && <CalibrationTab refresh={refresh} />}
       </div>
