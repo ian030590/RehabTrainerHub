@@ -510,7 +510,12 @@ export function AuthPanel({
               {accountDialogMode === 'login' && (
                 <>
                   <button className="auth-provider-button" type="button" onClick={startGoogleLogin}>
-                    <span aria-hidden="true" className="auth-provider-mark">G</span>
+                    <img
+                      alt=""
+                      aria-hidden="true"
+                      className="auth-provider-mark"
+                      src="/assets/google-logo.jpg"
+                    />
                     <span>{labels.loginGoogle}</span>
                   </button>
                   <div className="auth-divider" role="separator">

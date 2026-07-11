@@ -247,13 +247,11 @@
 }
 
 .auth-provider-mark {
-  display: inline-grid;
-  place-items: center;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  color: var(--accent-dark);
-  font-weight: 900;
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .auth-divider {
