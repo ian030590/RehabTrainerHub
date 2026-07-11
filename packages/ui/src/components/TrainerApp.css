@@ -626,9 +626,9 @@ body[data-ui-font-bold="true"] .app-layout :where(
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   margin-bottom: 12px;
-  padding: 16px 24px;
+  padding: 12px 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
   background: var(--bg-card);
@@ -916,6 +916,11 @@ body[data-ui-font-bold="true"] .app-layout :where(
   .rehab-footer-meta {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .setting-row {
+    gap: 12px;
+    padding: 12px 16px;
   }
 
   .rehab-footer-inner {
