@@ -59,7 +59,7 @@ const cssVariables = {
   '--brain-dark-bg-elevated': 'rgba(42, 32, 26, 0.96)',
   '--brain-dark-bg-overlay': 'rgba(0, 0, 0, 0.46)',
   '--brain-dark-bg-accent-soft': 'rgba(241, 201, 167, 0.14)',
-  '--brain-dark-logo-filter': 'brightness(1.22) contrast(1.05)',
+  '--brain-dark-logo-filter': 'brightness(1.3) contrast(1.1) saturate(1.08)',
   '--brain-dark-shadow-card': '0 2px 12px rgba(0, 0, 0, 0.24)',
   '--brain-dark-shadow-floating': '0 16px 34px rgba(0, 0, 0, 0.36)',
   '--brain-contrast-bg': '#000000',

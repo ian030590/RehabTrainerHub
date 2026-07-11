@@ -672,7 +672,8 @@ body[data-ui-font-bold="true"] .app-layout :where(
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1500px;
+  width: min(1500px, calc(100% - 48px));
+  min-height: 64px;
   margin: 0 auto;
   gap: 16px;
   padding: 0;

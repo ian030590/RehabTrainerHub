@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 680" role="img" aria-labelledby="title desc">
-  <title id="title">Brain Trainer logo</title>
-  <desc id="desc">A teal brain network with green leaves and the Brain Trainer wordmark.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Brain Trainer favicon</title>
+  <desc id="desc">The Brain Trainer brain network mark without wordmark text.</desc>
   <defs>
     <linearGradient id="brainStroke" x1="250" x2="790" y1="90" y2="470" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#0B5B68"/>
@@ -36,33 +36,17 @@
     .spark {
       fill: #E7B93F;
     }
-    .word-brain {
-      fill: #075667;
-    }
-    .word-trainer {
-      fill: #7FBA96;
-    }
-    .wordmark {
-      font-family: Inter, "M PLUS Rounded 1c", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-      font-size: 150px;
-      font-weight: 800;
-      letter-spacing: 0;
-    }
     @media (prefers-color-scheme: dark) {
       .brain-line,
       .network-line {
         stroke: #7ED3E2;
       }
       .node,
-      .leaf,
-      .word-trainer {
+      .leaf {
         fill: #A9E2BF;
       }
       .spark {
         fill: #FFE36A;
-      }
-      .word-brain {
-        fill: #7ED3E2;
       }
     }
     @media (forced-colors: active) {
@@ -72,14 +56,12 @@
       }
       .node,
       .leaf,
-      .spark,
-      .word-brain,
-      .word-trainer {
+      .spark {
         fill: CanvasText;
       }
     }
   </style>
-  <g filter="url(#softShadow)">
+  <g filter="url(#softShadow)" transform="translate(-119 79) scale(.708)">
     <path class="brain-line" d="M430 99c-54 0-96 33-109 80-41 4-75 34-87 74-11 37 0 75 28 99-21 19-28 50-17 79 16 43 62 66 108 54 20-5 37-17 49-34"/>
     <path class="brain-line" d="M494 137c-30-10-54-35-54-66 0-44 43-75 103-75 68 0 118 42 143 113"/>
     <path class="brain-line" d="M700 154c56-4 101 28 117 79 12 38 2 78-25 104 16 26 16 58 0 86-25 44-82 57-134 32"/>
@@ -99,6 +81,4 @@
     <ellipse class="leaf" cx="794" cy="165" rx="24" ry="51" transform="rotate(52 794 165)"/>
     <path class="spark" d="M759 53c8 36 13 42 48 50-35 8-40 14-48 50-8-36-13-42-48-50 35-8 40-14 48-50Z"/>
   </g>
-  <text class="wordmark word-brain" x="52" y="616">Brain</text>
-  <text class="wordmark word-trainer" x="512" y="616">Trainer</text>
 </svg>

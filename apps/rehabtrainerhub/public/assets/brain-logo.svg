@@ -1,25 +1,104 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
-  <title id="title">BrainTrainer logo</title>
-  <desc id="desc">Coffee-colored brain and training path icon.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 680" role="img" aria-labelledby="title desc">
+  <title id="title">Brain Trainer logo</title>
+  <desc id="desc">A teal brain network with green leaves and the Brain Trainer wordmark.</desc>
+  <defs>
+    <linearGradient id="brainStroke" x1="250" x2="790" y1="90" y2="470" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B5B68"/>
+      <stop offset="1" stop-color="#064C5A"/>
+    </linearGradient>
+    <linearGradient id="mint" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#9AD0AE"/>
+      <stop offset="1" stop-color="#66A77D"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#063B45" flood-opacity="0.18"/>
+    </filter>
+  </defs>
   <style>
-    .brain { fill: #7a4a24; }
-    .fold, .dot { stroke: #f7d9bd; }
-    .dot { fill: #f7d9bd; stroke: none; }
-    .base { stroke: #7a4a24; }
+    .brain-line,
+    .network-line {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .brain-line {
+      stroke: url(#brainStroke);
+      stroke-width: 22;
+    }
+    .network-line {
+      stroke: #0B5B68;
+      stroke-width: 12;
+    }
+    .node,
+    .leaf {
+      fill: url(#mint);
+    }
+    .spark {
+      fill: #E7B93F;
+    }
+    .word-brain {
+      fill: #075667;
+    }
+    .word-trainer {
+      fill: #7FBA96;
+    }
+    .wordmark {
+      font-family: Inter, "M PLUS Rounded 1c", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      font-size: 150px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
     @media (prefers-color-scheme: dark) {
-      .brain { fill: #f1c9a7; }
-      .fold, .dot { stroke: #3a2417; }
-      .dot { fill: #3a2417; }
-      .base { stroke: #f1c9a7; }
+      .brain-line,
+      .network-line {
+        stroke: #7ED3E2;
+      }
+      .node,
+      .leaf,
+      .word-trainer {
+        fill: #A9E2BF;
+      }
+      .spark {
+        fill: #FFE36A;
+      }
+      .word-brain {
+        fill: #7ED3E2;
+      }
     }
     @media (forced-colors: active) {
-      .brain, .dot { fill: CanvasText; }
-      .fold, .base { stroke: CanvasText; }
+      .brain-line,
+      .network-line {
+        stroke: CanvasText;
+      }
+      .node,
+      .leaf,
+      .spark,
+      .word-brain,
+      .word-trainer {
+        fill: CanvasText;
+      }
     }
   </style>
-  <path class="brain" d="M76 124c-19-3-31-17-31-35 0-20 16-36 36-36 6-15 21-25 38-25 15 0 28 7 36 18 6-3 13-5 21-5 24 0 43 19 43 43 0 12-5 23-13 31 8 7 13 18 13 30 0 23-18 41-41 41h-20c-8 20-27 34-50 34-30 0-54-24-54-54 0-17 8-32 22-42Z"/>
-  <path class="fold" d="M93 91c16 0 28 12 28 28m-45 33c14-7 31-4 42 7m39-83c-15 10-20 27-13 43m24 28c-13 3-24 12-30 25" fill="none" stroke-width="12" stroke-linecap="round"/>
-  <circle class="dot" cx="81" cy="83" r="8"/>
-  <circle class="dot" cx="179" cy="92" r="8"/>
-  <path class="base" d="M91 210h88" stroke-width="14" stroke-linecap="round"/>
+  <g filter="url(#softShadow)">
+    <path class="brain-line" d="M430 99c-54 0-96 33-109 80-41 4-75 34-87 74-11 37 0 75 28 99-21 19-28 50-17 79 16 43 62 66 108 54 20-5 37-17 49-34"/>
+    <path class="brain-line" d="M494 137c-30-10-54-35-54-66 0-44 43-75 103-75 68 0 118 42 143 113"/>
+    <path class="brain-line" d="M700 154c56-4 101 28 117 79 12 38 2 78-25 104 16 26 16 58 0 86-25 44-82 57-134 32"/>
+    <path class="brain-line" d="M529 282c44-8 74-38 84-82"/>
+    <path class="brain-line" d="M537 285c87 2 160 33 208 88"/>
+    <path class="brain-line" d="M535 389c38 8 72 30 91 63"/>
+    <path class="brain-line" d="M483 445c-11 25-30 42-56 49"/>
+    <path class="network-line" d="M338 210c64 29 103 67 126 123"/>
+    <path class="network-line" d="M328 378c42-32 84-52 136-62"/>
+    <path class="network-line" d="M611 211c-11 47-34 80-76 100"/>
+    <circle class="node" cx="334" cy="205" r="32"/>
+    <circle class="node" cx="486" cy="320" r="31"/>
+    <circle class="node" cx="319" cy="388" r="32"/>
+    <circle class="node" cx="611" cy="210" r="32"/>
+    <circle class="node" cx="704" cy="388" r="32"/>
+    <ellipse class="leaf" cx="728" cy="137" rx="20" ry="43" transform="rotate(-35 728 137)"/>
+    <ellipse class="leaf" cx="794" cy="165" rx="24" ry="51" transform="rotate(52 794 165)"/>
+    <path class="spark" d="M759 53c8 36 13 42 48 50-35 8-40 14-48 50-8-36-13-42-48-50 35-8 40-14 48-50Z"/>
+  </g>
+  <text class="wordmark word-brain" x="52" y="616">Brain</text>
+  <text class="wordmark word-trainer" x="512" y="616">Trainer</text>
 </svg>
