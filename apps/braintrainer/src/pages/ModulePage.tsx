@@ -71,14 +71,14 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
       <h1 className="section-title fade-in-up" id="module-title">{t(module.titleKey)}</h1>
       <p className="section-subtitle fade-in-up">{t(module.introKey)}</p>
 
-      <nav className="settings-tabs brain-tabs" aria-label={t('tabs.label')} role="tablist">
+      <nav className="module-tabs" aria-label={t('tabs.label')} role="tablist">
         {modules.map((item) => (
           <NavLink
             key={item.id}
             to={item.path}
             role="tab"
             aria-selected={item.id === module.id}
-            className={({ isActive }) => `settings-tab ${isActive ? 'active' : ''}`}
+            className={({ isActive }) => `module-tab ${isActive ? 'active' : ''}`}
           >
             {t(item.navKey)}
           </NavLink>

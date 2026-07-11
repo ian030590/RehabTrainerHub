@@ -414,9 +414,11 @@ export const zh = {
   'links.title': '相關網站',
   'links.subtitle': 'RehabTrainerHub 生態系的正式網站',
   'links.hub.title': 'RehabTrainerHub',
-  'links.hub.desc': '居家復健入口平台，整理中風復健與視覺復健系統。',
+  'links.hub.desc': '居家訓練入口平台，整理各項居家訓練工具。',
   'links.strokeTrainer.title': 'StrokeTrainer',
   'links.strokeTrainer.desc': '中風復健訓練平台，提供多種復健練習工具。',
+  'links.brainTrainer.title': 'BrainTrainer',
+  'links.brainTrainer.desc': '認知訓練平台，整理注意、記憶與思考訓練類別。',
 
   // Hart Chart
   'home.module.hartChart.title': '哈特圖訓練',

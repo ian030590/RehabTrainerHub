@@ -28,6 +28,12 @@ export function LinksPage() {
       url: siteUrls.stroke,
       icon: <Icons.AppTrainer />,
     },
+    {
+      titleKey: 'links.brainTrainer.title',
+      descKey: 'links.brainTrainer.desc',
+      url: siteUrls.brain,
+      icon: <Icons.AppTrainer />,
+    },
   ];
 
   return (

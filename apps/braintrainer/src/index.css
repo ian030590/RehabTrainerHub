@@ -707,6 +707,11 @@ h2 {
   transform: translateY(-2px);
 }
 
+.external-link-card,
+.external-link-card:hover {
+  text-decoration: none;
+}
+
 .selection-card {
   width: 100%;
   min-height: 100%;
@@ -812,41 +817,6 @@ h2 {
 
 .content-grid-spaced {
   margin-top: 32px;
-}
-
-.brain-tabs,
-.settings-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 32px;
-}
-
-.settings-tab {
-  padding: 10px 24px;
-  border: 2px solid transparent;
-  border-radius: var(--radius-l);
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: var(--fw-medium);
-  text-decoration: none;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.settings-tab:hover {
-  background: var(--bg-panel);
-  color: var(--text-primary);
-}
-
-.settings-tab.active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  color: var(--accent-dark);
-  font-weight: var(--fw-bold);
 }
 
 .settings-container {

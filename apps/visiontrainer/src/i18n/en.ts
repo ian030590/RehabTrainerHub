@@ -415,9 +415,11 @@ export const en: Record<TranslationKey, string> = {
   'links.title': 'Related Websites',
   'links.subtitle': 'Official websites in the RehabTrainerHub ecosystem',
   'links.hub.title': 'RehabTrainerHub',
-  'links.hub.desc': 'Home rehabilitation portal for StrokeTrainer and VisionTrainer.',
+  'links.hub.desc': 'Home training portal for the RehabTrainerHub tools.',
   'links.strokeTrainer.title': 'StrokeTrainer',
   'links.strokeTrainer.desc': 'Stroke rehabilitation training platform with various rehab exercise tools.',
+  'links.brainTrainer.title': 'BrainTrainer',
+  'links.brainTrainer.desc': 'Cognitive training platform for attention, memory, and thinking categories.',
 
   // Hart Chart
   'home.module.hartChart.title': 'Hart Chart Training',

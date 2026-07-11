@@ -930,9 +930,11 @@ export const zh = {
   'links.title': '相關網站',
   'links.subtitle': 'RehabTrainerHub 生態系的正式網站',
   'links.hub.title': 'RehabTrainerHub',
-  'links.hub.desc': '居家復健入口平台，整理中風復健與視覺復健系統。',
+  'links.hub.desc': '居家訓練入口平台，整理各項居家訓練工具。',
   'links.visionTrainer.title': 'VisionTrainer',
   'links.visionTrainer.desc': '視覺能力訓練系統，提供多種視覺訓練項目。',
+  'links.brainTrainer.title': 'BrainTrainer',
+  'links.brainTrainer.desc': '認知訓練平台，整理注意、記憶與思考訓練類別。',
 };
 
 export type TranslationKey = keyof typeof zh;
