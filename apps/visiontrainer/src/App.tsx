@@ -1,8 +1,9 @@
 import { Suspense, lazy, useLayoutEffect } from 'react';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
+import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
 import { applyDisplaySettings } from '@rehab-trainer/ui/settings/displaySettings';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
 import { siteUrls } from './utils/siteUrls';
@@ -24,10 +25,27 @@ const HartChartPage = lazy(() => import('./pages/training/HartChartPage').then((
 const HartChartDisplayPage = lazy(() => import('./pages/training/HartChartPage').then((module) => ({ default: module.HartChartDisplayPage })));
 
 export function App() {
-  const { t } = useT();
+  const { lang, t } = useT();
+  const location = useLocation();
+  const apiBase = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
+  const locale = lang === 'en' ? 'en' : 'zh-TW';
+  const isTrainingPath = [
+    '/training',
+    '/acuity-test',
+    '/contrast-test',
+    '/hart-chart',
+    '/hart-chart/display',
+  ].includes(location.pathname);
 
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
+      <TrainingLoginReminder
+        active={isTrainingPath}
+        apiBase={apiBase}
+        appName="VisionTrainer"
+        locale={locale}
+        privacyHref={`${siteUrls.hub}/privacy/`}
+      />
       <Routes>
         <Route path="/training" element={<TrainingPage />} />
         <Route path="/acuity-test" element={<AcuityTestPage />} />

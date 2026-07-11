@@ -19,15 +19,9 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
   const uiFontBold = getSetting('uiFontBold');
   const uiTheme = getSetting('uiTheme');
   const auditoryFeedbackEnabled = getSetting('auditoryFeedbackEnabled');
-  const soundVolume = getSetting('soundVolume');
   const setUiFontSize = (nextSizePx: number) => {
     const clampedSizePx = Math.min(MAX_UI_FONT_SIZE_PX, Math.max(MIN_UI_FONT_SIZE_PX, nextSizePx));
     setSetting('uiFontSizePx', clampedSizePx);
-    refresh();
-  };
-  const setSoundVolume = (nextVolume: number) => {
-    const clampedVolume = Math.min(100, Math.max(0, nextVolume));
-    setSetting('soundVolume', clampedVolume);
     refresh();
   };
 
@@ -41,12 +35,14 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
         </div>
         <div className="setting-actions">
           <button
+            type="button"
             className={`btn btn-sm ${lang === 'zh' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => { setLang('zh'); refresh(); }}
           >
             {t('settings.language.zh')}
           </button>
           <button
+            type="button"
             className={`btn btn-sm ${lang === 'en' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => { setLang('en'); refresh(); }}
           >
@@ -150,7 +146,7 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
           <h3>{t('settings.sound.title')}</h3>
           <p>{t('settings.sound.desc')}</p>
         </div>
-        <div className="font-setting-control sound-setting-control">
+        <div className="setting-actions">
           <button
             type="button"
             className={`btn btn-sm ${auditoryFeedbackEnabled ? 'btn-primary' : 'btn-secondary'}`}
@@ -160,27 +156,6 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
             }}
           >
             {auditoryFeedbackEnabled ? t('settings.sound.on') : t('settings.sound.off')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-sm btn-secondary"
-            disabled={soundVolume <= 0}
-            aria-label={t('settings.sound.volumeDecrease')}
-            onClick={() => setSoundVolume(soundVolume - 10)}
-          >
-            {t('settings.sound.volumeDecrease')}
-          </button>
-          <span className="setting-value">
-            {t('settings.sound.volumeValue', { value: soundVolume })}
-          </span>
-          <button
-            type="button"
-            className="btn btn-sm btn-secondary"
-            disabled={soundVolume >= 100}
-            aria-label={t('settings.sound.volumeIncrease')}
-            onClick={() => setSoundVolume(soundVolume + 10)}
-          >
-            {t('settings.sound.volumeIncrease')}
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AUTH_CHANGED_EVENT,
   type AuthLocale,
@@ -13,8 +13,10 @@ import {
   fetchSharedAuthSession,
   getAuthApiOrigin,
   isAuthSessionMessage,
+  loginPasswordAccount,
   logoutAuthSession,
   openAuthPopup,
+  registerPasswordAccount,
   saveAuthProfile,
   setAuthToken,
 } from '../auth/authClient';
@@ -29,6 +31,7 @@ interface AuthPanelProps {
 }
 
 type AuthText = (typeof text)[keyof typeof text];
+type AccountDialogMode = 'register' | 'login';
 
 const chronicOptions = [
   'centralNervousSystem',
@@ -44,12 +47,13 @@ const text = {
     statusSignedIn: '已登入',
     loading: '檢查登入狀態中',
     loginGoogle: '登入',
+    loginAccount: '帳號登入',
     logout: '登出',
     completeProfile: '完成基本資料',
     profileNeeded: '登入後請先完成匿名基本資料，之後的使用紀錄會儲存在 D1 database。',
     privacyTitle: '隱私權政策與資料蒐集說明',
     privacyIntro:
-      '登入代表你同意 Rehab Trainer Hub 使用 Google 提供的帳號識別資訊建立登入狀態，並蒐集匿名基本資料與訓練紀錄，用於復健工具使用分析與服務改善。',
+      '登入代表你同意 Rehab Trainer Hub 使用帳號識別資訊建立登入狀態，並蒐集匿名基本資料與訓練紀錄，用於復健工具使用分析與服務改善。',
     privacyItems: [
       '匿名基本資料包含年齡、性別、國籍等。',
       '慢性病診斷、抽菸與喝酒習慣會用於使用紀錄分組分析。',
@@ -61,7 +65,22 @@ const text = {
     privacyPolicyLink: '開啟完整隱私權政策',
     agree: '我已閱讀並同意',
     continue: '繼續登入',
+    createAccount: '建立帳號',
     cancel: '取消',
+    accountTitleRegister: '建立帳號',
+    accountTitleLogin: '帳號登入',
+    accountIntroRegister: '建立帳號後會立即登入，不需要綁定 Google。',
+    accountIntroLogin: '使用已建立的 email 與密碼登入。',
+    accountDisplayName: '姓名',
+    accountEmail: 'Email',
+    accountPassword: '密碼',
+    accountPasswordHelp: '密碼至少 8 個字元，僅會送到後端驗證。',
+    accountCreateSubmit: '建立並登入',
+    accountLoginSubmit: '登入',
+    accountSwitchToLogin: '已有帳號，改用登入',
+    accountSwitchToRegister: '需要新帳號，改用建立帳號',
+    accountInvalid: '請填寫姓名、有效 email 與至少 8 個字元的密碼。',
+    accountFailed: '帳號登入或建立失敗，請確認資料後再試一次。',
     profileTitle: '匿名基本資料',
     profileIntro: '這些資料會與登入後的訓練紀錄一起儲存在 D1 database。請填寫已知資料，不確定時選擇不提供或不勾選。',
     ageRange: '年齡',
@@ -102,12 +121,13 @@ const text = {
     statusSignedIn: 'Signed in',
     loading: 'Checking sign-in status',
     loginGoogle: 'Sign in',
+    loginAccount: 'Account sign-in',
     logout: 'Sign out',
     completeProfile: 'Complete profile',
     profileNeeded: 'After sign-in, complete the anonymous profile. Future records will be saved to D1.',
     privacyTitle: 'Privacy Policy and Data Collection Notice',
     privacyIntro:
-      'By signing in, you agree that Rehab Trainer Hub may use account identifiers from Google to create a session, and collect anonymous profile data and training records for usage analysis and service improvement.',
+      'By signing in, you agree that Rehab Trainer Hub may use account identifiers to create a session, and collect anonymous profile data and training records for usage analysis and service improvement.',
     privacyItems: [
       'Anonymous profile data includes age, gender, nationality, and similar basics.',
       'Chronic diagnosis, smoking, and alcohol habits are used for grouped record analysis.',
@@ -119,7 +139,22 @@ const text = {
     privacyPolicyLink: 'Open full privacy policy',
     agree: 'I have read and agree',
     continue: 'Continue sign-in',
+    createAccount: 'Create account',
     cancel: 'Cancel',
+    accountTitleRegister: 'Create account',
+    accountTitleLogin: 'Account sign-in',
+    accountIntroRegister: 'Create an account and sign in without connecting Google.',
+    accountIntroLogin: 'Sign in with the email and password you created.',
+    accountDisplayName: 'Name',
+    accountEmail: 'Email',
+    accountPassword: 'Password',
+    accountPasswordHelp: 'Use at least 8 characters. Passwords are sent only to the backend for verification.',
+    accountCreateSubmit: 'Create and sign in',
+    accountLoginSubmit: 'Sign in',
+    accountSwitchToLogin: 'Already have an account',
+    accountSwitchToRegister: 'Create a new account',
+    accountInvalid: 'Enter a name, valid email, and a password with at least 8 characters.',
+    accountFailed: 'Account sign-in or creation failed. Check the details and try again.',
     profileTitle: 'Anonymous Profile',
     profileIntro: 'These fields are stored in D1 with signed-in training records. Fill in known data only.',
     ageRange: 'Age',
@@ -190,6 +225,14 @@ function createEmptyProfile(): RehabProfile {
   };
 }
 
+function createEmptyAccountForm() {
+  return {
+    displayName: '',
+    email: '',
+    password: '',
+  };
+}
+
 function toTextKey(locale: AuthLocale | undefined): keyof typeof text {
   return locale === 'en' ? 'en' : 'zhTW';
 }
@@ -218,6 +261,10 @@ export function AuthPanel({
   const [error, setError] = useState('');
   const [privacyProvider, setPrivacyProvider] = useState<AuthProvider | null>(null);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [accountDialogMode, setAccountDialogMode] = useState<AccountDialogMode | null>(null);
+  const [accountForm, setAccountForm] = useState(createEmptyAccountForm);
+  const [accountError, setAccountError] = useState('');
+  const [isSubmittingAccount, setIsSubmittingAccount] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profile, setProfile] = useState<RehabProfile>(createEmptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -234,6 +281,9 @@ export function AuthPanel({
 
     setPrivacyProvider(null);
     setPrivacyAccepted(false);
+    setAccountDialogMode(null);
+    setAccountForm(createEmptyAccountForm());
+    setAccountError('');
     if (!nextUser.profileCompleted) {
       setProfile(normalizeProfile(nextUser.profile));
       setIsProfileOpen(true);
@@ -285,11 +335,21 @@ export function AuthPanel({
 
   const requestLogin = async (provider: AuthProvider) => {
     setError('');
+    setAccountError('');
     if (user) return;
     const existingUser = await loadUser();
     if (existingUser) return;
     setPrivacyAccepted(false);
     setPrivacyProvider(provider);
+  };
+
+  const requestAccountLogin = async () => {
+    setError('');
+    setAccountError('');
+    if (user) return;
+    const existingUser = await loadUser();
+    if (existingUser) return;
+    setAccountDialogMode('login');
   };
 
   const continueLogin = () => {
@@ -308,6 +368,54 @@ export function AuthPanel({
     } catch (loginError) {
       console.warn('Unable to start OAuth login.', loginError);
       setError(labels.loginFailed);
+    }
+  };
+
+  const openAccountRegister = () => {
+    if (!privacyAccepted) return;
+    setAccountDialogMode('register');
+    setPrivacyProvider(null);
+    setError('');
+    setAccountError('');
+  };
+
+  const closeAccountDialog = () => {
+    setAccountDialogMode(null);
+    setAccountForm(createEmptyAccountForm());
+    setAccountError('');
+  };
+
+  const submitAccount = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const displayName = accountForm.displayName.trim();
+    const email = accountForm.email.trim();
+    const password = accountForm.password;
+    const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!accountDialogMode) return;
+    if (!emailIsValid || password.length < 8 || (accountDialogMode === 'register' && !displayName)) {
+      setAccountError(labels.accountInvalid);
+      return;
+    }
+
+    setIsSubmittingAccount(true);
+    setAccountError('');
+    try {
+      const session = accountDialogMode === 'register'
+        ? await registerPasswordAccount(apiBase, {
+            displayName,
+            email,
+            password,
+            privacyAccepted: true,
+          })
+        : await loginPasswordAccount(apiBase, { email, password });
+      setAuthToken(session.token);
+      applyLoadedUser(session.user);
+    } catch (submitError) {
+      console.warn('Unable to use password account.', submitError);
+      setAccountError(labels.accountFailed);
+    } finally {
+      setIsSubmittingAccount(false);
     }
   };
 
@@ -376,8 +484,6 @@ export function AuthPanel({
 
   return (
     <section className={`auth-panel ${className ?? ''}`} aria-label={`${appName} account`}>
-
-
       <div className="auth-panel-actions">
         {user ? (
           <>
@@ -394,6 +500,9 @@ export function AuthPanel({
           <>
             <button className="auth-button auth-button-primary" type="button" onClick={() => void requestLogin('google')}>
               {labels.loginGoogle}
+            </button>
+            <button className="auth-button auth-button-secondary" type="button" onClick={() => void requestAccountLogin()}>
+              {labels.loginAccount}
             </button>
           </>
         )}
@@ -429,6 +538,14 @@ export function AuthPanel({
                 {labels.cancel}
               </button>
               <button
+                className="auth-button auth-button-secondary"
+                disabled={!privacyAccepted}
+                type="button"
+                onClick={openAccountRegister}
+              >
+                {labels.createAccount}
+              </button>
+              <button
                 className="auth-button auth-button-primary"
                 disabled={!privacyAccepted}
                 type="button"
@@ -437,6 +554,78 @@ export function AuthPanel({
                 {labels.continue}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {accountDialogMode && (
+        <div className="auth-dialog-backdrop">
+          <div className="auth-dialog auth-account-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-account-title">
+            <h2 id="auth-account-title">
+              {accountDialogMode === 'register' ? labels.accountTitleRegister : labels.accountTitleLogin}
+            </h2>
+            <p>{accountDialogMode === 'register' ? labels.accountIntroRegister : labels.accountIntroLogin}</p>
+            <form className="auth-account-form" onSubmit={submitAccount}>
+              {accountDialogMode === 'register' && (
+                <label>
+                  <span>{labels.accountDisplayName}</span>
+                  <input
+                    autoComplete="name"
+                    required
+                    type="text"
+                    value={accountForm.displayName}
+                    onChange={(event) => setAccountForm((current) => ({ ...current, displayName: event.target.value }))}
+                  />
+                </label>
+              )}
+              <label>
+                <span>{labels.accountEmail}</span>
+                <input
+                  autoComplete="email"
+                  required
+                  type="email"
+                  value={accountForm.email}
+                  onChange={(event) => setAccountForm((current) => ({ ...current, email: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>{labels.accountPassword}</span>
+                <input
+                  autoComplete={accountDialogMode === 'register' ? 'new-password' : 'current-password'}
+                  minLength={8}
+                  required
+                  type="password"
+                  value={accountForm.password}
+                  onChange={(event) => setAccountForm((current) => ({ ...current, password: event.target.value }))}
+                />
+              </label>
+              <p className="auth-panel-note">{labels.accountPasswordHelp}</p>
+              {accountError && <p className="auth-panel-error">{accountError}</p>}
+              <div className="auth-dialog-actions">
+                <button className="auth-button auth-button-secondary" type="button" onClick={closeAccountDialog}>
+                  {labels.cancel}
+                </button>
+                <button
+                  className="auth-button auth-button-secondary"
+                  type="button"
+                  onClick={() => {
+                    if (accountDialogMode === 'register') {
+                      setAccountDialogMode('login');
+                    } else {
+                      closeAccountDialog();
+                      setPrivacyAccepted(false);
+                      setPrivacyProvider('google');
+                    }
+                    setAccountError('');
+                  }}
+                >
+                  {accountDialogMode === 'register' ? labels.accountSwitchToLogin : labels.accountSwitchToRegister}
+                </button>
+                <button className="auth-button auth-button-primary" disabled={isSubmittingAccount} type="submit">
+                  {accountDialogMode === 'register' ? labels.accountCreateSubmit : labels.accountLoginSubmit}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -2,16 +2,21 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'https://rehabtrainerhub.pages.dev',
   'https://stroketrainer.pages.dev',
   'https://visiontrainer.pages.dev',
+  'https://braintrainer.pages.dev',
   'http://localhost:3010',
   'http://127.0.0.1:3010',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:5174',
   'http://127.0.0.1:5174',
+  'http://localhost:5175',
+  'http://127.0.0.1:5175',
 ];
 
 export const AUTH_MESSAGE_TYPE = 'rehabtrainerhub-auth-session';
 export const AUTH_COOKIE_NAME = 'rehabtrainerhub_session';
+const PASSWORD_HASH_ALGORITHM = 'pbkdf2-sha256';
+const PASSWORD_HASH_ITERATIONS = 150000;
 
 export function getAuthBaseUrl(request, env) {
   const configured = env.AUTH_BASE_URL || env.NEXT_PUBLIC_REHABTRAINERHUB_URL;
@@ -92,6 +97,62 @@ export function getStateSecret(env) {
 
 export function getSessionSecret(env) {
   return requireSecret(env, 'AUTH_SESSION_SECRET');
+}
+
+export function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+export function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+export async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const hash = await derivePasswordHash(password, salt, PASSWORD_HASH_ITERATIONS);
+  return [
+    PASSWORD_HASH_ALGORITHM,
+    String(PASSWORD_HASH_ITERATIONS),
+    base64UrlEncodeBytes(salt),
+    base64UrlEncodeBytes(hash),
+  ].join('$');
+}
+
+export async function verifyPassword(password, storedHash) {
+  const [algorithm, iterationsText, saltText, hashText] = String(storedHash || '').split('$');
+  const iterations = Number(iterationsText);
+  if (algorithm !== PASSWORD_HASH_ALGORITHM || !Number.isInteger(iterations) || iterations < 100000) {
+    return false;
+  }
+
+  try {
+    const salt = base64UrlDecodeBytes(saltText);
+    const hash = await derivePasswordHash(password, salt, iterations);
+    return constantTimeEqual(base64UrlEncodeBytes(hash), hashText);
+  } catch {
+    return false;
+  }
+}
+
+async function derivePasswordHash(password, salt, iterations) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits'],
+  );
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      hash: 'SHA-256',
+      salt,
+      iterations,
+    },
+    key,
+    256,
+  );
+  return new Uint8Array(bits);
 }
 
 export function getBearerToken(request) {
@@ -221,11 +282,14 @@ function base64UrlEncodeBytes(bytes) {
 }
 
 function base64UrlDecode(value) {
+  return new TextDecoder().decode(base64UrlDecodeBytes(value));
+}
+
+function base64UrlDecodeBytes(value) {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
   const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
   const binary = atob(padded);
-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
 export function isSafeReturnTo(returnTo, env) {

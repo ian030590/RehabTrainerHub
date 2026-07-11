@@ -1,8 +1,9 @@
 import { Suspense, lazy, useLayoutEffect } from 'react';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
+import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
 import { applyDisplaySettings } from '@rehab-trainer/ui/settings/displaySettings';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
 import { siteUrls } from './utils/siteUrls';
@@ -21,10 +22,21 @@ const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((modul
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 
 export function App() {
-  const { t } = useT();
+  const { lang, t } = useT();
+  const location = useLocation();
+  const apiBase = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
+  const locale = lang === 'en' ? 'en' : 'zh-TW';
+  const trainingPaths = new Set(['/', '/motor-training', '/cognitive-training', '/speech-training', '/training']);
 
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
+      <TrainingLoginReminder
+        active={trainingPaths.has(location.pathname)}
+        apiBase={apiBase}
+        appName="StrokeTrainer"
+        locale={locale}
+        privacyHref={`${siteUrls.hub}/privacy/`}
+      />
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Navigate to="/motor-training" replace />} />

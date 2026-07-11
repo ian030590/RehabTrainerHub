@@ -156,6 +156,8 @@ export const zh = {
   'settings.prefix.placeholder': '輸入前綴',
   'settings.language.title': '語言',
   'settings.language.desc': '切換介面顯示語言',
+  'settings.language.zh': '中文',
+  'settings.language.en': '英文',
   'settings.fontSize.title': '介面字體大小',
   'settings.fontSize.desc': '調整各類 UI 顯示文字的字體大小',
   'settings.fontSize.value': '{value}px',

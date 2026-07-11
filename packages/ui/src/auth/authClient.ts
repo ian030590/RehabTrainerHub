@@ -48,6 +48,18 @@ export interface SharedAuthSession {
   user: AuthUser;
 }
 
+export interface PasswordAccountRegisterPayload {
+  displayName: string;
+  email: string;
+  password: string;
+  privacyAccepted: boolean;
+}
+
+export interface PasswordAccountLoginPayload {
+  email: string;
+  password: string;
+}
+
 export interface RemoteTrainingRecord {
   id: string;
   savedAt: string;
@@ -221,6 +233,51 @@ export async function logoutAuthSession(apiBase?: string): Promise<void> {
   } finally {
     clearAuthToken();
   }
+}
+
+async function parseAuthSessionResponse(response: Response, fallbackMessage: string): Promise<SharedAuthSession> {
+  if (!response.ok) {
+    throw new Error(`${fallbackMessage}. Status ${response.status}`);
+  }
+
+  const payload = await response.json() as Partial<SharedAuthSession>;
+  if (!payload.token || !payload.user) {
+    throw new Error(`${fallbackMessage}. Missing session payload.`);
+  }
+
+  return { token: payload.token, user: payload.user };
+}
+
+export async function registerPasswordAccount(
+  apiBase: string | undefined,
+  payload: PasswordAccountRegisterPayload,
+): Promise<SharedAuthSession> {
+  const response = await fetch(buildApiUrl(apiBase, '/api/auth/password/register'), {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseAuthSessionResponse(response, 'Unable to create account');
+}
+
+export async function loginPasswordAccount(
+  apiBase: string | undefined,
+  payload: PasswordAccountLoginPayload,
+): Promise<SharedAuthSession> {
+  const response = await fetch(buildApiUrl(apiBase, '/api/auth/password/login'), {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseAuthSessionResponse(response, 'Unable to sign in');
 }
 
 export async function saveAuthProfile(apiBase: string | undefined, profile: RehabProfile): Promise<AuthUser> {

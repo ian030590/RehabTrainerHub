@@ -142,6 +142,10 @@
   width: min(calc(860px * var(--ui-font-scale, 1)), 100%);
 }
 
+.auth-account-dialog {
+  width: min(calc(560px * var(--ui-font-scale, 1)), 100%);
+}
+
 .auth-dialog h2 {
   margin: 0 0 12px;
   color: var(--text-primary);
@@ -156,7 +160,8 @@
 
 .auth-checkbox-row,
 .auth-radio-row label,
-.auth-profile-grid label {
+.auth-profile-grid label,
+.auth-account-form label {
   display: grid;
   gap: 6px;
   color: var(--text-primary);
@@ -200,6 +205,12 @@
 .auth-frequency-grid {
   grid-template-columns: repeat(3, minmax(120px, 1fr));
   margin-bottom: 0;
+}
+
+.auth-account-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
 }
 
 .auth-fieldset {

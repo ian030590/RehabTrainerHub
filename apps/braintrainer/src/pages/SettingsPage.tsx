@@ -57,9 +57,10 @@ export function SettingsPage() {
       <section className="settings-container" aria-label={t('settings.title')}>
         <div className="setting-row">
           <div className="setting-info">
-            <h3>{t('settings.language')}</h3>
+            <h3>{t('settings.language.title')}</h3>
+            <p>{t('settings.language.desc')}</p>
           </div>
-          <div className="segmented-control" role="group" aria-label={t('settings.language')}>
+          <div className="setting-actions">
             <button
               type="button"
               className={`btn btn-sm ${lang === 'zh' ? 'btn-primary' : 'btn-secondary'}`}
@@ -148,13 +149,15 @@ export function SettingsPage() {
             <h3>{t('settings.sound.title')}</h3>
             <p>{t('settings.sound.desc')}</p>
           </div>
-          <button
-            type="button"
-            className={`btn btn-sm ${auditoryFeedbackEnabled ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => updateAuditoryFeedback(!auditoryFeedbackEnabled)}
-          >
-            {auditoryFeedbackEnabled ? t('settings.sound.on') : t('settings.sound.off')}
-          </button>
+          <div className="setting-actions">
+            <button
+              type="button"
+              className={`btn btn-sm ${auditoryFeedbackEnabled ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => updateAuditoryFeedback(!auditoryFeedbackEnabled)}
+            >
+              {auditoryFeedbackEnabled ? t('settings.sound.on') : t('settings.sound.off')}
+            </button>
+          </div>
         </div>
 
         <button className="btn btn-secondary reset-button" type="button" onClick={resetSettings}>

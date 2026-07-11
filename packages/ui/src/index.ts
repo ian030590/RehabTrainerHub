@@ -20,6 +20,7 @@ export type {
   TrainerNavbarLinkClassName,
   TrainerNavbarProps,
 } from './components/TrainerNavbar';
+export { TrainingLoginReminder } from './components/TrainingLoginReminder';
 export { UserSelector } from './components/UserSelector';
 export type { UserSelectorProps } from './components/UserSelector';
 export { downloadCsvFile, downloadFile } from './downloadFile';

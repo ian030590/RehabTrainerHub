@@ -79,18 +79,20 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
           <h3>{t('settings.language.title')}</h3>
           <p>{t('settings.language.desc')}</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="setting-actions">
           <button
+            type="button"
             className={`btn btn-sm ${lang === 'zh' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => { setLang('zh'); refresh(); }}
           >
-            {lang === 'zh' ? '中文' : 'Chinese'}
+            {t('settings.language.zh')}
           </button>
           <button
+            type="button"
             className={`btn btn-sm ${lang === 'en' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => { setLang('en'); refresh(); }}
           >
-            {lang === 'zh' ? '英文' : 'English'}
+            {t('settings.language.en')}
           </button>
         </div>
       </div>
@@ -190,15 +192,18 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
           <h3>{t('settings.sound.title')}</h3>
           <p>{t('settings.sound.desc')}</p>
         </div>
-        <button
-          className={`btn btn-sm ${getSetting('auditoryFeedbackEnabled') ? 'btn-primary' : 'btn-secondary'}`}
-          onClick={() => {
-            setSetting('auditoryFeedbackEnabled', !getSetting('auditoryFeedbackEnabled'));
-            refresh();
-          }}
-      >
-        {getSetting('auditoryFeedbackEnabled') ? t('settings.sound.on') : t('settings.sound.off')}
-      </button>
+        <div className="setting-actions">
+          <button
+            type="button"
+            className={`btn btn-sm ${getSetting('auditoryFeedbackEnabled') ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => {
+              setSetting('auditoryFeedbackEnabled', !getSetting('auditoryFeedbackEnabled'));
+              refresh();
+            }}
+          >
+            {getSetting('auditoryFeedbackEnabled') ? t('settings.sound.on') : t('settings.sound.off')}
+          </button>
+        </div>
       </div>
     </div>
   );
