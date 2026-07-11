@@ -20,12 +20,12 @@ interface TrainingLoginReminderProps {
 const text = {
   zhTW: {
     title: '登入提醒',
-    intro: '開始訓練前建議先登入。登入後訓練紀錄會儲存在 D1 database；未登入仍可使用，紀錄只會儲存在這台裝置的 IndexedDB。',
+    intro: '開始訓練前建議先登入。登入後可以跨裝置紀錄成績；未登入仍可使用，但成績無法跨裝置同步。',
     continue: '稍後再說',
   },
   en: {
     title: 'Sign-in reminder',
-    intro: 'Before training, sign in to save records to D1. You can continue without sign-in, but records stay in IndexedDB on this device.',
+    intro: 'Before training, sign in to record scores across devices. You can continue without sign-in, but scores will not sync across devices.',
     continue: 'Continue for now',
   },
 } as const;

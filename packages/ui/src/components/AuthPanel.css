@@ -274,6 +274,7 @@
 .auth-account-form .auth-dialog-actions {
   display: grid;
   gap: 8px;
+  margin-top: 8px;
 }
 
 .auth-account-form .auth-button-primary {
@@ -282,7 +283,7 @@
 }
 
 .auth-switch-line {
-  margin: 6px 0 0;
+  margin: 10px 0 0;
   text-align: center;
 }
 
@@ -301,8 +302,12 @@
 
 .auth-cancel-link {
   justify-self: center;
-  margin-top: -4px;
+  margin-top: 8px;
   color: var(--text-muted, var(--text-secondary));
+}
+
+.auth-dialog > .auth-panel + .auth-dialog-actions {
+  margin-top: 14px;
 }
 
 .auth-fieldset {
