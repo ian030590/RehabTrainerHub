@@ -38,6 +38,8 @@ body.ufov-game-active .ufov-panel {
 body.ufov-game-active .ufov-panel {
   align-content: center;
   justify-items: center;
+  width: 100%;
+  height: 100%;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -47,6 +49,18 @@ body.ufov-game-active .ufov-panel {
 
 body.ufov-game-active .ufov-feedback {
   color: #000;
+}
+
+body.ufov-game-active .ufov-page .jspsych-display-element,
+body.ufov-game-active .ufov-page .jspsych-content-wrapper,
+body.ufov-game-active .ufov-page .jspsych-content {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .ufov-page .section-title,
@@ -82,6 +96,11 @@ body.ufov-game-active .ufov-page .btn:focus-visible {
 
 body.ufov-game-active .ufov-stage {
   width: min(100vw, calc((100vh - 12px) * 1.501), 1000px);
+}
+
+.ufov-response-stage {
+  display: grid;
+  place-items: center;
 }
 
 .ufov-fixation-box {
@@ -225,12 +244,6 @@ body.ufov-game-active .ufov-stage {
   background:
     repeating-linear-gradient(35deg, #fff 0 3px, #000 3px 8px),
     repeating-linear-gradient(120deg, transparent 0 6px, #fff 6px 9px);
-}
-
-.ufov-response {
-  display: grid;
-  gap: 16px;
-  justify-items: center;
 }
 
 .ufov-choice-row {

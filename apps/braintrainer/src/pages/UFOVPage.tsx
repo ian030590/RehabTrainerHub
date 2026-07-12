@@ -102,7 +102,7 @@ const MAX_DURATION_MS = 500;
 const PRACTICE_DURATION_MS = 240;
 const FIXATION_MS = 1000;
 const MASK_MS = 500;
-const START_DURATION_MS = 240;
+const START_DURATION_MS = MAX_DURATION_MS;
 const START_STEP_MS = 40;
 const MIN_STEP_MS = 8;
 const AXES = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -372,8 +372,6 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
   }
 
   private renderStage(displayElement: HTMLElement, labels: UfovLabels, phase: 'fixation' | 'stimulus' | 'mask', subtest: Subtest, stimulus: TrialStimulus) {
-    const host = ensureChild(displayElement, 'ufov-stage-host', 'div');
-    host.className = 'ufov-response';
     const stage = document.createElement('div');
     stage.className = 'ufov-stage';
     stage.setAttribute('aria-label', labels.subtests[stimulus.subtestId]);
@@ -394,27 +392,28 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       mask.className = 'ufov-mask';
       stage.appendChild(mask);
     }
-    host.replaceChildren(stage);
+    displayElement.replaceChildren(stage);
   }
 
   private askCentral(displayElement: HTMLElement, labels: UfovLabels) {
-    const host = ensureChild(displayElement, 'ufov-stage-host', 'div');
-    host.className = 'ufov-response';
     return new Promise<CentralTarget>((resolve) => {
+      const stage = document.createElement('div');
+      stage.className = 'ufov-stage ufov-response-stage';
       const row = document.createElement('div');
       row.className = 'ufov-choice-row';
       row.append(
         vehicleButton('car', labels, () => resolve('car')),
         vehicleButton('truck', labels, () => resolve('truck')),
       );
-      host.replaceChildren(row);
+      stage.appendChild(row);
+      displayElement.replaceChildren(stage);
     });
   }
 
   private askAxis(displayElement: HTMLElement, labels: UfovLabels) {
-    const host = ensureChild(displayElement, 'ufov-stage-host', 'div');
-    host.className = 'ufov-response';
     return new Promise<number>((resolve) => {
+      const stage = document.createElement('div');
+      stage.className = 'ufov-stage ufov-response-stage';
       const pad = document.createElement('div');
       pad.className = 'ufov-axis-pad';
       const center = document.createElement('span');
@@ -428,18 +427,20 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
         button.style.top = `${point.y}%`;
         pad.appendChild(button);
       });
-      host.replaceChildren(pad);
+      stage.appendChild(pad);
+      displayElement.replaceChildren(stage);
     });
   }
 
   private showFeedback(displayElement: HTMLElement, labels: UfovLabels, correct: boolean) {
-    const host = ensureChild(displayElement, 'ufov-stage-host', 'div');
-    host.className = 'ufov-response';
+    const stage = document.createElement('div');
+    stage.className = 'ufov-stage ufov-response-stage';
     const feedback = document.createElement('p');
     feedback.className = 'ufov-feedback';
     feedback.textContent = correct ? '✓' : '×';
     feedback.setAttribute('aria-label', correct ? labels.correct : labels.incorrect);
-    host.replaceChildren(feedback);
+    stage.appendChild(feedback);
+    displayElement.replaceChildren(stage);
   }
 }
 
@@ -705,15 +706,6 @@ export function UFOVPage() {
       )}
     </main>
   );
-}
-
-function ensureChild(parent: HTMLElement, className: string, tagName: 'div') {
-  const existing = parent.querySelector<HTMLElement>(`:scope > .${className}`);
-  if (existing) return existing;
-  const child = document.createElement(tagName);
-  child.className = className;
-  parent.appendChild(child);
-  return child;
 }
 
 function formatPracticeScore(record: BrainTrainingRecord) {
