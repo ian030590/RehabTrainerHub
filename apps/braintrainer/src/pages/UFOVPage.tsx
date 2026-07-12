@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
+import type { JsPsychPlugin, TrialType } from 'jspsych';
 import {
   type BrainTrainingRecord,
   downloadTrainingRecordCsv,
@@ -9,10 +11,11 @@ import {
 import { useT } from '../i18n';
 import './UFOVPage.css';
 
-type Phase = 'intro' | 'calibrating' | 'fixation' | 'stimulus' | 'mask' | 'central-response' | 'axis-response' | 'feedback' | 'results';
 type CentralTarget = 'car' | 'truck';
 type Direction = 'up' | 'down';
 type SubtestId = 1 | 2 | 3;
+type UfovRunMode = 'instruction' | 'practice' | 'formal';
+type UfovLabels = (typeof copy)[keyof typeof copy];
 
 interface Subtest {
   id: SubtestId;
@@ -28,7 +31,6 @@ interface Slot {
 }
 
 interface TrialStimulus {
-  id: string;
   subtestId: SubtestId;
   practice: boolean;
   trialNumber: number;
@@ -73,6 +75,20 @@ interface RunState {
   results: SubtestResult[];
 }
 
+interface UfovExperimentData {
+  results: SubtestResult[];
+  trials: TrialRecord[];
+  refresh_ms: number;
+  aborted: boolean;
+  mode: UfovRunMode;
+  subtest_id: SubtestId;
+}
+
+interface UfovRunConfig {
+  subtestId: SubtestId;
+  mode: UfovRunMode;
+}
+
 const SUBTESTS: Subtest[] = [
   { id: 1, hasPeripheral: false, hasDistractors: false },
   { id: 2, hasPeripheral: true, hasDistractors: false },
@@ -89,314 +105,133 @@ const START_DURATION_MS = 240;
 const START_STEP_MS = 40;
 const MIN_STEP_MS = 8;
 const AXES = [0, 1, 2, 3, 4, 5, 6, 7];
+const AXIS_SYMBOLS = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
 const SLOTS = createSlots();
 
 const copy = {
   zh: {
     title: 'UFOV 注意力測驗',
     intro: '完成三個階段：處理速度、分散注意力、選擇性注意力。',
-    start: '開始測驗',
+    start: '開始',
     restart: '重新開始',
+    settingsTitle: 'UFOV 設定',
+    chooseSubtest: '選擇 Subtest',
+    chooseMode: '選擇流程',
+    modeInstruction: '說明',
+    modePractice: '練習',
+    modeFormal: '正式測驗',
+    openSettings: '設定測驗',
+    cancel: '取消',
     calibrating: '正在測量螢幕更新率',
-    fixation: '請看中央十字',
-    mask: '請保持注視',
-    centralQuestion: '剛才中央出現的是哪一個？',
-    axisQuestion: '剛才周邊目標出現在哪個方向？',
     car: '汽車',
     truck: '卡車',
     correct: '正確',
     incorrect: '再試一次',
-    formal: '正式測驗',
-    practice: '練習',
     trial: '題',
-    duration: '呈現時間',
     refresh: '螢幕更新',
     results: '測驗結果',
-    threshold: '閾值',
     aborted: '已中止',
     saveNote: '結果已存入 BrainTrainer 訓練紀錄。',
+    practiceResult: '練習答對',
     downloadCsv: '下載 CSV',
     downloadJson: '下載 JSON',
-    center: '中央',
     directions: ['上', '右上', '右', '右下', '下', '左下', '左', '左上'],
     subtests: {
       1: 'Subtest 1 處理速度',
       2: 'Subtest 2 分散注意力',
       3: 'Subtest 3 選擇性注意力',
     },
-    summaries: {
-      1: '辨識中央汽車或卡車。',
-      2: '辨識中央目標，並指出周邊目標方向。',
-      3: '在干擾物中辨識中央目標與周邊目標方向。',
+    instructions: {
+      1: '看著中央方框。刺激出現後，選出中央出現的是汽車或卡車。',
+      2: '看著中央方框。刺激出現後，先選中央車輛，再選周邊目標出現的方向。',
+      3: '看著中央方框。刺激出現後，在干擾物中辨識中央車輛，並選出周邊目標方向。',
     },
   },
   en: {
     title: 'UFOV Attention Test',
     intro: 'Complete three stages: processing speed, divided attention, and selective attention.',
-    start: 'Start test',
+    start: 'Start',
     restart: 'Restart',
+    settingsTitle: 'UFOV Settings',
+    chooseSubtest: 'Choose Subtest',
+    chooseMode: 'Choose Flow',
+    modeInstruction: 'Instructions',
+    modePractice: 'Practice',
+    modeFormal: 'Formal Test',
+    openSettings: 'Configure Test',
+    cancel: 'Cancel',
     calibrating: 'Measuring screen refresh rate',
-    fixation: 'Look at the center cross',
-    mask: 'Keep looking at the center',
-    centralQuestion: 'Which item appeared in the center?',
-    axisQuestion: 'Which direction contained the peripheral target?',
     car: 'Car',
     truck: 'Truck',
     correct: 'Correct',
     incorrect: 'Try again',
-    formal: 'Test',
-    practice: 'Practice',
     trial: 'Trial',
-    duration: 'Display time',
     refresh: 'Refresh',
     results: 'Results',
-    threshold: 'Threshold',
     aborted: 'Aborted',
     saveNote: 'Saved to BrainTrainer training records.',
+    practiceResult: 'Practice correct',
     downloadCsv: 'Download CSV',
     downloadJson: 'Download JSON',
-    center: 'Center',
     directions: ['Up', 'Up right', 'Right', 'Down right', 'Down', 'Down left', 'Left', 'Up left'],
     subtests: {
       1: 'Subtest 1 Processing Speed',
       2: 'Subtest 2 Divided Attention',
       3: 'Subtest 3 Selective Attention',
     },
-    summaries: {
-      1: 'Identify the central car or truck.',
-      2: 'Identify the central target and the peripheral target direction.',
-      3: 'Identify the central target and peripheral direction among distractors.',
+    instructions: {
+      1: 'Look at the center box. After the stimulus appears, choose whether the center item was a car or truck.',
+      2: 'Look at the center box. After the stimulus appears, choose the center vehicle, then choose the peripheral target direction.',
+      3: 'Look at the center box. After the stimulus appears, identify the center vehicle among distractors and choose the peripheral target direction.',
     },
   },
 } as const;
 
-export function UFOVPage() {
-  const { lang } = useT();
-  const labels = copy[lang];
-  const [phase, setPhase] = useState<Phase>('intro');
-  const [refreshMs, setRefreshMs] = useState(16.67);
-  const [trial, setTrial] = useState<TrialStimulus | null>(null);
-  const [centralResponse, setCentralResponse] = useState<CentralTarget | null>(null);
-  const [feedbackCorrect, setFeedbackCorrect] = useState<boolean | null>(null);
-  const [results, setResults] = useState<SubtestResult[]>([]);
-  const [savedRecord, setSavedRecord] = useState<BrainTrainingRecord | null>(null);
-  const runRef = useRef<RunState | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const timeoutRef = useRef<number | null>(null);
-  const responseStartedAtRef = useRef(0);
+const ufovInfo = {
+  name: 'ufov-experiment',
+  version: '1.0.0',
+  parameters: {
+    labels: {
+      type: ParameterType.COMPLEX,
+      default: copy.zh,
+    },
+    refresh_ms: {
+      type: ParameterType.FLOAT,
+      default: 16.67,
+    },
+    config: {
+      type: ParameterType.COMPLEX,
+      default: { subtestId: 1, mode: 'formal' } satisfies UfovRunConfig,
+    },
+  },
+  data: {
+    results: { type: ParameterType.COMPLEX },
+    trials: { type: ParameterType.COMPLEX },
+    refresh_ms: { type: ParameterType.FLOAT },
+    aborted: { type: ParameterType.BOOL },
+    mode: { type: ParameterType.STRING },
+    subtest_id: { type: ParameterType.INT },
+  },
+} as const;
 
-  const activeSubtest = runRef.current ? SUBTESTS[runRef.current.subtestIndex] : SUBTESTS[0];
-  const activeStageLabel = trial?.practice ? labels.practice : labels.formal;
-  const allTrials = useMemo(() => savedRecord?.detailRows ?? [], [savedRecord]);
+type UfovInfo = typeof ufovInfo;
 
-  const cancelTimers = useCallback(() => {
-    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
-    rafRef.current = null;
-    timeoutRef.current = null;
-  }, []);
+class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
+  static info = ufovInfo;
 
-  const runFrameDelay = useCallback((durationMs: number, onDone: () => void) => {
-    cancelTimers();
-    let startedAt: number | null = null;
-    const tick = (now: number) => {
-      startedAt ??= now;
-      if (now - startedAt >= durationMs) {
-        rafRef.current = null;
-        onDone();
-        return;
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  }, [cancelTimers]);
+  constructor(private jsPsych: JsPsych) {}
 
-  const beginTrial = useCallback(() => {
-    const run = runRef.current;
-    if (!run) return;
-    const subtest = SUBTESTS[run.subtestIndex];
-    const practice = run.practiceLeft > 0;
-    const durationMs = practice ? Math.max(PRACTICE_DURATION_MS, run.minDurationMs) : run.durationMs;
-    const nextTrial: TrialStimulus = {
-      id: crypto.randomUUID(),
-      subtestId: subtest.id,
-      practice,
-      trialNumber: practice ? PRACTICE_TRIALS - run.practiceLeft + 1 : run.testTrial + 1,
-      durationMs,
-      centralTarget: Math.random() > 0.5 ? 'car' : 'truck',
-      peripheralSlot: subtest.hasPeripheral ? SLOTS[Math.floor(Math.random() * SLOTS.length)] : undefined,
-    };
+  trial(displayElement: HTMLElement, trial: TrialType<UfovInfo>) {
+    void this.runExperiment(displayElement, trial);
+  }
 
-    setTrial(nextTrial);
-    setCentralResponse(null);
-    setFeedbackCorrect(null);
-    setPhase('fixation');
-    runFrameDelay(FIXATION_MS, () => {
-      setPhase('stimulus');
-      runFrameDelay(durationMs, () => {
-        setPhase('mask');
-        runFrameDelay(MASK_MS, () => {
-          responseStartedAtRef.current = performance.now();
-          setPhase('central-response');
-        });
-      });
-    });
-  }, [runFrameDelay]);
-
-  const beginSubtest = useCallback((subtestIndex: number) => {
-    const run = runRef.current;
-    if (!run) return;
-    run.subtestIndex = subtestIndex;
-    run.practiceLeft = PRACTICE_TRIALS;
-    run.testTrial = 0;
-    run.durationMs = Math.max(START_DURATION_MS, run.minDurationMs);
-    run.stepMs = START_STEP_MS;
-    run.reversals = [];
-    run.lastDirection = null;
-    run.limitStreak = 0;
-    run.failAtMaxStreak = 0;
-    run.subtestTrials = [];
-    beginTrial();
-  }, [beginTrial]);
-
-  const finishRun = useCallback((nextResults: SubtestResult[], trials: TrialRecord[]) => {
-    cancelTimers();
-    const now = new Date();
-    const thresholds = Object.fromEntries(nextResults.map((item) => [`subtest${item.subtestId}`, item.thresholdMs]));
-    const record: BrainTrainingRecord = {
-      id: `ufov_${now.getTime().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
-      savedAt: now.toISOString(),
-      trainingDate: formatDate(now),
-      userName: getAuthUserNameFromToken() || 'Guest',
-      moduleId: 'attention-training',
-      gameId: 'ufov',
-      gameTitle: labels.title,
-      difficulty: 'adaptive',
-      details: {
-        refreshMs: Math.round(refreshMs),
-        ...thresholds,
-        aborted: nextResults.some((item) => item.aborted),
-      },
-      detailRows: trials.map((item) => ({
-        Subtest: item.subtestId,
-        Phase: item.practice ? 'practice' : 'test',
-        Trial: item.trialNumber,
-        Duration_ms: Math.round(item.durationMs),
-        Central_Target: item.centralTarget,
-        Central_Response: item.centralResponse,
-        Peripheral_Axis: item.peripheralAxis ?? '',
-        Peripheral_Response: item.peripheralResponse ?? '',
-        Correct: item.correct,
-        Response_Time_ms: Math.round(item.responseTimeMs),
-      })),
-    };
-    setResults(nextResults);
-    setSavedRecord(record);
-    setPhase('results');
-    void saveTrainingRecord(record);
-  }, [cancelTimers, labels.title, refreshMs]);
-
-  const completeSubtest = useCallback((aborted: boolean) => {
-    const run = runRef.current;
-    if (!run) return;
-    const subtest = SUBTESTS[run.subtestIndex];
-    const result: SubtestResult = {
-      subtestId: subtest.id,
-      thresholdMs: aborted ? MAX_DURATION_MS : estimateThreshold(run.subtestTrials),
-      trialCount: run.subtestTrials.filter((item) => !item.practice).length,
-      aborted,
-    };
-    const nextResults = [...run.results, result];
-    run.results = nextResults;
-
-    if (aborted || run.subtestIndex >= SUBTESTS.length - 1) {
-      finishRun(nextResults, run.allTrials);
-      return;
-    }
-
-    beginSubtest(run.subtestIndex + 1);
-  }, [beginSubtest, finishRun]);
-
-  const finishTrial = useCallback((central: CentralTarget, axisResponse?: number) => {
-    const run = runRef.current;
-    if (!run || !trial) return;
-    const subtest = SUBTESTS[run.subtestIndex];
-    const correct = central === trial.centralTarget && (!subtest.hasPeripheral || axisResponse === trial.peripheralSlot?.axis);
-    const record: TrialRecord = {
-      subtestId: subtest.id,
-      practice: trial.practice,
-      trialNumber: trial.trialNumber,
-      durationMs: trial.durationMs,
-      centralTarget: trial.centralTarget,
-      centralResponse: central,
-      peripheralAxis: trial.peripheralSlot?.axis,
-      peripheralResponse: axisResponse,
-      correct,
-      responseTimeMs: performance.now() - responseStartedAtRef.current,
-    };
-    run.subtestTrials.push(record);
-    run.allTrials.push(record);
-
-    if (trial.practice) {
-      run.practiceLeft -= 1;
-      setFeedbackCorrect(correct);
-      setPhase('feedback');
-      timeoutRef.current = window.setTimeout(beginTrial, 850);
-      return;
-    }
-
-    run.testTrial += 1;
-    const direction: Direction = correct ? 'down' : 'up';
-    if (run.lastDirection && run.lastDirection !== direction) {
-      run.reversals.push(trial.durationMs);
-      run.stepMs = Math.max(MIN_STEP_MS, run.stepMs * 0.75);
-    }
-    run.lastDirection = direction;
-
-    const delta = correct ? -run.stepMs : run.stepMs * 3;
-    const nextDuration = clamp(trial.durationMs + delta, run.minDurationMs, MAX_DURATION_MS);
-    const atLimit = nextDuration === trial.durationMs && (nextDuration === run.minDurationMs || nextDuration === MAX_DURATION_MS);
-    run.limitStreak = atLimit ? run.limitStreak + 1 : 0;
-    run.failAtMaxStreak = !correct && trial.durationMs >= MAX_DURATION_MS ? run.failAtMaxStreak + 1 : 0;
-    run.durationMs = nextDuration;
-
-    const aborted = run.failAtMaxStreak >= 3;
-    const done = aborted
-      || run.testTrial >= MAX_TEST_TRIALS
-      || run.reversals.length >= MAX_REVERSALS
-      || run.limitStreak >= 3;
-    if (done) {
-      completeSubtest(aborted);
-      return;
-    }
-
-    timeoutRef.current = window.setTimeout(beginTrial, 250);
-  }, [beginTrial, completeSubtest, trial]);
-
-  const handleCentralResponse = (answer: CentralTarget) => {
-    setCentralResponse(answer);
-    if (!activeSubtest.hasPeripheral) {
-      finishTrial(answer);
-      return;
-    }
-    setPhase('axis-response');
-  };
-
-  const handleAxisResponse = (axis: number) => {
-    if (!centralResponse) return;
-    finishTrial(centralResponse, axis);
-  };
-
-  const startRun = async () => {
-    cancelTimers();
-    setPhase('calibrating');
-    setSavedRecord(null);
-    setResults([]);
-    const measured = await measureRefreshMs();
-    setRefreshMs(measured);
-    runRef.current = {
-      minDurationMs: Math.max(measured, 16.67),
-      subtestIndex: 0,
+  private async runExperiment(displayElement: HTMLElement, trial: TrialType<UfovInfo>) {
+    const labels = trial.labels as UfovLabels;
+    const config = trial.config as UfovRunConfig;
+    const subtestIndex = SUBTESTS.findIndex((item) => item.id === config.subtestId);
+    const run: RunState = {
+      minDurationMs: Math.max(Number(trial.refresh_ms ?? 16.67), 16.67),
+      subtestIndex: subtestIndex >= 0 ? subtestIndex : 0,
       practiceLeft: PRACTICE_TRIALS,
       testTrial: 0,
       durationMs: START_DURATION_MS,
@@ -409,60 +244,378 @@ export function UFOVPage() {
       allTrials: [],
       results: [],
     };
-    beginSubtest(0);
+
+    this.resetSubtest(run, run.subtestIndex);
+    const aborted = await this.runSubtest(displayElement, labels, run, config.mode);
+    run.results.push({
+      subtestId: SUBTESTS[run.subtestIndex].id,
+      thresholdMs: config.mode === 'formal' && !aborted ? estimateThreshold(run.subtestTrials) : MAX_DURATION_MS,
+      trialCount: run.subtestTrials.filter((item) => !item.practice).length,
+      aborted,
+    });
+
+    displayElement.replaceChildren();
+    this.jsPsych.finishTrial({
+      results: run.results,
+      trials: run.allTrials,
+      refresh_ms: trial.refresh_ms,
+      aborted: run.results.some((item) => item.aborted),
+      mode: config.mode,
+      subtest_id: SUBTESTS[run.subtestIndex].id,
+    });
+  }
+
+  private resetSubtest(run: RunState, subtestIndex: number) {
+    run.subtestIndex = subtestIndex;
+    run.practiceLeft = PRACTICE_TRIALS;
+    run.testTrial = 0;
+    run.durationMs = Math.max(START_DURATION_MS, run.minDurationMs);
+    run.stepMs = START_STEP_MS;
+    run.reversals = [];
+    run.lastDirection = null;
+    run.limitStreak = 0;
+    run.failAtMaxStreak = 0;
+    run.subtestTrials = [];
+  }
+
+  private async runSubtest(displayElement: HTMLElement, labels: UfovLabels, run: RunState, mode: UfovRunMode) {
+    let aborted = false;
+    while (mode === 'practice' && run.practiceLeft > 0) {
+      const record = await this.runOneTrial(displayElement, labels, run, true);
+      run.subtestTrials.push(record);
+      run.allTrials.push(record);
+      run.practiceLeft -= 1;
+      this.showFeedback(displayElement, labels, record.correct);
+      await waitMs(this.jsPsych, 850);
+    }
+    if (mode === 'practice') return false;
+    if (mode === 'instruction') return false;
+
+    while (!aborted) {
+      const record = await this.runOneTrial(displayElement, labels, run, false);
+      run.subtestTrials.push(record);
+      run.allTrials.push(record);
+      this.updateStaircase(run, record);
+      aborted = run.failAtMaxStreak >= 3;
+      const done = aborted
+        || run.testTrial >= MAX_TEST_TRIALS
+        || run.reversals.length >= MAX_REVERSALS
+        || run.limitStreak >= 3;
+      if (done) return aborted;
+      await waitMs(this.jsPsych, 250);
+    }
+    return aborted;
+  }
+
+  private async runOneTrial(displayElement: HTMLElement, labels: UfovLabels, run: RunState, practice: boolean) {
+    const subtest = SUBTESTS[run.subtestIndex];
+    const stimulus: TrialStimulus = {
+      subtestId: subtest.id,
+      practice,
+      trialNumber: practice ? PRACTICE_TRIALS - run.practiceLeft + 1 : run.testTrial + 1,
+      durationMs: practice ? Math.max(PRACTICE_DURATION_MS, run.minDurationMs) : run.durationMs,
+      centralTarget: Math.random() > 0.5 ? 'car' : 'truck',
+      peripheralSlot: subtest.hasPeripheral ? SLOTS[Math.floor(Math.random() * SLOTS.length)] : undefined,
+    };
+
+    this.renderStage(displayElement, labels, 'fixation', subtest, stimulus);
+    await waitFrameDuration(FIXATION_MS);
+    this.renderStage(displayElement, labels, 'stimulus', subtest, stimulus);
+    await waitFrameDuration(stimulus.durationMs);
+    this.renderStage(displayElement, labels, 'mask', subtest, stimulus);
+    await waitFrameDuration(MASK_MS);
+
+    const responseStartedAt = performance.now();
+    const centralResponse = await this.askCentral(displayElement, labels);
+    const peripheralResponse = subtest.hasPeripheral
+      ? await this.askAxis(displayElement, labels)
+      : undefined;
+    const correct = centralResponse === stimulus.centralTarget
+      && (!subtest.hasPeripheral || peripheralResponse === stimulus.peripheralSlot?.axis);
+
+    return {
+      subtestId: subtest.id,
+      practice,
+      trialNumber: stimulus.trialNumber,
+      durationMs: stimulus.durationMs,
+      centralTarget: stimulus.centralTarget,
+      centralResponse,
+      peripheralAxis: stimulus.peripheralSlot?.axis,
+      peripheralResponse,
+      correct,
+      responseTimeMs: performance.now() - responseStartedAt,
+    };
+  }
+
+  private updateStaircase(run: RunState, record: TrialRecord) {
+    run.testTrial += 1;
+    const direction: Direction = record.correct ? 'down' : 'up';
+    if (run.lastDirection && run.lastDirection !== direction) {
+      run.reversals.push(record.durationMs);
+      run.stepMs = Math.max(MIN_STEP_MS, run.stepMs * 0.75);
+    }
+    run.lastDirection = direction;
+
+    const delta = record.correct ? -run.stepMs : run.stepMs * 3;
+    const nextDuration = clamp(record.durationMs + delta, run.minDurationMs, MAX_DURATION_MS);
+    const atLimit = nextDuration === record.durationMs && (nextDuration === run.minDurationMs || nextDuration === MAX_DURATION_MS);
+    run.limitStreak = atLimit ? run.limitStreak + 1 : 0;
+    run.failAtMaxStreak = !record.correct && record.durationMs >= MAX_DURATION_MS ? run.failAtMaxStreak + 1 : 0;
+    run.durationMs = nextDuration;
+  }
+
+  private renderStage(displayElement: HTMLElement, labels: UfovLabels, phase: 'fixation' | 'stimulus' | 'mask', subtest: Subtest, stimulus: TrialStimulus) {
+    const host = ensureChild(displayElement, 'ufov-stage-host', 'div');
+    host.className = 'ufov-response';
+    const stage = document.createElement('div');
+    stage.className = 'ufov-stage';
+    stage.setAttribute('aria-label', labels.subtests[stimulus.subtestId]);
+    if (phase === 'fixation') {
+      const fixation = document.createElement('div');
+      fixation.className = 'ufov-fixation-box';
+      fixation.setAttribute('aria-hidden', 'true');
+      stage.appendChild(fixation);
+    }
+    if (phase === 'stimulus') {
+      stage.appendChild(createCentralStimulus(stimulus.centralTarget, labels));
+      if (subtest.hasPeripheral && stimulus.peripheralSlot) {
+        stage.appendChild(createPeripheralStimuli(subtest.hasDistractors, stimulus.peripheralSlot));
+      }
+    }
+    if (phase === 'mask') {
+      const mask = document.createElement('div');
+      mask.className = 'ufov-mask';
+      stage.appendChild(mask);
+    }
+    host.replaceChildren(stage);
+  }
+
+  private askCentral(displayElement: HTMLElement, labels: UfovLabels) {
+    const host = ensureChild(displayElement, 'ufov-stage-host', 'div');
+    host.className = 'ufov-response';
+    return new Promise<CentralTarget>((resolve) => {
+      const row = document.createElement('div');
+      row.className = 'ufov-choice-row';
+      row.append(
+        vehicleButton('car', labels, () => resolve('car')),
+        vehicleButton('truck', labels, () => resolve('truck')),
+      );
+      host.replaceChildren(row);
+    });
+  }
+
+  private askAxis(displayElement: HTMLElement, labels: UfovLabels) {
+    const host = ensureChild(displayElement, 'ufov-stage-host', 'div');
+    host.className = 'ufov-response';
+    return new Promise<number>((resolve) => {
+      const pad = document.createElement('div');
+      pad.className = 'ufov-axis-pad';
+      const center = document.createElement('span');
+      center.className = 'ufov-axis-center';
+      center.setAttribute('aria-hidden', 'true');
+      pad.appendChild(center);
+      AXES.forEach((axis) => {
+        const point = axisPoint(axis, 39);
+        const button = responseButton(labels.directions[axis], 'btn btn-secondary ufov-axis-button', () => resolve(axis), AXIS_SYMBOLS[axis]);
+        button.style.left = `${point.x}%`;
+        button.style.top = `${point.y}%`;
+        pad.appendChild(button);
+      });
+      host.replaceChildren(pad);
+    });
+  }
+
+  private showFeedback(displayElement: HTMLElement, labels: UfovLabels, correct: boolean) {
+    const host = ensureChild(displayElement, 'ufov-stage-host', 'div');
+    host.className = 'ufov-response';
+    const feedback = document.createElement('p');
+    feedback.className = 'ufov-feedback';
+    feedback.textContent = correct ? '✓' : '×';
+    feedback.setAttribute('aria-label', correct ? labels.correct : labels.incorrect);
+    host.replaceChildren(feedback);
+  }
+}
+
+export function UFOVPage() {
+  const { lang } = useT();
+  const labels = copy[lang];
+  const pageRef = useRef<HTMLElement | null>(null);
+  const displayRef = useRef<HTMLDivElement | null>(null);
+  const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
+  const skipFinishRef = useRef(false);
+  const [isConfigOpen, setIsConfigOpen] = useState(true);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isCalibrating, setIsCalibrating] = useState(false);
+  const [refreshMs, setRefreshMs] = useState(16.67);
+  const [selectedSubtest, setSelectedSubtest] = useState<SubtestId>(1);
+  const [selectedMode, setSelectedMode] = useState<UfovRunMode>('formal');
+  const [instructionSubtest, setInstructionSubtest] = useState<SubtestId | null>(null);
+  const [results, setResults] = useState<SubtestResult[]>([]);
+  const [savedRecord, setSavedRecord] = useState<BrainTrainingRecord | null>(null);
+
+  const finishExperiment = useCallback((data: UfovExperimentData) => {
+    const now = new Date();
+    const isFormal = data.mode === 'formal';
+    const correctCount = data.trials.filter((item) => item.correct).length;
+    const thresholds = isFormal
+      ? Object.fromEntries(data.results.map((item) => [`subtest${item.subtestId}`, item.thresholdMs]))
+      : {};
+    const record: BrainTrainingRecord = {
+      id: `ufov_${now.getTime().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+      savedAt: now.toISOString(),
+      trainingDate: formatDate(now),
+      userName: getAuthUserNameFromToken() || 'Guest',
+      moduleId: 'attention-training',
+      gameId: 'ufov',
+      gameTitle: labels.title,
+      difficulty: data.mode,
+      details: {
+        refreshMs: Math.round(data.refresh_ms),
+        subtest: data.subtest_id,
+        mode: data.mode,
+        correctCount,
+        trialCount: data.trials.length,
+        ...thresholds,
+        aborted: data.aborted,
+      },
+      detailRows: data.trials.map((item) => ({
+        Subtest: item.subtestId,
+        Phase: item.practice ? 'practice' : 'test',
+        Trial: item.trialNumber,
+        Duration_ms: Math.round(item.durationMs),
+        Central_Target: item.centralTarget,
+        Central_Response: item.centralResponse,
+        Peripheral_Axis: item.peripheralAxis ?? '',
+        Peripheral_Response: item.peripheralResponse ?? '',
+        Correct: item.correct,
+        Response_Time_ms: Math.round(item.responseTimeMs),
+      })),
+    };
+    setResults(data.results);
+    setSavedRecord(record);
+    setIsRunning(false);
+    jsPsychRef.current = null;
+    void saveTrainingRecord(record);
+  }, [labels.title]);
+
+  const startRun = async (config: UfovRunConfig) => {
+    const displayElement = displayRef.current;
+    if (!displayElement) return;
+    if (jsPsychRef.current) {
+      skipFinishRef.current = true;
+      jsPsychRef.current.abortExperiment();
+      jsPsychRef.current = null;
+    }
+    displayElement.replaceChildren();
+    setInstructionSubtest(null);
+    setIsCalibrating(true);
+    setSavedRecord(null);
+    setResults([]);
+    const measured = await measureRefreshMs();
+    setRefreshMs(measured);
+    setIsCalibrating(false);
+    setIsRunning(true);
+
+    const jsPsych = initJsPsych({
+      display_element: displayElement,
+      on_finish: () => {
+        if (skipFinishRef.current) {
+          skipFinishRef.current = false;
+          return;
+        }
+        const values = jsPsych.data.get().last(1).values();
+        const data = values[0] as Partial<UfovExperimentData> | undefined;
+        if (!data?.results || !data.trials) return;
+        finishExperiment(data as UfovExperimentData);
+      },
+    });
+    jsPsychRef.current = jsPsych;
+    jsPsych.run([{
+      type: UfovExperimentPlugin,
+      labels,
+      refresh_ms: measured,
+      config,
+    }]);
   };
 
-  useEffect(() => () => cancelTimers(), [cancelTimers]);
+  const startSelectedFlow = async () => {
+    await requestUfovFullscreen(pageRef.current);
+    setIsConfigOpen(false);
+    setSavedRecord(null);
+    setResults([]);
+    displayRef.current?.replaceChildren();
+    if (selectedMode === 'instruction') {
+      setInstructionSubtest(selectedSubtest);
+      setIsRunning(false);
+      setIsCalibrating(false);
+      return;
+    }
+    await startRun({ subtestId: selectedSubtest, mode: selectedMode });
+  };
+
+  useEffect(() => () => {
+    if (jsPsychRef.current) {
+      skipFinishRef.current = true;
+      jsPsychRef.current.abortExperiment();
+    }
+    jsPsychRef.current = null;
+    if (document.fullscreenElement === pageRef.current) {
+      void document.exitFullscreen?.().catch(() => undefined);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isConfigOpen) return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsConfigOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isConfigOpen]);
 
   return (
-    <main className="page-content ufov-page" id="main-content">
+    <main className="page-content ufov-page" id="main-content" ref={pageRef}>
       <section className="ufov-shell" aria-labelledby="ufov-title">
         <div className="ufov-panel">
           <h1 className="section-title" id="ufov-title">{labels.title}</h1>
           <p className="section-subtitle">{labels.intro}</p>
-          {phase === 'intro' && (
+          {!isRunning && !isCalibrating && !savedRecord && (
             <div className="ufov-actions">
-              <button className="btn btn-primary btn-lg" type="button" onClick={() => void startRun()}>
-                {labels.start}
+              <button className="btn btn-primary btn-lg" type="button" onClick={() => setIsConfigOpen(true)}>
+                {labels.openSettings}
               </button>
             </div>
           )}
-          {phase !== 'intro' && phase !== 'results' && (
-            <div className="ufov-status" aria-live="polite">
-              <span>{labels.subtests[activeSubtest.id]} · {activeStageLabel} {trial?.trialNumber ?? 1}</span>
-              <span>{labels.duration}: {Math.round(trial?.durationMs ?? START_DURATION_MS)} ms</span>
-              <span>{labels.refresh}: {refreshMs.toFixed(1)} ms</span>
-            </div>
+          {isCalibrating && <p className="ufov-feedback">{labels.calibrating}</p>}
+          {instructionSubtest && (
+            <section className="ufov-instructions" aria-labelledby="ufov-instructions-title">
+              <h2 id="ufov-instructions-title">{labels.subtests[instructionSubtest]}</h2>
+              <p>{labels.instructions[instructionSubtest]}</p>
+              <div className="ufov-actions">
+                <button className="btn btn-primary" type="button" onClick={() => setIsConfigOpen(true)}>
+                  {labels.openSettings}
+                </button>
+              </div>
+            </section>
           )}
-          {phase === 'calibrating' && <p className="ufov-feedback">{labels.calibrating}</p>}
-          {phase !== 'intro' && phase !== 'calibrating' && phase !== 'results' && (
-            <UFOVStage
-              labels={labels}
-              phase={phase}
-              subtest={activeSubtest}
-              trial={trial}
-              onCentralResponse={handleCentralResponse}
-              onAxisResponse={handleAxisResponse}
-            />
-          )}
-          {phase === 'feedback' && (
-            <p className="ufov-feedback" aria-live="polite">
-              {feedbackCorrect ? labels.correct : labels.incorrect}
-            </p>
-          )}
-          {phase === 'results' && savedRecord && (
+          <div ref={displayRef} />
+          {savedRecord && (
             <section className="ufov-results" aria-labelledby="ufov-results-title">
               <h2 className="section-title" id="ufov-results-title">{labels.results}</h2>
               <div className="ufov-result-grid">
                 {results.map((item) => (
                   <article className="ufov-result" key={item.subtestId}>
                     <span>{labels.subtests[item.subtestId]}</span>
-                    <strong>{Math.round(item.thresholdMs)} ms</strong>
-                    <span>{item.aborted ? labels.aborted : `${labels.trial}: ${item.trialCount}`}</span>
+                    <strong>
+                      {savedRecord.difficulty === 'formal'
+                        ? `${Math.round(item.thresholdMs)} ms`
+                        : formatPracticeScore(savedRecord)}
+                    </strong>
+                    <span>{item.aborted ? labels.aborted : `${labels.trial}: ${getResultTrialCount(savedRecord, item)}`}</span>
                   </article>
                 ))}
               </div>
-              <p>{labels.saveNote}</p>
+              <p>{savedRecord.difficulty === 'formal' ? labels.saveNote : labels.practiceResult}</p>
               <div className="ufov-actions">
                 <button className="btn btn-primary" type="button" onClick={() => downloadTrainingRecordCsv(savedRecord)}>
                   {labels.downloadCsv}
@@ -470,117 +623,173 @@ export function UFOVPage() {
                 <button className="btn btn-secondary" type="button" onClick={() => downloadTrainingRecordJson(savedRecord)}>
                   {labels.downloadJson}
                 </button>
-                <button className="btn btn-ghost" type="button" onClick={() => void startRun()}>
+                <button className="btn btn-ghost" type="button" onClick={() => setIsConfigOpen(true)}>
                   {labels.restart}
                 </button>
               </div>
-              <span className="ufov-feedback">{allTrials.length} {labels.trial}</span>
+              <span className="ufov-feedback">{savedRecord.detailRows?.length ?? 0} {labels.trial}</span>
             </section>
+          )}
+          {!savedRecord && !isRunning && (
+            <span className="ufov-feedback">{labels.refresh}: {refreshMs.toFixed(1)} ms</span>
           )}
         </div>
       </section>
+      {isConfigOpen && !isRunning && !isCalibrating && (
+        <div
+          className="config-modal-overlay fade-in"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsConfigOpen(false);
+          }}
+        >
+          <div
+            className="config-panel config-modal-panel ufov-config-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ufov-config-title"
+          >
+            <h2 id="ufov-config-title">{labels.settingsTitle}</h2>
+            <fieldset className="ufov-setting-group">
+              <legend>{labels.chooseSubtest}</legend>
+              <div className="ufov-option-grid">
+                {SUBTESTS.map((subtest) => (
+                  <label className="ufov-option" key={subtest.id}>
+                    <input
+                      checked={selectedSubtest === subtest.id}
+                      name="ufov-subtest"
+                      onChange={() => setSelectedSubtest(subtest.id)}
+                      type="radio"
+                    />
+                    <span>{labels.subtests[subtest.id]}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <fieldset className="ufov-setting-group">
+              <legend>{labels.chooseMode}</legend>
+              <div className="ufov-option-grid">
+                {(['instruction', 'practice', 'formal'] as UfovRunMode[]).map((mode) => (
+                  <label className="ufov-option" key={mode}>
+                    <input
+                      checked={selectedMode === mode}
+                      name="ufov-mode"
+                      onChange={() => setSelectedMode(mode)}
+                      type="radio"
+                    />
+                    <span>
+                      {mode === 'instruction' && labels.modeInstruction}
+                      {mode === 'practice' && labels.modePractice}
+                      {mode === 'formal' && labels.modeFormal}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <div className="ufov-actions">
+              <button className="btn btn-primary" type="button" onClick={() => void startSelectedFlow()}>
+                {labels.start}
+              </button>
+              <button className="btn btn-secondary" type="button" onClick={() => setIsConfigOpen(false)}>
+                {labels.cancel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
 
-function UFOVStage({
-  labels,
-  phase,
-  subtest,
-  trial,
-  onCentralResponse,
-  onAxisResponse,
-}: {
-  labels: (typeof copy)[keyof typeof copy];
-  phase: Phase;
-  subtest: Subtest;
-  trial: TrialStimulus | null;
-  onCentralResponse: (answer: CentralTarget) => void;
-  onAxisResponse: (axis: number) => void;
-}) {
-  return (
-    <div className="ufov-response">
-      <div className="ufov-stage" aria-label={trial ? labels.subtests[trial.subtestId] : labels.title}>
-        {phase === 'fixation' && <div className="ufov-fixation">+</div>}
-        {phase === 'stimulus' && trial && (
-          <>
-            <CentralStimulus target={trial.centralTarget} labels={labels} />
-            {subtest.hasPeripheral && trial.peripheralSlot && (
-              <PeripheralStimuli
-                distractors={subtest.hasDistractors}
-                targetSlot={trial.peripheralSlot}
-              />
-            )}
-          </>
-        )}
-        {phase === 'mask' && <div className="ufov-mask" aria-label={labels.mask} />}
-      </div>
-      {phase === 'central-response' && (
-        <>
-          <p>{labels.centralQuestion}</p>
-          <div className="ufov-choice-row">
-            <button className="btn btn-primary ufov-choice" type="button" onClick={() => onCentralResponse('car')}>
-              {labels.car}
-            </button>
-            <button className="btn btn-primary ufov-choice" type="button" onClick={() => onCentralResponse('truck')}>
-              {labels.truck}
-            </button>
-          </div>
-        </>
-      )}
-      {phase === 'axis-response' && (
-        <>
-          <p>{labels.axisQuestion}</p>
-          <div className="ufov-axis-pad">
-            <span className="ufov-axis-center">{labels.center}</span>
-            {AXES.map((axis) => {
-              const point = axisPoint(axis, 39);
-              return (
-                <button
-                  className="btn btn-secondary ufov-axis-button"
-                  key={axis}
-                  style={{ left: `${point.x}%`, top: `${point.y}%` }}
-                  type="button"
-                  onClick={() => onAxisResponse(axis)}
-                >
-                  {labels.directions[axis]}
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
-    </div>
-  );
+function ensureChild(parent: HTMLElement, className: string, tagName: 'div') {
+  const existing = parent.querySelector<HTMLElement>(`:scope > .${className}`);
+  if (existing) return existing;
+  const child = document.createElement(tagName);
+  child.className = className;
+  parent.appendChild(child);
+  return child;
 }
 
-function CentralStimulus({ target, labels }: { target: CentralTarget; labels: (typeof copy)[keyof typeof copy] }) {
-  return (
-    <div className={`ufov-central ${target === 'truck' ? 'ufov-central-truck' : ''}`}>
-      {target === 'car' ? labels.car : labels.truck}
-    </div>
-  );
+async function requestUfovFullscreen(element: HTMLElement | null) {
+  if (document.fullscreenElement) return;
+  await (element ?? document.documentElement).requestFullscreen?.().catch(() => undefined);
 }
 
-function PeripheralStimuli({ distractors, targetSlot }: { distractors: boolean; targetSlot: Slot }) {
-  return (
-    <>
-      {SLOTS.map((slot) => {
-        const isTarget = slot.axis === targetSlot.axis && slot.ring === targetSlot.ring;
-        if (!isTarget && !distractors) return null;
-        return (
-          <span
-            aria-hidden="true"
-            className={`ufov-slot ${isTarget ? 'ufov-target' : 'ufov-distractor'}`}
-            key={`${slot.axis}-${slot.ring}`}
-            style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-          >
-            {isTarget ? '●' : '▲'}
-          </span>
-        );
-      })}
-    </>
+function formatPracticeScore(record: BrainTrainingRecord) {
+  return `${Number(record.details?.correctCount ?? 0)}/${Number(record.details?.trialCount ?? 0)}`;
+}
+
+function getResultTrialCount(record: BrainTrainingRecord, result: SubtestResult) {
+  return record.difficulty === 'formal'
+    ? result.trialCount
+    : Number(record.details?.trialCount ?? 0);
+}
+
+function responseButton(label: string, className: string, onClick: () => void, text = label) {
+  const button = document.createElement('button');
+  button.className = className;
+  button.type = 'button';
+  button.textContent = text;
+  button.setAttribute('aria-label', label);
+  button.addEventListener('click', onClick, { once: true });
+  return button;
+}
+
+function createCentralStimulus(target: CentralTarget, labels: UfovLabels) {
+  const element = document.createElement('div');
+  element.className = `ufov-central ufov-central-${target}`;
+  element.setAttribute('aria-label', target === 'car' ? labels.car : labels.truck);
+  element.appendChild(createVehicleIcon(target));
+  return element;
+}
+
+function vehicleButton(target: CentralTarget, labels: UfovLabels, onClick: () => void) {
+  const button = responseButton(
+    target === 'car' ? labels.car : labels.truck,
+    'btn btn-primary ufov-choice',
+    onClick,
+    '',
   );
+  button.appendChild(createVehicleIcon(target));
+  return button;
+}
+
+function createVehicleIcon(target: CentralTarget) {
+  const vehicle = document.createElement('span');
+  vehicle.className = `ufov-vehicle ufov-vehicle-${target}`;
+  if (target === 'car') {
+    const roof = document.createElement('span');
+    roof.className = 'ufov-vehicle-roof';
+    vehicle.appendChild(roof);
+  } else {
+    const trailer = document.createElement('span');
+    trailer.className = 'ufov-vehicle-trailer';
+    const cabin = document.createElement('span');
+    cabin.className = 'ufov-vehicle-cabin';
+    vehicle.append(trailer, cabin);
+  }
+  const body = document.createElement('span');
+  body.className = 'ufov-vehicle-body';
+  const leftWheel = document.createElement('span');
+  leftWheel.className = 'ufov-vehicle-wheel ufov-vehicle-wheel-left';
+  const rightWheel = document.createElement('span');
+  rightWheel.className = 'ufov-vehicle-wheel ufov-vehicle-wheel-right';
+  vehicle.append(body, leftWheel, rightWheel);
+  return vehicle;
+}
+
+function createPeripheralStimuli(distractors: boolean, targetSlot: Slot) {
+  const fragment = document.createDocumentFragment();
+  SLOTS.forEach((slot) => {
+    const isTarget = slot.axis === targetSlot.axis && slot.ring === targetSlot.ring;
+    if (!isTarget && !distractors) return;
+    const element = document.createElement('span');
+    element.className = `ufov-slot ${isTarget ? 'ufov-target' : 'ufov-distractor'}`;
+    element.style.left = `${slot.x}%`;
+    element.style.top = `${slot.y}%`;
+    element.textContent = isTarget ? '●' : '▲';
+    fragment.appendChild(element);
+  });
+  return fragment;
 }
 
 function createSlots(): Slot[] {
@@ -610,6 +819,27 @@ function estimateThreshold(trials: TrialRecord[]) {
     .map((trial) => trial.durationMs);
   if (formalDurations.length === 0) return MAX_DURATION_MS;
   return formalDurations.reduce((sum, value) => sum + value, 0) / formalDurations.length;
+}
+
+function waitMs(jsPsych: JsPsych, durationMs: number) {
+  return new Promise<void>((resolve) => {
+    jsPsych.pluginAPI.setTimeout(resolve, durationMs);
+  });
+}
+
+function waitFrameDuration(durationMs: number) {
+  return new Promise<void>((resolve) => {
+    let startedAt: number | null = null;
+    const tick = (now: number) => {
+      startedAt ??= now;
+      if (now - startedAt >= durationMs) {
+        resolve();
+        return;
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
 }
 
 async function measureRefreshMs() {
