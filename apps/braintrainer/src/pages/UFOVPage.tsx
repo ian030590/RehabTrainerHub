@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import {
@@ -571,15 +572,6 @@ export function UFOVPage() {
     return () => document.body.classList.remove('ufov-game-active');
   }, [isRunning, isCalibrating]);
 
-  useEffect(() => {
-    if (!isConfigOpen) return undefined;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsConfigOpen(false);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isConfigOpen]);
-
   return (
     <main className="page-content ufov-page" id="main-content">
       <section className="ufov-shell" aria-labelledby="ufov-title">
@@ -641,24 +633,14 @@ export function UFOVPage() {
               <span className="ufov-feedback">{savedRecord.detailRows?.length ?? 0} {labels.trial}</span>
             </section>
           )}
-          {!savedRecord && !isRunning && (
+          {!savedRecord && !isRunning && !isConfigOpen && (
             <span className="ufov-feedback">{labels.refresh}: {refreshMs.toFixed(1)} ms</span>
           )}
         </div>
       </section>
       {isConfigOpen && !isRunning && !isCalibrating && (
-        <div
-          className="config-modal-overlay fade-in"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setIsConfigOpen(false);
-          }}
-        >
-          <div
-            className="config-panel config-modal-panel ufov-config-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="ufov-config-title"
-          >
+        <ConfigDialog ariaLabel={labels.settingsTitle} onClose={() => setIsConfigOpen(false)}>
+          <div className="ufov-config-dialog">
             <h2 id="ufov-config-title">{labels.settingsTitle}</h2>
             <div className="config-section">
               <div className="config-label">{labels.chooseSubtest}</div>
@@ -719,7 +701,7 @@ export function UFOVPage() {
               </strong>
             </div>
           </div>
-        </div>
+        </ConfigDialog>
       )}
     </main>
   );
