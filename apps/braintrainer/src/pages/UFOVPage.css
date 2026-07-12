@@ -150,7 +150,7 @@ body.ufov-game-active .ufov-stage {
   position: relative;
   display: block;
   width: 84px;
-  height: 46px;
+  height: 50px;
   background: transparent;
   color: #fff;
   transform-origin: center;
@@ -158,8 +158,6 @@ body.ufov-game-active .ufov-stage {
 
 .ufov-vehicle-body,
 .ufov-vehicle-roof,
-.ufov-vehicle-trailer,
-.ufov-vehicle-cabin,
 .ufov-vehicle-wheel {
   position: absolute;
   display: block;
@@ -168,38 +166,50 @@ body.ufov-game-active .ufov-stage {
 .ufov-vehicle-body {
   left: 8px;
   right: 8px;
-  bottom: 11px;
-  height: 19px;
-  border-radius: 6px;
+  bottom: 10px;
+  height: 20px;
   background: currentColor;
 }
 
 .ufov-vehicle-roof {
-  left: 26px;
+  left: 18px;
   top: 4px;
-  width: 30px;
-  height: 21px;
-  border: 4px solid currentColor;
-  border-bottom: 0;
-  border-radius: 8px 8px 0 0;
-}
-
-.ufov-vehicle-trailer {
-  left: 5px;
-  top: 12px;
-  width: 45px;
+  width: 48px;
   height: 22px;
-  border-radius: 5px;
   background: currentColor;
+  clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
 }
 
-.ufov-vehicle-cabin {
-  right: 5px;
-  top: 7px;
-  width: 27px;
-  height: 27px;
-  border-radius: 5px 8px 5px 5px;
-  background: currentColor;
+.ufov-vehicle-roof::before,
+.ufov-vehicle-roof::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  width: 9px;
+  height: 8px;
+  background: #000;
+}
+
+.ufov-vehicle-roof::before {
+  left: 13px;
+}
+
+.ufov-vehicle-roof::after {
+  right: 13px;
+}
+
+.ufov-vehicle-truck .ufov-vehicle-roof {
+  left: 42px;
+  width: 24px;
+  clip-path: polygon(0 0, 60% 0, 100% 100%, 0 100%);
+}
+
+.ufov-vehicle-truck .ufov-vehicle-roof::before {
+  left: 7px;
+}
+
+.ufov-vehicle-truck .ufov-vehicle-roof::after {
+  display: none;
 }
 
 .ufov-vehicle-wheel {
@@ -231,7 +241,7 @@ body.ufov-game-active .ufov-stage {
 }
 
 .ufov-central .ufov-vehicle {
-  transform: scale(0.5);
+  transform: scale(0.62);
 }
 
 .ufov-central .ufov-stimulus-square {
@@ -240,7 +250,7 @@ body.ufov-game-active .ufov-stage {
 }
 
 .ufov-target .ufov-vehicle {
-  transform: scale(0.32);
+  transform: scale(0.36);
 }
 
 .ufov-target .ufov-stimulus-square {

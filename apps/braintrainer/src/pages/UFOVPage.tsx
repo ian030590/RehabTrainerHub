@@ -757,24 +757,15 @@ function createStimulusSquare(target: CentralTarget) {
 function createVehicleIcon(target: CentralTarget) {
   const vehicle = document.createElement('span');
   vehicle.className = `ufov-vehicle ufov-vehicle-${target}`;
-  if (target === 'car') {
-    const roof = document.createElement('span');
-    roof.className = 'ufov-vehicle-roof';
-    vehicle.appendChild(roof);
-  } else {
-    const trailer = document.createElement('span');
-    trailer.className = 'ufov-vehicle-trailer';
-    const cabin = document.createElement('span');
-    cabin.className = 'ufov-vehicle-cabin';
-    vehicle.append(trailer, cabin);
-  }
+  const roof = document.createElement('span');
+  roof.className = 'ufov-vehicle-roof';
   const body = document.createElement('span');
   body.className = 'ufov-vehicle-body';
   const leftWheel = document.createElement('span');
   leftWheel.className = 'ufov-vehicle-wheel ufov-vehicle-wheel-left';
   const rightWheel = document.createElement('span');
   rightWheel.className = 'ufov-vehicle-wheel ufov-vehicle-wheel-right';
-  vehicle.append(body, leftWheel, rightWheel);
+  vehicle.append(roof, body, leftWheel, rightWheel);
   return vehicle;
 }
 
