@@ -17,6 +17,7 @@ const LOCAL_TRAINING_STORAGE_KEYS = [
   'vision_trainer_training_high_scores_v1',
   'vision_trainer_users',
   'vision_trainer_active_user',
+  'brain_trainer_training_records_v1',
 ];
 const LOCAL_TRAINING_DATABASES = [
   'stroke-trainer-training-records',

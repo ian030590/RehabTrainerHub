@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useT, type TranslationKey } from '../i18n';
 
 export type ModuleId = 'attention' | 'memory' | 'thinking';
@@ -9,6 +10,8 @@ interface ModuleDefinition {
   cards: Array<{
     titleKey: TranslationKey;
     bodyKey: TranslationKey;
+    actionKey?: TranslationKey;
+    to?: string;
   }>;
 }
 
@@ -18,7 +21,12 @@ const modules: ModuleDefinition[] = [
     titleKey: 'module.attention.title',
     introKey: 'module.attention.intro',
     cards: [
-      { titleKey: 'module.attention.card1.title', bodyKey: 'module.attention.card1.body' },
+      {
+        titleKey: 'module.attention.ufov.title',
+        bodyKey: 'module.attention.ufov.body',
+        actionKey: 'module.attention.ufov.action',
+        to: '/attention-training/ufov',
+      },
       { titleKey: 'module.attention.card2.title', bodyKey: 'module.attention.card2.body' },
       { titleKey: 'module.attention.card3.title', bodyKey: 'module.attention.card3.body' },
     ],
@@ -60,14 +68,24 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
 
       <section className="selection-grid content-grid-spaced" aria-label={t(module.titleKey)}>
         {module.cards.map((card, index) => (
-          <article className="card selection-card placeholder-card fade-in-up" aria-disabled="true" key={card.titleKey}>
+          <article
+            className={`card selection-card ${card.to ? '' : 'placeholder-card'} fade-in-up`}
+            aria-disabled={card.to ? undefined : 'true'}
+            key={card.titleKey}
+          >
             <span className="card-icon" aria-hidden="true">{index + 1}</span>
             <span className="card-title">{t(card.titleKey)}</span>
             <span className="card-desc">{t(card.bodyKey)}</span>
             <div className="card-action">
-              <button className="btn btn-secondary btn-sm" type="button" disabled>
-                {t('module.placeholderAction')}
-              </button>
+              {card.to ? (
+                <Link className="btn btn-primary btn-sm" to={card.to}>
+                  {t(card.actionKey ?? 'module.openAction')}
+                </Link>
+              ) : (
+                <button className="btn btn-secondary btn-sm" type="button" disabled>
+                  {t('module.placeholderAction')}
+                </button>
+              )}
             </div>
           </article>
         ))}
