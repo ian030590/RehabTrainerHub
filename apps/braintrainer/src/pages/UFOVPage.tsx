@@ -118,8 +118,11 @@ const copy = {
     chooseSubtest: '選擇 Subtest',
     chooseMode: '選擇流程',
     modeInstruction: '說明',
+    modeInstructionDesc: '只顯示操作說明，不開始計分。',
     modePractice: '練習',
+    modePracticeDesc: '固定速度練習 5 題，提供正誤回饋。',
     modeFormal: '正式測驗',
+    modeFormalDesc: '進入 adaptive 正式測驗並儲存結果。',
     openSettings: '設定測驗',
     cancel: '取消',
     calibrating: '正在測量螢幕更新率',
@@ -156,8 +159,11 @@ const copy = {
     chooseSubtest: 'Choose Subtest',
     chooseMode: 'Choose Flow',
     modeInstruction: 'Instructions',
+    modeInstructionDesc: 'Show instructions only, without scoring.',
     modePractice: 'Practice',
+    modePracticeDesc: 'Run 5 fixed-speed practice trials with feedback.',
     modeFormal: 'Formal Test',
+    modeFormalDesc: 'Run the adaptive formal test and save results.',
     openSettings: 'Configure Test',
     cancel: 'Cancel',
     calibrating: 'Measuring screen refresh rate',
@@ -439,7 +445,6 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
 export function UFOVPage() {
   const { lang } = useT();
   const labels = copy[lang];
-  const pageRef = useRef<HTMLElement | null>(null);
   const displayRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const skipFinishRef = useRef(false);
@@ -539,7 +544,6 @@ export function UFOVPage() {
   };
 
   const startSelectedFlow = async () => {
-    await requestUfovFullscreen(pageRef.current);
     setIsConfigOpen(false);
     setSavedRecord(null);
     setResults([]);
@@ -559,10 +563,13 @@ export function UFOVPage() {
       jsPsychRef.current.abortExperiment();
     }
     jsPsychRef.current = null;
-    if (document.fullscreenElement === pageRef.current) {
-      void document.exitFullscreen?.().catch(() => undefined);
-    }
   }, []);
+
+  useEffect(() => {
+    const active = isRunning || isCalibrating;
+    document.body.classList.toggle('ufov-game-active', active);
+    return () => document.body.classList.remove('ufov-game-active');
+  }, [isRunning, isCalibrating]);
 
   useEffect(() => {
     if (!isConfigOpen) return undefined;
@@ -574,11 +581,15 @@ export function UFOVPage() {
   }, [isConfigOpen]);
 
   return (
-    <main className="page-content ufov-page" id="main-content" ref={pageRef}>
+    <main className="page-content ufov-page" id="main-content">
       <section className="ufov-shell" aria-labelledby="ufov-title">
         <div className="ufov-panel">
-          <h1 className="section-title" id="ufov-title">{labels.title}</h1>
-          <p className="section-subtitle">{labels.intro}</p>
+          {!isRunning && !isCalibrating && (
+            <>
+              <h1 className="section-title" id="ufov-title">{labels.title}</h1>
+              <p className="section-subtitle">{labels.intro}</p>
+            </>
+          )}
           {!isRunning && !isCalibrating && !savedRecord && (
             <div className="ufov-actions">
               <button className="btn btn-primary btn-lg" type="button" onClick={() => setIsConfigOpen(true)}>
@@ -649,49 +660,63 @@ export function UFOVPage() {
             aria-labelledby="ufov-config-title"
           >
             <h2 id="ufov-config-title">{labels.settingsTitle}</h2>
-            <fieldset className="ufov-setting-group">
-              <legend>{labels.chooseSubtest}</legend>
-              <div className="ufov-option-grid">
+            <div className="config-section">
+              <div className="config-label">{labels.chooseSubtest}</div>
+              <div className="difficulty-selector">
                 {SUBTESTS.map((subtest) => (
-                  <label className="ufov-option" key={subtest.id}>
-                    <input
-                      checked={selectedSubtest === subtest.id}
-                      name="ufov-subtest"
-                      onChange={() => setSelectedSubtest(subtest.id)}
-                      type="radio"
-                    />
-                    <span>{labels.subtests[subtest.id]}</span>
-                  </label>
+                  <button
+                    className={`diff-btn ${selectedSubtest === subtest.id ? 'active' : ''}`}
+                    key={subtest.id}
+                    onClick={() => setSelectedSubtest(subtest.id)}
+                    type="button"
+                  >
+                    <span className="diff-btn-label">{labels.subtests[subtest.id]}</span>
+                    <span className="diff-btn-desc">{labels.instructions[subtest.id]}</span>
+                  </button>
                 ))}
               </div>
-            </fieldset>
-            <fieldset className="ufov-setting-group">
-              <legend>{labels.chooseMode}</legend>
-              <div className="ufov-option-grid">
+            </div>
+            <div className="config-section">
+              <div className="config-label">{labels.chooseMode}</div>
+              <div className="difficulty-selector">
                 {(['instruction', 'practice', 'formal'] as UfovRunMode[]).map((mode) => (
-                  <label className="ufov-option" key={mode}>
-                    <input
-                      checked={selectedMode === mode}
-                      name="ufov-mode"
-                      onChange={() => setSelectedMode(mode)}
-                      type="radio"
-                    />
-                    <span>
+                  <button
+                    className={`diff-btn ${selectedMode === mode ? 'active' : ''}`}
+                    key={mode}
+                    onClick={() => setSelectedMode(mode)}
+                    type="button"
+                  >
+                    <span className="diff-btn-label">
                       {mode === 'instruction' && labels.modeInstruction}
                       {mode === 'practice' && labels.modePractice}
                       {mode === 'formal' && labels.modeFormal}
                     </span>
-                  </label>
+                    <span className="diff-btn-desc">
+                      {mode === 'instruction' && labels.modeInstructionDesc}
+                      {mode === 'practice' && labels.modePracticeDesc}
+                      {mode === 'formal' && labels.modeFormalDesc}
+                    </span>
+                  </button>
                 ))}
               </div>
-            </fieldset>
-            <div className="ufov-actions">
-              <button className="btn btn-primary" type="button" onClick={() => void startSelectedFlow()}>
+            </div>
+            <div className="config-actions">
+              <button className="btn btn-primary btn-lg config-start-btn" type="button" onClick={() => void startSelectedFlow()}>
+                <svg aria-hidden="true" height="20" viewBox="0 0 24 24" width="20">
+                  <polygon fill="currentColor" points="5,3 19,12 5,21" />
+                </svg>
                 {labels.start}
               </button>
-              <button className="btn btn-secondary" type="button" onClick={() => setIsConfigOpen(false)}>
+              <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsConfigOpen(false)}>
                 {labels.cancel}
               </button>
+            </div>
+            <div className="config-summary">
+              <strong>{labels.subtests[selectedSubtest]}</strong> · <strong>
+                {selectedMode === 'instruction' && labels.modeInstruction}
+                {selectedMode === 'practice' && labels.modePractice}
+                {selectedMode === 'formal' && labels.modeFormal}
+              </strong>
             </div>
           </div>
         </div>
@@ -707,11 +732,6 @@ function ensureChild(parent: HTMLElement, className: string, tagName: 'div') {
   child.className = className;
   parent.appendChild(child);
   return child;
-}
-
-async function requestUfovFullscreen(element: HTMLElement | null) {
-  if (document.fullscreenElement) return;
-  await (element ?? document.documentElement).requestFullscreen?.().catch(() => undefined);
 }
 
 function formatPracticeScore(record: BrainTrainingRecord) {
@@ -786,25 +806,31 @@ function createPeripheralStimuli(distractors: boolean, targetSlot: Slot) {
     element.className = `ufov-slot ${isTarget ? 'ufov-target' : 'ufov-distractor'}`;
     element.style.left = `${slot.x}%`;
     element.style.top = `${slot.y}%`;
-    element.textContent = isTarget ? '●' : '▲';
+    element.setAttribute('aria-hidden', 'true');
+    if (isTarget) {
+      element.appendChild(createVehicleIcon('car'));
+    } else {
+      element.textContent = '▲';
+    }
     fragment.appendChild(element);
   });
   return fragment;
 }
 
 function createSlots(): Slot[] {
-  return AXES.flatMap((axis) => [20, 30, 40].map((radius, ring) => ({
+  return AXES.flatMap((axis) => [9, 18, 27].map((radius, ring) => ({
     axis,
     ring,
-    ...axisPoint(axis, radius),
+    ...axisPoint(axis, radius, true),
   })));
 }
 
-function axisPoint(axis: number, radius: number) {
+function axisPoint(axis: number, radius: number, compensateStageAspect = false) {
   const angle = (-90 + axis * 45) * Math.PI / 180;
+  const yRadius = compensateStageAspect ? radius * (800 / 533) : radius;
   return {
     x: 50 + Math.cos(angle) * radius,
-    y: 50 + Math.sin(angle) * radius,
+    y: 50 + Math.sin(angle) * yRadius,
   };
 }
 
