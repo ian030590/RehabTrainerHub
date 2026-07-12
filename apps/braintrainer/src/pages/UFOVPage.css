@@ -101,7 +101,12 @@ body.ufov-game-active .ufov-page .btn:focus-visible {
 }
 
 body.ufov-game-active .ufov-stage {
-  width: min(100vw, calc((100vh - 12px) * 1.501), 1000px);
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  aspect-ratio: auto;
+  margin: 0;
 }
 
 .ufov-response-stage {
@@ -149,8 +154,8 @@ body.ufov-game-active .ufov-stage {
 .ufov-vehicle {
   position: relative;
   display: block;
-  width: 84px;
-  height: 50px;
+  width: 72px;
+  height: 48px;
   background: transparent;
   color: #fff;
   transform-origin: center;
@@ -164,17 +169,17 @@ body.ufov-game-active .ufov-stage {
 }
 
 .ufov-vehicle-body {
-  left: 8px;
-  right: 8px;
+  left: 4px;
+  right: 4px;
   bottom: 10px;
-  height: 20px;
+  height: 15px;
   background: currentColor;
 }
 
 .ufov-vehicle-roof {
-  left: 18px;
-  top: 4px;
-  width: 48px;
+  left: 13px;
+  top: 7px;
+  width: 46px;
   height: 22px;
   background: currentColor;
   clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
@@ -185,27 +190,27 @@ body.ufov-game-active .ufov-stage {
   content: '';
   position: absolute;
   top: 8px;
-  width: 9px;
-  height: 8px;
+  width: 10px;
+  height: 9px;
   background: #000;
 }
 
 .ufov-vehicle-roof::before {
-  left: 13px;
+  left: 11px;
 }
 
 .ufov-vehicle-roof::after {
-  right: 13px;
+  right: 11px;
 }
 
 .ufov-vehicle-truck .ufov-vehicle-roof {
-  left: 42px;
-  width: 24px;
-  clip-path: polygon(0 0, 60% 0, 100% 100%, 0 100%);
+  left: 36px;
+  width: 23px;
+  clip-path: polygon(0 0, 62% 0, 100% 100%, 0 100%);
 }
 
 .ufov-vehicle-truck .ufov-vehicle-roof::before {
-  left: 7px;
+  left: 6px;
 }
 
 .ufov-vehicle-truck .ufov-vehicle-roof::after {
@@ -214,23 +219,23 @@ body.ufov-game-active .ufov-stage {
 
 .ufov-vehicle-wheel {
   bottom: 2px;
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   border: 3px solid currentColor;
   border-radius: 999px;
   background: #000;
 }
 
 .ufov-vehicle-wheel-left {
-  left: 17px;
+  left: 10px;
 }
 
 .ufov-vehicle-wheel-right {
-  right: 17px;
+  right: 10px;
 }
 
 .ufov-choice .ufov-vehicle {
-  transform: scale(0.62);
+  transform: scale(0.72);
 }
 
 .ufov-choice .ufov-stimulus-square {
@@ -239,7 +244,7 @@ body.ufov-game-active .ufov-stage {
 }
 
 .ufov-central .ufov-vehicle {
-  transform: scale(0.62);
+  transform: scale(0.72);
 }
 
 .ufov-central .ufov-stimulus-square {
@@ -248,7 +253,7 @@ body.ufov-game-active .ufov-stage {
 }
 
 .ufov-target .ufov-vehicle {
-  transform: scale(0.36);
+  transform: scale(0.42);
 }
 
 .ufov-target .ufov-stimulus-square {

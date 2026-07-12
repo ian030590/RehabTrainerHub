@@ -793,8 +793,8 @@ function createNoiseMask() {
   const mask = document.createElement('canvas');
   mask.className = 'ufov-mask-canvas';
   mask.setAttribute('aria-hidden', 'true');
-  mask.width = 160;
-  mask.height = 107;
+  mask.width = Math.max(1, Math.ceil(window.innerWidth));
+  mask.height = Math.max(1, Math.ceil(window.innerHeight));
   const context = mask.getContext('2d');
   if (!context) return mask;
 
