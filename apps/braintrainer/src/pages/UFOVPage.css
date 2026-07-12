@@ -25,8 +25,8 @@ body.ufov-game-active .navbar {
 
 body.ufov-game-active .ufov-page {
   padding: 0;
-  background: #fff;
-  color: #000;
+  background: #000;
+  color: #fff;
 }
 
 body.ufov-game-active .ufov-shell,
@@ -43,12 +43,12 @@ body.ufov-game-active .ufov-panel {
   padding: 0;
   border: 0;
   border-radius: 0;
-  background: #fff;
-  color: #000;
+  background: #000;
+  color: #fff;
 }
 
 body.ufov-game-active .ufov-feedback {
-  color: #000;
+  color: #fff;
 }
 
 body.ufov-game-active .ufov-page .jspsych-display-element,
@@ -79,8 +79,13 @@ body.ufov-game-active .ufov-page .btn-primary,
 body.ufov-game-active .ufov-page .btn:hover,
 body.ufov-game-active .ufov-page .btn:focus-visible {
   border-color: #fff;
-  background: #fff;
-  color: #000;
+  background: #000;
+  color: #fff;
+}
+
+body.ufov-game-active .ufov-page .btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
 }
 
 .ufov-stage {
@@ -91,7 +96,7 @@ body.ufov-game-active .ufov-page .btn:focus-visible {
   overflow: hidden;
   border: 0;
   border-radius: 0;
-  background: #fff;
+  background: #000;
 }
 
 body.ufov-game-active .ufov-stage {
@@ -109,8 +114,8 @@ body.ufov-game-active .ufov-stage {
   top: 50%;
   width: 64px;
   height: 64px;
-  border: 5px solid #000;
-  background: #fff;
+  border: 5px solid #fff;
+  background: #000;
   transform: translate(-50%, -50%);
 }
 
@@ -122,11 +127,22 @@ body.ufov-game-active .ufov-stage {
   place-items: center;
   width: 64px;
   height: 64px;
-  border: 5px solid #000;
+  border: 5px solid #fff;
   border-radius: 0;
-  background: #fff;
+  background: #000;
   color: #fff;
   transform: translate(-50%, -50%);
+}
+
+.ufov-stimulus-square {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border: 2px solid #fff;
+  background: #000;
+  color: #fff;
 }
 
 .ufov-vehicle {
@@ -134,7 +150,7 @@ body.ufov-game-active .ufov-stage {
   display: block;
   width: 84px;
   height: 46px;
-  background: #000;
+  background: transparent;
   color: #fff;
   transform-origin: center;
 }
@@ -204,15 +220,32 @@ body.ufov-game-active .ufov-stage {
 
 .ufov-choice .ufov-vehicle {
   margin: 0 auto;
-  transform: scale(0.76);
+  transform: scale(0.62);
+}
+
+.ufov-choice .ufov-stimulus-square {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto;
 }
 
 .ufov-central .ufov-vehicle {
-  transform: scale(0.45);
+  transform: scale(0.36);
+}
+
+.ufov-central .ufov-stimulus-square {
+  width: 42px;
+  height: 42px;
 }
 
 .ufov-target .ufov-vehicle {
-  transform: scale(0.3);
+  transform: scale(0.24);
+}
+
+.ufov-target .ufov-stimulus-square {
+  width: 28px;
+  height: 28px;
+  border-width: 2px;
 }
 
 .ufov-slot {
@@ -226,24 +259,25 @@ body.ufov-game-active .ufov-stage {
 }
 
 .ufov-target {
-  background: #000;
+  background: transparent;
   color: #fff;
 }
 
 .ufov-distractor {
-  background: #000;
+  background: transparent;
   color: #fff;
   font-size: 18px;
   font-weight: 900;
   line-height: 1;
 }
 
-.ufov-mask {
+.ufov-mask-canvas {
   position: absolute;
   inset: 0;
-  background:
-    repeating-linear-gradient(35deg, #fff 0 3px, #000 3px 8px),
-    repeating-linear-gradient(120deg, transparent 0 6px, #fff 6px 9px);
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
 }
 
 .ufov-choice-row {
@@ -309,25 +343,45 @@ body.ufov-game-active .ufov-stage {
 .ufov-results {
   display: grid;
   gap: 12px;
+  text-align: center;
 }
 
-.ufov-result-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.ufov-results .results-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.ufov-results .results-summary-value {
+  color: var(--accent);
+}
+
+.ufov-results .config-summary {
+  margin-top: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.ufov-results .config-summary strong {
+  color: var(--text-secondary);
+}
+
+.ufov-result-meta {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.ufov-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
-}
-
-.ufov-result {
-  display: grid;
-  gap: 6px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg-card);
-}
-
-.ufov-result strong {
-  font-size: 28px;
+  align-items: center;
 }
 
 .ufov-actions {
@@ -511,22 +565,12 @@ body.ufov-game-active .ufov-stage {
     padding: 16px;
   }
 
-  .ufov-central {
-    width: 104px;
-    height: 68px;
-  }
-
-  .ufov-vehicle {
-    transform: scale(0.86);
-  }
-
   .ufov-slot {
     width: 34px;
     height: 34px;
   }
 
-  .ufov-choice-row,
-  .ufov-result-grid {
+  .ufov-choice-row {
     grid-template-columns: 1fr;
   }
 

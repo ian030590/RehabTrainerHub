@@ -6,7 +6,6 @@ import type { JsPsychPlugin, TrialType } from 'jspsych';
 import {
   type BrainTrainingRecord,
   downloadTrainingRecordCsv,
-  downloadTrainingRecordJson,
   saveTrainingRecord,
 } from '../utils/trainingRecords';
 import { useT } from '../i18n';
@@ -138,7 +137,6 @@ const copy = {
     saveNote: '結果已存入 BrainTrainer 訓練紀錄。',
     practiceResult: '練習答對',
     downloadCsv: '下載 CSV',
-    downloadJson: '下載 JSON',
     directions: ['上', '右上', '右', '右下', '下', '左下', '左', '左上'],
     subtests: {
       1: 'Subtest 1 處理速度',
@@ -179,7 +177,6 @@ const copy = {
     saveNote: 'Saved to BrainTrainer training records.',
     practiceResult: 'Practice correct',
     downloadCsv: 'Download CSV',
-    downloadJson: 'Download JSON',
     directions: ['Up', 'Up right', 'Right', 'Down right', 'Down', 'Down left', 'Left', 'Up left'],
     subtests: {
       1: 'Subtest 1 Processing Speed',
@@ -388,9 +385,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       }
     }
     if (phase === 'mask') {
-      const mask = document.createElement('div');
-      mask.className = 'ufov-mask';
-      stage.appendChild(mask);
+      stage.appendChild(createNoiseMask());
     }
     displayElement.replaceChildren(stage);
   }
@@ -606,32 +601,37 @@ export function UFOVPage() {
           {savedRecord && (
             <section className="ufov-results" aria-labelledby="ufov-results-title">
               <h2 className="section-title" id="ufov-results-title">{labels.results}</h2>
-              <div className="ufov-result-grid">
+              <div className="results-summary">
                 {results.map((item) => (
-                  <article className="ufov-result" key={item.subtestId}>
-                    <span>{labels.subtests[item.subtestId]}</span>
-                    <strong>
+                  <span key={item.subtestId}>
+                    {labels.subtests[item.subtestId]}{' '}
+                    <b className="results-summary-value">
                       {savedRecord.difficulty === 'formal'
                         ? `${Math.round(item.thresholdMs)} ms`
                         : formatPracticeScore(savedRecord)}
-                    </strong>
-                    <span>{item.aborted ? labels.aborted : `${labels.trial}: ${getResultTrialCount(savedRecord, item)}`}</span>
-                  </article>
+                    </b>
+                    {' '}
+                    <span className="ufov-result-meta">
+                      {item.aborted ? labels.aborted : `${labels.trial}: ${getResultTrialCount(savedRecord, item)}`}
+                    </span>
+                  </span>
                 ))}
+                <span>
+                  {labels.trial}{' '}
+                  <b className="results-summary-value">{savedRecord.detailRows?.length ?? 0}</b>
+                </span>
               </div>
-              <p>{savedRecord.difficulty === 'formal' ? labels.saveNote : labels.practiceResult}</p>
-              <div className="ufov-actions">
-                <button className="btn btn-primary" type="button" onClick={() => downloadTrainingRecordCsv(savedRecord)}>
+              <div className="config-summary">
+                <strong>{savedRecord.difficulty === 'formal' ? labels.saveNote : `${labels.practiceResult} ${formatPracticeScore(savedRecord)}`}</strong>
+              </div>
+              <div className="config-actions ufov-result-actions">
+                <button className="btn btn-primary btn-lg config-start-btn" type="button" onClick={() => downloadTrainingRecordCsv(savedRecord)}>
                   {labels.downloadCsv}
                 </button>
-                <button className="btn btn-secondary" type="button" onClick={() => downloadTrainingRecordJson(savedRecord)}>
-                  {labels.downloadJson}
-                </button>
-                <button className="btn btn-ghost" type="button" onClick={() => setIsConfigOpen(true)}>
+                <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsConfigOpen(true)}>
                   {labels.restart}
                 </button>
               </div>
-              <span className="ufov-feedback">{savedRecord.detailRows?.length ?? 0} {labels.trial}</span>
             </section>
           )}
           {!savedRecord && !isRunning && !isConfigOpen && (
@@ -732,7 +732,7 @@ function createCentralStimulus(target: CentralTarget, labels: UfovLabels) {
   const element = document.createElement('div');
   element.className = `ufov-central ufov-central-${target}`;
   element.setAttribute('aria-label', target === 'car' ? labels.car : labels.truck);
-  element.appendChild(createVehicleIcon(target));
+  element.appendChild(createStimulusSquare(target));
   return element;
 }
 
@@ -743,8 +743,15 @@ function vehicleButton(target: CentralTarget, labels: UfovLabels, onClick: () =>
     onClick,
     '',
   );
-  button.appendChild(createVehicleIcon(target));
+  button.appendChild(createStimulusSquare(target));
   return button;
+}
+
+function createStimulusSquare(target: CentralTarget) {
+  const square = document.createElement('span');
+  square.className = 'ufov-stimulus-square';
+  square.appendChild(createVehicleIcon(target));
+  return square;
 }
 
 function createVehicleIcon(target: CentralTarget) {
@@ -782,13 +789,34 @@ function createPeripheralStimuli(distractors: boolean, targetSlot: Slot) {
     element.style.top = `${slot.y}%`;
     element.setAttribute('aria-hidden', 'true');
     if (isTarget) {
-      element.appendChild(createVehicleIcon('car'));
+      element.appendChild(createStimulusSquare('car'));
     } else {
       element.textContent = '▲';
     }
     fragment.appendChild(element);
   });
   return fragment;
+}
+
+function createNoiseMask() {
+  const mask = document.createElement('canvas');
+  mask.className = 'ufov-mask-canvas';
+  mask.setAttribute('aria-hidden', 'true');
+  mask.width = 160;
+  mask.height = 107;
+  const context = mask.getContext('2d');
+  if (!context) return mask;
+
+  const imageData = context.createImageData(mask.width, mask.height);
+  for (let index = 0; index < imageData.data.length; index += 4) {
+    const value = Math.random() > 0.5 ? 255 : 0;
+    imageData.data[index] = value;
+    imageData.data[index + 1] = value;
+    imageData.data[index + 2] = value;
+    imageData.data[index + 3] = 255;
+  }
+  context.putImageData(imageData, 0, 0);
+  return mask;
 }
 
 function createSlots(): Slot[] {
