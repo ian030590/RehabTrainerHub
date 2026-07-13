@@ -98,6 +98,7 @@ const PRACTICE_TRIALS = 5;
 const MAX_TEST_TRIALS = 24;
 const MAX_REVERSALS = 8;
 const MAX_DURATION_MS = 500;
+const MIN_DURATION_MS = 1;
 const PRACTICE_DURATION_MS = 240;
 const FIXATION_MS = 1000;
 const MASK_MS = 500;
@@ -234,7 +235,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     const config = trial.config as UfovRunConfig;
     const subtestIndex = SUBTESTS.findIndex((item) => item.id === config.subtestId);
     const run: RunState = {
-      minDurationMs: Math.max(Number(trial.refresh_ms ?? 16.67), 16.67),
+      minDurationMs: MIN_DURATION_MS,
       subtestIndex: subtestIndex >= 0 ? subtestIndex : 0,
       practiceLeft: PRACTICE_TRIALS,
       testTrial: 0,
@@ -323,11 +324,11 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     };
 
     this.renderStage(displayElement, labels, 'fixation', subtest, stimulus);
-    await waitFrameDuration(FIXATION_MS);
+    await waitMs(this.jsPsych, FIXATION_MS);
     this.renderStage(displayElement, labels, 'stimulus', subtest, stimulus);
-    await waitFrameDuration(stimulus.durationMs);
+    await waitMs(this.jsPsych, stimulus.durationMs);
     this.renderStage(displayElement, labels, 'mask', subtest, stimulus);
-    await waitFrameDuration(MASK_MS);
+    await waitMs(this.jsPsych, MASK_MS);
 
     const responseStartedAt = performance.now();
     const centralResponse = await this.askCentral(displayElement, labels);
@@ -843,21 +844,6 @@ function estimateThreshold(trials: TrialRecord[]) {
 function waitMs(jsPsych: JsPsych, durationMs: number) {
   return new Promise<void>((resolve) => {
     jsPsych.pluginAPI.setTimeout(resolve, durationMs);
-  });
-}
-
-function waitFrameDuration(durationMs: number) {
-  return new Promise<void>((resolve) => {
-    let startedAt: number | null = null;
-    const tick = (now: number) => {
-      startedAt ??= now;
-      if (now - startedAt >= durationMs) {
-        resolve();
-        return;
-      }
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
   });
 }
 
