@@ -535,7 +535,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       center.setAttribute('aria-hidden', 'true');
       pad.appendChild(center);
       AXES.forEach((axis) => {
-        const point = axisPoint(axis, 43);
+        const point = axisPoint(axis, 40);
         const button = responseButton(
           `${axis + 1}. ${labels.directions[axis]}`,
           'ufov-axis-button',
