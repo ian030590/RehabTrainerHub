@@ -1445,11 +1445,11 @@ body[data-ui-font-bold="true"] .app-layout :where(
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
-  margin: 18px 28px 18px;
+  margin: 18px 28px 28px;
 }
 
 .training-config-body .config-actions {
-  margin: 18px 0 0;
+  margin: 18px 0 28px;
 }
 
 .training-config .config-actions .btn {
