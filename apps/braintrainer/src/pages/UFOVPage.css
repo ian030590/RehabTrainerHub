@@ -243,22 +243,15 @@ body.ufov-game-active .ufov-stage {
   height: 72px;
 }
 
-.ufov-central .ufov-vehicle {
+.ufov-central .ufov-vehicle,
+.ufov-target .ufov-vehicle {
   transform: scale(0.72);
 }
 
-.ufov-central .ufov-stimulus-square {
+.ufov-central .ufov-stimulus-square,
+.ufov-target .ufov-stimulus-square {
   width: 62px;
   height: 62px;
-}
-
-.ufov-target .ufov-vehicle {
-  transform: scale(0.42);
-}
-
-.ufov-target .ufov-stimulus-square {
-  width: 36px;
-  height: 36px;
 }
 
 .ufov-slot {
@@ -272,6 +265,9 @@ body.ufov-game-active .ufov-stage {
 }
 
 .ufov-target {
+  width: 62px;
+  height: 62px;
+  overflow: visible;
   background: transparent;
   color: #fff;
 }
