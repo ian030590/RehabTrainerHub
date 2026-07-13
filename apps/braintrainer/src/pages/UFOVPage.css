@@ -276,8 +276,8 @@ body.ufov-game-active .ufov-stage {
 }
 
 .ufov-slot.ufov-distractor {
-  width: 72px;
-  height: 78px;
+  width: 96px;
+  height: 106px;
   overflow: visible;
   background: transparent;
   color: #fff;
@@ -286,8 +286,8 @@ body.ufov-game-active .ufov-stage {
 .ufov-triangle-distractor {
   position: relative;
   display: block;
-  width: 64px;
-  height: 72px;
+  width: 84px;
+  height: 96px;
 }
 
 .ufov-triangle-distractor::before,
@@ -303,7 +303,7 @@ body.ufov-game-active .ufov-stage {
 }
 
 .ufov-triangle-distractor::after {
-  inset: 4px 5px 7px;
+  inset: 6px 7px 10px;
   background: #000;
 }
 
@@ -331,7 +331,7 @@ body.ufov-game-active .ufov-stage {
 
 .ufov-axis-pad {
   position: relative;
-  width: min(78vmin, 430px);
+  width: min(88vmin, 600px);
   aspect-ratio: 1 / 1;
   border: 0;
   border-radius: 0;
@@ -343,8 +343,8 @@ body.ufov-game-active .ufov-stage {
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 42px;
+  height: 42px;
   padding: 0;
   border: 1px solid #d9d9d9;
   border-radius: 0;
@@ -353,7 +353,7 @@ body.ufov-game-active .ufov-stage {
   color: #000;
   cursor: pointer;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1;
   transform: translate(-50%, -50%);
@@ -373,7 +373,7 @@ body.ufov-game-active .ufov-stage {
   left: 50%;
   top: 50%;
   z-index: 0;
-  width: 42%;
+  width: 43%;
   height: 1px;
   background: #555;
   transform-origin: 0 50%;
@@ -675,8 +675,8 @@ body.ufov-game-active .ufov-stage {
   }
 
   .ufov-axis-button {
-    width: 24px;
-    height: 24px;
-    font-size: 11px;
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
   }
 }
