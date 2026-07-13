@@ -264,7 +264,7 @@ body.ufov-game-active .ufov-stage {
   transform: translate(-50%, -50%);
 }
 
-.ufov-target {
+.ufov-slot.ufov-target {
   width: 62px;
   height: 62px;
   overflow: visible;
@@ -272,12 +272,36 @@ body.ufov-game-active .ufov-stage {
   color: #fff;
 }
 
-.ufov-distractor {
+.ufov-slot.ufov-distractor {
+  width: 52px;
+  height: 48px;
+  overflow: visible;
   background: transparent;
   color: #fff;
-  font-size: 24px;
-  font-weight: 900;
-  line-height: 1;
+}
+
+.ufov-triangle-distractor {
+  position: relative;
+  display: block;
+  width: 46px;
+  height: 42px;
+}
+
+.ufov-triangle-distractor::before,
+.ufov-triangle-distractor::after {
+  content: '';
+  position: absolute;
+  clip-path: polygon(50% 100%, 2% 0, 98% 0);
+}
+
+.ufov-triangle-distractor::before {
+  inset: 0;
+  background: currentColor;
+}
+
+.ufov-triangle-distractor::after {
+  inset: 6px 7px 8px;
+  background: #000;
 }
 
 .ufov-mask-canvas {
@@ -453,6 +477,28 @@ body.ufov-game-active .ufov-stage {
   color: var(--text-primary);
 }
 
+.ufov-refresh-alert {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ufov-refresh-alert.warning {
+  border-color: var(--warning);
+  background: var(--bg-warning-soft, color-mix(in srgb, var(--warning) 12%, var(--bg-card)));
+}
+
+.ufov-refresh-alert strong {
+  color: var(--text-primary);
+}
+
 .ufov-config-dialog .config-section {
   margin-bottom: 24px;
 }
@@ -495,6 +541,20 @@ body.ufov-game-active .ufov-stage {
 .ufov-config-dialog .diff-btn:hover {
   border-color: var(--border-hover);
   background: var(--bg-card-hover);
+}
+
+.ufov-config-dialog .diff-btn:disabled {
+  border-color: var(--border);
+  background: var(--bg-card);
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.ufov-config-dialog .diff-btn:disabled .diff-btn-label,
+.ufov-config-dialog .diff-btn:disabled .diff-btn-desc {
+  color: var(--text-muted);
 }
 
 .ufov-config-dialog .diff-btn.active {

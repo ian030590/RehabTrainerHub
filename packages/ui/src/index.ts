@@ -40,10 +40,14 @@ export type {
 export { TrainingLoginReminder } from './components/TrainingLoginReminder';
 export { UserSelector } from './components/UserSelector';
 export type { UserSelectorProps } from './components/UserSelector';
+export { detectDisplayDeviceKind, is60HzRefreshFamily, measureDisplayRefreshRate } from './displayTiming';
+export type { DisplayDeviceKind, DisplayRefreshInfo, DisplayRefreshMeasureOptions } from './displayTiming';
 export { downloadCsvFile, downloadFile } from './downloadFile';
 export { createUseActiveUser } from './hooks/useActiveUser';
 export { useRoutedTrainingModule } from './hooks/useRoutedTrainingModule';
 export type { UseRoutedTrainingModuleArgs } from './hooks/useRoutedTrainingModule';
+export { withJsPsychFullscreen } from './jsPsychTimeline';
+export type { JsPsychFullscreenOptions, JsPsychTimelineTrial } from './jsPsychTimeline';
 export { applyDisplaySettings } from './settings/displaySettings';
 export type { DisplaySettings } from './settings/displaySettings';
 export { createUserStore } from './storage/userStore';

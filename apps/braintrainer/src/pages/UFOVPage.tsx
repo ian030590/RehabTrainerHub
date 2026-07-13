@@ -3,6 +3,14 @@ import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import {
+  detectDisplayDeviceKind,
+  measureDisplayRefreshRate,
+  type DisplayDeviceKind,
+  type DisplayRefreshInfo,
+} from '@rehab-trainer/ui/displayTiming';
+import { withJsPsychFullscreen } from '@rehab-trainer/ui/jsPsychTimeline';
+import FullscreenPlugin from '@jspsych/plugin-fullscreen';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import {
@@ -36,7 +44,9 @@ interface TrialStimulus {
   subtestId: SubtestId;
   practice: boolean;
   trialNumber: number;
-  durationMs: number;
+  durationFrames: number;
+  displayFrameCount: number;
+  plannedDurationMs: number;
   centralTarget: CentralTarget;
   peripheralSlot?: Slot;
 }
@@ -45,7 +55,11 @@ interface TrialRecord {
   subtestId: SubtestId;
   practice: boolean;
   trialNumber: number;
+  durationFrames: number;
+  displayFrameCount: number;
+  plannedDurationMs: number;
   durationMs: number;
+  actualDurationMs: number;
   centralTarget: CentralTarget;
   centralResponse: CentralTarget;
   peripheralAxis?: number;
@@ -62,12 +76,13 @@ interface SubtestResult {
 }
 
 interface RunState {
-  minDurationMs: number;
+  minDurationFrames: number;
   subtestIndex: number;
   practiceLeft: number;
   testTrial: number;
-  durationMs: number;
-  stepMs: number;
+  durationFrames: number;
+  stepFrames: number;
+  displayFramesPerStep: number;
   reversals: number[];
   lastDirection: Direction | null;
   limitStreak: number;
@@ -81,6 +96,10 @@ interface UfovExperimentData {
   results: SubtestResult[];
   trials: TrialRecord[];
   refresh_ms: number;
+  refresh_hz: number;
+  refresh_is_60hz_family: boolean;
+  refresh_device_kind: DisplayRefreshInfo['deviceKind'];
+  display_frames_per_ufov_step: number;
   aborted: boolean;
   mode: UfovRunMode;
   subtest_id: SubtestId;
@@ -99,14 +118,15 @@ const SUBTESTS: Subtest[] = [
 const PRACTICE_TRIALS = 5;
 const MAX_TEST_TRIALS = 24;
 const MAX_REVERSALS = 8;
-const MAX_DURATION_MS = 500;
-const MIN_DURATION_MS = 1;
-const PRACTICE_DURATION_MS = 240;
+const BASE_FRAME_MS = 1000 / 60;
+const MIN_DURATION_FRAMES = 1;
+const MAX_DURATION_FRAMES = 30;
+const PRACTICE_DURATION_FRAMES = 15;
 const FIXATION_MS = 1000;
 const MASK_MS = 500;
-const START_DURATION_MS = MAX_DURATION_MS;
-const START_STEP_MS = 40;
-const MIN_STEP_MS = 8;
+const START_DURATION_FRAMES = MAX_DURATION_FRAMES;
+const START_STEP_FRAMES = 3;
+const MIN_STEP_FRAMES = 1;
 const AXES = [0, 1, 2, 3, 4, 5, 6, 7];
 const AXIS_SYMBOLS = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
 const SLOTS = createSlots();
@@ -135,6 +155,14 @@ const copy = {
     incorrect: '再試一次',
     trial: '題',
     refresh: '螢幕更新',
+    refreshStatus: '螢幕更新率',
+    desktopRefreshWarning: '偵測到螢幕更新率不是 60 Hz 或 60 Hz 的倍數。正式測驗仍可執行，但建議先在電腦顯示設定切換到 60 Hz。',
+    mobileRefreshBlocked: '偵測到螢幕更新率不是 60 Hz 或 60 Hz 的倍數。手機或平板僅可使用說明或練習。',
+    mobileSubtestsBlocked: '手機和平板螢幕較小，僅開放 Subtest 1 處理速度。',
+    subtestUnavailable: '目前裝置不開放此子測驗',
+    formalUnavailable: '目前裝置不支援正式測驗',
+    fullscreenMessage: '測驗會進入全螢幕。請保持注視中央方框，刺激會依螢幕刷新逐幀呈現。',
+    fullscreenButton: '進入全螢幕',
     results: '測驗結果',
     aborted: '已中止',
     saveNote: '結果已存入 BrainTrainer 訓練紀錄。',
@@ -175,6 +203,14 @@ const copy = {
     incorrect: 'Try again',
     trial: 'Trial',
     refresh: 'Refresh',
+    refreshStatus: 'Screen refresh',
+    desktopRefreshWarning: 'The detected refresh rate is not 60 Hz or a multiple of 60 Hz. The formal test can run, but switching the computer display to 60 Hz is recommended.',
+    mobileRefreshBlocked: 'The detected refresh rate is not 60 Hz or a multiple of 60 Hz. On phones and tablets, only instructions and practice are available.',
+    mobileSubtestsBlocked: 'Phones and tablets have smaller screens, so only Subtest 1 Processing Speed is available.',
+    subtestUnavailable: 'This subtest is unavailable on this device',
+    formalUnavailable: 'Formal test unavailable on this device',
+    fullscreenMessage: 'The test will enter fullscreen. Keep looking at the center box; stimuli are presented frame-by-frame with the display refresh.',
+    fullscreenButton: 'Enter fullscreen',
     results: 'Results',
     aborted: 'Aborted',
     saveNote: 'Saved to BrainTrainer training records.',
@@ -206,6 +242,22 @@ const ufovInfo = {
       type: ParameterType.FLOAT,
       default: 16.67,
     },
+    refresh_hz: {
+      type: ParameterType.FLOAT,
+      default: 60,
+    },
+    refresh_is_60hz_family: {
+      type: ParameterType.BOOL,
+      default: true,
+    },
+    refresh_device_kind: {
+      type: ParameterType.STRING,
+      default: 'unknown',
+    },
+    display_frames_per_ufov_step: {
+      type: ParameterType.INT,
+      default: 1,
+    },
     config: {
       type: ParameterType.COMPLEX,
       default: { subtestId: 1, mode: 'formal' } satisfies UfovRunConfig,
@@ -215,6 +267,10 @@ const ufovInfo = {
     results: { type: ParameterType.COMPLEX },
     trials: { type: ParameterType.COMPLEX },
     refresh_ms: { type: ParameterType.FLOAT },
+    refresh_hz: { type: ParameterType.FLOAT },
+    refresh_is_60hz_family: { type: ParameterType.BOOL },
+    refresh_device_kind: { type: ParameterType.STRING },
+    display_frames_per_ufov_step: { type: ParameterType.INT },
     aborted: { type: ParameterType.BOOL },
     mode: { type: ParameterType.STRING },
     subtest_id: { type: ParameterType.INT },
@@ -237,12 +293,13 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     const config = trial.config as UfovRunConfig;
     const subtestIndex = SUBTESTS.findIndex((item) => item.id === config.subtestId);
     const run: RunState = {
-      minDurationMs: MIN_DURATION_MS,
+      minDurationFrames: MIN_DURATION_FRAMES,
       subtestIndex: subtestIndex >= 0 ? subtestIndex : 0,
       practiceLeft: PRACTICE_TRIALS,
       testTrial: 0,
-      durationMs: START_DURATION_MS,
-      stepMs: START_STEP_MS,
+      durationFrames: START_DURATION_FRAMES,
+      stepFrames: START_STEP_FRAMES,
+      displayFramesPerStep: getDisplayFramesPerUfovStep(trial.refresh_hz as number),
       reversals: [],
       lastDirection: null,
       limitStreak: 0,
@@ -256,7 +313,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     const aborted = await this.runSubtest(displayElement, labels, run, config.mode);
     run.results.push({
       subtestId: SUBTESTS[run.subtestIndex].id,
-      thresholdMs: config.mode === 'formal' && !aborted ? estimateThreshold(run.subtestTrials) : MAX_DURATION_MS,
+      thresholdMs: config.mode === 'formal' && !aborted ? estimateThreshold(run.subtestTrials) : frameCountToMs(MAX_DURATION_FRAMES),
       trialCount: run.subtestTrials.filter((item) => !item.practice).length,
       aborted,
     });
@@ -266,6 +323,10 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       results: run.results,
       trials: run.allTrials,
       refresh_ms: trial.refresh_ms,
+      refresh_hz: trial.refresh_hz,
+      refresh_is_60hz_family: trial.refresh_is_60hz_family,
+      refresh_device_kind: trial.refresh_device_kind,
+      display_frames_per_ufov_step: run.displayFramesPerStep,
       aborted: run.results.some((item) => item.aborted),
       mode: config.mode,
       subtest_id: SUBTESTS[run.subtestIndex].id,
@@ -276,8 +337,8 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     run.subtestIndex = subtestIndex;
     run.practiceLeft = PRACTICE_TRIALS;
     run.testTrial = 0;
-    run.durationMs = Math.max(START_DURATION_MS, run.minDurationMs);
-    run.stepMs = START_STEP_MS;
+    run.durationFrames = Math.max(START_DURATION_FRAMES, run.minDurationFrames);
+    run.stepFrames = START_STEP_FRAMES;
     run.reversals = [];
     run.lastDirection = null;
     run.limitStreak = 0;
@@ -316,20 +377,23 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
 
   private async runOneTrial(displayElement: HTMLElement, labels: UfovLabels, run: RunState, practice: boolean) {
     const subtest = SUBTESTS[run.subtestIndex];
+    const durationFrames = practice
+      ? Math.max(PRACTICE_DURATION_FRAMES, run.minDurationFrames)
+      : run.durationFrames;
     const stimulus: TrialStimulus = {
       subtestId: subtest.id,
       practice,
       trialNumber: practice ? PRACTICE_TRIALS - run.practiceLeft + 1 : run.testTrial + 1,
-      durationMs: practice ? Math.max(PRACTICE_DURATION_MS, run.minDurationMs) : run.durationMs,
+      durationFrames,
+      displayFrameCount: durationFrames * run.displayFramesPerStep,
+      plannedDurationMs: frameCountToMs(durationFrames),
       centralTarget: Math.random() > 0.5 ? 'car' : 'truck',
       peripheralSlot: subtest.hasPeripheral ? SLOTS[Math.floor(Math.random() * SLOTS.length)] : undefined,
     };
 
     this.renderStage(displayElement, labels, 'fixation', subtest, stimulus);
     await waitMs(this.jsPsych, FIXATION_MS);
-    this.renderStage(displayElement, labels, 'stimulus', subtest, stimulus);
-    await waitMs(this.jsPsych, stimulus.durationMs);
-    this.renderStage(displayElement, labels, 'mask', subtest, stimulus);
+    const actualDurationMs = await this.presentStimulusForFrames(displayElement, labels, subtest, stimulus);
     await waitMs(this.jsPsych, MASK_MS);
 
     const responseStartedAt = performance.now();
@@ -344,7 +408,11 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       subtestId: subtest.id,
       practice,
       trialNumber: stimulus.trialNumber,
-      durationMs: stimulus.durationMs,
+      durationFrames: stimulus.durationFrames,
+      displayFrameCount: stimulus.displayFrameCount,
+      plannedDurationMs: stimulus.plannedDurationMs,
+      durationMs: actualDurationMs,
+      actualDurationMs,
       centralTarget: stimulus.centralTarget,
       centralResponse,
       peripheralAxis: stimulus.peripheralSlot?.axis,
@@ -359,16 +427,56 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     const direction: Direction = record.correct ? 'down' : 'up';
     if (run.lastDirection && run.lastDirection !== direction) {
       run.reversals.push(record.durationMs);
-      run.stepMs = Math.max(MIN_STEP_MS, run.stepMs * 0.75);
+      run.stepFrames = Math.max(MIN_STEP_FRAMES, Math.round(run.stepFrames * 0.75));
     }
     run.lastDirection = direction;
 
-    const delta = record.correct ? -run.stepMs : run.stepMs * 3;
-    const nextDuration = clamp(record.durationMs + delta, run.minDurationMs, MAX_DURATION_MS);
-    const atLimit = nextDuration === record.durationMs && (nextDuration === run.minDurationMs || nextDuration === MAX_DURATION_MS);
+    const deltaFrames = record.correct ? -run.stepFrames : run.stepFrames * 3;
+    const nextDurationFrames = clamp(record.durationFrames + deltaFrames, run.minDurationFrames, MAX_DURATION_FRAMES);
+    const atLimit = nextDurationFrames === record.durationFrames
+      && (nextDurationFrames === run.minDurationFrames || nextDurationFrames === MAX_DURATION_FRAMES);
     run.limitStreak = atLimit ? run.limitStreak + 1 : 0;
-    run.failAtMaxStreak = !record.correct && record.durationMs >= MAX_DURATION_MS ? run.failAtMaxStreak + 1 : 0;
-    run.durationMs = nextDuration;
+    run.failAtMaxStreak = !record.correct && record.durationFrames >= MAX_DURATION_FRAMES ? run.failAtMaxStreak + 1 : 0;
+    run.durationFrames = nextDurationFrames;
+  }
+
+  private presentStimulusForFrames(
+    displayElement: HTMLElement,
+    labels: UfovLabels,
+    subtest: Subtest,
+    stimulus: TrialStimulus,
+  ) {
+    return new Promise<number>((resolve) => {
+      if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
+        this.renderStage(displayElement, labels, 'stimulus', subtest, stimulus);
+        this.jsPsych.pluginAPI.setTimeout(() => {
+          this.renderStage(displayElement, labels, 'mask', subtest, stimulus);
+          resolve(stimulus.plannedDurationMs);
+        }, stimulus.plannedDurationMs);
+        return;
+      }
+
+      let startTimestamp = 0;
+      let elapsedFrames = 0;
+
+      window.requestAnimationFrame((timestamp) => {
+        startTimestamp = timestamp;
+        this.renderStage(displayElement, labels, 'stimulus', subtest, stimulus);
+
+        const tick = (nextTimestamp: number) => {
+          elapsedFrames += 1;
+          if (elapsedFrames >= stimulus.displayFrameCount) {
+            this.renderStage(displayElement, labels, 'mask', subtest, stimulus);
+            resolve(nextTimestamp - startTimestamp);
+            return;
+          }
+
+          window.requestAnimationFrame(tick);
+        };
+
+        window.requestAnimationFrame(tick);
+      });
+    });
   }
 
   private renderStage(displayElement: HTMLElement, labels: UfovLabels, phase: 'fixation' | 'stimulus' | 'mask', subtest: Subtest, stimulus: TrialStimulus) {
@@ -452,11 +560,18 @@ export function UFOVPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [refreshMs, setRefreshMs] = useState(16.67);
+  const [refreshInfo, setRefreshInfo] = useState<DisplayRefreshInfo | null>(null);
+  const [isMeasuringRefresh, setIsMeasuringRefresh] = useState(false);
   const [selectedSubtest, setSelectedSubtest] = useState<SubtestId>(1);
   const [selectedMode, setSelectedMode] = useState<UfovRunMode>('formal');
   const [instructionSubtest, setInstructionSubtest] = useState<SubtestId | null>(null);
   const [results, setResults] = useState<SubtestResult[]>([]);
   const [savedRecord, setSavedRecord] = useState<BrainTrainingRecord | null>(null);
+  const deviceKind = refreshInfo?.deviceKind ?? detectDisplayDeviceKind();
+  const isSmallScreenDevice = isMobileOrTabletDevice(deviceKind);
+  const selectedSubtestBlocked = isSmallScreenDevice && selectedSubtest !== 1;
+  const formalTestBlocked = Boolean(refreshInfo && !refreshInfo.is60HzFamily && isSmallScreenDevice);
+  const selectedFlowBlocked = selectedSubtestBlocked || (selectedMode === 'formal' && formalTestBlocked);
 
   const finishExperiment = useCallback((data: UfovExperimentData) => {
     const now = new Date();
@@ -475,7 +590,11 @@ export function UFOVPage() {
       gameTitle: labels.title,
       difficulty: data.mode,
       details: {
-        refreshMs: Math.round(data.refresh_ms),
+        refreshMs: roundMs(data.refresh_ms),
+        refreshHz: roundMs(data.refresh_hz),
+        refresh60HzFamily: data.refresh_is_60hz_family,
+        refreshDeviceKind: data.refresh_device_kind,
+        displayFramesPerUfovStep: data.display_frames_per_ufov_step,
         subtest: data.subtest_id,
         mode: data.mode,
         correctCount,
@@ -487,7 +606,11 @@ export function UFOVPage() {
         Subtest: item.subtestId,
         Phase: item.practice ? 'practice' : 'test',
         Trial: item.trialNumber,
-        Duration_ms: Math.round(item.durationMs),
+        UFOV_60Hz_Frames: item.durationFrames,
+        Display_Frames: item.displayFrameCount,
+        Duration_ms: roundMs(item.durationMs),
+        Actual_Duration_ms: roundMs(item.actualDurationMs),
+        Requested_Duration_ms: roundMs(item.plannedDurationMs),
         Central_Target: item.centralTarget,
         Central_Response: item.centralResponse,
         Peripheral_Axis: item.peripheralAxis ?? '',
@@ -516,9 +639,23 @@ export function UFOVPage() {
     setIsCalibrating(true);
     setSavedRecord(null);
     setResults([]);
-    const measured = await measureRefreshMs();
-    setRefreshMs(measured);
+    const measured = await measureDisplayRefreshRate();
+    setRefreshInfo(measured);
+    setRefreshMs(measured.refreshMs);
     setIsCalibrating(false);
+
+    if (measured.isMobileOrTablet && config.subtestId !== 1) {
+      setIsConfigOpen(true);
+      setSelectedSubtest(1);
+      return;
+    }
+
+    if (config.mode === 'formal' && !measured.is60HzFamily && measured.isMobileOrTablet) {
+      setIsConfigOpen(true);
+      setSelectedMode('practice');
+      return;
+    }
+
     setIsRunning(true);
 
     const jsPsych = initJsPsych({
@@ -535,15 +672,24 @@ export function UFOVPage() {
       },
     });
     jsPsychRef.current = jsPsych;
-    jsPsych.run([{
+    const timeline = withJsPsychFullscreen([{
       type: UfovExperimentPlugin,
       labels,
-      refresh_ms: measured,
+      refresh_ms: measured.refreshMs,
+      refresh_hz: measured.refreshHz,
+      refresh_is_60hz_family: measured.is60HzFamily,
+      refresh_device_kind: measured.deviceKind,
       config,
-    }]);
+    }], FullscreenPlugin, {
+      message: labels.fullscreenMessage,
+      buttonLabel: labels.fullscreenButton,
+    });
+
+    jsPsych.run(timeline as any);
   };
 
   const startSelectedFlow = async () => {
+    if (selectedFlowBlocked) return;
     setIsConfigOpen(false);
     setSavedRecord(null);
     setResults([]);
@@ -556,6 +702,34 @@ export function UFOVPage() {
     }
     await startRun({ subtestId: selectedSubtest, mode: selectedMode });
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsMeasuringRefresh(true);
+    void measureDisplayRefreshRate().then((info) => {
+      if (cancelled) return;
+      setRefreshInfo(info);
+      setRefreshMs(info.refreshMs);
+    }).finally(() => {
+      if (!cancelled) setIsMeasuringRefresh(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (formalTestBlocked && selectedMode === 'formal') {
+      setSelectedMode('practice');
+    }
+  }, [formalTestBlocked, selectedMode]);
+
+  useEffect(() => {
+    if (isSmallScreenDevice && selectedSubtest !== 1) {
+      setSelectedSubtest(1);
+    }
+  }, [isSmallScreenDevice, selectedSubtest]);
 
   useEffect(() => () => {
     if (jsPsychRef.current) {
@@ -637,7 +811,9 @@ export function UFOVPage() {
             </section>
           )}
           {!savedRecord && !isRunning && !isConfigOpen && (
-            <span className="ufov-feedback">{labels.refresh}: {refreshMs.toFixed(1)} ms</span>
+            <span className="ufov-feedback">
+              {refreshInfo ? formatRefreshInfo(labels, refreshInfo) : `${labels.refresh}: ${refreshMs.toFixed(1)} ms`}
+            </span>
           )}
         </div>
       </section>
@@ -645,48 +821,73 @@ export function UFOVPage() {
         <ConfigDialog ariaLabel={labels.settingsTitle} onClose={() => setIsConfigOpen(false)}>
           <div className="ufov-config-dialog">
             <h2 id="ufov-config-title">{labels.settingsTitle}</h2>
+            {(isMeasuringRefresh || refreshInfo) && (
+              <div className={`ufov-refresh-alert ${isSmallScreenDevice || (refreshInfo && !refreshInfo.is60HzFamily) ? 'warning' : ''}`}>
+                <strong>
+                  {refreshInfo ? formatRefreshInfo(labels, refreshInfo) : labels.calibrating}
+                </strong>
+                {isSmallScreenDevice && (
+                  <span>{labels.mobileSubtestsBlocked}</span>
+                )}
+                {refreshInfo && !refreshInfo.is60HzFamily && (
+                  <span>
+                    {refreshInfo.isMobileOrTablet ? labels.mobileRefreshBlocked : labels.desktopRefreshWarning}
+                  </span>
+                )}
+              </div>
+            )}
             <div className="config-section">
               <div className="config-label">{labels.chooseSubtest}</div>
               <div className="difficulty-selector">
-                {SUBTESTS.map((subtest) => (
-                  <button
-                    className={`diff-btn ${selectedSubtest === subtest.id ? 'active' : ''}`}
-                    key={subtest.id}
-                    onClick={() => setSelectedSubtest(subtest.id)}
-                    type="button"
-                  >
-                    <span className="diff-btn-label">{labels.subtests[subtest.id]}</span>
-                    <span className="diff-btn-desc">{labels.instructions[subtest.id]}</span>
-                  </button>
-                ))}
+                {SUBTESTS.map((subtest) => {
+                  const subtestBlocked = isSmallScreenDevice && subtest.id !== 1;
+                  return (
+                    <button
+                      className={`diff-btn ${selectedSubtest === subtest.id ? 'active' : ''}`}
+                      disabled={subtestBlocked}
+                      key={subtest.id}
+                      onClick={() => setSelectedSubtest(subtest.id)}
+                      type="button"
+                    >
+                      <span className="diff-btn-label">{labels.subtests[subtest.id]}</span>
+                      <span className="diff-btn-desc">
+                        {subtestBlocked ? labels.subtestUnavailable : labels.instructions[subtest.id]}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div className="config-section">
               <div className="config-label">{labels.chooseMode}</div>
               <div className="difficulty-selector">
-                {(['instruction', 'practice', 'formal'] as UfovRunMode[]).map((mode) => (
-                  <button
-                    className={`diff-btn ${selectedMode === mode ? 'active' : ''}`}
-                    key={mode}
-                    onClick={() => setSelectedMode(mode)}
-                    type="button"
-                  >
-                    <span className="diff-btn-label">
-                      {mode === 'instruction' && labels.modeInstruction}
-                      {mode === 'practice' && labels.modePractice}
-                      {mode === 'formal' && labels.modeFormal}
-                    </span>
-                    <span className="diff-btn-desc">
-                      {mode === 'instruction' && labels.modeInstructionDesc}
-                      {mode === 'practice' && labels.modePracticeDesc}
-                      {mode === 'formal' && labels.modeFormalDesc}
-                    </span>
-                  </button>
-                ))}
+                {(['instruction', 'practice', 'formal'] as UfovRunMode[]).map((mode) => {
+                  const modeBlocked = mode === 'formal' && formalTestBlocked;
+                  return (
+                    <button
+                      className={`diff-btn ${selectedMode === mode ? 'active' : ''}`}
+                      disabled={modeBlocked}
+                      key={mode}
+                      onClick={() => setSelectedMode(mode)}
+                      type="button"
+                    >
+                      <span className="diff-btn-label">
+                        {mode === 'instruction' && labels.modeInstruction}
+                        {mode === 'practice' && labels.modePractice}
+                        {mode === 'formal' && labels.modeFormal}
+                      </span>
+                      <span className="diff-btn-desc">
+                        {mode === 'instruction' && labels.modeInstructionDesc}
+                        {mode === 'practice' && labels.modePracticeDesc}
+                        {mode === 'formal' && (modeBlocked ? labels.formalUnavailable : labels.modeFormalDesc)}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div className="config-actions">
-              <StartTrainingButton onClick={() => void startSelectedFlow()}>
+              <StartTrainingButton disabled={selectedFlowBlocked} onClick={() => void startSelectedFlow()}>
                 {labels.start}
               </StartTrainingButton>
               <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsConfigOpen(false)}>
@@ -781,11 +982,17 @@ function createPeripheralStimuli(distractors: boolean, targetSlot: Slot) {
     if (isTarget) {
       element.appendChild(createStimulusSquare('car'));
     } else {
-      element.textContent = '▲';
+      element.appendChild(createTriangleDistractor());
     }
     fragment.appendChild(element);
   });
   return fragment;
+}
+
+function createTriangleDistractor() {
+  const triangle = document.createElement('span');
+  triangle.className = 'ufov-triangle-distractor';
+  return triangle;
 }
 
 function createNoiseMask() {
@@ -835,7 +1042,7 @@ function estimateThreshold(trials: TrialRecord[]) {
     .filter((trial) => !trial.practice)
     .slice(-8)
     .map((trial) => trial.durationMs);
-  if (formalDurations.length === 0) return MAX_DURATION_MS;
+  if (formalDurations.length === 0) return frameCountToMs(MAX_DURATION_FRAMES);
   return formalDurations.reduce((sum, value) => sum + value, 0) / formalDurations.length;
 }
 
@@ -845,24 +1052,25 @@ function waitMs(jsPsych: JsPsych, durationMs: number) {
   });
 }
 
-async function measureRefreshMs() {
-  const samples: number[] = [];
-  let last = 0;
-  await new Promise<void>((resolve) => {
-    const tick = (now: number) => {
-      if (last) samples.push(now - last);
-      last = now;
-      if (samples.length >= 24) {
-        resolve();
-        return;
-      }
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  });
-  const usable = samples.filter((sample) => sample > 4 && sample < 40);
-  if (usable.length === 0) return 16.67;
-  return usable.reduce((sum, value) => sum + value, 0) / usable.length;
+function frameCountToMs(frames: number) {
+  return frames * BASE_FRAME_MS;
+}
+
+function getDisplayFramesPerUfovStep(refreshHz: number) {
+  if (!Number.isFinite(refreshHz) || refreshHz <= 0) return 1;
+  return Math.max(1, Math.round(refreshHz / 60));
+}
+
+function roundMs(value: number) {
+  return Number(value.toFixed(2));
+}
+
+function formatRefreshInfo(labels: UfovLabels, info: DisplayRefreshInfo) {
+  return `${labels.refreshStatus}: ${info.refreshHz.toFixed(1)} Hz (${info.refreshMs.toFixed(2)} ms)`;
+}
+
+function isMobileOrTabletDevice(deviceKind: DisplayDeviceKind) {
+  return deviceKind === 'phone' || deviceKind === 'tablet';
 }
 
 function formatDate(date: Date) {

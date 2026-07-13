@@ -28,9 +28,11 @@
     "./components/TrainerAppLayout": "./src/components/TrainerAppLayout.tsx",
     "./components/TrainerNavbar": "./src/components/TrainerNavbar.tsx",
     "./components/UserSelector": "./src/components/UserSelector.tsx",
+    "./displayTiming": "./src/displayTiming.ts",
     "./downloadFile": "./src/downloadFile.ts",
     "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
     "./hooks/useRoutedTrainingModule": "./src/hooks/useRoutedTrainingModule.ts",
+    "./jsPsychTimeline": "./src/jsPsychTimeline.ts",
     "./settings/displaySettings": "./src/settings/displaySettings.ts",
     "./storage/userStore": "./src/storage/userStore.ts",
     "./trainerTheme": "./src/trainerTheme.ts"

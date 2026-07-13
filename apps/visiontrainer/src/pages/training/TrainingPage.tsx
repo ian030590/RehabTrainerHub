@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { initJsPsych } from 'jspsych';
 import type { JsPsych } from 'jspsych';
+import FullscreenPlugin from '@jspsych/plugin-fullscreen';
 import WebGazerExtension from '@jspsych/extension-webgazer';
+import { withJsPsychFullscreen } from '@rehab-trainer/ui/jsPsychTimeline';
 import { useT } from '../../i18n';
 import { buildTimeline } from '../../experiment/timeline';
 import {
@@ -219,7 +221,12 @@ export function TrainingPage() {
 
       if (cancelled) return;
       jsPsychRef.current = jsPsych;
-      jsPsych.run(timeline as any);
+      jsPsych.run(withJsPsychFullscreen(timeline as any[], FullscreenPlugin, {
+        message: lang === 'zh'
+          ? '訓練會進入全螢幕，請依畫面指示完成任務。'
+          : 'Training will enter fullscreen. Follow the on-screen instructions to complete the task.',
+        buttonLabel: lang === 'zh' ? '進入全螢幕' : 'Enter fullscreen',
+      }) as any);
     };
 
     void setupExperiment();
