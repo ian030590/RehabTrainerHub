@@ -1,99 +1,61 @@
 # RehabTrainerHub
 
-RehabTrainerHub is a Turborepo + npm workspace that combines the home
-rehabilitation portal, StrokeTrainer, and VisionTrainer in one monorepo.
+## 中文
 
-## Structure
+RehabTrainerHub 是居家復健訓練入口，整合多個訓練工具：
+
+- StrokeTrainer：中風復健訓練
+- VisionTrainer：視覺訓練
+- BrainTrainer：認知訓練
+
+## English
+
+RehabTrainerHub is a home rehabilitation training hub that brings multiple trainers together:
+
+- StrokeTrainer: stroke rehabilitation training
+- VisionTrainer: vision training
+- BrainTrainer: cognitive training
+
+## 資料夾結構 / Folder Structure
 
 ```text
 .
 |-- apps/
-|   |-- rehabtrainerhub/   # Next.js static-export landing site
-|   |-- stroketrainer/     # Stroke rehabilitation Vite app
-|   `-- visiontrainer/     # Vision rehabilitation Vite app
+|   |-- rehabtrainerhub/   # 入口網站 / Hub site
+|   |-- stroketrainer/     # StrokeTrainer
+|   |-- visiontrainer/     # VisionTrainer
+|   `-- braintrainer/      # BrainTrainer
 |-- packages/
-|   |-- ui/                # Shared UI/components/browser utilities
-|   |-- config-eslint/     # Shared ESLint base config
-|   `-- config-tailwind/   # Shared design tokens and Tailwind config
+|   |-- ui/                # 共用介面與瀏覽器工具 / Shared UI and browser utilities
+|   |-- config-eslint/     # 共用 ESLint 設定 / Shared ESLint config
+|   `-- config-tailwind/   # 共用 Tailwind 設定 / Shared Tailwind config
+|-- docs/                  # 文件 / Documentation
+|-- scripts/               # 腳本 / Scripts
 |-- package-lock.json
+|-- package.json
 `-- turbo.json
 ```
 
-## Commands
+## 使用方式
 
-Use npm from Node.js 24 or newer:
+1. 進入 RehabTrainerHub 主畫面。
+2. 選擇要使用的 trainer：StrokeTrainer、VisionTrainer 或 BrainTrainer。
+3. 依需求調整網頁設定，例如語言、字體大小、色彩模式與音效。
+4. 選擇訓練分類與訓練模組。
+5. 在訓練前設定畫面確認參數後開始。
+6. 完成訓練後，可在成績結算畫面下載 CSV、重新開始或返回主畫面。
 
-```bash
-npm install --workspaces=false
-npm run build
-```
+## How To Use
 
-Useful filtered commands:
+1. Open the RehabTrainerHub home screen.
+2. Choose a trainer: StrokeTrainer, VisionTrainer, or BrainTrainer.
+3. Adjust page settings as needed, such as language, font size, color mode, and sound.
+4. Select a training category and module.
+5. Confirm the pre-training settings, then start the session.
+6. After training, use the results screen to download a CSV, restart, or return to the home screen.
 
-```bash
-npm run dev:hub
-npm run dev:stroke
-npm run dev:vision
-npm run build:hub
-npm run build:stroke
-npm run build:vision
-npm run build:cloudflare
-npm run deploy:cloudflare
-```
+## 注意事項 / Notice
 
-## Shared UI
+本專案用於復健流程練習與軟體原型展示，不能取代醫療診斷、治療或復健建議。
 
-Shared code lives in `packages/ui` and is imported as `@rehab-trainer/ui/*`.
-Current shared modules include:
-
-- `components/RehabFooter`
-- `components/UserSelector`
-- `downloadFile`
-- `hooks/useActiveUser`
-- `storage/userStore`
-
-App-specific training records, settings schemas, routes, and game logic stay in
-their owning app until both apps share the same behavior contract.
-
-## Deployment
-
-Cloudflare Pages is deployed from GitHub Actions. Configure these repository
-secrets:
-
-- `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_ACCOUNT_ID`
-
-The deploy workflow runs `npm run build:cloudflare`, discovers Pages apps from
-`apps/*/wrangler.toml`, applies configured D1 migrations, creates missing
-Cloudflare Pages projects, and deploys each app's configured output directory.
-The Cloudflare build removes bundled
-StrokeTrainer Vosk model archives that exceed Cloudflare Pages' per-file limit;
-serve those models from the configured external model URLs instead. A
-deployable app needs:
-
-- `apps/<app>/package.json` with `scripts.build`.
-- `apps/<app>/wrangler.toml` with `name` and `pages_build_output_dir`.
-
-Current projects:
-
-```text
-rehabtrainerhub -> apps/rehabtrainerhub/out
-stroketrainer   -> apps/stroketrainer/dist
-visiontrainer   -> apps/visiontrainer/dist
-```
-
-For SEO, set these GitHub repository variables to the canonical production
-URLs. The build uses them for cross-site links and canonical metadata:
-
-- `REHABTRAINERHUB_URL`
-- `STROKETRAINER_URL`
-- `VISIONTRAINER_URL`
-
-See [docs/repository-settings.md](./docs/repository-settings.md) for exact build
-commands, environment variables, custom-domain guidance, and redirect notes for
-the archived repositories.
-
-## Clinical Scope
-
-This project is for rehabilitation workflow practice and software prototyping.
-It is not medical diagnosis, treatment, or rehabilitation advice.
+This project is for rehabilitation workflow practice and software prototyping. It does not replace medical diagnosis, treatment, or rehabilitation advice.
