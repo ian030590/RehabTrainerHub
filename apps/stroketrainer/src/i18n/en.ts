@@ -425,6 +425,7 @@ export const en: Record<TranslationKey, string> = {
   'training.restart': 'Restart',
   'training.playAgain': 'Play Again',
   'training.returnSettings': 'Back to Settings',
+  'training.returnHome': 'Back to Home',
   'training.returnMenu': 'Back to Menu',
   'training.back': 'Back',
   'training.cancel': 'Cancel',

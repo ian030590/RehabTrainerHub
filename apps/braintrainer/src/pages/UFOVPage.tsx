@@ -3,6 +3,7 @@ import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
   detectDisplayDeviceKind,
   measureDisplayRefreshRate,
@@ -12,6 +13,7 @@ import {
 import { enterFullscreenFromUserGesture, exitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
+import { useNavigate } from 'react-router-dom';
 import {
   type BrainTrainingRecord,
   downloadTrainingRecordCsv,
@@ -166,6 +168,7 @@ const copy = {
     saveNote: '結果已存入 BrainTrainer 訓練紀錄。',
     practiceResult: '練習答對',
     downloadCsv: '下載 CSV',
+    backHome: '返回主畫面',
     actualProcessingSpeed: '實際處理速度',
     tableTrial: '題次',
     tableVehicle: '題目車子種類',
@@ -218,6 +221,7 @@ const copy = {
     saveNote: 'Saved to BrainTrainer training records.',
     practiceResult: 'Practice correct',
     downloadCsv: 'Download CSV',
+    backHome: 'Back to Home',
     actualProcessingSpeed: 'Actual processing speed',
     tableTrial: 'Trial',
     tableVehicle: 'Target vehicle',
@@ -591,6 +595,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
 
 export function UFOVPage() {
   const { lang } = useT();
+  const navigate = useNavigate();
   const labels = copy[lang];
   const displayRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
@@ -875,14 +880,15 @@ export function UFOVPage() {
               <div className="config-summary">
                 <strong>{savedRecord.difficulty === 'formal' ? labels.saveNote : `${labels.practiceResult} ${formatPracticeScore(savedRecord)}`}</strong>
               </div>
-              <div className="config-actions ufov-result-actions">
-                <button className="btn btn-primary btn-lg config-start-btn" type="button" onClick={() => downloadTrainingRecordCsv(savedRecord)}>
-                  {labels.downloadCsv}
-                </button>
-                <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsConfigOpen(true)}>
-                  {labels.restart}
-                </button>
-              </div>
+              <TrainingResultActions
+                className="config-actions ufov-result-actions"
+                downloadLabel={labels.downloadCsv}
+                restartLabel={labels.restart}
+                backLabel={labels.backHome}
+                onDownloadCsv={() => downloadTrainingRecordCsv(savedRecord)}
+                onRestart={() => setIsConfigOpen(true)}
+                onBackHome={() => navigate('/attention-training')}
+              />
             </section>
           )}
           {!savedRecord && !isRunning && !isConfigOpen && (

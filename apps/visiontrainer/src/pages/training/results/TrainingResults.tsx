@@ -1,3 +1,4 @@
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import type { TFunction, TrialData } from '../types';
 import { DefaultTrainingResults } from './DefaultTrainingResults';
 import { DrivingResults } from './DrivingResults';
@@ -13,6 +14,7 @@ interface TrainingResultsProps {
   oculomotorMode: string;
   oculomotorPattern: string;
   onDownloadCsv: () => void;
+  onRestart: () => void;
   onBackHome: () => void;
 }
 
@@ -24,6 +26,7 @@ export function TrainingResults({
   oculomotorMode,
   oculomotorPattern,
   onDownloadCsv,
+  onRestart,
   onBackHome,
 }: TrainingResultsProps) {
   return (
@@ -48,14 +51,14 @@ export function TrainingResults({
           <DefaultTrainingResults results={results} userName={userName} t={t} />
         )}
 
-        <div className="results-actions">
-          <button className="btn btn-primary btn-lg" onClick={onDownloadCsv}>
-            {t('exp.downloadCsv')}
-          </button>
-          <button className="btn btn-secondary btn-lg" onClick={onBackHome}>
-            {t('exp.backHome')}
-          </button>
-        </div>
+        <TrainingResultActions
+          downloadLabel={t('exp.downloadCsv')}
+          restartLabel={t('exp.restart')}
+          backLabel={t('exp.backHome')}
+          onDownloadCsv={onDownloadCsv}
+          onRestart={onRestart}
+          onBackHome={onBackHome}
+        />
       </div>
     </div>
   );

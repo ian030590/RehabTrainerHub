@@ -8,6 +8,7 @@ import PixiContrastSensitivityPlugin from '../../experiment/plugins/pixi-contras
 import { BestPEST } from './logic/bestPest';
 import { getActiveUser, getSetting } from '../../utils/settings';
 import { downloadCsvFile } from '../../utils/downloadFile';
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 
 // Ensure plugin is referenced
 void PixiContrastSensitivityPlugin;
@@ -43,7 +44,6 @@ export function ContrastTestPage() {
 
   const [searchParams] = useSearchParams();
   const totalTrials = parseInt(searchParams.get('trials') || '18', 10);
-  const isTrialMode = searchParams.get('trialMode') === 'true';
   
   const userName = getActiveUser() || t('exp.unknownUser');
 
@@ -174,6 +174,13 @@ export function ContrastTestPage() {
     );
   };
 
+  const restartTest = () => {
+    jsPsychRef.current = null;
+    setResultLogCSW(0);
+    setTrialRecords([]);
+    setPhase('running');
+  };
+
   if (phase === 'results') {
      const correctCount = trialRecords.filter((r) => r.correct).length;
      
@@ -224,16 +231,14 @@ export function ContrastTestPage() {
              </tbody>
            </table>
 
-           <div className="results-actions">
-             {!isTrialMode && (
-               <button className="btn btn-primary btn-lg" onClick={downloadCSV}>
-                 {t('acuity.downloadCsv') || 'Download CSV'}
-               </button>
-             )}
-             <button className="btn btn-secondary btn-lg" onClick={() => navigate('/assessment')}>
-               {t('acuity.backAssess') || 'Back'}
-             </button>
-           </div>
+           <TrainingResultActions
+             downloadLabel={t('acuity.downloadCsv') || 'Download CSV'}
+             restartLabel={t('exp.restart')}
+             backLabel={t('exp.backHome')}
+             onDownloadCsv={downloadCSV}
+             onRestart={restartTest}
+             onBackHome={() => navigate('/')}
+           />
            
            <p className="acuity-disclaimer-footer">
              {t('assess.disclaimer')}

@@ -286,6 +286,10 @@ export function TrainingPage() {
       oculomotorMode={oculomotorMode}
       oculomotorPattern={oculomotorPattern}
       onDownloadCsv={downloadCSV}
+      onRestart={() => {
+        setResults([]);
+        setPhase('running');
+      }}
       onBackHome={() => navigate('/')}
     />
   );

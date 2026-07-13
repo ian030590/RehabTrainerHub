@@ -308,7 +308,8 @@ export const en: Record<TranslationKey, string> = {
   'exp.res.thValid': 'Valid',
   'exp.res.thCollision': 'Collision',
   'exp.downloadCsv': '📥 Download CSV',
-  'exp.backHome': '← Back to Home',
+  'exp.restart': 'Restart',
+  'exp.backHome': 'Back to Home',
 
   // Acuity Test Page
   'acuity.wgNotLoaded': 'webgazer.js not loaded, please refresh.',

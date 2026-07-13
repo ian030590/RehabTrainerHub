@@ -20,6 +20,7 @@ import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { AppDialog } from '../../components/AppDialog';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
@@ -2020,11 +2021,14 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                 ))}
               </tbody>
             </table>
-            <div className="results-actions">
-              <button className="btn btn-primary btn-lg" onClick={downloadResult}>{t('training.downloadCsvScores')}</button>
-              <button className="btn btn-secondary btn-lg" onClick={restartGame}>{t('training.playAgain')}</button>
-              <button className="btn btn-ghost btn-lg" onClick={returnToEditor}>{t('training.returnSettings')}</button>
-            </div>
+            <TrainingResultActions
+              downloadLabel={t('training.downloadCsvScores')}
+              restartLabel={t('training.restart')}
+              backLabel={t('training.returnHome')}
+              onDownloadCsv={downloadResult}
+              onRestart={restartGame}
+              onBackHome={returnToEditor}
+            />
           </div>
         </div>
       )}

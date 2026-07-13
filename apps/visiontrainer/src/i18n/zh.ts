@@ -307,7 +307,8 @@ export const zh = {
   'exp.res.thValid': '有效',
   'exp.res.thCollision': '碰撞',
   'exp.downloadCsv': '下載 CSV 成績',
-  'exp.backHome': '← 返回首頁',
+  'exp.restart': '重新開始',
+  'exp.backHome': '返回主畫面',
 
   // Acuity Test Page
   'acuity.wgNotLoaded': 'webgazer.js 尚未載入，請重新整理頁面後再試。',

@@ -9,6 +9,7 @@ import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 
 type MinesweeperPhase = 'menu' | 'playing' | 'paused' | 'results';
 type MinesweeperDifficulty = 'Beginner' | 'Intermediate' | 'Advanced';
@@ -487,11 +488,14 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
               </tbody>
             </table>
 
-            <div className="results-actions">
-              <button className="btn btn-primary btn-lg" onClick={downloadResult}>{t('training.downloadCsvRecord')}</button>
-              <button className="btn btn-secondary btn-lg" onClick={restartGame}>{t('training.playAgain')}</button>
-              <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnSettings')}</button>
-            </div>
+            <TrainingResultActions
+              downloadLabel={t('training.downloadCsvRecord')}
+              restartLabel={t('training.restart')}
+              backLabel={t('training.returnHome')}
+              onDownloadCsv={downloadResult}
+              onRestart={restartGame}
+              onBackHome={returnToMenu}
+            />
           </div>
         </div>
       )}

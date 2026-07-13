@@ -23,6 +23,7 @@
     "./components/SettingsTabs": "./src/components/SettingsTabs.tsx",
     "./components/StartTrainingButton": "./src/components/StartTrainingButton.tsx",
     "./components/TrainingConfigSummary": "./src/components/TrainingConfigSummary.tsx",
+    "./components/TrainingResultActions": "./src/components/TrainingResultActions.tsx",
     "./components/TrainingModuleSelectionPage": "./src/components/TrainingModuleSelectionPage.tsx",
     "./components/TrainerApp.css": "./src/components/TrainerApp.css",
     "./components/TrainerAppLayout": "./src/components/TrainerAppLayout.tsx",

@@ -15,6 +15,7 @@ import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
@@ -1164,11 +1165,14 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
               </tbody>
             </table>
 
-            <div className="results-actions">
-              <button className="btn btn-primary btn-lg" onClick={downloadResult}>{t('training.downloadCsvRecord')}</button>
-              <button className="btn btn-secondary btn-lg" onClick={() => void startCalibration()}>{t('training.playAgain')}</button>
-              <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnSettings')}</button>
-            </div>
+            <TrainingResultActions
+              downloadLabel={t('training.downloadCsvRecord')}
+              restartLabel={t('training.restart')}
+              backLabel={t('training.returnHome')}
+              onDownloadCsv={downloadResult}
+              onRestart={() => void startCalibration()}
+              onBackHome={returnToMenu}
+            />
           </div>
         </div>
       )}

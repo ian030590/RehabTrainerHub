@@ -424,6 +424,7 @@ export const zh = {
   'training.restart': '重新開始',
   'training.playAgain': '再玩一次',
   'training.returnSettings': '返回設定',
+  'training.returnHome': '返回主畫面',
   'training.returnMenu': '回選單',
   'training.back': '返回',
   'training.cancel': '取消',

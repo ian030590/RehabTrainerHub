@@ -24,6 +24,8 @@ export { StartTrainingButton } from './components/StartTrainingButton';
 export type { StartTrainingButtonProps } from './components/StartTrainingButton';
 export { TrainingConfigSummary } from './components/TrainingConfigSummary';
 export type { TrainingConfigSummaryItem, TrainingConfigSummaryProps } from './components/TrainingConfigSummary';
+export { TrainingResultActions } from './components/TrainingResultActions';
+export type { TrainingResultActionsProps } from './components/TrainingResultActions';
 export { TrainerAppLayout } from './components/TrainerAppLayout';
 export type { TrainerAppLayoutProps } from './components/TrainerAppLayout';
 export { TrainingModuleSelectionPage } from './components/TrainingModuleSelectionPage';
