@@ -5,7 +5,6 @@ export interface TrainingModuleSelectionItem<TModuleId extends string> {
   id: TModuleId;
   title: ReactNode;
   description: ReactNode;
-  icon: ReactNode;
   meta?: ReactNode;
   actionLabel?: ReactNode;
 }
@@ -41,12 +40,12 @@ export function TrainingModuleSelectionPage<TModuleId extends string>({
       {subtitle && <p className="section-subtitle fade-in-up">{subtitle}</p>}
 
       <div className={gridClassName}>
-        {modules.map((module) => (
+        {modules.map((module, index) => (
           <SelectionCard
             key={module.id}
             title={module.title}
             description={module.description}
-            icon={module.icon}
+            index={index + 1}
             meta={module.meta}
             isSelected={selectedModuleId === module.id}
             actionLabel={typeof actionLabel === 'function' ? actionLabel(module) : actionLabel ?? module.actionLabel}

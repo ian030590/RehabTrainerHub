@@ -18,7 +18,6 @@ export function HomePage() {
     id: module.id,
     title: t(module.titleKey),
     description: t(module.descKey),
-    icon: module.icon,
   }));
 
   return (

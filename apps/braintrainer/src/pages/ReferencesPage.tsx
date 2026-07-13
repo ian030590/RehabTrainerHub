@@ -10,7 +10,7 @@ export function ReferencesPage() {
     <GridPageLayout title={t('references.title')} subtitle={t('references.subtitle')}>
       <ExternalLinkCard
         href="https://github.com/rbcavanaugh/mainConcept"
-        icon={<Icons.MainConcept />}
+        index={1}
         title={t('references.mainConcept.title')}
         description={t('references.mainConcept.desc')}
         actionLabel="rbcavanaugh/mainConcept"

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 export interface SelectionCardProps {
   title: ReactNode;
   description: ReactNode;
-  icon: ReactNode;
+  index: number;
   isSelected?: boolean;
   actionLabel?: ReactNode;
   meta?: ReactNode;
@@ -14,7 +14,7 @@ export interface SelectionCardProps {
 export function SelectionCard({
   title,
   description,
-  icon,
+  index,
   isSelected = false,
   actionLabel,
   meta,
@@ -28,7 +28,7 @@ export function SelectionCard({
       aria-expanded={isSelected}
       onClick={onSelect}
     >
-      <span className="card-icon">{icon}</span>
+      <span className="card-icon" aria-hidden="true">{index}</span>
       <span className="card-title">{title}</span>
       <span className="card-desc">{description}</span>
       {meta && <span className="card-meta">{meta}</span>}

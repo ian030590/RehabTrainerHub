@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { ExternalLinkCard } from './ExternalLinkCard';
 import { GridPageLayout } from './GridPageLayout';
 import { Icons } from './Icons';
@@ -6,7 +5,6 @@ import { Icons } from './Icons';
 export interface RelatedLinkItem {
   description: string;
   href: string;
-  icon: ReactNode;
   title: string;
 }
 
@@ -19,11 +17,11 @@ export interface RelatedLinksGridPageProps {
 export function RelatedLinksGridPage({ links, subtitle, title }: RelatedLinksGridPageProps) {
   return (
     <GridPageLayout title={title} subtitle={subtitle}>
-      {links.map((link) => (
+      {links.map((link, index) => (
         <ExternalLinkCard
           key={link.href}
           href={link.href}
-          icon={link.icon}
+          index={index + 1}
           title={link.title}
           description={link.description}
           actionLabel={link.href.replace('https://', '')}

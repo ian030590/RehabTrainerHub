@@ -310,12 +310,12 @@ export function HomePage() {
 
       {/* ── Training Cards ── */}
       <div className="selection-grid">
-        {TRAINING_MODULES.map((module) => (
+        {TRAINING_MODULES.map((module, index) => (
           <SelectionCard
             key={module.id}
             title={t(module.titleKey)}
             description={t(module.descKey)}
-            icon={module.icon}
+            index={index + 1}
             isSelected={expandedModule === module.id}
             actionLabel={expandedModule === module.id ? t('btn.collapseSettings') : t('btn.selectModule')}
             onSelect={() => handleCardClick(module.id)}

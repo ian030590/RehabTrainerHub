@@ -107,12 +107,12 @@ export function AssessmentPage() {
 
       {/* Test Cards Grid */}
       <div className="selection-grid">
-        {ASSESSMENTS.map((assessment) => (
+        {ASSESSMENTS.map((assessment, index) => (
           <SelectionCard
             key={assessment.id}
             title={t(assessment.titleKey)}
             description={t(assessment.descriptionKey)}
-            icon={assessment.icon}
+            index={index + 1}
             isSelected={expandedTest === assessment.id}
             actionLabel={expandedTest === assessment.id ? t('btn.collapseSettings') : t('btn.selectTest')}
             meta={(

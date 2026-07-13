@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 export interface ExternalLinkCardProps {
   href: string;
-  icon: ReactNode;
+  index: number;
   title: string;
   description: string;
   actionIcon: ReactNode;
@@ -11,7 +11,7 @@ export interface ExternalLinkCardProps {
 
 export function ExternalLinkCard({
   href,
-  icon,
+  index,
   title,
   description,
   actionIcon,
@@ -25,9 +25,7 @@ export function ExternalLinkCard({
       className="card card-link fade-in-up external-link-card"
       style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
     >
-      <div className="card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {icon}
-      </div>
+      <div className="card-icon" aria-hidden="true">{index}</div>
       <div className="card-title" style={{ width: '100%', textAlign: 'left' }}>
         {title}
       </div>
