@@ -9,7 +9,7 @@ import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
+import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import type { TFunction } from './types';
 
@@ -699,15 +699,28 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
 
       {phase === 'menu' && (
         <div className="training-panel">
-          <div className="training-config">
-            <header className="training-config-header">
-              <div>
-                <span className="training-config-label">{t('drawing.config.label')}</span>
-                <h1>{t('training.drawing.title')}</h1>
-              </div>
-            </header>
-
-            <div className="training-config-body">
+          <TrainingConfigPanel
+            label={t('drawing.config.label')}
+            title={t('training.drawing.title')}
+            summaryTitle={t('training.drawing.title')}
+            summaryItems={[
+              { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
+              { label: t('drawing.config.gameDuration'), value: gameDurationLabel },
+              { label: t('drawing.config.hp'), value: maxHp },
+              { label: t('drawing.config.enemySpeed'), value: t('drawing.config.speedValue', { value: speed }) },
+              { label: t('drawing.config.strictness'), value: `${strictness}%` },
+              { label: t('drawing.config.strokeWait'), value: t('drawing.config.waitValue', { value: strokeWaitMs }) },
+              { label: t('drawing.config.background'), value: backgroundSummary },
+            ]}
+            actions={(
+              <>
+                <StartTrainingButton onClick={startGame}>
+                  {t('training.start')}
+                </StartTrainingButton>
+                <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
+              </>
+            )}
+          >
               <section className="training-setting">
                 <div className="training-setting-header">
                   <div>
@@ -979,29 +992,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                   </label>
                 </div>
               </section>
-            </div>
-
-            <div className="training-config-footer">
-              <TrainingConfigSummary
-                title={t('training.drawing.title')}
-                items={[
-                  { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
-                  { label: t('drawing.config.gameDuration'), value: gameDurationLabel },
-                  { label: t('drawing.config.hp'), value: maxHp },
-                  { label: t('drawing.config.enemySpeed'), value: t('drawing.config.speedValue', { value: speed }) },
-                  { label: t('drawing.config.strictness'), value: `${strictness}%` },
-                  { label: t('drawing.config.strokeWait'), value: t('drawing.config.waitValue', { value: strokeWaitMs }) },
-                  { label: t('drawing.config.background'), value: backgroundSummary },
-                ]}
-              />
-              <div className="training-config-actions">
-                <StartTrainingButton onClick={startGame}>
-                  {t('training.start')}
-                </StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
-              </div>
-            </div>
-          </div>
+          </TrainingConfigPanel>
         </div>
       )}
 

@@ -1206,15 +1206,17 @@ body[data-ui-font-bold="true"] .app-layout :where(
   line-height: 1.15;
 }
 
-.training-config-summary {
+.training-config .config-summary {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+  margin: 16px 28px 0;
+  text-align: left;
 }
 
-.training-config-summary span,
-.training-config-summary strong {
+.training-config .config-summary span,
+.training-config .config-summary strong {
   min-height: 34px;
   display: inline-flex;
   align-items: center;
@@ -1229,7 +1231,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   white-space: nowrap;
 }
 
-.training-config-summary strong {
+.training-config .config-summary strong {
   color: var(--accent-dark);
 }
 
@@ -1239,6 +1241,11 @@ body[data-ui-font-bold="true"] .app-layout :where(
   gap: 0 28px;
   overflow-y: auto;
   padding: 6px 28px 2px;
+}
+
+.training-config-body-single {
+  grid-template-columns: 1fr;
+  padding-top: 6px;
 }
 
 .training-setting {
@@ -1394,26 +1401,44 @@ body[data-ui-font-bold="true"] .app-layout :where(
   accent-color: var(--accent);
 }
 
-.training-config-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 18px 28px;
-  border-top: 1px solid var(--border);
-  background: var(--bg-elevated);
-}
-
-.training-config-actions {
+.training-config .config-actions {
   flex: 0 0 auto;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
+  margin: 18px 28px 18px;
 }
 
-.training-config-actions .btn {
+.training-config-body .config-actions {
+  margin: 18px 0 0;
+}
+
+.training-config .config-actions .btn {
   border-radius: var(--radius-m);
+}
+
+.training-config .config-section {
+  min-width: 0;
+  margin: 0;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.training-config .config-label {
+  margin-bottom: 12px;
+  color: var(--text-primary);
+  font-size: calc(16px * var(--ui-font-scale, 1));
+  font-weight: var(--ui-font-heading-weight, 800);
+  letter-spacing: 0;
+  line-height: 1.25;
+  text-transform: none;
+}
+
+.training-config-body > .config-summary {
+  margin: 16px 0 0;
+  color: var(--text-muted);
+  text-align: left;
 }
 
 .training-panel-compact {
@@ -1722,14 +1747,14 @@ body[data-ui-font-bold="true"] .app-layout :where(
     max-height: calc(100vh - 32px);
   }
 
-  .training-config-header,
-  .training-config-footer {
+  .training-config-header {
     padding: 18px;
   }
 
-  .training-config-footer {
-    align-items: stretch;
-    flex-direction: column;
+  .training-config .config-summary,
+  .training-config .config-actions {
+    margin-left: 18px;
+    margin-right: 18px;
   }
 
   .training-config h1 {
@@ -1750,8 +1775,8 @@ body[data-ui-font-bold="true"] .app-layout :where(
     grid-template-columns: 1fr;
   }
 
-  .training-config-actions,
-  .training-config-actions .btn,
+  .training-config .config-actions,
+  .training-config .config-actions .btn,
   .training-actions,
   .training-actions .btn {
     width: 100%;

@@ -33,7 +33,7 @@ import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
+import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
@@ -693,15 +693,41 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
 
       {phase === 'menu' && (
         <div className="training-panel tongue-menu-panel">
-          <div className="training-config tongue-config">
-            <header className="training-config-header">
-              <div>
-                <span className="training-config-label">{t('tongue.config.label')}</span>
-                <h1>{t('tongue.title')}</h1>
-              </div>
-            </header>
-
-            <div className="training-config-body">
+          <TrainingConfigPanel
+            className="tongue-config"
+            label={t('tongue.config.label')}
+            title={t('tongue.title')}
+            summaryTitle={t('tongue.title')}
+            summaryItems={[
+              { label: t('tongue.config.sensitivity'), value: `${Math.round(config.sensitivity * 100)}%` },
+              { label: t('tongue.config.growthRate'), value: `${config.growthRate} px/s` },
+              {
+                label: t('tongue.config.duration'),
+                value: t('training.secondsShort', { value: config.durationSec }),
+              },
+              { label: t('tongue.config.appleSpeed'), value: `${config.appleSpeed} px/s` },
+              { label: t('tongue.config.spawnRate'), value: `${config.spawnIntervalSec.toFixed(1)}s` },
+              { label: t('tongue.config.edgeChance'), value: `${Math.round(config.edgeChance * 100)}%` },
+            ]}
+            actions={(
+              <>
+                {visionError && (
+                  <InlineAlert
+                    tone="error"
+                    className="training-start-alert"
+                    onClick={() => setShowVisionError(true)}
+                    aria-label={t('tongue.error.openDetails')}
+                  >
+                    {visionError}
+                  </InlineAlert>
+                )}
+                <StartTrainingButton onClick={() => void startSession()}>
+                  {t('tongue.calibration.start')}
+                </StartTrainingButton>
+                <button className="btn btn-ghost btn-lg" onClick={exitGame}>{t('training.cancel')}</button>
+              </>
+            )}
+          >
               <section className="training-setting">
                 <div className="training-setting-header">
                   <div>
@@ -838,41 +864,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                 title={t('tongue.privacy.title')}
                 description={t('tongue.privacy.desc')}
               />
-            </div>
-
-            <div className="training-config-footer">
-              <TrainingConfigSummary
-                title={t('tongue.title')}
-                items={[
-                  { label: t('tongue.config.sensitivity'), value: `${Math.round(config.sensitivity * 100)}%` },
-                  { label: t('tongue.config.growthRate'), value: `${config.growthRate} px/s` },
-                  {
-                    label: t('tongue.config.duration'),
-                    value: t('training.secondsShort', { value: config.durationSec }),
-                  },
-                  { label: t('tongue.config.appleSpeed'), value: `${config.appleSpeed} px/s` },
-                  { label: t('tongue.config.spawnRate'), value: `${config.spawnIntervalSec.toFixed(1)}s` },
-                  { label: t('tongue.config.edgeChance'), value: `${Math.round(config.edgeChance * 100)}%` },
-                ]}
-              />
-              <div className="training-config-actions">
-                {visionError && (
-                  <InlineAlert
-                    tone="error"
-                    className="training-start-alert"
-                    onClick={() => setShowVisionError(true)}
-                    aria-label={t('tongue.error.openDetails')}
-                  >
-                    {visionError}
-                  </InlineAlert>
-                )}
-                <StartTrainingButton onClick={() => void startSession()}>
-                  {t('tongue.calibration.start')}
-                </StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" onClick={exitGame}>{t('training.cancel')}</button>
-              </div>
-            </div>
-          </div>
+          </TrainingConfigPanel>
         </div>
       )}
 

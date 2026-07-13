@@ -18,13 +18,14 @@ const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((mo
 const ReferencesPage = lazy(() => import('./pages/ReferencesPage').then((module) => ({ default: module.ReferencesPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 const UFOVPage = lazy(() => import('./pages/UFOVPage').then((module) => ({ default: module.UFOVPage })));
+const MainConceptTraining = lazy(() => import('./pages/MainConceptTraining').then((module) => ({ default: module.MainConceptTraining })));
 
 export function App() {
   const { lang, t } = useT();
   const location = useLocation();
   const apiBase = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
   const locale = lang === 'en' ? 'en' : 'zh-TW';
-  const trainingPaths = new Set(['/', '/attention-training', '/attention-training/ufov', '/memory-training', '/thinking-training']);
+  const trainingPaths = new Set(['/', '/attention-training', '/attention-training/ufov', '/memory-training', '/thinking-training', '/thinking-training/main-concept']);
 
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
@@ -42,6 +43,7 @@ export function App() {
           <Route path="/attention-training/ufov" element={<UFOVPage />} />
           <Route path="/memory-training" element={<ModulePage moduleId="memory" />} />
           <Route path="/thinking-training" element={<ModulePage moduleId="thinking" />} />
+          <Route path="/thinking-training/main-concept" element={<MainConceptTraining />} />
           <Route path="/references" element={<ReferencesPage />} />
           <Route path="/links" element={<LinksPage />} />
           <Route path="/settings" element={<SettingsPage />} />

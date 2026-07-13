@@ -22,6 +22,7 @@
     "./components/SelectionCard": "./src/components/SelectionCard.tsx",
     "./components/SettingsTabs": "./src/components/SettingsTabs.tsx",
     "./components/StartTrainingButton": "./src/components/StartTrainingButton.tsx",
+    "./components/TrainingConfigPanel": "./src/components/TrainingConfigPanel.tsx",
     "./components/TrainingConfigSummary": "./src/components/TrainingConfigSummary.tsx",
     "./components/TrainingResultActions": "./src/components/TrainingResultActions.tsx",
     "./components/TrainingModuleSelectionPage": "./src/components/TrainingModuleSelectionPage.tsx",

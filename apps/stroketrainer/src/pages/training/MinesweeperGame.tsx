@@ -8,7 +8,7 @@ import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
+import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 
 type MinesweeperPhase = 'menu' | 'playing' | 'paused' | 'results';
@@ -303,15 +303,28 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     <div className={`minesweeper-game minesweeper-phase-${phase}`}>
       {phase === 'menu' && (
         <div className="training-panel">
-          <div className="training-config">
-            <header className="training-config-header">
-              <div>
-                <span className="training-config-label">{t('training.cognitive.configLabel')}</span>
-                <h1>{gameTitle}</h1>
-              </div>
-            </header>
-
-            <div className="training-config-body">
+          <TrainingConfigPanel
+            label={t('training.cognitive.configLabel')}
+            title={gameTitle}
+            summaryTitle={gameTitle}
+            summaryItems={[
+              { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
+              {
+                label: t('minesweeper.config.boardSize'),
+                value: `${selectedBoardConfig.label} (${selectedBoardConfig.rows}x${selectedBoardConfig.cols})`,
+              },
+              { label: t('minesweeper.config.mineDensity'), value: `${selectedDensityPercent}%` },
+              { label: t('minesweeper.config.mineCountLabel'), value: selectedMineCount },
+            ]}
+            actions={(
+              <>
+                <StartTrainingButton onClick={startGame}>
+                  {t('training.startGame')}
+                </StartTrainingButton>
+                <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.back')}</button>
+              </>
+            )}
+          >
               <section className="training-setting">
                 <div className="training-setting-header">
                   <div>
@@ -378,29 +391,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
                   </label>
                 </div>
               </section>
-            </div>
-
-            <div className="training-config-footer">
-              <TrainingConfigSummary
-                title={gameTitle}
-                items={[
-                  { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
-                  {
-                    label: t('minesweeper.config.boardSize'),
-                    value: `${selectedBoardConfig.label} (${selectedBoardConfig.rows}x${selectedBoardConfig.cols})`,
-                  },
-                  { label: t('minesweeper.config.mineDensity'), value: `${selectedDensityPercent}%` },
-                  { label: t('minesweeper.config.mineCountLabel'), value: selectedMineCount },
-                ]}
-              />
-              <div className="training-config-actions">
-                <StartTrainingButton onClick={startGame}>
-                  {t('training.startGame')}
-                </StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.back')}</button>
-              </div>
-            </div>
-          </div>
+          </TrainingConfigPanel>
         </div>
       )}
 

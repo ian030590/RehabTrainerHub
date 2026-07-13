@@ -5,17 +5,16 @@ import {
 } from '@rehab-trainer/ui/components/TrainingModuleSelectionPage';
 import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
 import { useT } from '../../i18n';
-import { MainConceptTraining } from './MainConceptTraining';
 import { TongueCatchGame } from './TongueCatchGame';
 import { VoiceDefenderGame } from './VoiceDefenderGame';
 
-type SpeechModuleId = 'voice-defender' | 'tongue-catch' | 'main-concept';
+type SpeechModuleId = 'voice-defender' | 'tongue-catch';
 
 export function SpeechTraining() {
   const { t } = useT();
   const [searchParams] = useSearchParams();
   const requestedGameId = searchParams.get('game');
-  const requestedModule = requestedGameId === 'voice-defender' || requestedGameId === 'tongue-catch' || requestedGameId === 'main-concept'
+  const requestedModule = requestedGameId === 'voice-defender' || requestedGameId === 'tongue-catch'
     ? requestedGameId
     : null;
   const { activeModule, openModule, closeModule } = useRoutedTrainingModule<SpeechModuleId>({
@@ -35,21 +34,6 @@ export function SpeechTraining() {
           <path d="M8 22h8" />
           <path d="M18 4h3v5" />
           <path d="m21 4-4 4" />
-        </svg>
-      ),
-    },
-    {
-      id: 'main-concept',
-      title: t('mainConcept.title'),
-      description: t('mainConcept.desc'),
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M4 5h16" />
-          <path d="M4 12h8" />
-          <path d="M4 19h16" />
-          <path d="M15 9h5v5h-5z" />
-          <path d="M17.5 5v4" />
-          <path d="M17.5 14v5" />
         </svg>
       ),
     },
@@ -74,10 +58,6 @@ export function SpeechTraining() {
 
   if (activeModule === 'tongue-catch') {
     return <TongueCatchGame onExit={closeModule} />;
-  }
-
-  if (activeModule === 'main-concept') {
-    return <MainConceptTraining onExit={closeModule} />;
   }
 
   return (

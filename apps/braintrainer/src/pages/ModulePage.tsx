@@ -46,7 +46,12 @@ const modules: ModuleDefinition[] = [
     titleKey: 'module.thinking.title',
     introKey: 'module.thinking.intro',
     cards: [
-      { titleKey: 'module.thinking.card1.title', bodyKey: 'module.thinking.card1.body' },
+      {
+        titleKey: 'module.thinking.mainConcept.title',
+        bodyKey: 'module.thinking.mainConcept.body',
+        actionKey: 'module.thinking.mainConcept.action',
+        to: '/thinking-training/main-concept',
+      },
       { titleKey: 'module.thinking.card2.title', bodyKey: 'module.thinking.card2.body' },
       { titleKey: 'module.thinking.card3.title', bodyKey: 'module.thinking.card3.body' },
     ],

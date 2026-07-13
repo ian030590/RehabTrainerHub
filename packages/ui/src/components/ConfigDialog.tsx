@@ -28,13 +28,15 @@ export function ConfigDialog({ children, onClose, ariaLabel }: ConfigDialogProps
         }
       }}
     >
-      <div
-        className="config-panel config-modal-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label={ariaLabel}
-      >
-        {children}
+      <div className="training-config config-modal-panel" role="dialog" aria-modal="true" aria-label={ariaLabel}>
+        <header className="training-config-header">
+          <div>
+            <h1>{ariaLabel}</h1>
+          </div>
+        </header>
+        <div className="training-config-body training-config-body-single config-dialog-body">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -74,7 +74,7 @@ import type { TFunction } from './types';
 import { COGNITIVE_ACCENT_CSS, clearStage, drawBackground } from './cognitive/utils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
+import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 
 export type { ReferenceGameId } from './cognitive/types';
@@ -381,15 +381,35 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
 
       {phase === 'menu' && (
         <div className="training-panel">
-          <div className="training-config cognitive-config">
-            <header className="training-config-header">
-              <div>
-                <span className="training-config-label">{t('training.cognitive.configLabel')}</span>
-                <h1>{metaTitle}</h1>
-              </div>
-            </header>
-
-            <div className="training-config-body">
+          <TrainingConfigPanel
+            className="cognitive-config"
+            label={t('training.cognitive.configLabel')}
+            title={metaTitle}
+            summaryTitle={metaTitle}
+            summaryItems={[
+              { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
+              gameId === 'reaction-time'
+                ? {
+                    label: t('cognitive.config.reactionTrials'),
+                    value: t('training.count', { value: reactionTrials }),
+                  }
+                : gameId === 'whack-a-mole'
+                  ? {
+                      label: t('cognitive.config.trainingDuration'),
+                      value: formatSeconds(whackDurationSec, t),
+                    }
+                  : {
+                      label: t('cognitive.config.timeLimit'),
+                      value: formatLimit(sessionLimitSec, t),
+                    },
+            ]}
+            actions={(
+              <>
+                <StartTrainingButton onClick={startGame}>{t('training.startGame')}</StartTrainingButton>
+                <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
+              </>
+            )}
+          >
               <section className="training-setting">
                 <div className="training-setting-header">
                   <div>
@@ -490,35 +510,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
                   <span>{metaFocus}</span>
                 </div>
               </section>
-            </div>
-
-            <div className="training-config-footer">
-              <TrainingConfigSummary
-                title={metaTitle}
-                items={[
-                  { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
-                  gameId === 'reaction-time'
-                    ? {
-                        label: t('cognitive.config.reactionTrials'),
-                        value: t('training.count', { value: reactionTrials }),
-                      }
-                    : gameId === 'whack-a-mole'
-                      ? {
-                          label: t('cognitive.config.trainingDuration'),
-                          value: formatSeconds(whackDurationSec, t),
-                        }
-                      : {
-                          label: t('cognitive.config.timeLimit'),
-                          value: formatLimit(sessionLimitSec, t),
-                        },
-                ]}
-              />
-              <div className="training-config-actions">
-                <StartTrainingButton onClick={startGame}>{t('training.startGame')}</StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
-              </div>
-            </div>
-          </div>
+          </TrainingConfigPanel>
         </div>
       )}
 

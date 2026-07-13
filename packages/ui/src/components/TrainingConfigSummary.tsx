@@ -12,7 +12,7 @@ export interface TrainingConfigSummaryProps {
 
 export function TrainingConfigSummary({ title, items }: TrainingConfigSummaryProps) {
   return (
-    <div className="training-config-summary">
+    <div className="config-summary">
       <strong>{title}</strong>
       {items.map((item, index) => (
         <span key={index}>

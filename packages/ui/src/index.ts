@@ -22,6 +22,8 @@ export { SettingsTabs } from './components/SettingsTabs';
 export type { SettingsTabItem, SettingsTabsProps } from './components/SettingsTabs';
 export { StartTrainingButton } from './components/StartTrainingButton';
 export type { StartTrainingButtonProps } from './components/StartTrainingButton';
+export { TrainingConfigActions, TrainingConfigPanel } from './components/TrainingConfigPanel';
+export type { TrainingConfigActionsProps, TrainingConfigPanelProps } from './components/TrainingConfigPanel';
 export { TrainingConfigSummary } from './components/TrainingConfigSummary';
 export type { TrainingConfigSummaryItem, TrainingConfigSummaryProps } from './components/TrainingConfigSummary';
 export { TrainingResultActions } from './components/TrainingResultActions';

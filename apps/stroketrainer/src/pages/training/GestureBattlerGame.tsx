@@ -14,7 +14,7 @@ import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
+import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
@@ -814,15 +814,36 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
       {phase === 'menu' && (
         <div className="training-panel gesture-menu-panel">
-          <div className="training-config gesture-config">
-            <header className="training-config-header">
-              <div>
-                <span className="training-config-label">{t('gesture.config.label')}</span>
-                <h1>{t('training.gesture.title')}</h1>
-              </div>
-            </header>
-
-            <div className="training-config-body">
+          <TrainingConfigPanel
+            className="gesture-config"
+            label={t('gesture.config.label')}
+            title={t('training.gesture.title')}
+            summaryTitle={t('training.gesture.title')}
+            summaryItems={[
+              { label: t('gesture.config.enemyHp'), value: enemyMaxHp },
+              { label: t('gesture.config.holdDuration'), value: `${holdDuration}s` },
+              { label: t('gesture.config.strictness'), value: `${Math.round(strictnessThreshold * 100)}%` },
+              { label: t('gesture.config.targetMode'), value: targetModeLabel },
+            ]}
+            actions={(
+              <>
+                {visionError && (
+                  <InlineAlert
+                    tone="error"
+                    className="training-start-alert"
+                    onClick={() => setShowVisionError(true)}
+                    aria-label={t('gesture.error.openDetails')}
+                  >
+                    {visionError}
+                  </InlineAlert>
+                )}
+                <StartTrainingButton onClick={() => void startCalibration()}>
+                  {t('training.start')}
+                </StartTrainingButton>
+                <button className="btn btn-ghost btn-lg" onClick={exitGame}>{t('training.cancel')}</button>
+              </>
+            )}
+          >
               <section className="training-setting">
                 <div className="training-setting-header">
                   <div>
@@ -961,36 +982,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                 title={t('gesture.privacy.title')}
                 description={t('gesture.privacy.desc')}
               />
-            </div>
-
-            <div className="training-config-footer">
-              <TrainingConfigSummary
-                title={t('training.gesture.title')}
-                items={[
-                  { label: t('gesture.config.enemyHp'), value: enemyMaxHp },
-                  { label: t('gesture.config.holdDuration'), value: `${holdDuration}s` },
-                  { label: t('gesture.config.strictness'), value: `${Math.round(strictnessThreshold * 100)}%` },
-                  { label: t('gesture.config.targetMode'), value: targetModeLabel },
-                ]}
-              />
-              <div className="training-config-actions">
-                {visionError && (
-                  <InlineAlert
-                    tone="error"
-                    className="training-start-alert"
-                    onClick={() => setShowVisionError(true)}
-                    aria-label={t('gesture.error.openDetails')}
-                  >
-                    {visionError}
-                  </InlineAlert>
-                )}
-                <StartTrainingButton onClick={() => void startCalibration()}>
-                  {t('training.start')}
-                </StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" onClick={exitGame}>{t('training.cancel')}</button>
-              </div>
-            </div>
-          </div>
+          </TrainingConfigPanel>
         </div>
       )}
 

@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
-import { useT, type TranslationKey } from '../../i18n';
-import { downloadCsvFile } from '../../utils/downloadFile';
-import { getActiveUser } from '../../utils/settings';
-import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { csvCell, formatTestDate } from './gameUtils';
-import { verifySelectedTrainingUser } from './selectedUserGuard';
+import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
+import { useNavigate } from 'react-router-dom';
+import { useT, type TranslationKey } from '../i18n';
+import { saveTrainingRecord, type BrainTrainingRecord } from '../utils/trainingRecords';
 
 type Rating = 'Accurate' | 'Inaccurate' | 'Absent';
 type Phase = 'menu' | 'instructions' | 'playing' | 'results';
@@ -308,12 +307,9 @@ const TRAINING_SETS: TrainingSet[] = [
 
 validateTrainingSets(TRAINING_SETS);
 
-interface MainConceptTrainingProps {
-  onExit: () => void;
-}
-
-export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
+export function MainConceptTraining() {
   const { t, lang } = useT();
+  const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>('menu');
   const [selectedSetId, setSelectedSetId] = useState(TRAINING_SETS[0].id);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -335,7 +331,6 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
   const locked = Boolean(acceptedTrial);
 
   const openInstructions = () => {
-    if (!verifySelectedTrainingUser()) return;
     setFeedback(null);
     setAcceptedTrial(null);
     setSummary(null);
@@ -343,7 +338,6 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
   };
 
   const startSession = () => {
-    if (!verifySelectedTrainingUser()) return;
     const firstQuestion = activeSet.questions[0];
     setCurrentIndex(0);
     setAnswer(createEmptyAnswer(firstQuestion));
@@ -361,6 +355,10 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
     setFeedback(null);
     setAcceptedTrial(null);
     setSummary(null);
+  };
+
+  const exitToThinkingTraining = () => {
+    navigate('/thinking-training');
   };
 
   const selectTrainingSet = (id: string) => {
@@ -437,13 +435,14 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
   };
 
   const finishSession = (finalResults: TrialResult[]) => {
+    const now = new Date();
     const correct = finalResults.filter((trial) => trial.correct).length;
     const total = activeSet.questions.length;
-    const durationSeconds = Math.max(1, Math.round((Date.now() - (startedAt ?? Date.now())) / 1000));
-    const date = formatTestDate(new Date());
+    const durationSeconds = Math.max(1, Math.round((now.getTime() - (startedAt ?? now.getTime())) / 1000));
+    const date = formatTestDate(now);
     const nextSummary: SessionSummary = {
       date,
-      participant: getActiveUser() || t('exp.unknownUser'),
+      participant: getAuthUserNameFromToken() || 'Guest',
       setTitle,
       total,
       correct,
@@ -455,10 +454,11 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
     setFeedback(null);
     setAcceptedTrial(null);
     setPhase('results');
-    void saveTrainingSessionRecord({
+    const record: BrainTrainingRecord = {
+      id: `main_concept_${now.getTime().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+      savedAt: now.toISOString(),
       userName: nextSummary.participant,
-      moduleId: 'speech-training',
-      moduleName: t('home.module.speech.title'),
+      moduleId: 'thinking-training',
       gameId: 'main-concept',
       gameTitle: t('mainConcept.title'),
       difficulty: nextSummary.setTitle,
@@ -472,7 +472,8 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
         Duration_Seconds: nextSummary.durationSeconds,
       },
       detailRows: toDetailRows(nextSummary.trials),
-    });
+    };
+    void saveTrainingRecord(record);
   };
 
   const downloadResult = () => {
@@ -483,15 +484,22 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
   if (phase === 'menu') {
     return (
       <div className="training-panel main-concept-fullscreen-panel">
-        <div className="training-config main-concept-config">
-          <header className="training-config-header">
-            <div>
-              <span className="training-config-label">{t('mainConcept.configLabel')}</span>
-              <h1>{t('mainConcept.title')}</h1>
-            </div>
-          </header>
-
-          <div className="training-config-body">
+        <TrainingConfigPanel
+          className="main-concept-config"
+          label={t('mainConcept.configLabel')}
+          title={t('mainConcept.title')}
+          summaryTitle={t('mainConcept.title')}
+          summaryItems={[
+            { label: t('mainConcept.trainingSet'), value: setTitle },
+            { label: t('mainConcept.source'), value: t('mainConcept.reference') },
+          ]}
+          actions={(
+            <>
+              <StartTrainingButton onClick={openInstructions}>{t('training.startGame')}</StartTrainingButton>
+              <button className="btn btn-ghost btn-lg" onClick={exitToThinkingTraining}>{t('training.cancel')}</button>
+            </>
+          )}
+        >
             <section className="training-setting training-setting-wide">
               <div className="training-setting-header">
                 <div>
@@ -524,22 +532,7 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
                 <span>{t('mainConcept.reference')}</span>
               </div>
             </section>
-          </div>
-
-          <div className="training-config-footer">
-            <TrainingConfigSummary
-              title={t('mainConcept.title')}
-              items={[
-                { label: t('mainConcept.trainingSet'), value: setTitle },
-                { label: t('mainConcept.source'), value: t('mainConcept.reference') },
-              ]}
-            />
-            <div className="training-config-actions">
-              <StartTrainingButton onClick={openInstructions}>{t('training.startGame')}</StartTrainingButton>
-              <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
-            </div>
-          </div>
-        </div>
+        </TrainingConfigPanel>
       </div>
     );
   }
@@ -547,15 +540,22 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
   if (phase === 'instructions') {
     return (
       <div className="training-panel main-concept-fullscreen-panel">
-        <div className="training-config main-concept-config main-concept-instructions-config">
-          <header className="training-config-header">
-            <div>
-              <span className="training-config-label">{t('mainConcept.instructions.label')}</span>
-              <h1>{t('mainConcept.instructions.title')}</h1>
-            </div>
-          </header>
-
-          <div className="training-config-body">
+        <TrainingConfigPanel
+          className="main-concept-config main-concept-instructions-config"
+          label={t('mainConcept.instructions.label')}
+          title={t('mainConcept.instructions.title')}
+          summaryTitle={t('mainConcept.title')}
+          summaryItems={[
+            { label: t('mainConcept.trainingSet'), value: setTitle },
+            { label: t('mainConcept.results.question'), value: activeSet.questions.length },
+          ]}
+          actions={(
+            <>
+              <StartTrainingButton onClick={startSession}>{t('mainConcept.instructions.begin')}</StartTrainingButton>
+              <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnSettings')}</button>
+            </>
+          )}
+        >
             <section className="training-setting training-setting-wide">
               <div className="training-setting-header">
                 <div>
@@ -599,22 +599,7 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
                 ))}
               </div>
             </section>
-          </div>
-
-          <div className="training-config-footer">
-            <TrainingConfigSummary
-              title={t('mainConcept.title')}
-              items={[
-                { label: t('mainConcept.trainingSet'), value: setTitle },
-                { label: t('mainConcept.results.question'), value: activeSet.questions.length },
-              ]}
-            />
-            <div className="training-config-actions">
-              <StartTrainingButton onClick={startSession}>{t('mainConcept.instructions.begin')}</StartTrainingButton>
-              <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnSettings')}</button>
-            </div>
-          </div>
-        </div>
+        </TrainingConfigPanel>
       </div>
     );
   }
@@ -757,7 +742,7 @@ export function MainConceptTraining({ onExit }: MainConceptTrainingProps) {
                 <button className="btn btn-primary btn-lg" onClick={submitAnswer}>{t('mainConcept.check')}</button>
               )}
               <button className="btn btn-secondary btn-lg" onClick={skipQuestion} disabled={locked}>{t('mainConcept.skip')}</button>
-              <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
+              <button className="btn btn-ghost btn-lg" onClick={exitToThinkingTraining}>{t('training.cancel')}</button>
             </div>
           </main>
         </div>
@@ -871,6 +856,19 @@ function toCsv(summary: SessionSummary): string {
     columns.join(','),
     ...rows.map((row) => columns.map((column) => csvCell(row[column as keyof typeof row])).join(',')),
   ].join('\n');
+}
+
+function csvCell(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  const text = String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function formatTestDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function validateTrainingSets(sets: TrainingSet[]): void {

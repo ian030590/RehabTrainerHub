@@ -19,7 +19,7 @@ import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
+import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { AppDialog } from '../../components/AppDialog';
 import { InlineAlert } from '../../components/InlineAlert';
@@ -1463,21 +1463,72 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
 
       {phase === 'editor' && (
         <div className="training-panel">
-          <div className="training-config">
-            <header className="training-config-header">
-              <div>
-                <span className="training-config-label">{t('voice.configLabel')}</span>
-                <h1>{t('voice.title')}</h1>
+          <TrainingConfigPanel
+            label={t('voice.configLabel')}
+            title={t('voice.title')}
+            headerEnd={modelStatus !== 'error' && (
+              <div className={`voice-model-status voice-model-status-${modelStatus}`} aria-live="polite">
+                <span>{modelStatusText}</span>
+                <progress max="100" value={modelProgress} aria-label={modelStatusText} />
               </div>
-              {modelStatus !== 'error' && (
-                <div className={`voice-model-status voice-model-status-${modelStatus}`} aria-live="polite">
-                  <span>{modelStatusText}</span>
-                  <progress max="100" value={modelProgress} aria-label={modelStatusText} />
-                </div>
-              )}
-            </header>
-
-            <div className="training-config-body">
+            )}
+            summaryTitle={t('voice.title')}
+            summaryItems={[
+              { label: t('cognitive.config.difficulty'), value: t(activeConfig.labelKey) },
+              { label: t('drawing.config.gameDuration'), value: gameDurationLabel },
+              { label: t('voice.config.hp'), value: maxHp },
+              {
+                label: t('voice.config.language'),
+                value: t(language === 'zh' ? 'voice.language.zh' : 'voice.language.en'),
+              },
+              ...(recognitionEngine
+                ? [{
+                    label: t('voice.config.engine'),
+                    value: t(recognitionEngine === 'vosk' ? 'voice.engine.vosk' : 'voice.engine.webSpeech'),
+                  }]
+                : []),
+              { label: t('voice.config.enemySpeed'), value: t('voice.config.speedValue', { value: speed }) },
+              {
+                label: t('voice.vocabulary.title'),
+                value: t('voice.vocabulary.activeCount', {
+                  active: activeWords.length,
+                  total: languageVocabulary.length,
+                }),
+              },
+              { label: t('drawing.config.background'), value: backgroundSummary },
+            ]}
+            actions={(
+              <>
+                {showStartValidation && startIssues.length > 0 && (
+                  <InlineAlert
+                    tone="error"
+                    className="training-start-alert training-start-alert-list"
+                    onClick={() => {
+                      if (microphoneError) {
+                        setShowMicrophoneError(true);
+                        return;
+                      }
+                      scrollToStartRequirement(startIssues[0].requirement);
+                    }}
+                    aria-label={microphoneError
+                      ? t('voice.microphone.openErrorDetails')
+                      : t('voice.startBlocked.title')}
+                  >
+                    <strong>{t('voice.startBlocked.title')}</strong>
+                    <span className="training-start-alert-details">
+                      {startIssues.map((issue) => (
+                        <span key={issue.requirement}>{issue.message}</span>
+                      ))}
+                    </span>
+                  </InlineAlert>
+                )}
+                <StartTrainingButton onClick={() => void handleStartGame()}>
+                  {t('training.start')}
+                </StartTrainingButton>
+                <button className="btn btn-ghost btn-lg" onClick={handleExit}>{t('training.cancel')}</button>
+              </>
+            )}
+          >
               <section className="training-setting">
                 <div className="training-setting-header">
                   <div>
@@ -1880,67 +1931,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                   </label>
                 </div>
               </section>
-            </div>
-
-            <div className="training-config-footer">
-              <TrainingConfigSummary
-                title={t('voice.title')}
-                items={[
-                  { label: t('cognitive.config.difficulty'), value: t(activeConfig.labelKey) },
-                  { label: t('drawing.config.gameDuration'), value: gameDurationLabel },
-                  { label: t('voice.config.hp'), value: maxHp },
-                  {
-                    label: t('voice.config.language'),
-                    value: t(language === 'zh' ? 'voice.language.zh' : 'voice.language.en'),
-                  },
-                  ...(recognitionEngine
-                    ? [{
-                        label: t('voice.config.engine'),
-                        value: t(recognitionEngine === 'vosk' ? 'voice.engine.vosk' : 'voice.engine.webSpeech'),
-                      }]
-                    : []),
-                  { label: t('voice.config.enemySpeed'), value: t('voice.config.speedValue', { value: speed }) },
-                  {
-                    label: t('voice.vocabulary.title'),
-                    value: t('voice.vocabulary.activeCount', {
-                      active: activeWords.length,
-                      total: languageVocabulary.length,
-                    }),
-                  },
-                  { label: t('drawing.config.background'), value: backgroundSummary },
-                ]}
-              />
-              <div className="training-config-actions">
-                {showStartValidation && startIssues.length > 0 && (
-                  <InlineAlert
-                    tone="error"
-                    className="training-start-alert training-start-alert-list"
-                    onClick={() => {
-                      if (microphoneError) {
-                        setShowMicrophoneError(true);
-                        return;
-                      }
-                      scrollToStartRequirement(startIssues[0].requirement);
-                    }}
-                    aria-label={microphoneError
-                      ? t('voice.microphone.openErrorDetails')
-                      : t('voice.startBlocked.title')}
-                  >
-                    <strong>{t('voice.startBlocked.title')}</strong>
-                    <span className="training-start-alert-details">
-                      {startIssues.map((issue) => (
-                        <span key={issue.requirement}>{issue.message}</span>
-                      ))}
-                    </span>
-                  </InlineAlert>
-                )}
-                <StartTrainingButton onClick={() => void handleStartGame()}>
-                  {t('training.start')}
-                </StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" onClick={handleExit}>{t('training.cancel')}</button>
-              </div>
-            </div>
-          </div>
+          </TrainingConfigPanel>
         </div>
       )}
 

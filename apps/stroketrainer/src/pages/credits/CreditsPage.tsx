@@ -30,13 +30,6 @@ export function CreditsPage() {
       url: 'https://github.com/antfu/vue-minesweeper',
       icon: <Icons.VueMinesweeper />,
     },
-    {
-      titleKey: 'credits.mainConcept.title',
-      descKey: 'credits.mainConcept.desc',
-      repo: 'rbcavanaugh/mainConcept',
-      url: 'https://github.com/rbcavanaugh/mainConcept',
-      icon: <Icons.MainConcept />,
-    },
   ];
 
   return (
