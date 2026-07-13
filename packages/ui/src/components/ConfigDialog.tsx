@@ -1,15 +1,16 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { TrainingConfigPanel } from './TrainingConfigPanel';
+import type { TrainingConfigSummaryItem } from './TrainingConfigSummary';
 
 export interface ConfigDialogProps {
   children: ReactNode;
   onClose: () => void;
   ariaLabel: string;
-  summary?: ReactNode;
+  summaryItems?: readonly TrainingConfigSummaryItem[];
 }
 
-export function ConfigDialog({ children, onClose, ariaLabel, summary }: ConfigDialogProps) {
+export function ConfigDialog({ children, onClose, ariaLabel, summaryItems = [] }: ConfigDialogProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -32,7 +33,7 @@ export function ConfigDialog({ children, onClose, ariaLabel, summary }: ConfigDi
     >
       <TrainingConfigPanel
         title={ariaLabel}
-        headerEnd={summary}
+        summaryItems={summaryItems}
         className="config-modal-panel"
         bodyClassName="training-config-body-single config-dialog-body"
         role="dialog"

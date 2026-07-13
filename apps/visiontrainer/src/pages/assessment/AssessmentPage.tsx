@@ -6,14 +6,12 @@ import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import { useT } from '../../i18n';
 import { isAssessmentCalibrationAtDefaults } from '../../utils/settings';
 import { useAppSetting } from '../../utils/useAppSetting';
-import { useActiveUser } from '../../utils/useActiveUser';
 import { ASSESSMENTS } from './assessmentDefinitions';
 import type { TestType } from './logic/optotypeRenderer';
 
 export function AssessmentPage() {
   const { t } = useT();
   const navigate = useNavigate();
-  const activeUser = useActiveUser();
   const [distanceCM] = useAppSetting('distanceInCM');
 
   const [expandedTest, setExpandedTest] = useState<TestType | null>(null);
@@ -132,14 +130,10 @@ export function AssessmentPage() {
         <ConfigDialog
           ariaLabel={t(expandedAssessment.titleKey)}
           onClose={() => setExpandedTest(null)}
-          summary={(
-            <div className="config-summary">
-              {t('assess.config.user')} <strong>{activeUser}</strong> ·{' '}
-              {t('assess.config.test')} <strong>{t(expandedAssessment.titleKey)}</strong> ·{' '}
-              {t('assess.config.trials')} <strong>{localTrials}</strong> ·{' '}
-              {t('assess.config.dist')} <strong>{distanceCM} cm</strong>
-            </div>
-          )}
+          summaryItems={[
+            { value: localTrials },
+            { value: `${distanceCM} cm` },
+          ]}
         >
             <div className="config-section">
               <div className="config-label">{t('assess.trialsLabel')}</div>

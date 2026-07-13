@@ -1,23 +1,20 @@
 import type { ReactNode } from 'react';
 
 export interface TrainingConfigSummaryItem {
-  label: ReactNode;
+  label?: ReactNode;
   value: ReactNode;
 }
 
 export interface TrainingConfigSummaryProps {
-  title: ReactNode;
+  title?: ReactNode;
   items: readonly TrainingConfigSummaryItem[];
 }
 
-export function TrainingConfigSummary({ title, items }: TrainingConfigSummaryProps) {
+export function TrainingConfigSummary({ items }: TrainingConfigSummaryProps) {
   return (
     <div className="config-summary">
-      <strong>{title}</strong>
       {items.map((item, index) => (
-        <span key={index}>
-          {item.label}: {item.value}
-        </span>
+        <span key={index}>{item.value}</span>
       ))}
     </div>
   );

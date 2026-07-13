@@ -902,15 +902,17 @@ export function UFOVPage() {
         <ConfigDialog
           ariaLabel={labels.settingsTitle}
           onClose={() => setIsConfigOpen(false)}
-          summary={(
-            <div className="config-summary">
-              <strong>{labels.subtests[selectedSubtest]}</strong> · <strong>
-                {selectedMode === 'instruction' && labels.modeInstruction}
-                {selectedMode === 'practice' && labels.modePractice}
-                {selectedMode === 'formal' && labels.modeFormal}
-              </strong>
-            </div>
-          )}
+          summaryItems={[
+            { value: labels.subtests[selectedSubtest] },
+            {
+              value:
+                selectedMode === 'instruction'
+                  ? labels.modeInstruction
+                  : selectedMode === 'practice'
+                    ? labels.modePractice
+                    : labels.modeFormal,
+            },
+          ]}
         >
           <div className="ufov-config-dialog">
             {(isMeasuringRefresh || refreshInfo) && (

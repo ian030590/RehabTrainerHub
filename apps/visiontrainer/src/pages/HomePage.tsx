@@ -12,7 +12,6 @@ import {
 import { pixiAppManager } from '../utils/pixiPool';
 import { SoundManager } from '../utils/soundManager';
 import { useAppSetting } from '../utils/useAppSetting';
-import { useActiveUser } from '../utils/useActiveUser';
 import {
   oculomotorModes,
   oculomotorPatterns,
@@ -41,7 +40,6 @@ function preloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknown> {
 export function HomePage() {
   const { t } = useT();
   const navigate = useNavigate();
-  const activeUser = useActiveUser();
 
   // ── Module expansion state ──
   const [expandedModule, setExpandedModule] = useState<TrainingModuleId | null>(null);
@@ -328,13 +326,10 @@ export function HomePage() {
         <ConfigDialog
           ariaLabel={t('home.module.movingCard.title')}
           onClose={() => setExpandedModule(null)}
-          summary={(
-            <div className="config-summary">
-              {t('home.config.user')} <strong>{activeUser}</strong> ·{' '}
-              {t('home.config.diffLabel')} <strong>{diffOptions.find((d) => d.key === localDifficulty)?.label}</strong> ·{' '}
-              {t('home.config.roundsLabel')} <strong>{localRounds}</strong>
-            </div>
-          )}
+          summaryItems={[
+            { value: diffOptions.find((d) => d.key === localDifficulty)?.label },
+            { value: localRounds },
+          ]}
         >
             {/* Difficulty */}
             <div className="config-section">
@@ -397,13 +392,10 @@ export function HomePage() {
         <ConfigDialog
           ariaLabel={t('home.module.oculomotor.title')}
           onClose={() => setExpandedModule(null)}
-          summary={(
-            <div className="config-summary">
-              {t('home.config.user')} <strong>{activeUser}</strong> ·{' '}
-              {t('home.config.modeLabel')} <strong>{t(`preset.mode.${oculomotorModes.find((mode) => mode.id === oculomotorMode)?.id}` as any)}</strong> ·{' '}
-              {t('home.config.durationLabel')} <strong>{oculomotorDurationSec}s</strong>
-            </div>
-          )}
+          summaryItems={[
+            { value: t(`preset.mode.${oculomotorMode}` as any) },
+            { value: `${oculomotorDurationSec}s` },
+          ]}
         >
             <div className="config-section">
               <div className="config-label">{t('home.config.trainingMode')}</div>
@@ -722,14 +714,11 @@ export function HomePage() {
         <ConfigDialog
           ariaLabel={t('home.module.gaborPatching.title')}
           onClose={() => setExpandedModule(null)}
-          summary={(
-            <div className="config-summary">
-              {t('home.config.user')} <strong>{activeUser}</strong> ·{' '}
-              {t('home.config.diffLabel')} <strong>{gaborDiffOptions.find((d) => d.key === localDifficulty)?.label}</strong> ·{' '}
-              {t('home.config.durationLabel')} <strong>{gaborDurationSec}s</strong> ·{' '}
-              {t('home.config.gaborMaxSpots')} <strong>{gaborMaxSpots}</strong>
-            </div>
-          )}
+          summaryItems={[
+            { value: gaborDiffOptions.find((d) => d.key === localDifficulty)?.label },
+            { value: `${gaborDurationSec}s` },
+            { value: gaborMaxSpots },
+          ]}
         >
             {/* Difficulty */}
             <div className="config-section">
@@ -831,12 +820,9 @@ export function HomePage() {
         <ConfigDialog
           ariaLabel={t('home.module.reading.title')}
           onClose={() => setExpandedModule(null)}
-          summary={(
-            <div className="config-summary">
-              {t('home.config.user')} <strong>{activeUser}</strong> ·{' '}
-              {t('home.config.storyLabel')} <strong>{t('home.config.randomStory')}</strong>
-            </div>
-          )}
+          summaryItems={[
+            { value: t('home.config.randomStory') },
+          ]}
         >
 
             <div className="config-section">
@@ -919,14 +905,11 @@ export function HomePage() {
         <ConfigDialog
           ariaLabel={t('home.module.driving.title')}
           onClose={() => setExpandedModule(null)}
-          summary={(
-            <div className="config-summary">
-              {t('home.config.user')} <strong>{activeUser}</strong> ·{' '}
-              {t('home.config.durationLabel')} <strong>{drivingDurationSec}s</strong> ·{' '}
-              {t('home.config.diffLabel')} <strong>{drivingDifficultyLabels[drivingDifficulty]}</strong> ·{' '}
-              {t('home.config.drivingRedFlash')} <strong>{drivingRedFlashEnabled ? t('common.on') : t('common.off')}</strong>
-            </div>
-          )}
+          summaryItems={[
+            { value: `${drivingDurationSec}s` },
+            { value: drivingDifficultyLabels[drivingDifficulty] },
+            { value: drivingRedFlashEnabled ? t('common.on') : t('common.off') },
+          ]}
         >
             <div className="config-section">
               <div className="config-label">{t('home.config.drivingReactionDifficulty')}</div>

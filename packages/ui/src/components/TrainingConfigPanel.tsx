@@ -36,7 +36,7 @@ export function TrainingConfigPanel({
 }: TrainingConfigPanelProps) {
   const panelClassName = ['training-config', className].filter(Boolean).join(' ');
   const bodyClasses = ['training-config-body', bodyClassName].filter(Boolean).join(' ');
-  const hasSummary = Boolean(summaryTitle && summaryItems.length > 0);
+  const hasSummary = summaryItems.length > 0;
 
   return (
     <div className={panelClassName} role={role} aria-label={ariaLabel} aria-modal={ariaModal}>
