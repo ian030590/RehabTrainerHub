@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 
-interface SelectionCardProps {
+export interface SelectionCardProps {
   title: ReactNode;
   description: ReactNode;
   icon: ReactNode;
   isSelected?: boolean;
   actionLabel?: ReactNode;
   meta?: ReactNode;
+  className?: string;
   onSelect: () => void;
 }
 
@@ -17,12 +18,13 @@ export function SelectionCard({
   isSelected = false,
   actionLabel,
   meta,
+  className = '',
   onSelect,
 }: SelectionCardProps) {
   return (
     <button
       type="button"
-      className={`card selection-card fade-in-up ${isSelected ? 'card-active' : ''}`}
+      className={`card selection-card fade-in-up ${isSelected ? 'card-active' : ''} ${className}`.trim()}
       aria-expanded={isSelected}
       onClick={onSelect}
     >

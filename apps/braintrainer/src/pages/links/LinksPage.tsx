@@ -1,9 +1,9 @@
 import { RelatedLinksGridPage } from '@rehab-trainer/ui/components/RelatedLinksGridPage';
 import { Icons } from '@rehab-trainer/ui/components/Icons';
-import { useT } from '../i18n';
-import { siteUrls } from '../utils/siteUrls';
+import { useT } from '../../i18n';
+import { siteUrls } from '../../utils/siteUrls';
 
-export function RelatedLinksPage() {
+export function LinksPage() {
   const { t } = useT();
 
   const links = [

@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-interface StartTrainingButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface StartTrainingButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 

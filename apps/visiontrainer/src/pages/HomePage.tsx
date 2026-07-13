@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useT } from '../i18n';
 import { useNavigate } from 'react-router-dom';
+import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
+import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
+import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import {
   isCalibrated,
   DRIVING_DURATION_MIN_SEC,
@@ -10,9 +13,6 @@ import { pixiAppManager } from '../utils/pixiPool';
 import { SoundManager } from '../utils/soundManager';
 import { useAppSetting } from '../utils/useAppSetting';
 import { useActiveUser } from '../utils/useActiveUser';
-import { ConfigDialog } from '../components/ConfigDialog';
-import { NumberPresetSelector } from '../components/NumberPresetSelector';
-import { SelectionCard } from '../components/SelectionCard';
 import {
   oculomotorModes,
   oculomotorPatterns,

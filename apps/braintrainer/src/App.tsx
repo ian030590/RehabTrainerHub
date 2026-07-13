@@ -14,9 +14,9 @@ import {
   getSetting,
 } from './utils/settings';
 
-const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })));
+const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
 const ReferencesPage = lazy(() => import('./pages/ReferencesPage').then((module) => ({ default: module.ReferencesPage })));
-const RelatedLinksPage = lazy(() => import('./pages/RelatedLinksPage').then((module) => ({ default: module.RelatedLinksPage })));
+const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 const UFOVPage = lazy(() => import('./pages/UFOVPage').then((module) => ({ default: module.UFOVPage })));
 
 export function App() {
@@ -43,7 +43,7 @@ export function App() {
           <Route path="/memory-training" element={<ModulePage moduleId="memory" />} />
           <Route path="/thinking-training" element={<ModulePage moduleId="thinking" />} />
           <Route path="/references" element={<ReferencesPage />} />
-          <Route path="/links" element={<RelatedLinksPage />} />
+          <Route path="/links" element={<LinksPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

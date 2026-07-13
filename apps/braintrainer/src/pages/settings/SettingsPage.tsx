@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useT, type Language } from '../i18n';
+import { useT, type Language } from '../../i18n';
 import {
   DEFAULT_UI_FONT_SIZE_PX,
   MAX_UI_FONT_SIZE_PX,
@@ -7,7 +7,7 @@ import {
   type UiTheme,
   getSetting,
   setSetting,
-} from '../utils/settings';
+} from '../../utils/settings';
 
 const themes: UiTheme[] = ['light', 'dark', 'contrast'];
 

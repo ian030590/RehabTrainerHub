@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
+import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
+import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import {
@@ -602,26 +604,25 @@ export function UFOVPage() {
           {savedRecord && (
             <section className="ufov-results" aria-labelledby="ufov-results-title">
               <h2 className="section-title" id="ufov-results-title">{labels.results}</h2>
-              <div className="results-summary">
-                {results.map((item) => (
-                  <span key={item.subtestId}>
-                    {labels.subtests[item.subtestId]}{' '}
-                    <b className="results-summary-value">
-                      {savedRecord.difficulty === 'formal'
-                        ? `${Math.round(item.thresholdMs)} ms`
-                        : formatPracticeScore(savedRecord)}
-                    </b>
-                    {' '}
-                    <span className="ufov-result-meta">
-                      {item.aborted ? labels.aborted : `${labels.trial}: ${getResultTrialCount(savedRecord, item)}`}
-                    </span>
-                  </span>
-                ))}
-                <span>
-                  {labels.trial}{' '}
-                  <b className="results-summary-value">{savedRecord.detailRows?.length ?? 0}</b>
-                </span>
-              </div>
+              <ResultSummary
+                items={[
+                  ...results.map((item) => ({
+                    label: labels.subtests[item.subtestId],
+                    value: savedRecord.difficulty === 'formal'
+                      ? `${Math.round(item.thresholdMs)} ms`
+                      : formatPracticeScore(savedRecord),
+                    meta: (
+                      <>
+                        {' '}
+                        <span className="ufov-result-meta">
+                          {item.aborted ? labels.aborted : `${labels.trial}: ${getResultTrialCount(savedRecord, item)}`}
+                        </span>
+                      </>
+                    ),
+                  })),
+                  { label: labels.trial, value: savedRecord.detailRows?.length ?? 0 },
+                ]}
+              />
               <div className="config-summary">
                 <strong>{savedRecord.difficulty === 'formal' ? labels.saveNote : `${labels.practiceResult} ${formatPracticeScore(savedRecord)}`}</strong>
               </div>
@@ -685,12 +686,9 @@ export function UFOVPage() {
               </div>
             </div>
             <div className="config-actions">
-              <button className="btn btn-primary btn-lg config-start-btn" type="button" onClick={() => void startSelectedFlow()}>
-                <svg aria-hidden="true" height="20" viewBox="0 0 24 24" width="20">
-                  <polygon fill="currentColor" points="5,3 19,12 5,21" />
-                </svg>
+              <StartTrainingButton onClick={() => void startSelectedFlow()}>
                 {labels.start}
-              </button>
+              </StartTrainingButton>
               <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsConfigOpen(false)}>
                 {labels.cancel}
               </button>

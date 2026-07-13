@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-interface UseGameModuleGuardArgs<TModuleId extends string> {
+export interface UseRoutedTrainingModuleArgs<TModuleId extends string> {
   requestedModule: TModuleId | null;
   basePath: string;
+  queryParam?: string;
 }
 
-export function useGameModuleGuard<TModuleId extends string>({
+export function useRoutedTrainingModule<TModuleId extends string>({
   requestedModule,
   basePath,
-}: UseGameModuleGuardArgs<TModuleId>) {
+  queryParam = 'game',
+}: UseRoutedTrainingModuleArgs<TModuleId>) {
   const navigate = useNavigate();
   const [activeModule, setActiveModule] = useState<TModuleId | null>(requestedModule);
 
@@ -18,8 +20,9 @@ export function useGameModuleGuard<TModuleId extends string>({
   }, [requestedModule]);
 
   const openModule = (moduleId: TModuleId) => {
+    const params = new URLSearchParams({ [queryParam]: moduleId });
     setActiveModule(moduleId);
-    navigate(`${basePath}?game=${moduleId}`);
+    navigate(`${basePath}?${params.toString()}`);
   };
 
   const closeModule = () => {

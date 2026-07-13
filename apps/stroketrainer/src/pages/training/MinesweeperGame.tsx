@@ -7,8 +7,8 @@ import { playFailureSound, playGameEndSound, playSuccessSound, prepareAudioFeedb
 import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
-import { StartTrainingButton } from './StartTrainingButton';
-import { TrainingConfigSummary } from './TrainingConfigSummary';
+import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
 
 type MinesweeperPhase = 'menu' | 'playing' | 'paused' | 'results';
 type MinesweeperDifficulty = 'Beginner' | 'Intermediate' | 'Advanced';

@@ -1,4 +1,4 @@
-interface NumberPresetSelectorProps {
+export interface NumberPresetSelectorProps {
   value: number;
   customValue: string;
   presets: readonly number[];

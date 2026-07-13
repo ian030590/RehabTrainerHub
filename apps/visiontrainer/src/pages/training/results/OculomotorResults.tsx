@@ -1,5 +1,5 @@
-import { ResultSummary } from '../../../components/ResultSummary';
-import type { ResultSummaryItem } from '../../../components/ResultSummary';
+import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
+import type { ResultSummaryItem } from '@rehab-trainer/ui/components/ResultSummary';
 import type { TFunction, TrialData } from '../types';
 
 interface OculomotorResultsProps {

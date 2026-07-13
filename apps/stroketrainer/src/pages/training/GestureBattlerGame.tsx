@@ -13,8 +13,8 @@ import { playGameEndSound, playSuccessSound, prepareAudioFeedback } from '../../
 import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
-import { StartTrainingButton } from './StartTrainingButton';
-import { TrainingConfigSummary } from './TrainingConfigSummary';
+import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';

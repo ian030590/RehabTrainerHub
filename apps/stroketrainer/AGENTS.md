@@ -29,7 +29,9 @@ Use TypeScript with `strict` enabled. Keep React components in PascalCase
 (`SpeechTraining.tsx`) and helpers/functions in camelCase. Prefer existing
 component patterns, route names, i18n key prefixes, and storage helpers over new
 abstractions. Keep UI text in `src/i18n/zh.ts` and `src/i18n/en.ts`; do not
-hard-code user-facing strings. CSS lives in `src/index.css` and should reuse
+hard-code user-facing strings. Shared trainer shell CSS belongs in
+`packages/ui/src/components/TrainerApp.css`; `src/index.css` should keep
+StrokeTrainer-specific game, sensor, and app-only overrides. CSS should reuse
 existing variables such as `--bg-card`, `--accent`, and `--radius-m`.
 
 ## Testing Guidelines

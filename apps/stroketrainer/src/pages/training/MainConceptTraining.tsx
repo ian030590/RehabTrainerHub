@@ -5,8 +5,8 @@ import { getActiveUser } from '../../utils/settings';
 import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { csvCell, formatTestDate } from './gameUtils';
 import { verifySelectedTrainingUser } from './selectedUserGuard';
-import { StartTrainingButton } from './StartTrainingButton';
-import { TrainingConfigSummary } from './TrainingConfigSummary';
+import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingConfigSummary } from '@rehab-trainer/ui/components/TrainingConfigSummary';
 
 type Rating = 'Accurate' | 'Inaccurate' | 'Absent';
 type Phase = 'menu' | 'instructions' | 'playing' | 'results';

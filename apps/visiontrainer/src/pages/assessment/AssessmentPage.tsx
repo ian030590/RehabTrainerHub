@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ConfigDialog } from '../../components/ConfigDialog';
-import { NumberPresetSelector } from '../../components/NumberPresetSelector';
-import { SelectionCard } from '../../components/SelectionCard';
+import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
+import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
+import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import { useT } from '../../i18n';
 import { isAssessmentCalibrationAtDefaults } from '../../utils/settings';
 import { useAppSetting } from '../../utils/useAppSetting';

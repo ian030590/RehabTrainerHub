@@ -1,4 +1,4 @@
-import { ResultSummary } from '../../../components/ResultSummary';
+import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { useAppSetting } from '../../../utils/useAppSetting';
 import type { TFunction, TrialData } from '../types';
 

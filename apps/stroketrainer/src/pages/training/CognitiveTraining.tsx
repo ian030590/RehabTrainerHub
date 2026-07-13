@@ -1,4 +1,9 @@
 import { useSearchParams } from 'react-router-dom';
+import {
+  TrainingModuleSelectionPage,
+  type TrainingModuleSelectionItem,
+} from '@rehab-trainer/ui/components/TrainingModuleSelectionPage';
+import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
 import { useT } from '../../i18n';
 import { MinesweeperGame } from './MinesweeperGame';
 import {
@@ -7,7 +12,6 @@ import {
   type ReferenceGameId,
   isReferenceGameId,
 } from './ReferenceCognitiveGame';
-import { useGameModuleGuard } from './useGameModuleGuard';
 
 type CognitiveModuleId = 'minesweeper' | ReferenceGameId;
 
@@ -16,10 +20,33 @@ export function CognitiveTraining() {
   const [searchParams] = useSearchParams();
   const requestedGameId = searchParams.get('game');
   const requestedModule = getRequestedModule(requestedGameId);
-  const { activeModule, openModule, closeModule } = useGameModuleGuard<CognitiveModuleId>({
+  const { activeModule, openModule, closeModule } = useRoutedTrainingModule<CognitiveModuleId>({
     requestedModule,
     basePath: '/cognitive-training',
   });
+  const modules: TrainingModuleSelectionItem<CognitiveModuleId>[] = [
+    {
+      id: 'minesweeper',
+      title: t('training.minesweeper.title'),
+      description: t('training.minesweeper.desc'),
+      icon: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 3v18" />
+          <path d="M15 3v18" />
+          <path d="M3 9h18" />
+          <path d="M3 15h18" />
+          <circle cx="12" cy="12" r="2.2" />
+        </svg>
+      ),
+    },
+    ...REFERENCE_COGNITIVE_MODULES.map<TrainingModuleSelectionItem<CognitiveModuleId>>((module) => ({
+      id: module.id,
+      title: t(module.titleKey),
+      description: t(module.descriptionKey),
+      icon: <CognitiveModuleIcon moduleId={module.id} />,
+    })),
+  ];
 
   if (activeModule === 'minesweeper') {
     return <MinesweeperGame onExit={closeModule} />;
@@ -30,41 +57,14 @@ export function CognitiveTraining() {
   }
 
   return (
-    <div className="page-content">
-      <h1 className="section-title fade-in-up">{t('home.module.cognitive.title')}</h1>
-      <p className="section-subtitle fade-in-up">{t('training.cognitive.subtitle')}</p>
-      <div className="training-grid">
-        <button className="card fade-in-up training-module-button" onClick={() => openModule('minesweeper')}>
-          <div className="card-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M9 3v18" />
-              <path d="M15 3v18" />
-              <path d="M3 9h18" />
-              <path d="M3 15h18" />
-              <circle cx="12" cy="12" r="2.2" />
-            </svg>
-          </div>
-          <h2 className="card-title">{t('training.minesweeper.title')}</h2>
-          <p className="card-desc">{t('training.minesweeper.desc')}</p>
-          <div className="card-expand-hint">{t('training.startGame')}</div>
-        </button>
-        {REFERENCE_COGNITIVE_MODULES.map((module) => (
-          <button
-            key={module.id}
-            className="card fade-in-up training-module-button"
-            onClick={() => openModule(module.id)}
-          >
-            <div className="card-icon">
-              <CognitiveModuleIcon moduleId={module.id} />
-            </div>
-            <h2 className="card-title">{t(module.titleKey)}</h2>
-            <p className="card-desc">{t(module.descriptionKey)}</p>
-            <div className="card-expand-hint">{t('training.startGame')}</div>
-          </button>
-        ))}
-      </div>
-    </div>
+    <TrainingModuleSelectionPage
+      title={t('home.module.cognitive.title')}
+      subtitle={t('training.cognitive.subtitle')}
+      modules={modules}
+      actionLabel={t('training.startGame')}
+      cardClassName="training-module-button"
+      onSelect={openModule}
+    />
   );
 }
 
