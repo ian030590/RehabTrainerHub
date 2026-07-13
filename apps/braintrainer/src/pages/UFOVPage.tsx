@@ -128,7 +128,6 @@ const START_DURATION_FRAMES = MAX_DURATION_FRAMES;
 const START_STEP_FRAMES = 3;
 const MIN_STEP_FRAMES = 1;
 const AXES = [0, 1, 2, 3, 4, 5, 6, 7];
-const AXIS_SYMBOLS = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
 const SLOTS = createSlots();
 
 const copy = {
@@ -522,13 +521,25 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       stage.className = 'ufov-stage ufov-response-stage';
       const pad = document.createElement('div');
       pad.className = 'ufov-axis-pad';
+      AXES.forEach((axis) => {
+        const guide = document.createElement('span');
+        guide.className = 'ufov-axis-guide';
+        guide.style.transform = `rotate(${-90 + axis * 45}deg)`;
+        guide.setAttribute('aria-hidden', 'true');
+        pad.appendChild(guide);
+      });
       const center = document.createElement('span');
       center.className = 'ufov-axis-center';
       center.setAttribute('aria-hidden', 'true');
       pad.appendChild(center);
       AXES.forEach((axis) => {
-        const point = axisPoint(axis, 39);
-        const button = responseButton(labels.directions[axis], 'btn btn-secondary ufov-axis-button', () => resolve(axis), AXIS_SYMBOLS[axis]);
+        const point = axisPoint(axis, 42);
+        const button = responseButton(
+          `${axis + 1}. ${labels.directions[axis]}`,
+          'ufov-axis-button',
+          () => resolve(axis),
+          String(axis + 1),
+        );
         button.style.left = `${point.x}%`;
         button.style.top = `${point.y}%`;
         pad.appendChild(button);
