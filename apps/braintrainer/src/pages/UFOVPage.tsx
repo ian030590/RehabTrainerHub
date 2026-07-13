@@ -128,7 +128,9 @@ const START_DURATION_FRAMES = MAX_DURATION_FRAMES;
 const START_STEP_FRAMES = 3;
 const MIN_STEP_FRAMES = 1;
 const AXES = [0, 1, 2, 3, 4, 5, 6, 7];
+const OUTER_RING_INDEX = 2;
 const SLOTS = createSlots();
+const PERIPHERAL_TARGET_SLOTS = SLOTS.filter((slot) => slot.ring === OUTER_RING_INDEX);
 
 const copy = {
   zh: {
@@ -387,7 +389,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       displayFrameCount: durationFrames * run.displayFramesPerStep,
       plannedDurationMs: frameCountToMs(durationFrames),
       centralTarget: Math.random() > 0.5 ? 'car' : 'truck',
-      peripheralSlot: subtest.hasPeripheral ? SLOTS[Math.floor(Math.random() * SLOTS.length)] : undefined,
+      peripheralSlot: subtest.hasPeripheral ? pickPeripheralTargetSlot() : undefined,
     };
 
     this.renderStage(displayElement, labels, 'fixation', subtest, stimulus);
@@ -1033,6 +1035,10 @@ function createSlots(): Slot[] {
     ring,
     ...axisPoint(axis, radius, true),
   })));
+}
+
+function pickPeripheralTargetSlot() {
+  return PERIPHERAL_TARGET_SLOTS[Math.floor(Math.random() * PERIPHERAL_TARGET_SLOTS.length)];
 }
 
 function axisPoint(axis: number, radius: number, compensateStageAspect = false) {
