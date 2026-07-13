@@ -52,22 +52,23 @@ export function SpeechTraining() {
     },
   ];
 
-  if (activeModule === 'voice-defender') {
-    return <VoiceDefenderGame onExit={closeModule} />;
-  }
-
-  if (activeModule === 'tongue-catch') {
-    return <TongueCatchGame onExit={closeModule} />;
-  }
+  const activeTraining = activeModule === 'voice-defender'
+    ? <VoiceDefenderGame onExit={closeModule} />
+    : activeModule === 'tongue-catch'
+      ? <TongueCatchGame onExit={closeModule} />
+      : null;
 
   return (
     <TrainingModuleSelectionPage
       title={t('home.module.speech.title')}
       subtitle={t('training.speech.subtitle')}
       modules={modules}
+      selectedModuleId={activeModule}
       actionLabel={t('training.startGame')}
       cardClassName="training-module-button"
       onSelect={openModule}
-    />
+    >
+      {activeTraining}
+    </TrainingModuleSelectionPage>
   );
 }

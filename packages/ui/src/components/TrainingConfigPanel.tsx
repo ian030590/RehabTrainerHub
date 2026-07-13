@@ -1,7 +1,9 @@
-import type { ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 import { TrainingConfigSummary, type TrainingConfigSummaryItem } from './TrainingConfigSummary';
 
-export interface TrainingConfigPanelProps {
+type PanelAriaProps = Pick<HTMLAttributes<HTMLDivElement>, 'aria-label' | 'aria-modal' | 'role'>;
+
+export interface TrainingConfigPanelProps extends PanelAriaProps {
   title: ReactNode;
   label?: ReactNode;
   headerEnd?: ReactNode;
@@ -28,25 +30,31 @@ export function TrainingConfigPanel({
   actions,
   className,
   bodyClassName,
+  role,
+  'aria-label': ariaLabel,
+  'aria-modal': ariaModal,
 }: TrainingConfigPanelProps) {
   const panelClassName = ['training-config', className].filter(Boolean).join(' ');
   const bodyClasses = ['training-config-body', bodyClassName].filter(Boolean).join(' ');
+  const hasSummary = Boolean(summaryTitle && summaryItems.length > 0);
 
   return (
-    <div className={panelClassName}>
+    <div className={panelClassName} role={role} aria-label={ariaLabel} aria-modal={ariaModal}>
       <header className="training-config-header">
-        <div>
+        <div className="training-config-title">
           {label && <span className="training-config-label">{label}</span>}
           <h1>{title}</h1>
         </div>
-        {headerEnd}
+        {(hasSummary || headerEnd) && (
+          <div className="training-config-header-side">
+            {hasSummary && <TrainingConfigSummary title={summaryTitle} items={summaryItems} />}
+            {headerEnd}
+          </div>
+        )}
       </header>
 
       <div className={bodyClasses}>{children}</div>
 
-      {summaryTitle && summaryItems.length > 0 && (
-        <TrainingConfigSummary title={summaryTitle} items={summaryItems} />
-      )}
       {actions && <TrainingConfigActions>{actions}</TrainingConfigActions>}
     </div>
   );

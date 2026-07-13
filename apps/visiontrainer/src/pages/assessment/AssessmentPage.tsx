@@ -132,6 +132,14 @@ export function AssessmentPage() {
         <ConfigDialog
           ariaLabel={t(expandedAssessment.titleKey)}
           onClose={() => setExpandedTest(null)}
+          summary={(
+            <div className="config-summary">
+              {t('assess.config.user')} <strong>{activeUser}</strong> ·{' '}
+              {t('assess.config.test')} <strong>{t(expandedAssessment.titleKey)}</strong> ·{' '}
+              {t('assess.config.trials')} <strong>{localTrials}</strong> ·{' '}
+              {t('assess.config.dist')} <strong>{distanceCM} cm</strong>
+            </div>
+          )}
         >
             <div className="config-section">
               <div className="config-label">{t('assess.trialsLabel')}</div>
@@ -193,12 +201,6 @@ export function AssessmentPage() {
               </button>
             </div>
 
-            <div className="config-summary">
-              {t('assess.config.user')} <strong>{activeUser}</strong> ·{' '}
-              {t('assess.config.test')} <strong>{t(expandedAssessment.titleKey)}</strong> ·{' '}
-              {t('assess.config.trials')} <strong>{localTrials}</strong> ·{' '}
-              {t('assess.config.dist')} <strong>{distanceCM} cm</strong>
-            </div>
         </ConfigDialog>
       )}
 

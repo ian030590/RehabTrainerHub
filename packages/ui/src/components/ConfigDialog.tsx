@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { TrainingConfigPanel } from './TrainingConfigPanel';
 
 export interface ConfigDialogProps {
   children: ReactNode;
   onClose: () => void;
   ariaLabel: string;
+  summary?: ReactNode;
 }
 
-export function ConfigDialog({ children, onClose, ariaLabel }: ConfigDialogProps) {
+export function ConfigDialog({ children, onClose, ariaLabel, summary }: ConfigDialogProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -28,16 +30,17 @@ export function ConfigDialog({ children, onClose, ariaLabel }: ConfigDialogProps
         }
       }}
     >
-      <div className="training-config config-modal-panel" role="dialog" aria-modal="true" aria-label={ariaLabel}>
-        <header className="training-config-header">
-          <div>
-            <h1>{ariaLabel}</h1>
-          </div>
-        </header>
-        <div className="training-config-body training-config-body-single config-dialog-body">
-          {children}
-        </div>
-      </div>
+      <TrainingConfigPanel
+        title={ariaLabel}
+        headerEnd={summary}
+        className="config-modal-panel"
+        bodyClassName="training-config-body-single config-dialog-body"
+        role="dialog"
+        aria-modal
+        aria-label={ariaLabel}
+      >
+        {children}
+      </TrainingConfigPanel>
     </div>
   );
 }

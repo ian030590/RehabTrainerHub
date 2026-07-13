@@ -19,6 +19,7 @@ export interface TrainingModuleSelectionPageProps<TModuleId extends string> {
   className?: string;
   gridClassName?: string;
   cardClassName?: string;
+  children?: ReactNode;
   onSelect: (moduleId: TModuleId) => void;
 }
 
@@ -31,6 +32,7 @@ export function TrainingModuleSelectionPage<TModuleId extends string>({
   className = 'page-content',
   gridClassName = 'training-grid',
   cardClassName,
+  children,
   onSelect,
 }: TrainingModuleSelectionPageProps<TModuleId>) {
   return (
@@ -53,6 +55,7 @@ export function TrainingModuleSelectionPage<TModuleId extends string>({
           />
         ))}
       </div>
+      {children}
     </div>
   );
 }

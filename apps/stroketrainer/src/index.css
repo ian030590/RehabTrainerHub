@@ -197,12 +197,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   font-size: calc(17px * var(--ui-font-scale));
 }
 
-.app-layout .training-config-label,
-.app-layout .training-config .config-summary span,
-.app-layout .training-config .config-summary strong,
-.app-layout .training-setting-header p,
-.app-layout .training-setting-header > span,
-.app-layout .training-option-meta,
 .app-layout .voice-model-status,
 .app-layout .voice-vocabulary-tools label,
 .app-layout .voice-vocabulary-warning,
@@ -210,13 +204,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   font-size: calc(13px * var(--ui-font-scale));
 }
 
-.app-layout .training-config h1 {
-  font-size: calc(32px * var(--ui-font-scale));
-  font-weight: var(--ui-font-heading-weight);
-}
-
-.app-layout .training-setting-header h2,
-.app-layout .training-option-title,
 .app-layout .drawing-defense-background-card-header,
 .app-layout .app-dialog h2,
 .app-layout .webgazer-jspsych-instructions h2,
@@ -2585,6 +2572,26 @@ body #webgazer-calibrate-container #calibration-point {
   max-width: 720px;
 }
 
+.drawing-defense-phase-menu,
+.cognitive-reference-phase-menu,
+.minesweeper-phase-menu,
+.gesture-battler-phase-menu,
+.tongue-catch-phase-menu {
+  background: transparent !important;
+  color: inherit;
+  font-family: inherit;
+  touch-action: auto;
+}
+
+.drawing-defense-phase-menu > :not(.training-panel):not(.app-dialog-overlay),
+.cognitive-reference-phase-menu > :not(.training-panel):not(.app-dialog-overlay),
+.minesweeper-phase-menu > :not(.training-panel):not(.app-dialog-overlay),
+.gesture-battler-phase-menu > :not(.training-panel):not(.app-dialog-overlay),
+.tongue-catch-phase-menu > :not(.training-panel):not(.app-dialog-overlay) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 @media (max-width: 720px) {
   .drawing-defense-hud {
     top: 8px;
@@ -2602,49 +2609,8 @@ body #webgazer-calibrate-container #calibration-point {
     font-size: 30px;
   }
 
-  .training-config {
-    width: min(100%, calc(100vw - 24px));
-    max-height: min(90vh, 760px);
-  }
-
-  .training-config-header {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 18px;
-  }
-
-  .training-config h1 {
-    font-size: 28px;
-  }
-
-  .training-config-body {
-    grid-template-columns: 1fr;
-    padding: 2px 18px 0;
-  }
-
-  .training-option-grid-three,
-  .training-option-grid-four,
-  .training-option-grid-two,
-  .training-speed-grid,
-  .training-duration-grid,
-  .training-wait-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .training-setting {
-    padding: 18px 0;
-  }
-
   .drawing-defense-background-controls {
     grid-template-columns: 1fr;
-  }
-
-  .training-config .config-actions {
-    width: 100%;
-  }
-
-  .training-config .config-actions .btn {
-    flex: 1 1 140px;
   }
 
   .training-actions {

@@ -48,23 +48,24 @@ export function CognitiveTraining() {
     })),
   ];
 
-  if (activeModule === 'minesweeper') {
-    return <MinesweeperGame onExit={closeModule} />;
-  }
-
-  if (activeModule && isReferenceGameId(activeModule)) {
-    return <ReferenceCognitiveGame gameId={activeModule} onExit={closeModule} />;
-  }
+  const activeTraining = activeModule === 'minesweeper'
+    ? <MinesweeperGame onExit={closeModule} />
+    : activeModule && isReferenceGameId(activeModule)
+      ? <ReferenceCognitiveGame gameId={activeModule} onExit={closeModule} />
+      : null;
 
   return (
     <TrainingModuleSelectionPage
       title={t('home.module.cognitive.title')}
       subtitle={t('training.cognitive.subtitle')}
       modules={modules}
+      selectedModuleId={activeModule}
       actionLabel={t('training.startGame')}
       cardClassName="training-module-button"
       onSelect={openModule}
-    />
+    >
+      {activeTraining}
+    </TrainingModuleSelectionPage>
   );
 }
 

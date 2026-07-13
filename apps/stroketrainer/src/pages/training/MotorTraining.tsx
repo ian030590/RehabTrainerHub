@@ -52,22 +52,23 @@ export function MotorTraining() {
     },
   ];
 
-  if (activeModule === 'drawing-defense') {
-    return <DrawingTowerDefenseGame onExit={closeModule} />;
-  }
-
-  if (activeModule === 'gesture-battler') {
-    return <GestureBattlerGame onExit={closeModule} />;
-  }
+  const activeTraining = activeModule === 'drawing-defense'
+    ? <DrawingTowerDefenseGame onExit={closeModule} />
+    : activeModule === 'gesture-battler'
+      ? <GestureBattlerGame onExit={closeModule} />
+      : null;
 
   return (
     <TrainingModuleSelectionPage
       title={t('home.module.motor.title')}
       subtitle={t('training.motor.subtitle')}
       modules={modules}
+      selectedModuleId={activeModule}
       actionLabel={t('training.startGame')}
       cardClassName="training-module-button"
       onSelect={openModule}
-    />
+    >
+      {activeTraining}
+    </TrainingModuleSelectionPage>
   );
 }

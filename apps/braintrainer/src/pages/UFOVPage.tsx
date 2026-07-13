@@ -899,9 +899,20 @@ export function UFOVPage() {
         </div>
       </section>
       {isConfigOpen && !isRunning && !isCalibrating && (
-        <ConfigDialog ariaLabel={labels.settingsTitle} onClose={() => setIsConfigOpen(false)}>
+        <ConfigDialog
+          ariaLabel={labels.settingsTitle}
+          onClose={() => setIsConfigOpen(false)}
+          summary={(
+            <div className="config-summary">
+              <strong>{labels.subtests[selectedSubtest]}</strong> · <strong>
+                {selectedMode === 'instruction' && labels.modeInstruction}
+                {selectedMode === 'practice' && labels.modePractice}
+                {selectedMode === 'formal' && labels.modeFormal}
+              </strong>
+            </div>
+          )}
+        >
           <div className="ufov-config-dialog">
-            <h2 id="ufov-config-title">{labels.settingsTitle}</h2>
             {(isMeasuringRefresh || refreshInfo) && (
               <div className={`ufov-refresh-alert ${isSmallScreenDevice ? 'warning' : ''}`}>
                 <strong>
@@ -965,13 +976,6 @@ export function UFOVPage() {
               <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsConfigOpen(false)}>
                 {labels.cancel}
               </button>
-            </div>
-            <div className="config-summary">
-              <strong>{labels.subtests[selectedSubtest]}</strong> · <strong>
-                {selectedMode === 'instruction' && labels.modeInstruction}
-                {selectedMode === 'practice' && labels.modePractice}
-                {selectedMode === 'formal' && labels.modeFormal}
-              </strong>
             </div>
           </div>
         </ConfigDialog>
