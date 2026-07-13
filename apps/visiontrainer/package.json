@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@jspsych/extension-webgazer": "^1.2.0",
-    "@jspsych/plugin-fullscreen": "^2.1.0",
     "@jspsych/plugin-html-button-response": "^2.1.0",
     "@jspsych/plugin-webgazer-calibrate": "^2.1.0",
     "@jspsych/plugin-webgazer-init-camera": "^2.1.0",

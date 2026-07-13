@@ -9,8 +9,7 @@ import {
   type DisplayDeviceKind,
   type DisplayRefreshInfo,
 } from '@rehab-trainer/ui/displayTiming';
-import { withJsPsychFullscreen } from '@rehab-trainer/ui/jsPsychTimeline';
-import FullscreenPlugin from '@jspsych/plugin-fullscreen';
+import { enterFullscreenFromUserGesture, exitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import {
@@ -535,7 +534,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       center.setAttribute('aria-hidden', 'true');
       pad.appendChild(center);
       AXES.forEach((axis) => {
-        const point = axisPoint(axis, 40);
+        const point = axisPoint(axis, 27, true);
         const button = responseButton(
           `${axis + 1}. ${labels.directions[axis]}`,
           'ufov-axis-button',
@@ -637,6 +636,7 @@ export function UFOVPage() {
     setIsRunning(false);
     jsPsychRef.current = null;
     void saveTrainingRecord(record);
+    void exitFullscreenIfActive();
   }, [labels.title]);
 
   const startRun = async (config: UfovRunConfig) => {
@@ -685,7 +685,8 @@ export function UFOVPage() {
       },
     });
     jsPsychRef.current = jsPsych;
-    const timeline = withJsPsychFullscreen([{
+
+    jsPsych.run([{
       type: UfovExperimentPlugin,
       labels,
       refresh_ms: measured.refreshMs,
@@ -693,16 +694,14 @@ export function UFOVPage() {
       refresh_is_60hz_family: measured.is60HzFamily,
       refresh_device_kind: measured.deviceKind,
       config,
-    }], FullscreenPlugin, {
-      message: labels.fullscreenMessage,
-      buttonLabel: labels.fullscreenButton,
-    });
-
-    jsPsych.run(timeline as any);
+    }]);
   };
 
   const startSelectedFlow = async () => {
     if (selectedFlowBlocked) return;
+    if (selectedMode !== 'instruction') {
+      void enterFullscreenFromUserGesture(document.documentElement);
+    }
     setIsConfigOpen(false);
     setSavedRecord(null);
     setResults([]);
@@ -750,6 +749,7 @@ export function UFOVPage() {
       jsPsychRef.current.abortExperiment();
     }
     jsPsychRef.current = null;
+    void exitFullscreenIfActive();
   }, []);
 
   useEffect(() => {
