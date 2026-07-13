@@ -425,6 +425,15 @@ body.ufov-game-active .ufov-stage {
   color: var(--accent);
 }
 
+.ufov-table-wrap {
+  overflow-x: auto;
+}
+
+.ufov-results .results-table {
+  max-width: 860px;
+  margin: 8px auto 12px;
+}
+
 .ufov-results .config-summary {
   margin-top: 0;
   color: var(--text-muted);
