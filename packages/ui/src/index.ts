@@ -44,8 +44,6 @@ export type {
 export { TrainingLoginReminder } from './components/TrainingLoginReminder';
 export { UserSelector } from './components/UserSelector';
 export type { UserSelectorProps } from './components/UserSelector';
-export { UfovPage } from './ufov/UfovPage';
-export type { UfovPageProps, UfovTrainingRecord } from './ufov/UfovPage';
 export { detectDisplayDeviceKind, is60HzRefreshFamily, measureDisplayRefreshRate } from './displayTiming';
 export type { DisplayDeviceKind, DisplayRefreshInfo, DisplayRefreshMeasureOptions } from './displayTiming';
 export { downloadCsvFile, downloadFile } from './downloadFile';

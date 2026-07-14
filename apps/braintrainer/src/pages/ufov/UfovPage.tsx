@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getAuthUserNameFromToken } from '../auth/authClient';
-import { ConfigDialog } from '../components/ConfigDialog';
-import { ResultSummary } from '../components/ResultSummary';
-import { StartTrainingButton } from '../components/StartTrainingButton';
-import { TrainingResultActions } from '../components/TrainingResultActions';
+import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
-  detectDisplayDeviceKind,
   measureDisplayRefreshRate,
-  type DisplayDeviceKind,
   type DisplayRefreshInfo,
-} from '../displayTiming';
-import { downloadCsvFile } from '../downloadFile';
-import { enterFullscreenFromUserGesture, exitFullscreenIfActive } from '../fullscreen';
+} from '@rehab-trainer/ui/displayTiming';
+import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
+import { exitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { useNavigate } from 'react-router-dom';
@@ -19,8 +15,8 @@ import './UfovPage.css';
 
 type CentralTarget = 'car' | 'truck';
 type Direction = 'up' | 'down';
-type SubtestId = 1 | 2 | 3;
-type UfovRunMode = 'instruction' | 'practice' | 'formal';
+export type SubtestId = 1 | 2 | 3;
+export type UfovRunMode = 'instruction' | 'practice' | 'formal';
 type UfovLabels = (typeof copy)[keyof typeof copy];
 type DetailRow = Record<string, unknown>;
 
@@ -42,6 +38,9 @@ export interface UfovPageProps {
   backPath: string;
   lang: 'zh' | 'en';
   moduleId: string;
+  initialSubtestId?: SubtestId;
+  initialMode?: UfovRunMode;
+  autoStart?: boolean;
   onSaveRecord?: (record: UfovTrainingRecord) => Promise<void> | void;
 }
 
@@ -155,31 +154,12 @@ const copy = {
   zh: {
     title: 'UFOV 注意力測驗',
     intro: '完成三個階段：處理速度、分散注意力、選擇性注意力。',
-    start: '開始',
     restart: '重新開始',
-    settingsTitle: 'UFOV 設定',
-    chooseSubtest: '選擇 Subtest',
-    chooseMode: '選擇流程',
-    modeInstruction: '說明',
-    modeInstructionDesc: '只顯示操作說明，不開始計分。',
-    modePractice: '練習',
-    modePracticeDesc: '固定速度練習 5 題，提供正誤回饋。',
-    modeFormal: '正式測驗',
-    modeFormalDesc: '進入 adaptive 正式測驗並儲存結果。',
-    openSettings: '設定測驗',
-    cancel: '取消',
-    calibrating: '正在測量螢幕更新率',
     car: '汽車',
     truck: '卡車',
     correct: '正確',
     incorrect: '再試一次',
     trial: '題',
-    refresh: '螢幕更新',
-    refreshStatus: '螢幕更新率',
-    mobileSubtestsBlocked: '手機和平板螢幕較小，僅開放 Subtest 1 處理速度。',
-    subtestUnavailable: '目前裝置不開放此子測驗',
-    fullscreenMessage: '測驗會進入全螢幕。請保持注視中央方框，刺激會依螢幕刷新逐幀呈現。',
-    fullscreenButton: '進入全螢幕',
     results: '測驗結果',
     aborted: '已中止',
     saveNote: '結果已存入 {appName} 訓練紀錄。',
@@ -209,31 +189,12 @@ const copy = {
   en: {
     title: 'UFOV Attention Test',
     intro: 'Complete three stages: processing speed, divided attention, and selective attention.',
-    start: 'Start',
     restart: 'Restart',
-    settingsTitle: 'UFOV Settings',
-    chooseSubtest: 'Choose Subtest',
-    chooseMode: 'Choose Flow',
-    modeInstruction: 'Instructions',
-    modeInstructionDesc: 'Show instructions only, without scoring.',
-    modePractice: 'Practice',
-    modePracticeDesc: 'Run 5 fixed-speed practice trials with feedback.',
-    modeFormal: 'Formal Test',
-    modeFormalDesc: 'Run the adaptive formal test and save results.',
-    openSettings: 'Configure Test',
-    cancel: 'Cancel',
-    calibrating: 'Measuring screen refresh rate',
     car: 'Car',
     truck: 'Truck',
     correct: 'Correct',
     incorrect: 'Try again',
     trial: 'Trial',
-    refresh: 'Refresh',
-    refreshStatus: 'Screen refresh',
-    mobileSubtestsBlocked: 'Phones and tablets have smaller screens, so only Subtest 1 Processing Speed is available.',
-    subtestUnavailable: 'This subtest is unavailable on this device',
-    fullscreenMessage: 'The test will enter fullscreen. Keep looking at the center box; stimuli are presented frame-by-frame with the display refresh.',
-    fullscreenButton: 'Enter fullscreen',
     results: 'Results',
     aborted: 'Aborted',
     saveNote: 'Saved to {appName} training records.',
@@ -612,28 +573,27 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
   }
 }
 
-export function UfovPage({ appName, backPath, lang, moduleId, onSaveRecord }: UfovPageProps) {
+export function UfovPage({
+  appName,
+  backPath,
+  lang,
+  moduleId,
+  initialSubtestId = 1,
+  initialMode = 'formal',
+  autoStart = false,
+  onSaveRecord,
+}: UfovPageProps) {
   const navigate = useNavigate();
   const labels = copy[lang];
   const displayRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const skipFinishRef = useRef(false);
-  const [isConfigOpen, setIsConfigOpen] = useState(true);
+  const autoStartRef = useRef(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [isCalibrating, setIsCalibrating] = useState(false);
-  const [refreshMs, setRefreshMs] = useState(16.67);
-  const [refreshInfo, setRefreshInfo] = useState<DisplayRefreshInfo | null>(null);
-  const [isMeasuringRefresh, setIsMeasuringRefresh] = useState(false);
-  const [selectedSubtest, setSelectedSubtest] = useState<SubtestId>(1);
-  const [selectedMode, setSelectedMode] = useState<UfovRunMode>('formal');
   const [instructionSubtest, setInstructionSubtest] = useState<SubtestId | null>(null);
   const [results, setResults] = useState<SubtestResult[]>([]);
   const [resultTrials, setResultTrials] = useState<TrialRecord[]>([]);
   const [savedRecord, setSavedRecord] = useState<UfovTrainingRecord | null>(null);
-  const deviceKind = refreshInfo?.deviceKind ?? detectDisplayDeviceKind();
-  const isSmallScreenDevice = isMobileOrTabletDevice(deviceKind);
-  const selectedSubtestBlocked = isSmallScreenDevice && selectedSubtest !== 1;
-  const selectedFlowBlocked = selectedSubtestBlocked;
 
   const finishExperiment = useCallback((data: UfovExperimentData) => {
     const now = new Date();
@@ -715,20 +675,13 @@ export function UfovPage({ appName, backPath, lang, moduleId, onSaveRecord }: Uf
     }
     displayElement.replaceChildren();
     setInstructionSubtest(null);
-    setIsCalibrating(true);
     setSavedRecord(null);
     setResults([]);
     setResultTrials([]);
     const measured = await measureDisplayRefreshRate();
-    setRefreshInfo(measured);
-    setRefreshMs(measured.refreshMs);
-    setIsCalibrating(false);
-
-    if (measured.isMobileOrTablet && config.subtestId !== 1) {
-      setIsConfigOpen(true);
-      setSelectedSubtest(1);
-      return;
-    }
+    const runConfig = measured.isMobileOrTablet && config.subtestId !== 1
+      ? { ...config, subtestId: 1 as SubtestId }
+      : config;
 
     setIsRunning(true);
 
@@ -754,50 +707,19 @@ export function UfovPage({ appName, backPath, lang, moduleId, onSaveRecord }: Uf
       refresh_hz: measured.refreshHz,
       refresh_is_60hz_family: measured.is60HzFamily,
       refresh_device_kind: measured.deviceKind,
-      config,
+      config: runConfig,
     }]);
   };
 
-  const startSelectedFlow = async () => {
-    if (selectedFlowBlocked) return;
-    if (selectedMode !== 'instruction') {
-      void enterFullscreenFromUserGesture(document.documentElement);
-    }
-    setIsConfigOpen(false);
-    setSavedRecord(null);
-    setResults([]);
-    setResultTrials([]);
-    displayRef.current?.replaceChildren();
-    if (selectedMode === 'instruction') {
-      setInstructionSubtest(selectedSubtest);
-      setIsRunning(false);
-      setIsCalibrating(false);
+  useEffect(() => {
+    if (!autoStart || autoStartRef.current || isRunning || savedRecord) return;
+    autoStartRef.current = true;
+    if (initialMode === 'instruction') {
+      setInstructionSubtest(initialSubtestId);
       return;
     }
-    await startRun({ subtestId: selectedSubtest, mode: selectedMode });
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-    setIsMeasuringRefresh(true);
-    void measureDisplayRefreshRate().then((info) => {
-      if (cancelled) return;
-      setRefreshInfo(info);
-      setRefreshMs(info.refreshMs);
-    }).finally(() => {
-      if (!cancelled) setIsMeasuringRefresh(false);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isSmallScreenDevice && selectedSubtest !== 1) {
-      setSelectedSubtest(1);
-    }
-  }, [isSmallScreenDevice, selectedSubtest]);
+    void startRun({ subtestId: initialSubtestId, mode: initialMode });
+  }, [autoStart, initialMode, initialSubtestId, isRunning, savedRecord]);
 
   useEffect(() => () => {
     if (jsPsychRef.current) {
@@ -809,36 +731,34 @@ export function UfovPage({ appName, backPath, lang, moduleId, onSaveRecord }: Uf
   }, []);
 
   useEffect(() => {
-    const active = isRunning || isCalibrating;
-    document.body.classList.toggle('ufov-game-active', active);
+    document.body.classList.toggle('ufov-game-active', isRunning);
     return () => document.body.classList.remove('ufov-game-active');
-  }, [isRunning, isCalibrating]);
+  }, [isRunning]);
 
   return (
     <main className="page-content ufov-page" id="main-content">
       <section className="ufov-shell" aria-labelledby="ufov-title">
         <div className="ufov-panel">
-          {!isRunning && !isCalibrating && (
+          {!isRunning && (
             <>
               <h1 className="section-title" id="ufov-title">{labels.title}</h1>
               <p className="section-subtitle">{labels.intro}</p>
             </>
           )}
-          {!isRunning && !isCalibrating && !savedRecord && (
+          {!isRunning && !savedRecord && (
             <div className="ufov-actions">
-              <button className="btn btn-primary btn-lg" type="button" onClick={() => setIsConfigOpen(true)}>
-                {labels.openSettings}
+              <button className="btn btn-primary btn-lg" type="button" onClick={() => navigate(backPath)}>
+                {labels.backHome}
               </button>
             </div>
           )}
-          {isCalibrating && <p className="ufov-feedback">{labels.calibrating}</p>}
           {instructionSubtest && (
             <section className="ufov-instructions" aria-labelledby="ufov-instructions-title">
               <h2 id="ufov-instructions-title">{labels.subtests[instructionSubtest]}</h2>
               <p>{labels.instructions[instructionSubtest]}</p>
               <div className="ufov-actions">
-                <button className="btn btn-primary" type="button" onClick={() => setIsConfigOpen(true)}>
-                  {labels.openSettings}
+                <button className="btn btn-primary" type="button" onClick={() => navigate(backPath)}>
+                  {labels.backHome}
                 </button>
               </div>
             </section>
@@ -908,102 +828,13 @@ export function UfovPage({ appName, backPath, lang, moduleId, onSaveRecord }: Uf
                 restartLabel={labels.restart}
                 backLabel={labels.backHome}
                 onDownloadCsv={() => downloadUfovTrainingRecordCsv(savedRecord)}
-                onRestart={() => setIsConfigOpen(true)}
+                onRestart={() => navigate(backPath)}
                 onBackHome={() => navigate(backPath)}
               />
             </section>
           )}
-          {!savedRecord && !isRunning && !isConfigOpen && (
-            <span className="ufov-feedback">
-              {refreshInfo ? formatRefreshInfo(labels, refreshInfo) : `${labels.refresh}: ${refreshMs.toFixed(1)} ms`}
-            </span>
-          )}
         </div>
       </section>
-      {isConfigOpen && !isRunning && !isCalibrating && (
-        <ConfigDialog
-          ariaLabel={labels.settingsTitle}
-          onClose={() => setIsConfigOpen(false)}
-          summaryItems={[
-            { value: labels.subtests[selectedSubtest] },
-            {
-              value:
-                selectedMode === 'instruction'
-                  ? labels.modeInstruction
-                  : selectedMode === 'practice'
-                    ? labels.modePractice
-                    : labels.modeFormal,
-            },
-          ]}
-        >
-          <div className="ufov-config-dialog">
-            {(isMeasuringRefresh || refreshInfo) && (
-              <div className={`ufov-refresh-alert ${isSmallScreenDevice ? 'warning' : ''}`}>
-                <strong>
-                  {refreshInfo ? formatRefreshInfo(labels, refreshInfo) : labels.calibrating}
-                </strong>
-                {isSmallScreenDevice && (
-                  <span>{labels.mobileSubtestsBlocked}</span>
-                )}
-              </div>
-            )}
-            <div className="config-section">
-              <div className="config-label">{labels.chooseSubtest}</div>
-              <div className="difficulty-selector">
-                {SUBTESTS.map((subtest) => {
-                  const subtestBlocked = isSmallScreenDevice && subtest.id !== 1;
-                  return (
-                    <button
-                      className={`diff-btn ${selectedSubtest === subtest.id ? 'active' : ''}`}
-                      disabled={subtestBlocked}
-                      key={subtest.id}
-                      onClick={() => setSelectedSubtest(subtest.id)}
-                      type="button"
-                    >
-                      <span className="diff-btn-label">{labels.subtests[subtest.id]}</span>
-                      <span className="diff-btn-desc">
-                        {subtestBlocked ? labels.subtestUnavailable : labels.instructions[subtest.id]}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="config-section">
-              <div className="config-label">{labels.chooseMode}</div>
-              <div className="difficulty-selector">
-                {(['instruction', 'practice', 'formal'] as UfovRunMode[]).map((mode) => (
-                  <button
-                    className={`diff-btn ${selectedMode === mode ? 'active' : ''}`}
-                    key={mode}
-                    onClick={() => setSelectedMode(mode)}
-                    type="button"
-                  >
-                    <span className="diff-btn-label">
-                      {mode === 'instruction' && labels.modeInstruction}
-                      {mode === 'practice' && labels.modePractice}
-                      {mode === 'formal' && labels.modeFormal}
-                    </span>
-                    <span className="diff-btn-desc">
-                      {mode === 'instruction' && labels.modeInstructionDesc}
-                      {mode === 'practice' && labels.modePracticeDesc}
-                      {mode === 'formal' && labels.modeFormalDesc}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="config-actions">
-              <StartTrainingButton disabled={selectedFlowBlocked} onClick={() => void startSelectedFlow()}>
-                {labels.start}
-              </StartTrainingButton>
-              <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsConfigOpen(false)}>
-                {labels.cancel}
-              </button>
-            </div>
-          </div>
-        </ConfigDialog>
-      )}
     </main>
   );
 }
@@ -1182,10 +1013,6 @@ function formatAxis(axis: number | undefined, labels: UfovLabels) {
   return typeof axis === 'number' ? labels.directions[axis] : labels.noPeripheral;
 }
 
-function formatRefreshInfo(labels: UfovLabels, info: DisplayRefreshInfo) {
-  return `${labels.refreshStatus}: ${info.refreshHz.toFixed(1)} Hz (${info.refreshMs.toFixed(2)} ms)`;
-}
-
 function formatSaveNote(labels: UfovLabels, appName: string) {
   return labels.saveNote.replace('{appName}', appName);
 }
@@ -1229,10 +1056,6 @@ function toCsvCell(value: unknown): string {
 
 function safeFilePart(value: string): string {
   return value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'ufov';
-}
-
-function isMobileOrTabletDevice(deviceKind: DisplayDeviceKind) {
-  return deviceKind === 'phone' || deviceKind === 'tablet';
 }
 
 function formatDate(date: Date) {

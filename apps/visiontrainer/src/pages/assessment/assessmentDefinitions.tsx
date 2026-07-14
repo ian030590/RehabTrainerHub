@@ -9,7 +9,6 @@ export interface AssessmentDefinition {
   descriptionKey: TranslationKey;
   optionCount?: number;
   defaultTrialCount?: number;
-  route?: string;
 }
 
 export const ASSESSMENTS: readonly AssessmentDefinition[] = [
@@ -59,6 +58,5 @@ export const ASSESSMENTS: readonly AssessmentDefinition[] = [
     id: 'ufov',
     titleKey: 'assess.ufov.title',
     descriptionKey: 'assess.ufov.desc',
-    route: '/assessment/ufov',
   },
 ];

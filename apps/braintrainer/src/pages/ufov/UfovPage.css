@@ -479,49 +479,6 @@ body.ufov-game-active .ufov-stage {
   margin: 0;
 }
 
-.ufov-page .config-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100vw;
-  max-width: none;
-  padding: 24px;
-  background: var(--bg-overlay);
-  color: var(--text-primary);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.ufov-config-dialog {
-  display: grid;
-  gap: 0;
-}
-
-.ufov-refresh-alert {
-  display: grid;
-  gap: 4px;
-  margin: 0 0 20px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.ufov-refresh-alert.warning {
-  border-color: var(--warning);
-  background: var(--bg-warning-soft, color-mix(in srgb, var(--warning) 12%, var(--bg-card)));
-}
-
-.ufov-refresh-alert strong {
-  color: var(--text-primary);
-}
-
 @media (max-width: 720px) {
   .ufov-page {
     padding: 20px 12px;
