@@ -415,6 +415,7 @@ export const en: Record<TranslationKey, string> = {
   'assess.contrast.resultsTitle': 'Contrast Sensitivity Results',
 
   // Training pages and games
+  'training.rules': 'Rules',
   'training.start': 'Start Training',
   'training.startGame': 'Start Game',
   'training.continueGame': 'Continue Game',

@@ -691,7 +691,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                   </InlineAlert>
                 )}
                 <StartTrainingButton onClick={() => setPhase('rules')}>
-                  {t('tongue.calibration.start')}
+                  {t('training.rules')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={exitGame}>{t('training.cancel')}</button>
               </>

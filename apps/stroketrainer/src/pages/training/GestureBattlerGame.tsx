@@ -781,7 +781,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                   </InlineAlert>
                 )}
                 <StartTrainingButton onClick={() => setPhase('rules')}>
-                  {t('training.start')}
+                  {t('training.rules')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={exitGame}>{t('training.cancel')}</button>
               </>

@@ -1485,7 +1485,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                   </InlineAlert>
                 )}
                 <StartTrainingButton onClick={() => void handleStartGame()}>
-                  {t('training.start')}
+                  {t('training.rules')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={handleExit}>{t('training.cancel')}</button>
               </>

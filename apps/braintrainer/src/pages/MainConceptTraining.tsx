@@ -512,7 +512,9 @@ export function MainConceptTraining() {
           ]}
           actions={(
             <>
-              <StartTrainingButton onClick={() => void openInstructions()}>{t('training.startGame')}</StartTrainingButton>
+              <StartTrainingButton onClick={() => void openInstructions()}>
+                {lang === 'zh' ? '規則說明' : 'Rules'}
+              </StartTrainingButton>
               <button className="btn btn-ghost btn-lg" onClick={exitToThinkingTraining}>{t('training.cancel')}</button>
             </>
           )}
@@ -593,7 +595,7 @@ export function MainConceptTraining() {
               items: activeSet.transcript.map((sentence, index) => `${index + 1}. ${sentence}`),
             },
           ]}
-          startLabel={t('mainConcept.instructions.begin')}
+          startLabel={lang === 'zh' ? '開始訓練' : 'Start Training'}
           backLabel={t('training.returnSettings')}
           onStart={() => void startSession()}
           onBack={returnToMenu}

@@ -291,7 +291,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
             actions={(
               <>
                 <StartTrainingButton onClick={() => setPhase('rules')}>
-                  {t('training.startGame')}
+                  {t('training.rules')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.back')}</button>
               </>

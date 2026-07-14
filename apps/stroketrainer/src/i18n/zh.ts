@@ -414,6 +414,7 @@ export const zh = {
   'assess.contrast.resultsTitle': '對比敏感度結果',
 
   // Training pages and games
+  'training.rules': '規則說明',
   'training.start': '開始訓練',
   'training.startGame': '開始遊戲',
   'training.continueGame': '繼續遊戲',

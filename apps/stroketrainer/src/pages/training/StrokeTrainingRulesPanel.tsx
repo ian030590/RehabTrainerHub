@@ -45,12 +45,12 @@ function getStrokeRuleLabels(lang: 'zh' | 'en') {
   return lang === 'en'
     ? {
         label: 'Game Rules',
-        start: 'Start Playing',
+        start: 'Start Training',
         back: 'Back to Settings',
       }
     : {
         label: '遊戲規則說明',
-        start: '開始遊玩',
+        start: '開始訓練',
         back: '回設定',
       };
 }

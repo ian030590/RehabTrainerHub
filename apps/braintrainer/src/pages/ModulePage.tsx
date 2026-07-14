@@ -322,15 +322,15 @@ function getBrainRuleLabels(lang: 'zh' | 'en') {
   return lang === 'en'
     ? {
         label: 'Game Rules',
-        next: 'Next: Rules',
-        start: 'Start Playing',
+        next: 'Rules',
+        start: 'Start Training',
         back: 'Back to Settings',
         summary: 'Selected Settings',
       }
     : {
         label: '遊戲規則說明',
-        next: '下一步：規則說明',
-        start: '開始遊玩',
+        next: '規則說明',
+        start: '開始訓練',
         back: '回設定',
         summary: '目前設定',
       };

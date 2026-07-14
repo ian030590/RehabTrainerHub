@@ -684,7 +684,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             actions={(
               <>
                 <StartTrainingButton onClick={() => setPhase('rules')}>
-                  {t('training.start')}
+                  {t('training.rules')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
               </>

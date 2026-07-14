@@ -76,8 +76,8 @@ export function HomePage() {
   const [prewarmed, setPrewarmed] = useState(() => pixiAppManager.ready);
   const [isStartingTraining, setIsStartingTraining] = useState(false);
   const rulesLabels = getRulesLabels(lang);
-  const showRulesButtonLabel = isStartingTraining ? t('btn.preparingTraining') : rulesLabels.next;
-  const rulesStartButtonLabel = isStartingTraining ? t('btn.preparingTraining') : rulesLabels.start;
+  const showRulesButtonLabel = rulesLabels.next;
+  const rulesStartButtonLabel = rulesLabels.start;
 
   // Preload the route chunk shortly after the home page is interactive.
   useEffect(() => {
@@ -1152,15 +1152,15 @@ function getRulesLabels(lang: string) {
   return lang === 'en'
     ? {
         label: 'Game Rules',
-        next: 'Next: Rules',
-        start: 'Start Playing',
+        next: 'Rules',
+        start: 'Start Training',
         back: 'Back to Settings',
         summary: 'Selected Settings',
       }
     : {
         label: '遊戲規則說明',
-        next: '下一步：規則說明',
-        start: '開始遊玩',
+        next: '規則說明',
+        start: '開始訓練',
         back: '回設定',
         summary: '目前設定',
       };
