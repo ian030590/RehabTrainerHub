@@ -76,6 +76,8 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 
 export type { ReferenceGameId } from './cognitive/types';
 export { REFERENCE_COGNITIVE_MODULES } from './cognitive/constants';
@@ -214,10 +216,13 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
 
   finishGameRef.current = finishGame;
 
-  const startGame = useCallback(() => {
+  const startGame = useCallback(async () => {
     if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
+    await enterFullscreenFromUserGesture(document.documentElement);
+    await waitForFullscreenLayout();
 
+    if (appRef.current) resizePixiAppToElement(appRef.current, pixiHostRef.current);
     metricsRef.current = { elapsed: 0 };
     lastHudSecondRef.current = -1;
     stateRef.current = createInitialState(gameId, difficulty, reactionTrials);
@@ -229,7 +234,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
   }, [difficulty, effectiveLimit, gameId, reactionTrials, setPhase, t]);
 
   const restartGame = useCallback(() => {
-    startGame();
+    void startGame();
   }, [startGame]);
 
   const returnToMenu = useCallback(() => {
@@ -364,6 +369,11 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     }
   }, [phase]);
 
+  useTrainingAbort({
+    active: phase === 'playing' || phase === 'paused',
+    onAbort: returnToMenu,
+  });
+
   return (
     <div className={`cognitive-reference-game cognitive-reference-phase-${phase}`} style={{ '--cognitive-game-accent': COGNITIVE_ACCENT_CSS } as CSSProperties}>
       <div ref={pixiHostRef} className="cognitive-pixi-stage" />
@@ -405,7 +415,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
             ]}
             actions={(
               <>
-                <StartTrainingButton onClick={startGame}>{t('training.startGame')}</StartTrainingButton>
+                <StartTrainingButton onClick={() => void startGame()}>{t('training.startGame')}</StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
               </>
             )}
@@ -520,7 +530,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
           <p>{t('cognitive.pause.desc', { label: hud.primaryLabel, value: hud.primaryValue, seconds: elapsedSeconds })}</p>
           <div className="training-actions">
             <button className="btn btn-primary btn-lg" onClick={resumeGame}>{t('training.continueTraining')}</button>
-            <button className="btn btn-secondary btn-lg" onClick={restartGame}>{t('training.restart')}</button>
+            <button className="btn btn-secondary btn-lg" onClick={() => void restartGame()}>{t('training.restart')}</button>
             <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnMenu')}</button>
           </div>
         </div>
@@ -575,7 +585,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
               restartLabel={t('training.restart')}
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
-              onRestart={restartGame}
+              onRestart={() => void restartGame()}
               onBackHome={returnToMenu}
             />
           </div>
@@ -686,4 +696,11 @@ function toCsv(records: SessionRecord[]): string {
     columns.map((column) => column.label).join(','),
     ...records.map((record) => columns.map((column) => csvCell(column.value(record))).join(',')),
   ].join('\n');
+}
+
+function resizePixiAppToElement(app: Application, element: HTMLElement | null): void {
+  const rect = element?.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect?.width || window.innerWidth));
+  const height = Math.max(1, Math.round(rect?.height || window.innerHeight));
+  app.renderer.resize(width, height);
 }

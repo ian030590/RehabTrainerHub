@@ -11,6 +11,8 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import type { TFunction } from './types';
 
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
@@ -479,12 +481,15 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     }, configRef.current.strokeWaitMs);
   }, [queueDrawingSampleUpload, recordEnemyOutcome, t]);
 
-  const startGame = useCallback(() => {
+  const startGame = useCallback(async () => {
     if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
+    await enterFullscreenFromUserGesture(document.documentElement);
+    await waitForFullscreenLayout();
 
     const app = appRef.current;
     if (!app) return;
+    resizePixiAppToElement(app, pixiHostRef.current);
     clearPixiState();
     app.stage.removeChildren();
     drawLayout(app);
@@ -500,7 +505,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   }, [clearPixiState, drawLayout, setPhase, t]);
 
   const restartGame = useCallback(() => {
-    startGame();
+    void startGame();
   }, [startGame]);
 
   const returnToMenu = useCallback(() => {
@@ -622,15 +627,10 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     };
   }, [drawLayout, finishGame, recordEnemyOutcome, spawnEnemy]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (phaseRef.current === 'playing') pauseGame();
-      else if (phaseRef.current === 'paused') resumeGame();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [pauseGame, resumeGame]);
+  useTrainingAbort({
+    active: phase === 'playing' || phase === 'paused',
+    onAbort: returnToMenu,
+  });
 
   useEffect(() => {
     const overlay = overlayRef.current;
@@ -714,7 +714,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             ]}
             actions={(
               <>
-                <StartTrainingButton onClick={startGame}>
+                <StartTrainingButton onClick={() => void startGame()}>
                   {t('training.start')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
@@ -1000,7 +1000,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         <div className="training-panel training-panel-compact">
           <h1>{t('drawing.pause.title')}</h1>
           <button className="btn btn-primary btn-lg" onClick={resumeGame}>{t('training.continueGame')}</button>
-          <button className="btn btn-secondary btn-lg" onClick={restartGame}>{t('training.restart')}</button>
+          <button className="btn btn-secondary btn-lg" onClick={() => void restartGame()}>{t('training.restart')}</button>
           <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnMenu')}</button>
         </div>
       )}
@@ -1054,7 +1054,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
               restartLabel={t('training.restart')}
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
-              onRestart={restartGame}
+              onRestart={() => void restartGame()}
               onBackHome={returnToMenu}
             />
           </div>
@@ -1812,4 +1812,11 @@ function formatSeconds(value: number, t: TFunction): string {
 
 function getShapeLabel(shape: ShapeId, t: TFunction): string {
   return t(SHAPE_LABEL_KEYS[shape]);
+}
+
+function resizePixiAppToElement(app: Application, element: HTMLElement | null): void {
+  const rect = element?.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect?.width || window.innerWidth));
+  const height = Math.max(1, Math.round(rect?.height || window.innerHeight));
+  app.renderer.resize(width, height);
 }

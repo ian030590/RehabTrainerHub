@@ -77,11 +77,9 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const ufovLabels = getUfovConfigLabels(lang);
   const isSmallScreenDevice = isMobileOrTabletDevice(detectDisplayDeviceKind());
 
-  const handleStartUfov = () => {
+  const handleStartUfov = async () => {
     const subtestId = isSmallScreenDevice ? 1 : selectedUfovSubtest;
-    if (selectedUfovMode !== 'instruction') {
-      void enterFullscreenFromUserGesture(document.documentElement);
-    }
+    await enterFullscreenFromUserGesture(document.documentElement);
     setIsUfovConfigOpen(false);
     navigate(`/attention-training/ufov?${new URLSearchParams({
       subtest: String(subtestId),
@@ -176,7 +174,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
           </div>
 
           <div className="config-actions">
-            <button className="btn btn-primary btn-lg config-start-btn" type="button" onClick={handleStartUfov}>
+            <button className="btn btn-primary btn-lg config-start-btn" type="button" onClick={() => void handleStartUfov()}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <polygon points="5,3 19,12 5,21" />
               </svg>

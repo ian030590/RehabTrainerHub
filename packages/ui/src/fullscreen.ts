@@ -24,3 +24,15 @@ export async function exitFullscreenIfActive() {
     return false;
   }
 }
+
+export function waitForFullscreenLayout() {
+  if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve());
+    });
+  });
+}

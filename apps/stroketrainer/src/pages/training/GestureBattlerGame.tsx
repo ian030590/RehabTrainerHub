@@ -16,6 +16,8 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
@@ -606,6 +608,9 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       return;
     }
     prepareAudioFeedback(jsPsychRef);
+    await enterFullscreenFromUserGesture(document.documentElement);
+    await waitForFullscreenLayout();
+    if (appRef.current) resizePixiAppToElement(appRef.current, pixiHostRef.current);
     stopVision();
     setVisionError('');
     setShowVisionError(false);
@@ -705,15 +710,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     setPhase('combat');
   }, [setPhase, t]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (phaseRef.current === 'combat') pauseGame();
-      else if (phaseRef.current === 'paused') resumeGame();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [pauseGame, resumeGame]);
+  useTrainingAbort({
+    active: ['initializing', 'calibration', 'combat', 'paused'].includes(phase),
+    onAbort: returnToMenu,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -1357,6 +1357,13 @@ function randomGesture(): GestureId {
 function chooseNextGesture(previous: GestureId): GestureId {
   const options = GESTURES.filter((gesture) => gesture !== previous);
   return options[Math.floor(Math.random() * options.length)];
+}
+
+function resizePixiAppToElement(app: Application, element: HTMLElement | null): void {
+  const rect = element?.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect?.width || window.innerWidth));
+  const height = Math.max(1, Math.round(rect?.height || window.innerHeight));
+  app.renderer.resize(width, height);
 }
 
 function drawBattleScene(app: Application): BattleScene {

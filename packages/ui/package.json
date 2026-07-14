@@ -35,6 +35,7 @@
     "./fullscreen": "./src/fullscreen.ts",
     "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
     "./hooks/useRoutedTrainingModule": "./src/hooks/useRoutedTrainingModule.ts",
+    "./hooks/useTrainingAbort": "./src/hooks/useTrainingAbort.ts",
     "./settings/displaySettings": "./src/settings/displaySettings.ts",
     "./storage/userStore": "./src/storage/userStore.ts",
     "./trainerTheme": "./src/trainerTheme.ts"

@@ -8,6 +8,7 @@ import {
 } from '@rehab-trainer/ui/displayTiming';
 import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { exitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { useNavigate } from 'react-router-dom';
@@ -710,6 +711,27 @@ export function UfovPage({
       config: runConfig,
     }]);
   };
+
+  const abortRun = useCallback(() => {
+    skipFinishRef.current = true;
+    if (jsPsychRef.current) {
+      jsPsychRef.current.abortExperiment();
+      jsPsychRef.current = null;
+    }
+    setIsRunning(false);
+    setInstructionSubtest(null);
+    setResults([]);
+    setResultTrials([]);
+    setSavedRecord(null);
+    void exitFullscreenIfActive();
+    navigate(backPath);
+  }, [backPath, navigate]);
+
+  useTrainingAbort({
+    active: isRunning || instructionSubtest !== null,
+    onAbort: abortRun,
+    abortOnFullscreenExit: false,
+  });
 
   useEffect(() => {
     if (!autoStart || autoStartRef.current || isRunning || savedRecord) return;

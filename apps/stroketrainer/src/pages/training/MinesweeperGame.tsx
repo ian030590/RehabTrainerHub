@@ -10,6 +10,8 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 
 type MinesweeperPhase = 'menu' | 'playing' | 'paused' | 'results';
 type MinesweeperDifficulty = 'Beginner' | 'Intermediate' | 'Advanced';
@@ -177,9 +179,11 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     writeJsPsychData(jsPsychRef, record as unknown as Record<string, unknown>, 'Unable to write minesweeper result to jsPsych data.');
   }, [boardCols, boardRows, difficulty, gameTitle, mineCount, selectedBoardConfig.label]);
 
-  const startGame = useCallback(() => {
+  const startGame = useCallback(async () => {
     if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
+    await enterFullscreenFromUserGesture(document.documentElement);
+    await waitForFullscreenLayout();
 
     const nextRows = selectedBoardConfig.rows;
     const nextCols = selectedBoardConfig.cols;
@@ -203,8 +207,10 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     setFlagMode(false);
   }, []);
 
-  const restartGame = useCallback(() => {
+  const restartGame = useCallback(async () => {
     prepareAudioFeedback(jsPsychRef);
+    await enterFullscreenFromUserGesture(document.documentElement);
+    await waitForFullscreenLayout();
     setBoard(createEmptyBoard(boardRows, boardCols));
     setMineCount(selectedBoardConfig.mines);
     setMinesGenerated(false);
@@ -290,6 +296,11 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     return () => window.clearInterval(timer);
   }, [phase]);
 
+  useTrainingAbort({
+    active: phase === 'playing' || phase === 'paused',
+    onAbort: returnToMenu,
+  });
+
   useEffect(() => {
     drawBoard(canvasRef.current, board, boardMetrics);
   }, [board, boardMetrics]);
@@ -318,7 +329,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
             ]}
             actions={(
               <>
-                <StartTrainingButton onClick={startGame}>
+                <StartTrainingButton onClick={() => void startGame()}>
                   {t('training.startGame')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.back')}</button>
@@ -429,7 +440,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
           <p>{t('minesweeper.pause.desc', { seconds: elapsedSeconds })}</p>
           <div className="training-actions">
             <button className="btn btn-primary btn-lg" onClick={resumeGame}>{t('training.continueGame')}</button>
-            <button className="btn btn-secondary btn-lg" onClick={restartGame}>{t('training.restart')}</button>
+            <button className="btn btn-secondary btn-lg" onClick={() => void restartGame()}>{t('training.restart')}</button>
             <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnSettings')}</button>
           </div>
         </div>
@@ -484,7 +495,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
               restartLabel={t('training.restart')}
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
-              onRestart={restartGame}
+              onRestart={() => void restartGame()}
               onBackHome={returnToMenu}
             />
           </div>

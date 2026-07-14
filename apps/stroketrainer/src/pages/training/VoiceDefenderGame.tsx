@@ -21,6 +21,8 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { AppDialog } from '../../components/AppDialog';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
@@ -1183,6 +1185,9 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     if (phaseRef.current === 'editor' && !microphoneReady) return;
     const app = appRef.current;
     if (!app) return;
+    await enterFullscreenFromUserGesture(document.documentElement);
+    await waitForFullscreenLayout();
+    resizePixiAppToElement(app, pixiHostRef.current);
 
     setMicrophoneError('');
     configRef.current = { language, difficulty, gameDurationSec, maxHp, speed, activeWords };
@@ -1278,15 +1283,10 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     }
   }, [returnToEditor, setPhase, startListening, t]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (phaseRef.current === 'playing') pauseGame();
-      else if (phaseRef.current === 'paused') void resumeGame();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [pauseGame, resumeGame]);
+  useTrainingAbort({
+    active: phase === 'playing' || phase === 'paused',
+    onAbort: returnToEditor,
+  });
 
   const handleExit = useCallback(() => {
     void stopListening();
@@ -2240,6 +2240,13 @@ function calculateFloatRms(samples: Float32Array): number {
 
 function toMeterLevel(rms: number): number {
   return clamp(Math.sqrt(rms) * 2.2, 0, 1);
+}
+
+function resizePixiAppToElement(app: Application, element: HTMLElement | null): void {
+  const rect = element?.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect?.width || window.innerWidth));
+  const height = Math.max(1, Math.round(rect?.height || window.innerHeight));
+  app.renderer.resize(width, height);
 }
 
 function getWebSpeechRecognitionConstructor(): WebSpeechRecognitionConstructor | null {

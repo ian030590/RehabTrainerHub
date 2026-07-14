@@ -9,6 +9,8 @@ import { BestPEST } from './logic/bestPest';
 import { getActiveUser, getSetting } from '../../utils/settings';
 import { downloadCsvFile } from '../../utils/downloadFile';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 
 // Ensure plugin is referenced
 void PixiContrastSensitivityPlugin;
@@ -37,6 +39,7 @@ export function ContrastTestPage() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const jsPsychRef = useRef<JsPsych | null>(null);
+  const abortingRef = useRef(false);
   
   const [phase, setPhase] = useState<'running' | 'results'>('running');
   const [resultLogCSW, setResultLogCSW] = useState<number>(0);
@@ -58,6 +61,7 @@ export function ContrastTestPage() {
       const jsPsych = initJsPsych({
         display_element: containerRef.current!,
         on_finish: () => {
+          if (abortingRef.current) return;
           setPhase('results');
         }
       });
@@ -121,6 +125,7 @@ export function ContrastTestPage() {
       };
 
       jsPsych.run([loopNode]).then(() => {
+         if (abortingRef.current) return;
          const finalStim = pest.nextStim2apply();
          const logCSWMaximal = 2.0;
          const finalLogCSW = logCSWMaximal - logCSWMaximal * finalStim;
@@ -139,6 +144,19 @@ export function ContrastTestPage() {
       }
     };
   }, [phase]);
+
+  const abortTest = () => {
+    abortingRef.current = true;
+    jsPsychRef.current?.abortExperiment();
+    jsPsychRef.current = null;
+    pixiAppManager.destroy();
+    navigate('/assessment');
+  };
+
+  useTrainingAbort({
+    active: phase === 'running',
+    onAbort: abortTest,
+  });
 
   const downloadCSV = () => {
     const dateStr = new Date().toISOString().split('T')[0];
@@ -174,7 +192,9 @@ export function ContrastTestPage() {
     );
   };
 
-  const restartTest = () => {
+  const restartTest = async () => {
+    await enterFullscreenFromUserGesture(document.documentElement);
+    abortingRef.current = false;
     jsPsychRef.current = null;
     setResultLogCSW(0);
     setTrialRecords([]);
@@ -236,7 +256,7 @@ export function ContrastTestPage() {
              restartLabel={t('exp.restart')}
              backLabel={t('exp.backHome')}
              onDownloadCsv={downloadCSV}
-             onRestart={restartTest}
+             onRestart={() => void restartTest()}
              onBackHome={() => navigate('/')}
            />
            

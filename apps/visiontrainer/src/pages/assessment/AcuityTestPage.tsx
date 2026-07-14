@@ -39,6 +39,8 @@ import { pixelFromDegree } from '../../utils/spatialUtils';
 import { SoundManager } from '../../utils/soundManager';
 import { downloadCsvFile } from '../../utils/downloadFile';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 
 type Phase = 'intro' | 'isi' | 'stimulus' | 'results';
 
@@ -206,7 +208,9 @@ export function AcuityTestPage() {
   }, [isWebGazerPL, t]);
 
   // ── Initialize and manage the test ──
-  const startTest = useCallback(() => {
+  const startTest = useCallback(async () => {
+    await enterFullscreenFromUserGesture(document.documentElement);
+
     const begin = () => {
       SoundManager.init();
       const nAlt = getAlternativeCount(testType);
@@ -475,16 +479,11 @@ export function AcuityTestPage() {
     const handleKey = (e: KeyboardEvent) => {
       if (phaseRef.current === 'intro') {
         if (e.key === ' ' || e.key === 'Enter') {
-          startTest();
+          void startTest();
         }
         return;
       }
       if (phaseRef.current !== 'stimulus') return;
-
-      if (e.key === 'Escape') {
-        navigate('/assessment');
-        return;
-      }
 
       if (isWebGazerPL) return;
 
@@ -566,6 +565,22 @@ export function AcuityTestPage() {
     }
   }, []);
 
+  const abortTest = useCallback(() => {
+    SoundManager.destroy();
+    try {
+      gazeExtensionRef.current?.pause?.();
+      gazeExtensionRef.current?.hidePredictions?.();
+    } catch {
+      // WebGazer cleanup should not block navigation.
+    }
+    navigate('/assessment');
+  }, [navigate]);
+
+  useTrainingAbort({
+    active: phase === 'isi' || phase === 'stimulus' || webGazerStatus === 'starting',
+    onAbort: abortTest,
+  });
+
   // ── Intro Phase ──
   if (phase === 'intro') {
     return (
@@ -585,7 +600,7 @@ export function AcuityTestPage() {
           )}
           <button
             className="btn btn-primary btn-lg"
-            onClick={startTest}
+            onClick={() => void startTest()}
             disabled={webGazerStatus === 'starting'}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -762,7 +777,7 @@ export function AcuityTestPage() {
           restartLabel={t('exp.restart')}
           backLabel={t('exp.backHome')}
           onDownloadCsv={downloadCSV}
-          onRestart={startTest}
+          onRestart={() => void startTest()}
           onBackHome={() => navigate('/')}
         />
 

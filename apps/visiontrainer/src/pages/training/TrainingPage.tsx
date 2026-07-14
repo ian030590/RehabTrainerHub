@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { initJsPsych } from 'jspsych';
 import type { JsPsych } from 'jspsych';
 import WebGazerExtension from '@jspsych/extension-webgazer';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '../../i18n';
 import { buildTimeline } from '../../experiment/timeline';
 import {
@@ -122,6 +123,7 @@ export function TrainingPage() {
   const [results, setResults] = useState<TrialData[]>([]);
   const jsPsychRef = useRef<JsPsych | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const skipFinishRef = useRef(false);
   const userName = getActiveUser() || t('exp.unknownUser');
 
   useEffect(() => {
@@ -145,6 +147,10 @@ export function TrainingPage() {
         display_element: container,
         extensions: enableWebGazer ? [{ type: WebGazerExtension }] : [],
         on_finish: async () => {
+          if (skipFinishRef.current) {
+            skipFinishRef.current = false;
+            return;
+          }
           const data = jsPsych.data.get().values() as TrialData[];
           await saveTrainingRecord({
             results: data,
@@ -256,6 +262,22 @@ export function TrainingPage() {
     userName,
     lang,
   ]);
+
+  const abortTraining = useCallback(() => {
+    if (phase !== 'running') return;
+    skipFinishRef.current = true;
+    SoundManager.destroy();
+    const jsPsych = jsPsychRef.current;
+    jsPsychRef.current = null;
+    jsPsych?.abortExperiment();
+    setResults([]);
+    navigate('/');
+  }, [navigate, phase]);
+
+  useTrainingAbort({
+    active: phase === 'running',
+    onAbort: abortTraining,
+  });
 
   const downloadCSV = useCallback(() => {
     downloadTrainingCsv({

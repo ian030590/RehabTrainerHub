@@ -4,6 +4,8 @@ import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfig
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
+import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useNavigate } from 'react-router-dom';
 import { useT, type TranslationKey } from '../i18n';
 import { saveTrainingRecord, type BrainTrainingRecord } from '../utils/trainingRecords';
@@ -330,14 +332,16 @@ export function MainConceptTraining() {
   const progressText = `${currentIndex + 1} / ${activeSet.questions.length}`;
   const locked = Boolean(acceptedTrial);
 
-  const openInstructions = () => {
+  const openInstructions = async () => {
+    await enterFullscreenFromUserGesture(document.documentElement);
     setFeedback(null);
     setAcceptedTrial(null);
     setSummary(null);
     setPhase('instructions');
   };
 
-  const startSession = () => {
+  const startSession = async () => {
+    await enterFullscreenFromUserGesture(document.documentElement);
     const firstQuestion = activeSet.questions[0];
     setCurrentIndex(0);
     setAnswer(createEmptyAnswer(firstQuestion));
@@ -356,6 +360,11 @@ export function MainConceptTraining() {
     setAcceptedTrial(null);
     setSummary(null);
   };
+
+  useTrainingAbort({
+    active: phase === 'instructions' || phase === 'playing',
+    onAbort: returnToMenu,
+  });
 
   const exitToThinkingTraining = () => {
     navigate('/thinking-training');
@@ -495,7 +504,7 @@ export function MainConceptTraining() {
           ]}
           actions={(
             <>
-              <StartTrainingButton onClick={openInstructions}>{t('training.startGame')}</StartTrainingButton>
+              <StartTrainingButton onClick={() => void openInstructions()}>{t('training.startGame')}</StartTrainingButton>
               <button className="btn btn-ghost btn-lg" onClick={exitToThinkingTraining}>{t('training.cancel')}</button>
             </>
           )}
@@ -551,7 +560,7 @@ export function MainConceptTraining() {
           ]}
           actions={(
             <>
-              <StartTrainingButton onClick={startSession}>{t('mainConcept.instructions.begin')}</StartTrainingButton>
+              <StartTrainingButton onClick={() => void startSession()}>{t('mainConcept.instructions.begin')}</StartTrainingButton>
               <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnSettings')}</button>
             </>
           )}
@@ -652,7 +661,7 @@ export function MainConceptTraining() {
             restartLabel={t('training.restart')}
             backLabel={t('training.returnHome')}
             onDownloadCsv={downloadResult}
-            onRestart={openInstructions}
+            onRestart={() => void openInstructions()}
             onBackHome={returnToMenu}
           />
         </div>

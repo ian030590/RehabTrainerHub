@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
+import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import {
   isCalibrated,
   DRIVING_DURATION_MIN_SEC,
@@ -108,6 +109,7 @@ export function HomePage() {
     if (!expandedModule || isStartingTraining) return;
     const moduleToStart = expandedModule;
     setIsStartingTraining(true);
+    await enterFullscreenFromUserGesture(document.documentElement);
 
     if (moduleToStart === 'hart-chart') {
       try {

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import QRCode from 'qrcode';
+import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '../../i18n';
 import {
   clampHartScale,
@@ -176,6 +178,11 @@ export function HartChartPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [instructionsOpen, qrOpen]);
+
+  useTrainingAbort({
+    active: !qrOpen && !instructionsOpen,
+    onAbort: () => navigate('/'),
+  });
 
   const resetChart = () => {
     setSeed(createHartSeed());
@@ -526,6 +533,7 @@ export function HartChartPage() {
 }
 
 export function HartChartDisplayPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const seed = useMemo(() => parseHartSeed(searchParams.get('seed')), [searchParams]);
   const scale = clampHartScale(Number(searchParams.get('scale') ?? '1'));
@@ -533,15 +541,18 @@ export function HartChartDisplayPage() {
 
   useEffect(() => {
     const enterFullscreen = () => {
-      if (!document.fullscreenElement) {
-        void document.documentElement.requestFullscreen?.().catch(() => undefined);
-      }
+      void enterFullscreenFromUserGesture(document.documentElement);
       window.removeEventListener('pointerdown', enterFullscreen);
     };
 
     window.addEventListener('pointerdown', enterFullscreen, { once: true });
     return () => window.removeEventListener('pointerdown', enterFullscreen);
   }, []);
+
+  useTrainingAbort({
+    active: true,
+    onAbort: () => navigate('/'),
+  });
 
   return (
     <main className="hart-display-page">
