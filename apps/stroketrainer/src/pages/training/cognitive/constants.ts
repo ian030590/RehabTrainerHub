@@ -1,6 +1,5 @@
 import type { TranslationKey } from '../../../i18n';
-import type { TFunction } from '../types';
-import type { Difficulty, HudState, ReferenceModuleMeta, SessionLimitSeconds } from './types';
+import type { Difficulty, ReferenceModuleMeta, SessionLimitSeconds } from './types';
 
 export const REFERENCE_COGNITIVE_MODULES: ReferenceModuleMeta[] = [
   {
@@ -80,14 +79,3 @@ export const SLIDING_CONFIG: Record<Difficulty, { size: number; shuffles: number
   Intermediate: { size: 4, shuffles: 72 },
   Advanced: { size: 5, shuffles: 120 },
 };
-
-export function createDefaultHud(t: TFunction): HudState {
-  return {
-    primaryLabel: t('cognitive.hud.status'),
-    primaryValue: '-',
-    secondaryLabel: t('cognitive.hud.progress'),
-    secondaryValue: '-',
-    tertiaryLabel: t('cognitive.hud.time'),
-    tertiaryValue: '-',
-  };
-}

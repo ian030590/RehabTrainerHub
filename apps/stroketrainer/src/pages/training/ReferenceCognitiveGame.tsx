@@ -8,7 +8,6 @@ import { playFailureSound, playGameEndSound, playSuccessSound, prepareAudioFeedb
 import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
 import {
-  createDefaultHud,
   DIFFICULTIES,
   REACTION_TRIAL_OPTIONS,
   REFERENCE_COGNITIVE_MODULES,
@@ -21,7 +20,6 @@ import {
   drawLightsOut,
   handleLightsTap,
   isLightsAutoSuccess,
-  summarizeLightsState,
 } from './cognitive/lightsOut';
 import {
   buildMemoryResultStats,
@@ -29,7 +27,6 @@ import {
   drawMemory,
   handleMemoryTap,
   isMemoryAutoSuccess,
-  summarizeMemoryState,
   updateMemoryTimedState,
 } from './cognitive/memoryMatch';
 import {
@@ -38,7 +35,6 @@ import {
   drawReaction,
   handleReactionStateTap,
   isReactionAutoSuccess,
-  summarizeReactionState,
   updateReactionTimedState,
 } from './cognitive/reactionTime';
 import {
@@ -47,7 +43,6 @@ import {
   drawSliding,
   handleSlidingTap,
   isSlidingAutoSuccess,
-  summarizeSlidingState,
 } from './cognitive/slidingPuzzle';
 import {
   buildWhackResultStats,
@@ -55,7 +50,6 @@ import {
   drawWhack,
   handleWhackTap,
   isWhackAutoSuccess,
-  summarizeWhackState,
   updateWhackTimedState,
 } from './cognitive/targetClick';
 import type {
@@ -63,7 +57,6 @@ import type {
   Difficulty,
   GamePhase,
   GameResult,
-  HudState,
   ReferenceGameId,
   ResultStats,
   RuntimeMetrics,
@@ -101,15 +94,13 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const renderRef = useRef<() => void>(() => undefined);
   const finishGameRef = useRef<(result: GameResult) => void>(() => undefined);
-  const lastHudSecondRef = useRef(-1);
+  const lastRenderSecondRef = useRef(-1);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
   const [sessionLimitSec, setSessionLimitSec] = useState<SessionLimitSeconds>(120);
   const [reactionTrials, setReactionTrials] = useState<number>(8);
   const [whackDurationSec, setWhackDurationSec] = useState<number>(30);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [hud, setHud] = useState<HudState>(() => createDefaultHud(t));
   const [result, setResult] = useState<SessionRecord | null>(null);
 
   const meta = getModuleMeta(gameId);
@@ -125,14 +116,6 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     phaseRef.current = next;
     setPhaseState(next);
   }, []);
-
-  const syncHud = useCallback(() => {
-    const state = stateRef.current;
-    if (!state) return;
-    const summary = summarizeState(state, metricsRef.current.elapsed, effectiveLimit, t);
-    setHud(summary);
-    setElapsedSeconds(Math.floor(metricsRef.current.elapsed));
-  }, [effectiveLimit, t]);
 
   const renderCurrent = useCallback(() => {
     const app = appRef.current;
@@ -188,7 +171,6 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
       Details_JSON: JSON.stringify(stats.details),
     };
     setResult(record);
-    setHud(summarizeState(state, metricsRef.current.elapsed, effectiveLimit, t));
     setPhase('results');
     void saveTrainingSessionRecord({
       userName: record.Participant_ID,
@@ -224,14 +206,12 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
 
     if (appRef.current) resizePixiAppToElement(appRef.current, pixiHostRef.current);
     metricsRef.current = { elapsed: 0 };
-    lastHudSecondRef.current = -1;
+    lastRenderSecondRef.current = -1;
     stateRef.current = createInitialState(gameId, difficulty, reactionTrials);
     setResult(null);
-    setElapsedSeconds(0);
-    setHud(summarizeState(stateRef.current, 0, effectiveLimit, t));
     setPhase('playing');
     window.setTimeout(() => renderRef.current(), 0);
-  }, [difficulty, effectiveLimit, gameId, reactionTrials, setPhase, t]);
+  }, [difficulty, gameId, reactionTrials, setPhase]);
 
   const restartGame = useCallback(() => {
     void startGame();
@@ -242,24 +222,11 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     setResult(null);
     stateRef.current = null;
     metricsRef.current = { elapsed: 0 };
-    setElapsedSeconds(0);
-    setHud(createDefaultHud(t));
     const app = appRef.current;
     if (app) {
       clearStage(app);
       drawBackground(app);
     }
-  }, [setPhase, t]);
-
-  const pauseGame = useCallback(() => {
-    if (phaseRef.current !== 'playing') return;
-    setPhase('paused');
-    syncHud();
-  }, [setPhase, syncHud]);
-
-  const resumeGame = useCallback(() => {
-    if (phaseRef.current !== 'paused') return;
-    setPhase('playing');
   }, [setPhase]);
 
   const downloadResult = useCallback(() => {
@@ -277,7 +244,6 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     if (state.kind === 'whack-a-mole') handleWhackTap(state, index, metricsRef.current.elapsed);
     if (state.kind === 'sliding-puzzle') handleSlidingTap(state, index, finishGameRef.current);
     playFeedbackForCountChange(feedbackBefore, getFeedbackCounts(state), jsPsychRef);
-    syncHud();
     renderRef.current();
   }
 
@@ -288,7 +254,6 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     const feedbackBefore = getFeedbackCounts(state);
     handleReactionStateTap(state, metricsRef.current.elapsed, difficulty, finishGameRef.current);
     playFeedbackForCountChange(feedbackBefore, getFeedbackCounts(state), jsPsychRef);
-    syncHud();
     renderRef.current();
   }
 
@@ -335,11 +300,12 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
             finishGameRef.current(isAutoSuccess(stateRef.current) ? 'Victory' : 'Defeat');
             return;
           }
-          const nextSecond = Math.floor(metricsRef.current.elapsed);
-          if (lastHudSecondRef.current !== nextSecond) {
-            lastHudSecondRef.current = nextSecond;
-            syncHud();
-            if (stateRef.current?.kind === 'whack-a-mole') renderRef.current();
+          if (stateRef.current?.kind === 'whack-a-mole') {
+            const nextSecond = Math.floor(metricsRef.current.elapsed);
+            if (lastRenderSecondRef.current !== nextSecond) {
+              lastRenderSecondRef.current = nextSecond;
+              renderRef.current();
+            }
           }
         });
         if (phaseRef.current === 'playing') renderRef.current();
@@ -357,7 +323,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
       if (appRef.current === app) appRef.current = null;
       if (initialized) app.destroy(true, { children: true });
     };
-  }, [gameId, sessionLimitSec, syncHud, whackDurationSec]);
+  }, [gameId, sessionLimitSec, whackDurationSec]);
 
   useEffect(() => {
     if (phase === 'menu') {
@@ -370,24 +336,13 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
   }, [phase]);
 
   useTrainingAbort({
-    active: phase === 'playing' || phase === 'paused',
+    active: phase === 'playing',
     onAbort: returnToMenu,
   });
 
   return (
     <div className={`cognitive-reference-game cognitive-reference-phase-${phase}`} style={{ '--cognitive-game-accent': COGNITIVE_ACCENT_CSS } as CSSProperties}>
       <div ref={pixiHostRef} className="cognitive-pixi-stage" />
-
-      {phase === 'playing' && (
-        <div className="training-game-hud cognitive-game-hud">
-          <div><strong>{t('cognitive.hud.time')}</strong> {elapsedSeconds}s</div>
-          <div><strong>{hud.primaryLabel}</strong> {hud.primaryValue}</div>
-          <div><strong>{hud.secondaryLabel}</strong> {hud.secondaryValue}</div>
-          <div><strong>{hud.tertiaryLabel}</strong> {hud.tertiaryValue}</div>
-          <button className="btn btn-sm btn-secondary" onClick={pauseGame}>{t('training.pause')}</button>
-          <button className="btn btn-sm btn-ghost" onClick={returnToMenu}>{t('training.returnMenu')}</button>
-        </div>
-      )}
 
       {phase === 'menu' && (
         <div className="training-panel">
@@ -524,18 +479,6 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
         </div>
       )}
 
-      {phase === 'paused' && (
-        <div className="training-panel training-panel-compact">
-          <h1>{t('cognitive.pause.title')}</h1>
-          <p>{t('cognitive.pause.desc', { label: hud.primaryLabel, value: hud.primaryValue, seconds: elapsedSeconds })}</p>
-          <div className="training-actions">
-            <button className="btn btn-primary btn-lg" onClick={resumeGame}>{t('training.continueTraining')}</button>
-            <button className="btn btn-secondary btn-lg" onClick={() => void restartGame()}>{t('training.restart')}</button>
-            <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnMenu')}</button>
-          </div>
-        </div>
-      )}
-
       {phase === 'results' && result && (
         <div className="experiment-container experiment-container-scrollable cognitive-results-container">
           <div className="experiment-results">
@@ -625,14 +568,6 @@ function isAutoSuccess(state: CognitiveGameState | null) {
   if (state.kind === 'reaction-time') return isReactionAutoSuccess(state);
   if (state.kind === 'whack-a-mole') return isWhackAutoSuccess(state);
   return isSlidingAutoSuccess(state);
-}
-
-function summarizeState(state: CognitiveGameState, elapsed: number, limit: SessionLimitSeconds, t: TFunction): HudState {
-  if (state.kind === 'memory-match') return summarizeMemoryState(state, elapsed, limit, t);
-  if (state.kind === 'lights-out') return summarizeLightsState(state, elapsed, limit, t);
-  if (state.kind === 'reaction-time') return summarizeReactionState(state, elapsed, limit, t);
-  if (state.kind === 'whack-a-mole') return summarizeWhackState(state, elapsed, limit, t);
-  return summarizeSlidingState(state, elapsed, limit, t);
 }
 
 function buildResultStats(state: CognitiveGameState): ResultStats {

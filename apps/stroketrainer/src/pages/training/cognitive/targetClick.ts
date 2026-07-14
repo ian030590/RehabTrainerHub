@@ -1,13 +1,11 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { WHACK_CONFIG } from './constants';
-import type { TFunction } from '../types';
-import type { Difficulty, HudState, ResultStats, SessionLimitSeconds, WhackState } from './types';
+import type { Difficulty, ResultStats, WhackState } from './types';
 import {
   COGNITIVE_ACCENT,
   COGNITIVE_BORDER,
   COGNITIVE_SURFACE,
   clamp,
-  formatTimeValue,
   getGridLayout,
   randomBetween,
 } from './utils';
@@ -60,17 +58,6 @@ function scheduleNextTarget(state: WhackState, elapsed: number) {
 
 export function isWhackAutoSuccess(state: WhackState) {
   return state.hits > 0;
-}
-
-export function summarizeWhackState(state: WhackState, elapsed: number, limit: SessionLimitSeconds, t: TFunction): HudState {
-  return {
-    primaryLabel: t('cognitive.hud.hits'),
-    primaryValue: String(state.hits),
-    secondaryLabel: t('cognitive.hud.misses'),
-    secondaryValue: String(state.misses),
-    tertiaryLabel: t('cognitive.hud.remaining'),
-    tertiaryValue: formatTimeValue(elapsed, limit),
-  };
 }
 
 export function buildWhackResultStats(state: WhackState): ResultStats {

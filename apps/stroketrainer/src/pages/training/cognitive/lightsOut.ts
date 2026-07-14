@@ -1,12 +1,10 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { LIGHTS_CONFIG } from './constants';
-import type { TFunction } from '../types';
-import type { Difficulty, GameResult, HudState, LightsOutState, ResultStats, SessionLimitSeconds } from './types';
+import type { Difficulty, GameResult, LightsOutState, ResultStats } from './types';
 import {
   COGNITIVE_ACCENT,
   COGNITIVE_BORDER,
   COGNITIVE_SURFACE,
-  formatTimeValue,
   getGridLayout,
   toggleLights,
 } from './utils';
@@ -33,18 +31,6 @@ export function handleLightsTap(state: LightsOutState, index: number, finishGame
 
 export function isLightsAutoSuccess(state: LightsOutState) {
   return isAllLightsOff(state.lights);
-}
-
-export function summarizeLightsState(state: LightsOutState, elapsed: number, limit: SessionLimitSeconds, t: TFunction): HudState {
-  const lightsOn = countLightsOn(state.lights);
-  return {
-    primaryLabel: t('cognitive.hud.lightsOn'),
-    primaryValue: String(lightsOn),
-    secondaryLabel: t('cognitive.hud.moves'),
-    secondaryValue: String(state.moves),
-    tertiaryLabel: t('cognitive.hud.remaining'),
-    tertiaryValue: formatTimeValue(elapsed, limit),
-  };
 }
 
 export function buildLightsResultStats(state: LightsOutState): ResultStats {

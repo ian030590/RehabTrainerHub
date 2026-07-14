@@ -60,10 +60,10 @@ declare const __BUNDLED_ZH_VOSK_MODEL_ENABLED__: boolean;
 export { calculateSimilarity, levenshteinDistance } from './voiceDefenderSpeechMatching';
 
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
-type GamePhase = 'editor' | 'playing' | 'paused' | 'results';
+type GamePhase = 'editor' | 'playing' | 'results';
 type ModelStatus = 'idle' | 'loading' | 'ready' | 'fallback' | 'error';
 type ModelLoadStage = VoskModelLoadStage | 'initializing';
-type GameResult = 'Victory' | 'Defeat' | 'Stopped';
+type GameResult = 'Victory' | 'Defeat';
 type MicrophoneStatus = 'pending' | 'testing' | 'ready' | 'silent' | 'muted' | 'disconnected' | 'denied';
 type RecognitionEngine = 'vosk' | 'web-speech';
 type BackgroundMode = 'stars' | 'color' | 'image';
@@ -357,10 +357,6 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   const [microphoneLevel, setMicrophoneLevel] = useState(0);
   const [microphoneError, setMicrophoneError] = useState('');
   const [showMicrophoneError, setShowMicrophoneError] = useState(false);
-  const [hp, setHp] = useState(DEFAULT_HP);
-  const [defeated, setDefeated] = useState(0);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [recognizedText, setRecognizedText] = useState('');
   const [result, setResult] = useState<SessionRecord | null>(null);
   const [showStartValidation, setShowStartValidation] = useState(false);
 
@@ -882,7 +878,6 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       Enemy_Results: enemyResultsRef.current.map((item) => ({ ...item })),
     };
     setResult(record);
-    setDefeated(metrics.defeated);
     setPhase('results');
     void saveTrainingSessionRecord({
       userName: record.Participant_ID,
@@ -920,7 +915,6 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       .map((transcript) => transcript.trim())
       .filter((transcript) => normalizeSpeechText(transcript));
     if (usableTranscripts.length === 0) return;
-    setRecognizedText(usableTranscripts[0]);
 
     const now = performance.now();
     const recognitionKey = usableTranscripts.map(normalizeSpeechText).join('|');
@@ -948,7 +942,6 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     enemiesRef.current = enemiesRef.current.filter((enemy) => enemy.id !== matched.enemy.id);
     metricsRef.current.defeated += 1;
     metricsRef.current.score += Math.max(10, Math.round(100 * matched.similarity));
-    setDefeated(metricsRef.current.defeated);
   }, [recordEnemyOutcome]);
 
   const startListening = useCallback(async () => {
@@ -1217,10 +1210,6 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     enemyResultsRef.current = [];
     wordMissesRef.current = {};
     lastRecognitionRef.current = { text: '', at: 0 };
-    setHp(maxHp);
-    setDefeated(0);
-    setElapsedSeconds(0);
-    setRecognizedText('');
     setResult(null);
     setPhase('playing');
     setShowStartValidation(false);
@@ -1263,28 +1252,8 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     setPhase('editor');
   }, [clearEnemies, drawStage, setPhase, stopListening]);
 
-  const pauseGame = useCallback(() => {
-    if (phaseRef.current !== 'playing') return;
-    setPhase('paused');
-    void stopListening();
-  }, [setPhase, stopListening]);
-
-  const resumeGame = useCallback(async () => {
-    if (phaseRef.current !== 'paused') return;
-    try {
-      await startListening();
-      setPhase('playing');
-    } catch (error) {
-      console.error('Unable to resume voice recognition.', error);
-      const accessError = getMicrophoneAccessError(error, t);
-      setMicrophoneError(accessError.message);
-      setMicrophoneStatus(accessError.microphoneStatus);
-      returnToEditor();
-    }
-  }, [returnToEditor, setPhase, startListening, t]);
-
   useTrainingAbort({
-    active: phase === 'playing' || phase === 'paused',
+    active: phase === 'playing',
     onAbort: returnToEditor,
   });
 
@@ -1334,8 +1303,6 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
         const targetGameDurationSec = configRef.current.gameDurationSec;
         const isTimeUnlimited = targetGameDurationSec === null;
         metrics.elapsed += dt;
-        const nextElapsed = Math.floor(metrics.elapsed);
-        setElapsedSeconds((current) => current === nextElapsed ? current : nextElapsed);
 
         const noActiveEnemies = enemiesRef.current.length === 0;
         if (config.spawnMode === 'fixed-interval' || noActiveEnemies) {
@@ -1366,7 +1333,6 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
           enemiesRef.current = enemiesRef.current.filter((item) => item.id !== enemy.id);
           wordMissesRef.current[enemy.word] = (wordMissesRef.current[enemy.word] ?? 0) + 1;
           metrics.hp = Math.max(0, metrics.hp - 1);
-          setHp(metrics.hp);
         }
 
         if (metrics.hp <= 0) {
@@ -1434,11 +1400,6 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     if (!result) return;
     downloadCsvFile(toCsv(result), `voice_defender_${Date.now()}.csv`);
   }, [result]);
-
-  const timeProgressText = useMemo(() => {
-    if (gameDurationSec === null) return `${elapsedSeconds}s / ${t('training.infinite')}`;
-    return `${Math.min(elapsedSeconds, gameDurationSec)}/${gameDurationSec}s`;
-  }, [elapsedSeconds, gameDurationSec, t]);
 
   return (
     <div
@@ -1932,42 +1893,6 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                 </div>
               </section>
           </TrainingConfigPanel>
-        </div>
-      )}
-
-      {phase !== 'results' && (
-        <div className="drawing-defense-hud">
-          <div><strong>{t('voice.hud.hp')}</strong> {hp}/{maxHp}</div>
-          <div><strong>{t('voice.results.defeated')}</strong> {defeated}</div>
-          <div><strong>{t('voice.hud.time')}</strong> {timeProgressText}</div>
-          <div>
-            <strong>{t('voice.hud.engine')}</strong>{' '}
-            {recognitionEngine
-              ? t(recognitionEngine === 'vosk' ? 'voice.engine.vosk' : 'voice.engine.webSpeech')
-              : '-'}
-          </div>
-          {phase === 'playing' && (
-            <div className={`voice-listening-indicator voice-listening-${microphoneStatus}`}>
-              <span aria-hidden="true" />
-              <strong>{getMicrophoneStatusText(microphoneStatus, t)}</strong>
-            </div>
-          )}
-          <div><strong>{t('voice.hud.heard')}</strong> {recognizedText || '-'}</div>
-          {phase === 'playing' && (
-            <button className="btn btn-sm btn-secondary" onClick={pauseGame}>{t('training.pause')}</button>
-          )}
-          {(phase === 'playing' || phase === 'paused') && (
-            <button className="btn btn-sm btn-ghost" onClick={() => finishGame('Stopped')}>{t('voice.finish')}</button>
-          )}
-        </div>
-      )}
-
-      {phase === 'paused' && (
-        <div className="training-panel training-panel-compact">
-          <h1>{t('voice.pause.title')}</h1>
-          <button className="btn btn-primary btn-lg" onClick={() => void resumeGame()}>{t('training.continueGame')}</button>
-          <button className="btn btn-secondary btn-lg" onClick={restartGame}>{t('training.restart')}</button>
-          <button className="btn btn-ghost btn-lg" onClick={returnToEditor}>{t('training.returnMenu')}</button>
         </div>
       )}
 

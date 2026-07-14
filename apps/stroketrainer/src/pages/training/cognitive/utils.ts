@@ -1,5 +1,4 @@
 import { Application, Container, Graphics, Text } from 'pixi.js';
-import type { SessionLimitSeconds } from './types';
 
 export const COGNITIVE_ACCENT_CSS = '#005EB8';
 export const COGNITIVE_ACCENT = 0x005eb8;
@@ -89,8 +88,4 @@ export function shuffle<T>(items: T[]) {
 export function clamp(value: number, min: number, max: number) {
   if (!Number.isFinite(value)) return min;
   return Math.min(max, Math.max(min, value));
-}
-
-export function formatTimeValue(elapsed: number, limit: SessionLimitSeconds) {
-  return limit === null ? `${Math.floor(elapsed)}s` : `${Math.max(0, Math.ceil(limit - elapsed))}s`;
 }

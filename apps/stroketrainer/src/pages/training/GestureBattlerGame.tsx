@@ -24,7 +24,7 @@ import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog'
 
 type GestureId = 1 | 2 | 3 | 4 | 5;
 type TargetMode = 'free' | 'directed';
-type GamePhase = 'menu' | 'initializing' | 'calibration' | 'combat' | 'paused' | 'results';
+type GamePhase = 'menu' | 'initializing' | 'calibration' | 'combat' | 'results';
 type CalibrationKind = 'rom-closed' | 'rom-open' | 'gesture';
 
 interface GestureBattlerGameProps {
@@ -98,12 +98,6 @@ interface BattleScene {
   playerBaseY: number;
 }
 
-interface RecognitionState {
-  gesture: GestureId | null;
-  similarity: number;
-  handVisible: boolean;
-}
-
 interface HoldState {
   gesture: GestureId | null;
   progressMs: number;
@@ -128,13 +122,6 @@ const DEFAULT_CUSTOM_ENEMY_HP = 8;
 const DEFAULT_CUSTOM_HOLD_DURATION = 2.5;
 const GESTURES: readonly GestureId[] = [1, 2, 3, 4, 5];
 const MOVE_COLORS = [0x38bdf8, 0xf8fafc, 0x4ade80, 0xfb923c, 0xfacc15] as const;
-const MOVE_KEYS: Record<GestureId, TranslationKey> = {
-  1: 'gesture.move.water',
-  2: 'gesture.move.strike',
-  3: 'gesture.move.leaf',
-  4: 'gesture.move.spark',
-  5: 'gesture.move.thunder',
-};
 const CALIBRATION_STEPS: readonly CalibrationStep[] = [
   {
     kind: 'rom-closed',
@@ -223,14 +210,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   const [isCalibrationCapturing, setIsCalibrationCapturing] = useState(false);
   const [calibrationProgress, setCalibrationProgress] = useState(0);
   const [calibrationNotice, setCalibrationNotice] = useState('');
-  const [enemyHp, setEnemyHp] = useState(DEFAULT_ENEMY_HP);
-  const [targetGesture, setTargetGesture] = useState<GestureId>(1);
-  const [holdProgress, setHoldProgress] = useState(0);
-  const [recognition, setRecognition] = useState<RecognitionState>({
-    gesture: null,
-    similarity: 0,
-    handVisible: false,
-  });
+  const [handVisible, setHandVisible] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [visionError, setVisionError] = useState('');
   const [showVisionError, setShowVisionError] = useState(false);
@@ -286,7 +266,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       lastValidAt: 0,
       attemptRecorded: false,
     };
-    setHoldProgress(0);
   }, []);
 
   const completeSession = useCallback((completedAt: number) => {
@@ -353,7 +332,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     if (attackActiveRef.current || phaseRef.current !== 'combat') return;
     attackActiveRef.current = true;
     const targetAtCast = configRef.current.targetMode === 'directed' ? targetGestureRef.current : null;
-    setStatusMessage(t('gesture.combat.casting', { gesture }));
     playSuccessSound(jsPsychRef);
     await animateAttack(appRef.current, sceneRef.current, gesture);
     if (!mountedRef.current || phaseRef.current !== 'combat') {
@@ -363,7 +341,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
     const nextHp = Math.max(0, enemyHpRef.current - 1);
     enemyHpRef.current = nextHp;
-    setEnemyHp(nextHp);
     const stats = metricsRef.current.stats[gesture];
     stats.successes += 1;
     metricsRef.current.successfulCasts += 1;
@@ -378,7 +355,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     resetHold(false);
 
     if (nextHp <= 0) {
-      setStatusMessage(t('gesture.combat.victory'));
       window.setTimeout(() => completeSession(performance.now()), 650);
       return;
     }
@@ -386,13 +362,9 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     if (configRef.current.targetMode === 'directed') {
       const nextTarget = chooseNextGesture(targetGestureRef.current);
       targetGestureRef.current = nextTarget;
-      setTargetGesture(nextTarget);
-      setStatusMessage(t('gesture.combat.nextTarget', { gesture: nextTarget }));
-    } else {
-      setStatusMessage(t('gesture.combat.hit'));
     }
     attackActiveRef.current = false;
-  }, [completeSession, resetHold, t]);
+  }, [completeSession, resetHold]);
 
   const handleCombatHand = useCallback((landmarks: NormalizedLandmark[], now: number) => {
     if (attackActiveRef.current) return;
@@ -406,11 +378,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       (configRef.current.targetMode === 'free' || match.gesture === targetGestureRef.current),
     );
 
-    setRecognition({
-      gesture: match.gesture,
-      similarity: match.similarity,
-      handVisible: true,
-    });
+    setHandVisible(true);
 
     if (match.gesture) {
       const stat = metricsRef.current.stats[match.gesture];
@@ -444,12 +412,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
     const durationMs = configRef.current.holdDuration * 1000;
     const progress = clamp(holdRef.current.progressMs / durationMs, 0, 1);
-    setHoldProgress(progress);
-    setStatusMessage(progress > 0
-      ? t('gesture.combat.hold', { seconds: Math.max(0, Math.ceil((durationMs - holdRef.current.progressMs) / 1000)) })
-      : t('gesture.combat.detected', { gesture: match.gesture }));
     if (progress >= 1) void triggerAttack(match.gesture, match.similarity);
-  }, [resetHold, t, triggerAttack]);
+  }, [resetHold, triggerAttack]);
 
   const beginCombat = useCallback(() => {
     const config = configRef.current;
@@ -464,15 +428,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       casts: [],
     };
     attackActiveRef.current = false;
-    setEnemyHp(config.enemyMaxHp);
-    setTargetGesture(firstTarget);
-    setRecognition({ gesture: null, similarity: 0, handVisible: false });
-    setStatusMessage(config.targetMode === 'directed'
-      ? t('gesture.combat.nextTarget', { gesture: firstTarget })
-      : t('gesture.combat.prompt'));
+    setHandVisible(false);
     resetHold(false);
     setPhase('combat');
-  }, [resetHold, setPhase, t]);
+  }, [resetHold, setPhase]);
 
   const advanceCalibration = useCallback((features: number[], step: CalibrationStep, notice = '') => {
     if (step.kind === 'rom-closed') {
@@ -501,7 +460,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   const handleCalibrationHand = useCallback((landmarks: NormalizedLandmark[], now: number) => {
     const step = CALIBRATION_STEPS[calibrationIndexRef.current];
     if (!step) return;
-    setRecognition({ gesture: null, similarity: 0, handVisible: true });
+    setHandVisible(true);
     if (!calibrationCapturingRef.current) return;
 
     const rawFeatures = extractHandFeatures(landmarks);
@@ -531,9 +490,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   }, [advanceCalibration, t]);
 
   const handleNoHand = useCallback((now: number) => {
-    setRecognition((current) => current.handVisible
-      ? { gesture: current.gesture, similarity: current.similarity, handVisible: false }
-      : current);
+    setHandVisible(false);
     if (now - lastHandSeenAtRef.current <= TRACKING_GRACE_MS) return;
     if (phaseRef.current === 'calibration') {
       if (!calibrationCapturingRef.current) return;
@@ -555,7 +512,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       setCalibrationNotice(t('gesture.calibration.insufficient'));
     } else if (phaseRef.current === 'combat') {
       resetHold(true);
-      setStatusMessage(t('gesture.combat.rest'));
     }
   }, [advanceCalibration, resetHold, t]);
 
@@ -698,20 +654,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     onExit();
   }, [onExit, stopVision]);
 
-  const pauseGame = useCallback(() => {
-    if (phaseRef.current !== 'combat') return;
-    resetHold(false);
-    setPhase('paused');
-  }, [resetHold, setPhase]);
-
-  const resumeGame = useCallback(() => {
-    if (phaseRef.current !== 'paused') return;
-    setStatusMessage(t('gesture.combat.prompt'));
-    setPhase('combat');
-  }, [setPhase, t]);
-
   useTrainingAbort({
-    active: ['initializing', 'calibration', 'combat', 'paused'].includes(phase),
+    active: ['initializing', 'calibration', 'combat'].includes(phase),
     onAbort: returnToMenu,
   });
 
@@ -735,19 +679,19 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       app.canvas.className = 'gesture-battler-canvas';
       app.ticker.add((ticker: Ticker) => {
         const scene = sceneRef.current;
-        if (!scene || (phaseRef.current !== 'combat' && phaseRef.current !== 'paused')) return;
+        if (!scene || phaseRef.current !== 'combat') return;
         const time = ticker.lastTime / 520;
         scene.enemy.y = scene.enemyBaseY + Math.sin(time) * 3;
         scene.player.y = scene.playerBaseY + Math.sin(time * 0.8) * 2;
       });
-      if (phaseRef.current === 'combat' || phaseRef.current === 'paused') {
+      if (phaseRef.current === 'combat') {
         sceneRef.current = drawBattleScene(app);
       }
     };
     void initialize();
 
     const onResize = () => {
-      if (!appRef.current || (phaseRef.current !== 'combat' && phaseRef.current !== 'paused')) return;
+      if (!appRef.current || phaseRef.current !== 'combat') return;
       sceneRef.current = drawBattleScene(appRef.current);
     };
     window.addEventListener('resize', onResize);
@@ -762,13 +706,11 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
   useEffect(() => {
     const app = appRef.current;
-    if (!app || (phase !== 'combat' && phase !== 'paused')) return;
+    if (!app || phase !== 'combat') return;
     sceneRef.current = drawBattleScene(app);
-  }, [enemyHp, enemyMaxHp, phase, targetGesture, targetMode]);
+  }, [phase]);
 
   const activeCalibrationStep = CALIBRATION_STEPS[calibrationIndex];
-  const hpPercent = clamp((enemyHp / enemyMaxHp) * 100, 0, 100);
-  const similarityPercent = Math.round(recognition.similarity * 100);
   const targetModeLabel = targetMode === 'free' ? t('gesture.config.free') : t('gesture.config.directed');
   const isCustomEnemyHp = !ENEMY_HP_OPTIONS.includes(enemyMaxHp as typeof ENEMY_HP_OPTIONS[number]);
   const isCustomHoldDuration = !HOLD_DURATION_OPTIONS.includes(holdDuration as typeof HOLD_DURATION_OPTIONS[number]);
@@ -809,7 +751,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       <div className={`gesture-camera ${phase === 'menu' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>
         <video ref={videoRef} muted playsInline aria-label={t('gesture.camera.preview')} />
         <canvas ref={handCanvasRef} aria-hidden="true" />
-        <span>{recognition.handVisible ? t('gesture.camera.tracking') : t('gesture.camera.finding')}</span>
+        <span>{handVisible ? t('gesture.camera.tracking') : t('gesture.camera.finding')}</span>
       </div>
 
       {phase === 'menu' && (
@@ -1038,76 +980,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
               <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.cancel')}</button>
             </div>
           </div>
-        </div>
-      )}
-
-      {(phase === 'combat' || phase === 'paused') && (
-        <>
-          <div className="gesture-combat-controls">
-            <span>{t('gesture.combat.noTimeLimit')}</span>
-            <button type="button" onClick={pauseGame}>{t('training.pause')}</button>
-          </div>
-
-          <div className="gesture-enemy-status">
-            <div>
-              <strong>{t('gesture.enemy.name')}</strong>
-              <span>Lv. 12</span>
-            </div>
-            <div className="gesture-hp-row">
-              <span>HP</span>
-              <div><i style={{ width: `${hpPercent}%` }} /></div>
-              <strong>{enemyHp}/{enemyMaxHp}</strong>
-            </div>
-          </div>
-
-          <div className="gesture-battle-dialogue">
-            <strong>{statusMessage}</strong>
-            <span>
-              {recognition.handVisible
-                ? t('gesture.combat.similarity', { value: similarityPercent })
-                : t('gesture.combat.rest')}
-            </span>
-          </div>
-
-          <div className="gesture-move-menu">
-            <header>
-              <span>{t('gesture.combat.moves')}</span>
-              {targetMode === 'directed' && (
-                <strong>{t('gesture.combat.target', { gesture: targetGesture })}</strong>
-              )}
-            </header>
-            <div className="gesture-move-list">
-              {GESTURES.map((gesture) => {
-                const selected = recognition.gesture === gesture;
-                const eligible = targetMode === 'free' || targetGesture === gesture;
-                return (
-                  <div
-                    key={gesture}
-                    className={`gesture-move ${selected ? 'selected' : ''} ${eligible ? '' : 'disabled'}`}
-                  >
-                    <span className="gesture-pointer">{selected ? '▶' : ''}</span>
-                    <b>{gesture}</b>
-                    <span>{t(MOVE_KEYS[gesture])}</span>
-                    {selected && eligible && (
-                      <i
-                        className="gesture-cast-ring"
-                        style={{ '--gesture-progress': `${holdProgress * 360}deg` } as React.CSSProperties}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
-
-      {phase === 'paused' && (
-        <div className="training-panel training-panel-compact gesture-pause-panel">
-          <h1>{t('gesture.pause.title')}</h1>
-          <p>{t('gesture.pause.desc')}</p>
-          <button className="btn btn-primary btn-lg" onClick={resumeGame}>{t('training.continueGame')}</button>
-          <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnSettings')}</button>
         </div>
       )}
 

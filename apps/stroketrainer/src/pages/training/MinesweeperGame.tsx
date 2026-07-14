@@ -13,7 +13,7 @@ import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResu
 import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 
-type MinesweeperPhase = 'menu' | 'playing' | 'paused' | 'results';
+type MinesweeperPhase = 'menu' | 'playing' | 'results';
 type MinesweeperDifficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 type BoardPresetId = 'compact' | 'classic-easy' | 'classic-medium' | 'classic-hard' | 'large' | 'dense' | 'custom';
 type GameResult = 'Victory' | 'Defeat';
@@ -103,7 +103,6 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   const [mineCount, setMineCount] = useState(calculateMineCount(DEFAULT_BOARD_ROWS, DEFAULT_BOARD_COLS, DIFFICULTIES[DEFAULT_DIFFICULTY].density));
   const [minesGenerated, setMinesGenerated] = useState(false);
   const [flagMode, setFlagMode] = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [result, setResult] = useState<SessionRecord | null>(null);
 
   const activeConfig = DIFFICULTIES[difficulty];
@@ -114,15 +113,13 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   const selectedDensityPercent = Math.round((selectedMineCount / Math.max(1, selectedBoardConfig.rows * selectedBoardConfig.cols)) * 100);
   const isCustomBoardSize = boardPreset === 'custom';
   const boardMetrics = useMemo(() => getBoardMetrics(boardRows, boardCols), [boardCols, boardRows]);
-  const boardStats = useMemo(() => getBoardStats(board), [board]);
-  const remainingMineEstimate = Math.max(0, mineCount - boardStats.flags);
   const gameTitle = t('training.minesweeper.title');
 
   const canvasStyle = useMemo<CSSProperties>(() => {
     return {
       width: `min(${boardMetrics.pixelWidth}px, calc(100vw - 48px))`,
       aspectRatio: `${boardMetrics.pixelWidth} / ${boardMetrics.pixelHeight}`,
-      maxHeight: 'calc(100vh - 148px)',
+      maxHeight: 'calc(100vh - 112px)',
     };
   }, [boardMetrics.pixelHeight, boardMetrics.pixelWidth]);
 
@@ -152,7 +149,6 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
       Game_Result: gameResult,
     };
     setBoard(nextBoard);
-    setElapsedSeconds(Math.floor(duration));
     setResult(record);
     setPhase('results');
     void saveTrainingSessionRecord({
@@ -194,7 +190,6 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     setBoard(createEmptyBoard(nextRows, nextCols));
     setMinesGenerated(false);
     setFlagMode(false);
-    setElapsedSeconds(0);
     setResult(null);
     elapsedMillisRef.current = 0;
     playStartedAtRef.current = Date.now();
@@ -215,25 +210,11 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     setMineCount(selectedBoardConfig.mines);
     setMinesGenerated(false);
     setFlagMode(false);
-    setElapsedSeconds(0);
     setResult(null);
     elapsedMillisRef.current = 0;
     playStartedAtRef.current = Date.now();
     setPhase('playing');
   }, [boardCols, boardRows, selectedBoardConfig.mines]);
-
-  const pauseGame = useCallback(() => {
-    if (phase !== 'playing') return;
-    elapsedMillisRef.current += Date.now() - playStartedAtRef.current;
-    setElapsedSeconds(Math.floor(elapsedMillisRef.current / 1000));
-    setPhase('paused');
-  }, [phase]);
-
-  const resumeGame = useCallback(() => {
-    if (phase !== 'paused') return;
-    playStartedAtRef.current = Date.now();
-    setPhase('playing');
-  }, [phase]);
 
   const toggleFlagAt = useCallback((x: number, y: number) => {
     if (phase !== 'playing') return;
@@ -288,16 +269,8 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     revealAt(position.x, position.y);
   }, [boardCols, boardRows, flagMode, phase, revealAt, toggleFlagAt]);
 
-  useEffect(() => {
-    if (phase !== 'playing') return undefined;
-    const timer = window.setInterval(() => {
-      setElapsedSeconds(Math.floor((elapsedMillisRef.current + Date.now() - playStartedAtRef.current) / 1000));
-    }, 250);
-    return () => window.clearInterval(timer);
-  }, [phase]);
-
   useTrainingAbort({
-    active: phase === 'playing' || phase === 'paused',
+    active: phase === 'playing',
     onAbort: returnToMenu,
   });
 
@@ -407,41 +380,22 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
       )}
 
       {phase === 'playing' && (
-        <>
-          <div className="training-game-hud minesweeper-hud">
-            <div><strong>{t('minesweeper.hud.time')}</strong> {elapsedSeconds}s</div>
-            <div><strong>{t('minesweeper.hud.mines')}</strong> {remainingMineEstimate}</div>
-            <div><strong>{t('minesweeper.hud.opened')}</strong> {boardStats.openedSafeCells}</div>
+        <div className="minesweeper-board-stage">
+          <canvas
+            ref={canvasRef}
+            className={`minesweeper-canvas ${flagMode ? 'flag-mode' : ''}`}
+            style={canvasStyle}
+            onPointerDown={handleCanvasPointerDown}
+            onContextMenu={(event) => event.preventDefault()}
+            aria-label={t('minesweeper.boardAria')}
+          />
+          <div className="minesweeper-board-controls">
             <button
               className={`btn btn-sm ${flagMode ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setFlagMode((current) => !current)}
             >
               {flagMode ? t('minesweeper.flagModeActive') : t('minesweeper.flagMode')}
             </button>
-            <button className="btn btn-sm btn-secondary" onClick={pauseGame}>{t('training.pause')}</button>
-            <button className="btn btn-sm btn-ghost" onClick={returnToMenu}>{t('training.returnSettings')}</button>
-          </div>
-          <div className="minesweeper-board-stage">
-            <canvas
-              ref={canvasRef}
-              className={`minesweeper-canvas ${flagMode ? 'flag-mode' : ''}`}
-              style={canvasStyle}
-              onPointerDown={handleCanvasPointerDown}
-              onContextMenu={(event) => event.preventDefault()}
-              aria-label={t('minesweeper.boardAria')}
-            />
-          </div>
-        </>
-      )}
-
-      {phase === 'paused' && (
-        <div className="training-panel training-panel-compact">
-          <h1>{t('minesweeper.pause.title')}</h1>
-          <p>{t('minesweeper.pause.desc', { seconds: elapsedSeconds })}</p>
-          <div className="training-actions">
-            <button className="btn btn-primary btn-lg" onClick={resumeGame}>{t('training.continueGame')}</button>
-            <button className="btn btn-secondary btn-lg" onClick={() => void restartGame()}>{t('training.restart')}</button>
-            <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnSettings')}</button>
           </div>
         </div>
       )}

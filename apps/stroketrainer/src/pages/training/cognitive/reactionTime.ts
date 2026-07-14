@@ -1,7 +1,7 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { REACTION_CONFIG } from './constants';
 import type { TFunction } from '../types';
-import type { Difficulty, GameResult, HudState, ReactionState, ResultStats, SessionLimitSeconds } from './types';
+import type { Difficulty, GameResult, ReactionState, ResultStats } from './types';
 import {
   COGNITIVE_ACCENT,
   COGNITIVE_ACCENT_TINT,
@@ -66,18 +66,6 @@ export function isReactionAutoSuccess(state: ReactionState) {
   return state.attempts.length >= state.targetTrials;
 }
 
-export function summarizeReactionState(state: ReactionState, _elapsed: number, _limit: SessionLimitSeconds, t: TFunction): HudState {
-  const avg = average(state.attempts);
-  return {
-    primaryLabel: t('cognitive.hud.count'),
-    primaryValue: `${state.attempts.length}/${state.targetTrials}`,
-    secondaryLabel: t('cognitive.hud.average'),
-    secondaryValue: avg === null ? '-' : `${avg}ms`,
-    tertiaryLabel: t('cognitive.hud.tooEarly'),
-    tertiaryValue: String(state.falseStarts),
-  };
-}
-
 export function buildReactionResultStats(state: ReactionState): ResultStats {
   const avg = average(state.attempts) ?? 0;
   const best = state.attempts.length > 0 ? Math.min(...state.attempts) : 0;
@@ -127,7 +115,7 @@ export function drawReaction(app: Application, state: ReactionState, onTap: () =
     fill: state.status === 'go' ? '#FFFFFF' : `#${COGNITIVE_TEXT.toString(16).padStart(6, '0')}`,
   });
   const avg = average(state.attempts);
-  addText(node, `${state.attempts.length}/${state.targetTrials}${avg === null ? '' : `  ${t('cognitive.hud.average')} ${avg} ms`}`, w / 2, y + boxH / 2 + 58, {
+  addText(node, `${state.attempts.length}/${state.targetTrials}${avg === null ? '' : `  ${t('cognitive.reaction.average')} ${avg} ms`}`, w / 2, y + boxH / 2 + 58, {
     fontSize: 22,
     fontWeight: '700',
     fill: state.status === 'go' ? '#FFFFFF' : `#${COGNITIVE_TEXT_MUTED.toString(16).padStart(6, '0')}`,

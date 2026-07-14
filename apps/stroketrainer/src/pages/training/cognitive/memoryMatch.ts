@@ -1,14 +1,12 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { CARD_VALUES, MEMORY_CONFIG } from './constants';
-import type { TFunction } from '../types';
-import type { Difficulty, GameResult, HudState, MemoryState, ResultStats, SessionLimitSeconds } from './types';
+import type { Difficulty, GameResult, MemoryState, ResultStats } from './types';
 import {
   COGNITIVE_ACCENT,
   COGNITIVE_ACCENT_TINT,
   COGNITIVE_BORDER,
   COGNITIVE_SURFACE,
   addText,
-  formatTimeValue,
   getGridLayout,
   shuffle,
 } from './utils';
@@ -65,17 +63,6 @@ export function updateMemoryTimedState(state: MemoryState, elapsed: number, rend
 
 export function isMemoryAutoSuccess(state: MemoryState) {
   return state.matchedPairs === state.pairs;
-}
-
-export function summarizeMemoryState(state: MemoryState, elapsed: number, limit: SessionLimitSeconds, t: TFunction): HudState {
-  return {
-    primaryLabel: t('cognitive.hud.pairs'),
-    primaryValue: `${state.matchedPairs}/${state.pairs}`,
-    secondaryLabel: t('cognitive.hud.moves'),
-    secondaryValue: String(state.moves),
-    tertiaryLabel: t('cognitive.hud.remaining'),
-    tertiaryValue: formatTimeValue(elapsed, limit),
-  };
 }
 
 export function buildMemoryResultStats(state: MemoryState): ResultStats {

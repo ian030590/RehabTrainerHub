@@ -17,7 +17,7 @@ import type { TFunction } from './types';
 
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 type ShapeId = 'circle' | 'cross' | 'square' | 'triangle' | 'vertical-line' | 'horizontal-line';
-type GamePhase = 'menu' | 'playing' | 'paused' | 'results';
+type GamePhase = 'menu' | 'playing' | 'results';
 type GameResult = 'Victory' | 'Defeat';
 type BackgroundMode = 'stars' | 'color' | 'image';
 type GameDurationSeconds = number | null;
@@ -150,6 +150,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
   const enemiesRef = useRef<Enemy[]>([]);
+  const backgroundLayerRef = useRef<Graphics | null>(null);
   const drawingLayerRef = useRef<Graphics | null>(null);
   const pathRef = useRef<Point[]>([]);
   const strokesRef = useRef<Point[][]>([]);
@@ -185,10 +186,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   const backgroundColor = DEFAULT_BACKGROUND_COLOR;
   const [uploadedBackgroundUrl, setUploadedBackgroundUrl] = useState<string | null>(null);
   const [uploadedBackgroundName, setUploadedBackgroundName] = useState(() => t('drawing.upload.noImage'));
-  const [hp, setHp] = useState(DEFAULT_HP);
-  const [defeated, setDefeated] = useState(0);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [recognized, setRecognized] = useState<string>(() => t('drawing.recognition.idle'));
   const [result, setResult] = useState<SessionRecord | null>(null);
 
   const activeConfig = DIFFICULTIES[difficulty];
@@ -281,9 +278,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       Enemy_Results: enemyResultsRef.current.map((enemyResult) => ({ ...enemyResult })),
     };
     setResult(record);
-    setHp(metrics.hp);
-    setDefeated(metrics.defeated);
-    setElapsedSeconds(Math.floor(metrics.elapsed));
     setPhase('results');
     void saveTrainingSessionRecord({
       userName: record.Participant_ID,
@@ -315,13 +309,16 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   }, [clearDrawingInput, recordEnemyOutcome, setPhase, t]);
 
   const drawLayout = useCallback((app: Application) => {
-    const w = app.renderer.width;
-    const bg = new Graphics();
-    bg.rect(0, 0, w, app.renderer.height).fill({ color: 0x050816, alpha: 0.22 });
-    app.stage.addChild(bg);
+    const width = app.screen.width;
+    const height = app.screen.height;
+    const bg = backgroundLayerRef.current ?? new Graphics();
+    bg.clear();
+    bg.rect(0, 0, width, height).fill({ color: 0x050816, alpha: 0.22 });
+    if (!bg.parent) app.stage.addChildAt(bg, 0);
+    backgroundLayerRef.current = bg;
 
-    const drawing = new Graphics();
-    app.stage.addChild(drawing);
+    const drawing = drawingLayerRef.current ?? new Graphics();
+    if (!drawing.parent) app.stage.addChild(drawing);
     drawingLayerRef.current = drawing;
   }, []);
 
@@ -345,7 +342,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   }, []);
 
   const spawnEnemy = useCallback((app: Application) => {
-    const w = app.renderer.width;
+    const w = app.screen.width;
     const enemyNumber = metricsRef.current.spawned + 1;
     const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
     const resultIndex = enemyResultsRef.current.length;
@@ -457,7 +454,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     recognitionTimerRef.current = window.setTimeout(() => {
       recognitionTimerRef.current = null;
       const recognition = recognizeShape(strokesRef.current, configRef.current.strictness);
-      setRecognized(recognition ? getShapeLabel(recognition, t) : t('drawing.recognition.unknown'));
       const matchedTarget = recognition ? findClosestEnemyByShape(enemiesRef.current, recognition) : undefined;
       const target = matchedTarget ?? enemiesRef.current[0];
       const matched = Boolean(matchedTarget);
@@ -468,7 +464,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         matchedTarget.node.destroy({ children: true });
         enemiesRef.current = enemiesRef.current.filter((enemy) => enemy.id !== matchedTarget.id);
         metricsRef.current.defeated += 1;
-        setDefeated(metricsRef.current.defeated);
       }
       if (drawingClearTimerRef.current !== null) {
         window.clearTimeout(drawingClearTimerRef.current);
@@ -496,13 +491,9 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     const initialHp = configRef.current.maxHp;
     metricsRef.current = { defeated: 0, hp: initialHp, spawned: 0, elapsed: 0, spawnTimer: 0, nextId: 1 };
     enemyResultsRef.current = [];
-    setHp(initialHp);
-    setDefeated(0);
-    setElapsedSeconds(0);
     setResult(null);
-    setRecognized(t('drawing.recognition.idle'));
     setPhase('playing');
-  }, [clearPixiState, drawLayout, setPhase, t]);
+  }, [clearPixiState, drawLayout, setPhase]);
 
   const restartGame = useCallback(() => {
     void startGame();
@@ -517,16 +508,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     }
     setPhase('menu');
   }, [clearPixiState, drawLayout, setPhase]);
-
-  const pauseGame = useCallback(() => {
-    if (phaseRef.current !== 'playing') return;
-    clearDrawingInput();
-    setPhase('paused');
-  }, [clearDrawingInput, setPhase]);
-
-  const resumeGame = useCallback(() => {
-    if (phaseRef.current === 'paused') setPhase('playing');
-  }, [setPhase]);
 
   const handleBackgroundImageUpload = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -567,8 +548,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         const targetGameDurationSec = configRef.current.gameDurationSec;
         const isTimeUnlimited = targetGameDurationSec === null;
         metrics.elapsed += dt;
-        const nextElapsedSeconds = Math.floor(metrics.elapsed);
-        setElapsedSeconds((current) => current === nextElapsedSeconds ? current : nextElapsedSeconds);
         const noActiveEnemies = enemiesRef.current.length === 0;
         if (cfg.spawnMode === 'fixed-interval' || noActiveEnemies) {
           metrics.spawnTimer += dt;
@@ -587,7 +566,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
           }
         }
         const enemyBottomOffset = ENEMY_VISUAL_HEIGHT;
-        const defenseY = app.renderer.height - enemyBottomOffset;
+        const defenseY = app.screen.height - enemyBottomOffset;
         for (const enemy of [...enemiesRef.current]) {
           enemy.y += configRef.current.speed * dt;
           enemy.node.y = enemy.y;
@@ -597,7 +576,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             enemy.node.destroy({ children: true });
             enemiesRef.current = enemiesRef.current.filter((item) => item.id !== enemy.id);
             metrics.hp = Math.max(0, metrics.hp - 1);
-            setHp(metrics.hp);
           }
         }
         if (metrics.hp <= 0) {
@@ -613,10 +591,16 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     init();
 
     const onResize = () => {
-      if (!appRef.current) return;
-      if (phaseRef.current === 'playing' || phaseRef.current === 'paused') return;
-      appRef.current.stage.removeChildren();
-      drawLayout(appRef.current);
+      const app = appRef.current;
+      if (!app) return;
+      resizePixiAppToElement(app, pixiHostRef.current);
+      if (phaseRef.current === 'playing') {
+        drawLayout(app);
+        redrawPath();
+        return;
+      }
+      app.stage.removeChildren();
+      drawLayout(app);
     };
     window.addEventListener('resize', onResize);
     return () => {
@@ -625,10 +609,10 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       app.destroy(true, { children: true });
       appRef.current = null;
     };
-  }, [drawLayout, finishGame, recordEnemyOutcome, spawnEnemy]);
+  }, [drawLayout, finishGame, recordEnemyOutcome, redrawPath, spawnEnemy]);
 
   useTrainingAbort({
-    active: phase === 'playing' || phase === 'paused',
+    active: phase === 'playing',
     onAbort: returnToMenu,
   });
 
@@ -675,11 +659,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     };
   }, [handlePointerEnd, redrawPath]);
 
-  const timeProgressText = useMemo(() => {
-    if (gameDurationSec === null) return `${elapsedSeconds}s / ${t('training.infinite')}`;
-    return `${Math.min(elapsedSeconds, gameDurationSec)}/${gameDurationSec}s`;
-  }, [elapsedSeconds, gameDurationSec, t]);
-
   const downloadResult = () => {
     if (!result) return;
     downloadCsvFile(toCsv([result], t), `drawing_tower_defense_${Date.now()}.csv`);
@@ -689,13 +668,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     <div className={`drawing-defense drawing-defense-phase-${phase}`} style={backgroundStyle}>
       <div ref={pixiHostRef} className="drawing-defense-stage" />
       <div ref={overlayRef} className="drawing-defense-input" />
-      {phase !== 'results' && <div className="drawing-defense-hud">
-        <div><strong>{t('drawing.config.hp')}</strong> {hp}/{maxHp}</div>
-        <div><strong>{t('drawing.hud.defeated')}</strong> {defeated}</div>
-        <div><strong>{t('drawing.hud.time')}</strong> {timeProgressText}</div>
-        <div><strong>{t('drawing.hud.recognition')}</strong> {recognized}</div>
-        {phase === 'playing' && <button className="btn btn-sm btn-secondary" onClick={pauseGame}>{t('training.pause')}</button>}
-      </div>}
 
       {phase === 'menu' && (
         <div className="training-panel">
@@ -993,15 +965,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                 </div>
               </section>
           </TrainingConfigPanel>
-        </div>
-      )}
-
-      {phase === 'paused' && (
-        <div className="training-panel training-panel-compact">
-          <h1>{t('drawing.pause.title')}</h1>
-          <button className="btn btn-primary btn-lg" onClick={resumeGame}>{t('training.continueGame')}</button>
-          <button className="btn btn-secondary btn-lg" onClick={() => void restartGame()}>{t('training.restart')}</button>
-          <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnMenu')}</button>
         </div>
       )}
 
@@ -1815,8 +1778,11 @@ function getShapeLabel(shape: ShapeId, t: TFunction): string {
 }
 
 function resizePixiAppToElement(app: Application, element: HTMLElement | null): void {
-  const rect = element?.getBoundingClientRect();
-  const width = Math.max(1, Math.round(rect?.width || window.innerWidth));
-  const height = Math.max(1, Math.round(rect?.height || window.innerHeight));
+  const fullscreenElement = document.fullscreenElement as HTMLElement | null;
+  const rect = fullscreenElement?.getBoundingClientRect() ?? element?.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect?.width || window.visualViewport?.width || window.innerWidth));
+  const height = Math.max(1, Math.round(rect?.height || window.visualViewport?.height || window.innerHeight));
   app.renderer.resize(width, height);
+  app.canvas.style.width = `${width}px`;
+  app.canvas.style.height = `${height}px`;
 }

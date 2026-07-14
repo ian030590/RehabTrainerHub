@@ -42,7 +42,7 @@ import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 
 type TongueClass = 'Rest' | 'Tongue_Left' | 'Tongue_Right';
-type GamePhase = 'menu' | 'initializing' | 'calibration' | 'playing' | 'paused' | 'results';
+type GamePhase = 'menu' | 'initializing' | 'calibration' | 'playing' | 'results';
 
 interface TongueCatchGameProps {
   onExit: () => void;
@@ -185,7 +185,6 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   const metricsRef = useRef<SessionMetrics>(createSessionMetrics());
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const finishSessionRef = useRef<() => void>(() => undefined);
-  const lastHudUpdateRef = useRef(0);
 
   const activeUser = getActiveUser() || '';
   const [phase, setPhaseState] = useState<GamePhase>('menu');
@@ -199,9 +198,6 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   const [visionError, setVisionError] = useState('');
   const [showVisionError, setShowVisionError] = useState(false);
   const [recognition, setRecognition] = useState<RecognitionState>(recognitionRef.current);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [score, setScore] = useState(0);
-  const [missed, setMissed] = useState(0);
   const [result, setResult] = useState<SessionResult | null>(null);
 
   const setPhase = useCallback((next: GamePhase) => {
@@ -259,14 +255,9 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     };
     recognitionRef.current = { label: 'Rest', confidence: 0, faceVisible: false };
     setRecognition(recognitionRef.current);
-    setElapsedSeconds(0);
-    setScore(0);
-    setMissed(0);
     setResult(null);
-    setStatusMessage(t('tongue.game.ready'));
-    lastHudUpdateRef.current = 0;
     setPhase('playing');
-  }, [setPhase, t]);
+  }, [setPhase]);
 
   const finishCalibrationStep = useCallback(() => {
     if (!calibrationCaptureRef.current.active) return;
@@ -471,7 +462,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, []);
 
   const finishSession = useCallback(() => {
-    if (phaseRef.current !== 'playing' && phaseRef.current !== 'paused') return;
+    if (phaseRef.current !== 'playing') return;
     const metrics = metricsRef.current;
     closeActiveHold(metrics, performance.now());
     const configSnapshot = configRef.current;
@@ -569,17 +560,11 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
           metrics: metricsRef.current,
           onCatch: () => {
             playSuccessSound(jsPsychRef);
-            setScore(metricsRef.current.score);
           },
           onMiss: () => {
             playFailureSound(jsPsychRef);
-            setMissed(metricsRef.current.missed);
           },
         });
-        if (metricsRef.current.elapsed - lastHudUpdateRef.current >= 0.2) {
-          lastHudUpdateRef.current = metricsRef.current.elapsed;
-          setElapsedSeconds(Math.floor(metricsRef.current.elapsed));
-        }
         if (metricsRef.current.elapsed >= configRef.current.durationSec) {
           finishSessionRef.current();
         }
@@ -603,17 +588,6 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       if (initialized) app.destroy(true, { children: true });
     };
   }, []);
-
-  const pauseGame = useCallback(() => {
-    if (phaseRef.current !== 'playing') return;
-    closeActiveHold(metricsRef.current, performance.now());
-    setPhase('paused');
-  }, [setPhase]);
-
-  const resumeGame = useCallback(() => {
-    if (phaseRef.current !== 'paused') return;
-    setPhase('playing');
-  }, [setPhase]);
 
   const returnToMenu = useCallback(() => {
     stopVision();
@@ -659,18 +633,11 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, [result]);
 
   useTrainingAbort({
-    active: ['initializing', 'calibration', 'playing', 'paused'].includes(phase),
+    active: ['initializing', 'calibration', 'playing'].includes(phase),
     onAbort: returnToMenu,
   });
 
   const activeCalibrationStep = CALIBRATION_STEPS[calibrationIndex];
-  const remainingSeconds = Math.max(0, config.durationSec - elapsedSeconds);
-  const confidencePercent = Math.round(recognition.confidence * 100);
-  const directionLabel = recognition.label === 'Tongue_Left'
-    ? t('tongue.direction.left')
-    : recognition.label === 'Tongue_Right'
-      ? t('tongue.direction.right')
-      : t('tongue.direction.rest');
 
   return (
     <div className={`tongue-catch tongue-catch-phase-${phase}`}>
@@ -914,35 +881,8 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
         </div>
       )}
 
-      {(phase === 'playing' || phase === 'paused') && (
-        <>
-          <div className="tongue-game-hud">
-            <span><small>{t('tongue.hud.time')}</small><strong>{remainingSeconds}s</strong></span>
-            <span><small>{t('tongue.hud.score')}</small><strong>{score}</strong></span>
-            <span><small>{t('tongue.hud.missed')}</small><strong>{missed}</strong></span>
-            <span className={`tongue-recognition-chip tongue-recognition-${recognition.label.toLowerCase()}`}>
-              <small>{t('tongue.hud.direction')}</small>
-              <strong>{directionLabel} · {confidencePercent}%</strong>
-            </span>
-            <button className="btn btn-sm btn-secondary" onClick={pauseGame}>{t('training.pause')}</button>
-            <button className="btn btn-sm btn-ghost" onClick={finishSession}>{t('tongue.finish')}</button>
-          </div>
-          {!recognition.faceVisible && (
-            <div className="tongue-face-warning">{t('tongue.game.findFace')}</div>
-          )}
-        </>
-      )}
-
-      {phase === 'paused' && (
-        <div className="training-panel training-panel-compact tongue-pause-panel">
-          <h1>{t('tongue.pause.title')}</h1>
-          <p>{t('tongue.pause.desc')}</p>
-          <div className="training-actions">
-            <button className="btn btn-primary btn-lg" onClick={resumeGame}>{t('training.continueGame')}</button>
-            <button className="btn btn-secondary btn-lg" onClick={finishSession}>{t('tongue.finish')}</button>
-            <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnSettings')}</button>
-          </div>
-        </div>
+      {phase === 'playing' && !recognition.faceVisible && (
+        <div className="tongue-face-warning">{t('tongue.game.findFace')}</div>
       )}
 
       {phase === 'results' && result && (

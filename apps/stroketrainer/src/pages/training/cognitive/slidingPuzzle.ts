@@ -1,11 +1,9 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { SLIDING_CONFIG } from './constants';
-import type { TFunction } from '../types';
-import type { Difficulty, GameResult, HudState, ResultStats, SessionLimitSeconds, SlidingState } from './types';
+import type { Difficulty, GameResult, ResultStats, SlidingState } from './types';
 import {
   COGNITIVE_ACCENT,
   addText,
-  formatTimeValue,
   getGridLayout,
   getSlidingNeighbors,
   isSlidingSolved,
@@ -40,17 +38,6 @@ export function handleSlidingTap(state: SlidingState, index: number, finishGame:
 
 export function isSlidingAutoSuccess(state: SlidingState) {
   return isSlidingSolved(state.tiles);
-}
-
-export function summarizeSlidingState(state: SlidingState, elapsed: number, limit: SessionLimitSeconds, t: TFunction): HudState {
-  return {
-    primaryLabel: t('cognitive.hud.moves'),
-    primaryValue: String(state.moves),
-    secondaryLabel: t('cognitive.results.errors'),
-    secondaryValue: String(state.errors),
-    tertiaryLabel: t('cognitive.hud.remaining'),
-    tertiaryValue: formatTimeValue(elapsed, limit),
-  };
 }
 
 export function buildSlidingResultStats(state: SlidingState): ResultStats {

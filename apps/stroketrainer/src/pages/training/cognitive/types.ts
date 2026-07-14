@@ -3,7 +3,7 @@ import type { TranslationKey } from '../../../i18n';
 export type ReferenceGameId = 'memory-match' | 'lights-out' | 'reaction-time' | 'whack-a-mole' | 'sliding-puzzle';
 
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
-export type GamePhase = 'menu' | 'playing' | 'paused' | 'results';
+export type GamePhase = 'menu' | 'playing' | 'results';
 export type GameResult = 'Victory' | 'Defeat';
 export type SessionLimitSeconds = number | null;
 
@@ -32,15 +32,6 @@ export interface SessionRecord {
   Error_Count: number;
   Game_Result: GameResult;
   Details_JSON: string;
-}
-
-export interface HudState {
-  primaryLabel: string;
-  primaryValue: string;
-  secondaryLabel: string;
-  secondaryValue: string;
-  tertiaryLabel: string;
-  tertiaryValue: string;
 }
 
 export interface RuntimeMetrics {
