@@ -15,9 +15,9 @@ export function Navbar() {
     { to: '/attention-training', className: navLinkClass, label: t('nav.attention') },
     { to: '/memory-training', className: navLinkClass, label: t('nav.memory') },
     { to: '/thinking-training', className: navLinkClass, label: t('nav.thinking') },
+    { to: '/settings', className: navLinkClass, label: t('nav.settings') },
     { to: '/references', className: navLinkClass, label: t('nav.references') },
     { to: '/links', className: navLinkClass, label: t('nav.links') },
-    { to: '/settings', className: navLinkClass, label: t('nav.settings') },
   ];
 
   return (
