@@ -416,7 +416,6 @@ export const zh = {
   // Training pages and games
   'training.start': '開始訓練',
   'training.startGame': '開始遊戲',
-  'training.pause': '暫停',
   'training.continueGame': '繼續遊戲',
   'training.continueTraining': '繼續訓練',
   'training.restart': '重新開始',

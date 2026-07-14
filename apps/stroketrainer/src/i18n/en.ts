@@ -417,7 +417,6 @@ export const en: Record<TranslationKey, string> = {
   // Training pages and games
   'training.start': 'Start Training',
   'training.startGame': 'Start Game',
-  'training.pause': 'Pause',
   'training.continueGame': 'Continue Game',
   'training.continueTraining': 'Continue Training',
   'training.restart': 'Restart',

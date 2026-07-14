@@ -146,6 +146,7 @@ const SHAPE_LABEL_KEYS: Record<ShapeId, TranslationKey> = {
 
 export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps) {
   const { t } = useT();
+  const gameRootRef = useRef<HTMLDivElement | null>(null);
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
@@ -479,7 +480,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   const startGame = useCallback(async () => {
     if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
-    await enterFullscreenFromUserGesture(document.documentElement);
+    await enterFullscreenFromUserGesture(gameRootRef.current ?? document.documentElement);
     await waitForFullscreenLayout();
 
     const app = appRef.current;
@@ -665,7 +666,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   };
 
   return (
-    <div className={`drawing-defense drawing-defense-phase-${phase}`} style={backgroundStyle}>
+    <div ref={gameRootRef} className={`drawing-defense drawing-defense-phase-${phase}`} style={backgroundStyle}>
       <div ref={pixiHostRef} className="drawing-defense-stage" />
       <div ref={overlayRef} className="drawing-defense-input" />
 
