@@ -9,6 +9,11 @@ import {
 import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { exitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import {
+  getFastestCorrectStimulusDurationMs,
+  getUfovDirectionAccuracy,
+  type UfovDirectionAccuracy,
+} from '@rehab-trainer/ui/ufovResults';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { useNavigate } from 'react-router-dom';
@@ -137,8 +142,11 @@ const SUBTESTS: Subtest[] = [
   { id: 3, hasPeripheral: true, hasDistractors: true },
 ];
 const PRACTICE_TRIALS = 5;
-const MAX_TEST_TRIALS = 24;
-const MAX_REVERSALS = 8;
+const MIN_TEST_TRIALS = 12;
+const MAX_TEST_TRIALS = 60;
+const MIN_STABLE_REVERSALS = 6;
+const STABLE_REVERSAL_WINDOW = 6;
+const FAIL_AT_MAX_STREAK_LIMIT = 2;
 const MIN_DURATION_FRAMES = 1;
 const MAX_DURATION_MS = 500;
 const PRACTICE_DURATION_MS = 250;
@@ -174,6 +182,7 @@ const copy = {
     tableDirection: '外圍車子方向',
     tableCorrect: '答對與否',
     tableProcessingSpeed: '處理速度（實際值）',
+    directionAccuracy: '各方向答對率',
     noPeripheral: '無',
     directions: ['上', '右上', '右', '右下', '下', '左下', '左', '左上'],
     subtests: {
@@ -209,6 +218,7 @@ const copy = {
     tableDirection: 'Peripheral direction',
     tableCorrect: 'Correct',
     tableProcessingSpeed: 'Processing speed (actual)',
+    directionAccuracy: 'Direction accuracy',
     noPeripheral: 'None',
     directions: ['Up', 'Up right', 'Right', 'Down right', 'Down', 'Down left', 'Left', 'Up left'],
     subtests: {
@@ -307,7 +317,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     run.results.push({
       subtestId: SUBTESTS[run.subtestIndex].id,
       thresholdMs: config.mode === 'formal' && !aborted
-        ? estimateThreshold(run.subtestTrials, framesToMs(run.maxDurationFrames, run.refreshMs))
+        ? estimateThreshold(run.reversals, run.subtestTrials, framesToMs(run.maxDurationFrames, run.refreshMs))
         : averageTrialDuration(run.subtestTrials),
       trialCount: run.subtestTrials.filter((item) => !item.practice).length,
       aborted,
@@ -358,11 +368,11 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       run.subtestTrials.push(record);
       run.allTrials.push(record);
       this.updateStaircase(run, record);
-      aborted = run.failAtMaxStreak >= 3;
+      aborted = run.failAtMaxStreak >= FAIL_AT_MAX_STREAK_LIMIT;
       const done = aborted
         || run.testTrial >= MAX_TEST_TRIALS
-        || run.reversals.length >= MAX_REVERSALS
-        || run.limitStreak >= 3;
+        || hasStableThreshold(run)
+        || (run.testTrial >= MIN_TEST_TRIALS && run.limitStreak >= 3);
       if (done) return aborted;
       await waitMs(this.jsPsych, 250);
     }
@@ -594,14 +604,18 @@ export function UfovPage({
   const [instructionSubtest, setInstructionSubtest] = useState<SubtestId | null>(null);
   const [results, setResults] = useState<SubtestResult[]>([]);
   const [resultTrials, setResultTrials] = useState<TrialRecord[]>([]);
+  const [directionAccuracy, setDirectionAccuracy] = useState<UfovDirectionAccuracy[]>([]);
   const [savedRecord, setSavedRecord] = useState<UfovTrainingRecord | null>(null);
 
   const finishExperiment = useCallback((data: UfovExperimentData) => {
     const now = new Date();
     const isFormal = data.mode === 'formal';
     const correctCount = data.trials.filter((item) => item.correct).length;
+    const nextDirectionAccuracy = getUfovDirectionAccuracy(data.trials);
     const primaryResult = data.results[0];
-    const processingSpeedMs = primaryResult ? roundMs(primaryResult.thresholdMs) : 0;
+    const thresholdProcessingSpeedMs = primaryResult ? roundMs(primaryResult.thresholdMs) : 0;
+    const bestCorrectProcessingSpeedMs = roundMs(getFastestCorrectStimulusDurationMs(data.trials, thresholdProcessingSpeedMs));
+    const processingSpeedMs = thresholdProcessingSpeedMs;
     const thresholds = isFormal
       ? Object.fromEntries(data.results.map((item) => [`subtest${item.subtestId}`, item.thresholdMs]))
       : {};
@@ -631,8 +645,11 @@ export function UfovPage({
         correctCount,
         trialCount: data.trials.length,
         processingSpeedMs,
+        bestCorrectProcessingSpeedMs,
+        thresholdProcessingSpeedMs,
         summaryScoreMs: processingSpeedMs,
         ufovSummary: summary,
+        directionAccuracy: nextDirectionAccuracy,
         ...thresholds,
         aborted: data.aborted,
       },
@@ -644,6 +661,9 @@ export function UfovPage({
         Target_Vehicle_Label: formatVehicle(item.centralTarget, labels),
         Peripheral_Axis: item.peripheralAxis ?? '',
         Peripheral_Direction: formatAxis(item.peripheralAxis, labels),
+        Peripheral_Direction_Correct: typeof item.peripheralAxis === 'number'
+          ? item.peripheralResponse === item.peripheralAxis
+          : '',
         Correct: item.correct,
         Processing_Speed_ms: roundMs(item.actualDurationMs),
         Requested_Display_Frames: item.durationFrames,
@@ -659,6 +679,7 @@ export function UfovPage({
     };
     setResults(data.results);
     setResultTrials(data.trials);
+    setDirectionAccuracy(nextDirectionAccuracy);
     setSavedRecord(record);
     setIsRunning(false);
     jsPsychRef.current = null;
@@ -679,6 +700,7 @@ export function UfovPage({
     setSavedRecord(null);
     setResults([]);
     setResultTrials([]);
+    setDirectionAccuracy([]);
     const measured = await measureDisplayRefreshRate();
     const runConfig = measured.isMobileOrTablet && config.subtestId !== 1
       ? { ...config, subtestId: 1 as SubtestId }
@@ -723,6 +745,7 @@ export function UfovPage({
     setResults([]);
     setResultTrials([]);
     setSavedRecord(null);
+    setDirectionAccuracy([]);
     void exitFullscreenIfActive();
     navigate(backPath);
   }, [backPath, navigate]);
@@ -809,6 +832,31 @@ export function UfovPage({
                   { label: labels.trial, value: savedRecord.detailRows?.length ?? 0 },
                 ]}
               />
+              {directionAccuracy.some((item) => item.total > 0) && (
+                <div className="ufov-table-wrap">
+                  <h3 className="ufov-direction-accuracy-title">{labels.directionAccuracy}</h3>
+                  <table className="results-table">
+                    <thead>
+                      <tr>
+                        <th>{labels.tableDirection}</th>
+                        <th>{labels.tableCorrect}</th>
+                        <th>{labels.directionAccuracy}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {directionAccuracy
+                        .filter((item) => item.total > 0)
+                        .map((item) => (
+                          <tr key={item.axis}>
+                            <td>{formatAxis(item.axis, labels)}</td>
+                            <td>{item.correct} / {item.total}</td>
+                            <td>{formatAccuracy(item.accuracyPercent)}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               <div className="ufov-table-wrap">
                 <table className="results-table">
                   <thead>
@@ -994,13 +1042,29 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function estimateThreshold(trials: TrialRecord[], fallbackMs: number) {
+function estimateThreshold(reversals: number[], trials: TrialRecord[], fallbackMs: number) {
+  if (reversals.length >= 4) {
+    const recentReversals = reversals.slice(-STABLE_REVERSAL_WINDOW);
+    return recentReversals.reduce((sum, value) => sum + value, 0) / recentReversals.length;
+  }
+
   const formalDurations = trials
     .filter((trial) => !trial.practice)
     .slice(-8)
     .map((trial) => trial.durationMs);
   if (formalDurations.length === 0) return fallbackMs;
   return formalDurations.reduce((sum, value) => sum + value, 0) / formalDurations.length;
+}
+
+function hasStableThreshold(run: RunState) {
+  if (run.testTrial < MIN_TEST_TRIALS) return false;
+  if (run.reversals.length < MIN_STABLE_REVERSALS) return false;
+
+  const recentReversals = run.reversals.slice(-STABLE_REVERSAL_WINDOW);
+  const min = Math.min(...recentReversals);
+  const max = Math.max(...recentReversals);
+  const toleranceMs = Math.max(run.refreshMs * 3, 25);
+  return max - min <= toleranceMs;
 }
 
 function averageTrialDuration(trials: TrialRecord[]) {
@@ -1033,6 +1097,10 @@ function formatVehicle(target: CentralTarget, labels: UfovLabels) {
 
 function formatAxis(axis: number | undefined, labels: UfovLabels) {
   return typeof axis === 'number' ? labels.directions[axis] : labels.noPeripheral;
+}
+
+function formatAccuracy(value: number) {
+  return `${Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)}%`;
 }
 
 function formatSaveNote(labels: UfovLabels, appName: string) {

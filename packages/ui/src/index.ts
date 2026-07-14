@@ -68,3 +68,5 @@ export {
   transitions,
   typography,
 } from './trainerTheme';
+export { getFastestCorrectStimulusDurationMs, getUfovDirectionAccuracy } from './ufovResults';
+export type { UfovDirectionAccuracy } from './ufovResults';

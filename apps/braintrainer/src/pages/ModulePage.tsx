@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
+import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { detectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { useT, type TranslationKey } from '../i18n';
-import type { SubtestId, UfovRunMode } from './ufov/UfovPage';
+import type { SubtestId, UfovRunMode, UfovTargetAxis } from './ufov/UfovPage';
 
 export type ModuleId = 'attention' | 'memory' | 'thinking';
 
@@ -74,6 +75,9 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const [isUfovConfigOpen, setIsUfovConfigOpen] = useState(false);
   const [selectedUfovSubtest, setSelectedUfovSubtest] = useState<SubtestId>(1);
   const [selectedUfovMode, setSelectedUfovMode] = useState<UfovRunMode>('formal');
+  const [selectedUfovTrialCount, setSelectedUfovTrialCount] = useState(48);
+  const [customUfovTrialCountInput, setCustomUfovTrialCountInput] = useState('');
+  const [selectedUfovAxes, setSelectedUfovAxes] = useState<UfovTargetAxis[]>([0, 1, 2, 3, 4, 5, 6, 7]);
   const ufovLabels = getUfovConfigLabels(lang);
   const isSmallScreenDevice = isMobileOrTabletDevice(detectDisplayDeviceKind());
 
@@ -84,8 +88,32 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
     navigate(`/attention-training/ufov?${new URLSearchParams({
       subtest: String(subtestId),
       mode: selectedUfovMode,
+      trials: String(selectedUfovTrialCount),
+      axes: selectedUfovAxes.join(','),
       start: '1',
     }).toString()}`);
+  };
+
+  const handleTrialPreset = (value: number) => {
+    setSelectedUfovTrialCount(value);
+    setCustomUfovTrialCountInput('');
+  };
+
+  const handleCustomTrialCount = (value: string) => {
+    setCustomUfovTrialCountInput(value);
+    const parsed = Number(value);
+    if (Number.isFinite(parsed) && parsed >= 1 && parsed <= 240) {
+      setSelectedUfovTrialCount(Math.round(parsed));
+    }
+  };
+
+  const toggleTargetAxis = (axis: UfovTargetAxis) => {
+    setSelectedUfovAxes((current) => {
+      if (current.includes(axis)) {
+        return current.length > 1 ? current.filter((item) => item !== axis) : current;
+      }
+      return [...current, axis].sort((left, right) => left - right);
+    });
   };
 
   return (
@@ -131,6 +159,8 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
           summaryItems={[
             { value: ufovLabels.subtests[selectedUfovSubtest] },
             { value: ufovLabels.modes[selectedUfovMode].label },
+            { value: selectedUfovTrialCount },
+            { value: `${selectedUfovAxes.length}/8` },
           ]}
         >
           <div className="config-section">
@@ -153,6 +183,36 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          <div className="config-section">
+            <div className="config-label">{ufovLabels.chooseTrialCount}</div>
+            <NumberPresetSelector
+              value={selectedUfovTrialCount}
+              customValue={customUfovTrialCountInput}
+              presets={[16, 48, 60]}
+              min={1}
+              max={240}
+              placeholder={ufovLabels.customTrialCount}
+              onPresetSelect={handleTrialPreset}
+              onCustomChange={handleCustomTrialCount}
+            />
+          </div>
+
+          <div className="config-section">
+            <div className="config-label">{ufovLabels.chooseDirections}</div>
+            <div className="difficulty-selector">
+              {UFOV_TARGET_AXES.map((axis) => (
+                <button
+                  className={`diff-btn ${selectedUfovAxes.includes(axis) ? 'active' : ''}`}
+                  key={axis}
+                  onClick={() => toggleTargetAxis(axis)}
+                  type="button"
+                >
+                  <span className="diff-btn-label">{axis + 1}. {ufovLabels.directions[axis]}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -192,6 +252,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
 
 const UFOV_SUBTESTS: SubtestId[] = [1, 2, 3];
 const UFOV_RUN_MODES: UfovRunMode[] = ['instruction', 'practice', 'formal'];
+const UFOV_TARGET_AXES: UfovTargetAxis[] = [0, 1, 2, 3, 4, 5, 6, 7];
 
 function isMobileOrTabletDevice(deviceKind: ReturnType<typeof detectDisplayDeviceKind>) {
   return deviceKind === 'phone' || deviceKind === 'tablet';
@@ -202,6 +263,9 @@ function getUfovConfigLabels(lang: 'zh' | 'en') {
     ? {
         settingsTitle: 'UFOV Settings',
         chooseSubtest: 'Choose Subtest',
+        chooseTrialCount: 'Choose Trial Count',
+        customTrialCount: 'Custom',
+        chooseDirections: 'Choose Stimulus Directions',
         chooseMode: 'Choose Flow',
         start: 'Start',
         cancel: 'Cancel',
@@ -216,15 +280,19 @@ function getUfovConfigLabels(lang: 'zh' | 'en') {
           2: 'Identify the center vehicle and the peripheral target direction.',
           3: 'Identify the center vehicle among distractors and the peripheral target direction.',
         },
+        directions: ['Up', 'Up right', 'Right', 'Down right', 'Down', 'Down left', 'Left', 'Up left'],
         modes: {
           instruction: { label: 'Instructions', description: 'Show instructions only, without scoring.' },
           practice: { label: 'Practice', description: 'Run 5 fixed-speed practice trials with feedback.' },
-          formal: { label: 'Formal Test', description: 'Run the adaptive formal test and save results.' },
+          formal: { label: 'Formal Test', description: 'Run the configured fixed-trial test and save results.' },
         },
       }
     : {
         settingsTitle: 'UFOV 設定',
         chooseSubtest: '選擇 Subtest',
+        chooseTrialCount: '選擇 Trial 數量',
+        customTrialCount: '自訂',
+        chooseDirections: '選擇刺激呈現方向',
         chooseMode: '選擇流程',
         start: '開始',
         cancel: '取消',
@@ -239,10 +307,11 @@ function getUfovConfigLabels(lang: 'zh' | 'en') {
           2: '辨認中央車輛，並指出周邊目標方向。',
           3: '在干擾物中辨認中央車輛，並指出周邊目標方向。',
         },
+        directions: ['上', '右上', '右', '右下', '下', '左下', '左', '左上'],
         modes: {
           instruction: { label: '說明', description: '只顯示測驗說明，不計分。' },
           practice: { label: '練習', description: '以固定速度進行 5 題練習並顯示回饋。' },
-          formal: { label: '正式測驗', description: '進入 adaptive 正式測驗並儲存結果。' },
+          formal: { label: '正式測驗', description: '依設定的固定 trial 數量進行測驗並儲存結果。' },
         },
       };
 }

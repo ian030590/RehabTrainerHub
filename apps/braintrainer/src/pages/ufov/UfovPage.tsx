@@ -9,6 +9,7 @@ import {
 import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { exitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { getFastestCorrectStimulusDurationMs } from '@rehab-trainer/ui/ufovResults';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +19,7 @@ type CentralTarget = 'car' | 'truck';
 type Direction = 'up' | 'down';
 export type SubtestId = 1 | 2 | 3;
 export type UfovRunMode = 'instruction' | 'practice' | 'formal';
+export type UfovTargetAxis = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type UfovLabels = (typeof copy)[keyof typeof copy];
 type DetailRow = Record<string, unknown>;
 
@@ -41,6 +43,8 @@ export interface UfovPageProps {
   moduleId: string;
   initialSubtestId?: SubtestId;
   initialMode?: UfovRunMode;
+  trialCount?: number;
+  targetAxes?: UfovTargetAxis[];
   autoStart?: boolean;
   onSaveRecord?: (record: UfovTrainingRecord) => Promise<void> | void;
 }
@@ -109,6 +113,8 @@ interface RunState {
   lastDirection: Direction | null;
   limitStreak: number;
   failAtMaxStreak: number;
+  testTrialLimit: number;
+  targetAxes: UfovTargetAxis[];
   subtestTrials: TrialRecord[];
   allTrials: TrialRecord[];
   results: SubtestResult[];
@@ -124,11 +130,15 @@ interface UfovExperimentData {
   aborted: boolean;
   mode: UfovRunMode;
   subtest_id: SubtestId;
+  configured_trial_count: number;
+  target_axes: UfovTargetAxis[];
 }
 
 interface UfovRunConfig {
   subtestId: SubtestId;
   mode: UfovRunMode;
+  trialCount?: number;
+  targetAxes?: UfovTargetAxis[];
 }
 
 const SUBTESTS: Subtest[] = [
@@ -137,8 +147,9 @@ const SUBTESTS: Subtest[] = [
   { id: 3, hasPeripheral: true, hasDistractors: true },
 ];
 const PRACTICE_TRIALS = 5;
-const MAX_TEST_TRIALS = 24;
-const MAX_REVERSALS = 8;
+const DEFAULT_FIXED_TEST_TRIALS = 48;
+const MIN_FIXED_TEST_TRIALS = 1;
+const MAX_FIXED_TEST_TRIALS = 240;
 const MIN_DURATION_FRAMES = 1;
 const MAX_DURATION_MS = 500;
 const PRACTICE_DURATION_MS = 250;
@@ -263,6 +274,8 @@ const ufovInfo = {
     aborted: { type: ParameterType.BOOL },
     mode: { type: ParameterType.STRING },
     subtest_id: { type: ParameterType.INT },
+    configured_trial_count: { type: ParameterType.INT },
+    target_axes: { type: ParameterType.COMPLEX },
   },
 } as const;
 
@@ -283,6 +296,8 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     const subtestIndex = SUBTESTS.findIndex((item) => item.id === config.subtestId);
     const refreshMs = Number(trial.refresh_ms) > 0 ? Number(trial.refresh_ms) : 1000 / 60;
     const maxDurationFrames = msToFrameCount(MAX_DURATION_MS, refreshMs);
+    const testTrialLimit = normalizeTrialCount(config.trialCount);
+    const targetAxes = normalizeTargetAxes(config.targetAxes);
     const run: RunState = {
       minDurationFrames: MIN_DURATION_FRAMES,
       subtestIndex: subtestIndex >= 0 ? subtestIndex : 0,
@@ -297,6 +312,8 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       lastDirection: null,
       limitStreak: 0,
       failAtMaxStreak: 0,
+      testTrialLimit,
+      targetAxes,
       subtestTrials: [],
       allTrials: [],
       results: [],
@@ -324,6 +341,8 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       aborted: run.results.some((item) => item.aborted),
       mode: config.mode,
       subtest_id: SUBTESTS[run.subtestIndex].id,
+      configured_trial_count: testTrialLimit,
+      target_axes: targetAxes,
     });
   }
 
@@ -358,11 +377,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       run.subtestTrials.push(record);
       run.allTrials.push(record);
       this.updateStaircase(run, record);
-      aborted = run.failAtMaxStreak >= 3;
-      const done = aborted
-        || run.testTrial >= MAX_TEST_TRIALS
-        || run.reversals.length >= MAX_REVERSALS
-        || run.limitStreak >= 3;
+      const done = run.testTrial >= run.testTrialLimit;
       if (done) return aborted;
       await waitMs(this.jsPsych, 250);
     }
@@ -382,7 +397,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       displayFrameCount: durationFrames,
       plannedDurationMs: framesToMs(durationFrames, run.refreshMs),
       centralTarget: Math.random() > 0.5 ? 'car' : 'truck',
-      peripheralSlot: subtest.hasPeripheral ? pickPeripheralTargetSlot() : undefined,
+      peripheralSlot: subtest.hasPeripheral ? pickPeripheralTargetSlot(run.targetAxes) : undefined,
     };
 
     this.renderStage(displayElement, labels, 'fixation', subtest, stimulus);
@@ -581,6 +596,8 @@ export function UfovPage({
   moduleId,
   initialSubtestId = 1,
   initialMode = 'formal',
+  trialCount = DEFAULT_FIXED_TEST_TRIALS,
+  targetAxes = [...AXES] as UfovTargetAxis[],
   autoStart = false,
   onSaveRecord,
 }: UfovPageProps) {
@@ -601,7 +618,10 @@ export function UfovPage({
     const isFormal = data.mode === 'formal';
     const correctCount = data.trials.filter((item) => item.correct).length;
     const primaryResult = data.results[0];
-    const processingSpeedMs = primaryResult ? roundMs(primaryResult.thresholdMs) : 0;
+    const thresholdProcessingSpeedMs = primaryResult ? roundMs(primaryResult.thresholdMs) : 0;
+    const processingSpeedMs = isFormal
+      ? roundMs(getFastestCorrectStimulusDurationMs(data.trials, thresholdProcessingSpeedMs))
+      : thresholdProcessingSpeedMs;
     const thresholds = isFormal
       ? Object.fromEntries(data.results.map((item) => [`subtest${item.subtestId}`, item.thresholdMs]))
       : {};
@@ -628,9 +648,14 @@ export function UfovPage({
         displayFrameMs: roundMs(data.refresh_ms),
         subtest: data.subtest_id,
         mode: data.mode,
+        configuredTrialCount: data.configured_trial_count,
+        targetAxes: data.target_axes,
+        targetDirections: data.target_axes.map((axis) => formatAxis(axis, labels)).join(' | '),
         correctCount,
         trialCount: data.trials.length,
         processingSpeedMs,
+        bestCorrectProcessingSpeedMs: processingSpeedMs,
+        thresholdProcessingSpeedMs,
         summaryScoreMs: processingSpeedMs,
         ufovSummary: summary,
         ...thresholds,
@@ -740,8 +765,8 @@ export function UfovPage({
       setInstructionSubtest(initialSubtestId);
       return;
     }
-    void startRun({ subtestId: initialSubtestId, mode: initialMode });
-  }, [autoStart, initialMode, initialSubtestId, isRunning, savedRecord]);
+    void startRun({ subtestId: initialSubtestId, mode: initialMode, trialCount, targetAxes });
+  }, [autoStart, initialMode, initialSubtestId, isRunning, savedRecord, targetAxes, trialCount]);
 
   useEffect(() => () => {
     if (jsPsychRef.current) {
@@ -977,8 +1002,10 @@ function createSlots(): Slot[] {
   })));
 }
 
-function pickPeripheralTargetSlot() {
-  return PERIPHERAL_TARGET_SLOTS[Math.floor(Math.random() * PERIPHERAL_TARGET_SLOTS.length)];
+function pickPeripheralTargetSlot(targetAxes: readonly UfovTargetAxis[]) {
+  const candidates = PERIPHERAL_TARGET_SLOTS.filter((slot) => targetAxes.includes(slot.axis as UfovTargetAxis));
+  const slots = candidates.length > 0 ? candidates : PERIPHERAL_TARGET_SLOTS;
+  return slots[Math.floor(Math.random() * slots.length)];
 }
 
 function axisPoint(axis: number, radius: number, compensateStageAspect = false) {
@@ -992,6 +1019,24 @@ function axisPoint(axis: number, radius: number, compensateStageAspect = false) 
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizeTrialCount(value: unknown) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return DEFAULT_FIXED_TEST_TRIALS;
+  return Math.round(clamp(numeric, MIN_FIXED_TEST_TRIALS, MAX_FIXED_TEST_TRIALS));
+}
+
+function normalizeTargetAxes(value: unknown): UfovTargetAxis[] {
+  if (!Array.isArray(value)) return [...AXES] as UfovTargetAxis[];
+
+  const axes = Array.from(new Set(
+    value
+      .map((item) => Number(item))
+      .filter((item): item is UfovTargetAxis => Number.isInteger(item) && AXES.includes(item)),
+  ));
+
+  return axes.length > 0 ? axes : [...AXES] as UfovTargetAxis[];
 }
 
 function estimateThreshold(trials: TrialRecord[], fallbackMs: number) {

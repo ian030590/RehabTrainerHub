@@ -429,6 +429,13 @@ body.ufov-game-active .ufov-stage {
   overflow-x: auto;
 }
 
+.ufov-direction-accuracy-title {
+  margin: 4px 0 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 800;
+}
+
 .ufov-results .results-table {
   max-width: 860px;
   margin: 8px auto 12px;

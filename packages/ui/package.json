@@ -39,7 +39,8 @@
     "./hooks/useTrainingAbort": "./src/hooks/useTrainingAbort.ts",
     "./settings/displaySettings": "./src/settings/displaySettings.ts",
     "./storage/userStore": "./src/storage/userStore.ts",
-    "./trainerTheme": "./src/trainerTheme.ts"
+    "./trainerTheme": "./src/trainerTheme.ts",
+    "./ufovResults": "./src/ufovResults.ts"
   },
   "peerDependencies": {
     "react": "^19.1.0",
