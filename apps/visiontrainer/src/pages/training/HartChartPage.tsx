@@ -105,7 +105,6 @@ export function HartChartPage() {
   const [decoderDragging, setDecoderDragging] = useState(false);
   const [decoderDragTarget, setDecoderDragTarget] = useState<DecoderDock>(decoderDock);
   const [decoderDragPreview, setDecoderDragPreview] = useState<DecoderDragPreview | null>(null);
-  const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [showHints, setShowHints] = useState(false);
   const [activeTokenIndex, setActiveTokenIndex] = useState<number | null>(null);
   const [answers, setAnswers] = useState<string[]>([]);
@@ -167,20 +166,19 @@ export function HartChartPage() {
   }, [qrOpen, shareUrl]);
 
   useEffect(() => {
-    if (!qrOpen && !instructionsOpen) return;
+    if (!qrOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       setQrOpen(false);
-      setInstructionsOpen(false);
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [instructionsOpen, qrOpen]);
+  }, [qrOpen]);
 
   useTrainingAbort({
-    active: !qrOpen && !instructionsOpen,
+    active: !qrOpen,
     onAbort: () => navigate('/'),
   });
 
@@ -335,9 +333,6 @@ export function HartChartPage() {
           >
             {t('hart.decoder')}
           </button>
-          <button className="btn btn-secondary hart-tool-button" type="button" onClick={() => setInstructionsOpen(true)}>
-            {t('hart.instructionsButton')}
-          </button>
           <button className="btn btn-secondary hart-tool-button" type="button" onClick={() => setQrOpen(true)}>
             {t('hart.openQr')}
           </button>
@@ -463,51 +458,6 @@ export function HartChartPage() {
           </div>
         )}
       </div>
-
-      {instructionsOpen && (
-        <div className="hart-modal-overlay" role="presentation" onClick={() => setInstructionsOpen(false)}>
-          <section
-            className="hart-instructions-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="hart-instructions-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="hart-dialog-header">
-              <h2 id="hart-instructions-title">{t('hart.instructionsTitle')}</h2>
-              <button
-                className="hart-dialog-close"
-                type="button"
-                aria-label={t('hart.close')}
-                onClick={() => setInstructionsOpen(false)}
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div className="hart-instructions-content">
-              <ol>
-                <li>{t('hart.instructions.1')}</li>
-                <li>{t('hart.instructions.2')}</li>
-                <li>{t('hart.instructions.3')}</li>
-                <li>{t('hart.instructions.4')}</li>
-                <li>{t('hart.instructions.5')}</li>
-                <li>{t('hart.instructions.6')}</li>
-                <li>{t('hart.instructions.7')}</li>
-              </ol>
-              <p className="hart-instructions-note"><strong>{t('hart.rememberLabel')}</strong> {t('hart.remember')}</p>
-
-              <h3>{t('hart.decoderInstructionsTitle')}</h3>
-              <ol>
-                <li>{t('hart.decoderInstructions.1')}</li>
-                <li>{t('hart.decoderInstructions.2')}</li>
-                <li>{t('hart.decoderInstructions.3')}</li>
-                <li>{t('hart.decoderInstructions.4')}</li>
-                <li>{t('hart.decoderInstructions.5')}</li>
-              </ol>
-            </div>
-          </section>
-        </div>
-      )}
 
       {qrOpen && (
         <div className="hart-modal-overlay" role="presentation" onClick={() => setQrOpen(false)}>

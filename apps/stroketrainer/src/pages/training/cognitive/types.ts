@@ -3,7 +3,7 @@ import type { TranslationKey } from '../../../i18n';
 export type ReferenceGameId = 'memory-match' | 'lights-out' | 'reaction-time' | 'whack-a-mole' | 'sliding-puzzle';
 
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
-export type GamePhase = 'menu' | 'playing' | 'results';
+export type GamePhase = 'menu' | 'rules' | 'playing' | 'results';
 export type GameResult = 'Victory' | 'Defeat';
 export type SessionLimitSeconds = number | null;
 

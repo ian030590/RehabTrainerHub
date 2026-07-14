@@ -28,6 +28,7 @@ import { AppDialog } from '../../components/AppDialog';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 import type { TFunction } from './types';
+import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
 import {
   createDefaultVoiceVocabulary,
   createVoiceVocabularyItems,
@@ -61,7 +62,7 @@ declare const __BUNDLED_ZH_VOSK_MODEL_ENABLED__: boolean;
 export { calculateSimilarity, levenshteinDistance } from './voiceDefenderSpeechMatching';
 
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
-type GamePhase = 'editor' | 'playing' | 'results';
+type GamePhase = 'editor' | 'rules' | 'playing' | 'results';
 type ModelStatus = 'idle' | 'loading' | 'ready' | 'fallback' | 'error';
 type ModelLoadStage = VoskModelLoadStage | 'initializing';
 type GameResult = 'Victory' | 'Defeat';
@@ -420,6 +421,30 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       : backgroundMode === 'color'
         ? backgroundColor
         : t('drawing.background.customImage');
+  const voiceSummaryItems = [
+    { label: t('cognitive.config.difficulty'), value: t(activeConfig.labelKey) },
+    { label: t('drawing.config.gameDuration'), value: gameDurationLabel },
+    { label: t('voice.config.hp'), value: maxHp },
+    {
+      label: t('voice.config.language'),
+      value: t(language === 'zh' ? 'voice.language.zh' : 'voice.language.en'),
+    },
+    ...(recognitionEngine
+      ? [{
+          label: t('voice.config.engine'),
+          value: t(recognitionEngine === 'vosk' ? 'voice.engine.vosk' : 'voice.engine.webSpeech'),
+        }]
+      : []),
+    { label: t('voice.config.enemySpeed'), value: t('voice.config.speedValue', { value: speed }) },
+    {
+      label: t('voice.vocabulary.title'),
+      value: t('voice.vocabulary.activeCount', {
+        active: activeWords.length,
+        total: languageVocabulary.length,
+      }),
+    },
+    { label: t('drawing.config.background'), value: backgroundSummary },
+  ];
   const backgroundModeLabel =
     backgroundMode === 'stars'
       ? t('drawing.background.image')
@@ -716,7 +741,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   useEffect(() => {
     if (
       backgroundReadyLanguage !== language
-      || (phase !== 'editor' && phase !== 'results')
+      || (phase !== 'editor' && phase !== 'rules' && phase !== 'results')
       || (modelStatus !== 'fallback' && modelStatus !== 'error')
     ) {
       return;
@@ -1232,19 +1257,15 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     t,
   ]);
 
-  const handleStartGame = useCallback(async () => {
+  const handleStartGame = useCallback(() => {
     setShowStartValidation(true);
     if (startIssues.length > 0) {
       window.requestAnimationFrame(() => scrollToStartRequirement(startIssues[0].requirement));
       return;
     }
     setShowStartValidation(false);
-    await startGame();
-  }, [scrollToStartRequirement, startGame, startIssues]);
-
-  const restartGame = useCallback(() => {
-    void startGame();
-  }, [startGame]);
+    setPhase('rules');
+  }, [scrollToStartRequirement, setPhase, startIssues]);
 
   const returnToEditor = useCallback(() => {
     void stopListening();
@@ -1255,7 +1276,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   }, [clearEnemies, drawStage, setPhase, stopListening]);
 
   useTrainingAbort({
-    active: phase === 'playing',
+    active: phase === 'rules' || phase === 'playing',
     onAbort: returnToEditor,
   });
 
@@ -1437,30 +1458,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
               </div>
             )}
             summaryTitle={t('voice.title')}
-            summaryItems={[
-              { label: t('cognitive.config.difficulty'), value: t(activeConfig.labelKey) },
-              { label: t('drawing.config.gameDuration'), value: gameDurationLabel },
-              { label: t('voice.config.hp'), value: maxHp },
-              {
-                label: t('voice.config.language'),
-                value: t(language === 'zh' ? 'voice.language.zh' : 'voice.language.en'),
-              },
-              ...(recognitionEngine
-                ? [{
-                    label: t('voice.config.engine'),
-                    value: t(recognitionEngine === 'vosk' ? 'voice.engine.vosk' : 'voice.engine.webSpeech'),
-                  }]
-                : []),
-              { label: t('voice.config.enemySpeed'), value: t('voice.config.speedValue', { value: speed }) },
-              {
-                label: t('voice.vocabulary.title'),
-                value: t('voice.vocabulary.activeCount', {
-                  active: activeWords.length,
-                  total: languageVocabulary.length,
-                }),
-              },
-              { label: t('drawing.config.background'), value: backgroundSummary },
-            ]}
+            summaryItems={voiceSummaryItems}
             actions={(
               <>
                 {showStartValidation && startIssues.length > 0 && (
@@ -1899,6 +1897,19 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
         </div>
       )}
 
+      {phase === 'rules' && (
+        <div className="training-panel">
+          <StrokeTrainingRulesPanel
+            gameId="voice-defender"
+            title={t('voice.title')}
+            summaryTitle={t('voice.title')}
+            summaryItems={voiceSummaryItems}
+            onStart={() => void startGame()}
+            onBack={returnToEditor}
+          />
+        </div>
+      )}
+
       {phase === 'results' && result && (
         <div className="experiment-container experiment-container-scrollable drawing-defense-results-container voice-defender-results-container">
           <div className="experiment-results">
@@ -1945,7 +1956,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
               restartLabel={t('training.restart')}
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
-              onRestart={restartGame}
+              onRestart={() => setPhase('rules')}
               onBackHome={returnToEditor}
             />
           </div>

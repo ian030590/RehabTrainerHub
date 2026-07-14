@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
@@ -556,7 +557,7 @@ export function MainConceptTraining() {
   if (phase === 'instructions') {
     return wrapFullscreenRoot(
       <div className="training-panel main-concept-fullscreen-panel">
-        <TrainingConfigPanel
+        <TrainingRulesPanel
           className="main-concept-config main-concept-instructions-config"
           label={t('mainConcept.instructions.label')}
           title={t('mainConcept.instructions.title')}
@@ -565,57 +566,38 @@ export function MainConceptTraining() {
             { label: t('mainConcept.trainingSet'), value: setTitle },
             { label: t('mainConcept.results.question'), value: activeSet.questions.length },
           ]}
-          actions={(
-            <>
-              <StartTrainingButton onClick={() => void startSession()}>{t('mainConcept.instructions.begin')}</StartTrainingButton>
-              <button className="btn btn-ghost btn-lg" onClick={returnToMenu}>{t('training.returnSettings')}</button>
-            </>
-          )}
-        >
-            <section className="training-setting training-setting-wide">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{t('mainConcept.instructions.goalTitle')}</h2>
-                  <p>{t('mainConcept.instructions.goalDesc')}</p>
-                </div>
-                <span>{setTitle}</span>
-              </div>
-              <ol className="main-concept-instruction-list">
-                <li>{t('mainConcept.instructions.step1')}</li>
-                <li>{t('mainConcept.instructions.step2')}</li>
-                <li>{t('mainConcept.instructions.step3')}</li>
-                <li>{t('mainConcept.instructions.step4')}</li>
-              </ol>
-            </section>
-
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{t('mainConcept.instructions.ratingTitle')}</h2>
-                  <p>{t('mainConcept.instructions.ratingDesc')}</p>
-                </div>
-              </div>
-              <div className="main-concept-instruction-list">
-                <p><strong>{t('mainConcept.rating.accurate')}</strong>{t('mainConcept.instructions.ratingAccurate')}</p>
-                <p><strong>{t('mainConcept.rating.inaccurate')}</strong>{t('mainConcept.instructions.ratingInaccurate')}</p>
-                <p><strong>{t('mainConcept.rating.absent')}</strong>{t('mainConcept.instructions.ratingAbsent')}</p>
-              </div>
-            </section>
-
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{t('mainConcept.transcript')}</h2>
-                  <p>{t('mainConcept.instructions.transcriptPreview')}</p>
-                </div>
-              </div>
-              <div className="main-concept-preview-list">
-                {activeSet.transcript.map((sentence, index) => (
-                  <span key={`${activeSet.id}-${index}`}>{index + 1}. {sentence}</span>
-                ))}
-              </div>
-            </section>
-        </TrainingConfigPanel>
+          sections={[
+            {
+              title: t('mainConcept.instructions.goalTitle'),
+              description: t('mainConcept.instructions.goalDesc'),
+              meta: setTitle,
+              items: [
+                t('mainConcept.instructions.step1'),
+                t('mainConcept.instructions.step2'),
+                t('mainConcept.instructions.step3'),
+                t('mainConcept.instructions.step4'),
+              ],
+            },
+            {
+              title: t('mainConcept.instructions.ratingTitle'),
+              description: t('mainConcept.instructions.ratingDesc'),
+              items: [
+                <><strong>{t('mainConcept.rating.accurate')}</strong>{t('mainConcept.instructions.ratingAccurate')}</>,
+                <><strong>{t('mainConcept.rating.inaccurate')}</strong>{t('mainConcept.instructions.ratingInaccurate')}</>,
+                <><strong>{t('mainConcept.rating.absent')}</strong>{t('mainConcept.instructions.ratingAbsent')}</>,
+              ],
+            },
+            {
+              title: t('mainConcept.transcript'),
+              description: t('mainConcept.instructions.transcriptPreview'),
+              items: activeSet.transcript.map((sentence, index) => `${index + 1}. ${sentence}`),
+            },
+          ]}
+          startLabel={t('mainConcept.instructions.begin')}
+          backLabel={t('training.returnSettings')}
+          onStart={() => void startSession()}
+          onBack={returnToMenu}
+        />
       </div>
     );
   }

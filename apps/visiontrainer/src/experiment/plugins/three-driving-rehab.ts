@@ -198,23 +198,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     display_element.appendChild(root);
     root.focus();
 
-    const overlay = this.createCalibrationOverlay(root);
-    const ready = overlay.querySelector<HTMLDivElement>('[data-driving-ready]');
-    if (ready) ready.textContent = this.text.readyLoaded;
-
-    this.attachKeyboardListeners(() => {
-      void startDriving();
-    }, trial, display_element);
-    this.attachGamepadListeners();
-    this.startCalibrationPreview(overlay);
-
-    const startButton = overlay.querySelector<HTMLButtonElement>('[data-driving-start]');
-    const startDriving = async () => {
+    const startDriving = () => {
       if (this.finished || this.renderer) return;
-      startButton?.setAttribute('disabled', 'true');
-      startButton && (startButton.textContent = this.text.loadingButton);
       try {
-        overlay.remove();
         this.initScene(root);
         this.initHud(root, trial.red_flash_enabled ?? true);
         this.trialStartTime = performance.now();
@@ -227,9 +213,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       }
     };
 
-    startButton?.addEventListener('click', () => {
-      void startDriving();
-    });
+    this.attachKeyboardListeners(() => {}, trial, display_element);
+    this.attachGamepadListeners();
+    startDriving();
   }
 
   private resetTrialState(trial?: TrialType<Info>) {

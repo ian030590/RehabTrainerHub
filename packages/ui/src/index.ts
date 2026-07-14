@@ -26,6 +26,8 @@ export { TrainingConfigActions, TrainingConfigPanel } from './components/Trainin
 export type { TrainingConfigActionsProps, TrainingConfigPanelProps } from './components/TrainingConfigPanel';
 export { TrainingConfigSummary } from './components/TrainingConfigSummary';
 export type { TrainingConfigSummaryItem, TrainingConfigSummaryProps } from './components/TrainingConfigSummary';
+export { TrainingRulesPanel } from './components/TrainingRulesPanel';
+export type { TrainingRuleSection, TrainingRulesPanelProps } from './components/TrainingRulesPanel';
 export { TrainingResultActions } from './components/TrainingResultActions';
 export type { TrainingResultActionsProps } from './components/TrainingResultActions';
 export { TrainerAppLayout } from './components/TrainerAppLayout';

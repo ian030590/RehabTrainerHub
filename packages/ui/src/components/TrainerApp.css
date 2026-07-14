@@ -1198,6 +1198,76 @@ body[data-ui-font-bold="true"] .app-layout :where(
   text-align: left;
 }
 
+.training-rules {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+.training-rules .training-config-label {
+  color: var(--accent-dark);
+}
+
+.training-rules-body {
+  grid-template-columns: 1fr;
+}
+
+.training-rule-section {
+  position: relative;
+}
+
+.training-rule-section::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  bottom: 22px;
+  left: -12px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--accent);
+  opacity: 0.72;
+}
+
+.training-rule-list {
+  counter-reset: training-rule;
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.training-rule-list li {
+  counter-increment: training-rule;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: calc(15px * var(--ui-font-scale, 1));
+  line-height: 1.55;
+}
+
+.training-rule-list li::before {
+  content: counter(training-rule);
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+  border-radius: 50%;
+  background: var(--bg-accent-soft);
+  color: var(--accent-dark);
+  font-size: calc(12px * var(--ui-font-scale, 1));
+  font-weight: 800;
+  line-height: 1;
+}
+
+.training-rule-note {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: calc(13px * var(--ui-font-scale, 1));
+  line-height: 1.55;
+}
+
 .training-config-header {
   display: flex;
   align-items: flex-start;
@@ -1811,6 +1881,10 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
   .training-config h1 {
     font-size: calc(24px * var(--ui-font-scale, 1));
+  }
+
+  .training-rule-section::before {
+    left: -8px;
   }
 
   .training-config-body {

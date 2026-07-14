@@ -13,8 +13,9 @@ import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResu
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
+import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
 
-type MinesweeperPhase = 'menu' | 'playing' | 'results';
+type MinesweeperPhase = 'menu' | 'rules' | 'playing' | 'results';
 type MinesweeperDifficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 type BoardPresetId = 'compact' | 'classic-easy' | 'classic-medium' | 'classic-hard' | 'large' | 'dense' | 'custom';
 type GameResult = 'Victory' | 'Defeat';
@@ -203,19 +204,6 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     setFlagMode(false);
   }, []);
 
-  const restartGame = useCallback(async () => {
-    prepareAudioFeedback(jsPsychRef);
-    await enterTrainingFullscreen();
-    setBoard(createEmptyBoard(boardRows, boardCols));
-    setMineCount(selectedBoardConfig.mines);
-    setMinesGenerated(false);
-    setFlagMode(false);
-    setResult(null);
-    elapsedMillisRef.current = 0;
-    playStartedAtRef.current = Date.now();
-    setPhase('playing');
-  }, [boardCols, boardRows, enterTrainingFullscreen, selectedBoardConfig.mines]);
-
   const toggleFlagAt = useCallback((x: number, y: number) => {
     if (phase !== 'playing') return;
     setBoard((currentBoard) => {
@@ -270,7 +258,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   }, [boardCols, boardRows, flagMode, phase, revealAt, toggleFlagAt]);
 
   useTrainingAbort({
-    active: phase === 'playing',
+    active: phase === 'playing' || phase === 'rules',
     onAbort: returnToMenu,
   });
 
@@ -302,7 +290,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
             ]}
             actions={(
               <>
-                <StartTrainingButton onClick={() => void startGame()}>
+                <StartTrainingButton onClick={() => setPhase('rules')}>
                   {t('training.startGame')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.back')}</button>
@@ -379,6 +367,27 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
         </div>
       )}
 
+      {phase === 'rules' && (
+        <div className="training-panel">
+          <StrokeTrainingRulesPanel
+            gameId="minesweeper"
+            title={gameTitle}
+            summaryTitle={gameTitle}
+            summaryItems={[
+              { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
+              {
+                label: t('minesweeper.config.boardSize'),
+                value: `${selectedBoardConfig.label} (${selectedBoardConfig.rows}x${selectedBoardConfig.cols})`,
+              },
+              { label: t('minesweeper.config.mineDensity'), value: `${selectedDensityPercent}%` },
+              { label: t('minesweeper.config.mineCountLabel'), value: selectedMineCount },
+            ]}
+            onStart={() => void startGame()}
+            onBack={() => setPhase('menu')}
+          />
+        </div>
+      )}
+
       {phase === 'playing' && (
         <div className="minesweeper-board-stage">
           <canvas
@@ -449,7 +458,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
               restartLabel={t('training.restart')}
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
-              onRestart={() => void restartGame()}
+              onRestart={() => setPhase('rules')}
               onBackHome={returnToMenu}
             />
           </div>

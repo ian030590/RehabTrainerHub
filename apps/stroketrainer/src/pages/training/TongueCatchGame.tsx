@@ -40,9 +40,10 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
+import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
 
 type TongueClass = 'Rest' | 'Tongue_Left' | 'Tongue_Right';
-type GamePhase = 'menu' | 'initializing' | 'calibration' | 'playing' | 'results';
+type GamePhase = 'menu' | 'rules' | 'initializing' | 'calibration' | 'playing' | 'results';
 
 interface TongueCatchGameProps {
   onExit: () => void;
@@ -633,11 +634,22 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, [result]);
 
   useTrainingAbort({
-    active: ['initializing', 'calibration', 'playing'].includes(phase),
+    active: ['rules', 'initializing', 'calibration', 'playing'].includes(phase),
     onAbort: returnToMenu,
   });
 
   const activeCalibrationStep = CALIBRATION_STEPS[calibrationIndex];
+  const tongueSummaryItems = [
+    { label: t('tongue.config.sensitivity'), value: `${Math.round(config.sensitivity * 100)}%` },
+    { label: t('tongue.config.growthRate'), value: `${config.growthRate} px/s` },
+    {
+      label: t('tongue.config.duration'),
+      value: t('training.secondsShort', { value: config.durationSec }),
+    },
+    { label: t('tongue.config.appleSpeed'), value: `${config.appleSpeed} px/s` },
+    { label: t('tongue.config.spawnRate'), value: `${config.spawnIntervalSec.toFixed(1)}s` },
+    { label: t('tongue.config.edgeChance'), value: `${Math.round(config.edgeChance * 100)}%` },
+  ];
 
   return (
     <div ref={fullscreenRootRef} className={`tongue-catch tongue-catch-phase-${phase}`}>
@@ -665,17 +677,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
             label={t('tongue.config.label')}
             title={t('tongue.title')}
             summaryTitle={t('tongue.title')}
-            summaryItems={[
-              { label: t('tongue.config.sensitivity'), value: `${Math.round(config.sensitivity * 100)}%` },
-              { label: t('tongue.config.growthRate'), value: `${config.growthRate} px/s` },
-              {
-                label: t('tongue.config.duration'),
-                value: t('training.secondsShort', { value: config.durationSec }),
-              },
-              { label: t('tongue.config.appleSpeed'), value: `${config.appleSpeed} px/s` },
-              { label: t('tongue.config.spawnRate'), value: `${config.spawnIntervalSec.toFixed(1)}s` },
-              { label: t('tongue.config.edgeChance'), value: `${Math.round(config.edgeChance * 100)}%` },
-            ]}
+            summaryItems={tongueSummaryItems}
             actions={(
               <>
                 {visionError && (
@@ -688,7 +690,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                     {visionError}
                   </InlineAlert>
                 )}
-                <StartTrainingButton onClick={() => void startSession()}>
+                <StartTrainingButton onClick={() => setPhase('rules')}>
                   {t('tongue.calibration.start')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={exitGame}>{t('training.cancel')}</button>
@@ -835,6 +837,19 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
         </div>
       )}
 
+      {phase === 'rules' && (
+        <div className="training-panel tongue-menu-panel">
+          <StrokeTrainingRulesPanel
+            gameId="tongue-catch"
+            title={t('tongue.title')}
+            summaryTitle={t('tongue.title')}
+            summaryItems={tongueSummaryItems}
+            onStart={() => void startSession()}
+            onBack={() => setPhase('menu')}
+          />
+        </div>
+      )}
+
       {phase === 'initializing' && (
         <div className="gesture-calibration-overlay">
           <div className="gesture-loading-card">
@@ -946,7 +961,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
               restartLabel={t('training.restart')}
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
-              onRestart={() => void startSession()}
+              onRestart={() => setPhase('rules')}
               onBackHome={returnToMenu}
             />
           </div>

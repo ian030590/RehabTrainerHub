@@ -25,6 +25,7 @@
     "./components/TrainingConfigPanel": "./src/components/TrainingConfigPanel.tsx",
     "./components/TrainingConfigSummary": "./src/components/TrainingConfigSummary.tsx",
     "./components/TrainingResultActions": "./src/components/TrainingResultActions.tsx",
+    "./components/TrainingRulesPanel": "./src/components/TrainingRulesPanel.tsx",
     "./components/TrainingModuleSelectionPage": "./src/components/TrainingModuleSelectionPage.tsx",
     "./components/TrainerApp.css": "./src/components/TrainerApp.css",
     "./components/TrainerAppLayout": "./src/components/TrainerAppLayout.tsx",

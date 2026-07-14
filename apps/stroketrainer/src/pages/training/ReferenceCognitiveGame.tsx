@@ -71,6 +71,7 @@ import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfig
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
 
 export type { ReferenceGameId } from './cognitive/types';
 export { REFERENCE_COGNITIVE_MODULES } from './cognitive/constants';
@@ -213,10 +214,6 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     window.setTimeout(() => renderRef.current(), 0);
   }, [difficulty, enterTrainingFullscreen, gameId, reactionTrials, setPhase]);
 
-  const restartGame = useCallback(() => {
-    void startGame();
-  }, [startGame]);
-
   const returnToMenu = useCallback(() => {
     setPhase('menu');
     setResult(null);
@@ -336,7 +333,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
   }, [phase]);
 
   useTrainingAbort({
-    active: phase === 'playing',
+    active: phase === 'playing' || phase === 'rules',
     onAbort: returnToMenu,
   });
 
@@ -370,7 +367,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
             ]}
             actions={(
               <>
-                <StartTrainingButton onClick={() => void startGame()}>{t('training.startGame')}</StartTrainingButton>
+                <StartTrainingButton onClick={() => setPhase('rules')}>{t('training.startGame')}</StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
               </>
             )}
@@ -479,6 +476,35 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
         </div>
       )}
 
+      {phase === 'rules' && (
+        <div className="training-panel">
+          <StrokeTrainingRulesPanel
+            gameId={gameId}
+            title={metaTitle}
+            summaryTitle={metaTitle}
+            summaryItems={[
+              { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
+              gameId === 'reaction-time'
+                ? {
+                    label: t('cognitive.config.reactionTrials'),
+                    value: t('training.count', { value: reactionTrials }),
+                  }
+                : gameId === 'whack-a-mole'
+                  ? {
+                      label: t('cognitive.config.trainingDuration'),
+                      value: formatSeconds(whackDurationSec, t),
+                    }
+                  : {
+                      label: t('cognitive.config.timeLimit'),
+                      value: formatLimit(sessionLimitSec, t),
+                    },
+            ]}
+            onStart={() => void startGame()}
+            onBack={() => setPhase('menu')}
+          />
+        </div>
+      )}
+
       {phase === 'results' && result && (
         <div className="experiment-container experiment-container-scrollable cognitive-results-container">
           <div className="experiment-results">
@@ -528,7 +554,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
               restartLabel={t('training.restart')}
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
-              onRestart={() => void restartGame()}
+              onRestart={() => setPhase('rules')}
               onBackHome={returnToMenu}
             />
           </div>

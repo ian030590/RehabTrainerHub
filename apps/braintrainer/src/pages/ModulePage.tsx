@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
+import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { detectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { useT, type TranslationKey } from '../i18n';
@@ -78,21 +79,38 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const [selectedUfovTrialCount, setSelectedUfovTrialCount] = useState(48);
   const [customUfovTrialCountInput, setCustomUfovTrialCountInput] = useState('');
   const [selectedUfovAxes, setSelectedUfovAxes] = useState<UfovTargetAxis[]>([0, 1, 2, 3, 4, 5, 6, 7]);
+  const [isUfovRulesOpen, setIsUfovRulesOpen] = useState(false);
   const ufovLabels = getUfovConfigLabels(lang);
   const isSmallScreenDevice = isMobileOrTabletDevice(detectDisplayDeviceKind());
+  const effectiveUfovSubtest = isSmallScreenDevice ? 1 : selectedUfovSubtest;
+  const ruleLabels = getBrainRuleLabels(lang);
 
   const handleStartUfov = async () => {
-    const subtestId = isSmallScreenDevice ? 1 : selectedUfovSubtest;
     await enterFullscreenFromUserGesture(document.documentElement);
     setIsUfovConfigOpen(false);
+    setIsUfovRulesOpen(false);
     navigate(`/attention-training/ufov?${new URLSearchParams({
-      subtest: String(subtestId),
+      subtest: String(effectiveUfovSubtest),
       mode: selectedUfovMode,
       trials: String(selectedUfovTrialCount),
       axes: selectedUfovAxes.join(','),
       start: '1',
     }).toString()}`);
   };
+
+  useEffect(() => {
+    if (!isUfovRulesOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsUfovRulesOpen(false);
+        setIsUfovConfigOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isUfovRulesOpen]);
 
   const handleTrialPreset = (value: number) => {
     setSelectedUfovTrialCount(value);
@@ -234,11 +252,18 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
           </div>
 
           <div className="config-actions">
-            <button className="btn btn-primary btn-lg config-start-btn" type="button" onClick={() => void handleStartUfov()}>
+            <button
+              className="btn btn-primary btn-lg config-start-btn"
+              type="button"
+              onClick={() => {
+                setIsUfovConfigOpen(false);
+                setIsUfovRulesOpen(true);
+              }}
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <polygon points="5,3 19,12 5,21" />
               </svg>
-              {ufovLabels.start}
+              {ruleLabels.next}
             </button>
             <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsUfovConfigOpen(false)}>
               {ufovLabels.cancel}
@@ -246,16 +271,103 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
           </div>
         </ConfigDialog>
       )}
+      {isUfovRulesOpen && (
+        <div
+          className="config-modal-overlay fade-in"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsUfovRulesOpen(false);
+              setIsUfovConfigOpen(true);
+            }
+          }}
+        >
+          <TrainingRulesPanel
+            className="config-modal-panel"
+            label={ruleLabels.label}
+            title={ufovLabels.subtests[effectiveUfovSubtest]}
+            summaryTitle={ruleLabels.summary}
+            summaryItems={[
+              { value: ufovLabels.subtests[effectiveUfovSubtest] },
+              { value: ufovLabels.modes[selectedUfovMode].label },
+              { value: selectedUfovTrialCount },
+              { value: `${selectedUfovAxes.length}/8` },
+            ]}
+            sections={getUfovRuleSections(lang, ufovLabels.subtests[effectiveUfovSubtest])}
+            startLabel={ruleLabels.start}
+            backLabel={ruleLabels.back}
+            onStart={() => void handleStartUfov()}
+            onBack={() => {
+              setIsUfovRulesOpen(false);
+              setIsUfovConfigOpen(true);
+            }}
+            role="dialog"
+            aria-modal
+            aria-label={`${ufovLabels.subtests[effectiveUfovSubtest]} ${ruleLabels.label}`}
+          />
+        </div>
+      )}
     </main>
   );
 }
 
 const UFOV_SUBTESTS: SubtestId[] = [1, 2, 3];
-const UFOV_RUN_MODES: UfovRunMode[] = ['instruction', 'practice', 'formal'];
+const UFOV_RUN_MODES: UfovRunMode[] = ['practice', 'formal'];
 const UFOV_TARGET_AXES: UfovTargetAxis[] = [0, 1, 2, 3, 4, 5, 6, 7];
 
 function isMobileOrTabletDevice(deviceKind: ReturnType<typeof detectDisplayDeviceKind>) {
   return deviceKind === 'phone' || deviceKind === 'tablet';
+}
+
+function getBrainRuleLabels(lang: 'zh' | 'en') {
+  return lang === 'en'
+    ? {
+        label: 'Game Rules',
+        next: 'Next: Rules',
+        start: 'Start Playing',
+        back: 'Back to Settings',
+        summary: 'Selected Settings',
+      }
+    : {
+        label: '遊戲規則說明',
+        next: '下一步：規則說明',
+        start: '開始遊玩',
+        back: '回設定',
+        summary: '目前設定',
+      };
+}
+
+function getUfovRuleSections(lang: 'zh' | 'en', subtestTitle: string) {
+  return lang === 'en'
+    ? [
+        {
+          title: 'Task Goal',
+          description: `Complete ${subtestTitle} by identifying the central item and, when required, the peripheral direction.`,
+          items: [
+            'Look at the center first and identify whether the central vehicle is a car or truck.',
+            'For divided or selective attention trials, also report the peripheral target direction.',
+            'Respond as accurately as possible; practice mode gives feedback, formal mode saves the configured results.',
+          ],
+        },
+        {
+          title: 'Results',
+          description: 'The result records accuracy, processing speed, direction responses, and the configured trial count.',
+        },
+      ]
+    : [
+        {
+          title: '任務目標',
+          description: `完成「${subtestTitle}」，辨識中央目標，必要時同時判斷周邊目標方向。`,
+          items: [
+            '每題先看中央刺激，判斷中央車輛是汽車或卡車。',
+            '分散注意或選擇性注意題型中，還要回報周邊目標所在方向。',
+            '練習模式會提供回饋；正式模式會依設定題數保存成績。',
+          ],
+        },
+        {
+          title: '成績計算',
+          description: '結算會記錄正確率、處理速度、方向反應與本次設定的題數。',
+        },
+      ];
 }
 
 function getUfovConfigLabels(lang: 'zh' | 'en') {

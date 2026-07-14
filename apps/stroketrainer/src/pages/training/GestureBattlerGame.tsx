@@ -21,10 +21,11 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
+import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
 
 type GestureId = 1 | 2 | 3 | 4 | 5;
 type TargetMode = 'free' | 'directed';
-type GamePhase = 'menu' | 'initializing' | 'calibration' | 'combat' | 'results';
+type GamePhase = 'menu' | 'rules' | 'initializing' | 'calibration' | 'combat' | 'results';
 type CalibrationKind = 'rom-closed' | 'rom-open' | 'gesture';
 
 interface GestureBattlerGameProps {
@@ -655,7 +656,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   }, [onExit, stopVision]);
 
   useTrainingAbort({
-    active: ['initializing', 'calibration', 'combat'].includes(phase),
+    active: ['rules', 'initializing', 'calibration', 'combat'].includes(phase),
     onAbort: returnToMenu,
   });
 
@@ -748,7 +749,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     <div ref={fullscreenRootRef} className={`gesture-battler gesture-battler-phase-${phase}`}>
       <div ref={pixiHostRef} className="gesture-battler-stage" />
 
-      <div className={`gesture-camera ${phase === 'menu' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>
+      <div className={`gesture-camera ${phase === 'menu' || phase === 'rules' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>
         <video ref={videoRef} muted playsInline aria-label={t('gesture.camera.preview')} />
         <canvas ref={handCanvasRef} aria-hidden="true" />
         <span>{handVisible ? t('gesture.camera.tracking') : t('gesture.camera.finding')}</span>
@@ -779,7 +780,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                     {visionError}
                   </InlineAlert>
                 )}
-                <StartTrainingButton onClick={() => void startCalibration()}>
+                <StartTrainingButton onClick={() => setPhase('rules')}>
                   {t('training.start')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={exitGame}>{t('training.cancel')}</button>
@@ -928,6 +929,24 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         </div>
       )}
 
+      {phase === 'rules' && (
+        <div className="training-panel gesture-menu-panel">
+          <StrokeTrainingRulesPanel
+            gameId="gesture-battler"
+            title={t('training.gesture.title')}
+            summaryTitle={t('training.gesture.title')}
+            summaryItems={[
+              { label: t('gesture.config.enemyHp'), value: enemyMaxHp },
+              { label: t('gesture.config.holdDuration'), value: `${holdDuration}s` },
+              { label: t('gesture.config.strictness'), value: `${Math.round(strictnessThreshold * 100)}%` },
+              { label: t('gesture.config.targetMode'), value: targetModeLabel },
+            ]}
+            onStart={() => void startCalibration()}
+            onBack={() => setPhase('menu')}
+          />
+        </div>
+      )}
+
       {phase === 'initializing' && (
         <div className="gesture-calibration-overlay">
           <div className="gesture-loading-card">
@@ -1034,7 +1053,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
               restartLabel={t('training.restart')}
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
-              onRestart={() => void startCalibration()}
+              onRestart={() => setPhase('rules')}
               onBackHome={returnToMenu}
             />
           </div>

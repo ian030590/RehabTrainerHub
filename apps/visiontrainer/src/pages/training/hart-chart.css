@@ -470,20 +470,11 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
-.hart-instructions-dialog,
 .hart-qr-dialog {
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: var(--radius-xl);
   background: #fff;
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.3);
-}
-
-.hart-instructions-dialog {
-  width: min(820px, 100%);
-  max-height: min(86dvh, 820px);
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  overflow: hidden;
 }
 
 .hart-dialog-header {
@@ -518,36 +509,6 @@
 .hart-dialog-close:hover {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: var(--accent-dark);
-}
-
-.hart-instructions-content {
-  overflow-y: auto;
-  padding: 22px 28px 28px;
-  color: var(--text-secondary);
-}
-
-.hart-instructions-content h3 {
-  margin: 26px 0 12px;
-  color: var(--accent-dark);
-  font-size: 20px;
-}
-
-.hart-instructions-content ol {
-  padding-left: 24px;
-}
-
-.hart-instructions-content li {
-  margin-bottom: 9px;
-  padding-left: 5px;
-}
-
-.hart-instructions-note {
-  margin-top: 18px;
-  padding: 14px 16px;
-  border-left: 4px solid var(--accent);
-  border-radius: 0 var(--radius-m) var(--radius-m) 0;
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  color: var(--text-secondary);
 }
 
 .hart-qr-dialog {
@@ -841,10 +802,6 @@
     font-size: 21px;
   }
 
-  .hart-instructions-content {
-    padding: 16px 18px 20px;
-    font-size: 15px;
-  }
 }
 
 @media (max-height: 650px) and (min-width: 921px) {

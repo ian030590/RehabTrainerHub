@@ -14,10 +14,11 @@ import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResu
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import type { TFunction } from './types';
+import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
 
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 type ShapeId = 'circle' | 'cross' | 'square' | 'triangle' | 'vertical-line' | 'horizontal-line';
-type GamePhase = 'menu' | 'playing' | 'results';
+type GamePhase = 'menu' | 'rules' | 'playing' | 'results';
 type GameResult = 'Victory' | 'Defeat';
 type BackgroundMode = 'stars' | 'color' | 'image';
 type GameDurationSeconds = number | null;
@@ -495,10 +496,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     setPhase('playing');
   }, [clearPixiState, drawLayout, enterTrainingFullscreen, setPhase]);
 
-  const restartGame = useCallback(() => {
-    void startGame();
-  }, [startGame]);
-
   const returnToMenu = useCallback(() => {
     const app = appRef.current;
     clearPixiState();
@@ -612,7 +609,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   }, [drawLayout, finishGame, recordEnemyOutcome, redrawPath, spawnEnemy]);
 
   useTrainingAbort({
-    active: phase === 'playing',
+    active: phase === 'playing' || phase === 'rules',
     onAbort: returnToMenu,
   });
 
@@ -686,7 +683,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             ]}
             actions={(
               <>
-                <StartTrainingButton onClick={() => void startGame()}>
+                <StartTrainingButton onClick={() => setPhase('rules')}>
                   {t('training.start')}
                 </StartTrainingButton>
                 <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
@@ -968,6 +965,27 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         </div>
       )}
 
+      {phase === 'rules' && (
+        <div className="training-panel">
+          <StrokeTrainingRulesPanel
+            gameId="drawing-defense"
+            title={t('training.drawing.title')}
+            summaryTitle={t('training.drawing.title')}
+            summaryItems={[
+              { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
+              { label: t('drawing.config.gameDuration'), value: gameDurationLabel },
+              { label: t('drawing.config.hp'), value: maxHp },
+              { label: t('drawing.config.enemySpeed'), value: t('drawing.config.speedValue', { value: speed }) },
+              { label: t('drawing.config.strictness'), value: `${strictness}%` },
+              { label: t('drawing.config.strokeWait'), value: t('drawing.config.waitValue', { value: strokeWaitMs }) },
+              { label: t('drawing.config.background'), value: backgroundSummary },
+            ]}
+            onStart={() => void startGame()}
+            onBack={() => setPhase('menu')}
+          />
+        </div>
+      )}
+
       {phase === 'results' && result && (
         <div className="experiment-container experiment-container-scrollable drawing-defense-results-container">
           <div className="experiment-results">
@@ -1017,7 +1035,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
               restartLabel={t('training.restart')}
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
-              onRestart={() => void restartGame()}
+              onRestart={() => setPhase('rules')}
               onBackHome={returnToMenu}
             />
           </div>
