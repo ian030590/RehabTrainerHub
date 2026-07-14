@@ -17,12 +17,11 @@ export const rehabTheme = {
   },
   fontFamily: {
     sans: [
-      'Inter',
-      'ui-sans-serif',
-      'system-ui',
-      '-apple-system',
-      'BlinkMacSystemFont',
-      'Segoe UI',
+      'Microsoft JhengHei',
+      'Microsoft JhengHei UI',
+      'PingFang TC',
+      'Noto Sans TC',
+      'Arial',
       'sans-serif',
     ],
   },

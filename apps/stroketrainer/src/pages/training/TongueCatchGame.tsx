@@ -35,7 +35,7 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
@@ -150,6 +150,7 @@ const LIP_LANDMARK_INDICES = Array.from(new Set(
 
 export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   const { t } = useT();
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const featureCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
@@ -370,8 +371,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       return;
     }
     prepareAudioFeedback(jsPsychRef);
-    await enterFullscreenFromUserGesture(document.documentElement);
-    await waitForFullscreenLayout();
+    await enterTrainingFullscreen();
     if (appRef.current) resizePixiAppToElement(appRef.current, pixiHostRef.current);
     stopVision();
     setVisionError('');
@@ -443,7 +443,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       setShowVisionError(true);
       setPhase('menu');
     }
-  }, [processFrame, setPhase, stopVision, t]);
+  }, [enterTrainingFullscreen, processFrame, setPhase, stopVision, t]);
 
   const startCalibrationCapture = useCallback(() => {
     const classifier = classifierRef.current;
@@ -640,7 +640,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   const activeCalibrationStep = CALIBRATION_STEPS[calibrationIndex];
 
   return (
-    <div className={`tongue-catch tongue-catch-phase-${phase}`}>
+    <div ref={fullscreenRootRef} className={`tongue-catch tongue-catch-phase-${phase}`}>
       <video
         ref={videoRef}
         className="tongue-catch-video"

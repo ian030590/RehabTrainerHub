@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
-import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useNavigate } from 'react-router-dom';
 import { useT, type TranslationKey } from '../i18n';
@@ -312,6 +312,7 @@ validateTrainingSets(TRAINING_SETS);
 export function MainConceptTraining() {
   const { t, lang } = useT();
   const navigate = useNavigate();
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const [phase, setPhase] = useState<Phase>('menu');
   const [selectedSetId, setSelectedSetId] = useState(TRAINING_SETS[0].id);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -333,7 +334,7 @@ export function MainConceptTraining() {
   const locked = Boolean(acceptedTrial);
 
   const openInstructions = async () => {
-    await enterFullscreenFromUserGesture(document.documentElement);
+    await enterTrainingFullscreen();
     setFeedback(null);
     setAcceptedTrial(null);
     setSummary(null);
@@ -341,7 +342,7 @@ export function MainConceptTraining() {
   };
 
   const startSession = async () => {
-    await enterFullscreenFromUserGesture(document.documentElement);
+    await enterTrainingFullscreen();
     const firstQuestion = activeSet.questions[0];
     setCurrentIndex(0);
     setAnswer(createEmptyAnswer(firstQuestion));
@@ -490,8 +491,14 @@ export function MainConceptTraining() {
     downloadCsvFile(toCsv(summary), `main_concept_${summary.date}_${Date.now()}.csv`);
   };
 
+  const wrapFullscreenRoot = (content: ReactNode) => (
+    <div ref={fullscreenRootRef} className={`main-concept-fullscreen-root main-concept-fullscreen-root-${phase}`}>
+      {content}
+    </div>
+  );
+
   if (phase === 'menu') {
-    return (
+    return wrapFullscreenRoot(
       <div className="training-panel main-concept-fullscreen-panel">
         <TrainingConfigPanel
           className="main-concept-config"
@@ -547,7 +554,7 @@ export function MainConceptTraining() {
   }
 
   if (phase === 'instructions') {
-    return (
+    return wrapFullscreenRoot(
       <div className="training-panel main-concept-fullscreen-panel">
         <TrainingConfigPanel
           className="main-concept-config main-concept-instructions-config"
@@ -614,7 +621,7 @@ export function MainConceptTraining() {
   }
 
   if (phase === 'results' && summary) {
-    return (
+    return wrapFullscreenRoot(
       <div className="experiment-container experiment-container-scrollable main-concept-results-container">
         <div className="experiment-results">
           <h1>{t('mainConcept.results.title')}</h1>
@@ -669,7 +676,7 @@ export function MainConceptTraining() {
     );
   }
 
-  return (
+  return wrapFullscreenRoot(
     <div className="main-concept-session">
       <div className="main-concept-shell">
         <header className="main-concept-header">

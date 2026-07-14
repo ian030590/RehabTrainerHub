@@ -1,5 +1,6 @@
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
+import { typography } from '@rehab-trainer/ui/trainerTheme';
 import { SoundManager } from '../../utils/soundManager';
 import { DIFFICULTY_PRESETS, HAZARD_TEMPLATES } from './driving/driving-hazards';
 import { DRIVING_ROUTE } from './driving/driving-route';
@@ -191,7 +192,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       overflow: 'hidden',
       background: '#0f1720',
       color: '#fff',
-      fontFamily: 'Inter, M PLUS Rounded 1c, Noto Sans TC, sans-serif',
+      fontFamily: typography.fontFamily,
       userSelect: 'none',
     });
     display_element.appendChild(root);
@@ -892,7 +893,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     ctx.arc(startPt.sx, startPt.sy, 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 9px Inter, sans-serif';
+    ctx.font = `bold 9px ${typography.fontFamily}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('A', startPt.sx, startPt.sy);
@@ -1251,7 +1252,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (ctx) {
       ctx.clearRect(0, 0, 256, 128);
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 92px sans-serif';
+      ctx.font = `bold 92px ${typography.fontFamily}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(label, 128, 64);
@@ -1347,7 +1348,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       cursor: 'pointer',
       pointerEvents: 'auto',
       textAlign: 'center',
-      fontFamily: 'Inter, M PLUS Rounded 1c, Noto Sans TC, sans-serif',
+      fontFamily: typography.fontFamily,
     });
     const panel = document.createElement('div');
     Object.assign(panel.style, {

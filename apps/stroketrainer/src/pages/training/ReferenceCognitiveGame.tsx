@@ -69,7 +69,7 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 
 export type { ReferenceGameId } from './cognitive/types';
@@ -86,6 +86,7 @@ export function isReferenceGameId(value: string | null): value is ReferenceGameI
 
 export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGameProps) {
   const { t } = useT();
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
   const phaseRef = useRef<GamePhase>('menu');
@@ -201,8 +202,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
   const startGame = useCallback(async () => {
     if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
-    await enterFullscreenFromUserGesture(document.documentElement);
-    await waitForFullscreenLayout();
+    await enterTrainingFullscreen();
 
     if (appRef.current) resizePixiAppToElement(appRef.current, pixiHostRef.current);
     metricsRef.current = { elapsed: 0 };
@@ -211,7 +211,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     setResult(null);
     setPhase('playing');
     window.setTimeout(() => renderRef.current(), 0);
-  }, [difficulty, gameId, reactionTrials, setPhase]);
+  }, [difficulty, enterTrainingFullscreen, gameId, reactionTrials, setPhase]);
 
   const restartGame = useCallback(() => {
     void startGame();
@@ -341,7 +341,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
   });
 
   return (
-    <div className={`cognitive-reference-game cognitive-reference-phase-${phase}`} style={{ '--cognitive-game-accent': COGNITIVE_ACCENT_CSS } as CSSProperties}>
+    <div ref={fullscreenRootRef} className={`cognitive-reference-game cognitive-reference-phase-${phase}`} style={{ '--cognitive-game-accent': COGNITIVE_ACCENT_CSS } as CSSProperties}>
       <div ref={pixiHostRef} className="cognitive-pixi-stage" />
 
       {phase === 'menu' && (

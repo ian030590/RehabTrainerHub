@@ -39,8 +39,9 @@ import { pixelFromDegree } from '../../utils/spatialUtils';
 import { SoundManager } from '../../utils/soundManager';
 import { downloadCsvFile } from '../../utils/downloadFile';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { typography } from '@rehab-trainer/ui/trainerTheme';
 
 type Phase = 'intro' | 'isi' | 'stimulus' | 'results';
 
@@ -149,6 +150,7 @@ function drawGratingApertureRing(
 export function AcuityTestPage() {
   const { t } = useT();
   const navigate = useNavigate();
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const [searchParams] = useSearchParams();
   const requestedTestType = searchParams.get('type') || searchParams.get('test');
   const testType = isTestType(requestedTestType) ? requestedTestType : 'landolt';
@@ -209,7 +211,7 @@ export function AcuityTestPage() {
 
   // ── Initialize and manage the test ──
   const startTest = useCallback(async () => {
-    await enterFullscreenFromUserGesture(document.documentElement);
+    await enterTrainingFullscreen();
 
     const begin = () => {
       SoundManager.init();
@@ -244,7 +246,7 @@ export function AcuityTestPage() {
         console.error(err);
         alert(t('acuity.wgFailed'));
       });
-  }, [ensureWebGazerReady, isWebGazerPL, testType, t]);
+  }, [ensureWebGazerReady, enterTrainingFullscreen, isWebGazerPL, testType, t]);
 
   const drawStimulus = useCallback(() => {
     const canvas = canvasRef.current;
@@ -302,7 +304,7 @@ export function AcuityTestPage() {
     const snellen = formatSnellenFraction(decVAFromStrokePixels(strokePx));
 
     ctx.fillStyle = '#9CA3AF';
-    ctx.font = `${ACUITY_OVERLAY_FONT_SIZE}px Inter, sans-serif`;
+    ctx.font = `${ACUITY_OVERLAY_FONT_SIZE}px ${typography.fontFamily}`;
     ctx.fillText(snellen, 12, 20);
   }, [testType]);
 
@@ -581,9 +583,15 @@ export function AcuityTestPage() {
     onAbort: abortTest,
   });
 
+  const wrapFullscreenRoot = (content: React.ReactNode) => (
+    <div ref={fullscreenRootRef} className={`acuity-fullscreen-root acuity-fullscreen-root-${phase}`}>
+      {content}
+    </div>
+  );
+
   // ── Intro Phase ──
   if (phase === 'intro') {
-    return (
+    return wrapFullscreenRoot(
       <div className="experiment-container">
         <div className="acuity-intro">
           <h1>{getTestTitle(testType, t)}</h1>
@@ -623,7 +631,7 @@ export function AcuityTestPage() {
 
   // ── Running Phase (ISI + Stimulus) ──
   if (phase === 'isi' || phase === 'stimulus') {
-    return (
+    return wrapFullscreenRoot(
       <div className="experiment-container acuity-test-container">
         <canvas
           ref={canvasRef}
@@ -710,7 +718,7 @@ export function AcuityTestPage() {
     );
   };
 
-  return (
+  return wrapFullscreenRoot(
     <div className="experiment-container" style={{ overflowY: 'auto' }}>
       <div className="acuity-results">
         <h1 style={{ fontSize: 32 }}>{t('acuity.done')}</h1>

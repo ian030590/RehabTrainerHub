@@ -49,6 +49,7 @@ export type { DisplayDeviceKind, DisplayRefreshInfo, DisplayRefreshMeasureOption
 export { downloadCsvFile, downloadFile } from './downloadFile';
 export { enterFullscreenFromUserGesture, exitFullscreenIfActive, waitForFullscreenLayout } from './fullscreen';
 export { createUseActiveUser } from './hooks/useActiveUser';
+export { useFullscreenTrainingRoot } from './hooks/useFullscreenTrainingRoot';
 export { useRoutedTrainingModule } from './hooks/useRoutedTrainingModule';
 export type { UseRoutedTrainingModuleArgs } from './hooks/useRoutedTrainingModule';
 export { useTrainingAbort } from './hooks/useTrainingAbort';

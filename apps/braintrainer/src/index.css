@@ -2,6 +2,17 @@
   color-scheme: light;
 }
 
+.main-concept-fullscreen-root {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.main-concept-fullscreen-root:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+}
+
 .main-concept-fullscreen-panel {
   z-index: 1000;
 }

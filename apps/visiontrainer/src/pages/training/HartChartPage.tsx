@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import QRCode from 'qrcode';
-import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '../../i18n';
 import {
@@ -535,19 +535,20 @@ export function HartChartPage() {
 export function HartChartDisplayPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLElement>();
   const seed = useMemo(() => parseHartSeed(searchParams.get('seed')), [searchParams]);
   const scale = clampHartScale(Number(searchParams.get('scale') ?? '1'));
   const chart = useMemo(() => createHartChart(seed), [seed]);
 
   useEffect(() => {
     const enterFullscreen = () => {
-      void enterFullscreenFromUserGesture(document.documentElement);
+      void enterTrainingFullscreen();
       window.removeEventListener('pointerdown', enterFullscreen);
     };
 
     window.addEventListener('pointerdown', enterFullscreen, { once: true });
     return () => window.removeEventListener('pointerdown', enterFullscreen);
-  }, []);
+  }, [enterTrainingFullscreen]);
 
   useTrainingAbort({
     active: true,
@@ -555,7 +556,7 @@ export function HartChartDisplayPage() {
   });
 
   return (
-    <main className="hart-display-page">
+    <main ref={fullscreenRootRef} className="hart-display-page">
       <HartChartGrid cells={chart} scale={scale} chartOnly />
     </main>
   );

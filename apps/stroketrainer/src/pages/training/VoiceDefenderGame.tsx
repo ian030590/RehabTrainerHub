@@ -21,8 +21,9 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { typography } from '@rehab-trainer/ui/trainerTheme';
 import { AppDialog } from '../../components/AppDialog';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
@@ -287,6 +288,7 @@ const VOSK_MODEL_MIN_BYTES = getPositiveNumber(
 
 export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   const { t } = useT();
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
   const modelRef = useRef<Model | null>(null);
@@ -1137,7 +1139,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       text: word,
       style: {
         fill: 0x1a1c1e,
-        fontFamily: 'Inter, M PLUS Rounded 1c, Noto Sans TC, Arial, sans-serif',
+        fontFamily: typography.fontFamily,
         fontSize: cardTypography.fontSize,
         fontWeight: cardTypography.fontWeight,
         align: 'center',
@@ -1178,8 +1180,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     if (phaseRef.current === 'editor' && !microphoneReady) return;
     const app = appRef.current;
     if (!app) return;
-    await enterFullscreenFromUserGesture(document.documentElement);
-    await waitForFullscreenLayout();
+    await enterTrainingFullscreen();
     resizePixiAppToElement(app, pixiHostRef.current);
 
     setMicrophoneError('');
@@ -1218,6 +1219,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     clearEnemies,
     difficulty,
     drawStage,
+    enterTrainingFullscreen,
     gameDurationSec,
     language,
     maxHp,
@@ -1403,6 +1405,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
 
   return (
     <div
+      ref={fullscreenRootRef}
       className={`drawing-defense voice-defender drawing-defense-phase-${phase === 'editor' ? 'menu' : phase} voice-defender-phase-${phase}`}
       style={backgroundStyle}
     >

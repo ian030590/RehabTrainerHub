@@ -116,17 +116,29 @@ export function getAuthUserNameFromToken(): string | null {
   if (!encodedPayload) return null;
 
   try {
-    const normalized = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-    const payload = JSON.parse(atob(padded)) as { name?: unknown; email?: unknown };
+    const payload = JSON.parse(base64UrlDecodeUtf8(encodedPayload)) as { name?: unknown; email?: unknown };
     return typeof payload.name === 'string' && payload.name.trim()
-      ? payload.name
+      ? payload.name.trim()
       : typeof payload.email === 'string' && payload.email.trim()
-        ? payload.email
+        ? payload.email.trim()
         : null;
   } catch {
     return null;
   }
+}
+
+function base64UrlDecodeUtf8(value: string): string {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+  const binary = atob(padded);
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+
+  if (typeof TextDecoder !== 'undefined') {
+    return new TextDecoder().decode(bytes);
+  }
+
+  const percentEncoded = Array.from(bytes, (byte) => `%${byte.toString(16).padStart(2, '0')}`).join('');
+  return decodeURIComponent(percentEncoded);
 }
 
 export function normalizeAuthApiBase(apiBase: string | undefined): string {

@@ -1,3 +1,5 @@
+import { typography } from '@rehab-trainer/ui/trainerTheme';
+
 const cssVariables = {
   '--bg': '#F7F1EA',
   '--bg-panel': '#FFFAF5',
@@ -21,7 +23,7 @@ const cssVariables = {
   '--bg-overlay-dark': 'rgba(0, 0, 0, 0.46)',
   '--bg-accent-soft': 'rgba(122, 74, 36, 0.10)',
   '--bg-accent-soft-hover': 'rgba(122, 74, 36, 0.14)',
-  '--font-family': "'Inter', 'M PLUS Rounded 1c', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif",
+  '--font-family': typography.fontFamily,
   '--ui-font-size': '18px',
   '--ui-font-scale': '1',
   '--ui-font-weight': '500',

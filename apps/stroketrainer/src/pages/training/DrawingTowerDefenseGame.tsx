@@ -11,7 +11,7 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import type { TFunction } from './types';
 
@@ -146,7 +146,7 @@ const SHAPE_LABEL_KEYS: Record<ShapeId, TranslationKey> = {
 
 export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps) {
   const { t } = useT();
-  const gameRootRef = useRef<HTMLDivElement | null>(null);
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
@@ -480,8 +480,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   const startGame = useCallback(async () => {
     if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
-    await enterFullscreenFromUserGesture(gameRootRef.current ?? document.documentElement);
-    await waitForFullscreenLayout();
+    await enterTrainingFullscreen();
 
     const app = appRef.current;
     if (!app) return;
@@ -494,7 +493,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     enemyResultsRef.current = [];
     setResult(null);
     setPhase('playing');
-  }, [clearPixiState, drawLayout, setPhase]);
+  }, [clearPixiState, drawLayout, enterTrainingFullscreen, setPhase]);
 
   const restartGame = useCallback(() => {
     void startGame();
@@ -666,7 +665,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   };
 
   return (
-    <div ref={gameRootRef} className={`drawing-defense drawing-defense-phase-${phase}`} style={backgroundStyle}>
+    <div ref={fullscreenRootRef} className={`drawing-defense drawing-defense-phase-${phase}`} style={backgroundStyle}>
       <div ref={pixiHostRef} className="drawing-defense-stage" />
       <div ref={overlayRef} className="drawing-defense-input" />
 

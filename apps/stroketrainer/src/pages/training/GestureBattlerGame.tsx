@@ -16,7 +16,7 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
@@ -155,6 +155,7 @@ function createEmptyGestureStats(): Record<GestureId, GestureStat> {
 
 export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   const { t } = useT();
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const handCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -564,8 +565,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       return;
     }
     prepareAudioFeedback(jsPsychRef);
-    await enterFullscreenFromUserGesture(document.documentElement);
-    await waitForFullscreenLayout();
+    await enterTrainingFullscreen();
     if (appRef.current) resizePixiAppToElement(appRef.current, pixiHostRef.current);
     stopVision();
     setVisionError('');
@@ -637,7 +637,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       setShowVisionError(true);
       setPhase('menu');
     }
-  }, [processFrame, setPhase, stopVision, t]);
+  }, [enterTrainingFullscreen, processFrame, setPhase, stopVision, t]);
 
   const returnToMenu = useCallback(() => {
     stopVision();
@@ -745,7 +745,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   }, [result]);
 
   return (
-    <div className={`gesture-battler gesture-battler-phase-${phase}`}>
+    <div ref={fullscreenRootRef} className={`gesture-battler gesture-battler-phase-${phase}`}>
       <div ref={pixiHostRef} className="gesture-battler-stage" />
 
       <div className={`gesture-camera ${phase === 'menu' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>

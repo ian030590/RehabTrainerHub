@@ -30,6 +30,19 @@ html, body, #root {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.acuity-fullscreen-root,
+.contrast-fullscreen-root {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.acuity-fullscreen-root:fullscreen,
+.contrast-fullscreen-root:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* ?? Scrollbar ?? */
 ::-webkit-scrollbar {
   width: 8px;

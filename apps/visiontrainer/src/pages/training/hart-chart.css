@@ -185,7 +185,7 @@
   border-radius: 16px;
   background: #fff;
   color: #111;
-  font-family: "Times New Roman", Times, serif;
+  font-family: var(--font-family);
   box-shadow: inset 0 0 0 7px #f6f7f8;
 }
 
@@ -598,6 +598,11 @@
   overflow: hidden;
   background: #fff;
   touch-action: manipulation;
+}
+
+.hart-display-page:fullscreen {
+  width: 100vw;
+  height: 100vh;
 }
 
 .hart-chart-grid-only {

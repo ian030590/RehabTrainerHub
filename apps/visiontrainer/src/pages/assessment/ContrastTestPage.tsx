@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useT } from '../../i18n';
 import { initJsPsych } from 'jspsych';
@@ -9,7 +9,7 @@ import { BestPEST } from './logic/bestPest';
 import { getActiveUser, getSetting } from '../../utils/settings';
 import { downloadCsvFile } from '../../utils/downloadFile';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 
 // Ensure plugin is referenced
@@ -37,6 +37,7 @@ function formatAlternative(alt: number) {
 export function ContrastTestPage() {
   const { t } = useT();
   const navigate = useNavigate();
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const containerRef = useRef<HTMLDivElement>(null);
   const jsPsychRef = useRef<JsPsych | null>(null);
   const abortingRef = useRef(false);
@@ -193,7 +194,7 @@ export function ContrastTestPage() {
   };
 
   const restartTest = async () => {
-    await enterFullscreenFromUserGesture(document.documentElement);
+    await enterTrainingFullscreen();
     abortingRef.current = false;
     jsPsychRef.current = null;
     setResultLogCSW(0);
@@ -201,10 +202,16 @@ export function ContrastTestPage() {
     setPhase('running');
   };
 
+  const wrapFullscreenRoot = (content: ReactNode) => (
+    <div ref={fullscreenRootRef} className={`contrast-fullscreen-root contrast-fullscreen-root-${phase}`}>
+      {content}
+    </div>
+  );
+
   if (phase === 'results') {
      const correctCount = trialRecords.filter((r) => r.correct).length;
      
-     return (
+     return wrapFullscreenRoot(
        <div className="experiment-container" style={{ overflowY: 'auto' }}>
          <div className="acuity-results">
            <h1 style={{ fontSize: 32 }}>{t('acuity.done') || 'Assessment Complete'}</h1>
@@ -268,7 +275,7 @@ export function ContrastTestPage() {
      );
   }
 
-  return (
+  return wrapFullscreenRoot(
     <div style={{ width: '100vw', height: '100vh', background: '#808080' }}>
        <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
     </div>

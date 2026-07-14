@@ -10,8 +10,9 @@ import { verifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { enterFullscreenFromUserGesture, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { typography } from '@rehab-trainer/ui/trainerTheme';
 
 type MinesweeperPhase = 'menu' | 'playing' | 'results';
 type MinesweeperDifficulty = 'Beginner' | 'Intermediate' | 'Advanced';
@@ -89,6 +90,7 @@ const DIRECTIONS = [
 
 export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   const { t } = useT();
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const elapsedMillisRef = useRef(0);
   const playStartedAtRef = useRef<number>(Date.now());
@@ -178,8 +180,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   const startGame = useCallback(async () => {
     if (!verifySelectedTrainingUser()) return;
     prepareAudioFeedback(jsPsychRef);
-    await enterFullscreenFromUserGesture(document.documentElement);
-    await waitForFullscreenLayout();
+    await enterTrainingFullscreen();
 
     const nextRows = selectedBoardConfig.rows;
     const nextCols = selectedBoardConfig.cols;
@@ -194,7 +195,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     elapsedMillisRef.current = 0;
     playStartedAtRef.current = Date.now();
     setPhase('playing');
-  }, [selectedBoardConfig, t]);
+  }, [enterTrainingFullscreen, selectedBoardConfig]);
 
   const returnToMenu = useCallback(() => {
     setPhase('menu');
@@ -204,8 +205,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
 
   const restartGame = useCallback(async () => {
     prepareAudioFeedback(jsPsychRef);
-    await enterFullscreenFromUserGesture(document.documentElement);
-    await waitForFullscreenLayout();
+    await enterTrainingFullscreen();
     setBoard(createEmptyBoard(boardRows, boardCols));
     setMineCount(selectedBoardConfig.mines);
     setMinesGenerated(false);
@@ -214,7 +214,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     elapsedMillisRef.current = 0;
     playStartedAtRef.current = Date.now();
     setPhase('playing');
-  }, [boardCols, boardRows, selectedBoardConfig.mines]);
+  }, [boardCols, boardRows, enterTrainingFullscreen, selectedBoardConfig.mines]);
 
   const toggleFlagAt = useCallback((x: number, y: number) => {
     if (phase !== 'playing') return;
@@ -284,7 +284,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   };
 
   return (
-    <div className={`minesweeper-game minesweeper-phase-${phase}`}>
+    <div ref={fullscreenRootRef} className={`minesweeper-game minesweeper-phase-${phase}`}>
       {phase === 'menu' && (
         <div className="training-panel">
           <TrainingConfigPanel
@@ -634,7 +634,7 @@ function drawCell(ctx: CanvasRenderingContext2D, cell: Cell, cellSize: number) {
 
   if (cell.adjacentMines > 0) {
     ctx.fillStyle = MINESWEEPER_ACCENT;
-    ctx.font = `800 ${Math.max(8, cellSize * 0.58)}px Arial, sans-serif`;
+    ctx.font = `800 ${Math.max(8, cellSize * 0.58)}px ${typography.fontFamily}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(String(cell.adjacentMines), x + cellSize / 2, y + cellSize / 2 + cellSize * 0.04);

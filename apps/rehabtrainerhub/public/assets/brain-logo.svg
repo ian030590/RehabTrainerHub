@@ -43,7 +43,7 @@
       fill: #7FBA96;
     }
     .wordmark {
-      font-family: Inter, "M PLUS Rounded 1c", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      font-family: "Microsoft JhengHei", "Microsoft JhengHei UI", "PingFang TC", "Noto Sans TC", Arial, sans-serif;
       font-size: 150px;
       font-weight: 800;
       letter-spacing: 0;
