@@ -1310,6 +1310,7 @@ function getVisionRuleSections(
               description: '依小地圖與路口提示完成送貨路線，並在突發事件中做出煞車或閃避反應。',
               items: [
                 '使用設定的控制方式操控方向、油門與緊急煞車。',
+                '按 C 或 V 可在跟隨、引擎蓋與駕駛艙視角間切換。',
                 '遇到行人、逆向車或其他危險事件時，請立即煞車或避開碰撞箱。',
                 '偏離車道太久會被系統重置，請盡量維持在路線上。',
               ],
@@ -1325,6 +1326,7 @@ function getVisionRuleSections(
               description: 'Follow the mini-map and intersection prompts to complete the delivery route while responding to hazards.',
               items: [
                 'Use the selected control mode for steering, throttle, and emergency braking.',
+                'Press C or V to switch between chase, hood, and cockpit camera views.',
                 'When a pedestrian, wrong-way car, or other hazard appears, brake or steer away from the collision box.',
                 'If you leave the lane for too long, the system resets the vehicle to the route.',
               ],
