@@ -48,7 +48,7 @@ const info = {
       type: ParameterType.BOOL,
       default: true,
     },
-    /** 'beginner' | 'intermediate' | 'advanced' – controls hazard reaction window */
+    /** 'beginner' | 'intermediate' | 'advanced' - controls hazard reaction window */
     driving_difficulty: {
       type: ParameterType.STRING,
       default: 'beginner',
@@ -102,7 +102,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private hazardSpawnCount = 0;
   private lastBrakePressed = false;
 
-  // ── Free-steering vehicle state ──
+  // Free-steering vehicle state
   private vehicleX = 0;
   private vehicleZ = 0;
   private vehicleHeading = 0; // radians, 0 = +Z direction
@@ -316,7 +316,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   /* ================================================================
-   * CALIBRATION OVERLAY – redesigned: info items are NOT styled as buttons
+   * CALIBRATION OVERLAY - redesigned: info items are NOT styled as buttons
    * ================================================================ */
   private createCalibrationOverlay(root: HTMLDivElement): HTMLDivElement {
     const overlay = document.createElement('div');
@@ -975,7 +975,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const arrowLen = 12;
     const ndx = Math.sin(this.vehicleHeading);
     const ndy = Math.cos(this.vehicleHeading);
-    // Map world to screen: +X → +sx, +Z → +sy
+    // Map world to screen: +X -> +sx, +Z -> +sy
     const screenDx = ndx * scale;
     const screenDy = ndy * scale;
     const screenLen = Math.hypot(screenDx, screenDy) || 1;
@@ -1012,10 +1012,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const nextInter = this.intersections.find((iz) => !iz.entered && this.progress < iz.distance);
       if (nextInter) {
         const dist = Math.round(nextInter.distance - this.progress);
-        const arrow = nextInter.turnDir === 'right' ? '➡️' : nextInter.turnDir === 'left' ? '⬅️' : '⬆️';
+        const arrow = nextInter.turnDir === 'right' ? '\u2192' : nextInter.turnDir === 'left' ? '\u2190' : '\u2191';
         dirLabel.textContent = `${arrow} ${this.format(this.text.turnAfterMeters, { dist, instruction: nextInter.instruction })}`;
       } else {
-        dirLabel.textContent = `⬆️ ${this.text.straightToDestination}`;
+        dirLabel.textContent = `\u2191 ${this.text.straightToDestination}`;
       }
     }
   }
@@ -1057,11 +1057,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       borderRadius: '50% 50% 0 0 / 16% 16% 0 0',
     });
 
-    // Steering wheel offset slightly left for left-hand drive (Taiwan)
+    // Left-hand-drive cockpit: driver and steering wheel are on the left side.
     const wheel = document.createElement('div');
     Object.assign(wheel.style, {
       position: 'absolute',
-      left: 'calc(50% - 30px)',
+      left: '38%',
       bottom: '4%',
       width: '220px',
       height: '110px',
@@ -1109,7 +1109,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.buildingCollisionBoxes = [];
 
     const roadBaseMat = new THREE.MeshStandardMaterial({ color: 0x2b3035, roughness: 0.9, metalness: 0.08 });
-    const laneMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.76, metalness: 0.05 });
+    const centerLineMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.76, metalness: 0.05 });
     const stopLineMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.68, metalness: 0.04 });
     const edgeMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
@@ -1146,6 +1146,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     ground.receiveShadow = true;
     this.scene.add(ground);
 
+    let segmentStartDistance = 0;
     for (const segment of this.route) {
       const mid = {
         x: segment.start.x + segment.dir.x * segment.length / 2,
@@ -1176,29 +1177,22 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         halfLength: segment.length / 2,
       });
 
-      for (const side of [-1, 1]) {
-        const edge = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.055, segment.length), edgeMat);
-        edge.position.set(
-          mid.x + normal.x * side * (this.referenceRoadWidth / 2 - 0.1),
-          0.06,
-          mid.z + normal.z * side * (this.referenceRoadWidth / 2 - 0.1),
-        );
-        edge.rotation.y = angle;
-        this.scene.add(edge);
-      }
+      this.addRoadEdgeMarkings(segment, segmentStartDistance, angle, normal, edgeMat);
 
       for (let d = 12; d < segment.length; d += 18) {
+        if (this.isNearIntersection(segmentStartDistance + d, 17)) continue;
         const center = {
           x: segment.start.x + segment.dir.x * d,
           z: segment.start.z + segment.dir.z * d,
         };
-        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.035, 7.2), laneMat);
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.035, 7.2), centerLineMat);
         stripe.position.set(center.x, 0.045, center.z);
         stripe.rotation.y = angle;
         this.scene.add(stripe);
       }
 
-      this.addReferenceRoadBarriers(segment, angle, normal, postMat, railMat, reflectorMat);
+      this.addReferenceRoadBarriers(segment, segmentStartDistance, angle, normal, postMat, railMat, reflectorMat);
+      segmentStartDistance += segment.length;
     }
 
     this.addLeftDriveStopLines(stopLineMat);
@@ -1247,6 +1241,36 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
   }
 
+  private addRoadEdgeMarkings(
+    segment: RouteSegment,
+    segmentStartDistance: number,
+    angle: number,
+    normal: Vec2,
+    material: any,
+  ) {
+    const THREE = this.requireThree();
+    if (!this.scene) return;
+
+    const edgeLength = 10;
+    for (let d = edgeLength / 2; d < segment.length; d += edgeLength + 1.5) {
+      if (this.isNearIntersection(segmentStartDistance + d, 18)) continue;
+      const center = {
+        x: segment.start.x + segment.dir.x * d,
+        z: segment.start.z + segment.dir.z * d,
+      };
+      for (const side of [-1, 1]) {
+        const edge = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.055, edgeLength), material);
+        edge.position.set(
+          center.x + normal.x * side * (this.referenceRoadWidth / 2 - 0.1),
+          0.06,
+          center.z + normal.z * side * (this.referenceRoadWidth / 2 - 0.1),
+        );
+        edge.rotation.y = angle;
+        this.scene.add(edge);
+      }
+    }
+  }
+
   private createReferenceRoadMaterial(length: number) {
     const THREE = this.requireThree();
     const loader = new THREE.TextureLoader();
@@ -1271,6 +1295,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private addReferenceRoadBarriers(
     segment: RouteSegment,
+    segmentStartDistance: number,
     angle: number,
     normal: Vec2,
     postMat: any,
@@ -1280,6 +1305,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const THREE = this.requireThree();
     if (!this.scene) return;
     for (let d = 6; d < segment.length; d += 8) {
+      if (this.isNearIntersection(segmentStartDistance + d, 22)) continue;
       const point = {
         x: segment.start.x + segment.dir.x * d,
         z: segment.start.z + segment.dir.z * d,
@@ -1443,14 +1469,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       group.add(sign);
 
       // Arrow on sign
-      const arrowLabel = inter.turnDir === 'right' ? '→' : '←';
+      const arrowLabel = inter.turnDir === 'right' ? '\u2192' : '\u2190';
       const texture = this.createSignTexture(arrowLabel);
       const arrowMat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
       const arrowPlane = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), arrowMat);
       arrowPlane.position.set(0, 4.2, 0.07);
       group.add(arrowPlane);
 
-      // Place on right side of road (Taiwan drives on right)
+      // Place on the right side of the road for left-hand-drive traffic.
       group.position.set(
         point.x + point.normal.x * (this.roadWidth / 2 + 1),
         0,
@@ -1826,12 +1852,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     // reference game's cinematic drift feel without changing scoring contracts.
     const lateralGrip = this.lerp(1.0, 0.68, Math.pow(speedRatio, 0.85));
     this.lastYawRate = this.vehicleSpeed > 0.03
-      ? -(this.vehicleSpeed * Math.tan(this.frontWheelAngle) / this.wheelBase) * lateralGrip
+      ? (this.vehicleSpeed * Math.tan(this.frontWheelAngle) / this.wheelBase) * lateralGrip
       : 0;
     this.vehicleHeading += this.lastYawRate * dt;
 
     // Move forward in heading direction
-    // heading=0 → moving in +Z, heading=PI/2 → moving in +X
+    // heading=0 -> moving in +Z, heading=PI/2 -> moving in +X
     const forward = this.getForwardVector(this.vehicleHeading);
     this.vehicleX += forward.x * this.vehicleSpeed * dt;
     this.vehicleZ += forward.z * this.vehicleSpeed * dt;
@@ -1852,7 +1878,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.progress = proj.distance;
     this.lateralOffset = proj.lateral;
 
-    // Lane deviation check – deviation is being too far from route center
+    // Lane deviation check - deviation is being too far from route center
     this.updateLaneDepartureState(Math.abs(this.lateralOffset) > this.laneDeviationLimit, time);
   }
 
@@ -1966,9 +1992,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         bestDist = distSq;
         bestRouteD = traveled + clampedT;
 
-        // Lateral offset: cross product to get signed distance
-        // normal = (-dir.z, dir.x) → positive on the left side
-        // We want + = right for Taiwan driving, so negate
+        // Lateral offset is positive on the right-hand lane used by left-hand-drive countries.
         const normal = { x: segment.dir.z, z: -segment.dir.x };
         bestLateral = (wx - closestX) * normal.x + (wz - closestZ) * normal.z;
       }
@@ -1988,7 +2012,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       if (!inter.announced && distToInter < 50 && distToInter > 0) {
         inter.announced = true;
         if (this.hud && inter.turnDir) {
-          const arrow = inter.turnDir === 'right' ? '→' : '←';
+          const arrow = inter.turnDir === 'right' ? '\u2192' : '\u2190';
           this.hud.status.textContent = this.format(this.text.upcomingTurn, { instruction: inter.instruction, arrow });
         }
       }
@@ -2374,15 +2398,16 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         vehicleBox.centerZ + forward.z * (7.5 + speedRatio * 5),
       );
     } else {
+      const driverLeftOffset = -0.62;
       targetPosition.set(
-        vehicleBox.centerX + forward.x * 0.45 + right.x * cabinSway,
+        vehicleBox.centerX + forward.x * 0.45 + right.x * (driverLeftOffset + cabinSway),
         2.05,
-        vehicleBox.centerZ + forward.z * 0.45 + right.z * cabinSway,
+        vehicleBox.centerZ + forward.z * 0.45 + right.z * (driverLeftOffset + cabinSway),
       );
       lookAt.set(
-        vehicleBox.centerX + forward.x * 35 + right.x * this.steeringInput * 0.65,
+        vehicleBox.centerX + forward.x * 35 + right.x * (driverLeftOffset * 0.35 + this.steeringInput * 0.65),
         1.65,
-        vehicleBox.centerZ + forward.z * 35 + right.z * this.steeringInput * 0.65,
+        vehicleBox.centerZ + forward.z * 35 + right.z * (driverLeftOffset * 0.35 + this.steeringInput * 0.65),
       );
     }
 
@@ -2413,7 +2438,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (this.hud?.event) {
       this.hud.event.textContent = this.language === 'en'
         ? `View: ${this.getCameraModeText()}`
-        : `視角：${this.getCameraModeText()}`;
+        : `\u8996\u89d2\uff1a${this.getCameraModeText()}`;
     }
   }
 
@@ -2421,14 +2446,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (this.language === 'en') {
       return this.cameraMode === 'first-person' ? 'First-person' : 'Third-person';
     }
-    return this.cameraMode === 'first-person' ? '第一人稱' : '第三人稱';
+    return this.cameraMode === 'first-person' ? '\u7b2c\u4e00\u4eba\u7a31' : '\u7b2c\u4e09\u4eba\u7a31';
   }
 
   private updateCameraModeHud() {
     if (this.hud?.view) {
       this.hud.view.textContent = this.language === 'en'
         ? `View: ${this.getCameraModeText()}`
-        : `視角：${this.getCameraModeText()}`;
+        : `\u8996\u89d2\uff1a${this.getCameraModeText()}`;
     }
     if (this.hud?.cockpit) {
       this.hud.cockpit.style.display = this.cameraMode === 'first-person' ? 'block' : 'none';
@@ -2446,7 +2471,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const nextInter = this.intersections.find((iz) => !iz.entered && this.progress < iz.distance);
     if (nextInter && nextInter.turnDir) {
       const dist = Math.round(nextInter.distance - this.progress);
-      const arrow = nextInter.turnDir === 'right' ? '→' : '←';
+      const arrow = nextInter.turnDir === 'right' ? '\u2192' : '\u2190';
       this.hud.status.textContent = this.format(this.text.navTurn, {
         dist,
         instruction: nextInter.instruction,
@@ -2461,7 +2486,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (this.hud.view) {
       this.hud.view.textContent = this.language === 'en'
         ? `View: ${this.getCameraModeText()}`
-        : `視角：${this.getCameraModeText()}`;
+        : `\u8996\u89d2\uff1a${this.getCameraModeText()}`;
     }
   }
 
