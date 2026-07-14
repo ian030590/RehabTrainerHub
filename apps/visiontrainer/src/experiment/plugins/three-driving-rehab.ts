@@ -1153,7 +1153,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         z: segment.start.z + segment.dir.z * segment.length / 2,
       };
       const angle = Math.atan2(segment.dir.x, segment.dir.z);
-      const normal = { x: segment.dir.z, z: -segment.dir.x };
+      const normal = { x: -segment.dir.z, z: segment.dir.x };
 
       const roadBase = new THREE.Mesh(new THREE.BoxGeometry(this.referenceRoadWidth + 0.44, 0.08, segment.length), roadBaseMat);
       roadBase.position.set(mid.x, -0.03, mid.z);
@@ -1852,7 +1852,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     // reference game's cinematic drift feel without changing scoring contracts.
     const lateralGrip = this.lerp(1.0, 0.68, Math.pow(speedRatio, 0.85));
     this.lastYawRate = this.vehicleSpeed > 0.03
-      ? (this.vehicleSpeed * Math.tan(this.frontWheelAngle) / this.wheelBase) * lateralGrip
+      ? -(this.vehicleSpeed * Math.tan(this.frontWheelAngle) / this.wheelBase) * lateralGrip
       : 0;
     this.vehicleHeading += this.lastYawRate * dt;
 
@@ -1992,8 +1992,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         bestDist = distSq;
         bestRouteD = traveled + clampedT;
 
-        // Lateral offset is positive on the right-hand lane used by left-hand-drive countries.
-        const normal = { x: segment.dir.z, z: -segment.dir.x };
+        // With this +Z-forward scene convention, road-right is (-dir.z, dir.x).
+        const normal = { x: -segment.dir.z, z: segment.dir.x };
         bestLateral = (wx - closestX) * normal.x + (wz - closestZ) * normal.z;
       }
 
@@ -2608,7 +2608,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getVisualRightVector(angle: number): Vec2 {
-    return { x: Math.cos(angle), z: -Math.sin(angle) };
+    return { x: -Math.cos(angle), z: Math.sin(angle) };
   }
 
   private getBoxWidthAxis(angle: number): Vec2 {
@@ -2631,7 +2631,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       if (clamped <= traveled + segment.length || i === this.route.length - 1) {
         const local = Math.max(0, Math.min(segment.length, clamped - traveled));
         const dir = this.getSmoothedDirection(i, local);
-        const normal = { x: dir.z, z: -dir.x };
+        const normal = { x: -dir.z, z: dir.x };
         return {
           x: segment.start.x + segment.dir.x * local,
           z: segment.start.z + segment.dir.z * local,
@@ -2648,7 +2648,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       x: last.start.x + last.dir.x * last.length,
       z: last.start.z + last.dir.z * last.length,
       dir: last.dir,
-      normal: { x: last.dir.z, z: -last.dir.x },
+      normal: { x: -last.dir.z, z: last.dir.x },
       segmentIndex: this.route.length - 1,
       localDistance: last.length,
     };

@@ -73,7 +73,6 @@ export function HomePage() {
   const [drivingRedFlashEnabled, setDrivingRedFlashEnabled] = useAppSetting('drivingRedFlashEnabled');
   const [drivingDifficulty, setDrivingDifficulty] = useAppSetting('drivingDifficulty');
   const [drivingControlMode, setDrivingControlMode] = useAppSetting('drivingControlMode');
-  const [prewarmed, setPrewarmed] = useState(() => pixiAppManager.ready);
   const [isStartingTraining, setIsStartingTraining] = useState(false);
   const rulesLabels = getRulesLabels(lang);
   const showRulesButtonLabel = rulesLabels.next;
@@ -90,17 +89,10 @@ export function HomePage() {
   // Warm up the selected training route and engine when a module panel expands.
   useEffect(() => {
     if (!expandedModule) return;
-    setPrewarmed(false);
-    let cancelled = false;
-    Promise.all([
+    void Promise.all([
       preloadTrainingRoute(),
       preloadTrainingEngine(expandedModule),
-    ]).then(() => {
-      if (!cancelled) setPrewarmed(true);
-    }).catch(() => {
-      if (!cancelled) setPrewarmed(false);
-    });
-    return () => { cancelled = true; };
+    ]).catch(() => undefined);
   }, [expandedModule]);
 
   useEffect(() => {
@@ -155,7 +147,6 @@ export function HomePage() {
       ]);
     } catch (error) {
       console.error('Training preload failed:', error);
-      setPrewarmed(false);
       setIsStartingTraining(false);
       alert(t('home.trainingLoadError'));
       return;
@@ -441,7 +432,7 @@ export function HomePage() {
                   <polygon points="5,3 19,12 5,21" />
                 </svg>
                 {showRulesButtonLabel}
-                {isStartingTraining ? <span className="loading-dot" /> : prewarmed && <span className="ready-dot" />}
+                {isStartingTraining && <span className="loading-dot" />}
               </button>
               <button
                 className="btn btn-ghost btn-lg"
@@ -763,7 +754,7 @@ export function HomePage() {
                   <polygon points="5,3 19,12 5,21" />
                 </svg>
                 {showRulesButtonLabel}
-                {isStartingTraining ? <span className="loading-dot" /> : prewarmed && <span className="ready-dot" />}
+                {isStartingTraining && <span className="loading-dot" />}
               </button>
               <button
                 className="btn btn-ghost btn-lg"
@@ -869,7 +860,7 @@ export function HomePage() {
                   <polygon points="5,3 19,12 5,21" />
                 </svg>
                 {showRulesButtonLabel}
-                {isStartingTraining ? <span className="loading-dot" /> : prewarmed && <span className="ready-dot" />}
+                {isStartingTraining && <span className="loading-dot" />}
               </button>
               <button
                 className="btn btn-ghost btn-lg"
@@ -954,7 +945,7 @@ export function HomePage() {
                   <polygon points="5,3 19,12 5,21" />
                 </svg>
                 {showRulesButtonLabel}
-                {isStartingTraining ? <span className="loading-dot" /> : prewarmed && <span className="ready-dot" />}
+                {isStartingTraining && <span className="loading-dot" />}
               </button>
               <button
                 className="btn btn-ghost btn-lg"
@@ -1073,7 +1064,7 @@ export function HomePage() {
                   <polygon points="5,3 19,12 5,21" />
                 </svg>
                 {showRulesButtonLabel}
-                {isStartingTraining ? <span className="loading-dot" /> : prewarmed && <span className="ready-dot" />}
+                {isStartingTraining && <span className="loading-dot" />}
               </button>
               <button
                 className="btn btn-ghost btn-lg"
@@ -1104,7 +1095,7 @@ export function HomePage() {
                   <polygon points="5,3 19,12 5,21" />
                 </svg>
                 {showRulesButtonLabel}
-                {isStartingTraining ? <span className="loading-dot" /> : prewarmed && <span className="ready-dot" />}
+                {isStartingTraining && <span className="loading-dot" />}
               </button>
               <button
                 className="btn btn-ghost btn-lg"
