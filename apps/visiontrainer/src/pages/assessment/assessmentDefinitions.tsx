@@ -1,12 +1,15 @@
 import type { TranslationKey } from '../../i18n';
 import type { TestType } from './logic/optotypeRenderer';
 
+export type AssessmentId = TestType | 'ufov';
+
 export interface AssessmentDefinition {
-  id: TestType;
+  id: AssessmentId;
   titleKey: TranslationKey;
   descriptionKey: TranslationKey;
-  optionCount: number;
-  defaultTrialCount: number;
+  optionCount?: number;
+  defaultTrialCount?: number;
+  route?: string;
 }
 
 export const ASSESSMENTS: readonly AssessmentDefinition[] = [
@@ -51,5 +54,11 @@ export const ASSESSMENTS: readonly AssessmentDefinition[] = [
     descriptionKey: 'assess.contrast.desc',
     optionCount: 8,
     defaultTrialCount: 18,
+  },
+  {
+    id: 'ufov',
+    titleKey: 'assess.ufov.title',
+    descriptionKey: 'assess.ufov.desc',
+    route: '/assessment/ufov',
   },
 ];

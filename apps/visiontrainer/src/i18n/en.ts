@@ -425,6 +425,8 @@ export const en: Record<TranslationKey, string> = {
   'exp.res.score': 'Score:',
   'assess.contrast.title': 'Contrast Sensitivity',
   'assess.contrast.desc': 'Measure your contrast sensitivity function',
+  'assess.ufov.title': 'UFOV Attention Test',
+  'assess.ufov.desc': 'Measure visual processing speed, divided attention, and selective attention.',
   'assess.contrast.resultsTitle': 'Contrast Sensitivity Results',
   'common.back': 'Back',
 

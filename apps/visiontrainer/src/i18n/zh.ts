@@ -424,6 +424,8 @@ export const zh = {
   'exp.res.score': '分數:',
   'assess.contrast.title': '對比敏感度',
   'assess.contrast.desc': '測量您的對比敏感度函數',
+  'assess.ufov.title': 'UFOV 注意力測驗',
+  'assess.ufov.desc': '測量視覺處理速度、分散注意力與選擇性注意力。',
   'assess.contrast.resultsTitle': '對比敏感度結果',
   'common.back': '返回',
 

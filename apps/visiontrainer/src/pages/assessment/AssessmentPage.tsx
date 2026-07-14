@@ -7,6 +7,7 @@ import { useT } from '../../i18n';
 import { isAssessmentCalibrationAtDefaults } from '../../utils/settings';
 import { useAppSetting } from '../../utils/useAppSetting';
 import { ASSESSMENTS } from './assessmentDefinitions';
+import type { AssessmentId } from './assessmentDefinitions';
 import type { TestType } from './logic/optotypeRenderer';
 
 export function AssessmentPage() {
@@ -20,13 +21,18 @@ export function AssessmentPage() {
   const [showCalibrationWarning, setShowCalibrationWarning] = useState(false);
   const [plInputMode, setPlInputMode] = useAppSetting('preferentialLookingInputMode');
 
-  const handleCardClick = (testId: TestType) => {
-    if (expandedTest === testId) {
+  const handleCardClick = (testId: AssessmentId) => {
+    const assessment = ASSESSMENTS.find((item) => item.id === testId)!;
+    if (assessment.route) {
+      navigate(assessment.route);
+      return;
+    }
+    const testType = testId as TestType;
+    if (expandedTest === testType) {
       setExpandedTest(null);
     } else {
-      setExpandedTest(testId);
-      const assessment = ASSESSMENTS.find((item) => item.id === testId)!;
-      setLocalTrials(assessment.defaultTrialCount);
+      setExpandedTest(testType);
+      setLocalTrials(assessment.defaultTrialCount ?? 18);
       setCustomTrialsInput('');
     }
   };
@@ -113,13 +119,13 @@ export function AssessmentPage() {
             index={index + 1}
             isSelected={expandedTest === assessment.id}
             actionLabel={expandedTest === assessment.id ? t('btn.collapseSettings') : t('btn.selectTest')}
-            meta={(
+            meta={assessment.optionCount && assessment.defaultTrialCount ? (
               <>
                 <span>{assessment.optionCount} {t('assess.options')}</span>
                 <span aria-hidden="true">·</span>
                 <span>{t('assess.defaultTrials').replace('{n}', assessment.defaultTrialCount.toString())}</span>
               </>
-            )}
+            ) : undefined}
             onSelect={() => handleCardClick(assessment.id)}
           />
         ))}

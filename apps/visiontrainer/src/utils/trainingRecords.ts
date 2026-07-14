@@ -27,6 +27,7 @@ const MODULE_TITLE_KEYS: Record<string, TranslationKey> = {
   'gabor-patching': 'home.module.gaborPatching.title',
   'reading-training': 'home.module.reading.title',
   'driving-rehab': 'home.module.driving.title',
+  'ufov-assessment': 'assess.ufov.title',
 };
 
 export interface TrainingRecordConfig {
@@ -46,6 +47,8 @@ export interface TrainingRecordConfig {
   drivingRedFlashEnabled?: boolean;
   drivingDifficulty?: string;
   drivingControlMode?: string;
+  ufovDetails?: Record<string, unknown>;
+  ufovSummary?: unknown;
 }
 
 export interface TrainingRecord {
