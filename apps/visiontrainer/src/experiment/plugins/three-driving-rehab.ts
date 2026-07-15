@@ -236,6 +236,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly buildingRoadGap = 1.2;
   private readonly buildingRoadMargin = 0.35;
   private readonly buildingIntersectionClearance = 24;
+  private readonly roadMarkingIntersectionClearance = 30;
   private readonly minLaneDeviationLimit = 5.4;
   private readonly laneDeviationGraceMs = 1500;
   private readonly laneResetBlackoutMs = 180;
@@ -296,7 +297,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         roadNoiseSamples: 1800,
         vehicleTextureSize: 1024,
         useReferenceVehicleModel: true,
-        useOsmCity: true,
+        useOsmCity: false,
         osmRoadSegmentLimit: 230,
         osmBuildingLimit: 120,
         ambientTrafficCount: 18,
@@ -314,7 +315,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       roadNoiseSamples: 1200,
       vehicleTextureSize: 512,
       useReferenceVehicleModel: true,
-      useOsmCity: true,
+      useOsmCity: false,
       osmRoadSegmentLimit: 150,
       osmBuildingLimit: 72,
       ambientTrafficCount: 14,
@@ -1930,7 +1931,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const edgeLength = 10;
     const roadWidth = this.getSegmentRoadWidth(segment);
     for (let d = edgeLength / 2; d < segment.length; d += edgeLength + 1.5) {
-      if (this.isNearIntersection(segmentStartDistance + d, 18)) continue;
+      if (this.isNearIntersection(segmentStartDistance + d, this.roadMarkingIntersectionClearance)) continue;
       const center = {
         x: segment.start.x + segment.dir.x * d,
         z: segment.start.z + segment.dir.z * d,
@@ -1995,8 +1996,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const solidStep = 6.5;
     for (let d = 5; d < segment.length - 3; d += solidStep) {
-      if (this.isNearIntersection(segmentStartDistance + d, 7)) continue;
-      const nearIntersection = this.isNearIntersection(segmentStartDistance + d, 38);
+      if (this.isNearIntersection(segmentStartDistance + d, this.roadMarkingIntersectionClearance)) continue;
 
       for (const offset of dividerOffsets) {
         const isCenterDivider = !segment.oneWay && Math.abs(offset) < laneWidth * 0.35;
@@ -2009,11 +2009,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
             continue;
           }
           createDoubleStripe(d, offset, 0.18, 0.13, solidStep + 0.25, centerLineMat);
-          continue;
-        }
-
-        if (nearIntersection && laneCount >= 3) {
-          createDoubleStripe(d, offset, 0.13, 0.11, solidStep + 0.25, laneDividerMat);
           continue;
         }
 
@@ -2727,7 +2722,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     this.renderer.render(this.scene, this.camera);
 
-    if (this.progress >= this.routeLength - 2) {
+    if (this.isDestinationReached()) {
       SoundManager.playRunEnd();
       this.finishTrial(trial, display_element, 'completed');
       return;
@@ -3038,6 +3033,18 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private getIntersectionStopLineDistance(inter: IntersectionZone): number {
     return Math.max(0, inter.distance - this.stopLineSetback);
+  }
+
+  private isDestinationReached(): boolean {
+    if (this.progress >= this.routeLength - 2) return true;
+    if (this.progress < this.routeLength - 18) return false;
+
+    const destination = this.getRoutePoint(this.routeLength);
+    const laneOffset = this.getDrivingLaneOffset(this.routeLength);
+    const vehicleBox = this.getVehicleCollisionBox();
+    const destinationX = destination.x + destination.normal.x * laneOffset;
+    const destinationZ = destination.z + destination.normal.z * laneOffset;
+    return Math.hypot(vehicleBox.centerX - destinationX, vehicleBox.centerZ - destinationZ) < 7.5;
   }
 
   private recordRedLightViolation(inter: IntersectionZone) {

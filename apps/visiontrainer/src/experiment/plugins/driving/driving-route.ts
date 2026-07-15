@@ -83,7 +83,7 @@ function getRenderedRoadProfile(point: RouteControlPoint): Pick<RouteControlPoin
   };
 }
 
-const xinyiKeelungLoop: readonly RouteControlPoint[] = [
+const keelungToXinyiEastDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5576717,
     lat: 25.0297961,
@@ -141,54 +141,6 @@ const xinyiKeelungLoop: readonly RouteControlPoint[] = [
     name: 'Xinyi Road Section 5',
   },
   {
-    lon: 121.5654166,
-    lat: 25.032958,
-    roadWidth: SONGZHI_6_LANE,
-    laneCount: 6,
-    oneWay: false,
-    name: 'Songzhi Road',
-  },
-  {
-    lon: 121.5654635,
-    lat: 25.0358704,
-    roadWidth: SONGSHOU_4_LANE,
-    laneCount: 4,
-    oneWay: false,
-    name: 'Songshou Road',
-  },
-  {
-    lon: 121.5635641,
-    lat: 25.035905,
-    roadWidth: CITY_HALL_2_LANE,
-    laneCount: 2,
-    oneWay: true,
-    name: 'City Hall Road',
-  },
-  {
-    lon: 121.5636052,
-    lat: 25.0357702,
-    roadWidth: CITY_HALL_2_LANE,
-    laneCount: 2,
-    oneWay: true,
-    name: 'City Hall Road',
-  },
-  {
-    lon: 121.5635362,
-    lat: 25.0330043,
-    roadWidth: XINYI_3_LANE,
-    laneCount: 3,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
-    lon: 121.5654166,
-    lat: 25.032958,
-    roadWidth: XINYI_4_LANE,
-    laneCount: 4,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
     lon: 121.568228,
     lat: 25.0327688,
     roadWidth: XINYI_4_LANE,
@@ -198,7 +150,7 @@ const xinyiKeelungLoop: readonly RouteControlPoint[] = [
   },
 ];
 
-const cityHallLoop: readonly RouteControlPoint[] = [
+const songzhiNorthDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5596234,
     lat: 25.0329882,
@@ -247,81 +199,9 @@ const cityHallLoop: readonly RouteControlPoint[] = [
     oneWay: true,
     name: 'City Hall Road',
   },
-  {
-    lon: 121.5636052,
-    lat: 25.0357702,
-    roadWidth: CITY_HALL_2_LANE,
-    laneCount: 2,
-    oneWay: true,
-    name: 'City Hall Road',
-  },
-  {
-    lon: 121.5635362,
-    lat: 25.0330043,
-    roadWidth: XINYI_3_LANE,
-    laneCount: 3,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
-    lon: 121.5654166,
-    lat: 25.032958,
-    roadWidth: XINYI_4_LANE,
-    laneCount: 4,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
-    lon: 121.568228,
-    lat: 25.0327688,
-    roadWidth: XINYI_4_LANE,
-    laneCount: 4,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
 ];
 
-const xinyiEastDelivery: readonly RouteControlPoint[] = [
-  {
-    lon: 121.5597077,
-    lat: 25.0331059,
-    roadWidth: XINYI_3_LANE,
-    laneCount: 3,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
-    lon: 121.5599064,
-    lat: 25.0330834,
-    roadWidth: XINYI_3_LANE,
-    laneCount: 3,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
-    lon: 121.5635362,
-    lat: 25.0330043,
-    roadWidth: XINYI_3_LANE,
-    laneCount: 3,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
-    lon: 121.5654166,
-    lat: 25.032958,
-    roadWidth: XINYI_4_LANE,
-    laneCount: 4,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
-    lon: 121.5654166,
-    lat: 25.032958,
-    roadWidth: SONGZHI_6_LANE,
-    laneCount: 6,
-    oneWay: false,
-    name: 'Songzhi Road',
-  },
+const songshouToCityHallDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5654635,
     lat: 25.0358704,
@@ -354,28 +234,12 @@ const xinyiEastDelivery: readonly RouteControlPoint[] = [
     oneWay: true,
     name: 'Xinyi Road Section 5',
   },
-  {
-    lon: 121.5654166,
-    lat: 25.032958,
-    roadWidth: XINYI_4_LANE,
-    laneCount: 4,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
-    lon: 121.568228,
-    lat: 25.0327688,
-    roadWidth: XINYI_4_LANE,
-    laneCount: 4,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
 ];
 
 export const DRIVING_ROUTE_VARIANTS: readonly DrivingRouteVariant[] = [
-  { id: 'xinyi-keelung-loop', label: 'Xinyi-Keelung loop', points: xinyiKeelungLoop },
-  { id: 'city-hall-loop', label: 'City Hall loop', points: cityHallLoop },
-  { id: 'xinyi-east-delivery', label: 'Xinyi east delivery', points: xinyiEastDelivery },
+  { id: 'keelung-to-xinyi-east', label: 'Keelung to Xinyi east', points: keelungToXinyiEastDelivery },
+  { id: 'songzhi-north-delivery', label: 'Songzhi north delivery', points: songzhiNorthDelivery },
+  { id: 'songshou-to-city-hall', label: 'Songshou to City Hall', points: songshouToCityHallDelivery },
 ];
 
 function buildRoute(points: readonly RouteControlPoint[]): RouteSegment[] {
