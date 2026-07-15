@@ -18,7 +18,7 @@ const TRAINING_RECORDS_DATABASE_NAME = 'stroke-trainer-training-records';
 const TRAINING_RECORDS_DATABASE_VERSION = 1;
 const TRAINING_RECORDS_STORE_NAME = 'records';
 const REMOTE_APP_ID = 'stroketrainer';
-const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
+const AUTH_API_BASE = siteUrls.hub;
 let legacyMigrationPromise: Promise<void> | null = null;
 
 const MODULE_TITLE_KEYS: Record<string, TranslationKey> = {

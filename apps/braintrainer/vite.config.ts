@@ -2,16 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 
-function normalizeSiteUrl(value: string | undefined, fallback: string) {
-  const url = value?.trim() || fallback;
-  return url.replace(/\/+$/, '');
-}
-
 function escapeHtml(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
-const siteUrl = normalizeSiteUrl(process.env.VITE_BRAINTRAINER_URL, 'https://brain.trainerhub.cc');
+const siteUrl = 'https://brain.trainerhub.cc';
 const seoTitle = 'BrainTrainer | 注意記憶與思考訓練';
 const seoDescription = 'BrainTrainer 提供注意、記憶與思考訓練入口，協助依專業建議安排認知訓練練習。';
 

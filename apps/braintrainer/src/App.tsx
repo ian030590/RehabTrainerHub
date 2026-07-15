@@ -23,7 +23,7 @@ const MainConceptTraining = lazy(() => import('./pages/MainConceptTraining').the
 export function App() {
   const { lang, t } = useT();
   const location = useLocation();
-  const apiBase = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
+  const apiBase = siteUrls.hub;
   const locale = lang === 'en' ? 'en' : 'zh-TW';
   const trainingPaths = new Set(['/', '/attention-training', '/attention-training/ufov', '/memory-training', '/thinking-training', '/thinking-training/main-concept']);
 

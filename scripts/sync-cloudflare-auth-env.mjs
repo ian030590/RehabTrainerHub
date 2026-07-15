@@ -26,12 +26,6 @@ function readTomlString(toml, key) {
   return match?.[1];
 }
 
-function normalizeUrl(value) {
-  const trimmed = value?.trim();
-  if (!trimmed) return '';
-  return trimmed.replace(/\/+$/, '');
-}
-
 function discoverPagesProjects() {
   return readdirSync(appsRoot)
     .map((entry) => join(appsRoot, entry))
@@ -56,23 +50,7 @@ function discoverPagesProjects() {
 }
 
 function getAuthBaseUrl() {
-  return normalizeUrl(
-    process.env.AUTH_API_BASE ||
-      process.env.AUTH_BASE_URL ||
-      process.env.REHABTRAINERHUB_URL ||
-      process.env.NEXT_PUBLIC_REHABTRAINERHUB_URL ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      defaultPublicAppUrls.REHABTRAINERHUB_URL,
-  );
-}
-
-function getPublicAppUrl(name, fallback) {
-  return normalizeUrl(
-    process.env[name] ||
-      process.env[`NEXT_PUBLIC_${name}`] ||
-      process.env[`VITE_${name}`] ||
-      fallback,
-  );
+  return defaultPublicAppUrls.REHABTRAINERHUB_URL;
 }
 
 function collectAllowedOrigins(authBaseUrl) {
@@ -80,19 +58,6 @@ function collectAllowedOrigins(authBaseUrl) {
     authBaseUrl,
     ...Object.values(defaultPublicAppUrls),
   ]);
-
-  for (const [name, value] of Object.entries(process.env)) {
-    if (!name.endsWith('_URL')) continue;
-    const normalized = normalizeUrl(value);
-    if (normalized.startsWith('https://') || normalized.startsWith('http://')) {
-      origins.add(normalized);
-    }
-  }
-
-  for (const origin of (process.env.AUTH_ALLOWED_ORIGINS || '').split(',')) {
-    const normalized = normalizeUrl(origin);
-    if (normalized) origins.add(normalized);
-  }
 
   return [...origins].join(',');
 }
@@ -106,10 +71,10 @@ function requireEnv(name) {
 }
 
 function getProjectSecrets(project, authBaseUrl, allowedOrigins) {
-  const hubUrl = getPublicAppUrl('REHABTRAINERHUB_URL', defaultPublicAppUrls.REHABTRAINERHUB_URL);
-  const strokeUrl = getPublicAppUrl('STROKETRAINER_URL', defaultPublicAppUrls.STROKETRAINER_URL);
-  const visionUrl = getPublicAppUrl('VISIONTRAINER_URL', defaultPublicAppUrls.VISIONTRAINER_URL);
-  const brainUrl = getPublicAppUrl('BRAINTRAINER_URL', defaultPublicAppUrls.BRAINTRAINER_URL);
+  const hubUrl = defaultPublicAppUrls.REHABTRAINERHUB_URL;
+  const strokeUrl = defaultPublicAppUrls.STROKETRAINER_URL;
+  const visionUrl = defaultPublicAppUrls.VISIONTRAINER_URL;
+  const brainUrl = defaultPublicAppUrls.BRAINTRAINER_URL;
   const sharedClientConfig = {
     AUTH_API_BASE: authBaseUrl,
     NEXT_PUBLIC_AUTH_API_BASE: authBaseUrl,

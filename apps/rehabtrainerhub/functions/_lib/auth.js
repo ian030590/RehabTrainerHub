@@ -4,6 +4,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'https://vision.trainerhub.cc',
   'https://brain.trainerhub.cc',
 ];
+const DEFAULT_AUTH_BASE_URL = 'https://trainerhub.cc';
 
 const LOCAL_ALLOWED_ORIGINS = [
   'http://localhost:3010',
@@ -26,19 +27,16 @@ let rateLimitTableReady = false;
 let rateLimitCleanupCounter = 0;
 
 export function getAuthBaseUrl(request, env) {
-  const configured = env.AUTH_BASE_URL || env.NEXT_PUBLIC_REHABTRAINERHUB_URL;
-  if (configured) return configured.replace(/\/+$/, '');
   const url = new URL(request.url);
-  return `${url.protocol}//${url.host}`;
+  if (shouldAllowLocalOrigins(env, request)) {
+    return `${url.protocol}//${url.host}`;
+  }
+  return DEFAULT_AUTH_BASE_URL;
 }
 
 export function getAllowedOrigins(env, request) {
-  const configured = (env.AUTH_ALLOWED_ORIGINS || '')
-    .split(',')
-    .map((origin) => origin.trim().replace(/\/+$/, ''))
-    .filter(Boolean);
   const localOrigins = shouldAllowLocalOrigins(env, request) ? LOCAL_ALLOWED_ORIGINS : [];
-  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...localOrigins, ...configured]);
+  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...localOrigins]);
 }
 
 function shouldAllowLocalOrigins(env, request) {

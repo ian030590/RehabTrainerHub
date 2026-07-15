@@ -4,19 +4,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "out/**", ".next/**"],
-      "env": [
-        "VITE_AUTH_API_BASE",
-        "VITE_STROKETRAINER_URL",
-        "VITE_VISIONTRAINER_URL",
-        "VITE_BRAINTRAINER_URL",
-        "VITE_REHABTRAINERHUB_URL",
-        "NEXT_PUBLIC_SITE_URL",
-        "NEXT_PUBLIC_AUTH_API_BASE",
-        "NEXT_PUBLIC_REHABTRAINERHUB_URL",
-        "NEXT_PUBLIC_STROKETRAINER_URL",
-        "NEXT_PUBLIC_VISIONTRAINER_URL",
-        "NEXT_PUBLIC_BRAINTRAINER_URL"
-      ]
+      "env": []
     },
     "dev": {
       "cache": false,

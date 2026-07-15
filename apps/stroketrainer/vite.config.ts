@@ -2,21 +2,16 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 
-function normalizeSiteUrl(value: string | undefined, fallback: string) {
-  const url = value?.trim() || fallback;
-  return url.replace(/\/+$/, '');
-}
-
 function escapeHtml(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
+const siteUrl = 'https://stroke.trainerhub.cc';
 const seoTitle = 'StrokeTrainer | 居家中風復健練習';
 const seoDescription = 'StrokeTrainer 提供動作、認知與語音練習，協助依治療師建議安排居家中風復健訓練。';
 
 export default defineConfig(({ mode }) => {
   const isCloudflarePagesBuild = process.env.CF_PAGES === '1' || mode === 'cloudflare';
-  const siteUrl = normalizeSiteUrl(process.env.VITE_STROKETRAINER_URL, 'https://stroke.trainerhub.cc');
 
   return {
     plugins: [

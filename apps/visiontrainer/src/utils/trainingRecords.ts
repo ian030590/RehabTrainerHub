@@ -19,7 +19,7 @@ const TRAINING_RECORDS_DB_NAME = `${STORAGE_PREFIX}training_records`;
 const TRAINING_RECORDS_DB_VERSION = 1;
 const TRAINING_RECORDS_STORE = 'records';
 const REMOTE_APP_ID = 'visiontrainer';
-const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
+const AUTH_API_BASE = siteUrls.hub;
 
 const MODULE_TITLE_KEYS: Record<string, TranslationKey> = {
   'moving-card': 'home.module.movingCard.title',

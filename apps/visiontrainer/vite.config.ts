@@ -2,16 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 
-function normalizeSiteUrl(value: string | undefined, fallback: string) {
-  const url = value?.trim() || fallback;
-  return url.replace(/\/+$/, '');
-}
-
 function escapeHtml(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
-const siteUrl = normalizeSiteUrl(process.env.VITE_VISIONTRAINER_URL, 'https://vision.trainerhub.cc');
+const siteUrl = 'https://vision.trainerhub.cc';
 const seoTitle = 'VisionTrainer | 視覺訓練與評估工具';
 const seoDescription = 'VisionTrainer 提供視覺評估、眼動、閱讀與視覺注意力練習，適合依專業建議安排居家視覺訓練。';
 

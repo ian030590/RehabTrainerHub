@@ -26,7 +26,7 @@ export interface BrainTrainingRecord {
 
 const TRAINING_RECORDS_KEY = `${STORAGE_PREFIX}training_records_v1`;
 const REMOTE_APP_ID = 'braintrainer';
-const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
+const AUTH_API_BASE = siteUrls.hub;
 
 export async function saveTrainingRecord(record: BrainTrainingRecord): Promise<void> {
   if (hasAuthToken()) {

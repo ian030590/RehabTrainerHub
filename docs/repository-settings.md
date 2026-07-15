@@ -72,20 +72,14 @@ settings by hand.
 
 Canonical production URLs:
 
-- `AUTH_API_BASE=https://trainerhub.cc`
-- `REHABTRAINERHUB_URL=https://trainerhub.cc`
-- `STROKETRAINER_URL=https://stroke.trainerhub.cc`
-- `VISIONTRAINER_URL=https://vision.trainerhub.cc`
-- `BRAINTRAINER_URL=https://brain.trainerhub.cc`
-- `AUTH_ALLOWED_ORIGINS=https://trainerhub.cc,https://stroke.trainerhub.cc,https://vision.trainerhub.cc,https://brain.trainerhub.cc`
+- Hub: `https://trainerhub.cc`
+- StrokeTrainer: `https://stroke.trainerhub.cc`
+- VisionTrainer: `https://vision.trainerhub.cc`
+- BrainTrainer: `https://brain.trainerhub.cc`
 
-These values drive Hub CTA links, each app's related-sites page, Vite canonical
-metadata, and the production sitemaps. Avoid temporary deployment preview URLs
-for these variables.
-
-`AUTH_ALLOWED_ORIGINS` is optional when the deploy script defaults match the
-canonical domains, but setting it explicitly keeps production auth behavior
-auditable.
+These values are fixed in source and drive Hub CTA links, each app's
+related-sites page, Vite canonical metadata, auth API base URLs, and production
+sitemaps.
 
 StrokeTrainer optional external Vosk model URLs:
 
@@ -107,9 +101,8 @@ Recommended mapping:
 - `vision.trainerhub.cc` -> `visiontrainer`
 - `brain.trainerhub.cc` -> `braintrainer`
 
-Set all public URL variables to the final custom domains after DNS is active.
-The Hub CTA links, related-sites pages, canonical metadata, and sitemaps will
-use those values on the next GitHub Actions build.
+The public site URLs are fixed in source. Do not configure alternate public URL
+environment variables for production builds.
 
 ## SEO
 
@@ -119,7 +112,7 @@ use those values on the next GitHub Actions build.
 - Trainer `robots.txt` and `sitemap.xml` files live under each trainer
   `public/` directory.
 - StrokeTrainer, VisionTrainer, and BrainTrainer inject canonical metadata
-  during Vite builds from their public URL variables.
+  during Vite builds from fixed production URLs.
 - Submit each production sitemap to Google Search Console after domain setup:
   `https://trainerhub.cc/sitemap.xml`,
   `https://stroke.trainerhub.cc/sitemap.xml`,

@@ -34,7 +34,7 @@ Register this callback URL in the Google Cloud Console OAuth client:
 https://trainerhub.cc/api/auth/callback
 ```
 
-Register the production callback and set `AUTH_BASE_URL=https://trainerhub.cc`.
+The production auth base URL is fixed to `https://trainerhub.cc`.
 
 ## GitHub Actions Secrets
 
@@ -51,25 +51,13 @@ GOOGLE_CLIENT_SECRET=<google oauth client secret>
 
 ## GitHub Actions Variables
 
-Recommended repository or `cloudflare-pages` environment variables:
-
-```text
-AUTH_API_BASE=https://trainerhub.cc
-REHABTRAINERHUB_URL=https://trainerhub.cc
-STROKETRAINER_URL=https://stroke.trainerhub.cc
-VISIONTRAINER_URL=https://vision.trainerhub.cc
-BRAINTRAINER_URL=https://brain.trainerhub.cc
-AUTH_ALLOWED_ORIGINS=https://trainerhub.cc,https://stroke.trainerhub.cc,https://vision.trainerhub.cc,https://brain.trainerhub.cc
-```
-
-`AUTH_ALLOWED_ORIGINS` is optional when the deploy script defaults match the canonical domains, but setting it explicitly keeps production auth behavior auditable.
+No public URL variables are required for production. The deployment sync script writes the canonical public URLs automatically.
 
 ## Cloudflare Pages Environment Sync
 
 GitHub Actions runs `scripts/sync-cloudflare-auth-env.mjs` during deployment:
 
-- Every Pages project receives shared client auth config:
-  `AUTH_API_BASE`, `NEXT_PUBLIC_AUTH_API_BASE`, `NEXT_PUBLIC_REHABTRAINERHUB_URL`, `VITE_AUTH_API_BASE`, and `VITE_REHABTRAINERHUB_URL`.
+- Every Pages project receives shared client auth config with the canonical public URLs.
 - The Hub project additionally receives:
   `AUTH_BASE_URL`, `AUTH_ALLOWED_ORIGINS`, `AUTH_SESSION_SECRET`, `AUTH_STATE_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`.
 - D1 migrations are applied for projects that define `database_name` and `migrations_dir` in `wrangler.toml`.
@@ -86,12 +74,7 @@ The runtime code can fall back to `AUTH_SESSION_SECRET` if `AUTH_STATE_SECRET` i
 
 ## Trainer And Future App Environment Variables
 
-Shared auth client code should use:
-
-```text
-VITE_AUTH_API_BASE=https://trainerhub.cc
-NEXT_PUBLIC_AUTH_API_BASE=https://trainerhub.cc
-```
+Shared auth client code uses `https://trainerhub.cc`.
 
 ## Privacy and Profile Fields
 

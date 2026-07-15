@@ -8,7 +8,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) => `navbar-link ${isA
 export function Navbar() {
   const { lang, t } = useT();
   const appName = 'BrainTrainer';
-  const apiBase = import.meta.env.VITE_AUTH_API_BASE || siteUrls.hub;
+  const apiBase = siteUrls.hub;
   const locale = lang === 'en' ? 'en' : 'zh-TW';
   const logoSrc = `${import.meta.env.BASE_URL}assets/logo.svg`;
   const navItems = [
