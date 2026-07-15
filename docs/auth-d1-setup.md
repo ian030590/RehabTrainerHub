@@ -28,13 +28,20 @@ npx --yes wrangler@4 d1 migrations apply rehabtrainerhub --config apps/rehabtrai
 
 ## OAuth Redirect URI
 
-Register this callback URL in the Google Cloud Console OAuth client:
+Register this exact callback URL in the Google Cloud Console OAuth client's
+**Authorized redirect URIs**:
 
 ```text
 https://trainerhub.cc/api/auth/callback
 ```
 
-The production auth base URL is fixed to `https://trainerhub.cc`.
+StrokeTrainer, VisionTrainer, and BrainTrainer still use this same Hub callback
+because their login popup starts from `https://trainerhub.cc/api/auth/start`.
+Adding only the trainer site URLs, such as `https://stroke.trainerhub.cc` or
+`https://vision.trainerhub.cc`, does not satisfy Google's `redirect_uri` check.
+
+The production auth base URL is `https://trainerhub.cc`. If `AUTH_BASE_URL` is
+set manually, it must also be the Hub origin, not an individual trainer origin.
 
 ## GitHub Actions Secrets
 

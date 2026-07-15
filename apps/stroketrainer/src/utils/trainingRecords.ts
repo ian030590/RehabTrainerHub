@@ -3,6 +3,7 @@ import {
   hasAuthToken,
   saveRemoteTrainingRecord,
 } from '@rehab-trainer/ui/auth/authClient';
+import { createCsvContent } from '@rehab-trainer/ui/csv';
 import type { TranslationKey } from '../i18n';
 import type { TrialData } from '../pages/training/types';
 import { downloadCsvFile } from './downloadFile';
@@ -331,10 +332,10 @@ export function buildTrainingRecordsCsv(records: TrainingRecord[], t: TFunction)
   const detailKeys = collectDetailKeys(rows);
   const columns = [...BASE_CSV_COLUMNS, ...detailKeys.map((key) => ({ key, label: key }))];
 
-  return [
+  return createCsvContent([
     columns.map((column) => column.label),
     ...rows.map((row) => columns.map((column) => row.base[column.key] ?? row.details[column.key] ?? '')),
-  ].map((row) => row.map(toCsvCell).join(',')).join('\n');
+  ]);
 }
 
 function toPreparedCsvRows(record: TrainingRecord, t: TFunction): PreparedCsvRow[] {
@@ -561,13 +562,4 @@ function normalizeCsvValue(value: unknown): unknown {
   } catch {
     return String(value);
   }
-}
-
-function toCsvCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
-
-  const text = String(value);
-  if (!/[",\r\n]/.test(text)) return text;
-
-  return `"${text.replace(/"/g, '""')}"`;
 }

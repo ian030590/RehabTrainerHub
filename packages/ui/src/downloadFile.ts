@@ -1,3 +1,5 @@
+import { ensureCsvUtf8Bom } from './csv';
+
 export function downloadFile(
   content: BlobPart | BlobPart[],
   filename: string,
@@ -18,5 +20,5 @@ export function downloadFile(
 }
 
 export function downloadCsvFile(csvContent: string, filename: string): void {
-  downloadFile(`\uFEFF${csvContent}`, filename, 'text/csv;charset=utf-8');
+  downloadFile(ensureCsvUtf8Bom(csvContent), filename, 'text/csv;charset=utf-8');
 }

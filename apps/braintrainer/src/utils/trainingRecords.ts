@@ -3,6 +3,7 @@ import {
   hasAuthToken,
   saveRemoteTrainingRecord,
 } from '@rehab-trainer/ui/auth/authClient';
+import { createCsvContent } from '@rehab-trainer/ui/csv';
 import { downloadCsvFile, downloadFile } from '@rehab-trainer/ui/downloadFile';
 import type { TranslationKey } from '../i18n';
 import { STORAGE_PREFIX } from './settings';
@@ -138,16 +139,10 @@ function buildTrainingRecordsCsv(records: BrainTrainingRecord[]): string {
     }));
   });
   const columns = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
-  return [
+  return createCsvContent([
     columns,
-    ...rows.map((row) => columns.map((column) => toCsvCell(row[column]))),
-  ].map((row) => row.join(',')).join('\n');
-}
-
-function toCsvCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    ...rows.map((row) => columns.map((column) => row[column])),
+  ]);
 }
 
 function formatFileDate(date: Date): string {

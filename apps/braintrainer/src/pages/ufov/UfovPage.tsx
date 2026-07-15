@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import { createCsvContent } from '@rehab-trainer/ui/csv';
 import {
   measureDisplayRefreshRate,
   type DisplayRefreshInfo,
@@ -1109,16 +1110,10 @@ function buildUfovTrainingRecordsCsv(records: UfovTrainingRecord[]): string {
     }));
   });
   const columns = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
-  return [
+  return createCsvContent([
     columns,
-    ...rows.map((row) => columns.map((column) => toCsvCell(row[column]))),
-  ].map((row) => row.join(',')).join('\n');
-}
-
-function toCsvCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    ...rows.map((row) => columns.map((column) => row[column])),
+  ]);
 }
 
 function safeFilePart(value: string): string {

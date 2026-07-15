@@ -48,6 +48,8 @@ export { UserSelector } from './components/UserSelector';
 export type { UserSelectorProps } from './components/UserSelector';
 export { detectDisplayDeviceKind, is60HzRefreshFamily, measureDisplayRefreshRate } from './displayTiming';
 export type { DisplayDeviceKind, DisplayRefreshInfo, DisplayRefreshMeasureOptions } from './displayTiming';
+export { createCsvContent, ensureCsvUtf8Bom, toCsvCell } from './csv';
+export type { CsvCellValue, CsvRow } from './csv';
 export { downloadCsvFile, downloadFile } from './downloadFile';
 export { enterFullscreenFromUserGesture, exitFullscreenIfActive, waitForFullscreenLayout } from './fullscreen';
 export { createUseActiveUser } from './hooks/useActiveUser';

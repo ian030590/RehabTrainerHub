@@ -31,12 +31,12 @@ export function getAuthBaseUrl(request, env) {
   if (shouldAllowLocalOrigins(env, request)) {
     return `${url.protocol}//${url.host}`;
   }
-  return DEFAULT_AUTH_BASE_URL;
+  return getConfiguredAuthBaseUrl(env);
 }
 
 export function getAllowedOrigins(env, request) {
   const localOrigins = shouldAllowLocalOrigins(env, request) ? LOCAL_ALLOWED_ORIGINS : [];
-  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...localOrigins]);
+  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...getConfiguredAllowedOrigins(env), ...localOrigins]);
 }
 
 function shouldAllowLocalOrigins(env, request) {
@@ -52,6 +52,28 @@ function shouldAllowLocalOrigins(env, request) {
 
 function isLocalHostname(hostname) {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+}
+
+function getConfiguredAuthBaseUrl(env) {
+  return normalizeOrigin(env.AUTH_BASE_URL) || DEFAULT_AUTH_BASE_URL;
+}
+
+function getConfiguredAllowedOrigins(env) {
+  return String(env.AUTH_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origin) => normalizeOrigin(origin))
+    .filter(Boolean);
+}
+
+function normalizeOrigin(value) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) return '';
+
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return '';
+  }
 }
 
 export function isAllowedOrigin(request, env) {
@@ -121,6 +143,7 @@ export function jsonResponse(request, env, data, init = {}) {
   return Response.json(data, {
     ...init,
     headers: {
+      'Content-Type': 'application/json; charset=utf-8',
       ...corsHeaders(request, env),
       ...securityHeaders(),
       ...(init.headers || {}),

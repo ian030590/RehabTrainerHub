@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { onRequestGet as getRecords } from '../api/records.js';
 import { onRequestGet as getSession } from '../api/auth/session.js';
-import { AUTH_COOKIE_NAME, createSessionForUser } from './auth.js';
+import { AUTH_COOKIE_NAME, createSessionForUser, getAllowedOrigins, getAuthBaseUrl } from './auth.js';
 
 const secret = '0123456789abcdef0123456789abcdef';
 const user = {
@@ -42,6 +42,19 @@ const env = {
 
 const token = await createSessionForUser(env, user);
 const cookie = `${AUTH_COOKIE_NAME}=${encodeURIComponent(token)}`;
+
+assert.equal(getAuthBaseUrl(new Request('https://trainerhub.cc/api/auth/start'), env), 'https://trainerhub.cc');
+assert.equal(
+  getAuthBaseUrl(new Request('https://trainerhub.cc/api/auth/start'), {
+    ...env,
+    AUTH_BASE_URL: 'https://auth.example.test/',
+  }),
+  'https://auth.example.test',
+);
+assert.equal(
+  getAllowedOrigins({ ...env, AUTH_ALLOWED_ORIGINS: 'https://extra.example.test,not a url' }, new Request('https://trainerhub.cc/')).has('https://extra.example.test'),
+  true,
+);
 
 async function assertSessionStatus(url, origin, expectedStatus, expectedCorsOrigin) {
   const response = await getSession({

@@ -4,6 +4,7 @@ import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfig
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import { createCsvContent } from '@rehab-trainer/ui/csv';
 import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -852,16 +853,10 @@ function toCsv(summary: SessionSummary): string {
     Correct_Sentences: trial.correctSentenceText,
   }));
 
-  return [
-    columns.join(','),
-    ...rows.map((row) => columns.map((column) => csvCell(row[column as keyof typeof row])).join(',')),
-  ].join('\n');
-}
-
-function csvCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  const text = String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  return createCsvContent([
+    columns,
+    ...rows.map((row) => columns.map((column) => row[column as keyof typeof row])),
+  ]);
 }
 
 function formatTestDate(date: Date): string {

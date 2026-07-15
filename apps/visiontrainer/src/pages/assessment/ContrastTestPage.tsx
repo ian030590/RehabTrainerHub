@@ -8,6 +8,7 @@ import PixiContrastSensitivityPlugin from '../../experiment/plugins/pixi-contras
 import { BestPEST } from './logic/bestPest';
 import { getActiveUser, getSetting } from '../../utils/settings';
 import { downloadCsvFile } from '../../utils/downloadFile';
+import { createCsvContent } from '@rehab-trainer/ui/csv';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -186,7 +187,7 @@ export function ContrastTestPage() {
     rows.push([t('acuity.csv.finalResult') || 'Final Result']);
     rows.push(['logCS (Weber)', resultLogCSW.toFixed(2)]);
     
-    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const csv = createCsvContent([headers, ...rows]);
     downloadCsvFile(
       csv,
       `${prefix ? prefix + '_' : ''}${userName}_contrast_${dateStr}.csv`,

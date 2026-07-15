@@ -31,6 +31,7 @@
     "./components/TrainerAppLayout": "./src/components/TrainerAppLayout.tsx",
     "./components/TrainerNavbar": "./src/components/TrainerNavbar.tsx",
     "./components/UserSelector": "./src/components/UserSelector.tsx",
+    "./csv": "./src/csv.ts",
     "./displayTiming": "./src/displayTiming.ts",
     "./downloadFile": "./src/downloadFile.ts",
     "./fullscreen": "./src/fullscreen.ts",

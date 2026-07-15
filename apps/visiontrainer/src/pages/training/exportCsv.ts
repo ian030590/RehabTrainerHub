@@ -1,3 +1,4 @@
+import { createCsvContent } from '@rehab-trainer/ui/csv';
 import { getSetting } from '../../utils/settings';
 import { downloadCsvFile } from '../../utils/downloadFile';
 import { mean } from '../../utils/mathUtils';
@@ -89,10 +90,7 @@ export function downloadTrainingCsv({
     rows.push([t('exp.res.collisions'), `${results[0]?.collisions ?? 0}`]);
   }
 
-  const csvContent = [
-    headers.join(','),
-    ...rows.map((row) => row.join(',')),
-  ].join('\n');
+  const csvContent = createCsvContent([headers, ...rows]);
 
   downloadCsvFile(
     csvContent,

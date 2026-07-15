@@ -38,6 +38,7 @@ import { getActiveUser, getSetting } from '../../utils/settings';
 import { pixelFromDegree } from '../../utils/spatialUtils';
 import { SoundManager } from '../../utils/soundManager';
 import { downloadCsvFile } from '../../utils/downloadFile';
+import { createCsvContent } from '@rehab-trainer/ui/csv';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -711,7 +712,7 @@ export function AcuityTestPage() {
     rows.push([t('acuity.csv.letterScore'), String(finalLetterScore)]);
     rows.push([t('acuity.csv.accuracy'), `${(correctRate * 100).toFixed(1)}%`]);
 
-    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const csv = createCsvContent([headers, ...rows]);
     downloadCsvFile(
       csv,
       `${prefix ? prefix + '_' : ''}${userName}_acuity_${testType}_${dateStr}.csv`,

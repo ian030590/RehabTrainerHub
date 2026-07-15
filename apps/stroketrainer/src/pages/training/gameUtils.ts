@@ -1,14 +1,12 @@
+import { toCsvCell } from '@rehab-trainer/ui/csv';
+
 type JsPsychDataWriter = {
   data?: {
     write?: (data: unknown) => void;
   };
 };
 
-export function csvCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  const text = String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-}
+export const csvCell = toCsvCell;
 
 export function clamp(value: number, min: number, max: number): number {
   if (!Number.isFinite(value)) return min;
