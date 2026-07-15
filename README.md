@@ -1,5 +1,9 @@
 # RehabTrainerHub
 
+<p align="center">
+  <img src="apps/rehabtrainerhub/public/rehabtrainerhub.svg" alt="Rehab Trainer Hub logo" width="160" />
+</p>
+
 ## 中文
 
 RehabTrainerHub 是居家復健訓練入口，整合多個訓練工具：
