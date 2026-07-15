@@ -858,6 +858,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const THREE = this.requireThree();
     if (!this.scene) return;
 
+    const fogRange = this.getDifficultyFogRange();
+    this.scene.fog = new THREE.Fog(0xcbd7d9, fogRange.near, fogRange.far);
+
     const ambient = new THREE.AmbientLight(0xffffff, 1.28);
     const sun = new THREE.DirectionalLight(0xffe7c2, 1.55);
     sun.position.set(38, 62, 26);
@@ -866,6 +869,27 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const hemi = new THREE.HemisphereLight(0xbfd4df, 0x4d6b50, 0.92);
     this.scene.add(ambient, sun, hemi);
     this.addSkyDome();
+  }
+
+  private getDifficultyFogRange(): { near: number; far: number } {
+    if (this.difficultyPreset === DIFFICULTY_PRESETS.advanced) {
+      return {
+        near: this.renderQuality.fogNear * 0.46,
+        far: this.renderQuality.fogFar * 0.54,
+      };
+    }
+
+    if (this.difficultyPreset === DIFFICULTY_PRESETS.intermediate) {
+      return {
+        near: this.renderQuality.fogNear * 0.68,
+        far: this.renderQuality.fogFar * 0.76,
+      };
+    }
+
+    return {
+      near: this.renderQuality.fogNear,
+      far: this.renderQuality.fogFar,
+    };
   }
 
   private addSkyDome() {
@@ -3293,23 +3317,22 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getHazardLeadDistance(id: HazardId): number {
-    const base = this.difficultyPreset.hazardLeadDistance;
     if (id === 'child-crossing') {
-      return this.clamp(base * 1.2, 34, 52);
+      return 42;
     }
     if (id === 'elder-stopped') {
-      return this.clamp(base * 1.45, 48, 68);
+      return 54;
     }
     if (id === 'drunk-driver') {
-      return this.clamp(base * 3.5, 110, 160);
+      return 130;
     }
     if (id === 'wrong-way-driver') {
-      return this.clamp(base * 4.7, 150, 220);
+      return 185;
     }
     if (id === 'plane-crash') {
-      return this.clamp(base * 3.0, 95, 145);
+      return 112;
     }
-    return base;
+    return 38;
   }
 
   private getHazardSpawnDistance(id: HazardId, triggerDistance: number): number {
