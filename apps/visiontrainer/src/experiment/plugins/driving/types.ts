@@ -29,13 +29,15 @@ export interface DrivingInput {
 }
 
 export type HazardId = 'child-crossing' | 'plane-crash' | 'drunk-driver' | 'elder-stopped' | 'wrong-way-driver';
+export type DrivingEventId = HazardId | 'traffic-light-red';
+export type TrafficLightState = 'green' | 'yellow' | 'red';
 
 export interface HazardTemplate {
   id: HazardId;
 }
 
 export interface DrivingEventResult {
-  event_id: HazardId;
+  event_id: DrivingEventId;
   label: string;
   distance_m: number;
   rt_ms: number | null;
@@ -91,6 +93,15 @@ export interface IntersectionZone {
   turnDir: 'left' | 'right' | null;
   entered: boolean;
   announced: boolean;
+  trafficSignalState: TrafficLightState;
+  trafficSignalOffsetMs: number;
+  redLightChecked: boolean;
+  trafficLightGroup?: any;
+  trafficLightLamps?: {
+    red: any;
+    yellow: any;
+    green: any;
+  };
 }
 
 export interface DifficultyPreset {

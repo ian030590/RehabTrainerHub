@@ -21,6 +21,7 @@ import type {
   IntersectionZone,
   RoutePoint,
   RouteSegment,
+  TrafficLightState,
   Vec2,
   VehicleResetPose,
 } from './driving/types';
@@ -111,6 +112,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private frontWheelAngle = 0;
   private lastYawRate = 0;
   private progress = 0;        // projected distance along route (for hazards/HUD)
+  private previousProgress = 0;
   private lateralOffset = 0;   // signed distance from route center (+ = right)
   private laneDeviationCount = 0;
   private laneDeviationActive = false;
@@ -184,6 +186,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly laneDeviationGraceMs = 1500;
   private readonly laneResetBlackoutMs = 180;
   private readonly laneResetHoldMs = 220;
+  private readonly stopLineSetback = 10.5;
+  private readonly trafficGreenMs = 6400;
+  private readonly trafficYellowMs = 1800;
+  private readonly trafficRedMs = 5400;
   private readonly referenceRoadWidth = 16;
   private readonly referenceVehicleUrl = '/assets/driving/reference-car-game/vehicals/car.glb';
   private readonly referenceRoadTextureUrl = '/assets/driving/reference-car-game/road.jpg';
@@ -225,6 +231,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.initHud(root, trial.red_flash_enabled ?? true);
         this.trialStartTime = performance.now();
         this.lastFrameTime = this.trialStartTime;
+        this.updateTrafficLights(this.trialStartTime);
         this.lastBrakePressed = this.readInput().brake > 0.35;
         this.raf = requestAnimationFrame((time) => this.loop(time, trial, display_element));
       } catch (error) {
@@ -249,6 +256,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.frontWheelAngle = 0;
     this.lastYawRate = 0;
     this.progress = 0;
+    this.previousProgress = 0;
     this.lateralOffset = 0;
     this.cameraRoll = 0;
     this.cameraFov = this.baseCameraFov;
@@ -297,6 +305,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           turnDir,
           entered: false,
           announced: false,
+          trafficSignalState: 'green',
+          trafficSignalOffsetMs: i * 2600,
+          redLightChecked: false,
         });
       }
     }
@@ -1018,8 +1029,85 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       clipPath: 'polygon(0 0, 100% 0, 100% 100%, 58% 100%)',
     });
 
-    cockpit.append(dash, wheel, leftPillar, rightPillar);
+    const centerMirror = this.createRearviewMirror('center');
+    const leftMirror = this.createRearviewMirror('left');
+    const rightMirror = this.createRearviewMirror('right');
+
+    cockpit.append(dash, wheel, leftPillar, rightPillar, centerMirror, leftMirror, rightMirror);
     return cockpit;
+  }
+
+  private createRearviewMirror(position: 'center' | 'left' | 'right'): HTMLDivElement {
+    const mirror = document.createElement('div');
+    const isCenter = position === 'center';
+    const isLeft = position === 'left';
+
+    Object.assign(mirror.style, {
+      position: 'absolute',
+      overflow: 'hidden',
+      background: 'linear-gradient(145deg, rgba(5, 10, 14, 0.98), rgba(18, 27, 34, 0.98))',
+      border: isCenter ? '5px solid rgba(7, 11, 15, 0.98)' : '4px solid rgba(7, 11, 15, 0.96)',
+      borderRadius: isCenter ? '10px' : '18px 22px 20px 18px / 16px 18px 22px 20px',
+      boxShadow: '0 10px 22px rgba(0,0,0,0.36), inset 0 0 0 1px rgba(255,255,255,0.10)',
+    });
+
+    if (isCenter) {
+      Object.assign(mirror.style, {
+        left: '50%',
+        top: '112px',
+        width: '210px',
+        height: '52px',
+        transform: 'translateX(-50%)',
+      });
+    } else {
+      Object.assign(mirror.style, {
+        top: '44%',
+        width: '128px',
+        height: '72px',
+        transform: isLeft ? 'skewY(-5deg) rotate(-2deg)' : 'skewY(5deg) rotate(2deg)',
+      });
+      if (isLeft) {
+        mirror.style.left = '18px';
+      } else {
+        mirror.style.right = '18px';
+      }
+    }
+
+    const glass = document.createElement('div');
+    Object.assign(glass.style, {
+      position: 'absolute',
+      inset: isCenter ? '4px 6px' : '5px',
+      overflow: 'hidden',
+      borderRadius: isCenter ? '6px' : '14px 18px 16px 14px / 12px 14px 18px 16px',
+      background: [
+        'linear-gradient(180deg, rgba(139, 188, 211, 0.88) 0%, rgba(86, 126, 148, 0.78) 43%, rgba(34, 44, 48, 0.84) 44%, rgba(20, 26, 29, 0.92) 100%)',
+        'radial-gradient(circle at 30% 18%, rgba(255,255,255,0.46), rgba(255,255,255,0) 34%)',
+      ].join(', '),
+      boxShadow: 'inset 0 0 18px rgba(0,0,0,0.44)',
+    });
+
+    const road = document.createElement('div');
+    Object.assign(road.style, {
+      position: 'absolute',
+      left: isCenter ? '43%' : isLeft ? '38%' : '46%',
+      bottom: '-18%',
+      width: isCenter ? '34%' : '42%',
+      height: '58%',
+      background: 'linear-gradient(180deg, rgba(49,57,63,0.36), rgba(12,15,18,0.86))',
+      clipPath: 'polygon(43% 0, 57% 0, 100% 100%, 0 100%)',
+      transform: isLeft ? 'rotate(7deg)' : isCenter ? 'none' : 'rotate(-7deg)',
+    });
+
+    const highlight = document.createElement('div');
+    Object.assign(highlight.style, {
+      position: 'absolute',
+      inset: '0',
+      background: 'linear-gradient(120deg, rgba(255,255,255,0.34), rgba(255,255,255,0.02) 32%, rgba(255,255,255,0) 52%)',
+    });
+
+    glass.append(road, highlight);
+    mirror.appendChild(glass);
+    return mirror;
   }
 
   /* ================================================================
@@ -1120,6 +1208,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
 
     this.addLeftDriveStopLines(stopLineMat);
+    this.addTrafficLights();
 
     for (const inter of this.intersections) {
       const point = this.getRoutePoint(inter.distance);
@@ -1151,12 +1240,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (!this.scene) return;
 
     const laneWidth = this.roadWidth / 2 - 1.6;
-    const stopLineSetback = 10.5;
     for (const inter of this.intersections) {
       const segment = this.route[inter.segmentIndex];
       if (!segment) continue;
 
-      const localDistance = Math.max(1, segment.length - stopLineSetback);
+      const localDistance = Math.max(1, segment.length - this.stopLineSetback);
       const normal = { x: -segment.dir.z, z: segment.dir.x };
       const angle = Math.atan2(segment.dir.x, segment.dir.z);
       const stopLine = new THREE.Mesh(new THREE.BoxGeometry(laneWidth, 0.052, 0.72), material);
@@ -1167,6 +1255,47 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       );
       stopLine.rotation.y = angle;
       this.scene.add(stopLine);
+    }
+  }
+
+  private addTrafficLights() {
+    const THREE = this.requireThree();
+    if (!this.scene) return;
+
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x29323a, roughness: 0.58, metalness: 0.35 });
+    const housingMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.62, metalness: 0.18 });
+
+    for (const inter of this.intersections) {
+      const segment = this.route[inter.segmentIndex];
+      if (!segment) continue;
+
+      const normal = { x: -segment.dir.z, z: segment.dir.x };
+      const angle = Math.atan2(segment.dir.x, segment.dir.z);
+      const localDistance = Math.max(2, segment.length - this.stopLineSetback - 2.4);
+      const baseX = segment.start.x + segment.dir.x * localDistance + normal.x * (this.roadWidth / 2 + 1.2);
+      const baseZ = segment.start.z + segment.dir.z * localDistance + normal.z * (this.roadWidth / 2 + 1.2);
+
+      const group = new THREE.Group();
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 4.4, 10), postMat);
+      post.position.y = 2.2;
+      const housing = new THREE.Mesh(new THREE.BoxGeometry(0.78, 2.25, 0.36), housingMat);
+      housing.position.set(0, 4.35, 0);
+      const red = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 10), new THREE.MeshBasicMaterial({ color: 0x451414 }));
+      const yellow = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 10), new THREE.MeshBasicMaterial({ color: 0x4a3a16 }));
+      const green = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 10), new THREE.MeshBasicMaterial({ color: 0x123d24 }));
+      red.position.set(0, 4.9, -0.2);
+      yellow.position.set(0, 4.35, -0.2);
+      green.position.set(0, 3.8, -0.2);
+      group.add(post, housing, red, yellow, green);
+      group.position.set(baseX, 0, baseZ);
+      group.rotation.y = angle;
+      group.traverse?.((child: any) => {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      });
+      this.scene.add(group);
+      inter.trafficLightGroup = group;
+      inter.trafficLightLamps = { red, yellow, green };
     }
   }
 
@@ -1644,12 +1773,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     if (!this.laneResetActive) {
       this.updateVehicleFree(input, dt, time);
+      this.updateTrafficLights(time);
       this.updateIntersections();
       this.activateScheduledHazards(time);
       this.updateHazards(time);
     } else {
       this.vehicleSpeed = 0;
       this.lastYawRate = 0;
+      this.updateTrafficLights(time);
     }
     this.updateVehicleVisual(dt, time);
     this.updateCameraFree(dt);
@@ -1750,6 +1881,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const previousX = this.vehicleX;
     const previousZ = this.vehicleZ;
     const previousHeading = this.vehicleHeading;
+    const previousProgress = this.progress;
 
     // Reference-style target speed smoothing: controls stay the same, but the car
     // eases into throttle/brake like the reference project instead of instantly
@@ -1802,6 +1934,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     // Project vehicle position onto the route to compute progress & lateral offset
     const vehicleBox = this.getVehicleCollisionBox();
     const proj = this.projectOntoRoute(vehicleBox.centerX, vehicleBox.centerZ);
+    this.previousProgress = previousProgress;
     this.progress = proj.distance;
     this.lateralOffset = proj.lateral;
 
@@ -1889,6 +2022,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const vehicleBox = this.getVehicleCollisionBox();
     const projected = this.projectOntoRoute(vehicleBox.centerX, vehicleBox.centerZ);
+    this.previousProgress = projected.distance;
     this.progress = projected.distance;
     this.lateralOffset = projected.lateral;
   }
@@ -1936,6 +2070,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       if (inter.entered) continue;
 
       const distToInter = inter.distance - this.progress;
+      const stopLineDistance = this.getIntersectionStopLineDistance(inter);
       if (!inter.announced && distToInter < 50 && distToInter > 0) {
         inter.announced = true;
         if (this.hud && inter.turnDir) {
@@ -1944,10 +2079,65 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         }
       }
 
+      if (!inter.redLightChecked && this.previousProgress < stopLineDistance && this.progress >= stopLineDistance) {
+        inter.redLightChecked = true;
+        if (inter.trafficSignalState === 'red') {
+          this.recordRedLightViolation(inter);
+        }
+      }
+
       if (this.progress >= inter.distance) {
         inter.entered = true;
       }
     }
+  }
+
+  private updateTrafficLights(time: number) {
+    const elapsedMs = Math.max(0, time - this.trialStartTime);
+    for (const inter of this.intersections) {
+      const state = this.getTrafficLightState(elapsedMs + inter.trafficSignalOffsetMs);
+      inter.trafficSignalState = state;
+      this.updateTrafficLightVisual(inter, state);
+    }
+  }
+
+  private getTrafficLightState(elapsedMs: number): TrafficLightState {
+    const cycleMs = this.trafficGreenMs + this.trafficYellowMs + this.trafficRedMs;
+    const phase = ((elapsedMs % cycleMs) + cycleMs) % cycleMs;
+    if (phase < this.trafficGreenMs) return 'green';
+    if (phase < this.trafficGreenMs + this.trafficYellowMs) return 'yellow';
+    return 'red';
+  }
+
+  private updateTrafficLightVisual(inter: IntersectionZone, state: TrafficLightState) {
+    const lamps = inter.trafficLightLamps;
+    if (!lamps) return;
+    lamps.red.material.color.setHex(state === 'red' ? 0xff1f1f : 0x451414);
+    lamps.yellow.material.color.setHex(state === 'yellow' ? 0xffd84a : 0x4a3a16);
+    lamps.green.material.color.setHex(state === 'green' ? 0x16d463 : 0x123d24);
+  }
+
+  private getIntersectionStopLineDistance(inter: IntersectionZone): number {
+    return Math.max(0, inter.distance - this.stopLineSetback);
+  }
+
+  private recordRedLightViolation(inter: IntersectionZone) {
+    const result: DrivingEventResult = {
+      event_id: 'traffic-light-red',
+      label: this.text.redLightViolation,
+      distance_m: Math.round(this.progress),
+      rt_ms: null,
+      valid: true,
+      collision: false,
+      brake_preheld: false,
+      response: 'red-light-violation',
+    };
+    this.eventResults.push(result);
+    SoundManager.playIncorrect();
+    if (this.hud?.event) {
+      this.hud.event.textContent = this.text.redLightViolationMessage;
+    }
+    inter.redLightChecked = true;
   }
 
   private preloadHazardEvents() {
