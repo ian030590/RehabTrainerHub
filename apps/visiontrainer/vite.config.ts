@@ -11,7 +11,9 @@ function escapeHtml(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
-const siteUrl = normalizeSiteUrl(process.env.VITE_VISIONTRAINER_URL, 'https://visiontrainer.pages.dev');
+const siteUrl = normalizeSiteUrl(process.env.VITE_VISIONTRAINER_URL, 'https://vision.trainerhub.cc');
+const seoTitle = 'VisionTrainer | 視覺訓練與評估工具';
+const seoDescription = 'VisionTrainer 提供視覺評估、眼動、閱讀與視覺注意力練習，適合依專業建議安排居家視覺訓練。';
 
 export default defineConfig({
   plugins: [
@@ -24,8 +26,13 @@ export default defineConfig({
           [
             `  <link rel="canonical" href="${escapeHtml(siteUrl)}" />`,
             `  <meta property="og:url" content="${escapeHtml(siteUrl)}" />`,
-            '  <meta property="og:title" content="VisionTrainer" />',
-            '  <meta property="og:description" content="視覺能力訓練系統，提供視覺評估、眼動、閱讀與視覺注意力練習。" />',
+            '  <meta property="og:type" content="website" />',
+            '  <meta property="og:site_name" content="Rehab Trainer Hub" />',
+            `  <meta property="og:title" content="${escapeHtml(seoTitle)}" />`,
+            `  <meta property="og:description" content="${escapeHtml(seoDescription)}" />`,
+            '  <meta name="twitter:card" content="summary" />',
+            `  <meta name="twitter:title" content="${escapeHtml(seoTitle)}" />`,
+            `  <meta name="twitter:description" content="${escapeHtml(seoDescription)}" />`,
             '</head>',
           ].join('\n'),
         );

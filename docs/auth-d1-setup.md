@@ -31,10 +31,10 @@ npx --yes wrangler@4 d1 migrations apply rehabtrainerhub --config apps/rehabtrai
 Register this callback URL in the Google Cloud Console OAuth client:
 
 ```text
-https://rehabtrainerhub.pages.dev/api/auth/callback
+https://trainerhub.cc/api/auth/callback
 ```
 
-For custom domains, register the equivalent custom-domain callback and set `AUTH_BASE_URL`.
+Register the production callback and set `AUTH_BASE_URL=https://trainerhub.cc`.
 
 ## GitHub Actions Secrets
 
@@ -54,14 +54,15 @@ GOOGLE_CLIENT_SECRET=<google oauth client secret>
 Recommended repository or `cloudflare-pages` environment variables:
 
 ```text
-AUTH_API_BASE=https://rehabtrainerhub.pages.dev
-REHABTRAINERHUB_URL=https://rehabtrainerhub.pages.dev
-STROKETRAINER_URL=https://stroketrainer.pages.dev
-VISIONTRAINER_URL=https://visiontrainer.pages.dev
-AUTH_ALLOWED_ORIGINS=https://rehabtrainerhub.pages.dev,https://stroketrainer.pages.dev,https://visiontrainer.pages.dev
+AUTH_API_BASE=https://trainerhub.cc
+REHABTRAINERHUB_URL=https://trainerhub.cc
+STROKETRAINER_URL=https://stroke.trainerhub.cc
+VISIONTRAINER_URL=https://vision.trainerhub.cc
+BRAINTRAINER_URL=https://brain.trainerhub.cc
+AUTH_ALLOWED_ORIGINS=https://trainerhub.cc,https://stroke.trainerhub.cc,https://vision.trainerhub.cc,https://brain.trainerhub.cc
 ```
 
-`AUTH_ALLOWED_ORIGINS` is optional. The deploy script also includes every discovered `apps/*/wrangler.toml` Pages project as `https://<project>.pages.dev`, so future sites are included automatically when they are added to the monorepo.
+`AUTH_ALLOWED_ORIGINS` is optional when the deploy script defaults match the canonical domains, but setting it explicitly keeps production auth behavior auditable.
 
 ## Cloudflare Pages Environment Sync
 
@@ -88,8 +89,8 @@ The runtime code can fall back to `AUTH_SESSION_SECRET` if `AUTH_STATE_SECRET` i
 Shared auth client code should use:
 
 ```text
-VITE_AUTH_API_BASE=https://rehabtrainerhub.pages.dev
-NEXT_PUBLIC_AUTH_API_BASE=https://rehabtrainerhub.pages.dev
+VITE_AUTH_API_BASE=https://trainerhub.cc
+NEXT_PUBLIC_AUTH_API_BASE=https://trainerhub.cc
 ```
 
 ## Privacy and Profile Fields
@@ -97,7 +98,7 @@ NEXT_PUBLIC_AUTH_API_BASE=https://rehabtrainerhub.pages.dev
 Privacy policy URL:
 
 ```text
-https://rehabtrainerhub.pages.dev/privacy/
+https://trainerhub.cc/privacy/
 ```
 
 The first login shows a privacy notice before OAuth starts. After OAuth returns, the profile form asks for:

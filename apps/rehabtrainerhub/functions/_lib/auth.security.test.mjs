@@ -28,17 +28,17 @@ const [encodedPayload] = token.split('.');
 const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString());
 assert.equal(payload.exp - payload.iat, 60 * 60 * 24 * 7);
 
-const noOriginHeaders = corsHeaders(new Request('https://rehabtrainerhub.pages.dev/api/auth/me'), env);
+const noOriginHeaders = corsHeaders(new Request('https://trainerhub.cc/api/auth/me'), env);
 assert.equal(noOriginHeaders['Access-Control-Allow-Origin'], undefined);
 
-const popup = await authPopupHtml('https://stroketrainer.pages.dev/', token, toPublicUser(user)).text();
+const popup = await authPopupHtml('https://stroke.trainerhub.cc/', token, toPublicUser(user)).text();
 assert.equal(popup.includes('auth_token'), false);
-assert.equal(popup.includes('https://stroketrainer.pages.dev/'), true);
-const popupResponse = authPopupHtml('https://stroketrainer.pages.dev/', token, toPublicUser(user));
+assert.equal(popup.includes('https://stroke.trainerhub.cc/'), true);
+const popupResponse = authPopupHtml('https://stroke.trainerhub.cc/', token, toPublicUser(user));
 assert.match(popupResponse.headers.get('content-security-policy'), /script-src 'nonce-/);
 assert.equal(popupResponse.headers.get('x-content-type-options'), 'nosniff');
 
-const request = new Request('https://rehabtrainerhub.pages.dev/api/auth/password/login', {
+const request = new Request('https://trainerhub.cc/api/auth/password/login', {
   method: 'POST',
   headers: {
     'CF-Connecting-IP': '203.0.113.10',

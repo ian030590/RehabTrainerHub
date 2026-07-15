@@ -3,7 +3,7 @@
     {
       "allowed": {
         "origins": [
-          "https://stroketrainer.pages.dev",
+          "https://stroke.trainerhub.cc",
           "https://ian030590.github.io"
         ],
         "methods": [

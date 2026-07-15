@@ -12,6 +12,33 @@ export const seoImage = {
   alt: `${HUB_FULL_NAME} logo`,
 } as const;
 
+const trainerApplications = [
+  {
+    '@type': 'WebApplication',
+    name: 'StrokeTrainer',
+    applicationCategory: 'HealthApplication',
+    operatingSystem: 'Web browser',
+    url: siteUrls.stroke,
+    description: 'StrokeTrainer 提供動作、認知與語音練習，協助依治療師建議安排居家中風復健訓練。',
+  },
+  {
+    '@type': 'WebApplication',
+    name: 'VisionTrainer',
+    applicationCategory: 'HealthApplication',
+    operatingSystem: 'Web browser',
+    url: siteUrls.vision,
+    description: 'VisionTrainer 提供視覺評估、眼動、閱讀與視覺注意力練習，適合依專業建議安排居家視覺訓練。',
+  },
+  {
+    '@type': 'WebApplication',
+    name: 'BrainTrainer',
+    applicationCategory: 'HealthApplication',
+    operatingSystem: 'Web browser',
+    url: siteUrls.brain,
+    description: 'BrainTrainer 提供注意、記憶與思考訓練入口，協助依專業建議安排認知訓練練習。',
+  },
+] as const;
+
 export function createSeoMetadata({
   title,
   description,
@@ -60,6 +87,7 @@ export const websiteJsonLd = {
   url: siteUrls.hub,
   inLanguage: ['zh-Hant-TW', 'en'],
   description: siteDescription,
+  hasPart: trainerApplications,
   publisher: {
     '@type': 'Organization',
     name: HUB_FULL_NAME,

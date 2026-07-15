@@ -11,9 +11,12 @@ function escapeHtml(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
+const seoTitle = 'StrokeTrainer | 居家中風復健練習';
+const seoDescription = 'StrokeTrainer 提供動作、認知與語音練習，協助依治療師建議安排居家中風復健訓練。';
+
 export default defineConfig(({ mode }) => {
   const isCloudflarePagesBuild = process.env.CF_PAGES === '1' || mode === 'cloudflare';
-  const siteUrl = normalizeSiteUrl(process.env.VITE_STROKETRAINER_URL, 'https://stroketrainer.pages.dev');
+  const siteUrl = normalizeSiteUrl(process.env.VITE_STROKETRAINER_URL, 'https://stroke.trainerhub.cc');
 
   return {
     plugins: [
@@ -26,8 +29,13 @@ export default defineConfig(({ mode }) => {
             [
               `  <link rel="canonical" href="${escapeHtml(siteUrl)}" />`,
               `  <meta property="og:url" content="${escapeHtml(siteUrl)}" />`,
-              '  <meta property="og:title" content="StrokeTrainer" />',
-              '  <meta property="og:description" content="居家中風復健訓練系統，提供動作、認知與語音練習。" />',
+              '  <meta property="og:type" content="website" />',
+              '  <meta property="og:site_name" content="Rehab Trainer Hub" />',
+              `  <meta property="og:title" content="${escapeHtml(seoTitle)}" />`,
+              `  <meta property="og:description" content="${escapeHtml(seoDescription)}" />`,
+              '  <meta name="twitter:card" content="summary" />',
+              `  <meta name="twitter:title" content="${escapeHtml(seoTitle)}" />`,
+              `  <meta name="twitter:description" content="${escapeHtml(seoDescription)}" />`,
               '</head>',
             ].join('\n'),
           );

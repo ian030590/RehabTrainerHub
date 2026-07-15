@@ -60,17 +60,17 @@ async function assertSessionStatus(url, origin, expectedStatus, expectedCorsOrig
 }
 
 await assertSessionStatus(
-  'https://rehabtrainerhub.pages.dev/api/auth/session',
+  'https://trainerhub.cc/api/auth/session',
   'http://localhost:5173',
   403,
   null,
 );
 
 const allowedSession = await assertSessionStatus(
-  'https://rehabtrainerhub.pages.dev/api/auth/session',
-  'https://stroketrainer.pages.dev',
+  'https://trainerhub.cc/api/auth/session',
+  'https://stroke.trainerhub.cc',
   200,
-  'https://stroketrainer.pages.dev',
+  'https://stroke.trainerhub.cc',
 );
 const allowedSessionBody = await allowedSession.json();
 assert.equal(allowedSessionBody.token, token);
@@ -85,7 +85,7 @@ const localDevSession = await assertSessionStatus(
 assert.equal((await localDevSession.json()).token, token);
 
 const blockedRecords = await getRecords({
-  request: new Request('https://rehabtrainerhub.pages.dev/api/records?appId=stroketrainer', {
+  request: new Request('https://trainerhub.cc/api/records?appId=stroketrainer', {
     headers: {
       Origin: 'http://localhost:5173',
       Authorization: `Bearer ${token}`,
@@ -96,9 +96,9 @@ const blockedRecords = await getRecords({
 assert.equal(blockedRecords.status, 403);
 
 const allowedRecords = await getRecords({
-  request: new Request('https://rehabtrainerhub.pages.dev/api/records?appId=stroketrainer', {
+  request: new Request('https://trainerhub.cc/api/records?appId=stroketrainer', {
     headers: {
-      Origin: 'https://stroketrainer.pages.dev',
+      Origin: 'https://stroke.trainerhub.cc',
       Authorization: `Bearer ${token}`,
     },
   }),

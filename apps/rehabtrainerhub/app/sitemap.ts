@@ -4,6 +4,7 @@ import { siteUrls } from './siteUrls';
 export const dynamic = 'force-static';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const lastModified = new Date('2026-07-15');
   const routes = [
     { route: '', changeFrequency: 'weekly', priority: 1 },
     { route: '/education', changeFrequency: 'monthly', priority: 0.85 },
@@ -14,7 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return routes.map(({ route, changeFrequency, priority }) => ({
     url: `${siteUrls.hub}${route}`,
-    lastModified: new Date('2026-07-05'),
+    lastModified,
     changeFrequency,
     priority,
   }));

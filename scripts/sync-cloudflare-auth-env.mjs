@@ -10,6 +10,12 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appsRoot = join(repoRoot, 'apps');
 const wranglerPrefix = ['--yes', 'wrangler@4'];
 const dryRun = process.argv.includes('--dry-run');
+const defaultPublicAppUrls = {
+  REHABTRAINERHUB_URL: 'https://trainerhub.cc',
+  STROKETRAINER_URL: 'https://stroke.trainerhub.cc',
+  VISIONTRAINER_URL: 'https://vision.trainerhub.cc',
+  BRAINTRAINER_URL: 'https://brain.trainerhub.cc',
+};
 
 function toPosixPath(path) {
   return path.replaceAll('\\', '/');
@@ -56,7 +62,7 @@ function getAuthBaseUrl() {
       process.env.REHABTRAINERHUB_URL ||
       process.env.NEXT_PUBLIC_REHABTRAINERHUB_URL ||
       process.env.NEXT_PUBLIC_SITE_URL ||
-      'https://rehabtrainerhub.pages.dev',
+      defaultPublicAppUrls.REHABTRAINERHUB_URL,
   );
 }
 
@@ -69,10 +75,10 @@ function getPublicAppUrl(name, fallback) {
   );
 }
 
-function collectAllowedOrigins(projects, authBaseUrl) {
+function collectAllowedOrigins(authBaseUrl) {
   const origins = new Set([
     authBaseUrl,
-    ...projects.map((project) => `https://${project.projectName}.pages.dev`),
+    ...Object.values(defaultPublicAppUrls),
   ]);
 
   for (const [name, value] of Object.entries(process.env)) {
@@ -100,10 +106,10 @@ function requireEnv(name) {
 }
 
 function getProjectSecrets(project, authBaseUrl, allowedOrigins) {
-  const hubUrl = getPublicAppUrl('REHABTRAINERHUB_URL', 'https://rehabtrainerhub.pages.dev');
-  const strokeUrl = getPublicAppUrl('STROKETRAINER_URL', 'https://stroketrainer.pages.dev');
-  const visionUrl = getPublicAppUrl('VISIONTRAINER_URL', 'https://visiontrainer.pages.dev');
-  const brainUrl = getPublicAppUrl('BRAINTRAINER_URL', 'https://braintrainer.pages.dev');
+  const hubUrl = getPublicAppUrl('REHABTRAINERHUB_URL', defaultPublicAppUrls.REHABTRAINERHUB_URL);
+  const strokeUrl = getPublicAppUrl('STROKETRAINER_URL', defaultPublicAppUrls.STROKETRAINER_URL);
+  const visionUrl = getPublicAppUrl('VISIONTRAINER_URL', defaultPublicAppUrls.VISIONTRAINER_URL);
+  const brainUrl = getPublicAppUrl('BRAINTRAINER_URL', defaultPublicAppUrls.BRAINTRAINER_URL);
   const sharedClientConfig = {
     AUTH_API_BASE: authBaseUrl,
     NEXT_PUBLIC_AUTH_API_BASE: authBaseUrl,
@@ -170,7 +176,7 @@ async function main() {
   }
 
   const authBaseUrl = getAuthBaseUrl();
-  const allowedOrigins = collectAllowedOrigins(projects, authBaseUrl);
+  const allowedOrigins = collectAllowedOrigins(authBaseUrl);
   const tempDir = dryRun ? '' : await mkdtemp(join(tmpdir(), 'rehab-auth-env-'));
 
   try {

@@ -1,11 +1,8 @@
-function normalizeSiteUrl(value: string | undefined, fallback: string) {
-  const url = value?.trim() || fallback;
-  return url.replace(/\/+$/, '');
-}
+import { defaultSiteUrls, normalizeSiteUrl } from '@rehab-trainer/ui/siteUrls';
 
 export const siteUrls = {
-  hub: normalizeSiteUrl(import.meta.env.VITE_REHABTRAINERHUB_URL, 'https://rehabtrainerhub.pages.dev'),
-  stroke: normalizeSiteUrl(import.meta.env.VITE_STROKETRAINER_URL, 'https://stroketrainer.pages.dev'),
-  vision: normalizeSiteUrl(import.meta.env.VITE_VISIONTRAINER_URL, 'https://visiontrainer.pages.dev'),
-  brain: normalizeSiteUrl(import.meta.env.VITE_BRAINTRAINER_URL, 'https://braintrainer.pages.dev'),
+  hub: normalizeSiteUrl(import.meta.env.VITE_REHABTRAINERHUB_URL, defaultSiteUrls.hub),
+  stroke: normalizeSiteUrl(import.meta.env.VITE_STROKETRAINER_URL, defaultSiteUrls.stroke),
+  vision: normalizeSiteUrl(import.meta.env.VITE_VISIONTRAINER_URL, defaultSiteUrls.vision),
+  brain: normalizeSiteUrl(import.meta.env.VITE_BRAINTRAINER_URL, defaultSiteUrls.brain),
 };

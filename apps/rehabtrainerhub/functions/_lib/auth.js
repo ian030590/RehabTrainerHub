@@ -1,8 +1,8 @@
 const DEFAULT_ALLOWED_ORIGINS = [
-  'https://rehabtrainerhub.pages.dev',
-  'https://stroketrainer.pages.dev',
-  'https://visiontrainer.pages.dev',
-  'https://braintrainer.pages.dev',
+  'https://trainerhub.cc',
+  'https://stroke.trainerhub.cc',
+  'https://vision.trainerhub.cc',
+  'https://brain.trainerhub.cc',
 ];
 
 const LOCAL_ALLOWED_ORIGINS = [

@@ -1,0 +1,14 @@
+export const defaultSiteUrls = {
+  hub: 'https://trainerhub.cc',
+  stroke: 'https://stroke.trainerhub.cc',
+  vision: 'https://vision.trainerhub.cc',
+  brain: 'https://brain.trainerhub.cc',
+} as const;
+
+export type SiteUrlKey = keyof typeof defaultSiteUrls;
+export type SiteUrls = typeof defaultSiteUrls;
+
+export function normalizeSiteUrl(value: string | null | undefined, fallback: string) {
+  const url = value?.trim() || fallback;
+  return url.replace(/\/+$/, '');
+}

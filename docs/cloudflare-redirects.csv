@@ -1,3 +1,4 @@
 source_url,target_url,status_code
-https://old-stroketrainer.pages.dev/*,https://stroketrainer.pages.dev/${1},301
-https://old-visiontrainer.pages.dev/*,https://visiontrainer.pages.dev/${1},301
+<old-stroke-deployment-host>/*,https://stroke.trainerhub.cc/${1},301
+<old-vision-deployment-host>/*,https://vision.trainerhub.cc/${1},301
+<old-brain-deployment-host>/*,https://brain.trainerhub.cc/${1},301
