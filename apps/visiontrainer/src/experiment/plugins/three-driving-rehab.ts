@@ -37,6 +37,16 @@ interface VehicleWheelBinding {
   front: boolean;
 }
 
+interface AmbientTrafficActor {
+  group: any;
+  distance: number;
+  lateral: number;
+  direction: 1 | -1;
+  speed: number;
+  targetSpeed: number;
+  cruiseSpeed: number;
+}
+
 const info = {
   name: 'three-driving-rehab',
   version: '3.0.0',
@@ -102,6 +112,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private eventResults: DrivingEventResult[] = [];
   private hazardSpawnCount = 0;
   private lastBrakePressed = false;
+  private ambientTrafficActors: AmbientTrafficActor[] = [];
+  private taipeiCityGroup: any = null;
 
   // Free-steering vehicle state
   private vehicleX = 0;
@@ -195,6 +207,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly referenceRoadTextureUrl = '/assets/driving/reference-car-game/road.jpg';
   private readonly referenceRoadNormalUrl = '/assets/driving/reference-car-game/road_normal.jpg';
   private readonly referenceRoadRoughnessUrl = '/assets/driving/reference-car-game/road_roughness.jpg';
+  private readonly taipeiOsmUrl = '/assets/driving/taipei-osm/taipei-xinyi-osm.json';
 
   private readonly route: RouteSegment[] = [...DRIVING_ROUTE];
   private readonly hazardTemplates: HazardTemplate[] = [...HAZARD_TEMPLATES];
@@ -276,6 +289,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.activeHazards = [];
     this.eventResults = [];
     this.hazardSpawnCount = 0;
+    this.ambientTrafficActors = [];
+    this.taipeiCityGroup = null;
     this.roadCollisionBoxes = [];
     this.buildingCollisionBoxes = [];
     this.keyState = { left: false, right: false, up: false, down: false };
@@ -644,8 +659,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.createSceneEnvironment();
     this.buildWorld();
     this.createVehicleVisual();
+    this.createAmbientTraffic();
     this.preloadHazardEvents();
     this.loadReferenceVehicleModel();
+    void this.loadTaipeiOsmCity();
   }
 
   private createSceneEnvironment() {
@@ -1231,6 +1248,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
 
     this.addReferenceScenery();
+    this.addTaiwanStreetDetails();
     this.addTurnSignage();
     this.addDestinationMarker();
   }
@@ -1264,6 +1282,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const postMat = new THREE.MeshStandardMaterial({ color: 0x29323a, roughness: 0.58, metalness: 0.35 });
     const housingMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.62, metalness: 0.18 });
+    const pedestrianMat = new THREE.MeshStandardMaterial({ color: 0x0b1720, roughness: 0.62, metalness: 0.14 });
+    const walkMat = new THREE.MeshBasicMaterial({ color: 0x21e66f });
 
     for (const inter of this.intersections) {
       const segment = this.route[inter.segmentIndex];
@@ -1286,7 +1306,16 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       red.position.set(0, 4.9, -0.2);
       yellow.position.set(0, 4.35, -0.2);
       green.position.set(0, 3.8, -0.2);
-      group.add(post, housing, red, yellow, green);
+      const pedestrianBox = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.58, 0.18), pedestrianMat);
+      pedestrianBox.position.set(0, 2.62, -0.18);
+      const littleGreenHead = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), walkMat);
+      littleGreenHead.position.set(0, 2.72, -0.29);
+      const littleGreenBody = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, 0.03), walkMat);
+      littleGreenBody.position.set(0, 2.56, -0.29);
+      const littleGreenLeg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.04, 0.03), walkMat);
+      littleGreenLeg.position.set(0.02, 2.43, -0.29);
+      littleGreenLeg.rotation.z = -0.35;
+      group.add(post, housing, red, yellow, green, pedestrianBox, littleGreenHead, littleGreenBody, littleGreenLeg);
       group.position.set(baseX, 0, baseZ);
       group.rotation.y = angle;
       group.traverse?.((child: any) => {
@@ -1296,6 +1325,137 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.scene.add(group);
       inter.trafficLightGroup = group;
       inter.trafficLightLamps = { red, yellow, green };
+    }
+  }
+
+  private addTaiwanStreetDetails() {
+    const THREE = this.requireThree();
+    if (!this.scene) return;
+
+    const scooterBoxMat = new THREE.MeshStandardMaterial({ color: 0x0f8b57, roughness: 0.72, metalness: 0.04 });
+    const laneMarkMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, metalness: 0.02 });
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.74, metalness: 0.08 });
+    const yellowMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65, metalness: 0.04 });
+    const utilityMat = new THREE.MeshStandardMaterial({ color: 0x9aa3a9, roughness: 0.76, metalness: 0.12 });
+    const arcadeMat = new THREE.MeshStandardMaterial({ color: 0xd9d4c8, roughness: 0.82, metalness: 0.02 });
+    const columnMat = new THREE.MeshStandardMaterial({ color: 0xb9b3a7, roughness: 0.86, metalness: 0.02 });
+
+    for (const inter of this.intersections) {
+      const segment = this.route[inter.segmentIndex];
+      if (!segment) continue;
+      const normal = { x: -segment.dir.z, z: segment.dir.x };
+      const angle = Math.atan2(segment.dir.x, segment.dir.z);
+      const boxDistance = Math.max(2, segment.length - this.stopLineSetback - 6.2);
+      const center = {
+        x: segment.start.x + segment.dir.x * boxDistance + normal.x * this.laneOffset,
+        z: segment.start.z + segment.dir.z * boxDistance + normal.z * this.laneOffset,
+      };
+
+      const waitingBox = new THREE.Mesh(new THREE.BoxGeometry(this.roadWidth / 2 - 1.4, 0.036, 4.8), scooterBoxMat);
+      waitingBox.position.set(center.x, 0.105, center.z);
+      waitingBox.rotation.y = angle;
+      this.scene.add(waitingBox);
+
+      for (const side of [-1, 1]) {
+        const line = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.048, 4.8), laneMarkMat);
+        line.position.set(
+          center.x + normal.x * side * (this.roadWidth / 4 - 0.35),
+          0.13,
+          center.z + normal.z * side * (this.roadWidth / 4 - 0.35),
+        );
+        line.rotation.y = angle;
+        this.scene.add(line);
+      }
+    }
+
+    for (let d = 18; d < this.routeLength - 12; d += 22) {
+      if (this.isNearIntersection(d, 14)) continue;
+      const point = this.getRoutePoint(d);
+      const angle = Math.atan2(point.dir.x, point.dir.z);
+
+      for (const side of [-1, 1]) {
+        if ((Math.floor(d / 22) + side) % 2 === 0) {
+          const pole = new THREE.Group();
+          const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 5.2, 10), poleMat);
+          shaft.position.y = 2.6;
+          pole.add(shaft);
+          for (let band = 0; band < 4; band += 1) {
+            const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.18, 0.04), yellowMat);
+            stripe.position.set(0, 0.75 + band * 0.32, -0.16);
+            stripe.rotation.z = band % 2 ? -0.25 : 0.25;
+            pole.add(stripe);
+          }
+          const arm = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 0.08), poleMat);
+          arm.position.set(side * 0.95, 4.85, 0);
+          pole.add(arm);
+          pole.position.set(
+            point.x + point.normal.x * side * (this.referenceRoadWidth / 2 + 2.0),
+            0,
+            point.z + point.normal.z * side * (this.referenceRoadWidth / 2 + 2.0),
+          );
+          pole.rotation.y = angle;
+          this.scene.add(pole);
+        }
+
+        if ((Math.floor(d / 22) + side) % 3 === 0) {
+          const box = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.8, 0.72), utilityMat);
+          box.position.set(
+            point.x + point.normal.x * side * (this.referenceRoadWidth / 2 + 1.4),
+            0.9,
+            point.z + point.normal.z * side * (this.referenceRoadWidth / 2 + 1.4),
+          );
+          box.rotation.y = angle;
+          box.castShadow = true;
+          box.receiveShadow = true;
+          this.scene.add(box);
+        }
+
+        if ((Math.floor(d / 22) + side) % 2 !== 0) {
+          const bayCenter = {
+            x: point.x + point.normal.x * side * (this.referenceRoadWidth / 2 + 0.65),
+            z: point.z + point.normal.z * side * (this.referenceRoadWidth / 2 + 0.65),
+          };
+          const bay = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.035, 4.0), laneMarkMat);
+          bay.position.set(bayCenter.x, 0.11, bayCenter.z);
+          bay.rotation.y = angle;
+          this.scene.add(bay);
+          if (d % 44 === 18) {
+            const scooter = this.createScooterMesh(0x2563eb);
+            scooter.position.set(bayCenter.x, 0.12, bayCenter.z);
+            scooter.rotation.y = angle + Math.PI * 0.5 * side;
+            scooter.scale.setScalar(0.86);
+            this.scene.add(scooter);
+          }
+        }
+      }
+    }
+
+    for (let d = 28; d < this.routeLength - 25; d += 36) {
+      if (this.isNearIntersection(d, 18)) continue;
+      const point = this.getRoutePoint(d);
+      const angle = Math.atan2(point.dir.x, point.dir.z);
+      for (const side of [-1, 1]) {
+        const arcade = new THREE.Group();
+        const canopy = new THREE.Mesh(new THREE.BoxGeometry(12, 0.28, 3.2), arcadeMat);
+        canopy.position.y = 3.05;
+        arcade.add(canopy);
+        for (const x of [-4.8, -2.4, 0, 2.4, 4.8]) {
+          const column = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.0, 0.22), columnMat);
+          column.position.set(x, 1.5, 1.18);
+          arcade.add(column);
+        }
+        arcade.position.set(
+          point.x + point.normal.x * side * (this.referenceRoadWidth / 2 + 5.2),
+          0,
+          point.z + point.normal.z * side * (this.referenceRoadWidth / 2 + 5.2),
+        );
+        arcade.rotation.y = angle + (side > 0 ? 0 : Math.PI);
+        arcade.traverse?.((child: any) => {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        });
+        this.scene.add(arcade);
+      }
     }
   }
 
@@ -1580,6 +1740,137 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.scene.add(group);
   }
 
+  private async loadTaipeiOsmCity() {
+    if (!this.scene || typeof fetch === 'undefined') return;
+
+    try {
+      const response = await fetch(this.taipeiOsmUrl);
+      if (!response.ok) return;
+      const payload = await response.json();
+      if (!payload || !Array.isArray(payload.elements)) return;
+      this.addTaipeiOsmCity(payload.elements);
+    } catch (error) {
+      console.warn('Unable to load Taipei OSM city data.', error);
+    }
+  }
+
+  private addTaipeiOsmCity(elements: any[]) {
+    const THREE = this.requireThree();
+    if (!this.scene) return;
+
+    const nodeMap = new Map<number, { lat: number; lon: number }>();
+    for (const element of elements) {
+      if (element?.type === 'node' && Number.isFinite(element.lat) && Number.isFinite(element.lon)) {
+        nodeMap.set(element.id, { lat: element.lat, lon: element.lon });
+      }
+    }
+
+    const group = new THREE.Group();
+    group.name = 'taipei-xinyi-osm-city';
+    const roadMat = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.88, metalness: 0.03 });
+    const buildingMats = [
+      new THREE.MeshStandardMaterial({ color: 0xbec7cf, roughness: 0.82, metalness: 0.02 }),
+      new THREE.MeshStandardMaterial({ color: 0xc8beb1, roughness: 0.84, metalness: 0.02 }),
+      new THREE.MeshStandardMaterial({ color: 0xaeb8bd, roughness: 0.8, metalness: 0.03 }),
+      new THREE.MeshStandardMaterial({ color: 0xd3d0c8, roughness: 0.86, metalness: 0.01 }),
+    ];
+    const arcadeShadowMat = new THREE.MeshStandardMaterial({ color: 0x30343a, roughness: 0.88, metalness: 0.02 });
+    let buildingCount = 0;
+    let roadSegmentCount = 0;
+
+    for (const element of elements) {
+      if (element?.type !== 'way' || !Array.isArray(element.nodes) || !element.tags) continue;
+      const points = element.nodes
+        .map((id: number) => nodeMap.get(id))
+        .filter(Boolean)
+        .map((node: { lat: number; lon: number }) => this.projectTaipeiLonLat(node.lon, node.lat));
+      if (points.length < 2) continue;
+
+      if (element.tags.highway && roadSegmentCount < 380) {
+        const width = this.getOsmRoadWidth(element.tags.highway);
+        for (let i = 1; i < points.length; i += 1) {
+          const a = points[i - 1];
+          const b = points[i];
+          const dx = b.x - a.x;
+          const dz = b.z - a.z;
+          const length = Math.hypot(dx, dz);
+          if (length < 2 || roadSegmentCount >= 380) continue;
+          const road = new THREE.Mesh(new THREE.BoxGeometry(width, 0.024, length), roadMat);
+          road.position.set((a.x + b.x) / 2, -0.455, (a.z + b.z) / 2);
+          road.rotation.y = Math.atan2(dx, dz);
+          road.receiveShadow = true;
+          group.add(road);
+          roadSegmentCount += 1;
+        }
+      }
+
+      if (element.tags.building && buildingCount < 170) {
+        const bbox = this.getPointBounds(points);
+        const width = bbox.maxX - bbox.minX;
+        const depth = bbox.maxZ - bbox.minZ;
+        if (width < 1.4 || depth < 1.4 || width > 40 || depth > 40) continue;
+        const height = this.getOsmBuildingHeight(element.tags, buildingCount);
+        const mat = buildingMats[buildingCount % buildingMats.length];
+        const building = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), mat);
+        building.position.set((bbox.minX + bbox.maxX) / 2, height / 2 - 0.45, (bbox.minZ + bbox.maxZ) / 2);
+        building.castShadow = true;
+        building.receiveShadow = true;
+        group.add(building);
+
+        if (height > 7 && Math.min(width, depth) > 4) {
+          const arcade = new THREE.Mesh(new THREE.BoxGeometry(width * 0.78, 2.25, 1.1), arcadeShadowMat);
+          arcade.position.set(building.position.x, 0.72, bbox.minZ + 0.55);
+          arcade.castShadow = true;
+          arcade.receiveShadow = true;
+          group.add(arcade);
+        }
+        buildingCount += 1;
+      }
+    }
+
+    this.scene.add(group);
+    this.taipeiCityGroup = group;
+  }
+
+  private projectTaipeiLonLat(lon: number, lat: number): Vec2 {
+    const centerLon = 121.5618;
+    const centerLat = 25.0345;
+    const metersPerLon = 111_320 * Math.cos(centerLat * Math.PI / 180);
+    const scale = 0.28;
+    return {
+      x: 60 + (lon - centerLon) * metersPerLon * scale,
+      z: 178 - (lat - centerLat) * 111_320 * scale,
+    };
+  }
+
+  private getPointBounds(points: Vec2[]) {
+    return points.reduce(
+      (bounds, point) => ({
+        minX: Math.min(bounds.minX, point.x),
+        maxX: Math.max(bounds.maxX, point.x),
+        minZ: Math.min(bounds.minZ, point.z),
+        maxZ: Math.max(bounds.maxZ, point.z),
+      }),
+      { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity },
+    );
+  }
+
+  private getOsmRoadWidth(highway: string): number {
+    if (highway === 'primary' || highway === 'secondary') return 8.4;
+    if (highway === 'tertiary' || highway === 'residential') return 5.8;
+    if (highway === 'service') return 3.4;
+    if (highway === 'footway' || highway === 'path' || highway === 'steps') return 1.4;
+    return 4.6;
+  }
+
+  private getOsmBuildingHeight(tags: Record<string, string>, index: number): number {
+    const explicitHeight = Number.parseFloat(String(tags.height ?? '').replace(/[^\d.]/g, ''));
+    if (Number.isFinite(explicitHeight) && explicitHeight > 2) return this.clamp(explicitHeight * 0.32, 3.4, 28);
+    const levels = Number.parseFloat(String(tags['building:levels'] ?? ''));
+    if (Number.isFinite(levels) && levels > 0) return this.clamp(levels * 1.05, 3.4, 26);
+    return 4.5 + (index % 7) * 1.4;
+  }
+
   private createVehicleVisual() {
     const THREE = this.requireThree();
     if (!this.scene) return;
@@ -1777,10 +2068,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.updateIntersections();
       this.activateScheduledHazards(time);
       this.updateHazards(time);
+      this.updateAmbientTraffic(dt);
     } else {
       this.vehicleSpeed = 0;
       this.lastYawRate = 0;
       this.updateTrafficLights(time);
+      this.updateAmbientTraffic(dt);
     }
     this.updateVehicleVisual(dt, time);
     this.updateCameraFree(dt);
@@ -2204,6 +2497,69 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return scheduledEvents;
   }
 
+  private createAmbientTraffic() {
+    if (!this.scene) return;
+
+    const palette = [0xeeeeee, 0x2563eb, 0xef4444, 0xf59e0b, 0x22c55e, 0x0f172a];
+    for (let i = 0; i < 18; i += 1) {
+      const isScooter = i % 3 !== 0;
+      const direction: 1 | -1 = i % 5 === 0 ? -1 : 1;
+      const group = isScooter
+        ? this.createScooterMesh(palette[i % palette.length])
+        : this.createFallbackVehicle(palette[i % palette.length]).group;
+      group.scale.setScalar(isScooter ? 0.9 : 0.78);
+      this.scene.add(group);
+      const actor: AmbientTrafficActor = {
+        group,
+        distance: (i * 31 + 18) % Math.max(1, this.routeLength - 12),
+        lateral: direction === 1
+          ? this.laneOffset + (isScooter ? -1.15 + (i % 2) * 0.62 : 0.2)
+          : -this.laneOffset + (isScooter ? 1.1 : -0.15),
+        direction,
+        speed: 0,
+        targetSpeed: 0,
+        cruiseSpeed: isScooter ? 8.2 + (i % 4) * 0.7 : 6.4 + (i % 3) * 0.8,
+      };
+      this.ambientTrafficActors.push(actor);
+      this.positionTrafficActor(actor);
+    }
+  }
+
+  private updateAmbientTraffic(dt: number) {
+    for (const actor of this.ambientTrafficActors) {
+      const stopDistance = this.getTrafficActorStopDistance(actor);
+      actor.targetSpeed = stopDistance !== null ? 0 : actor.cruiseSpeed;
+      actor.speed = this.expSmoothing(actor.speed, actor.targetSpeed, actor.targetSpeed > actor.speed ? 2.2 : 5.8, dt);
+      actor.distance += actor.direction * actor.speed * dt;
+      if (actor.distance > this.routeLength - 4) actor.distance = 6;
+      if (actor.distance < 4) actor.distance = this.routeLength - 6;
+      this.positionTrafficActor(actor);
+    }
+  }
+
+  private getTrafficActorStopDistance(actor: AmbientTrafficActor): number | null {
+    if (actor.direction !== 1) return null;
+
+    const nextInter = this.intersections.find((inter) => inter.distance > actor.distance);
+    if (!nextInter) return null;
+
+    const stopDistance = this.getIntersectionStopLineDistance(nextInter) - 2.2;
+    const distanceToStop = stopDistance - actor.distance;
+    if (distanceToStop < 0 || distanceToStop > 28) return null;
+    if (nextInter.trafficSignalState !== 'red' && nextInter.trafficSignalState !== 'yellow') return null;
+    return stopDistance;
+  }
+
+  private positionTrafficActor(actor: AmbientTrafficActor) {
+    const point = this.getRoutePoint(actor.distance);
+    actor.group.position.set(
+      point.x + point.normal.x * actor.lateral,
+      0.05,
+      point.z + point.normal.z * actor.lateral,
+    );
+    actor.group.rotation.y = Math.atan2(point.dir.x * actor.direction, point.dir.z * actor.direction);
+  }
+
   private activateScheduledHazards(time: number) {
     if (this.activeHazards.some((hazard) => hazard.active && !hazard.resolved)) return;
 
@@ -2523,6 +2879,37 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       default:
         return this.createCarMesh(0xef4444);
     }
+  }
+
+  private createScooterMesh(color: number) {
+    const THREE = this.requireThree();
+    const group = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.18 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7, metalness: 0.08 });
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.36, metalness: 0.48 });
+
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.36, 1.55), bodyMat);
+    body.position.y = 0.58;
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.14, 0.72), darkMat);
+    seat.position.set(0, 0.86, -0.08);
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 0.08), metalMat);
+    handle.position.set(0, 1.02, 0.62);
+    const front = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.72, 0.28), bodyMat);
+    front.position.set(0, 0.76, 0.54);
+    group.add(body, seat, handle, front);
+
+    for (const z of [-0.58, 0.62]) {
+      const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.065, 8, 16), darkMat);
+      wheel.rotation.y = Math.PI / 2;
+      wheel.position.set(0, 0.28, z);
+      group.add(wheel);
+    }
+
+    group.traverse?.((child: any) => {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    });
+    return group;
   }
 
   private createPersonMesh(color: number, scale: number) {
