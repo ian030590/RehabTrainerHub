@@ -122,13 +122,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private laneResetClearTimer: number | null = null;
   private cameraRoll = 0;
   private cameraFov = 68;
-  private cameraMode: DrivingCameraMode = 'third-person';
+  private cameraMode: DrivingCameraMode = 'first-person';
   private wheelSpin = 0;
-  private suspensionPhase = 0;
-
-  // Random event scheduling
-  private nextHazardDistance = 0;
-  private hazardPool: HazardTemplate[] = [];
 
   // Intersection / turning state
   private intersections: IntersectionZone[] = [];
@@ -257,9 +252,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.lateralOffset = 0;
     this.cameraRoll = 0;
     this.cameraFov = this.baseCameraFov;
-    this.cameraMode = 'third-person';
+    this.cameraMode = 'first-person';
     this.wheelSpin = 0;
-    this.suspensionPhase = 0;
     this.trialStartTime = 0;
     this.lastFrameTime = 0;
     this.laneDeviationCount = 0;
@@ -288,12 +282,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     // Difficulty
     const diffKey = (trial as any)?.driving_difficulty ?? 'beginner';
     this.difficultyPreset = DIFFICULTY_PRESETS[diffKey] ?? DIFFICULTY_PRESETS.beginner;
-
-    // Initialize hazard pool (shuffle order for randomness)
-    this.hazardPool = [...this.hazardTemplates].sort(() => Math.random() - 0.5);
-
-    // First hazard spawns between 30-65m
-    this.nextHazardDistance = 30 + Math.random() * 35;
 
     // Build intersection zones from route
     this.intersections = [];
@@ -645,6 +633,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.createSceneEnvironment();
     this.buildWorld();
     this.createVehicleVisual();
+    this.preloadHazardEvents();
     this.loadReferenceVehicleModel();
   }
 
@@ -1478,12 +1467,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.updateVehicleVisual(0, performance.now());
   }
 
-  private createFallbackVehicle(): { group: any; wheels: VehicleWheelBinding[] } {
+  private createFallbackVehicle(bodyColor = 0x1d4ed8): { group: any; wheels: VehicleWheelBinding[] } {
     const THREE = this.requireThree();
     const group = new THREE.Group();
     group.name = 'driving-reference-fallback-car';
 
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.42, metalness: 0.26 });
+    const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.42, metalness: 0.26 });
     const glassMat = new THREE.MeshStandardMaterial({ color: 0x172554, roughness: 0.18, metalness: 0.12 });
     const tireMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.72, metalness: 0.12 });
     const rimMat = new THREE.MeshStandardMaterial({ color: 0xb9c2cc, roughness: 0.42, metalness: 0.55 });
@@ -1605,7 +1594,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const vehicleBox = this.getVehicleCollisionBox();
     const speedRatio = this.clamp(this.vehicleSpeed / this.maxVehicleSpeed, 0, 1);
-    this.suspensionPhase += dt * (4.6 + speedRatio * 7.5);
     this.wheelSpin += this.vehicleSpeed * dt * 2.7;
     const pitch = this.lastBrakePressed
       ? this.lerp(-0.012, -0.026, speedRatio)
@@ -1657,7 +1645,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (!this.laneResetActive) {
       this.updateVehicleFree(input, dt, time);
       this.updateIntersections();
-      this.spawnRandomHazards(time);
+      this.activateScheduledHazards(time);
       this.updateHazards(time);
     } else {
       this.vehicleSpeed = 0;
@@ -1962,77 +1950,140 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
   }
 
-  /** Spawn hazards at randomized distances */
-  private spawnRandomHazards(time: number) {
-    if (this.progress >= this.routeLength - 40) return;
-    if (this.activeHazards.some((h) => !h.resolved)) return;
-    if (this.progress < this.nextHazardDistance) return;
+  private preloadHazardEvents() {
+    if (!this.scene) return;
 
-    // Pick next hazard from pool
-    if (this.hazardPool.length === 0) {
-      this.hazardPool = [...this.hazardTemplates].sort(() => Math.random() - 0.5);
+    const scheduledEvents = this.createHazardSchedule();
+    this.activeHazards = scheduledEvents.map(({ template, triggerDistance }) => {
+      const hazardLeadDistance = this.getHazardLeadDistance(template.id);
+      const hazardDistance = Math.min(this.routeLength - 8, triggerDistance + hazardLeadDistance);
+      const point = this.getRoutePoint(hazardDistance);
+      const group = this.createHazardMesh(template.id);
+      group.visible = false;
+      group.position.set(point.x, 0, point.z);
+      group.rotation.y = Math.atan2(point.dir.x, point.dir.z);
+      this.scene?.add(group);
+
+      return {
+        active: false,
+        template,
+        group,
+        triggerDistance,
+        hazardDistance,
+        startTime: 0,
+        brakeTime: null,
+        rt: null,
+        preheldBrake: false,
+        collision: false,
+        resolved: false,
+        removeAt: null,
+        currentDistance: hazardDistance,
+        currentLateral: 0,
+        targetLateral: 0,
+        crossingStartLateral: 0,
+        crossingEndLateral: 0,
+        result: {
+          event_id: template.id,
+          label: this.getHazardLabel(template.id),
+          distance_m: Math.round(triggerDistance),
+          rt_ms: null,
+          valid: true,
+          collision: false,
+          brake_preheld: false,
+          response: 'pending',
+        },
+      };
+    });
+  }
+
+  private createHazardSchedule(): Array<{ template: HazardTemplate; triggerDistance: number }> {
+    const scheduledEvents: Array<{ template: HazardTemplate; triggerDistance: number }> = [];
+    let hazardPool = [...this.hazardTemplates].sort(() => Math.random() - 0.5);
+    let triggerDistance = 30 + Math.random() * 35;
+    const { minHazardInterval, maxHazardInterval } = this.difficultyPreset;
+
+    while (triggerDistance < this.routeLength - 40) {
+      if (hazardPool.length === 0) {
+        hazardPool = [...this.hazardTemplates].sort(() => Math.random() - 0.5);
+      }
+      const template = hazardPool.pop()!;
+      scheduledEvents.push({ template, triggerDistance });
+      triggerDistance += minHazardInterval + Math.random() * (maxHazardInterval - minHazardInterval);
     }
-    const template = this.hazardPool.pop()!;
-    const hazardLabel = this.getHazardLabel(template.id);
-    this.hazardSpawnCount++;
+
+    return scheduledEvents;
+  }
+
+  private activateScheduledHazards(time: number) {
+    if (this.activeHazards.some((hazard) => hazard.active && !hazard.resolved)) return;
+
+    const hazard = this.activeHazards.find((item) => !item.active && !item.resolved && this.progress >= item.triggerDistance);
+    if (!hazard) return;
 
     const input = this.readInput();
-    const hazardDistance = Math.min(this.routeLength - 8, this.progress + this.difficultyPreset.hazardLeadDistance);
-    const group = this.createHazardMesh(template.id);
+    const hazardLeadDistance = this.getHazardLeadDistance(hazard.template.id);
+    const hazardDistance = Math.min(this.routeLength - 8, this.progress + hazardLeadDistance);
     const point = this.getRoutePoint(hazardDistance);
     const targetLateral = this.getCurrentVehicleLaneLateral();
     const crossingSide = targetLateral >= 0 ? 1 : -1;
-    const crossingStartLateral = crossingSide * (this.roadWidth / 2 + 0.8);
-    const crossingEndLateral = -crossingSide * (this.roadWidth / 2 + 0.8);
-    group.position.set(point.x + point.normal.x * targetLateral, 0, point.z + point.normal.z * targetLateral);
-    group.rotation.y = Math.atan2(point.dir.x, point.dir.z);
-    this.scene?.add(group);
-
+    const crossingEdge = hazard.template.id === 'child-crossing'
+      ? this.roadWidth / 2 + 0.25
+      : this.roadWidth / 2 + 0.8;
+    const crossingStartLateral = crossingSide * crossingEdge;
+    const crossingEndLateral = -crossingSide * crossingEdge;
     const preheldBrake = input.brake > 0.35;
-    const result: DrivingEventResult = {
-      event_id: template.id,
-      label: hazardLabel,
-      distance_m: Math.round(this.progress),
-      rt_ms: null,
-      valid: !preheldBrake,
-      collision: false,
-      brake_preheld: preheldBrake,
-      response: preheldBrake ? 'invalid-preheld-brake' : 'pending',
-    };
 
-    const hazard: ActiveHazard = {
-      template,
-      group,
-      triggerDistance: this.progress,
-      hazardDistance,
-      startTime: time,
-      brakeTime: preheldBrake ? time : null,
-      rt: null,
-      preheldBrake,
-      collision: false,
-      resolved: false,
-      removeAt: null,
-      currentDistance: hazardDistance,
-      currentLateral: targetLateral,
-      targetLateral,
-      crossingStartLateral,
-      crossingEndLateral,
-      result,
-    };
-    this.activeHazards.push(hazard);
-    this.eventResults.push(result);
+    hazard.active = true;
+    hazard.triggerDistance = this.progress;
+    hazard.hazardDistance = hazardDistance;
+    hazard.startTime = time;
+    hazard.brakeTime = preheldBrake ? time : null;
+    hazard.rt = null;
+    hazard.preheldBrake = preheldBrake;
+    hazard.collision = false;
+    hazard.resolved = false;
+    hazard.removeAt = null;
+    hazard.currentDistance = hazardDistance;
+    hazard.currentLateral = targetLateral;
+    hazard.targetLateral = targetLateral;
+    hazard.crossingStartLateral = crossingStartLateral;
+    hazard.crossingEndLateral = crossingEndLateral;
+    hazard.result.distance_m = Math.round(this.progress);
+    hazard.result.rt_ms = null;
+    hazard.result.valid = !preheldBrake;
+    hazard.result.collision = false;
+    hazard.result.brake_preheld = preheldBrake;
+    hazard.result.response = preheldBrake ? 'invalid-preheld-brake' : 'pending';
+    hazard.group.visible = true;
+    hazard.group.position.set(point.x + point.normal.x * targetLateral, 0, point.z + point.normal.z * targetLateral);
+    hazard.group.rotation.y = Math.atan2(point.dir.x, point.dir.z);
+
+    this.hazardSpawnCount++;
+    this.eventResults.push(hazard.result);
     this.flashRed();
-    if (this.hud) this.hud.event.textContent = hazardLabel;
+    if (this.hud) this.hud.event.textContent = hazard.result.label;
+  }
 
-    // Schedule next hazard
-    const { minHazardInterval, maxHazardInterval } = this.difficultyPreset;
-    this.nextHazardDistance = this.progress + minHazardInterval + Math.random() * (maxHazardInterval - minHazardInterval);
+  private getHazardLeadDistance(id: HazardId): number {
+    if (id === 'child-crossing') {
+      return this.clamp(this.difficultyPreset.hazardLeadDistance * 0.62, 14, 25);
+    }
+    return this.difficultyPreset.hazardLeadDistance;
   }
 
   private updateHazards(time: number) {
     const timeoutMs = this.difficultyPreset.hazardTimeoutMs;
 
     for (const hazard of this.activeHazards) {
+      if (hazard.resolved) {
+        if (hazard.removeAt !== null && time >= hazard.removeAt) {
+          hazard.group.visible = false;
+          hazard.removeAt = null;
+        }
+        continue;
+      }
+      if (!hazard.active) continue;
+
       const age = time - hazard.startTime;
       const point = this.getRoutePoint(hazard.currentDistance);
       const baseY = hazard.template.id === 'plane-crash' ? Math.max(0.3, 18 - age * 0.018) : 0;
@@ -2043,7 +2094,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       } else if (hazard.template.id === 'drunk-driver') {
         lateral = hazard.targetLateral;
       } else if (hazard.template.id === 'wrong-way-driver') {
-        hazard.currentDistance = Math.max(hazard.triggerDistance, hazard.hazardDistance - age * 0.012);
+        const minimumWrongWayDistance = Math.max(0, hazard.triggerDistance - 36);
+        hazard.currentDistance = Math.max(minimumWrongWayDistance, hazard.hazardDistance - age * 0.012);
         const movingPoint = this.getRoutePoint(hazard.currentDistance);
         hazard.group.position.set(
           movingPoint.x + movingPoint.normal.x * hazard.targetLateral,
@@ -2070,13 +2122,25 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
       const distanceToHazard = hazard.currentDistance - this.progress;
       const collisionNow = !hazard.resolved && this.isHazardColliding(hazard);
-      const safeBrake = hazard.brakeTime !== null && this.vehicleSpeed < 2.4 && !collisionNow && distanceToHazard > -1;
-      const passedHazard = !hazard.resolved && !collisionNow && this.hasPassedHazard(hazard);
+      const requiresDodge = hazard.template.id === 'wrong-way-driver';
+      const safeBrake = !requiresDodge && hazard.brakeTime !== null && this.vehicleSpeed < 2.4 && !collisionNow && distanceToHazard > -1;
+      const wrongWayDodged = requiresDodge && !collisionNow && this.hasDodgedWrongWayDriver(hazard);
+      const wrongWayOverran = requiresDodge && !collisionNow && !wrongWayDodged && this.hasWrongWayDriverOverrun(hazard);
+      const passedHazard = !requiresDodge && !collisionNow && this.hasPassedHazard(hazard);
 
       if (collisionNow) {
         this.resolveHazard(hazard, time, true, hazard.brakeTime ? 'collision-after-brake' : 'collision-no-brake');
+      } else if (wrongWayOverran) {
+        this.resolveHazard(hazard, time, true, hazard.brakeTime ? 'collision-after-brake' : 'collision-no-brake');
       } else if (safeBrake) {
         this.resolveHazard(hazard, time, false, hazard.preheldBrake ? 'invalid-preheld-brake' : 'brake');
+      } else if (wrongWayDodged) {
+        const response = hazard.preheldBrake
+          ? 'invalid-preheld-brake'
+          : hazard.brakeTime
+            ? 'dodge-after-brake'
+            : 'dodge';
+        this.resolveHazard(hazard, time, false, response);
       } else if (passedHazard) {
         const response = hazard.preheldBrake
           ? 'invalid-preheld-brake'
@@ -2086,18 +2150,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.resolveHazard(hazard, time, false, response);
       }
 
-      if (!hazard.resolved && age > timeoutMs && hazard.brakeTime !== null && this.vehicleSpeed < 2.4 && !collisionNow) {
+      if (!requiresDodge && !hazard.resolved && age > timeoutMs && hazard.brakeTime !== null && this.vehicleSpeed < 2.4 && !collisionNow) {
         this.resolveHazard(hazard, time, false, hazard.preheldBrake ? 'invalid-preheld-brake' : 'brake');
       }
 
-      if (hazard.removeAt !== null && time >= hazard.removeAt) {
-        this.scene?.remove(hazard.group);
-        this.disposeObject(hazard.group);
-        hazard.removeAt = null;
-      }
     }
-
-    this.activeHazards = this.activeHazards.filter((hazard) => hazard.removeAt !== null || !hazard.resolved);
   }
 
   private resolveHazard(hazard: ActiveHazard, time: number, collision: boolean, response: string) {
@@ -2148,6 +2205,27 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const hazardBox = this.getHazardCollisionBox(hazard);
     const passDistance = vehicleBox.halfLength + hazardBox.halfLength + 1.2;
     return this.progress - hazard.currentDistance > passDistance;
+  }
+
+  private hasDodgedWrongWayDriver(hazard: ActiveHazard): boolean {
+    const vehicleBox = this.getVehicleCollisionBox();
+    const hazardBox = this.getHazardCollisionBox(hazard);
+    const routeGap = hazard.currentDistance - this.progress;
+    const contactWindow = vehicleBox.halfLength + hazardBox.halfLength + 0.8;
+    if (routeGap > contactWindow) return false;
+
+    const vehicleLateral = this.getCurrentVehicleLaneLateral();
+    const lateralClearance = Math.abs(vehicleLateral - hazard.currentLateral);
+    const requiredClearance = vehicleBox.halfWidth + hazardBox.halfWidth + 0.9;
+    return lateralClearance >= requiredClearance;
+  }
+
+  private hasWrongWayDriverOverrun(hazard: ActiveHazard): boolean {
+    const vehicleBox = this.getVehicleCollisionBox();
+    const hazardBox = this.getHazardCollisionBox(hazard);
+    const routeGap = hazard.currentDistance - this.progress;
+    const overrunDistance = vehicleBox.halfLength + hazardBox.halfLength + 0.8;
+    return routeGap < -overrunDistance;
   }
 
   private getVehicleCollisionBox(): CollisionBox2D {
@@ -2222,7 +2300,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private handleBrakePressed(time: number) {
-    const hazard = this.activeHazards.find((item) => !item.resolved && item.brakeTime === null);
+    const hazard = this.activeHazards.find((item) => item.active && !item.resolved && item.brakeTime === null);
     if (!hazard || hazard.preheldBrake) return;
     hazard.brakeTime = time;
     hazard.rt = Math.round(time - hazard.startTime);
@@ -2275,7 +2353,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return group;
   }
 
-  private createCarMesh(_color: number) {
+  private createCarMesh(color: number) {
     const group = new THREE.Group();
     const referenceCar = this.vehicleModel?.clone?.(true);
     if (referenceCar) {
@@ -2288,7 +2366,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       return group;
     }
 
-    const fallback = this.createFallbackVehicle();
+    const fallback = this.createFallbackVehicle(color);
     group.add(fallback.group);
     return group;
   }

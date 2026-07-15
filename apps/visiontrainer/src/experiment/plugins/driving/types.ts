@@ -46,6 +46,7 @@ export interface DrivingEventResult {
 }
 
 export interface ActiveHazard {
+  active: boolean;
   template: HazardTemplate;
   group: any;
   triggerDistance: number;
