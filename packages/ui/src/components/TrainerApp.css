@@ -1733,7 +1733,8 @@ body[data-ui-font-bold="true"] .app-layout :where(
     justify-content: flex-start;
     width: min(320px, 86vw);
     height: 100vh;
-    padding: 84px 24px 24px;
+    gap: 12px;
+    padding: 72px 24px 24px;
     background: var(--bg-card);
     box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
     transition: right 0.3s ease;
@@ -1751,6 +1752,15 @@ body[data-ui-font-bold="true"] .app-layout :where(
     width: 100%;
   }
 
+  .navbar-links {
+    order: 1;
+  }
+
+  .navbar-tools {
+    order: 3;
+    margin-top: auto;
+  }
+
   .navbar-link,
   .navbar-download-btn {
     width: 100%;
@@ -1758,11 +1768,15 @@ body[data-ui-font-bold="true"] .app-layout :where(
     text-align: left;
   }
 
+  .navbar-link {
+    border: 0;
+  }
+
   .navbar-footer-links {
+    order: 2;
     display: flex;
     flex-direction: column;
     width: 100%;
-    margin-top: auto;
     padding-top: 16px;
     border-top: 1px solid var(--border);
     gap: 4px;
