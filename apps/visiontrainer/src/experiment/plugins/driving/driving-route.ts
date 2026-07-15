@@ -35,12 +35,53 @@ function roadWidthFromLanes(lanes: number, shoulderWidth = 1.2): number {
   return lanes * URBAN_LANE_WIDTH_M + shoulderWidth;
 }
 
-const XINYI_3_LANE = roadWidthFromLanes(3);
-const XINYI_4_LANE = roadWidthFromLanes(4, 1.4);
-const KEELUNG_3_LANE = roadWidthFromLanes(3);
-const CITY_HALL_2_LANE = roadWidthFromLanes(2, 1.2);
+const XINYI_6_LANE = roadWidthFromLanes(6, 2.4);
+const XINYI_8_LANE = roadWidthFromLanes(8, 2.8);
+const KEELUNG_6_LANE = roadWidthFromLanes(6, 2.4);
+const CITY_HALL_4_LANE = roadWidthFromLanes(4, 1.8);
 const SONGSHOU_4_LANE = roadWidthFromLanes(4, 1.8);
 const SONGZHI_6_LANE = roadWidthFromLanes(6, 2.0);
+const LAST_ROUTE_STORAGE_KEY = 'visiontrainer.driving.lastRouteId';
+
+const XINYI_3_LANE = XINYI_6_LANE;
+const XINYI_4_LANE = XINYI_8_LANE;
+const KEELUNG_3_LANE = KEELUNG_6_LANE;
+const CITY_HALL_2_LANE = CITY_HALL_4_LANE;
+
+let lastPickedRouteId: string | null = null;
+
+function getRenderedRoadProfile(point: RouteControlPoint): Pick<RouteControlPoint, 'roadWidth' | 'laneCount' | 'oneWay'> {
+  if (point.name.includes('Xinyi Road')) {
+    const laneCount = point.laneCount >= 4 ? 8 : 6;
+    return {
+      roadWidth: laneCount === 8 ? XINYI_8_LANE : XINYI_6_LANE,
+      laneCount,
+      oneWay: false,
+    };
+  }
+
+  if (point.name.includes('Keelung Road')) {
+    return { roadWidth: KEELUNG_6_LANE, laneCount: 6, oneWay: false };
+  }
+
+  if (point.name.includes('City Hall Road')) {
+    return { roadWidth: CITY_HALL_4_LANE, laneCount: 4, oneWay: false };
+  }
+
+  if (point.name.includes('Songzhi Road')) {
+    return { roadWidth: SONGZHI_6_LANE, laneCount: 6, oneWay: false };
+  }
+
+  if (point.name.includes('Songshou Road')) {
+    return { roadWidth: SONGSHOU_4_LANE, laneCount: 4, oneWay: false };
+  }
+
+  return {
+    roadWidth: point.roadWidth,
+    laneCount: point.laneCount,
+    oneWay: false,
+  };
+}
 
 const xinyiKeelungLoop: readonly RouteControlPoint[] = [
   {
@@ -358,6 +399,7 @@ function buildRoute(points: readonly RouteControlPoint[]): RouteSegment[] {
   for (let i = 0; i < points.length - 1; i += 1) {
     const start = projectTaipeiLonLat(points[i].lon, points[i].lat);
     const end = projectTaipeiLonLat(points[i + 1].lon, points[i + 1].lat);
+    const roadProfile = getRenderedRoadProfile(points[i]);
     const dx = end.x - start.x;
     const dz = end.z - start.z;
     const length = Math.hypot(dx, dz);
@@ -366,9 +408,9 @@ function buildRoute(points: readonly RouteControlPoint[]): RouteSegment[] {
       start,
       dir: { x: dx / length, z: dz / length },
       length,
-      roadWidth: points[i].roadWidth,
-      laneCount: points[i].laneCount,
-      oneWay: points[i].oneWay,
+      roadWidth: roadProfile.roadWidth,
+      laneCount: roadProfile.laneCount,
+      oneWay: roadProfile.oneWay,
       name: points[i].name,
     });
   }
@@ -380,7 +422,28 @@ export function buildDrivingRoute(variant: DrivingRouteVariant): RouteSegment[] 
 }
 
 export function pickRandomDrivingRoute(): DrivingRouteVariant {
-  return DRIVING_ROUTE_VARIANTS[Math.floor(Math.random() * DRIVING_ROUTE_VARIANTS.length)] ?? DRIVING_ROUTE_VARIANTS[0];
+  let storedLastRouteId: string | null = null;
+  try {
+    storedLastRouteId = typeof window !== 'undefined'
+      ? window.localStorage?.getItem(LAST_ROUTE_STORAGE_KEY)
+      : null;
+  } catch {
+    storedLastRouteId = null;
+  }
+  const previousRouteId = lastPickedRouteId ?? storedLastRouteId;
+  const candidates = DRIVING_ROUTE_VARIANTS.length > 1
+    ? DRIVING_ROUTE_VARIANTS.filter((route) => route.id !== previousRouteId)
+    : DRIVING_ROUTE_VARIANTS;
+  const selected = candidates[Math.floor(Math.random() * candidates.length)] ?? DRIVING_ROUTE_VARIANTS[0];
+  lastPickedRouteId = selected.id;
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage?.setItem(LAST_ROUTE_STORAGE_KEY, selected.id);
+    }
+  } catch {
+    // Private browsing or storage policy can reject localStorage.
+  }
+  return selected;
 }
 
 export const DRIVING_ROUTE: readonly RouteSegment[] = buildDrivingRoute(DRIVING_ROUTE_VARIANTS[0]);

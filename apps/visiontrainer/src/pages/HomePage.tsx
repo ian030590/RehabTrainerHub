@@ -6,11 +6,7 @@ import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetS
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
-import {
-  isCalibrated,
-  DRIVING_DURATION_MIN_SEC,
-  DRIVING_DURATION_MAX_SEC,
-} from '../utils/settings';
+import { isCalibrated } from '../utils/settings';
 import { pixiAppManager } from '../utils/pixiPool';
 import { SoundManager } from '../utils/soundManager';
 import { useAppSetting } from '../utils/useAppSetting';
@@ -69,7 +65,6 @@ export function HomePage() {
   const [readingWPS, setReadingWPS] = useAppSetting('readingWPS');
   const [readingCrowding, setReadingCrowding] = useAppSetting('readingCrowding');
   const [readingContrast, setReadingContrast] = useAppSetting('readingContrast');
-  const [drivingDurationSec, setDrivingDurationSec] = useAppSetting('drivingDurationSec');
   const [drivingRedFlashEnabled, setDrivingRedFlashEnabled] = useAppSetting('drivingRedFlashEnabled');
   const [drivingDifficulty, setDrivingDifficulty] = useAppSetting('drivingDifficulty');
   const [drivingControlMode, setDrivingControlMode] = useAppSetting('drivingControlMode');
@@ -186,7 +181,7 @@ export function HomePage() {
     }
 
     if (moduleToStart === 'driving-rehab') {
-      navigate(`/training?module=driving-rehab&duration=${drivingDurationSec}&redFlash=${drivingRedFlashEnabled}&drivingDifficulty=${drivingDifficulty}&controlMode=${drivingControlMode}`);
+      navigate(`/training?module=driving-rehab&redFlash=${drivingRedFlashEnabled}&drivingDifficulty=${drivingDifficulty}&controlMode=${drivingControlMode}`);
       return;
     }
 
@@ -261,7 +256,6 @@ export function HomePage() {
   const calibrated = isCalibrated();
   const roundsPresets = [3, 5, 10, 15];
   const durationPresets = [30, 60, 90, 120];
-  const drivingDurationPresets = [80, 100, 120, 140];
   const targetShapeOptions: { key: OculomotorTargetShape; label: string }[] = [
     { key: 'circle', label: t('home.shape.circle') },
     { key: 'star', label: t('home.shape.star') },
@@ -320,7 +314,6 @@ export function HomePage() {
         ];
       case 'driving-rehab':
         return [
-          { value: `${drivingDurationSec}s` },
           { value: drivingDifficultyLabels[drivingDifficulty] },
           { value: drivingControlOptions.find((option) => option.key === drivingControlMode)?.label },
         ];
@@ -963,7 +956,6 @@ export function HomePage() {
           ariaLabel={t('home.module.driving.title')}
           onClose={() => setExpandedModule(null)}
           summaryItems={[
-            { value: `${drivingDurationSec}s` },
             { value: drivingDifficultyLabels[drivingDifficulty] },
             { value: drivingRedFlashEnabled ? t('common.on') : t('common.off') },
           ]}
@@ -983,38 +975,6 @@ export function HomePage() {
                     </button>
                   );
                 })}
-              </div>
-            </div>
-
-            <div className="config-section">
-              <div className="config-label">{t('home.config.drivingDuration')}</div>
-              <div className="number-preset-selector">
-                {drivingDurationPresets.map((duration) => (
-                  <button
-                    key={duration}
-                    className={`number-preset-button ${drivingDurationSec === duration ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDrivingDurationSec(duration);
-                    }}
-                  >
-                    {duration}s
-                  </button>
-                ))}
-                <input
-                  className="number-preset-input"
-                  type="number"
-                  min={DRIVING_DURATION_MIN_SEC}
-                  max={DRIVING_DURATION_MAX_SEC}
-                  value={drivingDurationSec}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value, 10);
-                    if (Number.isFinite(value)) {
-                      setDrivingDurationSec(Math.max(DRIVING_DURATION_MIN_SEC, Math.min(DRIVING_DURATION_MAX_SEC, value)));
-                    }
-                  }}
-                />
               </div>
             </div>
 

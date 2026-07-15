@@ -7,7 +7,6 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '../../i18n';
 import { buildTimeline } from '../../experiment/timeline';
 import {
-  DRIVING_DURATION_MIN_SEC,
   getActiveUser,
   getSetting,
   isDrivingControlMode,
@@ -100,13 +99,6 @@ export function TrainingPage() {
   const oculomotorBackgroundColor = searchParams.get('backgroundColor') || getSetting('oculomotorBackgroundColor');
   const oculomotorCustomTargetImage = getSetting('oculomotorCustomTargetImage');
   const enableWebGazer = getSetting('oculomotorEnableWebgazer');
-  const requestedDrivingDurationSec = parseInt(searchParams.get('duration') || '', 10);
-  const drivingDurationSec = Math.max(
-    DRIVING_DURATION_MIN_SEC,
-    Number.isFinite(requestedDrivingDurationSec)
-      ? requestedDrivingDurationSec
-      : getSetting('drivingDurationSec'),
-  );
   const requestedDrivingFlash = searchParams.get('redFlash');
   const drivingRedFlashEnabled = requestedDrivingFlash === null
     ? getSetting('drivingRedFlashEnabled')
@@ -174,7 +166,6 @@ export function TrainingPage() {
               readingWPS: getSetting('readingWPS'),
               readingCrowding: getSetting('readingCrowding'),
               readingContrast: getSetting('readingContrast'),
-              drivingDurationSec,
               drivingRedFlashEnabled,
               drivingDifficulty,
               drivingControlMode,
@@ -215,7 +206,6 @@ export function TrainingPage() {
           contrast: getSetting('readingContrast'),
         },
         driving: {
-          durationSec: drivingDurationSec,
           redFlashEnabled: drivingRedFlashEnabled,
           difficulty: drivingDifficulty,
           controlMode: drivingControlMode,
@@ -255,7 +245,6 @@ export function TrainingPage() {
     enableWebGazer,
     gaborDurationSec,
     gaborMaxSpots,
-    drivingDurationSec,
     drivingRedFlashEnabled,
     drivingDifficulty,
     drivingControlMode,
