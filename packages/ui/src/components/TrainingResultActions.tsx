@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
+import { exitFullscreenIfActive } from '../fullscreen';
 
 export interface TrainingResultActionsProps {
   downloadLabel: ReactNode;
@@ -19,6 +20,10 @@ export function TrainingResultActions({
   onBackHome,
   className = 'results-actions',
 }: TrainingResultActionsProps) {
+  useEffect(() => {
+    void exitFullscreenIfActive();
+  }, []);
+
   return (
     <div className={className}>
       <button className="btn btn-primary btn-lg" type="button" onClick={onDownloadCsv}>
