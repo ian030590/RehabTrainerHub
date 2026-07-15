@@ -6,6 +6,7 @@ import {
   getAuthBaseUrl,
   getStateSecret,
   requireDatabase,
+  securityHeaders,
   toPublicUser,
   verifySignedValue,
 } from '../../_lib/auth.js';
@@ -26,17 +27,35 @@ async function handleCallback(request, env) {
   const oauthError = url.searchParams.get('error');
 
   if (oauthError) {
-    return new Response(`OAuth error: ${oauthError}`, { status: 400 });
+    return new Response(`OAuth error: ${oauthError}`, {
+      status: 400,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        ...securityHeaders(),
+      },
+    });
   }
   if (!code || !stateToken) {
-    return new Response('Missing OAuth callback parameters.', { status: 400 });
+    return new Response('Missing OAuth callback parameters.', {
+      status: 400,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        ...securityHeaders(),
+      },
+    });
   }
 
   let state;
   try {
     state = await verifySignedValue(stateToken, getStateSecret(env));
   } catch {
-    return new Response('Invalid OAuth state.', { status: 400 });
+    return new Response('Invalid OAuth state.', {
+      status: 400,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        ...securityHeaders(),
+      },
+    });
   }
 
   const authBaseUrl = getAuthBaseUrl(request, env);
@@ -111,6 +130,7 @@ async function handleCallback(request, env) {
 }
 
 function oauthFailureResponse(request, error) {
+  const nonce = crypto.randomUUID().replace(/-/g, '');
   const message = error instanceof Error ? error.message : '';
   const setupError = /not configured|D1 binding|must be configured/i.test(message);
   const databaseError = /D1_ERROR|SQLITE|no such table|provider_accounts|app_users/i.test(message);
@@ -143,7 +163,7 @@ function oauthFailureResponse(request, error) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rehab Trainer Hub Login Error</title>
-  <style>
+  <style nonce="${nonce}">
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; font: 700 18px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1a1c1e; background: #f9f9fc; }
     main { width: min(520px, calc(100% - 32px)); padding: 24px; border-radius: 8px; background: #fff; }
   </style>
@@ -157,7 +177,14 @@ function oauthFailureResponse(request, error) {
     status,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'no-store',
+      ...securityHeaders({
+        'Content-Security-Policy': [
+          "default-src 'none'",
+          `style-src 'nonce-${nonce}'`,
+          "base-uri 'none'",
+          "frame-ancestors 'none'",
+        ].join('; '),
+      }),
     },
   });
 }

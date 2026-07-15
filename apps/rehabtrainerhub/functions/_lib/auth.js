@@ -66,7 +66,10 @@ export function rejectDisallowedOrigin(request, env) {
   if (isAllowedOrigin(request, env)) return null;
   return new Response('Origin is not allowed.', {
     status: 403,
-    headers: corsHeaders(request, env),
+    headers: {
+      ...corsHeaders(request, env),
+      ...securityHeaders(),
+    },
   });
 }
 
@@ -91,11 +94,29 @@ export function corsHeaders(request, env) {
   return headers;
 }
 
+export function securityHeaders(extra = {}) {
+  return {
+    'Cache-Control': 'no-store',
+    'Cross-Origin-Resource-Policy': 'same-site',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=()',
+    'Referrer-Policy': 'no-referrer',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    ...extra,
+  };
+}
+
 export function optionsResponse(request, env) {
   if (!isAllowedOrigin(request, env)) {
-    return new Response('Origin is not allowed.', { status: 403 });
+    return new Response('Origin is not allowed.', { status: 403, headers: securityHeaders() });
   }
-  return new Response(null, { status: 204, headers: corsHeaders(request, env) });
+  return new Response(null, {
+    status: 204,
+    headers: {
+      ...corsHeaders(request, env),
+      ...securityHeaders(),
+    },
+  });
 }
 
 export function jsonResponse(request, env, data, init = {}) {
@@ -103,6 +124,7 @@ export function jsonResponse(request, env, data, init = {}) {
     ...init,
     headers: {
       ...corsHeaders(request, env),
+      ...securityHeaders(),
       ...(init.headers || {}),
     },
   });
@@ -127,7 +149,7 @@ export function requireSecret(env, name) {
 }
 
 export function getStateSecret(env) {
-  return env.AUTH_STATE_SECRET || requireSecret(env, 'AUTH_SESSION_SECRET');
+  return requireSecret(env, 'AUTH_STATE_SECRET');
 }
 
 export function getSessionSecret(env) {
@@ -240,6 +262,7 @@ export function createSessionCookie(request, token) {
     'Path=/',
     `Max-Age=${SESSION_TTL_SECONDS}`,
     'HttpOnly',
+    'Priority=High',
     secureAttributes,
   ].join('; ');
 }
@@ -253,6 +276,7 @@ export function clearSessionCookie(request) {
     'Path=/',
     'Max-Age=0',
     'HttpOnly',
+    'Priority=High',
     secureAttributes,
   ].join('; ');
 }
@@ -383,6 +407,7 @@ export function authPopupHtml(returnTo, token, user, init = {}) {
   const message = escapeScriptJson({ type: AUTH_MESSAGE_TYPE, token, user });
   const targetOriginJson = escapeScriptJson(targetOrigin);
   const fallbackJson = escapeScriptJson(returnTo);
+  const nonce = crypto.randomUUID().replace(/-/g, '');
 
   return new Response(`<!doctype html>
 <html lang="zh-Hant-TW">
@@ -390,7 +415,7 @@ export function authPopupHtml(returnTo, token, user, init = {}) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rehab Trainer Hub Login</title>
-  <style>
+  <style nonce="${nonce}">
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; font: 700 18px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1a1c1e; background: #f9f9fc; }
     main { width: min(520px, calc(100% - 32px)); padding: 24px; border: 1px solid #bfc8ca; border-radius: 8px; background: #fff; }
     a { color: #004148; font-weight: 900; }
@@ -401,7 +426,7 @@ export function authPopupHtml(returnTo, token, user, init = {}) {
     <p id="auth-status" data-zh="登入完成。視窗會自動關閉，或返回原本頁面。" data-en="Sign-in complete. This window will close automatically, or return to the original page.">登入完成。視窗會自動關閉，或返回原本頁面。</p>
     <p><a id="fallback" href="#" data-zh="回到 Rehab Trainer Hub" data-en="Return to Rehab Trainer Hub">回到 Rehab Trainer Hub</a></p>
   </main>
-  <script>
+  <script nonce="${nonce}">
     const locale = navigator.language && navigator.language.toLowerCase().startsWith('en') ? 'en' : 'zh';
     document.documentElement.lang = locale === 'en' ? 'en' : 'zh-Hant-TW';
     for (const element of document.querySelectorAll('[data-' + locale + ']')) {
@@ -423,7 +448,18 @@ export function authPopupHtml(returnTo, token, user, init = {}) {
     ...init,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'no-store',
+      ...securityHeaders({
+        'Content-Security-Policy': [
+          "default-src 'none'",
+          `script-src 'nonce-${nonce}'`,
+          `style-src 'nonce-${nonce}'`,
+          "base-uri 'none'",
+          "connect-src 'none'",
+          "form-action 'none'",
+          "frame-ancestors 'none'",
+          "img-src 'none'",
+        ].join('; '),
+      }),
       ...(init.headers || {}),
     },
   });
@@ -468,20 +504,16 @@ async function checkRateLimit(request, env, name, options = {}) {
       .bind(now - 60 * 60)
       .run();
   }
-  await db
+  const row = await db
     .prepare(`
       INSERT INTO rate_limits (key, count, reset_at, updated_at)
       VALUES (?, 1, ?, ?)
       ON CONFLICT(key) DO UPDATE SET
-        count = count + 1,
+        count = rate_limits.count + 1,
         updated_at = excluded.updated_at
+      RETURNING count, reset_at
     `)
     .bind(key, resetAt, new Date(now * 1000).toISOString())
-    .run();
-
-  const row = await db
-    .prepare('SELECT count, reset_at FROM rate_limits WHERE key = ?')
-    .bind(key)
     .first();
   const count = Number(row?.count || 0);
   return {

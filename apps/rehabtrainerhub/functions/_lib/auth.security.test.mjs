@@ -6,6 +6,7 @@ import {
   rateLimitResponse,
   toPublicUser,
 } from './auth.js';
+import { scanHtml } from '../api/submissions.js';
 
 const secret = '0123456789abcdef0123456789abcdef';
 const env = {
@@ -33,6 +34,9 @@ assert.equal(noOriginHeaders['Access-Control-Allow-Origin'], undefined);
 const popup = await authPopupHtml('https://stroketrainer.pages.dev/', token, toPublicUser(user)).text();
 assert.equal(popup.includes('auth_token'), false);
 assert.equal(popup.includes('https://stroketrainer.pages.dev/'), true);
+const popupResponse = authPopupHtml('https://stroketrainer.pages.dev/', token, toPublicUser(user));
+assert.match(popupResponse.headers.get('content-security-policy'), /script-src 'nonce-/);
+assert.equal(popupResponse.headers.get('x-content-type-options'), 'nosniff');
 
 const request = new Request('https://rehabtrainerhub.pages.dev/api/auth/password/login', {
   method: 'POST',
@@ -45,6 +49,14 @@ assert.equal(await rateLimitResponse(request, env, 'test-login', { limit: 2, win
 const limited = await rateLimitResponse(request, env, 'test-login', { limit: 2, windowSeconds: 60 });
 assert.equal(limited.status, 429);
 assert.equal(limited.headers.has('retry-after'), true);
+
+const encodedScriptScan = scanHtml('<!doctype html><html><body><scr&#x69;pt>alert(1)</scr&#x69;pt></body></html>', 'en');
+assert.equal(encodedScriptScan.ok, false);
+assert(encodedScriptScan.messages.some((message) => /script/i.test(message)));
+
+const encodedJavascriptScan = scanHtml('<!doctype html><html><body><a href="java&#115;cript:alert(1)">x</a></body></html>', 'en');
+assert.equal(encodedJavascriptScan.ok, false);
+assert(encodedJavascriptScan.messages.some((message) => /javascript/i.test(message)));
 
 console.log('auth security checks passed');
 
@@ -67,6 +79,16 @@ function createRateLimitDb() {
               return { success: true };
             },
             async first() {
+              if (/INSERT INTO rate_limits/i.test(sql)) {
+                const [key, resetAt] = args;
+                const current = rows.get(key);
+                const row = {
+                  count: (current?.count || 0) + 1,
+                  reset_at: resetAt,
+                };
+                rows.set(key, row);
+                return row;
+              }
               if (/SELECT count, reset_at FROM rate_limits/i.test(sql)) {
                 return rows.get(args[0]) || null;
               }

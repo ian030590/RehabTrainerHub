@@ -183,6 +183,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private rearviewPixelBuffers: Partial<Record<'center' | 'left' | 'right', Uint8Array>> = {};
   private rearviewCamera: any = null;
   private rearviewLastUpdateTime = 0;
+  private rearviewMirrorUpdateIndex = 0;
+  private cockpitSteeringWheel: HTMLDivElement | null = null;
+  private cockpitSpeedNeedle: HTMLDivElement | null = null;
+  private cockpitSpeedText: HTMLDivElement | null = null;
 
   private keyState = {
     left: false,
@@ -458,6 +462,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.rearviewPixelBuffers = {};
     this.rearviewCamera = null;
     this.rearviewLastUpdateTime = 0;
+    this.rearviewMirrorUpdateIndex = 0;
+    this.cockpitSteeringWheel = null;
+    this.cockpitSpeedNeedle = null;
+    this.cockpitSpeedText = null;
     this.gamepadConnected = Array.from(navigator.getGamepads?.() ?? []).some(Boolean);
     this.controlMode = this.getControlMode((trial as any)?.control_mode);
     this.language = this.getLanguage((trial as any)?.language);
@@ -787,8 +795,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private initScene(root: HTMLDivElement) {
     const THREE = this.requireThree();
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xb7bec2);
-    this.scene.fog = new THREE.Fog(0xb7bec2, this.renderQuality.fogNear, this.renderQuality.fogFar);
+    this.scene.background = new THREE.Color(0xd9eaf1);
+    this.scene.fog = new THREE.Fog(0xcbd7d9, this.renderQuality.fogNear, this.renderQuality.fogFar);
 
     const width = Math.max(1, root.clientWidth);
     const height = Math.max(1, root.clientHeight);
@@ -838,6 +846,72 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const hemi = new THREE.HemisphereLight(0xbfd4df, 0x4d6b50, 0.92);
     this.scene.add(ambient, sun, hemi);
+    this.addSkyDome();
+  }
+
+  private addSkyDome() {
+    const THREE = this.requireThree();
+    if (!this.scene) return;
+
+    const routeBounds = this.getRouteBounds();
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(1200, 32, 16),
+      new THREE.MeshBasicMaterial({
+        map: this.createSkyTexture(),
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        fog: false,
+      }),
+    );
+    sky.name = 'driving-sky-dome';
+    sky.position.set(
+      (routeBounds.minX + routeBounds.maxX) / 2,
+      -120,
+      (routeBounds.minZ + routeBounds.maxZ) / 2,
+    );
+    sky.renderOrder = -1000;
+    this.scene.add(sky);
+  }
+
+  private createSkyTexture() {
+    const THREE = this.requireThree();
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#5f9ed0');
+      gradient.addColorStop(0.42, '#a8d3e5');
+      gradient.addColorStop(0.66, '#e4eef0');
+      gradient.addColorStop(1, '#f7dfbd');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const sun = ctx.createRadialGradient(384, 74, 2, 384, 74, 92);
+      sun.addColorStop(0, 'rgba(255,246,205,0.95)');
+      sun.addColorStop(0.22, 'rgba(255,226,156,0.56)');
+      sun.addColorStop(1, 'rgba(255,226,156,0)');
+      ctx.fillStyle = sun;
+      ctx.fillRect(250, 0, 262, 190);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.28)';
+      for (const [x, y, w] of [
+        [54, 72, 92],
+        [154, 48, 68],
+        [286, 96, 116],
+        [418, 122, 82],
+      ] as const) {
+        ctx.beginPath();
+        ctx.ellipse(x, y, w, 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + w * 0.38, y + 4, w * 0.7, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    return texture;
   }
 
   private initHud(root: HTMLDivElement, redFlashEnabled: boolean) {
@@ -1137,10 +1211,116 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       width: '220px',
       height: '110px',
       transform: 'translateX(-50%)',
+      transformOrigin: '50% 100%',
       border: '18px solid rgba(9, 14, 18, 0.96)',
       borderBottom: '0',
       borderRadius: '140px 140px 0 0',
       boxShadow: '0 0 0 2px rgba(255,255,255,0.08), inset 0 8px 24px rgba(255,255,255,0.06)',
+    });
+    const wheelSpoke = document.createElement('div');
+    Object.assign(wheelSpoke.style, {
+      position: 'absolute',
+      left: '50%',
+      bottom: '-8px',
+      width: '18px',
+      height: '74px',
+      transform: 'translateX(-50%)',
+      borderRadius: '12px',
+      background: 'linear-gradient(180deg, rgba(28,34,40,0.96), rgba(8,12,16,0.96))',
+      boxShadow: '0 0 0 1px rgba(255,255,255,0.08)',
+    });
+    const wheelHub = document.createElement('div');
+    Object.assign(wheelHub.style, {
+      position: 'absolute',
+      left: '50%',
+      bottom: '-18px',
+      width: '56px',
+      height: '34px',
+      transform: 'translateX(-50%)',
+      borderRadius: '999px',
+      background: 'linear-gradient(180deg, rgba(33,41,49,0.98), rgba(8,12,16,0.98))',
+      boxShadow: 'inset 0 6px 12px rgba(255,255,255,0.06)',
+    });
+    wheel.append(wheelSpoke, wheelHub);
+    this.cockpitSteeringWheel = wheel;
+
+    const cluster = document.createElement('div');
+    Object.assign(cluster.style, {
+      position: 'absolute',
+      left: '30%',
+      bottom: '8%',
+      width: '148px',
+      height: '58px',
+      transform: 'translateX(-50%)',
+      borderRadius: '48px 48px 12px 12px',
+      background: 'linear-gradient(180deg, rgba(15,23,31,0.94), rgba(3,7,12,0.96))',
+      border: '1px solid rgba(255,255,255,0.08)',
+      boxShadow: '0 8px 18px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.10)',
+    });
+    const dial = document.createElement('div');
+    Object.assign(dial.style, {
+      position: 'absolute',
+      left: '16px',
+      top: '8px',
+      width: '44px',
+      height: '44px',
+      borderRadius: '50%',
+      border: '2px solid rgba(125,211,252,0.42)',
+      background: 'radial-gradient(circle at 50% 58%, rgba(14,23,34,0.9), rgba(2,6,10,0.96))',
+    });
+    const needle = document.createElement('div');
+    Object.assign(needle.style, {
+      position: 'absolute',
+      left: '20px',
+      bottom: '20px',
+      width: '2px',
+      height: '18px',
+      transformOrigin: '50% 100%',
+      transform: 'rotate(-115deg)',
+      background: '#f87171',
+      borderRadius: '2px',
+      boxShadow: '0 0 8px rgba(248,113,113,0.75)',
+    });
+    dial.appendChild(needle);
+    const speedReadout = document.createElement('div');
+    Object.assign(speedReadout.style, {
+      position: 'absolute',
+      right: '16px',
+      top: '12px',
+      color: '#dff7ff',
+      fontSize: '15px',
+      fontWeight: '900',
+      lineHeight: '1',
+      textShadow: '0 0 10px rgba(56,189,248,0.45)',
+    });
+    speedReadout.textContent = '0';
+    const speedUnit = document.createElement('div');
+    Object.assign(speedUnit.style, {
+      position: 'absolute',
+      right: '16px',
+      top: '31px',
+      color: 'rgba(223,247,255,0.72)',
+      fontSize: '9px',
+      fontWeight: '800',
+      lineHeight: '1',
+    });
+    speedUnit.textContent = 'km/h';
+    cluster.append(dial, speedReadout, speedUnit);
+    dash.appendChild(cluster);
+    this.cockpitSpeedNeedle = needle;
+    this.cockpitSpeedText = speedReadout;
+
+    const hood = document.createElement('div');
+    Object.assign(hood.style, {
+      position: 'absolute',
+      left: '50%',
+      bottom: '19%',
+      width: '44%',
+      height: '10%',
+      transform: 'translateX(-50%)',
+      borderRadius: '50% 50% 0 0 / 70% 70% 0 0',
+      background: 'linear-gradient(180deg, rgba(59,130,246,0.72), rgba(18,31,46,0.92))',
+      boxShadow: 'inset 0 14px 28px rgba(255,255,255,0.10), 0 -8px 30px rgba(15,23,42,0.16)',
     });
 
     const leftPillar = document.createElement('div');
@@ -1169,7 +1349,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const leftMirror = this.createRearviewMirror('left');
     const rightMirror = this.createRearviewMirror('right');
 
-    cockpit.append(dash, wheel, leftPillar, rightPillar, centerMirror, leftMirror, rightMirror);
+    cockpit.append(hood, dash, wheel, leftPillar, rightPillar, centerMirror, leftMirror, rightMirror);
     return cockpit;
   }
 
@@ -1223,8 +1403,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     });
 
     const canvas = document.createElement('canvas');
-    canvas.width = isCenter ? 210 : 128;
-    canvas.height = isCenter ? 52 : 72;
+    canvas.width = isCenter ? 180 : 112;
+    canvas.height = isCenter ? 46 : 64;
     canvas.dataset.rearviewMirror = position;
     Object.assign(canvas.style, {
       position: 'absolute',
@@ -1263,7 +1443,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private updateRearviewMirrors(time: number) {
     if (!this.renderer || !this.scene || !this.rearviewCamera) return;
     if (this.cameraMode !== 'first-person') return;
-    if (time - this.rearviewLastUpdateTime < 84) return;
+    if (time - this.rearviewLastUpdateTime < this.getRearviewUpdateIntervalMs()) return;
     this.rearviewLastUpdateTime = time;
 
     const entries = (['center', 'left', 'right'] as const)
@@ -1272,6 +1452,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         Boolean(entry.canvas?.isConnected)
       ));
     if (entries.length === 0) return;
+    const entry = entries[this.rearviewMirrorUpdateIndex % entries.length];
+    this.rearviewMirrorUpdateIndex += 1;
 
     const THREE = this.requireThree();
     const vehicleBox = this.getVehicleCollisionBox();
@@ -1281,39 +1463,44 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const previousVehicleVisible = this.vehicleRoot?.visible;
     if (this.vehicleRoot) this.vehicleRoot.visible = false;
 
-    for (const { position, canvas } of entries) {
-      const width = Math.max(1, canvas.width);
-      const height = Math.max(1, canvas.height);
-      const target = this.getRearviewRenderTarget(position, width, height);
-      const side = position === 'center' ? 0 : position === 'left' ? -1 : 1;
-      const sideOffset = side * 0.95;
-      const sideLook = side * 30;
+    const { position, canvas } = entry;
+    const width = Math.max(1, canvas.width);
+    const height = Math.max(1, canvas.height);
+    const target = this.getRearviewRenderTarget(position, width, height);
+    const side = position === 'center' ? 0 : position === 'left' ? -1 : 1;
+    const sideOffset = side * 0.95;
+    const sideLook = side * 30;
 
-      this.rearviewCamera.aspect = width / height;
-      this.rearviewCamera.updateProjectionMatrix();
-      this.rearviewCamera.position.set(
-        vehicleBox.centerX - forward.x * 1.05 + right.x * sideOffset,
-        position === 'center' ? 2.22 : 1.82,
-        vehicleBox.centerZ - forward.z * 1.05 + right.z * sideOffset,
-      );
-      this.rearviewCamera.lookAt(new THREE.Vector3(
-        vehicleBox.centerX - forward.x * 95 + right.x * sideLook,
-        1.42,
-        vehicleBox.centerZ - forward.z * 95 + right.z * sideLook,
-      ));
+    this.rearviewCamera.aspect = width / height;
+    this.rearviewCamera.updateProjectionMatrix();
+    this.rearviewCamera.position.set(
+      vehicleBox.centerX - forward.x * 1.05 + right.x * sideOffset,
+      position === 'center' ? 2.22 : 1.82,
+      vehicleBox.centerZ - forward.z * 1.05 + right.z * sideOffset,
+    );
+    this.rearviewCamera.lookAt(new THREE.Vector3(
+      vehicleBox.centerX - forward.x * 95 + right.x * sideLook,
+      1.42,
+      vehicleBox.centerZ - forward.z * 95 + right.z * sideLook,
+    ));
 
-      this.renderer.setRenderTarget(target);
-      this.renderer.clear(true, true, true);
-      this.renderer.render(this.scene, this.rearviewCamera);
-      const pixels = this.getRearviewPixelBuffer(position, width, height);
-      this.renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
-      this.copyRearviewPixelsToCanvas(pixels, canvas);
-    }
+    this.renderer.setRenderTarget(target);
+    this.renderer.clear(true, true, true);
+    this.renderer.render(this.scene, this.rearviewCamera);
+    const pixels = this.getRearviewPixelBuffer(position, width, height);
+    this.renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
+    this.copyRearviewPixelsToCanvas(pixels, canvas);
 
     this.renderer.setRenderTarget(previousTarget);
     if (this.vehicleRoot && previousVehicleVisible !== undefined) {
       this.vehicleRoot.visible = previousVehicleVisible;
     }
+  }
+
+  private getRearviewUpdateIntervalMs(): number {
+    if (this.renderQuality.level === 'low') return 180;
+    if (this.renderQuality.level === 'medium') return 140;
+    return 120;
   }
 
   private getRearviewRenderTarget(position: 'center' | 'left' | 'right', width: number, height: number) {
@@ -1451,6 +1638,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         halfLength: intersectionWidth / 2,
       });
     }
+    this.addBuildings();
+    this.addTaiwanStreetDetails();
     this.addTurnSignage();
     this.addDestinationMarker();
   }
@@ -1827,18 +2016,20 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private addBuildings() {
     const THREE = this.requireThree();
     if (!this.scene) return;
-    const colors = [0xb8c1cc, 0xd9b38c, 0x98b7a1, 0xc9a4a4, 0xb0a6cf];
+    const colors = [0xb9c7d3, 0xd6c2a6, 0xa9bfac, 0xcaa4a4, 0xa9a7c8, 0xc7d2c6];
+    const accents = [0x0f766e, 0x1d4ed8, 0xdc2626, 0x9333ea, 0xf59e0b];
+    const buildingStep = this.renderQuality.level === 'low' ? 34 : 20;
 
-    for (let d = 15; d < this.routeLength - 10; d += 20) {
+    for (let d = 15; d < this.routeLength - 10; d += buildingStep) {
       const point = this.getRoutePoint(d);
       for (const side of [-1, 1]) {
-        const height = 7 + ((d * (side + 3)) % 13);
-        const width = 8 + (d % 5);
-        const depth = 8 + ((d + 3) % 6);
+        const height = 7 + ((d * (side + 3)) % 17);
+        const width = 7 + (d % 6);
+        const depth = 7.5 + ((d + 3) % 6);
         if (this.isNearIntersection(d, this.buildingIntersectionClearance + depth / 2)) continue;
 
-        const angle = Math.atan2(point.dir.x, point.dir.z);
-        const setback = point.roadWidth / 2 + this.sidewalkWidth + this.buildingRoadGap + width / 2 + (d % 8);
+        const angle = Math.atan2(point.dir.x, point.dir.z) + side * Math.PI / 2;
+        const setback = point.roadWidth / 2 + this.sidewalkWidth + this.buildingRoadGap + depth / 2 + (d % 8);
         const centerX = point.x + point.normal.x * side * setback;
         const centerZ = point.z + point.normal.z * side * setback;
         const collisionBox: CollisionBox2D = {
@@ -1851,14 +2042,70 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         if (!this.isBuildingFootprintClear(collisionBox)) continue;
 
         const color = colors[Math.floor((d + side * 7) % colors.length)];
-        const material = new THREE.MeshBasicMaterial({ color });
-        const building = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
-        building.position.set(centerX, height / 2, centerZ);
+        const accent = accents[Math.floor((d * 3 + side * 11) % accents.length)];
+        const building = this.createUrbanBuilding(width, height, depth, color, accent, d + side * 19);
+        building.position.set(centerX, 0, centerZ);
         building.rotation.y = angle;
         this.scene.add(building);
         this.buildingCollisionBoxes.push(collisionBox);
       }
     }
+  }
+
+  private createUrbanBuilding(width: number, height: number, depth: number, color: number, accent: number, seed: number) {
+    const THREE = this.requireThree();
+    const group = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0.03 });
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.78, metalness: 0.08 });
+    const windowMat = new THREE.MeshBasicMaterial({ color: 0xc7e7ff, transparent: true, opacity: 0.62 });
+    const signMat = new THREE.MeshBasicMaterial({ color: accent });
+    const awningMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.7, metalness: 0.02 });
+
+    const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), bodyMat);
+    body.position.y = height / 2;
+    group.add(body);
+
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(width + 0.35, 0.32, depth + 0.35), roofMat);
+    roof.position.y = height + 0.16;
+    group.add(roof);
+
+    if (this.renderQuality.level !== 'low') {
+      const frontZ = depth / 2 + 0.035;
+      const rowCount = this.clamp(Math.floor((height - 3) / 2.2), 2, 8);
+      const columnCount = this.clamp(Math.floor(width / 1.55), 3, 7);
+      const startX = -((columnCount - 1) * 1.18) / 2;
+      for (let row = 0; row < rowCount; row += 1) {
+        for (let column = 0; column < columnCount; column += 1) {
+          if ((row + column + Math.floor(seed)) % 5 === 0) continue;
+          const window = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.72, 0.045), windowMat);
+          window.position.set(startX + column * 1.18, 3.25 + row * 2.0, frontZ);
+          group.add(window);
+        }
+      }
+
+      const storefront = new THREE.Mesh(new THREE.BoxGeometry(width * 0.72, 0.62, 0.055), signMat);
+      storefront.position.set(0, 2.25, frontZ + 0.02);
+      group.add(storefront);
+
+      const awning = new THREE.Mesh(new THREE.BoxGeometry(width * 0.82, 0.18, 1.05), awningMat);
+      awning.position.set(0, 2.95, frontZ + 0.42);
+      group.add(awning);
+
+      if (height > 13) {
+        const balconyMat = new THREE.MeshBasicMaterial({ color: 0x263238 });
+        for (let floor = 0; floor < Math.min(4, rowCount - 1); floor += 1) {
+          const rail = new THREE.Mesh(new THREE.BoxGeometry(width * 0.62, 0.08, 0.12), balconyMat);
+          rail.position.set(0, 4.05 + floor * 2.0, frontZ + 0.22);
+          group.add(rail);
+        }
+      }
+    }
+
+    group.traverse?.((child: any) => {
+      child.castShadow = false;
+      child.receiveShadow = false;
+    });
+    return group;
   }
 
   private isNearIntersection(distance: number, clearance: number): boolean {
@@ -2417,6 +2664,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.updateVehicleVisual(dt, time);
     this.updateCameraFree(dt);
     this.updateHud();
+    this.updateCockpitHud();
     this.updateMiniMap();
     this.updateRearviewMirrors(time);
 
@@ -2840,7 +3088,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         direction,
         speed: 0,
         targetSpeed: 0,
-        cruiseSpeed: isScooter ? 8.2 + (i % 4) * 0.7 : 6.4 + (i % 3) * 0.8,
+        cruiseSpeed: isScooter ? 6.8 + (i % 5) * 0.95 : 7.4 + (i % 4) * 1.05,
       };
       this.ambientTrafficActors.push(actor);
       this.positionTrafficActor(actor);
@@ -2860,16 +3108,29 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getTrafficActorStopDistance(actor: AmbientTrafficActor): number | null {
-    if (actor.direction !== 1) return null;
-
-    const nextInter = this.intersections.find((inter) => inter.distance > actor.distance);
+    let nextInter: IntersectionZone | undefined;
+    if (actor.direction === 1) {
+      nextInter = this.intersections.find((inter) => inter.distance > actor.distance);
+    } else {
+      for (let i = this.intersections.length - 1; i >= 0; i -= 1) {
+        if (this.intersections[i].distance < actor.distance) {
+          nextInter = this.intersections[i];
+          break;
+        }
+      }
+    }
     if (!nextInter) return null;
 
-    const stopDistance = this.getIntersectionStopLineDistance(nextInter) - 2.2;
-    const distanceToStop = stopDistance - actor.distance;
+    const stopDistance = this.getTrafficActorStopLineDistance(nextInter, actor.direction);
+    const distanceToStop = (stopDistance - actor.distance) * actor.direction;
     if (distanceToStop < 0 || distanceToStop > 28) return null;
     if (nextInter.trafficSignalState !== 'red' && nextInter.trafficSignalState !== 'yellow') return null;
     return stopDistance;
+  }
+
+  private getTrafficActorStopLineDistance(intersection: IntersectionZone, direction: 1 | -1): number {
+    if (direction === 1) return this.getIntersectionStopLineDistance(intersection) - 2.2;
+    return Math.min(this.routeLength, intersection.distance + this.stopLineSetback + 2.2);
   }
 
   private getTrafficLaneOffset(distance: number, direction: 1 | -1, isScooter: boolean, index: number): number {
@@ -3269,9 +3530,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private createHazardMesh(id: HazardId) {
     switch (id) {
       case 'child-crossing':
-        return this.createPersonMesh(0xffd166, 0.55);
+        return this.createPersonMesh(0xffd166, 0.55, { backpack: true });
       case 'elder-stopped':
-        return this.createPersonMesh(0xd9d9d9, 0.68);
+        return this.createPersonMesh(0xd9d9d9, 0.68, { cane: true });
       case 'plane-crash':
         return this.createPlaneMesh();
       case 'drunk-driver':
@@ -3314,21 +3575,42 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return group;
   }
 
-  private createPersonMesh(color: number, scale: number) {
+  private createPersonMesh(color: number, scale: number, options: { backpack?: boolean; cane?: boolean } = {}) {
     const THREE = this.requireThree();
     const group = new THREE.Group();
-    const skin = new THREE.MeshBasicMaterial({ color: 0xf2c6a0 });
-    const bodyMat = new THREE.MeshBasicMaterial({ color });
-    const dark = new THREE.MeshBasicMaterial({ color: 0x222222 });
+    const skin = new THREE.MeshStandardMaterial({ color: 0xf2c6a0, roughness: 0.78, metalness: 0.02 });
+    const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.72, metalness: 0.02 });
+    const dark = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7, metalness: 0.04 });
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.45 * scale, 8, 6), skin);
     head.position.y = 2.1 * scale;
     const body = new THREE.Mesh(new THREE.BoxGeometry(0.8 * scale, 1.15 * scale, 0.45 * scale), bodyMat);
     body.position.y = 1.25 * scale;
+    const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.16 * scale, 0.82 * scale, 0.16 * scale), bodyMat);
+    leftArm.position.set(-0.52 * scale, 1.3 * scale, 0);
+    leftArm.rotation.z = options.cane ? -0.25 : 0.38;
+    const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.16 * scale, 0.82 * scale, 0.16 * scale), bodyMat);
+    rightArm.position.set(0.52 * scale, 1.3 * scale, 0);
+    rightArm.rotation.z = options.backpack ? -0.42 : 0.25;
     const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.22 * scale, 0.9 * scale, 0.22 * scale), dark);
     leftLeg.position.set(-0.22 * scale, 0.45 * scale, 0);
+    leftLeg.rotation.z = options.backpack ? 0.18 : 0;
     const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.22 * scale, 0.9 * scale, 0.22 * scale), dark);
     rightLeg.position.set(0.22 * scale, 0.45 * scale, 0);
-    group.add(head, body, leftLeg, rightLeg);
+    rightLeg.rotation.z = options.backpack ? -0.18 : 0;
+    group.add(head, body, leftArm, rightArm, leftLeg, rightLeg);
+    if (options.backpack) {
+      const packMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.62, metalness: 0.05 });
+      const pack = new THREE.Mesh(new THREE.BoxGeometry(0.52 * scale, 0.68 * scale, 0.22 * scale), packMat);
+      pack.position.set(0, 1.35 * scale, -0.34 * scale);
+      group.add(pack);
+    }
+    if (options.cane) {
+      const caneMat = new THREE.MeshStandardMaterial({ color: 0x7c4a2d, roughness: 0.66, metalness: 0.08 });
+      const cane = new THREE.Mesh(new THREE.CylinderGeometry(0.035 * scale, 0.035 * scale, 1.35 * scale, 8), caneMat);
+      cane.position.set(-0.68 * scale, 0.72 * scale, 0.18 * scale);
+      cane.rotation.z = -0.16;
+      group.add(cane);
+    }
     return group;
   }
 
@@ -3355,12 +3637,33 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const group = new THREE.Group();
     const bodyMat = new THREE.MeshBasicMaterial({ color: 0xd6dde4 });
     const wingMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8 });
+    const smokeMat = new THREE.MeshBasicMaterial({ color: 0x4b5563, transparent: true, opacity: 0.42 });
+    const debrisMat = new THREE.MeshBasicMaterial({ color: 0x1f2937 });
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 7), bodyMat);
     const wing = new THREE.Mesh(new THREE.BoxGeometry(8, 0.18, 1.4), wingMat);
     const tail = new THREE.Mesh(new THREE.BoxGeometry(4, 0.16, 1.1), wingMat);
     tail.position.z = -2.8;
     tail.position.y = 0.75;
     group.add(body, wing, tail);
+    for (const [x, y, z, radius] of [
+      [-1.7, 0.9, -3.3, 0.7],
+      [1.6, 1.15, -3.9, 0.55],
+      [0.2, 1.35, -4.6, 0.82],
+    ] as const) {
+      const smoke = new THREE.Mesh(new THREE.SphereGeometry(radius, 10, 8), smokeMat);
+      smoke.position.set(x, y, z);
+      group.add(smoke);
+    }
+    for (const [x, z, w] of [
+      [-3.1, 2.8, 1.1],
+      [2.8, 1.9, 0.8],
+      [0.8, -3.8, 0.9],
+    ] as const) {
+      const debris = new THREE.Mesh(new THREE.BoxGeometry(w, 0.16, 0.42), debrisMat);
+      debris.position.set(x, 0.12, z);
+      debris.rotation.y = x * 0.7;
+      group.add(debris);
+    }
     group.scale.set(1.2, 1.2, 1.2);
     return group;
   }
@@ -3371,6 +3674,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private updateCameraFree(dt: number) {
     if (!this.camera) return;
 
+    const speedRatio = this.clamp(this.vehicleSpeed / this.maxVehicleSpeed, 0, 1);
+    const clock = performance.now() / 1000;
+    const firstPersonBob = this.cameraMode === 'first-person'
+      ? (Math.sin(clock * 13.5) * 0.014 + Math.sin(clock * 21.0) * 0.006) * speedRatio
+      : 0;
+    const brakeNod = this.cameraMode === 'first-person' && this.lastBrakePressed
+      ? this.lerp(0.012, 0.038, speedRatio)
+      : 0;
     const cabinSway = this.steeringInput * 0.08;
     const right = this.getVisualRightVector(this.vehicleHeading);
     const forward = this.getForwardVector(this.vehicleHeading);
@@ -3396,12 +3707,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const driverLeftOffset = -0.62;
       targetPosition.set(
         vehicleBox.centerX + forward.x * 0.45 + right.x * (driverLeftOffset + cabinSway),
-        2.05,
+        2.05 + firstPersonBob - brakeNod,
         vehicleBox.centerZ + forward.z * 0.45 + right.z * (driverLeftOffset + cabinSway),
       );
       lookAt.set(
         vehicleBox.centerX + forward.x * 35 + right.x * (driverLeftOffset * 0.35 + this.steeringInput * 0.65),
-        1.65,
+        1.65 + firstPersonBob * 0.45 - brakeNod * 0.35,
         vehicleBox.centerZ + forward.z * 35 + right.z * (driverLeftOffset * 0.35 + this.steeringInput * 0.65),
       );
     }
@@ -3412,12 +3723,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.camera.lookAt(lookAt);
 
     const targetRoll = this.cameraMode === 'first-person'
-      ? this.clamp(this.lastYawRate * 0.01, -0.014, 0.014)
+      ? this.clamp(this.lastYawRate * 0.012 - this.steeringInput * 0.006, -0.018, 0.018)
       : 0;
     this.cameraRoll = this.expSmoothing(this.cameraRoll, targetRoll, 6.5, dt);
     if (this.cameraMode === 'first-person') this.camera.rotateZ(this.cameraRoll);
 
-    const targetFov = this.cameraMode === 'third-person' ? this.baseCameraFov - 3 : this.baseCameraFov;
+    const targetFov = this.cameraMode === 'third-person'
+      ? this.baseCameraFov - 3
+      : this.baseCameraFov + speedRatio * 2.4;
     this.cameraFov = this.expSmoothing(this.cameraFov, targetFov, 3.2, dt);
     if (Math.abs(this.camera.fov - this.cameraFov) > 0.01) {
       this.camera.fov = this.cameraFov;
@@ -3458,6 +3771,21 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
     if (this.vehicleBlobShadow) {
       this.vehicleBlobShadow.visible = this.cameraMode === 'third-person';
+    }
+  }
+
+  private updateCockpitHud() {
+    if (this.cockpitSteeringWheel) {
+      const steeringDeg = this.clamp(this.frontWheelAngle * 34, -24, 24);
+      this.cockpitSteeringWheel.style.transform = `translateX(-50%) rotate(${steeringDeg}deg)`;
+    }
+    const speedKph = Math.round(this.vehicleSpeed * 3.6);
+    if (this.cockpitSpeedText) {
+      this.cockpitSpeedText.textContent = String(speedKph);
+    }
+    if (this.cockpitSpeedNeedle) {
+      const speedRatio = this.clamp(speedKph / Math.round(this.maxVehicleSpeed * 3.6), 0, 1);
+      this.cockpitSpeedNeedle.style.transform = `rotate(${-115 + speedRatio * 230}deg)`;
     }
   }
 
@@ -3924,6 +4252,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.miniMapCanvas = null;
     this.miniMapCtx = null;
     this.rearviewMirrorCanvases = {};
+    this.rearviewMirrorUpdateIndex = 0;
+    this.cockpitSteeringWheel = null;
+    this.cockpitSpeedNeedle = null;
+    this.cockpitSpeedText = null;
   }
 
   private disposeObject(object: any) {

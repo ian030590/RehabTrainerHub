@@ -203,17 +203,74 @@ export async function onRequestPost({ request, env }) {
 export function scanHtml(html, locale = 'zh-TW') {
   const copy = submissionMessages[locale] || submissionMessages['zh-TW'];
   const messages = [];
-  if (!html || !html.trim()) messages.push(copy.emptyHtml);
-  if (!/<!doctype\s+html|<html[\s>]/i.test(html)) messages.push(copy.missingHtmlStructure);
+  const normalizedHtml = normalizeHtmlForScan(html);
+  const scanTargets = normalizedHtml === html ? [html] : [html, normalizedHtml];
+  if (!normalizedHtml || !normalizedHtml.trim()) messages.push(copy.emptyHtml);
+  if (!/<!doctype\s+html|<html[\s>]/i.test(normalizedHtml)) messages.push(copy.missingHtmlStructure);
 
   for (const rule of forbiddenHtmlPatterns) {
-    if (rule.pattern.test(html)) messages.push(copy.forbidden[rule.key]);
+    if (scanTargets.some((target) => rule.pattern.test(target))) {
+      messages.push(copy.forbidden[rule.key]);
+    }
   }
 
   return {
     ok: messages.length === 0,
     messages: Array.from(new Set(messages)).slice(0, 10),
   };
+}
+
+function normalizeHtmlForScan(value) {
+  let normalized = String(value || '').normalize('NFKC');
+  for (let pass = 0; pass < 3; pass += 1) {
+    const next = decodeBackslashEscapes(decodeHtmlEntities(normalized)).normalize('NFKC');
+    if (next === normalized) break;
+    normalized = next;
+  }
+  return normalized;
+}
+
+function decodeHtmlEntities(value) {
+  const namedEntities = {
+    amp: '&',
+    apos: "'",
+    colon: ':',
+    gt: '>',
+    lt: '<',
+    newline: '\n',
+    quot: '"',
+    sol: '/',
+    tab: '\t',
+  };
+
+  return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]+);?/gi, (match, entity) => {
+    const lower = String(entity).toLowerCase();
+    try {
+      if (lower.startsWith('#x')) return String.fromCodePoint(Number.parseInt(lower.slice(2), 16));
+      if (lower.startsWith('#')) return String.fromCodePoint(Number.parseInt(lower.slice(1), 10));
+      return namedEntities[lower] ?? match;
+    } catch {
+      return match;
+    }
+  });
+}
+
+function decodeBackslashEscapes(value) {
+  return value
+    .replace(/\\u\{([0-9a-f]{1,6})\}/gi, (_, hex) => safeCodePoint(hex))
+    .replace(/\\u([0-9a-f]{4})/gi, (_, hex) => safeCodePoint(hex))
+    .replace(/\\x([0-9a-f]{2})/gi, (_, hex) => safeCodePoint(hex))
+    .replace(/\\([0-9a-f]{1,6})\s?/gi, (_, hex) => safeCodePoint(hex));
+}
+
+function safeCodePoint(hex) {
+  const codePoint = Number.parseInt(hex, 16);
+  if (!Number.isFinite(codePoint) || codePoint < 0 || codePoint > 0x10ffff) return '';
+  try {
+    return String.fromCodePoint(codePoint);
+  } catch {
+    return '';
+  }
 }
 
 function getLocale(form) {

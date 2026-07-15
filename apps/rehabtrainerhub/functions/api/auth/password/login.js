@@ -28,17 +28,18 @@ export async function onRequestPost({ request, env }) {
     return errorResponse(request, env, 'Invalid JSON payload.', 400);
   }
 
+  const ipLimit = await rateLimitResponse(request, env, 'password-login', { limit: 6, windowSeconds: 60 });
+  if (ipLimit) return ipLimit;
+
   const email = normalizeEmail(payload.email);
   const password = String(payload.password || '');
   if (!isValidEmail(email) || !password) {
     return errorResponse(request, env, 'Invalid email or password.', 401);
   }
 
-  const ipLimit = await rateLimitResponse(request, env, 'password-login', { limit: 10, windowSeconds: 60 });
-  if (ipLimit) return ipLimit;
   const accountLimit = await rateLimitResponse(request, env, 'password-login-account', {
     identity: email,
-    limit: 20,
+    limit: 10,
     windowSeconds: 15 * 60,
   });
   if (accountLimit) return accountLimit;
