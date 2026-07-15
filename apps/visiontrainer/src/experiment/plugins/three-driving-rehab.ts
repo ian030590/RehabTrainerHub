@@ -178,10 +178,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly laneOffset = 4.0;
   private readonly vehicleHalfWidth = 1.05;
   private readonly vehicleHalfLength = 2.2;
-  private readonly wheelBase = 2.85;
+  private readonly wheelBase = 2.72;
   private readonly maxVehicleSpeed = 18;
   private readonly baseCameraFov = 68;
-  private readonly maxCameraFov = 76;
   private readonly sidewalkWidth = 3;
   private readonly buildingRoadGap = 1.2;
   private readonly buildingRoadMargin = 0.35;
@@ -747,39 +746,56 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       position: 'absolute',
       bottom: '28px',
       right: '18px',
-      width: '200px',
-      height: '240px',
-      borderRadius: '18px',
+      width: '236px',
+      height: '278px',
+      borderRadius: '16px',
       overflow: 'hidden',
-      border: '2px solid rgba(255,255,255,0.22)',
-      background: 'rgba(8, 18, 28, 0.82)',
-      backdropFilter: 'blur(12px)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(56, 189, 248, 0.15)',
+      border: '1px solid rgba(15,23,42,0.18)',
+      background: '#f8fafc',
+      boxShadow: '0 14px 34px rgba(0,0,0,0.38), 0 1px 0 rgba(255,255,255,0.9) inset',
       zIndex: '15',
       display: 'flex',
       flexDirection: 'column',
     });
 
-    // Title bar
+    // Turn instruction, styled like a navigation step banner.
+    const dirLabel = document.createElement('div');
+    dirLabel.setAttribute('data-minimap-dir', '');
+    Object.assign(dirLabel.style, {
+      minHeight: '54px',
+      padding: '10px 14px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#fff',
+      background: '#1a73e8',
+      fontSize: '15px',
+      fontWeight: '800',
+      lineHeight: '1.25',
+      textAlign: 'center',
+      boxShadow: '0 1px 0 rgba(255,255,255,0.18) inset',
+    });
+    dirLabel.textContent = `↑ ${this.text.straight}`;
+
+    // Compact title bar.
     const titleBar = document.createElement('div');
     Object.assign(titleBar.style, {
-      padding: '8px 12px',
-      background: 'linear-gradient(180deg, rgba(56, 189, 248, 0.25), rgba(56, 189, 248, 0.08))',
-      borderBottom: '1px solid rgba(255,255,255,0.12)',
+      padding: '7px 12px',
+      background: '#fff',
+      borderBottom: '1px solid rgba(15,23,42,0.08)',
       display: 'flex',
       alignItems: 'center',
       gap: '6px',
       fontSize: '11px',
       fontWeight: '700',
-      color: '#7dd3fc',
-      letterSpacing: '0.5px',
+      color: '#334155',
     });
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     icon.setAttribute('width', '14');
     icon.setAttribute('height', '14');
     icon.setAttribute('viewBox', '0 0 24 24');
     icon.setAttribute('fill', 'none');
-    icon.setAttribute('stroke', '#38bdf8');
+    icon.setAttribute('stroke', '#1a73e8');
     icon.setAttribute('stroke-width', '2.5');
     icon.setAttribute('stroke-linecap', 'round');
     icon.setAttribute('stroke-linejoin', 'round');
@@ -790,30 +806,18 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     titleText.textContent = this.text.navigation;
     titleBar.append(icon, titleText);
 
-    // Direction instruction
-    const dirLabel = document.createElement('div');
-    dirLabel.setAttribute('data-minimap-dir', '');
-    Object.assign(dirLabel.style, {
-      padding: '6px 12px',
-      fontSize: '13px',
-      fontWeight: '700',
-      color: '#fff',
-      textAlign: 'center',
-      background: 'rgba(56, 189, 248, 0.12)',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
-    });
-    dirLabel.textContent = this.text.straight;
-
     // Canvas
     const canvas = document.createElement('canvas');
-    canvas.width = 200;
-    canvas.height = 172;
+    canvas.width = 236;
+    canvas.height = 194;
     Object.assign(canvas.style, {
       width: '100%',
+      minHeight: '0',
       flex: '1',
+      display: 'block',
     });
 
-    wrapper.append(titleBar, dirLabel, canvas);
+    wrapper.append(dirLabel, titleBar, canvas);
     this.miniMapCanvas = canvas;
     this.miniMapCtx = canvas.getContext('2d');
 
@@ -828,188 +832,119 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const w = canvas.width;
     const h = canvas.height;
+    const vehicleBox = this.getVehicleCollisionBox();
+    const forward = this.getForwardVector(this.vehicleHeading);
+    const right = this.getVisualRightVector(this.vehicleHeading);
+    const scale = 1.72;
+    const originX = w / 2;
+    const originY = h * 0.76;
 
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = 'rgba(12, 25, 38, 1)';
+    ctx.fillStyle = '#eef3f1';
     ctx.fillRect(0, 0, w, h);
 
-    // Compute bounding box
-    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-    for (const seg of this.route) {
-      const endX = seg.start.x + seg.dir.x * seg.length;
-      const endZ = seg.start.z + seg.dir.z * seg.length;
-      minX = Math.min(minX, seg.start.x, endX);
-      maxX = Math.max(maxX, seg.start.x, endX);
-      minZ = Math.min(minZ, seg.start.z, endZ);
-      maxZ = Math.max(maxZ, seg.start.z, endZ);
-    }
-
-    const padding = 24;
-    const rangeX = maxX - minX || 1;
-    const rangeZ = maxZ - minZ || 1;
-    const scale = Math.min((w - padding * 2) / rangeX, (h - padding * 2) / rangeZ);
-    const offsetX = (w - rangeX * scale) / 2;
-    const offsetZ = (h - rangeZ * scale) / 2;
-
     const toScreen = (px: number, pz: number) => ({
-      sx: offsetX + (px - minX) * scale,
-      sy: offsetZ + (pz - minZ) * scale,
+      sx: originX + ((px - vehicleBox.centerX) * right.x + (pz - vehicleBox.centerZ) * right.z) * scale,
+      sy: originY - ((px - vehicleBox.centerX) * forward.x + (pz - vehicleBox.centerZ) * forward.z) * scale,
     });
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Road shadow
-    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-    ctx.lineWidth = 10;
-    ctx.beginPath();
-    for (let i = 0; i < this.route.length; i++) {
-      const seg = this.route[i];
-      const s = toScreen(seg.start.x, seg.start.z);
-      const endX = seg.start.x + seg.dir.x * seg.length;
-      const endZ = seg.start.z + seg.dir.z * seg.length;
-      const e = toScreen(endX, endZ);
-      if (i === 0) ctx.moveTo(s.sx, s.sy);
-      ctx.lineTo(e.sx, e.sy);
-    }
-    ctx.stroke();
+    const drawPath = (fromDistance: number, toDistance: number, color: string, widthPx: number) => {
+      const from = this.clamp(fromDistance, 0, this.routeLength);
+      const to = this.clamp(toDistance, 0, this.routeLength);
+      if (to <= from) return;
 
-    // Road body
-    ctx.strokeStyle = 'rgba(80, 95, 110, 0.9)';
-    ctx.lineWidth = 7;
-    ctx.beginPath();
-    for (let i = 0; i < this.route.length; i++) {
-      const seg = this.route[i];
-      const s = toScreen(seg.start.x, seg.start.z);
-      const endX = seg.start.x + seg.dir.x * seg.length;
-      const endZ = seg.start.z + seg.dir.z * seg.length;
-      const e = toScreen(endX, endZ);
-      if (i === 0) ctx.moveTo(s.sx, s.sy);
-      ctx.lineTo(e.sx, e.sy);
-    }
-    ctx.stroke();
-
-    // Already-traveled portion
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    let traveled = 0;
-    let started = false;
-    for (let i = 0; i < this.route.length; i++) {
-      const seg = this.route[i];
-      const s = toScreen(seg.start.x, seg.start.z);
-      if (!started) {
-        ctx.moveTo(s.sx, s.sy);
-        started = true;
-      } else {
-        ctx.lineTo(s.sx, s.sy);
-      }
-      const segEnd = traveled + seg.length;
-      if (this.progress <= segEnd) {
-        const localD = Math.max(0, this.progress - traveled);
-        const px = seg.start.x + seg.dir.x * localD;
-        const pz = seg.start.z + seg.dir.z * localD;
-        const p = toScreen(px, pz);
-        ctx.lineTo(p.sx, p.sy);
-        break;
-      } else {
-        const endX = seg.start.x + seg.dir.x * seg.length;
-        const endZ = seg.start.z + seg.dir.z * seg.length;
-        const e = toScreen(endX, endZ);
-        ctx.lineTo(e.sx, e.sy);
-      }
-      traveled += seg.length;
-    }
-    ctx.stroke();
-
-    // Intersection dots
-    for (const inter of this.intersections) {
-      const pt = this.getRoutePoint(inter.distance);
-      const s = toScreen(pt.x, pt.z);
-      ctx.fillStyle = inter.entered ? 'rgba(56, 189, 248, 0.4)' : 'rgba(250, 204, 21, 0.7)';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = widthPx;
       ctx.beginPath();
-      ctx.arc(s.sx, s.sy, 4, 0, Math.PI * 2);
-      ctx.fill();
+
+      let first = true;
+      for (let distance = from; distance <= to; distance += 3) {
+        const point = this.getRoutePoint(distance);
+        const screen = toScreen(point.x, point.z);
+        if (first) {
+          ctx.moveTo(screen.sx, screen.sy);
+          first = false;
+        } else {
+          ctx.lineTo(screen.sx, screen.sy);
+        }
+      }
+
+      const endPoint = this.getRoutePoint(to);
+      const endScreen = toScreen(endPoint.x, endPoint.z);
+      if (first) {
+        ctx.moveTo(endScreen.sx, endScreen.sy);
+      } else {
+        ctx.lineTo(endScreen.sx, endScreen.sy);
+      }
+      ctx.stroke();
+    };
+
+    const visibleBack = Math.max(0, this.progress - 18);
+    const visibleAhead = Math.min(this.routeLength, this.progress + 126);
+    drawPath(visibleBack, visibleAhead, 'rgba(148, 163, 184, 0.28)', 28);
+    drawPath(visibleBack, visibleAhead, '#ffffff', 20);
+    drawPath(this.progress, visibleAhead, '#1a73e8', 12);
+    drawPath(this.progress, visibleAhead, '#185abc', 3);
+
+    const nextInter = this.intersections.find((iz) => !iz.entered && this.progress < iz.distance);
+    if (nextInter) {
+      const point = this.getRoutePoint(nextInter.distance);
+      const screen = toScreen(point.x, point.z);
+      if (screen.sx > -24 && screen.sx < w + 24 && screen.sy > -24 && screen.sy < h + 24) {
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = '#1a73e8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(screen.sx, screen.sy, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#1a73e8';
+        ctx.font = `bold 13px ${typography.fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(nextInter.turnDir === 'right' ? '→' : nextInter.turnDir === 'left' ? '←' : '↑', screen.sx, screen.sy + 0.5);
+      }
     }
 
-    // Start marker (A)
-    const startPt = toScreen(this.route[0].start.x, this.route[0].start.z);
-    ctx.fillStyle = '#34d399';
-    ctx.beginPath();
-    ctx.arc(startPt.sx, startPt.sy, 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = `bold 9px ${typography.fontFamily}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('A', startPt.sx, startPt.sy);
-
-    // Destination marker (B)
     const destPt = this.getRoutePoint(this.routeLength - 2);
     const destScreen = toScreen(destPt.x, destPt.z);
-    ctx.fillStyle = '#f87171';
-    ctx.beginPath();
-    ctx.arc(destScreen.sx, destScreen.sy, 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.fillText('B', destScreen.sx, destScreen.sy);
+    if (destScreen.sx > -18 && destScreen.sx < w + 18 && destScreen.sy > -18 && destScreen.sy < h + 18) {
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(destScreen.sx, destScreen.sy, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold 9px ${typography.fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('B', destScreen.sx, destScreen.sy + 0.2);
+    }
 
-    // Current position (use actual vehicle XZ, not route-projected)
-    const cs = toScreen(this.vehicleX, this.vehicleZ);
+    // Current car position stays as a small blue dot near the bottom,
+    // matching turn-by-turn navigation rather than an overview map.
+    const cs = { sx: originX, sy: originY };
     const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 300);
 
-    // Pulse ring
-    ctx.strokeStyle = `rgba(56, 189, 248, ${0.3 + pulse * 0.3})`;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(cs.sx, cs.sy, 6 + pulse * 3, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Player dot
-    ctx.fillStyle = '#38bdf8';
-    ctx.beginPath();
-    ctx.arc(cs.sx, cs.sy, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Direction arrow from vehicle heading
-    const arrowLen = 12;
-    const ndx = Math.sin(this.vehicleHeading);
-    const ndy = Math.cos(this.vehicleHeading);
-    // Map world to screen: +X -> +sx, +Z -> +sy
-    const screenDx = ndx * scale;
-    const screenDy = ndy * scale;
-    const screenLen = Math.hypot(screenDx, screenDy) || 1;
-    const normDx = screenDx / screenLen;
-    const normDy = screenDy / screenLen;
-
-    ctx.strokeStyle = '#38bdf8';
+    ctx.strokeStyle = `rgba(26, 115, 232, ${0.22 + pulse * 0.16})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(cs.sx, cs.sy);
-    ctx.lineTo(cs.sx + normDx * arrowLen, cs.sy + normDy * arrowLen);
+    ctx.arc(cs.sx, cs.sy, 9 + pulse * 3, 0, Math.PI * 2);
     ctx.stroke();
-
-    // Arrowhead
-    const headLen = 5;
-    const headAngle = Math.atan2(normDy, normDx);
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.moveTo(cs.sx + normDx * arrowLen, cs.sy + normDy * arrowLen);
-    ctx.lineTo(
-      cs.sx + normDx * arrowLen - headLen * Math.cos(headAngle - 0.5),
-      cs.sy + normDy * arrowLen - headLen * Math.sin(headAngle - 0.5),
-    );
-    ctx.lineTo(
-      cs.sx + normDx * arrowLen - headLen * Math.cos(headAngle + 0.5),
-      cs.sy + normDy * arrowLen - headLen * Math.sin(headAngle + 0.5),
-    );
-    ctx.closePath();
+    ctx.arc(cs.sx, cs.sy, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1a73e8';
+    ctx.beginPath();
+    ctx.arc(cs.sx, cs.sy, 5, 0, Math.PI * 2);
     ctx.fill();
 
     // Update direction label
     const dirLabel = this.hud?.miniMapWrapper?.querySelector('[data-minimap-dir]');
     if (dirLabel) {
-      const nextInter = this.intersections.find((iz) => !iz.entered && this.progress < iz.distance);
       if (nextInter) {
         const dist = Math.round(nextInter.distance - this.progress);
         const arrow = nextInter.turnDir === 'right' ? '\u2192' : nextInter.turnDir === 'left' ? '\u2190' : '\u2191';
@@ -1226,15 +1161,20 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const THREE = this.requireThree();
     if (!this.scene) return;
 
-    const laneWidth = this.roadWidth / 2 - 1.1;
+    const laneWidth = this.roadWidth / 2 - 1.6;
+    const stopLineSetback = 10.5;
     for (const inter of this.intersections) {
-      const point = this.getRoutePoint(Math.max(0, inter.distance - 7.5));
-      const angle = Math.atan2(point.dir.x, point.dir.z);
-      const stopLine = new THREE.Mesh(new THREE.BoxGeometry(laneWidth, 0.042, 0.62), material);
+      const segment = this.route[inter.segmentIndex];
+      if (!segment) continue;
+
+      const localDistance = Math.max(1, segment.length - stopLineSetback);
+      const normal = { x: -segment.dir.z, z: segment.dir.x };
+      const angle = Math.atan2(segment.dir.x, segment.dir.z);
+      const stopLine = new THREE.Mesh(new THREE.BoxGeometry(laneWidth, 0.052, 0.72), material);
       stopLine.position.set(
-        point.x + point.normal.x * (this.roadWidth / 4),
-        0.075,
-        point.z + point.normal.z * (this.roadWidth / 4),
+        segment.start.x + segment.dir.x * localDistance + normal.x * this.laneOffset,
+        0.085,
+        segment.start.z + segment.dir.z * localDistance + normal.z * this.laneOffset,
       );
       stopLine.rotation.y = angle;
       this.scene.add(stopLine);
@@ -1667,28 +1607,27 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const speedRatio = this.clamp(this.vehicleSpeed / this.maxVehicleSpeed, 0, 1);
     this.suspensionPhase += dt * (4.6 + speedRatio * 7.5);
     this.wheelSpin += this.vehicleSpeed * dt * 2.7;
-    const suspension = Math.sin(this.suspensionPhase) * 0.035 * (0.25 + speedRatio);
+    const pitch = this.lastBrakePressed
+      ? this.lerp(-0.012, -0.026, speedRatio)
+      : this.lerp(0.004, -0.004, speedRatio);
+    const roll = this.clamp(-this.steeringInput * 0.022 - this.lastYawRate * 0.018, -0.035, 0.035);
 
-    this.vehicleRoot.position.set(vehicleBox.centerX, suspension, vehicleBox.centerZ);
+    this.vehicleRoot.position.set(vehicleBox.centerX, 0.018, vehicleBox.centerZ);
     this.vehicleRoot.rotation.set(
-      this.clamp(-this.vehicleSpeed * 0.0022 + Math.max(0, -this.lastYawRate) * 0.025, -0.08, 0.08),
+      pitch,
       this.vehicleHeading,
-      this.clamp(-this.steeringInput * 0.055 - this.lastYawRate * 0.05, -0.09, 0.09),
+      roll,
     );
 
     for (const wheel of this.wheelBindings) {
-      wheel.node.position.y = wheel.initialY + suspension;
+      wheel.node.position.y = wheel.initialY;
       wheel.node.rotation.x = wheel.baseRotationX + this.wheelSpin;
       wheel.node.rotation.y = wheel.baseRotationY + (wheel.front ? this.frontWheelAngle * 0.72 : 0);
       wheel.node.rotation.z = wheel.baseRotationZ;
     }
 
     if (this.vehicleModel) {
-      this.vehicleModel.rotation.x = this.clamp(inputBrakePitch(this.lastBrakePressed, speedRatio), -0.035, 0.035);
-    }
-
-    function inputBrakePitch(braking: boolean, ratio: number) {
-      return braking ? -0.025 - ratio * 0.018 : ratio * 0.012;
+      this.vehicleModel.rotation.x = 0;
     }
   }
 
@@ -1840,17 +1779,17 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.vehicleSpeed = this.clamp(this.vehicleSpeed, 0, this.maxVehicleSpeed);
 
     const speedRatio = this.clamp(this.vehicleSpeed / this.maxVehicleSpeed, 0, 1);
-    const maxSteerAngle = this.lerp(0.58, 0.18, Math.pow(speedRatio, 0.72));
+    const maxSteerAngle = this.lerp(0.72, 0.28, Math.pow(speedRatio, 0.82));
     const targetWheelAngle = input.steering * maxSteerAngle;
-    const steeringResponse = Math.abs(input.steering) > 0.01 ? 5.2 : 8.2;
+    const steeringResponse = Math.abs(input.steering) > 0.01 ? 6.4 : 8.8;
     this.frontWheelAngle = this.expSmoothing(this.frontWheelAngle, targetWheelAngle, steeringResponse, dt);
     this.steeringInput = maxSteerAngle > 0
       ? this.clamp(this.frontWheelAngle / maxSteerAngle, -1, 1)
       : 0;
 
-    // Kinematic bicycle model with speed-dependent grip. Higher speed keeps the
-    // reference game's cinematic drift feel without changing scoring contracts.
-    const lateralGrip = this.lerp(1.0, 0.68, Math.pow(speedRatio, 0.85));
+    // Kinematic bicycle model with speed-dependent steering. Keep enough grip at
+    // medium speed so turns feel like road driving rather than a sliding camera.
+    const lateralGrip = this.lerp(1.0, 0.84, Math.pow(speedRatio, 0.9));
     this.lastYawRate = this.vehicleSpeed > 0.03
       ? -(this.vehicleSpeed * Math.tan(this.frontWheelAngle) / this.wheelBase) * lateralGrip
       : 0;
@@ -2375,8 +2314,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private updateCameraFree(dt: number) {
     if (!this.camera) return;
 
-    const speedRatio = this.clamp(this.vehicleSpeed / this.maxVehicleSpeed, 0, 1);
-    const cabinSway = this.steeringInput * 0.28;
+    const cabinSway = this.steeringInput * 0.08;
     const right = this.getVisualRightVector(this.vehicleHeading);
     const forward = this.getForwardVector(this.vehicleHeading);
     const vehicleBox = this.getVehicleCollisionBox();
@@ -2385,17 +2323,17 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const lookAt = new THREE.Vector3();
 
     if (this.cameraMode === 'third-person') {
-      const distance = 8.2 + speedRatio * 2.1;
-      const height = 3.1 + speedRatio * 0.7;
+      const distance = 9.0;
+      const height = 3.35;
       targetPosition.set(
         vehicleBox.centerX - forward.x * distance + right.x * 0.45,
         height,
         vehicleBox.centerZ - forward.z * distance + right.z * 0.45,
       );
       lookAt.set(
-        vehicleBox.centerX + forward.x * (7.5 + speedRatio * 5),
-        1.25 + speedRatio * 0.4,
-        vehicleBox.centerZ + forward.z * (7.5 + speedRatio * 5),
+        vehicleBox.centerX + forward.x * 10.5,
+        1.45,
+        vehicleBox.centerZ + forward.z * 10.5,
       );
     } else {
       const driverLeftOffset = -0.62;
@@ -2416,13 +2354,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.camera.position.lerp(targetPosition, t);
     this.camera.lookAt(lookAt);
 
-    const targetRoll = this.clamp(this.lastYawRate * 0.035, -0.052, 0.052);
-    this.cameraRoll = this.expSmoothing(this.cameraRoll, targetRoll, 5.5, dt);
+    const targetRoll = this.cameraMode === 'first-person'
+      ? this.clamp(this.lastYawRate * 0.01, -0.014, 0.014)
+      : 0;
+    this.cameraRoll = this.expSmoothing(this.cameraRoll, targetRoll, 6.5, dt);
     if (this.cameraMode === 'first-person') this.camera.rotateZ(this.cameraRoll);
 
-    const targetFov = this.baseCameraFov
-      + (this.maxCameraFov - this.baseCameraFov) * Math.pow(speedRatio, 1.25)
-      + (this.cameraMode === 'third-person' ? -3 : 0);
+    const targetFov = this.cameraMode === 'third-person' ? this.baseCameraFov - 3 : this.baseCameraFov;
     this.cameraFov = this.expSmoothing(this.cameraFov, targetFov, 3.2, dt);
     if (Math.abs(this.camera.fov - this.cameraFov) > 0.01) {
       this.camera.fov = this.cameraFov;
