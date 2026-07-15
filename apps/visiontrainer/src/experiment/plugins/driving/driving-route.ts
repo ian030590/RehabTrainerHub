@@ -141,8 +141,8 @@ const xinyiKeelungLoop: readonly RouteControlPoint[] = [
     name: 'Xinyi Road Section 5',
   },
   {
-    lon: 121.5654148,
-    lat: 25.0328457,
+    lon: 121.5654166,
+    lat: 25.032958,
     roadWidth: SONGZHI_6_LANE,
     laneCount: 6,
     oneWay: false,
@@ -183,14 +183,6 @@ const xinyiKeelungLoop: readonly RouteControlPoint[] = [
   {
     lon: 121.5654166,
     lat: 25.032958,
-    roadWidth: XINYI_4_LANE,
-    laneCount: 4,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
-    lon: 121.5654148,
-    lat: 25.0328457,
     roadWidth: XINYI_4_LANE,
     laneCount: 4,
     oneWay: true,
@@ -232,8 +224,8 @@ const cityHallLoop: readonly RouteControlPoint[] = [
     name: 'Xinyi Road Section 5',
   },
   {
-    lon: 121.5654148,
-    lat: 25.0328457,
+    lon: 121.5654166,
+    lat: 25.032958,
     roadWidth: SONGZHI_6_LANE,
     laneCount: 6,
     oneWay: false,
@@ -274,14 +266,6 @@ const cityHallLoop: readonly RouteControlPoint[] = [
   {
     lon: 121.5654166,
     lat: 25.032958,
-    roadWidth: XINYI_4_LANE,
-    laneCount: 4,
-    oneWay: true,
-    name: 'Xinyi Road Section 5',
-  },
-  {
-    lon: 121.5654148,
-    lat: 25.0328457,
     roadWidth: XINYI_4_LANE,
     laneCount: 4,
     oneWay: true,
@@ -331,8 +315,8 @@ const xinyiEastDelivery: readonly RouteControlPoint[] = [
     name: 'Xinyi Road Section 5',
   },
   {
-    lon: 121.5654148,
-    lat: 25.0328457,
+    lon: 121.5654166,
+    lat: 25.032958,
     roadWidth: SONGZHI_6_LANE,
     laneCount: 6,
     oneWay: false,
