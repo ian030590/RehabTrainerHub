@@ -21,6 +21,7 @@ export function DrivingResults({ results, userName, t }: DrivingResultsProps) {
         { label: t('exp.res.collisions'), value: result?.collisions ?? 0 },
         { label: t('exp.res.laneDeviations'), value: result?.lane_deviations ?? 0 },
         { label: t('exp.res.fps'), value: result?.average_fps ?? '-' },
+        { label: 'Route:', value: result?.route_label ?? result?.route_id ?? '-', emphasize: false },
         { label: t('exp.res.user'), value: userName, emphasize: false },
       ]} />
 

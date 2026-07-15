@@ -34,6 +34,8 @@ export interface TrialData {
   valid_event_count?: number;
   collisions?: number;
   lane_deviations?: number;
+  route_id?: string;
+  route_label?: string;
   route_progress?: number;
   driving_events?: DrivingEventResult[];
 }

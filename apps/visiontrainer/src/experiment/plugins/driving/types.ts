@@ -10,6 +10,10 @@ export interface RouteSegment {
   start: Vec2;
   dir: Vec2;
   length: number;
+  roadWidth: number;
+  laneCount: number;
+  oneWay: boolean;
+  name?: string;
 }
 
 export interface RoutePoint {
@@ -19,6 +23,9 @@ export interface RoutePoint {
   normal: Vec2;
   segmentIndex: number;
   localDistance: number;
+  roadWidth: number;
+  laneCount: number;
+  oneWay: boolean;
 }
 
 export interface DrivingInput {
@@ -29,7 +36,13 @@ export interface DrivingInput {
 }
 
 export type HazardId = 'child-crossing' | 'plane-crash' | 'drunk-driver' | 'elder-stopped' | 'wrong-way-driver';
-export type DrivingEventId = HazardId | 'traffic-light-red';
+export type DrivingEventId =
+  | HazardId
+  | 'traffic-light-red'
+  | 'navigation-deviation'
+  | 'lane-marking-crossed'
+  | 'lane-departure'
+  | 'vehicle-collision';
 export type TrafficLightState = 'green' | 'yellow' | 'red';
 
 export interface HazardTemplate {

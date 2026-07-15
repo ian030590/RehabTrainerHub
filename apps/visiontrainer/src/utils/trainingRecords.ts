@@ -446,7 +446,7 @@ function toCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
       return [[
         ...base,
         '',
-        '',
+        firstResult?.route_label ?? firstResult?.route_id ?? '',
         firstResult?.trial_type ?? '',
         '',
         '',
@@ -473,7 +473,7 @@ function toCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
     return events.map((event, index) => [
       ...base,
       '',
-      '',
+      firstResult?.route_label ?? firstResult?.route_id ?? '',
       firstResult?.trial_type ?? '',
       index + 1,
       '',
