@@ -21,7 +21,9 @@ export const AUTH_COOKIE_NAME = 'rehabtrainerhub_session';
 const PASSWORD_HASH_ALGORITHM = 'pbkdf2-sha256';
 const PASSWORD_HASH_ITERATIONS = 150000;
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
+const RATE_LIMIT_CLEANUP_INTERVAL = 100;
 let rateLimitTableReady = false;
+let rateLimitCleanupCounter = 0;
 
 export function getAuthBaseUrl(request, env) {
   const configured = env.AUTH_BASE_URL || env.NEXT_PUBLIC_REHABTRAINERHUB_URL;
@@ -293,6 +295,10 @@ async function createSignature(value, secret) {
   return base64UrlEncodeBytes(new Uint8Array(signature));
 }
 
+/**
+ * Constant-time comparison for ASCII/Base64URL strings only.
+ * Do not reuse for arbitrary Unicode text; charCodeAt compares UTF-16 code units.
+ */
 function constantTimeEqual(left, right) {
   if (left.length !== right.length) return false;
   let result = 0;
@@ -374,9 +380,9 @@ export async function createSessionForUser(env, user) {
 
 export function authPopupHtml(returnTo, token, user, init = {}) {
   const targetOrigin = new URL(returnTo).origin;
-  const message = JSON.stringify({ type: AUTH_MESSAGE_TYPE, token, user }).replace(/</g, '\\u003c');
-  const targetOriginJson = JSON.stringify(targetOrigin).replace(/</g, '\\u003c');
-  const fallbackJson = JSON.stringify(returnTo).replace(/</g, '\\u003c');
+  const message = escapeScriptJson({ type: AUTH_MESSAGE_TYPE, token, user });
+  const targetOriginJson = escapeScriptJson(targetOrigin);
+  const fallbackJson = escapeScriptJson(returnTo);
 
   return new Response(`<!doctype html>
 <html lang="zh-Hant-TW">
@@ -423,6 +429,13 @@ export function authPopupHtml(returnTo, token, user, init = {}) {
   });
 }
 
+function escapeScriptJson(value) {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026');
+}
+
 export async function rateLimitResponse(request, env, name, options = {}) {
   const result = await checkRateLimit(request, env, name, options);
   if (result.allowed) return null;
@@ -448,10 +461,13 @@ async function checkRateLimit(request, env, name, options = {}) {
   const db = requireDatabase(env);
 
   await ensureRateLimitTable(db);
-  await db
-    .prepare('DELETE FROM rate_limits WHERE reset_at < ?')
-    .bind(now - 60 * 60)
-    .run();
+  rateLimitCleanupCounter = (rateLimitCleanupCounter + 1) % RATE_LIMIT_CLEANUP_INTERVAL;
+  if (rateLimitCleanupCounter === 1) {
+    await db
+      .prepare('DELETE FROM rate_limits WHERE reset_at < ?')
+      .bind(now - 60 * 60)
+      .run();
+  }
   await db
     .prepare(`
       INSERT INTO rate_limits (key, count, reset_at, updated_at)

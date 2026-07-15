@@ -7,7 +7,7 @@ const TAIPEI_CENTER_Z = 178;
 const METERS_PER_LATITUDE_DEGREE = 111_320;
 const METERS_PER_LONGITUDE_DEGREE = METERS_PER_LATITUDE_DEGREE * Math.cos(TAIPEI_CENTER_LAT * Math.PI / 180);
 const OSM_TO_SCENE_SCALE = 1;
-const URBAN_LANE_WIDTH_M = 3.25;
+const URBAN_LANE_WIDTH_M = 3.5;
 
 interface RouteControlPoint {
   lon: number;

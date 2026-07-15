@@ -23,6 +23,7 @@ import {
   TorusGeometry,
   Vector3,
   WebGLRenderer,
+  WebGLRenderTarget,
 } from 'three';
 
 export const THREE = {
@@ -50,6 +51,7 @@ export const THREE = {
   TorusGeometry,
   Vector3,
   WebGLRenderer,
+  WebGLRenderTarget,
 } as const;
 
 export type ThreeModule = typeof THREE;

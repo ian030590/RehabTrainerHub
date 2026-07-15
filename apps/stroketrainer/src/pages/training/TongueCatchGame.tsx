@@ -541,7 +541,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       initialized = true;
       const appleTexture = await Assets.load<Texture>(APPLE_TEXTURE_URL);
       if (cancelled) {
-        app.destroy(true, { children: true });
+        app.destroy(true, { children: true, texture: true });
         return;
       }
       appRef.current = app;
@@ -586,7 +586,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       sceneRef.current = null;
       appRef.current = null;
       appleTextureRef.current = null;
-      if (initialized) app.destroy(true, { children: true });
+      if (initialized) app.destroy(true, { children: true, texture: true });
     };
   }, []);
 

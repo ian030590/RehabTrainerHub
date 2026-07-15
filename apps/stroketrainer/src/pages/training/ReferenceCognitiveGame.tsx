@@ -276,7 +276,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
         });
         initialized = true;
         if (cancelled) {
-          app.destroy(true, { children: true });
+          app.destroy(true, { children: true, texture: true });
           return;
         }
         appRef.current = app;
@@ -318,7 +318,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
       cancelled = true;
       window.removeEventListener('resize', handleResize);
       if (appRef.current === app) appRef.current = null;
-      if (initialized) app.destroy(true, { children: true });
+      if (initialized) app.destroy(true, { children: true, texture: true });
     };
   }, [gameId, sessionLimitSec, whackDurationSec]);
 

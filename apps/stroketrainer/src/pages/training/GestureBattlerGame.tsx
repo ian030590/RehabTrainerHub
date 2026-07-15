@@ -699,7 +699,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     return () => {
       cancelled = true;
       window.removeEventListener('resize', onResize);
-      app.destroy(true, { children: true });
+      app.destroy(true, { children: true, texture: true });
       appRef.current = null;
       sceneRef.current = null;
     };

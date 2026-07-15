@@ -1371,7 +1371,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     void init();
     return () => {
       cancelled = true;
-      app.destroy(true, { children: true });
+      app.destroy(true, { children: true, texture: true });
       appRef.current = null;
     };
   }, [drawStage, finishGame, recordEnemyOutcome, spawnEnemy]);

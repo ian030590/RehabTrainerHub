@@ -102,7 +102,7 @@ class PixiAppManager {
   /** Full cleanup — call when the training module is completely done. */
   destroy(): void {
     if (this.app) {
-      this.app.destroy(true, { children: true });
+      this.app.destroy(true, { children: true, texture: true });
       this.app = null;
       this._ready = false;
       this.initPromise = null;
