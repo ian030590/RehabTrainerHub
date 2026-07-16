@@ -1761,6 +1761,17 @@ body[data-ui-font-bold="true"] .app-layout :where(
     margin-top: auto;
   }
 
+  .trainer-auth-panel,
+  .trainer-auth-panel .auth-panel-actions,
+  .trainer-auth-panel .auth-button {
+    width: 100%;
+    max-width: none;
+  }
+
+  .trainer-auth-panel .auth-panel-actions {
+    flex-direction: column;
+  }
+
   .navbar-link,
   .navbar-download-btn {
     width: 100%;

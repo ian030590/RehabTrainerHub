@@ -1773,6 +1773,20 @@ body > main:not(.home-page) {
   }
 }
 
+@media (max-width: 1500px) {
+  .header-stack .header-actions {
+    order: 1;
+    flex: 0 0 auto;
+    justify-content: flex-start;
+  }
+
+  .header-stack .menu-tools {
+    order: 2;
+    flex: 0 0 auto;
+    margin-top: auto;
+  }
+}
+
 @media (max-width: 1180px) and (min-width: 981px) {
   .app-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
