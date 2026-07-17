@@ -260,6 +260,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly wheelBase = 2.72;
   private readonly maxVehicleSpeed = 18;
   private readonly baseCameraFov = 68;
+  private readonly initialRouteDistance = 18;
   private readonly firstPersonCameraForwardOffset = 0.45;
   private readonly firstPersonCameraHeight = 2.05;
   private readonly firstPersonCameraLookAhead = 35;
@@ -470,7 +471,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.route = buildDrivingRoute(this.selectedRouteVariant);
     this.updateRouteMetrics();
     this.finished = false;
-    const startDistance = 2;
+    const startDistance = this.getInitialRouteDistance();
     const startPoint = this.getRoutePoint(startDistance);
     const startHeading = this.getRouteHeading(startDistance);
     const startLaneOffset = this.getDrivingLaneOffset(startDistance);
@@ -4369,6 +4370,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private getRoadWidthAtDistance(distance: number): number {
     return this.getRoutePoint(distance).roadWidth;
+  }
+
+  private getInitialRouteDistance(): number {
+    return this.clamp(this.initialRouteDistance, 2, Math.max(2, this.routeLength - 12));
   }
 
   private getDrivingLaneOffset(distance: number): number {
