@@ -3782,37 +3782,39 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const targetPosition = new THREE.Vector3();
     const lookAt = new THREE.Vector3();
 
+    // Use vehicleX/vehicleZ (pure physics position on the route centre-line) as
+    // the anchor for lookAt so the camera always looks exactly along the heading
+    // vector.  vehicleBox.center has a perpendicular lane-offset baked in which
+    // caused the look-at direction to diverge from the heading axis, producing
+    // the tilted-road appearance.
     if (this.cameraMode === 'third-person') {
       const distance = 9.0;
       const height = 3.35;
-      // No lateral offset so the camera sits directly behind the vehicle
-      // (previously +0.45 right caused the view to look like right-rear).
       targetPosition.set(
-        vehicleBox.centerX - forward.x * distance,
+        this.vehicleX - forward.x * distance,
         height,
-        vehicleBox.centerZ - forward.z * distance,
+        this.vehicleZ - forward.z * distance,
       );
       lookAt.set(
-        vehicleBox.centerX + forward.x * 10.5,
+        this.vehicleX + forward.x * 10.5,
         1.45,
-        vehicleBox.centerZ + forward.z * 10.5,
+        this.vehicleZ + forward.z * 10.5,
       );
     } else {
-      // driverLeftOffset: negative = left of the right-vector (driver seat on left
-      // side for right-hand traffic).  Keep lateral sway but look straight ahead
-      // when steering input is zero so straight driving feels truly forward.
+      // driverLeftOffset: negative = left of the right-vector (driver seat on
+      // left side for right-hand traffic).
       const driverLeftOffset = -0.62;
       targetPosition.set(
-        vehicleBox.centerX + forward.x * 0.45 + right.x * (driverLeftOffset + cabinSway),
+        this.vehicleX + forward.x * 0.45 + right.x * (driverLeftOffset + cabinSway),
         2.05 + firstPersonBob - brakeNod,
-        vehicleBox.centerZ + forward.z * 0.45 + right.z * (driverLeftOffset + cabinSway),
+        this.vehicleZ + forward.z * 0.45 + right.z * (driverLeftOffset + cabinSway),
       );
-      // lookAt: use the same lateral seat offset for position but remove it from
-      // the look-at target so straight-ahead driving faces straight forward.
+      // lookAt stays on the pure heading axis; only steer-sway shifts it
+      // laterally so that straight driving looks exactly forward.
       lookAt.set(
-        vehicleBox.centerX + forward.x * 35 + right.x * (this.steeringInput * 0.65),
+        this.vehicleX + forward.x * 35 + right.x * (this.steeringInput * 0.65),
         1.65 + firstPersonBob * 0.45 - brakeNod * 0.35,
-        vehicleBox.centerZ + forward.z * 35 + right.z * (this.steeringInput * 0.65),
+        this.vehicleZ + forward.z * 35 + right.z * (this.steeringInput * 0.65),
       );
     }
 
@@ -3847,31 +3849,30 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const THREE = this.requireThree();
     const right = this.getVisualRightVector(this.vehicleHeading);
     const forward = this.getForwardVector(this.vehicleHeading);
-    const vehicleBox = this.getVehicleCollisionBox();
     const lookAt = new THREE.Vector3();
 
     if (this.cameraMode === 'third-person') {
       this.camera.position.set(
-        vehicleBox.centerX - forward.x * 9.0,
+        this.vehicleX - forward.x * 9.0,
         3.35,
-        vehicleBox.centerZ - forward.z * 9.0,
+        this.vehicleZ - forward.z * 9.0,
       );
       lookAt.set(
-        vehicleBox.centerX + forward.x * 10.5,
+        this.vehicleX + forward.x * 10.5,
         1.45,
-        vehicleBox.centerZ + forward.z * 10.5,
+        this.vehicleZ + forward.z * 10.5,
       );
     } else {
       const driverLeftOffset = -0.62;
       this.camera.position.set(
-        vehicleBox.centerX + forward.x * 0.45 + right.x * driverLeftOffset,
+        this.vehicleX + forward.x * 0.45 + right.x * driverLeftOffset,
         2.05,
-        vehicleBox.centerZ + forward.z * 0.45 + right.z * driverLeftOffset,
+        this.vehicleZ + forward.z * 0.45 + right.z * driverLeftOffset,
       );
       lookAt.set(
-        vehicleBox.centerX + forward.x * 35,
+        this.vehicleX + forward.x * 35,
         1.65,
-        vehicleBox.centerZ + forward.z * 35,
+        this.vehicleZ + forward.z * 35,
       );
     }
     this.camera.lookAt(lookAt);
