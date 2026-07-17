@@ -435,16 +435,25 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       color: '#fff',
       fontFamily: typography.fontFamily,
       userSelect: 'none',
+      visibility: 'hidden',
     });
     display_element.appendChild(root);
     root.focus();
 
-    const startDriving = () => {
+    const startDriving = async () => {
       if (this.finished || this.renderer) return;
       try {
         this.renderQuality = this.detectRenderQuality(root);
         this.initScene(root);
         this.initHud(root, trial.red_flash_enabled ?? true);
+        if (this.renderQuality.useReferenceVehicleModel) {
+          await this.loadReferenceVehicleModel();
+        }
+        if (this.finished) return;
+        if (!display_element.isConnected) {
+          this.finishTrial(trial, display_element, 'aborted');
+          return;
+        }
         this.trialStartTime = performance.now();
         this.lastFrameTime = this.trialStartTime;
         const initialInput = this.readInput();
@@ -452,6 +461,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.updateVehicleVisual(0, this.trialStartTime);
         this.updateTrafficLights(this.trialStartTime);
         this.lastBrakePressed = initialInput.brake > 0.35;
+        this.renderFirstFrameBeforeReveal(this.trialStartTime);
+        root.style.visibility = 'visible';
+        root.focus();
         this.raf = requestAnimationFrame((time) => this.loop(time, trial, display_element));
       } catch (error) {
         console.error(error);
@@ -461,7 +473,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     this.attachKeyboardListeners(() => {}, trial, display_element);
     this.attachGamepadListeners();
-    startDriving();
+    void startDriving();
   }
 
   private resetTrialState(trial?: TrialType<Info>) {
@@ -900,7 +912,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.createVehicleVisual();
     this.createAmbientTraffic();
     this.preloadHazardEvents();
-    if (this.renderQuality.useReferenceVehicleModel) this.loadReferenceVehicleModel();
     if (this.renderQuality.useOsmCity) void this.loadTaipeiOsmCity();
   }
 
@@ -2708,63 +2719,67 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return { group, wheels };
   }
 
-  private loadReferenceVehicleModel() {
-    if (!this.renderQuality.useReferenceVehicleModel) return;
+  private loadReferenceVehicleModel(): Promise<boolean> {
+    if (!this.renderQuality.useReferenceVehicleModel) return Promise.resolve(false);
     const root = this.vehicleRoot;
-    if (!root) return;
+    if (!root) return Promise.resolve(false);
 
     const loader = new GLTFLoader();
-    loader.load(
-      this.referenceVehicleUrl,
-      (gltf) => {
-        if (this.finished || !this.vehicleRoot) {
-          this.disposeObject(gltf.scene);
-          return;
-        }
-
-        const THREE = this.requireThree();
-        const model = gltf.scene;
-        model.name = 'driving-reference-car-glb';
-        model.traverse?.((child: any) => {
-          child.castShadow = false;
-          child.receiveShadow = false;
-          const material = child.material;
-          if (material) {
-            const materials = Array.isArray(material) ? material : [material];
-            for (const item of materials) {
-              this.applyVehicleMaterialQuality(item);
-            }
+    return new Promise((resolve) => {
+      loader.load(
+        this.referenceVehicleUrl,
+        (gltf) => {
+          if (this.finished || !this.vehicleRoot) {
+            this.disposeObject(gltf.scene);
+            resolve(false);
+            return;
           }
-        });
 
-        model.updateMatrixWorld(true);
-        let box = new THREE.Box3().setFromObject(model);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const modelLength = Math.max(size.z, size.x, 1);
-        const scale = 4.9 / modelLength;
-        model.scale.setScalar(scale);
-        model.updateMatrixWorld(true);
+          const THREE = this.requireThree();
+          const model = gltf.scene;
+          model.name = 'driving-reference-car-glb';
+          model.traverse?.((child: any) => {
+            child.castShadow = false;
+            child.receiveShadow = false;
+            const material = child.material;
+            if (material) {
+              const materials = Array.isArray(material) ? material : [material];
+              for (const item of materials) {
+                this.applyVehicleMaterialQuality(item);
+              }
+            }
+          });
 
-        box = new THREE.Box3().setFromObject(model);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
-        model.position.set(-center.x, -box.min.y, -center.z);
-        model.rotation.y = this.referenceVehicleModelYawOffset;
+          model.updateMatrixWorld(true);
+          let box = new THREE.Box3().setFromObject(model);
+          const size = new THREE.Vector3();
+          box.getSize(size);
+          const modelLength = Math.max(size.z, size.x, 1);
+          const scale = 4.9 / modelLength;
+          model.scale.setScalar(scale);
+          model.updateMatrixWorld(true);
 
-        this.vehicleRoot.remove(this.fallbackVehicle);
-        this.vehicleRoot.add(model);
-        this.vehicleModel = model;
-        this.fallbackVehicle = null;
-        this.bindReferenceWheels(model);
-        this.updateVehicleVisual(0, performance.now());
-        this.snapCameraToVehicle();
-      },
-      undefined,
-      (error) => {
-        console.warn('Unable to load reference driving vehicle model.', error);
-      },
-    );
+          box = new THREE.Box3().setFromObject(model);
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          model.position.set(-center.x, -box.min.y, -center.z);
+          model.rotation.y = this.referenceVehicleModelYawOffset;
+
+          this.vehicleRoot.remove(this.fallbackVehicle);
+          this.vehicleRoot.add(model);
+          this.vehicleModel = model;
+          this.fallbackVehicle = null;
+          this.bindReferenceWheels(model);
+          this.updateVehicleVisual(0, performance.now());
+          resolve(true);
+        },
+        undefined,
+        (error) => {
+          console.warn('Unable to load reference driving vehicle model.', error);
+          resolve(false);
+        },
+      );
+    });
   }
 
   private applyVehicleMaterialQuality(material: any) {
@@ -2944,6 +2959,17 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       return;
     }
     this.raf = requestAnimationFrame((nextTime) => this.loop(nextTime, trial, display_element));
+  }
+
+  private renderFirstFrameBeforeReveal(time: number) {
+    if (!this.renderer || !this.scene || !this.camera) return;
+    this.snapCameraToVehicle();
+    this.needsFirstFrameCameraSnap = false;
+    this.updateHud();
+    this.updateCockpitHud();
+    this.updateMiniMap();
+    this.updateRearviewMirrors(time);
+    this.renderer.render(this.scene, this.camera);
   }
 
   private isTrialTimedOut(time: number, trial: TrialType<Info>): boolean {
@@ -4106,6 +4132,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const next = modes[(modes.indexOf(this.cameraMode) + 1) % modes.length];
     this.cameraMode = next;
     this.updateCameraModeHud();
+    this.snapCameraToVehicle();
     if (this.hud?.event) {
       this.hud.event.textContent = this.language === 'en'
         ? `View: ${this.getCameraModeText()}`
