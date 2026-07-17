@@ -4156,13 +4156,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const laneWidth = this.getSegmentLaneWidth(segment);
     const laneCount = this.getSegmentLaneCount(segment);
     if (point.oneWay) {
-      return Math.max(0, point.roadWidth / 2 - laneWidth / 2 - 0.4);
+      const usableWidth = Math.min(point.roadWidth - 1.1, laneCount * laneWidth);
+      const startOffset = -usableWidth / 2 + laneWidth / 2;
+      const centerRightLane = Math.min(laneCount - 1, Math.ceil((laneCount - 1) / 2));
+      return startOffset + centerRightLane * laneWidth;
     }
     const lanesPerDirection = Math.max(1, Math.floor(laneCount / 2));
-    return Math.min(
-      point.roadWidth / 2 - laneWidth / 2,
-      laneWidth * (lanesPerDirection - 0.5),
-    );
+    const laneFromCenter = Math.min(lanesPerDirection - 1, Math.floor(lanesPerDirection / 2));
+    return Math.min(point.roadWidth / 2 - laneWidth / 2, laneWidth * (laneFromCenter + 0.5));
   }
 
   private getLaneDeviationLimit(distance: number): number {

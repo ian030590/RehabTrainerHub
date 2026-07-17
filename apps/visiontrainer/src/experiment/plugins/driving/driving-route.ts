@@ -262,7 +262,45 @@ function buildRoute(points: readonly RouteControlPoint[]): RouteSegment[] {
       name: points[i].name,
     });
   }
-  return segments;
+  return alignRouteStartToNegativeZ(segments);
+}
+
+function rotateVec2(point: Vec2, radians: number): Vec2 {
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  return {
+    x: point.x * cos - point.z * sin,
+    z: point.x * sin + point.z * cos,
+  };
+}
+
+function normalizeVec2(point: Vec2): Vec2 {
+  const length = Math.hypot(point.x, point.z) || 1;
+  return {
+    x: point.x / length,
+    z: point.z / length,
+  };
+}
+
+function alignRouteStartToNegativeZ(segments: RouteSegment[]): RouteSegment[] {
+  const first = segments[0];
+  if (!first) return segments;
+
+  const origin = first.start;
+  const firstHeading = Math.atan2(first.dir.x, -first.dir.z);
+  const rotation = -firstHeading;
+
+  return segments.map((segment) => ({
+    ...segment,
+    start: rotateVec2(
+      {
+        x: segment.start.x - origin.x,
+        z: segment.start.z - origin.z,
+      },
+      rotation,
+    ),
+    dir: normalizeVec2(rotateVec2(segment.dir, rotation)),
+  }));
 }
 
 export function buildDrivingRoute(variant: DrivingRouteVariant): RouteSegment[] {
