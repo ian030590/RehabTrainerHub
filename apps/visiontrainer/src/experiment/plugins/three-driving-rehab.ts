@@ -277,6 +277,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly laneResetBlackoutMs = 90;
   private readonly laneResetHoldMs = 120;
   private readonly stopLineSetback = 10.5;
+  private readonly minIntersectionSpacing = 70;
   private readonly trafficGreenMs = 6400;
   private readonly trafficYellowMs = 1800;
   private readonly trafficRedMs = 5400;
@@ -558,12 +559,17 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     // Build intersection zones from route
     this.intersections = [];
+    let pendingIntersection: IntersectionZone | null = null;
+    const addPendingIntersection = () => {
+      if (pendingIntersection) this.intersections.push(pendingIntersection);
+      pendingIntersection = null;
+    };
     let cumulativeDist = 0;
     for (let i = 0; i < this.route.length; i++) {
       cumulativeDist += this.route[i].length;
       if (i < this.route.length - 1) {
         const turnDir = this.getRouteTurn(this.route[i].dir, this.route[i + 1].dir);
-        this.intersections.push({
+        const intersection: IntersectionZone = {
           distance: cumulativeDist,
           segmentIndex: i,
           instruction: this.getTurnInstruction(turnDir),
@@ -573,9 +579,16 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           trafficSignalState: 'green',
           trafficSignalOffsetMs: i * 2600,
           redLightChecked: false,
-        });
+        };
+        if (!pendingIntersection || intersection.distance - pendingIntersection.distance >= this.minIntersectionSpacing) {
+          addPendingIntersection();
+          pendingIntersection = intersection;
+        } else if (!pendingIntersection.turnDir && intersection.turnDir) {
+          pendingIntersection = intersection;
+        }
       }
     }
+    addPendingIntersection();
   }
 
   /* ================================================================
@@ -1913,20 +1926,20 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       post.position.y = 2.2;
       const housing = new THREE.Mesh(new THREE.BoxGeometry(0.78, 2.25, 0.36), housingMat);
       housing.position.set(0, 4.35, 0);
-      const red = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 10), new THREE.MeshBasicMaterial({ color: 0x451414 }));
-      const yellow = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 10), new THREE.MeshBasicMaterial({ color: 0x4a3a16 }));
-      const green = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 10), new THREE.MeshBasicMaterial({ color: 0x123d24 }));
-      red.position.set(0, 4.9, -0.2);
-      yellow.position.set(0, 4.35, -0.2);
-      green.position.set(0, 3.8, -0.2);
+      const red = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 10), new THREE.MeshBasicMaterial({ color: 0x451414 }));
+      const yellow = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 10), new THREE.MeshBasicMaterial({ color: 0x4a3a16 }));
+      const green = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 10), new THREE.MeshBasicMaterial({ color: 0x123d24 }));
+      red.position.set(0, 4.9, 0.2);
+      yellow.position.set(0, 4.35, 0.2);
+      green.position.set(0, 3.8, 0.2);
       const pedestrianBox = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.58, 0.18), pedestrianMat);
-      pedestrianBox.position.set(0, 2.62, -0.18);
+      pedestrianBox.position.set(0, 2.62, 0.18);
       const littleGreenHead = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), walkMat);
-      littleGreenHead.position.set(0, 2.72, -0.29);
+      littleGreenHead.position.set(0, 2.72, 0.29);
       const littleGreenBody = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, 0.03), walkMat);
-      littleGreenBody.position.set(0, 2.56, -0.29);
+      littleGreenBody.position.set(0, 2.56, 0.29);
       const littleGreenLeg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.04, 0.03), walkMat);
-      littleGreenLeg.position.set(0.02, 2.43, -0.29);
+      littleGreenLeg.position.set(0.02, 2.43, 0.29);
       littleGreenLeg.rotation.z = -0.35;
       group.add(post, housing, red, yellow, green, pedestrianBox, littleGreenHead, littleGreenBody, littleGreenLeg);
       group.position.set(baseX, 0, baseZ);
