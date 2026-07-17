@@ -185,6 +185,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private laneResetActive = false;
   private laneResetBlackoutTimer: number | null = null;
   private laneResetClearTimer: number | null = null;
+  private needsFirstFrameCameraSnap = false;
   private cameraRoll = 0;
   private cameraFov = 68;
   private cameraMode: DrivingCameraMode = 'first-person';
@@ -444,15 +445,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.renderQuality = this.detectRenderQuality(root);
         this.initScene(root);
         this.initHud(root, trial.red_flash_enabled ?? true);
-        // Snap camera immediately to the correct follow position so the first frame
-        // does not show the camera sitting at the world origin (0,0,0) and
-        // lerping toward the vehicle over many frames (which looks like a view from
-        // the vehicle's right-rear).
-        this.snapCameraToVehicle();
         this.trialStartTime = performance.now();
         this.lastFrameTime = this.trialStartTime;
+        const initialInput = this.readInput();
+        this.updateVehicleFree(initialInput, 0, this.trialStartTime);
+        this.updateVehicleVisual(0, this.trialStartTime);
         this.updateTrafficLights(this.trialStartTime);
-        this.lastBrakePressed = this.readInput().brake > 0.35;
+        this.lastBrakePressed = initialInput.brake > 0.35;
         this.raf = requestAnimationFrame((time) => this.loop(time, trial, display_element));
       } catch (error) {
         console.error(error);
@@ -502,6 +501,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.laneDeparturePose = null;
     this.laneResetActive = false;
     this.clearLaneResetTimers();
+    this.needsFirstFrameCameraSnap = true;
     this.lastBrakePressed = false;
     this.fpsSamples = [];
     this.activeHazards = [];
@@ -2757,6 +2757,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.vehicleModel = model;
         this.fallbackVehicle = null;
         this.bindReferenceWheels(model);
+        this.updateVehicleVisual(0, performance.now());
+        this.snapCameraToVehicle();
       },
       undefined,
       (error) => {
@@ -2919,6 +2921,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
     this.updateVehicleVisual(dt, time);
     this.updateCameraFree(dt);
+    if (this.needsFirstFrameCameraSnap) {
+      this.needsFirstFrameCameraSnap = false;
+      this.snapCameraToVehicle();
+    }
     this.updateHud();
     this.updateCockpitHud();
     this.updateMiniMap();
@@ -4638,6 +4644,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.performanceDowngraded = false;
     this.lastPerformanceCheckTime = 0;
     this.sideRearviewMirrorsEnabled = true;
+    this.needsFirstFrameCameraSnap = false;
     if (this.scene) {
       this.disposeObject(this.scene);
       this.scene.clear?.();
