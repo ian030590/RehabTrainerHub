@@ -107,6 +107,7 @@ export interface IntersectionZone {
   entered: boolean;
   announced: boolean;
   trafficSignalState: TrafficLightState;
+  trafficSignalRenderedState?: TrafficLightState;
   trafficSignalOffsetMs: number;
   redLightChecked: boolean;
   trafficLightGroup?: any;
