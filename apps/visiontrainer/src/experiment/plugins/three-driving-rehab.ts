@@ -272,9 +272,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly buildingIntersectionClearance = 24;
   private readonly roadMarkingIntersectionClearance = 30;
   private readonly minLaneDeviationLimit = 5.4;
-  private readonly laneDeviationGraceMs = 1500;
-  private readonly laneResetBlackoutMs = 180;
-  private readonly laneResetHoldMs = 220;
+  private readonly laneDeviationGraceMs = 500;
+  private readonly laneResetBlackoutMs = 90;
+  private readonly laneResetHoldMs = 120;
   private readonly stopLineSetback = 10.5;
   private readonly trafficGreenMs = 6400;
   private readonly trafficYellowMs = 1800;
@@ -3186,6 +3186,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.previousProgress = projected.distance;
     this.progress = projected.distance;
     this.lateralOffset = projected.lateral;
+    this.snapCameraToVehicle();
   }
 
   /** Project a world point onto the route.
@@ -4054,8 +4055,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   /**
    * Teleport the camera instantly to the correct follow position without lerp.
-   * Call this once after initScene() so the very first rendered frame already
-   * shows the correct perspective instead of a view from the world origin.
+   * Use this after initScene() and lane resets so the next rendered frame already
+   * shows the correct perspective instead of lerping from a stale camera pose.
    */
   private snapCameraToVehicle() {
     if (!this.camera) return;
@@ -4088,7 +4089,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
     this.camera.up.set(0, 1, 0);
     this.camera.lookAt(lookAt);
-    this.camera.fov = this.baseCameraFov;
+    const targetFov = this.cameraMode === 'third-person' ? this.baseCameraFov - 3 : this.baseCameraFov;
+    this.cameraFov = targetFov;
+    this.camera.fov = targetFov;
     this.camera.updateProjectionMatrix();
   }
 
