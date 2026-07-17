@@ -143,10 +143,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private renderQuality: DrivingRenderQuality = this.createRenderQuality('medium');
   private selectedRouteVariant: DrivingRouteVariant | null = null;
 
-  // Free-steering vehicle state
+  // Free-steering vehicle state. vehicleX/Z is always the rendered and physical
+  // vehicle center in world coordinates. Route progress/lateral are projections
+  // of that center onto the active route.
   private vehicleX = 0;
   private vehicleZ = 0;
-  private vehicleHeading = 0; // radians, 0 = +Z direction
+  private vehicleHeading = 0; // radians, 0 = -Z direction
   private vehicleSpeed = 0;
   private steeringInput = 0;
   private frontWheelAngle = 0;
@@ -436,18 +438,20 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.route = buildDrivingRoute(this.selectedRouteVariant);
     this.updateRouteMetrics();
     this.finished = false;
-    const startPoint = this.getRoutePoint(2);
-    const startHeading = this.getRouteHeading(2);
-    const startLaneOffset = this.getDrivingLaneOffset(2);
-    this.vehicleX = startPoint.x;
-    this.vehicleZ = startPoint.z;
+    const startDistance = 2;
+    const startPoint = this.getRoutePoint(startDistance);
+    const startHeading = this.getRouteHeading(startDistance);
+    const startLaneOffset = this.getDrivingLaneOffset(startDistance);
+    const startVehicleCenter = this.getRouteLateralPoint(startPoint, startLaneOffset);
+    this.vehicleX = startVehicleCenter.x;
+    this.vehicleZ = startVehicleCenter.z;
     this.vehicleHeading = startHeading;
     this.vehicleSpeed = 0;
     this.steeringInput = 0;
     this.frontWheelAngle = 0;
     this.lastYawRate = 0;
-    this.progress = 0;
-    this.previousProgress = 0;
+    this.progress = startDistance;
+    this.previousProgress = startDistance;
     this.lateralOffset = startLaneOffset;
     this.cameraRoll = 0;
     this.cameraFov = this.baseCameraFov;
@@ -1109,7 +1113,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const h = canvas.height;
     const vehicleBox = this.getVehicleCollisionBox();
     const forward = this.getForwardVector(this.vehicleHeading);
-    const right = this.getVisualRightVector(this.vehicleHeading);
+    const right = this.getRightVector(this.vehicleHeading);
     const scale = 1.72;
     const originX = w / 2;
     const originY = h * 0.76;
@@ -1498,7 +1502,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const vehicleBox = this.getVehicleCollisionBox();
     const forward = this.getForwardVector(this.vehicleHeading);
-    const right = this.getVisualRightVector(this.vehicleHeading);
+    const right = this.getRightVector(this.vehicleHeading);
     const previousTarget = this.renderer.getRenderTarget?.() ?? null;
     const previousVehicleVisible = this.vehicleRoot?.visible;
     if (this.vehicleRoot) this.vehicleRoot.visible = false;
@@ -1669,8 +1673,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         x: segment.start.x + segment.dir.x * segment.length / 2,
         z: segment.start.z + segment.dir.z * segment.length / 2,
       };
-      const angle = Math.atan2(segment.dir.x, segment.dir.z);
-      const normal = { x: -segment.dir.z, z: segment.dir.x };
+      const heading = this.getHeadingFromDirection(segment.dir);
+      const angle = this.getSceneYawFromHeading(heading);
+      const normal = this.getRouteRightVector(segment.dir);
       const roadWidth = this.getSegmentRoadWidth(segment);
 
       const roadBase = new THREE.Mesh(new THREE.BoxGeometry(roadWidth + 0.44, 0.08, segment.length), roadBaseMat);
@@ -1690,7 +1695,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.roadCollisionBoxes.push({
         centerX: mid.x,
         centerZ: mid.z,
-        angle,
+        angle: heading,
         halfWidth: roadWidth / 2,
         halfLength: segment.length / 2,
       });
@@ -1713,14 +1718,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.createAsphaltRoadMaterial(intersectionWidth),
       );
       cross.position.set(point.x, 0.025, point.z);
-      const crossAngle = Math.atan2(point.normal.x, point.normal.z);
+      const crossHeading = this.getHeadingFromDirection(point.normal);
+      const crossAngle = this.getSceneYawFromHeading(crossHeading);
       cross.rotation.y = crossAngle;
       cross.receiveShadow = false;
       this.scene.add(cross);
       this.roadCollisionBoxes.push({
         centerX: point.x,
         centerZ: point.z,
-        angle: crossAngle,
+        angle: crossHeading,
         halfWidth: (approachWidth + 18) / 2,
         halfLength: intersectionWidth / 2,
       });
@@ -1740,8 +1746,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       if (!segment) continue;
 
       const localDistance = Math.max(1, segment.length - this.stopLineSetback);
-      const normal = { x: -segment.dir.z, z: segment.dir.x };
-      const angle = Math.atan2(segment.dir.x, segment.dir.z);
+      const normal = this.getRouteRightVector(segment.dir);
+      const angle = this.getSceneYawForDirection(segment.dir);
       const roadWidth = this.getSegmentRoadWidth(segment);
       const laneOffset = this.getDrivingLaneOffset(inter.distance - this.stopLineSetback);
       const laneWidth = Math.max(3.0, roadWidth / 2 - 1.6);
@@ -1769,8 +1775,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const segment = this.route[inter.segmentIndex];
       if (!segment) continue;
 
-      const normal = { x: -segment.dir.z, z: segment.dir.x };
-      const angle = Math.atan2(segment.dir.x, segment.dir.z);
+      const normal = this.getRouteRightVector(segment.dir);
+      const angle = this.getSceneYawForDirection(segment.dir);
       const localDistance = Math.max(2, segment.length - this.stopLineSetback - 2.4);
       const roadWidth = this.getSegmentRoadWidth(segment);
       const baseX = segment.start.x + segment.dir.x * localDistance + normal.x * (roadWidth / 2 + 1.2);
@@ -1824,8 +1830,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     for (const inter of this.intersections) {
       const segment = this.route[inter.segmentIndex];
       if (!segment) continue;
-      const normal = { x: -segment.dir.z, z: segment.dir.x };
-      const angle = Math.atan2(segment.dir.x, segment.dir.z);
+      const normal = this.getRouteRightVector(segment.dir);
+      const angle = this.getSceneYawForDirection(segment.dir);
       const boxDistance = Math.max(2, segment.length - this.stopLineSetback - 6.2);
       const roadWidth = this.getSegmentRoadWidth(segment);
       const laneOffset = this.getDrivingLaneOffset(inter.distance - this.stopLineSetback);
@@ -1857,7 +1863,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     for (let d = 18; d < this.routeLength - 12; d += streetDetailStep) {
       if (this.isNearIntersection(d, 14)) continue;
       const point = this.getRoutePoint(d);
-      const angle = Math.atan2(point.dir.x, point.dir.z);
+      const angle = this.getSceneYawForDirection(point.dir);
       const roadWidth = point.roadWidth;
 
       for (const side of [-1, 1]) {
@@ -1920,7 +1926,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     for (let d = 28; d < this.routeLength - 25; d += arcadeStep) {
       if (this.isNearIntersection(d, 18)) continue;
       const point = this.getRoutePoint(d);
-      const angle = Math.atan2(point.dir.x, point.dir.z);
+      const angle = this.getSceneYawForDirection(point.dir);
       const roadWidth = point.roadWidth;
       for (const side of [-1, 1]) {
         const arcade = new THREE.Group();
@@ -2109,14 +2115,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         const depth = 7.5 + ((d + 3) % 6);
         if (this.isNearIntersection(d, this.buildingIntersectionClearance + depth / 2)) continue;
 
-        const angle = Math.atan2(point.dir.x, point.dir.z) + side * Math.PI / 2;
+        const angle = this.getSceneYawForDirection(point.dir) + side * Math.PI / 2;
+        const heading = this.getHeadingFromSceneYaw(angle);
         const setback = point.roadWidth / 2 + this.sidewalkWidth + this.buildingRoadGap + depth / 2 + (d % 8);
         const centerX = point.x + point.normal.x * side * setback;
         const centerZ = point.z + point.normal.z * side * setback;
         const collisionBox: CollisionBox2D = {
           centerX,
           centerZ,
-          angle,
+          angle: heading,
           halfWidth: width / 2,
           halfLength: depth / 2,
         };
@@ -2245,7 +2252,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         0,
         point.z + point.normal.z * (point.roadWidth / 2 + 1),
       );
-      group.rotation.y = Math.atan2(point.dir.x, point.dir.z);
+      group.rotation.y = this.getSceneYawForDirection(point.dir);
       this.scene.add(group);
     }
   }
@@ -2357,7 +2364,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           if (this.getDistanceToRoute(centerX, centerZ) > 130) continue;
           const road = new THREE.Mesh(new THREE.BoxGeometry(width, 0.024, length), roadMat);
           road.position.set(centerX, -0.455, centerZ);
-          road.rotation.y = Math.atan2(dx, dz);
+          road.rotation.y = this.getSceneYawForDirection({ x: dx / length, z: dz / length });
           group.add(road);
           roadSegmentCount += 1;
         }
@@ -2518,10 +2525,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const wheels: VehicleWheelBinding[] = [];
     for (const [x, z, front] of [
-      [-1.25, 1.56, true],
-      [1.25, 1.56, true],
-      [-1.25, -1.48, false],
-      [1.25, -1.48, false],
+      [-1.25, -1.56, true],
+      [1.25, -1.56, true],
+      [-1.25, 1.48, false],
+      [1.25, 1.48, false],
     ] as const) {
       const wheel = new THREE.Group();
       const tire = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.14, 8, 18), tireMat);
@@ -2587,6 +2594,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         const center = new THREE.Vector3();
         box.getCenter(center);
         model.position.set(-center.x, -box.min.y, -center.z);
+        model.rotation.y = Math.PI;
 
         this.vehicleRoot.remove(this.fallbackVehicle);
         this.vehicleRoot.add(model);
@@ -2684,21 +2692,22 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       : this.lerp(0.004, -0.004, speedRatio);
     const roll = this.clamp(-this.steeringInput * 0.022 - this.lastYawRate * 0.018, -0.035, 0.035);
 
+    const sceneYaw = this.getSceneYawFromHeading(this.vehicleHeading);
     this.vehicleRoot.position.set(vehicleBox.centerX, 0.018, vehicleBox.centerZ);
     this.vehicleRoot.rotation.set(
       pitch,
-      this.vehicleHeading,
+      sceneYaw,
       roll,
     );
     if (this.vehicleBlobShadow) {
       this.vehicleBlobShadow.position.set(vehicleBox.centerX, 0.118, vehicleBox.centerZ);
-      this.vehicleBlobShadow.rotation.y = this.vehicleHeading;
+      this.vehicleBlobShadow.rotation.y = sceneYaw;
     }
 
     for (const wheel of this.wheelBindings) {
       wheel.node.position.y = wheel.initialY;
       wheel.node.rotation.x = wheel.baseRotationX + this.wheelSpin;
-      wheel.node.rotation.y = wheel.baseRotationY + (wheel.front ? this.frontWheelAngle * 0.72 : 0);
+      wheel.node.rotation.y = wheel.baseRotationY - (wheel.front ? this.frontWheelAngle * 0.72 : 0);
       wheel.node.rotation.z = wheel.baseRotationZ;
     }
 
@@ -2803,12 +2812,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     // medium speed so turns feel like road driving rather than a sliding camera.
     const lateralGrip = this.lerp(1.0, 0.84, Math.pow(speedRatio, 0.9));
     this.lastYawRate = this.vehicleSpeed > 0.03
-      ? -(this.vehicleSpeed * Math.tan(this.frontWheelAngle) / this.wheelBase) * lateralGrip
+      ? (this.vehicleSpeed * Math.tan(this.frontWheelAngle) / this.wheelBase) * lateralGrip
       : 0;
     this.vehicleHeading += this.lastYawRate * dt;
 
     // Move forward in heading direction
-    // heading=0 -> moving in +Z, heading=PI/2 -> moving in +X
+    // heading=0 -> moving in -Z, heading=PI/2 -> moving in +X
     const forward = this.getForwardVector(this.vehicleHeading);
     this.vehicleX += forward.x * this.vehicleSpeed * dt;
     this.vehicleZ += forward.z * this.vehicleSpeed * dt;
@@ -2950,13 +2959,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.getLaneDeviationLimit(pose.progress) - this.vehicleHalfWidth,
     );
     const resetHeading = this.getRouteHeading(pose.progress);
-    const visualRight = this.getVisualRightVector(resetHeading);
-    const laneOffset = this.getDrivingLaneOffset(pose.progress);
-    const vehicleCenterX = routePoint.x + routePoint.normal.x * safeLateral;
-    const vehicleCenterZ = routePoint.z + routePoint.normal.z * safeLateral;
+    const vehicleCenter = this.getRouteLateralPoint(routePoint, safeLateral);
 
-    this.vehicleX = vehicleCenterX - visualRight.x * laneOffset;
-    this.vehicleZ = vehicleCenterZ - visualRight.z * laneOffset;
+    this.vehicleX = vehicleCenter.x;
+    this.vehicleZ = vehicleCenter.z;
     this.vehicleHeading = resetHeading;
     this.vehicleSpeed = 0;
     this.frontWheelAngle = 0;
@@ -2988,8 +2994,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const closestX = segment.start.x + segment.dir.x * clampedT;
       const closestZ = segment.start.z + segment.dir.z * clampedT;
       const distSq = (wx - closestX) ** 2 + (wz - closestZ) ** 2;
-      const normalX = -segment.dir.z;
-      const normalZ = segment.dir.x;
+      const normal = this.getRouteRightVector(segment.dir);
+      const normalX = normal.x;
+      const normalZ = normal.z;
       const lateral = (wx - closestX) * normalX + (wz - closestZ) * normalZ;
       const routeDistance = (this.routeSegmentStarts[i] ?? 0) + clampedT;
       const delta = routeDistance - referenceDistance;
@@ -3105,7 +3112,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const group = this.createHazardMesh(template.id);
       group.visible = false;
       group.position.set(point.x, 0, point.z);
-      group.rotation.y = Math.atan2(point.dir.x, point.dir.z);
+      group.rotation.y = this.getSceneYawForDirection(point.dir);
       this.scene?.add(group);
 
       return {
@@ -3266,7 +3273,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       0.05,
       point.z + point.normal.z * actor.lateral,
     );
-    actor.group.rotation.y = Math.atan2(point.dir.x * actor.direction, point.dir.z * actor.direction);
+    actor.group.rotation.y = this.getSceneYawForDirection({
+      x: point.dir.x * actor.direction,
+      z: point.dir.z * actor.direction,
+    });
     actor.shadow.position.set(actor.group.position.x, 0.116, actor.group.position.z);
     actor.shadow.rotation.y = actor.group.rotation.y;
   }
@@ -3313,7 +3323,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     hazard.result.response = preheldBrake ? 'invalid-preheld-brake' : 'pending';
     hazard.group.visible = true;
     hazard.group.position.set(point.x + point.normal.x * targetLateral, 0, point.z + point.normal.z * targetLateral);
-    hazard.group.rotation.y = Math.atan2(point.dir.x, point.dir.z);
+    hazard.group.rotation.y = this.getSceneYawForDirection(point.dir);
 
     this.hazardSpawnCount++;
     this.eventResults.push(hazard.result);
@@ -3380,7 +3390,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           movingPoint.z + movingPoint.normal.z * hazard.targetLateral,
         );
         hazard.currentLateral = hazard.targetLateral;
-        hazard.group.rotation.y = Math.atan2(-movingPoint.dir.x, -movingPoint.dir.z);
+        hazard.group.rotation.y = this.getSceneYawForDirection({ x: -movingPoint.dir.x, z: -movingPoint.dir.z });
       }
 
       if (hazard.template.id !== 'wrong-way-driver') {
@@ -3390,7 +3400,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           baseY,
           point.z + point.normal.z * lateral,
         );
-        hazard.group.rotation.y = Math.atan2(point.dir.x, point.dir.z) + (hazard.template.id === 'drunk-driver' ? Math.sin(age / 300) * 0.5 : 0);
+        hazard.group.rotation.y = this.getSceneYawForDirection(point.dir) + (hazard.template.id === 'drunk-driver' ? Math.sin(age / 300) * 0.5 : 0);
       }
 
       if (hazard.template.id === 'plane-crash') {
@@ -3480,7 +3490,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const trafficBox: CollisionBox2D = {
         centerX: actor.group.position.x,
         centerZ: actor.group.position.z,
-        angle: actor.group.rotation.y || 0,
+        angle: this.getHeadingFromSceneYaw(actor.group.rotation.y || 0),
         halfWidth: isScooter ? 0.55 : 1.05,
         halfLength: isScooter ? 0.95 : 2.0,
       };
@@ -3529,11 +3539,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getVehicleCollisionBox(): CollisionBox2D {
-    const right = this.getVisualRightVector(this.vehicleHeading);
-    const laneOffset = this.getDrivingLaneOffset(this.progress);
     return {
-      centerX: this.vehicleX + right.x * laneOffset,
-      centerZ: this.vehicleZ + right.z * laneOffset,
+      centerX: this.vehicleX,
+      centerZ: this.vehicleZ,
       angle: this.vehicleHeading,
       halfWidth: this.vehicleHalfWidth,
       halfLength: this.vehicleHalfLength,
@@ -3552,7 +3560,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return {
       centerX: hazard.group.position.x,
       centerZ: hazard.group.position.z,
-      angle: hazard.group.rotation.y || 0,
+      angle: this.getHeadingFromSceneYaw(hazard.group.rotation.y || 0),
       ...footprint,
     };
   }
@@ -3648,12 +3656,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const seat = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.14, 0.72), darkMat);
     seat.position.set(0, 0.86, -0.08);
     const handle = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 0.08), metalMat);
-    handle.position.set(0, 1.02, 0.62);
+    handle.position.set(0, 1.02, -0.62);
     const front = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.72, 0.28), bodyMat);
-    front.position.set(0, 0.76, 0.54);
+    front.position.set(0, 0.76, -0.54);
     group.add(body, seat, handle, front);
 
-    for (const z of [-0.58, 0.62]) {
+    for (const z of [-0.62, 0.58]) {
       const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.065, 8, 16), darkMat);
       wheel.rotation.y = Math.PI / 2;
       wheel.position.set(0, 0.28, z);
@@ -3710,7 +3718,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const group = new THREE.Group();
     const referenceCar = this.vehicleModel?.clone?.(true);
     if (referenceCar) {
-      referenceCar.rotation.set(0, 0, 0);
+      referenceCar.rotation.x = 0;
       referenceCar.traverse?.((child: any) => {
         child.castShadow = false;
         child.receiveShadow = false;
@@ -3774,19 +3782,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const brakeNod = this.cameraMode === 'first-person' && this.lastBrakePressed
       ? this.lerp(0.012, 0.038, speedRatio)
       : 0;
-    const cabinSway = this.steeringInput * 0.08;
-    const right = this.getVisualRightVector(this.vehicleHeading);
     const forward = this.getForwardVector(this.vehicleHeading);
-    const vehicleBox = this.getVehicleCollisionBox();
     const THREE = this.requireThree();
     const targetPosition = new THREE.Vector3();
     const lookAt = new THREE.Vector3();
 
-    // Use vehicleX/vehicleZ (pure physics position on the route centre-line) as
-    // the anchor for lookAt so the camera always looks exactly along the heading
-    // vector.  vehicleBox.center has a perpendicular lane-offset baked in which
-    // caused the look-at direction to diverge from the heading axis, producing
-    // the tilted-road appearance.
+    // vehicleX/Z is the single source of truth for the rendered and physical
+    // vehicle center, so both camera modes stay centered on the same heading axis.
     if (this.cameraMode === 'third-person') {
       const distance = 9.0;
       const height = 3.35;
@@ -3801,20 +3803,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.vehicleZ + forward.z * 10.5,
       );
     } else {
-      // driverLeftOffset: negative = left of the right-vector (driver seat on
-      // left side for right-hand traffic).
-      const driverLeftOffset = -0.62;
       targetPosition.set(
-        this.vehicleX + forward.x * 0.45 + right.x * (driverLeftOffset + cabinSway),
+        this.vehicleX + forward.x * 0.45,
         2.05 + firstPersonBob - brakeNod,
-        this.vehicleZ + forward.z * 0.45 + right.z * (driverLeftOffset + cabinSway),
+        this.vehicleZ + forward.z * 0.45,
       );
-      // lookAt stays on the pure heading axis; only steer-sway shifts it
-      // laterally so that straight driving looks exactly forward.
       lookAt.set(
-        this.vehicleX + forward.x * 35 + right.x * (this.steeringInput * 0.65),
+        this.vehicleX + forward.x * 35,
         1.65 + firstPersonBob * 0.45 - brakeNod * 0.35,
-        this.vehicleZ + forward.z * 35 + right.z * (this.steeringInput * 0.65),
+        this.vehicleZ + forward.z * 35,
       );
     }
 
@@ -3822,12 +3819,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const t = 1 - Math.exp(-followResponse * dt);
     this.camera.position.lerp(targetPosition, t);
     this.camera.lookAt(lookAt);
-
-    const targetRoll = this.cameraMode === 'first-person'
-      ? this.clamp(this.lastYawRate * 0.012 - this.steeringInput * 0.006, -0.018, 0.018)
-      : 0;
-    this.cameraRoll = this.expSmoothing(this.cameraRoll, targetRoll, 6.5, dt);
-    if (this.cameraMode === 'first-person') this.camera.rotateZ(this.cameraRoll);
+    this.cameraRoll = 0;
 
     const targetFov = this.cameraMode === 'third-person'
       ? this.baseCameraFov - 3
@@ -3847,7 +3839,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private snapCameraToVehicle() {
     if (!this.camera) return;
     const THREE = this.requireThree();
-    const right = this.getVisualRightVector(this.vehicleHeading);
     const forward = this.getForwardVector(this.vehicleHeading);
     const lookAt = new THREE.Vector3();
 
@@ -3863,11 +3854,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.vehicleZ + forward.z * 10.5,
       );
     } else {
-      const driverLeftOffset = -0.62;
       this.camera.position.set(
-        this.vehicleX + forward.x * 0.45 + right.x * driverLeftOffset,
+        this.vehicleX + forward.x * 0.45,
         2.05,
-        this.vehicleZ + forward.z * 0.45 + right.z * driverLeftOffset,
+        this.vehicleZ + forward.z * 0.45,
       );
       lookAt.set(
         this.vehicleX + forward.x * 35,
@@ -4074,15 +4064,42 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getForwardVector(angle: number): Vec2 {
-    return { x: Math.sin(angle), z: Math.cos(angle) };
+    return { x: Math.sin(angle), z: -Math.cos(angle) };
   }
 
-  private getVisualRightVector(angle: number): Vec2 {
-    return { x: -Math.cos(angle), z: Math.sin(angle) };
+  private getRightVector(angle: number): Vec2 {
+    return { x: Math.cos(angle), z: Math.sin(angle) };
+  }
+
+  private getRouteRightVector(dir: Vec2): Vec2 {
+    return { x: -dir.z, z: dir.x };
+  }
+
+  private getHeadingFromDirection(dir: Vec2): number {
+    return Math.atan2(dir.x, -dir.z);
+  }
+
+  private getSceneYawFromHeading(heading: number): number {
+    return -heading;
+  }
+
+  private getHeadingFromSceneYaw(yaw: number): number {
+    return -yaw;
+  }
+
+  private getSceneYawForDirection(dir: Vec2): number {
+    return this.getSceneYawFromHeading(this.getHeadingFromDirection(dir));
+  }
+
+  private getRouteLateralPoint(point: Pick<RoutePoint, 'x' | 'z' | 'normal'>, lateral: number): Vec2 {
+    return {
+      x: point.x + point.normal.x * lateral,
+      z: point.z + point.normal.z * lateral,
+    };
   }
 
   private getBoxWidthAxis(angle: number): Vec2 {
-    return this.getVisualRightVector(angle);
+    return this.getRightVector(angle);
   }
 
   private getSegmentRoadWidth(segment?: RouteSegment): number {
@@ -4192,7 +4209,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
    * ================================================================ */
   private getRouteHeading(distance: number): number {
     const point = this.getRoutePoint(distance);
-    return Math.atan2(point.dir.x, point.dir.z);
+    return this.getHeadingFromDirection(point.dir);
   }
 
   private getRoutePoint(distance: number): RoutePoint {
@@ -4214,7 +4231,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const segmentStart = this.routeSegmentStarts[index] ?? 0;
       const local = Math.max(0, Math.min(segment.length, clamped - segmentStart));
       const dir = this.getSmoothedDirection(index, local);
-      const normal = { x: -dir.z, z: dir.x };
+      const normal = this.getRouteRightVector(dir);
       return {
         x: segment.start.x + segment.dir.x * local,
         z: segment.start.z + segment.dir.z * local,
@@ -4233,7 +4250,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       x: last.start.x + last.dir.x * last.length,
       z: last.start.z + last.dir.z * last.length,
       dir: last.dir,
-      normal: { x: -last.dir.z, z: last.dir.x },
+      normal: this.getRouteRightVector(last.dir),
       segmentIndex: this.route.length - 1,
       localDistance: last.length,
       roadWidth: this.getSegmentRoadWidth(last),
