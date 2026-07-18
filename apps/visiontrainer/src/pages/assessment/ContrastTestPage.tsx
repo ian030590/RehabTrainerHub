@@ -13,9 +13,6 @@ import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResu
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 
-// Ensure plugin is referenced
-void PixiContrastSensitivityPlugin;
-
 interface ContrastTrialRecord {
   trial: number;
   presented: number;

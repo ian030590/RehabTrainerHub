@@ -11,6 +11,13 @@ import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { exitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import {
+  drawUfovCanvasStage,
+  ensureUfovCanvasStage,
+  prepareUfovNoiseMask,
+  renderUfovCanvasStage,
+  type UfovCanvasPhase,
+} from '@rehab-trainer/ui/ufovCanvas';
+import {
   getFastestCorrectStimulusDurationMs,
   getUfovDirectionAccuracy,
   type UfovDirectionAccuracy,
@@ -455,12 +462,12 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     refreshMs: number,
   ) {
     return new Promise<{ actualDurationMs: number; actualFrameCount: number; droppedFrameCount: number }>((resolve) => {
-      const stimulusStage = this.createStageElement(labels, 'stimulus', subtest, stimulus);
-      const maskStage = this.createStageElement(labels, 'mask', subtest, stimulus);
+      const stage = ensureUfovCanvasStage(displayElement, labels.subtests[stimulus.subtestId]);
+      const maskImageData = prepareUfovNoiseMask(stage);
       if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
-        displayElement.replaceChildren(stimulusStage);
+        drawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus));
         this.jsPsych.pluginAPI.setTimeout(() => {
-          displayElement.replaceChildren(maskStage);
+          drawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
           resolve({
             actualDurationMs: stimulus.plannedDurationMs,
             actualFrameCount: stimulus.displayFrameCount,
@@ -475,12 +482,12 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
 
       window.requestAnimationFrame((timestamp) => {
         startTimestamp = timestamp;
-        displayElement.replaceChildren(stimulusStage);
+        drawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus));
 
         const tick = (nextTimestamp: number) => {
           elapsedFrames += 1;
           if (elapsedFrames >= stimulus.displayFrameCount) {
-            displayElement.replaceChildren(maskStage);
+            drawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
             const actualDurationMs = nextTimestamp - startTimestamp;
             resolve({
               actualDurationMs,
@@ -499,29 +506,26 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
   }
 
   private renderStage(displayElement: HTMLElement, labels: UfovLabels, phase: 'fixation' | 'stimulus' | 'mask', subtest: Subtest, stimulus: TrialStimulus) {
-    displayElement.replaceChildren(this.createStageElement(labels, phase, subtest, stimulus));
+    renderUfovCanvasStage(displayElement, this.getCanvasStageOptions(labels, phase, subtest, stimulus));
   }
 
-  private createStageElement(labels: UfovLabels, phase: 'fixation' | 'stimulus' | 'mask', subtest: Subtest, stimulus: TrialStimulus) {
-    const stage = document.createElement('div');
-    stage.className = 'ufov-stage';
-    stage.setAttribute('aria-label', labels.subtests[stimulus.subtestId]);
-    if (phase === 'fixation') {
-      const fixation = document.createElement('div');
-      fixation.className = 'ufov-fixation-box';
-      fixation.setAttribute('aria-hidden', 'true');
-      stage.appendChild(fixation);
-    }
-    if (phase === 'stimulus') {
-      stage.appendChild(createCentralStimulus(stimulus.centralTarget, labels));
-      if (subtest.hasPeripheral && stimulus.peripheralSlot) {
-        stage.appendChild(createPeripheralStimuli(subtest.hasDistractors, stimulus.peripheralSlot));
-      }
-    }
-    if (phase === 'mask') {
-      stage.appendChild(createNoiseMask());
-    }
-    return stage;
+  private getCanvasStageOptions(
+    labels: UfovLabels,
+    phase: UfovCanvasPhase,
+    subtest: Subtest,
+    stimulus: TrialStimulus,
+    maskImageData?: ImageData | null,
+  ) {
+    return {
+      ariaLabel: labels.subtests[stimulus.subtestId],
+      phase,
+      centralTarget: stimulus.centralTarget,
+      hasPeripheral: subtest.hasPeripheral,
+      hasDistractors: subtest.hasDistractors,
+      peripheralSlot: stimulus.peripheralSlot,
+      slots: SLOTS,
+      maskImageData,
+    };
   }
 
   private askCentral(displayElement: HTMLElement, labels: UfovLabels) {
@@ -930,14 +934,6 @@ function responseButton(label: string, className: string, onClick: () => void, t
   return button;
 }
 
-function createCentralStimulus(target: CentralTarget, labels: UfovLabels) {
-  const element = document.createElement('div');
-  element.className = `ufov-central ufov-central-${target}`;
-  element.setAttribute('aria-label', target === 'car' ? labels.car : labels.truck);
-  element.appendChild(createStimulusSquare(target));
-  return element;
-}
-
 function vehicleButton(target: CentralTarget, labels: UfovLabels, onClick: () => void) {
   const button = responseButton(
     target === 'car' ? labels.car : labels.truck,
@@ -969,53 +965,6 @@ function createVehicleIcon(target: CentralTarget) {
   rightWheel.className = 'ufov-vehicle-wheel ufov-vehicle-wheel-right';
   vehicle.append(roof, body, leftWheel, rightWheel);
   return vehicle;
-}
-
-function createPeripheralStimuli(distractors: boolean, targetSlot: Slot) {
-  const fragment = document.createDocumentFragment();
-  SLOTS.forEach((slot) => {
-    const isTarget = slot.axis === targetSlot.axis && slot.ring === targetSlot.ring;
-    if (!isTarget && !distractors) return;
-    const element = document.createElement('span');
-    element.className = `ufov-slot ${isTarget ? 'ufov-target' : 'ufov-distractor'}`;
-    element.style.left = `${slot.x}%`;
-    element.style.top = `${slot.y}%`;
-    element.setAttribute('aria-hidden', 'true');
-    if (isTarget) {
-      element.appendChild(createStimulusSquare('car'));
-    } else {
-      element.appendChild(createTriangleDistractor());
-    }
-    fragment.appendChild(element);
-  });
-  return fragment;
-}
-
-function createTriangleDistractor() {
-  const triangle = document.createElement('span');
-  triangle.className = 'ufov-triangle-distractor';
-  return triangle;
-}
-
-function createNoiseMask() {
-  const mask = document.createElement('canvas');
-  mask.className = 'ufov-mask-canvas';
-  mask.setAttribute('aria-hidden', 'true');
-  mask.width = Math.max(1, Math.ceil(window.innerWidth));
-  mask.height = Math.max(1, Math.ceil(window.innerHeight));
-  const context = mask.getContext('2d');
-  if (!context) return mask;
-
-  const imageData = context.createImageData(mask.width, mask.height);
-  for (let index = 0; index < imageData.data.length; index += 4) {
-    const value = Math.random() > 0.5 ? 255 : 0;
-    imageData.data[index] = value;
-    imageData.data[index + 1] = value;
-    imageData.data[index + 2] = value;
-    imageData.data[index + 3] = 255;
-  }
-  context.putImageData(imageData, 0, 0);
-  return mask;
 }
 
 function createSlots(): Slot[] {

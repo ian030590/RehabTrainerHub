@@ -43,6 +43,7 @@
     "./siteUrls": "./src/siteUrls.ts",
     "./storage/userStore": "./src/storage/userStore.ts",
     "./trainerTheme": "./src/trainerTheme.ts",
+    "./ufovCanvas": "./src/ufovCanvas.ts",
     "./ufovResults": "./src/ufovResults.ts"
   },
   "peerDependencies": {

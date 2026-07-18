@@ -74,5 +74,12 @@ export {
   transitions,
   typography,
 } from './trainerTheme';
+export {
+  drawUfovCanvasStage,
+  ensureUfovCanvasStage,
+  prepareUfovNoiseMask,
+  renderUfovCanvasStage,
+} from './ufovCanvas';
+export type { UfovCanvasPhase, UfovCanvasSlot, UfovCanvasStageOptions, UfovCanvasTarget } from './ufovCanvas';
 export { getFastestCorrectStimulusDurationMs, getUfovDirectionAccuracy } from './ufovResults';
 export type { UfovDirectionAccuracy } from './ufovResults';
