@@ -79,6 +79,12 @@ interface MiniMapRouteSample {
   z: number;
 }
 
+interface RouteLookup {
+  segment: RouteSegment;
+  index: number;
+  local: number;
+}
+
 interface BoxInstanceSpec {
   x: number;
   y: number;
@@ -288,6 +294,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly hazardTemplates: HazardTemplate[] = [...HAZARD_TEMPLATES];
 
   constructor(private jsPsych: JsPsych) {
+    this.route = this.ensureRoute(this.route);
     this.updateRouteMetrics();
   }
 
@@ -480,12 +487,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private resetTrialState(trial?: TrialType<Info>) {
     this.cleanupRenderResources();
     this.selectedRouteVariant = pickRandomDrivingRoute();
-    this.route = buildDrivingRoute(this.selectedRouteVariant);
+    this.route = this.ensureRoute(buildDrivingRoute(this.selectedRouteVariant));
     this.updateRouteMetrics();
     this.finished = false;
     const startDistance = this.getInitialRouteDistance();
     const startPoint = this.getRoutePoint(startDistance);
-    const startHeading = this.getRoadSurfaceHeading(startDistance);
+    const startHeading = this.getSurfaceHeading(startDistance);
     const startLaneOffset = this.getDrivingLaneOffset(startDistance);
     const startVehicleCenter = this.getRouteLateralPoint(startPoint, startLaneOffset);
     this.vehicleX = startVehicleCenter.x;
@@ -3215,7 +3222,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       -this.getLaneDeviationLimit(pose.progress) + this.vehicleHalfWidth,
       this.getLaneDeviationLimit(pose.progress) - this.vehicleHalfWidth,
     );
-    const resetHeading = this.getRoadSurfaceHeading(pose.progress);
+    const resetHeading = this.getSurfaceHeading(pose.progress);
     const vehicleCenter = this.getRouteLateralPoint(routePoint, safeLateral);
 
     this.vehicleX = vehicleCenter.x;
@@ -4421,24 +4428,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return this.getRoutePoint(distance).roadWidth;
   }
 
-  private getRoadSurfaceHeading(distance: number): number {
-    const clamped = Math.max(0, Math.min(this.routeLength, distance));
-    let index = this.route.length - 1;
-    let low = 0;
-    let high = this.route.length - 1;
-    while (low <= high) {
-      const mid = Math.floor((low + high) / 2);
-      if ((this.routeSegmentStarts[mid] ?? 0) <= clamped) {
-        index = mid;
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-    const segment = this.route[index] ?? this.route[0];
-    return segment ? this.getHeadingFromDirection(segment.dir) : 0;
-  }
-
   private getInitialRouteDistance(): number {
     return this.clamp(this.initialRouteDistance, 2, Math.max(2, this.routeLength - 12));
   }
@@ -4500,16 +4489,36 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   /* ================================================================
    * ROUTE HELPERS (used for hazard placement, minimap, etc.)
    * ================================================================ */
-  private getRouteHeading(distance: number): number {
-    const point = this.getRoutePoint(distance);
-    return this.getHeadingFromDirection(point.dir);
+  private ensureRoute(route: RouteSegment[]): RouteSegment[] {
+    const clean = route.filter((segment) => (
+      Number.isFinite(segment.length)
+      && segment.length > 0.5
+      && Number.isFinite(segment.start.x)
+      && Number.isFinite(segment.start.z)
+      && Number.isFinite(segment.dir.x)
+      && Number.isFinite(segment.dir.z)
+      && Number.isFinite(segment.roadWidth)
+      && Number.isFinite(segment.laneCount)
+    ));
+    if (clean.length > 0) return clean;
+    return [{
+      start: { x: 0, z: 0 },
+      dir: { x: 0, z: -1 },
+      length: 160,
+      roadWidth: this.defaultRoadWidth,
+      laneCount: 2,
+      oneWay: true,
+      name: 'fallback-road',
+    }];
   }
 
-  private getRoutePoint(distance: number): RoutePoint {
-    const clamped = Math.max(0, Math.min(this.routeLength, distance));
-    let index = this.route.length - 1;
+  private getRouteAt(distance: number): RouteLookup {
+    const maxDistance = Math.max(0, this.routeLength);
+    const clamped = this.clamp(distance, 0, maxDistance);
+    let index = 0;
     let low = 0;
     let high = this.route.length - 1;
+
     while (low <= high) {
       const mid = Math.floor((low + high) / 2);
       if ((this.routeSegmentStarts[mid] ?? 0) <= clamped) {
@@ -4519,36 +4528,40 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         high = mid - 1;
       }
     }
-    const segment = this.route[index];
-    if (segment) {
-      const segmentStart = this.routeSegmentStarts[index] ?? 0;
-      const local = Math.max(0, Math.min(segment.length, clamped - segmentStart));
-      const dir = this.getSmoothedDirection(index, local);
-      const normal = this.getRouteRightVector(dir);
-      return {
-        x: segment.start.x + segment.dir.x * local,
-        z: segment.start.z + segment.dir.z * local,
-        dir,
-        normal,
-        segmentIndex: index,
-        localDistance: local,
-        roadWidth: this.getSegmentRoadWidth(segment),
-        laneCount: this.getSegmentLaneCount(segment),
-        oneWay: segment.oneWay,
-      };
-    }
 
-    const last = this.route[this.route.length - 1];
+    const segment = this.route[index] ?? this.route[0];
+    const start = this.routeSegmentStarts[index] ?? 0;
     return {
-      x: last.start.x + last.dir.x * last.length,
-      z: last.start.z + last.dir.z * last.length,
-      dir: last.dir,
-      normal: this.getRouteRightVector(last.dir),
-      segmentIndex: this.route.length - 1,
-      localDistance: last.length,
-      roadWidth: this.getSegmentRoadWidth(last),
-      laneCount: this.getSegmentLaneCount(last),
-      oneWay: last.oneWay,
+      segment,
+      index,
+      local: this.clamp(clamped - start, 0, segment.length),
+    };
+  }
+
+  private getRouteHeading(distance: number): number {
+    const point = this.getRoutePoint(distance);
+    return this.getHeadingFromDirection(point.dir);
+  }
+
+  private getSurfaceHeading(distance: number): number {
+    return this.getHeadingFromDirection(this.getRouteAt(distance).segment.dir);
+  }
+
+  private getRoutePoint(distance: number): RoutePoint {
+    const at = this.getRouteAt(distance);
+    const { segment, index, local } = at;
+    const dir = this.getSmoothedDirection(index, local);
+    const normal = this.getRouteRightVector(dir);
+    return {
+      x: segment.start.x + segment.dir.x * local,
+      z: segment.start.z + segment.dir.z * local,
+      dir,
+      normal,
+      segmentIndex: index,
+      localDistance: local,
+      roadWidth: this.getSegmentRoadWidth(segment),
+      laneCount: this.getSegmentLaneCount(segment),
+      oneWay: segment.oneWay,
     };
   }
 
