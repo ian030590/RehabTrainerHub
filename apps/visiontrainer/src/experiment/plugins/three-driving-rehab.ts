@@ -235,6 +235,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private keydownListener: ((event: KeyboardEvent) => void) | null = null;
   private keyupListener: ((event: KeyboardEvent) => void) | null = null;
   private resizeListener: (() => void) | null = null;
+  private resizeObserver: ResizeObserver | null = null;
   private gamepadConnectedListener: ((event: GamepadEvent) => void) | null = null;
   private gamepadDisconnectedListener: ((event: GamepadEvent) => void) | null = null;
   private gamepadConnected = false;
@@ -271,6 +272,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly firstPersonCameraHeight = 2.05;
   private readonly firstPersonCameraLookAhead = 35;
   private readonly firstPersonCameraLookHeight = 1.65;
+  private readonly stableRendererPixelRatio = 1;
   private readonly referenceVehicleModelYawOffset = Math.PI;
   private readonly sidewalkWidth = 3;
   private readonly buildingRoadGap = 1.2;
@@ -331,7 +333,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (level === 'high') {
       return {
         level,
-        pixelRatioCap: 1.5,
+        pixelRatioCap: this.stableRendererPixelRatio,
         antialias: true,
         cameraFar: 900,
         fogNear: 260,
@@ -349,7 +351,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     return {
       level,
-      pixelRatioCap: 1.25,
+      pixelRatioCap: this.stableRendererPixelRatio,
       antialias: true,
       cameraFar: 650,
       fogNear: 180,
@@ -673,23 +675,23 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       alpha: false,
       powerPreference: 'high-performance',
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.renderQuality.pixelRatioCap));
+    this.renderer.setPixelRatio(this.getRendererPixelRatio());
     this.renderer.setSize(width, height, false);
     this.renderer.shadowMap.enabled = false;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.domElement.style.width = '100%';
     this.renderer.domElement.style.height = '100%';
     root.appendChild(this.renderer.domElement);
+    this.syncRendererSize(root);
 
     this.resizeListener = () => {
-      if (!this.renderer || !this.camera) return;
-      const nextWidth = Math.max(1, root.clientWidth);
-      const nextHeight = Math.max(1, root.clientHeight);
-      this.camera.aspect = nextWidth / nextHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(nextWidth, nextHeight, false);
+      this.syncRendererSize(root);
     };
     window.addEventListener('resize', this.resizeListener);
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => this.syncRendererSize(root));
+      this.resizeObserver.observe(root);
+    }
 
     this.createSceneEnvironment();
     this.buildWorld();
@@ -697,6 +699,20 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.createAmbientTraffic();
     this.preloadHazardEvents();
     if (this.renderQuality.useOsmCity) void this.loadTaipeiOsmCity();
+  }
+
+  private getRendererPixelRatio(): number {
+    return Math.min(window.devicePixelRatio || 1, this.renderQuality.pixelRatioCap);
+  }
+
+  private syncRendererSize(root: HTMLElement) {
+    if (!this.renderer || !this.camera) return;
+    const nextWidth = Math.max(1, root.clientWidth);
+    const nextHeight = Math.max(1, root.clientHeight);
+    this.camera.aspect = nextWidth / nextHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setPixelRatio(this.getRendererPixelRatio());
+    this.renderer.setSize(nextWidth, nextHeight, false);
   }
 
   private createSceneEnvironment() {
@@ -2782,8 +2798,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.disableSideRearviewMirrors();
     if (this.renderer) {
       const canvas = this.renderer.domElement;
+      const width = Math.max(1, canvas.clientWidth);
+      const height = Math.max(1, canvas.clientHeight);
       this.renderer.setPixelRatio(1);
-      this.renderer.setSize(Math.max(1, canvas.clientWidth), Math.max(1, canvas.clientHeight), false);
+      if (this.camera) {
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+      }
+      this.renderer.setSize(width, height, false);
     }
   }
 
@@ -4487,10 +4509,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       window.removeEventListener('keyup', this.keyupListener);
       this.keyupListener = null;
     }
-    if (this.resizeListener) {
-      window.removeEventListener('resize', this.resizeListener);
-      this.resizeListener = null;
-    }
+    this.detachResizeSync();
     if (this.gamepadConnectedListener) {
       window.removeEventListener('gamepadconnected', this.gamepadConnectedListener);
       this.gamepadConnectedListener = null;
@@ -4498,6 +4517,17 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (this.gamepadDisconnectedListener) {
       window.removeEventListener('gamepaddisconnected', this.gamepadDisconnectedListener);
       this.gamepadDisconnectedListener = null;
+    }
+  }
+
+  private detachResizeSync() {
+    if (this.resizeListener) {
+      window.removeEventListener('resize', this.resizeListener);
+      this.resizeListener = null;
+    }
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
     }
   }
 
@@ -4515,6 +4545,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private cleanupRenderResources() {
     cancelAnimationFrame(this.raf);
     this.clearLaneResetTimers();
+    this.detachResizeSync();
     for (const target of Object.values(this.rearviewRenderTargets)) {
       target?.dispose?.();
     }
