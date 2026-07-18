@@ -117,7 +117,9 @@ class PixiAppManager {
       await this.app.init({
         backgroundColor: pixiColors.bg,
         antialias: true,
-        resolution: window.devicePixelRatio || 1,
+        preference: ['webgl', 'canvas'],
+        powerPreference: 'high-performance',
+        resolution: 1,
         autoDensity: true,
         width: 100,
         height: 100,

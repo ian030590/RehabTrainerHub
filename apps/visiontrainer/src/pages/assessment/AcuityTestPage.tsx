@@ -175,6 +175,7 @@ export function AcuityTestPage() {
   const currentStrokePxRef = useRef(10);
   const recordsRef = useRef<TrialRecord[]>([]);
   const phaseRef = useRef<Phase>('intro');
+  const pendingStartRef = useRef(false);
   const gratingRegionsRef = useRef<{ left: GazeRegion; right: GazeRegion } | null>(null);
   const gazeExtensionRef = useRef<any>(null);
 
@@ -226,8 +227,8 @@ export function AcuityTestPage() {
       // Get canvas dimensions for stroke bounds
       strokeBoundsRef.current = getStrokeBounds(window.innerWidth, window.innerHeight);
 
+      pendingStartRef.current = true;
       setPhase('isi');
-      runNextTrial();
     };
 
     if (!isWebGazerPL) {
@@ -349,6 +350,13 @@ export function AcuityTestPage() {
       setPhase('stimulus');
     }, 300);
   }, [testType, totalTrials, drawStimulus]);
+
+  useEffect(() => {
+    if (phase !== 'isi' || !pendingStartRef.current || !canvasRef.current || !pestRef.current) return;
+    pendingStartRef.current = false;
+    const frameId = window.requestAnimationFrame(() => runNextTrial());
+    return () => window.cancelAnimationFrame(frameId);
+  }, [phase, runNextTrial]);
 
   // ── Handle response ──
   const handleResponse = useCallback((responseIdx: number, meta: GazeDecisionMeta = { mode: 'keyboard' }) => {

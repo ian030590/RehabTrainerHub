@@ -46,6 +46,7 @@ export function ContrastTestPage() {
   const [phase, setPhase] = useState<'running' | 'results'>('running');
   const [resultLogCSW, setResultLogCSW] = useState<number>(0);
   const [trialRecords, setTrialRecords] = useState<ContrastTrialRecord[]>([]);
+  const [loadError, setLoadError] = useState('');
 
   const [searchParams] = useSearchParams();
   const totalTrials = parseInt(searchParams.get('trials') || '18', 10);
@@ -58,16 +59,18 @@ export function ContrastTestPage() {
     if (jsPsychRef.current) return;
 
     const setup = async () => {
-      await pixiAppManager.warmUp();
+      try {
+        setLoadError('');
+        await pixiAppManager.warmUp();
       
-      const jsPsych = initJsPsych({
-        display_element: containerRef.current!,
-        on_finish: () => {
-          if (abortingRef.current) return;
-          setPhase('results');
-        }
-      });
-      jsPsychRef.current = jsPsych;
+        const jsPsych = initJsPsych({
+          display_element: containerRef.current!,
+          on_finish: () => {
+            if (abortingRef.current) return;
+            setPhase('results');
+          }
+        });
+        jsPsychRef.current = jsPsych;
 
       const pest = new BestPEST(4); // 4 alternatives for grating
       let currentTrial = 0;
@@ -126,15 +129,19 @@ export function ContrastTestPage() {
         }
       };
 
-      jsPsych.run([loopNode]).then(() => {
-         if (abortingRef.current) return;
-         const finalStim = pest.nextStim2apply();
-         const logCSWMaximal = 2.0;
-         const finalLogCSW = logCSWMaximal - logCSWMaximal * finalStim;
-         setResultLogCSW(finalLogCSW);
-         setTrialRecords(records);
-         pixiAppManager.destroy(); // clean up pixi
-      });
+        jsPsych.run([loopNode]).then(() => {
+          if (abortingRef.current) return;
+          const finalStim = pest.nextStim2apply();
+          const logCSWMaximal = 2.0;
+          const finalLogCSW = logCSWMaximal - logCSWMaximal * finalStim;
+          setResultLogCSW(finalLogCSW);
+          setTrialRecords(records);
+          pixiAppManager.destroy(); // clean up pixi
+        });
+      } catch (error) {
+        console.error('Contrast assessment failed to start:', error);
+        setLoadError(error instanceof Error ? error.message : String(error));
+      }
     };
 
     setup();
@@ -200,6 +207,7 @@ export function ContrastTestPage() {
     jsPsychRef.current = null;
     setResultLogCSW(0);
     setTrialRecords([]);
+    setLoadError('');
     setPhase('running');
   };
 
@@ -208,6 +216,20 @@ export function ContrastTestPage() {
       {content}
     </div>
   );
+
+  if (loadError) {
+    return wrapFullscreenRoot(
+      <div className="experiment-container">
+        <div className="experiment-instructions">
+          <h1>{t('home.trainingLoadError')}</h1>
+          <p>{loadError}</p>
+          <button className="btn btn-primary btn-lg" type="button" onClick={() => navigate('/assessment')}>
+            {t('exp.backHome')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (phase === 'results') {
      const correctCount = trialRecords.filter((r) => r.correct).length;
