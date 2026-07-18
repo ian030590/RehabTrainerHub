@@ -160,10 +160,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private fpsSamples: number[] = [];
   private activeHazards: ActiveHazard[] = [];
   private eventResults: DrivingEventResult[] = [];
-  private hazardSpawnCount = 0;
   private lastBrakePressed = false;
   private ambientTrafficActors: AmbientTrafficActor[] = [];
-  private taipeiCityGroup: any = null;
   private renderQuality: DrivingRenderQuality = this.createRenderQuality('medium');
   private selectedRouteVariant: DrivingRouteVariant | null = null;
 
@@ -192,7 +190,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private laneResetBlackoutTimer: number | null = null;
   private laneResetClearTimer: number | null = null;
   private needsFirstFrameCameraSnap = false;
-  private cameraRoll = 0;
   private cameraFov = 68;
   private cameraMode: DrivingCameraMode = 'first-person';
   private wheelSpin = 0;
@@ -253,7 +250,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     redFlash: HTMLDivElement;
     blackout?: HTMLDivElement;
     cockpit?: HTMLDivElement;
-    inputBars?: HTMLDivElement;
     miniMapWrapper?: HTMLDivElement;
   } | null = null;
 
@@ -479,7 +475,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       }
     };
 
-    this.attachKeyboardListeners(() => {}, trial, display_element);
+    this.attachKeyboardListeners(trial, display_element);
     this.attachGamepadListeners();
     void startDriving();
   }
@@ -491,8 +487,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.updateRouteMetrics();
     this.finished = false;
     const startDistance = this.getInitialRouteDistance();
-    const startPoint = this.getRoutePoint(startDistance);
-    const startHeading = this.getSurfaceHeading(startDistance);
+    const startPoint = this.getSurfacePoint(startDistance);
+    const startHeading = this.getHeadingFromDirection(startPoint.dir);
     const startLaneOffset = this.getDrivingLaneOffset(startDistance);
     const startVehicleCenter = this.getRouteLateralPoint(startPoint, startLaneOffset);
     this.vehicleX = startVehicleCenter.x;
@@ -505,7 +501,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.progress = startDistance;
     this.previousProgress = startDistance;
     this.lateralOffset = startLaneOffset;
-    this.cameraRoll = 0;
     this.cameraFov = this.baseCameraFov;
     this.cameraMode = 'first-person';
     this.wheelSpin = 0;
@@ -526,9 +521,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.fpsSamples = [];
     this.activeHazards = [];
     this.eventResults = [];
-    this.hazardSpawnCount = 0;
     this.ambientTrafficActors = [];
-    this.taipeiCityGroup = null;
     this.roadCollisionBoxes = [];
     this.buildingCollisionBoxes = [];
     this.keyState = { left: false, right: false, up: false, down: false };
@@ -598,238 +591,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     addPendingIntersection();
   }
 
-  /* ================================================================
-   * CALIBRATION OVERLAY - redesigned: info items are NOT styled as buttons
-   * ================================================================ */
-  private createCalibrationOverlay(root: HTMLDivElement): HTMLDivElement {
-    const overlay = document.createElement('div');
-    Object.assign(overlay.style, {
-      position: 'absolute',
-      inset: '0',
-      zIndex: '20',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '32px',
-      background: 'linear-gradient(135deg, rgba(6, 22, 36, 0.96), rgba(20, 38, 52, 0.96))',
-    });
-
-    const text = this.text;
-    const diffKey = this.getDifficultyLabel();
-
-    const card = document.createElement('div');
-    Object.assign(card.style, {
-      width: 'min(760px, 100%)',
-      border: '1px solid rgba(255,255,255,0.18)',
-      borderRadius: '24px',
-      padding: '40px 36px 32px',
-      background: 'rgba(255,255,255,0.06)',
-      boxShadow: '0 30px 90px rgba(0,0,0,0.36)',
-    });
-
-    const eyebrow = document.createElement('div');
-    Object.assign(eyebrow.style, {
-      fontSize: '13px',
-      letterSpacing: '2px',
-      textTransform: 'uppercase',
-      color: '#7dd3fc',
-      fontWeight: '700',
-      marginBottom: '6px',
-    });
-    eyebrow.textContent = text.eyebrow;
-
-    const title = document.createElement('h1');
-    Object.assign(title.style, {
-      fontSize: '34px',
-      lineHeight: '1.15',
-      margin: '0 0 16px',
-      fontWeight: '800',
-    });
-    title.textContent = text.title;
-
-    const intro = document.createElement('p');
-    Object.assign(intro.style, {
-      fontSize: '15px',
-      lineHeight: '1.85',
-      color: 'rgba(255,255,255,0.75)',
-      margin: '0 0 28px',
-    });
-    intro.append(
-      text.introA,
-      this.createInlineStrong(text.routeMap, '#7dd3fc'),
-      text.introB,
-      document.createElement('br'),
-      text.hazardIntroA,
-      this.createInlineStrong(text.randomHazards, '#fbbf24'),
-      text.hazardIntroB,
-      `${text.difficultyLabel}: `,
-      this.createInlineStrong(diffKey, '#38bdf8'),
-    );
-
-    const controls = document.createElement('div');
-    Object.assign(controls.style, {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '14px',
-      marginBottom: '28px',
-    });
-    controls.append(
-      this.createControlInfo(text.steering, this.getSteeringHint()),
-      this.createControlInfo(text.throttle, this.getThrottleHint()),
-      this.createControlInfo(text.emergencyBrake, this.getBrakeHint()),
-    );
-
-    const inputBars = document.createElement('div');
-    inputBars.dataset.drivingInputBars = '';
-    Object.assign(inputBars.style, { display: 'grid', gap: '10px', marginBottom: '22px' });
-
-    const ready = document.createElement('div');
-    ready.dataset.drivingReady = '';
-    Object.assign(ready.style, {
-      fontSize: '13px',
-      color: 'rgba(255,255,255,0.55)',
-      marginBottom: '22px',
-    });
-    ready.textContent = text.loading3d;
-
-    const start = document.createElement('button');
-    start.dataset.drivingStart = '';
-    start.type = 'button';
-    Object.assign(start.style, {
-      width: '100%',
-      minHeight: '58px',
-      border: '0',
-      borderRadius: '16px',
-      background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)',
-      color: '#062338',
-      fontSize: '18px',
-      fontWeight: '800',
-      cursor: 'pointer',
-      boxShadow: '0 4px 20px rgba(56, 189, 248, 0.35)',
-      transition: 'transform 0.12s, box-shadow 0.12s',
-    });
-    start.textContent = text.startMission;
-    start.addEventListener('mouseenter', () => {
-      start.style.transform = 'scale(1.02)';
-      start.style.boxShadow = '0 6px 28px rgba(56, 189, 248, 0.45)';
-    });
-    start.addEventListener('mouseleave', () => {
-      start.style.transform = 'scale(1)';
-      start.style.boxShadow = '0 4px 20px rgba(56, 189, 248, 0.35)';
-    });
-
-    const hint = document.createElement('div');
-    Object.assign(hint.style, {
-      marginTop: '14px',
-      textAlign: 'center',
-      fontSize: '12px',
-      color: 'rgba(255,255,255,0.42)',
-    });
-    hint.textContent = text.startHint;
-
-    card.append(eyebrow, title, intro, controls, inputBars, ready, start, hint);
-    overlay.appendChild(card);
-
-    if (inputBars) this.hud = { status: document.createElement('div'), speed: document.createElement('div'), distance: document.createElement('div'), event: document.createElement('div'), redFlash: document.createElement('div'), inputBars };
-
-    root.appendChild(overlay);
-    return overlay;
-  }
-
-  private createInlineStrong(text: string, color: string): HTMLElement {
-    const strong = document.createElement('b');
-    strong.style.color = color;
-    strong.textContent = text;
-    return strong;
-  }
-
-  private createControlInfo(label: string, hint: string): HTMLElement {
-    const item = document.createElement('div');
-    Object.assign(item.style, {
-      padding: '16px 14px',
-      borderRadius: '14px',
-      background: 'rgba(255,255,255,0.05)',
-      border: '1px solid rgba(255,255,255,0.08)',
-    });
-    const title = document.createElement('div');
-    Object.assign(title.style, {
-      fontSize: '11px',
-      letterSpacing: '1px',
-      textTransform: 'uppercase',
-      color: '#7dd3fc',
-      fontWeight: '700',
-      marginBottom: '6px',
-    });
-    title.textContent = label;
-    const body = document.createElement('div');
-    Object.assign(body.style, {
-      fontSize: '14px',
-      color: 'rgba(255,255,255,0.62)',
-    });
-    body.textContent = hint;
-    item.append(title, body);
-    return item;
-  }
-
-  private startCalibrationPreview(overlay: HTMLDivElement) {
-    const update = () => {
-      if (!overlay.isConnected || this.finished || this.renderer) return;
-      const inputBars = overlay.querySelector<HTMLDivElement>('[data-driving-input-bars]');
-      if (inputBars) {
-        const input = this.readInput();
-        inputBars.replaceChildren();
-        inputBars.appendChild(this.createInputBar(this.text.steering, input.steering, -1, 1));
-        inputBars.appendChild(this.createInputBar(this.text.throttle, input.throttle, 0, 1));
-        inputBars.appendChild(this.createInputBar(this.text.brake, input.brake, 0, 1));
-        const device = document.createElement('div');
-        device.style.fontSize = '12px';
-        device.style.color = 'rgba(255,255,255,0.50)';
-        device.textContent = this.getInputDeviceText(input);
-        inputBars.appendChild(device);
-      }
-      requestAnimationFrame(update);
-    };
-    requestAnimationFrame(update);
-  }
-
-  private createInputBar(label: string, value: number, min: number, max: number): HTMLDivElement {
-    const wrapper = document.createElement('div');
-    const normalized = Math.max(0, Math.min(1, (value - min) / (max - min)));
-    const header = document.createElement('div');
-    Object.assign(header.style, {
-      display: 'flex',
-      justifyContent: 'space-between',
-      fontSize: '12px',
-      color: 'rgba(255,255,255,0.60)',
-      marginBottom: '4px',
-    });
-    const labelElement = document.createElement('span');
-    labelElement.textContent = label;
-    const valueElement = document.createElement('span');
-    valueElement.textContent = value.toFixed(2);
-    header.append(labelElement, valueElement);
-
-    const track = document.createElement('div');
-    Object.assign(track.style, {
-      height: '6px',
-      borderRadius: '999px',
-      background: 'rgba(255,255,255,0.10)',
-      overflow: 'hidden',
-    });
-    const fill = document.createElement('div');
-    Object.assign(fill.style, {
-      height: '100%',
-      width: `${normalized * 100}%`,
-      background: '#38bdf8',
-      borderRadius: '999px',
-    });
-    track.appendChild(fill);
-    wrapper.append(header, track);
-    return wrapper;
-  }
-
   private attachKeyboardListeners(
-    onStart: () => void,
     trial: TrialType<Info>,
     display_element: HTMLElement,
   ) {
@@ -842,7 +604,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         event.preventDefault();
         this.cycleCameraMode();
       }
-      if (event.code === 'Enter' || event.code === 'Space') onStart();
       if (event.code === 'Escape') this.finishTrial(trial, display_element, 'aborted');
     };
     this.keyupListener = (event: KeyboardEvent) => {
@@ -2588,7 +2349,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
 
     this.scene.add(group);
-    this.taipeiCityGroup = group;
   }
 
   private projectTaipeiLonLat(lon: number, lat: number): Vec2 {
@@ -3216,13 +2976,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private applyLaneResetPose(pose: VehicleResetPose) {
-    const routePoint = this.getRoutePoint(pose.progress);
+    const routePoint = this.getSurfacePoint(pose.progress);
     const safeLateral = this.clamp(
       pose.lateral,
       -this.getLaneDeviationLimit(pose.progress) + this.vehicleHalfWidth,
       this.getLaneDeviationLimit(pose.progress) - this.vehicleHalfWidth,
     );
-    const resetHeading = this.getSurfaceHeading(pose.progress);
+    const resetHeading = this.getHeadingFromDirection(routePoint.dir);
     const vehicleCenter = this.getRouteLateralPoint(routePoint, safeLateral);
 
     this.vehicleX = vehicleCenter.x;
@@ -3594,7 +3354,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     hazard.group.position.set(point.x + point.normal.x * targetLateral, 0, point.z + point.normal.z * targetLateral);
     hazard.group.rotation.y = this.getSceneYawForDirection(point.dir);
 
-    this.hazardSpawnCount++;
     this.eventResults.push(hazard.result);
     this.flashRed();
     if (this.hud) this.hud.event.textContent = hazard.result.label;
@@ -4093,7 +3852,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
     this.camera.up.set(0, 1, 0);
     this.camera.lookAt(lookAt);
-    this.cameraRoll = 0;
 
     const targetFov = this.cameraMode === 'third-person'
       ? this.baseCameraFov - 3
@@ -4267,45 +4025,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     };
   }
 
-  private getInputDeviceText(input: DrivingInput): string {
-    if (this.controlMode === 'arrow') return this.text.controlArrow;
-    if (this.controlMode === 'wasd') return this.text.controlWasd;
-    if (!('getGamepads' in navigator)) return this.text.gamepadUnsupported;
-    if (input.gamepadName) return this.format(this.text.gamepadConnected, { id: input.gamepadName });
-    if (this.gamepadConnected) return this.text.gamepadWaiting;
-    return this.text.wheelWaiting;
-  }
-
   private getControlMode(value: unknown): DrivingControlMode {
     return value === 'wasd' || value === 'wheel' ? value : 'arrow';
   }
 
   private getLanguage(value: unknown): DrivingLanguage {
     return value === 'en' ? 'en' : 'zh';
-  }
-
-  private getDifficultyLabel(): string {
-    if (this.difficultyPreset === DIFFICULTY_PRESETS.advanced) return this.text.difficultyAdvanced;
-    if (this.difficultyPreset === DIFFICULTY_PRESETS.intermediate) return this.text.difficultyIntermediate;
-    return this.text.difficultyBeginner;
-  }
-
-  private getSteeringHint(): string {
-    if (this.controlMode === 'wasd') return this.text.wasdSteerHint;
-    if (this.controlMode === 'wheel') return this.text.wheelSteerHint;
-    return this.text.arrowSteerHint;
-  }
-
-  private getThrottleHint(): string {
-    if (this.controlMode === 'wasd') return this.text.wasdThrottleHint;
-    if (this.controlMode === 'wheel') return this.text.wheelThrottleHint;
-    return this.text.arrowThrottleHint;
-  }
-
-  private getBrakeHint(): string {
-    if (this.controlMode === 'wasd') return this.text.wasdBrakeHint;
-    if (this.controlMode === 'wheel') return this.text.wheelBrakeHint;
-    return this.text.arrowBrakeHint;
   }
 
   private getHazardLabel(id: HazardId): string {
@@ -4543,14 +4268,20 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return this.getHeadingFromDirection(point.dir);
   }
 
-  private getSurfaceHeading(distance: number): number {
-    return this.getHeadingFromDirection(this.getRouteAt(distance).segment.dir);
-  }
-
   private getRoutePoint(distance: number): RoutePoint {
     const at = this.getRouteAt(distance);
     const { segment, index, local } = at;
     const dir = this.getSmoothedDirection(index, local);
+    return this.makeRoutePoint(at, dir);
+  }
+
+  private getSurfacePoint(distance: number): RoutePoint {
+    const at = this.getRouteAt(distance);
+    return this.makeRoutePoint(at, at.segment.dir);
+  }
+
+  private makeRoutePoint(at: RouteLookup, dir: Vec2): RoutePoint {
+    const { segment, index, local } = at;
     const normal = this.getRouteRightVector(dir);
     return {
       x: segment.start.x + segment.dir.x * local,
