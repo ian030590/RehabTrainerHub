@@ -611,6 +611,7 @@ export function UfovPage({
   const displayRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const skipFinishRef = useRef(false);
+  const allowProgrammaticFullscreenExitRef = useRef(false);
   const autoStartRef = useRef(false);
   const [isRunning, setIsRunning] = useState(false);
   const [instructionSubtest, setInstructionSubtest] = useState<SubtestId | null>(null);
@@ -693,6 +694,7 @@ export function UfovPage({
     setIsRunning(false);
     jsPsychRef.current = null;
     void onSaveRecord?.(record);
+    allowProgrammaticFullscreenExitRef.current = true;
     void exitFullscreenIfActive();
   }, [labels, moduleId, onSaveRecord]);
 
@@ -743,6 +745,10 @@ export function UfovPage({
   };
 
   const abortRun = useCallback(() => {
+    if (allowProgrammaticFullscreenExitRef.current) {
+      allowProgrammaticFullscreenExitRef.current = false;
+      return;
+    }
     skipFinishRef.current = true;
     if (jsPsychRef.current) {
       jsPsychRef.current.abortExperiment();
@@ -760,7 +766,6 @@ export function UfovPage({
   useTrainingAbort({
     active: isRunning || instructionSubtest !== null,
     onAbort: abortRun,
-    abortOnFullscreenExit: false,
   });
 
   useEffect(() => {
