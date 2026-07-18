@@ -6,6 +6,7 @@ import { SoundManager } from '../../utils/soundManager';
 import { DIFFICULTY_PRESETS, HAZARD_TEMPLATES } from './driving/driving-hazards';
 import {
   DRIVING_ROUTE,
+  DRIVING_ROUTE_VARIANTS,
   buildDrivingRoute,
   pickRandomDrivingRoute,
   projectTaipeiLonLat,
@@ -243,6 +244,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private hud: {
     status: HTMLDivElement;
+    route: HTMLDivElement;
     speed: HTMLDivElement;
     distance: HTMLDivElement;
     view?: HTMLDivElement;
@@ -264,6 +266,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly maxVehicleSpeed = 18;
   private readonly baseCameraFov = 68;
   private readonly initialRouteDistance = 18;
+  private readonly routeTurnBlendDistance = 14;
   private readonly firstPersonCameraForwardOffset = 0.45;
   private readonly firstPersonCameraHeight = 2.05;
   private readonly firstPersonCameraLookAhead = 35;
@@ -809,11 +812,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     });
 
     const status = document.createElement('div');
+    const route = document.createElement('div');
     const speed = document.createElement('div');
     const distance = document.createElement('div');
     const view = document.createElement('div');
     const event = document.createElement('div');
     status.textContent = this.text.taskDelivery;
+    route.textContent = this.getRouteHudText();
     speed.textContent = '0 km/h';
     distance.textContent = '0 m';
     view.textContent = this.getCameraModeText();
@@ -838,6 +843,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       backdropFilter: 'blur(4px)',
     });
     Object.assign(status.style, { fontWeight: '800' });
+    Object.assign(route.style, {
+      color: 'rgba(191,219,254,0.95)',
+      fontSize: '12px',
+      fontWeight: '800',
+      overflowWrap: 'anywhere',
+    });
     Object.assign(event.style, { color: 'rgba(226,232,240,0.92)' });
     const metrics = document.createElement('div');
     Object.assign(metrics.style, {
@@ -849,7 +860,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       fontWeight: '700',
     });
     metrics.append(speed, distance, view);
-    hudPanel.append(status, metrics, event);
+    hudPanel.append(status, route, metrics, event);
 
     const redFlash = document.createElement('div');
     Object.assign(redFlash.style, {
@@ -880,7 +891,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     hud.append(redFlash, cockpit, hudPanel, miniMapWrapper, blackout);
     root.appendChild(hud);
 
-    this.hud = { status, speed, distance, view, event, redFlash, blackout, cockpit, miniMapWrapper };
+    this.hud = { status, route, speed, distance, view, event, redFlash, blackout, cockpit, miniMapWrapper };
     this.updateCameraModeHud();
   }
 
@@ -1010,7 +1021,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       ctx.lineWidth = widthPx;
       ctx.beginPath();
 
-      const firstPoint = this.getRoutePoint(from);
+      const firstPoint = this.getDrivingLanePoint(from);
       const firstScreen = toScreen(firstPoint.x, firstPoint.z);
       ctx.moveTo(firstScreen.sx, firstScreen.sy);
 
@@ -1019,7 +1030,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         ctx.lineTo(screen.sx, screen.sy);
       });
 
-      const endPoint = this.getRoutePoint(to);
+      const endPoint = this.getDrivingLanePoint(to);
       const endScreen = toScreen(endPoint.x, endPoint.z);
       ctx.lineTo(endScreen.sx, endScreen.sy);
       ctx.stroke();
@@ -1034,7 +1045,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const nextInter = this.intersections.find((iz) => !iz.entered && this.progress < iz.distance);
     if (nextInter) {
-      const point = this.getRoutePoint(nextInter.distance);
+      const point = this.getDrivingLanePoint(nextInter.distance);
       const screen = toScreen(point.x, point.z);
       if (screen.sx > -24 && screen.sx < w + 24 && screen.sy > -24 && screen.sy < h + 24) {
         ctx.fillStyle = '#fff';
@@ -1052,7 +1063,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       }
     }
 
-    const destPt = this.getRoutePoint(this.routeLength - 2);
+    const destPt = this.getDrivingLanePoint(this.routeLength - 2);
     const destScreen = toScreen(destPt.x, destPt.z);
     if (destScreen.sx > -18 && destScreen.sx < w + 18 && destScreen.sy > -18 && destScreen.sy < h + 18) {
       ctx.fillStyle = '#ef4444';
@@ -1115,11 +1126,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const samples: MiniMapRouteSample[] = [];
     const step = 3;
     for (let distance = 0; distance <= this.routeLength; distance += step) {
-      const point = this.getRoutePoint(distance);
-      samples.push({ distance, x: point.x, z: point.z });
+      const lanePoint = this.getDrivingLanePoint(distance);
+      samples.push({ distance, x: lanePoint.x, z: lanePoint.z });
     }
 
-    const last = this.getRoutePoint(this.routeLength);
+    const last = this.getDrivingLanePoint(this.routeLength);
     const lastSample = samples[samples.length - 1];
     if (!lastSample || lastSample.distance < this.routeLength) {
       samples.push({ distance: this.routeLength, x: last.x, z: last.z });
@@ -3973,6 +3984,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         ? 'Navigation: continue to destination'
         : '\u5c0e\u822a\uff1a\u76f4\u884c\u524d\u5f80\u7d42\u9ede';
     }
+    this.hud.route.textContent = this.getRouteHudText();
     this.hud.speed.textContent = `${Math.round(this.vehicleSpeed * 3.6)} km/h`;
     this.hud.distance.textContent = `${Math.max(0, Math.round(this.routeLength - this.progress))} m`;
     if (this.hud.view) {
@@ -4031,6 +4043,19 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private getLanguage(value: unknown): DrivingLanguage {
     return value === 'en' ? 'en' : 'zh';
+  }
+
+  private getRouteAlias(): string {
+    const routeId = this.selectedRouteVariant?.id;
+    const index = DRIVING_ROUTE_VARIANTS.findIndex((route) => route.id === routeId);
+    return index >= 0 ? `R${index + 1}` : 'R?';
+  }
+
+  private getRouteHudText(): string {
+    const roadName = this.getRouteAt(this.progress).segment.name;
+    const route = this.getRouteAlias();
+    const road = roadName ? ` / ${roadName}` : '';
+    return this.language === 'en' ? `Route: ${route}${road}` : `路線：${route}${road}`;
   }
 
   private getHazardLabel(id: HazardId): string {
@@ -4101,6 +4126,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     };
   }
 
+  private getDrivingLanePoint(distance: number): Vec2 {
+    return this.getRouteLateralPoint(this.getSurfacePoint(distance), this.getDrivingLaneOffset(distance));
+  }
+
   private getBoxWidthAxis(angle: number): Vec2 {
     return this.getRightVector(angle);
   }
@@ -4154,7 +4183,33 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getInitialRouteDistance(): number {
-    return this.clamp(this.initialRouteDistance, 2, Math.max(2, this.routeLength - 12));
+    return this.getStableRouteDistance(this.initialRouteDistance);
+  }
+
+  private getStableRouteDistance(distance: number): number {
+    const min = 2;
+    const max = Math.max(min, this.routeLength - 12);
+    let safe = this.clamp(distance, min, max);
+    const padding = this.routeTurnBlendDistance + 2;
+
+    for (let attempt = 0; attempt < this.route.length; attempt += 1) {
+      const at = this.getRouteAt(safe);
+      const segmentStart = this.routeSegmentStarts[at.index] ?? 0;
+      const segmentEnd = segmentStart + at.segment.length;
+      let next = safe;
+
+      if (at.index > 0 && safe - segmentStart < padding) {
+        next = segmentStart + padding;
+      }
+      if (at.index < this.route.length - 1 && segmentEnd - safe < padding) {
+        next = segmentEnd + padding;
+      }
+      next = this.clamp(next, min, max);
+      if (Math.abs(next - safe) < 0.001) return next;
+      safe = next;
+    }
+
+    return safe;
   }
 
   private getDrivingLaneOffset(distance: number): number {
@@ -4298,7 +4353,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private getSmoothedDirection(index: number, local: number): Vec2 {
     const segment = this.route[index];
-    const blendDistance = 14;
+    const blendDistance = this.routeTurnBlendDistance;
     if (local > segment.length - blendDistance && this.route[index + 1]) {
       const t = (local - (segment.length - blendDistance)) / blendDistance;
       return this.normalizeDir({
