@@ -485,7 +485,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.finished = false;
     const startDistance = this.getInitialRouteDistance();
     const startPoint = this.getRoutePoint(startDistance);
-    const startHeading = this.getRouteHeading(startDistance);
+    const startHeading = this.getRoadSurfaceHeading(startDistance);
     const startLaneOffset = this.getDrivingLaneOffset(startDistance);
     const startVehicleCenter = this.getRouteLateralPoint(startPoint, startLaneOffset);
     this.vehicleX = startVehicleCenter.x;
@@ -3215,7 +3215,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       -this.getLaneDeviationLimit(pose.progress) + this.vehicleHalfWidth,
       this.getLaneDeviationLimit(pose.progress) - this.vehicleHalfWidth,
     );
-    const resetHeading = this.getRouteHeading(pose.progress);
+    const resetHeading = this.getRoadSurfaceHeading(pose.progress);
     const vehicleCenter = this.getRouteLateralPoint(routePoint, safeLateral);
 
     this.vehicleX = vehicleCenter.x;
@@ -4419,6 +4419,24 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private getRoadWidthAtDistance(distance: number): number {
     return this.getRoutePoint(distance).roadWidth;
+  }
+
+  private getRoadSurfaceHeading(distance: number): number {
+    const clamped = Math.max(0, Math.min(this.routeLength, distance));
+    let index = this.route.length - 1;
+    let low = 0;
+    let high = this.route.length - 1;
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      if ((this.routeSegmentStarts[mid] ?? 0) <= clamped) {
+        index = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    const segment = this.route[index] ?? this.route[0];
+    return segment ? this.getHeadingFromDirection(segment.dir) : 0;
   }
 
   private getInitialRouteDistance(): number {
