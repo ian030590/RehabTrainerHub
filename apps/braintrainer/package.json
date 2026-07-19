@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node ../../scripts/check-trainer-entrypoints.mjs && tsc -b && vite build",
+    "test:entrypoints": "node ../../scripts/check-trainer-entrypoints.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

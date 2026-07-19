@@ -18,7 +18,9 @@ Shared UI, auth helpers, layout, settings, and storage utilities live in `packag
 - `npm run build:hub|stroke|vision|brain`: build one app.
 - `npm --prefix apps/<app> run preview`: preview a built Vite app or hub output.
 
-There is no repository-wide test script at present; use targeted builds as the minimum verification for changes.
+Run `npm run test:entrypoints` for high-risk trainer changes before reporting done. High-risk includes edits to trainer app entrypoints, routing, shared layout/UI imported by trainer entrypoints, or code that could pull Pixi, jsPsych, Three.js, MediaPipe, TensorFlow, or Vosk into an app entry bundle and cause a blank screen.
+
+There is no full test suite at present; use targeted builds as the minimum verification for changes.
 
 ## Coding Style & Naming Conventions
 

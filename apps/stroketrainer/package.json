@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/prune-cloudflare-pages-assets.mjs",
-    "build:full": "tsc -b && vite build",
-    "build:cloudflare": "tsc -b && vite build --mode cloudflare && node scripts/prune-cloudflare-pages-assets.mjs --force",
+    "build": "node ../../scripts/check-trainer-entrypoints.mjs && tsc -b && vite build && node scripts/prune-cloudflare-pages-assets.mjs",
+    "build:full": "node ../../scripts/check-trainer-entrypoints.mjs && tsc -b && vite build",
+    "build:cloudflare": "node ../../scripts/check-trainer-entrypoints.mjs && tsc -b && vite build --mode cloudflare && node scripts/prune-cloudflare-pages-assets.mjs --force",
+    "test:entrypoints": "node ../../scripts/check-trainer-entrypoints.mjs",
+    "test:cognitive-entry": "npm run test:entrypoints",
     "r2:upload-vosk": "node scripts/upload-vosk-to-r2.mjs",
     "vosk:repair-zh-symbols": "node scripts/repair-zh-vosk-symbols.mjs",
     "preview": "vite preview"

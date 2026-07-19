@@ -10,13 +10,13 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "node scripts/build-apps.mjs",
-    "build:cloudflare": "node scripts/build-apps.mjs --cloudflare-pages",
+    "build": "npm run test:entrypoints && node scripts/build-apps.mjs",
+    "build:cloudflare": "npm run test:entrypoints && node scripts/build-apps.mjs --cloudflare-pages",
     "build:brain": "npm --prefix apps/braintrainer run build",
     "build:hub": "npm --prefix apps/rehabtrainerhub run build",
     "build:stroke": "npm --prefix apps/stroketrainer run build",
     "build:vision": "npm --prefix apps/visiontrainer run build",
-    "build:turbo": "turbo run build",
+    "build:turbo": "npm run test:entrypoints && turbo run build",
     "dev": "turbo run dev --parallel",
     "dev:brain": "turbo run dev --filter=@rehab-trainer/braintrainer",
     "dev:hub": "turbo run dev --filter=@rehab-trainer/rehabtrainerhub",
@@ -26,7 +26,8 @@
     "preview:brain": "turbo run preview --filter=@rehab-trainer/braintrainer",
     "preview:hub": "turbo run preview --filter=@rehab-trainer/rehabtrainerhub",
     "preview:stroke": "turbo run preview --filter=@rehab-trainer/stroketrainer",
-    "preview:vision": "turbo run preview --filter=@rehab-trainer/visiontrainer"
+    "preview:vision": "turbo run preview --filter=@rehab-trainer/visiontrainer",
+    "test:entrypoints": "node scripts/check-trainer-entrypoints.mjs"
   },
   "dependencies": {
     "@jspsych/extension-webgazer": "^1.2.0",

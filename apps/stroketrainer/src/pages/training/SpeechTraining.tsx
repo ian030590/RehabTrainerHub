@@ -1,12 +1,15 @@
+import { Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import {
   TrainingModuleSelectionPage,
   type TrainingModuleSelectionItem,
 } from '@rehab-trainer/ui/components/TrainingModuleSelectionPage';
 import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
 import { useT } from '../../i18n';
-import { TongueCatchGame } from './TongueCatchGame';
-import { VoiceDefenderGame } from './VoiceDefenderGame';
+
+const TongueCatchGame = lazy(() => import('./TongueCatchGame').then((module) => ({ default: module.TongueCatchGame })));
+const VoiceDefenderGame = lazy(() => import('./VoiceDefenderGame').then((module) => ({ default: module.VoiceDefenderGame })));
 
 type SpeechModuleId = 'voice-defender' | 'tongue-catch';
 
@@ -34,11 +37,15 @@ export function SpeechTraining() {
     },
   ];
 
-  const activeTraining = activeModule === 'voice-defender'
-    ? <VoiceDefenderGame onExit={closeModule} />
-    : activeModule === 'tongue-catch'
-      ? <TongueCatchGame onExit={closeModule} />
-      : null;
+  const activeTraining = (
+    <Suspense fallback={<AppLoading label={t('app.loading')} />}>
+      {activeModule === 'voice-defender'
+        ? <VoiceDefenderGame onExit={closeModule} />
+        : activeModule === 'tongue-catch'
+          ? <TongueCatchGame onExit={closeModule} />
+          : null}
+    </Suspense>
+  );
 
   return (
     <TrainingModuleSelectionPage

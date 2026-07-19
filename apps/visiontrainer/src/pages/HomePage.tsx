@@ -7,7 +7,6 @@ import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { isCalibrated } from '../utils/settings';
-import { pixiAppManager } from '../utils/pixiPool';
 import { SoundManager } from '../utils/soundManager';
 import { useAppSetting } from '../utils/useAppSetting';
 import {
@@ -23,7 +22,7 @@ function preloadTrainingRoute(): Promise<unknown> {
   return import('./training/TrainingPage');
 }
 
-function preloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknown> {
+async function preloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknown> {
   if (moduleId === 'hart-chart') {
     return import('./training/HartChartPage');
   }
@@ -32,6 +31,7 @@ function preloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknown> {
     return import('../experiment/plugins/three-driving-rehab');
   }
 
+  const { pixiAppManager } = await import('../utils/pixiPool');
   return pixiAppManager.warmUp();
 }
 
