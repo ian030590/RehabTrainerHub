@@ -117,30 +117,13 @@ body.ufov-game-active .ufov-stage {
   place-items: center;
 }
 
-.ufov-fixation-box {
+.ufov-stage-canvas {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: var(--ufov-center-box-size);
-  height: var(--ufov-center-box-size);
-  border: var(--ufov-center-box-border) solid #fff;
-  background: #000;
-  transform: translate(-50%, -50%);
-}
-
-.ufov-central {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  display: grid;
-  place-items: center;
-  width: var(--ufov-center-box-size);
-  height: var(--ufov-center-box-size);
-  border: var(--ufov-center-box-border) solid #fff;
-  border-radius: 0;
-  background: #000;
-  color: #fff;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
 }
 
 .ufov-stimulus-square {
@@ -246,77 +229,6 @@ body.ufov-game-active .ufov-stage {
   height: 72px;
 }
 
-.ufov-central .ufov-vehicle,
-.ufov-target .ufov-vehicle {
-  transform: scale(var(--ufov-stimulus-vehicle-scale));
-}
-
-.ufov-central .ufov-stimulus-square,
-.ufov-target .ufov-stimulus-square {
-  width: 62px;
-  height: 62px;
-}
-
-.ufov-slot {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  overflow: hidden;
-  transform: translate(-50%, -50%);
-}
-
-.ufov-slot.ufov-target {
-  width: 62px;
-  height: 62px;
-  overflow: visible;
-  background: transparent;
-  color: #fff;
-}
-
-.ufov-slot.ufov-distractor {
-  width: 90px;
-  height: 100px;
-  overflow: visible;
-  background: transparent;
-  color: #fff;
-}
-
-.ufov-triangle-distractor {
-  position: relative;
-  display: block;
-  width: var(--ufov-center-box-size);
-  height: 96px;
-}
-
-.ufov-triangle-distractor::before,
-.ufov-triangle-distractor::after {
-  content: '';
-  position: absolute;
-  clip-path: polygon(50% 100%, 0 0, 100% 0);
-}
-
-.ufov-triangle-distractor::before {
-  inset: 0;
-  background: currentColor;
-}
-
-.ufov-triangle-distractor::after {
-  inset: 6px 7px 10px;
-  background: #000;
-}
-
-.ufov-stage-canvas,
-.ufov-mask-canvas {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  image-rendering: pixelated;
-}
-
 .ufov-choice-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(140px, 1fr));
@@ -391,8 +303,8 @@ body.ufov-game-active .ufov-stage {
   place-items: center;
   width: var(--ufov-center-box-size);
   height: var(--ufov-center-box-size);
-  border-radius: 0;
   border: var(--ufov-center-box-border) solid #fff;
+  border-radius: 0;
   background: #000;
   color: #fff;
   transform: translate(-50%, -50%);
@@ -494,11 +406,6 @@ body.ufov-game-active .ufov-stage {
 
   .ufov-panel {
     padding: 16px;
-  }
-
-  .ufov-slot {
-    width: 34px;
-    height: 34px;
   }
 
   .ufov-choice-row {

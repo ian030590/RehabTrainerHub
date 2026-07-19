@@ -345,12 +345,12 @@ function getUfovRuleSections(lang: 'zh' | 'en', subtestTitle: string) {
           items: [
             'Look at the center first and identify whether the central vehicle is a car or truck.',
             'For divided or selective attention trials, also report the peripheral target direction.',
-            'Respond as accurately as possible; practice mode gives feedback, formal mode saves the configured results.',
+            'Practice mode gives feedback; formal mode stops early when stable or at the configured max trials.',
           ],
         },
         {
           title: 'Results',
-          description: 'The result records accuracy, processing speed, direction responses, and the configured trial count.',
+          description: 'The result records accuracy, processing speed, direction responses, and the actual trial count.',
         },
       ]
     : [
@@ -360,12 +360,12 @@ function getUfovRuleSections(lang: 'zh' | 'en', subtestTitle: string) {
           items: [
             '每題先看中央刺激，判斷中央車輛是汽車或卡車。',
             '分散注意或選擇性注意題型中，還要回報周邊目標所在方向。',
-            '練習模式會提供回饋；正式模式會依設定題數保存成績。',
+            '練習模式會提供回饋；正式模式會穩定後提前停止，或跑到設定的最大題數。',
           ],
         },
         {
           title: '成績計算',
-          description: '結算會記錄正確率、處理速度、方向反應與本次設定的題數。',
+          description: '結算會記錄正確率、處理速度、方向反應與本次實際題數。',
         },
       ];
 }
@@ -375,7 +375,7 @@ function getUfovConfigLabels(lang: 'zh' | 'en') {
     ? {
         settingsTitle: 'UFOV Settings',
         chooseSubtest: 'Choose Subtest',
-        chooseTrialCount: 'Choose Trial Count',
+        chooseTrialCount: 'Choose Max Trial Count',
         customTrialCount: 'Custom',
         chooseDirections: 'Choose Stimulus Directions',
         chooseMode: 'Choose Flow',
@@ -396,13 +396,13 @@ function getUfovConfigLabels(lang: 'zh' | 'en') {
         modes: {
           instruction: { label: 'Instructions', description: 'Show instructions only, without scoring.' },
           practice: { label: 'Practice', description: 'Run 5 fixed-speed practice trials with feedback.' },
-          formal: { label: 'Formal Test', description: 'Run the configured fixed-trial test and save results.' },
+          formal: { label: 'Formal Test', description: 'Stop when stable, or at the configured max trials, then save results.' },
         },
       }
     : {
         settingsTitle: 'UFOV 設定',
         chooseSubtest: '選擇 Subtest',
-        chooseTrialCount: '選擇 Trial 數量',
+        chooseTrialCount: '選擇最大 Trial 數量',
         customTrialCount: '自訂',
         chooseDirections: '選擇刺激呈現方向',
         chooseMode: '選擇流程',
@@ -423,7 +423,7 @@ function getUfovConfigLabels(lang: 'zh' | 'en') {
         modes: {
           instruction: { label: '說明', description: '只顯示測驗說明，不計分。' },
           practice: { label: '練習', description: '以固定速度進行 5 題練習並顯示回饋。' },
-          formal: { label: '正式測驗', description: '依設定的固定 trial 數量進行測驗並儲存結果。' },
+          formal: { label: '正式測驗', description: '穩定後提前停止，或達到設定最大 trial 數量後儲存結果。' },
         },
       };
 }

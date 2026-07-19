@@ -81,5 +81,11 @@ export {
   renderUfovCanvasStage,
 } from './ufovCanvas';
 export type { UfovCanvasPhase, UfovCanvasSlot, UfovCanvasStageOptions, UfovCanvasTarget } from './ufovCanvas';
-export { getFastestCorrectStimulusDurationMs, getUfovDirectionAccuracy } from './ufovResults';
-export type { UfovDirectionAccuracy } from './ufovResults';
+export {
+  estimateUfovThresholdMs,
+  getFastestCorrectStimulusDurationMs,
+  getUfovDirectionAccuracy,
+  shouldStopUfovAdaptiveRun,
+  UFOV_ADAPTIVE_STOP,
+} from './ufovResults';
+export type { UfovAdaptiveRunState, UfovDirectionAccuracy } from './ufovResults';

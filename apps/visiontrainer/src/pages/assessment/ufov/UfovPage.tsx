@@ -18,14 +18,17 @@ import {
   type UfovCanvasPhase,
 } from '@rehab-trainer/ui/ufovCanvas';
 import {
+  estimateUfovThresholdMs,
   getFastestCorrectStimulusDurationMs,
   getUfovDirectionAccuracy,
+  shouldStopUfovAdaptiveRun,
+  UFOV_ADAPTIVE_STOP,
   type UfovDirectionAccuracy,
 } from '@rehab-trainer/ui/ufovResults';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { useNavigate } from 'react-router-dom';
-import './UfovPage.css';
+import '@rehab-trainer/ui/components/UfovPage.css';
 
 type CentralTarget = 'car' | 'truck';
 type Direction = 'up' | 'down';
@@ -150,11 +153,6 @@ const SUBTESTS: Subtest[] = [
   { id: 3, hasPeripheral: true, hasDistractors: true },
 ];
 const PRACTICE_TRIALS = 5;
-const MIN_TEST_TRIALS = 12;
-const MAX_TEST_TRIALS = 60;
-const MIN_STABLE_REVERSALS = 6;
-const STABLE_REVERSAL_WINDOW = 6;
-const FAIL_AT_MAX_STREAK_LIMIT = 2;
 const MIN_DURATION_FRAMES = 1;
 const MAX_DURATION_MS = 500;
 const PRACTICE_DURATION_MS = 250;
@@ -325,7 +323,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     run.results.push({
       subtestId: SUBTESTS[run.subtestIndex].id,
       thresholdMs: config.mode === 'formal' && !aborted
-        ? estimateThreshold(run.reversals, run.subtestTrials, framesToMs(run.maxDurationFrames, run.refreshMs))
+        ? estimateUfovThresholdMs(run.reversals, run.subtestTrials, framesToMs(run.maxDurationFrames, run.refreshMs))
         : averageTrialDuration(run.subtestTrials),
       trialCount: run.subtestTrials.filter((item) => !item.practice).length,
       aborted,
@@ -376,11 +374,8 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       run.subtestTrials.push(record);
       run.allTrials.push(record);
       this.updateStaircase(run, record);
-      aborted = run.failAtMaxStreak >= FAIL_AT_MAX_STREAK_LIMIT;
-      const done = aborted
-        || run.testTrial >= MAX_TEST_TRIALS
-        || hasStableThreshold(run)
-        || (run.testTrial >= MIN_TEST_TRIALS && run.limitStreak >= 3);
+      const done = shouldStopUfovAdaptiveRun(run);
+      aborted = run.failAtMaxStreak >= UFOV_ADAPTIVE_STOP.failAtMaxStreakLimit;
       if (done) return aborted;
       await waitMs(this.jsPsych, 250);
     }
@@ -997,31 +992,6 @@ function axisPoint(axis: number, radius: number, compensateStageAspect = false) 
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
-}
-
-function estimateThreshold(reversals: number[], trials: TrialRecord[], fallbackMs: number) {
-  if (reversals.length >= 4) {
-    const recentReversals = reversals.slice(-STABLE_REVERSAL_WINDOW);
-    return recentReversals.reduce((sum, value) => sum + value, 0) / recentReversals.length;
-  }
-
-  const formalDurations = trials
-    .filter((trial) => !trial.practice)
-    .slice(-8)
-    .map((trial) => trial.durationMs);
-  if (formalDurations.length === 0) return fallbackMs;
-  return formalDurations.reduce((sum, value) => sum + value, 0) / formalDurations.length;
-}
-
-function hasStableThreshold(run: RunState) {
-  if (run.testTrial < MIN_TEST_TRIALS) return false;
-  if (run.reversals.length < MIN_STABLE_REVERSALS) return false;
-
-  const recentReversals = run.reversals.slice(-STABLE_REVERSAL_WINDOW);
-  const min = Math.min(...recentReversals);
-  const max = Math.max(...recentReversals);
-  const toleranceMs = Math.max(run.refreshMs * 3, 25);
-  return max - min <= toleranceMs;
 }
 
 function averageTrialDuration(trials: TrialRecord[]) {

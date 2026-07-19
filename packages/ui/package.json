@@ -30,6 +30,7 @@
     "./components/TrainerApp.css": "./src/components/TrainerApp.css",
     "./components/TrainerAppLayout": "./src/components/TrainerAppLayout.tsx",
     "./components/TrainerNavbar": "./src/components/TrainerNavbar.tsx",
+    "./components/UfovPage.css": "./src/components/UfovPage.css",
     "./components/UserSelector": "./src/components/UserSelector.tsx",
     "./csv": "./src/csv.ts",
     "./displayTiming": "./src/displayTiming.ts",
