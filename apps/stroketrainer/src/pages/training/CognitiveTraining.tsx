@@ -1,17 +1,17 @@
+import { Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   TrainingModuleSelectionPage,
   type TrainingModuleSelectionItem,
 } from '@rehab-trainer/ui/components/TrainingModuleSelectionPage';
+import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
 import { useT } from '../../i18n';
-import { MinesweeperGame } from './MinesweeperGame';
-import {
-  ReferenceCognitiveGame,
-  REFERENCE_COGNITIVE_MODULES,
-  type ReferenceGameId,
-  isReferenceGameId,
-} from './ReferenceCognitiveGame';
+import { REFERENCE_COGNITIVE_MODULES } from './cognitive/constants';
+import type { ReferenceGameId } from './cognitive/types';
+
+const MinesweeperGame = lazy(() => import('./MinesweeperGame').then((module) => ({ default: module.MinesweeperGame })));
+const ReferenceCognitiveGame = lazy(() => import('./ReferenceCognitiveGame').then((module) => ({ default: module.ReferenceCognitiveGame })));
 
 type CognitiveModuleId = 'minesweeper' | ReferenceGameId;
 
@@ -37,11 +37,15 @@ export function CognitiveTraining() {
     })),
   ];
 
-  const activeTraining = activeModule === 'minesweeper'
-    ? <MinesweeperGame onExit={closeModule} />
-    : activeModule && isReferenceGameId(activeModule)
-      ? <ReferenceCognitiveGame gameId={activeModule} onExit={closeModule} />
-      : null;
+  const activeTraining = (
+    <Suspense fallback={<AppLoading label={t('app.loading')} />}>
+      {activeModule === 'minesweeper'
+        ? <MinesweeperGame onExit={closeModule} />
+        : activeModule && isReferenceGameId(activeModule)
+          ? <ReferenceCognitiveGame gameId={activeModule} onExit={closeModule} />
+          : null}
+    </Suspense>
+  );
 
   return (
     <TrainingModuleSelectionPage
@@ -62,4 +66,8 @@ function getRequestedModule(requestedGameId: string | null): CognitiveModuleId |
   if (requestedGameId === 'minesweeper') return 'minesweeper';
   if (isReferenceGameId(requestedGameId)) return requestedGameId;
   return null;
+}
+
+function isReferenceGameId(value: string | null): value is ReferenceGameId {
+  return REFERENCE_COGNITIVE_MODULES.some((module) => module.id === value);
 }
