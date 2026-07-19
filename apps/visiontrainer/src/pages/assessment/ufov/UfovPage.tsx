@@ -8,7 +8,7 @@ import {
   type DisplayRefreshInfo,
 } from '@rehab-trainer/ui/displayTiming';
 import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
-import { exitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
+import { exitFullscreenIfActive, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import {
   drawUfovCanvasStage,
@@ -714,6 +714,8 @@ export function UfovPage({
       : config;
 
     setIsRunning(true);
+    document.body.classList.add('ufov-game-active');
+    await waitForFullscreenLayout();
 
     const jsPsych = initJsPsych({
       display_element: displayElement,
