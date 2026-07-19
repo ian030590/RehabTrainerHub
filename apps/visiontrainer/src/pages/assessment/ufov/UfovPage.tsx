@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
@@ -606,7 +606,7 @@ export function UfovPage({
   const skipFinishRef = useRef(false);
   const allowProgrammaticFullscreenExitRef = useRef(false);
   const autoStartRef = useRef(false);
-  const [isRunning, setIsRunning] = useState(false);
+  const [isRunning, setIsRunning] = useState(autoStart && initialMode !== 'instruction');
   const [instructionSubtest, setInstructionSubtest] = useState<SubtestId | null>(null);
   const [results, setResults] = useState<SubtestResult[]>([]);
   const [resultTrials, setResultTrials] = useState<TrialRecord[]>([]);
@@ -708,14 +708,14 @@ export function UfovPage({
     setResults([]);
     setResultTrials([]);
     setDirectionAccuracy([]);
+    setIsRunning(true);
+    document.body.classList.add('ufov-game-active');
+    await waitForFullscreenLayout();
+
     const measured = await measureDisplayRefreshRate();
     const runConfig = measured.isMobileOrTablet && config.subtestId !== 1
       ? { ...config, subtestId: 1 as SubtestId }
       : config;
-
-    setIsRunning(true);
-    document.body.classList.add('ufov-game-active');
-    await waitForFullscreenLayout();
 
     const jsPsych = initJsPsych({
       display_element: displayElement,
@@ -769,14 +769,14 @@ export function UfovPage({
   });
 
   useEffect(() => {
-    if (!autoStart || autoStartRef.current || isRunning || savedRecord) return;
+    if (!autoStart || autoStartRef.current || savedRecord) return;
     autoStartRef.current = true;
     if (initialMode === 'instruction') {
       setInstructionSubtest(initialSubtestId);
       return;
     }
     void startRun({ subtestId: initialSubtestId, mode: initialMode });
-  }, [autoStart, initialMode, initialSubtestId, isRunning, savedRecord]);
+  }, [autoStart, initialMode, initialSubtestId, savedRecord]);
 
   useEffect(() => () => {
     if (jsPsychRef.current) {
@@ -787,7 +787,7 @@ export function UfovPage({
     void exitFullscreenIfActive();
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.body.classList.toggle('ufov-game-active', isRunning);
     return () => document.body.classList.remove('ufov-game-active');
   }, [isRunning]);
