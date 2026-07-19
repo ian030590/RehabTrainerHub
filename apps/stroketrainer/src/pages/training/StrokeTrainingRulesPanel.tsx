@@ -240,6 +240,150 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
           'The session ends when the tiles are in order.',
         ],
       );
+    case 'sudoku':
+      return buildReferenceRules(
+        isZh,
+        '填入空白數字，讓每列、每行與每個宮格都不重複。',
+        'Fill blank numbers so every row, column, and box has no repeats.',
+        ['點擊空格會依序切換可用數字。', '全部空格填到正確答案後完成訓練。'],
+        ['Tap a blank cell to cycle its value.', 'The session ends when every blank matches the solution.'],
+      );
+    case 'latin-square':
+      return buildReferenceRules(
+        isZh,
+        '填入空白數字，讓每列與每行都各出現一次每個數字。',
+        'Fill blanks so each row and column contains each number once.',
+        ['點擊空格切換數字。', '完成正確方格後進入結算。'],
+        ['Tap blanks to cycle numbers.', 'The session ends when the square is correct.'],
+      );
+    case 'magic-square':
+      return buildReferenceRules(
+        isZh,
+        '補上數字，讓列、行與對角線加總一致。',
+        'Complete the grid so rows, columns, and diagonals have the same sum.',
+        ['點擊空格切換數字。', '完成正確方陣後進入結算。'],
+        ['Tap blanks to cycle numbers.', 'The session ends when the magic square is correct.'],
+      );
+    case 'n-queens':
+      return buildReferenceRules(
+        isZh,
+        '放置指定數量的皇后，且彼此不能互相攻擊。',
+        'Place the required queens so none can attack another.',
+        ['點擊格子放置或移除皇后。', '同行、同列或同斜線會被視為衝突。'],
+        ['Tap a cell to place or remove a queen.', 'Shared rows, columns, or diagonals count as conflicts.'],
+      );
+    case 'knights-tour':
+      return buildReferenceRules(
+        isZh,
+        '依騎士走法移動，讓每個格子只拜訪一次。',
+        'Move like a knight and visit each square once.',
+        ['第一步可點任一格。', '之後每步必須是 L 形騎士移動，且不能回到已拜訪格。'],
+        ['Tap any square to start.', 'Each next move must be an L-shaped knight move to an unvisited square.'],
+      );
+    case 'binary-puzzle':
+      return buildReferenceRules(
+        isZh,
+        '用 0 與 1 完成方格，遵守平衡與不可三連規則。',
+        'Fill the grid with 0s and 1s using balance and no-three-in-a-row rules.',
+        ['點擊空格切換空白、0、1。', '全部空格符合答案後完成訓練。'],
+        ['Tap blanks to cycle empty, 0, and 1.', 'The session ends when the grid is correct.'],
+      );
+    case 'mastermind':
+      return buildReferenceRules(
+        isZh,
+        '用回饋提示推理隱藏色碼。',
+        'Use feedback to deduce the hidden color code.',
+        ['先點上方位置，再點下方顏色。', '送出後會顯示位置正確與顏色正確數量。'],
+        ['Tap a slot, then tap a color.', 'Submit to see exact-position and color-only feedback.'],
+      );
+    case 'bulls-and-cows':
+      return buildReferenceRules(
+        isZh,
+        '用位置與數字提示推理四位不重複數字。',
+        'Deduce the unique four-digit number from position and digit feedback.',
+        ['先點位置，再點數字。', '首位不可為 0，且四個數字不可重複。'],
+        ['Tap a slot, then tap a digit.', 'The first digit cannot be 0 and digits cannot repeat.'],
+      );
+    case 'simon-says':
+      return buildReferenceRules(
+        isZh,
+        '記住顏色亮起順序，並在輪到你時重複。',
+        'Remember the color sequence and repeat it when prompted.',
+        ['觀看階段請不要點擊。', '輸入錯誤會立即結束，完成目標輪數即成功。'],
+        ['Do not tap during the watch phase.', 'A wrong input ends the session; reaching the target round succeeds.'],
+      );
+    case 'tic-tac-toe':
+      return buildReferenceRules(
+        isZh,
+        '與電腦輪流下棋，先連線者獲勝。',
+        'Take turns against the computer and make a line first.',
+        ['你是藍色 X。', '點擊空格落子，電腦會自動回合。'],
+        ['You are the blue X.', 'Tap an empty cell; the computer moves automatically.'],
+      );
+    case 'connect4':
+      return buildReferenceRules(
+        isZh,
+        '投入棋子並搶先連成四個。',
+        'Drop discs and connect four first.',
+        ['點擊欄位投入藍色棋子。', '電腦會自動回合，橫直斜任一方向連四即勝。'],
+        ['Tap a column to drop a blue disc.', 'The computer moves automatically; four in any direction wins.'],
+      );
+    case 'nim':
+      return buildReferenceRules(
+        isZh,
+        '從單一堆中取走物件，避免拿到最後一個。',
+        'Remove objects from one pile while avoiding the final object.',
+        ['點擊某個物件會取走該物件與其後方物件。', '拿走最後一個物件者失敗。'],
+        ['Tap an object to remove it and the objects after it.', 'The player who takes the last object loses.'],
+      );
+    case 'dots-and-boxes':
+      return buildReferenceRules(
+        isZh,
+        '連接兩點成線，完成方盒即可得分。',
+        'Draw lines between dots; completing a box scores a point.',
+        ['點擊點與點之間的線段。', '完成盒子可繼續回合，最後分數較高者成功。'],
+        ['Tap a line between dots.', 'Completing a box gives another turn; higher final score succeeds.'],
+      );
+    case 'hex':
+      return buildReferenceRules(
+        isZh,
+        '搶先連接自己兩側邊界。',
+        'Connect your two sides before the computer connects its sides.',
+        ['你是藍色，目標是連接上方與下方。', '電腦是紅色，會嘗試連接左右兩側。'],
+        ['You are blue and connect top to bottom.', 'The computer is red and connects left to right.'],
+      );
+    case 'set-game':
+      return buildReferenceRules(
+        isZh,
+        '找出三張在每個特徵上都全同或全異的圖卡。',
+        'Find three cards where every feature is all same or all different.',
+        ['依序點選三張圖卡。', '有效組合會替換新卡，錯誤組合會清除選取。'],
+        ['Tap three cards.', 'Valid sets are replaced; invalid selections are cleared.'],
+      );
+    case 'tangram':
+      return buildReferenceRules(
+        isZh,
+        '把七巧板拼片配對到相符輪廓。',
+        'Match tangram pieces to their silhouettes.',
+        ['先點下方拼片，再點上方相符輪廓。', '全部拼片放到正確輪廓後完成訓練。'],
+        ['Tap a lower piece, then tap its matching outline.', 'The session ends when all pieces are placed.'],
+      );
+    case 'sokoban':
+      return buildReferenceRules(
+        isZh,
+        '推動箱子到指定目標格。',
+        'Push boxes onto target cells.',
+        ['點擊相鄰格移動。', '若相鄰格有箱子且後方可通行，就會推動箱子。'],
+        ['Tap an adjacent cell to move.', 'If a box is adjacent and the next cell is clear, it is pushed.'],
+      );
+    case 'maze':
+      return buildReferenceRules(
+        isZh,
+        '在迷宮中從起點走到終點。',
+        'Navigate from the start to the goal.',
+        ['點擊相鄰可通行格移動。', '碰到牆或點非相鄰格會記為錯誤。'],
+        ['Tap an adjacent open cell to move.', 'Walls or non-adjacent taps count as errors.'],
+      );
     case 'voice-defender':
       return isZh
         ? [

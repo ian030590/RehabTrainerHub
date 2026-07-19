@@ -1,6 +1,29 @@
 import type { TranslationKey } from '../../../i18n';
 
-export type ReferenceGameId = 'memory-match' | 'lights-out' | 'reaction-time' | 'whack-a-mole' | 'sliding-puzzle';
+export type ReferenceGameId =
+  | 'memory-match'
+  | 'lights-out'
+  | 'reaction-time'
+  | 'whack-a-mole'
+  | 'sliding-puzzle'
+  | 'sudoku'
+  | 'latin-square'
+  | 'magic-square'
+  | 'n-queens'
+  | 'knights-tour'
+  | 'binary-puzzle'
+  | 'mastermind'
+  | 'bulls-and-cows'
+  | 'simon-says'
+  | 'tic-tac-toe'
+  | 'connect4'
+  | 'nim'
+  | 'dots-and-boxes'
+  | 'hex'
+  | 'set-game'
+  | 'tangram'
+  | 'sokoban'
+  | 'maze';
 
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 export type GamePhase = 'menu' | 'rules' | 'playing' | 'results';
@@ -108,9 +131,214 @@ export interface SlidingState {
   errors: number;
 }
 
+export interface NumberGridState {
+  kind: 'sudoku' | 'latin-square' | 'magic-square' | 'binary-puzzle';
+  size: number;
+  boxSize?: number;
+  solution: number[];
+  values: number[];
+  givens: boolean[];
+  moves: number;
+  errors: number;
+}
+
+export interface NQueensState {
+  kind: 'n-queens';
+  size: number;
+  queens: boolean[];
+  moves: number;
+  errors: number;
+}
+
+export interface KnightsTourState {
+  kind: 'knights-tour';
+  size: number;
+  visited: number[];
+  currentIndex: number | null;
+  moves: number;
+  errors: number;
+}
+
+export interface MastermindAttempt {
+  guess: number[];
+  exact: number;
+  colorOnly: number;
+}
+
+export interface MastermindState {
+  kind: 'mastermind';
+  secret: number[];
+  guess: number[];
+  selectedSlot: number;
+  attempts: MastermindAttempt[];
+  maxAttempts: number;
+  colorCount: number;
+  moves: number;
+  errors: number;
+}
+
+export interface BullsAttempt {
+  guess: number[];
+  bulls: number;
+  cows: number;
+}
+
+export interface BullsAndCowsState {
+  kind: 'bulls-and-cows';
+  secret: number[];
+  guess: number[];
+  selectedSlot: number;
+  attempts: BullsAttempt[];
+  maxAttempts: number;
+  moves: number;
+  errors: number;
+}
+
+export interface SimonState {
+  kind: 'simon-says';
+  sequence: number[];
+  inputIndex: number;
+  litIndex: number | null;
+  showIndex: number;
+  nextStepAt: number;
+  targetRounds: number;
+  status: 'showing' | 'input';
+  moves: number;
+  errors: number;
+}
+
+export interface TicTacToeState {
+  kind: 'tic-tac-toe';
+  size: number;
+  winLength: number;
+  board: Array<'X' | 'O' | null>;
+  moves: number;
+  aiMoves: number;
+  errors: number;
+}
+
+export interface Connect4State {
+  kind: 'connect4';
+  rows: number;
+  cols: number;
+  board: Array<'P' | 'A' | null>;
+  moves: number;
+  aiMoves: number;
+  errors: number;
+}
+
+export interface NimState {
+  kind: 'nim';
+  piles: number[];
+  moves: number;
+  aiMoves: number;
+  errors: number;
+}
+
+export interface DotsAndBoxesState {
+  kind: 'dots-and-boxes';
+  size: number;
+  hLines: boolean[];
+  vLines: boolean[];
+  boxes: Array<'P' | 'A' | null>;
+  moves: number;
+  aiMoves: number;
+  errors: number;
+  playerScore: number;
+  aiScore: number;
+}
+
+export interface HexState {
+  kind: 'hex';
+  size: number;
+  board: number[];
+  moves: number;
+  aiMoves: number;
+  errors: number;
+}
+
+export interface SetCard {
+  id: string;
+  color: number;
+  shape: number;
+  fill: number;
+  count: number;
+}
+
+export interface SetGameState {
+  kind: 'set-game';
+  deck: SetCard[];
+  board: SetCard[];
+  selected: number[];
+  found: number;
+  targetSets: number;
+  moves: number;
+  errors: number;
+}
+
+export interface TangramPiece {
+  id: number;
+  shape: 'large-triangle' | 'medium-triangle' | 'small-triangle' | 'square' | 'parallelogram';
+  placed: boolean;
+}
+
+export interface TangramState {
+  kind: 'tangram';
+  pieces: TangramPiece[];
+  slots: number[];
+  selectedPieceId: number | null;
+  moves: number;
+  errors: number;
+}
+
+export interface SokobanState {
+  kind: 'sokoban';
+  rows: number;
+  cols: number;
+  walls: number[];
+  boxes: number[];
+  targets: number[];
+  player: number;
+  moves: number;
+  pushes: number;
+  errors: number;
+}
+
+export interface MazeCell {
+  top: boolean;
+  right: boolean;
+  bottom: boolean;
+  left: boolean;
+}
+
+export interface MazeState {
+  kind: 'maze';
+  size: number;
+  cells: MazeCell[];
+  current: number;
+  end: number;
+  moves: number;
+  errors: number;
+}
+
 export type CognitiveGameState =
   | MemoryState
   | LightsOutState
   | ReactionState
   | WhackState
-  | SlidingState;
+  | SlidingState
+  | NumberGridState
+  | NQueensState
+  | KnightsTourState
+  | MastermindState
+  | BullsAndCowsState
+  | SimonState
+  | TicTacToeState
+  | Connect4State
+  | NimState
+  | DotsAndBoxesState
+  | HexState
+  | SetGameState
+  | TangramState
+  | SokobanState
+  | MazeState;

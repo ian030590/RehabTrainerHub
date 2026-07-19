@@ -22,6 +22,16 @@ import {
   isLightsAutoSuccess,
 } from './cognitive/lightsOut';
 import {
+  buildLanguageNeutralResultStats,
+  createLanguageNeutralGameState,
+  drawLanguageNeutralGame,
+  getLanguageNeutralFeedbackCounts,
+  handleLanguageNeutralGameTap,
+  isLanguageNeutralAutoSuccess,
+  isLanguageNeutralGameState,
+  updateLanguageNeutralTimedState,
+} from './cognitive/languageNeutralGames';
+import {
   buildMemoryResultStats,
   createMemoryState,
   drawMemory,
@@ -142,6 +152,9 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
         drawSliding(app, state, handleCellTap);
         break;
       default:
+        if (isLanguageNeutralGameState(state)) {
+          drawLanguageNeutralGame(app, state, metricsRef.current.elapsed, handleCellTap, t);
+        }
         break;
     }
   }, [effectiveLimit, t, whackDurationSec]);
@@ -240,6 +253,9 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     if (state.kind === 'lights-out') handleLightsTap(state, index, finishGameRef.current);
     if (state.kind === 'whack-a-mole') handleWhackTap(state, index, metricsRef.current.elapsed);
     if (state.kind === 'sliding-puzzle') handleSlidingTap(state, index, finishGameRef.current);
+    if (isLanguageNeutralGameState(state)) {
+      handleLanguageNeutralGameTap(state, index, metricsRef.current.elapsed, finishGameRef.current);
+    }
     playFeedbackForCountChange(feedbackBefore, getFeedbackCounts(state), jsPsychRef);
     renderRef.current();
   }
@@ -573,6 +589,8 @@ function createInitialState(gameId: ReferenceGameId, difficulty: Difficulty, rea
   if (gameId === 'lights-out') return createLightsState(difficulty);
   if (gameId === 'reaction-time') return createReactionState(reactionTrials);
   if (gameId === 'whack-a-mole') return createWhackState(difficulty);
+  const languageNeutralState = createLanguageNeutralGameState(gameId, difficulty);
+  if (languageNeutralState) return languageNeutralState;
   return createSlidingState(difficulty);
 }
 
@@ -585,6 +603,7 @@ function updateTimedState(
   if (state.kind === 'memory-match') updateMemoryTimedState(state, elapsed, render);
   if (state.kind === 'reaction-time') updateReactionTimedState(state, elapsed, render);
   if (state.kind === 'whack-a-mole') updateWhackTimedState(state, elapsed, render);
+  if (isLanguageNeutralGameState(state)) updateLanguageNeutralTimedState(state, elapsed, render);
 }
 
 function isAutoSuccess(state: CognitiveGameState | null) {
@@ -593,6 +612,7 @@ function isAutoSuccess(state: CognitiveGameState | null) {
   if (state.kind === 'lights-out') return isLightsAutoSuccess(state);
   if (state.kind === 'reaction-time') return isReactionAutoSuccess(state);
   if (state.kind === 'whack-a-mole') return isWhackAutoSuccess(state);
+  if (isLanguageNeutralGameState(state)) return isLanguageNeutralAutoSuccess(state);
   return isSlidingAutoSuccess(state);
 }
 
@@ -601,6 +621,7 @@ function buildResultStats(state: CognitiveGameState): ResultStats {
   if (state.kind === 'lights-out') return buildLightsResultStats(state);
   if (state.kind === 'reaction-time') return buildReactionResultStats(state);
   if (state.kind === 'whack-a-mole') return buildWhackResultStats(state);
+  if (isLanguageNeutralGameState(state)) return buildLanguageNeutralResultStats(state);
   return buildSlidingResultStats(state);
 }
 
@@ -609,6 +630,7 @@ function getFeedbackCounts(state: CognitiveGameState): { success: number; errors
   if (state.kind === 'lights-out') return { success: isLightsAutoSuccess(state) ? 1 : 0, errors: 0 };
   if (state.kind === 'reaction-time') return { success: state.attempts.length, errors: state.falseStarts };
   if (state.kind === 'whack-a-mole') return { success: state.hits, errors: state.misses };
+  if (isLanguageNeutralGameState(state)) return getLanguageNeutralFeedbackCounts(state);
   return { success: state.moves, errors: state.errors };
 }
 
