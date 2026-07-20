@@ -1,73 +1,14 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { zh } from './zh';
-import type { ReactNode } from 'react';
-import type { TranslationKey } from './zh';
+import { createLanguageProvider, type SupportedLanguage } from '@rehab-trainer/ui/i18n/createLanguageProvider';
 import { en } from './en';
+import { zh } from './zh';
 import { STORAGE_PREFIX } from '../utils/settings';
+import type { TranslationKey } from './zh';
 
-type Language = 'zh' | 'en';
+export type Language = SupportedLanguage;
 
-interface LanguageContextType {
-  lang: Language;
-  setLang: (lang: Language) => void;
-  t: (key: TranslationKey, params?: Record<string, string | number>) => string;
-}
+const language = createLanguageProvider<TranslationKey>({
+  dictionaries: { zh, en },
+  storageKey: `${STORAGE_PREFIX}language`,
+});
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-const LANGUAGE_KEY = `${STORAGE_PREFIX}language`;
-
-function detectPreferredLanguage(): Language {
-  const candidates = navigator.languages?.length ? navigator.languages : [navigator.language];
-  for (const candidate of candidates) {
-    const normalized = candidate.toLowerCase();
-    if (normalized.startsWith('zh')) return 'zh';
-    if (normalized.startsWith('en')) return 'en';
-  }
-  return 'zh';
-}
-
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [lang, setLangState] = useState<Language>(() => {
-    const saved = localStorage.getItem(LANGUAGE_KEY);
-    return (saved === 'en' || saved === 'zh') ? saved : detectPreferredLanguage();
-  });
-
-  const setLang = useCallback((newLang: Language) => {
-    setLangState(newLang);
-    localStorage.setItem(LANGUAGE_KEY, newLang);
-  }, []);
-
-  const t = useCallback((key: TranslationKey, params?: Record<string, string | number>): string => {
-    const dictionary = lang === 'en' ? en : zh;
-    let text = dictionary[key];
-
-    // Fallback to key if not found
-    if (!text) return key;
-
-    // Replace parameters if provided e.g., {name} -> 'John'
-    if (params) {
-      Object.entries(params).forEach(([paramKey, value]) => {
-        text = text.replaceAll(`{${paramKey}}`, String(value));
-      });
-    }
-
-    return text;
-  }, [lang]);
-
-  const contextValue = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
-
-  return (
-    <LanguageContext.Provider value={contextValue}>
-      {children}
-    </LanguageContext.Provider>
-  );
-};
-
-export const useT = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useT must be used within a LanguageProvider');
-  }
-  return context;
-};
+export const { LanguageProvider, useT } = language;

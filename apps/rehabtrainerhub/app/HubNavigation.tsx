@@ -20,7 +20,7 @@ import { siteUrls } from './siteUrls';
 import { zhTW, en as enTranslations } from './i18n';
 import type { HubLocale } from './i18n/types';
 
-export type HubNavKey = 'programs' | 'care' | 'education' | 'links' | 'submit';
+export type HubNavKey = 'programs' | 'care' | 'education' | 'links' | 'references' | 'submit';
 export type { HubLocale };
 type FontScale = 'standard' | 'large' | 'extra';
 type Theme = 'light' | 'dark' | 'contrast';
@@ -42,6 +42,7 @@ const defaultLabels: HubNavLabels = {
   care: '安全提醒',
   education: '衛教資訊',
   links: '衛教影片',
+  references: '參考資料',
   submit: '合作投稿',
 };
 
@@ -50,6 +51,7 @@ const navItems: Array<{ key: HubNavKey; href: string }> = [
   { key: 'care', href: '/#care-title' },
   { key: 'education', href: '/education/' },
   { key: 'links', href: '/videos/' },
+  { key: 'references', href: '/references/' },
   { key: 'submit', href: '/collaborate/' },
 ];
 
@@ -120,6 +122,7 @@ function useStoredSetting<T extends string>(
 function getRouteNavKey(pathname: string): HubNavKey | undefined {
   if (pathname.startsWith('/education')) return 'education';
   if (pathname.startsWith('/videos') || pathname.startsWith('/links')) return 'links';
+  if (pathname.startsWith('/references')) return 'references';
   if (pathname.startsWith('/collaborate')) return 'submit';
   return undefined;
 }

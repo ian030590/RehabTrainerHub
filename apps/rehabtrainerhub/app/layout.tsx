@@ -5,6 +5,8 @@ import { createSeoMetadata, organizationJsonLd, siteDescription, websiteJsonLd }
 import { siteUrls } from './siteUrls';
 import './globals.css';
 import '@rehab-trainer/ui/components/AuthPanel.css';
+import '@rehab-trainer/ui/components/GridPageLayout.css';
+import '@rehab-trainer/ui/components/ReferenceListPage.css';
 
 const rootMetadata = createSeoMetadata({
   title: HUB_FULL_NAME,

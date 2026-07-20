@@ -10,6 +10,7 @@ export const en = {
       care: 'Safety Notes',
       education: 'Education',
       links: 'Education Videos',
+      references: 'References',
       submit: 'Collaboration',
     },
     footer: {

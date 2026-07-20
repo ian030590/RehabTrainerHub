@@ -10,6 +10,7 @@ export const zhTW = {
       care: '安全提醒',
       education: '衛教資訊',
       links: '衛教影片',
+      references: '參考資料',
       submit: '合作投稿',
     },
     footer: {

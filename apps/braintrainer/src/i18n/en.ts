@@ -141,7 +141,7 @@ export const en = {
   'settings.sound.off': '✗ Disabled',
   'settings.reset': 'Reset defaults',
   'references.title': 'References',
-  'references.subtitle': 'References used by BrainTrainer training modules.',
+  'references.subtitle': 'References used across training activities.',
   'references.mainConcept.title': 'Main Concept Analysis',
   'references.mainConcept.desc': 'Referenced main-concept analysis training flow and materials from rbcavanaugh/mainConcept',
   'links.title': 'Related Websites',

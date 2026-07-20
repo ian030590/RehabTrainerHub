@@ -383,7 +383,7 @@ export const en: Record<TranslationKey, string> = {
 
   // Credits Page
   'credits.title': 'References',
-  'credits.subtitle': 'Referenced open source projects and resources',
+  'credits.subtitle': 'References used across training activities.',
   'credits.webgazer.title': 'WebGazer.js',
   'credits.webgazer.desc': 'Provides webcam-based eye tracking using machine learning models to estimate user gaze location.',
   'credits.javascriptGames.title': 'JavaScript Cognitive Games',
@@ -900,4 +900,4 @@ export const en: Record<TranslationKey, string> = {
   'links.visionTrainer.desc': 'Visual training system with various exercises.',
   'links.brainTrainer.title': 'BrainTrainer',
   'links.brainTrainer.desc': 'Cognitive training platform for attention, memory, and thinking categories.',
-};
+} satisfies Record<TranslationKey, string>;

@@ -1,21 +1,53 @@
-import { ExternalLinkCard } from '@rehab-trainer/ui/components/ExternalLinkCard';
-import { GridPageLayout } from '@rehab-trainer/ui/components/GridPageLayout';
-import { Icons } from '@rehab-trainer/ui/components/Icons';
+import { ReferenceListPage, type ReferenceListItem } from '@rehab-trainer/ui/components/ReferenceListPage';
+import '@rehab-trainer/ui/components/GridPageLayout.css';
+import '@rehab-trainer/ui/components/ReferenceListPage.css';
 import { useT } from '../i18n';
 
+const labels = {
+  zh: {
+    title: '參考資料',
+    subtitle: '本頁整理各訓練活動使用的參考資料。',
+    githubSection: 'GitHub 專案',
+    literatureSection: '文獻',
+    moduleLabel: '參考 module',
+    githubTypeLabel: 'GitHub 專案',
+    literatureTypeLabel: '文獻',
+    emptyLabel: '這裡目前沒有資料。',
+  },
+  en: {
+    title: 'References',
+    subtitle: 'References used across training activities.',
+    githubSection: 'GitHub Projects',
+    literatureSection: 'Literature',
+    moduleLabel: 'Referenced by module',
+    githubTypeLabel: 'GitHub Project',
+    literatureTypeLabel: 'Literature',
+    emptyLabel: 'No references here yet.',
+  },
+} as const;
+
 export function ReferencesPage() {
-  const { t } = useT();
+  const { lang, t } = useT();
+  const copy = labels[lang];
+
+  const githubItems: ReferenceListItem[] = [
+    {
+      title: t('references.mainConcept.title'),
+      href: 'https://github.com/rbcavanaugh/mainConcept',
+      description: t('references.mainConcept.desc'),
+      actionLabel: 'rbcavanaugh/mainConcept',
+      modules: [
+        `${t('module.thinking.title')} - ${t('module.thinking.mainConcept.title')}`,
+      ],
+    },
+  ];
 
   return (
-    <GridPageLayout title={t('references.title')} subtitle={t('references.subtitle')}>
-      <ExternalLinkCard
-        href="https://github.com/rbcavanaugh/mainConcept"
-        index={1}
-        title={t('references.mainConcept.title')}
-        description={t('references.mainConcept.desc')}
-        actionLabel="rbcavanaugh/mainConcept"
-        actionIcon={<Icons.Github />}
-      />
-    </GridPageLayout>
+    <ReferenceListPage
+      githubItems={githubItems}
+      labels={copy}
+      subtitle={copy.subtitle}
+      title={copy.title}
+    />
   );
 }

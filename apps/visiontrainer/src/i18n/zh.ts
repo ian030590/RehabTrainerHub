@@ -389,8 +389,8 @@ export const zh = {
   'preset.path.peekaboo': '躲貓貓',
 
   // Credits Page
-  'credits.title': '參考來源',
-  'credits.subtitle': '參考的開源專案與資源',
+  'credits.title': '參考資料',
+  'credits.subtitle': '本頁整理各訓練活動使用的參考資料。',
   'credits.webgazer.title': 'WebGazer.js',
   'credits.webgazer.desc': '提供基於攝影機的視線追蹤功能，使用機器學習模型估計使用者注視位置。',
   'credits.fract10.title': '視力評估與螢幕校正',
@@ -471,6 +471,6 @@ export const zh = {
   'hart.qrAlt': '哈特圖手機顯示 QR Code',
   'hart.openDisplay': '在新分頁預覽圖表',
   'hart.close': '關閉',
-};
+} as const;
 
 export type TranslationKey = keyof typeof zh;

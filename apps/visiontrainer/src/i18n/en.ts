@@ -391,7 +391,7 @@ export const en: Record<TranslationKey, string> = {
 
   // Credits Page
   'credits.title': 'References',
-  'credits.subtitle': 'Referenced open source projects and resources',
+  'credits.subtitle': 'References used across training activities.',
   'credits.webgazer.title': 'WebGazer.js',
   'credits.webgazer.desc': 'Provides webcam-based eye tracking using machine learning models to estimate user gaze location.',
   'credits.fract10.title': 'Visual Assessment & Screen Calibration',
@@ -472,4 +472,4 @@ export const en: Record<TranslationKey, string> = {
   'hart.qrAlt': 'QR code for the phone Hart chart',
   'hart.openDisplay': 'Preview chart in a new tab',
   'hart.close': 'Close',
-};
+} satisfies Record<TranslationKey, string>;

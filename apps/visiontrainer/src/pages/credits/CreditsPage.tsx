@@ -1,64 +1,100 @@
-import { ExternalLinkCard } from '@rehab-trainer/ui/components/ExternalLinkCard';
-import { GridPageLayout } from '@rehab-trainer/ui/components/GridPageLayout';
-import { Icons } from '@rehab-trainer/ui/components/Icons';
-import { useT, type TranslationKey } from '../../i18n';
+import { ReferenceListPage, type ReferenceListItem } from '@rehab-trainer/ui/components/ReferenceListPage';
+import '@rehab-trainer/ui/components/GridPageLayout.css';
+import '@rehab-trainer/ui/components/ReferenceListPage.css';
+import { useT } from '../../i18n';
 
-interface CreditItem {
-  titleKey: TranslationKey;
-  descKey: TranslationKey;
-  repo: string;
-  url: string;
-}
+const labels = {
+  zh: {
+    title: '參考資料',
+    subtitle: '本頁整理各訓練活動使用的參考資料。',
+    githubSection: 'GitHub 專案',
+    literatureSection: '文獻',
+    moduleLabel: '參考 module',
+    githubTypeLabel: 'GitHub 專案',
+    literatureTypeLabel: '文獻',
+  },
+  en: {
+    title: 'References',
+    subtitle: 'References used across training activities.',
+    githubSection: 'GitHub Projects',
+    literatureSection: 'Literature',
+    moduleLabel: 'Referenced by module',
+    githubTypeLabel: 'GitHub Project',
+    literatureTypeLabel: 'Literature',
+  },
+} as const;
 
 export function CreditsPage() {
-  const { t } = useT();
+  const { lang, t } = useT();
+  const copy = labels[lang];
+  const visualAssessmentModule = lang === 'en' ? 'Visual Assessment' : '視力評估';
 
-  const credits: CreditItem[] = [
+  const githubItems: ReferenceListItem[] = [
     {
-      titleKey: 'credits.fract10.title',
-      descKey: 'credits.fract10.desc',
-      repo: 'michaelbach/FrACT10',
-      url: 'https://github.com/michaelbach/FrACT10',
+      title: 'WebGazer.js',
+      href: 'https://github.com/brownhci/WebGazer',
+      description: t('credits.webgazer.desc'),
+      actionLabel: 'brownhci/WebGazer',
+      modules: [
+        `${visualAssessmentModule} - ${t('assess.pl.title')}`,
+        t('settings.tab.webgazer'),
+      ],
     },
     {
-      titleKey: 'credits.eyeTraining.title',
-      descKey: 'credits.eyeTraining.desc',
-      repo: 'styts/eye-training',
-      url: 'https://github.com/styts/eye-training',
+      title: t('credits.fract10.title'),
+      href: 'https://github.com/michaelbach/FrACT10',
+      description: t('credits.fract10.desc'),
+      actionLabel: 'michaelbach/FrACT10',
+      modules: [
+        visualAssessmentModule,
+        t('settings.tab.calibration'),
+      ],
     },
     {
-      titleKey: 'credits.foveaflow.title',
-      descKey: 'credits.foveaflow.desc',
-      repo: 'Jesper-N/foveaflow',
-      url: 'https://github.com/Jesper-N/foveaflow',
+      title: t('credits.eyeTraining.title'),
+      href: 'https://github.com/styts/eye-training',
+      description: t('credits.eyeTraining.desc'),
+      actionLabel: 'styts/eye-training',
+      modules: [t('home.module.movingCard.title')],
     },
     {
-      titleKey: 'credits.gaborPatching.title',
-      descKey: 'credits.gaborPatching.desc',
-      repo: 'Fordi/gabor-patching',
-      url: 'https://github.com/Fordi/gabor-patching',
+      title: t('credits.foveaflow.title'),
+      href: 'https://github.com/Jesper-N/foveaflow',
+      description: t('credits.foveaflow.desc'),
+      actionLabel: 'Jesper-N/foveaflow',
+      modules: [t('home.module.oculomotor.title')],
     },
     {
-      titleKey: 'credits.visiontherapy.title',
-      descKey: 'credits.visiontherapy.desc',
-      repo: 'visiontherapy/visiontherapy.github.io',
-      url: 'https://github.com/visiontherapy/visiontherapy.github.io',
+      title: t('credits.gaborPatching.title'),
+      href: 'https://github.com/Fordi/gabor-patching',
+      description: t('credits.gaborPatching.desc'),
+      actionLabel: 'Fordi/gabor-patching',
+      modules: [t('home.module.gaborPatching.title')],
+    },
+    {
+      title: t('credits.visiontherapy.title'),
+      href: 'https://github.com/visiontherapy/visiontherapy.github.io',
+      description: t('credits.visiontherapy.desc'),
+      actionLabel: 'visiontherapy/visiontherapy.github.io',
+      modules: [t('home.module.hartChart.title')],
+    },
+  ];
+
+  const literatureItems: ReferenceListItem[] = [
+    {
+      title: 'Schmetterer, L., Scholl, H., Garhöfer, G., Janeschitz-Kriegl, L., Corvi, F., Sadda, S. R., & Medeiros, F. A. (2023). Endpoints for clinical trials in ophthalmology. Progress in Retinal and Eye Research, 97, 101160. https://doi.org/10.1016/j.preteyeres.2022.101160',
+      href: 'https://doi.org/10.1016/j.preteyeres.2022.101160',
+      modules: [visualAssessmentModule],
     },
   ];
 
   return (
-    <GridPageLayout title={t('credits.title')} subtitle={t('credits.subtitle')}>
-      {credits.map((credit, index) => (
-        <ExternalLinkCard
-          key={credit.url}
-          href={credit.url}
-          index={index + 1}
-          title={t(credit.titleKey)}
-          description={t(credit.descKey)}
-          actionLabel={credit.repo}
-          actionIcon={<Icons.Github />}
-        />
-      ))}
-    </GridPageLayout>
+    <ReferenceListPage
+      githubItems={githubItems}
+      labels={copy}
+      literatureItems={literatureItems}
+      subtitle={copy.subtitle}
+      title={copy.title}
+    />
   );
 }

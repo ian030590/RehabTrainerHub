@@ -381,8 +381,8 @@ export const zh = {
   'preset.path.peekaboo': '躲貓貓',
 
   // Credits Page
-  'credits.title': '參考來源',
-  'credits.subtitle': '參考的開源專案與資源',
+  'credits.title': '參考資料',
+  'credits.subtitle': '本頁整理各訓練活動使用的參考資料。',
   'credits.webgazer.title': 'WebGazer.js',
   'credits.webgazer.desc': '提供基於攝影機的視線追蹤功能，使用機器學習模型估計使用者注視位置。',
   'credits.javascriptGames.title': 'JavaScript 認知遊戲',
@@ -899,6 +899,6 @@ export const zh = {
   'links.visionTrainer.desc': '視覺能力訓練系統，提供多種視覺訓練項目。',
   'links.brainTrainer.title': 'BrainTrainer',
   'links.brainTrainer.desc': '認知訓練平台，整理注意、記憶與思考訓練類別。',
-};
+} as const;
 
 export type TranslationKey = keyof typeof zh;

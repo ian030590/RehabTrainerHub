@@ -1,46 +1,81 @@
-import { ExternalLinkCard } from '@rehab-trainer/ui/components/ExternalLinkCard';
-import { GridPageLayout } from '@rehab-trainer/ui/components/GridPageLayout';
-import { Icons } from '@rehab-trainer/ui/components/Icons';
-import { useT, type TranslationKey } from '../../i18n';
+import { ReferenceListPage, type ReferenceListItem } from '@rehab-trainer/ui/components/ReferenceListPage';
+import '@rehab-trainer/ui/components/GridPageLayout.css';
+import '@rehab-trainer/ui/components/ReferenceListPage.css';
+import { useT } from '../../i18n';
 
-interface CreditItem {
-  titleKey: TranslationKey;
-  descKey: TranslationKey;
-  repo: string;
-  url: string;
-}
+const labels = {
+  zh: {
+    title: '參考資料',
+    subtitle: '本頁整理各訓練活動使用的參考資料。',
+    githubSection: 'GitHub 專案',
+    literatureSection: '文獻',
+    moduleLabel: '參考 module',
+    githubTypeLabel: 'GitHub 專案',
+    literatureTypeLabel: '文獻',
+    emptyLabel: '這裡目前沒有資料。',
+  },
+  en: {
+    title: 'References',
+    subtitle: 'References used across training activities.',
+    githubSection: 'GitHub Projects',
+    literatureSection: 'Literature',
+    moduleLabel: 'Referenced by module',
+    githubTypeLabel: 'GitHub Project',
+    literatureTypeLabel: 'Literature',
+    emptyLabel: 'No references here yet.',
+  },
+} as const;
 
 export function CreditsPage() {
-  const { t } = useT();
+  const { lang, t } = useT();
+  const copy = labels[lang];
+  const cognitiveModule = t('home.module.cognitive.title');
+  const speechModule = t('home.module.speech.title');
 
-  const credits: CreditItem[] = [
+  const githubItems: ReferenceListItem[] = [
     {
-      titleKey: 'credits.javascriptGames.title',
-      descKey: 'credits.javascriptGames.desc',
-      repo: 'muthuspark/javascript-games',
-      url: 'https://github.com/muthuspark/javascript-games',
+      title: t('credits.javascriptGames.title'),
+      href: 'https://github.com/muthuspark/javascript-games',
+      description: t('credits.javascriptGames.desc'),
+      actionLabel: 'muthuspark/javascript-games',
+      modules: [
+        lang === 'en'
+          ? `${cognitiveModule} - reference mini-games`
+          : `${cognitiveModule} - 參考認知小遊戲`,
+      ],
     },
     {
-      titleKey: 'credits.vueMinesweeper.title',
-      descKey: 'credits.vueMinesweeper.desc',
-      repo: 'antfu/vue-minesweeper',
-      url: 'https://github.com/antfu/vue-minesweeper',
+      title: t('credits.vueMinesweeper.title'),
+      href: 'https://github.com/antfu/vue-minesweeper',
+      description: t('credits.vueMinesweeper.desc'),
+      actionLabel: 'antfu/vue-minesweeper',
+      modules: [
+        lang === 'en'
+          ? `${cognitiveModule} - Minesweeper`
+          : `${cognitiveModule} - 踩地雷`,
+      ],
+    },
+    {
+      title: 'Vosk Browser',
+      href: 'https://github.com/ccoreilly/vosk-browser',
+      description: lang === 'en'
+        ? 'Used as the browser speech-recognition runtime for local Vosk model inference.'
+        : '作為瀏覽器端語音辨識 runtime，支援本機 Vosk 模型推論。',
+      actionLabel: 'ccoreilly/vosk-browser',
+      modules: [
+        lang === 'en'
+          ? `${speechModule} - Voice Defender`
+          : `${speechModule} - 語音防衛者`,
+      ],
     },
   ];
 
   return (
-    <GridPageLayout title={t('credits.title')} subtitle={t('credits.subtitle')}>
-      {credits.map((credit, index) => (
-        <ExternalLinkCard
-          key={credit.url}
-          href={credit.url}
-          index={index + 1}
-          title={t(credit.titleKey)}
-          description={t(credit.descKey)}
-          actionLabel={credit.repo}
-          actionIcon={<Icons.Github />}
-        />
-      ))}
-    </GridPageLayout>
+    <ReferenceListPage
+      githubItems={githubItems}
+      labels={copy}
+      subtitle={copy.subtitle}
+      title={copy.title}
+    />
   );
 }

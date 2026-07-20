@@ -10,6 +10,12 @@ export { ExternalLinkCard } from './components/ExternalLinkCard';
 export type { ExternalLinkCardProps } from './components/ExternalLinkCard';
 export { NumberPresetSelector } from './components/NumberPresetSelector';
 export type { NumberPresetSelectorProps } from './components/NumberPresetSelector';
+export { ReferenceListPage } from './components/ReferenceListPage';
+export type {
+  ReferenceListItem,
+  ReferenceListPageLabels,
+  ReferenceListPageProps,
+} from './components/ReferenceListPage';
 export { RehabFooter } from './components/RehabFooter';
 export type { RehabFooterProps } from './components/RehabFooter';
 export { RelatedLinksGridPage } from './components/RelatedLinksGridPage';
@@ -58,6 +64,12 @@ export { useRoutedTrainingModule } from './hooks/useRoutedTrainingModule';
 export type { UseRoutedTrainingModuleArgs } from './hooks/useRoutedTrainingModule';
 export { useTrainingAbort } from './hooks/useTrainingAbort';
 export type { UseTrainingAbortArgs } from './hooks/useTrainingAbort';
+export { createLanguageProvider } from './i18n/createLanguageProvider';
+export type {
+  CreateLanguageProviderOptions,
+  LanguageContextValue,
+  SupportedLanguage,
+} from './i18n/createLanguageProvider';
 export { applyDisplaySettings } from './settings/displaySettings';
 export type { DisplaySettings } from './settings/displaySettings';
 export { defaultSiteUrls, normalizeSiteUrl } from './siteUrls';
