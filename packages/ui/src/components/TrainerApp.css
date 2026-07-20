@@ -1077,7 +1077,8 @@ body[data-ui-font-bold="true"] .app-layout :where(
 .training-result-summary {
   width: min(720px, 100%);
   display: grid;
-  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 220px));
+  justify-content: center;
   gap: 12px;
   margin: 16px 0 18px;
 }
