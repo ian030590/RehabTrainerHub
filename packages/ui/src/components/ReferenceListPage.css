@@ -93,20 +93,26 @@
 .reference-module-list {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: 8px;
 }
 
 .reference-module-chip {
+  box-sizing: border-box;
   max-width: 100%;
-  padding: 6px 10px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
   border: 1px solid var(--border, var(--outline-variant, #c3c6d6));
   border-radius: 8px;
   color: var(--text-primary, var(--text-heading, #172b4d));
   background: var(--bg-panel, var(--surface-container-low, #f3f4f6));
   font-size: calc(13px * var(--ui-font-scale, 1));
   font-weight: var(--ui-font-medium-weight, 600);
-  line-height: 1.35;
+  line-height: 1.25;
   overflow-wrap: anywhere;
+  text-align: left;
 }
 
 .reference-empty {
