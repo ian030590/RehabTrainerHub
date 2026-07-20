@@ -1,7 +1,12 @@
-import { ReferenceListPage, type ReferenceListItem } from '@rehab-trainer/ui/components/ReferenceListPage';
+import {
+  ReferenceListPage,
+  formatReferenceModuleChip,
+  type ReferenceListItem,
+} from '@rehab-trainer/ui/components/ReferenceListPage';
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import '@rehab-trainer/ui/components/ReferenceListPage.css';
 import { useT } from '../../i18n';
+import { REFERENCE_COGNITIVE_MODULES } from '../training/cognitive/constants';
 
 const labels = {
   zh: {
@@ -25,27 +30,20 @@ export function CreditsPage() {
   const copy = labels[lang];
   const cognitiveModule = t('home.module.cognitive.title');
   const speechModule = t('home.module.speech.title');
+  const moduleChip = (tabName: string, moduleName: string) => formatReferenceModuleChip(tabName, moduleName);
 
   const githubItems: ReferenceListItem[] = [
     {
       title: 'muthuspark/javascript-games',
       href: 'https://github.com/muthuspark/javascript-games',
       description: t('credits.javascriptGames.desc'),
-      modules: [
-        lang === 'en'
-          ? `${cognitiveModule} - reference mini-games`
-          : `${cognitiveModule} - 參考認知小遊戲`,
-      ],
+      modules: REFERENCE_COGNITIVE_MODULES.map((module) => moduleChip(cognitiveModule, t(module.titleKey))),
     },
     {
       title: 'antfu/vue-minesweeper',
       href: 'https://github.com/antfu/vue-minesweeper',
       description: t('credits.vueMinesweeper.desc'),
-      modules: [
-        lang === 'en'
-          ? `${cognitiveModule} - Minesweeper`
-          : `${cognitiveModule} - 踩地雷`,
-      ],
+      modules: [moduleChip(cognitiveModule, t('training.minesweeper.title'))],
     },
     {
       title: 'ccoreilly/vosk-browser',
@@ -53,11 +51,7 @@ export function CreditsPage() {
       description: lang === 'en'
         ? 'Used as the browser speech-recognition runtime for local Vosk model inference.'
         : '作為瀏覽器端語音辨識 runtime，支援本機 Vosk 模型推論。',
-      modules: [
-        lang === 'en'
-          ? `${speechModule} - Voice Defender`
-          : `${speechModule} - 語音防衛者`,
-      ],
+      modules: [moduleChip(speechModule, t('voice.title'))],
     },
   ];
 

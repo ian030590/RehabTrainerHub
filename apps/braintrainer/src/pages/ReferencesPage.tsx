@@ -1,4 +1,8 @@
-import { ReferenceListPage, type ReferenceListItem } from '@rehab-trainer/ui/components/ReferenceListPage';
+import {
+  ReferenceListPage,
+  formatReferenceModuleChip,
+  type ReferenceListItem,
+} from '@rehab-trainer/ui/components/ReferenceListPage';
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import '@rehab-trainer/ui/components/ReferenceListPage.css';
 import { useT } from '../i18n';
@@ -23,6 +27,7 @@ const labels = {
 export function ReferencesPage() {
   const { lang, t } = useT();
   const copy = labels[lang];
+  const moduleChip = (tabName: string, moduleName: string) => formatReferenceModuleChip(tabName, moduleName);
 
   const githubItems: ReferenceListItem[] = [
     {
@@ -30,7 +35,7 @@ export function ReferencesPage() {
       href: 'https://github.com/rbcavanaugh/mainConcept',
       description: t('references.mainConcept.desc'),
       modules: [
-        `${t('module.thinking.title')} - ${t('module.thinking.mainConcept.title')}`,
+        moduleChip(t('module.thinking.title'), t('module.thinking.mainConcept.title')),
       ],
     },
   ];

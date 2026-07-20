@@ -1,4 +1,8 @@
-import { ReferenceListPage, type ReferenceListItem } from '@rehab-trainer/ui/components/ReferenceListPage';
+import {
+  ReferenceListPage,
+  formatReferenceModuleChip,
+  type ReferenceListItem,
+} from '@rehab-trainer/ui/components/ReferenceListPage';
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import '@rehab-trainer/ui/components/ReferenceListPage.css';
 import { useT } from '../../i18n';
@@ -21,7 +25,10 @@ const labels = {
 export function CreditsPage() {
   const { lang, t } = useT();
   const copy = labels[lang];
-  const visualAssessmentModule = lang === 'en' ? 'Visual Assessment' : '視力評估';
+  const visualTrainingTab = t('nav.trainingList');
+  const visualAssessmentTab = t('nav.assessment');
+  const webSettingsTab = t('nav.settings');
+  const moduleChip = (tabName: string, moduleName: string) => formatReferenceModuleChip(tabName, moduleName);
 
   const githubItems: ReferenceListItem[] = [
     {
@@ -29,8 +36,8 @@ export function CreditsPage() {
       href: 'https://github.com/brownhci/WebGazer',
       description: t('credits.webgazer.desc'),
       modules: [
-        `${visualAssessmentModule} - ${t('assess.pl.title')}`,
-        t('settings.tab.webgazer'),
+        moduleChip(visualAssessmentTab, t('assess.pl.title')),
+        moduleChip(webSettingsTab, t('settings.tab.webgazer')),
       ],
     },
     {
@@ -38,33 +45,33 @@ export function CreditsPage() {
       href: 'https://github.com/michaelbach/FrACT10',
       description: t('credits.fract10.desc'),
       modules: [
-        visualAssessmentModule,
-        t('settings.tab.calibration'),
+        moduleChip(visualAssessmentTab, t('assess.pl.title')),
+        moduleChip(webSettingsTab, t('settings.tab.calibration')),
       ],
     },
     {
       title: 'styts/eye-training',
       href: 'https://github.com/styts/eye-training',
       description: t('credits.eyeTraining.desc'),
-      modules: [t('home.module.movingCard.title')],
+      modules: [moduleChip(visualTrainingTab, t('home.module.movingCard.title'))],
     },
     {
       title: 'Jesper-N/foveaflow',
       href: 'https://github.com/Jesper-N/foveaflow',
       description: t('credits.foveaflow.desc'),
-      modules: [t('home.module.oculomotor.title')],
+      modules: [moduleChip(visualTrainingTab, t('home.module.oculomotor.title'))],
     },
     {
       title: 'Fordi/eyegame',
       href: 'https://github.com/Fordi/eyegame.git',
       description: t('credits.gaborPatching.desc'),
-      modules: [t('home.module.gaborPatching.title')],
+      modules: [moduleChip(visualTrainingTab, t('home.module.gaborPatching.title'))],
     },
     {
       title: 'visiontherapy/visiontherapy.github.io',
       href: 'https://github.com/visiontherapy/visiontherapy.github.io',
       description: t('credits.visiontherapy.desc'),
-      modules: [t('home.module.hartChart.title')],
+      modules: [moduleChip(visualTrainingTab, t('home.module.hartChart.title'))],
     },
   ];
 
@@ -72,7 +79,7 @@ export function CreditsPage() {
     {
       title: 'Schmetterer, L., Scholl, H., Garhöfer, G., Janeschitz-Kriegl, L., Corvi, F., Sadda, S. R., & Medeiros, F. A. (2023). Endpoints for clinical trials in ophthalmology. Progress in Retinal and Eye Research, 97, 101160. https://doi.org/10.1016/j.preteyeres.2022.101160',
       href: 'https://doi.org/10.1016/j.preteyeres.2022.101160',
-      modules: [visualAssessmentModule],
+      modules: [moduleChip(visualAssessmentTab, t('assess.pl.title'))],
     },
   ];
 

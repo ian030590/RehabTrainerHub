@@ -40,6 +40,14 @@ export default defineConfig({
       '@rehab-trainer/ui': fileURLToPath(new URL('../../packages/ui/src', import.meta.url)),
     },
   },
+  server: {
+    watch: {
+      // Avoid phantom Windows file-watch events causing an endless full-reload loop in dev.
+      usePolling: true,
+      interval: 750,
+      ignored: ['**/tsconfig.json', '**/tsconfig.*.json', '**/*.tsbuildinfo'],
+    },
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

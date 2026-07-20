@@ -20,6 +20,10 @@ export interface ReferenceListPageProps {
   variant?: 'trainer' | 'hub';
 }
 
+export function formatReferenceModuleChip(tabName: string, moduleName: string) {
+  return `{${tabName}-${moduleName}}`;
+}
+
 function ReferenceSection({
   emptyLabel,
   items,
