@@ -8,9 +8,8 @@ export const COGNITIVE_BG = 0xf2f4f3;
 export const COGNITIVE_BORDER = 0xc2c6d4;
 export const COGNITIVE_TEXT = 0x1a1c1e;
 export const COGNITIVE_TEXT_MUTED = 0x424752;
-export const MOBILE_COGNITIVE_BOARD_RATIO = 0.7;
+export const COGNITIVE_BOARD_RATIO = 0.6;
 const MOBILE_COGNITIVE_MAX_MINOR_AXIS = 640;
-const DESKTOP_COGNITIVE_BOARD_MARGIN = 48;
 
 export function drawBackground(app: Application) {
   const bg = new Graphics();
@@ -23,15 +22,9 @@ export function isMobileCognitiveViewport(app: Application) {
 }
 
 export function getResponsiveBoardMaxSize(app: Application) {
-  if (isMobileCognitiveViewport(app)) {
-    return {
-      width: app.renderer.width * MOBILE_COGNITIVE_BOARD_RATIO,
-      height: app.renderer.height * MOBILE_COGNITIVE_BOARD_RATIO,
-    };
-  }
   return {
-    width: app.renderer.width - DESKTOP_COGNITIVE_BOARD_MARGIN,
-    height: app.renderer.height - DESKTOP_COGNITIVE_BOARD_MARGIN,
+    width: app.renderer.width * COGNITIVE_BOARD_RATIO,
+    height: app.renderer.height * COGNITIVE_BOARD_RATIO,
   };
 }
 
@@ -46,12 +39,11 @@ export function getResponsiveBoardBounds(app: Application) {
   };
 }
 
-export function getGridLayout(app: Application, cols: number, rows: number, preferredCell: number, gap: number, padding = 0) {
+export function getGridLayout(app: Application, cols: number, rows: number, _preferredCell: number, gap: number, padding = 0) {
   const boardBounds = getResponsiveBoardBounds(app);
-  const preferredLimit = isMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : preferredCell;
   const maxW = Math.max(1, boardBounds.width - padding * 2);
   const maxH = Math.max(1, boardBounds.height - padding * 2);
-  const cell = Math.floor(Math.min(preferredLimit, (maxW - gap * (cols - 1)) / cols, (maxH - gap * (rows - 1)) / rows));
+  const cell = Math.floor(Math.min((maxW - gap * (cols - 1)) / cols, (maxH - gap * (rows - 1)) / rows));
   const width = cell * cols + gap * (cols - 1);
   const height = cell * rows + gap * (rows - 1);
   return {

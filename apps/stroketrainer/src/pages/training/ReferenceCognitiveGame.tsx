@@ -104,7 +104,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
-  const [sessionLimitSec, setSessionLimitSec] = useState<SessionLimitSeconds>(120);
+  const [sessionLimitSec, setSessionLimitSec] = useState<SessionLimitSeconds>(null);
   const [reactionTrials, setReactionTrials] = useState<number>(8);
   const [whackDurationSec, setWhackDurationSec] = useState<number>(30);
   const [result, setResult] = useState<SessionRecord | null>(null);
