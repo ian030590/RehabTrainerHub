@@ -10,17 +10,32 @@ import { useT } from '../../i18n';
 
 const DrawingTowerDefenseGame = lazy(() => import('./DrawingTowerDefenseGame').then((module) => ({ default: module.DrawingTowerDefenseGame })));
 const GestureBattlerGame = lazy(() => import('./GestureBattlerGame').then((module) => ({ default: module.GestureBattlerGame })));
+const MotorCortexRehabGame = lazy(() => import('./MotorCortexRehabGame').then((module) => ({ default: module.MotorCortexRehabGame })));
 
-type MotorModuleId = 'drawing-defense' | 'gesture-battler';
+type MotorModuleId = 'drawing-defense' | 'gesture-battler' | 'motor-cortex-rehab';
+
+const motorCortexCopy = {
+  zh: {
+    title: '動作皮質復健訓練',
+    description: '以攝影機追蹤手部位置，練習彈跳球追蹤、垂直/水平活動範圍與隨機觸達，並依表現調整難度。',
+  },
+  en: {
+    title: 'Motor Cortex Rehab',
+    description: 'Use camera hand tracking for bouncing-ball tracking, vertical/horizontal range, and random reach drills with adaptive difficulty.',
+  },
+} as const;
 
 export function MotorTraining() {
-  const { t } = useT();
+  const { lang, t } = useT();
   const [searchParams] = useSearchParams();
   const requestedGameId = searchParams.get('game');
   const requestedModule: MotorModuleId | null =
-    requestedGameId === 'drawing-defense' || requestedGameId === 'gesture-battler'
+    requestedGameId === 'drawing-defense' ||
+    requestedGameId === 'gesture-battler' ||
+    requestedGameId === 'motor-cortex-rehab'
       ? requestedGameId
       : null;
+  const motorCortexLabels = motorCortexCopy[lang];
   const { activeModule, openModule, closeModule } = useRoutedTrainingModule<MotorModuleId>({
     requestedModule,
     basePath: '/motor-training',
@@ -36,6 +51,11 @@ export function MotorTraining() {
       title: t('training.gesture.title'),
       description: t('training.gesture.desc'),
     },
+    {
+      id: 'motor-cortex-rehab',
+      title: motorCortexLabels.title,
+      description: motorCortexLabels.description,
+    },
   ];
 
   const activeTraining = (
@@ -44,7 +64,9 @@ export function MotorTraining() {
         ? <DrawingTowerDefenseGame onExit={closeModule} />
         : activeModule === 'gesture-battler'
           ? <GestureBattlerGame onExit={closeModule} />
-          : null}
+          : activeModule === 'motor-cortex-rehab'
+            ? <MotorCortexRehabGame onExit={closeModule} />
+            : null}
     </Suspense>
   );
 

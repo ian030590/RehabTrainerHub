@@ -123,6 +123,38 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
               description: 'The result records casts, interrupted holds, total duration, and average gesture similarity.',
             },
           ];
+    case 'motor-cortex-rehab':
+      return isZh
+        ? [
+            {
+              title: '玩法',
+              description: '使用攝影機追蹤手部位置，依選擇的治療模組完成追蹤或觸達任務。',
+              items: [
+                '開始後把手放入攝影機畫面，讓手部游標停在目標圓內。',
+                '彈跳球、垂直與水平模組會持續移動目標；隨機觸達模組會在成功維持後換到新位置。',
+                '系統會依連續成功與命中率調整速度、目標大小與維持時間。',
+              ],
+            },
+            {
+              title: '結果紀錄',
+              description: '結果會紀錄訓練模組、追蹤手、命中率、可追蹤率、完成次數、中斷維持與自適應等級。',
+            },
+          ]
+        : [
+            {
+              title: 'How to Play',
+              description: 'Use webcam hand tracking to complete the selected tracking or reaching drill.',
+              items: [
+                'Place the hand in the camera frame and keep the hand cursor inside the target circle.',
+                'Bouncing, vertical, and horizontal modules move continuously; random reach relocates after a steady hold.',
+                'The system adapts speed, target size, and hold time based on streaks and accuracy.',
+              ],
+            },
+            {
+              title: 'Results',
+              description: 'The result records drill, tracking hand, accuracy, tracking visibility, reps, interrupted holds, and adaptive level.',
+            },
+          ];
     case 'minesweeper':
       return isZh
         ? [

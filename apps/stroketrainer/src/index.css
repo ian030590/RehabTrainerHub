@@ -2155,10 +2155,336 @@ body #webgazer-calibrate-container #calibration-point {
   max-width: 720px;
 }
 
+.motor-cortex-game {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(244, 247, 241, 0.96), rgba(230, 238, 229, 0.96)),
+    repeating-linear-gradient(0deg, rgba(47, 133, 90, 0.08) 0 1px, transparent 1px 18px);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  touch-action: none;
+}
+
+.motor-cortex-game:fullscreen {
+  width: 100vw;
+  height: 100vh;
+}
+
+.motor-cortex-menu-panel {
+  width: min(1040px, calc(100vw - 28px));
+}
+
+.motor-cortex-drill-grid {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+}
+
+.motor-cortex-reference-name {
+  width: fit-content;
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 2px;
+  padding: 3px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  border-radius: var(--radius-s);
+  color: var(--accent-dark);
+  background: var(--bg-accent-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.motor-cortex-camera {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 7;
+  width: min(220px, 24vw);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 3px solid rgba(15, 118, 110, 0.72);
+  border-radius: var(--radius-m);
+  background: #10251d;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22);
+}
+
+.motor-cortex-camera-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.motor-cortex-camera video,
+.motor-cortex-camera canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.motor-cortex-camera video {
+  transform: scaleX(-1);
+}
+
+.motor-cortex-camera > span {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 5px 8px;
+  background: rgba(7, 24, 19, 0.82);
+  color: #f0fdfa;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.motor-cortex-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(240, 247, 241, 0.86);
+}
+
+.motor-cortex-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 14px;
+  padding: 18px 18px 20px;
+}
+
+.motor-cortex-hud {
+  width: min(880px, calc(100vw - 280px));
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(92px, 1fr));
+  gap: 8px;
+  margin-left: auto;
+}
+
+.motor-cortex-hud span,
+.motor-cortex-result-summary span {
+  min-width: 0;
+}
+
+.motor-cortex-hud span {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: var(--radius-m);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.motor-cortex-hud small {
+  color: #35534d;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.motor-cortex-hud strong {
+  color: #123f35;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.motor-cortex-stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(33, 80, 66, 0.22);
+  border-radius: var(--radius-m);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 26%, transparent 74%, rgba(255, 255, 255, 0.18)),
+    repeating-linear-gradient(90deg, rgba(20, 83, 45, 0.08) 0 1px, transparent 1px 72px),
+    repeating-linear-gradient(0deg, rgba(20, 83, 45, 0.08) 0 1px, transparent 1px 72px),
+    #e5efdc;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.36);
+}
+
+.motor-cortex-path {
+  position: absolute;
+  display: none;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.12);
+  pointer-events: none;
+}
+
+.motor-cortex-drill-vertical .motor-cortex-path-vertical {
+  top: 8%;
+  bottom: 8%;
+  left: 50%;
+  display: block;
+  width: min(96px, 18vw);
+  transform: translateX(-50%);
+}
+
+.motor-cortex-drill-horizontal .motor-cortex-path-horizontal {
+  top: 50%;
+  right: 8%;
+  left: 8%;
+  display: block;
+  height: min(96px, 18vh);
+  transform: translateY(-50%);
+}
+
+.motor-cortex-target,
+.motor-cortex-hand-cursor {
+  position: absolute;
+  left: var(--motor-cortex-target-x);
+  top: var(--motor-cortex-target-y);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.motor-cortex-target {
+  width: var(--motor-cortex-target-size);
+  height: var(--motor-cortex-target-size);
+  display: grid;
+  place-items: center;
+  border: 4px solid color-mix(in srgb, var(--motor-cortex-accent) 72%, white);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.94) 0 28%, transparent 30%),
+    color-mix(in srgb, var(--motor-cortex-accent) 22%, rgba(255, 255, 255, 0.7));
+  box-shadow:
+    0 0 0 8px color-mix(in srgb, var(--motor-cortex-accent) 12%, transparent),
+    0 16px 32px rgba(15, 23, 42, 0.16);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.motor-cortex-target.is-hit {
+  border-color: #16a34a;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.98) 0 30%, transparent 32%),
+    rgba(187, 247, 208, 0.92);
+  box-shadow:
+    0 0 0 12px rgba(34, 197, 94, 0.18),
+    0 16px 32px rgba(15, 23, 42, 0.16);
+}
+
+.motor-cortex-target span {
+  color: #123f35;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.motor-cortex-target i {
+  position: absolute;
+  inset: 14%;
+  border: 2px dashed rgba(18, 63, 53, 0.32);
+  border-radius: 999px;
+}
+
+.motor-cortex-hand-cursor {
+  left: var(--motor-cortex-hand-x);
+  top: var(--motor-cortex-hand-y);
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(7, 89, 133, 0.86);
+  border-radius: 999px;
+  background: rgba(186, 230, 253, 0.82);
+  opacity: 0;
+  box-shadow: 0 6px 18px rgba(7, 89, 133, 0.24);
+  transition: opacity var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.motor-cortex-hand-cursor.is-visible {
+  opacity: 1;
+}
+
+.motor-cortex-hand-cursor.is-hit {
+  border-color: #16a34a;
+  background: rgba(187, 247, 208, 0.9);
+}
+
+.motor-cortex-hand-cursor span {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  padding: 3px 6px;
+  border-radius: var(--radius-s);
+  background: rgba(7, 24, 19, 0.78);
+  color: #f8fafc;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.motor-cortex-instruction {
+  width: min(680px, 100%);
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 12px 14px;
+  border: 1px solid rgba(15, 118, 110, 0.24);
+  border-radius: var(--radius-m);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+}
+
+.motor-cortex-instruction strong {
+  color: #123f35;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.motor-cortex-instruction span,
+.motor-cortex-instruction small {
+  color: #35534d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.motor-cortex-hold-meter {
+  grid-column: 1 / -1;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.12);
+}
+
+.motor-cortex-hold-meter i {
+  display: block;
+  width: var(--motor-cortex-hold-progress);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f766e, #f59e0b);
+  transition: width 80ms linear;
+}
+
+.motor-cortex-results-container {
+  z-index: 12;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.96)),
+    radial-gradient(circle at 18% 28%, rgba(45, 212, 191, 0.18), transparent 36%);
+}
+
+.motor-cortex-results-container .results-table {
+  max-width: 820px;
+}
+
 .drawing-defense-phase-menu,
 .cognitive-reference-phase-menu,
 .minesweeper-phase-menu,
 .gesture-battler-phase-menu,
+.motor-cortex-phase-menu,
 .tongue-catch-phase-menu {
   background: transparent !important;
   color: inherit;
@@ -2170,6 +2496,7 @@ body #webgazer-calibrate-container #calibration-point {
 .cognitive-reference-phase-menu > :not(.training-panel):not(.app-dialog-overlay),
 .minesweeper-phase-menu > :not(.training-panel):not(.app-dialog-overlay),
 .gesture-battler-phase-menu > :not(.training-panel):not(.app-dialog-overlay),
+.motor-cortex-phase-menu > :not(.training-panel):not(.app-dialog-overlay),
 .tongue-catch-phase-menu > :not(.training-panel):not(.app-dialog-overlay) {
   visibility: hidden;
   pointer-events: none;
@@ -2282,6 +2609,70 @@ body #webgazer-calibrate-container #calibration-point {
   }
 
   .gesture-result-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .motor-cortex-menu-panel {
+    width: min(100%, calc(100vw - 24px));
+  }
+
+  .motor-cortex-drill-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .motor-cortex-camera {
+    top: 9px;
+    left: 9px;
+    width: 120px;
+    border-width: 2px;
+  }
+
+  .motor-cortex-camera > span {
+    padding: 3px;
+    font-size: 8px;
+  }
+
+  .motor-cortex-play {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .motor-cortex-hud {
+    width: calc(100vw - 148px);
+    min-height: 54px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .motor-cortex-hud span {
+    min-height: 46px;
+    padding: 6px 8px;
+  }
+
+  .motor-cortex-hud small {
+    font-size: 9px;
+  }
+
+  .motor-cortex-hud strong {
+    font-size: 16px;
+  }
+
+  .motor-cortex-stage {
+    border-radius: var(--radius-s);
+  }
+
+  .motor-cortex-instruction {
+    min-height: 68px;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .motor-cortex-instruction span {
+    grid-column: 1 / -1;
+  }
+
+  .motor-cortex-result-summary {
     grid-template-columns: 1fr;
   }
 

@@ -28,11 +28,21 @@ const labels = {
 export function CreditsPage() {
   const { lang, t } = useT();
   const copy = labels[lang];
+  const motorModule = t('home.module.motor.title');
   const cognitiveModule = t('home.module.cognitive.title');
   const speechModule = t('home.module.speech.title');
   const moduleChip = (tabName: string, moduleName: string) => formatReferenceModuleChip(tabName, moduleName);
+  const motorCortexTitle = lang === 'en' ? 'Motor Cortex Rehab' : '動作皮質復健訓練';
 
   const githubItems: ReferenceListItem[] = [
+    {
+      title: 'ericosborne97/MotorCortexRehabilitationProgram',
+      href: 'https://github.com/ericosborne97/MotorCortexRehabilitationProgram',
+      description: lang === 'en'
+        ? 'Camera-based physical therapy companion used as the reference for hand-tracking motor rehab drills, adaptive difficulty, feedback, and session analytics.'
+        : '攝影機手部追蹤物理治療工具，作為手部追蹤動作復健、難度自適應、即時回饋與訓練紀錄的參考。',
+      modules: [moduleChip(motorModule, motorCortexTitle)],
+    },
     {
       title: 'muthuspark/javascript-games',
       href: 'https://github.com/muthuspark/javascript-games',

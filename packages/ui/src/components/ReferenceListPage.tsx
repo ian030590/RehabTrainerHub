@@ -21,7 +21,7 @@ export interface ReferenceListPageProps {
 }
 
 export function formatReferenceModuleChip(tabName: string, moduleName: string) {
-  return `{${tabName}-${moduleName}}`;
+  return `${tabName} - ${moduleName}`;
 }
 
 function ReferenceSection({
