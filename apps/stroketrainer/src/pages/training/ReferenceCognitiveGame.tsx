@@ -200,16 +200,16 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     prepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
 
-    if (appRef.current) resizePixiAppToElement(appRef.current, pixiHostRef.current);
+    const app = appRef.current;
+    if (!app || !(await resizePixiAppToElement(app, pixiHostRef.current))) return;
     metricsRef.current = { elapsed: 0 };
     lastRenderSecondRef.current = -1;
     stateRef.current = createInitialState(gameId, difficulty, reactionTrials);
     setResult(null);
     setPhase('playing');
-    window.setTimeout(() => {
-      renderRef.current();
-      if (stateRef.current?.kind === 'whack-a-mole') scheduleNextWhackTarget(stateRef.current);
-    }, 0);
+    renderRef.current();
+    flushPixiRender();
+    if (stateRef.current?.kind === 'whack-a-mole') scheduleNextWhackTarget(stateRef.current);
   }, [difficulty, enterTrainingFullscreen, gameId, reactionTrials, setPhase]);
 
   const returnToMenu = useCallback(() => {
@@ -575,7 +575,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
             <div className="training-result-summary">
               <span>
                 <small>{t('cognitive.results.result')}</small>
-                <strong>{result.Game_Result === 'Victory' ? t('cognitive.results.victory') : t('cognitive.results.defeat')}</strong>
+                <strong>{formatGameResult(result.Game_Result, t)}</strong>
               </span>
               <span>
                 <small>{t('cognitive.results.elapsed')}</small>
@@ -705,6 +705,12 @@ function formatSeconds(value: number, t: TFunction) {
   return t('training.secondsShort', { value });
 }
 
+function formatGameResult(result: GameResult, t: TFunction) {
+  if (result === 'Victory') return t('cognitive.results.victory');
+  if (result === 'Draw') return t('cognitive.results.draw');
+  return t('cognitive.results.defeat');
+}
+
 function toCsv(records: SessionRecord[]): string {
   const columns = Array.from(new Set(records.flatMap((record) => Object.keys(record))));
   return [
@@ -713,9 +719,25 @@ function toCsv(records: SessionRecord[]): string {
   ].join('\n');
 }
 
-function resizePixiAppToElement(app: Application, element: HTMLElement | null): void {
-  const rect = element?.getBoundingClientRect();
-  const width = Math.max(1, Math.round(rect?.width || window.innerWidth));
-  const height = Math.max(1, Math.round(rect?.height || window.innerHeight));
+async function resizePixiAppToElement(app: Application, element: HTMLElement | null): Promise<boolean> {
+  const size = await measureElementSize(element);
+  if (!size) return false;
+  const { width, height } = size;
   app.renderer.resize(width, height);
+  return true;
+}
+
+async function measureElementSize(element: HTMLElement | null) {
+  for (let frame = 0; frame < 8; frame += 1) {
+    const rect = element?.getBoundingClientRect();
+    const width = Math.round(rect?.width ?? 0);
+    const height = Math.round(rect?.height ?? 0);
+    if (width > 0 && height > 0) return { width, height };
+    await nextFrame();
+  }
+  return null;
+}
+
+function nextFrame() {
+  return new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 }

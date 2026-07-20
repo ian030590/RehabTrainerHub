@@ -686,7 +686,7 @@ function handleTicTacToeTap(state: TicTacToeState, index: number, finishGame: (r
     return;
   }
   if (state.board.every(Boolean)) {
-    finishGame('Defeat');
+    finishGame('Draw');
     return;
   }
   const aiMove = chooseTicTacToeMove(state);
@@ -694,7 +694,8 @@ function handleTicTacToeTap(state: TicTacToeState, index: number, finishGame: (r
     state.board[aiMove] = 'O';
     state.aiMoves += 1;
   }
-  if (checkMarkWin(state.board, state.size, state.winLength, 'O') || state.board.every(Boolean)) finishGame('Defeat');
+  if (checkMarkWin(state.board, state.size, state.winLength, 'O')) finishGame('Defeat');
+  if (state.board.every(Boolean)) finishGame('Draw');
 }
 
 function drawTicTacToe(app: Application, state: TicTacToeState, onTap: (index: number) => void, _t: TFunction) {

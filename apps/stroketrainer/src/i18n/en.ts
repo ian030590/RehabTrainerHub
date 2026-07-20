@@ -752,6 +752,7 @@ export const en: Record<TranslationKey, string> = {
   'cognitive.results.result': 'Result',
   'cognitive.results.victory': 'Victory',
   'cognitive.results.defeat': 'Defeat',
+  'cognitive.results.draw': 'Draw',
   'cognitive.results.elapsed': 'Elapsed Time',
 
   // Minesweeper

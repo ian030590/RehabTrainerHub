@@ -56,7 +56,7 @@ export function playFailureSound(jsPsychSource?: unknown): void {
   playSound('failure', jsPsychSource);
 }
 
-export function playGameEndSound(result: 'Victory' | 'Defeat' | 'Stopped', jsPsychSource?: unknown): void {
+export function playGameEndSound(result: 'Victory' | 'Defeat' | 'Draw' | 'Stopped', jsPsychSource?: unknown): void {
   if (result === 'Victory') playSound('victory', jsPsychSource);
   if (result === 'Defeat') playSound('defeat', jsPsychSource);
 }

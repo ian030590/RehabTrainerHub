@@ -751,6 +751,7 @@ export const zh = {
   'cognitive.results.result': '勝負',
   'cognitive.results.victory': '勝利',
   'cognitive.results.defeat': '失敗',
+  'cognitive.results.draw': '平手',
   'cognitive.results.elapsed': '使用時間',
 
   // Minesweeper

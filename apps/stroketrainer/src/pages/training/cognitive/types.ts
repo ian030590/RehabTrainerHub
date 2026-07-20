@@ -19,7 +19,7 @@ export type ReferenceGameId =
 
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 export type GamePhase = 'menu' | 'rules' | 'playing' | 'results';
-export type GameResult = 'Victory' | 'Defeat';
+export type GameResult = 'Victory' | 'Defeat' | 'Draw';
 export type SessionLimitSeconds = number | null;
 
 export interface ReferenceModuleMeta {
