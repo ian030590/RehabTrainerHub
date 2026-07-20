@@ -384,12 +384,9 @@ export const en: Record<TranslationKey, string> = {
   // Credits Page
   'credits.title': 'References',
   'credits.subtitle': 'References used across training activities.',
-  'credits.webgazer.title': 'WebGazer.js',
   'credits.webgazer.desc': 'Provides webcam-based eye tracking using machine learning models to estimate user gaze location.',
-  'credits.javascriptGames.title': 'JavaScript Cognitive Games',
-  'credits.javascriptGames.desc': 'Referenced various web games implementation from muthuspark/javascript-games',
-  'credits.vueMinesweeper.title': 'Vue Minesweeper',
-  'credits.vueMinesweeper.desc': 'Referenced minesweeper game logic and design from antfu/vue-minesweeper',
+  'credits.javascriptGames.desc': 'Collection of browser mini-game implementations used as a reference for cognitive mini-game flow and interaction patterns.',
+  'credits.vueMinesweeper.desc': 'Minesweeper game logic and board interaction reference.',
 
   // Extra
   'nav.brand': 'Stroke Trainer',

@@ -2,6 +2,7 @@
   "name": "rehab-workspace",
   "private": true,
   "version": "1.0.0",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "packageManager": "npm@11.18.0",
   "description": "Turborepo monorepo for RehabTrainerHub, StrokeTrainer, VisionTrainer, and BrainTrainer.",

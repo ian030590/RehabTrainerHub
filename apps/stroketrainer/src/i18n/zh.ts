@@ -383,12 +383,9 @@ export const zh = {
   // Credits Page
   'credits.title': '參考資料',
   'credits.subtitle': '本頁整理各訓練活動使用的參考資料。',
-  'credits.webgazer.title': 'WebGazer.js',
   'credits.webgazer.desc': '提供基於攝影機的視線追蹤功能，使用機器學習模型估計使用者注視位置。',
-  'credits.javascriptGames.title': 'JavaScript 認知遊戲',
-  'credits.javascriptGames.desc': '參考 muthuspark/javascript-games 的多種網頁小遊戲實作',
-  'credits.vueMinesweeper.title': 'Vue 踩地雷',
-  'credits.vueMinesweeper.desc': '參考 antfu/vue-minesweeper 的踩地雷遊戲邏輯與設計',
+  'credits.javascriptGames.desc': '多種網頁小遊戲實作，作為認知小遊戲操作流程與互動模式參考。',
+  'credits.vueMinesweeper.desc': '踩地雷遊戲邏輯與版面互動參考。',
 
   // Extra
   'nav.brand': 'Stroke Trainer',

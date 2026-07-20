@@ -9,9 +9,6 @@ const labels = {
     subtitle: '本頁整理各訓練活動使用的參考資料。',
     githubSection: 'GitHub 專案',
     literatureSection: '文獻',
-    moduleLabel: '參考 module',
-    githubTypeLabel: 'GitHub 專案',
-    literatureTypeLabel: '文獻',
     emptyLabel: '這裡目前沒有資料。',
   },
   en: {
@@ -19,9 +16,6 @@ const labels = {
     subtitle: 'References used across training activities.',
     githubSection: 'GitHub Projects',
     literatureSection: 'Literature',
-    moduleLabel: 'Referenced by module',
-    githubTypeLabel: 'GitHub Project',
-    literatureTypeLabel: 'Literature',
     emptyLabel: 'No references here yet.',
   },
 } as const;
@@ -34,10 +28,9 @@ export function CreditsPage() {
 
   const githubItems: ReferenceListItem[] = [
     {
-      title: t('credits.javascriptGames.title'),
+      title: 'muthuspark/javascript-games',
       href: 'https://github.com/muthuspark/javascript-games',
       description: t('credits.javascriptGames.desc'),
-      actionLabel: 'muthuspark/javascript-games',
       modules: [
         lang === 'en'
           ? `${cognitiveModule} - reference mini-games`
@@ -45,10 +38,9 @@ export function CreditsPage() {
       ],
     },
     {
-      title: t('credits.vueMinesweeper.title'),
+      title: 'antfu/vue-minesweeper',
       href: 'https://github.com/antfu/vue-minesweeper',
       description: t('credits.vueMinesweeper.desc'),
-      actionLabel: 'antfu/vue-minesweeper',
       modules: [
         lang === 'en'
           ? `${cognitiveModule} - Minesweeper`
@@ -56,12 +48,11 @@ export function CreditsPage() {
       ],
     },
     {
-      title: 'Vosk Browser',
+      title: 'ccoreilly/vosk-browser',
       href: 'https://github.com/ccoreilly/vosk-browser',
       description: lang === 'en'
         ? 'Used as the browser speech-recognition runtime for local Vosk model inference.'
         : '作為瀏覽器端語音辨識 runtime，支援本機 Vosk 模型推論。',
-      actionLabel: 'ccoreilly/vosk-browser',
       modules: [
         lang === 'en'
           ? `${speechModule} - Voice Defender`

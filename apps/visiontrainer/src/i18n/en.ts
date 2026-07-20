@@ -392,18 +392,12 @@ export const en: Record<TranslationKey, string> = {
   // Credits Page
   'credits.title': 'References',
   'credits.subtitle': 'References used across training activities.',
-  'credits.webgazer.title': 'WebGazer.js',
   'credits.webgazer.desc': 'Provides webcam-based eye tracking using machine learning models to estimate user gaze location.',
-  'credits.fract10.title': 'Visual Assessment & Screen Calibration',
-  'credits.fract10.desc': 'Referenced implementation methods and algorithms from michaelbach/FrACT10',
-  'credits.eyeTraining.title': 'Moving Card Training',
-  'credits.eyeTraining.desc': 'Referenced styts/eye-training project',
-  'credits.foveaflow.title': 'Oculomotor Training',
-  'credits.foveaflow.desc': 'Referenced MOT design from Jesper-N/foveaflow',
-  'credits.gaborPatching.title': 'Gabor Patching',
-  'credits.gaborPatching.desc': 'Referenced game mechanics from Fordi/gabor-patching',
-  'credits.visiontherapy.title': 'Hart Chart Training',
-  'credits.visiontherapy.desc': 'Referenced vision therapy training tools and exercises from visiontherapy/visiontherapy.github.io',
+  'credits.fract10.desc': 'Psychophysical visual acuity assessment and screen calibration tool used as a reference for assessment flow and algorithms.',
+  'credits.eyeTraining.desc': 'Eye movement and fixation training project used as an interaction reference for Moving Card Training.',
+  'credits.foveaflow.desc': 'Multiple-object tracking vision training project used as a reference for target movement and tracking design.',
+  'credits.gaborPatching.desc': 'Gabor patch visual recognition game used as a reference for the Gabor Patching training mechanic.',
+  'credits.visiontherapy.desc': 'Vision therapy exercise collection used as a reference for Hart Chart and related vision training content.',
 
   // Extra
   'nav.brand': 'Vision Trainer',

@@ -33,59 +33,66 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
     labels: {
       githubSection: 'GitHub 專案',
       literatureSection: '文獻',
-      moduleLabel: '參考 module',
-      githubTypeLabel: 'GitHub 專案',
-      literatureTypeLabel: '文獻',
     },
     githubItems: [
       {
-        title: 'WebGazer.js',
+        title: 'brownhci/WebGazer',
         href: 'https://github.com/brownhci/WebGazer',
+        description: '基於攝影機的視線追蹤 library，作為視線追蹤校正與 PL 視力評估參考。',
         modules: ['VisionTrainer / 視力評估 - PL', 'VisionTrainer / 視線追蹤校正'],
       },
       {
-        title: 'FrACT10',
+        title: 'michaelbach/FrACT10',
         href: 'https://github.com/michaelbach/FrACT10',
+        description: '心理物理視力評估與螢幕校正工具，作為視力評估流程與演算法參考。',
         modules: ['VisionTrainer / 視力評估', 'VisionTrainer / 螢幕校正'],
       },
       {
         title: 'styts/eye-training',
         href: 'https://github.com/styts/eye-training',
+        description: '眼球移動與注視練習專案，作為移動卡片訓練互動參考。',
         modules: ['VisionTrainer / 移動卡片訓練'],
       },
       {
         title: 'Jesper-N/foveaflow',
         href: 'https://github.com/Jesper-N/foveaflow',
+        description: '多目標追蹤視覺訓練專案，作為眼動訓練目標移動與追蹤設計參考。',
         modules: ['VisionTrainer / 眼動訓練'],
       },
       {
-        title: 'Fordi/gabor-patching',
-        href: 'https://github.com/Fordi/gabor-patching',
+        title: 'Fordi/eyegame',
+        href: 'https://github.com/Fordi/eyegame.git',
+        description: 'Gabor patch 視覺辨識遊戲，作為蓋伯斑塊練習機制參考。',
         modules: ['VisionTrainer / 蓋伯斑塊練習'],
       },
       {
         title: 'visiontherapy/visiontherapy.github.io',
         href: 'https://github.com/visiontherapy/visiontherapy.github.io',
+        description: '視覺治療練習集合，作為哈特圖等視覺訓練內容參考。',
         modules: ['VisionTrainer / 哈特圖訓練'],
       },
       {
         title: 'muthuspark/javascript-games',
         href: 'https://github.com/muthuspark/javascript-games',
+        description: '多種網頁小遊戲實作，作為認知小遊戲操作流程與互動模式參考。',
         modules: ['StrokeTrainer / 認知訓練 - 參考認知小遊戲'],
       },
       {
         title: 'antfu/vue-minesweeper',
         href: 'https://github.com/antfu/vue-minesweeper',
+        description: '踩地雷遊戲邏輯與版面互動參考。',
         modules: ['StrokeTrainer / 認知訓練 - 踩地雷'],
       },
       {
         title: 'ccoreilly/vosk-browser',
         href: 'https://github.com/ccoreilly/vosk-browser',
+        description: '瀏覽器端 Vosk 語音辨識 runtime，用於本機語音模型推論參考。',
         modules: ['StrokeTrainer / 語音訓練 - 語音防衛者'],
       },
       {
         title: 'rbcavanaugh/mainConcept',
         href: 'https://github.com/rbcavanaugh/mainConcept',
+        description: '主旨概念分析訓練題材與評分流程，作為主旨概念訓練參考。',
         modules: ['BrainTrainer / 思考訓練 - 主旨概念訓練'],
       },
     ],
@@ -93,6 +100,7 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
       {
         title: 'Schmetterer, L., Scholl, H., Garhöfer, G., Janeschitz-Kriegl, L., Corvi, F., Sadda, S. R., & Medeiros, F. A. (2023). Endpoints for clinical trials in ophthalmology. Progress in Retinal and Eye Research, 97, 101160. https://doi.org/10.1016/j.preteyeres.2022.101160',
         href: 'https://doi.org/10.1016/j.preteyeres.2022.101160',
+        description: '眼科臨床試驗終點指標綜述，作為視力評估參考文獻。',
         modules: ['VisionTrainer / 視力評估'],
       },
     ],
@@ -103,59 +111,66 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
     labels: {
       githubSection: 'GitHub Projects',
       literatureSection: 'Literature',
-      moduleLabel: 'Referenced by module',
-      githubTypeLabel: 'GitHub Project',
-      literatureTypeLabel: 'Literature',
     },
     githubItems: [
       {
-        title: 'WebGazer.js',
+        title: 'brownhci/WebGazer',
         href: 'https://github.com/brownhci/WebGazer',
+        description: 'Webcam-based eye tracking library used as a reference for gaze calibration and PL visual assessment.',
         modules: ['VisionTrainer / Visual Assessment - PL', 'VisionTrainer / WebGazer Calibration'],
       },
       {
-        title: 'FrACT10',
+        title: 'michaelbach/FrACT10',
         href: 'https://github.com/michaelbach/FrACT10',
+        description: 'Psychophysical visual acuity assessment and screen calibration tool used as a reference for assessment flow and algorithms.',
         modules: ['VisionTrainer / Visual Assessment', 'VisionTrainer / Screen Calibration'],
       },
       {
         title: 'styts/eye-training',
         href: 'https://github.com/styts/eye-training',
+        description: 'Eye movement and fixation training project used as an interaction reference for Moving Card Training.',
         modules: ['VisionTrainer / Moving Card Training'],
       },
       {
         title: 'Jesper-N/foveaflow',
         href: 'https://github.com/Jesper-N/foveaflow',
+        description: 'Multiple-object tracking vision training project used as a reference for target movement and tracking design.',
         modules: ['VisionTrainer / Oculomotor Training'],
       },
       {
-        title: 'Fordi/gabor-patching',
-        href: 'https://github.com/Fordi/gabor-patching',
+        title: 'Fordi/eyegame',
+        href: 'https://github.com/Fordi/eyegame.git',
+        description: 'Gabor patch visual recognition game used as a reference for the Gabor Patching training mechanic.',
         modules: ['VisionTrainer / Gabor Patching'],
       },
       {
         title: 'visiontherapy/visiontherapy.github.io',
         href: 'https://github.com/visiontherapy/visiontherapy.github.io',
+        description: 'Vision therapy exercise collection used as a reference for Hart Chart and related vision training content.',
         modules: ['VisionTrainer / Hart Chart Training'],
       },
       {
         title: 'muthuspark/javascript-games',
         href: 'https://github.com/muthuspark/javascript-games',
+        description: 'Collection of browser mini-game implementations used as a reference for cognitive mini-game flow and interaction patterns.',
         modules: ['StrokeTrainer / Cognitive Training - reference mini-games'],
       },
       {
         title: 'antfu/vue-minesweeper',
         href: 'https://github.com/antfu/vue-minesweeper',
+        description: 'Minesweeper game logic and board interaction reference.',
         modules: ['StrokeTrainer / Cognitive Training - Minesweeper'],
       },
       {
         title: 'ccoreilly/vosk-browser',
         href: 'https://github.com/ccoreilly/vosk-browser',
+        description: 'Browser Vosk speech-recognition runtime used as a reference for local speech model inference.',
         modules: ['StrokeTrainer / Speech Training - Voice Defender'],
       },
       {
         title: 'rbcavanaugh/mainConcept',
         href: 'https://github.com/rbcavanaugh/mainConcept',
+        description: 'Main-concept analysis materials and scoring workflow used as a reference for Main Concept Training.',
         modules: ['BrainTrainer / Thinking Training - Main Concept Training'],
       },
     ],
@@ -163,6 +178,7 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
       {
         title: 'Schmetterer, L., Scholl, H., Garhöfer, G., Janeschitz-Kriegl, L., Corvi, F., Sadda, S. R., & Medeiros, F. A. (2023). Endpoints for clinical trials in ophthalmology. Progress in Retinal and Eye Research, 97, 101160. https://doi.org/10.1016/j.preteyeres.2022.101160',
         href: 'https://doi.org/10.1016/j.preteyeres.2022.101160',
+        description: 'Review of ophthalmology clinical-trial endpoints used as a visual assessment literature reference.',
         modules: ['VisionTrainer / Visual Assessment'],
       },
     ],
@@ -287,6 +303,7 @@ export function ReferencesContent() {
       literatureItems={copy.literatureItems}
       subtitle={copy.subtitle}
       title={copy.title}
+      variant="hub"
     />
   );
 }

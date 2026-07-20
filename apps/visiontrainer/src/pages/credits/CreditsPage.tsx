@@ -9,18 +9,12 @@ const labels = {
     subtitle: '本頁整理各訓練活動使用的參考資料。',
     githubSection: 'GitHub 專案',
     literatureSection: '文獻',
-    moduleLabel: '參考 module',
-    githubTypeLabel: 'GitHub 專案',
-    literatureTypeLabel: '文獻',
   },
   en: {
     title: 'References',
     subtitle: 'References used across training activities.',
     githubSection: 'GitHub Projects',
     literatureSection: 'Literature',
-    moduleLabel: 'Referenced by module',
-    githubTypeLabel: 'GitHub Project',
-    literatureTypeLabel: 'Literature',
   },
 } as const;
 
@@ -31,51 +25,45 @@ export function CreditsPage() {
 
   const githubItems: ReferenceListItem[] = [
     {
-      title: 'WebGazer.js',
+      title: 'brownhci/WebGazer',
       href: 'https://github.com/brownhci/WebGazer',
       description: t('credits.webgazer.desc'),
-      actionLabel: 'brownhci/WebGazer',
       modules: [
         `${visualAssessmentModule} - ${t('assess.pl.title')}`,
         t('settings.tab.webgazer'),
       ],
     },
     {
-      title: t('credits.fract10.title'),
+      title: 'michaelbach/FrACT10',
       href: 'https://github.com/michaelbach/FrACT10',
       description: t('credits.fract10.desc'),
-      actionLabel: 'michaelbach/FrACT10',
       modules: [
         visualAssessmentModule,
         t('settings.tab.calibration'),
       ],
     },
     {
-      title: t('credits.eyeTraining.title'),
+      title: 'styts/eye-training',
       href: 'https://github.com/styts/eye-training',
       description: t('credits.eyeTraining.desc'),
-      actionLabel: 'styts/eye-training',
       modules: [t('home.module.movingCard.title')],
     },
     {
-      title: t('credits.foveaflow.title'),
+      title: 'Jesper-N/foveaflow',
       href: 'https://github.com/Jesper-N/foveaflow',
       description: t('credits.foveaflow.desc'),
-      actionLabel: 'Jesper-N/foveaflow',
       modules: [t('home.module.oculomotor.title')],
     },
     {
-      title: t('credits.gaborPatching.title'),
-      href: 'https://github.com/Fordi/gabor-patching',
+      title: 'Fordi/eyegame',
+      href: 'https://github.com/Fordi/eyegame.git',
       description: t('credits.gaborPatching.desc'),
-      actionLabel: 'Fordi/gabor-patching',
       modules: [t('home.module.gaborPatching.title')],
     },
     {
-      title: t('credits.visiontherapy.title'),
+      title: 'visiontherapy/visiontherapy.github.io',
       href: 'https://github.com/visiontherapy/visiontherapy.github.io',
       description: t('credits.visiontherapy.desc'),
-      actionLabel: 'visiontherapy/visiontherapy.github.io',
       modules: [t('home.module.hartChart.title')],
     },
   ];

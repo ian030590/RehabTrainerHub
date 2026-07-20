@@ -63,3 +63,34 @@ RehabTrainerHub is a home rehabilitation training hub that brings multiple train
 本專案用於復健流程練習與軟體原型展示，不能取代醫療診斷、治療或復健建議。
 
 This project is for rehabilitation workflow practice and software prototyping. It does not replace medical diagnosis, treatment, or rehabilitation advice.
+
+## 授權 / License
+
+本 repository 的原始碼以 GNU Affero General Public License v3.0 授權，SPDX identifier 為 `AGPL-3.0-only`。完整條款請見 [LICENSE.md](LICENSE.md)。
+
+The original source code in this repository is licensed under the GNU Affero General Public License v3.0, SPDX identifier `AGPL-3.0-only`. See [LICENSE.md](LICENSE.md) for the full license text.
+
+GitHub 會依 repository 根目錄的 license 檔案偵測授權。若公開 repository 尚未顯示 AGPL-3.0，請先確認本次新增的 `LICENSE.md` 已推送到預設分支。
+
+GitHub detects repository licenses from the license file in the repository root. If the public repository does not yet show AGPL-3.0, confirm that this `LICENSE.md` file has been pushed to the default branch.
+
+## 第三方參考 / Third-Party References
+
+下列項目是頁面中列名的參考專案或使用的第三方程式庫；它們各自保留原授權。本 repository 的 AGPL-3.0 授權不會重新授權第三方專案本身。
+
+The following projects are referenced by the app pages or used as third-party libraries. They keep their own licenses. This repository's AGPL-3.0 license does not relicense those third-party projects.
+
+| Project | Current license check | Notes |
+| --- | --- | --- |
+| brownhci/WebGazer | `GPL-3.0-or-later` in package metadata; GitHub license API did not classify the custom license file | Compatible with AGPL-3.0 for this web app use; preserve upstream notices. |
+| michaelbach/FrACT10 | `GPL-3.0` | Compatible with AGPL-3.0. |
+| styts/eye-training | No GitHub-detected license and no package license found | Reference only. Do not copy or adapt code/assets unless permission is clarified. |
+| Jesper-N/foveaflow | `MIT` | Permissive; compatible with AGPL-3.0. |
+| Fordi/eyegame | `CC-BY-SA-4.0` | Reference only. If code/assets are copied or adapted, preserve CC BY-SA obligations for that material. |
+| visiontherapy/visiontherapy.github.io | `AGPL-3.0` | Compatible with AGPL-3.0. |
+| muthuspark/javascript-games | `MIT` | Permissive; compatible with AGPL-3.0. |
+| antfu/vue-minesweeper | `MIT` | Permissive; compatible with AGPL-3.0. |
+| ccoreilly/vosk-browser | `Apache-2.0` | Permissive; compatible with AGPL-3.0. |
+| rbcavanaugh/mainConcept | `AGPL-3.0` | Compatible with AGPL-3.0. |
+
+Last checked: 2026-07-20.

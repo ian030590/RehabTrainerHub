@@ -391,18 +391,12 @@ export const zh = {
   // Credits Page
   'credits.title': '參考資料',
   'credits.subtitle': '本頁整理各訓練活動使用的參考資料。',
-  'credits.webgazer.title': 'WebGazer.js',
   'credits.webgazer.desc': '提供基於攝影機的視線追蹤功能，使用機器學習模型估計使用者注視位置。',
-  'credits.fract10.title': '視力評估與螢幕校正',
-  'credits.fract10.desc': '參考 michaelbach/FrACT10 的實作方法與演算法',
-  'credits.eyeTraining.title': '移動卡片訓練',
-  'credits.eyeTraining.desc': '參考 styts/eye-training 專案',
-  'credits.foveaflow.title': '眼動訓練',
-  'credits.foveaflow.desc': '參考 Jesper-N/foveaflow 的多項目標追蹤設計',
-  'credits.gaborPatching.title': '蓋伯斑塊練習',
-  'credits.gaborPatching.desc': '參考 Fordi/gabor-patching 的遊戲機制',
-  'credits.visiontherapy.title': '哈特圖訓練',
-  'credits.visiontherapy.desc': '參考 visiontherapy/visiontherapy.github.io 的視覺治療訓練工具與練習',
+  'credits.fract10.desc': '心理物理視力評估與螢幕校正工具，作為視力評估流程與演算法參考。',
+  'credits.eyeTraining.desc': '眼球移動與注視練習專案，作為移動卡片訓練互動參考。',
+  'credits.foveaflow.desc': '多目標追蹤視覺訓練專案，作為眼動訓練目標移動與追蹤設計參考。',
+  'credits.gaborPatching.desc': 'Gabor patch 視覺辨識遊戲，作為蓋伯斑塊練習機制參考。',
+  'credits.visiontherapy.desc': '視覺治療練習集合，作為哈特圖等視覺訓練內容參考。',
 
   // Extra
   'nav.brand': 'Vision Trainer',

@@ -9,9 +9,6 @@ const labels = {
     subtitle: '本頁整理各訓練活動使用的參考資料。',
     githubSection: 'GitHub 專案',
     literatureSection: '文獻',
-    moduleLabel: '參考 module',
-    githubTypeLabel: 'GitHub 專案',
-    literatureTypeLabel: '文獻',
     emptyLabel: '這裡目前沒有資料。',
   },
   en: {
@@ -19,9 +16,6 @@ const labels = {
     subtitle: 'References used across training activities.',
     githubSection: 'GitHub Projects',
     literatureSection: 'Literature',
-    moduleLabel: 'Referenced by module',
-    githubTypeLabel: 'GitHub Project',
-    literatureTypeLabel: 'Literature',
     emptyLabel: 'No references here yet.',
   },
 } as const;
@@ -32,10 +26,9 @@ export function ReferencesPage() {
 
   const githubItems: ReferenceListItem[] = [
     {
-      title: t('references.mainConcept.title'),
+      title: 'rbcavanaugh/mainConcept',
       href: 'https://github.com/rbcavanaugh/mainConcept',
       description: t('references.mainConcept.desc'),
-      actionLabel: 'rbcavanaugh/mainConcept',
       modules: [
         `${t('module.thinking.title')} - ${t('module.thinking.mainConcept.title')}`,
       ],

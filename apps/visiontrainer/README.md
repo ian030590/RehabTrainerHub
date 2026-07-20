@@ -71,5 +71,5 @@ Deploy the `dist/` directory to any static host, including GitHub Pages.
 - [FrACT10](https://github.com/michaelbach/FrACT10) for visual acuity and calibration references.
 - [styts/eye-training](https://github.com/styts/eye-training) for moving-card training references.
 - [Jesper-N/foveaflow](https://github.com/Jesper-N/foveaflow) for oculomotor training references.
-- [Fordi/gabor-patching](https://github.com/Fordi/gabor-patching) for Gabor patching references.
+- [Fordi/eyegame](https://github.com/Fordi/eyegame.git) for Gabor patching references.
 - [visiontherapy.github.io](https://github.com/visiontherapy/visiontherapy.github.io) for Hart Chart and vision therapy references.
