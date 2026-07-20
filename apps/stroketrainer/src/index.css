@@ -2175,10 +2175,6 @@ body #webgazer-calibrate-container #calibration-point {
   height: 100vh;
 }
 
-.motor-cortex-menu-panel {
-  width: min(1040px, calc(100vw - 28px));
-}
-
 .motor-cortex-drill-grid {
   grid-template-columns: repeat(2, minmax(220px, 1fr));
 }
@@ -2610,10 +2606,6 @@ body #webgazer-calibrate-container #calibration-point {
 
   .gesture-result-summary {
     grid-template-columns: 1fr;
-  }
-
-  .motor-cortex-menu-panel {
-    width: min(100%, calc(100vw - 24px));
   }
 
   .motor-cortex-drill-grid {

@@ -148,9 +148,7 @@ const DURATION_OPTIONS = [45, 60, 90] as const;
 const COPY = {
   zh: {
     title: '動作皮質復健訓練',
-    description: '參考 Motor Cortex Rehabilitation Program 的手部追蹤復健流程，練習追蹤、垂直/水平活動範圍與隨機觸達。',
     configLabel: '攝影機動作訓練設定',
-    startBlocked: '開始前請先選擇訓練使用者，並允許攝影機權限。',
     drill: '訓練模組',
     drillDesc: '選擇這次要練習的手部追蹤任務。',
     difficulty: '自適應起始難度',
@@ -219,9 +217,7 @@ const COPY = {
   },
   en: {
     title: 'Motor Cortex Rehab',
-    description: 'Hand-tracking rehab flow inspired by Motor Cortex Rehabilitation Program: tracking, vertical range, horizontal range, and random reach drills.',
     configLabel: 'Camera Motor Training Settings',
-    startBlocked: 'Select a training user and allow camera permission before starting.',
     drill: 'Training Module',
     drillDesc: 'Choose the hand-tracking task for this session.',
     difficulty: 'Adaptive Start Level',
@@ -682,7 +678,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       </div>
 
       {phase === 'menu' && (
-        <div className="training-panel motor-cortex-menu-panel">
+        <div className="training-panel">
           <TrainingConfigPanel
             label={labels.configLabel}
             title={labels.title}
@@ -849,7 +845,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       )}
 
       {phase === 'rules' && (
-        <div className="training-panel motor-cortex-menu-panel">
+        <div className="training-panel">
           <StrokeTrainingRulesPanel
             gameId="motor-cortex-rehab"
             title={labels.title}
