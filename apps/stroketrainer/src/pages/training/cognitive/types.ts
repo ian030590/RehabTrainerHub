@@ -33,6 +33,7 @@ export interface ReferenceModuleMeta {
 export interface SessionRecord {
   Game_Result: GameResult;
   Total_Duration_Seconds: number;
+  [key: string]: unknown;
 }
 
 export interface RuntimeMetrics {
@@ -92,12 +93,14 @@ export interface WhackState {
   activeIndex: number | null;
   nextTargetAt: number;
   targetExpiresAt: number | null;
+  targetStartedAt: number | null;
   targetMs: number;
   minDelay: number;
   maxDelay: number;
   hits: number;
   misses: number;
   taps: number;
+  hitReactionMs: number[];
 }
 
 export interface SlidingState {

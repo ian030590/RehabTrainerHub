@@ -2,7 +2,9 @@ import { Application, Container, Graphics } from 'pixi.js';
 import { WHACK_CONFIG } from './constants';
 import type { Difficulty, ResultStats, WhackState } from './types';
 import {
+  average,
   getGridLayout,
+  getPointerEventTimestamp,
   isMobileCognitiveViewport,
   randomBetween,
 } from './utils';
@@ -19,44 +21,59 @@ export function createWhackState(difficulty: Difficulty): WhackState {
     kind: 'whack-a-mole',
     gridSize: config.gridSize,
     activeIndex: null,
-    nextTargetAt: 0.6,
+    nextTargetAt: performance.now() + 600,
     targetExpiresAt: null,
+    targetStartedAt: null,
     targetMs: config.targetMs,
     minDelay: config.minDelay,
     maxDelay: config.maxDelay,
     hits: 0,
     misses: 0,
     taps: 0,
+    hitReactionMs: [],
   };
 }
 
-export function handleWhackTap(state: WhackState, index: number, elapsed: number) {
+export function handleWhackTap(state: WhackState, index: number, tapMs: number) {
   state.taps += 1;
   if (state.activeIndex === index) {
     state.hits += 1;
-    scheduleNextTarget(state, elapsed);
-    return;
+    if (state.targetStartedAt !== null) {
+      state.hitReactionMs.push(Math.max(0, Math.round(tapMs - state.targetStartedAt)));
+    }
+    scheduleNextTarget(state, tapMs);
+    return true;
   }
   state.misses += 1;
+  return false;
 }
 
 export function updateWhackTimedState(state: WhackState, elapsed: number, render: () => void) {
-  if (state.activeIndex !== null && state.targetExpiresAt !== null && elapsed >= state.targetExpiresAt) {
-    state.misses += 1;
-    scheduleNextTarget(state, elapsed);
-    render();
-  }
-  if (state.activeIndex === null && elapsed >= state.nextTargetAt) {
-    state.activeIndex = Math.floor(Math.random() * state.gridSize * state.gridSize);
-    state.targetExpiresAt = elapsed + state.targetMs / 1000;
-    render();
-  }
+  void state;
+  void elapsed;
+  void render;
 }
 
-function scheduleNextTarget(state: WhackState, elapsed: number) {
+export function showWhackTarget(state: WhackState, onsetMs: number) {
+  if (state.activeIndex !== null) return false;
+  state.activeIndex = Math.floor(Math.random() * state.gridSize * state.gridSize);
+  state.targetStartedAt = onsetMs;
+  state.targetExpiresAt = onsetMs + state.targetMs;
+  return true;
+}
+
+export function expireWhackTarget(state: WhackState, nowMs: number) {
+  if (state.activeIndex === null) return false;
+  state.misses += 1;
+  scheduleNextTarget(state, nowMs);
+  return true;
+}
+
+function scheduleNextTarget(state: WhackState, nowMs: number) {
   state.activeIndex = null;
   state.targetExpiresAt = null;
-  state.nextTargetAt = elapsed + randomBetween(state.minDelay, state.maxDelay);
+  state.targetStartedAt = null;
+  state.nextTargetAt = nowMs + randomBetween(state.minDelay, state.maxDelay) * 1000;
 }
 
 export function isWhackAutoSuccess(state: WhackState) {
@@ -64,6 +81,8 @@ export function isWhackAutoSuccess(state: WhackState) {
 }
 
 export function buildWhackResultStats(state: WhackState): ResultStats {
+  const avg = average(state.hitReactionMs) ?? 0;
+  const best = state.hitReactionMs.length > 0 ? Math.min(...state.hitReactionMs) : 0;
   return {
     score: Math.max(0, state.hits * 100 - state.misses * 25),
     accuracy: state.taps > 0 ? Math.round((state.hits / state.taps) * 100) : 0,
@@ -71,11 +90,11 @@ export function buildWhackResultStats(state: WhackState): ResultStats {
     attempts: state.taps,
     success: state.hits,
     errors: state.misses,
-    details: { gridSize: state.gridSize, targetMs: state.targetMs },
+    details: { gridSize: state.gridSize, targetMs: state.targetMs, hitReactionMs: state.hitReactionMs, averageMs: avg, bestMs: best },
   };
 }
 
-export function drawWhack(app: Application, state: WhackState, onTap: (index: number) => void) {
+export function drawWhack(app: Application, state: WhackState, onTap: (index: number, tapMs: number) => void) {
   const padding = isMobileCognitiveViewport(app) ? 15 : 20;
   const { cell, gap, startX, startY } = getGridLayout(app, state.gridSize, state.gridSize, 100, 15, padding);
   const board = new Graphics();
@@ -98,7 +117,7 @@ export function drawWhack(app: Application, state: WhackState, onTap: (index: nu
     node.y = y;
     node.eventMode = 'static';
     node.cursor = 'pointer';
-    node.on('pointertap', () => onTap(index));
+    node.on('pointertap', (event) => onTap(index, getPointerEventTimestamp(event)));
     const g = new Graphics();
     g.circle(cell / 2, cell / 2, cell * 0.5).fill(MOLE_HOLE_COLOR);
     g.ellipse(cell / 2, cell * 0.56, cell * 0.42, cell * 0.25).fill({ color: 0x000000, alpha: 0.25 });

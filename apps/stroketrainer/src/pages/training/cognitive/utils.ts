@@ -101,6 +101,12 @@ export function randomBetween(min: number, max: number) {
   return min + Math.random() * (max - min);
 }
 
+export function getPointerEventTimestamp(event: { timeStamp?: number }) {
+  const now = performance.now();
+  const timestamp = Number(event.timeStamp);
+  return Number.isFinite(timestamp) && timestamp > 0 && Math.abs(timestamp - now) < 60_000 ? timestamp : now;
+}
+
 export function shuffle<T>(items: T[]) {
   const next = [...items];
   for (let i = next.length - 1; i > 0; i -= 1) {

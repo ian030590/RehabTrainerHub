@@ -6,6 +6,7 @@ import {
   addText,
   average,
   getResponsiveBoardMaxSize,
+  getPointerEventTimestamp,
   isMobileCognitiveViewport,
 } from './utils';
 
@@ -30,13 +31,22 @@ export function createReactionState(targetTrials: number): ReactionState {
   };
 }
 
-export function handleReactionStateTap(state: ReactionState, elapsed: number, difficulty: Difficulty, finishGame: (result: GameResult) => void) {
+export function handleReactionStateTap(
+  state: ReactionState,
+  tapMs: number,
+  difficulty: Difficulty,
+  finishGame: (result: GameResult) => void,
+  scheduleGo: (delayMs: number, goAtMs: number) => void,
+) {
   if (state.status === 'waiting' || state.status === 'result' || state.status === 'too-early') {
     const cfg = REACTION_CONFIG[difficulty];
+    const delayMs = (cfg.minDelay + Math.random() * (cfg.maxDelay - cfg.minDelay)) * 1000;
+    const goAtMs = performance.now() + delayMs;
     state.status = 'ready';
-    state.goAt = elapsed + cfg.minDelay + Math.random() * (cfg.maxDelay - cfg.minDelay);
+    state.goAt = goAtMs;
     state.goStartedAt = null;
     state.lastReactionMs = null;
+    scheduleGo(delayMs, goAtMs);
     return;
   }
   if (state.status === 'ready') {
@@ -46,7 +56,7 @@ export function handleReactionStateTap(state: ReactionState, elapsed: number, di
     return;
   }
   if (state.status === 'go' && state.goStartedAt !== null) {
-    const reactionMs = Math.max(0, Math.round((elapsed - state.goStartedAt) * 1000));
+    const reactionMs = Math.max(0, Math.round(tapMs - state.goStartedAt));
     state.attempts.push(reactionMs);
     state.lastReactionMs = reactionMs;
     state.status = 'result';
@@ -58,12 +68,18 @@ export function handleReactionStateTap(state: ReactionState, elapsed: number, di
   }
 }
 
+export function showReactionGo(state: ReactionState, onsetMs: number) {
+  if (state.status !== 'ready') return false;
+  state.status = 'go';
+  state.goAt = null;
+  state.goStartedAt = onsetMs;
+  return true;
+}
+
 export function updateReactionTimedState(state: ReactionState, elapsed: number, render: () => void) {
-  if (state.status === 'ready' && state.goAt !== null && elapsed >= state.goAt) {
-    state.status = 'go';
-    state.goStartedAt = elapsed;
-    render();
-  }
+  void state;
+  void elapsed;
+  void render;
 }
 
 export function isReactionAutoSuccess(state: ReactionState) {
@@ -85,7 +101,7 @@ export function buildReactionResultStats(state: ReactionState): ResultStats {
   };
 }
 
-export function drawReaction(app: Application, state: ReactionState, onTap: () => void, t: TFunction) {
+export function drawReaction(app: Application, state: ReactionState, onTap: (tapMs: number) => void, t: TFunction) {
   const w = app.renderer.width;
   const h = app.renderer.height;
   const maxSize = getResponsiveBoardMaxSize(app);
@@ -108,7 +124,7 @@ export function drawReaction(app: Application, state: ReactionState, onTap: () =
   const node = new Container();
   node.eventMode = 'static';
   node.cursor = 'pointer';
-  node.on('pointertap', onTap);
+  node.on('pointertap', (event) => onTap(getPointerEventTimestamp(event)));
   const g = new Graphics();
   g.rect(x, y, boxW, boxH).fill(REACTION_COLORS[state.status]);
   node.addChild(g);

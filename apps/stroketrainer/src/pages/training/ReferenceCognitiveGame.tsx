@@ -39,9 +39,11 @@ import {
 } from './cognitive/memoryMatch';
 import {
   createReactionState,
+  buildReactionResultStats,
   drawReaction,
   handleReactionStateTap,
   isReactionAutoSuccess,
+  showReactionGo,
   updateReactionTimedState,
 } from './cognitive/reactionTime';
 import {
@@ -52,9 +54,12 @@ import {
 } from './cognitive/slidingPuzzle';
 import {
   createWhackState,
+  buildWhackResultStats,
   drawWhack,
+  expireWhackTarget,
   handleWhackTap,
   isWhackAutoSuccess,
+  showWhackTarget,
   updateWhackTimedState,
 } from './cognitive/targetClick';
 import type {
@@ -139,7 +144,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
         drawReaction(app, state, handleReactionTap, t);
         break;
       case 'whack-a-mole':
-        drawWhack(app, state, handleCellTap);
+        drawWhack(app, state, handleWhackCellTap);
         break;
       case 'sliding-puzzle':
         drawSliding(app, state, handleCellTap);
@@ -158,12 +163,15 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     if (phaseRef.current === 'results') return;
     const state = stateRef.current;
     if (!state) return;
+    jsPsychRef.current?.pluginAPI.clearAllTimeouts();
     playGameEndSound(gameResult, jsPsychRef);
     const trainingDate = formatTestDate(new Date());
     const participantId = getActiveUser() || 'Unknown';
+    const timingData = getTimingResultData(state);
     const record: SessionRecord = {
       Game_Result: gameResult,
       Total_Duration_Seconds: Number(metricsRef.current.elapsed.toFixed(1)),
+      ...timingData.details,
     };
     setResult(record);
     setPhase('results');
@@ -177,7 +185,9 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
       details: {
         Game_Result: record.Game_Result,
         Total_Duration_Seconds: record.Total_Duration_Seconds,
+        ...timingData.details,
       },
+      detailRows: timingData.detailRows,
     });
     writeJsPsychData(jsPsychRef, record as unknown as Record<string, unknown>, 'Unable to write reference cognitive result to jsPsych data.');
   }, [difficulty, gameId, metaTitle, setPhase]);
@@ -186,6 +196,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
 
   const startGame = useCallback(async () => {
     if (!verifySelectedTrainingUser()) return;
+    jsPsychRef.current?.pluginAPI.clearAllTimeouts();
     prepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
 
@@ -195,10 +206,14 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     stateRef.current = createInitialState(gameId, difficulty, reactionTrials);
     setResult(null);
     setPhase('playing');
-    window.setTimeout(() => renderRef.current(), 0);
+    window.setTimeout(() => {
+      renderRef.current();
+      if (stateRef.current?.kind === 'whack-a-mole') scheduleNextWhackTarget(stateRef.current);
+    }, 0);
   }, [difficulty, enterTrainingFullscreen, gameId, reactionTrials, setPhase]);
 
   const returnToMenu = useCallback(() => {
+    jsPsychRef.current?.pluginAPI.clearAllTimeouts();
     setPhase('menu');
     setResult(null);
     stateRef.current = null;
@@ -222,7 +237,6 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     const feedbackBefore = getFeedbackCounts(state);
     if (state.kind === 'memory-match') handleMemoryTap(state, index, metricsRef.current.elapsed, finishGameRef.current);
     if (state.kind === 'lights-out') handleLightsTap(state, index, finishGameRef.current);
-    if (state.kind === 'whack-a-mole') handleWhackTap(state, index, metricsRef.current.elapsed);
     if (state.kind === 'sliding-puzzle') handleSlidingTap(state, index, finishGameRef.current);
     if (isLanguageNeutralGameState(state)) {
       handleLanguageNeutralGameTap(state, index, metricsRef.current.elapsed, finishGameRef.current);
@@ -231,14 +245,60 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     renderRef.current();
   }
 
-  function handleReactionTap() {
+  function handleWhackCellTap(index: number, tapMs: number) {
+    if (phaseRef.current !== 'playing') return;
+    const state = stateRef.current;
+    if (!state || state.kind !== 'whack-a-mole') return;
+    const feedbackBefore = getFeedbackCounts(state);
+    const hit = handleWhackTap(state, index, tapMs);
+    if (hit) scheduleNextWhackTarget(state);
+    playFeedbackForCountChange(feedbackBefore, getFeedbackCounts(state), jsPsychRef);
+    renderRef.current();
+  }
+
+  function handleReactionTap(tapMs: number) {
     if (phaseRef.current !== 'playing') return;
     const state = stateRef.current;
     if (!state || state.kind !== 'reaction-time') return;
     const feedbackBefore = getFeedbackCounts(state);
-    handleReactionStateTap(state, metricsRef.current.elapsed, difficulty, finishGameRef.current);
+    handleReactionStateTap(state, tapMs, difficulty, finishGameRef.current, (delayMs, goAtMs) => {
+      jsPsychRef.current?.pluginAPI.setTimeout(() => {
+        if (phaseRef.current !== 'playing' || stateRef.current !== state || state.goAt !== goAtMs) return;
+        if (!showReactionGo(state, performance.now())) return;
+        renderRef.current();
+        flushPixiRender();
+        state.goStartedAt = performance.now();
+      }, delayMs);
+    });
     playFeedbackForCountChange(feedbackBefore, getFeedbackCounts(state), jsPsychRef);
     renderRef.current();
+  }
+
+  function scheduleNextWhackTarget(state: Extract<CognitiveGameState, { kind: 'whack-a-mole' }>) {
+    const delayMs = Math.max(0, state.nextTargetAt - performance.now());
+    jsPsychRef.current?.pluginAPI.setTimeout(() => {
+      if (phaseRef.current !== 'playing' || stateRef.current !== state || state.activeIndex !== null) return;
+      if (!showWhackTarget(state, performance.now())) return;
+      renderRef.current();
+      flushPixiRender();
+      const onsetMs = performance.now();
+      state.targetStartedAt = onsetMs;
+      state.targetExpiresAt = onsetMs + state.targetMs;
+      jsPsychRef.current?.pluginAPI.setTimeout(() => {
+        if (phaseRef.current !== 'playing' || stateRef.current !== state || state.targetStartedAt !== onsetMs) return;
+        const feedbackBefore = getFeedbackCounts(state);
+        if (!expireWhackTarget(state, performance.now())) return;
+        playFeedbackForCountChange(feedbackBefore, getFeedbackCounts(state), jsPsychRef);
+        renderRef.current();
+        scheduleNextWhackTarget(state);
+      }, state.targetMs);
+    }, delayMs);
+  }
+
+  function flushPixiRender() {
+    const app = appRef.current;
+    if (!app) return;
+    app.renderer.render(app.stage);
   }
 
   useEffect(() => {
@@ -583,6 +643,46 @@ function getFeedbackCounts(state: CognitiveGameState): { success: number; errors
   return { success: state.moves, errors: state.errors };
 }
 
+function getTimingResultData(state: CognitiveGameState): { details: Record<string, unknown>; detailRows?: Record<string, unknown>[] } {
+  if (state.kind === 'reaction-time') {
+    const stats = buildReactionResultStats(state);
+    return {
+      details: {
+        Reaction_Trials: state.targetTrials,
+        Reaction_Successes: state.attempts.length,
+        False_Starts: state.falseStarts,
+        Reaction_Times_ms: state.attempts.join('|'),
+        Average_Reaction_Time_ms: stats.details.averageMs,
+        Best_Reaction_Time_ms: stats.details.bestMs,
+      },
+      detailRows: state.attempts.map((reactionMs, index) => ({
+        Trial: index + 1,
+        Reaction_Time_ms: reactionMs,
+      })),
+    };
+  }
+
+  if (state.kind === 'whack-a-mole') {
+    const stats = buildWhackResultStats(state);
+    return {
+      details: {
+        Target_Click_Hits: state.hits,
+        Target_Click_Misses: state.misses,
+        Target_Click_Taps: state.taps,
+        Target_Click_Reaction_Times_ms: state.hitReactionMs.join('|'),
+        Average_Target_Click_Reaction_Time_ms: stats.details.averageMs,
+        Best_Target_Click_Reaction_Time_ms: stats.details.bestMs,
+      },
+      detailRows: state.hitReactionMs.map((reactionMs, index) => ({
+        Hit: index + 1,
+        Target_Click_Reaction_Time_ms: reactionMs,
+      })),
+    };
+  }
+
+  return { details: {} };
+}
+
 function playFeedbackForCountChange(
   before: { success: number; errors: number },
   after: { success: number; errors: number },
@@ -606,13 +706,10 @@ function formatSeconds(value: number, t: TFunction) {
 }
 
 function toCsv(records: SessionRecord[]): string {
-  const columns: Array<{ label: string; value: (record: SessionRecord) => unknown }> = [
-    { label: 'Game_Result', value: (record) => record.Game_Result },
-    { label: 'Total_Duration_Seconds', value: (record) => record.Total_Duration_Seconds },
-  ];
+  const columns = Array.from(new Set(records.flatMap((record) => Object.keys(record))));
   return [
-    columns.map((column) => column.label).join(','),
-    ...records.map((record) => columns.map((column) => csvCell(column.value(record))).join(',')),
+    columns.join(','),
+    ...records.map((record) => columns.map((column) => csvCell(record[column])).join(',')),
   ].join('\n');
 }
 
