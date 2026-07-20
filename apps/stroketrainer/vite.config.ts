@@ -53,6 +53,21 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks(id) {
             const normalizedId = id.replaceAll('\\', '/');
+            if (normalizedId.includes('.css')) {
+              return;
+            }
+            if (normalizedId.includes('vite/preload-helper') || normalizedId.includes('commonjsHelpers')) {
+              return 'bundler-runtime';
+            }
+            if (
+              normalizedId.includes('/node_modules/react/') ||
+              normalizedId.includes('/node_modules/react-dom/') ||
+              normalizedId.includes('/node_modules/scheduler/') ||
+              normalizedId.includes('/node_modules/react-router/') ||
+              normalizedId.includes('/node_modules/react-router-dom/')
+            ) {
+              return 'react-runtime';
+            }
             if (normalizedId.includes('/node_modules/three/')) {
               return 'three-runtime';
             }
