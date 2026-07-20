@@ -9,10 +9,11 @@ import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTraini
 import { useT } from '../../i18n';
 
 const DrawingTowerDefenseGame = lazy(() => import('./DrawingTowerDefenseGame').then((module) => ({ default: module.DrawingTowerDefenseGame })));
+const AsteroidShieldGame = lazy(() => import('./AsteroidShieldGame').then((module) => ({ default: module.AsteroidShieldGame })));
 const GestureBattlerGame = lazy(() => import('./GestureBattlerGame').then((module) => ({ default: module.GestureBattlerGame })));
 const MotorCortexRehabGame = lazy(() => import('./MotorCortexRehabGame').then((module) => ({ default: module.MotorCortexRehabGame })));
 
-type MotorModuleId = 'drawing-defense' | 'gesture-battler' | 'motor-cortex-rehab';
+type MotorModuleId = 'drawing-defense' | 'asteroid-shield' | 'gesture-battler' | 'motor-cortex-rehab';
 
 const motorCortexCopy = {
   zh: {
@@ -31,6 +32,7 @@ export function MotorTraining() {
   const requestedGameId = searchParams.get('game');
   const requestedModule: MotorModuleId | null =
     requestedGameId === 'drawing-defense' ||
+    requestedGameId === 'asteroid-shield' ||
     requestedGameId === 'gesture-battler' ||
     requestedGameId === 'motor-cortex-rehab'
       ? requestedGameId
@@ -45,6 +47,11 @@ export function MotorTraining() {
       id: 'drawing-defense',
       title: t('training.drawing.title'),
       description: t('training.drawing.desc'),
+    },
+    {
+      id: 'asteroid-shield',
+      title: t('training.asteroidShield.title'),
+      description: t('training.asteroidShield.desc'),
     },
     {
       id: 'gesture-battler',
@@ -62,6 +69,8 @@ export function MotorTraining() {
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
       {activeModule === 'drawing-defense'
         ? <DrawingTowerDefenseGame onExit={closeModule} />
+        : activeModule === 'asteroid-shield'
+          ? <AsteroidShieldGame onExit={closeModule} />
         : activeModule === 'gesture-battler'
           ? <GestureBattlerGame onExit={closeModule} />
           : activeModule === 'motor-cortex-rehab'

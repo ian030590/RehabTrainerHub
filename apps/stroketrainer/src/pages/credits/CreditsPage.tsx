@@ -36,6 +36,22 @@ export function CreditsPage() {
 
   const githubItems: ReferenceListItem[] = [
     {
+      title: 'eduardosamman/asteroid-attack',
+      href: 'https://github.com/eduardosamman/asteroid-attack',
+      description: lang === 'en'
+        ? 'Arcade shield-defense game used as the reference for spaceship protection, asteroid threat tiers, durability, scoring, and rising speed pressure.'
+        : '作為飛船護盾防衛、小行星威脅分級、耐久、分數與速度逐步提升的遊戲邏輯參考。',
+      modules: [moduleChip(motorModule, t('training.asteroidShield.title'))],
+    },
+    {
+      title: 'Kenney Space Shooter Redux',
+      href: 'https://kenney.nl/assets/space-shooter-redux',
+      description: lang === 'en'
+        ? 'CC0 PNG spaceship, shield, asteroid, power-up, and space background assets used for Asteroid Shield Defense.'
+        : 'CC0 PNG 太空船、護盾、小行星、能量物與太空背景素材，用於小行星護盾防衛。',
+      modules: [moduleChip(motorModule, t('training.asteroidShield.title'))],
+    },
+    {
       title: 'ericosborne97/MotorCortexRehabilitationProgram',
       href: 'https://github.com/ericosborne97/MotorCortexRehabilitationProgram',
       description: lang === 'en'

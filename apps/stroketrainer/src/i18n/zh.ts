@@ -439,6 +439,8 @@ export const zh = {
   'training.speech.subtitle': '選擇言語訓練模組',
   'training.drawing.title': '畫畫塔防',
   'training.drawing.desc': '以滑鼠或觸控繪製圓形、叉叉、方形、三角形與直橫線，訓練上肢精細動作與手眼協調。',
+  'training.asteroidShield.title': '小行星護盾防衛',
+  'training.asteroidShield.desc': '用滑鼠、方向鍵或 MediaPipe 手部位置移動大型透明護盾，保護飛船免受小行星撞擊。',
   'training.gesture.title': '手勢指令對戰',
   'training.gesture.desc': '校正個人手部活動範圍後，以數字 1–5 手勢選招、持續集氣並擊敗像素怪物。',
   'training.minesweeper.title': '踩地雷',

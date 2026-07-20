@@ -440,6 +440,8 @@ export const en: Record<TranslationKey, string> = {
   'training.speech.subtitle': 'Select a speech training module',
   'training.drawing.title': 'Drawing Tower Defense',
   'training.drawing.desc': 'Draw circles, crosses, squares, triangles, vertical lines, and horizontal lines with mouse or touch to train fine upper-limb movement and hand-eye coordination.',
+  'training.asteroidShield.title': 'Asteroid Shield Defense',
+  'training.asteroidShield.desc': 'Use mouse, arrow keys, or MediaPipe hand position to move a large transparent shield and protect the spaceship from incoming asteroids.',
   'training.gesture.title': 'Gesture Command Battle',
   'training.gesture.desc': 'Calibrate personal hand range, select moves with gestures 1–5, hold to charge, and defeat a pixel monster.',
   'training.minesweeper.title': 'Minesweeper',

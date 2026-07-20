@@ -91,6 +91,38 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
               description: 'The result records defeated enemies, spawned enemies, reaction time, shape, and success status.',
             },
           ];
+    case 'asteroid-shield':
+      return isZh
+        ? [
+            {
+              title: '玩法',
+              description: '移動護盾攔截飛向飛船的小行星，訓練上肢方向控制、反應與持續注意。',
+              items: [
+                '可用滑鼠、方向鍵，或開啟 MediaPipe 後用手部位置控制護盾方向。',
+                '藍色小行星造成少量傷害，綠色小行星傷害較高，暗色小行星若命中會直接結束。',
+                '能量石碰到護盾或飛船會恢復耐久；每累積一段攔截數，小行星速度會提升。',
+              ],
+            },
+            {
+              title: '結果紀錄',
+              description: '結果會記錄分數、飛船耐久、攔截數、受擊數、能量石數量、反應時間與當下控制方式。',
+            },
+          ]
+        : [
+            {
+              title: 'How to Play',
+              description: 'Move the shield to intercept asteroids before they reach the spaceship.',
+              items: [
+                'Use the mouse, arrow keys, or MediaPipe hand position to aim the shield.',
+                'Blue asteroids deal light damage, green asteroids deal heavier damage, and dark asteroids end the session if they hit.',
+                'Energy rocks restore durability; asteroid speed increases after repeated successful blocks.',
+              ],
+            },
+            {
+              title: 'Results',
+              description: 'The result records score, ship durability, blocks, hits, energy rocks, response time, and control source.',
+            },
+          ];
     case 'gesture-battler':
       return isZh
         ? [
