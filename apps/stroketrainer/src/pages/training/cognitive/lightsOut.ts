@@ -2,12 +2,16 @@ import { Application, Container, Graphics } from 'pixi.js';
 import { LIGHTS_CONFIG } from './constants';
 import type { Difficulty, GameResult, LightsOutState, ResultStats } from './types';
 import {
-  COGNITIVE_ACCENT,
-  COGNITIVE_BORDER,
-  COGNITIVE_SURFACE,
   getGridLayout,
+  isMobileCognitiveViewport,
   toggleLights,
 } from './utils';
+
+const LIGHTS_BOARD_COLOR = 0x1a1a2e;
+const LIGHTS_CELL_OFF = 0x16213e;
+const LIGHTS_CELL_OFF_BORDER = 0x0f3460;
+const LIGHTS_CELL_ON = 0xf1c40f;
+const LIGHTS_CELL_ON_BORDER = 0xf39c12;
 
 export function createLightsState(difficulty: Difficulty): LightsOutState {
   const config = LIGHTS_CONFIG[difficulty];
@@ -58,7 +62,17 @@ function countLightsOn(lights: boolean[][]): number {
 }
 
 export function drawLightsOut(app: Application, state: LightsOutState, onTap: (index: number) => void) {
-  const { cell, gap, startX, startY } = getGridLayout(app, state.size, state.size, 96, 10);
+  const padding = isMobileCognitiveViewport(app) ? 10 : 15;
+  const { cell, gap, startX, startY } = getGridLayout(app, state.size, state.size, 60, 4, padding);
+  const board = new Graphics();
+  board.rect(
+    startX - padding,
+    startY - padding,
+    state.size * cell + (state.size - 1) * gap + padding * 2,
+    state.size * cell + (state.size - 1) * gap + padding * 2,
+  ).fill(LIGHTS_BOARD_COLOR);
+  app.stage.addChild(board);
+
   state.lights.forEach((row, yIndex) => {
     row.forEach((light, xIndex) => {
       const index = yIndex * state.size + xIndex;
@@ -71,13 +85,14 @@ export function drawLightsOut(app: Application, state: LightsOutState, onTap: (i
       node.cursor = 'pointer';
       node.on('pointertap', () => onTap(index));
       const g = new Graphics();
-      g.roundRect(0, 0, cell, cell, 8)
-        .fill(light ? COGNITIVE_ACCENT : COGNITIVE_SURFACE)
-        .stroke({ color: light ? COGNITIVE_ACCENT : COGNITIVE_BORDER, width: 2 });
+      g.rect(0, 0, cell, cell)
+        .fill(light ? LIGHTS_CELL_ON : LIGHTS_CELL_OFF)
+        .stroke({ color: light ? LIGHTS_CELL_ON_BORDER : LIGHTS_CELL_OFF_BORDER, width: 2 });
       node.addChild(g);
       if (light) {
         const glow = new Graphics();
-        glow.circle(cell / 2, cell / 2, cell * 0.18).fill({ color: 0xffffff, alpha: 0.72 });
+        glow.circle(cell / 2, cell / 2, cell * 0.32).fill({ color: LIGHTS_CELL_ON, alpha: 0.32 });
+        glow.circle(cell / 2, cell / 2, cell * 0.18).fill({ color: 0xffffff, alpha: 0.78 });
         node.addChild(glow);
       }
       app.stage.addChild(node);

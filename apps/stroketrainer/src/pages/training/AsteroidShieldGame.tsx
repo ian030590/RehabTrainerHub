@@ -253,17 +253,7 @@ const COPY = {
     initialization: '手部追蹤無法啟動，已改用滑鼠與方向鍵。',
     errorTitle: '手部控制無法啟動',
     openDetails: '開啟錯誤詳情',
-    statusHp: '耐久',
     statusScore: '分數',
-    statusBlocked: '攔截',
-    statusHits: '命中',
-    statusTime: '剩餘',
-    statusControl: '控制',
-    controlMouse: '滑鼠',
-    controlKeyboard: '方向鍵',
-    controlHand: '手部',
-    controlNone: '待命',
-    playHint: '移動滑鼠、方向鍵，或把手移到攝影機畫面中的方向來調整護盾。',
     resultTitle: '護盾防衛訓練完成',
     user: '使用者',
     finalHp: '剩餘耐久',
@@ -319,17 +309,7 @@ const COPY = {
     initialization: 'Hand tracking could not start. Continuing with mouse and arrow keys.',
     errorTitle: 'Unable to Start Hand Control',
     openDetails: 'Open error details',
-    statusHp: 'HP',
     statusScore: 'Score',
-    statusBlocked: 'Blocked',
-    statusHits: 'Hits',
-    statusTime: 'Time',
-    statusControl: 'Control',
-    controlMouse: 'Mouse',
-    controlKeyboard: 'Arrow Keys',
-    controlHand: 'Hand',
-    controlNone: 'Ready',
-    playHint: 'Move the mouse, press arrow keys, or place your hand in the camera frame to aim the shield.',
     resultTitle: 'Asteroid Shield Training Complete',
     user: 'User',
     finalHp: 'Final HP',
@@ -363,13 +343,6 @@ const OUTCOME_COPY_KEYS: Record<ThreatOutcome, 'shielded' | 'hit' | 'collected' 
   hit: 'hit',
   collected: 'collected',
   missed: 'missed',
-};
-
-const CONTROL_COPY_KEYS: Record<ControlSource, 'controlMouse' | 'controlKeyboard' | 'controlHand' | 'controlNone'> = {
-  mouse: 'controlMouse',
-  keyboard: 'controlKeyboard',
-  hand: 'controlHand',
-  none: 'controlNone',
 };
 
 export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
@@ -417,7 +390,6 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   const [showVisionError, setShowVisionError] = useState(false);
   const [isHandTrackingActive, setIsHandTrackingActive] = useState(false);
   const [result, setResult] = useState<SessionRecord | null>(null);
-  const [hud, setHud] = useState(() => createHudState(DEFAULT_HP, DEFAULT_DURATION_SECONDS));
 
   const summaryItems = useMemo(() => [
     { label: labels.difficulty, value: labels[difficulty] },
@@ -549,7 +521,6 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     };
     resultRecordsRef.current = [];
     shieldAngleRef.current = -Math.PI / 2;
-    setHud(createHudState(config.maxHp, config.durationSec));
     setResult(null);
     setPhase('playing');
   }, [setPhase]);
@@ -690,7 +661,6 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     metricsRef.current = createEmptyMetrics(configRef.current.maxHp);
     resultRecordsRef.current = [];
     setResult(null);
-    setHud(createHudState(configRef.current.maxHp, configRef.current.durationSec));
     setPhase('menu');
   }, [setPhase, stopVision]);
 
@@ -744,7 +714,6 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
           shieldAngleRef,
           keysRef,
           resultRecordsRef,
-          onHud: setHud,
           onSuccess: () => playSuccessSound(jsPsychRef),
           onFailure: () => playFailureSound(jsPsychRef),
           onComplete: finishGame,
@@ -1026,39 +995,6 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         </div>
       )}
 
-      {phase === 'playing' && (
-        <div className="asteroid-shield-play">
-          <div className="asteroid-shield-hud">
-            <span>
-              <small>{labels.statusHp}</small>
-              <strong>{hud.hp}/{hud.maxHp}</strong>
-              <i><b style={{ width: `${hud.hpPercent}%` }} /></i>
-            </span>
-            <span>
-              <small>{labels.statusScore}</small>
-              <strong>{hud.score}</strong>
-            </span>
-            <span>
-              <small>{labels.statusBlocked}</small>
-              <strong>{hud.blocked}</strong>
-            </span>
-            <span>
-              <small>{labels.statusHits}</small>
-              <strong>{hud.hits}</strong>
-            </span>
-            <span>
-              <small>{labels.statusTime}</small>
-              <strong>{Math.max(0, Math.ceil(hud.timeRemaining))}s</strong>
-            </span>
-            <span>
-              <small>{labels.statusControl}</small>
-              <strong>{labels[CONTROL_COPY_KEYS[hud.controlSource]]}</strong>
-            </span>
-          </div>
-          <div className="asteroid-shield-hint">{labels.playHint}</div>
-        </div>
-      )}
-
       {phase === 'results' && result && (
         <div className="experiment-container experiment-container-scrollable asteroid-shield-results-container">
           <div className="experiment-results">
@@ -1156,19 +1092,6 @@ function createEmptyMetrics(maxHp: number): SessionMetrics {
   };
 }
 
-function createHudState(maxHp: number, durationSec: number) {
-  return {
-    hp: maxHp,
-    maxHp,
-    hpPercent: 100,
-    score: 0,
-    blocked: 0,
-    hits: 0,
-    timeRemaining: durationSec,
-    controlSource: 'none' as ControlSource,
-  };
-}
-
 async function loadAssetTextures(): Promise<AssetTextures> {
   const [background, ship, shield, normal, heavy, lethal, energy] = await Promise.all([
     Assets.load<Texture>(ASSET_URLS.background),
@@ -1228,7 +1151,6 @@ function updateAsteroidGame({
   shieldAngleRef,
   keysRef,
   resultRecordsRef,
-  onHud,
   onSuccess,
   onFailure,
   onComplete,
@@ -1250,7 +1172,6 @@ function updateAsteroidGame({
   shieldAngleRef: { current: number };
   keysRef: { current: { up: boolean; down: boolean; left: boolean; right: boolean } };
   resultRecordsRef: { current: ThreatRecord[] };
-  onHud: (state: ReturnType<typeof createHudState>) => void;
   onSuccess: () => void;
   onFailure: () => void;
   onComplete: (result: GameResult) => void;
@@ -1332,16 +1253,6 @@ function updateAsteroidGame({
   }
 
   const elapsedSec = metrics.elapsedMs / 1000;
-  onHud({
-    hp: metrics.hp,
-    maxHp: metrics.maxHp,
-    hpPercent: metrics.maxHp > 0 ? (metrics.hp / metrics.maxHp) * 100 : 0,
-    score: metrics.score,
-    blocked: metrics.blocked,
-    hits: metrics.hits,
-    timeRemaining: Math.max(0, config.durationSec - elapsedSec),
-    controlSource: metrics.lastControlSource,
-  });
 
   if (metrics.hp <= 0) {
     onComplete('Defeat');

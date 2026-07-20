@@ -3,15 +3,19 @@ import { REACTION_CONFIG } from './constants';
 import type { TFunction } from '../types';
 import type { Difficulty, GameResult, ReactionState, ResultStats } from './types';
 import {
-  COGNITIVE_ACCENT,
-  COGNITIVE_ACCENT_TINT,
-  COGNITIVE_BORDER,
-  COGNITIVE_SURFACE,
-  COGNITIVE_TEXT,
-  COGNITIVE_TEXT_MUTED,
   addText,
   average,
+  getResponsiveBoardMaxSize,
+  isMobileCognitiveViewport,
 } from './utils';
+
+const REACTION_COLORS: Record<ReactionState['status'], number> = {
+  waiting: 0x3498db,
+  ready: 0xe74c3c,
+  go: 0x2ecc71,
+  result: 0x3498db,
+  'too-early': 0xe67e22,
+};
 
 export function createReactionState(targetTrials: number): ReactionState {
   return {
@@ -84,17 +88,16 @@ export function buildReactionResultStats(state: ReactionState): ResultStats {
 export function drawReaction(app: Application, state: ReactionState, onTap: () => void, t: TFunction) {
   const w = app.renderer.width;
   const h = app.renderer.height;
-  const boxW = Math.min(w - 48, 720);
-  const boxH = Math.min(h - 150, 420);
+  const maxSize = getResponsiveBoardMaxSize(app);
+  const scale = Math.min(
+    isMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 1,
+    maxSize.width / 500,
+    maxSize.height / 300,
+  );
+  const boxW = Math.floor(500 * scale);
+  const boxH = Math.floor(300 * scale);
   const x = (w - boxW) / 2;
-  const y = (h - boxH) / 2 + 24;
-  const colors = {
-    waiting: COGNITIVE_SURFACE,
-    ready: COGNITIVE_ACCENT_TINT,
-    go: COGNITIVE_ACCENT,
-    result: COGNITIVE_ACCENT_TINT,
-    'too-early': COGNITIVE_ACCENT_TINT,
-  };
+  const y = (h - boxH) / 2;
   const labels = {
     waiting: t('cognitive.reaction.waiting'),
     ready: t('cognitive.reaction.ready'),
@@ -107,18 +110,12 @@ export function drawReaction(app: Application, state: ReactionState, onTap: () =
   node.cursor = 'pointer';
   node.on('pointertap', onTap);
   const g = new Graphics();
-  g.roundRect(x, y, boxW, boxH, 8).fill(colors[state.status]).stroke({ color: state.status === 'go' ? COGNITIVE_ACCENT : COGNITIVE_BORDER, width: 2 });
+  g.rect(x, y, boxW, boxH).fill(REACTION_COLORS[state.status]);
   node.addChild(g);
-  addText(node, labels[state.status], w / 2, y + boxH / 2 - 20, {
-    fontSize: 52,
-    fontWeight: '900',
-    fill: state.status === 'go' ? '#FFFFFF' : `#${COGNITIVE_TEXT.toString(16).padStart(6, '0')}`,
-  });
-  const avg = average(state.attempts);
-  addText(node, `${state.attempts.length}/${state.targetTrials}${avg === null ? '' : `  ${t('cognitive.reaction.average')} ${avg} ms`}`, w / 2, y + boxH / 2 + 58, {
-    fontSize: 22,
-    fontWeight: '700',
-    fill: state.status === 'go' ? '#FFFFFF' : `#${COGNITIVE_TEXT_MUTED.toString(16).padStart(6, '0')}`,
+  addText(node, labels[state.status], w / 2, y + boxH / 2, {
+    fontSize: state.status === 'result' && state.lastReactionMs !== null ? 56 : 32,
+    fontWeight: '400',
+    fill: '#FFFFFF',
   });
   app.stage.addChild(node);
 }

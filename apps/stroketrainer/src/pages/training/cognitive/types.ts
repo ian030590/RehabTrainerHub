@@ -7,21 +7,13 @@ export type ReferenceGameId =
   | 'whack-a-mole'
   | 'sliding-puzzle'
   | 'sudoku'
-  | 'latin-square'
-  | 'magic-square'
-  | 'n-queens'
-  | 'knights-tour'
-  | 'binary-puzzle'
-  | 'mastermind'
   | 'bulls-and-cows'
   | 'simon-says'
   | 'tic-tac-toe'
   | 'connect4'
-  | 'nim'
   | 'dots-and-boxes'
   | 'hex'
   | 'set-game'
-  | 'tangram'
   | 'sokoban'
   | 'maze';
 
@@ -132,47 +124,12 @@ export interface SlidingState {
 }
 
 export interface NumberGridState {
-  kind: 'sudoku' | 'latin-square' | 'magic-square' | 'binary-puzzle';
+  kind: 'sudoku' | 'latin-square' | 'magic-square';
   size: number;
   boxSize?: number;
   solution: number[];
   values: number[];
   givens: boolean[];
-  moves: number;
-  errors: number;
-}
-
-export interface NQueensState {
-  kind: 'n-queens';
-  size: number;
-  queens: boolean[];
-  moves: number;
-  errors: number;
-}
-
-export interface KnightsTourState {
-  kind: 'knights-tour';
-  size: number;
-  visited: number[];
-  currentIndex: number | null;
-  moves: number;
-  errors: number;
-}
-
-export interface MastermindAttempt {
-  guess: number[];
-  exact: number;
-  colorOnly: number;
-}
-
-export interface MastermindState {
-  kind: 'mastermind';
-  secret: number[];
-  guess: number[];
-  selectedSlot: number;
-  attempts: MastermindAttempt[];
-  maxAttempts: number;
-  colorCount: number;
   moves: number;
   errors: number;
 }
@@ -227,14 +184,6 @@ export interface Connect4State {
   errors: number;
 }
 
-export interface NimState {
-  kind: 'nim';
-  piles: number[];
-  moves: number;
-  aiMoves: number;
-  errors: number;
-}
-
 export interface DotsAndBoxesState {
   kind: 'dots-and-boxes';
   size: number;
@@ -276,21 +225,6 @@ export interface SetGameState {
   errors: number;
 }
 
-export interface TangramPiece {
-  id: number;
-  shape: 'large-triangle' | 'medium-triangle' | 'small-triangle' | 'square' | 'parallelogram';
-  placed: boolean;
-}
-
-export interface TangramState {
-  kind: 'tangram';
-  pieces: TangramPiece[];
-  slots: number[];
-  selectedPieceId: number | null;
-  moves: number;
-  errors: number;
-}
-
 export interface SokobanState {
   kind: 'sokoban';
   rows: number;
@@ -328,17 +262,12 @@ export type CognitiveGameState =
   | WhackState
   | SlidingState
   | NumberGridState
-  | NQueensState
-  | KnightsTourState
-  | MastermindState
   | BullsAndCowsState
   | SimonState
   | TicTacToeState
   | Connect4State
-  | NimState
   | DotsAndBoxesState
   | HexState
   | SetGameState
-  | TangramState
   | SokobanState
   | MazeState;

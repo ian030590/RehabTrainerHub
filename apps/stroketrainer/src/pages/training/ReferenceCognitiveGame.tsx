@@ -26,6 +26,7 @@ import {
   createLanguageNeutralGameState,
   drawLanguageNeutralGame,
   getLanguageNeutralFeedbackCounts,
+  handleLanguageNeutralGameKey,
   handleLanguageNeutralGameTap,
   isLanguageNeutralAutoSuccess,
   isLanguageNeutralGameState,
@@ -146,7 +147,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
         drawReaction(app, state, handleReactionTap, t);
         break;
       case 'whack-a-mole':
-        drawWhack(app, state, metricsRef.current.elapsed, effectiveLimit ?? whackDurationSec, handleCellTap);
+        drawWhack(app, state, handleCellTap);
         break;
       case 'sliding-puzzle':
         drawSliding(app, state, handleCellTap);
@@ -157,7 +158,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
         }
         break;
     }
-  }, [effectiveLimit, t, whackDurationSec]);
+  }, [t]);
 
   renderRef.current = renderCurrent;
 
@@ -269,6 +270,22 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     playFeedbackForCountChange(feedbackBefore, getFeedbackCounts(state), jsPsychRef);
     renderRef.current();
   }
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (phaseRef.current !== 'playing') return;
+      const state = stateRef.current;
+      if (!state || !isLanguageNeutralGameState(state)) return;
+      const feedbackBefore = getFeedbackCounts(state);
+      const handled = handleLanguageNeutralGameKey(state, event.key, finishGameRef.current);
+      if (!handled) return;
+      event.preventDefault();
+      playFeedbackForCountChange(feedbackBefore, getFeedbackCounts(state), jsPsychRef);
+      renderRef.current();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     jsPsychRef.current = initJsPsych();

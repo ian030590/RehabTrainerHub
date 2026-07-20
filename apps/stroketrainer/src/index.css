@@ -2506,88 +2506,6 @@ body #webgazer-calibrate-container #calibration-point {
   display: block;
 }
 
-.asteroid-shield-play {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 12px;
-  padding: 16px;
-  pointer-events: none;
-}
-
-.asteroid-shield-hud {
-  width: min(980px, calc(100vw - 270px));
-  min-height: 74px;
-  display: grid;
-  grid-template-columns: repeat(6, minmax(92px, 1fr));
-  gap: 8px;
-  margin-left: auto;
-}
-
-.asteroid-shield-hud span {
-  min-width: 0;
-  display: grid;
-  align-content: center;
-  gap: 3px;
-  padding: 9px 11px;
-  border: 1px solid rgba(125, 211, 252, 0.3);
-  border-radius: var(--radius-m);
-  background: rgba(12, 17, 35, 0.72);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.asteroid-shield-hud small {
-  color: #a5f3fc;
-  font-size: 10px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.asteroid-shield-hud strong {
-  min-width: 0;
-  color: #fff7ed;
-  font-size: 20px;
-  font-weight: 900;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.asteroid-shield-hud i {
-  height: 7px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(248, 113, 113, 0.18);
-}
-
-.asteroid-shield-hud i b {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #fb7185, #facc15, #22c55e);
-  transition: width 120ms linear;
-}
-
-.asteroid-shield-hint {
-  align-self: end;
-  justify-self: center;
-  max-width: min(760px, calc(100vw - 32px));
-  padding: 8px 12px;
-  border: 1px solid rgba(251, 191, 36, 0.36);
-  border-radius: var(--radius-m);
-  background: rgba(24, 22, 38, 0.72);
-  color: #fef3c7;
-  font-size: 13px;
-  font-weight: 800;
-  text-align: center;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
 .asteroid-shield-camera {
   position: fixed;
   top: 14px;
@@ -2863,35 +2781,6 @@ body #webgazer-calibrate-container #calibration-point {
   .asteroid-shield-camera > span {
     padding: 3px;
     font-size: 8px;
-  }
-
-  .asteroid-shield-play {
-    gap: 8px;
-    padding: 10px;
-  }
-
-  .asteroid-shield-hud {
-    width: calc(100vw - 148px);
-    min-height: 54px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-  }
-
-  .asteroid-shield-hud span {
-    min-height: 46px;
-    padding: 6px 8px;
-  }
-
-  .asteroid-shield-hud small {
-    font-size: 9px;
-  }
-
-  .asteroid-shield-hud strong {
-    font-size: 16px;
-  }
-
-  .asteroid-shield-hint {
-    font-size: 11px;
   }
 
   .asteroid-shield-result-summary {

@@ -8,12 +8,8 @@ import type {
   DotsAndBoxesState,
   GameResult,
   HexState,
-  KnightsTourState,
-  MastermindState,
   MazeCell,
   MazeState,
-  NQueensState,
-  NimState,
   NumberGridState,
   ReferenceGameId,
   ResultStats,
@@ -21,82 +17,98 @@ import type {
   SetGameState,
   SimonState,
   SokobanState,
-  TangramPiece,
-  TangramState,
   TicTacToeState,
 } from './types';
 import {
-  COGNITIVE_ACCENT,
-  COGNITIVE_ACCENT_TINT,
-  COGNITIVE_BG,
-  COGNITIVE_BORDER,
-  COGNITIVE_SURFACE,
-  COGNITIVE_TEXT,
-  COGNITIVE_TEXT_MUTED,
   addText,
   getGridLayout,
+  getResponsiveBoardBounds,
+  getResponsiveBoardMaxSize,
+  isMobileCognitiveViewport,
   shuffle,
 } from './utils';
 
-type LanguageNeutralGameKind = Exclude<ReferenceGameId, 'memory-match' | 'lights-out' | 'reaction-time' | 'whack-a-mole' | 'sliding-puzzle'>;
+type ReferenceLanguageNeutralGameKind = Exclude<
+  ReferenceGameId,
+  'memory-match' | 'lights-out' | 'reaction-time' | 'whack-a-mole' | 'sliding-puzzle'
+>;
+type LanguageNeutralGameKind = ReferenceLanguageNeutralGameKind | NumberGridState['kind'];
 type LanguageNeutralGameState = Extract<CognitiveGameState, { kind: LanguageNeutralGameKind }>;
 
 const LANGUAGE_NEUTRAL_KINDS: readonly LanguageNeutralGameKind[] = [
   'sudoku',
   'latin-square',
   'magic-square',
-  'n-queens',
-  'knights-tour',
-  'binary-puzzle',
-  'mastermind',
   'bulls-and-cows',
   'simon-says',
   'tic-tac-toe',
   'connect4',
-  'nim',
   'dots-and-boxes',
   'hex',
   'set-game',
-  'tangram',
   'sokoban',
   'maze',
 ];
 
-const TITLE_KEYS: Record<LanguageNeutralGameKind, Parameters<TFunction>[0]> = {
-  sudoku: 'cognitive.sudoku.title',
-  'latin-square': 'cognitive.latin.title',
-  'magic-square': 'cognitive.magic.title',
-  'n-queens': 'cognitive.queens.title',
-  'knights-tour': 'cognitive.knights.title',
-  'binary-puzzle': 'cognitive.binary.title',
-  mastermind: 'cognitive.mastermind.title',
-  'bulls-and-cows': 'cognitive.bulls.title',
-  'simon-says': 'cognitive.simon.title',
-  'tic-tac-toe': 'cognitive.tictactoe.title',
-  connect4: 'cognitive.connect4.title',
-  nim: 'cognitive.nim.title',
-  'dots-and-boxes': 'cognitive.dots.title',
-  hex: 'cognitive.hex.title',
-  'set-game': 'cognitive.set.title',
-  tangram: 'cognitive.tangram.title',
-  sokoban: 'cognitive.sokoban.title',
-  maze: 'cognitive.maze.title',
-};
+const NUMBER_GRID_BORDER = 0x000000;
+const NUMBER_GRID_CELL_FILL = 0xffffff;
+const NUMBER_GRID_ENTRY_TEXT = '#005EB8';
+const NUMBER_GRID_GIVEN_TEXT = '#000000';
 
-const PLAYER_COLOR = COGNITIVE_ACCENT;
-const AI_COLOR = 0xb54747;
-const SUCCESS_COLOR = 0x16794a;
-const WARNING_COLOR = 0xd97706;
-const SET_COLORS = [0x005eb8, 0x16794a, 0xb54747];
-const MASTERMIND_COLORS = [0x005eb8, 0x16794a, 0xd97706, 0xb54747, 0x6d5bd0, 0x0f766e];
+const ORIGINAL_BLUE = 0x3498db;
+const ORIGINAL_BLUE_DARK = 0x2980b9;
+const ORIGINAL_BLUE_EDGE = 0x2471a3;
+const ORIGINAL_GREEN = 0x2ecc71;
+const ORIGINAL_GREEN_DARK = 0x27ae60;
+const ORIGINAL_RED = 0xe74c3c;
+const ORIGINAL_RED_DARK = 0xc0392b;
+const ORIGINAL_RED_EDGE = 0xa93226;
+const ORIGINAL_YELLOW = 0xf1c40f;
+const ORIGINAL_CONNECT4_YELLOW = 0xfacc15;
+const ORIGINAL_CONNECT4_RED = 0xdc143c;
+const ORIGINAL_PURPLE = 0x9b59b6;
+const ORIGINAL_BOARD_DARK = 0x34495e;
+const ORIGINAL_TEXT = 0x2c3e50;
+const ORIGINAL_LIGHT = 0xecf0f1;
+const ORIGINAL_LIGHT_MUTED = 0xf5f5f5;
+const ORIGINAL_BORDER = 0xbdc3c7;
+const ORIGINAL_GRAY_BORDER = 0xdee2e6;
+const PLAYER_COLOR = ORIGINAL_BLUE;
+const AI_COLOR = ORIGINAL_RED;
+const SET_COLORS = [ORIGINAL_RED, ORIGINAL_GREEN_DARK, ORIGINAL_PURPLE];
 const EMPTY = 0;
-const BINARY_EMPTY = -1;
-const COLOR_OFFSET = 1000;
 const DIGIT_OFFSET = 1100;
 const SUBMIT_INDEX = 1200;
 const DOTS_VERTICAL_OFFSET = 1300;
-const TANGRAM_PIECE_OFFSET = 1400;
-const TANGRAM_SLOT_OFFSET = 1500;
+const DIRECTION_BY_KEY: Partial<Record<string, GridDirection>> = {
+  ArrowUp: { dx: 0, dy: -1 },
+  ArrowDown: { dx: 0, dy: 1 },
+  ArrowLeft: { dx: -1, dy: 0 },
+  ArrowRight: { dx: 1, dy: 0 },
+};
+
+type GridDirection = { dx: number; dy: number };
+
+const SOKOBAN_LEVELS = [
+  ['WWWWWW', 'W....W', 'W.B..W', 'W.T..W', 'W..P.W', 'WWWWWW'],
+  ['WWWWWWWW', 'W......W', 'W.B..B.W', 'W..TT..W', 'W...P..W', 'W......W', 'WWWWWWWW'],
+  ['WWWWWWWW', 'WT....TW', 'W.WBBW.W', 'W..P...W', 'W......W', 'WWWWWWWW'],
+  ['WWWWWWWWW', 'W.......W', 'W..BBB..W', 'W..TTT..W', 'W...P...W', 'W.......W', 'WWWWWWWWW'],
+  ['WWWWWWWW', 'W......W', 'W.T.B..W', 'W.TWBP.W', 'W......W', 'WWWWWWWW'],
+  ['WWWWWWWWW', 'W...W...W', 'W.B.W.T.W', 'W.B...T.W', 'W.P.W...W', 'WWWWWWWWW'],
+  ['WWWWWWWW', 'WTT....W', 'WB.B...W', 'W......W', 'W...P..W', 'WWWWWWWW'],
+  ['WWWWWWWWW', 'W...T...W', 'W..T.T..W', 'W.B.B.B.W', 'W...P...W', 'W.......W', 'WWWWWWWWW'],
+  ['WWWWWWWWWW', 'W........W', 'W.BWWWB..W', 'W.TW.WT..W', 'W..W.W...W', 'W...P....W', 'WWWWWWWWWW'],
+] as const;
+
+const SOKOBAN_LEVEL_CHOICES: Record<Difficulty, number[]> = {
+  Beginner: [0, 1, 4],
+  Intermediate: [2, 3, 5, 6],
+  Advanced: [5, 7, 8],
+};
+
+const lastSokobanLevelByDifficulty: Partial<Record<Difficulty, number>> = {};
+const lastMazeSignatureByDifficulty: Partial<Record<Difficulty, string>> = {};
 
 export function isLanguageNeutralGameState(state: CognitiveGameState): state is LanguageNeutralGameState {
   return LANGUAGE_NEUTRAL_KINDS.includes(state.kind as LanguageNeutralGameKind);
@@ -108,16 +120,7 @@ export function createLanguageNeutralGameState(
 ): LanguageNeutralGameState | null {
   switch (gameId) {
     case 'sudoku':
-    case 'latin-square':
-    case 'magic-square':
-    case 'binary-puzzle':
-      return createNumberGridState(gameId, difficulty);
-    case 'n-queens':
-      return createNQueensState(difficulty);
-    case 'knights-tour':
-      return createKnightsTourState(difficulty);
-    case 'mastermind':
-      return createMastermindState(difficulty);
+      return createMergedSudokuState(difficulty);
     case 'bulls-and-cows':
       return createBullsAndCowsState(difficulty);
     case 'simon-says':
@@ -126,16 +129,12 @@ export function createLanguageNeutralGameState(
       return createTicTacToeState(difficulty);
     case 'connect4':
       return createConnect4State();
-    case 'nim':
-      return createNimState(difficulty);
     case 'dots-and-boxes':
       return createDotsAndBoxesState(difficulty);
     case 'hex':
       return createHexState(difficulty);
     case 'set-game':
       return createSetGameState(difficulty);
-    case 'tangram':
-      return createTangramState();
     case 'sokoban':
       return createSokobanState(difficulty);
     case 'maze':
@@ -155,17 +154,7 @@ export function handleLanguageNeutralGameTap(
     case 'sudoku':
     case 'latin-square':
     case 'magic-square':
-    case 'binary-puzzle':
       handleNumberGridTap(state, index, finishGame);
-      break;
-    case 'n-queens':
-      handleNQueensTap(state, index, finishGame);
-      break;
-    case 'knights-tour':
-      handleKnightsTourTap(state, index, finishGame);
-      break;
-    case 'mastermind':
-      handleMastermindTap(state, index, finishGame);
       break;
     case 'bulls-and-cows':
       handleBullsAndCowsTap(state, index, finishGame);
@@ -179,9 +168,6 @@ export function handleLanguageNeutralGameTap(
     case 'connect4':
       handleConnect4Tap(state, index, finishGame);
       break;
-    case 'nim':
-      handleNimTap(state, index, finishGame);
-      break;
     case 'dots-and-boxes':
       handleDotsAndBoxesTap(state, index, finishGame);
       break;
@@ -190,9 +176,6 @@ export function handleLanguageNeutralGameTap(
       break;
     case 'set-game':
       handleSetTap(state, index, finishGame);
-      break;
-    case 'tangram':
-      handleTangramTap(state, index, finishGame);
       break;
     case 'sokoban':
       handleSokobanTap(state, index, finishGame);
@@ -203,6 +186,24 @@ export function handleLanguageNeutralGameTap(
     default:
       break;
   }
+}
+
+export function handleLanguageNeutralGameKey(
+  state: LanguageNeutralGameState,
+  key: string,
+  finishGame: (result: GameResult) => void,
+) {
+  const direction = DIRECTION_BY_KEY[key];
+  if (!direction) return false;
+  if (state.kind === 'sokoban') {
+    moveSokoban(state, direction, finishGame);
+    return true;
+  }
+  if (state.kind === 'maze') {
+    moveMaze(state, direction, finishGame);
+    return true;
+  }
+  return false;
 }
 
 export function updateLanguageNeutralTimedState(
@@ -234,14 +235,7 @@ export function isLanguageNeutralAutoSuccess(state: LanguageNeutralGameState) {
     case 'sudoku':
     case 'latin-square':
     case 'magic-square':
-    case 'binary-puzzle':
       return isNumberGridSolved(state);
-    case 'n-queens':
-      return countQueens(state) === state.size && countQueenConflicts(state) === 0;
-    case 'knights-tour':
-      return state.visited.length === state.size * state.size;
-    case 'mastermind':
-      return state.attempts.some((attempt) => attempt.exact === state.secret.length);
     case 'bulls-and-cows':
       return state.attempts.some((attempt) => attempt.bulls === state.secret.length);
     case 'simon-says':
@@ -250,16 +244,12 @@ export function isLanguageNeutralAutoSuccess(state: LanguageNeutralGameState) {
       return checkMarkWin(state.board, state.size, state.winLength, 'X');
     case 'connect4':
       return checkConnect4Win(state.board, state.rows, state.cols, 'P');
-    case 'nim':
-      return totalNimObjects(state.piles) === 0;
     case 'dots-and-boxes':
       return isDotsBoardFull(state) && state.playerScore > state.aiScore;
     case 'hex':
       return hasHexPath(state, 1);
     case 'set-game':
       return state.found >= state.targetSets;
-    case 'tangram':
-      return state.pieces.every((piece) => piece.placed);
     case 'sokoban':
       return isSokobanSolved(state);
     case 'maze':
@@ -274,43 +264,7 @@ export function buildLanguageNeutralResultStats(state: LanguageNeutralGameState)
     case 'sudoku':
     case 'latin-square':
     case 'magic-square':
-    case 'binary-puzzle':
       return buildNumberGridStats(state);
-    case 'n-queens': {
-      const queens = countQueens(state);
-      const conflicts = countQueenConflicts(state);
-      return {
-        score: Math.max(0, queens * 100 - conflicts * 40 - state.errors * 20),
-        accuracy: queens > 0 ? Math.max(0, Math.round(((queens - conflicts) / queens) * 100)) : 0,
-        moves: state.moves,
-        attempts: state.moves,
-        success: Math.max(0, queens - conflicts),
-        errors: state.errors + conflicts,
-        details: { size: state.size, queens, conflicts },
-      };
-    }
-    case 'knights-tour':
-      return {
-        score: Math.max(0, state.visited.length * 35 - state.errors * 25),
-        accuracy: state.moves + state.errors > 0 ? Math.round((state.moves / (state.moves + state.errors)) * 100) : 0,
-        moves: state.moves,
-        attempts: state.moves + state.errors,
-        success: state.visited.length,
-        errors: state.errors,
-        details: { size: state.size, visited: state.visited.length },
-      };
-    case 'mastermind': {
-      const best = Math.max(0, ...state.attempts.map((attempt) => attempt.exact));
-      return {
-        score: Math.max(0, best * 180 + state.attempts.length * 20 - state.errors * 25),
-        accuracy: state.attempts.length > 0 ? Math.round((best / state.secret.length) * 100) : 0,
-        moves: state.moves,
-        attempts: state.attempts.length,
-        success: best,
-        errors: state.errors,
-        details: { guesses: state.attempts, maxAttempts: state.maxAttempts },
-      };
-    }
     case 'bulls-and-cows': {
       const best = Math.max(0, ...state.attempts.map((attempt) => attempt.bulls));
       return {
@@ -337,8 +291,6 @@ export function buildLanguageNeutralResultStats(state: LanguageNeutralGameState)
       return buildBoardAiStats(state.moves, state.aiMoves, state.errors, checkMarkWin(state.board, state.size, state.winLength, 'X'), { size: state.size, winLength: state.winLength });
     case 'connect4':
       return buildBoardAiStats(state.moves, state.aiMoves, state.errors, checkConnect4Win(state.board, state.rows, state.cols, 'P'), { rows: state.rows, cols: state.cols });
-    case 'nim':
-      return buildBoardAiStats(state.moves, state.aiMoves, state.errors, totalNimObjects(state.piles) === 0, { piles: state.piles });
     case 'dots-and-boxes':
       return {
         score: Math.max(0, state.playerScore * 120 - state.aiScore * 90 - state.errors * 25),
@@ -361,18 +313,6 @@ export function buildLanguageNeutralResultStats(state: LanguageNeutralGameState)
         errors: state.errors,
         details: { targetSets: state.targetSets, cardsRemaining: state.deck.length },
       };
-    case 'tangram': {
-      const placed = state.pieces.filter((piece) => piece.placed).length;
-      return {
-        score: Math.max(0, placed * 120 - state.errors * 30 - state.moves * 2),
-        accuracy: state.moves > 0 ? Math.round((placed / state.moves) * 100) : 0,
-        moves: state.moves,
-        attempts: state.moves,
-        success: placed,
-        errors: state.errors,
-        details: { placed, totalPieces: state.pieces.length },
-      };
-    }
     case 'sokoban':
       return {
         score: Math.max(0, countSolvedBoxes(state) * 150 - state.pushes * 4 - state.errors * 25),
@@ -403,29 +343,19 @@ export function getLanguageNeutralFeedbackCounts(state: LanguageNeutralGameState
     case 'sudoku':
     case 'latin-square':
     case 'magic-square':
-    case 'binary-puzzle':
       return { success: countCorrectEditableCells(state), errors: state.errors };
-    case 'n-queens':
-      return { success: countQueens(state) - countQueenConflicts(state), errors: state.errors + countQueenConflicts(state) };
-    case 'knights-tour':
-      return { success: state.visited.length, errors: state.errors };
-    case 'mastermind':
-      return { success: state.attempts.reduce((sum, attempt) => sum + attempt.exact, 0), errors: state.errors };
     case 'bulls-and-cows':
       return { success: state.attempts.reduce((sum, attempt) => sum + attempt.bulls, 0), errors: state.errors };
     case 'simon-says':
       return { success: state.moves, errors: state.errors };
     case 'tic-tac-toe':
     case 'connect4':
-    case 'nim':
     case 'hex':
       return { success: state.moves, errors: state.errors };
     case 'dots-and-boxes':
       return { success: state.playerScore, errors: state.errors + state.aiScore };
     case 'set-game':
       return { success: state.found, errors: state.errors };
-    case 'tangram':
-      return { success: state.pieces.filter((piece) => piece.placed).length, errors: state.errors };
     case 'sokoban':
       return { success: countSolvedBoxes(state), errors: state.errors };
     case 'maze':
@@ -446,17 +376,7 @@ export function drawLanguageNeutralGame(
     case 'sudoku':
     case 'latin-square':
     case 'magic-square':
-    case 'binary-puzzle':
       drawNumberGrid(app, state, onTap, t);
-      break;
-    case 'n-queens':
-      drawNQueens(app, state, onTap, t);
-      break;
-    case 'knights-tour':
-      drawKnightsTour(app, state, onTap, t);
-      break;
-    case 'mastermind':
-      drawMastermind(app, state, onTap, t);
       break;
     case 'bulls-and-cows':
       drawBullsAndCows(app, state, onTap, t);
@@ -470,9 +390,6 @@ export function drawLanguageNeutralGame(
     case 'connect4':
       drawConnect4(app, state, onTap, t);
       break;
-    case 'nim':
-      drawNim(app, state, onTap, t);
-      break;
     case 'dots-and-boxes':
       drawDotsAndBoxes(app, state, onTap, t);
       break;
@@ -481,9 +398,6 @@ export function drawLanguageNeutralGame(
       break;
     case 'set-game':
       drawSetGame(app, state, onTap, t);
-      break;
-    case 'tangram':
-      drawTangram(app, state, onTap, t);
       break;
     case 'sokoban':
       drawSokoban(app, state, onTap, t);
@@ -520,15 +434,20 @@ function createNumberGridState(kind: NumberGridState['kind'], difficulty: Diffic
   if (kind === 'magic-square') {
     return maskNumberGrid('magic-square', 3, [8, 1, 6, 3, 5, 7, 4, 9, 2], [4, 6, 7][diff]);
   }
-  const size = [6, 8, 10][diff];
-  return maskNumberGrid('binary-puzzle', size, createBinarySolution(size), Math.round(size * size * [0.45, 0.58, 0.68][diff]));
+  throw new Error(`Unsupported number grid kind: ${kind}`);
+}
+
+function createMergedSudokuState(difficulty: Difficulty): NumberGridState {
+  if (difficulty === 'Beginner') return createNumberGridState('latin-square', difficulty);
+  if (difficulty === 'Intermediate') return createNumberGridState('magic-square', difficulty);
+  return createNumberGridState('sudoku', difficulty);
 }
 
 function maskNumberGrid(kind: NumberGridState['kind'], size: number, solution: number[], blanks: number, boxSize?: number): NumberGridState {
   const values = [...solution];
   const givens = Array.from({ length: solution.length }, () => true);
   shuffle(Array.from({ length: solution.length }, (_, index) => index)).slice(0, blanks).forEach((index) => {
-    values[index] = kind === 'binary-puzzle' ? BINARY_EMPTY : EMPTY;
+    values[index] = EMPTY;
     givens[index] = false;
   });
   return { kind, size, boxSize, solution, values, givens, moves: 0, errors: 0 };
@@ -536,8 +455,8 @@ function maskNumberGrid(kind: NumberGridState['kind'], size: number, solution: n
 
 function handleNumberGridTap(state: NumberGridState, index: number, finishGame: (result: GameResult) => void) {
   if (state.givens[index]) return;
-  const emptyValue = state.kind === 'binary-puzzle' ? BINARY_EMPTY : EMPTY;
-  const maxValue = state.kind === 'binary-puzzle' ? 1 : state.size * (state.kind === 'magic-square' ? state.size : 1);
+  const emptyValue = EMPTY;
+  const maxValue = state.kind === 'magic-square' ? state.size * state.size : state.size;
   const current = state.values[index];
   state.values[index] = current >= maxValue ? emptyValue : current + 1;
   state.moves += 1;
@@ -566,15 +485,14 @@ function buildNumberGridStats(state: NumberGridState): ResultStats {
     attempts: state.moves,
     success: correct,
     errors: state.errors + (editable - correct),
-    details: { size: state.size, solved: isNumberGridSolved(state) },
+    details: { variant: state.kind, size: state.size, solved: isNumberGridSolved(state) },
   };
 }
 
-function drawNumberGrid(app: Application, state: NumberGridState, onTap: (index: number) => void, t: TFunction) {
-  const emptyValue = state.kind === 'binary-puzzle' ? BINARY_EMPTY : EMPTY;
-  drawHeader(app, t(TITLE_KEYS[state.kind]), t('cognitive.play.tapCycle'));
+function drawNumberGrid(app: Application, state: NumberGridState, onTap: (index: number) => void, _t: TFunction) {
+  const emptyValue = EMPTY;
   const preferred = state.kind === 'sudoku' ? 50 : state.size >= 8 ? 46 : 74;
-  const { cell, gap, startX, startY } = getGridLayout(app, state.size, state.size, preferred, state.kind === 'sudoku' ? 3 : 6);
+  const { cell, gap, startX, startY } = getGridLayout(app, state.size, state.size, preferred, 0);
   state.values.forEach((value, index) => {
     const row = Math.floor(index / state.size);
     const col = index % state.size;
@@ -583,160 +501,36 @@ function drawNumberGrid(app: Application, state: NumberGridState, onTap: (index:
     node.y = startY + row * (cell + gap);
     const given = state.givens[index];
     const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 6)
-      .fill(given ? COGNITIVE_ACCENT_TINT : COGNITIVE_SURFACE)
-      .stroke({ color: given ? COGNITIVE_ACCENT : COGNITIVE_BORDER, width: given ? 2 : 1 });
+    g.rect(0, 0, cell, cell).fill(NUMBER_GRID_CELL_FILL);
     node.addChild(g);
     if (value !== emptyValue) {
       addText(node, String(value), cell / 2, cell / 2, {
         fontSize: Math.max(18, cell * 0.42),
         fontWeight: given ? '900' : '700',
-        fill: given ? '#005EB8' : '#1A1C1E',
+        fill: given ? NUMBER_GRID_GIVEN_TEXT : NUMBER_GRID_ENTRY_TEXT,
       });
     }
     app.stage.addChild(node);
   });
+  drawNumberGridLines(app, startX, startY, cell, state.size, state.kind === 'sudoku' ? (state.boxSize ?? 3) : state.size);
 }
 
-function createNQueensState(difficulty: Difficulty): NQueensState {
-  const size = [4, 6, 8][difficultyIndex(difficulty)];
-  return { kind: 'n-queens', size, queens: Array.from({ length: size * size }, () => false), moves: 0, errors: 0 };
-}
+function drawNumberGridLines(app: Application, startX: number, startY: number, cell: number, size: number, majorEvery: number) {
+  const boardSize = cell * size;
+  const minor = new Graphics();
+  const major = new Graphics();
 
-function handleNQueensTap(state: NQueensState, index: number, finishGame: (result: GameResult) => void) {
-  state.queens[index] = !state.queens[index];
-  state.moves += 1;
-  if (state.queens[index] && countQueenConflicts(state) > 0) state.errors += 1;
-  if (countQueens(state) === state.size && countQueenConflicts(state) === 0) finishGame('Victory');
-}
-
-function drawNQueens(app: Application, state: NQueensState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.queens.title'), t('cognitive.play.placeQueens', { value: state.size }));
-  const conflicts = getQueenConflictIndexes(state);
-  const { cell, gap, startX, startY } = getGridLayout(app, state.size, state.size, 72, 2);
-  state.queens.forEach((queen, index) => {
-    const row = Math.floor(index / state.size);
-    const col = index % state.size;
-    const node = interactiveNode(onTap, index);
-    node.x = startX + col * (cell + gap);
-    node.y = startY + row * (cell + gap);
-    const g = new Graphics();
-    g.rect(0, 0, cell, cell)
-      .fill((row + col) % 2 === 0 ? COGNITIVE_SURFACE : COGNITIVE_ACCENT_TINT)
-      .stroke({ color: conflicts.has(index) ? AI_COLOR : COGNITIVE_BORDER, width: conflicts.has(index) ? 3 : 1 });
-    node.addChild(g);
-    if (queen) {
-      addText(node, 'Q', cell / 2, cell / 2, {
-        fontSize: Math.max(24, cell * 0.48),
-        fontWeight: '900',
-        fill: conflicts.has(index) ? '#B54747' : '#005EB8',
-      });
-    }
-    app.stage.addChild(node);
-  });
-}
-
-function createKnightsTourState(difficulty: Difficulty): KnightsTourState {
-  const size = [5, 6, 7][difficultyIndex(difficulty)];
-  return { kind: 'knights-tour', size, visited: [], currentIndex: null, moves: 0, errors: 0 };
-}
-
-function handleKnightsTourTap(state: KnightsTourState, index: number, finishGame: (result: GameResult) => void) {
-  if (state.visited.includes(index)) {
-    state.errors += 1;
-    return;
+  for (let index = 0; index <= size; index += 1) {
+    const position = index * cell;
+    const target = index % majorEvery === 0 ? major : minor;
+    target.moveTo(startX + position, startY).lineTo(startX + position, startY + boardSize);
+    target.moveTo(startX, startY + position).lineTo(startX + boardSize, startY + position);
   }
-  if (state.currentIndex !== null && !isKnightMove(state.currentIndex, index, state.size)) {
-    state.errors += 1;
-    return;
-  }
-  state.currentIndex = index;
-  state.visited.push(index);
-  state.moves += 1;
-  if (state.visited.length === state.size * state.size) finishGame('Victory');
-}
 
-function drawKnightsTour(app: Application, state: KnightsTourState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.knights.title'), t('cognitive.play.visited', { value: state.visited.length }));
-  const { cell, gap, startX, startY } = getGridLayout(app, state.size, state.size, 70, 3);
-  Array.from({ length: state.size * state.size }).forEach((_, index) => {
-    const row = Math.floor(index / state.size);
-    const col = index % state.size;
-    const step = state.visited.indexOf(index);
-    const isCurrent = index === state.currentIndex;
-    const node = interactiveNode(onTap, index);
-    node.x = startX + col * (cell + gap);
-    node.y = startY + row * (cell + gap);
-    const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 6)
-      .fill(step >= 0 ? (isCurrent ? COGNITIVE_ACCENT : COGNITIVE_ACCENT_TINT) : COGNITIVE_SURFACE)
-      .stroke({ color: COGNITIVE_BORDER, width: 1 });
-    node.addChild(g);
-    if (step >= 0) {
-      addText(node, String(step + 1), cell / 2, cell / 2, {
-        fontSize: Math.max(15, cell * 0.28),
-        fontWeight: '900',
-        fill: isCurrent ? '#FFFFFF' : '#005EB8',
-      });
-    }
-    app.stage.addChild(node);
-  });
-}
-
-function createMastermindState(difficulty: Difficulty): MastermindState {
-  const diff = difficultyIndex(difficulty);
-  const colorCount = [4, 5, 6][diff];
-  const secret = shuffle(Array.from({ length: colorCount }, (_, index) => index)).slice(0, 4);
-  return {
-    kind: 'mastermind',
-    secret,
-    guess: Array.from({ length: 4 }, () => -1),
-    selectedSlot: 0,
-    attempts: [],
-    maxAttempts: [10, 9, 8][diff],
-    colorCount,
-    moves: 0,
-    errors: 0,
-  };
-}
-
-function handleMastermindTap(state: MastermindState, index: number, finishGame: (result: GameResult) => void) {
-  if (index >= 0 && index < state.guess.length) {
-    state.selectedSlot = index;
-    return;
-  }
-  if (index >= COLOR_OFFSET && index < COLOR_OFFSET + state.colorCount) {
-    state.guess[state.selectedSlot] = index - COLOR_OFFSET;
-    state.selectedSlot = (state.selectedSlot + 1) % state.guess.length;
-    state.moves += 1;
-    return;
-  }
-  if (index !== SUBMIT_INDEX) return;
-  if (state.guess.some((value) => value < 0)) {
-    state.errors += 1;
-    return;
-  }
-  const result = scoreMastermindGuess(state.secret, state.guess);
-  state.attempts.push({ guess: [...state.guess], ...result });
-  state.moves += 1;
-  if (result.exact === state.secret.length) {
-    finishGame('Victory');
-    return;
-  }
-  state.guess = Array.from({ length: state.guess.length }, () => -1);
-  state.selectedSlot = 0;
-  if (state.attempts.length >= state.maxAttempts) finishGame('Defeat');
-}
-
-function drawMastermind(app: Application, state: MastermindState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.mastermind.title'), t('cognitive.play.mastermind', { value: state.maxAttempts - state.attempts.length }));
-  drawGuessHistory(app, state.attempts.map((attempt) => ({
-    label: `${attempt.exact}/${attempt.colorOnly}`,
-    values: attempt.guess,
-  })), 4);
-  drawCodeInput(app, state.guess, state.selectedSlot, onTap);
-  drawColorPalette(app, state.colorCount, onTap);
-  drawButton(app, SUBMIT_INDEX, t('cognitive.play.submit'), app.renderer.width / 2, app.renderer.height - 72, 180, 48, onTap);
+  minor.stroke({ color: NUMBER_GRID_BORDER, width: 1 });
+  major.stroke({ color: NUMBER_GRID_BORDER, width: 4 });
+  app.stage.addChild(minor);
+  app.stage.addChild(major);
 }
 
 function createBullsAndCowsState(difficulty: Difficulty): BullsAndCowsState {
@@ -785,14 +579,14 @@ function handleBullsAndCowsTap(state: BullsAndCowsState, index: number, finishGa
 }
 
 function drawBullsAndCows(app: Application, state: BullsAndCowsState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.bulls.title'), t('cognitive.play.bulls', { value: state.maxAttempts - state.attempts.length }));
+  const boardBounds = getResponsiveBoardBounds(app);
   drawGuessHistory(app, state.attempts.map((attempt) => ({
     label: `${attempt.bulls}/${attempt.cows}`,
     values: attempt.guess,
-  })), 10);
+  })));
   drawDigitInput(app, state.guess, state.selectedSlot, onTap);
   drawDigitPalette(app, onTap);
-  drawButton(app, SUBMIT_INDEX, t('cognitive.play.submit'), app.renderer.width / 2, app.renderer.height - 72, 180, 48, onTap);
+  drawButton(app, SUBMIT_INDEX, t('cognitive.play.submit'), app.renderer.width / 2, boardBounds.bottom - 24, Math.min(180, boardBounds.width), 48, onTap);
 }
 
 function createSimonState(difficulty: Difficulty): SimonState {
@@ -831,31 +625,39 @@ function handleSimonTap(state: SimonState, index: number, elapsed: number, finis
   state.nextStepAt = elapsed + 0.55;
 }
 
-function drawSimon(app: Application, state: SimonState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.simon.title'), state.status === 'showing' ? t('cognitive.simon.watch') : t('cognitive.simon.repeat'));
-  const size = Math.min(360, app.renderer.width - 64, app.renderer.height - 180);
-  const startX = (app.renderer.width - size) / 2;
-  const startY = (app.renderer.height - size) / 2 + 40;
-  const colors = [0x005eb8, 0x16794a, 0xd97706, 0xb54747];
-  for (let index = 0; index < 4; index += 1) {
-    const node = interactiveNode(onTap, index);
+function drawSimon(app: Application, state: SimonState, onTap: (index: number) => void, _t: TFunction) {
+  const boardMax = getResponsiveBoardMaxSize(app);
+  const boardSize = Math.floor(Math.min(isMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 320, boardMax.width, boardMax.height));
+  const buttonSize = boardSize * (150 / 320);
+  const gap = boardSize - buttonSize * 2;
+  const startX = (app.renderer.width - boardSize) / 2;
+  const startY = (app.renderer.height - boardSize) / 2;
+  const buttons = [
+    { color: ORIGINAL_GREEN, activeColor: 0x58d68d, corner: 'top-left' as const },
+    { color: ORIGINAL_RED, activeColor: 0xec7063, corner: 'top-right' as const },
+    { color: ORIGINAL_YELLOW, activeColor: 0xf4d03f, corner: 'bottom-left' as const },
+    { color: ORIGINAL_BLUE, activeColor: 0x5dade2, corner: 'bottom-right' as const },
+  ];
+
+  buttons.forEach((button, index) => {
     const col = index % 2;
     const row = Math.floor(index / 2);
-    node.x = startX + col * (size / 2 + 8);
-    node.y = startY + row * (size / 2 + 8);
-    const lit = state.litIndex === index;
-    const g = new Graphics();
-    g.roundRect(0, 0, size / 2 - 8, size / 2 - 8, 8)
-      .fill({ color: colors[index], alpha: lit ? 1 : 0.42 })
-      .stroke({ color: lit ? 0xffffff : COGNITIVE_BORDER, width: lit ? 4 : 1 });
-    node.addChild(g);
-    app.stage.addChild(node);
-  }
-  addText(app.stage, `${state.sequence.length}/${state.targetRounds}`, app.renderer.width / 2, startY + size + 24, {
-    fontSize: 24,
-    fontWeight: '900',
-    fill: '#1A1C1E',
+    drawSimonButton(
+      app,
+      startX + col * (buttonSize + gap),
+      startY + row * (buttonSize + gap),
+      buttonSize,
+      button.corner,
+      state.litIndex === index ? button.activeColor : button.color,
+      state.litIndex === index,
+      index,
+      onTap,
+    );
   });
+
+  const center = new Graphics();
+  center.circle(app.renderer.width / 2, app.renderer.height / 2, boardSize * (50 / 320)).fill(ORIGINAL_TEXT);
+  app.stage.addChild(center);
 }
 
 function createTicTacToeState(difficulty: Difficulty): TicTacToeState {
@@ -895,9 +697,18 @@ function handleTicTacToeTap(state: TicTacToeState, index: number, finishGame: (r
   if (checkMarkWin(state.board, state.size, state.winLength, 'O') || state.board.every(Boolean)) finishGame('Defeat');
 }
 
-function drawTicTacToe(app: Application, state: TicTacToeState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.tictactoe.title'), t('cognitive.play.youBlue'));
-  const { cell, gap, startX, startY } = getGridLayout(app, state.size, state.size, 92, 8);
+function drawTicTacToe(app: Application, state: TicTacToeState, onTap: (index: number) => void, _t: TFunction) {
+  const padding = 10;
+  const { cell, gap, startX, startY } = getGridLayout(app, state.size, state.size, 60, 5, padding);
+  const board = new Graphics();
+  board.rect(
+    startX - padding,
+    startY - padding,
+    state.size * cell + (state.size - 1) * gap + padding * 2,
+    state.size * cell + (state.size - 1) * gap + padding * 2,
+  ).fill(0xffffff);
+  app.stage.addChild(board);
+
   state.board.forEach((mark, index) => {
     const row = Math.floor(index / state.size);
     const col = index % state.size;
@@ -905,13 +716,13 @@ function drawTicTacToe(app: Application, state: TicTacToeState, onTap: (index: n
     node.x = startX + col * (cell + gap);
     node.y = startY + row * (cell + gap);
     const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 8).fill(COGNITIVE_SURFACE).stroke({ color: COGNITIVE_BORDER, width: 2 });
+    g.rect(0, 0, cell, cell).fill(0xffffff).stroke({ color: 0x333333, width: 2 });
     node.addChild(g);
     if (mark) {
       addText(node, mark, cell / 2, cell / 2, {
-        fontSize: Math.max(28, cell * 0.52),
-        fontWeight: '900',
-        fill: mark === 'X' ? '#005EB8' : '#B54747',
+        fontSize: Math.max(24, cell * 0.4),
+        fontWeight: '400',
+        fill: '#2c3e50',
       });
     }
     app.stage.addChild(node);
@@ -950,9 +761,8 @@ function handleConnect4Tap(state: Connect4State, index: number, finishGame: (res
   if (checkConnect4Win(state.board, state.rows, state.cols, 'A') || state.board.every(Boolean)) finishGame('Defeat');
 }
 
-function drawConnect4(app: Application, state: Connect4State, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.connect4.title'), t('cognitive.play.dropDisc'));
-  const { cell, gap, startX, startY } = getGridLayout(app, state.cols, state.rows, 62, 6);
+function drawConnect4(app: Application, state: Connect4State, onTap: (index: number) => void, _t: TFunction) {
+  const { cell, gap, startX, startY } = getGridLayout(app, state.cols, state.rows, 50, 10);
   state.board.forEach((disc, index) => {
     const row = Math.floor(index / state.cols);
     const col = index % state.cols;
@@ -960,58 +770,9 @@ function drawConnect4(app: Application, state: Connect4State, onTap: (index: num
     node.x = startX + col * (cell + gap);
     node.y = startY + row * (cell + gap);
     const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 6).fill(COGNITIVE_ACCENT_TINT).stroke({ color: COGNITIVE_BORDER, width: 1 });
-    g.circle(cell / 2, cell / 2, cell * 0.35).fill(disc === 'P' ? PLAYER_COLOR : disc === 'A' ? AI_COLOR : COGNITIVE_SURFACE);
+    g.circle(cell / 2, cell / 2, cell / 2).fill(disc === 'P' ? ORIGINAL_CONNECT4_YELLOW : disc === 'A' ? ORIGINAL_CONNECT4_RED : 0xffffff);
     node.addChild(g);
     app.stage.addChild(node);
-  });
-}
-
-function createNimState(difficulty: Difficulty): NimState {
-  const piles = [[3, 4, 5], [4, 5, 6], [5, 7, 9]][difficultyIndex(difficulty)];
-  return { kind: 'nim', piles: [...piles], moves: 0, aiMoves: 0, errors: 0 };
-}
-
-function handleNimTap(state: NimState, index: number, finishGame: (result: GameResult) => void) {
-  const pile = Math.floor(index / 100);
-  const take = state.piles[pile] - (index % 100);
-  if (!state.piles[pile] || take < 1 || take > state.piles[pile]) {
-    state.errors += 1;
-    return;
-  }
-  state.piles[pile] -= take;
-  state.moves += 1;
-  if (totalNimObjects(state.piles) === 0) {
-    finishGame('Defeat');
-    return;
-  }
-  const aiMove = chooseNimMove(state);
-  state.piles[aiMove.pile] -= aiMove.take;
-  state.aiMoves += 1;
-  if (totalNimObjects(state.piles) === 0) finishGame('Victory');
-}
-
-function drawNim(app: Application, state: NimState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.nim.title'), t('cognitive.play.nim'));
-  const maxPile = Math.max(...state.piles, 1);
-  const gap = 12;
-  const circle = Math.min(44, (app.renderer.width - 96 - gap * (maxPile - 1)) / maxPile);
-  const startY = 150;
-  state.piles.forEach((count, pile) => {
-    addText(app.stage, String(pile + 1), 48, startY + pile * 82 + circle / 2, {
-      fontSize: 20,
-      fontWeight: '900',
-      fill: '#424752',
-    });
-    for (let item = 0; item < count; item += 1) {
-      const node = interactiveNode(onTap, pile * 100 + item);
-      node.x = 86 + item * (circle + gap);
-      node.y = startY + pile * 82;
-      const g = new Graphics();
-      g.circle(circle / 2, circle / 2, circle / 2).fill(COGNITIVE_ACCENT).stroke({ color: COGNITIVE_BORDER, width: 1 });
-      node.addChild(g);
-      app.stage.addChild(node);
-    }
   });
 }
 
@@ -1054,16 +815,25 @@ function handleDotsAndBoxesTap(state: DotsAndBoxesState, index: number, finishGa
   }
 }
 
-function drawDotsAndBoxes(app: Application, state: DotsAndBoxesState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.dots.title'), `${t('cognitive.play.score')}: ${state.playerScore}/${state.aiScore}`);
-  const { cell, startX, startY } = getGridLayout(app, state.size, state.size, 72, 0);
+function drawDotsAndBoxes(app: Application, state: DotsAndBoxesState, onTap: (index: number) => void, _t: TFunction) {
+  const padding = 16;
+  const { cell, startX, startY } = getGridLayout(app, state.size, state.size, 72, 0, padding);
+  const board = new Graphics();
+  board.rect(
+    startX - padding,
+    startY - padding,
+    (state.size - 1) * cell + padding * 2,
+    (state.size - 1) * cell + padding * 2,
+  ).fill(ORIGINAL_LIGHT_MUTED).stroke({ color: ORIGINAL_GRAY_BORDER, width: 2 });
+  app.stage.addChild(board);
+
   for (let row = 0; row < state.size - 1; row += 1) {
     for (let col = 0; col < state.size - 1; col += 1) {
       const owner = state.boxes[row * (state.size - 1) + col];
       if (!owner) continue;
       const g = new Graphics();
       g.rect(startX + col * cell + 8, startY + row * cell + 8, cell - 16, cell - 16)
-        .fill({ color: owner === 'P' ? COGNITIVE_ACCENT : AI_COLOR, alpha: 0.16 });
+        .fill({ color: owner === 'P' ? ORIGINAL_BLUE : ORIGINAL_RED, alpha: 0.4 });
       app.stage.addChild(g);
     }
   }
@@ -1080,7 +850,7 @@ function drawDotsAndBoxes(app: Application, state: DotsAndBoxesState, onTap: (in
   for (let row = 0; row < state.size; row += 1) {
     for (let col = 0; col < state.size; col += 1) {
       const dot = new Graphics();
-      dot.circle(startX + col * cell, startY + row * cell, 5).fill(COGNITIVE_TEXT);
+      dot.circle(startX + col * cell, startY + row * cell, 5).fill(ORIGINAL_TEXT);
       app.stage.addChild(dot);
     }
   }
@@ -1110,12 +880,29 @@ function handleHexTap(state: HexState, index: number, finishGame: (result: GameR
   if (hasHexPath(state, 2) || state.board.every(Boolean)) finishGame('Defeat');
 }
 
-function drawHex(app: Application, state: HexState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.hex.title'), t('cognitive.play.connectSides'));
-  const radius = Math.min(31, (app.renderer.width - 96) / (state.size * 1.55), (app.renderer.height - 180) / (state.size * 1.35));
+function drawHex(app: Application, state: HexState, onTap: (index: number) => void, _t: TFunction) {
+  const boardMax = getResponsiveBoardMaxSize(app);
+  const preferredRadius = isMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 31;
+  const horizontalFactor = (state.size * 1.5 - 0.5) * Math.sqrt(3);
+  const verticalFactor = state.size * 1.5 + 0.5;
+  const edgePadding = 24;
+  const radius = Math.floor(Math.max(8, Math.min(
+    preferredRadius,
+    (boardMax.width - edgePadding) / horizontalFactor,
+    (boardMax.height - edgePadding) / verticalFactor,
+  )));
   const width = radius * Math.sqrt(3);
-  const startX = (app.renderer.width - (state.size + state.size / 2) * width) / 2 + width;
-  const startY = 145;
+  const boardWidth = horizontalFactor * radius;
+  const boardHeight = verticalFactor * radius;
+  const startX = (app.renderer.width - boardWidth) / 2 + width / 2;
+  const startY = (app.renderer.height - boardHeight) / 2 + radius;
+  const edge = new Graphics();
+  edge.rect(startX - width / 2, startY - radius - 12, boardWidth, 6).fill(ORIGINAL_BLUE);
+  edge.rect(startX - width / 2, startY + boardHeight - radius + 6, boardWidth, 6).fill(ORIGINAL_BLUE_DARK);
+  edge.rect(startX - width / 2 - 12, startY - radius, 6, boardHeight).fill(ORIGINAL_RED);
+  edge.rect(startX + boardWidth - width / 2 + 6, startY - radius, 6, boardHeight).fill(ORIGINAL_RED_DARK);
+  app.stage.addChild(edge);
+
   state.board.forEach((value, index) => {
     const row = Math.floor(index / state.size);
     const col = index % state.size;
@@ -1126,8 +913,8 @@ function drawHex(app: Application, state: HexState, onTap: (index: number) => vo
     node.y = cy;
     const g = new Graphics();
     drawHexagon(g, 0, 0, radius)
-      .fill(value === 1 ? PLAYER_COLOR : value === 2 ? AI_COLOR : COGNITIVE_SURFACE)
-      .stroke({ color: COGNITIVE_BORDER, width: 2 });
+      .fill(value === 1 ? PLAYER_COLOR : value === 2 ? AI_COLOR : ORIGINAL_LIGHT)
+      .stroke({ color: value === 1 ? ORIGINAL_BLUE_EDGE : value === 2 ? ORIGINAL_RED_EDGE : ORIGINAL_BORDER, width: 2 });
     node.addChild(g);
     app.stage.addChild(node);
   });
@@ -1174,104 +961,50 @@ function handleSetTap(state: SetGameState, index: number, finishGame: (result: G
   state.selected = [];
 }
 
-function drawSetGame(app: Application, state: SetGameState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.set.title'), `${state.found}/${state.targetSets}`);
+function drawSetGame(app: Application, state: SetGameState, onTap: (index: number) => void, _t: TFunction) {
   const cols = 4;
   const rows = Math.ceil(state.board.length / cols);
-  const { cell, gap, startX, startY } = getGridLayout(app, cols, rows, 116, 10);
+  const gap = 10;
+  const padding = 15;
+  const boardMax = getResponsiveBoardMaxSize(app);
+  const preferredCardWidth = isMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 120;
+  const availableWidth = boardMax.width - padding * 2 - gap * (cols - 1);
+  const availableHeight = boardMax.height - padding * 2 - gap * (rows - 1);
+  const cardWidth = Math.floor(Math.min(preferredCardWidth, availableWidth / cols, (availableHeight / rows) * 1.5));
+  const cardHeight = Math.floor(cardWidth * (80 / 120));
+  const boardWidth = cols * cardWidth + (cols - 1) * gap + padding * 2;
+  const boardHeight = rows * cardHeight + (rows - 1) * gap + padding * 2;
+  const startX = (app.renderer.width - boardWidth) / 2 + padding;
+  const startY = (app.renderer.height - boardHeight) / 2 + padding;
+  const board = new Graphics();
+  board.rect(startX - padding, startY - padding, boardWidth, boardHeight).fill(ORIGINAL_BOARD_DARK);
+  app.stage.addChild(board);
+
   state.board.forEach((card, index) => {
     const row = Math.floor(index / cols);
     const col = index % cols;
     const selected = state.selected.includes(index);
     const node = interactiveNode(onTap, index);
-    node.x = startX + col * (cell + gap);
-    node.y = startY + row * (cell + gap);
+    node.x = startX + col * (cardWidth + gap);
+    node.y = startY + row * (cardHeight + gap);
     const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 8)
-      .fill(selected ? COGNITIVE_ACCENT_TINT : COGNITIVE_SURFACE)
-      .stroke({ color: selected ? COGNITIVE_ACCENT : COGNITIVE_BORDER, width: selected ? 3 : 1 });
+    g.rect(0, 0, cardWidth, cardHeight)
+      .fill(0xffffff)
+      .stroke({ color: selected ? ORIGINAL_BLUE : ORIGINAL_BORDER, width: 3 });
     node.addChild(g);
-    drawSetCard(node, card, cell);
-    app.stage.addChild(node);
-  });
-}
-
-function createTangramState(): TangramState {
-  const pieces: TangramPiece[] = [
-    { id: 0, shape: 'large-triangle', placed: false },
-    { id: 1, shape: 'large-triangle', placed: false },
-    { id: 2, shape: 'medium-triangle', placed: false },
-    { id: 3, shape: 'small-triangle', placed: false },
-    { id: 4, shape: 'small-triangle', placed: false },
-    { id: 5, shape: 'square', placed: false },
-    { id: 6, shape: 'parallelogram', placed: false },
-  ];
-  return { kind: 'tangram', pieces, slots: shuffle(pieces.map((piece) => piece.id)), selectedPieceId: null, moves: 0, errors: 0 };
-}
-
-function handleTangramTap(state: TangramState, index: number, finishGame: (result: GameResult) => void) {
-  if (index >= TANGRAM_PIECE_OFFSET && index < TANGRAM_SLOT_OFFSET) {
-    const pieceId = index - TANGRAM_PIECE_OFFSET;
-    const piece = state.pieces.find((candidate) => candidate.id === pieceId);
-    if (piece && !piece.placed) state.selectedPieceId = pieceId;
-    return;
-  }
-  if (index < TANGRAM_SLOT_OFFSET) return;
-  const slot = index - TANGRAM_SLOT_OFFSET;
-  if (state.selectedPieceId === null || state.slots[slot] === undefined) return;
-  const piece = state.pieces.find((candidate) => candidate.id === state.selectedPieceId);
-  state.moves += 1;
-  if (piece && state.slots[slot] === piece.id) {
-    piece.placed = true;
-    state.selectedPieceId = null;
-    if (state.pieces.every((candidate) => candidate.placed)) finishGame('Victory');
-    return;
-  }
-  state.errors += 1;
-}
-
-function drawTangram(app: Application, state: TangramState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.tangram.title'), t('cognitive.play.matchSilhouette'));
-  const slotSize = Math.min(84, (app.renderer.width - 96) / 7);
-  const topY = 150;
-  const startX = (app.renderer.width - (slotSize * 7 + 8 * 6)) / 2;
-  state.slots.forEach((pieceId, slot) => {
-    const piece = state.pieces[pieceId];
-    const node = interactiveNode(onTap, TANGRAM_SLOT_OFFSET + slot);
-    node.x = startX + slot * (slotSize + 8);
-    node.y = topY;
-    const g = new Graphics();
-    g.roundRect(0, 0, slotSize, slotSize, 8).fill(COGNITIVE_SURFACE).stroke({ color: COGNITIVE_BORDER, width: 2 });
-    node.addChild(g);
-    if (piece.placed) drawTangramPiece(node, piece.shape, slotSize / 2, slotSize / 2, slotSize * 0.34, COGNITIVE_ACCENT, true);
-    else drawTangramPiece(node, piece.shape, slotSize / 2, slotSize / 2, slotSize * 0.34, COGNITIVE_BORDER, false);
-    app.stage.addChild(node);
-  });
-  const pieces = state.pieces.filter((piece) => !piece.placed);
-  const bottomY = Math.min(app.renderer.height - slotSize - 96, topY + slotSize + 120);
-  const pieceStartX = (app.renderer.width - (slotSize * 7 + 8 * 6)) / 2;
-  pieces.forEach((piece, index) => {
-    const node = interactiveNode(onTap, TANGRAM_PIECE_OFFSET + piece.id);
-    node.x = pieceStartX + index * (slotSize + 8);
-    node.y = bottomY;
-    const selected = state.selectedPieceId === piece.id;
-    const g = new Graphics();
-    g.roundRect(0, 0, slotSize, slotSize, 8)
-      .fill(selected ? COGNITIVE_ACCENT_TINT : COGNITIVE_SURFACE)
-      .stroke({ color: selected ? COGNITIVE_ACCENT : COGNITIVE_BORDER, width: selected ? 3 : 1 });
-    node.addChild(g);
-    drawTangramPiece(node, piece.shape, slotSize / 2, slotSize / 2, slotSize * 0.34, SET_COLORS[piece.id % SET_COLORS.length], true);
+    if (selected) {
+      const selectedGlow = new Graphics();
+      selectedGlow.rect(-3, -3, cardWidth + 6, cardHeight + 6).stroke({ color: ORIGINAL_BLUE, width: 3, alpha: 0.4 });
+      node.addChild(selectedGlow);
+    }
+    drawSetCard(node, card, cardWidth, cardHeight);
     app.stage.addChild(node);
   });
 }
 
 function createSokobanState(difficulty: Difficulty): SokobanState {
-  const levels = [
-    ['#####', '#@  #', '# $ #', '# . #', '#####'],
-    ['######', '#@   #', '# $$ #', '# .. #', '######'],
-    ['#######', '#@    #', '# $$  #', '#  #. #', '#   . #', '#######'],
-  ];
-  const layout = levels[difficultyIndex(difficulty)];
+  const levelIndex = chooseSokobanLevelIndex(difficulty);
+  const layout = SOKOBAN_LEVELS[levelIndex];
   const walls: number[] = [];
   const boxes: number[] = [];
   const targets: number[] = [];
@@ -1279,13 +1012,22 @@ function createSokobanState(difficulty: Difficulty): SokobanState {
   layout.forEach((line, row) => {
     [...line].forEach((char, col) => {
       const index = row * line.length + col;
-      if (char === '#') walls.push(index);
-      if (char === '$' || char === '*') boxes.push(index);
-      if (char === '.' || char === '*' || char === '+') targets.push(index);
-      if (char === '@' || char === '+') player = index;
+      if (char === '#' || char === 'W') walls.push(index);
+      if (char === '$' || char === '*' || char === 'B' || char === 'O') boxes.push(index);
+      if (char === 'T' || char === '*' || char === 'O' || char === '+') targets.push(index);
+      if (char === '@' || char === '+' || char === 'P') player = index;
     });
   });
   return { kind: 'sokoban', rows: layout.length, cols: layout[0].length, walls, boxes, targets, player, moves: 0, pushes: 0, errors: 0 };
+}
+
+function chooseSokobanLevelIndex(difficulty: Difficulty) {
+  const choices = SOKOBAN_LEVEL_CHOICES[difficulty];
+  const previous = lastSokobanLevelByDifficulty[difficulty];
+  const available = choices.filter((index) => index !== previous);
+  const picked = available[Math.floor(Math.random() * available.length)] ?? choices[0];
+  lastSokobanLevelByDifficulty[difficulty] = picked;
+  return picked;
 }
 
 function handleSokobanTap(state: SokobanState, index: number, finishGame: (result: GameResult) => void) {
@@ -1293,21 +1035,29 @@ function handleSokobanTap(state: SokobanState, index: number, finishGame: (resul
   const playerCol = state.player % state.cols;
   const targetRow = Math.floor(index / state.cols);
   const targetCol = index % state.cols;
-  const dy = targetRow - playerRow;
-  const dx = targetCol - playerCol;
-  if (Math.abs(dx) + Math.abs(dy) !== 1) {
+  moveSokoban(state, { dx: targetCol - playerCol, dy: targetRow - playerRow }, finishGame);
+}
+
+function moveSokoban(state: SokobanState, direction: GridDirection, finishGame: (result: GameResult) => void) {
+  if (Math.abs(direction.dx) + Math.abs(direction.dy) !== 1) {
     state.errors += 1;
     return;
   }
-  const next = state.player + dy * state.cols + dx;
+  const row = Math.floor(state.player / state.cols);
+  const col = state.player % state.cols;
+  const nextRow = row + direction.dy;
+  const nextCol = col + direction.dx;
+  const next = nextRow * state.cols + nextCol;
   const boxAt = state.boxes.indexOf(next);
-  if (state.walls.includes(next)) {
+  if (isSokobanBlocked(state, nextRow, nextCol)) {
     state.errors += 1;
     return;
   }
   if (boxAt >= 0) {
-    const boxNext = next + dy * state.cols + dx;
-    if (state.walls.includes(boxNext) || state.boxes.includes(boxNext)) {
+    const boxNextRow = nextRow + direction.dy;
+    const boxNextCol = nextCol + direction.dx;
+    const boxNext = boxNextRow * state.cols + boxNextCol;
+    if (isSokobanBlocked(state, boxNextRow, boxNextCol) || state.boxes.includes(boxNext)) {
       state.errors += 1;
       return;
     }
@@ -1319,9 +1069,16 @@ function handleSokobanTap(state: SokobanState, index: number, finishGame: (resul
   if (isSokobanSolved(state)) finishGame('Victory');
 }
 
-function drawSokoban(app: Application, state: SokobanState, onTap: (index: number) => void, t: TFunction) {
-  drawHeader(app, t('cognitive.sokoban.title'), t('cognitive.play.pushBoxes'));
-  const { cell, gap, startX, startY } = getGridLayout(app, state.cols, state.rows, 74, 4);
+function isSokobanBlocked(state: SokobanState, row: number, col: number) {
+  return row < 0 || row >= state.rows || col < 0 || col >= state.cols || state.walls.includes(row * state.cols + col);
+}
+
+function drawSokoban(app: Application, state: SokobanState, onTap: (index: number) => void, _t: TFunction) {
+  const { cell, gap, startX, startY } = getGridLayout(app, state.cols, state.rows, 50, 0);
+  const board = new Graphics();
+  board.rect(startX, startY, state.cols * cell, state.rows * cell).fill(0xf5f5dc).stroke({ color: 0x333333, width: 3 });
+  app.stage.addChild(board);
+
   for (let index = 0; index < state.rows * state.cols; index += 1) {
     const row = Math.floor(index / state.cols);
     const col = index % state.cols;
@@ -1332,12 +1089,32 @@ function drawSokoban(app: Application, state: SokobanState, onTap: (index: numbe
     const target = state.targets.includes(index);
     const box = state.boxes.includes(index);
     const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 6)
-      .fill(wall ? COGNITIVE_TEXT_MUTED : COGNITIVE_SURFACE)
-      .stroke({ color: COGNITIVE_BORDER, width: 1 });
-    if (target) g.circle(cell / 2, cell / 2, cell * 0.14).fill(SUCCESS_COLOR);
-    if (box) g.roundRect(cell * 0.2, cell * 0.2, cell * 0.6, cell * 0.6, 6).fill(target ? SUCCESS_COLOR : WARNING_COLOR);
-    if (state.player === index) g.circle(cell / 2, cell / 2, cell * 0.24).fill(COGNITIVE_ACCENT);
+    if (wall) {
+      g.rect(0, 0, cell, cell).fill(0x654321).stroke({ color: 0x4a3520, width: 2 });
+      g.moveTo(0, cell / 2).lineTo(cell, cell / 2).stroke({ color: 0x4a3520, width: 2 });
+    }
+    if (target) {
+      g.circle(cell / 2, cell / 2, cell / 4).fill(0xff6b6b).stroke({ color: 0xcc5555, width: 2 });
+    }
+    if (box) {
+      const onTarget = state.targets.includes(index);
+      const boxFill = onTarget ? 0x4caf50 : 0xd4a574;
+      const boxStroke = onTarget ? 0x2e7d32 : 0x8b6914;
+      const crossStroke = onTarget ? 0x1b5e20 : 0x6d4c41;
+      g.rect(4, 4, cell - 8, cell - 8).fill(boxFill).stroke({ color: boxStroke, width: 2 });
+      g.moveTo(12, 12).lineTo(cell - 12, cell - 12);
+      g.moveTo(cell - 12, 12).lineTo(12, cell - 12);
+      g.stroke({ color: crossStroke, width: 2 });
+    }
+    if (state.player === index) {
+      const r = cell / 2 - 6;
+      g.circle(cell / 2, cell / 2, r).fill(0x2196f3).stroke({ color: 0x1565c0, width: 3 });
+      g.circle(cell / 2 - r * 0.35, cell / 2 - r * 0.22, r * 0.18).fill(0xffffff);
+      g.circle(cell / 2 + r * 0.35, cell / 2 - r * 0.22, r * 0.18).fill(0xffffff);
+      g.circle(cell / 2 - r * 0.35, cell / 2 - r * 0.22, r * 0.08).fill(0x333333);
+      g.circle(cell / 2 + r * 0.35, cell / 2 - r * 0.22, r * 0.08).fill(0x333333);
+      g.arc(cell / 2, cell / 2 + r * 0.1, r * 0.45, 0.15 * Math.PI, 0.85 * Math.PI).stroke({ color: 0x333333, width: 2 });
+    }
     node.addChild(g);
     app.stage.addChild(node);
   }
@@ -1345,30 +1122,68 @@ function drawSokoban(app: Application, state: SokobanState, onTap: (index: numbe
 
 function createMazeState(difficulty: Difficulty): MazeState {
   const size = [8, 10, 12][difficultyIndex(difficulty)];
+  let state = createRandomMazeState(size);
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const signature = getMazeSignature(state);
+    if (signature !== lastMazeSignatureByDifficulty[difficulty]) {
+      lastMazeSignatureByDifficulty[difficulty] = signature;
+      return state;
+    }
+    state = createRandomMazeState(size);
+  }
+  lastMazeSignatureByDifficulty[difficulty] = getMazeSignature(state);
+  return state;
+}
+
+function createRandomMazeState(size: number): MazeState {
+  const start = Math.floor(Math.random() * size * size);
+  const cells = generateMaze(size, start);
   return {
     kind: 'maze',
     size,
-    cells: generateMaze(size),
-    current: 0,
-    end: size * size - 1,
+    cells,
+    current: start,
+    end: findFarthestMazeIndex(cells, size, start),
     moves: 0,
     errors: 0,
   };
 }
 
+function getMazeSignature(state: MazeState) {
+  return `${state.current}:${state.end}:${state.cells.map((cell) => (
+    `${cell.top ? 1 : 0}${cell.right ? 1 : 0}${cell.bottom ? 1 : 0}${cell.left ? 1 : 0}`
+  )).join('')}`;
+}
+
 function handleMazeTap(state: MazeState, index: number, finishGame: (result: GameResult) => void) {
-  if (!canMoveMaze(state, state.current, index)) {
+  const currentRow = Math.floor(state.current / state.size);
+  const currentCol = state.current % state.size;
+  const targetRow = Math.floor(index / state.size);
+  const targetCol = index % state.size;
+  moveMaze(state, { dx: targetCol - currentCol, dy: targetRow - currentRow }, finishGame);
+}
+
+function moveMaze(state: MazeState, direction: GridDirection, finishGame: (result: GameResult) => void) {
+  const row = Math.floor(state.current / state.size);
+  const col = state.current % state.size;
+  const nextRow = row + direction.dy;
+  const nextCol = col + direction.dx;
+  const next = nextRow * state.size + nextCol;
+  if (nextRow < 0 || nextRow >= state.size || nextCol < 0 || nextCol >= state.size || !canMoveMaze(state, state.current, next)) {
     state.errors += 1;
     return;
   }
-  state.current = index;
+  state.current = next;
   state.moves += 1;
   if (state.current === state.end) finishGame('Victory');
 }
 
-function drawMaze(app: Application, state: MazeState, onTap: (index: number) => void, t: TFunction, elapsed: number) {
-  drawHeader(app, t('cognitive.maze.title'), t('cognitive.play.elapsed', { value: Math.floor(elapsed) }));
+function drawMaze(app: Application, state: MazeState, onTap: (index: number) => void, _t: TFunction, _elapsed: number) {
   const { cell, startX, startY } = getGridLayout(app, state.size, state.size, 42, 0);
+  const board = new Graphics();
+  board.rect(startX, startY, state.size * cell, state.size * cell).fill(0xffffff).stroke({ color: 0x333333, width: 2 });
+  app.stage.addChild(board);
+
   state.cells.forEach((mazeCell, index) => {
     const row = Math.floor(index / state.size);
     const col = index % state.size;
@@ -1376,7 +1191,7 @@ function drawMaze(app: Application, state: MazeState, onTap: (index: number) => 
     node.x = startX + col * cell;
     node.y = startY + row * cell;
     const bg = new Graphics();
-    bg.rect(0, 0, cell, cell).fill(index === state.end ? COGNITIVE_ACCENT_TINT : COGNITIVE_SURFACE);
+    bg.rect(0, 0, cell, cell).fill(index === state.end ? 0x4caf50 : 0xffffff);
     bg.moveTo(0, 0);
     if (mazeCell.top) bg.lineTo(cell, 0);
     else bg.moveTo(cell, 0);
@@ -1385,8 +1200,8 @@ function drawMaze(app: Application, state: MazeState, onTap: (index: number) => 
     if (mazeCell.bottom) bg.lineTo(0, cell);
     else bg.moveTo(0, cell);
     if (mazeCell.left) bg.lineTo(0, 0);
-    bg.stroke({ color: COGNITIVE_TEXT_MUTED, width: 2 });
-    if (index === state.current) bg.circle(cell / 2, cell / 2, cell * 0.24).fill(COGNITIVE_ACCENT);
+    bg.stroke({ color: 0x333333, width: 2 });
+    if (index === state.current) bg.rect(cell * 0.25, cell * 0.25, cell * 0.5, cell * 0.5).fill(0xff0000);
     node.addChild(bg);
     app.stage.addChild(node);
   });
@@ -1418,28 +1233,41 @@ function interactiveNode(onTap: (index: number) => void, index: number) {
   return node;
 }
 
-function drawHeader(app: Application, title: string, subtitle: string) {
-  const panel = new Graphics();
-  panel.roundRect(24, 20, app.renderer.width - 48, 72, 8)
-    .fill({ color: COGNITIVE_SURFACE, alpha: 0.96 })
-    .stroke({ color: COGNITIVE_BORDER, width: 1 });
-  app.stage.addChild(panel);
-  const titleText = new Text({
-    text: title,
-    style: { fontSize: 22, fontWeight: '900', fill: '#1A1C1E' },
-  });
-  titleText.anchor.set(0, 0.5);
-  titleText.x = 44;
-  titleText.y = 44;
-  app.stage.addChild(titleText);
-  const subtitleText = new Text({
-    text: subtitle,
-    style: { fontSize: 15, fontWeight: '700', fill: '#424752' },
-  });
-  subtitleText.anchor.set(0, 0.5);
-  subtitleText.x = 44;
-  subtitleText.y = 70;
-  app.stage.addChild(subtitleText);
+function drawSimonButton(
+  app: Application,
+  x: number,
+  y: number,
+  size: number,
+  corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
+  color: number,
+  active: boolean,
+  index: number,
+  onTap: (index: number) => void,
+) {
+  const node = interactiveNode(onTap, index);
+  const g = new Graphics();
+  const r = size;
+
+  if (corner === 'top-left') {
+    g.moveTo(x + r, y).lineTo(x + size, y).lineTo(x + size, y + size).lineTo(x, y + size).lineTo(x, y + r)
+      .arc(x + r, y + r, r, Math.PI, Math.PI * 1.5).closePath();
+  } else if (corner === 'top-right') {
+    g.moveTo(x, y).lineTo(x + size - r, y)
+      .arc(x + size - r, y + r, r, Math.PI * 1.5, Math.PI * 2)
+      .lineTo(x + size, y + size).lineTo(x, y + size).closePath();
+  } else if (corner === 'bottom-left') {
+    g.moveTo(x, y).lineTo(x + size, y).lineTo(x + size, y + size).lineTo(x + r, y + size)
+      .arc(x + r, y + size - r, r, Math.PI / 2, Math.PI)
+      .lineTo(x, y).closePath();
+  } else {
+    g.moveTo(x, y).lineTo(x + size, y).lineTo(x + size, y + size - r)
+      .arc(x + size - r, y + size - r, r, 0, Math.PI / 2)
+      .lineTo(x, y + size).closePath();
+  }
+
+  g.fill({ color, alpha: active ? 1 : 0.7 }).stroke({ color: 0x333333, width: 4 });
+  node.addChild(g);
+  app.stage.addChild(node);
 }
 
 function drawButton(app: Application, index: number, label: string, cx: number, cy: number, width: number, height: number, onTap: (index: number) => void) {
@@ -1447,150 +1275,85 @@ function drawButton(app: Application, index: number, label: string, cx: number, 
   node.x = cx - width / 2;
   node.y = cy - height / 2;
   const g = new Graphics();
-  g.roundRect(0, 0, width, height, 8).fill(COGNITIVE_ACCENT).stroke({ color: COGNITIVE_ACCENT, width: 2 });
+  g.rect(0, 0, width, height).fill(ORIGINAL_GREEN);
   node.addChild(g);
   addText(node, label, width / 2, height / 2, {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '400',
     fill: '#FFFFFF',
   });
   app.stage.addChild(node);
 }
 
-function drawGuessHistory(app: Application, rows: Array<{ values: number[]; label: string }>, paletteSize: number) {
-  const startX = 40;
-  const startY = 122;
-  const cell = 26;
+function drawGuessHistory(app: Application, rows: Array<{ values: number[]; label: string }>) {
+  const boardBounds = getResponsiveBoardBounds(app);
+  const rowWidth = Math.min(340, boardBounds.width);
+  const startX = boardBounds.left + (boardBounds.width - rowWidth) / 2;
+  const startY = boardBounds.top;
+  const rowHeight = 30;
   rows.slice(-8).forEach((row, rowIndex) => {
-    row.values.forEach((value, col) => {
-      const g = new Graphics();
-      g.circle(startX + col * 34 + cell / 2, startY + rowIndex * 34 + cell / 2, cell / 2)
-        .fill(paletteSize === 10 ? COGNITIVE_ACCENT_TINT : MASTERMIND_COLORS[value] ?? COGNITIVE_BG)
-        .stroke({ color: COGNITIVE_BORDER, width: 1 });
-      app.stage.addChild(g);
-      if (paletteSize === 10) {
-        addText(app.stage, String(value), startX + col * 34 + cell / 2, startY + rowIndex * 34 + cell / 2, {
-          fontSize: 15,
-          fontWeight: '900',
-          fill: '#005EB8',
-        });
-      }
-    });
-    const text = new Text({ text: row.label, style: { fontSize: 15, fontWeight: '900', fill: '#424752' } });
-    text.anchor.set(0, 0.5);
-    text.x = startX + 150;
-    text.y = startY + rowIndex * 34 + cell / 2;
-    app.stage.addChild(text);
-  });
-}
-
-function drawCodeInput(app: Application, guess: number[], selectedSlot: number, onTap: (index: number) => void) {
-  const cell = 54;
-  const startX = (app.renderer.width - guess.length * (cell + 12)) / 2;
-  const y = app.renderer.height / 2 - 20;
-  guess.forEach((value, index) => {
-    const node = interactiveNode(onTap, index);
-    node.x = startX + index * (cell + 12);
-    node.y = y;
+    const y = startY + rowIndex * rowHeight;
     const g = new Graphics();
-    g.circle(cell / 2, cell / 2, cell / 2)
-      .fill(value >= 0 ? MASTERMIND_COLORS[value] : COGNITIVE_SURFACE)
-      .stroke({ color: selectedSlot === index ? COGNITIVE_ACCENT : COGNITIVE_BORDER, width: selectedSlot === index ? 4 : 2 });
-    node.addChild(g);
-    app.stage.addChild(node);
+    g.rect(startX, y, rowWidth, rowHeight).fill(ORIGINAL_LIGHT).stroke({ color: ORIGINAL_BORDER, width: 1 });
+    app.stage.addChild(g);
+    const guess = new Text({ text: row.values.join(''), style: { fontSize: 18, fontFamily: 'monospace', fontWeight: '700', fill: '#2c3e50' } });
+    guess.anchor.set(0, 0.5);
+    guess.x = startX + 16;
+    guess.y = y + rowHeight / 2;
+    app.stage.addChild(guess);
+    const result = new Text({ text: row.label, style: { fontSize: 16, fontWeight: '700', fill: '#e74c3c' } });
+    result.anchor.set(1, 0.5);
+    result.x = startX + rowWidth - 16;
+    result.y = y + rowHeight / 2;
+    app.stage.addChild(result);
   });
-}
-
-function drawColorPalette(app: Application, colorCount: number, onTap: (index: number) => void) {
-  const cell = 44;
-  const startX = (app.renderer.width - colorCount * (cell + 10)) / 2;
-  const y = app.renderer.height / 2 + 70;
-  for (let color = 0; color < colorCount; color += 1) {
-    const node = interactiveNode(onTap, COLOR_OFFSET + color);
-    node.x = startX + color * (cell + 10);
-    node.y = y;
-    const g = new Graphics();
-    g.circle(cell / 2, cell / 2, cell / 2).fill(MASTERMIND_COLORS[color]).stroke({ color: COGNITIVE_BORDER, width: 1 });
-    node.addChild(g);
-    app.stage.addChild(node);
-  }
 }
 
 function drawDigitInput(app: Application, guess: number[], selectedSlot: number, onTap: (index: number) => void) {
-  const cell = 54;
-  const startX = (app.renderer.width - guess.length * (cell + 12)) / 2;
-  const y = app.renderer.height / 2 - 20;
+  const boardBounds = getResponsiveBoardBounds(app);
+  const gap = 12;
+  const preferredCell = isMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 54;
+  const cell = Math.floor(Math.min(preferredCell, (boardBounds.width - gap * (guess.length - 1)) / guess.length, boardBounds.height * 0.12));
+  const startX = boardBounds.left + (boardBounds.width - guess.length * cell - gap * (guess.length - 1)) / 2;
+  const y = boardBounds.top + boardBounds.height * 0.46;
   guess.forEach((value, index) => {
     const node = interactiveNode(onTap, index);
-    node.x = startX + index * (cell + 12);
+    node.x = startX + index * (cell + gap);
     node.y = y;
     const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 8)
-      .fill(COGNITIVE_SURFACE)
-      .stroke({ color: selectedSlot === index ? COGNITIVE_ACCENT : COGNITIVE_BORDER, width: selectedSlot === index ? 4 : 2 });
+    g.rect(0, 0, cell, cell)
+      .fill(0xffffff)
+      .stroke({ color: selectedSlot === index ? ORIGINAL_BLUE_DARK : ORIGINAL_BLUE, width: selectedSlot === index ? 4 : 2 });
     node.addChild(g);
-    if (value >= 0) addText(node, String(value), cell / 2, cell / 2, { fontSize: 28, fontWeight: '900', fill: '#005EB8' });
+    if (value >= 0) addText(node, String(value), cell / 2, cell / 2, { fontSize: 28, fontWeight: '400', fill: '#2c3e50' });
     app.stage.addChild(node);
   });
 }
 
 function drawDigitPalette(app: Application, onTap: (index: number) => void) {
-  const cell = 38;
+  const boardBounds = getResponsiveBoardBounds(app);
+  const preferredCell = isMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 38;
   const cols = 5;
-  const startX = (app.renderer.width - cols * (cell + 8)) / 2;
-  const y = app.renderer.height / 2 + 66;
+  const gap = 8;
+  const cell = Math.floor(Math.min(preferredCell, (boardBounds.width - gap * (cols - 1)) / cols, boardBounds.height * 0.1));
+  const startX = boardBounds.left + (boardBounds.width - cols * cell - gap * (cols - 1)) / 2;
+  const y = boardBounds.top + boardBounds.height * 0.62;
   for (let digit = 0; digit < 10; digit += 1) {
     const node = interactiveNode(onTap, DIGIT_OFFSET + digit);
-    node.x = startX + (digit % cols) * (cell + 8);
-    node.y = y + Math.floor(digit / cols) * (cell + 8);
+    node.x = startX + (digit % cols) * (cell + gap);
+    node.y = y + Math.floor(digit / cols) * (cell + gap);
     const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 8).fill(COGNITIVE_ACCENT_TINT).stroke({ color: COGNITIVE_BORDER, width: 1 });
+    g.rect(0, 0, cell, cell).fill(ORIGINAL_BLUE);
     node.addChild(g);
-    addText(node, String(digit), cell / 2, cell / 2, { fontSize: 20, fontWeight: '900', fill: '#005EB8' });
+    addText(node, String(digit), cell / 2, cell / 2, { fontSize: 20, fontWeight: '400', fill: '#FFFFFF' });
     app.stage.addChild(node);
   }
-}
-
-function scoreMastermindGuess(secret: number[], guess: number[]) {
-  const exact = guess.reduce((sum, value, index) => sum + (value === secret[index] ? 1 : 0), 0);
-  const colorOnly = guess.filter((value, index) => value !== secret[index] && secret.includes(value)).length;
-  return { exact, colorOnly };
 }
 
 function scoreBullsGuess(secret: number[], guess: number[]) {
   const bulls = guess.reduce((sum, value, index) => sum + (value === secret[index] ? 1 : 0), 0);
   const cows = guess.filter((value, index) => value !== secret[index] && secret.includes(value)).length;
   return { bulls, cows };
-}
-
-function countQueens(state: NQueensState) {
-  return state.queens.filter(Boolean).length;
-}
-
-function countQueenConflicts(state: NQueensState) {
-  return getQueenConflictIndexes(state).size;
-}
-
-function getQueenConflictIndexes(state: NQueensState) {
-  const conflicts = new Set<number>();
-  const queens = state.queens
-    .map((queen, index) => ({ queen, index, row: Math.floor(index / state.size), col: index % state.size }))
-    .filter((item) => item.queen);
-  queens.forEach((first, firstIndex) => {
-    queens.slice(firstIndex + 1).forEach((second) => {
-      if (first.row === second.row || first.col === second.col || Math.abs(first.row - second.row) === Math.abs(first.col - second.col)) {
-        conflicts.add(first.index);
-        conflicts.add(second.index);
-      }
-    });
-  });
-  return conflicts;
-}
-
-function isKnightMove(from: number, to: number, size: number) {
-  const dy = Math.abs(Math.floor(from / size) - Math.floor(to / size));
-  const dx = Math.abs((from % size) - (to % size));
-  return (dx === 1 && dy === 2) || (dx === 2 && dy === 1);
 }
 
 function checkMarkWin(board: Array<string | null>, size: number, winLength: number, mark: string) {
@@ -1676,19 +1439,6 @@ function findConnect4WinningColumn(state: Connect4State, mark: 'P' | 'A', availa
     dropConnect4Disc(clone, col, mark);
     return checkConnect4Win(clone.board, clone.rows, clone.cols, mark);
   }) ?? null;
-}
-
-function totalNimObjects(piles: number[]) {
-  return piles.reduce((sum, pile) => sum + pile, 0);
-}
-
-function chooseNimMove(state: NimState) {
-  const nonEmpty = state.piles.map((count, pile) => ({ count, pile })).filter((item) => item.count > 0);
-  const total = totalNimObjects(state.piles);
-  const leaveOne = nonEmpty.find((item) => item.count >= total - 1);
-  if (leaveOne && total > 1) return { pile: leaveOne.pile, take: Math.max(1, total - 1) };
-  const pile = nonEmpty[Math.floor(Math.random() * nonEmpty.length)];
-  return { pile: pile.pile, take: Math.max(1, Math.floor(Math.random() * pile.count) + 1) };
 }
 
 function parseDotsLineIndex(state: DotsAndBoxesState, index: number) {
@@ -1781,9 +1531,9 @@ function drawDotsLine(app: Application, x1: number, y1: number, x2: number, y2: 
   const w = Math.abs(x2 - x1) || 18;
   const h = Math.abs(y2 - y1) || 18;
   const hit = new Graphics();
-  hit.rect(-9, -9, w + 18, h + 18).fill({ color: COGNITIVE_SURFACE, alpha: 0.001 });
+  hit.rect(-9, -9, w + 18, h + 18).fill({ color: 0xffffff, alpha: 0.001 });
   hit.moveTo(x1 - minX, y1 - minY).lineTo(x2 - minX, y2 - minY)
-    .stroke({ color: drawn ? COGNITIVE_ACCENT : COGNITIVE_BORDER, width: drawn ? 5 : 2 });
+    .stroke({ color: drawn ? ORIGINAL_BLUE : 0xdddddd, width: drawn ? 5 : 4 });
   node.addChild(hit);
   app.stage.addChild(node);
 }
@@ -1900,10 +1650,11 @@ function findSet(cards: SetCard[]) {
   return null;
 }
 
-function drawSetCard(container: Container, card: SetCard, size: number) {
-  const shapeGap = size / (card.count + 1);
+function drawSetCard(container: Container, card: SetCard, width: number, height: number) {
+  const shapeGap = height / (card.count + 1);
+  const shapeRadius = Math.min(width, height) * 0.22;
   for (let i = 0; i < card.count; i += 1) {
-    drawSetShape(container, card, size / 2, shapeGap * (i + 1), size * 0.18);
+    drawSetShape(container, card, width / 2, shapeGap * (i + 1), shapeRadius);
   }
 }
 
@@ -1928,33 +1679,18 @@ function drawSetShape(container: Container, card: SetCard, cx: number, cy: numbe
   container.addChild(g);
 }
 
-function drawTangramPiece(container: Container, shape: TangramPiece['shape'], cx: number, cy: number, size: number, color: number, filled: boolean) {
-  const g = new Graphics();
-  if (shape.includes('triangle')) {
-    const scale = shape === 'large-triangle' ? 1.15 : shape === 'medium-triangle' ? 0.96 : 0.74;
-    g.moveTo(cx, cy - size * scale).lineTo(cx + size * scale, cy + size * scale).lineTo(cx - size * scale, cy + size * scale).closePath();
-  } else if (shape === 'square') {
-    g.rect(cx - size * 0.8, cy - size * 0.8, size * 1.6, size * 1.6);
-  } else {
-    g.moveTo(cx - size, cy + size * 0.7).lineTo(cx + size * 0.45, cy + size * 0.7).lineTo(cx + size, cy - size * 0.7).lineTo(cx - size * 0.45, cy - size * 0.7).closePath();
-  }
-  if (filled) g.fill({ color, alpha: 0.86 });
-  g.stroke({ color, width: 3 });
-  container.addChild(g);
-}
-
 function isSokobanSolved(state: SokobanState) {
-  return state.boxes.every((box) => state.targets.includes(box));
+  return state.boxes.length === state.targets.length && state.boxes.every((box) => state.targets.includes(box));
 }
 
 function countSolvedBoxes(state: SokobanState) {
   return state.boxes.filter((box) => state.targets.includes(box)).length;
 }
 
-function generateMaze(size: number): MazeCell[] {
+function generateMaze(size: number, startIndex: number): MazeCell[] {
   const cells: MazeCell[] = Array.from({ length: size * size }, () => ({ top: true, right: true, bottom: true, left: true }));
-  const visited = new Set<number>([0]);
-  const stack = [0];
+  const visited = new Set<number>([startIndex]);
+  const stack = [startIndex];
   while (stack.length > 0) {
     const current = stack[stack.length - 1];
     const neighbors = getMazeNeighbors(current, size).filter((neighbor) => !visited.has(neighbor.index));
@@ -1968,6 +1704,37 @@ function generateMaze(size: number): MazeCell[] {
     stack.push(next.index);
   }
   return cells;
+}
+
+function findFarthestMazeIndex(cells: MazeCell[], size: number, start: number) {
+  const queue = [{ index: start, distance: 0 }];
+  const seen = new Set<number>([start]);
+  let farthest = queue[0];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) break;
+    if (current.distance > farthest.distance) farthest = current;
+    getOpenMazeNeighbors(cells, size, current.index).forEach((next) => {
+      if (seen.has(next)) return;
+      seen.add(next);
+      queue.push({ index: next, distance: current.distance + 1 });
+    });
+  }
+
+  return farthest.index;
+}
+
+function getOpenMazeNeighbors(cells: MazeCell[], size: number, index: number) {
+  const cell = cells[index];
+  const row = Math.floor(index / size);
+  const col = index % size;
+  const neighbors: number[] = [];
+  if (!cell.top && row > 0) neighbors.push(index - size);
+  if (!cell.right && col < size - 1) neighbors.push(index + 1);
+  if (!cell.bottom && row < size - 1) neighbors.push(index + size);
+  if (!cell.left && col > 0) neighbors.push(index - 1);
+  return neighbors;
 }
 
 function getMazeNeighbors(index: number, size: number) {
@@ -2000,56 +1767,4 @@ function canMoveMaze(state: MazeState, from: number, to: number) {
   if (targetCol > col) return !cell.right;
   if (targetRow > row) return !cell.bottom;
   return !cell.left;
-}
-
-function createBinarySolution(size: number) {
-  const rows = validBinaryRows(size);
-  const solution: number[] = [];
-  const chosen: number[][] = [];
-  function backtrack(row: number): boolean {
-    if (row === size) {
-      const cols = Array.from({ length: size }, (_, col) => chosen.map((values) => values[col]).join(''));
-      return new Set(cols).size === size && cols.every((col) => isValidBinaryLine([...col].map(Number), true));
-    }
-    const candidates = shuffle(rows).filter((candidate) => !chosen.some((picked) => picked.join('') === candidate.join('')));
-    for (const candidate of candidates) {
-      chosen.push(candidate);
-      if (columnsStillValid(chosen, size) && backtrack(row + 1)) return true;
-      chosen.pop();
-    }
-    return false;
-  }
-  backtrack(0);
-  chosen.forEach((row) => solution.push(...row));
-  return solution.length === size * size ? solution : Array.from({ length: size * size }, (_, index) => (Math.floor(index / size) + index) % 2);
-}
-
-function validBinaryRows(size: number) {
-  const rows: number[][] = [];
-  const build = (prefix: number[]) => {
-    if (prefix.length === size) {
-      if (isValidBinaryLine(prefix, true)) rows.push(prefix);
-      return;
-    }
-    [0, 1].forEach((value) => build([...prefix, value]));
-  };
-  build([]);
-  return rows;
-}
-
-function columnsStillValid(chosen: number[][], size: number) {
-  for (let col = 0; col < size; col += 1) {
-    const column = chosen.map((row) => row[col]);
-    if (!isValidBinaryLine(column, false, size)) return false;
-  }
-  return true;
-}
-
-function isValidBinaryLine(values: number[], complete: boolean, size = values.length) {
-  for (let index = 2; index < values.length; index += 1) {
-    if (values[index] === values[index - 1] && values[index] === values[index - 2]) return false;
-  }
-  const ones = values.filter((value) => value === 1).length;
-  const zeros = values.filter((value) => value === 0).length;
-  return complete ? ones === zeros : ones <= size / 2 && zeros <= size / 2;
 }

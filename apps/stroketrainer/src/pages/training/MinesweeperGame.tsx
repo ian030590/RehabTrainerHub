@@ -75,6 +75,10 @@ const DEFAULT_BOARD_PRESET: BoardPresetId = 'compact';
 const DEFAULT_BOARD_ROWS = BOARD_PRESETS[DEFAULT_BOARD_PRESET].rows;
 const DEFAULT_BOARD_COLS = BOARD_PRESETS[DEFAULT_BOARD_PRESET].cols;
 const DEFAULT_CUSTOM_BOARD_SIZE = 12;
+const MOBILE_BOARD_VIEWPORT_PERCENT = 70;
+const MOBILE_BOARD_WIDTH_LIMIT = `${MOBILE_BOARD_VIEWPORT_PERCENT}vw`;
+const MOBILE_BOARD_HEIGHT_LIMIT = `${MOBILE_BOARD_VIEWPORT_PERCENT}vh`;
+const DESKTOP_BOARD_INLINE_MARGIN_PX = 48;
 
 const MINESWEEPER_ACCENT = '#005EB8';
 
@@ -120,9 +124,10 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
 
   const canvasStyle = useMemo<CSSProperties>(() => {
     return {
-      width: `min(${boardMetrics.pixelWidth}px, calc(100vw - 48px))`,
+      width: `min(${boardMetrics.pixelWidth}px, calc(100vw - ${DESKTOP_BOARD_INLINE_MARGIN_PX}px), ${MOBILE_BOARD_WIDTH_LIMIT})`,
       aspectRatio: `${boardMetrics.pixelWidth} / ${boardMetrics.pixelHeight}`,
-      maxHeight: 'calc(100vh - 112px)',
+      height: 'auto',
+      maxHeight: MOBILE_BOARD_HEIGHT_LIMIT,
     };
   }, [boardMetrics.pixelHeight, boardMetrics.pixelWidth]);
 

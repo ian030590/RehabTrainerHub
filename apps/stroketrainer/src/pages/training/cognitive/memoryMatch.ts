@@ -2,14 +2,17 @@ import { Application, Container, Graphics } from 'pixi.js';
 import { CARD_VALUES, MEMORY_CONFIG } from './constants';
 import type { Difficulty, GameResult, MemoryState, ResultStats } from './types';
 import {
-  COGNITIVE_ACCENT,
-  COGNITIVE_ACCENT_TINT,
-  COGNITIVE_BORDER,
-  COGNITIVE_SURFACE,
   addText,
   getGridLayout,
+  isMobileCognitiveViewport,
   shuffle,
 } from './utils';
+
+const MEMORY_BOARD_COLOR = 0x34495e;
+const MEMORY_CARD_FRONT = 0x3498db;
+const MEMORY_CARD_BACK = 0xecf0f1;
+const MEMORY_CARD_MATCHED = 0x2ecc71;
+const MEMORY_TEXT_DARK = '#2c3e50';
 
 export function createMemoryState(difficulty: Difficulty): MemoryState {
   const config = MEMORY_CONFIG[difficulty];
@@ -79,7 +82,17 @@ export function buildMemoryResultStats(state: MemoryState): ResultStats {
 }
 
 export function drawMemory(app: Application, state: MemoryState, onTap: (index: number) => void) {
-  const { cell, gap, startX, startY } = getGridLayout(app, state.cols, state.rows, 92, 10);
+  const padding = isMobileCognitiveViewport(app) ? 10 : 15;
+  const { cell, gap, startX, startY } = getGridLayout(app, state.cols, state.rows, 70, 10, padding);
+  const board = new Graphics();
+  board.rect(
+    startX - padding,
+    startY - padding,
+    state.cols * cell + (state.cols - 1) * gap + padding * 2,
+    state.rows * cell + (state.rows - 1) * gap + padding * 2,
+  ).fill(MEMORY_BOARD_COLOR);
+  app.stage.addChild(board);
+
   state.cards.forEach((card, index) => {
     const row = Math.floor(index / state.cols);
     const col = index % state.cols;
@@ -91,15 +104,14 @@ export function drawMemory(app: Application, state: MemoryState, onTap: (index: 
     node.eventMode = card.matched ? 'none' : 'static';
     node.cursor = card.matched ? 'default' : 'pointer';
     node.on('pointertap', () => onTap(index));
-    const cardColor = card.matched ? COGNITIVE_ACCENT_TINT : card.revealed ? COGNITIVE_SURFACE : COGNITIVE_ACCENT;
-    const borderColor = card.revealed || card.matched ? COGNITIVE_BORDER : COGNITIVE_ACCENT;
+    const cardColor = card.matched ? MEMORY_CARD_MATCHED : card.revealed ? MEMORY_CARD_BACK : MEMORY_CARD_FRONT;
     const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 8).fill(cardColor).stroke({ color: borderColor, width: 2 });
+    g.rect(0, 0, cell, cell).fill(cardColor);
     node.addChild(g);
     addText(node, card.revealed || card.matched ? card.value : '?', cell / 2, cell / 2, {
       fontSize: Math.max(24, cell * 0.42),
-      fontWeight: '800',
-      fill: card.revealed || card.matched ? '#1A1C1E' : '#FFFFFF',
+      fontWeight: '400',
+      fill: card.revealed || card.matched ? MEMORY_TEXT_DARK : '#FFFFFF',
     });
     app.stage.addChild(node);
   });

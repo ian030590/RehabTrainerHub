@@ -2,12 +2,14 @@ import { Application, Container, Graphics } from 'pixi.js';
 import { SLIDING_CONFIG } from './constants';
 import type { Difficulty, GameResult, ResultStats, SlidingState } from './types';
 import {
-  COGNITIVE_ACCENT,
   addText,
   getGridLayout,
   getSlidingNeighbors,
   isSlidingSolved,
 } from './utils';
+
+const SLIDING_BOARD_COLOR = 0x34495e;
+const SLIDING_TILE_COLOR = 0x3498db;
 
 export function createSlidingState(difficulty: Difficulty): SlidingState {
   const config = SLIDING_CONFIG[difficulty];
@@ -53,7 +55,17 @@ export function buildSlidingResultStats(state: SlidingState): ResultStats {
 }
 
 export function drawSliding(app: Application, state: SlidingState, onTap: (index: number) => void) {
-  const { cell, gap, startX, startY } = getGridLayout(app, state.size, state.size, 96, 8);
+  const padding = 10;
+  const { cell, gap, startX, startY } = getGridLayout(app, state.size, state.size, 96, 5, padding);
+  const board = new Graphics();
+  board.rect(
+    startX - padding,
+    startY - padding,
+    state.size * cell + (state.size - 1) * gap + padding * 2,
+    state.size * cell + (state.size - 1) * gap + padding * 2,
+  ).fill(SLIDING_BOARD_COLOR);
+  app.stage.addChild(board);
+
   state.tiles.forEach((tile, index) => {
     if (tile === 0) return;
     const row = Math.floor(index / state.size);
@@ -67,11 +79,11 @@ export function drawSliding(app: Application, state: SlidingState, onTap: (index
     node.cursor = 'pointer';
     node.on('pointertap', () => onTap(index));
     const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 8).fill(COGNITIVE_ACCENT).stroke({ color: COGNITIVE_ACCENT, width: 2 });
+    g.rect(0, 0, cell, cell).fill(SLIDING_TILE_COLOR);
     node.addChild(g);
     addText(node, String(tile), cell / 2, cell / 2, {
       fontSize: Math.max(22, cell * 0.38),
-      fontWeight: '900',
+      fontWeight: '400',
       fill: '#FFFFFF',
     });
     app.stage.addChild(node);

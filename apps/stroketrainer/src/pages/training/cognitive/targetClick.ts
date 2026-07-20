@@ -2,13 +2,16 @@ import { Application, Container, Graphics } from 'pixi.js';
 import { WHACK_CONFIG } from './constants';
 import type { Difficulty, ResultStats, WhackState } from './types';
 import {
-  COGNITIVE_ACCENT,
-  COGNITIVE_BORDER,
-  COGNITIVE_SURFACE,
-  clamp,
   getGridLayout,
+  isMobileCognitiveViewport,
   randomBetween,
 } from './utils';
+
+const MOLE_BOARD_COLOR = 0x8b4513;
+const MOLE_HOLE_COLOR = 0x3d2314;
+const MOLE_BODY_COLOR = 0x8b7355;
+const MOLE_FACE_COLOR = 0x2c2c2c;
+const MOLE_NOSE_COLOR = 0x5c4033;
 
 export function createWhackState(difficulty: Difficulty): WhackState {
   const config = WHACK_CONFIG[difficulty];
@@ -72,8 +75,18 @@ export function buildWhackResultStats(state: WhackState): ResultStats {
   };
 }
 
-export function drawWhack(app: Application, state: WhackState, elapsed: number, duration: number, onTap: (index: number) => void) {
-  const { cell, gap, startX, startY } = getGridLayout(app, state.gridSize, state.gridSize, 104, 14);
+export function drawWhack(app: Application, state: WhackState, onTap: (index: number) => void) {
+  const padding = isMobileCognitiveViewport(app) ? 15 : 20;
+  const { cell, gap, startX, startY } = getGridLayout(app, state.gridSize, state.gridSize, 100, 15, padding);
+  const board = new Graphics();
+  board.rect(
+    startX - padding,
+    startY - padding,
+    state.gridSize * cell + (state.gridSize - 1) * gap + padding * 2,
+    state.gridSize * cell + (state.gridSize - 1) * gap + padding * 2,
+  ).fill(MOLE_BOARD_COLOR);
+  app.stage.addChild(board);
+
   const total = state.gridSize * state.gridSize;
   for (let index = 0; index < total; index += 1) {
     const row = Math.floor(index / state.gridSize);
@@ -87,24 +100,17 @@ export function drawWhack(app: Application, state: WhackState, elapsed: number, 
     node.cursor = 'pointer';
     node.on('pointertap', () => onTap(index));
     const g = new Graphics();
-    g.roundRect(0, 0, cell, cell, 8).fill(COGNITIVE_SURFACE).stroke({ color: COGNITIVE_BORDER, width: 2 });
-    g.circle(cell / 2, cell / 2, cell * 0.28).fill(0xe7eef5).stroke({ color: COGNITIVE_BORDER, width: 2 });
+    g.circle(cell / 2, cell / 2, cell * 0.5).fill(MOLE_HOLE_COLOR);
+    g.ellipse(cell / 2, cell * 0.56, cell * 0.42, cell * 0.25).fill({ color: 0x000000, alpha: 0.25 });
     node.addChild(g);
     if (state.activeIndex === index) {
-      const target = new Graphics();
-      target.circle(cell / 2, cell / 2, cell * 0.28).fill(COGNITIVE_ACCENT);
-      target.circle(cell / 2, cell / 2, cell * 0.14).fill(COGNITIVE_SURFACE);
-      target.circle(cell / 2, cell / 2, cell * 0.06).fill(COGNITIVE_ACCENT);
-      node.addChild(target);
+      const mole = new Graphics();
+      mole.ellipse(cell / 2, cell * 0.55, cell * 0.34, cell * 0.36).fill(MOLE_BODY_COLOR);
+      mole.circle(cell * 0.36, cell * 0.43, cell * 0.055).fill(MOLE_FACE_COLOR);
+      mole.circle(cell * 0.64, cell * 0.43, cell * 0.055).fill(MOLE_FACE_COLOR);
+      mole.ellipse(cell / 2, cell * 0.58, cell * 0.09, cell * 0.06).fill(MOLE_NOSE_COLOR);
+      node.addChild(mole);
     }
     app.stage.addChild(node);
   }
-  const progressWidth = Math.min(app.renderer.width - 48, 520);
-  const progressX = (app.renderer.width - progressWidth) / 2;
-  const progressY = Math.max(80, startY - 36);
-  const ratio = clamp(1 - elapsed / Math.max(1, duration), 0, 1);
-  const bar = new Graphics();
-  bar.roundRect(progressX, progressY, progressWidth, 10, 5).fill(0xd8dee8);
-  bar.roundRect(progressX, progressY, progressWidth * ratio, 10, 5).fill(COGNITIVE_ACCENT);
-  app.stage.addChild(bar);
 }
