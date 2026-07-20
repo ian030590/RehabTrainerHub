@@ -749,14 +749,10 @@ export const en: Record<TranslationKey, string> = {
   'cognitive.config.focusTitle': 'Training Focus',
   'cognitive.results.complete': 'Training Complete',
   'cognitive.results.ended': 'Training Ended',
-  'cognitive.results.score': 'Score',
-  'cognitive.results.accuracy': 'Accuracy',
+  'cognitive.results.result': 'Result',
+  'cognitive.results.victory': 'Victory',
+  'cognitive.results.defeat': 'Defeat',
   'cognitive.results.elapsed': 'Elapsed Time',
-  'cognitive.results.game': 'Game',
-  'cognitive.results.difficulty': 'Difficulty',
-  'cognitive.results.attempts': 'Attempts',
-  'cognitive.results.success': 'Success Count',
-  'cognitive.results.errors': 'Error Count',
 
   // Minesweeper
   'minesweeper.diff.beginner': 'Beginner',
@@ -782,13 +778,7 @@ export const en: Record<TranslationKey, string> = {
   'minesweeper.boardAria': 'Minesweeper board',
   'minesweeper.results.victory': 'Completed Successfully!',
   'minesweeper.results.defeat': 'Game Over',
-  'minesweeper.results.correctFlags': 'Correctly flagged mines',
   'minesweeper.results.duration': 'Total time used',
-  'minesweeper.results.openedCells': 'Successfully opened cells',
-  'minesweeper.results.boardSize': 'Board Size',
-  'minesweeper.results.minesTotal': 'Total Mines',
-  'minesweeper.results.flagsPlaced': 'Flags Placed',
-  'minesweeper.results.incorrectFlags': 'Incorrect Flags',
 
   // Drawing tower defense
   'drawing.diff.beginner': 'Beginner',

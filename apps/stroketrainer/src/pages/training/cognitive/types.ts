@@ -31,22 +31,8 @@ export interface ReferenceModuleMeta {
 }
 
 export interface SessionRecord {
-  Test_Date: string;
-  Participant_ID: string;
-  Game_ID: ReferenceGameId;
-  Game_Title: string;
-  Difficulty: Difficulty;
-  Session_Limit_Seconds: string;
-  Target_Trials: number;
-  Total_Duration_Seconds: number;
-  Score: number;
-  Accuracy_Percent: number;
-  Moves: number;
-  Attempts: number;
-  Success_Count: number;
-  Error_Count: number;
   Game_Result: GameResult;
-  Details_JSON: string;
+  Total_Duration_Seconds: number;
 }
 
 export interface RuntimeMetrics {

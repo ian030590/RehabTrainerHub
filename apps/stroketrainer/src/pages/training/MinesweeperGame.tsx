@@ -40,20 +40,8 @@ interface Cell {
 }
 
 interface SessionRecord {
-  Test_Date: string;
-  Participant_ID: string;
-  Difficulty: MinesweeperDifficulty;
-  Board_Preset: string;
-  Mine_Density_Percent: number;
-  Board_Size: string;
-  Total_Cells: number;
-  Mines_Total: number;
-  Correctly_Flagged_Mines: number;
-  Incorrect_Flags: number;
-  Flags_Placed: number;
-  Successful_Opened_Cells: number;
-  Total_Duration_Seconds: number;
   Game_Result: GameResult;
+  Total_Duration_Seconds: number;
 }
 
 const DIFFICULTIES: Record<MinesweeperDifficulty, DifficultyConfig> = {
@@ -139,49 +127,29 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     playGameEndSound(gameResult, jsPsychRef);
     const duration = Math.max(0, (elapsedMillisRef.current + Date.now() - playStartedAtRef.current) / 1000);
     elapsedMillisRef.current = duration * 1000;
-    const stats = getBoardStats(nextBoard);
+    const trainingDate = formatTestDate(new Date());
+    const participantId = getActiveUser() || 'Unknown';
     const record: SessionRecord = {
-      Test_Date: formatTestDate(new Date()),
-      Participant_ID: getActiveUser() || 'Unknown',
-      Difficulty: difficulty,
-      Board_Preset: selectedBoardConfig.label,
-      Mine_Density_Percent: Math.round((mineCount / Math.max(1, boardRows * boardCols)) * 100),
-      Board_Size: `${boardRows}x${boardCols}`,
-      Total_Cells: boardRows * boardCols,
-      Mines_Total: mineCount,
-      Correctly_Flagged_Mines: stats.correctFlags,
-      Incorrect_Flags: stats.incorrectFlags,
-      Flags_Placed: stats.flags,
-      Successful_Opened_Cells: stats.openedSafeCells,
-      Total_Duration_Seconds: Number(duration.toFixed(1)),
       Game_Result: gameResult,
+      Total_Duration_Seconds: Number(duration.toFixed(1)),
     };
     setBoard(nextBoard);
     setResult(record);
     setPhase('results');
     void saveTrainingSessionRecord({
-      userName: record.Participant_ID,
+      userName: participantId,
       moduleId: 'cognitive-training',
       gameId: 'minesweeper',
       gameTitle,
-      difficulty: record.Difficulty,
-      trainingDate: record.Test_Date,
+      difficulty,
+      trainingDate,
       details: {
-        Board_Preset: record.Board_Preset,
-        Mine_Density_Percent: record.Mine_Density_Percent,
-        Board_Size: record.Board_Size,
-        Total_Cells: record.Total_Cells,
-        Mines_Total: record.Mines_Total,
-        Correctly_Flagged_Mines: record.Correctly_Flagged_Mines,
-        Incorrect_Flags: record.Incorrect_Flags,
-        Flags_Placed: record.Flags_Placed,
-        Successful_Opened_Cells: record.Successful_Opened_Cells,
-        Total_Duration_Seconds: record.Total_Duration_Seconds,
         Game_Result: record.Game_Result,
+        Total_Duration_Seconds: record.Total_Duration_Seconds,
       },
     });
     writeJsPsychData(jsPsychRef, record as unknown as Record<string, unknown>, 'Unable to write minesweeper result to jsPsych data.');
-  }, [boardCols, boardRows, difficulty, gameTitle, mineCount, selectedBoardConfig.label]);
+  }, [difficulty, gameTitle]);
 
   const startGame = useCallback(async () => {
     if (!verifySelectedTrainingUser()) return;
@@ -420,43 +388,14 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
             <h1>{result.Game_Result === 'Victory' ? t('minesweeper.results.victory') : t('minesweeper.results.defeat')}</h1>
             <div className="training-result-summary">
               <span>
-                <small>{t('minesweeper.results.correctFlags')}</small>
-                <strong>{result.Correctly_Flagged_Mines}</strong>
+                <small>{t('cognitive.results.result')}</small>
+                <strong>{result.Game_Result === 'Victory' ? t('cognitive.results.victory') : t('cognitive.results.defeat')}</strong>
               </span>
               <span>
                 <small>{t('minesweeper.results.duration')}</small>
                 <strong>{formatSeconds(result.Total_Duration_Seconds, t)}</strong>
               </span>
-              <span>
-                <small>{t('minesweeper.results.openedCells')}</small>
-                <strong>{result.Successful_Opened_Cells}</strong>
-              </span>
             </div>
-
-            <table className="results-table">
-              <tbody>
-                <tr>
-                  <th>{t('minesweeper.results.boardSize')}</th>
-                  <td>{result.Board_Size}</td>
-                </tr>
-                <tr>
-                  <th>{t('cognitive.results.difficulty')}</th>
-                  <td>{t(DIFFICULTIES[result.Difficulty].labelKey)}</td>
-                </tr>
-                <tr>
-                  <th>{t('minesweeper.results.minesTotal')}</th>
-                  <td>{result.Mines_Total}</td>
-                </tr>
-                <tr>
-                  <th>{t('minesweeper.results.flagsPlaced')}</th>
-                  <td>{result.Flags_Placed}</td>
-                </tr>
-                <tr>
-                  <th>{t('minesweeper.results.incorrectFlags')}</th>
-                  <td>{result.Incorrect_Flags}</td>
-                </tr>
-              </tbody>
-            </table>
 
             <TrainingResultActions
               downloadLabel={t('training.downloadCsvRecord')}
@@ -701,37 +640,14 @@ function getCanvasCell(event: PointerEvent<HTMLCanvasElement>, rows: number, col
   return { x, y };
 }
 
-function getBoardStats(board: Cell[][]) {
-  const cells = board.flat();
-  const flags = cells.filter((cell) => cell.flagged);
-  return {
-    flags: flags.length,
-    correctFlags: flags.filter((cell) => cell.mine).length,
-    incorrectFlags: flags.filter((cell) => !cell.mine).length,
-    openedSafeCells: cells.filter((cell) => cell.revealed && !cell.mine).length,
-  };
-}
-
 function formatSeconds(value: number, t: (key: TranslationKey, params?: Record<string, string | number>) => string) {
   return t('training.secondsShort', { value });
 }
 
 function toCsv(records: SessionRecord[]): string {
   const columns: Array<{ label: string; value: (record: SessionRecord) => unknown }> = [
-    { label: 'Test_Date', value: (record) => record.Test_Date },
-    { label: 'Participant_ID', value: (record) => record.Participant_ID },
-    { label: 'Difficulty', value: (record) => record.Difficulty },
-    { label: 'Board_Preset', value: (record) => record.Board_Preset },
-    { label: 'Mine_Density_Percent', value: (record) => record.Mine_Density_Percent },
-    { label: 'Board_Size', value: (record) => record.Board_Size },
-    { label: 'Total_Cells', value: (record) => record.Total_Cells },
-    { label: 'Mines_Total', value: (record) => record.Mines_Total },
-    { label: 'Correctly_Flagged_Mines', value: (record) => record.Correctly_Flagged_Mines },
-    { label: 'Incorrect_Flags', value: (record) => record.Incorrect_Flags },
-    { label: 'Flags_Placed', value: (record) => record.Flags_Placed },
-    { label: 'Successful_Opened_Cells', value: (record) => record.Successful_Opened_Cells },
-    { label: 'Total_Duration_Seconds', value: (record) => record.Total_Duration_Seconds },
     { label: 'Game_Result', value: (record) => record.Game_Result },
+    { label: 'Total_Duration_Seconds', value: (record) => record.Total_Duration_Seconds },
   ];
   return [
     columns.map((column) => column.label).join(','),

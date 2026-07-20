@@ -15,14 +15,12 @@ import {
   WHACK_DURATION_OPTIONS,
 } from './cognitive/constants';
 import {
-  buildLightsResultStats,
   createLightsState,
   drawLightsOut,
   handleLightsTap,
   isLightsAutoSuccess,
 } from './cognitive/lightsOut';
 import {
-  buildLanguageNeutralResultStats,
   createLanguageNeutralGameState,
   drawLanguageNeutralGame,
   getLanguageNeutralFeedbackCounts,
@@ -33,7 +31,6 @@ import {
   updateLanguageNeutralTimedState,
 } from './cognitive/languageNeutralGames';
 import {
-  buildMemoryResultStats,
   createMemoryState,
   drawMemory,
   handleMemoryTap,
@@ -41,7 +38,6 @@ import {
   updateMemoryTimedState,
 } from './cognitive/memoryMatch';
 import {
-  buildReactionResultStats,
   createReactionState,
   drawReaction,
   handleReactionStateTap,
@@ -49,14 +45,12 @@ import {
   updateReactionTimedState,
 } from './cognitive/reactionTime';
 import {
-  buildSlidingResultStats,
   createSlidingState,
   drawSliding,
   handleSlidingTap,
   isSlidingAutoSuccess,
 } from './cognitive/slidingPuzzle';
 import {
-  buildWhackResultStats,
   createWhackState,
   drawWhack,
   handleWhackTap,
@@ -69,7 +63,6 @@ import type {
   GamePhase,
   GameResult,
   ReferenceGameId,
-  ResultStats,
   RuntimeMetrics,
   SessionLimitSeconds,
   SessionRecord,
@@ -123,7 +116,6 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
   const activeConfig = DIFFICULTIES[difficulty];
   const activeDifficultyLabel = t(activeConfig.labelKey);
   const activeDifficultyDescription = t(activeConfig.descriptionKey);
-  const effectiveLimit = gameId === 'whack-a-mole' ? whackDurationSec : sessionLimitSec;
 
   const setPhase = useCallback((next: GamePhase) => {
     phaseRef.current = next;
@@ -167,50 +159,28 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     const state = stateRef.current;
     if (!state) return;
     playGameEndSound(gameResult, jsPsychRef);
-    const stats = buildResultStats(state);
+    const trainingDate = formatTestDate(new Date());
+    const participantId = getActiveUser() || 'Unknown';
     const record: SessionRecord = {
-      Test_Date: formatTestDate(new Date()),
-      Participant_ID: getActiveUser() || 'Unknown',
-      Game_ID: gameId,
-      Game_Title: metaTitle,
-      Difficulty: difficulty,
-      Session_Limit_Seconds: effectiveLimit === null ? t('training.infinite') : String(effectiveLimit),
-      Target_Trials: gameId === 'reaction-time' ? reactionTrials : 0,
-      Total_Duration_Seconds: Number(metricsRef.current.elapsed.toFixed(1)),
-      Score: stats.score,
-      Accuracy_Percent: stats.accuracy,
-      Moves: stats.moves,
-      Attempts: stats.attempts,
-      Success_Count: stats.success,
-      Error_Count: stats.errors,
       Game_Result: gameResult,
-      Details_JSON: JSON.stringify(stats.details),
+      Total_Duration_Seconds: Number(metricsRef.current.elapsed.toFixed(1)),
     };
     setResult(record);
     setPhase('results');
     void saveTrainingSessionRecord({
-      userName: record.Participant_ID,
+      userName: participantId,
       moduleId: 'cognitive-training',
-      gameId: record.Game_ID,
-      gameTitle: record.Game_Title,
-      difficulty: record.Difficulty,
-      trainingDate: record.Test_Date,
+      gameId,
+      gameTitle: metaTitle,
+      difficulty,
+      trainingDate,
       details: {
-        Session_Limit_Seconds: record.Session_Limit_Seconds,
-        Target_Trials: record.Target_Trials,
-        Total_Duration_Seconds: record.Total_Duration_Seconds,
-        Score: record.Score,
-        Accuracy_Percent: record.Accuracy_Percent,
-        Moves: record.Moves,
-        Attempts: record.Attempts,
-        Success_Count: record.Success_Count,
-        Error_Count: record.Error_Count,
         Game_Result: record.Game_Result,
-        Details_JSON: record.Details_JSON,
+        Total_Duration_Seconds: record.Total_Duration_Seconds,
       },
     });
     writeJsPsychData(jsPsychRef, record as unknown as Record<string, unknown>, 'Unable to write reference cognitive result to jsPsych data.');
-  }, [difficulty, effectiveLimit, gameId, metaTitle, reactionTrials, setPhase, t]);
+  }, [difficulty, gameId, metaTitle, setPhase]);
 
   finishGameRef.current = finishGame;
 
@@ -544,43 +514,14 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
             <h1>{result.Game_Result === 'Victory' ? t('cognitive.results.complete') : t('cognitive.results.ended')}</h1>
             <div className="training-result-summary">
               <span>
-                <small>{t('cognitive.results.score')}</small>
-                <strong>{result.Score}</strong>
-              </span>
-              <span>
-                <small>{t('cognitive.results.accuracy')}</small>
-                <strong>{result.Accuracy_Percent}%</strong>
+                <small>{t('cognitive.results.result')}</small>
+                <strong>{result.Game_Result === 'Victory' ? t('cognitive.results.victory') : t('cognitive.results.defeat')}</strong>
               </span>
               <span>
                 <small>{t('cognitive.results.elapsed')}</small>
-                <strong>{result.Total_Duration_Seconds}s</strong>
+                <strong>{formatSeconds(result.Total_Duration_Seconds, t)}</strong>
               </span>
             </div>
-
-            <table className="results-table">
-              <tbody>
-                <tr>
-                  <th>{t('cognitive.results.game')}</th>
-                  <td>{result.Game_Title}</td>
-                </tr>
-                <tr>
-                  <th>{t('cognitive.results.difficulty')}</th>
-                  <td>{t(DIFFICULTIES[result.Difficulty].labelKey)}</td>
-                </tr>
-                <tr>
-                  <th>{t('cognitive.results.attempts')}</th>
-                  <td>{result.Attempts}</td>
-                </tr>
-                <tr>
-                  <th>{t('cognitive.results.success')}</th>
-                  <td>{result.Success_Count}</td>
-                </tr>
-                <tr>
-                  <th>{t('cognitive.results.errors')}</th>
-                  <td>{result.Error_Count}</td>
-                </tr>
-              </tbody>
-            </table>
 
             <TrainingResultActions
               downloadLabel={t('training.downloadCsvRecord')}
@@ -633,15 +574,6 @@ function isAutoSuccess(state: CognitiveGameState | null) {
   return isSlidingAutoSuccess(state);
 }
 
-function buildResultStats(state: CognitiveGameState): ResultStats {
-  if (state.kind === 'memory-match') return buildMemoryResultStats(state);
-  if (state.kind === 'lights-out') return buildLightsResultStats(state);
-  if (state.kind === 'reaction-time') return buildReactionResultStats(state);
-  if (state.kind === 'whack-a-mole') return buildWhackResultStats(state);
-  if (isLanguageNeutralGameState(state)) return buildLanguageNeutralResultStats(state);
-  return buildSlidingResultStats(state);
-}
-
 function getFeedbackCounts(state: CognitiveGameState): { success: number; errors: number } {
   if (state.kind === 'memory-match') return { success: state.matchedPairs, errors: state.errors };
   if (state.kind === 'lights-out') return { success: isLightsAutoSuccess(state) ? 1 : 0, errors: 0 };
@@ -675,22 +607,8 @@ function formatSeconds(value: number, t: TFunction) {
 
 function toCsv(records: SessionRecord[]): string {
   const columns: Array<{ label: string; value: (record: SessionRecord) => unknown }> = [
-    { label: 'Test_Date', value: (record) => record.Test_Date },
-    { label: 'Participant_ID', value: (record) => record.Participant_ID },
-    { label: 'Game_ID', value: (record) => record.Game_ID },
-    { label: 'Game_Title', value: (record) => record.Game_Title },
-    { label: 'Difficulty', value: (record) => record.Difficulty },
-    { label: 'Session_Limit_Seconds', value: (record) => record.Session_Limit_Seconds },
-    { label: 'Target_Trials', value: (record) => record.Target_Trials },
-    { label: 'Total_Duration_Seconds', value: (record) => record.Total_Duration_Seconds },
-    { label: 'Score', value: (record) => record.Score },
-    { label: 'Accuracy_Percent', value: (record) => record.Accuracy_Percent },
-    { label: 'Moves', value: (record) => record.Moves },
-    { label: 'Attempts', value: (record) => record.Attempts },
-    { label: 'Success_Count', value: (record) => record.Success_Count },
-    { label: 'Error_Count', value: (record) => record.Error_Count },
     { label: 'Game_Result', value: (record) => record.Game_Result },
-    { label: 'Details_JSON', value: (record) => record.Details_JSON },
+    { label: 'Total_Duration_Seconds', value: (record) => record.Total_Duration_Seconds },
   ];
   return [
     columns.map((column) => column.label).join(','),

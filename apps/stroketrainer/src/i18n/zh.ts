@@ -748,14 +748,10 @@ export const zh = {
   'cognitive.config.focusTitle': '訓練重點',
   'cognitive.results.complete': '訓練完成',
   'cognitive.results.ended': '訓練結束',
-  'cognitive.results.score': '分數',
-  'cognitive.results.accuracy': '正確率',
+  'cognitive.results.result': '勝負',
+  'cognitive.results.victory': '勝利',
+  'cognitive.results.defeat': '失敗',
   'cognitive.results.elapsed': '使用時間',
-  'cognitive.results.game': '遊戲',
-  'cognitive.results.difficulty': '難度',
-  'cognitive.results.attempts': '嘗試次數',
-  'cognitive.results.success': '成功次數',
-  'cognitive.results.errors': '錯誤次數',
 
   // Minesweeper
   'minesweeper.diff.beginner': '初級',
@@ -781,13 +777,7 @@ export const zh = {
   'minesweeper.boardAria': '踩地雷棋盤',
   'minesweeper.results.victory': '成功完成！',
   'minesweeper.results.defeat': '遊戲結束',
-  'minesweeper.results.correctFlags': '成功標記的地雷數量',
   'minesweeper.results.duration': '使用總時數',
-  'minesweeper.results.openedCells': '成功開闢格子數量',
-  'minesweeper.results.boardSize': '棋盤大小',
-  'minesweeper.results.minesTotal': '地雷總數',
-  'minesweeper.results.flagsPlaced': '放置旗標',
-  'minesweeper.results.incorrectFlags': '錯誤旗標',
 
   // Drawing tower defense
   'drawing.diff.beginner': '初級',
