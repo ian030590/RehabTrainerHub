@@ -34,8 +34,13 @@ const modules: ModuleDefinition[] = [
         actionKey: 'module.attention.ufov.action',
         to: '/attention-training/ufov',
       },
+      {
+        titleKey: 'module.attention.everyBall.title',
+        bodyKey: 'module.attention.everyBall.body',
+        actionKey: 'module.attention.everyBall.action',
+        to: '/attention-training/every-ball-response',
+      },
       { titleKey: 'module.attention.card2.title', bodyKey: 'module.attention.card2.body' },
-      { titleKey: 'module.attention.card3.title', bodyKey: 'module.attention.card3.body' },
     ],
   },
   {

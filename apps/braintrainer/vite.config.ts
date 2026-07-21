@@ -40,6 +40,11 @@ export default defineConfig({
       '@rehab-trainer/ui': fileURLToPath(new URL('../../packages/ui/src', import.meta.url)),
     },
   },
+  server: {
+    watch: {
+      ignored: ['**/tsconfig.json', '**/tsconfig.*.json', '**/*.tsbuildinfo'],
+    },
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets'
