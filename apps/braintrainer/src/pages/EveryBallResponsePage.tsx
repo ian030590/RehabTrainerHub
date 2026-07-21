@@ -597,36 +597,55 @@ export function EveryBallResponsePage() {
   const drawVisual = useCallback((nextVisual: VisualState) => {
     visualRef.current = nextVisual;
     setVisual(nextVisual);
-    const app = appRef.current;
+    const app = GetInitializedPixiApp(appRef.current);
     if (app) drawEveryBallScene(app, nextVisual, labels);
   }, [labels]);
 
   useEffect(() => {
     mountedRef.current = true;
     let cancelled = false;
+    let initialized = false;
     const app = new Application();
-    appRef.current = app;
+
+    const destroyApp = () => {
+      if (!initialized) return;
+      try {
+        app.destroy(true, { children: true, texture: true });
+      } catch (error) {
+        console.warn('Unable to destroy Every Ball Response Pixi stage.', error);
+      }
+    };
 
     const initialize = async () => {
       const host = stageHostRef.current;
       if (!host) return;
-      await app.init({
-        background: '#ffffff',
-        antialias: true,
-        autoDensity: true,
-        resolution: Math.min(window.devicePixelRatio || 1, 2),
-        resizeTo: host,
-      });
-      if (cancelled) return;
-      host.appendChild(app.canvas);
-      app.canvas.className = 'every-ball-canvas';
-      drawEveryBallScene(app, visualRef.current, labels);
+      try {
+        await app.init({
+          background: '#ffffff',
+          antialias: true,
+          autoDensity: true,
+          resolution: Math.min(window.devicePixelRatio || 1, 2),
+          resizeTo: host,
+        });
+        initialized = true;
+        if (cancelled) {
+          destroyApp();
+          return;
+        }
+        appRef.current = app;
+        host.appendChild(app.canvas);
+        app.canvas.className = 'every-ball-canvas';
+        drawEveryBallScene(app, visualRef.current, labels);
+      } catch (error) {
+        console.warn('Unable to initialize Every Ball Response Pixi stage.', error);
+      }
     };
     void initialize();
 
     const onResize = () => {
-      if (!appRef.current) return;
-      drawEveryBallScene(appRef.current, visualRef.current, labels);
+      const currentApp = GetInitializedPixiApp(appRef.current);
+      if (!currentApp) return;
+      drawEveryBallScene(currentApp, visualRef.current, labels);
     };
     window.addEventListener('resize', onResize);
     return () => {
@@ -635,14 +654,17 @@ export function EveryBallResponsePage() {
       window.removeEventListener('resize', onResize);
       void stopInput();
       jsPsychRef.current?.abortExperiment();
-      app.destroy(true, { children: true, texture: true });
-      appRef.current = null;
+      if (appRef.current === app) {
+        appRef.current = null;
+      }
+      destroyApp();
     };
   }, [labels, stopInput]);
 
   useEffect(() => {
-    if (!appRef.current) return;
-    drawEveryBallScene(appRef.current, visualRef.current, labels);
+    const app = GetInitializedPixiApp(appRef.current);
+    if (!app) return;
+    drawEveryBallScene(app, visualRef.current, labels);
   }, [labels]);
 
   useEffect(() => {
@@ -1675,6 +1697,10 @@ function getResponseActionLabel(action: ResponseAction, labels: EveryBallLabels)
 
 function getLevel(levelId: LevelDefinition['id']): LevelDefinition {
   return LEVELS.find((level) => level.id === levelId) ?? LEVELS[0];
+}
+
+function GetInitializedPixiApp(app: Application | null): Application | null {
+  return app && (app as { renderer?: unknown }).renderer ? app : null;
 }
 
 function requireElement<T>(element: T | null): T {
