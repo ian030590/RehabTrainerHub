@@ -20,6 +20,8 @@ Shared UI, auth helpers, layout, settings, and storage utilities live in `packag
 
 Run `npm run test:entrypoints` for high-risk trainer changes before reporting done. High-risk includes edits to trainer app entrypoints, routing, shared layout/UI imported by trainer entrypoints, or code that could pull Pixi, jsPsych, Three.js, MediaPipe, TensorFlow, or Vosk into an app entry bundle and cause a blank screen.
 
+Run `npm --workspace @rehab-trainer/stroketrainer run test:asteroid-shield-fullscreen` after changes to Asteroid Shield, its fullscreen flow, or Pixi sizing. This regression test verifies the setting and rules flow, native fullscreen target, and full-viewport game canvas.
+
 There is no full test suite at present; use targeted builds as the minimum verification for changes.
 
 ## Coding Style & Naming Conventions

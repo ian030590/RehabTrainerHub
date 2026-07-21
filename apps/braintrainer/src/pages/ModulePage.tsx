@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
+import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
@@ -17,7 +18,6 @@ interface ModuleDefinition {
   cards: Array<{
     titleKey: TranslationKey;
     bodyKey: TranslationKey;
-    actionKey?: TranslationKey;
     to?: string;
   }>;
 }
@@ -31,13 +31,11 @@ const modules: ModuleDefinition[] = [
       {
         titleKey: 'module.attention.ufov.title',
         bodyKey: 'module.attention.ufov.body',
-        actionKey: 'module.attention.ufov.action',
         to: '/attention-training/ufov',
       },
       {
         titleKey: 'module.attention.everyBall.title',
         bodyKey: 'module.attention.everyBall.body',
-        actionKey: 'module.attention.everyBall.action',
         to: '/attention-training/every-ball-response',
       },
       { titleKey: 'module.attention.card2.title', bodyKey: 'module.attention.card2.body' },
@@ -61,7 +59,6 @@ const modules: ModuleDefinition[] = [
       {
         titleKey: 'module.thinking.mainConcept.title',
         bodyKey: 'module.thinking.mainConcept.body',
-        actionKey: 'module.thinking.mainConcept.action',
         to: '/thinking-training/main-concept',
       },
       { titleKey: 'module.thinking.card2.title', bodyKey: 'module.thinking.card2.body' },
@@ -148,30 +145,23 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
         {module.cards.map((card, index) => {
           const isUfovCard = card.to === '/attention-training/ufov';
           return (
-            <article
-              className={`card selection-card ${card.to ? '' : 'placeholder-card'} fade-in-up`}
-              aria-disabled={card.to ? undefined : 'true'}
+            <SelectionCard
               key={card.titleKey}
-            >
-              <span className="card-icon" aria-hidden="true">{index + 1}</span>
-              <span className="card-title">{t(card.titleKey)}</span>
-              <span className="card-desc">{t(card.bodyKey)}</span>
-              <div className="card-action">
-                {isUfovCard ? (
-                  <button className="btn btn-primary btn-sm" type="button" onClick={() => setIsUfovConfigOpen(true)}>
-                    {t(card.actionKey ?? 'module.openAction')}
-                  </button>
-                ) : card.to ? (
-                  <Link className="btn btn-primary btn-sm" to={card.to}>
-                    {t(card.actionKey ?? 'module.openAction')}
-                  </Link>
-                ) : (
-                  <button className="btn btn-secondary btn-sm" type="button" disabled>
-                    {t('module.placeholderAction')}
-                  </button>
-                )}
-              </div>
-            </article>
+              title={t(card.titleKey)}
+              description={t(card.bodyKey)}
+              index={index + 1}
+              actionLabel={card.to ? t('btn.selectModule') : t('module.placeholderAction')}
+              className={card.to ? '' : 'placeholder-card'}
+              disabled={!card.to}
+              onSelect={() => {
+                if (!card.to) return;
+                if (isUfovCard) {
+                  setIsUfovConfigOpen(true);
+                  return;
+                }
+                navigate(card.to);
+              }}
+            />
           );
         })}
       </section>

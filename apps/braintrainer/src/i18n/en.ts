@@ -14,6 +14,7 @@ export const en = {
   'nav.noScores': 'There are no BrainTrainer training records yet.',
   'nav.scoresDownloadError': 'Unable to read BrainTrainer training records. Please try again.',
   'nav.toggleMenu': 'Toggle menu',
+  'btn.selectModule': 'Select Module',
   'module.placeholderAction': 'Module not available yet',
   'module.openAction': 'Start',
   'module.attention.title': 'Attention Training',

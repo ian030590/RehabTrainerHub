@@ -85,7 +85,7 @@ export function MotorTraining() {
       subtitle={t('training.motor.subtitle')}
       modules={modules}
       selectedModuleId={activeModule}
-      actionLabel={t('training.startGame')}
+      actionLabel={t('btn.selectModule')}
       cardClassName="training-module-button"
       onSelect={openModule}
     >

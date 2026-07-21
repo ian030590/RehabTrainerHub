@@ -466,6 +466,14 @@ body[data-ui-font-bold="true"] .app-layout :where(
   font-weight: var(--fw-bold, 700);
 }
 
+.card-action-icon {
+  transition: transform var(--transition-normal);
+}
+
+.card-action-icon.is-expanded {
+  transform: rotate(180deg);
+}
+
 .btn {
   display: inline-flex;
   align-items: center;

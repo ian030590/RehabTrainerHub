@@ -1,4 +1,5 @@
 export const zh = {
+  'btn.selectModule': '選擇此模組',
   'app.loading': '載入 BrainTrainer...',
   'nav.brand': 'BrainTrainer',
   'nav.logoAlt': 'BrainTrainer 標誌',

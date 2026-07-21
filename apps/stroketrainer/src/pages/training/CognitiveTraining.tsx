@@ -53,7 +53,7 @@ export function CognitiveTraining() {
       subtitle={t('training.cognitive.subtitle')}
       modules={modules}
       selectedModuleId={activeModule}
-      actionLabel={t('training.startGame')}
+      actionLabel={t('btn.selectModule')}
       cardClassName="training-module-button"
       onSelect={openModule}
     >

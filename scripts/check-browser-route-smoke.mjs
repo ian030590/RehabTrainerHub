@@ -14,11 +14,17 @@ const expectedSelectors = [
   ...ParseSelectorList(args.selector),
   ...ParseSelectorList(args.allSelectors),
 ];
+const clickSelectors = ParseSelectorList(args.clickSelectors);
+const viewportSelectors = ParseSelectorList(args.viewportSelectors);
+const canvasViewportSelectors = ParseSelectorList(args.canvasViewportSelectors);
+const fullscreenSelector = args.fullscreenSelector;
+const requireFullscreenBeforeAudio = args.fullscreenBeforeAudio === 'true';
+const storageEntries = ParseStorageEntries(args.storage);
 const expectedText = args.text;
 const timeoutMs = Number(args.timeoutMs ?? 12000);
 
 if (expectedSelectors.length === 0) {
-  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs --app <appDir> --route <route> --selector <cssSelector> [--allSelectors <cssSelector,...>] [--text <text>]');
+  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs --app <appDir> --route <route> --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--text <text>]');
 }
 
 const browserPath = FindBrowserPath();
@@ -85,8 +91,39 @@ try {
   await cdp.Send('Page.enable', undefined, sessionId);
   await cdp.Send('Network.enable', undefined, sessionId);
   await cdp.Send('Log.enable', undefined, sessionId);
+  const bootstrapStatements = [];
+  if (storageEntries.length > 0) {
+    bootstrapStatements.push(`for (const [key, value] of ${JSON.stringify(storageEntries)}) localStorage.setItem(key, value);`);
+  }
+  if (requireFullscreenBeforeAudio) {
+    bootstrapStatements.push(`
+      window.__trainerSmokeCallOrder = [];
+      const originalRequestFullscreen = HTMLElement.prototype.requestFullscreen;
+      if (originalRequestFullscreen) {
+        HTMLElement.prototype.requestFullscreen = function (...args) {
+          window.__trainerSmokeCallOrder.push('fullscreen');
+          return originalRequestFullscreen.apply(this, args);
+        };
+      }
+      const audioContextPrototype = window.AudioContext?.prototype;
+      const originalAudioResume = audioContextPrototype?.resume;
+      if (originalAudioResume) {
+        audioContextPrototype.resume = function (...args) {
+          window.__trainerSmokeCallOrder.push('audio');
+          return originalAudioResume.apply(this, args);
+        };
+      }
+    `);
+  }
+  if (bootstrapStatements.length > 0) {
+    await cdp.Send('Page.addScriptToEvaluateOnNewDocument', {
+      source: bootstrapStatements.join('\n'),
+    }, sessionId);
+  }
   await cdp.Send('Page.navigate', { url: `http://127.0.0.1:${previewPort}${route}` }, sessionId);
   await Wait(timeoutMs);
+  await ClickSelectors(cdp, sessionId, clickSelectors, timeoutMs);
+  if (clickSelectors.length > 0) await Wait(800);
 
   const stateResult = await cdp.Send('Runtime.evaluate', {
     expression: `JSON.stringify({
@@ -97,6 +134,39 @@ try {
         selector,
         matched: Boolean(document.querySelector(selector)),
       })),
+      fullscreenMatched: ${fullscreenSelector ? `Boolean(document.fullscreenElement?.matches(${JSON.stringify(fullscreenSelector)}))` : 'true'},
+      viewportMatches: ${JSON.stringify(viewportSelectors)}.map((selector) => {
+        const element = document.querySelector(selector);
+        const rect = element?.getBoundingClientRect();
+        const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+        const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+        return {
+          selector,
+          matched: Boolean(rect && Math.abs(rect.left) <= 1 && Math.abs(rect.top) <= 1 && Math.abs(rect.width - viewportWidth) <= 1 && Math.abs(rect.height - viewportHeight) <= 1),
+          rect: rect ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : null,
+          viewport: { width: viewportWidth, height: viewportHeight },
+        };
+      }),
+      canvasViewportMatches: ${JSON.stringify(canvasViewportSelectors)}.map((selector) => {
+        const canvas = document.querySelector(selector);
+        const rect = canvas?.getBoundingClientRect();
+        const resolution = Math.min(window.devicePixelRatio || 1, 2);
+        const expectedWidth = Math.round((rect?.width ?? 0) * resolution);
+        const expectedHeight = Math.round((rect?.height ?? 0) * resolution);
+        return {
+          selector,
+          matched: canvas instanceof HTMLCanvasElement && Boolean(rect) && Math.abs(canvas.width - expectedWidth) <= 2 && Math.abs(canvas.height - expectedHeight) <= 2,
+          buffer: canvas instanceof HTMLCanvasElement ? { width: canvas.width, height: canvas.height } : null,
+          expected: { width: expectedWidth, height: expectedHeight },
+        };
+      }),
+      fullscreenBeforeAudio: ${requireFullscreenBeforeAudio ? `(() => {
+        const callOrder = window.__trainerSmokeCallOrder ?? [];
+        const fullscreenIndex = callOrder.indexOf('fullscreen');
+        const audioIndex = callOrder.indexOf('audio');
+        return fullscreenIndex >= 0 && (audioIndex < 0 || fullscreenIndex < audioIndex);
+      })()` : 'true'},
+      callOrder: ${requireFullscreenBeforeAudio ? 'window.__trainerSmokeCallOrder ?? []' : '[]'},
       textMatched: ${expectedText ? `document.body.innerText.includes(${JSON.stringify(expectedText)})` : 'true'}
     })`,
     returnByValue: true,
@@ -117,6 +187,22 @@ try {
   }
   if (!state.textMatched) {
     failures.push(`Missing expected text: ${expectedText}`);
+  }
+  if (!state.fullscreenMatched) {
+    failures.push(`Fullscreen element did not match: ${fullscreenSelector}`);
+  }
+  for (const viewportMatch of state.viewportMatches) {
+    if (!viewportMatch.matched) {
+      failures.push(`Element did not cover the viewport: ${viewportMatch.selector} (${JSON.stringify(viewportMatch.rect)} vs ${JSON.stringify(viewportMatch.viewport)})`);
+    }
+  }
+  for (const canvasViewportMatch of state.canvasViewportMatches) {
+    if (!canvasViewportMatch.matched) {
+      failures.push(`Canvas buffer did not match its viewport: ${canvasViewportMatch.selector} (${JSON.stringify(canvasViewportMatch.buffer)} vs ${JSON.stringify(canvasViewportMatch.expected)})`);
+    }
+  }
+  if (!state.fullscreenBeforeAudio) {
+    failures.push(`Fullscreen request must precede audio activation. Call order: ${state.callOrder.join(', ')}`);
   }
   if (exceptions.length > 0) {
     failures.push(`Runtime exceptions:\n${exceptions.map((exception) => `  - ${exception}`).join('\n')}`);
@@ -162,6 +248,59 @@ function ParseSelectorList(value) {
     .split(',')
     .map((selector) => selector.trim())
     .filter(Boolean);
+}
+
+function ParseStorageEntries(value) {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map((entry) => {
+      const separatorIndex = entry.indexOf('=');
+      if (separatorIndex <= 0) {
+        throw new Error(`Storage entry must use key=value syntax: ${entry}`);
+      }
+      return [entry.slice(0, separatorIndex), entry.slice(separatorIndex + 1)];
+    });
+}
+
+async function ClickSelectors(cdp, sessionId, selectors, timeoutMs) {
+  for (const selector of selectors) {
+    const bounds = await WaitForClickableBounds(cdp, sessionId, selector, timeoutMs);
+    await cdp.Send('Input.dispatchMouseEvent', {
+      type: 'mousePressed',
+      x: bounds.x,
+      y: bounds.y,
+      button: 'left',
+      clickCount: 1,
+    }, sessionId);
+    await cdp.Send('Input.dispatchMouseEvent', {
+      type: 'mouseReleased',
+      x: bounds.x,
+      y: bounds.y,
+      button: 'left',
+      clickCount: 1,
+    }, sessionId);
+    await Wait(150);
+  }
+}
+
+async function WaitForClickableBounds(cdp, sessionId, selector, timeoutMs) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    const result = await cdp.Send('Runtime.evaluate', {
+      expression: `(() => {
+        const element = document.querySelector(${JSON.stringify(selector)});
+        if (!(element instanceof HTMLElement) || element.matches(':disabled')) return null;
+        const rect = element.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1) return null;
+        return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      })()`,
+      returnByValue: true,
+    }, sessionId);
+    if (result.result.value) return result.result.value;
+    await Wait(100);
+  }
+  throw new Error(`Timed out waiting for clickable selector: ${selector}`);
 }
 
 function FindBrowserPath() {

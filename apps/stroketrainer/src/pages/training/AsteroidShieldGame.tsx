@@ -563,8 +563,9 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
 
   const startGame = useCallback(async () => {
     if (!VerifySelectedTrainingUser()) return;
+    const fullscreenPromise = enterTrainingFullscreen();
     PrepareAudioFeedback(jsPsychRef);
-    await enterTrainingFullscreen();
+    await fullscreenPromise;
     stopVision();
     setVisionError('');
     setShowVisionError(false);
@@ -682,9 +683,9 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   useEffect(() => {
     let cancelled = false;
     const app = new Application();
+    const host = pixiHostRef.current;
 
     const initialize = async () => {
-      const host = pixiHostRef.current;
       if (!host) return;
       await app.init({
         backgroundAlpha: 0,
@@ -703,6 +704,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       host.appendChild(app.canvas);
       app.canvas.className = 'asteroid-shield-canvas';
       ResetAsteroidScene(app, sceneRef, textures);
+      onResize();
       app.ticker.add((ticker: Ticker) => {
         if (phaseRef.current !== 'playing') return;
         UpdateAsteroidGame({
@@ -727,13 +729,23 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       const currentApp = appRef.current;
       const scene = sceneRef.current;
       if (!currentApp || !scene) return;
-      ResizePixiAppToElement(currentApp, pixiHostRef.current);
+      ResizePixiAppToElement(currentApp, host);
       UpdateSceneLayout(currentApp, scene, configRef.current.shieldSizePercent, shieldAngleRef.current);
     };
+    const resizeObserver = host && typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(onResize)
+      : null;
+
     window.addEventListener('resize', onResize);
+    window.visualViewport?.addEventListener('resize', onResize);
+    document.addEventListener('fullscreenchange', onResize);
+    if (resizeObserver && host) resizeObserver.observe(host);
     return () => {
       cancelled = true;
       window.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('resize', onResize);
+      document.removeEventListener('fullscreenchange', onResize);
+      resizeObserver?.disconnect();
       app.destroy(true, { children: true, texture: true });
       appRef.current = null;
       texturesRef.current = null;

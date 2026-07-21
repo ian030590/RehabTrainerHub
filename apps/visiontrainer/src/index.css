@@ -361,24 +361,6 @@ body #webgazer-calibrate-container #calibration-point {
   color: var(--text-muted);
 }
 
-.card-action {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  font-size: 16px;
-  color: var(--accent);
-  font-weight: var(--fw-bold);
-}
-
-.card-action-icon {
-  transition: transform var(--transition-normal);
-}
-
-.card-action-icon.is-expanded {
-  transform: rotate(180deg);
-}
-
 /* Acuity Test Intro */
 .acuity-intro {
   display: flex;
