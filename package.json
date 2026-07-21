@@ -18,7 +18,7 @@
     "build:stroke": "npm --prefix apps/stroketrainer run build",
     "build:vision": "npm --prefix apps/visiontrainer run build",
     "build:turbo": "npm run test:entrypoints && turbo run build",
-    "dev": "turbo run dev --parallel",
+    "dev": "turbo run dev",
     "dev:brain": "turbo run dev --filter=@rehab-trainer/braintrainer",
     "dev:hub": "turbo run dev --filter=@rehab-trainer/rehabtrainerhub",
     "dev:stroke": "turbo run dev --filter=@rehab-trainer/stroketrainer",
