@@ -1,6 +1,6 @@
 import { ExternalLinkCard } from './ExternalLinkCard';
 import { GridPageLayout } from './GridPageLayout';
-import { Icons } from './Icons';
+import { icons } from './Icons';
 
 export interface RelatedLinkItem {
   description: string;
@@ -25,7 +25,7 @@ export function RelatedLinksGridPage({ links, subtitle, title }: RelatedLinksGri
           title={link.title}
           description={link.description}
           actionLabel={link.href.replace('https://', '')}
-          actionIcon={<Icons.ExternalLink />}
+          actionIcon={<icons.ExternalLink />}
         />
       ))}
     </GridPageLayout>

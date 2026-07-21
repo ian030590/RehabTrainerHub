@@ -1,4 +1,4 @@
-import { HUB_NAME } from '../hubBrand';
+import { hubName } from '../hubBrand';
 
 export const en = {
   hub: {
@@ -41,14 +41,14 @@ export const en = {
   home: {
     documentLanguage: 'en',
     brandSubtitle: 'Home rehabilitation hub',
-    navigationLabel: `${HUB_NAME} navigation`,
+    navigationLabel: `${hubName} navigation`,
     hero: {
       eyebrow: 'Home rehabilitation hub',
       title: 'Home rehabilitation tools developed by occupational therapists',
       body: 'Practice home rehabilitation through the website on a computer, phone, or tablet at home. Use it under therapist guidance.',
       primaryAction: 'Choose a tool',
       secondaryAction: 'View safety notes',
-      visualLabel: `${HUB_NAME} tool selection preview`,
+      visualLabel: `${hubName} tool selection preview`,
       checklist: ['Stroke practice', 'Vision training', 'Larger text'],
     },
     programs: {

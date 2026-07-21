@@ -12,12 +12,12 @@ import { Application, Container, Graphics, Text, type Ticker } from 'pixi.js';
 import { initJsPsych } from 'jspsych';
 import type { KaldiRecognizer, Model } from 'vosk-browser';
 import { useT, type TranslationKey } from '../../i18n';
-import { downloadCsvFile } from '../../utils/downloadFile';
-import { DEFAULT_UI_FONT_SIZE_PX, getActiveUser, getSetting } from '../../utils/settings';
-import { playFailureSound, playGameEndSound, playSuccessSound, prepareAudioFeedback } from '../../utils/soundManager';
-import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
-import { verifySelectedTrainingUser } from './selectedUserGuard';
+import { DownloadCsvFile } from '../../utils/downloadFile';
+import { defaultUiFontSizePx, getActiveUser, GetSetting } from '../../utils/settings';
+import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
+import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
@@ -30,36 +30,36 @@ import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog'
 import type { TFunction } from './types';
 import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
 import {
-  createDefaultVoiceVocabulary,
-  createVoiceVocabularyItems,
-  loadVoiceVocabulary,
-  saveVoiceVocabulary,
-  splitVoiceVocabularyInput,
+  CreateDefaultVoiceVocabulary,
+  CreateVoiceVocabularyItems,
+  LoadVoiceVocabulary,
+  SaveVoiceVocabulary,
+  SplitVoiceVocabularyInput,
   type VoiceLanguage,
   type VoiceVocabularyItem,
 } from './voiceDefenderVocabulary';
 import {
-  buildVoskGrammar,
-  calculateBestSpeechSimilarity,
-  normalizeSpeechText,
-  VOICE_MATCH_SIMILARITY_THRESHOLD,
+  BuildVoskGrammar,
+  CalculateBestSpeechSimilarity,
+  NormalizeSpeechText,
+  voiceMatchSimilarityThreshold,
 } from './voiceDefenderSpeechMatching';
 import {
-  deleteCachedModel,
-  getCachedModelUrl,
-  startVoskModelBackgroundDownload,
+  DeleteCachedModel,
+  GetCachedModelUrl,
+  StartVoskModelBackgroundDownload,
   type CachedModelUrl,
   type VoskModelLoadStage,
 } from './voskModelCache';
 import {
-  hasVoskVocabularyWord,
-  loadVoskVocabularyIndex,
+  HasVoskVocabularyWord,
+  LoadVoskVocabularyIndex,
   type VoskVocabularyIndex,
 } from './voskVocabularyIndex';
 
 declare const __BUNDLED_ZH_VOSK_MODEL_ENABLED__: boolean;
 
-export { calculateSimilarity, levenshteinDistance } from './voiceDefenderSpeechMatching';
+export { CalculateSimilarity, LevenshteinDistance } from './voiceDefenderSpeechMatching';
 
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 type GamePhase = 'editor' | 'rules' | 'playing' | 'results';
@@ -201,37 +201,37 @@ interface StartIssue {
   message: string;
 }
 
-const DEFAULT_MODEL_URLS: Record<VoiceLanguage, string> = {
+const defaultModelUrls: Record<VoiceLanguage, string> = {
   zh: __BUNDLED_ZH_VOSK_MODEL_ENABLED__
     ? `${import.meta.env.BASE_URL}models/vosk-model-small-zh-tw-0.3.tar.gz`
     : '',
   en: 'https://ccoreilly.github.io/vosk-browser/models/vosk-model-small-en-us-0.15.tar.gz',
 };
 
-const DEFAULT_MODEL_BYTES: Record<VoiceLanguage, number> = {
+const defaultModelBytes: Record<VoiceLanguage, number> = {
   zh: 33_368_542,
   en: 41_184_862,
 };
 
-const MODEL_URLS: Record<VoiceLanguage, string> = {
+const modelUrls: Record<VoiceLanguage, string> = {
   zh: import.meta.env.VITE_VOSK_MODEL_ZH_URL?.trim()
-    || DEFAULT_MODEL_URLS.zh,
+    || defaultModelUrls.zh,
   en: import.meta.env.VITE_VOSK_MODEL_EN_URL?.trim()
-    || DEFAULT_MODEL_URLS.en,
+    || defaultModelUrls.en,
 };
 
-const MODEL_VOCABULARY_URLS: Record<VoiceLanguage, string> = {
+const modelVocabularyUrls: Record<VoiceLanguage, string> = {
   zh: import.meta.env.VITE_VOSK_MODEL_ZH_VOCAB_URL?.trim()
-    || (MODEL_URLS.zh === DEFAULT_MODEL_URLS.zh
+    || (modelUrls.zh === defaultModelUrls.zh
       ? `${import.meta.env.BASE_URL}models/vosk-model-small-zh-tw-0.3-vocabulary.txt`
       : ''),
   en: import.meta.env.VITE_VOSK_MODEL_EN_VOCAB_URL?.trim()
-    || (MODEL_URLS.en === DEFAULT_MODEL_URLS.en
+    || (modelUrls.en === defaultModelUrls.en
       ? `${import.meta.env.BASE_URL}models/vosk-model-small-en-us-0.15-vocabulary.txt`
       : ''),
 };
 
-const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
+const difficulties: Record<Difficulty, DifficultyConfig> = {
   Beginner: {
     labelKey: 'voice.diff.beginner',
     descriptionKey: 'voice.diff.beginnerDesc',
@@ -252,20 +252,20 @@ const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
   },
 };
 
-const HP_OPTIONS = [1, 3, 5] as const;
-const GAME_DURATION_OPTIONS = [30, 60, 300, null] as const;
-const ENEMY_SPEED_OPTIONS = [5, 15, 30] as const;
-const DEFAULT_HP = 3;
-const DEFAULT_ENEMY_SPEED = 5;
-const DEFAULT_GAME_DURATION_SECONDS: GameDurationSeconds = 30;
-const DEFAULT_CUSTOM_GAME_DURATION_SECONDS = 120;
-const ENEMY_VISUAL_HEIGHT = 98;
-const ENEMY_SPAWN_Y = -ENEMY_VISUAL_HEIGHT - 8;
-const DEFAULT_BACKGROUND_COLOR = '#005EB8';
-const MICROPHONE_SIGNAL_THRESHOLD = 0.006;
-const MICROPHONE_SILENCE_DELAY_MS = 1600;
-const IOS_MICROPHONE_PERMISSION_TIMEOUT_MS = 15_000;
-const MICROPHONE_MEDIA_CONSTRAINTS: MediaStreamConstraints = {
+const hpOptions = [1, 3, 5] as const;
+const gameDurationOptions = [30, 60, 300, null] as const;
+const enemySpeedOptions = [5, 15, 30] as const;
+const defaultHp = 3;
+const defaultEnemySpeed = 5;
+const defaultGameDurationSeconds: GameDurationSeconds = 30;
+const defaultCustomGameDurationSeconds = 120;
+const enemyVisualHeight = 98;
+const enemySpawnY = -enemyVisualHeight - 8;
+const defaultBackgroundColor = '#005EB8';
+const microphoneSignalThreshold = 0.006;
+const microphoneSilenceDelayMs = 1600;
+const iosMicrophonePermissionTimeoutMs = 15_000;
+const microphoneMediaConstraints: MediaStreamConstraints = {
   video: false,
   audio: {
     echoCancellation: true,
@@ -274,15 +274,15 @@ const MICROPHONE_MEDIA_CONSTRAINTS: MediaStreamConstraints = {
   },
 };
 const starSkyBackgroundImage = `url(${import.meta.env.BASE_URL}assets/StarSky.png)`;
-const VOSK_MODEL_DOWNLOAD_TIMEOUT_MS = getPositiveNumber(
+const voskModelDownloadTimeoutMs = GetPositiveNumber(
   import.meta.env.VITE_VOSK_MODEL_TIMEOUT_MS,
   90_000,
 );
-const VOSK_MODEL_RETRY_DELAY_MS = getPositiveNumber(
+const voskModelRetryDelayMs = GetPositiveNumber(
   import.meta.env.VITE_VOSK_MODEL_RETRY_MS,
   10_000,
 );
-const VOSK_MODEL_MIN_BYTES = getPositiveNumber(
+const voskModelMinBytes = GetPositiveNumber(
   import.meta.env.VITE_VOSK_MODEL_MIN_BYTES,
   1_048_576,
 );
@@ -311,7 +311,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   const lastRecognitionRef = useRef({ text: '', at: 0 });
   const metricsRef = useRef({
     elapsed: 0,
-    hp: DEFAULT_HP,
+    hp: defaultHp,
     score: 0,
     spawned: 0,
     defeated: 0,
@@ -321,9 +321,9 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   const configRef = useRef({
     language: 'zh' as VoiceLanguage,
     difficulty: 'Beginner' as Difficulty,
-    gameDurationSec: DEFAULT_GAME_DURATION_SECONDS,
-    maxHp: DEFAULT_HP,
-    speed: DEFAULT_ENEMY_SPEED,
+    gameDurationSec: defaultGameDurationSeconds,
+    maxHp: defaultHp,
+    speed: defaultEnemySpeed,
     activeWords: [] as string[],
   });
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
@@ -331,17 +331,17 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   const [phase, setPhaseState] = useState<GamePhase>('editor');
   const [language, setLanguage] = useState<VoiceLanguage>('zh');
   const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
-  const [gameDurationSec, setGameDurationSec] = useState<GameDurationSeconds>(DEFAULT_GAME_DURATION_SECONDS);
-  const [customGameDurationSec, setCustomGameDurationSec] = useState(DEFAULT_CUSTOM_GAME_DURATION_SECONDS);
-  const [maxHp, setMaxHp] = useState(DEFAULT_HP);
-  const [customHp, setCustomHp] = useState(DEFAULT_HP);
-  const [speed, setSpeed] = useState(DEFAULT_ENEMY_SPEED);
-  const [customSpeed, setCustomSpeed] = useState(DEFAULT_ENEMY_SPEED);
+  const [gameDurationSec, setGameDurationSec] = useState<GameDurationSeconds>(defaultGameDurationSeconds);
+  const [customGameDurationSec, setCustomGameDurationSec] = useState(defaultCustomGameDurationSeconds);
+  const [maxHp, setMaxHp] = useState(defaultHp);
+  const [customHp, setCustomHp] = useState(defaultHp);
+  const [speed, setSpeed] = useState(defaultEnemySpeed);
+  const [customSpeed, setCustomSpeed] = useState(defaultEnemySpeed);
   const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('stars');
-  const [backgroundColor, setBackgroundColor] = useState(DEFAULT_BACKGROUND_COLOR);
+  const [backgroundColor, setBackgroundColor] = useState(defaultBackgroundColor);
   const [uploadedBackgroundUrl, setUploadedBackgroundUrl] = useState<string | null>(null);
   const [uploadedBackgroundName, setUploadedBackgroundName] = useState(() => t('drawing.upload.noImage'));
-  const [vocabulary, setVocabulary] = useState<VoiceVocabularyItem[]>(loadVoiceVocabulary);
+  const [vocabulary, setVocabulary] = useState<VoiceVocabularyItem[]>(LoadVoiceVocabulary);
   const [newWord, setNewWord] = useState('');
   const [vocabularyWarning, setVocabularyWarning] = useState('');
   const [vocabularyIndexStatus, setVocabularyIndexStatus] = useState<
@@ -354,7 +354,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   const [recognitionEngine, setRecognitionEngine] = useState<RecognitionEngine | null>(null);
   const [backgroundReadyLanguage, setBackgroundReadyLanguage] = useState<VoiceLanguage | null>(null);
   const [showInAppBrowserNotice, setShowInAppBrowserNotice] = useState(
-    () => typeof navigator !== 'undefined' && isLineOrFacebookInAppBrowser(navigator.userAgent),
+    () => typeof navigator !== 'undefined' && IsLineOrFacebookInAppBrowser(navigator.userAgent),
   );
   const [microphoneStatus, setMicrophoneStatus] = useState<MicrophoneStatus>('pending');
   const [microphoneLevel, setMicrophoneLevel] = useState(0);
@@ -363,7 +363,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   const [result, setResult] = useState<SessionRecord | null>(null);
   const [showStartValidation, setShowStartValidation] = useState(false);
 
-  const activeConfig = DIFFICULTIES[difficulty];
+  const activeConfig = difficulties[difficulty];
   const languageVocabulary = useMemo(
     () => vocabulary.filter((item) => item.language === language),
     [language, vocabulary],
@@ -393,7 +393,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     if (!microphoneReady) {
       issues.push({
         requirement: 'microphone',
-        message: getMicrophoneStartIssue(microphoneStatus, microphoneError, t),
+        message: GetMicrophoneStartIssue(microphoneStatus, microphoneError, t),
       });
     }
     return issues;
@@ -411,10 +411,10 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     () => new Set(startIssues.map((issue) => issue.requirement)),
     [startIssues],
   );
-  const isPresetGameDuration = GAME_DURATION_OPTIONS.includes(gameDurationSec as typeof GAME_DURATION_OPTIONS[number]);
-  const isCustomHp = !HP_OPTIONS.includes(maxHp as typeof HP_OPTIONS[number]);
-  const isCustomSpeed = !ENEMY_SPEED_OPTIONS.includes(speed as typeof ENEMY_SPEED_OPTIONS[number]);
-  const gameDurationLabel = formatGameDuration(gameDurationSec, t);
+  const isPresetGameDuration = gameDurationOptions.includes(gameDurationSec as typeof gameDurationOptions[number]);
+  const isCustomHp = !hpOptions.includes(maxHp as typeof hpOptions[number]);
+  const isCustomSpeed = !enemySpeedOptions.includes(speed as typeof enemySpeedOptions[number]);
+  const gameDurationLabel = FormatGameDuration(gameDurationSec, t);
   const backgroundSummary =
     backgroundMode === 'stars'
       ? t('drawing.background.stars')
@@ -458,7 +458,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     }
     return { backgroundImage: 'none', backgroundColor };
   }, [backgroundColor, backgroundMode, uploadedBackgroundUrl]);
-  const modelStatusText = getModelStatusText(modelStatus, modelLoadStage, modelProgress, t);
+  const modelStatusText = GetModelStatusText(modelStatus, modelLoadStage, modelProgress, t);
 
   const setPhase = useCallback((next: GamePhase) => {
     phaseRef.current = next;
@@ -499,7 +499,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   }, [activeWords, difficulty, gameDurationSec, language, maxHp, speed]);
 
   useEffect(() => {
-    saveVoiceVocabulary(vocabulary);
+    SaveVoiceVocabulary(vocabulary);
   }, [vocabulary]);
 
   useEffect(() => {
@@ -604,10 +604,10 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     setModelError('');
     setBackgroundReadyLanguage(null);
     setVocabularyWarning('');
-    const vocabularyUrl = MODEL_VOCABULARY_URLS[targetLanguage];
+    const vocabularyUrl = modelVocabularyUrls[targetLanguage];
     if (vocabularyUrl && !modelVocabularyIndexesRef.current[targetLanguage]) {
       setVocabularyIndexStatus((current) => ({ ...current, [targetLanguage]: 'loading' }));
-      void loadVoskVocabularyIndex(vocabularyUrl)
+      void LoadVoskVocabularyIndex(vocabularyUrl)
         .then((index) => {
           modelVocabularyIndexesRef.current[targetLanguage] = index;
           setVocabularyIndexStatus((current) => ({ ...current, [targetLanguage]: 'ready' }));
@@ -620,9 +620,9 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     const cacheKey = targetLanguage === 'zh'
       ? 'voice-defender-zh-tw-v2'
       : `voice-defender-${targetLanguage}`;
-    const modelUrl = MODEL_URLS[targetLanguage];
+    const modelUrl = modelUrls[targetLanguage];
     if (!modelUrl) {
-      if (getWebSpeechRecognitionConstructor()) {
+      if (GetWebSpeechRecognitionConstructor()) {
         recognitionEngineRef.current = 'web-speech';
         setRecognitionEngine('web-speech');
         setModelProgress(100);
@@ -634,13 +634,13 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       }
       return;
     }
-    const expectedModelBytes = MODEL_URLS[targetLanguage] === DEFAULT_MODEL_URLS[targetLanguage]
-      ? DEFAULT_MODEL_BYTES[targetLanguage]
+    const expectedModelBytes = modelUrls[targetLanguage] === defaultModelUrls[targetLanguage]
+      ? defaultModelBytes[targetLanguage]
       : 0;
     let cachedUrl: CachedModelUrl | null = null;
-    const subscribeToBackgroundDownload = () => startVoskModelBackgroundDownload(
+    const subscribeToBackgroundDownload = () => StartVoskModelBackgroundDownload(
       cacheKey,
-      MODEL_URLS[targetLanguage],
+      modelUrls[targetLanguage],
       (snapshot) => {
         if (loadGenerationRef.current !== generation) return;
         setModelLoadStage(snapshot.stage);
@@ -655,17 +655,17 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
           }));
         }
       },
-      VOSK_MODEL_DOWNLOAD_TIMEOUT_MS,
-      VOSK_MODEL_RETRY_DELAY_MS,
-      VOSK_MODEL_MIN_BYTES,
+      voskModelDownloadTimeoutMs,
+      voskModelRetryDelayMs,
+      voskModelMinBytes,
       expectedModelBytes,
     );
     backgroundDownloadUnsubscribeRef.current = subscribeToBackgroundDownload();
 
     try {
-      cachedUrl = await getCachedModelUrl(
+      cachedUrl = await GetCachedModelUrl(
         cacheKey,
-        MODEL_URLS[targetLanguage],
+        modelUrls[targetLanguage],
         (progress) => {
           if (loadGenerationRef.current === generation) {
             setModelProgress(progress);
@@ -676,8 +676,8 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
             setModelLoadStage(stage);
           }
         },
-        VOSK_MODEL_DOWNLOAD_TIMEOUT_MS,
-        VOSK_MODEL_MIN_BYTES,
+        voskModelDownloadTimeoutMs,
+        voskModelMinBytes,
         expectedModelBytes,
       );
       if (loadGenerationRef.current !== generation) {
@@ -711,12 +711,12 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
           cachedModelUrlRef.current = null;
         }
         cachedUrl.revoke();
-        await deleteCachedModel(cacheKey);
+        await DeleteCachedModel(cacheKey);
         setBackgroundReadyLanguage(null);
         backgroundDownloadUnsubscribeRef.current?.();
         backgroundDownloadUnsubscribeRef.current = subscribeToBackgroundDownload();
       }
-      if (getWebSpeechRecognitionConstructor()) {
+      if (GetWebSpeechRecognitionConstructor()) {
         recognitionEngineRef.current = 'web-speech';
         setRecognitionEngine('web-speech');
         setModelProgress(100);
@@ -774,7 +774,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new MicrophoneAccessError(t('voice.microphone.denied'), 'denied');
       }
-      const stream = await requestMicrophoneStream(MICROPHONE_MEDIA_CONSTRAINTS);
+      const stream = await RequestMicrophoneStream(microphoneMediaConstraints);
       pendingStream = stream;
       const track = stream.getAudioTracks()[0];
       if (!track || track.readyState !== 'live') {
@@ -810,9 +810,9 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       const updateMeter = (now: number) => {
         if (microphoneTestRuntimeRef.current !== runtime) return;
         analyser.getByteTimeDomainData(samples);
-        const rms = calculateByteRms(samples);
+        const rms = CalculateByteRms(samples);
         if (now - lastRenderAt >= 70) {
-          setMicrophoneLevel(toMeterLevel(rms));
+          setMicrophoneLevel(ToMeterLevel(rms));
           lastRenderAt = now;
         }
 
@@ -822,13 +822,13 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
         } else if (!track.enabled || track.muted) {
           setMicrophoneStatus('muted');
           setMicrophoneError(t('voice.startBlocked.microphoneMuted'));
-        } else if (rms >= MICROPHONE_SIGNAL_THRESHOLD) {
+        } else if (rms >= microphoneSignalThreshold) {
           lastSignalAt = now;
           setMicrophoneStatus('ready');
           setMicrophoneError('');
         } else if (
-          now - startedAt >= MICROPHONE_SILENCE_DELAY_MS
-          && (lastSignalAt === 0 || now - lastSignalAt >= MICROPHONE_SILENCE_DELAY_MS)
+          now - startedAt >= microphoneSilenceDelayMs
+          && (lastSignalAt === 0 || now - lastSignalAt >= microphoneSilenceDelayMs)
         ) {
           setMicrophoneStatus('silent');
           setMicrophoneError(t('voice.startBlocked.microphoneSilent'));
@@ -844,7 +844,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
         await pendingAudioContext.close().catch(() => undefined);
       }
       await stopMicrophoneTest(false);
-      const accessError = getMicrophoneAccessError(error, t);
+      const accessError = GetMicrophoneAccessError(error, t);
       setMicrophoneStatus(accessError.microphoneStatus);
       setMicrophoneError(accessError.message);
     }
@@ -880,14 +880,14 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
 
   const finishGame = useCallback((gameResult: GameResult) => {
     if (phaseRef.current === 'results') return;
-    playGameEndSound(gameResult, jsPsychRef);
+    PlayGameEndSound(gameResult, jsPsychRef);
     void stopListening();
     enemiesRef.current.forEach((enemy) => recordEnemyOutcome(enemy, false));
     clearEnemies();
     const metrics = metricsRef.current;
-    const troubleWord = getMostDifficultWord(wordMissesRef.current);
+    const troubleWord = GetMostDifficultWord(wordMissesRef.current);
     const record: SessionRecord = {
-      Test_Date: formatTestDate(new Date()),
+      Test_Date: FormatTestDate(new Date()),
       Participant_ID: getActiveUser() || 'Unknown',
       Language: configRef.current.language,
       Recognition_Engine: recognitionEngineRef.current ?? 'web-speech',
@@ -906,7 +906,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     };
     setResult(record);
     setPhase('results');
-    void saveTrainingSessionRecord({
+    void SaveTrainingSessionRecord({
       userName: record.Participant_ID,
       moduleId: 'speech-training',
       gameId: 'voice-defender',
@@ -929,7 +929,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       },
       detailRows: record.Enemy_Results.map((item) => ({ ...item }) as Record<string, unknown>),
     });
-    writeJsPsychData(
+    WriteJsPsychData(
       jsPsychRef,
       record as unknown as Record<string, unknown>,
       'Unable to write voice defender result to jsPsych data.',
@@ -940,11 +940,11 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     if (phaseRef.current !== 'playing') return;
     const usableTranscripts = transcripts
       .map((transcript) => transcript.trim())
-      .filter((transcript) => normalizeSpeechText(transcript));
+      .filter((transcript) => NormalizeSpeechText(transcript));
     if (usableTranscripts.length === 0) return;
 
     const now = performance.now();
-    const recognitionKey = usableTranscripts.map(normalizeSpeechText).join('|');
+    const recognitionKey = usableTranscripts.map(NormalizeSpeechText).join('|');
     if (
       lastRecognitionRef.current.text === recognitionKey
       && now - lastRecognitionRef.current.at < 650
@@ -956,14 +956,14 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       .flatMap((enemy) => usableTranscripts.map((transcript) => ({
         enemy,
         transcript,
-        similarity: calculateBestSpeechSimilarity(transcript, enemy.word),
+        similarity: CalculateBestSpeechSimilarity(transcript, enemy.word),
       })))
-      .filter((candidate) => candidate.similarity >= VOICE_MATCH_SIMILARITY_THRESHOLD)
+      .filter((candidate) => candidate.similarity >= voiceMatchSimilarityThreshold)
       .sort((a, b) => b.enemy.y - a.enemy.y || b.similarity - a.similarity)[0];
 
     if (!matched) return;
     lastRecognitionRef.current = { text: recognitionKey, at: now };
-    playSuccessSound(jsPsychRef);
+    PlaySuccessSound(jsPsychRef);
     recordEnemyOutcome(matched.enemy, true, matched.transcript, matched.similarity);
     matched.enemy.node.destroy({ children: true });
     enemiesRef.current = enemiesRef.current.filter((enemy) => enemy.id !== matched.enemy.id);
@@ -979,12 +979,12 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
 
     const engine = recognitionEngineRef.current;
     if (engine === 'web-speech') {
-      const SpeechRecognitionConstructor = getWebSpeechRecognitionConstructor();
-      if (!SpeechRecognitionConstructor) {
+      const speechRecognitionConstructor = GetWebSpeechRecognitionConstructor();
+      if (!speechRecognitionConstructor) {
         throw new Error(t('voice.model.webSpeechUnavailable'));
       }
 
-      const recognition = new SpeechRecognitionConstructor();
+      const recognition = new speechRecognitionConstructor();
       const runtime: WebSpeechRuntime = {
         kind: 'web-speech',
         recognition,
@@ -1023,7 +1023,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
         if (event.error === 'aborted' || event.error === 'no-speech') return;
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
           runtime.shouldRestart = false;
-          const accessError = getMicrophoneAccessError(event.error, t);
+          const accessError = GetMicrophoneAccessError(event.error, t);
           setMicrophoneStatus(accessError.microphoneStatus);
           setMicrophoneError(accessError.message);
           return;
@@ -1058,7 +1058,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new MicrophoneAccessError(t('voice.microphone.denied'), 'denied');
     }
-    const stream = await requestMicrophoneStream(MICROPHONE_MEDIA_CONSTRAINTS);
+    const stream = await RequestMicrophoneStream(microphoneMediaConstraints);
     const track = stream.getAudioTracks()[0];
     if (!track || track.readyState !== 'live') {
       stream.getTracks().forEach((streamTrack) => streamTrack.stop());
@@ -1066,7 +1066,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     }
     const audioContext = new AudioContext();
     await audioContext.resume();
-    const grammar = buildVoskGrammar(
+    const grammar = BuildVoskGrammar(
       configRef.current.activeWords,
       configRef.current.language,
     );
@@ -1097,22 +1097,22 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     processor.onaudioprocess = (event) => {
       try {
         const samples = event.inputBuffer.getChannelData(0);
-        const rms = calculateFloatRms(samples);
+        const rms = CalculateFloatRms(samples);
         const now = performance.now();
-        setMicrophoneLevel(toMeterLevel(rms));
+        setMicrophoneLevel(ToMeterLevel(rms));
         if (track.readyState !== 'live') {
           setMicrophoneStatus('disconnected');
           setMicrophoneError(t('voice.startBlocked.microphoneDisconnected'));
         } else if (!track.enabled || track.muted) {
           setMicrophoneStatus('muted');
           setMicrophoneError(t('voice.startBlocked.microphoneMuted'));
-        } else if (rms >= MICROPHONE_SIGNAL_THRESHOLD) {
+        } else if (rms >= microphoneSignalThreshold) {
           lastSignalAt = now;
           setMicrophoneStatus('ready');
           setMicrophoneError('');
         } else if (
-          now - startedAt >= MICROPHONE_SILENCE_DELAY_MS
-          && (lastSignalAt === 0 || now - lastSignalAt >= MICROPHONE_SILENCE_DELAY_MS)
+          now - startedAt >= microphoneSilenceDelayMs
+          && (lastSignalAt === 0 || now - lastSignalAt >= microphoneSilenceDelayMs)
         ) {
           setMicrophoneStatus('silent');
           setMicrophoneError(t('voice.startBlocked.microphoneSilent'));
@@ -1122,7 +1122,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
         console.warn('Unable to process microphone audio.', error);
         processor.onaudioprocess = null;
         setMicrophoneStatus('disconnected');
-        setMicrophoneError(getErrorMessage(error) || t('voice.startBlocked.microphoneDisconnected'));
+        setMicrophoneError(GetErrorMessage(error) || t('voice.startBlocked.microphoneDisconnected'));
       }
     };
     source.connect(processor);
@@ -1146,9 +1146,9 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     const word = words[Math.floor(Math.random() * words.length)];
     const enemyNumber = metricsRef.current.spawned + 1;
     const resultIndex = enemyResultsRef.current.length;
-    const cardTypography = getVoiceCardTypography(word);
-    const boardWidth = clamp(cardTypography.estimatedWidth + 32, 88, Math.min(280, app.renderer.width - 24));
-    const boardHeight = clamp(cardTypography.fontSize + 28, 50, 74);
+    const cardTypography = GetVoiceCardTypography(word);
+    const boardWidth = Clamp(cardTypography.estimatedWidth + 32, 88, Math.min(280, app.renderer.width - 24));
+    const boardHeight = Clamp(cardTypography.fontSize + 28, 50, 74);
     const boardY = 48;
     const x = boardWidth / 2 + 12 + Math.random() * Math.max(1, app.renderer.width - boardWidth - 24);
     const node = new Container();
@@ -1174,14 +1174,14 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     label.y = boardY + boardHeight / 2;
     node.addChild(monster, board, label);
     node.x = x;
-    node.y = ENEMY_SPAWN_Y;
+    node.y = enemySpawnY;
     app.stage.addChild(node);
 
     const enemy: Enemy = {
       id: metricsRef.current.nextId++,
       word,
       x,
-      y: ENEMY_SPAWN_Y,
+      y: enemySpawnY,
       node,
       spawnedAtSec: metricsRef.current.elapsed,
       resultIndex,
@@ -1199,14 +1199,14 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   }, []);
 
   const startGame = useCallback(async () => {
-    if (!verifySelectedTrainingUser()) return;
-    prepareAudioFeedback(jsPsychRef);
+    if (!VerifySelectedTrainingUser()) return;
+    PrepareAudioFeedback(jsPsychRef);
     if (!recognitionReady || activeWords.length === 0) return;
     if (phaseRef.current === 'editor' && !microphoneReady) return;
     const app = appRef.current;
     if (!app) return;
     await enterTrainingFullscreen();
-    resizePixiAppToElement(app, pixiHostRef.current);
+    ResizePixiAppToElement(app, pixiHostRef.current);
 
     setMicrophoneError('');
     configRef.current = { language, difficulty, gameDurationSec, maxHp, speed, activeWords };
@@ -1214,7 +1214,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       await startListening();
     } catch (error) {
       console.error('Unable to start voice recognition.', error);
-      const accessError = getMicrophoneAccessError(error, t);
+      const accessError = GetMicrophoneAccessError(error, t);
       setMicrophoneError(accessError.message);
       setMicrophoneStatus(accessError.microphoneStatus);
       setShowStartValidation(true);
@@ -1322,7 +1322,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
         if (phaseRef.current !== 'playing') return;
         const dt = Math.min(ticker.deltaMS / 1000, 0.05);
         const metrics = metricsRef.current;
-        const config = DIFFICULTIES[configRef.current.difficulty];
+        const config = difficulties[configRef.current.difficulty];
         const targetGameDurationSec = configRef.current.gameDurationSec;
         const isTimeUnlimited = targetGameDurationSec === null;
         metrics.elapsed += dt;
@@ -1345,12 +1345,12 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
           }
         }
 
-        const defenseY = app.renderer.height - ENEMY_VISUAL_HEIGHT;
+        const defenseY = app.renderer.height - enemyVisualHeight;
         for (const enemy of [...enemiesRef.current]) {
           enemy.y += configRef.current.speed * dt;
           enemy.node.y = enemy.y;
           if (enemy.y <= defenseY) continue;
-          playFailureSound(jsPsychRef);
+          PlayFailureSound(jsPsychRef);
           recordEnemyOutcome(enemy, false);
           enemy.node.destroy({ children: true });
           enemiesRef.current = enemiesRef.current.filter((item) => item.id !== enemy.id);
@@ -1385,11 +1385,11 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     const word = newWord.trim();
     if (!word) return;
     setVocabularyWarning('');
-    const entries = splitVoiceVocabularyInput(word, language);
+    const entries = SplitVoiceVocabularyInput(word, language);
     const newEntries = entries.filter((entry) => (
       !vocabulary.some((item) => (
         item.language === language
-        && normalizeSpeechText(item.word) === normalizeSpeechText(entry)
+        && NormalizeSpeechText(item.word) === NormalizeSpeechText(entry)
       ))
     ));
     if (newEntries.length === 0) {
@@ -1406,7 +1406,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       return;
     }
     const unsupportedEntry = newEntries.find((entry) => (
-      !hasVoskVocabularyWord(vocabularyIndex, entry, language)
+      !HasVoskVocabularyWord(vocabularyIndex, entry, language)
     ));
     if (unsupportedEntry) {
       setVocabularyWarning(t('voice.vocabulary.unsupportedWord', { word: unsupportedEntry }));
@@ -1414,14 +1414,14 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     }
     updateVocabulary((items) => [
       ...items,
-      ...newEntries.flatMap((entry) => createVoiceVocabularyItems(entry, language)),
+      ...newEntries.flatMap((entry) => CreateVoiceVocabularyItems(entry, language)),
     ]);
     setNewWord('');
   }, [language, newWord, t, updateVocabulary, vocabulary, vocabularyIndexStatus]);
 
   const downloadResult = useCallback(() => {
     if (!result) return;
-    downloadCsvFile(toCsv(result), `voice_defender_${Date.now()}.csv`);
+    DownloadCsvFile(ToCsv(result), `voice_defender_${Date.now()}.csv`);
   }, [result]);
 
   return (
@@ -1500,7 +1500,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                   <span>{t(activeConfig.labelKey)}</span>
                 </div>
                 <div className="training-option-grid training-option-grid-three">
-                  {Object.entries(DIFFICULTIES).map(([key, value]) => (
+                  {Object.entries(difficulties).map(([key, value]) => (
                     <button
                       key={key}
                       type="button"
@@ -1523,7 +1523,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                   <span>{maxHp}</span>
                 </div>
                 <div className="training-option-grid training-option-grid-four">
-                  {HP_OPTIONS.map((option) => (
+                  {hpOptions.map((option) => (
                     <button
                       key={option}
                       type="button"
@@ -1546,7 +1546,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                       step="1"
                       value={customHp}
                       onChange={(event) => {
-                        const value = clamp(Number(event.target.value), 1, 20);
+                        const value = Clamp(Number(event.target.value), 1, 20);
                         setCustomHp(value);
                         setMaxHp(value);
                       }}
@@ -1564,7 +1564,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                     <p>{gameDurationLabel}</p>
                   </div>
                   <span>
-                    {gameDurationSec === DEFAULT_GAME_DURATION_SECONDS
+                    {gameDurationSec === defaultGameDurationSeconds
                       ? t('training.default')
                       : isPresetGameDuration
                         ? t('training.optional')
@@ -1572,14 +1572,14 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                   </span>
                 </div>
                 <div className="training-option-grid training-duration-grid">
-                  {GAME_DURATION_OPTIONS.filter((option) => option !== null).map((option) => (
+                  {gameDurationOptions.filter((option) => option !== null).map((option) => (
                     <button
                       key={option}
                       type="button"
                       className={`training-option ${gameDurationSec === option ? 'active' : ''}`}
                       onClick={() => setGameDurationSec(option)}
                     >
-                      <span className="training-option-title">{formatGameDuration(option, t)}</span>
+                      <span className="training-option-title">{FormatGameDuration(option, t)}</span>
                     </button>
                   ))}
                   <label
@@ -1595,7 +1595,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                       step="1"
                       value={customGameDurationSec}
                       onChange={(event) => {
-                        const value = clamp(Number(event.target.value), 1, 1800);
+                        const value = Clamp(Number(event.target.value), 1, 1800);
                         setCustomGameDurationSec(value);
                         setGameDurationSec(value);
                       }}
@@ -1622,7 +1622,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                   <span>{isCustomSpeed ? t('training.custom') : t('training.default')}</span>
                 </div>
                 <div className="training-option-grid training-speed-grid">
-                  {ENEMY_SPEED_OPTIONS.map((option) => (
+                  {enemySpeedOptions.map((option) => (
                     <button
                       key={option}
                       type="button"
@@ -1646,7 +1646,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                       step="1"
                       value={customSpeed}
                       onChange={(event) => {
-                        const value = clamp(Number(event.target.value), 1, 170);
+                        const value = Clamp(Number(event.target.value), 1, 170);
                         setCustomSpeed(value);
                         setSpeed(value);
                       }}
@@ -1782,7 +1782,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                       className="btn btn-ghost"
                       onClick={() => updateVocabulary((items) => [
                         ...items.filter((item) => item.language !== language),
-                        ...createDefaultVoiceVocabulary().filter((item) => item.language === language),
+                        ...CreateDefaultVoiceVocabulary().filter((item) => item.language === language),
                       ])}
                     >
                       {t('voice.vocabulary.reset')}
@@ -1803,7 +1803,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                     <h2>{t('voice.microphone.title')}</h2>
                     <p>{t('voice.microphone.desc')}</p>
                   </div>
-                  <span>{getMicrophoneStatusText(microphoneStatus, t)}</span>
+                  <span>{GetMicrophoneStatusText(microphoneStatus, t)}</span>
                 </div>
                 <div className="voice-microphone-controls">
                   <div className="voice-volume-meter-group">
@@ -1975,32 +1975,32 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   );
 }
 
-function getVoiceCardTypography(word: string): {
+function GetVoiceCardTypography(word: string): {
   estimatedWidth: number;
   fontSize: number;
   fontWeight: '700' | '900';
 } {
   const characters = [...word];
   const baseFontSize = characters.length > 10 ? 15 : characters.length > 6 ? 18 : 22;
-  const fontScale = getSetting('uiFontSizePx') / DEFAULT_UI_FONT_SIZE_PX;
-  const fontSize = Math.round(clamp(baseFontSize * fontScale, 12, 38));
+  const fontScale = GetSetting('uiFontSizePx') / defaultUiFontSizePx;
+  const fontSize = Math.round(Clamp(baseFontSize * fontScale, 12, 38));
   const estimatedWidth = Math.ceil(characters.reduce((totalWidth, character) => (
-    totalWidth + fontSize * getVoiceCardCharacterWidthFactor(character)
+    totalWidth + fontSize * GetVoiceCardCharacterWidthFactor(character)
   ), 0));
 
   return {
     estimatedWidth,
     fontSize,
-    fontWeight: getSetting('uiFontBold') ? '900' : '700',
+    fontWeight: GetSetting('uiFontBold') ? '900' : '700',
   };
 }
 
-function getVoiceCardCharacterWidthFactor(character: string): number {
+function GetVoiceCardCharacterWidthFactor(character: string): number {
   if (/[\u0000-\u007f]/.test(character)) return 0.62;
   return 1;
 }
 
-function getModelStatusText(
+function GetModelStatusText(
   status: ModelStatus,
   stage: ModelLoadStage,
   progress: number,
@@ -2020,7 +2020,7 @@ function getModelStatusText(
   return t('voice.model.waiting');
 }
 
-export function isLineOrFacebookInAppBrowser(userAgent: string): boolean {
+export function IsLineOrFacebookInAppBrowser(userAgent: string): boolean {
   return /\bLine\/[\d.]+/i.test(userAgent)
     || /(FBAN|FBAV|FB_IAB|FBIOS|FB4A|MESSENGER)/i.test(userAgent);
 }
@@ -2044,9 +2044,9 @@ class MicrophonePermissionTimeoutError extends Error {
   }
 }
 
-function requestMicrophoneStream(constraints: MediaStreamConstraints): Promise<MediaStream> {
+function RequestMicrophoneStream(constraints: MediaStreamConstraints): Promise<MediaStream> {
   const request = navigator.mediaDevices.getUserMedia(constraints);
-  if (!isLikelyIosDevice()) return request;
+  if (!IsLikelyIosDevice()) return request;
 
   let isSettled = false;
   let timeoutId = 0;
@@ -2055,7 +2055,7 @@ function requestMicrophoneStream(constraints: MediaStreamConstraints): Promise<M
       if (isSettled) return;
       isSettled = true;
       reject(new MicrophonePermissionTimeoutError());
-    }, IOS_MICROPHONE_PERMISSION_TIMEOUT_MS);
+    }, iosMicrophonePermissionTimeoutMs);
 
     request.then(
       (stream) => {
@@ -2077,27 +2077,27 @@ function requestMicrophoneStream(constraints: MediaStreamConstraints): Promise<M
   });
 }
 
-function getMicrophoneAccessError(error: unknown, t: TFunction): MicrophoneAccessError {
+function GetMicrophoneAccessError(error: unknown, t: TFunction): MicrophoneAccessError {
   if (error instanceof MicrophoneAccessError) return error;
 
-  const isDenied = isMicrophonePermissionDeniedError(error) || error instanceof MicrophonePermissionTimeoutError;
+  const isDenied = IsMicrophonePermissionDeniedError(error) || error instanceof MicrophonePermissionTimeoutError;
   if (isDenied) {
-    const message = isLikelyIosDevice()
-      ? t('voice.microphone.iosSettings', { browser: getCurrentBrowserDisplayName(t) })
+    const message = IsLikelyIosDevice()
+      ? t('voice.microphone.iosSettings', { browser: GetCurrentBrowserDisplayName(t) })
       : t('voice.microphone.denied');
     return new MicrophoneAccessError(message, 'denied');
   }
 
-  return new MicrophoneAccessError(getErrorMessage(error) || t('voice.microphone.denied'), 'disconnected');
+  return new MicrophoneAccessError(GetErrorMessage(error) || t('voice.microphone.denied'), 'disconnected');
 }
 
-function isLikelyIosDevice(): boolean {
+function IsLikelyIosDevice(): boolean {
   if (typeof navigator === 'undefined') return false;
   return /iPad|iPhone|iPod/i.test(navigator.userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
-function getCurrentBrowserDisplayName(t: TFunction): string {
+function GetCurrentBrowserDisplayName(t: TFunction): string {
   if (typeof navigator === 'undefined') return t('voice.microphone.browserFallback');
   const userAgent = navigator.userAgent;
   if (/\bLine\/[\d.]+/i.test(userAgent)) return 'LINE';
@@ -2112,9 +2112,9 @@ function getCurrentBrowserDisplayName(t: TFunction): string {
   return t('voice.microphone.browserFallback');
 }
 
-function isMicrophonePermissionDeniedError(error: unknown): boolean {
-  const errorName = getErrorName(error);
-  const normalizedError = `${errorName} ${getErrorMessage(error)}`.toLowerCase();
+function IsMicrophonePermissionDeniedError(error: unknown): boolean {
+  const errorName = GetErrorName(error);
+  const normalizedError = `${errorName} ${GetErrorMessage(error)}`.toLowerCase();
   return errorName === 'NotAllowedError'
     || errorName === 'SecurityError'
     || errorName === 'PermissionDeniedError'
@@ -2123,13 +2123,13 @@ function isMicrophonePermissionDeniedError(error: unknown): boolean {
     || normalizedError.includes('permission denied');
 }
 
-function getErrorName(error: unknown): string {
+function GetErrorName(error: unknown): string {
   if (!error || typeof error !== 'object' || !('name' in error)) return '';
   const value = (error as { name?: unknown }).name;
   return typeof value === 'string' ? value : '';
 }
 
-function getErrorMessage(error: unknown): string {
+function GetErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
   if (!error || typeof error !== 'object' || !('message' in error)) return '';
@@ -2137,7 +2137,7 @@ function getErrorMessage(error: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
-function getMicrophoneStatusText(status: MicrophoneStatus, t: TFunction): string {
+function GetMicrophoneStatusText(status: MicrophoneStatus, t: TFunction): string {
   if (status === 'testing') return t('voice.microphone.testing');
   if (status === 'ready') return t('voice.microphone.ready');
   if (status === 'silent') return t('voice.microphone.silent');
@@ -2147,7 +2147,7 @@ function getMicrophoneStatusText(status: MicrophoneStatus, t: TFunction): string
   return t('voice.microphone.pending');
 }
 
-function getMicrophoneStartIssue(
+function GetMicrophoneStartIssue(
   status: MicrophoneStatus,
   error: string,
   t: TFunction,
@@ -2160,7 +2160,7 @@ function getMicrophoneStartIssue(
   return t('voice.startBlocked.microphonePending');
 }
 
-function calculateByteRms(samples: Uint8Array): number {
+function CalculateByteRms(samples: Uint8Array): number {
   let sumSquares = 0;
   for (const sample of samples) {
     const normalized = (sample - 128) / 128;
@@ -2169,7 +2169,7 @@ function calculateByteRms(samples: Uint8Array): number {
   return Math.sqrt(sumSquares / samples.length);
 }
 
-function calculateFloatRms(samples: Float32Array): number {
+function CalculateFloatRms(samples: Float32Array): number {
   let sumSquares = 0;
   for (const sample of samples) {
     sumSquares += sample * sample;
@@ -2177,18 +2177,18 @@ function calculateFloatRms(samples: Float32Array): number {
   return Math.sqrt(sumSquares / samples.length);
 }
 
-function toMeterLevel(rms: number): number {
-  return clamp(Math.sqrt(rms) * 2.2, 0, 1);
+function ToMeterLevel(rms: number): number {
+  return Clamp(Math.sqrt(rms) * 2.2, 0, 1);
 }
 
-function resizePixiAppToElement(app: Application, element: HTMLElement | null): void {
+function ResizePixiAppToElement(app: Application, element: HTMLElement | null): void {
   const rect = element?.getBoundingClientRect();
   const width = Math.max(1, Math.round(rect?.width || window.innerWidth));
   const height = Math.max(1, Math.round(rect?.height || window.innerHeight));
   app.renderer.resize(width, height);
 }
 
-function getWebSpeechRecognitionConstructor(): WebSpeechRecognitionConstructor | null {
+function GetWebSpeechRecognitionConstructor(): WebSpeechRecognitionConstructor | null {
   if (typeof window === 'undefined') return null;
   const browserWindow = window as Window & {
     SpeechRecognition?: WebSpeechRecognitionConstructor;
@@ -2197,20 +2197,20 @@ function getWebSpeechRecognitionConstructor(): WebSpeechRecognitionConstructor |
   return browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition ?? null;
 }
 
-function getPositiveNumber(value: string | undefined, fallback: number): number {
+function GetPositiveNumber(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function getMostDifficultWord(misses: Record<string, number>): string {
+function GetMostDifficultWord(misses: Record<string, number>): string {
   return Object.entries(misses).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
 }
 
-function formatGameDuration(duration: GameDurationSeconds, t: TFunction): string {
+function FormatGameDuration(duration: GameDurationSeconds, t: TFunction): string {
   return duration === null ? t('drawing.config.infiniteMode') : t('training.secondsShort', { value: duration });
 }
 
-function toCsv(record: SessionRecord): string {
+function ToCsv(record: SessionRecord): string {
   const columns = [
     'Test_Date',
     'Participant_ID',

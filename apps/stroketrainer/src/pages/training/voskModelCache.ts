@@ -1,9 +1,9 @@
-const CACHE_NAME = 'stroke-trainer-vosk-models-v1';
-const CACHE_KEY_PREFIX = '__vosk_model_cache__';
-const SOURCE_URL_HEADER = 'X-Stroke-Trainer-Model-Source';
-const COMPLETE_HEADER = 'X-Stroke-Trainer-Model-Complete';
-const SIZE_HEADER = 'X-Stroke-Trainer-Model-Size';
-const DEFAULT_MIN_MODEL_BYTES = 34_603_008;
+const cacheName = 'stroke-trainer-vosk-models-v1';
+const cacheKeyPrefix = '__vosk_model_cache__';
+const sourceUrlHeader = 'X-Stroke-Trainer-Model-Source';
+const completeHeader = 'X-Stroke-Trainer-Model-Complete';
+const sizeHeader = 'X-Stroke-Trainer-Model-Size';
+const defaultMinModelBytes = 34_603_008;
 
 export type VoskModelLoadStage = 'checking-cache' | 'loading-cache' | 'downloading' | 'saving-cache';
 
@@ -28,20 +28,20 @@ interface BackgroundDownloadJob {
 const backgroundDownloadJobs = new Map<string, BackgroundDownloadJob>();
 const inFlightModelDownloads = new Map<string, Promise<Blob>>();
 
-export async function getCachedModelUrl(
+export async function GetCachedModelUrl(
   cacheKey: string,
   sourceUrl: string,
   onProgress: (progress: number) => void,
   onStage?: (stage: VoskModelLoadStage) => void,
   downloadTimeoutMs = 90_000,
-  minModelBytes = DEFAULT_MIN_MODEL_BYTES,
+  minModelBytes = defaultMinModelBytes,
   expectedModelBytes = 0,
 ): Promise<CachedModelUrl> {
   onStage?.('checking-cache');
   onProgress(0);
 
-  const cacheRequest = createCacheRequest(cacheKey);
-  const cachedBlob = await readCachedModel(
+  const cacheRequest = CreateCacheRequest(cacheKey);
+  const cachedBlob = await ReadCachedModel(
     cacheRequest,
     sourceUrl,
     minModelBytes,
@@ -50,14 +50,14 @@ export async function getCachedModelUrl(
   );
   if (cachedBlob) {
     onProgress(100);
-    return createObjectUrl(cachedBlob);
+    return CreateObjectUrl(cachedBlob);
   }
 
   onStage?.('downloading');
   const downloadKey = `${cacheRequest.url}\n${sourceUrl}`;
   let download = inFlightModelDownloads.get(downloadKey);
   if (!download) {
-    download = downloadModelBlob(
+    download = DownloadModelBlob(
       cacheRequest,
       sourceUrl,
       onProgress,
@@ -72,10 +72,10 @@ export async function getCachedModelUrl(
   }
   const blob = await download;
   onProgress(100);
-  return createObjectUrl(blob);
+  return CreateObjectUrl(blob);
 }
 
-async function downloadModelBlob(
+async function DownloadModelBlob(
   cacheRequest: Request,
   sourceUrl: string,
   onProgress: (progress: number) => void,
@@ -106,9 +106,9 @@ async function downloadModelBlob(
       );
     }
     const blob = response.body
-      ? await readResponseBlob(response, totalBytes, onProgress)
+      ? await ReadResponseBlob(response, totalBytes, onProgress)
       : await response.blob();
-    await validateModelBlob(
+    await ValidateModelBlob(
       blob,
       expectedModelBytes || totalBytes,
       minModelBytes,
@@ -117,7 +117,7 @@ async function downloadModelBlob(
 
     onProgress(100);
     onStage?.('saving-cache');
-    await writeCachedModel(cacheRequest, sourceUrl, blob).catch((error) => {
+    await WriteCachedModel(cacheRequest, sourceUrl, blob).catch((error) => {
       console.warn('Unable to cache Vosk model with the Cache API.', error);
     });
     return blob;
@@ -131,13 +131,13 @@ async function downloadModelBlob(
   }
 }
 
-export function startVoskModelBackgroundDownload(
+export function StartVoskModelBackgroundDownload(
   cacheKey: string,
   sourceUrl: string,
   listener: (snapshot: VoskBackgroundDownloadSnapshot) => void,
   downloadTimeoutMs = 90_000,
   retryDelayMs = 10_000,
-  minModelBytes = DEFAULT_MIN_MODEL_BYTES,
+  minModelBytes = defaultMinModelBytes,
   expectedModelBytes = 0,
 ): () => void {
   const jobKey = `${cacheKey}\n${sourceUrl}`;
@@ -154,7 +154,7 @@ export function startVoskModelBackgroundDownload(
       },
     };
     backgroundDownloadJobs.set(jobKey, job);
-    void runBackgroundDownload(
+    void RunBackgroundDownload(
       jobKey,
       job,
       cacheKey,
@@ -173,17 +173,17 @@ export function startVoskModelBackgroundDownload(
   };
 }
 
-export async function deleteCachedModel(cacheKey: string): Promise<void> {
+export async function DeleteCachedModel(cacheKey: string): Promise<void> {
   if (!('caches' in window)) return;
   try {
-    const cache = await caches.open(CACHE_NAME);
-    await cache.delete(createCacheRequest(cacheKey));
+    const cache = await caches.open(cacheName);
+    await cache.delete(CreateCacheRequest(cacheKey));
   } catch (error) {
     console.warn('Unable to delete cached Vosk model.', error);
   }
 }
 
-async function readCachedModel(
+async function ReadCachedModel(
   request: Request,
   sourceUrl: string,
   minModelBytes: number,
@@ -193,14 +193,14 @@ async function readCachedModel(
   if (!('caches' in window)) return null;
 
   try {
-    const cache = await caches.open(CACHE_NAME);
+    const cache = await caches.open(cacheName);
     const response = await cache.match(request);
     if (!response) return null;
-    const expectedSize = Number(response.headers.get(SIZE_HEADER));
+    const expectedSize = Number(response.headers.get(sizeHeader));
     if (
       !response.ok
-      || response.headers.get(SOURCE_URL_HEADER) !== sourceUrl
-      || response.headers.get(COMPLETE_HEADER) !== '1'
+      || response.headers.get(sourceUrlHeader) !== sourceUrl
+      || response.headers.get(completeHeader) !== '1'
       || !Number.isSafeInteger(expectedSize)
       || expectedSize < minModelBytes
       || (expectedModelBytes > 0 && expectedSize !== expectedModelBytes)
@@ -212,7 +212,7 @@ async function readCachedModel(
     onStage?.('loading-cache');
     const blob = await response.blob();
     try {
-      await validateModelBlob(
+      await ValidateModelBlob(
         blob,
         expectedModelBytes || expectedSize,
         minModelBytes,
@@ -229,19 +229,19 @@ async function readCachedModel(
   }
 }
 
-async function writeCachedModel(request: Request, sourceUrl: string, blob: Blob): Promise<void> {
+async function WriteCachedModel(request: Request, sourceUrl: string, blob: Blob): Promise<void> {
   if (!('caches' in window)) return;
-  const cache = await caches.open(CACHE_NAME);
+  const cache = await caches.open(cacheName);
   const headers = new Headers({
     'Content-Type': blob.type || 'application/gzip',
-    [SOURCE_URL_HEADER]: sourceUrl,
-    [COMPLETE_HEADER]: '1',
-    [SIZE_HEADER]: String(blob.size),
+    [sourceUrlHeader]: sourceUrl,
+    [completeHeader]: '1',
+    [sizeHeader]: String(blob.size),
   });
   await cache.put(request, new Response(blob, { status: 200, headers }));
 }
 
-async function readResponseBlob(
+async function ReadResponseBlob(
   response: Response,
   totalBytes: number,
   onProgress: (progress: number) => void,
@@ -268,7 +268,7 @@ async function readResponseBlob(
   });
 }
 
-async function validateModelBlob(
+async function ValidateModelBlob(
   blob: Blob,
   expectedSize: number,
   minModelBytes: number,
@@ -305,7 +305,7 @@ async function validateModelBlob(
   }
 }
 
-async function runBackgroundDownload(
+async function RunBackgroundDownload(
   jobKey: string,
   job: BackgroundDownloadJob,
   cacheKey: string,
@@ -323,19 +323,19 @@ async function runBackgroundDownload(
       status: 'downloading',
       error: '',
     };
-    notifyBackgroundDownload(job);
+    NotifyBackgroundDownload(job);
 
     try {
-      const cachedUrl = await getCachedModelUrl(
+      const cachedUrl = await GetCachedModelUrl(
         cacheKey,
         sourceUrl,
         (progress) => {
           job.snapshot = { ...job.snapshot, progress };
-          notifyBackgroundDownload(job);
+          NotifyBackgroundDownload(job);
         },
         (stage) => {
           job.snapshot = { ...job.snapshot, stage };
-          notifyBackgroundDownload(job);
+          NotifyBackgroundDownload(job);
         },
         downloadTimeoutMs,
         minModelBytes,
@@ -348,7 +348,7 @@ async function runBackgroundDownload(
         status: 'ready',
         error: '',
       };
-      notifyBackgroundDownload(job);
+      NotifyBackgroundDownload(job);
       backgroundDownloadJobs.delete(jobKey);
       return;
     } catch (error) {
@@ -357,28 +357,28 @@ async function runBackgroundDownload(
         status: 'retrying',
         error: error instanceof Error ? error.message : String(error),
       };
-      notifyBackgroundDownload(job);
-      await delay(retryDelayMs);
+      NotifyBackgroundDownload(job);
+      await Delay(retryDelayMs);
     }
   }
 }
 
-function notifyBackgroundDownload(job: BackgroundDownloadJob): void {
+function NotifyBackgroundDownload(job: BackgroundDownloadJob): void {
   job.listeners.forEach((listener) => listener(job.snapshot));
 }
 
-function delay(milliseconds: number): Promise<void> {
+function Delay(milliseconds: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
-function createCacheRequest(cacheKey: string): Request {
-  const cacheUrl = new URL(`${CACHE_KEY_PREFIX}/${encodeURIComponent(cacheKey)}`, window.location.href);
+function CreateCacheRequest(cacheKey: string): Request {
+  const cacheUrl = new URL(`${cacheKeyPrefix}/${encodeURIComponent(cacheKey)}`, window.location.href);
   cacheUrl.search = '';
   cacheUrl.hash = '';
   return new Request(cacheUrl.toString(), { method: 'GET' });
 }
 
-function createObjectUrl(blob: Blob): CachedModelUrl {
+function CreateObjectUrl(blob: Blob): CachedModelUrl {
   const url = URL.createObjectURL(blob);
   return {
     url,

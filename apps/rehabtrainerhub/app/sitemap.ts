@@ -3,7 +3,7 @@ import { siteUrls } from './siteUrls';
 
 export const dynamic = 'force-static';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default function Sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date('2026-07-15');
   const routes = [
     { route: '', changeFrequency: 'weekly', priority: 1 },

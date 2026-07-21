@@ -1,28 +1,28 @@
 import {
-  getRemoteTrainingRecords,
-  hasAuthToken,
-  saveRemoteTrainingRecord,
+  GetRemoteTrainingRecords,
+  HasAuthToken,
+  SaveRemoteTrainingRecord,
 } from '@rehab-trainer/ui/auth/authClient';
-import { createCsvContent } from '@rehab-trainer/ui/csv';
+import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import type { TranslationKey } from '../i18n';
 import type { TrialData } from '../pages/training/types';
-import { downloadCsvFile } from './downloadFile';
-import { getSetting, STORAGE_PREFIX } from './settings';
+import { DownloadCsvFile } from './downloadFile';
+import { GetSetting, storagePrefix } from './settings';
 import { siteUrls } from './siteUrls';
 
 type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;
 
-export const TRAINING_RECORDS_CHANGED_EVENT = 'stroke-trainer-training-records-changed';
+export const trainingRecordsChangedEvent = 'stroke-trainer-training-records-changed';
 
-const TRAINING_RECORDS_KEY = `${STORAGE_PREFIX}training_records_v1`;
-const TRAINING_RECORDS_DATABASE_NAME = 'stroke-trainer-training-records';
-const TRAINING_RECORDS_DATABASE_VERSION = 1;
-const TRAINING_RECORDS_STORE_NAME = 'records';
-const REMOTE_APP_ID = 'stroketrainer';
-const AUTH_API_BASE = siteUrls.hub;
+const trainingRecordsKey = `${storagePrefix}training_records_v1`;
+const trainingRecordsDatabaseName = 'stroke-trainer-training-records';
+const trainingRecordsDatabaseVersion = 1;
+const trainingRecordsStoreName = 'records';
+const remoteAppId = 'stroketrainer';
+const authApiBase = siteUrls.hub;
 let legacyMigrationPromise: Promise<void> | null = null;
 
-const MODULE_TITLE_KEYS: Record<string, TranslationKey> = {
+const moduleTitleKeys: Record<string, TranslationKey> = {
   'motor-training': 'home.module.motor.title',
   'cognitive-training': 'home.module.cognitive.title',
   'speech-training': 'home.module.speech.title',
@@ -99,7 +99,7 @@ interface PreparedCsvRow {
   details: CsvDetailRow;
 }
 
-const BASE_CSV_COLUMNS: CsvColumn[] = [
+const baseCsvColumns: CsvColumn[] = [
   { key: 'Training_Date', label: 'Training_Date' },
   { key: 'Training_Time', label: 'Training_Time' },
   { key: 'Record_ID', label: 'Record_ID' },
@@ -112,13 +112,13 @@ const BASE_CSV_COLUMNS: CsvColumn[] = [
   { key: 'Difficulty', label: 'Difficulty' },
 ];
 
-export async function getTrainingRecords(): Promise<TrainingRecord[]> {
-  if (hasAuthToken()) {
+export async function GetTrainingRecords(): Promise<TrainingRecord[]> {
+  if (HasAuthToken()) {
     try {
-      const remoteRecords = await getRemoteTrainingRecords(AUTH_API_BASE, REMOTE_APP_ID);
+      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId);
       if (remoteRecords) {
         return remoteRecords
-          .map(toTrainingRecord)
+          .map(ToTrainingRecord)
           .filter((record): record is TrainingRecord => record !== null)
           .sort((left, right) => left.savedAt.localeCompare(right.savedAt));
       }
@@ -128,10 +128,10 @@ export async function getTrainingRecords(): Promise<TrainingRecord[]> {
   }
 
   try {
-    await ensureLegacyTrainingRecordsMigrated();
-    const storedRecords = await readAllTrainingRecords();
+    await EnsureLegacyTrainingRecordsMigrated();
+    const storedRecords = await ReadAllTrainingRecords();
     return storedRecords
-      .map(toTrainingRecord)
+      .map(ToTrainingRecord)
       .filter((record): record is TrainingRecord => record !== null)
       .sort((left, right) => left.savedAt.localeCompare(right.savedAt));
   } catch (error) {
@@ -140,14 +140,14 @@ export async function getTrainingRecords(): Promise<TrainingRecord[]> {
   }
 }
 
-export async function saveTrainingRecord(args: SaveTrainingRecordArgs): Promise<TrainingRecord | null> {
+export async function SaveTrainingRecord(args: SaveTrainingRecordArgs): Promise<TrainingRecord | null> {
   if (args.results.length === 0) return null;
   const now = new Date();
 
   const record: TrainingRecord = {
-    id: createRecordId(),
+    id: CreateRecordId(),
     savedAt: now.toISOString(),
-    trainingDate: formatDate(now),
+    trainingDate: FormatDate(now),
     userName: args.userName,
     moduleId: args.moduleId,
     difficulty: args.difficulty,
@@ -157,20 +157,20 @@ export async function saveTrainingRecord(args: SaveTrainingRecordArgs): Promise<
     results: args.results,
   };
 
-  return appendTrainingRecord(record);
+  return AppendTrainingRecord(record);
 }
 
-export async function saveTrainingSessionRecord(args: SaveTrainingSessionRecordArgs): Promise<TrainingRecord | null> {
+export async function SaveTrainingSessionRecord(args: SaveTrainingSessionRecordArgs): Promise<TrainingRecord | null> {
   const now = new Date();
-  const details = normalizeCsvRow(args.details);
+  const details = NormalizeCsvRow(args.details);
   const detailRows = args.detailRows
-    ?.map((row) => normalizeCsvRow(row))
+    ?.map((row) => NormalizeCsvRow(row))
     .filter((row): row is CsvDetailRow => Boolean(row));
 
   const record: TrainingRecord = {
-    id: createRecordId(),
+    id: CreateRecordId(),
     savedAt: now.toISOString(),
-    trainingDate: args.trainingDate || formatDate(now),
+    trainingDate: args.trainingDate || FormatDate(now),
     userName: args.userName,
     moduleId: args.moduleId,
     moduleName: args.moduleName,
@@ -182,18 +182,18 @@ export async function saveTrainingSessionRecord(args: SaveTrainingSessionRecordA
     results: [],
   };
 
-  return appendTrainingRecord(record);
+  return AppendTrainingRecord(record);
 }
 
-async function appendTrainingRecord(record: TrainingRecord): Promise<TrainingRecord | null> {
-  if (hasAuthToken()) {
+async function AppendTrainingRecord(record: TrainingRecord): Promise<TrainingRecord | null> {
+  if (HasAuthToken()) {
     try {
-      const saved = await saveRemoteTrainingRecord(AUTH_API_BASE, {
-        appId: REMOTE_APP_ID,
+      const saved = await SaveRemoteTrainingRecord(authApiBase, {
+        appId: remoteAppId,
         record,
       });
       if (saved) {
-        window.dispatchEvent(new Event(TRAINING_RECORDS_CHANGED_EVENT));
+        window.dispatchEvent(new Event(trainingRecordsChangedEvent));
         return record;
       }
     } catch (error) {
@@ -202,9 +202,9 @@ async function appendTrainingRecord(record: TrainingRecord): Promise<TrainingRec
   }
 
   try {
-    await ensureLegacyTrainingRecordsMigrated();
-    await writeTrainingRecord(record);
-    window.dispatchEvent(new Event(TRAINING_RECORDS_CHANGED_EVENT));
+    await EnsureLegacyTrainingRecordsMigrated();
+    await WriteTrainingRecord(record);
+    window.dispatchEvent(new Event(trainingRecordsChangedEvent));
     return record;
   } catch (error) {
     console.warn('Unable to save training record.', error);
@@ -212,23 +212,23 @@ async function appendTrainingRecord(record: TrainingRecord): Promise<TrainingRec
   }
 }
 
-export async function downloadAllTrainingRecordsCsv(t: TFunction): Promise<boolean> {
-  const records = await getTrainingRecords();
+export async function DownloadAllTrainingRecordsCsv(t: TFunction): Promise<boolean> {
+  const records = await GetTrainingRecords();
   if (records.length === 0) return false;
 
   const now = new Date();
-  const prefix = getSetting('downloadDirectory');
-  const filenameDate = formatDate(now);
-  const filenameTime = formatTime(now).replace(/:/g, '');
+  const prefix = GetSetting('downloadDirectory');
+  const filenameDate = FormatDate(now);
+  const filenameTime = FormatTime(now).replace(/:/g, '');
   const filename = `${prefix ? `${prefix}_` : ''}training_records_${filenameDate}_${filenameTime}.csv`;
 
-  downloadCsvFile(buildTrainingRecordsCsv(records, t), filename);
+  DownloadCsvFile(BuildTrainingRecordsCsv(records, t), filename);
   return true;
 }
 
-async function ensureLegacyTrainingRecordsMigrated(): Promise<void> {
+async function EnsureLegacyTrainingRecordsMigrated(): Promise<void> {
   if (!legacyMigrationPromise) {
-    legacyMigrationPromise = migrateLegacyTrainingRecords().catch((error) => {
+    legacyMigrationPromise = MigrateLegacyTrainingRecords().catch((error) => {
       legacyMigrationPromise = null;
       throw error;
     });
@@ -236,10 +236,10 @@ async function ensureLegacyTrainingRecordsMigrated(): Promise<void> {
   await legacyMigrationPromise;
 }
 
-async function migrateLegacyTrainingRecords(): Promise<void> {
+async function MigrateLegacyTrainingRecords(): Promise<void> {
   let raw: string | null = null;
   try {
-    raw = localStorage.getItem(TRAINING_RECORDS_KEY);
+    raw = localStorage.getItem(trainingRecordsKey);
   } catch (error) {
     console.warn('Unable to inspect legacy training records.', error);
     return;
@@ -256,21 +256,21 @@ async function migrateLegacyTrainingRecords(): Promise<void> {
   if (!Array.isArray(parsed)) return;
 
   const records = parsed
-    .map(toTrainingRecord)
+    .map(ToTrainingRecord)
     .filter((record): record is TrainingRecord => record !== null);
-  await writeTrainingRecords(records);
+  await WriteTrainingRecords(records);
   try {
-    localStorage.removeItem(TRAINING_RECORDS_KEY);
+    localStorage.removeItem(trainingRecordsKey);
   } catch (error) {
     console.warn('Legacy training records were migrated but could not be removed.', error);
   }
 }
 
-async function readAllTrainingRecords(): Promise<unknown[]> {
-  const database = await openTrainingRecordsDatabase();
+async function ReadAllTrainingRecords(): Promise<unknown[]> {
+  const database = await OpenTrainingRecordsDatabase();
   return new Promise((resolve, reject) => {
-    const transaction = database.transaction(TRAINING_RECORDS_STORE_NAME, 'readonly');
-    const request = transaction.objectStore(TRAINING_RECORDS_STORE_NAME).getAll();
+    const transaction = database.transaction(trainingRecordsStoreName, 'readonly');
+    const request = transaction.objectStore(trainingRecordsStoreName).getAll();
     request.onsuccess = () => resolve(request.result as unknown[]);
     request.onerror = () => reject(request.error);
     transaction.oncomplete = () => database.close();
@@ -281,16 +281,16 @@ async function readAllTrainingRecords(): Promise<unknown[]> {
   });
 }
 
-async function writeTrainingRecord(record: TrainingRecord): Promise<void> {
-  await writeTrainingRecords([record]);
+async function WriteTrainingRecord(record: TrainingRecord): Promise<void> {
+  await WriteTrainingRecords([record]);
 }
 
-async function writeTrainingRecords(records: TrainingRecord[]): Promise<void> {
+async function WriteTrainingRecords(records: TrainingRecord[]): Promise<void> {
   if (records.length === 0) return;
-  const database = await openTrainingRecordsDatabase();
+  const database = await OpenTrainingRecordsDatabase();
   return new Promise((resolve, reject) => {
-    const transaction = database.transaction(TRAINING_RECORDS_STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(TRAINING_RECORDS_STORE_NAME);
+    const transaction = database.transaction(trainingRecordsStoreName, 'readwrite');
+    const store = transaction.objectStore(trainingRecordsStoreName);
     records.forEach((record) => store.put(record));
     transaction.oncomplete = () => {
       database.close();
@@ -307,17 +307,17 @@ async function writeTrainingRecords(records: TrainingRecord[]): Promise<void> {
   });
 }
 
-function openTrainingRecordsDatabase(): Promise<IDBDatabase> {
+function OpenTrainingRecordsDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (!('indexedDB' in window)) {
       reject(new Error('IndexedDB is unavailable.'));
       return;
     }
-    const request = indexedDB.open(TRAINING_RECORDS_DATABASE_NAME, TRAINING_RECORDS_DATABASE_VERSION);
+    const request = indexedDB.open(trainingRecordsDatabaseName, trainingRecordsDatabaseVersion);
     request.onupgradeneeded = () => {
       const database = request.result;
-      if (!database.objectStoreNames.contains(TRAINING_RECORDS_STORE_NAME)) {
-        const store = database.createObjectStore(TRAINING_RECORDS_STORE_NAME, { keyPath: 'id' });
+      if (!database.objectStoreNames.contains(trainingRecordsStoreName)) {
+        const store = database.createObjectStore(trainingRecordsStoreName, { keyPath: 'id' });
         store.createIndex('savedAt', 'savedAt');
       }
     };
@@ -327,48 +327,48 @@ function openTrainingRecordsDatabase(): Promise<IDBDatabase> {
   });
 }
 
-export function buildTrainingRecordsCsv(records: TrainingRecord[], t: TFunction): string {
-  const rows = records.flatMap((record) => toPreparedCsvRows(record, t));
-  const detailKeys = collectDetailKeys(rows);
-  const columns = [...BASE_CSV_COLUMNS, ...detailKeys.map((key) => ({ key, label: key }))];
+export function BuildTrainingRecordsCsv(records: TrainingRecord[], t: TFunction): string {
+  const rows = records.flatMap((record) => ToPreparedCsvRows(record, t));
+  const detailKeys = CollectDetailKeys(rows);
+  const columns = [...baseCsvColumns, ...detailKeys.map((key) => ({ key, label: key }))];
 
-  return createCsvContent([
+  return CreateCsvContent([
     columns.map((column) => column.label),
     ...rows.map((row) => columns.map((column) => row.base[column.key] ?? row.details[column.key] ?? '')),
   ]);
 }
 
-function toPreparedCsvRows(record: TrainingRecord, t: TFunction): PreparedCsvRow[] {
-  const detailRows = hasSessionDetails(record) ? toSessionDetailRows(record) : toLegacyDetailRows(record, t);
+function ToPreparedCsvRows(record: TrainingRecord, t: TFunction): PreparedCsvRow[] {
+  const detailRows = HasSessionDetails(record) ? ToSessionDetailRows(record) : ToLegacyDetailRows(record, t);
   const rows = detailRows.length > 0 ? detailRows : [{}];
-  const { date, time } = formatRecordDateTime(record);
+  const { date, time } = FormatRecordDateTime(record);
   const base = {
     Training_Date: date,
     Training_Time: time,
     Record_ID: record.id,
     Saved_At: record.savedAt,
     User: record.userName,
-    Module: record.moduleName || formatModule(record.moduleId, t),
+    Module: record.moduleName || FormatModule(record.moduleId, t),
     Module_ID: record.moduleId,
-    Game: record.gameTitle || formatModule(record.moduleId, t),
+    Game: record.gameTitle || FormatModule(record.moduleId, t),
     Game_ID: record.gameId || record.moduleId,
-    Difficulty: formatDifficulty(record.config?.drivingDifficulty ?? record.difficulty, t),
+    Difficulty: FormatDifficulty(record.config?.drivingDifficulty ?? record.difficulty, t),
   };
 
   return rows.map((details) => ({ base, details }));
 }
 
-function toSessionDetailRows(record: TrainingRecord): CsvDetailRow[] {
+function ToSessionDetailRows(record: TrainingRecord): CsvDetailRow[] {
   const details = record.details ?? {};
   const detailRows = record.detailRows && record.detailRows.length > 0 ? record.detailRows : [undefined];
-  return detailRows.map((detailRow, index) => normalizeCsvRow({
+  return detailRows.map((detailRow, index) => NormalizeCsvRow({
     ...(detailRows.length > 1 ? { Detail_Row: index + 1 } : {}),
     ...details,
     ...(detailRow ?? {}),
   }) ?? {});
 }
 
-function toLegacyDetailRows(record: TrainingRecord, t: TFunction): CsvDetailRow[] {
+function ToLegacyDetailRows(record: TrainingRecord, t: TFunction): CsvDetailRow[] {
   const firstResult = record.results[0];
   const readingWPS = record.config?.readingWPS ?? '';
   const readingCrowding = record.config?.readingCrowding ?? '';
@@ -376,7 +376,7 @@ function toLegacyDetailRows(record: TrainingRecord, t: TFunction): CsvDetailRow[
   if (record.moduleId === 'driving-rehab') {
     const events = firstResult?.driving_events ?? [];
     if (events.length === 0) {
-      return [stripEmptyValues({
+      return [StripEmptyValues({
         Trial_Type: firstResult?.trial_type,
         Response: firstResult?.response,
         RT_ms: firstResult?.average_rt,
@@ -387,7 +387,7 @@ function toLegacyDetailRows(record: TrainingRecord, t: TFunction): CsvDetailRow[
       })];
     }
 
-    return events.map((event, index) => stripEmptyValues({
+    return events.map((event, index) => StripEmptyValues({
       Trial_Type: firstResult?.trial_type,
       Round: index + 1,
       Response: event.response,
@@ -403,14 +403,14 @@ function toLegacyDetailRows(record: TrainingRecord, t: TFunction): CsvDetailRow[
     }));
   }
 
-  return record.results.map((result, index) => stripEmptyValues({
-    Mode: formatOculomotorMode(result.mode ?? record.oculomotorMode ?? record.config?.oculomotorMode, t),
-    Path: formatOculomotorPath(result.pattern ?? record.oculomotorPattern ?? record.config?.oculomotorPattern, t),
+  return record.results.map((result, index) => StripEmptyValues({
+    Mode: FormatOculomotorMode(result.mode ?? record.oculomotorMode ?? record.config?.oculomotorMode, t),
+    Path: FormatOculomotorPath(result.pattern ?? record.oculomotorPattern ?? record.config?.oculomotorPattern, t),
     Trial_Type: result.trial_type,
     Round: index + 1,
     Target: result.target,
     Response: (result as TrialData & { response_text?: string }).response_text ?? result.response,
-    Correct: formatCorrect(result.correct),
+    Correct: FormatCorrect(result.correct),
     RT_ms: result.rt ?? result.reading_time,
     Duration_ms: result.duration_ms,
     Score: result.score,
@@ -425,12 +425,12 @@ function toLegacyDetailRows(record: TrainingRecord, t: TFunction): CsvDetailRow[
   }));
 }
 
-function toTrainingRecord(value: unknown): TrainingRecord | null {
-  const item = toObject(value);
+function ToTrainingRecord(value: unknown): TrainingRecord | null {
+  const item = ToObject(value);
   if (!item || !Array.isArray(item.results)) return null;
 
   return {
-    id: typeof item.id === 'string' ? item.id : createRecordId(),
+    id: typeof item.id === 'string' ? item.id : CreateRecordId(),
     savedAt: typeof item.savedAt === 'string' ? item.savedAt : new Date().toISOString(),
     trainingDate: typeof item.trainingDate === 'string' ? item.trainingDate : undefined,
     userName: typeof item.userName === 'string' ? item.userName : '',
@@ -441,88 +441,88 @@ function toTrainingRecord(value: unknown): TrainingRecord | null {
     difficulty: typeof item.difficulty === 'string' ? item.difficulty : '',
     oculomotorMode: typeof item.oculomotorMode === 'string' ? item.oculomotorMode : undefined,
     oculomotorPattern: typeof item.oculomotorPattern === 'string' ? item.oculomotorPattern : undefined,
-    config: toObject(item.config) as TrainingRecordConfig | undefined,
-    details: normalizeCsvRow(toObject(item.details)),
+    config: ToObject(item.config) as TrainingRecordConfig | undefined,
+    details: NormalizeCsvRow(ToObject(item.details)),
     detailRows: Array.isArray(item.detailRows)
-      ? item.detailRows.map((row) => normalizeCsvRow(toObject(row))).filter((row): row is CsvDetailRow => Boolean(row))
+      ? item.detailRows.map((row) => NormalizeCsvRow(ToObject(row))).filter((row): row is CsvDetailRow => Boolean(row))
       : undefined,
     results: item.results as TrialData[],
   };
 }
 
-function toObject(value: unknown): Record<string, unknown> | undefined {
+function ToObject(value: unknown): Record<string, unknown> | undefined {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
   return undefined;
 }
 
-function createRecordId(): string {
+function CreateRecordId(): string {
   const randomPart = Math.random().toString(36).slice(2, 10);
   return `${Date.now().toString(36)}_${randomPart}`;
 }
 
-function formatSavedAt(savedAt: string): { date: string; time: string } {
+function FormatSavedAt(savedAt: string): { date: string; time: string } {
   const date = new Date(savedAt);
   if (Number.isNaN(date.getTime())) {
     return { date: '', time: '' };
   }
-  return { date: formatDate(date), time: formatTime(date) };
+  return { date: FormatDate(date), time: FormatTime(date) };
 }
 
-function formatRecordDateTime(record: TrainingRecord): { date: string; time: string } {
-  const savedAt = formatSavedAt(record.savedAt);
+function FormatRecordDateTime(record: TrainingRecord): { date: string; time: string } {
+  const savedAt = FormatSavedAt(record.savedAt);
   return {
     date: record.trainingDate || savedAt.date,
     time: savedAt.time,
   };
 }
 
-function formatDate(date: Date): string {
+function FormatDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
-function formatTime(date: Date): string {
+function FormatTime(date: Date): string {
   const hour = String(date.getHours()).padStart(2, '0');
   const minute = String(date.getMinutes()).padStart(2, '0');
   const second = String(date.getSeconds()).padStart(2, '0');
   return `${hour}:${minute}:${second}`;
 }
 
-function formatModule(moduleId: string, t: TFunction): string {
-  const key = MODULE_TITLE_KEYS[moduleId];
+function FormatModule(moduleId: string, t: TFunction): string {
+  const key = moduleTitleKeys[moduleId];
   return key ? t(key) : moduleId;
 }
 
-function formatDifficulty(difficulty: string, t: TFunction): string {
+function FormatDifficulty(difficulty: string, t: TFunction): string {
   if (difficulty === 'beginner' || difficulty === 'intermediate' || difficulty === 'advanced') {
     return t(`home.diff.${difficulty}` as TranslationKey);
   }
   return difficulty;
 }
 
-function formatOculomotorMode(mode: string | undefined, t: TFunction): string {
+function FormatOculomotorMode(mode: string | undefined, t: TFunction): string {
   return mode ? t(`preset.mode.${mode}` as TranslationKey) : '';
 }
 
-function formatOculomotorPath(path: string | undefined, t: TFunction): string {
+function FormatOculomotorPath(path: string | undefined, t: TFunction): string {
   return path ? t(`preset.path.${path}` as TranslationKey) : '';
 }
 
-function formatCorrect(correct: boolean | undefined): string {
+function FormatCorrect(correct: boolean | undefined): string {
   if (correct === undefined) return '';
   return correct ? 'true' : 'false';
 }
 
-function hasSessionDetails(record: TrainingRecord): boolean {
+function HasSessionDetails(record: TrainingRecord): boolean {
   return Boolean(record.details || (record.detailRows && record.detailRows.length > 0));
 }
 
-function collectDetailKeys(rows: PreparedCsvRow[]): string[] {
-  const baseKeys = new Set(BASE_CSV_COLUMNS.map((column) => column.key));
+function CollectDetailKeys(rows: PreparedCsvRow[]): string[] {
+  const baseKeys = new Set(baseCsvColumns.map((column) => column.key));
   const keys: string[] = [];
   rows.forEach((row) => {
     Object.keys(row.details).forEach((key) => {
@@ -533,21 +533,21 @@ function collectDetailKeys(rows: PreparedCsvRow[]): string[] {
   return keys;
 }
 
-function normalizeCsvRow(row: CsvDetailRow | undefined): CsvDetailRow | undefined {
+function NormalizeCsvRow(row: CsvDetailRow | undefined): CsvDetailRow | undefined {
   if (!row) return undefined;
-  const normalized = stripEmptyValues(row);
+  const normalized = StripEmptyValues(row);
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 }
 
-function stripEmptyValues(row: CsvDetailRow): CsvDetailRow {
+function StripEmptyValues(row: CsvDetailRow): CsvDetailRow {
   return Object.fromEntries(
     Object.entries(row)
       .filter(([, value]) => value !== undefined)
-      .map(([key, value]) => [key, normalizeCsvValue(value)]),
+      .map(([key, value]) => [key, NormalizeCsvValue(value)]),
   );
 }
 
-function normalizeCsvValue(value: unknown): unknown {
+function NormalizeCsvValue(value: unknown): unknown {
   if (
     value === null ||
     typeof value === 'string' ||

@@ -15,23 +15,23 @@ import {
 } from 'pixi.js';
 import { initJsPsych } from 'jspsych';
 import { useT, type TranslationKey } from '../../i18n';
-import { downloadCsvFile } from '../../utils/downloadFile';
+import { DownloadCsvFile } from '../../utils/downloadFile';
 import { getActiveUser } from '../../utils/settings';
 import {
-  playFailureSound,
-  playGameEndSound,
-  playSuccessSound,
-  prepareAudioFeedback,
+  PlayFailureSound,
+  PlayGameEndSound,
+  PlaySuccessSound,
+  PrepareAudioFeedback,
 } from '../../utils/soundManager';
 import {
-  DEFAULT_TONGUE_SETTINGS,
-  getTongueTrainingSettings,
-  saveTongueTrainingSettings,
+  defaultTongueSettings,
+  GetTongueTrainingSettings,
+  SaveTongueTrainingSettings,
   type TongueTrainingSettings,
 } from '../../utils/tongueRehabStorage';
-import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
-import { verifySelectedTrainingUser } from './selectedUserGuard';
+import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
@@ -117,18 +117,18 @@ interface SessionResult {
   Apple_Results: AppleResult[];
 }
 
-const MEDIAPIPE_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
-const FACE_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
-const DETECTION_INTERVAL_MS = 72;
-const CALIBRATION_CAPTURE_MS = 1900;
-const MIN_CLASS_EXAMPLES = 10;
-const MOUTH_FEATURE_WIDTH = 32;
-const MOUTH_FEATURE_HEIGHT = 24;
-const MAX_TONGUE_SEGMENTS = 10;
-const TONGUE_WIDTH = 28;
-const TONGUE_COLLISION_RADIUS = TONGUE_WIDTH / 2;
-const APPLE_TEXTURE_URL = `${import.meta.env.BASE_URL}assets/tongue-apple.webp`;
-const CALIBRATION_STEPS: readonly CalibrationStep[] = [
+const mediapipeWasmUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
+const faceModelUrl = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+const detectionIntervalMs = 72;
+const calibrationCaptureMs = 1900;
+const minClassExamples = 10;
+const mouthFeatureWidth = 32;
+const mouthFeatureHeight = 24;
+const maxTongueSegments = 10;
+const tongueWidth = 28;
+const tongueCollisionRadius = tongueWidth / 2;
+const appleTextureUrl = `${import.meta.env.BASE_URL}assets/tongue-apple.webp`;
+const calibrationSteps: readonly CalibrationStep[] = [
   {
     label: 'Rest',
     titleKey: 'tongue.calibration.restTitle',
@@ -145,7 +145,7 @@ const CALIBRATION_STEPS: readonly CalibrationStep[] = [
     instructionKey: 'tongue.calibration.rightInstruction',
   },
 ];
-const LIP_LANDMARK_INDICES = Array.from(new Set(
+const lipLandmarkIndices = Array.from(new Set(
   FaceLandmarker.FACE_LANDMARKS_LIPS.flatMap((connection) => [connection.start, connection.end]),
 ));
 
@@ -183,15 +183,15 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     confidence: 0,
     faceVisible: false,
   });
-  const configRef = useRef<TongueTrainingSettings>({ ...DEFAULT_TONGUE_SETTINGS });
-  const metricsRef = useRef<SessionMetrics>(createSessionMetrics());
+  const configRef = useRef<TongueTrainingSettings>({ ...defaultTongueSettings });
+  const metricsRef = useRef<SessionMetrics>(CreateSessionMetrics());
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const finishSessionRef = useRef<() => void>(() => undefined);
 
   const activeUser = getActiveUser() || '';
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   const [config, setConfig] = useState<TongueTrainingSettings>(() => (
-    activeUser ? getTongueTrainingSettings(activeUser) : { ...DEFAULT_TONGUE_SETTINGS }
+    activeUser ? GetTongueTrainingSettings(activeUser) : { ...defaultTongueSettings }
   ));
   const [calibrationIndex, setCalibrationIndex] = useState(0);
   const [calibrationProgress, setCalibrationProgress] = useState(0);
@@ -209,7 +209,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
 
   useEffect(() => {
     configRef.current = config;
-    if (activeUser) saveTongueTrainingSettings(activeUser, config);
+    if (activeUser) SaveTongueTrainingSettings(activeUser, config);
   }, [activeUser, config]);
 
   useEffect(() => {
@@ -217,7 +217,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, []);
 
   useEffect(() => {
-    if (activeUser) setConfig(getTongueTrainingSettings(activeUser));
+    if (activeUser) setConfig(GetTongueTrainingSettings(activeUser));
   }, [activeUser]);
 
   const stopVision = useCallback(() => {
@@ -250,9 +250,9 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     const app = appRef.current;
     const appleTexture = appleTextureRef.current;
     if (!app || !appleTexture) return;
-    resetTongueScene(app, sceneRef, appleTexture);
+    ResetTongueScene(app, sceneRef, appleTexture);
     metricsRef.current = {
-      ...createSessionMetrics(),
+      ...CreateSessionMetrics(),
       startedAt: performance.now(),
     };
     recognitionRef.current = { label: 'Rest', confidence: 0, faceVisible: false };
@@ -266,8 +266,8 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     calibrationCaptureRef.current.active = false;
     setIsCapturing(false);
     setCalibrationProgress(1);
-    const currentStep = CALIBRATION_STEPS[calibrationIndexRef.current];
-    writeJsPsychData(jsPsychRef, {
+    const currentStep = calibrationSteps[calibrationIndexRef.current];
+    WriteJsPsychData(jsPsychRef, {
       trial_type: 'tongue-calibration',
       class_label: currentStep.label,
       sample_count: calibrationCaptureRef.current.samples,
@@ -275,7 +275,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     }, 'Unable to write tongue calibration data to jsPsych.');
 
     const nextIndex = calibrationIndexRef.current + 1;
-    if (nextIndex < CALIBRATION_STEPS.length) {
+    if (nextIndex < calibrationSteps.length) {
       calibrationIndexRef.current = nextIndex;
       setCalibrationIndex(nextIndex);
       window.setTimeout(() => setCalibrationProgress(0), 180);
@@ -295,7 +295,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     try {
       const prediction = await classifier.predictClass(feature, 3);
       if (!mountedRef.current || phaseRef.current !== 'playing') return;
-      const label = isTongueClass(prediction.label) ? prediction.label : 'Rest';
+      const label = IsTongueClass(prediction.label) ? prediction.label : 'Rest';
       const confidence = prediction.confidences[prediction.label] ?? 0;
       const acceptedLabel = confidence >= configRef.current.sensitivity ? label : 'Rest';
       syncRecognition({
@@ -314,7 +314,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   const processFrame = useCallback((now: number) => {
     animationFrameRef.current = window.requestAnimationFrame(processFrame);
     if (phaseRef.current !== 'calibration' && phaseRef.current !== 'playing') return;
-    if (now - lastDetectionAtRef.current < DETECTION_INTERVAL_MS) return;
+    if (now - lastDetectionAtRef.current < detectionIntervalMs) return;
     const video = videoRef.current;
     const landmarker = faceLandmarkerRef.current;
     const featureCanvas = featureCanvasRef.current;
@@ -334,21 +334,21 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
         return;
       }
 
-      const mouth = calculateMouthAnchor(landmarks);
+      const mouth = CalculateMouthAnchor(landmarks);
       lastMouthRef.current = { ...mouth, visible: true };
-      const feature = extractMouthFeature(video, featureCanvas, landmarks);
+      const feature = ExtractMouthFeature(video, featureCanvas, landmarks);
       if (phaseRef.current === 'calibration') {
         if (!calibrationCaptureRef.current.active) {
           feature.dispose();
           return;
         }
-        const step = CALIBRATION_STEPS[calibrationIndexRef.current];
+        const step = calibrationSteps[calibrationIndexRef.current];
         classifierRef.current?.addExample(feature, step.label);
         feature.dispose();
         calibrationCaptureRef.current.samples += 1;
-        const progress = clamp((now - calibrationCaptureRef.current.startedAt) / CALIBRATION_CAPTURE_MS, 0, 1);
+        const progress = Clamp((now - calibrationCaptureRef.current.startedAt) / calibrationCaptureMs, 0, 1);
         setCalibrationProgress(progress);
-        if (progress >= 1 && calibrationCaptureRef.current.samples >= MIN_CLASS_EXAMPLES) {
+        if (progress >= 1 && calibrationCaptureRef.current.samples >= minClassExamples) {
           void finishCalibrationStep();
         }
         return;
@@ -365,15 +365,15 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, [classifyFeature, finishCalibrationStep, setPhase, stopVision, syncRecognition, t]);
 
   const startSession = useCallback(async () => {
-    if (!verifySelectedTrainingUser()) return;
+    if (!VerifySelectedTrainingUser()) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       setVisionError(t('tongue.error.unsupported'));
       setShowVisionError(true);
       return;
     }
-    prepareAudioFeedback(jsPsychRef);
+    PrepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
-    if (appRef.current) resizePixiAppToElement(appRef.current, pixiHostRef.current);
+    if (appRef.current) ResizePixiAppToElement(appRef.current, pixiHostRef.current);
     stopVision();
     setVisionError('');
     setShowVisionError(false);
@@ -406,9 +406,9 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
 
       setStatusMessage(t('tongue.loading.model'));
       await tf.ready();
-      const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
+      const vision = await FilesetResolver.forVisionTasks(mediapipeWasmUrl);
       const landmarker = await FaceLandmarker.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: FACE_MODEL_URL },
+        baseOptions: { modelAssetPath: faceModelUrl },
         runningMode: 'VIDEO',
         numFaces: 1,
         minFaceDetectionConfidence: 0.5,
@@ -448,7 +448,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
 
   const startCalibrationCapture = useCallback(() => {
     const classifier = classifierRef.current;
-    const step = CALIBRATION_STEPS[calibrationIndexRef.current];
+    const step = calibrationSteps[calibrationIndexRef.current];
     if (!classifier || !step) return;
     if ((classifier.getClassExampleCount()[step.label] ?? 0) > 0) {
       classifier.clearClass(step.label);
@@ -465,14 +465,14 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   const finishSession = useCallback(() => {
     if (phaseRef.current !== 'playing') return;
     const metrics = metricsRef.current;
-    closeActiveHold(metrics, performance.now());
+    CloseActiveHold(metrics, performance.now());
     const configSnapshot = configRef.current;
     const participantId = getActiveUser() || 'Unknown';
     const averageHold = metrics.holdDurations.length > 0
       ? metrics.holdDurations.reduce((total, value) => total + value, 0) / metrics.holdDurations.length
       : 0;
     const session: SessionResult = {
-      Test_Date: formatTestDate(new Date()),
+      Test_Date: FormatTestDate(new Date()),
       Participant_ID: participantId,
       Duration_Seconds: Number(metrics.elapsed.toFixed(1)),
       Score: metrics.score,
@@ -488,14 +488,14 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     setResult(session);
     setPhase('results');
     stopVision();
-    playGameEndSound('Victory', jsPsychRef);
-    void saveTrainingSessionRecord({
+    PlayGameEndSound('Victory', jsPsychRef);
+    void SaveTrainingSessionRecord({
       userName: participantId,
       moduleId: 'speech-training',
       moduleName: t('home.module.speech.title'),
       gameId: 'tongue-catch',
       gameTitle: t('tongue.title'),
-      difficulty: difficultyLabel(configSnapshot),
+      difficulty: DifficultyLabel(configSnapshot),
       trainingDate: session.Test_Date,
       details: {
         Duration_Seconds: session.Duration_Seconds,
@@ -514,7 +514,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
         Apple_Caught: apple.caught,
       })),
     });
-    writeJsPsychData(
+    WriteJsPsychData(
       jsPsychRef,
       session as unknown as Record<string, unknown>,
       'Unable to write tongue training result to jsPsych data.',
@@ -539,7 +539,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
         resizeTo: host,
       });
       initialized = true;
-      const appleTexture = await Assets.load<Texture>(APPLE_TEXTURE_URL);
+      const appleTexture = await Assets.load<Texture>(appleTextureUrl);
       if (cancelled) {
         app.destroy(true, { children: true, texture: true });
         return;
@@ -548,10 +548,10 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       appleTextureRef.current = appleTexture;
       host.appendChild(app.canvas);
       app.canvas.className = 'tongue-catch-canvas';
-      resetTongueScene(app, sceneRef, appleTexture);
+      ResetTongueScene(app, sceneRef, appleTexture);
       app.ticker.add((ticker: Ticker) => {
         if (phaseRef.current !== 'playing') return;
-        updateTongueGame({
+        UpdateTongueGame({
           app,
           ticker,
           sceneRef,
@@ -560,10 +560,10 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
           config: configRef.current,
           metrics: metricsRef.current,
           onCatch: () => {
-            playSuccessSound(jsPsychRef);
+            PlaySuccessSound(jsPsychRef);
           },
           onMiss: () => {
-            playFailureSound(jsPsychRef);
+            PlayFailureSound(jsPsychRef);
           },
         });
         if (metricsRef.current.elapsed >= configRef.current.durationSec) {
@@ -576,13 +576,13 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     const handleResize = () => {
       const currentApp = appRef.current;
       const appleTexture = appleTextureRef.current;
-      if (currentApp && appleTexture) resetTongueScene(currentApp, sceneRef, appleTexture);
+      if (currentApp && appleTexture) ResetTongueScene(currentApp, sceneRef, appleTexture);
     };
     window.addEventListener('resize', handleResize);
     return () => {
       cancelled = true;
       window.removeEventListener('resize', handleResize);
-      if (sceneRef.current) destroyTongueScene(sceneRef.current);
+      if (sceneRef.current) DestroyTongueScene(sceneRef.current);
       sceneRef.current = null;
       appRef.current = null;
       appleTextureRef.current = null;
@@ -598,7 +598,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     recognitionRef.current = { label: 'Rest', confidence: 0, faceVisible: false };
     const app = appRef.current;
     const appleTexture = appleTextureRef.current;
-    if (app && appleTexture) resetTongueScene(app, sceneRef, appleTexture);
+    if (app && appleTexture) ResetTongueScene(app, sceneRef, appleTexture);
   }, [setPhase, stopVision]);
 
   const exitGame = useCallback(() => {
@@ -627,7 +627,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
         apple?.caught ?? '',
       ]),
     ];
-    downloadCsvFile(
+    DownloadCsvFile(
       rows.map((row) => row.map(csvCell).join(',')).join('\n'),
       `tongue_catch_${Date.now()}.csv`,
     );
@@ -638,7 +638,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     onAbort: returnToMenu,
   });
 
-  const activeCalibrationStep = CALIBRATION_STEPS[calibrationIndex];
+  const activeCalibrationStep = calibrationSteps[calibrationIndex];
   const tongueSummaryItems = [
     { label: t('tongue.config.sensitivity'), value: `${Math.round(config.sensitivity * 100)}%` },
     { label: t('tongue.config.growthRate'), value: `${config.growthRate} px/s` },
@@ -665,8 +665,8 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       <canvas
         ref={featureCanvasRef}
         className="tongue-feature-canvas"
-        width={MOUTH_FEATURE_WIDTH}
-        height={MOUTH_FEATURE_HEIGHT}
+        width={mouthFeatureWidth}
+        height={mouthFeatureHeight}
         aria-hidden="true"
       />
 
@@ -867,7 +867,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
           </div>
           <div className="tongue-calibration-card">
             <span className="gesture-step-count">
-              {t('tongue.calibration.step', { current: calibrationIndex + 1, total: CALIBRATION_STEPS.length })}
+              {t('tongue.calibration.step', { current: calibrationIndex + 1, total: calibrationSteps.length })}
             </span>
             <div className={`tongue-direction-cue tongue-direction-${activeCalibrationStep.label.toLowerCase()}`}>
               <TongueCue label={activeCalibrationStep.label} />
@@ -1001,7 +1001,7 @@ function TongueCue({ label }: { label: TongueClass }) {
   );
 }
 
-function createSessionMetrics(): SessionMetrics {
+function CreateSessionMetrics(): SessionMetrics {
   return {
     startedAt: 0,
     elapsed: 0,
@@ -1014,26 +1014,26 @@ function createSessionMetrics(): SessionMetrics {
   };
 }
 
-function resizePixiAppToElement(app: Application, element: HTMLElement | null): void {
+function ResizePixiAppToElement(app: Application, element: HTMLElement | null): void {
   const rect = element?.getBoundingClientRect();
   const width = Math.max(1, Math.round(rect?.width || window.innerWidth));
   const height = Math.max(1, Math.round(rect?.height || window.innerHeight));
   app.renderer.resize(width, height);
 }
 
-function resetTongueScene(
+function ResetTongueScene(
   app: Application,
   sceneRef: { current: TongueScene | null },
   appleTexture: Texture,
 ): void {
-  if (sceneRef.current) destroyTongueScene(sceneRef.current);
+  if (sceneRef.current) DestroyTongueScene(sceneRef.current);
   const root = new Container();
-  const points = Array.from({ length: MAX_TONGUE_SEGMENTS }, () => new Point(app.screen.width / 2, app.screen.height * 0.66));
-  const tongueTexture = createTongueTexture();
+  const points = Array.from({ length: maxTongueSegments }, () => new Point(app.screen.width / 2, app.screen.height * 0.66));
+  const tongueTexture = CreateTongueTexture();
   const tongue = new MeshRope({
     texture: tongueTexture,
     points,
-    width: TONGUE_WIDTH,
+    width: tongueWidth,
   });
   root.addChild(tongue);
   app.stage.addChild(root);
@@ -1052,7 +1052,7 @@ function resetTongueScene(
   };
 }
 
-function destroyTongueScene(scene: TongueScene): void {
+function DestroyTongueScene(scene: TongueScene): void {
   scene.apples.forEach((apple) => apple.view.destroy({ children: true }));
   scene.apples = [];
   scene.root.removeFromParent();
@@ -1060,7 +1060,7 @@ function destroyTongueScene(scene: TongueScene): void {
   scene.tongueTexture.destroy(true);
 }
 
-function createTongueTexture(): Texture {
+function CreateTongueTexture(): Texture {
   const canvas = document.createElement('canvas');
   canvas.width = 96;
   canvas.height = 32;
@@ -1087,7 +1087,7 @@ function createTongueTexture(): Texture {
   return Texture.from(canvas);
 }
 
-function updateTongueGame(args: {
+function UpdateTongueGame(args: {
   app: Application;
   ticker: Ticker;
   sceneRef: { current: TongueScene | null };
@@ -1103,7 +1103,7 @@ function updateTongueGame(args: {
   const dt = Math.min(args.ticker.deltaMS / 1000, 0.05);
   args.metrics.elapsed += dt;
 
-  const mappedMouth = mapVideoPointToStage(
+  const mappedMouth = MapVideoPointToStage(
     args.mouth.x,
     args.mouth.y,
     args.app.screen.width,
@@ -1123,10 +1123,10 @@ function updateTongueGame(args: {
     : 0;
   if (direction === 0) {
     scene.tongueLength = Math.max(0, scene.tongueLength - args.config.growthRate * 1.7 * dt);
-    closeActiveHold(args.metrics, performance.now());
+    CloseActiveHold(args.metrics, performance.now());
   } else {
     if (args.metrics.holdDirection !== args.recognition.label) {
-      closeActiveHold(args.metrics, performance.now());
+      CloseActiveHold(args.metrics, performance.now());
       args.metrics.holdStartedAt = performance.now();
       args.metrics.holdDirection = args.recognition.label;
     }
@@ -1140,13 +1140,13 @@ function updateTongueGame(args: {
     scene.tongueLength = Math.min(maxLength, scene.tongueLength + args.config.growthRate * dt);
   }
   if (scene.tongueLength <= 1) scene.tongueDirection = direction;
-  updateTonguePoints(scene);
+  UpdateTonguePoints(scene);
 
   scene.spawnElapsed += dt;
   if (scene.spawnElapsed >= args.config.spawnIntervalSec) {
     scene.spawnElapsed = 0;
     const resultIndex = args.metrics.appleResults.length;
-    const position = spawnApple(scene, args.app.screen.width, args.config.edgeChance, resultIndex);
+    const position = SpawnApple(scene, args.app.screen.width, args.config.edgeChance, resultIndex);
     args.metrics.appleResults.push({
       horizontalPositionPercent: position,
       caught: false,
@@ -1159,31 +1159,31 @@ function updateTongueGame(args: {
     apple.view.y += args.config.appleSpeed * dt;
     const sway = Math.sin(apple.swayPhase + apple.fallElapsed * apple.swaySpeed);
     const half = apple.size / 2;
-    apple.view.x = clamp(
+    apple.view.x = Clamp(
       apple.baseX + sway * apple.swayAmplitude,
       half,
       args.app.screen.width - half,
     );
     apple.view.rotation = sway * 0.09;
     const caught = scene.tongueLength > 20
-      && tongueIntersectsApple(scene.points, apple);
+      && TongueIntersectsApple(scene.points, apple);
     if (caught) {
       const appleResult = args.metrics.appleResults[apple.resultIndex];
       if (appleResult) appleResult.caught = true;
-      removeApple(scene, index);
+      RemoveApple(scene, index);
       args.metrics.score += 1;
       args.onCatch();
       continue;
     }
     if (apple.view.y - half > args.app.screen.height) {
-      removeApple(scene, index);
+      RemoveApple(scene, index);
       args.metrics.missed += 1;
       args.onMiss();
     }
   }
 }
 
-function updateTonguePoints(scene: TongueScene): void {
+function UpdateTonguePoints(scene: TongueScene): void {
   const direction = scene.tongueDirection || 1;
   scene.points.forEach((point, index) => {
     const progress = index / (scene.points.length - 1);
@@ -1193,11 +1193,11 @@ function updateTonguePoints(scene: TongueScene): void {
   scene.tongue.visible = scene.tongueLength > 2;
 }
 
-function tongueIntersectsApple(points: Point[], apple: AppleSprite): boolean {
-  const collisionRadius = apple.size / 2 + TONGUE_COLLISION_RADIUS;
+function TongueIntersectsApple(points: Point[], apple: AppleSprite): boolean {
+  const collisionRadius = apple.size / 2 + tongueCollisionRadius;
   const collisionRadiusSquared = collisionRadius * collisionRadius;
   for (let index = 1; index < points.length; index += 1) {
-    if (distanceToSegmentSquared(
+    if (DistanceToSegmentSquared(
       apple.view.x,
       apple.view.y,
       points[index - 1].x,
@@ -1211,7 +1211,7 @@ function tongueIntersectsApple(points: Point[], apple: AppleSprite): boolean {
   return false;
 }
 
-function distanceToSegmentSquared(
+function DistanceToSegmentSquared(
   pointX: number,
   pointY: number,
   startX: number,
@@ -1228,7 +1228,7 @@ function distanceToSegmentSquared(
     return dx * dx + dy * dy;
   }
 
-  const projection = clamp(
+  const projection = Clamp(
     ((pointX - startX) * segmentX + (pointY - startY) * segmentY) / segmentLengthSquared,
     0,
     1,
@@ -1240,7 +1240,7 @@ function distanceToSegmentSquared(
   return dx * dx + dy * dy;
 }
 
-function spawnApple(
+function SpawnApple(
   scene: TongueScene,
   width: number,
   edgeChance: number,
@@ -1250,11 +1250,11 @@ function spawnApple(
   const side = Math.random() < 0.5 ? -1 : 1;
   const normalizedX = useEdge
     ? side < 0
-      ? randomBetween(0.1, 0.28)
-      : randomBetween(0.72, 0.9)
-    : randomBetween(0.27, 0.73);
-  const size = randomBetween(95, 120);
-  const apple = createAppleSprite(size, scene.appleTexture, resultIndex);
+      ? RandomBetween(0.1, 0.28)
+      : RandomBetween(0.72, 0.9)
+    : RandomBetween(0.27, 0.73);
+  const size = RandomBetween(95, 120);
+  const apple = CreateAppleSprite(size, scene.appleTexture, resultIndex);
   apple.baseX = width * normalizedX;
   apple.view.x = apple.baseX;
   apple.view.y = -size;
@@ -1263,7 +1263,7 @@ function spawnApple(
   return Number((normalizedX * 200 - 100).toFixed(1));
 }
 
-function createAppleSprite(size: number, texture: Texture, resultIndex: number): AppleSprite {
+function CreateAppleSprite(size: number, texture: Texture, resultIndex: number): AppleSprite {
   const view = new Container();
   const sprite = new Sprite({
     texture,
@@ -1278,20 +1278,20 @@ function createAppleSprite(size: number, texture: Texture, resultIndex: number):
     resultIndex,
     baseX: 0,
     fallElapsed: 0,
-    swayAmplitude: randomBetween(5, 9),
-    swayPhase: randomBetween(0, Math.PI * 2),
-    swaySpeed: randomBetween(1.7, 2.3),
+    swayAmplitude: RandomBetween(5, 9),
+    swayPhase: RandomBetween(0, Math.PI * 2),
+    swaySpeed: RandomBetween(1.7, 2.3),
   };
 }
 
-function removeApple(scene: TongueScene, index: number): void {
+function RemoveApple(scene: TongueScene, index: number): void {
   const [apple] = scene.apples.splice(index, 1);
   if (!apple) return;
   apple.view.removeFromParent();
   apple.view.destroy({ children: true });
 }
 
-function closeActiveHold(metrics: SessionMetrics, now: number): void {
+function CloseActiveHold(metrics: SessionMetrics, now: number): void {
   if (metrics.holdStartedAt !== null) {
     const duration = Math.max(0, (now - metrics.holdStartedAt) / 1000);
     if (duration >= 0.12) metrics.holdDurations.push(duration);
@@ -1300,8 +1300,8 @@ function closeActiveHold(metrics: SessionMetrics, now: number): void {
   metrics.holdDirection = null;
 }
 
-function calculateMouthAnchor(landmarks: NormalizedLandmark[]): { x: number; y: number } {
-  const points = LIP_LANDMARK_INDICES.map((index) => landmarks[index]).filter(Boolean);
+function CalculateMouthAnchor(landmarks: NormalizedLandmark[]): { x: number; y: number } {
+  const points = lipLandmarkIndices.map((index) => landmarks[index]).filter(Boolean);
   if (points.length === 0) return { x: 0.5, y: 0.64 };
   return {
     x: points.reduce((total, point) => total + point.x, 0) / points.length,
@@ -1309,12 +1309,12 @@ function calculateMouthAnchor(landmarks: NormalizedLandmark[]): { x: number; y: 
   };
 }
 
-function extractMouthFeature(
+function ExtractMouthFeature(
   video: HTMLVideoElement,
   canvas: HTMLCanvasElement,
   landmarks: NormalizedLandmark[],
 ): tf.Tensor {
-  const points = LIP_LANDMARK_INDICES.map((index) => landmarks[index]).filter(Boolean);
+  const points = lipLandmarkIndices.map((index) => landmarks[index]).filter(Boolean);
   const minX = Math.min(...points.map((point) => point.x));
   const maxX = Math.max(...points.map((point) => point.x));
   const minY = Math.min(...points.map((point) => point.y));
@@ -1325,12 +1325,12 @@ function extractMouthFeature(
   const centerY = (minY + maxY) / 2 + mouthHeight * 0.55;
   const cropWidth = mouthWidth * 1.65;
   const cropHeight = Math.max(mouthHeight * 3.2, cropWidth * 0.7);
-  const sourceX = clamp((centerX - cropWidth / 2) * video.videoWidth, 0, video.videoWidth - 1);
-  const sourceY = clamp((centerY - cropHeight / 2) * video.videoHeight, 0, video.videoHeight - 1);
+  const sourceX = Clamp((centerX - cropWidth / 2) * video.videoWidth, 0, video.videoWidth - 1);
+  const sourceY = Clamp((centerY - cropHeight / 2) * video.videoHeight, 0, video.videoHeight - 1);
   const sourceWidth = Math.min(cropWidth * video.videoWidth, video.videoWidth - sourceX);
   const sourceHeight = Math.min(cropHeight * video.videoHeight, video.videoHeight - sourceY);
   const context = canvas.getContext('2d', { willReadFrequently: true });
-  if (!context) return tf.zeros([MOUTH_FEATURE_WIDTH * MOUTH_FEATURE_HEIGHT]);
+  if (!context) return tf.zeros([mouthFeatureWidth * mouthFeatureHeight]);
   context.save();
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.translate(canvas.width, 0);
@@ -1354,7 +1354,7 @@ function extractMouthFeature(
   });
 }
 
-function mapVideoPointToStage(
+function MapVideoPointToStage(
   normalizedX: number,
   normalizedY: number,
   stageWidth: number,
@@ -1374,17 +1374,17 @@ function mapVideoPointToStage(
   };
 }
 
-function isTongueClass(value: string): value is TongueClass {
+function IsTongueClass(value: string): value is TongueClass {
   return value === 'Rest' || value === 'Tongue_Left' || value === 'Tongue_Right';
 }
 
-function difficultyLabel(config: TongueTrainingSettings): string {
+function DifficultyLabel(config: TongueTrainingSettings): string {
   const pressure = config.appleSpeed / 120 + 1.5 / config.spawnIntervalSec + config.edgeChance;
   if (pressure < 2.15) return 'beginner';
   if (pressure < 3) return 'intermediate';
   return 'advanced';
 }
 
-function randomBetween(min: number, max: number): number {
+function RandomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }

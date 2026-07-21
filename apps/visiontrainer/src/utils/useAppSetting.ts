@@ -1,9 +1,9 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import {
-  APP_SETTINGS_CHANGED_EVENT,
-  STORAGE_PREFIX,
-  getSetting,
-  setSetting,
+  appSettingsChangedEvent,
+  storagePrefix,
+  GetSetting,
+  SetSetting,
 } from './settings';
 import type { AppSettings } from './settings';
 
@@ -18,23 +18,23 @@ export function useAppSetting<K extends keyof AppSettings>(key: K) {
       }
     };
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === null || event.key === `${STORAGE_PREFIX}${key}`) {
+      if (event.key === null || event.key === `${storagePrefix}${key}`) {
         onStoreChange();
       }
     };
 
-    window.addEventListener(APP_SETTINGS_CHANGED_EVENT, handleSettingChange);
+    window.addEventListener(appSettingsChangedEvent, handleSettingChange);
     window.addEventListener('storage', handleStorageChange);
     return () => {
-      window.removeEventListener(APP_SETTINGS_CHANGED_EVENT, handleSettingChange);
+      window.removeEventListener(appSettingsChangedEvent, handleSettingChange);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [key]);
 
-  const getSnapshot = useCallback(() => getSetting(key), [key]);
+  const getSnapshot = useCallback(() => GetSetting(key), [key]);
   const value = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   const updateValue = useCallback((nextValue: AppSettings[K]) => {
-    setSetting(key, nextValue);
+    SetSetting(key, nextValue);
   }, [key]);
 
   return [value, updateValue] as const;

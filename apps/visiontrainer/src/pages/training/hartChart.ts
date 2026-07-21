@@ -1,8 +1,8 @@
-export const HART_GRID_SIZE = 10;
+export const hartGridSize = 10;
 
-const HART_ALPHABET = 'ABCDEFGHKLMNOPQRSTUVWXYZ';
+const hartAlphabet = 'ABCDEFGHKLMNOPQRSTUVWXYZ';
 
-const DECODER_PHRASES = [
+const decoderPhrases = [
   'A glittering gem is not enough',
   'Art does not have to be intentional',
   'Dan ate the clouds like cotton candy',
@@ -32,7 +32,7 @@ export interface HartDecoderToken {
   };
 }
 
-function seededRandom(seed: number): () => number {
+function SeededRandom(seed: number): () => number {
   const modulus = 2 ** 35 - 31;
   const multiplier = 185852;
   let state = Math.abs(Math.trunc(seed)) % modulus;
@@ -43,7 +43,7 @@ function seededRandom(seed: number): () => number {
   };
 }
 
-export function createHartSeed(): number {
+export function CreateHartSeed(): number {
   if (typeof crypto !== 'undefined' && 'getRandomValues' in crypto) {
     const value = new Uint32Array(1);
     crypto.getRandomValues(value);
@@ -53,18 +53,18 @@ export function createHartSeed(): number {
   return Math.floor(Math.random() * 100_000_000);
 }
 
-export function createHartChart(seed: number): HartCell[] {
-  const random = seededRandom(seed);
+export function CreateHartChart(seed: number): HartCell[] {
+  const random = SeededRandom(seed);
   const cells: HartCell[] = [];
   let previous = '';
 
-  for (let row = 1; row <= HART_GRID_SIZE; row += 1) {
-    for (let col = 1; col <= HART_GRID_SIZE; col += 1) {
+  for (let row = 1; row <= hartGridSize; row += 1) {
+    for (let col = 1; col <= hartGridSize; col += 1) {
       let char = previous;
       let attempts = 0;
 
       while (char === previous && attempts < 6) {
-        char = HART_ALPHABET[Math.floor(random() * HART_ALPHABET.length)];
+        char = hartAlphabet[Math.floor(random() * hartAlphabet.length)];
         attempts += 1;
       }
 
@@ -76,12 +76,12 @@ export function createHartChart(seed: number): HartCell[] {
   return cells;
 }
 
-export function createHartDecoder(chart: HartCell[], seed: number): {
+export function CreateHartDecoder(chart: HartCell[], seed: number): {
   phrase: string;
   tokens: HartDecoderToken[];
 } {
-  const random = seededRandom(seed + 48_271);
-  const phrase = DECODER_PHRASES[Math.floor(random() * DECODER_PHRASES.length)];
+  const random = SeededRandom(seed + 48_271);
+  const phrase = decoderPhrases[Math.floor(random() * decoderPhrases.length)];
   const positionsByCharacter = new Map<string, HartCell[]>();
 
   chart.forEach((cell) => {
@@ -107,12 +107,12 @@ export function createHartDecoder(chart: HartCell[], seed: number): {
   return { phrase, tokens };
 }
 
-export function parseHartSeed(value: string | null): number {
+export function ParseHartSeed(value: string | null): number {
   const parsed = Number.parseInt(value ?? '', 10);
-  return Number.isFinite(parsed) ? Math.abs(parsed) % 100_000_000 : createHartSeed();
+  return Number.isFinite(parsed) ? Math.abs(parsed) % 100_000_000 : CreateHartSeed();
 }
 
-export function clampHartScale(value: number): number {
+export function ClampHartScale(value: number): number {
   if (!Number.isFinite(value)) return 1;
   return Math.max(0.65, Math.min(1.45, value));
 }

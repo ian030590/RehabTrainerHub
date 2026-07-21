@@ -1,35 +1,35 @@
 import { Application, Container, Graphics, Text } from 'pixi.js';
 
-export const COGNITIVE_ACCENT_CSS = '#005EB8';
-export const COGNITIVE_ACCENT = 0x005eb8;
-export const COGNITIVE_ACCENT_TINT = 0xe8f3ff;
-export const COGNITIVE_SURFACE = 0xffffff;
-export const COGNITIVE_BG = 0xf2f4f3;
-export const COGNITIVE_BORDER = 0xc2c6d4;
-export const COGNITIVE_TEXT = 0x1a1c1e;
-export const COGNITIVE_TEXT_MUTED = 0x424752;
-export const COGNITIVE_BOARD_RATIO = 0.6;
-const MOBILE_COGNITIVE_MAX_MINOR_AXIS = 640;
+export const cognitiveAccentCss = '#005EB8';
+export const cognitiveAccent = 0x005eb8;
+export const cognitiveAccentTint = 0xe8f3ff;
+export const cognitiveSurface = 0xffffff;
+export const cognitiveBg = 0xf2f4f3;
+export const cognitiveBorder = 0xc2c6d4;
+export const cognitiveText = 0x1a1c1e;
+export const cognitiveTextMuted = 0x424752;
+export const cognitiveBoardRatio = 0.6;
+const mobileCognitiveMaxMinorAxis = 640;
 
-export function drawBackground(app: Application) {
+export function DrawBackground(app: Application) {
   const bg = new Graphics();
-  bg.rect(0, 0, app.renderer.width, app.renderer.height).fill(COGNITIVE_BG);
+  bg.rect(0, 0, app.renderer.width, app.renderer.height).fill(cognitiveBg);
   app.stage.addChild(bg);
 }
 
-export function isMobileCognitiveViewport(app: Application) {
-  return Math.min(app.renderer.width, app.renderer.height) <= MOBILE_COGNITIVE_MAX_MINOR_AXIS;
+export function IsMobileCognitiveViewport(app: Application) {
+  return Math.min(app.renderer.width, app.renderer.height) <= mobileCognitiveMaxMinorAxis;
 }
 
-export function getResponsiveBoardMaxSize(app: Application) {
+export function GetResponsiveBoardMaxSize(app: Application) {
   return {
-    width: app.renderer.width * COGNITIVE_BOARD_RATIO,
-    height: app.renderer.height * COGNITIVE_BOARD_RATIO,
+    width: app.renderer.width * cognitiveBoardRatio,
+    height: app.renderer.height * cognitiveBoardRatio,
   };
 }
 
-export function getResponsiveBoardBounds(app: Application) {
-  const size = getResponsiveBoardMaxSize(app);
+export function GetResponsiveBoardBounds(app: Application) {
+  const size = GetResponsiveBoardMaxSize(app);
   return {
     ...size,
     left: (app.renderer.width - size.width) / 2,
@@ -39,8 +39,8 @@ export function getResponsiveBoardBounds(app: Application) {
   };
 }
 
-export function getGridLayout(app: Application, cols: number, rows: number, _preferredCell: number, gap: number, padding = 0) {
-  const boardBounds = getResponsiveBoardBounds(app);
+export function GetGridLayout(app: Application, cols: number, rows: number, _preferredCell: number, gap: number, padding = 0) {
+  const boardBounds = GetResponsiveBoardBounds(app);
   const maxW = Math.max(1, boardBounds.width - padding * 2);
   const maxH = Math.max(1, boardBounds.height - padding * 2);
   const cell = Math.floor(Math.min((maxW - gap * (cols - 1)) / cols, (maxH - gap * (rows - 1)) / rows));
@@ -54,7 +54,7 @@ export function getGridLayout(app: Application, cols: number, rows: number, _pre
   };
 }
 
-export function addText(container: Container, text: string, x: number, y: number, style: Record<string, unknown>) {
+export function AddText(container: Container, text: string, x: number, y: number, style: Record<string, unknown>) {
   const label = new Text({ text, style });
   label.anchor.set(0.5);
   label.x = x;
@@ -62,12 +62,12 @@ export function addText(container: Container, text: string, x: number, y: number
   container.addChild(label);
 }
 
-export function clearStage(app: Application) {
+export function ClearStage(app: Application) {
   const children = app.stage.removeChildren();
   children.forEach((child) => child.destroy({ children: true }));
 }
 
-export function toggleLights(lights: boolean[][], row: number, col: number) {
+export function ToggleLights(lights: boolean[][], row: number, col: number) {
   const size = lights.length;
   [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dy, dx]) => {
     const y = row + dy;
@@ -77,7 +77,7 @@ export function toggleLights(lights: boolean[][], row: number, col: number) {
   });
 }
 
-export function getSlidingNeighbors(index: number, size: number) {
+export function GetSlidingNeighbors(index: number, size: number) {
   const row = Math.floor(index / size);
   const col = index % size;
   return [
@@ -88,26 +88,26 @@ export function getSlidingNeighbors(index: number, size: number) {
   ].filter((value): value is number => value !== null);
 }
 
-export function isSlidingSolved(tiles: number[]) {
+export function IsSlidingSolved(tiles: number[]) {
   return tiles.every((tile, index) => tile === (index + 1) % tiles.length);
 }
 
-export function average(values: number[]) {
+export function Average(values: number[]) {
   if (values.length === 0) return null;
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
 }
 
-export function randomBetween(min: number, max: number) {
+export function RandomBetween(min: number, max: number) {
   return min + Math.random() * (max - min);
 }
 
-export function getPointerEventTimestamp(event: { timeStamp?: number }) {
+export function GetPointerEventTimestamp(event: { timeStamp?: number }) {
   const now = performance.now();
   const timestamp = Number(event.timeStamp);
   return Number.isFinite(timestamp) && timestamp > 0 && Math.abs(timestamp - now) < 60_000 ? timestamp : now;
 }
 
-export function shuffle<T>(items: T[]) {
+export function Shuffle<T>(items: T[]) {
   const next = [...items];
   for (let i = next.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -116,7 +116,7 @@ export function shuffle<T>(items: T[]) {
   return next;
 }
 
-export function clamp(value: number, min: number, max: number) {
+export function Clamp(value: number, min: number, max: number) {
   if (!Number.isFinite(value)) return min;
   return Math.min(max, Math.max(min, value));
 }

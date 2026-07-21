@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 import { HubShell } from './HubNavigation';
-import { HUB_FULL_NAME, HUB_LOCAL_NAME } from './hubBrand';
-import { createSeoMetadata, organizationJsonLd, siteDescription, websiteJsonLd } from './seo';
+import { hubFullName, hubLocalName } from './hubBrand';
+import { CreateSeoMetadata, organizationJsonLd, siteDescription, websiteJsonLd } from './seo';
 import { siteUrls } from './siteUrls';
 import './globals.css';
 import '@rehab-trainer/ui/components/AuthPanel.css';
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import '@rehab-trainer/ui/components/ReferenceListPage.css';
 
-const rootMetadata = createSeoMetadata({
-  title: HUB_FULL_NAME,
+const rootMetadata = CreateSeoMetadata({
+  title: hubFullName,
   description: siteDescription,
   path: '/',
   absoluteTitle: true,
@@ -19,10 +19,10 @@ export const metadata: Metadata = {
   ...rootMetadata,
   metadataBase: new URL(siteUrls.hub),
   title: {
-    default: HUB_FULL_NAME,
-    template: `%s | ${HUB_LOCAL_NAME}`,
+    default: hubFullName,
+    template: `%s | ${hubLocalName}`,
   },
-  applicationName: HUB_FULL_NAME,
+  applicationName: hubFullName,
   keywords: ['居家訓練網', '居家訓練', '居家復健', '中風復健', '視覺訓練', '認知訓練', 'BrainTrainer', 'brain trainer', '職能治療', '衛教影片', 'Rehab Trainer Hub', 'rehab trainer hub'],
   icons: {
     icon: '/rehabtrainerhub.svg',

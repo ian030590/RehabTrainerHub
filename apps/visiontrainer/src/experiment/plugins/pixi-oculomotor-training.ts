@@ -9,12 +9,12 @@ import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Graphics, Sprite, Text, Texture } from 'pixi.js';
 import { pixiColors, typography } from '../../theme';
 import {
-  attachPixiTrialCanvas,
-  cleanupPixiTrial,
-  createPixiTrialContainer,
-  runPixiTrial,
+  AttachPixiTrialCanvas,
+  CleanupPixiTrial,
+  CreatePixiTrialContainer,
+  RunPixiTrial,
 } from '../../utils/pixiPool';
-import { pixelFromDegree } from '../../utils/spatialUtils';
+import { PixelFromDegree } from '../../utils/spatialUtils';
 import { createRng } from '../../pages/training/oculomotor/random';
 import { sampleOculomotorPatternInto } from '../../pages/training/oculomotor/patterns';
 import type { Arena, OculomotorMode, OculomotorPattern, OculomotorTargetShape, TargetFrame } from '../../pages/training/oculomotor/types';
@@ -109,8 +109,8 @@ const info = {
 
 type Info = typeof info;
 
-const LILAC_DOT_COUNT = 12;
-const FULL_CIRCLE = Math.PI * 2;
+const lilacDotCount = 12;
+const fullCircle = Math.PI * 2;
 
 const modeTitle: Record<OculomotorMode, string> = {
   pursuit: '眼動訓練 · 追視',
@@ -256,9 +256,9 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
 
   constructor(private jsPsych: JsPsych) {}
 
-  trial(display_element: HTMLElement, trial: TrialType<Info>): void {
+  trial(displayElement: HTMLElement, trial: TrialType<Info>): void {
     const self = this;
-    const wrapper = createPixiTrialContainer(display_element);
+    const wrapper = CreatePixiTrialContainer(displayElement);
 
     const mode = trial.mode as OculomotorMode;
     const pattern = trial.pattern as OculomotorPattern;
@@ -294,10 +294,10 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
     let totalTrainingTimeMs = 0;
     let totalAOITimeMs = 0;
     let calibrationPausedMs = 0;
-    const aoiRadiusPx = pixelFromDegree(5);
+    const aoiRadiusPx = PixelFromDegree(5);
 
     const runWithApp = (app: Application) => {
-      attachPixiTrialCanvas(wrapper);
+      AttachPixiTrialCanvas(wrapper);
 
       const startTime = performance.now();
       const bgGfx = new Graphics();
@@ -485,12 +485,12 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         const cy = (arena.height + hudHeight) / 2;
         const orbit = Math.min(arena.width, arena.height - hudHeight) * 0.31;
         const dotRadius = Math.max(8, orbit * 0.13);
-        const hiddenIndex = Math.floor(elapsedSec * 10) % LILAC_DOT_COUNT;
+        const hiddenIndex = Math.floor(elapsedSec * 10) % lilacDotCount;
 
         lilacGfx.clear();
-        for (let i = 0; i < LILAC_DOT_COUNT; i += 1) {
+        for (let i = 0; i < lilacDotCount; i += 1) {
           if (i === hiddenIndex) continue;
-          const angle = -Math.PI / 2 + (i / LILAC_DOT_COUNT) * FULL_CIRCLE;
+          const angle = -Math.PI / 2 + (i / lilacDotCount) * fullCircle;
           lilacGfx
             .circle(cx + Math.cos(angle) * orbit, cy + Math.sin(angle) * orbit, dotRadius)
             .fill({ color: 0xff00fe, alpha: 0.86 });
@@ -508,7 +508,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           audioElement.pause();
           audioElement.currentTime = 0;
         }
-        cleanupPixiTrial(display_element);
+        CleanupPixiTrial(displayElement);
 
         const elapsed = Math.min(durationMs, Math.round(getElapsedMs()));
         const averageFps = frameCount > 0 ? fpsAccumulator / frameCount : 0;
@@ -690,7 +690,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       };
 
       const tick = () => {
-        if (!display_element.isConnected) {
+        if (!displayElement.isConnected) {
           finish('Unmounted');
           return;
         }
@@ -753,7 +753,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       app.ticker.add(tick);
     };
 
-    runPixiTrial(display_element, runWithApp);
+    RunPixiTrial(displayElement, runWithApp);
   }
 }
 

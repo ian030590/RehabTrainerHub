@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 
-function escapeHtml(value: string) {
+function EscapeHtml(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
@@ -19,15 +19,15 @@ export default defineConfig({
         return html.replace(
           '</head>',
           [
-            `  <link rel="canonical" href="${escapeHtml(siteUrl)}" />`,
-            `  <meta property="og:url" content="${escapeHtml(siteUrl)}" />`,
+            `  <link rel="canonical" href="${EscapeHtml(siteUrl)}" />`,
+            `  <meta property="og:url" content="${EscapeHtml(siteUrl)}" />`,
             '  <meta property="og:type" content="website" />',
             '  <meta property="og:site_name" content="Rehab Trainer Hub" />',
-            `  <meta property="og:title" content="${escapeHtml(seoTitle)}" />`,
-            `  <meta property="og:description" content="${escapeHtml(seoDescription)}" />`,
+            `  <meta property="og:title" content="${EscapeHtml(seoTitle)}" />`,
+            `  <meta property="og:description" content="${EscapeHtml(seoDescription)}" />`,
             '  <meta name="twitter:card" content="summary" />',
-            `  <meta name="twitter:title" content="${escapeHtml(seoTitle)}" />`,
-            `  <meta name="twitter:description" content="${escapeHtml(seoDescription)}" />`,
+            `  <meta name="twitter:title" content="${EscapeHtml(seoTitle)}" />`,
+            `  <meta name="twitter:description" content="${EscapeHtml(seoDescription)}" />`,
             '</head>',
           ].join('\n'),
         );

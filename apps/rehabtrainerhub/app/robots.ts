@@ -3,7 +3,7 @@ import { siteUrls } from './siteUrls';
 
 export const dynamic = 'force-static';
 
-export default function robots(): MetadataRoute.Robots {
+export default function Robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',

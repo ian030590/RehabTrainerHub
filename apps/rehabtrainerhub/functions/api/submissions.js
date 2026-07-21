@@ -1,12 +1,12 @@
-import { errorResponse, jsonResponse, optionsResponse, rateLimitResponse, rejectDisallowedOrigin } from '../_lib/auth.js';
+import { ErrorResponse, JsonResponse, OptionsResponse, RateLimitResponse, RejectDisallowedOrigin } from '../_lib/auth.js';
 
-const MAX_TITLE_LENGTH = 80;
-const MAX_NAME_LENGTH = 80;
-const MAX_CONTACT_LENGTH = 120;
-const MAX_DESCRIPTION_LENGTH = 1500;
-const MAX_IDEA_LENGTH = 4000;
-const MAX_HTML_BYTES = 180 * 1024;
-const WEBHOOK_ENV_NAME = 'REHAB_SUBMISSION_WEBHOOK_URL';
+const maxTitleLength = 80;
+const maxNameLength = 80;
+const maxContactLength = 120;
+const maxDescriptionLength = 1500;
+const maxIdeaLength = 4000;
+const maxHtmlBytes = 180 * 1024;
+const webhookEnvName = 'REHAB_SUBMISSION_WEBHOOK_URL';
 
 const submissionMessages = {
   'zh-TW': {
@@ -113,39 +113,39 @@ const forbiddenHtmlPatterns = [
 ];
 
 export function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env);
+  return OptionsResponse(request, env);
 }
 
 export async function onRequestPost({ request, env }) {
-  const originError = rejectDisallowedOrigin(request, env);
+  const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
-  const limitError = await rateLimitResponse(request, env, 'submissions', { limit: 5, windowSeconds: 60 });
+  const limitError = await RateLimitResponse(request, env, 'submissions', { limit: 5, windowSeconds: 60 });
   if (limitError) return limitError;
 
   const form = await request.formData().catch(() => null);
-  if (!form) return errorResponse(request, env, submissionMessages['zh-TW'].invalidForm, 400);
-  const locale = getLocale(form);
+  if (!form) return ErrorResponse(request, env, submissionMessages['zh-TW'].invalidForm, 400);
+  const locale = GetLocale(form);
   const copy = submissionMessages[locale];
 
-  if (cleanText(form.get('website'), 80)) {
-    return jsonResponse(request, env, { ok: true, ignored: true });
+  if (CleanText(form.get('website'), 80)) {
+    return JsonResponse(request, env, { ok: true, ignored: true });
   }
 
-  const type = cleanText(form.get('type'), 16);
-  const title = cleanText(form.get('title'), MAX_TITLE_LENGTH);
-  const name = cleanText(form.get('name'), MAX_NAME_LENGTH);
-  const contact = cleanText(form.get('contact'), MAX_CONTACT_LENGTH);
+  const type = CleanText(form.get('type'), 16);
+  const title = CleanText(form.get('title'), maxTitleLength);
+  const name = CleanText(form.get('name'), maxNameLength);
+  const contact = CleanText(form.get('contact'), maxContactLength);
 
-  if (!['idea', 'demo'].includes(type)) return errorResponse(request, env, copy.invalidType, 400);
-  if (!title) return errorResponse(request, env, copy.titleRequired, 400);
+  if (!['idea', 'demo'].includes(type)) return ErrorResponse(request, env, copy.invalidType, 400);
+  if (!title) return ErrorResponse(request, env, copy.titleRequired, 400);
 
   if (type === 'idea') {
-    const ideaText = cleanText(form.get('ideaText'), MAX_IDEA_LENGTH);
-    if (ideaText.length < 20) return errorResponse(request, env, copy.ideaTooShort, 400);
+    const ideaText = CleanText(form.get('ideaText'), maxIdeaLength);
+    if (ideaText.length < 20) return ErrorResponse(request, env, copy.ideaTooShort, 400);
 
-    const txt = buildIdeaText({ title, name, contact, ideaText });
-    const sendResult = await trySendDiscord(env, {
-      content: buildDiscordContent({
+    const txt = BuildIdeaText({ title, name, contact, ideaText });
+    const sendResult = await TrySendDiscord(env, {
+      content: BuildDiscordContent({
         heading: 'Rehab Trainer Hub 活動想法投稿',
         title,
         name,
@@ -153,35 +153,35 @@ export async function onRequestPost({ request, env }) {
         summary: ideaText,
       }),
       attachment: {
-        filename: `${safeFileBase(title)}-idea.txt`,
+        filename: `${SafeFileBase(title)}-idea.txt`,
         contentType: 'text/plain;charset=utf-8',
         body: txt,
       },
     }, copy.webhookMissing);
-    if (!sendResult.ok) return errorResponse(request, env, sendResult.message, 502);
+    if (!sendResult.ok) return ErrorResponse(request, env, sendResult.message, 502);
 
-    return jsonResponse(request, env, { ok: true });
+    return JsonResponse(request, env, { ok: true });
   }
 
-  const description = cleanText(form.get('description'), MAX_DESCRIPTION_LENGTH);
-  if (description.length < 20) return errorResponse(request, env, copy.descriptionTooShort, 400);
+  const description = CleanText(form.get('description'), maxDescriptionLength);
+  if (description.length < 20) return ErrorResponse(request, env, copy.descriptionTooShort, 400);
 
   const file = form.get('demoFile');
-  if (!isUploadedFile(file)) return errorResponse(request, env, copy.fileRequired, 400);
-  if (!file.name.toLowerCase().endsWith('.html')) return errorResponse(request, env, copy.fileType, 400);
-  if (!file.size || file.size > MAX_HTML_BYTES) return errorResponse(request, env, copy.fileSize, 400);
+  if (!IsUploadedFile(file)) return ErrorResponse(request, env, copy.fileRequired, 400);
+  if (!file.name.toLowerCase().endsWith('.html')) return ErrorResponse(request, env, copy.fileType, 400);
+  if (!file.size || file.size > maxHtmlBytes) return ErrorResponse(request, env, copy.fileSize, 400);
 
   const html = await file.text();
-  const scan = scanHtml(html, locale);
+  const scan = ScanHtml(html, locale);
   if (!scan.ok) {
-    return jsonResponse(request, env, {
+    return JsonResponse(request, env, {
       error: copy.htmlFailed,
       details: scan.messages,
     }, { status: 400 });
   }
 
-  const sendResult = await trySendDiscord(env, {
-    content: buildDiscordContent({
+  const sendResult = await TrySendDiscord(env, {
+    content: BuildDiscordContent({
       heading: 'Rehab Trainer Hub HTML Demo 投稿',
       title,
       name,
@@ -190,20 +190,20 @@ export async function onRequestPost({ request, env }) {
       scanSummary: copy.scanPassed(file.size),
     }),
     attachment: {
-      filename: `${safeFileBase(title)}.html`,
+      filename: `${SafeFileBase(title)}.html`,
       contentType: 'text/html;charset=utf-8',
       body: html,
     },
   }, copy.webhookMissing);
-  if (!sendResult.ok) return errorResponse(request, env, sendResult.message, 502);
+  if (!sendResult.ok) return ErrorResponse(request, env, sendResult.message, 502);
 
-  return jsonResponse(request, env, { ok: true, scan });
+  return JsonResponse(request, env, { ok: true, scan });
 }
 
-export function scanHtml(html, locale = 'zh-TW') {
+export function ScanHtml(html, locale = 'zh-TW') {
   const copy = submissionMessages[locale] || submissionMessages['zh-TW'];
   const messages = [];
-  const normalizedHtml = normalizeHtmlForScan(html);
+  const normalizedHtml = NormalizeHtmlForScan(html);
   const scanTargets = normalizedHtml === html ? [html] : [html, normalizedHtml];
   if (!normalizedHtml || !normalizedHtml.trim()) messages.push(copy.emptyHtml);
   if (!/<!doctype\s+html|<html[\s>]/i.test(normalizedHtml)) messages.push(copy.missingHtmlStructure);
@@ -220,17 +220,17 @@ export function scanHtml(html, locale = 'zh-TW') {
   };
 }
 
-function normalizeHtmlForScan(value) {
+function NormalizeHtmlForScan(value) {
   let normalized = String(value || '').normalize('NFKC');
   for (let pass = 0; pass < 3; pass += 1) {
-    const next = decodeBackslashEscapes(decodeHtmlEntities(normalized)).normalize('NFKC');
+    const next = DecodeBackslashEscapes(DecodeHtmlEntities(normalized)).normalize('NFKC');
     if (next === normalized) break;
     normalized = next;
   }
   return normalized;
 }
 
-function decodeHtmlEntities(value) {
+function DecodeHtmlEntities(value) {
   const namedEntities = {
     amp: '&',
     apos: "'",
@@ -255,15 +255,15 @@ function decodeHtmlEntities(value) {
   });
 }
 
-function decodeBackslashEscapes(value) {
+function DecodeBackslashEscapes(value) {
   return value
-    .replace(/\\u\{([0-9a-f]{1,6})\}/gi, (_, hex) => safeCodePoint(hex))
-    .replace(/\\u([0-9a-f]{4})/gi, (_, hex) => safeCodePoint(hex))
-    .replace(/\\x([0-9a-f]{2})/gi, (_, hex) => safeCodePoint(hex))
-    .replace(/\\([0-9a-f]{1,6})\s?/gi, (_, hex) => safeCodePoint(hex));
+    .replace(/\\u\{([0-9a-f]{1,6})\}/gi, (_, hex) => SafeCodePoint(hex))
+    .replace(/\\u([0-9a-f]{4})/gi, (_, hex) => SafeCodePoint(hex))
+    .replace(/\\x([0-9a-f]{2})/gi, (_, hex) => SafeCodePoint(hex))
+    .replace(/\\([0-9a-f]{1,6})\s?/gi, (_, hex) => SafeCodePoint(hex));
 }
 
-function safeCodePoint(hex) {
+function SafeCodePoint(hex) {
   const codePoint = Number.parseInt(hex, 16);
   if (!Number.isFinite(codePoint) || codePoint < 0 || codePoint > 0x10ffff) return '';
   try {
@@ -273,11 +273,11 @@ function safeCodePoint(hex) {
   }
 }
 
-function getLocale(form) {
-  return cleanText(form.get('locale'), 16) === 'en' ? 'en' : 'zh-TW';
+function GetLocale(form) {
+  return CleanText(form.get('locale'), 16) === 'en' ? 'en' : 'zh-TW';
 }
 
-function cleanText(value, maxLength) {
+function CleanText(value, maxLength) {
   if (typeof value !== 'string') return '';
   return value
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
@@ -285,7 +285,7 @@ function cleanText(value, maxLength) {
     .slice(0, maxLength);
 }
 
-function isUploadedFile(value) {
+function IsUploadedFile(value) {
   return Boolean(
     value &&
     typeof value === 'object' &&
@@ -295,7 +295,7 @@ function isUploadedFile(value) {
   );
 }
 
-function buildIdeaText({ title, name, contact, ideaText }) {
+function BuildIdeaText({ title, name, contact, ideaText }) {
   return [
     `標題：${title}`,
     `姓名或單位：${name || '未提供'}`,
@@ -306,22 +306,22 @@ function buildIdeaText({ title, name, contact, ideaText }) {
   ].join('\n');
 }
 
-function buildDiscordContent({ heading, title, name, contact, summary, scanSummary }) {
+function BuildDiscordContent({ heading, title, name, contact, summary, scanSummary }) {
   const lines = [
-    `**${escapeDiscord(heading)}**`,
-    `標題：${escapeDiscord(title)}`,
-    `姓名或單位：${escapeDiscord(name || '未提供')}`,
-    `聯絡方式：${escapeDiscord(contact || '未提供')}`,
+    `**${EscapeDiscord(heading)}**`,
+    `標題：${EscapeDiscord(title)}`,
+    `姓名或單位：${EscapeDiscord(name || '未提供')}`,
+    `聯絡方式：${EscapeDiscord(contact || '未提供')}`,
   ];
 
-  if (scanSummary) lines.push(`檢查：${escapeDiscord(scanSummary)}`);
-  lines.push('', escapeDiscord(summary).slice(0, 900));
+  if (scanSummary) lines.push(`檢查：${EscapeDiscord(scanSummary)}`);
+  lines.push('', EscapeDiscord(summary).slice(0, 900));
   return lines.join('\n').slice(0, 1900);
 }
 
-async function sendDiscordSubmission(env, { content, attachment }) {
-  const webhookUrl = getWebhookUrl(env);
-  if (!webhookUrl) throw new Error(`${WEBHOOK_ENV_NAME} is not configured.`);
+async function SendDiscordSubmission(env, { content, attachment }) {
+  const webhookUrl = GetWebhookUrl(env);
+  if (!webhookUrl) throw new Error(`${webhookEnvName} is not configured.`);
 
   const body = new FormData();
   body.append('payload_json', JSON.stringify({
@@ -345,9 +345,9 @@ async function sendDiscordSubmission(env, { content, attachment }) {
   }
 }
 
-async function trySendDiscord(env, payload, errorMessage = submissionMessages['zh-TW'].webhookMissing) {
+async function TrySendDiscord(env, payload, errorMessage = submissionMessages['zh-TW'].webhookMissing) {
   try {
-    await sendDiscordSubmission(env, payload);
+    await SendDiscordSubmission(env, payload);
     return { ok: true };
   } catch {
     return {
@@ -357,8 +357,8 @@ async function trySendDiscord(env, payload, errorMessage = submissionMessages['z
   }
 }
 
-function getWebhookUrl(env) {
-  const rawUrl = env[WEBHOOK_ENV_NAME];
+function GetWebhookUrl(env) {
+  const rawUrl = env[webhookEnvName];
   if (!rawUrl) return '';
 
   try {
@@ -372,7 +372,7 @@ function getWebhookUrl(env) {
   }
 }
 
-function safeFileBase(value) {
+function SafeFileBase(value) {
   const normalized = value
     .normalize('NFKD')
     .replace(/[^\p{Letter}\p{Number}]+/gu, '-')
@@ -381,7 +381,7 @@ function safeFileBase(value) {
   return normalized || 'rehab-trainer-hub-submission';
 }
 
-function escapeDiscord(value) {
+function EscapeDiscord(value) {
   return String(value)
     .replace(/@/g, '@\u200b')
     .replace(/`/g, "'");

@@ -1,23 +1,23 @@
 import { Application, Container, Graphics } from 'pixi.js';
-import { CARD_VALUES, MEMORY_CONFIG } from './constants';
+import { cardValues, memoryConfig } from './constants';
 import type { Difficulty, GameResult, MemoryState, ResultStats } from './types';
 import {
-  addText,
-  getGridLayout,
-  isMobileCognitiveViewport,
-  shuffle,
+  AddText,
+  GetGridLayout,
+  IsMobileCognitiveViewport,
+  Shuffle,
 } from './utils';
 
-const MEMORY_BOARD_COLOR = 0x34495e;
-const MEMORY_CARD_FRONT = 0x3498db;
-const MEMORY_CARD_BACK = 0xecf0f1;
-const MEMORY_CARD_MATCHED = 0x2ecc71;
-const MEMORY_TEXT_DARK = '#2c3e50';
+const memoryBoardColor = 0x34495e;
+const memoryCardFront = 0x3498db;
+const memoryCardBack = 0xecf0f1;
+const memoryCardMatched = 0x2ecc71;
+const memoryTextDark = '#2c3e50';
 
-export function createMemoryState(difficulty: Difficulty): MemoryState {
-  const config = MEMORY_CONFIG[difficulty];
-  const values = shuffle(CARD_VALUES).slice(0, config.pairs);
-  const cards = shuffle([...values, ...values]).map((value) => ({ value, revealed: false, matched: false }));
+export function CreateMemoryState(difficulty: Difficulty): MemoryState {
+  const config = memoryConfig[difficulty];
+  const values = Shuffle(cardValues).slice(0, config.pairs);
+  const cards = Shuffle([...values, ...values]).map((value) => ({ value, revealed: false, matched: false }));
   return {
     kind: 'memory-match',
     rows: config.rows,
@@ -32,7 +32,7 @@ export function createMemoryState(difficulty: Difficulty): MemoryState {
   };
 }
 
-export function handleMemoryTap(state: MemoryState, index: number, elapsed: number, finishGame: (result: GameResult) => void) {
+export function HandleMemoryTap(state: MemoryState, index: number, elapsed: number, finishGame: (result: GameResult) => void) {
   if (state.mismatchClearAt !== null || state.flipped.length >= 2) return;
   const card = state.cards[index];
   if (!card || card.revealed || card.matched) return;
@@ -54,7 +54,7 @@ export function handleMemoryTap(state: MemoryState, index: number, elapsed: numb
   }
 }
 
-export function updateMemoryTimedState(state: MemoryState, elapsed: number, render: () => void) {
+export function UpdateMemoryTimedState(state: MemoryState, elapsed: number, render: () => void) {
   if (state.mismatchClearAt === null || elapsed < state.mismatchClearAt) return;
   state.flipped.forEach((index) => {
     if (!state.cards[index].matched) state.cards[index].revealed = false;
@@ -64,11 +64,11 @@ export function updateMemoryTimedState(state: MemoryState, elapsed: number, rend
   render();
 }
 
-export function isMemoryAutoSuccess(state: MemoryState) {
+export function IsMemoryAutoSuccess(state: MemoryState) {
   return state.matchedPairs === state.pairs;
 }
 
-export function buildMemoryResultStats(state: MemoryState): ResultStats {
+export function BuildMemoryResultStats(state: MemoryState): ResultStats {
   const accuracy = state.moves > 0 ? Math.round((state.matchedPairs / state.moves) * 100) : 0;
   return {
     score: Math.max(0, state.matchedPairs * 120 - state.errors * 20 - state.moves * 2),
@@ -81,16 +81,16 @@ export function buildMemoryResultStats(state: MemoryState): ResultStats {
   };
 }
 
-export function drawMemory(app: Application, state: MemoryState, onTap: (index: number) => void) {
-  const padding = isMobileCognitiveViewport(app) ? 10 : 15;
-  const { cell, gap, startX, startY } = getGridLayout(app, state.cols, state.rows, 70, 10, padding);
+export function DrawMemory(app: Application, state: MemoryState, onTap: (index: number) => void) {
+  const padding = IsMobileCognitiveViewport(app) ? 10 : 15;
+  const { cell, gap, startX, startY } = GetGridLayout(app, state.cols, state.rows, 70, 10, padding);
   const board = new Graphics();
   board.rect(
     startX - padding,
     startY - padding,
     state.cols * cell + (state.cols - 1) * gap + padding * 2,
     state.rows * cell + (state.rows - 1) * gap + padding * 2,
-  ).fill(MEMORY_BOARD_COLOR);
+  ).fill(memoryBoardColor);
   app.stage.addChild(board);
 
   state.cards.forEach((card, index) => {
@@ -104,14 +104,14 @@ export function drawMemory(app: Application, state: MemoryState, onTap: (index: 
     node.eventMode = card.matched ? 'none' : 'static';
     node.cursor = card.matched ? 'default' : 'pointer';
     node.on('pointertap', () => onTap(index));
-    const cardColor = card.matched ? MEMORY_CARD_MATCHED : card.revealed ? MEMORY_CARD_BACK : MEMORY_CARD_FRONT;
+    const cardColor = card.matched ? memoryCardMatched : card.revealed ? memoryCardBack : memoryCardFront;
     const g = new Graphics();
     g.rect(0, 0, cell, cell).fill(cardColor);
     node.addChild(g);
-    addText(node, card.revealed || card.matched ? card.value : '?', cell / 2, cell / 2, {
+    AddText(node, card.revealed || card.matched ? card.value : '?', cell / 2, cell / 2, {
       fontSize: Math.max(24, cell * 0.42),
       fontWeight: '400',
-      fill: card.revealed || card.matched ? MEMORY_TEXT_DARK : '#FFFFFF',
+      fill: card.revealed || card.matched ? memoryTextDark : '#FFFFFF',
     });
     app.stage.addChild(node);
   });

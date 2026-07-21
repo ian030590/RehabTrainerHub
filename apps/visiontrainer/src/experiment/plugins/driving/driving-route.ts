@@ -1,13 +1,13 @@
 import type { RouteSegment, Vec2 } from './types';
 
-const TAIPEI_CENTER_LON = 121.5618;
-const TAIPEI_CENTER_LAT = 25.0345;
-const TAIPEI_CENTER_X = 60;
-const TAIPEI_CENTER_Z = 178;
-const METERS_PER_LATITUDE_DEGREE = 111_320;
-const METERS_PER_LONGITUDE_DEGREE = METERS_PER_LATITUDE_DEGREE * Math.cos(TAIPEI_CENTER_LAT * Math.PI / 180);
-const OSM_TO_SCENE_SCALE = 1;
-const URBAN_LANE_WIDTH_M = 3.2;
+const taipeiCenterLon = 121.5618;
+const taipeiCenterLat = 25.0345;
+const taipeiCenterX = 60;
+const taipeiCenterZ = 178;
+const metersPerLatitudeDegree = 111_320;
+const metersPerLongitudeDegree = metersPerLatitudeDegree * Math.cos(taipeiCenterLat * Math.PI / 180);
+const osmToSceneScale = 1;
+const urbanLaneWidthM = 3.2;
 
 interface RouteControlPoint {
   lon: number;
@@ -24,56 +24,56 @@ export interface DrivingRouteVariant {
   points: readonly RouteControlPoint[];
 }
 
-export function projectTaipeiLonLat(lon: number, lat: number): Vec2 {
+export function ProjectTaipeiLonLat(lon: number, lat: number): Vec2 {
   return {
-    x: TAIPEI_CENTER_X + (lon - TAIPEI_CENTER_LON) * METERS_PER_LONGITUDE_DEGREE * OSM_TO_SCENE_SCALE,
-    z: TAIPEI_CENTER_Z - (lat - TAIPEI_CENTER_LAT) * METERS_PER_LATITUDE_DEGREE * OSM_TO_SCENE_SCALE,
+    x: taipeiCenterX + (lon - taipeiCenterLon) * metersPerLongitudeDegree * osmToSceneScale,
+    z: taipeiCenterZ - (lat - taipeiCenterLat) * metersPerLatitudeDegree * osmToSceneScale,
   };
 }
 
-function roadWidthFromLanes(lanes: number, shoulderWidth = 1.2): number {
-  return lanes * URBAN_LANE_WIDTH_M + shoulderWidth;
+function RoadWidthFromLanes(lanes: number, shoulderWidth = 1.2): number {
+  return lanes * urbanLaneWidthM + shoulderWidth;
 }
 
-const XINYI_6_LANE = roadWidthFromLanes(6, 2.4);
-const XINYI_8_LANE = roadWidthFromLanes(8, 2.8);
-const KEELUNG_6_LANE = roadWidthFromLanes(6, 2.4);
-const CITY_HALL_4_LANE = roadWidthFromLanes(4, 1.8);
-const SONGSHOU_4_LANE = roadWidthFromLanes(4, 1.8);
-const SONGZHI_6_LANE = roadWidthFromLanes(6, 2.0);
-const LAST_ROUTE_STORAGE_KEY = 'visiontrainer.driving.lastRouteId';
+const xinyi6Lane = RoadWidthFromLanes(6, 2.4);
+const xinyi8Lane = RoadWidthFromLanes(8, 2.8);
+const keelung6Lane = RoadWidthFromLanes(6, 2.4);
+const cityHall4Lane = RoadWidthFromLanes(4, 1.8);
+const songshou4Lane = RoadWidthFromLanes(4, 1.8);
+const songzhi6Lane = RoadWidthFromLanes(6, 2.0);
+const lastRouteStorageKey = 'visiontrainer.driving.lastRouteId';
 
-const XINYI_3_LANE = XINYI_6_LANE;
-const XINYI_4_LANE = XINYI_8_LANE;
-const KEELUNG_3_LANE = KEELUNG_6_LANE;
-const CITY_HALL_2_LANE = CITY_HALL_4_LANE;
+const xinyi3Lane = xinyi6Lane;
+const xinyi4Lane = xinyi8Lane;
+const keelung3Lane = keelung6Lane;
+const cityHall2Lane = cityHall4Lane;
 
 let lastPickedRouteId: string | null = null;
 
-function getRenderedRoadProfile(point: RouteControlPoint): Pick<RouteControlPoint, 'roadWidth' | 'laneCount' | 'oneWay'> {
+function GetRenderedRoadProfile(point: RouteControlPoint): Pick<RouteControlPoint, 'roadWidth' | 'laneCount' | 'oneWay'> {
   if (point.name.includes('Xinyi Road')) {
     const laneCount = point.laneCount >= 4 ? 8 : 6;
     return {
-      roadWidth: laneCount === 8 ? XINYI_8_LANE : XINYI_6_LANE,
+      roadWidth: laneCount === 8 ? xinyi8Lane : xinyi6Lane,
       laneCount,
       oneWay: false,
     };
   }
 
   if (point.name.includes('Keelung Road')) {
-    return { roadWidth: KEELUNG_6_LANE, laneCount: 6, oneWay: false };
+    return { roadWidth: keelung6Lane, laneCount: 6, oneWay: false };
   }
 
   if (point.name.includes('City Hall Road')) {
-    return { roadWidth: CITY_HALL_4_LANE, laneCount: 4, oneWay: false };
+    return { roadWidth: cityHall4Lane, laneCount: 4, oneWay: false };
   }
 
   if (point.name.includes('Songzhi Road')) {
-    return { roadWidth: SONGZHI_6_LANE, laneCount: 6, oneWay: false };
+    return { roadWidth: songzhi6Lane, laneCount: 6, oneWay: false };
   }
 
   if (point.name.includes('Songshou Road')) {
-    return { roadWidth: SONGSHOU_4_LANE, laneCount: 4, oneWay: false };
+    return { roadWidth: songshou4Lane, laneCount: 4, oneWay: false };
   }
 
   return {
@@ -87,7 +87,7 @@ const keelungToXinyiEastDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5576717,
     lat: 25.0297961,
-    roadWidth: KEELUNG_3_LANE,
+    roadWidth: keelung3Lane,
     laneCount: 3,
     oneWay: true,
     name: 'Keelung Road Section 2',
@@ -95,7 +95,7 @@ const keelungToXinyiEastDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5589772,
     lat: 25.0318959,
-    roadWidth: KEELUNG_3_LANE,
+    roadWidth: keelung3Lane,
     laneCount: 3,
     oneWay: true,
     name: 'Keelung Road Section 2',
@@ -103,7 +103,7 @@ const keelungToXinyiEastDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5590422,
     lat: 25.0320558,
-    roadWidth: KEELUNG_3_LANE,
+    roadWidth: keelung3Lane,
     laneCount: 3,
     oneWay: true,
     name: 'Keelung Road Section 2',
@@ -111,7 +111,7 @@ const keelungToXinyiEastDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5596234,
     lat: 25.0329882,
-    roadWidth: XINYI_3_LANE,
+    roadWidth: xinyi3Lane,
     laneCount: 3,
     oneWay: true,
     name: 'Xinyi Road Section 5',
@@ -119,7 +119,7 @@ const keelungToXinyiEastDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5597077,
     lat: 25.0331059,
-    roadWidth: XINYI_3_LANE,
+    roadWidth: xinyi3Lane,
     laneCount: 3,
     oneWay: true,
     name: 'Xinyi Road Section 5',
@@ -127,7 +127,7 @@ const keelungToXinyiEastDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5599064,
     lat: 25.0330834,
-    roadWidth: XINYI_3_LANE,
+    roadWidth: xinyi3Lane,
     laneCount: 3,
     oneWay: true,
     name: 'Xinyi Road Section 5',
@@ -135,7 +135,7 @@ const keelungToXinyiEastDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5654166,
     lat: 25.032958,
-    roadWidth: XINYI_4_LANE,
+    roadWidth: xinyi4Lane,
     laneCount: 4,
     oneWay: true,
     name: 'Xinyi Road Section 5',
@@ -143,7 +143,7 @@ const keelungToXinyiEastDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.568228,
     lat: 25.0327688,
-    roadWidth: XINYI_4_LANE,
+    roadWidth: xinyi4Lane,
     laneCount: 4,
     oneWay: true,
     name: 'Xinyi Road Section 5',
@@ -154,7 +154,7 @@ const songzhiNorthDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5596234,
     lat: 25.0329882,
-    roadWidth: XINYI_3_LANE,
+    roadWidth: xinyi3Lane,
     laneCount: 3,
     oneWay: true,
     name: 'Xinyi Road Section 5',
@@ -162,7 +162,7 @@ const songzhiNorthDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5599064,
     lat: 25.0330834,
-    roadWidth: XINYI_3_LANE,
+    roadWidth: xinyi3Lane,
     laneCount: 3,
     oneWay: true,
     name: 'Xinyi Road Section 5',
@@ -170,7 +170,7 @@ const songzhiNorthDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5654166,
     lat: 25.032958,
-    roadWidth: XINYI_4_LANE,
+    roadWidth: xinyi4Lane,
     laneCount: 4,
     oneWay: true,
     name: 'Xinyi Road Section 5',
@@ -178,7 +178,7 @@ const songzhiNorthDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5654166,
     lat: 25.032958,
-    roadWidth: SONGZHI_6_LANE,
+    roadWidth: songzhi6Lane,
     laneCount: 6,
     oneWay: false,
     name: 'Songzhi Road',
@@ -186,7 +186,7 @@ const songzhiNorthDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5654635,
     lat: 25.0358704,
-    roadWidth: SONGSHOU_4_LANE,
+    roadWidth: songshou4Lane,
     laneCount: 4,
     oneWay: false,
     name: 'Songshou Road',
@@ -194,7 +194,7 @@ const songzhiNorthDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5635641,
     lat: 25.035905,
-    roadWidth: CITY_HALL_2_LANE,
+    roadWidth: cityHall2Lane,
     laneCount: 2,
     oneWay: true,
     name: 'City Hall Road',
@@ -205,7 +205,7 @@ const songshouToCityHallDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5654635,
     lat: 25.0358704,
-    roadWidth: SONGSHOU_4_LANE,
+    roadWidth: songshou4Lane,
     laneCount: 4,
     oneWay: false,
     name: 'Songshou Road',
@@ -213,7 +213,7 @@ const songshouToCityHallDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5635641,
     lat: 25.035905,
-    roadWidth: SONGSHOU_4_LANE,
+    roadWidth: songshou4Lane,
     laneCount: 4,
     oneWay: false,
     name: 'Songshou Road',
@@ -221,7 +221,7 @@ const songshouToCityHallDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5636052,
     lat: 25.0357702,
-    roadWidth: CITY_HALL_2_LANE,
+    roadWidth: cityHall2Lane,
     laneCount: 2,
     oneWay: true,
     name: 'City Hall Road',
@@ -229,25 +229,25 @@ const songshouToCityHallDelivery: readonly RouteControlPoint[] = [
   {
     lon: 121.5635362,
     lat: 25.0330043,
-    roadWidth: XINYI_3_LANE,
+    roadWidth: xinyi3Lane,
     laneCount: 3,
     oneWay: true,
     name: 'Xinyi Road Section 5',
   },
 ];
 
-export const DRIVING_ROUTE_VARIANTS: readonly DrivingRouteVariant[] = [
+export const drivingRouteVariants: readonly DrivingRouteVariant[] = [
   { id: 'keelung-to-xinyi-east', label: 'Keelung to Xinyi east', points: keelungToXinyiEastDelivery },
   { id: 'songzhi-north-delivery', label: 'Songzhi north delivery', points: songzhiNorthDelivery },
   { id: 'songshou-to-city-hall', label: 'Songshou to City Hall', points: songshouToCityHallDelivery },
 ];
 
-function buildRoute(points: readonly RouteControlPoint[]): RouteSegment[] {
+function BuildRoute(points: readonly RouteControlPoint[]): RouteSegment[] {
   const segments: RouteSegment[] = [];
   for (let i = 0; i < points.length - 1; i += 1) {
-    const start = projectTaipeiLonLat(points[i].lon, points[i].lat);
-    const end = projectTaipeiLonLat(points[i + 1].lon, points[i + 1].lat);
-    const roadProfile = getRenderedRoadProfile(points[i]);
+    const start = ProjectTaipeiLonLat(points[i].lon, points[i].lat);
+    const end = ProjectTaipeiLonLat(points[i + 1].lon, points[i + 1].lat);
+    const roadProfile = GetRenderedRoadProfile(points[i]);
     const dx = end.x - start.x;
     const dz = end.z - start.z;
     const length = Math.hypot(dx, dz);
@@ -262,10 +262,10 @@ function buildRoute(points: readonly RouteControlPoint[]): RouteSegment[] {
       name: points[i].name,
     });
   }
-  return alignRouteStartToNegativeZ(segments);
+  return AlignRouteStartToNegativeZ(segments);
 }
 
-function rotateVec2(point: Vec2, radians: number): Vec2 {
+function RotateVec2(point: Vec2, radians: number): Vec2 {
   const cos = Math.cos(radians);
   const sin = Math.sin(radians);
   return {
@@ -274,7 +274,7 @@ function rotateVec2(point: Vec2, radians: number): Vec2 {
   };
 }
 
-function normalizeVec2(point: Vec2): Vec2 {
+function NormalizeVec2(point: Vec2): Vec2 {
   const length = Math.hypot(point.x, point.z) || 1;
   return {
     x: point.x / length,
@@ -282,7 +282,7 @@ function normalizeVec2(point: Vec2): Vec2 {
   };
 }
 
-function alignRouteStartToNegativeZ(segments: RouteSegment[]): RouteSegment[] {
+function AlignRouteStartToNegativeZ(segments: RouteSegment[]): RouteSegment[] {
   const first = segments[0];
   if (!first) return segments;
 
@@ -292,39 +292,39 @@ function alignRouteStartToNegativeZ(segments: RouteSegment[]): RouteSegment[] {
 
   return segments.map((segment) => ({
     ...segment,
-    start: rotateVec2(
+    start: RotateVec2(
       {
         x: segment.start.x - origin.x,
         z: segment.start.z - origin.z,
       },
       rotation,
     ),
-    dir: normalizeVec2(rotateVec2(segment.dir, rotation)),
+    dir: NormalizeVec2(RotateVec2(segment.dir, rotation)),
   }));
 }
 
-export function buildDrivingRoute(variant: DrivingRouteVariant): RouteSegment[] {
-  return buildRoute(variant.points);
+export function BuildDrivingRoute(variant: DrivingRouteVariant): RouteSegment[] {
+  return BuildRoute(variant.points);
 }
 
-export function pickRandomDrivingRoute(): DrivingRouteVariant {
+export function PickRandomDrivingRoute(): DrivingRouteVariant {
   let storedLastRouteId: string | null = null;
   try {
     storedLastRouteId = typeof window !== 'undefined'
-      ? window.localStorage?.getItem(LAST_ROUTE_STORAGE_KEY)
+      ? window.localStorage?.getItem(lastRouteStorageKey)
       : null;
   } catch {
     storedLastRouteId = null;
   }
   const previousRouteId = lastPickedRouteId ?? storedLastRouteId;
-  const candidates = DRIVING_ROUTE_VARIANTS.length > 1
-    ? DRIVING_ROUTE_VARIANTS.filter((route) => route.id !== previousRouteId)
-    : DRIVING_ROUTE_VARIANTS;
-  const selected = candidates[Math.floor(Math.random() * candidates.length)] ?? DRIVING_ROUTE_VARIANTS[0];
+  const candidates = drivingRouteVariants.length > 1
+    ? drivingRouteVariants.filter((route) => route.id !== previousRouteId)
+    : drivingRouteVariants;
+  const selected = candidates[Math.floor(Math.random() * candidates.length)] ?? drivingRouteVariants[0];
   lastPickedRouteId = selected.id;
   try {
     if (typeof window !== 'undefined') {
-      window.localStorage?.setItem(LAST_ROUTE_STORAGE_KEY, selected.id);
+      window.localStorage?.setItem(lastRouteStorageKey, selected.id);
     }
   } catch {
     // Private browsing or storage policy can reject localStorage.
@@ -332,4 +332,4 @@ export function pickRandomDrivingRoute(): DrivingRouteVariant {
   return selected;
 }
 
-export const DRIVING_ROUTE: readonly RouteSegment[] = buildDrivingRoute(DRIVING_ROUTE_VARIANTS[0]);
+export const drivingRoute: readonly RouteSegment[] = BuildDrivingRoute(drivingRouteVariants[0]);

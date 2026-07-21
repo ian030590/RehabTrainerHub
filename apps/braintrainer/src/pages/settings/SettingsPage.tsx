@@ -1,22 +1,22 @@
 import { useState } from 'react';
 import { useT, type Language } from '../../i18n';
 import {
-  DEFAULT_UI_FONT_SIZE_PX,
-  MAX_UI_FONT_SIZE_PX,
-  MIN_UI_FONT_SIZE_PX,
+  defaultUiFontSizePx,
+  maxUiFontSizePx,
+  minUiFontSizePx,
   type UiTheme,
-  getSetting,
-  setSetting,
+  GetSetting,
+  SetSetting,
 } from '../../utils/settings';
 
 const themes: UiTheme[] = ['light', 'dark', 'contrast'];
 
 export function SettingsPage() {
   const { lang, setLang, t } = useT();
-  const [fontSize, setFontSize] = useState(() => getSetting('uiFontSizePx'));
-  const [bold, setBold] = useState(() => getSetting('uiFontBold'));
-  const [theme, setTheme] = useState(() => getSetting('uiTheme'));
-  const [auditoryFeedbackEnabled, setAuditoryFeedbackEnabled] = useState(() => getSetting('auditoryFeedbackEnabled'));
+  const [fontSize, setFontSize] = useState(() => GetSetting('uiFontSizePx'));
+  const [bold, setBold] = useState(() => GetSetting('uiFontBold'));
+  const [theme, setTheme] = useState(() => GetSetting('uiTheme'));
+  const [auditoryFeedbackEnabled, setAuditoryFeedbackEnabled] = useState(() => GetSetting('auditoryFeedbackEnabled'));
 
   const updateLanguage = (nextLang: Language) => {
     setLang(nextLang);
@@ -24,26 +24,26 @@ export function SettingsPage() {
 
   const updateFontSize = (nextSize: number) => {
     setFontSize(nextSize);
-    setSetting('uiFontSizePx', nextSize);
+    SetSetting('uiFontSizePx', nextSize);
   };
 
   const updateBold = (nextBold: boolean) => {
     setBold(nextBold);
-    setSetting('uiFontBold', nextBold);
+    SetSetting('uiFontBold', nextBold);
   };
 
   const updateTheme = (nextTheme: UiTheme) => {
     setTheme(nextTheme);
-    setSetting('uiTheme', nextTheme);
+    SetSetting('uiTheme', nextTheme);
   };
 
   const updateAuditoryFeedback = (nextEnabled: boolean) => {
     setAuditoryFeedbackEnabled(nextEnabled);
-    setSetting('auditoryFeedbackEnabled', nextEnabled);
+    SetSetting('auditoryFeedbackEnabled', nextEnabled);
   };
 
   const resetSettings = () => {
-    updateFontSize(DEFAULT_UI_FONT_SIZE_PX);
+    updateFontSize(defaultUiFontSizePx);
     updateBold(false);
     updateTheme('light');
     updateAuditoryFeedback(true);
@@ -90,7 +90,7 @@ export function SettingsPage() {
             <button
               type="button"
               className="btn btn-sm btn-secondary"
-              disabled={fontSize <= MIN_UI_FONT_SIZE_PX}
+              disabled={fontSize <= minUiFontSizePx}
               aria-label={t('settings.fontSize.decrease')}
               onClick={() => updateFontSize(fontSize - 1)}
             >
@@ -102,7 +102,7 @@ export function SettingsPage() {
             <button
               type="button"
               className="btn btn-sm btn-secondary"
-              disabled={fontSize >= MAX_UI_FONT_SIZE_PX}
+              disabled={fontSize >= maxUiFontSizePx}
               aria-label={t('settings.fontSize.increase')}
               onClick={() => updateFontSize(fontSize + 1)}
             >
@@ -111,7 +111,7 @@ export function SettingsPage() {
             <button
               type="button"
               className="btn btn-sm btn-ghost"
-              onClick={() => updateFontSize(DEFAULT_UI_FONT_SIZE_PX)}
+              onClick={() => updateFontSize(defaultUiFontSizePx)}
             >
               {t('settings.fontSize.reset')}
             </button>

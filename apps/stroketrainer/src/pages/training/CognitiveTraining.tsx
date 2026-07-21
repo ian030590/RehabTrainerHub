@@ -7,7 +7,7 @@ import {
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
 import { useT } from '../../i18n';
-import { REFERENCE_COGNITIVE_MODULES } from './cognitive/constants';
+import { referenceCognitiveModules } from './cognitive/constants';
 import type { ReferenceGameId } from './cognitive/types';
 
 const MinesweeperGame = lazy(() => import('./MinesweeperGame').then((module) => ({ default: module.MinesweeperGame })));
@@ -19,7 +19,7 @@ export function CognitiveTraining() {
   const { t } = useT();
   const [searchParams] = useSearchParams();
   const requestedGameId = searchParams.get('game');
-  const requestedModule = getRequestedModule(requestedGameId);
+  const requestedModule = GetRequestedModule(requestedGameId);
   const { activeModule, openModule, closeModule } = useRoutedTrainingModule<CognitiveModuleId>({
     requestedModule,
     basePath: '/cognitive-training',
@@ -30,7 +30,7 @@ export function CognitiveTraining() {
       title: t('training.minesweeper.title'),
       description: t('training.minesweeper.desc'),
     },
-    ...REFERENCE_COGNITIVE_MODULES.map<TrainingModuleSelectionItem<CognitiveModuleId>>((module) => ({
+    ...referenceCognitiveModules.map<TrainingModuleSelectionItem<CognitiveModuleId>>((module) => ({
       id: module.id,
       title: t(module.titleKey),
       description: t(module.descriptionKey),
@@ -41,7 +41,7 @@ export function CognitiveTraining() {
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
       {activeModule === 'minesweeper'
         ? <MinesweeperGame onExit={closeModule} />
-        : activeModule && isReferenceGameId(activeModule)
+        : activeModule && IsReferenceGameId(activeModule)
           ? <ReferenceCognitiveGame gameId={activeModule} onExit={closeModule} />
           : null}
     </Suspense>
@@ -62,12 +62,12 @@ export function CognitiveTraining() {
   );
 }
 
-function getRequestedModule(requestedGameId: string | null): CognitiveModuleId | null {
+function GetRequestedModule(requestedGameId: string | null): CognitiveModuleId | null {
   if (requestedGameId === 'minesweeper') return 'minesweeper';
-  if (isReferenceGameId(requestedGameId)) return requestedGameId;
+  if (IsReferenceGameId(requestedGameId)) return requestedGameId;
   return null;
 }
 
-function isReferenceGameId(value: string | null): value is ReferenceGameId {
-  return REFERENCE_COGNITIVE_MODULES.some((module) => module.id === value);
+function IsReferenceGameId(value: string | null): value is ReferenceGameId {
+  return referenceCognitiveModules.some((module) => module.id === value);
 }

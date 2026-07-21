@@ -2,16 +2,16 @@ import { Suspense, lazy, useLayoutEffect } from 'react';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
 import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
-import { applyDisplaySettings } from '@rehab-trainer/ui/settings/displaySettings';
+import { ApplyDisplaySettings } from '@rehab-trainer/ui/settings/displaySettings';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
 import { ModulePage } from './pages/ModulePage';
 import { siteUrls } from './utils/siteUrls';
 import {
-  DEFAULT_UI_FONT_SIZE_PX,
-  SETTINGS_CHANGED_EVENT,
-  getSetting,
+  defaultUiFontSizePx,
+  settingsChangedEvent,
+  GetSetting,
 } from './utils/settings';
 
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
@@ -76,19 +76,19 @@ function AppLayout() {
 
   useLayoutEffect(() => {
     const applySettings = () => {
-      applyDisplaySettings({
-        fontSizePx: getSetting('uiFontSizePx'),
-        defaultFontSizePx: DEFAULT_UI_FONT_SIZE_PX,
-        fontBold: getSetting('uiFontBold'),
-        uiTheme: getSetting('uiTheme'),
+      ApplyDisplaySettings({
+        fontSizePx: GetSetting('uiFontSizePx'),
+        defaultFontSizePx: defaultUiFontSizePx,
+        fontBold: GetSetting('uiFontBold'),
+        uiTheme: GetSetting('uiTheme'),
       });
     };
 
     applySettings();
-    window.addEventListener(SETTINGS_CHANGED_EVENT, applySettings);
+    window.addEventListener(settingsChangedEvent, applySettings);
     window.addEventListener('storage', applySettings);
     return () => {
-      window.removeEventListener(SETTINGS_CHANGED_EVENT, applySettings);
+      window.removeEventListener(settingsChangedEvent, applySettings);
       window.removeEventListener('storage', applySettings);
     };
   }, []);

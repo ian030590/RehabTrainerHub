@@ -7,14 +7,14 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appsRoot = join(repoRoot, 'apps');
 const wranglerPrefix = ['--yes', 'wrangler@4'];
-const CLOUDFLARE_PAGES_ASSET_LIMIT_BYTES = 25 * 1024 * 1024;
-const DEPLOY_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes per deploy
+const cloudflarePagesAssetLimitBytes = 25 * 1024 * 1024;
+const deployTimeoutMs = 5 * 60 * 1000; // 5 minutes per deploy
 
-function toPosixPath(path) {
+function ToPosixPath(path) {
   return path.replaceAll('\\', '/');
 }
 
-function getArg(name) {
+function GetArg(name) {
   const prefix = `${name}=`;
   const inline = process.argv.find((arg) => arg.startsWith(prefix));
   if (inline) {
@@ -25,19 +25,19 @@ function getArg(name) {
   return index >= 0 ? process.argv[index + 1] : undefined;
 }
 
-const branch = getArg('--branch') ?? process.env.GITHUB_REF_NAME ?? 'main';
+const branch = GetArg('--branch') ?? process.env.GITHUB_REF_NAME ?? 'main';
 const productionBranch =
-  getArg('--production-branch') ?? process.env.CLOUDFLARE_PAGES_PRODUCTION_BRANCH ?? 'main';
+  GetArg('--production-branch') ?? process.env.CLOUDFLARE_PAGES_PRODUCTION_BRANCH ?? 'main';
 const dryRun = process.argv.includes('--dry-run');
 const validateOutput = !dryRun || process.argv.includes('--validate-output');
 const syncAuthEnv = !process.argv.includes('--skip-auth-env-sync');
 
-function readTomlString(toml, key) {
+function ReadTomlString(toml, key) {
   const match = toml.match(new RegExp(`^\\s*${key}\\s*=\\s*["']([^"']+)["']\\s*$`, 'm'));
   return match?.[1];
 }
 
-function discoverPagesProjects() {
+function DiscoverPagesProjects() {
   return readdirSync(appsRoot)
     .map((entry) => join(appsRoot, entry))
     .filter((entryPath) => statSync(entryPath).isDirectory())
@@ -49,30 +49,30 @@ function discoverPagesProjects() {
 
       const packagePath = join(appDir, 'package.json');
       if (!existsSync(packagePath)) {
-        throw new Error(`${toPosixPath(relative(repoRoot, appDir))} has wrangler.toml but no package.json.`);
+        throw new Error(`${ToPosixPath(relative(repoRoot, appDir))} has wrangler.toml but no package.json.`);
       }
 
       const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
       if (!pkg.scripts?.build) {
-        throw new Error(`${toPosixPath(relative(repoRoot, packagePath))} must define scripts.build.`);
+        throw new Error(`${ToPosixPath(relative(repoRoot, packagePath))} must define scripts.build.`);
       }
 
       const toml = readFileSync(wranglerPath, 'utf8');
-      const projectName = readTomlString(toml, 'name');
-      const outputDir = readTomlString(toml, 'pages_build_output_dir');
-      const compatibilityDate = readTomlString(toml, 'compatibility_date');
-      const databaseName = readTomlString(toml, 'database_name');
-      const migrationsDir = readTomlString(toml, 'migrations_dir');
+      const projectName = ReadTomlString(toml, 'name');
+      const outputDir = ReadTomlString(toml, 'pages_build_output_dir');
+      const compatibilityDate = ReadTomlString(toml, 'compatibility_date');
+      const databaseName = ReadTomlString(toml, 'database_name');
+      const migrationsDir = ReadTomlString(toml, 'migrations_dir');
 
       if (!projectName) {
-        throw new Error(`${toPosixPath(relative(repoRoot, wranglerPath))} must define name.`);
+        throw new Error(`${ToPosixPath(relative(repoRoot, wranglerPath))} must define name.`);
       }
 
       if (!outputDir) {
-        throw new Error(`${toPosixPath(relative(repoRoot, wranglerPath))} must define pages_build_output_dir.`);
+        throw new Error(`${ToPosixPath(relative(repoRoot, wranglerPath))} must define pages_build_output_dir.`);
       }
 
-      const appPath = toPosixPath(relative(repoRoot, appDir));
+      const appPath = ToPosixPath(relative(repoRoot, appDir));
 
       return {
         appPath,
@@ -80,7 +80,7 @@ function discoverPagesProjects() {
         databaseName,
         hasD1Migrations: Boolean(databaseName && migrationsDir),
         outputDir,
-        outputPath: toPosixPath(join(appPath, outputDir)),
+        outputPath: ToPosixPath(join(appPath, outputDir)),
         projectName,
       };
     })
@@ -88,20 +88,20 @@ function discoverPagesProjects() {
     .sort((a, b) => a.appPath.localeCompare(b.appPath));
 }
 
-function shellQuote(value) {
+function ShellQuote(value) {
   return /[\s"'`$]/.test(value) ? JSON.stringify(value) : value;
 }
 
-function runWrangler(args, options = {}) {
+function RunWrangler(args, options = {}) {
   const commandArgs = [...wranglerPrefix, ...args];
-  console.log(`$ npx ${commandArgs.map(shellQuote).join(' ')}`);
+  console.log(`$ npx ${commandArgs.map(ShellQuote).join(' ')}`);
 
   if (dryRun) {
     return '';
   }
 
   const shouldCapture = options.capture || options.allowProjectAlreadyExists;
-  const command = getCommand('npx', commandArgs);
+  const command = GetCommand('npx', commandArgs);
   const spawnOptions = {
     cwd: repoRoot,
     encoding: shouldCapture ? 'utf8' : undefined,
@@ -134,7 +134,7 @@ function runWrangler(args, options = {}) {
       : `exit code ${result.status}`;
 
     const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
-    if (options.allowProjectAlreadyExists && isProjectAlreadyExistsOutput(output)) {
+    if (options.allowProjectAlreadyExists && IsProjectAlreadyExistsOutput(output)) {
       return result.stdout ?? '';
     }
 
@@ -149,11 +149,11 @@ function runWrangler(args, options = {}) {
   return result.stdout ?? '';
 }
 
-function isProjectAlreadyExistsOutput(output) {
+function IsProjectAlreadyExistsOutput(output) {
   return output.includes('8000002') || /project with this name already exists/i.test(output);
 }
 
-function getCommand(file, args) {
+function GetCommand(file, args) {
   if (process.platform !== 'win32') {
     return { file, args };
   }
@@ -164,7 +164,7 @@ function getCommand(file, args) {
   };
 }
 
-function parseJsonOutput(output) {
+function ParseJsonOutput(output) {
   const firstBrace = output.indexOf('{');
   const firstBracket = output.indexOf('[');
   const starts = [firstBrace, firstBracket].filter((index) => index >= 0);
@@ -178,7 +178,7 @@ function parseJsonOutput(output) {
   return JSON.parse(output.slice(start, end + 1));
 }
 
-function getProjectItems(payload) {
+function GetProjectItems(payload) {
   if (Array.isArray(payload)) {
     return payload;
   }
@@ -192,14 +192,14 @@ function getProjectItems(payload) {
   return [];
 }
 
-function listExistingProjectNames() {
+function ListExistingProjectNames() {
   if (dryRun) {
     return new Set();
   }
 
   try {
-    const output = runWrangler(['pages', 'project', 'list', '--json'], { capture: true });
-    const items = getProjectItems(parseJsonOutput(output));
+    const output = RunWrangler(['pages', 'project', 'list', '--json'], { capture: true });
+    const items = GetProjectItems(ParseJsonOutput(output));
 
     const names = new Set(
       items
@@ -218,7 +218,7 @@ function listExistingProjectNames() {
   }
 }
 
-function ensureProject(project, existingProjectNames) {
+function EnsureProject(project, existingProjectNames) {
   if (existingProjectNames.has(project.projectName)) {
     console.log(`Cloudflare Pages project exists: ${project.projectName}`);
     return;
@@ -236,11 +236,11 @@ function ensureProject(project, existingProjectNames) {
     args.push(`--compatibility-date=${project.compatibilityDate}`);
   }
 
-  runWrangler(args, { allowProjectAlreadyExists: true });
+  RunWrangler(args, { allowProjectAlreadyExists: true });
   existingProjectNames.add(project.projectName);
 }
 
-function deployProject(project, attempt = 1) {
+function DeployProject(project, attempt = 1) {
   const maxAttempts = 3;
   const args = [
     `--cwd=${project.appPath}`,
@@ -252,7 +252,7 @@ function deployProject(project, attempt = 1) {
   ];
 
   try {
-    runWrangler(args, { timeout: DEPLOY_TIMEOUT_MS });
+    RunWrangler(args, { timeout: deployTimeoutMs });
   } catch (error) {
     console.error(`\n❌ Deploy failed for ${project.projectName} (attempt ${attempt}/${maxAttempts}): ${error.message}`);
 
@@ -260,17 +260,17 @@ function deployProject(project, attempt = 1) {
       const delaySec = attempt * 10;
       console.log(`⏳ Retrying in ${delaySec}s...`);
       spawnSync(process.platform === 'win32' ? 'timeout' : 'sleep', [String(delaySec)], { stdio: 'ignore' });
-      return deployProject(project, attempt + 1);
+      return DeployProject(project, attempt + 1);
     }
 
     throw error;
   }
 }
 
-function applyProjectMigrations(project) {
+function ApplyProjectMigrations(project) {
   if (!project.hasD1Migrations) return;
 
-  runWrangler([
+  RunWrangler([
     `--cwd=${project.appPath}`,
     'd1',
     'migrations',
@@ -280,7 +280,7 @@ function applyProjectMigrations(project) {
   ]);
 }
 
-function syncAuthEnvironment() {
+function SyncAuthEnvironment() {
   if (!syncAuthEnv) {
     console.log('Skipping auth environment sync.');
     return;
@@ -288,7 +288,7 @@ function syncAuthEnvironment() {
 
   const args = ['scripts/sync-cloudflare-auth-env.mjs'];
   if (dryRun) args.push('--dry-run');
-  console.log(`$ node ${args.map(shellQuote).join(' ')}`);
+  console.log(`$ node ${args.map(ShellQuote).join(' ')}`);
   if (dryRun) {
     const result = spawnSync(process.execPath, args, {
       cwd: repoRoot,
@@ -315,7 +315,7 @@ function syncAuthEnvironment() {
   }
 }
 
-function validateProjectOutput(project) {
+function ValidateProjectOutput(project) {
   const absoluteOutputPath = join(repoRoot, project.outputPath);
   if (!existsSync(absoluteOutputPath)) {
     throw new Error(
@@ -323,10 +323,10 @@ function validateProjectOutput(project) {
     );
   }
 
-  const oversizedFiles = findOversizedFiles(absoluteOutputPath);
+  const oversizedFiles = FindOversizedFiles(absoluteOutputPath);
   if (oversizedFiles.length > 0) {
     const details = oversizedFiles
-      .map((file) => `${toPosixPath(relative(repoRoot, file.path))} (${formatMiB(file.size)})`)
+      .map((file) => `${ToPosixPath(relative(repoRoot, file.path))} (${FormatMiB(file.size)})`)
       .join('\n');
     throw new Error(
       [
@@ -338,14 +338,14 @@ function validateProjectOutput(project) {
   }
 }
 
-function findOversizedFiles(directory) {
+function FindOversizedFiles(directory) {
   const entries = readdirSync(directory, { withFileTypes: true });
   const files = [];
 
   for (const entry of entries) {
     const entryPath = join(directory, entry.name);
     if (entry.isDirectory()) {
-      files.push(...findOversizedFiles(entryPath));
+      files.push(...FindOversizedFiles(entryPath));
       continue;
     }
     if (!entry.isFile()) {
@@ -353,7 +353,7 @@ function findOversizedFiles(directory) {
     }
 
     const entryStat = statSync(entryPath);
-    if (entryStat.size > CLOUDFLARE_PAGES_ASSET_LIMIT_BYTES) {
+    if (entryStat.size > cloudflarePagesAssetLimitBytes) {
       files.push({ path: entryPath, size: entryStat.size });
     }
   }
@@ -361,11 +361,11 @@ function findOversizedFiles(directory) {
   return files;
 }
 
-function formatMiB(bytes) {
+function FormatMiB(bytes) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
 }
 
-const projects = discoverPagesProjects();
+const projects = DiscoverPagesProjects();
 
 if (projects.length === 0) {
   throw new Error('No Cloudflare Pages apps found under apps/*/wrangler.toml.');
@@ -378,22 +378,22 @@ for (const project of projects) {
 
 if (validateOutput) {
   for (const project of projects) {
-    validateProjectOutput(project);
+    ValidateProjectOutput(project);
   }
 }
 
-const existingProjectNames = listExistingProjectNames();
+const existingProjectNames = ListExistingProjectNames();
 
 for (const project of projects) {
-  ensureProject(project, existingProjectNames);
+  EnsureProject(project, existingProjectNames);
 }
 
-syncAuthEnvironment();
+SyncAuthEnvironment();
 
 for (const project of projects) {
-  applyProjectMigrations(project);
+  ApplyProjectMigrations(project);
 }
 
 for (const project of projects) {
-  deployProject(project);
+  DeployProject(project);
 }

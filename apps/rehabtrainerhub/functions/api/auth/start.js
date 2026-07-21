@@ -1,15 +1,15 @@
 import {
-  authPopupHtml,
-  createSignedValue,
-  errorResponse,
-  getAuthBaseUrl,
-  getCookieSession,
-  getStateSecret,
-  getUserById,
-  isSafeReturnTo,
-  optionsResponse,
-  rejectDisallowedOrigin,
-  toPublicUser,
+  AuthPopupHtml,
+  CreateSignedValue,
+  ErrorResponse,
+  GetAuthBaseUrl,
+  GetCookieSession,
+  GetStateSecret,
+  GetUserById,
+  IsSafeReturnTo,
+  OptionsResponse,
+  RejectDisallowedOrigin,
+  ToPublicUser,
 } from '../../_lib/auth.js';
 
 const providers = {
@@ -21,22 +21,22 @@ const providers = {
 };
 
 export function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env);
+  return OptionsResponse(request, env);
 }
 
 export async function onRequestGet({ request, env }) {
-  const originError = rejectDisallowedOrigin(request, env);
+  const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
 
   try {
-    return await startOAuth(request, env);
+    return await StartOAuth(request, env);
   } catch (error) {
     console.error('OAuth start failed.', error);
-    return errorResponse(request, env, 'Unable to start OAuth login.', 500);
+    return ErrorResponse(request, env, 'Unable to start OAuth login.', 500);
   }
 }
 
-async function startOAuth(request, env) {
+async function StartOAuth(request, env) {
   const url = new URL(request.url);
   const provider = url.searchParams.get('provider');
   const returnTo = url.searchParams.get('returnTo') || '';
@@ -44,21 +44,21 @@ async function startOAuth(request, env) {
   const locale = url.searchParams.get('locale') === 'en' ? 'en' : 'zh-TW';
 
   if (!provider || !providers[provider]) {
-    return errorResponse(request, env, 'Unsupported auth provider.', 400);
+    return ErrorResponse(request, env, 'Unsupported auth provider.', 400);
   }
   if (!privacyAccepted) {
-    return errorResponse(request, env, 'Privacy policy acceptance is required before sign-in.', 400);
+    return ErrorResponse(request, env, 'Privacy policy acceptance is required before sign-in.', 400);
   }
-  if (!isSafeReturnTo(returnTo, env, request)) {
-    return errorResponse(request, env, 'Return URL is not allowed.', 400);
+  if (!IsSafeReturnTo(returnTo, env, request)) {
+    return ErrorResponse(request, env, 'Return URL is not allowed.', 400);
   }
 
   try {
-    const existingSession = await getCookieSession(request, env);
+    const existingSession = await GetCookieSession(request, env);
     if (existingSession?.payload?.sub) {
-      const existingUser = await getUserById(env, existingSession.payload.sub);
+      const existingUser = await GetUserById(env, existingSession.payload.sub);
       if (existingUser) {
-        return authPopupHtml(returnTo, existingSession.token, toPublicUser(existingUser));
+        return AuthPopupHtml(returnTo, existingSession.token, ToPublicUser(existingUser));
       }
     }
   } catch (error) {
@@ -68,14 +68,14 @@ async function startOAuth(request, env) {
   const config = providers[provider];
   const clientId = env[config.clientId];
   if (!clientId) {
-    return errorResponse(request, env, `${config.clientId} is not configured.`, 503);
+    return ErrorResponse(request, env, `${config.clientId} is not configured.`, 503);
   }
 
-  const authBaseUrl = getAuthBaseUrl(request, env);
+  const authBaseUrl = GetAuthBaseUrl(request, env);
   const redirectUri = `${authBaseUrl}/api/auth/callback`;
   let state;
   try {
-    state = await createSignedValue(
+    state = await CreateSignedValue(
       {
         provider,
         returnTo,
@@ -83,12 +83,12 @@ async function startOAuth(request, env) {
         locale,
         nonce: crypto.randomUUID(),
       },
-      getStateSecret(env),
+      GetStateSecret(env),
       10 * 60,
     );
   } catch (error) {
     console.error('OAuth state creation failed.', error);
-    return errorResponse(request, env, 'Auth signing secret is not configured.', 503);
+    return ErrorResponse(request, env, 'Auth signing secret is not configured.', 503);
   }
 
   const authUrl = new URL(config.authUrl);

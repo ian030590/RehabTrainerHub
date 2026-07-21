@@ -110,7 +110,7 @@ const cssVariables = {
   '--theme-contrast-logo-filter': 'grayscale(1) brightness(0) invert(1)',
 } as const;
 
-export function applyThemeTokens(root: HTMLElement = document.documentElement): void {
+export function ApplyThemeTokens(root: HTMLElement = document.documentElement): void {
   for (const [name, value] of Object.entries(cssVariables)) {
     root.style.setProperty(name, value);
   }

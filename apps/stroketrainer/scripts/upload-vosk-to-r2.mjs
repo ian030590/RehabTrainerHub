@@ -5,11 +5,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const bucket = getEnv('R2_BUCKET', 'stroke-trainer-vosk-models');
-const prefix = normalizePrefix(getEnv('R2_PREFIX', ''));
-const publicBaseUrl = trimTrailingSlash(process.env.R2_PUBLIC_BASE_URL ?? '');
-const corsFile = path.resolve(rootDir, getEnv('R2_CORS_FILE', 'config/r2-cors.json'));
-const cacheControl = getEnv('R2_CACHE_CONTROL', 'public,max-age=31536000,immutable');
+const bucket = GetEnv('R2_BUCKET', 'stroke-trainer-vosk-models');
+const prefix = NormalizePrefix(GetEnv('R2_PREFIX', ''));
+const publicBaseUrl = TrimTrailingSlash(process.env.R2_PUBLIC_BASE_URL ?? '');
+const corsFile = path.resolve(rootDir, GetEnv('R2_CORS_FILE', 'config/r2-cors.json'));
+const cacheControl = GetEnv('R2_CACHE_CONTROL', 'public,max-age=31536000,immutable');
 const shouldCreateBucket = process.env.R2_CREATE_BUCKET !== '0';
 const shouldApplyCors = process.env.R2_APPLY_CORS !== '0';
 const npxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
@@ -18,28 +18,28 @@ const uploadTargets = [
   {
     envName: 'VITE_VOSK_MODEL_ZH_URL',
     filePath: path.join(rootDir, 'public', 'models', 'vosk-model-small-zh-tw-0.3.tar.gz'),
-    key: joinKey(prefix, 'vosk-model-small-zh-tw-0.3.tar.gz'),
+    key: JoinKey(prefix, 'vosk-model-small-zh-tw-0.3.tar.gz'),
     contentType: 'application/gzip',
     required: true,
   },
   {
     envName: 'VITE_VOSK_MODEL_ZH_VOCAB_URL',
     filePath: path.join(rootDir, 'public', 'models', 'vosk-model-small-zh-tw-0.3-vocabulary.txt'),
-    key: joinKey(prefix, 'vosk-model-small-zh-tw-0.3-vocabulary.txt'),
+    key: JoinKey(prefix, 'vosk-model-small-zh-tw-0.3-vocabulary.txt'),
     contentType: 'text/plain;charset=utf-8',
     required: false,
   },
   {
     envName: 'VITE_VOSK_MODEL_EN_URL',
     filePath: path.join(rootDir, 'public', 'models', 'vosk-model-small-en-us-0.15.tar.gz'),
-    key: joinKey(prefix, 'vosk-model-small-en-us-0.15.tar.gz'),
+    key: JoinKey(prefix, 'vosk-model-small-en-us-0.15.tar.gz'),
     contentType: 'application/gzip',
     required: false,
   },
   {
     envName: 'VITE_VOSK_MODEL_EN_VOCAB_URL',
     filePath: path.join(rootDir, 'public', 'models', 'vosk-model-small-en-us-0.15-vocabulary.txt'),
-    key: joinKey(prefix, 'vosk-model-small-en-us-0.15-vocabulary.txt'),
+    key: JoinKey(prefix, 'vosk-model-small-en-us-0.15-vocabulary.txt'),
     contentType: 'text/plain;charset=utf-8',
     required: false,
   },
@@ -48,7 +48,7 @@ const uploadTargets = [
 console.log(`Preparing Vosk model upload to R2 bucket "${bucket}".`);
 
 if (shouldCreateBucket) {
-  const createResult = runWrangler(['r2', 'bucket', 'create', bucket], { capture: true, allowExistingBucket: true });
+  const createResult = RunWrangler(['r2', 'bucket', 'create', bucket], { capture: true, allowExistingBucket: true });
   if (createResult.existingBucket) {
     console.log(`R2 bucket "${bucket}" already exists; continuing.`);
   }
@@ -61,7 +61,7 @@ if (shouldApplyCors) {
     throw new Error(`CORS file not found: ${path.relative(rootDir, corsFile)}`);
   }
   console.log(`Applying CORS policy from ${path.relative(rootDir, corsFile)}.`);
-  runWrangler(['r2', 'bucket', 'cors', 'set', bucket, '--file', corsFile], { interactive: true });
+  RunWrangler(['r2', 'bucket', 'cors', 'set', bucket, '--file', corsFile], { interactive: true });
 } else {
   console.log('Skipping CORS policy because R2_APPLY_CORS=0.');
 }
@@ -77,8 +77,8 @@ for (const target of uploadTargets) {
   }
 
   const size = statSync(target.filePath).size;
-  console.log(`Uploading ${path.relative(rootDir, target.filePath)} (${formatMiB(size)}) to ${bucket}/${target.key}.`);
-  runWrangler([
+  console.log(`Uploading ${path.relative(rootDir, target.filePath)} (${FormatMiB(size)}) to ${bucket}/${target.key}.`);
+  RunWrangler([
     'r2',
     'object',
     'put',
@@ -103,7 +103,7 @@ if (publicBaseUrl) {
   console.log('Set R2_PUBLIC_BASE_URL to print exact VITE_VOSK_* URLs after upload.');
 }
 
-function runWrangler(args, options = {}) {
+function RunWrangler(args, options = {}) {
   const result = spawnSync(npxBin, ['wrangler', ...args], {
     cwd: rootDir,
     env: {
@@ -136,23 +136,23 @@ function runWrangler(args, options = {}) {
   throw new Error(`Wrangler command failed: npx wrangler ${args.join(' ')}`);
 }
 
-function getEnv(name, fallback) {
+function GetEnv(name, fallback) {
   const value = process.env[name]?.trim();
   return value || fallback;
 }
 
-function normalizePrefix(value) {
+function NormalizePrefix(value) {
   return value.trim().replace(/^\/+|\/+$/g, '');
 }
 
-function joinKey(...parts) {
+function JoinKey(...parts) {
   return parts.filter(Boolean).join('/').replace(/\/+/g, '/');
 }
 
-function trimTrailingSlash(value) {
+function TrimTrailingSlash(value) {
   return value.trim().replace(/\/+$/g, '');
 }
 
-function formatMiB(bytes) {
+function FormatMiB(bytes) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
 }

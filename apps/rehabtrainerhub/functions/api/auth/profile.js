@@ -1,12 +1,12 @@
 import {
-  errorResponse,
-  getUserById,
-  jsonResponse,
-  optionsResponse,
-  rejectDisallowedOrigin,
-  requireDatabase,
-  requireSession,
-  toPublicUser,
+  ErrorResponse,
+  GetUserById,
+  JsonResponse,
+  OptionsResponse,
+  RejectDisallowedOrigin,
+  RequireDatabase,
+  RequireSession,
+  ToPublicUser,
 } from '../../_lib/auth.js';
 
 const chronicDiagnosisValues = new Set([
@@ -23,22 +23,22 @@ const smokingUnits = new Set(['packs', 'cigarettes']);
 const alcoholUnits = new Set(['bottles', 'cans', 'cups']);
 
 export function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env);
+  return OptionsResponse(request, env);
 }
 
 export async function onRequestPut({ request, env }) {
-  const originError = rejectDisallowedOrigin(request, env);
+  const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
 
-  const session = await requireSession(request, env);
-  if (!session?.sub) return errorResponse(request, env, 'Unauthorized.', 401);
+  const session = await RequireSession(request, env);
+  if (!session?.sub) return ErrorResponse(request, env, 'Unauthorized.', 401);
 
   const input = await request.json().catch(() => null);
-  const profile = normalizeProfile(input);
-  if (!profile) return errorResponse(request, env, 'Invalid profile payload.', 400);
+  const profile = NormalizeProfile(input);
+  if (!profile) return ErrorResponse(request, env, 'Invalid profile payload.', 400);
 
   const now = new Date().toISOString();
-  const db = requireDatabase(env);
+  const db = RequireDatabase(env);
   await db
     .prepare(`
       UPDATE app_users
@@ -72,11 +72,11 @@ export async function onRequestPut({ request, env }) {
     )
     .run();
 
-  const user = await getUserById(env, session.sub);
-  return jsonResponse(request, env, { user: toPublicUser(user) });
+  const user = await GetUserById(env, session.sub);
+  return JsonResponse(request, env, { user: ToPublicUser(user) });
 }
 
-function normalizeProfile(input) {
+function NormalizeProfile(input) {
   if (!input || typeof input !== 'object') return null;
 
   const ageRange = typeof input.ageRange === 'string' ? input.ageRange.trim() : '';
@@ -88,10 +88,10 @@ function normalizeProfile(input) {
   const smokingStatus = habitStatuses.has(input.smokingStatus) ? input.smokingStatus : 'none';
   const alcoholStatus = habitStatuses.has(input.alcoholStatus) ? input.alcoholStatus : 'none';
   const smokingFrequency = smokingStatus === 'current'
-    ? normalizeFrequency(input.smokingFrequency, smokingUnits)
+    ? NormalizeFrequency(input.smokingFrequency, smokingUnits)
     : undefined;
   const alcoholFrequency = alcoholStatus === 'current'
-    ? normalizeFrequency(input.alcoholFrequency, alcoholUnits)
+    ? NormalizeFrequency(input.alcoholFrequency, alcoholUnits)
     : undefined;
 
   if (!ageRange || !gender || !nationality) return null;
@@ -110,7 +110,7 @@ function normalizeProfile(input) {
   };
 }
 
-function normalizeFrequency(input, validUnits) {
+function NormalizeFrequency(input, validUnits) {
   if (!input || typeof input !== 'object') return null;
   const interval = intervals.has(input.interval) ? input.interval : 'week';
   const unit = validUnits.has(input.unit) ? input.unit : null;

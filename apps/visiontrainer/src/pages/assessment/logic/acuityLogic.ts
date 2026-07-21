@@ -5,55 +5,55 @@
  * Based on FrACT10's MiscSpace.j and FractControllerAcuity.j.
  */
 
-import { pixelFromDegree, degreeFromPixel } from '../../../utils/spatialUtils';
+import { PixelFromDegree, DegreeFromPixel } from '../../../utils/spatialUtils';
 
 // ── LogMAR ↔ decimal VA ──
 
 /** decimal VA → LogMAR */
-export function logMARFromDecVA(decVA: number): number {
+export function LogMARFromDecVA(decVA: number): number {
   return -Math.log10(decVA);
 }
 
 /** LogMAR → decimal VA */
-export function decVAFromLogMAR(logMAR: number): number {
+export function DecVAFromLogMAR(logMAR: number): number {
   return Math.pow(10, -logMAR);
 }
 
 // ── stroke pixels ↔ decimal VA ──
 
 /** Given stroke size in pixels → decimal VA */
-export function decVAFromStrokePixels(px: number): number {
-  return 1 / 60 / degreeFromPixel(px);
+export function DecVAFromStrokePixels(px: number): number {
+  return 1 / 60 / DegreeFromPixel(px);
 }
 
 /** decimal VA → stroke size in pixels */
-export function strokePixelsFromDecVA(decVA: number): number {
-  return pixelFromDegree(1 / 60 / decVA);
+export function StrokePixelsFromDecVA(decVA: number): number {
+  return PixelFromDegree(1 / 60 / decVA);
 }
 
 // ── stroke pixels ↔ LogMAR ──
 
 /** stroke pixels → LogMAR */
-export function logMARFromStrokePixels(px: number): number {
-  return logMARFromDecVA(decVAFromStrokePixels(px));
+export function LogMARFromStrokePixels(px: number): number {
+  return LogMARFromDecVA(DecVAFromStrokePixels(px));
 }
 
 /** LogMAR → stroke pixels */
-export function strokePixelsFromLogMAR(logMAR: number): number {
-  return strokePixelsFromDecVA(decVAFromLogMAR(logMAR));
+export function StrokePixelsFromLogMAR(logMAR: number): number {
+  return StrokePixelsFromDecVA(DecVAFromLogMAR(logMAR));
 }
 
 // ── Letter score ──
 
 /** LogMAR → ETDRS letter score (85 − 50 × logMAR) */
-export function lettersFromLogMAR(logMAR: number): number {
+export function LettersFromLogMAR(logMAR: number): number {
   return 85 - 50 * logMAR;
 }
 
 // ── Snellen fraction ──
 
 /** Format a Snellen fraction string (e.g. "20/20") */
-export function formatSnellenFraction(decVA: number): string {
+export function FormatSnellenFraction(decVA: number): string {
   // Use 20 as standard denominator base
   const testDistFeet = 20;
   const denominator = Math.round(testDistFeet / decVA);
@@ -67,7 +67,7 @@ export function formatSnellenFraction(decVA: number): string {
 /**
  * Compute the min and max stroke sizes in pixels for the current screen.
  */
-export function getStrokeBounds(viewWidth: number, viewHeight: number): {
+export function GetStrokeBounds(viewWidth: number, viewHeight: number): {
   strokeMin: number;
   strokeMax: number;
 } {
@@ -81,7 +81,7 @@ export function getStrokeBounds(viewWidth: number, viewHeight: number): {
  * Convert BestPEST normalised value (0–1) to stroke size in pixels.
  * 0 → smallest (hardest), 1 → largest (easiest).
  */
-export function stimDeviceFromThresholder(
+export function StimDeviceFromThresholder(
   tPest: number,
   strokeMin: number,
   strokeMax: number,
@@ -96,7 +96,7 @@ export function stimDeviceFromThresholder(
 /**
  * Convert stroke size in pixels back to the 0–1 scale.
  */
-export function stimThresholderFromDevice(
+export function StimThresholderFromDevice(
   d: number,
   strokeMin: number,
   strokeMax: number,
@@ -109,12 +109,12 @@ export function stimThresholderFromDevice(
 // ── Starting-size logic (DIN 01.02.04.08) ──
 
 /** Determine the starting logMAR. FrACT default = 1.0 */
-export const STARTING_LOG_MAR = 1.0;
+export const startingLogMar = 1.0;
 
 /**
  * Get default trial count for a given number of alternatives.
  */
-export function defaultTrialCount(nAlternatives: number): number {
+export function DefaultTrialCount(nAlternatives: number): number {
   if (nAlternatives <= 4) return 24;
   if (nAlternatives <= 8) return 18;
   return 18; // 10-alternative letters

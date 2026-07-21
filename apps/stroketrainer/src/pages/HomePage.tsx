@@ -4,7 +4,7 @@ import {
   TrainingModuleSelectionPage,
   type TrainingModuleSelectionItem,
 } from '@rehab-trainer/ui/components/TrainingModuleSelectionPage';
-import { TRAINING_MODULES } from './home/trainingModules';
+import { trainingModules } from './home/trainingModules';
 import type { TrainingModuleId } from './home/trainingModules';
 
 export function HomePage() {
@@ -14,7 +14,7 @@ export function HomePage() {
   const handleCardClick = (moduleId: TrainingModuleId) => {
     navigate(`/training?module=${moduleId}`);
   };
-  const modules: readonly TrainingModuleSelectionItem<TrainingModuleId>[] = TRAINING_MODULES.map((module) => ({
+  const modules: readonly TrainingModuleSelectionItem<TrainingModuleId>[] = trainingModules.map((module) => ({
     id: module.id,
     title: t(module.titleKey),
     description: t(module.descKey),

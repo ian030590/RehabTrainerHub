@@ -17,14 +17,14 @@ import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { pixiColors, typography } from '../../theme';
-import { shuffleArray, generateRandomLetters, generateScatteredPositions } from '../../utils/mathUtils';
-import { pixelFromMillimeter } from '../../utils/spatialUtils';
-import { SoundManager } from '../../utils/soundManager';
+import { ShuffleArray, GenerateRandomLetters, GenerateScatteredPositions } from '../../utils/mathUtils';
+import { PixelFromMillimeter } from '../../utils/spatialUtils';
+import { soundManager } from '../../utils/soundManager';
 import {
-  attachPixiTrialCanvas,
-  cleanupPixiTrial,
-  createPixiTrialContainer,
-  runPixiTrial,
+  AttachPixiTrialCanvas,
+  CleanupPixiTrial,
+  CreatePixiTrialContainer,
+  RunPixiTrial,
 } from '../../utils/pixiPool';
 
 // ── Plugin Info ──
@@ -84,12 +84,12 @@ interface GameOption {
 }
 
 // ── Responsive Layout Constants ──
-const MARGIN_X = 0.03;
-const MARGIN_TOP = 0.18;
-const MARGIN_BOTTOM = 0.05;
-const GRID_COLS = 5;
-const GRID_ROWS = 4;
-const MOVE_DURATION_MS = 300;
+const marginX = 0.03;
+const marginTop = 0.18;
+const marginBottom = 0.05;
+const gridCols = 5;
+const gridRows = 4;
+const moveDurationMs = 300;
 
 class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
   static info = info;
@@ -100,14 +100,14 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
    * MUST NOT be async! jsPsych v8 auto-finishes async trials.
    * Instead, we use .then() for PixiJS init and call finishTrial() explicitly.
    */
-  trial(display_element: HTMLElement, trial: TrialType<Info>): void {
+  trial(displayElement: HTMLElement, trial: TrialType<Info>): void {
     const self = this;
 
     // ── Setup Container ──
-    const wrapper = createPixiTrialContainer(display_element);
+    const wrapper = CreatePixiTrialContainer(displayElement);
 
     // ── State (captured by closure) ──
-    const target = (trial.target_letters as string) || generateRandomLetters(2);
+    const target = (trial.target_letters as string) || GenerateRandomLetters(2);
     const diff = trial.difficulty as string;
     const optionCount = trial.option_count as number;
     let feedbackActive = false;
@@ -115,19 +115,19 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
     let trialEnded = false;
 
     const runWithApp = (app: Application) => {
-      attachPixiTrialCanvas(wrapper);
+      AttachPixiTrialCanvas(wrapper);
 
       const startTime = performance.now();
 
       // ── Screen-relative helpers ──
-      const W = () => app.screen.width;
-      const H = () => app.screen.height;
-      const cx = () => W() / 2;
+      const getWidth = () => app.screen.width;
+      const getHeight = () => app.screen.height;
+      const cx = () => getWidth() / 2;
 
-      const gameX = () => W() * MARGIN_X;
-      const gameY = () => H() * MARGIN_TOP;
-      const gameW = () => W() * (1 - 2 * MARGIN_X);
-      const gameH = () => H() * (1 - MARGIN_TOP - MARGIN_BOTTOM);
+      const gameX = () => getWidth() * marginX;
+      const gameY = () => getHeight() * marginTop;
+      const gameW = () => getWidth() * (1 - 2 * marginX);
+      const gameH = () => getHeight() * (1 - marginTop - marginBottom);
 
       // ── Build Scene ──
       const bgGfx = new Graphics();
@@ -166,28 +166,28 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
       roundText.text = `回合: ${trial.round_number} / ${trial.total_rounds}`;
 
       // ── Draw Layout (responsive) ──
-      function drawLayout() {
-        const w = W();
-        const h = H();
+      function DrawLayout() {
+        const width = getWidth();
+        const height = getHeight();
 
-        bgGfx.clear().rect(0, 0, w, h).fill({ color: pixiColors.bg });
+        bgGfx.clear().rect(0, 0, width, height).fill({ color: pixiColors.bg });
 
         headerGfx.clear()
-          .rect(0, 0, w, h * 0.08).fill({ color: pixiColors.bgPanel })
-          .rect(0, h * 0.08 - 1, w, 1).fill({ color: pixiColors.border });
+          .rect(0, 0, width, height * 0.08).fill({ color: pixiColors.bgPanel })
+          .rect(0, height * 0.08 - 1, width, 1).fill({ color: pixiColors.border });
 
         scoreText.x = 24;
-        scoreText.y = h * 0.04 - 8;
-        roundText.x = w - 180;
-        roundText.y = h * 0.04 - 8;
+        scoreText.y = height * 0.04 - 8;
+        roundText.x = width - 180;
+        roundText.y = height * 0.04 - 8;
 
-        const targetPxSize = pixelFromMillimeter(trial.target_size_mm as number);
-        const safeSize = Math.min(targetPxSize, h * 0.08, w * 0.1);
+        const targetPxSize = PixelFromMillimeter(trial.target_size_mm as number);
+        const safeSize = Math.min(targetPxSize, height * 0.08, width * 0.1);
         targetText.style.fontSize = Math.max(16, safeSize);
         targetText.x = cx();
-        targetText.y = h * 0.12;
+        targetText.y = height * 0.12;
 
-        const chY = h * 0.15;
+        const chY = height * 0.15;
         crossGfx.clear()
           .moveTo(cx() - 8, chY).lineTo(cx() + 8, chY)
           .moveTo(cx(), chY - 8).lineTo(cx(), chY + 8)
@@ -198,14 +198,14 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
           .stroke({ color: pixiColors.border, width: 1, alpha: 0.5 });
       }
 
-      drawLayout();
+      DrawLayout();
 
       // ── Generate Options ──
       const isCircle = diff === 'intermediate' || diff === 'advanced';
 
       const distractors = new Set<string>();
       while (distractors.size < optionCount - 1) {
-        const d = generateRandomLetters(2);
+        const d = GenerateRandomLetters(2);
         if (d !== target) distractors.add(d);
       }
 
@@ -213,12 +213,12 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
         { letters: target, isCorrect: true },
       ];
       distractors.forEach((l) => rawOptions.push({ letters: l, isCorrect: false }));
-      shuffleArray(rawOptions);
+      ShuffleArray(rawOptions);
 
       const gw = gameW();
       const gh = gameH();
-      const cellW = gw / GRID_COLS;
-      const cellH = gh / GRID_ROWS;
+      const cellW = gw / gridCols;
+      const cellH = gh / gridRows;
       let oW = cellW * 0.8;
       let oH = cellH * 0.8;
 
@@ -238,19 +238,19 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
       const gy = gameY();
 
       if (diff === 'beginner') {
-        for (let r = 0; r < GRID_ROWS; r++) {
-          for (let c = 0; c < GRID_COLS; c++) {
+        for (let r = 0; r < gridRows; r++) {
+          for (let c = 0; c < gridCols; c++) {
             positions.push({
               x: gx + c * cellW + cellW * 0.1 + oW / 2,
               y: gy + r * cellH + cellH * 0.1 + oH / 2,
             });
           }
         }
-        shuffleArray(positions);
+        ShuffleArray(positions);
       } else {
         const safeW = Math.max(1, gw - oW);
         const safeH = Math.max(1, gh - oH);
-        positions = generateScatteredPositions(
+        positions = GenerateScatteredPositions(
           optionCount,
           { x: gx + oW / 2, y: gy + oH / 2, w: safeW, h: safeH },
           minDist
@@ -259,7 +259,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
 
       // ── Create Option Containers ──
       const options: GameOption[] = [];
-      const optionFontPx = Math.max(12, pixelFromMillimeter(trial.option_size_mm as number));
+      const optionFontPx = Math.max(12, PixelFromMillimeter(trial.option_size_mm as number));
 
       const correctBg = 0x1A3D2B;
       const correctBorder = pixiColors.success;
@@ -290,7 +290,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
               const dx = pos.x - positions[j].x;
               const dy = pos.y - positions[j].y;
               const dist = Math.sqrt(dx * dx + dy * dy);
-              const threshold = Math.min(W(), H()) * 0.3;
+              const threshold = Math.min(getWidth(), getHeight()) * 0.3;
               if (dist < threshold) {
                 const angleDiff = Math.abs(testRot - assignedRotations[j]);
                 const weight = 1 - dist / threshold;
@@ -387,11 +387,11 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
 
           if (gameOpt.isCorrect) {
             drawState('correct');
-            SoundManager.playCorrect();
-            setTimeout(() => endTrial(rt, true, gameOpt.letters), 350);
+            soundManager.playCorrect();
+            setTimeout(() => EndTrial(rt, true, gameOpt.letters), 350);
           } else {
             drawState('wrong');
-            SoundManager.playIncorrect();
+            soundManager.playIncorrect();
             setTimeout(() => {
               drawState('normal');
               feedbackActive = false;
@@ -404,9 +404,9 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
       }
 
       // ── Move Timer ──
-      function moveRandomOption() {
-        if (!display_element.isConnected) {
-          endTrial(0, false, 'Unmounted');
+      function MoveRandomOption() {
+        if (!displayElement.isConnected) {
+          EndTrial(0, false, 'Unmounted');
           return;
         }
         if (trialEnded || options.length === 0) return;
@@ -418,13 +418,13 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
         const curGy = gameY();
         const curGw = gameW();
         const curGh = gameH();
-        const curCellW = curGw / GRID_COLS;
-        const curCellH = curGh / GRID_ROWS;
+        const curCellW = curGw / gridCols;
+        const curCellH = curGh / gridRows;
 
         if (diff === 'beginner') {
           const allGridPos: { x: number; y: number }[] = [];
-          for (let r = 0; r < GRID_ROWS; r++) {
-            for (let c = 0; c < GRID_COLS; c++) {
+          for (let r = 0; r < gridRows; r++) {
+            for (let c = 0; c < gridCols; c++) {
               allGridPos.push({
                 x: curGx + c * curCellW + curCellW * 0.1 + oW / 2,
                 y: curGy + r * curCellH + curCellH * 0.1 + oH / 2,
@@ -475,7 +475,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
           const animate = () => {
             if (trialEnded) return;
             const elapsed = performance.now() - animStart;
-            const t = Math.min(1, elapsed / MOVE_DURATION_MS);
+            const t = Math.min(1, elapsed / moveDurationMs);
             const ease = 1 - Math.pow(1 - t, 3);
             opt.container.x = sx + (targetPos.x - sx) * ease;
             opt.container.y = sy + (targetPos.y - sy) * ease;
@@ -485,22 +485,22 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
         }
       }
 
-      moveTimerId = setInterval(moveRandomOption, trial.move_interval_ms as number);
+      moveTimerId = setInterval(MoveRandomOption, trial.move_interval_ms as number);
 
       // ── Resize Handler ──
-      const handleResize = () => drawLayout();
+      const handleResize = () => DrawLayout();
       app.renderer.on('resize', handleResize);
 
       // ── Keydown Handler ──
       const handleKeydown = (e: KeyboardEvent) => {
         if (e.code === 'Escape') {
-          endTrial(Math.round(performance.now() - startTime), false, 'Escape');
+          EndTrial(Math.round(performance.now() - startTime), false, 'Escape');
         }
       };
       window.addEventListener('keydown', handleKeydown);
 
       // ── End Trial ──
-      function endTrial(rt: number, correct: boolean, response: string) {
+      function EndTrial(rt: number, correct: boolean, response: string) {
         if (trialEnded) return;
         trialEnded = true;
 
@@ -509,7 +509,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
         window.removeEventListener('keydown', handleKeydown);
 
         // Clear & detach (reuse app for next round)
-        cleanupPixiTrial(display_element);
+        CleanupPixiTrial(displayElement);
 
         // Tell jsPsych this trial is done
         self.jsPsych.finishTrial({
@@ -522,7 +522,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
 
     };
 
-    runPixiTrial(display_element, runWithApp);
+    RunPixiTrial(displayElement, runWithApp);
 
     // Returns void (undefined) — jsPsych waits for finishTrial()
   }

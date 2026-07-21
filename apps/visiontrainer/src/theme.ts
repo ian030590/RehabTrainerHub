@@ -27,7 +27,7 @@ const colorTokens = {
 export const cssColors = colorTokens;
 
 export const pixiColors = Object.fromEntries(
-  Object.entries(colorTokens).map(([key, value]) => [key, cssHexToNumber(value)]),
+  Object.entries(colorTokens).map(([key, value]) => [key, CssHexToNumber(value)]),
 ) as { readonly [K in keyof typeof colorTokens]: number };
 
 export { radii, spacing, transitions, typography };
@@ -119,12 +119,12 @@ const cssVariables = {
   '--theme-contrast-logo-filter': 'grayscale(1) brightness(0) invert(1)',
 } as const;
 
-export function applyThemeTokens(root: HTMLElement = document.documentElement): void {
+export function ApplyThemeTokens(root: HTMLElement = document.documentElement): void {
   for (const [name, value] of Object.entries(cssVariables)) {
     root.style.setProperty(name, value);
   }
 }
 
-function cssHexToNumber(hex: string): number {
+function CssHexToNumber(hex: string): number {
   return Number.parseInt(hex.slice(1), 16);
 }

@@ -17,21 +17,21 @@ export interface DisplayRefreshMeasureOptions {
   maxSampleMs?: number;
 }
 
-const DEFAULT_REFRESH_MS = 1000 / 60;
-const DEFAULT_SAMPLE_COUNT = 72;
-const DEFAULT_MIN_SAMPLE_MS = 4;
-const DEFAULT_MAX_SAMPLE_MS = 80;
+const defaultRefreshMs = 1000 / 60;
+const defaultSampleCount = 72;
+const defaultMinSampleMs = 4;
+const defaultMaxSampleMs = 80;
 
-export async function measureDisplayRefreshRate(
+export async function MeasureDisplayRefreshRate(
   options: DisplayRefreshMeasureOptions = {},
 ): Promise<DisplayRefreshInfo> {
   if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
-    return createRefreshInfo(DEFAULT_REFRESH_MS, [], detectDisplayDeviceKind());
+    return CreateRefreshInfo(defaultRefreshMs, [], DetectDisplayDeviceKind());
   }
 
-  const targetSamples = options.sampleCount ?? DEFAULT_SAMPLE_COUNT;
-  const minSampleMs = options.minSampleMs ?? DEFAULT_MIN_SAMPLE_MS;
-  const maxSampleMs = options.maxSampleMs ?? DEFAULT_MAX_SAMPLE_MS;
+  const targetSamples = options.sampleCount ?? defaultSampleCount;
+  const minSampleMs = options.minSampleMs ?? defaultMinSampleMs;
+  const maxSampleMs = options.maxSampleMs ?? defaultMaxSampleMs;
   const samples: number[] = [];
   let lastTimestamp = 0;
 
@@ -56,12 +56,12 @@ export async function measureDisplayRefreshRate(
     window.requestAnimationFrame(tick);
   });
 
-  const usableSamples = trimOutliers(samples);
-  const refreshMs = median(usableSamples) || DEFAULT_REFRESH_MS;
-  return createRefreshInfo(refreshMs, usableSamples, detectDisplayDeviceKind());
+  const usableSamples = TrimOutliers(samples);
+  const refreshMs = Median(usableSamples) || defaultRefreshMs;
+  return CreateRefreshInfo(refreshMs, usableSamples, DetectDisplayDeviceKind());
 }
 
-export function detectDisplayDeviceKind(): DisplayDeviceKind {
+export function DetectDisplayDeviceKind(): DisplayDeviceKind {
   if (typeof navigator === 'undefined') return 'unknown';
 
   const userAgent = navigator.userAgent || '';
@@ -84,7 +84,7 @@ export function detectDisplayDeviceKind(): DisplayDeviceKind {
   return 'desktop';
 }
 
-export function is60HzRefreshFamily(refreshHz: number): boolean {
+export function Is60HzRefreshFamily(refreshHz: number): boolean {
   if (!Number.isFinite(refreshHz) || refreshHz <= 0) return false;
 
   const nearest60HzMultiple = Math.max(1, Math.round(refreshHz / 60)) * 60;
@@ -92,7 +92,7 @@ export function is60HzRefreshFamily(refreshHz: number): boolean {
   return Math.abs(refreshHz - nearest60HzMultiple) <= toleranceHz;
 }
 
-function createRefreshInfo(
+function CreateRefreshInfo(
   refreshMs: number,
   samples: number[],
   deviceKind: DisplayDeviceKind,
@@ -104,15 +104,15 @@ function createRefreshInfo(
     refreshMs,
     refreshHz,
     sampleCount: samples.length,
-    standardDeviationMs: standardDeviation(samples, refreshMs),
+    standardDeviationMs: StandardDeviation(samples, refreshMs),
     nearest60HzMultiple,
-    is60HzFamily: is60HzRefreshFamily(refreshHz),
+    is60HzFamily: Is60HzRefreshFamily(refreshHz),
     deviceKind,
     isMobileOrTablet: deviceKind === 'phone' || deviceKind === 'tablet',
   };
 }
 
-function trimOutliers(values: number[]) {
+function TrimOutliers(values: number[]) {
   if (values.length < 8) return values;
 
   const sorted = [...values].sort((left, right) => left - right);
@@ -120,7 +120,7 @@ function trimOutliers(values: number[]) {
   return sorted.slice(trimCount, sorted.length - trimCount);
 }
 
-function median(values: number[]) {
+function Median(values: number[]) {
   if (values.length === 0) return 0;
 
   const sorted = [...values].sort((left, right) => left - right);
@@ -130,7 +130,7 @@ function median(values: number[]) {
     : sorted[mid];
 }
 
-function standardDeviation(values: number[], average: number) {
+function StandardDeviation(values: number[], average: number) {
   if (values.length === 0) return 0;
 
   const variance = values.reduce((sum, value) => sum + (value - average) ** 2, 0) / values.length;

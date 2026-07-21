@@ -1,4 +1,4 @@
-import { getSetting } from './settings';
+import { GetSetting } from './settings';
 
 type JsPsychAudioProvider = {
   pluginAPI?: {
@@ -18,7 +18,7 @@ interface ToneStep {
   delay?: number;
 }
 
-const SOUND_SEQUENCES: Record<SoundKind, ToneStep[]> = {
+const soundSequences: Record<SoundKind, ToneStep[]> = {
   success: [
     { frequency: 523.25, duration: 0.07 },
     { frequency: 659.25, duration: 0.08, delay: 0.06 },
@@ -43,37 +43,37 @@ const SOUND_SEQUENCES: Record<SoundKind, ToneStep[]> = {
 
 let fallbackAudioContext: AudioContext | null = null;
 
-export function prepareAudioFeedback(jsPsychSource?: unknown): void {
-  if (!isAudioFeedbackEnabled()) return;
-  resumeAudioContext(getAudioContext(jsPsychSource));
+export function PrepareAudioFeedback(jsPsychSource?: unknown): void {
+  if (!IsAudioFeedbackEnabled()) return;
+  ResumeAudioContext(GetAudioContext(jsPsychSource));
 }
 
-export function playSuccessSound(jsPsychSource?: unknown): void {
-  playSound('success', jsPsychSource);
+export function PlaySuccessSound(jsPsychSource?: unknown): void {
+  PlaySound('success', jsPsychSource);
 }
 
-export function playFailureSound(jsPsychSource?: unknown): void {
-  playSound('failure', jsPsychSource);
+export function PlayFailureSound(jsPsychSource?: unknown): void {
+  PlaySound('failure', jsPsychSource);
 }
 
-export function playGameEndSound(result: 'Victory' | 'Defeat' | 'Draw' | 'Stopped', jsPsychSource?: unknown): void {
-  if (result === 'Victory') playSound('victory', jsPsychSource);
-  if (result === 'Defeat') playSound('defeat', jsPsychSource);
+export function PlayGameEndSound(result: 'Victory' | 'Defeat' | 'Draw' | 'Stopped', jsPsychSource?: unknown): void {
+  if (result === 'Victory') PlaySound('victory', jsPsychSource);
+  if (result === 'Defeat') PlaySound('defeat', jsPsychSource);
 }
 
-function playSound(kind: SoundKind, jsPsychSource?: unknown): void {
-  if (!isAudioFeedbackEnabled()) return;
-  const audioContext = getAudioContext(jsPsychSource);
+function PlaySound(kind: SoundKind, jsPsychSource?: unknown): void {
+  if (!IsAudioFeedbackEnabled()) return;
+  const audioContext = GetAudioContext(jsPsychSource);
   if (!audioContext) return;
 
-  resumeAudioContext(audioContext);
-  const volume = getFeedbackVolume();
+  ResumeAudioContext(audioContext);
+  const volume = GetFeedbackVolume();
   const startAt = audioContext.currentTime + 0.01;
-  SOUND_SEQUENCES[kind].forEach((step) => playTone(audioContext, step, startAt, volume));
+  soundSequences[kind].forEach((step) => PlayTone(audioContext, step, startAt, volume));
 }
 
-function getAudioContext(jsPsychSource?: unknown): AudioContext | null {
-  const jsPsych = unwrapJsPsych(jsPsychSource);
+function GetAudioContext(jsPsychSource?: unknown): AudioContext | null {
+  const jsPsych = UnwrapJsPsych(jsPsychSource);
   try {
     const jsPsychAudioContext = jsPsych?.pluginAPI?.audioContext?.();
     if (jsPsychAudioContext) return jsPsychAudioContext;
@@ -86,32 +86,32 @@ function getAudioContext(jsPsychSource?: unknown): AudioContext | null {
   return fallbackAudioContext;
 }
 
-function unwrapJsPsych(source: unknown): JsPsychAudioProvider | null {
+function UnwrapJsPsych(source: unknown): JsPsychAudioProvider | null {
   const current = (source as JsPsychRef | null)?.current;
   const candidate = current ?? source;
   if (!candidate || typeof candidate !== 'object') return null;
   return candidate as JsPsychAudioProvider;
 }
 
-function isAudioFeedbackEnabled(): boolean {
+function IsAudioFeedbackEnabled(): boolean {
   try {
-    return getSetting('auditoryFeedbackEnabled') && getSetting('soundVolume') > 0;
+    return GetSetting('auditoryFeedbackEnabled') && GetSetting('soundVolume') > 0;
   } catch {
     return false;
   }
 }
 
-function getFeedbackVolume(): number {
-  const settingVolume = clamp(getSetting('soundVolume') / 100, 0, 1);
+function GetFeedbackVolume(): number {
+  const settingVolume = Clamp(GetSetting('soundVolume') / 100, 0, 1);
   return settingVolume * 0.18;
 }
 
-function resumeAudioContext(audioContext: AudioContext | null): void {
+function ResumeAudioContext(audioContext: AudioContext | null): void {
   if (!audioContext || audioContext.state === 'running') return;
   void audioContext.resume().catch(() => undefined);
 }
 
-function playTone(audioContext: AudioContext, step: ToneStep, startAt: number, volume: number): void {
+function PlayTone(audioContext: AudioContext, step: ToneStep, startAt: number, volume: number): void {
   const oscillator = audioContext.createOscillator();
   const gain = audioContext.createGain();
   const toneStart = startAt + (step.delay ?? 0);
@@ -129,7 +129,7 @@ function playTone(audioContext: AudioContext, step: ToneStep, startAt: number, v
   oscillator.stop(toneEnd + 0.02);
 }
 
-function clamp(value: number, min: number, max: number): number {
+function Clamp(value: number, min: number, max: number): number {
   if (!Number.isFinite(value)) return min;
   return Math.min(max, Math.max(min, value));
 }

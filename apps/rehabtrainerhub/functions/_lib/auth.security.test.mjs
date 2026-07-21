@@ -1,17 +1,17 @@
 import assert from 'node:assert/strict';
 import {
-  authPopupHtml,
-  corsHeaders,
-  createSessionForUser,
-  rateLimitResponse,
-  toPublicUser,
+  AuthPopupHtml,
+  CorsHeaders,
+  CreateSessionForUser,
+  RateLimitResponse,
+  ToPublicUser,
 } from './auth.js';
-import { scanHtml } from '../api/submissions.js';
+import { ScanHtml } from '../api/submissions.js';
 
 const secret = '0123456789abcdef0123456789abcdef';
 const env = {
   AUTH_SESSION_SECRET: secret,
-  REHAB_DB: createRateLimitDb(),
+  REHAB_DB: CreateRateLimitDb(),
 };
 const user = {
   id: 'user-1',
@@ -21,20 +21,20 @@ const user = {
   profile_json: JSON.stringify({ chronicDiagnoses: ['centralNervousSystem'] }),
 };
 
-assert.equal(toPublicUser(user).profile, undefined);
+assert.equal(ToPublicUser(user).profile, undefined);
 
-const token = await createSessionForUser(env, user);
+const token = await CreateSessionForUser(env, user);
 const [encodedPayload] = token.split('.');
 const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString());
 assert.equal(payload.exp - payload.iat, 60 * 60 * 24 * 7);
 
-const noOriginHeaders = corsHeaders(new Request('https://trainerhub.cc/api/auth/me'), env);
+const noOriginHeaders = CorsHeaders(new Request('https://trainerhub.cc/api/auth/me'), env);
 assert.equal(noOriginHeaders['Access-Control-Allow-Origin'], undefined);
 
-const popup = await authPopupHtml('https://stroke.trainerhub.cc/', token, toPublicUser(user)).text();
+const popup = await AuthPopupHtml('https://stroke.trainerhub.cc/', token, ToPublicUser(user)).text();
 assert.equal(popup.includes('auth_token'), false);
 assert.equal(popup.includes('https://stroke.trainerhub.cc/'), true);
-const popupResponse = authPopupHtml('https://stroke.trainerhub.cc/', token, toPublicUser(user));
+const popupResponse = AuthPopupHtml('https://stroke.trainerhub.cc/', token, ToPublicUser(user));
 assert.match(popupResponse.headers.get('content-security-policy'), /script-src 'nonce-/);
 assert.equal(popupResponse.headers.get('x-content-type-options'), 'nosniff');
 
@@ -44,23 +44,23 @@ const request = new Request('https://trainerhub.cc/api/auth/password/login', {
     'CF-Connecting-IP': '203.0.113.10',
   },
 });
-assert.equal(await rateLimitResponse(request, env, 'test-login', { limit: 2, windowSeconds: 60 }), null);
-assert.equal(await rateLimitResponse(request, env, 'test-login', { limit: 2, windowSeconds: 60 }), null);
-const limited = await rateLimitResponse(request, env, 'test-login', { limit: 2, windowSeconds: 60 });
+assert.equal(await RateLimitResponse(request, env, 'test-login', { limit: 2, windowSeconds: 60 }), null);
+assert.equal(await RateLimitResponse(request, env, 'test-login', { limit: 2, windowSeconds: 60 }), null);
+const limited = await RateLimitResponse(request, env, 'test-login', { limit: 2, windowSeconds: 60 });
 assert.equal(limited.status, 429);
 assert.equal(limited.headers.has('retry-after'), true);
 
-const encodedScriptScan = scanHtml('<!doctype html><html><body><scr&#x69;pt>alert(1)</scr&#x69;pt></body></html>', 'en');
+const encodedScriptScan = ScanHtml('<!doctype html><html><body><scr&#x69;pt>alert(1)</scr&#x69;pt></body></html>', 'en');
 assert.equal(encodedScriptScan.ok, false);
 assert(encodedScriptScan.messages.some((message) => /script/i.test(message)));
 
-const encodedJavascriptScan = scanHtml('<!doctype html><html><body><a href="java&#115;cript:alert(1)">x</a></body></html>', 'en');
+const encodedJavascriptScan = ScanHtml('<!doctype html><html><body><a href="java&#115;cript:alert(1)">x</a></body></html>', 'en');
 assert.equal(encodedJavascriptScan.ok, false);
 assert(encodedJavascriptScan.messages.some((message) => /javascript/i.test(message)));
 
 console.log('auth security checks passed');
 
-function createRateLimitDb() {
+function CreateRateLimitDb() {
   const rows = new Map();
   return {
     prepare(sql) {

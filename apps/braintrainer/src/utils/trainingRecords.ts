@@ -1,12 +1,12 @@
 import {
-  getRemoteTrainingRecords,
-  hasAuthToken,
-  saveRemoteTrainingRecord,
+  GetRemoteTrainingRecords,
+  HasAuthToken,
+  SaveRemoteTrainingRecord,
 } from '@rehab-trainer/ui/auth/authClient';
-import { createCsvContent } from '@rehab-trainer/ui/csv';
-import { downloadCsvFile, downloadFile } from '@rehab-trainer/ui/downloadFile';
+import { CreateCsvContent } from '@rehab-trainer/ui/csv';
+import { DownloadCsvFile, DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import type { TranslationKey } from '../i18n';
-import { STORAGE_PREFIX } from './settings';
+import { storagePrefix } from './settings';
 import { siteUrls } from './siteUrls';
 
 type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;
@@ -25,15 +25,15 @@ export interface BrainTrainingRecord {
   detailRows?: DetailRow[];
 }
 
-const TRAINING_RECORDS_KEY = `${STORAGE_PREFIX}training_records_v1`;
-const REMOTE_APP_ID = 'braintrainer';
-const AUTH_API_BASE = siteUrls.hub;
+const trainingRecordsKey = `${storagePrefix}training_records_v1`;
+const remoteAppId = 'braintrainer';
+const authApiBase = siteUrls.hub;
 
-export async function saveTrainingRecord(record: BrainTrainingRecord): Promise<void> {
-  if (hasAuthToken()) {
+export async function SaveTrainingRecord(record: BrainTrainingRecord): Promise<void> {
+  if (HasAuthToken()) {
     try {
-      const saved = await saveRemoteTrainingRecord(AUTH_API_BASE, {
-        appId: REMOTE_APP_ID,
+      const saved = await SaveRemoteTrainingRecord(authApiBase, {
+        appId: remoteAppId,
         record,
       });
       if (saved) return;
@@ -42,59 +42,59 @@ export async function saveTrainingRecord(record: BrainTrainingRecord): Promise<v
     }
   }
 
-  const records = getLocalTrainingRecords();
+  const records = GetLocalTrainingRecords();
   const index = records.findIndex((item) => item.id === record.id);
   if (index >= 0) records[index] = record;
   else records.push(record);
-  localStorage.setItem(TRAINING_RECORDS_KEY, JSON.stringify(records));
+  localStorage.setItem(trainingRecordsKey, JSON.stringify(records));
 }
 
-export async function getTrainingRecords(): Promise<BrainTrainingRecord[]> {
-  if (hasAuthToken()) {
+export async function GetTrainingRecords(): Promise<BrainTrainingRecord[]> {
+  if (HasAuthToken()) {
     try {
-      const remoteRecords = await getRemoteTrainingRecords(AUTH_API_BASE, REMOTE_APP_ID);
-      if (remoteRecords) return remoteRecords.map(toTrainingRecord).filter((record): record is BrainTrainingRecord => Boolean(record));
+      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId);
+      if (remoteRecords) return remoteRecords.map(ToTrainingRecord).filter((record): record is BrainTrainingRecord => Boolean(record));
     } catch (error) {
       console.warn('Unable to read remote BrainTrainer records. Falling back to localStorage.', error);
     }
   }
 
-  return getLocalTrainingRecords();
+  return GetLocalTrainingRecords();
 }
 
-export async function downloadAllTrainingRecordsCsv(_t: TFunction): Promise<boolean> {
-  const records = await getTrainingRecords();
+export async function DownloadAllTrainingRecordsCsv(_t: TFunction): Promise<boolean> {
+  const records = await GetTrainingRecords();
   if (records.length === 0) return false;
-  downloadCsvFile(buildTrainingRecordsCsv(records), `braintrainer_records_${formatFileDate(new Date())}.csv`);
+  DownloadCsvFile(BuildTrainingRecordsCsv(records), `braintrainer_records_${FormatFileDate(new Date())}.csv`);
   return true;
 }
 
-export function downloadTrainingRecordCsv(record: BrainTrainingRecord): void {
-  downloadCsvFile(buildTrainingRecordsCsv([record]), `${safeFilePart(record.gameId)}_${record.trainingDate ?? formatFileDate(new Date())}.csv`);
+export function DownloadTrainingRecordCsv(record: BrainTrainingRecord): void {
+  DownloadCsvFile(BuildTrainingRecordsCsv([record]), `${SafeFilePart(record.gameId)}_${record.trainingDate ?? FormatFileDate(new Date())}.csv`);
 }
 
-export function downloadTrainingRecordJson(record: BrainTrainingRecord): void {
-  downloadFile(
+export function DownloadTrainingRecordJson(record: BrainTrainingRecord): void {
+  DownloadFile(
     JSON.stringify(record, null, 2),
-    `${safeFilePart(record.gameId)}_${record.trainingDate ?? formatFileDate(new Date())}.json`,
+    `${SafeFilePart(record.gameId)}_${record.trainingDate ?? FormatFileDate(new Date())}.json`,
     'application/json;charset=utf-8',
   );
 }
 
-function getLocalTrainingRecords(): BrainTrainingRecord[] {
-  const raw = localStorage.getItem(TRAINING_RECORDS_KEY);
+function GetLocalTrainingRecords(): BrainTrainingRecord[] {
+  const raw = localStorage.getItem(trainingRecordsKey);
   if (!raw) return [];
   try {
     const parsed: unknown = JSON.parse(raw);
     return Array.isArray(parsed)
-      ? parsed.map(toTrainingRecord).filter((record): record is BrainTrainingRecord => Boolean(record))
+      ? parsed.map(ToTrainingRecord).filter((record): record is BrainTrainingRecord => Boolean(record))
       : [];
   } catch {
     return [];
   }
 }
 
-function toTrainingRecord(value: unknown): BrainTrainingRecord | null {
+function ToTrainingRecord(value: unknown): BrainTrainingRecord | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const item = value as Record<string, unknown>;
   if (typeof item.id !== 'string' || typeof item.savedAt !== 'string') return null;
@@ -108,20 +108,20 @@ function toTrainingRecord(value: unknown): BrainTrainingRecord | null {
     gameId: typeof item.gameId === 'string' ? item.gameId : item.moduleId,
     gameTitle: typeof item.gameTitle === 'string' ? item.gameTitle : item.moduleId,
     difficulty: typeof item.difficulty === 'string' ? item.difficulty : '',
-    details: toDetailRow(item.details),
+    details: ToDetailRow(item.details),
     detailRows: Array.isArray(item.detailRows)
-      ? item.detailRows.map(toDetailRow).filter((row): row is DetailRow => Boolean(row))
+      ? item.detailRows.map(ToDetailRow).filter((row): row is DetailRow => Boolean(row))
       : undefined,
   };
 }
 
-function toDetailRow(value: unknown): DetailRow | undefined {
+function ToDetailRow(value: unknown): DetailRow | undefined {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? value as DetailRow
     : undefined;
 }
 
-function buildTrainingRecordsCsv(records: BrainTrainingRecord[]): string {
+function BuildTrainingRecordsCsv(records: BrainTrainingRecord[]): string {
   const rows = records.flatMap((record) => {
     const details = record.details ?? {};
     const detailRows = record.detailRows?.length ? record.detailRows : [{}];
@@ -139,19 +139,19 @@ function buildTrainingRecordsCsv(records: BrainTrainingRecord[]): string {
     }));
   });
   const columns = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
-  return createCsvContent([
+  return CreateCsvContent([
     columns,
     ...rows.map((row) => columns.map((column) => row[column])),
   ]);
 }
 
-function formatFileDate(date: Date): string {
+function FormatFileDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
-function safeFilePart(value: string): string {
+function SafeFilePart(value: string): string {
   return value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'braintrainer';
 }

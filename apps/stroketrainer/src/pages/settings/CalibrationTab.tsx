@@ -1,24 +1,24 @@
 import { useState } from 'react';
 import { useT } from '../../i18n';
 import {
-  getSetting,
-  setSetting,
-  isCalibrated,
-  markDisplayCalibrated,
-  clearDisplayCalibration,
-  getMMPerPixel,
-  CAL_BAR_LENGTH_PX,
-  CARD_WIDTH_MM,
-  CARD_HEIGHT_MM,
+  GetSetting,
+  SetSetting,
+  IsCalibrated,
+  MarkDisplayCalibrated,
+  ClearDisplayCalibration,
+  GetMMPerPixel,
+  calBarLengthPx,
+  cardWidthMm,
+  cardHeightMm,
 } from '../../utils/settings';
-import { pixelFromMillimeter } from '../../utils/spatialUtils';
+import { PixelFromMillimeter } from '../../utils/spatialUtils';
 
 /* ── Calibration Tab ── */
 export function CalibrationTab({ refresh }: { refresh: () => void }) {
   const { t } = useT();
   const [calMode, setCalMode] = useState<'ruler' | 'card'>('ruler');
-  const calibrated = isCalibrated();
-  const mmPerPx = getMMPerPixel();
+  const calibrated = IsCalibrated();
+  const mmPerPx = GetMMPerPixel();
 
   return (
     <div className="fade-in">
@@ -63,11 +63,11 @@ export function RulerCalibration({ refresh }: { refresh: () => void }) {
   const handleApply = () => {
     const val = parseFloat(inputVal);
     if (!isNaN(val) && val > 0 && val <= 10000) {
-      setSetting('rulerLengthInMM', val);
+      SetSetting('rulerLengthInMM', val);
       const pxPerMM = rulerBarPx / val;
-      const newCalBarMM = CAL_BAR_LENGTH_PX / pxPerMM;
-      setSetting('calBarLengthInMM', newCalBarMM);
-      markDisplayCalibrated();
+      const newCalBarMM = calBarLengthPx / pxPerMM;
+      SetSetting('calBarLengthInMM', newCalBarMM);
+      MarkDisplayCalibrated();
       refresh();
     }
   };
@@ -96,15 +96,15 @@ export function RulerCalibration({ refresh }: { refresh: () => void }) {
 
 export function CardCalibration({ refresh }: { refresh: () => void }) {
   const { t } = useT();
-  const wPx = pixelFromMillimeter(CARD_WIDTH_MM);
-  const hPx = pixelFromMillimeter(CARD_HEIGHT_MM);
+  const wPx = PixelFromMillimeter(cardWidthMm);
+  const hPx = PixelFromMillimeter(cardHeightMm);
   const factors = [1.1, 1.01, 1.0 / 1.01, 1.0 / 1.1];
   const labels = ['− −', '−', '+', '+ +'];
 
   const handleAdjust = (factor: number) => {
-    const current = getSetting('calBarLengthInMM');
-    setSetting('calBarLengthInMM', current * factor);
-    markDisplayCalibrated();
+    const current = GetSetting('calBarLengthInMM');
+    SetSetting('calBarLengthInMM', current * factor);
+    MarkDisplayCalibrated();
     refresh();
   };
 
@@ -119,7 +119,7 @@ export function CardCalibration({ refresh }: { refresh: () => void }) {
         style={{ width: wPx, height: hPx }}
       >
         <span className="cal-card-size-label">
-          {CARD_WIDTH_MM}mm × {CARD_HEIGHT_MM}mm
+          {cardWidthMm}mm × {cardHeightMm}mm
         </span>
       </div>
       <div className="cal-controls cal-controls-spaced">
@@ -135,7 +135,7 @@ export function CardCalibration({ refresh }: { refresh: () => void }) {
       </div>
       <button
         className="btn btn-danger btn-sm cal-reset-btn"
-        onClick={() => { setSetting('calBarLengthInMM', 149); clearDisplayCalibration(); refresh(); }}
+        onClick={() => { SetSetting('calBarLengthInMM', 149); ClearDisplayCalibration(); refresh(); }}
       >
         {t('settings.cal.resetBtn')}
       </button>

@@ -1,4 +1,4 @@
-export async function enterFullscreenFromUserGesture(element?: HTMLElement | null) {
+export async function EnterFullscreenFromUserGesture(element?: HTMLElement | null) {
   if (typeof document === 'undefined') return false;
   if (document.fullscreenElement) return true;
 
@@ -13,7 +13,7 @@ export async function enterFullscreenFromUserGesture(element?: HTMLElement | nul
   }
 }
 
-export async function exitFullscreenIfActive() {
+export async function ExitFullscreenIfActive() {
   if (typeof document === 'undefined') return false;
   if (!document.fullscreenElement || !document.exitFullscreen) return false;
 
@@ -25,7 +25,7 @@ export async function exitFullscreenIfActive() {
   }
 }
 
-export function waitForFullscreenLayout() {
+export function WaitForFullscreenLayout() {
   if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
     return Promise.resolve();
   }

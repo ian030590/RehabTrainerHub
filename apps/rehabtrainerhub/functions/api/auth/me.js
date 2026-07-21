@@ -1,26 +1,26 @@
 import {
-  errorResponse,
-  getUserById,
-  jsonResponse,
-  optionsResponse,
-  rejectDisallowedOrigin,
-  requireSession,
-  toPublicUser,
+  ErrorResponse,
+  GetUserById,
+  JsonResponse,
+  OptionsResponse,
+  RejectDisallowedOrigin,
+  RequireSession,
+  ToPublicUser,
 } from '../../_lib/auth.js';
 
 export function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env);
+  return OptionsResponse(request, env);
 }
 
 export async function onRequestGet({ request, env }) {
-  const originError = rejectDisallowedOrigin(request, env);
+  const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
 
-  const session = await requireSession(request, env);
-  if (!session?.sub) return errorResponse(request, env, 'Unauthorized.', 401);
+  const session = await RequireSession(request, env);
+  if (!session?.sub) return ErrorResponse(request, env, 'Unauthorized.', 401);
 
-  const user = await getUserById(env, session.sub);
-  if (!user) return errorResponse(request, env, 'Unauthorized.', 401);
+  const user = await GetUserById(env, session.sub);
+  if (!user) return ErrorResponse(request, env, 'Unauthorized.', 401);
 
-  return jsonResponse(request, env, { user: toPublicUser(user) });
+  return JsonResponse(request, env, { user: ToPublicUser(user) });
 }

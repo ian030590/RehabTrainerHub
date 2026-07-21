@@ -3,7 +3,7 @@
  */
 
 /** Shuffle an array in-place (Fisher-Yates) */
-export function shuffleArray<T>(array: T[]): T[] {
+export function ShuffleArray<T>(array: T[]): T[] {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
@@ -12,21 +12,21 @@ export function shuffleArray<T>(array: T[]): T[] {
 }
 
 /** Random integer in [min, max] inclusive */
-export function randomInt(min: number, max: number): number {
+export function RandomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 /** Clamp value */
-export function clamp(val: number, min: number, max: number): number {
+export function Clamp(val: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, val));
 }
 
-export function mean(values: readonly number[]): number {
+export function Mean(values: readonly number[]): number {
   if (values.length === 0) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-export function median(values: readonly number[]): number {
+export function Median(values: readonly number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
@@ -36,7 +36,7 @@ export function median(values: readonly number[]): number {
 }
 
 /** Generate random uppercase letter string */
-export function generateRandomLetters(length: number): string {
+export function GenerateRandomLetters(length: number): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let result = '';
   for (let i = 0; i < length; i++) {
@@ -46,17 +46,17 @@ export function generateRandomLetters(length: number): string {
 }
 
 /** Linear interpolation */
-export function lerp(a: number, b: number, t: number): number {
+export function Lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
 /** Ease-out cubic */
-export function easeOutCubic(t: number): number {
+export function EaseOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
 /** Ease-in-out quad */
-export function easeInOutQuad(t: number): number {
+export function EaseInOutQuad(t: number): number {
   return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
@@ -64,7 +64,7 @@ export function easeInOutQuad(t: number): number {
  * Generate scattered non-overlapping positions.
  * Rejection sampling with fallback.
  */
-export function generateScatteredPositions(
+export function GenerateScatteredPositions(
   count: number,
   bounds: { x: number; y: number; w: number; h: number },
   minDist: number,

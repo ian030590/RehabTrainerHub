@@ -23,7 +23,7 @@ export function StrokeTrainingRulesPanel({
   onBack,
 }: StrokeTrainingRulesPanelProps) {
   const { lang } = useT();
-  const labels = getStrokeRuleLabels(lang);
+  const labels = GetStrokeRuleLabels(lang);
 
   return (
     <TrainingRulesPanel
@@ -32,7 +32,7 @@ export function StrokeTrainingRulesPanel({
       title={title}
       summaryTitle={summaryTitle}
       summaryItems={summaryItems}
-      sections={getStrokeRuleSections(gameId, lang)}
+      sections={GetStrokeRuleSections(gameId, lang)}
       startLabel={labels.start}
       backLabel={labels.back}
       onStart={onStart}
@@ -41,7 +41,7 @@ export function StrokeTrainingRulesPanel({
   );
 }
 
-function getStrokeRuleLabels(lang: 'zh' | 'en') {
+function GetStrokeRuleLabels(lang: 'zh' | 'en') {
   return lang === 'en'
     ? {
         label: 'Game Rules',
@@ -55,7 +55,7 @@ function getStrokeRuleLabels(lang: 'zh' | 'en') {
       };
 }
 
-function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
+function GetStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
   const isZh = lang !== 'en';
 
   switch (gameId) {
@@ -221,7 +221,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
           ];
     case 'memory':
     case 'memory-match':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '翻開卡片並找出相同圖案配對，訓練短期記憶與視覺搜尋。',
         'Flip cards to find matching pairs and train short-term memory with visual scanning.',
@@ -238,7 +238,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
       );
     case 'lights':
     case 'lights-out':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '點擊格子會切換該格與鄰近格子的亮滅，目標是關閉全部亮燈。',
         'Click a cell to toggle it and its neighbors. Turn all lights off.',
@@ -255,7 +255,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
       );
     case 'reaction':
     case 'reaction-time':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '等待訊號出現後再點擊，訓練反應時間與抑制控制。',
         'Wait for the signal, then click quickly to train reaction time and inhibition.',
@@ -272,7 +272,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
       );
     case 'whack':
     case 'whack-a-mole':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '在時間內點擊出現的目標，訓練視覺搜尋與注意力轉移。',
         'Click targets as they appear within the time limit.',
@@ -289,7 +289,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
       );
     case 'sliding':
     case 'sliding-puzzle':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '利用空格移動拼圖，將數字恢復到正確順序。',
         'Slide tiles into the empty space to restore numeric order.',
@@ -305,7 +305,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
         ],
       );
     case 'sudoku':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '此入口合併三種數字推理：初級是拉丁方格，中級是魔術方陣，高級是 9x9 數獨。',
         'This entry combines three number-grid tasks: Beginner is Latin Square, Intermediate is Magic Square, and Advanced is 9x9 Sudoku.',
@@ -313,7 +313,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['Tap a blank cell to cycle its value.', 'Complete the row, column, box, or sum rule for the selected difficulty.', 'The session ends when every blank matches the solution.'],
       );
     case 'bulls-and-cows':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '用位置與數字提示推理四位不重複數字。',
         'Deduce the unique four-digit number from position and digit feedback.',
@@ -321,7 +321,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['Tap a slot, then tap a digit.', 'The first digit cannot be 0 and digits cannot repeat.'],
       );
     case 'simon-says':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '記住顏色亮起順序，並在輪到你時重複。',
         'Remember the color sequence and repeat it when prompted.',
@@ -329,7 +329,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['Do not tap during the watch phase.', 'A wrong input ends the session; reaching the target round succeeds.'],
       );
     case 'tic-tac-toe':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '與電腦輪流下棋，先連線者獲勝。',
         'Take turns against the computer and make a line first.',
@@ -337,7 +337,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['You are X.', 'Tap an empty cell; the computer moves automatically.'],
       );
     case 'connect4':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '投入棋子並搶先連成四個。',
         'Drop discs and connect four first.',
@@ -345,7 +345,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['Tap a column to drop a yellow disc.', 'The computer moves automatically; four in any direction wins.'],
       );
     case 'dots-and-boxes':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '連接兩點成線，完成方盒即可得分。',
         'Draw lines between dots; completing a box scores a point.',
@@ -353,7 +353,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['Tap a line between dots.', 'Completing a box gives another turn; higher final score succeeds.'],
       );
     case 'hex':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '搶先連接自己兩側邊界。',
         'Connect your two sides before the computer connects its sides.',
@@ -361,7 +361,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['You are blue and connect top to bottom.', 'The computer is red and connects left to right.'],
       );
     case 'set-game':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '找出三張在每個特徵上都全同或全異的圖卡。',
         'Find three cards where every feature is all same or all different.',
@@ -369,7 +369,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['Tap three cards.', 'Valid sets are replaced; invalid selections are cleared.'],
       );
     case 'sokoban':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '推動箱子到指定目標格。',
         'Push boxes onto target cells.',
@@ -377,7 +377,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['Use arrow keys or tap an adjacent cell to move.', 'If a box is adjacent and the next cell is clear, it is pushed.', 'Each session draws from varied level layouts.'],
       );
     case 'maze':
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '在迷宮中從起點走到終點。',
         'Navigate from the start to the goal.',
@@ -449,7 +449,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
             },
           ];
     default:
-      return buildReferenceRules(
+      return BuildReferenceRules(
         isZh,
         '依畫面提示完成任務，訓練注意力、控制與反應。',
         'Follow the on-screen task to train attention, control, and response.',
@@ -459,7 +459,7 @@ function getStrokeRuleSections(gameId: string, lang: 'zh' | 'en') {
   }
 }
 
-function buildReferenceRules(
+function BuildReferenceRules(
   isZh: boolean,
   zhDescription: string,
   enDescription: string,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import {
   ReferenceListPage,
-  formatReferenceModuleChip,
+  FormatReferenceModuleChip,
   type ReferenceListItem,
   type ReferenceListPageLabels,
 } from '@rehab-trainer/ui/components/ReferenceListPage';
@@ -51,7 +51,7 @@ const zhStrokeCognitiveReferenceModuleChips = [
   '七巧板',
   '推箱子',
   '迷宮',
-].map((moduleName) => formatReferenceModuleChip('認知訓練', moduleName));
+].map((moduleName) => FormatReferenceModuleChip('認知訓練', moduleName));
 
 const enStrokeCognitiveReferenceModuleChips = [
   'Memory Match',
@@ -77,7 +77,7 @@ const enStrokeCognitiveReferenceModuleChips = [
   'Tangram',
   'Sokoban',
   'Maze',
-].map((moduleName) => formatReferenceModuleChip('Cognitive Training', moduleName));
+].map((moduleName) => FormatReferenceModuleChip('Cognitive Training', moduleName));
 
 const referencesCopy: Record<HubLocale, ReferencesCopy> = {
   'zh-TW': {
@@ -93,8 +93,8 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         href: 'https://github.com/brownhci/WebGazer',
         description: '基於攝影機的視線追蹤 library，作為視線追蹤校正與 PL 視力評估參考。',
         modules: [
-          formatReferenceModuleChip('視覺評估', '條紋視力'),
-          formatReferenceModuleChip('網頁設定', '視線追蹤校正'),
+          FormatReferenceModuleChip('視覺評估', '條紋視力'),
+          FormatReferenceModuleChip('網頁設定', '視線追蹤校正'),
         ],
       },
       {
@@ -102,33 +102,33 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         href: 'https://github.com/michaelbach/FrACT10',
         description: '心理物理視力評估與螢幕校正工具，作為視力評估流程與演算法參考。',
         modules: [
-          formatReferenceModuleChip('視覺評估', '條紋視力'),
-          formatReferenceModuleChip('網頁設定', '螢幕校正'),
+          FormatReferenceModuleChip('視覺評估', '條紋視力'),
+          FormatReferenceModuleChip('網頁設定', '螢幕校正'),
         ],
       },
       {
         title: 'styts/eye-training',
         href: 'https://github.com/styts/eye-training',
         description: '眼球移動與注視練習專案，作為移動卡片訓練互動參考。',
-        modules: [formatReferenceModuleChip('視覺訓練', '移動卡片訓練')],
+        modules: [FormatReferenceModuleChip('視覺訓練', '移動卡片訓練')],
       },
       {
         title: 'Jesper-N/foveaflow',
         href: 'https://github.com/Jesper-N/foveaflow',
         description: '多目標追蹤視覺訓練專案，作為眼動訓練目標移動與追蹤設計參考。',
-        modules: [formatReferenceModuleChip('視覺訓練', '眼動訓練')],
+        modules: [FormatReferenceModuleChip('視覺訓練', '眼動訓練')],
       },
       {
         title: 'Fordi/eyegame',
         href: 'https://github.com/Fordi/eyegame.git',
         description: 'Gabor patch 視覺辨識遊戲，作為蓋伯斑塊練習機制參考。',
-        modules: [formatReferenceModuleChip('視覺訓練', '蓋伯斑塊練習')],
+        modules: [FormatReferenceModuleChip('視覺訓練', '蓋伯斑塊練習')],
       },
       {
         title: 'visiontherapy/visiontherapy.github.io',
         href: 'https://github.com/visiontherapy/visiontherapy.github.io',
         description: '視覺治療練習集合，作為哈特圖等視覺訓練內容參考。',
-        modules: [formatReferenceModuleChip('視覺訓練', '哈特圖訓練')],
+        modules: [FormatReferenceModuleChip('視覺訓練', '哈特圖訓練')],
       },
       {
         title: 'muthuspark/javascript-games',
@@ -140,19 +140,19 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         title: 'antfu/vue-minesweeper',
         href: 'https://github.com/antfu/vue-minesweeper',
         description: '踩地雷遊戲邏輯與版面互動參考。',
-        modules: [formatReferenceModuleChip('認知訓練', '踩地雷')],
+        modules: [FormatReferenceModuleChip('認知訓練', '踩地雷')],
       },
       {
         title: 'ccoreilly/vosk-browser',
         href: 'https://github.com/ccoreilly/vosk-browser',
         description: '瀏覽器端 Vosk 語音辨識 runtime，用於本機語音模型推論參考。',
-        modules: [formatReferenceModuleChip('口語訓練', '語音防線')],
+        modules: [FormatReferenceModuleChip('口語訓練', '語音防線')],
       },
       {
         title: 'rbcavanaugh/mainConcept',
         href: 'https://github.com/rbcavanaugh/mainConcept',
         description: '主旨概念分析訓練題材與評分流程，作為主旨概念訓練參考。',
-        modules: [formatReferenceModuleChip('思考訓練', '主旨概念訓練')],
+        modules: [FormatReferenceModuleChip('思考訓練', '主旨概念訓練')],
       },
     ],
     literatureItems: [
@@ -160,7 +160,7 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         title: 'Schmetterer, L., Scholl, H., Garhöfer, G., Janeschitz-Kriegl, L., Corvi, F., Sadda, S. R., & Medeiros, F. A. (2023). Endpoints for clinical trials in ophthalmology. Progress in Retinal and Eye Research, 97, 101160. https://doi.org/10.1016/j.preteyeres.2022.101160',
         href: 'https://doi.org/10.1016/j.preteyeres.2022.101160',
         description: '眼科臨床試驗終點指標綜述，作為視力評估參考文獻。',
-        modules: [formatReferenceModuleChip('視覺評估', '條紋視力')],
+        modules: [FormatReferenceModuleChip('視覺評估', '條紋視力')],
       },
     ],
   },
@@ -177,8 +177,8 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         href: 'https://github.com/brownhci/WebGazer',
         description: 'Webcam-based eye tracking library used as a reference for gaze calibration and PL visual assessment.',
         modules: [
-          formatReferenceModuleChip('Visual Assessment', 'Preferential Looking (PL)'),
-          formatReferenceModuleChip('Web Settings', 'WebGazer Calibration'),
+          FormatReferenceModuleChip('Visual Assessment', 'Preferential Looking (PL)'),
+          FormatReferenceModuleChip('Web Settings', 'WebGazer Calibration'),
         ],
       },
       {
@@ -186,33 +186,33 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         href: 'https://github.com/michaelbach/FrACT10',
         description: 'Psychophysical visual acuity assessment and screen calibration tool used as a reference for assessment flow and algorithms.',
         modules: [
-          formatReferenceModuleChip('Visual Assessment', 'Preferential Looking (PL)'),
-          formatReferenceModuleChip('Web Settings', 'Calibration'),
+          FormatReferenceModuleChip('Visual Assessment', 'Preferential Looking (PL)'),
+          FormatReferenceModuleChip('Web Settings', 'Calibration'),
         ],
       },
       {
         title: 'styts/eye-training',
         href: 'https://github.com/styts/eye-training',
         description: 'Eye movement and fixation training project used as an interaction reference for Moving Card Training.',
-        modules: [formatReferenceModuleChip('Visual Training', 'Moving Card Training')],
+        modules: [FormatReferenceModuleChip('Visual Training', 'Moving Card Training')],
       },
       {
         title: 'Jesper-N/foveaflow',
         href: 'https://github.com/Jesper-N/foveaflow',
         description: 'Multiple-object tracking vision training project used as a reference for target movement and tracking design.',
-        modules: [formatReferenceModuleChip('Visual Training', 'Oculomotor Training')],
+        modules: [FormatReferenceModuleChip('Visual Training', 'Oculomotor Training')],
       },
       {
         title: 'Fordi/eyegame',
         href: 'https://github.com/Fordi/eyegame.git',
         description: 'Gabor patch visual recognition game used as a reference for the Gabor Patching training mechanic.',
-        modules: [formatReferenceModuleChip('Visual Training', 'Gabor Patching')],
+        modules: [FormatReferenceModuleChip('Visual Training', 'Gabor Patching')],
       },
       {
         title: 'visiontherapy/visiontherapy.github.io',
         href: 'https://github.com/visiontherapy/visiontherapy.github.io',
         description: 'Vision therapy exercise collection used as a reference for Hart Chart and related vision training content.',
-        modules: [formatReferenceModuleChip('Visual Training', 'Hart Chart Training')],
+        modules: [FormatReferenceModuleChip('Visual Training', 'Hart Chart Training')],
       },
       {
         title: 'muthuspark/javascript-games',
@@ -224,19 +224,19 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         title: 'antfu/vue-minesweeper',
         href: 'https://github.com/antfu/vue-minesweeper',
         description: 'Minesweeper game logic and board interaction reference.',
-        modules: [formatReferenceModuleChip('Cognitive Training', 'Minesweeper')],
+        modules: [FormatReferenceModuleChip('Cognitive Training', 'Minesweeper')],
       },
       {
         title: 'ccoreilly/vosk-browser',
         href: 'https://github.com/ccoreilly/vosk-browser',
         description: 'Browser Vosk speech-recognition runtime used as a reference for local speech model inference.',
-        modules: [formatReferenceModuleChip('Speech Training', 'Voice Defender')],
+        modules: [FormatReferenceModuleChip('Speech Training', 'Voice Defender')],
       },
       {
         title: 'rbcavanaugh/mainConcept',
         href: 'https://github.com/rbcavanaugh/mainConcept',
         description: 'Main-concept analysis materials and scoring workflow used as a reference for Main Concept Training.',
-        modules: [formatReferenceModuleChip('Thinking Training', 'Main Concept Training')],
+        modules: [FormatReferenceModuleChip('Thinking Training', 'Main Concept Training')],
       },
     ],
     literatureItems: [
@@ -244,7 +244,7 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         title: 'Schmetterer, L., Scholl, H., Garhöfer, G., Janeschitz-Kriegl, L., Corvi, F., Sadda, S. R., & Medeiros, F. A. (2023). Endpoints for clinical trials in ophthalmology. Progress in Retinal and Eye Research, 97, 101160. https://doi.org/10.1016/j.preteyeres.2022.101160',
         href: 'https://doi.org/10.1016/j.preteyeres.2022.101160',
         description: 'Review of ophthalmology clinical-trial endpoints used as a visual assessment literature reference.',
-        modules: [formatReferenceModuleChip('Visual Assessment', 'Preferential Looking (PL)')],
+        modules: [FormatReferenceModuleChip('Visual Assessment', 'Preferential Looking (PL)')],
       },
     ],
   },

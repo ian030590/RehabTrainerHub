@@ -14,12 +14,12 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '../../i18n';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
-import { downloadCsvFile } from '../../utils/downloadFile';
+import { DownloadCsvFile } from '../../utils/downloadFile';
 import { getActiveUser } from '../../utils/settings';
-import { playGameEndSound, playSuccessSound, prepareAudioFeedback } from '../../utils/soundManager';
-import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
-import { verifySelectedTrainingUser } from './selectedUserGuard';
+import { PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
+import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 
@@ -123,29 +123,29 @@ interface LiveState {
   insideTarget: boolean;
 }
 
-const MEDIAPIPE_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
-const HAND_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
-const DETECTION_INTERVAL_MS = 66;
-const TRACKING_GRACE_MS = 240;
-const LIVE_STATE_INTERVAL_MS = 45;
-const HAND_CURSOR_RADIUS = 18;
+const mediapipeWasmUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
+const handModelUrl = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const detectionIntervalMs = 66;
+const trackingGraceMs = 240;
+const liveStateIntervalMs = 45;
+const handCursorRadius = 18;
 
-const DRILLS: readonly DrillDefinition[] = [
+const drills: readonly DrillDefinition[] = [
   { id: 'bounce', referenceName: 'Therapy Module 1', accent: '#2f855a' },
   { id: 'vertical', referenceName: 'Therapy Module 2', accent: '#0f766e' },
   { id: 'horizontal', referenceName: 'Therapy Module 3', accent: '#b45309' },
   { id: 'random', referenceName: 'Therapy Module 4', accent: '#be123c' },
 ];
 
-const DIFFICULTIES: readonly DifficultyDefinition[] = [
+const difficulties: readonly DifficultyDefinition[] = [
   { id: 'beginner', radius: 82, speed: 120, holdMs: 560 },
   { id: 'intermediate', radius: 66, speed: 165, holdMs: 760 },
   { id: 'advanced', radius: 54, speed: 220, holdMs: 980 },
 ];
 
-const DURATION_OPTIONS = [45, 60, 90] as const;
+const durationOptions = [45, 60, 90] as const;
 
-const COPY = {
+const copy = {
   zh: {
     title: '動作皮質復健訓練',
     configLabel: '攝影機動作訓練設定',
@@ -286,11 +286,11 @@ const COPY = {
   },
 } as const;
 
-const HAND_LABELS: readonly HandChoice[] = ['any', 'left', 'right'];
+const handLabels: readonly HandChoice[] = ['any', 'left', 'right'];
 
 export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   const { lang, t } = useT();
-  const labels = COPY[lang];
+  const labels = copy[lang];
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const stageRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -305,12 +305,12 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   const mountedRef = useRef(true);
   const targetRef = useRef<TargetState | null>(null);
   const handRef = useRef<HandState>({ x: 0, y: 0, visible: false, handedness: null, lastSeenAt: 0 });
-  const metricsRef = useRef<SessionMetrics>(createEmptyMetrics());
+  const metricsRef = useRef<SessionMetrics>(CreateEmptyMetrics());
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   const [drill, setDrill] = useState<DrillId>('bounce');
   const [difficulty, setDifficulty] = useState<DifficultyId>('beginner');
-  const [durationSec, setDurationSec] = useState<(typeof DURATION_OPTIONS)[number]>(60);
+  const [durationSec, setDurationSec] = useState<(typeof durationOptions)[number]>(60);
   const [handChoice, setHandChoice] = useState<HandChoice>('any');
   const [targetSizeScale, setTargetSizeScale] = useState(1);
   const [speedScale, setSpeedScale] = useState(1);
@@ -364,9 +364,9 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     stopVision();
   }, [stopVision]);
 
-  const activeDrill = useMemo(() => DRILLS.find((item) => item.id === drill) ?? DRILLS[0], [drill]);
+  const activeDrill = useMemo(() => drills.find((item) => item.id === drill) ?? drills[0], [drill]);
   const activeDifficulty = useMemo(
-    () => DIFFICULTIES.find((item) => item.id === difficulty) ?? DIFFICULTIES[0],
+    () => difficulties.find((item) => item.id === difficulty) ?? difficulties[0],
     [difficulty],
   );
 
@@ -374,13 +374,13 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     { label: labels.drill, value: labels.drillNames[drill] },
     { label: labels.difficulty, value: labels.difficultyNames[difficulty] },
     { label: labels.duration, value: `${durationSec}s` },
-    { label: labels.hand, value: formatHandChoice(handChoice, labels) },
+    { label: labels.hand, value: FormatHandChoice(handChoice, labels) },
   ], [difficulty, drill, durationSec, handChoice, labels]);
 
   const resetGameState = useCallback(() => {
     targetRef.current = null;
     handRef.current = { x: 0, y: 0, visible: false, handedness: null, lastSeenAt: 0 };
-    metricsRef.current = createEmptyMetrics();
+    metricsRef.current = CreateEmptyMetrics();
     lastDetectionAtRef.current = 0;
     lastVideoTimeRef.current = -1;
     lastLiveStateAtRef.current = 0;
@@ -410,7 +410,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     const accuracy = metrics.handVisibleMs > 0 ? metrics.inTargetMs / metrics.handVisibleMs : 0;
     const visibility = metrics.handVisibleMs / elapsedMs;
     const session: SessionRecord = {
-      Test_Date: formatTestDate(new Date()),
+      Test_Date: FormatTestDate(new Date()),
       Participant_ID: participantId,
       Drill: labels.drillNames[drill],
       Reference_Module: activeDrill.referenceName,
@@ -420,19 +420,19 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       Target_Size_Scale: Number(targetSizeScale.toFixed(2)),
       Speed_Scale: Number(speedScale.toFixed(2)),
       Adaptive_Level: target?.level ?? 1,
-      Accuracy_Percent: toPercent(accuracy),
-      Hand_Visible_Percent: toPercent(visibility),
+      Accuracy_Percent: ToPercent(accuracy),
+      Hand_Visible_Percent: ToPercent(visibility),
       Successful_Reps: metrics.successes,
       Interrupted_Holds: metrics.misses,
       Best_Hold_Seconds: Number((metrics.bestHoldMs / 1000).toFixed(2)),
       Event_Records: metrics.events.map((event) => ({ ...event })),
     };
 
-    playGameEndSound('Victory', jsPsychRef);
+    PlayGameEndSound('Victory', jsPsychRef);
     setResult(session);
     setPhase('results');
     stopVision();
-    void saveTrainingSessionRecord({
+    void SaveTrainingSessionRecord({
       userName: participantId,
       moduleId: 'motor-training',
       gameId: 'motor-cortex-rehab',
@@ -455,7 +455,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       },
       detailRows: session.Event_Records.map((event) => ({ ...event }) as Record<string, unknown>),
     });
-    writeJsPsychData(
+    WriteJsPsychData(
       jsPsychRef,
       session as unknown as Record<string, unknown>,
       'Unable to write motor cortex rehab result to jsPsych data.',
@@ -472,7 +472,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     if (!stage || !rect || rect.width <= 0 || rect.height <= 0) return;
 
     if (!targetRef.current) {
-      targetRef.current = createInitialTarget(
+      targetRef.current = CreateInitialTarget(
         drill,
         activeDifficulty,
         targetSizeScale,
@@ -482,16 +482,16 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       );
     }
 
-    if (now - lastDetectionAtRef.current >= DETECTION_INTERVAL_MS && video && landmarker && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    if (now - lastDetectionAtRef.current >= detectionIntervalMs && video && landmarker && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
       if (video.currentTime !== lastVideoTimeRef.current) {
         lastVideoTimeRef.current = video.currentTime;
         lastDetectionAtRef.current = now;
         try {
           const detection = landmarker.detectForVideo(video, now);
-          const selection = selectHand(detection.landmarks, detection.handedness ?? detection.handednesses, handChoice);
-          drawHandLandmarks(handCanvasRef.current, video, selection?.landmarks);
+          const selection = SelectHand(detection.landmarks, detection.handedness ?? detection.handednesses, handChoice);
+          DrawHandLandmarks(handCanvasRef.current, video, selection?.landmarks);
           if (selection) {
-            const point = getHandCursorPoint(selection.landmarks, rect.width, rect.height);
+            const point = GetHandCursorPoint(selection.landmarks, rect.width, rect.height);
             handRef.current = {
               x: point.x,
               y: point.y,
@@ -499,7 +499,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
               handedness: selection.handedness,
               lastSeenAt: now,
             };
-          } else if (now - handRef.current.lastSeenAt > TRACKING_GRACE_MS) {
+          } else if (now - handRef.current.lastSeenAt > trackingGraceMs) {
             handRef.current = { ...handRef.current, visible: false };
           }
         } catch (error) {
@@ -513,7 +513,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       }
     }
 
-    updateTrainingLoop({
+    UpdateTrainingLoop({
       now,
       rect,
       drill,
@@ -525,13 +525,13 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       hand: handRef.current,
       metrics: metricsRef.current,
       labels,
-      onSuccess: () => playSuccessSound(jsPsychRef),
+      onSuccess: () => PlaySuccessSound(jsPsychRef),
       onComplete: completeSession,
     });
 
-    if (now - lastLiveStateAtRef.current >= LIVE_STATE_INTERVAL_MS && targetRef.current) {
+    if (now - lastLiveStateAtRef.current >= liveStateIntervalMs && targetRef.current) {
       lastLiveStateAtRef.current = now;
-      setLiveState(buildLiveState(
+      setLiveState(BuildLiveState(
         now,
         durationSec,
         rect,
@@ -554,14 +554,14 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   ]);
 
   const startTraining = useCallback(async () => {
-    if (!verifySelectedTrainingUser()) return;
+    if (!VerifySelectedTrainingUser()) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       setVisionError(labels.unsupported);
       setShowVisionError(true);
       return;
     }
 
-    prepareAudioFeedback(jsPsychRef);
+    PrepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
     stopVision();
     resetGameState();
@@ -597,9 +597,9 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       await video.play();
 
       setStatusMessage(labels.loadingModel);
-      const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
+      const vision = await FilesetResolver.forVisionTasks(mediapipeWasmUrl);
       const landmarker = await HandLandmarker.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: HAND_MODEL_URL },
+        baseOptions: { modelAssetPath: handModelUrl },
         runningMode: 'VIDEO',
         numHands: handChoice === 'any' ? 1 : 2,
         minHandDetectionConfidence: 0.5,
@@ -612,7 +612,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       }
       handLandmarkerRef.current = landmarker;
       metricsRef.current = {
-        ...createEmptyMetrics(),
+        ...CreateEmptyMetrics(),
         startedAt: performance.now(),
         lastTickAt: performance.now(),
       };
@@ -645,7 +645,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
 
   const downloadResult = useCallback(() => {
     if (!result) return;
-    downloadCsvFile(buildMotorCortexCsv(result), `motor_cortex_rehab_${result.Test_Date}.csv`);
+    DownloadCsvFile(BuildMotorCortexCsv(result), `motor_cortex_rehab_${result.Test_Date}.csv`);
   }, [result]);
 
   useTrainingAbort({
@@ -714,7 +714,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                 <span>{labels.drillNames[drill]}</span>
               </div>
               <div className="training-option-grid motor-cortex-drill-grid">
-                {DRILLS.map((item) => (
+                {drills.map((item) => (
                   <button
                     className={`training-option ${drill === item.id ? 'active' : ''}`}
                     key={item.id}
@@ -738,7 +738,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                 <span>{labels.difficultyNames[difficulty]}</span>
               </div>
               <div className="training-option-grid training-option-grid-three">
-                {DIFFICULTIES.map((item) => (
+                {difficulties.map((item) => (
                   <button
                     className={`training-option ${difficulty === item.id ? 'active' : ''}`}
                     key={item.id}
@@ -761,7 +761,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                 <span>{durationSec}s</span>
               </div>
               <div className="training-option-grid training-option-grid-three">
-                {DURATION_OPTIONS.map((value) => (
+                {durationOptions.map((value) => (
                   <button
                     className={`training-option ${durationSec === value ? 'active' : ''}`}
                     key={value}
@@ -780,17 +780,17 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                   <h2>{labels.hand}</h2>
                   <p>{labels.handDesc}</p>
                 </div>
-                <span>{formatHandChoice(handChoice, labels)}</span>
+                <span>{FormatHandChoice(handChoice, labels)}</span>
               </div>
               <div className="training-option-grid training-option-grid-three">
-                {HAND_LABELS.map((value) => (
+                {handLabels.map((value) => (
                   <button
                     className={`training-option ${handChoice === value ? 'active' : ''}`}
                     key={value}
                     type="button"
                     onClick={() => setHandChoice(value)}
                   >
-                    <span className="training-option-title">{formatHandChoice(value, labels)}</span>
+                    <span className="training-option-title">{FormatHandChoice(value, labels)}</span>
                   </button>
                 ))}
               </div>
@@ -876,11 +876,11 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
             </span>
             <span>
               <small>{labels.accuracy}</small>
-              <strong>{toPercent(liveState.accuracy)}%</strong>
+              <strong>{ToPercent(liveState.accuracy)}%</strong>
             </span>
             <span>
               <small>{labels.visible}</small>
-              <strong>{toPercent(liveState.visibility)}%</strong>
+              <strong>{ToPercent(liveState.visibility)}%</strong>
             </span>
             <span>
               <small>{labels.reps}</small>
@@ -997,7 +997,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   );
 }
 
-function createEmptyMetrics(): SessionMetrics {
+function CreateEmptyMetrics(): SessionMetrics {
   return {
     startedAt: 0,
     lastTickAt: 0,
@@ -1012,7 +1012,7 @@ function createEmptyMetrics(): SessionMetrics {
   };
 }
 
-function createInitialTarget(
+function CreateInitialTarget(
   drill: DrillId,
   difficulty: DifficultyDefinition,
   targetSizeScale: number,
@@ -1031,7 +1031,7 @@ function createInitialTarget(
   }
   if (drill === 'random') {
     return {
-      ...placeRandomTarget({ x: center.x, y: center.y, vx: 0, vy: 0, radius, level: 1, holdTargetMs: difficulty.holdMs }, width, height),
+      ...PlaceRandomTarget({ x: center.x, y: center.y, vx: 0, vy: 0, radius, level: 1, holdTargetMs: difficulty.holdMs }, width, height),
       holdTargetMs: difficulty.holdMs + 240,
     };
   }
@@ -1046,7 +1046,7 @@ function createInitialTarget(
   };
 }
 
-function updateTrainingLoop({
+function UpdateTrainingLoop({
   now,
   rect,
   drill,
@@ -1071,7 +1071,7 @@ function updateTrainingLoop({
   target: TargetState;
   hand: HandState;
   metrics: SessionMetrics;
-  labels: (typeof COPY)['zh'] | (typeof COPY)['en'];
+  labels: (typeof copy)['zh'] | (typeof copy)['en'];
   onSuccess: () => void;
   onComplete: (completedAt: number) => void;
 }) {
@@ -1087,11 +1087,11 @@ function updateTrainingLoop({
 
   const deltaMs = Math.min(90, Math.max(0, now - metrics.lastTickAt));
   metrics.lastTickAt = now;
-  moveTarget(drill, target, rect.width, rect.height, deltaMs);
+  MoveTarget(drill, target, rect.width, rect.height, deltaMs);
 
-  const handVisible = hand.visible && now - hand.lastSeenAt <= TRACKING_GRACE_MS;
+  const handVisible = hand.visible && now - hand.lastSeenAt <= trackingGraceMs;
   if (handVisible) metrics.handVisibleMs += deltaMs;
-  const insideTarget = handVisible && distance2d(hand, target) <= target.radius + HAND_CURSOR_RADIUS;
+  const insideTarget = handVisible && Distance2d(hand, target) <= target.radius + handCursorRadius;
   if (insideTarget) {
     metrics.inTargetMs += deltaMs;
     metrics.currentHoldMs += deltaMs;
@@ -1099,7 +1099,7 @@ function updateTrainingLoop({
   } else if (metrics.currentHoldMs > 180) {
     metrics.misses += 1;
     metrics.streak = 0;
-    metrics.events.push(toEventRecord({
+    metrics.events.push(ToEventRecord({
       metrics,
       drillName: labels.drillNames[drill],
       result: 'interrupted',
@@ -1114,7 +1114,7 @@ function updateTrainingLoop({
   if (metrics.currentHoldMs >= target.holdTargetMs) {
     metrics.successes += 1;
     metrics.streak += 1;
-    metrics.events.push(toEventRecord({
+    metrics.events.push(ToEventRecord({
       metrics,
       drillName: labels.drillNames[drill],
       result: 'success',
@@ -1123,14 +1123,14 @@ function updateTrainingLoop({
     }));
     metrics.currentHoldMs = 0;
     onSuccess();
-    adaptTarget(target, activeDifficulty, targetSizeScale, speedScale, metrics);
+    AdaptTarget(target, activeDifficulty, targetSizeScale, speedScale, metrics);
     if (drill === 'random') {
-      placeRandomTarget(target, rect.width, rect.height);
+      PlaceRandomTarget(target, rect.width, rect.height);
     }
   }
 }
 
-function moveTarget(drill: DrillId, target: TargetState, width: number, height: number, deltaMs: number) {
+function MoveTarget(drill: DrillId, target: TargetState, width: number, height: number, deltaMs: number) {
   const deltaSec = deltaMs / 1000;
   const padding = target.radius + 24;
   if (drill === 'random') return;
@@ -1144,16 +1144,16 @@ function moveTarget(drill: DrillId, target: TargetState, width: number, height: 
   }
 
   if (target.x < padding || target.x > width - padding) {
-    target.x = clamp(target.x, padding, width - padding);
+    target.x = Clamp(target.x, padding, width - padding);
     target.vx *= -1;
   }
   if (target.y < padding || target.y > height - padding) {
-    target.y = clamp(target.y, padding, height - padding);
+    target.y = Clamp(target.y, padding, height - padding);
     target.vy *= -1;
   }
 }
 
-function adaptTarget(
+function AdaptTarget(
   target: TargetState,
   difficulty: DifficultyDefinition,
   targetSizeScale: number,
@@ -1172,18 +1172,18 @@ function adaptTarget(
   const directionY = Math.sign(target.vy || 1);
   target.vx = directionX * speed;
   target.vy = directionY * speed * 0.78;
-  target.radius = clamp(difficulty.radius * targetSizeScale * (1 - (target.level - 1) * 0.035), 38, 110);
-  target.holdTargetMs = clamp(difficulty.holdMs + (target.level - 1) * 40, 420, 1400);
+  target.radius = Clamp(difficulty.radius * targetSizeScale * (1 - (target.level - 1) * 0.035), 38, 110);
+  target.holdTargetMs = Clamp(difficulty.holdMs + (target.level - 1) * 40, 420, 1400);
 }
 
-function placeRandomTarget(target: TargetState, width: number, height: number): TargetState {
+function PlaceRandomTarget(target: TargetState, width: number, height: number): TargetState {
   const padding = target.radius + 28;
   target.x = padding + Math.random() * Math.max(1, width - padding * 2);
   target.y = padding + Math.random() * Math.max(1, height - padding * 2);
   return target;
 }
 
-function toEventRecord({
+function ToEventRecord({
   metrics,
   drillName,
   result,
@@ -1203,13 +1203,13 @@ function toEventRecord({
     Result: result,
     Time_Seconds: Number((elapsedMs / 1000).toFixed(2)),
     Hold_Seconds: Number((metrics.currentHoldMs / 1000).toFixed(2)),
-    Accuracy_Percent: toPercent(accuracy),
+    Accuracy_Percent: ToPercent(accuracy),
     Target_Size_Px: Number((target.radius * 2).toFixed(1)),
     Adaptive_Level: target.level,
   };
 }
 
-function buildLiveState(
+function BuildLiveState(
   now: number,
   durationSec: number,
   rect: DOMRect,
@@ -1220,15 +1220,15 @@ function buildLiveState(
   const elapsedMs = metrics.startedAt ? now - metrics.startedAt : 0;
   const accuracy = metrics.handVisibleMs > 0 ? metrics.inTargetMs / metrics.handVisibleMs : 0;
   const visibility = elapsedMs > 0 ? metrics.handVisibleMs / elapsedMs : 0;
-  const handVisible = hand.visible && now - hand.lastSeenAt <= TRACKING_GRACE_MS;
-  const insideTarget = handVisible && distance2d(hand, target) <= target.radius + HAND_CURSOR_RADIUS;
+  const handVisible = hand.visible && now - hand.lastSeenAt <= trackingGraceMs;
+  const insideTarget = handVisible && Distance2d(hand, target) <= target.radius + handCursorRadius;
   return {
     timeRemaining: Math.max(0, durationSec - elapsedMs / 1000),
     accuracy,
     visibility,
     successes: metrics.successes,
     misses: metrics.misses,
-    currentHoldPercent: clamp(metrics.currentHoldMs / target.holdTargetMs, 0, 1),
+    currentHoldPercent: Clamp(metrics.currentHoldMs / target.holdTargetMs, 0, 1),
     level: target.level,
     targetX: (target.x / rect.width) * 100,
     targetY: (target.y / rect.height) * 100,
@@ -1240,29 +1240,29 @@ function buildLiveState(
   };
 }
 
-function selectHand(
+function SelectHand(
   landmarks: NormalizedLandmark[][],
   handedness: Category[][],
   handChoice: HandChoice,
 ): { landmarks: NormalizedLandmark[]; handedness: HandChoice | null } | null {
   if (!landmarks.length) return null;
   if (handChoice === 'any') {
-    return { landmarks: landmarks[0], handedness: toHandChoice(handedness[0]?.[0]?.categoryName) };
+    return { landmarks: landmarks[0], handedness: ToHandChoice(handedness[0]?.[0]?.categoryName) };
   }
-  const index = handedness.findIndex((categories) => toHandChoice(categories[0]?.categoryName) === handChoice);
+  const index = handedness.findIndex((categories) => ToHandChoice(categories[0]?.categoryName) === handChoice);
   if (index >= 0 && landmarks[index]) {
     return { landmarks: landmarks[index], handedness: handChoice };
   }
   return null;
 }
 
-function toHandChoice(label: string | undefined): HandChoice | null {
+function ToHandChoice(label: string | undefined): HandChoice | null {
   if (label === 'Left') return 'left';
   if (label === 'Right') return 'right';
   return null;
 }
 
-function getHandCursorPoint(landmarks: NormalizedLandmark[], width: number, height: number): { x: number; y: number } {
+function GetHandCursorPoint(landmarks: NormalizedLandmark[], width: number, height: number): { x: number; y: number } {
   const points = [landmarks[0], landmarks[5], landmarks[9], landmarks[13], landmarks[17]].filter(Boolean);
   const average = points.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
   return {
@@ -1271,7 +1271,7 @@ function getHandCursorPoint(landmarks: NormalizedLandmark[], width: number, heig
   };
 }
 
-function drawHandLandmarks(
+function DrawHandLandmarks(
   canvas: HTMLCanvasElement | null,
   video: HTMLVideoElement,
   landmarks: NormalizedLandmark[] | undefined,
@@ -1307,21 +1307,21 @@ function drawHandLandmarks(
   context.restore();
 }
 
-function distance2d(left: Pick<HandState, 'x' | 'y'>, right: Pick<TargetState, 'x' | 'y'>): number {
+function Distance2d(left: Pick<HandState, 'x' | 'y'>, right: Pick<TargetState, 'x' | 'y'>): number {
   return Math.hypot(left.x - right.x, left.y - right.y);
 }
 
-function toPercent(value: number): number {
-  return Number((clamp(value, 0, 1) * 100).toFixed(1));
+function ToPercent(value: number): number {
+  return Number((Clamp(value, 0, 1) * 100).toFixed(1));
 }
 
-function formatHandChoice(handChoice: HandChoice, labels: (typeof COPY)['zh'] | (typeof COPY)['en']): string {
+function FormatHandChoice(handChoice: HandChoice, labels: (typeof copy)['zh'] | (typeof copy)['en']): string {
   if (handChoice === 'left') return labels.handLeft;
   if (handChoice === 'right') return labels.handRight;
   return labels.handAny;
 }
 
-function buildMotorCortexCsv(result: SessionRecord): string {
+function BuildMotorCortexCsv(result: SessionRecord): string {
   const rows = [
     [
       'Test_Date',

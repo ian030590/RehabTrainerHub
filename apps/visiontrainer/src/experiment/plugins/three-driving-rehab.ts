@@ -2,18 +2,18 @@ import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
-import { SoundManager } from '../../utils/soundManager';
-import { DIFFICULTY_PRESETS, HAZARD_TEMPLATES } from './driving/driving-hazards';
+import { soundManager } from '../../utils/soundManager';
+import { difficultyPresets, hazardTemplates } from './driving/driving-hazards';
 import {
-  DRIVING_ROUTE,
-  DRIVING_ROUTE_VARIANTS,
-  buildDrivingRoute,
-  pickRandomDrivingRoute,
-  projectTaipeiLonLat,
+  drivingRoute,
+  drivingRouteVariants,
+  BuildDrivingRoute,
+  PickRandomDrivingRoute,
+  ProjectTaipeiLonLat,
   type DrivingRouteVariant,
 } from './driving/driving-route';
-import { THREE, type ThreeModule } from './driving/driving-scene';
-import { DRIVING_TEXT, type DrivingText } from './driving/driving-text';
+import { three, type ThreeModule } from './driving/driving-scene';
+import { drivingText, type DrivingText } from './driving/driving-text';
 import type {
   ActiveHazard,
   CollisionBox2D,
@@ -199,7 +199,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private intersections: IntersectionZone[] = [];
 
   // Difficulty
-  private difficultyPreset: DifficultyPreset = DIFFICULTY_PRESETS.beginner;
+  private difficultyPreset: DifficultyPreset = difficultyPresets.beginner;
 
   // Mini-map
   private miniMapCanvas: HTMLCanvasElement | null = null;
@@ -241,7 +241,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private gamepadConnected = false;
   private controlMode: DrivingControlMode = 'arrow';
   private language: DrivingLanguage = 'zh';
-  private text: DrivingText = DRIVING_TEXT.zh;
+  private text: DrivingText = drivingText.zh;
 
   private hud: {
     status: HTMLDivElement;
@@ -291,8 +291,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly referenceVehicleUrl = '/assets/driving/reference-car-game/vehicals/car.glb';
   private readonly taipeiOsmUrl = '/assets/driving/taipei-osm/taipei-xinyi-osm.json';
 
-  private route: RouteSegment[] = [...DRIVING_ROUTE];
-  private readonly hazardTemplates: HazardTemplate[] = [...HAZARD_TEMPLATES];
+  private route: RouteSegment[] = [...drivingRoute];
+  private readonly hazardTemplates: HazardTemplate[] = [...hazardTemplates];
 
   constructor(private jsPsych: JsPsych) {
     this.route = this.ensureRoute(this.route);
@@ -427,10 +427,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return quality;
   }
 
-  trial(display_element: HTMLElement, trial: TrialType<Info>) {
-    display_element.replaceChildren();
+  trial(displayElement: HTMLElement, trial: TrialType<Info>) {
+    displayElement.replaceChildren();
     this.resetTrialState(trial);
-    SoundManager.init();
+    soundManager.init();
 
     const root = document.createElement('div');
     root.className = 'driving-rehab-root';
@@ -446,7 +446,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       userSelect: 'none',
       visibility: 'hidden',
     });
-    display_element.appendChild(root);
+    displayElement.appendChild(root);
     root.focus();
 
     const startDriving = async () => {
@@ -459,36 +459,36 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           await this.loadReferenceVehicleModel();
         }
         if (this.finished) return;
-        if (!display_element.isConnected) {
-          this.finishTrial(trial, display_element, 'aborted');
+        if (!displayElement.isConnected) {
+          this.finishTrial(displayElement, 'aborted');
           return;
         }
         this.trialStartTime = performance.now();
         this.lastFrameTime = this.trialStartTime;
         const initialInput = this.readInput();
         this.updateVehicleFree(initialInput, 0, this.trialStartTime);
-        this.updateVehicleVisual(0, this.trialStartTime);
+        this.updateVehicleVisual(0);
         this.updateTrafficLights(this.trialStartTime);
         this.lastBrakePressed = initialInput.brake > 0.35;
         this.renderFirstFrameBeforeReveal(this.trialStartTime);
         root.style.visibility = 'visible';
         root.focus();
-        this.raf = requestAnimationFrame((time) => this.loop(time, trial, display_element));
+        this.raf = requestAnimationFrame((time) => this.loop(time, trial, displayElement));
       } catch (error) {
         console.error(error);
-        this.finishTrial(trial, display_element, 'load-error');
+        this.finishTrial(displayElement, 'load-error');
       }
     };
 
-    this.attachKeyboardListeners(trial, display_element);
+    this.attachKeyboardListeners(displayElement);
     this.attachGamepadListeners();
     void startDriving();
   }
 
   private resetTrialState(trial?: TrialType<Info>) {
     this.cleanupRenderResources();
-    this.selectedRouteVariant = pickRandomDrivingRoute();
-    this.route = this.ensureRoute(buildDrivingRoute(this.selectedRouteVariant));
+    this.selectedRouteVariant = PickRandomDrivingRoute();
+    this.route = this.ensureRoute(BuildDrivingRoute(this.selectedRouteVariant));
     this.updateRouteMetrics();
     this.finished = false;
     const startDistance = this.getInitialRouteDistance();
@@ -555,12 +555,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.gamepadConnected = Array.from(navigator.getGamepads?.() ?? []).some(Boolean);
     this.controlMode = this.getControlMode((trial as any)?.control_mode);
     this.language = this.getLanguage((trial as any)?.language);
-    this.text = DRIVING_TEXT[this.language];
+    this.text = drivingText[this.language];
     this.renderQuality = this.createRenderQuality('medium');
 
     // Difficulty
     const diffKey = (trial as any)?.driving_difficulty ?? 'beginner';
-    this.difficultyPreset = DIFFICULTY_PRESETS[diffKey] ?? DIFFICULTY_PRESETS.beginner;
+    this.difficultyPreset = difficultyPresets[diffKey] ?? difficultyPresets.beginner;
 
     // Build intersection zones from route
     this.intersections = [];
@@ -596,10 +596,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     addPendingIntersection();
   }
 
-  private attachKeyboardListeners(
-    trial: TrialType<Info>,
-    display_element: HTMLElement,
-  ) {
+  private attachKeyboardListeners(displayElement: HTMLElement) {
     this.keydownListener = (event: KeyboardEvent) => {
       if (this.shouldPreventKeyDefault(event.code)) {
         event.preventDefault();
@@ -609,7 +606,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         event.preventDefault();
         this.cycleCameraMode();
       }
-      if (event.code === 'Escape') this.finishTrial(trial, display_element, 'aborted');
+      if (event.code === 'Escape') this.finishTrial(displayElement, 'aborted');
     };
     this.keyupListener = (event: KeyboardEvent) => {
       this.setKeyboardInput(event.code, false);
@@ -659,18 +656,18 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private initScene(root: HTMLDivElement) {
-    const THREE = this.requireThree();
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xd9eaf1);
-    this.scene.fog = new THREE.Fog(0xcbd7d9, this.renderQuality.fogNear, this.renderQuality.fogFar);
+    const three = this.requireThree();
+    this.scene = new three.Scene();
+    this.scene.background = new three.Color(0xd9eaf1);
+    this.scene.fog = new three.Fog(0xcbd7d9, this.renderQuality.fogNear, this.renderQuality.fogFar);
 
     const width = Math.max(1, root.clientWidth);
     const height = Math.max(1, root.clientHeight);
-    this.camera = new THREE.PerspectiveCamera(this.baseCameraFov, width / height, 0.1, this.renderQuality.cameraFar);
-    this.rearviewCamera = new THREE.PerspectiveCamera(66, 3.2, 0.1, Math.min(this.renderQuality.cameraFar, 360));
-    this.rearviewLookAt = new THREE.Vector3();
+    this.camera = new three.PerspectiveCamera(this.baseCameraFov, width / height, 0.1, this.renderQuality.cameraFar);
+    this.rearviewCamera = new three.PerspectiveCamera(66, 3.2, 0.1, Math.min(this.renderQuality.cameraFar, 360));
+    this.rearviewLookAt = new three.Vector3();
 
-    this.renderer = new THREE.WebGLRenderer({
+    this.renderer = new three.WebGLRenderer({
       antialias: this.renderQuality.antialias,
       alpha: false,
       powerPreference: 'high-performance',
@@ -678,7 +675,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.renderer.setPixelRatio(this.getRendererPixelRatio());
     this.renderer.setSize(width, height, false);
     this.renderer.shadowMap.enabled = false;
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.outputColorSpace = three.SRGBColorSpace;
     this.renderer.domElement.style.width = '100%';
     this.renderer.domElement.style.height = '100%';
     root.appendChild(this.renderer.domElement);
@@ -716,31 +713,31 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createSceneEnvironment() {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (!this.scene) return;
 
     const fogRange = this.getDifficultyFogRange();
-    this.scene.fog = new THREE.Fog(0xcbd7d9, fogRange.near, fogRange.far);
+    this.scene.fog = new three.Fog(0xcbd7d9, fogRange.near, fogRange.far);
 
-    const ambient = new THREE.AmbientLight(0xffffff, 1.28);
-    const sun = new THREE.DirectionalLight(0xffe7c2, 1.55);
+    const ambient = new three.AmbientLight(0xffffff, 1.28);
+    const sun = new three.DirectionalLight(0xffe7c2, 1.55);
     sun.position.set(38, 62, 26);
     sun.castShadow = false;
 
-    const hemi = new THREE.HemisphereLight(0xbfd4df, 0x4d6b50, 0.92);
+    const hemi = new three.HemisphereLight(0xbfd4df, 0x4d6b50, 0.92);
     this.scene.add(ambient, sun, hemi);
     this.addSkyDome();
   }
 
   private getDifficultyFogRange(): { near: number; far: number } {
-    if (this.difficultyPreset === DIFFICULTY_PRESETS.advanced) {
+    if (this.difficultyPreset === difficultyPresets.advanced) {
       return {
         near: this.renderQuality.fogNear * 0.46,
         far: this.renderQuality.fogFar * 0.54,
       };
     }
 
-    if (this.difficultyPreset === DIFFICULTY_PRESETS.intermediate) {
+    if (this.difficultyPreset === difficultyPresets.intermediate) {
       return {
         near: this.renderQuality.fogNear * 0.68,
         far: this.renderQuality.fogFar * 0.76,
@@ -754,15 +751,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private addSkyDome() {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (!this.scene) return;
 
     const routeBounds = this.getRouteBounds();
-    const sky = new THREE.Mesh(
-      new THREE.SphereGeometry(1200, 32, 16),
-      new THREE.MeshBasicMaterial({
+    const sky = new three.Mesh(
+      new three.SphereGeometry(1200, 32, 16),
+      new three.MeshBasicMaterial({
         map: this.createSkyTexture(),
-        side: THREE.DoubleSide,
+        side: three.DoubleSide,
         depthWrite: false,
         fog: false,
       }),
@@ -778,7 +775,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createSkyTexture() {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 256;
@@ -812,8 +809,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         ctx.fill();
       }
     }
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
+    const texture = new three.CanvasTexture(canvas);
+    texture.colorSpace = three.SRGBColorSpace;
     texture.needsUpdate = true;
     return texture;
   }
@@ -1478,7 +1475,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   ) {
     if (!this.renderer || !this.scene || !this.rearviewCamera) return;
 
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     const width = Math.max(1, canvas.width);
     const height = Math.max(1, canvas.height);
     const target = this.getRearviewRenderTarget(position, width, height);
@@ -1497,7 +1494,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       eyeHeight,
       vehicleBox.centerZ - forward.z * eyeBack + right.z * sideOffset,
     );
-    const lookAt = this.rearviewLookAt ?? new THREE.Vector3();
+    const lookAt = this.rearviewLookAt ?? new three.Vector3();
     this.rearviewLookAt = lookAt;
     lookAt.set(
       vehicleBox.centerX - forward.x * lookDistance + right.x * sideLook,
@@ -1527,9 +1524,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const existing = this.rearviewRenderTargets[position];
     if (existing?.width === width && existing?.height === height) return existing;
     existing?.dispose?.();
-    const THREE = this.requireThree();
-    const target = new THREE.WebGLRenderTarget(width, height, { depthBuffer: true, stencilBuffer: false });
-    target.texture.colorSpace = THREE.SRGBColorSpace;
+    const three = this.requireThree();
+    const target = new three.WebGLRenderTarget(width, height, { depthBuffer: true, stencilBuffer: false });
+    target.texture.colorSpace = three.SRGBColorSpace;
     this.rearviewRenderTargets[position] = target;
     this.rearviewPixelBuffers[position] = new Uint8Array(width * height * 4);
     return target;
@@ -1565,24 +1562,24 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
    * WORLD BUILDING
    * ================================================================ */
   private buildWorld() {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (!this.scene) return;
 
     this.roadCollisionBoxes = [];
     this.buildingCollisionBoxes = [];
 
-    const roadBaseMat = new THREE.MeshStandardMaterial({ color: 0x2b3035, roughness: 0.9, metalness: 0.08 });
-    const centerLineMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.76, metalness: 0.05 });
-    const laneDividerMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.72, metalness: 0.03 });
-    const stopLineMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.68, metalness: 0.04 });
-    const edgeMat = new THREE.MeshStandardMaterial({
+    const roadBaseMat = new three.MeshStandardMaterial({ color: 0x2b3035, roughness: 0.9, metalness: 0.08 });
+    const centerLineMat = new three.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.76, metalness: 0.05 });
+    const laneDividerMat = new three.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.72, metalness: 0.03 });
+    const stopLineMat = new three.MeshStandardMaterial({ color: 0xffffff, roughness: 0.68, metalness: 0.04 });
+    const edgeMat = new three.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.7,
       metalness: 0.08,
       emissive: 0xaa1111,
       emissiveIntensity: 0.24,
     });
-    const grassMat = new THREE.MeshStandardMaterial({
+    const grassMat = new three.MeshStandardMaterial({
       color: 0x4f8d55,
       roughness: 0.86,
       metalness: 0.02,
@@ -1595,7 +1592,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       routeBounds.maxX - routeBounds.minX + 720,
       routeBounds.maxZ - routeBounds.minZ + 720,
     );
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(groundSize, groundSize, 64, 64), grassMat);
+    const ground = new three.Mesh(new three.PlaneGeometry(groundSize, groundSize, 64, 64), grassMat);
     ground.rotation.x = -Math.PI / 2;
     ground.position.set((routeBounds.minX + routeBounds.maxX) / 2, -0.52, (routeBounds.minZ + routeBounds.maxZ) / 2);
     ground.receiveShadow = false;
@@ -1612,14 +1609,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const normal = this.getRouteRightVector(segment.dir);
       const roadWidth = this.getSegmentRoadWidth(segment);
 
-      const roadBase = new THREE.Mesh(new THREE.BoxGeometry(roadWidth + 0.44, 0.08, segment.length), roadBaseMat);
+      const roadBase = new three.Mesh(new three.BoxGeometry(roadWidth + 0.44, 0.08, segment.length), roadBaseMat);
       roadBase.position.set(mid.x, -0.03, mid.z);
       roadBase.rotation.y = angle;
       roadBase.receiveShadow = false;
       this.scene.add(roadBase);
 
-      const road = new THREE.Mesh(
-        new THREE.BoxGeometry(roadWidth, 0.045, segment.length),
+      const road = new three.Mesh(
+        new three.BoxGeometry(roadWidth, 0.045, segment.length),
         this.createAsphaltRoadMaterial(segment.length),
       );
       road.position.set(mid.x, 0.015, mid.z);
@@ -1647,8 +1644,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const approachWidth = this.getSegmentRoadWidth(this.route[inter.segmentIndex]);
       const nextWidth = this.getSegmentRoadWidth(this.route[inter.segmentIndex + 1] ?? this.route[inter.segmentIndex]);
       const intersectionWidth = Math.max(approachWidth, nextWidth) + 18;
-      const cross = new THREE.Mesh(
-        new THREE.BoxGeometry(approachWidth + 18, 0.04, intersectionWidth),
+      const cross = new three.Mesh(
+        new three.BoxGeometry(approachWidth + 18, 0.04, intersectionWidth),
         this.createAsphaltRoadMaterial(intersectionWidth),
       );
       cross.position.set(point.x, 0.025, point.z);
@@ -1672,7 +1669,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private addLeftDriveStopLines(material: any) {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (!this.scene) return;
 
     for (const inter of this.intersections) {
@@ -1685,7 +1682,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const roadWidth = this.getSegmentRoadWidth(segment);
       const laneOffset = this.getDrivingLaneOffset(inter.distance - this.stopLineSetback);
       const laneWidth = Math.max(3.0, roadWidth / 2 - 1.6);
-      const stopLine = new THREE.Mesh(new THREE.BoxGeometry(laneWidth, 0.052, 0.72), material);
+      const stopLine = new three.Mesh(new three.BoxGeometry(laneWidth, 0.052, 0.72), material);
       stopLine.position.set(
         segment.start.x + segment.dir.x * localDistance + normal.x * laneOffset,
         0.085,
@@ -1697,13 +1694,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private addTrafficLights() {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (!this.scene) return;
 
-    const postMat = new THREE.MeshStandardMaterial({ color: 0x29323a, roughness: 0.58, metalness: 0.35 });
-    const housingMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.62, metalness: 0.18 });
-    const pedestrianMat = new THREE.MeshStandardMaterial({ color: 0x0b1720, roughness: 0.62, metalness: 0.14 });
-    const walkMat = new THREE.MeshBasicMaterial({ color: 0x21e66f });
+    const postMat = new three.MeshStandardMaterial({ color: 0x29323a, roughness: 0.58, metalness: 0.35 });
+    const housingMat = new three.MeshStandardMaterial({ color: 0x111827, roughness: 0.62, metalness: 0.18 });
+    const pedestrianMat = new three.MeshStandardMaterial({ color: 0x0b1720, roughness: 0.62, metalness: 0.14 });
+    const walkMat = new three.MeshBasicMaterial({ color: 0x21e66f });
 
     for (const inter of this.intersections) {
       const segment = this.route[inter.segmentIndex];
@@ -1716,24 +1713,24 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const baseX = segment.start.x + segment.dir.x * localDistance + normal.x * (roadWidth / 2 + 1.2);
       const baseZ = segment.start.z + segment.dir.z * localDistance + normal.z * (roadWidth / 2 + 1.2);
 
-      const group = new THREE.Group();
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 4.4, 10), postMat);
+      const group = new three.Group();
+      const post = new three.Mesh(new three.CylinderGeometry(0.12, 0.16, 4.4, 10), postMat);
       post.position.y = 2.2;
-      const housing = new THREE.Mesh(new THREE.BoxGeometry(0.78, 2.25, 0.36), housingMat);
+      const housing = new three.Mesh(new three.BoxGeometry(0.78, 2.25, 0.36), housingMat);
       housing.position.set(0, 4.35, 0);
-      const red = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 10), new THREE.MeshBasicMaterial({ color: 0x451414 }));
-      const yellow = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 10), new THREE.MeshBasicMaterial({ color: 0x4a3a16 }));
-      const green = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 10), new THREE.MeshBasicMaterial({ color: 0x123d24 }));
+      const red = new three.Mesh(new three.SphereGeometry(0.28, 16, 10), new three.MeshBasicMaterial({ color: 0x451414 }));
+      const yellow = new three.Mesh(new three.SphereGeometry(0.28, 16, 10), new three.MeshBasicMaterial({ color: 0x4a3a16 }));
+      const green = new three.Mesh(new three.SphereGeometry(0.28, 16, 10), new three.MeshBasicMaterial({ color: 0x123d24 }));
       red.position.set(0, 4.9, 0.2);
       yellow.position.set(0, 4.35, 0.2);
       green.position.set(0, 3.8, 0.2);
-      const pedestrianBox = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.58, 0.18), pedestrianMat);
+      const pedestrianBox = new three.Mesh(new three.BoxGeometry(0.68, 0.58, 0.18), pedestrianMat);
       pedestrianBox.position.set(0, 2.62, 0.18);
-      const littleGreenHead = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), walkMat);
+      const littleGreenHead = new three.Mesh(new three.SphereGeometry(0.07, 10, 8), walkMat);
       littleGreenHead.position.set(0, 2.72, 0.29);
-      const littleGreenBody = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, 0.03), walkMat);
+      const littleGreenBody = new three.Mesh(new three.BoxGeometry(0.08, 0.16, 0.03), walkMat);
       littleGreenBody.position.set(0, 2.56, 0.29);
-      const littleGreenLeg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.04, 0.03), walkMat);
+      const littleGreenLeg = new three.Mesh(new three.BoxGeometry(0.2, 0.04, 0.03), walkMat);
       littleGreenLeg.position.set(0.02, 2.43, 0.29);
       littleGreenLeg.rotation.z = -0.35;
       group.add(post, housing, red, yellow, green, pedestrianBox, littleGreenHead, littleGreenBody, littleGreenLeg);
@@ -1750,16 +1747,16 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private addTaiwanStreetDetails() {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (!this.scene) return;
 
-    const scooterBoxMat = new THREE.MeshStandardMaterial({ color: 0x0f8b57, roughness: 0.72, metalness: 0.04 });
-    const laneMarkMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, metalness: 0.02 });
-    const poleMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.74, metalness: 0.08 });
-    const yellowMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65, metalness: 0.04 });
-    const utilityMat = new THREE.MeshStandardMaterial({ color: 0x9aa3a9, roughness: 0.76, metalness: 0.12 });
-    const arcadeMat = new THREE.MeshStandardMaterial({ color: 0xd9d4c8, roughness: 0.82, metalness: 0.02 });
-    const columnMat = new THREE.MeshStandardMaterial({ color: 0xb9b3a7, roughness: 0.86, metalness: 0.02 });
+    const scooterBoxMat = new three.MeshStandardMaterial({ color: 0x0f8b57, roughness: 0.72, metalness: 0.04 });
+    const laneMarkMat = new three.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, metalness: 0.02 });
+    const poleMat = new three.MeshStandardMaterial({ color: 0x27272a, roughness: 0.74, metalness: 0.08 });
+    const yellowMat = new three.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65, metalness: 0.04 });
+    const utilityMat = new three.MeshStandardMaterial({ color: 0x9aa3a9, roughness: 0.76, metalness: 0.12 });
+    const arcadeMat = new three.MeshStandardMaterial({ color: 0xd9d4c8, roughness: 0.82, metalness: 0.02 });
+    const columnMat = new three.MeshStandardMaterial({ color: 0xb9b3a7, roughness: 0.86, metalness: 0.02 });
 
     for (const inter of this.intersections) {
       const segment = this.route[inter.segmentIndex];
@@ -1774,13 +1771,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         z: segment.start.z + segment.dir.z * boxDistance + normal.z * laneOffset,
       };
 
-      const waitingBox = new THREE.Mesh(new THREE.BoxGeometry(Math.max(3.4, roadWidth / 2 - 1.4), 0.036, 4.8), scooterBoxMat);
+      const waitingBox = new three.Mesh(new three.BoxGeometry(Math.max(3.4, roadWidth / 2 - 1.4), 0.036, 4.8), scooterBoxMat);
       waitingBox.position.set(center.x, 0.105, center.z);
       waitingBox.rotation.y = angle;
       this.scene.add(waitingBox);
 
       for (const side of [-1, 1]) {
-        const line = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.048, 4.8), laneMarkMat);
+        const line = new three.Mesh(new three.BoxGeometry(0.14, 0.048, 4.8), laneMarkMat);
         line.position.set(
           center.x + normal.x * side * (roadWidth / 4 - 0.35),
           0.13,
@@ -1804,17 +1801,17 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
       for (const side of [-1, 1]) {
         if ((Math.floor(d / 22) + side) % 2 === 0) {
-          const pole = new THREE.Group();
-          const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 5.2, 10), poleMat);
+          const pole = new three.Group();
+          const shaft = new three.Mesh(new three.CylinderGeometry(0.13, 0.16, 5.2, 10), poleMat);
           shaft.position.y = 2.6;
           pole.add(shaft);
           for (let band = 0; band < 4; band += 1) {
-            const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.18, 0.04), yellowMat);
+            const stripe = new three.Mesh(new three.BoxGeometry(0.34, 0.18, 0.04), yellowMat);
             stripe.position.set(0, 0.75 + band * 0.32, -0.16);
             stripe.rotation.z = band % 2 ? -0.25 : 0.25;
             pole.add(stripe);
           }
-          const arm = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 0.08), poleMat);
+          const arm = new three.Mesh(new three.BoxGeometry(2.4, 0.08, 0.08), poleMat);
           arm.position.set(side * 0.95, 4.85, 0);
           pole.add(arm);
           pole.position.set(
@@ -1866,12 +1863,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const angle = this.getSceneYawForDirection(point.dir);
       const roadWidth = point.roadWidth;
       for (const side of [-1, 1]) {
-        const arcade = new THREE.Group();
-        const canopy = new THREE.Mesh(new THREE.BoxGeometry(12, 0.28, 3.2), arcadeMat);
+        const arcade = new three.Group();
+        const canopy = new three.Mesh(new three.BoxGeometry(12, 0.28, 3.2), arcadeMat);
         canopy.position.y = 3.05;
         arcade.add(canopy);
         for (const x of [-4.8, -2.4, 0, 2.4, 4.8]) {
-          const column = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.0, 0.22), columnMat);
+          const column = new three.Mesh(new three.BoxGeometry(0.22, 3.0, 0.22), columnMat);
           column.position.set(x, 1.5, 1.18);
           arcade.add(column);
         }
@@ -1993,10 +1990,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private addBoxInstances(width: number, height: number, length: number, material: any, instances: BoxInstanceSpec[]) {
     if (!this.scene || instances.length === 0) return;
-    const THREE = this.requireThree();
-    const geometry = new THREE.BoxGeometry(width, height, length);
-    const mesh = new THREE.InstancedMesh(geometry, material, instances.length);
-    const transform = new THREE.Object3D();
+    const three = this.requireThree();
+    const geometry = new three.BoxGeometry(width, height, length);
+    const mesh = new three.InstancedMesh(geometry, material, instances.length);
+    const transform = new three.Object3D();
 
     instances.forEach((instance, index) => {
       transform.position.set(instance.x, instance.y, instance.z);
@@ -2012,13 +2009,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createAsphaltRoadMaterial(length: number) {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     const repeatBucket = Math.max(1, Math.round(length / 20));
     const cached = this.asphaltMaterials.get(repeatBucket);
     if (cached) return cached;
 
     const map = this.createLowResolutionRoadTexture(repeatBucket);
-    const material = new THREE.MeshStandardMaterial({
+    const material = new three.MeshStandardMaterial({
       map,
       color: 0x686868,
       roughness: 0.92,
@@ -2029,7 +2026,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createLowResolutionRoadTexture(repeatY: number) {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (this.asphaltTexture) {
       const texture = this.asphaltTexture.clone();
       texture.repeat.set(1.15, repeatY);
@@ -2061,18 +2058,17 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       }
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
+    const texture = new three.CanvasTexture(canvas);
+    texture.wrapS = three.RepeatWrapping;
+    texture.wrapT = three.RepeatWrapping;
     texture.repeat.set(1.15, repeatY);
-    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.colorSpace = three.SRGBColorSpace;
     texture.needsUpdate = true;
     this.asphaltTexture = texture;
     return texture;
   }
 
   private addBuildings() {
-    const THREE = this.requireThree();
     if (!this.scene) return;
     const colors = [0xb9c7d3, 0xd6c2a6, 0xa9bfac, 0xcaa4a4, 0xa9a7c8, 0xc7d2c6];
     const accents = [0x0f766e, 0x1d4ed8, 0xdc2626, 0x9333ea, 0xf59e0b];
@@ -2112,19 +2108,19 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createUrbanBuilding(width: number, height: number, depth: number, color: number, accent: number, seed: number) {
-    const THREE = this.requireThree();
-    const group = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0.03 });
-    const roofMat = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.78, metalness: 0.08 });
-    const windowMat = new THREE.MeshBasicMaterial({ color: 0xc7e7ff, transparent: true, opacity: 0.62 });
-    const signMat = new THREE.MeshBasicMaterial({ color: accent });
-    const awningMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.7, metalness: 0.02 });
+    const three = this.requireThree();
+    const group = new three.Group();
+    const bodyMat = new three.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0.03 });
+    const roofMat = new three.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.78, metalness: 0.08 });
+    const windowMat = new three.MeshBasicMaterial({ color: 0xc7e7ff, transparent: true, opacity: 0.62 });
+    const signMat = new three.MeshBasicMaterial({ color: accent });
+    const awningMat = new three.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.7, metalness: 0.02 });
 
-    const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), bodyMat);
+    const body = new three.Mesh(new three.BoxGeometry(width, height, depth), bodyMat);
     body.position.y = height / 2;
     group.add(body);
 
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(width + 0.35, 0.32, depth + 0.35), roofMat);
+    const roof = new three.Mesh(new three.BoxGeometry(width + 0.35, 0.32, depth + 0.35), roofMat);
     roof.position.y = height + 0.16;
     group.add(roof);
 
@@ -2136,24 +2132,24 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       for (let row = 0; row < rowCount; row += 1) {
         for (let column = 0; column < columnCount; column += 1) {
           if ((row + column + Math.floor(seed)) % 5 === 0) continue;
-          const window = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.72, 0.045), windowMat);
+          const window = new three.Mesh(new three.BoxGeometry(0.62, 0.72, 0.045), windowMat);
           window.position.set(startX + column * 1.18, 3.25 + row * 2.0, frontZ);
           group.add(window);
         }
       }
 
-      const storefront = new THREE.Mesh(new THREE.BoxGeometry(width * 0.72, 0.62, 0.055), signMat);
+      const storefront = new three.Mesh(new three.BoxGeometry(width * 0.72, 0.62, 0.055), signMat);
       storefront.position.set(0, 2.25, frontZ + 0.02);
       group.add(storefront);
 
-      const awning = new THREE.Mesh(new THREE.BoxGeometry(width * 0.82, 0.18, 1.05), awningMat);
+      const awning = new three.Mesh(new three.BoxGeometry(width * 0.82, 0.18, 1.05), awningMat);
       awning.position.set(0, 2.95, frontZ + 0.42);
       group.add(awning);
 
       if (height > 13) {
-        const balconyMat = new THREE.MeshBasicMaterial({ color: 0x263238 });
+        const balconyMat = new three.MeshBasicMaterial({ color: 0x263238 });
         for (let floor = 0; floor < Math.min(4, rowCount - 1); floor += 1) {
-          const rail = new THREE.Mesh(new THREE.BoxGeometry(width * 0.62, 0.08, 0.12), balconyMat);
+          const rail = new three.Mesh(new three.BoxGeometry(width * 0.62, 0.08, 0.12), balconyMat);
           rail.position.set(0, 4.05 + floor * 2.0, frontZ + 0.22);
           group.add(rail);
         }
@@ -2187,7 +2183,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   /** Add physical road signs at intersections */
   private addTurnSignage() {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (!this.scene) return;
 
     for (const inter of this.intersections) {
@@ -2195,25 +2191,25 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
       const signDist = Math.max(5, inter.distance - 20);
       const point = this.getRoutePoint(signDist);
-      const group = new THREE.Group();
+      const group = new three.Group();
 
       // Post
-      const postMat = new THREE.MeshBasicMaterial({ color: 0x888888 });
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 0.2), postMat);
+      const postMat = new three.MeshBasicMaterial({ color: 0x888888 });
+      const post = new three.Mesh(new three.BoxGeometry(0.2, 4, 0.2), postMat);
       post.position.y = 2;
       group.add(post);
 
       // Sign board
-      const signMat = new THREE.MeshBasicMaterial({ color: 0x2563eb });
-      const sign = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.8, 0.12), signMat);
+      const signMat = new three.MeshBasicMaterial({ color: 0x2563eb });
+      const sign = new three.Mesh(new three.BoxGeometry(2.8, 1.8, 0.12), signMat);
       sign.position.y = 4.2;
       group.add(sign);
 
       // Arrow on sign
       const arrowLabel = this.getNavigationArrow(inter.turnDir);
       const texture = this.createSignTexture(arrowLabel);
-      const arrowMat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
-      const arrowPlane = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), arrowMat);
+      const arrowMat = new three.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
+      const arrowPlane = new three.Mesh(new three.PlaneGeometry(2.2, 1.4), arrowMat);
       arrowPlane.position.set(0, 4.2, 0.07);
       group.add(arrowPlane);
 
@@ -2232,7 +2228,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const cached = this.signTextureCache.get(label);
     if (cached) return cached;
 
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     const canvas = document.createElement('canvas');
     canvas.width = 256;
     canvas.height = 128;
@@ -2245,22 +2241,22 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       ctx.textBaseline = 'middle';
       ctx.fillText(label, 128, 64);
     }
-    const texture = new THREE.CanvasTexture(canvas);
+    const texture = new three.CanvasTexture(canvas);
     texture.needsUpdate = true;
     this.signTextureCache.set(label, texture);
     return texture;
   }
 
   private addDestinationMarker() {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (!this.scene) return;
     const point = this.getRoutePoint(this.routeLength - 5);
-    const group = new THREE.Group();
-    const postMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const flagMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5, 0.35), postMat);
+    const group = new three.Group();
+    const postMat = new three.MeshBasicMaterial({ color: 0xffffff });
+    const flagMat = new three.MeshBasicMaterial({ color: 0x38bdf8 });
+    const post = new three.Mesh(new three.BoxGeometry(0.35, 5, 0.35), postMat);
     post.position.y = 2.5;
-    const flag = new THREE.Mesh(new THREE.BoxGeometry(4, 2.2, 0.18), flagMat);
+    const flag = new three.Mesh(new three.BoxGeometry(4, 2.2, 0.18), flagMat);
     flag.position.set(2, 4.2, 0);
     group.add(post, flag);
     group.position.set(point.x + point.normal.x * (point.roadWidth / 2 + 4), 0, point.z + point.normal.z * (point.roadWidth / 2 + 4));
@@ -2283,7 +2279,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private addTaipeiOsmCity(elements: any[]) {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (!this.scene) return;
 
     const nodeMap = new Map<number, { lat: number; lon: number }>();
@@ -2293,16 +2289,16 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       }
     }
 
-    const group = new THREE.Group();
+    const group = new three.Group();
     group.name = 'taipei-xinyi-osm-city';
-    const roadMat = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.88, metalness: 0.03 });
+    const roadMat = new three.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.88, metalness: 0.03 });
     const buildingMats = [
-      new THREE.MeshStandardMaterial({ color: 0xbec7cf, roughness: 0.82, metalness: 0.02 }),
-      new THREE.MeshStandardMaterial({ color: 0xc8beb1, roughness: 0.84, metalness: 0.02 }),
-      new THREE.MeshStandardMaterial({ color: 0xaeb8bd, roughness: 0.8, metalness: 0.03 }),
-      new THREE.MeshStandardMaterial({ color: 0xd3d0c8, roughness: 0.86, metalness: 0.01 }),
+      new three.MeshStandardMaterial({ color: 0xbec7cf, roughness: 0.82, metalness: 0.02 }),
+      new three.MeshStandardMaterial({ color: 0xc8beb1, roughness: 0.84, metalness: 0.02 }),
+      new three.MeshStandardMaterial({ color: 0xaeb8bd, roughness: 0.8, metalness: 0.03 }),
+      new three.MeshStandardMaterial({ color: 0xd3d0c8, roughness: 0.86, metalness: 0.01 }),
     ];
-    const arcadeShadowMat = new THREE.MeshStandardMaterial({ color: 0x30343a, roughness: 0.88, metalness: 0.02 });
+    const arcadeShadowMat = new three.MeshStandardMaterial({ color: 0x30343a, roughness: 0.88, metalness: 0.02 });
     let buildingCount = 0;
     let roadSegmentCount = 0;
     const roadLimit = this.renderQuality.osmRoadSegmentLimit;
@@ -2337,7 +2333,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           const centerX = (a.x + b.x) / 2;
           const centerZ = (a.z + b.z) / 2;
           if (this.getDistanceToRoute(centerX, centerZ) > 130) continue;
-          const road = new THREE.Mesh(new THREE.BoxGeometry(width, 0.024, length), roadMat);
+          const road = new three.Mesh(new three.BoxGeometry(width, 0.024, length), roadMat);
           road.position.set(centerX, -0.455, centerZ);
           road.rotation.y = this.getSceneYawForDirection({ x: dx / length, z: dz / length });
           group.add(road);
@@ -2361,13 +2357,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         };
         if (!this.isBuildingFootprintClear(this.expandCollisionBox(collisionBox, 2.2))) continue;
         if (!this.isBoxNearRoute(collisionBox, 95)) continue;
-        const building = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), mat);
+        const building = new three.Mesh(new three.BoxGeometry(width, height, depth), mat);
         building.position.set(collisionBox.centerX, height / 2 - 0.45, collisionBox.centerZ);
         group.add(building);
         this.buildingCollisionBoxes.push(collisionBox);
 
         if (height > 7 && Math.min(width, depth) > 4) {
-          const arcade = new THREE.Mesh(new THREE.BoxGeometry(width * 0.78, 2.25, 1.1), arcadeShadowMat);
+          const arcade = new three.Mesh(new three.BoxGeometry(width * 0.78, 2.25, 1.1), arcadeShadowMat);
           arcade.position.set(building.position.x, 0.72, bbox.minZ + 0.55);
           group.add(arcade);
         }
@@ -2379,7 +2375,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private projectTaipeiLonLat(lon: number, lat: number): Vec2 {
-    return projectTaipeiLonLat(lon, lat);
+    return ProjectTaipeiLonLat(lon, lat);
   }
 
   private getPointBounds(points: Vec2[]) {
@@ -2425,10 +2421,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createVehicleVisual() {
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     if (!this.scene) return;
 
-    const root = new THREE.Group();
+    const root = new three.Group();
     root.name = 'driving-reference-vehicle-root';
     this.vehicleRoot = root;
     this.scene.add(root);
@@ -2439,18 +2435,18 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     root.add(fallback.group);
     this.vehicleBlobShadow = this.createBlobShadowMesh(2.75, 5.35, 0.42);
     this.scene.add(this.vehicleBlobShadow);
-    this.updateVehicleVisual(0, performance.now());
+    this.updateVehicleVisual(0);
   }
 
   private createBlobShadowMesh(width: number, length: number, opacity: number) {
-    const THREE = this.requireThree();
-    const material = new THREE.MeshBasicMaterial({
+    const three = this.requireThree();
+    const material = new three.MeshBasicMaterial({
       map: this.getBlobShadowTexture(),
       transparent: true,
       opacity,
       depthWrite: false,
     });
-    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(width, length), material);
+    const shadow = new three.Mesh(new three.PlaneGeometry(width, length), material);
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = 0.118;
     shadow.renderOrder = 1;
@@ -2460,7 +2456,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private getBlobShadowTexture() {
     if (this.blobShadowTexture) return this.blobShadowTexture;
 
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     const canvas = document.createElement('canvas');
     canvas.width = 256;
     canvas.height = 128;
@@ -2473,26 +2469,26 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    this.blobShadowTexture = new THREE.CanvasTexture(canvas);
+    this.blobShadowTexture = new three.CanvasTexture(canvas);
     this.blobShadowTexture.needsUpdate = true;
     return this.blobShadowTexture;
   }
 
   private createFallbackVehicle(bodyColor = 0x1d4ed8): { group: any; wheels: VehicleWheelBinding[] } {
-    const THREE = this.requireThree();
-    const group = new THREE.Group();
+    const three = this.requireThree();
+    const group = new three.Group();
     group.name = 'driving-reference-fallback-car';
 
-    const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.42, metalness: 0.26 });
-    const glassMat = new THREE.MeshStandardMaterial({ color: 0x172554, roughness: 0.18, metalness: 0.12 });
-    const tireMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.72, metalness: 0.12 });
-    const rimMat = new THREE.MeshStandardMaterial({ color: 0xb9c2cc, roughness: 0.42, metalness: 0.55 });
+    const bodyMat = new three.MeshStandardMaterial({ color: bodyColor, roughness: 0.42, metalness: 0.26 });
+    const glassMat = new three.MeshStandardMaterial({ color: 0x172554, roughness: 0.18, metalness: 0.12 });
+    const tireMat = new three.MeshStandardMaterial({ color: 0x111111, roughness: 0.72, metalness: 0.12 });
+    const rimMat = new three.MeshStandardMaterial({ color: 0xb9c2cc, roughness: 0.42, metalness: 0.55 });
 
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.88, 4.5), bodyMat);
+    const body = new three.Mesh(new three.BoxGeometry(1.95, 0.88, 4.5), bodyMat);
     body.position.y = 0.82;
     body.castShadow = false;
     body.receiveShadow = false;
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.82, 1.7), glassMat);
+    const cabin = new three.Mesh(new three.BoxGeometry(1.38, 0.82, 1.7), glassMat);
     cabin.position.set(0, 1.44, -0.28);
     cabin.castShadow = false;
     group.add(body, cabin);
@@ -2504,10 +2500,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       [-0.98, 1.38, false],
       [0.98, 1.38, false],
     ] as const) {
-      const wheel = new THREE.Group();
-      const tire = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.12, 8, 18), tireMat);
+      const wheel = new three.Group();
+      const tire = new three.Mesh(new three.TorusGeometry(0.38, 0.12, 8, 18), tireMat);
       tire.rotation.y = Math.PI / 2;
-      const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.15, 16), rimMat);
+      const rim = new three.Mesh(new three.CylinderGeometry(0.22, 0.22, 0.15, 16), rimMat);
       rim.rotation.z = Math.PI / 2;
       wheel.add(tire, rim);
       wheel.position.set(x, 0.42, z);
@@ -2542,7 +2538,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
             return;
           }
 
-          const THREE = this.requireThree();
+          const three = this.requireThree();
           const model = gltf.scene;
           model.name = 'driving-reference-car-glb';
           model.traverse?.((child: any) => {
@@ -2558,16 +2554,16 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           });
 
           model.updateMatrixWorld(true);
-          let box = new THREE.Box3().setFromObject(model);
-          const size = new THREE.Vector3();
+          let box = new three.Box3().setFromObject(model);
+          const size = new three.Vector3();
           box.getSize(size);
           const modelLength = Math.max(size.z, size.x, 1);
           const scale = 4.55 / modelLength;
           model.scale.setScalar(scale);
           model.updateMatrixWorld(true);
 
-          box = new THREE.Box3().setFromObject(model);
-          const center = new THREE.Vector3();
+          box = new three.Box3().setFromObject(model);
+          const center = new three.Vector3();
           box.getCenter(center);
           model.position.set(-center.x, -box.min.y, -center.z);
           model.rotation.y = this.referenceVehicleModelYawOffset;
@@ -2577,7 +2573,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           this.vehicleModel = model;
           this.fallbackVehicle = null;
           this.bindReferenceWheels(model);
-          this.updateVehicleVisual(0, performance.now());
+          this.updateVehicleVisual(0);
           resolve(true);
         },
         undefined,
@@ -2630,7 +2626,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const sourceMax = Math.max(sourceWidth, sourceHeight);
     if (!image || sourceMax <= maxSize || sourceWidth <= 0 || sourceHeight <= 0) return texture;
 
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     const scale = maxSize / sourceMax;
     const canvas = document.createElement('canvas');
     canvas.width = Math.max(1, Math.round(sourceWidth * scale));
@@ -2639,11 +2635,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (!ctx) return texture;
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-    const capped = new THREE.CanvasTexture(canvas);
+    const capped = new three.CanvasTexture(canvas);
     capped.wrapS = texture.wrapS;
     capped.wrapT = texture.wrapT;
     capped.flipY = texture.flipY;
-    capped.colorSpace = texture.colorSpace ?? THREE.SRGBColorSpace;
+    capped.colorSpace = texture.colorSpace ?? three.SRGBColorSpace;
     if (texture.offset && capped.offset) capped.offset.copy(texture.offset);
     if (texture.repeat && capped.repeat) capped.repeat.copy(texture.repeat);
     if (texture.center && capped.center) capped.center.copy(texture.center);
@@ -2670,7 +2666,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.wheelBindings = bindings;
   }
 
-  private updateVehicleVisual(dt: number, time: number) {
+  private updateVehicleVisual(dt: number) {
     if (!this.vehicleRoot) return;
 
     const vehicleBox = this.getVehicleCollisionBox();
@@ -2708,10 +2704,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   /* ================================================================
    * MAIN LOOP
    * ================================================================ */
-  private loop(time: number, trial: TrialType<Info>, display_element: HTMLElement) {
+  private loop(time: number, trial: TrialType<Info>, displayElement: HTMLElement) {
     if (this.finished || !this.renderer || !this.scene || !this.camera) return;
-    if (!display_element.isConnected) {
-      this.finishTrial(trial, display_element, 'aborted');
+    if (!displayElement.isConnected) {
+      this.finishTrial(displayElement, 'aborted');
       return;
     }
 
@@ -2741,7 +2737,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.updateTrafficLights(time);
       this.updateAmbientTraffic(dt);
     }
-    this.updateVehicleVisual(dt, time);
+    this.updateVehicleVisual(dt);
     this.updateCameraFree(dt);
     if (this.needsFirstFrameCameraSnap) {
       this.needsFirstFrameCameraSnap = false;
@@ -2755,17 +2751,17 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.renderer.render(this.scene, this.camera);
 
     if (this.isTrialTimedOut(time, trial)) {
-      SoundManager.playRunEnd();
-      this.finishTrial(trial, display_element, 'timeout');
+      soundManager.playRunEnd();
+      this.finishTrial(displayElement, 'timeout');
       return;
     }
 
     if (this.isDestinationReached()) {
-      SoundManager.playRunEnd();
-      this.finishTrial(trial, display_element, 'completed');
+      soundManager.playRunEnd();
+      this.finishTrial(displayElement, 'completed');
       return;
     }
-    this.raf = requestAnimationFrame((nextTime) => this.loop(nextTime, trial, display_element));
+    this.raf = requestAnimationFrame((nextTime) => this.loop(nextTime, trial, displayElement));
   }
 
   private renderFirstFrameBeforeReveal(time: number) {
@@ -3157,7 +3153,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       response: 'red-light-violation',
     };
     this.eventResults.push(result);
-    SoundManager.playIncorrect();
+    soundManager.playIncorrect();
     if (this.hud?.event) {
       this.hud.event.textContent = this.text.redLightViolationMessage;
     }
@@ -3526,10 +3522,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     hazard.removeAt = time + 950;
 
     if (collision) {
-      SoundManager.playIncorrect();
+      soundManager.playIncorrect();
       this.vehicleSpeed = Math.min(this.vehicleSpeed, 2.5);
     } else {
-      SoundManager.playCorrect();
+      soundManager.playCorrect();
     }
 
     if (this.hud) {
@@ -3573,7 +3569,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (time - this.lastCollisionEventTime < 1200) return;
     this.lastCollisionEventTime = time;
     this.recordDrivingRuleEvent('vehicle-collision', 'collision', { collision: true });
-    SoundManager.playIncorrect();
+    soundManager.playIncorrect();
   }
 
   private isHazardColliding(hazard: ActiveHazard): boolean {
@@ -3733,24 +3729,24 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createScooterMesh(color: number) {
-    const THREE = this.requireThree();
-    const group = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.18 });
-    const darkMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7, metalness: 0.08 });
-    const metalMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.36, metalness: 0.48 });
+    const three = this.requireThree();
+    const group = new three.Group();
+    const bodyMat = new three.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.18 });
+    const darkMat = new three.MeshStandardMaterial({ color: 0x111111, roughness: 0.7, metalness: 0.08 });
+    const metalMat = new three.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.36, metalness: 0.48 });
 
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.36, 1.55), bodyMat);
+    const body = new three.Mesh(new three.BoxGeometry(0.7, 0.36, 1.55), bodyMat);
     body.position.y = 0.58;
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.14, 0.72), darkMat);
+    const seat = new three.Mesh(new three.BoxGeometry(0.48, 0.14, 0.72), darkMat);
     seat.position.set(0, 0.86, -0.08);
-    const handle = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 0.08), metalMat);
+    const handle = new three.Mesh(new three.BoxGeometry(1.0, 0.08, 0.08), metalMat);
     handle.position.set(0, 1.02, -0.62);
-    const front = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.72, 0.28), bodyMat);
+    const front = new three.Mesh(new three.BoxGeometry(0.42, 0.72, 0.28), bodyMat);
     front.position.set(0, 0.76, -0.54);
     group.add(body, seat, handle, front);
 
     for (const z of [-0.62, 0.58]) {
-      const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.065, 8, 16), darkMat);
+      const wheel = new three.Mesh(new three.TorusGeometry(0.22, 0.065, 8, 16), darkMat);
       wheel.rotation.y = Math.PI / 2;
       wheel.position.set(0, 0.28, z);
       group.add(wheel);
@@ -3764,37 +3760,37 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createPersonMesh(color: number, scale: number, options: { backpack?: boolean; cane?: boolean } = {}) {
-    const THREE = this.requireThree();
-    const group = new THREE.Group();
-    const skin = new THREE.MeshStandardMaterial({ color: 0xf2c6a0, roughness: 0.78, metalness: 0.02 });
-    const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.72, metalness: 0.02 });
-    const dark = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7, metalness: 0.04 });
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.45 * scale, 8, 6), skin);
+    const three = this.requireThree();
+    const group = new three.Group();
+    const skin = new three.MeshStandardMaterial({ color: 0xf2c6a0, roughness: 0.78, metalness: 0.02 });
+    const bodyMat = new three.MeshStandardMaterial({ color, roughness: 0.72, metalness: 0.02 });
+    const dark = new three.MeshStandardMaterial({ color: 0x222222, roughness: 0.7, metalness: 0.04 });
+    const head = new three.Mesh(new three.SphereGeometry(0.45 * scale, 8, 6), skin);
     head.position.y = 2.1 * scale;
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.8 * scale, 1.15 * scale, 0.45 * scale), bodyMat);
+    const body = new three.Mesh(new three.BoxGeometry(0.8 * scale, 1.15 * scale, 0.45 * scale), bodyMat);
     body.position.y = 1.25 * scale;
-    const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.16 * scale, 0.82 * scale, 0.16 * scale), bodyMat);
+    const leftArm = new three.Mesh(new three.BoxGeometry(0.16 * scale, 0.82 * scale, 0.16 * scale), bodyMat);
     leftArm.position.set(-0.52 * scale, 1.3 * scale, 0);
     leftArm.rotation.z = options.cane ? -0.25 : 0.38;
-    const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.16 * scale, 0.82 * scale, 0.16 * scale), bodyMat);
+    const rightArm = new three.Mesh(new three.BoxGeometry(0.16 * scale, 0.82 * scale, 0.16 * scale), bodyMat);
     rightArm.position.set(0.52 * scale, 1.3 * scale, 0);
     rightArm.rotation.z = options.backpack ? -0.42 : 0.25;
-    const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.22 * scale, 0.9 * scale, 0.22 * scale), dark);
+    const leftLeg = new three.Mesh(new three.BoxGeometry(0.22 * scale, 0.9 * scale, 0.22 * scale), dark);
     leftLeg.position.set(-0.22 * scale, 0.45 * scale, 0);
     leftLeg.rotation.z = options.backpack ? 0.18 : 0;
-    const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.22 * scale, 0.9 * scale, 0.22 * scale), dark);
+    const rightLeg = new three.Mesh(new three.BoxGeometry(0.22 * scale, 0.9 * scale, 0.22 * scale), dark);
     rightLeg.position.set(0.22 * scale, 0.45 * scale, 0);
     rightLeg.rotation.z = options.backpack ? -0.18 : 0;
     group.add(head, body, leftArm, rightArm, leftLeg, rightLeg);
     if (options.backpack) {
-      const packMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.62, metalness: 0.05 });
-      const pack = new THREE.Mesh(new THREE.BoxGeometry(0.52 * scale, 0.68 * scale, 0.22 * scale), packMat);
+      const packMat = new three.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.62, metalness: 0.05 });
+      const pack = new three.Mesh(new three.BoxGeometry(0.52 * scale, 0.68 * scale, 0.22 * scale), packMat);
       pack.position.set(0, 1.35 * scale, -0.34 * scale);
       group.add(pack);
     }
     if (options.cane) {
-      const caneMat = new THREE.MeshStandardMaterial({ color: 0x7c4a2d, roughness: 0.66, metalness: 0.08 });
-      const cane = new THREE.Mesh(new THREE.CylinderGeometry(0.035 * scale, 0.035 * scale, 1.35 * scale, 8), caneMat);
+      const caneMat = new three.MeshStandardMaterial({ color: 0x7c4a2d, roughness: 0.66, metalness: 0.08 });
+      const cane = new three.Mesh(new three.CylinderGeometry(0.035 * scale, 0.035 * scale, 1.35 * scale, 8), caneMat);
       cane.position.set(-0.68 * scale, 0.72 * scale, 0.18 * scale);
       cane.rotation.z = -0.16;
       group.add(cane);
@@ -3803,7 +3799,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createCarMesh(color: number) {
-    const group = new THREE.Group();
+    const group = new three.Group();
     const referenceCar = this.vehicleModel?.clone?.(true);
     if (referenceCar) {
       referenceCar.rotation.x = 0;
@@ -3821,15 +3817,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private createPlaneMesh() {
-    const THREE = this.requireThree();
-    const group = new THREE.Group();
-    const bodyMat = new THREE.MeshBasicMaterial({ color: 0xd6dde4 });
-    const wingMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8 });
-    const smokeMat = new THREE.MeshBasicMaterial({ color: 0x4b5563, transparent: true, opacity: 0.42 });
-    const debrisMat = new THREE.MeshBasicMaterial({ color: 0x1f2937 });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 7), bodyMat);
-    const wing = new THREE.Mesh(new THREE.BoxGeometry(8, 0.18, 1.4), wingMat);
-    const tail = new THREE.Mesh(new THREE.BoxGeometry(4, 0.16, 1.1), wingMat);
+    const three = this.requireThree();
+    const group = new three.Group();
+    const bodyMat = new three.MeshBasicMaterial({ color: 0xd6dde4 });
+    const wingMat = new three.MeshBasicMaterial({ color: 0x94a3b8 });
+    const smokeMat = new three.MeshBasicMaterial({ color: 0x4b5563, transparent: true, opacity: 0.42 });
+    const debrisMat = new three.MeshBasicMaterial({ color: 0x1f2937 });
+    const body = new three.Mesh(new three.BoxGeometry(1.4, 1.2, 7), bodyMat);
+    const wing = new three.Mesh(new three.BoxGeometry(8, 0.18, 1.4), wingMat);
+    const tail = new three.Mesh(new three.BoxGeometry(4, 0.16, 1.1), wingMat);
     tail.position.z = -2.8;
     tail.position.y = 0.75;
     group.add(body, wing, tail);
@@ -3838,7 +3834,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       [1.6, 1.15, -3.9, 0.55],
       [0.2, 1.35, -4.6, 0.82],
     ] as const) {
-      const smoke = new THREE.Mesh(new THREE.SphereGeometry(radius, 10, 8), smokeMat);
+      const smoke = new three.Mesh(new three.SphereGeometry(radius, 10, 8), smokeMat);
       smoke.position.set(x, y, z);
       group.add(smoke);
     }
@@ -3847,7 +3843,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       [2.8, 1.9, 0.8],
       [0.8, -3.8, 0.9],
     ] as const) {
-      const debris = new THREE.Mesh(new THREE.BoxGeometry(w, 0.16, 0.42), debrisMat);
+      const debris = new three.Mesh(new three.BoxGeometry(w, 0.16, 0.42), debrisMat);
       debris.position.set(x, 0.12, z);
       debris.rotation.y = x * 0.7;
       group.add(debris);
@@ -3871,9 +3867,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       ? this.lerp(0.012, 0.038, speedRatio)
       : 0;
     const forward = this.getForwardVector(this.vehicleHeading);
-    const THREE = this.requireThree();
-    const targetPosition = new THREE.Vector3();
-    const lookAt = new THREE.Vector3();
+    const three = this.requireThree();
+    const targetPosition = new three.Vector3();
+    const lookAt = new three.Vector3();
 
     // vehicleX/Z is the single source of truth for the rendered and physical
     // vehicle center, so both camera modes stay centered on the same heading axis.
@@ -3930,9 +3926,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
    */
   private snapCameraToVehicle() {
     if (!this.camera) return;
-    const THREE = this.requireThree();
+    const three = this.requireThree();
     const forward = this.getForwardVector(this.vehicleHeading);
-    const lookAt = new THREE.Vector3();
+    const lookAt = new three.Vector3();
 
     if (this.cameraMode === 'third-person') {
       this.camera.position.set(
@@ -4096,7 +4092,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private getRouteAlias(): string {
     const routeId = this.selectedRouteVariant?.id;
-    const index = DRIVING_ROUTE_VARIANTS.findIndex((route) => route.id === routeId);
+    const index = drivingRouteVariants.findIndex((route) => route.id === routeId);
     return index >= 0 ? `R${index + 1}` : 'R?';
   }
 
@@ -4376,7 +4372,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private getRoutePoint(distance: number): RoutePoint {
     const at = this.getRouteAt(distance);
-    const { segment, index, local } = at;
+    const { index, local } = at;
     const dir = this.getSmoothedDirection(index, local);
     return this.makeRoutePoint(at, dir);
   }
@@ -4450,7 +4446,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   /* ================================================================
    * TRIAL FINISH & CLEANUP
    * ================================================================ */
-  private finishTrial(trial: TrialType<Info>, display_element: HTMLElement, response: string) {
+  private finishTrial(displayElement: HTMLElement, response: string) {
     if (this.finished) return;
     this.finished = true;
 
@@ -4477,7 +4473,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     this.detachGlobalListeners();
     this.cleanupRenderResources();
-    display_element.replaceChildren();
+    displayElement.replaceChildren();
 
     this.jsPsych.finishTrial({
       rt: averageRt,
@@ -4613,7 +4609,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private requireThree(): ThreeModule {
-    return THREE;
+    return three;
   }
 }
 

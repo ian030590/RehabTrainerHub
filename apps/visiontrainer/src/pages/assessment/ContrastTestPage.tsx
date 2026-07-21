@@ -6,9 +6,9 @@ import type { JsPsych } from 'jspsych';
 import { pixiAppManager } from '../../utils/pixiPool';
 import PixiContrastSensitivityPlugin from '../../experiment/plugins/pixi-contrast-sensitivity';
 import { BestPEST } from './logic/bestPest';
-import { getActiveUser, getSetting } from '../../utils/settings';
-import { downloadCsvFile } from '../../utils/downloadFile';
-import { createCsvContent } from '@rehab-trainer/ui/csv';
+import { getActiveUser, GetSetting } from '../../utils/settings';
+import { DownloadCsvFile } from '../../utils/downloadFile';
+import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -22,7 +22,7 @@ interface ContrastTrialRecord {
   logCSW: number;
 }
 
-function formatAlternative(alt: number) {
+function FormatAlternative(alt: number) {
   const map: Record<number, string> = {
     0: '↕',
     2: '⤢',
@@ -79,7 +79,7 @@ export function ContrastTestPage() {
       let currentLogCSW = 0;
 
       const getBackColor = () => {
-        const gamma = getSetting('gammaValue') || 2.2;
+        const gamma = GetSetting('gammaValue') || 2.2;
         const c = Math.round(Math.pow(0.5, 1 / gamma) * 255);
         const hex = c.toString(16).padStart(2, '0');
         return `#${hex}${hex}${hex}`;
@@ -167,7 +167,7 @@ export function ContrastTestPage() {
   const downloadCSV = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false }).replace(/:/g, '');
-    const prefix = getSetting('downloadDirectory');
+    const prefix = GetSetting('downloadDirectory');
 
     const headers = [
       t('exp.csv.user'),
@@ -183,7 +183,7 @@ export function ContrastTestPage() {
     ];
     const rows = trialRecords.map((r) => [
       userName, dateStr, timeStr, 'Contrast', r.trial,
-      formatAlternative(r.presented), r.response, r.correct ? '✓' : '✗',
+      FormatAlternative(r.presented), r.response, r.correct ? '✓' : '✗',
       r.contrastWeber.toFixed(4), r.logCSW.toFixed(3)
     ]);
     
@@ -191,8 +191,8 @@ export function ContrastTestPage() {
     rows.push([t('acuity.csv.finalResult') || 'Final Result']);
     rows.push(['logCS (Weber)', resultLogCSW.toFixed(2)]);
     
-    const csv = createCsvContent([headers, ...rows]);
-    downloadCsvFile(
+    const csv = CreateCsvContent([headers, ...rows]);
+    DownloadCsvFile(
       csv,
       `${prefix ? prefix + '_' : ''}${userName}_contrast_${dateStr}.csv`,
     );
@@ -267,7 +267,7 @@ export function ContrastTestPage() {
                {trialRecords.map((r) => (
                  <tr key={r.trial}>
                    <td>{r.trial}</td>
-                   <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{formatAlternative(r.presented)}</td>
+                   <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{FormatAlternative(r.presented)}</td>
                    <td>{r.response}</td>
                    <td style={{ color: r.correct ? 'var(--success)' : 'var(--error)' }}>
                      {r.correct ? '✓' : '✗'}

@@ -1,11 +1,11 @@
 import { useT } from '../../i18n';
 import {
-  getSetting,
-  setSetting,
-  markDisplayCalibrated,
-  MAX_UI_FONT_SIZE_PX,
-  MIN_UI_FONT_SIZE_PX,
-  DEFAULT_UI_FONT_SIZE_PX
+  GetSetting,
+  SetSetting,
+  MarkDisplayCalibrated,
+  maxUiFontSizePx,
+  minUiFontSizePx,
+  defaultUiFontSizePx
 } from '../../utils/settings';
 import type { UiTheme } from '../../utils/settings';
 import { SettingRow } from './SettingRow';
@@ -15,13 +15,13 @@ const themes: UiTheme[] = ['light', 'dark', 'contrast'];
 /* ── General Tab ── */
 export function GeneralTab({ refresh }: { refresh: () => void }) {
   const { t, lang, setLang } = useT();
-  const uiFontSizePx = getSetting('uiFontSizePx');
-  const uiFontBold = getSetting('uiFontBold');
-  const uiTheme = getSetting('uiTheme');
-  const auditoryFeedbackEnabled = getSetting('auditoryFeedbackEnabled');
+  const uiFontSizePx = GetSetting('uiFontSizePx');
+  const uiFontBold = GetSetting('uiFontBold');
+  const uiTheme = GetSetting('uiTheme');
+  const auditoryFeedbackEnabled = GetSetting('auditoryFeedbackEnabled');
   const setUiFontSize = (nextSizePx: number) => {
-    const clampedSizePx = Math.min(MAX_UI_FONT_SIZE_PX, Math.max(MIN_UI_FONT_SIZE_PX, nextSizePx));
-    setSetting('uiFontSizePx', clampedSizePx);
+    const clampedSizePx = Math.min(maxUiFontSizePx, Math.max(minUiFontSizePx, nextSizePx));
+    SetSetting('uiFontSizePx', clampedSizePx);
     refresh();
   };
 
@@ -64,7 +64,7 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
           <button
             type="button"
             className="btn btn-sm btn-secondary"
-            disabled={uiFontSizePx <= MIN_UI_FONT_SIZE_PX}
+            disabled={uiFontSizePx <= minUiFontSizePx}
             aria-label={t('settings.fontSize.decrease')}
             onClick={() => setUiFontSize(uiFontSizePx - 1)}
           >
@@ -76,7 +76,7 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
           <button
             type="button"
             className="btn btn-sm btn-secondary"
-            disabled={uiFontSizePx >= MAX_UI_FONT_SIZE_PX}
+            disabled={uiFontSizePx >= maxUiFontSizePx}
             aria-label={t('settings.fontSize.increase')}
             onClick={() => setUiFontSize(uiFontSizePx + 1)}
           >
@@ -85,7 +85,7 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
           <button
             type="button"
             className="btn btn-sm btn-ghost"
-            onClick={() => setUiFontSize(DEFAULT_UI_FONT_SIZE_PX)}
+            onClick={() => setUiFontSize(defaultUiFontSizePx)}
           >
             {t('settings.fontSize.reset')}
           </button>
@@ -93,7 +93,7 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
             type="button"
             className={`btn btn-sm ${uiFontBold ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => {
-              setSetting('uiFontBold', !uiFontBold);
+              SetSetting('uiFontBold', !uiFontBold);
               refresh();
             }}
           >
@@ -114,7 +114,7 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
               className={`btn btn-sm ${uiTheme === theme ? 'btn-primary' : 'btn-secondary'}`}
               key={theme}
               onClick={() => {
-                setSetting('uiTheme', theme);
+                SetSetting('uiTheme', theme);
                 refresh();
               }}
             >
@@ -128,12 +128,12 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
       <SettingRow
         title={t('settings.distance.title')}
         desc={t('settings.distance.desc')}
-        value={`${getSetting('distanceInCM')} cm`}
+        value={`${GetSetting('distanceInCM')} cm`}
         onEdit={(val: string) => {
           const num = parseInt(val, 10);
           if (!isNaN(num) && num >= 10 && num <= 500) {
-            setSetting('distanceInCM', num);
-            markDisplayCalibrated();
+            SetSetting('distanceInCM', num);
+            MarkDisplayCalibrated();
             refresh();
           }
         }}
@@ -151,7 +151,7 @@ export function GeneralTab({ refresh }: { refresh: () => void }) {
             type="button"
             className={`btn btn-sm ${auditoryFeedbackEnabled ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => {
-              setSetting('auditoryFeedbackEnabled', !auditoryFeedbackEnabled);
+              SetSetting('auditoryFeedbackEnabled', !auditoryFeedbackEnabled);
               refresh();
             }}
           >

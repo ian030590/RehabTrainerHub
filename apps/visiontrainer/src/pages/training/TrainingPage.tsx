@@ -5,15 +5,15 @@ import type { JsPsych } from 'jspsych';
 import WebGazerExtension from '@jspsych/extension-webgazer';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '../../i18n';
-import { buildTimeline } from '../../experiment/timeline';
+import { BuildTimeline } from '../../experiment/timeline';
 import {
   getActiveUser,
-  getSetting,
-  isDrivingControlMode,
+  GetSetting,
+  IsDrivingControlMode,
 } from '../../utils/settings';
-import { SoundManager } from '../../utils/soundManager';
-import { saveTrainingRecord } from '../../utils/trainingRecords';
-import { downloadTrainingCsv } from './exportCsv';
+import { soundManager } from '../../utils/soundManager';
+import { SaveTrainingRecord } from '../../utils/trainingRecords';
+import { DownloadTrainingCsv } from './exportCsv';
 import {
   isOculomotorMode,
   isOculomotorPattern,
@@ -25,14 +25,14 @@ import type { TrialData } from './types';
 
 type Phase = 'running' | 'results';
 
-const TRAINING_LAYOUT_WAIT_TIMEOUT_MS = 800;
+const trainingLayoutWaitTimeoutMs = 800;
 
-function hasUsableLayout(element: HTMLElement): boolean {
+function HasUsableLayout(element: HTMLElement): boolean {
   const rect = element.getBoundingClientRect();
   return element.isConnected && rect.width > 0 && rect.height > 0;
 }
 
-function waitForUsableLayout(element: HTMLElement): Promise<void> {
+function WaitForUsableLayout(element: HTMLElement): Promise<void> {
   return new Promise((resolve) => {
     let done = false;
     let observer: ResizeObserver | null = null;
@@ -54,7 +54,7 @@ function waitForUsableLayout(element: HTMLElement): Promise<void> {
 
     const check = () => {
       if (done) return;
-      if (!hasUsableLayout(element)) {
+      if (!HasUsableLayout(element)) {
         frameId = window.requestAnimationFrame(check);
         return;
       }
@@ -62,7 +62,7 @@ function waitForUsableLayout(element: HTMLElement): Promise<void> {
     };
 
     frameId = window.requestAnimationFrame(check);
-    timeoutId = window.setTimeout(finish, TRAINING_LAYOUT_WAIT_TIMEOUT_MS);
+    timeoutId = window.setTimeout(finish, trainingLayoutWaitTimeoutMs);
 
     if (typeof ResizeObserver !== 'undefined') {
       observer = new ResizeObserver(check);
@@ -76,38 +76,38 @@ export function TrainingPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const moduleId = searchParams.get('module') || 'moving-card';
-  const difficulty = searchParams.get('difficulty') || getSetting('difficulty');
-  const totalRounds = parseInt(searchParams.get('rounds') || '', 10) || getSetting('totalRounds');
-  const requestedMode = searchParams.get('mode') || getSetting('oculomotorMode');
-  const requestedPattern = searchParams.get('pattern') || getSetting('oculomotorPattern');
-  const oculomotorMode = isOculomotorMode(requestedMode) ? requestedMode : getSetting('oculomotorMode');
+  const difficulty = searchParams.get('difficulty') || GetSetting('difficulty');
+  const totalRounds = parseInt(searchParams.get('rounds') || '', 10) || GetSetting('totalRounds');
+  const requestedMode = searchParams.get('mode') || GetSetting('oculomotorMode');
+  const requestedPattern = searchParams.get('pattern') || GetSetting('oculomotorPattern');
+  const oculomotorMode = isOculomotorMode(requestedMode) ? requestedMode : GetSetting('oculomotorMode');
   const oculomotorPattern = isOculomotorPattern(requestedPattern)
     ? requestedPattern
-    : getSetting('oculomotorPattern');
+    : GetSetting('oculomotorPattern');
   const oculomotorDurationSec = parseInt(searchParams.get('duration') || '', 10)
-    || getSetting('oculomotorDurationSec');
+    || GetSetting('oculomotorDurationSec');
   const oculomotorSpeedDegPerSec = parseFloat(searchParams.get('speed') || '')
-    || getSetting('oculomotorSpeedDegPerSec');
+    || GetSetting('oculomotorSpeedDegPerSec');
   const oculomotorTargetSizeMm = parseFloat(searchParams.get('size') || '')
-    || getSetting('oculomotorTargetSizeMm');
+    || GetSetting('oculomotorTargetSizeMm');
   const oculomotorDistractorCount = parseInt(searchParams.get('distractors') || '', 10);
-  const requestedTargetShape = searchParams.get('shape') || getSetting('oculomotorTargetShape');
-  const oculomotorTargetShape = isOculomotorTargetShape(requestedTargetShape)
+  const requestedTargetShape = searchParams.get('shape') || GetSetting('oculomotorTargetShape');
+  const oculomotorTargetShape = IsOculomotorTargetShape(requestedTargetShape)
     ? requestedTargetShape
-    : getSetting('oculomotorTargetShape');
-  const oculomotorTargetColor = searchParams.get('targetColor') || getSetting('oculomotorTargetColor');
-  const oculomotorBackgroundColor = searchParams.get('backgroundColor') || getSetting('oculomotorBackgroundColor');
-  const oculomotorCustomTargetImage = getSetting('oculomotorCustomTargetImage');
-  const enableWebGazer = getSetting('oculomotorEnableWebgazer');
+    : GetSetting('oculomotorTargetShape');
+  const oculomotorTargetColor = searchParams.get('targetColor') || GetSetting('oculomotorTargetColor');
+  const oculomotorBackgroundColor = searchParams.get('backgroundColor') || GetSetting('oculomotorBackgroundColor');
+  const oculomotorCustomTargetImage = GetSetting('oculomotorCustomTargetImage');
+  const enableWebGazer = GetSetting('oculomotorEnableWebgazer');
   const requestedDrivingFlash = searchParams.get('redFlash');
   const drivingRedFlashEnabled = requestedDrivingFlash === null
-    ? getSetting('drivingRedFlashEnabled')
+    ? GetSetting('drivingRedFlashEnabled')
     : requestedDrivingFlash === 'true';
-  const drivingDifficulty = (searchParams.get('drivingDifficulty') as any) || getSetting('drivingDifficulty');
+  const drivingDifficulty = (searchParams.get('drivingDifficulty') as any) || GetSetting('drivingDifficulty');
   const requestedDrivingControlMode = searchParams.get('controlMode');
-  const drivingControlMode = isDrivingControlMode(requestedDrivingControlMode)
+  const drivingControlMode = IsDrivingControlMode(requestedDrivingControlMode)
     ? requestedDrivingControlMode
-    : getSetting('drivingControlMode');
+    : GetSetting('drivingControlMode');
   const gaborDurationSec = parseInt(searchParams.get('duration') || '', 10) || 60;
   const gaborMaxSpots = parseInt(searchParams.get('maxSpots') || '', 10) || 10;
 
@@ -128,7 +128,7 @@ export function TrainingPage() {
     let cancelled = false;
 
     const setupExperiment = async () => {
-      await waitForUsableLayout(container);
+      await WaitForUsableLayout(container);
       if (cancelled) return;
 
       const storyData = moduleId === 'reading-training'
@@ -144,7 +144,7 @@ export function TrainingPage() {
             return;
           }
           const data = jsPsych.data.get().values() as TrialData[];
-          await saveTrainingRecord({
+          await SaveTrainingRecord({
             results: data,
             userName,
             moduleId,
@@ -160,25 +160,25 @@ export function TrainingPage() {
               oculomotorTargetSizeMm,
               oculomotorDistractorCount: Number.isFinite(oculomotorDistractorCount)
                 ? oculomotorDistractorCount
-                : getSetting('oculomotorDistractorCount'),
+                : GetSetting('oculomotorDistractorCount'),
               gaborDurationSec,
               gaborMaxSpots,
-              readingWPS: getSetting('readingWPS'),
-              readingCrowding: getSetting('readingCrowding'),
-              readingContrast: getSetting('readingContrast'),
+              readingWPS: GetSetting('readingWPS'),
+              readingCrowding: GetSetting('readingCrowding'),
+              readingContrast: GetSetting('readingContrast'),
               drivingRedFlashEnabled,
               drivingDifficulty,
               drivingControlMode,
             },
           });
-          SoundManager.destroy();
+          soundManager.destroy();
           setResults(data);
           jsPsychRef.current = null;
           setPhase('results');
         },
       });
 
-      const timeline = await buildTimeline(moduleId, {
+      const timeline = await BuildTimeline(moduleId, {
         difficulty,
         totalRounds,
         oculomotor: {
@@ -189,7 +189,7 @@ export function TrainingPage() {
           targetSizeMm: oculomotorTargetSizeMm,
           distractorCount: Number.isFinite(oculomotorDistractorCount)
             ? oculomotorDistractorCount
-            : getSetting('oculomotorDistractorCount'),
+            : GetSetting('oculomotorDistractorCount'),
           targetColor: oculomotorTargetColor,
           backgroundColor: oculomotorBackgroundColor,
           targetShape: oculomotorTargetShape,
@@ -201,9 +201,9 @@ export function TrainingPage() {
         },
         reading: {
           story: storyData,
-          wps: getSetting('readingWPS'),
-          crowding: getSetting('readingCrowding'),
-          contrast: getSetting('readingContrast'),
+          wps: GetSetting('readingWPS'),
+          crowding: GetSetting('readingCrowding'),
+          contrast: GetSetting('readingContrast'),
         },
         driving: {
           redFlashEnabled: drivingRedFlashEnabled,
@@ -222,7 +222,7 @@ export function TrainingPage() {
 
     return () => {
       cancelled = true;
-      SoundManager.destroy();
+      soundManager.destroy();
       if (jsPsychRef.current) {
         jsPsychRef.current = null;
       }
@@ -255,7 +255,7 @@ export function TrainingPage() {
   const abortTraining = useCallback(() => {
     if (phase !== 'running') return;
     skipFinishRef.current = true;
-    SoundManager.destroy();
+    soundManager.destroy();
     const jsPsych = jsPsychRef.current;
     jsPsychRef.current = null;
     jsPsych?.abortExperiment();
@@ -269,7 +269,7 @@ export function TrainingPage() {
   });
 
   const downloadCSV = useCallback(() => {
-    downloadTrainingCsv({
+    DownloadTrainingCsv({
       results,
       userName,
       moduleId,
@@ -306,6 +306,6 @@ export function TrainingPage() {
   );
 }
 
-function isOculomotorTargetShape(value: string): value is OculomotorTargetShape {
+function IsOculomotorTargetShape(value: string): value is OculomotorTargetShape {
   return ['circle', 'star', 'square', 'cross', 'triangle', 'custom'].includes(value);
 }

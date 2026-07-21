@@ -1,6 +1,6 @@
 import type { HazardId } from './types';
 
-export const DRIVING_TEXT = {
+export const drivingText = {
   zh: {
     controllerConnected: '已連接控制器：{id}',
     controllerDisconnected: '控制器已中斷，改用鍵盤控制',
@@ -62,5 +62,5 @@ export const DRIVING_TEXT = {
 } as const;
 
 export type DrivingText = {
-  [K in keyof typeof DRIVING_TEXT.zh]: K extends 'hazardLabels' ? Record<HazardId, string> : string;
+  [K in keyof typeof drivingText.zh]: K extends 'hazardLabels' ? Record<HazardId, string> : string;
 };

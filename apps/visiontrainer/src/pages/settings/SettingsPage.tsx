@@ -8,21 +8,21 @@ import WebGazerExtension from '@jspsych/extension-webgazer';
 import WebGazerInitCameraPlugin from '@jspsych/plugin-webgazer-init-camera';
 import WebGazerCalibratePlugin from '@jspsych/plugin-webgazer-calibrate';
 import {
-  getSetting,
-  setSetting,
-  isCalibrated,
-  markDisplayCalibrated,
-  clearDisplayCalibration,
-  getMMPerPixel,
-  CAL_BAR_LENGTH_PX,
-  CARD_WIDTH_MM,
-  CARD_HEIGHT_MM,
-  DEFAULT_UI_FONT_SIZE_PX,
-  MAX_UI_FONT_SIZE_PX,
-  MIN_UI_FONT_SIZE_PX,
+  GetSetting,
+  SetSetting,
+  IsCalibrated,
+  MarkDisplayCalibrated,
+  ClearDisplayCalibration,
+  GetMMPerPixel,
+  calBarLengthPx,
+  cardWidthMm,
+  cardHeightMm,
+  defaultUiFontSizePx,
+  maxUiFontSizePx,
+  minUiFontSizePx,
   type UiTheme,
 } from '../../utils/settings';
-import { pixelFromMillimeter } from '../../utils/spatialUtils';
+import { PixelFromMillimeter } from '../../utils/spatialUtils';
 
 type Tab = 'general' | 'calibration' | 'webgazer' | 'gamma' | 'crowding';
 const themes: UiTheme[] = ['light', 'dark', 'contrast'];
@@ -62,12 +62,12 @@ export function SettingsPage() {
 /* ── General Tab ── */
 function GeneralTab({ refresh }: { refresh: () => void }) {
   const { t, lang, setLang } = useT();
-  const uiFontSizePx = getSetting('uiFontSizePx');
-  const uiFontBold = getSetting('uiFontBold');
-  const uiTheme = getSetting('uiTheme');
+  const uiFontSizePx = GetSetting('uiFontSizePx');
+  const uiFontBold = GetSetting('uiFontBold');
+  const uiTheme = GetSetting('uiTheme');
   const setUiFontSize = (nextSizePx: number) => {
-    const clampedSizePx = Math.min(MAX_UI_FONT_SIZE_PX, Math.max(MIN_UI_FONT_SIZE_PX, nextSizePx));
-    setSetting('uiFontSizePx', clampedSizePx);
+    const clampedSizePx = Math.min(maxUiFontSizePx, Math.max(minUiFontSizePx, nextSizePx));
+    SetSetting('uiFontSizePx', clampedSizePx);
     refresh();
   };
 
@@ -110,7 +110,7 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
           <button
             type="button"
             className="btn btn-sm btn-secondary"
-            disabled={uiFontSizePx <= MIN_UI_FONT_SIZE_PX}
+            disabled={uiFontSizePx <= minUiFontSizePx}
             aria-label={t('settings.fontSize.decrease')}
             onClick={() => setUiFontSize(uiFontSizePx - 1)}
           >
@@ -122,7 +122,7 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
           <button
             type="button"
             className="btn btn-sm btn-secondary"
-            disabled={uiFontSizePx >= MAX_UI_FONT_SIZE_PX}
+            disabled={uiFontSizePx >= maxUiFontSizePx}
             aria-label={t('settings.fontSize.increase')}
             onClick={() => setUiFontSize(uiFontSizePx + 1)}
           >
@@ -131,7 +131,7 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
           <button
             type="button"
             className="btn btn-sm btn-ghost"
-            onClick={() => setUiFontSize(DEFAULT_UI_FONT_SIZE_PX)}
+            onClick={() => setUiFontSize(defaultUiFontSizePx)}
           >
             {t('settings.fontSize.reset')}
           </button>
@@ -139,7 +139,7 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
             type="button"
             className={`btn btn-sm ${uiFontBold ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => {
-              setSetting('uiFontBold', !uiFontBold);
+              SetSetting('uiFontBold', !uiFontBold);
               refresh();
             }}
           >
@@ -160,7 +160,7 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
               className={`btn btn-sm ${uiTheme === theme ? 'btn-primary' : 'btn-secondary'}`}
               key={theme}
               onClick={() => {
-                setSetting('uiTheme', theme);
+                SetSetting('uiTheme', theme);
                 refresh();
               }}
             >
@@ -174,12 +174,12 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
       <SettingRow
         title={t('settings.distance.title')}
         desc={t('settings.distance.desc')}
-        value={`${getSetting('distanceInCM')} cm`}
+        value={`${GetSetting('distanceInCM')} cm`}
         onEdit={(val) => {
           const num = parseInt(val, 10);
           if (!isNaN(num) && num >= 10 && num <= 500) {
-            setSetting('distanceInCM', num);
-            markDisplayCalibrated();
+            SetSetting('distanceInCM', num);
+            MarkDisplayCalibrated();
             refresh();
           }
         }}
@@ -195,13 +195,13 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
         <div className="setting-actions">
           <button
             type="button"
-            className={`btn btn-sm ${getSetting('auditoryFeedbackEnabled') ? 'btn-primary' : 'btn-secondary'}`}
+            className={`btn btn-sm ${GetSetting('auditoryFeedbackEnabled') ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => {
-              setSetting('auditoryFeedbackEnabled', !getSetting('auditoryFeedbackEnabled'));
+              SetSetting('auditoryFeedbackEnabled', !GetSetting('auditoryFeedbackEnabled'));
               refresh();
             }}
           >
-            {getSetting('auditoryFeedbackEnabled') ? t('settings.sound.on') : t('settings.sound.off')}
+            {GetSetting('auditoryFeedbackEnabled') ? t('settings.sound.on') : t('settings.sound.off')}
           </button>
         </div>
       </div>
@@ -213,8 +213,8 @@ function GeneralTab({ refresh }: { refresh: () => void }) {
 function CalibrationTab({ refresh }: { refresh: () => void }) {
   const { t } = useT();
   const [calMode, setCalMode] = useState<'ruler' | 'card'>('ruler');
-  const calibrated = isCalibrated();
-  const mmPerPx = getMMPerPixel();
+  const calibrated = IsCalibrated();
+  const mmPerPx = GetMMPerPixel();
 
   return (
     <div className="fade-in">
@@ -259,11 +259,11 @@ function RulerCalibration({ refresh }: { refresh: () => void }) {
   const handleApply = () => {
     const val = parseFloat(inputVal);
     if (!isNaN(val) && val > 0 && val <= 10000) {
-      setSetting('rulerLengthInMM', val);
+      SetSetting('rulerLengthInMM', val);
       const pxPerMM = rulerBarPx / val;
-      const newCalBarMM = CAL_BAR_LENGTH_PX / pxPerMM;
-      setSetting('calBarLengthInMM', newCalBarMM);
-      markDisplayCalibrated();
+      const newCalBarMM = calBarLengthPx / pxPerMM;
+      SetSetting('calBarLengthInMM', newCalBarMM);
+      MarkDisplayCalibrated();
       refresh();
     }
   };
@@ -293,15 +293,15 @@ function RulerCalibration({ refresh }: { refresh: () => void }) {
 
 function CardCalibration({ refresh }: { refresh: () => void }) {
   const { t } = useT();
-  const wPx = pixelFromMillimeter(CARD_WIDTH_MM);
-  const hPx = pixelFromMillimeter(CARD_HEIGHT_MM);
+  const wPx = PixelFromMillimeter(cardWidthMm);
+  const hPx = PixelFromMillimeter(cardHeightMm);
   const factors = [1.1, 1.01, 1.0 / 1.01, 1.0 / 1.1];
   const labels = ['− −', '−', '+', '+ +'];
 
   const handleAdjust = (factor: number) => {
-    const current = getSetting('calBarLengthInMM');
-    setSetting('calBarLengthInMM', current * factor);
-    markDisplayCalibrated();
+    const current = GetSetting('calBarLengthInMM');
+    SetSetting('calBarLengthInMM', current * factor);
+    MarkDisplayCalibrated();
     refresh();
   };
 
@@ -319,7 +319,7 @@ function CardCalibration({ refresh }: { refresh: () => void }) {
           position: 'absolute', bottom: -24, left: '50%', transform: 'translateX(-50%)',
           fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap',
         }}>
-          {CARD_WIDTH_MM}mm × {CARD_HEIGHT_MM}mm
+          {cardWidthMm}mm × {cardHeightMm}mm
         </span>
       </div>
       <div className="cal-controls" style={{ marginTop: 36 }}>
@@ -336,7 +336,7 @@ function CardCalibration({ refresh }: { refresh: () => void }) {
       <button
         className="btn btn-danger btn-sm"
         style={{ marginTop: 16 }}
-        onClick={() => { setSetting('calBarLengthInMM', 149); clearDisplayCalibration(); refresh(); }}
+        onClick={() => { SetSetting('calBarLengthInMM', 149); ClearDisplayCalibration(); refresh(); }}
       >
         {t('settings.cal.resetBtn')}
       </button>
@@ -351,7 +351,7 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
   const jsPsychRef = useRef<any>(null);
   const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const calibratedAt = getSetting('webGazerCalibrationAt');
+  const calibratedAt = GetSetting('webGazerCalibrationAt');
 
   // Cleanup jsPsych on unmount
   React.useEffect(() => {
@@ -432,7 +432,7 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
             { type: WebGazerExtension },
           ] as any,
           on_finish: () => {
-            setSetting('webGazerCalibrationAt', new Date().toISOString());
+            SetSetting('webGazerCalibrationAt', new Date().toISOString());
             jsPsychRef.current = null;
             setStatus('done');
             setMessage(t('settings.wg.done'));
@@ -495,7 +495,7 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
     } catch {
       // Clearing the saved status should still work if WebGazer is not active.
     }
-    setSetting('webGazerCalibrationAt', '');
+    SetSetting('webGazerCalibrationAt', '');
     setStatus('idle');
     setMessage('');
     refresh();
@@ -566,7 +566,7 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
 /* ── Gamma Tab ── */
 function GammaTab({ refresh }: { refresh: () => void }) {
   const { t } = useT();
-  const gammaVal = getSetting('gammaValue');
+  const gammaVal = GetSetting('gammaValue');
   const deltas = [
     { label: '− 0.1', delta: -0.1 },
     { label: '− 0.01', delta: -0.01 },
@@ -610,7 +610,7 @@ function GammaTab({ refresh }: { refresh: () => void }) {
             onClick={() => {
               const nv = Math.round((gammaVal + b.delta) * 100) / 100;
               if (nv >= 0.8 && nv <= 4.0) {
-                setSetting('gammaValue', nv);
+                SetSetting('gammaValue', nv);
                 refresh();
               }
             }}
@@ -683,12 +683,12 @@ function CrowdingTab({ refresh }: { refresh: () => void }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span className="setting-value">
-            {crowdTypes[getSetting('crowdingType')]}
+            {crowdTypes[GetSetting('crowdingType')]}
           </span>
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => {
-              setSetting('crowdingType', ((getSetting('crowdingType') + 1) % 7) as number);
+              SetSetting('crowdingType', ((GetSetting('crowdingType') + 1) % 7) as number);
               refresh();
             }}
           >
@@ -704,12 +704,12 @@ function CrowdingTab({ refresh }: { refresh: () => void }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span className="setting-value">
-            {distTypes[getSetting('crowdingDistanceType')]}
+            {distTypes[GetSetting('crowdingDistanceType')]}
           </span>
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => {
-              setSetting('crowdingDistanceType', ((getSetting('crowdingDistanceType') + 1) % 4) as number);
+              SetSetting('crowdingDistanceType', ((GetSetting('crowdingDistanceType') + 1) % 4) as number);
               refresh();
             }}
           >

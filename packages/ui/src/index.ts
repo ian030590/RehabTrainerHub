@@ -52,32 +52,32 @@ export type {
 export { TrainingLoginReminder } from './components/TrainingLoginReminder';
 export { UserSelector } from './components/UserSelector';
 export type { UserSelectorProps } from './components/UserSelector';
-export { detectDisplayDeviceKind, is60HzRefreshFamily, measureDisplayRefreshRate } from './displayTiming';
+export { DetectDisplayDeviceKind, Is60HzRefreshFamily, MeasureDisplayRefreshRate } from './displayTiming';
 export type { DisplayDeviceKind, DisplayRefreshInfo, DisplayRefreshMeasureOptions } from './displayTiming';
-export { createCsvContent, ensureCsvUtf8Bom, toCsvCell } from './csv';
+export { CreateCsvContent, EnsureCsvUtf8Bom, ToCsvCell } from './csv';
 export type { CsvCellValue, CsvRow } from './csv';
-export { downloadCsvFile, downloadFile } from './downloadFile';
-export { enterFullscreenFromUserGesture, exitFullscreenIfActive, waitForFullscreenLayout } from './fullscreen';
-export { createUseActiveUser } from './hooks/useActiveUser';
+export { DownloadCsvFile, DownloadFile } from './downloadFile';
+export { EnterFullscreenFromUserGesture, ExitFullscreenIfActive, WaitForFullscreenLayout } from './fullscreen';
+export { CreateUseActiveUser } from './hooks/useActiveUser';
 export { useFullscreenTrainingRoot } from './hooks/useFullscreenTrainingRoot';
 export { useRoutedTrainingModule } from './hooks/useRoutedTrainingModule';
 export type { UseRoutedTrainingModuleArgs } from './hooks/useRoutedTrainingModule';
 export { useTrainingAbort } from './hooks/useTrainingAbort';
 export type { UseTrainingAbortArgs } from './hooks/useTrainingAbort';
-export { createLanguageProvider } from './i18n/createLanguageProvider';
+export { CreateLanguageProvider } from './i18n/createLanguageProvider';
 export type {
   CreateLanguageProviderOptions,
   LanguageContextValue,
   SupportedLanguage,
 } from './i18n/createLanguageProvider';
-export { applyDisplaySettings } from './settings/displaySettings';
+export { ApplyDisplaySettings } from './settings/displaySettings';
 export type { DisplaySettings } from './settings/displaySettings';
-export { defaultSiteUrls, normalizeSiteUrl } from './siteUrls';
+export { defaultSiteUrls, NormalizeSiteUrl } from './siteUrls';
 export type { SiteUrlKey, SiteUrls } from './siteUrls';
-export { createUserStore } from './storage/userStore';
+export { CreateUserStore } from './storage/userStore';
 export type { UserStore } from './storage/userStore';
 export {
-  applyThemeTokens,
+  ApplyThemeTokens,
   cssColors,
   pixiColors,
   radii,
@@ -87,17 +87,17 @@ export {
   typography,
 } from './trainerTheme';
 export {
-  drawUfovCanvasStage,
-  ensureUfovCanvasStage,
-  prepareUfovNoiseMask,
-  renderUfovCanvasStage,
+  DrawUfovCanvasStage,
+  EnsureUfovCanvasStage,
+  PrepareUfovNoiseMask,
+  RenderUfovCanvasStage,
 } from './ufovCanvas';
 export type { UfovCanvasPhase, UfovCanvasSlot, UfovCanvasStageOptions, UfovCanvasTarget } from './ufovCanvas';
 export {
-  estimateUfovThresholdMs,
-  getFastestCorrectStimulusDurationMs,
-  getUfovDirectionAccuracy,
-  shouldStopUfovAdaptiveRun,
-  UFOV_ADAPTIVE_STOP,
+  EstimateUfovThresholdMs,
+  GetFastestCorrectStimulusDurationMs,
+  GetUfovDirectionAccuracy,
+  ShouldStopUfovAdaptiveRun,
+  ufovAdaptiveStop,
 } from './ufovResults';
 export type { UfovAdaptiveRunState, UfovDirectionAccuracy } from './ufovResults';

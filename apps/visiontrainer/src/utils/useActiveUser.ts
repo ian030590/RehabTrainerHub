@@ -1,7 +1,7 @@
-import { createUseActiveUser } from '@rehab-trainer/ui/hooks/useActiveUser';
-import { ACTIVE_USER_CHANGED_EVENT, getActiveUser } from './settings';
+import { CreateUseActiveUser } from '@rehab-trainer/ui/hooks/useActiveUser';
+import { activeUserChangedEvent, getActiveUser } from './settings';
 
-export const useActiveUser = createUseActiveUser({
-  activeUserChangedEvent: ACTIVE_USER_CHANGED_EVENT,
+export const useActiveUser = CreateUseActiveUser({
+  activeUserChangedEvent: activeUserChangedEvent,
   getActiveUser,
 });

@@ -1,5 +1,5 @@
-import { getPixelsPerMM } from './settings';
+import { GetPixelsPerMM } from './settings';
 
-export function pixelFromMillimeter(mm: number): number {
-  return mm * getPixelsPerMM();
+export function PixelFromMillimeter(mm: number): number {
+  return mm * GetPixelsPerMM();
 }

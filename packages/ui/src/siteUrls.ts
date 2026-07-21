@@ -8,7 +8,7 @@ export const defaultSiteUrls = {
 export type SiteUrlKey = keyof typeof defaultSiteUrls;
 export type SiteUrls = typeof defaultSiteUrls;
 
-export function normalizeSiteUrl(value: string | null | undefined, fallback: string) {
+export function NormalizeSiteUrl(value: string | null | undefined, fallback: string) {
   const url = value?.trim() || fallback;
   return url.replace(/\/+$/, '');
 }

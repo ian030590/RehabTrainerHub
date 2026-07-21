@@ -3,10 +3,10 @@ import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Graphics, Text } from 'pixi.js';
 import { typography } from '../../theme';
 import {
-  attachPixiTrialCanvas,
-  cleanupPixiTrial,
-  createPixiTrialContainer,
-  runPixiTrial,
+  AttachPixiTrialCanvas,
+  CleanupPixiTrial,
+  CreatePixiTrialContainer,
+  RunPixiTrial,
 } from '../../utils/pixiPool';
 
 const info = {
@@ -43,10 +43,10 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
 
   constructor(private jsPsych: JsPsych) {}
 
-  trial(display_element: HTMLElement, trial: TrialType<Info>): void {
+  trial(displayElement: HTMLElement, trial: TrialType<Info>): void {
     const self = this;
-    const wrapper = createPixiTrialContainer(
-      display_element,
+    const wrapper = CreatePixiTrialContainer(
+      displayElement,
       'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;background-color:#ffffff;',
     );
 
@@ -68,10 +68,10 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
     const startTime = performance.now();
 
     const runWithApp = (app: Application) => {
-      attachPixiTrialCanvas(wrapper);
+      AttachPixiTrialCanvas(wrapper);
 
-      const W = () => app.screen.width;
-      const H = () => app.screen.height;
+      const getWidth = () => app.screen.width;
+      const getHeight = () => app.screen.height;
 
       const bgGfx = new Graphics();
       const textObj = new Text();
@@ -86,32 +86,32 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
       };
       textObj.anchor.set(0.5);
 
-      function drawLayout() {
-        const w = W();
-        const h = H();
-        bgGfx.clear().rect(0, 0, w, h).fill({ color: 0xffffff });
-        textObj.x = w / 2;
-        textObj.y = h / 2;
+      function DrawLayout() {
+        const width = getWidth();
+        const height = getHeight();
+        bgGfx.clear().rect(0, 0, width, height).fill({ color: 0xffffff });
+        textObj.x = width / 2;
+        textObj.y = height / 2;
       }
-      drawLayout();
+      DrawLayout();
 
-      const handleResize = () => drawLayout();
+      const handleResize = () => DrawLayout();
       app.renderer.on('resize', handleResize);
 
       const handleKeydown = (e: KeyboardEvent) => {
         if (e.code === 'Escape') {
-          endTrial();
+          EndTrial();
         }
       };
       window.addEventListener('keydown', handleKeydown);
 
-      function endTrial() {
+      function EndTrial() {
         if (trialEnded) return;
         trialEnded = true;
         if (timerId) clearTimeout(timerId);
         app.renderer.off('resize', handleResize);
         window.removeEventListener('keydown', handleKeydown);
-        cleanupPixiTrial(display_element);
+        CleanupPixiTrial(displayElement);
 
         self.jsPsych.finishTrial({
           reading_time: Math.round(performance.now() - startTime),
@@ -123,23 +123,23 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
       const countdowns = ['3', '2', '1'];
       let cIdx = 0;
 
-      function showCountdown() {
+      function ShowCountdown() {
         if (trialEnded) return;
         if (cIdx < countdowns.length) {
           textObj.text = countdowns[cIdx];
           cIdx++;
-          timerId = setTimeout(showCountdown, 1000);
+          timerId = setTimeout(ShowCountdown, 1000);
         } else {
-          startReading();
+          StartReading();
         }
       }
 
       // Step 2: Reading RSVP
       let chunkIdx = 0;
-      function startReading() {
+      function StartReading() {
         if (trialEnded) return;
         if (chunkIdx >= contentArray.length) {
-          endTrial();
+          EndTrial();
           return;
         }
 
@@ -152,13 +152,13 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
         const displayTimeMs = (currentCrowding / wps) * 1000;
         chunkIdx += currentCrowding;
 
-        timerId = setTimeout(startReading, displayTimeMs);
+        timerId = setTimeout(StartReading, displayTimeMs);
       }
 
-      showCountdown();
+      ShowCountdown();
     };
 
-    runPixiTrial(display_element, runWithApp);
+    RunPixiTrial(displayElement, runWithApp);
   }
 }
 

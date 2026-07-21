@@ -4,22 +4,22 @@
  */
 
 // ── Global Constants ──
-import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
-import { createUserStore } from '@rehab-trainer/ui/storage/userStore';
+import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { CreateUserStore } from '@rehab-trainer/ui/storage/userStore';
 
-export const CARD_WIDTH_MM = 85.6;
-export const CARD_HEIGHT_MM = 53.98;
-export const DEFAULT_DISTANCE_CM = 60;
-export const DEFAULT_CAL_BAR_LENGTH_MM = 149;
-export const CAL_BAR_LENGTH_PX = 700;
-export const STORAGE_PREFIX = 'stroke_trainer_';
-export const DEFAULT_UI_FONT_SIZE_PX = 18;
-export const MIN_UI_FONT_SIZE_PX = 14;
-export const MAX_UI_FONT_SIZE_PX = 30;
+export const cardWidthMm = 85.6;
+export const cardHeightMm = 53.98;
+export const defaultDistanceCm = 60;
+export const defaultCalBarLengthMm = 149;
+export const calBarLengthPx = 700;
+export const storagePrefix = 'stroke_trainer_';
+export const defaultUiFontSizePx = 18;
+export const minUiFontSizePx = 14;
+export const maxUiFontSizePx = 30;
 
 
-export const DRIVING_DURATION_MIN_SEC = 80;
-export const DRIVING_DURATION_MAX_SEC = 240;
+export const drivingDurationMinSec = 80;
+export const drivingDurationMaxSec = 240;
 export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel';
 export type UiTheme = 'light' | 'dark' | 'contrast';
 
@@ -69,9 +69,9 @@ interface SettingMeta<T> {
   max?: number;
 }
 
-const META: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> } = {
-  distanceInCM:           { dflt: DEFAULT_DISTANCE_CM,       min: 10,   max: 500 },
-  calBarLengthInMM:       { dflt: DEFAULT_CAL_BAR_LENGTH_MM, min: 1,    max: 10000 },
+const appSettingsMeta: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> } = {
+  distanceInCM:           { dflt: defaultDistanceCm,       min: 10,   max: 500 },
+  calBarLengthInMM:       { dflt: defaultCalBarLengthMm, min: 1,    max: 10000 },
   rulerLengthInMM:        { dflt: 0,    min: 0,    max: 10000 },
   totalRounds:            { dflt: 5,    min: 1,    max: 100 },
   optionCount:            { dflt: 18,   min: 4,    max: 40 },
@@ -99,56 +99,56 @@ const META: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> } = {
   displayCalibrationAt: { dflt: '' },
   readingWPS: { dflt: 4, min: 1, max: 20 },
   readingStoryId: { dflt: 'en_story_01' },
-  drivingDurationSec: { dflt: DRIVING_DURATION_MIN_SEC, min: DRIVING_DURATION_MIN_SEC, max: DRIVING_DURATION_MAX_SEC },
+  drivingDurationSec: { dflt: drivingDurationMinSec, min: drivingDurationMinSec, max: drivingDurationMaxSec },
   drivingRedFlashEnabled: { dflt: true },
   drivingDifficulty: { dflt: 'beginner' },
   drivingControlMode: { dflt: 'arrow' },
-  uiFontSizePx: { dflt: DEFAULT_UI_FONT_SIZE_PX, min: MIN_UI_FONT_SIZE_PX, max: MAX_UI_FONT_SIZE_PX },
+  uiFontSizePx: { dflt: defaultUiFontSizePx, min: minUiFontSizePx, max: maxUiFontSizePx },
   uiFontBold: { dflt: false },
   uiTheme: { dflt: 'light' },
 };
 
-function storageKey(name: string): string {
-  return STORAGE_PREFIX + name;
+function StorageKey(name: string): string {
+  return storagePrefix + name;
 }
 
-export const ACTIVE_USER_CHANGED_EVENT = 'stroke-trainer-active-user-changed';
-export const SETTINGS_CHANGED_EVENT = 'stroke-trainer-settings-changed';
+export const activeUserChangedEvent = 'stroke-trainer-active-user-changed';
+export const settingsChangedEvent = 'stroke-trainer-settings-changed';
 
 const settingCache: Partial<AppSettings> = {};
 
-function isUiTheme(value: string): value is UiTheme {
+function IsUiTheme(value: string): value is UiTheme {
   return value === 'light' || value === 'dark' || value === 'contrast';
 }
 
-export function getSetting<K extends keyof AppSettings>(key: K): AppSettings[K] {
+export function GetSetting<K extends keyof AppSettings>(key: K): AppSettings[K] {
   if (Object.prototype.hasOwnProperty.call(settingCache, key)) {
     return settingCache[key] as AppSettings[K];
   }
 
-  const raw = localStorage.getItem(storageKey(key));
+  const raw = localStorage.getItem(StorageKey(key));
   if (raw === null) {
-    settingCache[key] = META[key].dflt;
-    return META[key].dflt;
+    settingCache[key] = appSettingsMeta[key].dflt;
+    return appSettingsMeta[key].dflt;
   }
 
-  const meta = META[key];
-  if (typeof meta.dflt === 'boolean') {
+  const settingMeta = appSettingsMeta[key];
+  if (typeof settingMeta.dflt === 'boolean') {
     const value = (raw === 'true') as AppSettings[K];
     settingCache[key] = value;
     return value;
   }
-  if (typeof meta.dflt === 'number') {
+  if (typeof settingMeta.dflt === 'number') {
     const num = parseFloat(raw);
-    if (isNaN(num) || (meta.min !== undefined && num < meta.min) || (meta.max !== undefined && num > meta.max)) {
-      settingCache[key] = meta.dflt;
-      return meta.dflt;
+    if (isNaN(num) || (settingMeta.min !== undefined && num < settingMeta.min) || (settingMeta.max !== undefined && num > settingMeta.max)) {
+      settingCache[key] = settingMeta.dflt;
+      return settingMeta.dflt;
     }
     settingCache[key] = num as AppSettings[K];
     return settingCache[key] as AppSettings[K];
   }
   if (key === 'uiTheme') {
-    const value = (isUiTheme(raw) ? raw : meta.dflt) as AppSettings[K];
+    const value = (IsUiTheme(raw) ? raw : settingMeta.dflt) as AppSettings[K];
     settingCache[key] = value;
     return value;
   }
@@ -156,46 +156,46 @@ export function getSetting<K extends keyof AppSettings>(key: K): AppSettings[K] 
   return settingCache[key] as AppSettings[K];
 }
 
-export function setSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
+export function SetSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
   settingCache[key] = value;
-  localStorage.setItem(storageKey(key), String(value));
-  window.dispatchEvent(new CustomEvent(SETTINGS_CHANGED_EVENT, {
+  localStorage.setItem(StorageKey(key), String(value));
+  window.dispatchEvent(new CustomEvent(settingsChangedEvent, {
     detail: { key, value },
   }));
 }
 
-export function isCalibrated(): boolean {
+export function IsCalibrated(): boolean {
   return (
-    getSetting('displayCalibrationAt') !== '' ||
-    getSetting('distanceInCM') !== DEFAULT_DISTANCE_CM ||
-    getSetting('calBarLengthInMM') !== DEFAULT_CAL_BAR_LENGTH_MM
+    GetSetting('displayCalibrationAt') !== '' ||
+    GetSetting('distanceInCM') !== defaultDistanceCm ||
+    GetSetting('calBarLengthInMM') !== defaultCalBarLengthMm
   );
 }
 
-export function markDisplayCalibrated(): void {
-  setSetting('displayCalibrationAt', new Date().toISOString());
+export function MarkDisplayCalibrated(): void {
+  SetSetting('displayCalibrationAt', new Date().toISOString());
 }
 
-export function clearDisplayCalibration(): void {
-  setSetting('displayCalibrationAt', '');
+export function ClearDisplayCalibration(): void {
+  SetSetting('displayCalibrationAt', '');
 }
 
-export function getPixelsPerMM(): number {
-  return CAL_BAR_LENGTH_PX / getSetting('calBarLengthInMM');
+export function GetPixelsPerMM(): number {
+  return calBarLengthPx / GetSetting('calBarLengthInMM');
 }
 
-export function getMMPerPixel(): number {
-  return getSetting('calBarLengthInMM') / CAL_BAR_LENGTH_PX;
+export function GetMMPerPixel(): number {
+  return GetSetting('calBarLengthInMM') / calBarLengthPx;
 }
 
 // ── User Management (simple name-only) ──
-export const userStore = createUserStore({
-  activeUserChangedEvent: ACTIVE_USER_CHANGED_EVENT,
-  storagePrefix: STORAGE_PREFIX,
+export const userStore = CreateUserStore({
+  activeUserChangedEvent: activeUserChangedEvent,
+  storagePrefix: storagePrefix,
 });
 
 export const addUser = userStore.addUser;
-export const getActiveUser = () => getAuthUserNameFromToken() || userStore.getActiveUser();
+export const getActiveUser = () => GetAuthUserNameFromToken() || userStore.getActiveUser();
 export const getUsers = userStore.getUsers;
 export const removeUser = userStore.removeUser;
 export const setActiveUser = userStore.setActiveUser;

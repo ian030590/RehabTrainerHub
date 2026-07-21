@@ -5,24 +5,24 @@ import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
-import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
-import { isCalibrated } from '../utils/settings';
-import { SoundManager } from '../utils/soundManager';
+import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { IsCalibrated } from '../utils/settings';
+import { soundManager } from '../utils/soundManager';
 import { useAppSetting } from '../utils/useAppSetting';
 import {
   oculomotorModes,
   oculomotorPatterns,
 } from './training/oculomotor/presets';
-import { TRAINING_MODULES } from './home/trainingModules';
+import { trainingModules } from './home/trainingModules';
 import type { TrainingModuleId } from './home/trainingModules';
 import type { OculomotorPattern, OculomotorTargetShape } from './training/oculomotor/types';
 import type { DrivingControlMode } from '../utils/settings';
 
-function preloadTrainingRoute(): Promise<unknown> {
+function PreloadTrainingRoute(): Promise<unknown> {
   return import('./training/TrainingPage');
 }
 
-async function preloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknown> {
+async function PreloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknown> {
   if (moduleId === 'hart-chart') {
     return import('./training/HartChartPage');
   }
@@ -69,14 +69,14 @@ export function HomePage() {
   const [drivingDifficulty, setDrivingDifficulty] = useAppSetting('drivingDifficulty');
   const [drivingControlMode, setDrivingControlMode] = useAppSetting('drivingControlMode');
   const [isStartingTraining, setIsStartingTraining] = useState(false);
-  const rulesLabels = getRulesLabels(lang);
+  const rulesLabels = GetRulesLabels(lang);
   const showRulesButtonLabel = rulesLabels.next;
   const rulesStartButtonLabel = rulesLabels.start;
 
   // Preload the route chunk shortly after the home page is interactive.
   useEffect(() => {
     const timerId = window.setTimeout(() => {
-      void preloadTrainingRoute();
+      void PreloadTrainingRoute();
     }, 0);
     return () => window.clearTimeout(timerId);
   }, []);
@@ -85,8 +85,8 @@ export function HomePage() {
   useEffect(() => {
     if (!expandedModule) return;
     void Promise.all([
-      preloadTrainingRoute(),
-      preloadTrainingEngine(expandedModule),
+      PreloadTrainingRoute(),
+      PreloadTrainingEngine(expandedModule),
     ]).catch(() => undefined);
   }, [expandedModule]);
 
@@ -119,11 +119,11 @@ export function HomePage() {
     if (!expandedModule || isStartingTraining) return;
     const moduleToStart = expandedModule;
     setIsStartingTraining(true);
-    await enterFullscreenFromUserGesture(document.documentElement);
+    await EnterFullscreenFromUserGesture(document.documentElement);
 
     if (moduleToStart === 'hart-chart') {
       try {
-        await preloadTrainingEngine(moduleToStart);
+        await PreloadTrainingEngine(moduleToStart);
         navigate('/hart-chart');
       } catch (error) {
         console.error('Hart Chart preload failed:', error);
@@ -133,12 +133,12 @@ export function HomePage() {
       return;
     }
 
-    SoundManager.init();
+    soundManager.init();
 
     try {
       await Promise.all([
-        preloadTrainingRoute(),
-        preloadTrainingEngine(moduleToStart),
+        PreloadTrainingRoute(),
+        PreloadTrainingEngine(moduleToStart),
       ]);
     } catch (error) {
       console.error('Training preload failed:', error);
@@ -253,7 +253,7 @@ export function HomePage() {
     reader.readAsDataURL(file);
   };
 
-  const calibrated = isCalibrated();
+  const calibrated = IsCalibrated();
   const roundsPresets = [3, 5, 10, 15];
   const durationPresets = [30, 60, 90, 120];
   const targetShapeOptions: { key: OculomotorTargetShape; label: string }[] = [
@@ -326,7 +326,7 @@ export function HomePage() {
     }
   };
   const activeRulesModule = rulesModule
-    ? TRAINING_MODULES.find((module) => module.id === rulesModule)
+    ? trainingModules.find((module) => module.id === rulesModule)
     : null;
   const activeRulesSummaryItems = rulesModule ? getRulesSummaryItems(rulesModule) : [];
 
@@ -358,7 +358,7 @@ export function HomePage() {
 
       {/* ── Training Cards ── */}
       <div className="selection-grid">
-        {TRAINING_MODULES.map((module, index) => (
+        {trainingModules.map((module, index) => (
           <SelectionCard
             key={module.id}
             title={t(module.titleKey)}
@@ -1082,7 +1082,7 @@ export function HomePage() {
             title={t(activeRulesModule.titleKey)}
             summaryTitle={rulesLabels.summary}
             summaryItems={activeRulesSummaryItems}
-            sections={getVisionRuleSections(rulesModule, lang, t)}
+            sections={GetVisionRuleSections(rulesModule, lang, t)}
             startLabel={rulesStartButtonLabel}
             backLabel={rulesLabels.back}
             startDisabled={isStartingTraining}
@@ -1099,7 +1099,7 @@ export function HomePage() {
   );
 }
 
-function getRulesLabels(lang: string) {
+function GetRulesLabels(lang: string) {
   return lang === 'en'
     ? {
         label: 'Game Rules',
@@ -1117,7 +1117,7 @@ function getRulesLabels(lang: string) {
       };
 }
 
-function getVisionRuleSections(
+function GetVisionRuleSections(
   moduleId: TrainingModuleId,
   lang: string,
   t: (key: any, params?: Record<string, string | number>) => string,

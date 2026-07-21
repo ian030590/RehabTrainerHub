@@ -1,7 +1,7 @@
-export function hasSelectedTrainingUser(): boolean {
+export function HasSelectedTrainingUser(): boolean {
   return true;
 }
 
-export function verifySelectedTrainingUser(): boolean {
+export function VerifySelectedTrainingUser(): boolean {
   return true;
 }

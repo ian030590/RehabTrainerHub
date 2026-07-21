@@ -1,7 +1,7 @@
-import { createCsvContent } from '@rehab-trainer/ui/csv';
-import { getSetting } from '../../utils/settings';
-import { downloadCsvFile } from '../../utils/downloadFile';
-import { mean } from '../../utils/mathUtils';
+import { CreateCsvContent } from '@rehab-trainer/ui/csv';
+import { GetSetting } from '../../utils/settings';
+import { DownloadCsvFile } from '../../utils/downloadFile';
+import { Mean } from '../../utils/mathUtils';
 import type { TFunction, TrialData } from './types';
 
 interface DownloadTrainingCsvArgs {
@@ -14,7 +14,7 @@ interface DownloadTrainingCsvArgs {
   t: TFunction;
 }
 
-export function downloadTrainingCsv({
+export function DownloadTrainingCsv({
   results,
   userName,
   moduleId,
@@ -25,7 +25,7 @@ export function downloadTrainingCsv({
 }: DownloadTrainingCsvArgs) {
   if (results.length === 0) return;
 
-  const prefix = getSetting('downloadDirectory');
+  const prefix = GetSetting('downloadDirectory');
   const dateStr = new Date().toISOString().split('T')[0];
   const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false }).replace(/:/g, '');
   const isOculomotor = moduleId === 'oculomotor-training';
@@ -71,15 +71,15 @@ export function downloadTrainingCsv({
       }
       if (isReading) {
         if (result.trial_type === 'html-button-response') {
-          return [...baseRow, getSetting('readingWPS'), getSetting('readingCrowding'), result.target, result.response_text || result.response, result.correct ? '✓' : '✗', result.rt];
+          return [...baseRow, GetSetting('readingWPS'), GetSetting('readingCrowding'), result.target, result.response_text || result.response, result.correct ? '✓' : '✗', result.rt];
         }
-        return [...baseRow, getSetting('readingWPS'), getSetting('readingCrowding'), 'Reading Phase', '-', '-', result.reading_time || 0];
+        return [...baseRow, GetSetting('readingWPS'), GetSetting('readingCrowding'), 'Reading Phase', '-', '-', result.reading_time || 0];
       }
       return [...baseRow, difficulty, i + 1, result.target, result.response, result.correct ? '✓' : '✗', result.rt];
     });
 
   if (!isOculomotor && !isGabor && !isDriving) {
-    const avgRt = Math.round(mean(results.map((result) => result.rt)));
+    const avgRt = Math.round(Mean(results.map((result) => result.rt)));
     const correctCount = results.filter((result) => result.correct).length;
     rows.push(['']);
     rows.push([t('exp.avgRt'), `${avgRt} ms`]);
@@ -90,9 +90,9 @@ export function downloadTrainingCsv({
     rows.push([t('exp.res.collisions'), `${results[0]?.collisions ?? 0}`]);
   }
 
-  const csvContent = createCsvContent([headers, ...rows]);
+  const csvContent = CreateCsvContent([headers, ...rows]);
 
-  downloadCsvFile(
+  DownloadCsvFile(
     csvContent,
     `${prefix ? prefix + '_' : ''}${userName}_${moduleId}_${dateStr}.csv`,
   );

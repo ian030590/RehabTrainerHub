@@ -2,12 +2,12 @@ import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Sprite, Texture, Graphics } from 'pixi.js';
 import {
-  attachPixiTrialCanvas,
-  cleanupPixiTrial,
-  createPixiTrialContainer,
-  runPixiTrial,
+  AttachPixiTrialCanvas,
+  CleanupPixiTrial,
+  CreatePixiTrialContainer,
+  RunPixiTrial,
 } from '../../utils/pixiPool';
-import { drawLandoltC, drawTumblingE, drawContrastGrating } from '../../pages/assessment/logic/optotypeRenderer';
+import { DrawLandoltC, DrawTumblingE, DrawContrastGrating } from '../../pages/assessment/logic/optotypeRenderer';
 import type { LandoltDirection, EDirection } from '../../pages/assessment/logic/optotypeRenderer';
 
 const info = {
@@ -61,7 +61,7 @@ const info = {
 
 type Info = typeof info;
 
-const KEY_DIRECTION_MAP: Record<string, number> = {
+const keyDirectionMap: Record<string, number> = {
   arrowright: 0,
   '6': 0,
   arrowupright: 1,
@@ -84,8 +84,8 @@ const KEY_DIRECTION_MAP: Record<string, number> = {
   pagedown: 7,
 };
 
-function keyToDirection(key: string): number {
-  return KEY_DIRECTION_MAP[key.toLowerCase()] ?? -1;
+function KeyToDirection(key: string): number {
+  return keyDirectionMap[key.toLowerCase()] ?? -1;
 }
 
 class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
@@ -94,11 +94,11 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
 
   constructor(private jsPsych: JsPsych) {}
 
-  trial(display_element: HTMLElement, trial: TrialType<Info>, on_load: () => void) {
-    const container = createPixiTrialContainer(display_element);
+  trial(displayElement: HTMLElement, trial: TrialType<Info>, onLoad: () => void) {
+    const container = CreatePixiTrialContainer(displayElement);
 
-    runPixiTrial(display_element, (app) => {
-      attachPixiTrialCanvas(container);
+    RunPixiTrial(displayElement, (app) => {
+      AttachPixiTrialCanvas(container);
       app.renderer.background.color = trial.back_color!;
 
       const cx = app.screen.width / 2;
@@ -112,7 +112,7 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
       cross.lineTo(cx, cy + 10);
       app.stage.addChild(cross);
 
-      on_load();
+      onLoad();
 
       this.jsPsych.pluginAPI.setTimeout(() => {
         cross.destroy();
@@ -128,11 +128,11 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
         ctx.fillRect(0, 0, size, size);
 
         if (trial.optotype === 'landolt') {
-          drawLandoltC(ctx, size / 2, size / 2, trial.stroke_px!, trial.direction as LandoltDirection, trial.fore_color!, trial.back_color!);
+          DrawLandoltC(ctx, size / 2, size / 2, trial.stroke_px!, trial.direction as LandoltDirection, trial.fore_color!, trial.back_color!);
         } else if (trial.optotype === 'tumblingE') {
-          drawTumblingE(ctx, size / 2, size / 2, trial.stroke_px!, trial.direction as EDirection, trial.fore_color!);
+          DrawTumblingE(ctx, size / 2, size / 2, trial.stroke_px!, trial.direction as EDirection, trial.fore_color!);
         } else if (trial.optotype === 'grating') {
-          drawContrastGrating(ctx, size / 2, size / 2, size, trial.direction!, trial.contrast!, trial.back_color!);
+          DrawContrastGrating(ctx, size / 2, size / 2, size, trial.direction!, trial.contrast!, trial.back_color!);
         }
       
         const texture = Texture.from(canvas);
@@ -144,7 +144,7 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
 
         this.keyboardListener = this.jsPsych.pluginAPI.getKeyboardResponse({
           callback_function: (info: any) => {
-            this.endTrial(info.rt, info.key, trial, sprite, display_element);
+            this.endTrial(info.rt, info.key, trial, sprite, displayElement);
           },
           valid_responses: trial.choices,
           rt_method: 'performance',
@@ -161,9 +161,9 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
       this.jsPsych.pluginAPI.cancelKeyboardResponse(this.keyboardListener);
     }
     sprite.destroy();
-    cleanupPixiTrial(displayElement);
+    CleanupPixiTrial(displayElement);
 
-    const userDirection = keyToDirection(key);
+    const userDirection = KeyToDirection(key);
     const expectedDirection = trial.direction;
     const isCorrect = trial.optotype === 'grating'
       ? userDirection !== -1 && userDirection % 4 === expectedDirection

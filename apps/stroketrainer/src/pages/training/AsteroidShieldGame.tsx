@@ -23,17 +23,17 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '../../i18n';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
-import { downloadCsvFile } from '../../utils/downloadFile';
+import { DownloadCsvFile } from '../../utils/downloadFile';
 import { getActiveUser } from '../../utils/settings';
 import {
-  playFailureSound,
-  playGameEndSound,
-  playSuccessSound,
-  prepareAudioFeedback,
+  PlayFailureSound,
+  PlayGameEndSound,
+  PlaySuccessSound,
+  PrepareAudioFeedback,
 } from '../../utils/soundManager';
-import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
-import { verifySelectedTrainingUser } from './selectedUserGuard';
+import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 
@@ -161,32 +161,32 @@ interface HandState {
   lastSeenAt: number;
 }
 
-const MEDIAPIPE_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
-const HAND_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
-const ASSET_BASE_URL = `${import.meta.env.BASE_URL}assets/asteroid-shield/`;
-const ASSET_URLS = {
-  background: `${ASSET_BASE_URL}background.png`,
-  ship: `${ASSET_BASE_URL}ship.png`,
-  shield: `${ASSET_BASE_URL}shield.png`,
-  normal: `${ASSET_BASE_URL}asteroid-blue.png`,
-  heavy: `${ASSET_BASE_URL}asteroid-green.png`,
-  lethal: `${ASSET_BASE_URL}asteroid-dark.png`,
-  energy: `${ASSET_BASE_URL}energy-rock.png`,
+const mediapipeWasmUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
+const handModelUrl = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const assetBaseUrl = `${import.meta.env.BASE_URL}assets/asteroid-shield/`;
+const assetUrls = {
+  background: `${assetBaseUrl}background.png`,
+  ship: `${assetBaseUrl}ship.png`,
+  shield: `${assetBaseUrl}shield.png`,
+  normal: `${assetBaseUrl}asteroid-blue.png`,
+  heavy: `${assetBaseUrl}asteroid-green.png`,
+  lethal: `${assetBaseUrl}asteroid-dark.png`,
+  energy: `${assetBaseUrl}energy-rock.png`,
 } as const;
 
-const DETECTION_INTERVAL_MS = 66;
-const TRACKING_GRACE_MS = 260;
-const MANUAL_CONTROL_GRACE_MS = 850;
-const SPEED_LEVEL_STEP = 15;
-const DURATION_OPTIONS = [45, 60, 90] as const;
-const HP_OPTIONS = [6, 10, 14] as const;
-const HAND_CHOICES: readonly HandChoice[] = ['any', 'left', 'right'];
-const SHIELD_SIZE_OPTIONS = [115, 135, 155] as const;
-const DEFAULT_DURATION_SECONDS = 60;
-const DEFAULT_HP = 10;
-const DEFAULT_SHIELD_SIZE_PERCENT = 135;
+const detectionIntervalMs = 66;
+const trackingGraceMs = 260;
+const manualControlGraceMs = 850;
+const speedLevelStep = 15;
+const durationOptions = [45, 60, 90] as const;
+const hpOptions = [6, 10, 14] as const;
+const handChoices: readonly HandChoice[] = ['any', 'left', 'right'];
+const shieldSizeOptions = [115, 135, 155] as const;
+const defaultDurationSeconds = 60;
+const defaultHp = 10;
+const defaultShieldSizePercent = 135;
 
-const DIFFICULTIES: readonly DifficultyDefinition[] = [
+const difficulties: readonly DifficultyDefinition[] = [
   {
     id: 'beginner',
     spawnIntervalSec: 1.35,
@@ -216,7 +216,7 @@ const DIFFICULTIES: readonly DifficultyDefinition[] = [
   },
 ] as const;
 
-const COPY = {
+const copy = {
   zh: {
     title: '小行星護盾防衛',
     configLabel: '護盾動作訓練設定',
@@ -331,14 +331,14 @@ const COPY = {
   },
 } as const;
 
-const THREAT_COPY_KEYS: Record<ThreatKind, 'normal' | 'heavy' | 'lethal' | 'energy'> = {
+const threatCopyKeys: Record<ThreatKind, 'normal' | 'heavy' | 'lethal' | 'energy'> = {
   normal: 'normal',
   heavy: 'heavy',
   lethal: 'lethal',
   energy: 'energy',
 };
 
-const OUTCOME_COPY_KEYS: Record<ThreatOutcome, 'shielded' | 'hit' | 'collected' | 'missed'> = {
+const outcomeCopyKeys: Record<ThreatOutcome, 'shielded' | 'hit' | 'collected' | 'missed'> = {
   shielded: 'shielded',
   hit: 'hit',
   collected: 'collected',
@@ -347,7 +347,7 @@ const OUTCOME_COPY_KEYS: Record<ThreatOutcome, 'shielded' | 'hit' | 'collected' 
 
 export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   const { lang, t } = useT();
-  const labels = COPY[lang];
+  const labels = copy[lang];
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -367,12 +367,12 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   const phaseRef = useRef<GamePhase>('menu');
   const mountedRef = useRef(true);
   const resultRecordsRef = useRef<ThreatRecord[]>([]);
-  const metricsRef = useRef<SessionMetrics>(createEmptyMetrics(DEFAULT_HP));
+  const metricsRef = useRef<SessionMetrics>(CreateEmptyMetrics(defaultHp));
   const configRef = useRef({
     difficulty: 'beginner' as DifficultyId,
-    durationSec: DEFAULT_DURATION_SECONDS,
-    maxHp: DEFAULT_HP,
-    shieldSizePercent: DEFAULT_SHIELD_SIZE_PERCENT,
+    durationSec: defaultDurationSeconds,
+    maxHp: defaultHp,
+    shieldSizePercent: defaultShieldSizePercent,
     handControlEnabled: true,
     handChoice: 'any' as HandChoice,
   });
@@ -380,9 +380,9 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   const [difficulty, setDifficulty] = useState<DifficultyId>('beginner');
-  const [durationSec, setDurationSec] = useState(DEFAULT_DURATION_SECONDS);
-  const [maxHp, setMaxHp] = useState(DEFAULT_HP);
-  const [shieldSizePercent, setShieldSizePercent] = useState(DEFAULT_SHIELD_SIZE_PERCENT);
+  const [durationSec, setDurationSec] = useState(defaultDurationSeconds);
+  const [maxHp, setMaxHp] = useState(defaultHp);
+  const [shieldSizePercent, setShieldSizePercent] = useState(defaultShieldSizePercent);
   const [handControlEnabled, setHandControlEnabled] = useState(true);
   const [handChoice, setHandChoice] = useState<HandChoice>('any');
   const [statusMessage, setStatusMessage] = useState('');
@@ -397,7 +397,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     { label: labels.hp, value: maxHp },
     { label: labels.shieldSize, value: `${shieldSizePercent}%` },
     { label: labels.handControl, value: handControlEnabled ? t('common.on') : t('common.off') },
-    { label: labels.hand, value: formatHandChoice(handChoice, labels) },
+    { label: labels.hand, value: FormatHandChoice(handChoice, labels) },
   ], [difficulty, durationSec, handChoice, handControlEnabled, labels, maxHp, shieldSizePercent, t]);
 
   const setPhase = useCallback((nextPhase: GamePhase) => {
@@ -449,7 +449,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const participantId = getActiveUser() || 'Unknown';
     const totalDuration = Number((metrics.elapsedMs / 1000).toFixed(1));
     const record: SessionRecord = {
-      Test_Date: formatTestDate(new Date()),
+      Test_Date: FormatTestDate(new Date()),
       Participant_ID: participantId,
       Difficulty: config.difficulty,
       Duration_Seconds: config.durationSec,
@@ -471,11 +471,11 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
 
     sceneRef.current?.threats.forEach((threat) => threat.sprite.destroy());
     if (sceneRef.current) sceneRef.current.threats = [];
-    playGameEndSound(gameResult, jsPsychRef);
+    PlayGameEndSound(gameResult, jsPsychRef);
     setResult(record);
     setPhase('results');
     stopVision();
-    void saveTrainingSessionRecord({
+    void SaveTrainingSessionRecord({
       userName: participantId,
       moduleId: 'motor-training',
       gameId: 'asteroid-shield',
@@ -500,7 +500,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       },
       detailRows: record.Object_Records.map((item) => ({ ...item })),
     });
-    writeJsPsychData(
+    WriteJsPsychData(
       jsPsychRef,
       record as unknown as Record<string, unknown>,
       'Unable to write asteroid shield result to jsPsych data.',
@@ -511,11 +511,11 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const app = appRef.current;
     const textures = texturesRef.current;
     if (!app || !textures) return;
-    resizePixiAppToElement(app, pixiHostRef.current);
-    resetAsteroidScene(app, sceneRef, textures);
+    ResizePixiAppToElement(app, pixiHostRef.current);
+    ResetAsteroidScene(app, sceneRef, textures);
     const config = configRef.current;
     metricsRef.current = {
-      ...createEmptyMetrics(config.maxHp),
+      ...CreateEmptyMetrics(config.maxHp),
       startedAt: performance.now(),
       lastTickAt: performance.now(),
     };
@@ -533,24 +533,24 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const host = pixiHostRef.current;
     const rect = host?.getBoundingClientRect();
     if (!video || !landmarker || !rect || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
-    if (now - lastDetectionAtRef.current < DETECTION_INTERVAL_MS) return;
+    if (now - lastDetectionAtRef.current < detectionIntervalMs) return;
     if (video.currentTime === lastVideoTimeRef.current) return;
 
     lastVideoTimeRef.current = video.currentTime;
     lastDetectionAtRef.current = now;
     try {
       const detection = landmarker.detectForVideo(video, now);
-      const selection = selectHand(detection.landmarks, detection.handedness ?? detection.handednesses, configRef.current.handChoice);
-      drawHandLandmarks(handCanvasRef.current, video, selection?.landmarks);
+      const selection = SelectHand(detection.landmarks, detection.handedness ?? detection.handednesses, configRef.current.handChoice);
+      DrawHandLandmarks(handCanvasRef.current, video, selection?.landmarks);
       if (selection) {
-        const point = getHandCursorPoint(selection.landmarks, rect.width, rect.height);
+        const point = GetHandCursorPoint(selection.landmarks, rect.width, rect.height);
         handRef.current = { x: point.x, y: point.y, visible: true, lastSeenAt: now };
-        if (now - lastManualControlAtRef.current > MANUAL_CONTROL_GRACE_MS) {
-          const layout = getShieldLayout(rect.width, rect.height, configRef.current.shieldSizePercent, shieldAngleRef.current);
+        if (now - lastManualControlAtRef.current > manualControlGraceMs) {
+          const layout = GetShieldLayout(rect.width, rect.height, configRef.current.shieldSizePercent, shieldAngleRef.current);
           shieldAngleRef.current = Math.atan2(point.y - layout.shipY, point.x - layout.shipX);
           metricsRef.current.lastControlSource = 'hand';
         }
-      } else if (now - handRef.current.lastSeenAt > TRACKING_GRACE_MS) {
+      } else if (now - handRef.current.lastSeenAt > trackingGraceMs) {
         handRef.current = { ...handRef.current, visible: false };
       }
     } catch (error) {
@@ -562,8 +562,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   }, [labels.initialization, stopVision]);
 
   const startGame = useCallback(async () => {
-    if (!verifySelectedTrainingUser()) return;
-    prepareAudioFeedback(jsPsychRef);
+    if (!VerifySelectedTrainingUser()) return;
+    PrepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
     stopVision();
     setVisionError('');
@@ -575,10 +575,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       setStatusMessage(labels.initialization);
       setPhase('initializing');
       try {
-        const textures = await loadAssetTextures();
+        const textures = await LoadAssetTextures();
         if (!mountedRef.current) return;
         texturesRef.current = textures;
-        resetAsteroidScene(app, sceneRef, textures);
+        ResetAsteroidScene(app, sceneRef, textures);
       } catch (error) {
         console.warn('Unable to load asteroid shield assets.', error);
         setVisionError(labels.initialization);
@@ -627,9 +627,9 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       await video.play();
 
       setStatusMessage(labels.loadingModel);
-      const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
+      const vision = await FilesetResolver.forVisionTasks(mediapipeWasmUrl);
       const landmarker = await HandLandmarker.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: HAND_MODEL_URL },
+        baseOptions: { modelAssetPath: handModelUrl },
         runningMode: 'VIDEO',
         numHands: configRef.current.handChoice === 'any' ? 1 : 2,
         minHandDetectionConfidence: 0.5,
@@ -657,8 +657,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
 
   const returnToMenu = useCallback(() => {
     stopVision();
-    clearAsteroidScene(sceneRef.current);
-    metricsRef.current = createEmptyMetrics(configRef.current.maxHp);
+    ClearAsteroidScene(sceneRef.current);
+    metricsRef.current = CreateEmptyMetrics(configRef.current.maxHp);
     resultRecordsRef.current = [];
     setResult(null);
     setPhase('menu');
@@ -671,7 +671,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
 
   const downloadResult = useCallback(() => {
     if (!result) return;
-    downloadCsvFile(buildAsteroidShieldCsv(result), `asteroid_shield_${result.Test_Date}.csv`);
+    DownloadCsvFile(BuildAsteroidShieldCsv(result), `asteroid_shield_${result.Test_Date}.csv`);
   }, [result]);
 
   useTrainingAbort({
@@ -693,7 +693,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         resolution: Math.min(window.devicePixelRatio || 1, 2),
         resizeTo: host,
       });
-      const textures = await loadAssetTextures();
+      const textures = await LoadAssetTextures();
       if (cancelled) {
         app.destroy(true, { children: true, texture: true });
         return;
@@ -702,10 +702,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       texturesRef.current = textures;
       host.appendChild(app.canvas);
       app.canvas.className = 'asteroid-shield-canvas';
-      resetAsteroidScene(app, sceneRef, textures);
+      ResetAsteroidScene(app, sceneRef, textures);
       app.ticker.add((ticker: Ticker) => {
         if (phaseRef.current !== 'playing') return;
-        updateAsteroidGame({
+        UpdateAsteroidGame({
           app,
           ticker,
           sceneRef,
@@ -714,8 +714,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
           shieldAngleRef,
           keysRef,
           resultRecordsRef,
-          onSuccess: () => playSuccessSound(jsPsychRef),
-          onFailure: () => playFailureSound(jsPsychRef),
+          onSuccess: () => PlaySuccessSound(jsPsychRef),
+          onFailure: () => PlayFailureSound(jsPsychRef),
           onComplete: finishGame,
         });
       });
@@ -727,8 +727,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       const currentApp = appRef.current;
       const scene = sceneRef.current;
       if (!currentApp || !scene) return;
-      resizePixiAppToElement(currentApp, pixiHostRef.current);
-      updateSceneLayout(currentApp, scene, configRef.current.shieldSizePercent, shieldAngleRef.current);
+      ResizePixiAppToElement(currentApp, pixiHostRef.current);
+      UpdateSceneLayout(currentApp, scene, configRef.current.shieldSizePercent, shieldAngleRef.current);
     };
     window.addEventListener('resize', onResize);
     return () => {
@@ -747,7 +747,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const updateFromPointer = (event: PointerEvent) => {
       if (phaseRef.current !== 'playing') return;
       const rect = host.getBoundingClientRect();
-      const layout = getShieldLayout(rect.width, rect.height, configRef.current.shieldSizePercent, shieldAngleRef.current);
+      const layout = GetShieldLayout(rect.width, rect.height, configRef.current.shieldSizePercent, shieldAngleRef.current);
       shieldAngleRef.current = Math.atan2(event.clientY - rect.top - layout.shipY, event.clientX - rect.left - layout.shipX);
       lastManualControlAtRef.current = performance.now();
       metricsRef.current.lastControlSource = 'mouse';
@@ -836,7 +836,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                 <span>{labels[difficulty]}</span>
               </div>
               <div className="training-option-grid training-option-grid-three">
-                {DIFFICULTIES.map((item) => (
+                {difficulties.map((item) => (
                   <button
                     className={`training-option ${difficulty === item.id ? 'active' : ''}`}
                     key={item.id}
@@ -859,7 +859,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                 <span>{durationSec}s</span>
               </div>
               <div className="training-option-grid training-option-grid-three">
-                {DURATION_OPTIONS.map((value) => (
+                {durationOptions.map((value) => (
                   <button
                     className={`training-option ${durationSec === value ? 'active' : ''}`}
                     key={value}
@@ -881,7 +881,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                 <span>{maxHp}</span>
               </div>
               <div className="training-option-grid training-option-grid-three">
-                {HP_OPTIONS.map((value) => (
+                {hpOptions.map((value) => (
                   <button
                     className={`training-option ${maxHp === value ? 'active' : ''}`}
                     key={value}
@@ -903,7 +903,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                 <span>{shieldSizePercent}%</span>
               </div>
               <div className="training-option-grid training-option-grid-three">
-                {SHIELD_SIZE_OPTIONS.map((value) => (
+                {shieldSizeOptions.map((value) => (
                   <button
                     className={`training-option ${shieldSizePercent === value ? 'active' : ''}`}
                     key={value}
@@ -948,17 +948,17 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                   <h2>{labels.hand}</h2>
                   <p>{labels.handDesc}</p>
                 </div>
-                <span>{formatHandChoice(handChoice, labels)}</span>
+                <span>{FormatHandChoice(handChoice, labels)}</span>
               </div>
               <div className="training-option-grid training-option-grid-three">
-                {HAND_CHOICES.map((value) => (
+                {handChoices.map((value) => (
                   <button
                     className={`training-option ${handChoice === value ? 'active' : ''}`}
                     key={value}
                     type="button"
                     onClick={() => setHandChoice(value)}
                   >
-                    <span className="training-option-title">{formatHandChoice(value, labels)}</span>
+                    <span className="training-option-title">{FormatHandChoice(value, labels)}</span>
                   </button>
                 ))}
               </div>
@@ -1040,8 +1040,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                 {latestRows.map((item) => (
                   <tr key={`${item.Object_Number}-${item.Outcome}`}>
                     <td>{item.Object_Number}</td>
-                    <td>{labels[THREAT_COPY_KEYS[item.Type]]}</td>
-                    <td>{labels[OUTCOME_COPY_KEYS[item.Outcome]]}</td>
+                    <td>{labels[threatCopyKeys[item.Type]]}</td>
+                    <td>{labels[outcomeCopyKeys[item.Outcome]]}</td>
                     <td>{item.Response_Time_Seconds === null ? '-' : `${item.Response_Time_Seconds}s`}</td>
                     <td>{item.Damage}</td>
                   </tr>
@@ -1073,7 +1073,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   );
 }
 
-function createEmptyMetrics(maxHp: number): SessionMetrics {
+function CreateEmptyMetrics(maxHp: number): SessionMetrics {
   return {
     startedAt: 0,
     elapsedMs: 0,
@@ -1092,25 +1092,25 @@ function createEmptyMetrics(maxHp: number): SessionMetrics {
   };
 }
 
-async function loadAssetTextures(): Promise<AssetTextures> {
+async function LoadAssetTextures(): Promise<AssetTextures> {
   const [background, ship, shield, normal, heavy, lethal, energy] = await Promise.all([
-    Assets.load<Texture>(ASSET_URLS.background),
-    Assets.load<Texture>(ASSET_URLS.ship),
-    Assets.load<Texture>(ASSET_URLS.shield),
-    Assets.load<Texture>(ASSET_URLS.normal),
-    Assets.load<Texture>(ASSET_URLS.heavy),
-    Assets.load<Texture>(ASSET_URLS.lethal),
-    Assets.load<Texture>(ASSET_URLS.energy),
+    Assets.load<Texture>(assetUrls.background),
+    Assets.load<Texture>(assetUrls.ship),
+    Assets.load<Texture>(assetUrls.shield),
+    Assets.load<Texture>(assetUrls.normal),
+    Assets.load<Texture>(assetUrls.heavy),
+    Assets.load<Texture>(assetUrls.lethal),
+    Assets.load<Texture>(assetUrls.energy),
   ]);
   return { background, ship, shield, normal, heavy, lethal, energy };
 }
 
-function resetAsteroidScene(
+function ResetAsteroidScene(
   app: Application,
   sceneRef: { current: AsteroidScene | null },
   textures: AssetTextures,
 ): void {
-  clearAsteroidScene(sceneRef.current);
+  ClearAsteroidScene(sceneRef.current);
   app.stage.removeChildren().forEach((child) => child.destroy({ children: true }));
   const background = TilingSprite.from(textures.background, {
     width: app.screen.width,
@@ -1130,10 +1130,10 @@ function resetAsteroidScene(
     textures,
     threats: [],
   };
-  updateSceneLayout(app, sceneRef.current, DEFAULT_SHIELD_SIZE_PERCENT, -Math.PI / 2);
+  UpdateSceneLayout(app, sceneRef.current, defaultShieldSizePercent, -Math.PI / 2);
 }
 
-function clearAsteroidScene(scene: AsteroidScene | null): void {
+function ClearAsteroidScene(scene: AsteroidScene | null): void {
   if (!scene) return;
   scene.threats.forEach((threat) => {
     threat.sprite.removeFromParent();
@@ -1142,7 +1142,7 @@ function clearAsteroidScene(scene: AsteroidScene | null): void {
   scene.threats = [];
 }
 
-function updateAsteroidGame({
+function UpdateAsteroidGame({
   app,
   ticker,
   sceneRef,
@@ -1183,15 +1183,15 @@ function updateAsteroidGame({
   const dt = Math.min(ticker.deltaMS / 1000, 0.05);
   metrics.elapsedMs += dt * 1000;
   metrics.spawnTimerSec += dt;
-  applyKeyboardShieldControl(keysRef.current, shieldAngleRef, metrics);
-  const layout = updateSceneLayout(app, scene, config.shieldSizePercent, shieldAngleRef.current);
+  ApplyKeyboardShieldControl(keysRef.current, shieldAngleRef, metrics);
+  const layout = UpdateSceneLayout(app, scene, config.shieldSizePercent, shieldAngleRef.current);
   scene.background.tilePosition.y += dt * (10 + metrics.speedLevel * 3);
 
-  const difficulty = DIFFICULTIES.find((item) => item.id === config.difficulty) ?? DIFFICULTIES[0];
+  const difficulty = difficulties.find((item) => item.id === config.difficulty) ?? difficulties[0];
   const activeInterval = Math.max(0.46, difficulty.spawnIntervalSec - (metrics.speedLevel - 1) * 0.045);
   if (metrics.spawnTimerSec >= activeInterval && scene.threats.length < difficulty.maxThreats) {
     metrics.spawnTimerSec = 0;
-    spawnThreat(scene, layout, app.screen.width, app.screen.height, difficulty, metrics);
+    SpawnThreat(scene, layout, app.screen.width, app.screen.height, difficulty, metrics);
   }
 
   for (const threat of [...scene.threats]) {
@@ -1199,7 +1199,7 @@ function updateAsteroidGame({
     threat.y += threat.vy * dt;
     if (threat.x < threat.radius || threat.x > app.screen.width - threat.radius) {
       threat.vx *= -1;
-      threat.x = clamp(threat.x, threat.radius, app.screen.width - threat.radius);
+      threat.x = Clamp(threat.x, threat.radius, app.screen.width - threat.radius);
     }
     if (threat.y < threat.radius) {
       threat.vy *= -1;
@@ -1215,17 +1215,17 @@ function updateAsteroidGame({
       metrics.collected += 1;
       metrics.score += threat.score;
       metrics.hp = Math.min(metrics.maxHp, metrics.hp + 2);
-      recordThreatOutcome(threat, 'collected', metrics, resultRecordsRef.current, 0);
-      removeThreat(scene, threat);
+      RecordThreatOutcome(threat, 'collected', metrics, resultRecordsRef.current, 0);
+      RemoveThreat(scene, threat);
       onSuccess();
       continue;
     }
     if (threat.kind !== 'energy' && shieldDistance <= layout.shieldRadius + threat.radius * 0.82) {
       metrics.blocked += 1;
       metrics.score += threat.score;
-      metrics.speedLevel = 1 + Math.floor(metrics.blocked / SPEED_LEVEL_STEP);
-      recordThreatOutcome(threat, 'shielded', metrics, resultRecordsRef.current, 0);
-      removeThreat(scene, threat);
+      metrics.speedLevel = 1 + Math.floor(metrics.blocked / speedLevelStep);
+      RecordThreatOutcome(threat, 'shielded', metrics, resultRecordsRef.current, 0);
+      RemoveThreat(scene, threat);
       onSuccess();
       continue;
     }
@@ -1235,20 +1235,20 @@ function updateAsteroidGame({
         metrics.collected += 1;
         metrics.score += threat.score;
         metrics.hp = Math.min(metrics.maxHp, metrics.hp + 2);
-        recordThreatOutcome(threat, 'collected', metrics, resultRecordsRef.current, 0);
+        RecordThreatOutcome(threat, 'collected', metrics, resultRecordsRef.current, 0);
         onSuccess();
       } else {
         metrics.hits += 1;
         metrics.hp = threat.kind === 'lethal' ? 0 : Math.max(0, metrics.hp - damage);
-        recordThreatOutcome(threat, 'hit', metrics, resultRecordsRef.current, damage);
+        RecordThreatOutcome(threat, 'hit', metrics, resultRecordsRef.current, damage);
         onFailure();
       }
-      removeThreat(scene, threat);
+      RemoveThreat(scene, threat);
       continue;
     }
     if (threat.y > app.screen.height + threat.radius * 2) {
-      recordThreatOutcome(threat, 'missed', metrics, resultRecordsRef.current, 0);
-      removeThreat(scene, threat);
+      RecordThreatOutcome(threat, 'missed', metrics, resultRecordsRef.current, 0);
+      RemoveThreat(scene, threat);
     }
   }
 
@@ -1261,7 +1261,7 @@ function updateAsteroidGame({
   }
 }
 
-function updateSceneLayout(
+function UpdateSceneLayout(
   app: Application,
   scene: AsteroidScene,
   shieldSizePercent: number,
@@ -1272,14 +1272,14 @@ function updateSceneLayout(
   scene.background.width = width;
   scene.background.height = height;
   const minSide = Math.min(width, height);
-  const shipWidth = clamp(minSide * 0.14, 82, 148);
+  const shipWidth = Clamp(minSide * 0.14, 82, 148);
   scene.ship.width = shipWidth;
   scene.ship.height = shipWidth * (scene.ship.texture.height / scene.ship.texture.width);
   scene.ship.x = width * 0.5;
-  scene.ship.y = clamp(height * 0.68, height * 0.56, height - scene.ship.height * 0.7);
+  scene.ship.y = Clamp(height * 0.68, height * 0.56, height - scene.ship.height * 0.7);
   scene.ship.rotation = 0;
 
-  const shieldDiameter = clamp(minSide * 0.23 * (shieldSizePercent / 100), 170, 330);
+  const shieldDiameter = Clamp(minSide * 0.23 * (shieldSizePercent / 100), 170, 330);
   scene.shield.width = shieldDiameter;
   scene.shield.height = shieldDiameter * (scene.shield.texture.height / scene.shield.texture.width);
   scene.shield.alpha = 0.46;
@@ -1299,13 +1299,13 @@ function updateSceneLayout(
   };
 }
 
-function getShieldLayout(width: number, height: number, shieldSizePercent: number, shieldAngle: number): ShieldLayout {
+function GetShieldLayout(width: number, height: number, shieldSizePercent: number, shieldAngle: number): ShieldLayout {
   const minSide = Math.min(width, height);
-  const shipWidth = clamp(minSide * 0.14, 82, 148);
+  const shipWidth = Clamp(minSide * 0.14, 82, 148);
   const shipHeight = shipWidth * (75 / 99);
   const shipX = width * 0.5;
-  const shipY = clamp(height * 0.68, height * 0.56, height - shipHeight * 0.7);
-  const shieldDiameter = clamp(minSide * 0.23 * (shieldSizePercent / 100), 170, 330);
+  const shipY = Clamp(height * 0.68, height * 0.56, height - shipHeight * 0.7);
+  const shieldDiameter = Clamp(minSide * 0.23 * (shieldSizePercent / 100), 170, 330);
   const shieldRadius = shieldDiameter * 0.38;
   const shipRadius = Math.max(shipWidth, shipHeight) * 0.38;
   const shieldOffset = shipRadius + shieldRadius * 0.44;
@@ -1319,7 +1319,7 @@ function getShieldLayout(width: number, height: number, shieldSizePercent: numbe
   };
 }
 
-function applyKeyboardShieldControl(
+function ApplyKeyboardShieldControl(
   keys: { up: boolean; down: boolean; left: boolean; right: boolean },
   shieldAngleRef: { current: number },
   metrics: SessionMetrics,
@@ -1331,7 +1331,7 @@ function applyKeyboardShieldControl(
   metrics.lastControlSource = 'keyboard';
 }
 
-function spawnThreat(
+function SpawnThreat(
   scene: AsteroidScene,
   layout: ShieldLayout,
   width: number,
@@ -1339,18 +1339,18 @@ function spawnThreat(
   difficulty: DifficultyDefinition,
   metrics: SessionMetrics,
 ): void {
-  const kind = chooseThreatKind(difficulty);
-  const texture = getThreatTexture(scene, kind);
-  const size = getThreatSize(kind, width, height);
+  const kind = ChooseThreatKind(difficulty);
+  const texture = GetThreatTexture(scene, kind);
+  const size = GetThreatSize(kind, width, height);
   const sprite = new Sprite({ texture, anchor: 0.5, width: size, height: size });
-  sprite.tint = getThreatTint(kind);
+  sprite.tint = GetThreatTint(kind);
   sprite.alpha = kind === 'lethal' ? 0.96 : 1;
-  const spawnPoint = randomSpawnPoint(width, height);
-  const aimX = layout.shipX + randomBetween(-layout.shipRadius * 0.55, layout.shipRadius * 0.55);
-  const aimY = layout.shipY + randomBetween(-layout.shipRadius * 0.4, layout.shipRadius * 0.4);
-  const direction = normalizeVector(aimX - spawnPoint.x, aimY - spawnPoint.y);
-  const speed = difficulty.baseSpeed + (metrics.speedLevel - 1) * 18 + randomBetween(-12, 18);
-  const tangent = randomBetween(-0.18, 0.18);
+  const spawnPoint = RandomSpawnPoint(width, height);
+  const aimX = layout.shipX + RandomBetween(-layout.shipRadius * 0.55, layout.shipRadius * 0.55);
+  const aimY = layout.shipY + RandomBetween(-layout.shipRadius * 0.4, layout.shipRadius * 0.4);
+  const direction = NormalizeVector(aimX - spawnPoint.x, aimY - spawnPoint.y);
+  const speed = difficulty.baseSpeed + (metrics.speedLevel - 1) * 18 + RandomBetween(-12, 18);
+  const tangent = RandomBetween(-0.18, 0.18);
   const threat: Threat = {
     id: metrics.nextId++,
     kind,
@@ -1363,7 +1363,7 @@ function spawnThreat(
     damage: kind === 'normal' ? 1 : kind === 'heavy' ? 3 : kind === 'lethal' ? metrics.maxHp : 0,
     score: kind === 'normal' ? 10 : kind === 'heavy' ? 25 : kind === 'lethal' ? 55 : 8,
     spawnedAtMs: metrics.elapsedMs,
-    rotationSpeed: randomBetween(-2.2, 2.2),
+    rotationSpeed: RandomBetween(-2.2, 2.2),
     resultIndex: metrics.spawned,
   };
   sprite.x = threat.x;
@@ -1373,14 +1373,14 @@ function spawnThreat(
   metrics.spawned += 1;
 }
 
-function getThreatTexture(scene: AsteroidScene, kind: ThreatKind): Texture {
+function GetThreatTexture(scene: AsteroidScene, kind: ThreatKind): Texture {
   if (kind === 'normal') return scene.textures.normal;
   if (kind === 'heavy') return scene.textures.heavy;
   if (kind === 'lethal') return scene.textures.lethal;
   return scene.textures.energy;
 }
 
-function chooseThreatKind(difficulty: DifficultyDefinition): ThreatKind {
+function ChooseThreatKind(difficulty: DifficultyDefinition): ThreatKind {
   const roll = Math.random();
   if (roll < difficulty.energyChance) return 'energy';
   if (roll < difficulty.energyChance + difficulty.lethalChance) return 'lethal';
@@ -1388,33 +1388,33 @@ function chooseThreatKind(difficulty: DifficultyDefinition): ThreatKind {
   return 'normal';
 }
 
-function getThreatSize(kind: ThreatKind, width: number, height: number): number {
-  const base = clamp(Math.min(width, height) * 0.065, 42, 74);
+function GetThreatSize(kind: ThreatKind, width: number, height: number): number {
+  const base = Clamp(Math.min(width, height) * 0.065, 42, 74);
   if (kind === 'energy') return base * 0.72;
   if (kind === 'heavy') return base * 1.1;
   if (kind === 'lethal') return base * 1.24;
   return base;
 }
 
-function getThreatTint(kind: ThreatKind): number {
+function GetThreatTint(kind: ThreatKind): number {
   if (kind === 'normal') return 0x76b7ff;
   if (kind === 'heavy') return 0x63e27a;
   if (kind === 'lethal') return 0x2f3446;
   return 0xffffff;
 }
 
-function randomSpawnPoint(width: number, height: number): { x: number; y: number } {
+function RandomSpawnPoint(width: number, height: number): { x: number; y: number } {
   const edge = Math.random();
   if (edge < 0.72) {
-    return { x: randomBetween(30, width - 30), y: -44 };
+    return { x: RandomBetween(30, width - 30), y: -44 };
   }
   if (edge < 0.86) {
-    return { x: -44, y: randomBetween(40, height * 0.52) };
+    return { x: -44, y: RandomBetween(40, height * 0.52) };
   }
-  return { x: width + 44, y: randomBetween(40, height * 0.52) };
+  return { x: width + 44, y: RandomBetween(40, height * 0.52) };
 }
 
-function recordThreatOutcome(
+function RecordThreatOutcome(
   threat: Threat,
   outcome: ThreatOutcome,
   metrics: SessionMetrics,
@@ -1439,35 +1439,35 @@ function recordThreatOutcome(
   });
 }
 
-function removeThreat(scene: AsteroidScene, threat: Threat): void {
+function RemoveThreat(scene: AsteroidScene, threat: Threat): void {
   scene.threats = scene.threats.filter((item) => item.id !== threat.id);
   threat.sprite.removeFromParent();
   threat.sprite.destroy();
 }
 
-function selectHand(
+function SelectHand(
   landmarks: NormalizedLandmark[][],
   handedness: Category[][],
   handChoice: HandChoice,
 ): { landmarks: NormalizedLandmark[]; handedness: HandChoice | null } | null {
   if (!landmarks.length) return null;
   if (handChoice === 'any') {
-    return { landmarks: landmarks[0], handedness: toHandChoice(handedness[0]?.[0]?.categoryName) };
+    return { landmarks: landmarks[0], handedness: ToHandChoice(handedness[0]?.[0]?.categoryName) };
   }
-  const index = handedness.findIndex((categories) => toHandChoice(categories[0]?.categoryName) === handChoice);
+  const index = handedness.findIndex((categories) => ToHandChoice(categories[0]?.categoryName) === handChoice);
   if (index >= 0 && landmarks[index]) {
     return { landmarks: landmarks[index], handedness: handChoice };
   }
   return null;
 }
 
-function toHandChoice(label: string | undefined): HandChoice | null {
+function ToHandChoice(label: string | undefined): HandChoice | null {
   if (label === 'Left') return 'left';
   if (label === 'Right') return 'right';
   return null;
 }
 
-function getHandCursorPoint(landmarks: NormalizedLandmark[], width: number, height: number): { x: number; y: number } {
+function GetHandCursorPoint(landmarks: NormalizedLandmark[], width: number, height: number): { x: number; y: number } {
   const points = [landmarks[0], landmarks[5], landmarks[9], landmarks[13], landmarks[17]].filter(Boolean);
   const average = points.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
   return {
@@ -1476,7 +1476,7 @@ function getHandCursorPoint(landmarks: NormalizedLandmark[], width: number, heig
   };
 }
 
-function drawHandLandmarks(
+function DrawHandLandmarks(
   canvas: HTMLCanvasElement | null,
   video: HTMLVideoElement,
   landmarks: NormalizedLandmark[] | undefined,
@@ -1512,22 +1512,22 @@ function drawHandLandmarks(
   context.restore();
 }
 
-function normalizeVector(x: number, y: number): { x: number; y: number } {
+function NormalizeVector(x: number, y: number): { x: number; y: number } {
   const length = Math.max(1e-6, Math.hypot(x, y));
   return { x: x / length, y: y / length };
 }
 
-function randomBetween(min: number, max: number): number {
+function RandomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min);
 }
 
-function formatHandChoice(handChoice: HandChoice, labels: (typeof COPY)['zh'] | (typeof COPY)['en']): string {
+function FormatHandChoice(handChoice: HandChoice, labels: (typeof copy)['zh'] | (typeof copy)['en']): string {
   if (handChoice === 'left') return labels.handLeft;
   if (handChoice === 'right') return labels.handRight;
   return labels.handAny;
 }
 
-function resizePixiAppToElement(app: Application, element: HTMLElement | null): void {
+function ResizePixiAppToElement(app: Application, element: HTMLElement | null): void {
   const fullscreenElement = document.fullscreenElement as HTMLElement | null;
   const rect = fullscreenElement?.getBoundingClientRect() ?? element?.getBoundingClientRect();
   const width = Math.max(1, Math.round(rect?.width || window.visualViewport?.width || window.innerWidth));
@@ -1537,7 +1537,7 @@ function resizePixiAppToElement(app: Application, element: HTMLElement | null): 
   app.canvas.style.height = `${height}px`;
 }
 
-function buildAsteroidShieldCsv(result: SessionRecord): string {
+function BuildAsteroidShieldCsv(result: SessionRecord): string {
   const rows = [
     [
       'Test_Date',

@@ -1,55 +1,55 @@
 import {
-  errorResponse,
-  hashPassword,
-  isValidEmail,
-  jsonResponse,
-  normalizeEmail,
-  optionsResponse,
-  rateLimitResponse,
-  rejectDisallowedOrigin,
-  requireDatabase,
+  ErrorResponse,
+  HashPassword,
+  IsValidEmail,
+  JsonResponse,
+  NormalizeEmail,
+  OptionsResponse,
+  RateLimitResponse,
+  RejectDisallowedOrigin,
+  RequireDatabase,
 } from '../../../_lib/auth.js';
 
-const REGISTER_ACCEPTED = { ok: true };
+const registerAccepted = { ok: true };
 
 export function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env);
+  return OptionsResponse(request, env);
 }
 
 export async function onRequestPost({ request, env }) {
-  const originError = rejectDisallowedOrigin(request, env);
+  const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
 
   let payload;
   try {
     payload = await request.json();
   } catch {
-    return errorResponse(request, env, 'Invalid JSON payload.', 400);
+    return ErrorResponse(request, env, 'Invalid JSON payload.', 400);
   }
 
   const displayName = String(payload.displayName || '').trim();
-  const email = normalizeEmail(payload.email);
+  const email = NormalizeEmail(payload.email);
   const password = String(payload.password || '');
   const privacyAccepted = payload.privacyAccepted === true;
 
   if (!privacyAccepted) {
-    return errorResponse(request, env, 'Privacy policy acceptance is required before account creation.', 400);
+    return ErrorResponse(request, env, 'Privacy policy acceptance is required before account creation.', 400);
   }
-  if (!displayName || displayName.length > 80 || !isValidEmail(email) || password.length < 8 || password.length > 128) {
-    return errorResponse(request, env, 'Invalid account details.', 400);
+  if (!displayName || displayName.length > 80 || !IsValidEmail(email) || password.length < 8 || password.length > 128) {
+    return ErrorResponse(request, env, 'Invalid account details.', 400);
   }
 
-  const limitError = await rateLimitResponse(request, env, 'password-register', { limit: 5, windowSeconds: 60 });
+  const limitError = await RateLimitResponse(request, env, 'password-register', { limit: 5, windowSeconds: 60 });
   if (limitError) return limitError;
 
   try {
-    const db = requireDatabase(env);
+    const db = RequireDatabase(env);
     const existingAccount = await db
       .prepare('SELECT user_id FROM password_accounts WHERE email = ?')
       .bind(email)
       .first();
     if (existingAccount) {
-      return jsonResponse(request, env, REGISTER_ACCEPTED, { status: 202 });
+      return JsonResponse(request, env, registerAccepted, { status: 202 });
     }
 
     const now = new Date().toISOString();
@@ -62,7 +62,7 @@ export async function onRequestPost({ request, env }) {
       profile_completed_at: null,
       profile_json: null,
     };
-    const passwordHash = await hashPassword(password);
+    const passwordHash = await HashPassword(password);
 
     try {
       await db.batch([
@@ -77,14 +77,14 @@ export async function onRequestPost({ request, env }) {
       ]);
     } catch (insertError) {
       if (String(insertError).includes('UNIQUE')) {
-        return jsonResponse(request, env, REGISTER_ACCEPTED, { status: 202 });
+        return JsonResponse(request, env, registerAccepted, { status: 202 });
       }
       throw insertError;
     }
 
-    return jsonResponse(request, env, REGISTER_ACCEPTED, { status: 202 });
+    return JsonResponse(request, env, registerAccepted, { status: 202 });
   } catch (error) {
     console.error('Password account registration failed.', error);
-    return errorResponse(request, env, 'Unable to create account.', 500);
+    return ErrorResponse(request, env, 'Unable to create account.', 500);
   }
 }

@@ -5,11 +5,11 @@ import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreen
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '../../i18n';
 import {
-  clampHartScale,
-  createHartChart,
-  createHartDecoder,
-  createHartSeed,
-  parseHartSeed,
+  ClampHartScale,
+  CreateHartChart,
+  CreateHartDecoder,
+  CreateHartSeed,
+  ParseHartSeed,
 } from './hartChart';
 import type {
   CSSProperties,
@@ -29,16 +29,16 @@ interface DecoderDragPreview {
   height: number;
 }
 
-const DECODER_DOCK_KEY = 'vision_trainer_hart_decoder_dock';
-const DECODER_DOCKS: readonly DecoderDock[] = ['left', 'right', 'top', 'bottom'];
+const decoderDockKey = 'vision_trainer_hart_decoder_dock';
+const decoderDocks: readonly DecoderDock[] = ['left', 'right', 'top', 'bottom'];
 
-function isDecoderDock(value: string | null): value is DecoderDock {
-  return value !== null && DECODER_DOCKS.includes(value as DecoderDock);
+function IsDecoderDock(value: string | null): value is DecoderDock {
+  return value !== null && decoderDocks.includes(value as DecoderDock);
 }
 
-function getInitialDecoderDock(): DecoderDock {
-  const savedDock = localStorage.getItem(DECODER_DOCK_KEY);
-  if (isDecoderDock(savedDock)) return savedDock;
+function GetInitialDecoderDock(): DecoderDock {
+  const savedDock = localStorage.getItem(decoderDockKey);
+  if (IsDecoderDock(savedDock)) return savedDock;
   return window.matchMedia('(orientation: portrait)').matches ? 'bottom' : 'right';
 }
 
@@ -98,10 +98,10 @@ function HartChartGrid({
 export function HartChartPage() {
   const { t, lang } = useT();
   const navigate = useNavigate();
-  const [seed, setSeed] = useState(createHartSeed);
+  const [seed, setSeed] = useState(CreateHartSeed);
   const [scale, setScale] = useState(1);
   const [decoderOpen, setDecoderOpen] = useState(false);
-  const [decoderDock, setDecoderDock] = useState<DecoderDock>(getInitialDecoderDock);
+  const [decoderDock, setDecoderDock] = useState<DecoderDock>(GetInitialDecoderDock);
   const [decoderDragging, setDecoderDragging] = useState(false);
   const [decoderDragTarget, setDecoderDragTarget] = useState<DecoderDock>(decoderDock);
   const [decoderDragPreview, setDecoderDragPreview] = useState<DecoderDragPreview | null>(null);
@@ -116,8 +116,8 @@ export function HartChartPage() {
   const decoderDragActiveRef = useRef(false);
   const decoderDragTargetRef = useRef<DecoderDock>(decoderDock);
 
-  const chart = useMemo(() => createHartChart(seed), [seed]);
-  const decoder = useMemo(() => createHartDecoder(chart, seed), [chart, seed]);
+  const chart = useMemo(() => CreateHartChart(seed), [seed]);
+  const decoder = useMemo(() => CreateHartDecoder(chart, seed), [chart, seed]);
   const shareUrl = useMemo(() => {
     const baseUrl = window.location.href.split('#')[0];
     const params = new URLSearchParams({
@@ -183,7 +183,7 @@ export function HartChartPage() {
   });
 
   const resetChart = () => {
-    setSeed(createHartSeed());
+    setSeed(CreateHartSeed());
     setQrDataUrl('');
   };
 
@@ -191,7 +191,7 @@ export function HartChartPage() {
     setDecoderDock(dock);
     setDecoderDragTarget(dock);
     decoderDragTargetRef.current = dock;
-    localStorage.setItem(DECODER_DOCK_KEY, dock);
+    localStorage.setItem(decoderDockKey, dock);
   };
 
   const getDockFromPointer = (clientX: number, clientY: number): DecoderDock => {
@@ -205,7 +205,7 @@ export function HartChartPage() {
       bottom: Math.abs(rect.bottom - clientY),
     };
 
-    return DECODER_DOCKS.reduce((nearest, dock) => (
+    return decoderDocks.reduce((nearest, dock) => (
       distances[dock] < distances[nearest] ? dock : nearest
     ), 'right');
   };
@@ -317,7 +317,7 @@ export function HartChartPage() {
               max="1.45"
               step="0.05"
               value={scale}
-              onChange={(event) => setScale(clampHartScale(Number(event.target.value)))}
+              onChange={(event) => setScale(ClampHartScale(Number(event.target.value)))}
             />
             <output>{Math.round(scale * 100)}%</output>
           </label>
@@ -447,7 +447,7 @@ export function HartChartPage() {
 
         {decoderDragging && (
           <div className="hart-dock-zones" aria-hidden="true">
-            {DECODER_DOCKS.map((dock) => (
+            {decoderDocks.map((dock) => (
               <div
                 key={dock}
                 className={`hart-dock-zone hart-dock-zone-${dock} ${decoderDragTarget === dock ? 'active' : ''}`}
@@ -486,9 +486,9 @@ export function HartChartDisplayPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLElement>();
-  const seed = useMemo(() => parseHartSeed(searchParams.get('seed')), [searchParams]);
-  const scale = clampHartScale(Number(searchParams.get('scale') ?? '1'));
-  const chart = useMemo(() => createHartChart(seed), [seed]);
+  const seed = useMemo(() => ParseHartSeed(searchParams.get('seed')), [searchParams]);
+  const scale = ClampHartScale(Number(searchParams.get('scale') ?? '1'));
+  const chart = useMemo(() => CreateHartChart(seed), [seed]);
 
   useEffect(() => {
     const enterFullscreen = () => {

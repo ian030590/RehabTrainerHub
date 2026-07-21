@@ -1,43 +1,43 @@
 import {
-  createSessionCookie,
-  createSessionForUser,
-  errorResponse,
-  isValidEmail,
-  jsonResponse,
-  normalizeEmail,
-  optionsResponse,
-  rateLimitResponse,
-  rejectDisallowedOrigin,
-  requireDatabase,
-  toPublicUser,
-  verifyPassword,
+  CreateSessionCookie,
+  CreateSessionForUser,
+  ErrorResponse,
+  IsValidEmail,
+  JsonResponse,
+  NormalizeEmail,
+  OptionsResponse,
+  RateLimitResponse,
+  RejectDisallowedOrigin,
+  RequireDatabase,
+  ToPublicUser,
+  VerifyPassword,
 } from '../../../_lib/auth.js';
 
 export function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env);
+  return OptionsResponse(request, env);
 }
 
 export async function onRequestPost({ request, env }) {
-  const originError = rejectDisallowedOrigin(request, env);
+  const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
 
   let payload;
   try {
     payload = await request.json();
   } catch {
-    return errorResponse(request, env, 'Invalid JSON payload.', 400);
+    return ErrorResponse(request, env, 'Invalid JSON payload.', 400);
   }
 
-  const ipLimit = await rateLimitResponse(request, env, 'password-login', { limit: 6, windowSeconds: 60 });
+  const ipLimit = await RateLimitResponse(request, env, 'password-login', { limit: 6, windowSeconds: 60 });
   if (ipLimit) return ipLimit;
 
-  const email = normalizeEmail(payload.email);
+  const email = NormalizeEmail(payload.email);
   const password = String(payload.password || '');
-  if (!isValidEmail(email) || !password) {
-    return errorResponse(request, env, 'Invalid email or password.', 401);
+  if (!IsValidEmail(email) || !password) {
+    return ErrorResponse(request, env, 'Invalid email or password.', 401);
   }
 
-  const accountLimit = await rateLimitResponse(request, env, 'password-login-account', {
+  const accountLimit = await RateLimitResponse(request, env, 'password-login-account', {
     identity: email,
     limit: 10,
     windowSeconds: 15 * 60,
@@ -45,7 +45,7 @@ export async function onRequestPost({ request, env }) {
   if (accountLimit) return accountLimit;
 
   try {
-    const account = await requireDatabase(env)
+    const account = await RequireDatabase(env)
       .prepare(`
         SELECT password_accounts.password_hash, app_users.*
         FROM password_accounts
@@ -55,21 +55,21 @@ export async function onRequestPost({ request, env }) {
       .bind(email)
       .first();
 
-    if (!account || !(await verifyPassword(password, account.password_hash))) {
-      return errorResponse(request, env, 'Invalid email or password.', 401);
+    if (!account || !(await VerifyPassword(password, account.password_hash))) {
+      return ErrorResponse(request, env, 'Invalid email or password.', 401);
     }
 
-    const token = await createSessionForUser(env, account);
-    return jsonResponse(request, env, {
+    const token = await CreateSessionForUser(env, account);
+    return JsonResponse(request, env, {
       token,
-      user: toPublicUser(account),
+      user: ToPublicUser(account),
     }, {
       headers: {
-        'Set-Cookie': createSessionCookie(request, token),
+        'Set-Cookie': CreateSessionCookie(request, token),
       },
     });
   } catch (error) {
     console.error('Password account login failed.', error);
-    return errorResponse(request, env, 'Unable to sign in.', 500);
+    return ErrorResponse(request, env, 'Unable to sign in.', 500);
   }
 }

@@ -1,16 +1,16 @@
 import { Application, Container, Graphics } from 'pixi.js';
-import { REACTION_CONFIG } from './constants';
+import { reactionConfig } from './constants';
 import type { TFunction } from '../types';
 import type { Difficulty, GameResult, ReactionState, ResultStats } from './types';
 import {
-  addText,
-  average,
-  getResponsiveBoardMaxSize,
-  getPointerEventTimestamp,
-  isMobileCognitiveViewport,
+  AddText,
+  Average,
+  GetResponsiveBoardMaxSize,
+  GetPointerEventTimestamp,
+  IsMobileCognitiveViewport,
 } from './utils';
 
-const REACTION_COLORS: Record<ReactionState['status'], number> = {
+const reactionColors: Record<ReactionState['status'], number> = {
   waiting: 0x3498db,
   ready: 0xe74c3c,
   go: 0x2ecc71,
@@ -18,7 +18,7 @@ const REACTION_COLORS: Record<ReactionState['status'], number> = {
   'too-early': 0xe67e22,
 };
 
-export function createReactionState(targetTrials: number): ReactionState {
+export function CreateReactionState(targetTrials: number): ReactionState {
   return {
     kind: 'reaction-time',
     status: 'waiting',
@@ -31,7 +31,7 @@ export function createReactionState(targetTrials: number): ReactionState {
   };
 }
 
-export function handleReactionStateTap(
+export function HandleReactionStateTap(
   state: ReactionState,
   tapMs: number,
   difficulty: Difficulty,
@@ -39,7 +39,7 @@ export function handleReactionStateTap(
   scheduleGo: (delayMs: number, goAtMs: number) => void,
 ) {
   if (state.status === 'waiting' || state.status === 'result' || state.status === 'too-early') {
-    const cfg = REACTION_CONFIG[difficulty];
+    const cfg = reactionConfig[difficulty];
     const delayMs = (cfg.minDelay + Math.random() * (cfg.maxDelay - cfg.minDelay)) * 1000;
     const goAtMs = performance.now() + delayMs;
     state.status = 'ready';
@@ -68,7 +68,7 @@ export function handleReactionStateTap(
   }
 }
 
-export function showReactionGo(state: ReactionState, onsetMs: number) {
+export function ShowReactionGo(state: ReactionState, onsetMs: number) {
   if (state.status !== 'ready') return false;
   state.status = 'go';
   state.goAt = null;
@@ -76,18 +76,18 @@ export function showReactionGo(state: ReactionState, onsetMs: number) {
   return true;
 }
 
-export function updateReactionTimedState(state: ReactionState, elapsed: number, render: () => void) {
+export function UpdateReactionTimedState(state: ReactionState, elapsed: number, render: () => void) {
   void state;
   void elapsed;
   void render;
 }
 
-export function isReactionAutoSuccess(state: ReactionState) {
+export function IsReactionAutoSuccess(state: ReactionState) {
   return state.attempts.length >= state.targetTrials;
 }
 
-export function buildReactionResultStats(state: ReactionState): ResultStats {
-  const avg = average(state.attempts) ?? 0;
+export function BuildReactionResultStats(state: ReactionState): ResultStats {
+  const avg = Average(state.attempts) ?? 0;
   const best = state.attempts.length > 0 ? Math.min(...state.attempts) : 0;
   const attemptsWithFalseStarts = state.attempts.length + state.falseStarts;
   return {
@@ -101,12 +101,12 @@ export function buildReactionResultStats(state: ReactionState): ResultStats {
   };
 }
 
-export function drawReaction(app: Application, state: ReactionState, onTap: (tapMs: number) => void, t: TFunction) {
+export function DrawReaction(app: Application, state: ReactionState, onTap: (tapMs: number) => void, t: TFunction) {
   const w = app.renderer.width;
   const h = app.renderer.height;
-  const maxSize = getResponsiveBoardMaxSize(app);
+  const maxSize = GetResponsiveBoardMaxSize(app);
   const scale = Math.min(
-    isMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 1,
+    IsMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 1,
     maxSize.width / 500,
     maxSize.height / 300,
   );
@@ -124,11 +124,11 @@ export function drawReaction(app: Application, state: ReactionState, onTap: (tap
   const node = new Container();
   node.eventMode = 'static';
   node.cursor = 'pointer';
-  node.on('pointertap', (event) => onTap(getPointerEventTimestamp(event)));
+  node.on('pointertap', (event) => onTap(GetPointerEventTimestamp(event)));
   const g = new Graphics();
-  g.rect(x, y, boxW, boxH).fill(REACTION_COLORS[state.status]);
+  g.rect(x, y, boxW, boxH).fill(reactionColors[state.status]);
   node.addChild(g);
-  addText(node, labels[state.status], w / 2, y + boxH / 2, {
+  AddText(node, labels[state.status], w / 2, y + boxH / 2, {
     fontSize: state.status === 'result' && state.lastReactionMs !== null ? 56 : 32,
     fontWeight: '400',
     fill: '#FFFFFF',

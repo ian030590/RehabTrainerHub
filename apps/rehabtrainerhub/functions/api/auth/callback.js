@@ -1,26 +1,26 @@
 import {
-  authPopupHtml,
-  createSessionCookie,
-  createSessionForUser,
-  errorResponse,
-  getAuthBaseUrl,
-  getStateSecret,
-  requireDatabase,
-  securityHeaders,
-  toPublicUser,
-  verifySignedValue,
+  AuthPopupHtml,
+  CreateSessionCookie,
+  CreateSessionForUser,
+  ErrorResponse,
+  GetAuthBaseUrl,
+  GetStateSecret,
+  RequireDatabase,
+  SecurityHeaders,
+  ToPublicUser,
+  VerifySignedValue,
 } from '../../_lib/auth.js';
 
 export async function onRequestGet({ request, env }) {
   try {
-    return await handleCallback(request, env);
+    return await HandleCallback(request, env);
   } catch (error) {
     console.error('OAuth callback failed.', error);
-    return oauthFailureResponse(request, error);
+    return OauthFailureResponse(request, error);
   }
 }
 
-async function handleCallback(request, env) {
+async function HandleCallback(request, env) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const stateToken = url.searchParams.get('state');
@@ -31,7 +31,7 @@ async function handleCallback(request, env) {
       status: 400,
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        ...securityHeaders(),
+        ...SecurityHeaders(),
       },
     });
   }
@@ -40,35 +40,35 @@ async function handleCallback(request, env) {
       status: 400,
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        ...securityHeaders(),
+        ...SecurityHeaders(),
       },
     });
   }
 
   let state;
   try {
-    state = await verifySignedValue(stateToken, getStateSecret(env));
+    state = await VerifySignedValue(stateToken, GetStateSecret(env));
   } catch {
     return new Response('Invalid OAuth state.', {
       status: 400,
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        ...securityHeaders(),
+        ...SecurityHeaders(),
       },
     });
   }
 
-  const authBaseUrl = getAuthBaseUrl(request, env);
+  const authBaseUrl = GetAuthBaseUrl(request, env);
   const redirectUri = `${authBaseUrl}/api/auth/callback`;
   const identity = state.provider === 'google'
-    ? await getGoogleIdentity(env, code, redirectUri)
+    ? await GetGoogleIdentity(env, code, redirectUri)
     : null;
 
   if (!identity) {
-    return errorResponse(request, env, 'Unsupported auth provider.', 400);
+    return ErrorResponse(request, env, 'Unsupported auth provider.', 400);
   }
 
-  const db = requireDatabase(env);
+  const db = RequireDatabase(env);
   const now = new Date().toISOString();
   const existingProvider = await db
     .prepare('SELECT user_id FROM provider_accounts WHERE provider = ? AND provider_user_id = ?')
@@ -121,15 +121,15 @@ async function handleCallback(request, env) {
   const userRow = await db.prepare('SELECT * FROM app_users WHERE id = ?').bind(userId).first();
   if (!userRow) throw new Error('User row was not found after OAuth login.');
 
-  const token = await createSessionForUser(env, userRow);
-  return authPopupHtml(state.returnTo, token, toPublicUser(userRow), {
+  const token = await CreateSessionForUser(env, userRow);
+  return AuthPopupHtml(state.returnTo, token, ToPublicUser(userRow), {
     headers: {
-      'Set-Cookie': createSessionCookie(request, token),
+      'Set-Cookie': CreateSessionCookie(request, token),
     },
   });
 }
 
-function oauthFailureResponse(request, error) {
+function OauthFailureResponse(request, error) {
   const nonce = crypto.randomUUID().replace(/-/g, '');
   const message = error instanceof Error ? error.message : '';
   const setupError = /not configured|D1 binding|must be configured/i.test(message);
@@ -177,7 +177,7 @@ function oauthFailureResponse(request, error) {
     status,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      ...securityHeaders({
+      ...SecurityHeaders({
         'Content-Security-Policy': [
           "default-src 'none'",
           `style-src 'nonce-${nonce}'`,
@@ -189,7 +189,7 @@ function oauthFailureResponse(request, error) {
   });
 }
 
-async function getGoogleIdentity(env, code, redirectUri) {
+async function GetGoogleIdentity(env, code, redirectUri) {
   const clientId = env.GOOGLE_CLIENT_ID;
   const clientSecret = env.GOOGLE_CLIENT_SECRET;
   if (!clientId || !clientSecret) throw new Error('Google OAuth credentials are not configured.');

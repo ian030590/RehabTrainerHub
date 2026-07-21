@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
-import { detectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
-import { enterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
+import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { useT } from '../../i18n';
-import { isAssessmentCalibrationAtDefaults } from '../../utils/settings';
+import { IsAssessmentCalibrationAtDefaults } from '../../utils/settings';
 import { useAppSetting } from '../../utils/useAppSetting';
-import { ASSESSMENTS } from './assessmentDefinitions';
+import { assessments } from './assessmentDefinitions';
 import type { AssessmentId } from './assessmentDefinitions';
 import type { TestType } from './logic/optotypeRenderer';
 import type { SubtestId, UfovRunMode } from './ufov/UfovPage';
@@ -26,11 +26,11 @@ export function AssessmentPage() {
   const [customTrialsInput, setCustomTrialsInput] = useState('');
   const [showCalibrationWarning, setShowCalibrationWarning] = useState(false);
   const [plInputMode, setPlInputMode] = useAppSetting('preferentialLookingInputMode');
-  const ufovLabels = getUfovConfigLabels(lang);
-  const isSmallScreenDevice = isMobileOrTabletDevice(detectDisplayDeviceKind());
+  const ufovLabels = GetUfovConfigLabels(lang);
+  const isSmallScreenDevice = IsMobileOrTabletDevice(DetectDisplayDeviceKind());
 
   const handleCardClick = (testId: AssessmentId) => {
-    const assessment = ASSESSMENTS.find((item) => item.id === testId)!;
+    const assessment = assessments.find((item) => item.id === testId)!;
     if (testId === 'ufov') {
       setExpandedTest(null);
       setIsUfovConfigOpen((current) => !current);
@@ -65,12 +65,12 @@ export function AssessmentPage() {
 
   const handleStartTest = async () => {
     if (!expandedTest) return;
-    if (isAssessmentCalibrationAtDefaults()) {
+    if (IsAssessmentCalibrationAtDefaults()) {
       setShowCalibrationWarning(true);
       return;
     }
 
-    await enterFullscreenFromUserGesture(document.documentElement);
+    await EnterFullscreenFromUserGesture(document.documentElement);
     navigate(getAssessmentUrl(false));
   };
 
@@ -80,13 +80,13 @@ export function AssessmentPage() {
 
   const handleTryAnyway = async () => {
     setShowCalibrationWarning(false);
-    await enterFullscreenFromUserGesture(document.documentElement);
+    await EnterFullscreenFromUserGesture(document.documentElement);
     navigate(getAssessmentUrl(true));
   };
 
   const handleStartUfov = async () => {
     const subtestId = isSmallScreenDevice ? 1 : selectedUfovSubtest;
-    await enterFullscreenFromUserGesture(document.documentElement);
+    await EnterFullscreenFromUserGesture(document.documentElement);
     setIsUfovConfigOpen(false);
     navigate(`/assessment/ufov?${new URLSearchParams({
       subtest: String(subtestId),
@@ -112,7 +112,7 @@ export function AssessmentPage() {
     }
   };
 
-  const expandedAssessment = ASSESSMENTS.find((item) => item.id === expandedTest);
+  const expandedAssessment = assessments.find((item) => item.id === expandedTest);
   const trialsPresets = [12, 18, 24, 36];
 
   return (
@@ -134,7 +134,7 @@ export function AssessmentPage() {
 
       {/* Test Cards Grid */}
       <div className="selection-grid">
-        {ASSESSMENTS.map((assessment, index) => (
+        {assessments.map((assessment, index) => (
           <SelectionCard
             key={assessment.id}
             title={t(assessment.titleKey)}
@@ -239,7 +239,7 @@ export function AssessmentPage() {
           <div className="config-section">
             <div className="config-label">{ufovLabels.chooseSubtest}</div>
             <div className="difficulty-selector">
-              {UFOV_SUBTESTS.map((subtestId) => {
+              {ufovSubtests.map((subtestId) => {
                 const subtestBlocked = isSmallScreenDevice && subtestId !== 1;
                 return (
                   <button
@@ -262,7 +262,7 @@ export function AssessmentPage() {
           <div className="config-section">
             <div className="config-label">{ufovLabels.chooseMode}</div>
             <div className="difficulty-selector">
-              {UFOV_RUN_MODES.map((mode) => (
+              {ufovRunModes.map((mode) => (
                 <button
                   className={`diff-btn ${selectedUfovMode === mode ? 'active' : ''}`}
                   key={mode}
@@ -315,14 +315,14 @@ export function AssessmentPage() {
   );
 }
 
-const UFOV_SUBTESTS: SubtestId[] = [1, 2, 3];
-const UFOV_RUN_MODES: UfovRunMode[] = ['instruction', 'practice', 'formal'];
+const ufovSubtests: SubtestId[] = [1, 2, 3];
+const ufovRunModes: UfovRunMode[] = ['instruction', 'practice', 'formal'];
 
-function isMobileOrTabletDevice(deviceKind: ReturnType<typeof detectDisplayDeviceKind>) {
+function IsMobileOrTabletDevice(deviceKind: ReturnType<typeof DetectDisplayDeviceKind>) {
   return deviceKind === 'phone' || deviceKind === 'tablet';
 }
 
-function getUfovConfigLabels(lang: 'zh' | 'en') {
+function GetUfovConfigLabels(lang: 'zh' | 'en') {
   return lang === 'en'
     ? {
         settingsTitle: 'UFOV Settings',

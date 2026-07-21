@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { HUB_FULL_NAME, HUB_LOCAL_NAME, HUB_NAME } from './hubBrand';
+import { hubFullName, hubLocalName, hubName } from './hubBrand';
 import { siteUrls } from './siteUrls';
 
 export const siteDescription =
@@ -9,7 +9,7 @@ export const seoImage = {
   url: '/rehabtrainerhub.svg',
   width: 840,
   height: 840,
-  alt: `${HUB_FULL_NAME} logo`,
+  alt: `${hubFullName} logo`,
 } as const;
 
 const trainerApplications = [
@@ -39,7 +39,7 @@ const trainerApplications = [
   },
 ] as const;
 
-export function createSeoMetadata({
+export function CreateSeoMetadata({
   title,
   description,
   path,
@@ -52,7 +52,7 @@ export function createSeoMetadata({
   absoluteTitle?: boolean;
   noIndex?: boolean;
 }): Metadata {
-  const resolvedTitle = absoluteTitle ? title : `${title} | ${HUB_LOCAL_NAME}`;
+  const resolvedTitle = absoluteTitle ? title : `${title} | ${hubLocalName}`;
 
   return {
     title: absoluteTitle ? { absolute: title } : title,
@@ -65,7 +65,7 @@ export function createSeoMetadata({
       title: resolvedTitle,
       description,
       url: path,
-      siteName: HUB_FULL_NAME,
+      siteName: hubFullName,
       locale: 'zh_TW',
       type: 'website',
       images: [seoImage],
@@ -82,15 +82,15 @@ export function createSeoMetadata({
 export const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: HUB_FULL_NAME,
-  alternateName: [HUB_LOCAL_NAME, HUB_NAME],
+  name: hubFullName,
+  alternateName: [hubLocalName, hubName],
   url: siteUrls.hub,
   inLanguage: ['zh-Hant-TW', 'en'],
   description: siteDescription,
   hasPart: trainerApplications,
   publisher: {
     '@type': 'Organization',
-    name: HUB_FULL_NAME,
+    name: hubFullName,
     url: siteUrls.hub,
     logo: {
       '@type': 'ImageObject',
@@ -104,8 +104,8 @@ export const websiteJsonLd = {
 export const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: HUB_FULL_NAME,
-  alternateName: [HUB_LOCAL_NAME, HUB_NAME],
+  name: hubFullName,
+  alternateName: [hubLocalName, hubName],
   url: siteUrls.hub,
   logo: {
     '@type': 'ImageObject',

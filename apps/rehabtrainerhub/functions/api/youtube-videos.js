@@ -1,24 +1,24 @@
-import { errorResponse, jsonResponse, optionsResponse, rateLimitResponse, rejectDisallowedOrigin } from '../_lib/auth.js';
+import { ErrorResponse, JsonResponse, OptionsResponse, RateLimitResponse, RejectDisallowedOrigin } from '../_lib/auth.js';
 
-const DEFAULT_CHANNEL_ID = 'UCHE7xFZ9I8rJzbrFXA-3L3w';
-const DEFAULT_MAX_RESULTS = 12;
+const defaultChannelId = 'UCHE7xFZ9I8rJzbrFXA-3L3w';
+const defaultMaxResults = 12;
 
 export function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env);
+  return OptionsResponse(request, env);
 }
 
 export async function onRequestGet({ request, env }) {
-  const originError = rejectDisallowedOrigin(request, env);
+  const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
-  const limitError = await rateLimitResponse(request, env, 'youtube-videos', { limit: 20, windowSeconds: 60 });
+  const limitError = await RateLimitResponse(request, env, 'youtube-videos', { limit: 20, windowSeconds: 60 });
   if (limitError) return limitError;
 
   const apiKey = env.YOUTUBE_API_KEY;
-  if (!apiKey) return errorResponse(request, env, 'YOUTUBE_API_KEY is not configured.', 500);
+  if (!apiKey) return ErrorResponse(request, env, 'YOUTUBE_API_KEY is not configured.', 500);
 
   const requestUrl = new URL(request.url);
-  const channelId = normalizeChannelId(requestUrl.searchParams.get('channelId')) || DEFAULT_CHANNEL_ID;
-  const maxResults = normalizeMaxResults(requestUrl.searchParams.get('maxResults'));
+  const channelId = NormalizeChannelId(requestUrl.searchParams.get('channelId')) || defaultChannelId;
+  const maxResults = NormalizeMaxResults(requestUrl.searchParams.get('maxResults'));
   const youtubeUrl = new URL('https://www.googleapis.com/youtube/v3/search');
   youtubeUrl.search = new URLSearchParams({
     part: 'snippet',
@@ -35,7 +35,7 @@ export async function onRequestGet({ request, env }) {
   });
   const data = await response.json().catch(() => null);
   if (!response.ok || !data) {
-    return errorResponse(request, env, 'Unable to load YouTube videos.', 502);
+    return ErrorResponse(request, env, 'Unable to load YouTube videos.', 502);
   }
 
   const videos = (data.items || [])
@@ -54,20 +54,20 @@ export async function onRequestGet({ request, env }) {
     })
     .filter(Boolean);
 
-  return jsonResponse(request, env, { channelId, videos }, {
+  return JsonResponse(request, env, { channelId, videos }, {
     headers: {
       'Cache-Control': 'public, max-age=300',
     },
   });
 }
 
-function normalizeChannelId(value) {
+function NormalizeChannelId(value) {
   const channelId = typeof value === 'string' ? value.trim() : '';
   return /^[A-Za-z0-9_-]{12,80}$/.test(channelId) ? channelId : '';
 }
 
-function normalizeMaxResults(value) {
+function NormalizeMaxResults(value) {
   const parsed = Number.parseInt(value || '', 10);
-  if (!Number.isFinite(parsed)) return DEFAULT_MAX_RESULTS;
+  if (!Number.isFinite(parsed)) return defaultMaxResults;
   return Math.min(Math.max(parsed, 1), 24);
 }

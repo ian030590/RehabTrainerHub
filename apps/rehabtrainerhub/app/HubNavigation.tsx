@@ -15,7 +15,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react';
-import { HUB_LOCAL_NAME, HUB_NAME } from './hubBrand';
+import { hubLocalName, hubName } from './hubBrand';
 import { siteUrls } from './siteUrls';
 import { zhTW, en as enTranslations } from './i18n';
 import type { HubLocale } from './i18n/types';
@@ -82,21 +82,21 @@ interface HubReadabilityState {
   setTheme: Dispatch<SetStateAction<Theme>>;
 }
 
-const HubReadabilityContext = createContext<HubReadabilityState | null>(null);
+const hubReadabilityContext = createContext<HubReadabilityState | null>(null);
 
-function labelFor(labels: Partial<HubNavLabels> | undefined, key: HubNavKey) {
+function LabelFor(labels: Partial<HubNavLabels> | undefined, key: HubNavKey) {
   return labels?.[key] ?? defaultLabels[key];
 }
 
-function isLocale(value: string | null): value is HubLocale {
+function IsLocale(value: string | null): value is HubLocale {
   return value === 'zh-TW' || value === 'en';
 }
 
-function isFontScale(value: string | null): value is FontScale {
+function IsFontScale(value: string | null): value is FontScale {
   return value === 'standard' || value === 'large' || value === 'extra';
 }
 
-function isTheme(value: string | null): value is Theme {
+function IsTheme(value: string | null): value is Theme {
   return value === 'light' || value === 'dark' || value === 'contrast';
 }
 
@@ -119,7 +119,7 @@ function useStoredSetting<T extends string>(
   return [value, setValue] as const;
 }
 
-function getRouteNavKey(pathname: string): HubNavKey | undefined {
+function GetRouteNavKey(pathname: string): HubNavKey | undefined {
   if (pathname.startsWith('/education')) return 'education';
   if (pathname.startsWith('/videos') || pathname.startsWith('/links')) return 'links';
   if (pathname.startsWith('/references')) return 'references';
@@ -128,7 +128,7 @@ function getRouteNavKey(pathname: string): HubNavKey | undefined {
 }
 
 export function useHubReadability() {
-  const context = useContext(HubReadabilityContext);
+  const context = useContext(hubReadabilityContext);
   if (!context) throw new Error('useHubReadability must be used inside HubShell.');
   return context;
 }
@@ -155,7 +155,7 @@ function HubNavLinks({ activeKey, labels, navigationLabel, onNavigate }: HubNavi
           key={item.key}
           onClick={onNavigate}
         >
-          {labelFor(labels, item.key)}
+          {LabelFor(labels, item.key)}
         </Link>
       ))}
     </nav>
@@ -216,8 +216,8 @@ export function HubSiteHeader({
             <Image src="/rehabtrainerhub.svg" alt="" width={44} height={44} priority />
           </span>
           <span>
-            <strong>{HUB_NAME}</strong>
-            <span className="brand-local-name">{HUB_LOCAL_NAME}</span>
+            <strong>{hubName}</strong>
+            <span className="brand-local-name">{hubLocalName}</span>
           </span>
         </Link>
 
@@ -255,7 +255,7 @@ export function HubBottomNav({ activeKey, labels, navigationLabel }: HubNavigati
     <nav className="bottom-nav" aria-label={navigationLabel ?? 'Rehab Trainer Hub navigation'}>
       {navItems.map((item) => (
         <Link className={activeKey === item.key ? 'is-active' : ''} href={item.href} key={item.key}>
-          {labelFor(labels, item.key)}
+          {LabelFor(labels, item.key)}
         </Link>
       ))}
     </nav>
@@ -264,13 +264,13 @@ export function HubBottomNav({ activeKey, labels, navigationLabel }: HubNavigati
 
 export function HubShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const [locale, setLocale] = useStoredSetting<HubLocale>(storageKeys.locale, 'zh-TW', isLocale);
+  const [locale, setLocale] = useStoredSetting<HubLocale>(storageKeys.locale, 'zh-TW', IsLocale);
   const [fontScale, setFontScale] = useStoredSetting<FontScale>(
     storageKeys.fontScale,
     'standard',
-    isFontScale,
+    IsFontScale,
   );
-  const [theme, setTheme] = useStoredSetting<Theme>(storageKeys.theme, 'light', isTheme);
+  const [theme, setTheme] = useStoredSetting<Theme>(storageKeys.theme, 'light', IsTheme);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState<SectionId>('programs');
   const copy = headerContent[locale];
@@ -314,7 +314,7 @@ export function HubShell({ children }: { children: ReactNode }) {
     ? currentSection === 'programs' || currentSection === 'care'
       ? currentSection
       : undefined
-    : getRouteNavKey(pathname);
+    : GetRouteNavKey(pathname);
 
   const contextValue = useMemo(
     () => ({ locale, fontScale, theme, setLocale, setFontScale, setTheme }),
@@ -324,7 +324,7 @@ export function HubShell({ children }: { children: ReactNode }) {
   const closeHeaderPanels = () => setIsSettingsOpen(false);
 
   return (
-    <HubReadabilityContext.Provider value={contextValue}>
+    <hubReadabilityContext.Provider value={contextValue}>
       <HubSiteHeader
         activeKey={activeKey}
         headerTools={(
@@ -340,7 +340,7 @@ export function HubShell({ children }: { children: ReactNode }) {
             </div>
 
             <AuthPanel
-              appName={HUB_NAME}
+              appName={hubName}
               className="home-auth-panel"
               locale={locale === 'en' ? 'en' : 'zh-TW'}
             />
@@ -403,11 +403,11 @@ export function HubShell({ children }: { children: ReactNode }) {
       <HubBottomNav activeKey={activeKey} labels={copy.nav} navigationLabel={copy.navigationLabel} />
       {children}
       <RehabFooter
-        appName={HUB_NAME}
+        appName={hubName}
         hubHref={siteUrls.hub}
         privacyHref={`${siteUrls.hub}/privacy/`}
         labels={copy.footer}
       />
-    </HubReadabilityContext.Provider>
+    </hubReadabilityContext.Provider>
   );
 }

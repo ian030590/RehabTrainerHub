@@ -1,6 +1,6 @@
 import { TrainerNavbar } from '@rehab-trainer/ui/components/TrainerNavbar';
 import { useLocation } from 'react-router-dom';
-import { downloadAllTrainingRecordsCsv } from '../utils/trainingRecords';
+import { DownloadAllTrainingRecordsCsv } from '../utils/trainingRecords';
 import { useT } from '../i18n';
 import { siteUrls } from '../utils/siteUrls';
 
@@ -48,7 +48,7 @@ export function Navbar() {
         label: t('nav.downloadScores'),
         noScoresMessage: t('nav.noScores'),
         errorMessage: t('nav.scoresDownloadError'),
-        onDownload: () => downloadAllTrainingRecordsCsv(t),
+        onDownload: () => DownloadAllTrainingRecordsCsv(t),
       }}
       toggleMenuLabel={t('nav.toggleMenu')}
     />

@@ -11,9 +11,9 @@
 import { Application } from 'pixi.js';
 import { pixiColors } from '../theme';
 
-const DEFAULT_TRIAL_CONTAINER_STYLE = 'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;';
+const defaultTrialContainerStyle = 'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;';
 
-function getRenderSize(container: HTMLElement): { width: number; height: number } {
+function GetRenderSize(container: HTMLElement): { width: number; height: number } {
   const rect = container.getBoundingClientRect();
   const parentRect = container.parentElement?.getBoundingClientRect();
   const width = container.clientWidth || rect.width || parentRect?.width || window.innerWidth;
@@ -135,16 +135,16 @@ class PixiAppManager {
 
   private resizeToContainer(container: HTMLElement): void {
     if (!this.app) return;
-    const { width, height } = getRenderSize(container);
+    const { width, height } = GetRenderSize(container);
     this.app.renderer.resize(width, height);
   }
 }
 
 export const pixiAppManager = PixiAppManager.getInstance();
 
-export function createPixiTrialContainer(
+export function CreatePixiTrialContainer(
   displayElement: HTMLElement,
-  styleText = DEFAULT_TRIAL_CONTAINER_STYLE,
+  styleText = defaultTrialContainerStyle,
 ): HTMLDivElement {
   displayElement.replaceChildren();
   const container = document.createElement('div');
@@ -153,18 +153,18 @@ export function createPixiTrialContainer(
   return container;
 }
 
-export function attachPixiTrialCanvas(container: HTMLElement): void {
+export function AttachPixiTrialCanvas(container: HTMLElement): void {
   pixiAppManager.clearStage();
   pixiAppManager.attachTo(container);
 }
 
-export function cleanupPixiTrial(displayElement: HTMLElement): void {
+export function CleanupPixiTrial(displayElement: HTMLElement): void {
   pixiAppManager.clearStage();
   pixiAppManager.detachCanvas();
   displayElement.replaceChildren();
 }
 
-export function runPixiTrial(displayElement: HTMLElement, runWithApp: (app: Application) => void): void {
+export function RunPixiTrial(displayElement: HTMLElement, runWithApp: (app: Application) => void): void {
   if (pixiAppManager.ready) {
     const app = pixiAppManager.getApp();
     if (app) {

@@ -12,14 +12,14 @@ interface CreateUserStoreOptions {
   storagePrefix: string;
 }
 
-export function createUserStore({
+export function CreateUserStore({
   activeUserChangedEvent,
   storagePrefix,
 }: CreateUserStoreOptions): UserStore {
   const usersKey = `${storagePrefix}users`;
   const activeUserKey = `${storagePrefix}active_user`;
 
-  function getUsers(): string[] {
+  function GetUsers(): string[] {
     const raw = localStorage.getItem(usersKey);
     if (!raw) return [];
     try {
@@ -30,11 +30,11 @@ export function createUserStore({
     }
   }
 
-  function getActiveUser(): string | null {
+  function GetActiveUser(): string | null {
     return localStorage.getItem(activeUserKey) || null;
   }
 
-  function setActiveUser(name: string | null): void {
+  function SetActiveUser(name: string | null): void {
     if (name) {
       localStorage.setItem(activeUserKey, name);
     } else {
@@ -43,28 +43,28 @@ export function createUserStore({
     window.dispatchEvent(new Event(activeUserChangedEvent));
   }
 
-  function addUser(name: string): void {
-    const users = getUsers();
+  function AddUser(name: string): void {
+    const users = GetUsers();
     if (!users.includes(name)) {
       users.push(name);
       localStorage.setItem(usersKey, JSON.stringify(users));
     }
   }
 
-  function removeUser(name: string): void {
-    const users = getUsers().filter((user) => user !== name);
+  function RemoveUser(name: string): void {
+    const users = GetUsers().filter((user) => user !== name);
     localStorage.setItem(usersKey, JSON.stringify(users));
-    if (getActiveUser() === name) {
-      setActiveUser(null);
+    if (GetActiveUser() === name) {
+      SetActiveUser(null);
     }
   }
 
   return {
     activeUserChangedEvent,
-    addUser,
-    getActiveUser,
-    getUsers,
-    removeUser,
-    setActiveUser,
+    addUser: AddUser,
+    getActiveUser: GetActiveUser,
+    getUsers: GetUsers,
+    removeUser: RemoveUser,
+    setActiveUser: SetActiveUser,
   };
 }

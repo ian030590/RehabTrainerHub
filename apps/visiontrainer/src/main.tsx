@@ -3,14 +3,14 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { App } from './App';
 import { LanguageProvider } from './i18n';
-import { applyThemeTokens } from './theme';
-import { initializeTrainingRecords } from './utils/trainingRecords';
+import { ApplyThemeTokens } from './theme';
+import { InitializeTrainingRecords } from './utils/trainingRecords';
 import 'jspsych/css/jspsych.css';
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import './index.css';
 import '@rehab-trainer/ui/components/TrainerApp.css';
 
-applyThemeTokens();
+ApplyThemeTokens();
 
 const rootElement = document.getElementById('root');
 
@@ -18,7 +18,7 @@ if (!rootElement) {
   throw new Error('Root element #root was not found.');
 }
 
-void initializeTrainingRecords().catch((error) => {
+void InitializeTrainingRecords().catch((error) => {
   console.warn('Unable to initialize training records.', error);
 });
 

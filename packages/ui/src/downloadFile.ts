@@ -1,6 +1,6 @@
-import { ensureCsvUtf8Bom } from './csv';
+import { EnsureCsvUtf8Bom } from './csv';
 
-export function downloadFile(
+export function DownloadFile(
   content: BlobPart | BlobPart[],
   filename: string,
   mimeType = 'text/plain;charset=utf-8',
@@ -19,6 +19,6 @@ export function downloadFile(
   window.setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
-export function downloadCsvFile(csvContent: string, filename: string): void {
-  downloadFile(ensureCsvUtf8Bom(csvContent), filename, 'text/csv;charset=utf-8');
+export function DownloadCsvFile(csvContent: string, filename: string): void {
+  DownloadFile(EnsureCsvUtf8Bom(csvContent), filename, 'text/csv;charset=utf-8');
 }

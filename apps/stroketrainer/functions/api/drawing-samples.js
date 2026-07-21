@@ -1,74 +1,74 @@
-const MAX_IMAGE_BYTES = 1024 * 1024;
-const MAX_REQUEST_BYTES = MAX_IMAGE_BYTES + 128 * 1024;
-const SHAPES = new Set(['circle', 'cross', 'square', 'triangle', 'vertical-line', 'horizontal-line']);
-const UPLOAD_TOKEN_HEADER = 'x-drawing-upload-token';
+const maxImageBytes = 1024 * 1024;
+const maxRequestBytes = maxImageBytes + 128 * 1024;
+const shapes = new Set(['circle', 'cross', 'square', 'triangle', 'vertical-line', 'horizontal-line']);
+const uploadTokenHeader = 'x-drawing-upload-token';
 
 export async function onRequestOptions(context) {
   return new Response(null, {
-    status: isAllowedOrigin(context) ? 204 : 403,
-    headers: corsHeaders(context),
+    status: IsAllowedOrigin(context) ? 204 : 403,
+    headers: CorsHeaders(context),
   });
 }
 
 export async function onRequestPost(context) {
   const { request, env } = context;
-  const headers = corsHeaders(context);
+  const headers = CorsHeaders(context);
   const webhookUrl = env.DISCORD_DRAWING_WEBHOOK_URL;
 
-  if (!isAllowedOrigin(context)) {
-    return json({ error: 'Origin is not allowed.' }, 403, headers);
+  if (!IsAllowedOrigin(context)) {
+    return Json({ error: 'Origin is not allowed.' }, 403, headers);
   }
 
-  if (!hasValidUploadToken(request, env)) {
-    return json({ error: 'Upload is not allowed.' }, 403, headers);
+  if (!HasValidUploadToken(request, env)) {
+    return Json({ error: 'Upload is not allowed.' }, 403, headers);
   }
 
   if (!webhookUrl) {
-    return json({ error: 'Discord webhook is not configured.' }, 500, headers);
+    return Json({ error: 'Discord webhook is not configured.' }, 500, headers);
   }
 
   const contentType = request.headers.get('content-type') || '';
   if (!contentType.includes('multipart/form-data')) {
-    return json({ error: 'Expected multipart/form-data.' }, 415, headers);
+    return Json({ error: 'Expected multipart/form-data.' }, 415, headers);
   }
 
   const contentLength = Number(request.headers.get('content-length'));
-  if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
-    return json({ error: 'Upload request is too large.' }, 413, headers);
+  if (Number.isFinite(contentLength) && contentLength > maxRequestBytes) {
+    return Json({ error: 'Upload request is too large.' }, 413, headers);
   }
 
   let form;
   try {
     form = await request.formData();
   } catch {
-    return json({ error: 'Invalid multipart form data.' }, 400, headers);
+    return Json({ error: 'Invalid multipart form data.' }, 400, headers);
   }
   const image = form.get('image');
   const metadataText = form.get('metadata');
 
   if (!(image instanceof File)) {
-    return json({ error: 'Missing image file.' }, 400, headers);
+    return Json({ error: 'Missing image file.' }, 400, headers);
   }
 
   if (image.type !== 'image/png') {
-    return json({ error: 'Only PNG image uploads are accepted.' }, 415, headers);
+    return Json({ error: 'Only PNG image uploads are accepted.' }, 415, headers);
   }
 
-  if (image.size > MAX_IMAGE_BYTES) {
-    return json({ error: 'Image is too large.' }, 413, headers);
+  if (image.size > maxImageBytes) {
+    return Json({ error: 'Image is too large.' }, 413, headers);
   }
 
-  const metadata = parseMetadata(metadataText);
-  const filename = createSafeFilename(metadata, image.name);
+  const metadata = ParseMetadata(metadataText);
+  const filename = CreateSafeFilename(metadata, image.name);
   const discordForm = new FormData();
-  discordForm.append('payload_json', JSON.stringify(createDiscordPayload(metadata, filename)));
+  discordForm.append('payload_json', JSON.stringify(CreateDiscordPayload(metadata, filename)));
   discordForm.append('files[0]', image, filename);
 
   let discordWebhookUrl;
   try {
-    discordWebhookUrl = createDiscordWebhookUrl(webhookUrl);
+    discordWebhookUrl = CreateDiscordWebhookUrl(webhookUrl);
   } catch {
-    return json({ error: 'Discord webhook URL is invalid.' }, 500, headers);
+    return Json({ error: 'Discord webhook URL is invalid.' }, 500, headers);
   }
 
   let discordResponse;
@@ -78,27 +78,27 @@ export async function onRequestPost(context) {
       body: discordForm,
     });
   } catch {
-    return json({ error: 'Discord upload request failed.' }, 502, headers);
+    return Json({ error: 'Discord upload request failed.' }, 502, headers);
   }
 
   if (!discordResponse.ok) {
-    return json(
+    return Json(
       { error: 'Discord upload failed.', discordStatus: discordResponse.status },
       502,
       headers,
     );
   }
 
-  return json({ ok: true, filename }, 201, headers);
+  return Json({ ok: true, filename }, 201, headers);
 }
 
-function createDiscordWebhookUrl(webhookUrl) {
+function CreateDiscordWebhookUrl(webhookUrl) {
   const url = new URL(webhookUrl);
   url.searchParams.set('wait', 'true');
   return url.toString();
 }
 
-function parseMetadata(value) {
+function ParseMetadata(value) {
   if (typeof value !== 'string' || value.length > 12000) return {};
 
   try {
@@ -109,30 +109,30 @@ function parseMetadata(value) {
   }
 }
 
-function createSafeFilename(metadata, fallbackName) {
-  const rawTarget = typeof metadata.targetShape === 'string' && SHAPES.has(metadata.targetShape)
+function CreateSafeFilename(metadata, fallbackName) {
+  const rawTarget = typeof metadata.targetShape === 'string' && shapes.has(metadata.targetShape)
     ? metadata.targetShape
     : 'unknown';
   const matched = metadata.matched === true ? 'hit' : 'miss';
   const sampleId = typeof metadata.sampleId === 'string' ? metadata.sampleId : fallbackName.replace(/\.png$/i, '');
-  const safeSampleId = sanitizeFilePart(sampleId) || crypto.randomUUID();
+  const safeSampleId = SanitizeFilePart(sampleId) || crypto.randomUUID();
   return `drawing_${rawTarget}_${matched}_${safeSampleId}.png`;
 }
 
-function createDiscordPayload(metadata, filename) {
-  const targetShape = safeText(metadata.targetShape) || 'unknown';
-  const recognizedShape = safeText(metadata.recognizedShape) || 'unrecognized';
-  const participant = safeText(metadata.participantId) || 'Unknown';
+function CreateDiscordPayload(metadata, filename) {
+  const targetShape = SafeText(metadata.targetShape) || 'unknown';
+  const recognizedShape = SafeText(metadata.recognizedShape) || 'unrecognized';
+  const participant = SafeText(metadata.participantId) || 'Unknown';
   const fields = [
     { name: 'participant', value: participant, inline: true },
     { name: 'target', value: targetShape, inline: true },
     { name: 'recognized', value: recognizedShape, inline: true },
     { name: 'matched', value: metadata.matched === true ? 'true' : 'false', inline: true },
-    { name: 'difficulty', value: safeText(metadata.difficulty) || 'unknown', inline: true },
-    { name: 'enemy', value: safeText(metadata.enemyNumber) || '-', inline: true },
-    { name: 'elapsedSec', value: safeText(metadata.elapsedSeconds) || '-', inline: true },
-    { name: 'strokeCount', value: safeText(metadata.strokeCount) || '-', inline: true },
-    { name: 'pointCount', value: safeText(metadata.pointCount) || '-', inline: true },
+    { name: 'difficulty', value: SafeText(metadata.difficulty) || 'unknown', inline: true },
+    { name: 'enemy', value: SafeText(metadata.enemyNumber) || '-', inline: true },
+    { name: 'elapsedSec', value: SafeText(metadata.elapsedSeconds) || '-', inline: true },
+    { name: 'strokeCount', value: SafeText(metadata.strokeCount) || '-', inline: true },
+    { name: 'pointCount', value: SafeText(metadata.pointCount) || '-', inline: true },
   ];
 
   return {
@@ -140,28 +140,28 @@ function createDiscordPayload(metadata, filename) {
     content: `Drawing sample: ${filename}`,
     embeds: [{
       title: 'Drawing Tower Defense Sample',
-      timestamp: safeTimestamp(metadata.createdAt),
+      timestamp: SafeTimestamp(metadata.createdAt),
       fields,
     }],
   };
 }
 
-function safeText(value) {
+function SafeText(value) {
   if (value === null || value === undefined) return '';
   return String(value).slice(0, 256);
 }
 
-function safeTimestamp(value) {
+function SafeTimestamp(value) {
   if (typeof value !== 'string') return new Date().toISOString();
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
 }
 
-function sanitizeFilePart(value) {
+function SanitizeFilePart(value) {
   return String(value).trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120);
 }
 
-function json(data, status, headers) {
+function Json(data, status, headers) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -171,50 +171,50 @@ function json(data, status, headers) {
   });
 }
 
-function corsHeaders({ request, env }) {
+function CorsHeaders({ request, env }) {
   const origin = request.headers.get('Origin');
   const headers = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': `content-type, ${UPLOAD_TOKEN_HEADER}`,
+    'Access-Control-Allow-Headers': `content-type, ${uploadTokenHeader}`,
     'Access-Control-Max-Age': '86400',
     vary: 'Origin',
   };
 
   if (!origin) return headers;
 
-  if (isOriginAllowed(origin, request, env)) {
+  if (IsOriginAllowed(origin, request, env)) {
     headers['Access-Control-Allow-Origin'] = origin;
   }
 
   return headers;
 }
 
-function isAllowedOrigin({ request, env }) {
+function IsAllowedOrigin({ request, env }) {
   const origin = request.headers.get('Origin');
   if (!origin) return false;
 
-  return isOriginAllowed(origin, request, env);
+  return IsOriginAllowed(origin, request, env);
 }
 
-function isOriginAllowed(origin, request, env) {
+function IsOriginAllowed(origin, request, env) {
   const requestOrigin = new URL(request.url).origin;
-  return origin === requestOrigin || getAllowedOrigins(env).includes(origin);
+  return origin === requestOrigin || GetAllowedOrigins(env).includes(origin);
 }
 
-function getAllowedOrigins(env) {
+function GetAllowedOrigins(env) {
   return String(env.DRAWING_UPLOAD_ALLOWED_ORIGINS || '')
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
 }
 
-function hasValidUploadToken(request, env) {
+function HasValidUploadToken(request, env) {
   const token = String(env.DRAWING_UPLOAD_TOKEN || '');
   if (!token) return true;
-  return constantTimeEqual(request.headers.get(UPLOAD_TOKEN_HEADER) || '', token);
+  return ConstantTimeEqual(request.headers.get(uploadTokenHeader) || '', token);
 }
 
-function constantTimeEqual(left, right) {
+function ConstantTimeEqual(left, right) {
   if (left.length !== right.length) return false;
   let result = 0;
   for (let index = 0; index < left.length; index += 1) {

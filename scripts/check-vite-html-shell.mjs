@@ -22,7 +22,7 @@ for (const file of files) {
   const distDir = dirname(absolutePath);
   const html = readFileSync(absolutePath, 'utf8');
   const tags = [];
-  const markupErrors = collectMarkupErrors(html);
+  const markupErrors = CollectMarkupErrors(html);
 
   if (markupErrors.length > 0) {
     failures.push(`${file}: malformed HTML shell\n${markupErrors.map((error) => `  - ${error}`).join('\n')}`);
@@ -45,8 +45,8 @@ for (const file of files) {
     failures.push(`${file}: missing production stylesheet link`);
   }
 
-  checkAssetReferences(file, distDir, tags, failures);
-  checkProtectedChunkImports(file, distDir, failures);
+  CheckAssetReferences(file, distDir, tags, failures);
+  CheckProtectedChunkImports(file, distDir, failures);
 }
 
 if (failures.length > 0) {
@@ -55,7 +55,7 @@ if (failures.length > 0) {
 
 console.log(`Vite HTML shell check passed for ${files.length} file${files.length === 1 ? '' : 's'}.`);
 
-function collectMarkupErrors(html) {
+function CollectMarkupErrors(html) {
   const errors = [];
 
   for (let index = 0; index < html.length; index += 1) {
@@ -73,7 +73,7 @@ function collectMarkupErrors(html) {
         if (char === quote) {
           quote = '';
         } else if (char === '<') {
-          errors.push(`tag starting at ${formatLocation(html, start)} contains "<" before closing ${quote} attribute quote`);
+          errors.push(`tag starting at ${FormatLocation(html, start)} contains "<" before closing ${quote} attribute quote`);
           break;
         }
         continue;
@@ -87,7 +87,7 @@ function collectMarkupErrors(html) {
     }
 
     if (index >= html.length) {
-      errors.push(`tag starting at ${formatLocation(html, start)} is not closed`);
+      errors.push(`tag starting at ${FormatLocation(html, start)} is not closed`);
       break;
     }
   }
@@ -95,7 +95,7 @@ function collectMarkupErrors(html) {
   return errors;
 }
 
-function formatLocation(source, offset) {
+function FormatLocation(source, offset) {
   const before = source.slice(0, offset);
   const line = before.split('\n').length;
   const lastLineBreak = before.lastIndexOf('\n');
@@ -103,18 +103,18 @@ function formatLocation(source, offset) {
   return `line ${line}, column ${column}`;
 }
 
-function checkAssetReferences(file, distDir, tags, failures) {
+function CheckAssetReferences(file, distDir, tags, failures) {
   for (const tag of tags) {
-    const src = getAttribute(tag, 'src');
-    const href = getAttribute(tag, 'href');
+    const src = GetAttribute(tag, 'src');
+    const href = GetAttribute(tag, 'href');
     const assetRef = src ?? href;
-    const assetPath = resolveAssetPath(distDir, assetRef);
+    const assetPath = ResolveAssetPath(distDir, assetRef);
 
     if (assetPath && !existsSync(assetPath)) {
       failures.push(`${file}: referenced asset is missing: ${assetRef}`);
     }
 
-    if (isRouteCriticalAssetTag(tag) && isNestedRouteUnsafeAssetReference(assetRef)) {
+    if (IsRouteCriticalAssetTag(tag) && IsNestedRouteUnsafeAssetReference(assetRef)) {
       failures.push(
         `${file}: route-critical asset ${assetRef} is relative; use Vite base '/' so direct nested routes do not render a blank screen`,
       );
@@ -122,8 +122,8 @@ function checkAssetReferences(file, distDir, tags, failures) {
 
     if (
       /^<link\b/i.test(tag) &&
-      getAttribute(tag, 'rel')?.toLowerCase() === 'modulepreload' &&
-      isForbiddenRuntimeAsset(assetRef)
+      GetAttribute(tag, 'rel')?.toLowerCase() === 'modulepreload' &&
+      IsForbiddenRuntimeAsset(assetRef)
     ) {
       failures.push(
         `${file}: root HTML modulepreloads ${assetRef}; trainer shell must not eagerly load heavy game runtimes`,
@@ -132,7 +132,7 @@ function checkAssetReferences(file, distDir, tags, failures) {
   }
 }
 
-function checkProtectedChunkImports(file, distDir, failures) {
+function CheckProtectedChunkImports(file, distDir, failures) {
   const assetsDir = join(distDir, 'assets');
 
   if (!existsSync(assetsDir)) {
@@ -141,13 +141,13 @@ function checkProtectedChunkImports(file, distDir, failures) {
 
   const protectedChunks = readdirSync(assetsDir)
     .filter((asset) => asset.endsWith('.js'))
-    .filter((asset) => protectedChunkPrefixes.some((prefix) => isChunkName(asset, prefix)));
+    .filter((asset) => protectedChunkPrefixes.some((prefix) => IsChunkName(asset, prefix)));
 
   for (const chunk of protectedChunks) {
     const source = readFileSync(join(assetsDir, chunk), 'utf8');
 
-    for (const importedAsset of collectStaticJsImports(source)) {
-      if (isForbiddenRuntimeAsset(importedAsset)) {
+    for (const importedAsset of CollectStaticJsImports(source)) {
+      if (IsForbiddenRuntimeAsset(importedAsset)) {
         failures.push(
           `${file}: ${chunk} statically imports ${importedAsset}; protected trainer routes must lazy-load heavy game runtimes`,
         );
@@ -156,7 +156,7 @@ function checkProtectedChunkImports(file, distDir, failures) {
   }
 }
 
-function collectStaticJsImports(source) {
+function CollectStaticJsImports(source) {
   const imports = [];
   const importPattern = /(?:^|;)\s*import(?![.(])(?:(?!;).)*?["']([^"']+\.js)["']/gs;
   let match = importPattern.exec(source);
@@ -169,12 +169,12 @@ function collectStaticJsImports(source) {
   return imports;
 }
 
-function getAttribute(tag, name) {
+function GetAttribute(tag, name) {
   const match = tag.match(new RegExp(`\\b${name}\\s*=\\s*("([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i'));
   return match?.[2] ?? match?.[3] ?? match?.[4] ?? null;
 }
 
-function resolveAssetPath(distDir, assetRef) {
+function ResolveAssetPath(distDir, assetRef) {
   if (!assetRef || /^https?:\/\//i.test(assetRef) || assetRef.startsWith('//') || assetRef.startsWith('#')) {
     return null;
   }
@@ -192,20 +192,20 @@ function resolveAssetPath(distDir, assetRef) {
   return null;
 }
 
-function isRouteCriticalAssetTag(tag) {
+function IsRouteCriticalAssetTag(tag) {
   if (/^<script\b/i.test(tag)) {
-    return Boolean(getAttribute(tag, 'src'));
+    return Boolean(GetAttribute(tag, 'src'));
   }
 
   if (!/^<link\b/i.test(tag)) {
     return false;
   }
 
-  const rel = getAttribute(tag, 'rel')?.toLowerCase();
+  const rel = GetAttribute(tag, 'rel')?.toLowerCase();
   return rel === 'stylesheet' || rel === 'modulepreload' || rel === 'preload';
 }
 
-function isNestedRouteUnsafeAssetReference(assetRef) {
+function IsNestedRouteUnsafeAssetReference(assetRef) {
   if (!assetRef || /^https?:\/\//i.test(assetRef) || assetRef.startsWith('//') || assetRef.startsWith('#')) {
     return false;
   }
@@ -213,15 +213,15 @@ function isNestedRouteUnsafeAssetReference(assetRef) {
   return !assetRef.startsWith('/');
 }
 
-function isForbiddenRuntimeAsset(assetRef) {
+function IsForbiddenRuntimeAsset(assetRef) {
   if (!assetRef) {
     return false;
   }
 
   const assetName = basename(assetRef.split(/[?#]/)[0]);
-  return forbiddenRuntimeChunkPrefixes.some((prefix) => isChunkName(assetName, prefix));
+  return forbiddenRuntimeChunkPrefixes.some((prefix) => IsChunkName(assetName, prefix));
 }
 
-function isChunkName(assetName, prefix) {
+function IsChunkName(assetName, prefix) {
   return assetName === `${prefix}.js` || (assetName.startsWith(`${prefix}-`) && assetName.endsWith('.js'));
 }

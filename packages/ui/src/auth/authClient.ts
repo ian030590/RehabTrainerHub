@@ -5,11 +5,11 @@ export type HabitInterval = 'week' | 'month';
 export type SmokingUnit = 'packs' | 'cigarettes';
 export type AlcoholUnit = 'bottles' | 'cans' | 'cups';
 
-export const AUTH_CHANGED_EVENT = 'rehab-auth-changed';
-export const AUTH_MESSAGE_TYPE = 'rehabtrainerhub-auth-session';
+export const authChangedEvent = 'rehab-auth-changed';
+export const authMessageType = 'rehabtrainerhub-auth-session';
 
-const AUTH_TOKEN_KEY = 'rehabtrainerhub.auth.token';
-const LOCAL_TRAINING_STORAGE_KEYS = [
+const authTokenKey = 'rehabtrainerhub.auth.token';
+const localTrainingStorageKeys = [
   'stroke_trainer_training_records_v1',
   'stroke_trainer_users',
   'stroke_trainer_active_user',
@@ -19,7 +19,7 @@ const LOCAL_TRAINING_STORAGE_KEYS = [
   'vision_trainer_active_user',
   'brain_trainer_training_records_v1',
 ];
-const LOCAL_TRAINING_DATABASES = [
+const localTrainingDatabases = [
   'stroke-trainer-training-records',
   'vision_trainer_training_records',
 ];
@@ -52,7 +52,7 @@ export interface AuthUser {
 }
 
 export interface AuthSessionMessage {
-  type: typeof AUTH_MESSAGE_TYPE;
+  type: typeof authMessageType;
   token: string;
   user: AuthUser;
 }
@@ -89,34 +89,34 @@ export interface RemoteTrainingRecordPayload {
   record: RemoteTrainingRecord;
 }
 
-export function getAuthToken(): string | null {
+export function GetAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+  return window.localStorage.getItem(authTokenKey);
 }
 
-export function setAuthToken(token: string, dispatchEvent = true): void {
-  window.localStorage.setItem(AUTH_TOKEN_KEY, token);
-  if (dispatchEvent) window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+export function SetAuthToken(token: string, dispatchEvent = true): void {
+  window.localStorage.setItem(authTokenKey, token);
+  if (dispatchEvent) window.dispatchEvent(new Event(authChangedEvent));
 }
 
-export function clearAuthToken(): void {
-  window.localStorage.removeItem(AUTH_TOKEN_KEY);
-  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+export function ClearAuthToken(): void {
+  window.localStorage.removeItem(authTokenKey);
+  window.dispatchEvent(new Event(authChangedEvent));
 }
 
-export function hasAuthToken(): boolean {
-  return Boolean(getAuthToken());
+export function HasAuthToken(): boolean {
+  return Boolean(GetAuthToken());
 }
 
-export function getAuthUserNameFromToken(): string | null {
-  const token = getAuthToken();
+export function GetAuthUserNameFromToken(): string | null {
+  const token = GetAuthToken();
   if (!token) return null;
 
   const [encodedPayload] = token.split('.');
   if (!encodedPayload) return null;
 
   try {
-    const payload = JSON.parse(base64UrlDecodeUtf8(encodedPayload)) as { name?: unknown; email?: unknown };
+    const payload = JSON.parse(Base64UrlDecodeUtf8(encodedPayload)) as { name?: unknown; email?: unknown };
     return typeof payload.name === 'string' && payload.name.trim()
       ? payload.name.trim()
       : typeof payload.email === 'string' && payload.email.trim()
@@ -127,7 +127,7 @@ export function getAuthUserNameFromToken(): string | null {
   }
 }
 
-function base64UrlDecodeUtf8(value: string): string {
+function Base64UrlDecodeUtf8(value: string): string {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
   const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
   const binary = atob(padded);
@@ -141,20 +141,20 @@ function base64UrlDecodeUtf8(value: string): string {
   return decodeURIComponent(percentEncoded);
 }
 
-export function normalizeAuthApiBase(apiBase: string | undefined): string {
+export function NormalizeAuthApiBase(apiBase: string | undefined): string {
   const trimmed = apiBase?.trim() ?? '';
   return trimmed.replace(/\/+$/, '');
 }
 
-export function buildApiUrl(apiBase: string | undefined, path: string): string {
-  const normalizedBase = normalizeAuthApiBase(apiBase);
+export function BuildApiUrl(apiBase: string | undefined, path: string): string {
+  const normalizedBase = NormalizeAuthApiBase(apiBase);
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${normalizedBase}${normalizedPath}`;
 }
 
-export function getAuthApiOrigin(apiBase: string | undefined): string | null {
+export function GetAuthApiOrigin(apiBase: string | undefined): string | null {
   if (typeof window === 'undefined') return null;
-  const normalizedBase = normalizeAuthApiBase(apiBase);
+  const normalizedBase = NormalizeAuthApiBase(apiBase);
   try {
     return new URL(normalizedBase || window.location.origin, window.location.origin).origin;
   } catch {
@@ -162,7 +162,7 @@ export function getAuthApiOrigin(apiBase: string | undefined): string | null {
   }
 }
 
-export function buildAuthStartUrl(
+export function BuildAuthStartUrl(
   provider: AuthProvider,
   options: {
     apiBase?: string;
@@ -172,7 +172,7 @@ export function buildAuthStartUrl(
   },
 ): string {
   const returnTo = options.returnTo ?? window.location.href;
-  const url = new URL(buildApiUrl(options.apiBase, '/api/auth/start'), window.location.origin);
+  const url = new URL(BuildApiUrl(options.apiBase, '/api/auth/start'), window.location.origin);
   url.searchParams.set('provider', provider);
   url.searchParams.set('returnTo', returnTo);
   url.searchParams.set('privacyAccepted', options.privacyAccepted ? '1' : '0');
@@ -180,7 +180,7 @@ export function buildAuthStartUrl(
   return url.toString();
 }
 
-export function openAuthPopup(url: string): Window | null {
+export function OpenAuthPopup(url: string): Window | null {
   const width = 560;
   const height = 720;
   const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2));
@@ -193,24 +193,24 @@ export function openAuthPopup(url: string): Window | null {
   );
 }
 
-export function isAuthSessionMessage(value: unknown): value is AuthSessionMessage {
+export function IsAuthSessionMessage(value: unknown): value is AuthSessionMessage {
   if (!value || typeof value !== 'object') return false;
   const message = value as Record<string, unknown>;
-  return message.type === AUTH_MESSAGE_TYPE && typeof message.token === 'string';
+  return message.type === authMessageType && typeof message.token === 'string';
 }
 
-export async function fetchCurrentAuthUser(apiBase?: string): Promise<AuthUser | null> {
-  const token = getAuthToken();
+export async function FetchCurrentAuthUser(apiBase?: string): Promise<AuthUser | null> {
+  const token = GetAuthToken();
   if (!token) return null;
 
-  const response = await fetch(buildApiUrl(apiBase, '/api/auth/me'), {
+  const response = await fetch(BuildApiUrl(apiBase, '/api/auth/me'), {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
 
   if (response.status === 401) {
-    clearAuthToken();
+    ClearAuthToken();
     return null;
   }
 
@@ -222,8 +222,8 @@ export async function fetchCurrentAuthUser(apiBase?: string): Promise<AuthUser |
   return payload.user ?? null;
 }
 
-export async function fetchSharedAuthSession(apiBase?: string): Promise<SharedAuthSession | null> {
-  const response = await fetch(buildApiUrl(apiBase, '/api/auth/session'), {
+export async function FetchSharedAuthSession(apiBase?: string): Promise<SharedAuthSession | null> {
+  const response = await fetch(BuildApiUrl(apiBase, '/api/auth/session'), {
     credentials: 'include',
   });
 
@@ -237,32 +237,32 @@ export async function fetchSharedAuthSession(apiBase?: string): Promise<SharedAu
   return payload.token && payload.user ? { token: payload.token, user: payload.user } : null;
 }
 
-export async function logoutAuthSession(apiBase?: string): Promise<void> {
+export async function LogoutAuthSession(apiBase?: string): Promise<void> {
   try {
-    await fetch(buildApiUrl(apiBase, '/api/auth/logout'), {
+    await fetch(BuildApiUrl(apiBase, '/api/auth/logout'), {
       method: 'POST',
       credentials: 'include',
     });
   } finally {
-    await clearLocalTrainerData();
-    clearAuthToken();
+    await ClearLocalTrainerData();
+    ClearAuthToken();
   }
 }
 
-export async function clearLocalTrainerData(): Promise<void> {
+export async function ClearLocalTrainerData(): Promise<void> {
   if (typeof window === 'undefined') return;
 
   try {
-    for (const key of LOCAL_TRAINING_STORAGE_KEYS) {
+    for (const key of localTrainingStorageKeys) {
       window.localStorage.removeItem(key);
     }
   } catch {
     // Best-effort shared-device cleanup; logout must still clear the auth token.
   }
-  await Promise.allSettled(LOCAL_TRAINING_DATABASES.map(deleteIndexedDatabase));
+  await Promise.allSettled(localTrainingDatabases.map(DeleteIndexedDatabase));
 }
 
-function deleteIndexedDatabase(name: string): Promise<void> {
+function DeleteIndexedDatabase(name: string): Promise<void> {
   return new Promise((resolve) => {
     if (!('indexedDB' in window)) {
       resolve();
@@ -275,7 +275,7 @@ function deleteIndexedDatabase(name: string): Promise<void> {
   });
 }
 
-async function parseAuthSessionResponse(response: Response, fallbackMessage: string): Promise<SharedAuthSession> {
+async function ParseAuthSessionResponse(response: Response, fallbackMessage: string): Promise<SharedAuthSession> {
   if (!response.ok) {
     throw new Error(`${fallbackMessage}. Status ${response.status}`);
   }
@@ -288,11 +288,11 @@ async function parseAuthSessionResponse(response: Response, fallbackMessage: str
   return { token: payload.token, user: payload.user };
 }
 
-export async function registerPasswordAccount(
+export async function RegisterPasswordAccount(
   apiBase: string | undefined,
   payload: PasswordAccountRegisterPayload,
 ): Promise<void> {
-  const response = await fetch(buildApiUrl(apiBase, '/api/auth/password/register'), {
+  const response = await fetch(BuildApiUrl(apiBase, '/api/auth/password/register'), {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -306,11 +306,11 @@ export async function registerPasswordAccount(
   }
 }
 
-export async function loginPasswordAccount(
+export async function LoginPasswordAccount(
   apiBase: string | undefined,
   payload: PasswordAccountLoginPayload,
 ): Promise<SharedAuthSession> {
-  const response = await fetch(buildApiUrl(apiBase, '/api/auth/password/login'), {
+  const response = await fetch(BuildApiUrl(apiBase, '/api/auth/password/login'), {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -319,14 +319,14 @@ export async function loginPasswordAccount(
     body: JSON.stringify(payload),
   });
 
-  return parseAuthSessionResponse(response, 'Unable to sign in');
+  return ParseAuthSessionResponse(response, 'Unable to sign in');
 }
 
-export async function saveAuthProfile(apiBase: string | undefined, profile: RehabProfile): Promise<AuthUser> {
-  const token = getAuthToken();
+export async function SaveAuthProfile(apiBase: string | undefined, profile: RehabProfile): Promise<AuthUser> {
+  const token = GetAuthToken();
   if (!token) throw new Error('Cannot save profile without an auth token.');
 
-  const response = await fetch(buildApiUrl(apiBase, '/api/auth/profile'), {
+  const response = await fetch(BuildApiUrl(apiBase, '/api/auth/profile'), {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -343,14 +343,14 @@ export async function saveAuthProfile(apiBase: string | undefined, profile: Reha
   return payload.user;
 }
 
-export async function saveRemoteTrainingRecord(
+export async function SaveRemoteTrainingRecord(
   apiBase: string | undefined,
   payload: RemoteTrainingRecordPayload,
 ): Promise<boolean> {
-  const token = getAuthToken();
+  const token = GetAuthToken();
   if (!token) return false;
 
-  const response = await fetch(buildApiUrl(apiBase, '/api/records'), {
+  const response = await fetch(BuildApiUrl(apiBase, '/api/records'), {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -360,7 +360,7 @@ export async function saveRemoteTrainingRecord(
   });
 
   if (response.status === 401) {
-    clearAuthToken();
+    ClearAuthToken();
     return false;
   }
 
@@ -371,14 +371,14 @@ export async function saveRemoteTrainingRecord(
   return true;
 }
 
-export async function getRemoteTrainingRecords(
+export async function GetRemoteTrainingRecords(
   apiBase: string | undefined,
   appId: string,
 ): Promise<RemoteTrainingRecord[] | null> {
-  const token = getAuthToken();
+  const token = GetAuthToken();
   if (!token) return null;
 
-  const url = new URL(buildApiUrl(apiBase, '/api/records'), window.location.origin);
+  const url = new URL(BuildApiUrl(apiBase, '/api/records'), window.location.origin);
   url.searchParams.set('appId', appId);
 
   const response = await fetch(url.toString(), {
@@ -388,7 +388,7 @@ export async function getRemoteTrainingRecords(
   });
 
   if (response.status === 401) {
-    clearAuthToken();
+    ClearAuthToken();
     return null;
   }
 

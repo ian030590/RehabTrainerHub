@@ -7,12 +7,12 @@ import {
 } from '@mediapipe/tasks-vision';
 import { initJsPsych } from 'jspsych';
 import { useT, type TranslationKey } from '../../i18n';
-import { downloadCsvFile } from '../../utils/downloadFile';
+import { DownloadCsvFile } from '../../utils/downloadFile';
 import { getActiveUser } from '../../utils/settings';
-import { playGameEndSound, playSuccessSound, prepareAudioFeedback } from '../../utils/soundManager';
-import { saveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { clamp, csvCell, formatTestDate, writeJsPsychData } from './gameUtils';
-import { verifySelectedTrainingUser } from './selectedUserGuard';
+import { PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
+import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
@@ -107,23 +107,23 @@ interface HoldState {
   attemptRecorded: boolean;
 }
 
-const MEDIAPIPE_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
-const HAND_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
-const CALIBRATION_HOLD_MS = 2200;
-const CALIBRATION_CHANGE_THRESHOLD = 0.22;
-const CALIBRATION_MIN_STABLE_SAMPLES = 5;
-const TRACKING_GRACE_MS = 180;
-const DETECTION_INTERVAL_MS = 66;
-const DEFAULT_ENEMY_HP = 10;
-const DEFAULT_HOLD_DURATION = 2;
-const DEFAULT_STRICTNESS = 0.7;
-const ENEMY_HP_OPTIONS = [5, 10, 15] as const;
-const HOLD_DURATION_OPTIONS = [1.5, 2, 3] as const;
-const DEFAULT_CUSTOM_ENEMY_HP = 8;
-const DEFAULT_CUSTOM_HOLD_DURATION = 2.5;
-const GESTURES: readonly GestureId[] = [1, 2, 3, 4, 5];
-const MOVE_COLORS = [0x38bdf8, 0xf8fafc, 0x4ade80, 0xfb923c, 0xfacc15] as const;
-const CALIBRATION_STEPS: readonly CalibrationStep[] = [
+const mediapipeWasmUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
+const handModelUrl = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const calibrationHoldMs = 2200;
+const calibrationChangeThreshold = 0.22;
+const calibrationMinStableSamples = 5;
+const trackingGraceMs = 180;
+const detectionIntervalMs = 66;
+const defaultEnemyHp = 10;
+const defaultHoldDuration = 2;
+const defaultStrictness = 0.7;
+const enemyHpOptions = [5, 10, 15] as const;
+const holdDurationOptions = [1.5, 2, 3] as const;
+const defaultCustomEnemyHp = 8;
+const defaultCustomHoldDuration = 2.5;
+const gestures: readonly GestureId[] = [1, 2, 3, 4, 5];
+const moveColors = [0x38bdf8, 0xf8fafc, 0x4ade80, 0xfb923c, 0xfacc15] as const;
+const calibrationSteps: readonly CalibrationStep[] = [
   {
     kind: 'rom-closed',
     gesture: 0,
@@ -136,7 +136,7 @@ const CALIBRATION_STEPS: readonly CalibrationStep[] = [
     titleKey: 'gesture.calibration.openTitle',
     instructionKey: 'gesture.calibration.openInstruction',
   },
-  ...GESTURES.map((gesture) => ({
+  ...gestures.map((gesture) => ({
     kind: 'gesture' as const,
     gesture,
     titleKey: 'gesture.calibration.gestureTitle' as TranslationKey,
@@ -144,7 +144,7 @@ const CALIBRATION_STEPS: readonly CalibrationStep[] = [
   })),
 ];
 
-function createEmptyGestureStats(): Record<GestureId, GestureStat> {
+function CreateEmptyGestureStats(): Record<GestureId, GestureStat> {
   return {
     1: { attempts: 0, successes: 0, interruptions: 0, similarityTotal: 0, similaritySamples: 0 },
     2: { attempts: 0, successes: 0, interruptions: 0, similarityTotal: 0, similaritySamples: 0 },
@@ -182,31 +182,31 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     lastValidAt: 0,
     attemptRecorded: false,
   });
-  const enemyHpRef = useRef(DEFAULT_ENEMY_HP);
+  const enemyHpRef = useRef(defaultEnemyHp);
   const targetGestureRef = useRef<GestureId>(1);
   const attackActiveRef = useRef(false);
   const mountedRef = useRef(true);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const configRef = useRef<GestureConfig>({
-    enemyMaxHp: DEFAULT_ENEMY_HP,
-    holdDuration: DEFAULT_HOLD_DURATION,
-    strictnessThreshold: DEFAULT_STRICTNESS,
+    enemyMaxHp: defaultEnemyHp,
+    holdDuration: defaultHoldDuration,
+    strictnessThreshold: defaultStrictness,
     targetMode: 'free',
   });
   const metricsRef = useRef({
     startedAt: 0,
     successfulCasts: 0,
     interruptedHolds: 0,
-    stats: createEmptyGestureStats(),
+    stats: CreateEmptyGestureStats(),
     casts: [] as CastRecord[],
   });
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
-  const [enemyMaxHp, setEnemyMaxHp] = useState(DEFAULT_ENEMY_HP);
-  const [customEnemyHp, setCustomEnemyHp] = useState(DEFAULT_CUSTOM_ENEMY_HP);
-  const [holdDuration, setHoldDuration] = useState(DEFAULT_HOLD_DURATION);
-  const [customHoldDuration, setCustomHoldDuration] = useState(DEFAULT_CUSTOM_HOLD_DURATION);
-  const [strictnessThreshold, setStrictnessThreshold] = useState(DEFAULT_STRICTNESS);
+  const [enemyMaxHp, setEnemyMaxHp] = useState(defaultEnemyHp);
+  const [customEnemyHp, setCustomEnemyHp] = useState(defaultCustomEnemyHp);
+  const [holdDuration, setHoldDuration] = useState(defaultHoldDuration);
+  const [customHoldDuration, setCustomHoldDuration] = useState(defaultCustomHoldDuration);
+  const [strictnessThreshold, setStrictnessThreshold] = useState(defaultStrictness);
   const [targetMode, setTargetMode] = useState<TargetMode>('free');
   const [calibrationIndex, setCalibrationIndex] = useState(0);
   const [isCalibrationCapturing, setIsCalibrationCapturing] = useState(false);
@@ -275,7 +275,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const config = configRef.current;
     const metrics = metricsRef.current;
     const participantId = getActiveUser() || 'Unknown';
-    const gestureStats = GESTURES.map((gesture) => {
+    const gestureStats = gestures.map((gesture) => {
       const stat = metrics.stats[gesture];
       return {
         Gesture: gesture,
@@ -289,7 +289,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       };
     });
     const session: SessionRecord = {
-      Test_Date: formatTestDate(new Date()),
+      Test_Date: FormatTestDate(new Date()),
       Participant_ID: participantId,
       Enemy_Max_HP: config.enemyMaxHp,
       Hold_Duration_Seconds: config.holdDuration,
@@ -301,11 +301,11 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       Gesture_Stats: gestureStats,
       Cast_Records: metrics.casts.map((cast) => ({ ...cast })),
     };
-    playGameEndSound('Victory', jsPsychRef);
+    PlayGameEndSound('Victory', jsPsychRef);
     setResult(session);
     setPhase('results');
     stopVision();
-    void saveTrainingSessionRecord({
+    void SaveTrainingSessionRecord({
       userName: participantId,
       moduleId: 'motor-training',
       gameId: 'gesture-battler',
@@ -323,7 +323,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       },
       detailRows: gestureStats.map((stat) => ({ ...stat })),
     });
-    writeJsPsychData(
+    WriteJsPsychData(
       jsPsychRef,
       session as unknown as Record<string, unknown>,
       'Unable to write gesture battler result to jsPsych data.',
@@ -334,8 +334,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     if (attackActiveRef.current || phaseRef.current !== 'combat') return;
     attackActiveRef.current = true;
     const targetAtCast = configRef.current.targetMode === 'directed' ? targetGestureRef.current : null;
-    playSuccessSound(jsPsychRef);
-    await animateAttack(appRef.current, sceneRef.current, gesture);
+    PlaySuccessSound(jsPsychRef);
+    await AnimateAttack(appRef.current, sceneRef.current, gesture);
     if (!mountedRef.current || phaseRef.current !== 'combat') {
       attackActiveRef.current = false;
       return;
@@ -362,7 +362,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     }
 
     if (configRef.current.targetMode === 'directed') {
-      const nextTarget = chooseNextGesture(targetGestureRef.current);
+      const nextTarget = ChooseNextGesture(targetGestureRef.current);
       targetGestureRef.current = nextTarget;
     }
     attackActiveRef.current = false;
@@ -371,8 +371,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   const handleCombatHand = useCallback((landmarks: NormalizedLandmark[], now: number) => {
     if (attackActiveRef.current) return;
     const rom = romRef.current;
-    const currentFeatures = normalizeFeatures(extractHandFeatures(landmarks), rom);
-    const match = classifyGesture(currentFeatures, gestureProfilesRef.current);
+    const currentFeatures = NormalizeFeatures(ExtractHandFeatures(landmarks), rom);
+    const match = ClassifyGesture(currentFeatures, gestureProfilesRef.current);
     const threshold = configRef.current.strictnessThreshold;
     const isEligible = Boolean(
       match.gesture &&
@@ -389,7 +389,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     }
 
     if (!isEligible || !match.gesture) {
-      const withinGrace = now - holdRef.current.lastValidAt <= TRACKING_GRACE_MS;
+      const withinGrace = now - holdRef.current.lastValidAt <= trackingGraceMs;
       if (!withinGrace) resetHold(true);
       return;
     }
@@ -413,20 +413,20 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     }
 
     const durationMs = configRef.current.holdDuration * 1000;
-    const progress = clamp(holdRef.current.progressMs / durationMs, 0, 1);
+    const progress = Clamp(holdRef.current.progressMs / durationMs, 0, 1);
     if (progress >= 1) void triggerAttack(match.gesture, match.similarity);
   }, [resetHold, triggerAttack]);
 
   const beginCombat = useCallback(() => {
     const config = configRef.current;
-    const firstTarget = randomGesture();
+    const firstTarget = RandomGesture();
     targetGestureRef.current = firstTarget;
     enemyHpRef.current = config.enemyMaxHp;
     metricsRef.current = {
       startedAt: performance.now(),
       successfulCasts: 0,
       interruptedHolds: 0,
-      stats: createEmptyGestureStats(),
+      stats: CreateEmptyGestureStats(),
       casts: [],
     };
     attackActiveRef.current = false;
@@ -441,7 +441,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     } else if (step.kind === 'rom-open') {
       romRef.current.open = features;
     } else {
-      gestureProfilesRef.current[step.gesture as GestureId] = normalizeFeatures(features, romRef.current);
+      gestureProfilesRef.current[step.gesture as GestureId] = NormalizeFeatures(features, romRef.current);
     }
 
     const nextIndex = calibrationIndexRef.current + 1;
@@ -450,7 +450,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     calibrationSamplesRef.current = [];
     setIsCalibrationCapturing(false);
     setCalibrationProgress(0);
-    if (nextIndex >= CALIBRATION_STEPS.length) {
+    if (nextIndex >= calibrationSteps.length) {
       beginCombat();
       return;
     }
@@ -460,20 +460,20 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   }, [beginCombat]);
 
   const handleCalibrationHand = useCallback((landmarks: NormalizedLandmark[], now: number) => {
-    const step = CALIBRATION_STEPS[calibrationIndexRef.current];
+    const step = calibrationSteps[calibrationIndexRef.current];
     if (!step) return;
     setHandVisible(true);
     if (!calibrationCapturingRef.current) return;
 
-    const rawFeatures = extractHandFeatures(landmarks);
+    const rawFeatures = ExtractHandFeatures(landmarks);
     if (calibrationHoldStartRef.current === null) {
       calibrationHoldStartRef.current = now;
       calibrationSamplesRef.current = [];
     }
 
-    if (calibrationSamplesRef.current.length >= CALIBRATION_MIN_STABLE_SAMPLES) {
-      const previousFeatures = averageVectors(calibrationSamplesRef.current);
-      if (calibrationFeatureDifference(previousFeatures, rawFeatures) >= CALIBRATION_CHANGE_THRESHOLD) {
+    if (calibrationSamplesRef.current.length >= calibrationMinStableSamples) {
+      const previousFeatures = AverageVectors(calibrationSamplesRef.current);
+      if (CalibrationFeatureDifference(previousFeatures, rawFeatures) >= calibrationChangeThreshold) {
         advanceCalibration(
           previousFeatures,
           step,
@@ -485,22 +485,22 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
     calibrationSamplesRef.current.push(rawFeatures);
     const elapsed = now - calibrationHoldStartRef.current;
-    setCalibrationProgress(clamp(elapsed / CALIBRATION_HOLD_MS, 0, 1));
-    if (elapsed >= CALIBRATION_HOLD_MS) {
-      advanceCalibration(averageVectors(calibrationSamplesRef.current), step);
+    setCalibrationProgress(Clamp(elapsed / calibrationHoldMs, 0, 1));
+    if (elapsed >= calibrationHoldMs) {
+      advanceCalibration(AverageVectors(calibrationSamplesRef.current), step);
     }
   }, [advanceCalibration, t]);
 
   const handleNoHand = useCallback((now: number) => {
     setHandVisible(false);
-    if (now - lastHandSeenAtRef.current <= TRACKING_GRACE_MS) return;
+    if (now - lastHandSeenAtRef.current <= trackingGraceMs) return;
     if (phaseRef.current === 'calibration') {
       if (!calibrationCapturingRef.current) return;
       if (calibrationSamplesRef.current.length === 0) return;
-      const step = CALIBRATION_STEPS[calibrationIndexRef.current];
-      if (step && calibrationSamplesRef.current.length >= CALIBRATION_MIN_STABLE_SAMPLES) {
+      const step = calibrationSteps[calibrationIndexRef.current];
+      if (step && calibrationSamplesRef.current.length >= calibrationMinStableSamples) {
         advanceCalibration(
-          averageVectors(calibrationSamplesRef.current),
+          AverageVectors(calibrationSamplesRef.current),
           step,
           t('gesture.calibration.changeStopped'),
         );
@@ -530,7 +530,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     animationFrameRef.current = window.requestAnimationFrame(processFrame);
     const currentPhase = phaseRef.current;
     if (currentPhase !== 'calibration' && currentPhase !== 'combat') return;
-    if (now - lastDetectionAtRef.current < DETECTION_INTERVAL_MS) return;
+    if (now - lastDetectionAtRef.current < detectionIntervalMs) return;
     const video = videoRef.current;
     const landmarker = handLandmarkerRef.current;
     if (!video || !landmarker || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
@@ -541,7 +541,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     try {
       const detection = landmarker.detectForVideo(video, now);
       const landmarks = detection.landmarks[0];
-      drawHandLandmarks(handCanvasRef.current, video, landmarks);
+      DrawHandLandmarks(handCanvasRef.current, video, landmarks);
       if (!landmarks) {
         handleNoHand(now);
         return;
@@ -559,15 +559,15 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   }, [handleCalibrationHand, handleCombatHand, handleNoHand, setPhase, stopVision, t]);
 
   const startCalibration = useCallback(async () => {
-    if (!verifySelectedTrainingUser()) return;
+    if (!VerifySelectedTrainingUser()) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       setVisionError(t('gesture.error.unsupported'));
       setShowVisionError(true);
       return;
     }
-    prepareAudioFeedback(jsPsychRef);
+    PrepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
-    if (appRef.current) resizePixiAppToElement(appRef.current, pixiHostRef.current);
+    if (appRef.current) ResizePixiAppToElement(appRef.current, pixiHostRef.current);
     stopVision();
     setVisionError('');
     setShowVisionError(false);
@@ -599,9 +599,9 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       await video.play();
 
       setStatusMessage(t('gesture.loading.model'));
-      const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
+      const vision = await FilesetResolver.forVisionTasks(mediapipeWasmUrl);
       const landmarker = await HandLandmarker.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: HAND_MODEL_URL },
+        baseOptions: { modelAssetPath: handModelUrl },
         runningMode: 'VIDEO',
         numHands: 1,
         minHandDetectionConfidence: 0.5,
@@ -686,14 +686,14 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         scene.player.y = scene.playerBaseY + Math.sin(time * 0.8) * 2;
       });
       if (phaseRef.current === 'combat') {
-        sceneRef.current = drawBattleScene(app);
+        sceneRef.current = DrawBattleScene(app);
       }
     };
     void initialize();
 
     const onResize = () => {
       if (!appRef.current || phaseRef.current !== 'combat') return;
-      sceneRef.current = drawBattleScene(appRef.current);
+      sceneRef.current = DrawBattleScene(appRef.current);
     };
     window.addEventListener('resize', onResize);
     return () => {
@@ -708,13 +708,13 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   useEffect(() => {
     const app = appRef.current;
     if (!app || phase !== 'combat') return;
-    sceneRef.current = drawBattleScene(app);
+    sceneRef.current = DrawBattleScene(app);
   }, [phase]);
 
-  const activeCalibrationStep = CALIBRATION_STEPS[calibrationIndex];
+  const activeCalibrationStep = calibrationSteps[calibrationIndex];
   const targetModeLabel = targetMode === 'free' ? t('gesture.config.free') : t('gesture.config.directed');
-  const isCustomEnemyHp = !ENEMY_HP_OPTIONS.includes(enemyMaxHp as typeof ENEMY_HP_OPTIONS[number]);
-  const isCustomHoldDuration = !HOLD_DURATION_OPTIONS.includes(holdDuration as typeof HOLD_DURATION_OPTIONS[number]);
+  const isCustomEnemyHp = !enemyHpOptions.includes(enemyMaxHp as typeof enemyHpOptions[number]);
+  const isCustomHoldDuration = !holdDurationOptions.includes(holdDuration as typeof holdDurationOptions[number]);
   const resultRows = useMemo(() => result?.Gesture_Stats ?? [], [result]);
 
   const downloadResult = useCallback(() => {
@@ -739,7 +739,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       stat.Success_Rate_Percent,
       stat.Average_Similarity_Percent,
     ]);
-    downloadCsvFile(
+    DownloadCsvFile(
       [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\n'),
       `gesture_battler_${Date.now()}.csv`,
     );
@@ -796,7 +796,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                   <span>{enemyMaxHp}</span>
                 </div>
                 <div className="training-option-grid training-option-grid-four">
-                  {ENEMY_HP_OPTIONS.map((value) => (
+                  {enemyHpOptions.map((value) => (
                     <button
                       key={value}
                       type="button"
@@ -819,7 +819,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                       step="1"
                       value={customEnemyHp}
                       onChange={(event) => {
-                        const value = clamp(Number(event.target.value), 1, 100);
+                        const value = Clamp(Number(event.target.value), 1, 100);
                         setCustomEnemyHp(value);
                         setEnemyMaxHp(value);
                       }}
@@ -839,7 +839,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                   <span>{holdDuration}s</span>
                 </div>
                 <div className="training-option-grid training-option-grid-four">
-                  {HOLD_DURATION_OPTIONS.map((value) => (
+                  {holdDurationOptions.map((value) => (
                     <button
                       key={value}
                       type="button"
@@ -862,7 +862,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                       step="0.1"
                       value={customHoldDuration}
                       onChange={(event) => {
-                        const value = clamp(Number(event.target.value), 0.5, 10);
+                        const value = Clamp(Number(event.target.value), 0.5, 10);
                         setCustomHoldDuration(value);
                         setHoldDuration(value);
                       }}
@@ -962,7 +962,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
           <div className="gesture-calibration-card">
             <div className="gesture-calibration-copy">
               <span className="gesture-step-count">
-                {t('gesture.calibration.step', { current: calibrationIndex + 1, total: CALIBRATION_STEPS.length })}
+                {t('gesture.calibration.step', { current: calibrationIndex + 1, total: calibrationSteps.length })}
               </span>
               <h1>
                 {t(activeCalibrationStep.titleKey, { gesture: activeCalibrationStep.gesture })}
@@ -1102,9 +1102,9 @@ function GestureCue({ gesture }: { gesture: 0 | GestureId }) {
   );
 }
 
-function extractHandFeatures(landmarks: NormalizedLandmark[]): number[] {
-  const palmCenter = averagePoints([landmarks[0], landmarks[5], landmarks[9], landmarks[13], landmarks[17]]);
-  const palmWidth = Math.max(distance3d(landmarks[5], landmarks[17]), 0.025);
+function ExtractHandFeatures(landmarks: NormalizedLandmark[]): number[] {
+  const palmCenter = AveragePoints([landmarks[0], landmarks[5], landmarks[9], landmarks[13], landmarks[17]]);
+  const palmWidth = Math.max(Distance3d(landmarks[5], landmarks[17]), 0.025);
   const tips = [4, 8, 12, 16, 20];
   const mcps = [2, 5, 9, 13, 17];
   const joints = [
@@ -1116,33 +1116,33 @@ function extractHandFeatures(landmarks: NormalizedLandmark[]): number[] {
   ];
   const features: number[] = [];
 
-  tips.forEach((tip) => features.push(distance3d(landmarks[tip], palmCenter) / palmWidth));
-  tips.forEach((tip, index) => features.push(distance3d(landmarks[tip], landmarks[mcps[index]]) / palmWidth));
+  tips.forEach((tip) => features.push(Distance3d(landmarks[tip], palmCenter) / palmWidth));
+  tips.forEach((tip, index) => features.push(Distance3d(landmarks[tip], landmarks[mcps[index]]) / palmWidth));
   joints.forEach(([base, firstJoint, secondJoint, tip]) => {
-    features.push(jointAngle(landmarks[base], landmarks[firstJoint], landmarks[secondJoint]) / 180);
-    features.push(jointAngle(landmarks[firstJoint], landmarks[secondJoint], landmarks[tip]) / 180);
+    features.push(JointAngle(landmarks[base], landmarks[firstJoint], landmarks[secondJoint]) / 180);
+    features.push(JointAngle(landmarks[firstJoint], landmarks[secondJoint], landmarks[tip]) / 180);
   });
   return features.map((value) => Number.isFinite(value) ? value : 0);
 }
 
-function normalizeFeatures(features: number[], rom: RomProfile): number[] {
+function NormalizeFeatures(features: number[], rom: RomProfile): number[] {
   if (!rom.closed || !rom.open) return [...features];
   return features.map((value, index) => {
     if (index >= 5) return value;
     const closed = rom.closed?.[index] ?? 0;
     const open = rom.open?.[index] ?? 1;
     const span = Math.max(Math.abs(open - closed), 0.08);
-    return clamp((value - closed) / span, -0.25, 1.25);
+    return Clamp((value - closed) / span, -0.25, 1.25);
   });
 }
 
-function classifyGesture(
+function ClassifyGesture(
   features: number[],
   profiles: Partial<Record<GestureId, number[]>>,
 ): { gesture: GestureId | null; similarity: number } {
   let bestGesture: GestureId | null = null;
   let bestSimilarity = 0;
-  GESTURES.forEach((gesture) => {
+  gestures.forEach((gesture) => {
     const profile = profiles[gesture];
     if (!profile || profile.length !== features.length) return;
     let weightedDifference = 0;
@@ -1152,7 +1152,7 @@ function classifyGesture(
       weightedDifference += Math.min(Math.abs(features[index] - profile[index]), 1) * weight;
       totalWeight += weight;
     }
-    const similarity = clamp(1 - weightedDifference / totalWeight / 0.42, 0, 1);
+    const similarity = Clamp(1 - weightedDifference / totalWeight / 0.42, 0, 1);
     if (similarity > bestSimilarity) {
       bestSimilarity = similarity;
       bestGesture = gesture;
@@ -1161,7 +1161,7 @@ function classifyGesture(
   return { gesture: bestGesture, similarity: bestSimilarity };
 }
 
-function averageVectors(vectors: number[][]): number[] {
+function AverageVectors(vectors: number[][]): number[] {
   if (vectors.length === 0) return [];
   const average = new Array(vectors[0].length).fill(0);
   vectors.forEach((vector) => vector.forEach((value, index) => {
@@ -1170,7 +1170,7 @@ function averageVectors(vectors: number[][]): number[] {
   return average;
 }
 
-function calibrationFeatureDifference(previous: number[], current: number[]): number {
+function CalibrationFeatureDifference(previous: number[], current: number[]): number {
   if (previous.length === 0 || previous.length !== current.length) return 1;
   const total = previous.reduce((sum, value, index) => {
     const scale = index < 10 ? 1.5 : 1;
@@ -1179,7 +1179,7 @@ function calibrationFeatureDifference(previous: number[], current: number[]): nu
   return total / previous.length;
 }
 
-function averagePoints(points: NormalizedLandmark[]): NormalizedLandmark {
+function AveragePoints(points: NormalizedLandmark[]): NormalizedLandmark {
   const total = points.reduce(
     (sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y, z: sum.z + point.z }),
     { x: 0, y: 0, z: 0 },
@@ -1192,11 +1192,11 @@ function averagePoints(points: NormalizedLandmark[]): NormalizedLandmark {
   };
 }
 
-function distance3d(left: Pick<NormalizedLandmark, 'x' | 'y' | 'z'>, right: Pick<NormalizedLandmark, 'x' | 'y' | 'z'>): number {
+function Distance3d(left: Pick<NormalizedLandmark, 'x' | 'y' | 'z'>, right: Pick<NormalizedLandmark, 'x' | 'y' | 'z'>): number {
   return Math.hypot(left.x - right.x, left.y - right.y, left.z - right.z);
 }
 
-function jointAngle(
+function JointAngle(
   first: NormalizedLandmark,
   middle: NormalizedLandmark,
   last: NormalizedLandmark,
@@ -1204,11 +1204,11 @@ function jointAngle(
   const left = { x: first.x - middle.x, y: first.y - middle.y, z: first.z - middle.z };
   const right = { x: last.x - middle.x, y: last.y - middle.y, z: last.z - middle.z };
   const denominator = Math.max(Math.hypot(left.x, left.y, left.z) * Math.hypot(right.x, right.y, right.z), 1e-6);
-  const cosine = clamp((left.x * right.x + left.y * right.y + left.z * right.z) / denominator, -1, 1);
+  const cosine = Clamp((left.x * right.x + left.y * right.y + left.z * right.z) / denominator, -1, 1);
   return Math.acos(cosine) * (180 / Math.PI);
 }
 
-function drawHandLandmarks(
+function DrawHandLandmarks(
   canvas: HTMLCanvasElement | null,
   video: HTMLVideoElement,
   landmarks: NormalizedLandmark[] | undefined,
@@ -1241,23 +1241,23 @@ function drawHandLandmarks(
   });
 }
 
-function randomGesture(): GestureId {
-  return GESTURES[Math.floor(Math.random() * GESTURES.length)];
+function RandomGesture(): GestureId {
+  return gestures[Math.floor(Math.random() * gestures.length)];
 }
 
-function chooseNextGesture(previous: GestureId): GestureId {
-  const options = GESTURES.filter((gesture) => gesture !== previous);
+function ChooseNextGesture(previous: GestureId): GestureId {
+  const options = gestures.filter((gesture) => gesture !== previous);
   return options[Math.floor(Math.random() * options.length)];
 }
 
-function resizePixiAppToElement(app: Application, element: HTMLElement | null): void {
+function ResizePixiAppToElement(app: Application, element: HTMLElement | null): void {
   const rect = element?.getBoundingClientRect();
   const width = Math.max(1, Math.round(rect?.width || window.innerWidth));
   const height = Math.max(1, Math.round(rect?.height || window.innerHeight));
   app.renderer.resize(width, height);
 }
 
-function drawBattleScene(app: Application): BattleScene {
+function DrawBattleScene(app: Application): BattleScene {
   app.stage.removeChildren().forEach((child) => child.destroy({ children: true }));
   const width = app.renderer.width;
   const height = app.renderer.height;
@@ -1273,18 +1273,18 @@ function drawBattleScene(app: Application): BattleScene {
   background.ellipse(width * 0.24, height * 0.72, width * 0.2, height * 0.065).fill({ color: 0x62745b, alpha: 0.28 });
   stage.addChild(background);
 
-  const enemy = createPixelEnemy();
+  const enemy = CreatePixelEnemy();
   enemy.x = width * 0.73;
-  const enemyBaseY = clamp(height * 0.32, 130, height * 0.4);
+  const enemyBaseY = Clamp(height * 0.32, 130, height * 0.4);
   enemy.y = enemyBaseY;
-  enemy.scale.set(clamp(width / 1050, 0.7, 1.2));
+  enemy.scale.set(Clamp(width / 1050, 0.7, 1.2));
   stage.addChild(enemy);
 
-  const player = createPixelHero();
+  const player = CreatePixelHero();
   player.x = width * 0.23;
-  const playerBaseY = clamp(height * 0.54, 220, height * 0.6);
+  const playerBaseY = Clamp(height * 0.54, 220, height * 0.6);
   player.y = playerBaseY;
-  player.scale.set(clamp(width / 1100, 0.68, 1.15));
+  player.scale.set(Clamp(width / 1100, 0.68, 1.15));
   stage.addChild(player);
 
   const effects = new Container();
@@ -1292,7 +1292,7 @@ function drawBattleScene(app: Application): BattleScene {
   return { enemy, player, effects, width, height, enemyBaseY, playerBaseY };
 }
 
-function createPixelEnemy(): Container {
+function CreatePixelEnemy(): Container {
   const enemy = new Container();
   const body = new Graphics();
   body.rect(-72, -16, 144, 70).fill(0x5c86a3);
@@ -1312,7 +1312,7 @@ function createPixelEnemy(): Container {
   return enemy;
 }
 
-function createPixelHero(): Container {
+function CreatePixelHero(): Container {
   const hero = new Container();
   const body = new Graphics();
   body.rect(-46, -12, 92, 88).fill(0x1f4f78);
@@ -1330,13 +1330,13 @@ function createPixelHero(): Container {
   return hero;
 }
 
-function animateAttack(
+function AnimateAttack(
   app: Application | null,
   scene: BattleScene | null,
   gesture: GestureId,
 ): Promise<void> {
   if (!app || !scene) return Promise.resolve();
-  const color = MOVE_COLORS[gesture - 1];
+  const color = moveColors[gesture - 1];
   const projectile = new Graphics();
   projectile.rect(-10, -10, 20, 20).fill(color);
   projectile.rect(-4, -18, 8, 8).fill(0xffffff);
@@ -1353,7 +1353,7 @@ function animateAttack(
     const duration = 620;
     const tick = (ticker: Ticker) => {
       elapsed += ticker.deltaMS;
-      const progress = clamp(elapsed / duration, 0, 1);
+      const progress = Clamp(elapsed / duration, 0, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       projectile.x = startX + (endX - startX) * eased;
       projectile.y = startY + (endY - startY) * eased - Math.sin(progress * Math.PI) * 80;

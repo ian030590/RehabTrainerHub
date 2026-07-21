@@ -1,15 +1,15 @@
 import { pinyin } from 'pinyin-pro';
 
-export const VOICE_MATCH_SIMILARITY_THRESHOLD = 0.3;
+export const voiceMatchSimilarityThreshold = 0.3;
 
-export function normalizeSpeechText(value: string): string {
+export function NormalizeSpeechText(value: string): string {
   return value
     .normalize('NFKC')
     .toLocaleLowerCase()
     .replace(/[^\p{L}\p{N}]/gu, '');
 }
 
-export function buildVoskGrammar(
+export function BuildVoskGrammar(
   words: string[],
   language: 'zh' | 'en',
 ): string {
@@ -20,29 +20,29 @@ export function buildVoskGrammar(
   return JSON.stringify([...new Set([...phrases, '[unk]'])]);
 }
 
-export function calculateBestSpeechSimilarity(transcript: string, target: string): number {
-  const usePinyin = containsHanCharacter(target);
+export function CalculateBestSpeechSimilarity(transcript: string, target: string): number {
+  const usePinyin = ContainsHanCharacter(target);
   const normalizedTarget = usePinyin
-    ? normalizeSpeechPronunciation(target)
-    : normalizeSpeechText(target);
+    ? NormalizeSpeechPronunciation(target)
+    : NormalizeSpeechText(target);
   const candidates = usePinyin
-    ? buildPinyinCandidates(transcript, getPinyinSyllables(target).length)
+    ? BuildPinyinCandidates(transcript, GetPinyinSyllables(target).length)
     : new Set([
-        normalizeSpeechText(transcript),
+        NormalizeSpeechText(transcript),
         ...transcript
           .split(/[\s,.;:!?，。！？、；：]+/u)
-          .map(normalizeSpeechText),
+          .map(NormalizeSpeechText),
       ]);
   return Math.max(
     0,
     ...[...candidates]
       .filter(Boolean)
-      .map((candidate) => calculateSimilarity(candidate, normalizedTarget)),
+      .map((candidate) => CalculateSimilarity(candidate, normalizedTarget)),
   );
 }
 
-export function normalizeSpeechPronunciation(value: string): string {
-  return normalizeSpeechText(pinyin(value.normalize('NFKC'), {
+export function NormalizeSpeechPronunciation(value: string): string {
+  return NormalizeSpeechText(pinyin(value.normalize('NFKC'), {
     toneType: 'none',
     traditional: true,
     nonZh: 'consecutive',
@@ -51,10 +51,10 @@ export function normalizeSpeechPronunciation(value: string): string {
   }));
 }
 
-function buildPinyinCandidates(transcript: string, targetSyllableCount: number): Set<string> {
-  const syllables = getPinyinSyllables(transcript);
+function BuildPinyinCandidates(transcript: string, targetSyllableCount: number): Set<string> {
+  const syllables = GetPinyinSyllables(transcript);
   const candidates = new Set<string>([
-    normalizeSpeechPronunciation(transcript),
+    NormalizeSpeechPronunciation(transcript),
     ...syllables,
   ]);
   const windowSize = Math.max(1, targetSyllableCount);
@@ -64,7 +64,7 @@ function buildPinyinCandidates(transcript: string, targetSyllableCount: number):
   return candidates;
 }
 
-function getPinyinSyllables(value: string): string[] {
+function GetPinyinSyllables(value: string): string[] {
   return pinyin(value.normalize('NFKC'), {
     toneType: 'none',
     type: 'array',
@@ -72,15 +72,15 @@ function getPinyinSyllables(value: string): string[] {
     nonZh: 'consecutive',
     v: true,
   }).flatMap((part) => part.split(/[^\p{L}\p{N}]+/u))
-    .map(normalizeSpeechText)
+    .map(NormalizeSpeechText)
     .filter(Boolean);
 }
 
-function containsHanCharacter(value: string): boolean {
+function ContainsHanCharacter(value: string): boolean {
   return /\p{Script=Han}/u.test(value);
 }
 
-export function levenshteinDistance(a: string, b: string): number {
+export function LevenshteinDistance(a: string, b: string): number {
   if (a === b) return 0;
   if (!a) return [...b].length;
   if (!b) return [...a].length;
@@ -103,8 +103,8 @@ export function levenshteinDistance(a: string, b: string): number {
   return previous[right.length];
 }
 
-export function calculateSimilarity(a: string, b: string): number {
+export function CalculateSimilarity(a: string, b: string): number {
   const maxLength = Math.max([...a].length, [...b].length);
   if (maxLength === 0) return 1;
-  return 1 - levenshteinDistance(a, b) / maxLength;
+  return 1 - LevenshteinDistance(a, b) / maxLength;
 }

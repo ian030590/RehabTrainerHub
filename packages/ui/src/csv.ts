@@ -1,9 +1,9 @@
-export const CSV_UTF8_BOM = '\uFEFF';
+export const csvUtf8Bom = '\uFEFF';
 
 export type CsvCellValue = unknown;
 export type CsvRow = CsvCellValue[];
 
-export function toCsvCell(value: CsvCellValue): string {
+export function ToCsvCell(value: CsvCellValue): string {
   if (value === null || value === undefined) return '';
 
   const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
@@ -12,10 +12,10 @@ export function toCsvCell(value: CsvCellValue): string {
   return `"${text.replace(/"/g, '""')}"`;
 }
 
-export function createCsvContent(rows: CsvRow[]): string {
-  return rows.map((row) => row.map(toCsvCell).join(',')).join('\n');
+export function CreateCsvContent(rows: CsvRow[]): string {
+  return rows.map((row) => row.map(ToCsvCell).join(',')).join('\n');
 }
 
-export function ensureCsvUtf8Bom(content: string): string {
-  return content.startsWith(CSV_UTF8_BOM) ? content : `${CSV_UTF8_BOM}${content}`;
+export function EnsureCsvUtf8Bom(content: string): string {
+  return content.startsWith(csvUtf8Bom) ? content : `${csvUtf8Bom}${content}`;
 }

@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
-import { exitFullscreenIfActive } from '../fullscreen';
+import { ExitFullscreenIfActive } from '../fullscreen';
 
 export interface TrainingResultActionsProps {
   downloadLabel: ReactNode;
@@ -21,7 +21,7 @@ export function TrainingResultActions({
   className = 'results-actions',
 }: TrainingResultActionsProps) {
   useEffect(() => {
-    void exitFullscreenIfActive();
+    void ExitFullscreenIfActive();
   }, []);
 
   return (

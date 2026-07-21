@@ -17,16 +17,16 @@ const defaultPublicAppUrls = {
   BRAINTRAINER_URL: 'https://brain.trainerhub.cc',
 };
 
-function toPosixPath(path) {
+function ToPosixPath(path) {
   return path.replaceAll('\\', '/');
 }
 
-function readTomlString(toml, key) {
+function ReadTomlString(toml, key) {
   const match = toml.match(new RegExp(`^\\s*${key}\\s*=\\s*["']([^"']+)["']\\s*$`, 'm'));
   return match?.[1];
 }
 
-function discoverPagesProjects() {
+function DiscoverPagesProjects() {
   return readdirSync(appsRoot)
     .map((entry) => join(appsRoot, entry))
     .filter((entryPath) => statSync(entryPath).isDirectory())
@@ -35,13 +35,13 @@ function discoverPagesProjects() {
       if (!existsSync(wranglerPath)) return null;
 
       const toml = readFileSync(wranglerPath, 'utf8');
-      const projectName = readTomlString(toml, 'name');
+      const projectName = ReadTomlString(toml, 'name');
       if (!projectName) {
-        throw new Error(`${toPosixPath(relative(repoRoot, wranglerPath))} must define name.`);
+        throw new Error(`${ToPosixPath(relative(repoRoot, wranglerPath))} must define name.`);
       }
 
       return {
-        appPath: toPosixPath(relative(repoRoot, appDir)),
+        appPath: ToPosixPath(relative(repoRoot, appDir)),
         projectName,
       };
     })
@@ -49,11 +49,11 @@ function discoverPagesProjects() {
     .sort((a, b) => a.appPath.localeCompare(b.appPath));
 }
 
-function getAuthBaseUrl() {
+function GetAuthBaseUrl() {
   return defaultPublicAppUrls.REHABTRAINERHUB_URL;
 }
 
-function collectAllowedOrigins(authBaseUrl) {
+function CollectAllowedOrigins(authBaseUrl) {
   const origins = new Set([
     authBaseUrl,
     ...Object.values(defaultPublicAppUrls),
@@ -62,7 +62,7 @@ function collectAllowedOrigins(authBaseUrl) {
   return [...origins].join(',');
 }
 
-function requireEnv(name) {
+function RequireEnv(name) {
   const value = process.env[name]?.trim();
   if (!value && !dryRun) {
     throw new Error(`${name} must be provided as a GitHub Actions secret or environment variable.`);
@@ -70,7 +70,7 @@ function requireEnv(name) {
   return value || `<${name}>`;
 }
 
-function getProjectSecrets(project, authBaseUrl, allowedOrigins) {
+function GetProjectSecrets(project, authBaseUrl, allowedOrigins) {
   const hubUrl = defaultPublicAppUrls.REHABTRAINERHUB_URL;
   const strokeUrl = defaultPublicAppUrls.STROKETRAINER_URL;
   const visionUrl = defaultPublicAppUrls.VISIONTRAINER_URL;
@@ -97,14 +97,14 @@ function getProjectSecrets(project, authBaseUrl, allowedOrigins) {
     ...sharedClientConfig,
     AUTH_BASE_URL: authBaseUrl,
     AUTH_ALLOWED_ORIGINS: allowedOrigins,
-    AUTH_SESSION_SECRET: requireEnv('AUTH_SESSION_SECRET'),
-    AUTH_STATE_SECRET: requireEnv('AUTH_STATE_SECRET'),
-    GOOGLE_CLIENT_ID: requireEnv('GOOGLE_CLIENT_ID'),
-    GOOGLE_CLIENT_SECRET: requireEnv('GOOGLE_CLIENT_SECRET'),
+    AUTH_SESSION_SECRET: RequireEnv('AUTH_SESSION_SECRET'),
+    AUTH_STATE_SECRET: RequireEnv('AUTH_STATE_SECRET'),
+    GOOGLE_CLIENT_ID: RequireEnv('GOOGLE_CLIENT_ID'),
+    GOOGLE_CLIENT_SECRET: RequireEnv('GOOGLE_CLIENT_SECRET'),
   };
 }
 
-function getCommand(file, args) {
+function GetCommand(file, args) {
   if (process.platform !== 'win32') return { file, args };
   return {
     file: process.env.ComSpec ?? 'cmd.exe',
@@ -112,16 +112,16 @@ function getCommand(file, args) {
   };
 }
 
-function shellQuote(value) {
+function ShellQuote(value) {
   return /[\s"'`$]/.test(value) ? JSON.stringify(value) : value;
 }
 
-function runWrangler(args) {
+function RunWrangler(args) {
   const commandArgs = [...wranglerPrefix, ...args];
-  console.log(`$ npx ${commandArgs.map(shellQuote).join(' ')}`);
+  console.log(`$ npx ${commandArgs.map(ShellQuote).join(' ')}`);
   if (dryRun) return;
 
-  const command = getCommand('npx', commandArgs);
+  const command = GetCommand('npx', commandArgs);
   const result = spawnSync(command.file, command.args, {
     cwd: repoRoot,
     env: process.env,
@@ -134,14 +134,14 @@ function runWrangler(args) {
   }
 }
 
-async function main() {
-  const projects = discoverPagesProjects();
+async function Main() {
+  const projects = DiscoverPagesProjects();
   if (projects.length === 0) {
     throw new Error('No Cloudflare Pages apps found under apps/*/wrangler.toml.');
   }
 
-  const authBaseUrl = getAuthBaseUrl();
-  const allowedOrigins = collectAllowedOrigins(authBaseUrl);
+  const authBaseUrl = GetAuthBaseUrl();
+  const allowedOrigins = CollectAllowedOrigins(authBaseUrl);
   const tempDir = dryRun ? '' : await mkdtemp(join(tmpdir(), 'rehab-auth-env-'));
 
   try {
@@ -149,7 +149,7 @@ async function main() {
     console.log(`Auth API base: ${authBaseUrl}`);
 
     for (const project of projects) {
-      const secrets = getProjectSecrets(project, authBaseUrl, allowedOrigins);
+      const secrets = GetProjectSecrets(project, authBaseUrl, allowedOrigins);
       const secretNames = Object.keys(secrets).sort().join(', ');
       console.log(`- ${project.projectName}: ${secretNames}`);
 
@@ -161,7 +161,7 @@ async function main() {
         await writeFile(secretFile, JSON.stringify(secrets, null, 2), 'utf8');
       }
 
-      runWrangler([
+      RunWrangler([
         'pages',
         'secret',
         'bulk',
@@ -176,4 +176,4 @@ async function main() {
   }
 }
 
-await main();
+await Main();

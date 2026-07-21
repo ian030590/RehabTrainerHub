@@ -2,13 +2,13 @@ import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Sprite, Texture, Text } from 'pixi.js';
 import {
-  attachPixiTrialCanvas,
-  cleanupPixiTrial,
-  createPixiTrialContainer,
-  runPixiTrial,
+  AttachPixiTrialCanvas,
+  CleanupPixiTrial,
+  CreatePixiTrialContainer,
+  RunPixiTrial,
 } from '../../utils/pixiPool';
 import { typography } from '../../theme';
-import { SoundManager } from '../../utils/soundManager';
+import { soundManager } from '../../utils/soundManager';
 
 const info = {
   name: 'pixi-gabor-patching',
@@ -78,7 +78,7 @@ interface FloatingScore {
   lifetime: number;
 }
 
-const GABOR_TEXTURE_SPECS = [
+const gaborTextureSpecs = [
   { size: 256, freq: 0.05, angle: 0 },
   { size: 256, freq: 0.08, angle: Math.PI / 4 },
   { size: 256, freq: 0.03, angle: Math.PI / 2 },
@@ -86,17 +86,17 @@ const GABOR_TEXTURE_SPECS = [
 
 const gaborTextureCache = new Map<string, Texture>();
 
-function getGaborTexture(size: number, freq: number, angle: number): Texture {
+function GetGaborTexture(size: number, freq: number, angle: number): Texture {
   const key = `${size}:${freq}:${angle}`;
   const cached = gaborTextureCache.get(key);
   if (cached) return cached;
 
-  const texture = createGaborTexture(size, freq, angle);
+  const texture = CreateGaborTexture(size, freq, angle);
   gaborTextureCache.set(key, texture);
   return texture;
 }
 
-function createGaborTexture(size: number, freq: number, angle: number): Texture {
+function CreateGaborTexture(size: number, freq: number, angle: number): Texture {
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -146,31 +146,31 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
 
   constructor(private jsPsych: JsPsych) {}
 
-  trial(display_element: HTMLElement, trial: TrialType<Info>) {
-    const container = createPixiTrialContainer(
-      display_element,
+  trial(displayElement: HTMLElement, trial: TrialType<Info>) {
+    const container = CreatePixiTrialContainer(
+      displayElement,
       'width:100%;height:100%;position:relative;overflow:hidden;cursor:default;',
     );
 
-    const HUD = document.createElement('div');
-    HUD.style.position = 'absolute';
-    HUD.style.top = '20px';
-    HUD.style.left = '20px';
-    HUD.style.right = '20px';
-    HUD.style.display = 'flex';
-    HUD.style.justifyContent = 'space-between';
-    HUD.style.pointerEvents = 'none';
-    HUD.style.fontFamily = typography.fontFamily;
-    HUD.style.fontSize = '24px';
-    HUD.style.fontWeight = 'bold';
-    HUD.style.color = '#FFFFFF';
-    HUD.style.textShadow = '0 2px 4px rgba(0,0,0,0.5)';
+    const hud = document.createElement('div');
+    hud.style.position = 'absolute';
+    hud.style.top = '20px';
+    hud.style.left = '20px';
+    hud.style.right = '20px';
+    hud.style.display = 'flex';
+    hud.style.justifyContent = 'space-between';
+    hud.style.pointerEvents = 'none';
+    hud.style.fontFamily = typography.fontFamily;
+    hud.style.fontSize = '24px';
+    hud.style.fontWeight = 'bold';
+    hud.style.color = '#FFFFFF';
+    hud.style.textShadow = '0 2px 4px rgba(0,0,0,0.5)';
 
     const timerEl = document.createElement('div');
     const scoreEl = document.createElement('div');
-    HUD.appendChild(timerEl);
-    HUD.appendChild(scoreEl);
-    container.appendChild(HUD);
+    hud.appendChild(timerEl);
+    hud.appendChild(scoreEl);
+    container.appendChild(hud);
 
     this.score = 0;
     this.hits = 0;
@@ -178,20 +178,20 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     this.floatingScores = [];
     this.isGameOver = false;
 
-    runPixiTrial(display_element, (app) => {
+    RunPixiTrial(displayElement, (app) => {
       this.app = app;
-      attachPixiTrialCanvas(container);
+      AttachPixiTrialCanvas(container);
       app.renderer.background.color = trial.background_color ?? '#808080';
       
-      this.textures = GABOR_TEXTURE_SPECS.map((spec) => (
-        getGaborTexture(spec.size, spec.freq, spec.angle)
+      this.textures = gaborTextureSpecs.map((spec) => (
+        GetGaborTexture(spec.size, spec.freq, spec.angle)
       ));
 
       this.gameStartTime = performance.now();
 
       this.keydownListener = (event: KeyboardEvent) => {
         if (event.code === 'Escape') {
-          this.endGame(trial, display_element);
+          this.endGame(trial, displayElement);
         }
       };
       window.addEventListener('keydown', this.keydownListener);
@@ -249,15 +249,15 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
       };
 
       const loop = (time: number) => {
-        if (!display_element.isConnected) {
-          this.endGame(trial, display_element);
+        if (!displayElement.isConnected) {
+          this.endGame(trial, displayElement);
           return;
         }
         if (this.isGameOver || !this.app) return;
         
         const elapsed = time - this.gameStartTime;
         if (elapsed >= (trial.duration_ms ?? 60000)) {
-          this.endGame(trial, display_element);
+          this.endGame(trial, displayElement);
           return;
         }
 
@@ -329,7 +329,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
 
     this.score += finalPoints;
     this.hits += 1;
-    SoundManager.playPop();
+    soundManager.playPop();
 
     const floatText = new Text({
       text: finalPoints.toString(),
@@ -368,7 +368,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     spot.sprite.destroy();
   }
 
-  private endGame(trial: TrialType<Info>, display_element: HTMLElement) {
+  private endGame(trial: TrialType<Info>, displayElement: HTMLElement) {
     if (this.isGameOver) return;
     this.isGameOver = true;
     cancelAnimationFrame(this.gameLoopRaf);
@@ -380,7 +380,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     }
 
     if (this.app) {
-      cleanupPixiTrial(display_element);
+      CleanupPixiTrial(displayElement);
       this.app = null;
     }
 

@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { ReadableHome } from './ReadableHome';
-import { HUB_FULL_NAME } from './hubBrand';
-import { createSeoMetadata, siteDescription } from './seo';
+import { hubFullName } from './hubBrand';
+import { CreateSeoMetadata, siteDescription } from './seo';
 
-export const metadata: Metadata = createSeoMetadata({
-  title: HUB_FULL_NAME,
+export const metadata: Metadata = CreateSeoMetadata({
+  title: hubFullName,
   description: siteDescription,
   path: '/',
   absoluteTitle: true,

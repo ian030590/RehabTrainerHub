@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { exitFullscreenIfActive } from '../fullscreen';
+import { ExitFullscreenIfActive } from '../fullscreen';
 
 export interface UseTrainingAbortArgs {
   active: boolean;
@@ -32,7 +32,7 @@ export function useTrainingAbort({
       abortingRef.current = true;
       onAbortRef.current();
       if (exitFullscreen) {
-        void exitFullscreenIfActive();
+        void ExitFullscreenIfActive();
       }
       window.setTimeout(() => {
         abortingRef.current = false;

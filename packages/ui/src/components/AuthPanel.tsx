@@ -1,22 +1,22 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  AUTH_CHANGED_EVENT,
+  authChangedEvent,
   type AuthLocale,
   type AuthUser,
   type HabitStatus,
   type RehabProfile,
-  buildAuthStartUrl,
-  clearAuthToken,
-  fetchCurrentAuthUser,
-  fetchSharedAuthSession,
-  getAuthApiOrigin,
-  isAuthSessionMessage,
-  loginPasswordAccount,
-  logoutAuthSession,
-  openAuthPopup,
-  registerPasswordAccount,
-  saveAuthProfile,
-  setAuthToken,
+  BuildAuthStartUrl,
+  ClearAuthToken,
+  FetchCurrentAuthUser,
+  FetchSharedAuthSession,
+  GetAuthApiOrigin,
+  IsAuthSessionMessage,
+  LoginPasswordAccount,
+  LogoutAuthSession,
+  OpenAuthPopup,
+  RegisterPasswordAccount,
+  SaveAuthProfile,
+  SetAuthToken,
 } from '../auth/authClient';
 
 interface AuthPanelProps {
@@ -216,7 +216,7 @@ const defaultAlcoholFrequency = {
   unit: 'cups',
 } as const;
 
-function createEmptyProfile(): RehabProfile {
+function CreateEmptyProfile(): RehabProfile {
   return {
     ageRange: '',
     gender: '',
@@ -229,7 +229,7 @@ function createEmptyProfile(): RehabProfile {
   };
 }
 
-function createEmptyAccountForm() {
+function CreateEmptyAccountForm() {
   return {
     displayName: '',
     email: '',
@@ -237,17 +237,17 @@ function createEmptyAccountForm() {
   };
 }
 
-function toTextKey(locale: AuthLocale | undefined): keyof typeof text {
+function ToTextKey(locale: AuthLocale | undefined): keyof typeof text {
   return locale === 'en' ? 'en' : 'zhTW';
 }
 
-function normalizeProfile(profile: RehabProfile | undefined): RehabProfile {
+function NormalizeProfile(profile: RehabProfile | undefined): RehabProfile {
   return {
-    ...createEmptyProfile(),
+    ...CreateEmptyProfile(),
     ...profile,
     chronicDiagnoses: profile?.chronicDiagnoses ?? [],
-    smokingFrequency: profile?.smokingFrequency ?? createEmptyProfile().smokingFrequency,
-    alcoholFrequency: profile?.alcoholFrequency ?? createEmptyProfile().alcoholFrequency,
+    smokingFrequency: profile?.smokingFrequency ?? CreateEmptyProfile().smokingFrequency,
+    alcoholFrequency: profile?.alcoholFrequency ?? CreateEmptyProfile().alcoholFrequency,
   };
 }
 
@@ -259,19 +259,19 @@ export function AuthPanel({
   privacyHref,
   onAuthChange,
 }: AuthPanelProps) {
-  const labels = text[toTextKey(locale)];
+  const labels = text[ToTextKey(locale)];
   const [user, setUser] = useState<AuthUser | null>(null);
 
   const [error, setError] = useState('');
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [accountDialogMode, setAccountDialogMode] = useState<AccountDialogMode | null>(null);
-  const [accountForm, setAccountForm] = useState(createEmptyAccountForm);
+  const [accountForm, setAccountForm] = useState(CreateEmptyAccountForm);
   const [accountError, setAccountError] = useState('');
   const [isSubmittingAccount, setIsSubmittingAccount] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [profile, setProfile] = useState<RehabProfile>(createEmptyProfile);
+  const [profile, setProfile] = useState<RehabProfile>(CreateEmptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const authOrigin = useMemo(() => getAuthApiOrigin(apiBase), [apiBase]);
+  const authOrigin = useMemo(() => GetAuthApiOrigin(apiBase), [apiBase]);
   const resolvedPrivacyHref = useMemo(() => {
     if (privacyHref) return privacyHref;
     return authOrigin ? `${authOrigin}/privacy/` : '/privacy/';
@@ -284,10 +284,10 @@ export function AuthPanel({
 
     setPrivacyAccepted(false);
     setAccountDialogMode(null);
-    setAccountForm(createEmptyAccountForm());
+    setAccountForm(CreateEmptyAccountForm());
     setAccountError('');
     if (!nextUser.profileCompleted) {
-      setProfile(normalizeProfile(nextUser.profile));
+      setProfile(NormalizeProfile(nextUser.profile));
       setIsProfileOpen(true);
     }
   }, [onAuthChange]);
@@ -295,11 +295,11 @@ export function AuthPanel({
   const loadUser = useCallback(async (): Promise<AuthUser | null> => {
     setError('');
     try {
-      let nextUser = await fetchCurrentAuthUser(apiBase);
+      let nextUser = await FetchCurrentAuthUser(apiBase);
       if (!nextUser) {
-        const sharedSession = await fetchSharedAuthSession(apiBase);
+        const sharedSession = await FetchSharedAuthSession(apiBase);
         if (sharedSession) {
-          setAuthToken(sharedSession.token, false);
+          SetAuthToken(sharedSession.token, false);
           nextUser = sharedSession.user;
         }
       }
@@ -320,15 +320,15 @@ export function AuthPanel({
     const handleAuthChange = () => void loadUser();
     const handleMessage = (event: MessageEvent) => {
       if (authOrigin && event.origin !== authOrigin) return;
-      if (!isAuthSessionMessage(event.data)) return;
-      setAuthToken(event.data.token);
+      if (!IsAuthSessionMessage(event.data)) return;
+      SetAuthToken(event.data.token);
       applyLoadedUser(event.data.user);
     };
 
-    window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChange);
+    window.addEventListener(authChangedEvent, handleAuthChange);
     window.addEventListener('message', handleMessage);
     return () => {
-      window.removeEventListener(AUTH_CHANGED_EVENT, handleAuthChange);
+      window.removeEventListener(authChangedEvent, handleAuthChange);
       window.removeEventListener('message', handleMessage);
     };
   }, [applyLoadedUser, authOrigin, loadUser]);
@@ -345,13 +345,13 @@ export function AuthPanel({
 
   const startGoogleLogin = () => {
     try {
-      const authUrl = buildAuthStartUrl('google', {
+      const authUrl = BuildAuthStartUrl('google', {
         apiBase,
         locale,
         privacyAccepted: true,
         returnTo: window.location.href,
       });
-      const popup = openAuthPopup(authUrl);
+      const popup = OpenAuthPopup(authUrl);
       if (!popup) window.location.assign(authUrl);
       closeAccountDialog();
     } catch (loginError) {
@@ -363,7 +363,7 @@ export function AuthPanel({
   const closeAccountDialog = () => {
     setAccountDialogMode(null);
     setPrivacyAccepted(false);
-    setAccountForm(createEmptyAccountForm());
+    setAccountForm(CreateEmptyAccountForm());
     setAccountError('');
   };
 
@@ -388,7 +388,7 @@ export function AuthPanel({
     setAccountError('');
     try {
       if (accountDialogMode === 'register') {
-        await registerPasswordAccount(apiBase, {
+        await RegisterPasswordAccount(apiBase, {
           displayName,
           email,
           password,
@@ -399,8 +399,8 @@ export function AuthPanel({
         setAccountError(labels.accountCreated);
         return;
       }
-      const session = await loginPasswordAccount(apiBase, { email, password });
-      setAuthToken(session.token);
+      const session = await LoginPasswordAccount(apiBase, { email, password });
+      SetAuthToken(session.token);
       applyLoadedUser(session.user);
     } catch (submitError) {
       console.warn('Unable to use password account.', submitError);
@@ -413,9 +413,9 @@ export function AuthPanel({
   const handleLogout = () => {
     setUser(null);
     onAuthChange?.(null);
-    void logoutAuthSession(apiBase).catch((logoutError) => {
+    void LogoutAuthSession(apiBase).catch((logoutError) => {
       console.warn('Unable to clear shared auth session.', logoutError);
-      clearAuthToken();
+      ClearAuthToken();
     });
   };
 
@@ -461,7 +461,7 @@ export function AuthPanel({
         smokingFrequency: profile.smokingStatus === 'current' ? profile.smokingFrequency : undefined,
         alcoholFrequency: profile.alcoholStatus === 'current' ? profile.alcoholFrequency : undefined,
       };
-      const nextUser = await saveAuthProfile(apiBase, cleanedProfile);
+      const nextUser = await SaveAuthProfile(apiBase, cleanedProfile);
       setUser(nextUser);
       onAuthChange?.(nextUser);
       setIsProfileOpen(false);
@@ -631,7 +631,7 @@ export function AuthPanel({
                 <select value={profile.gender} onChange={(event) => updateProfile('gender', event.target.value)}>
                   <option value="">{labels.selectPlaceholder}</option>
                   {genderOptions.map((option) => (
-                    <option key={option.value} value={option.value}>{option[toTextKey(locale)]}</option>
+                    <option key={option.value} value={option.value}>{option[ToTextKey(locale)]}</option>
                   ))}
                 </select>
               </label>

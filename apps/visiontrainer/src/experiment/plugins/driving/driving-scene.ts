@@ -28,7 +28,7 @@ import {
   WebGLRenderTarget,
 } from 'three';
 
-export const THREE = {
+export const three = {
   AmbientLight,
   Box3,
   BoxGeometry,
@@ -58,4 +58,4 @@ export const THREE = {
   WebGLRenderTarget,
 } as const;
 
-export type ThreeModule = typeof THREE;
+export type ThreeModule = typeof three;

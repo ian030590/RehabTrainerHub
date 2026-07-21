@@ -1,12 +1,12 @@
-const DEFAULT_ALLOWED_ORIGINS = [
+const defaultAllowedOrigins = [
   'https://trainerhub.cc',
   'https://stroke.trainerhub.cc',
   'https://vision.trainerhub.cc',
   'https://brain.trainerhub.cc',
 ];
-const DEFAULT_AUTH_BASE_URL = 'https://trainerhub.cc';
+const defaultAuthBaseUrl = 'https://trainerhub.cc';
 
-const LOCAL_ALLOWED_ORIGINS = [
+const localAllowedOrigins = [
   'http://localhost:3010',
   'http://127.0.0.1:3010',
   'http://localhost:5173',
@@ -17,55 +17,55 @@ const LOCAL_ALLOWED_ORIGINS = [
   'http://127.0.0.1:5175',
 ];
 
-export const AUTH_MESSAGE_TYPE = 'rehabtrainerhub-auth-session';
-export const AUTH_COOKIE_NAME = 'rehabtrainerhub_session';
-const PASSWORD_HASH_ALGORITHM = 'pbkdf2-sha256';
-const PASSWORD_HASH_ITERATIONS = 150000;
-const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
-const RATE_LIMIT_CLEANUP_INTERVAL = 100;
+export const authMessageType = 'rehabtrainerhub-auth-session';
+export const authCookieName = 'rehabtrainerhub_session';
+const passwordHashAlgorithm = 'pbkdf2-sha256';
+const passwordHashIterations = 150000;
+const sessionTtlSeconds = 60 * 60 * 24 * 7;
+const rateLimitCleanupInterval = 100;
 let rateLimitTableReady = false;
 let rateLimitCleanupCounter = 0;
 
-export function getAuthBaseUrl(request, env) {
+export function GetAuthBaseUrl(request, env) {
   const url = new URL(request.url);
-  if (shouldAllowLocalOrigins(env, request)) {
+  if (ShouldAllowLocalOrigins(env, request)) {
     return `${url.protocol}//${url.host}`;
   }
-  return getConfiguredAuthBaseUrl(env);
+  return GetConfiguredAuthBaseUrl(env);
 }
 
-export function getAllowedOrigins(env, request) {
-  const localOrigins = shouldAllowLocalOrigins(env, request) ? LOCAL_ALLOWED_ORIGINS : [];
-  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...getConfiguredAllowedOrigins(env), ...localOrigins]);
+export function GetAllowedOrigins(env, request) {
+  const localOrigins = ShouldAllowLocalOrigins(env, request) ? localAllowedOrigins : [];
+  return new Set([...defaultAllowedOrigins, ...GetConfiguredAllowedOrigins(env), ...localOrigins]);
 }
 
-function shouldAllowLocalOrigins(env, request) {
+function ShouldAllowLocalOrigins(env, request) {
   if (env.AUTH_ALLOW_LOCAL_ORIGINS === '1') return true;
   if (!request) return false;
 
   try {
-    return isLocalHostname(new URL(request.url).hostname);
+    return IsLocalHostname(new URL(request.url).hostname);
   } catch {
     return false;
   }
 }
 
-function isLocalHostname(hostname) {
+function IsLocalHostname(hostname) {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
 }
 
-function getConfiguredAuthBaseUrl(env) {
-  return normalizeOrigin(env.AUTH_BASE_URL) || DEFAULT_AUTH_BASE_URL;
+function GetConfiguredAuthBaseUrl(env) {
+  return NormalizeOrigin(env.AUTH_BASE_URL) || defaultAuthBaseUrl;
 }
 
-function getConfiguredAllowedOrigins(env) {
+function GetConfiguredAllowedOrigins(env) {
   return String(env.AUTH_ALLOWED_ORIGINS || '')
     .split(',')
-    .map((origin) => normalizeOrigin(origin))
+    .map((origin) => NormalizeOrigin(origin))
     .filter(Boolean);
 }
 
-function normalizeOrigin(value) {
+function NormalizeOrigin(value) {
   const trimmed = String(value || '').trim();
   if (!trimmed) return '';
 
@@ -76,24 +76,24 @@ function normalizeOrigin(value) {
   }
 }
 
-export function isAllowedOrigin(request, env) {
+export function IsAllowedOrigin(request, env) {
   const origin = request.headers.get('Origin');
   if (!origin) return true;
-  return getAllowedOrigins(env, request).has(origin.replace(/\/+$/, ''));
+  return GetAllowedOrigins(env, request).has(origin.replace(/\/+$/, ''));
 }
 
-export function rejectDisallowedOrigin(request, env) {
-  if (isAllowedOrigin(request, env)) return null;
+export function RejectDisallowedOrigin(request, env) {
+  if (IsAllowedOrigin(request, env)) return null;
   return new Response('Origin is not allowed.', {
     status: 403,
     headers: {
-      ...corsHeaders(request, env),
-      ...securityHeaders(),
+      ...CorsHeaders(request, env),
+      ...SecurityHeaders(),
     },
   });
 }
 
-export function corsHeaders(request, env) {
+export function CorsHeaders(request, env) {
   const origin = request.headers.get('Origin');
   const headers = {
     'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
@@ -106,7 +106,7 @@ export function corsHeaders(request, env) {
     return headers;
   }
 
-  if (getAllowedOrigins(env, request).has(origin.replace(/\/+$/, ''))) {
+  if (GetAllowedOrigins(env, request).has(origin.replace(/\/+$/, ''))) {
     headers['Access-Control-Allow-Origin'] = origin;
     headers['Access-Control-Allow-Credentials'] = 'true';
   }
@@ -114,7 +114,7 @@ export function corsHeaders(request, env) {
   return headers;
 }
 
-export function securityHeaders(extra = {}) {
+export function SecurityHeaders(extra = {}) {
   return {
     'Cache-Control': 'no-store',
     'Cross-Origin-Resource-Policy': 'same-site',
@@ -126,42 +126,42 @@ export function securityHeaders(extra = {}) {
   };
 }
 
-export function optionsResponse(request, env) {
-  if (!isAllowedOrigin(request, env)) {
-    return new Response('Origin is not allowed.', { status: 403, headers: securityHeaders() });
+export function OptionsResponse(request, env) {
+  if (!IsAllowedOrigin(request, env)) {
+    return new Response('Origin is not allowed.', { status: 403, headers: SecurityHeaders() });
   }
   return new Response(null, {
     status: 204,
     headers: {
-      ...corsHeaders(request, env),
-      ...securityHeaders(),
+      ...CorsHeaders(request, env),
+      ...SecurityHeaders(),
     },
   });
 }
 
-export function jsonResponse(request, env, data, init = {}) {
+export function JsonResponse(request, env, data, init = {}) {
   return Response.json(data, {
     ...init,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      ...corsHeaders(request, env),
-      ...securityHeaders(),
+      ...CorsHeaders(request, env),
+      ...SecurityHeaders(),
       ...(init.headers || {}),
     },
   });
 }
 
-export function errorResponse(request, env, message, status = 400) {
-  return jsonResponse(request, env, { error: message }, { status });
+export function ErrorResponse(request, env, message, status = 400) {
+  return JsonResponse(request, env, { error: message }, { status });
 }
 
-export function requireDatabase(env) {
+export function RequireDatabase(env) {
   const db = env.REHAB_DB || env.rehab_db;
   if (!db) throw new Error('REHAB_DB D1 binding is not configured.');
   return db;
 }
 
-export function requireSecret(env, name) {
+export function RequireSecret(env, name) {
   const value = env[name];
   if (!value || value.length < 24) {
     throw new Error(`${name} must be configured and at least 24 characters.`);
@@ -169,50 +169,50 @@ export function requireSecret(env, name) {
   return value;
 }
 
-export function getStateSecret(env) {
-  return requireSecret(env, 'AUTH_STATE_SECRET');
+export function GetStateSecret(env) {
+  return RequireSecret(env, 'AUTH_STATE_SECRET');
 }
 
-export function getSessionSecret(env) {
-  return requireSecret(env, 'AUTH_SESSION_SECRET');
+export function GetSessionSecret(env) {
+  return RequireSecret(env, 'AUTH_SESSION_SECRET');
 }
 
-export function normalizeEmail(value) {
+export function NormalizeEmail(value) {
   return String(value || '').trim().toLowerCase();
 }
 
-export function isValidEmail(value) {
+export function IsValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-export async function hashPassword(password) {
+export async function HashPassword(password) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const hash = await derivePasswordHash(password, salt, PASSWORD_HASH_ITERATIONS);
+  const hash = await DerivePasswordHash(password, salt, passwordHashIterations);
   return [
-    PASSWORD_HASH_ALGORITHM,
-    String(PASSWORD_HASH_ITERATIONS),
-    base64UrlEncodeBytes(salt),
-    base64UrlEncodeBytes(hash),
+    passwordHashAlgorithm,
+    String(passwordHashIterations),
+    Base64UrlEncodeBytes(salt),
+    Base64UrlEncodeBytes(hash),
   ].join('$');
 }
 
-export async function verifyPassword(password, storedHash) {
+export async function VerifyPassword(password, storedHash) {
   const [algorithm, iterationsText, saltText, hashText] = String(storedHash || '').split('$');
   const iterations = Number(iterationsText);
-  if (algorithm !== PASSWORD_HASH_ALGORITHM || !Number.isInteger(iterations) || iterations < 100000) {
+  if (algorithm !== passwordHashAlgorithm || !Number.isInteger(iterations) || iterations < 100000) {
     return false;
   }
 
   try {
-    const salt = base64UrlDecodeBytes(saltText);
-    const hash = await derivePasswordHash(password, salt, iterations);
-    return constantTimeEqual(base64UrlEncodeBytes(hash), hashText);
+    const salt = Base64UrlDecodeBytes(saltText);
+    const hash = await DerivePasswordHash(password, salt, iterations);
+    return ConstantTimeEqual(Base64UrlEncodeBytes(hash), hashText);
   } catch {
     return false;
   }
 }
 
-async function derivePasswordHash(password, salt, iterations) {
+async function DerivePasswordHash(password, salt, iterations) {
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(password),
@@ -233,23 +233,23 @@ async function derivePasswordHash(password, salt, iterations) {
   return new Uint8Array(bits);
 }
 
-export function getBearerToken(request) {
+export function GetBearerToken(request) {
   const header = request.headers.get('Authorization') || '';
   const match = header.match(/^Bearer\s+(.+)$/i);
   return match?.[1] ?? null;
 }
 
-export async function requireSession(request, env) {
-  const token = getBearerToken(request);
+export async function RequireSession(request, env) {
+  const token = GetBearerToken(request);
   if (!token) return null;
   try {
-    return await verifySignedValue(token, getSessionSecret(env));
+    return await VerifySignedValue(token, GetSessionSecret(env));
   } catch {
     return null;
   }
 }
 
-export function getCookieValue(request, name) {
+export function GetCookieValue(request, name) {
   const cookieHeader = request.headers.get('Cookie') || '';
   const cookies = cookieHeader.split(';').map((cookie) => cookie.trim()).filter(Boolean);
   for (const cookie of cookies) {
@@ -261,39 +261,39 @@ export function getCookieValue(request, name) {
   return null;
 }
 
-export async function getCookieSession(request, env) {
-  const token = getCookieValue(request, AUTH_COOKIE_NAME);
+export async function GetCookieSession(request, env) {
+  const token = GetCookieValue(request, authCookieName);
   if (!token) return null;
   try {
     return {
       token,
-      payload: await verifySignedValue(token, getSessionSecret(env)),
+      payload: await VerifySignedValue(token, GetSessionSecret(env)),
     };
   } catch {
     return null;
   }
 }
 
-export function createSessionCookie(request, token) {
+export function CreateSessionCookie(request, token) {
   const secureAttributes = new URL(request.url).protocol === 'https:'
     ? 'SameSite=None; Secure'
     : 'SameSite=Lax';
   return [
-    `${AUTH_COOKIE_NAME}=${encodeURIComponent(token)}`,
+    `${authCookieName}=${encodeURIComponent(token)}`,
     'Path=/',
-    `Max-Age=${SESSION_TTL_SECONDS}`,
+    `Max-Age=${sessionTtlSeconds}`,
     'HttpOnly',
     'Priority=High',
     secureAttributes,
   ].join('; ');
 }
 
-export function clearSessionCookie(request) {
+export function ClearSessionCookie(request) {
   const secureAttributes = new URL(request.url).protocol === 'https:'
     ? 'SameSite=None; Secure'
     : 'SameSite=Lax';
   return [
-    `${AUTH_COOKIE_NAME}=`,
+    `${authCookieName}=`,
     'Path=/',
     'Max-Age=0',
     'HttpOnly',
@@ -302,33 +302,33 @@ export function clearSessionCookie(request) {
   ].join('; ');
 }
 
-export async function createSignedValue(payload, secret, ttlSeconds) {
+export async function CreateSignedValue(payload, secret, ttlSeconds) {
   const now = Math.floor(Date.now() / 1000);
   const body = {
     ...payload,
     iat: now,
     exp: now + ttlSeconds,
   };
-  const encodedPayload = base64UrlEncode(JSON.stringify(body));
-  const signature = await createSignature(encodedPayload, secret);
+  const encodedPayload = Base64UrlEncode(JSON.stringify(body));
+  const signature = await CreateSignature(encodedPayload, secret);
   return `${encodedPayload}.${signature}`;
 }
 
-export async function verifySignedValue(token, secret) {
+export async function VerifySignedValue(token, secret) {
   const [encodedPayload, signature] = token.split('.');
   if (!encodedPayload || !signature) throw new Error('Malformed token.');
 
-  const expectedSignature = await createSignature(encodedPayload, secret);
-  if (!constantTimeEqual(signature, expectedSignature)) throw new Error('Invalid signature.');
+  const expectedSignature = await CreateSignature(encodedPayload, secret);
+  if (!ConstantTimeEqual(signature, expectedSignature)) throw new Error('Invalid signature.');
 
-  const payload = JSON.parse(base64UrlDecode(encodedPayload));
+  const payload = JSON.parse(Base64UrlDecode(encodedPayload));
   if (typeof payload.exp !== 'number' || payload.exp < Math.floor(Date.now() / 1000)) {
     throw new Error('Token expired.');
   }
   return payload;
 }
 
-async function createSignature(value, secret) {
+async function CreateSignature(value, secret) {
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),
@@ -337,14 +337,14 @@ async function createSignature(value, secret) {
     ['sign'],
   );
   const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value));
-  return base64UrlEncodeBytes(new Uint8Array(signature));
+  return Base64UrlEncodeBytes(new Uint8Array(signature));
 }
 
 /**
  * Constant-time comparison for ASCII/Base64URL strings only.
  * Do not reuse for arbitrary Unicode text; charCodeAt compares UTF-16 code units.
  */
-function constantTimeEqual(left, right) {
+function ConstantTimeEqual(left, right) {
   if (left.length !== right.length) return false;
   let result = 0;
   for (let index = 0; index < left.length; index += 1) {
@@ -353,11 +353,11 @@ function constantTimeEqual(left, right) {
   return result === 0;
 }
 
-function base64UrlEncode(value) {
-  return base64UrlEncodeBytes(new TextEncoder().encode(value));
+function Base64UrlEncode(value) {
+  return Base64UrlEncodeBytes(new TextEncoder().encode(value));
 }
 
-function base64UrlEncodeBytes(bytes) {
+function Base64UrlEncodeBytes(bytes) {
   let binary = '';
   bytes.forEach((byte) => {
     binary += String.fromCharCode(byte);
@@ -365,27 +365,27 @@ function base64UrlEncodeBytes(bytes) {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function base64UrlDecode(value) {
-  return new TextDecoder().decode(base64UrlDecodeBytes(value));
+function Base64UrlDecode(value) {
+  return new TextDecoder().decode(Base64UrlDecodeBytes(value));
 }
 
-function base64UrlDecodeBytes(value) {
+function Base64UrlDecodeBytes(value) {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
   const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
   const binary = atob(padded);
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
-export function isSafeReturnTo(returnTo, env, request) {
+export function IsSafeReturnTo(returnTo, env, request) {
   try {
     const url = new URL(returnTo);
-    return getAllowedOrigins(env, request).has(url.origin);
+    return GetAllowedOrigins(env, request).has(url.origin);
   } catch {
     return false;
   }
 }
 
-export function toPublicUser(row) {
+export function ToPublicUser(row) {
   return {
     id: row.id,
     displayName: row.display_name || row.email || 'Rehab Trainer Hub User',
@@ -396,7 +396,7 @@ export function toPublicUser(row) {
   };
 }
 
-export function safeJsonParse(value) {
+export function SafeJsonParse(value) {
   try {
     return JSON.parse(value);
   } catch {
@@ -404,30 +404,30 @@ export function safeJsonParse(value) {
   }
 }
 
-export async function getUserById(env, userId) {
-  return requireDatabase(env)
+export async function GetUserById(env, userId) {
+  return RequireDatabase(env)
     .prepare('SELECT * FROM app_users WHERE id = ?')
     .bind(userId)
     .first();
 }
 
-export async function createSessionForUser(env, user) {
-  return createSignedValue(
+export async function CreateSessionForUser(env, user) {
+  return CreateSignedValue(
     {
       sub: user.id,
       name: user.display_name || user.email || 'Rehab Trainer Hub User',
       email: user.email || undefined,
     },
-    getSessionSecret(env),
-    SESSION_TTL_SECONDS,
+    GetSessionSecret(env),
+    sessionTtlSeconds,
   );
 }
 
-export function authPopupHtml(returnTo, token, user, init = {}) {
+export function AuthPopupHtml(returnTo, token, user, init = {}) {
   const targetOrigin = new URL(returnTo).origin;
-  const message = escapeScriptJson({ type: AUTH_MESSAGE_TYPE, token, user });
-  const targetOriginJson = escapeScriptJson(targetOrigin);
-  const fallbackJson = escapeScriptJson(returnTo);
+  const message = EscapeScriptJson({ type: authMessageType, token, user });
+  const targetOriginJson = EscapeScriptJson(targetOrigin);
+  const fallbackJson = EscapeScriptJson(returnTo);
   const nonce = crypto.randomUUID().replace(/-/g, '');
 
   return new Response(`<!doctype html>
@@ -469,7 +469,7 @@ export function authPopupHtml(returnTo, token, user, init = {}) {
     ...init,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      ...securityHeaders({
+      ...SecurityHeaders({
         'Content-Security-Policy': [
           "default-src 'none'",
           `script-src 'nonce-${nonce}'`,
@@ -486,17 +486,17 @@ export function authPopupHtml(returnTo, token, user, init = {}) {
   });
 }
 
-function escapeScriptJson(value) {
+function EscapeScriptJson(value) {
   return JSON.stringify(value)
     .replace(/</g, '\\u003c')
     .replace(/>/g, '\\u003e')
     .replace(/&/g, '\\u0026');
 }
 
-export async function rateLimitResponse(request, env, name, options = {}) {
-  const result = await checkRateLimit(request, env, name, options);
+export async function RateLimitResponse(request, env, name, options = {}) {
+  const result = await CheckRateLimit(request, env, name, options);
   if (result.allowed) return null;
-  return jsonResponse(request, env, { error: 'Too many requests.' }, {
+  return JsonResponse(request, env, { error: 'Too many requests.' }, {
     status: 429,
     headers: {
       'Retry-After': String(result.retryAfter),
@@ -504,7 +504,7 @@ export async function rateLimitResponse(request, env, name, options = {}) {
   });
 }
 
-async function checkRateLimit(request, env, name, options = {}) {
+async function CheckRateLimit(request, env, name, options = {}) {
   const limit = options.limit ?? 10;
   const windowSeconds = options.windowSeconds ?? 60;
   const now = Math.floor(Date.now() / 1000);
@@ -514,11 +514,11 @@ async function checkRateLimit(request, env, name, options = {}) {
     || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim()
     || 'unknown';
   const identity = options.identity ? `:${options.identity}` : '';
-  const key = await sha256Base64Url(`${name}:${client}${identity}:${windowId}`);
-  const db = requireDatabase(env);
+  const key = await Sha256Base64Url(`${name}:${client}${identity}:${windowId}`);
+  const db = RequireDatabase(env);
 
-  await ensureRateLimitTable(db);
-  rateLimitCleanupCounter = (rateLimitCleanupCounter + 1) % RATE_LIMIT_CLEANUP_INTERVAL;
+  await EnsureRateLimitTable(db);
+  rateLimitCleanupCounter = (rateLimitCleanupCounter + 1) % rateLimitCleanupInterval;
   if (rateLimitCleanupCounter === 1) {
     await db
       .prepare('DELETE FROM rate_limits WHERE reset_at < ?')
@@ -543,7 +543,7 @@ async function checkRateLimit(request, env, name, options = {}) {
   };
 }
 
-async function ensureRateLimitTable(db) {
+async function EnsureRateLimitTable(db) {
   if (rateLimitTableReady) return;
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS rate_limits (
@@ -557,7 +557,7 @@ async function ensureRateLimitTable(db) {
   rateLimitTableReady = true;
 }
 
-async function sha256Base64Url(value) {
+async function Sha256Base64Url(value) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return base64UrlEncodeBytes(new Uint8Array(digest));
+  return Base64UrlEncodeBytes(new Uint8Array(digest));
 }

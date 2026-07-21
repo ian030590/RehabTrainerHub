@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   type AuthLocale,
   type AuthUser,
-  fetchCurrentAuthUser,
-  fetchSharedAuthSession,
-  getAuthToken,
-  setAuthToken,
+  FetchCurrentAuthUser,
+  FetchSharedAuthSession,
+  GetAuthToken,
+  SetAuthToken,
 } from '../auth/authClient';
 import { AuthPanel } from './AuthPanel';
 
@@ -30,7 +30,7 @@ const text = {
   },
 } as const;
 
-function toTextKey(locale: AuthLocale | undefined): keyof typeof text {
+function ToTextKey(locale: AuthLocale | undefined): keyof typeof text {
   return locale === 'en' ? 'en' : 'zhTW';
 }
 
@@ -41,7 +41,7 @@ export function TrainingLoginReminder({
   locale,
   privacyHref,
 }: TrainingLoginReminderProps) {
-  const labels = text[toTextKey(locale)];
+  const labels = text[ToTextKey(locale)];
   const [isOpen, setIsOpen] = useState(false);
   const storageKey = useMemo(() => `rehabtrainerhub.auth.trainingReminderSeen.${appName}`, [appName]);
 
@@ -54,18 +54,18 @@ export function TrainingLoginReminder({
         return;
       }
       if (typeof window === 'undefined' || window.localStorage.getItem(storageKey) === '1') return;
-      if (getAuthToken()) {
+      if (GetAuthToken()) {
         try {
-          if (await fetchCurrentAuthUser(apiBase)) return;
+          if (await FetchCurrentAuthUser(apiBase)) return;
         } catch (error) {
           console.warn('Unable to check auth token before training.', error);
         }
       }
 
       try {
-        const sharedSession = await fetchSharedAuthSession(apiBase);
+        const sharedSession = await FetchSharedAuthSession(apiBase);
         if (sharedSession) {
-          setAuthToken(sharedSession.token);
+          SetAuthToken(sharedSession.token);
           return;
         }
       } catch (error) {

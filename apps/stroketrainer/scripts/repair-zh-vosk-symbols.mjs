@@ -19,9 +19,9 @@ const vocabularyPath = path.join(
 
 const archive = await fs.readFile(modelPath);
 const tar = gunzipSync(archive);
-const graph = findTarEntry(tar, '/Gr.fst');
-const inputSymbols = readFstSymbolTable(graph, 0);
-const outputSymbols = readFstSymbolTable(graph, inputSymbols.nextOffset);
+const graph = FindTarEntry(tar, '/Gr.fst');
+const inputSymbols = ReadFstSymbolTable(graph, 0);
+const outputSymbols = ReadFstSymbolTable(graph, inputSymbols.nextOffset);
 
 if (inputSymbols.entries.length !== outputSymbols.entries.length) {
   throw new Error(
@@ -56,7 +56,7 @@ const vocabulary = new Set(
 );
 const unsupportedWords = inputSymbols.entries
   .map((entry) => entry.symbol)
-  .filter((symbol) => !isSpecialSymbol(symbol) && !vocabulary.has(symbol));
+  .filter((symbol) => !IsSpecialSymbol(symbol) && !vocabulary.has(symbol));
 if (unsupportedWords.length > 0) {
   throw new Error(
     `The Vosk vocabulary index is missing ${unsupportedWords.length} symbols, including "${unsupportedWords[0]}".`,
@@ -73,15 +73,15 @@ if (repairedCount > 0) {
   console.log(`Model archive size: ${archive.length} bytes.`);
 }
 
-function findTarEntry(tarBuffer, suffix) {
+function FindTarEntry(tarBuffer, suffix) {
   let offset = 0;
   while (offset + 512 <= tarBuffer.length) {
     const header = tarBuffer.subarray(offset, offset + 512);
-    const name = readNullTerminated(header.subarray(0, 100));
+    const name = ReadNullTerminated(header.subarray(0, 100));
     if (!name) break;
-    const prefix = readNullTerminated(header.subarray(345, 500));
+    const prefix = ReadNullTerminated(header.subarray(345, 500));
     const fullName = prefix ? `${prefix}/${name}` : name;
-    const sizeText = readNullTerminated(header.subarray(124, 136)).trim();
+    const sizeText = ReadNullTerminated(header.subarray(124, 136)).trim();
     const size = Number.parseInt(sizeText || '0', 8);
     const contentOffset = offset + 512;
     if (fullName.endsWith(suffix)) {
@@ -92,30 +92,30 @@ function findTarEntry(tarBuffer, suffix) {
   throw new Error(`Unable to find ${suffix} in the Vosk archive.`);
 }
 
-function readFstSymbolTable(buffer, offset) {
+function ReadFstSymbolTable(buffer, offset) {
   const cursor = { offset };
   if (offset === 0) {
-    readInt32(buffer, cursor);
-    readString(buffer, cursor);
-    readString(buffer, cursor);
-    readInt32(buffer, cursor);
-    const flags = readInt32(buffer, cursor);
+    ReadInt32(buffer, cursor);
+    ReadString(buffer, cursor);
+    ReadString(buffer, cursor);
+    ReadInt32(buffer, cursor);
+    const flags = ReadInt32(buffer, cursor);
     if ((flags & 3) !== 3) {
       throw new Error('The Vosk grammar FST does not contain both symbol tables.');
     }
     cursor.offset += 8 * 4;
   }
 
-  const magic = readInt32(buffer, cursor);
+  const magic = ReadInt32(buffer, cursor);
   if (magic !== 0x7eb2fb74) {
     throw new Error(`Unexpected OpenFst symbol table magic at byte ${offset}.`);
   }
-  readString(buffer, cursor);
+  ReadString(buffer, cursor);
   cursor.offset += 8;
-  const count = Number(readInt64(buffer, cursor));
+  const count = Number(ReadInt64(buffer, cursor));
   const entries = [];
   for (let index = 0; index < count; index += 1) {
-    const length = readInt32(buffer, cursor);
+    const length = ReadInt32(buffer, cursor);
     const symbolOffset = cursor.offset;
     const bytes = buffer.subarray(symbolOffset, symbolOffset + length);
     cursor.offset += length;
@@ -123,37 +123,37 @@ function readFstSymbolTable(buffer, offset) {
       symbol: bytes.toString('utf8'),
       bytes: Buffer.from(bytes),
       offset: symbolOffset,
-      key: Number(readInt64(buffer, cursor)),
+      key: Number(ReadInt64(buffer, cursor)),
     });
   }
   return { entries, nextOffset: cursor.offset };
 }
 
-function readInt32(buffer, cursor) {
+function ReadInt32(buffer, cursor) {
   const value = buffer.readInt32LE(cursor.offset);
   cursor.offset += 4;
   return value;
 }
 
-function readInt64(buffer, cursor) {
+function ReadInt64(buffer, cursor) {
   const value = buffer.readBigInt64LE(cursor.offset);
   cursor.offset += 8;
   return value;
 }
 
-function readString(buffer, cursor) {
-  const length = readInt32(buffer, cursor);
+function ReadString(buffer, cursor) {
+  const length = ReadInt32(buffer, cursor);
   const value = buffer.subarray(cursor.offset, cursor.offset + length).toString('utf8');
   cursor.offset += length;
   return value;
 }
 
-function readNullTerminated(buffer) {
+function ReadNullTerminated(buffer) {
   const end = buffer.indexOf(0);
   return buffer.subarray(0, end < 0 ? buffer.length : end).toString('utf8');
 }
 
-function isSpecialSymbol(symbol) {
+function IsSpecialSymbol(symbol) {
   return symbol.startsWith('<')
     || symbol.startsWith('[')
     || symbol.startsWith('#')

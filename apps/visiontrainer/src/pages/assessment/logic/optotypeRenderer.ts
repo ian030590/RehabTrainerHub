@@ -17,11 +17,11 @@ export type LandoltDirection = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type EDirection = 0 | 2 | 4 | 6; // 0=right, 2=up, 4=left, 6=down
 
 /** Sloan letters: C D H K N O R S V Z */
-export const SLOAN_LETTERS = ['C', 'D', 'H', 'K', 'N', 'O', 'R', 'S', 'V', 'Z'] as const;
+export const sloanLetters = ['C', 'D', 'H', 'K', 'N', 'O', 'R', 'S', 'V', 'Z'] as const;
 export type SloanLetterIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 /** Picture optotypes */
-export const PICTURE_NAMES = ['房子', '圓形', '正方形', '星星'] as const;
+export const pictureNames = ['房子', '圓形', '正方形', '星星'] as const;
 export type PictureIndex = 0 | 1 | 2 | 3;
 
 /** Grating orientation for preferential looking */
@@ -34,16 +34,16 @@ export interface GratingRenderOptions {
 
 // ── Color constants ──
 
-const FORE = '#000000';
-const BACK = '#FFFFFF';
+const fore = '#000000';
+const back = '#FFFFFF';
 
 // ── Helper: fill a polygon defined in a -5…+5 coordinate system ──
 
-function fillPolygon(
+function FillPolygon(
   ctx: CanvasRenderingContext2D,
   points: number[][],
   d: number,
-  color: string = FORE,
+  color: string = fore,
 ) {
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -57,14 +57,14 @@ function fillPolygon(
 
 // ── Landolt C ──
 
-export function drawLandoltC(
+export function DrawLandoltC(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
   strokePx: number,
   direction: LandoltDirection,
-  foreColor: string = FORE,
-  backColor: string = BACK,
+  foreColor: string = fore,
+  backColor: string = back,
 ) {
   ctx.save();
   ctx.translate(cx, cy);
@@ -98,13 +98,13 @@ export function drawLandoltC(
 
 // ── Tumbling E ──
 
-export function drawTumblingE(
+export function DrawTumblingE(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
   strokePx: number,
   direction: EDirection,
-  foreColor: string = FORE,
+  foreColor: string = fore,
 ) {
   ctx.save();
   ctx.translate(cx, cy);
@@ -117,7 +117,7 @@ export function drawTumblingE(
 
   const angle = (-Math.PI / 4) * direction;
   ctx.rotate(angle);
-  fillPolygon(ctx, ePoints, strokePx * 0.5, foreColor);
+  FillPolygon(ctx, ePoints, strokePx * 0.5, foreColor);
   ctx.rotate(-angle);
 
   ctx.restore();
@@ -125,18 +125,18 @@ export function drawTumblingE(
 
 // ── Sloan Letters ──
 
-export function drawSloanLetter(
+export function DrawSloanLetter(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
   strokePx: number,
   letterIndex: SloanLetterIndex,
 ) {
-  const letter = SLOAN_LETTERS[letterIndex];
+  const letter = sloanLetters[letterIndex];
   const fontSize = Math.max(1, strokePx * 5);
 
   ctx.save();
-  ctx.fillStyle = FORE;
+  ctx.fillStyle = fore;
   ctx.font = `700 ${fontSize}px Arial, Helvetica, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
@@ -150,7 +150,7 @@ export function drawSloanLetter(
 // ── Picture Optotypes ──
 // Simple geometric shapes recognizable by young children
 
-export function drawPictureOptotype(
+export function DrawPictureOptotype(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
@@ -160,13 +160,13 @@ export function drawPictureOptotype(
   const size = strokePx * 5; // overall optotype size
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.fillStyle = FORE;
-  ctx.strokeStyle = FORE;
+  ctx.fillStyle = fore;
+  ctx.strokeStyle = fore;
   ctx.lineWidth = strokePx;
 
   switch (index) {
     case 0: // House
-      drawHouse(ctx, size);
+      DrawHouse(ctx, size);
       break;
     case 1: // Circle
       ctx.beginPath();
@@ -177,14 +177,14 @@ export function drawPictureOptotype(
       ctx.strokeRect(-size * 0.4, -size * 0.4, size * 0.8, size * 0.8);
       break;
     case 3: // Star
-      drawStar(ctx, size * 0.45, 5, strokePx);
+      DrawStar(ctx, size * 0.45, 5, strokePx);
       break;
   }
 
   ctx.restore();
 }
 
-function drawHouse(ctx: CanvasRenderingContext2D, size: number) {
+function DrawHouse(ctx: CanvasRenderingContext2D, size: number) {
   const h = size * 0.5;
   const w = size * 0.4;
   // walls
@@ -200,7 +200,7 @@ function drawHouse(ctx: CanvasRenderingContext2D, size: number) {
   ctx.strokeRect(-w * 0.2, h * 0.3, w * 0.4, h * 0.7);
 }
 
-function drawStar(
+function DrawStar(
   ctx: CanvasRenderingContext2D,
   r: number,
   points: number,
@@ -221,7 +221,7 @@ function drawStar(
 
 // ── Preferential Looking Gratings ──
 
-export function drawGrating(
+export function DrawGrating(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
@@ -250,10 +250,10 @@ export function drawGrating(
   const xOffset = orientation === 'left' ? -r * 1.5 : r * 1.5;
 
   // Draw vertical stripes
-  ctx.fillStyle = options.lightColor ?? BACK;
+  ctx.fillStyle = options.lightColor ?? back;
   ctx.fillRect(-r, -r, r * 2, r * 2);
 
-  ctx.fillStyle = options.darkColor ?? FORE;
+  ctx.fillStyle = options.darkColor ?? fore;
   const startX = -r + (xOffset % cycleWidthPx);
   for (let x = startX - cycleWidthPx; x < r; x += cycleWidthPx) {
     ctx.fillRect(x, -r, barWidth, r * 2);
@@ -264,7 +264,7 @@ export function drawGrating(
 
 // ── Sine Wave Grating for Contrast Sensitivity ──
 
-export function drawContrastGrating(
+export function DrawContrastGrating(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
@@ -335,11 +335,11 @@ export function drawContrastGrating(
 
 // ── Convenience: clear canvas with background color ──
 
-export function clearCanvas(
+export function ClearCanvas(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  backgroundColor = BACK,
+  backgroundColor = back,
 ) {
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, width, height);
@@ -347,7 +347,7 @@ export function clearCanvas(
 
 // ── Direction labels for UI ──
 
-export const LANDOLT_DIRECTION_LABELS: Record<LandoltDirection, string> = {
+export const landoltDirectionLabels: Record<LandoltDirection, string> = {
   0: '→',
   1: '↗',
   2: '↑',
@@ -358,7 +358,7 @@ export const LANDOLT_DIRECTION_LABELS: Record<LandoltDirection, string> = {
   7: '↘',
 };
 
-export const E_DIRECTION_LABELS: Record<EDirection, string> = {
+export const eDirectionLabels: Record<EDirection, string> = {
   0: '→',
   2: '↑',
   4: '←',
@@ -366,7 +366,7 @@ export const E_DIRECTION_LABELS: Record<EDirection, string> = {
 };
 
 /** Get the number of alternatives for each test type */
-export function getAlternativeCount(testType: TestType): number {
+export function GetAlternativeCount(testType: TestType): number {
   switch (testType) {
     case 'landolt':   return 8;
     case 'tumblingE': return 4;
@@ -379,6 +379,6 @@ export function getAlternativeCount(testType: TestType): number {
 }
 
 /** Generate a random alternative for the given test type */
-export function randomAlternative(testType: TestType): number {
-  return Math.floor(Math.random() * getAlternativeCount(testType));
+export function RandomAlternative(testType: TestType): number {
+  return Math.floor(Math.random() * GetAlternativeCount(testType));
 }

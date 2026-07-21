@@ -1,16 +1,16 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { createCsvContent } from '@rehab-trainer/ui/csv';
-import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
+import { CreateCsvContent } from '@rehab-trainer/ui/csv';
+import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useNavigate } from 'react-router-dom';
 import { useT, type TranslationKey } from '../i18n';
-import { saveTrainingRecord, type BrainTrainingRecord } from '../utils/trainingRecords';
+import { SaveTrainingRecord, type BrainTrainingRecord } from '../utils/trainingRecords';
 
 type Rating = 'Accurate' | 'Inaccurate' | 'Absent';
 type Phase = 'menu' | 'instructions' | 'playing' | 'results';
@@ -68,13 +68,13 @@ interface SessionSummary {
   trials: TrialResult[];
 }
 
-const RATING_KEYS: Record<Rating, TranslationKey> = {
+const ratingKeys: Record<Rating, TranslationKey> = {
   Accurate: 'mainConcept.rating.accurate',
   Inaccurate: 'mainConcept.rating.inaccurate',
   Absent: 'mainConcept.rating.absent',
 };
 
-const TRAINING_SETS: TrainingSet[] = [
+const trainingSets: TrainingSet[] = [
   {
     id: 'broken-window-1',
     titleKey: 'mainConcept.module.brokenWindow1',
@@ -309,16 +309,16 @@ const TRAINING_SETS: TrainingSet[] = [
   },
 ];
 
-validateTrainingSets(TRAINING_SETS);
+ValidateTrainingSets(trainingSets);
 
 export function MainConceptTraining() {
   const { t, lang } = useT();
   const navigate = useNavigate();
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const [phase, setPhase] = useState<Phase>('menu');
-  const [selectedSetId, setSelectedSetId] = useState(TRAINING_SETS[0].id);
+  const [selectedSetId, setSelectedSetId] = useState(trainingSets[0].id);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answer, setAnswer] = useState<AnswerState>(() => createEmptyAnswer(TRAINING_SETS[0].questions[0]));
+  const [answer, setAnswer] = useState<AnswerState>(() => CreateEmptyAnswer(trainingSets[0].questions[0]));
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [acceptedTrial, setAcceptedTrial] = useState<TrialResult | null>(null);
   const [attempts, setAttempts] = useState<Record<string, number>>({});
@@ -327,8 +327,8 @@ export function MainConceptTraining() {
   const [summary, setSummary] = useState<SessionSummary | null>(null);
 
   const activeSet = useMemo(() => {
-    const set = TRAINING_SETS.find((item) => item.id === selectedSetId) ?? TRAINING_SETS[0];
-    return localizeTrainingSet(set, lang);
+    const set = trainingSets.find((item) => item.id === selectedSetId) ?? trainingSets[0];
+    return LocalizeTrainingSet(set, lang);
   }, [lang, selectedSetId]);
   const currentQuestion = activeSet.questions[currentIndex] ?? activeSet.questions[0];
   const setTitle = t(activeSet.titleKey);
@@ -347,7 +347,7 @@ export function MainConceptTraining() {
     await enterTrainingFullscreen();
     const firstQuestion = activeSet.questions[0];
     setCurrentIndex(0);
-    setAnswer(createEmptyAnswer(firstQuestion));
+    setAnswer(CreateEmptyAnswer(firstQuestion));
     setFeedback(null);
     setAcceptedTrial(null);
     setAttempts({});
@@ -408,7 +408,7 @@ export function MainConceptTraining() {
     setAttempts((current) => ({ ...current, [currentQuestion.id]: nextAttempt }));
 
     const ratingsCorrect = currentQuestion.correctRatings.every((rating, index) => answer.ratings[index] === rating);
-    const sentencesCorrect = sameNumberList(answer.selectedSentenceIndexes, currentQuestion.correctSentenceIndexes);
+    const sentencesCorrect = SameNumberList(answer.selectedSentenceIndexes, currentQuestion.correctSentenceIndexes);
     if (!ratingsCorrect || !sentencesCorrect) {
       const lines = [t('mainConcept.feedback.tryAgain')];
       if (!ratingsCorrect) lines.push(t('mainConcept.feedback.ratingsMismatch'));
@@ -417,17 +417,17 @@ export function MainConceptTraining() {
       return;
     }
 
-    const trial = buildTrial(currentQuestion, activeSet.transcript, answer, true, nextAttempt, t);
+    const trial = BuildTrial(currentQuestion, activeSet.transcript, answer, true, nextAttempt, t);
     setAcceptedTrial(trial);
-    setFeedback({ kind: 'success', lines: [t('mainConcept.feedback.correct'), ...buildAnswerLines(trial, t)] });
+    setFeedback({ kind: 'success', lines: [t('mainConcept.feedback.correct'), ...BuildAnswerLines(trial, t)] });
   };
 
   const skipQuestion = () => {
     const nextAttempt = (attempts[currentQuestion.id] ?? 0) + 1;
     setAttempts((current) => ({ ...current, [currentQuestion.id]: nextAttempt }));
-    const trial = buildTrial(currentQuestion, activeSet.transcript, answer, false, nextAttempt, t);
+    const trial = BuildTrial(currentQuestion, activeSet.transcript, answer, false, nextAttempt, t);
     setAcceptedTrial(trial);
-    setFeedback({ kind: 'warning', lines: [t('mainConcept.feedback.skipped'), ...buildAnswerLines(trial, t)] });
+    setFeedback({ kind: 'warning', lines: [t('mainConcept.feedback.skipped'), ...BuildAnswerLines(trial, t)] });
   };
 
   const goNext = () => {
@@ -441,7 +441,7 @@ export function MainConceptTraining() {
 
     const nextQuestion = activeSet.questions[currentIndex + 1];
     setCurrentIndex((index) => index + 1);
-    setAnswer(createEmptyAnswer(nextQuestion));
+    setAnswer(CreateEmptyAnswer(nextQuestion));
     setFeedback(null);
     setAcceptedTrial(null);
   };
@@ -451,10 +451,10 @@ export function MainConceptTraining() {
     const correct = finalResults.filter((trial) => trial.correct).length;
     const total = activeSet.questions.length;
     const durationSeconds = Math.max(1, Math.round((now.getTime() - (startedAt ?? now.getTime())) / 1000));
-    const date = formatTestDate(now);
+    const date = FormatTestDate(now);
     const nextSummary: SessionSummary = {
       date,
-      participant: getAuthUserNameFromToken() || 'Guest',
+      participant: GetAuthUserNameFromToken() || 'Guest',
       setTitle,
       total,
       correct,
@@ -483,14 +483,14 @@ export function MainConceptTraining() {
         Accuracy_Percent: nextSummary.accuracy,
         Duration_Seconds: nextSummary.durationSeconds,
       },
-      detailRows: toDetailRows(nextSummary.trials),
+      detailRows: ToDetailRows(nextSummary.trials),
     };
-    void saveTrainingRecord(record);
+    void SaveTrainingRecord(record);
   };
 
   const downloadResult = () => {
     if (!summary) return;
-    downloadCsvFile(toCsv(summary), `main_concept_${summary.date}_${Date.now()}.csv`);
+    DownloadCsvFile(ToCsv(summary), `main_concept_${summary.date}_${Date.now()}.csv`);
   };
 
   const wrapFullscreenRoot = (content: ReactNode) => (
@@ -529,7 +529,7 @@ export function MainConceptTraining() {
                 <span>{setTitle}</span>
               </div>
               <div className="training-option-grid training-option-grid-three">
-                {TRAINING_SETS.map((set) => (
+                {trainingSets.map((set) => (
                   <button
                     key={set.id}
                     type="button"
@@ -712,7 +712,7 @@ export function MainConceptTraining() {
                     <strong>{element}</strong>
                   </div>
                   <div className="main-concept-rating-group" aria-label={t('mainConcept.ratingPrompt')}>
-                    {(Object.keys(RATING_KEYS) as Rating[]).map((rating) => (
+                    {(Object.keys(ratingKeys) as Rating[]).map((rating) => (
                       <button
                         key={rating}
                         type="button"
@@ -720,7 +720,7 @@ export function MainConceptTraining() {
                         onClick={() => setRating(elementIndex, rating)}
                         disabled={locked}
                       >
-                        {t(RATING_KEYS[rating])}
+                        {t(ratingKeys[rating])}
                       </button>
                     ))}
                   </div>
@@ -752,14 +752,14 @@ export function MainConceptTraining() {
   );
 }
 
-function createEmptyAnswer(question: MainConceptQuestion): AnswerState {
+function CreateEmptyAnswer(question: MainConceptQuestion): AnswerState {
   return {
     ratings: question.elements.map(() => null),
     selectedSentenceIndexes: [],
   };
 }
 
-function localizeTrainingSet(set: TrainingSet, lang: string): TrainingSet {
+function LocalizeTrainingSet(set: TrainingSet, lang: string): TrainingSet {
   if (lang !== 'zh') return set;
   return {
     ...set,
@@ -768,12 +768,12 @@ function localizeTrainingSet(set: TrainingSet, lang: string): TrainingSet {
   };
 }
 
-function sameNumberList(left: number[], right: number[]): boolean {
+function SameNumberList(left: number[], right: number[]): boolean {
   if (left.length !== right.length) return false;
   return left.every((value, index) => value === right[index]);
 }
 
-function buildTrial(
+function BuildTrial(
   question: MainConceptQuestion,
   transcript: string[],
   answer: AnswerState,
@@ -786,25 +786,25 @@ function buildTrial(
     concept: question.concept,
     correct,
     attempts,
-    userRatings: answer.ratings.map((rating) => (rating ? t(RATING_KEYS[rating]) : '')).join(' | '),
-    correctRatings: question.correctRatings.map((rating) => t(RATING_KEYS[rating])).join(' | '),
-    selectedSentenceText: indexesToText(answer.selectedSentenceIndexes, transcript),
-    correctSentenceText: indexesToText(question.correctSentenceIndexes, transcript),
+    userRatings: answer.ratings.map((rating) => (rating ? t(ratingKeys[rating]) : '')).join(' | '),
+    correctRatings: question.correctRatings.map((rating) => t(ratingKeys[rating])).join(' | '),
+    selectedSentenceText: IndexesToText(answer.selectedSentenceIndexes, transcript),
+    correctSentenceText: IndexesToText(question.correctSentenceIndexes, transcript),
   };
 }
 
-function indexesToText(indexes: number[], transcript: string[]): string {
+function IndexesToText(indexes: number[], transcript: string[]): string {
   return indexes.map((index) => transcript[index]).filter(Boolean).join(' | ');
 }
 
-function buildAnswerLines(trial: TrialResult, t: (key: TranslationKey, params?: Record<string, string | number>) => string): string[] {
+function BuildAnswerLines(trial: TrialResult, t: (key: TranslationKey, params?: Record<string, string | number>) => string): string[] {
   return [
     `${t('mainConcept.results.correctRatings')}: ${trial.correctRatings}`,
     `${t('mainConcept.results.correctSentences')}: ${trial.correctSentenceText || t('mainConcept.none')}`,
   ];
 }
 
-function toDetailRows(trials: TrialResult[]): Array<Record<string, unknown>> {
+function ToDetailRows(trials: TrialResult[]): Array<Record<string, unknown>> {
   return trials.map((trial, index) => ({
     Question: index + 1,
     Concept: trial.concept,
@@ -817,7 +817,7 @@ function toDetailRows(trials: TrialResult[]): Array<Record<string, unknown>> {
   }));
 }
 
-function toCsv(summary: SessionSummary): string {
+function ToCsv(summary: SessionSummary): string {
   const columns = [
     'Training_Date',
     'Participant_ID',
@@ -853,27 +853,27 @@ function toCsv(summary: SessionSummary): string {
     Correct_Sentences: trial.correctSentenceText,
   }));
 
-  return createCsvContent([
+  return CreateCsvContent([
     columns,
     ...rows.map((row) => columns.map((column) => row[column as keyof typeof row])),
   ]);
 }
 
-function formatTestDate(date: Date): string {
+function FormatTestDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
-function validateTrainingSets(sets: TrainingSet[]): void {
+function ValidateTrainingSets(sets: TrainingSet[]): void {
   sets.forEach((set) => {
-    validateQuestions(set.questions, set.transcript.length);
-    validateQuestions(set.zh.questions, set.zh.transcript.length);
+    ValidateQuestions(set.questions, set.transcript.length);
+    ValidateQuestions(set.zh.questions, set.zh.transcript.length);
   });
 }
 
-function validateQuestions(questions: MainConceptQuestion[], transcriptLength: number): void {
+function ValidateQuestions(questions: MainConceptQuestion[], transcriptLength: number): void {
   questions.forEach((question) => {
       if (question.elements.length !== question.correctRatings.length) {
         throw new Error(`Invalid main concept training data: ${question.id}`);

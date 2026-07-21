@@ -1,7 +1,7 @@
 import type { Arena, OculomotorPattern, PatternParams, TargetFrame } from './types';
 import type { Rng } from './random';
 
-const TAU = Math.PI * 2;
+const tau = Math.PI * 2;
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
@@ -115,7 +115,7 @@ const sampleSingle = (
 
   const generatePolygon = (sides: number, angleOffset = -Math.PI / 2): [number, number][] => {
     return Array.from({ length: sides }, (_, i) => {
-      const angle = angleOffset + (i / sides) * TAU;
+      const angle = angleOffset + (i / sides) * tau;
       return [cx + Math.cos(angle) * rx, cy + Math.sin(angle) * ry];
     });
   };
@@ -123,7 +123,7 @@ const sampleSingle = (
   const generateStar = (points: number, innerRatio = 0.5, angleOffset = -Math.PI / 2): [number, number][] => {
     const sides = points * 2;
     return Array.from({ length: sides }, (_, i) => {
-      const angle = angleOffset + (i / sides) * TAU;
+      const angle = angleOffset + (i / sides) * tau;
       const r = i % 2 === 0 ? 1 : innerRatio;
       return [cx + Math.cos(angle) * rx * r, cy + Math.sin(angle) * ry * r];
     });

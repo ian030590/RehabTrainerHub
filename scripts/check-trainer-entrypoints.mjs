@@ -25,7 +25,7 @@ const viteConfigFiles = readdirSync(appsRoot, { withFileTypes: true })
   .map((entry) => `apps/${entry.name}/vite.config.ts`)
   .filter((file) => existsSync(resolve(repoRoot, file)));
 
-const protectedEntrypoints = unique([
+const protectedEntrypoints = Unique([
   ...appEntrypoints,
   'apps/stroketrainer/src/pages/HomePage.tsx',
   'apps/stroketrainer/src/pages/training/MotorTraining.tsx',
@@ -44,11 +44,11 @@ for (const entrypoint of protectedEntrypoints) {
     continue;
   }
 
-  scanStaticImportGraph(absolutePath, entrypoint, new Set());
+  ScanStaticImportGraph(absolutePath, entrypoint, new Set());
 }
 
 for (const viteConfigFile of viteConfigFiles) {
-  checkViteBaseConfig(viteConfigFile);
+  CheckViteBaseConfig(viteConfigFile);
 }
 
 if (violations.length > 0) {
@@ -57,26 +57,26 @@ if (violations.length > 0) {
 
 console.log(`White-screen smoke test passed for ${protectedEntrypoints.length} trainer entrypoints.`);
 
-function scanStaticImportGraph(filePath, entrypoint, visited) {
+function ScanStaticImportGraph(filePath, entrypoint, visited) {
   if (visited.has(filePath)) return;
   visited.add(filePath);
 
   const source = readFileSync(filePath, 'utf8');
-  for (const specifier of getStaticImports(source)) {
-    const forbiddenImport = getForbiddenRuntimeImport(specifier);
+  for (const specifier of GetStaticImports(source)) {
+    const forbiddenImport = GetForbiddenRuntimeImport(specifier);
     if (forbiddenImport) {
-      violations.push(`${entrypoint}: ${relativeToRepo(filePath)} statically imports ${specifier}`);
+      violations.push(`${entrypoint}: ${RelativeToRepo(filePath)} statically imports ${specifier}`);
       continue;
     }
 
-    const resolved = resolveProjectImport(filePath, specifier);
-    if (resolved && isScannableSourceFile(resolved)) {
-      scanStaticImportGraph(resolved, entrypoint, visited);
+    const resolved = ResolveProjectImport(filePath, specifier);
+    if (resolved && IsScannableSourceFile(resolved)) {
+      ScanStaticImportGraph(resolved, entrypoint, visited);
     }
   }
 }
 
-function checkViteBaseConfig(configFile) {
+function CheckViteBaseConfig(configFile) {
   const source = readFileSync(resolve(repoRoot, configFile), 'utf8');
 
   if (/\bbase\s*:\s*['"]\.\/['"]/.test(source)) {
@@ -86,7 +86,7 @@ function checkViteBaseConfig(configFile) {
   }
 }
 
-function getStaticImports(source) {
+function GetStaticImports(source) {
   const imports = [];
   const pattern = /^\s*import\s+(type\s+)?(?:[\s\S]*?\s+from\s+)?['"]([^'"]+)['"];?/gm;
   let match;
@@ -99,27 +99,27 @@ function getStaticImports(source) {
   return imports;
 }
 
-function getForbiddenRuntimeImport(specifier) {
+function GetForbiddenRuntimeImport(specifier) {
   return forbiddenRuntimeImports.find((name) => specifier === name || specifier.startsWith(`${name}/`));
 }
 
-function resolveProjectImport(importerPath, specifier) {
+function ResolveProjectImport(importerPath, specifier) {
   if (specifier.startsWith('.')) {
-    return resolveModule(dirname(importerPath), specifier);
+    return ResolveModule(dirname(importerPath), specifier);
   }
 
   if (specifier === '@rehab-trainer/ui') {
-    return resolveModule(resolve(repoRoot, 'packages/ui/src'), 'index');
+    return ResolveModule(resolve(repoRoot, 'packages/ui/src'), 'index');
   }
 
   if (specifier.startsWith('@rehab-trainer/ui/')) {
-    return resolveModule(resolve(repoRoot, 'packages/ui/src'), specifier.slice('@rehab-trainer/ui/'.length));
+    return ResolveModule(resolve(repoRoot, 'packages/ui/src'), specifier.slice('@rehab-trainer/ui/'.length));
   }
 
   return null;
 }
 
-function resolveModule(baseDir, specifier) {
+function ResolveModule(baseDir, specifier) {
   const basePath = resolve(baseDir, specifier);
   const candidates = [
     basePath,
@@ -138,14 +138,14 @@ function resolveModule(baseDir, specifier) {
   return candidates.find((candidate) => existsSync(candidate) && statSync(candidate).isFile()) ?? null;
 }
 
-function isScannableSourceFile(filePath) {
+function IsScannableSourceFile(filePath) {
   return /\.(mjs|js|jsx|ts|tsx)$/.test(filePath);
 }
 
-function relativeToRepo(filePath) {
+function RelativeToRepo(filePath) {
   return filePath.slice(repoRoot.length + 1);
 }
 
-function unique(items) {
+function Unique(items) {
   return [...new Set(items)];
 }

@@ -4,27 +4,27 @@ import { useT } from '../../i18n';
 import WebGazerExtension from '@jspsych/extension-webgazer';
 import { BestPEST } from './logic/bestPest';
 import {
-  getStrokeBounds,
-  stimDeviceFromThresholder,
-  stimThresholderFromDevice,
-  logMARFromStrokePixels,
-  decVAFromStrokePixels,
-  formatSnellenFraction,
-  lettersFromLogMAR,
+  GetStrokeBounds,
+  StimDeviceFromThresholder,
+  StimThresholderFromDevice,
+  LogMARFromStrokePixels,
+  DecVAFromStrokePixels,
+  FormatSnellenFraction,
+  LettersFromLogMAR,
 } from './logic/acuityLogic';
 import {
-  clearCanvas,
-  drawLandoltC,
-  drawTumblingE,
-  drawSloanLetter,
-  drawPictureOptotype,
-  drawGrating,
-  getAlternativeCount,
-  randomAlternative,
-  LANDOLT_DIRECTION_LABELS,
-  E_DIRECTION_LABELS,
-  SLOAN_LETTERS,
-  PICTURE_NAMES,
+  ClearCanvas,
+  DrawLandoltC,
+  DrawTumblingE,
+  DrawSloanLetter,
+  DrawPictureOptotype,
+  DrawGrating,
+  GetAlternativeCount,
+  RandomAlternative,
+  landoltDirectionLabels,
+  eDirectionLabels,
+  sloanLetters,
+  pictureNames,
 } from './logic/optotypeRenderer';
 import type {
   TestType,
@@ -34,11 +34,11 @@ import type {
   PictureIndex,
   GratingOrientation,
 } from './logic/optotypeRenderer';
-import { getActiveUser, getSetting } from '../../utils/settings';
-import { pixelFromDegree } from '../../utils/spatialUtils';
-import { SoundManager } from '../../utils/soundManager';
-import { downloadCsvFile } from '../../utils/downloadFile';
-import { createCsvContent } from '@rehab-trainer/ui/csv';
+import { getActiveUser, GetSetting } from '../../utils/settings';
+import { PixelFromDegree } from '../../utils/spatialUtils';
+import { soundManager } from '../../utils/soundManager';
+import { DownloadCsvFile } from '../../utils/downloadFile';
+import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -46,11 +46,11 @@ import { typography } from '@rehab-trainer/ui/trainerTheme';
 
 type Phase = 'intro' | 'isi' | 'stimulus' | 'results';
 
-const ACUITY_OVERLAY_FONT_SIZE = 12;
-const MID_LUMINANCE = 0.5;
-const DEFAULT_ACUITY_BACKGROUND = '#FFFFFF';
-const VALID_TEST_TYPES: TestType[] = ['landolt', 'tumblingE', 'letters', 'pictures', 'gratings', 'contrast'];
-const PICTURE_KEY_LABELS = ['1', '2', '3', '4'] as const;
+const acuityOverlayFontSize = 12;
+const midLuminance = 0.5;
+const defaultAcuityBackground = '#FFFFFF';
+const validTestTypes: TestType[] = ['landolt', 'tumblingE', 'letters', 'pictures', 'gratings', 'contrast'];
+const pictureKeyLabels = ['1', '2', '3', '4'] as const;
 
 interface TrialRecord {
   trial: number;
@@ -78,11 +78,11 @@ interface GazeDecisionMeta {
   totalSamples?: number;
 }
 
-function isTestType(value: string | null): value is TestType {
-  return value !== null && VALID_TEST_TYPES.includes(value as TestType);
+function IsTestType(value: string | null): value is TestType {
+  return value !== null && validTestTypes.includes(value as TestType);
 }
 
-function prepareAcuityCanvas(canvas: HTMLCanvasElement) {
+function PrepareAcuityCanvas(canvas: HTMLCanvasElement) {
   const width = Math.max(1, window.innerWidth);
   const height = Math.max(1, window.innerHeight);
   const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -106,23 +106,23 @@ function prepareAcuityCanvas(canvas: HTMLCanvasElement) {
   return { ctx, width, height };
 }
 
-function getGammaCorrectedMidGrayChannel(): number {
-  const gamma = getSetting('gammaValue');
-  const corrected = Math.pow(MID_LUMINANCE, 1 / gamma);
+function GetGammaCorrectedMidGrayChannel(): number {
+  const gamma = GetSetting('gammaValue');
+  const corrected = Math.pow(midLuminance, 1 / gamma);
   return Math.round(Math.min(1, Math.max(0, corrected)) * 255);
 }
 
-function getGammaCorrectedMidGray(): string {
-  const channel = getGammaCorrectedMidGrayChannel();
+function GetGammaCorrectedMidGray(): string {
+  const channel = GetGammaCorrectedMidGrayChannel();
   return `rgb(${channel}, ${channel}, ${channel})`;
 }
 
-function getAcuityBackground(testType: TestType): string {
-  return testType === 'gratings' ? getGammaCorrectedMidGray() : DEFAULT_ACUITY_BACKGROUND;
+function GetAcuityBackground(testType: TestType): string {
+  return testType === 'gratings' ? GetGammaCorrectedMidGray() : defaultAcuityBackground;
 }
 
-function getBalancedGratingColors() {
-  const gray = getGammaCorrectedMidGrayChannel();
+function GetBalancedGratingColors() {
+  const gray = GetGammaCorrectedMidGrayChannel();
   const amplitude = Math.min(gray, 255 - gray);
   const light = gray + amplitude;
   const dark = gray - amplitude;
@@ -133,14 +133,14 @@ function getBalancedGratingColors() {
   };
 }
 
-function drawGratingApertureRing(
+function DrawGratingApertureRing(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
   diameter: number,
 ) {
   ctx.save();
-  ctx.strokeStyle = DEFAULT_ACUITY_BACKGROUND;
+  ctx.strokeStyle = defaultAcuityBackground;
   ctx.lineWidth = Math.max(1.5, diameter * 0.012);
   ctx.beginPath();
   ctx.arc(cx, cy, diameter / 2 - ctx.lineWidth / 2, 0, Math.PI * 2);
@@ -154,10 +154,10 @@ export function AcuityTestPage() {
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const [searchParams] = useSearchParams();
   const requestedTestType = searchParams.get('type') || searchParams.get('test');
-  const testType = isTestType(requestedTestType) ? requestedTestType : 'landolt';
+  const testType = IsTestType(requestedTestType) ? requestedTestType : 'landolt';
   const totalTrials = parseInt(searchParams.get('trials') || '18', 10);
   const requestedResponseMode =
-    searchParams.get('responseMode') || searchParams.get('mode') || getSetting('preferentialLookingInputMode');
+    searchParams.get('responseMode') || searchParams.get('mode') || GetSetting('preferentialLookingInputMode');
   const responseMode: 'keyboard' | 'webgazer' =
     requestedResponseMode === 'webgazer' ? 'webgazer' : 'keyboard';
   const isWebGazerPL = testType === 'gratings' && responseMode === 'webgazer';
@@ -216,8 +216,8 @@ export function AcuityTestPage() {
     await enterTrainingFullscreen();
 
     const begin = () => {
-      SoundManager.init();
-      const nAlt = getAlternativeCount(testType);
+      soundManager.init();
+      const nAlt = GetAlternativeCount(testType);
       pestRef.current = new BestPEST(nAlt);
       trialRef.current = 0;
       recordsRef.current = [];
@@ -225,7 +225,7 @@ export function AcuityTestPage() {
       setWebGazerMessage('');
 
       // Get canvas dimensions for stroke bounds
-      strokeBoundsRef.current = getStrokeBounds(window.innerWidth, window.innerHeight);
+      strokeBoundsRef.current = GetStrokeBounds(window.innerWidth, window.innerHeight);
 
       pendingStartRef.current = true;
       setPhase('isi');
@@ -253,11 +253,11 @@ export function AcuityTestPage() {
   const drawStimulus = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const prepared = prepareAcuityCanvas(canvas);
+    const prepared = PrepareAcuityCanvas(canvas);
     if (!prepared) return;
 
     const { ctx, width, height } = prepared;
-    clearCanvas(ctx, width, height, getAcuityBackground(testType));
+    ClearCanvas(ctx, width, height, GetAcuityBackground(testType));
 
     const cx = width / 2;
     const cy = height / 2;
@@ -267,21 +267,21 @@ export function AcuityTestPage() {
 
     switch (testType) {
       case 'landolt':
-        drawLandoltC(ctx, cx, cy, strokePx, alt as LandoltDirection);
+        DrawLandoltC(ctx, cx, cy, strokePx, alt as LandoltDirection);
         break;
       case 'tumblingE':
-        drawTumblingE(ctx, cx, cy, strokePx, (alt * 2) as EDirection);
+        DrawTumblingE(ctx, cx, cy, strokePx, (alt * 2) as EDirection);
         break;
       case 'letters':
-        drawSloanLetter(ctx, cx, cy, strokePx, alt as SloanLetterIndex);
+        DrawSloanLetter(ctx, cx, cy, strokePx, alt as SloanLetterIndex);
         break;
       case 'pictures':
-        drawPictureOptotype(ctx, cx, cy, strokePx, alt as PictureIndex);
+        DrawPictureOptotype(ctx, cx, cy, strokePx, alt as PictureIndex);
         break;
       case 'gratings': {
-        const pixPerDeg = pixelFromDegree(1);
+        const pixPerDeg = PixelFromDegree(1);
         // spatial frequency based on stroke size
-        const cpd = 30 / Math.pow(10, logMARFromStrokePixels(strokePx));
+        const cpd = 30 / Math.pow(10, LogMARFromStrokePixels(strokePx));
         const diameter = Math.min(height * 0.58, width * 0.34);
         const orient: GratingOrientation = alt === 0 ? 'left' : 'right';
         const margin = 24;
@@ -290,11 +290,11 @@ export function AcuityTestPage() {
         const leftX = cx - baseOffset;
         const rightX = cx + baseOffset;
         const gratingX = orient === 'left' ? leftX : rightX;
-        const gratingColors = getBalancedGratingColors();
+        const gratingColors = GetBalancedGratingColors();
 
-        drawGrating(ctx, gratingX, cy, diameter, cpd, orient, pixPerDeg, gratingColors);
-        drawGratingApertureRing(ctx, leftX, cy, diameter);
-        drawGratingApertureRing(ctx, rightX, cy, diameter);
+        DrawGrating(ctx, gratingX, cy, diameter, cpd, orient, pixPerDeg, gratingColors);
+        DrawGratingApertureRing(ctx, leftX, cy, diameter);
+        DrawGratingApertureRing(ctx, rightX, cy, diameter);
         gratingRegionsRef.current = {
           left: { x: leftX, y: cy, radius: diameter / 2 },
           right: { x: rightX, y: cy, radius: diameter / 2 },
@@ -303,10 +303,10 @@ export function AcuityTestPage() {
       }
     }
 
-    const snellen = formatSnellenFraction(decVAFromStrokePixels(strokePx));
+    const snellen = FormatSnellenFraction(DecVAFromStrokePixels(strokePx));
 
     ctx.fillStyle = '#9CA3AF';
-    ctx.font = `${ACUITY_OVERLAY_FONT_SIZE}px ${typography.fontFamily}`;
+    ctx.font = `${acuityOverlayFontSize}px ${typography.fontFamily}`;
     ctx.fillText(snellen, 12, 20);
   }, [testType]);
 
@@ -317,7 +317,7 @@ export function AcuityTestPage() {
     trialRef.current += 1;
     if (trialRef.current > totalTrials) {
       setTrialRecords([...recordsRef.current]);
-      SoundManager.destroy();
+      soundManager.destroy();
       setPhase('results');
       return;
     }
@@ -325,22 +325,22 @@ export function AcuityTestPage() {
     // Get next stimulus from BestPEST
     const tPest = pest.nextStim2apply();
     const { strokeMin, strokeMax } = strokeBoundsRef.current;
-    const strokePx = stimDeviceFromThresholder(tPest, strokeMin, strokeMax);
+    const strokePx = StimDeviceFromThresholder(tPest, strokeMin, strokeMax);
     currentStrokePxRef.current = strokePx;
 
     // Generate random alternative
-    currentAlternativeRef.current = randomAlternative(testType);
+    currentAlternativeRef.current = RandomAlternative(testType);
 
     // ISI phase (blank screen)
     setPhase('isi');
     const canvas = canvasRef.current;
     if (canvas) {
-      const prepared = prepareAcuityCanvas(canvas);
-      if (prepared) clearCanvas(
+      const prepared = PrepareAcuityCanvas(canvas);
+      if (prepared) ClearCanvas(
         prepared.ctx,
         prepared.width,
         prepared.height,
-        getAcuityBackground(testType),
+        GetAcuityBackground(testType),
       );
     }
 
@@ -371,7 +371,7 @@ export function AcuityTestPage() {
     const { strokeMin, strokeMax } = strokeBoundsRef.current;
 
     // Record
-    const logMAR = logMARFromStrokePixels(strokePx);
+    const logMAR = LogMARFromStrokePixels(strokePx);
     const record: TrialRecord = {
       trial: trialRef.current,
       presented,
@@ -387,15 +387,15 @@ export function AcuityTestPage() {
     recordsRef.current.push(record);
 
     // Feed back to BestPEST
-    const tPest = stimThresholderFromDevice(strokePx, strokeMin, strokeMax);
+    const tPest = StimThresholderFromDevice(strokePx, strokeMin, strokeMax);
     pest.enterTrialOutcome(tPest, correct);
 
     // Audio feedback
-    if (getSetting('auditoryFeedbackEnabled')) {
+    if (GetSetting('auditoryFeedbackEnabled')) {
       if (correct) {
-        SoundManager.playCorrect();
+        soundManager.playCorrect();
       } else {
-        SoundManager.playIncorrect();
+        soundManager.playIncorrect();
       }
     }
 
@@ -555,9 +555,9 @@ export function AcuityTestPage() {
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      const prepared = prepareAcuityCanvas(canvas);
+      const prepared = PrepareAcuityCanvas(canvas);
       if (!prepared) return;
-      strokeBoundsRef.current = getStrokeBounds(prepared.width, prepared.height);
+      strokeBoundsRef.current = GetStrokeBounds(prepared.width, prepared.height);
       if (phaseRef.current === 'stimulus') {
         drawStimulus();
       }
@@ -567,7 +567,7 @@ export function AcuityTestPage() {
   }, [drawStimulus]);
 
   useEffect(() => () => {
-    SoundManager.destroy();
+    soundManager.destroy();
     try {
       gazeExtensionRef.current?.pause?.();
       gazeExtensionRef.current?.hidePredictions?.();
@@ -577,7 +577,7 @@ export function AcuityTestPage() {
   }, []);
 
   const abortTest = useCallback(() => {
-    SoundManager.destroy();
+    soundManager.destroy();
     try {
       gazeExtensionRef.current?.pause?.();
       gazeExtensionRef.current?.hidePredictions?.();
@@ -603,8 +603,8 @@ export function AcuityTestPage() {
     return wrapFullscreenRoot(
       <div className="experiment-container">
         <div className="acuity-intro">
-          <h1>{getTestTitle(testType, t)}</h1>
-          <p>{getTestInstruction(testType, t)}</p>
+          <h1>{GetTestTitle(testType, t)}</h1>
+          <p>{GetTestInstruction(testType, t)}</p>
           {isWebGazerPL ? (
             <div className="webgazer-pl-intro">
               <h3>{t('acuity.plWgMethod')}</h3>
@@ -612,7 +612,7 @@ export function AcuityTestPage() {
             </div>
           ) : (
             <div className="acuity-intro-keys">
-              {getKeyHints(testType, t)}
+              {GetKeyHints(testType, t)}
             </div>
           )}
           <button
@@ -648,7 +648,7 @@ export function AcuityTestPage() {
             display: 'block',
             width: '100%',
             height: '100%',
-            background: getAcuityBackground(testType),
+            background: GetAcuityBackground(testType),
           }}
         />
         {isWebGazerPL && phase === 'stimulus' && (
@@ -656,7 +656,7 @@ export function AcuityTestPage() {
         )}
         {!isWebGazerPL && (
           <div className="acuity-touch-controls">
-            {renderTouchButtons(testType, handleResponse, t)}
+            {RenderTouchButtons(testType, handleResponse, t)}
           </div>
         )}
         {/* Abort button */}
@@ -674,10 +674,10 @@ export function AcuityTestPage() {
   // ── Results Phase ──
   const records = trialRecords;
   const finalStrokePx = records.length > 0 ? records[records.length - 1].strokePx : 10;
-  const finalLogMAR = logMARFromStrokePixels(finalStrokePx);
-  const finalDecVA = decVAFromStrokePixels(finalStrokePx);
-  const finalSnellen = formatSnellenFraction(finalDecVA);
-  const finalLetterScore = Math.round(lettersFromLogMAR(finalLogMAR));
+  const finalLogMAR = LogMARFromStrokePixels(finalStrokePx);
+  const finalDecVA = DecVAFromStrokePixels(finalStrokePx);
+  const finalSnellen = FormatSnellenFraction(finalDecVA);
+  const finalLetterScore = Math.round(LettersFromLogMAR(finalLogMAR));
   const correctCount = records.filter((r) => r.correct).length;
   const correctRate = records.length > 0 ? correctCount / records.length : 0;
   const decimalAcuity = finalDecVA.toFixed(2);
@@ -685,7 +685,7 @@ export function AcuityTestPage() {
   const downloadCSV = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false }).replace(/:/g, '');
-    const prefix = getSetting('downloadDirectory');
+    const prefix = GetSetting('downloadDirectory');
 
     const headers = [
       t('exp.csv.user'),
@@ -720,8 +720,8 @@ export function AcuityTestPage() {
     rows.push([t('acuity.csv.letterScore'), String(finalLetterScore)]);
     rows.push([t('acuity.csv.accuracy'), `${(correctRate * 100).toFixed(1)}%`]);
 
-    const csv = createCsvContent([headers, ...rows]);
-    downloadCsvFile(
+    const csv = CreateCsvContent([headers, ...rows]);
+    DownloadCsvFile(
       csv,
       `${prefix ? prefix + '_' : ''}${userName}_acuity_${testType}_${dateStr}.csv`,
     );
@@ -752,7 +752,7 @@ export function AcuityTestPage() {
         </div>
 
         <div className="acuity-result-meta">
-          <span>{t('assess.config.test')} <b>{getTestTitle(testType, t)}</b></span>
+          <span>{t('assess.config.test')} <b>{GetTestTitle(testType, t)}</b></span>
           <span>{t('acuity.decimalAcuity')}: <b style={{ color: 'var(--accent)' }}>{decimalAcuity}</b></span>
           <span>{t('acuity.csv.accuracy')}: <b style={{ color: 'var(--accent)' }}>{correctCount}/{records.length}</b></span>
           <span>{t('assess.config.user')} <b>{userName}</b></span>
@@ -777,9 +777,9 @@ export function AcuityTestPage() {
               <tr key={i}>
                 <td>{r.trial}</td>
                 <td style={{ fontWeight: 600, color: 'var(--accent)' }}>
-                  {formatAlternative(testType, r.presented, t)}
+                  {FormatAlternative(testType, r.presented, t)}
                 </td>
-                <td>{formatAlternative(testType, r.responded, t)}</td>
+                <td>{FormatAlternative(testType, r.responded, t)}</td>
                 <td style={{ color: r.correct ? 'var(--success)' : 'var(--error)' }}>
                   {r.correct ? '✓' : '✗'}
                 </td>
@@ -808,7 +808,7 @@ export function AcuityTestPage() {
 
 // ── Helpers ──
 
-function getTestTitle(t: TestType, tFunc: any): string {
+function GetTestTitle(t: TestType, tFunc: any): string {
   const map: Record<TestType, string> = {
     landolt: tFunc('assess.landolt.title'),
     tumblingE: tFunc('assess.tumblingE.title'),
@@ -820,7 +820,7 @@ function getTestTitle(t: TestType, tFunc: any): string {
   return map[t];
 }
 
-function getTestInstruction(t: TestType, tFunc: any): string {
+function GetTestInstruction(t: TestType, tFunc: any): string {
   switch (t) {
     case 'landolt':
       return tFunc('acuity.inst.landolt');
@@ -839,7 +839,7 @@ function getTestInstruction(t: TestType, tFunc: any): string {
   }
 }
 
-function getKeyHints(t: TestType, tFunc: any): React.ReactNode {
+function GetKeyHints(t: TestType, tFunc: any): React.ReactNode {
   switch (t) {
     case 'landolt':
     case 'contrast':
@@ -847,7 +847,7 @@ function getKeyHints(t: TestType, tFunc: any): React.ReactNode {
         <div className="key-hints-grid-8">
           {([3, 2, 1, 4, -1, 0, 5, 6, 7] as number[]).map((dir, i) => (
             <div key={i} className={`key-hint ${dir === -1 ? 'key-hint-empty' : ''}`}>
-              {dir >= 0 ? LANDOLT_DIRECTION_LABELS[dir as LandoltDirection] : ''}
+              {dir >= 0 ? landoltDirectionLabels[dir as LandoltDirection] : ''}
             </div>
           ))}
         </div>
@@ -864,9 +864,9 @@ function getKeyHints(t: TestType, tFunc: any): React.ReactNode {
     case 'pictures':
       return (
         <div className="key-hints-pictures">
-          {PICTURE_NAMES.map((name, idx) => (
+          {pictureNames.map((name, idx) => (
             <div key={name} className="picture-key-hint">
-              <span className="picture-key-number">{PICTURE_KEY_LABELS[idx]}</span>
+              <span className="picture-key-number">{pictureKeyLabels[idx]}</span>
               <span>{name}</span>
             </div>
           ))}
@@ -875,7 +875,7 @@ function getKeyHints(t: TestType, tFunc: any): React.ReactNode {
     case 'letters':
       return (
         <div className="key-hints-letters">
-          {SLOAN_LETTERS.map((l) => (
+          {sloanLetters.map((l) => (
             <div key={l} className="key-hint">{l}</div>
           ))}
         </div>
@@ -890,7 +890,7 @@ function getKeyHints(t: TestType, tFunc: any): React.ReactNode {
   }
 }
 
-function renderTouchButtons(testType: TestType, onResponse: (idx: number) => void, tFunc: any): React.ReactNode {
+function RenderTouchButtons(testType: TestType, onResponse: (idx: number) => void, tFunc: any): React.ReactNode {
   switch (testType) {
     case 'landolt':
     case 'contrast':
@@ -908,7 +908,7 @@ function renderTouchButtons(testType: TestType, onResponse: (idx: number) => voi
                 style={{ left: `${left}%`, top: `${top}%` }}
                 onClick={() => onResponse(dir)}
               >
-                {LANDOLT_DIRECTION_LABELS[dir]}
+                {landoltDirectionLabels[dir]}
               </button>
             );
           })}
@@ -926,13 +926,13 @@ function renderTouchButtons(testType: TestType, onResponse: (idx: number) => voi
     case 'pictures':
       return (
         <div className="touch-btn-pictures">
-          {PICTURE_NAMES.map((name, idx) => (
+          {pictureNames.map((name, idx) => (
             <button
               key={name}
               className="picture-choice-btn"
               onClick={() => onResponse(idx)}
             >
-              <span className="picture-choice-key">{PICTURE_KEY_LABELS[idx]}</span>
+              <span className="picture-choice-key">{pictureKeyLabels[idx]}</span>
               <span className="picture-choice-name">{name}</span>
             </button>
           ))}
@@ -941,7 +941,7 @@ function renderTouchButtons(testType: TestType, onResponse: (idx: number) => voi
     case 'letters':
       return (
         <div className="touch-btn-letters">
-          {SLOAN_LETTERS.map((l, i) => (
+          {sloanLetters.map((l, i) => (
             <button key={l} className="direction-btn letter-btn" onClick={() => onResponse(i)}>
               {l}
             </button>
@@ -958,17 +958,17 @@ function renderTouchButtons(testType: TestType, onResponse: (idx: number) => voi
   }
 }
 
-function formatAlternative(testType: TestType, idx: number, tFunc: any): string {
+function FormatAlternative(testType: TestType, idx: number, tFunc: any): string {
   switch (testType) {
     case 'landolt':
     case 'contrast':
-      return LANDOLT_DIRECTION_LABELS[idx as LandoltDirection] || String(idx);
+      return landoltDirectionLabels[idx as LandoltDirection] || String(idx);
     case 'tumblingE':
-      return E_DIRECTION_LABELS[(idx * 2) as EDirection] || String(idx);
+      return eDirectionLabels[(idx * 2) as EDirection] || String(idx);
     case 'letters':
-      return SLOAN_LETTERS[idx] || String(idx);
+      return sloanLetters[idx] || String(idx);
     case 'pictures':
-      return PICTURE_NAMES[idx] ? `${idx + 1} ${PICTURE_NAMES[idx]}` : String(idx);
+      return pictureNames[idx] ? `${idx + 1} ${pictureNames[idx]}` : String(idx);
     case 'gratings':
       return idx === 0 ? tFunc('acuity.lbl.left') : tFunc('acuity.lbl.right');
     default:

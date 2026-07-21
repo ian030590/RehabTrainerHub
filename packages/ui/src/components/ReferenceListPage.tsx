@@ -20,7 +20,7 @@ export interface ReferenceListPageProps {
   variant?: 'trainer' | 'hub';
 }
 
-export function formatReferenceModuleChip(tabName: string, moduleName: string) {
+export function FormatReferenceModuleChip(tabName: string, moduleName: string) {
   return `${tabName} - ${moduleName}`;
 }
 

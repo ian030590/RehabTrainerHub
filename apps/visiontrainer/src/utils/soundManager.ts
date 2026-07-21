@@ -2,7 +2,7 @@
  * Simple sound manager for feedback sounds.
  * Uses Web Audio API for synthesized beeps.
  */
-import { getSetting } from './settings';
+import { GetSetting } from './settings';
 
 class SoundManagerImpl {
   private ctx: AudioContext | null = null;
@@ -36,11 +36,11 @@ class SoundManagerImpl {
   }
 
   playTone(frequency: number, durationMs: number, type: OscillatorType = 'sine'): void {
-    if (!getSetting('auditoryFeedbackEnabled')) return;
+    if (!GetSetting('auditoryFeedbackEnabled')) return;
     const ctx = this.ensureContext();
     if (!ctx) return;
 
-    const vol = getSetting('soundVolume') / 100;
+    const vol = GetSetting('soundVolume') / 100;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = type;
@@ -62,10 +62,10 @@ class SoundManagerImpl {
   }
 
   playPop(): void {
-    if (!getSetting('auditoryFeedbackEnabled')) return;
+    if (!GetSetting('auditoryFeedbackEnabled')) return;
     const ctx = this.ensureContext();
     if (!ctx) return;
-    const vol = getSetting('soundVolume') / 100;
+    const vol = GetSetting('soundVolume') / 100;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -80,10 +80,10 @@ class SoundManagerImpl {
   }
 
   playRunEnd(): void {
-    if (!getSetting('auditoryFeedbackEnabled')) return;
+    if (!GetSetting('auditoryFeedbackEnabled')) return;
     const ctx = this.ensureContext();
     if (!ctx) return;
-    const vol = getSetting('soundVolume') / 100;
+    const vol = GetSetting('soundVolume') / 100;
     const now = ctx.currentTime;
     [523.25, 659.25, 783.99].forEach((freq, i) => {
       const osc = ctx.createOscillator();
@@ -100,4 +100,4 @@ class SoundManagerImpl {
   }
 }
 
-export const SoundManager = new SoundManagerImpl();
+export const soundManager = new SoundManagerImpl();

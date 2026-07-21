@@ -1,6 +1,6 @@
 import {
   ReferenceListPage,
-  formatReferenceModuleChip,
+  FormatReferenceModuleChip,
   type ReferenceListItem,
 } from '@rehab-trainer/ui/components/ReferenceListPage';
 import '@rehab-trainer/ui/components/GridPageLayout.css';
@@ -28,7 +28,7 @@ export function CreditsPage() {
   const visualTrainingTab = t('nav.trainingList');
   const visualAssessmentTab = t('nav.assessment');
   const webSettingsTab = t('nav.settings');
-  const moduleChip = (tabName: string, moduleName: string) => formatReferenceModuleChip(tabName, moduleName);
+  const moduleChip = (tabName: string, moduleName: string) => FormatReferenceModuleChip(tabName, moduleName);
 
   const githubItems: ReferenceListItem[] = [
     {

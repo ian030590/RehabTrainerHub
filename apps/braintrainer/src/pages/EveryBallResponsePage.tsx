@@ -5,14 +5,14 @@ import {
   PoseLandmarker,
   type NormalizedLandmark,
 } from '@mediapipe/tasks-vision';
-import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
-import { createCsvContent } from '@rehab-trainer/ui/csv';
-import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
+import { CreateCsvContent } from '@rehab-trainer/ui/csv';
+import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { Application, Container, Graphics, Text } from 'pixi.js';
@@ -20,7 +20,7 @@ import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../i18n';
-import { saveTrainingRecord, type BrainTrainingRecord } from '../utils/trainingRecords';
+import { SaveTrainingRecord, type BrainTrainingRecord } from '../utils/trainingRecords';
 import './EveryBallResponsePage.css';
 
 type Phase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
@@ -194,26 +194,26 @@ interface EveryBallExperimentData {
   trial_count: number;
 }
 
-const LEVELS: readonly LevelDefinition[] = [
+const levels: readonly LevelDefinition[] = [
   { id: 1, trialCount: 8, passAccuracy: 100 },
   { id: 2, trialCount: 16, passAccuracy: 85 },
   { id: 3, trialCount: 20, passAccuracy: 80 },
 ];
-const TRIAL_COUNT_OPTIONS = [8, 16, 20, 24, 32] as const;
-const DISTRACTOR_BALLS: readonly BallId[] = ['soccer', 'tennis', 'beach'];
-const FEEDBACK_MS = 550;
-const STIMULUS_MS = 900;
-const RESPONSE_WINDOW_MS = 1800;
-const FIXATION_MIN_MS = 1000;
-const FIXATION_MAX_MS = 3000;
-const MEDIAPIPE_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
-const HAND_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
-const POSE_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
-const CAMERA_DETECTION_INTERVAL_MS = 70;
-const CAMERA_GESTURE_COOLDOWN_MS = 480;
-const CLAP_CLOSE_DISTANCE = 0.12;
-const CLAP_OPEN_DISTANCE = 0.2;
-const MICROPHONE_COOLDOWN_MS = 320;
+const trialCountOptions = [8, 16, 20, 24, 32] as const;
+const distractorBalls: readonly BallId[] = ['soccer', 'tennis', 'beach'];
+const feedbackMs = 550;
+const stimulusMs = 900;
+const responseWindowMs = 1800;
+const fixationMinMs = 1000;
+const fixationMaxMs = 3000;
+const mediapipeWasmUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
+const handModelUrl = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const poseModelUrl = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+const cameraDetectionIntervalMs = 70;
+const cameraGestureCooldownMs = 480;
+const clapCloseDistance = 0.12;
+const clapOpenDistance = 0.2;
+const microphoneCooldownMs = 320;
 
 const everyBallInfo = {
   name: 'every-ball-response',
@@ -277,7 +277,7 @@ class EveryBallExperimentPlugin implements JsPsychPlugin<EveryBallInfo> {
           totalTrials: plans.length,
           fixationStyle: config.fixationStyle,
         });
-        await waitMs(this.jsPsych, plan.fixationMs);
+        await WaitMs(this.jsPsych, plan.fixationMs);
 
         notify?.({
           phase: 'stimulus',
@@ -289,26 +289,26 @@ class EveryBallExperimentPlugin implements JsPsychPlugin<EveryBallInfo> {
           yRatio: plan.yRatio,
         });
 
-        const hideStimulus = waitMs(this.jsPsych, STIMULUS_MS).then(() => {
+        const hideStimulus = WaitMs(this.jsPsych, stimulusMs).then(() => {
           notify?.({
             phase: 'blank',
             trialNumber: plan.trialNumber,
             totalTrials: plans.length,
           });
         });
-        const response = await controller.waitForResponse(RESPONSE_WINDOW_MS);
+        const response = await controller.waitForResponse(responseWindowMs);
         await hideStimulus;
 
-        const record = buildTrialRecord(plan, response, labels);
+        const record = BuildTrialRecord(plan, response, labels);
         records.push(record);
-        writeJsPsychData(this.jsPsych, record as unknown as Record<string, unknown>);
+        WriteJsPsychData(this.jsPsych, record as unknown as Record<string, unknown>);
         notify?.({
           phase: 'feedback',
           trialNumber: plan.trialNumber,
           totalTrials: plans.length,
           feedbackCorrect: record.Correct,
         });
-        await waitMs(this.jsPsych, FEEDBACK_MS);
+        await WaitMs(this.jsPsych, feedbackMs);
       }
     } catch (error) {
       aborted = true;
@@ -568,7 +568,7 @@ export function EveryBallResponsePage() {
   const [levelId, setLevelId] = useState<LevelDefinition['id']>(1);
   const [inputMode, setInputMode] = useState<InputMode>('camera');
   const [fixationStyle, setFixationStyle] = useState<FixationStyle>('cross');
-  const [trialCount, setTrialCount] = useState(LEVELS[0].trialCount);
+  const [trialCount, setTrialCount] = useState(levels[0].trialCount);
   const [microphoneSensitivity, setMicrophoneSensitivity] = useState(0.65);
   const [statusMessage, setStatusMessage] = useState('');
   const [inputLevel, setInputLevel] = useState(0);
@@ -576,7 +576,7 @@ export function EveryBallResponsePage() {
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [visual, setVisual] = useState<VisualState>({ phase: 'idle' });
 
-  const activeLevel = getLevel(levelId);
+  const activeLevel = GetLevel(levelId);
   const selectedLevelLabels = labels.levels[levelId];
   const inputModeLabel = inputMode === 'camera' ? labels.camera : labels.microphone;
   const fixationLabel = fixationStyle === 'cross' ? labels.cross : labels.blank;
@@ -598,7 +598,7 @@ export function EveryBallResponsePage() {
     visualRef.current = nextVisual;
     setVisual(nextVisual);
     const app = GetInitializedPixiApp(appRef.current);
-    if (app) drawEveryBallScene(app, nextVisual, labels);
+    if (app) DrawEveryBallScene(app, nextVisual, labels);
   }, [labels]);
 
   useEffect(() => {
@@ -635,7 +635,7 @@ export function EveryBallResponsePage() {
         appRef.current = app;
         host.appendChild(app.canvas);
         app.canvas.className = 'every-ball-canvas';
-        drawEveryBallScene(app, visualRef.current, labels);
+        DrawEveryBallScene(app, visualRef.current, labels);
       } catch (error) {
         console.warn('Unable to initialize Every Ball Response Pixi stage.', error);
       }
@@ -645,7 +645,7 @@ export function EveryBallResponsePage() {
     const onResize = () => {
       const currentApp = GetInitializedPixiApp(appRef.current);
       if (!currentApp) return;
-      drawEveryBallScene(currentApp, visualRef.current, labels);
+      DrawEveryBallScene(currentApp, visualRef.current, labels);
     };
     window.addEventListener('resize', onResize);
     return () => {
@@ -664,7 +664,7 @@ export function EveryBallResponsePage() {
   useEffect(() => {
     const app = GetInitializedPixiApp(appRef.current);
     if (!app) return;
-    drawEveryBallScene(app, visualRef.current, labels);
+    DrawEveryBallScene(app, visualRef.current, labels);
   }, [labels]);
 
   useEffect(() => {
@@ -693,7 +693,7 @@ export function EveryBallResponsePage() {
 
   const chooseLevel = (nextLevel: LevelDefinition['id']) => {
     setLevelId(nextLevel);
-    setTrialCount(getLevel(nextLevel).trialCount);
+    setTrialCount(GetLevel(nextLevel).trialCount);
   };
 
   const returnToMenu = useCallback(async () => {
@@ -721,7 +721,7 @@ export function EveryBallResponsePage() {
   ) => {
     void stopInput();
     const now = new Date();
-    const nextSummary = buildSessionSummary(data.trials, activeLabels, level, modeLabel, now);
+    const nextSummary = BuildSessionSummary(data.trials, activeLabels, level, modeLabel, now);
     setSummary(nextSummary);
     setStatusMessage('');
     setPhase('results');
@@ -749,7 +749,7 @@ export function EveryBallResponsePage() {
       },
       detailRows: nextSummary.trials.map((trial) => ({ ...trial })),
     };
-    void saveTrainingRecord(record);
+    void SaveTrainingRecord(record);
   }, [drawVisual, setPhase, stopInput]);
 
   const startSession = useCallback(async () => {
@@ -764,15 +764,15 @@ export function EveryBallResponsePage() {
 
     try {
       inputRuntimeRef.current = inputMode === 'camera'
-        ? await createCameraRuntime({
-            video: requireElement(videoRef.current),
-            overlay: requireElement(cameraOverlayRef.current),
+        ? await CreateCameraRuntime({
+            video: RequireElement(videoRef.current),
+            overlay: RequireElement(cameraOverlayRef.current),
             controller: inputControllerRef.current,
             onStatus: (status) => {
               if (mountedRef.current) setStatusMessage(status);
             },
           }, labels)
-        : await createMicrophoneRuntime({
+        : await CreateMicrophoneRuntime({
             sensitivity: microphoneSensitivity,
             controller: inputControllerRef.current,
             onLevel: (level) => {
@@ -784,7 +784,7 @@ export function EveryBallResponsePage() {
           }, labels);
 
       if (!mountedRef.current) return;
-      const plans = createTrialPlans(levelId, trialCount);
+      const plans = CreateTrialPlans(levelId, trialCount);
       const jsPsych = initJsPsych();
       jsPsychRef.current = jsPsych;
       setPhase('playing');
@@ -811,7 +811,7 @@ export function EveryBallResponsePage() {
     } catch (error) {
       console.warn('Unable to start Every Ball Response.', error);
       await stopInput();
-      setErrorMessage(getStartErrorMessage(error, inputMode, labels));
+      setErrorMessage(GetStartErrorMessage(error, inputMode, labels));
       setStatusMessage('');
       drawVisual({ phase: 'idle' });
       setPhase('menu');
@@ -834,7 +834,7 @@ export function EveryBallResponsePage() {
 
   const downloadResult = () => {
     if (!summary) return;
-    downloadCsvFile(toCsv(summary), `every_ball_response_${summary.date}_${Date.now()}.csv`);
+    DownloadCsvFile(ToCsv(summary), `every_ball_response_${summary.date}_${Date.now()}.csv`);
   };
 
   const summaryItems = useMemo(() => [
@@ -881,7 +881,7 @@ export function EveryBallResponsePage() {
                 <span>{selectedLevelLabels.shortTitle}</span>
               </div>
               <div className="training-option-grid training-option-grid-three">
-                {LEVELS.map((level) => (
+                {levels.map((level) => (
                   <button
                     className={`training-option ${levelId === level.id ? 'active' : ''}`}
                     key={level.id}
@@ -927,7 +927,7 @@ export function EveryBallResponsePage() {
                 <span>{trialCount}</span>
               </div>
               <div className="training-option-grid training-option-grid-five">
-                {TRIAL_COUNT_OPTIONS.map((count) => (
+                {trialCountOptions.map((count) => (
                   <button
                     className={`training-option ${trialCount === count ? 'active' : ''}`}
                     key={count}
@@ -1032,7 +1032,7 @@ export function EveryBallResponsePage() {
           </div>
           <div>
             <span>{visual.trialNumber ?? 0} / {visual.totalTrials ?? trialCount}</span>
-            <strong>{getExpectedActionLabel(visual.expectedAction ?? 'none', labels)}</strong>
+            <strong>{GetExpectedActionLabel(visual.expectedAction ?? 'none', labels)}</strong>
           </div>
           <div>
             <span>{inputModeLabel}</span>
@@ -1107,20 +1107,20 @@ export function EveryBallResponsePage() {
   );
 }
 
-function createTrialPlans(levelId: LevelDefinition['id'], trialCount: number): TrialPlan[] {
-  const balls = createBallSequence(levelId, trialCount);
-  return shuffle(balls).map((ball, index) => ({
+function CreateTrialPlans(levelId: LevelDefinition['id'], trialCount: number): TrialPlan[] {
+  const balls = CreateBallSequence(levelId, trialCount);
+  return Shuffle(balls).map((ball, index) => ({
     trialNumber: index + 1,
     levelId,
     ball,
-    expectedAction: getExpectedAction(levelId, ball),
-    fixationMs: randomInt(FIXATION_MIN_MS, FIXATION_MAX_MS),
+    expectedAction: GetExpectedAction(levelId, ball),
+    fixationMs: RandomInt(fixationMinMs, fixationMaxMs),
     xRatio: 0.28 + Math.random() * 0.44,
     yRatio: 0.3 + Math.random() * 0.34,
   }));
 }
 
-function createBallSequence(levelId: LevelDefinition['id'], trialCount: number): BallId[] {
+function CreateBallSequence(levelId: LevelDefinition['id'], trialCount: number): BallId[] {
   if (levelId === 1) return Array.from({ length: trialCount }, () => 'basketball');
   const sequence: BallId[] = [];
   const targetCount = Math.max(1, Math.round(trialCount * (levelId === 2 ? 0.56 : 0.62)));
@@ -1130,30 +1130,30 @@ function createBallSequence(levelId: LevelDefinition['id'], trialCount: number):
   }
   while (sequence.length < trialCount) {
     const distractor = levelId === 2
-      ? DISTRACTOR_BALLS[sequence.length % DISTRACTOR_BALLS.length]
+      ? distractorBalls[sequence.length % distractorBalls.length]
       : (['tennis', 'beach'] as const)[sequence.length % 2];
     sequence.push(distractor);
   }
   return sequence;
 }
 
-function getExpectedAction(levelId: LevelDefinition['id'], ball: BallId): ExpectedAction {
+function GetExpectedAction(levelId: LevelDefinition['id'], ball: BallId): ExpectedAction {
   if (ball === 'basketball') return 'clap';
   if (levelId === 3 && ball === 'soccer') return 'thigh';
   return 'none';
 }
 
-function buildTrialRecord(plan: TrialPlan, response: ActionResponse | null, labels: EveryBallLabels): TrialRecord {
+function BuildTrialRecord(plan: TrialPlan, response: ActionResponse | null, labels: EveryBallLabels): TrialRecord {
   const correct = plan.expectedAction === 'none'
     ? response === null
     : response?.action === plan.expectedAction;
-  const outcome = getOutcome(plan.expectedAction, response, correct);
+  const outcome = GetOutcome(plan.expectedAction, response, correct);
   return {
     Trial_Number: plan.trialNumber,
     Level: plan.levelId,
     Ball: labels.balls[plan.ball],
-    Expected_Action: getExpectedActionLabel(plan.expectedAction, labels),
-    Response_Action: response ? getResponseActionLabel(response.action, labels) : '',
+    Expected_Action: GetExpectedActionLabel(plan.expectedAction, labels),
+    Response_Action: response ? GetResponseActionLabel(response.action, labels) : '',
     Response_Source: response?.source ?? '',
     Outcome: outcome,
     Correct: correct,
@@ -1162,7 +1162,7 @@ function buildTrialRecord(plan: TrialPlan, response: ActionResponse | null, labe
   };
 }
 
-function getOutcome(expected: ExpectedAction, response: ActionResponse | null, correct: boolean): TrialOutcome {
+function GetOutcome(expected: ExpectedAction, response: ActionResponse | null, correct: boolean): TrialOutcome {
   if (correct && expected === 'none') return 'correct_reject';
   if (correct) return 'hit';
   if (!response) return 'miss';
@@ -1170,7 +1170,7 @@ function getOutcome(expected: ExpectedAction, response: ActionResponse | null, c
   return 'wrong_action';
 }
 
-function buildSessionSummary(
+function BuildSessionSummary(
   trials: TrialRecord[],
   labels: EveryBallLabels,
   level: LevelDefinition,
@@ -1185,8 +1185,8 @@ function buildSessionSummary(
     : null;
   const accuracy = Math.round((correct / total) * 100);
   return {
-    date: formatTestDate(date),
-    participant: getAuthUserNameFromToken() || 'Guest',
+    date: FormatTestDate(date),
+    participant: GetAuthUserNameFromToken() || 'Guest',
     levelTitle: labels.levels[level.id].title,
     inputMode,
     total,
@@ -1201,7 +1201,7 @@ function buildSessionSummary(
   };
 }
 
-function toCsv(summary: SessionSummary): string {
+function ToCsv(summary: SessionSummary): string {
   const columns = [
     'Training_Date',
     'Participant_ID',
@@ -1240,13 +1240,13 @@ function toCsv(summary: SessionSummary): string {
     Wrong_Actions: summary.wrongActions,
     Passed: summary.passed,
   }));
-  return createCsvContent([
+  return CreateCsvContent([
     columns,
     ...rows.map((row) => columns.map((column) => row[column as keyof typeof row])),
   ]);
 }
 
-async function createCameraRuntime(options: CameraRuntimeOptions, labels: EveryBallLabels): Promise<InputRuntime> {
+async function CreateCameraRuntime(options: CameraRuntimeOptions, labels: EveryBallLabels): Promise<InputRuntime> {
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new Error(labels.error.cameraUnsupported);
   }
@@ -1264,10 +1264,10 @@ async function createCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
   await video.play();
 
   options.onStatus(labels.initializingCamera);
-  const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
+  const vision = await FilesetResolver.forVisionTasks(mediapipeWasmUrl);
   const [handLandmarker, poseLandmarker] = await Promise.all([
     HandLandmarker.createFromOptions(vision, {
-      baseOptions: { modelAssetPath: HAND_MODEL_URL },
+      baseOptions: { modelAssetPath: handModelUrl },
       runningMode: 'VIDEO',
       numHands: 2,
       minHandDetectionConfidence: 0.48,
@@ -1275,7 +1275,7 @@ async function createCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
       minTrackingConfidence: 0.48,
     }),
     PoseLandmarker.createFromOptions(vision, {
-      baseOptions: { modelAssetPath: POSE_MODEL_URL },
+      baseOptions: { modelAssetPath: poseModelUrl },
       runningMode: 'VIDEO',
       numPoses: 1,
       minPoseDetectionConfidence: 0.45,
@@ -1301,7 +1301,7 @@ async function createCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
 
   const processFrame = (now: number) => {
     animationFrame = window.requestAnimationFrame(processFrame);
-    if (stopped || now - lastDetectionAt < CAMERA_DETECTION_INTERVAL_MS) return;
+    if (stopped || now - lastDetectionAt < cameraDetectionIntervalMs) return;
     if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || video.currentTime === lastVideoTime) return;
     lastVideoTime = video.currentTime;
     lastDetectionAt = now;
@@ -1310,9 +1310,9 @@ async function createCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
     const poseResult = poseLandmarker.detectForVideo(video, now);
     const handLandmarks = handResult.landmarks;
     const poseLandmarks = poseResult.landmarks[0];
-    drawCameraOverlay(options.overlay, video, handLandmarks, poseLandmarks);
+    DrawCameraOverlay(options.overlay, video, handLandmarks, poseLandmarks);
 
-    const handCenters = handLandmarks.map(getPalmCenter);
+    const handCenters = handLandmarks.map(GetPalmCenter);
     if (handCenters.length === 0) {
       updateStatus(labels.cameraFinding);
       lastClapDistance = Number.POSITIVE_INFINITY;
@@ -1323,11 +1323,11 @@ async function createCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
     updateStatus(labels.cameraTracking);
     let emitted = false;
     if (handCenters.length >= 2) {
-      const distance = getDistance(handCenters[0], handCenters[1]);
+      const distance = GetDistance(handCenters[0], handCenters[1]);
       if (
-        distance <= CLAP_CLOSE_DISTANCE
-        && lastClapDistance >= CLAP_OPEN_DISTANCE
-        && now - lastGestureAt >= CAMERA_GESTURE_COOLDOWN_MS
+        distance <= clapCloseDistance
+        && lastClapDistance >= clapOpenDistance
+        && now - lastGestureAt >= cameraGestureCooldownMs
       ) {
         options.controller.emit('clap', 'camera');
         lastGestureAt = now;
@@ -1336,12 +1336,12 @@ async function createCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
       lastClapDistance = distance;
     }
 
-    const thighContact = isThighContact(handCenters, poseLandmarks);
+    const thighContact = IsThighContact(handCenters, poseLandmarks);
     if (
       !emitted
       && thighContact
       && !lastThighContact
-      && now - lastGestureAt >= CAMERA_GESTURE_COOLDOWN_MS
+      && now - lastGestureAt >= cameraGestureCooldownMs
     ) {
       options.controller.emit('thigh', 'camera');
       lastGestureAt = now;
@@ -1358,17 +1358,17 @@ async function createCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
       video.srcObject = null;
       handLandmarker.close();
       poseLandmarker.close();
-      clearCameraOverlay(options.overlay);
+      ClearCameraOverlay(options.overlay);
     },
   };
 }
 
-async function createMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels: EveryBallLabels): Promise<InputRuntime> {
+async function CreateMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels: EveryBallLabels): Promise<InputRuntime> {
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new Error(labels.error.microphoneUnsupported);
   }
-  const AudioContextConstructor = getAudioContextConstructor();
-  if (!AudioContextConstructor) {
+  const audioContextConstructor = GetAudioContextConstructor();
+  if (!audioContextConstructor) {
     throw new Error(labels.error.microphoneUnsupported);
   }
 
@@ -1380,7 +1380,7 @@ async function createMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels
     },
     video: false,
   });
-  const audioContext = new AudioContextConstructor();
+  const audioContext = new audioContextConstructor();
   await audioContext.resume();
   const source = audioContext.createMediaStreamSource(stream);
   const analyser = audioContext.createAnalyser();
@@ -1394,24 +1394,24 @@ async function createMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels
   let stopped = false;
   let lastTriggerAt = 0;
   let belowThreshold = true;
-  const threshold = microphoneThreshold(options.sensitivity);
+  const threshold = MicrophoneThreshold(options.sensitivity);
   options.onStatus(labels.microphoneReady);
 
   const tick = (now: number) => {
     animationFrame = window.requestAnimationFrame(tick);
     if (stopped) return;
     analyser.getFloatTimeDomainData(timeSamples);
-    const rms = calculateRms(timeSamples);
-    options.onLevel(toMeterLevel(rms));
+    const rms = CalculateRms(timeSamples);
+    options.onLevel(ToMeterLevel(rms));
     if (rms < threshold * 0.62) {
       belowThreshold = true;
       return;
     }
-    if (!belowThreshold || rms < threshold || now - lastTriggerAt < MICROPHONE_COOLDOWN_MS) return;
+    if (!belowThreshold || rms < threshold || now - lastTriggerAt < microphoneCooldownMs) return;
     belowThreshold = false;
     lastTriggerAt = now;
     analyser.getByteFrequencyData(freqSamples);
-    options.controller.emit(classifyTapSound(freqSamples), 'microphone');
+    options.controller.emit(ClassifyTapSound(freqSamples), 'microphone');
   };
   animationFrame = window.requestAnimationFrame(tick);
 
@@ -1430,7 +1430,7 @@ async function createMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels
   };
 }
 
-function drawEveryBallScene(app: Application, visual: VisualState, labels: EveryBallLabels): void {
+function DrawEveryBallScene(app: Application, visual: VisualState, labels: EveryBallLabels): void {
   const width = app.renderer.width;
   const height = app.renderer.height;
   app.stage.removeChildren();
@@ -1439,21 +1439,21 @@ function drawEveryBallScene(app: Application, visual: VisualState, labels: Every
   app.stage.addChild(background);
 
   if (visual.phase === 'fixation' && visual.fixationStyle === 'cross') {
-    drawCrosshair(app.stage, width, height);
+    DrawCrosshair(app.stage, width, height);
   }
 
   if (visual.phase === 'stimulus' && visual.ball) {
     const x = width * (visual.xRatio ?? 0.5);
     const y = height * (visual.yRatio ?? 0.5);
-    drawBall(app.stage, visual.ball, x, y, Math.min(width, height) * 0.13, labels);
+    DrawBall(app.stage, visual.ball, x, y, Math.min(width, height) * 0.13, labels);
   }
 
   if (visual.phase === 'feedback') {
-    drawFeedback(app.stage, width, height, Boolean(visual.feedbackCorrect));
+    DrawFeedback(app.stage, width, height, Boolean(visual.feedbackCorrect));
   }
 }
 
-function drawCrosshair(stage: Container, width: number, height: number): void {
+function DrawCrosshair(stage: Container, width: number, height: number): void {
   const size = Math.max(28, Math.min(width, height) * 0.04);
   const line = new Graphics();
   line.moveTo(width / 2 - size, height / 2).lineTo(width / 2 + size, height / 2);
@@ -1462,16 +1462,16 @@ function drawCrosshair(stage: Container, width: number, height: number): void {
   stage.addChild(line);
 }
 
-function drawBall(stage: Container, ball: BallId, x: number, y: number, radius: number, labels: EveryBallLabels): void {
+function DrawBall(stage: Container, ball: BallId, x: number, y: number, radius: number, labels: EveryBallLabels): void {
   const container = new Container();
   container.x = x;
   container.y = y;
   stage.addChild(container);
 
-  if (ball === 'basketball') drawBasketball(container, radius);
-  else if (ball === 'soccer') drawSoccerBall(container, radius);
-  else if (ball === 'tennis') drawTennisBall(container, radius);
-  else drawBeachBall(container, radius);
+  if (ball === 'basketball') DrawBasketball(container, radius);
+  else if (ball === 'soccer') DrawSoccerBall(container, radius);
+  else if (ball === 'tennis') DrawTennisBall(container, radius);
+  else DrawBeachBall(container, radius);
 
   const text = new Text({
     text: labels.balls[ball],
@@ -1487,7 +1487,7 @@ function drawBall(stage: Container, ball: BallId, x: number, y: number, radius: 
   container.addChild(text);
 }
 
-function drawBasketball(container: Container, radius: number): void {
+function DrawBasketball(container: Container, radius: number): void {
   const ball = new Graphics();
   ball.circle(0, 0, radius).fill({ color: 0xf97316 });
   ball.circle(0, 0, radius).stroke({ color: 0x7c2d12, width: Math.max(4, radius * 0.06) });
@@ -1500,16 +1500,16 @@ function drawBasketball(container: Container, radius: number): void {
   container.addChild(ball);
 }
 
-function drawSoccerBall(container: Container, radius: number): void {
+function DrawSoccerBall(container: Container, radius: number): void {
   const ball = new Graphics();
   ball.circle(0, 0, radius).fill({ color: 0xf8fafc });
   ball.circle(0, 0, radius).stroke({ color: 0x111827, width: Math.max(4, radius * 0.05) });
-  drawPentagon(ball, 0, 0, radius * 0.32, 0x111827);
+  DrawPentagon(ball, 0, 0, radius * 0.32, 0x111827);
   for (let index = 0; index < 5; index += 1) {
     const angle = -Math.PI / 2 + index * ((Math.PI * 2) / 5);
     const px = Math.cos(angle) * radius * 0.62;
     const py = Math.sin(angle) * radius * 0.62;
-    drawPentagon(ball, px, py, radius * 0.16, 0x111827);
+    DrawPentagon(ball, px, py, radius * 0.16, 0x111827);
     ball.moveTo(Math.cos(angle) * radius * 0.32, Math.sin(angle) * radius * 0.32);
     ball.lineTo(px, py);
   }
@@ -1517,7 +1517,7 @@ function drawSoccerBall(container: Container, radius: number): void {
   container.addChild(ball);
 }
 
-function drawTennisBall(container: Container, radius: number): void {
+function DrawTennisBall(container: Container, radius: number): void {
   const ball = new Graphics();
   ball.circle(0, 0, radius).fill({ color: 0xa3e635 });
   ball.circle(0, 0, radius).stroke({ color: 0x3f6212, width: Math.max(4, radius * 0.05) });
@@ -1527,7 +1527,7 @@ function drawTennisBall(container: Container, radius: number): void {
   container.addChild(ball);
 }
 
-function drawBeachBall(container: Container, radius: number): void {
+function DrawBeachBall(container: Container, radius: number): void {
   const colors = [0x38bdf8, 0xfacc15, 0xfb7185, 0xffffff];
   const ball = new Graphics();
   for (let index = 0; index < colors.length; index += 1) {
@@ -1543,7 +1543,7 @@ function drawBeachBall(container: Container, radius: number): void {
   container.addChild(ball);
 }
 
-function drawFeedback(stage: Container, width: number, height: number, correct: boolean): void {
+function DrawFeedback(stage: Container, width: number, height: number, correct: boolean): void {
   const graphics = new Graphics();
   const size = Math.min(width, height) * 0.14;
   const x = width / 2;
@@ -1561,7 +1561,7 @@ function drawFeedback(stage: Container, width: number, height: number, correct: 
   stage.addChild(graphics);
 }
 
-function drawPentagon(graphics: Graphics, x: number, y: number, radius: number, color: number): void {
+function DrawPentagon(graphics: Graphics, x: number, y: number, radius: number, color: number): void {
   for (let index = 0; index < 5; index += 1) {
     const angle = -Math.PI / 2 + index * ((Math.PI * 2) / 5);
     const px = x + Math.cos(angle) * radius;
@@ -1573,7 +1573,7 @@ function drawPentagon(graphics: Graphics, x: number, y: number, radius: number, 
   graphics.fill({ color });
 }
 
-function drawCameraOverlay(
+function DrawCameraOverlay(
   canvas: HTMLCanvasElement,
   video: HTMLVideoElement,
   handLandmarks: NormalizedLandmark[][],
@@ -1609,11 +1609,11 @@ function drawCameraOverlay(
   });
 }
 
-function clearCameraOverlay(canvas: HTMLCanvasElement): void {
+function ClearCameraOverlay(canvas: HTMLCanvasElement): void {
   canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function getPalmCenter(landmarks: NormalizedLandmark[]): NormalizedLandmark {
+function GetPalmCenter(landmarks: NormalizedLandmark[]): NormalizedLandmark {
   const indexes = [0, 5, 9, 13, 17];
   const total = indexes.reduce((sum, index) => ({
     x: sum.x + (landmarks[index]?.x ?? 0),
@@ -1629,7 +1629,7 @@ function getPalmCenter(landmarks: NormalizedLandmark[]): NormalizedLandmark {
   };
 }
 
-function isThighContact(handCenters: NormalizedLandmark[], pose?: NormalizedLandmark[]): boolean {
+function IsThighContact(handCenters: NormalizedLandmark[], pose?: NormalizedLandmark[]): boolean {
   if (!pose) return handCenters.some((hand) => hand.y > 0.62);
   const zones = [
     { hip: pose[23], knee: pose[25] },
@@ -1645,7 +1645,7 @@ function isThighContact(handCenters: NormalizedLandmark[], pose?: NormalizedLand
   }));
 }
 
-function classifyTapSound(freqSamples: Uint8Array): ResponseAction {
+function ClassifyTapSound(freqSamples: Uint8Array): ResponseAction {
   const split = Math.floor(freqSamples.length * 0.38);
   let low = 0;
   let high = 0;
@@ -1657,27 +1657,27 @@ function classifyTapSound(freqSamples: Uint8Array): ResponseAction {
   return ratio >= 0.34 ? 'clap' : 'thigh';
 }
 
-function calculateRms(samples: Float32Array): number {
+function CalculateRms(samples: Float32Array): number {
   let total = 0;
   for (const sample of samples) total += sample * sample;
   return Math.sqrt(total / samples.length);
 }
 
-function toMeterLevel(rms: number): number {
-  return clamp(rms * 8.5, 0, 1);
+function ToMeterLevel(rms: number): number {
+  return Clamp(rms * 8.5, 0, 1);
 }
 
-function microphoneThreshold(sensitivity: number): number {
-  return 0.085 - clamp(sensitivity, 0.35, 0.9) * 0.06;
+function MicrophoneThreshold(sensitivity: number): number {
+  return 0.085 - Clamp(sensitivity, 0.35, 0.9) * 0.06;
 }
 
-function getAudioContextConstructor(): typeof AudioContext | null {
+function GetAudioContextConstructor(): typeof AudioContext | null {
   if (typeof window === 'undefined') return null;
   const audioWindow = window as Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext };
   return audioWindow.AudioContext ?? audioWindow.webkitAudioContext ?? null;
 }
 
-function getStartErrorMessage(error: unknown, inputMode: InputMode, labels: EveryBallLabels): string {
+function GetStartErrorMessage(error: unknown, inputMode: InputMode, labels: EveryBallLabels): string {
   if (error instanceof DOMException && error.name === 'NotAllowedError') {
     return inputMode === 'camera' ? labels.error.cameraPermission : labels.error.microphonePermission;
   }
@@ -1685,36 +1685,36 @@ function getStartErrorMessage(error: unknown, inputMode: InputMode, labels: Ever
   return inputMode === 'camera' ? labels.error.cameraInitialization : labels.error.microphoneInitialization;
 }
 
-function getExpectedActionLabel(action: ExpectedAction, labels: EveryBallLabels): string {
+function GetExpectedActionLabel(action: ExpectedAction, labels: EveryBallLabels): string {
   if (action === 'clap') return labels.actionClap;
   if (action === 'thigh') return labels.actionThigh;
   return labels.actionNone;
 }
 
-function getResponseActionLabel(action: ResponseAction, labels: EveryBallLabels): string {
+function GetResponseActionLabel(action: ResponseAction, labels: EveryBallLabels): string {
   return action === 'clap' ? labels.actionClap : labels.actionThigh;
 }
 
-function getLevel(levelId: LevelDefinition['id']): LevelDefinition {
-  return LEVELS.find((level) => level.id === levelId) ?? LEVELS[0];
+function GetLevel(levelId: LevelDefinition['id']): LevelDefinition {
+  return levels.find((level) => level.id === levelId) ?? levels[0];
 }
 
 function GetInitializedPixiApp(app: Application | null): Application | null {
   return app && (app as { renderer?: unknown }).renderer ? app : null;
 }
 
-function requireElement<T>(element: T | null): T {
+function RequireElement<T>(element: T | null): T {
   if (!element) throw new Error('Required browser element is unavailable.');
   return element;
 }
 
-function waitMs(jsPsych: JsPsych, durationMs: number): Promise<void> {
+function WaitMs(jsPsych: JsPsych, durationMs: number): Promise<void> {
   return new Promise((resolve) => {
     jsPsych.pluginAPI.setTimeout(resolve, durationMs);
   });
 }
 
-function writeJsPsychData(jsPsych: JsPsych, record: Record<string, unknown>): void {
+function WriteJsPsychData(jsPsych: JsPsych, record: Record<string, unknown>): void {
   try {
     const writer = jsPsych.data as unknown as { write?: (data: unknown) => void };
     writer.write?.call(writer, record);
@@ -1723,11 +1723,11 @@ function writeJsPsychData(jsPsych: JsPsych, record: Record<string, unknown>): vo
   }
 }
 
-function randomInt(min: number, max: number): number {
+function RandomInt(min: number, max: number): number {
   return Math.round(min + Math.random() * (max - min));
 }
 
-function shuffle<T>(items: readonly T[]): T[] {
+function Shuffle<T>(items: readonly T[]): T[] {
   const next = [...items];
   for (let index = next.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(Math.random() * (index + 1));
@@ -1736,16 +1736,16 @@ function shuffle<T>(items: readonly T[]): T[] {
   return next;
 }
 
-function getDistance(left: NormalizedLandmark, right: NormalizedLandmark): number {
+function GetDistance(left: NormalizedLandmark, right: NormalizedLandmark): number {
   return Math.hypot(left.x - right.x, left.y - right.y);
 }
 
-function clamp(value: number, min: number, max: number): number {
+function Clamp(value: number, min: number, max: number): number {
   if (!Number.isFinite(value)) return min;
   return Math.min(max, Math.max(min, value));
 }
 
-function formatTestDate(date: Date): string {
+function FormatTestDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');

@@ -5,7 +5,7 @@ export interface DisplaySettings {
   uiTheme?: string;
 }
 
-export function applyDisplaySettings({
+export function ApplyDisplaySettings({
   fontSizePx,
   defaultFontSizePx,
   fontBold,

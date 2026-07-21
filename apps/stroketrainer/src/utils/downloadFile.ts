@@ -1,1 +1,1 @@
-export { downloadCsvFile, downloadFile } from '@rehab-trainer/ui/downloadFile';
+export { DownloadCsvFile, DownloadFile } from '@rehab-trainer/ui/downloadFile';

@@ -4,25 +4,25 @@
  */
 
 // ── Global Constants ──
-import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
-import { createUserStore } from '@rehab-trainer/ui/storage/userStore';
+import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { CreateUserStore } from '@rehab-trainer/ui/storage/userStore';
 import type { OculomotorPattern, OculomotorTargetShape } from '../pages/training/oculomotor/types';
 
-export const CARD_WIDTH_MM = 85.6;
-export const CARD_HEIGHT_MM = 53.98;
-export const DEFAULT_DISTANCE_CM = 60;
-export const DEFAULT_CAL_BAR_LENGTH_MM = 149;
-export const DEFAULT_GAMMA_VALUE = 2.0;
-export const CAL_BAR_LENGTH_PX = 700;
-export const APP_VERSION = '3.0.0';
-export const STORAGE_PREFIX = 'vision_trainer_';
-export const APP_SETTINGS_CHANGED_EVENT = 'vision-trainer-settings-changed';
-export const DEFAULT_UI_FONT_SIZE_PX = 18;
-export const MIN_UI_FONT_SIZE_PX = 14;
-export const MAX_UI_FONT_SIZE_PX = 30;
+export const cardWidthMm = 85.6;
+export const cardHeightMm = 53.98;
+export const defaultDistanceCm = 60;
+export const defaultCalBarLengthMm = 149;
+export const defaultGammaValue = 2.0;
+export const calBarLengthPx = 700;
+export const appVersion = '3.0.0';
+export const storagePrefix = 'vision_trainer_';
+export const appSettingsChangedEvent = 'vision-trainer-settings-changed';
+export const defaultUiFontSizePx = 18;
+export const minUiFontSizePx = 14;
+export const maxUiFontSizePx = 30;
 
-export const DRIVING_DURATION_MIN_SEC = 80;
-export const DRIVING_DURATION_MAX_SEC = 240;
+export const drivingDurationMinSec = 80;
+export const drivingDurationMaxSec = 240;
 export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel';
 export type UiTheme = 'light' | 'dark' | 'contrast';
 
@@ -80,11 +80,11 @@ interface SettingMeta<T> {
   max?: number;
 }
 
-const META: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> } = {
-  distanceInCM:           { dflt: DEFAULT_DISTANCE_CM,       min: 10,   max: 500 },
-  calBarLengthInMM:       { dflt: DEFAULT_CAL_BAR_LENGTH_MM, min: 1,    max: 10000 },
+const appSettingsMeta: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> } = {
+  distanceInCM:           { dflt: defaultDistanceCm,       min: 10,   max: 500 },
+  calBarLengthInMM:       { dflt: defaultCalBarLengthMm, min: 1,    max: 10000 },
   rulerLengthInMM:        { dflt: 0,    min: 0,    max: 10000 },
-  gammaValue:             { dflt: DEFAULT_GAMMA_VALUE,  min: 0.8,  max: 4.0 },
+  gammaValue:             { dflt: defaultGammaValue,  min: 0.8,  max: 4.0 },
   crowdingType:           { dflt: 0,    min: 0,    max: 6 },
   crowdingDistanceType:   { dflt: 0,    min: 0,    max: 3 },
   totalRounds:            { dflt: 5,    min: 1,    max: 100 },
@@ -118,101 +118,101 @@ const META: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> } = {
   readingCrowding: { dflt: 1, min: 1, max: 5 },
   readingContrast: { dflt: 0.0, min: 0.0, max: 2.0 },
   readingStoryId: { dflt: 'en_story_01' },
-  drivingDurationSec: { dflt: DRIVING_DURATION_MIN_SEC, min: DRIVING_DURATION_MIN_SEC, max: DRIVING_DURATION_MAX_SEC },
+  drivingDurationSec: { dflt: drivingDurationMinSec, min: drivingDurationMinSec, max: drivingDurationMaxSec },
   drivingRedFlashEnabled: { dflt: true },
   drivingDifficulty: { dflt: 'beginner' },
   drivingControlMode: { dflt: 'arrow' },
-  uiFontSizePx: { dflt: DEFAULT_UI_FONT_SIZE_PX, min: MIN_UI_FONT_SIZE_PX, max: MAX_UI_FONT_SIZE_PX },
+  uiFontSizePx: { dflt: defaultUiFontSizePx, min: minUiFontSizePx, max: maxUiFontSizePx },
   uiFontBold: { dflt: false },
   uiTheme: { dflt: 'light' },
 };
 
-function storageKey(name: string): string {
-  return STORAGE_PREFIX + name;
+function StorageKey(name: string): string {
+  return storagePrefix + name;
 }
 
-export const ACTIVE_USER_CHANGED_EVENT = 'vision-trainer-active-user-changed';
+export const activeUserChangedEvent = 'vision-trainer-active-user-changed';
 
-function isUiTheme(value: string): value is UiTheme {
+function IsUiTheme(value: string): value is UiTheme {
   return value === 'light' || value === 'dark' || value === 'contrast';
 }
 
-export function getSetting<K extends keyof AppSettings>(key: K): AppSettings[K] {
-  const raw = localStorage.getItem(storageKey(key));
-  if (raw === null) return META[key].dflt;
-  const meta = META[key];
-  if (typeof meta.dflt === 'boolean') {
+export function GetSetting<K extends keyof AppSettings>(key: K): AppSettings[K] {
+  const raw = localStorage.getItem(StorageKey(key));
+  if (raw === null) return appSettingsMeta[key].dflt;
+  const settingMeta = appSettingsMeta[key];
+  if (typeof settingMeta.dflt === 'boolean') {
     return (raw === 'true') as AppSettings[K];
   }
-  if (typeof meta.dflt === 'number') {
+  if (typeof settingMeta.dflt === 'number') {
     const num = parseFloat(raw);
-    if (isNaN(num)) return meta.dflt;
-    if (meta.min !== undefined && num < meta.min) return meta.dflt;
-    if (meta.max !== undefined && num > meta.max) return meta.dflt;
+    if (isNaN(num)) return settingMeta.dflt;
+    if (settingMeta.min !== undefined && num < settingMeta.min) return settingMeta.dflt;
+    if (settingMeta.max !== undefined && num > settingMeta.max) return settingMeta.dflt;
     return num as AppSettings[K];
   }
   if (key === 'uiTheme') {
-    return (isUiTheme(raw) ? raw : meta.dflt) as AppSettings[K];
+    return (IsUiTheme(raw) ? raw : settingMeta.dflt) as AppSettings[K];
   }
   return raw as unknown as AppSettings[K];
 }
 
-export function setSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
-  localStorage.setItem(storageKey(key), String(value));
-  window.dispatchEvent(new CustomEvent(APP_SETTINGS_CHANGED_EVENT, { detail: { key } }));
+export function SetSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
+  localStorage.setItem(StorageKey(key), String(value));
+  window.dispatchEvent(new CustomEvent(appSettingsChangedEvent, { detail: { key } }));
 }
 
-export function isDrivingControlMode(value: unknown): value is DrivingControlMode {
+export function IsDrivingControlMode(value: unknown): value is DrivingControlMode {
   return value === 'arrow' || value === 'wasd' || value === 'wheel';
 }
 
-export function isCalibrated(): boolean {
+export function IsCalibrated(): boolean {
   return (
-    getSetting('displayCalibrationAt') !== '' ||
-    getSetting('distanceInCM') !== DEFAULT_DISTANCE_CM ||
-    getSetting('calBarLengthInMM') !== DEFAULT_CAL_BAR_LENGTH_MM
+    GetSetting('displayCalibrationAt') !== '' ||
+    GetSetting('distanceInCM') !== defaultDistanceCm ||
+    GetSetting('calBarLengthInMM') !== defaultCalBarLengthMm
   );
 }
 
-export function isAssessmentCalibrationAtDefaults(): boolean {
+export function IsAssessmentCalibrationAtDefaults(): boolean {
   return (
-    getSetting('distanceInCM') === DEFAULT_DISTANCE_CM &&
-    getSetting('calBarLengthInMM') === DEFAULT_CAL_BAR_LENGTH_MM &&
-    getSetting('gammaValue') === DEFAULT_GAMMA_VALUE
+    GetSetting('distanceInCM') === defaultDistanceCm &&
+    GetSetting('calBarLengthInMM') === defaultCalBarLengthMm &&
+    GetSetting('gammaValue') === defaultGammaValue
   );
 }
 
-export function markDisplayCalibrated(): void {
-  setSetting('displayCalibrationAt', new Date().toISOString());
+export function MarkDisplayCalibrated(): void {
+  SetSetting('displayCalibrationAt', new Date().toISOString());
 }
 
-export function clearDisplayCalibration(): void {
-  setSetting('displayCalibrationAt', '');
+export function ClearDisplayCalibration(): void {
+  SetSetting('displayCalibrationAt', '');
 }
 
-export function resetAllSettings(): void {
-  for (const key of Object.keys(META) as (keyof AppSettings)[]) {
-    localStorage.removeItem(storageKey(key));
+export function ResetAllSettings(): void {
+  for (const key of Object.keys(appSettingsMeta) as (keyof AppSettings)[]) {
+    localStorage.removeItem(StorageKey(key));
   }
-  window.dispatchEvent(new CustomEvent(APP_SETTINGS_CHANGED_EVENT, { detail: { key: null } }));
+  window.dispatchEvent(new CustomEvent(appSettingsChangedEvent, { detail: { key: null } }));
 }
 
-export function getPixelsPerMM(): number {
-  return CAL_BAR_LENGTH_PX / getSetting('calBarLengthInMM');
+export function GetPixelsPerMM(): number {
+  return calBarLengthPx / GetSetting('calBarLengthInMM');
 }
 
-export function getMMPerPixel(): number {
-  return getSetting('calBarLengthInMM') / CAL_BAR_LENGTH_PX;
+export function GetMMPerPixel(): number {
+  return GetSetting('calBarLengthInMM') / calBarLengthPx;
 }
 
 // ── User Management (simple name-only) ──
-export const userStore = createUserStore({
-  activeUserChangedEvent: ACTIVE_USER_CHANGED_EVENT,
-  storagePrefix: STORAGE_PREFIX,
+export const userStore = CreateUserStore({
+  activeUserChangedEvent: activeUserChangedEvent,
+  storagePrefix: storagePrefix,
 });
 
 export const addUser = userStore.addUser;
-export const getActiveUser = () => getAuthUserNameFromToken() || userStore.getActiveUser();
+export const getActiveUser = () => GetAuthUserNameFromToken() || userStore.getActiveUser();
 export const getUsers = userStore.getUsers;
 export const removeUser = userStore.removeUser;
 export const setActiveUser = userStore.setActiveUser;

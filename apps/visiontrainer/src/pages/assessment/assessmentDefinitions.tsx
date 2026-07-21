@@ -11,7 +11,7 @@ export interface AssessmentDefinition {
   defaultTrialCount?: number;
 }
 
-export const ASSESSMENTS: readonly AssessmentDefinition[] = [
+export const assessments: readonly AssessmentDefinition[] = [
   {
     id: 'landolt',
     titleKey: 'assess.landolt.title',

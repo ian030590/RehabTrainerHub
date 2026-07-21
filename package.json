@@ -11,8 +11,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run test:entrypoints && node scripts/build-apps.mjs",
-    "build:cloudflare": "npm run test:entrypoints && node scripts/build-apps.mjs --cloudflare-pages",
+    "build": "npm run test:naming && npm run test:entrypoints && node scripts/build-apps.mjs",
+    "build:cloudflare": "npm run test:naming && npm run test:entrypoints && node scripts/build-apps.mjs --cloudflare-pages",
     "build:brain": "npm --prefix apps/braintrainer run build",
     "build:hub": "npm --prefix apps/rehabtrainerhub run build",
     "build:stroke": "npm --prefix apps/stroketrainer run build",
@@ -28,7 +28,8 @@
     "preview:hub": "turbo run preview --filter=@rehab-trainer/rehabtrainerhub",
     "preview:stroke": "turbo run preview --filter=@rehab-trainer/stroketrainer",
     "preview:vision": "turbo run preview --filter=@rehab-trainer/visiontrainer",
-    "test:entrypoints": "node scripts/check-trainer-entrypoints.mjs"
+    "test:entrypoints": "node scripts/check-trainer-entrypoints.mjs",
+    "test:naming": "node scripts/check-identifier-names.mjs"
   },
   "dependencies": {
     "@jspsych/extension-webgazer": "^1.2.0",

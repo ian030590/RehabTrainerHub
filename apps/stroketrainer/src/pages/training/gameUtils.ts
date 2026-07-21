@@ -1,4 +1,4 @@
-import { toCsvCell } from '@rehab-trainer/ui/csv';
+import { ToCsvCell } from '@rehab-trainer/ui/csv';
 
 type JsPsychDataWriter = {
   data?: {
@@ -6,21 +6,21 @@ type JsPsychDataWriter = {
   };
 };
 
-export const csvCell = toCsvCell;
+export const csvCell = ToCsvCell;
 
-export function clamp(value: number, min: number, max: number): number {
+export function Clamp(value: number, min: number, max: number): number {
   if (!Number.isFinite(value)) return min;
   return Math.min(max, Math.max(min, value));
 }
 
-export function formatTestDate(date: Date): string {
+export function FormatTestDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
-export function writeJsPsychData(
+export function WriteJsPsychData(
   jsPsychRef: { current: unknown },
   record: Record<string, unknown>,
   warningMessage: string,

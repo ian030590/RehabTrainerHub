@@ -1,27 +1,27 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { getAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { createCsvContent } from '@rehab-trainer/ui/csv';
+import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import {
-  measureDisplayRefreshRate,
+  MeasureDisplayRefreshRate,
   type DisplayRefreshInfo,
 } from '@rehab-trainer/ui/displayTiming';
-import { downloadCsvFile } from '@rehab-trainer/ui/downloadFile';
-import { exitFullscreenIfActive, waitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
+import { ExitFullscreenIfActive, WaitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import {
-  drawUfovCanvasStage,
-  ensureUfovCanvasStage,
-  prepareUfovNoiseMask,
-  renderUfovCanvasStage,
+  DrawUfovCanvasStage,
+  EnsureUfovCanvasStage,
+  PrepareUfovNoiseMask,
+  RenderUfovCanvasStage,
   type UfovCanvasPhase,
 } from '@rehab-trainer/ui/ufovCanvas';
 import {
-  estimateUfovThresholdMs,
-  getFastestCorrectStimulusDurationMs,
-  shouldStopUfovAdaptiveRun,
-  UFOV_ADAPTIVE_STOP,
+  EstimateUfovThresholdMs,
+  GetFastestCorrectStimulusDurationMs,
+  ShouldStopUfovAdaptiveRun,
+  ufovAdaptiveStop,
 } from '@rehab-trainer/ui/ufovResults';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
@@ -154,26 +154,26 @@ interface UfovRunConfig {
   targetAxes?: UfovTargetAxis[];
 }
 
-const SUBTESTS: Subtest[] = [
+const subtests: Subtest[] = [
   { id: 1, hasPeripheral: false, hasDistractors: false },
   { id: 2, hasPeripheral: true, hasDistractors: false },
   { id: 3, hasPeripheral: true, hasDistractors: true },
 ];
-const PRACTICE_TRIALS = 5;
-const DEFAULT_MAX_TEST_TRIALS = 48;
-const MIN_CONFIGURED_TEST_TRIALS = 1;
-const MAX_CONFIGURED_TEST_TRIALS = 240;
-const MIN_DURATION_FRAMES = 1;
-const MAX_DURATION_MS = 500;
-const PRACTICE_DURATION_MS = 250;
-const FIXATION_MS = 1000;
-const MASK_MS = 500;
-const START_STEP_MS = 50;
-const MIN_STEP_FRAMES = 1;
-const AXES = [0, 1, 2, 3, 4, 5, 6, 7];
-const OUTER_RING_INDEX = 2;
-const SLOTS = createSlots();
-const PERIPHERAL_TARGET_SLOTS = SLOTS.filter((slot) => slot.ring === OUTER_RING_INDEX);
+const practiceTrials = 5;
+const defaultMaxTestTrials = 48;
+const minConfiguredTestTrials = 1;
+const maxConfiguredTestTrials = 240;
+const minDurationFrames = 1;
+const maxDurationMs = 500;
+const practiceDurationMs = 250;
+const fixationMs = 1000;
+const maskMs = 500;
+const startStepMs = 50;
+const minStepFrames = 1;
+const ufovTargetAxes = [0, 1, 2, 3, 4, 5, 6, 7];
+const outerRingIndex = 2;
+const slots = CreateSlots();
+const peripheralTargetSlots = slots.filter((slot) => slot.ring === outerRingIndex);
 
 const copy = {
   zh: {
@@ -306,20 +306,20 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
   private async runExperiment(displayElement: HTMLElement, trial: TrialType<UfovInfo>) {
     const labels = trial.labels as UfovLabels;
     const config = trial.config as UfovRunConfig;
-    const subtestIndex = SUBTESTS.findIndex((item) => item.id === config.subtestId);
+    const subtestIndex = subtests.findIndex((item) => item.id === config.subtestId);
     const refreshMs = Number(trial.refresh_ms) > 0 ? Number(trial.refresh_ms) : 1000 / 60;
-    const maxDurationFrames = msToFrameCount(MAX_DURATION_MS, refreshMs);
-    const testTrialLimit = normalizeTrialCount(config.trialCount);
-    const targetAxes = normalizeTargetAxes(config.targetAxes);
+    const maxDurationFrames = MsToFrameCount(maxDurationMs, refreshMs);
+    const testTrialLimit = NormalizeTrialCount(config.trialCount);
+    const targetAxes = NormalizeTargetAxes(config.targetAxes);
     const run: RunState = {
-      minDurationFrames: MIN_DURATION_FRAMES,
+      minDurationFrames: minDurationFrames,
       subtestIndex: subtestIndex >= 0 ? subtestIndex : 0,
-      practiceLeft: PRACTICE_TRIALS,
+      practiceLeft: practiceTrials,
       testTrial: 0,
       durationFrames: maxDurationFrames,
-      stepFrames: msToFrameCount(START_STEP_MS, refreshMs),
+      stepFrames: MsToFrameCount(startStepMs, refreshMs),
       maxDurationFrames,
-      practiceDurationFrames: msToFrameCount(PRACTICE_DURATION_MS, refreshMs),
+      practiceDurationFrames: MsToFrameCount(practiceDurationMs, refreshMs),
       refreshMs,
       reversals: [],
       lastDirection: null,
@@ -335,10 +335,10 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     this.resetSubtest(run, run.subtestIndex);
     const aborted = await this.runSubtest(displayElement, labels, run, config.mode);
     run.results.push({
-      subtestId: SUBTESTS[run.subtestIndex].id,
+      subtestId: subtests[run.subtestIndex].id,
       thresholdMs: config.mode === 'formal' && !aborted
-        ? estimateUfovThresholdMs(run.reversals, run.subtestTrials, framesToMs(run.maxDurationFrames, run.refreshMs))
-        : averageTrialDuration(run.subtestTrials),
+        ? EstimateUfovThresholdMs(run.reversals, run.subtestTrials, FramesToMs(run.maxDurationFrames, run.refreshMs))
+        : AverageTrialDuration(run.subtestTrials),
       trialCount: run.subtestTrials.filter((item) => !item.practice).length,
       aborted,
     });
@@ -353,7 +353,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       refresh_device_kind: trial.refresh_device_kind,
       aborted: run.results.some((item) => item.aborted),
       mode: config.mode,
-      subtest_id: SUBTESTS[run.subtestIndex].id,
+      subtest_id: subtests[run.subtestIndex].id,
       configured_trial_count: testTrialLimit,
       target_axes: targetAxes,
     });
@@ -361,10 +361,10 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
 
   private resetSubtest(run: RunState, subtestIndex: number) {
     run.subtestIndex = subtestIndex;
-    run.practiceLeft = PRACTICE_TRIALS;
+    run.practiceLeft = practiceTrials;
     run.testTrial = 0;
     run.durationFrames = Math.max(run.maxDurationFrames, run.minDurationFrames);
-    run.stepFrames = msToFrameCount(START_STEP_MS, run.refreshMs);
+    run.stepFrames = MsToFrameCount(startStepMs, run.refreshMs);
     run.reversals = [];
     run.lastDirection = null;
     run.limitStreak = 0;
@@ -380,7 +380,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       run.allTrials.push(record);
       run.practiceLeft -= 1;
       this.showFeedback(displayElement, labels, record.correct);
-      await waitMs(this.jsPsych, 850);
+      await WaitMs(this.jsPsych, 850);
     }
     if (mode === 'practice') return false;
     if (mode === 'instruction') return false;
@@ -390,34 +390,34 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       run.subtestTrials.push(record);
       run.allTrials.push(record);
       this.updateStaircase(run, record);
-      const done = shouldStopUfovAdaptiveRun(run, run.testTrialLimit);
-      aborted = run.failAtMaxStreak >= UFOV_ADAPTIVE_STOP.failAtMaxStreakLimit;
+      const done = ShouldStopUfovAdaptiveRun(run, run.testTrialLimit);
+      aborted = run.failAtMaxStreak >= ufovAdaptiveStop.failAtMaxStreakLimit;
       if (done) return aborted;
-      await waitMs(this.jsPsych, 250);
+      await WaitMs(this.jsPsych, 250);
     }
     return aborted;
   }
 
   private async runOneTrial(displayElement: HTMLElement, labels: UfovLabels, run: RunState, practice: boolean) {
-    const subtest = SUBTESTS[run.subtestIndex];
+    const subtest = subtests[run.subtestIndex];
     const durationFrames = practice
       ? Math.max(run.practiceDurationFrames, run.minDurationFrames)
       : run.durationFrames;
     const stimulus: TrialStimulus = {
       subtestId: subtest.id,
       practice,
-      trialNumber: practice ? PRACTICE_TRIALS - run.practiceLeft + 1 : run.testTrial + 1,
+      trialNumber: practice ? practiceTrials - run.practiceLeft + 1 : run.testTrial + 1,
       durationFrames,
       displayFrameCount: durationFrames,
-      plannedDurationMs: framesToMs(durationFrames, run.refreshMs),
+      plannedDurationMs: FramesToMs(durationFrames, run.refreshMs),
       centralTarget: Math.random() > 0.5 ? 'car' : 'truck',
-      peripheralSlot: subtest.hasPeripheral ? pickPeripheralTargetSlot(run.targetAxes) : undefined,
+      peripheralSlot: subtest.hasPeripheral ? PickPeripheralTargetSlot(run.targetAxes) : undefined,
     };
 
     this.renderStage(displayElement, labels, 'fixation', subtest, stimulus);
-    await waitMs(this.jsPsych, FIXATION_MS);
+    await WaitMs(this.jsPsych, fixationMs);
     const presentation = await this.presentStimulusForFrames(displayElement, labels, subtest, stimulus, run.refreshMs);
-    await waitMs(this.jsPsych, MASK_MS);
+    await WaitMs(this.jsPsych, maskMs);
 
     const responseStartedAt = performance.now();
     const centralResponse = await this.askCentral(displayElement, labels);
@@ -452,12 +452,12 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     const direction: Direction = record.correct ? 'down' : 'up';
     if (run.lastDirection && run.lastDirection !== direction) {
       run.reversals.push(record.durationMs);
-      run.stepFrames = Math.max(MIN_STEP_FRAMES, Math.round(run.stepFrames * 0.75));
+      run.stepFrames = Math.max(minStepFrames, Math.round(run.stepFrames * 0.75));
     }
     run.lastDirection = direction;
 
     const deltaFrames = record.correct ? -run.stepFrames : run.stepFrames * 3;
-    const nextDurationFrames = clamp(record.durationFrames + deltaFrames, run.minDurationFrames, run.maxDurationFrames);
+    const nextDurationFrames = Clamp(record.durationFrames + deltaFrames, run.minDurationFrames, run.maxDurationFrames);
     const atLimit = nextDurationFrames === record.durationFrames
       && (nextDurationFrames === run.minDurationFrames || nextDurationFrames === run.maxDurationFrames);
     run.limitStreak = atLimit ? run.limitStreak + 1 : 0;
@@ -473,12 +473,12 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     refreshMs: number,
   ) {
     return new Promise<{ actualDurationMs: number; actualFrameCount: number; droppedFrameCount: number }>((resolve) => {
-      const stage = ensureUfovCanvasStage(displayElement, labels.subtests[stimulus.subtestId]);
-      const maskImageData = prepareUfovNoiseMask(stage);
+      const stage = EnsureUfovCanvasStage(displayElement, labels.subtests[stimulus.subtestId]);
+      const maskImageData = PrepareUfovNoiseMask(stage);
       if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
-        drawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus));
+        DrawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus));
         this.jsPsych.pluginAPI.setTimeout(() => {
-          drawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
+          DrawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
           resolve({
             actualDurationMs: stimulus.plannedDurationMs,
             actualFrameCount: stimulus.displayFrameCount,
@@ -493,12 +493,12 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
 
       window.requestAnimationFrame((timestamp) => {
         startTimestamp = timestamp;
-        drawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus));
+        DrawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus));
 
         const tick = (nextTimestamp: number) => {
           elapsedFrames += 1;
           if (elapsedFrames >= stimulus.displayFrameCount) {
-            drawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
+            DrawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
             const actualDurationMs = nextTimestamp - startTimestamp;
             resolve({
               actualDurationMs,
@@ -517,7 +517,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
   }
 
   private renderStage(displayElement: HTMLElement, labels: UfovLabels, phase: 'fixation' | 'stimulus' | 'mask', subtest: Subtest, stimulus: TrialStimulus) {
-    renderUfovCanvasStage(displayElement, this.getCanvasStageOptions(labels, phase, subtest, stimulus));
+    RenderUfovCanvasStage(displayElement, this.getCanvasStageOptions(labels, phase, subtest, stimulus));
   }
 
   private getCanvasStageOptions(
@@ -534,7 +534,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       hasPeripheral: subtest.hasPeripheral,
       hasDistractors: subtest.hasDistractors,
       peripheralSlot: stimulus.peripheralSlot,
-      slots: SLOTS,
+      slots: slots,
       maskImageData,
     };
   }
@@ -546,8 +546,8 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       const row = document.createElement('div');
       row.className = 'ufov-choice-row';
       row.append(
-        vehicleButton('car', labels, () => resolve('car')),
-        vehicleButton('truck', labels, () => resolve('truck')),
+        VehicleButton('car', labels, () => resolve('car')),
+        VehicleButton('truck', labels, () => resolve('truck')),
       );
       stage.appendChild(row);
       displayElement.replaceChildren(stage);
@@ -560,7 +560,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       stage.className = 'ufov-stage ufov-response-stage';
       const pad = document.createElement('div');
       pad.className = 'ufov-axis-pad';
-      AXES.forEach((axis) => {
+      ufovTargetAxes.forEach((axis) => {
         const guide = document.createElement('span');
         guide.className = 'ufov-axis-guide';
         guide.style.transform = `rotate(${-90 + axis * 45}deg)`;
@@ -571,9 +571,9 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
       center.className = 'ufov-axis-center';
       center.setAttribute('aria-hidden', 'true');
       pad.appendChild(center);
-      AXES.forEach((axis) => {
-        const point = axisPoint(axis, 27, true);
-        const button = responseButton(
+      ufovTargetAxes.forEach((axis) => {
+        const point = AxisPoint(axis, 27, true);
+        const button = ResponseButton(
           `${axis + 1}. ${labels.directions[axis]}`,
           'ufov-axis-button',
           () => resolve(axis),
@@ -607,8 +607,8 @@ export function UfovPage({
   moduleId,
   initialSubtestId = 1,
   initialMode = 'formal',
-  trialCount = DEFAULT_MAX_TEST_TRIALS,
-  targetAxes = [...AXES] as UfovTargetAxis[],
+  trialCount = defaultMaxTestTrials,
+  targetAxes = [...ufovTargetAxes] as UfovTargetAxis[],
   autoStart = false,
   onSaveRecord,
 }: UfovPageProps) {
@@ -630,39 +630,39 @@ export function UfovPage({
     const isFormal = data.mode === 'formal';
     const correctCount = data.trials.filter((item) => item.correct).length;
     const primaryResult = data.results[0];
-    const thresholdProcessingSpeedMs = primaryResult ? roundMs(primaryResult.thresholdMs) : 0;
+    const thresholdProcessingSpeedMs = primaryResult ? RoundMs(primaryResult.thresholdMs) : 0;
     const processingSpeedMs = isFormal
-      ? roundMs(getFastestCorrectStimulusDurationMs(data.trials, thresholdProcessingSpeedMs))
+      ? RoundMs(GetFastestCorrectStimulusDurationMs(data.trials, thresholdProcessingSpeedMs))
       : thresholdProcessingSpeedMs;
     const thresholds = isFormal
       ? Object.fromEntries(data.results.map((item) => [`subtest${item.subtestId}`, item.thresholdMs]))
       : {};
     const summary = data.results.map((item) => ({
       subtest: item.subtestId,
-      processingSpeedMs: roundMs(item.thresholdMs),
+      processingSpeedMs: RoundMs(item.thresholdMs),
       trialCount: item.trialCount,
       aborted: item.aborted,
     }));
     const record: UfovTrainingRecord = {
       id: `ufov_${now.getTime().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
       savedAt: now.toISOString(),
-      trainingDate: formatDate(now),
-      userName: getAuthUserNameFromToken() || 'Guest',
+      trainingDate: FormatDate(now),
+      userName: GetAuthUserNameFromToken() || 'Guest',
       moduleId,
       gameId: 'ufov',
       gameTitle: labels.title,
       difficulty: data.mode,
       details: {
-        refreshMs: roundMs(data.refresh_ms),
-        refreshHz: roundMs(data.refresh_hz),
+        refreshMs: RoundMs(data.refresh_ms),
+        refreshHz: RoundMs(data.refresh_hz),
         refresh60HzFamily: data.refresh_is_60hz_family,
         refreshDeviceKind: data.refresh_device_kind,
-        displayFrameMs: roundMs(data.refresh_ms),
+        displayFrameMs: RoundMs(data.refresh_ms),
         subtest: data.subtest_id,
         mode: data.mode,
         configuredTrialCount: data.configured_trial_count,
         targetAxes: data.target_axes,
-        targetDirections: data.target_axes.map((axis) => formatAxis(axis, labels)).join(' | '),
+        targetDirections: data.target_axes.map((axis) => FormatAxis(axis, labels)).join(' | '),
         correctCount,
         trialCount: data.trials.length,
         processingSpeedMs,
@@ -678,19 +678,19 @@ export function UfovPage({
         Phase: item.practice ? 'practice' : 'test',
         Trial: item.trialNumber,
         Target_Vehicle: item.centralTarget,
-        Target_Vehicle_Label: formatVehicle(item.centralTarget, labels),
+        Target_Vehicle_Label: FormatVehicle(item.centralTarget, labels),
         Peripheral_Axis: item.peripheralAxis ?? '',
-        Peripheral_Direction: formatAxis(item.peripheralAxis, labels),
+        Peripheral_Direction: FormatAxis(item.peripheralAxis, labels),
         Correct: item.correct,
-        Processing_Speed_ms: roundMs(item.actualDurationMs),
+        Processing_Speed_ms: RoundMs(item.actualDurationMs),
         Requested_Display_Frames: item.durationFrames,
         Actual_Display_Frames: item.actualFrameCount,
         Dropped_Frames: item.droppedFrameCount,
-        Actual_Duration_ms: roundMs(item.actualDurationMs),
-        Requested_Duration_ms: roundMs(item.plannedDurationMs),
+        Actual_Duration_ms: RoundMs(item.actualDurationMs),
+        Requested_Duration_ms: RoundMs(item.plannedDurationMs),
         Central_Response: item.centralResponse,
         Peripheral_Response: item.peripheralResponse ?? '',
-        Peripheral_Response_Direction: formatAxis(item.peripheralResponse, labels),
+        Peripheral_Response_Direction: FormatAxis(item.peripheralResponse, labels),
         Response_Time_ms: Math.round(item.responseTimeMs),
       })),
     };
@@ -701,7 +701,7 @@ export function UfovPage({
     jsPsychRef.current = null;
     void onSaveRecord?.(record);
     allowProgrammaticFullscreenExitRef.current = true;
-    void exitFullscreenIfActive();
+    void ExitFullscreenIfActive();
   }, [labels, moduleId, onSaveRecord]);
 
   const startRun = async (config: UfovRunConfig) => {
@@ -719,9 +719,9 @@ export function UfovPage({
     setResultTrials([]);
     setIsRunning(true);
     document.body.classList.add('ufov-game-active');
-    await waitForFullscreenLayout();
+    await WaitForFullscreenLayout();
 
-    const measured = await measureDisplayRefreshRate();
+    const measured = await MeasureDisplayRefreshRate();
     const runConfig = measured.isMobileOrTablet && config.subtestId !== 1
       ? { ...config, subtestId: 1 as SubtestId }
       : config;
@@ -767,7 +767,7 @@ export function UfovPage({
     setResults([]);
     setResultTrials([]);
     setSavedRecord(null);
-    void exitFullscreenIfActive();
+    void ExitFullscreenIfActive();
     navigate(backPath);
   }, [backPath, navigate]);
 
@@ -792,7 +792,7 @@ export function UfovPage({
       jsPsychRef.current.abortExperiment();
     }
     jsPsychRef.current = null;
-    void exitFullscreenIfActive();
+    void ExitFullscreenIfActive();
   }, []);
 
   useLayoutEffect(() => {
@@ -834,17 +834,17 @@ export function UfovPage({
               <h2 className="section-title" id="ufov-results-title">{labels.results}</h2>
               <ResultSummary
                 items={[
-                  { label: labels.actualProcessingSpeed, value: `${roundMs(Number(savedRecord.details?.processingSpeedMs ?? 0))} ms` },
+                  { label: labels.actualProcessingSpeed, value: `${RoundMs(Number(savedRecord.details?.processingSpeedMs ?? 0))} ms` },
                   ...results.map((item) => ({
                     label: labels.subtests[item.subtestId],
                     value: savedRecord.difficulty === 'formal'
                       ? `${Math.round(item.thresholdMs)} ms`
-                      : formatPracticeScore(savedRecord),
+                      : FormatPracticeScore(savedRecord),
                     meta: (
                       <>
                         {' '}
                         <span className="ufov-result-meta">
-                          {item.aborted ? labels.aborted : `${labels.trial}: ${getResultTrialCount(savedRecord, item)}`}
+                          {item.aborted ? labels.aborted : `${labels.trial}: ${GetResultTrialCount(savedRecord, item)}`}
                         </span>
                       </>
                     ),
@@ -868,13 +868,13 @@ export function UfovPage({
                       <tr key={`${trial.practice ? 'p' : 't'}-${trial.trialNumber}`}>
                         <td>{trial.trialNumber}</td>
                         <td style={{ fontWeight: 600, color: 'var(--accent)' }}>
-                          {formatVehicle(trial.centralTarget, labels)}
+                          {FormatVehicle(trial.centralTarget, labels)}
                         </td>
-                        <td>{formatAxis(trial.peripheralAxis, labels)}</td>
+                        <td>{FormatAxis(trial.peripheralAxis, labels)}</td>
                         <td className={trial.correct ? 'result-success' : 'result-fail'}>
                           {trial.correct ? '✓' : '✗'}
                         </td>
-                        <td>{roundMs(trial.actualDurationMs)} ms</td>
+                        <td>{RoundMs(trial.actualDurationMs)} ms</td>
                       </tr>
                     ))}
                   </tbody>
@@ -883,8 +883,8 @@ export function UfovPage({
               <div className="config-summary">
                 <strong>
                   {savedRecord.difficulty === 'formal'
-                    ? onSaveRecord ? formatSaveNote(labels, appName) : labels.csvOnlyNote
-                    : `${labels.practiceResult} ${formatPracticeScore(savedRecord)}`}
+                    ? onSaveRecord ? FormatSaveNote(labels, appName) : labels.csvOnlyNote
+                    : `${labels.practiceResult} ${FormatPracticeScore(savedRecord)}`}
                 </strong>
               </div>
               <TrainingResultActions
@@ -892,7 +892,7 @@ export function UfovPage({
                 downloadLabel={labels.downloadCsv}
                 restartLabel={labels.restart}
                 backLabel={labels.backHome}
-                onDownloadCsv={() => downloadUfovTrainingRecordCsv(savedRecord)}
+                onDownloadCsv={() => DownloadUfovTrainingRecordCsv(savedRecord)}
                 onRestart={() => navigate(backPath)}
                 onBackHome={() => navigate(backPath)}
               />
@@ -904,17 +904,17 @@ export function UfovPage({
   );
 }
 
-function formatPracticeScore(record: UfovTrainingRecord) {
+function FormatPracticeScore(record: UfovTrainingRecord) {
   return `${Number(record.details?.correctCount ?? 0)}/${Number(record.details?.trialCount ?? 0)}`;
 }
 
-function getResultTrialCount(record: UfovTrainingRecord, result: SubtestResult) {
+function GetResultTrialCount(record: UfovTrainingRecord, result: SubtestResult) {
   return record.difficulty === 'formal'
     ? result.trialCount
     : Number(record.details?.trialCount ?? 0);
 }
 
-function responseButton(label: string, className: string, onClick: () => void, text = label) {
+function ResponseButton(label: string, className: string, onClick: () => void, text = label) {
   const button = document.createElement('button');
   button.className = className;
   button.type = 'button';
@@ -924,25 +924,25 @@ function responseButton(label: string, className: string, onClick: () => void, t
   return button;
 }
 
-function vehicleButton(target: CentralTarget, labels: UfovLabels, onClick: () => void) {
-  const button = responseButton(
+function VehicleButton(target: CentralTarget, labels: UfovLabels, onClick: () => void) {
+  const button = ResponseButton(
     target === 'car' ? labels.car : labels.truck,
     'btn btn-primary ufov-choice',
     onClick,
     '',
   );
-  button.appendChild(createStimulusSquare(target));
+  button.appendChild(CreateStimulusSquare(target));
   return button;
 }
 
-function createStimulusSquare(target: CentralTarget) {
+function CreateStimulusSquare(target: CentralTarget) {
   const square = document.createElement('span');
   square.className = 'ufov-stimulus-square';
-  square.appendChild(createVehicleIcon(target));
+  square.appendChild(CreateVehicleIcon(target));
   return square;
 }
 
-function createVehicleIcon(target: CentralTarget) {
+function CreateVehicleIcon(target: CentralTarget) {
   const vehicle = document.createElement('span');
   vehicle.className = `ufov-vehicle ufov-vehicle-${target}`;
   const roof = document.createElement('span');
@@ -957,21 +957,21 @@ function createVehicleIcon(target: CentralTarget) {
   return vehicle;
 }
 
-function createSlots(): Slot[] {
-  return AXES.flatMap((axis) => [9, 18, 27].map((radius, ring) => ({
+function CreateSlots(): Slot[] {
+  return ufovTargetAxes.flatMap((axis) => [9, 18, 27].map((radius, ring) => ({
     axis,
     ring,
-    ...axisPoint(axis, radius, true),
+    ...AxisPoint(axis, radius, true),
   })));
 }
 
-function pickPeripheralTargetSlot(targetAxes: readonly UfovTargetAxis[]) {
-  const candidates = PERIPHERAL_TARGET_SLOTS.filter((slot) => targetAxes.includes(slot.axis as UfovTargetAxis));
-  const slots = candidates.length > 0 ? candidates : PERIPHERAL_TARGET_SLOTS;
+function PickPeripheralTargetSlot(targetAxes: readonly UfovTargetAxis[]) {
+  const candidates = peripheralTargetSlots.filter((slot) => targetAxes.includes(slot.axis as UfovTargetAxis));
+  const slots = candidates.length > 0 ? candidates : peripheralTargetSlots;
   return slots[Math.floor(Math.random() * slots.length)];
 }
 
-function axisPoint(axis: number, radius: number, compensateStageAspect = false) {
+function AxisPoint(axis: number, radius: number, compensateStageAspect = false) {
   const angle = (-90 + axis * 45) * Math.PI / 180;
   const yRadius = compensateStageAspect ? radius * (800 / 533) : radius;
   return {
@@ -980,72 +980,72 @@ function axisPoint(axis: number, radius: number, compensateStageAspect = false) 
   };
 }
 
-function clamp(value: number, min: number, max: number) {
+function Clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function normalizeTrialCount(value: unknown) {
+function NormalizeTrialCount(value: unknown) {
   const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return DEFAULT_MAX_TEST_TRIALS;
-  return Math.round(clamp(numeric, MIN_CONFIGURED_TEST_TRIALS, MAX_CONFIGURED_TEST_TRIALS));
+  if (!Number.isFinite(numeric)) return defaultMaxTestTrials;
+  return Math.round(Clamp(numeric, minConfiguredTestTrials, maxConfiguredTestTrials));
 }
 
-function normalizeTargetAxes(value: unknown): UfovTargetAxis[] {
-  if (!Array.isArray(value)) return [...AXES] as UfovTargetAxis[];
+function NormalizeTargetAxes(value: unknown): UfovTargetAxis[] {
+  if (!Array.isArray(value)) return [...ufovTargetAxes] as UfovTargetAxis[];
 
-  const axes = Array.from(new Set(
+  const normalizedAxes = Array.from(new Set(
     value
       .map((item) => Number(item))
-      .filter((item): item is UfovTargetAxis => Number.isInteger(item) && AXES.includes(item)),
+      .filter((item): item is UfovTargetAxis => Number.isInteger(item) && ufovTargetAxes.includes(item)),
   ));
 
-  return axes.length > 0 ? axes : [...AXES] as UfovTargetAxis[];
+  return normalizedAxes.length > 0 ? normalizedAxes : [...ufovTargetAxes] as UfovTargetAxis[];
 }
 
-function averageTrialDuration(trials: TrialRecord[]) {
-  if (trials.length === 0) return MAX_DURATION_MS;
+function AverageTrialDuration(trials: TrialRecord[]) {
+  if (trials.length === 0) return maxDurationMs;
   return trials.reduce((sum, trial) => sum + trial.durationMs, 0) / trials.length;
 }
 
-function waitMs(jsPsych: JsPsych, durationMs: number) {
+function WaitMs(jsPsych: JsPsych, durationMs: number) {
   return new Promise<void>((resolve) => {
     jsPsych.pluginAPI.setTimeout(resolve, durationMs);
   });
 }
 
-function msToFrameCount(durationMs: number, refreshMs: number) {
+function MsToFrameCount(durationMs: number, refreshMs: number) {
   if (!Number.isFinite(refreshMs) || refreshMs <= 0) return Math.max(1, Math.round(durationMs / (1000 / 60)));
   return Math.max(1, Math.round(durationMs / refreshMs));
 }
 
-function framesToMs(frames: number, refreshMs: number) {
+function FramesToMs(frames: number, refreshMs: number) {
   return frames * refreshMs;
 }
 
-function roundMs(value: number) {
+function RoundMs(value: number) {
   return Number(value.toFixed(2));
 }
 
-function formatVehicle(target: CentralTarget, labels: UfovLabels) {
+function FormatVehicle(target: CentralTarget, labels: UfovLabels) {
   return target === 'car' ? labels.car : labels.truck;
 }
 
-function formatAxis(axis: number | undefined, labels: UfovLabels) {
+function FormatAxis(axis: number | undefined, labels: UfovLabels) {
   return typeof axis === 'number' ? labels.directions[axis] : labels.noPeripheral;
 }
 
-function formatSaveNote(labels: UfovLabels, appName: string) {
+function FormatSaveNote(labels: UfovLabels, appName: string) {
   return labels.saveNote.replace('{appName}', appName);
 }
 
-function downloadUfovTrainingRecordCsv(record: UfovTrainingRecord): void {
-  downloadCsvFile(
-    buildUfovTrainingRecordsCsv([record]),
-    `${safeFilePart(record.gameId)}_${record.trainingDate ?? formatDate(new Date())}.csv`,
+function DownloadUfovTrainingRecordCsv(record: UfovTrainingRecord): void {
+  DownloadCsvFile(
+    BuildUfovTrainingRecordsCsv([record]),
+    `${SafeFilePart(record.gameId)}_${record.trainingDate ?? FormatDate(new Date())}.csv`,
   );
 }
 
-function buildUfovTrainingRecordsCsv(records: UfovTrainingRecord[]): string {
+function BuildUfovTrainingRecordsCsv(records: UfovTrainingRecord[]): string {
   const rows = records.flatMap((record) => {
     const details = record.details ?? {};
     const detailRows = record.detailRows?.length ? record.detailRows : [{}];
@@ -1063,17 +1063,17 @@ function buildUfovTrainingRecordsCsv(records: UfovTrainingRecord[]): string {
     }));
   });
   const columns = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
-  return createCsvContent([
+  return CreateCsvContent([
     columns,
     ...rows.map((row) => columns.map((column) => row[column])),
   ]);
 }
 
-function safeFilePart(value: string): string {
+function SafeFilePart(value: string): string {
   return value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'ufov';
 }
 
-function formatDate(date: Date) {
+function FormatDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');

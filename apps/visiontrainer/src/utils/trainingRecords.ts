@@ -1,28 +1,28 @@
 import {
-  getRemoteTrainingRecords,
-  hasAuthToken,
-  saveRemoteTrainingRecord,
+  GetRemoteTrainingRecords,
+  HasAuthToken,
+  SaveRemoteTrainingRecord,
 } from '@rehab-trainer/ui/auth/authClient';
-import { createCsvContent } from '@rehab-trainer/ui/csv';
+import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import type { TranslationKey } from '../i18n';
 import type { TrialData } from '../pages/training/types';
-import { downloadCsvFile } from './downloadFile';
-import { getSetting, STORAGE_PREFIX } from './settings';
+import { DownloadCsvFile } from './downloadFile';
+import { GetSetting, storagePrefix } from './settings';
 import { siteUrls } from './siteUrls';
 
 type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;
 
-export const TRAINING_RECORDS_CHANGED_EVENT = 'vision-trainer-training-records-changed';
+export const trainingRecordsChangedEvent = 'vision-trainer-training-records-changed';
 
-const LEGACY_TRAINING_RECORDS_KEY = `${STORAGE_PREFIX}training_records_v1`;
-const TRAINING_HIGH_SCORES_KEY = `${STORAGE_PREFIX}training_high_scores_v1`;
-const TRAINING_RECORDS_DB_NAME = `${STORAGE_PREFIX}training_records`;
-const TRAINING_RECORDS_DB_VERSION = 1;
-const TRAINING_RECORDS_STORE = 'records';
-const REMOTE_APP_ID = 'visiontrainer';
-const AUTH_API_BASE = siteUrls.hub;
+const legacyTrainingRecordsKey = `${storagePrefix}training_records_v1`;
+const trainingHighScoresKey = `${storagePrefix}training_high_scores_v1`;
+const trainingRecordsDbName = `${storagePrefix}training_records`;
+const trainingRecordsDbVersion = 1;
+const trainingRecordsStore = 'records';
+const remoteAppId = 'visiontrainer';
+const authApiBase = siteUrls.hub;
 
-const MODULE_TITLE_KEYS: Record<string, TranslationKey> = {
+const moduleTitleKeys: Record<string, TranslationKey> = {
   'moving-card': 'home.module.movingCard.title',
   'oculomotor-training': 'home.module.oculomotor.title',
   'gabor-patching': 'home.module.gaborPatching.title',
@@ -86,17 +86,17 @@ type CsvRow = unknown[];
 let databasePromise: Promise<IDBDatabase> | null = null;
 let migrationPromise: Promise<void> | null = null;
 
-export function initializeTrainingRecords(): Promise<void> {
-  return ensureLegacyRecordsMigrated();
+export function InitializeTrainingRecords(): Promise<void> {
+  return EnsureLegacyRecordsMigrated();
 }
 
-export async function getTrainingRecords(): Promise<TrainingRecord[]> {
-  if (hasAuthToken()) {
+export async function GetTrainingRecords(): Promise<TrainingRecord[]> {
+  if (HasAuthToken()) {
     try {
-      const remoteRecords = await getRemoteTrainingRecords(AUTH_API_BASE, REMOTE_APP_ID);
+      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId);
       if (remoteRecords) {
         return remoteRecords
-          .map(toTrainingRecord)
+          .map(ToTrainingRecord)
           .filter((record): record is TrainingRecord => record !== null)
           .sort((left, right) => left.savedAt.localeCompare(right.savedAt));
       }
@@ -106,16 +106,16 @@ export async function getTrainingRecords(): Promise<TrainingRecord[]> {
   }
 
   try {
-    const database = await getTrainingRecordsDatabase();
-    await ensureLegacyRecordsMigrated(database);
-    const transaction = database.transaction(TRAINING_RECORDS_STORE, 'readonly');
-    const records = await requestToPromise<unknown[]>(
-      transaction.objectStore(TRAINING_RECORDS_STORE).getAll(),
+    const database = await GetTrainingRecordsDatabase();
+    await EnsureLegacyRecordsMigrated(database);
+    const transaction = database.transaction(trainingRecordsStore, 'readonly');
+    const records = await RequestToPromise<unknown[]>(
+      transaction.objectStore(trainingRecordsStore).getAll(),
     );
-    await transactionToPromise(transaction);
+    await TransactionToPromise(transaction);
 
     return records
-      .map(toTrainingRecord)
+      .map(ToTrainingRecord)
       .filter((record): record is TrainingRecord => record !== null)
       .sort((left, right) => left.savedAt.localeCompare(right.savedAt));
   } catch (error) {
@@ -124,10 +124,10 @@ export async function getTrainingRecords(): Promise<TrainingRecord[]> {
   }
 }
 
-export async function getTrainingRecordCount(): Promise<number> {
-  if (hasAuthToken()) {
+export async function GetTrainingRecordCount(): Promise<number> {
+  if (HasAuthToken()) {
     try {
-      const remoteRecords = await getRemoteTrainingRecords(AUTH_API_BASE, REMOTE_APP_ID);
+      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId);
       if (remoteRecords) return remoteRecords.length;
     } catch (error) {
       console.warn('Unable to count remote training records. Falling back to IndexedDB.', error);
@@ -135,13 +135,13 @@ export async function getTrainingRecordCount(): Promise<number> {
   }
 
   try {
-    const database = await getTrainingRecordsDatabase();
-    await ensureLegacyRecordsMigrated(database);
-    const transaction = database.transaction(TRAINING_RECORDS_STORE, 'readonly');
-    const count = await requestToPromise<number>(
-      transaction.objectStore(TRAINING_RECORDS_STORE).count(),
+    const database = await GetTrainingRecordsDatabase();
+    await EnsureLegacyRecordsMigrated(database);
+    const transaction = database.transaction(trainingRecordsStore, 'readonly');
+    const count = await RequestToPromise<number>(
+      transaction.objectStore(trainingRecordsStore).count(),
     );
-    await transactionToPromise(transaction);
+    await TransactionToPromise(transaction);
     return count;
   } catch (error) {
     console.warn('Unable to count saved training records.', error);
@@ -149,11 +149,11 @@ export async function getTrainingRecordCount(): Promise<number> {
   }
 }
 
-export async function saveTrainingRecord(args: SaveTrainingRecordArgs): Promise<TrainingRecord | null> {
+export async function SaveTrainingRecord(args: SaveTrainingRecordArgs): Promise<TrainingRecord | null> {
   if (args.results.length === 0) return null;
 
   const record: TrainingRecord = {
-    id: createRecordId(),
+    id: CreateRecordId(),
     savedAt: new Date().toISOString(),
     userName: args.userName,
     moduleId: args.moduleId,
@@ -164,15 +164,15 @@ export async function saveTrainingRecord(args: SaveTrainingRecordArgs): Promise<
     results: args.results,
   };
 
-  if (hasAuthToken()) {
+  if (HasAuthToken()) {
     try {
-      const saved = await saveRemoteTrainingRecord(AUTH_API_BASE, {
-        appId: REMOTE_APP_ID,
+      const saved = await SaveRemoteTrainingRecord(authApiBase, {
+        appId: remoteAppId,
         record,
       });
       if (saved) {
-        updateTrainingHighScores([record]);
-        window.dispatchEvent(new Event(TRAINING_RECORDS_CHANGED_EVENT));
+        UpdateTrainingHighScores([record]);
+        window.dispatchEvent(new Event(trainingRecordsChangedEvent));
         return record;
       }
     } catch (error) {
@@ -181,13 +181,13 @@ export async function saveTrainingRecord(args: SaveTrainingRecordArgs): Promise<
   }
 
   try {
-    const database = await getTrainingRecordsDatabase();
-    await ensureLegacyRecordsMigrated(database);
-    const transaction = database.transaction(TRAINING_RECORDS_STORE, 'readwrite');
-    transaction.objectStore(TRAINING_RECORDS_STORE).put(record);
-    await transactionToPromise(transaction);
-    updateTrainingHighScores([record]);
-    window.dispatchEvent(new Event(TRAINING_RECORDS_CHANGED_EVENT));
+    const database = await GetTrainingRecordsDatabase();
+    await EnsureLegacyRecordsMigrated(database);
+    const transaction = database.transaction(trainingRecordsStore, 'readwrite');
+    transaction.objectStore(trainingRecordsStore).put(record);
+    await TransactionToPromise(transaction);
+    UpdateTrainingHighScores([record]);
+    window.dispatchEvent(new Event(trainingRecordsChangedEvent));
     return record;
   } catch (error) {
     console.warn('Unable to save training record.', error);
@@ -195,21 +195,21 @@ export async function saveTrainingRecord(args: SaveTrainingRecordArgs): Promise<
   }
 }
 
-export async function downloadAllTrainingRecordsCsv(t: TFunction): Promise<boolean> {
-  const records = await getTrainingRecords();
+export async function DownloadAllTrainingRecordsCsv(t: TFunction): Promise<boolean> {
+  const records = await GetTrainingRecords();
   if (records.length === 0) return false;
 
   const now = new Date();
-  const prefix = getSetting('downloadDirectory');
-  const filenameDate = formatDate(now);
-  const filenameTime = formatTime(now).replace(/:/g, '');
+  const prefix = GetSetting('downloadDirectory');
+  const filenameDate = FormatDate(now);
+  const filenameTime = FormatTime(now).replace(/:/g, '');
   const filename = `${prefix ? `${prefix}_` : ''}training_records_${filenameDate}_${filenameTime}.csv`;
 
-  downloadCsvFile(buildTrainingRecordsCsv(records, t), filename);
+  DownloadCsvFile(BuildTrainingRecordsCsv(records, t), filename);
   return true;
 }
 
-function getTrainingRecordsDatabase(): Promise<IDBDatabase> {
+function GetTrainingRecordsDatabase(): Promise<IDBDatabase> {
   if (!databasePromise) {
     const openingDatabase = new Promise<IDBDatabase>((resolve, reject) => {
       if (!('indexedDB' in window)) {
@@ -218,14 +218,14 @@ function getTrainingRecordsDatabase(): Promise<IDBDatabase> {
       }
 
       const request = window.indexedDB.open(
-        TRAINING_RECORDS_DB_NAME,
-        TRAINING_RECORDS_DB_VERSION,
+        trainingRecordsDbName,
+        trainingRecordsDbVersion,
       );
 
       request.onupgradeneeded = () => {
         const database = request.result;
-        if (!database.objectStoreNames.contains(TRAINING_RECORDS_STORE)) {
-          const store = database.createObjectStore(TRAINING_RECORDS_STORE, { keyPath: 'id' });
+        if (!database.objectStoreNames.contains(trainingRecordsStore)) {
+          const store = database.createObjectStore(trainingRecordsStore, { keyPath: 'id' });
           store.createIndex('savedAt', 'savedAt');
           store.createIndex('userName', 'userName');
           store.createIndex('moduleId', 'moduleId');
@@ -252,9 +252,9 @@ function getTrainingRecordsDatabase(): Promise<IDBDatabase> {
   return databasePromise;
 }
 
-function ensureLegacyRecordsMigrated(database?: IDBDatabase): Promise<void> {
+function EnsureLegacyRecordsMigrated(database?: IDBDatabase): Promise<void> {
   if (!migrationPromise) {
-    migrationPromise = migrateLegacyRecords(database).catch((error) => {
+    migrationPromise = MigrateLegacyRecords(database).catch((error) => {
       migrationPromise = null;
       throw error;
     });
@@ -262,8 +262,8 @@ function ensureLegacyRecordsMigrated(database?: IDBDatabase): Promise<void> {
   return migrationPromise;
 }
 
-async function migrateLegacyRecords(existingDatabase?: IDBDatabase): Promise<void> {
-  const raw = localStorage.getItem(LEGACY_TRAINING_RECORDS_KEY);
+async function MigrateLegacyRecords(existingDatabase?: IDBDatabase): Promise<void> {
+  const raw = localStorage.getItem(legacyTrainingRecordsKey);
   if (!raw) return;
 
   let parsed: unknown;
@@ -280,7 +280,7 @@ async function migrateLegacyRecords(existingDatabase?: IDBDatabase): Promise<voi
   }
 
   const records = parsed
-    .map(toTrainingRecord)
+    .map(ToTrainingRecord)
     .filter((record): record is TrainingRecord => record !== null)
     .sort((left, right) => left.savedAt.localeCompare(right.savedAt));
 
@@ -289,27 +289,27 @@ async function migrateLegacyRecords(existingDatabase?: IDBDatabase): Promise<voi
     return;
   }
 
-  const database = existingDatabase ?? await getTrainingRecordsDatabase();
+  const database = existingDatabase ?? await GetTrainingRecordsDatabase();
   if (records.length > 0) {
-    const transaction = database.transaction(TRAINING_RECORDS_STORE, 'readwrite');
-    const store = transaction.objectStore(TRAINING_RECORDS_STORE);
+    const transaction = database.transaction(trainingRecordsStore, 'readwrite');
+    const store = transaction.objectStore(trainingRecordsStore);
     records.forEach((record) => store.put(record));
-    await transactionToPromise(transaction);
-    updateTrainingHighScores(records);
+    await TransactionToPromise(transaction);
+    UpdateTrainingHighScores(records);
   }
 
-  localStorage.removeItem(LEGACY_TRAINING_RECORDS_KEY);
-  window.dispatchEvent(new Event(TRAINING_RECORDS_CHANGED_EVENT));
+  localStorage.removeItem(legacyTrainingRecordsKey);
+  window.dispatchEvent(new Event(trainingRecordsChangedEvent));
 }
 
-function updateTrainingHighScores(records: TrainingRecord[]): void {
-  const highScores = readTrainingHighScores();
+function UpdateTrainingHighScores(records: TrainingRecord[]): void {
+  const highScores = ReadTrainingHighScores();
 
   records.forEach((record) => {
-    const score = calculateTrainingScore(record);
+    const score = CalculateTrainingScore(record);
     if (score === null) return;
 
-    const key = createHighScoreKey(record.userName, record.moduleId);
+    const key = CreateHighScoreKey(record.userName, record.moduleId);
     const current = highScores[key];
     if (current && current.score >= score) return;
 
@@ -321,38 +321,38 @@ function updateTrainingHighScores(records: TrainingRecord[]): void {
     };
   });
 
-  localStorage.setItem(TRAINING_HIGH_SCORES_KEY, JSON.stringify(highScores));
+  localStorage.setItem(trainingHighScoresKey, JSON.stringify(highScores));
 }
 
-function readTrainingHighScores(): Record<string, TrainingHighScore> {
-  const raw = localStorage.getItem(TRAINING_HIGH_SCORES_KEY);
+function ReadTrainingHighScores(): Record<string, TrainingHighScore> {
+  const raw = localStorage.getItem(trainingHighScoresKey);
   if (!raw) return {};
 
   try {
     const parsed: unknown = JSON.parse(raw);
-    return toObject(parsed) as Record<string, TrainingHighScore> | undefined ?? {};
+    return ToObject(parsed) as Record<string, TrainingHighScore> | undefined ?? {};
   } catch (error) {
     console.warn('Unable to read saved training high scores.', error);
     return {};
   }
 }
 
-function calculateTrainingScore(record: TrainingRecord): number | null {
+function CalculateTrainingScore(record: TrainingRecord): number | null {
   const firstResult = record.results[0];
 
   if (record.moduleId === 'gabor-patching') {
-    return toFiniteNumber(firstResult?.score);
+    return ToFiniteNumber(firstResult?.score);
   }
 
   if (record.moduleId === 'oculomotor-training') {
-    const aoiScore = toFiniteNumber(
+    const aoiScore = ToFiniteNumber(
       (firstResult as TrialData & { aoi_score?: number } | undefined)?.aoi_score,
     );
-    return aoiScore ?? toFiniteNumber(firstResult?.acquired_targets);
+    return aoiScore ?? ToFiniteNumber(firstResult?.acquired_targets);
   }
 
   if (record.moduleId === 'driving-rehab') {
-    return toFiniteNumber(firstResult?.valid_event_count);
+    return ToFiniteNumber(firstResult?.valid_event_count);
   }
 
   const scoredResults = record.moduleId === 'reading-training'
@@ -361,22 +361,22 @@ function calculateTrainingScore(record: TrainingRecord): number | null {
   return scoredResults.filter((result) => result.correct).length;
 }
 
-function createHighScoreKey(userName: string, moduleId: string): string {
+function CreateHighScoreKey(userName: string, moduleId: string): string {
   return `${encodeURIComponent(userName)}::${encodeURIComponent(moduleId)}`;
 }
 
-function toFiniteNumber(value: unknown): number | null {
+function ToFiniteNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
+function RequestToPromise<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed.'));
   });
 }
 
-function transactionToPromise(transaction: IDBTransaction): Promise<void> {
+function TransactionToPromise(transaction: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error ?? new Error('IndexedDB transaction failed.'));
@@ -384,7 +384,7 @@ function transactionToPromise(transaction: IDBTransaction): Promise<void> {
   });
 }
 
-export function buildTrainingRecordsCsv(records: TrainingRecord[], t: TFunction): string {
+export function BuildTrainingRecordsCsv(records: TrainingRecord[], t: TFunction): string {
   const headers = [
     t('exp.csv.sessionId'),
     t('exp.csv.savedAt'),
@@ -418,15 +418,15 @@ export function buildTrainingRecordsCsv(records: TrainingRecord[], t: TFunction)
     t('exp.csv.readingCrowding'),
   ];
 
-  const rows = records.flatMap((record) => toCsvRows(record, t));
-  return createCsvContent([headers, ...rows]);
+  const rows = records.flatMap((record) => ToCsvRows(record, t));
+  return CreateCsvContent([headers, ...rows]);
 }
 
-function toCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
+function ToCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
   const firstResult = record.results[0];
-  const moduleLabel = formatModule(record.moduleId, t);
-  const difficulty = formatDifficulty(record.config?.drivingDifficulty ?? record.difficulty, t);
-  const { date, time } = formatSavedAt(record.savedAt);
+  const moduleLabel = FormatModule(record.moduleId, t);
+  const difficulty = FormatDifficulty(record.config?.drivingDifficulty ?? record.difficulty, t);
+  const { date, time } = FormatSavedAt(record.savedAt);
   const readingWPS = record.config?.readingWPS ?? '';
   const readingCrowding = record.config?.readingCrowding ?? '';
 
@@ -500,13 +500,13 @@ function toCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
 
   return record.results.map((result, index) => [
     ...base,
-    formatOculomotorMode(result.mode ?? record.oculomotorMode ?? record.config?.oculomotorMode, t),
-    formatOculomotorPath(result.pattern ?? record.oculomotorPattern ?? record.config?.oculomotorPattern, t),
+    FormatOculomotorMode(result.mode ?? record.oculomotorMode ?? record.config?.oculomotorMode, t),
+    FormatOculomotorPath(result.pattern ?? record.oculomotorPattern ?? record.config?.oculomotorPattern, t),
     result.trial_type ?? '',
     index + 1,
     result.target ?? '',
     (result as TrialData & { response_text?: string }).response_text ?? result.response ?? '',
-    formatCorrect(result.correct),
+    FormatCorrect(result.correct),
     result.rt ?? result.reading_time ?? '',
     result.duration_ms ?? '',
     result.score ?? '',
@@ -525,78 +525,78 @@ function toCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
   ]);
 }
 
-function toTrainingRecord(value: unknown): TrainingRecord | null {
-  const item = toObject(value);
+function ToTrainingRecord(value: unknown): TrainingRecord | null {
+  const item = ToObject(value);
   if (!item || !Array.isArray(item.results)) return null;
 
   return {
-    id: typeof item.id === 'string' ? item.id : createRecordId(),
+    id: typeof item.id === 'string' ? item.id : CreateRecordId(),
     savedAt: typeof item.savedAt === 'string' ? item.savedAt : new Date().toISOString(),
     userName: typeof item.userName === 'string' ? item.userName : '',
     moduleId: typeof item.moduleId === 'string' ? item.moduleId : '',
     difficulty: typeof item.difficulty === 'string' ? item.difficulty : '',
     oculomotorMode: typeof item.oculomotorMode === 'string' ? item.oculomotorMode : undefined,
     oculomotorPattern: typeof item.oculomotorPattern === 'string' ? item.oculomotorPattern : undefined,
-    config: toObject(item.config) as TrainingRecordConfig | undefined,
+    config: ToObject(item.config) as TrainingRecordConfig | undefined,
     results: item.results as TrialData[],
   };
 }
 
-function toObject(value: unknown): Record<string, unknown> | undefined {
+function ToObject(value: unknown): Record<string, unknown> | undefined {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
   return undefined;
 }
 
-function createRecordId(): string {
+function CreateRecordId(): string {
   const randomPart = Math.random().toString(36).slice(2, 10);
   return `${Date.now().toString(36)}_${randomPart}`;
 }
 
-function formatSavedAt(savedAt: string): { date: string; time: string } {
+function FormatSavedAt(savedAt: string): { date: string; time: string } {
   const date = new Date(savedAt);
   if (Number.isNaN(date.getTime())) {
     return { date: '', time: '' };
   }
-  return { date: formatDate(date), time: formatTime(date) };
+  return { date: FormatDate(date), time: FormatTime(date) };
 }
 
-function formatDate(date: Date): string {
+function FormatDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
-function formatTime(date: Date): string {
+function FormatTime(date: Date): string {
   const hour = String(date.getHours()).padStart(2, '0');
   const minute = String(date.getMinutes()).padStart(2, '0');
   const second = String(date.getSeconds()).padStart(2, '0');
   return `${hour}:${minute}:${second}`;
 }
 
-function formatModule(moduleId: string, t: TFunction): string {
-  const key = MODULE_TITLE_KEYS[moduleId];
+function FormatModule(moduleId: string, t: TFunction): string {
+  const key = moduleTitleKeys[moduleId];
   return key ? t(key) : moduleId;
 }
 
-function formatDifficulty(difficulty: string, t: TFunction): string {
+function FormatDifficulty(difficulty: string, t: TFunction): string {
   if (difficulty === 'beginner' || difficulty === 'intermediate' || difficulty === 'advanced') {
     return t(`home.diff.${difficulty}` as TranslationKey);
   }
   return difficulty;
 }
 
-function formatOculomotorMode(mode: string | undefined, t: TFunction): string {
+function FormatOculomotorMode(mode: string | undefined, t: TFunction): string {
   return mode ? t(`preset.mode.${mode}` as TranslationKey) : '';
 }
 
-function formatOculomotorPath(path: string | undefined, t: TFunction): string {
+function FormatOculomotorPath(path: string | undefined, t: TFunction): string {
   return path ? t(`preset.path.${path}` as TranslationKey) : '';
 }
 
-function formatCorrect(correct: boolean | undefined): string {
+function FormatCorrect(correct: boolean | undefined): string {
   if (correct === undefined) return '';
   return correct ? 'true' : 'false';
 }

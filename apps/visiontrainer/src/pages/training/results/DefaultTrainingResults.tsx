@@ -1,5 +1,5 @@
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
-import { mean, median } from '../../../utils/mathUtils';
+import { Mean, Median } from '../../../utils/mathUtils';
 import type { TFunction, TrialData } from '../types';
 
 interface DefaultTrainingResultsProps {
@@ -10,9 +10,9 @@ interface DefaultTrainingResultsProps {
 
 export function DefaultTrainingResults({ results, userName, t }: DefaultTrainingResultsProps) {
   const responseTimes = results.map((result) => result.rt);
-  const averageRt = Math.round(mean(responseTimes));
+  const averageRt = Math.round(Mean(responseTimes));
   const correctCount = results.filter((result) => result.correct).length;
-  const medianRt = Math.round(median(responseTimes));
+  const medianRt = Math.round(Median(responseTimes));
 
   return (
     <>

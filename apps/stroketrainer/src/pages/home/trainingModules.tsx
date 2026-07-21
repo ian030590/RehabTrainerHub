@@ -11,7 +11,7 @@ export interface TrainingModuleCardData {
   descKey: TranslationKey;
 }
 
-export const TRAINING_MODULES: readonly TrainingModuleCardData[] = [
+export const trainingModules: readonly TrainingModuleCardData[] = [
   {
     id: 'motor-training',
     titleKey: 'home.module.motor.title',

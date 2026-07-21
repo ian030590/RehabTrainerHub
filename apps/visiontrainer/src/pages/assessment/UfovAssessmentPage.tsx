@@ -1,14 +1,14 @@
 import { useSearchParams } from 'react-router-dom';
 import { useT } from '../../i18n';
-import { saveTrainingRecord } from '../../utils/trainingRecords';
+import { SaveTrainingRecord } from '../../utils/trainingRecords';
 import type { TrialData } from '../training/types';
 import { UfovPage, type SubtestId, type UfovRunMode, type UfovTrainingRecord } from './ufov/UfovPage';
 
 export function UfovAssessmentPage() {
   const { lang } = useT();
   const [searchParams] = useSearchParams();
-  const initialSubtestId = parseSubtestId(searchParams.get('subtest'));
-  const initialMode = parseRunMode(searchParams.get('mode'));
+  const initialSubtestId = ParseSubtestId(searchParams.get('subtest'));
+  const initialMode = ParseRunMode(searchParams.get('mode'));
   const autoStart = searchParams.get('start') === '1';
 
   return (
@@ -20,24 +20,24 @@ export function UfovAssessmentPage() {
       initialSubtestId={initialSubtestId}
       initialMode={initialMode}
       autoStart={autoStart}
-      onSaveRecord={saveUfovRecord}
+      onSaveRecord={SaveUfovRecord}
     />
   );
 }
 
-function parseSubtestId(value: string | null): SubtestId {
+function ParseSubtestId(value: string | null): SubtestId {
   if (value === '2') return 2;
   if (value === '3') return 3;
   return 1;
 }
 
-function parseRunMode(value: string | null): UfovRunMode {
+function ParseRunMode(value: string | null): UfovRunMode {
   if (value === 'instruction' || value === 'practice' || value === 'formal') return value;
   return 'formal';
 }
 
-async function saveUfovRecord(record: UfovTrainingRecord) {
-  await saveTrainingRecord({
+async function SaveUfovRecord(record: UfovTrainingRecord) {
+  await SaveTrainingRecord({
     userName: record.userName,
     moduleId: record.moduleId,
     difficulty: record.difficulty,
@@ -45,11 +45,11 @@ async function saveUfovRecord(record: UfovTrainingRecord) {
       ufovDetails: record.details,
       ufovSummary: record.details?.ufovSummary,
     },
-    results: toUfovTrialData(record),
+    results: ToUfovTrialData(record),
   });
 }
 
-function toUfovTrialData(record: UfovTrainingRecord): TrialData[] {
+function ToUfovTrialData(record: UfovTrainingRecord): TrialData[] {
   return (record.detailRows ?? []).map((row, index) => ({
     ...row,
     trial_index: index,

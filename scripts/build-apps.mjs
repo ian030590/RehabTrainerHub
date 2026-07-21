@@ -9,11 +9,11 @@ const appsRoot = join(repoRoot, 'apps');
 const dryRun = process.argv.includes('--dry-run');
 const cloudflarePages = process.argv.includes('--cloudflare-pages');
 
-function toPosixPath(path) {
+function ToPosixPath(path) {
   return path.replaceAll('\\', '/');
 }
 
-function discoverBuildableApps() {
+function DiscoverBuildableApps() {
   return readdirSync(appsRoot)
     .map((entry) => join(appsRoot, entry))
     .filter((entryPath) => statSync(entryPath).isDirectory())
@@ -29,15 +29,15 @@ function discoverBuildableApps() {
       }
 
       return {
-        name: pkg.name ?? toPosixPath(relative(repoRoot, appDir)),
-        path: toPosixPath(relative(repoRoot, appDir)),
+        name: pkg.name ?? ToPosixPath(relative(repoRoot, appDir)),
+        path: ToPosixPath(relative(repoRoot, appDir)),
       };
     })
     .filter(Boolean)
     .sort((a, b) => a.path.localeCompare(b.path));
 }
 
-function runBuild(app) {
+function RunBuild(app) {
   console.log(`\n=== Building ${app.name} (${app.path}) ===`);
 
   if (dryRun) {
@@ -46,7 +46,7 @@ function runBuild(app) {
     return;
   }
 
-  const command = getCommand('npm', ['--prefix', app.path, 'run', 'build']);
+  const command = GetCommand('npm', ['--prefix', app.path, 'run', 'build']);
   const result = spawnSync(command.file, command.args, {
     cwd: repoRoot,
     env: cloudflarePages ? { ...process.env, CF_PAGES: '1' } : process.env,
@@ -62,7 +62,7 @@ function runBuild(app) {
   }
 }
 
-function getCommand(file, args) {
+function GetCommand(file, args) {
   if (process.platform !== 'win32') {
     return { file, args };
   }
@@ -73,12 +73,12 @@ function getCommand(file, args) {
   };
 }
 
-const apps = discoverBuildableApps();
+const apps = DiscoverBuildableApps();
 
 if (apps.length === 0) {
   throw new Error('No buildable apps found under apps/*/package.json.');
 }
 
 for (const app of apps) {
-  runBuild(app);
+  RunBuild(app);
 }

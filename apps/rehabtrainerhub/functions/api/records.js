@@ -1,29 +1,29 @@
 import {
-  errorResponse,
-  jsonResponse,
-  optionsResponse,
-  rejectDisallowedOrigin,
-  requireDatabase,
-  requireSession,
-  safeJsonParse,
+  ErrorResponse,
+  JsonResponse,
+  OptionsResponse,
+  RejectDisallowedOrigin,
+  RequireDatabase,
+  RequireSession,
+  SafeJsonParse,
 } from '../_lib/auth.js';
 
 const appIds = new Set(['rehabtrainerhub', 'stroketrainer', 'visiontrainer', 'braintrainer']);
 
 export function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env);
+  return OptionsResponse(request, env);
 }
 
 export async function onRequestGet({ request, env }) {
-  const originError = rejectDisallowedOrigin(request, env);
+  const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
 
-  const session = await requireSession(request, env);
-  if (!session?.sub) return errorResponse(request, env, 'Unauthorized.', 401);
+  const session = await RequireSession(request, env);
+  if (!session?.sub) return ErrorResponse(request, env, 'Unauthorized.', 401);
 
   const url = new URL(request.url);
   const appId = url.searchParams.get('appId');
-  const db = requireDatabase(env);
+  const db = RequireDatabase(env);
   const query = appId && appIds.has(appId)
     ? db
       .prepare('SELECT payload_json FROM training_records WHERE user_id = ? AND app_id = ? ORDER BY saved_at ASC')
@@ -33,24 +33,24 @@ export async function onRequestGet({ request, env }) {
       .bind(session.sub);
   const result = await query.all();
   const records = (result.results || [])
-    .map((row) => safeJsonParse(row.payload_json))
+    .map((row) => SafeJsonParse(row.payload_json))
     .filter(Boolean);
 
-  return jsonResponse(request, env, { records });
+  return JsonResponse(request, env, { records });
 }
 
 export async function onRequestPost({ request, env }) {
-  const originError = rejectDisallowedOrigin(request, env);
+  const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
 
-  const session = await requireSession(request, env);
-  if (!session?.sub) return errorResponse(request, env, 'Unauthorized.', 401);
+  const session = await RequireSession(request, env);
+  if (!session?.sub) return ErrorResponse(request, env, 'Unauthorized.', 401);
 
   const input = await request.json().catch(() => null);
-  const payload = normalizeRecordPayload(input);
-  if (!payload) return errorResponse(request, env, 'Invalid training record payload.', 400);
+  const payload = NormalizeRecordPayload(input);
+  if (!payload) return ErrorResponse(request, env, 'Invalid training record payload.', 400);
 
-  const db = requireDatabase(env);
+  const db = RequireDatabase(env);
   const now = new Date().toISOString();
   await db
     .prepare(`
@@ -83,10 +83,10 @@ export async function onRequestPost({ request, env }) {
     )
     .run();
 
-  return jsonResponse(request, env, { ok: true, record: payload.record }, { status: 201 });
+  return JsonResponse(request, env, { ok: true, record: payload.record }, { status: 201 });
 }
 
-function normalizeRecordPayload(input) {
+function NormalizeRecordPayload(input) {
   if (!input || typeof input !== 'object') return null;
   const appId = typeof input.appId === 'string' ? input.appId : '';
   const record = input.record && typeof input.record === 'object' ? input.record : null;
