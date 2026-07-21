@@ -10,12 +10,15 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = ParseArgs(process.argv.slice(2));
 const appDir = resolve(process.cwd(), args.app ?? '.');
 const route = args.route ?? '/';
-const expectedSelector = args.selector;
+const expectedSelectors = [
+  ...ParseSelectorList(args.selector),
+  ...ParseSelectorList(args.allSelectors),
+];
 const expectedText = args.text;
 const timeoutMs = Number(args.timeoutMs ?? 12000);
 
-if (!expectedSelector) {
-  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs --app <appDir> --route <route> --selector <cssSelector> [--text <text>]');
+if (expectedSelectors.length === 0) {
+  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs --app <appDir> --route <route> --selector <cssSelector> [--allSelectors <cssSelector,...>] [--text <text>]');
 }
 
 const browserPath = FindBrowserPath();
@@ -90,7 +93,10 @@ try {
       href: location.href,
       rootHtml: document.querySelector('#root')?.outerHTML || '',
       bodyText: document.body.innerText || '',
-      selectorMatched: Boolean(document.querySelector(${JSON.stringify(expectedSelector)})),
+      selectorMatches: ${JSON.stringify(expectedSelectors)}.map((selector) => ({
+        selector,
+        matched: Boolean(document.querySelector(selector)),
+      })),
       textMatched: ${expectedText ? `document.body.innerText.includes(${JSON.stringify(expectedText)})` : 'true'}
     })`,
     returnByValue: true,
@@ -104,8 +110,10 @@ try {
   if (!state.rootHtml || state.rootHtml === '<div id="root"></div>') {
     failures.push('React root is empty.');
   }
-  if (!state.selectorMatched) {
-    failures.push(`Missing expected selector: ${expectedSelector}`);
+  for (const selectorMatch of state.selectorMatches) {
+    if (!selectorMatch.matched) {
+      failures.push(`Missing expected selector: ${selectorMatch.selector}`);
+    }
   }
   if (!state.textMatched) {
     failures.push(`Missing expected text: ${expectedText}`);
@@ -146,6 +154,14 @@ function ParseArgs(argv) {
     index += 1;
   }
   return parsed;
+}
+
+function ParseSelectorList(value) {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map((selector) => selector.trim())
+    .filter(Boolean);
 }
 
 function FindBrowserPath() {
