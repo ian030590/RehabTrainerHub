@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => {
     define: {
       __BUNDLED_ZH_VOSK_MODEL_ENABLED__: JSON.stringify(!isCloudflarePagesBuild),
     },
-    base: './',
+    base: '/',
     server: {
       watch: {
         ignored: ['**/tsconfig.json', '**/tsconfig.*.json', '**/*.tsbuildinfo'],

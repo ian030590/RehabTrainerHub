@@ -114,6 +114,12 @@ function checkAssetReferences(file, distDir, tags, failures) {
       failures.push(`${file}: referenced asset is missing: ${assetRef}`);
     }
 
+    if (isRouteCriticalAssetTag(tag) && isNestedRouteUnsafeAssetReference(assetRef)) {
+      failures.push(
+        `${file}: route-critical asset ${assetRef} is relative; use Vite base '/' so direct nested routes do not render a blank screen`,
+      );
+    }
+
     if (
       /^<link\b/i.test(tag) &&
       getAttribute(tag, 'rel')?.toLowerCase() === 'modulepreload' &&
@@ -175,11 +181,36 @@ function resolveAssetPath(distDir, assetRef) {
 
   const cleanRef = assetRef.split(/[?#]/)[0];
 
+  if (cleanRef.startsWith('/')) {
+    return resolve(distDir, cleanRef.slice(1));
+  }
+
   if (cleanRef.startsWith('./') || cleanRef.startsWith('assets/')) {
     return resolve(distDir, cleanRef);
   }
 
   return null;
+}
+
+function isRouteCriticalAssetTag(tag) {
+  if (/^<script\b/i.test(tag)) {
+    return Boolean(getAttribute(tag, 'src'));
+  }
+
+  if (!/^<link\b/i.test(tag)) {
+    return false;
+  }
+
+  const rel = getAttribute(tag, 'rel')?.toLowerCase();
+  return rel === 'stylesheet' || rel === 'modulepreload' || rel === 'preload';
+}
+
+function isNestedRouteUnsafeAssetReference(assetRef) {
+  if (!assetRef || /^https?:\/\//i.test(assetRef) || assetRef.startsWith('//') || assetRef.startsWith('#')) {
+    return false;
+  }
+
+  return !assetRef.startsWith('/');
 }
 
 function isForbiddenRuntimeAsset(assetRef) {

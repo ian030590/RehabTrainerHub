@@ -3,6 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const appsRoot = join(repoRoot, 'apps');
 const forbiddenRuntimeImports = [
   '@jspsych',
   '@mediapipe',
@@ -14,9 +15,14 @@ const forbiddenRuntimeImports = [
   'vosk-browser',
 ];
 
-const appEntrypoints = readdirSync(join(repoRoot, 'apps'), { withFileTypes: true })
+const appEntrypoints = readdirSync(appsRoot, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => `apps/${entry.name}/src/App.tsx`)
+  .filter((file) => existsSync(resolve(repoRoot, file)));
+
+const viteConfigFiles = readdirSync(appsRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => `apps/${entry.name}/vite.config.ts`)
   .filter((file) => existsSync(resolve(repoRoot, file)));
 
 const protectedEntrypoints = unique([
@@ -41,6 +47,10 @@ for (const entrypoint of protectedEntrypoints) {
   scanStaticImportGraph(absolutePath, entrypoint, new Set());
 }
 
+for (const viteConfigFile of viteConfigFiles) {
+  checkViteBaseConfig(viteConfigFile);
+}
+
 if (violations.length > 0) {
   throw new Error(`White-screen smoke test failed:\n${violations.map((line) => `- ${line}`).join('\n')}`);
 }
@@ -63,6 +73,16 @@ function scanStaticImportGraph(filePath, entrypoint, visited) {
     if (resolved && isScannableSourceFile(resolved)) {
       scanStaticImportGraph(resolved, entrypoint, visited);
     }
+  }
+}
+
+function checkViteBaseConfig(configFile) {
+  const source = readFileSync(resolve(repoRoot, configFile), 'utf8');
+
+  if (/\bbase\s*:\s*['"]\.\/['"]/.test(source)) {
+    violations.push(
+      `${configFile}: uses Vite base './'; use '/' so direct nested trainer routes load production assets`,
+    );
   }
 }
 

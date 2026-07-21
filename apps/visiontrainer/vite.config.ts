@@ -34,7 +34,7 @@ export default defineConfig({
       },
     },
   ],
-  base: './',
+  base: '/',
   resolve: {
     alias: {
       '@rehab-trainer/ui': fileURLToPath(new URL('../../packages/ui/src', import.meta.url)),
