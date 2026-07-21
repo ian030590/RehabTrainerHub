@@ -454,7 +454,7 @@ export function MainConceptTraining() {
     const date = FormatTestDate(now);
     const nextSummary: SessionSummary = {
       date,
-      participant: GetAuthUserNameFromToken() || 'Guest',
+      participant: GetAuthUserNameFromToken() || 'Signed-in user',
       setTitle,
       total,
       correct,

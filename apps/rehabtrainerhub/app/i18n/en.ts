@@ -216,8 +216,8 @@ export const en = {
         {
           title: 'Where data is stored',
           items: [
-            'When using the service while signed in, anonymous basic information and training records are stored in Rehab Trainer Hub Cloudflare D1 database.',
-            'When using the service without signing in, training records are only stored in the current browser IndexedDB and will not be synchronized to the D1 database.',
+            'After sign-in and questionnaire completion, anonymous basic information, medical history questionnaire answers, and training records are stored in Rehab Trainer Hub Cloudflare D1 database.',
+            'Trainer functions are not available without sign-in or required questionnaire completion.',
             'The login flows for StrokeTrainer, VisionTrainer, and BrainTrainer connect to the Rehab Trainer Hub login API and use the same login state.',
           ],
         },
@@ -232,9 +232,9 @@ export const en = {
         {
           title: 'Your choices',
           items: [
-            'You can choose not to sign in and continue using features that support local records.',
-            'You can sign out on any homepage or trainer page; after signing out, new records will revert to local IndexedDB storage.',
-            'You can use your browser settings to clear IndexedDB local records.',
+            'You can choose not to provide required data; without sign-in or required questionnaire completion, trainer functions cannot start.',
+            'You can sign out on any homepage or trainer page; sign-out removes the local login state and local training data.',
+            'If your browser still has older local records, you can clear IndexedDB local data in browser settings.',
           ],
         },
       ],

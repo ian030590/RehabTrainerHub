@@ -41,23 +41,23 @@ const chronicOptions = [
 
 const text = {
   zhTW: {
-    statusGuest: '未登入：成績只會留在這台裝置，無法跨裝置同步。',
+    statusGuest: '需登入並完成問卷後才能開始訓練。',
     statusSignedIn: '已登入',
     loading: '檢查登入狀態中',
     authEntry: '註冊/登入',
     loginGoogle: '使用 Google 登入',
     logout: '登出',
-    completeProfile: '完成基本資料',
-    profileNeeded: '登入後請先完成匿名基本資料，之後就能跨裝置紀錄成績。',
+    completeProfile: '完成問卷',
+    profileNeeded: '登入後請先完成基本資料與醫療史問卷，完成前無法開始訓練。',
     privacyTitle: '隱私權政策與資料蒐集說明',
     privacyIntro:
-      '登入後可以跨裝置紀錄與查看訓練成績；不登入也能使用，但成績無法跨裝置同步。',
+      '註冊/登入並完成問卷後才能使用訓練工具。送出前請確認你了解以下資料蒐集方式。',
     privacyItems: [
-      '登入後，訓練成績會跟著你的帳號保存。',
-      '會請你填寫匿名基本資料，例如年齡、性別與國籍。',
-      '若你選擇填寫，會保存醫師診斷的慢性病、抽菸與喝酒習慣。',
+      '登入帳號資料只用於建立登入狀態與辨識同一位使用者。',
+      '會請你填寫基本資料問卷：年齡、性別與國籍。',
+      '會請你填寫醫療史問卷：醫師診斷的慢性病類別、抽菸與喝酒習慣。',
       '訓練成績會包含使用的工具、訓練項目、難度、時間與分數。',
-      '未登入時，訓練成績只會留在目前使用的裝置。',
+      '沒有登入或未完成必要問卷時，無法開始訓練。',
     ],
     privacySensitive:
       '慢性病欄位請只填寫已由醫師診斷的狀況；若沒有醫師診斷，請勿自行猜測填寫。',
@@ -82,8 +82,12 @@ const text = {
     accountInvalid: '請填寫姓名、有效 email 與至少 8 個字元的密碼。',
     accountFailed: '帳號登入或建立失敗，請確認資料後再試一次。',
     accountCreated: '帳號建立完成，請使用同一組 email 與密碼登入。',
-    profileTitle: '匿名基本資料',
-    profileIntro: '這些資料會和登入後的成績一起保存。請填寫已知資料，不確定時選擇不提供或不勾選。',
+    privacyRequired: '請先閱讀並同意隱私權政策與資料蒐集說明。',
+    profileTitle: '基本資料與醫療史問卷',
+    profileIntro: '這些資料會和登入後的成績一起保存，用於分組分析與改善服務。完成前無法開始訓練。',
+    basicQuestionnaire: '基本資料問卷',
+    medicalQuestionnaire: '醫療史問卷',
+    medicalIntro: '請只填寫已知且正確的資料；慢性病只勾選醫師已診斷的狀況。本平台不會依填寫內容提供診斷或個別醫療建議。',
     ageRange: '年齡',
     gender: '性別',
     nationality: '國籍',
@@ -103,6 +107,7 @@ const text = {
     habitFormer: '已經戒掉',
     frequency: '頻率',
     amount: '次數或數量',
+    unit: '單位',
     intervalWeek: '每週',
     intervalMonth: '每月',
     smokingPacks: '包',
@@ -112,29 +117,29 @@ const text = {
     alcoholCups: '杯',
     saveProfile: '儲存資料',
     saving: '儲存中',
-    required: '請填寫年齡、性別與國籍。',
+    required: '請填寫基本資料問卷中的年齡、性別與國籍。',
     currentHabitNeedsAmount: '若選擇「有」抽菸或喝酒，請填寫頻率與數量。',
     loginFailed: '登入流程無法開始，請稍後再試。',
     profileFailed: '資料儲存失敗，請稍後再試。',
   },
   en: {
-    statusGuest: 'Not signed in: scores stay on this device and will not sync across devices.',
+    statusGuest: 'Sign in and complete the questionnaires before training.',
     statusSignedIn: 'Signed in',
     loading: 'Checking sign-in status',
     authEntry: 'Sign up / sign in',
     loginGoogle: 'Sign in with Google',
     logout: 'Sign out',
-    completeProfile: 'Complete profile',
-    profileNeeded: 'After sign-in, complete the anonymous profile to sync scores across devices.',
+    completeProfile: 'Complete questionnaires',
+    profileNeeded: 'After sign-in, complete the basic profile and medical history questionnaires before training.',
     privacyTitle: 'Privacy Policy and Data Collection Notice',
     privacyIntro:
-      'Sign in to record and view training scores across devices. You can use training without signing in, but scores will not sync across devices.',
+      'Training requires sign-up/sign-in and questionnaire completion. Confirm you understand this data collection before submitting.',
     privacyItems: [
-      'Signed-in scores are saved with your account.',
-      'You will be asked for anonymous basics such as age, gender, and nationality.',
-      'If you choose to provide them, physician-diagnosed chronic conditions, smoking habits, and alcohol habits are saved.',
+      'Account data is used only to establish sign-in and identify the same user.',
+      'You will complete a basic profile questionnaire: age, gender, and nationality.',
+      'You will complete a medical history questionnaire: physician-diagnosed chronic condition categories, smoking habits, and alcohol habits.',
       'Training scores include the tool, training item, difficulty, time, and score.',
-      'Without sign-in, scores stay only on the device you are using.',
+      'Without sign-in or required questionnaire completion, training cannot start.',
     ],
     privacySensitive:
       'For chronic condition fields, only select conditions diagnosed by a physician. Do not guess or self-diagnose.',
@@ -159,8 +164,12 @@ const text = {
     accountInvalid: 'Enter a name, valid email, and a password with at least 8 characters.',
     accountFailed: 'Account sign-in or creation failed. Check the details and try again.',
     accountCreated: 'Account created. Sign in with the same email and password.',
-    profileTitle: 'Anonymous Profile',
-    profileIntro: 'These fields are saved with signed-in scores. Fill in known data only.',
+    privacyRequired: 'Read and agree to the privacy policy and data collection notice first.',
+    profileTitle: 'Basic Profile and Medical History Questionnaires',
+    profileIntro: 'These fields are saved with signed-in scores for grouped analysis and service improvement. Training is blocked until they are complete.',
+    basicQuestionnaire: 'Basic Profile Questionnaire',
+    medicalQuestionnaire: 'Medical History Questionnaire',
+    medicalIntro: 'Provide only known and accurate information. Select chronic conditions only when diagnosed by a physician. This platform will not provide diagnosis or individual medical advice based on these answers.',
     ageRange: 'Age',
     gender: 'Gender',
     nationality: 'Nationality',
@@ -180,6 +189,7 @@ const text = {
     habitFormer: 'Quit',
     frequency: 'Frequency',
     amount: 'Amount',
+    unit: 'Unit',
     intervalWeek: 'Per week',
     intervalMonth: 'Per month',
     smokingPacks: 'packs',
@@ -189,7 +199,7 @@ const text = {
     alcoholCups: 'cups',
     saveProfile: 'Save profile',
     saving: 'Saving',
-    required: 'Please fill in age, gender, and nationality.',
+    required: 'Please complete age, gender, and nationality in the basic profile questionnaire.',
     currentHabitNeedsAmount: 'When smoking or alcohol is set to Yes, frequency and amount are required.',
     loginFailed: 'Sign-in could not start. Please try again later.',
     profileFailed: 'Profile could not be saved. Please try again later.',
@@ -344,11 +354,16 @@ export function AuthPanel({
   };
 
   const startGoogleLogin = () => {
+    if (!privacyAccepted) {
+      setAccountError(labels.privacyRequired);
+      return;
+    }
+
     try {
       const authUrl = BuildAuthStartUrl('google', {
         apiBase,
         locale,
-        privacyAccepted: true,
+        privacyAccepted,
         returnTo: window.location.href,
       });
       const popup = OpenAuthPopup(authUrl);
@@ -480,6 +495,28 @@ export function AuthPanel({
     && privacyAccepted;
   const canLoginAccount = accountEmailIsValid && accountForm.password.length >= 8;
   const canSubmitAccount = accountDialogMode === 'register' ? canRegisterAccount : canLoginAccount;
+  const privacyNotice = (
+    <>
+      <p>{labels.privacyIntro}</p>
+      <ul>
+        {labels.privacyItems.map((item) => <li key={item}>{item}</li>)}
+      </ul>
+      <p className="auth-sensitive-warning">{labels.privacySensitive}</p>
+      <p>
+        <a className="auth-privacy-link" href={resolvedPrivacyHref} target="_blank" rel="noopener noreferrer">
+          {labels.privacyPolicyLink}
+        </a>
+      </p>
+      <label className="auth-checkbox-row">
+        <input
+          checked={privacyAccepted}
+          onChange={(event) => setPrivacyAccepted(event.target.checked)}
+          type="checkbox"
+        />
+        <span>{labels.agree}</span>
+      </label>
+    </>
+  );
 
   return (
     <section className={`auth-panel ${className ?? ''}`} aria-label={`${appName} account`}>
@@ -515,7 +552,8 @@ export function AuthPanel({
             <form className="auth-account-form" onSubmit={submitAccount}>
               {accountDialogMode === 'login' && (
                 <>
-                  <button className="auth-provider-button" type="button" onClick={startGoogleLogin}>
+                  {privacyNotice}
+                  <button className="auth-provider-button" disabled={!privacyAccepted} type="button" onClick={startGoogleLogin}>
                     <img
                       alt=""
                       aria-hidden="true"
@@ -564,26 +602,7 @@ export function AuthPanel({
               </label>
               <p className="auth-panel-note">{labels.accountPasswordHelp}</p>
               {accountDialogMode === 'register' && (
-                <>
-                  <p>{labels.privacyIntro}</p>
-                  <ul>
-                    {labels.privacyItems.map((item) => <li key={item}>{item}</li>)}
-                  </ul>
-                  <p className="auth-sensitive-warning">{labels.privacySensitive}</p>
-                  <p>
-                    <a className="auth-privacy-link" href={resolvedPrivacyHref} target="_blank" rel="noopener noreferrer">
-                      {labels.privacyPolicyLink}
-                    </a>
-                  </p>
-                  <label className="auth-checkbox-row">
-                    <input
-                      checked={privacyAccepted}
-                      onChange={(event) => setPrivacyAccepted(event.target.checked)}
-                      type="checkbox"
-                    />
-                    <span>{labels.agree}</span>
-                  </label>
-                </>
+                privacyNotice
               )}
               {accountError && <p className="auth-panel-error">{accountError}</p>}
               <div className="auth-dialog-actions">
@@ -618,6 +637,7 @@ export function AuthPanel({
           <div className="auth-dialog auth-profile-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-profile-title">
             <h2 id="auth-profile-title">{labels.profileTitle}</h2>
             <p>{labels.profileIntro}</p>
+            <h3 className="auth-section-heading">{labels.basicQuestionnaire}</h3>
             <div className="auth-profile-grid">
               <label>
                 <span>{labels.ageRange}</span>
@@ -646,6 +666,8 @@ export function AuthPanel({
               </label>
             </div>
 
+            <h3 className="auth-section-heading">{labels.medicalQuestionnaire}</h3>
+            <p className="auth-sensitive-warning">{labels.medicalIntro}</p>
             <fieldset className="auth-fieldset">
               <legend>{labels.chronicTitle}</legend>
               <p className="auth-sensitive-warning">{labels.chronicReminder}</p>
@@ -765,7 +787,7 @@ function HabitFields<Unit extends string>({
             />
           </label>
           <label>
-            <span>{labels.amount}</span>
+            <span>{labels.unit}</span>
             <select value={value.unit} onChange={(event) => onValueChange({ ...value, unit: event.target.value as Unit })}>
               {units.map(([unitValue, unitLabel]) => <option key={unitValue} value={unitValue}>{unitLabel}</option>)}
             </select>

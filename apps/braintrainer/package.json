@@ -9,7 +9,7 @@
     "build": "node ../../scripts/check-trainer-entrypoints.mjs && tsc -b && vite build && node ../../scripts/check-vite-html-shell.mjs dist/index.html && npm run test:route-smoke",
     "test:entrypoints": "node ../../scripts/check-trainer-entrypoints.mjs",
     "test:production-shell": "node ../../scripts/check-vite-html-shell.mjs dist/index.html",
-    "test:route-smoke": "node ../../scripts/check-browser-route-smoke.mjs --app . --route /#/attention-training/every-ball-response --allSelectors \".every-ball-config,.training-setting,.training-option,.every-ball-slider\"",
+    "test:route-smoke": "node ../../scripts/check-browser-route-smoke.mjs --app . --route /#/attention-training/every-ball-response --mockAuthUser true --allSelectors \".every-ball-config,.training-setting,.training-option,.every-ball-slider\"",
     "preview": "vite preview"
   },
   "dependencies": {

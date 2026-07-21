@@ -20,11 +20,12 @@ const canvasViewportSelectors = ParseSelectorList(args.canvasViewportSelectors);
 const fullscreenSelector = args.fullscreenSelector;
 const requireFullscreenBeforeAudio = args.fullscreenBeforeAudio === 'true';
 const storageEntries = ParseStorageEntries(args.storage);
+const mockAuthUser = args.mockAuthUser === 'true';
 const expectedText = args.text;
 const timeoutMs = Number(args.timeoutMs ?? 12000);
 
 if (expectedSelectors.length === 0) {
-  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs --app <appDir> --route <route> --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--text <text>]');
+  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs --app <appDir> --route <route> --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>]');
 }
 
 const browserPath = FindBrowserPath();
@@ -92,6 +93,50 @@ try {
   await cdp.Send('Network.enable', undefined, sessionId);
   await cdp.Send('Log.enable', undefined, sessionId);
   const bootstrapStatements = [];
+  if (mockAuthUser) {
+    const tokenPayload = Buffer.from(JSON.stringify({
+      sub: 'route-smoke-user',
+      name: 'Route Smoke',
+      email: 'route-smoke@example.test',
+    })).toString('base64url');
+    const token = `${tokenPayload}.route-smoke-signature`;
+    const user = {
+      id: 'route-smoke-user',
+      displayName: 'Route Smoke',
+      email: 'route-smoke@example.test',
+      profileCompleted: true,
+      privacyAcceptedAt: '2026-01-01T00:00:00.000Z',
+    };
+    storageEntries.push(['rehabtrainerhub.auth.token', token]);
+    bootstrapStatements.push(`
+      const routeSmokeAuthToken = ${JSON.stringify(token)};
+      const routeSmokeAuthUser = ${JSON.stringify(user)};
+      const routeSmokeFetch = window.fetch.bind(window);
+      window.fetch = (input, init) => {
+        const rawUrl = typeof input === 'string' ? input : input?.url;
+        const url = new URL(rawUrl || '', location.href);
+        if (url.origin === 'https://trainerhub.cc' && url.pathname === '/api/auth/me') {
+          return Promise.resolve(new Response(JSON.stringify({ user: routeSmokeAuthUser }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }));
+        }
+        if (url.origin === 'https://trainerhub.cc' && url.pathname === '/api/auth/session') {
+          return Promise.resolve(new Response(JSON.stringify({ token: routeSmokeAuthToken, user: routeSmokeAuthUser }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }));
+        }
+        if (url.origin === 'https://trainerhub.cc' && url.pathname === '/api/records') {
+          return Promise.resolve(new Response(JSON.stringify(init?.method === 'POST' ? { ok: true } : { records: [] }), {
+            status: init?.method === 'POST' ? 201 : 200,
+            headers: { 'Content-Type': 'application/json' },
+          }));
+        }
+        return routeSmokeFetch(input, init);
+      };
+    `);
+  }
   if (storageEntries.length > 0) {
     bootstrapStatements.push(`for (const [key, value] of ${JSON.stringify(storageEntries)}) localStorage.setItem(key, value);`);
   }

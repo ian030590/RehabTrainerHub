@@ -1186,7 +1186,7 @@ function BuildSessionSummary(
   const accuracy = Math.round((correct / total) * 100);
   return {
     date: FormatTestDate(date),
-    participant: GetAuthUserNameFromToken() || 'Guest',
+    participant: GetAuthUserNameFromToken() || 'Signed-in user',
     levelTitle: labels.levels[level.id].title,
     inputMode,
     total,

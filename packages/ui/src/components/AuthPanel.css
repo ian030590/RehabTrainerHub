@@ -153,6 +153,12 @@
   color: var(--text-primary);
 }
 
+.auth-section-heading {
+  margin: 22px 0 0;
+  color: var(--text-primary);
+  font-size: calc(18px * var(--ui-font-scale, 1));
+}
+
 .auth-dialog p,
 .auth-dialog li {
   color: var(--text-secondary);
@@ -244,6 +250,11 @@
 
 .auth-provider-button:hover {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.auth-provider-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .auth-provider-mark {

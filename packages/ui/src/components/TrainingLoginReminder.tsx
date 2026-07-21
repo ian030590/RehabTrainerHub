@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
+  authChangedEvent,
   type AuthLocale,
   type AuthUser,
   FetchCurrentAuthUser,
   FetchSharedAuthSession,
-  GetAuthToken,
   SetAuthToken,
 } from '../auth/authClient';
 import { AuthPanel } from './AuthPanel';
@@ -19,14 +19,14 @@ interface TrainingLoginReminderProps {
 
 const text = {
   zhTW: {
-    title: '登入提醒',
-    intro: '開始訓練前建議先登入。登入後可以跨裝置紀錄成績；未登入仍可使用，但成績無法跨裝置同步。',
-    continue: '稍後再說',
+    title: '請先登入並完成問卷',
+    intro: '開始訓練前必須登入，並完成基本資料與醫療史問卷。資料只用於登入辨識、訓練紀錄同步與服務改善；本平台不提供診斷或個別醫療建議。',
+    profilePending: '登入後若尚未完成問卷，系統會立即開啟問卷；完成前無法開始訓練。',
   },
   en: {
-    title: 'Sign-in reminder',
-    intro: 'Before training, sign in to record scores across devices. You can continue without sign-in, but scores will not sync across devices.',
-    continue: 'Continue for now',
+    title: 'Sign in and complete the questionnaires',
+    intro: 'Training requires sign-in and completion of the basic profile and medical history questionnaires. Data is used only for account identification, training record sync, and service improvement; this platform does not provide diagnosis or individual medical advice.',
+    profilePending: 'If your questionnaires are incomplete after sign-in, they will open immediately. Training stays blocked until they are complete.',
   },
 } as const;
 
@@ -42,63 +42,58 @@ export function TrainingLoginReminder({
   privacyHref,
 }: TrainingLoginReminderProps) {
   const labels = text[ToTextKey(locale)];
-  const [isOpen, setIsOpen] = useState(false);
-  const storageKey = useMemo(() => `rehabtrainerhub.auth.trainingReminderSeen.${appName}`, [appName]);
+  const [isCleared, setIsCleared] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const checkSession = useCallback(async () => {
+    if (!active) {
+      setIsCleared(false);
+      return;
+    }
 
-    const checkSession = async () => {
-      if (!active) {
-        setIsOpen(false);
-        return;
-      }
-      if (typeof window === 'undefined' || window.localStorage.getItem(storageKey) === '1') return;
-      if (GetAuthToken()) {
-        try {
-          if (await FetchCurrentAuthUser(apiBase)) return;
-        } catch (error) {
-          console.warn('Unable to check auth token before training.', error);
-        }
-      }
+    let user: AuthUser | null = null;
+    try {
+      user = await FetchCurrentAuthUser(apiBase);
+    } catch (error) {
+      console.warn('Unable to check auth token before training.', error);
+    }
 
+    if (!user) {
       try {
         const sharedSession = await FetchSharedAuthSession(apiBase);
         if (sharedSession) {
-          SetAuthToken(sharedSession.token);
-          return;
+          SetAuthToken(sharedSession.token, false);
+          user = sharedSession.user;
         }
       } catch (error) {
         console.warn('Unable to check shared auth session before training.', error);
       }
+    }
 
-      if (!cancelled) setIsOpen(true);
-    };
+    setIsCleared(Boolean(user?.profileCompleted));
+  }, [active, apiBase]);
+
+  useEffect(() => {
+    const handleAuthChange = () => void checkSession();
 
     void checkSession();
+    window.addEventListener(authChangedEvent, handleAuthChange);
     return () => {
-      cancelled = true;
+      window.removeEventListener(authChangedEvent, handleAuthChange);
     };
-  }, [active, apiBase, storageKey]);
-
-  const dismiss = () => {
-    window.localStorage.setItem(storageKey, '1');
-    setIsOpen(false);
-  };
+  }, [checkSession]);
 
   const handleAuthChange = (user: AuthUser | null) => {
-    if (!user) return;
-    window.localStorage.setItem(storageKey, '1');
-    if (user.profileCompleted) setIsOpen(false);
+    setIsCleared(Boolean(user?.profileCompleted));
   };
 
-  if (!isOpen) return null;
+  if (!active || isCleared) return null;
 
   return (
     <div className="auth-dialog-backdrop">
       <div className="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="training-login-reminder-title">
         <h2 id="training-login-reminder-title">{labels.title}</h2>
         <p>{labels.intro}</p>
+        <p className="auth-sensitive-warning">{labels.profilePending}</p>
         <AuthPanel
           apiBase={apiBase}
           appName={appName}
@@ -106,11 +101,6 @@ export function TrainingLoginReminder({
           privacyHref={privacyHref}
           onAuthChange={handleAuthChange}
         />
-        <div className="auth-dialog-actions">
-          <button className="auth-button auth-button-secondary" type="button" onClick={dismiss}>
-            {labels.continue}
-          </button>
-        </div>
       </div>
     </div>
   );

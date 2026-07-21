@@ -17,10 +17,13 @@ const chronicDiagnosisValues = new Set([
   'neurotic',
 ]);
 
+const ageRanges = new Set(['0-17', '18-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+']);
+const genders = new Set(['woman', 'man', 'nonbinary', 'preferNotToSay']);
 const habitStatuses = new Set(['none', 'current', 'former']);
 const intervals = new Set(['week', 'month']);
 const smokingUnits = new Set(['packs', 'cigarettes']);
 const alcoholUnits = new Set(['bottles', 'cans', 'cups']);
+const maxNationalityLength = 80;
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);
@@ -94,7 +97,9 @@ function NormalizeProfile(input) {
     ? NormalizeFrequency(input.alcoholFrequency, alcoholUnits)
     : undefined;
 
-  if (!ageRange || !gender || !nationality) return null;
+  if (!ageRanges.has(ageRange) || !genders.has(gender) || !nationality || nationality.length > maxNationalityLength) {
+    return null;
+  }
   if (smokingStatus === 'current' && !smokingFrequency) return null;
   if (alcoholStatus === 'current' && !alcoholFrequency) return null;
 
@@ -116,6 +121,8 @@ function NormalizeFrequency(input, validUnits) {
   const unit = validUnits.has(input.unit) ? input.unit : null;
   const amount = typeof input.amount === 'string' ? input.amount.trim() : String(input.amount ?? '').trim();
   const numericAmount = Number(amount);
-  if (!unit || !amount || !Number.isFinite(numericAmount) || numericAmount < 0) return null;
+  if (!unit || !amount || amount.length > 16 || !Number.isFinite(numericAmount) || numericAmount < 0 || numericAmount > 10000) {
+    return null;
+  }
   return { interval, amount, unit };
 }

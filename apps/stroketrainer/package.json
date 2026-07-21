@@ -11,7 +11,7 @@
     "build:cloudflare": "node ../../scripts/check-trainer-entrypoints.mjs && tsc -b && vite build --mode cloudflare && node ../../scripts/check-vite-html-shell.mjs dist/index.html && npm run test:asteroid-shield-fullscreen && node scripts/prune-cloudflare-pages-assets.mjs --force",
     "test:entrypoints": "node ../../scripts/check-trainer-entrypoints.mjs",
     "test:production-shell": "node ../../scripts/check-vite-html-shell.mjs dist/index.html",
-    "test:asteroid-shield-fullscreen": "node ../../scripts/check-browser-route-smoke.mjs --app . --route /#/motor-training?game=asteroid-shield --storage rehabtrainerhub.auth.trainingReminderSeen.StrokeTrainer=1 --clickSelectors \".asteroid-shield-phase-menu .config-start-btn,.asteroid-shield-phase-rules .config-start-btn\" --selector .asteroid-shield-phase-playing --fullscreenSelector .asteroid-shield-game --fullscreenBeforeAudio true --viewportSelectors \".asteroid-shield-game,.asteroid-shield-stage\" --canvasViewportSelectors .asteroid-shield-canvas",
+    "test:asteroid-shield-fullscreen": "node ../../scripts/check-browser-route-smoke.mjs --app . --route /#/motor-training?game=asteroid-shield --mockAuthUser true --clickSelectors \".asteroid-shield-phase-menu .config-start-btn,.asteroid-shield-phase-rules .config-start-btn\" --selector .asteroid-shield-phase-playing --fullscreenSelector .asteroid-shield-game --fullscreenBeforeAudio true --viewportSelectors \".asteroid-shield-game,.asteroid-shield-stage\" --canvasViewportSelectors .asteroid-shield-canvas",
     "test:cognitive-entry": "npm run test:entrypoints",
     "r2:upload-vosk": "node scripts/upload-vosk-to-r2.mjs",
     "vosk:repair-zh-symbols": "node scripts/repair-zh-vosk-symbols.mjs",

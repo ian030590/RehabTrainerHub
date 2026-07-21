@@ -9,7 +9,20 @@ const user = {
   display_name: 'Victim Case',
   email: 'victim@example.test',
   profile_completed_at: '2026-07-12T00:00:00.000Z',
-  profile_json: JSON.stringify({ chronicDiagnoses: ['centralNervousSystem'] }),
+  age_range: '40-49',
+  gender: 'woman',
+  nationality: 'Taiwan',
+  chronic_diagnoses_json: JSON.stringify(['centralNervousSystem']),
+  smoking_status: 'none',
+  alcohol_status: 'none',
+  profile_json: JSON.stringify({
+    ageRange: '40-49',
+    gender: 'woman',
+    nationality: 'Taiwan',
+    chronicDiagnoses: ['centralNervousSystem'],
+    smokingStatus: 'none',
+    alcoholStatus: 'none',
+  }),
 };
 const record = {
   id: 'rec-1',

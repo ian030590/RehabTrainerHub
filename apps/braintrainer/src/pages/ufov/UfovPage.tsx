@@ -647,7 +647,7 @@ export function UfovPage({
       id: `ufov_${now.getTime().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
       savedAt: now.toISOString(),
       trainingDate: FormatDate(now),
-      userName: GetAuthUserNameFromToken() || 'Guest',
+      userName: GetAuthUserNameFromToken() || 'Signed-in user',
       moduleId,
       gameId: 'ufov',
       gameTitle: labels.title,

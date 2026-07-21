@@ -391,9 +391,26 @@ export function ToPublicUser(row) {
     displayName: row.display_name || row.email || 'Rehab Trainer Hub User',
     email: row.email || undefined,
     avatarUrl: row.avatar_url || undefined,
-    profileCompleted: Boolean(row.profile_completed_at),
+    profileCompleted: HasCompletedProfile(row),
     privacyAcceptedAt: row.privacy_accepted_at || undefined,
   };
+}
+
+function HasCompletedProfile(row) {
+  const profile = row.profile_json ? SafeJsonParse(row.profile_json) : null;
+  if (!profile || typeof profile !== 'object') return false;
+
+  return Boolean(
+    row.profile_completed_at
+    && profile.ageRange
+    && profile.gender
+    && profile.nationality
+    && Array.isArray(profile.chronicDiagnoses)
+    && profile.smokingStatus
+    && profile.alcoholStatus
+    && (profile.smokingStatus !== 'current' || profile.smokingFrequency?.amount)
+    && (profile.alcoholStatus !== 'current' || profile.alcoholFrequency?.amount)
+  );
 }
 
 export function SafeJsonParse(value) {
