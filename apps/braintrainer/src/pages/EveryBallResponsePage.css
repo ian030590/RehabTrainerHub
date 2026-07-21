@@ -1,0 +1,215 @@
+.every-ball {
+  position: relative;
+  min-height: 100vh;
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+.every-ball:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.every-ball-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: #ffffff;
+}
+
+.every-ball-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.every-ball-panel {
+  position: relative;
+  z-index: 2;
+}
+
+.every-ball-config {
+  width: min(1120px, 100%);
+}
+
+.every-ball-setting-muted {
+  opacity: 0.62;
+}
+
+.every-ball-slider {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.every-ball-error {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--error);
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--error) 12%, var(--bg-panel));
+  color: var(--text-primary);
+  font-size: calc(14px * var(--ui-font-scale, 1));
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.every-ball-status-panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: min(520px, calc(100vw - 32px));
+  display: grid;
+  gap: 10px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-modal);
+  transform: translate(-50%, -50%);
+}
+
+.every-ball-status-panel strong {
+  font-size: calc(20px * var(--ui-font-scale, 1));
+}
+
+.every-ball-status-panel span {
+  color: var(--text-secondary);
+  font-size: calc(14px * var(--ui-font-scale, 1));
+  line-height: 1.55;
+}
+
+.every-ball-camera {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 3;
+  width: min(260px, 32vw);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 2px solid rgba(17, 24, 39, 0.18);
+  border-radius: var(--radius-m);
+  background: #0f172a;
+  box-shadow: var(--shadow-card);
+}
+
+.every-ball-camera-hidden {
+  display: none;
+}
+
+.every-ball-camera video,
+.every-ball-camera canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.every-ball-camera canvas {
+  pointer-events: none;
+}
+
+.every-ball-hud {
+  position: fixed;
+  left: 18px;
+  right: 18px;
+  top: 18px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(150px, 0.8fr) minmax(180px, 1fr) minmax(110px, 0.45fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  border-radius: var(--radius-m);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(8px);
+}
+
+.every-ball-hud > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.every-ball-hud span {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: calc(12px * var(--ui-font-scale, 1));
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.every-ball-hud strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: calc(15px * var(--ui-font-scale, 1));
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.every-ball-meter {
+  height: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.every-ball-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #16a34a, #facc15, #ef4444);
+}
+
+.every-ball-results-container {
+  position: relative;
+  z-index: 2;
+}
+
+.every-ball-results {
+  width: min(980px, 100%);
+}
+
+.every-ball-results-table {
+  max-width: 920px;
+}
+
+.every-ball-results-table td:nth-child(2),
+.every-ball-results-table td:nth-child(3) {
+  text-align: left;
+}
+
+@media (max-width: 900px) {
+  .every-ball-hud {
+    grid-template-columns: 1fr 1fr;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+  }
+
+  .every-ball-hud .btn {
+    width: 100%;
+  }
+
+  .every-ball-camera {
+    right: 10px;
+    bottom: 10px;
+    width: min(180px, 42vw);
+  }
+}
+
+@media (max-width: 620px) {
+  .every-ball-hud {
+    grid-template-columns: 1fr;
+  }
+
+  .every-ball-camera {
+    width: min(150px, 46vw);
+  }
+}

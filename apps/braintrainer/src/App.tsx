@@ -18,6 +18,7 @@ const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((mo
 const ReferencesPage = lazy(() => import('./pages/ReferencesPage').then((module) => ({ default: module.ReferencesPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 const UFOVPage = lazy(() => import('./pages/UFOVPage').then((module) => ({ default: module.UFOVPage })));
+const EveryBallResponsePage = lazy(() => import('./pages/EveryBallResponsePage').then((module) => ({ default: module.EveryBallResponsePage })));
 const MainConceptTraining = lazy(() => import('./pages/MainConceptTraining').then((module) => ({ default: module.MainConceptTraining })));
 
 export function App() {
@@ -25,7 +26,7 @@ export function App() {
   const location = useLocation();
   const apiBase = siteUrls.hub;
   const locale = lang === 'en' ? 'en' : 'zh-TW';
-  const trainingPaths = new Set(['/', '/attention-training', '/attention-training/ufov', '/memory-training', '/thinking-training', '/thinking-training/main-concept']);
+  const trainingPaths = new Set(['/', '/attention-training', '/attention-training/ufov', '/attention-training/every-ball-response', '/memory-training', '/thinking-training', '/thinking-training/main-concept']);
 
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
@@ -41,6 +42,7 @@ export function App() {
           <Route path="/" element={<Navigate to="/attention-training" replace />} />
           <Route path="/attention-training" element={<ModulePage moduleId="attention" />} />
           <Route path="/attention-training/ufov" element={<UFOVPage />} />
+          <Route path="/attention-training/every-ball-response" element={<EveryBallResponsePage />} />
           <Route path="/memory-training" element={<ModulePage moduleId="memory" />} />
           <Route path="/thinking-training" element={<ModulePage moduleId="thinking" />} />
           <Route path="/thinking-training/main-concept" element={<MainConceptTraining />} />
