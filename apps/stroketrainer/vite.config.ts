@@ -8,7 +8,7 @@ function EscapeHtml(value: string) {
 
 const siteUrl = 'https://stroke.trainerhub.cc';
 const seoTitle = 'StrokeTrainer | 居家中風復健練習';
-const seoDescription = 'StrokeTrainer 提供動作、認知與語音練習，協助依治療師建議安排居家中風復健訓練。';
+const seoDescription = 'StrokeTrainer 提供動作與認知練習，協助依治療師建議安排居家中風復健訓練。';
 
 export default defineConfig(({ mode }) => {
   const isCloudflarePagesBuild = process.env.CF_PAGES === '1' || mode === 'cloudflare';

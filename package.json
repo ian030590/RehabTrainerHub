@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "build": "npm run test:naming && npm run test:entrypoints && node scripts/build-apps.mjs",
-    "build:cloudflare": "npm run test:naming && npm run test:entrypoints && node scripts/build-apps.mjs --cloudflare-pages",
+    "build:cloudflare": "npm run test:naming && npm run test:entrypoints && npm run test:cloudflare-deploy && node scripts/build-apps.mjs --cloudflare-pages",
     "build:brain": "npm --prefix apps/braintrainer run build",
     "build:hub": "npm --prefix apps/rehabtrainerhub run build",
     "build:mouth": "npm --prefix apps/mouthtrainer run build",
@@ -32,6 +32,7 @@
     "preview:stroke": "turbo run preview --filter=@rehab-trainer/stroketrainer",
     "preview:vision": "turbo run preview --filter=@rehab-trainer/visiontrainer",
     "test:entrypoints": "node scripts/check-trainer-entrypoints.mjs",
+    "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs",
     "test:naming": "node scripts/check-identifier-names.mjs"
   },
   "dependencies": {

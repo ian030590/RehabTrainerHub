@@ -20,12 +20,18 @@ const appEntrypoints = readdirSync(appsRoot, { withFileTypes: true })
   .map((entry) => `apps/${entry.name}/src/App.tsx`)
   .filter((file) => existsSync(resolve(repoRoot, file)));
 
+const appRuntimeEntrypoints = readdirSync(appsRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => `apps/${entry.name}/src/main.tsx`)
+  .filter((file) => existsSync(resolve(repoRoot, file)));
+
 const viteConfigFiles = readdirSync(appsRoot, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => `apps/${entry.name}/vite.config.ts`)
   .filter((file) => existsSync(resolve(repoRoot, file)));
 
 const protectedEntrypoints = Unique([
+  ...appRuntimeEntrypoints,
   ...appEntrypoints,
   'apps/stroketrainer/src/pages/HomePage.tsx',
   'apps/stroketrainer/src/pages/training/MotorTraining.tsx',
@@ -101,6 +107,10 @@ function GetStaticImports(source) {
 }
 
 function GetForbiddenRuntimeImport(specifier) {
+  if (/\.(?:css|less|sass|scss)(?:\?|$)/.test(specifier)) {
+    return undefined;
+  }
+
   return forbiddenRuntimeImports.find((name) => specifier === name || specifier.startsWith(`${name}/`));
 }
 

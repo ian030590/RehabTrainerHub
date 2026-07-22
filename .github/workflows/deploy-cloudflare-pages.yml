@@ -66,7 +66,17 @@ jobs:
           VISIONTRAINER_URL: ${{ vars.VISIONTRAINER_URL }}
           BRAINTRAINER_URL: ${{ vars.BRAINTRAINER_URL }}
           MOUTHTRAINER_URL: ${{ vars.MOUTHTRAINER_URL }}
+          VITE_VOSK_MODEL_ZH_URL: ${{ vars.VITE_VOSK_MODEL_ZH_URL }}
+          VITE_VOSK_MODEL_EN_URL: ${{ vars.VITE_VOSK_MODEL_EN_URL }}
+          VITE_VOSK_MODEL_ZH_VOCAB_URL: ${{ vars.VITE_VOSK_MODEL_ZH_VOCAB_URL }}
+          VITE_VOSK_MODEL_EN_VOCAB_URL: ${{ vars.VITE_VOSK_MODEL_EN_VOCAB_URL }}
+          VITE_VOSK_MODEL_MIN_BYTES: ${{ vars.VITE_VOSK_MODEL_MIN_BYTES }}
           AUTH_SESSION_SECRET: ${{ secrets.AUTH_SESSION_SECRET }}
           AUTH_STATE_SECRET: ${{ secrets.AUTH_STATE_SECRET }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+      - name: Smoke test deployed StrokeTrainer
+        run: node scripts/check-browser-route-smoke.mjs --url "${STROKETRAINER_URL%/}/#/" --selector ".training-grid" --mockAuthUser true --timeoutMs 20000
+        env:
+          STROKETRAINER_URL: ${{ vars.STROKETRAINER_URL || 'https://stroke.trainerhub.cc' }}

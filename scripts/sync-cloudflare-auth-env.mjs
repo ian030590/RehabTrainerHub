@@ -17,6 +17,13 @@ const defaultPublicAppUrls = {
   BRAINTRAINER_URL: 'https://brain.trainerhub.cc',
   MOUTHTRAINER_URL: 'https://mouth.trainerhub.cc',
 };
+const optionalTrainerVariableNames = [
+  'VITE_VOSK_MODEL_ZH_URL',
+  'VITE_VOSK_MODEL_EN_URL',
+  'VITE_VOSK_MODEL_ZH_VOCAB_URL',
+  'VITE_VOSK_MODEL_EN_VOCAB_URL',
+  'VITE_VOSK_MODEL_MIN_BYTES',
+];
 
 function ToPosixPath(path) {
   return path.replaceAll('\\', '/');
@@ -50,17 +57,43 @@ function DiscoverPagesProjects() {
     .sort((a, b) => a.appPath.localeCompare(b.appPath));
 }
 
-function GetAuthBaseUrl() {
-  return defaultPublicAppUrls.REHABTRAINERHUB_URL;
+function NormalizeUrl(value) {
+  return value.trim().replace(/\/+$/, '');
 }
 
-function CollectAllowedOrigins(authBaseUrl) {
+function GetPublicAppUrls() {
+  return Object.fromEntries(
+    Object.entries(defaultPublicAppUrls).map(([name, fallback]) => [
+      name,
+      NormalizeUrl(process.env[name]?.trim() || fallback),
+    ]),
+  );
+}
+
+function GetAuthBaseUrl(publicAppUrls) {
+  return NormalizeUrl(
+    process.env.AUTH_API_BASE?.trim() ||
+    process.env.AUTH_BASE_URL?.trim() ||
+    publicAppUrls.REHABTRAINERHUB_URL,
+  );
+}
+
+function CollectAllowedOrigins(authBaseUrl, publicAppUrls) {
   const origins = new Set([
     authBaseUrl,
-    ...Object.values(defaultPublicAppUrls),
+    ...Object.values(publicAppUrls),
+    ...(process.env.AUTH_ALLOWED_ORIGINS ?? '').split(',').map((origin) => origin.trim()).filter(Boolean),
   ]);
 
   return [...origins].join(',');
+}
+
+function GetOptionalTrainerVariables() {
+  return Object.fromEntries(
+    optionalTrainerVariableNames
+      .map((name) => [name, process.env[name]?.trim()])
+      .filter(([, value]) => Boolean(value)),
+  );
 }
 
 function RequireEnv(name) {
@@ -71,14 +104,19 @@ function RequireEnv(name) {
   return value || `<${name}>`;
 }
 
-function GetProjectSecrets(project, authBaseUrl, allowedOrigins) {
-  const hubUrl = defaultPublicAppUrls.REHABTRAINERHUB_URL;
-  const strokeUrl = defaultPublicAppUrls.STROKETRAINER_URL;
-  const visionUrl = defaultPublicAppUrls.VISIONTRAINER_URL;
-  const brainUrl = defaultPublicAppUrls.BRAINTRAINER_URL;
-  const mouthUrl = defaultPublicAppUrls.MOUTHTRAINER_URL;
+function GetProjectSecrets(project, authBaseUrl, allowedOrigins, publicAppUrls) {
+  const hubUrl = publicAppUrls.REHABTRAINERHUB_URL;
+  const strokeUrl = publicAppUrls.STROKETRAINER_URL;
+  const visionUrl = publicAppUrls.VISIONTRAINER_URL;
+  const brainUrl = publicAppUrls.BRAINTRAINER_URL;
+  const mouthUrl = publicAppUrls.MOUTHTRAINER_URL;
   const sharedClientConfig = {
     AUTH_API_BASE: authBaseUrl,
+    REHABTRAINERHUB_URL: hubUrl,
+    STROKETRAINER_URL: strokeUrl,
+    VISIONTRAINER_URL: visionUrl,
+    BRAINTRAINER_URL: brainUrl,
+    MOUTHTRAINER_URL: mouthUrl,
     NEXT_PUBLIC_AUTH_API_BASE: authBaseUrl,
     NEXT_PUBLIC_REHABTRAINERHUB_URL: hubUrl,
     NEXT_PUBLIC_STROKETRAINER_URL: strokeUrl,
@@ -91,6 +129,7 @@ function GetProjectSecrets(project, authBaseUrl, allowedOrigins) {
     VITE_VISIONTRAINER_URL: visionUrl,
     VITE_BRAINTRAINER_URL: brainUrl,
     VITE_MOUTHTRAINER_URL: mouthUrl,
+    ...GetOptionalTrainerVariables(),
   };
 
   if (project.projectName !== 'rehabtrainerhub') {
@@ -144,8 +183,9 @@ async function Main() {
     throw new Error('No Cloudflare Pages apps found under apps/*/wrangler.toml.');
   }
 
-  const authBaseUrl = GetAuthBaseUrl();
-  const allowedOrigins = CollectAllowedOrigins(authBaseUrl);
+  const publicAppUrls = GetPublicAppUrls();
+  const authBaseUrl = GetAuthBaseUrl(publicAppUrls);
+  const allowedOrigins = CollectAllowedOrigins(authBaseUrl, publicAppUrls);
   const tempDir = dryRun ? '' : await mkdtemp(join(tmpdir(), 'rehab-auth-env-'));
 
   try {
@@ -153,7 +193,7 @@ async function Main() {
     console.log(`Auth API base: ${authBaseUrl}`);
 
     for (const project of projects) {
-      const secrets = GetProjectSecrets(project, authBaseUrl, allowedOrigins);
+      const secrets = GetProjectSecrets(project, authBaseUrl, allowedOrigins, publicAppUrls);
       const secretNames = Object.keys(secrets).sort().join(', ');
       console.log(`- ${project.projectName}: ${secretNames}`);
 

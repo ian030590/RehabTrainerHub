@@ -145,8 +145,13 @@ const cssVariables = {
   '--theme-contrast-logo-filter': 'grayscale(1) brightness(0) invert(1)',
 } as const;
 
-export function ApplyThemeTokens(root: HTMLElement = document.documentElement): void {
-  for (const [name, value] of Object.entries(cssVariables)) {
+export type TrainerThemeOverrides = Partial<Record<keyof typeof cssVariables, string>>;
+
+export function ApplyThemeTokens(
+  root: HTMLElement = document.documentElement,
+  overrides: TrainerThemeOverrides = {},
+): void {
+  for (const [name, value] of Object.entries({ ...cssVariables, ...overrides })) {
     root.style.setProperty(name, value);
   }
 }

@@ -10,6 +10,8 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = ParseArgs(process.argv.slice(2));
 const appDir = resolve(process.cwd(), args.app ?? '.');
 const route = args.route ?? '/';
+const externalUrl = args.url;
+const testTarget = externalUrl ?? route;
 const expectedSelectors = [
   ...ParseSelectorList(args.selector),
   ...ParseSelectorList(args.allSelectors),
@@ -25,7 +27,7 @@ const expectedText = args.text;
 const timeoutMs = Number(args.timeoutMs ?? 12000);
 
 if (expectedSelectors.length === 0) {
-  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs --app <appDir> --route <route> --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>]');
+  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs (--app <appDir> --route <route> | --url <absoluteUrl>) --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>]');
 }
 
 const browserPath = FindBrowserPath();
@@ -34,32 +36,37 @@ if (!browserPath) {
   throw new Error('No Chrome or Edge executable was found for browser route smoke testing.');
 }
 
-const previewPort = await GetAvailablePort();
+const previewPort = externalUrl ? null : await GetAvailablePort();
 const debugPort = await GetAvailablePort();
 const userDataDir = resolve(repoRoot, '.tmp', `route-smoke-${process.pid}`);
 mkdirSync(userDataDir, { recursive: true });
 
-const viteBin = resolve(repoRoot, 'node_modules/vite/bin/vite.js');
-const previewProcess = spawn(process.execPath, [viteBin, 'preview', '--host', '127.0.0.1', '--port', String(previewPort)], {
-  cwd: appDir,
-  stdio: ['ignore', 'pipe', 'pipe'],
-});
+let previewProcess;
 let previewLogs = '';
-previewProcess.stdout.on('data', (chunk) => {
-  previewLogs += chunk;
-});
-previewProcess.stderr.on('data', (chunk) => {
-  previewLogs += chunk;
-});
+if (!externalUrl) {
+  const viteBin = resolve(repoRoot, 'node_modules/vite/bin/vite.js');
+  previewProcess = spawn(process.execPath, [viteBin, 'preview', '--host', '127.0.0.1', '--port', String(previewPort)], {
+    cwd: appDir,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  previewProcess.stdout.on('data', (chunk) => {
+    previewLogs += chunk;
+  });
+  previewProcess.stderr.on('data', (chunk) => {
+    previewLogs += chunk;
+  });
+}
 
 let browserProcess;
 let browserLogs = '';
 let ws;
 
 try {
-  await WaitForHttp(`http://127.0.0.1:${previewPort}/`, 'Vite preview');
+  if (!externalUrl) {
+    await WaitForHttp(`http://127.0.0.1:${previewPort}/`, 'Vite preview');
+  }
   browserProcess = spawn(browserPath, [
-    '--headless=old',
+    '--headless=new',
     '--disable-gpu',
     '--disable-software-rasterizer',
     '--disable-gpu-compositing',
@@ -165,7 +172,8 @@ try {
       source: bootstrapStatements.join('\n'),
     }, sessionId);
   }
-  await cdp.Send('Page.navigate', { url: `http://127.0.0.1:${previewPort}${route}` }, sessionId);
+  const navigationUrl = externalUrl ?? `http://127.0.0.1:${previewPort}${route}`;
+  await cdp.Send('Page.navigate', { url: navigationUrl }, sessionId);
   await Wait(timeoutMs);
   await ClickSelectors(cdp, sessionId, clickSelectors, timeoutMs);
   if (clickSelectors.length > 0) await Wait(800);
@@ -220,6 +228,26 @@ try {
   const exceptions = cdp.events
     .filter((event) => event.sessionId === sessionId && event.method === 'Runtime.exceptionThrown')
     .map((event) => event.params.exceptionDetails.exception?.description ?? event.params.exceptionDetails.text);
+  const criticalRequests = new Map(
+    cdp.events
+      .filter((event) => event.sessionId === sessionId && event.method === 'Network.requestWillBeSent')
+      .map((event) => [event.params.requestId, {
+        type: event.params.type,
+        url: event.params.request.url,
+      }]),
+  );
+  const failedResources = cdp.events
+    .filter((event) => event.sessionId === sessionId && event.method === 'Network.loadingFailed')
+    .map((event) => ({ ...event.params, request: criticalRequests.get(event.params.requestId) }))
+    .filter((event) => ['Document', 'Script', 'Stylesheet'].includes(event.request?.type))
+    .filter((event) => IsSameOrigin(event.request?.url, navigationUrl))
+    .map((event) => `${event.request.url}: ${event.errorText}`);
+  const errorResponses = cdp.events
+    .filter((event) => event.sessionId === sessionId && event.method === 'Network.responseReceived')
+    .filter((event) => ['Document', 'Script', 'Stylesheet'].includes(event.params.type))
+    .filter((event) => event.params.response.status >= 400)
+    .filter((event) => IsSameOrigin(event.params.response.url, navigationUrl))
+    .map((event) => `${event.params.response.url}: HTTP ${event.params.response.status}`);
 
   const failures = [];
   if (!state.rootHtml || state.rootHtml === '<div id="root"></div>') {
@@ -252,12 +280,18 @@ try {
   if (exceptions.length > 0) {
     failures.push(`Runtime exceptions:\n${exceptions.map((exception) => `  - ${exception}`).join('\n')}`);
   }
-
-  if (failures.length > 0) {
-    throw new Error(`Browser route smoke failed for ${route}\n${failures.join('\n')}\n\nPage text:\n${state.bodyText.slice(0, 2000)}`);
+  if (failedResources.length > 0) {
+    failures.push(`Failed critical resources:\n${failedResources.map((resource) => `  - ${resource}`).join('\n')}`);
+  }
+  if (errorResponses.length > 0) {
+    failures.push(`Critical HTTP errors:\n${errorResponses.map((resource) => `  - ${resource}`).join('\n')}`);
   }
 
-  console.log(`Browser route smoke passed for ${route}.`);
+  if (failures.length > 0) {
+    throw new Error(`Browser route smoke failed for ${testTarget}\n${failures.join('\n')}\n\nPage text:\n${state.bodyText.slice(0, 2000)}`);
+  }
+
+  console.log(`Browser route smoke passed for ${testTarget}.`);
 } catch (error) {
   console.error(error.stack || error);
   console.error('\nPreview logs:\n' + previewLogs.slice(-4000));
@@ -435,6 +469,15 @@ async function WaitForHttp(url, label) {
 
 function Wait(durationMs) {
   return new Promise((resolve) => setTimeout(resolve, durationMs));
+}
+
+function IsSameOrigin(candidate, target) {
+  if (!candidate) return false;
+  try {
+    return new URL(candidate).origin === new URL(target).origin;
+  } catch {
+    return false;
+  }
 }
 
 function StopProcess(childProcess) {

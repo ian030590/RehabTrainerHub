@@ -86,6 +86,7 @@ export {
   transitions,
   typography,
 } from './trainerTheme';
+export type { TrainerThemeOverrides } from './trainerTheme';
 export {
   DrawUfovCanvasStage,
   EnsureUfovCanvasStage,
