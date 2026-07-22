@@ -21,6 +21,11 @@ export function LinksPage() {
       title: t('links.brainTrainer.title'),
       description: t('links.brainTrainer.desc'),
     },
+    {
+      href: siteUrls.mouth,
+      title: 'MouthTrainer',
+      description: '口說、理解與口腔動作訓練平台。',
+    },
   ];
 
   return (

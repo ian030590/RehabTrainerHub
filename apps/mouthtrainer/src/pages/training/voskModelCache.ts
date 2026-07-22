@@ -1,8 +1,8 @@
-const cacheName = 'stroke-trainer-vosk-models-v1';
+const cacheName = 'mouth-trainer-vosk-models-v1';
 const cacheKeyPrefix = '__vosk_model_cache__';
-const sourceUrlHeader = 'X-Stroke-Trainer-Model-Source';
-const completeHeader = 'X-Stroke-Trainer-Model-Complete';
-const sizeHeader = 'X-Stroke-Trainer-Model-Size';
+const sourceUrlHeader = 'X-Mouth-Trainer-Model-Source';
+const completeHeader = 'X-Mouth-Trainer-Model-Complete';
+const sizeHeader = 'X-Mouth-Trainer-Model-Size';
 const defaultMinModelBytes = 34_603_008;
 
 export type VoskModelLoadStage = 'checking-cache' | 'loading-cache' | 'downloading' | 'saving-cache';

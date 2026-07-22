@@ -28,7 +28,7 @@ import { AppDialog } from '../../components/AppDialog';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 import type { TFunction } from './types';
-import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
+import { MouthTrainingRulesPanel } from './MouthTrainingRulesPanel';
 import {
   CreateDefaultVoiceVocabulary,
   CreateVoiceVocabularyItems,
@@ -273,7 +273,7 @@ const microphoneMediaConstraints: MediaStreamConstraints = {
     channelCount: 1,
   },
 };
-const starSkyBackgroundImage = `url(${import.meta.env.BASE_URL}assets/StarSky.png)`;
+const starSkyBackgroundImage = 'radial-gradient(circle at 30% 20%, #397fc4 0 2px, transparent 3px), radial-gradient(circle at 72% 66%, #6aaee6 0 2px, transparent 3px), linear-gradient(180deg, #043d75, #005eb8)';
 const voskModelDownloadTimeoutMs = GetPositiveNumber(
   import.meta.env.VITE_VOSK_MODEL_TIMEOUT_MS,
   90_000,
@@ -1899,7 +1899,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
 
       {phase === 'rules' && (
         <div className="training-panel">
-          <StrokeTrainingRulesPanel
+          <MouthTrainingRulesPanel
             gameId="voice-defender"
             title={t('voice.title')}
             summaryTitle={t('voice.title')}

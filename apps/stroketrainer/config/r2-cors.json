@@ -4,6 +4,7 @@
       "allowed": {
         "origins": [
           "https://stroke.trainerhub.cc",
+          "https://mouth.trainerhub.cc",
           "https://ian030590.github.io"
         ],
         "methods": [

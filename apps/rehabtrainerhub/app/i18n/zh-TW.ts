@@ -75,9 +75,9 @@ export const zhTW = {
         title: 'StrokeTrainer',
         localTitle: '中風復健練習',
         name: 'StrokeTrainer',
-        bestFor: '適合：動作、認知、說話練習',
+        bestFor: '適合：動作與認知練習',
         description: '將治療師交代的方向，整理成適合在家短時間練習的任務。',
-        points: ['動作協調', '注意力記憶', '口腔語音'],
+        points: ['動作協調', '注意力記憶'],
         action: '開啟中風復健',
         logoAlt: 'StrokeTrainer 標誌',
       },
@@ -102,6 +102,17 @@ export const zhTW = {
         points: ['注意訓練', '記憶訓練', '思考訓練'],
         action: '開啟認知訓練',
         logoAlt: 'BrainTrainer 標誌',
+      },
+      {
+        id: 'mouth',
+        title: 'MouthTrainer',
+        localTitle: '口說與口腔訓練練習',
+        name: 'MouthTrainer',
+        bestFor: '適合：口說、理解與口腔動作練習',
+        description: '提供引導式語音辨識與舌頭動作練習，並準備理解訓練入口。',
+        points: ['口說訓練', '理解訓練', '口腔動作'],
+        action: '開啟 MouthTrainer',
+        logoAlt: 'MouthTrainer 標誌',
       },
     ],
     safetySteps: [
@@ -190,7 +201,7 @@ export const zhTW = {
       eyebrow: '隱私權政策',
       title: '登入、匿名資料與訓練紀錄的使用說明。',
       intro: [
-        '本政策適用於 Rehab Trainer Hub、StrokeTrainer、VisionTrainer 與 BrainTrainer 的登入、基本資料填寫與訓練紀錄儲存。',
+        '本政策適用於 Rehab Trainer Hub、StrokeTrainer、VisionTrainer、BrainTrainer 與 MouthTrainer 的登入、基本資料填寫與訓練紀錄儲存。',
         '本平台以居家復健練習與流程原型為目的，不取代醫師、治療師或其他專業人員的評估。',
       ],
       sections: [
@@ -218,7 +229,7 @@ export const zhTW = {
           items: [
             '登入並完成問卷後，匿名基本資料、醫療史問卷與訓練紀錄會儲存在 Rehab Trainer Hub 的 Cloudflare D1 database。',
             '未登入或未完成必要問卷時，trainer 訓練功能不會開放使用。',
-            'StrokeTrainer、VisionTrainer 與 BrainTrainer 的登入流程會連到 Rehab Trainer Hub 的登入 API，並使用同一份登入狀態。',
+            'StrokeTrainer、VisionTrainer、BrainTrainer 與 MouthTrainer 的登入流程會連到 Rehab Trainer Hub 的登入 API，並使用同一份登入狀態。',
           ],
         },
         {

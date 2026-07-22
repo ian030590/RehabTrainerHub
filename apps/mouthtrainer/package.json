@@ -1,0 +1,33 @@
+{
+  "name": "@rehab-trainer/mouthtrainer",
+  "private": true,
+  "version": "0.1.0",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node ../../scripts/check-trainer-entrypoints.mjs && tsc -b && vite build && node ../../scripts/check-vite-html-shell.mjs dist/index.html",
+    "test:entrypoints": "node ../../scripts/check-trainer-entrypoints.mjs",
+    "test:production-shell": "node ../../scripts/check-vite-html-shell.mjs dist/index.html",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.35",
+    "@tensorflow-models/knn-classifier": "^1.2.6",
+    "@tensorflow/tfjs": "^4.22.0",
+    "jspsych": "^8.2.1",
+    "pinyin-pro": "^3.28.1",
+    "pixi.js": "^8.18.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.1",
+    "vosk-browser": "^0.0.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.4",
+    "@vitejs/plugin-react": "^4.5.2",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5"
+  }
+}

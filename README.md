@@ -11,6 +11,7 @@ RehabTrainerHub 是居家復健訓練入口，整合多個訓練工具：
 - StrokeTrainer：中風復健訓練
 - VisionTrainer：視覺訓練
 - BrainTrainer：認知訓練
+- MouthTrainer：口說、理解與口腔訓練
 
 ## English
 
@@ -19,6 +20,7 @@ RehabTrainerHub is a home rehabilitation training hub that brings multiple train
 - StrokeTrainer: stroke rehabilitation training
 - VisionTrainer: vision training
 - BrainTrainer: cognitive training
+- MouthTrainer: speech, comprehension, and oral movement training
 
 ## 資料夾結構 / Folder Structure
 
@@ -28,7 +30,8 @@ RehabTrainerHub is a home rehabilitation training hub that brings multiple train
 |   |-- rehabtrainerhub/   # 入口網站 / Hub site
 |   |-- stroketrainer/     # StrokeTrainer
 |   |-- visiontrainer/     # VisionTrainer
-|   `-- braintrainer/      # BrainTrainer
+|   |-- braintrainer/      # BrainTrainer
+|   `-- mouthtrainer/      # MouthTrainer
 |-- packages/
 |   |-- ui/                # 共用介面與瀏覽器工具 / Shared UI and browser utilities
 |   |-- config-eslint/     # 共用 ESLint 設定 / Shared ESLint config
@@ -43,7 +46,7 @@ RehabTrainerHub is a home rehabilitation training hub that brings multiple train
 ## 使用方式
 
 1. 進入 RehabTrainerHub 主畫面。
-2. 選擇要使用的 trainer：StrokeTrainer、VisionTrainer 或 BrainTrainer。
+2. 選擇要使用的 trainer：StrokeTrainer、VisionTrainer、BrainTrainer 或 MouthTrainer。
 3. 依需求調整網頁設定，例如語言、字體大小、色彩模式與音效。
 4. 選擇訓練分類與訓練模組。
 5. 在訓練前設定畫面確認參數後開始。
@@ -52,7 +55,7 @@ RehabTrainerHub is a home rehabilitation training hub that brings multiple train
 ## How To Use
 
 1. Open the RehabTrainerHub home screen.
-2. Choose a trainer: StrokeTrainer, VisionTrainer, or BrainTrainer.
+2. Choose a trainer: StrokeTrainer, VisionTrainer, BrainTrainer, or MouthTrainer.
 3. Adjust page settings as needed, such as language, font size, color mode, and sound.
 4. Select a training category and module.
 5. Confirm the pre-training settings, then start the session.

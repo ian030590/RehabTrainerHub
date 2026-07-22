@@ -9,6 +9,7 @@ export function LinksPage() {
     { href: siteUrls.hub, title: t('links.hub.title'), description: t('links.hub.desc') },
     { href: siteUrls.stroke, title: t('links.stroke.title'), description: t('links.stroke.desc') },
     { href: siteUrls.vision, title: t('links.vision.title'), description: t('links.vision.desc') },
+    { href: siteUrls.mouth, title: 'MouthTrainer', description: '口說、理解與口腔動作訓練平台。' },
   ];
 
   return (

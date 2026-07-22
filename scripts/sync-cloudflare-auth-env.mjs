@@ -15,6 +15,7 @@ const defaultPublicAppUrls = {
   STROKETRAINER_URL: 'https://stroke.trainerhub.cc',
   VISIONTRAINER_URL: 'https://vision.trainerhub.cc',
   BRAINTRAINER_URL: 'https://brain.trainerhub.cc',
+  MOUTHTRAINER_URL: 'https://mouth.trainerhub.cc',
 };
 
 function ToPosixPath(path) {
@@ -75,6 +76,7 @@ function GetProjectSecrets(project, authBaseUrl, allowedOrigins) {
   const strokeUrl = defaultPublicAppUrls.STROKETRAINER_URL;
   const visionUrl = defaultPublicAppUrls.VISIONTRAINER_URL;
   const brainUrl = defaultPublicAppUrls.BRAINTRAINER_URL;
+  const mouthUrl = defaultPublicAppUrls.MOUTHTRAINER_URL;
   const sharedClientConfig = {
     AUTH_API_BASE: authBaseUrl,
     NEXT_PUBLIC_AUTH_API_BASE: authBaseUrl,
@@ -82,11 +84,13 @@ function GetProjectSecrets(project, authBaseUrl, allowedOrigins) {
     NEXT_PUBLIC_STROKETRAINER_URL: strokeUrl,
     NEXT_PUBLIC_VISIONTRAINER_URL: visionUrl,
     NEXT_PUBLIC_BRAINTRAINER_URL: brainUrl,
+    NEXT_PUBLIC_MOUTHTRAINER_URL: mouthUrl,
     VITE_AUTH_API_BASE: authBaseUrl,
     VITE_REHABTRAINERHUB_URL: hubUrl,
     VITE_STROKETRAINER_URL: strokeUrl,
     VITE_VISIONTRAINER_URL: visionUrl,
     VITE_BRAINTRAINER_URL: brainUrl,
+    VITE_MOUTHTRAINER_URL: mouthUrl,
   };
 
   if (project.projectName !== 'rehabtrainerhub') {

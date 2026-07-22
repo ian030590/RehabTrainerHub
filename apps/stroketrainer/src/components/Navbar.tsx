@@ -18,16 +18,13 @@ export function Navbar() {
       ? 'motor-training'
       : location.pathname === '/cognitive-training'
         ? 'cognitive-training'
-        : location.pathname === '/speech-training'
-          ? 'speech-training'
-          : location.pathname === '/training'
+        : location.pathname === '/training'
             ? (new URLSearchParams(location.search).get('module') || 'motor-training')
             : null;
   const trainingLinkClass = (moduleId: string) => `navbar-link ${activeTrainingModule === moduleId ? 'active' : ''}`;
   const navItems = [
     { to: '/motor-training', className: () => trainingLinkClass('motor-training'), label: t('home.module.motor.title') },
     { to: '/cognitive-training', className: () => trainingLinkClass('cognitive-training'), label: t('home.module.cognitive.title') },
-    { to: '/speech-training', className: () => trainingLinkClass('speech-training'), label: t('home.module.speech.title') },
     { to: '/settings', className: navLinkClass, label: t('nav.settings') },
     { to: '/credits', className: navLinkClass, label: t('nav.credits') },
     { to: '/links', className: navLinkClass, label: t('nav.links') },

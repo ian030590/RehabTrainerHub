@@ -3,6 +3,7 @@ const defaultAllowedOrigins = [
   'https://stroke.trainerhub.cc',
   'https://vision.trainerhub.cc',
   'https://brain.trainerhub.cc',
+  'https://mouth.trainerhub.cc',
 ];
 const defaultAuthBaseUrl = 'https://trainerhub.cc';
 

@@ -1,0 +1,35 @@
+import { zh as strokeZh } from '../../../stroketrainer/src/i18n/zh';
+
+export const zh = {
+  ...strokeZh,
+  'app.loading': '正在載入 MouthTrainer…',
+  'nav.brand': 'MouthTrainer',
+  'nav.logoAlt': 'MouthTrainer 標誌',
+  'nav.speech': '口說訓練',
+  'nav.comprehension': '理解訓練',
+  'nav.oral': '口腔訓練',
+  'nav.settings': '網頁設定',
+  'nav.credits': '參考資料',
+  'nav.links': '相關網站',
+  'nav.downloadScores': '下載紀錄',
+  'nav.noScores': '目前沒有 MouthTrainer 訓練紀錄。',
+  'nav.scoresDownloadError': '無法讀取 MouthTrainer 訓練紀錄，請再試一次。',
+  'mouth.speech.title': '口說訓練',
+  'mouth.speech.subtitle': '使用語音辨識練習清楚說出畫面上的詞語。',
+  'mouth.oral.title': '口腔訓練',
+  'mouth.oral.subtitle': '完成臉部與舌頭校正後，以舌頭方向進行互動練習。',
+  'mouth.comprehension.title': '理解訓練',
+  'mouth.comprehension.subtitle': '理解訓練模組正在規劃中。',
+  'mouth.comprehension.body': '這個入口已準備好，之後會加入聽覺理解、詞語理解與日常情境理解練習。',
+  'mouth.references.subtitle': 'MouthTrainer 使用的開放原始碼與技術參考。',
+  'mouth.links.mouth.title': 'MouthTrainer',
+  'mouth.links.mouth.desc': '口說、理解與口腔動作訓練平台。',
+  'mouth.links.stroke.title': 'StrokeTrainer',
+  'mouth.links.stroke.desc': '中風復健訓練平台，提供動作與認知練習。',
+  'mouth.links.vision.title': 'VisionTrainer',
+  'mouth.links.vision.desc': '視覺評估與視覺訓練平台。',
+  'mouth.links.brain.title': 'BrainTrainer',
+  'mouth.links.brain.desc': '注意、記憶與思考訓練平台。',
+} as const;
+
+export type TranslationKey = keyof typeof zh;

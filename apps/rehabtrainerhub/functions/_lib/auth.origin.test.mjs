@@ -102,6 +102,13 @@ const allowedSessionBody = await allowedSession.json();
 assert.equal(allowedSessionBody.token, token);
 assert.equal(allowedSessionBody.user.profile, undefined);
 
+await AssertSessionStatus(
+  'https://trainerhub.cc/api/auth/session',
+  'https://mouth.trainerhub.cc',
+  200,
+  'https://mouth.trainerhub.cc',
+);
+
 const localDevSession = await AssertSessionStatus(
   'http://localhost:3010/api/auth/session',
   'http://localhost:5173',

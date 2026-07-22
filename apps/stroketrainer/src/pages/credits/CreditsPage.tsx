@@ -30,7 +30,6 @@ export function CreditsPage() {
   const copy = labels[lang];
   const motorModule = t('home.module.motor.title');
   const cognitiveModule = t('home.module.cognitive.title');
-  const speechModule = t('home.module.speech.title');
   const moduleChip = (tabName: string, moduleName: string) => FormatReferenceModuleChip(tabName, moduleName);
   const motorCortexTitle = lang === 'en' ? 'Motor Cortex Rehab' : '動作皮質復健訓練';
 
@@ -70,14 +69,6 @@ export function CreditsPage() {
       href: 'https://github.com/antfu/vue-minesweeper',
       description: t('credits.vueMinesweeper.desc'),
       modules: [moduleChip(cognitiveModule, t('training.minesweeper.title'))],
-    },
-    {
-      title: 'ccoreilly/vosk-browser',
-      href: 'https://github.com/ccoreilly/vosk-browser',
-      description: lang === 'en'
-        ? 'Used as the browser speech-recognition runtime for local Vosk model inference.'
-        : '作為瀏覽器端語音辨識 runtime，支援本機 Vosk 模型推論。',
-      modules: [moduleChip(speechModule, t('voice.title'))],
     },
   ];
 

@@ -1,0 +1,13 @@
+@import '../../stroketrainer/src/index.css';
+
+.mouth-coming-soon {
+  display: grid;
+  gap: 12px;
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.mouth-coming-soon .training-panel {
+  text-align: left;
+}

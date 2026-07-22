@@ -27,6 +27,10 @@ const appAssets = {
     href: siteUrls.brain,
     image: '/assets/brain-logo.svg',
   },
+  mouth: {
+    href: siteUrls.mouth,
+    image: '/assets/mouth-logo.svg',
+  },
 } as const;
 
 function Icon({ name, className }: { name: IconName; className?: string }) {

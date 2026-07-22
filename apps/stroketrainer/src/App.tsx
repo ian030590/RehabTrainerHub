@@ -17,7 +17,6 @@ const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((mo
 const TrainingPage = lazy(() => import('./pages/training/TrainingPage').then((module) => ({ default: module.TrainingPage })));
 const MotorTraining = lazy(() => import('./pages/training/MotorTraining').then((module) => ({ default: module.MotorTraining })));
 const CognitiveTraining = lazy(() => import('./pages/training/CognitiveTraining').then((module) => ({ default: module.CognitiveTraining })));
-const SpeechTraining = lazy(() => import('./pages/training/SpeechTraining').then((module) => ({ default: module.SpeechTraining })));
 const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((module) => ({ default: module.CreditsPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 
@@ -26,7 +25,7 @@ export function App() {
   const location = useLocation();
   const apiBase = siteUrls.hub;
   const locale = lang === 'en' ? 'en' : 'zh-TW';
-  const trainingPaths = new Set(['/', '/motor-training', '/cognitive-training', '/speech-training', '/training']);
+  const trainingPaths = new Set(['/', '/motor-training', '/cognitive-training', '/training']);
 
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
@@ -42,7 +41,6 @@ export function App() {
           <Route path="/" element={<Navigate to="/motor-training" replace />} />
           <Route path="/motor-training" element={<MotorTraining />} />
           <Route path="/cognitive-training" element={<CognitiveTraining />} />
-          <Route path="/speech-training" element={<SpeechTraining />} />
           <Route path="/training" element={<TrainingPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/credits" element={<CreditsPage />} />

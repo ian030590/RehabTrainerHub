@@ -75,9 +75,9 @@ export const en = {
         title: 'StrokeTrainer',
         localTitle: 'Stroke rehabilitation practice',
         name: 'StrokeTrainer',
-        bestFor: 'Good for movement, cognition, and speech practice',
+        bestFor: 'Good for movement and cognitive practice',
         description: 'Turns therapist-directed goals into short home practice tasks.',
-        points: ['Coordination', 'Attention and memory', 'Oral speech'],
+        points: ['Coordination', 'Attention and memory'],
         action: 'Open StrokeTrainer',
         logoAlt: 'StrokeTrainer logo',
       },
@@ -102,6 +102,17 @@ export const en = {
         points: ['Attention training', 'Memory training', 'Thinking training'],
         action: 'Open BrainTrainer',
         logoAlt: 'BrainTrainer logo',
+      },
+      {
+        id: 'mouth',
+        title: 'MouthTrainer',
+        localTitle: 'Speech and oral training practice',
+        name: 'MouthTrainer',
+        bestFor: 'Good for speech, comprehension, and oral movement practice',
+        description: 'Provides guided speech recognition and tongue-movement practice, with a prepared space for comprehension exercises.',
+        points: ['Speech training', 'Comprehension training', 'Oral movement'],
+        action: 'Open MouthTrainer',
+        logoAlt: 'MouthTrainer logo',
       },
     ],
     safetySteps: [
@@ -190,7 +201,7 @@ export const en = {
       eyebrow: 'Privacy Policy',
       title: 'How login, anonymous data, and training records are used.',
       intro: [
-        'This policy applies to login, basic profile entry, and training record storage for Rehab Trainer Hub, StrokeTrainer, VisionTrainer, and BrainTrainer.',
+        'This policy applies to login, basic profile entry, and training record storage for Rehab Trainer Hub, StrokeTrainer, VisionTrainer, BrainTrainer, and MouthTrainer.',
         'This platform is intended for home rehabilitation practice and workflow prototyping, and does not replace evaluation by a physician, therapist, or other professional.',
       ],
       sections: [
@@ -218,7 +229,7 @@ export const en = {
           items: [
             'After sign-in and questionnaire completion, anonymous basic information, medical history questionnaire answers, and training records are stored in Rehab Trainer Hub Cloudflare D1 database.',
             'Trainer functions are not available without sign-in or required questionnaire completion.',
-            'The login flows for StrokeTrainer, VisionTrainer, and BrainTrainer connect to the Rehab Trainer Hub login API and use the same login state.',
+            'The login flows for StrokeTrainer, VisionTrainer, BrainTrainer, and MouthTrainer connect to the Rehab Trainer Hub login API and use the same login state.',
           ],
         },
         {

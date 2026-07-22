@@ -40,7 +40,7 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
-import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
+import { MouthTrainingRulesPanel } from './MouthTrainingRulesPanel';
 
 type TongueClass = 'Rest' | 'Tongue_Left' | 'Tongue_Right';
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'calibration' | 'playing' | 'results';
@@ -127,7 +127,7 @@ const mouthFeatureHeight = 24;
 const maxTongueSegments = 10;
 const tongueWidth = 28;
 const tongueCollisionRadius = tongueWidth / 2;
-const appleTextureUrl = `${import.meta.env.BASE_URL}assets/tongue-apple.webp`;
+const appleTextureUrl = `${import.meta.env.BASE_URL}assets/tongue-apple.svg`;
 const calibrationSteps: readonly CalibrationStep[] = [
   {
     label: 'Rest',
@@ -491,8 +491,8 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     PlayGameEndSound('Victory', jsPsychRef);
     void SaveTrainingSessionRecord({
       userName: participantId,
-      moduleId: 'speech-training',
-      moduleName: t('home.module.speech.title'),
+      moduleId: 'oral-training',
+      moduleName: t('mouth.oral.title'),
       gameId: 'tongue-catch',
       gameTitle: t('tongue.title'),
       difficulty: DifficultyLabel(configSnapshot),
@@ -839,7 +839,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
 
       {phase === 'rules' && (
         <div className="training-panel tongue-menu-panel">
-          <StrokeTrainingRulesPanel
+          <MouthTrainingRulesPanel
             gameId="tongue-catch"
             title={t('tongue.title')}
             summaryTitle={t('tongue.title')}
