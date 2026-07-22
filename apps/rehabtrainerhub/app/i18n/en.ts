@@ -71,15 +71,15 @@ export const en = {
     },
     apps: [
       {
-        id: 'stroke',
-        title: 'StrokeTrainer',
-        localTitle: 'Stroke rehabilitation practice',
-        name: 'StrokeTrainer',
-        bestFor: 'Good for movement and coordination practice',
-        description: 'Turns therapist-directed goals into short home practice tasks.',
-        points: ['Coordination', 'Hand-eye control'],
-        action: 'Open StrokeTrainer',
-        logoAlt: 'StrokeTrainer logo',
+        id: 'motor',
+        title: 'MotorTrainer',
+        localTitle: 'Motor rehabilitation practice',
+        name: 'MotorTrainer',
+        bestFor: 'Good for upper-limb, lower-limb, and coordination practice',
+        description: 'Turns therapist-directed goals into short motor practice tasks at home.',
+        points: ['Upper limb', 'Lower limb', 'Coordination'],
+        action: 'Open MotorTrainer',
+        logoAlt: 'MotorTrainer logo',
       },
       {
         id: 'vision',
@@ -201,7 +201,7 @@ export const en = {
       eyebrow: 'Privacy Policy',
       title: 'How login, anonymous data, and training records are used.',
       intro: [
-        'This policy applies to login, basic profile entry, and training record storage for Rehab Trainer Hub, StrokeTrainer, VisionTrainer, BrainTrainer, and MouthTrainer.',
+        'This policy applies to login, basic profile entry, and training record storage for Rehab Trainer Hub, MotorTrainer, VisionTrainer, BrainTrainer, and MouthTrainer.',
         'This platform is intended for home rehabilitation practice and workflow prototyping, and does not replace evaluation by a physician, therapist, or other professional.',
       ],
       sections: [
@@ -229,7 +229,7 @@ export const en = {
           items: [
             'After sign-in and questionnaire completion, anonymous basic information, medical history questionnaire answers, and training records are stored in Rehab Trainer Hub Cloudflare D1 database.',
             'Trainer functions are not available without sign-in or required questionnaire completion.',
-            'The login flows for StrokeTrainer, VisionTrainer, BrainTrainer, and MouthTrainer connect to the Rehab Trainer Hub login API and use the same login state.',
+            'The login flows for MotorTrainer, VisionTrainer, BrainTrainer, and MouthTrainer connect to the Rehab Trainer Hub login API and use the same login state.',
           ],
         },
         {

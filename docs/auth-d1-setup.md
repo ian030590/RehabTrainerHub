@@ -6,7 +6,7 @@ RehabTrainerHub uses the Hub Pages project as the central auth API for:
 - Anonymous profile collection after login
 - Signed-in training record storage in Cloudflare D1
 
-StrokeTrainer, VisionTrainer, and future Pages apps call the Hub API with a bearer token. If there is no token, records stay in each browser's IndexedDB.
+MotorTrainer, VisionTrainer, and future Pages apps call the Hub API with a bearer token. If there is no token, records stay in each browser's IndexedDB.
 
 The Hub also sets a first-party session cookie. Other sites try to restore that shared Hub session on load, and the login popup can reuse the same Hub session when browser third-party cookie rules block silent restoration.
 
@@ -35,9 +35,9 @@ Register this exact callback URL in the Google Cloud Console OAuth client's
 https://trainerhub.cc/api/auth/callback
 ```
 
-StrokeTrainer, VisionTrainer, and BrainTrainer still use this same Hub callback
+MotorTrainer, VisionTrainer, and BrainTrainer still use this same Hub callback
 because their login popup starts from `https://trainerhub.cc/api/auth/start`.
-Adding only the trainer site URLs, such as `https://stroke.trainerhub.cc` or
+Adding only the trainer site URLs, such as `https://motor.trainerhub.cc` or
 `https://vision.trainerhub.cc`, does not satisfy Google's `redirect_uri` check.
 
 The production auth base URL is `https://trainerhub.cc`. If `AUTH_BASE_URL` is

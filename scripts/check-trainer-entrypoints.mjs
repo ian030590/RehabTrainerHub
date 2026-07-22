@@ -33,8 +33,8 @@ const viteConfigFiles = readdirSync(appsRoot, { withFileTypes: true })
 const protectedEntrypoints = Unique([
   ...appRuntimeEntrypoints,
   ...appEntrypoints,
-  'apps/stroketrainer/src/pages/HomePage.tsx',
-  'apps/stroketrainer/src/pages/training/MotorTraining.tsx',
+  'apps/motortrainer/src/pages/HomePage.tsx',
+  'apps/motortrainer/src/pages/training/UpperLimbTraining.tsx',
   'apps/braintrainer/src/pages/thinking/ThinkingTraining.tsx',
   'apps/mouthtrainer/src/pages/training/SpeechTraining.tsx',
   'apps/mouthtrainer/src/pages/training/OralTraining.tsx',

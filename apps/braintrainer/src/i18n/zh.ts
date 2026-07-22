@@ -154,8 +154,8 @@ export const zh = {
   'links.subtitle': 'RehabTrainerHub 生態系的正式網站',
   'links.hub.title': 'RehabTrainerHub',
   'links.hub.desc': '居家訓練入口平台，整理各項居家訓練工具。',
-  'links.stroke.title': 'StrokeTrainer',
-  'links.stroke.desc': '中風復健訓練平台，提供動作練習。',
+  'links.motor.title': 'MotorTrainer',
+  'links.motor.desc': '動作訓練平台，提供上肢與下肢訓練入口。',
   'links.vision.title': 'VisionTrainer',
   'links.vision.desc': '視覺訓練平台，提供視覺搜尋、閱讀眼動與對比辨識練習。',
 } as const;

@@ -15,9 +15,9 @@ const content: { [K in HubLocale]: typeof zhTW.home | typeof enTranslations.home
 };
 
 const appAssets = {
-  stroke: {
-    href: siteUrls.stroke,
-    image: '/assets/stroke-logo.svg',
+  motor: {
+    href: siteUrls.motor,
+    image: '/assets/motor-logo.svg',
   },
   vision: {
     href: siteUrls.vision,

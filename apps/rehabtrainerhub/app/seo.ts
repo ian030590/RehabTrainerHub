@@ -3,7 +3,7 @@ import { hubFullName, hubLocalName, hubName } from './hubBrand';
 import { siteUrls } from './siteUrls';
 
 export const siteDescription =
-  '居家訓練網 Rehab Trainer Hub 提供職能治療師設計的居家訓練工具，整合中風復健、視覺訓練、認知訓練、衛教資訊與衛教影片。';
+  '居家訓練網 Rehab Trainer Hub 提供職能治療師設計的居家訓練工具，整合動作復健、視覺訓練、認知訓練、衛教資訊與衛教影片。';
 
 export const seoImage = {
   url: '/rehabtrainerhub.svg',
@@ -15,11 +15,11 @@ export const seoImage = {
 const trainerApplications = [
   {
     '@type': 'WebApplication',
-    name: 'StrokeTrainer',
+    name: 'MotorTrainer',
     applicationCategory: 'HealthApplication',
     operatingSystem: 'Web browser',
-    url: siteUrls.stroke,
-    description: 'StrokeTrainer 提供動作練習，協助依治療師建議安排居家中風復健訓練。',
+    url: siteUrls.motor,
+    description: 'MotorTrainer 提供上肢與下肢訓練入口，協助依治療師建議安排居家動作復健練習。',
   },
   {
     '@type': 'WebApplication',

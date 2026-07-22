@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://motor.trainerhub.cc/sitemap.xml

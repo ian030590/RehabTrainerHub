@@ -429,8 +429,8 @@ export const en: Record<TranslationKey, string> = {
   'links.subtitle': 'Official websites in the RehabTrainerHub ecosystem',
   'links.hub.title': 'RehabTrainerHub',
   'links.hub.desc': 'Home training portal for the RehabTrainerHub tools.',
-  'links.strokeTrainer.title': 'StrokeTrainer',
-  'links.strokeTrainer.desc': 'Stroke rehabilitation training platform with various rehab exercise tools.',
+  'links.motorTrainer.title': 'MotorTrainer',
+  'links.motorTrainer.desc': 'Motor rehabilitation platform with upper- and lower-limb training areas.',
   'links.brainTrainer.title': 'BrainTrainer',
   'links.brainTrainer.desc': 'Cognitive training platform for attention, memory, and thinking categories.',
 

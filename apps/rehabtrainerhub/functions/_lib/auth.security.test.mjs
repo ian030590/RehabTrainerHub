@@ -46,10 +46,10 @@ assert.equal(payload.exp - payload.iat, 60 * 60 * 24 * 7);
 const noOriginHeaders = CorsHeaders(new Request('https://trainerhub.cc/api/auth/me'), env);
 assert.equal(noOriginHeaders['Access-Control-Allow-Origin'], undefined);
 
-const popup = await AuthPopupHtml('https://stroke.trainerhub.cc/', token, ToPublicUser(user)).text();
+const popup = await AuthPopupHtml('https://motor.trainerhub.cc/', token, ToPublicUser(user)).text();
 assert.equal(popup.includes('auth_token'), false);
-assert.equal(popup.includes('https://stroke.trainerhub.cc/'), true);
-const popupResponse = AuthPopupHtml('https://stroke.trainerhub.cc/', token, ToPublicUser(user));
+assert.equal(popup.includes('https://motor.trainerhub.cc/'), true);
+const popupResponse = AuthPopupHtml('https://motor.trainerhub.cc/', token, ToPublicUser(user));
 assert.match(popupResponse.headers.get('content-security-policy'), /script-src 'nonce-/);
 assert.equal(popupResponse.headers.get('x-content-type-options'), 'nosniff');
 

@@ -1,6 +1,6 @@
 const defaultAllowedOrigins = [
   'https://trainerhub.cc',
-  'https://stroke.trainerhub.cc',
+  'https://motor.trainerhub.cc',
   'https://vision.trainerhub.cc',
   'https://brain.trainerhub.cc',
   'https://mouth.trainerhub.cc',

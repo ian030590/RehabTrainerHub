@@ -1,6 +1,6 @@
 export const defaultSiteUrls = {
   hub: 'https://trainerhub.cc',
-  stroke: 'https://stroke.trainerhub.cc',
+  motor: 'https://motor.trainerhub.cc',
   vision: 'https://vision.trainerhub.cc',
   brain: 'https://brain.trainerhub.cc',
   mouth: 'https://mouth.trainerhub.cc',

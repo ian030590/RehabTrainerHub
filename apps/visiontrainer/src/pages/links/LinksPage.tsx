@@ -12,9 +12,9 @@ export function LinksPage() {
       description: t('links.hub.desc'),
     },
     {
-      href: siteUrls.stroke,
-      title: t('links.strokeTrainer.title'),
-      description: t('links.strokeTrainer.desc'),
+      href: siteUrls.motor,
+      title: t('links.motorTrainer.title'),
+      description: t('links.motorTrainer.desc'),
     },
     {
       href: siteUrls.brain,

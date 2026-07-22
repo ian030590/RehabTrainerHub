@@ -71,15 +71,15 @@ export const zhTW = {
     },
     apps: [
       {
-        id: 'stroke',
-        title: 'StrokeTrainer',
-        localTitle: '中風復健練習',
-        name: 'StrokeTrainer',
-        bestFor: '適合：肢體動作與協調練習',
-        description: '將治療師交代的方向，整理成適合在家短時間練習的任務。',
-        points: ['動作協調', '手眼控制'],
-        action: '開啟中風復健',
-        logoAlt: 'StrokeTrainer 標誌',
+        id: 'motor',
+        title: 'MotorTrainer',
+        localTitle: '動作復健練習',
+        name: 'MotorTrainer',
+        bestFor: '適合：上肢、下肢與動作協調練習',
+        description: '將治療師交代的方向，整理成適合在家短時間練習的動作任務。',
+        points: ['上肢訓練', '下肢訓練', '動作協調'],
+        action: '開啟動作訓練',
+        logoAlt: 'MotorTrainer 標誌',
       },
       {
         id: 'vision',
@@ -201,7 +201,7 @@ export const zhTW = {
       eyebrow: '隱私權政策',
       title: '登入、匿名資料與訓練紀錄的使用說明。',
       intro: [
-        '本政策適用於 Rehab Trainer Hub、StrokeTrainer、VisionTrainer、BrainTrainer 與 MouthTrainer 的登入、基本資料填寫與訓練紀錄儲存。',
+        '本政策適用於 Rehab Trainer Hub、MotorTrainer、VisionTrainer、BrainTrainer 與 MouthTrainer 的登入、基本資料填寫與訓練紀錄儲存。',
         '本平台以居家復健練習與流程原型為目的，不取代醫師、治療師或其他專業人員的評估。',
       ],
       sections: [
@@ -229,7 +229,7 @@ export const zhTW = {
           items: [
             '登入並完成問卷後，匿名基本資料、醫療史問卷與訓練紀錄會儲存在 Rehab Trainer Hub 的 Cloudflare D1 database。',
             '未登入或未完成必要問卷時，trainer 訓練功能不會開放使用。',
-            'StrokeTrainer、VisionTrainer、BrainTrainer 與 MouthTrainer 的登入流程會連到 Rehab Trainer Hub 的登入 API，並使用同一份登入狀態。',
+            'MotorTrainer、VisionTrainer、BrainTrainer 與 MouthTrainer 的登入流程會連到 Rehab Trainer Hub 的登入 API，並使用同一份登入狀態。',
           ],
         },
         {

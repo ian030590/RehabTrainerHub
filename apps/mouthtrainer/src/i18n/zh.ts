@@ -1,7 +1,7 @@
-import { zh as strokeZh } from '../../../stroketrainer/src/i18n/zh';
+import { zh as motorZh } from '../../../motortrainer/src/i18n/zh';
 
 export const zh = {
-  ...strokeZh,
+  ...motorZh,
   'app.loading': '正在載入 MouthTrainer…',
   'nav.brand': 'MouthTrainer',
   'nav.logoAlt': 'MouthTrainer 標誌',
@@ -24,8 +24,8 @@ export const zh = {
   'mouth.references.subtitle': 'MouthTrainer 使用的開放原始碼與技術參考。',
   'mouth.links.mouth.title': 'MouthTrainer',
   'mouth.links.mouth.desc': '口說、理解與口腔動作訓練平台。',
-  'mouth.links.stroke.title': 'StrokeTrainer',
-  'mouth.links.stroke.desc': '中風復健訓練平台，提供動作練習。',
+  'mouth.links.motor.title': 'MotorTrainer',
+  'mouth.links.motor.desc': '動作訓練平台，提供上肢與下肢訓練入口。',
   'mouth.links.vision.title': 'VisionTrainer',
   'mouth.links.vision.desc': '視覺評估與視覺訓練平台。',
   'mouth.links.brain.title': 'BrainTrainer',

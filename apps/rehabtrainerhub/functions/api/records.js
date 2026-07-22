@@ -8,7 +8,7 @@ import {
   SafeJsonParse,
 } from '../_lib/auth.js';
 
-const appIds = new Set(['rehabtrainerhub', 'stroketrainer', 'visiontrainer', 'braintrainer', 'mouthtrainer']);
+const appIds = new Set(['rehabtrainerhub', 'motortrainer', 'visiontrainer', 'braintrainer', 'mouthtrainer']);
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);

@@ -28,7 +28,7 @@ const record = {
   id: 'rec-1',
   savedAt: '2026-07-12T00:00:00.000Z',
   userName: 'Case A',
-  moduleId: 'motor-training',
+  moduleId: 'upper-limb-training',
   difficulty: 'beginner',
   results: [{ score: 88 }],
 };
@@ -94,9 +94,9 @@ await AssertSessionStatus(
 
 const allowedSession = await AssertSessionStatus(
   'https://trainerhub.cc/api/auth/session',
-  'https://stroke.trainerhub.cc',
+  'https://motor.trainerhub.cc',
   200,
-  'https://stroke.trainerhub.cc',
+  'https://motor.trainerhub.cc',
 );
 const allowedSessionBody = await allowedSession.json();
 assert.equal(allowedSessionBody.token, token);
@@ -118,7 +118,7 @@ const localDevSession = await AssertSessionStatus(
 assert.equal((await localDevSession.json()).token, token);
 
 const blockedRecords = await getRecords({
-  request: new Request('https://trainerhub.cc/api/records?appId=stroketrainer', {
+  request: new Request('https://trainerhub.cc/api/records?appId=motortrainer', {
     headers: {
       Origin: 'http://localhost:5173',
       Authorization: `Bearer ${token}`,
@@ -129,9 +129,9 @@ const blockedRecords = await getRecords({
 assert.equal(blockedRecords.status, 403);
 
 const allowedRecords = await getRecords({
-  request: new Request('https://trainerhub.cc/api/records?appId=stroketrainer', {
+  request: new Request('https://trainerhub.cc/api/records?appId=motortrainer', {
     headers: {
-      Origin: 'https://stroke.trainerhub.cc',
+      Origin: 'https://motor.trainerhub.cc',
       Authorization: `Bearer ${token}`,
     },
   }),

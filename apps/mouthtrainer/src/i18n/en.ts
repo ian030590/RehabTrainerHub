@@ -1,8 +1,8 @@
-import { en as strokeEn } from '../../../stroketrainer/src/i18n/en';
+import { en as motorEn } from '../../../motortrainer/src/i18n/en';
 import type { TranslationKey } from './zh';
 
 export const en: Record<TranslationKey, string> = {
-  ...strokeEn,
+  ...motorEn,
   'app.loading': 'Loading MouthTrainer…',
   'nav.brand': 'MouthTrainer',
   'nav.logoAlt': 'MouthTrainer logo',
@@ -25,8 +25,8 @@ export const en: Record<TranslationKey, string> = {
   'mouth.references.subtitle': 'Open-source projects and technical references used by MouthTrainer.',
   'mouth.links.mouth.title': 'MouthTrainer',
   'mouth.links.mouth.desc': 'Speech, comprehension, and oral-movement training.',
-  'mouth.links.stroke.title': 'StrokeTrainer',
-  'mouth.links.stroke.desc': 'Stroke rehabilitation with movement practice.',
+  'mouth.links.motor.title': 'MotorTrainer',
+  'mouth.links.motor.desc': 'Motor rehabilitation with upper- and lower-limb training areas.',
   'mouth.links.vision.title': 'VisionTrainer',
   'mouth.links.vision.desc': 'Visual assessment and visual training.',
   'mouth.links.brain.title': 'BrainTrainer',

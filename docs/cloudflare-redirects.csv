@@ -1,4 +1,4 @@
 source_url,target_url,status_code
-<old-stroke-deployment-host>/*,https://stroke.trainerhub.cc/${1},301
+<old-motor-deployment-host>/*,https://motor.trainerhub.cc/${1},301
 <old-vision-deployment-host>/*,https://vision.trainerhub.cc/${1},301
 <old-brain-deployment-host>/*,https://brain.trainerhub.cc/${1},301

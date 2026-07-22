@@ -155,8 +155,8 @@ export const en = {
   'links.subtitle': 'Official websites in the RehabTrainerHub ecosystem',
   'links.hub.title': 'RehabTrainerHub',
   'links.hub.desc': 'Home training portal for the RehabTrainerHub tools.',
-  'links.stroke.title': 'StrokeTrainer',
-  'links.stroke.desc': 'Stroke rehabilitation training platform for movement practice.',
+  'links.motor.title': 'MotorTrainer',
+  'links.motor.desc': 'Motor rehabilitation platform with upper- and lower-limb training areas.',
   'links.vision.title': 'VisionTrainer',
   'links.vision.desc': 'Vision training platform for visual search, reading eye movement, and contrast practice.',
 } satisfies Record<TranslationKey, string>;

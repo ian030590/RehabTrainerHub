@@ -10,9 +10,9 @@ export const authMessageType = 'rehabtrainerhub-auth-session';
 
 const authTokenKey = 'rehabtrainerhub.auth.token';
 const localTrainingStorageKeys = [
-  'stroke_trainer_training_records_v1',
-  'stroke_trainer_users',
-  'stroke_trainer_active_user',
+  'motor_trainer_training_records_v1',
+  'motor_trainer_users',
+  'motor_trainer_active_user',
   'vision_trainer_training_records_v1',
   'vision_trainer_training_high_scores_v1',
   'vision_trainer_users',
@@ -20,7 +20,7 @@ const localTrainingStorageKeys = [
   'brain_trainer_training_records_v1',
 ];
 const localTrainingDatabases = [
-  'stroke-trainer-training-records',
+  'motor-trainer-training-records',
   'vision_trainer_training_records',
 ];
 
