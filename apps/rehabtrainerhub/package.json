@@ -2,6 +2,10 @@
   "name": "@rehab-trainer/rehabtrainerhub",
   "private": true,
   "version": "1.0.0",
+  "homepage": "https://trainerhub.cc",
+  "rehabTrainer": {
+    "role": "hub"
+  },
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {

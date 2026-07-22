@@ -26,7 +26,7 @@ const mockAuthUser = args.mockAuthUser === 'true';
 const expectedText = args.text;
 const timeoutMs = Number(args.timeoutMs ?? 12000);
 
-if (expectedSelectors.length === 0) {
+if (expectedSelectors.length === 0 && !externalUrl) {
   throw new Error('Usage: node scripts/check-browser-route-smoke.mjs (--app <appDir> --route <route> | --url <absoluteUrl>) --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>]');
 }
 

@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -30,22 +32,12 @@ jobs:
       - name: Install dependencies
         run: npm ci --workspaces=false
 
+      - name: Discover Pages app environment
+        run: node scripts/write-pages-env.mjs >> "$GITHUB_ENV"
+
       - name: Build all apps
         run: npm run build:cloudflare
         env:
-          NEXT_PUBLIC_SITE_URL: ${{ vars.REHABTRAINERHUB_URL || vars.NEXT_PUBLIC_SITE_URL }}
-          NEXT_PUBLIC_AUTH_API_BASE: ${{ vars.AUTH_API_BASE || vars.REHABTRAINERHUB_URL || vars.NEXT_PUBLIC_SITE_URL }}
-          NEXT_PUBLIC_REHABTRAINERHUB_URL: ${{ vars.REHABTRAINERHUB_URL || vars.NEXT_PUBLIC_SITE_URL }}
-          NEXT_PUBLIC_STROKETRAINER_URL: ${{ vars.STROKETRAINER_URL }}
-          NEXT_PUBLIC_VISIONTRAINER_URL: ${{ vars.VISIONTRAINER_URL }}
-          NEXT_PUBLIC_BRAINTRAINER_URL: ${{ vars.BRAINTRAINER_URL }}
-          NEXT_PUBLIC_MOUTHTRAINER_URL: ${{ vars.MOUTHTRAINER_URL }}
-          VITE_AUTH_API_BASE: ${{ vars.AUTH_API_BASE || vars.REHABTRAINERHUB_URL || vars.NEXT_PUBLIC_SITE_URL }}
-          VITE_REHABTRAINERHUB_URL: ${{ vars.REHABTRAINERHUB_URL || vars.NEXT_PUBLIC_SITE_URL }}
-          VITE_STROKETRAINER_URL: ${{ vars.STROKETRAINER_URL }}
-          VITE_VISIONTRAINER_URL: ${{ vars.VISIONTRAINER_URL }}
-          VITE_BRAINTRAINER_URL: ${{ vars.BRAINTRAINER_URL }}
-          VITE_MOUTHTRAINER_URL: ${{ vars.MOUTHTRAINER_URL }}
           VITE_VOSK_MODEL_ZH_URL: ${{ vars.VITE_VOSK_MODEL_ZH_URL }}
           VITE_VOSK_MODEL_EN_URL: ${{ vars.VITE_VOSK_MODEL_EN_URL }}
           VITE_VOSK_MODEL_ZH_VOCAB_URL: ${{ vars.VITE_VOSK_MODEL_ZH_VOCAB_URL }}
@@ -58,14 +50,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          AUTH_API_BASE: ${{ vars.AUTH_API_BASE || vars.REHABTRAINERHUB_URL || vars.NEXT_PUBLIC_SITE_URL }}
-          AUTH_BASE_URL: ${{ vars.AUTH_API_BASE || vars.REHABTRAINERHUB_URL || vars.NEXT_PUBLIC_SITE_URL }}
           AUTH_ALLOWED_ORIGINS: ${{ vars.AUTH_ALLOWED_ORIGINS }}
-          REHABTRAINERHUB_URL: ${{ vars.REHABTRAINERHUB_URL || vars.NEXT_PUBLIC_SITE_URL }}
-          STROKETRAINER_URL: ${{ vars.STROKETRAINER_URL }}
-          VISIONTRAINER_URL: ${{ vars.VISIONTRAINER_URL }}
-          BRAINTRAINER_URL: ${{ vars.BRAINTRAINER_URL }}
-          MOUTHTRAINER_URL: ${{ vars.MOUTHTRAINER_URL }}
           VITE_VOSK_MODEL_ZH_URL: ${{ vars.VITE_VOSK_MODEL_ZH_URL }}
           VITE_VOSK_MODEL_EN_URL: ${{ vars.VITE_VOSK_MODEL_EN_URL }}
           VITE_VOSK_MODEL_ZH_VOCAB_URL: ${{ vars.VITE_VOSK_MODEL_ZH_VOCAB_URL }}
@@ -76,7 +61,8 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
-      - name: Smoke test deployed StrokeTrainer
-        run: node scripts/check-browser-route-smoke.mjs --url "${STROKETRAINER_URL%/}/#/" --selector ".training-grid" --mockAuthUser true --timeoutMs 20000
+      - name: Smoke test changed Trainers
+        run: node scripts/check-changed-trainer-smoke.mjs
         env:
-          STROKETRAINER_URL: ${{ vars.STROKETRAINER_URL || 'https://stroke.trainerhub.cc' }}
+          SMOKE_BASE_SHA: ${{ github.event.before }}
+          SMOKE_HEAD_SHA: ${{ github.sha }}

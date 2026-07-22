@@ -31,6 +31,7 @@ const productionBranch =
 const dryRun = process.argv.includes('--dry-run');
 const validateOutput = !dryRun || process.argv.includes('--validate-output');
 const syncAuthEnv = !process.argv.includes('--skip-auth-env-sync');
+const syncDomains = !process.argv.includes('--skip-domain-sync');
 
 function ReadTomlString(toml, key) {
   const match = toml.match(new RegExp(`^\\s*${key}\\s*=\\s*["']([^"']+)["']\\s*$`, 'm'));
@@ -315,6 +316,26 @@ function SyncAuthEnvironment() {
   }
 }
 
+function SyncCustomDomains() {
+  if (!syncDomains) {
+    console.log('Skipping Cloudflare Pages custom domain sync.');
+    return;
+  }
+
+  const args = ['scripts/sync-cloudflare-pages-domains.mjs'];
+  if (dryRun) args.push('--dry-run');
+  console.log(`$ node ${args.map(ShellQuote).join(' ')}`);
+  const result = spawnSync(process.execPath, args, {
+    cwd: repoRoot,
+    env: process.env,
+    stdio: 'inherit',
+  });
+  if (result.status !== 0) {
+    if (result.error) throw result.error;
+    throw new Error(`Cloudflare Pages domain sync failed with exit code ${result.status}.`);
+  }
+}
+
 function ValidateProjectOutput(project) {
   const absoluteOutputPath = join(repoRoot, project.outputPath);
   if (!existsSync(absoluteOutputPath)) {
@@ -397,3 +418,5 @@ for (const project of projects) {
 for (const project of projects) {
   DeployProject(project);
 }
+
+SyncCustomDomains();

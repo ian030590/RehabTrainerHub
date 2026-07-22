@@ -2,6 +2,10 @@
   "name": "@rehab-trainer/mouthtrainer",
   "private": true,
   "version": "0.1.0",
+  "homepage": "https://mouth.trainerhub.cc",
+  "rehabTrainer": {
+    "role": "trainer"
+  },
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
