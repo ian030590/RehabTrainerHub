@@ -1365,6 +1365,8 @@ body > main:not(.home-page) {
 :root[data-theme="contrast"] .app-card-vision .app-link:hover,
 :root[data-theme="contrast"] .app-card-brain .app-link,
 :root[data-theme="contrast"] .app-card-brain .app-link:hover,
+:root[data-theme="contrast"] .app-card-mouth .app-link,
+:root[data-theme="contrast"] .app-card-mouth .app-link:hover,
 :root[data-theme="contrast"] .control-group button:hover,
 :root[data-theme="contrast"] .control-group button.is-active,
 :root[data-theme="contrast"] .feature-card > span {

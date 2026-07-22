@@ -111,7 +111,7 @@ export const zhTW = {
         bestFor: '適合：口說、理解與口腔動作練習',
         description: '提供引導式語音辨識與舌頭動作練習，並準備理解訓練入口。',
         points: ['口說訓練', '理解訓練', '口腔動作'],
-        action: '開啟 MouthTrainer',
+        action: '開啟口說與口腔訓練',
         logoAlt: 'MouthTrainer 標誌',
       },
     ],
