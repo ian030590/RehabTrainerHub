@@ -27,7 +27,7 @@ if (trainers.length === 0) {
 console.log(`Testing ${trainers.length} changed Trainer(s): ${trainers.map((app) => app.appName).join(', ')}`);
 for (const trainer of trainers) {
   if (dryRun) {
-    console.log(`- ${trainer.appName}: ${trainer.siteUrl}`);
+    console.log(`- ${trainer.appName}: ${trainer.deploymentUrl} (canonical: ${trainer.siteUrl})`);
     continue;
   }
   await SmokeTrainer(trainer);
@@ -35,17 +35,37 @@ for (const trainer of trainers) {
 
 async function SmokeTrainer(trainer) {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    console.log(`Smoke testing ${trainer.appName} at ${trainer.siteUrl} (${attempt}/${attempts})...`);
+    console.log(`Smoke testing ${trainer.appName} deployment at ${trainer.deploymentUrl} (${attempt}/${attempts})...`);
     const result = spawnSync(
       process.execPath,
-      [smokeScript, '--url', trainer.siteUrl, '--timeoutMs', String(timeoutMs)],
+      [smokeScript, '--url', trainer.deploymentUrl, '--timeoutMs', String(timeoutMs)],
       { cwd: defaultRepoRoot, stdio: 'inherit' },
     );
-    if (result.status === 0) return;
+    if (result.status === 0) {
+      await ReportCanonicalStatus(trainer);
+      return;
+    }
     if (result.error) throw result.error;
     if (attempt < attempts) await Wait(retryDelayMs);
   }
   throw new Error(`Deployed Trainer smoke test failed after ${attempts} attempts: ${trainer.appName}`);
+}
+
+async function ReportCanonicalStatus(trainer) {
+  try {
+    const response = await fetch(trainer.siteUrl, {
+      method: 'HEAD',
+      redirect: 'follow',
+      signal: AbortSignal.timeout(5000),
+    });
+    if (response.ok) {
+      console.log(`Canonical URL reachable: ${trainer.siteUrl}`);
+      return;
+    }
+    console.warn(`⚠ Canonical URL returned HTTP ${response.status}: ${trainer.siteUrl}`);
+  } catch (error) {
+    console.warn(`⚠ Canonical URL is not ready yet: ${trainer.siteUrl} (${error.message})`);
+  }
 }
 
 function GetChangedFiles(parsedArgs) {

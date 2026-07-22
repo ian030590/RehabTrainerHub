@@ -4,8 +4,6 @@ import { DiscoverPagesApps } from './pages-apps.mjs';
 const dryRun = process.argv.includes('--dry-run');
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
 const apiToken = process.env.CLOUDFLARE_API_TOKEN?.trim();
-const waitTimeoutMs = Number(process.env.CLOUDFLARE_DOMAIN_WAIT_MS ?? 180000);
-const pollIntervalMs = 5000;
 
 if (!dryRun && (!accountId || !apiToken)) {
   throw new Error('CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN are required to sync Pages domains.');
@@ -27,7 +25,7 @@ for (const app of pagesApps) {
     console.log(`Canonical domain exists: ${app.projectName} -> ${app.hostname} (${domain.status})`);
   }
 
-  await WaitUntilActive(app, domain);
+  ReportDomainStatus(app, domain);
 }
 
 async function GetDomain(app) {
@@ -35,20 +33,13 @@ async function GetDomain(app) {
   return domains.find((domain) => domain.name === app.hostname) ?? null;
 }
 
-async function WaitUntilActive(app, initialDomain) {
-  let domain = initialDomain;
-  const deadline = Date.now() + waitTimeoutMs;
-  while (domain?.status !== 'active') {
-    if (['blocked', 'deactivated', 'error'].includes(domain?.status)) {
-      throw new Error(`${app.hostname} entered Cloudflare Pages domain status ${domain.status}: ${domain.error_message ?? 'unknown error'}`);
-    }
-    if (Date.now() >= deadline) {
-      throw new Error(`${app.hostname} did not become active within ${Math.round(waitTimeoutMs / 1000)} seconds.`);
-    }
-    await Wait(pollIntervalMs);
-    domain = await GetDomain(app);
+function ReportDomainStatus(app, domain) {
+  if (domain?.status === 'active') {
+    console.log(`Canonical domain active: ${app.projectName} -> ${app.hostname}`);
+    return;
   }
-  console.log(`Canonical domain active: ${app.projectName} -> ${app.hostname}`);
+  const details = domain?.error_message ? `: ${domain.error_message}` : '';
+  console.warn(`⚠ Canonical domain ${app.hostname} is ${domain?.status ?? 'pending'}${details}. Activation continues asynchronously; deployment will proceed.`);
 }
 
 async function Request(app, method, suffix = '', body) {
@@ -67,8 +58,4 @@ async function Request(app, method, suffix = '', body) {
     throw new Error(`Cloudflare Pages domain API failed for ${app.projectName}: ${details}`);
   }
   return payload?.result;
-}
-
-function Wait(durationMs) {
-  return new Promise((resolveWait) => setTimeout(resolveWait, durationMs));
 }

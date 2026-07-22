@@ -40,6 +40,7 @@ export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
         outputPath: ToPosixPath(join(appPath, outputDir)),
         packageName: pkg.name,
         projectName,
+        deploymentUrl: `https://${projectName}.pages.dev`,
         role,
         siteUrl,
         hostname: new URL(siteUrl).hostname,
