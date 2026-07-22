@@ -73,10 +73,10 @@ export const zhTW = {
       {
         id: 'motor',
         title: 'MotorTrainer',
-        localTitle: '動作復健練習',
+        localTitle: '動作訓練練習',
         name: 'MotorTrainer',
         bestFor: '適合：上肢、下肢與動作協調練習',
-        description: '將治療師交代的方向，整理成適合在家短時間練習的動作任務。',
+        description: '提供上肢與下肢訓練入口，協助依治療師建議安排居家動作復健練習。',
         points: ['上肢訓練', '下肢訓練', '動作協調'],
         action: '開啟動作訓練',
         logoAlt: 'MotorTrainer 標誌',

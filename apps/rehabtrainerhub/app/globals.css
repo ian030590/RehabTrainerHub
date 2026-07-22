@@ -20,6 +20,8 @@
   --secondary: #006c47;
   --brain-accent: #7a4a24;
   --brain-accent-hover: #5a3519;
+  --mouth-accent: #6d28d9;
+  --mouth-accent-hover: #5b21b6;
   --on-secondary-container: #00714b;
   --surface-variant: #e1e2e4;
   --error: #ba1a1a;
@@ -121,6 +123,8 @@
   --secondary: #90d8ad;
   --brain-accent: #f1c9a7;
   --brain-accent-hover: #ffd9bd;
+  --mouth-accent: #c4b5fd;
+  --mouth-accent-hover: #d8b4fe;
   --secondary-container: #90d8ad;
   --on-secondary: #052014;
   --outline: #9a9a9a;
@@ -161,6 +165,8 @@
   --secondary: #ffff00;
   --brain-accent: #ffff00;
   --brain-accent-hover: #ffff00;
+  --mouth-accent: #ffff00;
+  --mouth-accent-hover: #ffff00;
   --secondary-container: #ffff00;
   --on-secondary: #000000;
   --outline: #ffffff;
@@ -199,6 +205,8 @@
   :root {
     --brain-accent: LinkText;
     --brain-accent-hover: Highlight;
+    --mouth-accent: LinkText;
+    --mouth-accent-hover: Highlight;
     --warning: CanvasText;
     --logo-border: CanvasText;
     --logo-filter: grayscale(1) contrast(1.8);
@@ -755,6 +763,10 @@ body > main:not(.home-page) {
   border-top-color: var(--brain-accent);
 }
 
+.app-card-mouth {
+  border-top-color: var(--mouth-accent);
+}
+
 .app-card-heading {
   display: flex;
   align-items: flex-start;
@@ -781,6 +793,10 @@ body > main:not(.home-page) {
   color: var(--brain-accent);
 }
 
+.app-card-mouth .app-card-heading span {
+  color: var(--mouth-accent);
+}
+
 .app-icon {
   display: grid;
   place-items: center;
@@ -802,6 +818,12 @@ body > main:not(.home-page) {
 .app-card-brain .app-icon {
   border-color: var(--logo-border);
   color: var(--brain-accent);
+  background: var(--logo-surface);
+}
+
+.app-card-mouth .app-icon {
+  border-color: var(--logo-border);
+  color: var(--mouth-accent);
   background: var(--logo-surface);
 }
 
@@ -865,6 +887,10 @@ body > main:not(.home-page) {
   color: var(--brain-accent);
 }
 
+.app-card-mouth .check-icon {
+  color: var(--mouth-accent);
+}
+
 .app-link {
   width: 100%;
   margin-top: auto;
@@ -896,9 +922,19 @@ body > main:not(.home-page) {
   background: var(--brain-accent);
 }
 
+.app-card-mouth .app-link {
+  border-color: var(--mouth-accent);
+  background: var(--mouth-accent);
+}
+
 .app-card-brain .app-link:hover {
   border-color: var(--brain-accent-hover);
   background: var(--brain-accent-hover);
+}
+
+.app-card-mouth .app-link:hover {
+  border-color: var(--mouth-accent-hover);
+  background: var(--mouth-accent-hover);
 }
 
 .care-section {
