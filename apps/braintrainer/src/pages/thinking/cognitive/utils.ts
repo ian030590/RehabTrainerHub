@@ -1,13 +1,13 @@
 import { Application, Container, Graphics, Text } from 'pixi.js';
 
-export const cognitiveAccentCss = '#005EB8';
-export const cognitiveAccent = 0x005eb8;
-export const cognitiveAccentTint = 0xe8f3ff;
+export const cognitiveAccentCss = '#7A4A24';
+export const cognitiveAccent = 0x7a4a24;
+export const cognitiveAccentTint = 0xfbf3eb;
 export const cognitiveSurface = 0xffffff;
-export const cognitiveBg = 0xf2f4f3;
-export const cognitiveBorder = 0xc2c6d4;
-export const cognitiveText = 0x1a1c1e;
-export const cognitiveTextMuted = 0x424752;
+export const cognitiveBg = 0xf7f1ea;
+export const cognitiveBorder = 0xd8c6b7;
+export const cognitiveText = 0x201a16;
+export const cognitiveTextMuted = 0x594235;
 export const cognitiveBoardRatio = 0.6;
 const mobileCognitiveMaxMinorAxis = 640;
 

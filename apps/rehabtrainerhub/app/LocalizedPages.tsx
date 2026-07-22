@@ -27,7 +27,7 @@ interface ReferencesCopy {
   literatureItems: readonly ReferenceListItem[];
 }
 
-const zhStrokeCognitiveReferenceModuleChips = [
+const zhBrainThinkingReferenceModuleChips = [
   '記憶配對',
   '熄燈解題',
   '反應時間',
@@ -51,9 +51,9 @@ const zhStrokeCognitiveReferenceModuleChips = [
   '七巧板',
   '推箱子',
   '迷宮',
-].map((moduleName) => FormatReferenceModuleChip('認知訓練', moduleName));
+].map((moduleName) => FormatReferenceModuleChip('思考訓練', moduleName));
 
-const enStrokeCognitiveReferenceModuleChips = [
+const enBrainThinkingReferenceModuleChips = [
   'Memory Match',
   'Lights Out',
   'Reaction Time',
@@ -77,7 +77,7 @@ const enStrokeCognitiveReferenceModuleChips = [
   'Tangram',
   'Sokoban',
   'Maze',
-].map((moduleName) => FormatReferenceModuleChip('Cognitive Training', moduleName));
+].map((moduleName) => FormatReferenceModuleChip('Thinking Training', moduleName));
 
 const referencesCopy: Record<HubLocale, ReferencesCopy> = {
   'zh-TW': {
@@ -134,13 +134,13 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         title: 'muthuspark/javascript-games',
         href: 'https://github.com/muthuspark/javascript-games',
         description: '多種網頁小遊戲實作，作為認知小遊戲操作流程與互動模式參考。',
-        modules: zhStrokeCognitiveReferenceModuleChips,
+        modules: zhBrainThinkingReferenceModuleChips,
       },
       {
         title: 'antfu/vue-minesweeper',
         href: 'https://github.com/antfu/vue-minesweeper',
         description: '踩地雷遊戲邏輯與版面互動參考。',
-        modules: [FormatReferenceModuleChip('認知訓練', '踩地雷')],
+        modules: [FormatReferenceModuleChip('思考訓練', '踩地雷')],
       },
       {
         title: 'ccoreilly/vosk-browser',
@@ -218,13 +218,13 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         title: 'muthuspark/javascript-games',
         href: 'https://github.com/muthuspark/javascript-games',
         description: 'Collection of browser mini-game implementations used as a reference for cognitive mini-game flow and interaction patterns.',
-        modules: enStrokeCognitiveReferenceModuleChips,
+        modules: enBrainThinkingReferenceModuleChips,
       },
       {
         title: 'antfu/vue-minesweeper',
         href: 'https://github.com/antfu/vue-minesweeper',
         description: 'Minesweeper game logic and board interaction reference.',
-        modules: [FormatReferenceModuleChip('Cognitive Training', 'Minesweeper')],
+        modules: [FormatReferenceModuleChip('Thinking Training', 'Minesweeper')],
       },
       {
         title: 'ccoreilly/vosk-browser',

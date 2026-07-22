@@ -6,7 +6,6 @@ import {
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import '@rehab-trainer/ui/components/ReferenceListPage.css';
 import { useT } from '../../i18n';
-import { referenceCognitiveModules } from '../training/cognitive/constants';
 
 const labels = {
   zh: {
@@ -29,7 +28,6 @@ export function CreditsPage() {
   const { lang, t } = useT();
   const copy = labels[lang];
   const motorModule = t('home.module.motor.title');
-  const cognitiveModule = t('home.module.cognitive.title');
   const moduleChip = (tabName: string, moduleName: string) => FormatReferenceModuleChip(tabName, moduleName);
   const motorCortexTitle = lang === 'en' ? 'Motor Cortex Rehab' : '動作皮質復健訓練';
 
@@ -57,18 +55,6 @@ export function CreditsPage() {
         ? 'Camera-based physical therapy companion used as the reference for hand-tracking motor rehab drills, adaptive difficulty, feedback, and session analytics.'
         : '攝影機手部追蹤物理治療工具，作為手部追蹤動作復健、難度自適應、即時回饋與訓練紀錄的參考。',
       modules: [moduleChip(motorModule, motorCortexTitle)],
-    },
-    {
-      title: 'muthuspark/javascript-games',
-      href: 'https://github.com/muthuspark/javascript-games',
-      description: t('credits.javascriptGames.desc'),
-      modules: referenceCognitiveModules.map((module) => moduleChip(cognitiveModule, t(module.titleKey))),
-    },
-    {
-      title: 'antfu/vue-minesweeper',
-      href: 'https://github.com/antfu/vue-minesweeper',
-      description: t('credits.vueMinesweeper.desc'),
-      modules: [moduleChip(cognitiveModule, t('training.minesweeper.title'))],
     },
   ];
 

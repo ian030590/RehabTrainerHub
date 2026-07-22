@@ -59,7 +59,7 @@ export const zh = {
   'home.enterUserName': '輸入使用者名稱',
   'home.calWarning': '⚠ 尚未校正螢幕 — 前往設定頁校正以確保準確度',
   'home.listTitle': '訓練清單',
-  'home.listSubtitle': '選擇動作或認知訓練項目',
+  'home.listSubtitle': '選擇動作訓練項目',
   
   // Modules
   'home.module.motor.title': '動作訓練',

@@ -61,7 +61,7 @@ export const en: Record<TranslationKey, string> = {
   'home.enterUserName': 'Enter user name',
   'home.calWarning': '⚠ Screen not calibrated — Go to settings to calibrate for accuracy',
   'home.listTitle': 'Training List',
-  'home.listSubtitle': 'Choose motor or cognitive training',
+  'home.listSubtitle': 'Choose a motor training activity',
   
   // Modules
   'home.module.motor.title': 'Motor Training',

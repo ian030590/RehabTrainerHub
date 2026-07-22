@@ -19,7 +19,7 @@ const trainerApplications = [
     applicationCategory: 'HealthApplication',
     operatingSystem: 'Web browser',
     url: siteUrls.stroke,
-    description: 'StrokeTrainer 提供動作、認知與語音練習，協助依治療師建議安排居家中風復健訓練。',
+    description: 'StrokeTrainer 提供動作練習，協助依治療師建議安排居家中風復健訓練。',
   },
   {
     '@type': 'WebApplication',

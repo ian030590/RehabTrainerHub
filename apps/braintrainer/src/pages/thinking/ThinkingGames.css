@@ -1,0 +1,123 @@
+.training-module-button {
+  text-align: left;
+  font-family: var(--font-family);
+}
+
+.cognitive-reference-game {
+  --cognitive-game-accent: var(--accent);
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.cognitive-pixi-stage {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.cognitive-reference-phase-menu .cognitive-pixi-stage,
+.cognitive-reference-phase-results .cognitive-pixi-stage {
+  pointer-events: none;
+}
+
+.cognitive-pixi-canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+.cognitive-config .training-option.active .training-option-title {
+  color: var(--cognitive-game-accent);
+}
+
+.cognitive-config .training-option.active {
+  border-color: var(--cognitive-game-accent);
+  background: color-mix(in srgb, var(--cognitive-game-accent) 9%, white);
+  box-shadow: inset 0 0 0 1px var(--cognitive-game-accent);
+}
+
+.cognitive-results-container .results-table,
+.minesweeper-results-container .results-table {
+  max-width: 720px;
+}
+
+.minesweeper-preset-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.minesweeper-game {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.minesweeper-phase-menu {
+  overflow-y: auto;
+}
+
+.minesweeper-board-stage {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  overflow: auto;
+}
+
+.minesweeper-canvas {
+  display: block;
+  flex: 0 0 auto;
+  border: 4px solid var(--text-primary);
+  border-radius: var(--radius-s);
+  background: #ffffff;
+  box-shadow: var(--shadow-elevated);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.minesweeper-canvas.flag-mode {
+  cursor: crosshair;
+}
+
+.minesweeper-board-controls {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.cognitive-reference-phase-menu,
+.minesweeper-phase-menu {
+  background: transparent !important;
+  color: inherit;
+  font-family: inherit;
+  touch-action: auto;
+}
+
+.cognitive-reference-phase-menu > :not(.training-panel):not(.app-dialog-overlay),
+.minesweeper-phase-menu > :not(.training-panel):not(.app-dialog-overlay) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .minesweeper-preset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

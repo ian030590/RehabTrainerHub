@@ -19,6 +19,7 @@ const ReferencesPage = lazy(() => import('./pages/ReferencesPage').then((module)
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 const UFOVPage = lazy(() => import('./pages/UFOVPage').then((module) => ({ default: module.UFOVPage })));
 const EveryBallResponsePage = lazy(() => import('./pages/EveryBallResponsePage').then((module) => ({ default: module.EveryBallResponsePage })));
+const ThinkingTraining = lazy(() => import('./pages/thinking/ThinkingTraining').then((module) => ({ default: module.ThinkingTraining })));
 const MainConceptTraining = lazy(() => import('./pages/MainConceptTraining').then((module) => ({ default: module.MainConceptTraining })));
 
 export function App() {
@@ -44,7 +45,7 @@ export function App() {
           <Route path="/attention-training/ufov" element={<UFOVPage />} />
           <Route path="/attention-training/every-ball-response" element={<EveryBallResponsePage />} />
           <Route path="/memory-training" element={<ModulePage moduleId="memory" />} />
-          <Route path="/thinking-training" element={<ModulePage moduleId="thinking" />} />
+          <Route path="/thinking-training" element={<ThinkingTraining />} />
           <Route path="/thinking-training/main-concept" element={<MainConceptTraining />} />
           <Route path="/references" element={<ReferencesPage />} />
           <Route path="/links" element={<LinksPage />} />

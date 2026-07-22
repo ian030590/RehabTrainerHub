@@ -26,7 +26,7 @@ export const en: Record<TranslationKey, string> = {
   'mouth.links.mouth.title': 'MouthTrainer',
   'mouth.links.mouth.desc': 'Speech, comprehension, and oral-movement training.',
   'mouth.links.stroke.title': 'StrokeTrainer',
-  'mouth.links.stroke.desc': 'Stroke rehabilitation with movement and cognitive practice.',
+  'mouth.links.stroke.desc': 'Stroke rehabilitation with movement practice.',
   'mouth.links.vision.title': 'VisionTrainer',
   'mouth.links.vision.desc': 'Visual assessment and visual training.',
   'mouth.links.brain.title': 'BrainTrainer',

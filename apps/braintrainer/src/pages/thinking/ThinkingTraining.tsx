@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   TrainingModuleSelectionPage,
   type TrainingModuleSelectionItem,
@@ -9,28 +9,36 @@ import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTraini
 import { useT } from '../../i18n';
 import { referenceCognitiveModules } from './cognitive/constants';
 import type { ReferenceGameId } from './cognitive/types';
+import './ThinkingGames.css';
 
 const MinesweeperGame = lazy(() => import('./MinesweeperGame').then((module) => ({ default: module.MinesweeperGame })));
 const ReferenceCognitiveGame = lazy(() => import('./ReferenceCognitiveGame').then((module) => ({ default: module.ReferenceCognitiveGame })));
 
-type CognitiveModuleId = 'minesweeper' | ReferenceGameId;
+type ThinkingGameId = 'minesweeper' | ReferenceGameId;
+type ThinkingModuleId = 'main-concept' | ThinkingGameId;
 
-export function CognitiveTraining() {
+export function ThinkingTraining() {
   const { t } = useT();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedGameId = searchParams.get('game');
   const requestedModule = GetRequestedModule(requestedGameId);
-  const { activeModule, openModule, closeModule } = useRoutedTrainingModule<CognitiveModuleId>({
+  const { activeModule, openModule, closeModule } = useRoutedTrainingModule<ThinkingGameId>({
     requestedModule,
-    basePath: '/cognitive-training',
+    basePath: '/thinking-training',
   });
-  const modules: TrainingModuleSelectionItem<CognitiveModuleId>[] = [
+  const modules: TrainingModuleSelectionItem<ThinkingModuleId>[] = [
+    {
+      id: 'main-concept',
+      title: t('module.thinking.mainConcept.title'),
+      description: t('module.thinking.mainConcept.body'),
+    },
     {
       id: 'minesweeper',
       title: t('training.minesweeper.title'),
       description: t('training.minesweeper.desc'),
     },
-    ...referenceCognitiveModules.map<TrainingModuleSelectionItem<CognitiveModuleId>>((module) => ({
+    ...referenceCognitiveModules.map<TrainingModuleSelectionItem<ThinkingModuleId>>((module) => ({
       id: module.id,
       title: t(module.titleKey),
       description: t(module.descriptionKey),
@@ -49,20 +57,26 @@ export function CognitiveTraining() {
 
   return (
     <TrainingModuleSelectionPage
-      title={t('home.module.cognitive.title')}
-      subtitle={t('training.cognitive.subtitle')}
+      title={t('module.thinking.title')}
+      subtitle={t('training.thinking.subtitle')}
       modules={modules}
       selectedModuleId={activeModule}
       actionLabel={t('btn.selectModule')}
       cardClassName="training-module-button"
-      onSelect={openModule}
+      onSelect={(moduleId) => {
+        if (moduleId === 'main-concept') {
+          navigate('/thinking-training/main-concept');
+          return;
+        }
+        openModule(moduleId);
+      }}
     >
       {activeTraining}
     </TrainingModuleSelectionPage>
   );
 }
 
-function GetRequestedModule(requestedGameId: string | null): CognitiveModuleId | null {
+function GetRequestedModule(requestedGameId: string | null): ThinkingGameId | null {
   if (requestedGameId === 'minesweeper') return 'minesweeper';
   if (IsReferenceGameId(requestedGameId)) return requestedGameId;
   return null;

@@ -6,7 +6,7 @@ export function TrainingPage() {
   const gameId = searchParams.get('game');
 
   if (moduleId === 'cognitive-training') {
-    return <Navigate to="/cognitive-training" replace />;
+    return <Navigate to={`/cognitive-training${gameId ? `?game=${encodeURIComponent(gameId)}` : ''}`} replace />;
   }
 
   return <Navigate to={`/motor-training${gameId ? `?game=${gameId}` : ''}`} replace />;

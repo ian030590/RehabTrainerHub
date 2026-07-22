@@ -1,12 +1,12 @@
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
 import { Application, type Ticker } from 'pixi.js';
 import { initJsPsych } from 'jspsych';
+import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { useT } from '../../i18n';
-import { DownloadCsvFile } from '../../utils/downloadFile';
-import { getActiveUser } from '../../utils/settings';
+import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { csvCell, FormatTestDate, WriteJsPsychData } from '@rehab-trainer/ui/trainingGameUtils';
 import {
   difficulties,
   reactionTrialOptions,
@@ -74,13 +74,12 @@ import type {
 } from './cognitive/types';
 import type { TFunction } from './types';
 import { cognitiveAccentCss, ClearStage, DrawBackground } from './cognitive/utils';
-import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
+import { BrainTrainingRulesPanel } from './BrainTrainingRulesPanel';
 
 export type { ReferenceGameId } from './cognitive/types';
 export { referenceCognitiveModules } from './cognitive/constants';
@@ -166,7 +165,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     jsPsychRef.current?.pluginAPI.clearAllTimeouts();
     PlayGameEndSound(gameResult, jsPsychRef);
     const trainingDate = FormatTestDate(new Date());
-    const participantId = getActiveUser() || 'Unknown';
+    const participantId = GetAuthUserNameFromToken() || 'Unknown';
     const timingData = GetTimingResultData(state);
     const record: SessionRecord = {
       Game_Result: gameResult,
@@ -177,7 +176,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     setPhase('results');
     void SaveTrainingSessionRecord({
       userName: participantId,
-      moduleId: 'cognitive-training',
+      moduleId: 'thinking-training',
       gameId,
       gameTitle: metaTitle,
       difficulty,
@@ -195,7 +194,6 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
   finishGameRef.current = finishGame;
 
   const startGame = useCallback(async () => {
-    if (!VerifySelectedTrainingUser()) return;
     jsPsychRef.current?.pluginAPI.clearAllTimeouts();
     PrepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
@@ -227,7 +225,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
 
   const downloadResult = useCallback(() => {
     if (!result) return;
-    DownloadCsvFile(ToCsv([result]), `cognitive_${gameId}_${Date.now()}.csv`);
+    DownloadCsvFile(ToCsv([result]), `thinking_${gameId}_${Date.now()}.csv`);
   }, [gameId, result]);
 
   function HandleCellTap(index: number) {
@@ -408,7 +406,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
         <div className="training-panel">
           <TrainingConfigPanel
             className="cognitive-config"
-            label={t('training.cognitive.configLabel')}
+            label={t('training.thinking.configLabel')}
             title={metaTitle}
             summaryTitle={metaTitle}
             summaryItems={[
@@ -541,7 +539,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
 
       {phase === 'rules' && (
         <div className="training-panel">
-          <StrokeTrainingRulesPanel
+          <BrainTrainingRulesPanel
             gameId={gameId}
             title={metaTitle}
             summaryTitle={metaTitle}

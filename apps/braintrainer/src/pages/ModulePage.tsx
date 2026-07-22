@@ -9,7 +9,7 @@ import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { useT, type TranslationKey } from '../i18n';
 import type { SubtestId, UfovRunMode, UfovTargetAxis } from './ufov/UfovPage';
 
-export type ModuleId = 'attention' | 'memory' | 'thinking';
+export type ModuleId = 'attention' | 'memory';
 
 interface ModuleDefinition {
   id: ModuleId;
@@ -49,20 +49,6 @@ const modules: ModuleDefinition[] = [
       { titleKey: 'module.memory.card1.title', bodyKey: 'module.memory.card1.body' },
       { titleKey: 'module.memory.card2.title', bodyKey: 'module.memory.card2.body' },
       { titleKey: 'module.memory.card3.title', bodyKey: 'module.memory.card3.body' },
-    ],
-  },
-  {
-    id: 'thinking',
-    titleKey: 'module.thinking.title',
-    introKey: 'module.thinking.intro',
-    cards: [
-      {
-        titleKey: 'module.thinking.mainConcept.title',
-        bodyKey: 'module.thinking.mainConcept.body',
-        to: '/thinking-training/main-concept',
-      },
-      { titleKey: 'module.thinking.card2.title', bodyKey: 'module.thinking.card2.body' },
-      { titleKey: 'module.thinking.card3.title', bodyKey: 'module.thinking.card3.body' },
     ],
   },
 ];

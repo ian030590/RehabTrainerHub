@@ -7,6 +7,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./auth/authClient": "./src/auth/authClient.ts",
+    "./audioFeedback": "./src/audioFeedback.ts",
     "./components/AppLoading": "./src/components/AppLoading.tsx",
     "./components/AuthPanel.css": "./src/components/AuthPanel.css",
     "./components/AuthPanel": "./src/components/AuthPanel.tsx",
@@ -48,6 +49,7 @@
     "./siteUrls": "./src/siteUrls.ts",
     "./storage/userStore": "./src/storage/userStore.ts",
     "./trainerTheme": "./src/trainerTheme.ts",
+    "./trainingGameUtils": "./src/trainingGameUtils.ts",
     "./ufovCanvas": "./src/ufovCanvas.ts",
     "./ufovResults": "./src/ufovResults.ts"
   },

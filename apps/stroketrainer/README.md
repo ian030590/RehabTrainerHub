@@ -2,9 +2,11 @@
 
 # StrokeTrainer
 
-StrokeTrainer is a React rehabilitation training web app for motor, cognitive,
-and speech practice. It combines game-like training modules with local settings,
-user selection, calibration, and training record helpers.
+StrokeTrainer is a React rehabilitation training web app for motor practice. It
+combines game-like upper-limb training modules with local settings, user
+selection, calibration, and training record helpers. Cognitive games now live
+under BrainTrainer Thinking Training, while speech and oral exercises live under
+MouthTrainer.
 
 > **Disclaimer:** This application is for programming practice and experimental
 > purposes. It is not medical diagnosis, treatment, or rehabilitation advice. If
@@ -17,7 +19,6 @@ user selection, calibration, and training record helpers.
 - **PixiJS v8**: 2D rendering for drawing and game screens
 - **jsPsych 8** + **WebGazer.js**: calibration and training data flow
 - **MediaPipe Tasks Vision** + **TensorFlow.js**: gesture and vision helpers
-- **Vosk Browser** + **Web Speech API**: speech recognition with fallback
 - **Three.js**: 3D/visual training support
 - **Vite**: development and production builds
 
@@ -28,21 +29,6 @@ user selection, calibration, and training record helpers.
 - **Drawing Tower Defense**: draw circles, crosses, squares, triangles, and
   straight lines with mouse or touch.
 - **Gesture Battler**: camera-based hand gesture practice.
-
-### Cognitive Training
-
-- **Minesweeper**: attention, visual scanning, reasoning, and marking.
-- **Memory Match**: working memory, visual search, and inhibition.
-- **Lights Out**: logical reasoning and step planning.
-- **Reaction Time**: sustained attention and response inhibition.
-- **Whack-a-Mole**: visual scanning, hand-eye coordination, and speed control.
-- **Sliding Puzzle**: spatial planning and sequential reasoning.
-
-### Speech Training
-
-- **Voice Defender**: speech recognition practice using cached Vosk models when
-  available, with browser Web Speech fallback.
-- **Tongue Catch**: camera-based tongue movement practice.
 
 ## Project Structure
 
@@ -59,15 +45,10 @@ src/
 |   |-- home/                        # Home page cards and module metadata
 |   |-- training/                    # Training pages and games
 |   |   |-- MotorTraining.tsx
-|   |   |-- CognitiveTraining.tsx
-|   |   |-- SpeechTraining.tsx
 |   |   |-- DrawingTowerDefenseGame.tsx
 |   |   |-- GestureBattlerGame.tsx
-|   |   |-- MinesweeperGame.tsx
-|   |   |-- ReferenceCognitiveGame.tsx
-|   |   |-- VoiceDefenderGame.tsx
-|   |   |-- TongueCatchGame.tsx
-|   |   `-- cognitive/               # Shared cognitive game logic
+|   |   |-- AsteroidShieldGame.tsx
+|   |   `-- MotorCortexRehabGame.tsx
 |   |-- settings/                    # Settings and calibration
 |   |-- credits/                     # Credits page
 |   `-- links/                       # Related links page

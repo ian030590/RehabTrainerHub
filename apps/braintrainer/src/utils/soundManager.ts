@@ -8,5 +8,5 @@ export const {
   PlayGameEndSound,
 } = CreateAudioFeedbackController(() => ({
   enabled: GetSetting('auditoryFeedbackEnabled'),
-  volumePercent: GetSetting('soundVolume'),
+  volumePercent: 50,
 }));

@@ -25,6 +25,17 @@ export interface BrainTrainingRecord {
   detailRows?: DetailRow[];
 }
 
+interface SaveTrainingSessionRecordArgs {
+  userName: string;
+  moduleId: string;
+  gameId: string;
+  gameTitle: string;
+  difficulty: string;
+  trainingDate?: string;
+  details?: DetailRow;
+  detailRows?: DetailRow[];
+}
+
 const trainingRecordsKey = `${storagePrefix}training_records_v1`;
 const remoteAppId = 'braintrainer';
 const authApiBase = siteUrls.hub;
@@ -47,6 +58,22 @@ export async function SaveTrainingRecord(record: BrainTrainingRecord): Promise<v
   if (index >= 0) records[index] = record;
   else records.push(record);
   localStorage.setItem(trainingRecordsKey, JSON.stringify(records));
+}
+
+export async function SaveTrainingSessionRecord(args: SaveTrainingSessionRecordArgs): Promise<void> {
+  const now = new Date();
+  await SaveTrainingRecord({
+    id: CreateRecordId(),
+    savedAt: now.toISOString(),
+    trainingDate: args.trainingDate ?? FormatFileDate(now),
+    userName: args.userName,
+    moduleId: args.moduleId,
+    gameId: args.gameId,
+    gameTitle: args.gameTitle,
+    difficulty: args.difficulty,
+    details: args.details,
+    detailRows: args.detailRows,
+  });
 }
 
 export async function GetTrainingRecords(): Promise<BrainTrainingRecord[]> {
@@ -154,4 +181,9 @@ function FormatFileDate(date: Date): string {
 
 function SafeFilePart(value: string): string {
   return value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'braintrainer';
+}
+
+function CreateRecordId(): string {
+  const randomPart = Math.random().toString(36).slice(2, 10);
+  return `${Date.now().toString(36)}_${randomPart}`;
 }

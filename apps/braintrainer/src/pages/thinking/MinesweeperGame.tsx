@@ -1,19 +1,18 @@
 import { type CSSProperties, type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { initJsPsych } from 'jspsych';
+import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { useT, type TranslationKey } from '../../i18n';
-import { DownloadCsvFile } from '../../utils/downloadFile';
-import { getActiveUser } from '../../utils/settings';
+import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
-import { VerifySelectedTrainingUser } from './selectedUserGuard';
+import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from '@rehab-trainer/ui/trainingGameUtils';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
-import { StrokeTrainingRulesPanel } from './StrokeTrainingRulesPanel';
+import { BrainTrainingRulesPanel } from './BrainTrainingRulesPanel';
 
 type MinesweeperPhase = 'menu' | 'rules' | 'playing' | 'results';
 type MinesweeperDifficulty = 'Beginner' | 'Intermediate' | 'Advanced';
@@ -68,7 +67,7 @@ const mobileBoardWidthLimit = `${mobileBoardViewportPercent}vw`;
 const mobileBoardHeightLimit = `${mobileBoardViewportPercent}vh`;
 const desktopBoardInlineMarginPx = 48;
 
-const minesweeperAccent = '#005EB8';
+const minesweeperAccent = '#7A4A24';
 
 const directions = [
   [-1, -1],
@@ -128,7 +127,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     const duration = Math.max(0, (elapsedMillisRef.current + Date.now() - playStartedAtRef.current) / 1000);
     elapsedMillisRef.current = duration * 1000;
     const trainingDate = FormatTestDate(new Date());
-    const participantId = getActiveUser() || 'Unknown';
+    const participantId = GetAuthUserNameFromToken() || 'Unknown';
     const record: SessionRecord = {
       Game_Result: gameResult,
       Total_Duration_Seconds: Number(duration.toFixed(1)),
@@ -138,7 +137,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     setPhase('results');
     void SaveTrainingSessionRecord({
       userName: participantId,
-      moduleId: 'cognitive-training',
+      moduleId: 'thinking-training',
       gameId: 'minesweeper',
       gameTitle,
       difficulty,
@@ -152,7 +151,6 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   }, [difficulty, gameTitle]);
 
   const startGame = useCallback(async () => {
-    if (!VerifySelectedTrainingUser()) return;
     PrepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
 
@@ -249,7 +247,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
       {phase === 'menu' && (
         <div className="training-panel">
           <TrainingConfigPanel
-            label={t('training.cognitive.configLabel')}
+            label={t('training.thinking.configLabel')}
             title={gameTitle}
             summaryTitle={gameTitle}
             summaryItems={[
@@ -342,7 +340,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
 
       {phase === 'rules' && (
         <div className="training-panel">
-          <StrokeTrainingRulesPanel
+          <BrainTrainingRulesPanel
             gameId="minesweeper"
             title={gameTitle}
             summaryTitle={gameTitle}

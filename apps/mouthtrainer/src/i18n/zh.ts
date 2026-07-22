@@ -25,7 +25,7 @@ export const zh = {
   'mouth.links.mouth.title': 'MouthTrainer',
   'mouth.links.mouth.desc': '口說、理解與口腔動作訓練平台。',
   'mouth.links.stroke.title': 'StrokeTrainer',
-  'mouth.links.stroke.desc': '中風復健訓練平台，提供動作與認知練習。',
+  'mouth.links.stroke.desc': '中風復健訓練平台，提供動作練習。',
   'mouth.links.vision.title': 'VisionTrainer',
   'mouth.links.vision.desc': '視覺評估與視覺訓練平台。',
   'mouth.links.brain.title': 'BrainTrainer',

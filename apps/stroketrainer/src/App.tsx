@@ -1,4 +1,4 @@
-import { Suspense, lazy, useLayoutEffect } from 'react';
+import { Suspense, lazy, useEffect, useLayoutEffect } from 'react';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
 import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
@@ -16,7 +16,6 @@ import {
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
 const TrainingPage = lazy(() => import('./pages/training/TrainingPage').then((module) => ({ default: module.TrainingPage })));
 const MotorTraining = lazy(() => import('./pages/training/MotorTraining').then((module) => ({ default: module.MotorTraining })));
-const CognitiveTraining = lazy(() => import('./pages/training/CognitiveTraining').then((module) => ({ default: module.CognitiveTraining })));
 const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((module) => ({ default: module.CreditsPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 
@@ -25,7 +24,7 @@ export function App() {
   const location = useLocation();
   const apiBase = siteUrls.hub;
   const locale = lang === 'en' ? 'en' : 'zh-TW';
-  const trainingPaths = new Set(['/', '/motor-training', '/cognitive-training', '/training']);
+  const trainingPaths = new Set(['/', '/motor-training', '/training']);
 
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
@@ -40,7 +39,7 @@ export function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Navigate to="/motor-training" replace />} />
           <Route path="/motor-training" element={<MotorTraining />} />
-          <Route path="/cognitive-training" element={<CognitiveTraining />} />
+          <Route path="/cognitive-training" element={<BrainThinkingRedirect />} />
           <Route path="/training" element={<TrainingPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/credits" element={<CreditsPage />} />
@@ -51,6 +50,17 @@ export function App() {
       </Routes>
     </Suspense>
   );
+}
+
+function BrainThinkingRedirect() {
+  const { t } = useT();
+  const location = useLocation();
+
+  useEffect(() => {
+    window.location.replace(`${siteUrls.brain}/#/thinking-training${location.search}`);
+  }, [location.search]);
+
+  return <AppLoading label={t('app.loading')} />;
 }
 
 function AppLayout() {
