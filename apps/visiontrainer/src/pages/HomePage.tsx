@@ -331,7 +331,7 @@ export function HomePage() {
   const activeRulesSummaryItems = rulesModule ? getRulesSummaryItems(rulesModule) : [];
 
   return (
-    <div className="page-content">
+    <main className="page-content" id="main-content">
       {/* ── Calibration Notice ── */}
       {!calibrated && (
         <div style={{
@@ -1095,7 +1095,7 @@ export function HomePage() {
           />
         </div>
       )}
-    </div>
+    </main>
   );
 }
 

@@ -23,15 +23,13 @@ export async function onRequestGet({ request, env }) {
 
   const url = new URL(request.url);
   const appId = url.searchParams.get('appId');
+  if (!appIds.has(appId)) return ErrorResponse(request, env, 'Invalid app id.', 400);
+
   const db = RequireDatabase(env);
-  const query = appId && appIds.has(appId)
-    ? db
-      .prepare('SELECT payload_json FROM training_records WHERE user_id = ? AND app_id = ? ORDER BY saved_at ASC')
-      .bind(session.sub, appId)
-    : db
-      .prepare('SELECT payload_json FROM training_records WHERE user_id = ? ORDER BY saved_at ASC')
-      .bind(session.sub);
-  const result = await query.all();
+  const result = await db
+    .prepare('SELECT payload_json FROM training_records WHERE user_id = ? AND app_id = ? ORDER BY saved_at ASC')
+    .bind(session.sub, appId)
+    .all();
   const records = (result.results || [])
     .map((row) => SafeJsonParse(row.payload_json))
     .filter(Boolean);
@@ -52,7 +50,7 @@ export async function onRequestPost({ request, env }) {
 
   const db = RequireDatabase(env);
   const now = new Date().toISOString();
-  await db
+  const result = await db
     .prepare(`
       INSERT INTO training_records (
         id, user_id, app_id, module_id, game_id, saved_at, training_date, difficulty, user_name, payload_json, created_at, updated_at
@@ -66,6 +64,8 @@ export async function onRequestPost({ request, env }) {
         user_name = excluded.user_name,
         payload_json = excluded.payload_json,
         updated_at = excluded.updated_at
+      WHERE training_records.user_id = excluded.user_id
+        AND training_records.app_id = excluded.app_id
     `)
     .bind(
       payload.record.id,
@@ -82,6 +82,10 @@ export async function onRequestPost({ request, env }) {
       now,
     )
     .run();
+
+  if (result?.meta?.changes === 0) {
+    return ErrorResponse(request, env, 'Training record id belongs to a different account or app.', 409);
+  }
 
   return JsonResponse(request, env, { ok: true, record: payload.record }, { status: 201 });
 }

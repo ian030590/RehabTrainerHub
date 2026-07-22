@@ -20,6 +20,27 @@ export interface ReferenceListPageProps {
   variant?: 'trainer' | 'hub';
 }
 
+export function GetDefaultReferenceListPageLabels(language: 'zh' | 'en'): ReferenceListPageLabels & {
+  subtitle: string;
+  title: string;
+} {
+  return language === 'en'
+    ? {
+        title: 'References',
+        subtitle: 'References used across training activities.',
+        githubSection: 'Projects and documentation',
+        literatureSection: 'Literature',
+        emptyLabel: 'No references here yet.',
+      }
+    : {
+        title: '參考資料',
+        subtitle: '本頁整理各訓練活動使用的參考資料。',
+        githubSection: '專案與技術文件',
+        literatureSection: '文獻',
+        emptyLabel: '這裡目前沒有資料。',
+      };
+}
+
 export function FormatReferenceModuleChip(tabName: string, moduleName: string) {
   return `${tabName} - ${moduleName}`;
 }

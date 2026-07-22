@@ -4,10 +4,10 @@ export const zh = {
   'nav.credits': '參考資料',
   'nav.links': '相關網站',
   'nav.noUser': '未選擇使用者',
-  'nav.downloadScores': '下載成績',
-  'nav.noScores': '目前沒有可下載的訓練成績。',
+  'nav.downloadScores': '下載紀錄',
+  'nav.noScores': '目前沒有可下載的訓練紀錄。',
   'nav.logoAlt': 'MotorTrainer 標誌',
-  'nav.scoresDownloadError': '無法讀取已儲存的訓練成績，請稍後再試。',
+  'nav.scoresDownloadError': '無法讀取訓練紀錄，請稍後再試。',
   'nav.toggleMenu': '開關選單',
 
   // Common Buttons & Actions

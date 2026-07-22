@@ -8,18 +8,25 @@ export { EditableSettingRow } from './components/EditableSettingRow';
 export type { EditableSettingRowProps } from './components/EditableSettingRow';
 export { ExternalLinkCard } from './components/ExternalLinkCard';
 export type { ExternalLinkCardProps } from './components/ExternalLinkCard';
+export { CreateGeneralSettingsPanelLabels, GeneralSettingsPanel } from './components/GeneralSettingsPanel';
+export type {
+  GeneralSettingsLanguage,
+  GeneralSettingsPanelLabels,
+  GeneralSettingsPanelProps,
+  GeneralSettingsTheme,
+} from './components/GeneralSettingsPanel';
 export { NumberPresetSelector } from './components/NumberPresetSelector';
 export type { NumberPresetSelectorProps } from './components/NumberPresetSelector';
-export { ReferenceListPage } from './components/ReferenceListPage';
+export { GetDefaultReferenceListPageLabels, ReferenceListPage } from './components/ReferenceListPage';
 export type {
   ReferenceListItem,
   ReferenceListPageLabels,
   ReferenceListPageProps,
 } from './components/ReferenceListPage';
-export { RehabFooter } from './components/RehabFooter';
+export { GetTrainerFooterLabels, GetTrainerSkipLinkLabel, RehabFooter } from './components/RehabFooter';
 export type { RehabFooterProps } from './components/RehabFooter';
-export { RelatedLinksGridPage } from './components/RelatedLinksGridPage';
-export type { RelatedLinkItem, RelatedLinksGridPageProps } from './components/RelatedLinksGridPage';
+export { CreateRelatedTrainerLinks, GetDefaultRelatedLinksPageLabels, RelatedLinksGridPage } from './components/RelatedLinksGridPage';
+export type { RelatedLinkItem, RelatedLinksGridPageProps, RelatedTrainerSite } from './components/RelatedLinksGridPage';
 export { ResultSummary } from './components/ResultSummary';
 export type { ResultSummaryItem, ResultSummaryProps } from './components/ResultSummary';
 export { SelectionCard } from './components/SelectionCard';
@@ -62,6 +69,8 @@ export { CreateUseActiveUser } from './hooks/useActiveUser';
 export { useFullscreenTrainingRoot } from './hooks/useFullscreenTrainingRoot';
 export { useRoutedTrainingModule } from './hooks/useRoutedTrainingModule';
 export type { UseRoutedTrainingModuleArgs } from './hooks/useRoutedTrainingModule';
+export { useSyncedDisplaySettings } from './hooks/useSyncedDisplaySettings';
+export type { SyncedDisplaySettings } from './hooks/useSyncedDisplaySettings';
 export { useTrainingAbort } from './hooks/useTrainingAbort';
 export type { UseTrainingAbortArgs } from './hooks/useTrainingAbort';
 export { CreateLanguageProvider } from './i18n/createLanguageProvider';

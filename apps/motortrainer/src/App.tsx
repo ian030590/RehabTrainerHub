@@ -1,8 +1,9 @@
-import { Suspense, lazy, useEffect, useLayoutEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
+import { GetTrainerFooterLabels, GetTrainerSkipLinkLabel } from '@rehab-trainer/ui/components/RehabFooter';
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
 import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
-import { ApplyDisplaySettings } from '@rehab-trainer/ui/settings/displaySettings';
+import { useSyncedDisplaySettings } from '@rehab-trainer/ui/hooks/useSyncedDisplaySettings';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
@@ -67,50 +68,23 @@ function BrainThinkingRedirect() {
 
 function AppLayout() {
   const { lang } = useT();
-  const footerLabels = lang === 'en'
-    ? {
-        hub: 'Hub',
-        privacy: 'Privacy',
-        repo: 'GitHub',
-        disclaimer: 'For rehabilitation practice workflow prototyping, not medical advice.',
-        rights: 'All rights reserved.',
-      }
-    : {
-        hub: 'Hub',
-        privacy: '隱私權政策',
-        repo: 'GitHub',
-        disclaimer: '復健練習流程原型，不能取代醫療建議。',
-        rights: '保留所有權利。',
-      };
-
-  useLayoutEffect(() => {
-    const applySettings = () => {
-      ApplyDisplaySettings({
-        fontSizePx: GetSetting('uiFontSizePx'),
-        defaultFontSizePx: defaultUiFontSizePx,
-        fontBold: GetSetting('uiFontBold'),
-        uiTheme: GetSetting('uiTheme'),
-      });
-    };
-
-    applySettings();
-    window.addEventListener(settingsChangedEvent, applySettings);
-    window.addEventListener('storage', applySettings);
-    return () => {
-      window.removeEventListener(settingsChangedEvent, applySettings);
-      window.removeEventListener('storage', applySettings);
-    };
-  }, []);
+  useSyncedDisplaySettings(() => ({
+    fontSizePx: GetSetting('uiFontSizePx'),
+    defaultFontSizePx: defaultUiFontSizePx,
+    fontBold: GetSetting('uiFontBold'),
+    uiTheme: GetSetting('uiTheme'),
+  }), settingsChangedEvent);
 
   return (
     <TrainerAppLayout
       navbar={<Navbar />}
+      skipLinkLabel={GetTrainerSkipLinkLabel(lang)}
       footer={{
         appName: 'MotorTrainer',
         hubHref: siteUrls.hub,
         privacyHref: `${siteUrls.hub}/privacy/`,
         repoHref: 'https://github.com/ian030590/RehabTrainerHub',
-        labels: footerLabels,
+        labels: GetTrainerFooterLabels(lang),
       }}
     >
       <Outlet />

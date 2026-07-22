@@ -18,7 +18,7 @@ export function SettingsPage() {
   ];
 
   return (
-    <div className="page-content">
+    <main className="page-content" id="main-content">
       <h1 className="section-title fade-in-up">{t('settings.title')}</h1>
       <p className="section-subtitle fade-in-up">{t('settings.subtitle')}</p>
 
@@ -28,6 +28,6 @@ export function SettingsPage() {
         {activeTab === 'general' && <GeneralTab refresh={refresh} />}
         {activeTab === 'calibration' && <CalibrationTab refresh={refresh} />}
       </div>
-    </div>
+    </main>
   );
 }

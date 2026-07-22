@@ -1,30 +1,16 @@
 import {
   ReferenceListPage,
   FormatReferenceModuleChip,
+  GetDefaultReferenceListPageLabels,
   type ReferenceListItem,
 } from '@rehab-trainer/ui/components/ReferenceListPage';
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import '@rehab-trainer/ui/components/ReferenceListPage.css';
 import { useT } from '../../i18n';
 
-const labels = {
-  zh: {
-    title: '參考資料',
-    subtitle: '本頁整理各訓練活動使用的參考資料。',
-    githubSection: 'GitHub 專案',
-    literatureSection: '文獻',
-  },
-  en: {
-    title: 'References',
-    subtitle: 'References used across training activities.',
-    githubSection: 'GitHub Projects',
-    literatureSection: 'Literature',
-  },
-} as const;
-
 export function CreditsPage() {
   const { lang, t } = useT();
-  const copy = labels[lang];
+  const copy = GetDefaultReferenceListPageLabels(lang);
   const visualTrainingTab = t('nav.trainingList');
   const visualAssessmentTab = t('nav.assessment');
   const webSettingsTab = t('nav.settings');

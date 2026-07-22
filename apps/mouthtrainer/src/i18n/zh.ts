@@ -2,7 +2,7 @@ import { zh as motorZh } from '../../../motortrainer/src/i18n/zh';
 
 export const zh = {
   ...motorZh,
-  'app.loading': '正在載入 MouthTrainer…',
+  'app.loading': '載入 MouthTrainer...',
   'nav.brand': 'MouthTrainer',
   'nav.logoAlt': 'MouthTrainer 標誌',
   'nav.speech': '口說訓練',
@@ -12,8 +12,8 @@ export const zh = {
   'nav.credits': '參考資料',
   'nav.links': '相關網站',
   'nav.downloadScores': '下載紀錄',
-  'nav.noScores': '目前沒有 MouthTrainer 訓練紀錄。',
-  'nav.scoresDownloadError': '無法讀取 MouthTrainer 訓練紀錄，請再試一次。',
+  'nav.noScores': '目前沒有可下載的訓練紀錄。',
+  'nav.scoresDownloadError': '無法讀取訓練紀錄，請稍後再試。',
   'mouth.speech.title': '口說訓練',
   'mouth.speech.subtitle': '使用語音辨識練習清楚說出畫面上的詞語。',
   'mouth.oral.title': '口腔訓練',

@@ -6,10 +6,10 @@ export const en: Record<TranslationKey, string> = {
   'nav.credits': 'References',
   'nav.links': 'Related Sites',
   'nav.noUser': 'No User Selected',
-  'nav.downloadScores': 'Download Scores',
-  'nav.noScores': 'No saved training scores are available yet.',
+  'nav.downloadScores': 'Download Records',
+  'nav.noScores': 'No training records are available yet.',
   'nav.logoAlt': 'MotorTrainer logo',
-  'nav.scoresDownloadError': 'Unable to read saved training scores. Please try again.',
+  'nav.scoresDownloadError': 'Unable to read training records. Please try again.',
   'nav.toggleMenu': 'Toggle menu',
 
   // Common Buttons & Actions
@@ -838,7 +838,7 @@ export const en: Record<TranslationKey, string> = {
   'drawing.csv.testDate': 'Test Date',
 
   // Links Page
-  'links.title': 'Related Websites',
+  'links.title': 'Related Sites',
   'links.subtitle': 'Official websites in the RehabTrainerHub ecosystem',
   'links.hub.title': 'RehabTrainerHub',
   'links.hub.desc': 'Home training portal for the RehabTrainerHub tools.',

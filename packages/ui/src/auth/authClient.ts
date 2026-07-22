@@ -18,10 +18,18 @@ const localTrainingStorageKeys = [
   'vision_trainer_users',
   'vision_trainer_active_user',
   'brain_trainer_training_records_v1',
+  'mouth_trainer_training_records_v1',
+  'mouth_trainer_users',
+  'mouth_trainer_active_user',
+  'mouth_trainer_voice_defender_vocabulary_v1',
+  'mouth_trainer_voice_defender_vocabulary_v2',
 ];
 const localTrainingDatabases = [
   'motor-trainer-training-records',
   'vision_trainer_training_records',
+];
+const localTrainingStorageKeyPrefixes = [
+  'mouth_trainer_tongue_settings_',
 ];
 
 export interface HabitFrequency<Unit extends string> {
@@ -255,6 +263,16 @@ export async function ClearLocalTrainerData(): Promise<void> {
   try {
     for (const key of localTrainingStorageKeys) {
       window.localStorage.removeItem(key);
+    }
+    const keys = Array.from(
+      { length: window.localStorage.length },
+      (_, index) => window.localStorage.key(index),
+    );
+    for (const key of keys) {
+      if (!key) continue;
+      if (localTrainingStorageKeyPrefixes.some((prefix) => key.startsWith(prefix))) {
+        window.localStorage.removeItem(key);
+      }
     }
   } catch {
     // Best-effort shared-device cleanup; logout must still clear the auth token.

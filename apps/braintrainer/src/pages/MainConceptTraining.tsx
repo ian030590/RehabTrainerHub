@@ -698,7 +698,7 @@ export function MainConceptTraining() {
             </div>
           </aside>
 
-          <main className="main-concept-panel main-concept-question">
+          <main className="main-concept-panel main-concept-question" id="main-content">
             <div className="main-concept-panel-heading">
               <h2>{t('mainConcept.concept')}</h2>
               <p>{currentQuestion.concept}</p>

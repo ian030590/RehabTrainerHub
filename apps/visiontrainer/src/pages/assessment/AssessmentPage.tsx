@@ -116,7 +116,7 @@ export function AssessmentPage() {
   const trialsPresets = [12, 18, 24, 36];
 
   return (
-    <div className="page-content">
+    <main className="page-content" id="main-content">
       {/* Disclaimer */}
       <div className="assessment-disclaimer fade-in">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -311,7 +311,7 @@ export function AssessmentPage() {
             </div>
         </ConfigDialog>
       )}
-    </div>
+    </main>
   );
 }
 

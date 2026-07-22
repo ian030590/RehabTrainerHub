@@ -35,7 +35,7 @@ export function TrainingModuleSelectionPage<TModuleId extends string>({
   onSelect,
 }: TrainingModuleSelectionPageProps<TModuleId>) {
   return (
-    <div className={className}>
+    <main className={className} id="main-content">
       <h1 className="section-title fade-in-up">{title}</h1>
       {subtitle && <p className="section-subtitle fade-in-up">{subtitle}</p>}
 
@@ -55,6 +55,6 @@ export function TrainingModuleSelectionPage<TModuleId extends string>({
         ))}
       </div>
       {children}
-    </div>
+    </main>
   );
 }

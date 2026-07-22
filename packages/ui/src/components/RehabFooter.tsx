@@ -13,6 +13,28 @@ export interface RehabFooterProps {
   };
 }
 
+export function GetTrainerFooterLabels(language: 'zh' | 'en') {
+  return language === 'en'
+    ? {
+        hub: 'Hub',
+        privacy: 'Privacy',
+        repo: 'GitHub',
+        disclaimer: 'For rehabilitation practice workflow prototyping, not medical advice.',
+        rights: 'All rights reserved.',
+      }
+    : {
+        hub: 'Hub',
+        privacy: '隱私權政策',
+        repo: 'GitHub',
+        disclaimer: '復健練習流程原型，不能取代醫療建議。',
+        rights: '保留所有權利。',
+      };
+}
+
+export function GetTrainerSkipLinkLabel(language: 'zh' | 'en') {
+  return language === 'en' ? 'Skip to content' : '跳到主要內容';
+}
+
 export function RehabFooter({
   appName = 'Rehab Trainer Hub',
   hubHref = '/',

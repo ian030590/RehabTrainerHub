@@ -3,8 +3,6 @@ import { DownloadAllTrainingRecordsCsv } from '../utils/trainingRecords';
 import { useT } from '../i18n';
 import { siteUrls } from '../utils/siteUrls';
 
-const navLinkClass = ({ isActive }: { isActive: boolean }) => `navbar-link ${isActive ? 'active' : ''}`;
-
 export function Navbar() {
   const { lang, t } = useT();
   const appName = 'BrainTrainer';
@@ -12,12 +10,12 @@ export function Navbar() {
   const locale = lang === 'en' ? 'en' : 'zh-TW';
   const logoSrc = `${import.meta.env.BASE_URL}assets/logo.svg`;
   const navItems = [
-    { to: '/attention-training', className: navLinkClass, label: t('nav.attention') },
-    { to: '/memory-training', className: navLinkClass, label: t('nav.memory') },
-    { to: '/thinking-training', className: navLinkClass, label: t('nav.thinking') },
-    { to: '/settings', className: navLinkClass, label: t('nav.settings') },
-    { to: '/references', className: navLinkClass, label: t('nav.references') },
-    { to: '/links', className: navLinkClass, label: t('nav.links') },
+    { to: '/attention-training', label: t('nav.attention') },
+    { to: '/memory-training', label: t('nav.memory') },
+    { to: '/thinking-training', label: t('nav.thinking') },
+    { to: '/settings', label: t('nav.settings') },
+    { to: '/references', label: t('nav.references') },
+    { to: '/links', label: t('nav.links') },
   ];
 
   return (

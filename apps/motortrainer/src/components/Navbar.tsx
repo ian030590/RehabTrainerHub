@@ -3,8 +3,6 @@ import { DownloadAllTrainingRecordsCsv } from '../utils/trainingRecords';
 import { useT } from '../i18n';
 import { siteUrls } from '../utils/siteUrls';
 
-const navLinkClass = ({ isActive }: { isActive: boolean }) => `navbar-link ${isActive ? 'active' : ''}`;
-
 export function Navbar() {
   const { lang, t } = useT();
   const appName = 'MotorTrainer';
@@ -12,11 +10,11 @@ export function Navbar() {
   const locale = lang === 'en' ? 'en' : 'zh-TW';
   const logoSrc = `${import.meta.env.BASE_URL}assets/logo.svg`;
   const navItems = [
-    { to: '/upper-limb-training', className: navLinkClass, label: t('home.module.upperLimb.title') },
-    { to: '/lower-limb-training', className: navLinkClass, label: t('home.module.lowerLimb.title') },
-    { to: '/settings', className: navLinkClass, label: t('nav.settings') },
-    { to: '/credits', className: navLinkClass, label: t('nav.credits') },
-    { to: '/links', className: navLinkClass, label: t('nav.links') },
+    { to: '/upper-limb-training', label: t('home.module.upperLimb.title') },
+    { to: '/lower-limb-training', label: t('home.module.lowerLimb.title') },
+    { to: '/settings', label: t('nav.settings') },
+    { to: '/credits', label: t('nav.credits') },
+    { to: '/links', label: t('nav.links') },
   ];
 
   return (
