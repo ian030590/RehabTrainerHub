@@ -21,17 +21,17 @@
     "@tensorflow/tfjs": "^4.22.0",
     "jspsych": "^8.2.1",
     "microsoft-cognitiveservices-speech-sdk": "^1.51.0",
-    "pinyin-pro": "^3.28.1",
+    "pinyin-pro": "^3.28.2",
     "pixi.js": "^8.18.1",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "react-router-dom": "^7.6.1"
   },
   "devDependencies": {
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.4",
-    "@vitejs/plugin-react": "^4.5.2",
-    "typescript": "~5.8.3",
-    "vite": "^6.3.5"
+    "@vitejs/plugin-react": "^6.0.4",
+    "typescript": "~7.0.2",
+    "vite": "^8.1.5"
   }
 }

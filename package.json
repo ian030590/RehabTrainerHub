@@ -46,26 +46,26 @@
     "@tensorflow/tfjs": "^4.22.0",
     "jspsych": "^8.2.1",
     "microsoft-cognitiveservices-speech-sdk": "^1.51.0",
-    "next": "^16.2.10",
-    "pinyin-pro": "^3.28.1",
+    "next": "^16.2.11",
+    "pinyin-pro": "^3.28.2",
     "pixi.js": "^8.18.1",
     "qrcode": "^1.5.4",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "react-router-dom": "^7.6.1",
-    "recharts": "^3.8.1",
-    "three": "^0.184.0"
+    "recharts": "^3.10.0",
+    "three": "^0.185.1"
   },
   "devDependencies": {
-    "@types/node": "^24.10.2",
+    "@types/node": "^26.1.1",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
-    "@types/three": "^0.184.1",
-    "@vitejs/plugin-react": "^4.5.2",
-    "turbo": "^2.10.2",
-    "typescript": "~5.8.3",
-    "vite": "^6.3.5"
+    "@types/three": "^0.185.1",
+    "@vitejs/plugin-react": "^6.0.4",
+    "turbo": "^2.10.6",
+    "typescript": "~7.0.2",
+    "vite": "^8.1.5"
   },
   "engines": {
     "node": ">=22"
