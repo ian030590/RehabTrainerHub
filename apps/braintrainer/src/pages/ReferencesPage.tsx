@@ -55,6 +55,16 @@ export function ReferencesPage() {
         moduleChip(thinkingModule, t('training.minesweeper.title'))
       ],
     },
+    {
+      title: 'Edwards, J. D., Wadley, V. G., Vance, D. E., Wood, K., Roenker, D. L., & Ball, K. K. (2005). The reliability and validity of useful field of view test scores as administered by personal computer. Journal of Clinical and Experimental Neuropsychology, 27(5), 529–543. https://doi.org/10.1080/13803390490515432',
+      href: 'https://doi.org/10.1080/13803390490515432',
+      modules: [moduleChip(t('module.attention.title'), 'UFOV Test')],
+    },
+    {
+      title: 'Nicholas, L. E., & Brookshire, R. H. (1995). Presence, completeness, and accuracy of main concepts in the connected speech of non-brain-damaged adults and adults with aphasia. Journal of Speech, Language, and Hearing Research, 38(1), 145-156. https://doi.org/10.1044/jshr.3801.145',
+      href: 'https://doi.org/10.1044/jshr.3801.145',
+      modules: [moduleChip(thinkingModule, t('module.thinking.mainConcept.title'))],
+    },
   ];
 
   return (

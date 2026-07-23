@@ -67,6 +67,27 @@ export function CreditsPage() {
       href: 'https://doi.org/10.1016/j.preteyeres.2022.101160',
       modules: [moduleChip(visualAssessmentTab, t('assess.pl.title'))],
     },
+    {
+      title: 'Edwards, J. D., Wadley, V. G., Vance, D. E., Wood, K., Roenker, D. L., & Ball, K. K. (2005). The reliability and validity of useful field of view test scores as administered by personal computer. Journal of Clinical and Experimental Neuropsychology, 27(5), 529–543. https://doi.org/10.1080/13803390490515432',
+      href: 'https://doi.org/10.1080/13803390490515432',
+      modules: [moduleChip(visualAssessmentTab, t('assess.ufov.title'))],
+    },
+    {
+      title: 'Bach, M. (1996). The Freiburg Visual Acuity test—automatic measurement of visual acuity. Optometry and Vision Science, 73(1), 49–53. https://doi.org/10.1097/00006324-199601000-00008',
+      href: 'https://doi.org/10.1097/00006324-199601000-00008',
+      modules: [
+        moduleChip(visualAssessmentTab, t('assess.pl.title')),
+        moduleChip(webSettingsTab, t('settings.tab.calibration')),
+      ],
+    },
+    {
+      title: 'Papoutsaki, A., Sangkloy, P., Laskey, J., Daskalova, N., Huang, J., & Hays, J. (2016). WebGazer: Scalable Webcam Eye Tracking Using User Interactions. Proceedings of the 25th International Joint Conference on Artificial Intelligence (IJCAI 2016), 3839-3845.',
+      href: 'https://www.ijcai.org/Proceedings/16/Papers/542.pdf',
+      modules: [
+        moduleChip(visualAssessmentTab, t('assess.pl.title')),
+        moduleChip(webSettingsTab, t('settings.tab.webgazer')),
+      ],
+    },
   ];
 
   return (
