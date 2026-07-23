@@ -45,9 +45,22 @@ export function ReferencesPage() {
     },
   ];
 
+  const literatureItems: ReferenceListItem[] = [
+    {
+      title: 'Gao, M., Huang, L., Yi, J., Zhang, T., Zhu, G., Zhang, Q., Tian, J., Zhao, R., Duan, X., & Liu, Z. (2025). The Effectiveness of Computerized Cognitive Training in Patients With Poststroke Cognitive Impairment: Systematic Review and Meta-Analysis. Journal of Medical Internet Research, 27, e73140. https://doi.org/10.2196/73140',
+      href: 'https://doi.org/10.2196/73140',
+      modules: [
+        moduleChip(thinkingModule, t('module.thinking.mainConcept.title')),
+        ...referenceCognitiveModules.map(module => moduleChip(t(cognitiveTrainingAreaTitleKeys[GetCognitiveTrainingArea(module.id)]), t(module.titleKey))),
+        moduleChip(thinkingModule, t('training.minesweeper.title'))
+      ],
+    },
+  ];
+
   return (
     <ReferenceListPage
       githubItems={githubItems}
+      literatureItems={literatureItems}
       labels={copy}
       subtitle={copy.subtitle}
       title={copy.title}

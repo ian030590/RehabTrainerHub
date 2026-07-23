@@ -42,9 +42,21 @@ export function CreditsPage() {
     },
   ];
 
+  const literatureItems: ReferenceListItem[] = [
+    {
+      title: 'Ikbali Afsar, S., Mirzayev, I., Umit Yemisci, O., & Cosar Saracgil, S. N. (2018). Virtual Reality in Upper Extremity Rehabilitation of Stroke Patients: A Randomized Controlled Trial. Journal of Stroke and Cerebrovascular Diseases, 27(12), 3473–3478. https://doi.org/10.1016/j.jstrokecerebrovasdis.2018.08.007',
+      href: 'https://doi.org/10.1016/j.jstrokecerebrovasdis.2018.08.007',
+      modules: [
+        moduleChip(upperLimbModule, t('training.asteroidShield.title')),
+        moduleChip(upperLimbModule, motorCortexTitle)
+      ],
+    },
+  ];
+
   return (
     <ReferenceListPage
       githubItems={githubItems}
+      literatureItems={literatureItems}
       labels={copy}
       subtitle={copy.subtitle}
       title={copy.title}

@@ -40,9 +40,21 @@ export function ReferencesPage() {
     },
   ];
 
+  const literatureItems: ReferenceListItem[] = [
+    {
+      title: 'Chiaramonte, R., Pavone, P., & Vecchio, M. (2020). Speech rehabilitation in dysarthria after stroke: a systematic review of the studies. European Journal of Physical and Rehabilitation Medicine, 56(5). https://doi.org/10.23736/s1973-9087.20.06185-7',
+      href: 'https://doi.org/10.23736/s1973-9087.20.06185-7',
+      modules: [
+        FormatReferenceModuleChip(speech, t('voice.title')),
+        FormatReferenceModuleChip(oral, t('tongue.title'))
+      ],
+    },
+  ];
+
   return (
     <ReferenceListPage
       githubItems={items}
+      literatureItems={literatureItems}
       labels={labels}
       subtitle={labels.subtitle}
       title={labels.title}
