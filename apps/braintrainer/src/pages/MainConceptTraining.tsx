@@ -1,6 +1,10 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
-import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  TrainingConfigOptionGroup,
+  TrainingConfigPanel,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
@@ -520,15 +524,12 @@ export function MainConceptTraining() {
             </>
           )}
         >
-            <section className="training-setting training-setting-wide">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{t('mainConcept.trainingSet')}</h2>
-                  <p>{t('mainConcept.trainingSetDesc')}</p>
-                </div>
-                <span>{setTitle}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-three">
+            <TrainingConfigSection
+              title={t('mainConcept.trainingSet')}
+              description={t('mainConcept.trainingSetDesc')}
+              value={setTitle}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {trainingSets.map((set) => (
                   <button
                     key={set.id}
@@ -540,18 +541,14 @@ export function MainConceptTraining() {
                     <span className="training-option-meta">{t(set.descriptionKey)}</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting training-setting-wide">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{t('mainConcept.focusTitle')}</h2>
-                  <p>{t('mainConcept.focusDesc')}</p>
-                </div>
-                <span>{t('mainConcept.reference')}</span>
-              </div>
-            </section>
+            <TrainingConfigSection
+              title={t('mainConcept.focusTitle')}
+              description={t('mainConcept.focusDesc')}
+              value={t('mainConcept.reference')}
+            />
         </TrainingConfigPanel>
       </div>
     );

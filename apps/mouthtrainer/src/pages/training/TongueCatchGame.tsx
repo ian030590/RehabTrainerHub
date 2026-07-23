@@ -33,11 +33,15 @@ import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  TrainingConfigNotice,
+  TrainingConfigOptionGroup,
+  TrainingConfigPanel,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 import { MouthTrainingRulesPanel } from './MouthTrainingRulesPanel';
@@ -697,14 +701,11 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
               </>
             )}
           >
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('tongue.config.sensitivity')}</h2>
-                    <p>{t('tongue.config.sensitivityDesc')}</p>
-                  </div>
-                  <span>{Math.round(config.sensitivity * 100)}%</span>
-                </div>
+              <TrainingConfigSection
+                title={t('tongue.config.sensitivity')}
+                description={t('tongue.config.sensitivityDesc')}
+                value={`${Math.round(config.sensitivity * 100)}%`}
+              >
                 <input
                   className="training-slider"
                   type="range"
@@ -717,16 +718,13 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                     sensitivity: Number(event.target.value) / 100,
                   }))}
                 />
-              </section>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('tongue.config.growthRate')}</h2>
-                    <p>{t('tongue.config.growthRateDesc')}</p>
-                  </div>
-                  <span>{config.growthRate} px/s</span>
-                </div>
+              <TrainingConfigSection
+                title={t('tongue.config.growthRate')}
+                description={t('tongue.config.growthRateDesc')}
+                value={`${config.growthRate} px/s`}
+              >
                 <input
                   className="training-slider"
                   type="range"
@@ -739,17 +737,14 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                     growthRate: Number(event.target.value),
                   }))}
                 />
-              </section>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('tongue.config.duration')}</h2>
-                    <p>{t('tongue.config.durationDesc')}</p>
-                  </div>
-                  <span>{t('training.secondsShort', { value: config.durationSec })}</span>
-                </div>
-                <div className="training-option-grid training-option-grid-three">
+              <TrainingConfigSection
+                title={t('tongue.config.duration')}
+                description={t('tongue.config.durationDesc')}
+                value={t('training.secondsShort', { value: config.durationSec })}
+              >
+                <TrainingConfigOptionGroup columns={3}>
                   {[60, 90, 120].map((value) => (
                     <button
                       key={value}
@@ -760,17 +755,14 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                       <span className="training-option-title">{t('training.secondsShort', { value })}</span>
                     </button>
                   ))}
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('tongue.config.appleSpeed')}</h2>
-                    <p>{t('tongue.config.appleSpeedDesc')}</p>
-                  </div>
-                  <span>{config.appleSpeed} px/s</span>
-                </div>
+              <TrainingConfigSection
+                title={t('tongue.config.appleSpeed')}
+                description={t('tongue.config.appleSpeedDesc')}
+                value={`${config.appleSpeed} px/s`}
+              >
                 <input
                   className="training-slider"
                   type="range"
@@ -783,16 +775,13 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                     appleSpeed: Number(event.target.value),
                   }))}
                 />
-              </section>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('tongue.config.spawnRate')}</h2>
-                    <p>{t('tongue.config.spawnRateDesc')}</p>
-                  </div>
-                  <span>{config.spawnIntervalSec.toFixed(1)}s</span>
-                </div>
+              <TrainingConfigSection
+                title={t('tongue.config.spawnRate')}
+                description={t('tongue.config.spawnRateDesc')}
+                value={`${config.spawnIntervalSec.toFixed(1)}s`}
+              >
                 <input
                   className="training-slider"
                   type="range"
@@ -805,16 +794,13 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                     spawnIntervalSec: Number(event.target.value),
                   }))}
                 />
-              </section>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('tongue.config.edgeChance')}</h2>
-                    <p>{t('tongue.config.edgeChanceDesc')}</p>
-                  </div>
-                  <span>{Math.round(config.edgeChance * 100)}%</span>
-                </div>
+              <TrainingConfigSection
+                title={t('tongue.config.edgeChance')}
+                description={t('tongue.config.edgeChanceDesc')}
+                value={`${Math.round(config.edgeChance * 100)}%`}
+              >
                 <input
                   className="training-slider"
                   type="range"
@@ -827,9 +813,9 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                     edgeChance: Number(event.target.value) / 100,
                   }))}
                 />
-              </section>
+              </TrainingConfigSection>
 
-              <TrainingPrivacyNotice
+              <TrainingConfigNotice
                 title={t('tongue.privacy.title')}
                 description={t('tongue.privacy.desc')}
               />

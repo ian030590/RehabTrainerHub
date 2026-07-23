@@ -7,7 +7,12 @@ import {
 } from '@mediapipe/tasks-vision';
 import { initJsPsych } from 'jspsych';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  TrainingConfigNotice,
+  TrainingConfigOptionGroup,
+  TrainingConfigPanel,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -21,7 +26,6 @@ import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
-import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 
 type DrillId = 'bounce' | 'vertical' | 'horizontal' | 'random';
 type DifficultyId = 'beginner' | 'intermediate' | 'advanced';
@@ -705,15 +709,13 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
               </>
             )}
           >
-            <section className="training-setting training-setting-wide">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.drill}</h2>
-                  <p>{labels.drillDesc}</p>
-                </div>
-                <span>{labels.drillNames[drill]}</span>
-              </div>
-              <div className="training-option-grid motor-cortex-drill-grid">
+            <TrainingConfigSection
+              title={labels.drill}
+              description={labels.drillDesc}
+              value={labels.drillNames[drill]}
+              wide
+            >
+              <TrainingConfigOptionGroup className="motor-cortex-drill-grid">
                 {drills.map((item) => (
                   <button
                     className={`training-option ${drill === item.id ? 'active' : ''}`}
@@ -726,18 +728,15 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                     <span className="motor-cortex-reference-name">{item.referenceName}</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.difficulty}</h2>
-                  <p>{labels.difficultyDesc}</p>
-                </div>
-                <span>{labels.difficultyNames[difficulty]}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-three">
+            <TrainingConfigSection
+              title={labels.difficulty}
+              description={labels.difficultyDesc}
+              value={labels.difficultyNames[difficulty]}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {difficulties.map((item) => (
                   <button
                     className={`training-option ${difficulty === item.id ? 'active' : ''}`}
@@ -749,18 +748,15 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                     <span className="training-option-meta">{Math.round(item.speed * speedScale)} px/s</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.duration}</h2>
-                  <p>{labels.durationDesc}</p>
-                </div>
-                <span>{durationSec}s</span>
-              </div>
-              <div className="training-option-grid training-option-grid-three">
+            <TrainingConfigSection
+              title={labels.duration}
+              description={labels.durationDesc}
+              value={`${durationSec}s`}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {durationOptions.map((value) => (
                   <button
                     className={`training-option ${durationSec === value ? 'active' : ''}`}
@@ -771,18 +767,15 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                     <span className="training-option-title">{value}s</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.hand}</h2>
-                  <p>{labels.handDesc}</p>
-                </div>
-                <span>{FormatHandChoice(handChoice, labels)}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-three">
+            <TrainingConfigSection
+              title={labels.hand}
+              description={labels.handDesc}
+              value={FormatHandChoice(handChoice, labels)}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {handLabels.map((value) => (
                   <button
                     className={`training-option ${handChoice === value ? 'active' : ''}`}
@@ -793,17 +786,14 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                     <span className="training-option-title">{FormatHandChoice(value, labels)}</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.targetSize}</h2>
-                  <p>{labels.targetSizeDesc}</p>
-                </div>
-                <span>{Math.round(targetSizeScale * 100)}%</span>
-              </div>
+            <TrainingConfigSection
+              title={labels.targetSize}
+              description={labels.targetSizeDesc}
+              value={`${Math.round(targetSizeScale * 100)}%`}
+            >
               <input
                 className="training-slider"
                 type="range"
@@ -814,16 +804,13 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                 onChange={(event) => setTargetSizeScale(Number(event.target.value) / 100)}
                 aria-label={labels.targetSize}
               />
-            </section>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.speed}</h2>
-                  <p>{labels.speedDesc}</p>
-                </div>
-                <span>{Math.round(speedScale * 100)}%</span>
-              </div>
+            <TrainingConfigSection
+              title={labels.speed}
+              description={labels.speedDesc}
+              value={`${Math.round(speedScale * 100)}%`}
+            >
               <input
                 className="training-slider"
                 type="range"
@@ -834,9 +821,9 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                 onChange={(event) => setSpeedScale(Number(event.target.value) / 100)}
                 aria-label={labels.speed}
               />
-            </section>
+            </TrainingConfigSection>
 
-            <TrainingPrivacyNotice
+            <TrainingConfigNotice
               title={labels.privacyTitle}
               description={labels.privacyDesc}
             />

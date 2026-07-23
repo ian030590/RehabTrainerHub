@@ -19,7 +19,11 @@ import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  TrainingConfigOptionGroup,
+  TrainingConfigPanel,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -1491,15 +1495,12 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
               </>
             )}
           >
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('cognitive.config.difficulty')}</h2>
-                    <p>{t(activeConfig.descriptionKey)}</p>
-                  </div>
-                  <span>{t(activeConfig.labelKey)}</span>
-                </div>
-                <div className="training-option-grid training-option-grid-three">
+              <TrainingConfigSection
+                title={t('cognitive.config.difficulty')}
+                description={t(activeConfig.descriptionKey)}
+                value={t(activeConfig.labelKey)}
+              >
+                <TrainingConfigOptionGroup columns={3}>
                   {Object.entries(difficulties).map(([key, value]) => (
                     <button
                       key={key}
@@ -1511,18 +1512,15 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                       <span className="training-option-meta">{t(value.descriptionKey)}</span>
                     </button>
                   ))}
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('voice.config.hp')}</h2>
-                    <p>{t('voice.config.hpDesc')}</p>
-                  </div>
-                  <span>{maxHp}</span>
-                </div>
-                <div className="training-option-grid training-option-grid-four">
+              <TrainingConfigSection
+                title={t('voice.config.hp')}
+                description={t('voice.config.hpDesc')}
+                value={maxHp}
+              >
+                <TrainingConfigOptionGroup columns={4}>
                   {hpOptions.map((option) => (
                     <button
                       key={option}
@@ -1554,24 +1552,20 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                       aria-label={t('drawing.config.customHp')}
                     />
                   </label>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting training-setting-wide">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('drawing.config.gameDuration')}</h2>
-                    <p>{gameDurationLabel}</p>
-                  </div>
-                  <span>
-                    {gameDurationSec === defaultGameDurationSeconds
-                      ? t('training.default')
-                      : isPresetGameDuration
-                        ? t('training.optional')
-                        : t('training.custom')}
-                  </span>
-                </div>
-                <div className="training-option-grid training-duration-grid">
+              <TrainingConfigSection
+                title={t('drawing.config.gameDuration')}
+                description={gameDurationLabel}
+                value={gameDurationSec === defaultGameDurationSeconds
+                  ? t('training.default')
+                  : isPresetGameDuration
+                    ? t('training.optional')
+                    : t('training.custom')}
+                wide
+              >
+                <TrainingConfigOptionGroup className="training-duration-grid">
                   {gameDurationOptions.filter((option) => option !== null).map((option) => (
                     <button
                       key={option}
@@ -1610,18 +1604,15 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                   >
                     <span className="training-option-title">{t('drawing.config.infiniteMode')}</span>
                   </button>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('voice.config.enemySpeed')}</h2>
-                    <p>{t('voice.config.speedValue', { value: speed })}</p>
-                  </div>
-                  <span>{isCustomSpeed ? t('training.custom') : t('training.default')}</span>
-                </div>
-                <div className="training-option-grid training-speed-grid">
+              <TrainingConfigSection
+                title={t('voice.config.enemySpeed')}
+                description={t('voice.config.speedValue', { value: speed })}
+                value={isCustomSpeed ? t('training.custom') : t('training.default')}
+              >
+                <TrainingConfigOptionGroup className="training-speed-grid">
                   {enemySpeedOptions.map((option) => (
                     <button
                       key={option}
@@ -1654,24 +1645,21 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                       aria-label={t('voice.config.customEnemySpeed')}
                     />
                   </label>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section
+              <TrainingConfigSection
                 ref={recognitionSettingRef}
-                className={`training-setting training-setting-wide ${
-                  showStartValidation && invalidStartRequirements.has('recognition') ? 'voice-start-invalid' : ''
-                }`}
+                className={showStartValidation && invalidStartRequirements.has('recognition')
+                  ? 'voice-start-invalid'
+                  : undefined}
                 aria-invalid={showStartValidation && invalidStartRequirements.has('recognition')}
+                title={t('voice.config.language')}
+                description={t('voice.config.languageDesc')}
+                value={t(language === 'zh' ? 'voice.language.zh' : 'voice.language.en')}
+                wide
               >
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('voice.config.language')}</h2>
-                    <p>{t('voice.config.languageDesc')}</p>
-                  </div>
-                  <span>{t(language === 'zh' ? 'voice.language.zh' : 'voice.language.en')}</span>
-                </div>
-                <div className="training-option-grid training-option-grid-three">
+                <TrainingConfigOptionGroup columns={3}>
                   {(['zh', 'en'] as const).map((option) => (
                     <button
                       key={option}
@@ -1695,23 +1683,20 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                     <span className="training-option-title">{t('voice.model.reload')}</span>
                     <span className="training-option-meta">{t('voice.model.cacheHint')}</span>
                   </button>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section
+              <TrainingConfigSection
                 ref={vocabularySettingRef}
-                className={`training-setting training-setting-wide voice-vocabulary-setting ${
+                className={`voice-vocabulary-setting ${
                   showStartValidation && invalidStartRequirements.has('vocabulary') ? 'voice-start-invalid' : ''
                 }`}
                 aria-invalid={showStartValidation && invalidStartRequirements.has('vocabulary')}
+                title={t('voice.vocabulary.title')}
+                description={t('voice.vocabulary.desc')}
+                value={t('voice.vocabulary.activeCount', { active: activeWords.length, total: languageVocabulary.length })}
+                wide
               >
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('voice.vocabulary.title')}</h2>
-                    <p>{t('voice.vocabulary.desc')}</p>
-                  </div>
-                  <span>{t('voice.vocabulary.activeCount', { active: activeWords.length, total: languageVocabulary.length })}</span>
-                </div>
                 <div className="voice-vocabulary-editor">
                   <div className="voice-vocabulary-list">
                     {languageVocabulary.length === 0 ? (
@@ -1789,22 +1774,19 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                     </button>
                   </div>
                 </div>
-              </section>
+              </TrainingConfigSection>
 
-              <section
+              <TrainingConfigSection
                 ref={microphoneSettingRef}
-                className={`training-setting training-setting-wide voice-microphone-setting voice-microphone-${microphoneStatus} ${
+                className={`voice-microphone-setting voice-microphone-${microphoneStatus} ${
                   showStartValidation && invalidStartRequirements.has('microphone') ? 'voice-start-invalid' : ''
                 }`}
                 aria-invalid={showStartValidation && invalidStartRequirements.has('microphone')}
+                title={t('voice.microphone.title')}
+                description={t('voice.microphone.desc')}
+                value={GetMicrophoneStatusText(microphoneStatus, t)}
+                wide
               >
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('voice.microphone.title')}</h2>
-                    <p>{t('voice.microphone.desc')}</p>
-                  </div>
-                  <span>{GetMicrophoneStatusText(microphoneStatus, t)}</span>
-                </div>
                 <div className="voice-microphone-controls">
                   <div className="voice-volume-meter-group">
                     <div className="voice-volume-meter-label">
@@ -1826,16 +1808,14 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                     {t('voice.microphone.test')}
                   </button>
                 </div>
-              </section>
+              </TrainingConfigSection>
 
-              <section className="training-setting training-setting-wide">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('drawing.config.background')}</h2>
-                    <p>{backgroundSummary}</p>
-                  </div>
-                  <span>{backgroundModeLabel}</span>
-                </div>
+              <TrainingConfigSection
+                title={t('drawing.config.background')}
+                description={backgroundSummary}
+                value={backgroundModeLabel}
+                wide
+              >
                 <div className="drawing-defense-background-controls">
                   <button
                     type="button"
@@ -1892,7 +1872,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                     />
                   </label>
                 </div>
-              </section>
+              </TrainingConfigSection>
           </TrainingConfigPanel>
         </div>
       )}

@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
+import {
+  TrainingConfigOptionGroup,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { useT } from '../../i18n';
@@ -163,50 +167,8 @@ export function AssessmentPage() {
             { value: localTrials },
             { value: `${distanceCM} cm` },
           ]}
-        >
-            <div className="config-section">
-              <div className="config-label">{t('assess.trialsLabel')}</div>
-              <NumberPresetSelector
-                value={localTrials}
-                customValue={customTrialsInput}
-                presets={trialsPresets}
-                min={1}
-                max={100}
-                placeholder={t('home.config.custom')}
-                onPresetSelect={handleTrialsPreset}
-                onCustomChange={handleCustomTrials}
-              />
-            </div>
-
-            {expandedTest === 'gratings' && (
-              <div className="config-section">
-                <div className="config-label">{t('assess.plMethodTitle')}</div>
-                <div className="difficulty-selector">
-                  <button
-                    className={`diff-btn ${plInputMode === 'keyboard' ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePLInputMode('keyboard');
-                    }}
-                  >
-                    <span className="diff-btn-label">{t('assess.kbMode')}</span>
-                    <span className="diff-btn-desc">{t('assess.kbModeDesc')}</span>
-                  </button>
-                  <button
-                    className={`diff-btn ${plInputMode === 'webgazer' ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePLInputMode('webgazer');
-                    }}
-                  >
-                    <span className="diff-btn-label">{t('assess.wgMode')}</span>
-                    <span className="diff-btn-desc">{t('assess.wgModeDesc')}</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="config-actions">
+          actions={(
+            <>
               <button
                 className="btn btn-primary btn-lg config-start-btn"
                 onClick={(e) => { e.stopPropagation(); void handleStartTest(); }}
@@ -222,8 +184,51 @@ export function AssessmentPage() {
               >
                 {t('btn.cancel')}
               </button>
-            </div>
+            </>
+          )}
+        >
+            <TrainingConfigSection title={t('assess.trialsLabel')} value={localTrials}>
+              <NumberPresetSelector
+                value={localTrials}
+                customValue={customTrialsInput}
+                presets={trialsPresets}
+                min={1}
+                max={100}
+                placeholder={t('home.config.custom')}
+                onPresetSelect={handleTrialsPreset}
+                onCustomChange={handleCustomTrials}
+              />
+            </TrainingConfigSection>
 
+            {expandedTest === 'gratings' && (
+              <TrainingConfigSection
+                title={t('assess.plMethodTitle')}
+                value={plInputMode === 'keyboard' ? t('assess.kbMode') : t('assess.wgMode')}
+              >
+                <TrainingConfigOptionGroup columns={2}>
+                  <button
+                    className={`training-option ${plInputMode === 'keyboard' ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePLInputMode('keyboard');
+                    }}
+                  >
+                    <span className="training-option-title">{t('assess.kbMode')}</span>
+                    <span className="training-option-meta">{t('assess.kbModeDesc')}</span>
+                  </button>
+                  <button
+                    className={`training-option ${plInputMode === 'webgazer' ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePLInputMode('webgazer');
+                    }}
+                  >
+                    <span className="training-option-title">{t('assess.wgMode')}</span>
+                    <span className="training-option-meta">{t('assess.wgModeDesc')}</span>
+                  </button>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
+            )}
         </ConfigDialog>
       )}
 
@@ -235,58 +240,63 @@ export function AssessmentPage() {
             { value: ufovLabels.subtests[selectedUfovSubtest] },
             { value: ufovLabels.modes[selectedUfovMode].label },
           ]}
+          actions={(
+            <>
+              <button className="btn btn-primary btn-lg config-start-btn" type="button" onClick={() => void handleStartUfov()}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
+                {ufovLabels.start}
+              </button>
+              <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsUfovConfigOpen(false)}>
+                {ufovLabels.cancel}
+              </button>
+            </>
+          )}
         >
-          <div className="config-section">
-            <div className="config-label">{ufovLabels.chooseSubtest}</div>
-            <div className="difficulty-selector">
+          <TrainingConfigSection
+            title={ufovLabels.chooseSubtest}
+            value={ufovLabels.subtests[selectedUfovSubtest]}
+          >
+            <TrainingConfigOptionGroup columns={3}>
               {ufovSubtests.map((subtestId) => {
                 const subtestBlocked = isSmallScreenDevice && subtestId !== 1;
                 return (
                   <button
-                    className={`diff-btn ${selectedUfovSubtest === subtestId ? 'active' : ''}`}
+                    className={`training-option ${selectedUfovSubtest === subtestId ? 'active' : ''}`}
                     disabled={subtestBlocked}
                     key={subtestId}
                     onClick={() => setSelectedUfovSubtest(subtestId)}
                     type="button"
                   >
-                    <span className="diff-btn-label">{ufovLabels.subtests[subtestId]}</span>
-                    <span className="diff-btn-desc">
+                    <span className="training-option-title">{ufovLabels.subtests[subtestId]}</span>
+                    <span className="training-option-meta">
                       {subtestBlocked ? ufovLabels.subtestUnavailable : ufovLabels.instructions[subtestId]}
                     </span>
                   </button>
                 );
               })}
-            </div>
-          </div>
+            </TrainingConfigOptionGroup>
+          </TrainingConfigSection>
 
-          <div className="config-section">
-            <div className="config-label">{ufovLabels.chooseMode}</div>
-            <div className="difficulty-selector">
+          <TrainingConfigSection
+            title={ufovLabels.chooseMode}
+            value={ufovLabels.modes[selectedUfovMode].label}
+          >
+            <TrainingConfigOptionGroup columns={3}>
               {ufovRunModes.map((mode) => (
                 <button
-                  className={`diff-btn ${selectedUfovMode === mode ? 'active' : ''}`}
+                  className={`training-option ${selectedUfovMode === mode ? 'active' : ''}`}
                   key={mode}
                   onClick={() => setSelectedUfovMode(mode)}
                   type="button"
                 >
-                  <span className="diff-btn-label">{ufovLabels.modes[mode].label}</span>
-                  <span className="diff-btn-desc">{ufovLabels.modes[mode].description}</span>
+                  <span className="training-option-title">{ufovLabels.modes[mode].label}</span>
+                  <span className="training-option-meta">{ufovLabels.modes[mode].description}</span>
                 </button>
               ))}
-            </div>
-          </div>
-
-          <div className="config-actions">
-            <button className="btn btn-primary btn-lg config-start-btn" type="button" onClick={() => void handleStartUfov()}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <polygon points="5,3 19,12 5,21" />
-              </svg>
-              {ufovLabels.start}
-            </button>
-            <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsUfovConfigOpen(false)}>
-              {ufovLabels.cancel}
-            </button>
-          </div>
+            </TrainingConfigOptionGroup>
+          </TrainingConfigSection>
         </ConfigDialog>
       )}
 
@@ -294,21 +304,22 @@ export function AssessmentPage() {
         <ConfigDialog
           ariaLabel={t('assess.calibrationWarning.title')}
           onClose={() => setShowCalibrationWarning(false)}
-        >
-            <div className="config-section">
-              <div className="config-label">{t('assess.calibrationWarning.title')}</div>
-              <p className="calibration-warning-message">
-                {t('assess.calibrationWarning.message')}
-              </p>
-            </div>
-            <div className="config-actions">
+          actions={(
+            <>
               <button className="btn btn-primary btn-lg" onClick={handleCalibrateNow}>
                 {t('assess.calibrationWarning.calibrateNow')}
               </button>
               <button className="btn btn-secondary btn-lg" onClick={() => void handleTryAnyway()}>
                 {t('assess.calibrationWarning.tryAnyway')}
               </button>
-            </div>
+            </>
+          )}
+        >
+            <TrainingConfigSection
+              title={t('assess.calibrationWarning.title')}
+              description={t('assess.calibrationWarning.message')}
+              wide
+            />
         </ConfigDialog>
       )}
     </main>

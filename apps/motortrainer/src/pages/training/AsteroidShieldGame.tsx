@@ -16,7 +16,12 @@ import {
 } from '@mediapipe/tasks-vision';
 import { initJsPsych } from 'jspsych';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  TrainingConfigNotice,
+  TrainingConfigOptionGroup,
+  TrainingConfigPanel,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -35,7 +40,6 @@ import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
-import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 
 type DifficultyId = 'beginner' | 'intermediate' | 'advanced';
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
@@ -839,15 +843,12 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
               </>
             )}
           >
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.difficulty}</h2>
-                  <p>{labels.difficultyDesc}</p>
-                </div>
-                <span>{labels[difficulty]}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-three">
+            <TrainingConfigSection
+              title={labels.difficulty}
+              description={labels.difficultyDesc}
+              value={labels[difficulty]}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {difficulties.map((item) => (
                   <button
                     className={`training-option ${difficulty === item.id ? 'active' : ''}`}
@@ -859,18 +860,15 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     <span className="training-option-meta">{Math.round(item.baseSpeed)} px/s</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.duration}</h2>
-                  <p>{labels.durationDesc}</p>
-                </div>
-                <span>{durationSec}s</span>
-              </div>
-              <div className="training-option-grid training-option-grid-three">
+            <TrainingConfigSection
+              title={labels.duration}
+              description={labels.durationDesc}
+              value={`${durationSec}s`}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {durationOptions.map((value) => (
                   <button
                     className={`training-option ${durationSec === value ? 'active' : ''}`}
@@ -881,18 +879,11 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     <span className="training-option-title">{value}s</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.hp}</h2>
-                  <p>{labels.hpDesc}</p>
-                </div>
-                <span>{maxHp}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-three">
+            <TrainingConfigSection title={labels.hp} description={labels.hpDesc} value={maxHp}>
+              <TrainingConfigOptionGroup columns={3}>
                 {hpOptions.map((value) => (
                   <button
                     className={`training-option ${maxHp === value ? 'active' : ''}`}
@@ -903,18 +894,15 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     <span className="training-option-title">{value}</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.shieldSize}</h2>
-                  <p>{labels.shieldSizeDesc}</p>
-                </div>
-                <span>{shieldSizePercent}%</span>
-              </div>
-              <div className="training-option-grid training-option-grid-three">
+            <TrainingConfigSection
+              title={labels.shieldSize}
+              description={labels.shieldSizeDesc}
+              value={`${shieldSizePercent}%`}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {shieldSizeOptions.map((value) => (
                   <button
                     className={`training-option ${shieldSizePercent === value ? 'active' : ''}`}
@@ -925,18 +913,15 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     <span className="training-option-title">{value}%</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.handControl}</h2>
-                  <p>{labels.handControlDesc}</p>
-                </div>
-                <span>{handControlEnabled ? t('common.on') : t('common.off')}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-two">
+            <TrainingConfigSection
+              title={labels.handControl}
+              description={labels.handControlDesc}
+              value={handControlEnabled ? t('common.on') : t('common.off')}
+            >
+              <TrainingConfigOptionGroup columns={2}>
                 <button
                   className={`training-option ${handControlEnabled ? 'active' : ''}`}
                   type="button"
@@ -951,18 +936,15 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                 >
                   <span className="training-option-title">{t('common.off')}</span>
                 </button>
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.hand}</h2>
-                  <p>{labels.handDesc}</p>
-                </div>
-                <span>{FormatHandChoice(handChoice, labels)}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-three">
+            <TrainingConfigSection
+              title={labels.hand}
+              description={labels.handDesc}
+              value={FormatHandChoice(handChoice, labels)}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {handChoices.map((value) => (
                   <button
                     className={`training-option ${handChoice === value ? 'active' : ''}`}
@@ -973,10 +955,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     <span className="training-option-title">{FormatHandChoice(value, labels)}</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <TrainingPrivacyNotice
+            <TrainingConfigNotice
               title={labels.privacyTitle}
               description={labels.privacyDesc}
             />

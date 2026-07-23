@@ -29,10 +29,6 @@
   z-index: 2;
 }
 
-.every-ball-config {
-  width: min(1120px, 100%);
-}
-
 .every-ball-setting-muted {
   opacity: 0.62;
 }

@@ -9,7 +9,11 @@ import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  TrainingConfigOptionGroup,
+  TrainingConfigPanel,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -690,15 +694,12 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
               </>
             )}
           >
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('cognitive.config.difficulty')}</h2>
-                    <p>{activeDifficultyDescription}</p>
-                  </div>
-                  <span>{activeDifficultyLabel}</span>
-                </div>
-                <div className="training-option-grid training-option-grid-three">
+              <TrainingConfigSection
+                title={t('cognitive.config.difficulty')}
+                description={activeDifficultyDescription}
+                value={activeDifficultyLabel}
+              >
+                <TrainingConfigOptionGroup columns={3}>
                   {Object.entries(difficulties).map(([key, value]) => (
                     <button
                       key={key}
@@ -710,18 +711,15 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                       <span className="training-option-meta">{t(value.descriptionKey)}</span>
                     </button>
                   ))}
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('drawing.config.hp')}</h2>
-                    <p>{t('drawing.config.hpValue', { value: maxHp })}</p>
-                  </div>
-                  <span>{isCustomHp ? t('training.custom') : t('training.default')}</span>
-                </div>
-                <div className="training-option-grid training-option-grid-four">
+              <TrainingConfigSection
+                title={t('drawing.config.hp')}
+                description={t('drawing.config.hpValue', { value: maxHp })}
+                value={isCustomHp ? t('training.custom') : t('training.default')}
+              >
+                <TrainingConfigOptionGroup columns={4}>
                   {hpOptions.map((option) => (
                     <button
                       key={option}
@@ -753,20 +751,16 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                       aria-label={t('drawing.config.customHp')}
                     />
                   </label>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting training-setting-wide">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('drawing.config.gameDuration')}</h2>
-                    <p>{gameDurationLabel}</p>
-                  </div>
-                  <span>
-                    {gameDurationSec === defaultGameDurationSeconds ? t('training.default') : isPresetGameDuration ? t('training.optional') : t('training.custom')}
-                  </span>
-                </div>
-                <div className="training-option-grid training-duration-grid">
+              <TrainingConfigSection
+                title={t('drawing.config.gameDuration')}
+                description={gameDurationLabel}
+                value={gameDurationSec === defaultGameDurationSeconds ? t('training.default') : isPresetGameDuration ? t('training.optional') : t('training.custom')}
+                wide
+              >
+                <TrainingConfigOptionGroup className="training-duration-grid">
                   {gameDurationOptions.filter((option) => option !== null).map((option) => (
                     <button
                       key={option}
@@ -805,18 +799,15 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                   >
                     <span className="training-option-title">{t('drawing.config.infiniteMode')}</span>
                   </button>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('drawing.config.enemySpeed')}</h2>
-                    <p>{t('drawing.config.speedValue', { value: speed })}</p>
-                  </div>
-                  <span>{isCustomSpeed ? t('training.custom') : t('training.default')}</span>
-                </div>
-                <div className="training-option-grid training-speed-grid">
+              <TrainingConfigSection
+                title={t('drawing.config.enemySpeed')}
+                description={t('drawing.config.speedValue', { value: speed })}
+                value={isCustomSpeed ? t('training.custom') : t('training.default')}
+              >
+                <TrainingConfigOptionGroup className="training-speed-grid">
                   {enemySpeedOptions.map((option) => (
                     <button
                       key={option}
@@ -849,16 +840,13 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                       aria-label={t('drawing.config.customEnemySpeed')}
                     />
                   </label>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('drawing.config.strictness')}</h2>
-                    <p>{strictness}%</p>
-                  </div>
-                </div>
+              <TrainingConfigSection
+                title={t('drawing.config.strictness')}
+                description={`${strictness}%`}
+              >
                 <input
                   className="training-slider"
                   type="range"
@@ -868,16 +856,13 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                   value={strictness}
                   onChange={(event) => setStrictness(Number(event.target.value))}
                 />
-              </section>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('drawing.config.strokeWait')}</h2>
-                    <p>{t('drawing.config.waitValue', { value: strokeWaitMs })}</p>
-                  </div>
-                </div>
-                <div className="training-option-grid training-wait-grid">
+              <TrainingConfigSection
+                title={t('drawing.config.strokeWait')}
+                description={t('drawing.config.waitValue', { value: strokeWaitMs })}
+              >
+                <TrainingConfigOptionGroup className="training-wait-grid">
                   {strokeWaitOptions.map((wait) => (
                     <button
                       key={wait}
@@ -909,17 +894,15 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                       aria-label={t('drawing.config.customStrokeWait')}
                     />
                   </label>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting training-setting-wide">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('drawing.config.background')}</h2>
-                    <p>{backgroundSummary}</p>
-                  </div>
-                  <span>{backgroundModeLabel}</span>
-                </div>
+              <TrainingConfigSection
+                title={t('drawing.config.background')}
+                description={backgroundSummary}
+                value={backgroundModeLabel}
+                wide
+              >
                 <div className="drawing-defense-background-controls">
                   <button
                     type="button"
@@ -960,7 +943,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                     />
                   </label>
                 </div>
-              </section>
+              </TrainingConfigSection>
           </TrainingConfigPanel>
         </div>
       )}

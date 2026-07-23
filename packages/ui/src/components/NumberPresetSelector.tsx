@@ -1,3 +1,5 @@
+import { TrainingConfigOptionGroup } from './TrainingConfigPanel';
+
 export interface NumberPresetSelectorProps {
   value: number;
   customValue: string;
@@ -20,26 +22,29 @@ export function NumberPresetSelector({
   onCustomChange,
 }: NumberPresetSelectorProps) {
   return (
-    <div className="number-preset-selector">
+    <TrainingConfigOptionGroup className="training-number-preset-grid" columns={4}>
       {presets.map((preset) => (
         <button
           key={preset}
           type="button"
-          className={`number-preset-button ${value === preset && !customValue ? 'active' : ''}`}
+          className={`training-option ${value === preset && !customValue ? 'active' : ''}`}
           onClick={() => onPresetSelect(preset)}
         >
-          {preset}
+          <span className="training-option-title">{preset}</span>
         </button>
       ))}
-      <input
-        className="number-preset-input"
-        type="number"
-        min={min}
-        max={max}
-        placeholder={placeholder}
-        value={customValue}
-        onChange={(event) => onCustomChange(event.target.value)}
-      />
-    </div>
+      <label className={`training-option training-option-custom ${customValue ? 'active' : ''}`}>
+        <span className="training-option-title">{placeholder}</span>
+        <input
+          className="training-number-input"
+          type="number"
+          min={min}
+          max={max}
+          placeholder={placeholder}
+          value={customValue}
+          onChange={(event) => onCustomChange(event.target.value)}
+        />
+      </label>
+    </TrainingConfigOptionGroup>
   );
 }

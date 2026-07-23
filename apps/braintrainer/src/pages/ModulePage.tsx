@@ -4,6 +4,10 @@ import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
+import {
+  TrainingConfigOptionGroup,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
@@ -197,32 +201,53 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
             { value: selectedUfovTrialCount },
             { value: `${selectedUfovAxes.length}/8` },
           ]}
+          actions={(
+            <>
+              <button
+                className="btn btn-primary btn-lg config-start-btn"
+                type="button"
+                onClick={() => {
+                  setIsUfovConfigOpen(false);
+                  setIsUfovRulesOpen(true);
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
+                {ruleLabels.next}
+              </button>
+              <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsUfovConfigOpen(false)}>
+                {ufovLabels.cancel}
+              </button>
+            </>
+          )}
         >
-          <div className="config-section">
-            <div className="config-label">{ufovLabels.chooseSubtest}</div>
-            <div className="difficulty-selector">
+          <TrainingConfigSection
+            title={ufovLabels.chooseSubtest}
+            value={ufovLabels.subtests[selectedUfovSubtest]}
+          >
+            <TrainingConfigOptionGroup columns={3}>
               {ufovSubtests.map((subtestId) => {
                 const subtestBlocked = isSmallScreenDevice && subtestId !== 1;
                 return (
                   <button
-                    className={`diff-btn ${selectedUfovSubtest === subtestId ? 'active' : ''}`}
+                    className={`training-option ${selectedUfovSubtest === subtestId ? 'active' : ''}`}
                     disabled={subtestBlocked}
                     key={subtestId}
                     onClick={() => setSelectedUfovSubtest(subtestId)}
                     type="button"
                   >
-                    <span className="diff-btn-label">{ufovLabels.subtests[subtestId]}</span>
-                    <span className="diff-btn-desc">
+                    <span className="training-option-title">{ufovLabels.subtests[subtestId]}</span>
+                    <span className="training-option-meta">
                       {subtestBlocked ? ufovLabels.subtestUnavailable : ufovLabels.instructions[subtestId]}
                     </span>
                   </button>
                 );
               })}
-            </div>
-          </div>
+            </TrainingConfigOptionGroup>
+          </TrainingConfigSection>
 
-          <div className="config-section">
-            <div className="config-label">{ufovLabels.chooseTrialCount}</div>
+          <TrainingConfigSection title={ufovLabels.chooseTrialCount} value={selectedUfovTrialCount}>
             <NumberPresetSelector
               value={selectedUfovTrialCount}
               customValue={customUfovTrialCountInput}
@@ -233,59 +258,45 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
               onPresetSelect={handleTrialPreset}
               onCustomChange={handleCustomTrialCount}
             />
-          </div>
+          </TrainingConfigSection>
 
-          <div className="config-section">
-            <div className="config-label">{ufovLabels.chooseDirections}</div>
-            <div className="difficulty-selector">
+          <TrainingConfigSection
+            title={ufovLabels.chooseDirections}
+            value={`${selectedUfovAxes.length}/8`}
+            wide
+          >
+            <TrainingConfigOptionGroup columns={4}>
               {ufovTargetAxes.map((axis) => (
                 <button
-                  className={`diff-btn ${selectedUfovAxes.includes(axis) ? 'active' : ''}`}
+                  className={`training-option ${selectedUfovAxes.includes(axis) ? 'active' : ''}`}
                   key={axis}
                   onClick={() => toggleTargetAxis(axis)}
                   type="button"
                 >
-                  <span className="diff-btn-label">{axis + 1}. {ufovLabels.directions[axis]}</span>
+                  <span className="training-option-title">{axis + 1}. {ufovLabels.directions[axis]}</span>
                 </button>
               ))}
-            </div>
-          </div>
+            </TrainingConfigOptionGroup>
+          </TrainingConfigSection>
 
-          <div className="config-section">
-            <div className="config-label">{ufovLabels.chooseMode}</div>
-            <div className="difficulty-selector">
+          <TrainingConfigSection
+            title={ufovLabels.chooseMode}
+            value={ufovLabels.modes[selectedUfovMode].label}
+          >
+            <TrainingConfigOptionGroup columns={3}>
               {ufovRunModes.map((mode) => (
                 <button
-                  className={`diff-btn ${selectedUfovMode === mode ? 'active' : ''}`}
+                  className={`training-option ${selectedUfovMode === mode ? 'active' : ''}`}
                   key={mode}
                   onClick={() => setSelectedUfovMode(mode)}
                   type="button"
                 >
-                  <span className="diff-btn-label">{ufovLabels.modes[mode].label}</span>
-                  <span className="diff-btn-desc">{ufovLabels.modes[mode].description}</span>
+                  <span className="training-option-title">{ufovLabels.modes[mode].label}</span>
+                  <span className="training-option-meta">{ufovLabels.modes[mode].description}</span>
                 </button>
               ))}
-            </div>
-          </div>
-
-          <div className="config-actions">
-            <button
-              className="btn btn-primary btn-lg config-start-btn"
-              type="button"
-              onClick={() => {
-                setIsUfovConfigOpen(false);
-                setIsUfovRulesOpen(true);
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <polygon points="5,3 19,12 5,21" />
-              </svg>
-              {ruleLabels.next}
-            </button>
-            <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsUfovConfigOpen(false)}>
-              {ufovLabels.cancel}
-            </button>
-          </div>
+            </TrainingConfigOptionGroup>
+          </TrainingConfigSection>
         </ConfigDialog>
       )}
       {isUfovRulesOpen && (

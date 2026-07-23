@@ -14,11 +14,15 @@ import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  TrainingConfigNotice,
+  TrainingConfigOptionGroup,
+  TrainingConfigPanel,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { TrainingPrivacyNotice } from './TrainingPrivacyNotice';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
@@ -787,15 +791,12 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
               </>
             )}
           >
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('gesture.config.enemyHp')}</h2>
-                    <p>{t('gesture.config.enemyHpDesc')}</p>
-                  </div>
-                  <span>{enemyMaxHp}</span>
-                </div>
-                <div className="training-option-grid training-option-grid-four">
+              <TrainingConfigSection
+                title={t('gesture.config.enemyHp')}
+                description={t('gesture.config.enemyHpDesc')}
+                value={enemyMaxHp}
+              >
+                <TrainingConfigOptionGroup columns={4}>
                   {enemyHpOptions.map((value) => (
                     <button
                       key={value}
@@ -827,18 +828,15 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                       aria-label={t('gesture.config.customEnemyHp')}
                     />
                   </label>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('gesture.config.holdDuration')}</h2>
-                    <p>{t('gesture.config.holdDurationDesc')}</p>
-                  </div>
-                  <span>{holdDuration}s</span>
-                </div>
-                <div className="training-option-grid training-option-grid-four">
+              <TrainingConfigSection
+                title={t('gesture.config.holdDuration')}
+                description={t('gesture.config.holdDurationDesc')}
+                value={`${holdDuration}s`}
+              >
+                <TrainingConfigOptionGroup columns={4}>
                   {holdDurationOptions.map((value) => (
                     <button
                       key={value}
@@ -870,17 +868,14 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                       aria-label={t('gesture.config.customHoldDuration')}
                     />
                   </label>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('gesture.config.strictness')}</h2>
-                    <p>{t('gesture.config.strictnessDesc')}</p>
-                  </div>
-                  <span>{Math.round(strictnessThreshold * 100)}%</span>
-                </div>
+              <TrainingConfigSection
+                title={t('gesture.config.strictness')}
+                description={t('gesture.config.strictnessDesc')}
+                value={`${Math.round(strictnessThreshold * 100)}%`}
+              >
                 <input
                   className="training-slider"
                   type="range"
@@ -891,17 +886,14 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                   onChange={(event) => setStrictnessThreshold(Number(event.target.value) / 100)}
                   aria-label={t('gesture.config.strictness')}
                 />
-              </section>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('gesture.config.targetMode')}</h2>
-                    <p>{t('gesture.config.targetModeDesc')}</p>
-                  </div>
-                  <span>{targetModeLabel}</span>
-                </div>
-                <div className="training-option-grid training-option-grid-two">
+              <TrainingConfigSection
+                title={t('gesture.config.targetMode')}
+                description={t('gesture.config.targetModeDesc')}
+                value={targetModeLabel}
+              >
+                <TrainingConfigOptionGroup columns={2}>
                   <button
                     type="button"
                     className={`training-option ${targetMode === 'free' ? 'active' : ''}`}
@@ -918,10 +910,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                     <span className="training-option-title">{t('gesture.config.directed')}</span>
                     <span className="training-option-meta">{t('gesture.config.directedDesc')}</span>
                   </button>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <TrainingPrivacyNotice
+              <TrainingConfigNotice
                 title={t('gesture.privacy.title')}
                 description={t('gesture.privacy.desc')}
               />

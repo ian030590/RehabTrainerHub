@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { StartTrainingButton } from './StartTrainingButton';
-import { TrainingConfigPanel } from './TrainingConfigPanel';
+import { TrainingConfigPanel, TrainingConfigSection } from './TrainingConfigPanel';
 import type { TrainingConfigSummaryItem } from './TrainingConfigSummary';
 
 type PanelAriaProps = Pick<HTMLAttributes<HTMLDivElement>, 'aria-label' | 'aria-modal' | 'role'>;
@@ -76,25 +76,20 @@ export function TrainingRulesPanel({
       )}
     >
       {sections.map((section, index) => (
-        <section
-          className={['training-setting', 'training-setting-wide', 'training-rule-section', section.className]
-            .filter(Boolean)
-            .join(' ')}
+        <TrainingConfigSection
+          className={['training-rule-section', section.className].filter(Boolean).join(' ')}
+          description={section.description}
           key={index}
+          title={section.title}
+          value={section.meta}
+          wide
         >
-          <div className="training-setting-header">
-            <div>
-              <h2>{section.title}</h2>
-              {section.description && <p>{section.description}</p>}
-            </div>
-            {section.meta && <span>{section.meta}</span>}
-          </div>
           {section.items && section.items.length > 0 && (
             <ol className="training-rule-list">
               {section.items.map((item, itemIndex) => <li key={itemIndex}>{item}</li>)}
             </ol>
           )}
-        </section>
+        </TrainingConfigSection>
       ))}
       {children}
     </TrainingConfigPanel>

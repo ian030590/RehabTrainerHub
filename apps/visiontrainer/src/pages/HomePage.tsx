@@ -4,6 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
+import {
+  TrainingConfigOptionGroup,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { IsCalibrated } from '../utils/settings';
@@ -329,6 +333,28 @@ export function HomePage() {
     ? trainingModules.find((module) => module.id === rulesModule)
     : null;
   const activeRulesSummaryItems = rulesModule ? getRulesSummaryItems(rulesModule) : [];
+  const configActions = (
+    <>
+      <button
+        className={`btn btn-primary btn-lg config-start-btn ${isStartingTraining ? 'is-loading' : ''}`}
+        disabled={isStartingTraining}
+        aria-busy={isStartingTraining}
+        onClick={(event) => { event.stopPropagation(); handleShowRules(); }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <polygon points="5,3 19,12 5,21" />
+        </svg>
+        {showRulesButtonLabel}
+        {isStartingTraining && <span className="loading-dot" />}
+      </button>
+      <button
+        className="btn btn-ghost btn-lg"
+        onClick={(event) => { event.stopPropagation(); setExpandedModule(null); }}
+      >
+        {t('btn.cancel')}
+      </button>
+    </>
+  );
 
   return (
     <main className="page-content" id="main-content">
@@ -380,27 +406,29 @@ export function HomePage() {
             { value: diffOptions.find((d) => d.key === localDifficulty)?.label },
             { value: localRounds },
           ]}
+          actions={configActions}
         >
             {/* Difficulty */}
-            <div className="config-section">
-              <div className="config-label">{t('home.config.difficulty')}</div>
-              <div className="difficulty-selector">
+            <TrainingConfigSection
+              title={t('home.config.difficulty')}
+              value={diffOptions.find((option) => option.key === localDifficulty)?.label}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {diffOptions.map((opt) => (
                   <button
                     key={opt.key}
-                    className={`diff-btn ${localDifficulty === opt.key ? 'active' : ''}`}
+                    className={`training-option ${localDifficulty === opt.key ? 'active' : ''}`}
                     onClick={(e) => { e.stopPropagation(); setLocalDifficulty(opt.key); }}
                   >
-                    <span className="diff-btn-label">{opt.label}</span>
-                    <span className="diff-btn-desc">{opt.desc}</span>
+                    <span className="training-option-title">{opt.label}</span>
+                    <span className="training-option-meta">{opt.desc}</span>
                   </button>
                 ))}
-              </div>
-            </div>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
             {/* Rounds */}
-            <div className="config-section">
-              <div className="config-label">{t('home.config.rounds')}</div>
+            <TrainingConfigSection title={t('home.config.rounds')} value={localRounds}>
               <NumberPresetSelector
                 value={localRounds}
                 customValue={customRoundsInput}
@@ -411,29 +439,7 @@ export function HomePage() {
                 onPresetSelect={handleRoundsPreset}
                 onCustomChange={handleCustomRoundsChange}
               />
-            </div>
-
-            {/* Actions */}
-            <div className="config-actions">
-              <button
-                className={`btn btn-primary btn-lg config-start-btn ${isStartingTraining ? 'is-loading' : ''}`}
-                disabled={isStartingTraining}
-                aria-busy={isStartingTraining}
-                onClick={(e) => { e.stopPropagation(); handleShowRules(); }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5,3 19,12 5,21" />
-                </svg>
-                {showRulesButtonLabel}
-                {isStartingTraining && <span className="loading-dot" />}
-              </button>
-              <button
-                className="btn btn-ghost btn-lg"
-                onClick={(e) => { e.stopPropagation(); setExpandedModule(null); }}
-              >
-                {t('btn.cancel')}
-              </button>
-            </div>
+            </TrainingConfigSection>
 
         </ConfigDialog>
       )}
@@ -446,29 +452,34 @@ export function HomePage() {
             { value: t(`preset.mode.${oculomotorMode}` as any) },
             { value: `${oculomotorDurationSec}s` },
           ]}
+          actions={configActions}
         >
-            <div className="config-section">
-              <div className="config-label">{t('home.config.trainingMode')}</div>
-              <div className="difficulty-selector">
+            <TrainingConfigSection
+              title={t('home.config.trainingMode')}
+              value={t(`preset.mode.${oculomotorMode}` as any)}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {oculomotorModes.map((mode) => (
                   <button
                     key={mode.id}
-                    className={`diff-btn ${oculomotorMode === mode.id ? 'active' : ''}`}
+                    className={`training-option ${oculomotorMode === mode.id ? 'active' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setOculomotorMode(mode.id);
                     }}
                   >
-                    <span className="diff-btn-label">{t(`preset.mode.${mode.id}` as any)}</span>
-                    <span className="diff-btn-desc">{t(`preset.mode.${mode.id}Desc` as any)}</span>
+                    <span className="training-option-title">{t(`preset.mode.${mode.id}` as any)}</span>
+                    <span className="training-option-meta">{t(`preset.mode.${mode.id}Desc` as any)}</span>
                   </button>
                 ))}
-              </div>
-            </div>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
             {oculomotorMode !== 'lilac-chaser' && (
-              <div className="config-section">
-                <div className="config-label">{t('home.config.movementPath')}</div>
+              <TrainingConfigSection
+                title={t('home.config.movementPath')}
+                value={t(`preset.path.${oculomotorPattern}` as any)}
+              >
                 <select
                   className="input"
                   value={oculomotorPattern}
@@ -479,44 +490,48 @@ export function HomePage() {
                     <option key={pattern.id} value={pattern.id}>{t(`preset.path.${pattern.id}` as any)}</option>
                   ))}
                 </select>
-              </div>
+              </TrainingConfigSection>
             )}
 
-            <div className="config-section">
-              <div className="config-label">{t('home.config.durationSec')}</div>
-              <div className="number-preset-selector">
+            <TrainingConfigSection
+              title={t('home.config.durationSec')}
+              value={`${oculomotorDurationSec}s`}
+            >
+              <TrainingConfigOptionGroup columns={4}>
                 {durationPresets.map((duration) => (
                   <button
                     key={duration}
-                    className={`number-preset-button ${oculomotorDurationSec === duration ? 'active' : ''}`}
+                    className={`training-option ${oculomotorDurationSec === duration ? 'active' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setOculomotorDurationSec(duration);
                     }}
                   >
-                    {duration}
+                    <span className="training-option-title">{duration}s</span>
                   </button>
                 ))}
-                <input
-                  className="number-preset-input"
-                  type="number"
-                  min="15"
-                  max="300"
-                  value={oculomotorDurationSec}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value, 10);
-                    if (Number.isFinite(value)) {
-                      setOculomotorDurationSec(Math.max(15, Math.min(300, value)));
-                    }
-                  }}
-                />
-              </div>
-            </div>
+                <label className={`training-option training-option-custom ${durationPresets.includes(oculomotorDurationSec) ? '' : 'active'}`}>
+                  <span className="training-option-title">{t('home.config.custom')}</span>
+                  <input
+                    className="training-number-input"
+                    type="number"
+                    min="15"
+                    max="300"
+                    value={oculomotorDurationSec}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      if (Number.isFinite(value)) {
+                        setOculomotorDurationSec(Math.max(15, Math.min(300, value)));
+                      }
+                    }}
+                  />
+                </label>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <div className="config-section">
-              <div className="config-label">{t('home.config.speedAndSize')}</div>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 8, justifyContent: 'center' }}>
+            <TrainingConfigSection title={t('home.config.speedAndSize')} wide>
+              <div className="training-config-inline-actions">
                 {[1, 2, 4, 8].map(mult => (
                   <button
                     key={mult}
@@ -530,11 +545,11 @@ export function HomePage() {
                   </button>
                 ))}
               </div>
-              <div className="difficulty-selector">
-                <label className="diff-btn" style={{ cursor: 'default', alignItems: 'stretch' }}>
-                  <span className="diff-btn-desc">{t('home.config.speed')}</span>
+              <TrainingConfigOptionGroup columns={3}>
+                <label className="training-option training-option-field">
+                  <span className="training-option-meta">{t('home.config.speed')}</span>
                   <input
-                    className="number-preset-input"
+                    className="training-number-input"
                     type="number"
                     min="2"
                     max="80"
@@ -546,13 +561,12 @@ export function HomePage() {
                         setOculomotorSpeedDegPerSec(Math.max(2, Math.min(80, value)));
                       }
                     }}
-                    style={{ width: '100%' }}
                   />
                 </label>
-                <label className="diff-btn" style={{ cursor: 'default', alignItems: 'stretch' }}>
-                  <span className="diff-btn-desc">{t('home.config.size')}</span>
+                <label className="training-option training-option-field">
+                  <span className="training-option-meta">{t('home.config.size')}</span>
                   <input
-                    className="number-preset-input"
+                    className="training-number-input"
                     type="number"
                     min="2"
                     max="100"
@@ -564,13 +578,12 @@ export function HomePage() {
                         setOculomotorTargetSizeMm(Math.max(2, Math.min(100, value)));
                       }
                     }}
-                    style={{ width: '100%' }}
                   />
                 </label>
-                <label className="diff-btn" style={{ cursor: 'default', alignItems: 'stretch' }}>
-                  <span className="diff-btn-desc">{t('home.config.distractors')}</span>
+                <label className="training-option training-option-field">
+                  <span className="training-option-meta">{t('home.config.distractors')}</span>
                   <input
-                    className="number-preset-input"
+                    className="training-number-input"
                     type="number"
                     min="0"
                     max="12"
@@ -583,17 +596,16 @@ export function HomePage() {
                         setOculomotorDistractorCount(Math.max(0, Math.min(12, value)));
                       }
                     }}
-                    style={{ width: '100%', opacity: oculomotorMode === 'multi-object' ? 1 : 0.5 }}
+                    style={{ opacity: oculomotorMode === 'multi-object' ? 1 : 0.5 }}
                   />
                 </label>
-              </div>
-            </div>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <div className="config-section">
-              <div className="config-label">{t('home.config.colors')}</div>
-              <div className="color-settings-row">
-                <label className="color-field">
-                  <span>{t('home.config.targetColor')}</span>
+            <TrainingConfigSection title={t('home.config.colors')} wide>
+              <TrainingConfigOptionGroup columns={3}>
+                <label className="training-option training-option-field training-option-color-field">
+                  <span className="training-option-title">{t('home.config.targetColor')}</span>
                   <input
                     type="color"
                     value={oculomotorTargetColor}
@@ -601,8 +613,8 @@ export function HomePage() {
                     onChange={(e) => setOculomotorTargetColor(e.target.value)}
                   />
                 </label>
-                <label className="color-field">
-                  <span>{t('home.config.bgColor')}</span>
+                <label className="training-option training-option-field training-option-color-field">
+                  <span className="training-option-title">{t('home.config.bgColor')}</span>
                   <input
                     type="color"
                     value={oculomotorBackgroundColor}
@@ -610,9 +622,10 @@ export function HomePage() {
                     onChange={(e) => setOculomotorBackgroundColor(e.target.value)}
                   />
                 </label>
-                <label className="color-field" style={{ flex: 2 }}>
-                  <span>{t('home.config.opacity')} ({oculomotorTargetOpacity})</span>
+                <label className="training-option training-option-field">
+                  <span className="training-option-title">{t('home.config.opacity')} ({oculomotorTargetOpacity})</span>
                   <input
+                    className="training-slider"
                     type="range"
                     min="0.1"
                     max="1.0"
@@ -620,23 +633,20 @@ export function HomePage() {
                     value={oculomotorTargetOpacity}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => setOculomotorTargetOpacity(parseFloat(e.target.value))}
-                    style={{ width: '100%' }}
                   />
                 </label>
-              </div>
-            </div>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
             
-            <div className="config-section">
-              <div className="config-label">{t('home.config.advancedConfig')}</div>
-              <div className="color-settings-row">
-                <label className="color-field" style={{ flex: 1 }}>
-                  <span>{t('home.config.bgImage')}</span>
+            <TrainingConfigSection title={t('home.config.advancedConfig')} wide>
+              <TrainingConfigOptionGroup columns={2}>
+                <label className="training-option training-option-field">
+                  <span className="training-option-title">{t('home.config.bgImage')}</span>
                   <input
                     type="file"
                     accept="image/*"
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => handleBackgroundImageChange(e.target.files?.[0])}
-                    style={{ width: '100%' }}
                   />
                   {oculomotorBackgroundImage && (
                     <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setOculomotorBackgroundImage(''); }}>
@@ -644,14 +654,13 @@ export function HomePage() {
                     </button>
                   )}
                 </label>
-                <label className="color-field" style={{ flex: 1 }}>
-                  <span>{t('home.config.audio')}</span>
+                <label className="training-option training-option-field">
+                  <span className="training-option-title">{t('home.config.audio')}</span>
                   <input
                     type="file"
                     accept="audio/*"
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => handleAudioChange(e.target.files?.[0])}
-                    style={{ width: '100%' }}
                   />
                   {oculomotorAudio && (
                     <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setOculomotorAudio(''); }}>
@@ -659,11 +668,12 @@ export function HomePage() {
                     </button>
                   )}
                 </label>
-              </div>
-              <div className="color-settings-row" style={{ marginTop: 16 }}>
-                <label className="color-field" style={{ flex: 1 }}>
-                  <span>{t('home.config.bounceJitter')} ({oculomotorBounceJitter})</span>
+              </TrainingConfigOptionGroup>
+              <TrainingConfigOptionGroup className="training-option-grid-spaced" columns={2}>
+                <label className="training-option training-option-field">
+                  <span className="training-option-title">{t('home.config.bounceJitter')} ({oculomotorBounceJitter})</span>
                   <input
+                    className="training-slider"
                     type="range"
                     min="0"
                     max="100"
@@ -671,44 +681,46 @@ export function HomePage() {
                     value={oculomotorBounceJitter}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => setOculomotorBounceJitter(parseInt(e.target.value, 10))}
-                    style={{ width: '100%' }}
                   />
                 </label>
-              </div>
-            </div>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <div className="config-section">
-              <div className="config-label">{t('settings.train.wgToggle')}</div>
-              <label className="diff-btn" style={{ cursor: 'pointer', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span className="diff-btn-label">{t('settings.train.wgToggle')}</span>
-                  <span className="diff-btn-desc">{t('settings.train.wgDesc')}</span>
+            <TrainingConfigSection
+              title={t('settings.train.wgToggle')}
+              value={oculomotorEnableWebgazer ? t('common.on') : t('common.off')}
+            >
+              <label className={`training-option training-option-toggle ${oculomotorEnableWebgazer ? 'active' : ''}`}>
+                <div>
+                  <span className="training-option-title">{t('settings.train.wgToggle')}</span>
+                  <span className="training-option-meta">{t('settings.train.wgDesc')}</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={oculomotorEnableWebgazer}
                   onChange={(e) => setOculomotorEnableWebgazer(e.target.checked)}
-                  style={{ transform: 'scale(1.5)', cursor: 'pointer' }}
                 />
               </label>
-            </div>
+            </TrainingConfigSection>
 
-            <div className="config-section">
-              <div className="config-label">{t('home.config.targetShape')}</div>
-              <div className="shape-selector">
+            <TrainingConfigSection
+              title={t('home.config.targetShape')}
+              value={targetShapeOptions.find((shape) => shape.key === oculomotorTargetShape)?.label}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {targetShapeOptions.map((shape) => (
                   <button
                     key={shape.key}
-                    className={`shape-btn ${oculomotorTargetShape === shape.key ? 'active' : ''}`}
+                    className={`training-option ${oculomotorTargetShape === shape.key ? 'active' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setOculomotorTargetShape(shape.key);
                     }}
                   >
-                    {shape.label}
+                    <span className="training-option-title">{shape.label}</span>
                   </button>
                 ))}
-              </div>
+              </TrainingConfigOptionGroup>
               {oculomotorTargetShape === 'custom' && (
                 <div className="custom-image-field">
                   <input
@@ -734,28 +746,7 @@ export function HomePage() {
                   )}
                 </div>
               )}
-            </div>
-
-            <div className="config-actions">
-              <button
-                className={`btn btn-primary btn-lg config-start-btn ${isStartingTraining ? 'is-loading' : ''}`}
-                disabled={isStartingTraining}
-                aria-busy={isStartingTraining}
-                onClick={(e) => { e.stopPropagation(); handleShowRules(); }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5,3 19,12 5,21" />
-                </svg>
-                {showRulesButtonLabel}
-                {isStartingTraining && <span className="loading-dot" />}
-              </button>
-              <button
-                className="btn btn-ghost btn-lg"
-                onClick={(e) => { e.stopPropagation(); setExpandedModule(null); }}
-              >
-                {t('btn.cancel')}
-              </button>
-            </div>
+            </TrainingConfigSection>
 
         </ConfigDialog>
       )}
@@ -769,63 +760,69 @@ export function HomePage() {
             { value: `${gaborDurationSec}s` },
             { value: gaborMaxSpots },
           ]}
+          actions={configActions}
         >
             {/* Difficulty */}
-            <div className="config-section">
-              <div className="config-label">{t('home.config.difficulty')}</div>
-              <div className="difficulty-selector">
+            <TrainingConfigSection
+              title={t('home.config.difficulty')}
+              value={gaborDiffOptions.find((option) => option.key === localDifficulty)?.label}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {gaborDiffOptions.map((opt) => (
                   <button
                     key={opt.key}
-                    className={`diff-btn ${localDifficulty === opt.key ? 'active' : ''}`}
+                    className={`training-option ${localDifficulty === opt.key ? 'active' : ''}`}
                     onClick={(e) => { e.stopPropagation(); setLocalDifficulty(opt.key); }}
                   >
-                    <span className="diff-btn-label">{opt.label}</span>
-                    <span className="diff-btn-desc">{opt.desc}</span>
+                    <span className="training-option-title">{opt.label}</span>
+                    <span className="training-option-meta">{opt.desc}</span>
                   </button>
                 ))}
-              </div>
-            </div>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
             {/* Duration */}
-            <div className="config-section">
-              <div className="config-label">{t('home.config.gaborDuration')}</div>
-              <div className="number-preset-selector">
+            <TrainingConfigSection title={t('home.config.gaborDuration')} value={`${gaborDurationSec}s`}>
+              <TrainingConfigOptionGroup columns={4}>
                 {durationPresets.map((duration) => (
                   <button
                     key={duration}
-                    className={`number-preset-button ${gaborDurationSec === duration ? 'active' : ''}`}
+                    className={`training-option ${gaborDurationSec === duration ? 'active' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setGaborDurationSec(duration);
                     }}
                   >
-                    {duration}s
+                    <span className="training-option-title">{duration}s</span>
                   </button>
                 ))}
-                <input
-                  className="number-preset-input"
-                  type="number"
-                  min="15"
-                  max="300"
-                  value={gaborDurationSec}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value, 10);
-                    if (Number.isFinite(value)) {
-                      setGaborDurationSec(Math.max(15, Math.min(300, value)));
-                    }
-                  }}
-                />
-              </div>
-            </div>
+                <label className={`training-option training-option-custom ${durationPresets.includes(gaborDurationSec) ? '' : 'active'}`}>
+                  <span className="training-option-title">{t('home.config.custom')}</span>
+                  <input
+                    className="training-number-input"
+                    type="number"
+                    min="15"
+                    max="300"
+                    value={gaborDurationSec}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      if (Number.isFinite(value)) {
+                        setGaborDurationSec(Math.max(15, Math.min(300, value)));
+                      }
+                    }}
+                  />
+                </label>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
             {/* Max Spots */}
-            <div className="config-section">
-              <div className="config-label">{t('home.config.gaborMaxSpots')}</div>
-              <div className="difficulty-selector">
+            <TrainingConfigSection title={t('home.config.gaborMaxSpots')} value={gaborMaxSpots}>
+              <TrainingConfigOptionGroup columns="auto">
+                <label className="training-option training-option-field">
+                  <span className="training-option-title">{t('home.config.gaborMaxSpots')}</span>
                 <input
-                  className="number-preset-input"
+                  className="training-number-input"
                   type="number"
                   min="3"
                   max="50"
@@ -837,31 +834,10 @@ export function HomePage() {
                       setGaborMaxSpots(Math.max(3, Math.min(50, value)));
                     }
                   }}
-                  style={{ width: '100%', maxWidth: 200 }}
                 />
-              </div>
-            </div>
-
-            <div className="config-actions">
-              <button
-                className={`btn btn-primary btn-lg config-start-btn ${isStartingTraining ? 'is-loading' : ''}`}
-                disabled={isStartingTraining}
-                aria-busy={isStartingTraining}
-                onClick={(e) => { e.stopPropagation(); handleShowRules(); }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5,3 19,12 5,21" />
-                </svg>
-                {showRulesButtonLabel}
-                {isStartingTraining && <span className="loading-dot" />}
-              </button>
-              <button
-                className="btn btn-ghost btn-lg"
-                onClick={(e) => { e.stopPropagation(); setExpandedModule(null); }}
-              >
-                {t('btn.cancel')}
-              </button>
-            </div>
+                </label>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
         </ConfigDialog>
       )}
@@ -873,15 +849,15 @@ export function HomePage() {
           summaryItems={[
             { value: t('home.config.randomStory') },
           ]}
+          actions={configActions}
         >
 
-            <div className="config-section">
-              <div className="config-label">{t('home.config.readingSettings')}</div>
-              <div className="difficulty-selector">
-                <label className="diff-btn" style={{ cursor: 'default', alignItems: 'stretch' }}>
-                  <span className="diff-btn-desc">{t('home.config.readingWps')}</span>
+            <TrainingConfigSection title={t('home.config.readingSettings')} wide>
+              <TrainingConfigOptionGroup columns={3}>
+                <label className="training-option training-option-field">
+                  <span className="training-option-meta">{t('home.config.readingWps')}</span>
                   <input
-                    className="number-preset-input"
+                    className="training-number-input"
                     type="number"
                     min="1"
                     max="20"
@@ -891,13 +867,12 @@ export function HomePage() {
                       const value = parseInt(e.target.value, 10);
                       if (Number.isFinite(value)) setReadingWPS(Math.max(1, Math.min(20, value)));
                     }}
-                    style={{ width: '100%' }}
                   />
                 </label>
-                <label className="diff-btn" style={{ cursor: 'default', alignItems: 'stretch' }}>
-                  <span className="diff-btn-desc">{t('home.config.readingCrowding')}</span>
+                <label className="training-option training-option-field">
+                  <span className="training-option-meta">{t('home.config.readingCrowding')}</span>
                   <input
-                    className="number-preset-input"
+                    className="training-number-input"
                     type="number"
                     min="1"
                     max="5"
@@ -907,12 +882,12 @@ export function HomePage() {
                       const value = parseInt(e.target.value, 10);
                       if (Number.isFinite(value)) setReadingCrowding(Math.max(1, Math.min(5, value)));
                     }}
-                    style={{ width: '100%' }}
                   />
                 </label>
-                <label className="diff-btn" style={{ cursor: 'default', alignItems: 'stretch' }}>
-                  <span className="diff-btn-desc">{t('home.config.readingContrast')}</span>
+                <label className="training-option training-option-field">
+                  <span className="training-option-meta">{t('home.config.readingContrast')}</span>
                   <input
+                    className="training-slider"
                     type="range"
                     min="0.0"
                     max="2.0"
@@ -920,33 +895,11 @@ export function HomePage() {
                     value={readingContrast}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => setReadingContrast(parseFloat(e.target.value))}
-                    style={{ width: '100%', marginTop: 'auto' }}
                   />
-                  <span className="diff-btn-label">{readingContrast.toFixed(1)}</span>
+                  <span className="training-option-title">{readingContrast.toFixed(1)}</span>
                 </label>
-              </div>
-            </div>
-
-            <div className="config-actions">
-              <button
-                className={`btn btn-primary btn-lg config-start-btn ${isStartingTraining ? 'is-loading' : ''}`}
-                disabled={isStartingTraining}
-                aria-busy={isStartingTraining}
-                onClick={(e) => { e.stopPropagation(); handleShowRules(); }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5,3 19,12 5,21" />
-                </svg>
-                {showRulesButtonLabel}
-                {isStartingTraining && <span className="loading-dot" />}
-              </button>
-              <button
-                className="btn btn-ghost btn-lg"
-                onClick={(e) => { e.stopPropagation(); setExpandedModule(null); }}
-              >
-                {t('btn.cancel')}
-              </button>
-            </div>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
         </ConfigDialog>
       )}
@@ -959,111 +912,81 @@ export function HomePage() {
             { value: drivingDifficultyLabels[drivingDifficulty] },
             { value: drivingRedFlashEnabled ? t('common.on') : t('common.off') },
           ]}
+          actions={configActions}
         >
-            <div className="config-section">
-              <div className="config-label">{t('home.config.drivingReactionDifficulty')}</div>
-              <div className="difficulty-selector">
+            <TrainingConfigSection
+              title={t('home.config.drivingReactionDifficulty')}
+              value={drivingDifficultyLabels[drivingDifficulty]}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {(['beginner', 'intermediate', 'advanced'] as const).map((level) => {
                   return (
                     <button
                       key={level}
-                      className={`diff-btn ${drivingDifficulty === level ? 'active' : ''}`}
+                      className={`training-option ${drivingDifficulty === level ? 'active' : ''}`}
                       onClick={(e) => { e.stopPropagation(); setDrivingDifficulty(level); }}
                     >
-                      <span className="diff-btn-label">{drivingDifficultyLabels[level]}</span>
-                      <span className="diff-btn-desc">{drivingDifficultyDescs[level]}</span>
+                      <span className="training-option-title">{drivingDifficultyLabels[level]}</span>
+                      <span className="training-option-meta">{drivingDifficultyDescs[level]}</span>
                     </button>
                   );
                 })}
-              </div>
-            </div>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <div className="config-section">
-              <div className="config-label">{t('home.config.drivingAssist')}</div>
-              <label className="diff-btn" style={{ cursor: 'pointer', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span className="diff-btn-label">{t('home.config.drivingRedFlash')}</span>
-                  <span className="diff-btn-desc">{t('home.config.drivingRedFlashDesc')}</span>
+            <TrainingConfigSection
+              title={t('home.config.drivingAssist')}
+              value={drivingRedFlashEnabled ? t('common.on') : t('common.off')}
+            >
+              <label className={`training-option training-option-toggle ${drivingRedFlashEnabled ? 'active' : ''}`}>
+                <div>
+                  <span className="training-option-title">{t('home.config.drivingRedFlash')}</span>
+                  <span className="training-option-meta">{t('home.config.drivingRedFlashDesc')}</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={drivingRedFlashEnabled}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) => setDrivingRedFlashEnabled(e.target.checked)}
-                  style={{ transform: 'scale(1.5)', cursor: 'pointer' }}
                 />
               </label>
-            </div>
+            </TrainingConfigSection>
 
-            <div className="config-section">
-              <div className="config-label">{t('home.config.drivingControls')}</div>
-              <div className="difficulty-selector">
+            <TrainingConfigSection
+              title={t('home.config.drivingControls')}
+              value={drivingControlOptions.find((option) => option.key === drivingControlMode)?.label}
+              wide
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {drivingControlOptions.map((option) => (
                   <button
                     key={option.key}
-                    className={`diff-btn ${drivingControlMode === option.key ? 'active' : ''}`}
+                    className={`training-option ${drivingControlMode === option.key ? 'active' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setDrivingControlMode(option.key);
                     }}
                   >
-                    <span className="diff-btn-label">{option.label}</span>
+                    <span className="training-option-title">{option.label}</span>
                   </button>
                 ))}
-              </div>
-            </div>
-
-            <div className="config-actions">
-              <button
-                className={`btn btn-primary btn-lg config-start-btn ${isStartingTraining ? 'is-loading' : ''}`}
-                disabled={isStartingTraining}
-                aria-busy={isStartingTraining}
-                onClick={(e) => { e.stopPropagation(); handleShowRules(); }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5,3 19,12 5,21" />
-                </svg>
-                {showRulesButtonLabel}
-                {isStartingTraining && <span className="loading-dot" />}
-              </button>
-              <button
-                className="btn btn-ghost btn-lg"
-                onClick={(e) => { e.stopPropagation(); setExpandedModule(null); }}
-              >
-                {t('btn.cancel')}
-              </button>
-            </div>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
         </ConfigDialog>
       )}
 
       {expandedModule === 'hart-chart' && rulesModule !== 'hart-chart' && (
-        <ConfigDialog ariaLabel={t('home.module.hartChart.title')} onClose={() => setExpandedModule(null)}>
-            <div className="config-section">
-              <div className="config-label">{t('home.module.hartChart.title')}</div>
-              <p className="calibration-warning-message">{t('home.config.hartChartSummary')}</p>
-            </div>
-
-            <div className="config-actions">
-              <button
-                className={`btn btn-primary btn-lg config-start-btn ${isStartingTraining ? 'is-loading' : ''}`}
-                disabled={isStartingTraining}
-                aria-busy={isStartingTraining}
-                onClick={(e) => { e.stopPropagation(); handleShowRules(); }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5,3 19,12 5,21" />
-                </svg>
-                {showRulesButtonLabel}
-                {isStartingTraining && <span className="loading-dot" />}
-              </button>
-              <button
-                className="btn btn-ghost btn-lg"
-                onClick={(e) => { e.stopPropagation(); setExpandedModule(null); }}
-              >
-                {t('btn.cancel')}
-              </button>
-            </div>
+        <ConfigDialog
+          ariaLabel={t('home.module.hartChart.title')}
+          onClose={() => setExpandedModule(null)}
+          actions={configActions}
+        >
+            <TrainingConfigSection
+              title={t('home.module.hartChart.title')}
+              description={t('home.config.hartChartSummary')}
+              wide
+            />
         </ConfigDialog>
       )}
 

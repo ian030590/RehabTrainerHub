@@ -676,40 +676,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   font-weight: var(--fw-bold, 700);
 }
 
-.config-label,
-.config-summary,
-.number-preset-input::placeholder,
-.diff-btn-desc {
-  font-size: calc(12px * var(--ui-font-scale, 1));
-}
-
-.color-field,
-.shape-btn,
-.number-preset-input {
-  font-size: calc(14px * var(--ui-font-scale, 1));
-}
-
-.diff-btn-label,
-.number-preset-button {
-  font-size: calc(16px * var(--ui-font-scale, 1));
-}
-
-.calibration-warning-message {
-  font-size: calc(18px * var(--ui-font-scale, 1));
-}
-
 /* Shared training flow surfaces */
-.config-panel,
-.module-config-panel {
-  width: 100%;
-  max-width: 800px;
-  margin-top: 20px;
-  padding: 32px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-l);
-  background: var(--bg-panel);
-}
-
 .config-modal-overlay {
   position: fixed;
   inset: 0;
@@ -730,208 +697,10 @@ body[data-ui-font-bold="true"] .app-layout :where(
   box-shadow: var(--shadow-modal, var(--shadow-floating));
 }
 
-.config-section {
-  margin-bottom: 24px;
-}
-
-.config-label {
-  margin-bottom: 10px;
-  color: var(--text-muted);
-  font-weight: var(--fw-bold, 700);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-
-.difficulty-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.diff-btn {
-  flex: 1;
-  min-width: 120px;
-  min-height: 88px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 14px 12px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  cursor: pointer;
-  font-family: var(--font-family);
-  text-align: center;
-  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
-}
-
-.diff-btn:hover {
-  border-color: var(--border-hover);
-  background: var(--bg-card-hover);
-}
-
-.diff-btn.active {
-  border-color: var(--accent);
-  background: var(--bg-accent-soft);
-  box-shadow: inset 0 0 0 1px var(--accent);
-}
-
-.diff-btn:disabled {
-  border-color: var(--border);
-  background: var(--bg-card);
-  box-shadow: none;
-  color: var(--text-muted);
-  cursor: not-allowed;
-  opacity: 0.52;
-}
-
-.diff-btn-label {
-  color: var(--text-primary);
-  font-weight: var(--fw-bold, 700);
-}
-
-.diff-btn.active .diff-btn-label {
-  color: var(--accent-dark);
-}
-
-.diff-btn-desc {
-  color: var(--text-muted);
-  line-height: 1.35;
-}
-
-.diff-btn.active .diff-btn-desc {
-  color: var(--text-secondary);
-}
-
-.diff-btn:disabled .diff-btn-label,
-.diff-btn:disabled .diff-btn-desc {
-  color: var(--text-muted);
-}
-
-.number-preset-selector {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.number-preset-button {
-  width: 52px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-family: var(--font-family);
-  font-weight: var(--fw-bold, 700);
-  transition: all var(--transition-fast);
-}
-
-.number-preset-button:hover {
-  border-color: var(--accent);
-  background: var(--bg-card-hover);
-  color: var(--text-primary);
-}
-
-.number-preset-button.active {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--text-on-accent);
-}
-
-.number-preset-input {
-  width: 72px;
-  height: 42px;
-  padding: 0 12px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg);
-  color: var(--text-primary);
-  font-family: var(--font-family);
-  text-align: center;
-  outline: none;
-  transition: border-color var(--transition-fast);
-}
-
-.number-preset-input:focus {
-  border-color: var(--accent);
-}
-
-.number-preset-input::placeholder {
-  color: var(--text-muted);
-}
-
-.number-preset-input::-webkit-outer-spin-button,
-.number-preset-input::-webkit-inner-spin-button,
 .training-number-input::-webkit-outer-spin-button,
 .training-number-input::-webkit-inner-spin-button {
   margin: 0;
   -webkit-appearance: none;
-}
-
-.color-settings-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.color-field {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  font-weight: var(--fw-bold, 700);
-}
-
-.color-field input[type="color"] {
-  width: 52px;
-  height: 34px;
-  padding: 0;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-s);
-  background: transparent;
-  cursor: pointer;
-}
-
-.shape-selector {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.shape-btn {
-  min-height: 42px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-family: var(--font-family);
-  font-weight: var(--fw-bold, 700);
-  transition: all var(--transition-fast);
-}
-
-.shape-btn:hover {
-  border-color: var(--accent);
-  background: var(--bg-card-hover);
-  color: var(--text-primary);
-}
-
-.shape-btn.active {
-  border-color: var(--accent);
-  background: var(--bg-accent-soft);
-  color: var(--accent-dark);
 }
 
 .custom-image-field {
@@ -1006,12 +775,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
 .config-summary strong {
   color: var(--text-secondary);
-}
-
-.calibration-warning-message {
-  margin: 0;
-  color: var(--text-secondary);
-  line-height: 1.7;
 }
 
 .experiment-container {
@@ -1375,6 +1138,29 @@ body[data-ui-font-bold="true"] .app-layout :where(
   grid-column: 1 / -1;
 }
 
+.training-config-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-m);
+  background: var(--bg-warning-soft);
+}
+
+.training-config-notice strong {
+  flex: 0 0 auto;
+  color: var(--warning);
+  font-size: calc(14px * var(--ui-font-scale, 1));
+}
+
+.training-config-notice span {
+  color: var(--text-secondary);
+  font-size: calc(13px * var(--ui-font-scale, 1));
+  line-height: 1.5;
+}
+
 .training-setting-header {
   display: flex;
   align-items: flex-start;
@@ -1436,6 +1222,14 @@ body[data-ui-font-bold="true"] .app-layout :where(
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.training-option-grid-five {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.training-option-grid-auto {
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+}
+
 .training-option {
   min-width: 0;
   min-height: 62px;
@@ -1466,6 +1260,15 @@ body[data-ui-font-bold="true"] .app-layout :where(
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 
+.training-option:disabled {
+  border-color: var(--border);
+  background: var(--bg-card);
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
 .training-option-title {
   width: 100%;
   overflow-wrap: anywhere;
@@ -1490,6 +1293,78 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
 .training-option-custom {
   cursor: pointer;
+}
+
+.training-option-field {
+  align-items: stretch;
+  justify-content: flex-start;
+  cursor: default;
+}
+
+.training-option-field:hover {
+  border-color: var(--border);
+  background: var(--bg-card);
+}
+
+.training-option-field input[type="file"] {
+  width: 100%;
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: calc(12px * var(--ui-font-scale, 1));
+}
+
+.training-option-color-field {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.training-option-color-field input[type="color"] {
+  width: 52px;
+  height: 34px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-s);
+  background: transparent;
+  cursor: pointer;
+}
+
+.training-option-toggle {
+  min-height: 62px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.training-option-toggle > div {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 3px;
+}
+
+.training-option-toggle input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.training-config-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.training-option-grid-spaced {
+  margin-top: 10px;
 }
 
 .training-number-input {
@@ -1533,23 +1408,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
 .training-config .config-actions .btn {
   border-radius: var(--radius-m);
-}
-
-.training-config .config-section {
-  min-width: 0;
-  margin: 0;
-  padding: 22px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.training-config .config-label {
-  margin-bottom: 12px;
-  color: var(--text-primary);
-  font-size: calc(16px * var(--ui-font-scale, 1));
-  font-weight: var(--ui-font-heading-weight, 800);
-  letter-spacing: 0;
-  line-height: 1.25;
-  text-transform: none;
 }
 
 .training-config-body > .config-summary {
@@ -1929,6 +1787,8 @@ body[data-ui-font-bold="true"] .app-layout :where(
   .training-option-grid-two,
   .training-option-grid-three,
   .training-option-grid-four,
+  .training-option-grid-five,
+  .training-option-grid-auto,
   .training-speed-grid,
   .training-duration-grid,
   .training-wait-grid {
@@ -1940,6 +1800,10 @@ body[data-ui-font-bold="true"] .app-layout :where(
   .training-actions,
   .training-actions .btn {
     width: 100%;
+  }
+
+  .training-config-notice {
+    flex-direction: column;
   }
 
   .training-result-summary {
@@ -1966,11 +1830,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 @media (max-width: 520px) {
   .settings-tab {
     flex: 1 1 100%;
-  }
-
-  .color-settings-row,
-  .shape-selector {
-    grid-template-columns: 1fr;
   }
 }
 

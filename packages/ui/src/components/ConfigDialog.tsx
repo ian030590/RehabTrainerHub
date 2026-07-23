@@ -8,9 +8,20 @@ export interface ConfigDialogProps {
   onClose: () => void;
   ariaLabel: string;
   summaryItems?: readonly TrainingConfigSummaryItem[];
+  actions?: ReactNode;
+  bodyClassName?: string;
+  className?: string;
 }
 
-export function ConfigDialog({ children, onClose, ariaLabel, summaryItems = [] }: ConfigDialogProps) {
+export function ConfigDialog({
+  children,
+  onClose,
+  ariaLabel,
+  summaryItems = [],
+  actions,
+  bodyClassName,
+  className,
+}: ConfigDialogProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -34,8 +45,9 @@ export function ConfigDialog({ children, onClose, ariaLabel, summaryItems = [] }
       <TrainingConfigPanel
         title={ariaLabel}
         summaryItems={summaryItems}
-        className="config-modal-panel"
-        bodyClassName="training-config-body-single config-dialog-body"
+        actions={actions}
+        className={['config-modal-panel', className].filter(Boolean).join(' ')}
+        bodyClassName={bodyClassName}
         role="dialog"
         aria-modal
         aria-label={ariaLabel}

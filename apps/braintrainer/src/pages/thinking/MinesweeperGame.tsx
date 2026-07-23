@@ -7,7 +7,11 @@ import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedb
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from '@rehab-trainer/ui/trainingGameUtils';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  TrainingConfigOptionGroup,
+  TrainingConfigPanel,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -268,15 +272,12 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
               </>
             )}
           >
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('cognitive.config.difficulty')}</h2>
-                    <p>{activeDifficultyDescription}</p>
-                  </div>
-                  <span>{activeDifficultyLabel}</span>
-                </div>
-                <div className="training-option-grid training-option-grid-three">
+              <TrainingConfigSection
+                title={t('cognitive.config.difficulty')}
+                description={activeDifficultyDescription}
+                value={activeDifficultyLabel}
+              >
+                <TrainingConfigOptionGroup columns={3}>
                   {Object.entries(difficulties).map(([key, value]) => (
                     <button
                       key={key}
@@ -288,18 +289,15 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
                       <span className="training-option-meta">{t(value.descriptionKey)}</span>
                     </button>
                   ))}
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('minesweeper.config.boardSize')}</h2>
-                    <p>{selectedBoardConfig.rows}x{selectedBoardConfig.cols}</p>
-                  </div>
-                  <span>{isCustomBoardSize ? t('training.custom') : t('training.default')}</span>
-                </div>
-                <div className="training-option-grid minesweeper-preset-grid">
+              <TrainingConfigSection
+                title={t('minesweeper.config.boardSize')}
+                description={`${selectedBoardConfig.rows}x${selectedBoardConfig.cols}`}
+                value={isCustomBoardSize ? t('training.custom') : t('training.default')}
+              >
+                <TrainingConfigOptionGroup className="minesweeper-preset-grid">
                   {Object.entries(boardPresets).map(([id, preset]) => (
                     <button
                       key={id}
@@ -332,8 +330,8 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
                       aria-label={t('minesweeper.config.customBoardSize')}
                     />
                   </label>
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
           </TrainingConfigPanel>
         </div>
       )}

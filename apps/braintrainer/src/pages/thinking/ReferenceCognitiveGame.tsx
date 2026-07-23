@@ -76,7 +76,11 @@ import type {
 import type { TFunction } from './types';
 import { cognitiveAccentCss, ClearStage, DrawBackground } from './cognitive/utils';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  TrainingConfigOptionGroup,
+  TrainingConfigPanel,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -445,15 +449,12 @@ export function ReferenceCognitiveGame({
               </>
             )}
           >
-              <section className="training-setting">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('cognitive.config.difficulty')}</h2>
-                    <p>{activeDifficultyDescription}</p>
-                  </div>
-                  <span>{activeDifficultyLabel}</span>
-                </div>
-                <div className="training-option-grid training-option-grid-three">
+              <TrainingConfigSection
+                title={t('cognitive.config.difficulty')}
+                description={activeDifficultyDescription}
+                value={activeDifficultyLabel}
+              >
+                <TrainingConfigOptionGroup columns={3}>
                   {Object.entries(difficulties).map(([key, value]) => (
                     <button
                       key={key}
@@ -465,19 +466,16 @@ export function ReferenceCognitiveGame({
                       <span className="training-option-meta">{t(value.descriptionKey)}</span>
                     </button>
                   ))}
-                </div>
-              </section>
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
 
               {gameId === 'reaction-time' ? (
-                <section className="training-setting">
-                  <div className="training-setting-header">
-                    <div>
-                      <h2>{t('cognitive.config.reactionTrials')}</h2>
-                      <p>{t('cognitive.config.reactionTrialsDesc')}</p>
-                    </div>
-                    <span>{t('training.count', { value: reactionTrials })}</span>
-                  </div>
-                  <div className="training-option-grid training-option-grid-three">
+                <TrainingConfigSection
+                  title={t('cognitive.config.reactionTrials')}
+                  description={t('cognitive.config.reactionTrialsDesc')}
+                  value={t('training.count', { value: reactionTrials })}
+                >
+                  <TrainingConfigOptionGroup columns={3}>
                     {reactionTrialOptions.map((value) => (
                       <button
                         key={value}
@@ -488,18 +486,15 @@ export function ReferenceCognitiveGame({
                         <span className="training-option-title">{t('training.count', { value })}</span>
                       </button>
                     ))}
-                  </div>
-                </section>
+                  </TrainingConfigOptionGroup>
+                </TrainingConfigSection>
               ) : gameId === 'whack-a-mole' ? (
-                <section className="training-setting">
-                  <div className="training-setting-header">
-                    <div>
-                      <h2>{t('cognitive.config.trainingDuration')}</h2>
-                      <p>{t('cognitive.config.trainingDurationDesc')}</p>
-                    </div>
-                    <span>{FormatSeconds(whackDurationSec, t)}</span>
-                  </div>
-                  <div className="training-option-grid training-option-grid-three">
+                <TrainingConfigSection
+                  title={t('cognitive.config.trainingDuration')}
+                  description={t('cognitive.config.trainingDurationDesc')}
+                  value={FormatSeconds(whackDurationSec, t)}
+                >
+                  <TrainingConfigOptionGroup columns={3}>
                     {whackDurationOptions.map((value) => (
                       <button
                         key={value}
@@ -510,18 +505,15 @@ export function ReferenceCognitiveGame({
                         <span className="training-option-title">{FormatSeconds(value, t)}</span>
                       </button>
                     ))}
-                  </div>
-                </section>
+                  </TrainingConfigOptionGroup>
+                </TrainingConfigSection>
               ) : (
-                <section className="training-setting">
-                  <div className="training-setting-header">
-                    <div>
-                      <h2>{t('cognitive.config.timeLimit')}</h2>
-                      <p>{sessionLimitSec === null ? t('cognitive.config.noTimeLimit') : t('cognitive.config.finishWithin', { seconds: sessionLimitSec })}</p>
-                    </div>
-                    <span>{FormatLimit(sessionLimitSec, t)}</span>
-                  </div>
-                  <div className="training-option-grid training-duration-grid">
+                <TrainingConfigSection
+                  title={t('cognitive.config.timeLimit')}
+                  description={sessionLimitSec === null ? t('cognitive.config.noTimeLimit') : t('cognitive.config.finishWithin', { seconds: sessionLimitSec })}
+                  value={FormatLimit(sessionLimitSec, t)}
+                >
+                  <TrainingConfigOptionGroup className="training-duration-grid">
                     {sessionLimitOptions.map((value) => (
                       <button
                         key={String(value)}
@@ -532,19 +524,16 @@ export function ReferenceCognitiveGame({
                         <span className="training-option-title">{FormatLimit(value, t)}</span>
                       </button>
                     ))}
-                  </div>
-                </section>
+                  </TrainingConfigOptionGroup>
+                </TrainingConfigSection>
               )}
 
-              <section className="training-setting training-setting-wide">
-                <div className="training-setting-header">
-                  <div>
-                    <h2>{t('cognitive.config.focusTitle')}</h2>
-                    <p>{metaDescription}</p>
-                  </div>
-                  <span>{metaFocus}</span>
-                </div>
-              </section>
+              <TrainingConfigSection
+                title={t('cognitive.config.focusTitle')}
+                description={metaDescription}
+                value={metaFocus}
+                wide
+              />
           </TrainingConfigPanel>
         </div>
       )}

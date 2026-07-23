@@ -8,7 +8,11 @@ import {
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
-import { TrainingConfigPanel } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  TrainingConfigOptionGroup,
+  TrainingConfigPanel,
+  TrainingConfigSection,
+} from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
@@ -872,15 +876,12 @@ export function EveryBallResponsePage() {
               </>
             )}
           >
-            <section className="training-setting training-setting-wide">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.level}</h2>
-                  <p>{selectedLevelLabels.description}</p>
-                </div>
-                <span>{selectedLevelLabels.shortTitle}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-three">
+            <TrainingConfigSection
+              title={labels.level}
+              description={selectedLevelLabels.description}
+              value={selectedLevelLabels.shortTitle}
+            >
+              <TrainingConfigOptionGroup columns={3}>
                 {levels.map((level) => (
                   <button
                     className={`training-option ${levelId === level.id ? 'active' : ''}`}
@@ -892,18 +893,15 @@ export function EveryBallResponsePage() {
                     <span className="training-option-meta">{labels.levels[level.id].description}</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting training-setting-wide">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.inputMode}</h2>
-                  <p>{labels.permissionPrivacy}</p>
-                </div>
-                <span>{inputModeLabel}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-two">
+            <TrainingConfigSection
+              title={labels.inputMode}
+              description={labels.permissionPrivacy}
+              value={inputModeLabel}
+            >
+              <TrainingConfigOptionGroup columns={2}>
                 {(['camera', 'microphone'] as const).map((mode) => (
                   <button
                     className={`training-option ${inputMode === mode ? 'active' : ''}`}
@@ -915,18 +913,16 @@ export function EveryBallResponsePage() {
                     <span className="training-option-meta">{labels.inputDescriptions[mode]}</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting training-setting-wide">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.trials}</h2>
-                  <p>{labels.trainingFocusDesc}</p>
-                </div>
-                <span>{trialCount}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-five">
+            <TrainingConfigSection
+              title={labels.trials}
+              description={labels.trainingFocusDesc}
+              value={trialCount}
+              wide
+            >
+              <TrainingConfigOptionGroup columns={5}>
                 {trialCountOptions.map((count) => (
                   <button
                     className={`training-option ${trialCount === count ? 'active' : ''}`}
@@ -937,18 +933,15 @@ export function EveryBallResponsePage() {
                     <span className="training-option-title">{count}</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className="training-setting">
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.fixation}</h2>
-                  <p>{labels.fixationDescriptions[fixationStyle]}</p>
-                </div>
-                <span>{fixationLabel}</span>
-              </div>
-              <div className="training-option-grid training-option-grid-two">
+            <TrainingConfigSection
+              title={labels.fixation}
+              description={labels.fixationDescriptions[fixationStyle]}
+              value={fixationLabel}
+            >
+              <TrainingConfigOptionGroup columns={2}>
                 {(['cross', 'blank'] as const).map((style) => (
                   <button
                     className={`training-option ${fixationStyle === style ? 'active' : ''}`}
@@ -960,17 +953,15 @@ export function EveryBallResponsePage() {
                     <span className="training-option-meta">{labels.fixationDescriptions[style]}</span>
                   </button>
                 ))}
-              </div>
-            </section>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
 
-            <section className={`training-setting ${inputMode === 'microphone' ? '' : 'every-ball-setting-muted'}`}>
-              <div className="training-setting-header">
-                <div>
-                  <h2>{labels.sensitivity}</h2>
-                  <p>{labels.localProcessing}</p>
-                </div>
-                <span>{Math.round(microphoneSensitivity * 100)}%</span>
-              </div>
+            <TrainingConfigSection
+              className={inputMode === 'microphone' ? undefined : 'every-ball-setting-muted'}
+              title={labels.sensitivity}
+              description={labels.localProcessing}
+              value={`${Math.round(microphoneSensitivity * 100)}%`}
+            >
               <input
                 className="every-ball-slider"
                 type="range"
@@ -982,7 +973,7 @@ export function EveryBallResponsePage() {
                 aria-label={labels.sensitivity}
                 onChange={(event) => setMicrophoneSensitivity(Number(event.target.value))}
               />
-            </section>
+            </TrainingConfigSection>
           </TrainingConfigPanel>
         </div>
       )}

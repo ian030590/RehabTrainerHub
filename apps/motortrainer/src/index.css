@@ -342,29 +342,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   content: "- ";
 }
 
-.training-setting.training-privacy-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-top: 16px;
-  padding: 16px 18px;
-  border: 1px solid var(--warning);
-  border-radius: var(--radius-m);
-  background: var(--bg-warning-soft);
-}
-
-.training-privacy-note strong {
-  flex: 0 0 auto;
-  color: var(--warning);
-  font-size: 14px;
-}
-
-.training-privacy-note span {
-  color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
 /* ?? Experiment Container ?? */
 .drawing-defense-results-container .results-table {
   max-width: 760px;
@@ -2555,10 +2532,6 @@ body #webgazer-calibrate-container #calibration-point {
 
   .voice-defender-results-container .training-result-summary {
     grid-template-columns: 1fr;
-  }
-
-  .training-privacy-note {
-    flex-direction: column;
   }
 
   .gesture-calibration-card {
