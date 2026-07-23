@@ -143,9 +143,9 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         modules: [FormatReferenceModuleChip('思考訓練', '踩地雷')],
       },
       {
-        title: 'ccoreilly/vosk-browser',
-        href: 'https://github.com/ccoreilly/vosk-browser',
-        description: '瀏覽器端 Vosk 語音辨識 runtime，用於本機語音模型推論參考。',
+        title: 'Microsoft Cognitive Services Speech SDK for JavaScript',
+        href: 'https://learn.microsoft.com/azure/ai-services/speech-service/speech-sdk',
+        description: 'Azure AI Speech runtime，用於瀏覽器語音辨識。',
         modules: [FormatReferenceModuleChip('口語訓練', '語音防線')],
       },
       {
@@ -227,9 +227,9 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         modules: [FormatReferenceModuleChip('Thinking Training', 'Minesweeper')],
       },
       {
-        title: 'ccoreilly/vosk-browser',
-        href: 'https://github.com/ccoreilly/vosk-browser',
-        description: 'Browser Vosk speech-recognition runtime used as a reference for local speech model inference.',
+        title: 'Microsoft Cognitive Services Speech SDK for JavaScript',
+        href: 'https://learn.microsoft.com/azure/ai-services/speech-service/speech-sdk',
+        description: 'Azure AI Speech runtime used for browser speech recognition.',
         modules: [FormatReferenceModuleChip('Speech Training', 'Voice Defender')],
       },
       {

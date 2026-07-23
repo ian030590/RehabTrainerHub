@@ -44,17 +44,30 @@ function GetPublicVariables(pagesApps, authBaseUrl) {
 }
 
 function GetProjectSecrets(project, publicVariables, authBaseUrl, allowedOrigins) {
-  if (project.role !== 'hub') return publicVariables;
+  const secrets = project.role === 'hub'
+    ? {
+        ...publicVariables,
+        AUTH_BASE_URL: authBaseUrl,
+        AUTH_ALLOWED_ORIGINS: allowedOrigins,
+        AUTH_SESSION_SECRET: RequireEnv('AUTH_SESSION_SECRET'),
+        AUTH_STATE_SECRET: RequireEnv('AUTH_STATE_SECRET'),
+        GOOGLE_CLIENT_ID: RequireEnv('GOOGLE_CLIENT_ID'),
+        GOOGLE_CLIENT_SECRET: RequireEnv('GOOGLE_CLIENT_SECRET'),
+      }
+    : { ...publicVariables };
 
-  return {
-    ...publicVariables,
-    AUTH_BASE_URL: authBaseUrl,
-    AUTH_ALLOWED_ORIGINS: allowedOrigins,
-    AUTH_SESSION_SECRET: RequireEnv('AUTH_SESSION_SECRET'),
-    AUTH_STATE_SECRET: RequireEnv('AUTH_STATE_SECRET'),
-    GOOGLE_CLIENT_ID: RequireEnv('GOOGLE_CLIENT_ID'),
-    GOOGLE_CLIENT_SECRET: RequireEnv('GOOGLE_CLIENT_SECRET'),
-  };
+  if (project.appName === 'mouthtrainer') {
+    secrets.AZURE_SPEECH_KEY = RequireEnv('AZURE_SPEECH_KEY');
+    secrets.AZURE_SPEECH_REGION = RequireEnv('AZURE_SPEECH_REGION');
+    AddOptionalEnv(secrets, 'AZURE_SPEECH_ALLOWED_ORIGINS');
+  }
+
+  return secrets;
+}
+
+function AddOptionalEnv(target, name) {
+  const value = process.env[name]?.trim();
+  if (value) target[name] = value;
 }
 
 function GetCommand(file, args) {

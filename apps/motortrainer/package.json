@@ -17,8 +17,6 @@
     "test:production-shell": "node ../../scripts/check-vite-html-shell.mjs dist/index.html",
     "test:browser-shell": "node ../../scripts/check-browser-route-smoke.mjs --app . --route / --selector .training-grid --mockAuthUser true",
     "test:asteroid-shield-fullscreen": "node ../../scripts/check-browser-route-smoke.mjs --app . --route /#/upper-limb-training?game=asteroid-shield --mockAuthUser true --clickSelectors \".asteroid-shield-phase-menu .asteroid-shield-hand-control-off,.asteroid-shield-phase-menu .config-start-btn,.asteroid-shield-phase-rules .config-start-btn\" --selector .asteroid-shield-phase-playing --fullscreenSelector .asteroid-shield-game --fullscreenBeforeAudio true --viewportSelectors \".asteroid-shield-game,.asteroid-shield-stage\" --canvasViewportSelectors .asteroid-shield-canvas",
-    "r2:upload-vosk": "node scripts/upload-vosk-to-r2.mjs",
-    "vosk:repair-zh-symbols": "node scripts/repair-zh-vosk-symbols.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -32,8 +30,7 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.1",
     "recharts": "^3.8.1",
-    "three": "^0.184.0",
-    "vosk-browser": "^0.0.8"
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.4",

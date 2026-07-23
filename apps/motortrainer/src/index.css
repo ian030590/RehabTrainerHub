@@ -195,7 +195,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   font-size: calc(17px * var(--ui-font-scale));
 }
 
-.app-layout .voice-model-status,
+.app-layout .voice-recognition-status,
 .app-layout .voice-vocabulary-tools label,
 .app-layout .voice-vocabulary-warning,
 .app-layout .voice-volume-meter-label {
@@ -1318,7 +1318,7 @@ body #webgazer-calibrate-container #calibration-point {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.voice-model-status {
+.voice-recognition-status {
   min-width: 230px;
   display: grid;
   gap: 8px;
@@ -1328,12 +1328,12 @@ body #webgazer-calibrate-container #calibration-point {
   font-weight: 700;
 }
 
-.training-config-header .voice-model-status {
+.training-config-header .voice-recognition-status {
   flex: 0 1 320px;
   align-self: center;
 }
 
-.voice-model-status progress {
+.voice-recognition-status progress {
   width: 100%;
   height: 10px;
   overflow: hidden;
@@ -1343,11 +1343,11 @@ body #webgazer-calibrate-container #calibration-point {
   accent-color: var(--accent);
 }
 
-.voice-model-status-ready {
+.voice-recognition-status-ready {
   color: var(--success);
 }
 
-.voice-model-status-fallback {
+.voice-recognition-status-fallback {
   color: #b45309;
 }
 
@@ -2513,7 +2513,7 @@ body #webgazer-calibrate-container #calibration-point {
     grid-template-columns: 1fr;
   }
 
-  .voice-model-status {
+  .voice-recognition-status {
     min-width: 0;
     width: 100%;
   }

@@ -45,6 +45,7 @@
     "@tensorflow-models/knn-classifier": "^1.2.6",
     "@tensorflow/tfjs": "^4.22.0",
     "jspsych": "^8.2.1",
+    "microsoft-cognitiveservices-speech-sdk": "^1.51.0",
     "next": "^16.2.10",
     "pinyin-pro": "^3.28.1",
     "pixi.js": "^8.18.1",
@@ -53,8 +54,7 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.1",
     "recharts": "^3.8.1",
-    "three": "^0.184.0",
-    "vosk-browser": "^0.0.8"
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.2",

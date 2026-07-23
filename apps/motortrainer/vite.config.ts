@@ -10,10 +10,7 @@ const siteUrl = 'https://motor.trainerhub.cc';
 const seoTitle = 'MotorTrainer | 居家動作復健訓練';
 const seoDescription = 'MotorTrainer 提供上肢與下肢訓練入口，協助依治療師建議安排居家動作復健練習。';
 
-export default defineConfig(({ mode }) => {
-  const isCloudflarePagesBuild = process.env.CF_PAGES === '1' || mode === 'cloudflare';
-
-  return {
+export default defineConfig({
     plugins: [
       react(),
       {
@@ -41,9 +38,6 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@rehab-trainer/ui': fileURLToPath(new URL('../../packages/ui/src', import.meta.url)),
       },
-    },
-    define: {
-      __BUNDLED_ZH_VOSK_MODEL_ENABLED__: JSON.stringify(!isCloudflarePagesBuild),
     },
     base: '/',
     server: {
@@ -92,5 +86,4 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-  };
 });

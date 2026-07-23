@@ -39,9 +39,6 @@ export default defineConfig({
       '@rehab-trainer/ui': fileURLToPath(new URL('../../packages/ui/src', import.meta.url)),
     },
   },
-  define: {
-    __BUNDLED_ZH_VOSK_MODEL_ENABLED__: JSON.stringify(false),
-  },
   base: '/',
   server: {
     watch: {

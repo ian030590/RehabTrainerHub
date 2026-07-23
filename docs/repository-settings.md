@@ -38,10 +38,9 @@ pages_build_output_dir = "dist"
 
 The root `npm run build` command builds every app under `apps/*` that defines a
 build script. Use `npm run build:cloudflare` before Cloudflare deployment; it
-sets `CF_PAGES=1` for every app so MotorTrainer removes bundled Vosk model
-archives larger than Cloudflare Pages' 25 MiB per-file limit. The deploy
-workflow creates the Cloudflare Pages project when it does not already exist,
-uses `main` as the production branch, then deploys
+sets `CF_PAGES=1` for every app so Cloudflare-specific output checks run. The
+deploy workflow creates the Cloudflare Pages project when it does not already
+exist, uses `main` as the production branch, then deploys
 `apps/<app>/<pages_build_output_dir>`.
 
 ## GitHub Secrets
@@ -58,15 +57,18 @@ Required for `.github/workflows/deploy-cloudflare-pages.yml`:
   Hub auth API.
 - `GOOGLE_CLIENT_ID`: Google OAuth client ID for the Hub callback URL.
 - `GOOGLE_CLIENT_SECRET`: Google OAuth client secret for the Hub callback URL.
+- `AZURE_SPEECH_KEY`: Azure AI Speech key used only by the MouthTrainer Pages
+  Function token endpoint.
 
 The deploy workflow syncs auth environment secrets to Cloudflare Pages before
 deploying. Every Pages project discovered from `apps/*/wrangler.toml` receives
 the shared client auth base URL. The `rehabtrainerhub` project also receives
-the Google OAuth and session signing secrets. GitHub Actions is the source of
-truth for these values; each deploy overwrites the corresponding Cloudflare
-Pages secrets and variables through `wrangler pages secret bulk`. This keeps
-future Pages apps on the same login system without adding per-site Cloudflare
-settings by hand.
+the Google OAuth and session signing secrets. The `mouthtrainer` project also
+receives Azure Speech runtime settings. GitHub Actions is the source of truth
+for these values; each deploy overwrites the corresponding Cloudflare Pages
+secrets and variables through `wrangler pages secret bulk`. This keeps future
+Pages apps on the same login system without adding per-site Cloudflare settings
+by hand.
 
 ## Environment Variables
 
@@ -81,16 +83,15 @@ These values are fixed in source and drive Hub CTA links, each app's
 related-sites page, Vite canonical metadata, auth API base URLs, and production
 sitemaps.
 
-MotorTrainer optional external Vosk model URLs:
+MouthTrainer Azure Speech variables:
 
-- `VITE_VOSK_MODEL_ZH_URL`
-- `VITE_VOSK_MODEL_EN_URL`
-- `VITE_VOSK_MODEL_ZH_VOCAB_URL`
-- `VITE_VOSK_MODEL_EN_VOCAB_URL`
-- `VITE_VOSK_MODEL_MIN_BYTES`
+- `AZURE_SPEECH_REGION`: Azure Speech resource region, for example `eastus`.
+- `AZURE_SPEECH_ALLOWED_ORIGINS`: optional comma-separated extra origins for
+  the token endpoint.
 
-Use repository or Pages variables for public model URLs. Use secrets only for
-private credentials such as Cloudflare API tokens or Discord webhook values.
+Use repository or Pages variables for public runtime settings. Use secrets only
+for private credentials such as Cloudflare API tokens, Discord webhook values,
+and `AZURE_SPEECH_KEY`.
 
 ## Custom Domains
 

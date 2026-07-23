@@ -9,17 +9,6 @@ export function NormalizeSpeechText(value: string): string {
     .replace(/[^\p{L}\p{N}]/gu, '');
 }
 
-export function BuildVoskGrammar(
-  words: string[],
-  language: 'zh' | 'en',
-): string {
-  const phrases = words
-    .map((word) => word.normalize('NFKC').trim().replace(/\s+/g, ' '))
-    .map((word) => language === 'en' ? word.toLocaleLowerCase() : word)
-    .filter(Boolean);
-  return JSON.stringify([...new Set([...phrases, '[unk]'])]);
-}
-
 export function CalculateBestSpeechSimilarity(transcript: string, target: string): number {
   const usePinyin = ContainsHanCharacter(target);
   const normalizedTarget = usePinyin

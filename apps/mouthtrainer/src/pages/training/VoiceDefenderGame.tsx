@@ -10,7 +10,6 @@ import {
 } from 'react';
 import { Application, Container, Graphics, Text, type Ticker } from 'pixi.js';
 import { initJsPsych } from 'jspsych';
-import type { KaldiRecognizer, Model } from 'vosk-browser';
 import { useT, type TranslationKey } from '../../i18n';
 import { DownloadCsvFile } from '../../utils/downloadFile';
 import { defaultUiFontSizePx, getActiveUser, GetSetting } from '../../utils/settings';
@@ -43,38 +42,24 @@ import {
   type VoiceVocabularyItem,
 } from './voiceDefenderVocabulary';
 import {
-  BuildVoskGrammar,
   CalculateBestSpeechSimilarity,
   NormalizeSpeechText,
   voiceMatchSimilarityThreshold,
 } from './voiceDefenderSpeechMatching';
-import {
-  DeleteCachedModel,
-  GetCachedModelUrl,
-  StartVoskModelBackgroundDownload,
-  type CachedModelUrl,
-  type VoskModelLoadStage,
-} from './voskModelCache';
-import {
-  HasVoskVocabularyWord,
-  LoadVoskVocabularyIndex,
-  type VoskVocabularyIndex,
-} from './voskVocabularyIndex';
-
-declare const __BUNDLED_ZH_VOSK_MODEL_ENABLED__: boolean;
 
 export { CalculateSimilarity, LevenshteinDistance } from './voiceDefenderSpeechMatching';
 
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 type GamePhase = 'editor' | 'rules' | 'playing' | 'results';
-type ModelStatus = 'idle' | 'loading' | 'ready' | 'fallback' | 'error';
-type ModelLoadStage = VoskModelLoadStage | 'initializing';
+type RecognitionStatus = 'idle' | 'connecting' | 'ready' | 'fallback' | 'error';
 type GameResult = 'Victory' | 'Defeat';
 type MicrophoneStatus = 'pending' | 'testing' | 'ready' | 'silent' | 'muted' | 'disconnected' | 'denied';
-type RecognitionEngine = 'vosk' | 'web-speech';
+type RecognitionEngine = 'azure' | 'web-speech';
 type BackgroundMode = 'stars' | 'color' | 'image';
 type GameDurationSeconds = number | null;
 type StartRequirement = 'recognition' | 'vocabulary' | 'microphone';
+type AzureSpeechSdk = typeof import('microsoft-cognitiveservices-speech-sdk');
+type AzureSpeechRecognizer = InstanceType<AzureSpeechSdk['SpeechRecognizer']>;
 
 interface VoiceDefenderGameProps {
   onExit: () => void;
@@ -123,17 +108,6 @@ interface SessionRecord {
   Most_Difficult_Word: string;
   Game_Result: GameResult;
   Enemy_Results: EnemyResult[];
-}
-
-interface VoskSpeechRuntime {
-  kind: 'vosk';
-  stream: MediaStream;
-  audioContext: AudioContext;
-  source: MediaStreamAudioSourceNode;
-  processor: ScriptProcessorNode;
-  mute: GainNode;
-  recognizer: KaldiRecognizer;
-  removeTrackListeners: () => void;
 }
 
 interface WebSpeechRecognitionAlternative {
@@ -189,7 +163,21 @@ interface WebSpeechRuntime {
   restartTimer: number | null;
 }
 
-type SpeechRuntime = VoskSpeechRuntime | WebSpeechRuntime;
+interface AzureSpeechToken {
+  token: string;
+  region: string;
+  expiresInSeconds: number;
+  fetchedAtMs: number;
+}
+
+interface AzureSpeechRuntime {
+  kind: 'azure';
+  recognizer: AzureSpeechRecognizer;
+  shouldRefreshToken: boolean;
+  tokenRefreshTimer: number | null;
+}
+
+type SpeechRuntime = AzureSpeechRuntime | WebSpeechRuntime;
 
 interface MicrophoneTestRuntime {
   stream: MediaStream;
@@ -205,35 +193,7 @@ interface StartIssue {
   message: string;
 }
 
-const defaultModelUrls: Record<VoiceLanguage, string> = {
-  zh: __BUNDLED_ZH_VOSK_MODEL_ENABLED__
-    ? `${import.meta.env.BASE_URL}models/vosk-model-small-zh-tw-0.3.tar.gz`
-    : '',
-  en: 'https://ccoreilly.github.io/vosk-browser/models/vosk-model-small-en-us-0.15.tar.gz',
-};
-
-const defaultModelBytes: Record<VoiceLanguage, number> = {
-  zh: 33_368_542,
-  en: 41_184_862,
-};
-
-const modelUrls: Record<VoiceLanguage, string> = {
-  zh: import.meta.env.VITE_VOSK_MODEL_ZH_URL?.trim()
-    || defaultModelUrls.zh,
-  en: import.meta.env.VITE_VOSK_MODEL_EN_URL?.trim()
-    || defaultModelUrls.en,
-};
-
-const modelVocabularyUrls: Record<VoiceLanguage, string> = {
-  zh: import.meta.env.VITE_VOSK_MODEL_ZH_VOCAB_URL?.trim()
-    || (modelUrls.zh === defaultModelUrls.zh
-      ? `${import.meta.env.BASE_URL}models/vosk-model-small-zh-tw-0.3-vocabulary.txt`
-      : ''),
-  en: import.meta.env.VITE_VOSK_MODEL_EN_VOCAB_URL?.trim()
-    || (modelUrls.en === defaultModelUrls.en
-      ? `${import.meta.env.BASE_URL}models/vosk-model-small-en-us-0.15-vocabulary.txt`
-      : ''),
-};
+const azureSpeechTokenEndpoint = '/api/azure-speech-token';
 
 const difficulties: Record<Difficulty, DifficultyConfig> = {
   Beginner: {
@@ -269,6 +229,8 @@ const defaultBackgroundColor = '#005EB8';
 const microphoneSignalThreshold = 0.006;
 const microphoneSilenceDelayMs = 1600;
 const iosMicrophonePermissionTimeoutMs = 15_000;
+const azureSpeechTokenRefreshLeadMs = 60_000;
+const azureSpeechTokenDefaultExpiresInSeconds = 600;
 const microphoneMediaConstraints: MediaStreamConstraints = {
   video: false,
   audio: {
@@ -278,17 +240,9 @@ const microphoneMediaConstraints: MediaStreamConstraints = {
   },
 };
 const starSkyBackgroundImage = 'radial-gradient(circle at 30% 20%, #397fc4 0 2px, transparent 3px), radial-gradient(circle at 72% 66%, #6aaee6 0 2px, transparent 3px), linear-gradient(180deg, #043d75, #005eb8)';
-const voskModelDownloadTimeoutMs = GetPositiveNumber(
-  import.meta.env.VITE_VOSK_MODEL_TIMEOUT_MS,
-  90_000,
-);
-const voskModelRetryDelayMs = GetPositiveNumber(
-  import.meta.env.VITE_VOSK_MODEL_RETRY_MS,
+const azureSpeechTokenTimeoutMs = GetPositiveNumber(
+  import.meta.env.VITE_AZURE_SPEECH_TOKEN_TIMEOUT_MS,
   10_000,
-);
-const voskModelMinBytes = GetPositiveNumber(
-  import.meta.env.VITE_VOSK_MODEL_MIN_BYTES,
-  1_048_576,
 );
 
 export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
@@ -296,13 +250,10 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
-  const modelRef = useRef<Model | null>(null);
-  const cachedModelUrlRef = useRef<CachedModelUrl | null>(null);
+  const azureSpeechTokenRef = useRef<AzureSpeechToken | null>(null);
   const speechRuntimeRef = useRef<SpeechRuntime | null>(null);
   const recognitionEngineRef = useRef<RecognitionEngine | null>(null);
-  const backgroundDownloadUnsubscribeRef = useRef<(() => void) | null>(null);
   const uploadedBackgroundUrlRef = useRef<string | null>(null);
-  const modelVocabularyIndexesRef = useRef<Partial<Record<VoiceLanguage, VoskVocabularyIndex>>>({});
   const recognitionSettingRef = useRef<HTMLElement | null>(null);
   const vocabularySettingRef = useRef<HTMLElement | null>(null);
   const microphoneSettingRef = useRef<HTMLElement | null>(null);
@@ -348,15 +299,9 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   const [vocabulary, setVocabulary] = useState<VoiceVocabularyItem[]>(LoadVoiceVocabulary);
   const [newWord, setNewWord] = useState('');
   const [vocabularyWarning, setVocabularyWarning] = useState('');
-  const [vocabularyIndexStatus, setVocabularyIndexStatus] = useState<
-    Partial<Record<VoiceLanguage, 'loading' | 'ready' | 'error'>>
-  >({});
-  const [modelStatus, setModelStatus] = useState<ModelStatus>('idle');
-  const [modelLoadStage, setModelLoadStage] = useState<ModelLoadStage>('checking-cache');
-  const [modelProgress, setModelProgress] = useState(0);
-  const [modelError, setModelError] = useState('');
+  const [recognitionStatus, setRecognitionStatus] = useState<RecognitionStatus>('idle');
+  const [recognitionError, setRecognitionError] = useState('');
   const [recognitionEngine, setRecognitionEngine] = useState<RecognitionEngine | null>(null);
-  const [backgroundReadyLanguage, setBackgroundReadyLanguage] = useState<VoiceLanguage | null>(null);
   const [showInAppBrowserNotice, setShowInAppBrowserNotice] = useState(
     () => typeof navigator !== 'undefined' && IsLineOrFacebookInAppBrowser(navigator.userAgent),
   );
@@ -377,15 +322,15 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     [languageVocabulary],
   );
   const microphoneReady = microphoneStatus === 'ready';
-  const recognitionReady = modelStatus === 'ready' || modelStatus === 'fallback';
+  const recognitionReady = recognitionStatus === 'ready' || recognitionStatus === 'fallback';
   const startIssues = useMemo<StartIssue[]>(() => {
     const issues: StartIssue[] = [];
     if (!recognitionReady) {
       issues.push({
         requirement: 'recognition',
-        message: modelStatus === 'loading'
-          ? t('voice.startBlocked.modelLoading')
-          : modelError || t('voice.startBlocked.modelUnavailable'),
+        message: recognitionStatus === 'connecting'
+          ? t('voice.startBlocked.recognitionConnecting')
+          : recognitionError || t('voice.startBlocked.recognitionUnavailable'),
       });
     }
     if (activeWords.length === 0) {
@@ -406,8 +351,8 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     microphoneError,
     microphoneReady,
     microphoneStatus,
-    modelError,
-    modelStatus,
+    recognitionError,
+    recognitionStatus,
     recognitionReady,
     t,
   ]);
@@ -436,7 +381,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     ...(recognitionEngine
       ? [{
           label: t('voice.config.engine'),
-          value: t(recognitionEngine === 'vosk' ? 'voice.engine.vosk' : 'voice.engine.webSpeech'),
+          value: GetRecognitionEngineLabel(recognitionEngine, t),
         }]
       : []),
     { label: t('voice.config.enemySpeed'), value: t('voice.config.speedValue', { value: speed }) },
@@ -462,7 +407,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     }
     return { backgroundImage: 'none', backgroundColor };
   }, [backgroundColor, backgroundMode, uploadedBackgroundUrl]);
-  const modelStatusText = GetModelStatusText(modelStatus, modelLoadStage, modelProgress, t);
+  const recognitionStatusText = GetRecognitionStatusText(recognitionStatus, t);
 
   const setPhase = useCallback((next: GamePhase) => {
     phaseRef.current = next;
@@ -495,8 +440,8 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   }, [microphoneError]);
 
   useEffect(() => {
-    if (modelStatus === 'error') setShowStartValidation(true);
-  }, [modelStatus]);
+    if (recognitionStatus === 'error') setShowStartValidation(true);
+  }, [recognitionStatus]);
 
   useEffect(() => {
     configRef.current = { language, difficulty, gameDurationSec, maxHp, speed, activeWords };
@@ -560,17 +505,13 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
   const stopListening = useCallback(async (resetStatus = true) => {
     const runtime = speechRuntimeRef.current;
     speechRuntimeRef.current = null;
-    if (runtime?.kind === 'vosk') {
-      runtime.processor.onaudioprocess = null;
-      runtime.removeTrackListeners();
-      runtime.source.disconnect();
-      runtime.processor.disconnect();
-      runtime.mute.disconnect();
-      runtime.stream.getTracks().forEach((track) => track.stop());
-      runtime.recognizer.remove();
-      if (runtime.audioContext.state !== 'closed') {
-        await runtime.audioContext.close().catch(() => undefined);
+    if (runtime?.kind === 'azure') {
+      runtime.shouldRefreshToken = false;
+      if (runtime.tokenRefreshTimer !== null) {
+        window.clearTimeout(runtime.tokenRefreshTimer);
       }
+      await StopAzureContinuousRecognition(runtime.recognizer);
+      runtime.recognizer.close();
     } else if (runtime?.kind === 'web-speech') {
       runtime.shouldRestart = false;
       if (runtime.restartTimer !== null) {
@@ -591,144 +532,41 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     };
   }, [stopListening]);
 
-  const loadModel = useCallback(async (targetLanguage: VoiceLanguage) => {
+  const connectRecognitionEngine = useCallback(async (targetLanguage: VoiceLanguage) => {
     const generation = loadGenerationRef.current + 1;
     loadGenerationRef.current = generation;
-    backgroundDownloadUnsubscribeRef.current?.();
-    backgroundDownloadUnsubscribeRef.current = null;
-    modelRef.current?.terminate();
-    modelRef.current = null;
-    cachedModelUrlRef.current?.revoke();
-    cachedModelUrlRef.current = null;
+    azureSpeechTokenRef.current = null;
     recognitionEngineRef.current = null;
     setRecognitionEngine(null);
-    setModelStatus('loading');
-    setModelLoadStage('checking-cache');
-    setModelProgress(0);
-    setModelError('');
-    setBackgroundReadyLanguage(null);
+    setRecognitionStatus('connecting');
+    setRecognitionError('');
     setVocabularyWarning('');
-    const vocabularyUrl = modelVocabularyUrls[targetLanguage];
-    if (vocabularyUrl && !modelVocabularyIndexesRef.current[targetLanguage]) {
-      setVocabularyIndexStatus((current) => ({ ...current, [targetLanguage]: 'loading' }));
-      void LoadVoskVocabularyIndex(vocabularyUrl)
-        .then((index) => {
-          modelVocabularyIndexesRef.current[targetLanguage] = index;
-          setVocabularyIndexStatus((current) => ({ ...current, [targetLanguage]: 'ready' }));
-        })
-        .catch((error) => {
-          console.warn('Unable to load Vosk vocabulary index.', error);
-          setVocabularyIndexStatus((current) => ({ ...current, [targetLanguage]: 'error' }));
-        });
-    }
-    const cacheKey = targetLanguage === 'zh'
-      ? 'voice-defender-zh-tw-v2'
-      : `voice-defender-${targetLanguage}`;
-    const modelUrl = modelUrls[targetLanguage];
-    if (!modelUrl) {
-      if (GetWebSpeechRecognitionConstructor()) {
-        recognitionEngineRef.current = 'web-speech';
-        setRecognitionEngine('web-speech');
-        setModelProgress(100);
-        setModelStatus('fallback');
-        setModelError(`${t('voice.model.externalModelRequired')} ${t('voice.model.fallbackHint')}`);
-      } else {
-        setModelStatus('error');
-        setModelError(`${t('voice.model.externalModelRequired')} ${t('voice.model.webSpeechUnavailable')}`);
-      }
-      return;
-    }
-    const expectedModelBytes = modelUrls[targetLanguage] === defaultModelUrls[targetLanguage]
-      ? defaultModelBytes[targetLanguage]
-      : 0;
-    let cachedUrl: CachedModelUrl | null = null;
-    const subscribeToBackgroundDownload = () => StartVoskModelBackgroundDownload(
-      cacheKey,
-      modelUrls[targetLanguage],
-      (snapshot) => {
-        if (loadGenerationRef.current !== generation) return;
-        setModelLoadStage(snapshot.stage);
-        setModelProgress(snapshot.progress);
-        if (snapshot.status === 'ready') {
-          setModelError(t('voice.model.backgroundReady'));
-          setBackgroundReadyLanguage(targetLanguage);
-        } else if (snapshot.status === 'retrying') {
-          setModelError(t('voice.model.backgroundRetry', {
-            attempt: snapshot.attempt,
-            error: snapshot.error,
-          }));
-        }
-      },
-      voskModelDownloadTimeoutMs,
-      voskModelRetryDelayMs,
-      voskModelMinBytes,
-      expectedModelBytes,
-    );
-    backgroundDownloadUnsubscribeRef.current = subscribeToBackgroundDownload();
 
     try {
-      cachedUrl = await GetCachedModelUrl(
-        cacheKey,
-        modelUrls[targetLanguage],
-        (progress) => {
-          if (loadGenerationRef.current === generation) {
-            setModelProgress(progress);
-          }
-        },
-        (stage) => {
-          if (loadGenerationRef.current === generation) {
-            setModelLoadStage(stage);
-          }
-        },
-        voskModelDownloadTimeoutMs,
-        voskModelMinBytes,
-        expectedModelBytes,
+      const token = await FetchAzureSpeechToken(
+        azureSpeechTokenEndpoint,
+        azureSpeechTokenTimeoutMs,
+        targetLanguage,
       );
-      if (loadGenerationRef.current !== generation) {
-        cachedUrl.revoke();
-        return;
-      }
-      cachedModelUrlRef.current = cachedUrl;
-      setModelLoadStage('initializing');
-      const { createModel } = await import('vosk-browser');
-      const model = await createModel(cachedUrl.url, -1);
-      if (loadGenerationRef.current !== generation) {
-        model.terminate();
-        cachedUrl.revoke();
-        if (cachedModelUrlRef.current === cachedUrl) {
-          cachedModelUrlRef.current = null;
-        }
-        return;
-      }
-      modelRef.current = model;
-      setBackgroundReadyLanguage(null);
-      recognitionEngineRef.current = 'vosk';
-      setRecognitionEngine('vosk');
-      setModelProgress(100);
-      setModelStatus('ready');
+      if (loadGenerationRef.current !== generation) return;
+
+      azureSpeechTokenRef.current = token;
+      recognitionEngineRef.current = 'azure';
+      setRecognitionEngine('azure');
+      setRecognitionStatus('ready');
     } catch (error) {
       if (loadGenerationRef.current !== generation) return;
-      console.warn('Unable to load Vosk model; attempting Web Speech API fallback.', error);
-      const errorMessage = error instanceof Error ? error.message : t('voice.model.error');
-      if (cachedUrl) {
-        if (cachedModelUrlRef.current === cachedUrl) {
-          cachedModelUrlRef.current = null;
-        }
-        cachedUrl.revoke();
-        await DeleteCachedModel(cacheKey);
-        setBackgroundReadyLanguage(null);
-        backgroundDownloadUnsubscribeRef.current?.();
-        backgroundDownloadUnsubscribeRef.current = subscribeToBackgroundDownload();
-      }
+
+      console.warn('Unable to initialize Azure Speech; attempting Web Speech API fallback.', error);
+      const errorMessage = GetErrorMessage(error) || t('voice.recognition.error');
       if (GetWebSpeechRecognitionConstructor()) {
         recognitionEngineRef.current = 'web-speech';
         setRecognitionEngine('web-speech');
-        setModelProgress(100);
-        setModelStatus('fallback');
-        setModelError(`${errorMessage} ${t('voice.model.fallbackHint')}`);
+        setRecognitionStatus('fallback');
+        setRecognitionError(`${errorMessage} ${t('voice.recognition.fallbackHint')}`);
       } else {
-        setModelStatus('error');
-        setModelError(`${errorMessage} ${t('voice.model.webSpeechUnavailable')}`);
+        setRecognitionStatus('error');
+        setRecognitionError(`${errorMessage} ${t('voice.recognition.webSpeechUnavailable')}`);
       }
     }
   }, [t]);
@@ -739,29 +577,13 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     setMicrophoneStatus('pending');
     setMicrophoneLevel(0);
     setMicrophoneError('');
-    void loadModel(language);
-  }, [language, loadModel, stopListening, stopMicrophoneTest]);
-
-  useEffect(() => {
-    if (
-      backgroundReadyLanguage !== language
-      || (phase !== 'editor' && phase !== 'rules' && phase !== 'results')
-      || (modelStatus !== 'fallback' && modelStatus !== 'error')
-    ) {
-      return;
-    }
-    setBackgroundReadyLanguage(null);
-    void loadModel(language);
-  }, [backgroundReadyLanguage, language, loadModel, modelStatus, phase]);
+    void connectRecognitionEngine(language);
+  }, [language, connectRecognitionEngine, stopListening, stopMicrophoneTest]);
 
   useEffect(() => () => {
     loadGenerationRef.current += 1;
-    backgroundDownloadUnsubscribeRef.current?.();
-    backgroundDownloadUnsubscribeRef.current = null;
     void stopListening(false);
     void stopMicrophoneTest(false);
-    modelRef.current?.terminate();
-    cachedModelUrlRef.current?.revoke();
     enemiesRef.current.forEach((enemy) => enemy.node.destroy({ children: true }));
     enemiesRef.current = [];
   }, [stopListening, stopMicrophoneTest]);
@@ -975,6 +797,49 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     metricsRef.current.score += Math.max(10, Math.round(100 * matched.similarity));
   }, [recordEnemyOutcome]);
 
+  const getAzureSpeechToken = useCallback(async (
+    currentToken: AzureSpeechToken | null,
+    tokenLanguage: VoiceLanguage,
+  ) => {
+    if (currentToken && IsAzureSpeechTokenFresh(currentToken)) {
+      return currentToken;
+    }
+    const token = await FetchAzureSpeechToken(
+      azureSpeechTokenEndpoint,
+      azureSpeechTokenTimeoutMs,
+      tokenLanguage,
+    );
+    azureSpeechTokenRef.current = token;
+    return token;
+  }, []);
+
+  const scheduleAzureSpeechTokenRefresh = useCallback((
+    runtime: AzureSpeechRuntime,
+    currentToken: AzureSpeechToken,
+    tokenLanguage: VoiceLanguage,
+  ) => {
+    if (runtime.tokenRefreshTimer !== null) {
+      window.clearTimeout(runtime.tokenRefreshTimer);
+    }
+    const refreshDelayMs = Math.max(
+      30_000,
+      currentToken.expiresInSeconds * 1000 - azureSpeechTokenRefreshLeadMs,
+    );
+    runtime.tokenRefreshTimer = window.setTimeout(() => {
+      if (speechRuntimeRef.current !== runtime || !runtime.shouldRefreshToken) return;
+      void getAzureSpeechToken(null, tokenLanguage)
+        .then((token) => {
+          if (speechRuntimeRef.current !== runtime || !runtime.shouldRefreshToken) return;
+          runtime.recognizer.authorizationToken = token.token;
+          scheduleAzureSpeechTokenRefresh(runtime, token, tokenLanguage);
+        })
+        .catch((error) => {
+          if (speechRuntimeRef.current !== runtime || !runtime.shouldRefreshToken) return;
+          setMicrophoneError(GetErrorMessage(error) || t('voice.recognition.error'));
+        });
+    }, refreshDelayMs);
+  }, [getAzureSpeechToken, t]);
+
   const startListening = useCallback(async () => {
     await stopMicrophoneTest(false);
     await stopListening(false);
@@ -985,7 +850,7 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
     if (engine === 'web-speech') {
       const speechRecognitionConstructor = GetWebSpeechRecognitionConstructor();
       if (!speechRecognitionConstructor) {
-        throw new Error(t('voice.model.webSpeechUnavailable'));
+        throw new Error(t('voice.recognition.webSpeechUnavailable'));
       }
 
       const recognition = new speechRecognitionConstructor();
@@ -1057,92 +922,76 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       return;
     }
 
-    const model = modelRef.current;
-    if (!model || engine !== 'vosk') throw new Error(t('voice.model.notReady'));
+    if (engine !== 'azure') throw new Error(t('voice.recognition.notReady'));
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new MicrophoneAccessError(t('voice.microphone.denied'), 'denied');
     }
-    const stream = await RequestMicrophoneStream(microphoneMediaConstraints);
-    const track = stream.getAudioTracks()[0];
-    if (!track || track.readyState !== 'live') {
-      stream.getTracks().forEach((streamTrack) => streamTrack.stop());
-      throw new MicrophoneAccessError(t('voice.microphone.denied'), 'denied');
-    }
-    const audioContext = new AudioContext();
-    await audioContext.resume();
-    const grammar = BuildVoskGrammar(
-      configRef.current.activeWords,
-      configRef.current.language,
-    );
-    const recognizer = new model.KaldiRecognizer(audioContext.sampleRate, grammar);
-    recognizer.on('partialresult', (message) => {
-      if ('result' in message && 'partial' in message.result) {
-        handleRecognition([message.result.partial]);
-      }
-    });
-    recognizer.on('result', (message) => {
-      if ('result' in message && 'text' in message.result) {
-        handleRecognition([message.result.text]);
-      }
-    });
-    recognizer.on('error', (message) => {
-      if (!('error' in message)) return;
-      console.error('Vosk recognizer error.', message.error);
-      setMicrophoneError(message.error);
-    });
 
-    const source = audioContext.createMediaStreamSource(stream);
-    const processor = audioContext.createScriptProcessor(4096, 1, 1);
-    const mute = audioContext.createGain();
-    const removeTrackListeners = addMicrophoneTrackListeners(track);
-    const startedAt = performance.now();
-    let lastSignalAt = 0;
-    mute.gain.value = 0;
-    processor.onaudioprocess = (event) => {
-      try {
-        const samples = event.inputBuffer.getChannelData(0);
-        const rms = CalculateFloatRms(samples);
-        const now = performance.now();
-        setMicrophoneLevel(ToMeterLevel(rms));
-        if (track.readyState !== 'live') {
-          setMicrophoneStatus('disconnected');
-          setMicrophoneError(t('voice.startBlocked.microphoneDisconnected'));
-        } else if (!track.enabled || track.muted) {
-          setMicrophoneStatus('muted');
-          setMicrophoneError(t('voice.startBlocked.microphoneMuted'));
-        } else if (rms >= microphoneSignalThreshold) {
-          lastSignalAt = now;
-          setMicrophoneStatus('ready');
-          setMicrophoneError('');
-        } else if (
-          now - startedAt >= microphoneSilenceDelayMs
-          && (lastSignalAt === 0 || now - lastSignalAt >= microphoneSilenceDelayMs)
-        ) {
-          setMicrophoneStatus('silent');
-          setMicrophoneError(t('voice.startBlocked.microphoneSilent'));
-        }
-        recognizer.acceptWaveform(event.inputBuffer);
-      } catch (error) {
-        console.warn('Unable to process microphone audio.', error);
-        processor.onaudioprocess = null;
+    const sdk = await import('microsoft-cognitiveservices-speech-sdk');
+    sdk.SpeechRecognizer.enableTelemetry(false);
+    const azureToken = await getAzureSpeechToken(azureSpeechTokenRef.current, configRef.current.language);
+    const speechConfig = sdk.SpeechConfig.fromAuthorizationToken(azureToken.token, azureToken.region);
+    speechConfig.speechRecognitionLanguage = configRef.current.language === 'zh' ? 'zh-TW' : 'en-US';
+    const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
+    const recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+    const runtime: AzureSpeechRuntime = {
+      kind: 'azure',
+      recognizer,
+      shouldRefreshToken: true,
+      tokenRefreshTimer: null,
+    };
+
+    recognizer.sessionStarted = () => {
+      setMicrophoneStatus('ready');
+      setMicrophoneError('');
+    };
+    recognizer.speechStartDetected = () => {
+      setMicrophoneStatus('ready');
+      setMicrophoneError('');
+    };
+    recognizer.recognizing = (_, event) => {
+      const text = event.result?.text?.trim();
+      if (!text) return;
+      setMicrophoneStatus('ready');
+      setMicrophoneError('');
+      handleRecognition([text]);
+    };
+    recognizer.recognized = (_, event) => {
+      const text = event.result?.text?.trim();
+      if (!text) return;
+      setMicrophoneStatus('ready');
+      setMicrophoneError('');
+      handleRecognition([text]);
+    };
+    recognizer.canceled = (_, event) => {
+      const message = event.errorDetails || String(event.reason || t('voice.recognition.error'));
+      if (message) setMicrophoneError(message);
+      if (IsMicrophonePermissionDeniedMessage(message)) {
+        setMicrophoneStatus('denied');
+      } else {
         setMicrophoneStatus('disconnected');
-        setMicrophoneError(GetErrorMessage(error) || t('voice.startBlocked.microphoneDisconnected'));
       }
     };
-    source.connect(processor);
-    processor.connect(mute);
-    mute.connect(audioContext.destination);
-    speechRuntimeRef.current = {
-      kind: 'vosk',
-      stream,
-      audioContext,
-      source,
-      processor,
-      mute,
-      recognizer,
-      removeTrackListeners,
+    recognizer.sessionStopped = () => {
+      if (speechRuntimeRef.current === runtime) {
+        setMicrophoneStatus('disconnected');
+      }
     };
-  }, [addMicrophoneTrackListeners, handleRecognition, stopListening, stopMicrophoneTest, t]);
+
+    speechRuntimeRef.current = runtime;
+    scheduleAzureSpeechTokenRefresh(runtime, azureToken, configRef.current.language);
+    try {
+      await StartAzureContinuousRecognition(recognizer);
+    } catch (error) {
+      speechRuntimeRef.current = null;
+      runtime.shouldRefreshToken = false;
+      if (runtime.tokenRefreshTimer !== null) {
+        window.clearTimeout(runtime.tokenRefreshTimer);
+      }
+      recognizer.close();
+      throw error;
+    }
+  }, [getAzureSpeechToken, handleRecognition, scheduleAzureSpeechTokenRefresh, stopListening, stopMicrophoneTest, t]);
 
   const spawnEnemy = useCallback((app: Application) => {
     const words = configRef.current.activeWords;
@@ -1400,28 +1249,12 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
       setNewWord('');
       return;
     }
-    const vocabularyIndex = modelVocabularyIndexesRef.current[language];
-    if (!vocabularyIndex) {
-      setVocabularyWarning(t(
-        vocabularyIndexStatus[language] === 'loading'
-          ? 'voice.vocabulary.modelChecking'
-          : 'voice.vocabulary.modelIndexUnavailable',
-      ));
-      return;
-    }
-    const unsupportedEntry = newEntries.find((entry) => (
-      !HasVoskVocabularyWord(vocabularyIndex, entry, language)
-    ));
-    if (unsupportedEntry) {
-      setVocabularyWarning(t('voice.vocabulary.unsupportedWord', { word: unsupportedEntry }));
-      return;
-    }
     updateVocabulary((items) => [
       ...items,
       ...newEntries.flatMap((entry) => CreateVoiceVocabularyItems(entry, language)),
     ]);
     setNewWord('');
-  }, [language, newWord, t, updateVocabulary, vocabulary, vocabularyIndexStatus]);
+  }, [language, newWord, updateVocabulary, vocabulary]);
 
   const downloadResult = useCallback(() => {
     if (!result) return;
@@ -1455,10 +1288,12 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
           <TrainingConfigPanel
             label={t('voice.configLabel')}
             title={t('voice.title')}
-            headerEnd={modelStatus !== 'error' && (
-              <div className={`voice-model-status voice-model-status-${modelStatus}`} aria-live="polite">
-                <span>{modelStatusText}</span>
-                <progress max="100" value={modelProgress} aria-label={modelStatusText} />
+            headerEnd={recognitionStatus !== 'error' && (
+              <div className={`voice-recognition-status voice-recognition-status-${recognitionStatus}`} aria-live="polite">
+                <span>{recognitionStatusText}</span>
+                {recognitionStatus === 'connecting' && (
+                  <progress aria-label={recognitionStatusText} />
+                )}
               </div>
             )}
             summaryTitle={t('voice.title')}
@@ -1678,10 +1513,10 @@ export function VoiceDefenderGame({ onExit }: VoiceDefenderGameProps) {
                   <button
                     type="button"
                     className="training-option"
-                    onClick={() => void loadModel(language)}
+                    onClick={() => void connectRecognitionEngine(language)}
                   >
-                    <span className="training-option-title">{t('voice.model.reload')}</span>
-                    <span className="training-option-meta">{t('voice.model.cacheHint')}</span>
+                    <span className="training-option-title">{t('voice.recognition.reconnect')}</span>
+                    <span className="training-option-meta">{t('voice.recognition.azureHint')}</span>
                   </button>
                 </TrainingConfigOptionGroup>
               </TrainingConfigSection>
@@ -1980,24 +1815,97 @@ function GetVoiceCardCharacterWidthFactor(character: string): number {
   return 1;
 }
 
-function GetModelStatusText(
-  status: ModelStatus,
-  stage: ModelLoadStage,
-  progress: number,
+function GetRecognitionStatusText(
+  status: RecognitionStatus,
   t: TFunction,
 ): string {
-  if (status === 'ready') return t('voice.model.ready');
-  if (status === 'fallback' && progress < 100) {
-    return t('voice.model.fallbackDownloading', { value: progress });
+  if (status === 'ready') return t('voice.recognition.ready');
+  if (status === 'fallback') return t('voice.recognition.fallback');
+  if (status === 'error') return t('voice.recognition.error');
+  if (status === 'connecting') return t('voice.recognition.connecting');
+  return t('voice.recognition.waiting');
+}
+
+function GetRecognitionEngineLabel(engine: RecognitionEngine, t: TFunction): string {
+  return t(engine === 'azure' ? 'voice.engine.azure' : 'voice.engine.webSpeech');
+}
+
+async function FetchAzureSpeechToken(
+  endpoint: string,
+  timeoutMs: number,
+  language: VoiceLanguage,
+): Promise<AzureSpeechToken> {
+  const url = new URL(endpoint, window.location.href);
+  url.searchParams.set('language', language);
+  const abortController = new AbortController();
+  const timeoutId = window.setTimeout(() => abortController.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+      signal: abortController.signal,
+    });
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(errorText || `Azure Speech token request failed (${response.status}).`);
+    }
+
+    const payload: unknown = await response.json();
+    if (!payload || typeof payload !== 'object') {
+      throw new Error('Azure Speech token response is invalid.');
+    }
+    const data = payload as Record<string, unknown>;
+    const token = typeof data.token === 'string' ? data.token.trim() : '';
+    const region = typeof data.region === 'string' ? data.region.trim() : '';
+    const expiresInSeconds = Number(data.expiresInSeconds);
+    if (!token || !region) {
+      throw new Error('Azure Speech token response is missing token or region.');
+    }
+
+    return {
+      token,
+      region,
+      expiresInSeconds: Number.isFinite(expiresInSeconds) && expiresInSeconds > 0
+        ? expiresInSeconds
+        : azureSpeechTokenDefaultExpiresInSeconds,
+      fetchedAtMs: Date.now(),
+    };
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('Azure Speech token request timed out.');
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
   }
-  if (status === 'fallback') return t('voice.model.fallback');
-  if (status === 'error') return t('voice.model.error');
-  if (status === 'loading' && stage === 'checking-cache') return t('voice.model.checkingCache');
-  if (status === 'loading' && stage === 'loading-cache') return t('voice.model.loadingCache');
-  if (status === 'loading' && stage === 'downloading') return t('voice.model.downloading', { value: progress });
-  if (status === 'loading' && stage === 'saving-cache') return t('voice.model.savingCache');
-  if (status === 'loading' && stage === 'initializing') return t('voice.model.initializing');
-  return t('voice.model.waiting');
+}
+
+function IsAzureSpeechTokenFresh(token: AzureSpeechToken): boolean {
+  const refreshAfterMs = Math.max(
+    0,
+    token.expiresInSeconds * 1000 - azureSpeechTokenRefreshLeadMs,
+  );
+  return Date.now() - token.fetchedAtMs < refreshAfterMs;
+}
+
+function StartAzureContinuousRecognition(recognizer: AzureSpeechRecognizer): Promise<void> {
+  return new Promise((resolve, reject) => {
+    recognizer.startContinuousRecognitionAsync(resolve, reject);
+  });
+}
+
+function StopAzureContinuousRecognition(recognizer: AzureSpeechRecognizer): Promise<void> {
+  return new Promise((resolve) => {
+    try {
+      recognizer.stopContinuousRecognitionAsync(
+        () => resolve(),
+        () => resolve(),
+      );
+    } catch {
+      resolve();
+    }
+  });
 }
 
 export function IsLineOrFacebookInAppBrowser(userAgent: string): boolean {
@@ -2103,6 +2011,14 @@ function IsMicrophonePermissionDeniedError(error: unknown): boolean {
     || normalizedError.includes('permission denied');
 }
 
+function IsMicrophonePermissionDeniedMessage(message: string): boolean {
+  const normalizedMessage = message.toLowerCase();
+  return normalizedMessage.includes('permission denied')
+    || normalizedMessage.includes('notallowed')
+    || normalizedMessage.includes('not allowed')
+    || normalizedMessage.includes('microphone');
+}
+
 function GetErrorName(error: unknown): string {
   if (!error || typeof error !== 'object' || !('name' in error)) return '';
   const value = (error as { name?: unknown }).name;
@@ -2145,14 +2061,6 @@ function CalculateByteRms(samples: Uint8Array): number {
   for (const sample of samples) {
     const normalized = (sample - 128) / 128;
     sumSquares += normalized * normalized;
-  }
-  return Math.sqrt(sumSquares / samples.length);
-}
-
-function CalculateFloatRms(samples: Float32Array): number {
-  let sumSquares = 0;
-  for (const sample of samples) {
-    sumSquares += sample * sample;
   }
   return Math.sqrt(sumSquares / samples.length);
 }

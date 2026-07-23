@@ -30,6 +30,23 @@ export const zh = {
   'mouth.links.vision.desc': '視覺評估與視覺訓練平台。',
   'mouth.links.brain.title': 'BrainTrainer',
   'mouth.links.brain.desc': '注意、記憶與思考訓練平台。',
+  'voice.config.languageDesc': '優先使用 Azure AI Speech；中文辨識結果與字卡會轉為拼音，再以 30% 相似度比對。',
+  'voice.language.zhModel': 'Azure zh-TW 辨識',
+  'voice.language.enModel': 'Azure en-US 辨識',
+  'voice.recognition.waiting': '等待連線 Azure Speech',
+  'voice.recognition.connecting': '正在連線 Azure Speech',
+  'voice.recognition.ready': 'Azure Speech 已就緒',
+  'voice.recognition.fallback': 'Web Speech 模糊比對已就緒',
+  'voice.recognition.fallbackHint': '已自動改用 Web Speech API；中文辨識結果與字卡會轉為拼音，並以 30% 相似度比對。',
+  'voice.recognition.webSpeechUnavailable': '此瀏覽器也不支援 Web Speech API。',
+  'voice.recognition.error': '語音辨識設定失敗',
+  'voice.recognition.notReady': '語音辨識引擎尚未就緒。',
+  'voice.recognition.reconnect': '重新連線 Azure Speech',
+  'voice.recognition.azureHint': 'Azure Speech 會在雲端辨識；遊戲進行時麥克風音訊會傳送到 Azure。',
+  'voice.engine.azure': 'Azure AI Speech',
+  'voice.engine.webSpeech': 'Web Speech 模糊比對',
+  'voice.microphone.desc': '開始前請先測試麥克風；遊戲進行時麥克風音訊會傳送到 Azure Speech 進行辨識。',
+  'voice.vocabulary.desc': '中文內容會拆成單一字元；可自由新增、啟用或刪除自訂字詞。',
 } as const;
 
 export type TranslationKey = keyof typeof zh;

@@ -15,11 +15,11 @@ export function ReferencesPage() {
   const oral = t('mouth.oral.title');
   const items: ReferenceListItem[] = [
     {
-      title: 'ccoreilly/vosk-browser',
-      href: 'https://github.com/ccoreilly/vosk-browser',
+      title: 'Microsoft Cognitive Services Speech SDK for JavaScript',
+      href: 'https://learn.microsoft.com/azure/ai-services/speech-service/speech-sdk',
       description: lang === 'en'
-        ? 'Browser speech-recognition runtime for local Vosk model inference.'
-        : '用於本機 Vosk 語音模型推論的瀏覽器端語音辨識 runtime。',
+        ? 'Azure AI Speech runtime used for browser speech recognition.'
+        : '用於瀏覽器語音辨識的 Azure AI Speech runtime。',
       modules: [FormatReferenceModuleChip(speech, t('voice.title'))],
     },
     {
