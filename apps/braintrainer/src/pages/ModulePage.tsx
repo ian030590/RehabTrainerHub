@@ -1,25 +1,34 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
 import { useT, type TranslationKey } from '../i18n';
+import { GetReferenceCognitiveModules } from './thinking/cognitive/constants';
+import type { ReferenceGameId } from './thinking/cognitive/types';
 import type { SubtestId, UfovRunMode, UfovTargetAxis } from './ufov/UfovPage';
 
+const ReferenceCognitiveGame = lazy(() => import('./thinking/ReferenceCognitiveGame').then((module) => ({ default: module.ReferenceCognitiveGame })));
+
 export type ModuleId = 'attention' | 'memory';
+
+interface ModuleCardDefinition {
+  titleKey: TranslationKey;
+  bodyKey: TranslationKey;
+  to?: string;
+  gameId?: ReferenceGameId;
+}
 
 interface ModuleDefinition {
   id: ModuleId;
   titleKey: TranslationKey;
   introKey: TranslationKey;
-  cards: Array<{
-    titleKey: TranslationKey;
-    bodyKey: TranslationKey;
-    to?: string;
-  }>;
+  cards: ModuleCardDefinition[];
 }
 
 const modules: ModuleDefinition[] = [
@@ -38,18 +47,13 @@ const modules: ModuleDefinition[] = [
         bodyKey: 'module.attention.everyBall.body',
         to: '/attention-training/every-ball-response',
       },
-      { titleKey: 'module.attention.card2.title', bodyKey: 'module.attention.card2.body' },
     ],
   },
   {
     id: 'memory',
     titleKey: 'module.memory.title',
     introKey: 'module.memory.intro',
-    cards: [
-      { titleKey: 'module.memory.card1.title', bodyKey: 'module.memory.card1.body' },
-      { titleKey: 'module.memory.card2.title', bodyKey: 'module.memory.card2.body' },
-      { titleKey: 'module.memory.card3.title', bodyKey: 'module.memory.card3.body' },
-    ],
+    cards: [],
   },
 ];
 
@@ -60,7 +64,22 @@ function GetModule(moduleId: ModuleId) {
 export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const { lang, t } = useT();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const module = GetModule(moduleId);
+  const moduleCards: ModuleCardDefinition[] = [
+    ...module.cards,
+    ...GetReferenceCognitiveModules(moduleId).map((game) => ({
+      titleKey: game.titleKey,
+      bodyKey: game.descriptionKey,
+      gameId: game.id,
+    })),
+  ];
+  const requestedGameId = searchParams.get('game');
+  const requestedModule = moduleCards.find((card) => card.gameId === requestedGameId)?.gameId ?? null;
+  const { activeModule, openModule, closeModule } = useRoutedTrainingModule<ReferenceGameId>({
+    requestedModule,
+    basePath: `/${moduleId}-training`,
+  });
   const [isUfovConfigOpen, setIsUfovConfigOpen] = useState(false);
   const [selectedUfovSubtest, setSelectedUfovSubtest] = useState<SubtestId>(1);
   const [selectedUfovMode, setSelectedUfovMode] = useState<UfovRunMode>('formal');
@@ -128,18 +147,24 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
       <p className="section-subtitle fade-in-up">{t(module.introKey)}</p>
 
       <section className="selection-grid content-grid-spaced" aria-label={t(module.titleKey)}>
-        {module.cards.map((card, index) => {
+        {moduleCards.map((card, index) => {
           const isUfovCard = card.to === '/attention-training/ufov';
+          const isPlayable = Boolean(card.to || card.gameId);
           return (
             <SelectionCard
-              key={card.titleKey}
+              key={card.gameId ?? card.titleKey}
               title={t(card.titleKey)}
               description={t(card.bodyKey)}
               index={index + 1}
-              actionLabel={card.to ? t('btn.selectModule') : t('module.placeholderAction')}
-              className={card.to ? '' : 'placeholder-card'}
-              disabled={!card.to}
+              actionLabel={isPlayable ? t('btn.selectModule') : t('module.placeholderAction')}
+              className={isPlayable ? '' : 'placeholder-card'}
+              disabled={!isPlayable}
+              isSelected={activeModule === card.gameId}
               onSelect={() => {
+                if (card.gameId) {
+                  openModule(card.gameId);
+                  return;
+                }
                 if (!card.to) return;
                 if (isUfovCard) {
                   setIsUfovConfigOpen(true);
@@ -151,6 +176,17 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
           );
         })}
       </section>
+      <Suspense fallback={<AppLoading label={t('app.loading')} />}>
+        {activeModule && (
+          <ReferenceCognitiveGame
+            gameId={activeModule}
+            onExit={closeModule}
+            trainingModuleId={`${moduleId}-training`}
+            trainingConfigLabel={t(module.titleKey)}
+            recordFilePrefix={moduleId}
+          />
+        )}
+      </Suspense>
       {isUfovConfigOpen && (
         <ConfigDialog
           ariaLabel={ufovLabels.settingsTitle}

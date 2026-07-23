@@ -168,8 +168,8 @@ function GetRuleSections(gameId: string, lang: 'zh' | 'en') {
         isZh,
         '連接兩點成線，完成方盒即可得分。',
         'Draw lines between dots; completing a box scores a point.',
-        ['點擊點與點之間的線段。', '完成盒子可繼續回合，最後分數較高者成功。'],
-        ['Tap a line between dots.', 'Completing a box gives another turn; higher final score succeeds.'],
+        ['點擊點與點之間的線段。', '我方牆壁為藍色，電腦牆壁為紅色。', '完成盒子可繼續回合，最後分數較高者成功。'],
+        ['Tap a line between dots.', 'Your walls are blue and the computer walls are red.', 'Completing a box gives another turn; higher final score succeeds.'],
       );
     case 'hex':
       return BuildRules(

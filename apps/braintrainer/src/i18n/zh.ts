@@ -149,7 +149,7 @@ export const zh = {
   'references.title': '參考資料',
   'references.subtitle': '本頁整理各訓練活動使用的參考資料。',
   'references.mainConcept.desc': '主旨概念分析訓練題材與評分流程，作為主旨概念訓練參考。',
-  'references.javascriptGames.desc': '多種網頁小遊戲實作，作為思考訓練小遊戲操作流程與互動模式參考。',
+  'references.javascriptGames.desc': '多種網頁小遊戲實作，作為認知訓練小遊戲操作流程與互動模式參考。',
   'references.vueMinesweeper.desc': '踩地雷遊戲邏輯與版面互動參考。',
   'links.title': '相關網站',
   'links.subtitle': 'RehabTrainerHub 生態系的正式網站',

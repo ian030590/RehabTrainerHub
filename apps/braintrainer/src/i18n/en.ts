@@ -150,7 +150,7 @@ export const en = {
   'references.title': 'References',
   'references.subtitle': 'References used across training activities.',
   'references.mainConcept.desc': 'Main-concept analysis materials and scoring workflow used as a reference for Main Concept Training.',
-  'references.javascriptGames.desc': 'Browser mini-game implementations used as references for thinking-game flow and interaction patterns.',
+  'references.javascriptGames.desc': 'Browser mini-game implementations used as references for cognitive-training flow and interaction patterns.',
   'references.vueMinesweeper.desc': 'Minesweeper game logic and board interaction reference.',
   'links.title': 'Related Sites',
   'links.subtitle': 'Official websites in the RehabTrainerHub ecosystem',

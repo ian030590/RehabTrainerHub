@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text } from 'pixi.js';
+import { Application, Assets, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import type { TFunction } from '../types';
 import type {
   BullsAndCowsState,
@@ -86,6 +86,26 @@ const directionByKey: Partial<Record<string, GridDirection>> = {
   ArrowLeft: { dx: -1, dy: 0 },
   ArrowRight: { dx: 1, dy: 0 },
 };
+
+interface SokobanAssetTextures {
+  player: Texture;
+  crate: Texture;
+  target: Texture;
+}
+
+const sokobanAssetBaseUrl = `${import.meta.env.BASE_URL}assets/sokoban`;
+let sokobanAssetTextures: SokobanAssetTextures | null = null;
+let sokobanAssetTexturePromise: Promise<SokobanAssetTextures> | null = null;
+
+export async function LoadSokobanAssetTextures(): Promise<void> {
+  if (sokobanAssetTextures) return;
+  sokobanAssetTexturePromise ??= Promise.all([
+    Assets.load<Texture>(`${sokobanAssetBaseUrl}/player.png`),
+    Assets.load<Texture>(`${sokobanAssetBaseUrl}/crate.png`),
+    Assets.load<Texture>(`${sokobanAssetBaseUrl}/target.png`),
+  ]).then(([player, crate, target]) => ({ player, crate, target }));
+  sokobanAssetTextures = await sokobanAssetTexturePromise;
+}
 
 type GridDirection = { dx: number; dy: number };
 
@@ -782,8 +802,8 @@ function CreateDotsAndBoxesState(difficulty: Difficulty): DotsAndBoxesState {
   return {
     kind: 'dots-and-boxes',
     size,
-    hLines: Array.from({ length: size * (size - 1) }, () => false),
-    vLines: Array.from({ length: (size - 1) * size }, () => false),
+    hLines: Array.from({ length: size * (size - 1) }, () => null),
+    vLines: Array.from({ length: (size - 1) * size }, () => null),
     boxes: Array.from({ length: (size - 1) * (size - 1) }, () => null),
     moves: 0,
     aiMoves: 0,
@@ -799,7 +819,7 @@ function HandleDotsAndBoxesTap(state: DotsAndBoxesState, index: number, finishGa
     state.errors += 1;
     return;
   }
-  SetDotsLine(state, move.horizontal, move.index, true);
+  SetDotsLine(state, move.horizontal, move.index, 'P');
   const completed = ClaimDotsBoxes(state, move.horizontal, move.index, 'P');
   state.playerScore += completed;
   state.moves += 1;
@@ -808,7 +828,7 @@ function HandleDotsAndBoxesTap(state: DotsAndBoxesState, index: number, finishGa
   for (let turn = 0; turn < 12 && !IsDotsBoardFull(state); turn += 1) {
     const aiMove = ChooseDotsMove(state);
     if (!aiMove) break;
-    SetDotsLine(state, aiMove.horizontal, aiMove.index, true);
+    SetDotsLine(state, aiMove.horizontal, aiMove.index, 'A');
     const aiCompleted = ClaimDotsBoxes(state, aiMove.horizontal, aiMove.index, 'A');
     state.aiScore += aiCompleted;
     state.aiMoves += 1;
@@ -838,15 +858,15 @@ function DrawDotsAndBoxes(app: Application, state: DotsAndBoxesState, onTap: (in
       app.stage.addChild(g);
     }
   }
-  state.hLines.forEach((drawn, index) => {
+  state.hLines.forEach((owner, index) => {
     const row = Math.floor(index / (state.size - 1));
     const col = index % (state.size - 1);
-    DrawDotsLine(app, startX + col * cell, startY + row * cell, startX + (col + 1) * cell, startY + row * cell, drawn, index, onTap);
+    DrawDotsLine(app, startX + col * cell, startY + row * cell, startX + (col + 1) * cell, startY + row * cell, owner, index, onTap);
   });
-  state.vLines.forEach((drawn, index) => {
+  state.vLines.forEach((owner, index) => {
     const row = Math.floor(index / state.size);
     const col = index % state.size;
-    DrawDotsLine(app, startX + col * cell, startY + row * cell, startX + col * cell, startY + (row + 1) * cell, drawn, dotsVerticalOffset + index, onTap);
+    DrawDotsLine(app, startX + col * cell, startY + row * cell, startX + col * cell, startY + (row + 1) * cell, owner, dotsVerticalOffset + index, onTap);
   });
   for (let row = 0; row < state.size; row += 1) {
     for (let col = 0; col < state.size; col += 1) {
@@ -1094,31 +1114,49 @@ function DrawSokoban(app: Application, state: SokobanState, onTap: (index: numbe
       g.rect(0, 0, cell, cell).fill(0x654321).stroke({ color: 0x4a3520, width: 2 });
       g.moveTo(0, cell / 2).lineTo(cell, cell / 2).stroke({ color: 0x4a3520, width: 2 });
     }
+    node.addChild(g);
     if (target) {
-      g.circle(cell / 2, cell / 2, cell / 4).fill(0xff6b6b).stroke({ color: 0xcc5555, width: 2 });
+      if (sokobanAssetTextures) {
+        node.addChild(CreateSokobanSprite(sokobanAssetTextures.target, cell, 1));
+      } else {
+        const fallbackTarget = new Graphics();
+        fallbackTarget.circle(cell / 2, cell / 2, cell / 4).fill(0x34d399).stroke({ color: 0x059669, width: 2 });
+        node.addChild(fallbackTarget);
+      }
     }
     if (box) {
       const onTarget = state.targets.includes(index);
-      const boxFill = onTarget ? 0x4caf50 : 0xd4a574;
-      const boxStroke = onTarget ? 0x2e7d32 : 0x8b6914;
-      const crossStroke = onTarget ? 0x1b5e20 : 0x6d4c41;
-      g.rect(4, 4, cell - 8, cell - 8).fill(boxFill).stroke({ color: boxStroke, width: 2 });
-      g.moveTo(12, 12).lineTo(cell - 12, cell - 12);
-      g.moveTo(cell - 12, 12).lineTo(12, cell - 12);
-      g.stroke({ color: crossStroke, width: 2 });
+      if (sokobanAssetTextures) {
+        node.addChild(CreateSokobanSprite(sokobanAssetTextures.crate, cell, 0.9));
+      } else {
+        const fallbackBox = new Graphics();
+        fallbackBox.rect(4, 4, cell - 8, cell - 8).fill(0xef4444).stroke({ color: 0xb91c1c, width: 2 });
+        node.addChild(fallbackBox);
+      }
+      if (onTarget) {
+        const targetGlow = new Graphics();
+        targetGlow.roundRect(3, 3, cell - 6, cell - 6, 8).stroke({ color: 0x10b981, width: 3, alpha: 0.95 });
+        node.addChild(targetGlow);
+      }
     }
     if (state.player === index) {
-      const r = cell / 2 - 6;
-      g.circle(cell / 2, cell / 2, r).fill(0x2196f3).stroke({ color: 0x1565c0, width: 3 });
-      g.circle(cell / 2 - r * 0.35, cell / 2 - r * 0.22, r * 0.18).fill(0xffffff);
-      g.circle(cell / 2 + r * 0.35, cell / 2 - r * 0.22, r * 0.18).fill(0xffffff);
-      g.circle(cell / 2 - r * 0.35, cell / 2 - r * 0.22, r * 0.08).fill(0x333333);
-      g.circle(cell / 2 + r * 0.35, cell / 2 - r * 0.22, r * 0.08).fill(0x333333);
-      g.arc(cell / 2, cell / 2 + r * 0.1, r * 0.45, 0.15 * Math.PI, 0.85 * Math.PI).stroke({ color: 0x333333, width: 2 });
+      if (sokobanAssetTextures) {
+        node.addChild(CreateSokobanSprite(sokobanAssetTextures.player, cell, 0.94));
+      } else {
+        const fallbackPlayer = new Graphics();
+        fallbackPlayer.circle(cell / 2, cell / 2, cell / 2 - 6).fill(0x2196f3).stroke({ color: 0x1565c0, width: 3 });
+        node.addChild(fallbackPlayer);
+      }
     }
-    node.addChild(g);
     app.stage.addChild(node);
   }
+}
+
+function CreateSokobanSprite(texture: Texture, cell: number, scale: number) {
+  const size = cell * scale;
+  const sprite = new Sprite({ texture, anchor: 0.5, width: size, height: size });
+  sprite.position.set(cell / 2, cell / 2);
+  return sprite;
 }
 
 function CreateMazeState(difficulty: Difficulty): MazeState {
@@ -1451,12 +1489,12 @@ function ParseDotsLineIndex(state: DotsAndBoxesState, index: number) {
 }
 
 function IsDotsLineDrawn(state: DotsAndBoxesState, horizontal: boolean, index: number) {
-  return horizontal ? state.hLines[index] : state.vLines[index];
+  return Boolean(horizontal ? state.hLines[index] : state.vLines[index]);
 }
 
-function SetDotsLine(state: DotsAndBoxesState, horizontal: boolean, index: number, value: boolean) {
-  if (horizontal) state.hLines[index] = value;
-  else state.vLines[index] = value;
+function SetDotsLine(state: DotsAndBoxesState, horizontal: boolean, index: number, owner: 'P' | 'A' | null) {
+  if (horizontal) state.hLines[index] = owner;
+  else state.vLines[index] = owner;
 }
 
 function ClaimDotsBoxes(state: DotsAndBoxesState, horizontal: boolean, lineIndex: number, owner: 'P' | 'A') {
@@ -1490,8 +1528,8 @@ function IsDotsBoxComplete(state: DotsAndBoxesState, row: number, col: number) {
 
 function ChooseDotsMove(state: DotsAndBoxesState) {
   const moves = [
-    ...state.hLines.map((drawn, index) => ({ drawn, horizontal: true, index })),
-    ...state.vLines.map((drawn, index) => ({ drawn, horizontal: false, index })),
+    ...state.hLines.map((owner, index) => ({ drawn: Boolean(owner), horizontal: true, index })),
+    ...state.vLines.map((owner, index) => ({ drawn: Boolean(owner), horizontal: false, index })),
   ].filter((move) => !move.drawn);
   return moves.find((move) => WouldCompleteDotsBox(state, move.horizontal, move.index))
     ?? moves[Math.floor(Math.random() * moves.length)]
@@ -1499,7 +1537,7 @@ function ChooseDotsMove(state: DotsAndBoxesState) {
 }
 
 function WouldCompleteDotsBox(state: DotsAndBoxesState, horizontal: boolean, index: number) {
-  SetDotsLine(state, horizontal, index, true);
+  SetDotsLine(state, horizontal, index, 'P');
   const completes = horizontal
     ? [
         [Math.floor(index / (state.size - 1)) - 1, index % (state.size - 1)],
@@ -1509,7 +1547,7 @@ function WouldCompleteDotsBox(state: DotsAndBoxesState, horizontal: boolean, ind
         [Math.floor(index / state.size), (index % state.size) - 1],
         [Math.floor(index / state.size), index % state.size],
       ].some(([row, col]) => row >= 0 && col >= 0 && row < state.size - 1 && col < state.size - 1 && !state.boxes[row * (state.size - 1) + col] && IsDotsBoxComplete(state, row, col));
-  SetDotsLine(state, horizontal, index, false);
+  SetDotsLine(state, horizontal, index, null);
   return completes;
 }
 
@@ -1523,7 +1561,7 @@ function FinishDotsIfFull(state: DotsAndBoxesState, finishGame: (result: GameRes
   return true;
 }
 
-function DrawDotsLine(app: Application, x1: number, y1: number, x2: number, y2: number, drawn: boolean, index: number, onTap: (index: number) => void) {
+function DrawDotsLine(app: Application, x1: number, y1: number, x2: number, y2: number, owner: 'P' | 'A' | null, index: number, onTap: (index: number) => void) {
   const node = InteractiveNode(onTap, index);
   const minX = Math.min(x1, x2);
   const minY = Math.min(y1, y2);
@@ -1534,7 +1572,10 @@ function DrawDotsLine(app: Application, x1: number, y1: number, x2: number, y2: 
   const hit = new Graphics();
   hit.rect(-9, -9, w + 18, h + 18).fill({ color: 0xffffff, alpha: 0.001 });
   hit.moveTo(x1 - minX, y1 - minY).lineTo(x2 - minX, y2 - minY)
-    .stroke({ color: drawn ? originalBlue : 0xdddddd, width: drawn ? 5 : 4 });
+    .stroke({
+      color: owner === 'P' ? playerColor : owner === 'A' ? aiColor : 0xdddddd,
+      width: owner ? 5 : 4,
+    });
   node.addChild(hit);
   app.stage.addChild(node);
 }

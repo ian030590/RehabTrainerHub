@@ -176,8 +176,8 @@ export interface Connect4State {
 export interface DotsAndBoxesState {
   kind: 'dots-and-boxes';
   size: number;
-  hLines: boolean[];
-  vLines: boolean[];
+  hLines: Array<'P' | 'A' | null>;
+  vLines: Array<'P' | 'A' | null>;
   boxes: Array<'P' | 'A' | null>;
   moves: number;
   aiMoves: number;

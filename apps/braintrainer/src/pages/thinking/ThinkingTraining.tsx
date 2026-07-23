@@ -7,7 +7,7 @@ import {
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
 import { useT } from '../../i18n';
-import { referenceCognitiveModules } from './cognitive/constants';
+import { GetReferenceCognitiveModules } from './cognitive/constants';
 import type { ReferenceGameId } from './cognitive/types';
 import './ThinkingGames.css';
 
@@ -16,6 +16,7 @@ const ReferenceCognitiveGame = lazy(() => import('./ReferenceCognitiveGame').the
 
 type ThinkingGameId = 'minesweeper' | ReferenceGameId;
 type ThinkingModuleId = 'main-concept' | ThinkingGameId;
+const thinkingCognitiveModules = GetReferenceCognitiveModules('thinking');
 
 export function ThinkingTraining() {
   const { t } = useT();
@@ -38,7 +39,7 @@ export function ThinkingTraining() {
       title: t('training.minesweeper.title'),
       description: t('training.minesweeper.desc'),
     },
-    ...referenceCognitiveModules.map<TrainingModuleSelectionItem<ThinkingModuleId>>((module) => ({
+    ...thinkingCognitiveModules.map<TrainingModuleSelectionItem<ThinkingModuleId>>((module) => ({
       id: module.id,
       title: t(module.titleKey),
       description: t(module.descriptionKey),
@@ -83,5 +84,5 @@ function GetRequestedModule(requestedGameId: string | null): ThinkingGameId | nu
 }
 
 function IsReferenceGameId(value: string | null): value is ReferenceGameId {
-  return referenceCognitiveModules.some((module) => module.id === value);
+  return thinkingCognitiveModules.some((module) => module.id === value);
 }

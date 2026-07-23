@@ -20,8 +20,9 @@
   --secondary: #006c47;
   --brain-accent: #7a4a24;
   --brain-accent-hover: #5a3519;
-  --mouth-accent: #6d28d9;
-  --mouth-accent-hover: #5b21b6;
+  --mouth-accent: #6750a4;
+  --mouth-accent-hover: #4f378b;
+  --mouth-logo-filter: saturate(0.78);
   --on-secondary-container: #00714b;
   --surface-variant: #e1e2e4;
   --error: #ba1a1a;
@@ -123,8 +124,9 @@
   --secondary: #90d8ad;
   --brain-accent: #f1c9a7;
   --brain-accent-hover: #ffd9bd;
-  --mouth-accent: #c4b5fd;
-  --mouth-accent-hover: #d8b4fe;
+  --mouth-accent: #c9bedc;
+  --mouth-accent-hover: #e2daeb;
+  --mouth-logo-filter: brightness(1.14) contrast(1.12) saturate(0.78) drop-shadow(0 0 1px rgba(255, 255, 255, 0.7));
   --secondary-container: #90d8ad;
   --on-secondary: #052014;
   --outline: #9a9a9a;
@@ -167,6 +169,7 @@
   --brain-accent-hover: #ffff00;
   --mouth-accent: #ffff00;
   --mouth-accent-hover: #ffff00;
+  --mouth-logo-filter: grayscale(1) brightness(0) invert(1);
   --secondary-container: #ffff00;
   --on-secondary: #000000;
   --outline: #ffffff;
@@ -207,6 +210,7 @@
     --brain-accent-hover: Highlight;
     --mouth-accent: LinkText;
     --mouth-accent-hover: Highlight;
+    --mouth-logo-filter: none;
     --warning: CanvasText;
     --logo-border: CanvasText;
     --logo-filter: grayscale(1) contrast(1.8);
@@ -834,6 +838,10 @@ body > main:not(.home-page) {
   background: var(--logo-surface);
   filter: var(--logo-filter);
   object-fit: contain;
+}
+
+.app-card-mouth .app-logo {
+  filter: var(--mouth-logo-filter);
 }
 
 .app-best-for {

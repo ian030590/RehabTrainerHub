@@ -7,7 +7,11 @@ import {
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import '@rehab-trainer/ui/components/ReferenceListPage.css';
 import { useT } from '../i18n';
-import { referenceCognitiveModules } from './thinking/cognitive/constants';
+import {
+  cognitiveTrainingAreaTitleKeys,
+  GetCognitiveTrainingArea,
+  referenceCognitiveModules,
+} from './thinking/cognitive/constants';
 
 export function ReferencesPage() {
   const { lang, t } = useT();
@@ -28,7 +32,10 @@ export function ReferencesPage() {
       title: 'muthuspark/javascript-games',
       href: 'https://github.com/muthuspark/javascript-games',
       description: t('references.javascriptGames.desc'),
-      modules: referenceCognitiveModules.map((module) => moduleChip(thinkingModule, t(module.titleKey))),
+      modules: referenceCognitiveModules.map((module) => {
+        const area = GetCognitiveTrainingArea(module.id);
+        return moduleChip(t(cognitiveTrainingAreaTitleKeys[area]), t(module.titleKey));
+      }),
     },
     {
       title: 'antfu/vue-minesweeper',

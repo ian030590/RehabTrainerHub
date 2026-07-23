@@ -28,6 +28,7 @@ import {
   HandleLanguageNeutralGameTap,
   IsLanguageNeutralAutoSuccess,
   IsLanguageNeutralGameState,
+  LoadSokobanAssetTextures,
   UpdateLanguageNeutralTimedState,
 } from './cognitive/languageNeutralGames';
 import {
@@ -80,6 +81,7 @@ import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResu
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { BrainTrainingRulesPanel } from './BrainTrainingRulesPanel';
+import './ThinkingGames.css';
 
 export type { ReferenceGameId } from './cognitive/types';
 export { referenceCognitiveModules } from './cognitive/constants';
@@ -87,13 +89,22 @@ export { referenceCognitiveModules } from './cognitive/constants';
 interface ReferenceCognitiveGameProps {
   gameId: ReferenceGameId;
   onExit: () => void;
+  trainingModuleId?: string;
+  trainingConfigLabel?: string;
+  recordFilePrefix?: string;
 }
 
 export function IsReferenceGameId(value: string | null): value is ReferenceGameId {
   return referenceCognitiveModules.some((module) => module.id === value);
 }
 
-export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGameProps) {
+export function ReferenceCognitiveGame({
+  gameId,
+  onExit,
+  trainingModuleId = 'thinking-training',
+  trainingConfigLabel,
+  recordFilePrefix = 'thinking',
+}: ReferenceCognitiveGameProps) {
   const { t } = useT();
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
@@ -176,7 +187,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
     setPhase('results');
     void SaveTrainingSessionRecord({
       userName: participantId,
-      moduleId: 'thinking-training',
+      moduleId: trainingModuleId,
       gameId,
       gameTitle: metaTitle,
       difficulty,
@@ -189,7 +200,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
       detailRows: timingData.detailRows,
     });
     WriteJsPsychData(jsPsychRef, record as unknown as Record<string, unknown>, 'Unable to write reference cognitive result to jsPsych data.');
-  }, [difficulty, gameId, metaTitle, setPhase]);
+  }, [difficulty, gameId, metaTitle, setPhase, trainingModuleId]);
 
   finishGameRef.current = finishGame;
 
@@ -225,8 +236,8 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
 
   const downloadResult = useCallback(() => {
     if (!result) return;
-    DownloadCsvFile(ToCsv([result]), `thinking_${gameId}_${Date.now()}.csv`);
-  }, [gameId, result]);
+    DownloadCsvFile(ToCsv([result]), `${recordFilePrefix}_${gameId}_${Date.now()}.csv`);
+  }, [gameId, recordFilePrefix, result]);
 
   function HandleCellTap(index: number) {
     if (phaseRef.current !== 'playing') return;
@@ -336,8 +347,9 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
           resizeTo: host,
         });
         initialized = true;
+        if (gameId === 'sokoban') await LoadSokobanAssetTextures();
         if (cancelled) {
-          app.destroy(true, { children: true, texture: true });
+          app.destroy(true, { children: true, texture: false });
           return;
         }
         appRef.current = app;
@@ -379,7 +391,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
       cancelled = true;
       window.removeEventListener('resize', handleResize);
       if (appRef.current === app) appRef.current = null;
-      if (initialized) app.destroy(true, { children: true, texture: true });
+      if (initialized) app.destroy(true, { children: true, texture: false });
     };
   }, [gameId, sessionLimitSec, whackDurationSec]);
 
@@ -406,7 +418,7 @@ export function ReferenceCognitiveGame({ gameId, onExit }: ReferenceCognitiveGam
         <div className="training-panel">
           <TrainingConfigPanel
             className="cognitive-config"
-            label={t('training.thinking.configLabel')}
+            label={trainingConfigLabel ?? t('training.thinking.configLabel')}
             title={metaTitle}
             summaryTitle={metaTitle}
             summaryItems={[

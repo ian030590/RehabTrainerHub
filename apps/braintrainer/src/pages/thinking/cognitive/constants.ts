@@ -1,5 +1,5 @@
 import type { TranslationKey } from '../../../i18n';
-import type { Difficulty, ReferenceModuleMeta, SessionLimitSeconds } from './types';
+import type { Difficulty, ReferenceGameId, ReferenceModuleMeta, SessionLimitSeconds } from './types';
 
 export const referenceCognitiveModules: ReferenceModuleMeta[] = [
   {
@@ -108,6 +108,27 @@ export const referenceCognitiveModules: ReferenceModuleMeta[] = [
     focusKey: 'cognitive.maze.focus',
   },
 ];
+
+export type CognitiveTrainingArea = 'attention' | 'memory' | 'thinking';
+
+export const cognitiveTrainingAreaTitleKeys: Record<CognitiveTrainingArea, TranslationKey> = {
+  attention: 'module.attention.title',
+  memory: 'module.memory.title',
+  thinking: 'module.thinking.title',
+};
+
+const attentionCognitiveGameIds = new Set<ReferenceGameId>(['reaction-time', 'whack-a-mole']);
+const memoryCognitiveGameIds = new Set<ReferenceGameId>(['memory-match', 'simon-says']);
+
+export function GetCognitiveTrainingArea(gameId: ReferenceGameId): CognitiveTrainingArea {
+  if (attentionCognitiveGameIds.has(gameId)) return 'attention';
+  if (memoryCognitiveGameIds.has(gameId)) return 'memory';
+  return 'thinking';
+}
+
+export function GetReferenceCognitiveModules(area: CognitiveTrainingArea) {
+  return referenceCognitiveModules.filter((module) => GetCognitiveTrainingArea(module.id) === area);
+}
 
 export const difficulties: Record<Difficulty, { labelKey: TranslationKey; descriptionKey: TranslationKey }> = {
   Beginner: { labelKey: 'cognitive.diff.beginner', descriptionKey: 'cognitive.diff.beginnerDesc' },

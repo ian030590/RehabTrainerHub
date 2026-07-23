@@ -1,5 +1,9 @@
 @import '../../motortrainer/src/index.css';
 
+:root {
+  --logo-filter: saturate(0.78);
+}
+
 .mouth-coming-soon {
   display: grid;
   gap: 12px;
