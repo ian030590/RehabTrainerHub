@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   applicationName: hubFullName,
   keywords: ['居家訓練網', '居家訓練', '居家復健', '中風復健', '動作訓練', '視覺訓練', '認知訓練', '口說訓練', '口腔訓練', 'MotorTrainer', 'MouthTrainer', 'BrainTrainer', 'brain trainer', '職能治療', '衛教影片', 'Rehab Trainer Hub', 'rehab trainer hub'],
   icons: {
-    icon: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: '/rehabtrainerhub.svg',
+    apple: '/rehabtrainerhub.svg',
   },
   verification: {
     google: '_ZdVR2kZ9xg_TnPtv5tLda3-fJWHLArBNDMpgE5NkZA',

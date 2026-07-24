@@ -374,7 +374,7 @@ body > main:not(.home-page) {
   width: 40px;
   height: 40px;
   overflow: hidden;
-  border: 1px solid var(--logo-border);
+  border: 0;
   border-radius: var(--radius);
   background: var(--logo-surface);
 }
@@ -807,26 +807,23 @@ body > main:not(.home-page) {
   flex: 0 0 auto;
   width: 88px;
   height: 60px;
-  border: 1px solid var(--logo-border);
+  border: 0;
   border-radius: var(--radius);
   color: var(--primary);
   background: var(--logo-surface);
 }
 
 .app-card-vision .app-icon {
-  border-color: var(--logo-border);
   color: var(--secondary);
   background: var(--logo-surface);
 }
 
 .app-card-brain .app-icon {
-  border-color: var(--logo-border);
   color: var(--brain-accent);
   background: var(--logo-surface);
 }
 
 .app-card-mouth .app-icon {
-  border-color: var(--logo-border);
   color: var(--mouth-accent);
   background: var(--logo-surface);
 }
@@ -1311,7 +1308,6 @@ body > main:not(.home-page) {
 }
 
 :root[data-theme="dark"] .eyebrow.pill,
-:root[data-theme="dark"] .app-icon,
 :root[data-theme="dark"] .submission-type label.is-selected {
   border-color: var(--outline-variant);
 }
@@ -1337,13 +1333,11 @@ body > main:not(.home-page) {
 }
 
 :root[data-theme="contrast"] .site-header,
-:root[data-theme="contrast"] .brand-mark,
 :root[data-theme="contrast"] .readability-panel,
 :root[data-theme="contrast"] .control-group,
 :root[data-theme="contrast"] .hero,
 :root[data-theme="contrast"] .hero-panel,
 :root[data-theme="contrast"] .app-card,
-:root[data-theme="contrast"] .app-icon,
 :root[data-theme="contrast"] .app-points,
 :root[data-theme="contrast"] .care-copy,
 :root[data-theme="contrast"] .feature-card,
