@@ -74,7 +74,21 @@ body[data-ui-theme="contrast"] {
 
 body {
   margin: 0;
-  overflow: hidden;
+  /*
+   * Trainer setup, results, and content pages can exceed the viewport.
+   * Individual full-screen training modules manage their own overflow, so
+   * do not lock scrolling at the document level.
+   */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Some trainer apps have legacy global rules that hide overflow on these
+ * elements. Keep the shared application shell vertically scrollable. */
+html,
+#root {
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 button,
