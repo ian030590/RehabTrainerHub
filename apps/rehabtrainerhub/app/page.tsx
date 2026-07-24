@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ReadableHome } from './ReadableHome';
+import { TrainingLobby } from './TrainingLobby';
 import { hubFullName } from './hubBrand';
 import { CreateSeoMetadata, siteDescription } from './seo';
 
@@ -11,5 +11,5 @@ export const metadata: Metadata = CreateSeoMetadata({
 });
 
 export default function HomePage() {
-  return <ReadableHome />;
+  return <TrainingLobby />;
 }

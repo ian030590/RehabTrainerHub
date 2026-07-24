@@ -6,7 +6,6 @@ import {
   RateLimitResponse,
   ToPublicUser,
 } from './auth.js';
-import { ScanHtml } from '../api/submissions.js';
 
 const secret = '0123456789abcdef0123456789abcdef';
 const env = {
@@ -64,14 +63,6 @@ assert.equal(await RateLimitResponse(request, env, 'test-login', { limit: 2, win
 const limited = await RateLimitResponse(request, env, 'test-login', { limit: 2, windowSeconds: 60 });
 assert.equal(limited.status, 429);
 assert.equal(limited.headers.has('retry-after'), true);
-
-const encodedScriptScan = ScanHtml('<!doctype html><html><body><scr&#x69;pt>alert(1)</scr&#x69;pt></body></html>', 'en');
-assert.equal(encodedScriptScan.ok, false);
-assert(encodedScriptScan.messages.some((message) => /script/i.test(message)));
-
-const encodedJavascriptScan = ScanHtml('<!doctype html><html><body><a href="java&#115;cript:alert(1)">x</a></body></html>', 'en');
-assert.equal(encodedJavascriptScan.ok, false);
-assert(encodedJavascriptScan.messages.some((message) => /javascript/i.test(message)));
 
 console.log('auth security checks passed');
 

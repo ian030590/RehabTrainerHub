@@ -112,6 +112,21 @@ export {
 } from './trainerTheme';
 export type { TrainerThemeOverrides } from './trainerTheme';
 export {
+  BuildTrainingModuleHref,
+  GetTrainingCatalogModules,
+  GetTrainingModuleCopy,
+  GetTrainingPurpose,
+  trainingCatalog,
+  trainingPurposes,
+} from './trainingCatalog';
+export type {
+  LocalizedTrainingCopy,
+  TrainerCatalogId,
+  TrainingCatalogModule,
+  TrainingModuleKind,
+  TrainingPurposeId,
+} from './trainingCatalog';
+export {
   DrawUfovCanvasStage,
   EnsureUfovCanvasStage,
   PrepareUfovNoiseMask,

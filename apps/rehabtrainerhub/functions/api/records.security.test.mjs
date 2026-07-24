@@ -85,6 +85,9 @@ const allowedInsert = await onRequestPost({
   env,
 });
 assert.equal(allowedInsert.status, 201);
+const insertedPayload = await allowedInsert.json();
+assert.match(insertedPayload.record.trainingDate, /^\d{4}-\d{2}-\d{2}$/);
+assert.notEqual(insertedPayload.record.savedAt, attackerRecord.savedAt);
 
 const victimRecords = await onRequestGet({
   request: new Request('https://trainerhub.cc/api/records?appId=motortrainer', {
@@ -129,6 +132,7 @@ function CreateTrainingRecordsDb(initialRows) {
                   gameId,
                   savedAt,
                   trainingDate,
+                  verifiedTrainingDate,
                   difficulty,
                   userName,
                   payloadJson,
@@ -147,6 +151,7 @@ function CreateTrainingRecordsDb(initialRows) {
                   game_id: gameId,
                   saved_at: savedAt,
                   training_date: trainingDate,
+                  verified_training_date: verifiedTrainingDate,
                   difficulty,
                   user_name: userName,
                   payload_json: payloadJson,

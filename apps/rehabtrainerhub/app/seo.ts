@@ -3,7 +3,7 @@ import { hubFullName, hubLocalName, hubName } from './hubBrand';
 import { siteUrls } from './siteUrls';
 
 export const siteDescription =
-  '居家訓練網 Rehab Trainer Hub 提供職能治療師設計的居家訓練工具，整合動作復健、視覺訓練、認知訓練、衛教資訊與衛教影片。';
+  '居家訓練網 Rehab Trainer Hub 整合動作、視覺、注意力、記憶、高階認知與口腔訓練模組，並提供每日任務與復健進度追蹤。';
 
 export const seoImage = {
   url: '/rehabtrainerhub.svg',
@@ -93,7 +93,7 @@ export const websiteJsonLd = {
   name: hubFullName,
   alternateName: [hubLocalName, hubName],
   url: siteUrls.hub,
-  inLanguage: ['zh-Hant-TW', 'en'],
+  inLanguage: 'zh-Hant-TW',
   description: siteDescription,
   hasPart: trainerApplications,
   publisher: {

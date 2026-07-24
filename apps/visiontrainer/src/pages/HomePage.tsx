@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useT } from '../i18n';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
@@ -10,6 +10,7 @@ import {
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { GetTrainingModuleCopy } from '@rehab-trainer/ui/trainingCatalog';
 import { IsCalibrated } from '../utils/settings';
 import { soundManager } from '../utils/soundManager';
 import { useAppSetting } from '../utils/useAppSetting';
@@ -71,9 +72,13 @@ async function PreloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknow
 export function HomePage() {
   const { t, lang } = useT();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedModule = trainingModules.find(
+    (module) => module.id === searchParams.get('module'),
+  )?.id ?? null;
 
   // ── Module expansion state ──
-  const [expandedModule, setExpandedModule] = useState<TrainingModuleId | null>(null);
+  const [expandedModule, setExpandedModule] = useState<TrainingModuleId | null>(requestedModule);
   const [rulesModule, setRulesModule] = useState<TrainingModuleId | null>(null);
   const [localDifficulty, setLocalDifficulty] = useAppSetting('difficulty');
   const [localRounds, setLocalRounds] = useAppSetting('totalRounds');
@@ -416,8 +421,8 @@ export function HomePage() {
         {trainingModules.map((module, index) => (
           <SelectionCard
             key={module.id}
-            title={t(module.titleKey)}
-            description={t(module.descKey)}
+            title={GetTrainingModuleCopy(module.catalogModule, lang).title}
+            description={GetTrainingModuleCopy(module.catalogModule, lang).description}
             index={index + 1}
             isSelected={expandedModule === module.id}
             actionLabel={expandedModule === module.id ? t('btn.collapseSettings') : t('btn.selectModule')}
@@ -1031,7 +1036,7 @@ export function HomePage() {
           <TrainingRulesPanel
             className="config-modal-panel"
             label={rulesLabels.label}
-            title={t(activeRulesModule.titleKey)}
+            title={GetTrainingModuleCopy(activeRulesModule.catalogModule, lang).title}
             summaryTitle={rulesLabels.summary}
             summaryItems={activeRulesSummaryItems}
             sections={GetVisionRuleSections(rulesModule, lang, t)}
@@ -1043,7 +1048,7 @@ export function HomePage() {
             onBack={() => setRulesModule(null)}
             role="dialog"
             aria-modal
-            aria-label={`${t(activeRulesModule.titleKey)} ${rulesLabels.label}`}
+            aria-label={`${GetTrainingModuleCopy(activeRulesModule.catalogModule, lang).title} ${rulesLabels.label}`}
           />
         </div>
       )}

@@ -6,6 +6,7 @@ import {
 } from '@rehab-trainer/ui/components/TrainingModuleSelectionPage';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
+import { GetTrainingCatalogModules } from '@rehab-trainer/ui/trainingCatalog';
 import { useT } from '../../i18n';
 import { GetReferenceCognitiveModules } from './cognitive/constants';
 import type { ReferenceGameId } from './cognitive/types';
@@ -16,6 +17,11 @@ const ReferenceCognitiveGame = lazy(() => import('./ReferenceCognitiveGame').the
 
 type ThinkingGameId = 'minesweeper' | ReferenceGameId;
 type ThinkingModuleId = 'main-concept' | ThinkingGameId;
+const thinkingRouteModules = GetTrainingCatalogModules({
+  trainer: 'brain',
+  purpose: 'higher-cognition',
+  kind: 'brain-route',
+});
 const thinkingCognitiveModules = GetReferenceCognitiveModules('thinking');
 
 export function ThinkingTraining() {
@@ -29,16 +35,11 @@ export function ThinkingTraining() {
     basePath: '/thinking-training',
   });
   const modules: TrainingModuleSelectionItem<ThinkingModuleId>[] = [
-    {
-      id: 'main-concept',
-      title: t('module.thinking.mainConcept.title'),
-      description: t('module.thinking.mainConcept.body'),
-    },
-    {
-      id: 'minesweeper',
-      title: t('training.minesweeper.title'),
-      description: t('training.minesweeper.desc'),
-    },
+    ...thinkingRouteModules.map<TrainingModuleSelectionItem<ThinkingModuleId>>((module) => ({
+      id: module.runtimeId as ThinkingModuleId,
+      title: t(module.titleKey as Parameters<typeof t>[0]),
+      description: t(module.descriptionKey as Parameters<typeof t>[0]),
+    })),
     ...thinkingCognitiveModules.map<TrainingModuleSelectionItem<ThinkingModuleId>>((module) => ({
       id: module.id,
       title: t(module.titleKey),

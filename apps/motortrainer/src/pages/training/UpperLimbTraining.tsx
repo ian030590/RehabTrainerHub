@@ -6,6 +6,10 @@ import {
   type TrainingModuleSelectionItem,
 } from '@rehab-trainer/ui/components/TrainingModuleSelectionPage';
 import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
+import {
+  GetTrainingCatalogModules,
+  GetTrainingModuleCopy,
+} from '@rehab-trainer/ui/trainingCatalog';
 import { useT } from '../../i18n';
 
 const DrawingTowerDefenseGame = lazy(() => import('./DrawingTowerDefenseGame').then((module) => ({ default: module.DrawingTowerDefenseGame })));
@@ -15,55 +19,30 @@ const MotorCortexRehabGame = lazy(() => import('./MotorCortexRehabGame').then((m
 
 type UpperLimbModuleId = 'drawing-defense' | 'asteroid-shield' | 'gesture-battler' | 'motor-cortex-rehab';
 
-const motorCortexCopy = {
-  zh: {
-    title: '動作皮質復健訓練',
-    description: '以攝影機追蹤手部位置，練習彈跳球追蹤、垂直/水平活動範圍與隨機觸達，並依表現調整難度。',
-  },
-  en: {
-    title: 'Motor Cortex Rehab',
-    description: 'Use camera hand tracking for bouncing-ball tracking, vertical/horizontal range, and random reach drills with adaptive difficulty.',
-  },
-} as const;
+const upperLimbCatalogModules = GetTrainingCatalogModules({
+  trainer: 'motor',
+  purpose: 'upper-limb',
+  kind: 'motor-upper',
+});
 
 export function UpperLimbTraining() {
   const { lang, t } = useT();
   const [searchParams] = useSearchParams();
   const requestedGameId = searchParams.get('game');
-  const requestedModule: UpperLimbModuleId | null =
-    requestedGameId === 'drawing-defense' ||
-    requestedGameId === 'asteroid-shield' ||
-    requestedGameId === 'gesture-battler' ||
-    requestedGameId === 'motor-cortex-rehab'
-      ? requestedGameId
-      : null;
-  const motorCortexLabels = motorCortexCopy[lang];
+  const requestedModule = IsUpperLimbModuleId(requestedGameId) ? requestedGameId : null;
   const { activeModule, openModule, closeModule } = useRoutedTrainingModule<UpperLimbModuleId>({
     requestedModule,
     basePath: '/upper-limb-training',
   });
-  const modules: readonly TrainingModuleSelectionItem<UpperLimbModuleId>[] = [
-    {
-      id: 'drawing-defense',
-      title: t('training.drawing.title'),
-      description: t('training.drawing.desc'),
-    },
-    {
-      id: 'asteroid-shield',
-      title: t('training.asteroidShield.title'),
-      description: t('training.asteroidShield.desc'),
-    },
-    {
-      id: 'gesture-battler',
-      title: t('training.gesture.title'),
-      description: t('training.gesture.desc'),
-    },
-    {
-      id: 'motor-cortex-rehab',
-      title: motorCortexLabels.title,
-      description: motorCortexLabels.description,
-    },
-  ];
+  const modules: readonly TrainingModuleSelectionItem<UpperLimbModuleId>[] =
+    upperLimbCatalogModules.map((module) => {
+      const copy = GetTrainingModuleCopy(module, lang);
+      return {
+        id: module.runtimeId as UpperLimbModuleId,
+        title: copy.title,
+        description: copy.description,
+      };
+    });
 
   const activeTraining = (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
@@ -92,4 +71,8 @@ export function UpperLimbTraining() {
       {activeTraining}
     </TrainingModuleSelectionPage>
   );
+}
+
+function IsUpperLimbModuleId(value: string | null): value is UpperLimbModuleId {
+  return upperLimbCatalogModules.some((module) => module.runtimeId === value);
 }

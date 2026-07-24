@@ -1,4 +1,7 @@
-import type { TranslationKey } from '../../i18n';
+import {
+  GetTrainingCatalogModules,
+  type TrainingCatalogModule,
+} from '@rehab-trainer/ui/trainingCatalog';
 
 export type TrainingModuleId =
   | 'moving-card'
@@ -10,39 +13,12 @@ export type TrainingModuleId =
 
 export interface TrainingModuleDefinition {
   id: TrainingModuleId;
-  titleKey: TranslationKey;
-  descKey: TranslationKey;
+  catalogModule: TrainingCatalogModule;
 }
 
-export const trainingModules: readonly TrainingModuleDefinition[] = [
-  {
-    id: 'moving-card',
-    titleKey: 'home.module.movingCard.title',
-    descKey: 'home.module.movingCard.desc',
-  },
-  {
-    id: 'oculomotor-training',
-    titleKey: 'home.module.oculomotor.title',
-    descKey: 'home.module.oculomotor.desc',
-  },
-  {
-    id: 'gabor-patching',
-    titleKey: 'home.module.gaborPatching.title',
-    descKey: 'home.module.gaborPatching.desc',
-  },
-  {
-    id: 'reading-training',
-    titleKey: 'home.module.reading.title',
-    descKey: 'home.module.reading.desc',
-  },
-  {
-    id: 'driving-rehab',
-    titleKey: 'home.module.driving.title',
-    descKey: 'home.module.driving.desc',
-  },
-  {
-    id: 'hart-chart',
-    titleKey: 'home.module.hartChart.title',
-    descKey: 'home.module.hartChart.desc',
-  },
-];
+export const trainingModules: readonly TrainingModuleDefinition[] =
+  GetTrainingCatalogModules({ trainer: 'vision', purpose: 'vision', kind: 'vision' })
+    .map((catalogModule) => ({
+      id: catalogModule.runtimeId as TrainingModuleId,
+      catalogModule,
+    }));

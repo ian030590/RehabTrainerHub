@@ -97,6 +97,32 @@ export interface RemoteTrainingRecordPayload {
   record: RemoteTrainingRecord;
 }
 
+export interface RehabDailyTask {
+  id: string;
+  title: string;
+  current: number;
+  target: number;
+  completed: boolean;
+}
+
+export interface RehabAchievement {
+  id: string;
+  title: string;
+  requiredDays: number;
+  achieved: boolean;
+}
+
+export interface RehabProgress {
+  serverDate: string;
+  timeZone: string;
+  startedOn: string | null;
+  daysSinceStart: number;
+  rehabilitationDays: number;
+  totalRehabilitationDays: number;
+  dailyTasks: RehabDailyTask[];
+  achievements: RehabAchievement[];
+}
+
 export function GetAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
   return window.localStorage.getItem(authTokenKey);
@@ -416,4 +442,26 @@ export async function GetRemoteTrainingRecords(
 
   const payload = await response.json() as { records?: RemoteTrainingRecord[] };
   return payload.records ?? [];
+}
+
+export async function FetchRehabProgress(apiBase?: string): Promise<RehabProgress | null> {
+  const token = GetAuthToken();
+  if (!token) return null;
+
+  const response = await fetch(BuildApiUrl(apiBase, '/api/progress'), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (response.status === 401) {
+    ClearAuthToken();
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Unable to load rehabilitation progress. Status ${response.status}`);
+  }
+
+  return response.json() as Promise<RehabProgress>;
 }

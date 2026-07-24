@@ -1,113 +1,19 @@
+import { GetTrainingCatalogModules } from '@rehab-trainer/ui/trainingCatalog';
 import type { TranslationKey } from '../../../i18n';
 import type { Difficulty, ReferenceGameId, ReferenceModuleMeta, SessionLimitSeconds } from './types';
 
-export const referenceCognitiveModules: ReferenceModuleMeta[] = [
-  {
-    id: 'memory-match',
-    titleKey: 'cognitive.memory.title',
-    referenceTitleKey: 'cognitive.memory.referenceTitle',
-    descriptionKey: 'cognitive.memory.desc',
-    focusKey: 'cognitive.memory.focus',
-  },
-  {
-    id: 'lights-out',
-    titleKey: 'cognitive.lights.title',
-    referenceTitleKey: 'cognitive.lights.referenceTitle',
-    descriptionKey: 'cognitive.lights.desc',
-    focusKey: 'cognitive.lights.focus',
-  },
-  {
-    id: 'reaction-time',
-    titleKey: 'cognitive.reaction.title',
-    referenceTitleKey: 'cognitive.reaction.referenceTitle',
-    descriptionKey: 'cognitive.reaction.desc',
-    focusKey: 'cognitive.reaction.focus',
-  },
-  {
-    id: 'whack-a-mole',
-    titleKey: 'cognitive.whack.title',
-    referenceTitleKey: 'cognitive.whack.referenceTitle',
-    descriptionKey: 'cognitive.whack.desc',
-    focusKey: 'cognitive.whack.focus',
-  },
-  {
-    id: 'sliding-puzzle',
-    titleKey: 'cognitive.sliding.title',
-    referenceTitleKey: 'cognitive.sliding.referenceTitle',
-    descriptionKey: 'cognitive.sliding.desc',
-    focusKey: 'cognitive.sliding.focus',
-  },
-  {
-    id: 'sudoku',
-    titleKey: 'cognitive.sudoku.title',
-    referenceTitleKey: 'cognitive.sudoku.referenceTitle',
-    descriptionKey: 'cognitive.sudoku.desc',
-    focusKey: 'cognitive.sudoku.focus',
-  },
-  {
-    id: 'bulls-and-cows',
-    titleKey: 'cognitive.bulls.title',
-    referenceTitleKey: 'cognitive.bulls.referenceTitle',
-    descriptionKey: 'cognitive.bulls.desc',
-    focusKey: 'cognitive.bulls.focus',
-  },
-  {
-    id: 'simon-says',
-    titleKey: 'cognitive.simon.title',
-    referenceTitleKey: 'cognitive.simon.referenceTitle',
-    descriptionKey: 'cognitive.simon.desc',
-    focusKey: 'cognitive.simon.focus',
-  },
-  {
-    id: 'tic-tac-toe',
-    titleKey: 'cognitive.tictactoe.title',
-    referenceTitleKey: 'cognitive.tictactoe.referenceTitle',
-    descriptionKey: 'cognitive.tictactoe.desc',
-    focusKey: 'cognitive.tictactoe.focus',
-  },
-  {
-    id: 'connect4',
-    titleKey: 'cognitive.connect4.title',
-    referenceTitleKey: 'cognitive.connect4.referenceTitle',
-    descriptionKey: 'cognitive.connect4.desc',
-    focusKey: 'cognitive.connect4.focus',
-  },
-  {
-    id: 'dots-and-boxes',
-    titleKey: 'cognitive.dots.title',
-    referenceTitleKey: 'cognitive.dots.referenceTitle',
-    descriptionKey: 'cognitive.dots.desc',
-    focusKey: 'cognitive.dots.focus',
-  },
-  {
-    id: 'hex',
-    titleKey: 'cognitive.hex.title',
-    referenceTitleKey: 'cognitive.hex.referenceTitle',
-    descriptionKey: 'cognitive.hex.desc',
-    focusKey: 'cognitive.hex.focus',
-  },
-  {
-    id: 'set-game',
-    titleKey: 'cognitive.set.title',
-    referenceTitleKey: 'cognitive.set.referenceTitle',
-    descriptionKey: 'cognitive.set.desc',
-    focusKey: 'cognitive.set.focus',
-  },
-  {
-    id: 'sokoban',
-    titleKey: 'cognitive.sokoban.title',
-    referenceTitleKey: 'cognitive.sokoban.referenceTitle',
-    descriptionKey: 'cognitive.sokoban.desc',
-    focusKey: 'cognitive.sokoban.focus',
-  },
-  {
-    id: 'maze',
-    titleKey: 'cognitive.maze.title',
-    referenceTitleKey: 'cognitive.maze.referenceTitle',
-    descriptionKey: 'cognitive.maze.desc',
-    focusKey: 'cognitive.maze.focus',
-  },
-];
+const referenceCatalogModules = GetTrainingCatalogModules({
+  trainer: 'brain',
+  kind: 'brain-reference',
+});
+
+export const referenceCognitiveModules: ReferenceModuleMeta[] = referenceCatalogModules.map((module) => ({
+  id: module.runtimeId as ReferenceGameId,
+  titleKey: module.titleKey as TranslationKey,
+  referenceTitleKey: module.referenceTitleKey as TranslationKey,
+  descriptionKey: module.descriptionKey as TranslationKey,
+  focusKey: module.focusKey as TranslationKey,
+}));
 
 export type CognitiveTrainingArea = 'attention' | 'memory' | 'thinking';
 
@@ -117,12 +23,10 @@ export const cognitiveTrainingAreaTitleKeys: Record<CognitiveTrainingArea, Trans
   thinking: 'module.thinking.title',
 };
 
-const attentionCognitiveGameIds = new Set<ReferenceGameId>(['reaction-time', 'whack-a-mole']);
-const memoryCognitiveGameIds = new Set<ReferenceGameId>(['memory-match', 'simon-says']);
-
 export function GetCognitiveTrainingArea(gameId: ReferenceGameId): CognitiveTrainingArea {
-  if (attentionCognitiveGameIds.has(gameId)) return 'attention';
-  if (memoryCognitiveGameIds.has(gameId)) return 'memory';
+  const purpose = referenceCatalogModules.find((module) => module.runtimeId === gameId)?.purpose;
+  if (purpose === 'attention') return 'attention';
+  if (purpose === 'memory') return 'memory';
   return 'thinking';
 }
 

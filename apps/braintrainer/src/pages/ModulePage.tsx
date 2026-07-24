@@ -12,6 +12,7 @@ import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPa
 import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
+import { GetTrainingCatalogModules } from '@rehab-trainer/ui/trainingCatalog';
 import { useT, type TranslationKey } from '../i18n';
 import { GetReferenceCognitiveModules } from './thinking/cognitive/constants';
 import type { ReferenceGameId } from './thinking/cognitive/types';
@@ -35,29 +36,30 @@ interface ModuleDefinition {
   cards: ModuleCardDefinition[];
 }
 
+function GetCatalogRouteCards(purpose: 'attention' | 'memory'): ModuleCardDefinition[] {
+  return GetTrainingCatalogModules({
+    trainer: 'brain',
+    purpose,
+    kind: 'brain-route',
+  }).map((module) => ({
+    titleKey: module.titleKey as TranslationKey,
+    bodyKey: module.descriptionKey as TranslationKey,
+    to: module.entryPath,
+  }));
+}
+
 const modules: ModuleDefinition[] = [
   {
     id: 'attention',
     titleKey: 'module.attention.title',
     introKey: 'module.attention.intro',
-    cards: [
-      {
-        titleKey: 'module.attention.ufov.title',
-        bodyKey: 'module.attention.ufov.body',
-        to: '/attention-training/ufov',
-      },
-      {
-        titleKey: 'module.attention.everyBall.title',
-        bodyKey: 'module.attention.everyBall.body',
-        to: '/attention-training/every-ball-response',
-      },
-    ],
+    cards: GetCatalogRouteCards('attention'),
   },
   {
     id: 'memory',
     titleKey: 'module.memory.title',
     introKey: 'module.memory.intro',
-    cards: [],
+    cards: GetCatalogRouteCards('memory'),
   },
 ];
 

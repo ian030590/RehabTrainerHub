@@ -50,6 +50,7 @@
     "./siteUrls": "./src/siteUrls.ts",
     "./storage/userStore": "./src/storage/userStore.ts",
     "./trainerTheme": "./src/trainerTheme.ts",
+    "./trainingCatalog": "./src/trainingCatalog.ts",
     "./trainingGameUtils": "./src/trainingGameUtils.ts",
     "./ufovCanvas": "./src/ufovCanvas.ts",
     "./ufovResults": "./src/ufovResults.ts"

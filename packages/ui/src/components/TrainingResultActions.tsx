@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { ExitFullscreenIfActive } from '../fullscreen';
+import { defaultSiteUrls } from '../siteUrls';
 
 export interface TrainingResultActionsProps {
   downloadLabel: ReactNode;
@@ -8,6 +9,8 @@ export interface TrainingResultActionsProps {
   onDownloadCsv: () => void;
   onRestart: () => void;
   onBackHome: () => void;
+  hubLabel?: ReactNode;
+  hubHref?: string;
   className?: string;
 }
 
@@ -18,6 +21,8 @@ export function TrainingResultActions({
   onDownloadCsv,
   onRestart,
   onBackHome,
+  hubLabel = '返回訓練大廳',
+  hubHref = defaultSiteUrls.hub,
   className = 'results-actions',
 }: TrainingResultActionsProps) {
   useEffect(() => {
@@ -35,6 +40,9 @@ export function TrainingResultActions({
       <button className="btn btn-ghost btn-lg" type="button" onClick={onBackHome}>
         {backLabel}
       </button>
+      <a className="btn btn-secondary btn-lg" href={hubHref}>
+        {hubLabel}
+      </a>
     </div>
   );
 }
