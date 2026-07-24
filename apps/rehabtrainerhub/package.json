@@ -14,14 +14,14 @@
     "preview": "npx serve out"
   },
   "dependencies": {
-    "next": "^16.2.10",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "next": "^16.2.11",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@types/node": "^24.10.2",
+    "@types/node": "^26.1.1",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
-    "typescript": "~5.8.3"
+    "typescript": "~7.0.2"
   }
 }

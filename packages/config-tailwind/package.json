@@ -9,7 +9,7 @@
     "./tokens": "./tokens.ts"
   },
   "devDependencies": {
-    "tailwindcss": "^4.3.2",
-    "typescript": "~5.8.3"
+    "tailwindcss": "^4.3.3",
+    "typescript": "~7.0.2"
   }
 }
