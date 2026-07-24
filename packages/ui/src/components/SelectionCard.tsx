@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { CardImagePlaceholder } from './CardImagePlaceholder';
 
 export interface SelectionCardProps {
   title: ReactNode;
@@ -31,29 +32,34 @@ export function SelectionCard({
       disabled={disabled}
       onClick={onSelect}
     >
-      <span className="card-icon" aria-hidden="true">{index}</span>
-      <span className="card-title">{title}</span>
-      <span className="card-desc">{description}</span>
-      {meta && <span className="card-meta">{meta}</span>}
-      {actionLabel && (
-        <span className="card-action">
-          {actionLabel}
-          {!disabled && (
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              className={isSelected ? 'card-action-icon is-expanded' : 'card-action-icon'}
-              aria-hidden="true"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          )}
-        </span>
-      )}
+      <span className="selection-card-visual" aria-hidden="true">
+        <CardImagePlaceholder />
+      </span>
+      <span className="selection-card-content">
+        <span className="card-icon" aria-hidden="true">{index}</span>
+        <span className="card-title">{title}</span>
+        <span className="card-desc">{description}</span>
+        {meta && <span className="card-meta">{meta}</span>}
+        {actionLabel && (
+          <span className="card-action">
+            {actionLabel}
+            {!disabled && (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                className={isSelected ? 'card-action-icon is-expanded' : 'card-action-icon'}
+                aria-hidden="true"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            )}
+          </span>
+        )}
+      </span>
     </button>
   );
 }

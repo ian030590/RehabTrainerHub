@@ -11,6 +11,7 @@ import {
   type TrainerCatalogId,
   type TrainingPurposeId,
 } from '@rehab-trainer/ui/trainingCatalog';
+import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
 
 const trainerVisuals: Record<TrainerCatalogId, {
   name: string;
@@ -133,6 +134,11 @@ export function TrainingLobby() {
 
                 return (
                   <article className={`module-card trainer-${module.trainer}`} key={module.catalogId}>
+                    <div className="module-card-visual" aria-label="Training image placeholder" role="img">
+                      <CardImagePlaceholder />
+                      <span className="module-card-visual-label">圖片即將推出</span>
+                    </div>
+                    <div className="module-card-content">
                     <div className="module-card-meta">
                       <span>{purpose.label}</span>
                       <Image
@@ -148,8 +154,9 @@ export function TrainingLobby() {
                       <span>{trainer.name}</span>
                       <a href={BuildTrainingModuleHref(module)}>
                         開始訓練
-                        <span className="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                        <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                       </a>
+                    </div>
                     </div>
                   </article>
                 );

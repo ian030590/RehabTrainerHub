@@ -2,6 +2,8 @@ export { AuthPanel } from './components/AuthPanel';
 export type { AuthLocale, AuthProvider, AuthUser, RehabProfile } from './auth/authClient';
 export { AppLoading } from './components/AppLoading';
 export type { AppLoadingProps } from './components/AppLoading';
+export { CardImagePlaceholder, cardImagePlaceholderSrc } from './components/CardImagePlaceholder';
+export type { CardImagePlaceholderProps } from './components/CardImagePlaceholder';
 export { ConfigDialog } from './components/ConfigDialog';
 export type { ConfigDialogProps } from './components/ConfigDialog';
 export { EditableSettingRow } from './components/EditableSettingRow';

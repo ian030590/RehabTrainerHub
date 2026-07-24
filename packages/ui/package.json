@@ -11,6 +11,7 @@
     "./components/AppLoading": "./src/components/AppLoading.tsx",
     "./components/AuthPanel.css": "./src/components/AuthPanel.css",
     "./components/AuthPanel": "./src/components/AuthPanel.tsx",
+    "./components/CardImagePlaceholder": "./src/components/CardImagePlaceholder.tsx",
     "./components/ConfigDialog": "./src/components/ConfigDialog.tsx",
     "./components/ExternalLinkCard": "./src/components/ExternalLinkCard.tsx",
     "./components/GridPageLayout": "./src/components/GridPageLayout.tsx",
