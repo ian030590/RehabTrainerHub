@@ -49,7 +49,7 @@ Required for `.github/workflows/deploy-cloudflare-pages.yml`:
 
 - `CLOUDFLARE_API_TOKEN`: Cloudflare API token with account-level Cloudflare
   Pages edit access and D1 edit access so the workflow can list, create, deploy
-  Pages projects, and apply D1 migrations.
+  Pages projects, apply D1 migrations, and purge the R2 asset CDN cache.
 - `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account ID that owns the Pages projects.
 - `AUTH_SESSION_SECRET`: long random app-owned session signing secret for the
   Hub auth API.
@@ -99,6 +99,9 @@ Recommended GitHub Variables for the Cloudflare Pages environment:
   public CDN URLs.
 - `AI_ASSET_BASE_URL`: public R2 asset CDN origin, for example
   `https://assets.trainerhub.cc`.
+- `CLOUDFLARE_ZONE_ID`: required when `AI_ASSET_BASE_URL` is set. This is the
+  Cloudflare zone ID for the asset host, used to purge stale immutable R2 asset
+  headers before verification.
 - `ASSET_PUBLIC_BASE_URL`: public R2 base URL used for uploaded article covers.
   Usually the same value as `AI_ASSET_BASE_URL`.
 

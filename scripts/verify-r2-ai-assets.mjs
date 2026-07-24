@@ -114,10 +114,13 @@ function ValidateCors(response, corsOrigin, objectUrl) {
 }
 
 function ValidateAssetMetadata(response, asset, objectUrl) {
+  const contentRange = response.headers.get('content-range');
+  const contentRangeSize = Number(contentRange?.match(/^bytes \d+-\d+\/(\d+)$/)?.[1]);
   const contentLength = Number(response.headers.get('content-length'));
-  if (!Number.isSafeInteger(contentLength) || contentLength !== asset.size) {
+  const objectSize = response.status === 206 ? contentRangeSize : contentLength;
+  if (!Number.isSafeInteger(objectSize) || objectSize !== asset.size) {
     throw new Error(
-      `${objectUrl} Content-Length must be ${asset.size}; received ${response.headers.get('content-length')}.`,
+      `${objectUrl} size must be ${asset.size}; received Content-Length ${response.headers.get('content-length')} and Content-Range ${JSON.stringify(contentRange)}.`,
     );
   }
 
@@ -167,26 +170,28 @@ async function VerifyAsset(asset, baseUrl, corsOrigin, timeoutMs) {
   let response;
   try {
     response = await fetch(objectUrl, {
-      method: 'HEAD',
+      method: 'GET',
       headers: {
         'Accept-Encoding': 'identity',
         Origin: corsOrigin,
+        Range: 'bytes=0-0',
       },
       redirect: 'follow',
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (error) {
     throw new Error(
-      `${objectUrl} HEAD request failed: ${error instanceof Error ? error.message : String(error)}`,
+      `${objectUrl} GET request failed: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 
   if (!response.ok) {
-    throw new Error(`${objectUrl} HEAD returned HTTP ${response.status}.`);
+    throw new Error(`${objectUrl} GET returned HTTP ${response.status}.`);
   }
   ValidateCors(response, corsOrigin, objectUrl);
   ValidateCacheControl(response.headers.get('cache-control'), objectUrl);
   ValidateAssetMetadata(response, asset, objectUrl);
+  await response.body?.cancel();
   return {
     cacheControl: response.headers.get('cache-control'),
     corsOrigin,

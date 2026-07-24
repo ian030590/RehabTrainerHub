@@ -44,7 +44,7 @@ ASSET_BUCKET   R2
 
 `apps/rehabtrainerhub/wrangler.toml` 已宣告三個 binding；部署腳本會傳入 Wrangler 的 experimental provisioning / auto-create 旗標。首次正式部署後，仍應在 Cloudflare Dashboard 的 Pages 專案中確認三個 binding 都已存在且指向預期資源。
 
-Cloudflare API token 至少需涵蓋本流程使用的 Pages、D1、KV 與 R2 編輯權限，並設定正確的 `CLOUDFLARE_ACCOUNT_ID`。請將 token 放在 GitHub environment secret，不要寫入 repository。
+Cloudflare API token 至少需涵蓋本流程使用的 Pages、D1、KV、R2 編輯權限與 Zone Cache Purge 權限，並設定正確的 `CLOUDFLARE_ACCOUNT_ID`。請將 token 放在 GitHub environment secret，不要寫入 repository。
 
 若 Wrangler 顯示 `The database ... could not be found [code: 7404]`，通常代表目前登入的 Cloudflare account 或 `CLOUDFLARE_ACCOUNT_ID` 不是擁有該 D1 database 的帳號。先修正 account/token，再重跑 migration 或角色設定。
 
@@ -133,6 +133,7 @@ node scripts/verify-r2-ai-assets.mjs --base-url=https://assets.trainerhub.cc
 ```
 
 Manifest 內每個物件都有 versioned key、精確大小及 SHA-256。同步程式只接受符合 manifest 的 bytes；上游檔案一旦改變會停止上傳，必須更新 digest 並改用新的 versioned key，避免既有一年快取讀到不同內容。
+部署流程會在驗證前 purge manifest 內的公開 URL，避免 CORS 規則更新前的 immutable edge cache 繼續回舊 header。
 
 上傳 metadata：
 
@@ -140,7 +141,7 @@ Manifest 內每個物件都有 versioned key、精確大小及 SHA-256。同步�
 Cache-Control: public, max-age=31536000, immutable
 ```
 
-驗證器會對所有 manifest 物件送出 `HEAD`，並預設檢查四個 trainer origin 的 CORS、HTTPS，以及至少一年且帶有 `immutable` 的快取標頭。若正式 origin 不同，可用逗號指定：
+驗證器會對所有 manifest 物件送出 1-byte range `GET`，並預設檢查四個 trainer origin 的 CORS、HTTPS，以及至少一年且帶有 `immutable` 的快取標頭。若正式 origin 不同，可用逗號指定：
 
 ```bash
 node scripts/verify-r2-ai-assets.mjs \
@@ -152,6 +153,7 @@ GitHub variables：
 
 ```text
 AI_ASSET_BASE_URL=https://assets.trainerhub.cc
+CLOUDFLARE_ZONE_ID=<trainerhub.cc zone id>
 ASSET_PUBLIC_BASE_URL=https://assets.trainerhub.cc
 ```
 
