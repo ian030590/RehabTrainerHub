@@ -170,7 +170,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   justify-content: center;
   min-height: 64px;
   padding: 0 48px;
-  border-bottom: 1px solid var(--border);
   background: var(--bg-card);
   box-shadow: var(--shadow-card, 0 1px 4px rgba(0, 0, 0, 0.02));
   transition: min-height 220ms ease, opacity 220ms ease, transform 220ms ease;
@@ -219,7 +218,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   width: 44px;
   height: 44px;
   padding: 8px;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-m);
   background: var(--bg-card);
   color: var(--text-primary);
@@ -1082,7 +1081,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   justify-content: space-between;
   gap: 24px;
   padding: 26px 28px 22px;
-  border-bottom: 1px solid var(--border);
 }
 
 .training-config-title {
@@ -1167,7 +1165,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 .training-setting {
   min-width: 0;
   padding: 22px 0;
-  border-bottom: 1px solid var(--border);
 }
 
 .training-setting-wide {
@@ -1227,7 +1224,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   height: 36px;
   flex: 0 0 auto;
   padding: 0;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: 50%;
   background: var(--bg-card);
   color: var(--text-secondary);
@@ -1588,7 +1585,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 .rehab-footer {
   flex: 0 0 auto;
   padding: 0;
-  border-top: 1px solid var(--border);
   background: var(--bg-card);
   color: var(--text-secondary);
   transition: max-height 220ms ease, opacity 220ms ease, transform 220ms ease;
@@ -1823,7 +1819,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
     flex-direction: column;
     width: 100%;
     padding-top: 16px;
-    border-top: 1px solid var(--border);
     gap: 4px;
   }
 
@@ -2138,7 +2133,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   .training-config .config-actions {
     margin: 0;
     padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--border);
     background: var(--bg-elevated);
   }
 
