@@ -6,6 +6,7 @@ import {
   CleanupPixiTrial,
   CreatePixiTrialContainer,
   RunPixiTrial,
+  pixiRuntimeScopes,
 } from '../../utils/pixiPool';
 import { DrawLandoltC, DrawTumblingE, DrawContrastGrating } from '../../pages/assessment/logic/optotypeRenderer';
 import type { LandoltDirection, EDirection } from '../../pages/assessment/logic/optotypeRenderer';
@@ -60,6 +61,7 @@ const info = {
 } as const;
 
 type Info = typeof info;
+const contrastPixiScope = pixiRuntimeScopes.contrastAssessment;
 
 const keyDirectionMap: Record<string, number> = {
   arrowright: 0,
@@ -96,10 +98,14 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
   constructor(private jsPsych: JsPsych) {}
 
   trial(displayElement: HTMLElement, trial: TrialType<Info>, onLoad: () => void) {
-    const container = CreatePixiTrialContainer(displayElement);
+    const container = CreatePixiTrialContainer(
+      displayElement,
+      undefined,
+      'contrast-sensitivity-trial',
+    );
 
-    RunPixiTrial(displayElement, (app) => {
-      AttachPixiTrialCanvas(container);
+    RunPixiTrial(contrastPixiScope, displayElement, (app) => {
+      AttachPixiTrialCanvas(contrastPixiScope, container);
       app.renderer.background.color = trial.back_color!;
 
       const cx = app.screen.width / 2;
@@ -168,7 +174,7 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
     this.touchControls?.remove();
     this.touchControls = null;
     sprite.destroy();
-    CleanupPixiTrial(displayElement);
+    CleanupPixiTrial(contrastPixiScope, displayElement);
 
     const userDirection = KeyToDirection(key);
     const expectedDirection = trial.direction;

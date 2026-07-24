@@ -25,6 +25,7 @@ import {
   CleanupPixiTrial,
   CreatePixiTrialContainer,
   RunPixiTrial,
+  pixiRuntimeScopes,
 } from '../../utils/pixiPool';
 
 // ── Plugin Info ──
@@ -90,6 +91,8 @@ const marginBottom = 0.05;
 const gridCols = 5;
 const gridRows = 4;
 const moveDurationMs = 300;
+const movingCardPixiScope = pixiRuntimeScopes.movingCard;
+const movingCardContainerStyle = 'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;background:#0D1117;';
 
 class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
   static info = info;
@@ -104,7 +107,11 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
     const self = this;
 
     // ── Setup Container ──
-    const wrapper = CreatePixiTrialContainer(displayElement);
+    const wrapper = CreatePixiTrialContainer(
+      displayElement,
+      movingCardContainerStyle,
+      'moving-card-trial',
+    );
 
     // ── State (captured by closure) ──
     const target = (trial.target_letters as string) || GenerateRandomLetters(2);
@@ -115,7 +122,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
     let trialEnded = false;
 
     const runWithApp = (app: Application) => {
-      AttachPixiTrialCanvas(wrapper);
+      AttachPixiTrialCanvas(movingCardPixiScope, wrapper);
 
       const startTime = performance.now();
 
@@ -509,7 +516,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
         window.removeEventListener('keydown', handleKeydown);
 
         // Clear & detach (reuse app for next round)
-        CleanupPixiTrial(displayElement);
+        CleanupPixiTrial(movingCardPixiScope, displayElement);
 
         // Tell jsPsych this trial is done
         self.jsPsych.finishTrial({
@@ -522,7 +529,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
 
     };
 
-    RunPixiTrial(displayElement, runWithApp);
+    RunPixiTrial(movingCardPixiScope, displayElement, runWithApp);
 
     // Returns void (undefined) — jsPsych waits for finishTrial()
   }

@@ -11,6 +11,7 @@ import {
   GetSetting,
   IsDrivingControlMode,
 } from '../../utils/settings';
+import { DestroyPixiTrainingRuntime } from '../../utils/pixiPool';
 import { soundManager } from '../../utils/soundManager';
 import { SaveTrainingRecord } from '../../utils/trainingRecords';
 import { DownloadTrainingCsv } from './exportCsv';
@@ -172,6 +173,7 @@ export function TrainingPage() {
             },
           });
           soundManager.destroy();
+          DestroyPixiTrainingRuntime(moduleId);
           setResults(data);
           jsPsychRef.current = null;
           setPhase('results');
@@ -223,6 +225,7 @@ export function TrainingPage() {
     return () => {
       cancelled = true;
       soundManager.destroy();
+      DestroyPixiTrainingRuntime(moduleId);
       if (jsPsychRef.current) {
         jsPsychRef.current = null;
       }
@@ -259,9 +262,10 @@ export function TrainingPage() {
     const jsPsych = jsPsychRef.current;
     jsPsychRef.current = null;
     jsPsych?.abortExperiment();
+    DestroyPixiTrainingRuntime(moduleId);
     setResults([]);
     navigate('/');
-  }, [navigate, phase]);
+  }, [moduleId, navigate, phase]);
 
   useTrainingAbort({
     active: phase === 'running',

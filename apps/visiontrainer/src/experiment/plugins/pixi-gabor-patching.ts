@@ -6,6 +6,7 @@ import {
   CleanupPixiTrial,
   CreatePixiTrialContainer,
   RunPixiTrial,
+  pixiRuntimeScopes,
 } from '../../utils/pixiPool';
 import { typography } from '../../theme';
 import { soundManager } from '../../utils/soundManager';
@@ -83,6 +84,7 @@ const gaborTextureSpecs = [
   { size: 256, freq: 0.08, angle: Math.PI / 4 },
   { size: 256, freq: 0.03, angle: Math.PI / 2 },
 ] as const;
+const gaborPatchingPixiScope = pixiRuntimeScopes.gaborPatching;
 
 const gaborTextureCache = new Map<string, Texture>();
 
@@ -150,6 +152,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     const container = CreatePixiTrialContainer(
       displayElement,
       'width:100%;height:100%;position:relative;overflow:hidden;cursor:default;',
+      'gabor-patching-trial',
     );
 
     const hud = document.createElement('div');
@@ -178,9 +181,9 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     this.floatingScores = [];
     this.isGameOver = false;
 
-    RunPixiTrial(displayElement, (app) => {
+    RunPixiTrial(gaborPatchingPixiScope, displayElement, (app) => {
       this.app = app;
-      AttachPixiTrialCanvas(container);
+      AttachPixiTrialCanvas(gaborPatchingPixiScope, container);
       app.renderer.background.color = trial.background_color ?? '#808080';
       
       this.textures = gaborTextureSpecs.map((spec) => (
@@ -380,7 +383,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     }
 
     if (this.app) {
-      CleanupPixiTrial(displayElement);
+      CleanupPixiTrial(gaborPatchingPixiScope, displayElement);
       this.app = null;
     }
 

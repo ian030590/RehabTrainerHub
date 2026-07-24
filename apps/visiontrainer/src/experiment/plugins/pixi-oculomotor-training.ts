@@ -13,6 +13,7 @@ import {
   CleanupPixiTrial,
   CreatePixiTrialContainer,
   RunPixiTrial,
+  pixiRuntimeScopes,
 } from '../../utils/pixiPool';
 import { PixelFromDegree } from '../../utils/spatialUtils';
 import { createRng } from '../../pages/training/oculomotor/random';
@@ -111,6 +112,8 @@ type Info = typeof info;
 
 const lilacDotCount = 12;
 const fullCircle = Math.PI * 2;
+const oculomotorPixiScope = pixiRuntimeScopes.oculomotor;
+const oculomotorContainerStyle = 'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;background:#0D1117;';
 
 const modeTitle: Record<OculomotorMode, string> = {
   pursuit: '眼動訓練 · 追視',
@@ -258,7 +261,11 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
 
   trial(displayElement: HTMLElement, trial: TrialType<Info>): void {
     const self = this;
-    const wrapper = CreatePixiTrialContainer(displayElement);
+    const wrapper = CreatePixiTrialContainer(
+      displayElement,
+      oculomotorContainerStyle,
+      'oculomotor-training-trial',
+    );
 
     const mode = trial.mode as OculomotorMode;
     const pattern = trial.pattern as OculomotorPattern;
@@ -297,7 +304,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
     const aoiRadiusPx = PixelFromDegree(5);
 
     const runWithApp = (app: Application) => {
-      AttachPixiTrialCanvas(wrapper);
+      AttachPixiTrialCanvas(oculomotorPixiScope, wrapper);
 
       const startTime = performance.now();
       const bgGfx = new Graphics();
@@ -508,7 +515,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           audioElement.pause();
           audioElement.currentTime = 0;
         }
-        CleanupPixiTrial(displayElement);
+        CleanupPixiTrial(oculomotorPixiScope, displayElement);
 
         const elapsed = Math.min(durationMs, Math.round(getElapsedMs()));
         const averageFps = frameCount > 0 ? fpsAccumulator / frameCount : 0;
@@ -753,7 +760,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       app.ticker.add(tick);
     };
 
-    RunPixiTrial(displayElement, runWithApp);
+    RunPixiTrial(oculomotorPixiScope, displayElement, runWithApp);
   }
 }
 

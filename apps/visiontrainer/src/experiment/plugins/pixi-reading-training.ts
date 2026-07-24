@@ -7,6 +7,7 @@ import {
   CleanupPixiTrial,
   CreatePixiTrialContainer,
   RunPixiTrial,
+  pixiRuntimeScopes,
 } from '../../utils/pixiPool';
 
 const info = {
@@ -37,6 +38,7 @@ const info = {
 } as const;
 
 type Info = typeof info;
+const readingPixiScope = pixiRuntimeScopes.reading;
 
 class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
   static info = info;
@@ -48,6 +50,7 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
     const wrapper = CreatePixiTrialContainer(
       displayElement,
       'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;background-color:#ffffff;',
+      'reading-training-trial',
     );
 
     const contentArray = trial.content_array as string[];
@@ -68,7 +71,7 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
     const startTime = performance.now();
 
     const runWithApp = (app: Application) => {
-      AttachPixiTrialCanvas(wrapper);
+      AttachPixiTrialCanvas(readingPixiScope, wrapper);
 
       const getWidth = () => app.screen.width;
       const getHeight = () => app.screen.height;
@@ -111,7 +114,7 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
         if (timerId) clearTimeout(timerId);
         app.renderer.off('resize', handleResize);
         window.removeEventListener('keydown', handleKeydown);
-        CleanupPixiTrial(displayElement);
+        CleanupPixiTrial(readingPixiScope, displayElement);
 
         self.jsPsych.finishTrial({
           reading_time: Math.round(performance.now() - startTime),
@@ -158,7 +161,7 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
       ShowCountdown();
     };
 
-    RunPixiTrial(displayElement, runWithApp);
+    RunPixiTrial(readingPixiScope, displayElement, runWithApp);
   }
 }
 

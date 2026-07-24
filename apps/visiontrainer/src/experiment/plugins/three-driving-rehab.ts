@@ -274,7 +274,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly firstPersonCameraHeight = 2.05;
   private readonly firstPersonCameraLookAhead = 35;
   private readonly firstPersonCameraLookHeight = 1.65;
-  private readonly stableRendererPixelRatio = 1;
+  private readonly stableRendererPixelRatio = 1.5;
   private readonly referenceVehicleModelYawOffset = Math.PI;
   private readonly sidewalkWidth = 3;
   private readonly buildingRoadGap = 1.2;

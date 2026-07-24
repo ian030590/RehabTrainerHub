@@ -3,7 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useT } from '../../i18n';
 import { initJsPsych } from 'jspsych';
 import type { JsPsych } from 'jspsych';
-import { pixiAppManager } from '../../utils/pixiPool';
+import {
+  DestroyPixiRuntime,
+  WarmUpPixiRuntime,
+  pixiRuntimeScopes,
+} from '../../utils/pixiPool';
 import PixiContrastSensitivityPlugin from '../../experiment/plugins/pixi-contrast-sensitivity';
 import { BestPEST } from './logic/bestPest';
 import { getActiveUser, GetSetting } from '../../utils/settings';
@@ -58,7 +62,7 @@ export function ContrastTestPage() {
     const setup = async () => {
       try {
         setLoadError('');
-        await pixiAppManager.warmUp();
+        await WarmUpPixiRuntime(pixiRuntimeScopes.contrastAssessment);
       
         const jsPsych = initJsPsych({
           display_element: containerRef.current!,
@@ -133,7 +137,7 @@ export function ContrastTestPage() {
           const finalLogCSW = logCSWMaximal - logCSWMaximal * finalStim;
           setResultLogCSW(finalLogCSW);
           setTrialRecords(records);
-          pixiAppManager.destroy(); // clean up pixi
+          DestroyPixiRuntime(pixiRuntimeScopes.contrastAssessment);
         });
       } catch (error) {
         console.error('Contrast assessment failed to start:', error);
@@ -146,7 +150,7 @@ export function ContrastTestPage() {
     return () => {
       // cleanup on unmount
       if (jsPsychRef.current && phase === 'running') {
-        pixiAppManager.destroy();
+        DestroyPixiRuntime(pixiRuntimeScopes.contrastAssessment);
       }
     };
   }, [phase]);
@@ -155,7 +159,7 @@ export function ContrastTestPage() {
     abortingRef.current = true;
     jsPsychRef.current?.abortExperiment();
     jsPsychRef.current = null;
-    pixiAppManager.destroy();
+    DestroyPixiRuntime(pixiRuntimeScopes.contrastAssessment);
     navigate('/assessment');
   };
 

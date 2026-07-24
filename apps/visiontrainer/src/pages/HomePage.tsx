@@ -35,8 +35,37 @@ async function PreloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknow
     return import('../experiment/plugins/three-driving-rehab');
   }
 
-  const { pixiAppManager } = await import('../utils/pixiPool');
-  return pixiAppManager.warmUp();
+  const { WarmUpPixiTrainingRuntime } = await import('../utils/pixiPool');
+
+  if (moduleId === 'moving-card') {
+    return Promise.all([
+      import('../experiment/plugins/pixi-moving-card'),
+      WarmUpPixiTrainingRuntime(moduleId),
+    ]);
+  }
+
+  if (moduleId === 'oculomotor-training') {
+    return Promise.all([
+      import('../experiment/plugins/pixi-oculomotor-training'),
+      WarmUpPixiTrainingRuntime(moduleId),
+    ]);
+  }
+
+  if (moduleId === 'gabor-patching') {
+    return Promise.all([
+      import('../experiment/plugins/pixi-gabor-patching'),
+      WarmUpPixiTrainingRuntime(moduleId),
+    ]);
+  }
+
+  if (moduleId === 'reading-training') {
+    return Promise.all([
+      import('../experiment/plugins/pixi-reading-training'),
+      WarmUpPixiTrainingRuntime(moduleId),
+    ]);
+  }
+
+  return Promise.resolve();
 }
 
 export function HomePage() {
