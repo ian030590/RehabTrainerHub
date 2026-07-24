@@ -26,7 +26,6 @@
     "dev:motor": "turbo run dev --filter=@rehab-trainer/motortrainer",
     "dev:vision": "turbo run dev --filter=@rehab-trainer/visiontrainer",
     "deploy:cloudflare": "npm run build:cloudflare && node scripts/deploy-cloudflare-pages.mjs",
-    "purge:r2-ai-assets-cache": "node scripts/purge-r2-ai-assets-cache.mjs",
     "preview:brain": "turbo run preview --filter=@rehab-trainer/braintrainer",
     "preview:hub": "turbo run preview --filter=@rehab-trainer/rehabtrainerhub",
     "preview:mouth": "turbo run preview --filter=@rehab-trainer/mouthtrainer",

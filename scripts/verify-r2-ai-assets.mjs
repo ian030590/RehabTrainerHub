@@ -13,6 +13,7 @@ const defaultCorsOrigins = [
   'https://mouth.trainerhub.cc',
 ];
 const oneYearSeconds = 365 * 24 * 60 * 60;
+const verificationCacheKey = `${Date.now()}-${process.pid}`;
 
 function GetArg(name) {
   const prefix = `${name}=`;
@@ -167,14 +168,16 @@ async function ReadManifest(manifestPath) {
 
 async function VerifyAsset(asset, baseUrl, corsOrigin, timeoutMs) {
   const objectUrl = new URL(asset.key, `${baseUrl}/`).href;
+  const requestUrl = new URL(objectUrl);
+  requestUrl.searchParams.set('r2-ai-asset-verify', verificationCacheKey);
   let response;
   try {
-    response = await fetch(objectUrl, {
+    response = await fetch(requestUrl, {
       method: 'GET',
       headers: {
         'Accept-Encoding': 'identity',
         Origin: corsOrigin,
-        Range: 'bytes=0-0',
+        'User-Agent': 'Mozilla/5.0 R2 runtime asset verifier',
       },
       redirect: 'follow',
       signal: AbortSignal.timeout(timeoutMs),
