@@ -12,7 +12,6 @@ export function Navbar() {
       logoSrc={`${import.meta.env.BASE_URL}assets/logo.svg`}
       logoAlt={t('nav.logoAlt')}
       navItems={[
-        { to: '/speech-training', label: t('nav.speech') },
         { to: '/comprehension-training', label: t('nav.comprehension') },
         { to: '/oral-training', label: t('nav.oral') },
         { to: '/settings', label: t('nav.settings') },

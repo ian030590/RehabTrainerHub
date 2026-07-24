@@ -9,6 +9,7 @@ body,
 #root {
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
   background: var(--bg);
   color: var(--text-primary);
   font-family: var(--font-family);
@@ -136,6 +137,7 @@ body[data-ui-font-bold="true"] .app-layout :where(
   flex-direction: column;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   background: var(--bg);
   color: var(--text-primary);
   font-size: var(--ui-font-size, 18px);
@@ -1177,6 +1179,33 @@ body[data-ui-font-bold="true"] .app-layout :where(
   line-height: 1.25;
 }
 
+.training-setting-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.training-setting-help {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.training-setting-help.is-open {
+  border-color: var(--accent);
+  background: var(--bg-accent-soft);
+  color: var(--accent-dark);
+}
+
 .training-setting-header p {
   margin: 0;
   color: var(--text-secondary);
@@ -1554,6 +1583,109 @@ body[data-ui-font-bold="true"] .app-layout :where(
   font-weight: var(--ui-font-medium-weight, var(--fw-medium, 600));
 }
 
+.mobile-touch-pad {
+  position: fixed;
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 1010;
+  width: 148px;
+  height: 148px;
+  display: grid;
+  grid-template-columns: repeat(3, 48px);
+  grid-template-rows: repeat(3, 48px);
+  gap: 2px;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mobile-touch-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.56);
+  border-radius: var(--radius-m);
+  background: rgba(15, 23, 42, 0.48);
+  color: #ffffff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.18);
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.mobile-touch-button:active {
+  border-color: rgba(255, 255, 255, 0.9);
+  background: rgba(37, 99, 235, 0.72);
+  transform: scale(0.96);
+}
+
+.mobile-touch-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.mobile-touch-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.mobile-touch-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.mobile-touch-down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.mobile-action-controls {
+  position: fixed;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 1010;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mobile-action-button {
+  min-width: 108px;
+  min-height: 54px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  border-radius: var(--radius-m);
+  background: rgba(15, 23, 42, 0.56);
+  color: #ffffff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.2);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 900;
+  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.mobile-action-button:active {
+  background: rgba(37, 99, 235, 0.74);
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mobile-touch-pad,
+  .mobile-action-controls {
+    display: none;
+  }
+}
+
 .fade-in {
   animation: fadeIn 0.4s ease both;
 }
@@ -1685,8 +1817,71 @@ body[data-ui-font-bold="true"] .app-layout :where(
 }
 
 @media (max-width: 768px) {
+  .navbar {
+    min-height: calc(48px + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) 10px 0;
+  }
+
+  .navbar-inner {
+    gap: 10px;
+  }
+
+  .navbar-brand {
+    max-width: min(68vw, 300px);
+    gap: 8px;
+    font-size: calc(16px * var(--ui-font-scale, 1));
+  }
+
+  .navbar-brand img {
+    height: 20px;
+  }
+
+  .navbar-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-s);
+  }
+
+  .navbar-menu {
+    padding-top: calc(56px + env(safe-area-inset-top));
+  }
+
   .page-content {
-    padding: 24px 20px;
+    padding: 14px 14px 12px;
+  }
+
+  .section-title {
+    margin-bottom: 4px;
+    font-size: calc(22px * var(--ui-font-scale, 1));
+    line-height: 1.18;
+  }
+
+  .section-subtitle {
+    margin-bottom: 14px;
+    font-size: calc(12px * var(--ui-font-scale, 1));
+    line-height: 1.4;
+  }
+
+  .selection-grid,
+  .training-grid,
+  .assessment-grid {
+    gap: 12px;
+  }
+
+  .card {
+    padding: 18px;
+    border-radius: var(--radius-m);
+  }
+
+  .card-icon,
+  .card-desc {
+    display: none;
+  }
+
+  .card-title {
+    margin-bottom: 0;
+    font-size: calc(18px * var(--ui-font-scale, 1));
+    line-height: 1.22;
   }
 
   .setting-row,
@@ -1704,11 +1899,12 @@ body[data-ui-font-bold="true"] .app-layout :where(
   .rehab-footer-inner {
     flex-direction: row;
     align-items: center;
-    min-height: 38px;
-    width: min(1500px, calc(100% - 32px));
+    min-height: calc(30px + env(safe-area-inset-bottom));
+    width: min(1500px, calc(100% - 24px));
     justify-content: center;
     gap: 6px;
-    font-size: calc(10px * var(--ui-font-scale, 1));
+    padding-bottom: env(safe-area-inset-bottom);
+    font-size: calc(9px * var(--ui-font-scale, 1));
     line-height: 1.3;
     text-align: center;
   }
@@ -1735,27 +1931,46 @@ body[data-ui-font-bold="true"] .app-layout :where(
   }
 
   .training-panel {
-    padding: 16px;
+    padding: 0;
   }
 
   .training-panel h1 {
-    font-size: calc(28px * var(--ui-font-scale, 1));
+    font-size: calc(22px * var(--ui-font-scale, 1));
+  }
+
+  .config-modal-overlay {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+  }
+
+  .config-modal-panel {
+    max-height: 100dvh;
+    margin: 0;
   }
 
   .training-config {
-    width: 100%;
-    max-height: calc(100vh - 32px);
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .training-config-header {
-    padding: 18px;
+    flex: 0 0 auto;
+    gap: 8px;
+    padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
     flex-direction: column;
   }
 
   .training-config .config-summary,
   .training-config .config-actions {
-    margin-left: 18px;
-    margin-right: 18px;
+    margin-left: 12px;
+    margin-right: 12px;
   }
 
   .training-config-header-side {
@@ -1772,27 +1987,110 @@ body[data-ui-font-bold="true"] .app-layout :where(
   }
 
   .training-config h1 {
-    font-size: calc(24px * var(--ui-font-scale, 1));
+    font-size: calc(20px * var(--ui-font-scale, 1));
+    line-height: 1.16;
+  }
+
+  .training-config-label {
+    margin-bottom: 2px;
+    font-size: calc(10px * var(--ui-font-scale, 1));
+  }
+
+  .training-config .config-summary {
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .training-config .config-summary span,
+  .training-config .config-summary strong {
+    min-height: 28px;
+    padding: 4px 8px;
+    font-size: calc(11px * var(--ui-font-scale, 1));
   }
 
   .training-rule-section::before {
-    left: -8px;
+    display: none;
   }
 
   .training-config-body {
     grid-template-columns: 1fr;
-    padding: 0 18px;
+    padding: 0 12px 2px;
   }
 
   .training-option-grid-two,
   .training-option-grid-three,
   .training-option-grid-four,
   .training-option-grid-five,
-  .training-option-grid-auto,
   .training-speed-grid,
   .training-duration-grid,
   .training-wait-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .training-option-grid-auto {
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  }
+
+  .training-option-field {
+    grid-column: 1 / -1;
+  }
+
+  .training-setting {
+    padding: 12px 0;
+  }
+
+  .training-setting-header {
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .training-setting-title-row h2,
+  .training-setting-header h2 {
+    margin: 0;
+    font-size: calc(14px * var(--ui-font-scale, 1));
+    line-height: 1.22;
+  }
+
+  .training-setting-help {
+    display: inline-flex;
+  }
+
+  .training-setting-description {
+    display: none;
+    margin-top: 6px !important;
+    font-size: calc(11px * var(--ui-font-scale, 1)) !important;
+    line-height: 1.42 !important;
+  }
+
+  .training-setting-description[data-mobile-open="true"] {
+    display: block;
+  }
+
+  .training-setting-header > span {
+    min-height: 26px;
+    padding: 3px 8px;
+    font-size: calc(11px * var(--ui-font-scale, 1));
+  }
+
+  .training-option {
+    min-height: 50px;
+    padding: 8px 10px;
+    border-radius: var(--radius-s);
+  }
+
+  .training-option-title {
+    font-size: calc(14px * var(--ui-font-scale, 1));
+  }
+
+  .training-option-meta {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: calc(10px * var(--ui-font-scale, 1));
+    line-height: 1.25;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   .training-config .config-actions,
@@ -1802,8 +2100,24 @@ body[data-ui-font-bold="true"] .app-layout :where(
     width: 100%;
   }
 
+  .training-config .config-actions {
+    margin: 0;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    background: var(--bg-elevated);
+  }
+
+  .training-config .config-actions .btn {
+    min-height: 48px;
+    padding: 10px 16px;
+    font-size: calc(15px * var(--ui-font-scale, 1));
+  }
+
   .training-config-notice {
     flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 10px 12px;
   }
 
   .training-result-summary {
@@ -1824,6 +2138,114 @@ body[data-ui-font-bold="true"] .app-layout :where(
 
   .font-setting-control .btn {
     flex: 1 1 auto;
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .mobile-touch-pad {
+    width: 124px;
+    height: 124px;
+    grid-template-columns: repeat(3, 40px);
+    grid-template-rows: repeat(3, 40px);
+  }
+
+  .mobile-touch-button {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .mobile-action-controls {
+    gap: 8px;
+  }
+
+  .mobile-action-button {
+    min-width: 90px;
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .navbar {
+    min-height: calc(42px + env(safe-area-inset-top));
+  }
+
+  .navbar-brand {
+    font-size: calc(14px * var(--ui-font-scale, 1));
+  }
+
+  .navbar-brand img {
+    height: 18px;
+  }
+
+  .navbar-toggle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .rehab-footer-inner {
+    min-height: calc(24px + env(safe-area-inset-bottom));
+    font-size: calc(8px * var(--ui-font-scale, 1));
+  }
+
+  .page-content {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: calc(18px * var(--ui-font-scale, 1));
+  }
+
+  .section-subtitle {
+    display: none;
+  }
+
+  .training-config-header {
+    padding-top: calc(6px + env(safe-area-inset-top));
+    padding-bottom: 6px;
+  }
+
+  .training-config-label,
+  .training-config-header-side {
+    display: none;
+  }
+
+  .training-config h1 {
+    font-size: calc(18px * var(--ui-font-scale, 1));
+  }
+
+  .training-config-body {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 14px;
+  }
+
+  .training-setting {
+    padding: 8px 0;
+  }
+
+  .training-setting-header {
+    margin-bottom: 6px;
+  }
+
+  .training-option {
+    min-height: 42px;
+    padding: 6px 9px;
+  }
+
+  .training-option-meta {
+    display: none;
+  }
+
+  .training-config .config-actions {
+    flex-wrap: nowrap;
+    padding-top: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+  }
+
+  .training-config .config-actions .btn {
+    min-height: 42px;
+    padding: 8px 12px;
   }
 }
 

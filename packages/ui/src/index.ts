@@ -17,6 +17,8 @@ export type {
 } from './components/GeneralSettingsPanel';
 export { NumberPresetSelector } from './components/NumberPresetSelector';
 export type { NumberPresetSelectorProps } from './components/NumberPresetSelector';
+export { MobileActionControls, MobileDirectionPad } from './components/MobileTouchControls';
+export type { MobileActionControl, MobileActionControlsProps, MobileDirection, MobileDirectionPadProps } from './components/MobileTouchControls';
 export { GetDefaultReferenceListPageLabels, ReferenceListPage } from './components/ReferenceListPage';
 export type {
   ReferenceListItem,

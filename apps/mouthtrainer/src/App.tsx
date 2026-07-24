@@ -9,7 +9,6 @@ import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
 import { ComprehensionTraining } from './pages/ComprehensionTraining';
 import { OralTraining } from './pages/training/OralTraining';
-import { SpeechTraining } from './pages/training/SpeechTraining';
 import { defaultUiFontSizePx, GetSetting, settingsChangedEvent } from './utils/settings';
 import { siteUrls } from './utils/siteUrls';
 
@@ -20,7 +19,7 @@ const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => 
 export function App() {
   const { lang, t } = useT();
   const location = useLocation();
-  const isTraining = ['/speech-training', '/comprehension-training', '/oral-training'].includes(location.pathname);
+  const isTraining = ['/comprehension-training', '/oral-training'].includes(location.pathname);
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
       <TrainingLoginReminder
@@ -32,8 +31,7 @@ export function App() {
       />
       <Routes>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Navigate to="/speech-training" replace />} />
-          <Route path="/speech-training" element={<SpeechTraining />} />
+          <Route path="/" element={<Navigate to="/oral-training" replace />} />
           <Route path="/comprehension-training" element={<ComprehensionTraining />} />
           <Route path="/oral-training" element={<OralTraining />} />
           <Route path="/settings" element={<SettingsPage />} />

@@ -49,9 +49,6 @@ jobs:
           AUTH_STATE_SECRET: ${{ secrets.AUTH_STATE_SECRET }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
-          AZURE_SPEECH_REGION: ${{ vars.AZURE_SPEECH_REGION }}
-          AZURE_SPEECH_ALLOWED_ORIGINS: ${{ vars.AZURE_SPEECH_ALLOWED_ORIGINS }}
 
       - name: Smoke test changed Trainers
         run: node scripts/check-changed-trainer-smoke.mjs

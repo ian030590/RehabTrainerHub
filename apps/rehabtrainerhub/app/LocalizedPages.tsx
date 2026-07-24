@@ -143,12 +143,6 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         modules: [FormatReferenceModuleChip('思考訓練', '踩地雷')],
       },
       {
-        title: 'Microsoft Cognitive Services Speech SDK for JavaScript',
-        href: 'https://learn.microsoft.com/azure/ai-services/speech-service/speech-sdk',
-        description: 'Azure AI Speech runtime，用於瀏覽器語音辨識。',
-        modules: [FormatReferenceModuleChip('口語訓練', '語音防線')],
-      },
-      {
         title: 'rbcavanaugh/mainConcept',
         href: 'https://github.com/rbcavanaugh/mainConcept',
         description: '主旨概念分析訓練題材與評分流程，作為主旨概念訓練參考。',
@@ -225,12 +219,6 @@ const referencesCopy: Record<HubLocale, ReferencesCopy> = {
         href: 'https://github.com/antfu/vue-minesweeper',
         description: 'Minesweeper game logic and board interaction reference.',
         modules: [FormatReferenceModuleChip('Thinking Training', 'Minesweeper')],
-      },
-      {
-        title: 'Microsoft Cognitive Services Speech SDK for JavaScript',
-        href: 'https://learn.microsoft.com/azure/ai-services/speech-service/speech-sdk',
-        description: 'Azure AI Speech runtime used for browser speech recognition.',
-        modules: [FormatReferenceModuleChip('Speech Training', 'Voice Defender')],
       },
       {
         title: 'rbcavanaugh/mainConcept',

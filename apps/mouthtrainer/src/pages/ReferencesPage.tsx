@@ -11,17 +11,8 @@ import { useT } from '../i18n';
 export function ReferencesPage() {
   const { lang, t } = useT();
   const labels = GetDefaultReferenceListPageLabels(lang);
-  const speech = t('mouth.speech.title');
   const oral = t('mouth.oral.title');
   const items: ReferenceListItem[] = [
-    {
-      title: 'Microsoft Cognitive Services Speech SDK for JavaScript',
-      href: 'https://learn.microsoft.com/azure/ai-services/speech-service/speech-sdk',
-      description: lang === 'en'
-        ? 'Azure AI Speech runtime used for browser speech recognition.'
-        : '用於瀏覽器語音辨識的 Azure AI Speech runtime。',
-      modules: [FormatReferenceModuleChip(speech, t('voice.title'))],
-    },
     {
       title: 'MediaPipe Tasks Vision',
       href: 'https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker',
@@ -44,10 +35,7 @@ export function ReferencesPage() {
     {
       title: 'Chiaramonte, R., Pavone, P., & Vecchio, M. (2020). Speech rehabilitation in dysarthria after stroke: a systematic review of the studies. European Journal of Physical and Rehabilitation Medicine, 56(5). https://doi.org/10.23736/s1973-9087.20.06185-7',
       href: 'https://doi.org/10.23736/s1973-9087.20.06185-7',
-      modules: [
-        FormatReferenceModuleChip(speech, t('voice.title')),
-        FormatReferenceModuleChip(oral, t('tongue.title'))
-      ],
+      modules: [FormatReferenceModuleChip(oral, t('tongue.title'))],
     },
   ];
 

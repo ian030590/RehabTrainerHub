@@ -91,6 +91,7 @@ function KeyToDirection(key: string): number {
 class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
   static info = info;
   private keyboardListener: any;
+  private touchControls: HTMLDivElement | null = null;
 
   constructor(private jsPsych: JsPsych) {}
 
@@ -141,6 +142,7 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
         sprite.x = cx;
         sprite.y = cy;
         app.stage.addChild(sprite);
+        const stimulusOnset = performance.now();
 
         this.keyboardListener = this.jsPsych.pluginAPI.getKeyboardResponse({
           callback_function: (info: any) => {
@@ -151,6 +153,9 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
           persist: false,
           allow_held_key: false,
         });
+        this.touchControls = this.createTouchControls(container, (key) => {
+          this.endTrial(Math.round(performance.now() - stimulusOnset), key, trial, sprite, displayElement);
+        });
 
       }, trial.fixation_duration_ms!);
     });
@@ -160,6 +165,8 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
     if (this.keyboardListener) {
       this.jsPsych.pluginAPI.cancelKeyboardResponse(this.keyboardListener);
     }
+    this.touchControls?.remove();
+    this.touchControls = null;
     sprite.destroy();
     CleanupPixiTrial(displayElement);
 
@@ -175,6 +182,73 @@ class PixiContrastSensitivityPlugin implements JsPsychPlugin<Info> {
       correct: isCorrect,
     });
   }
+
+  private createTouchControls(container: HTMLElement, onSelect: (key: string) => void) {
+    if (!ShouldShowTouchControls()) return null;
+
+    const pad = document.createElement('div');
+    Object.assign(pad.style, {
+      position: 'absolute',
+      right: 'max(12px, env(safe-area-inset-right))',
+      bottom: 'max(12px, env(safe-area-inset-bottom))',
+      zIndex: '5',
+      width: '144px',
+      height: '144px',
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 46px)',
+      gridTemplateRows: 'repeat(3, 46px)',
+      gap: '3px',
+      pointerEvents: 'auto',
+      touchAction: 'none',
+    });
+
+    const directions = [
+      { key: 'ArrowUpLeft', label: '↖', col: 1, row: 1 },
+      { key: 'ArrowUp', label: '↑', col: 2, row: 1 },
+      { key: 'ArrowUpRight', label: '↗', col: 3, row: 1 },
+      { key: 'ArrowLeft', label: '←', col: 1, row: 2 },
+      { key: 'ArrowRight', label: '→', col: 3, row: 2 },
+      { key: 'ArrowDownLeft', label: '↙', col: 1, row: 3 },
+      { key: 'ArrowDown', label: '↓', col: 2, row: 3 },
+      { key: 'ArrowDownRight', label: '↘', col: 3, row: 3 },
+    ] as const;
+
+    for (const direction of directions) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = direction.label;
+      button.setAttribute('aria-label', direction.key);
+      Object.assign(button.style, {
+        gridColumn: String(direction.col),
+        gridRow: String(direction.row),
+        width: '46px',
+        height: '46px',
+        border: '1px solid rgba(15, 23, 42, 0.22)',
+        borderRadius: '10px',
+        background: 'rgba(255, 255, 255, 0.34)',
+        color: 'rgba(15, 23, 42, 0.72)',
+        fontSize: '18px',
+        fontWeight: '800',
+        cursor: 'pointer',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+      });
+      button.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onSelect(direction.key);
+      }, { once: true });
+      pad.appendChild(button);
+    }
+
+    container.appendChild(pad);
+    return pad;
+  }
+}
+
+function ShouldShowTouchControls() {
+  return navigator.maxTouchPoints > 0
+    || (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches);
 }
 
 export default PixiContrastSensitivityPlugin;

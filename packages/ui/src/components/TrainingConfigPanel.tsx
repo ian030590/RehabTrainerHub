@@ -1,4 +1,5 @@
-import type { HTMLAttributes, ReactNode, Ref } from 'react';
+import { useId, useState, type HTMLAttributes, type ReactNode, type Ref } from 'react';
+import { icons } from './Icons';
 import { TrainingConfigSummary, type TrainingConfigSummaryItem } from './TrainingConfigSummary';
 
 type PanelAriaProps = Pick<HTMLAttributes<HTMLDivElement>, 'aria-label' | 'aria-modal' | 'role'>;
@@ -107,6 +108,8 @@ export function TrainingConfigSection({
 }: TrainingConfigSectionProps) {
   const hasDescription = description !== undefined && description !== null && description !== '';
   const hasValue = value !== undefined && value !== null && value !== '';
+  const descriptionId = useId();
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
 
   return (
     <section
@@ -116,8 +119,33 @@ export function TrainingConfigSection({
     >
       <div className="training-setting-header">
         <div>
-          <h2>{title}</h2>
-          {hasDescription && <p>{description}</p>}
+          <div className="training-setting-title-row">
+            <h2>{title}</h2>
+            {hasDescription && (
+              <button
+                type="button"
+                className={`training-setting-help ${isDescriptionOpen ? 'is-open' : ''}`}
+                aria-controls={descriptionId}
+                aria-expanded={isDescriptionOpen}
+                aria-label="Show setting details"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsDescriptionOpen((open) => !open);
+                }}
+              >
+                <icons.QuestionCircle />
+              </button>
+            )}
+          </div>
+          {hasDescription && (
+            <p
+              id={descriptionId}
+              className="training-setting-description"
+              data-mobile-open={isDescriptionOpen ? 'true' : undefined}
+            >
+              {description}
+            </p>
+          )}
         </div>
         {hasValue && <span>{value}</span>}
       </div>

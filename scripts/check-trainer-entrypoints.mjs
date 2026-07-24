@@ -36,7 +36,6 @@ const protectedEntrypoints = Unique([
   'apps/motortrainer/src/pages/HomePage.tsx',
   'apps/motortrainer/src/pages/training/UpperLimbTraining.tsx',
   'apps/braintrainer/src/pages/thinking/ThinkingTraining.tsx',
-  'apps/mouthtrainer/src/pages/training/SpeechTraining.tsx',
   'apps/mouthtrainer/src/pages/training/OralTraining.tsx',
   'apps/visiontrainer/src/pages/HomePage.tsx',
   'apps/braintrainer/src/pages/ModulePage.tsx',

@@ -384,38 +384,6 @@ function GetMotorRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['可用方向鍵移動，也可點擊相鄰可通行格移動。', '碰到牆或點非相鄰格會記為錯誤。', '每次訓練會生成不同迷宮、起點與終點。'],
         ['Use arrow keys or tap an adjacent open cell to move.', 'Walls or non-adjacent taps count as errors.', 'Each session generates a new maze with varied start and goal cells.'],
       );
-    case 'voice-defender':
-      return isZh
-        ? [
-            {
-              title: '遊玩方式',
-              description: '朗讀靠近的字卡，成功辨識後會擊退敵人。',
-              items: [
-                '開始前請完成麥克風測試，並確認至少啟用一個詞彙。',
-                '字卡靠近防線時，請清楚朗讀畫面上的文字。',
-                '敵人抵達防線會扣除 HP；HP 歸零後進入結算。',
-              ],
-            },
-            {
-              title: '成績計算',
-              description: '結算會記錄存活時間、擊退數、分數、最困難詞與辨識相似度。',
-            },
-          ]
-        : [
-            {
-              title: 'How to Play',
-              description: 'Read approaching word cards aloud to defeat enemies.',
-              items: [
-                'Test the microphone first and enable at least one vocabulary item.',
-                'When a card approaches the defense line, clearly say the shown word.',
-                'Enemies that reach the line cost HP; results appear when HP reaches zero.',
-              ],
-            },
-            {
-              title: 'Results',
-              description: 'The result records survival time, defeated enemies, score, most difficult word, and similarity.',
-            },
-          ];
     case 'tongue-catch':
       return isZh
         ? [

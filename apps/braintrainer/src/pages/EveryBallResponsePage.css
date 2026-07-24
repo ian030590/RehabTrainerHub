@@ -206,6 +206,42 @@
   }
 
   .every-ball-camera {
-    width: min(150px, 46vw);
+    right: auto;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    left: max(10px, env(safe-area-inset-left));
+    width: min(124px, 34vw);
+  }
+
+  .every-ball-mobile-actions .mobile-action-button {
+    min-width: 96px;
+    min-height: 50px;
+    padding-inline: 12px;
+    font-size: calc(14px * var(--ui-font-scale, 1));
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .every-ball-hud {
+    top: 6px;
+    left: 8px;
+    right: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .every-ball-hud span {
+    font-size: calc(10px * var(--ui-font-scale, 1));
+  }
+
+  .every-ball-hud strong {
+    font-size: calc(12px * var(--ui-font-scale, 1));
+  }
+
+  .every-ball-camera {
+    right: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(8px, env(safe-area-inset-left));
+    width: min(112px, 20vw);
   }
 }

@@ -24,7 +24,6 @@
     "@tensorflow-models/knn-classifier": "^1.2.6",
     "@tensorflow/tfjs": "^4.22.0",
     "jspsych": "^8.2.1",
-    "pinyin-pro": "^3.28.1",
     "pixi.js": "^8.18.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

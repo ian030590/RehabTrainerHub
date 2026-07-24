@@ -26,7 +26,6 @@ const moduleTitleKeys: Record<string, TranslationKey> = {
   'upper-limb-training': 'home.module.upperLimb.title',
   'lower-limb-training': 'home.module.lowerLimb.title',
   'cognitive-training': 'home.module.cognitive.title',
-  'speech-training': 'home.module.speech.title',
 };
 
 export interface TrainingRecordConfig {

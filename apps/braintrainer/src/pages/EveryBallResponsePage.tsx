@@ -13,6 +13,7 @@ import {
   TrainingConfigPanel,
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import { MobileActionControls } from '@rehab-trainer/ui/components/MobileTouchControls';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
@@ -33,7 +34,7 @@ type FixationStyle = 'cross' | 'blank';
 type BallId = 'basketball' | 'soccer' | 'tennis' | 'beach';
 type ResponseAction = 'clap' | 'thigh';
 type ExpectedAction = ResponseAction | 'none';
-type ResponseSource = InputMode | 'keyboard';
+type ResponseSource = InputMode | 'keyboard' | 'touch';
 type TrialOutcome = 'hit' | 'correct_reject' | 'miss' | 'false_alarm' | 'wrong_action';
 
 interface LevelDefinition {
@@ -418,7 +419,7 @@ const copy: Record<'zh' | 'en', EveryBallLabels> = {
     actionClap: '拍手',
     actionThigh: '拍大腿',
     actionNone: '不動作',
-    keyboardHint: '測試鍵盤可用空白鍵代表拍手、方向下鍵代表拍大腿。',
+    keyboardHint: '手機可用畫面按鈕反應；鍵盤測試可用空白鍵代表拍手、方向下鍵代表拍大腿。',
     balls: {
       basketball: '籃球',
       soccer: '足球',
@@ -506,7 +507,7 @@ const copy: Record<'zh' | 'en', EveryBallLabels> = {
     actionClap: 'Clap',
     actionThigh: 'Tap thigh',
     actionNone: 'No action',
-    keyboardHint: 'For testing, Space triggers clap and ArrowDown triggers thigh.',
+    keyboardHint: 'On phones, use the on-screen action buttons. For keyboard testing, Space triggers clap and ArrowDown triggers thigh.',
     balls: {
       basketball: 'Basketball',
       soccer: 'Soccer ball',
@@ -1038,6 +1039,24 @@ export function EveryBallResponsePage() {
             {labels.cancel}
           </button>
         </div>
+      )}
+
+      {phase === 'playing' && (
+        <MobileActionControls
+          className="every-ball-mobile-actions"
+          actions={[
+            {
+              id: 'clap',
+              label: labels.actionClap,
+              onPress: () => inputControllerRef.current.emit('clap', 'touch'),
+            },
+            {
+              id: 'thigh',
+              label: labels.actionThigh,
+              onPress: () => inputControllerRef.current.emit('thigh', 'touch'),
+            },
+          ]}
+        />
       )}
 
       {phase === 'results' && summary && (

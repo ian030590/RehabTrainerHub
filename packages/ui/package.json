@@ -16,6 +16,7 @@
     "./components/GridPageLayout": "./src/components/GridPageLayout.tsx",
     "./components/GridPageLayout.css": "./src/components/GridPageLayout.css",
     "./components/Icons": "./src/components/Icons.tsx",
+    "./components/MobileTouchControls": "./src/components/MobileTouchControls.tsx",
     "./components/EditableSettingRow": "./src/components/EditableSettingRow.tsx",
     "./components/NumberPresetSelector": "./src/components/NumberPresetSelector.tsx",
     "./components/ReferenceListPage": "./src/components/ReferenceListPage.tsx",

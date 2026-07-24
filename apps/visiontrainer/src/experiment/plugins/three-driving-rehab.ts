@@ -36,6 +36,7 @@ import type {
 
 type DrivingCameraMode = 'third-person' | 'first-person';
 type DrivingRenderQualityLevel = 'low' | 'medium' | 'high';
+type DrivingTouchKey = 'left' | 'right' | 'up' | 'down';
 
 interface DrivingRenderQuality {
   level: DrivingRenderQualityLevel;
@@ -234,6 +235,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private keydownListener: ((event: KeyboardEvent) => void) | null = null;
   private keyupListener: ((event: KeyboardEvent) => void) | null = null;
+  private touchControlsRoot: HTMLDivElement | null = null;
   private resizeListener: (() => void) | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private gamepadConnectedListener: ((event: GamepadEvent) => void) | null = null;
@@ -455,6 +457,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.renderQuality = this.detectRenderQuality(root);
         this.initScene(root);
         this.initHud(root, trial.red_flash_enabled ?? true);
+        this.initTouchControls(root);
         if (this.renderQuality.useReferenceVehicleModel) {
           await this.loadReferenceVehicleModel();
         }
@@ -613,6 +616,99 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     };
     window.addEventListener('keydown', this.keydownListener);
     window.addEventListener('keyup', this.keyupListener);
+  }
+
+  private initTouchControls(root: HTMLDivElement) {
+    this.touchControlsRoot?.remove();
+    this.touchControlsRoot = null;
+    if (!ShouldShowDrivingTouchControls()) return;
+
+    const controls = document.createElement('div');
+    controls.className = 'driving-touch-controls';
+    Object.assign(controls.style, {
+      position: 'absolute',
+      inset: '0',
+      zIndex: '12',
+      pointerEvents: 'none',
+      touchAction: 'none',
+    });
+
+    const steering = document.createElement('div');
+    Object.assign(steering.style, {
+      position: 'absolute',
+      left: 'max(14px, env(safe-area-inset-left))',
+      bottom: 'max(14px, env(safe-area-inset-bottom))',
+      display: 'flex',
+      gap: '10px',
+      pointerEvents: 'auto',
+    });
+
+    const pedals = document.createElement('div');
+    Object.assign(pedals.style, {
+      position: 'absolute',
+      right: 'max(14px, env(safe-area-inset-right))',
+      bottom: 'max(14px, env(safe-area-inset-bottom))',
+      display: 'grid',
+      gap: '10px',
+      pointerEvents: 'auto',
+    });
+
+    const camera = CreateDrivingTouchButton('CAM', 'Switch camera view');
+    Object.assign(camera.style, {
+      position: 'absolute',
+      left: '50%',
+      bottom: 'max(14px, env(safe-area-inset-bottom))',
+      minWidth: '64px',
+      height: '44px',
+      transform: 'translateX(-50%)',
+      pointerEvents: 'auto',
+      fontSize: '13px',
+    });
+    camera.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.cycleCameraMode();
+    });
+
+    const left = this.createDrivingPressButton('←', 'Steer left', ['left']);
+    const right = this.createDrivingPressButton('→', 'Steer right', ['right']);
+    const throttle = this.createDrivingPressButton('▲', 'Throttle', ['up']);
+    const brake = this.createDrivingPressButton('▼', 'Brake', ['down']);
+
+    steering.append(left, right);
+    pedals.append(throttle, brake);
+    controls.append(steering, pedals, camera);
+    root.appendChild(controls);
+    this.touchControlsRoot = controls;
+  }
+
+  private createDrivingPressButton(
+    label: string,
+    ariaLabel: string,
+    keys: DrivingTouchKey[],
+  ) {
+    const button = CreateDrivingTouchButton(label, ariaLabel);
+    const setPressed = (pressed: boolean) => {
+      for (const key of keys) {
+        this.keyState[key] = pressed;
+      }
+    };
+    const release = (event: PointerEvent) => {
+      event.preventDefault();
+      setPressed(false);
+    };
+
+    button.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      button.setPointerCapture(event.pointerId);
+      setPressed(true);
+    });
+    button.addEventListener('pointerup', release);
+    button.addEventListener('pointercancel', release);
+    button.addEventListener('pointerleave', release);
+    button.addEventListener('contextmenu', (event) => event.preventDefault());
+    return button;
   }
 
   private shouldPreventKeyDefault(code: string): boolean {
@@ -4569,6 +4665,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.renderer.domElement?.remove?.();
       this.renderer = null;
     }
+    this.touchControlsRoot?.remove();
+    this.touchControlsRoot = null;
     this.camera = null;
     this.rearviewCamera = null;
     this.rearviewLookAt = null;
@@ -4611,6 +4709,50 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private requireThree(): ThreeModule {
     return three;
   }
+}
+
+function CreateDrivingTouchButton(label: string, ariaLabel: string) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.setAttribute('aria-label', ariaLabel);
+  Object.assign(button.style, {
+    minWidth: '58px',
+    height: '58px',
+    padding: '0 14px',
+    border: '1px solid rgba(255, 255, 255, 0.52)',
+    borderRadius: '12px',
+    background: 'rgba(15, 23, 42, 0.5)',
+    color: '#ffffff',
+    boxShadow: '0 10px 24px rgba(0, 0, 0, 0.22)',
+    cursor: 'pointer',
+    fontFamily: typography.fontFamily,
+    fontSize: '22px',
+    fontWeight: '900',
+    lineHeight: '1',
+    touchAction: 'none',
+    userSelect: 'none',
+    WebkitTapHighlightColor: 'transparent',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+  });
+  button.addEventListener('pointerdown', () => {
+    button.style.background = 'rgba(37, 99, 235, 0.74)';
+    button.style.transform = 'scale(0.96)';
+  });
+  const clearActive = () => {
+    button.style.background = 'rgba(15, 23, 42, 0.5)';
+    button.style.transform = 'scale(1)';
+  };
+  button.addEventListener('pointerup', clearActive);
+  button.addEventListener('pointercancel', clearActive);
+  button.addEventListener('pointerleave', clearActive);
+  return button;
+}
+
+function ShouldShowDrivingTouchControls() {
+  return navigator.maxTouchPoints > 0
+    || (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches);
 }
 
 export default ThreeDrivingRehabPlugin;

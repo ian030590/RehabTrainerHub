@@ -8,7 +8,7 @@ if (files.length === 0) {
 }
 
 const failures = [];
-const protectedChunkPrefixes = ['index', 'TrainingPage', 'MotorTraining', 'ThinkingTraining', 'SpeechTraining'];
+const protectedChunkPrefixes = ['index', 'TrainingPage', 'MotorTraining', 'ThinkingTraining'];
 const forbiddenRuntimeChunkPrefixes = [
   'experiment-runtime',
   'pixi-runtime',

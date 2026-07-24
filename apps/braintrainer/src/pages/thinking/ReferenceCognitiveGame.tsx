@@ -81,6 +81,7 @@ import {
   TrainingConfigPanel,
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import { MobileDirectionPad, type MobileDirection } from '@rehab-trainer/ui/components/MobileTouchControls';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -287,6 +288,23 @@ export function ReferenceCognitiveGame({
     renderRef.current();
   }
 
+  function HandleMobileDirection(direction: MobileDirection) {
+    if (phaseRef.current !== 'playing') return;
+    const state = stateRef.current;
+    if (!state || (state.kind !== 'sokoban' && state.kind !== 'maze')) return;
+    const keyByDirection: Record<MobileDirection, string> = {
+      up: 'ArrowUp',
+      down: 'ArrowDown',
+      left: 'ArrowLeft',
+      right: 'ArrowRight',
+    };
+    const feedbackBefore = GetFeedbackCounts(state);
+    const handled = HandleLanguageNeutralGameKey(state, keyByDirection[direction], finishGameRef.current);
+    if (!handled) return;
+    PlayFeedbackForCountChange(feedbackBefore, GetFeedbackCounts(state), jsPsychRef);
+    renderRef.current();
+  }
+
   function ScheduleNextWhackTarget(state: Extract<CognitiveGameState, { kind: 'whack-a-mole' }>) {
     const delayMs = Math.max(0, state.nextTargetAt - performance.now());
     jsPsychRef.current?.pluginAPI.setTimeout(() => {
@@ -417,6 +435,13 @@ export function ReferenceCognitiveGame({
   return (
     <div ref={fullscreenRootRef} className={`cognitive-reference-game cognitive-reference-phase-${phase}`} style={{ '--cognitive-game-accent': cognitiveAccentCss } as CSSProperties}>
       <div ref={pixiHostRef} className="cognitive-pixi-stage" />
+      {phase === 'playing' && (stateRef.current?.kind === 'sokoban' || stateRef.current?.kind === 'maze') && (
+        <MobileDirectionPad
+          className="cognitive-mobile-dpad"
+          onDirectionEnd={() => undefined}
+          onDirectionStart={HandleMobileDirection}
+        />
+      )}
 
       {phase === 'menu' && (
         <div className="training-panel">

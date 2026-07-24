@@ -826,7 +826,6 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       {phase === 'rules' && (
         <div className="training-panel tongue-menu-panel">
           <MouthTrainingRulesPanel
-            gameId="tongue-catch"
             title={t('tongue.title')}
             summaryTitle={t('tongue.title')}
             summaryItems={tongueSummaryItems}

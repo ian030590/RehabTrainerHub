@@ -56,18 +56,7 @@ function GetProjectSecrets(project, publicVariables, authBaseUrl, allowedOrigins
       }
     : { ...publicVariables };
 
-  if (project.appName === 'mouthtrainer') {
-    secrets.AZURE_SPEECH_KEY = RequireEnv('AZURE_SPEECH_KEY');
-    secrets.AZURE_SPEECH_REGION = RequireEnv('AZURE_SPEECH_REGION');
-    AddOptionalEnv(secrets, 'AZURE_SPEECH_ALLOWED_ORIGINS');
-  }
-
   return secrets;
-}
-
-function AddOptionalEnv(target, name) {
-  const value = process.env[name]?.trim();
-  if (value) target[name] = value;
 }
 
 function GetCommand(file, args) {

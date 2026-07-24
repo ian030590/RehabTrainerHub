@@ -57,14 +57,11 @@ Required for `.github/workflows/deploy-cloudflare-pages.yml`:
   Hub auth API.
 - `GOOGLE_CLIENT_ID`: Google OAuth client ID for the Hub callback URL.
 - `GOOGLE_CLIENT_SECRET`: Google OAuth client secret for the Hub callback URL.
-- `AZURE_SPEECH_KEY`: Azure AI Speech key used only by the MouthTrainer Pages
-  Function token endpoint.
 
 The deploy workflow syncs auth environment secrets to Cloudflare Pages before
 deploying. Every Pages project discovered from `apps/*/wrangler.toml` receives
 the shared client auth base URL. The `rehabtrainerhub` project also receives
-the Google OAuth and session signing secrets. The `mouthtrainer` project also
-receives Azure Speech runtime settings. GitHub Actions is the source of truth
+the Google OAuth and session signing secrets. GitHub Actions is the source of truth
 for these values; each deploy overwrites the corresponding Cloudflare Pages
 secrets and variables through `wrangler pages secret bulk`. This keeps future
 Pages apps on the same login system without adding per-site Cloudflare settings
@@ -83,15 +80,8 @@ These values are fixed in source and drive Hub CTA links, each app's
 related-sites page, Vite canonical metadata, auth API base URLs, and production
 sitemaps.
 
-MouthTrainer Azure Speech variables:
-
-- `AZURE_SPEECH_REGION`: Azure Speech resource region, for example `eastus`.
-- `AZURE_SPEECH_ALLOWED_ORIGINS`: optional comma-separated extra origins for
-  the token endpoint.
-
 Use repository or Pages variables for public runtime settings. Use secrets only
-for private credentials such as Cloudflare API tokens, Discord webhook values,
-and `AZURE_SPEECH_KEY`.
+for private credentials such as Cloudflare API tokens and Discord webhook values.
 
 ## Custom Domains
 

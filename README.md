@@ -93,7 +93,6 @@ The following projects are referenced by the app pages or used as third-party li
 | visiontherapy/visiontherapy.github.io | `AGPL-3.0` | Compatible with AGPL-3.0. |
 | muthuspark/javascript-games | `MIT` | Permissive; compatible with AGPL-3.0. |
 | antfu/vue-minesweeper | `MIT` | Permissive; compatible with AGPL-3.0. |
-| microsoft-cognitiveservices-speech-sdk | `MIT` | Permissive; compatible with AGPL-3.0. |
 | rbcavanaugh/mainConcept | `AGPL-3.0` | Compatible with AGPL-3.0. |
 
 Last checked: 2026-07-20.
