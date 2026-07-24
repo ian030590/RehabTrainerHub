@@ -2,6 +2,7 @@ import { useState, type ComponentProps } from 'react';
 import { NavLink } from 'react-router-dom';
 import type { AuthLocale } from '../auth/authClient';
 import { AuthPanel } from './AuthPanel';
+import { useScrollChromeVisibility } from '../hooks/useScrollChromeVisibility';
 
 export type TrainerNavbarLinkClassName = ComponentProps<typeof NavLink>['className'];
 
@@ -55,6 +56,7 @@ export function TrainerNavbar({
 }: TrainerNavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloadingScores, setIsDownloadingScores] = useState(false);
+  const isScrollChromeVisible = useScrollChromeVisibility({ scrollContainerSelector: '.page-content' });
   const footerLinks: TrainerNavbarFooterLink[] = [
     { href: auth.apiBase, label: 'Hub' },
     { href: `${auth.apiBase.replace(/\/+$/, '')}/privacy/`, label: auth.locale === 'en' ? 'Privacy' : '隱私權政策' },
@@ -82,7 +84,7 @@ export function TrainerNavbar({
   };
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${!isScrollChromeVisible && !isOpen ? 'is-scroll-hidden' : ''}`}>
       <div className="navbar-inner">
         <NavLink to={brandHref} className="navbar-brand" onClick={closeMenu}>
           <img src={logoSrc} alt={logoAlt} height={logoHeight} style={logoStyle} />

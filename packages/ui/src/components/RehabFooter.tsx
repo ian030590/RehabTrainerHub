@@ -1,3 +1,5 @@
+import { useScrollChromeVisibility } from '../hooks/useScrollChromeVisibility';
+
 export interface RehabFooterProps {
   appName?: string;
   hubHref?: string;
@@ -42,8 +44,10 @@ export function RehabFooter({
   repoHref = 'https://github.com/ian030590/RehabTrainerHub',
   labels,
 }: RehabFooterProps) {
+  const isScrollChromeVisible = useScrollChromeVisibility({ scrollContainerSelector: '.page-content' });
+
   return (
-    <footer className="rehab-footer">
+    <footer className={`rehab-footer ${!isScrollChromeVisible ? 'is-scroll-hidden' : ''}`}>
       <div className="rehab-footer-inner">
         <strong>{appName}</strong>
         <span>{labels?.disclaimer ?? 'For rehabilitation practice workflow prototyping, not medical advice.'}</span>

@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
+import { useScrollChromeVisibility } from '@rehab-trainer/ui/hooks/useScrollChromeVisibility';
 import type { AuthUser } from '@rehab-trainer/ui/auth/authClient';
 import { hubName } from './hubBrand';
 import { siteUrls } from './siteUrls';
@@ -37,6 +38,7 @@ export function HubShell({ children }: { children: ReactNode }) {
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const isScrollChromeVisible = useScrollChromeVisibility();
 
   useEffect(() => {
     setIsAccountOpen(false);
@@ -64,7 +66,7 @@ export function HubShell({ children }: { children: ReactNode }) {
 
   return (
     <hubAuthContext.Provider value={{ user }}>
-      <header className="hub-header">
+      <header className={`hub-header ${!isScrollChromeVisible ? 'is-scroll-hidden' : ''}`}>
         <Link className="hub-brand" href="/" aria-label="Rehab Trainer Hub 訓練大廳">
           <Image src="/rehabtrainerhub.svg" alt="" width={42} height={42} priority />
           <span>
@@ -117,7 +119,18 @@ export function HubShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      {children}
+      <div className="hub-content">{children}</div>
+      <footer className={`hub-footer ${!isScrollChromeVisible ? 'is-scroll-hidden' : ''}`}>
+        <div className="hub-footer-inner">
+          <strong>Rehab Trainer Hub</strong>
+          <span>復健訓練流程原型，非醫療建議。</span>
+          <nav aria-label="頁尾導覽">
+            <Link href="/">訓練大廳</Link>
+            <Link href="/privacy/">隱私權</Link>
+            <a href="https://github.com/ian030590/RehabTrainerHub" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+        </div>
+      </footer>
     </hubAuthContext.Provider>
   );
 }

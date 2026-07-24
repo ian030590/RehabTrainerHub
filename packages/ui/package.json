@@ -44,6 +44,7 @@
     "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
     "./hooks/useFullscreenTrainingRoot": "./src/hooks/useFullscreenTrainingRoot.ts",
     "./hooks/useRoutedTrainingModule": "./src/hooks/useRoutedTrainingModule.ts",
+    "./hooks/useScrollChromeVisibility": "./src/hooks/useScrollChromeVisibility.ts",
     "./hooks/useTrainingAbort": "./src/hooks/useTrainingAbort.ts",
     "./i18n/createLanguageProvider": "./src/i18n/createLanguageProvider.tsx",
     "./settings/displaySettings": "./src/settings/displaySettings.ts",

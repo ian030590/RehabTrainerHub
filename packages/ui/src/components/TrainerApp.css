@@ -173,6 +173,16 @@ body[data-ui-font-bold="true"] .app-layout :where(
   border-bottom: 1px solid var(--border);
   background: var(--bg-card);
   box-shadow: var(--shadow-card, 0 1px 4px rgba(0, 0, 0, 0.02));
+  transition: min-height 220ms ease, opacity 220ms ease, transform 220ms ease;
+}
+
+.navbar.is-scroll-hidden {
+  max-height: 0;
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-100%);
 }
 
 .navbar-inner {
@@ -1557,6 +1567,16 @@ body[data-ui-font-bold="true"] .app-layout :where(
   border-top: 1px solid var(--border);
   background: var(--bg-card);
   color: var(--text-secondary);
+  transition: max-height 220ms ease, opacity 220ms ease, transform 220ms ease;
+}
+
+.rehab-footer.is-scroll-hidden {
+  max-height: 0;
+  overflow: hidden;
+  border-top-color: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(100%);
 }
 
 .rehab-footer-inner {

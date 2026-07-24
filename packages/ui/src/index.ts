@@ -84,6 +84,7 @@ export { CreateUseActiveUser } from './hooks/useActiveUser';
 export { useFullscreenTrainingRoot } from './hooks/useFullscreenTrainingRoot';
 export { useRoutedTrainingModule } from './hooks/useRoutedTrainingModule';
 export type { UseRoutedTrainingModuleArgs } from './hooks/useRoutedTrainingModule';
+export { useScrollChromeVisibility } from './hooks/useScrollChromeVisibility';
 export { useSyncedDisplaySettings } from './hooks/useSyncedDisplaySettings';
 export type { SyncedDisplaySettings } from './hooks/useSyncedDisplaySettings';
 export { useTrainingAbort } from './hooks/useTrainingAbort';
