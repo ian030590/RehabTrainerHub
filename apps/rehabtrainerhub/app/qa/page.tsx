@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import { CreateSeoMetadata } from '../seo';
 import { siteUrls } from '../siteUrls';
+import { EducationArticles } from './EducationArticles';
 
 export const metadata: Metadata = CreateSeoMetadata({
-  title: '常見問答',
-  description: 'Rehab Trainer Hub 常見問答與訓練服務介紹。',
+  title: '問答中心與衛教文章',
+  description: '閱讀治療師撰寫的復健衛教文章，並了解 Rehab Trainer Hub 的訓練服務。',
   path: '/qa',
-  noIndex: true,
 });
 
 const trainerLinks = [
@@ -32,6 +32,8 @@ export default function QuestionsPage() {
           登入後可保存訓練紀錄、追蹤每日任務與復健進度，並在不同訓練器之間延續使用體驗。
         </p>
       </section>
+
+      <EducationArticles />
 
       <section className="trainer-links-section" aria-labelledby="trainer-links-title">
         <div className="section-title-row">

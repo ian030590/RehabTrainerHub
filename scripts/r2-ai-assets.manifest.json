@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "cacheControl": "public, max-age=31536000, immutable",
+  "assets": [
+    {
+      "source": "node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_internal.js",
+      "key": "ai/mediapipe/tasks-vision/0.10.35/wasm/vision_wasm_internal.js",
+      "contentType": "text/javascript; charset=utf-8",
+      "size": 322044,
+      "sha256": "e7fd9858e8e8f221d9b96eddc11f8e077f263e0b7bbd79d3cbe882b134274f8c"
+    },
+    {
+      "source": "node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_internal.wasm",
+      "key": "ai/mediapipe/tasks-vision/0.10.35/wasm/vision_wasm_internal.wasm",
+      "contentType": "application/wasm",
+      "size": 11153617,
+      "sha256": "6a5c64584c2ab61c763b6e204afbdbc7ce1caf7f5216187322bca8df94f646bc"
+    },
+    {
+      "source": "node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.js",
+      "key": "ai/mediapipe/tasks-vision/0.10.35/wasm/vision_wasm_module_internal.js",
+      "contentType": "text/javascript; charset=utf-8",
+      "size": 322082,
+      "sha256": "1f1d6215324a1fe62f6742d49a3db911170987ca18ad8c1b75f1a1c82acf2b44"
+    },
+    {
+      "source": "node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.wasm",
+      "key": "ai/mediapipe/tasks-vision/0.10.35/wasm/vision_wasm_module_internal.wasm",
+      "contentType": "application/wasm",
+      "size": 11153641,
+      "sha256": "617b8e0248dbd27e9d7ece4218004eae4cefb499196d1bb4fa0e3fef21708756"
+    },
+    {
+      "source": "node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_nosimd_internal.js",
+      "key": "ai/mediapipe/tasks-vision/0.10.35/wasm/vision_wasm_nosimd_internal.js",
+      "contentType": "text/javascript; charset=utf-8",
+      "size": 321847,
+      "sha256": "438d1fe8ff7f4d946025bc211c291543c037d8a3785ed4eee60f1f521b236296"
+    },
+    {
+      "source": "node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_nosimd_internal.wasm",
+      "key": "ai/mediapipe/tasks-vision/0.10.35/wasm/vision_wasm_nosimd_internal.wasm",
+      "contentType": "application/wasm",
+      "size": 10481398,
+      "sha256": "8a3092d34c79d3f57e6ba8592105e8a90f6b07c27891ffecd14cca428bfd3e31"
+    },
+    {
+      "source": "apps/visiontrainer/public/webgazer.js",
+      "key": "ai/webgazer/local-v1/webgazer.js",
+      "contentType": "text/javascript; charset=utf-8",
+      "size": 3492461,
+      "sha256": "65840eaae573c10c1d015b432b447c04607bb2d709be6302482c0e7582975dde"
+    },
+    {
+      "sourceUrl": "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      "key": "ai/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      "contentType": "application/octet-stream",
+      "size": 7819105,
+      "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1"
+    },
+    {
+      "sourceUrl": "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+      "key": "ai/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+      "contentType": "application/octet-stream",
+      "size": 5777746,
+      "sha256": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a"
+    },
+    {
+      "sourceUrl": "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+      "key": "ai/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+      "contentType": "application/octet-stream",
+      "size": 3758596,
+      "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff"
+    },
+    {
+      "source": "apps/motortrainer/public/assets/StarSky.png",
+      "key": "game-assets/motortrainer/star-sky/v1/StarSky.png",
+      "contentType": "image/png",
+      "size": 4650499,
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d"
+    },
+    {
+      "source": "apps/visiontrainer/public/assets/driving/reference-car-game/vehicals/car.glb",
+      "key": "game-assets/visiontrainer/reference-car/v1/car.glb",
+      "contentType": "model/gltf-binary",
+      "size": 6062428,
+      "sha256": "ee9867fc2208c53376e452d9c6009a8f7dc8b15d10f875d115d15ac6f61135cf"
+    }
+  ]
+}

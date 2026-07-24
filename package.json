@@ -11,8 +11,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run test:naming && npm run test:entrypoints && node scripts/build-apps.mjs",
-    "build:cloudflare": "npm run test:naming && npm run test:entrypoints && npm run test:cloudflare-deploy && npm run test:changed-trainer-smoke && node scripts/build-apps.mjs --cloudflare-pages",
+    "build": "npm run test:naming && npm run test:hub-functions && npm run test:entrypoints && node scripts/build-apps.mjs",
+    "build:cloudflare": "npm run test:naming && npm run test:hub-functions && npm run test:entrypoints && npm run test:cloudflare-deploy && npm run test:changed-trainer-smoke && node scripts/build-apps.mjs --cloudflare-pages",
     "build:brain": "npm --prefix apps/braintrainer run build",
     "build:hub": "npm --prefix apps/rehabtrainerhub run build",
     "build:mouth": "npm --prefix apps/mouthtrainer run build",
@@ -31,9 +31,12 @@
     "preview:mouth": "turbo run preview --filter=@rehab-trainer/mouthtrainer",
     "preview:motor": "turbo run preview --filter=@rehab-trainer/motortrainer",
     "preview:vision": "turbo run preview --filter=@rehab-trainer/visiontrainer",
+    "sync:r2-ai-assets": "node scripts/sync-r2-ai-assets.mjs",
+    "verify:r2-ai-assets": "node scripts/verify-r2-ai-assets.mjs",
     "test:entrypoints": "node scripts/check-trainer-entrypoints.mjs",
     "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs",
     "test:changed-trainer-smoke": "node scripts/check-changed-trainer-smoke.test.mjs",
+    "test:hub-functions": "node --test \"apps/rehabtrainerhub/functions/**/*.test.mjs\"",
     "test:naming": "node scripts/check-identifier-names.mjs"
   },
   "dependencies": {
@@ -41,7 +44,7 @@
     "@jspsych/plugin-html-button-response": "^2.1.0",
     "@jspsych/plugin-webgazer-calibrate": "^2.1.0",
     "@jspsych/plugin-webgazer-init-camera": "^2.1.0",
-    "@mediapipe/tasks-vision": "^0.10.35",
+    "@mediapipe/tasks-vision": "0.10.35",
     "@tensorflow-models/knn-classifier": "^1.2.6",
     "@tensorflow/tfjs": "^4.22.0",
     "jspsych": "^8.2.1",

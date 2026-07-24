@@ -15,7 +15,7 @@ The Hub also sets a first-party session cookie. Other sites try to restore that 
 The production D1 database has been created:
 
 ```text
-name: rehabtrainerhub
+name: rehab_db
 database_id: 0f4e6bb2-cf41-4051-ad74-19bb501fe9dd
 region: APAC
 ```
@@ -23,7 +23,7 @@ region: APAC
 Deployments apply migrations automatically before publishing Pages. To apply them manually:
 
 ```bash
-npx --yes wrangler@4 d1 migrations apply rehabtrainerhub --config apps/rehabtrainerhub/wrangler.toml --remote
+npx --yes wrangler@4 d1 migrations apply rehab_db --config apps/rehabtrainerhub/wrangler.toml --remote
 ```
 
 ## OAuth Redirect URI
@@ -52,13 +52,16 @@ AUTH_SESSION_SECRET=<random 32+ character secret>
 AUTH_STATE_SECRET=<random 32+ character secret>
 GOOGLE_CLIENT_ID=<google oauth client id>
 GOOGLE_CLIENT_SECRET=<google oauth client secret>
+TURNSTILE_SECRET_KEY=<optional Cloudflare Turnstile secret>
 ```
 
 `AUTH_SESSION_SECRET` and `AUTH_STATE_SECRET` are app-owned random signing secrets. They are not Google values. Generate long random strings and keep them only in GitHub Actions secrets or Cloudflare environment variables.
 
 ## GitHub Actions Variables
 
-No public URL variables are required for production. The deployment sync script writes the canonical public URLs automatically.
+Public URL variables are generated automatically. Optional Cloudflare feature variables are
+documented in [admin-cloudflare-setup.md](admin-cloudflare-setup.md), including Turnstile,
+Web Analytics, and the R2 asset custom domain.
 
 ## Cloudflare Pages Environment Sync
 

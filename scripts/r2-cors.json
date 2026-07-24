@@ -1,0 +1,39 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": [
+          "https://trainerhub.cc",
+          "https://motor.trainerhub.cc",
+          "https://vision.trainerhub.cc",
+          "https://brain.trainerhub.cc",
+          "https://mouth.trainerhub.cc",
+          "https://rehabtrainerhub.pages.dev",
+          "https://motortrainer.pages.dev",
+          "https://visiontrainer.pages.dev",
+          "https://braintrainer.pages.dev",
+          "https://mouthtrainer.pages.dev",
+          "http://localhost:3000",
+          "http://localhost:5173",
+          "http://localhost:5174",
+          "http://localhost:5175",
+          "http://localhost:5176",
+          "http://localhost:5177"
+        ],
+        "methods": [
+          "GET",
+          "HEAD"
+        ],
+        "headers": [
+          "*"
+        ]
+      },
+      "exposeHeaders": [
+        "ETag",
+        "Content-Length",
+        "Content-Type"
+      ],
+      "maxAgeSeconds": 86400
+    }
+  ]
+}

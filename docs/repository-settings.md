@@ -57,6 +57,8 @@ Required for `.github/workflows/deploy-cloudflare-pages.yml`:
   Hub auth API.
 - `GOOGLE_CLIENT_ID`: Google OAuth client ID for the Hub callback URL.
 - `GOOGLE_CLIENT_SECRET`: Google OAuth client secret for the Hub callback URL.
+- `TURNSTILE_SECRET_KEY`: Cloudflare Turnstile server-side Siteverify secret.
+  Required when `TURNSTILE_REQUIRED` or `TURNSTILE_RECORDS_REQUIRED` is `1`.
 
 The deploy workflow syncs auth environment secrets to Cloudflare Pages before
 deploying. Every Pages project discovered from `apps/*/wrangler.toml` receives
@@ -82,6 +84,19 @@ sitemaps.
 
 Use repository or Pages variables for public runtime settings. Use secrets only
 for private credentials such as Cloudflare API tokens and Discord webhook values.
+
+Recommended GitHub Variables for the Cloudflare Pages environment:
+
+- `TURNSTILE_SITE_KEY`: public Turnstile widget site key.
+- `TURNSTILE_REQUIRED`: `1` to require Turnstile on register, password login,
+  and OAuth start; otherwise `0`.
+- `TURNSTILE_RECORDS_REQUIRED`: `1` to require Turnstile before training record
+  uploads; otherwise `0`.
+- `CF_WEB_ANALYTICS_TOKEN`: Cloudflare Web Analytics site token.
+- `AI_ASSET_BASE_URL`: public R2 asset CDN origin, for example
+  `https://assets.trainerhub.cc`.
+- `ASSET_PUBLIC_BASE_URL`: public R2 base URL used for uploaded article covers.
+  Usually the same value as `AI_ASSET_BASE_URL`.
 
 ## Custom Domains
 

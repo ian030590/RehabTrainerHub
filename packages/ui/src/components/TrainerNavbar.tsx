@@ -1,6 +1,6 @@
 import { useState, type ComponentProps } from 'react';
 import { NavLink } from 'react-router-dom';
-import type { AuthLocale } from '../auth/authClient';
+import { type AuthLocale } from '../auth/authClient';
 import { AuthPanel } from './AuthPanel';
 
 export type TrainerNavbarLinkClassName = ComponentProps<typeof NavLink>['className'];
@@ -29,6 +29,8 @@ export interface TrainerNavbarProps {
     apiBase: string;
     appName: string;
     locale: AuthLocale;
+    turnstileAuthRequired?: boolean;
+    turnstileSiteKey?: string;
   };
   download: {
     label: string;
@@ -127,6 +129,11 @@ export function TrainerNavbar({
               appName={auth.appName}
               className="trainer-auth-panel"
               locale={auth.locale}
+              turnstileSiteKey={
+                auth.turnstileAuthRequired === true
+                  ? auth.turnstileSiteKey
+                  : undefined
+              }
             />
 
             <div className="navbar-records">

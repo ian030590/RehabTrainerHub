@@ -1,5 +1,8 @@
+import { ExecuteTurnstileChallenge } from '../turnstileClient';
+
 export type AuthProvider = 'google';
 export type AuthLocale = 'zh-TW' | 'en';
+export type AuthUserRole = 'patient' | 'therapist' | 'admin';
 export type HabitStatus = 'none' | 'current' | 'former';
 export type HabitInterval = 'week' | 'month';
 export type SmokingUnit = 'packs' | 'cigarettes';
@@ -31,6 +34,11 @@ const localTrainingDatabases = [
 const localTrainingStorageKeyPrefixes = [
   'mouth_trainer_tongue_settings_',
 ];
+let remoteRecordVerification = {
+  enabled: false,
+  locale: 'zh-TW' as AuthLocale,
+  siteKey: '',
+};
 
 export interface HabitFrequency<Unit extends string> {
   interval: HabitInterval;
@@ -54,6 +62,7 @@ export interface AuthUser {
   displayName: string;
   email?: string;
   avatarUrl?: string;
+  role: AuthUserRole;
   profileCompleted: boolean;
   privacyAcceptedAt?: string;
   profile?: RehabProfile;
@@ -75,11 +84,13 @@ export interface PasswordAccountRegisterPayload {
   email: string;
   password: string;
   privacyAccepted: boolean;
+  turnstileToken?: string;
 }
 
 export interface PasswordAccountLoginPayload {
   email: string;
   password: string;
+  turnstileToken?: string;
 }
 
 export interface RemoteTrainingRecord {
@@ -95,6 +106,18 @@ export interface RemoteTrainingRecord {
 export interface RemoteTrainingRecordPayload {
   appId: string;
   record: RemoteTrainingRecord;
+}
+
+export function ConfigureRemoteTrainingRecordVerification(options: {
+  enabled: boolean;
+  locale?: AuthLocale;
+  siteKey?: string;
+}): void {
+  remoteRecordVerification = {
+    enabled: options.enabled,
+    locale: options.locale ?? 'zh-TW',
+    siteKey: String(options.siteKey || '').trim(),
+  };
 }
 
 export interface RehabDailyTask {
@@ -210,6 +233,7 @@ export function BuildAuthStartUrl(
     locale?: AuthLocale;
     privacyAccepted: boolean;
     returnTo?: string;
+    turnstileToken?: string;
   },
 ): string {
   const returnTo = options.returnTo ?? window.location.href;
@@ -218,6 +242,9 @@ export function BuildAuthStartUrl(
   url.searchParams.set('returnTo', returnTo);
   url.searchParams.set('privacyAccepted', options.privacyAccepted ? '1' : '0');
   url.searchParams.set('locale', options.locale ?? 'zh-TW');
+  if (options.turnstileToken) {
+    url.searchParams.set('turnstileToken', options.turnstileToken);
+  }
   return url.toString();
 }
 
@@ -400,6 +427,17 @@ export async function SaveRemoteTrainingRecord(
 ): Promise<boolean> {
   const token = GetAuthToken();
   if (!token) return false;
+  let turnstileToken: string | undefined;
+  if (remoteRecordVerification.enabled) {
+    if (!remoteRecordVerification.siteKey) {
+      throw new Error('Training record verification is enabled without a Turnstile site key.');
+    }
+    turnstileToken = await ExecuteTurnstileChallenge({
+      action: 'records',
+      language: remoteRecordVerification.locale,
+      siteKey: remoteRecordVerification.siteKey,
+    });
+  }
 
   const response = await fetch(BuildApiUrl(apiBase, '/api/records'), {
     method: 'POST',
@@ -407,7 +445,10 @@ export async function SaveRemoteTrainingRecord(
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...payload,
+      turnstileToken,
+    }),
   });
 
   if (response.status === 401) {
@@ -429,9 +470,64 @@ export async function GetRemoteTrainingRecords(
   const token = GetAuthToken();
   if (!token) return null;
 
+  const records: RemoteTrainingRecord[] = [];
+  let cursor = '';
+  const pageSize = 100;
+  const maximumPages = 100;
+  let pageCount = 0;
+  let exceededPaginationLimit = false;
+
+  while (pageCount < maximumPages) {
+    pageCount += 1;
+    const url = new URL(BuildApiUrl(apiBase, '/api/records'), window.location.origin);
+    url.searchParams.set('appId', appId);
+    url.searchParams.set('limit', String(pageSize));
+    if (cursor) url.searchParams.set('cursor', cursor);
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status === 401) {
+      ClearAuthToken();
+      return null;
+    }
+    if (!response.ok) {
+      throw new Error(`Unable to load remote training records. Status ${response.status}`);
+    }
+
+    const payload = await response.json() as {
+      nextCursor?: string;
+      records?: RemoteTrainingRecord[];
+    };
+    records.push(...(payload.records ?? []));
+    if (!payload.nextCursor || payload.nextCursor === cursor) break;
+    if (pageCount === maximumPages) {
+      exceededPaginationLimit = true;
+      break;
+    }
+    cursor = payload.nextCursor;
+  }
+
+  if (exceededPaginationLimit) {
+    throw new Error('Remote training history exceeds the safe client pagination limit.');
+  }
+
+  return records;
+}
+
+export async function GetRemoteTrainingRecordCount(
+  apiBase: string | undefined,
+  appId: string,
+): Promise<number | null> {
+  const token = GetAuthToken();
+  if (!token) return null;
+
   const url = new URL(BuildApiUrl(apiBase, '/api/records'), window.location.origin);
   url.searchParams.set('appId', appId);
-
+  url.searchParams.set('count', '1');
   const response = await fetch(url.toString(), {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -442,13 +538,14 @@ export async function GetRemoteTrainingRecords(
     ClearAuthToken();
     return null;
   }
-
   if (!response.ok) {
-    throw new Error(`Unable to load remote training records. Status ${response.status}`);
+    throw new Error(`Unable to count remote training records. Status ${response.status}`);
   }
 
-  const payload = await response.json() as { records?: RemoteTrainingRecord[] };
-  return payload.records ?? [];
+  const payload = await response.json() as { count?: unknown };
+  return typeof payload.count === 'number' && Number.isSafeInteger(payload.count)
+    ? payload.count
+    : 0;
 }
 
 export async function FetchRehabProgress(apiBase?: string): Promise<RehabProgress | null> {

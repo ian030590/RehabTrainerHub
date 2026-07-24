@@ -35,8 +35,23 @@ jobs:
       - name: Discover Pages app environment
         run: node scripts/write-pages-env.mjs >> "$GITHUB_ENV"
 
+      - name: Verify production R2 AI assets
+        if: ${{ github.ref == 'refs/heads/main' && vars.AI_ASSET_BASE_URL != '' }}
+        run: npm run verify:r2-ai-assets
+        env:
+          AI_ASSET_BASE_URL: ${{ vars.AI_ASSET_BASE_URL }}
+
       - name: Build all apps
         run: npm run build:cloudflare
+        env:
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+          NEXT_PUBLIC_TURNSTILE_AUTH_REQUIRED: ${{ vars.TURNSTILE_REQUIRED }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+          VITE_TURNSTILE_AUTH_REQUIRED: ${{ vars.TURNSTILE_REQUIRED }}
+          VITE_TURNSTILE_RECORDS_REQUIRED: ${{ vars.TURNSTILE_RECORDS_REQUIRED }}
+          NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
+          VITE_CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
+          VITE_AI_ASSET_BASE_URL: ${{ github.ref == 'refs/heads/main' && vars.AI_ASSET_BASE_URL || '' }}
 
       - name: Ensure and deploy Cloudflare Pages projects
         timeout-minutes: 15
@@ -47,6 +62,13 @@ jobs:
           AUTH_ALLOWED_ORIGINS: ${{ vars.AUTH_ALLOWED_ORIGINS }}
           AUTH_SESSION_SECRET: ${{ secrets.AUTH_SESSION_SECRET }}
           AUTH_STATE_SECRET: ${{ secrets.AUTH_STATE_SECRET }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+          TURNSTILE_REQUIRED: ${{ vars.TURNSTILE_REQUIRED }}
+          TURNSTILE_RECORDS_REQUIRED: ${{ vars.TURNSTILE_RECORDS_REQUIRED }}
+          CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
+          AI_ASSET_BASE_URL: ${{ vars.AI_ASSET_BASE_URL }}
+          ASSET_PUBLIC_BASE_URL: ${{ vars.ASSET_PUBLIC_BASE_URL }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 

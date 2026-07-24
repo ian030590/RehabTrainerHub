@@ -22,6 +22,11 @@ const navigationItems = [
   { href: '/qa/', label: '問答中心' },
 ] as const;
 
+function IsStaffUser(user: AuthUser | null): boolean {
+  const role = (user as (AuthUser & { role?: unknown }) | null)?.role;
+  return role === 'therapist' || role === 'admin';
+}
+
 interface HubAuthContextValue {
   user: AuthUser | null;
 }
@@ -37,6 +42,7 @@ export function HubShell({ children }: { children: ReactNode }) {
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const isStaff = IsStaffUser(user);
 
   useEffect(() => {
     setIsAccountOpen(false);
@@ -106,6 +112,16 @@ export function HubShell({ children }: { children: ReactNode }) {
             id="hub-account-panel"
           >
             {user && <p className="account-name">{user.displayName}</p>}
+            {isStaff && (
+              <Link
+                aria-current={pathname.startsWith('/admin/') ? 'page' : undefined}
+                className="account-admin-link"
+                href="/admin/"
+              >
+                <span className="material-symbols-outlined" aria-hidden="true">clinical_notes</span>
+                治療師後台
+              </Link>
+            )}
             <AuthPanel
               apiBase={siteUrls.hub}
               appName={hubName}
@@ -113,6 +129,11 @@ export function HubShell({ children }: { children: ReactNode }) {
               locale="zh-TW"
               onAuthChange={setUser}
               privacyHref={`${siteUrls.hub}/privacy/`}
+              turnstileSiteKey={
+                process.env.NEXT_PUBLIC_TURNSTILE_AUTH_REQUIRED === '1'
+                  ? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+                  : undefined
+              }
             />
           </div>
         </div>

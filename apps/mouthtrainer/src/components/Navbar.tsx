@@ -18,7 +18,13 @@ export function Navbar() {
         { to: '/references', label: t('nav.credits') },
         { to: '/links', label: t('nav.links') },
       ]}
-      auth={{ apiBase: siteUrls.hub, appName: 'MouthTrainer', locale: lang === 'en' ? 'en' : 'zh-TW' }}
+      auth={{
+        apiBase: siteUrls.hub,
+        appName: 'MouthTrainer',
+        locale: lang === 'en' ? 'en' : 'zh-TW',
+        turnstileAuthRequired: import.meta.env.VITE_TURNSTILE_AUTH_REQUIRED === '1',
+        turnstileSiteKey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
+      }}
       download={{ label: t('nav.downloadScores'), noScoresMessage: t('nav.noScores'), errorMessage: t('nav.scoresDownloadError'), onDownload: () => DownloadAllTrainingRecordsCsv(t) }}
       toggleMenuLabel={t('nav.toggleMenu')}
     />

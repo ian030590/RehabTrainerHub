@@ -1,5 +1,6 @@
 import {
   GetRemoteTrainingRecords,
+  GetRemoteTrainingRecordCount,
   HasAuthToken,
   SaveRemoteTrainingRecord,
 } from '@rehab-trainer/ui/auth/authClient';
@@ -127,8 +128,8 @@ export async function GetTrainingRecords(): Promise<TrainingRecord[]> {
 export async function GetTrainingRecordCount(): Promise<number> {
   if (HasAuthToken()) {
     try {
-      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId);
-      if (remoteRecords) return remoteRecords.length;
+      const remoteCount = await GetRemoteTrainingRecordCount(authApiBase, remoteAppId);
+      if (remoteCount !== null) return remoteCount;
     } catch (error) {
       console.warn('Unable to count remote training records. Falling back to IndexedDB.', error);
     }

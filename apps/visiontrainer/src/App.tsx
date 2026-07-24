@@ -48,6 +48,9 @@ export function App() {
         appName="VisionTrainer"
         locale={locale}
         privacyHref={`${siteUrls.hub}/privacy/`}
+        turnstileAuthRequired={import.meta.env.VITE_TURNSTILE_AUTH_REQUIRED === '1'}
+        turnstileRecordsRequired={import.meta.env.VITE_TURNSTILE_RECORDS_REQUIRED === '1'}
+        turnstileSiteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
       />
       <Routes>
         <Route path="/training" element={<TrainingPage />} />
@@ -82,6 +85,8 @@ function AppLayout() {
 
   return (
     <TrainerAppLayout
+      analyticsToken={import.meta.env.VITE_CF_WEB_ANALYTICS_TOKEN}
+      locale={lang === 'en' ? 'en' : 'zh-TW'}
       navbar={<Navbar />}
       skipLinkLabel={GetTrainerSkipLinkLabel(lang)}
       footer={{

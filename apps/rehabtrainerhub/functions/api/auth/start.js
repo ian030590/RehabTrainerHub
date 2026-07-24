@@ -1,5 +1,6 @@
 import {
   AuthPopupHtml,
+  CreateOAuthNonceCookie,
   CreateSignedValue,
   ErrorResponse,
   GetAuthBaseUrl,
@@ -8,9 +9,12 @@ import {
   GetUserById,
   IsSafeReturnTo,
   OptionsResponse,
+  RateLimitResponse,
   RejectDisallowedOrigin,
   ToPublicUser,
+  TransientRateLimitResponse,
 } from '../../_lib/auth.js';
+import { VerifyTurnstileToken } from '../../_lib/turnstile.js';
 
 const providers = {
   google: {
@@ -42,6 +46,7 @@ async function StartOAuth(request, env) {
   const returnTo = url.searchParams.get('returnTo') || '';
   const privacyAccepted = url.searchParams.get('privacyAccepted') === '1';
   const locale = url.searchParams.get('locale') === 'en' ? 'en' : 'zh-TW';
+  const turnstileToken = url.searchParams.get('turnstileToken');
 
   if (!provider || !providers[provider]) {
     return ErrorResponse(request, env, 'Unsupported auth provider.', 400);
@@ -65,6 +70,25 @@ async function StartOAuth(request, env) {
     console.warn('Existing auth session lookup failed.', error);
   }
 
+  const transientLimit = TransientRateLimitResponse(request, env, 'oauth-start-siteverify', {
+    limit: 30,
+    windowSeconds: 60,
+  });
+  if (transientLimit) return transientLimit;
+
+  if (env.TURNSTILE_REQUIRED === '1') {
+    const verification = await VerifyTurnstileToken(request, env, turnstileToken, 'auth');
+    if (!verification.success) {
+      return ErrorResponse(request, env, 'Human verification failed.', 400);
+    }
+  }
+
+  const limitError = await RateLimitResponse(request, env, 'oauth-start', {
+    limit: 10,
+    windowSeconds: 60,
+  });
+  if (limitError) return limitError;
+
   const config = providers[provider];
   const clientId = env[config.clientId];
   if (!clientId) {
@@ -74,6 +98,7 @@ async function StartOAuth(request, env) {
   const authBaseUrl = GetAuthBaseUrl(request, env);
   const redirectUri = `${authBaseUrl}/api/auth/callback`;
   let state;
+  const oauthNonce = crypto.randomUUID();
   try {
     state = await CreateSignedValue(
       {
@@ -81,7 +106,7 @@ async function StartOAuth(request, env) {
         returnTo,
         privacyAccepted,
         locale,
-        nonce: crypto.randomUUID(),
+        oauthNonce,
       },
       GetStateSecret(env),
       10 * 60,
@@ -99,5 +124,11 @@ async function StartOAuth(request, env) {
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('prompt', 'select_account');
 
-  return Response.redirect(authUrl.toString(), 302);
+  const redirectResponse = Response.redirect(authUrl.toString(), 302);
+  const headers = new Headers(redirectResponse.headers);
+  headers.append('Set-Cookie', CreateOAuthNonceCookie(request, oauthNonce));
+  return new Response(null, {
+    status: redirectResponse.status,
+    headers,
+  });
 }

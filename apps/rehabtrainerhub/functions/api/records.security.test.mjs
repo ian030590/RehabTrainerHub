@@ -89,6 +89,48 @@ const insertedPayload = await allowedInsert.json();
 assert.match(insertedPayload.record.trainingDate, /^\d{4}-\d{2}-\d{2}$/);
 assert.notEqual(insertedPayload.record.savedAt, attackerRecord.savedAt);
 
+const oversizedPayload = await onRequestPost({
+  request: new Request('https://trainerhub.cc/api/records', {
+    method: 'POST',
+    headers: {
+      Origin: 'https://motor.trainerhub.cc',
+      Authorization: `Bearer ${attackerToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      appId: 'motortrainer',
+      record: {
+        ...attackerRecord,
+        id: 'oversized-record-id',
+        results: [{ raw: 'x'.repeat(260 * 1024) }],
+      },
+    }),
+  }),
+  env,
+});
+assert.equal(oversizedPayload.status, 413);
+
+const overlongModule = await onRequestPost({
+  request: new Request('https://trainerhub.cc/api/records', {
+    method: 'POST',
+    headers: {
+      Origin: 'https://motor.trainerhub.cc',
+      Authorization: `Bearer ${attackerToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      appId: 'motortrainer',
+      record: {
+        ...attackerRecord,
+        id: 'invalid-module-record-id',
+        moduleId: 'm'.repeat(121),
+      },
+    }),
+  }),
+  env,
+});
+assert.equal(overlongModule.status, 400);
+
 const victimRecords = await onRequestGet({
   request: new Request('https://trainerhub.cc/api/records?appId=motortrainer', {
     headers: {
@@ -104,23 +146,44 @@ console.log('records security checks passed');
 
 function CreateTrainingRecordsDb(initialRows) {
   const rows = new Map(initialRows.map((row) => [row.id, { ...row }]));
+  const rateLimits = new Map();
 
   return {
     prepare(sql) {
       return {
+        async run() {
+          return { success: true, meta: { changes: 0 } };
+        },
         bind(...args) {
           return {
             async all() {
-              if (/SELECT payload_json FROM training_records/i.test(sql)) {
+              if (/SELECT payload_json, id, saved_at\s+FROM training_records/i.test(sql)) {
                 const [userId, appId] = args;
                 return {
                   results: Array.from(rows.values())
                     .filter((row) => row.user_id === userId && row.app_id === appId)
                     .sort((left, right) => left.saved_at.localeCompare(right.saved_at))
-                    .map((row) => ({ payload_json: row.payload_json })),
+                    .map((row) => ({
+                      payload_json: row.payload_json,
+                      id: row.id,
+                      saved_at: row.saved_at,
+                    })),
                 };
               }
               return { results: [] };
+            },
+            async first() {
+              if (/INSERT INTO rate_limits/i.test(sql)) {
+                const [key, resetAt] = args;
+                const current = rateLimits.get(key);
+                const row = {
+                  count: Number(current?.count || 0) + 1,
+                  reset_at: resetAt,
+                };
+                rateLimits.set(key, row);
+                return row;
+              }
+              return null;
             },
             async run() {
               if (/INSERT INTO training_records/i.test(sql)) {

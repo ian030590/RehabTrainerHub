@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { CloudflareWebAnalytics } from '@rehab-trainer/ui/components/CloudflareWebAnalytics';
 import { HubShell } from './HubNavigation';
 import { hubFullName, hubLocalName } from './hubBrand';
 import { CreateSeoMetadata, organizationJsonLd, siteDescription, websiteJsonLd } from './seo';
@@ -62,6 +63,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body>
         <HubShell>{children}</HubShell>
+        <CloudflareWebAnalytics token={process.env.NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN} />
       </body>
     </html>
   );

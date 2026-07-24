@@ -231,6 +231,14 @@
   margin-top: 20px;
 }
 
+.turnstile-widget {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  place-items: center;
+  overflow-x: auto;
+}
+
 .auth-provider-button {
   display: inline-flex;
   align-items: center;

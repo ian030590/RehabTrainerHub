@@ -8,9 +8,13 @@ import {
   RateLimitResponse,
   RejectDisallowedOrigin,
   RequireDatabase,
+  TransientRateLimitResponse,
 } from '../../../_lib/auth.js';
+import { ReadJsonBody } from '../../../_lib/request.js';
+import { VerifyTurnstileToken } from '../../../_lib/turnstile.js';
 
 const registerAccepted = { ok: true };
+const maximumAuthBodyBytes = 32 * 1024;
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);
@@ -20,10 +24,23 @@ export async function onRequestPost({ request, env }) {
   const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
 
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
+  const transientLimit = TransientRateLimitResponse(request, env, 'password-register-siteverify', {
+    limit: 20,
+    windowSeconds: 60,
+  });
+  if (transientLimit) return transientLimit;
+
+  const parsedBody = await ReadJsonBody(request, maximumAuthBodyBytes);
+  if (!parsedBody.ok) {
+    return ErrorResponse(
+      request,
+      env,
+      parsedBody.reason === 'too-large' ? 'Auth payload is too large.' : 'Invalid JSON payload.',
+      parsedBody.reason === 'too-large' ? 413 : 400,
+    );
+  }
+  const payload = parsedBody.value;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return ErrorResponse(request, env, 'Invalid JSON payload.', 400);
   }
 
@@ -39,11 +56,19 @@ export async function onRequestPost({ request, env }) {
     return ErrorResponse(request, env, 'Invalid account details.', 400);
   }
 
+  if (env.TURNSTILE_REQUIRED === '1') {
+    const verification = await VerifyTurnstileToken(request, env, payload.turnstileToken, 'auth');
+    if (!verification.success) {
+      return ErrorResponse(request, env, 'Human verification failed.', 400);
+    }
+  }
+
   const limitError = await RateLimitResponse(request, env, 'password-register', { limit: 5, windowSeconds: 60 });
   if (limitError) return limitError;
 
   try {
     const db = RequireDatabase(env);
+    const passwordHash = await HashPassword(password);
     const existingAccount = await db
       .prepare('SELECT user_id FROM password_accounts WHERE email = ?')
       .bind(email)
@@ -62,7 +87,6 @@ export async function onRequestPost({ request, env }) {
       profile_completed_at: null,
       profile_json: null,
     };
-    const passwordHash = await HashPassword(password);
 
     try {
       await db.batch([

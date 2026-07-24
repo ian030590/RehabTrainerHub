@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   authChangedEvent,
+  ConfigureRemoteTrainingRecordVerification,
   type AuthLocale,
   type AuthUser,
   FetchCurrentAuthUser,
@@ -15,6 +16,9 @@ interface TrainingLoginReminderProps {
   appName: string;
   locale?: AuthLocale;
   privacyHref?: string;
+  turnstileAuthRequired?: boolean;
+  turnstileRecordsRequired?: boolean;
+  turnstileSiteKey?: string;
 }
 
 const text = {
@@ -40,9 +44,21 @@ export function TrainingLoginReminder({
   appName,
   locale,
   privacyHref,
+  turnstileAuthRequired,
+  turnstileRecordsRequired,
+  turnstileSiteKey,
 }: TrainingLoginReminderProps) {
   const labels = text[ToTextKey(locale)];
   const [isCleared, setIsCleared] = useState(false);
+
+  useEffect(() => {
+    ConfigureRemoteTrainingRecordVerification({
+      enabled: turnstileRecordsRequired === true,
+      locale,
+      siteKey: turnstileSiteKey,
+    });
+    return () => ConfigureRemoteTrainingRecordVerification({ enabled: false });
+  }, [locale, turnstileRecordsRequired, turnstileSiteKey]);
 
   const checkSession = useCallback(async () => {
     if (!active) {
@@ -100,6 +116,7 @@ export function TrainingLoginReminder({
           locale={locale}
           privacyHref={privacyHref}
           onAuthChange={handleAuthChange}
+          turnstileSiteKey={turnstileAuthRequired ? turnstileSiteKey : undefined}
         />
       </div>
     </div>

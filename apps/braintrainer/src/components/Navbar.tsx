@@ -28,6 +28,8 @@ export function Navbar() {
         apiBase,
         appName,
         locale,
+        turnstileAuthRequired: import.meta.env.VITE_TURNSTILE_AUTH_REQUIRED === '1',
+        turnstileSiteKey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
       }}
       download={{
         label: t('nav.downloadScores'),

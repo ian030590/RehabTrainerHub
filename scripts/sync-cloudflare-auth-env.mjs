@@ -20,12 +20,56 @@ function RequireEnv(name) {
   return value || `<${name}>`;
 }
 
+function GetOptionalEnv(name) {
+  return process.env[name]?.trim() || '';
+}
+
+function GetTurnstileConfiguration() {
+  const siteKey = GetOptionalEnv('TURNSTILE_SITE_KEY');
+  const secretKey = GetOptionalEnv('TURNSTILE_SECRET_KEY');
+  const rawRequired = GetOptionalEnv('TURNSTILE_REQUIRED');
+  const rawRecordsRequired = GetOptionalEnv('TURNSTILE_RECORDS_REQUIRED');
+  if (rawRequired && !['0', '1'].includes(rawRequired)) {
+    throw new Error('TURNSTILE_REQUIRED must be 0 or 1.');
+  }
+  if (rawRecordsRequired && !['0', '1'].includes(rawRecordsRequired)) {
+    throw new Error('TURNSTILE_RECORDS_REQUIRED must be 0 or 1.');
+  }
+  if (Boolean(siteKey) !== Boolean(secretKey)) {
+    throw new Error('TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY must be configured together.');
+  }
+
+  const required = rawRequired || '0';
+  const recordsRequired = rawRecordsRequired || '0';
+  if ((required === '1' || recordsRequired === '1') && (!siteKey || !secretKey)) {
+    throw new Error('Turnstile cannot be required without both the site key and secret key.');
+  }
+  return {
+    recordsRequired,
+    required,
+    secretKey,
+    siteKey,
+  };
+}
+
 function GetPublicVariables(pagesApps, authBaseUrl) {
+  const turnstile = GetTurnstileConfiguration();
   const variables = {
     AUTH_API_BASE: authBaseUrl,
     NEXT_PUBLIC_AUTH_API_BASE: authBaseUrl,
     VITE_AUTH_API_BASE: authBaseUrl,
   };
+  const sharedPublicVariables = {
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: turnstile.siteKey,
+    NEXT_PUBLIC_TURNSTILE_AUTH_REQUIRED: turnstile.required,
+    VITE_TURNSTILE_SITE_KEY: turnstile.siteKey,
+    VITE_TURNSTILE_AUTH_REQUIRED: turnstile.required,
+    VITE_TURNSTILE_RECORDS_REQUIRED: turnstile.recordsRequired,
+    NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN: GetOptionalEnv('CF_WEB_ANALYTICS_TOKEN'),
+    VITE_CF_WEB_ANALYTICS_TOKEN: GetOptionalEnv('CF_WEB_ANALYTICS_TOKEN'),
+    VITE_AI_ASSET_BASE_URL: GetOptionalEnv('AI_ASSET_BASE_URL'),
+  };
+  Object.assign(variables, sharedPublicVariables);
 
   for (const app of pagesApps) {
     variables[app.urlEnvName] = app.siteUrl;
@@ -44,6 +88,7 @@ function GetPublicVariables(pagesApps, authBaseUrl) {
 }
 
 function GetProjectSecrets(project, publicVariables, authBaseUrl, allowedOrigins) {
+  const turnstile = GetTurnstileConfiguration();
   const secrets = project.role === 'hub'
     ? {
         ...publicVariables,
@@ -55,6 +100,15 @@ function GetProjectSecrets(project, publicVariables, authBaseUrl, allowedOrigins
         GOOGLE_CLIENT_SECRET: RequireEnv('GOOGLE_CLIENT_SECRET'),
       }
     : { ...publicVariables };
+
+  if (project.role === 'hub') {
+    const assetPublicBaseUrl = GetOptionalEnv('ASSET_PUBLIC_BASE_URL')
+      || GetOptionalEnv('AI_ASSET_BASE_URL');
+    secrets.TURNSTILE_SECRET_KEY = turnstile.secretKey;
+    secrets.TURNSTILE_REQUIRED = turnstile.required;
+    secrets.TURNSTILE_RECORDS_REQUIRED = turnstile.recordsRequired;
+    secrets.ASSET_PUBLIC_BASE_URL = assetPublicBaseUrl;
+  }
 
   return secrets;
 }

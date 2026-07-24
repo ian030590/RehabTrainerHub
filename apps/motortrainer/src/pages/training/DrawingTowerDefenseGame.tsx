@@ -1,6 +1,7 @@
 import { type ChangeEvent, type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Application, Container, Graphics, Text, type Ticker } from 'pixi.js';
 import { initJsPsych } from 'jspsych';
+import { CreateRuntimeAssetUrlCandidates } from '@rehab-trainer/ui/aiAssets';
 import { useT, type TranslationKey } from '../../i18n';
 import { DownloadCsvFile } from '../../utils/downloadFile';
 import { getActiveUser } from '../../utils/settings';
@@ -127,7 +128,13 @@ const minRdpEpsilonRatio = 0.05;
 const maxRdpEpsilonRatio = 0.1;
 const rdpClosedEndpointDistancePx = 30;
 const rdpStraightAngleDegrees = 160;
-const starSkyBackgroundImage = `url(${import.meta.env.BASE_URL}assets/StarSky.png)`;
+const starSkyBackgroundImage = CreateRuntimeAssetUrlCandidates(
+  import.meta.env.VITE_AI_ASSET_BASE_URL,
+  'game-assets/motortrainer/star-sky/v1/StarSky.png',
+  `${import.meta.env.BASE_URL}assets/StarSky.png`,
+)
+  .map((url) => `url("${url}")`)
+  .join(', ');
 const drawingSampleUploadEndpoint = import.meta.env.VITE_DRAWING_SAMPLE_UPLOAD_URL?.trim() || '/api/drawing-samples';
 const drawingSampleUploadToken = import.meta.env.VITE_DRAWING_SAMPLE_UPLOAD_TOKEN?.trim() || '';
 const drawingSampleImageSize = 256;

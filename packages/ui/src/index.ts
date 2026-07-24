@@ -1,11 +1,26 @@
 export { AuthPanel } from './components/AuthPanel';
 export type { AuthLocale, AuthProvider, AuthUser, RehabProfile } from './auth/authClient';
+export {
+  CreateRuntimeAssetUrlCandidates,
+  CreateMediaPipeAssetUrlCandidates,
+  CreateMediaPipeAssetUrls,
+  LoadMediaPipeWithFallback,
+  mediaPipeTasksVisionVersion,
+} from './aiAssets';
+export type { MediaPipeAssetUrls } from './aiAssets';
 export { AppLoading } from './components/AppLoading';
 export type { AppLoadingProps } from './components/AppLoading';
 export { CardImagePlaceholder, cardImagePlaceholderSrc } from './components/CardImagePlaceholder';
 export type { CardImagePlaceholderProps } from './components/CardImagePlaceholder';
+export { CloudflareWebAnalytics } from './components/CloudflareWebAnalytics';
+export type { CloudflareWebAnalyticsProps } from './components/CloudflareWebAnalytics';
 export { ConfigDialog } from './components/ConfigDialog';
 export type { ConfigDialogProps } from './components/ConfigDialog';
+export { DevicePerformanceNotice } from './components/DevicePerformanceNotice';
+export type {
+  DevicePerformanceNoticeLocale,
+  DevicePerformanceNoticeProps,
+} from './components/DevicePerformanceNotice';
 export { EditableSettingRow } from './components/EditableSettingRow';
 export type { EditableSettingRowProps } from './components/EditableSettingRow';
 export { ExternalLinkCard } from './components/ExternalLinkCard';
@@ -78,6 +93,13 @@ export { UserSelector } from './components/UserSelector';
 export type { UserSelectorProps } from './components/UserSelector';
 export { DetectDisplayDeviceKind, Is60HzRefreshFamily, MeasureDisplayRefreshRate } from './displayTiming';
 export type { DisplayDeviceKind, DisplayRefreshInfo, DisplayRefreshMeasureOptions } from './displayTiming';
+export { MeasureDevicePerformance } from './devicePerformance';
+export type {
+  DevicePerformanceInfo,
+  DevicePerformanceLevel,
+  DevicePerformanceMeasureOptions,
+  DevicePerformanceReason,
+} from './devicePerformance';
 export { CreateCsvContent, EnsureCsvUtf8Bom, ToCsvCell } from './csv';
 export type { CsvCellValue, CsvRow } from './csv';
 export { DownloadCsvFile, DownloadFile } from './downloadFile';

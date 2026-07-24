@@ -1,23 +1,30 @@
 import {
   AuthPopupHtml,
+  ClearOAuthNonceCookie,
+  ConstantTimeEqual,
   CreateSessionCookie,
   CreateSessionForUser,
   ErrorResponse,
   GetAuthBaseUrl,
+  GetCookieValue,
   GetStateSecret,
   RequireDatabase,
   SecurityHeaders,
   ToPublicUser,
+  TransientRateLimitResponse,
   VerifySignedValue,
+  oauthNonceCookieName,
 } from '../../_lib/auth.js';
 
 export async function onRequestGet({ request, env }) {
+  let response;
   try {
-    return await HandleCallback(request, env);
+    response = await HandleCallback(request, env);
   } catch (error) {
     console.error('OAuth callback failed.', error);
-    return OauthFailureResponse(request, error);
+    response = OauthFailureResponse(request, error);
   }
+  return ClearOAuthNonce(response, request);
 }
 
 async function HandleCallback(request, env) {
@@ -57,6 +64,26 @@ async function HandleCallback(request, env) {
       },
     });
   }
+  const cookieNonce = GetCookieValue(request, oauthNonceCookieName);
+  if (
+    typeof state.oauthNonce !== 'string'
+    || typeof cookieNonce !== 'string'
+    || !ConstantTimeEqual(state.oauthNonce, cookieNonce)
+  ) {
+    return new Response('Invalid OAuth state.', {
+      status: 400,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        ...SecurityHeaders(),
+      },
+    });
+  }
+
+  const callbackLimit = TransientRateLimitResponse(request, env, 'oauth-callback', {
+    limit: 10,
+    windowSeconds: 60,
+  });
+  if (callbackLimit) return callbackLimit;
 
   const authBaseUrl = GetAuthBaseUrl(request, env);
   const redirectUri = `${authBaseUrl}/api/auth/callback`;
@@ -126,6 +153,16 @@ async function HandleCallback(request, env) {
     headers: {
       'Set-Cookie': CreateSessionCookie(request, token),
     },
+  });
+}
+
+function ClearOAuthNonce(response, request) {
+  const headers = new Headers(response.headers);
+  headers.append('Set-Cookie', ClearOAuthNonceCookie(request));
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
   });
 }
 

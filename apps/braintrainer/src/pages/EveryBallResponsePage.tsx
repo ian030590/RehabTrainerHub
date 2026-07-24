@@ -5,6 +5,10 @@ import {
   PoseLandmarker,
   type NormalizedLandmark,
 } from '@mediapipe/tasks-vision';
+import {
+  CreateMediaPipeAssetUrlCandidates,
+  LoadMediaPipeWithFallback,
+} from '@rehab-trainer/ui/aiAssets';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
@@ -211,9 +215,9 @@ const stimulusMs = 900;
 const responseWindowMs = 1800;
 const fixationMinMs = 1000;
 const fixationMaxMs = 3000;
-const mediapipeWasmUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
-const handModelUrl = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
-const poseModelUrl = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates(
+  import.meta.env.VITE_AI_ASSET_BASE_URL,
+);
 const cameraDetectionIntervalMs = 70;
 const cameraGestureCooldownMs = 480;
 const clapCloseDistance = 0.12;
@@ -1274,25 +1278,38 @@ async function CreateCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
   await video.play();
 
   options.onStatus(labels.initializingCamera);
-  const vision = await FilesetResolver.forVisionTasks(mediapipeWasmUrl);
-  const [handLandmarker, poseLandmarker] = await Promise.all([
-    HandLandmarker.createFromOptions(vision, {
-      baseOptions: { modelAssetPath: handModelUrl },
-      runningMode: 'VIDEO',
-      numHands: 2,
-      minHandDetectionConfidence: 0.48,
-      minHandPresenceConfidence: 0.48,
-      minTrackingConfidence: 0.48,
-    }),
-    PoseLandmarker.createFromOptions(vision, {
-      baseOptions: { modelAssetPath: poseModelUrl },
-      runningMode: 'VIDEO',
-      numPoses: 1,
-      minPoseDetectionConfidence: 0.45,
-      minPosePresenceConfidence: 0.45,
-      minTrackingConfidence: 0.45,
-    }),
-  ]);
+  const { handLandmarker, poseLandmarker } = await LoadMediaPipeWithFallback(
+    mediaPipeAssetCandidates,
+    async ({
+      wasmUrl,
+      handLandmarkerModelUrl,
+      poseLandmarkerLiteModelUrl,
+    }) => {
+      const vision = await FilesetResolver.forVisionTasks(wasmUrl);
+      const handLandmarker = await HandLandmarker.createFromOptions(vision, {
+        baseOptions: { modelAssetPath: handLandmarkerModelUrl },
+        runningMode: 'VIDEO',
+        numHands: 2,
+        minHandDetectionConfidence: 0.48,
+        minHandPresenceConfidence: 0.48,
+        minTrackingConfidence: 0.48,
+      });
+      try {
+        const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+          baseOptions: { modelAssetPath: poseLandmarkerLiteModelUrl },
+          runningMode: 'VIDEO',
+          numPoses: 1,
+          minPoseDetectionConfidence: 0.45,
+          minPosePresenceConfidence: 0.45,
+          minTrackingConfidence: 0.45,
+        });
+        return { handLandmarker, poseLandmarker };
+      } catch (error) {
+        handLandmarker.close();
+        throw error;
+      }
+    },
+  );
 
   let animationFrame = 0;
   let stopped = false;

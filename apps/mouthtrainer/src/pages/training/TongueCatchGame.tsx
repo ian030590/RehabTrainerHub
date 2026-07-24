@@ -4,6 +4,10 @@ import * as knnClassifier from '@tensorflow-models/knn-classifier';
 import type { KNNClassifier } from '@tensorflow-models/knn-classifier';
 import * as tf from '@tensorflow/tfjs';
 import {
+  CreateMediaPipeAssetUrlCandidates,
+  LoadMediaPipeWithFallback,
+} from '@rehab-trainer/ui/aiAssets';
+import {
   Application,
   Assets,
   Container,
@@ -121,8 +125,9 @@ interface SessionResult {
   Apple_Results: AppleResult[];
 }
 
-const mediapipeWasmUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
-const faceModelUrl = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates(
+  import.meta.env.VITE_AI_ASSET_BASE_URL,
+);
 const detectionIntervalMs = 72;
 const calibrationCaptureMs = 1900;
 const minClassExamples = 10;
@@ -410,15 +415,20 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
 
       setStatusMessage(t('tongue.loading.model'));
       await tf.ready();
-      const vision = await FilesetResolver.forVisionTasks(mediapipeWasmUrl);
-      const landmarker = await FaceLandmarker.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: faceModelUrl },
-        runningMode: 'VIDEO',
-        numFaces: 1,
-        minFaceDetectionConfidence: 0.5,
-        minFacePresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
+      const landmarker = await LoadMediaPipeWithFallback(
+        mediaPipeAssetCandidates,
+        async ({ wasmUrl, faceLandmarkerModelUrl }) => {
+          const vision = await FilesetResolver.forVisionTasks(wasmUrl);
+          return FaceLandmarker.createFromOptions(vision, {
+            baseOptions: { modelAssetPath: faceLandmarkerModelUrl },
+            runningMode: 'VIDEO',
+            numFaces: 1,
+            minFaceDetectionConfidence: 0.5,
+            minFacePresenceConfidence: 0.5,
+            minTrackingConfidence: 0.5,
+          });
+        },
+      );
       if (!mountedRef.current) {
         landmarker.close();
         return;

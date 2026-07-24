@@ -67,6 +67,11 @@ RehabTrainerHub is a home rehabilitation training hub that brings multiple train
 
 This project is for rehabilitation workflow practice and software prototyping. It does not replace medical diagnosis, treatment, or rehabilitation advice.
 
+## 部署文件 / Deployment
+
+- [Auth and D1 setup](docs/auth-d1-setup.md)
+- [治療師後台與 Cloudflare 擴充設定](docs/admin-cloudflare-setup.md)
+
 ## 授權 / License
 
 本 repository 的原始碼以 GNU Affero General Public License v3.0 授權，SPDX identifier 為 `AGPL-3.0-only`。完整條款請見 [LICENSE.md](LICENSE.md)。

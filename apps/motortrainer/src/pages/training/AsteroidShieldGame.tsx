@@ -15,6 +15,10 @@ import {
   type NormalizedLandmark,
 } from '@mediapipe/tasks-vision';
 import { initJsPsych } from 'jspsych';
+import {
+  CreateMediaPipeAssetUrlCandidates,
+  LoadMediaPipeWithFallback,
+} from '@rehab-trainer/ui/aiAssets';
 import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
 import {
   TrainingConfigNotice,
@@ -165,8 +169,9 @@ interface HandState {
   lastSeenAt: number;
 }
 
-const mediapipeWasmUrl = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm';
-const handModelUrl = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates(
+  import.meta.env.VITE_AI_ASSET_BASE_URL,
+);
 const assetBaseUrl = `${import.meta.env.BASE_URL}assets/asteroid-shield/`;
 const assetUrls = {
   background: `${assetBaseUrl}background.png`,
@@ -632,15 +637,20 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       await video.play();
 
       setStatusMessage(labels.loadingModel);
-      const vision = await FilesetResolver.forVisionTasks(mediapipeWasmUrl);
-      const landmarker = await HandLandmarker.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: handModelUrl },
-        runningMode: 'VIDEO',
-        numHands: configRef.current.handChoice === 'any' ? 1 : 2,
-        minHandDetectionConfidence: 0.5,
-        minHandPresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
+      const landmarker = await LoadMediaPipeWithFallback(
+        mediaPipeAssetCandidates,
+        async ({ wasmUrl, handLandmarkerModelUrl }) => {
+          const vision = await FilesetResolver.forVisionTasks(wasmUrl);
+          return HandLandmarker.createFromOptions(vision, {
+            baseOptions: { modelAssetPath: handLandmarkerModelUrl },
+            runningMode: 'VIDEO',
+            numHands: configRef.current.handChoice === 'any' ? 1 : 2,
+            minHandDetectionConfidence: 0.5,
+            minHandPresenceConfidence: 0.5,
+            minTrackingConfidence: 0.5,
+          });
+        },
+      );
       if (!mountedRef.current) {
         landmarker.close();
         return;

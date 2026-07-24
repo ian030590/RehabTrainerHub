@@ -20,12 +20,15 @@ const localAllowedOrigins = [
 
 export const authMessageType = 'rehabtrainerhub-auth-session';
 export const authCookieName = 'rehabtrainerhub_session';
+export const oauthNonceCookieName = 'rehabtrainerhub_oauth_nonce';
 const passwordHashAlgorithm = 'pbkdf2-sha256';
 const passwordHashIterations = 150000;
 const sessionTtlSeconds = 60 * 60 * 24 * 7;
 const rateLimitCleanupInterval = 100;
 let rateLimitTableReady = false;
 let rateLimitCleanupCounter = 0;
+const transientRateLimits = new Map();
+const maximumTransientRateLimitKeys = 2000;
 
 export function GetAuthBaseUrl(request, env) {
   const url = new URL(request.url);
@@ -37,7 +40,13 @@ export function GetAuthBaseUrl(request, env) {
 
 export function GetAllowedOrigins(env, request) {
   const localOrigins = ShouldAllowLocalOrigins(env, request) ? localAllowedOrigins : [];
-  return new Set([...defaultAllowedOrigins, ...GetConfiguredAllowedOrigins(env), ...localOrigins]);
+  const requestOrigin = request ? NormalizeOrigin(request.url) : '';
+  return new Set([
+    ...defaultAllowedOrigins,
+    ...GetConfiguredAllowedOrigins(env),
+    ...localOrigins,
+    ...(requestOrigin ? [requestOrigin] : []),
+  ]);
 }
 
 function ShouldAllowLocalOrigins(env, request) {
@@ -183,7 +192,9 @@ export function NormalizeEmail(value) {
 }
 
 export function IsValidEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  return typeof value === 'string'
+    && value.length <= 254
+    && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 export async function HashPassword(password) {
@@ -303,6 +314,30 @@ export function ClearSessionCookie(request) {
   ].join('; ');
 }
 
+export function CreateOAuthNonceCookie(request, nonce) {
+  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
+  return [
+    `${oauthNonceCookieName}=${encodeURIComponent(nonce)}`,
+    'Path=/api/auth/callback',
+    'Max-Age=600',
+    'HttpOnly',
+    'SameSite=Lax',
+    'Priority=High',
+  ].join('; ') + secure;
+}
+
+export function ClearOAuthNonceCookie(request) {
+  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
+  return [
+    `${oauthNonceCookieName}=`,
+    'Path=/api/auth/callback',
+    'Max-Age=0',
+    'HttpOnly',
+    'SameSite=Lax',
+    'Priority=High',
+  ].join('; ') + secure;
+}
+
 export async function CreateSignedValue(payload, secret, ttlSeconds) {
   const now = Math.floor(Date.now() / 1000);
   const body = {
@@ -345,7 +380,7 @@ async function CreateSignature(value, secret) {
  * Constant-time comparison for ASCII/Base64URL strings only.
  * Do not reuse for arbitrary Unicode text; charCodeAt compares UTF-16 code units.
  */
-function ConstantTimeEqual(left, right) {
+export function ConstantTimeEqual(left, right) {
   if (left.length !== right.length) return false;
   let result = 0;
   for (let index = 0; index < left.length; index += 1) {
@@ -392,6 +427,7 @@ export function ToPublicUser(row) {
     displayName: row.display_name || row.email || 'Rehab Trainer Hub User',
     email: row.email || undefined,
     avatarUrl: row.avatar_url || undefined,
+    role: ['patient', 'therapist', 'admin'].includes(row.role) ? row.role : 'patient',
     profileCompleted: HasCompletedProfile(row),
     privacyAcceptedAt: row.privacy_accepted_at || undefined,
   };
@@ -522,8 +558,8 @@ export async function RateLimitResponse(request, env, name, options = {}) {
   });
 }
 
-async function CheckRateLimit(request, env, name, options = {}) {
-  const limit = options.limit ?? 10;
+export function TransientRateLimitResponse(request, env, name, options = {}) {
+  const limit = options.limit ?? 30;
   const windowSeconds = options.windowSeconds ?? 60;
   const now = Math.floor(Date.now() / 1000);
   const windowId = Math.floor(now / windowSeconds);
@@ -531,6 +567,45 @@ async function CheckRateLimit(request, env, name, options = {}) {
   const client = request.headers.get('CF-Connecting-IP')
     || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim()
     || 'unknown';
+  const identity = options.identity ? `:${options.identity}` : '';
+  const key = `${name}:${client}${identity}:${windowId}`;
+  const nextCount = (transientRateLimits.get(key)?.count || 0) + 1;
+  transientRateLimits.set(key, { count: nextCount, resetAt });
+  PruneTransientRateLimits(now);
+
+  if (nextCount <= limit) return null;
+  return JsonResponse(request, env, { error: 'Too many requests.' }, {
+    status: 429,
+    headers: {
+      'Retry-After': String(Math.max(1, resetAt - now)),
+    },
+  });
+}
+
+function PruneTransientRateLimits(now) {
+  if (transientRateLimits.size <= maximumTransientRateLimitKeys) return;
+
+  for (const [key, value] of transientRateLimits) {
+    if (value.resetAt < now) transientRateLimits.delete(key);
+  }
+  while (transientRateLimits.size > maximumTransientRateLimitKeys) {
+    const oldestKey = transientRateLimits.keys().next().value;
+    if (oldestKey === undefined) break;
+    transientRateLimits.delete(oldestKey);
+  }
+}
+
+async function CheckRateLimit(request, env, name, options = {}) {
+  const limit = options.limit ?? 10;
+  const windowSeconds = options.windowSeconds ?? 60;
+  const now = Math.floor(Date.now() / 1000);
+  const windowId = Math.floor(now / windowSeconds);
+  const resetAt = (windowId + 1) * windowSeconds;
+  const client = options.identityOnly
+    ? 'identity-only'
+    : request.headers.get('CF-Connecting-IP')
+      || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim()
+      || 'unknown';
   const identity = options.identity ? `:${options.identity}` : '';
   const key = await Sha256Base64Url(`${name}:${client}${identity}:${windowId}`);
   const db = RequireDatabase(env);

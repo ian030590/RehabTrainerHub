@@ -18,6 +18,7 @@ import {
   SaveAuthProfile,
   SetAuthToken,
 } from '../auth/authClient';
+import { TurnstileWidget } from './TurnstileWidget';
 
 interface AuthPanelProps {
   apiBase?: string;
@@ -26,6 +27,7 @@ interface AuthPanelProps {
   locale?: AuthLocale;
   privacyHref?: string;
   onAuthChange?: (user: AuthUser | null) => void;
+  turnstileSiteKey?: string;
 }
 
 type AuthText = (typeof text)[keyof typeof text];
@@ -82,6 +84,7 @@ const text = {
     accountInvalid: '請填寫姓名、有效 email 與至少 8 個字元的密碼。',
     accountFailed: '帳號登入或建立失敗，請確認資料後再試一次。',
     accountCreated: '帳號建立完成，請使用同一組 email 與密碼登入。',
+    verificationRequired: '請先完成人機驗證。',
     privacyRequired: '請先閱讀並同意隱私權政策與資料蒐集說明。',
     profileTitle: '基本資料與醫療史問卷',
     profileIntro: '這些資料會和登入後的訓練紀錄一起保存，用於分組分析與改善服務。完成前無法開始訓練。',
@@ -164,6 +167,7 @@ const text = {
     accountInvalid: 'Enter a name, valid email, and a password with at least 8 characters.',
     accountFailed: 'Account sign-in or creation failed. Check the details and try again.',
     accountCreated: 'Account created. Sign in with the same email and password.',
+    verificationRequired: 'Complete the human verification first.',
     privacyRequired: 'Read and agree to the privacy policy and data collection notice first.',
     profileTitle: 'Basic Profile and Medical History Questionnaires',
     profileIntro: 'These fields are saved with signed-in training records for grouped analysis and service improvement. Training is blocked until they are complete.',
@@ -268,6 +272,7 @@ export function AuthPanel({
   locale,
   privacyHref,
   onAuthChange,
+  turnstileSiteKey,
 }: AuthPanelProps) {
   const labels = text[ToTextKey(locale)];
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -281,6 +286,8 @@ export function AuthPanel({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profile, setProfile] = useState<RehabProfile>(CreateEmptyProfile);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const authOrigin = useMemo(() => GetAuthApiOrigin(apiBase), [apiBase]);
   const resolvedPrivacyHref = useMemo(() => {
     if (privacyHref) return privacyHref;
@@ -358,6 +365,10 @@ export function AuthPanel({
       setAccountError(labels.privacyRequired);
       return;
     }
+    if (turnstileSiteKey && !turnstileToken) {
+      setAccountError(labels.verificationRequired);
+      return;
+    }
 
     try {
       const authUrl = BuildAuthStartUrl('google', {
@@ -365,6 +376,7 @@ export function AuthPanel({
         locale,
         privacyAccepted,
         returnTo: window.location.href,
+        turnstileToken: turnstileToken ?? undefined,
       });
       const popup = OpenAuthPopup(authUrl);
       if (!popup) window.location.assign(authUrl);
@@ -380,6 +392,8 @@ export function AuthPanel({
     setPrivacyAccepted(false);
     setAccountForm(CreateEmptyAccountForm());
     setAccountError('');
+    setTurnstileToken(null);
+    setTurnstileResetKey((current) => current + 1);
   };
 
   const submitAccount = async (event: FormEvent<HTMLFormElement>) => {
@@ -390,6 +404,10 @@ export function AuthPanel({
     const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     if (!accountDialogMode) return;
+    if (turnstileSiteKey && !turnstileToken) {
+      setAccountError(labels.verificationRequired);
+      return;
+    }
     if (
       !emailIsValid
       || password.length < 8
@@ -408,18 +426,27 @@ export function AuthPanel({
           email,
           password,
           privacyAccepted: true,
+          turnstileToken: turnstileToken ?? undefined,
         });
+        setTurnstileToken(null);
+        setTurnstileResetKey((current) => current + 1);
         setAccountDialogMode('login');
         setAccountForm({ displayName: '', email, password: '' });
         setAccountError(labels.accountCreated);
         return;
       }
-      const session = await LoginPasswordAccount(apiBase, { email, password });
+      const session = await LoginPasswordAccount(apiBase, {
+        email,
+        password,
+        turnstileToken: turnstileToken ?? undefined,
+      });
       SetAuthToken(session.token);
       applyLoadedUser(session.user);
     } catch (submitError) {
       console.warn('Unable to use password account.', submitError);
       setAccountError(labels.accountFailed);
+      setTurnstileToken(null);
+      setTurnstileResetKey((current) => current + 1);
     } finally {
       setIsSubmittingAccount(false);
     }
@@ -495,6 +522,7 @@ export function AuthPanel({
     && privacyAccepted;
   const canLoginAccount = accountEmailIsValid && accountForm.password.length >= 8;
   const canSubmitAccount = accountDialogMode === 'register' ? canRegisterAccount : canLoginAccount;
+  const hasVerification = !turnstileSiteKey || Boolean(turnstileToken);
   const privacyNotice = (
     <>
       <p>{labels.privacyIntro}</p>
@@ -553,7 +581,14 @@ export function AuthPanel({
               {accountDialogMode === 'login' && (
                 <>
                   {privacyNotice}
-                  <button className="auth-provider-button" disabled={!privacyAccepted} type="button" onClick={startGoogleLogin}>
+                  <TurnstileWidget
+                    action="auth"
+                    language={locale}
+                    onTokenChange={setTurnstileToken}
+                    resetKey={turnstileResetKey}
+                    siteKey={turnstileSiteKey}
+                  />
+                  <button className="auth-provider-button" disabled={!privacyAccepted || !hasVerification} type="button" onClick={startGoogleLogin}>
                     <img
                       alt=""
                       aria-hidden="true"
@@ -604,9 +639,18 @@ export function AuthPanel({
               {accountDialogMode === 'register' && (
                 privacyNotice
               )}
+              {accountDialogMode === 'register' && (
+                <TurnstileWidget
+                  action="auth"
+                  language={locale}
+                  onTokenChange={setTurnstileToken}
+                  resetKey={turnstileResetKey}
+                  siteKey={turnstileSiteKey}
+                />
+              )}
               {accountError && <p className="auth-panel-error">{accountError}</p>}
               <div className="auth-dialog-actions">
-                <button className="auth-button auth-button-primary" disabled={!canSubmitAccount || isSubmittingAccount} type="submit">
+                <button className="auth-button auth-button-primary" disabled={!canSubmitAccount || !hasVerification || isSubmittingAccount} type="submit">
                   {accountDialogMode === 'register' ? labels.accountCreateSubmit : labels.accountLoginSubmit}
                 </button>
               </div>
@@ -619,6 +663,8 @@ export function AuthPanel({
                     setAccountDialogMode(accountDialogMode === 'register' ? 'login' : 'register');
                     setAccountError('');
                     setPrivacyAccepted(false);
+                    setTurnstileToken(null);
+                    setTurnstileResetKey((current) => current + 1);
                   }}
                 >
                   {accountDialogMode === 'register' ? labels.switchToLoginAction : labels.switchToRegisterAction}

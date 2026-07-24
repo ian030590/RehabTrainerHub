@@ -1,6 +1,7 @@
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { CreateRuntimeAssetUrlCandidates } from '@rehab-trainer/ui/aiAssets';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
 import { soundManager } from '../../utils/soundManager';
 import { difficultyPresets, hazardTemplates } from './driving/driving-hazards';
@@ -290,7 +291,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly trafficGreenMs = 6400;
   private readonly trafficYellowMs = 1800;
   private readonly trafficRedMs = 5400;
-  private readonly referenceVehicleUrl = '/assets/driving/reference-car-game/vehicals/car.glb';
+  private readonly referenceVehicleUrls = CreateRuntimeAssetUrlCandidates(
+    import.meta.env.VITE_AI_ASSET_BASE_URL,
+    'game-assets/visiontrainer/reference-car/v1/car.glb',
+    '/assets/driving/reference-car-game/vehicals/car.glb',
+  );
   private readonly taipeiOsmUrl = '/assets/driving/taipei-osm/taipei-xinyi-osm.json';
 
   private route: RouteSegment[] = [...drivingRoute];
@@ -2625,8 +2630,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const loader = new GLTFLoader();
     return new Promise((resolve) => {
-      loader.load(
-        this.referenceVehicleUrl,
+      const loadCandidate = (candidateIndex: number) => loader.load(
+        this.referenceVehicleUrls[candidateIndex],
         (gltf) => {
           if (this.finished || !this.vehicleRoot) {
             this.disposeObject(gltf.scene);
@@ -2674,10 +2679,19 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         },
         undefined,
         (error) => {
+          if (candidateIndex + 1 < this.referenceVehicleUrls.length) {
+            console.warn(
+              'Unable to load the reference vehicle from the configured CDN. Falling back locally.',
+              error,
+            );
+            loadCandidate(candidateIndex + 1);
+            return;
+          }
           console.warn('Unable to load reference driving vehicle model.', error);
           resolve(false);
         },
       );
+      loadCandidate(0);
     });
   }
 

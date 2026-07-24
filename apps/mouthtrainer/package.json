@@ -16,7 +16,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mediapipe/tasks-vision": "^0.10.35",
+    "@mediapipe/tasks-vision": "0.10.35",
     "@tensorflow-models/knn-classifier": "^1.2.6",
     "@tensorflow/tfjs": "^4.22.0",
     "jspsych": "^8.2.1",
