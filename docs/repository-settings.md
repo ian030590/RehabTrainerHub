@@ -93,6 +93,10 @@ Recommended GitHub Variables for the Cloudflare Pages environment:
 - `TURNSTILE_RECORDS_REQUIRED`: `1` to require Turnstile before training record
   uploads; otherwise `0`.
 - `CF_WEB_ANALYTICS_TOKEN`: Cloudflare Web Analytics site token.
+- `R2_AI_ASSET_BUCKET`: R2 bucket name that stores versioned MediaPipe,
+  WebGazer, and large trainer runtime assets. The deploy workflow syncs
+  `scripts/r2-ai-assets.manifest.json` to this bucket before verifying the
+  public CDN URLs.
 - `AI_ASSET_BASE_URL`: public R2 asset CDN origin, for example
   `https://assets.trainerhub.cc`.
 - `ASSET_PUBLIC_BASE_URL`: public R2 base URL used for uploaded article covers.

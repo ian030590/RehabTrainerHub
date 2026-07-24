@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
+import { lookup } from 'node:dns/promises';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -194,6 +195,20 @@ async function VerifyAsset(asset, baseUrl, corsOrigin, timeoutMs) {
   };
 }
 
+async function VerifyBaseHost(baseUrl) {
+  const hostname = new URL(baseUrl).hostname;
+  try {
+    await lookup(hostname);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `AI asset base URL hostname does not resolve: ${hostname}. `
+        + `Configure the public R2 custom domain/DNS record or update AI_ASSET_BASE_URL. `
+        + `DNS lookup failed: ${message}`,
+    );
+  }
+}
+
 async function Main() {
   const manifestPath = ResolveManifestPath(GetArg('--manifest'));
   const manifest = await ReadManifest(manifestPath);
@@ -213,6 +228,7 @@ async function Main() {
 
   console.log(`Verifying ${manifest.assets.length} R2 runtime asset(s) at ${baseUrl}`);
   console.log(`CORS origins: ${corsOrigins.join(', ')}`);
+  await VerifyBaseHost(baseUrl);
 
   const results = await Promise.allSettled(
     manifest.assets.flatMap((asset) => (

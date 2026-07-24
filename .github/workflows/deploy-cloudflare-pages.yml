@@ -35,6 +35,14 @@ jobs:
       - name: Discover Pages app environment
         run: node scripts/write-pages-env.mjs >> "$GITHUB_ENV"
 
+      - name: Sync production R2 AI assets
+        if: ${{ github.ref == 'refs/heads/main' && vars.R2_AI_ASSET_BUCKET != '' }}
+        run: npm run sync:r2-ai-assets
+        env:
+          R2_AI_ASSET_BUCKET: ${{ vars.R2_AI_ASSET_BUCKET }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Verify production R2 AI assets
         if: ${{ github.ref == 'refs/heads/main' && vars.AI_ASSET_BASE_URL != '' }}
         run: npm run verify:r2-ai-assets
