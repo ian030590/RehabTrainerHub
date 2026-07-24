@@ -42,6 +42,19 @@ export function BuildProgressSummary(rows, serverDate, timeZone = defaultRehabTi
   const distinctModules = new Set(
     todayRows.map((row) => `${row.module_id || ''}:${row.game_id || ''}`),
   ).size;
+  const recentModules = [];
+  const recentModuleIds = new Set();
+  for (const row of rows) {
+    const moduleId = row.game_id || row.module_id;
+    if (!moduleId || recentModuleIds.has(moduleId)) continue;
+    recentModuleIds.add(moduleId);
+    recentModules.push({
+      moduleId,
+      gameId: row.game_id || null,
+      playedAt: row.created_at || null,
+    });
+    if (recentModules.length === 3) break;
+  }
 
   return {
     serverDate,
@@ -50,6 +63,7 @@ export function BuildProgressSummary(rows, serverDate, timeZone = defaultRehabTi
     daysSinceStart: startedOn ? DateDifference(startedOn, serverDate) + 1 : 0,
     rehabilitationDays: currentStreak,
     totalRehabilitationDays: trainingDates.length,
+    recentModules,
     dailyTasks: [
       CreateDailyTask('complete-one', '完成 1 次訓練', todayRows.length, 1),
       CreateDailyTask('complete-three', '完成 3 次訓練', todayRows.length, 3),

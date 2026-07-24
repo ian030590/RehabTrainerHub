@@ -31,10 +31,11 @@ export async function onRequestGet({ request, env }) {
       SELECT
         COALESCE(verified_training_date, substr(created_at, 1, 10)) AS training_date,
         module_id,
-        game_id
+        game_id,
+        created_at
       FROM training_records
       WHERE user_id = ?
-      ORDER BY verified_training_date ASC, created_at ASC
+      ORDER BY created_at DESC
     `)
     .bind(session.sub)
     .all();

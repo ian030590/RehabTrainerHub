@@ -112,6 +112,12 @@ export interface RehabAchievement {
   achieved: boolean;
 }
 
+export interface RehabRecentModule {
+  moduleId: string;
+  gameId: string | null;
+  playedAt: string | null;
+}
+
 export interface RehabProgress {
   serverDate: string;
   timeZone: string;
@@ -119,6 +125,7 @@ export interface RehabProgress {
   daysSinceStart: number;
   rehabilitationDays: number;
   totalRehabilitationDays: number;
+  recentModules: RehabRecentModule[];
   dailyTasks: RehabDailyTask[];
   achievements: RehabAchievement[];
 }

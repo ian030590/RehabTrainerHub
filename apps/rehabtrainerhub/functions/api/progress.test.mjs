@@ -31,6 +31,10 @@ assert.deepEqual(
   activeSummary.dailyTasks.map((task) => [task.current, task.completed]),
   [[1, true], [3, true], [2, true]],
 );
+assert.deepEqual(
+  activeSummary.recentModules.map((module) => module.moduleId),
+  ['moving-card', 'reaction-time', 'memory-match'],
+);
 
 const interruptedSummary = BuildProgressSummary([
   CreateRow('2026-07-01', 'vision-training', 'moving-card'),

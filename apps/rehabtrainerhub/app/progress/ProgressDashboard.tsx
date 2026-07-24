@@ -6,6 +6,12 @@ import {
   type RehabAchievement,
   type RehabProgress,
 } from '@rehab-trainer/ui/auth/authClient';
+import {
+  BuildTrainingModuleHref,
+  GetTrainingModuleCopy,
+  GetTrainingPurpose,
+  trainingCatalog,
+} from '@rehab-trainer/ui/trainingCatalog';
 import { useHubAuth } from '../HubNavigation';
 import { siteUrls } from '../siteUrls';
 import { TrophyIcon } from '../TrophyIcon';
@@ -66,6 +72,9 @@ export function ProgressDashboard() {
   }, [user]);
 
   const achievements = progress?.achievements ?? emptyAchievements;
+  const recentModules = (progress?.recentModules ?? [])
+    .map((recentModule) => trainingCatalog.find((module) => module.runtimeId === recentModule.moduleId))
+    .filter((module): module is (typeof trainingCatalog)[number] => Boolean(module));
   const dateFormatter = new Intl.DateTimeFormat('zh-TW', {
     year: 'numeric',
     month: 'long',
@@ -152,6 +161,39 @@ export function ProgressDashboard() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="recent-module-section" aria-labelledby="recent-modules-title">
+        <div className="section-title-row">
+          <div>
+            <p className="page-kicker">Recently played</p>
+            <h2 id="recent-modules-title">近期遊玩</h2>
+          </div>
+        </div>
+
+        {status === 'loading' ? (
+          <p className="recent-module-empty">正在載入近期遊玩紀錄…</p>
+        ) : recentModules.length > 0 ? (
+          <div className="recent-module-grid">
+            {recentModules.map((module) => {
+              const copy = GetTrainingModuleCopy(module, 'zh-TW');
+              const purpose = GetTrainingPurpose(module.purpose);
+
+              return (
+                <article className={`recent-module-card trainer-${module.trainer}`} key={module.catalogId}>
+                  <span>{purpose.label}</span>
+                  <h3>{copy.title}</h3>
+                  <a href={BuildTrainingModuleHref(module, siteUrls)}>
+                    開始訓練
+                    <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                  </a>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="recent-module-empty">完成訓練後，最近遊玩的模組會顯示在這裡。</p>
+        )}
       </section>
 
       <section className="achievement-section" aria-labelledby="achievement-title">

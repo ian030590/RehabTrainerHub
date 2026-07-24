@@ -881,6 +881,7 @@ input:focus-visible {
 }
 
 .daily-section,
+.recent-module-section,
 .achievement-section {
   margin-top: 40px;
 }
@@ -956,6 +957,61 @@ input:focus-visible {
   min-width: 0;
   border-radius: inherit;
   background: var(--primary);
+}
+
+.recent-module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.recent-module-card {
+  --trainer-color: var(--primary);
+  --trainer-color-dark: var(--primary-hover);
+  display: flex;
+  min-height: 154px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--trainer-color) 30%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--trainer-color) 10%, var(--surface));
+}
+
+.recent-module-card.trainer-motor { --trainer-color: #b04431; --trainer-color-dark: #8b3426; }
+.recent-module-card.trainer-vision { --trainer-color: #2868a9; --trainer-color-dark: #1d4f82; }
+.recent-module-card.trainer-brain { --trainer-color: #7d5b26; --trainer-color-dark: #5d421b; }
+.recent-module-card.trainer-mouth { --trainer-color: #6c4f85; --trainer-color-dark: #503b64; }
+
+.recent-module-card > span {
+  color: var(--trainer-color-dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.recent-module-card h3 {
+  margin: 8px 0 18px;
+  font-size: 1.05rem;
+}
+
+.recent-module-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  color: var(--trainer-color-dark);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.recent-module-card a .material-symbols-outlined { font-size: 18px; }
+
+.recent-module-empty {
+  padding: 22px;
+  margin: 0;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
 }
 
 .achievement-grid {
@@ -1094,6 +1150,10 @@ input:focus-visible {
 
   .achievement-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .recent-module-grid {
+    grid-template-columns: 1fr;
   }
 }
 
