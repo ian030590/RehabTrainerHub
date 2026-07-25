@@ -1,8 +1,11 @@
 export interface RehabFooterProps {
   appName?: string;
+  className?: string;
   hubHref?: string;
+  innerClassName?: string;
   privacyHref?: string;
   repoHref?: string;
+  showRights?: boolean;
   labels?: {
     hub?: string;
     privacy?: string;
@@ -37,14 +40,17 @@ export function GetTrainerSkipLinkLabel(language: 'zh' | 'en') {
 
 export function RehabFooter({
   appName = 'Rehab Trainer Hub',
+  className = 'rehab-footer',
   hubHref = '/',
+  innerClassName = 'rehab-footer-inner',
   privacyHref,
   repoHref = 'https://github.com/ian030590/RehabTrainerHub',
+  showRights = true,
   labels,
 }: RehabFooterProps) {
   return (
-    <footer className="rehab-footer">
-      <div className="rehab-footer-inner">
+    <footer className={className}>
+      <div className={innerClassName}>
         <strong>{appName}</strong>
         <span>{labels?.disclaimer ?? 'For rehabilitation practice workflow prototyping, not medical advice.'}</span>
         <div className="rehab-footer-meta">
@@ -53,7 +59,9 @@ export function RehabFooter({
             {privacyHref && <a href={privacyHref}>{labels?.privacy ?? 'Privacy'}</a>}
             <a href={repoHref} target="_blank" rel="noopener noreferrer">{labels?.repo ?? 'GitHub'}</a>
           </nav>
-          <span className="rehab-footer-rights">&copy; 2026 {labels?.rights ?? 'All rights reserved.'}</span>
+          {showRights && (
+            <span className="rehab-footer-rights">&copy; 2026 {labels?.rights ?? 'All rights reserved.'}</span>
+          )}
         </div>
       </div>
     </footer>

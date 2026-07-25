@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
+import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
 import type { AuthUser } from '@rehab-trainer/ui/auth/authClient';
 import { hubName } from './hubBrand';
 import { siteUrls } from './siteUrls';
@@ -140,17 +141,20 @@ export function HubShell({ children }: { children: ReactNode }) {
       </header>
 
       <div className="hub-content">{children}</div>
-      <footer className="hub-footer">
-        <div className="hub-footer-inner">
-          <strong>Rehab Trainer Hub</strong>
-          <span>復健訓練流程原型，非醫療建議。</span>
-          <nav aria-label="頁尾導覽">
-            <Link href="/">訓練大廳</Link>
-            <Link href="/privacy/">隱私權</Link>
-            <a href="https://github.com/ian030590/RehabTrainerHub" target="_blank" rel="noopener noreferrer">GitHub</a>
-          </nav>
-        </div>
-      </footer>
+      <RehabFooter
+        appName="Rehab Trainer Hub"
+        className="hub-footer"
+        innerClassName="hub-footer-inner"
+        privacyHref="/privacy/"
+        showRights={false}
+        labels={{
+          hub: '訓練大廳',
+          privacy: '隱私權',
+          repo: 'GitHub',
+          disclaimer: '復健訓練流程原型，非醫療建議。',
+          navigation: '頁尾導覽',
+        }}
+      />
       </div>
     </hubAuthContext.Provider>
   );
