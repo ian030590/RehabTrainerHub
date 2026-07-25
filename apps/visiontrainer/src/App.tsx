@@ -4,6 +4,7 @@ import { GetTrainerFooterLabels, GetTrainerSkipLinkLabel } from '@rehab-trainer/
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
 import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
 import { useSyncedDisplaySettings } from '@rehab-trainer/ui/hooks/useSyncedDisplaySettings';
+import { PwaRegistration } from '@rehab-trainer/ui/pwa';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
@@ -25,6 +26,7 @@ const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((modul
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 const HartChartPage = lazy(() => import('./pages/training/HartChartPage').then((module) => ({ default: module.HartChartPage })));
 const HartChartDisplayPage = lazy(() => import('./pages/training/HartChartPage').then((module) => ({ default: module.HartChartDisplayPage })));
+const InstallAppPage = lazy(() => import('@rehab-trainer/ui/components/InstallAppPage').then((module) => ({ default: module.InstallAppPage })));
 
 export function App() {
   const { lang, t } = useT();
@@ -42,6 +44,7 @@ export function App() {
 
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
+      <PwaRegistration />
       <TrainingLoginReminder
         active={isTrainingPath}
         apiBase={apiBase}
@@ -66,6 +69,7 @@ export function App() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/credits" element={<CreditsPage />} />
           <Route path="/links" element={<LinksPage />} />
+          <Route path="/download" element={<InstallAppPage appName="VisionTrainer" />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -91,6 +95,7 @@ function AppLayout() {
       skipLinkLabel={GetTrainerSkipLinkLabel(lang)}
       footer={{
         appName: 'VisionTrainer',
+        downloadHref: '/#/download',
         hubHref: siteUrls.hub,
         privacyHref: `${siteUrls.hub}/privacy/`,
         labels: GetTrainerFooterLabels(lang),

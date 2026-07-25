@@ -81,6 +81,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
     })),
   ];
   const requestedGameId = searchParams.get('game');
+  const isUfovRequested = moduleId === 'attention' && requestedGameId === 'ufov';
   const requestedModule = moduleCards.find((card) => card.gameId === requestedGameId)?.gameId ?? null;
   const { activeModule, openModule, closeModule } = useRoutedTrainingModule<ReferenceGameId>({
     requestedModule,
@@ -97,6 +98,10 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const isSmallScreenDevice = IsMobileOrTabletDevice(DetectDisplayDeviceKind());
   const effectiveUfovSubtest = isSmallScreenDevice ? 1 : selectedUfovSubtest;
   const ruleLabels = GetBrainRuleLabels(lang);
+
+  useEffect(() => {
+    if (isUfovRequested) setIsUfovConfigOpen(true);
+  }, [isUfovRequested]);
 
   const handleStartUfov = async () => {
     await EnterFullscreenFromUserGesture(document.documentElement);
@@ -154,7 +159,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
 
       <section className="selection-grid content-grid-spaced" aria-label={t(module.titleKey)}>
         {moduleCards.map((card, index) => {
-          const isUfovCard = card.to === '/attention-training/ufov';
+          const isUfovCard = card.to === '/attention-training?game=ufov';
           const isPlayable = Boolean(card.to || card.gameId);
           return (
             <SelectionCard

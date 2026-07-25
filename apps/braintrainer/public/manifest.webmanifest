@@ -1,0 +1,30 @@
+{
+  "id": "/",
+  "name": "BrainTrainer 注意記憶與思考訓練",
+  "short_name": "BrainTrainer",
+  "description": "注意力、記憶力與高階認知居家訓練。",
+  "lang": "zh-TW",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf7f4",
+  "theme_color": "#7a4a24",
+  "icons": [
+    {
+      "src": "/icons/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/pwa-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

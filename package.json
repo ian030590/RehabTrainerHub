@@ -11,8 +11,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run test:naming && npm run test:hub-functions && npm run test:entrypoints && node scripts/build-apps.mjs",
-    "build:cloudflare": "npm run test:naming && npm run test:hub-functions && npm run test:entrypoints && npm run test:cloudflare-deploy && npm run test:changed-trainer-smoke && node scripts/build-apps.mjs --cloudflare-pages",
+    "build": "npm run test:naming && npm run test:pwa && npm run test:hub-functions && npm run test:entrypoints && node scripts/build-apps.mjs",
+    "build:cloudflare": "npm run test:naming && npm run test:pwa && npm run test:hub-functions && npm run test:entrypoints && npm run test:cloudflare-deploy && npm run test:changed-trainer-smoke && node scripts/build-apps.mjs --cloudflare-pages",
     "build:brain": "npm --prefix apps/braintrainer run build",
     "build:hub": "npm --prefix apps/rehabtrainerhub run build",
     "build:mouth": "npm --prefix apps/mouthtrainer run build",
@@ -37,7 +37,8 @@
     "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs",
     "test:changed-trainer-smoke": "node scripts/check-changed-trainer-smoke.test.mjs",
     "test:hub-functions": "node --test \"apps/rehabtrainerhub/functions/**/*.test.mjs\"",
-    "test:naming": "node scripts/check-identifier-names.mjs"
+    "test:naming": "node scripts/check-identifier-names.mjs",
+    "test:pwa": "node scripts/check-pwa-assets.mjs"
   },
   "dependencies": {
     "@jspsych/extension-webgazer": "^1.2.0",

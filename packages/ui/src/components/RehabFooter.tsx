@@ -1,6 +1,7 @@
 export interface RehabFooterProps {
   appName?: string;
   className?: string;
+  downloadHref?: string;
   hubHref?: string;
   innerClassName?: string;
   privacyHref?: string;
@@ -8,6 +9,7 @@ export interface RehabFooterProps {
   showRights?: boolean;
   labels?: {
     hub?: string;
+    download?: string;
     privacy?: string;
     repo?: string;
     disclaimer?: string;
@@ -20,6 +22,7 @@ export function GetTrainerFooterLabels(language: 'zh' | 'en') {
   return language === 'en'
     ? {
         hub: 'Hub',
+        download: 'Download app',
         privacy: 'Privacy',
         repo: 'GitHub',
         disclaimer: 'For rehabilitation practice workflow prototyping, not medical advice.',
@@ -27,6 +30,7 @@ export function GetTrainerFooterLabels(language: 'zh' | 'en') {
       }
     : {
         hub: 'Hub',
+        download: '下載程式',
         privacy: '隱私權政策',
         repo: 'GitHub',
         disclaimer: '復健練習流程原型，不能取代醫療建議。',
@@ -41,6 +45,7 @@ export function GetTrainerSkipLinkLabel(language: 'zh' | 'en') {
 export function RehabFooter({
   appName = 'Rehab Trainer Hub',
   className = 'rehab-footer',
+  downloadHref,
   hubHref = '/',
   innerClassName = 'rehab-footer-inner',
   privacyHref,
@@ -56,6 +61,7 @@ export function RehabFooter({
         <div className="rehab-footer-meta">
           <nav aria-label={labels?.navigation ?? 'Footer navigation'}>
             <a href={hubHref}>{labels?.hub ?? 'Hub'}</a>
+            {downloadHref && <a href={downloadHref}>{labels?.download ?? 'Download app'}</a>}
             {privacyHref && <a href={privacyHref}>{labels?.privacy ?? 'Privacy'}</a>}
             <a href={repoHref} target="_blank" rel="noopener noreferrer">{labels?.repo ?? 'GitHub'}</a>
           </nav>

@@ -170,7 +170,7 @@ const seeds: readonly TrainingCatalogSeed[] = [
     trainer: 'brain',
     purpose: 'attention',
     kind: 'brain-route',
-    path: '/attention-training/ufov',
+    path: '/attention-training?game=ufov',
     zh: ['UFOV 注意力測驗', '練習處理速度、分散注意力與選擇性注意力。'],
     en: ['UFOV Attention Test', 'Practise processing speed, divided attention, and selective attention.'],
     titleKey: 'module.attention.ufov.title',
@@ -458,6 +458,10 @@ export function BuildTrainingModuleHref(
   urls: SiteUrls = defaultSiteUrls,
 ): string {
   return `${urls[module.trainer]}/#${module.entryPath}`;
+}
+
+export function BuildHubTrainingHref(module: TrainingCatalogModule): string {
+  return `/train/?module=${encodeURIComponent(module.catalogId)}`;
 }
 
 export function GetTrainingPurpose(purposeId: TrainingPurposeId) {

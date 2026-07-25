@@ -5,7 +5,7 @@
 這是一個 npm workspace / Turborepo monorepo。應用程式程式碼放在 `apps/`：
 
 - `apps/rehabtrainerhub`：Next.js hub 網站與 Cloudflare Pages Functions。
-- `apps/motortrainer`、`apps/visiontrainer`、`apps/braintrainer`：Vite React 訓練器應用。
+- `apps/motortrainer`、`apps/visiontrainer`、`apps/braintrainer`、`apps/mouthtrainer`：Vite React 訓練器應用。
 
 共用 UI、auth helper、layout、settings 與 storage 工具放在 `packages/ui/src`。靜態資產位於各 app 的 `public/` 目錄中，常見路徑是 `public/assets/`。Cloudflare D1 migrations 放在 `apps/rehabtrainerhub/migrations/`。
 
@@ -33,6 +33,10 @@
 如果邏輯、UI、樣式、auth 行為、settings 行為、routing helper，或 footer/navbar 行為可以共享，就不應該在每個 trainer 裡各自重寫。請把可重用的程式碼放到 `packages/ui/src` 或其他共用 helper，再只傳入 app 專屬資料，例如 label、顏色、URL 或模組清單。這點非常重要，因為 MotorTrainer、VisionTrainer 與 BrainTrainer 本來就是平行產品：重複邏輯會分歧、造成無障礙行為不一致，還會讓同一個 bug 要修三次。編輯 app-specific 檔案前，先確認這個變更是否應該放到 `TrainerNavbar`、`TrainerAppLayout`、`AuthPanel`、共用 settings utilities、共用 CSS 或共用 storage/auth helpers。app 檔案應該組合共用元件，而不是分叉出自己的版本。
 
 玩家面向的訓練模組是廣泛共享的例外。單一訓練體驗必須自行擁有其 runtime 邏輯、遊戲迴圈、renderer/canvas 生命週期、input handling、jsPsych/Pixi/Three timeline/plugin 設定，以及模組專屬刺激或遊戲內 UI 樣式。不要把長生命週期的訓練引擎狀態集中共用到多個模組，也不要讓某個模組依賴另一個模組的 runtime helper 或視覺規則。這類模組的共用程式碼應限制在 React 頁面外殼：routing、auth、settings form、layout、navigation、結果組合，以及與 renderer 無關的工具函式。
+
+Hub 訓練大廳不得複製或分叉 trainer 的設定表單、預設值、驗證、rules 或 runtime。Hub 只能依 training catalog 裝載 trainer-owned config entry；修改 trainer config 必須不需修改 Hub 即自動生效。Hub 僅負責模組選擇、容器、歷史、退出與瀏覽器權限委派。Pixi、jsPsych、Three、MediaPipe、TensorFlow 等 runtime 與其生命週期仍由各訓練模組自行擁有。
+
+Hub 與每個 trainer 是各自獨立的 PWA，必須保有自己的 manifest、app identity、scope 與同來源下載頁；從哪一個 app 安裝，就只安裝該 app。Hub 內嵌 trainer 時也不得改變目前頂層 app 的來源或把使用者導向另一個 trainer 網站。
 
 共用 CSS 應放在 `packages/ui/src/components/TrainerApp.css` 或其他 package 層級的 stylesheet，適用於共用外殼，例如 cards、dialogs、trainer setup panel、result summary、result table、routed module selection、buttons、form controls 或 layout primitives。App 的 `index.css` 應只保留產品專屬的視覺、遊戲/刺激渲染，以及 app 專用覆寫。把共用元件搬到 `packages/ui` 時，也要同時搬移對應的可重用 CSS，並在可行時刪除本地重複規則。
 

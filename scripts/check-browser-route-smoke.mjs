@@ -33,7 +33,7 @@ if (expectedSelectors.length === 0 && !externalUrl) {
 const browserPath = FindBrowserPath();
 
 if (!browserPath) {
-  throw new Error('No Chrome or Edge executable was found for browser route smoke testing.');
+  throw new Error('No Chromium-based browser executable was found for browser route smoke testing.');
 }
 
 const previewPort = externalUrl ? null : await GetAvailablePort();
@@ -370,6 +370,7 @@ async function WaitForClickableBounds(cdp, sessionId, selector, timeoutMs) {
       expression: `(() => {
         const element = document.querySelector(${JSON.stringify(selector)});
         if (!(element instanceof HTMLElement) || element.matches(':disabled')) return null;
+        element.scrollIntoView({ behavior: 'instant', block: 'center', inline: 'center' });
         const rect = element.getBoundingClientRect();
         if (rect.width < 1 || rect.height < 1) return null;
         return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
@@ -394,6 +395,9 @@ function FindBrowserPath() {
     'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
     'C:/Program Files/Google/Chrome/Application/chrome.exe',
     'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
     ...FindWindowsVersionedBrowsers('C:/Program Files (x86)/Microsoft/EdgeCore'),
     ...FindWindowsVersionedBrowsers('C:/Program Files (x86)/Microsoft/EdgeWebView/Application'),
   ];

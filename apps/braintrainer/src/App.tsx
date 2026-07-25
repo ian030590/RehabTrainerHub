@@ -4,6 +4,7 @@ import { GetTrainerFooterLabels, GetTrainerSkipLinkLabel } from '@rehab-trainer/
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
 import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
 import { useSyncedDisplaySettings } from '@rehab-trainer/ui/hooks/useSyncedDisplaySettings';
+import { PwaRegistration } from '@rehab-trainer/ui/pwa';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
@@ -22,6 +23,7 @@ const UFOVPage = lazy(() => import('./pages/UFOVPage').then((module) => ({ defau
 const EveryBallResponsePage = lazy(() => import('./pages/EveryBallResponsePage').then((module) => ({ default: module.EveryBallResponsePage })));
 const ThinkingTraining = lazy(() => import('./pages/thinking/ThinkingTraining').then((module) => ({ default: module.ThinkingTraining })));
 const MainConceptTraining = lazy(() => import('./pages/MainConceptTraining').then((module) => ({ default: module.MainConceptTraining })));
+const InstallAppPage = lazy(() => import('@rehab-trainer/ui/components/InstallAppPage').then((module) => ({ default: module.InstallAppPage })));
 
 export function App() {
   const { lang, t } = useT();
@@ -32,6 +34,7 @@ export function App() {
 
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
+      <PwaRegistration />
       <TrainingLoginReminder
         active={trainingPaths.has(location.pathname)}
         apiBase={apiBase}
@@ -54,6 +57,7 @@ export function App() {
           <Route path="/references" element={<ReferencesPage />} />
           <Route path="/links" element={<LinksPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/download" element={<InstallAppPage appName="BrainTrainer" />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -78,6 +82,7 @@ function AppLayout() {
       skipLinkLabel={GetTrainerSkipLinkLabel(lang)}
       footer={{
         appName: 'BrainTrainer',
+        downloadHref: '/#/download',
         hubHref: siteUrls.hub,
         privacyHref: `${siteUrls.hub}/privacy/`,
         repoHref: 'https://github.com/ian030590/RehabTrainerHub',

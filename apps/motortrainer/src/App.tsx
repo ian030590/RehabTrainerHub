@@ -4,6 +4,7 @@ import { GetTrainerFooterLabels, GetTrainerSkipLinkLabel } from '@rehab-trainer/
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
 import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
 import { useSyncedDisplaySettings } from '@rehab-trainer/ui/hooks/useSyncedDisplaySettings';
+import { PwaRegistration } from '@rehab-trainer/ui/pwa';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
@@ -20,6 +21,7 @@ const UpperLimbTraining = lazy(() => import('./pages/training/UpperLimbTraining'
 const LowerLimbTraining = lazy(() => import('./pages/training/LowerLimbTraining').then((module) => ({ default: module.LowerLimbTraining })));
 const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((module) => ({ default: module.CreditsPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
+const InstallAppPage = lazy(() => import('@rehab-trainer/ui/components/InstallAppPage').then((module) => ({ default: module.InstallAppPage })));
 
 export function App() {
   const { lang, t } = useT();
@@ -30,6 +32,7 @@ export function App() {
 
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
+      <PwaRegistration />
       <TrainingLoginReminder
         active={trainingPaths.has(location.pathname)}
         apiBase={apiBase}
@@ -50,6 +53,7 @@ export function App() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/credits" element={<CreditsPage />} />
           <Route path="/links" element={<LinksPage />} />
+          <Route path="/download" element={<InstallAppPage appName="MotorTrainer" />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -86,6 +90,7 @@ function AppLayout() {
       skipLinkLabel={GetTrainerSkipLinkLabel(lang)}
       footer={{
         appName: 'MotorTrainer',
+        downloadHref: '/#/download',
         hubHref: siteUrls.hub,
         privacyHref: `${siteUrls.hub}/privacy/`,
         repoHref: 'https://github.com/ian030590/RehabTrainerHub',

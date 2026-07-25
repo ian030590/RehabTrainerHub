@@ -15,6 +15,7 @@ import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
 import { AccountAvatar } from '@rehab-trainer/ui/components/AccountAvatar';
 import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
 import type { AuthUser } from '@rehab-trainer/ui/auth/authClient';
+import { PwaRegistration } from '@rehab-trainer/ui/pwa';
 import { hubName } from './hubBrand';
 import { siteUrls } from './siteUrls';
 
@@ -22,6 +23,7 @@ const navigationItems = [
   { href: '/', label: '訓練大廳' },
   { href: '/progress/', label: '進度追蹤' },
   { href: '/qa/', label: '問答中心' },
+  { href: '/download/', label: '下載程式' },
 ] as const;
 
 function IsStaffUser(user: AuthUser | null): boolean {
@@ -45,6 +47,7 @@ export function HubShell({ children }: { children: ReactNode }) {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const isStaff = IsStaffUser(user);
+  const isTrainingRoute = pathname === '/train' || pathname.startsWith('/train/');
 
   useEffect(() => {
     setIsAccountOpen(false);
@@ -72,95 +75,102 @@ export function HubShell({ children }: { children: ReactNode }) {
 
   return (
     <hubAuthContext.Provider value={{ user }}>
-      <div className="hub-shell">
-      <header className="hub-header">
-        <Link className="hub-brand" href="/" aria-label="Rehab Trainer Hub 訓練大廳">
-          <Image src="/rehabtrainerhub.svg" alt="" width={42} height={42} priority />
-          <span>
-            <strong>Rehab Trainer Hub</strong>
-            <small>居家訓練網</small>
-          </span>
-        </Link>
+      <div className={`hub-shell${isTrainingRoute ? ' hub-shell-training' : ''}`}>
+        <PwaRegistration />
+        {!isTrainingRoute && (
+          <header className="hub-header">
+            <Link className="hub-brand" href="/" aria-label="Rehab Trainer Hub 訓練大廳">
+              <Image src="/rehabtrainerhub.svg" alt="" width={42} height={42} priority />
+              <span>
+                <strong>Rehab Trainer Hub</strong>
+                <small>居家訓練網</small>
+              </span>
+            </Link>
 
-        <nav className="hub-nav" aria-label="主要導覽">
-          {navigationItems.map((item) => {
-            const isActive = item.href === '/'
-              ? pathname === '/'
-              : pathname.startsWith(item.href);
-            return (
-              <Link className={isActive ? 'is-active' : ''} href={item.href} key={item.href}>
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+            <nav className="hub-nav" aria-label="主要導覽">
+              {navigationItems.map((item) => {
+                const isActive = item.href === '/'
+                  ? pathname === '/'
+                  : pathname.startsWith(item.href);
+                return (
+                  <Link className={isActive ? 'is-active' : ''} href={item.href} key={item.href}>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
 
-        <div className="account-menu" ref={accountMenuRef}>
-          <button
-            aria-controls="hub-account-panel"
-            aria-expanded={isAccountOpen}
-            aria-label={user ? `${user.displayName} 帳號選單` : '帳號選單'}
-            className={`account-menu-button ${user ? 'is-signed-in' : ''}`}
-            onClick={() => setIsAccountOpen((open) => !open)}
-            title={user ? user.displayName : '帳號'}
-            type="button"
-          >
-            <AccountAvatar
-              alt=""
-              avatarUrl={user?.avatarUrl}
-              className="account-avatar"
-              fallback={<span className="material-symbols-outlined" aria-hidden="true">account_circle</span>}
-            />
-          </button>
-
-          <div
-            className="account-popover"
-            hidden={!isAccountOpen}
-            id="hub-account-panel"
-          >
-            {user && <p className="account-name">{user.displayName}</p>}
-            {isStaff && (
-              <Link
-                aria-current={pathname.startsWith('/admin/') ? 'page' : undefined}
-                className="account-admin-link"
-                href="/admin/"
+            <div className="account-menu" ref={accountMenuRef}>
+              <button
+                aria-controls="hub-account-panel"
+                aria-expanded={isAccountOpen}
+                aria-label={user ? `${user.displayName} 帳號選單` : '帳號選單'}
+                className={`account-menu-button ${user ? 'is-signed-in' : ''}`}
+                onClick={() => setIsAccountOpen((open) => !open)}
+                title={user ? user.displayName : '帳號'}
+                type="button"
               >
-                <span className="material-symbols-outlined" aria-hidden="true">clinical_notes</span>
-                治療師後台
-              </Link>
-            )}
-            <AuthPanel
-              apiBase={siteUrls.hub}
-              appName={hubName}
-              className="hub-auth-panel"
-              locale="zh-TW"
-              onAuthChange={setUser}
-              privacyHref={`${siteUrls.hub}/privacy/`}
-              turnstileSiteKey={
-                process.env.NEXT_PUBLIC_TURNSTILE_AUTH_REQUIRED === '1'
-                  ? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
-                  : undefined
-              }
-            />
-          </div>
-        </div>
-      </header>
+                <AccountAvatar
+                  alt=""
+                  avatarUrl={user?.avatarUrl}
+                  className="account-avatar"
+                  fallback={<span className="material-symbols-outlined" aria-hidden="true">account_circle</span>}
+                />
+              </button>
 
-      <div className="hub-content">{children}</div>
-      <RehabFooter
-        appName="Rehab Trainer Hub"
-        className="hub-footer"
-        innerClassName="hub-footer-inner"
-        privacyHref="/privacy/"
-        showRights={false}
-        labels={{
-          hub: '訓練大廳',
-          privacy: '隱私權',
-          repo: 'GitHub',
-          disclaimer: '復健訓練流程原型，非醫療建議。',
-          navigation: '頁尾導覽',
-        }}
-      />
+              <div
+                className="account-popover"
+                hidden={!isAccountOpen}
+                id="hub-account-panel"
+              >
+                {user && <p className="account-name">{user.displayName}</p>}
+                {isStaff && (
+                  <Link
+                    aria-current={pathname.startsWith('/admin/') ? 'page' : undefined}
+                    className="account-admin-link"
+                    href="/admin/"
+                  >
+                    <span className="material-symbols-outlined" aria-hidden="true">clinical_notes</span>
+                    治療師後台
+                  </Link>
+                )}
+                <AuthPanel
+                  apiBase={siteUrls.hub}
+                  appName={hubName}
+                  className="hub-auth-panel"
+                  locale="zh-TW"
+                  onAuthChange={setUser}
+                  privacyHref={`${siteUrls.hub}/privacy/`}
+                  turnstileSiteKey={
+                    process.env.NEXT_PUBLIC_TURNSTILE_AUTH_REQUIRED === '1'
+                      ? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+                      : undefined
+                  }
+                />
+              </div>
+            </div>
+          </header>
+        )}
+
+        <div className={`hub-content${isTrainingRoute ? ' hub-content-training' : ''}`}>{children}</div>
+        {!isTrainingRoute && (
+          <RehabFooter
+            appName="Rehab Trainer Hub"
+            className="hub-footer"
+            downloadHref="/download/"
+            innerClassName="hub-footer-inner"
+            privacyHref="/privacy/"
+            showRights={false}
+            labels={{
+              hub: '訓練大廳',
+              download: '下載程式',
+              privacy: '隱私權',
+              repo: 'GitHub',
+              disclaimer: '復健訓練流程原型，非醫療建議。',
+              navigation: '頁尾導覽',
+            }}
+          />
+        )}
       </div>
     </hubAuthContext.Provider>
   );

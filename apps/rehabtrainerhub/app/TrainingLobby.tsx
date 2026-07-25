@@ -1,9 +1,10 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import {
-  BuildTrainingModuleHref,
+  BuildHubTrainingHref,
   GetTrainingModuleCopy,
   GetTrainingPurpose,
   trainingCatalog,
@@ -152,10 +153,10 @@ export function TrainingLobby() {
                     <p>{copy.description}</p>
                     <div className="module-card-footer">
                       <span>{trainer.name}</span>
-                      <a href={BuildTrainingModuleHref(module)}>
+                      <Link href={BuildHubTrainingHref(module)}>
                         開始訓練
                         <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                      </a>
+                      </Link>
                     </div>
                     </div>
                   </article>

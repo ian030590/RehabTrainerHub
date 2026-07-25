@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { CloudflareWebAnalytics } from '@rehab-trainer/ui/components/CloudflareWebAnalytics';
 import { HubShell } from './HubNavigation';
 import { hubFullName, hubLocalName } from './hubBrand';
@@ -6,6 +6,7 @@ import { CreateSeoMetadata, organizationJsonLd, siteDescription, websiteJsonLd }
 import { siteUrls } from './siteUrls';
 import './globals.css';
 import '@rehab-trainer/ui/components/AuthPanel.css';
+import '@rehab-trainer/ui/components/InstallAppPage.css';
 
 const rootMetadata = CreateSeoMetadata({
   title: hubFullName,
@@ -22,6 +23,12 @@ export const metadata: Metadata = {
     template: `%s | ${hubLocalName}`,
   },
   applicationName: hubFullName,
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: hubLocalName,
+  },
   keywords: [
     '居家訓練網',
     '居家復健訓練',
@@ -35,11 +42,18 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: '/rehabtrainerhub.svg',
-    apple: '/rehabtrainerhub.svg',
+    apple: '/icons/apple-touch-icon.png',
   },
   verification: {
     google: '_ZdVR2kZ9xg_TnPtv5tLda3-fJWHLArBNDMpgE5NkZA',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#146c5b',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

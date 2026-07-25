@@ -1,0 +1,120 @@
+.install-app-page {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 48px 0 64px;
+  color: var(--text-primary, var(--text, #202428));
+}
+
+.install-app-hero {
+  max-width: 760px;
+  margin-bottom: 32px;
+}
+
+.install-app-kicker {
+  margin: 0 0 6px;
+  color: var(--accent, var(--primary, #146c5b));
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.install-app-hero h1 {
+  margin-bottom: 10px;
+}
+
+.install-app-button {
+  min-height: 46px;
+  margin-top: 10px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: var(--radius-m, var(--radius, 8px));
+  background: var(--accent, var(--primary, #146c5b));
+  color: var(--text-on-accent, #fff);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.install-app-button:disabled {
+  opacity: 0.58;
+  cursor: default;
+}
+
+.install-app-status {
+  min-height: 1.5em;
+  margin: 10px 0 0;
+  color: var(--text-secondary, var(--text-muted, #606970));
+}
+
+.install-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.install-guide-card {
+  padding: 24px;
+  border: 1px solid var(--border, #d4d9de);
+  border-radius: var(--radius-l, var(--radius, 8px));
+  background: var(--bg-card, var(--surface, #fff));
+  box-shadow: var(--shadow-card, var(--shadow-sm, 0 1px 2px rgba(20, 33, 43, 0.08)));
+}
+
+.install-guide-card h2 {
+  margin-bottom: 14px;
+}
+
+.install-guide-card li + li {
+  margin-top: 8px;
+}
+
+.install-guide-card img {
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  margin: 20px 0 12px;
+  border: 1px solid var(--border, #d4d9de);
+  border-radius: var(--radius-m, var(--radius, 8px));
+  object-fit: contain;
+}
+
+.install-guide-note {
+  color: var(--text-secondary, var(--text-muted, #606970));
+}
+
+.install-guide-source {
+  display: block;
+  margin-top: 10px;
+  color: var(--accent, var(--primary, #146c5b));
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.install-attribution {
+  margin-top: 24px;
+  padding: 16px 18px;
+  border-left: 4px solid var(--accent, var(--primary, #146c5b));
+  background: var(--bg-panel, var(--surface-muted, #eef1f4));
+  color: var(--text-secondary, var(--text-muted, #606970));
+  font-size: 0.82rem;
+}
+
+.install-attribution a {
+  color: var(--accent, var(--primary, #146c5b));
+}
+
+@media (max-width: 760px) {
+  .install-app-page {
+    width: min(100% - 24px, 1180px);
+    padding: 24px 0 36px;
+  }
+
+  .install-guide-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .install-guide-card {
+    padding: 18px;
+  }
+}

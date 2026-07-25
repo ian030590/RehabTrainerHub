@@ -16,6 +16,18 @@ export interface TrainerAppLayoutProps {
   skipLinkHref?: string;
 }
 
+function IsHubOrigin(url: string): boolean {
+  try {
+    const { hostname, origin, protocol } = new URL(url);
+    return origin === 'https://trainerhub.cc'
+      || origin === 'https://rehabtrainerhub.pages.dev'
+      || (protocol === 'https:' && hostname.endsWith('.rehabtrainerhub.pages.dev'))
+      || (protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1'));
+  } catch {
+    return false;
+  }
+}
+
 export function TrainerAppLayout({
   analyticsToken,
   children,
@@ -25,6 +37,11 @@ export function TrainerAppLayout({
   skipLinkLabel,
   skipLinkHref = '#main-content',
 }: TrainerAppLayoutProps) {
+  const isEmbeddedHubTraining = typeof window !== 'undefined'
+    && window.self !== window.top
+    && new URLSearchParams(window.location.search).get('embed') === 'hub'
+    && IsHubOrigin(document.referrer);
+
   return (
     <div className="app-layout">
       {skipLinkLabel && (
@@ -32,10 +49,10 @@ export function TrainerAppLayout({
           {skipLinkLabel}
         </a>
       )}
-      {navbar}
-      <DevicePerformanceNotice locale={locale} />
+      {!isEmbeddedHubTraining && navbar}
+      {!isEmbeddedHubTraining && <DevicePerformanceNotice locale={locale} />}
       {children}
-      <RehabFooter {...footer} />
+      {!isEmbeddedHubTraining && <RehabFooter {...footer} />}
       <CloudflareWebAnalytics token={analyticsToken} />
     </div>
   );

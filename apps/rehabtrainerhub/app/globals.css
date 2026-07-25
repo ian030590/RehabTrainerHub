@@ -187,6 +187,12 @@ summary:focus-visible {
   min-height: 100dvh;
 }
 
+.hub-shell-training {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 .hub-footer {
   z-index: 70;
   flex: 0 0 auto;
@@ -198,6 +204,99 @@ summary:focus-visible {
   display: flex;
   flex: 1 0 auto;
   flex-direction: column;
+}
+
+.hub-content-training {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.embedded-training-page {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--background);
+}
+
+.embedded-training-bar {
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(0, 2fr) minmax(150px, 1fr);
+  align-items: center;
+  min-height: calc(58px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) max(18px, env(safe-area-inset-right)) 0 max(18px, env(safe-area-inset-left));
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.embedded-training-bar a {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  min-height: 44px;
+  color: var(--primary);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.embedded-training-bar strong {
+  overflow: hidden;
+  color: var(--heading);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.embedded-training-frame {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  background: var(--background);
+}
+
+.embedded-training-frame > p,
+.embedded-training-loading {
+  display: grid;
+  min-height: 100%;
+  margin: 0;
+  place-items: center;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.embedded-training-frame > p {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+}
+
+.embedded-training-frame iframe {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--background);
+}
+
+.embedded-training-error {
+  width: min(640px, calc(100% - 32px));
+  margin: auto;
+  padding: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: center;
+}
+
+.embedded-training-error a {
+  display: inline-flex;
+  margin-top: 10px;
+  color: var(--primary);
+  font-weight: 800;
 }
 
 .hub-footer-inner {
@@ -2227,6 +2326,27 @@ summary:focus-visible {
 
   .hub-footer-inner > span {
     flex: 1 1 100%;
+  }
+
+  .hub-footer-inner a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+  }
+
+  .embedded-training-bar {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-left: max(12px, env(safe-area-inset-left));
+  }
+
+  .embedded-training-bar a > span:last-child {
+    display: none;
+  }
+
+  .embedded-training-bar strong {
+    padding-right: 44px;
   }
 
   .hub-brand {

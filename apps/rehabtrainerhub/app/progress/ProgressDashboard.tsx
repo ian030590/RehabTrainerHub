@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
   FetchRehabProgress,
@@ -7,7 +8,7 @@ import {
   type RehabProgress,
 } from '@rehab-trainer/ui/auth/authClient';
 import {
-  BuildTrainingModuleHref,
+  BuildHubTrainingHref,
   GetTrainingModuleCopy,
   GetTrainingPurpose,
   trainingCatalog,
@@ -183,10 +184,10 @@ export function ProgressDashboard() {
                 <article className={`recent-module-card trainer-${module.trainer}`} key={module.catalogId}>
                   <span>{purpose.label}</span>
                   <h3>{copy.title}</h3>
-                  <a href={BuildTrainingModuleHref(module, siteUrls)}>
+                  <Link href={BuildHubTrainingHref(module)}>
                     開始訓練
                     <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                  </a>
+                  </Link>
                 </article>
               );
             })}

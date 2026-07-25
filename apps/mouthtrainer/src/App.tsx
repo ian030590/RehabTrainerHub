@@ -5,6 +5,7 @@ import { GetTrainerFooterLabels, GetTrainerSkipLinkLabel } from '@rehab-trainer/
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
 import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
 import { useSyncedDisplaySettings } from '@rehab-trainer/ui/hooks/useSyncedDisplaySettings';
+import { PwaRegistration } from '@rehab-trainer/ui/pwa';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
 import { ComprehensionTraining } from './pages/ComprehensionTraining';
@@ -15,6 +16,7 @@ import { siteUrls } from './utils/siteUrls';
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
 const ReferencesPage = lazy(() => import('./pages/ReferencesPage').then((module) => ({ default: module.ReferencesPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
+const InstallAppPage = lazy(() => import('@rehab-trainer/ui/components/InstallAppPage').then((module) => ({ default: module.InstallAppPage })));
 
 export function App() {
   const { lang, t } = useT();
@@ -22,6 +24,7 @@ export function App() {
   const isTraining = ['/comprehension-training', '/oral-training'].includes(location.pathname);
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
+      <PwaRegistration />
       <TrainingLoginReminder
         active={isTraining}
         apiBase={siteUrls.hub}
@@ -40,6 +43,7 @@ export function App() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/references" element={<ReferencesPage />} />
           <Route path="/links" element={<LinksPage />} />
+          <Route path="/download" element={<InstallAppPage appName="MouthTrainer" />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -64,6 +68,7 @@ function AppLayout() {
       skipLinkLabel={GetTrainerSkipLinkLabel(lang)}
       footer={{
         appName: 'MouthTrainer',
+        downloadHref: '/#/download',
         hubHref: siteUrls.hub,
         privacyHref: `${siteUrls.hub}/privacy/`,
         repoHref: 'https://github.com/ian030590/RehabTrainerHub',
