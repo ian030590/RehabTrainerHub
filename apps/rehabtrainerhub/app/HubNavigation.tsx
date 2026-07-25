@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
+import { AccountAvatar } from '@rehab-trainer/ui/components/AccountAvatar';
 import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
 import type { AuthUser } from '@rehab-trainer/ui/auth/authClient';
 import { hubName } from './hubBrand';
@@ -104,7 +105,12 @@ export function HubShell({ children }: { children: ReactNode }) {
             title={user ? user.displayName : '帳號'}
             type="button"
           >
-            <span className="material-symbols-outlined" aria-hidden="true">account_circle</span>
+            <AccountAvatar
+              alt=""
+              avatarUrl={user?.avatarUrl}
+              className="account-avatar"
+              fallback={<span className="material-symbols-outlined" aria-hidden="true">account_circle</span>}
+            />
           </button>
 
           <div

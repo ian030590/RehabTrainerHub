@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { type AuthLocale, type AuthUser } from '../auth/authClient';
+import { AccountAvatar } from './AccountAvatar';
 import { AuthPanel } from './AuthPanel';
 
 export type TrainerNavbarLinkClassName = ComponentProps<typeof NavLink>['className'];
@@ -136,7 +137,12 @@ export function TrainerNavbar({
           title={user ? user.displayName : accountMenuLabel}
           type="button"
         >
-          <AccountIcon />
+          <AccountAvatar
+            alt=""
+            avatarUrl={user?.avatarUrl}
+            className="trainer-account-avatar"
+            fallback={<AccountIcon />}
+          />
         </button>
 
         <div className="trainer-account-popover" hidden={!isAccountOpen} id="trainer-account-panel">

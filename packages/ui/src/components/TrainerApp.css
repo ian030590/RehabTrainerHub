@@ -308,6 +308,13 @@ body[data-ui-font-bold="true"] .app-layout :where(
   height: 34px;
 }
 
+.trainer-account-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
 .trainer-account-popover {
   position: absolute;
   top: calc(100% + 12px);

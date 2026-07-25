@@ -10,6 +10,7 @@
     "./auth/authClient": "./src/auth/authClient.ts",
     "./audioFeedback": "./src/audioFeedback.ts",
     "./components/AppLoading": "./src/components/AppLoading.tsx",
+    "./components/AccountAvatar": "./src/components/AccountAvatar.tsx",
     "./components/AuthPanel.css": "./src/components/AuthPanel.css",
     "./components/AuthPanel": "./src/components/AuthPanel.tsx",
     "./components/CardImagePlaceholder": "./src/components/CardImagePlaceholder.tsx",
