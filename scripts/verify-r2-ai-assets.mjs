@@ -177,6 +177,7 @@ async function VerifyAsset(asset, baseUrl, corsOrigin, timeoutMs) {
       headers: {
         'Accept-Encoding': 'identity',
         Origin: corsOrigin,
+        Range: 'bytes=0-0',
         'User-Agent': 'Mozilla/5.0 R2 runtime asset verifier',
       },
       redirect: 'follow',
