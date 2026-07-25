@@ -250,8 +250,6 @@ function DeployProject(project, attempt = 1) {
     project.outputDir,
     `--project-name=${project.projectName}`,
     `--branch=${branch}`,
-    '--experimental-provision=true',
-    '--experimental-auto-create=true',
   ];
 
   try {

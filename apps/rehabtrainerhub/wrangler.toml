@@ -8,10 +8,10 @@ database_name = "rehab_db"
 database_id = "0f4e6bb2-cf41-4051-ad74-19bb501fe9dd"
 migrations_dir = "migrations"
 
-# Wrangler 4 provisions these draft resources on the first deployment and
-# keeps the resulting bindings attached to the Pages project.
 [[kv_namespaces]]
 binding = "ARTICLE_CACHE"
+id = "9671f8f8995240a3a5fc6b870c66b561"
 
 [[r2_buckets]]
 binding = "ASSET_BUCKET"
+bucket_name = "rehab-storage"
