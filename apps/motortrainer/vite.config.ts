@@ -79,9 +79,6 @@ export default defineConfig({
             if (normalizedId.includes('/node_modules/@tensorflow/') || normalizedId.includes('/node_modules/@tensorflow-models/')) {
               return 'tensorflow-runtime';
             }
-            if (normalizedId.includes('/node_modules/recharts/')) {
-              return 'charts-runtime';
-            }
           },
         },
       },

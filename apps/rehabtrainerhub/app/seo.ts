@@ -7,8 +7,8 @@ export const siteDescription =
 
 export const seoImage = {
   url: '/rehabtrainerhub.svg',
-  width: 840,
-  height: 840,
+  width: 512,
+  height: 512,
   alt: `${hubFullName} logo`,
 } as const;
 
