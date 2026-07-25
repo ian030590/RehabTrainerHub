@@ -40,7 +40,8 @@
     "test:naming": "node scripts/check-identifier-names.mjs"
   },
   "devDependencies": {
-    "turbo": "^2.10.2"
+    "turbo": "^2.10.2",
+    "typescript": "~5.8.3"
   },
   "engines": {
     "node": ">=22"
