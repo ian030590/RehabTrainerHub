@@ -505,10 +505,10 @@ summary:focus-visible {
   transform: translateY(-2px);
 }
 
-.trainer-link-card.trainer-motor { --trainer-color: #b04431; --trainer-surface: #fbeae6; }
-.trainer-link-card.trainer-vision { --trainer-color: #2868a9; --trainer-surface: #e8f1fb; }
-.trainer-link-card.trainer-brain { --trainer-color: #7d5b26; --trainer-surface: #f8f0df; }
-.trainer-link-card.trainer-mouth { --trainer-color: #6c4f85; --trainer-surface: #f2ebf8; }
+.trainer-link-card.trainer-motor { --trainer-color: #005eb8; --trainer-surface: color-mix(in srgb, #005eb8 8%, var(--surface)); }
+.trainer-link-card.trainer-vision { --trainer-color: #006c47; --trainer-surface: color-mix(in srgb, #006c47 8%, var(--surface)); }
+.trainer-link-card.trainer-brain { --trainer-color: #7a4a24; --trainer-surface: color-mix(in srgb, #7a4a24 10%, var(--surface)); }
+.trainer-link-card.trainer-mouth { --trainer-color: #6750a4; --trainer-surface: color-mix(in srgb, #6750a4 9%, var(--surface)); }
 
 .trainer-link-card > .material-symbols-outlined {
   position: absolute;
@@ -714,27 +714,27 @@ summary:focus-visible {
 }
 
 .module-card.trainer-motor {
-  --trainer-color: #b04431;
-  --trainer-color-dark: #8b3426;
-  --trainer-surface: #fbeae6;
+  --trainer-color: #005eb8;
+  --trainer-color-dark: #00478d;
+  --trainer-surface: color-mix(in srgb, #005eb8 8%, var(--surface));
 }
 
 .module-card.trainer-vision {
-  --trainer-color: #2868a9;
-  --trainer-color-dark: #1d4f82;
-  --trainer-surface: #e8f1fb;
+  --trainer-color: #006c47;
+  --trainer-color-dark: #005235;
+  --trainer-surface: color-mix(in srgb, #006c47 8%, var(--surface));
 }
 
 .module-card.trainer-brain {
-  --trainer-color: #7d5b26;
-  --trainer-color-dark: #5d421b;
-  --trainer-surface: #f8f0df;
+  --trainer-color: #7a4a24;
+  --trainer-color-dark: #5a3519;
+  --trainer-surface: color-mix(in srgb, #7a4a24 10%, var(--surface));
 }
 
 .module-card.trainer-mouth {
-  --trainer-color: #6c4f85;
-  --trainer-color-dark: #503b64;
-  --trainer-surface: #f2ebf8;
+  --trainer-color: #6750a4;
+  --trainer-color-dark: #4f378b;
+  --trainer-surface: color-mix(in srgb, #6750a4 9%, var(--surface));
 }
 
 .module-card-visual {
@@ -1080,10 +1080,10 @@ summary:focus-visible {
   background: color-mix(in srgb, var(--trainer-color) 10%, var(--surface));
 }
 
-.recent-module-card.trainer-motor { --trainer-color: #b04431; --trainer-color-dark: #8b3426; }
-.recent-module-card.trainer-vision { --trainer-color: #2868a9; --trainer-color-dark: #1d4f82; }
-.recent-module-card.trainer-brain { --trainer-color: #7d5b26; --trainer-color-dark: #5d421b; }
-.recent-module-card.trainer-mouth { --trainer-color: #6c4f85; --trainer-color-dark: #503b64; }
+.recent-module-card.trainer-motor { --trainer-color: #005eb8; --trainer-color-dark: #00478d; }
+.recent-module-card.trainer-vision { --trainer-color: #006c47; --trainer-color-dark: #005235; }
+.recent-module-card.trainer-brain { --trainer-color: #7a4a24; --trainer-color-dark: #5a3519; }
+.recent-module-card.trainer-mouth { --trainer-color: #6750a4; --trainer-color-dark: #4f378b; }
 
 .recent-module-card > span {
   color: var(--trainer-color-dark);
