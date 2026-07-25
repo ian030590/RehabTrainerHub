@@ -13,8 +13,6 @@ const defaultCorsOrigins = [
   'https://mouth.trainerhub.cc',
 ];
 const oneYearSeconds = 365 * 24 * 60 * 60;
-const propagationRetryDelayMs = 10_000;
-const propagationRetryAttempts = 6;
 
 function GetArg(name) {
   const prefix = `${name}=`;
@@ -170,30 +168,21 @@ async function ReadManifest(manifestPath) {
 async function VerifyAsset(asset, baseUrl, corsOrigin, timeoutMs) {
   const objectUrl = new URL(asset.key, `${baseUrl}/`).href;
   let response;
-  for (let attempt = 1; attempt <= propagationRetryAttempts; attempt += 1) {
-    try {
-      response = await fetch(objectUrl, {
-        method: 'GET',
-        headers: {
-          'Accept-Encoding': 'identity',
-          Origin: corsOrigin,
-          Range: 'bytes=0-0',
-        },
-        redirect: 'follow',
-        signal: AbortSignal.timeout(timeoutMs),
-      });
-    } catch (error) {
-      throw new Error(
-        `${objectUrl} GET request failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-    if (response.status !== 403 || attempt === propagationRetryAttempts) break;
-
-    await response.body?.cancel();
-    console.warn(
-      `- 403 ${objectUrl} for ${corsOrigin}; retrying (${attempt}/${propagationRetryAttempts})`,
+  try {
+    response = await fetch(objectUrl, {
+      method: 'GET',
+      headers: {
+        'Accept-Encoding': 'identity',
+        Origin: corsOrigin,
+        Range: 'bytes=0-0',
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    throw new Error(
+      `${objectUrl} GET request failed: ${error instanceof Error ? error.message : String(error)}`,
     );
-    await new Promise((resolve) => setTimeout(resolve, propagationRetryDelayMs));
   }
 
   if (!response.ok) {

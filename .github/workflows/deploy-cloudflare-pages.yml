@@ -35,27 +35,35 @@ jobs:
       - name: Discover Pages app environment
         run: node scripts/write-pages-env.mjs >> "$GITHUB_ENV"
 
-      - name: Configure production R2 AI asset CORS
-        if: ${{ github.ref == 'refs/heads/main' && vars.R2_AI_ASSET_BUCKET != '' }}
+      - name: Check runtime asset changes
+        id: runtime-assets
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            BEFORE="$GITHUB_SHA^"
+          fi
+          if ! git rev-parse --verify "$BEFORE^{commit}" >/dev/null 2>&1 || ! git diff --quiet "$BEFORE" "$GITHUB_SHA" -- scripts/r2-ai-assets.manifest.json scripts/r2-cors.json; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure production R2 runtime asset CORS
+        if: ${{ github.ref == 'refs/heads/main' && vars.R2_AI_ASSET_BUCKET != '' && steps.runtime-assets.outputs.changed == 'true' }}
         run: npx --yes wrangler@4 r2 bucket cors set "$R2_AI_ASSET_BUCKET" --file scripts/r2-cors.json
         env:
           R2_AI_ASSET_BUCKET: ${{ vars.R2_AI_ASSET_BUCKET }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Sync production R2 AI assets
-        if: ${{ github.ref == 'refs/heads/main' && vars.R2_AI_ASSET_BUCKET != '' }}
+      - name: Sync production R2 runtime assets
+        if: ${{ github.ref == 'refs/heads/main' && vars.R2_AI_ASSET_BUCKET != '' && steps.runtime-assets.outputs.changed == 'true' }}
         run: npm run sync:r2-ai-assets
         env:
           R2_AI_ASSET_BUCKET: ${{ vars.R2_AI_ASSET_BUCKET }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-      - name: Verify production R2 AI assets
-        if: ${{ github.ref == 'refs/heads/main' && vars.AI_ASSET_BASE_URL != '' }}
-        run: npm run verify:r2-ai-assets
-        env:
-          AI_ASSET_BASE_URL: ${{ vars.AI_ASSET_BASE_URL }}
 
       - name: Build all apps
         run: npm run build:cloudflare
