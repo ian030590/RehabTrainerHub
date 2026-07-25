@@ -36,7 +36,6 @@ export function Navbar() {
         errorMessage: t('nav.scoresDownloadError'),
         onDownload: () => DownloadAllTrainingRecordsCsv(t),
       }}
-      toggleMenuLabel={t('nav.toggleMenu')}
     />
   );
 }

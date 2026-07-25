@@ -26,7 +26,6 @@ export function Navbar() {
         turnstileSiteKey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
       }}
       download={{ label: t('nav.downloadScores'), noScoresMessage: t('nav.noScores'), errorMessage: t('nav.scoresDownloadError'), onDownload: () => DownloadAllTrainingRecordsCsv(t) }}
-      toggleMenuLabel={t('nav.toggleMenu')}
     />
   );
 }

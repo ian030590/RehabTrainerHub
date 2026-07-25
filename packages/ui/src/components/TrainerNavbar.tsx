@@ -1,6 +1,6 @@
-import { useState, type ComponentProps } from 'react';
-import { NavLink } from 'react-router-dom';
-import { type AuthLocale } from '../auth/authClient';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { type AuthLocale, type AuthUser } from '../auth/authClient';
 import { AuthPanel } from './AuthPanel';
 
 export type TrainerNavbarLinkClassName = ComponentProps<typeof NavLink>['className'];
@@ -10,12 +10,6 @@ export interface TrainerNavbarItem {
   label: string;
   className?: TrainerNavbarLinkClassName;
   end?: boolean;
-}
-
-interface TrainerNavbarFooterLink {
-  href: string;
-  label: string;
-  external?: boolean;
 }
 
 export interface TrainerNavbarProps {
@@ -38,43 +32,68 @@ export interface TrainerNavbarProps {
     errorMessage: string;
     onDownload: () => Promise<boolean>;
   };
-  toggleMenuLabel?: string;
 }
 
-const defaultNavLinkClass: TrainerNavbarLinkClassName = ({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`;
-const logoStyle = { width: 'auto', objectFit: 'contain' } as const;
+const defaultNavLinkClass: TrainerNavbarLinkClassName = ({ isActive }) => `trainer-hub-nav-link ${isActive ? 'is-active' : ''}`;
+const logoStyle = { objectFit: 'contain' } as const;
+
+function AccountIcon() {
+  return (
+    <svg aria-hidden="true" className="trainer-account-icon" viewBox="0 0 24 24">
+      <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z" fill="currentColor" />
+    </svg>
+  );
+}
 
 export function TrainerNavbar({
   brandLabel,
   brandHref = '/',
   logoSrc,
   logoAlt,
-  logoHeight = 22,
+  logoHeight = 42,
   navItems,
   auth,
   download,
-  toggleMenuLabel = 'Toggle menu',
 }: TrainerNavbarProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isDownloadingScores, setIsDownloadingScores] = useState(false);
-  const footerLinks: TrainerNavbarFooterLink[] = [
-    { href: auth.apiBase, label: 'Hub' },
-    { href: `${auth.apiBase.replace(/\/+$/, '')}/privacy/`, label: auth.locale === 'en' ? 'Privacy' : '隱私權政策' },
-    { href: 'https://github.com/ian030590/RehabTrainerHub', label: 'GitHub', external: true },
-  ];
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const accountMenuLabel = auth.locale === 'en' ? 'Account menu' : '帳號選單';
 
-  const toggleMenu = () => setIsOpen((open) => !open);
-  const closeMenu = () => setIsOpen(false);
+  useEffect(() => {
+    setIsAccountOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isAccountOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setIsAccountOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsAccountOpen(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isAccountOpen]);
+
   const handleDownloadScores = async () => {
     if (isDownloadingScores) return;
 
     setIsDownloadingScores(true);
     try {
       const downloaded = await download.onDownload();
-      if (!downloaded) {
-        window.alert(download.noScoresMessage);
-      }
-      closeMenu();
+      if (!downloaded) window.alert(download.noScoresMessage);
+      setIsAccountOpen(false);
     } catch (error) {
       console.error('Unable to download training scores.', error);
       window.alert(download.errorMessage);
@@ -84,90 +103,63 @@ export function TrainerNavbar({
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-inner">
-        <NavLink to={brandHref} className="navbar-brand" onClick={closeMenu}>
-          <img src={logoSrc} alt={logoAlt} height={logoHeight} style={logoStyle} />
-          {brandLabel}
-        </NavLink>
+    <header className="trainer-hub-header">
+      <NavLink to={brandHref} className="trainer-hub-brand" onClick={() => setIsAccountOpen(false)}>
+        <img src={logoSrc} alt={logoAlt} height={logoHeight} style={logoStyle} />
+        <span>
+          <strong>{brandLabel}</strong>
+          <small>Rehab Trainer Hub</small>
+        </span>
+      </NavLink>
 
-        <button className="navbar-toggle" onClick={toggleMenu} aria-label={toggleMenuLabel}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            {isOpen ? (
-              <>
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </>
-            ) : (
-              <>
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </>
-            )}
-          </svg>
+      <nav className="trainer-hub-nav" aria-label={auth.locale === 'en' ? 'Primary navigation' : '主要導覽'}>
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            className={item.className ?? defaultNavLinkClass}
+            onClick={() => setIsAccountOpen(false)}
+          >
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="trainer-account-menu" ref={accountMenuRef}>
+        <button
+          aria-controls="trainer-account-panel"
+          aria-expanded={isAccountOpen}
+          aria-label={user ? `${user.displayName} ${accountMenuLabel}` : accountMenuLabel}
+          className={`trainer-account-menu-button ${user ? 'is-signed-in' : ''}`}
+          onClick={() => setIsAccountOpen((open) => !open)}
+          title={user ? user.displayName : accountMenuLabel}
+          type="button"
+        >
+          <AccountIcon />
         </button>
 
-        <div className={`navbar-menu ${isOpen ? 'is-open' : ''}`}>
-          <div className="navbar-links">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={item.className ?? defaultNavLinkClass}
-                onClick={closeMenu}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
-
-          <div className="navbar-tools">
-            <AuthPanel
-              apiBase={auth.apiBase}
-              appName={auth.appName}
-              className="trainer-auth-panel"
-              locale={auth.locale}
-              turnstileSiteKey={
-                auth.turnstileAuthRequired === true
-                  ? auth.turnstileSiteKey
-                  : undefined
-              }
-            />
-
-            <div className="navbar-records">
-              <button
-                type="button"
-                className="btn btn-primary btn-sm navbar-download-btn"
-                onClick={() => void handleDownloadScores()}
-                disabled={isDownloadingScores}
-                aria-busy={isDownloadingScores}
-              >
-                {download.label}
-              </button>
-            </div>
-          </div>
-
-          {footerLinks.length > 0 && (
-            <div className="navbar-footer-links">
-              {footerLinks.map((link) => (
-                <a
-                  className="navbar-footer-link"
-                  href={link.href}
-                  key={`${link.label}-${link.href}`}
-                  onClick={closeMenu}
-                  rel={link.external ? 'noopener noreferrer' : undefined}
-                  target={link.external ? '_blank' : undefined}
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          )}
+        <div className="trainer-account-popover" hidden={!isAccountOpen} id="trainer-account-panel">
+          {user && <p className="trainer-account-name">{user.displayName}</p>}
+          <AuthPanel
+            apiBase={auth.apiBase}
+            appName={auth.appName}
+            className="trainer-hub-auth-panel"
+            locale={auth.locale}
+            onAuthChange={setUser}
+            turnstileSiteKey={auth.turnstileAuthRequired === true ? auth.turnstileSiteKey : undefined}
+          />
+          <button
+            aria-busy={isDownloadingScores}
+            className="btn btn-primary btn-sm trainer-account-download-btn"
+            disabled={isDownloadingScores}
+            onClick={() => void handleDownloadScores()}
+            type="button"
+          >
+            {download.label}
+          </button>
         </div>
       </div>
-      {isOpen && <div className="navbar-overlay" onClick={closeMenu} />}
-    </nav>
+    </header>
   );
 }
