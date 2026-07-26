@@ -228,6 +228,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private cockpitSteeringWheel: HTMLDivElement | null = null;
   private cockpitSpeedNeedle: HTMLDivElement | null = null;
   private cockpitSpeedText: HTMLDivElement | null = null;
+  private orientationOverlay: HTMLDivElement | null = null;
+  private portraitBlocked = false;
+  private portraitBlockedAt = 0;
 
   private keyState = {
     left: false,
@@ -258,6 +261,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     redFlash: HTMLDivElement;
     blackout?: HTMLDivElement;
     cockpit?: HTMLDivElement;
+    panel?: HTMLDivElement;
     miniMapWrapper?: HTMLDivElement;
   } | null = null;
 
@@ -477,6 +481,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.initScene(root);
         this.initHud(root, trial.red_flash_enabled ?? true);
         this.initTouchControls(root);
+        this.initOrientationGuard(root);
         if (this.renderQuality.useReferenceVehicleModel) {
           await this.loadReferenceVehicleModel();
         }
@@ -492,6 +497,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         if (!renderPerformanceSettled || this.finished) return;
 
         this.trialStartTime = performance.now();
+        if (this.portraitBlocked) this.portraitBlockedAt = this.trialStartTime;
         this.lastFrameTime = this.trialStartTime;
         const initialInput = this.readInput();
         this.updateVehicleFree(initialInput, 0, this.trialStartTime);
@@ -637,6 +643,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.cockpitSteeringWheel = null;
     this.cockpitSpeedNeedle = null;
     this.cockpitSpeedText = null;
+    this.orientationOverlay = null;
+    this.portraitBlocked = false;
+    this.portraitBlockedAt = 0;
     this.gamepadConnected = Array.from(navigator.getGamepads?.() ?? []).some(Boolean);
     this.controlMode = this.getControlMode((trial as any)?.control_mode);
     this.language = this.getLanguage((trial as any)?.language);
@@ -721,7 +730,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       left: 'max(14px, env(safe-area-inset-left))',
       bottom: 'max(14px, env(safe-area-inset-bottom))',
       display: 'flex',
-      gap: '10px',
+      gap: '8px',
       pointerEvents: 'auto',
     });
 
@@ -731,7 +740,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       right: 'max(14px, env(safe-area-inset-right))',
       bottom: 'max(14px, env(safe-area-inset-bottom))',
       display: 'grid',
-      gap: '10px',
+      gap: '8px',
       pointerEvents: 'auto',
     });
 
@@ -752,10 +761,41 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.cycleCameraMode();
     });
 
-    const left = this.createDrivingPressButton('←', 'Steer left', ['left']);
-    const right = this.createDrivingPressButton('→', 'Steer right', ['right']);
-    const throttle = this.createDrivingPressButton('▲', 'Throttle', ['up']);
-    const brake = this.createDrivingPressButton('▼', 'Brake', ['down']);
+    const left = this.createDrivingPressButton('◀', 'Steer left', ['left']);
+    const right = this.createDrivingPressButton('▶', 'Steer right', ['right']);
+    const throttle = this.createDrivingPressButton(this.language === 'en' ? 'GO' : '前進', 'Throttle', ['up']);
+    const brake = this.createDrivingPressButton(this.language === 'en' ? 'BRAKE' : '煞車', 'Brake', ['down']);
+
+    for (const button of [left, right]) {
+      Object.assign(button.style, {
+        minWidth: '76px',
+        width: '76px',
+        height: '70px',
+        padding: '0',
+        borderRadius: '18px',
+        fontSize: '29px',
+      });
+    }
+    Object.assign(throttle.style, {
+      minWidth: '88px',
+      width: '88px',
+      height: '64px',
+      padding: '0 10px',
+      borderRadius: '18px',
+      background: 'rgba(22, 101, 52, 0.72)',
+      fontSize: '15px',
+      letterSpacing: '0.04em',
+    });
+    Object.assign(brake.style, {
+      minWidth: '88px',
+      width: '88px',
+      height: '64px',
+      padding: '0 8px',
+      borderRadius: '18px',
+      background: 'rgba(185, 28, 28, 0.76)',
+      fontSize: '13px',
+      letterSpacing: '0.03em',
+    });
 
     steering.append(left, right);
     pedals.append(throttle, brake);
@@ -788,7 +828,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     });
     button.addEventListener('pointerup', release);
     button.addEventListener('pointercancel', release);
-    button.addEventListener('pointerleave', release);
+    button.addEventListener('lostpointercapture', release);
     button.addEventListener('contextmenu', (event) => event.preventDefault());
     return button;
   }
@@ -889,6 +929,208 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.camera.updateProjectionMatrix();
     this.renderer.setPixelRatio(this.getRendererPixelRatio());
     this.renderer.setSize(nextWidth, nextHeight, false);
+    this.syncMobileHudLayout();
+  }
+
+  private isTouchLandscape() {
+    if (!ShouldShowDrivingTouchControls()) return false;
+    if (typeof window.matchMedia === 'function') {
+      return window.matchMedia('(orientation: landscape)').matches;
+    }
+    return window.innerWidth >= window.innerHeight;
+  }
+
+  private isTouchPortrait() {
+    if (!ShouldShowDrivingTouchControls()) return false;
+    if (typeof window.matchMedia === 'function') {
+      return window.matchMedia('(orientation: portrait)').matches;
+    }
+    return window.innerHeight > window.innerWidth;
+  }
+
+  private syncMobileHudLayout() {
+    const hud = this.hud;
+    const miniMapWrapper = hud?.miniMapWrapper;
+    if (!miniMapWrapper) return;
+
+    const directionLabel = this.miniMapDirectionLabel;
+    const titleBar = miniMapWrapper.querySelector<HTMLElement>('[data-minimap-title]');
+    const hudPanel = hud?.panel;
+    const isLandscapeTouch = this.isTouchLandscape();
+    if (isLandscapeTouch) {
+      Object.assign(miniMapWrapper.style, {
+        top: 'max(12px, env(safe-area-inset-top))',
+        left: 'max(12px, env(safe-area-inset-left))',
+        right: 'auto',
+        bottom: 'auto',
+        width: '148px',
+        height: '126px',
+        borderRadius: '12px',
+        transform: 'none',
+      });
+      if (directionLabel) {
+        Object.assign(directionLabel.style, {
+          minHeight: '36px',
+          padding: '6px 8px',
+          fontSize: '12px',
+          lineHeight: '1.15',
+        });
+      }
+      if (titleBar) titleBar.style.display = 'none';
+      if (hudPanel) {
+        Object.assign(hudPanel.style, {
+          top: 'max(12px, env(safe-area-inset-top))',
+          left: 'calc(max(12px, env(safe-area-inset-left)) + 160px)',
+          minWidth: '0',
+          width: 'min(232px, calc(100vw - 190px))',
+          maxWidth: 'calc(100vw - 190px)',
+          padding: '7px 9px',
+          gap: '4px',
+          fontSize: '11px',
+          lineHeight: '1.25',
+        });
+      }
+      return;
+    }
+
+    Object.assign(miniMapWrapper.style, {
+      top: 'auto',
+      left: 'auto',
+      right: '18px',
+      bottom: '28px',
+      width: '236px',
+      height: '278px',
+      borderRadius: '16px',
+      transform: 'none',
+    });
+    if (directionLabel) {
+      Object.assign(directionLabel.style, {
+        minHeight: '54px',
+        padding: '10px 14px',
+        fontSize: '15px',
+        lineHeight: '1.25',
+      });
+    }
+    if (titleBar) titleBar.style.display = 'flex';
+    if (hudPanel) {
+      Object.assign(hudPanel.style, {
+        top: '16px',
+        left: '16px',
+        minWidth: '220px',
+        width: 'auto',
+        maxWidth: 'min(420px, calc(100vw - 280px))',
+        padding: '10px 12px',
+        gap: '6px',
+        fontSize: '13px',
+        lineHeight: '1.3',
+      });
+    }
+  }
+
+  private initOrientationGuard(root: HTMLDivElement) {
+    this.orientationOverlay?.remove();
+    this.orientationOverlay = null;
+    if (!ShouldShowDrivingTouchControls()) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'driving-orientation-overlay';
+    overlay.setAttribute('role', 'alert');
+    overlay.setAttribute('aria-live', 'assertive');
+    overlay.setAttribute('aria-atomic', 'true');
+    Object.assign(overlay.style, {
+      position: 'absolute',
+      inset: '0',
+      zIndex: '40',
+      display: 'none',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '12px',
+      padding: '28px',
+      background: '#ffffff',
+      color: '#172033',
+      textAlign: 'center',
+      pointerEvents: 'auto',
+    });
+
+    const deviceIcon = document.createElement('div');
+    deviceIcon.setAttribute('aria-hidden', 'true');
+    deviceIcon.textContent = '↻';
+    Object.assign(deviceIcon.style, {
+      display: 'grid',
+      width: '68px',
+      height: '68px',
+      placeItems: 'center',
+      border: '3px solid #2563eb',
+      borderRadius: '18px',
+      color: '#2563eb',
+      fontSize: '42px',
+      fontWeight: '800',
+      transform: 'rotate(-90deg)',
+    });
+
+    const title = document.createElement('strong');
+    title.textContent = this.language === 'en' ? 'Rotate to landscape' : '請將裝置旋轉為橫向';
+    Object.assign(title.style, {
+      fontSize: 'clamp(20px, 5vw, 28px)',
+      lineHeight: '1.25',
+    });
+
+    const detail = document.createElement('p');
+    detail.textContent = this.language === 'en'
+      ? 'Hold your device with both hands. The drive will continue when it is horizontal.'
+      : '請以雙手橫向握持裝置；旋轉完成後將自動繼續駕駛。';
+    Object.assign(detail.style, {
+      maxWidth: '32rem',
+      margin: '0',
+      color: '#475569',
+      fontSize: '16px',
+      fontWeight: '600',
+      lineHeight: '1.55',
+    });
+
+    overlay.append(deviceIcon, title, detail);
+    root.appendChild(overlay);
+    this.orientationOverlay = overlay;
+    this.syncOrientationGuard(performance.now());
+  }
+
+  private syncOrientationGuard(time: number): boolean {
+    const shouldBlock = this.isTouchPortrait();
+    if (shouldBlock === this.portraitBlocked) return shouldBlock;
+
+    this.portraitBlocked = shouldBlock;
+    if (shouldBlock) {
+      this.portraitBlockedAt = time;
+      this.keyState = { left: false, right: false, up: false, down: false };
+      this.lastBrakePressed = false;
+      if (this.orientationOverlay) {
+        this.orientationOverlay.style.display = 'flex';
+        this.orientationOverlay.setAttribute('aria-hidden', 'false');
+      }
+      return true;
+    }
+
+    const pausedDuration = Math.max(0, time - this.portraitBlockedAt);
+    if (pausedDuration > 0) this.shiftTimedStateAfterOrientationPause(pausedDuration);
+    this.portraitBlockedAt = 0;
+    this.lastFrameTime = time;
+    this.lastBrakePressed = false;
+    if (this.orientationOverlay) {
+      this.orientationOverlay.style.display = 'none';
+      this.orientationOverlay.setAttribute('aria-hidden', 'true');
+    }
+    return false;
+  }
+
+  private shiftTimedStateAfterOrientationPause(pausedDuration: number) {
+    if (this.trialStartTime > 0) this.trialStartTime += pausedDuration;
+    if (this.lastCollisionEventTime > 0) this.lastCollisionEventTime += pausedDuration;
+    for (const hazard of this.activeHazards) {
+      if (hazard.active) hazard.startTime += pausedDuration;
+      if (hazard.brakeTime !== null) hazard.brakeTime += pausedDuration;
+      if (hazard.removeAt !== null) hazard.removeAt += pausedDuration;
+    }
   }
 
   private createSceneEnvironment() {
@@ -1083,8 +1325,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     hud.append(redFlash, cockpit, hudPanel, miniMapWrapper, blackout);
     root.appendChild(hud);
 
-    this.hud = { status, route, speed, distance, view, event, redFlash, blackout, cockpit, miniMapWrapper };
+    this.hud = { status, route, speed, distance, view, event, redFlash, blackout, cockpit, panel: hudPanel, miniMapWrapper };
     this.updateCameraModeHud();
+    this.syncMobileHudLayout();
   }
 
   /** Create the GPS-style mini-map navigation panel */
@@ -1127,6 +1370,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     // Compact title bar.
     const titleBar = document.createElement('div');
+    titleBar.setAttribute('data-minimap-title', '');
     Object.assign(titleBar.style, {
       padding: '7px 12px',
       background: '#fff',
@@ -2930,6 +3174,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (this.finished || !this.renderer || !this.scene || !this.camera) return;
     if (!displayElement.isConnected) {
       this.finishTrial(displayElement, 'aborted');
+      return;
+    }
+    if (this.syncOrientationGuard(time)) {
+      this.lastFrameTime = time;
+      this.raf = requestAnimationFrame((nextTime) => this.loop(nextTime, trial, displayElement));
       return;
     }
 
@@ -4861,6 +5110,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
     this.touchControlsRoot?.remove();
     this.touchControlsRoot = null;
+    this.orientationOverlay?.remove();
+    this.orientationOverlay = null;
+    this.portraitBlocked = false;
+    this.portraitBlockedAt = 0;
     this.camera = null;
     this.rearviewCamera = null;
     this.rearviewLookAt = null;
