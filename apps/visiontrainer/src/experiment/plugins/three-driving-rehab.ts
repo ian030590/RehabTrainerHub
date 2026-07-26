@@ -216,7 +216,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private rearviewMirrorUpdateIndex = 0;
   private sideRearviewMirrorsEnabled = true;
   private performanceDowngraded = false;
-  private lastPerformanceCheckTime = 0;
   private miniMapLastUpdateTime = 0;
   private miniMapLastDirectionText = '';
   private asphaltTexture: any = null;
@@ -276,6 +275,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly firstPersonCameraLookAhead = 35;
   private readonly firstPersonCameraLookHeight = 1.65;
   private readonly stableRendererPixelRatio = 1.5;
+  private readonly renderCalibrationWarmupFrames = 12;
+  private readonly renderCalibrationSampleFrames = 120;
+  private readonly renderCalibrationMaxMs = 6000;
   private readonly referenceVehicleModelYawOffset = Math.PI;
   private readonly sidewalkWidth = 3;
   private readonly buildingRoadGap = 1.2;
@@ -442,6 +444,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const root = document.createElement('div');
     root.className = 'driving-rehab-root';
     root.tabIndex = 0;
+    root.setAttribute('aria-busy', 'true');
     Object.assign(root.style, {
       position: 'relative',
       width: '100%',
@@ -451,10 +454,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       color: '#fff',
       fontFamily: typography.fontFamily,
       userSelect: 'none',
-      visibility: 'hidden',
     });
     displayElement.appendChild(root);
-    root.focus();
+    const loadingOverlay = this.createLoadingOverlay(root);
 
     const startDriving = async () => {
       if (this.finished || this.renderer) return;
@@ -471,6 +473,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           this.finishTrial(displayElement, 'aborted');
           return;
         }
+        this.updateVehicleVisual(0);
+        this.updateTrafficLights(0);
+        this.renderFirstFrameBeforeReveal(performance.now());
+        const renderPerformanceSettled = await this.settleRenderPerformanceBeforeStart(displayElement);
+        if (!renderPerformanceSettled || this.finished) return;
+
         this.trialStartTime = performance.now();
         this.lastFrameTime = this.trialStartTime;
         const initialInput = this.readInput();
@@ -479,8 +487,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.updateTrafficLights(this.trialStartTime);
         this.lastBrakePressed = initialInput.brake > 0.35;
         this.renderFirstFrameBeforeReveal(this.trialStartTime);
-        root.style.visibility = 'visible';
+        root.setAttribute('aria-busy', 'false');
+        loadingOverlay.remove();
         root.focus();
+        this.attachKeyboardListeners(displayElement);
+        this.attachGamepadListeners();
         this.raf = requestAnimationFrame((time) => this.loop(time, trial, displayElement));
       } catch (error) {
         console.error(error);
@@ -488,9 +499,62 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       }
     };
 
-    this.attachKeyboardListeners(displayElement);
-    this.attachGamepadListeners();
     void startDriving();
+  }
+
+  private createLoadingOverlay(root: HTMLDivElement): HTMLDivElement {
+    const overlay = document.createElement('div');
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    Object.assign(overlay.style, {
+      position: 'absolute',
+      inset: '0',
+      zIndex: '50',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '16px',
+      background: 'rgba(255, 255, 255, 0.88)',
+      color: '#172033',
+      cursor: 'wait',
+      pointerEvents: 'auto',
+      backdropFilter: 'blur(2px)',
+      WebkitBackdropFilter: 'blur(2px)',
+    });
+
+    const spinner = document.createElement('div');
+    spinner.setAttribute('aria-hidden', 'true');
+    Object.assign(spinner.style, {
+      width: '34px',
+      height: '34px',
+      border: '4px solid rgba(23, 32, 51, 0.2)',
+      borderTopColor: '#172033',
+      borderRadius: '50%',
+      boxSizing: 'border-box',
+    });
+    if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      spinner.animate(
+        [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
+        { duration: 850, iterations: Infinity },
+      );
+    }
+
+    const label = document.createElement('div');
+    label.textContent = this.language === 'en'
+      ? 'Optimizing display performance...'
+      : '\u6b63\u5728\u8abf\u6574\u986f\u793a\u6548\u80fd...';
+    Object.assign(label.style, {
+      padding: '0 24px',
+      fontSize: '16px',
+      fontWeight: '700',
+      lineHeight: '1.5',
+      textAlign: 'center',
+    });
+
+    overlay.append(spinner, label);
+    root.appendChild(overlay);
+    return overlay;
   }
 
   private resetTrialState(trial?: TrialType<Info>) {
@@ -550,7 +614,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.rearviewMirrorUpdateIndex = 0;
     this.sideRearviewMirrorsEnabled = true;
     this.performanceDowngraded = false;
-    this.lastPerformanceCheckTime = 0;
     this.miniMapLastUpdateTime = 0;
     this.miniMapLastDirectionText = '';
     this.asphaltTexture = null;
@@ -800,7 +863,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getRendererPixelRatio(): number {
-    return Math.min(window.devicePixelRatio || 1, this.renderQuality.pixelRatioCap);
+    const pixelRatioCap = this.performanceDowngraded ? 1 : this.renderQuality.pixelRatioCap;
+    return Math.min(window.devicePixelRatio || 1, pixelRatioCap);
   }
 
   private syncRendererSize(root: HTMLElement) {
@@ -2825,7 +2889,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.lastFrameTime = time;
     this.fpsSamples.push(1 / dt);
     if (this.fpsSamples.length > 240) this.fpsSamples.shift();
-    this.monitorRuntimePerformance(time);
 
     const input = this.readInput();
     const brakePressed = input.brake > 0.35;
@@ -2885,34 +2948,72 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.renderer.render(this.scene, this.camera);
   }
 
+  private settleRenderPerformanceBeforeStart(displayElement: HTMLElement): Promise<boolean> {
+    if (!this.renderer || this.getRendererPixelRatio() <= 1) return Promise.resolve(true);
+
+    return new Promise((resolve) => {
+      const samples: number[] = [];
+      let previousFrameTime = 0;
+      let warmupFrameCount = 0;
+      let calibrationStartTime = 0;
+
+      const sampleFrame = (time: number) => {
+        if (this.finished || !displayElement.isConnected || !this.renderer || !this.scene || !this.camera) {
+          if (!this.finished) this.finishTrial(displayElement, 'aborted');
+          resolve(false);
+          return;
+        }
+        if (calibrationStartTime === 0) calibrationStartTime = time;
+
+        if (previousFrameTime > 0) {
+          if (warmupFrameCount < this.renderCalibrationWarmupFrames) {
+            warmupFrameCount += 1;
+          } else {
+            const frameDurationSec = this.clamp((time - previousFrameTime) / 1000, 0.001, 0.05);
+            samples.push(1 / frameDurationSec);
+          }
+        }
+        previousFrameTime = time;
+
+        this.updateRearviewMirrors(time);
+        this.renderer.render(this.scene, this.camera);
+
+        const calibrationTimedOut = time - calibrationStartTime >= this.renderCalibrationMaxMs;
+        if (samples.length < this.renderCalibrationSampleFrames && !calibrationTimedOut) {
+          this.raf = requestAnimationFrame(sampleFrame);
+          return;
+        }
+
+        const averageFps = samples.length > 0
+          ? samples.reduce((sum, fps) => sum + fps, 0) / samples.length
+          : 0;
+        const threshold = this.renderQuality.level === 'high' ? 48 : 42;
+        if (averageFps < threshold) this.applyPerformanceFallback();
+        console.info('[DrivingRehab] render calibration', {
+          averageFps: Math.round(averageFps),
+          pixelRatio: this.getRendererPixelRatio(),
+          downgraded: this.performanceDowngraded,
+        });
+        resolve(true);
+      };
+
+      this.raf = requestAnimationFrame(sampleFrame);
+    });
+  }
+
+  private applyPerformanceFallback() {
+    if (this.performanceDowngraded) return;
+    this.performanceDowngraded = true;
+    this.disableSideRearviewMirrors();
+
+    const root = this.renderer?.domElement?.parentElement;
+    if (root instanceof HTMLElement) this.syncRendererSize(root);
+  }
+
   private isTrialTimedOut(time: number, trial: TrialType<Info>): boolean {
     const durationSec = Number((trial as any).driving_duration_sec ?? 80);
     const durationMs = Math.max(5_000, durationSec * 1000);
     return this.trialStartTime > 0 && time - this.trialStartTime >= durationMs;
-  }
-
-  private monitorRuntimePerformance(time: number) {
-    if (this.performanceDowngraded || this.fpsSamples.length < 120) return;
-    if (time - this.lastPerformanceCheckTime < 1500) return;
-    this.lastPerformanceCheckTime = time;
-    const recent = this.fpsSamples.slice(-120);
-    const averageFps = recent.reduce((sum, fps) => sum + fps, 0) / recent.length;
-    const threshold = this.renderQuality.level === 'high' ? 48 : 42;
-    if (averageFps >= threshold) return;
-
-    this.performanceDowngraded = true;
-    this.disableSideRearviewMirrors();
-    if (this.renderer) {
-      const canvas = this.renderer.domElement;
-      const width = Math.max(1, canvas.clientWidth);
-      const height = Math.max(1, canvas.clientHeight);
-      this.renderer.setPixelRatio(1);
-      if (this.camera) {
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
-      }
-      this.renderer.setSize(width, height, false);
-    }
   }
 
   private disableSideRearviewMirrors() {
@@ -4665,7 +4766,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.miniMapLastDirectionText = '';
     this.miniMapRouteSamples = [];
     this.performanceDowngraded = false;
-    this.lastPerformanceCheckTime = 0;
     this.sideRearviewMirrorsEnabled = true;
     this.needsFirstFrameCameraSnap = false;
     if (this.scene) {
