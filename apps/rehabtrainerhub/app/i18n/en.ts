@@ -228,7 +228,7 @@ export const en = {
           title: 'Where data is stored',
           items: [
             'After sign-in and questionnaire completion, anonymous basic information, medical history questionnaire answers, and training records are stored in Rehab Trainer Hub Cloudflare D1 database.',
-            'Trainer functions are not available without sign-in or required questionnaire completion.',
+            'Without sign-in, trainer functions remain available, and training records are saved in this browser first instead of syncing to a Hub account.',
             'The login flows for MotorTrainer, VisionTrainer, BrainTrainer, and MouthTrainer connect to the Rehab Trainer Hub login API and use the same login state.',
           ],
         },
@@ -243,7 +243,7 @@ export const en = {
         {
           title: 'Your choices',
           items: [
-            'You can choose not to provide required data; without sign-in or required questionnaire completion, trainer functions cannot start.',
+            'You can choose not to sign in or provide questionnaire data; trainers remain available, but records will not sync across devices.',
             'You can sign out on any homepage or trainer page; sign-out removes the local login state and local training data.',
             'If your browser still has older local records, you can clear IndexedDB local data in browser settings.',
           ],

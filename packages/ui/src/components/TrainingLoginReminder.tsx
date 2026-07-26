@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   authChangedEvent,
   ConfigureRemoteTrainingRecordVerification,
@@ -23,19 +23,39 @@ interface TrainingLoginReminderProps {
 
 const text = {
   zhTW: {
-    title: '請先登入並完成問卷',
-    intro: '開始訓練前必須登入，並完成基本資料與醫療史問卷。資料只用於登入辨識、訓練紀錄同步與服務改善；本平台不提供診斷或個別醫療建議。',
-    profilePending: '登入後若尚未完成問卷，系統會立即開啟問卷；完成前無法開始訓練。',
+    title: '建議登入以保存訓練紀錄',
+    intro: '你可以不用登入繼續訓練。登入後，訓練紀錄可跨裝置保存與查看。',
+    profilePending: '完成基本資料與醫療史問卷後，紀錄可用於分組分析與服務改善；本平台不提供診斷或個別醫療建議。',
+    dismiss: '稍後再說',
   },
   en: {
-    title: 'Sign in and complete the questionnaires',
-    intro: 'Training requires sign-in and completion of the basic profile and medical history questionnaires. Data is used only for account identification, training record sync, and service improvement; this platform does not provide diagnosis or individual medical advice.',
-    profilePending: 'If your questionnaires are incomplete after sign-in, they will open immediately. Training stays blocked until they are complete.',
+    title: 'Sign in to save training records',
+    intro: 'You can keep training without signing in. After sign-in, training records can be saved and viewed across devices.',
+    profilePending: 'Completing the basic profile and medical history questionnaires helps grouped analysis and service improvement; this platform does not provide diagnosis or individual medical advice.',
+    dismiss: 'Later',
   },
 } as const;
 
 function ToTextKey(locale: AuthLocale | undefined): keyof typeof text {
   return locale === 'en' ? 'en' : 'zhTW';
+}
+
+function StoreLeftPage(key: string): void {
+  try {
+    window.localStorage.setItem(key, '1');
+  } catch {
+    // Local storage can be unavailable in strict private modes.
+  }
+}
+
+function ConsumeLeftPage(key: string): boolean {
+  try {
+    const hadLeftPage = window.localStorage.getItem(key) === '1';
+    if (hadLeftPage) window.localStorage.removeItem(key);
+    return hadLeftPage;
+  } catch {
+    return false;
+  }
 }
 
 export function TrainingLoginReminder({
@@ -49,7 +69,10 @@ export function TrainingLoginReminder({
   turnstileSiteKey,
 }: TrainingLoginReminderProps) {
   const labels = text[ToTextKey(locale)];
-  const [isCleared, setIsCleared] = useState(false);
+  const reminderStorageKey = `rehabtrainerhub.training-login-reminder.${appName}`;
+  const hasLeftPageRef = useRef(false);
+  const [isReminderOpen, setIsReminderOpen] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
   useEffect(() => {
     ConfigureRemoteTrainingRecordVerification({
@@ -60,10 +83,11 @@ export function TrainingLoginReminder({
     return () => ConfigureRemoteTrainingRecordVerification({ enabled: false });
   }, [locale, turnstileRecordsRequired, turnstileSiteKey]);
 
-  const checkSession = useCallback(async () => {
+  const checkSession = useCallback(async (): Promise<AuthUser | null> => {
     if (!active) {
-      setIsCleared(false);
-      return;
+      setIsReminderOpen(false);
+      setIsSignedIn(false);
+      return null;
     }
 
     let user: AuthUser | null = null;
@@ -85,7 +109,9 @@ export function TrainingLoginReminder({
       }
     }
 
-    setIsCleared(Boolean(user?.profileCompleted));
+    setIsSignedIn(Boolean(user));
+    if (user) setIsReminderOpen(false);
+    return user;
   }, [active, apiBase]);
 
   useEffect(() => {
@@ -98,11 +124,45 @@ export function TrainingLoginReminder({
     };
   }, [checkSession]);
 
+  useEffect(() => {
+    if (!active) {
+      hasLeftPageRef.current = false;
+      return;
+    }
+
+    const markLeftPage = () => {
+      hasLeftPageRef.current = true;
+      StoreLeftPage(reminderStorageKey);
+    };
+    const remindIfGuest = () => {
+      if (!hasLeftPageRef.current && !ConsumeLeftPage(reminderStorageKey)) return;
+      hasLeftPageRef.current = false;
+      void checkSession().then((user) => {
+        if (!user) setIsReminderOpen(true);
+      });
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') markLeftPage();
+      if (document.visibilityState === 'visible') remindIfGuest();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', markLeftPage);
+    window.addEventListener('pageshow', remindIfGuest);
+    remindIfGuest();
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', markLeftPage);
+      window.removeEventListener('pageshow', remindIfGuest);
+    };
+  }, [active, checkSession, reminderStorageKey]);
+
   const handleAuthChange = (user: AuthUser | null) => {
-    setIsCleared(Boolean(user?.profileCompleted));
+    setIsSignedIn(Boolean(user));
+    if (user) setIsReminderOpen(false);
   };
 
-  if (!active || isCleared) return null;
+  if (!active || isSignedIn || !isReminderOpen) return null;
 
   return (
     <div className="auth-dialog-backdrop">
@@ -118,6 +178,11 @@ export function TrainingLoginReminder({
           onAuthChange={handleAuthChange}
           turnstileSiteKey={turnstileAuthRequired ? turnstileSiteKey : undefined}
         />
+        <div className="auth-dialog-actions">
+          <button className="auth-button auth-button-secondary" type="button" onClick={() => setIsReminderOpen(false)}>
+            {labels.dismiss}
+          </button>
+        </div>
       </div>
     </div>
   );

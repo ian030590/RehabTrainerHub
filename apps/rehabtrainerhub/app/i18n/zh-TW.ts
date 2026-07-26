@@ -228,7 +228,7 @@ export const zhTW = {
           title: '資料儲存位置',
           items: [
             '登入並完成問卷後，匿名基本資料、醫療史問卷與訓練紀錄會儲存在 Rehab Trainer Hub 的 Cloudflare D1 database。',
-            '未登入或未完成必要問卷時，trainer 訓練功能不會開放使用。',
+            '未登入時仍可使用 trainer 訓練功能，訓練紀錄會先保存在此瀏覽器，且不會同步到 Hub 帳號。',
             'MotorTrainer、VisionTrainer、BrainTrainer 與 MouthTrainer 的登入流程會連到 Rehab Trainer Hub 的登入 API，並使用同一份登入狀態。',
           ],
         },
@@ -243,7 +243,7 @@ export const zhTW = {
         {
           title: '你的選擇',
           items: [
-            '你可以選擇不提供必要資料；但未登入或未完成必要問卷時，無法開始 trainer 訓練功能。',
+            '你可以選擇不登入或不提供問卷資料；trainer 仍可使用，但紀錄不會跨裝置同步。',
             '你可以在任一主頁或 trainer 頁面登出；登出會移除本機登入狀態與本機訓練資料。',
             '若瀏覽器仍留有過去的本機紀錄，你可以使用瀏覽器設定清除 IndexedDB 本機資料。',
           ],

@@ -43,23 +43,23 @@ const chronicOptions = [
 
 const text = {
   zhTW: {
-    statusGuest: '需登入並完成問卷後才能開始訓練。',
+    statusGuest: '不用登入也可以訓練；登入後可同步訓練紀錄。',
     statusSignedIn: '已登入',
     loading: '檢查登入狀態中',
     authEntry: '註冊/登入',
     loginGoogle: '使用 Google 登入',
     logout: '登出',
     completeProfile: '完成問卷',
-    profileNeeded: '登入後請先完成基本資料與醫療史問卷，完成前無法開始訓練。',
+    profileNeeded: '可完成基本資料與醫療史問卷，讓登入後的訓練紀錄用於分組分析與服務改善。',
     privacyTitle: '隱私權政策與資料蒐集說明',
     privacyIntro:
-      '註冊/登入並完成問卷後才能使用訓練工具。送出前請確認你了解以下資料蒐集方式。',
+      '註冊/登入後可以跨裝置保存與查看訓練紀錄。送出前請確認你了解以下資料蒐集方式。',
     privacyItems: [
       '登入帳號資料只用於建立登入狀態與辨識同一位使用者。',
       '會請你填寫基本資料問卷：年齡、性別與國籍。',
       '會請你填寫醫療史問卷：醫師診斷的慢性病類別、抽菸與喝酒習慣。',
       '訓練紀錄會包含使用的工具、訓練項目、難度、時間與分數。',
-      '沒有登入或未完成必要問卷時，無法開始訓練。',
+      '未登入時仍可開始訓練，訓練紀錄會先保存在此瀏覽器。',
     ],
     privacySensitive:
       '慢性病欄位請只填寫已由醫師診斷的狀況；若沒有醫師診斷，請勿自行猜測填寫。',
@@ -87,7 +87,7 @@ const text = {
     verificationRequired: '請先完成人機驗證。',
     privacyRequired: '請先閱讀並同意隱私權政策與資料蒐集說明。',
     profileTitle: '基本資料與醫療史問卷',
-    profileIntro: '這些資料會和登入後的訓練紀錄一起保存，用於分組分析與改善服務。完成前無法開始訓練。',
+    profileIntro: '這些資料會和登入後的訓練紀錄一起保存，用於分組分析與改善服務。你可以稍後再補填。',
     basicQuestionnaire: '基本資料問卷',
     medicalQuestionnaire: '醫療史問卷',
     medicalIntro: '請只填寫已知且正確的資料；慢性病只勾選醫師已診斷的狀況。本平台不會依填寫內容提供診斷或個別醫療建議。',
@@ -126,23 +126,23 @@ const text = {
     profileFailed: '資料儲存失敗，請稍後再試。',
   },
   en: {
-    statusGuest: 'Sign in and complete the questionnaires before training.',
+    statusGuest: 'You can train without signing in; sign in to sync training records.',
     statusSignedIn: 'Signed in',
     loading: 'Checking sign-in status',
     authEntry: 'Sign up / sign in',
     loginGoogle: 'Sign in with Google',
     logout: 'Sign out',
     completeProfile: 'Complete questionnaires',
-    profileNeeded: 'After sign-in, complete the basic profile and medical history questionnaires before training.',
+    profileNeeded: 'You can complete the basic profile and medical history questionnaires so signed-in training records support grouped analysis and service improvement.',
     privacyTitle: 'Privacy Policy and Data Collection Notice',
     privacyIntro:
-      'Training requires sign-up/sign-in and questionnaire completion. Confirm you understand this data collection before submitting.',
+      'Sign-up/sign-in lets you save and view training records across devices. Confirm you understand this data collection before submitting.',
     privacyItems: [
       'Account data is used only to establish sign-in and identify the same user.',
       'You will complete a basic profile questionnaire: age, gender, and nationality.',
       'You will complete a medical history questionnaire: physician-diagnosed chronic condition categories, smoking habits, and alcohol habits.',
       'Training records include the tool, training item, difficulty, time, and score.',
-      'Without sign-in or required questionnaire completion, training cannot start.',
+      'Without sign-in, training can still start and records are saved in this browser first.',
     ],
     privacySensitive:
       'For chronic condition fields, only select conditions diagnosed by a physician. Do not guess or self-diagnose.',
@@ -170,7 +170,7 @@ const text = {
     verificationRequired: 'Complete the human verification first.',
     privacyRequired: 'Read and agree to the privacy policy and data collection notice first.',
     profileTitle: 'Basic Profile and Medical History Questionnaires',
-    profileIntro: 'These fields are saved with signed-in training records for grouped analysis and service improvement. Training is blocked until they are complete.',
+    profileIntro: 'These fields are saved with signed-in training records for grouped analysis and service improvement. You can fill them in later.',
     basicQuestionnaire: 'Basic Profile Questionnaire',
     medicalQuestionnaire: 'Medical History Questionnaire',
     medicalIntro: 'Provide only known and accurate information. Select chronic conditions only when diagnosed by a physician. This platform will not provide diagnosis or individual medical advice based on these answers.',
@@ -757,11 +757,9 @@ export function AuthPanel({
             />
 
             <div className="auth-dialog-actions">
-              {user?.profileCompleted && (
-                <button className="auth-button auth-button-secondary" type="button" onClick={() => setIsProfileOpen(false)}>
-                  {labels.cancel}
-                </button>
-              )}
+              <button className="auth-button auth-button-secondary" type="button" onClick={() => setIsProfileOpen(false)}>
+                {labels.cancel}
+              </button>
               <button className="auth-button auth-button-primary" disabled={isSavingProfile} type="button" onClick={submitProfile}>
                 {isSavingProfile ? labels.saving : labels.saveProfile}
               </button>
