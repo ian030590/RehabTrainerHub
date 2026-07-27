@@ -34,7 +34,12 @@ export function OralTraining() {
       subtitle={t('mouth.oral.subtitle')}
       modules={oralCatalogModules.map((module) => {
         const copy = GetTrainingModuleCopy(module, lang);
-        return { id: 'tongue-catch' as const, title: copy.title, description: copy.description };
+        return {
+          id: 'tongue-catch' as const,
+          title: copy.title,
+          description: copy.description,
+          imageSrc: module.imagePath,
+        };
       })}
       selectedModuleId={activeModule}
       actionLabel={t('btn.selectModule')}

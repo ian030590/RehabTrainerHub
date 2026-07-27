@@ -9,6 +9,7 @@ export interface SelectionCardProps {
   disabled?: boolean;
   actionLabel?: ReactNode;
   meta?: ReactNode;
+  imageSrc?: string;
   className?: string;
   onSelect: () => void;
 }
@@ -21,6 +22,7 @@ export function SelectionCard({
   disabled = false,
   actionLabel,
   meta,
+  imageSrc,
   className = '',
   onSelect,
 }: SelectionCardProps) {
@@ -33,7 +35,7 @@ export function SelectionCard({
       onClick={onSelect}
     >
       <span className="selection-card-visual" aria-hidden="true">
-        <CardImagePlaceholder />
+        <CardImagePlaceholder src={imageSrc} />
       </span>
       <span className="selection-card-content">
         <span className="card-icon" aria-hidden="true">{index}</span>

@@ -138,6 +138,7 @@ export {
 } from './trainerTheme';
 export type { TrainerThemeOverrides } from './trainerTheme';
 export {
+  BuildTrainingModuleImageSrc,
   BuildTrainingModuleHref,
   GetTrainingCatalogModules,
   GetTrainingModuleCopy,

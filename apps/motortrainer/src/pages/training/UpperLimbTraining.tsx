@@ -41,6 +41,7 @@ export function UpperLimbTraining() {
         id: module.runtimeId as UpperLimbModuleId,
         title: copy.title,
         description: copy.description,
+        imageSrc: module.imagePath,
       };
     });
 

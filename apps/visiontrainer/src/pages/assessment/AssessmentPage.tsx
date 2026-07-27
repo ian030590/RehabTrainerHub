@@ -143,6 +143,7 @@ export function AssessmentPage() {
             key={assessment.id}
             title={t(assessment.titleKey)}
             description={t(assessment.descriptionKey)}
+            imageSrc={assessment.imagePath}
             index={index + 1}
             isSelected={assessment.id === 'ufov' ? isUfovConfigOpen : expandedTest === assessment.id}
             actionLabel={(assessment.id === 'ufov' ? isUfovConfigOpen : expandedTest === assessment.id) ? t('btn.collapseSettings') : t('btn.selectTest')}

@@ -25,6 +25,7 @@ export type ModuleId = 'attention' | 'memory';
 interface ModuleCardDefinition {
   titleKey: TranslationKey;
   bodyKey: TranslationKey;
+  imagePath: string;
   to?: string;
   gameId?: ReferenceGameId;
 }
@@ -44,6 +45,7 @@ function GetCatalogRouteCards(purpose: 'attention' | 'memory'): ModuleCardDefini
   }).map((module) => ({
     titleKey: module.titleKey as TranslationKey,
     bodyKey: module.descriptionKey as TranslationKey,
+    imagePath: module.imagePath,
     to: module.entryPath,
   }));
 }
@@ -77,6 +79,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
     ...GetReferenceCognitiveModules(moduleId).map((game) => ({
       titleKey: game.titleKey,
       bodyKey: game.descriptionKey,
+      imagePath: `/assets/training-modules/${game.id}.webp`,
       gameId: game.id,
     })),
   ];
@@ -166,6 +169,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
               key={card.gameId ?? card.titleKey}
               title={t(card.titleKey)}
               description={t(card.bodyKey)}
+              imageSrc={card.imagePath}
               index={index + 1}
               actionLabel={isPlayable ? t('btn.selectModule') : t('module.placeholderAction')}
               className={isPlayable ? '' : 'placeholder-card'}

@@ -430,6 +430,7 @@ export function HomePage() {
             key={module.id}
             title={GetTrainingModuleCopy(module.catalogModule, lang).title}
             description={GetTrainingModuleCopy(module.catalogModule, lang).description}
+            imageSrc={module.catalogModule.imagePath}
             index={index + 1}
             isSelected={expandedModule === module.id}
             actionLabel={expandedModule === module.id ? t('btn.collapseSettings') : t('btn.selectModule')}

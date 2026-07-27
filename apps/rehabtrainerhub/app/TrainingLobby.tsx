@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import {
   BuildHubTrainingHref,
+  BuildTrainingModuleImageSrc,
   GetTrainingModuleCopy,
   GetTrainingPurpose,
   trainingCatalog,
@@ -139,9 +140,8 @@ export function TrainingLobby() {
 
                 return (
                   <article className={`module-card trainer-${module.trainer}`} key={module.catalogId}>
-                    <div className="module-card-visual" aria-label={copy.visualLabel} role="img">
-                      <CardImagePlaceholder />
-                      <span className="module-card-visual-label">{copy.visualComingSoon}</span>
+                    <div className="module-card-visual" aria-label={moduleCopy.title} role="img">
+                      <CardImagePlaceholder src={BuildTrainingModuleImageSrc(module)} />
                     </div>
                     <div className="module-card-content">
                       <div className="module-card-meta">

@@ -32,6 +32,7 @@ export interface TrainingCatalogModule {
   purpose: TrainingPurposeId;
   kind: TrainingModuleKind;
   entryPath: string;
+  imagePath: string;
   copy: {
     'zh-TW': LocalizedTrainingCopy;
     en: LocalizedTrainingCopy;
@@ -424,6 +425,7 @@ export const trainingCatalog: readonly TrainingCatalogModule[] = seeds.map((seed
   purpose: seed.purpose,
   kind: seed.kind,
   entryPath: seed.path,
+  imagePath: `/assets/training-modules/${seed.id}.webp`,
   copy: {
     'zh-TW': { title: seed.zh[0], description: seed.zh[1] },
     en: { title: seed.en[0], description: seed.en[1] },
@@ -458,6 +460,13 @@ export function BuildTrainingModuleHref(
   urls: SiteUrls = defaultSiteUrls,
 ): string {
   return `${urls[module.trainer]}/#${module.entryPath}`;
+}
+
+export function BuildTrainingModuleImageSrc(
+  module: TrainingCatalogModule,
+  urls: SiteUrls = defaultSiteUrls,
+): string {
+  return `${urls[module.trainer].replace(/\/+$/, '')}${module.imagePath}`;
 }
 
 export function BuildHubTrainingHref(module: TrainingCatalogModule): string {

@@ -7,6 +7,7 @@ export interface TrainingModuleSelectionItem<TModuleId extends string> {
   description: ReactNode;
   meta?: ReactNode;
   actionLabel?: ReactNode;
+  imageSrc?: string;
 }
 
 export interface TrainingModuleSelectionPageProps<TModuleId extends string> {
@@ -47,6 +48,7 @@ export function TrainingModuleSelectionPage<TModuleId extends string>({
             description={module.description}
             index={index + 1}
             meta={module.meta}
+            imageSrc={module.imageSrc}
             isSelected={selectedModuleId === module.id}
             actionLabel={typeof actionLabel === 'function' ? actionLabel(module) : actionLabel ?? module.actionLabel}
             className={cardClassName}

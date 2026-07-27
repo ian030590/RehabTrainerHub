@@ -39,11 +39,13 @@ export function ThinkingTraining() {
       id: module.runtimeId as ThinkingModuleId,
       title: t(module.titleKey as Parameters<typeof t>[0]),
       description: t(module.descriptionKey as Parameters<typeof t>[0]),
+      imageSrc: module.imagePath,
     })),
     ...thinkingCognitiveModules.map<TrainingModuleSelectionItem<ThinkingModuleId>>((module) => ({
       id: module.id,
       title: t(module.titleKey),
       description: t(module.descriptionKey),
+      imageSrc: `/assets/training-modules/${module.id}.webp`,
     })),
   ];
 
