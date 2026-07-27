@@ -37,7 +37,6 @@ import type {
 
 type DrivingCameraMode = 'third-person' | 'first-person';
 type DrivingRenderQualityLevel = 'low' | 'medium' | 'high';
-type RearviewQualityLevel = 'low' | 'medium' | 'high';
 type DrivingTouchKey = 'left' | 'right' | 'up' | 'down';
 
 interface DrivingRenderQuality {
@@ -113,6 +112,10 @@ const info = {
       type: ParameterType.STRING,
       default: 'arrow',
     },
+    render_quality: {
+      type: ParameterType.STRING,
+      default: 'high',
+    },
     driving_duration_sec: {
       type: ParameterType.INT,
       default: 80,
@@ -166,7 +169,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private eventResults: DrivingEventResult[] = [];
   private lastBrakePressed = false;
   private ambientTrafficActors: AmbientTrafficActor[] = [];
-  private renderQuality: DrivingRenderQuality = this.createRenderQuality('medium');
+  private renderQuality: DrivingRenderQuality = this.createRenderQuality('high');
   private selectedRouteVariant: DrivingRouteVariant | null = null;
 
   // Free-steering vehicle state. vehicleX/Z is always the rendered and physical
@@ -214,11 +217,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private rearviewCamera: any = null;
   private rearviewLookAt: any = null;
   private rearviewLastUpdateTime = 0;
-  private rearviewMirrorUpdateIndex = 0;
   private sideRearviewMirrorsEnabled = true;
-  private performanceDowngraded = false;
-  private rearviewQualityLevel: RearviewQualityLevel = 'medium';
-  private rearviewFpsDowngraded = false;
+  private rearviewQualityLevel: DrivingRenderQualityLevel = 'high';
   private miniMapLastUpdateTime = 0;
   private miniMapLastDirectionText = '';
   private asphaltTexture: any = null;
@@ -282,12 +282,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly firstPersonCameraLookAhead = 35;
   private readonly firstPersonCameraLookHeight = 1.65;
   private readonly stableRendererPixelRatio = 1.5;
-  private readonly renderCalibrationWarmupFrames = 8;
-  private readonly renderCalibrationSampleFrames = 60;
-  private readonly renderCalibrationMaxMs = 3000;
-  private readonly fallbackCalibrationWarmupFrames = 6;
-  private readonly fallbackCalibrationSampleFrames = 45;
-  private readonly fallbackCalibrationMaxMs = 2500;
   private readonly referenceVehicleModelYawOffset = Math.PI;
   private readonly sidewalkWidth = 3;
   private readonly buildingRoadGap = 1.2;
@@ -386,69 +380,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     };
   }
 
-  private detectRenderQuality(root: HTMLElement): DrivingRenderQuality {
-    const nav = navigator as Navigator & { deviceMemory?: number };
-    const cores = nav.hardwareConcurrency ?? 4;
-    const memory = nav.deviceMemory ?? 4;
-    const dpr = window.devicePixelRatio || 1;
-    const pixelCount = Math.max(1, root.clientWidth * root.clientHeight * dpr * dpr);
-
-    let maxTextureSize = 2048;
-    let maxRenderbufferSize = 2048;
-    let hasWebGl2 = false;
-    const probeCanvas = document.createElement('canvas');
-    const gl = (
-      probeCanvas.getContext('webgl2', { failIfMajorPerformanceCaveat: true }) ||
-      probeCanvas.getContext('webgl', { failIfMajorPerformanceCaveat: true }) ||
-      probeCanvas.getContext('experimental-webgl', { failIfMajorPerformanceCaveat: true })
-    ) as WebGLRenderingContext | WebGL2RenderingContext | null;
-
-    if (gl) {
-      hasWebGl2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
-      maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) ?? maxTextureSize;
-      maxRenderbufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) ?? maxRenderbufferSize;
-    }
-
-    const cpuStart = performance.now();
-    let cpuSink = 0;
-    for (let i = 0; i < 48_000; i += 1) {
-      cpuSink += Math.sqrt((i % 97) + 1);
-    }
-    const cpuMs = performance.now() - cpuStart;
-    if (cpuSink < 0) console.info(cpuSink);
-
-    let score = 0;
-    score += Math.min(2.4, cores * 0.35);
-    score += Math.min(2.2, memory * 0.42);
-    score += hasWebGl2 ? 1.6 : 0.5;
-    score += maxTextureSize >= 8192 ? 1.2 : maxTextureSize >= 4096 ? 0.8 : 0.2;
-    score += maxRenderbufferSize >= 8192 ? 0.6 : 0.2;
-    score += cpuMs < 4 ? 1.0 : cpuMs < 8 ? 0.45 : -0.35;
-    if (pixelCount > 4_000_000) score -= 1.1;
-    if (dpr > 2) score -= 0.7;
-
-    const level: DrivingRenderQualityLevel = score >= 7.2
-      ? 'high'
-      : score >= 4.7
-        ? 'medium'
-        : 'low';
-    const quality = this.createRenderQuality(level);
-    console.info('[DrivingRehab] render quality', {
-      level: quality.level,
-      score: Math.round(score * 10) / 10,
-      cores,
-      memory,
-      dpr,
-      maxTextureSize,
-      maxRenderbufferSize,
-      cpuMs: Math.round(cpuMs * 10) / 10,
-    });
-    return quality;
+  private getRenderQualityLevel(value: unknown): DrivingRenderQualityLevel {
+    return value === 'low' || value === 'medium' || value === 'high' ? value : 'high';
   }
 
-  private configureInitialRearviewPerformance() {
+  private configureInitialRearviewQuality() {
     this.rearviewQualityLevel = this.renderQuality.level;
-    this.rearviewFpsDowngraded = false;
   }
 
   trial(displayElement: HTMLElement, trial: TrialType<Info>) {
@@ -476,8 +413,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const startDriving = async () => {
       if (this.finished || this.renderer) return;
       try {
-        this.renderQuality = this.detectRenderQuality(root);
-        this.configureInitialRearviewPerformance();
+        console.info('[DrivingRehab] selected render quality', { level: this.renderQuality.level });
         this.initScene(root);
         this.initHud(root, trial.red_flash_enabled ?? true);
         this.initTouchControls(root);
@@ -493,8 +429,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.updateVehicleVisual(0);
         this.updateTrafficLights(0);
         this.renderFirstFrameBeforeReveal(performance.now());
-        const renderPerformanceSettled = await this.settleRenderPerformanceBeforeStart(displayElement);
-        if (!renderPerformanceSettled || this.finished) return;
 
         this.trialStartTime = performance.now();
         if (this.portraitBlocked) this.portraitBlockedAt = this.trialStartTime;
@@ -560,8 +494,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     const label = document.createElement('div');
     label.textContent = this.language === 'en'
-      ? 'Optimizing display performance...'
-      : '\u6b63\u5728\u8abf\u6574\u986f\u793a\u6548\u80fd...';
+      ? 'Loading driving environment...'
+      : '\u6b63\u5728\u8f09\u5165\u99d5\u99db\u5834\u666f...';
     Object.assign(label.style, {
       padding: '0 24px',
       fontSize: '16px',
@@ -629,11 +563,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.rearviewCamera = null;
     this.rearviewLookAt = null;
     this.rearviewLastUpdateTime = 0;
-    this.rearviewMirrorUpdateIndex = 0;
     this.sideRearviewMirrorsEnabled = true;
-    this.performanceDowngraded = false;
-    this.rearviewQualityLevel = 'medium';
-    this.rearviewFpsDowngraded = false;
+    this.rearviewQualityLevel = 'high';
     this.miniMapLastUpdateTime = 0;
     this.miniMapLastDirectionText = '';
     this.asphaltTexture = null;
@@ -650,7 +581,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.controlMode = this.getControlMode((trial as any)?.control_mode);
     this.language = this.getLanguage((trial as any)?.language);
     this.text = drivingText[this.language];
-    this.renderQuality = this.createRenderQuality('medium');
+    this.renderQuality = this.createRenderQuality(this.getRenderQualityLevel((trial as any)?.render_quality));
+    this.configureInitialRearviewQuality();
 
     // Difficulty
     const diffKey = (trial as any)?.driving_difficulty ?? 'beginner';
@@ -917,8 +849,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getRendererPixelRatio(): number {
-    const pixelRatioCap = this.performanceDowngraded ? 1 : this.renderQuality.pixelRatioCap;
-    return Math.min(window.devicePixelRatio || 1, pixelRatioCap);
+    return Math.min(window.devicePixelRatio || 1, this.renderQuality.pixelRatioCap);
   }
 
   private syncRendererSize(root: HTMLElement) {
@@ -1866,22 +1797,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.renderRearviewMirror('center', centerCanvas, vehicleBox, forward, right);
       }
 
-      if (!this.rearviewFpsDowngraded) {
-        if (leftConnected && leftCanvas) {
-          this.renderRearviewMirror('left', leftCanvas, vehicleBox, forward, right);
-        }
-        if (rightConnected && rightCanvas) {
-          this.renderRearviewMirror('right', rightCanvas, vehicleBox, forward, right);
-        }
-      } else if (leftConnected || rightConnected) {
-        const sidePosition: 'left' | 'right' = leftConnected && rightConnected
-          ? (this.rearviewMirrorUpdateIndex % 2 === 0 ? 'left' : 'right')
-          : leftConnected
-            ? 'left'
-            : 'right';
-        const sideCanvas = sidePosition === 'left' ? leftCanvas : rightCanvas;
-        this.rearviewMirrorUpdateIndex += 1;
-        if (sideCanvas) this.renderRearviewMirror(sidePosition, sideCanvas, vehicleBox, forward, right);
+      if (leftConnected && leftCanvas) {
+        this.renderRearviewMirror('left', leftCanvas, vehicleBox, forward, right);
+      }
+      if (rightConnected && rightCanvas) {
+        this.renderRearviewMirror('right', rightCanvas, vehicleBox, forward, right);
       }
     } finally {
       this.renderer.setRenderTarget(previousTarget);
@@ -1943,7 +1863,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getRearviewUpdateIntervalMs(): number {
-    return this.rearviewFpsDowngraded ? 1000 / 12 : 1000 / 30;
+    return 1000 / 30;
   }
 
   private getRearviewCanvasSize(position: 'center' | 'left' | 'right') {
@@ -1959,22 +1879,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       width: Math.max(1, Math.round(baseWidth * scale)),
       height: Math.max(1, Math.round(baseHeight * scale)),
     };
-  }
-
-  private applyRearviewCanvasQuality() {
-    for (const position of ['center', 'left', 'right'] as const) {
-      const canvas = this.rearviewMirrorCanvases[position];
-      if (!canvas) continue;
-      const size = this.getRearviewCanvasSize(position);
-      if (canvas.width === size.width && canvas.height === size.height) continue;
-      canvas.width = size.width;
-      canvas.height = size.height;
-      this.rearviewRenderTargets[position]?.dispose?.();
-      delete this.rearviewRenderTargets[position];
-      delete this.rearviewPixelBuffers[position];
-      this.rearviewImageData.delete(canvas);
-    }
-    this.rearviewLastUpdateTime = 0;
   }
 
   private getRearviewRenderTarget(position: 'center' | 'left' | 'right', width: number, height: number) {
@@ -3243,110 +3147,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.updateMiniMap();
     this.updateRearviewMirrors(time);
     this.renderer.render(this.scene, this.camera);
-  }
-
-  private async settleRenderPerformanceBeforeStart(displayElement: HTMLElement): Promise<boolean> {
-    if (!this.renderer) return false;
-
-    const threshold = this.renderQuality.level === 'high'
-      ? 48
-      : this.renderQuality.level === 'medium'
-        ? 42
-        : 36;
-    let averageFps = await this.measureRenderPerformance(
-      displayElement,
-      this.renderCalibrationWarmupFrames,
-      this.renderCalibrationSampleFrames,
-      this.renderCalibrationMaxMs,
-    );
-    if (averageFps === null) return false;
-
-    const canReduceQuality = this.rearviewQualityLevel !== 'low' || this.getRendererPixelRatio() > 1;
-    if (averageFps < threshold && canReduceQuality) {
-      this.applyPerformanceQualityFallback();
-      averageFps = await this.measureRenderPerformance(
-        displayElement,
-        this.fallbackCalibrationWarmupFrames,
-        this.fallbackCalibrationSampleFrames,
-        this.fallbackCalibrationMaxMs,
-      );
-      if (averageFps === null) return false;
-    }
-    if (averageFps < threshold) this.applyRearviewFpsFallback();
-
-    console.info('[DrivingRehab] render calibration', {
-      averageFps: Math.round(averageFps),
-      pixelRatio: this.getRendererPixelRatio(),
-      rearviewQuality: this.rearviewQualityLevel,
-      rearviewFps: Math.round(1000 / this.getRearviewUpdateIntervalMs()),
-      downgraded: this.performanceDowngraded,
-    });
-    return true;
-  }
-
-  private measureRenderPerformance(
-    displayElement: HTMLElement,
-    warmupFrames: number,
-    sampleFrames: number,
-    maxDurationMs: number,
-  ): Promise<number | null> {
-    return new Promise((resolve) => {
-      const samples: number[] = [];
-      let previousFrameTime = 0;
-      let warmupFrameCount = 0;
-      let calibrationStartTime = 0;
-      this.rearviewLastUpdateTime = 0;
-
-      const sampleFrame = (time: number) => {
-        if (this.finished || !displayElement.isConnected || !this.renderer || !this.scene || !this.camera) {
-          if (!this.finished) this.finishTrial(displayElement, 'aborted');
-          resolve(null);
-          return;
-        }
-        if (calibrationStartTime === 0) calibrationStartTime = time;
-
-        if (previousFrameTime > 0) {
-          if (warmupFrameCount < warmupFrames) {
-            warmupFrameCount += 1;
-          } else {
-            const frameDurationSec = this.clamp((time - previousFrameTime) / 1000, 0.001, 0.05);
-            samples.push(1 / frameDurationSec);
-          }
-        }
-        previousFrameTime = time;
-
-        this.updateRearviewMirrors(time);
-        this.renderer.render(this.scene, this.camera);
-
-        const timedOut = time - calibrationStartTime >= maxDurationMs;
-        if (samples.length < sampleFrames && !timedOut) {
-          this.raf = requestAnimationFrame(sampleFrame);
-          return;
-        }
-
-        const averageFps = samples.length > 0
-          ? samples.reduce((sum, fps) => sum + fps, 0) / samples.length
-          : 0;
-        resolve(averageFps);
-      };
-
-      this.raf = requestAnimationFrame(sampleFrame);
-    });
-  }
-
-  private applyPerformanceQualityFallback() {
-    this.performanceDowngraded = true;
-    this.rearviewQualityLevel = 'low';
-    this.applyRearviewCanvasQuality();
-
-    const root = this.renderer?.domElement?.parentElement;
-    if (root instanceof HTMLElement) this.syncRendererSize(root);
-  }
-
-  private applyRearviewFpsFallback() {
-    this.rearviewFpsDowngraded = true;
-    this.rearviewLastUpdateTime = 0;
-    this.rearviewMirrorUpdateIndex = 0;
   }
 
   private isTrialTimedOut(time: number, trial: TrialType<Info>): boolean {
@@ -5092,10 +4892,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.miniMapLastUpdateTime = 0;
     this.miniMapLastDirectionText = '';
     this.miniMapRouteSamples = [];
-    this.performanceDowngraded = false;
     this.sideRearviewMirrorsEnabled = true;
-    this.rearviewQualityLevel = 'medium';
-    this.rearviewFpsDowngraded = false;
+    this.rearviewQualityLevel = 'high';
     this.needsFirstFrameCameraSnap = false;
     if (this.scene) {
       this.disposeObject(this.scene);
@@ -5129,7 +4927,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.miniMapCtx = null;
     this.miniMapDirectionLabel = null;
     this.rearviewMirrorCanvases = {};
-    this.rearviewMirrorUpdateIndex = 0;
     this.cockpitSteeringWheel = null;
     this.cockpitSpeedNeedle = null;
     this.cockpitSpeedText = null;

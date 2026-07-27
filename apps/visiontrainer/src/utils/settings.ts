@@ -24,6 +24,7 @@ export const maxUiFontSizePx = 30;
 export const drivingDurationMinSec = 80;
 export const drivingDurationMaxSec = 240;
 export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel';
+export type DrivingRenderQualityLevel = 'low' | 'medium' | 'high';
 export type UiTheme = 'light' | 'dark' | 'contrast';
 
 // ── Settings ──
@@ -69,6 +70,7 @@ export interface AppSettings {
   drivingRedFlashEnabled: boolean;
   drivingDifficulty: 'beginner' | 'intermediate' | 'advanced';
   drivingControlMode: DrivingControlMode;
+  drivingRenderQuality: DrivingRenderQualityLevel;
   uiFontSizePx: number;
   uiFontBold: boolean;
   uiTheme: UiTheme;
@@ -122,6 +124,7 @@ const appSettingsMeta: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> }
   drivingRedFlashEnabled: { dflt: true },
   drivingDifficulty: { dflt: 'beginner' },
   drivingControlMode: { dflt: 'arrow' },
+  drivingRenderQuality: { dflt: 'high' },
   uiFontSizePx: { dflt: defaultUiFontSizePx, min: minUiFontSizePx, max: maxUiFontSizePx },
   uiFontBold: { dflt: false },
   uiTheme: { dflt: 'light' },
@@ -154,6 +157,9 @@ export function GetSetting<K extends keyof AppSettings>(key: K): AppSettings[K] 
   if (key === 'uiTheme') {
     return (IsUiTheme(raw) ? raw : settingMeta.dflt) as AppSettings[K];
   }
+  if (key === 'drivingRenderQuality') {
+    return (IsDrivingRenderQualityLevel(raw) ? raw : settingMeta.dflt) as AppSettings[K];
+  }
   return raw as unknown as AppSettings[K];
 }
 
@@ -164,6 +170,10 @@ export function SetSetting<K extends keyof AppSettings>(key: K, value: AppSettin
 
 export function IsDrivingControlMode(value: unknown): value is DrivingControlMode {
   return value === 'arrow' || value === 'wasd' || value === 'wheel';
+}
+
+export function IsDrivingRenderQualityLevel(value: unknown): value is DrivingRenderQualityLevel {
+  return value === 'low' || value === 'medium' || value === 'high';
 }
 
 export function IsCalibrated(): boolean {

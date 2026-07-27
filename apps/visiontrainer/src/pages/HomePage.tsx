@@ -21,7 +21,7 @@ import {
 import { trainingModules } from './home/trainingModules';
 import type { TrainingModuleId } from './home/trainingModules';
 import type { OculomotorPattern, OculomotorTargetShape } from './training/oculomotor/types';
-import type { DrivingControlMode } from '../utils/settings';
+import type { DrivingControlMode, DrivingRenderQualityLevel } from '../utils/settings';
 
 function PreloadTrainingRoute(): Promise<unknown> {
   return import('./training/TrainingPage');
@@ -106,6 +106,7 @@ export function HomePage() {
   const [drivingRedFlashEnabled, setDrivingRedFlashEnabled] = useAppSetting('drivingRedFlashEnabled');
   const [drivingDifficulty, setDrivingDifficulty] = useAppSetting('drivingDifficulty');
   const [drivingControlMode, setDrivingControlMode] = useAppSetting('drivingControlMode');
+  const [drivingRenderQuality, setDrivingRenderQuality] = useAppSetting('drivingRenderQuality');
   const [isStartingTraining, setIsStartingTraining] = useState(false);
   const rulesLabels = GetRulesLabels(lang);
   const showRulesButtonLabel = rulesLabels.next;
@@ -219,7 +220,7 @@ export function HomePage() {
     }
 
     if (moduleToStart === 'driving-rehab') {
-      navigate(`/training?module=driving-rehab&redFlash=${drivingRedFlashEnabled}&drivingDifficulty=${drivingDifficulty}&controlMode=${drivingControlMode}`);
+      navigate(`/training?module=driving-rehab&redFlash=${drivingRedFlashEnabled}&drivingDifficulty=${drivingDifficulty}&controlMode=${drivingControlMode}&renderQuality=${drivingRenderQuality}`);
       return;
     }
 
@@ -317,6 +318,11 @@ export function HomePage() {
     { key: 'wasd', label: t('home.config.drivingControlWasd') },
     { key: 'wheel', label: t('home.config.drivingControlWheel') },
   ];
+  const drivingRenderQualityOptions: { key: DrivingRenderQualityLevel; label: string }[] = [
+    { key: 'high', label: t('home.config.drivingRenderQualityHigh') },
+    { key: 'medium', label: t('home.config.drivingRenderQualityMedium') },
+    { key: 'low', label: t('home.config.drivingRenderQualityLow') },
+  ];
   const drivingDifficultyLabels: Record<'beginner' | 'intermediate' | 'advanced', string> = {
     beginner: t('home.diff.beginner'),
     intermediate: t('home.diff.intermediate'),
@@ -354,6 +360,7 @@ export function HomePage() {
         return [
           { value: drivingDifficultyLabels[drivingDifficulty] },
           { value: drivingControlOptions.find((option) => option.key === drivingControlMode)?.label },
+          { value: drivingRenderQualityOptions.find((option) => option.key === drivingRenderQuality)?.label },
         ];
       case 'hart-chart':
         return [
@@ -944,6 +951,7 @@ export function HomePage() {
           onClose={() => setExpandedModule(null)}
           summaryItems={[
             { value: drivingDifficultyLabels[drivingDifficulty] },
+            { value: drivingRenderQualityOptions.find((option) => option.key === drivingRenderQuality)?.label },
             { value: drivingRedFlashEnabled ? t('common.on') : t('common.off') },
           ]}
           actions={configActions}
@@ -965,6 +973,26 @@ export function HomePage() {
                     </button>
                   );
                 })}
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
+
+            <TrainingConfigSection
+              title={t('home.config.drivingRenderQuality')}
+              value={drivingRenderQualityOptions.find((option) => option.key === drivingRenderQuality)?.label}
+            >
+              <TrainingConfigOptionGroup columns={3}>
+                {drivingRenderQualityOptions.map((option) => (
+                  <button
+                    key={option.key}
+                    className={`training-option ${drivingRenderQuality === option.key ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDrivingRenderQuality(option.key);
+                    }}
+                  >
+                    <span className="training-option-title">{option.label}</span>
+                  </button>
+                ))}
               </TrainingConfigOptionGroup>
             </TrainingConfigSection>
 

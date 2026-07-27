@@ -1,4 +1,4 @@
-import type { DrivingControlMode } from '../../utils/settings';
+import type { DrivingControlMode, DrivingRenderQualityLevel } from '../../utils/settings';
 import type { OculomotorMode, OculomotorPattern, OculomotorTargetShape } from '../../pages/training/oculomotor/types';
 import type { ReadingStory } from '../../pages/training/reading/types';
 
@@ -37,6 +37,7 @@ export interface BuildTimelineOverrides {
     redFlashEnabled?: boolean;
     difficulty?: 'beginner' | 'intermediate' | 'advanced';
     controlMode?: DrivingControlMode;
+    renderQuality?: DrivingRenderQualityLevel;
     language?: AppLanguage;
   };
 }

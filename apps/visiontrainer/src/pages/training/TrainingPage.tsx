@@ -10,6 +10,7 @@ import {
   getActiveUser,
   GetSetting,
   IsDrivingControlMode,
+  IsDrivingRenderQualityLevel,
 } from '../../utils/settings';
 import { DestroyPixiTrainingRuntime } from '../../utils/pixiPool';
 import { soundManager } from '../../utils/soundManager';
@@ -109,6 +110,10 @@ export function TrainingPage() {
   const drivingControlMode = IsDrivingControlMode(requestedDrivingControlMode)
     ? requestedDrivingControlMode
     : GetSetting('drivingControlMode');
+  const requestedDrivingRenderQuality = searchParams.get('renderQuality');
+  const drivingRenderQuality = IsDrivingRenderQualityLevel(requestedDrivingRenderQuality)
+    ? requestedDrivingRenderQuality
+    : GetSetting('drivingRenderQuality');
   const gaborDurationSec = parseInt(searchParams.get('duration') || '', 10) || 60;
   const gaborMaxSpots = parseInt(searchParams.get('maxSpots') || '', 10) || 10;
 
@@ -170,6 +175,7 @@ export function TrainingPage() {
               drivingRedFlashEnabled,
               drivingDifficulty,
               drivingControlMode,
+              drivingRenderQuality,
             },
           });
           soundManager.destroy();
@@ -211,6 +217,7 @@ export function TrainingPage() {
           redFlashEnabled: drivingRedFlashEnabled,
           difficulty: drivingDifficulty,
           controlMode: drivingControlMode,
+          renderQuality: drivingRenderQuality,
           language: lang,
         },
       });
@@ -251,6 +258,7 @@ export function TrainingPage() {
     drivingRedFlashEnabled,
     drivingDifficulty,
     drivingControlMode,
+    drivingRenderQuality,
     userName,
     lang,
   ]);

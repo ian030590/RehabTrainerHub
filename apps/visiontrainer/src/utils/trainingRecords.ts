@@ -49,6 +49,7 @@ export interface TrainingRecordConfig {
   drivingRedFlashEnabled?: boolean;
   drivingDifficulty?: string;
   drivingControlMode?: string;
+  drivingRenderQuality?: string;
   ufovDetails?: Record<string, unknown>;
   ufovSummary?: unknown;
 }

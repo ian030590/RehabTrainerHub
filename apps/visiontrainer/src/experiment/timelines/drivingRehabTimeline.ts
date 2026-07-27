@@ -7,6 +7,7 @@ export async function BuildDrivingRehabTimeline(overrides?: BuildTimelineOverrid
   const redFlashEnabled = overrides?.driving?.redFlashEnabled ?? GetSetting('drivingRedFlashEnabled');
   const drivingDifficulty = overrides?.driving?.difficulty ?? GetSetting('drivingDifficulty');
   const drivingControlMode = overrides?.driving?.controlMode ?? GetSetting('drivingControlMode');
+  const drivingRenderQuality = overrides?.driving?.renderQuality ?? GetSetting('drivingRenderQuality');
   const language = overrides?.driving?.language ?? 'zh';
 
   return [
@@ -15,6 +16,7 @@ export async function BuildDrivingRehabTimeline(overrides?: BuildTimelineOverrid
       red_flash_enabled: redFlashEnabled,
       driving_difficulty: drivingDifficulty,
       control_mode: drivingControlMode,
+      render_quality: drivingRenderQuality,
       language,
     },
   ];
