@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { IsHubTrainingCompleteMessage } from '@rehab-trainer/ui/embeddedTraining';
+import {
+  IsHubTrainingActiveMessage,
+  IsHubTrainingCompleteMessage,
+} from '@rehab-trainer/ui/embeddedTraining';
 import {
   BuildTrainingModuleHref,
   GetTrainingModuleCopy,
@@ -16,6 +19,7 @@ export function EmbeddedTraining() {
   const searchParams = useSearchParams();
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [isTrainingComplete, setIsTrainingComplete] = useState(false);
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).embeddedTraining;
@@ -30,6 +34,7 @@ export function EmbeddedTraining() {
   }, [module]);
 
   useEffect(() => {
+    setIsTrainingActive(false);
     setIsTrainingComplete(false);
   }, [sourceUrl]);
 
@@ -37,18 +42,22 @@ export function EmbeddedTraining() {
     if (!sourceUrl) return;
 
     const trainerOrigin = new URL(sourceUrl).origin;
-    const handleTrainingComplete = (event: MessageEvent<unknown>) => {
+    const handleTrainingMessage = (event: MessageEvent<unknown>) => {
       if (event.origin !== trainerOrigin
-        || event.source !== frameRef.current?.contentWindow
-        || !IsHubTrainingCompleteMessage(event.data)) {
+        || event.source !== frameRef.current?.contentWindow) {
         return;
       }
 
-      setIsTrainingComplete(true);
+      if (IsHubTrainingActiveMessage(event.data)) {
+        setIsTrainingActive(event.data.active);
+      } else if (IsHubTrainingCompleteMessage(event.data)) {
+        setIsTrainingActive(false);
+        setIsTrainingComplete(true);
+      }
     };
 
-    window.addEventListener('message', handleTrainingComplete);
-    return () => window.removeEventListener('message', handleTrainingComplete);
+    window.addEventListener('message', handleTrainingMessage);
+    return () => window.removeEventListener('message', handleTrainingMessage);
   }, [sourceUrl]);
 
   if (!module) {
@@ -65,7 +74,7 @@ export function EmbeddedTraining() {
 
   return (
     <main className="embedded-training-page" id="main-content">
-      {!isTrainingComplete && (
+      {!isTrainingActive && !isTrainingComplete && (
         <header className="embedded-training-bar">
           <Link aria-label={copy.returnToLobby} href="/">
             <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>
