@@ -300,7 +300,7 @@ export function ContrastTestPage() {
   }
 
   return wrapFullscreenRoot(
-    <div style={{ width: '100vw', height: '100vh', background: '#808080' }}>
+    <div className="contrast-running-stage">
        <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
     </div>
   );

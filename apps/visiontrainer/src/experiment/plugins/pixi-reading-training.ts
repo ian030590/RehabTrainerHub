@@ -89,12 +89,23 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
       };
       textObj.anchor.set(0.5);
 
+      function FitTextToViewport() {
+        const viewport = window.visualViewport;
+        const viewportLeft = Math.max(0, viewport?.offsetLeft ?? 0);
+        const viewportWidth = Math.min(getWidth(), viewport?.width ?? getWidth());
+        const availableWidth = Math.max(1, viewportWidth - 32);
+        textObj.style.fontSize = 48;
+        const measuredWidth = Math.max(1, textObj.width);
+        textObj.style.fontSize = Math.min(48, 48 * availableWidth / measuredWidth);
+        textObj.x = viewportLeft + viewportWidth / 2;
+      }
+
       function DrawLayout() {
         const width = getWidth();
         const height = getHeight();
         bgGfx.clear().rect(0, 0, width, height).fill({ color: 0xffffff });
-        textObj.x = width / 2;
         textObj.y = height / 2;
+        FitTextToViewport();
       }
       DrawLayout();
 
@@ -130,6 +141,7 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
         if (trialEnded) return;
         if (cIdx < countdowns.length) {
           textObj.text = countdowns[cIdx];
+          FitTextToViewport();
           cIdx++;
           timerId = setTimeout(ShowCountdown, 1000);
         } else {
@@ -151,6 +163,7 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
         const chunkWords = contentArray.slice(chunkIdx, chunkIdx + currentCrowding);
         
         textObj.text = chunkWords.join(' ');
+        FitTextToViewport();
         
         const displayTimeMs = (currentCrowding / wps) * 1000;
         chunkIdx += currentCrowding;

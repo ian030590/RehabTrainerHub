@@ -465,6 +465,8 @@
   display: grid;
   place-items: center;
   padding: 20px;
+  height: 100vh;
+  height: 100dvh;
   background: rgba(17, 24, 39, 0.52);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -513,12 +515,16 @@
 
 .hart-qr-dialog {
   width: min(440px, 100%);
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
   padding: 28px;
   text-align: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .hart-qr-dialog h2,
@@ -531,8 +537,10 @@
 }
 
 .hart-qr-dialog img {
-  width: min(320px, 100%);
+  width: min(100%, clamp(120px, calc(100vh - 220px), 320px));
+  width: min(100%, clamp(120px, calc(100dvh - 220px), 320px));
   aspect-ratio: 1;
+  flex: 0 0 auto;
 }
 
 .hart-qr-dialog a {
@@ -564,6 +572,7 @@
 .hart-display-page:fullscreen {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
 }
 
 .hart-chart-grid-only {
@@ -802,6 +811,16 @@
     font-size: 21px;
   }
 
+}
+
+@media (max-width: 640px), (orientation: portrait) and (max-width: 1180px) {
+  .hart-page-decoder-open .hart-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(180px, 44%);
+    grid-template-areas:
+      "chart"
+      "decoder";
+  }
 }
 
 @media (max-height: 650px) and (min-width: 921px) {

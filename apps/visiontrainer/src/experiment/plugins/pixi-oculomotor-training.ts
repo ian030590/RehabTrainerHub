@@ -110,10 +110,35 @@ const info = {
 
 type Info = typeof info;
 
+interface SafeAreaInsets {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 const lilacDotCount = 12;
 const fullCircle = Math.PI * 2;
 const oculomotorPixiScope = pixiRuntimeScopes.oculomotor;
 const oculomotorContainerStyle = 'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;background:#0D1117;';
+
+function CreateSafeAreaProbe(container: HTMLElement): HTMLDivElement {
+  const probe = document.createElement('div');
+  probe.setAttribute('aria-hidden', 'true');
+  probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);';
+  container.appendChild(probe);
+  return probe;
+}
+
+function ReadSafeAreaInsets(probe: HTMLElement): SafeAreaInsets {
+  const style = window.getComputedStyle(probe);
+  return {
+    top: parseFloat(style.paddingTop) || 0,
+    right: parseFloat(style.paddingRight) || 0,
+    bottom: parseFloat(style.paddingBottom) || 0,
+    left: parseFloat(style.paddingLeft) || 0,
+  };
+}
 
 const modeTitle: Record<OculomotorMode, string> = {
   pursuit: '眼動訓練 · 追視',
@@ -266,6 +291,13 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       oculomotorContainerStyle,
       'oculomotor-training-trial',
     );
+    const safeAreaProbe = CreateSafeAreaProbe(wrapper);
+    const pauseButton = document.createElement('button');
+    pauseButton.type = 'button';
+    pauseButton.className = 'oculomotor-pause-button';
+    pauseButton.textContent = 'Ⅱ';
+    pauseButton.setAttribute('aria-label', '暫停訓練');
+    wrapper.appendChild(pauseButton);
 
     const mode = trial.mode as OculomotorMode;
     const pattern = trial.pattern as OculomotorPattern;
@@ -315,7 +347,6 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       const titleText = new Text();
       const metaText = new Text();
       const timeText = new Text();
-      const pauseText = new Text();
       const exitText = new Text();
       const reactionLetter = new Text();
       const frames: TargetFrame[] = [];
@@ -327,7 +358,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       let latestTarget: TargetFrame | null = null;
       let hudVisible = false;
 
-      app.stage.addChild(bgGfx, guideGfx, lilacGfx, targetGfx, reactionLetter, hudGfx, titleText, metaText, timeText, pauseText, exitText);
+      app.stage.addChild(bgGfx, guideGfx, lilacGfx, targetGfx, reactionLetter, hudGfx, titleText, metaText, timeText, exitText);
 
       let audioElement: HTMLAudioElement | null = null;
       if (customAudio) {
@@ -360,13 +391,12 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         fontWeight: '700',
         fill: pixiColors.accentHover,
       };
-      pauseText.style = {
+      exitText.style = {
         fontFamily: typography.fontFamily,
         fontSize: typography.fontSizeS,
         fontWeight: '700',
         fill: pixiColors.textPrimary,
       };
-      exitText.style = pauseText.style;
       reactionLetter.style = {
         fontFamily: typography.fontFamily,
         fontSize: Math.max(18, radiusPx * 0.92),
@@ -411,7 +441,11 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       const drawHud = (remainingMs: number) => {
         const w = app.screen.width;
         const h = app.screen.height;
-        const hudHeight = Math.max(58, Math.min(72, h * 0.09));
+        const safeInsets = ReadSafeAreaInsets(safeAreaProbe);
+        const compact = w - safeInsets.left - safeInsets.right < 560;
+        const hudHeight = compact
+          ? Math.max(88 + safeInsets.top, Math.min(112 + safeInsets.top, h * 0.3))
+          : Math.max(58 + safeInsets.top, Math.min(82 + safeInsets.top, h * 0.12));
 
         hudVisible = paused;
 
@@ -419,12 +453,12 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         titleText.visible = hudVisible;
         metaText.visible = hudVisible;
         timeText.visible = hudVisible;
-        pauseText.visible = hudVisible;
         exitText.visible = hudVisible;
 
         if (!hudVisible) return;
 
-        const buttonY = hudHeight / 2 - 15;
+        const buttonY = safeInsets.top + 12;
+        const exitX = w - safeInsets.right - 72;
 
         hudGfx
           .rect(0, 0, w, hudHeight)
@@ -433,29 +467,23 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           .fill({ color: pixiColors.border });
 
         hudGfx
-          .roundRect(w - 168, buttonY, 72, 30, 6)
-          .fill({ color: paused ? pixiColors.accentDark : pixiColors.bgCard })
-          .stroke({ color: pixiColors.border, width: 1 })
-          .roundRect(w - 84, buttonY, 60, 30, 6)
+          .roundRect(exitX, buttonY, 60, 44, 7)
           .fill({ color: pixiColors.bgCard })
           .stroke({ color: pixiColors.border, width: 1 });
 
-        titleText.x = 24;
-        titleText.y = Math.max(10, hudHeight * 0.18);
-        metaText.x = 24;
-        metaText.y = titleText.y + 26;
+        titleText.style.fontSize = typography.fontSizeL;
+        titleText.x = safeInsets.left + 16;
+        titleText.y = safeInsets.top + 8;
+        metaText.x = safeInsets.left + 16;
+        metaText.y = safeInsets.top + (compact ? 34 : 36);
 
         timeText.text = `${Math.ceil(remainingMs / 1000)}s`;
-        timeText.x = Math.max(180, w - 238);
-        timeText.y = hudHeight / 2 - 10;
-
-        pauseText.text = paused ? '繼續' : '暫停';
-        pauseText.x = w - 146;
-        pauseText.y = hudHeight / 2 - 9;
+        timeText.x = compact ? safeInsets.left + 16 : Math.max(safeInsets.left + 200, w - safeInsets.right - 232);
+        timeText.y = compact ? safeInsets.top + 58 : safeInsets.top + 22;
 
         exitText.text = '結束';
-        exitText.x = w - 66;
-        exitText.y = hudHeight / 2 - 9;
+        exitText.x = exitX + 15;
+        exitText.y = buttonY + 12;
       };
 
       const drawGuides = (arena: Arena, hudHeight: number) => {
@@ -540,23 +568,36 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         if (paused) {
           pausedMs += performance.now() - pauseStartedAt;
           paused = false;
+          pauseButton.textContent = 'Ⅱ';
+          pauseButton.setAttribute('aria-label', '暫停訓練');
           if (audioElement) audioElement.play().catch(e => console.warn('Audio play failed', e));
           return;
         }
         pauseStartedAt = performance.now();
         paused = true;
+        pauseButton.textContent = '▶';
+        pauseButton.setAttribute('aria-label', '繼續訓練');
         if (audioElement) audioElement.pause();
       };
+
+      pauseButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        togglePause();
+      });
 
       const handleStageTap = (event: any) => {
         if (ended) return;
         const point = event.global;
         const w = app.screen.width;
-        const hudHeight = Math.max(58, Math.min(72, app.screen.height * 0.09));
+        const safeInsets = ReadSafeAreaInsets(safeAreaProbe);
+        const compact = w - safeInsets.left - safeInsets.right < 560;
+        const hudHeight = compact
+          ? Math.max(88 + safeInsets.top, Math.min(112 + safeInsets.top, app.screen.height * 0.3))
+          : Math.max(58 + safeInsets.top, Math.min(82 + safeInsets.top, app.screen.height * 0.12));
 
         if (hudVisible && point.y <= hudHeight) {
-          if (point.x >= w - 168 && point.x <= w - 96) togglePause();
-          if (point.x >= w - 84 && point.x <= w - 24) finish('手動結束');
+          if (point.x >= w - safeInsets.right - 72 && point.x <= w - safeInsets.right - 12) finish('手動結束');
           return;
         }
 

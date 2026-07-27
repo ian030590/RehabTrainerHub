@@ -590,7 +590,9 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     const handleResize = () => {
       const currentApp = appRef.current;
       const appleTexture = appleTextureRef.current;
-      if (currentApp && appleTexture) ResetTongueScene(currentApp, sceneRef, appleTexture);
+      if (!currentApp || !appleTexture) return;
+      ResizePixiAppToElement(currentApp, pixiHostRef.current);
+      ResetTongueScene(currentApp, sceneRef, appleTexture);
     };
     window.addEventListener('resize', handleResize);
     return () => {

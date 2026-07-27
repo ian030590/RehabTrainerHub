@@ -644,6 +644,7 @@ export function EveryBallResponsePage() {
         appRef.current = app;
         host.appendChild(app.canvas);
         app.canvas.className = 'every-ball-canvas';
+        app.renderer.on('resize', onResize);
         DrawEveryBallScene(app, visualRef.current, labels);
       } catch (error) {
         console.warn('Unable to initialize Every Ball Response Pixi stage.', error);
@@ -656,11 +657,10 @@ export function EveryBallResponsePage() {
       if (!currentApp) return;
       DrawEveryBallScene(currentApp, visualRef.current, labels);
     };
-    window.addEventListener('resize', onResize);
     return () => {
       cancelled = true;
       mountedRef.current = false;
-      window.removeEventListener('resize', onResize);
+      if (initialized) app.renderer.off('resize', onResize);
       void stopInput();
       jsPsychRef.current?.abortExperiment();
       if (appRef.current === app) {
@@ -1022,15 +1022,15 @@ export function EveryBallResponsePage() {
 
       {phase === 'playing' && (
         <div className="every-ball-hud">
-          <div>
+          <div className="every-ball-hud-title">
             <span>{selectedLevelLabels.shortTitle}</span>
             <strong>{labels.title}</strong>
           </div>
-          <div>
+          <div className="every-ball-hud-trial">
             <span>{visual.trialNumber ?? 0} / {visual.totalTrials ?? trialCount}</span>
             <strong>{GetExpectedActionLabel(visual.expectedAction ?? 'none', labels)}</strong>
           </div>
-          <div>
+          <div className="every-ball-hud-status">
             <span>{inputModeLabel}</span>
             <strong>{statusMessage || (inputMode === 'camera' ? labels.cameraFinding : labels.microphoneReady)}</strong>
           </div>
@@ -1470,9 +1470,15 @@ function DrawEveryBallScene(app: Application, visual: VisualState, labels: Every
   }
 
   if (visual.phase === 'stimulus' && visual.ball) {
+    const radius = Math.min(width, height) * 0.13;
     const x = width * (visual.xRatio ?? 0.5);
-    const y = height * (visual.yRatio ?? 0.5);
-    DrawBall(app.stage, visual.ball, x, y, Math.min(width, height) * 0.13, labels);
+    const minY = width <= 620 && height > width
+      ? height * 0.42
+      : height <= 560 && width > height
+        ? height * 0.38
+        : radius;
+    const y = Clamp(height * (visual.yRatio ?? 0.5), minY, height - radius * 1.5);
+    DrawBall(app.stage, visual.ball, x, y, radius, labels);
   }
 
   if (visual.phase === 'feedback') {

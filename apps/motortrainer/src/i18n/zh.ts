@@ -533,6 +533,8 @@ export const zh = {
   'gesture.camera.preview': '即時手部攝影機預覽',
   'gesture.camera.tracking': '已追蹤手部',
   'gesture.camera.finding': '請將手放入框內',
+  'gesture.orientation.title': '請將手機轉為橫向',
+  'gesture.orientation.description': '此訓練需要橫向畫面，旋轉手機後會自動繼續。',
   'gesture.calibration.step': '校正 {current} / {total}',
   'gesture.calibration.closedTitle': '測量握拳活動範圍',
   'gesture.calibration.closedInstruction': '請盡可能握緊拳頭，讓系統記錄手指彎曲極限。',
