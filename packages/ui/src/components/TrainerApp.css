@@ -486,8 +486,12 @@ body[data-ui-font-bold="true"] .app-layout :where(
 }
 
 .selection-card {
+  display: flex;
   width: 100%;
   min-height: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   padding: 0;
   border: 2px solid color-mix(in srgb, var(--accent) 14%, var(--border));
   border-radius: calc(var(--radius-l) * 1.25);
