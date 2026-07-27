@@ -13,6 +13,8 @@ import {
   type TrainingPurposeId,
 } from '@rehab-trainer/ui/trainingCatalog';
 import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
+import { GetHubUiCopy } from './i18n';
+import { useHubLanguage } from './i18n/HubLanguage';
 
 const trainerVisuals: Record<TrainerCatalogId, {
   name: string;
@@ -44,7 +46,9 @@ const trainerVisuals: Record<TrainerCatalogId, {
 export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
-  const normalizedQuery = query.trim().toLocaleLowerCase('zh-TW');
+  const { language, locale, t } = useHubLanguage();
+  const copy = GetHubUiCopy(language).lobby;
+  const normalizedQuery = query.trim().toLocaleLowerCase(locale);
 
   const purposeCounts = useMemo(() => new Map(
     trainingPurposes.map((purpose) => [
@@ -54,12 +58,12 @@ export function TrainingLobby() {
   ), []);
 
   const visibleModules = useMemo(() => trainingCatalog.filter((module) => {
-    const title = GetTrainingModuleCopy(module, 'zh-TW').title.toLocaleLowerCase('zh-TW');
+    const title = GetTrainingModuleCopy(module, locale).title.toLocaleLowerCase(locale);
     const matchesSearch = !normalizedQuery || title.includes(normalizedQuery);
     const matchesPurpose = selectedPurposes.length === 0
       || selectedPurposes.includes(module.purpose);
     return matchesSearch && matchesPurpose;
-  }), [normalizedQuery, selectedPurposes]);
+  }), [locale, normalizedQuery, selectedPurposes]);
 
   const togglePurpose = (purposeId: TrainingPurposeId) => {
     setSelectedPurposes((current) => (
@@ -79,16 +83,16 @@ export function TrainingLobby() {
       <section className="lobby-heading" aria-labelledby="lobby-title">
         <div>
           <p className="page-kicker">Rehab Trainer Hub</p>
-          <h1 id="lobby-title">訓練大廳</h1>
-          <p>選擇訓練目的，或直接搜尋模組名稱。</p>
+          <h1 id="lobby-title">{copy.title}</h1>
+          <p>{copy.intro}</p>
         </div>
 
         <label className="module-search">
           <span className="material-symbols-outlined" aria-hidden="true">search</span>
-          <span className="sr-only">搜尋模組名稱</span>
+          <span className="sr-only">{copy.searchLabel}</span>
           <input
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="搜尋訓練模組"
+            placeholder={copy.searchPlaceholder}
             type="search"
             value={query}
           />
@@ -98,14 +102,14 @@ export function TrainingLobby() {
       <div className="lobby-layout">
         <aside className="filter-panel" aria-labelledby="filter-title">
           <div className="filter-heading">
-            <h2 id="filter-title">Filters</h2>
+            <h2 id="filter-title">{copy.filters}</h2>
             {(selectedPurposes.length > 0 || query) && (
-              <button onClick={clearFilters} type="button">清除</button>
+              <button onClick={clearFilters} type="button">{copy.clear}</button>
             )}
           </div>
 
           <fieldset>
-            <legend className="sr-only">訓練目的</legend>
+            <legend className="sr-only">{copy.purposeLegend}</legend>
             {trainingPurposes.map((purpose) => (
               <label className="filter-option" key={purpose.id}>
                 <input
@@ -113,7 +117,7 @@ export function TrainingLobby() {
                   onChange={() => togglePurpose(purpose.id)}
                   type="checkbox"
                 />
-                <span>{purpose.label}</span>
+                <span>{language === 'en' ? purpose.labelEn : purpose.label}</span>
                 <small>{purposeCounts.get(purpose.id) ?? 0}</small>
               </label>
             ))}
@@ -122,42 +126,42 @@ export function TrainingLobby() {
 
         <section className="module-results" aria-labelledby="result-title">
           <div className="result-heading">
-            <h2 id="result-title">所有訓練模組</h2>
-            <p aria-live="polite">共 {visibleModules.length} 個模組</p>
+            <h2 id="result-title">{copy.allModules}</h2>
+            <p aria-live="polite">{t('lobby.moduleCount', { count: visibleModules.length })}</p>
           </div>
 
           {visibleModules.length > 0 ? (
             <div className="module-grid">
               {visibleModules.map((module) => {
-                const copy = GetTrainingModuleCopy(module, 'zh-TW');
+                const moduleCopy = GetTrainingModuleCopy(module, locale);
                 const purpose = GetTrainingPurpose(module.purpose);
                 const trainer = trainerVisuals[module.trainer];
 
                 return (
                   <article className={`module-card trainer-${module.trainer}`} key={module.catalogId}>
-                    <div className="module-card-visual" aria-label="Training image placeholder" role="img">
+                    <div className="module-card-visual" aria-label={copy.visualLabel} role="img">
                       <CardImagePlaceholder />
-                      <span className="module-card-visual-label">圖片即將推出</span>
+                      <span className="module-card-visual-label">{copy.visualComingSoon}</span>
                     </div>
                     <div className="module-card-content">
-                    <div className="module-card-meta">
-                      <span>{purpose.label}</span>
-                      <Image
-                        src={trainer.logo}
-                        alt={trainer.logoAlt}
-                        width={52}
-                        height={36}
-                      />
-                    </div>
-                    <h3>{copy.title}</h3>
-                    <p>{copy.description}</p>
-                    <div className="module-card-footer">
-                      <span>{trainer.name}</span>
-                      <Link href={BuildHubTrainingHref(module)}>
-                        開始訓練
-                        <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                      </Link>
-                    </div>
+                      <div className="module-card-meta">
+                        <span>{language === 'en' ? purpose.labelEn : purpose.label}</span>
+                        <Image
+                          src={trainer.logo}
+                          alt={trainer.logoAlt}
+                          width={52}
+                          height={36}
+                        />
+                      </div>
+                      <h3>{moduleCopy.title}</h3>
+                      <p>{moduleCopy.description}</p>
+                      <div className="module-card-footer">
+                        <span>{trainer.name}</span>
+                        <Link href={BuildHubTrainingHref(module)}>
+                          {copy.start}
+                          <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                        </Link>
+                      </div>
                     </div>
                   </article>
                 );
@@ -166,8 +170,8 @@ export function TrainingLobby() {
           ) : (
             <div className="empty-results">
               <span className="material-symbols-outlined" aria-hidden="true">search_off</span>
-              <h3>找不到符合條件的模組</h3>
-              <button onClick={clearFilters} type="button">清除篩選條件</button>
+              <h3>{copy.noResultsTitle}</h3>
+              <button onClick={clearFilters} type="button">{copy.noResultsAction}</button>
             </div>
           )}
         </section>

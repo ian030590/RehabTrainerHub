@@ -13,15 +13,17 @@ import type {
   ArticleDetailResponse,
   ArticleListResponse,
 } from '../articleTypes';
+import { GetHubUiCopy } from '../i18n';
+import { useHubLanguage } from '../i18n/HubLanguage';
 
 type LoadStatus = 'loading' | 'ready' | 'error';
 type ArticleContentStatus = 'idle' | LoadStatus;
 
-function FormatPublishedDate(value: string | null): string {
+function FormatPublishedDate(value: string | null, locale: 'zh-TW' | 'en'): string {
   if (!value) return '';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('zh-TW', {
+  return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -29,12 +31,14 @@ function FormatPublishedDate(value: string | null): string {
 }
 
 export function EducationArticles() {
+  const { language, t } = useHubLanguage();
   const [articles, setArticles] = useState<ArticleCard[]>([]);
   const [status, setStatus] = useState<LoadStatus>('loading');
   const [requestKey, setRequestKey] = useState(0);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState('');
+  const copy = GetHubUiCopy(language).educationArticles;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -90,7 +94,7 @@ export function EducationArticles() {
       setNextCursor(payload.nextCursor);
     } catch (error) {
       console.warn('Unable to load more education articles.', error);
-      setLoadMoreError('無法載入更多文章，請稍後再試。');
+      setLoadMoreError(copy.loadMoreError);
     } finally {
       setIsLoadingMore(false);
     }
@@ -100,16 +104,16 @@ export function EducationArticles() {
     <section className="education-articles-section" aria-labelledby="education-articles-title">
       <div className="section-title-row">
         <div>
-          <p className="page-kicker">Patient education</p>
-          <h2 id="education-articles-title">治療師衛教專欄</h2>
+          <p className="page-kicker">{copy.kicker}</p>
+          <h2 id="education-articles-title">{copy.title}</h2>
         </div>
-        {status === 'ready' && articles.length > 0 && <p>{articles.length} 篇文章</p>}
+        {status === 'ready' && articles.length > 0 && <p>{t('educationArticles.count', { count: articles.length })}</p>}
       </div>
 
       {status === 'loading' && (
         <div className="education-articles-state" role="status">
           <span className="material-symbols-outlined" aria-hidden="true">progress_activity</span>
-          <p>正在載入衛教文章…</p>
+          <p>{copy.loading}</p>
         </div>
       )}
 
@@ -117,11 +121,11 @@ export function EducationArticles() {
         <div className="education-articles-state is-error" role="alert">
           <span className="material-symbols-outlined" aria-hidden="true">error</span>
           <div>
-            <h3>暫時無法載入衛教文章</h3>
-            <p>請稍後再試，或重新整理這個頁面。</p>
+            <h3>{copy.loadErrorTitle}</h3>
+            <p>{copy.loadErrorBody}</p>
           </div>
           <button onClick={() => setRequestKey((current) => current + 1)} type="button">
-            重新載入
+            {copy.reload}
           </button>
         </div>
       )}
@@ -130,8 +134,8 @@ export function EducationArticles() {
         <div className="education-articles-state">
           <span className="material-symbols-outlined" aria-hidden="true">article</span>
           <div>
-            <h3>衛教文章準備中</h3>
-            <p>治療師發布文章後，會以卡片形式顯示在這裡。</p>
+            <h3>{copy.emptyTitle}</h3>
+            <p>{copy.emptyBody}</p>
           </div>
         </div>
       )}
@@ -152,7 +156,7 @@ export function EducationArticles() {
                   onClick={() => void loadMore()}
                   type="button"
                 >
-                  {isLoadingMore ? '載入中…' : '載入更多文章'}
+                  {isLoadingMore ? copy.loadingMore : copy.loadMore}
                 </button>
               )}
             </div>
@@ -164,9 +168,11 @@ export function EducationArticles() {
 }
 
 function EducationArticleCard({ article }: { article: ArticleCard }) {
+  const { language, locale } = useHubLanguage();
   const [content, setContent] = useState('');
   const [contentStatus, setContentStatus] = useState<ArticleContentStatus>('idle');
   const requestRef = useRef<AbortController | null>(null);
+  const copy = GetHubUiCopy(language).educationArticle;
 
   useEffect(() => () => requestRef.current?.abort(), []);
 
@@ -217,27 +223,27 @@ function EducationArticleCard({ article }: { article: ArticleCard }) {
       </div>
       <div className="education-article-content">
         <div className="education-article-meta">
-          <span>{article.category || '一般衛教'}</span>
+          <span>{article.category || copy.general}</span>
           {article.publishedAt && (
             <time dateTime={article.publishedAt}>
-              {FormatPublishedDate(article.publishedAt)}
+              {FormatPublishedDate(article.publishedAt, locale)}
             </time>
           )}
         </div>
         <h3>{article.title}</h3>
         <p className="education-article-summary">{article.summary}</p>
-        <p className="education-article-author">撰文：{article.authorName}</p>
+        <p className="education-article-author">{copy.author}: {article.authorName}</p>
         <details onToggle={handleToggle}>
           <summary>
-            <span>閱讀文章</span>
+            <span>{copy.read}</span>
             <span className="material-symbols-outlined" aria-hidden="true">expand_more</span>
           </summary>
           <div className="education-article-body">
-            {contentStatus === 'loading' && <p role="status">載入文章中…</p>}
+            {contentStatus === 'loading' && <p role="status">{copy.loading}</p>}
             {contentStatus === 'error' && (
               <div className="education-article-load-error" role="alert">
-                <p>文章暫時無法載入，請稍後再試。</p>
-                <button onClick={loadContent} type="button">重新載入</button>
+                <p>{copy.error}</p>
+                <button onClick={loadContent} type="button">{copy.reload}</button>
               </div>
             )}
             {contentStatus === 'ready' && <p>{content}</p>}

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { InstallAppPage } from '@rehab-trainer/ui/components/InstallAppPage';
 import { CreateSeoMetadata } from '../seo';
+import { DownloadContent } from './DownloadContent';
 
 export const metadata: Metadata = CreateSeoMetadata({
   title: '下載程式',
@@ -9,10 +9,5 @@ export const metadata: Metadata = CreateSeoMetadata({
 });
 
 export default function DownloadPage() {
-  return (
-    <InstallAppPage
-      appName="Rehab Trainer Hub"
-      guideAssetBaseUrl="/assets/pwa-install"
-    />
-  );
+  return <DownloadContent />;
 }

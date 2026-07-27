@@ -170,7 +170,7 @@ summary:focus-visible {
 .hub-header {
   z-index: 80;
   display: grid;
-  grid-template-columns: minmax(220px, auto) minmax(0, 1fr) 48px;
+  grid-template-columns: minmax(220px, auto) minmax(0, 1fr) auto;
   align-items: center;
   gap: 28px;
   min-height: 72px;
@@ -408,6 +408,38 @@ summary:focus-visible {
 .account-menu {
   position: relative;
   justify-self: end;
+}
+
+.hub-header-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 4px;
+}
+
+.hub-language-toggle {
+  display: inline-grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.hub-language-toggle:hover,
+.hub-language-toggle:focus-visible {
+  background: var(--primary-soft);
+}
+
+.hub-language-toggle img {
+  width: 26px;
+  height: 20px;
+  border: 1px solid color-mix(in srgb, var(--heading) 20%, transparent);
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(20, 33, 43, 0.16);
+  object-fit: cover;
 }
 
 .account-menu-button {
@@ -2305,7 +2337,7 @@ summary:focus-visible {
 
 @media (max-width: 720px) {
   .hub-header {
-    grid-template-columns: minmax(0, 1fr) 44px;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     min-height: 112px;
     padding: 8px 16px 0;
@@ -2376,7 +2408,7 @@ summary:focus-visible {
     left: 4px;
   }
 
-  .account-menu {
+  .hub-header-actions {
     grid-column: 2;
     grid-row: 1;
   }

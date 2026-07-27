@@ -17,14 +17,11 @@ import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
 import type { AuthUser } from '@rehab-trainer/ui/auth/authClient';
 import { PwaRegistration } from '@rehab-trainer/ui/pwa';
 import { hubName } from './hubBrand';
+import { GetHubUiCopy } from './i18n';
+import { HubLanguageProvider, useHubLanguage } from './i18n/HubLanguage';
 import { siteUrls } from './siteUrls';
 
-const navigationItems = [
-  { href: '/', label: '訓練大廳' },
-  { href: '/progress/', label: '進度追蹤' },
-  { href: '/qa/', label: '問答中心' },
-  { href: '/download/', label: '下載程式' },
-] as const;
+const navigationHrefs = ['/', '/progress/', '/qa/', '/download/'] as const;
 
 function IsStaffUser(user: AuthUser | null): boolean {
   const role = (user as (AuthUser & { role?: unknown }) | null)?.role;
@@ -42,12 +39,23 @@ export function useHubAuth() {
 }
 
 export function HubShell({ children }: { children: ReactNode }) {
+  return (
+    <HubLanguageProvider>
+      <HubShellContent>{children}</HubShellContent>
+    </HubLanguageProvider>
+  );
+}
+
+function HubShellContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const { language, locale, setLanguage } = useHubLanguage();
   const isStaff = IsStaffUser(user);
   const isTrainingRoute = pathname === '/train' || pathname.startsWith('/train/');
+  const copy = GetHubUiCopy(language).navigation;
+  const nextLanguage = language === 'en' ? 'zh' : 'en';
 
   useEffect(() => {
     setIsAccountOpen(false);
@@ -79,74 +87,91 @@ export function HubShell({ children }: { children: ReactNode }) {
         <PwaRegistration />
         {!isTrainingRoute && (
           <header className="hub-header">
-            <Link className="hub-brand" href="/" aria-label="Rehab Trainer Hub 訓練大廳">
+            <Link className="hub-brand" href="/" aria-label="Rehab Trainer Hub">
               <Image src="/rehabtrainerhub.svg" alt="" width={42} height={42} priority />
               <span>
                 <strong>Rehab Trainer Hub</strong>
-                <small>居家訓練網</small>
+                <small>{copy.brandSubtitle}</small>
               </span>
             </Link>
 
-            <nav className="hub-nav" aria-label="主要導覽">
-              {navigationItems.map((item) => {
-                const isActive = item.href === '/'
+            <nav className="hub-nav" aria-label={copy.navigationLabel}>
+              {navigationHrefs.map((href, index) => {
+                const isActive = href === '/'
                   ? pathname === '/'
-                  : pathname.startsWith(item.href);
+                  : pathname.startsWith(href);
                 return (
-                  <Link className={isActive ? 'is-active' : ''} href={item.href} key={item.href}>
-                    {item.label}
+                  <Link className={isActive ? 'is-active' : ''} href={href} key={href}>
+                    {copy.navigationItems[index]}
                   </Link>
                 );
               })}
             </nav>
 
-            <div className="account-menu" ref={accountMenuRef}>
+            <div className="hub-header-actions">
               <button
-                aria-controls="hub-account-panel"
-                aria-expanded={isAccountOpen}
-                aria-label={user ? `${user.displayName} 帳號選單` : '帳號選單'}
-                className={`account-menu-button ${user ? 'is-signed-in' : ''}`}
-                onClick={() => setIsAccountOpen((open) => !open)}
-                title={user ? user.displayName : '帳號'}
+                aria-label={copy.switchLanguage}
+                className="hub-language-toggle"
+                onClick={() => setLanguage(nextLanguage)}
+                title={copy.switchLanguage}
                 type="button"
               >
-                <AccountAvatar
+                <img
                   alt=""
-                  avatarUrl={user?.avatarUrl}
-                  className="account-avatar"
-                  fallback={<span className="material-symbols-outlined" aria-hidden="true">account_circle</span>}
+                  aria-hidden="true"
+                  src={language === 'en' ? '/assets/flags/us.svg' : '/assets/flags/tw.svg'}
                 />
+                <span className="sr-only">{copy.flagLabel}</span>
               </button>
 
-              <div
-                className="account-popover"
-                hidden={!isAccountOpen}
-                id="hub-account-panel"
-              >
-                {user && <p className="account-name">{user.displayName}</p>}
-                {isStaff && (
-                  <Link
-                    aria-current={pathname.startsWith('/admin/') ? 'page' : undefined}
-                    className="account-admin-link"
-                    href="/admin/"
-                  >
-                    <span className="material-symbols-outlined" aria-hidden="true">clinical_notes</span>
-                    治療師後台
-                  </Link>
-                )}
-                <AuthPanel
-                  apiBase={siteUrls.hub}
-                  appName={hubName}
-                  className="hub-auth-panel"
-                  locale="zh-TW"
-                  onAuthChange={setUser}
-                  privacyHref={`${siteUrls.hub}/privacy/`}
-                  turnstileSiteKey={
-                    process.env.NEXT_PUBLIC_TURNSTILE_AUTH_REQUIRED === '1'
-                      ? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
-                      : undefined
-                  }
-                />
+              <div className="account-menu" ref={accountMenuRef}>
+                <button
+                  aria-controls="hub-account-panel"
+                  aria-expanded={isAccountOpen}
+                  aria-label={user ? `${user.displayName} — ${copy.accountMenu}` : copy.accountMenu}
+                  className={`account-menu-button ${user ? 'is-signed-in' : ''}`}
+                  onClick={() => setIsAccountOpen((open) => !open)}
+                  title={user ? user.displayName : copy.accountMenu}
+                  type="button"
+                >
+                  <AccountAvatar
+                    alt=""
+                    avatarUrl={user?.avatarUrl}
+                    className="account-avatar"
+                    fallback={<span className="material-symbols-outlined" aria-hidden="true">account_circle</span>}
+                  />
+                </button>
+
+                <div
+                  className="account-popover"
+                  hidden={!isAccountOpen}
+                  id="hub-account-panel"
+                >
+                  {user && <p className="account-name">{user.displayName}</p>}
+                  {isStaff && (
+                    <Link
+                      aria-current={pathname.startsWith('/admin/') ? 'page' : undefined}
+                      className="account-admin-link"
+                      href="/admin/"
+                    >
+                      <span className="material-symbols-outlined" aria-hidden="true">clinical_notes</span>
+                      {copy.admin}
+                    </Link>
+                  )}
+                  <AuthPanel
+                    apiBase={siteUrls.hub}
+                    appName={hubName}
+                    className="hub-auth-panel"
+                    locale={locale}
+                    onAuthChange={setUser}
+                    privacyHref={`${siteUrls.hub}/privacy/`}
+                    turnstileSiteKey={
+                      process.env.NEXT_PUBLIC_TURNSTILE_AUTH_REQUIRED === '1'
+                        ? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+                        : undefined
+                    }
+                  />
+                </div>
               </div>
             </div>
           </header>
@@ -162,12 +187,12 @@ export function HubShell({ children }: { children: ReactNode }) {
             privacyHref="/privacy/"
             showRights={false}
             labels={{
-              hub: '訓練大廳',
-              download: '下載程式',
-              privacy: '隱私權',
+              hub: copy.footer.hub,
+              download: copy.footer.download,
+              privacy: copy.footer.privacy,
               repo: 'GitHub',
-              disclaimer: '復健訓練流程原型，非醫療建議。',
-              navigation: '頁尾導覽',
+              disclaimer: copy.footer.disclaimer,
+              navigation: copy.footer.navigation,
             }}
           />
         )}

@@ -8,10 +8,14 @@ import {
   GetTrainingModuleCopy,
   trainingCatalog,
 } from '@rehab-trainer/ui/trainingCatalog';
+import { GetHubUiCopy } from '../i18n';
+import { useHubLanguage } from '../i18n/HubLanguage';
 
 export function EmbeddedTraining() {
   const searchParams = useSearchParams();
   const [isLoaded, setIsLoaded] = useState(false);
+  const { language, locale, t } = useHubLanguage();
+  const copy = GetHubUiCopy(language).embeddedTraining;
   const module = trainingCatalog.find(
     (candidate) => candidate.catalogId === searchParams.get('module'),
   );
@@ -25,26 +29,26 @@ export function EmbeddedTraining() {
   if (!module) {
     return (
       <main className="embedded-training-error" id="main-content">
-        <h1>找不到訓練模組</h1>
-        <p>這個訓練連結不存在或已經更新。</p>
-        <Link href="/">返回訓練大廳</Link>
+        <h1>{copy.notFoundTitle}</h1>
+        <p>{copy.notFoundBody}</p>
+        <Link href="/">{copy.returnToLobby}</Link>
       </main>
     );
   }
 
-  const copy = GetTrainingModuleCopy(module, 'zh-TW');
+  const moduleCopy = GetTrainingModuleCopy(module, locale);
 
   return (
     <main className="embedded-training-page" id="main-content">
       <header className="embedded-training-bar">
-        <Link aria-label="返回訓練大廳" href="/">
+        <Link aria-label={copy.returnToLobby} href="/">
           <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>
-          <span>訓練大廳</span>
+          <span>{copy.returnToLobby}</span>
         </Link>
-        <strong>{copy.title}</strong>
+        <strong>{moduleCopy.title}</strong>
       </header>
       <div className="embedded-training-frame">
-        {!isLoaded && <p aria-live="polite">正在載入訓練設定…</p>}
+        {!isLoaded && <p aria-live="polite">{copy.loading}</p>}
         <iframe
           allow="autoplay; camera; microphone; fullscreen"
           allowFullScreen
@@ -52,7 +56,7 @@ export function EmbeddedTraining() {
           referrerPolicy="strict-origin-when-cross-origin"
           sandbox="allow-downloads allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"
           src={sourceUrl}
-          title={`${copy.title} 訓練設定與遊戲`}
+          title={t('embeddedTraining.frameTitle', { title: moduleCopy.title })}
         />
       </div>
     </main>

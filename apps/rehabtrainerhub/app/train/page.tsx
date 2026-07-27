@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { CreateSeoMetadata } from '../seo';
 import { EmbeddedTraining } from './EmbeddedTraining';
+import { TrainingLoading } from './TrainingLoading';
 
 export const metadata: Metadata = CreateSeoMetadata({
   title: '進行訓練',
@@ -12,7 +13,7 @@ export const metadata: Metadata = CreateSeoMetadata({
 
 export default function TrainingPage() {
   return (
-    <Suspense fallback={<main className="embedded-training-loading">正在載入訓練…</main>}>
+    <Suspense fallback={<TrainingLoading />}>
       <EmbeddedTraining />
     </Suspense>
   );

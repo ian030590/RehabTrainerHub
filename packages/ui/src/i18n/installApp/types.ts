@@ -1,0 +1,35 @@
+export interface InstallAppCopy {
+  title: string;
+  intro: string;
+  installed: string;
+  dismissed: string;
+  unavailable: string;
+  install: string;
+  tryInstall: string;
+  installedButton: string;
+  desktopTitle: string;
+  desktopSteps: readonly string[];
+  desktopAlt: string;
+  firefoxTitle: string;
+  firefoxSteps: readonly string[];
+  firefoxNote: string;
+  firefoxAlt: string;
+  iphoneTitle: string;
+  iphoneSteps: readonly string[];
+  iphoneAlt: string;
+  androidTitle: string;
+  androidBody: string;
+  androidAlt: string;
+  androidInstall: string;
+  sourcePrefix: string;
+  desktopSource: string;
+  firefoxSource: string;
+  iphoneWebSource: string;
+  appleSource: string;
+  mdnSource: string;
+  attributionLabel: string;
+  attribution: string;
+  attributionMiddle: string;
+  attributionEnd: string;
+  attributionTail: string;
+}

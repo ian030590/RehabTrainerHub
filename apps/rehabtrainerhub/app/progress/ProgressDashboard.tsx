@@ -14,6 +14,8 @@ import {
   trainingCatalog,
 } from '@rehab-trainer/ui/trainingCatalog';
 import { useHubAuth } from '../HubNavigation';
+import { GetHubUiCopy } from '../i18n';
+import { useHubLanguage } from '../i18n/HubLanguage';
 import { siteUrls } from '../siteUrls';
 import { TrophyIcon } from '../TrophyIcon';
 
@@ -43,8 +45,10 @@ type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 export function ProgressDashboard() {
   const { user } = useHubAuth();
+  const { language, locale, t } = useHubLanguage();
   const [progress, setProgress] = useState<RehabProgress | null>(null);
   const [status, setStatus] = useState<LoadStatus>('idle');
+  const copy = GetHubUiCopy(language).progress;
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +80,7 @@ export function ProgressDashboard() {
   const recentModules = (progress?.recentModules ?? [])
     .map((recentModule) => trainingCatalog.find((module) => module.runtimeId === recentModule.moduleId))
     .filter((module): module is (typeof trainingCatalog)[number] => Boolean(module));
-  const dateFormatter = new Intl.DateTimeFormat('zh-TW', {
+  const dateFormatter = new Intl.DateTimeFormat(locale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -85,48 +89,48 @@ export function ProgressDashboard() {
   return (
     <main className="progress-page" id="main-content">
       <header className="page-heading">
-        <p className="page-kicker">Rehabilitation progress</p>
-        <h1>進度追蹤</h1>
+        <p className="page-kicker">{copy.kicker}</p>
+        <h1>{copy.title}</h1>
       </header>
 
       {!user && (
         <section className="progress-notice" aria-live="polite">
           <span className="material-symbols-outlined" aria-hidden="true">lock</span>
           <div>
-            <h2>登入後查看個人進度</h2>
-            <p>請使用右上角帳號按鈕登入。</p>
+            <h2>{copy.signInTitle}</h2>
+            <p>{copy.signInBody}</p>
           </div>
         </section>
       )}
 
       {status === 'error' && (
-        <p className="progress-error" role="alert">目前無法載入進度，請稍後再試。</p>
+        <p className="progress-error" role="alert">{copy.loadError}</p>
       )}
 
-      <section className="progress-metrics" aria-label="復健天數">
+      <section className="progress-metrics" aria-label={copy.rehabilitationDays}>
         <article>
-          <span>距開始復健經過</span>
+          <span>{copy.daysSinceStart}</span>
           <strong>{status === 'loading' ? '—' : progress?.daysSinceStart ?? 0}</strong>
-          <small>天</small>
+          <small>{copy.days}</small>
           <p>
             {progress?.startedOn
-              ? `開始於 ${dateFormatter.format(new Date(`${progress.startedOn}T00:00:00+08:00`))}`
-              : '尚無復健紀錄'}
+              ? t('progress.startedOn', { date: dateFormatter.format(new Date(`${progress.startedOn}T00:00:00+08:00`)) })
+              : copy.noRecords}
           </p>
         </article>
         <article>
-          <span>累計復健天數</span>
+          <span>{copy.rehabilitationDays}</span>
           <strong>{status === 'loading' ? '—' : progress?.rehabilitationDays ?? 0}</strong>
-          <small>天</small>
-          <p>中斷後重新起算，成就以此為準</p>
+          <small>{copy.days}</small>
+          <p>{copy.streakNote}</p>
         </article>
       </section>
 
       <section className="daily-section" aria-labelledby="daily-title">
         <div className="section-title-row">
           <div>
-            <p className="page-kicker">Today</p>
-            <h2 id="daily-title">每日任務</h2>
+            <p className="page-kicker">{copy.today}</p>
+            <h2 id="daily-title">{copy.dailyTasks}</h2>
           </div>
           {progress && (
             <time dateTime={progress.serverDate}>
@@ -146,7 +150,7 @@ export function ProgressDashboard() {
                 {task.completed ? 'check_circle' : 'radio_button_unchecked'}
               </span>
               <div>
-                <h3>{task.title}</h3>
+                <h3>{copy.dailyTaskTitles[task.id as keyof typeof copy.dailyTaskTitles] ?? task.title}</h3>
                 <div
                   aria-label={`${task.current} / ${task.target}`}
                   aria-valuemax={task.target}
@@ -167,25 +171,25 @@ export function ProgressDashboard() {
       <section className="recent-module-section" aria-labelledby="recent-modules-title">
         <div className="section-title-row">
           <div>
-            <p className="page-kicker">Recently played</p>
-            <h2 id="recent-modules-title">近期遊玩</h2>
+            <p className="page-kicker">{copy.recentlyPlayed}</p>
+            <h2 id="recent-modules-title">{copy.recentlyPlayed}</h2>
           </div>
         </div>
 
         {status === 'loading' ? (
-          <p className="recent-module-empty">正在載入近期遊玩紀錄…</p>
+          <p className="recent-module-empty">{copy.loadingRecent}</p>
         ) : recentModules.length > 0 ? (
           <div className="recent-module-grid">
             {recentModules.map((module) => {
-              const copy = GetTrainingModuleCopy(module, 'zh-TW');
+              const moduleCopy = GetTrainingModuleCopy(module, locale);
               const purpose = GetTrainingPurpose(module.purpose);
 
               return (
                 <article className={`recent-module-card trainer-${module.trainer}`} key={module.catalogId}>
-                  <span>{purpose.label}</span>
-                  <h3>{copy.title}</h3>
+                  <span>{language === 'en' ? purpose.labelEn : purpose.label}</span>
+                  <h3>{moduleCopy.title}</h3>
                   <Link href={BuildHubTrainingHref(module)}>
-                    開始訓練
+                    {copy.start}
                     <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                   </Link>
                 </article>
@@ -193,17 +197,20 @@ export function ProgressDashboard() {
             })}
           </div>
         ) : (
-          <p className="recent-module-empty">完成訓練後，最近遊玩的模組會顯示在這裡。</p>
+          <p className="recent-module-empty">{copy.noRecent}</p>
         )}
       </section>
 
       <section className="achievement-section" aria-labelledby="achievement-title">
         <div className="section-title-row">
           <div>
-            <p className="page-kicker">Milestones</p>
-            <h2 id="achievement-title">復健成就</h2>
+            <p className="page-kicker">{copy.milestones}</p>
+            <h2 id="achievement-title">{copy.achievements}</h2>
           </div>
-          <p>{achievements.filter((achievement) => achievement.achieved).length}/{achievements.length} 已達成</p>
+          <p>{t('progress.achievedCount', {
+            current: achievements.filter((achievement) => achievement.achieved).length,
+            total: achievements.length,
+          })}</p>
         </div>
 
         <div className="achievement-grid">
@@ -212,17 +219,17 @@ export function ProgressDashboard() {
               <div className="trophy-mark">
                 <TrophyIcon />
               </div>
-              <h3>{achievement.title}</h3>
-              <p>{achievement.achieved ? '已達成' : `尚需 ${Math.max(0, achievement.requiredDays - (progress?.rehabilitationDays ?? 0))} 天`}</p>
+              <h3>{t('progress.achievementTitle', { days: achievement.requiredDays })}</h3>
+              <p>{achievement.achieved ? copy.achieved : t('progress.daysToGo', {
+                days: Math.max(0, achievement.requiredDays - (progress?.rehabilitationDays ?? 0)),
+              })}</p>
             </article>
           ))}
         </div>
       </section>
 
       {progress && (
-        <p className="server-date-note">
-          日期由後端依 {progress.timeZone} 驗證
-        </p>
+        <p className="server-date-note">{t('progress.serverDate', { timeZone: progress.timeZone })}</p>
       )}
     </main>
   );
