@@ -48,6 +48,7 @@
     "./devicePerformance": "./src/devicePerformance.ts",
     "./displayTiming": "./src/displayTiming.ts",
     "./downloadFile": "./src/downloadFile.ts",
+    "./embeddedTraining": "./src/embeddedTraining.ts",
     "./fullscreen": "./src/fullscreen.ts",
     "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
     "./hooks/useFullscreenTrainingRoot": "./src/hooks/useFullscreenTrainingRoot.ts",

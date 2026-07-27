@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { NotifyHubTrainingComplete } from '../embeddedTraining';
 import { ExitFullscreenIfActive } from '../fullscreen';
 import { defaultSiteUrls } from '../siteUrls';
 
@@ -27,6 +28,7 @@ export function TrainingResultActions({
 }: TrainingResultActionsProps) {
   useEffect(() => {
     void ExitFullscreenIfActive();
+    NotifyHubTrainingComplete();
   }, []);
 
   return (
