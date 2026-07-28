@@ -979,7 +979,8 @@ summary:focus-visible {
   display: none;
 }
 
-.module-card-footer a {
+.module-card-footer a,
+.module-card-footer button {
   display: inline-flex;
   width: 100%;
   min-height: 44px;
@@ -990,19 +991,23 @@ summary:focus-visible {
   border-radius: 999px;
   color: #ffffff;
   background: var(--trainer-color);
+  border: none;
+  cursor: pointer;
   font-size: 0.88rem;
   font-weight: 700;
   text-decoration: none;
   transition: background-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
 }
 
-.module-card-footer a:hover {
+.module-card-footer a:hover,
+.module-card-footer button:hover {
   background: var(--trainer-color-dark);
   box-shadow: 0 5px 12px color-mix(in srgb, var(--trainer-color) 24%, transparent);
   transform: scale(0.98);
 }
 
-.module-card-footer a:focus-visible {
+.module-card-footer a:focus-visible,
+.module-card-footer button:focus-visible {
   outline: 3px solid var(--trainer-color);
   outline-offset: 3px;
 }
