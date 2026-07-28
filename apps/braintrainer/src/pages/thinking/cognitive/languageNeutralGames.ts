@@ -232,7 +232,12 @@ export function UpdateLanguageNeutralTimedState(
   elapsed: number,
   render: () => void,
 ) {
-  if (state.kind !== 'simon-says' || state.status !== 'showing' || elapsed < state.nextStepAt) return;
+  if (state.kind !== 'simon-says' || state.status !== 'showing') return;
+  if (state.litIndex !== null && elapsed < state.nextStepAt) {
+    render();
+    return;
+  }
+  if (elapsed < state.nextStepAt) return;
   if (state.litIndex !== null) {
     state.litIndex = null;
     state.nextStepAt = elapsed + 0.2;
@@ -403,7 +408,7 @@ export function DrawLanguageNeutralGame(
       DrawBullsAndCows(app, state, onTap, t);
       break;
     case 'simon-says':
-      DrawSimon(app, state, onTap, t);
+      DrawSimon(app, state, elapsed, onTap, t);
       break;
     case 'tic-tac-toe':
       DrawTicTacToe(app, state, onTap, t);
@@ -647,7 +652,7 @@ function HandleSimonTap(state: SimonState, index: number, elapsed: number, finis
   state.nextStepAt = elapsed + 0.55;
 }
 
-function DrawSimon(app: Application, state: SimonState, onTap: (index: number) => void, _t: TFunction) {
+function DrawSimon(app: Application, state: SimonState, elapsed: number, onTap: (index: number) => void, _t: TFunction) {
   const boardMax = GetResponsiveBoardMaxSize(app);
   const boardSize = Math.floor(Math.min(IsMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 320, boardMax.width, boardMax.height));
   const buttonSize = boardSize * (150 / 320);
@@ -672,6 +677,7 @@ function DrawSimon(app: Application, state: SimonState, onTap: (index: number) =
       button.corner,
       state.litIndex === index ? button.activeColor : button.color,
       state.litIndex === index,
+      elapsed,
       index,
       onTap,
     );
@@ -1282,12 +1288,26 @@ function DrawSimonButton(
   corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
   color: number,
   active: boolean,
+  elapsed: number,
   index: number,
   onTap: (index: number) => void,
 ) {
   const node = InteractiveNode(onTap, index);
   const g = new Graphics();
   const r = size;
+  const pulse = active ? 0.5 + Math.sin(elapsed * 24) * 0.5 : 0;
+  const shift = active ? size * (0.07 + pulse * 0.03) : 0;
+  const dx = corner.includes('left') ? -shift : shift;
+  const dy = corner.includes('top') ? -shift : shift;
+  x += dx;
+  y += dy;
+
+  if (active) {
+    const glow = new Graphics();
+    glow.roundRect(x - size * 0.06, y - size * 0.06, size * 1.12, size * 1.12, size * 0.18)
+      .fill({ color, alpha: 0.34 + pulse * 0.24 });
+    node.addChild(glow);
+  }
 
   if (corner === 'top-left') {
     g.moveTo(x + r, y).lineTo(x + size, y).lineTo(x + size, y + size).lineTo(x, y + size).lineTo(x, y + r)
@@ -1306,7 +1326,7 @@ function DrawSimonButton(
       .lineTo(x, y + size).closePath();
   }
 
-  g.fill({ color, alpha: active ? 1 : 0.7 }).stroke({ color: 0x333333, width: 4 });
+  g.fill({ color, alpha: active ? 1 : 0.45 }).stroke({ color: active ? 0xffffff : 0x333333, width: active ? 7 : 4 });
   node.addChild(g);
   app.stage.addChild(node);
 }
