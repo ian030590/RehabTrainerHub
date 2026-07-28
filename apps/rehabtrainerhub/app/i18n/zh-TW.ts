@@ -8,7 +8,7 @@ export const zhTW = {
     nav: {
       programs: '復健工具',
       care: '安全提醒',
-      education: '衛教資訊',
+      education: '常見問答',
       links: '衛教影片',
       references: '參考資料',
       submit: '合作投稿',

@@ -6,7 +6,10 @@ import {
   GetTrainingModuleCopy,
   type TrainingCatalogModule,
 } from '@rehab-trainer/ui/trainingCatalog';
-import { IsHubTrainingCompleteMessage } from '@rehab-trainer/ui/embeddedTraining';
+import {
+  IsHubTrainingActiveMessage,
+  IsHubTrainingCompleteMessage,
+} from '@rehab-trainer/ui/embeddedTraining';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 
@@ -19,6 +22,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [isTrainingComplete, setIsTrainingComplete] = useState(false);
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).embeddedTraining;
@@ -34,13 +38,14 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
     dialogRef.current?.showModal();
   }, []);
 
-  // Reset completion state when module changes
+  // Reset state when module/sourceUrl changes
   useEffect(() => {
+    setIsTrainingActive(false);
     setIsTrainingComplete(false);
     setIsLoaded(false);
   }, [sourceUrl]);
 
-  // Listen for training-complete postMessage from the iframe
+  // Listen for training postMessages from the iframe
   useEffect(() => {
     if (!sourceUrl) return;
     const trainerOrigin = new URL(sourceUrl).origin;
@@ -49,24 +54,28 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
       if (
         event.origin !== trainerOrigin
         || event.source !== frameRef.current?.contentWindow
-        || !IsHubTrainingCompleteMessage(event.data)
       ) {
         return;
       }
-      setIsTrainingComplete(true);
+
+      if (IsHubTrainingActiveMessage(event.data)) {
+        setIsTrainingActive(event.data.active);
+      } else if (IsHubTrainingCompleteMessage(event.data)) {
+        setIsTrainingActive(false);
+        setIsTrainingComplete(true);
+      }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [sourceUrl]);
 
-  // Close dialog on Escape (native dialog behaviour already fires this, but we
-  // need to sync React state by calling onClose).
+  // Close dialog on Escape — sync React state by calling onClose
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     const handleCancel = (event: Event) => {
-      event.preventDefault(); // prevent default close so we control it
+      event.preventDefault();
       onClose();
     };
     dialog.addEventListener('cancel', handleCancel);
@@ -81,7 +90,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
       className="training-overlay"
       ref={dialogRef}
     >
-      {!isTrainingComplete && (
+      {!isTrainingActive && !isTrainingComplete && (
         <header className="embedded-training-bar">
           <button
             aria-label={copy.returnToLobby}

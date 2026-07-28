@@ -377,6 +377,7 @@ export function ReferenceCognitiveGame({
         appRef.current = app;
         host.appendChild(app.canvas);
         app.canvas.className = 'cognitive-pixi-canvas';
+        app.renderer.on('resize', handleResize);
         DrawBackground(app);
         app.ticker.add((ticker: Ticker) => {
           if (phaseRef.current !== 'playing') return;
@@ -408,12 +409,13 @@ export function ReferenceCognitiveGame({
 
     void init();
     const handleResize = () => renderRef.current();
-    window.addEventListener('resize', handleResize);
     return () => {
       cancelled = true;
-      window.removeEventListener('resize', handleResize);
       if (appRef.current === app) appRef.current = null;
-      if (initialized) app.destroy(true, { children: true, texture: false });
+      if (initialized) {
+        app.renderer.off('resize', handleResize);
+        app.destroy(true, { children: true, texture: false });
+      }
     };
   }, [gameId, sessionLimitSec, whackDurationSec]);
 

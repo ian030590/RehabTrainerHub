@@ -132,6 +132,9 @@ const defaultCustomEnemyHp = 8;
 const defaultCustomHoldDuration = 2.5;
 const gestures: readonly GestureId[] = [1, 2, 3, 4, 5];
 const moveColors = [0x38bdf8, 0xf8fafc, 0x4ade80, 0xfb923c, 0xfacc15] as const;
+const coarsePortraitMediaQuery = typeof window === 'undefined' || !window.matchMedia
+  ? null
+  : window.matchMedia('(orientation: portrait) and (pointer: coarse)');
 const calibrationSteps: readonly CalibrationStep[] = [
   {
     kind: 'rom-closed',
@@ -539,6 +542,22 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     animationFrameRef.current = window.requestAnimationFrame(processFrame);
     const currentPhase = phaseRef.current;
     if (currentPhase !== 'calibration' && currentPhase !== 'combat') return;
+    if (IsCoarsePointerPortrait()) {
+      if (
+        currentPhase === 'calibration'
+        && (calibrationHoldStartRef.current !== null || calibrationSamplesRef.current.length > 0)
+      ) {
+        calibrationHoldStartRef.current = null;
+        calibrationSamplesRef.current = [];
+        setCalibrationProgress(0);
+      } else if (
+        currentPhase === 'combat'
+        && (holdRef.current.gesture !== null || holdRef.current.progressMs > 0)
+      ) {
+        resetHold(false);
+      }
+      return;
+    }
     if (now - lastDetectionAtRef.current < detectionIntervalMs) return;
     const video = videoRef.current;
     const landmarker = handLandmarkerRef.current;
@@ -565,7 +584,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       stopVision();
       setPhase('menu');
     }
-  }, [handleCalibrationHand, handleCombatHand, handleNoHand, setPhase, stopVision, t]);
+  }, [handleCalibrationHand, handleCombatHand, handleNoHand, resetHold, setPhase, stopVision, t]);
 
   const startCalibration = useCallback(async () => {
     if (!VerifySelectedTrainingUser()) return;
@@ -676,11 +695,12 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
   useEffect(() => {
     let cancelled = false;
+    let initialized = false;
     const app = new Application();
     appRef.current = app;
+    const host = pixiHostRef.current;
 
     const initialize = async () => {
-      const host = pixiHostRef.current;
       if (!host) return;
       await app.init({
         background: '#d9e6c3',
@@ -690,6 +710,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         resizeTo: host,
       });
       if (cancelled) return;
+      initialized = true;
       host.appendChild(app.canvas);
       app.canvas.className = 'gesture-battler-canvas';
       app.ticker.add((ticker: Ticker) => {
@@ -706,13 +727,24 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     void initialize();
 
     const onResize = () => {
-      if (!appRef.current || phaseRef.current !== 'combat') return;
-      sceneRef.current = DrawBattleScene(appRef.current);
+      const currentApp = appRef.current;
+      if (!initialized || !currentApp || !host) return;
+      ResizePixiAppToElement(currentApp, host);
+      if (phaseRef.current === 'combat') sceneRef.current = DrawBattleScene(currentApp);
     };
+    const resizeObserver = host && typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(onResize)
+      : null;
     window.addEventListener('resize', onResize);
+    window.visualViewport?.addEventListener('resize', onResize);
+    document.addEventListener('fullscreenchange', onResize);
+    if (resizeObserver && host) resizeObserver.observe(host);
     return () => {
       cancelled = true;
       window.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('resize', onResize);
+      document.removeEventListener('fullscreenchange', onResize);
+      resizeObserver?.disconnect();
       app.destroy(true, { children: true, texture: true });
       appRef.current = null;
       sceneRef.current = null;
@@ -763,11 +795,19 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     <div ref={fullscreenRootRef} className={`gesture-battler gesture-battler-phase-${phase}`}>
       <div ref={pixiHostRef} className="gesture-battler-stage" />
 
-      <div className={`gesture-camera ${phase === 'menu' || phase === 'rules' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>
+      <div className={`gesture-camera ${phase === 'menu' || phase === 'rules' || phase === 'initializing' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>
         <video ref={videoRef} muted playsInline aria-label={t('gesture.camera.preview')} />
         <canvas ref={handCanvasRef} aria-hidden="true" />
         <span>{handVisible ? t('gesture.camera.tracking') : t('gesture.camera.finding')}</span>
       </div>
+
+      {['rules', 'initializing', 'calibration', 'combat'].includes(phase) && (
+        <div className="gesture-orientation-gate" role="status" aria-live="polite">
+          <span className="gesture-orientation-phone" aria-hidden="true" />
+          <strong>{t('gesture.orientation.title')}</strong>
+          <span>{t('gesture.orientation.description')}</span>
+        </div>
+      )}
 
       {phase === 'menu' && (
         <div className="training-panel gesture-menu-panel">
@@ -1250,6 +1290,10 @@ function RandomGesture(): GestureId {
 function ChooseNextGesture(previous: GestureId): GestureId {
   const options = gestures.filter((gesture) => gesture !== previous);
   return options[Math.floor(Math.random() * options.length)];
+}
+
+function IsCoarsePointerPortrait(): boolean {
+  return coarsePortraitMediaQuery?.matches ?? false;
 }
 
 function ResizePixiAppToElement(app: Application, element: HTMLElement | null): void {

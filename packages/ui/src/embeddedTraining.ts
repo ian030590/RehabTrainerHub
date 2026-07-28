@@ -1,8 +1,16 @@
 export const hubTrainingCompleteMessageType = 'rehab-trainer:training-complete' as const;
+export const hubTrainingActiveMessageType = 'rehab-trainer:training-active' as const;
 
 export interface HubTrainingCompleteMessage {
   type: typeof hubTrainingCompleteMessageType;
 }
+
+export interface HubTrainingActiveMessage {
+  type: typeof hubTrainingActiveMessageType;
+  active: boolean;
+}
+
+type HubTrainingMessage = HubTrainingCompleteMessage | HubTrainingActiveMessage;
 
 export function IsHubOrigin(url: string): boolean {
   try {
@@ -31,18 +39,25 @@ export function IsEmbeddedHubTraining(): boolean {
   return GetEmbeddedHubOrigin() !== null;
 }
 
-export function NotifyHubTrainingComplete() {
+function PostHubTrainingMessage(message: HubTrainingMessage) {
   if (typeof window === 'undefined'
     || window.self === window.top
     || new URLSearchParams(window.location.search).get('embed') !== 'hub') {
     return;
   }
 
-  const message: HubTrainingCompleteMessage = { type: hubTrainingCompleteMessageType };
   // The parent Hub verifies both this trainer's origin and iframe window before
   // accepting the message. Use the referrer-derived origin when available, but
   // retain delivery for privacy settings that intentionally omit referrers.
   window.parent.postMessage(message, GetEmbeddedHubOrigin() ?? '*');
+}
+
+export function NotifyHubTrainingComplete() {
+  PostHubTrainingMessage({ type: hubTrainingCompleteMessageType });
+}
+
+export function NotifyHubTrainingActive(active: boolean) {
+  PostHubTrainingMessage({ type: hubTrainingActiveMessageType, active });
 }
 
 export function IsHubTrainingCompleteMessage(value: unknown): value is HubTrainingCompleteMessage {
@@ -50,4 +65,13 @@ export function IsHubTrainingCompleteMessage(value: unknown): value is HubTraini
     && value !== null
     && 'type' in value
     && value.type === hubTrainingCompleteMessageType;
+}
+
+export function IsHubTrainingActiveMessage(value: unknown): value is HubTrainingActiveMessage {
+  return typeof value === 'object'
+    && value !== null
+    && 'type' in value
+    && value.type === hubTrainingActiveMessageType
+    && 'active' in value
+    && typeof value.active === 'boolean';
 }

@@ -8,7 +8,7 @@ export const en = {
     nav: {
       programs: 'Rehab Tools',
       care: 'Safety Notes',
-      education: 'Education',
+      education: 'FAQs',
       links: 'Education Videos',
       references: 'References',
       submit: 'Collaboration',

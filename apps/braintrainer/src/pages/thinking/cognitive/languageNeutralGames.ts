@@ -27,6 +27,7 @@ import {
   IsMobileCognitiveViewport,
   Shuffle,
 } from './utils';
+import { GetBullsAndCowsLayout } from './bullsAndCowsLayout';
 
 type ReferenceLanguageNeutralGameKind = Exclude<
   ReferenceGameId,
@@ -600,13 +601,14 @@ function HandleBullsAndCowsTap(state: BullsAndCowsState, index: number, finishGa
 
 function DrawBullsAndCows(app: Application, state: BullsAndCowsState, onTap: (index: number) => void, t: TFunction) {
   const boardBounds = GetResponsiveBoardBounds(app);
+  const layout = GetBullsAndCowsLayout(boardBounds, state.attempts.length);
   DrawGuessHistory(app, state.attempts.map((attempt) => ({
     label: `${attempt.bulls}/${attempt.cows}`,
     values: attempt.guess,
-  })));
-  DrawDigitInput(app, state.guess, state.selectedSlot, onTap);
-  DrawDigitPalette(app, onTap);
-  DrawButton(app, submitIndex, t('cognitive.play.submit'), app.renderer.width / 2, boardBounds.bottom - 24, Math.min(180, boardBounds.width), 48, onTap);
+  })), layout);
+  DrawDigitInput(app, state.guess, state.selectedSlot, layout, onTap);
+  DrawDigitPalette(app, layout, onTap);
+  DrawButton(app, submitIndex, t('cognitive.play.submit'), layout.submit.x + layout.submit.width / 2, layout.submit.y + layout.submit.height / 2, layout.submit.width, layout.submit.height, onTap);
 }
 
 function CreateSimonState(difficulty: Difficulty): SimonState {
@@ -1324,67 +1326,51 @@ function DrawButton(app: Application, index: number, label: string, cx: number, 
   app.stage.addChild(node);
 }
 
-function DrawGuessHistory(app: Application, rows: Array<{ values: number[]; label: string }>) {
-  const boardBounds = GetResponsiveBoardBounds(app);
-  const rowWidth = Math.min(340, boardBounds.width);
-  const startX = boardBounds.left + (boardBounds.width - rowWidth) / 2;
-  const startY = boardBounds.top;
-  const rowHeight = 30;
-  rows.slice(-8).forEach((row, rowIndex) => {
-    const y = startY + rowIndex * rowHeight;
+function DrawGuessHistory(app: Application, rows: Array<{ values: number[]; label: string }>, layout: ReturnType<typeof GetBullsAndCowsLayout>) {
+  const visibleRows = layout.history.visibleRows ? rows.slice(-layout.history.visibleRows) : [];
+  visibleRows.forEach((row, rowIndex) => {
+    const y = layout.history.y + rowIndex * layout.history.rowHeight;
     const g = new Graphics();
-    g.rect(startX, y, rowWidth, rowHeight).fill(originalLight).stroke({ color: originalBorder, width: 1 });
+    g.rect(layout.history.x, y, layout.history.width, layout.history.rowHeight).fill(originalLight).stroke({ color: originalBorder, width: 1 });
     app.stage.addChild(g);
     const guess = new Text({ text: row.values.join(''), style: { fontSize: 18, fontFamily: 'monospace', fontWeight: '700', fill: '#2c3e50' } });
     guess.anchor.set(0, 0.5);
-    guess.x = startX + 16;
-    guess.y = y + rowHeight / 2;
+    guess.x = layout.history.x + 16;
+    guess.y = y + layout.history.rowHeight / 2;
     app.stage.addChild(guess);
     const result = new Text({ text: row.label, style: { fontSize: 16, fontWeight: '700', fill: '#e74c3c' } });
     result.anchor.set(1, 0.5);
-    result.x = startX + rowWidth - 16;
-    result.y = y + rowHeight / 2;
+    result.x = layout.history.x + layout.history.width - 16;
+    result.y = y + layout.history.rowHeight / 2;
     app.stage.addChild(result);
   });
 }
 
-function DrawDigitInput(app: Application, guess: number[], selectedSlot: number, onTap: (index: number) => void) {
-  const boardBounds = GetResponsiveBoardBounds(app);
-  const gap = 12;
-  const preferredCell = IsMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 54;
-  const cell = Math.floor(Math.min(preferredCell, (boardBounds.width - gap * (guess.length - 1)) / guess.length, boardBounds.height * 0.12));
-  const startX = boardBounds.left + (boardBounds.width - guess.length * cell - gap * (guess.length - 1)) / 2;
-  const y = boardBounds.top + boardBounds.height * 0.46;
+function DrawDigitInput(app: Application, guess: number[], selectedSlot: number, layout: ReturnType<typeof GetBullsAndCowsLayout>, onTap: (index: number) => void) {
   guess.forEach((value, index) => {
     const node = InteractiveNode(onTap, index);
-    node.x = startX + index * (cell + gap);
-    node.y = y;
+    node.x = layout.input.x + index * (layout.input.cell + layout.input.gap);
+    node.y = layout.input.y;
     const g = new Graphics();
-    g.rect(0, 0, cell, cell)
+    g.rect(0, 0, layout.input.cell, layout.input.cell)
       .fill(0xffffff)
       .stroke({ color: selectedSlot === index ? originalBlueDark : originalBlue, width: selectedSlot === index ? 4 : 2 });
     node.addChild(g);
-    if (value >= 0) AddText(node, String(value), cell / 2, cell / 2, { fontSize: 28, fontWeight: '400', fill: '#2c3e50' });
+    if (value >= 0) AddText(node, String(value), layout.input.cell / 2, layout.input.cell / 2, { fontSize: Math.min(28, layout.input.cell * 0.72), fontWeight: '400', fill: '#2c3e50' });
     app.stage.addChild(node);
   });
 }
 
-function DrawDigitPalette(app: Application, onTap: (index: number) => void) {
-  const boardBounds = GetResponsiveBoardBounds(app);
-  const preferredCell = IsMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 38;
+function DrawDigitPalette(app: Application, layout: ReturnType<typeof GetBullsAndCowsLayout>, onTap: (index: number) => void) {
   const cols = 5;
-  const gap = 8;
-  const cell = Math.floor(Math.min(preferredCell, (boardBounds.width - gap * (cols - 1)) / cols, boardBounds.height * 0.1));
-  const startX = boardBounds.left + (boardBounds.width - cols * cell - gap * (cols - 1)) / 2;
-  const y = boardBounds.top + boardBounds.height * 0.62;
   for (let digit = 0; digit < 10; digit += 1) {
     const node = InteractiveNode(onTap, digitOffset + digit);
-    node.x = startX + (digit % cols) * (cell + gap);
-    node.y = y + Math.floor(digit / cols) * (cell + gap);
+    node.x = layout.palette.x + (digit % cols) * (layout.palette.cell + layout.palette.gap);
+    node.y = layout.palette.y + Math.floor(digit / cols) * (layout.palette.cell + layout.palette.rowGap);
     const g = new Graphics();
-    g.rect(0, 0, cell, cell).fill(originalBlue);
+    g.rect(0, 0, layout.palette.cell, layout.palette.cell).fill(originalBlue);
     node.addChild(g);
-    AddText(node, String(digit), cell / 2, cell / 2, { fontSize: 20, fontWeight: '400', fill: '#FFFFFF' });
+    AddText(node, String(digit), layout.palette.cell / 2, layout.palette.cell / 2, { fontSize: Math.min(20, layout.palette.cell * 0.72), fontWeight: '400', fill: '#FFFFFF' });
     app.stage.addChild(node);
   }
 }

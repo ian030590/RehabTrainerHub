@@ -108,6 +108,7 @@ body.ufov-game-active .ufov-stage {
   inset: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   aspect-ratio: auto;
   margin: 0;
 }

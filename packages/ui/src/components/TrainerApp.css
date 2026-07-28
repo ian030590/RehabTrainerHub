@@ -2164,6 +2164,23 @@ body[data-ui-font-bold="true"] .app-layout :where(
   .training-result-summary {
     grid-template-columns: 1fr;
   }
+
+  .experiment-results {
+    justify-content: flex-start;
+    padding:
+      calc(16px + env(safe-area-inset-top))
+      max(16px, env(safe-area-inset-right))
+      calc(16px + env(safe-area-inset-bottom))
+      max(16px, env(safe-area-inset-left));
+  }
+
+  .results-table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @media (max-width: 640px) {

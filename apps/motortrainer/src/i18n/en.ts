@@ -534,6 +534,8 @@ export const en: Record<TranslationKey, string> = {
   'gesture.camera.preview': 'Live hand camera preview',
   'gesture.camera.tracking': 'Hand tracked',
   'gesture.camera.finding': 'Place your hand in the frame',
+  'gesture.orientation.title': 'Rotate your phone sideways',
+  'gesture.orientation.description': 'This training requires landscape view and will continue automatically after rotation.',
   'gesture.calibration.step': 'Calibration {current} / {total}',
   'gesture.calibration.closedTitle': 'Measure Closed-Fist Range',
   'gesture.calibration.closedInstruction': 'Close your fist as much as comfortably possible so the system can record the flexion limit.',

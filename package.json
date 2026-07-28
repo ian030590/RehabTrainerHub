@@ -33,9 +33,10 @@
     "preview:vision": "turbo run preview --filter=@rehab-trainer/visiontrainer",
     "sync:r2-ai-assets": "node scripts/sync-r2-ai-assets.mjs",
     "verify:r2-ai-assets": "node scripts/verify-r2-ai-assets.mjs",
-    "test:entrypoints": "node scripts/check-trainer-entrypoints.mjs",
+    "test:entrypoints": "node scripts/check-trainer-entrypoints.mjs && npm run test:embedded-training",
     "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs",
     "test:changed-trainer-smoke": "node scripts/check-changed-trainer-smoke.test.mjs",
+    "test:embedded-training": "node --test scripts/check-embedded-training-message.test.mjs",
     "test:hub-functions": "node --test \"apps/rehabtrainerhub/functions/**/*.test.mjs\"",
     "test:naming": "node scripts/check-identifier-names.mjs",
     "test:pwa": "node scripts/check-pwa-assets.mjs"

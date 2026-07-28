@@ -4,12 +4,14 @@
 
 .main-concept-fullscreen-root {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg);
 }
 
 .main-concept-fullscreen-root:fullscreen {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: auto;
 }
 
@@ -30,6 +32,7 @@
 .main-concept-shell {
   width: min(1180px, 100%);
   min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -300,6 +303,7 @@
 
   .main-concept-shell {
     min-height: calc(100vh - 32px);
+    min-height: calc(100dvh - 32px);
   }
 
   .main-concept-header,

@@ -145,6 +145,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
   private gameLoopRaf = 0;
   private isGameOver = false;
   private keydownListener: ((e: KeyboardEvent) => void) | null = null;
+  private resizeListener: (() => void) | null = null;
 
   constructor(private jsPsych: JsPsych) {}
 
@@ -157,15 +158,17 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
 
     const hud = document.createElement('div');
     hud.style.position = 'absolute';
-    hud.style.top = '20px';
-    hud.style.left = '20px';
-    hud.style.right = '20px';
+    hud.style.top = 'max(12px, env(safe-area-inset-top))';
+    hud.style.left = 'max(12px, env(safe-area-inset-left))';
+    hud.style.right = 'max(12px, env(safe-area-inset-right))';
     hud.style.display = 'flex';
     hud.style.justifyContent = 'space-between';
     hud.style.pointerEvents = 'none';
     hud.style.fontFamily = typography.fontFamily;
-    hud.style.fontSize = '24px';
+    hud.style.gap = '12px';
+    hud.style.fontSize = '20px';
     hud.style.fontWeight = 'bold';
+    hud.style.whiteSpace = 'nowrap';
     hud.style.color = '#FFFFFF';
     hud.style.textShadow = '0 2px 4px rgba(0,0,0,0.5)';
 
@@ -185,6 +188,8 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
       this.app = app;
       AttachPixiTrialCanvas(gaborPatchingPixiScope, container);
       app.renderer.background.color = trial.background_color ?? '#808080';
+      this.resizeListener = () => this.clampActiveSpots();
+      app.renderer.on('resize', this.resizeListener);
       
       this.textures = gaborTextureSpecs.map((spec) => (
         GetGaborTexture(spec.size, spec.freq, spec.angle)
@@ -212,15 +217,17 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
         const type = Math.floor(Math.random() * this.textures.length);
         const tex = this.textures[type];
         const sprite = new Sprite(tex);
-        
-        sprite.anchor.set(0.5);
-        sprite.x = 128 + Math.random() * (this.app!.screen.width - 256);
-        sprite.y = 128 + Math.random() * (this.app!.screen.height - 256);
-        sprite.rotation = Math.random() * Math.PI * 2;
-        
         const minSize = trial.min_size ?? 0.2;
         const maxSize = trial.max_size ?? 0.8;
         const targetSize = maxSize;
+
+        sprite.anchor.set(0.5);
+        const maxRadius = Math.hypot(tex.width, tex.height) * maxSize / 2;
+        const halfWidth = Math.min(this.app.screen.width / 2, maxRadius);
+        const halfHeight = Math.min(this.app.screen.height / 2, maxRadius);
+        sprite.x = halfWidth + Math.random() * Math.max(0, this.app.screen.width - halfWidth * 2);
+        sprite.y = halfHeight + Math.random() * Math.max(0, this.app.screen.height - halfHeight * 2);
+        sprite.rotation = Math.random() * Math.PI * 2;
         sprite.scale.set(minSize);
         
         const maxOp = trial.max_opacity ?? 0.8;
@@ -371,6 +378,23 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     spot.sprite.destroy();
   }
 
+  private clampActiveSpots() {
+    if (!this.app) return;
+    const width = this.app.screen.width;
+    const height = this.app.screen.height;
+    const clampAxis = (value: number, halfSize: number, size: number) => (
+      size <= halfSize * 2
+        ? size / 2
+        : Math.min(size - halfSize, Math.max(halfSize, value))
+    );
+
+    for (const spot of this.spots) {
+      const maxRadius = Math.hypot(spot.sprite.texture.width, spot.sprite.texture.height) * spot.targetSize / 2;
+      spot.sprite.x = clampAxis(spot.sprite.x, maxRadius, width);
+      spot.sprite.y = clampAxis(spot.sprite.y, maxRadius, height);
+    }
+  }
+
   private endGame(trial: TrialType<Info>, displayElement: HTMLElement) {
     if (this.isGameOver) return;
     this.isGameOver = true;
@@ -383,9 +407,11 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     }
 
     if (this.app) {
+      if (this.resizeListener) this.app.renderer.off('resize', this.resizeListener);
       CleanupPixiTrial(gaborPatchingPixiScope, displayElement);
       this.app = null;
     }
+    this.resizeListener = null;
 
     this.textures = [];
     this.spots = [];
