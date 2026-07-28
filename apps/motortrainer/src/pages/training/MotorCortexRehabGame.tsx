@@ -10,7 +10,7 @@ import {
   CreateMediaPipeAssetUrlCandidates,
   LoadMediaPipeWithFallback,
 } from '@rehab-trainer/ui/aiAssets';
-import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
   TrainingConfigNotice,
   TrainingConfigOptionGroup,
@@ -699,7 +699,12 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
             summaryTitle={labels.title}
             summaryItems={summaryItems}
             actions={(
-              <>
+              <TrainingConfigNavigationActions
+                cancelLabel={t('training.cancel')}
+                nextLabel={t('training.rules')}
+                onCancel={exitGame}
+                onNext={() => setPhase('rules')}
+              >
                 {visionError && (
                   <InlineAlert
                     tone="error"
@@ -710,13 +715,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
                     {visionError}
                   </InlineAlert>
                 )}
-                <StartTrainingButton onClick={() => setPhase('rules')}>
-                  {t('training.rules')}
-                </StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" type="button" onClick={exitGame}>
-                  {t('training.cancel')}
-                </button>
-              </>
+              </TrainingConfigNavigationActions>
             )}
           >
             <TrainingConfigSection

@@ -9,7 +9,7 @@ import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedb
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
-import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
   TrainingConfigOptionGroup,
   TrainingConfigPanel,
@@ -693,12 +693,12 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
               { label: t('drawing.config.background'), value: backgroundSummary },
             ]}
             actions={(
-              <>
-                <StartTrainingButton onClick={() => setPhase('rules')}>
-                  {t('training.rules')}
-                </StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
-              </>
+              <TrainingConfigNavigationActions
+                cancelLabel={t('training.cancel')}
+                nextLabel={t('training.rules')}
+                onCancel={onExit}
+                onNext={() => setPhase('rules')}
+              />
             )}
           >
               <TrainingConfigSection

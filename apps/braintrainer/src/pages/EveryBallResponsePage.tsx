@@ -11,7 +11,7 @@ import {
 } from '@rehab-trainer/ui/aiAssets';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
-import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
   TrainingConfigOptionGroup,
   TrainingConfigPanel,
@@ -877,15 +877,14 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
             summaryTitle={labels.title}
             summaryItems={summaryItems}
             actions={(
-              <>
+              <TrainingConfigNavigationActions
+                cancelLabel={labels.cancel}
+                nextLabel={labels.rules}
+                onCancel={() => void exitToAttentionTraining()}
+                onNext={() => setPhase('rules')}
+              >
                 {errorMessage && <div className="every-ball-error" role="alert">{errorMessage}</div>}
-                <StartTrainingButton onClick={() => setPhase('rules')}>
-                  {labels.rules}
-                </StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" type="button" onClick={() => void exitToAttentionTraining()}>
-                  {labels.cancel}
-                </button>
-              </>
+              </TrainingConfigNavigationActions>
             )}
           >
             <TrainingConfigSection

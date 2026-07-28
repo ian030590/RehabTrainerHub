@@ -5,7 +5,7 @@ import {
   TrainingConfigPanel,
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
-import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
@@ -520,12 +520,12 @@ export function MainConceptTraining({ onExit }: { onExit?: () => void } = {}) {
             { label: t('mainConcept.source'), value: t('mainConcept.reference') },
           ]}
           actions={(
-            <>
-              <StartTrainingButton onClick={() => void openInstructions()}>
-                {lang === 'zh' ? '規則說明' : 'Rules'}
-              </StartTrainingButton>
-              <button className="btn btn-ghost btn-lg" onClick={exitToThinkingTraining}>{t('training.cancel')}</button>
-            </>
+            <TrainingConfigNavigationActions
+              cancelLabel={t('training.cancel')}
+              nextLabel={lang === 'zh' ? '規則說明' : 'Rules'}
+              onCancel={exitToThinkingTraining}
+              onNext={() => void openInstructions()}
+            />
           )}
         >
             <TrainingConfigSection

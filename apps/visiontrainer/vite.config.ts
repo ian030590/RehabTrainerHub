@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 
@@ -10,17 +10,7 @@ const siteUrl = 'https://vision.trainerhub.cc';
 const seoTitle = 'VisionTrainer | 視覺訓練與評估工具';
 const seoDescription = 'VisionTrainer 提供視覺評估、眼動、閱讀與視覺注意力練習，適合依專業建議安排居家視覺訓練。';
 
-export default defineConfig(({ mode }) => {
-  const environment = loadEnv(
-    mode,
-    fileURLToPath(new URL('.', import.meta.url)),
-    'VITE_',
-  );
-  const assetBaseUrl = NormalizeAssetBaseUrl(environment.VITE_AI_ASSET_BASE_URL);
-  const webGazerScriptUrl = assetBaseUrl
-    ? `${assetBaseUrl}/ai/webgazer/local-v1/webgazer.js`
-    : '%BASE_URL%webgazer.js';
-
+export default defineConfig(() => {
   return {
     plugins: [
       react(),
@@ -30,10 +20,6 @@ export default defineConfig(({ mode }) => {
           order: 'pre',
           handler(html) {
             return html
-              .replace(
-                'src="%BASE_URL%webgazer.js"',
-                `src="${EscapeHtml(webGazerScriptUrl)}"`,
-              )
               .replace(
                 '</head>',
                 [
@@ -82,15 +68,3 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
-
-function NormalizeAssetBaseUrl(value?: string) {
-  const normalizedValue = String(value || '').trim().replace(/\/+$/, '');
-  if (!normalizedValue) return '';
-
-  try {
-    const parsedUrl = new URL(normalizedValue);
-    return parsedUrl.protocol === 'https:' ? parsedUrl.href.replace(/\/+$/, '') : '';
-  } catch {
-    return '';
-  }
-}

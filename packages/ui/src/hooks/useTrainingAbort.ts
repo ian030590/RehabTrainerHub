@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { NotifyHubTrainingActive } from '../embeddedTraining';
+import { NotifyHubTrainingAbort, NotifyHubTrainingActive } from '../embeddedTraining';
 import { ExitFullscreenIfActive } from '../fullscreen';
 
 export interface UseTrainingAbortArgs {
@@ -38,6 +38,7 @@ export function useTrainingAbort({
     const abortTraining = () => {
       if (abortingRef.current) return;
       abortingRef.current = true;
+      NotifyHubTrainingAbort();
       onAbortRef.current();
       if (exitFullscreen) {
         void ExitFullscreenIfActive();

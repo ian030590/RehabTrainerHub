@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
+import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import {
@@ -230,24 +231,15 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
             { value: `${selectedUfovAxes.length}/8` },
           ]}
           actions={(
-            <>
-              <button
-                className="btn btn-primary btn-lg config-start-btn"
-                type="button"
-                onClick={() => {
-                  setIsUfovConfigOpen(false);
-                  setIsUfovRulesOpen(true);
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <polygon points="5,3 19,12 5,21" />
-                </svg>
-                {ruleLabels.next}
-              </button>
-              <button className="btn btn-ghost btn-lg" type="button" onClick={() => setIsUfovConfigOpen(false)}>
-                {ufovLabels.cancel}
-              </button>
-            </>
+            <TrainingConfigNavigationActions
+              cancelLabel={ufovLabels.cancel}
+              nextLabel={ruleLabels.next}
+              onCancel={closeUfovConfig}
+              onNext={() => {
+                setIsUfovConfigOpen(false);
+                setIsUfovRulesOpen(true);
+              }}
+            />
           )}
         >
           <TrainingConfigSection

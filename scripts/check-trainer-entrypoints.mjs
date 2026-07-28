@@ -30,6 +30,15 @@ const viteConfigFiles = readdirSync(appsRoot, { withFileTypes: true })
   .map((entry) => `apps/${entry.name}/vite.config.ts`)
   .filter((file) => existsSync(resolve(repoRoot, file)));
 
+const trainerHtmlEntrypoints = readdirSync(appsRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && entry.name.endsWith('trainer'))
+  .map((entry) => `apps/${entry.name}/index.html`)
+  .filter((file) => existsSync(resolve(repoRoot, file)));
+
+const trainerSourceFiles = readdirSync(appsRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && entry.name.endsWith('trainer'))
+  .flatMap((entry) => CollectSourceFiles(resolve(appsRoot, entry.name, 'src')));
+
 const protectedEntrypoints = Unique([
   ...appRuntimeEntrypoints,
   ...appEntrypoints,
@@ -55,6 +64,14 @@ for (const entrypoint of protectedEntrypoints) {
 
 for (const viteConfigFile of viteConfigFiles) {
   CheckViteBaseConfig(viteConfigFile);
+}
+
+for (const htmlEntrypoint of trainerHtmlEntrypoints) {
+  CheckHtmlEntrypoint(htmlEntrypoint);
+}
+
+for (const sourceFile of trainerSourceFiles) {
+  CheckTrainingUiContract(sourceFile);
 }
 
 if (violations.length > 0) {
@@ -111,6 +128,37 @@ function GetForbiddenRuntimeImport(specifier) {
   }
 
   return forbiddenRuntimeImports.find((name) => specifier === name || specifier.startsWith(`${name}/`));
+}
+
+function CheckHtmlEntrypoint(htmlFile) {
+  const source = readFileSync(resolve(repoRoot, htmlFile), 'utf8');
+  const heavyRuntimePattern = /(?:webgazer|mediapipe|tensorflow|tfjs|vosk)(?:[^\s"']*)\.js/i;
+
+  for (const match of source.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)) {
+    if (heavyRuntimePattern.test(match[1])) {
+      violations.push(
+        `${htmlFile}: eagerly loads heavy runtime ${match[1]}; load it from the owning module after config interaction`,
+      );
+    }
+  }
+}
+
+function CheckTrainingUiContract(filePath) {
+  const source = readFileSync(filePath, 'utf8');
+  if (/from\s+['"]@rehab-trainer\/ui\/components\/StartTrainingButton['"]/.test(source)) {
+    violations.push(
+      `${RelativeToRepo(filePath)}: imports StartTrainingButton directly; config flows must use TrainingConfigNavigationActions and rules flows must use TrainingRulesPanel`,
+    );
+  }
+}
+
+function CollectSourceFiles(directory) {
+  if (!existsSync(directory)) return [];
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) return CollectSourceFiles(path);
+    return entry.isFile() && /\.tsx?$/.test(entry.name) ? [path] : [];
+  });
 }
 
 function ResolveProjectImport(importerPath, specifier) {

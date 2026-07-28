@@ -75,7 +75,7 @@ import type {
 } from './cognitive/types';
 import type { TFunction } from './types';
 import { cognitiveAccentCss, ClearStage, DrawBackground } from './cognitive/utils';
-import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
   TrainingConfigOptionGroup,
   TrainingConfigPanel,
@@ -470,10 +470,12 @@ export function ReferenceCognitiveGame({
                     },
             ]}
             actions={(
-              <>
-                <StartTrainingButton onClick={() => setPhase('rules')}>{t('training.rules')}</StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.cancel')}</button>
-              </>
+              <TrainingConfigNavigationActions
+                cancelLabel={t('training.cancel')}
+                nextLabel={t('training.rules')}
+                onCancel={onExit}
+                onNext={() => setPhase('rules')}
+              />
             )}
           >
               <TrainingConfigSection

@@ -54,6 +54,16 @@ test('embedded training reports active state to its verified Hub origin', (conte
     active: 'true',
   }), false);
 
+  embeddedTraining.NotifyHubTrainingAbort();
+  assert.deepEqual(messages.shift(), [
+    { type: 'rehab-trainer:training-active', active: false },
+    'https://trainerhub.cc',
+  ]);
+  assert.deepEqual(messages.shift(), [
+    { type: 'rehab-trainer:training-exit' },
+    'https://trainerhub.cc',
+  ]);
+
   embeddedTraining.NotifyHubTrainingExit();
   assert.deepEqual(messages.shift(), [
     { type: 'rehab-trainer:training-exit' },

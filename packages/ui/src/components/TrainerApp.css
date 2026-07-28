@@ -812,6 +812,10 @@ body[data-training-embed="hub"] #root,
   position: fixed;
   inset: 0;
   z-index: 900;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -819,6 +823,7 @@ body[data-training-embed="hub"] #root,
   background: var(--bg-overlay);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  overscroll-behavior: contain;
 }
 
 .config-modal-panel {
@@ -1062,6 +1067,10 @@ body[data-training-embed="hub"] #root,
   position: fixed;
   inset: 0;
   z-index: 6;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -43,6 +43,7 @@ import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResu
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
+import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
 
 type Phase = 'intro' | 'isi' | 'stimulus' | 'results';
 
@@ -186,10 +187,7 @@ export function AcuityTestPage() {
 
   const ensureWebGazerReady = useCallback(async () => {
     if (!isWebGazerPL) return;
-
-    if (!(window as any).webgazer) {
-      throw alert(t('acuity.wgNotLoaded'));
-    }
+    await EnsureWebGazerLoaded();
 
     if (!gazeExtensionRef.current) {
       const extension = new (WebGazerExtension as any)({});

@@ -36,7 +36,7 @@ import {
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
-import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
   TrainingConfigNotice,
   TrainingConfigOptionGroup,
@@ -695,7 +695,12 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
             summaryTitle={t('tongue.title')}
             summaryItems={tongueSummaryItems}
             actions={(
-              <>
+              <TrainingConfigNavigationActions
+                cancelLabel={t('training.cancel')}
+                nextLabel={t('training.rules')}
+                onCancel={exitGame}
+                onNext={() => setPhase('rules')}
+              >
                 {visionError && (
                   <InlineAlert
                     tone="error"
@@ -706,11 +711,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                     {visionError}
                   </InlineAlert>
                 )}
-                <StartTrainingButton onClick={() => setPhase('rules')}>
-                  {t('training.rules')}
-                </StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" onClick={exitGame}>{t('training.cancel')}</button>
-              </>
+              </TrainingConfigNavigationActions>
             )}
           >
               <TrainingConfigSection

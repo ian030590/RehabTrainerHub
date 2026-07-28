@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useT } from '../i18n';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
+import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import {
@@ -385,26 +386,14 @@ export function HomePage() {
     : null;
   const activeRulesSummaryItems = rulesModule ? getRulesSummaryItems(rulesModule) : [];
   const configActions = (
-    <>
-      <button
-        className={`btn btn-primary btn-lg config-start-btn ${isStartingTraining ? 'is-loading' : ''}`}
-        disabled={isStartingTraining}
-        aria-busy={isStartingTraining}
-        onClick={(event) => { event.stopPropagation(); handleShowRules(); }}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <polygon points="5,3 19,12 5,21" />
-        </svg>
-        {showRulesButtonLabel}
-        {isStartingTraining && <span className="loading-dot" />}
-      </button>
-      <button
-        className="btn btn-ghost btn-lg"
-        onClick={(event) => { event.stopPropagation(); handleCloseConfig(); }}
-      >
-        {t('btn.cancel')}
-      </button>
-    </>
+    <TrainingConfigNavigationActions
+      cancelLabel={t('btn.cancel')}
+      disabled={isStartingTraining}
+      loading={isStartingTraining}
+      nextLabel={showRulesButtonLabel}
+      onCancel={handleCloseConfig}
+      onNext={handleShowRules}
+    />
   );
 
   return (

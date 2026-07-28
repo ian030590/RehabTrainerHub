@@ -26,6 +26,7 @@ import {
   minUiFontSizePx,
 } from '../../utils/settings';
 import { PixelFromMillimeter } from '../../utils/spatialUtils';
+import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
 
 type Tab = 'general' | 'calibration' | 'webgazer' | 'gamma' | 'crowding';
 
@@ -314,16 +315,17 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
     return () => observer.disconnect();
   }, [status]);
 
-  const runCalibration = () => {
-    // Check if webgazer.js is loaded
-    if (!(window as any).webgazer) {
+  const runCalibration = async () => {
+    setStatus('running');
+    setMessage(t('settings.wg.startingCam'));
+    try {
+      await EnsureWebGazerLoaded();
+    } catch (error) {
+      console.error('Unable to load WebGazer.', error);
       setStatus('error');
       setMessage(t('settings.wg.errorNotLoaded'));
       return;
     }
-
-    setStatus('running');
-    setMessage(t('settings.wg.startingCam'));
 
     // Wait for the overlay to render, then init jsPsych inside it
     requestAnimationFrame(() => {

@@ -6,7 +6,7 @@ import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, csvCell, FormatTestDate, WriteJsPsychData } from '@rehab-trainer/ui/trainingGameUtils';
-import { StartTrainingButton } from '@rehab-trainer/ui/components/StartTrainingButton';
+import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
   TrainingConfigOptionGroup,
   TrainingConfigPanel,
@@ -264,12 +264,12 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
               { label: t('minesweeper.config.mineCountLabel'), value: selectedMineCount },
             ]}
             actions={(
-              <>
-                <StartTrainingButton onClick={() => setPhase('rules')}>
-                  {t('training.rules')}
-                </StartTrainingButton>
-                <button className="btn btn-ghost btn-lg" onClick={onExit}>{t('training.back')}</button>
-              </>
+              <TrainingConfigNavigationActions
+                cancelLabel={t('training.back')}
+                nextLabel={t('training.rules')}
+                onCancel={onExit}
+                onNext={() => setPhase('rules')}
+              />
             )}
           >
               <TrainingConfigSection

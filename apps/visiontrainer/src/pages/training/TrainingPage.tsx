@@ -15,6 +15,7 @@ import {
 import { DestroyPixiTrainingRuntime } from '../../utils/pixiPool';
 import { soundManager } from '../../utils/soundManager';
 import { SaveTrainingRecord } from '../../utils/trainingRecords';
+import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
 import { DownloadTrainingCsv } from './exportCsv';
 import {
   isOculomotorMode,
@@ -137,6 +138,11 @@ export function TrainingPage() {
       await WaitForUsableLayout(container);
       if (cancelled) return;
 
+      if (enableWebGazer) {
+        await EnsureWebGazerLoaded();
+        if (cancelled) return;
+      }
+
       const storyData = moduleId === 'reading-training'
         ? getRandomStory(lang) || undefined
         : undefined;
@@ -227,7 +233,12 @@ export function TrainingPage() {
       jsPsych.run(timeline as any);
     };
 
-    void setupExperiment();
+    void setupExperiment().catch((error) => {
+      if (cancelled) return;
+      console.error('Unable to initialize visual training.', error);
+      alert(t('home.trainingLoadError'));
+      navigate('/');
+    });
 
     return () => {
       cancelled = true;
@@ -261,6 +272,8 @@ export function TrainingPage() {
     drivingRenderQuality,
     userName,
     lang,
+    navigate,
+    t,
   ]);
 
   const abortTraining = useCallback(() => {

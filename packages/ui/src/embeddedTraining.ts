@@ -68,6 +68,11 @@ export function NotifyHubTrainingActive(active: boolean) {
   PostHubTrainingMessage({ type: hubTrainingActiveMessageType, active });
 }
 
+export function NotifyHubTrainingAbort() {
+  NotifyHubTrainingActive(false);
+  NotifyHubTrainingExit();
+}
+
 export function NotifyHubTrainingExit() {
   PostHubTrainingMessage({ type: hubTrainingExitMessageType });
 }

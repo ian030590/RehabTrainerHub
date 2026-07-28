@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BuildTrainingModuleHref,
   GetTrainingModuleCopy,
@@ -28,6 +28,12 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).embeddedTraining;
 
+  const closeOverlay = useCallback(() => {
+    const dialog = dialogRef.current;
+    if (dialog?.open) dialog.close();
+    onClose();
+  }, [onClose]);
+
   const sourceUrl = useMemo(() => {
     const url = new URL(BuildTrainingModuleHref(module));
     url.searchParams.set('embed', 'hub');
@@ -36,7 +42,11 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
 
   // Open the native dialog when mounted
   useEffect(() => {
-    dialogRef.current?.showModal();
+    const dialog = dialogRef.current;
+    dialog?.showModal();
+    return () => {
+      if (dialog?.open) dialog.close();
+    };
   }, []);
 
   // Reset state when module/sourceUrl changes
@@ -65,13 +75,13 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         setIsTrainingActive(false);
         setIsTrainingComplete(true);
       } else if (IsHubTrainingExitMessage(event.data)) {
-        onClose();
+        closeOverlay();
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onClose, sourceUrl]);
+  }, [closeOverlay, sourceUrl]);
 
   // Close dialog on Escape — sync React state by calling onClose
   useEffect(() => {
@@ -79,11 +89,11 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
     if (!dialog) return;
     const handleCancel = (event: Event) => {
       event.preventDefault();
-      onClose();
+      closeOverlay();
     };
     dialog.addEventListener('cancel', handleCancel);
     return () => dialog.removeEventListener('cancel', handleCancel);
-  }, [onClose]);
+  }, [closeOverlay]);
 
   const moduleCopy = GetTrainingModuleCopy(module, locale);
 
