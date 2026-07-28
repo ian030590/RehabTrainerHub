@@ -8,6 +8,13 @@
   background: var(--bg);
 }
 
+.main-concept-fullscreen-root-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: transparent;
+}
+
 .main-concept-fullscreen-root:fullscreen {
   width: 100vw;
   height: 100vh;

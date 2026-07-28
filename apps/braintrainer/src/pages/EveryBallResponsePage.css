@@ -6,6 +6,18 @@
   color: var(--text-primary);
 }
 
+.every-ball-phase-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: transparent;
+}
+
+.every-ball-phase-menu > :not(.training-panel) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .every-ball:fullscreen {
   width: 100vw;
   height: 100vh;

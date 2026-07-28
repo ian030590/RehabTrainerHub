@@ -58,6 +58,7 @@ export function TrainingResults({
           onDownloadCsv={onDownloadCsv}
           onRestart={onRestart}
           onBackHome={onBackHome}
+          hubLabel={t('exp.backLobby')}
         />
       </div>
     </div>

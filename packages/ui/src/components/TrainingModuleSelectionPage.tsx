@@ -35,8 +35,12 @@ export function TrainingModuleSelectionPage<TModuleId extends string>({
   children,
   onSelect,
 }: TrainingModuleSelectionPageProps<TModuleId>) {
+  const pageClassName = [className, 'training-module-selection-page']
+    .filter((value, index, values) => values.indexOf(value) === index)
+    .join(' ');
+
   return (
-    <main className={className} id="main-content">
+    <main className={pageClassName} id="main-content">
       <h1 className="section-title fade-in-up">{title}</h1>
       {subtitle && <p className="section-subtitle fade-in-up">{subtitle}</p>}
 
@@ -56,7 +60,7 @@ export function TrainingModuleSelectionPage<TModuleId extends string>({
           />
         ))}
       </div>
-      {children}
+      {children && <div className="training-module-overlay-content">{children}</div>}
     </main>
   );
 }

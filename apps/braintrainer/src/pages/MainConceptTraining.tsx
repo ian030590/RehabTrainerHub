@@ -315,7 +315,7 @@ const trainingSets: TrainingSet[] = [
 
 ValidateTrainingSets(trainingSets);
 
-export function MainConceptTraining() {
+export function MainConceptTraining({ onExit }: { onExit?: () => void } = {}) {
   const { t, lang } = useT();
   const navigate = useNavigate();
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
@@ -374,6 +374,10 @@ export function MainConceptTraining() {
   });
 
   const exitToThinkingTraining = () => {
+    if (onExit) {
+      onExit();
+      return;
+    }
     navigate('/thinking-training');
   };
 
@@ -651,7 +655,8 @@ export function MainConceptTraining() {
             backLabel={t('training.returnHome')}
             onDownloadCsv={downloadResult}
             onRestart={() => void openInstructions()}
-            onBackHome={returnToMenu}
+            onBackHome={exitToThinkingTraining}
+            hubLabel={t('training.returnLobby')}
           />
         </div>
       </div>

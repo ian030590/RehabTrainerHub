@@ -615,7 +615,8 @@ export function ReferenceCognitiveGame({
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
               onRestart={() => setPhase('rules')}
-              onBackHome={returnToMenu}
+              onBackHome={onExit}
+              hubLabel={t('training.returnLobby')}
             />
           </div>
         </div>

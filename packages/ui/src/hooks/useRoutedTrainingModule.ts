@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '../embeddedTraining';
 
 export interface UseRoutedTrainingModuleArgs<TModuleId extends string> {
   requestedModule: TModuleId | null;
@@ -26,6 +27,10 @@ export function useRoutedTrainingModule<TModuleId extends string>({
   };
 
   const closeModule = () => {
+    if (IsEmbeddedHubTraining()) {
+      NotifyHubTrainingExit();
+      return;
+    }
     setActiveModule(null);
     navigate(basePath);
   };

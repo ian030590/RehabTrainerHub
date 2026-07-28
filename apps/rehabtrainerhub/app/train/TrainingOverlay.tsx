@@ -9,6 +9,7 @@ import {
 import {
   IsHubTrainingActiveMessage,
   IsHubTrainingCompleteMessage,
+  IsHubTrainingExitMessage,
 } from '@rehab-trainer/ui/embeddedTraining';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
@@ -63,12 +64,14 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
       } else if (IsHubTrainingCompleteMessage(event.data)) {
         setIsTrainingActive(false);
         setIsTrainingComplete(true);
+      } else if (IsHubTrainingExitMessage(event.data)) {
+        onClose();
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [sourceUrl]);
+  }, [onClose, sourceUrl]);
 
   // Close dialog on Escape — sync React state by calling onClose
   useEffect(() => {
@@ -87,23 +90,11 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   return (
     <dialog
       aria-label={moduleCopy.title}
-      className="training-overlay"
+      className={`training-overlay ${isTrainingActive || isTrainingComplete
+        ? 'training-overlay-runtime'
+        : 'training-overlay-config'}`}
       ref={dialogRef}
     >
-      {!isTrainingActive && !isTrainingComplete && (
-        <header className="embedded-training-bar">
-          <button
-            aria-label={copy.returnToLobby}
-            className="training-overlay-back"
-            onClick={onClose}
-            type="button"
-          >
-            <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>
-            <span>{copy.returnToLobby}</span>
-          </button>
-          <strong>{moduleCopy.title}</strong>
-        </header>
-      )}
       <div className="embedded-training-frame">
         {!isLoaded && <p aria-live="polite">{copy.loading}</p>}
         <iframe

@@ -976,7 +976,8 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
               onRestart={() => setPhase('rules')}
-              onBackHome={returnToMenu}
+              onBackHome={exitGame}
+              hubLabel={t('training.returnLobby')}
             />
           </div>
         </div>

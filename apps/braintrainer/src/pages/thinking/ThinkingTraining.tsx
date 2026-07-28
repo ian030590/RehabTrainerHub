@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   TrainingModuleSelectionPage,
   type TrainingModuleSelectionItem,
@@ -14,6 +14,7 @@ import './ThinkingGames.css';
 
 const MinesweeperGame = lazy(() => import('./MinesweeperGame').then((module) => ({ default: module.MinesweeperGame })));
 const ReferenceCognitiveGame = lazy(() => import('./ReferenceCognitiveGame').then((module) => ({ default: module.ReferenceCognitiveGame })));
+const MainConceptTraining = lazy(() => import('../MainConceptTraining').then((module) => ({ default: module.MainConceptTraining })));
 
 type ThinkingGameId = 'minesweeper' | ReferenceGameId;
 type ThinkingModuleId = 'main-concept' | ThinkingGameId;
@@ -26,11 +27,10 @@ const thinkingCognitiveModules = GetReferenceCognitiveModules('thinking');
 
 export function ThinkingTraining() {
   const { t } = useT();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedGameId = searchParams.get('game');
   const requestedModule = GetRequestedModule(requestedGameId);
-  const { activeModule, openModule, closeModule } = useRoutedTrainingModule<ThinkingGameId>({
+  const { activeModule, openModule, closeModule } = useRoutedTrainingModule<ThinkingModuleId>({
     requestedModule,
     basePath: '/thinking-training',
   });
@@ -53,6 +53,8 @@ export function ThinkingTraining() {
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
       {activeModule === 'minesweeper'
         ? <MinesweeperGame onExit={closeModule} />
+        : activeModule === 'main-concept'
+          ? <MainConceptTraining onExit={closeModule} />
         : activeModule && IsReferenceGameId(activeModule)
           ? <ReferenceCognitiveGame gameId={activeModule} onExit={closeModule} />
           : null}
@@ -67,20 +69,15 @@ export function ThinkingTraining() {
       selectedModuleId={activeModule}
       actionLabel={t('btn.selectModule')}
       cardClassName="training-module-button"
-      onSelect={(moduleId) => {
-        if (moduleId === 'main-concept') {
-          navigate('/thinking-training/main-concept');
-          return;
-        }
-        openModule(moduleId);
-      }}
+      onSelect={openModule}
     >
       {activeTraining}
     </TrainingModuleSelectionPage>
   );
 }
 
-function GetRequestedModule(requestedGameId: string | null): ThinkingGameId | null {
+function GetRequestedModule(requestedGameId: string | null): ThinkingModuleId | null {
+  if (requestedGameId === 'main-concept') return 'main-concept';
   if (requestedGameId === 'minesweeper') return 'minesweeper';
   if (IsReferenceGameId(requestedGameId)) return requestedGameId;
   return null;

@@ -1026,7 +1026,8 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
               backLabel={t('training.returnHome')}
               onDownloadCsv={downloadResult}
               onRestart={() => setPhase('rules')}
-              onBackHome={returnToMenu}
+              onBackHome={onExit}
+              hubLabel={t('training.returnLobby')}
             />
           </div>
         </div>

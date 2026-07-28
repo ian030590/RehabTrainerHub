@@ -151,6 +151,7 @@ interface EveryBallLabels {
   backSettings: string;
   restart: string;
   returnHome: string;
+  returnLobby: string;
   downloadCsv: string;
   initializingCamera: string;
   initializingMicrophone: string;
@@ -399,7 +400,8 @@ const copy: Record<'zh' | 'en', EveryBallLabels> = {
     cancel: '取消',
     backSettings: '返回設定',
     restart: '再玩一次',
-    returnHome: '返回注意訓練',
+    returnHome: '返回清單',
+    returnLobby: '返回大廳',
     downloadCsv: '下載 CSV 紀錄',
     initializingCamera: '正在開啟相機並載入 MediaPipe 模型...',
     initializingMicrophone: '正在開啟麥克風...',
@@ -487,7 +489,8 @@ const copy: Record<'zh' | 'en', EveryBallLabels> = {
     cancel: 'Cancel',
     backSettings: 'Back to Settings',
     restart: 'Restart',
-    returnHome: 'Back to Attention',
+    returnHome: 'Back to List',
+    returnLobby: 'Back to Lobby',
     downloadCsv: 'Download CSV Record',
     initializingCamera: 'Opening camera and loading MediaPipe models...',
     initializingMicrophone: 'Opening microphone...',
@@ -557,7 +560,7 @@ const copy: Record<'zh' | 'en', EveryBallLabels> = {
   },
 };
 
-export function EveryBallResponsePage() {
+export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) {
   const { lang } = useT();
   const labels = copy[lang];
   const navigate = useNavigate();
@@ -719,8 +722,12 @@ export function EveryBallResponsePage() {
   const exitToAttentionTraining = useCallback(async () => {
     await stopInput();
     jsPsychRef.current?.abortExperiment();
+    if (onExit) {
+      onExit();
+      return;
+    }
     navigate('/attention-training');
-  }, [navigate, stopInput]);
+  }, [navigate, onExit, stopInput]);
 
   const completeSession = useCallback((
     data: EveryBallExperimentData,
@@ -1113,6 +1120,7 @@ export function EveryBallResponsePage() {
               onDownloadCsv={downloadResult}
               onRestart={() => setPhase('rules')}
               onBackHome={() => void exitToAttentionTraining()}
+              hubLabel={labels.returnLobby}
             />
           </div>
         </div>

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { CloudflareWebAnalytics } from './CloudflareWebAnalytics';
 import {
   DevicePerformanceNotice,
@@ -28,8 +28,19 @@ export function TrainerAppLayout({
 }: TrainerAppLayoutProps) {
   const isEmbeddedHubTraining = IsEmbeddedHubTraining();
 
+  useEffect(() => {
+    if (!isEmbeddedHubTraining) return;
+
+    document.documentElement.dataset.trainingEmbed = 'hub';
+    document.body.dataset.trainingEmbed = 'hub';
+    return () => {
+      delete document.documentElement.dataset.trainingEmbed;
+      delete document.body.dataset.trainingEmbed;
+    };
+  }, [isEmbeddedHubTraining]);
+
   return (
-    <div className="app-layout">
+    <div className={`app-layout ${isEmbeddedHubTraining ? 'app-layout-embedded-hub' : ''}`.trim()}>
       {skipLinkLabel && (
         <a className="skip-link" href={skipLinkHref}>
           {skipLinkLabel}

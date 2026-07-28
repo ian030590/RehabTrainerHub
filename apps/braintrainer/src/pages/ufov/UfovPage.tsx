@@ -191,7 +191,8 @@ const copy = {
     csvOnlyNote: '完整結果可下載為 CSV。',
     practiceResult: '練習答對',
     downloadCsv: '下載 CSV',
-    backHome: '返回主畫面',
+    backHome: '返回清單',
+    backLobby: '返回大廳',
     actualProcessingSpeed: '實際處理速度',
     tableTrial: '題次',
     tableVehicle: '題目車子種類',
@@ -226,7 +227,8 @@ const copy = {
     csvOnlyNote: 'Complete results can be downloaded as CSV.',
     practiceResult: 'Practice correct',
     downloadCsv: 'Download CSV',
-    backHome: 'Back to Home',
+    backHome: 'Back to List',
+    backLobby: 'Back to Lobby',
     actualProcessingSpeed: 'Actual processing speed',
     tableTrial: 'Trial',
     tableVehicle: 'Target vehicle',
@@ -895,6 +897,7 @@ export function UfovPage({
                 onDownloadCsv={() => DownloadUfovTrainingRecordCsv(savedRecord)}
                 onRestart={() => navigate(backPath)}
                 onBackHome={() => navigate(backPath)}
+                hubLabel={labels.backLobby}
               />
             </section>
           )}

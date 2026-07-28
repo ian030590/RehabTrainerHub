@@ -13,21 +13,24 @@ import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
 import { GetTrainingCatalogModules } from '@rehab-trainer/ui/trainingCatalog';
+import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
 import { useT, type TranslationKey } from '../i18n';
 import { GetReferenceCognitiveModules } from './thinking/cognitive/constants';
 import type { ReferenceGameId } from './thinking/cognitive/types';
 import type { SubtestId, UfovRunMode, UfovTargetAxis } from './ufov/UfovPage';
 
 const ReferenceCognitiveGame = lazy(() => import('./thinking/ReferenceCognitiveGame').then((module) => ({ default: module.ReferenceCognitiveGame })));
+const EveryBallResponsePage = lazy(() => import('./EveryBallResponsePage').then((module) => ({ default: module.EveryBallResponsePage })));
 
 export type ModuleId = 'attention' | 'memory';
+type ModuleGameId = ReferenceGameId | 'every-ball-response';
 
 interface ModuleCardDefinition {
   titleKey: TranslationKey;
   bodyKey: TranslationKey;
   imagePath: string;
   to?: string;
-  gameId?: ReferenceGameId;
+  gameId?: ModuleGameId;
 }
 
 interface ModuleDefinition {
@@ -47,6 +50,7 @@ function GetCatalogRouteCards(purpose: 'attention' | 'memory'): ModuleCardDefini
     bodyKey: module.descriptionKey as TranslationKey,
     imagePath: module.imagePath,
     to: module.entryPath,
+    gameId: module.runtimeId === 'every-ball-response' ? 'every-ball-response' : undefined,
   }));
 }
 
@@ -86,7 +90,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const requestedGameId = searchParams.get('game');
   const isUfovRequested = moduleId === 'attention' && requestedGameId === 'ufov';
   const requestedModule = moduleCards.find((card) => card.gameId === requestedGameId)?.gameId ?? null;
-  const { activeModule, openModule, closeModule } = useRoutedTrainingModule<ReferenceGameId>({
+  const { activeModule, openModule, closeModule } = useRoutedTrainingModule<ModuleGameId>({
     requestedModule,
     basePath: `/${moduleId}-training`,
   });
@@ -101,6 +105,15 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const isSmallScreenDevice = IsMobileOrTabletDevice(DetectDisplayDeviceKind());
   const effectiveUfovSubtest = isSmallScreenDevice ? 1 : selectedUfovSubtest;
   const ruleLabels = GetBrainRuleLabels(lang);
+
+  const closeUfovConfig = () => {
+    if (IsEmbeddedHubTraining()) {
+      NotifyHubTrainingExit();
+      return;
+    }
+    setIsUfovConfigOpen(false);
+    navigate(`/${moduleId}-training`);
+  };
 
   useEffect(() => {
     if (isUfovRequested) setIsUfovConfigOpen(true);
@@ -156,7 +169,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   };
 
   return (
-    <main className="page-content" id="main-content">
+    <main className="page-content training-module-selection-page" id="main-content">
       <h1 className="section-title fade-in-up" id="module-title">{t(module.titleKey)}</h1>
       <p className="section-subtitle fade-in-up">{t(module.introKey)}</p>
 
@@ -191,21 +204,25 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
           );
         })}
       </section>
-      <Suspense fallback={<AppLoading label={t('app.loading')} />}>
-        {activeModule && (
-          <ReferenceCognitiveGame
-            gameId={activeModule}
-            onExit={closeModule}
-            trainingModuleId={`${moduleId}-training`}
-            trainingConfigLabel={t(module.titleKey)}
-            recordFilePrefix={moduleId}
-          />
-        )}
-      </Suspense>
+      <div className="training-module-overlay-content">
+        <Suspense fallback={<AppLoading label={t('app.loading')} />}>
+          {activeModule === 'every-ball-response'
+            ? <EveryBallResponsePage onExit={closeModule} />
+            : activeModule && (
+              <ReferenceCognitiveGame
+                gameId={activeModule}
+                onExit={closeModule}
+                trainingModuleId={`${moduleId}-training`}
+                trainingConfigLabel={t(module.titleKey)}
+                recordFilePrefix={moduleId}
+              />
+            )}
+        </Suspense>
+      </div>
       {isUfovConfigOpen && (
         <ConfigDialog
           ariaLabel={ufovLabels.settingsTitle}
-          onClose={() => setIsUfovConfigOpen(false)}
+          onClose={closeUfovConfig}
           summaryItems={[
             { value: ufovLabels.subtests[selectedUfovSubtest] },
             { value: ufovLabels.modes[selectedUfovMode].label },

@@ -10,6 +10,7 @@ import {
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
 import { GetTrainingModuleCopy } from '@rehab-trainer/ui/trainingCatalog';
 import { IsCalibrated } from '../utils/settings';
 import { soundManager } from '../utils/soundManager';
@@ -152,6 +153,15 @@ export function HomePage() {
   const handleShowRules = () => {
     if (!expandedModule || isStartingTraining) return;
     setRulesModule(expandedModule);
+  };
+
+  const handleCloseConfig = () => {
+    if (IsEmbeddedHubTraining()) {
+      NotifyHubTrainingExit();
+      return;
+    }
+    setRulesModule(null);
+    setExpandedModule(null);
   };
 
   const handleStartTraining = async () => {
@@ -390,7 +400,7 @@ export function HomePage() {
       </button>
       <button
         className="btn btn-ghost btn-lg"
-        onClick={(event) => { event.stopPropagation(); setExpandedModule(null); }}
+        onClick={(event) => { event.stopPropagation(); handleCloseConfig(); }}
       >
         {t('btn.cancel')}
       </button>
@@ -398,7 +408,7 @@ export function HomePage() {
   );
 
   return (
-    <main className="page-content" id="main-content">
+    <main className="page-content training-module-selection-page" id="main-content">
       {/* ── Calibration Notice ── */}
       {!calibrated && (
         <div style={{
@@ -443,7 +453,7 @@ export function HomePage() {
       {expandedModule === 'moving-card' && rulesModule !== 'moving-card' && (
         <ConfigDialog
           ariaLabel={t('home.module.movingCard.title')}
-          onClose={() => setExpandedModule(null)}
+          onClose={handleCloseConfig}
           summaryItems={[
             { value: diffOptions.find((d) => d.key === localDifficulty)?.label },
             { value: localRounds },
@@ -489,7 +499,7 @@ export function HomePage() {
       {expandedModule === 'oculomotor-training' && rulesModule !== 'oculomotor-training' && (
         <ConfigDialog
           ariaLabel={t('home.module.oculomotor.title')}
-          onClose={() => setExpandedModule(null)}
+          onClose={handleCloseConfig}
           summaryItems={[
             { value: t(`preset.mode.${oculomotorMode}` as any) },
             { value: `${oculomotorDurationSec}s` },
@@ -796,7 +806,7 @@ export function HomePage() {
       {expandedModule === 'gabor-patching' && rulesModule !== 'gabor-patching' && (
         <ConfigDialog
           ariaLabel={t('home.module.gaborPatching.title')}
-          onClose={() => setExpandedModule(null)}
+          onClose={handleCloseConfig}
           summaryItems={[
             { value: gaborDiffOptions.find((d) => d.key === localDifficulty)?.label },
             { value: `${gaborDurationSec}s` },
@@ -887,7 +897,7 @@ export function HomePage() {
       {expandedModule === 'reading-training' && rulesModule !== 'reading-training' && (
         <ConfigDialog
           ariaLabel={t('home.module.reading.title')}
-          onClose={() => setExpandedModule(null)}
+          onClose={handleCloseConfig}
           summaryItems={[
             { value: t('home.config.randomStory') },
           ]}
@@ -949,7 +959,7 @@ export function HomePage() {
       {expandedModule === 'driving-rehab' && rulesModule !== 'driving-rehab' && (
         <ConfigDialog
           ariaLabel={t('home.module.driving.title')}
-          onClose={() => setExpandedModule(null)}
+          onClose={handleCloseConfig}
           summaryItems={[
             { value: drivingDifficultyLabels[drivingDifficulty] },
             { value: drivingRenderQualityOptions.find((option) => option.key === drivingRenderQuality)?.label },
@@ -1042,7 +1052,7 @@ export function HomePage() {
       {expandedModule === 'hart-chart' && rulesModule !== 'hart-chart' && (
         <ConfigDialog
           ariaLabel={t('home.module.hartChart.title')}
-          onClose={() => setExpandedModule(null)}
+          onClose={handleCloseConfig}
           actions={configActions}
         >
             <TrainingConfigSection

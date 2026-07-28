@@ -1,5 +1,6 @@
 export const hubTrainingCompleteMessageType = 'rehab-trainer:training-complete' as const;
 export const hubTrainingActiveMessageType = 'rehab-trainer:training-active' as const;
+export const hubTrainingExitMessageType = 'rehab-trainer:training-exit' as const;
 
 export interface HubTrainingCompleteMessage {
   type: typeof hubTrainingCompleteMessageType;
@@ -10,7 +11,14 @@ export interface HubTrainingActiveMessage {
   active: boolean;
 }
 
-type HubTrainingMessage = HubTrainingCompleteMessage | HubTrainingActiveMessage;
+export interface HubTrainingExitMessage {
+  type: typeof hubTrainingExitMessageType;
+}
+
+type HubTrainingMessage =
+  | HubTrainingCompleteMessage
+  | HubTrainingActiveMessage
+  | HubTrainingExitMessage;
 
 export function IsHubOrigin(url: string): boolean {
   try {
@@ -60,6 +68,10 @@ export function NotifyHubTrainingActive(active: boolean) {
   PostHubTrainingMessage({ type: hubTrainingActiveMessageType, active });
 }
 
+export function NotifyHubTrainingExit() {
+  PostHubTrainingMessage({ type: hubTrainingExitMessageType });
+}
+
 export function IsHubTrainingCompleteMessage(value: unknown): value is HubTrainingCompleteMessage {
   return typeof value === 'object'
     && value !== null
@@ -74,4 +86,11 @@ export function IsHubTrainingActiveMessage(value: unknown): value is HubTraining
     && value.type === hubTrainingActiveMessageType
     && 'active' in value
     && typeof value.active === 'boolean';
+}
+
+export function IsHubTrainingExitMessage(value: unknown): value is HubTrainingExitMessage {
+  return typeof value === 'object'
+    && value !== null
+    && 'type' in value
+    && value.type === hubTrainingExitMessageType;
 }

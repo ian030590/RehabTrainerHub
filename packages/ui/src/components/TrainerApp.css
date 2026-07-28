@@ -159,6 +159,22 @@ body[data-ui-font-bold="true"] .app-layout :where(
   font-weight: var(--ui-font-weight, var(--fw-regular, 500));
 }
 
+html[data-training-embed="hub"],
+body[data-training-embed="hub"],
+body[data-training-embed="hub"] #root,
+.app-layout-embedded-hub {
+  background: transparent !important;
+}
+
+.training-module-overlay-content {
+  display: contents;
+}
+
+.app-layout-embedded-hub .training-module-selection-page > :not(.config-modal-overlay):not(.training-module-overlay-content) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .skip-link {
   position: fixed;
   left: 16px;
