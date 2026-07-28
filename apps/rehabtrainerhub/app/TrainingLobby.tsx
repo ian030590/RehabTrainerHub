@@ -1,16 +1,16 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { TrainingOverlay } from './train/TrainingOverlay';
 import {
-  BuildHubTrainingHref,
   BuildTrainingModuleImageSrc,
   GetTrainingModuleCopy,
   GetTrainingPurpose,
   trainingCatalog,
   trainingPurposes,
   type TrainerCatalogId,
+  type TrainingCatalogModule,
   type TrainingPurposeId,
 } from '@rehab-trainer/ui/trainingCatalog';
 import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
@@ -47,6 +47,8 @@ const trainerVisuals: Record<TrainerCatalogId, {
 export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
+  const [activeModule, setActiveModule] = useState<TrainingCatalogModule | null>(null);
+  const handleCloseOverlay = useCallback(() => setActiveModule(null), []);
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).lobby;
   const normalizedQuery = query.trim().toLocaleLowerCase(locale);
@@ -80,6 +82,10 @@ export function TrainingLobby() {
   };
 
   return (
+    <>
+    {activeModule && (
+      <TrainingOverlay module={activeModule} onClose={handleCloseOverlay} />
+    )}
     <main className="lobby-page" id="main-content">
       <section className="lobby-heading" aria-labelledby="lobby-title">
         <div>
@@ -157,10 +163,13 @@ export function TrainingLobby() {
                       <p>{moduleCopy.description}</p>
                       <div className="module-card-footer">
                         <span>{trainer.name}</span>
-                        <Link href={BuildHubTrainingHref(module)}>
+                        <button
+                          onClick={() => setActiveModule(module)}
+                          type="button"
+                        >
                           {copy.start}
                           <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   </article>
@@ -177,5 +186,6 @@ export function TrainingLobby() {
         </section>
       </div>
     </main>
+    </>
   );
 }
