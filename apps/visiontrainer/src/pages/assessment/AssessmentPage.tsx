@@ -9,6 +9,7 @@ import {
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
+import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useT } from '../../i18n';
 import { IsAssessmentCalibrationAtDefaults } from '../../utils/settings';
 import { useAppSetting } from '../../utils/useAppSetting';
@@ -30,6 +31,10 @@ export function AssessmentPage() {
   const [customTrialsInput, setCustomTrialsInput] = useState('');
   const [showCalibrationWarning, setShowCalibrationWarning] = useState(false);
   const [plInputMode, setPlInputMode] = useAppSetting('preferentialLookingInputMode');
+  const webGazerPermission = useMediaPermissionPreflight({
+    active: expandedTest === 'gratings' && plInputMode === 'webgazer',
+    video: true,
+  });
   const ufovLabels = GetUfovConfigLabels(lang);
   const isSmallScreenDevice = IsMobileOrTabletDevice(DetectDisplayDeviceKind());
 
@@ -172,6 +177,9 @@ export function AssessmentPage() {
             <>
               <button
                 className="btn btn-primary btn-lg config-start-btn"
+                disabled={expandedTest === 'gratings'
+                  && plInputMode === 'webgazer'
+                  && webGazerPermission.status !== 'granted'}
                 onClick={(e) => { e.stopPropagation(); void handleStartTest(); }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -229,6 +237,18 @@ export function AssessmentPage() {
                   </button>
                 </TrainingConfigOptionGroup>
               </TrainingConfigSection>
+            )}
+            {expandedTest === 'gratings' && plInputMode === 'webgazer' && (
+              <p
+                className={`webgazer-pl-message ${['denied', 'unsupported', 'error'].includes(webGazerPermission.status) ? 'error' : ''}`}
+                role={['denied', 'unsupported', 'error'].includes(webGazerPermission.status) ? 'alert' : 'status'}
+              >
+                {webGazerPermission.status === 'granted'
+                  ? t('settings.wg.permissionReady')
+                  : ['denied', 'unsupported', 'error'].includes(webGazerPermission.status)
+                    ? t('settings.wg.permissionError')
+                    : t('settings.wg.startingCam')}
+              </p>
             )}
         </ConfigDialog>
       )}

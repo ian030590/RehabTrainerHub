@@ -9,8 +9,6 @@ import { useT } from '../../i18n';
 import ReactDOM from 'react-dom';
 import { initJsPsych } from 'jspsych';
 import WebGazerExtension from '@jspsych/extension-webgazer';
-import WebGazerInitCameraPlugin from '@jspsych/plugin-webgazer-init-camera';
-import WebGazerCalibratePlugin from '@jspsych/plugin-webgazer-calibrate';
 import {
   GetSetting,
   SetSetting,
@@ -27,6 +25,10 @@ import {
 } from '../../utils/settings';
 import { PixelFromMillimeter } from '../../utils/spatialUtils';
 import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
+import {
+  CreateWebGazerCalibrationTimeline,
+  ResetWebGazerCalibrationData,
+} from '../../utils/webgazerCalibration';
 
 type Tab = 'general' | 'calibration' | 'webgazer' | 'gamma' | 'crowding';
 
@@ -320,6 +322,7 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
     setMessage(t('settings.wg.startingCam'));
     try {
       await EnsureWebGazerLoaded();
+      await ResetWebGazerCalibrationData();
     } catch (error) {
       console.error('Unable to load WebGazer.', error);
       setStatus('error');
@@ -354,32 +357,13 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
 
         jsPsychRef.current = jsPsych;
 
-        jsPsych.run([
-          {
-            type: WebGazerInitCameraPlugin,
-            instructions: `
-              <div class="webgazer-jspsych-instructions">
-                <h2>${t('settings.wg.title')}</h2>
-                <p>${t('settings.wg.inst1')}</p>
-                <p>${t('settings.wg.inst2')}</p>
-                <p>${t('settings.wg.inst3')}</p>
-              </div>
-            `,
-            button_text: t('settings.wg.startBtn'),
-          },
-          {
-            type: WebGazerCalibratePlugin,
-            calibration_points: [
-              [10, 10], [50, 10], [90, 10],
-              [10, 50], [50, 50], [90, 50],
-              [10, 90], [50, 90], [90, 90],
-            ],
-            calibration_mode: 'click',
-            repetitions_per_point: 2,
-            randomize_calibration_order: true,
-            point_size: 24,
-          },
-        ] as any);
+        jsPsych.run(CreateWebGazerCalibrationTimeline({
+          title: t('settings.wg.title'),
+          instruction1: t('settings.wg.inst1'),
+          instruction2: t('settings.wg.inst2'),
+          instruction3: t('settings.wg.inst3'),
+          buttonText: t('settings.wg.startBtn'),
+        }) as any);
       } catch (error) {
         jsPsychRef.current = null;
         setStatus('error');

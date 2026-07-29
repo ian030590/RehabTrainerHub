@@ -53,6 +53,7 @@
     "./fullscreen": "./src/fullscreen.ts",
     "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
     "./hooks/useFullscreenTrainingRoot": "./src/hooks/useFullscreenTrainingRoot.ts",
+    "./hooks/useMediaPermissionPreflight": "./src/hooks/useMediaPermissionPreflight.ts",
     "./hooks/useRoutedTrainingModule": "./src/hooks/useRoutedTrainingModule.ts",
     "./hooks/useScrollChromeVisibility": "./src/hooks/useScrollChromeVisibility.ts",
     "./hooks/useTrainingAbort": "./src/hooks/useTrainingAbort.ts",

@@ -23,6 +23,7 @@ import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPa
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
+import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
@@ -587,6 +588,11 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
   const [errorMessage, setErrorMessage] = useState('');
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [visual, setVisual] = useState<VisualState>({ phase: 'idle' });
+  const mediaPermission = useMediaPermissionPreflight({
+    active: phase === 'menu',
+    audio: inputMode === 'microphone',
+    video: inputMode === 'camera',
+  });
 
   const activeLevel = GetLevel(levelId);
   const selectedLevelLabels = labels.levels[levelId];
@@ -597,6 +603,20 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
     phaseRef.current = nextPhase;
     setPhaseState(nextPhase);
   }, []);
+
+  useEffect(() => {
+    if (mediaPermission.status === 'granted') {
+      setErrorMessage('');
+    } else if (mediaPermission.status === 'unsupported') {
+      setErrorMessage(inputMode === 'camera'
+        ? labels.error.cameraUnsupported
+        : labels.error.microphoneUnsupported);
+    } else if (mediaPermission.status === 'denied' || mediaPermission.status === 'error') {
+      setErrorMessage(inputMode === 'camera'
+        ? labels.error.cameraPermission
+        : labels.error.microphonePermission);
+    }
+  }, [inputMode, labels.error, mediaPermission.status]);
 
   const stopInput = useCallback(async () => {
     inputControllerRef.current.cancelWaiting();
@@ -879,6 +899,8 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
             actions={(
               <TrainingConfigNavigationActions
                 cancelLabel={labels.cancel}
+                disabled={mediaPermission.status !== 'granted'}
+                loading={mediaPermission.status === 'idle' || mediaPermission.status === 'requesting'}
                 nextLabel={labels.rules}
                 onCancel={() => void exitToAttentionTraining()}
                 onNext={() => setPhase('rules')}

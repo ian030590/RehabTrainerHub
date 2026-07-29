@@ -190,6 +190,8 @@ export const en: Record<TranslationKey, string> = {
   // WebGazer
   'settings.wg.errorNotLoaded': 'webgazer.js not loaded. Check if public/webgazer.js exists.',
   'settings.wg.startingCam': 'Starting camera, please allow browser webcam access.',
+  'settings.wg.permissionReady': 'Camera permission is ready. Calibration will run after you start.',
+  'settings.wg.permissionError': 'Camera permission is unavailable. Allow camera access in the browser before continuing.',
   'settings.wg.errorContainer': 'Cannot get calibration container.',
   'settings.wg.done': 'WebGazer calibration completed.',
   'settings.wg.title': 'WebGazer Calibration',

@@ -107,6 +107,12 @@ export { DownloadCsvFile, DownloadFile } from './downloadFile';
 export { EnterFullscreenFromUserGesture, ExitFullscreenIfActive, WaitForFullscreenLayout } from './fullscreen';
 export { CreateUseActiveUser } from './hooks/useActiveUser';
 export { useFullscreenTrainingRoot } from './hooks/useFullscreenTrainingRoot';
+export { useMediaPermissionPreflight } from './hooks/useMediaPermissionPreflight';
+export type {
+  MediaPermissionPreflightResult,
+  MediaPermissionPreflightStatus,
+  UseMediaPermissionPreflightOptions,
+} from './hooks/useMediaPermissionPreflight';
 export { useRoutedTrainingModule } from './hooks/useRoutedTrainingModule';
 export type { UseRoutedTrainingModuleArgs } from './hooks/useRoutedTrainingModule';
 export { useScrollChromeVisibility } from './hooks/useScrollChromeVisibility';

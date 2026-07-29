@@ -26,6 +26,7 @@ import {
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
+import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
@@ -132,6 +133,13 @@ const defaultCustomEnemyHp = 8;
 const defaultCustomHoldDuration = 2.5;
 const gestures: readonly GestureId[] = [1, 2, 3, 4, 5];
 const moveColors = [0x38bdf8, 0xf8fafc, 0x4ade80, 0xfb923c, 0xfacc15] as const;
+const moveNameKeys: Record<GestureId, TranslationKey> = {
+  1: 'gesture.move.water',
+  2: 'gesture.move.strike',
+  3: 'gesture.move.leaf',
+  4: 'gesture.move.spark',
+  5: 'gesture.move.thunder',
+};
 const mobileGameMediaQuery = typeof window === 'undefined' || !window.matchMedia
   ? null
   : window.matchMedia('(any-pointer: coarse) and (max-width: 1024px)');
@@ -236,6 +244,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   const [combatTargetGesture, setCombatTargetGesture] = useState<GestureId>(1);
   const [combatGesture, setCombatGesture] = useState<GestureId | null>(null);
   const [combatHoldProgress, setCombatHoldProgress] = useState(0);
+  const cameraPermission = useMediaPermissionPreflight({
+    active: phase === 'menu',
+    video: true,
+  });
 
   const setPhase = useCallback((nextPhase: GamePhase) => {
     phaseRef.current = nextPhase;
@@ -245,6 +257,14 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   useEffect(() => {
     configRef.current = { enemyMaxHp, holdDuration, strictnessThreshold, targetMode };
   }, [enemyMaxHp, holdDuration, strictnessThreshold, targetMode]);
+
+  useEffect(() => {
+    if (cameraPermission.status === 'unsupported') {
+      setVisionError(t('gesture.error.unsupported'));
+    } else if (cameraPermission.status === 'denied' || cameraPermission.status === 'error') {
+      setVisionError(t('gesture.error.permission'));
+    }
+  }, [cameraPermission.status, t]);
 
   useEffect(() => {
     jsPsychRef.current = initJsPsych();
@@ -782,6 +802,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
   const activeCalibrationStep = calibrationSteps[calibrationIndex];
   const targetModeLabel = targetMode === 'free' ? t('gesture.config.free') : t('gesture.config.directed');
+  const combatEnemyHpPercent = Clamp((combatEnemyHp / enemyMaxHp) * 100, 0, 100);
   const isCustomEnemyHp = !enemyHpOptions.includes(enemyMaxHp as typeof enemyHpOptions[number]);
   const isCustomHoldDuration = !holdDurationOptions.includes(holdDuration as typeof holdDurationOptions[number]);
   const resultRows = useMemo(() => result?.Gesture_Stats ?? [], [result]);
@@ -846,46 +867,57 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
       {phase === 'combat' && (
         <div className="gesture-combat-hud">
-          <section className="gesture-enemy-health" aria-label={t('gesture.combat.enemyHp')}>
-            <div className="gesture-enemy-health-copy">
-              <strong>{t('gesture.combat.enemyHp')}</strong>
-              <span>{combatEnemyHp} / {enemyMaxHp}</span>
+          <section className="gesture-enemy-status" aria-label={t('gesture.combat.enemyHp')}>
+            <div>
+              <strong>{t('gesture.enemy.name')}</strong>
+              <span>Lv. 12</span>
             </div>
             <div
-              className="gesture-enemy-health-track"
+              className="gesture-hp-row"
               role="progressbar"
               aria-label={t('gesture.combat.enemyHp')}
               aria-valuemin={0}
               aria-valuemax={enemyMaxHp}
               aria-valuenow={combatEnemyHp}
             >
-              <span style={{ width: `${(combatEnemyHp / enemyMaxHp) * 100}%` }} />
+              <span>HP</span>
+              <div aria-hidden="true">
+                <i style={{ width: `${combatEnemyHpPercent}%` }} />
+              </div>
+              <strong>{combatEnemyHp}/{enemyMaxHp}</strong>
             </div>
           </section>
 
-          <section className="gesture-move-panel" aria-label={t('gesture.combat.moves')}>
-            <strong>{targetMode === 'directed'
-              ? t('gesture.combat.target', { gesture: combatTargetGesture })
-              : t('gesture.combat.moves')}</strong>
-            <ul className="gesture-move-list">
+          <section className="gesture-move-menu" aria-label={t('gesture.combat.moves')}>
+            <header>
+              <span>{t('gesture.combat.moves')}</span>
+              {targetMode === 'directed' && (
+                <strong>{t('gesture.combat.target', { gesture: combatTargetGesture })}</strong>
+              )}
+            </header>
+            <div className="gesture-move-list">
               {gestures.map((gesture) => {
-                const isTarget = targetMode === 'directed' && gesture === combatTargetGesture;
-                const isActive = gesture === combatGesture;
+                const selected = gesture === combatGesture;
+                const eligible = targetMode === 'free' || gesture === combatTargetGesture;
                 return (
-                  <li
+                  <div
                     key={gesture}
-                    className={`${isTarget ? 'gesture-move-target' : ''} ${isActive ? 'gesture-move-active' : ''}`.trim()}
+                    className={`gesture-move ${selected ? 'selected' : ''} ${eligible ? '' : 'disabled'}`.trim()}
                   >
-                    <span className={`gesture-move-number gesture-move-number-${gesture}`}>{gesture}</span>
-                    {isActive && (
-                      <span className="gesture-move-hold" aria-hidden="true">
-                        <span style={{ width: `${combatHoldProgress * 100}%` }} />
-                      </span>
+                    <span className="gesture-pointer" aria-hidden="true">{selected ? '▶' : ''}</span>
+                    <b>{gesture}</b>
+                    <span>{t(moveNameKeys[gesture])}</span>
+                    {selected && eligible && (
+                      <i
+                        className="gesture-cast-ring"
+                        style={{ '--gesture-progress': `${combatHoldProgress * 360}deg` } as React.CSSProperties}
+                        aria-hidden="true"
+                      />
                     )}
-                  </li>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           </section>
         </div>
       )}
@@ -906,6 +938,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             actions={(
               <TrainingConfigNavigationActions
                 cancelLabel={t('training.cancel')}
+                disabled={cameraPermission.status !== 'granted'}
+                loading={cameraPermission.status === 'idle' || cameraPermission.status === 'requesting'}
                 nextLabel={t('training.rules')}
                 onCancel={exitGame}
                 onNext={() => setPhase('rules')}

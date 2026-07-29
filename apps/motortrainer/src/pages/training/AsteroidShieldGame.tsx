@@ -28,6 +28,7 @@ import {
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
+import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '../../i18n';
 import { InlineAlert } from '../../components/InlineAlert';
@@ -399,6 +400,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   const [showVisionError, setShowVisionError] = useState(false);
   const [isHandTrackingActive, setIsHandTrackingActive] = useState(false);
   const [result, setResult] = useState<SessionRecord | null>(null);
+  const cameraPermission = useMediaPermissionPreflight({
+    active: phase === 'menu' && handControlEnabled,
+    video: true,
+  });
 
   const summaryItems = useMemo(() => [
     { label: labels.difficulty, value: labels[difficulty] },
@@ -428,6 +433,14 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   useEffect(() => {
     jsPsychRef.current = initJsPsych();
   }, []);
+
+  useEffect(() => {
+    if (cameraPermission.status === 'unsupported') {
+      setVisionError(labels.unsupported);
+    } else if (cameraPermission.status === 'denied' || cameraPermission.status === 'error') {
+      setVisionError(labels.permission);
+    }
+  }, [cameraPermission.status, labels.permission, labels.unsupported]);
 
   const stopVision = useCallback(() => {
     if (animationFrameRef.current !== null) {
@@ -835,6 +848,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             actions={(
               <TrainingConfigNavigationActions
                 cancelLabel={t('training.cancel')}
+                loading={handControlEnabled && (cameraPermission.status === 'idle' || cameraPermission.status === 'requesting')}
                 nextLabel={t('training.rules')}
                 onCancel={exitGame}
                 onNext={() => setPhase('rules')}

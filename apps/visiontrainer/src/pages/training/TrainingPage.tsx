@@ -16,6 +16,7 @@ import { DestroyPixiTrainingRuntime } from '../../utils/pixiPool';
 import { soundManager } from '../../utils/soundManager';
 import { SaveTrainingRecord } from '../../utils/trainingRecords';
 import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
+import { ResetWebGazerCalibrationData } from '../../utils/webgazerCalibration';
 import { DownloadTrainingCsv } from './exportCsv';
 import {
   isOculomotorMode,
@@ -101,7 +102,7 @@ export function TrainingPage() {
   const oculomotorTargetColor = searchParams.get('targetColor') || GetSetting('oculomotorTargetColor');
   const oculomotorBackgroundColor = searchParams.get('backgroundColor') || GetSetting('oculomotorBackgroundColor');
   const oculomotorCustomTargetImage = GetSetting('oculomotorCustomTargetImage');
-  const enableWebGazer = GetSetting('oculomotorEnableWebgazer');
+  const enableWebGazer = moduleId === 'oculomotor-training' && GetSetting('oculomotorEnableWebgazer');
   const requestedDrivingFlash = searchParams.get('redFlash');
   const drivingRedFlashEnabled = requestedDrivingFlash === null
     ? GetSetting('drivingRedFlashEnabled')
@@ -140,6 +141,7 @@ export function TrainingPage() {
 
       if (enableWebGazer) {
         await EnsureWebGazerLoaded();
+        await ResetWebGazerCalibrationData();
         if (cancelled) return;
       }
 
@@ -208,6 +210,13 @@ export function TrainingPage() {
           backgroundColor: oculomotorBackgroundColor,
           targetShape: oculomotorTargetShape,
           customTargetImage: oculomotorCustomTargetImage,
+          webGazerCalibration: {
+            title: t('settings.wg.title'),
+            instruction1: t('settings.wg.inst1'),
+            instruction2: t('settings.wg.inst2'),
+            instruction3: t('settings.wg.inst3'),
+            buttonText: t('settings.wg.startBtn'),
+          },
         },
         gabor: {
           durationSec: gaborDurationSec,
@@ -308,7 +317,11 @@ export function TrainingPage() {
   if (phase === 'running') {
     return (
       <div key="running" className="experiment-container">
-        <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+        <div
+          ref={containerRef}
+          className={enableWebGazer ? 'webgazer-fullscreen-stage' : undefined}
+          style={{ width: '100%', height: '100%' }}
+        />
       </div>
     );
   }

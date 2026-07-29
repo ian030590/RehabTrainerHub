@@ -22,6 +22,13 @@ export interface BuildTimelineOverrides {
     backgroundImage?: string;
     audio?: string;
     bounceJitter?: number;
+    webGazerCalibration?: {
+      buttonText: string;
+      instruction1: string;
+      instruction2: string;
+      instruction3: string;
+      title: string;
+    };
   };
   gabor?: {
     durationSec?: number;

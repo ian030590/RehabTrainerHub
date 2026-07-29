@@ -1,8 +1,7 @@
-import WebgazerInitCameraPlugin from '@jspsych/plugin-webgazer-init-camera';
-import WebgazerCalibratePlugin from '@jspsych/plugin-webgazer-calibrate';
 import PixiOculomotorTrainingPlugin from '../plugins/pixi-oculomotor-training';
 import { GetSetting } from '../../utils/settings';
 import { PixelFromDegree, PixelFromMillimeter } from '../../utils/spatialUtils';
+import { CreateWebGazerCalibrationTimeline } from '../../utils/webgazerCalibration';
 import type { BuildTimelineOverrides } from './types';
 
 export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): object[] {
@@ -25,22 +24,13 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
   const timeline: object[] = [];
 
   if (enableWebGazer) {
-    timeline.push({
-      type: WebgazerInitCameraPlugin,
-    });
-
-    if (!GetSetting('webGazerCalibrationAt')) {
-      timeline.push({
-        type: WebgazerCalibratePlugin,
-        calibration_points: [
-          [10, 10], [10, 50], [10, 90],
-          [50, 10], [50, 50], [50, 90],
-          [90, 10], [90, 50], [90, 90],
-        ],
-        repetitions_per_point: 2,
-        randomize_calibration_order: true,
-      });
-    }
+    timeline.push(...CreateWebGazerCalibrationTimeline(overrides?.oculomotor?.webGazerCalibration ?? {
+      title: 'WebGazer Calibration',
+      instruction1: 'Allow camera access and center your face in the camera view.',
+      instruction2: 'Look at each point, then click or tap its center twice.',
+      instruction3: 'Keep your head steady until all points are complete.',
+      buttonText: 'Start Calibration',
+    }));
   }
 
   timeline.push({

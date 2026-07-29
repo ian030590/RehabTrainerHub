@@ -188,6 +188,8 @@ export const zh = {
   // WebGazer
   'settings.wg.errorNotLoaded': 'webgazer.js 未載入。請確認 public/webgazer.js 存在且 index.html 正確引用。',
   'settings.wg.startingCam': '正在啟動攝影機，請允許瀏覽器使用攝影機。',
+  'settings.wg.permissionReady': '攝影機權限已就緒；開始後會先進行眼動校正。',
+  'settings.wg.permissionError': '無法取得攝影機權限，請先在瀏覽器允許攝影機存取。',
   'settings.wg.errorContainer': '無法取得校正容器元素。',
   'settings.wg.done': '視線追蹤校正已完成。',
   'settings.wg.title': '視線追蹤校正',

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useT } from '../../i18n';
+import { initJsPsych } from 'jspsych';
 import WebGazerExtension from '@jspsych/extension-webgazer';
 import { BestPEST } from './logic/bestPest';
 import {
@@ -44,6 +45,10 @@ import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreen
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
 import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
+import {
+  CreateWebGazerCalibrationTimeline,
+  ResetWebGazerCalibrationData,
+} from '../../utils/webgazerCalibration';
 
 type Phase = 'intro' | 'isi' | 'stimulus' | 'results';
 
@@ -149,6 +154,15 @@ function DrawGratingApertureRing(
   ctx.restore();
 }
 
+async function WaitForCalibrationContainer(getElement: () => HTMLDivElement | null) {
+  for (let frame = 0; frame < 30; frame += 1) {
+    const element = getElement();
+    if (element) return element;
+    await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+  }
+  throw new Error('Unable to mount the WebGazer calibration surface.');
+}
+
 export function AcuityTestPage() {
   const { t } = useT();
   const navigate = useNavigate();
@@ -179,38 +193,44 @@ export function AcuityTestPage() {
   const pendingStartRef = useRef(false);
   const gratingRegionsRef = useRef<{ left: GazeRegion; right: GazeRegion } | null>(null);
   const gazeExtensionRef = useRef<any>(null);
+  const calibrationContainerRef = useRef<HTMLDivElement>(null);
+  const calibrationJsPsychRef = useRef<any>(null);
+  const startAttemptRef = useRef(0);
 
   const userName = getActiveUser() || t('exp.unknownUser');
 
   // Keep phaseRef in sync
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
-  const ensureWebGazerReady = useCallback(async () => {
-    if (!isWebGazerPL) return;
+  const runWebGazerCalibration = useCallback(async (attemptId: number) => {
     await EnsureWebGazerLoaded();
+    await ResetWebGazerCalibrationData();
+    if (attemptId !== startAttemptRef.current) return null;
 
-    if (!gazeExtensionRef.current) {
-      const extension = new (WebGazerExtension as any)({});
-      await extension.initialize({});
-      gazeExtensionRef.current = extension;
-    }
+    const container = await WaitForCalibrationContainer(() => calibrationContainerRef.current);
+    if (attemptId !== startAttemptRef.current) return null;
+    container.replaceChildren();
 
-    const extension = gazeExtensionRef.current;
-    if (!extension) {
-      throw alert(t('acuity.wgFailed'));
-    }
+    const jsPsych = initJsPsych({
+      display_element: container,
+      extensions: [{ type: WebGazerExtension }] as any,
+    });
+    calibrationJsPsychRef.current = jsPsych;
+    await jsPsych.run(CreateWebGazerCalibrationTimeline({
+      title: t('settings.wg.title'),
+      instruction1: t('settings.wg.inst1'),
+      instruction2: t('settings.wg.inst2'),
+      instruction3: t('settings.wg.inst3'),
+      buttonText: t('settings.wg.startBtn'),
+    }) as any);
 
-    if (!extension.isInitialized()) {
-      await extension.start();
-    }
-
-    extension.hideVideo();
-    extension.hidePredictions();
-    extension.resume();
-  }, [isWebGazerPL, t]);
+    if (attemptId !== startAttemptRef.current) return null;
+    return (jsPsych as any).extensions?.webgazer ?? null;
+  }, [t]);
 
   // ── Initialize and manage the test ──
   const startTest = useCallback(async () => {
+    if (webGazerStatus === 'starting') return;
     await enterTrainingFullscreen();
 
     const begin = () => {
@@ -236,17 +256,26 @@ export function AcuityTestPage() {
 
     setWebGazerStatus('starting');
     setWebGazerMessage(t('acuity.wgStarting'));
-    ensureWebGazerReady()
-      .then(() => {
-        setWebGazerStatus('ready');
-        begin();
-      })
-      .catch((err) => {
-        setWebGazerStatus('error');
-        console.error(err);
-        alert(t('acuity.wgFailed'));
-      });
-  }, [ensureWebGazerReady, enterTrainingFullscreen, isWebGazerPL, testType, t]);
+    const attemptId = ++startAttemptRef.current;
+
+    try {
+      const extension = await runWebGazerCalibration(attemptId);
+      if (attemptId !== startAttemptRef.current || !extension) return;
+      gazeExtensionRef.current = extension;
+      extension.hideVideo();
+      extension.hidePredictions();
+      extension.resume();
+      calibrationJsPsychRef.current = null;
+      setWebGazerStatus('ready');
+      begin();
+    } catch (error) {
+      if (attemptId !== startAttemptRef.current) return;
+      calibrationJsPsychRef.current = null;
+      setWebGazerStatus('error');
+      setWebGazerMessage(t('acuity.wgFailed'));
+      console.error(error);
+    }
+  }, [enterTrainingFullscreen, isWebGazerPL, runWebGazerCalibration, testType, t, webGazerStatus]);
 
   const drawStimulus = useCallback(() => {
     const canvas = canvasRef.current;
@@ -564,11 +593,37 @@ export function AcuityTestPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, [drawStimulus]);
 
-  useEffect(() => () => {
-    soundManager.destroy();
+  const cancelWebGazerCalibration = useCallback(() => {
+    startAttemptRef.current += 1;
     try {
+      const calibrationExtension = calibrationJsPsychRef.current?.extensions?.webgazer;
+      calibrationExtension?.pause?.();
+      calibrationExtension?.hidePredictions?.();
+      calibrationExtension?.hideVideo?.();
+      calibrationJsPsychRef.current?.abortExperiment?.();
       gazeExtensionRef.current?.pause?.();
       gazeExtensionRef.current?.hidePredictions?.();
+      gazeExtensionRef.current?.hideVideo?.();
+    } catch {
+      // WebGazer cleanup should not block returning to the intro.
+    }
+    calibrationJsPsychRef.current = null;
+    setWebGazerStatus('idle');
+    setWebGazerMessage('');
+  }, []);
+
+  useEffect(() => () => {
+    soundManager.destroy();
+    startAttemptRef.current += 1;
+    try {
+      const calibrationExtension = calibrationJsPsychRef.current?.extensions?.webgazer;
+      calibrationExtension?.pause?.();
+      calibrationExtension?.hidePredictions?.();
+      calibrationExtension?.hideVideo?.();
+      calibrationJsPsychRef.current?.abortExperiment?.();
+      gazeExtensionRef.current?.pause?.();
+      gazeExtensionRef.current?.hidePredictions?.();
+      gazeExtensionRef.current?.hideVideo?.();
     } catch {
       // WebGazer cleanup should not block navigation.
     }
@@ -576,12 +631,20 @@ export function AcuityTestPage() {
 
   const abortTest = useCallback(() => {
     soundManager.destroy();
+    startAttemptRef.current += 1;
     try {
+      const calibrationExtension = calibrationJsPsychRef.current?.extensions?.webgazer;
+      calibrationExtension?.pause?.();
+      calibrationExtension?.hidePredictions?.();
+      calibrationExtension?.hideVideo?.();
+      calibrationJsPsychRef.current?.abortExperiment?.();
       gazeExtensionRef.current?.pause?.();
       gazeExtensionRef.current?.hidePredictions?.();
+      gazeExtensionRef.current?.hideVideo?.();
     } catch {
       // WebGazer cleanup should not block navigation.
     }
+    calibrationJsPsychRef.current = null;
     navigate('/assessment');
   }, [navigate]);
 
@@ -593,6 +656,19 @@ export function AcuityTestPage() {
   const wrapFullscreenRoot = (content: React.ReactNode) => (
     <div ref={fullscreenRootRef} className={`acuity-fullscreen-root acuity-fullscreen-root-${phase}`}>
       {content}
+      {isWebGazerPL && webGazerStatus === 'starting' && (
+        <div className="webgazer-fullscreen-overlay">
+          <div ref={calibrationContainerRef} className="webgazer-fullscreen-stage" />
+          <button
+            className="webgazer-cancel-btn"
+            type="button"
+            onClick={cancelWebGazerCalibration}
+            title={t('settings.wg.cancelTitle')}
+          >
+            {t('settings.wg.cancelBtn')}
+          </button>
+        </div>
+      )}
     </div>
   );
 

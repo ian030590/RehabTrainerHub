@@ -19,6 +19,7 @@ import {
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
+import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '../../i18n';
 import { InlineAlert } from '../../components/InlineAlert';
@@ -343,6 +344,10 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     handVisible: false,
     insideTarget: false,
   });
+  const cameraPermission = useMediaPermissionPreflight({
+    active: phase === 'menu',
+    video: true,
+  });
 
   const setPhase = useCallback((nextPhase: GamePhase) => {
     phaseRef.current = nextPhase;
@@ -367,6 +372,14 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   useEffect(() => {
     jsPsychRef.current = initJsPsych();
   }, []);
+
+  useEffect(() => {
+    if (cameraPermission.status === 'unsupported') {
+      setVisionError(labels.unsupported);
+    } else if (cameraPermission.status === 'denied' || cameraPermission.status === 'error') {
+      setVisionError(labels.permission);
+    }
+  }, [cameraPermission.status, labels.permission, labels.unsupported]);
 
   useEffect(() => () => {
     mountedRef.current = false;
@@ -701,6 +714,8 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
             actions={(
               <TrainingConfigNavigationActions
                 cancelLabel={t('training.cancel')}
+                disabled={cameraPermission.status !== 'granted'}
+                loading={cameraPermission.status === 'idle' || cameraPermission.status === 'requesting'}
                 nextLabel={t('training.rules')}
                 onCancel={exitGame}
                 onNext={() => setPhase('rules')}

@@ -10,6 +10,7 @@ import {
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
+import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
 import { GetTrainingModuleCopy } from '@rehab-trainer/ui/trainingCatalog';
@@ -110,6 +111,10 @@ export function HomePage() {
   const [drivingControlMode, setDrivingControlMode] = useAppSetting('drivingControlMode');
   const [drivingRenderQuality, setDrivingRenderQuality] = useAppSetting('drivingRenderQuality');
   const [isStartingTraining, setIsStartingTraining] = useState(false);
+  const webGazerPermission = useMediaPermissionPreflight({
+    active: expandedModule === 'oculomotor-training' && oculomotorEnableWebgazer,
+    video: true,
+  });
   const rulesLabels = GetRulesLabels(lang);
   const showRulesButtonLabel = rulesLabels.next;
   const rulesStartButtonLabel = rulesLabels.start;
@@ -388,12 +393,33 @@ export function HomePage() {
   const configActions = (
     <TrainingConfigNavigationActions
       cancelLabel={t('btn.cancel')}
-      disabled={isStartingTraining}
-      loading={isStartingTraining}
+      disabled={isStartingTraining || (
+        expandedModule === 'oculomotor-training'
+        && oculomotorEnableWebgazer
+        && webGazerPermission.status !== 'granted'
+      )}
+      loading={isStartingTraining || (
+        expandedModule === 'oculomotor-training'
+        && oculomotorEnableWebgazer
+        && (webGazerPermission.status === 'idle' || webGazerPermission.status === 'requesting')
+      )}
       nextLabel={showRulesButtonLabel}
       onCancel={handleCloseConfig}
       onNext={handleShowRules}
-    />
+    >
+      {expandedModule === 'oculomotor-training' && oculomotorEnableWebgazer && (
+        <p
+          className={`webgazer-pl-message ${['denied', 'unsupported', 'error'].includes(webGazerPermission.status) ? 'error' : ''}`}
+          role={['denied', 'unsupported', 'error'].includes(webGazerPermission.status) ? 'alert' : 'status'}
+        >
+          {webGazerPermission.status === 'granted'
+            ? t('settings.wg.permissionReady')
+            : ['denied', 'unsupported', 'error'].includes(webGazerPermission.status)
+              ? t('settings.wg.permissionError')
+              : t('settings.wg.startingCam')}
+        </p>
+      )}
+    </TrainingConfigNavigationActions>
   );
 
   return (

@@ -235,9 +235,10 @@ body #webgazerVideoContainer {
 .webgazer-fullscreen-stage #calibration-point,
 body #webgazer-calibrate-container #calibration-point {
   transform: translate(-50%, -50%) !important;
-  border: 2px solid #fff !important;
+  border: 2px solid var(--text-on-accent) !important;
   background: var(--accent) !important;
   box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 18%, transparent);
+  touch-action: manipulation;
 }
 
 .webgazer-jspsych-instructions {
@@ -306,6 +307,64 @@ body #webgazer-calibrate-container #calibration-point {
   background: rgba(255, 85, 85, 0.2);
   border-color: rgba(255, 85, 85, 0.4);
   color: var(--error);
+}
+
+@media (any-pointer: coarse) {
+  .webgazer-fullscreen-stage #calibration-point,
+  body #webgazer-calibrate-container #calibration-point {
+    min-width: 48px !important;
+    min-height: 48px !important;
+  }
+
+  .webgazer-fullscreen-stage #webgazer-init-container > div {
+    width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)) !important;
+    margin-top: min(210px, 32dvh) !important;
+  }
+
+  .webgazer-jspsych-instructions {
+    width: 100%;
+    padding: 18px;
+  }
+
+  .webgazer-fullscreen-stage .jspsych-btn {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  .webgazer-cancel-btn {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    min-height: 44px;
+  }
+}
+
+@media (any-pointer: coarse) and (max-height: 600px) and (orientation: landscape) {
+  body #webgazerVideoContainer {
+    top: max(4px, env(safe-area-inset-top)) !important;
+    transform: translateX(-50%) scale(0.58) !important;
+    transform-origin: top center !important;
+  }
+
+  .webgazer-fullscreen-stage #webgazer-init-container > div {
+    width: min(620px, calc(100vw - 140px)) !important;
+    margin-top: 112px !important;
+  }
+
+  .webgazer-jspsych-instructions {
+    margin-bottom: 8px;
+    padding: 10px 14px;
+  }
+
+  .webgazer-jspsych-instructions h2 {
+    margin-bottom: 5px;
+    font-size: 18px;
+  }
+
+  .webgazer-jspsych-instructions p {
+    margin: 3px 0;
+    font-size: 13px;
+    line-height: 1.35;
+  }
 }
 
 /* ?? Calibration ?? */

@@ -45,6 +45,7 @@ import {
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
+import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
@@ -210,6 +211,10 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   const [showVisionError, setShowVisionError] = useState(false);
   const [recognition, setRecognition] = useState<RecognitionState>(recognitionRef.current);
   const [result, setResult] = useState<SessionResult | null>(null);
+  const cameraPermission = useMediaPermissionPreflight({
+    active: phase === 'menu',
+    video: true,
+  });
 
   const setPhase = useCallback((next: GamePhase) => {
     phaseRef.current = next;
@@ -224,6 +229,14 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   useEffect(() => {
     jsPsychRef.current = initJsPsych();
   }, []);
+
+  useEffect(() => {
+    if (cameraPermission.status === 'unsupported') {
+      setVisionError(t('tongue.error.unsupported'));
+    } else if (cameraPermission.status === 'denied' || cameraPermission.status === 'error') {
+      setVisionError(t('tongue.error.permission'));
+    }
+  }, [cameraPermission.status, t]);
 
   useEffect(() => {
     if (activeUser) setConfig(GetTongueTrainingSettings(activeUser));
@@ -697,6 +710,8 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
             actions={(
               <TrainingConfigNavigationActions
                 cancelLabel={t('training.cancel')}
+                disabled={cameraPermission.status !== 'granted'}
+                loading={cameraPermission.status === 'idle' || cameraPermission.status === 'requesting'}
                 nextLabel={t('training.rules')}
                 onCancel={exitGame}
                 onNext={() => setPhase('rules')}
