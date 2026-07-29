@@ -132,6 +132,9 @@ const defaultCustomEnemyHp = 8;
 const defaultCustomHoldDuration = 2.5;
 const gestures: readonly GestureId[] = [1, 2, 3, 4, 5];
 const moveColors = [0x38bdf8, 0xf8fafc, 0x4ade80, 0xfb923c, 0xfacc15] as const;
+const mobileGameMediaQuery = typeof window === 'undefined' || !window.matchMedia
+  ? null
+  : window.matchMedia('(any-pointer: coarse) and (max-width: 1024px)');
 const coarsePortraitMediaQuery = typeof window === 'undefined' || !window.matchMedia
   ? null
   : window.matchMedia('(orientation: portrait) and (pointer: coarse)');
@@ -229,6 +232,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   const [visionError, setVisionError] = useState('');
   const [showVisionError, setShowVisionError] = useState(false);
   const [result, setResult] = useState<SessionRecord | null>(null);
+  const [combatEnemyHp, setCombatEnemyHp] = useState(defaultEnemyHp);
+  const [combatTargetGesture, setCombatTargetGesture] = useState<GestureId>(1);
+  const [combatGesture, setCombatGesture] = useState<GestureId | null>(null);
+  const [combatHoldProgress, setCombatHoldProgress] = useState(0);
 
   const setPhase = useCallback((nextPhase: GamePhase) => {
     phaseRef.current = nextPhase;
@@ -280,6 +287,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       lastValidAt: 0,
       attemptRecorded: false,
     };
+    setCombatGesture(null);
+    setCombatHoldProgress(0);
   }, []);
 
   const completeSession = useCallback((completedAt: number) => {
@@ -355,6 +364,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
     const nextHp = Math.max(0, enemyHpRef.current - 1);
     enemyHpRef.current = nextHp;
+    setCombatEnemyHp(nextHp);
     const stats = metricsRef.current.stats[gesture];
     stats.successes += 1;
     metricsRef.current.successfulCasts += 1;
@@ -376,6 +386,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     if (configRef.current.targetMode === 'directed') {
       const nextTarget = ChooseNextGesture(targetGestureRef.current);
       targetGestureRef.current = nextTarget;
+      setCombatTargetGesture(nextTarget);
     }
     attackActiveRef.current = false;
   }, [completeSession, resetHold]);
@@ -401,6 +412,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     }
 
     if (!isEligible || !match.gesture) {
+      setCombatGesture(match.gesture);
+      setCombatHoldProgress(0);
       const withinGrace = now - holdRef.current.lastValidAt <= trackingGraceMs;
       if (!withinGrace) resetHold(true);
       return;
@@ -426,6 +439,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
     const durationMs = configRef.current.holdDuration * 1000;
     const progress = Clamp(holdRef.current.progressMs / durationMs, 0, 1);
+    setCombatGesture(match.gesture);
+    setCombatHoldProgress(progress);
     if (progress >= 1) void triggerAttack(match.gesture, match.similarity);
   }, [resetHold, triggerAttack]);
 
@@ -434,6 +449,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const firstTarget = RandomGesture();
     targetGestureRef.current = firstTarget;
     enemyHpRef.current = config.enemyMaxHp;
+    setCombatEnemyHp(config.enemyMaxHp);
+    setCombatTargetGesture(firstTarget);
+    setCombatGesture(null);
+    setCombatHoldProgress(0);
     metricsRef.current = {
       startedAt: performance.now(),
       successfulCasts: 0,
@@ -505,6 +524,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
   const handleNoHand = useCallback((now: number) => {
     setHandVisible(false);
+    setCombatGesture(null);
     if (now - lastHandSeenAtRef.current <= trackingGraceMs) return;
     if (phaseRef.current === 'calibration') {
       if (!calibrationCapturingRef.current) return;
@@ -594,7 +614,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       return;
     }
     PrepareAudioFeedback(jsPsychRef);
-    await enterTrainingFullscreen();
+    // Mobile browser fullscreen suppresses native page zoom on several browsers.
+    // Keep the fixed game surface in the normal document so two-finger pinch zoom
+    // remains available, while desktop retains the immersive fullscreen flow.
+    if (!IsMobileGameViewport()) await enterTrainingFullscreen();
     if (appRef.current) ResizePixiAppToElement(appRef.current, pixiHostRef.current);
     stopVision();
     setVisionError('');
@@ -795,6 +818,18 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     <div ref={fullscreenRootRef} className={`gesture-battler gesture-battler-phase-${phase}`}>
       <div ref={pixiHostRef} className="gesture-battler-stage" />
 
+      <button
+        className="gesture-mobile-back"
+        type="button"
+        onClick={exitGame}
+        aria-label={t('gesture.mobile.backLobby')}
+        title={t('gesture.mobile.backLobby')}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.5 5 7.5 12l7 7" />
+        </svg>
+      </button>
+
       <div className={`gesture-camera ${phase === 'menu' || phase === 'rules' || phase === 'initializing' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>
         <video ref={videoRef} muted playsInline aria-label={t('gesture.camera.preview')} />
         <canvas ref={handCanvasRef} aria-hidden="true" />
@@ -806,6 +841,52 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
           <span className="gesture-orientation-phone" aria-hidden="true" />
           <strong>{t('gesture.orientation.title')}</strong>
           <span>{t('gesture.orientation.description')}</span>
+        </div>
+      )}
+
+      {phase === 'combat' && (
+        <div className="gesture-combat-hud">
+          <section className="gesture-enemy-health" aria-label={t('gesture.combat.enemyHp')}>
+            <div className="gesture-enemy-health-copy">
+              <strong>{t('gesture.combat.enemyHp')}</strong>
+              <span>{combatEnemyHp} / {enemyMaxHp}</span>
+            </div>
+            <div
+              className="gesture-enemy-health-track"
+              role="progressbar"
+              aria-label={t('gesture.combat.enemyHp')}
+              aria-valuemin={0}
+              aria-valuemax={enemyMaxHp}
+              aria-valuenow={combatEnemyHp}
+            >
+              <span style={{ width: `${(combatEnemyHp / enemyMaxHp) * 100}%` }} />
+            </div>
+          </section>
+
+          <section className="gesture-move-panel" aria-label={t('gesture.combat.moves')}>
+            <strong>{targetMode === 'directed'
+              ? t('gesture.combat.target', { gesture: combatTargetGesture })
+              : t('gesture.combat.moves')}</strong>
+            <ul className="gesture-move-list">
+              {gestures.map((gesture) => {
+                const isTarget = targetMode === 'directed' && gesture === combatTargetGesture;
+                const isActive = gesture === combatGesture;
+                return (
+                  <li
+                    key={gesture}
+                    className={`${isTarget ? 'gesture-move-target' : ''} ${isActive ? 'gesture-move-active' : ''}`.trim()}
+                  >
+                    <span className={`gesture-move-number gesture-move-number-${gesture}`}>{gesture}</span>
+                    {isActive && (
+                      <span className="gesture-move-hold" aria-hidden="true">
+                        <span style={{ width: `${combatHoldProgress * 100}%` }} />
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         </div>
       )}
 
@@ -1296,6 +1377,10 @@ function ChooseNextGesture(previous: GestureId): GestureId {
 
 function IsCoarsePointerPortrait(): boolean {
   return coarsePortraitMediaQuery?.matches ?? false;
+}
+
+function IsMobileGameViewport(): boolean {
+  return mobileGameMediaQuery?.matches ?? false;
 }
 
 function ResizePixiAppToElement(app: Application, element: HTMLElement | null): void {

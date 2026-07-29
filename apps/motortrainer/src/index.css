@@ -1315,6 +1315,168 @@ body #webgazer-calibrate-container #calibration-point {
   image-rendering: pixelated;
 }
 
+.gesture-mobile-back {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  z-index: 30;
+  width: 46px;
+  height: 46px;
+  display: none;
+  place-items: center;
+  padding: 0;
+  border: 3px solid var(--border);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bg-card) 94%, transparent);
+  color: var(--text-primary);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--text-primary) 24%, transparent);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.gesture-mobile-back svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.6;
+}
+
+.gesture-combat-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.gesture-enemy-health {
+  position: absolute;
+  top: calc(18px + env(safe-area-inset-top));
+  left: 50%;
+  width: min(420px, 42vw);
+  padding: 10px 12px 12px;
+  border: 3px solid var(--border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  box-shadow: 6px 6px 0 color-mix(in srgb, var(--text-primary) 18%, transparent);
+  transform: translateX(-50%);
+}
+
+.gesture-enemy-health-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.gesture-enemy-health-track {
+  height: 20px;
+  overflow: hidden;
+  border: 3px solid var(--border);
+  background: color-mix(in srgb, var(--border) 35%, var(--bg-card));
+}
+
+.gesture-enemy-health-track > span {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--error) 0 16px,
+    color-mix(in srgb, var(--error) 78%, var(--bg-card)) 16px 32px
+  );
+  transition: width 240ms ease-out;
+}
+
+.gesture-move-panel {
+  position: absolute;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+}
+
+.gesture-move-panel > strong {
+  padding: 5px 9px;
+  border: 2px solid var(--border);
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.gesture-move-list {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gesture-move-list li {
+  position: relative;
+  width: 52px;
+  display: grid;
+  gap: 4px;
+  transition: transform 120ms ease-out;
+}
+
+.gesture-move-number {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-on-accent);
+  font-size: 26px;
+  font-weight: 900;
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--text-primary) 20%, transparent);
+}
+
+.gesture-move-number-1 { background: var(--accent); }
+.gesture-move-number-2 { background: var(--accent-dark); }
+.gesture-move-number-3 { background: var(--success); }
+.gesture-move-number-4 { background: var(--warning); }
+.gesture-move-number-5 { background: color-mix(in srgb, var(--warning) 65%, var(--bg-card)); }
+
+.gesture-move-target .gesture-move-number {
+  outline: 4px solid color-mix(in srgb, var(--warning) 55%, var(--bg-card));
+  outline-offset: 2px;
+}
+
+.gesture-move-active {
+  transform: translateY(-7px);
+}
+
+.gesture-move-active .gesture-move-number {
+  border-color: var(--bg-card);
+  box-shadow:
+    0 0 0 3px var(--border),
+    5px 5px 0 color-mix(in srgb, var(--text-primary) 24%, transparent);
+}
+
+.gesture-move-hold {
+  height: 8px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  background: color-mix(in srgb, var(--border) 35%, var(--bg-card));
+}
+
+.gesture-move-hold > span {
+  display: block;
+  height: 100%;
+  background: var(--success);
+}
+
 .gesture-menu-panel {
   background:
     linear-gradient(rgba(242, 244, 243, 0.86), rgba(242, 244, 243, 0.86)),
@@ -2644,5 +2806,81 @@ body #webgazer-calibrate-container #calibration-point {
   }
   .btn:hover, .card-link:hover, .secondary-action:hover, .card:hover, .content-page article:hover {
     transform: none !important;
+  }
+}
+
+/* Phone gameplay keeps browser-native pinch zoom and adds a persistent lobby exit. */
+@media (any-pointer: coarse) and (max-width: 1024px) {
+  .gesture-battler,
+  .gesture-battler-stage,
+  .gesture-battler-canvas,
+  .gesture-combat-hud {
+    touch-action: pinch-zoom;
+  }
+
+  .gesture-mobile-back {
+    display: grid;
+  }
+
+  .gesture-battler-phase-calibration .gesture-camera,
+  .gesture-battler-phase-combat .gesture-camera {
+    top: calc(64px + env(safe-area-inset-top));
+  }
+
+  .gesture-enemy-health {
+    top: calc(8px + env(safe-area-inset-top));
+    width: min(330px, 46vw);
+    padding: 6px 8px 8px;
+  }
+
+  .gesture-enemy-health-copy {
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+
+  .gesture-enemy-health-track {
+    height: 14px;
+    border-width: 2px;
+  }
+
+  .gesture-move-panel {
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    gap: 5px;
+  }
+
+  .gesture-move-panel > strong {
+    padding: 3px 7px;
+    font-size: 11px;
+  }
+
+  .gesture-move-list {
+    gap: 6px;
+  }
+
+  .gesture-move-list li,
+  .gesture-move-number {
+    width: 42px;
+  }
+
+  .gesture-move-number {
+    height: 42px;
+    border-width: 2px;
+    font-size: 21px;
+    box-shadow: 3px 3px 0 color-mix(in srgb, var(--text-primary) 20%, transparent);
+  }
+
+  .gesture-move-target .gesture-move-number {
+    outline-width: 3px;
+    outline-offset: 1px;
+  }
+
+  .gesture-move-active {
+    transform: translateY(-4px);
+  }
+
+  .gesture-move-hold {
+    height: 6px;
+    border-width: 1px;
   }
 }

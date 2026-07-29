@@ -37,8 +37,9 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const sourceUrl = useMemo(() => {
     const url = new URL(BuildTrainingModuleHref(module));
     url.searchParams.set('embed', 'hub');
+    url.searchParams.set('lang', language);
     return url.toString();
-  }, [module]);
+  }, [language, module]);
 
   // Open the native dialog when mounted
   useEffect(() => {

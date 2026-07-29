@@ -321,6 +321,12 @@ summary:focus-visible {
   border: none;
   background: transparent;
   overflow: hidden;
+  touch-action: pinch-zoom;
+}
+
+.training-overlay .embedded-training-frame,
+.training-overlay .embedded-training-frame iframe {
+  touch-action: pinch-zoom;
 }
 
 .training-overlay::backdrop {

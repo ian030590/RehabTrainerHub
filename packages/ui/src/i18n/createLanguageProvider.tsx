@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
 export type SupportedLanguage = 'zh' | 'en';
@@ -40,6 +40,12 @@ function ReadStoredLanguage(storageKey: string): string | null {
   }
 }
 
+function ReadRequestedLanguage(): SupportedLanguage | null {
+  if (typeof window === 'undefined') return null;
+  const requestedLanguage = new URLSearchParams(window.location.search).get('lang');
+  return IsSupportedLanguage(requestedLanguage) ? requestedLanguage : null;
+}
+
 function WriteStoredLanguage(storageKey: string, lang: SupportedLanguage) {
   if (typeof window === 'undefined') return;
   try {
@@ -58,9 +64,15 @@ export function CreateLanguageProvider<TKey extends string>({
 
   function LanguageProvider({ children }: { children: ReactNode }) {
     const [lang, setLangState] = useState<SupportedLanguage>(() => {
+      const requested = ReadRequestedLanguage();
+      if (requested) return requested;
       const saved = ReadStoredLanguage(storageKey);
       return IsSupportedLanguage(saved) ? saved : DetectPreferredLanguage(fallbackLanguage);
     });
+
+    useEffect(() => {
+      document.documentElement.lang = lang === 'en' ? 'en' : 'zh-Hant-TW';
+    }, [lang]);
 
     const setLang = useCallback((newLang: SupportedLanguage) => {
       setLangState(newLang);
