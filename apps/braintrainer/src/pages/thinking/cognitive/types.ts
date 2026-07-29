@@ -168,6 +168,9 @@ export interface Connect4State {
   rows: number;
   cols: number;
   board: Array<'P' | 'A' | null>;
+  drops: Array<{ index: number; mark: 'P' | 'A'; startedAt: number }>;
+  winningLine: number[];
+  pendingResult: { result: GameResult; finishAt: number } | null;
   moves: number;
   aiMoves: number;
   errors: number;

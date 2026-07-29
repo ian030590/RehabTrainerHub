@@ -384,7 +384,7 @@ export function ReferenceCognitiveGame({
           const dt = Math.min(ticker.deltaMS / 1000, 0.05);
           metricsRef.current.elapsed += dt;
           const feedbackBefore = stateRef.current?.kind === 'whack-a-mole' ? GetFeedbackCounts(stateRef.current) : null;
-          UpdateTimedState(stateRef.current, metricsRef.current.elapsed, renderRef.current);
+          UpdateTimedState(stateRef.current, metricsRef.current.elapsed, renderRef.current, finishGameRef.current);
           if (feedbackBefore && stateRef.current?.kind === 'whack-a-mole') {
             PlayFeedbackForCountChange(feedbackBefore, GetFeedbackCounts(stateRef.current), jsPsychRef);
           }
@@ -645,12 +645,13 @@ function UpdateTimedState(
   state: CognitiveGameState | null,
   elapsed: number,
   render: () => void,
+  finishGame: (result: GameResult) => void,
 ) {
   if (!state) return;
   if (state.kind === 'memory-match') UpdateMemoryTimedState(state, elapsed, render);
   if (state.kind === 'reaction-time') UpdateReactionTimedState(state, elapsed, render);
   if (state.kind === 'whack-a-mole') UpdateWhackTimedState(state, elapsed, render);
-  if (IsLanguageNeutralGameState(state)) UpdateLanguageNeutralTimedState(state, elapsed, render);
+  if (IsLanguageNeutralGameState(state)) UpdateLanguageNeutralTimedState(state, elapsed, render, finishGame);
 }
 
 function IsAutoSuccess(state: CognitiveGameState | null) {

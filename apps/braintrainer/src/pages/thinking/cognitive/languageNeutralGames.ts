@@ -187,7 +187,7 @@ export function HandleLanguageNeutralGameTap(
       HandleTicTacToeTap(state, index, finishGame);
       break;
     case 'connect4':
-      HandleConnect4Tap(state, index, finishGame);
+      HandleConnect4Tap(state, index, elapsed, finishGame);
       break;
     case 'dots-and-boxes':
       HandleDotsAndBoxesTap(state, index, finishGame);
@@ -231,8 +231,21 @@ export function UpdateLanguageNeutralTimedState(
   state: LanguageNeutralGameState,
   elapsed: number,
   render: () => void,
+  finishGame?: (result: GameResult) => void,
 ) {
-  if (state.kind !== 'simon-says' || state.status !== 'showing' || elapsed < state.nextStepAt) return;
+  if (state.kind === 'connect4') {
+    const hadDrops = state.drops.length > 0;
+    state.drops = state.drops.filter((drop) => elapsed - drop.startedAt < 0.45);
+    if (hadDrops || state.pendingResult) render();
+    if (state.pendingResult && elapsed >= state.pendingResult.finishAt) finishGame?.(state.pendingResult.result);
+    return;
+  }
+  if (state.kind !== 'simon-says' || state.status !== 'showing') return;
+  if (state.litIndex !== null && elapsed < state.nextStepAt) {
+    render();
+    return;
+  }
+  if (elapsed < state.nextStepAt) return;
   if (state.litIndex !== null) {
     state.litIndex = null;
     state.nextStepAt = elapsed + 0.2;
@@ -403,13 +416,13 @@ export function DrawLanguageNeutralGame(
       DrawBullsAndCows(app, state, onTap, t);
       break;
     case 'simon-says':
-      DrawSimon(app, state, onTap, t);
+      DrawSimon(app, state, elapsed, onTap, t);
       break;
     case 'tic-tac-toe':
       DrawTicTacToe(app, state, onTap, t);
       break;
     case 'connect4':
-      DrawConnect4(app, state, onTap, t);
+      DrawConnect4(app, state, onTap, t, elapsed);
       break;
     case 'dots-and-boxes':
       DrawDotsAndBoxes(app, state, onTap, t);
@@ -647,7 +660,7 @@ function HandleSimonTap(state: SimonState, index: number, elapsed: number, finis
   state.nextStepAt = elapsed + 0.55;
 }
 
-function DrawSimon(app: Application, state: SimonState, onTap: (index: number) => void, _t: TFunction) {
+function DrawSimon(app: Application, state: SimonState, elapsed: number, onTap: (index: number) => void, _t: TFunction) {
   const boardMax = GetResponsiveBoardMaxSize(app);
   const boardSize = Math.floor(Math.min(IsMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 320, boardMax.width, boardMax.height));
   const buttonSize = boardSize * (150 / 320);
@@ -672,6 +685,7 @@ function DrawSimon(app: Application, state: SimonState, onTap: (index: number) =
       button.corner,
       state.litIndex === index ? button.activeColor : button.color,
       state.litIndex === index,
+      elapsed,
       index,
       onTap,
     );
@@ -758,34 +772,44 @@ function CreateConnect4State(): Connect4State {
     rows: 6,
     cols: 7,
     board: Array.from({ length: 42 }, () => null),
+    drops: [],
+    winningLine: [],
+    pendingResult: null,
     moves: 0,
     aiMoves: 0,
     errors: 0,
   };
 }
 
-function HandleConnect4Tap(state: Connect4State, index: number, finishGame: (result: GameResult) => void) {
+function HandleConnect4Tap(state: Connect4State, index: number, elapsed: number, finishGame: (result: GameResult) => void) {
+  if (state.drops.length > 0 || state.pendingResult) return;
   const col = index % state.cols;
   const playerRow = DropConnect4Disc(state, col, 'P');
   if (playerRow === null) {
     state.errors += 1;
     return;
   }
+  state.drops.push({ index: playerRow * state.cols + col, mark: 'P', startedAt: elapsed });
   state.moves += 1;
-  if (CheckConnect4Win(state.board, state.rows, state.cols, 'P')) {
-    finishGame('Victory');
+  const playerLine = FindConnect4Line(state.board, state.rows, state.cols, 'P');
+  if (playerLine) {
+    QueueConnect4Result(state, 'Victory', elapsed, playerLine);
     return;
   }
   const aiCol = ChooseConnect4Move(state);
   if (aiCol !== null) {
-    DropConnect4Disc(state, aiCol, 'A');
+    const aiRow = DropConnect4Disc(state, aiCol, 'A');
+    if (aiRow !== null) state.drops.push({ index: aiRow * state.cols + aiCol, mark: 'A', startedAt: elapsed });
     state.aiMoves += 1;
   }
-  if (CheckConnect4Win(state.board, state.rows, state.cols, 'A') || state.board.every(Boolean)) finishGame('Defeat');
+  const aiLine = FindConnect4Line(state.board, state.rows, state.cols, 'A');
+  if (aiLine) QueueConnect4Result(state, 'Defeat', elapsed, aiLine);
+  else if (state.board.every(Boolean)) finishGame('Defeat');
 }
 
-function DrawConnect4(app: Application, state: Connect4State, onTap: (index: number) => void, _t: TFunction) {
+function DrawConnect4(app: Application, state: Connect4State, onTap: (index: number) => void, _t: TFunction, elapsed = 0) {
   const { cell, gap, startX, startY } = GetGridLayout(app, state.cols, state.rows, 50, 10);
+  const dropping = new Set(state.drops.map((drop) => drop.index));
   state.board.forEach((disc, index) => {
     const row = Math.floor(index / state.cols);
     const col = index % state.cols;
@@ -793,10 +817,45 @@ function DrawConnect4(app: Application, state: Connect4State, onTap: (index: num
     node.x = startX + col * (cell + gap);
     node.y = startY + row * (cell + gap);
     const g = new Graphics();
-    g.circle(cell / 2, cell / 2, cell / 2).fill(disc === 'P' ? originalConnect4Yellow : disc === 'A' ? originalConnect4Red : 0xffffff);
+    g.circle(cell / 2, cell / 2, cell / 2).fill(disc && !dropping.has(index) ? Connect4Color(disc) : 0xffffff);
+    if (state.winningLine.includes(index)) {
+      g.circle(cell / 2, cell / 2, cell / 2 - 3).stroke({ color: 0x111827, width: Math.max(3, cell * 0.08), alpha: 0.95 });
+    }
     node.addChild(g);
     app.stage.addChild(node);
   });
+  state.drops.forEach((drop) => {
+    const row = Math.floor(drop.index / state.cols);
+    const col = drop.index % state.cols;
+    const progress = Math.min(1, Math.max(0, (elapsed - drop.startedAt) / 0.45));
+    const eased = 1 - (1 - progress) ** 3;
+    const disc = new Graphics();
+    disc.circle(0, 0, cell / 2).fill(Connect4Color(drop.mark));
+    const targetY = startY + row * (cell + gap) + cell / 2;
+    disc.x = startX + col * (cell + gap) + cell / 2;
+    disc.y = startY - cell / 2 + (targetY - (startY - cell / 2)) * eased;
+    app.stage.addChild(disc);
+  });
+  if (state.winningLine.length >= 4) {
+    const first = state.winningLine[0];
+    const last = state.winningLine[state.winningLine.length - 1];
+    const startRow = Math.floor(first / state.cols);
+    const startCol = first % state.cols;
+    const endRow = Math.floor(last / state.cols);
+    const endCol = last % state.cols;
+    const lineProgress = state.pendingResult
+      ? Math.min(1, Math.max(0, (elapsed - (state.pendingResult.finishAt - 1.2)) / 0.7))
+      : 1;
+    const x1 = startX + startCol * (cell + gap) + cell / 2;
+    const y1 = startY + startRow * (cell + gap) + cell / 2;
+    const x2 = startX + endCol * (cell + gap) + cell / 2;
+    const y2 = startY + endRow * (cell + gap) + cell / 2;
+    const line = new Graphics();
+    line.moveTo(x1, y1)
+      .lineTo(x1 + (x2 - x1) * lineProgress, y1 + (y2 - y1) * lineProgress)
+      .stroke({ color: 0x111827, width: Math.max(6, cell * 0.12), alpha: 0.9 });
+    app.stage.addChild(line);
+  }
 }
 
 function CreateDotsAndBoxesState(difficulty: Difficulty): DotsAndBoxesState {
@@ -1282,12 +1341,26 @@ function DrawSimonButton(
   corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
   color: number,
   active: boolean,
+  elapsed: number,
   index: number,
   onTap: (index: number) => void,
 ) {
   const node = InteractiveNode(onTap, index);
   const g = new Graphics();
   const r = size;
+  const pulse = active ? 0.5 + Math.sin(elapsed * 24) * 0.5 : 0;
+  const shift = active ? size * (0.07 + pulse * 0.03) : 0;
+  const dx = corner.includes('left') ? -shift : shift;
+  const dy = corner.includes('top') ? -shift : shift;
+  x += dx;
+  y += dy;
+
+  if (active) {
+    const glow = new Graphics();
+    glow.roundRect(x - size * 0.06, y - size * 0.06, size * 1.12, size * 1.12, size * 0.18)
+      .fill({ color, alpha: 0.34 + pulse * 0.24 });
+    node.addChild(glow);
+  }
 
   if (corner === 'top-left') {
     g.moveTo(x + r, y).lineTo(x + size, y).lineTo(x + size, y + size).lineTo(x, y + size).lineTo(x, y + r)
@@ -1306,7 +1379,7 @@ function DrawSimonButton(
       .lineTo(x, y + size).closePath();
   }
 
-  g.fill({ color, alpha: active ? 1 : 0.7 }).stroke({ color: 0x333333, width: 4 });
+  g.fill({ color, alpha: active ? 1 : 0.45 }).stroke({ color: active ? 0xffffff : 0x333333, width: active ? 7 : 4 });
   node.addChild(g);
   app.stage.addChild(node);
 }
@@ -1431,23 +1504,36 @@ function DropConnect4Disc(state: Connect4State, col: number, mark: 'P' | 'A') {
 }
 
 function CheckConnect4Win(board: Array<string | null>, rows: number, cols: number, mark: string) {
+  return Boolean(FindConnect4Line(board, rows, cols, mark));
+}
+
+function FindConnect4Line(board: Array<string | null>, rows: number, cols: number, mark: string) {
   const directions = [[1, 0], [0, 1], [1, 1], [1, -1]] as const;
   for (let row = 0; row < rows; row += 1) {
     for (let col = 0; col < cols; col += 1) {
       if (board[row * cols + col] !== mark) continue;
       for (const [dx, dy] of directions) {
-        let count = 1;
+        const line = [row * cols + col];
         for (let step = 1; step < 4; step += 1) {
           const nextRow = row + dy * step;
           const nextCol = col + dx * step;
           if (nextRow < 0 || nextRow >= rows || nextCol < 0 || nextCol >= cols || board[nextRow * cols + nextCol] !== mark) break;
-          count += 1;
+          line.push(nextRow * cols + nextCol);
         }
-        if (count >= 4) return true;
+        if (line.length >= 4) return line;
       }
     }
   }
-  return false;
+  return null;
+}
+
+function QueueConnect4Result(state: Connect4State, result: GameResult, elapsed: number, winningLine: number[]) {
+  state.winningLine = winningLine;
+  state.pendingResult = { result, finishAt: elapsed + 1.8 };
+}
+
+function Connect4Color(mark: 'P' | 'A') {
+  return mark === 'P' ? originalConnect4Yellow : originalConnect4Red;
 }
 
 function ChooseConnect4Move(state: Connect4State) {
