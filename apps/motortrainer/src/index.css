@@ -1639,36 +1639,20 @@ body #webgazer-calibrate-container #calibration-point {
 }
 
 .gesture-loading-card {
-  display: grid;
-  justify-items: center;
-  gap: 12px;
-  text-align: center;
-}
-
-.gesture-loading-card h1,
-.gesture-calibration-card h1 {
-  margin: 0;
-  color: #17201a;
-  font-family: var(--font-family);
-  font-size: clamp(26px, 4vw, 42px);
-  letter-spacing: -1px;
-}
-
-.gesture-loading-card p,
-.gesture-calibration-card p {
-  margin: 0;
-  color: #52634b;
-  font-size: 17px;
-  line-height: 1.65;
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .gesture-loader {
-  width: 54px;
-  height: 54px;
-  border: 8px solid #cbd9b5;
+  width: 40px;
+  height: 40px;
+  border: 3px solid #cbd9b5;
   border-top-color: #4d7c0f;
   border-radius: 50%;
-  animation: gesture-spin 0.8s steps(8) infinite;
+  animation: gesture-spin 0.8s linear infinite;
 }
 
 @keyframes gesture-spin {

@@ -111,9 +111,8 @@ export function EducationArticles() {
       </div>
 
       {status === 'loading' && (
-        <div className="education-articles-state" role="status">
-          <span className="material-symbols-outlined" aria-hidden="true">progress_activity</span>
-          <p>{copy.loading}</p>
+        <div aria-label={copy.loading} className="education-articles-state" role="status">
+          <span className="minimal-loading-spinner" aria-hidden="true" />
         </div>
       )}
 
@@ -239,7 +238,11 @@ function EducationArticleCard({ article }: { article: ArticleCard }) {
             <span className="material-symbols-outlined" aria-hidden="true">expand_more</span>
           </summary>
           <div className="education-article-body">
-            {contentStatus === 'loading' && <p role="status">{copy.loading}</p>}
+            {contentStatus === 'loading' && (
+              <div aria-label={copy.loading} className="inline-loading-state" role="status">
+                <span className="minimal-loading-spinner" aria-hidden="true" />
+              </div>
+            )}
             {contentStatus === 'error' && (
               <div className="education-article-load-error" role="alert">
                 <p>{copy.error}</p>

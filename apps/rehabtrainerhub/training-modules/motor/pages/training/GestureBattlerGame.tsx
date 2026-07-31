@@ -1097,10 +1097,13 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
       {phase === 'initializing' && (
         <div className="gesture-calibration-overlay">
-          <div className="gesture-loading-card">
-            <div className="gesture-loader" />
-            <h1>{t('gesture.loading.title')}</h1>
-            <p>{statusMessage}</p>
+          <div
+            aria-label={statusMessage || t('gesture.loading.title')}
+            aria-live="polite"
+            className="gesture-loading-card"
+            role="status"
+          >
+            <div className="gesture-loader" aria-hidden="true" />
           </div>
         </div>
       )}

@@ -517,96 +517,23 @@ body[data-training-embed="hub"] #root,
 
 .app-loading {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
-  gap: 16px;
   padding: 24px;
   background: var(--bg);
-  color: var(--text-secondary);
   overflow: hidden;
-}
-
-.app-loading-skeleton {
-  position: relative;
-  isolation: isolate;
-  width: min(420px, 100%);
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 18px;
-  padding: 22px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-l);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-ambient);
-  animation: app-loading-enter 260ms ease-out both;
-}
-
-.app-loading-skeleton::after {
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 20%,
-    color-mix(in srgb, var(--accent) 8%, transparent) 46%,
-    color-mix(in srgb, var(--accent) 13%, transparent) 52%,
-    transparent 78%
-  );
-  content: "";
-  pointer-events: none;
-  transform: translate3d(-120%, 0, 0);
-  animation: app-loading-sheen 1.6s ease-in-out infinite;
-}
-
-.app-loading-skeleton > * {
-  position: relative;
-  z-index: 1;
 }
 
 .app-loading-indicator {
-  width: 42px;
-  height: 42px;
-  border: 3px solid color-mix(in srgb, var(--accent) 16%, transparent);
+  width: 40px;
+  height: 40px;
+  border: 3px solid color-mix(in srgb, var(--accent) 18%, transparent);
   border-top-color: var(--accent);
   border-radius: 50%;
-  animation: spin 0.9s linear infinite;
-}
-
-.app-loading-skeleton-copy {
-  display: grid;
-  gap: 9px;
-}
-
-.app-loading-skeleton-line {
-  width: 100%;
-  height: 10px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--text-muted) 18%, transparent);
-  animation: app-loading-breathe 1.35s ease-in-out infinite alternate;
-}
-
-.app-loading-skeleton-line-title {
-  width: min(72%, 220px);
-  height: 14px;
-  background: color-mix(in srgb, var(--accent) 24%, transparent);
-}
-
-.app-loading-skeleton-line-short {
-  width: 58%;
-  animation-delay: 140ms;
-}
-
-.app-loading-text {
-  margin: 0;
-  font-size: calc(15px * var(--ui-font-scale, 1));
-  font-weight: var(--fw-bold, 700);
-  text-align: center;
+  animation: spin 0.8s linear infinite;
 }
 
 .page-content {
@@ -2578,37 +2505,8 @@ body[data-training-embed="hub"] #root,
     transition-duration: 0.01ms !important;
   }
 
-  .app-loading-skeleton,
-  .app-loading-skeleton::after,
-  .app-loading-indicator,
-  .app-loading-skeleton-line {
+  .app-loading-indicator {
     animation: none !important;
-  }
-}
-
-@keyframes app-loading-enter {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes app-loading-sheen {
-  to {
-    transform: translate3d(120%, 0, 0);
-  }
-}
-
-@keyframes app-loading-breathe {
-  from {
-    opacity: 0.55;
-  }
-  to {
-    opacity: 1;
   }
 }
 

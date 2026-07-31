@@ -5,16 +5,17 @@ import { useHubLanguage } from '../i18n/HubLanguage';
 
 export function TrainingLoading() {
   const { language } = useHubLanguage();
+  const label = GetHubUiCopy(language).embeddedTraining.loadingPage;
+
   return (
     <main className="embedded-training-loading">
-      <div className="training-loading-stage" role="status" aria-live="polite">
-        <span className="training-loading-orbit" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-        <strong>{GetHubUiCopy(language).embeddedTraining.loadingPage}</strong>
-        <span className="training-loading-progress" aria-hidden="true" />
+      <div
+        aria-label={label}
+        aria-live="polite"
+        className="training-loading-stage"
+        role="status"
+      >
+        <span className="training-loading-spinner" aria-hidden="true" />
       </div>
     </main>
   );

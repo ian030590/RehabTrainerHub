@@ -66,42 +66,16 @@
 }
 
 .gesture-loading-card {
-  width: min(760px, calc(100vw - 48px));
-  display: grid;
-  justify-items: center;
-  gap: 12px;
-  padding: 30px;
-  border: 4px solid var(--tongue-loader-surface);
-  border-radius: 5px;
-  background: var(--tongue-loader-surface);
-  box-shadow:
-    0 0 0 4px var(--tongue-loader-border),
-    12px 12px 0 rgb(var(--tongue-loader-shadow-rgb) / 0.2);
-  text-align: center;
-}
-
-.gesture-loading-card h1 {
-  margin: 0;
-  color: var(--tongue-loader-ink);
-  font-family: var(--font-family);
-  font-size: clamp(26px, 4vw, 42px);
-  letter-spacing: -1px;
-}
-
-.gesture-loading-card p {
-  margin: 0;
-  color: var(--tongue-loader-muted);
-  font-size: 17px;
-  line-height: 1.65;
+  width: auto;
 }
 
 .gesture-loader {
-  width: 54px;
-  height: 54px;
-  border: 8px solid var(--tongue-loader-track);
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--tongue-loader-track);
   border-top-color: var(--tongue-loader-accent);
   border-radius: 50%;
-  animation: tongue-loader-spin 0.8s steps(8) infinite;
+  animation: tongue-loader-spin 0.8s linear infinite;
 }
 
 .gesture-calibration-actions {

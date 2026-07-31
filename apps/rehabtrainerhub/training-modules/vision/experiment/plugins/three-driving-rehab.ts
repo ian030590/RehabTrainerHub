@@ -464,17 +464,18 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       inset: '0',
       zIndex: '50',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '16px',
       background: 'rgba(255, 255, 255, 0.88)',
-      color: '#172033',
       cursor: 'wait',
       pointerEvents: 'auto',
-      backdropFilter: 'blur(2px)',
-      WebkitBackdropFilter: 'blur(2px)',
     });
+    overlay.setAttribute(
+      'aria-label',
+      this.language === 'en'
+        ? 'Loading driving environment...'
+        : '\u6b63\u5728\u8f09\u5165\u99d5\u99db\u5834\u666f...',
+    );
 
     const spinner = document.createElement('div');
     spinner.setAttribute('aria-hidden', 'true');
@@ -493,19 +494,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       );
     }
 
-    const label = document.createElement('div');
-    label.textContent = this.language === 'en'
-      ? 'Loading driving environment...'
-      : '\u6b63\u5728\u8f09\u5165\u99d5\u99db\u5834\u666f...';
-    Object.assign(label.style, {
-      padding: '0 24px',
-      fontSize: '16px',
-      fontWeight: '700',
-      lineHeight: '1.5',
-      textAlign: 'center',
-    });
-
-    overlay.append(spinner, label);
+    overlay.append(spinner);
     root.appendChild(overlay);
     return overlay;
   }

@@ -453,9 +453,8 @@ export function ArticleManager({ onArticlesChanged }: ArticleManagerProps) {
       )}
 
       {status === 'loading' && (
-        <div className="admin-state" role="status">
-          <span className="material-symbols-outlined" aria-hidden="true">progress_activity</span>
-          <p>正在載入衛教文章…</p>
+        <div aria-label="正在載入衛教文章" className="admin-state" role="status">
+          <span className="minimal-loading-spinner" aria-hidden="true" />
         </div>
       )}
 

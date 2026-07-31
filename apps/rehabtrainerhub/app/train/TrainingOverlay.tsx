@@ -124,18 +124,13 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
     >
       <div className={`embedded-training-frame ${isReady ? 'is-ready' : ''}`}>
         <div
+          aria-label={copy.loading}
           aria-hidden={isReady || undefined}
           aria-live={isReady ? undefined : 'polite'}
           className="training-loading-stage"
           role={isReady ? undefined : 'status'}
         >
-          <span className="training-loading-orbit" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-          <strong>{copy.loading}</strong>
-          <span className="training-loading-progress" aria-hidden="true" />
+          <span className="training-loading-spinner" aria-hidden="true" />
         </div>
         <iframe
           allow="autoplay; camera; microphone; fullscreen"

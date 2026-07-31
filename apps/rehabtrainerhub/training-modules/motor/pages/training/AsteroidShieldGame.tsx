@@ -1015,10 +1015,13 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
 
       {phase === 'initializing' && (
         <div className="asteroid-shield-loading-overlay">
-          <div className="gesture-loading-card">
-            <div className="gesture-loader" />
-            <h1>{labels.loadingTitle}</h1>
-            <p>{statusMessage}</p>
+          <div
+            aria-label={statusMessage || labels.loadingTitle}
+            aria-live="polite"
+            className="gesture-loading-card"
+            role="status"
+          >
+            <div className="gesture-loader" aria-hidden="true" />
           </div>
         </div>
       )}

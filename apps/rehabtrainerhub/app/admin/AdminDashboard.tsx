@@ -316,9 +316,8 @@ export function AdminDashboard() {
         </div>
 
         {overviewStatus === 'loading' && !overview && (
-          <div className="admin-state" role="status">
-            <span className="material-symbols-outlined" aria-hidden="true">progress_activity</span>
-            <p>正在載入後台總覽…</p>
+          <div aria-label="正在載入後台總覽" className="admin-state" role="status">
+            <span className="minimal-loading-spinner" aria-hidden="true" />
           </div>
         )}
 
@@ -545,9 +544,8 @@ export function AdminDashboard() {
         )}
 
         {recordsStatus === 'loading' && (
-          <div className="admin-state" role="status">
-            <span className="material-symbols-outlined" aria-hidden="true">progress_activity</span>
-            <p>正在載入訓練紀錄…</p>
+          <div aria-label="正在載入訓練紀錄" className="admin-state" role="status">
+            <span className="minimal-loading-spinner" aria-hidden="true" />
           </div>
         )}
 

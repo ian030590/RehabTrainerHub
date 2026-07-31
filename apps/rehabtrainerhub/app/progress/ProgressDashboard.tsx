@@ -177,7 +177,13 @@ export function ProgressDashboard() {
         </div>
 
         {status === 'loading' ? (
-          <p className="recent-module-empty">{copy.loadingRecent}</p>
+          <div
+            aria-label={copy.loadingRecent}
+            className="recent-module-empty"
+            role="status"
+          >
+            <span className="minimal-loading-spinner" aria-hidden="true" />
+          </div>
         ) : recentModules.length > 0 ? (
           <div className="recent-module-grid">
             {recentModules.map((module) => {
