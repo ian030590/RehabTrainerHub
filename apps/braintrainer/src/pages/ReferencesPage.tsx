@@ -11,7 +11,7 @@ import {
   cognitiveTrainingAreaTitleKeys,
   GetCognitiveTrainingArea,
   referenceCognitiveModules,
-} from './thinking/cognitive/constants';
+} from '@rehab-trainer/hub-modules/brain/pages/thinking/cognitive/constants';
 
 export function ReferencesPage() {
   const { lang, t } = useT();

@@ -5,7 +5,7 @@ const files = [
   'apps/rehabtrainerhub/app/globals.css',
   'apps/motortrainer/src/index.css',
   'apps/visiontrainer/src/index.css',
-  'apps/visiontrainer/src/pages/training/hart-chart.css'
+  'apps/rehabtrainerhub/training-modules/vision/pages/training/hart-chart.css'
 ];
 
 const variables = `

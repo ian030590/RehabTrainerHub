@@ -6,7 +6,7 @@
 // ── Global Constants ──
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { CreateUserStore } from '@rehab-trainer/ui/storage/userStore';
-import type { OculomotorPattern, OculomotorTargetShape } from '../pages/training/oculomotor/types';
+import type { OculomotorPattern, OculomotorTargetShape } from '@rehab-trainer/hub-modules/vision/pages/training/oculomotor/types';
 
 export const cardWidthMm = 85.6;
 export const cardHeightMm = 53.98;

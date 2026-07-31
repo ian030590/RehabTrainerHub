@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { trainingCatalog } from '@rehab-trainer/ui/trainingCatalog';
+import { trainingCatalog } from '@rehab-trainer/hub-modules/catalog';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { TrainingOverlay } from './TrainingOverlay';

@@ -1,6 +1,7 @@
 export const hubTrainingCompleteMessageType = 'rehab-trainer:training-complete' as const;
 export const hubTrainingActiveMessageType = 'rehab-trainer:training-active' as const;
 export const hubTrainingExitMessageType = 'rehab-trainer:training-exit' as const;
+export const hubTrainingReadyMessageType = 'rehab-trainer:training-ready' as const;
 
 export interface HubTrainingCompleteMessage {
   type: typeof hubTrainingCompleteMessageType;
@@ -15,10 +16,25 @@ export interface HubTrainingExitMessage {
   type: typeof hubTrainingExitMessageType;
 }
 
+export interface HubTrainingReadyMessage {
+  type: typeof hubTrainingReadyMessageType;
+}
+
 type HubTrainingMessage =
   | HubTrainingCompleteMessage
   | HubTrainingActiveMessage
-  | HubTrainingExitMessage;
+  | HubTrainingExitMessage
+  | HubTrainingReadyMessage;
+
+export function IsTrustedTrainingFrameMessage(
+  event: Pick<MessageEvent<unknown>, 'origin' | 'source'>,
+  expectedOrigin: string,
+  expectedSource: MessageEventSource | null,
+): boolean {
+  return event.origin === expectedOrigin
+    && expectedSource !== null
+    && event.source === expectedSource;
+}
 
 export function IsHubOrigin(url: string): boolean {
   try {
@@ -77,6 +93,10 @@ export function NotifyHubTrainingExit() {
   PostHubTrainingMessage({ type: hubTrainingExitMessageType });
 }
 
+export function NotifyHubTrainingReady() {
+  PostHubTrainingMessage({ type: hubTrainingReadyMessageType });
+}
+
 export function IsHubTrainingCompleteMessage(value: unknown): value is HubTrainingCompleteMessage {
   return typeof value === 'object'
     && value !== null
@@ -98,4 +118,11 @@ export function IsHubTrainingExitMessage(value: unknown): value is HubTrainingEx
     && value !== null
     && 'type' in value
     && value.type === hubTrainingExitMessageType;
+}
+
+export function IsHubTrainingReadyMessage(value: unknown): value is HubTrainingReadyMessage {
+  return typeof value === 'object'
+    && value !== null
+    && 'type' in value
+    && value.type === hubTrainingReadyMessageType;
 }

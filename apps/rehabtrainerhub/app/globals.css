@@ -261,20 +261,103 @@ summary:focus-visible {
   background: transparent;
 }
 
-.embedded-training-frame > p,
 .embedded-training-loading {
   display: grid;
   min-height: 100%;
   margin: 0;
   place-items: center;
-  color: var(--text-muted);
-  font-weight: 700;
 }
 
-.embedded-training-frame > p {
+.training-loading-stage {
   position: absolute;
   z-index: 1;
   inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: 32px;
+  color: var(--text-muted);
+  background:
+    radial-gradient(circle at 50% 46%, var(--primary-soft), transparent 34%),
+    var(--background);
+  font-weight: 700;
+  opacity: 1;
+  transition: opacity 320ms ease, visibility 320ms ease;
+}
+
+.embedded-training-loading .training-loading-stage {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+}
+
+.embedded-training-frame.is-ready .training-loading-stage {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.training-loading-orbit {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  border: 2px solid color-mix(in srgb, var(--primary) 18%, transparent);
+  border-radius: 50%;
+  animation: training-orbit-spin 1.8s linear infinite;
+}
+
+.training-loading-orbit::before {
+  position: absolute;
+  inset: 13px;
+  border: 2px dashed color-mix(in srgb, var(--primary) 36%, transparent);
+  border-radius: inherit;
+  content: "";
+  animation: training-orbit-spin 2.4s linear infinite reverse;
+}
+
+.training-loading-orbit i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--primary) 58%, transparent);
+  transform: rotate(calc(var(--orbit-index, 0) * 120deg)) translateX(38px);
+  transform-origin: 0 0;
+}
+
+.training-loading-orbit i:nth-child(2) { --orbit-index: 1; }
+.training-loading-orbit i:nth-child(3) { --orbit-index: 2; }
+
+.training-loading-progress {
+  position: relative;
+  width: min(260px, 72vw);
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 14%, var(--border));
+}
+
+.training-loading-progress::after {
+  position: absolute;
+  inset: 0;
+  width: 46%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  content: "";
+  animation: training-progress-sweep 1.35s ease-in-out infinite;
+}
+
+@keyframes training-orbit-spin {
+  to { transform: rotate(1turn); }
+}
+
+@keyframes training-progress-sweep {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(260%); }
 }
 
 .embedded-training-frame iframe {
@@ -285,6 +368,12 @@ summary:focus-visible {
   height: 100%;
   border: 0;
   background: transparent;
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+
+.embedded-training-frame.is-ready iframe {
+  opacity: 1;
 }
 
 .embedded-training-error {
@@ -880,13 +969,21 @@ summary:focus-visible {
   border-radius: calc(var(--radius) * 2);
   background: var(--trainer-surface);
   box-shadow: 0 20px 20px color-mix(in srgb, var(--trainer-color) 8%, transparent);
+  cursor: pointer;
+  outline: none;
   transition: border-color 300ms ease, box-shadow 300ms ease, transform 300ms ease;
 }
 
-.module-card:hover {
+.module-card:hover,
+.module-card:focus-visible {
   border-color: color-mix(in srgb, var(--trainer-color) 44%, var(--border));
   box-shadow: 0 25px 30px color-mix(in srgb, var(--trainer-color) 14%, transparent);
   transform: translateY(-4px);
+}
+
+.module-card:focus-visible {
+  outline: 3px solid var(--trainer-color);
+  outline-offset: 4px;
 }
 
 .module-card.trainer-motor {
@@ -986,12 +1083,13 @@ summary:focus-visible {
   margin-top: auto;
 }
 
-.module-card-footer > span {
+.module-card-footer > span:not(.module-card-action) {
   display: none;
 }
 
 .module-card-footer a,
-.module-card-footer button {
+.module-card-footer button,
+.module-card-footer .module-card-action {
   display: inline-flex;
   width: 100%;
   min-height: 44px;
@@ -1010,6 +1108,8 @@ summary:focus-visible {
   transition: background-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
 }
 
+.module-card:hover .module-card-action,
+.module-card:focus-visible .module-card-action,
 .module-card-footer a:hover,
 .module-card-footer button:hover {
   background: var(--trainer-color-dark);
@@ -1025,6 +1125,23 @@ summary:focus-visible {
 
 .module-card-footer .material-symbols-outlined {
   font-size: 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .training-loading-orbit,
+  .training-loading-orbit::before,
+  .training-loading-progress::after {
+    animation: none;
+  }
+
+  .training-loading-orbit i {
+    box-shadow: none;
+  }
+
+  .embedded-training-frame iframe,
+  .training-loading-stage {
+    transition: none;
+  }
 }
 
 .empty-results {

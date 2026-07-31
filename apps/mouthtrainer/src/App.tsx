@@ -9,7 +9,7 @@ import { PwaRegistration } from '@rehab-trainer/ui/pwa';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
 import { ComprehensionTraining } from './pages/ComprehensionTraining';
-import { OralTraining } from './pages/training/OralTraining';
+import { OralTraining } from '@rehab-trainer/hub-modules/mouth/pages/training/OralTraining';
 import { defaultUiFontSizePx, GetSetting, settingsChangedEvent } from './utils/settings';
 import { siteUrls } from './utils/siteUrls';
 

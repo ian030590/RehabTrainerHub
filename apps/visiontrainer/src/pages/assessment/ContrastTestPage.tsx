@@ -8,11 +8,9 @@ import {
   WarmUpPixiRuntime,
   pixiRuntimeScopes,
 } from '../../utils/pixiPool';
-import PixiContrastSensitivityPlugin from '../../experiment/plugins/pixi-contrast-sensitivity';
+import PixiContrastSensitivityPlugin from '@rehab-trainer/hub-modules/vision/experiment/plugins/pixi-contrast-sensitivity';
 import { BestPEST } from './logic/bestPest';
 import { getActiveUser, GetSetting } from '../../utils/settings';
-import { DownloadCsvFile } from '../../utils/downloadFile';
-import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -39,7 +37,7 @@ function FormatAlternative(alt: number) {
 export function ContrastTestPage() {
   const { t } = useT();
   const navigate = useNavigate();
-  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
+  const { fullscreenRootRef } = useFullscreenTrainingRoot<HTMLDivElement>();
   const containerRef = useRef<HTMLDivElement>(null);
   const jsPsychRef = useRef<JsPsych | null>(null);
   const abortingRef = useRef(false);
@@ -168,50 +166,6 @@ export function ContrastTestPage() {
     onAbort: abortTest,
   });
 
-  const downloadCSV = () => {
-    const dateStr = new Date().toISOString().split('T')[0];
-    const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false }).replace(/:/g, '');
-    const prefix = GetSetting('downloadDirectory');
-
-    const headers = [
-      t('exp.csv.user'),
-      t('exp.csv.date'),
-      t('exp.csv.time'),
-      t('acuity.csv.test') || 'Test',
-      t('acuity.csv.trial') || 'Trial',
-      t('acuity.csv.presented') || 'Presented',
-      t('acuity.csv.response') || 'Response',
-      t('acuity.csv.correct') || 'Correct',
-      'Weber Contrast',
-      'logCSW'
-    ];
-    const rows = trialRecords.map((r) => [
-      userName, dateStr, timeStr, 'Contrast', r.trial,
-      FormatAlternative(r.presented), r.response, r.correct ? '✓' : '✗',
-      r.contrastWeber.toFixed(4), r.logCSW.toFixed(3)
-    ]);
-    
-    rows.push([]);
-    rows.push([t('acuity.csv.finalResult') || 'Final Result']);
-    rows.push(['logCS (Weber)', resultLogCSW.toFixed(2)]);
-    
-    const csv = CreateCsvContent([headers, ...rows]);
-    DownloadCsvFile(
-      csv,
-      `${prefix ? prefix + '_' : ''}${userName}_contrast_${dateStr}.csv`,
-    );
-  };
-
-  const restartTest = async () => {
-    await enterTrainingFullscreen();
-    abortingRef.current = false;
-    jsPsychRef.current = null;
-    setResultLogCSW(0);
-    setTrialRecords([]);
-    setLoadError('');
-    setPhase('running');
-  };
-
   const wrapFullscreenRoot = (content: ReactNode) => (
     <div ref={fullscreenRootRef} className={`contrast-fullscreen-root contrast-fullscreen-root-${phase}`}>
       {content}
@@ -283,12 +237,9 @@ export function ContrastTestPage() {
            </table>
 
            <TrainingResultActions
-             downloadLabel={t('acuity.downloadCsv') || 'Download CSV'}
-             restartLabel={t('exp.restart')}
              backLabel={t('exp.backHome')}
-             onDownloadCsv={downloadCSV}
-             onRestart={() => void restartTest()}
              onBackHome={() => navigate('/')}
+             hubLabel={t('exp.backLobby')}
            />
            
            <p className="acuity-disclaimer-footer">

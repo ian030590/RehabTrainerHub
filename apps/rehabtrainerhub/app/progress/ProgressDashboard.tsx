@@ -12,7 +12,7 @@ import {
   GetTrainingModuleCopy,
   GetTrainingPurpose,
   trainingCatalog,
-} from '@rehab-trainer/ui/trainingCatalog';
+} from '@rehab-trainer/hub-modules/catalog';
 import { useHubAuth } from '../HubNavigation';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';

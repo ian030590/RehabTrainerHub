@@ -1,9 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TrainingOverlay } from './train/TrainingOverlay';
 import {
+  BuildTrainingModuleHref,
   BuildTrainingModuleImageSrc,
   GetTrainingModuleCopy,
   GetTrainingPurpose,
@@ -12,7 +13,7 @@ import {
   type TrainerCatalogId,
   type TrainingCatalogModule,
   type TrainingPurposeId,
-} from '@rehab-trainer/ui/trainingCatalog';
+} from '@rehab-trainer/hub-modules/catalog';
 import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
 import { GetHubUiCopy } from './i18n';
 import { useHubLanguage } from './i18n/HubLanguage';
@@ -44,6 +45,20 @@ const trainerVisuals: Record<TrainerCatalogId, {
   },
 };
 
+const prefetchedTrainingUrls = new Set<string>();
+
+function PreloadTrainingModule(module: TrainingCatalogModule) {
+  const href = BuildTrainingModuleHref(module);
+  if (prefetchedTrainingUrls.has(href)) return;
+  prefetchedTrainingUrls.add(href);
+
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.as = 'document';
+  link.href = href;
+  document.head.append(link);
+}
+
 export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
@@ -67,6 +82,25 @@ export function TrainingLobby() {
       || selectedPurposes.includes(module.purpose);
     return matchesSearch && matchesPurpose;
   }), [locale, normalizedQuery, selectedPurposes]);
+
+  useEffect(() => {
+    const origins = new Set(trainingCatalog.map((module) => (
+      new URL(BuildTrainingModuleHref(module)).origin
+    )));
+    const links = [...origins].flatMap((origin) => {
+      const preconnect = document.createElement('link');
+      preconnect.rel = 'preconnect';
+      preconnect.href = origin;
+      preconnect.crossOrigin = 'anonymous';
+      const dnsPrefetch = document.createElement('link');
+      dnsPrefetch.rel = 'dns-prefetch';
+      dnsPrefetch.href = origin;
+      document.head.append(preconnect, dnsPrefetch);
+      return [preconnect, dnsPrefetch];
+    });
+
+    return () => links.forEach((link) => link.remove());
+  }, []);
 
   const togglePurpose = (purposeId: TrainingPurposeId) => {
     setSelectedPurposes((current) => (
@@ -145,7 +179,22 @@ export function TrainingLobby() {
                 const trainer = trainerVisuals[module.trainer];
 
                 return (
-                  <article className={`module-card trainer-${module.trainer}`} key={module.catalogId}>
+                  <article
+                    aria-label={`${copy.start}: ${moduleCopy.title}`}
+                    className={`module-card trainer-${module.trainer}`}
+                    key={module.catalogId}
+                    onClick={() => setActiveModule(module)}
+                    onFocus={() => PreloadTrainingModule(module)}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter' && event.key !== ' ') return;
+                      event.preventDefault();
+                      setActiveModule(module);
+                    }}
+                    onPointerDown={() => PreloadTrainingModule(module)}
+                    onPointerEnter={() => PreloadTrainingModule(module)}
+                    role="button"
+                    tabIndex={0}
+                  >
                     <div className="module-card-visual" aria-label={moduleCopy.title} role="img">
                       <CardImagePlaceholder src={BuildTrainingModuleImageSrc(module)} />
                     </div>
@@ -163,13 +212,10 @@ export function TrainingLobby() {
                       <p>{moduleCopy.description}</p>
                       <div className="module-card-footer">
                         <span>{trainer.name}</span>
-                        <button
-                          onClick={() => setActiveModule(module)}
-                          type="button"
-                        >
+                        <span className="module-card-action" aria-hidden="true">
                           {copy.start}
                           <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                        </button>
+                        </span>
                       </div>
                     </div>
                   </article>

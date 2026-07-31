@@ -1,7 +1,36 @@
-@import '../../motortrainer/src/index.css';
-
 :root {
   --logo-filter: saturate(0.78);
+  --tongue-loader-surface: #f8faf0;
+  --tongue-loader-ink: #17201a;
+  --tongue-loader-muted: #52634b;
+  --tongue-loader-track: #cbd9b5;
+  --tongue-loader-accent: #4d7c0f;
+  --tongue-loader-border: #273329;
+  --tongue-loader-shadow-rgb: 39 51 41;
+  --tongue-loader-backdrop-rgb: 226 237 207;
+  --tongue-loader-ink-rgb: 23 32 26;
+  --tongue-loader-step-surface: #e7f2d5;
+  --tongue-loader-step-ink: #365314;
+  --tongue-loader-progress-track: #d7dfcb;
+  --tongue-loader-progress-start: #65a30d;
+  --tongue-loader-progress-end: #84cc16;
+  --tongue-calibration-track: #e2e8f0;
+  --tongue-calibration-accent: #fb7185;
+  --tongue-calibration-accent-rgb: 251 113 133;
+  --tongue-calibration-accent-strong: #e11d48;
+  --tongue-calibration-cue: #ffe4e6;
+  --tongue-calibration-cue-ink: #475569;
+  --tongue-surface: #fff;
+  --tongue-surface-rgb: 255 255 255;
+  --tongue-game-sky: #dbeafe;
+  --tongue-game-sky-rgb: 219 234 254;
+  --tongue-game-ground-rgb: 226 232 240;
+  --tongue-game-panel-rgb: 242 244 243;
+  --tongue-game-accent-rgb: 59 130 246;
+  --tongue-warning-surface: #fffbeb;
+  --tongue-warning-ink: #92400e;
+  --tongue-warning-accent-rgb: 245 158 11;
+  --tongue-shadow-rgb: 15 23 42;
 }
 
 .mouth-coming-soon {
@@ -14,4 +43,491 @@
 
 .mouth-coming-soon .training-panel {
   text-align: left;
+}
+
+/* Tongue Catch owns its runtime visuals; shared setup/results primitives live in TrainerApp.css. */
+.gesture-calibration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background:
+    linear-gradient(
+      rgb(var(--tongue-loader-backdrop-rgb) / 0.9),
+      rgb(var(--tongue-loader-backdrop-rgb) / 0.9)
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 7px,
+      rgb(var(--tongue-loader-ink-rgb) / 0.1) 7px 8px
+    );
+}
+
+.gesture-loading-card {
+  width: min(760px, calc(100vw - 48px));
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 30px;
+  border: 4px solid var(--tongue-loader-surface);
+  border-radius: 5px;
+  background: var(--tongue-loader-surface);
+  box-shadow:
+    0 0 0 4px var(--tongue-loader-border),
+    12px 12px 0 rgb(var(--tongue-loader-shadow-rgb) / 0.2);
+  text-align: center;
+}
+
+.gesture-loading-card h1 {
+  margin: 0;
+  color: var(--tongue-loader-ink);
+  font-family: var(--font-family);
+  font-size: clamp(26px, 4vw, 42px);
+  letter-spacing: -1px;
+}
+
+.gesture-loading-card p {
+  margin: 0;
+  color: var(--tongue-loader-muted);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.gesture-loader {
+  width: 54px;
+  height: 54px;
+  border: 8px solid var(--tongue-loader-track);
+  border-top-color: var(--tongue-loader-accent);
+  border-radius: 50%;
+  animation: tongue-loader-spin 0.8s steps(8) infinite;
+}
+
+.gesture-calibration-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gesture-step-count {
+  width: fit-content;
+  padding: 6px 9px;
+  border: 2px solid var(--tongue-loader-border);
+  background: var(--tongue-loader-step-surface);
+  color: var(--tongue-loader-step-ink);
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.gesture-calibration-progress {
+  height: 22px;
+  overflow: hidden;
+  border: 3px solid var(--tongue-loader-border);
+  background: var(--tongue-loader-progress-track);
+}
+
+.gesture-calibration-progress span {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--tongue-loader-progress-start) 0 12px,
+    var(--tongue-loader-progress-end) 12px 24px
+  );
+  transition: width 80ms linear;
+}
+
+.tongue-catch {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 50% 30%,
+      rgb(var(--tongue-game-sky-rgb) / 0.85),
+      rgb(var(--tongue-game-ground-rgb) / 0.98)
+    ),
+    var(--tongue-game-sky);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.tongue-catch-video,
+.tongue-catch-stage,
+.tongue-catch-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.tongue-catch-video {
+  z-index: 0;
+  object-fit: cover;
+  transform: scaleX(-1);
+  transition: opacity 160ms ease;
+}
+
+.tongue-catch-stage {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.tongue-catch-canvas {
+  display: block;
+}
+
+.tongue-feature-canvas {
+  position: fixed;
+  top: -100px;
+  left: -100px;
+  width: 32px;
+  height: 24px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tongue-menu-panel {
+  background:
+    linear-gradient(
+      rgb(var(--tongue-game-panel-rgb) / 0.88),
+      rgb(var(--tongue-game-panel-rgb) / 0.88)
+    ),
+    radial-gradient(
+      circle at 16% 20%,
+      rgb(var(--tongue-calibration-accent-rgb) / 0.16),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 84% 80%,
+      rgb(var(--tongue-game-accent-rgb) / 0.14),
+      transparent 32%
+    );
+}
+
+.tongue-config {
+  width: min(1060px, calc(100vw - 48px));
+  max-height: min(92vh, 880px);
+}
+
+.tongue-calibration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 7;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 34vw, 460px);
+  background: transparent;
+}
+
+.tongue-catch-phase-calibration .tongue-catch-video {
+  right: auto;
+  width: calc(100% - clamp(360px, 34vw, 460px));
+  opacity: 1 !important;
+}
+
+.tongue-catch-phase-calibration .tongue-catch-stage {
+  display: none;
+}
+
+.tongue-calibration-camera-space {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 75%,
+    rgb(var(--tongue-shadow-rgb) / 0.22)
+  );
+  pointer-events: none;
+}
+
+.tongue-camera-guide {
+  width: min(46vh, 42vw);
+  aspect-ratio: 0.78;
+  border: 3px solid rgb(var(--tongue-surface-rgb) / 0.74);
+  border-radius: 48% 48% 44% 44%;
+  box-shadow:
+    0 0 0 9999px rgb(var(--tongue-shadow-rgb) / 0.08),
+    0 0 0 1px rgb(var(--tongue-shadow-rgb) / 0.22);
+}
+
+.tongue-calibration-card {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 15px;
+  padding: clamp(24px, 4vw, 46px);
+  border-left: 1px solid var(--border);
+  background: var(--bg-card);
+  box-shadow: -16px 0 44px rgb(var(--tongue-shadow-rgb) / 0.18);
+  text-align: center;
+}
+
+.tongue-calibration-card h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+.tongue-calibration-card p {
+  max-width: 520px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.tongue-calibration-card > strong {
+  color: var(--accent-dark);
+}
+
+.tongue-calibration-card .gesture-calibration-progress {
+  width: min(420px, 100%);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--tongue-calibration-track);
+}
+
+.tongue-calibration-card .gesture-calibration-progress span {
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    var(--tongue-calibration-accent),
+    var(--tongue-calibration-accent-strong)
+  );
+}
+
+.tongue-direction-cue {
+  width: 220px;
+  height: 150px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--tongue-surface) 45%, var(--tongue-calibration-cue) 100%);
+  color: var(--tongue-calibration-cue-ink);
+}
+
+.tongue-direction-cue svg {
+  width: 190px;
+  height: 136px;
+}
+
+.tongue-face-warning {
+  position: fixed;
+  top: calc(18px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 5;
+  padding: 9px 14px;
+  border: 1px solid rgb(var(--tongue-warning-accent-rgb) / 0.55);
+  border-radius: var(--radius-m);
+  background: color-mix(in srgb, var(--tongue-warning-surface) 94%, transparent);
+  color: var(--tongue-warning-ink);
+  font-size: 14px;
+  font-weight: 800;
+  transform: translateX(-50%);
+}
+
+.tongue-results-container {
+  z-index: 12;
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--tongue-surface) 96%, transparent),
+      color-mix(in srgb, var(--tongue-surface) 96%, transparent)
+    ),
+    radial-gradient(
+      circle at 20% 20%,
+      rgb(var(--tongue-calibration-accent-rgb) / 0.16),
+      transparent 34%
+    );
+}
+
+.tongue-result-details {
+  width: min(720px, 100%);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 8px 24px;
+  margin: 0;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg-card);
+  text-align: left;
+}
+
+.tongue-result-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tongue-result-details dt {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tongue-result-details dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.tongue-results-container .results-table {
+  max-width: 720px;
+}
+
+.tongue-catch-phase-menu {
+  background: transparent !important;
+  color: inherit;
+  font-family: inherit;
+  touch-action: auto;
+}
+
+.tongue-catch-phase-menu > :not(.training-panel):not(.app-dialog-overlay) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@keyframes tongue-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 720px) {
+  .tongue-result-details {
+    grid-template-columns: 1fr;
+  }
+
+  .tongue-config {
+    width: min(100%, calc(100vw - 24px));
+  }
+
+  .tongue-calibration-overlay {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(44vh, 1fr) auto;
+  }
+
+  .tongue-catch-phase-calibration .tongue-catch-video {
+    right: 0;
+    width: 100%;
+    height: 44vh;
+  }
+
+  .tongue-calibration-camera-space {
+    min-height: 44vh;
+  }
+
+  .tongue-camera-guide {
+    width: min(30vh, 42vw);
+  }
+
+  .tongue-calibration-card {
+    height: auto;
+    max-height: 56vh;
+    align-content: start;
+    gap: 10px;
+    padding: 18px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+    box-shadow: 0 -12px 34px rgb(var(--tongue-shadow-rgb) / 0.18);
+  }
+
+  .tongue-calibration-card h1 {
+    font-size: 26px;
+  }
+
+  .tongue-calibration-card p {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .tongue-direction-cue {
+    width: 130px;
+    height: 82px;
+  }
+
+  .tongue-direction-cue svg {
+    width: 118px;
+    height: 78px;
+  }
+
+  .tongue-face-warning {
+    top: calc(16px + env(safe-area-inset-top));
+    width: calc(100vw - 32px);
+    text-align: center;
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .gesture-calibration-overlay {
+    padding: 10px;
+  }
+
+  .gesture-loading-card {
+    max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px);
+    overflow-y: auto;
+  }
+
+  .tongue-calibration-overlay {
+    grid-template-columns: minmax(0, 1fr) min(320px, 48vw);
+  }
+
+  .tongue-catch-phase-calibration .tongue-catch-video {
+    width: calc(100% - min(320px, 48vw));
+  }
+
+  .tongue-calibration-card {
+    align-content: start;
+    gap: 8px;
+    padding:
+      calc(12px + env(safe-area-inset-top))
+      calc(16px + env(safe-area-inset-right))
+      calc(12px + env(safe-area-inset-bottom))
+      16px;
+    overflow-y: auto;
+  }
+
+  .tongue-calibration-card h1 {
+    font-size: 24px;
+  }
+
+  .tongue-calibration-card p {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .tongue-direction-cue {
+    width: 120px;
+    height: 76px;
+  }
+
+  .tongue-direction-cue svg {
+    width: 108px;
+    height: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gesture-loader {
+    animation: none;
+  }
+
+  .tongue-catch-video,
+  .gesture-calibration-progress span {
+    transition: none;
+  }
 }

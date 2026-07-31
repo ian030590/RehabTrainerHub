@@ -8,7 +8,7 @@ import { PwaRegistration } from '@rehab-trainer/ui/pwa';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
-import { ModulePage } from './pages/ModulePage';
+import { ModulePage } from '@rehab-trainer/hub-modules/brain/pages/ModulePage';
 import { siteUrls } from './utils/siteUrls';
 import {
   defaultUiFontSizePx,
@@ -19,10 +19,10 @@ import {
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
 const ReferencesPage = lazy(() => import('./pages/ReferencesPage').then((module) => ({ default: module.ReferencesPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
-const UFOVPage = lazy(() => import('./pages/UFOVPage').then((module) => ({ default: module.UFOVPage })));
-const EveryBallResponsePage = lazy(() => import('./pages/EveryBallResponsePage').then((module) => ({ default: module.EveryBallResponsePage })));
-const ThinkingTraining = lazy(() => import('./pages/thinking/ThinkingTraining').then((module) => ({ default: module.ThinkingTraining })));
-const MainConceptTraining = lazy(() => import('./pages/MainConceptTraining').then((module) => ({ default: module.MainConceptTraining })));
+const UFOVPage = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/UFOVPage').then((module) => ({ default: module.UFOVPage })));
+const EveryBallResponsePage = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/EveryBallResponsePage').then((module) => ({ default: module.EveryBallResponsePage })));
+const ThinkingTraining = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/thinking/ThinkingTraining').then((module) => ({ default: module.ThinkingTraining })));
+const MainConceptTraining = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/MainConceptTraining').then((module) => ({ default: module.MainConceptTraining })));
 const InstallAppPage = lazy(() => import('@rehab-trainer/ui/components/InstallAppPage').then((module) => ({ default: module.InstallAppPage })));
 
 export function App() {

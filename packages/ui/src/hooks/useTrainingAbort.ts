@@ -7,6 +7,7 @@ export interface UseTrainingAbortArgs {
   onAbort: () => void;
   exitFullscreen?: boolean;
   abortOnFullscreenExit?: boolean;
+  abortOnEscape?: boolean;
 }
 
 export function useTrainingAbort({
@@ -14,6 +15,7 @@ export function useTrainingAbort({
   onAbort,
   exitFullscreen = true,
   abortOnFullscreenExit = true,
+  abortOnEscape = true,
 }: UseTrainingAbortArgs) {
   const abortingRef = useRef(false);
   const onAbortRef = useRef(onAbort);
@@ -61,11 +63,15 @@ export function useTrainingAbort({
       abortTraining();
     };
 
-    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    if (abortOnEscape) {
+      window.addEventListener('keydown', handleKeyDown, { capture: true });
+    }
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      if (abortOnEscape) {
+        window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      }
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, [abortOnFullscreenExit, active, exitFullscreen]);
+  }, [abortOnEscape, abortOnFullscreenExit, active, exitFullscreen]);
 }

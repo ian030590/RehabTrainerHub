@@ -6,7 +6,7 @@ import {
 } from '@rehab-trainer/ui/auth/authClient';
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import type { TranslationKey } from '../i18n';
-import type { TrialData } from '../pages/training/types';
+import type { TrialData } from '@rehab-trainer/hub-modules/vision/pages/training/types';
 import { DownloadCsvFile } from './downloadFile';
 import { GetSetting, storagePrefix } from './settings';
 import { siteUrls } from './siteUrls';
@@ -29,6 +29,7 @@ const moduleTitleKeys: Record<string, TranslationKey> = {
   'gabor-patching': 'home.module.gaborPatching.title',
   'reading-training': 'home.module.reading.title',
   'driving-rehab': 'home.module.driving.title',
+  'hart-chart': 'home.module.hartChart.title',
   'ufov-assessment': 'assess.ufov.title',
 };
 

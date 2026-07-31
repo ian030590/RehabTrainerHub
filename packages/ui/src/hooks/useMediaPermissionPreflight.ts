@@ -28,6 +28,14 @@ interface CachedPermissionRequest {
 
 const permissionRequests = new Map<string, CachedPermissionRequest>();
 
+export function CanRetryMediaPermission(status: MediaPermissionPreflightStatus) {
+  return status === 'denied' || status === 'error';
+}
+
+export function GetMediaPermissionRetryLabel(language: 'zh' | 'en') {
+  return language === 'zh' ? '重新要求權限' : 'Request Permission Again';
+}
+
 function GetRequestKey(audio: boolean, video: boolean) {
   return `${audio ? 'audio' : ''}:${video ? 'video' : ''}`;
 }

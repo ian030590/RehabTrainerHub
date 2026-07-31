@@ -107,7 +107,11 @@ export { DownloadCsvFile, DownloadFile } from './downloadFile';
 export { EnterFullscreenFromUserGesture, ExitFullscreenIfActive, WaitForFullscreenLayout } from './fullscreen';
 export { CreateUseActiveUser } from './hooks/useActiveUser';
 export { useFullscreenTrainingRoot } from './hooks/useFullscreenTrainingRoot';
-export { useMediaPermissionPreflight } from './hooks/useMediaPermissionPreflight';
+export {
+  CanRetryMediaPermission,
+  GetMediaPermissionRetryLabel,
+  useMediaPermissionPreflight,
+} from './hooks/useMediaPermissionPreflight';
 export type {
   MediaPermissionPreflightResult,
   MediaPermissionPreflightStatus,
@@ -119,6 +123,7 @@ export { useScrollChromeVisibility } from './hooks/useScrollChromeVisibility';
 export { useSyncedDisplaySettings } from './hooks/useSyncedDisplaySettings';
 export type { SyncedDisplaySettings } from './hooks/useSyncedDisplaySettings';
 export { useTrainingAbort } from './hooks/useTrainingAbort';
+export { useTrainingConfigReady } from './hooks/useTrainingConfigReady';
 export type { UseTrainingAbortArgs } from './hooks/useTrainingAbort';
 export { CreateLanguageProvider } from './i18n/createLanguageProvider';
 export type {
@@ -133,6 +138,11 @@ export type { SiteUrlKey, SiteUrls } from './siteUrls';
 export { CreateUserStore } from './storage/userStore';
 export type { UserStore } from './storage/userStore';
 export {
+  IsTrainingFlowLaunchState,
+  trainingFlowLaunchState,
+} from './trainingFlow';
+export type { TrainingFlowLaunchState } from './trainingFlow';
+export {
   ApplyThemeTokens,
   cssColors,
   pixiColors,
@@ -143,22 +153,6 @@ export {
   typography,
 } from './trainerTheme';
 export type { TrainerThemeOverrides } from './trainerTheme';
-export {
-  BuildTrainingModuleImageSrc,
-  BuildTrainingModuleHref,
-  GetTrainingCatalogModules,
-  GetTrainingModuleCopy,
-  GetTrainingPurpose,
-  trainingCatalog,
-  trainingPurposes,
-} from './trainingCatalog';
-export type {
-  LocalizedTrainingCopy,
-  TrainerCatalogId,
-  TrainingCatalogModule,
-  TrainingModuleKind,
-  TrainingPurposeId,
-} from './trainingCatalog';
 export {
   DrawUfovCanvasStage,
   EnsureUfovCanvasStage,

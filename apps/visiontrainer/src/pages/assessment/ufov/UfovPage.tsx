@@ -2,12 +2,10 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import {
   MeasureDisplayRefreshRate,
   type DisplayRefreshInfo,
 } from '@rehab-trainer/ui/displayTiming';
-import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { ExitFullscreenIfActive, WaitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import {
@@ -901,12 +899,9 @@ export function UfovPage({
               </div>
               <TrainingResultActions
                 className="config-actions ufov-result-actions"
-                downloadLabel={labels.downloadCsv}
-                restartLabel={labels.restart}
                 backLabel={labels.backHome}
-                onDownloadCsv={() => DownloadUfovTrainingRecordCsv(savedRecord)}
-                onRestart={() => navigate(backPath)}
                 onBackHome={() => navigate(backPath)}
+                hubLabel={lang === 'zh' ? '返回大廳' : 'Back to Lobby'}
               />
             </section>
           )}
@@ -1032,41 +1027,6 @@ function FormatAccuracy(value: number) {
 
 function FormatSaveNote(labels: UfovLabels, appName: string) {
   return labels.saveNote.replace('{appName}', appName);
-}
-
-function DownloadUfovTrainingRecordCsv(record: UfovTrainingRecord): void {
-  DownloadCsvFile(
-    BuildUfovTrainingRecordsCsv([record]),
-    `${SafeFilePart(record.gameId)}_${record.trainingDate ?? FormatDate(new Date())}.csv`,
-  );
-}
-
-function BuildUfovTrainingRecordsCsv(records: UfovTrainingRecord[]): string {
-  const rows = records.flatMap((record) => {
-    const details = record.details ?? {};
-    const detailRows = record.detailRows?.length ? record.detailRows : [{}];
-    return detailRows.map((detailRow, index): DetailRow => ({
-      Saved_At: record.savedAt,
-      Training_Date: record.trainingDate ?? '',
-      User: record.userName,
-      Module_ID: record.moduleId,
-      Game_ID: record.gameId,
-      Game: record.gameTitle,
-      Difficulty: record.difficulty,
-      Detail_Row: detailRows.length > 1 ? index + 1 : '',
-      ...details,
-      ...detailRow,
-    }));
-  });
-  const columns = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
-  return CreateCsvContent([
-    columns,
-    ...rows.map((row) => columns.map((column) => row[column])),
-  ]);
-}
-
-function SafeFilePart(value: string): string {
-  return value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'ufov';
 }
 
 function FormatDate(date: Date) {

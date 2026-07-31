@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { useT } from '../../i18n';
 import { SaveTrainingRecord } from '../../utils/trainingRecords';
-import type { TrialData } from '../training/types';
+import type { TrialData } from '@rehab-trainer/hub-modules/vision/pages/training/types';
 import { UfovPage, type SubtestId, type UfovRunMode, type UfovTrainingRecord } from './ufov/UfovPage';
 
 export function UfovAssessmentPage() {

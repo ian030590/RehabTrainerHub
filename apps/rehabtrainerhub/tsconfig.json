@@ -25,6 +25,9 @@
       ],
       "@rehab-trainer/ui/*": [
         "../../packages/ui/src/*"
+      ],
+      "@rehab-trainer/hub-modules/*": [
+        "./training-modules/*"
       ]
     },
     "plugins": [
@@ -41,6 +44,10 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "training-modules/motor",
+    "training-modules/vision",
+    "training-modules/brain",
+    "training-modules/mouth"
   ]
 }

@@ -38,16 +38,19 @@ const trainerHtmlEntrypoints = readdirSync(appsRoot, { withFileTypes: true })
 const trainerSourceFiles = readdirSync(appsRoot, { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && entry.name.endsWith('trainer'))
   .flatMap((entry) => CollectSourceFiles(resolve(appsRoot, entry.name, 'src')));
+const hubTrainingModuleSourceFiles = CollectSourceFiles(
+  resolve(appsRoot, 'rehabtrainerhub', 'training-modules'),
+);
 
 const protectedEntrypoints = Unique([
   ...appRuntimeEntrypoints,
   ...appEntrypoints,
   'apps/motortrainer/src/pages/HomePage.tsx',
-  'apps/motortrainer/src/pages/training/UpperLimbTraining.tsx',
-  'apps/braintrainer/src/pages/thinking/ThinkingTraining.tsx',
-  'apps/mouthtrainer/src/pages/training/OralTraining.tsx',
-  'apps/visiontrainer/src/pages/HomePage.tsx',
-  'apps/braintrainer/src/pages/ModulePage.tsx',
+  'apps/rehabtrainerhub/training-modules/motor/pages/training/UpperLimbTraining.tsx',
+  'apps/rehabtrainerhub/training-modules/brain/pages/thinking/ThinkingTraining.tsx',
+  'apps/rehabtrainerhub/training-modules/mouth/pages/training/OralTraining.tsx',
+  'apps/rehabtrainerhub/training-modules/vision/pages/HomePage.tsx',
+  'apps/rehabtrainerhub/training-modules/brain/pages/ModulePage.tsx',
 ]);
 
 const violations = [];
@@ -70,7 +73,7 @@ for (const htmlEntrypoint of trainerHtmlEntrypoints) {
   CheckHtmlEntrypoint(htmlEntrypoint);
 }
 
-for (const sourceFile of trainerSourceFiles) {
+for (const sourceFile of [...trainerSourceFiles, ...hubTrainingModuleSourceFiles]) {
   CheckTrainingUiContract(sourceFile);
 }
 
@@ -172,6 +175,13 @@ function ResolveProjectImport(importerPath, specifier) {
 
   if (specifier.startsWith('@rehab-trainer/ui/')) {
     return ResolveModule(resolve(repoRoot, 'packages/ui/src'), specifier.slice('@rehab-trainer/ui/'.length));
+  }
+
+  if (specifier.startsWith('@rehab-trainer/hub-modules/')) {
+    return ResolveModule(
+      resolve(repoRoot, 'apps/rehabtrainerhub/training-modules'),
+      specifier.slice('@rehab-trainer/hub-modules/'.length),
+    );
   }
 
   return null;

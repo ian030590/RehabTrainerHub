@@ -5,11 +5,13 @@ import {
   BuildTrainingModuleHref,
   GetTrainingModuleCopy,
   type TrainingCatalogModule,
-} from '@rehab-trainer/ui/trainingCatalog';
+} from '@rehab-trainer/hub-modules/catalog';
 import {
   IsHubTrainingActiveMessage,
   IsHubTrainingCompleteMessage,
   IsHubTrainingExitMessage,
+  IsHubTrainingReadyMessage,
+  IsTrustedTrainingFrameMessage,
 } from '@rehab-trainer/ui/embeddedTraining';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
@@ -23,6 +25,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [isTrainingComplete, setIsTrainingComplete] = useState(false);
   const { language, locale, t } = useHubLanguage();
@@ -55,6 +58,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
     setIsTrainingActive(false);
     setIsTrainingComplete(false);
     setIsLoaded(false);
+    setIsReady(false);
   }, [sourceUrl]);
 
   // Listen for training postMessages from the iframe
@@ -63,10 +67,11 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
     const trainerOrigin = new URL(sourceUrl).origin;
 
     const handleMessage = (event: MessageEvent<unknown>) => {
-      if (
-        event.origin !== trainerOrigin
-        || event.source !== frameRef.current?.contentWindow
-      ) {
+      if (!IsTrustedTrainingFrameMessage(
+        event,
+        trainerOrigin,
+        frameRef.current?.contentWindow ?? null,
+      )) {
         return;
       }
 
@@ -75,6 +80,8 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
       } else if (IsHubTrainingCompleteMessage(event.data)) {
         setIsTrainingActive(false);
         setIsTrainingComplete(true);
+      } else if (IsHubTrainingReadyMessage(event.data)) {
+        setIsReady(true);
       } else if (IsHubTrainingExitMessage(event.data)) {
         closeOverlay();
       }
@@ -83,6 +90,15 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [closeOverlay, sourceUrl]);
+
+  // A trainer normally removes the loading stage with the ready message. If
+  // its bootstrap fails before React mounts, expose the iframe after a short
+  // grace period instead of leaving an endless loading animation.
+  useEffect(() => {
+    if (!isLoaded || isReady) return;
+    const timeoutId = window.setTimeout(() => setIsReady(true), 8_000);
+    return () => window.clearTimeout(timeoutId);
+  }, [isLoaded, isReady]);
 
   // Close dialog on Escape — sync React state by calling onClose
   useEffect(() => {
@@ -106,11 +122,25 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         : 'training-overlay-config'}`}
       ref={dialogRef}
     >
-      <div className="embedded-training-frame">
-        {!isLoaded && <p aria-live="polite">{copy.loading}</p>}
+      <div className={`embedded-training-frame ${isReady ? 'is-ready' : ''}`}>
+        <div
+          aria-hidden={isReady || undefined}
+          aria-live={isReady ? undefined : 'polite'}
+          className="training-loading-stage"
+          role={isReady ? undefined : 'status'}
+        >
+          <span className="training-loading-orbit" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+          <strong>{copy.loading}</strong>
+          <span className="training-loading-progress" aria-hidden="true" />
+        </div>
         <iframe
           allow="autoplay; camera; microphone; fullscreen"
           allowFullScreen
+          className={isLoaded ? 'is-loaded' : undefined}
           onLoad={() => setIsLoaded(true)}
           referrerPolicy="strict-origin-when-cross-origin"
           ref={frameRef}

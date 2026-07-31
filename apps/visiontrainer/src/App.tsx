@@ -15,17 +15,17 @@ import {
   GetSetting,
 } from './utils/settings';
 
-const HomePage = lazy(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })));
+const HomePage = lazy(() => import('@rehab-trainer/hub-modules/vision/pages/HomePage').then((module) => ({ default: module.HomePage })));
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
-const TrainingPage = lazy(() => import('./pages/training/TrainingPage').then((module) => ({ default: module.TrainingPage })));
+const TrainingPage = lazy(() => import('@rehab-trainer/hub-modules/vision/pages/training/TrainingPage').then((module) => ({ default: module.TrainingPage })));
 const AssessmentPage = lazy(() => import('./pages/assessment/AssessmentPage').then((module) => ({ default: module.AssessmentPage })));
 const AcuityTestPage = lazy(() => import('./pages/assessment/AcuityTestPage').then((module) => ({ default: module.AcuityTestPage })));
 const ContrastTestPage = lazy(() => import('./pages/assessment/ContrastTestPage').then((module) => ({ default: module.ContrastTestPage })));
 const UfovAssessmentPage = lazy(() => import('./pages/assessment/UfovAssessmentPage').then((module) => ({ default: module.UfovAssessmentPage })));
 const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((module) => ({ default: module.CreditsPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
-const HartChartPage = lazy(() => import('./pages/training/HartChartPage').then((module) => ({ default: module.HartChartPage })));
-const HartChartDisplayPage = lazy(() => import('./pages/training/HartChartPage').then((module) => ({ default: module.HartChartDisplayPage })));
+const HartChartPage = lazy(() => import('@rehab-trainer/hub-modules/vision/pages/training/HartChartPage').then((module) => ({ default: module.HartChartPage })));
+const HartChartDisplayPage = lazy(() => import('@rehab-trainer/hub-modules/vision/pages/training/HartChartPage').then((module) => ({ default: module.HartChartDisplayPage })));
 const InstallAppPage = lazy(() => import('@rehab-trainer/ui/components/InstallAppPage').then((module) => ({ default: module.InstallAppPage })));
 
 export function App() {

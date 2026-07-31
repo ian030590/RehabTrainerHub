@@ -6,7 +6,8 @@
     "types": ["vite/client"],
     "paths": {
       "@rehab-trainer/ui": ["../../packages/ui/src/index.ts"],
-      "@rehab-trainer/ui/*": ["../../packages/ui/src/*"]
+      "@rehab-trainer/ui/*": ["../../packages/ui/src/*"],
+      "@rehab-trainer/hub-modules/*": ["../rehabtrainerhub/training-modules/*"]
     },
     "skipLibCheck": true,
     "strict": true,

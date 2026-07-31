@@ -1,0 +1,67 @@
+// Text copy local to the Hub-owned driving runtime.
+import type { HazardId } from './types';
+
+export const drivingText = {
+  zh: {
+    controllerConnected: '已連接控制器：{id}',
+    controllerDisconnected: '控制器已中斷，改用鍵盤控制',
+    taskDelivery: '任務：A 點送貨至 B 點',
+    watchRoad: '保持車道並注意突發事件',
+    navigation: '導航',
+    straight: '直行',
+    straightToDestination: '直行抵達目的地',
+    turnAfterMeters: '{dist}m 後{instruction}',
+    upcomingTurn: '導航：前方路口請{instruction} {arrow}',
+    noValidRt: '無有效 RT',
+    collision: '碰撞',
+    dodged: '閃避通過',
+    stopped: '已煞停',
+    brakeReaction: '{label}：煞車反應 {rt} ms',
+    hazardResult: '{label}：{outcome} / {rtText}',
+    redLightViolation: '闖紅燈',
+    redLightViolationMessage: '闖紅燈：已記錄一次事件',
+    turnLeft: '左轉',
+    turnRight: '右轉',
+    deliveryTarget: 'A 點送貨至 B 點',
+    hazardLabels: {
+      'child-crossing': '小孩突然衝出馬路',
+      'plane-crash': '飛機墜落於前方道路',
+      'drunk-driver': '醉酒駕駛車輛開上分隔島',
+      'elder-stopped': '老人走到路中間停下',
+      'wrong-way-driver': '毒駕車輛逆向衝來',
+    },
+  },
+  en: {
+    controllerConnected: 'Controller connected: {id}',
+    controllerDisconnected: 'Controller disconnected; using keyboard control',
+    taskDelivery: 'Task: deliver from point A to point B',
+    watchRoad: 'Stay in lane and watch for hazards',
+    navigation: 'Navigation',
+    straight: 'Straight',
+    straightToDestination: 'Straight to destination',
+    turnAfterMeters: 'in {dist}m {instruction}',
+    upcomingTurn: 'Navigation: {instruction} at the upcoming intersection {arrow}',
+    noValidRt: 'No valid RT',
+    collision: 'Collision',
+    dodged: 'Dodged',
+    stopped: 'Stopped',
+    brakeReaction: '{label}: brake reaction {rt} ms',
+    hazardResult: '{label}: {outcome} / {rtText}',
+    redLightViolation: 'Red light violation',
+    redLightViolationMessage: 'Red light violation recorded',
+    turnLeft: 'turn left',
+    turnRight: 'turn right',
+    deliveryTarget: 'Delivery from point A to point B',
+    hazardLabels: {
+      'child-crossing': 'Child suddenly runs into the road',
+      'plane-crash': 'Plane crashes onto the road ahead',
+      'drunk-driver': 'Drunk driver vehicle mounts the median',
+      'elder-stopped': 'Older pedestrian stops in the road',
+      'wrong-way-driver': 'Drug-impaired driver approaches the wrong way',
+    },
+  },
+} as const;
+
+export type DrivingText = {
+  [K in keyof typeof drivingText.zh]: K extends 'hazardLabels' ? Record<HazardId, string> : string;
+};

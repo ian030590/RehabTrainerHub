@@ -5,6 +5,10 @@ import ts from 'typescript';
 
 const compilerOptions = { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 };
 const embeddedSource = await readFile(new URL('../packages/ui/src/embeddedTraining.ts', import.meta.url), 'utf8');
+const resultActionsSource = await readFile(
+  new URL('../packages/ui/src/components/TrainingResultActions.tsx', import.meta.url),
+  'utf8',
+);
 const embeddedCode = ts.transpileModule(embeddedSource, { compilerOptions }).outputText;
 const embeddedUrl = `data:text/javascript;base64,${Buffer.from(embeddedCode).toString('base64')}`;
 const embeddedTraining = await import(embeddedUrl);
@@ -54,6 +58,27 @@ test('embedded training reports active state to its verified Hub origin', (conte
     active: 'true',
   }), false);
 
+  embeddedTraining.NotifyHubTrainingReady();
+  assert.deepEqual(messages.shift(), [
+    { type: 'rehab-trainer:training-ready' },
+    'https://trainerhub.cc',
+  ]);
+  assert.equal(embeddedTraining.IsHubTrainingReadyMessage({
+    type: 'rehab-trainer:training-ready',
+  }), true);
+
+  embeddedTraining.NotifyHubTrainingComplete();
+  assert.deepEqual(messages.shift(), [
+    { type: 'rehab-trainer:training-complete' },
+    'https://trainerhub.cc',
+  ]);
+  assert.equal(embeddedTraining.IsHubTrainingCompleteMessage({
+    type: 'rehab-trainer:training-complete',
+  }), true);
+  assert.equal(embeddedTraining.IsHubTrainingCompleteMessage({
+    type: 'rehab-trainer:training-ready',
+  }), false);
+
   embeddedTraining.NotifyHubTrainingAbort();
   assert.deepEqual(messages.shift(), [
     { type: 'rehab-trainer:training-active', active: false },
@@ -75,4 +100,35 @@ test('embedded training reports active state to its verified Hub origin', (conte
   assert.equal(embeddedTraining.IsHubTrainingExitMessage({
     type: 'rehab-trainer:training-complete',
   }), false);
+});
+
+test('Hub accepts messages only from the expected Trainer origin and frame', () => {
+  const expectedSource = {};
+  assert.equal(embeddedTraining.IsTrustedTrainingFrameMessage(
+    { origin: 'https://vision.trainerhub.cc', source: expectedSource },
+    'https://vision.trainerhub.cc',
+    expectedSource,
+  ), true);
+  assert.equal(embeddedTraining.IsTrustedTrainingFrameMessage(
+    { origin: 'https://attacker.example', source: expectedSource },
+    'https://vision.trainerhub.cc',
+    expectedSource,
+  ), false);
+  assert.equal(embeddedTraining.IsTrustedTrainingFrameMessage(
+    { origin: 'https://vision.trainerhub.cc', source: {} },
+    'https://vision.trainerhub.cc',
+    expectedSource,
+  ), false);
+  assert.equal(embeddedTraining.IsTrustedTrainingFrameMessage(
+    { origin: 'https://vision.trainerhub.cc', source: null },
+    'https://vision.trainerhub.cc',
+    null,
+  ), false);
+});
+
+test('training results expose exactly one source-aware navigation button', () => {
+  assert.equal((resultActionsSource.match(/<button\b/g) ?? []).length, 1);
+  assert.equal(resultActionsSource.includes('downloadLabel'), false);
+  assert.equal(resultActionsSource.includes('restartLabel'), false);
+  assert.match(resultActionsSource, /isEmbeddedHubTraining \? NotifyHubTrainingExit : onBackHome/);
 });

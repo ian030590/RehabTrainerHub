@@ -1,5 +1,8 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    "apps/rehabtrainerhub/training-modules/**"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

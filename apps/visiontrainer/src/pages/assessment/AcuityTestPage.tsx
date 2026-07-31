@@ -38,8 +38,6 @@ import type {
 import { getActiveUser, GetSetting } from '../../utils/settings';
 import { PixelFromDegree } from '../../utils/spatialUtils';
 import { soundManager } from '../../utils/soundManager';
-import { DownloadCsvFile } from '../../utils/downloadFile';
-import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -752,54 +750,8 @@ export function AcuityTestPage() {
   const finalDecVA = DecVAFromStrokePixels(finalStrokePx);
   const finalSnellen = FormatSnellenFraction(finalDecVA);
   const finalLetterScore = Math.round(LettersFromLogMAR(finalLogMAR));
-  const correctCount = records.filter((r) => r.correct).length;
-  const correctRate = records.length > 0 ? correctCount / records.length : 0;
+  const correctCount = records.filter((record) => record.correct).length;
   const decimalAcuity = finalDecVA.toFixed(2);
-
-  const downloadCSV = () => {
-    const dateStr = new Date().toISOString().split('T')[0];
-    const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false }).replace(/:/g, '');
-    const prefix = GetSetting('downloadDirectory');
-
-    const headers = [
-      t('exp.csv.user'),
-      t('exp.csv.date'),
-      t('exp.csv.time'),
-      t('acuity.csv.test'),
-      t('acuity.csv.trial'),
-      t('acuity.csv.presented'),
-      t('acuity.csv.response'),
-      t('acuity.csv.correct'),
-      t('acuity.csv.logmar'),
-      t('acuity.csv.strokePx'),
-      t('acuity.csv.responseMode'),
-      t('acuity.csv.gazeLeft'),
-      t('acuity.csv.gazeRight'),
-      t('acuity.csv.gazeTotal'),
-    ];
-    const rows = records.map((r) => [
-      userName, dateStr, timeStr, testType, r.trial,
-      r.presented, r.responded, r.correct ? '✓' : '✗',
-      r.logMAR.toFixed(3), r.strokePx.toFixed(2),
-      r.responseMode ?? 'keyboard',
-      r.gazeLeftSamples ?? '',
-      r.gazeRightSamples ?? '',
-      r.gazeTotalSamples ?? '',
-    ]);
-    rows.push([]);
-    rows.push([t('acuity.csv.finalResult')]);
-    rows.push([t('acuity.csv.decimalAcuity'), finalLogMAR.toFixed(2)]);
-    rows.push([t('acuity.decimalAcuity'), finalDecVA.toFixed(2)]);
-    rows.push([t('acuity.csv.snellen'), finalSnellen]);
-    rows.push([t('acuity.csv.letterScore'), String(finalLetterScore)]);
-    rows.push([t('acuity.csv.accuracy'), `${(correctRate * 100).toFixed(1)}%`]);
-
-    const csv = CreateCsvContent([headers, ...rows]);
-    DownloadCsvFile(
-      csv,
-      `${prefix ? prefix + '_' : ''}${userName}_acuity_${testType}_${dateStr}.csv`,
-    );
-  };
 
   return wrapFullscreenRoot(
     <div className="experiment-container" style={{ overflowY: 'auto' }}>
@@ -864,12 +816,9 @@ export function AcuityTestPage() {
         </table>
 
         <TrainingResultActions
-          downloadLabel={t('acuity.downloadCsv')}
-          restartLabel={t('exp.restart')}
           backLabel={t('exp.backHome')}
-          onDownloadCsv={downloadCSV}
-          onRestart={() => void startTest()}
           onBackHome={() => navigate('/')}
+          hubLabel={t('exp.backLobby')}
         />
 
         <p className="acuity-disclaimer-footer">

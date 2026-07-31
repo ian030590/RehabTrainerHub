@@ -16,9 +16,9 @@ import {
 } from './utils/settings';
 
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
-const TrainingPage = lazy(() => import('./pages/training/TrainingPage').then((module) => ({ default: module.TrainingPage })));
-const UpperLimbTraining = lazy(() => import('./pages/training/UpperLimbTraining').then((module) => ({ default: module.UpperLimbTraining })));
-const LowerLimbTraining = lazy(() => import('./pages/training/LowerLimbTraining').then((module) => ({ default: module.LowerLimbTraining })));
+const TrainingPage = lazy(() => import('@rehab-trainer/hub-modules/motor/pages/training/TrainingPage').then((module) => ({ default: module.TrainingPage })));
+const UpperLimbTraining = lazy(() => import('@rehab-trainer/hub-modules/motor/pages/training/UpperLimbTraining').then((module) => ({ default: module.UpperLimbTraining })));
+const LowerLimbTraining = lazy(() => import('@rehab-trainer/hub-modules/motor/pages/training/LowerLimbTraining').then((module) => ({ default: module.LowerLimbTraining })));
 const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((module) => ({ default: module.CreditsPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 const InstallAppPage = lazy(() => import('@rehab-trainer/ui/components/InstallAppPage').then((module) => ({ default: module.InstallAppPage })));

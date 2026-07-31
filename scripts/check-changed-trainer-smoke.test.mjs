@@ -12,6 +12,20 @@ for (const trainer of trainers) {
 }
 
 assert.equal(SelectChangedTrainers(pagesApps, ['apps/rehabtrainerhub/app/page.tsx']).length, 0);
+assert.deepEqual(
+  SelectChangedTrainers(
+    pagesApps,
+    ['apps/rehabtrainerhub/training-modules/vision/pages/training/TrainingPage.tsx'],
+  ).map((app) => app.appName),
+  ['visiontrainer'],
+);
+assert.deepEqual(
+  SelectChangedTrainers(
+    pagesApps,
+    ['apps/rehabtrainerhub/training-modules/catalog.ts'],
+  ).map((app) => app.appName),
+  trainers.map((app) => app.appName),
+);
 assert.equal(SelectChangedTrainers(pagesApps, ['README.md']).length, 0);
 assert.deepEqual(
   SelectChangedTrainers(pagesApps, ['packages/ui/src/index.ts']).map((app) => app.appName),

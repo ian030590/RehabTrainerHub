@@ -69,6 +69,18 @@ export function SelectChangedTrainers(pagesApps, changedFiles) {
       continue;
     }
 
+    const hubModuleMatch = file.match(
+      /^apps\/rehabtrainerhub\/training-modules\/(motor|vision|brain|mouth)(?:\/|$)/,
+    );
+    if (hubModuleMatch) {
+      selectedNames.add(`${hubModuleMatch[1]}trainer`);
+      continue;
+    }
+    if (file === 'apps/rehabtrainerhub/training-modules/catalog.ts') {
+      sharedChange = true;
+      continue;
+    }
+
     const trainer = trainers.find((app) => file === app.appPath || file.startsWith(`${app.appPath}/`));
     if (trainer) selectedNames.add(trainer.appName);
   }
