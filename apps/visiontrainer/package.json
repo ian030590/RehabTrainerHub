@@ -22,21 +22,21 @@
     "@jspsych/plugin-html-button-response": "^2.1.0",
     "@jspsych/plugin-webgazer-calibrate": "^2.1.0",
     "@jspsych/plugin-webgazer-init-camera": "^2.1.0",
-    "jspsych": "^8.2.1",
+    "jspsych": "^8.3.0",
     "pixi.js": "^8.18.1",
     "qrcode": "^1.5.4",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.6.1",
-    "three": "^0.184.0"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.2",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
-    "@types/three": "^0.184.1",
-    "@vitejs/plugin-react": "^4.5.2",
-    "typescript": "~5.8.3",
-    "vite": "^6.3.5"
+    "@types/three": "^0.185.1",
+    "@vitejs/plugin-react": "^6.0.4",
+    "typescript": "~7.0.2",
+    "vite": "^8.1.5"
   }
 }
