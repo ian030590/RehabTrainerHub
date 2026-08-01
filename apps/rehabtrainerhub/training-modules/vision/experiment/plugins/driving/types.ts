@@ -1,5 +1,5 @@
 // Types local to the Hub-owned driving runtime.
-export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel';
+export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel' | 'touch';
 export type DrivingLanguage = 'zh' | 'en';
 
 export interface Vec2 {
@@ -33,6 +33,7 @@ export interface DrivingInput {
   steering: number;
   throttle: number;
   brake: number;
+  brakeTimestamp: number | null;
   gamepadName: string;
 }
 
@@ -55,6 +56,8 @@ export interface DrivingEventResult {
   label: string;
   distance_m: number;
   rt_ms: number | null;
+  raw_rt_ms?: number | null;
+  reaction_frames?: number | null;
   valid: boolean;
   collision: boolean;
   brake_preheld: boolean;
@@ -68,6 +71,7 @@ export interface ActiveHazard {
   triggerDistance: number;
   hazardDistance: number;
   startTime: number;
+  presentedAt: number | null;
   brakeTime: number | null;
   rt: number | null;
   preheldBrake: boolean;

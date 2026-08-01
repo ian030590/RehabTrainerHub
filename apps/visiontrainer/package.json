@@ -10,7 +10,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node ../../scripts/check-trainer-entrypoints.mjs && tsc -b && vite build && node ../../scripts/check-vite-html-shell.mjs dist/index.html && node ../../scripts/emit-pwa-assets.mjs dist",
+    "build": "node ../../scripts/check-trainer-entrypoints.mjs && npm run test:driving-rehab && tsc -b && vite build && node ../../scripts/check-vite-html-shell.mjs dist/index.html && node ../../scripts/emit-pwa-assets.mjs dist",
+    "test:driving-rehab": "node --test ../../scripts/check-driving-rehab-core.test.mjs",
+    "test:driving-rehab-browser": "node ../../scripts/check-driving-rehab-browser.mjs",
     "test:entrypoints": "node ../../scripts/check-trainer-entrypoints.mjs",
     "test:production-shell": "node ../../scripts/check-vite-html-shell.mjs dist/index.html",
     "preview": "vite preview"

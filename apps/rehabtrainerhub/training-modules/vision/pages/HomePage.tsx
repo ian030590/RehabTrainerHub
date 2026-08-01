@@ -21,6 +21,13 @@ import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
 import { trainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { GetTrainingModuleCopy } from '@rehab-trainer/hub-modules/catalog';
+import {
+  GetDrivingInputCapabilitiesSnapshot,
+  IsDrivingControlModeAvailable,
+  IsDrivingWheelCalibrationUsable,
+  useDrivingInputCapabilities,
+  useDrivingWheelCalibration,
+} from '../utils/drivingInputCapabilities';
 import { IsCalibrated } from '../utils/settings';
 import { soundManager } from '../utils/soundManager';
 import { useAppSetting } from '../utils/useAppSetting';
@@ -119,6 +126,14 @@ export function HomePage() {
   const [drivingControlMode, setDrivingControlMode] = useAppSetting('drivingControlMode');
   const [drivingRenderQuality, setDrivingRenderQuality] = useAppSetting('drivingRenderQuality');
   const [isStartingTraining, setIsStartingTraining] = useState(false);
+  const drivingInputCapabilities = useDrivingInputCapabilities();
+  const drivingWheelCalibration = useDrivingWheelCalibration(
+    drivingInputCapabilities.wheelDevice,
+  );
+  const drivingControlModeAvailable = IsDrivingControlModeAvailable(
+    drivingControlMode,
+    drivingInputCapabilities,
+  ) && (drivingControlMode !== 'wheel' || drivingWheelCalibration.calibrated);
   const webGazerPermission = useMediaPermissionPreflight({
     active: expandedModule === 'oculomotor-training' && oculomotorEnableWebgazer,
     video: true,
@@ -168,6 +183,7 @@ export function HomePage() {
 
   const handleShowRules = () => {
     if (!expandedModule || isStartingTraining) return;
+    if (expandedModule === 'driving-rehab' && !drivingControlModeAvailable) return;
     setRulesModule(expandedModule);
   };
 
@@ -183,6 +199,21 @@ export function HomePage() {
   const handleStartTraining = async () => {
     if (!expandedModule || isStartingTraining) return;
     const moduleToStart = expandedModule;
+    if (moduleToStart === 'driving-rehab') {
+      const latestCapabilities = GetDrivingInputCapabilitiesSnapshot();
+      if (!IsDrivingControlModeAvailable(drivingControlMode, latestCapabilities)) {
+        drivingInputCapabilities.rescan();
+        setRulesModule(null);
+        return;
+      }
+      if (drivingControlMode === 'wheel' && (
+        !drivingWheelCalibration.calibrated
+        || !IsDrivingWheelCalibrationUsable(drivingWheelCalibration.calibration)
+      )) {
+        setRulesModule(null);
+        return;
+      }
+    }
     setIsStartingTraining(true);
     await EnterFullscreenFromUserGesture(document.documentElement);
 
@@ -339,10 +370,49 @@ export function HomePage() {
     { key: 'intermediate', label: t('home.diff.intermediate'), desc: t('home.diff.gaborIntermediateDesc') },
     { key: 'advanced', label: t('home.diff.advanced'), desc: t('home.diff.gaborAdvancedDesc') },
   ];
-  const drivingControlOptions: { key: DrivingControlMode; label: string }[] = [
-    { key: 'arrow', label: t('home.config.drivingControlArrow') },
-    { key: 'wasd', label: t('home.config.drivingControlWasd') },
-    { key: 'wheel', label: t('home.config.drivingControlWheel') },
+  const keyboardCapabilityLabel = drivingInputCapabilities.keyboardConfirmed
+    ? t('home.config.drivingKeyboardReady')
+    : t('home.config.drivingKeyboardUnknown');
+  const wheelCapabilityLabel = drivingInputCapabilities.wheelDevice
+    ? drivingWheelCalibration.calibrated
+      ? t('home.config.drivingWheelCalibrated', { id: drivingInputCapabilities.wheelDevice.id })
+      : t('home.config.drivingWheelNeedsCalibration', { id: drivingInputCapabilities.wheelDevice.id })
+    : drivingInputCapabilities.wheelApiSupported
+      ? t('home.config.drivingWheelMissing')
+      : t('home.config.drivingWheelUnsupported');
+  const touchCapabilityLabel = drivingInputCapabilities.touchAvailable
+    ? t('home.config.drivingTouchReady')
+    : t('home.config.drivingTouchMissing');
+  const drivingControlOptions: {
+    key: DrivingControlMode;
+    label: string;
+    available: boolean;
+    capabilityLabel: string;
+  }[] = [
+    {
+      key: 'arrow',
+      label: t('home.config.drivingControlArrow'),
+      available: drivingInputCapabilities.keyboardConfirmed,
+      capabilityLabel: keyboardCapabilityLabel,
+    },
+    {
+      key: 'wasd',
+      label: t('home.config.drivingControlWasd'),
+      available: drivingInputCapabilities.keyboardConfirmed,
+      capabilityLabel: keyboardCapabilityLabel,
+    },
+    {
+      key: 'wheel',
+      label: t('home.config.drivingControlWheel'),
+      available: drivingInputCapabilities.wheelDevice !== null,
+      capabilityLabel: wheelCapabilityLabel,
+    },
+    {
+      key: 'touch',
+      label: t('home.config.drivingControlTouch'),
+      available: drivingInputCapabilities.touchAvailable,
+      capabilityLabel: touchCapabilityLabel,
+    },
   ];
   const drivingRenderQualityOptions: { key: DrivingRenderQualityLevel; label: string }[] = [
     { key: 'high', label: t('home.config.drivingRenderQualityHigh') },
@@ -407,6 +477,9 @@ export function HomePage() {
         expandedModule === 'oculomotor-training'
         && oculomotorEnableWebgazer
         && webGazerPermission.status !== 'granted'
+      ) || (
+        expandedModule === 'driving-rehab'
+        && !drivingControlModeAvailable
       )}
       loading={isStartingTraining || (
         expandedModule === 'oculomotor-training'
@@ -996,6 +1069,7 @@ export function HomePage() {
           onClose={handleCloseConfig}
           summaryItems={[
             { value: drivingDifficultyLabels[drivingDifficulty] },
+            { value: drivingControlOptions.find((option) => option.key === drivingControlMode)?.label },
             { value: drivingRenderQualityOptions.find((option) => option.key === drivingRenderQuality)?.label },
             { value: drivingRedFlashEnabled ? t('common.on') : t('common.off') },
           ]}
@@ -1061,23 +1135,103 @@ export function HomePage() {
 
             <TrainingConfigSection
               title={t('home.config.drivingControls')}
+              description={t('home.config.drivingControlsDesc')}
               value={drivingControlOptions.find((option) => option.key === drivingControlMode)?.label}
               wide
             >
-              <TrainingConfigOptionGroup columns={3}>
+              <div className="training-config-inline-actions">
+                <button
+                  className="btn btn-secondary btn-sm"
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    drivingInputCapabilities.rescan();
+                  }}
+                >
+                  {t('home.config.drivingRescanInputs')}
+                </button>
+              </div>
+              <TrainingConfigOptionGroup columns={4}>
                 {drivingControlOptions.map((option) => (
                   <button
                     key={option.key}
                     className={`training-option ${drivingControlMode === option.key ? 'active' : ''}`}
+                    type="button"
+                    disabled={!option.available}
+                    title={!option.available ? option.capabilityLabel : undefined}
                     onClick={(e) => {
                       e.stopPropagation();
                       setDrivingControlMode(option.key);
                     }}
                   >
                     <span className="training-option-title">{option.label}</span>
+                    <span className="training-option-meta">{option.capabilityLabel}</span>
                   </button>
                 ))}
               </TrainingConfigOptionGroup>
+              {drivingControlMode === 'wheel' && drivingInputCapabilities.wheelDevice && (
+                <div className="training-config-inline-actions" role="status" aria-live="polite">
+                  <span className="training-option-meta">
+                    {drivingWheelCalibration.phase === 'idle'
+                      ? drivingWheelCalibration.calibrated
+                        ? t('home.config.drivingWheelCalibrationReady')
+                        : t('home.config.drivingWheelCalibrationStart')
+                      : drivingWheelCalibration.phase === 'error'
+                        ? t(`home.config.drivingWheelCalibrationError.${drivingWheelCalibration.error ?? 'disconnected'}`)
+                        : t(`home.config.drivingWheelCalibrationStep.${drivingWheelCalibration.phase}`)}
+                  </span>
+                  {drivingWheelCalibration.phase === 'idle' ? (
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        drivingWheelCalibration.begin();
+                      }}
+                    >
+                      {drivingWheelCalibration.calibrated
+                        ? t('home.config.drivingWheelRecalibrate')
+                        : t('home.config.drivingWheelCalibrate')}
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (drivingWheelCalibration.phase === 'error') {
+                            drivingWheelCalibration.begin();
+                          } else {
+                            drivingWheelCalibration.advance();
+                          }
+                        }}
+                      >
+                        {drivingWheelCalibration.phase === 'error'
+                          ? t('home.config.drivingWheelRetryCalibration')
+                          : t('home.config.drivingWheelCaptureStep')}
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          drivingWheelCalibration.cancel();
+                        }}
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+              {!drivingControlModeAvailable && (
+                <div className="training-config-inline-actions" role="status" aria-live="polite">
+                  <span className="training-option-meta">
+                    {t('home.config.drivingControlUnavailable')}
+                  </span>
+                </div>
+              )}
             </TrainingConfigSection>
 
         </ConfigDialog>
@@ -1115,7 +1269,10 @@ export function HomePage() {
             sections={GetVisionRuleSections(rulesModule, lang, t)}
             startLabel={rulesStartButtonLabel}
             backLabel={rulesLabels.back}
-            startDisabled={isStartingTraining}
+            startDisabled={isStartingTraining || (
+              rulesModule === 'driving-rehab'
+              && !drivingControlModeAvailable
+            )}
             startClassName={isStartingTraining ? 'is-loading' : ''}
             onStart={() => void handleStartTraining()}
             onBack={() => setRulesModule(null)}

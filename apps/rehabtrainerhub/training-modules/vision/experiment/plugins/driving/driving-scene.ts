@@ -25,6 +25,7 @@ import {
   SRGBColorSpace,
   TorusGeometry,
   Vector3,
+  Vector4,
   WebGLRenderer,
   WebGLRenderTarget,
 } from 'three';
@@ -55,6 +56,7 @@ export const three = {
   SRGBColorSpace,
   TorusGeometry,
   Vector3,
+  Vector4,
   WebGLRenderer,
   WebGLRenderTarget,
 } as const;

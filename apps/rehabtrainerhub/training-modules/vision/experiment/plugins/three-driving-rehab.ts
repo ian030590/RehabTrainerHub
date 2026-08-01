@@ -3,6 +3,7 @@ import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { CreateRuntimeAssetUrlCandidates } from '@rehab-trainer/ui/aiAssets';
+import { MeasureDisplayRefreshRate } from '@rehab-trainer/ui/displayTiming';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
 import { soundManager } from '../../utils/soundManager';
 import { difficultyPresets, hazardTemplates } from './driving/driving-hazards';
@@ -15,7 +16,35 @@ import {
   type DrivingRouteVariant,
 } from './driving/driving-route';
 import { three, type ThreeModule } from './driving/driving-scene';
+import {
+  CalculateDrivingCameraPose,
+  type DrivingCameraMode,
+} from './driving/driving-camera';
+import {
+  CalculateDrivingViewport,
+  CaptureDrivingRendererPassState,
+  CreateDrivingRenderQuality,
+  DrivingViewportController,
+  RestoreDrivingRendererPassState,
+  type DrivingRenderQuality,
+  type DrivingRenderQualityLevel,
+} from './driving/driving-rendering';
+import {
+  CalculateDrivingFixedSteps,
+  CalculateEstimatedPresentationTime,
+  CalculateFrameAlignedReactionTime,
+  NormalizeDrivingInputTimestamp,
+  SummarizeReactionTimes,
+} from './driving/driving-timing';
+import {
+  FindDrivingWheelGamepad,
+  IsDrivingWheelGamepad,
+  ParseDrivingWheelCalibration,
+  ReadDrivingWheelInput,
+  type DrivingWheelCalibration,
+} from './driving/driving-input';
 import { drivingText, type DrivingText } from './driving/driving-text';
+import { RegisterDrivingRuntimeDisposer } from './driving/driving-runtime-lifecycle';
 import type {
   ActiveHazard,
   CollisionBox2D,
@@ -36,26 +65,7 @@ import type {
   VehicleResetPose,
 } from './driving/types';
 
-type DrivingCameraMode = 'third-person' | 'first-person';
-type DrivingRenderQualityLevel = 'low' | 'medium' | 'high';
 type DrivingTouchKey = 'left' | 'right' | 'up' | 'down';
-
-interface DrivingRenderQuality {
-  level: DrivingRenderQualityLevel;
-  pixelRatioCap: number;
-  antialias: boolean;
-  cameraFar: number;
-  fogNear: number;
-  fogFar: number;
-  roadTextureSize: number;
-  roadNoiseSamples: number;
-  vehicleTextureSize: number;
-  useReferenceVehicleModel: boolean;
-  useOsmCity: boolean;
-  osmRoadSegmentLimit: number;
-  osmBuildingLimit: number;
-  ambientTrafficCount: number;
-}
 
 interface VehicleWheelBinding {
   node: any;
@@ -113,6 +123,10 @@ const info = {
       type: ParameterType.STRING,
       default: 'arrow',
     },
+    wheel_calibration: {
+      type: ParameterType.COMPLEX,
+      default: null,
+    },
     render_quality: {
       type: ParameterType.STRING,
       default: 'high',
@@ -135,10 +149,16 @@ const info = {
     average_rt: { type: ParameterType.INT },
     median_rt: { type: ParameterType.INT },
     valid_event_count: { type: ParameterType.INT },
+    reaction_event_count: { type: ParameterType.INT },
     collisions: { type: ParameterType.INT },
     lane_deviations: { type: ParameterType.INT },
     average_fps: { type: ParameterType.INT },
+    display_refresh_hz: { type: ParameterType.FLOAT },
+    display_refresh_ms: { type: ParameterType.FLOAT },
+    refresh_sample_count: { type: ParameterType.INT },
+    refresh_measurement_valid: { type: ParameterType.BOOL },
     rendering_quality: { type: ParameterType.STRING },
+    control_mode: { type: ParameterType.STRING },
     route_progress: { type: ParameterType.FLOAT },
     driving_events: { type: ParameterType.COMPLEX },
   },
@@ -159,18 +179,27 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private blobShadowTexture: any = null;
   private wheelBindings: VehicleWheelBinding[] = [];
   private raf = 0;
+  private unregisterRuntimeDisposer: (() => void) | null = null;
   private finished = false;
   private routeLength = 0;
   private routeSegmentStarts: number[] = [];
   private miniMapRouteSamples: MiniMapRouteSample[] = [];
   private lastFrameTime = 0;
   private trialStartTime = 0;
+  private simulationTime = 0;
+  private simulationAccumulatorMs = 0;
   private fpsSamples: number[] = [];
   private activeHazards: ActiveHazard[] = [];
   private eventResults: DrivingEventResult[] = [];
   private lastBrakePressed = false;
+  private pendingBrakeTimestamp: number | null = null;
   private ambientTrafficActors: AmbientTrafficActor[] = [];
-  private renderQuality: DrivingRenderQuality = this.createRenderQuality('high');
+  private renderQuality: DrivingRenderQuality = CreateDrivingRenderQuality('high');
+  private viewportController: DrivingViewportController | null = null;
+  private displayRefreshMs = 1000 / 60;
+  private displayRefreshHz = 60;
+  private refreshSampleCount = 0;
+  private refreshMeasured = false;
   private selectedRouteVariant: DrivingRouteVariant | null = null;
 
   // Free-steering vehicle state. vehicleX/Z is always the rendered and physical
@@ -198,7 +227,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private laneResetBlackoutTimer: number | null = null;
   private laneResetClearTimer: number | null = null;
   private needsFirstFrameCameraSnap = false;
-  private cameraFov = 68;
   private cameraMode: DrivingCameraMode = 'first-person';
   private wheelSpin = 0;
 
@@ -229,9 +257,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private cockpitSteeringWheel: HTMLDivElement | null = null;
   private cockpitSpeedNeedle: HTMLDivElement | null = null;
   private cockpitSpeedText: HTMLDivElement | null = null;
-  private orientationOverlay: HTMLDivElement | null = null;
-  private portraitBlocked = false;
-  private portraitBlockedAt = 0;
 
   private keyState = {
     left: false,
@@ -243,12 +268,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private keydownListener: ((event: KeyboardEvent) => void) | null = null;
   private keyupListener: ((event: KeyboardEvent) => void) | null = null;
   private touchControlsRoot: HTMLDivElement | null = null;
-  private resizeListener: (() => void) | null = null;
-  private resizeObserver: ResizeObserver | null = null;
+  private inputPauseOverlay: HTMLDivElement | null = null;
+  private inputPausedAt = 0;
+  private visibilityPausedAt: number | null = null;
+  private visibilityChangeListener: (() => void) | null = null;
   private gamepadConnectedListener: ((event: GamepadEvent) => void) | null = null;
   private gamepadDisconnectedListener: ((event: GamepadEvent) => void) | null = null;
   private gamepadConnected = false;
   private controlMode: DrivingControlMode = 'arrow';
+  private wheelCalibration: DrivingWheelCalibration | null = null;
   private language: DrivingLanguage = 'zh';
   private text: DrivingText = drivingText.zh;
 
@@ -275,14 +303,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly vehicleHalfLength = 2.25;
   private readonly wheelBase = 2.72;
   private readonly maxVehicleSpeed = 18;
+  private readonly fixedSimulationStepMs = 1000 / 120;
+  private readonly maxSimulationCatchUpMs = 250;
   private readonly baseCameraFov = 68;
   private readonly initialRouteDistance = 18;
   private readonly routeTurnBlendDistance = 14;
-  private readonly firstPersonCameraForwardOffset = 0.45;
-  private readonly firstPersonCameraHeight = 2.05;
-  private readonly firstPersonCameraLookAhead = 35;
-  private readonly firstPersonCameraLookHeight = 1.65;
-  private readonly stableRendererPixelRatio = 1.5;
   private readonly referenceVehicleModelYawOffset = Math.PI;
   private readonly sidewalkWidth = 3;
   private readonly buildingRoadGap = 1.2;
@@ -324,67 +349,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.miniMapRouteSamples = this.createMiniMapRouteSamples();
   }
 
-  private createRenderQuality(level: DrivingRenderQualityLevel): DrivingRenderQuality {
-    if (level === 'low') {
-      return {
-        level,
-        pixelRatioCap: 1,
-        antialias: false,
-        cameraFar: 420,
-        fogNear: 120,
-        fogFar: 360,
-        roadTextureSize: 256,
-        roadNoiseSamples: 650,
-        vehicleTextureSize: 512,
-        useReferenceVehicleModel: false,
-        useOsmCity: false,
-        osmRoadSegmentLimit: 0,
-        osmBuildingLimit: 0,
-        ambientTrafficCount: 10,
-      };
-    }
-
-    if (level === 'high') {
-      return {
-        level,
-        pixelRatioCap: this.stableRendererPixelRatio,
-        antialias: true,
-        cameraFar: 900,
-        fogNear: 260,
-        fogFar: 780,
-        roadTextureSize: 512,
-        roadNoiseSamples: 1800,
-        vehicleTextureSize: 1024,
-        useReferenceVehicleModel: true,
-        useOsmCity: false,
-        osmRoadSegmentLimit: 230,
-        osmBuildingLimit: 120,
-        ambientTrafficCount: 18,
-      };
-    }
-
-    return {
-      level,
-      pixelRatioCap: this.stableRendererPixelRatio,
-      antialias: true,
-      cameraFar: 650,
-      fogNear: 180,
-      fogFar: 560,
-      roadTextureSize: 512,
-      roadNoiseSamples: 1200,
-      vehicleTextureSize: 512,
-      useReferenceVehicleModel: true,
-      useOsmCity: false,
-      osmRoadSegmentLimit: 150,
-      osmBuildingLimit: 72,
-      ambientTrafficCount: 14,
-    };
-  }
-
-  private getRenderQualityLevel(value: unknown): DrivingRenderQualityLevel {
-    return value === 'low' || value === 'medium' || value === 'high' ? value : 'high';
-  }
-
   private configureInitialRearviewQuality() {
     this.rearviewQualityLevel = this.renderQuality.level;
   }
@@ -392,6 +356,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   trial(displayElement: HTMLElement, trial: TrialType<Info>) {
     displayElement.replaceChildren();
     this.resetTrialState(trial);
+    this.unregisterRuntimeDisposer = RegisterDrivingRuntimeDisposer(() => {
+      if (this.finished) return;
+      this.finished = true;
+      this.detachGlobalListeners();
+      this.cleanupRenderResources();
+    });
     soundManager.init();
 
     const root = document.createElement('div');
@@ -418,7 +388,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.initScene(root);
         this.initHud(root, trial.red_flash_enabled ?? true);
         this.initTouchControls(root);
-        this.initOrientationGuard(root);
+        this.initInputPauseOverlay(root);
         if (this.renderQuality.useReferenceVehicleModel) {
           await this.loadReferenceVehicleModel();
         }
@@ -431,8 +401,33 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.updateTrafficLights(0);
         this.renderFirstFrameBeforeReveal(performance.now());
 
+        // Measure only after high-quality scene/model initialization and a GPU
+        // warm-up render. Heavy startup work must not consume the sampling
+        // timeout or make a fast display look like the 60 Hz fallback.
+        const displayRefresh = await MeasureDisplayRefreshRate({
+          sampleCount: 48,
+          minimumSampleCount: 12,
+          minSampleMs: 1,
+          maxSampleMs: 100,
+          timeoutMs: 2_000,
+        });
+        this.displayRefreshMs = displayRefresh.refreshMs;
+        this.displayRefreshHz = displayRefresh.refreshHz;
+        this.refreshSampleCount = displayRefresh.sampleCount;
+        this.refreshMeasured = displayRefresh.measured;
+        root.dataset.drivingRefreshHz = this.refreshMeasured
+          ? this.displayRefreshHz.toFixed(3)
+          : 'fallback';
+        root.dataset.drivingRefreshSamples = String(this.refreshSampleCount);
+        if (this.finished) return;
+        if (!displayElement.isConnected) {
+          this.finishTrial(displayElement, 'aborted');
+          return;
+        }
+
         this.trialStartTime = performance.now();
-        if (this.portraitBlocked) this.portraitBlockedAt = this.trialStartTime;
+        this.simulationTime = this.trialStartTime;
+        this.simulationAccumulatorMs = 0;
         this.lastFrameTime = this.trialStartTime;
         const initialInput = this.readInput();
         this.updateVehicleFree(initialInput, 0, this.trialStartTime);
@@ -443,6 +438,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         root.setAttribute('aria-busy', 'false');
         loadingOverlay.remove();
         root.focus();
+        this.attachVisibilityPauseListener();
         this.attachKeyboardListeners(displayElement);
         this.attachGamepadListeners();
         this.raf = requestAnimationFrame((time) => this.loop(time, trial, displayElement));
@@ -520,10 +516,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.progress = startDistance;
     this.previousProgress = startDistance;
     this.lateralOffset = startLaneOffset;
-    this.cameraFov = this.baseCameraFov;
     this.cameraMode = 'first-person';
     this.wheelSpin = 0;
     this.trialStartTime = 0;
+    this.simulationTime = 0;
+    this.simulationAccumulatorMs = 0;
     this.lastFrameTime = 0;
     this.laneDeviationCount = 0;
     this.laneDeviationActive = false;
@@ -537,7 +534,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.clearLaneResetTimers();
     this.needsFirstFrameCameraSnap = true;
     this.lastBrakePressed = false;
+    this.pendingBrakeTimestamp = null;
     this.fpsSamples = [];
+    this.displayRefreshMs = 1000 / 60;
+    this.displayRefreshHz = 60;
+    this.refreshSampleCount = 0;
+    this.refreshMeasured = false;
     this.activeHazards = [];
     this.eventResults = [];
     this.ambientTrafficActors = [];
@@ -564,14 +566,12 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.cockpitSteeringWheel = null;
     this.cockpitSpeedNeedle = null;
     this.cockpitSpeedText = null;
-    this.orientationOverlay = null;
-    this.portraitBlocked = false;
-    this.portraitBlockedAt = 0;
-    this.gamepadConnected = Array.from(navigator.getGamepads?.() ?? []).some(Boolean);
+    this.gamepadConnected = FindDrivingWheelGamepad(navigator.getGamepads?.() ?? []) !== null;
     this.controlMode = this.getControlMode((trial as any)?.control_mode);
+    this.wheelCalibration = ParseDrivingWheelCalibration((trial as any)?.wheel_calibration);
     this.language = this.getLanguage((trial as any)?.language);
     this.text = drivingText[this.language];
-    this.renderQuality = this.createRenderQuality(this.getRenderQualityLevel((trial as any)?.render_quality));
+    this.renderQuality = CreateDrivingRenderQuality((trial as any)?.render_quality);
     this.configureInitialRearviewQuality();
 
     // Difficulty
@@ -617,7 +617,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       if (this.shouldPreventKeyDefault(event.code)) {
         event.preventDefault();
       }
-      this.setKeyboardInput(event.code, true);
+      this.setKeyboardInput(event.code, true, event.timeStamp);
       if (event.code === 'KeyC' || event.code === 'KeyV') {
         event.preventDefault();
         this.cycleCameraMode();
@@ -625,7 +625,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       if (event.code === 'Escape') this.finishTrial(displayElement, 'aborted');
     };
     this.keyupListener = (event: KeyboardEvent) => {
-      this.setKeyboardInput(event.code, false);
+      this.setKeyboardInput(event.code, false, event.timeStamp);
     };
     window.addEventListener('keydown', this.keydownListener);
     window.addEventListener('keyup', this.keyupListener);
@@ -634,7 +634,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private initTouchControls(root: HTMLDivElement) {
     this.touchControlsRoot?.remove();
     this.touchControlsRoot = null;
-    if (!ShouldShowDrivingTouchControls()) return;
+    this.inputPauseOverlay = null;
+    this.inputPausedAt = 0;
+    this.visibilityPausedAt = null;
+    if (!this.isTouchControlEnabled()) return;
 
     const controls = document.createElement('div');
     controls.className = 'driving-touch-controls';
@@ -647,6 +650,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     });
 
     const steering = document.createElement('div');
+    steering.dataset.drivingControlGroup = 'steering';
     Object.assign(steering.style, {
       position: 'absolute',
       left: 'max(14px, env(safe-area-inset-left))',
@@ -657,6 +661,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     });
 
     const pedals = document.createElement('div');
+    pedals.dataset.drivingControlGroup = 'pedals';
     Object.assign(pedals.style, {
       position: 'absolute',
       right: 'max(14px, env(safe-area-inset-right))',
@@ -667,6 +672,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     });
 
     const camera = CreateDrivingTouchButton('CAM', 'Switch camera view');
+    camera.dataset.drivingControlGroup = 'camera';
     Object.assign(camera.style, {
       position: 'absolute',
       left: '50%',
@@ -704,7 +710,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       height: '64px',
       padding: '0 10px',
       borderRadius: '18px',
-      background: 'rgba(22, 101, 52, 0.72)',
+      background: 'color-mix(in srgb, var(--success) 72%, transparent)',
       fontSize: '15px',
       letterSpacing: '0.04em',
     });
@@ -714,7 +720,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       height: '64px',
       padding: '0 8px',
       borderRadius: '18px',
-      background: 'rgba(185, 28, 28, 0.76)',
+      background: 'color-mix(in srgb, var(--error) 76%, transparent)',
       fontSize: '13px',
       letterSpacing: '0.03em',
     });
@@ -724,6 +730,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     controls.append(steering, pedals, camera);
     root.appendChild(controls);
     this.touchControlsRoot = controls;
+    this.syncTouchControlsLayout();
   }
 
   private createDrivingPressButton(
@@ -746,6 +753,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       event.preventDefault();
       event.stopPropagation();
       button.setPointerCapture(event.pointerId);
+      if (keys.includes('down') && !this.keyState.down) {
+        this.captureBrakeInputTimestamp(event.timeStamp);
+      }
       setPressed(true);
     });
     button.addEventListener('pointerup', release);
@@ -753,6 +763,43 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     button.addEventListener('lostpointercapture', release);
     button.addEventListener('contextmenu', (event) => event.preventDefault());
     return button;
+  }
+
+  private initInputPauseOverlay(root: HTMLDivElement) {
+    this.inputPauseOverlay?.remove();
+    const overlay = document.createElement('div');
+    overlay.setAttribute('role', 'alert');
+    overlay.setAttribute('aria-live', 'assertive');
+    Object.assign(overlay.style, {
+      position: 'absolute',
+      inset: '0',
+      zIndex: '60',
+      display: 'none',
+      placeItems: 'center',
+      padding: '24px',
+      background: 'var(--bg-overlay)',
+      color: 'var(--text-primary)',
+      textAlign: 'center',
+      pointerEvents: 'auto',
+    });
+    const message = document.createElement('div');
+    Object.assign(message.style, {
+      width: 'min(520px, 100%)',
+      padding: '22px',
+      border: '1px solid var(--border-hover)',
+      borderRadius: 'var(--radius-l)',
+      background: 'var(--bg-card)',
+    });
+    const title = document.createElement('strong');
+    title.textContent = this.text.inputPausedTitle;
+    Object.assign(title.style, { display: 'block', fontSize: '22px', lineHeight: '1.3' });
+    const detail = document.createElement('p');
+    detail.textContent = this.text.inputPausedDetail;
+    Object.assign(detail.style, { margin: '10px 0 0', fontSize: '15px', lineHeight: '1.55' });
+    message.append(title, detail);
+    overlay.append(message);
+    root.appendChild(overlay);
+    this.inputPauseOverlay = overlay;
   }
 
   private shouldPreventKeyDefault(code: string): boolean {
@@ -766,29 +813,41 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     return false;
   }
 
-  private setKeyboardInput(code: string, pressed: boolean) {
+  private setKeyboardInput(code: string, pressed: boolean, eventTimestamp: number) {
     if (this.controlMode === 'arrow') {
       if (code === 'ArrowLeft') this.keyState.left = pressed;
       if (code === 'ArrowRight') this.keyState.right = pressed;
       if (code === 'ArrowUp') this.keyState.up = pressed;
-      if (code === 'ArrowDown') this.keyState.down = pressed;
+      if (code === 'ArrowDown') {
+        if (pressed && !this.keyState.down) {
+          this.captureBrakeInputTimestamp(eventTimestamp);
+        }
+        this.keyState.down = pressed;
+      }
       return;
     }
     if (this.controlMode === 'wasd') {
       if (code === 'KeyA') this.keyState.left = pressed;
       if (code === 'KeyD') this.keyState.right = pressed;
       if (code === 'KeyW') this.keyState.up = pressed;
-      if (code === 'KeyS') this.keyState.down = pressed;
+      if (code === 'KeyS') {
+        if (pressed && !this.keyState.down) {
+          this.captureBrakeInputTimestamp(eventTimestamp);
+        }
+        this.keyState.down = pressed;
+      }
     }
   }
 
   private attachGamepadListeners() {
     this.gamepadConnectedListener = (event: GamepadEvent) => {
+      if (this.controlMode !== 'wheel' || !IsDrivingWheelGamepad(event.gamepad)) return;
       this.gamepadConnected = true;
       if (this.hud?.event) this.hud.event.textContent = this.format(this.text.controllerConnected, { id: event.gamepad.id });
     };
     this.gamepadDisconnectedListener = () => {
-      this.gamepadConnected = Array.from(navigator.getGamepads?.() ?? []).some(Boolean);
+      if (this.controlMode !== 'wheel') return;
+      this.gamepadConnected = FindDrivingWheelGamepad(navigator.getGamepads?.() ?? []) !== null;
       if (this.hud?.event && !this.gamepadConnected) this.hud.event.textContent = this.text.controllerDisconnected;
     };
     window.addEventListener('gamepadconnected', this.gamepadConnectedListener);
@@ -801,9 +860,18 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.scene.background = new three.Color(0xd9eaf1);
     this.scene.fog = new three.Fog(0xcbd7d9, this.renderQuality.fogNear, this.renderQuality.fogFar);
 
-    const width = Math.max(1, root.clientWidth);
-    const height = Math.max(1, root.clientHeight);
-    this.camera = new three.PerspectiveCamera(this.baseCameraFov, width / height, 0.1, this.renderQuality.cameraFar);
+    const initialViewport = CalculateDrivingViewport(
+      root.clientWidth,
+      root.clientHeight,
+      window.devicePixelRatio || 1,
+      this.renderQuality.pixelRatioCap,
+    );
+    this.camera = new three.PerspectiveCamera(
+      this.baseCameraFov,
+      initialViewport.aspect,
+      0.1,
+      this.renderQuality.cameraFar,
+    );
     this.rearviewCamera = new three.PerspectiveCamera(66, 3.2, 0.1, Math.min(this.renderQuality.cameraFar, 360));
     this.rearviewLookAt = new three.Vector3();
 
@@ -812,23 +880,20 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       alpha: false,
       powerPreference: 'high-performance',
     });
-    this.renderer.setPixelRatio(this.getRendererPixelRatio());
-    this.renderer.setSize(width, height, false);
     this.renderer.shadowMap.enabled = false;
     this.renderer.outputColorSpace = three.SRGBColorSpace;
     this.renderer.domElement.style.width = '100%';
     this.renderer.domElement.style.height = '100%';
+    this.renderer.domElement.style.display = 'block';
     root.appendChild(this.renderer.domElement);
-    this.syncRendererSize(root);
-
-    this.resizeListener = () => {
-      this.syncRendererSize(root);
-    };
-    window.addEventListener('resize', this.resizeListener);
-    if (typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver(() => this.syncRendererSize(root));
-      this.resizeObserver.observe(root);
-    }
+    this.viewportController = new DrivingViewportController({
+      renderer: this.renderer,
+      camera: this.camera,
+      root,
+      pixelRatioCap: this.renderQuality.pixelRatioCap,
+      onLayoutChange: () => this.syncMobileHudLayout(),
+    });
+    this.viewportController.start();
 
     this.createSceneEnvironment();
     this.buildWorld();
@@ -838,38 +903,76 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (this.renderQuality.useOsmCity) void this.loadTaipeiOsmCity();
   }
 
-  private getRendererPixelRatio(): number {
-    return Math.min(window.devicePixelRatio || 1, this.renderQuality.pixelRatioCap);
-  }
-
-  private syncRendererSize(root: HTMLElement) {
-    if (!this.renderer || !this.camera) return;
-    const nextWidth = Math.max(1, root.clientWidth);
-    const nextHeight = Math.max(1, root.clientHeight);
-    this.camera.aspect = nextWidth / nextHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setPixelRatio(this.getRendererPixelRatio());
-    this.renderer.setSize(nextWidth, nextHeight, false);
-    this.syncMobileHudLayout();
-  }
-
   private isTouchLandscape() {
-    if (!ShouldShowDrivingTouchControls()) return false;
+    if (!this.isTouchControlEnabled()) return false;
     if (typeof window.matchMedia === 'function') {
       return window.matchMedia('(orientation: landscape)').matches;
     }
     return window.innerWidth >= window.innerHeight;
   }
 
-  private isTouchPortrait() {
-    if (!ShouldShowDrivingTouchControls()) return false;
-    if (typeof window.matchMedia === 'function') {
-      return window.matchMedia('(orientation: portrait)').matches;
+  private isTouchControlEnabled() {
+    return this.controlMode === 'touch' && navigator.maxTouchPoints > 0;
+  }
+
+  private syncTouchControlsLayout() {
+    const controls = this.touchControlsRoot;
+    if (!controls) return;
+    const width = controls.clientWidth || controls.parentElement?.clientWidth || window.innerWidth;
+    const height = controls.clientHeight || controls.parentElement?.clientHeight || window.innerHeight;
+    const compact = width < 420 || height > width;
+    const veryNarrow = width < 240;
+    const steering = controls.querySelector<HTMLElement>('[data-driving-control-group="steering"]');
+    const pedals = controls.querySelector<HTMLElement>('[data-driving-control-group="pedals"]');
+    const camera = controls.querySelector<HTMLElement>('[data-driving-control-group="camera"]');
+    const steeringButtons = steering?.querySelectorAll<HTMLElement>('button') ?? [];
+    const pedalButtons = pedals?.querySelectorAll<HTMLElement>('button') ?? [];
+    const steeringSize = compact ? Math.max(44, Math.min(60, Math.floor((width - 100) / 2))) : 76;
+    const pedalWidth = compact ? Math.max(54, Math.min(72, Math.floor(width * 0.21))) : 88;
+    const pedalHeight = compact ? 52 : 64;
+    const sideInset = compact ? 'max(8px, env(safe-area-inset-left))' : 'max(14px, env(safe-area-inset-left))';
+    const bottomInset = compact ? 'max(8px, env(safe-area-inset-bottom))' : 'max(14px, env(safe-area-inset-bottom))';
+
+    if (steering) {
+      steering.style.left = sideInset;
+      steering.style.bottom = veryNarrow
+        ? `calc(${bottomInset} + ${pedalHeight * 2 + 18}px)`
+        : bottomInset;
+      steering.style.gap = compact ? '6px' : '8px';
     }
-    return window.innerHeight > window.innerWidth;
+    for (const button of steeringButtons) {
+      button.style.minWidth = `${steeringSize}px`;
+      button.style.width = `${steeringSize}px`;
+      button.style.height = `${compact ? 56 : 70}px`;
+      button.style.borderRadius = compact ? '15px' : '18px';
+      button.style.fontSize = compact ? '24px' : '29px';
+    }
+    if (pedals) {
+      pedals.style.right = compact
+        ? 'max(8px, env(safe-area-inset-right))'
+        : 'max(14px, env(safe-area-inset-right))';
+      pedals.style.bottom = bottomInset;
+      pedals.style.gap = compact ? '6px' : '8px';
+    }
+    for (const button of pedalButtons) {
+      button.style.minWidth = `${pedalWidth}px`;
+      button.style.width = `${pedalWidth}px`;
+      button.style.height = `${pedalHeight}px`;
+      button.style.borderRadius = compact ? '15px' : '18px';
+      button.style.fontSize = compact ? '12px' : button.getAttribute('aria-label') === 'Throttle' ? '15px' : '13px';
+    }
+    if (camera) {
+      camera.style.minWidth = compact ? '54px' : '64px';
+      camera.style.height = compact ? '40px' : '44px';
+      camera.style.bottom = compact
+        ? `calc(${bottomInset} + ${veryNarrow ? pedalHeight * 2 + 82 : pedalHeight * 2 + 18}px)`
+        : bottomInset;
+      camera.style.fontSize = compact ? '11px' : '13px';
+    }
   }
 
   private syncMobileHudLayout() {
+    this.syncTouchControlsLayout();
     const hud = this.hud;
     const miniMapWrapper = hud?.miniMapWrapper;
     if (!miniMapWrapper) return;
@@ -914,6 +1017,42 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       return;
     }
 
+    if (this.isTouchControlEnabled()) {
+      Object.assign(miniMapWrapper.style, {
+        top: 'max(10px, env(safe-area-inset-top))',
+        left: 'max(10px, env(safe-area-inset-left))',
+        right: 'auto',
+        bottom: 'auto',
+        width: '132px',
+        height: '112px',
+        borderRadius: '11px',
+        transform: 'none',
+      });
+      if (directionLabel) {
+        Object.assign(directionLabel.style, {
+          minHeight: '34px',
+          padding: '5px 7px',
+          fontSize: '11px',
+          lineHeight: '1.15',
+        });
+      }
+      if (titleBar) titleBar.style.display = 'none';
+      if (hudPanel) {
+        Object.assign(hudPanel.style, {
+          top: 'max(10px, env(safe-area-inset-top))',
+          left: 'calc(max(10px, env(safe-area-inset-left)) + 142px)',
+          minWidth: '0',
+          width: 'calc(100vw - max(10px, env(safe-area-inset-left)) - 152px)',
+          maxWidth: 'none',
+          padding: '6px 7px',
+          gap: '3px',
+          fontSize: '10px',
+          lineHeight: '1.2',
+        });
+      }
+      return;
+    }
+
     Object.assign(miniMapWrapper.style, {
       top: 'auto',
       left: 'auto',
@@ -945,112 +1084,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         fontSize: '13px',
         lineHeight: '1.3',
       });
-    }
-  }
-
-  private initOrientationGuard(root: HTMLDivElement) {
-    this.orientationOverlay?.remove();
-    this.orientationOverlay = null;
-    if (!ShouldShowDrivingTouchControls()) return;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'driving-orientation-overlay';
-    overlay.setAttribute('role', 'alert');
-    overlay.setAttribute('aria-live', 'assertive');
-    overlay.setAttribute('aria-atomic', 'true');
-    Object.assign(overlay.style, {
-      position: 'absolute',
-      inset: '0',
-      zIndex: '40',
-      display: 'none',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '12px',
-      padding: '28px',
-      background: '#ffffff',
-      color: '#172033',
-      textAlign: 'center',
-      pointerEvents: 'auto',
-    });
-
-    const deviceIcon = document.createElement('div');
-    deviceIcon.setAttribute('aria-hidden', 'true');
-    deviceIcon.textContent = '↻';
-    Object.assign(deviceIcon.style, {
-      display: 'grid',
-      width: '68px',
-      height: '68px',
-      placeItems: 'center',
-      border: '3px solid #2563eb',
-      borderRadius: '18px',
-      color: '#2563eb',
-      fontSize: '42px',
-      fontWeight: '800',
-      transform: 'rotate(-90deg)',
-    });
-
-    const title = document.createElement('strong');
-    title.textContent = this.language === 'en' ? 'Rotate to landscape' : '請將裝置旋轉為橫向';
-    Object.assign(title.style, {
-      fontSize: 'clamp(20px, 5vw, 28px)',
-      lineHeight: '1.25',
-    });
-
-    const detail = document.createElement('p');
-    detail.textContent = this.language === 'en'
-      ? 'Hold your device with both hands. The drive will continue when it is horizontal.'
-      : '請以雙手橫向握持裝置；旋轉完成後將自動繼續駕駛。';
-    Object.assign(detail.style, {
-      maxWidth: '32rem',
-      margin: '0',
-      color: '#475569',
-      fontSize: '16px',
-      fontWeight: '600',
-      lineHeight: '1.55',
-    });
-
-    overlay.append(deviceIcon, title, detail);
-    root.appendChild(overlay);
-    this.orientationOverlay = overlay;
-    this.syncOrientationGuard(performance.now());
-  }
-
-  private syncOrientationGuard(time: number): boolean {
-    const shouldBlock = this.isTouchPortrait();
-    if (shouldBlock === this.portraitBlocked) return shouldBlock;
-
-    this.portraitBlocked = shouldBlock;
-    if (shouldBlock) {
-      this.portraitBlockedAt = time;
-      this.keyState = { left: false, right: false, up: false, down: false };
-      this.lastBrakePressed = false;
-      if (this.orientationOverlay) {
-        this.orientationOverlay.style.display = 'flex';
-        this.orientationOverlay.setAttribute('aria-hidden', 'false');
-      }
-      return true;
-    }
-
-    const pausedDuration = Math.max(0, time - this.portraitBlockedAt);
-    if (pausedDuration > 0) this.shiftTimedStateAfterOrientationPause(pausedDuration);
-    this.portraitBlockedAt = 0;
-    this.lastFrameTime = time;
-    this.lastBrakePressed = false;
-    if (this.orientationOverlay) {
-      this.orientationOverlay.style.display = 'none';
-      this.orientationOverlay.setAttribute('aria-hidden', 'true');
-    }
-    return false;
-  }
-
-  private shiftTimedStateAfterOrientationPause(pausedDuration: number) {
-    if (this.trialStartTime > 0) this.trialStartTime += pausedDuration;
-    if (this.lastCollisionEventTime > 0) this.lastCollisionEventTime += pausedDuration;
-    for (const hazard of this.activeHazards) {
-      if (hazard.active) hazard.startTime += pausedDuration;
-      if (hazard.brakeTime !== null) hazard.brakeTime += pausedDuration;
-      if (hazard.removeAt !== null) hazard.removeAt += pausedDuration;
     }
   }
 
@@ -1778,7 +1811,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const vehicleBox = this.getVehicleCollisionBox();
     const forward = this.getForwardVector(this.vehicleHeading);
     const right = this.getRightVector(this.vehicleHeading);
-    const previousTarget = this.renderer.getRenderTarget?.() ?? null;
+    const three = this.requireThree();
+    const rendererState = CaptureDrivingRendererPassState(
+      this.renderer,
+      () => new three.Vector4(),
+    );
     const previousVehicleVisible = this.vehicleRoot?.visible;
     if (this.vehicleRoot) this.vehicleRoot.visible = false;
 
@@ -1794,11 +1831,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.renderRearviewMirror('right', rightCanvas, vehicleBox, forward, right);
       }
     } finally {
-      this.renderer.setRenderTarget(previousTarget);
-      if (!previousTarget) {
-        this.renderer.setViewport(0, 0, this.renderer.domElement.width, this.renderer.domElement.height);
-        this.renderer.setScissorTest(false);
-      }
+      RestoreDrivingRendererPassState(this.renderer, rendererState);
       if (this.vehicleRoot && previousVehicleVisible !== undefined) {
         this.vehicleRoot.visible = previousVehicleVisible;
       }
@@ -1843,8 +1876,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.rearviewCamera.lookAt(lookAt);
 
     this.renderer.setRenderTarget(target);
-    this.renderer.setViewport(0, 0, width, height);
-    this.renderer.setScissorTest(false);
     this.renderer.clear(true, true, true);
     this.renderer.render(this.scene, this.rearviewCamera);
     const pixels = this.getRearviewPixelBuffer(position, width, height);
@@ -3070,39 +3101,54 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.finishTrial(displayElement, 'aborted');
       return;
     }
-    if (this.syncOrientationGuard(time)) {
+    if (this.syncVisibilityPause(time) || this.syncInputPause(time)) {
       this.lastFrameTime = time;
       this.raf = requestAnimationFrame((nextTime) => this.loop(nextTime, trial, displayElement));
       return;
     }
-
-    const dt = Math.min(0.05, Math.max(0.001, (time - this.lastFrameTime) / 1000));
+    this.excludeInactiveFrameGap(time);
+    const frameDurationMs = Math.max(0, time - this.lastFrameTime);
     this.lastFrameTime = time;
-    this.fpsSamples.push(1 / dt);
+    if (frameDurationMs >= 1 && frameDurationMs <= 100) {
+      this.fpsSamples.push(1000 / frameDurationMs);
+    }
     if (this.fpsSamples.length > 240) this.fpsSamples.shift();
 
     const input = this.readInput();
     const brakePressed = input.brake > 0.35;
     if (!this.laneResetActive && brakePressed && !this.lastBrakePressed) {
-      this.handleBrakePressed(time);
+      this.handleBrakePressed(input.brakeTimestamp ?? time);
     }
+    if (brakePressed) this.pendingBrakeTimestamp = null;
     this.lastBrakePressed = brakePressed;
 
-    if (!this.laneResetActive) {
-      this.updateVehicleFree(input, dt, time);
-      this.updateTrafficLights(time);
-      this.updateIntersections();
-      this.activateScheduledHazards(time);
-      this.updateHazards(time);
-      this.updateAmbientTraffic(dt);
-    } else {
-      this.vehicleSpeed = 0;
-      this.lastYawRate = 0;
-      this.updateTrafficLights(time);
-      this.updateAmbientTraffic(dt);
+    const fixedSteps = CalculateDrivingFixedSteps(
+      this.simulationAccumulatorMs,
+      frameDurationMs,
+      this.fixedSimulationStepMs,
+      this.maxSimulationCatchUpMs,
+    );
+    this.simulationAccumulatorMs = fixedSteps.nextAccumulatorMs;
+    const fixedDt = this.fixedSimulationStepMs / 1000;
+    for (let step = 0; step < fixedSteps.stepCount; step += 1) {
+      this.simulationTime += this.fixedSimulationStepMs;
+      if (!this.laneResetActive) {
+        this.updateVehicleFree(input, fixedDt, this.simulationTime);
+        this.updateTrafficLights(this.simulationTime);
+        this.updateIntersections();
+        this.activateScheduledHazards(this.simulationTime);
+        this.updateHazards(this.simulationTime);
+        this.updateAmbientTraffic(fixedDt);
+      } else {
+        this.vehicleSpeed = 0;
+        this.lastYawRate = 0;
+        this.updateTrafficLights(this.simulationTime);
+        this.updateAmbientTraffic(fixedDt);
+      }
     }
-    this.updateVehicleVisual(dt);
-    this.updateCameraFree(dt);
+    const simulatedDt = fixedSteps.simulatedMs / 1000;
+    this.updateVehicleVisual(simulatedDt);
+    this.updateCameraFree();
     if (this.needsFirstFrameCameraSnap) {
       this.needsFirstFrameCameraSnap = false;
       this.snapCameraToVehicle();
@@ -3112,9 +3158,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.updateMiniMap();
     this.updateRearviewMirrors(time);
 
+    this.viewportController?.prepareMainRender();
     this.renderer.render(this.scene, this.camera);
+    this.markHazardsPresented(CalculateEstimatedPresentationTime(
+      time,
+      performance.now(),
+      this.refreshMeasured ? this.displayRefreshMs : Number.NaN,
+    ));
 
-    if (this.isTrialTimedOut(time, trial)) {
+    if (this.isTrialTimedOut(this.simulationTime, trial)) {
       soundManager.playRunEnd();
       this.finishTrial(displayElement, 'timeout');
       return;
@@ -3136,7 +3188,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.updateCockpitHud();
     this.updateMiniMap();
     this.updateRearviewMirrors(time);
+    this.viewportController?.prepareMainRender();
     this.renderer.render(this.scene, this.camera);
+    this.markHazardsPresented(CalculateEstimatedPresentationTime(
+      time,
+      performance.now(),
+      this.refreshMeasured ? this.displayRefreshMs : Number.NaN,
+    ));
   }
 
   private isTrialTimedOut(time: number, trial: TrialType<Info>): boolean {
@@ -3508,6 +3566,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         triggerDistance,
         hazardDistance,
         startTime: 0,
+        presentedAt: null,
         brakeTime: null,
         rt: null,
         preheldBrake: false,
@@ -3694,6 +3753,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     hazard.triggerDistance = this.progress;
     hazard.hazardDistance = hazardDistance;
     hazard.startTime = time;
+    hazard.presentedAt = null;
     hazard.brakeTime = preheldBrake ? time : null;
     hazard.rt = null;
     hazard.preheldBrake = preheldBrake;
@@ -3720,6 +3780,109 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.eventResults.push(hazard.result);
     this.flashRed();
     if (this.hud) this.hud.event.textContent = hazard.result.label;
+  }
+
+  private syncInputPause(time: number) {
+    const inputAvailable = this.controlMode !== 'wheel' || (() => {
+      const wheel = FindDrivingWheelGamepad(navigator.getGamepads?.() ?? []);
+      return Boolean(
+        wheel
+        && this.wheelCalibration
+        && ReadDrivingWheelInput(wheel, this.wheelCalibration),
+      );
+    })();
+    if (!inputAvailable) {
+      if (this.inputPausedAt === 0) {
+        this.inputPausedAt = time;
+        this.keyState = { left: false, right: false, up: false, down: false };
+        this.lastBrakePressed = false;
+        if (this.inputPauseOverlay) this.inputPauseOverlay.style.display = 'grid';
+      }
+      return true;
+    }
+    if (this.inputPausedAt === 0) return false;
+
+    const pausedDuration = Math.max(0, time - this.inputPausedAt);
+    this.inputPausedAt = 0;
+    if (this.inputPauseOverlay) this.inputPauseOverlay.style.display = 'none';
+    this.shiftResponseClockAfterPause(pausedDuration);
+    this.lastFrameTime = time;
+    this.lastBrakePressed = this.readInput().brake > 0.35;
+    return false;
+  }
+
+  private attachVisibilityPauseListener() {
+    if (this.visibilityChangeListener) return;
+    this.visibilityChangeListener = () => {
+      const time = performance.now();
+      if (document.visibilityState !== 'visible') {
+        this.beginVisibilityPause(time);
+      } else {
+        this.endVisibilityPause(time);
+      }
+    };
+    document.addEventListener('visibilitychange', this.visibilityChangeListener);
+    if (document.visibilityState !== 'visible') {
+      this.beginVisibilityPause(performance.now());
+    }
+  }
+
+  private beginVisibilityPause(time: number) {
+    if (this.visibilityPausedAt === null) this.visibilityPausedAt = time;
+    this.keyState = { left: false, right: false, up: false, down: false };
+    this.pendingBrakeTimestamp = null;
+    this.lastBrakePressed = false;
+  }
+
+  private endVisibilityPause(time: number) {
+    if (this.visibilityPausedAt === null) return;
+    const pausedDuration = Math.max(0, time - this.visibilityPausedAt);
+    this.visibilityPausedAt = null;
+    this.shiftResponseClockAfterPause(pausedDuration);
+    // If a wheel-disconnect pause overlaps the hidden interval, move its start
+    // forward too so the same wall-clock duration is not excluded twice.
+    if (this.inputPausedAt > 0) this.inputPausedAt += pausedDuration;
+    this.lastFrameTime = time;
+    this.pendingBrakeTimestamp = null;
+    this.lastBrakePressed = this.controlMode === 'wheel'
+      ? this.readInput().brake > 0.35
+      : false;
+  }
+
+  private syncVisibilityPause(time: number) {
+    if (document.visibilityState !== 'visible') {
+      this.beginVisibilityPause(time);
+      return true;
+    }
+    this.endVisibilityPause(time);
+    return false;
+  }
+
+  private excludeInactiveFrameGap(time: number) {
+    if (this.lastFrameTime <= 0) return;
+    const gap = time - this.lastFrameTime;
+    if (!Number.isFinite(gap) || gap <= this.maxSimulationCatchUpMs) return;
+    const excludedDuration = gap - this.maxSimulationCatchUpMs;
+    this.shiftResponseClockAfterPause(excludedDuration);
+    if (this.inputPausedAt > 0) this.inputPausedAt += excludedDuration;
+    this.lastFrameTime += excludedDuration;
+  }
+
+  private shiftResponseClockAfterPause(pausedDuration: number) {
+    if (pausedDuration <= 0) return;
+    for (const hazard of this.activeHazards) {
+      if (hazard.presentedAt !== null) hazard.presentedAt += pausedDuration;
+    }
+    this.rearviewLastUpdateTime = performance.now();
+    this.miniMapLastUpdateTime = performance.now();
+  }
+
+  private markHazardsPresented(time: number) {
+    for (const hazard of this.activeHazards) {
+      if (hazard.active && !hazard.resolved && hazard.group.visible && hazard.presentedAt === null) {
+        hazard.presentedAt = time;
+      }
+    }
   }
 
   private getHazardLeadDistance(id: HazardId): number {
@@ -4022,10 +4185,25 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private handleBrakePressed(time: number) {
     const hazard = this.activeHazards.find((item) => item.active && !item.resolved && item.brakeTime === null);
-    if (!hazard || hazard.preheldBrake) return;
+    if (!hazard || hazard.preheldBrake || hazard.presentedAt === null) return;
+    if (time < hazard.presentedAt) {
+      hazard.preheldBrake = true;
+      hazard.brakeTime = time;
+      hazard.result.brake_preheld = true;
+      hazard.result.valid = false;
+      hazard.result.response = 'invalid-preheld-brake';
+      return;
+    }
+    const reaction = CalculateFrameAlignedReactionTime(
+      hazard.presentedAt,
+      time,
+      this.refreshMeasured ? this.displayRefreshMs : Number.NaN,
+    );
     hazard.brakeTime = time;
-    hazard.rt = Math.round(time - hazard.startTime);
+    hazard.rt = reaction.rtMs;
     hazard.result.rt_ms = hazard.rt;
+    hazard.result.raw_rt_ms = reaction.rawRtMs;
+    hazard.result.reaction_frames = reaction.frameCount;
     hazard.result.response = 'brake';
     hazard.result.valid = true;
     if (this.hud) {
@@ -4181,70 +4359,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   /* ================================================================
-   * CAMERA - reference-style follow camera with view switching
+   * CAMERA - deterministic vehicle-relative rig with view switching
    * ================================================================ */
-  private updateCameraFree(dt: number) {
-    if (!this.camera) return;
-
-    const speedRatio = this.clamp(this.vehicleSpeed / this.maxVehicleSpeed, 0, 1);
-    const clock = performance.now() / 1000;
-    const firstPersonBob = this.cameraMode === 'first-person'
-      ? (Math.sin(clock * 13.5) * 0.014 + Math.sin(clock * 21.0) * 0.006) * speedRatio
-      : 0;
-    const brakeNod = this.cameraMode === 'first-person' && this.lastBrakePressed
-      ? this.lerp(0.012, 0.038, speedRatio)
-      : 0;
-    const forward = this.getForwardVector(this.vehicleHeading);
-    const three = this.requireThree();
-    const targetPosition = new three.Vector3();
-    const lookAt = new three.Vector3();
-
-    // vehicleX/Z is the single source of truth for the rendered and physical
-    // vehicle center, so both camera modes stay centered on the same heading axis.
-    if (this.cameraMode === 'third-person') {
-      const distance = 9.0;
-      const height = 3.35;
-      targetPosition.set(
-        this.vehicleX - forward.x * distance,
-        height,
-        this.vehicleZ - forward.z * distance,
-      );
-      lookAt.set(
-        this.vehicleX + forward.x * 10.5,
-        1.45,
-        this.vehicleZ + forward.z * 10.5,
-      );
-    } else {
-      targetPosition.set(
-        this.vehicleX + forward.x * this.firstPersonCameraForwardOffset,
-        this.firstPersonCameraHeight + firstPersonBob - brakeNod,
-        this.vehicleZ + forward.z * this.firstPersonCameraForwardOffset,
-      );
-      lookAt.set(
-        this.vehicleX + forward.x * this.firstPersonCameraLookAhead,
-        this.firstPersonCameraLookHeight + firstPersonBob * 0.45 - brakeNod * 0.35,
-        this.vehicleZ + forward.z * this.firstPersonCameraLookAhead,
-      );
-    }
-
-    if (this.cameraMode === 'third-person') {
-      const followResponse = 5.8;
-      const t = 1 - Math.exp(-followResponse * dt);
-      this.camera.position.lerp(targetPosition, t);
-    } else {
-      this.camera.position.copy(targetPosition);
-    }
-    this.camera.up.set(0, 1, 0);
-    this.camera.lookAt(lookAt);
-
-    const targetFov = this.cameraMode === 'third-person'
-      ? this.baseCameraFov - 3
-      : this.baseCameraFov + speedRatio * 2.4;
-    this.cameraFov = this.expSmoothing(this.cameraFov, targetFov, 3.2, dt);
-    if (Math.abs(this.camera.fov - this.cameraFov) > 0.01) {
-      this.camera.fov = this.cameraFov;
-      this.camera.updateProjectionMatrix();
-    }
+  private updateCameraFree() {
+    this.applyCameraPose();
   }
 
   /**
@@ -4253,40 +4371,24 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
    * shows the correct perspective instead of lerping from a stale camera pose.
    */
   private snapCameraToVehicle() {
-    if (!this.camera) return;
-    const three = this.requireThree();
-    const forward = this.getForwardVector(this.vehicleHeading);
-    const lookAt = new three.Vector3();
+    this.applyCameraPose();
+  }
 
-    if (this.cameraMode === 'third-person') {
-      this.camera.position.set(
-        this.vehicleX - forward.x * 9.0,
-        3.35,
-        this.vehicleZ - forward.z * 9.0,
-      );
-      lookAt.set(
-        this.vehicleX + forward.x * 10.5,
-        1.45,
-        this.vehicleZ + forward.z * 10.5,
-      );
-    } else {
-      this.camera.position.set(
-        this.vehicleX + forward.x * this.firstPersonCameraForwardOffset,
-        this.firstPersonCameraHeight,
-        this.vehicleZ + forward.z * this.firstPersonCameraForwardOffset,
-      );
-      lookAt.set(
-        this.vehicleX + forward.x * this.firstPersonCameraLookAhead,
-        this.firstPersonCameraLookHeight,
-        this.vehicleZ + forward.z * this.firstPersonCameraLookAhead,
-      );
+  private applyCameraPose() {
+    if (!this.camera) return;
+    const pose = CalculateDrivingCameraPose({
+      vehicleX: this.vehicleX,
+      vehicleZ: this.vehicleZ,
+      vehicleHeading: this.vehicleHeading,
+      mode: this.cameraMode,
+    });
+    this.camera.position.set(pose.position.x, pose.position.y, pose.position.z);
+    this.camera.up.set(pose.up.x, pose.up.y, pose.up.z);
+    this.camera.lookAt(pose.lookAt.x, pose.lookAt.y, pose.lookAt.z);
+    if (Math.abs(this.camera.fov - pose.fov) > 0.0001) {
+      this.camera.fov = pose.fov;
+      this.camera.updateProjectionMatrix();
     }
-    this.camera.up.set(0, 1, 0);
-    this.camera.lookAt(lookAt);
-    const targetFov = this.cameraMode === 'third-person' ? this.baseCameraFov - 3 : this.baseCameraFov;
-    this.cameraFov = targetFov;
-    this.camera.fov = targetFov;
-    this.camera.updateProjectionMatrix();
   }
 
   private cycleCameraMode() {
@@ -4382,36 +4484,38 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     let steering = 0;
     let throttle = this.keyState.up ? 1 : 0;
     let brake = this.keyState.down ? 1 : 0;
+    let brakeTimestamp = this.pendingBrakeTimestamp;
     let gamepadName = '';
 
     if (this.keyState.left) steering -= 1;
     if (this.keyState.right) steering += 1;
 
-    const gamepads = navigator.getGamepads?.() ?? [];
-    const gamepad = Array.from(gamepads).find((pad): pad is Gamepad => Boolean(pad));
+    const gamepad = FindDrivingWheelGamepad(navigator.getGamepads?.() ?? []);
     this.gamepadConnected = Boolean(gamepad);
-    if (this.controlMode === 'wheel' && gamepad) {
+    if (this.controlMode === 'wheel' && gamepad && this.wheelCalibration) {
       gamepadName = gamepad.id;
-      const axisSteering = Math.abs(gamepad.axes[0] ?? 0) > 0.08 ? gamepad.axes[0] : 0;
-      const throttleButton = Math.max(gamepad.buttons[7]?.value ?? 0, gamepad.buttons[0]?.value ?? 0);
-      const brakeButton = Math.max(gamepad.buttons[6]?.value ?? 0, gamepad.buttons[1]?.value ?? 0);
-      const throttleAxis = this.normalizePedalAxis(gamepad.axes[2] ?? gamepad.axes[5] ?? 1);
-      const brakeAxis = this.normalizePedalAxis(gamepad.axes[3] ?? gamepad.axes[4] ?? 1);
-      steering = Math.abs(axisSteering) > Math.abs(steering) ? axisSteering : steering;
-      throttle = Math.max(throttle, throttleButton, throttleAxis);
-      brake = Math.max(brake, brakeButton, brakeAxis);
+      const wheelInput = ReadDrivingWheelInput(gamepad, this.wheelCalibration);
+      if (wheelInput) {
+        steering = Math.abs(wheelInput.steering) > 0.03 ? wheelInput.steering : 0;
+        throttle = wheelInput.throttle;
+        brake = wheelInput.brake;
+        if (brake > 0.35 && Number.isFinite(gamepad.timestamp)) {
+          brakeTimestamp = this.normalizeInputTimestamp(gamepad.timestamp);
+        }
+      }
     }
 
     return {
       steering: Math.max(-1, Math.min(1, steering)),
       throttle: Math.max(0, Math.min(1, throttle)),
       brake: Math.max(0, Math.min(1, brake)),
+      brakeTimestamp,
       gamepadName,
     };
   }
 
   private getControlMode(value: unknown): DrivingControlMode {
-    return value === 'wasd' || value === 'wheel' ? value : 'arrow';
+    return value === 'wasd' || value === 'wheel' || value === 'touch' ? value : 'arrow';
   }
 
   private getLanguage(value: unknown): DrivingLanguage {
@@ -4440,11 +4544,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       (text, [key, value]) => text.replace(new RegExp(`{${key}}`, 'g'), String(value)),
       template,
     );
-  }
-
-  private normalizePedalAxis(value: number): number {
-    if (!Number.isFinite(value)) return 0;
-    return Math.max(0, Math.min(1, (1 - value) / 2));
   }
 
   private clamp(value: number, min: number, max: number): number {
@@ -4779,21 +4878,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.finished = true;
 
     const duration = this.trialStartTime > 0
-      ? Math.round(performance.now() - this.trialStartTime)
+      ? Math.round(Math.max(0, this.simulationTime - this.trialStartTime))
       : 0;
     const validEvents = this.eventResults.filter((event) => event.valid);
     const validRts = validEvents
       .filter((event) => event.rt_ms !== null)
-      .map((event) => event.rt_ms as number)
-      .sort((a, b) => a - b);
-    const averageRt = validRts.length
-      ? Math.round(validRts.reduce((sum, rt) => sum + rt, 0) / validRts.length)
-      : 0;
-    const medianRt = validRts.length
-      ? (validRts.length % 2
-        ? validRts[Math.floor(validRts.length / 2)]
-        : Math.round((validRts[validRts.length / 2 - 1] + validRts[validRts.length / 2]) / 2))
-      : 0;
+      .map((event) => event.rt_ms);
+    const reactionSummary = SummarizeReactionTimes(validRts);
     const collisions = this.eventResults.filter((event) => event.collision).length;
     const averageFps = this.fpsSamples.length
       ? Math.round(this.fpsSamples.reduce((sum, fps) => sum + fps, 0) / this.fpsSamples.length)
@@ -4804,18 +4895,24 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     displayElement.replaceChildren();
 
     this.jsPsych.finishTrial({
-      rt: averageRt,
+      rt: reactionSummary.averageMs,
       correct: response === 'completed' && collisions === 0,
       target: this.text.deliveryTarget,
       response,
       duration_ms: duration,
-      average_rt: averageRt,
-      median_rt: medianRt,
+      average_rt: reactionSummary.averageMs,
+      median_rt: reactionSummary.medianMs,
       valid_event_count: validEvents.length,
+      reaction_event_count: validRts.length,
       collisions,
       lane_deviations: this.laneDeviationCount,
       average_fps: averageFps,
+      display_refresh_hz: this.refreshMeasured ? Math.round(this.displayRefreshHz * 100) / 100 : 0,
+      display_refresh_ms: this.refreshMeasured ? Math.round(this.displayRefreshMs * 1000) / 1000 : 0,
+      refresh_sample_count: this.refreshSampleCount,
+      refresh_measurement_valid: this.refreshMeasured,
       rendering_quality: this.renderQuality.level,
+      control_mode: this.controlMode,
       route_id: this.selectedRouteVariant?.id ?? 'unknown',
       route_label: this.selectedRouteVariant?.label ?? 'Unknown route',
       route_progress: Math.round(this.progress * 10) / 10,
@@ -4842,17 +4939,29 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       window.removeEventListener('gamepaddisconnected', this.gamepadDisconnectedListener);
       this.gamepadDisconnectedListener = null;
     }
+    if (this.visibilityChangeListener) {
+      document.removeEventListener('visibilitychange', this.visibilityChangeListener);
+      this.visibilityChangeListener = null;
+    }
+    this.visibilityPausedAt = null;
+  }
+
+  private normalizeInputTimestamp(value: number) {
+    return NormalizeDrivingInputTimestamp(value, performance.now());
+  }
+
+  private captureBrakeInputTimestamp(value: number) {
+    const timestamp = this.normalizeInputTimestamp(value);
+    if (document.visibilityState !== 'visible' || this.visibilityPausedAt !== null) return;
+    this.excludeInactiveFrameGap(timestamp);
+    this.pendingBrakeTimestamp = timestamp;
+    this.lastBrakePressed = true;
+    if (!this.laneResetActive) this.handleBrakePressed(timestamp);
   }
 
   private detachResizeSync() {
-    if (this.resizeListener) {
-      window.removeEventListener('resize', this.resizeListener);
-      this.resizeListener = null;
-    }
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-      this.resizeObserver = null;
-    }
+    this.viewportController?.stop();
+    this.viewportController = null;
   }
 
   private clearLaneResetTimers() {
@@ -4867,6 +4976,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private cleanupRenderResources() {
+    this.unregisterRuntimeDisposer?.();
+    this.unregisterRuntimeDisposer = null;
     cancelAnimationFrame(this.raf);
     this.clearLaneResetTimers();
     this.detachResizeSync();
@@ -4898,10 +5009,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
     this.touchControlsRoot?.remove();
     this.touchControlsRoot = null;
-    this.orientationOverlay?.remove();
-    this.orientationOverlay = null;
-    this.portraitBlocked = false;
-    this.portraitBlockedAt = 0;
+    this.inputPauseOverlay?.remove();
+    this.inputPauseOverlay = null;
+    this.inputPausedAt = 0;
+    this.visibilityPausedAt = null;
     this.camera = null;
     this.rearviewCamera = null;
     this.rearviewLookAt = null;
@@ -4954,11 +5065,11 @@ function CreateDrivingTouchButton(label: string, ariaLabel: string) {
     minWidth: '58px',
     height: '58px',
     padding: '0 14px',
-    border: '1px solid rgba(255, 255, 255, 0.52)',
+    border: '1px solid var(--border-hover)',
     borderRadius: '12px',
-    background: 'rgba(15, 23, 42, 0.5)',
-    color: '#ffffff',
-    boxShadow: '0 10px 24px rgba(0, 0, 0, 0.22)',
+    background: 'var(--bg-overlay)',
+    color: 'var(--text-primary)',
+    boxShadow: 'var(--shadow-floating)',
     cursor: 'pointer',
     fontFamily: typography.fontFamily,
     fontSize: '22px',
@@ -4971,22 +5082,17 @@ function CreateDrivingTouchButton(label: string, ariaLabel: string) {
     WebkitBackdropFilter: 'blur(8px)',
   });
   button.addEventListener('pointerdown', () => {
-    button.style.background = 'rgba(37, 99, 235, 0.74)';
-    button.style.transform = 'scale(0.96)';
+    button.style.background = 'var(--accent)';
+    button.style.setProperty('scale', '0.96');
   });
   const clearActive = () => {
-    button.style.background = 'rgba(15, 23, 42, 0.5)';
-    button.style.transform = 'scale(1)';
+    button.style.background = 'var(--bg-overlay)';
+    button.style.setProperty('scale', '1');
   };
   button.addEventListener('pointerup', clearActive);
   button.addEventListener('pointercancel', clearActive);
   button.addEventListener('pointerleave', clearActive);
   return button;
-}
-
-function ShouldShowDrivingTouchControls() {
-  return navigator.maxTouchPoints > 0
-    || (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches);
 }
 
 export default ThreeDrivingRehabPlugin;

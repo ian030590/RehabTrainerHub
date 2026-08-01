@@ -4,6 +4,8 @@ export interface DisplayRefreshInfo {
   refreshMs: number;
   refreshHz: number;
   sampleCount: number;
+  measured: boolean;
+  isFallback: boolean;
   standardDeviationMs: number;
   nearest60HzMultiple: number;
   is60HzFamily: boolean;
@@ -13,14 +15,18 @@ export interface DisplayRefreshInfo {
 
 export interface DisplayRefreshMeasureOptions {
   sampleCount?: number;
+  minimumSampleCount?: number;
   minSampleMs?: number;
   maxSampleMs?: number;
+  timeoutMs?: number;
 }
 
 const defaultRefreshMs = 1000 / 60;
 const defaultSampleCount = 72;
-const defaultMinSampleMs = 4;
+const defaultMinSampleMs = 1;
 const defaultMaxSampleMs = 80;
+const defaultTimeoutMs = 3_500;
+const defaultMinimumSampleCount = 8;
 
 export async function MeasureDisplayRefreshRate(
   options: DisplayRefreshMeasureOptions = {},
@@ -29,14 +35,59 @@ export async function MeasureDisplayRefreshRate(
     return CreateRefreshInfo(defaultRefreshMs, [], DetectDisplayDeviceKind());
   }
 
-  const targetSamples = options.sampleCount ?? defaultSampleCount;
+  const targetSamples = Math.max(1, Math.floor(options.sampleCount ?? defaultSampleCount));
+  const minimumSampleCount = Math.min(
+    targetSamples,
+    Math.max(1, Math.floor(options.minimumSampleCount ?? defaultMinimumSampleCount)),
+  );
   const minSampleMs = options.minSampleMs ?? defaultMinSampleMs;
   const maxSampleMs = options.maxSampleMs ?? defaultMaxSampleMs;
+  const timeoutMs = options.timeoutMs ?? defaultTimeoutMs;
   const samples: number[] = [];
   let lastTimestamp = 0;
 
   await new Promise<void>((resolve) => {
+    let finished = false;
+    let frameId = 0;
+    let sampleTimeoutId = 0;
+    let watchdogTimeoutId = 0;
+
+    const scheduleFrame = () => {
+      if (finished || frameId) return;
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        if (frameId) window.cancelAnimationFrame(frameId);
+        if (sampleTimeoutId) window.clearTimeout(sampleTimeoutId);
+        frameId = 0;
+        sampleTimeoutId = 0;
+        lastTimestamp = 0;
+        return;
+      }
+      scheduleFrame();
+    };
+
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (frameId) window.cancelAnimationFrame(frameId);
+      if (sampleTimeoutId) window.clearTimeout(sampleTimeoutId);
+      if (watchdogTimeoutId) window.clearTimeout(watchdogTimeoutId);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+      resolve();
+    };
+
     const tick = (timestamp: number) => {
+      if (finished) return;
+      frameId = 0;
+      if (!sampleTimeoutId) {
+        sampleTimeoutId = window.setTimeout(finish, Math.max(250, timeoutMs));
+      }
       if (lastTimestamp > 0) {
         const delta = timestamp - lastTimestamp;
         if (delta >= minSampleMs && delta <= maxSampleMs) {
@@ -46,19 +97,24 @@ export async function MeasureDisplayRefreshRate(
 
       lastTimestamp = timestamp;
       if (samples.length >= targetSamples) {
-        resolve();
+        finish();
         return;
       }
 
-      window.requestAnimationFrame(tick);
+      scheduleFrame();
     };
 
-    window.requestAnimationFrame(tick);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+    scheduleFrame();
+    watchdogTimeoutId = window.setTimeout(finish, Math.max(30_000, timeoutMs * 10));
   });
 
   const usableSamples = TrimOutliers(samples);
-  const refreshMs = Median(usableSamples) || defaultRefreshMs;
-  return CreateRefreshInfo(refreshMs, usableSamples, DetectDisplayDeviceKind());
+  const reliableSamples = usableSamples.length >= minimumSampleCount ? usableSamples : [];
+  const refreshMs = Median(reliableSamples) || defaultRefreshMs;
+  return CreateRefreshInfo(refreshMs, reliableSamples, DetectDisplayDeviceKind());
 }
 
 export function DetectDisplayDeviceKind(): DisplayDeviceKind {
@@ -104,6 +160,8 @@ function CreateRefreshInfo(
     refreshMs,
     refreshHz,
     sampleCount: samples.length,
+    measured: samples.length > 0,
+    isFallback: samples.length === 0,
     standardDeviationMs: StandardDeviation(samples, refreshMs),
     nearest60HzMultiple,
     is60HzFamily: Is60HzRefreshFamily(refreshHz),

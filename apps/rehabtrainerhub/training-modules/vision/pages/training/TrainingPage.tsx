@@ -9,6 +9,8 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { useT } from '../../i18n';
 import { BuildTimeline } from '../../experiment/timeline';
+import { ParseDrivingWheelCalibration } from '../../experiment/plugins/driving/driving-input';
+import { DisposeDrivingRehabRuntime } from '../../experiment/plugins/driving/driving-runtime-lifecycle';
 import {
   getActiveUser,
   GetSetting,
@@ -20,6 +22,12 @@ import { soundManager } from '../../utils/soundManager';
 import { SaveTrainingRecord } from '../../utils/trainingRecords';
 import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
 import { ResetWebGazerCalibrationData } from '../../utils/webgazerCalibration';
+import {
+  GetDrivingInputCapabilitiesSnapshot,
+  IsDrivingControlModeAvailable,
+  IsDrivingWheelCalibrationUsable,
+  useDrivingInputCapabilities,
+} from '../../utils/drivingInputCapabilities';
 import {
   isOculomotorMode,
   isOculomotorPattern,
@@ -132,16 +140,57 @@ function TrainingRuntimePage() {
     : GetSetting('drivingRenderQuality');
   const gaborDurationSec = parseInt(searchParams.get('duration') || '', 10) || 60;
   const gaborMaxSpots = parseInt(searchParams.get('maxSpots') || '', 10) || 10;
+  const drivingInputCapabilities = useDrivingInputCapabilities();
+  const drivingWheelCalibration = ParseDrivingWheelCalibration(
+    GetSetting('drivingWheelCalibration'),
+  );
+  const drivingInputKey = `driving:${drivingControlMode}`;
+  const drivingInputAvailable = IsDrivingControlModeAvailable(
+    drivingControlMode,
+    drivingInputCapabilities,
+  ) && (
+    drivingControlMode !== 'wheel'
+    || IsDrivingWheelCalibrationUsable(drivingWheelCalibration)
+  );
 
   const [phase, setPhase] = useState<Phase>('running');
   const [results, setResults] = useState<TrialData[]>([]);
+  const [acceptedDrivingInputKey, setAcceptedDrivingInputKey] = useState<string | null>(() => (
+    moduleId === 'driving-rehab'
+    && (() => {
+      const capabilities = GetDrivingInputCapabilitiesSnapshot();
+      return IsDrivingControlModeAvailable(drivingControlMode, capabilities)
+        && (
+          drivingControlMode !== 'wheel'
+          || IsDrivingWheelCalibrationUsable(drivingWheelCalibration)
+        );
+    })()
+      ? drivingInputKey
+      : null
+  ));
   const jsPsychRef = useRef<JsPsych | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const skipFinishRef = useRef(false);
   const userName = getActiveUser() || t('exp.unknownUser');
+  const drivingInputAccepted = moduleId !== 'driving-rehab'
+    || acceptedDrivingInputKey === drivingInputKey;
+  const drivingInputGateMessage = drivingControlMode === 'arrow' || drivingControlMode === 'wasd'
+    ? t('home.config.drivingKeyboardUnknown')
+    : drivingControlMode === 'touch'
+      ? t('home.config.drivingTouchMissing')
+      : drivingInputCapabilities.wheelDevice
+        ? t('home.config.drivingWheelCalibrationStart')
+        : t('home.config.drivingWheelMissing');
+
+  useEffect(() => {
+    if (moduleId === 'driving-rehab' && drivingInputAvailable) {
+      setAcceptedDrivingInputKey(drivingInputKey);
+    }
+  }, [drivingInputAvailable, drivingInputKey, moduleId]);
 
   useEffect(() => {
     if (phase !== 'running') return;
+    if (!drivingInputAccepted) return;
     if (!containerRef.current) return;
     if (jsPsychRef.current) return;
 
@@ -246,6 +295,7 @@ function TrainingRuntimePage() {
           redFlashEnabled: drivingRedFlashEnabled,
           difficulty: drivingDifficulty,
           controlMode: drivingControlMode,
+          wheelCalibration: drivingWheelCalibration,
           renderQuality: drivingRenderQuality,
           language: lang,
         },
@@ -268,9 +318,12 @@ function TrainingRuntimePage() {
       cancelled = true;
       soundManager.destroy();
       DestroyPixiTrainingRuntime(moduleId);
-      if (jsPsychRef.current) {
-        jsPsychRef.current = null;
-      }
+      if (moduleId === 'driving-rehab') DisposeDrivingRehabRuntime();
+      const activeJsPsych = jsPsychRef.current;
+      if (!activeJsPsych) return;
+      skipFinishRef.current = true;
+      jsPsychRef.current = null;
+      activeJsPsych.abortExperiment();
     };
   }, [
     phase,
@@ -293,6 +346,7 @@ function TrainingRuntimePage() {
     drivingRedFlashEnabled,
     drivingDifficulty,
     drivingControlMode,
+    drivingInputAccepted,
     drivingRenderQuality,
     userName,
     lang,
@@ -308,6 +362,7 @@ function TrainingRuntimePage() {
     jsPsychRef.current = null;
     jsPsych?.abortExperiment();
     DestroyPixiTrainingRuntime(moduleId);
+    if (moduleId === 'driving-rehab') DisposeDrivingRehabRuntime();
     setResults([]);
     navigate('/');
   }, [moduleId, navigate, phase]);
@@ -318,6 +373,50 @@ function TrainingRuntimePage() {
   });
 
   if (phase === 'running') {
+    if (!drivingInputAccepted) {
+      return (
+        <div className="experiment-container">
+          <section
+            role="alert"
+            aria-live="polite"
+            style={{
+              width: 'min(560px, calc(100% - 32px))',
+              margin: 'auto',
+              padding: '24px',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-l)',
+              background: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              boxShadow: 'var(--shadow-lg)',
+              textAlign: 'center',
+            }}
+          >
+            <h1 style={{ margin: '0 0 10px', fontSize: '1.35rem' }}>
+              {t('home.config.drivingControlUnavailable')}
+            </h1>
+            <p style={{ margin: '0 0 18px', color: 'var(--text-muted)' }}>
+              {drivingInputGateMessage}
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px' }}>
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => drivingInputCapabilities.rescan()}
+              >
+                {t('home.config.drivingRescanInputs')}
+              </button>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={() => navigate('/?module=driving-rehab')}
+              >
+                {t('common.back')}
+              </button>
+            </div>
+          </section>
+        </div>
+      );
+    }
     return (
       <div key="running" className="experiment-container">
         <div

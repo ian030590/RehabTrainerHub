@@ -4,7 +4,9 @@ import type { HazardId } from './types';
 export const drivingText = {
   zh: {
     controllerConnected: '已連接控制器：{id}',
-    controllerDisconnected: '控制器已中斷，改用鍵盤控制',
+    controllerDisconnected: '方向盤已中斷，請重新連接後繼續',
+    inputPausedTitle: '控制裝置已中斷，訓練已暫停',
+    inputPausedDetail: '重新連接並校正過的方向盤後，計時與事件會從暫停處繼續。按 Esc 可離開訓練。',
     taskDelivery: '任務：A 點送貨至 B 點',
     watchRoad: '保持車道並注意突發事件',
     navigation: '導航',
@@ -33,7 +35,9 @@ export const drivingText = {
   },
   en: {
     controllerConnected: 'Controller connected: {id}',
-    controllerDisconnected: 'Controller disconnected; using keyboard control',
+    controllerDisconnected: 'Steering wheel disconnected; reconnect it to continue',
+    inputPausedTitle: 'Control device disconnected — training paused',
+    inputPausedDetail: 'Reconnect the calibrated steering wheel to resume timing and events. Press Escape to leave training.',
     taskDelivery: 'Task: deliver from point A to point B',
     watchRoad: 'Stay in lane and watch for hazards',
     navigation: 'Navigation',

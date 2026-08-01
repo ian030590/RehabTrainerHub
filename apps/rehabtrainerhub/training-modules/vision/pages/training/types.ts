@@ -8,6 +8,8 @@ export interface DrivingEventResult {
   label: string;
   distance_m: number;
   rt_ms: number | null;
+  raw_rt_ms?: number | null;
+  reaction_frames?: number | null;
   valid: boolean;
   collision: boolean;
   brake_preheld: boolean;
@@ -24,6 +26,10 @@ export interface TrialData {
   pattern?: string;
   acquired_targets?: number;
   average_fps?: number;
+  display_refresh_hz?: number;
+  display_refresh_ms?: number;
+  refresh_sample_count?: number;
+  refresh_measurement_valid?: boolean;
   duration_ms?: number;
   score?: number;
   trial_type?: string;
@@ -33,9 +39,11 @@ export interface TrialData {
   average_rt?: number;
   median_rt?: number;
   valid_event_count?: number;
+  reaction_event_count?: number;
   collisions?: number;
   lane_deviations?: number;
   rendering_quality?: string;
+  control_mode?: string;
   route_id?: string;
   route_label?: string;
   route_progress?: number;

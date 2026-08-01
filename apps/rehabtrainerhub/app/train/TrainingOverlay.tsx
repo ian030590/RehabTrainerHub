@@ -133,7 +133,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
           <span className="training-loading-spinner" aria-hidden="true" />
         </div>
         <iframe
-          allow="autoplay; camera; microphone; fullscreen"
+          allow="autoplay; camera; microphone; gamepad; fullscreen"
           allowFullScreen
           className={isLoaded ? 'is-loaded' : undefined}
           onLoad={() => setIsLoaded(true)}
