@@ -647,6 +647,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       zIndex: '12',
       pointerEvents: 'none',
       touchAction: 'none',
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
     });
 
     const steering = document.createElement('div');
@@ -655,8 +657,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       position: 'absolute',
       left: 'max(14px, env(safe-area-inset-left))',
       bottom: 'max(14px, env(safe-area-inset-bottom))',
-      display: 'flex',
-      gap: '8px',
+      width: '140px',
+      height: '140px',
       pointerEvents: 'auto',
     });
 
@@ -666,7 +668,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       position: 'absolute',
       right: 'max(14px, env(safe-area-inset-right))',
       bottom: 'max(14px, env(safe-area-inset-bottom))',
-      display: 'grid',
+      display: 'flex',
       gap: '8px',
       pointerEvents: 'auto',
     });
@@ -689,44 +691,92 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.cycleCameraMode();
     });
 
-    const left = this.createDrivingPressButton('◀', 'Steer left', ['left']);
-    const right = this.createDrivingPressButton('▶', 'Steer right', ['right']);
-    const throttle = this.createDrivingPressButton(this.language === 'en' ? 'GO' : '前進', 'Throttle', ['up']);
-    const brake = this.createDrivingPressButton(this.language === 'en' ? 'BRAKE' : '煞車', 'Brake', ['down']);
+    const wheel = document.createElement('div');
+    wheel.dataset.drivingControlVisual = 'wheel';
+    Object.assign(wheel.style, {
+      position: 'absolute',
+      inset: '0',
+      background: 'var(--accent)',
+      mask: 'url(/assets/driving-controls/steering-wheel.svg) center / contain no-repeat',
+      WebkitMask: 'url(/assets/driving-controls/steering-wheel.svg) center / contain no-repeat',
+      filter: 'drop-shadow(0 4px 8px var(--bg-overlay))',
+      pointerEvents: 'none',
+      transition: 'transform 120ms ease-out',
+    });
+    const left = this.createDrivingPressButton('', 'Steer left', ['left']);
+    const right = this.createDrivingPressButton('', 'Steer right', ['right']);
+    const throttle = this.createDrivingPressButton('', 'Throttle', ['up']);
+    const brake = this.createDrivingPressButton('', 'Brake', ['down']);
 
     for (const button of [left, right]) {
       Object.assign(button.style, {
-        minWidth: '76px',
-        width: '76px',
-        height: '70px',
+        position: 'absolute',
+        top: '0',
+        bottom: '0',
+        minWidth: '0',
+        width: '50%',
+        height: '100%',
         padding: '0',
-        borderRadius: '18px',
-        fontSize: '29px',
+        border: '0',
+        borderRadius: '50%',
+        background: 'transparent',
+        boxShadow: 'none',
       });
+    }
+    left.style.left = '0';
+    right.style.right = '0';
+    const renderWheel = () => {
+      wheel.style.transform = `rotate(${this.keyState.left ? -28 : this.keyState.right ? 28 : 0}deg) scale(${this.keyState.left || this.keyState.right ? 0.96 : 1})`;
+    };
+    for (const button of [left, right]) {
+      button.addEventListener('pointerdown', renderWheel);
+      button.addEventListener('pointerup', renderWheel);
+      button.addEventListener('pointercancel', renderWheel);
+      button.addEventListener('lostpointercapture', renderWheel);
     }
     Object.assign(throttle.style, {
       minWidth: '88px',
       width: '88px',
       height: '64px',
-      padding: '0 10px',
+      padding: '9px 24px',
       borderRadius: '18px',
       background: 'color-mix(in srgb, var(--success) 72%, transparent)',
-      fontSize: '15px',
-      letterSpacing: '0.04em',
+      backgroundImage: 'url(/assets/driving-controls/car-pedals.svg)',
+      backgroundPosition: '25% 52%',
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: '650% auto',
+      color: 'var(--text-on-accent)',
+      transformOrigin: 'bottom',
+      transition: 'transform 90ms ease-out, filter 90ms ease-out',
     });
     Object.assign(brake.style, {
       minWidth: '88px',
       width: '88px',
       height: '64px',
-      padding: '0 8px',
+      padding: '12px 10px',
       borderRadius: '18px',
       background: 'color-mix(in srgb, var(--error) 76%, transparent)',
-      fontSize: '13px',
-      letterSpacing: '0.03em',
+      backgroundImage: 'url(/assets/driving-controls/car-pedals.svg)',
+      backgroundPosition: '59% 54%',
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: '650% auto',
+      color: 'var(--text-on-accent)',
+      transformOrigin: 'bottom',
+      transition: 'transform 90ms ease-out, filter 90ms ease-out',
     });
+    for (const [button, key] of [[brake, 'down'], [throttle, 'up']] as const) {
+      const renderPedal = () => {
+        const pressed = this.keyState[key];
+        button.style.transform = pressed ? 'perspective(120px) rotateX(-14deg) translateY(7px)' : 'none';
+      };
+      button.addEventListener('pointerdown', renderPedal);
+      button.addEventListener('pointerup', renderPedal);
+      button.addEventListener('pointercancel', renderPedal);
+      button.addEventListener('lostpointercapture', renderPedal);
+    }
 
-    steering.append(left, right);
-    pedals.append(throttle, brake);
+    steering.append(wheel, left, right);
+    pedals.append(brake, throttle);
     controls.append(steering, pedals, camera);
     root.appendChild(controls);
     this.touchControlsRoot = controls;
@@ -925,9 +975,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const steering = controls.querySelector<HTMLElement>('[data-driving-control-group="steering"]');
     const pedals = controls.querySelector<HTMLElement>('[data-driving-control-group="pedals"]');
     const camera = controls.querySelector<HTMLElement>('[data-driving-control-group="camera"]');
-    const steeringButtons = steering?.querySelectorAll<HTMLElement>('button') ?? [];
     const pedalButtons = pedals?.querySelectorAll<HTMLElement>('button') ?? [];
-    const steeringSize = compact ? Math.max(44, Math.min(60, Math.floor((width - 100) / 2))) : 76;
+    const steeringSize = compact ? Math.max(92, Math.min(116, Math.floor(width * 0.3))) : 140;
     const pedalWidth = compact ? Math.max(54, Math.min(72, Math.floor(width * 0.21))) : 88;
     const pedalHeight = compact ? 52 : 64;
     const sideInset = compact ? 'max(8px, env(safe-area-inset-left))' : 'max(14px, env(safe-area-inset-left))';
@@ -936,16 +985,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (steering) {
       steering.style.left = sideInset;
       steering.style.bottom = veryNarrow
-        ? `calc(${bottomInset} + ${pedalHeight * 2 + 18}px)`
+        ? `calc(${bottomInset} + ${pedalHeight + 18}px)`
         : bottomInset;
-      steering.style.gap = compact ? '6px' : '8px';
-    }
-    for (const button of steeringButtons) {
-      button.style.minWidth = `${steeringSize}px`;
-      button.style.width = `${steeringSize}px`;
-      button.style.height = `${compact ? 56 : 70}px`;
-      button.style.borderRadius = compact ? '15px' : '18px';
-      button.style.fontSize = compact ? '24px' : '29px';
+      steering.style.width = `${steeringSize}px`;
+      steering.style.height = `${steeringSize}px`;
     }
     if (pedals) {
       pedals.style.right = compact
@@ -965,7 +1008,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       camera.style.minWidth = compact ? '54px' : '64px';
       camera.style.height = compact ? '40px' : '44px';
       camera.style.bottom = compact
-        ? `calc(${bottomInset} + ${veryNarrow ? pedalHeight * 2 + 82 : pedalHeight * 2 + 18}px)`
+        ? `calc(${bottomInset} + ${veryNarrow ? pedalHeight + steeringSize + 26 : pedalHeight + 18}px)`
         : bottomInset;
       camera.style.fontSize = compact ? '11px' : '13px';
     }
@@ -5077,17 +5120,18 @@ function CreateDrivingTouchButton(label: string, ariaLabel: string) {
     lineHeight: '1',
     touchAction: 'none',
     userSelect: 'none',
+    WebkitUserSelect: 'none',
     WebkitTapHighlightColor: 'transparent',
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
   });
   button.addEventListener('pointerdown', () => {
-    button.style.background = 'var(--accent)';
     button.style.setProperty('scale', '0.96');
+    button.style.filter = 'brightness(0.84)';
   });
   const clearActive = () => {
-    button.style.background = 'var(--bg-overlay)';
     button.style.setProperty('scale', '1');
+    button.style.filter = '';
   };
   button.addEventListener('pointerup', clearActive);
   button.addEventListener('pointercancel', clearActive);
