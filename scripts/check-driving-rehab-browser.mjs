@@ -207,6 +207,12 @@ try {
   });
   const portraitTouchState = await ReadTouchControlState(cdp, sessionId);
   AssertPortraitTouchControls(portraitTouchState);
+  const wheelPressState = await PressTouchControl(cdp, sessionId, 'Steer left', '[data-driving-control-visual="wheel"]');
+  assert.match(wheelPressState.pressedTransform, /rotate\(-28deg\)/, 'steering wheel must turn left while pressed');
+  assert.match(wheelPressState.releasedTransform, /rotate\(0deg\)/, 'steering wheel must return after release');
+  const brakePressState = await PressTouchControl(cdp, sessionId, 'Brake', 'button[aria-label="Brake"]');
+  assert.match(brakePressState.pressedTransform, /rotateX\(-14deg\)/, 'brake pedal must depress while pressed');
+  assert.equal(brakePressState.releasedTransform, 'none', 'brake pedal must return after release');
   const cameraPressState = await PressTouchCameraControl(cdp, sessionId);
   assert.ok(
     NearlyEqual(cameraPressState.beforeCenterX, cameraPressState.afterCenterX, 0.5),
@@ -541,6 +547,25 @@ async function PressTouchCameraControl(cdpClient, targetSessionId) {
   };
 }
 
+async function PressTouchControl(cdpClient, targetSessionId, label, visualSelector) {
+  const center = await Evaluate(cdpClient, targetSessionId, `(() => {
+    const button = document.querySelector('button[aria-label=${JSON.stringify(label)}]');
+    if (!(button instanceof HTMLButtonElement)) return null;
+    const rect = button.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  })()`);
+  assert.ok(center, `${label} touch control is missing`);
+  await cdpClient.Send('Input.dispatchMouseEvent', {
+    type: 'mousePressed', x: center.x, y: center.y, button: 'left', clickCount: 1,
+  }, targetSessionId);
+  const pressedTransform = await Evaluate(cdpClient, targetSessionId, `document.querySelector(${JSON.stringify(visualSelector)})?.style.transform`);
+  await cdpClient.Send('Input.dispatchMouseEvent', {
+    type: 'mouseReleased', x: center.x, y: center.y, button: 'left', clickCount: 1,
+  }, targetSessionId);
+  const releasedTransform = await Evaluate(cdpClient, targetSessionId, `document.querySelector(${JSON.stringify(visualSelector)})?.style.transform`);
+  return { pressedTransform, releasedTransform };
+}
+
 async function DispatchTrustedKeyboardEvent(cdpClient, targetSessionId) {
   await cdpClient.Send('Input.dispatchKeyEvent', {
     type: 'keyDown',
@@ -687,6 +712,7 @@ async function ReadTouchControlState(cdpClient, targetSessionId) {
     return {
       root: root ? toRect(root) : null,
       maxTouchPoints: navigator.maxTouchPoints,
+      userSelect: controls ? getComputedStyle(controls).userSelect : null,
       buttons: controls ? Array.from(controls.querySelectorAll('button')).map((button) => ({
         label: button.getAttribute('aria-label'),
         ...toRect(button),
@@ -836,6 +862,7 @@ function AssertDrivingConfigState(state, expected) {
 function AssertPortraitTouchControls(state) {
   assert.equal(state.maxTouchPoints, 5, 'portrait touch preload');
   assert.ok(state.root, 'portrait driving root is missing');
+  assert.equal(state.userSelect, 'none', 'touch-control text must not be selectable');
   assert.equal(state.buttons.length, 5, 'portrait touch button count');
   for (const button of state.buttons) {
     assert.ok(button.width >= 40 && button.height >= 40, `${button.label}: minimum touch target`);
