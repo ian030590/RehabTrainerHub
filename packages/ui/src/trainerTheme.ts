@@ -28,7 +28,7 @@ export const pixiColors = Object.fromEntries(
 ) as { readonly [K in keyof typeof colorTokens]: number };
 
 export const typography = {
-  fontFamily: "'Microsoft JhengHei', 'Microsoft JhengHei UI', 'PingFang TC', 'Noto Sans TC', Arial, sans-serif",
+  fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Microsoft JhengHei UI', Arial, sans-serif",
   fontSizeXS: 12,
   fontSizeS: 14,
   fontSizeM: 16,

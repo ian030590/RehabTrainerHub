@@ -17,10 +17,10 @@ export const rehabTheme = {
   },
   fontFamily: {
     sans: [
+      'Noto Sans TC',
+      'PingFang TC',
       'Microsoft JhengHei',
       'Microsoft JhengHei UI',
-      'PingFang TC',
-      'Noto Sans TC',
       'Arial',
       'sans-serif',
     ],

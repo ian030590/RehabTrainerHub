@@ -24,7 +24,7 @@
   --shadow-md: 0 8px 24px rgba(20, 33, 43, 0.12);
   --page-max: 1540px;
   --radius: 8px;
-  --font-body: "Microsoft JhengHei", "Microsoft JhengHei UI", "PingFang TC", "Noto Sans TC", Arial, sans-serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Microsoft JhengHei UI", Arial, sans-serif;
 
   /* Shared AuthPanel tokens */
   --bg-card: var(--surface);
