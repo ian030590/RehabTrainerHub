@@ -25,7 +25,8 @@ const cssVariables = {
   '--bg-accent-soft-hover': 'rgba(122, 74, 36, 0.14)',
   '--font-family': typography.fontFamily,
   '--ui-font-size': '18px',
-  '--ui-font-scale': '1',
+  // Increased to 1.25 for better readability for elderly users (was 1)
+  '--ui-font-scale': '1.25',
   '--ui-font-weight': '500',
   '--ui-font-medium-weight': '700',
   '--ui-font-heading-weight': '800',
