@@ -571,8 +571,8 @@ export function AuthPanel({
       {user && !user.profileCompleted && <p className="auth-panel-note">{labels.profileNeeded}</p>}
 
       {accountDialogMode && (
-        <div className="auth-dialog-backdrop">
-          <div className="auth-dialog auth-account-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-account-title">
+        <div className="auth-dialog-backdrop" onClick={closeAccountDialog}>
+          <div className="auth-dialog auth-account-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-account-title" onClick={(e) => e.stopPropagation()}>
             <h2 id="auth-account-title">
               {accountDialogMode === 'register' ? labels.authTitleRegister : labels.authTitleLogin}
             </h2>
@@ -679,8 +679,8 @@ export function AuthPanel({
       )}
 
       {isProfileOpen && (
-        <div className="auth-dialog-backdrop">
-          <div className="auth-dialog auth-profile-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-profile-title">
+        <div className="auth-dialog-backdrop" onClick={() => setIsProfileOpen(false)}>
+          <div className="auth-dialog auth-profile-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-profile-title" onClick={(e) => e.stopPropagation()}>
             <h2 id="auth-profile-title">{labels.profileTitle}</h2>
             <p>{labels.profileIntro}</p>
             <h3 className="auth-section-heading">{labels.basicQuestionnaire}</h3>
