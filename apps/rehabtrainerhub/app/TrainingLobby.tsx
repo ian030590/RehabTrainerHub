@@ -17,6 +17,7 @@ import {
 import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
 import { GetHubUiCopy } from './i18n';
 import { useHubLanguage } from './i18n/HubLanguage';
+import { hubFullName } from './hubBrand';
 
 const trainerVisuals: Record<TrainerCatalogId, {
   name: string;
@@ -123,8 +124,11 @@ export function TrainingLobby() {
     <main className="lobby-page" id="main-content">
       <section className="lobby-heading" aria-labelledby="lobby-title">
         <div>
-          <p className="page-kicker">Rehab Trainer Hub</p>
-          <h1 id="lobby-title">{copy.title}</h1>
+          <p className="page-kicker">{hubFullName}</p>
+          <h1 id="lobby-title">
+            <span className="sr-only">{hubFullName} </span>
+            {copy.title}
+          </h1>
           <p>{copy.intro}</p>
         </div>
 

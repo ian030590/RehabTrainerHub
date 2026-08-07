@@ -125,8 +125,11 @@ html, body, #root {
 }
 
 /* Full-screen overlay for WebGazer calibration.
-   Rendered via React Portal on document.body, so it must cover everything. */
+   Rendered via React Portal on document.body, so it must cover everything.
+   Always in the DOM (no conditional rendering) to guarantee containerRef is
+   populated before jsPsych is initialised; visibility is toggled by .is-active. */
 .webgazer-fullscreen-overlay {
+  display: none;
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -136,6 +139,10 @@ html, body, #root {
   background: var(--bg);
   overflow: hidden;
   isolation: isolate;
+}
+
+.webgazer-fullscreen-overlay.is-active {
+  display: block;
 }
 
 .webgazer-fullscreen-stage {

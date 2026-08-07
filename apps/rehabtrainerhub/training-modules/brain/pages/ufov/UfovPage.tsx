@@ -338,7 +338,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     run.results.push({
       subtestId: subtests[run.subtestIndex].id,
       thresholdMs: config.mode === 'formal' && !aborted
-        ? EstimateUfovThresholdMs(run.reversals, run.subtestTrials, FramesToMs(run.maxDurationFrames, run.refreshMs))
+        ? EstimateUfovThresholdMs(run, run.subtestTrials, FramesToMs(run.maxDurationFrames, run.refreshMs))
         : AverageTrialDuration(run.subtestTrials),
       trialCount: run.subtestTrials.filter((item) => !item.practice).length,
       aborted,

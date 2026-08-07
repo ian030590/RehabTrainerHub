@@ -40,8 +40,8 @@ export const zhTW = {
   },
   home: {
     documentLanguage: 'zh-Hant-TW',
-    brandSubtitle: '居家訓練入口',
-    navigationLabel: `${hubName} 導覽`,
+    brandSubtitle: '居家訓練網',
+    navigationLabel: `居家訓練網 ${hubName} 導覽`,
     hero: {
       eyebrow: '居家訓練入口',
       title: '職能治療師開發的居家訓練工具',
@@ -253,8 +253,8 @@ export const zhTW = {
   },
   hubUi: {
     navigation: {
-      brandSubtitle: '居家訓練入口',
-      navigationLabel: 'Rehab Trainer Hub 導覽',
+      brandSubtitle: '居家訓練網',
+      navigationLabel: '居家訓練網 Rehab Trainer Hub 導覽',
       navigationItems: ['訓練大廳', '進度追蹤', '衛教資訊', '下載程式'],
       accountMenu: '帳戶選單',
       admin: '治療師後台',

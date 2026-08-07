@@ -94,12 +94,20 @@ export function ShouldStopUfovAdaptiveRun(
 }
 
 export function EstimateUfovThresholdMs(
-  reversals: readonly number[],
+  run: UfovAdaptiveRunState,
   trials: readonly UfovStimulusDurationTrial[],
   fallbackMs: number,
 ) {
-  if (reversals.length >= 4) {
-    const recentReversals = reversals.slice(-ufovAdaptiveStop.stableReversalWindow);
+  if (run.limitStreak >= ufovAdaptiveStop.stableLimitStreak) {
+    const formalDurations = trials
+      .filter((trial) => !trial.practice && trial.correct)
+      .map((trial) => GetTrialDurationMs(trial))
+      .filter((duration): duration is number => duration !== null && Number.isFinite(duration) && duration > 0);
+    return formalDurations.length > 0 ? Math.min(...formalDurations) : fallbackMs;
+  }
+
+  if (run.reversals.length >= 4) {
+    const recentReversals = run.reversals.slice(-ufovAdaptiveStop.stableReversalWindow);
     return recentReversals.reduce((sum, value) => sum + value, 0) / recentReversals.length;
   }
 

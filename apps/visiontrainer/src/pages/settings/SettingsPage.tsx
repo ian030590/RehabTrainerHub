@@ -260,6 +260,9 @@ function CardCalibration({ refresh }: { refresh: () => void }) {
 /* ── WebGazer Calibration Tab ── */
 function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
   const { t } = useT();
+  // The overlay container is always in the DOM (via Portal) so containerRef is
+  // always populated — avoids the race where requestAnimationFrame fires before
+  // React commits a conditionally-rendered Portal to the DOM.
   const containerRef = useRef<HTMLDivElement>(null);
   const jsPsychRef = useRef<any>(null);
   const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
@@ -317,6 +320,39 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
     return () => observer.disconnect();
   }, [status]);
 
+  const startJsPsych = (container: HTMLDivElement) => {
+    container.replaceChildren();
+    try {
+      const jsPsych = initJsPsych({
+        display_element: container,
+        extensions: [
+          { type: WebGazerExtension },
+        ] as any,
+        on_finish: () => {
+          SetSetting('webGazerCalibrationAt', new Date().toISOString());
+          jsPsychRef.current = null;
+          setStatus('done');
+          setMessage(t('settings.wg.done'));
+          refresh();
+        },
+      });
+
+      jsPsychRef.current = jsPsych;
+
+      jsPsych.run(CreateWebGazerCalibrationTimeline({
+        title: t('settings.wg.title'),
+        instruction1: t('settings.wg.inst1'),
+        instruction2: t('settings.wg.inst2'),
+        instruction3: t('settings.wg.inst3'),
+        buttonText: t('settings.wg.startBtn'),
+      }) as any);
+    } catch (error) {
+      jsPsychRef.current = null;
+      setStatus('error');
+      setMessage(error instanceof Error ? error.message : t('settings.wg.errorFail'));
+    }
+  };
+
   const runCalibration = async () => {
     setStatus('running');
     setMessage(t('settings.wg.startingCam'));
@@ -330,46 +366,30 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
       return;
     }
 
-    // Wait for the overlay to render, then init jsPsych inside it
-    requestAnimationFrame(() => {
+    // The Portal overlay div is always mounted (just hidden via CSS when idle),
+    // so containerRef.current is guaranteed to be non-null here. We still use
+    // requestAnimationFrame to let React flush the `is-active` class change
+    // before jsPsych writes into the container.
+    const tryStart = () => {
       const container = containerRef.current;
       if (!container) {
-        setStatus('error');
-        setMessage(t('settings.wg.errorContainer'));
+        // Should not happen since the Portal is always in the DOM,
+        // but retry once after the next paint just in case.
+        requestAnimationFrame(() => {
+          const c = containerRef.current;
+          if (!c) {
+            setStatus('error');
+            setMessage(t('settings.wg.errorContainer'));
+            return;
+          }
+          startJsPsych(c);
+        });
         return;
       }
-      container.replaceChildren();
+      startJsPsych(container);
+    };
 
-      try {
-        const jsPsych = initJsPsych({
-          display_element: container,
-          extensions: [
-            { type: WebGazerExtension },
-          ] as any,
-          on_finish: () => {
-            SetSetting('webGazerCalibrationAt', new Date().toISOString());
-            jsPsychRef.current = null;
-            setStatus('done');
-            setMessage(t('settings.wg.done'));
-            refresh();
-          },
-        });
-
-        jsPsychRef.current = jsPsych;
-
-        jsPsych.run(CreateWebGazerCalibrationTimeline({
-          title: t('settings.wg.title'),
-          instruction1: t('settings.wg.inst1'),
-          instruction2: t('settings.wg.inst2'),
-          instruction3: t('settings.wg.inst3'),
-          buttonText: t('settings.wg.startBtn'),
-        }) as any);
-      } catch (error) {
-        jsPsychRef.current = null;
-        setStatus('error');
-        setMessage(error instanceof Error ? error.message : t('settings.wg.errorFail'));
-      }
-    });
+    requestAnimationFrame(tryStart);
   };
 
   const cancelCalibration = () => {
@@ -438,13 +458,13 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
         )}
       </div>
 
-
-      {/* Full-screen overlay for calibration – rendered via Portal on document.body
-          so it is completely independent of the app layout and Navbar */}
-      {status === 'running' &&
-        ReactDOM.createPortal(
-          <div className="webgazer-fullscreen-overlay">
-            <div ref={containerRef} className="webgazer-fullscreen-stage" />
+      {/* Full-screen overlay for calibration – always rendered via Portal on document.body
+          so containerRef is always populated and there is no race with React's async commit.
+          Visibility is controlled by the `is-active` CSS class instead of conditional rendering. */}
+      {ReactDOM.createPortal(
+        <div className={`webgazer-fullscreen-overlay${status === 'running' ? ' is-active' : ''}`}>
+          <div ref={containerRef} className="webgazer-fullscreen-stage" />
+          {status === 'running' && (
             <button
               className="webgazer-cancel-btn"
               onClick={cancelCalibration}
@@ -452,9 +472,10 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
             >
               {t('settings.wg.cancelBtn')}
             </button>
-          </div>,
-          document.body
-        )}
+          )}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
