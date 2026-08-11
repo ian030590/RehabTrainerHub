@@ -1,38 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
+import { CreateViteHtmlSeoPlugin } from '../../scripts/vite-html-seo';
 
-function EscapeHtml(value: string) {
-  return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-}
-
-const siteUrl = 'https://brain.trainerhub.cc';
-const seoTitle = 'BrainTrainer | 注意記憶與思考訓練';
-const seoDescription = 'BrainTrainer 提供注意、記憶與思考訓練入口，協助依專業建議安排認知訓練練習。';
+const seoTitle = 'BrainTrainer | 注意力、記憶與認知訓練 - 居家訓練網';
+const seoDescription = 'BrainTrainer 提供注意力、記憶力與高階認知互動練習，包含 UFOV、反應控制、記憶配對、推理與問題解決等訓練。';
 
 export default defineConfig({
   plugins: [
     react(),
-    {
-      name: 'braintrainer-html-metadata',
-      transformIndexHtml(html) {
-        return html.replace(
-          '</head>',
-          [
-            `  <link rel="canonical" href="${EscapeHtml(siteUrl)}" />`,
-            `  <meta property="og:url" content="${EscapeHtml(siteUrl)}" />`,
-            '  <meta property="og:type" content="website" />',
-            '  <meta property="og:site_name" content="Rehab Trainer Hub" />',
-            `  <meta property="og:title" content="${EscapeHtml(seoTitle)}" />`,
-            `  <meta property="og:description" content="${EscapeHtml(seoDescription)}" />`,
-            '  <meta name="twitter:card" content="summary" />',
-            `  <meta name="twitter:title" content="${EscapeHtml(seoTitle)}" />`,
-            `  <meta name="twitter:description" content="${EscapeHtml(seoDescription)}" />`,
-            '</head>',
-          ].join('\n'),
-        );
-      },
-    },
+    CreateViteHtmlSeoPlugin({
+      alternateName: '居家認知訓練',
+      applicationName: 'BrainTrainer',
+      description: seoDescription,
+      featureList: ['注意力訓練', '記憶力訓練', '高階認知與思考練習'],
+      siteUrl: 'https://brain.trainerhub.cc',
+      title: seoTitle,
+    }),
   ],
   base: '/',
   resolve: {

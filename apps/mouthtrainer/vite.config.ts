@@ -1,38 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
+import { CreateViteHtmlSeoPlugin } from '../../scripts/vite-html-seo';
 
-function EscapeHtml(value: string) {
-  return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-}
-
-const siteUrl = 'https://mouth.trainerhub.cc';
-const seoTitle = 'MouthTrainer | 口說、理解與口腔訓練';
-const seoDescription = 'MouthTrainer 提供口說、理解與口腔動作訓練，協助依專業建議安排居家練習。';
+const seoTitle = 'MouthTrainer | 舌頭動作與口腔訓練 - 居家訓練網';
+const seoDescription = 'MouthTrainer 提供以攝影機辨識舌頭左右方向的口腔動作互動練習，完成校正後即可依專業建議進行訓練。';
 
 export default defineConfig({
   plugins: [
     react(),
-    {
-      name: 'mouthtrainer-html-metadata',
-      transformIndexHtml(html) {
-        return html.replace(
-          '</head>',
-          [
-            `  <link rel="canonical" href="${EscapeHtml(siteUrl)}" />`,
-            `  <meta property="og:url" content="${EscapeHtml(siteUrl)}" />`,
-            '  <meta property="og:type" content="website" />',
-            '  <meta property="og:site_name" content="Rehab Trainer Hub" />',
-            `  <meta property="og:title" content="${EscapeHtml(seoTitle)}" />`,
-            `  <meta property="og:description" content="${EscapeHtml(seoDescription)}" />`,
-            '  <meta name="twitter:card" content="summary" />',
-            `  <meta name="twitter:title" content="${EscapeHtml(seoTitle)}" />`,
-            `  <meta name="twitter:description" content="${EscapeHtml(seoDescription)}" />`,
-            '</head>',
-          ].join('\n'),
-        );
-      },
-    },
+    CreateViteHtmlSeoPlugin({
+      alternateName: '居家舌頭動作訓練',
+      applicationName: 'MouthTrainer',
+      description: seoDescription,
+      featureList: ['攝影機舌頭方向辨識', '舌頭左右動作練習'],
+      siteUrl: 'https://mouth.trainerhub.cc',
+      title: seoTitle,
+    }),
   ],
   resolve: {
       alias: {

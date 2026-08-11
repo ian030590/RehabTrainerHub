@@ -1,38 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
+import { CreateViteHtmlSeoPlugin } from '../../scripts/vite-html-seo';
 
-function EscapeHtml(value: string) {
-  return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-}
-
-const siteUrl = 'https://motor.trainerhub.cc';
-const seoTitle = 'MotorTrainer | 居家動作復健訓練';
-const seoDescription = 'MotorTrainer 提供上肢與下肢訓練入口，協助依治療師建議安排居家動作復健練習。';
+const seoTitle = 'MotorTrainer | 上肢動作與手眼協調訓練 - 居家訓練網';
+const seoDescription = 'MotorTrainer 提供畫畫塔防、小行星護盾、手勢指令與手部追蹤等上肢互動練習，協助依專業建議安排居家動作訓練。';
 
 export default defineConfig({
     plugins: [
       react(),
-      {
-        name: 'motortrainer-html-metadata',
-        transformIndexHtml(html) {
-          return html.replace(
-            '</head>',
-            [
-              `  <link rel="canonical" href="${EscapeHtml(siteUrl)}" />`,
-              `  <meta property="og:url" content="${EscapeHtml(siteUrl)}" />`,
-              '  <meta property="og:type" content="website" />',
-              '  <meta property="og:site_name" content="Rehab Trainer Hub" />',
-              `  <meta property="og:title" content="${EscapeHtml(seoTitle)}" />`,
-              `  <meta property="og:description" content="${EscapeHtml(seoDescription)}" />`,
-              '  <meta name="twitter:card" content="summary" />',
-              `  <meta name="twitter:title" content="${EscapeHtml(seoTitle)}" />`,
-              `  <meta name="twitter:description" content="${EscapeHtml(seoDescription)}" />`,
-              '</head>',
-            ].join('\n'),
-          );
-        },
-      },
+      CreateViteHtmlSeoPlugin({
+        alternateName: '居家上肢動作訓練',
+        applicationName: 'MotorTrainer',
+        description: seoDescription,
+        featureList: ['圖形繪製練習', '手部定位與追蹤', '手勢辨識互動'],
+        siteUrl: 'https://motor.trainerhub.cc',
+        title: seoTitle,
+      }),
     ],
     resolve: {
       alias: {

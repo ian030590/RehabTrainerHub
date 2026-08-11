@@ -10,7 +10,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/clean-next-output.mjs && next build && node ../../scripts/emit-pwa-assets.mjs out",
+    "build": "node scripts/clean-next-output.mjs && next build && node ../../scripts/emit-pwa-assets.mjs out && node ../../scripts/check-seo-output.mjs",
     "preview": "npx serve out"
   },
   "dependencies": {

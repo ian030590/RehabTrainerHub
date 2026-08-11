@@ -2,26 +2,19 @@ import type { Metadata, Viewport } from 'next';
 import { CloudflareWebAnalytics } from '@rehab-trainer/ui/components/CloudflareWebAnalytics';
 import { HubShell } from './HubNavigation';
 import { hubFullName, hubLocalName } from './hubBrand';
-import { CreateSeoMetadata, organizationJsonLd, siteDescription, websiteJsonLd } from './seo';
+import { siteDescription } from './seo';
 import { siteUrls } from './siteUrls';
 import './globals.css';
 import '@rehab-trainer/ui/components/AuthPanel.css';
 import '@rehab-trainer/ui/components/InstallAppPage.css';
 
-const rootMetadata = CreateSeoMetadata({
-  title: hubFullName,
-  description: siteDescription,
-  path: '/',
-  absoluteTitle: true,
-});
-
 export const metadata: Metadata = {
-  ...rootMetadata,
   metadataBase: new URL(siteUrls.hub),
   title: {
     default: hubFullName,
     template: `%s | ${hubLocalName}`,
   },
+  description: siteDescription,
   applicationName: hubFullName,
   manifest: '/manifest.webmanifest',
   appleWebApp: {
@@ -71,14 +64,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0"
           rel="stylesheet"
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
       </head>
       <body>

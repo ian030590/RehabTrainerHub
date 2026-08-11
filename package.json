@@ -42,7 +42,8 @@
     "test:training-flow": "node scripts/check-training-module-flow.mjs",
     "test:hub-functions": "node --test \"apps/rehabtrainerhub/functions/**/*.test.mjs\"",
     "test:naming": "node scripts/check-identifier-names.mjs",
-    "test:pwa": "node scripts/check-pwa-assets.mjs"
+    "test:pwa": "node scripts/check-pwa-assets.mjs",
+    "test:seo": "node scripts/check-seo-output.mjs --all"
   },
   "dependencies": {
     "@jspsych/extension-webgazer": "^1.2.0",

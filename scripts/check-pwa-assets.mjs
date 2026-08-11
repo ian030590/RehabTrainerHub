@@ -46,6 +46,7 @@ try {
   const outputDir = resolve(fixtureRoot, 'motortrainer', 'dist');
   mkdirSync(resolve(outputDir, '.hidden'), { recursive: true });
   writeFileSync(resolve(outputDir, 'index.html'), '<!doctype html><title>PWA fixture</title>');
+  writeFileSync(resolve(outputDir, '404.html'), '<!doctype html><title>Not found</title>');
   writeFileSync(resolve(outputDir, '.DS_Store'), 'deployment metadata');
   writeFileSync(resolve(outputDir, '.hidden', 'ignored.txt'), 'hidden deployment file');
 
@@ -59,6 +60,7 @@ try {
   const worker = readFileSync(resolve(outputDir, 'sw.js'), 'utf8');
   assert.equal(worker.includes('.DS_Store'), false);
   assert.equal(worker.includes('.hidden'), false);
+  assert.equal(worker.includes('/404.html'), false);
   assert.match(worker, /caches\.match\(request, \{ ignoreSearch: true \}\)/);
 
   const headers = readFileSync(resolve(outputDir, '_headers'), 'utf8');

@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "MotorTrainer 居家動作復健訓練",
+  "name": "MotorTrainer 上肢動作與手眼協調訓練",
   "short_name": "MotorTrainer",
-  "description": "上肢與下肢居家動作復健訓練。",
+  "description": "畫畫塔防、小行星護盾、手勢指令與手部追蹤等上肢互動練習。",
   "lang": "zh-TW",
   "start_url": "/",
   "scope": "/",

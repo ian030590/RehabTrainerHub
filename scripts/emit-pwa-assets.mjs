@@ -18,7 +18,7 @@ const outputFiles = (await CollectFiles(outputDir))
   .filter((filePath) => {
     const outputPathParts = relative(outputDir, filePath).split(sep);
     return !outputPathParts.some((part) => part.startsWith('.'))
-      && !['sw.js', '_headers'].includes(basename(filePath));
+      && !['404.html', 'sw.js', '_headers'].includes(basename(filePath));
   })
   .sort();
 const precacheUrls = [...new Set(outputFiles.map((filePath) => ToPublicUrl(outputDir, filePath)))].sort();
