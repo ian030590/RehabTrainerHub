@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { CloudflareWebAnalytics } from '@rehab-trainer/ui/components/CloudflareWebAnalytics';
 import { HubShell } from './HubNavigation';
-import { hubFullName, hubLocalName } from './hubBrand';
+import { hubLocalName, hubSeoTitle } from './hubBrand';
 import { siteDescription } from './seo';
 import { siteUrls } from './siteUrls';
 import './globals.css';
@@ -11,11 +11,11 @@ import '@rehab-trainer/ui/components/InstallAppPage.css';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrls.hub),
   title: {
-    default: hubFullName,
+    default: hubSeoTitle,
     template: `%s | ${hubLocalName}`,
   },
   description: siteDescription,
-  applicationName: hubFullName,
+  applicationName: hubLocalName,
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
@@ -24,13 +24,14 @@ export const metadata: Metadata = {
   },
   keywords: [
     '居家訓練網',
-    '居家復健訓練',
-    '訓練大廳',
-    '復健進度',
-    '動作訓練',
-    '視覺訓練',
-    '認知訓練',
-    '口腔訓練',
+    '居家訓練工具',
+    '居家訓練平台',
+    '居家練習',
+    '衛教資訊',
+    '動作練習',
+    '視覺練習',
+    '認知練習',
+    '口腔動作練習',
     'Rehab Trainer Hub',
   ],
   icons: {

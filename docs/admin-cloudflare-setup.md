@@ -1,4 +1,4 @@
-# 治療師後台與 Cloudflare 上線指南
+# 管理後台與 Cloudflare 上線指南
 
 本文件涵蓋 `/admin`、D1、KV、R2、Turnstile、Web Analytics，以及 AI 模型 CDN 的正式環境設定。程式可在未設定 Cloudflare 額外服務時建置；需要的綁定或金鑰未就緒時，受影響功能會明確失敗或採用既定 CDN fallback，不會默默降低驗證強度。
 
@@ -7,23 +7,23 @@
 ```text
 Trainer -> /api/records -> D1 training_records
                               |
-Therapist -> /admin -> assigned patient query -> JSON / CSV + audit
+Authorized staff -> /admin -> assigned user query -> JSON / CSV + audit
 
-Therapist -> article editor -> D1 education_articles
+Authorized staff -> article editor -> D1 education_articles
                                   |
                                   +-> ARTICLE_CACHE (published pages)
                                            |
-Patient -> /qa -> /api/articles -----------+
+User -> /qa -> /api/articles --------------+
 
 Article cover / AI assets -> R2 -> assets.trainerhub.cc -> Cloudflare CDN
 ```
 
 - `app_users.role` 可為 `patient`、`therapist` 或 `admin`。
-- `admin` 可以查看所有病患；`therapist` 只能查看 `therapist_patient_assignments` 指派的病患。
+- `admin` 可以查看所有使用者；既有 `therapist` 角色只能查看 `therapist_patient_assignments` 指派的使用者。
 - 後台 API 以 Hub 的 HttpOnly session cookie 為預設認證，並在每次請求向 D1 查詢目前角色。Production 不應啟用 `ADMIN_ALLOW_BEARER`。
 - 訓練紀錄標示為「客戶端回報」，不可當成經醫療人員驗證的量測。API 會限制大小、結構、頻率並保留伺服器接收時間。
 - CSV 匯出會做欄位公式中和、分批 keyset 查詢、筆數上限與稽核記錄。
-- 後台首頁最多預載 500 位病患供快速選擇；仍可直接輸入完整 patient ID 查詢其資料。
+- 後台首頁最多預載 500 位使用者供快速選擇；仍可直接輸入完整 patient ID 查詢其資料。
 
 ## 1. D1 migration 與 Pages bindings
 
@@ -48,7 +48,7 @@ Cloudflare API token 至少需涵蓋本流程使用的 Pages、D1、KV 與 R2 �
 
 若 Wrangler 顯示 `The database ... could not be found [code: 7404]`，通常代表目前登入的 Cloudflare account 或 `CLOUDFLARE_ACCOUNT_ID` 不是擁有該 D1 database 的帳號。先修正 account/token，再重跑 migration 或角色設定。
 
-## 2. 指派管理員、治療師與病患
+## 2. 指派管理員、已授權人員與使用者
 
 先查詢使用者：
 
@@ -70,7 +70,7 @@ npx --yes wrangler@4 d1 execute rehab_db \
   --command "UPDATE app_users SET role='therapist', updated_at=datetime('now') WHERE id='THERAPIST_USER_ID'"
 ```
 
-建立治療師與病患關聯：
+建立已授權人員與使用者關聯（資料表沿用既有欄位名稱）：
 
 ```bash
 npx --yes wrangler@4 d1 execute rehab_db \
@@ -181,7 +181,7 @@ Hub 與四個 trainer 只有在 token 存在時才注入 RUM beacon。不要把 
 
 ## 7. 低效能裝置提示
 
-四個 trainer 共用進場檢測：取樣約 45–60 個 animation frames，並參考 `hardwareConcurrency` 與可用時的 `deviceMemory`。低效能裝置只顯示可關閉提示，不會直接阻擋復健流程。
+四個 trainer 共用進場檢測：取樣約 45–60 個 animation frames，並參考 `hardwareConcurrency` 與可用時的 `deviceMemory`。低效能裝置只顯示可關閉提示，不會直接阻擋練習流程。
 
 未來若要自動降低 MediaPipe 偵測幀率、renderer 解析度或 WebGL 效果，應在各訓練模組內依 renderer 特性實作，不要把長生命週期的遊戲狀態放進共用 UI package。
 
@@ -189,8 +189,8 @@ Hub 與四個 trainer 只有在 token 存在時才注入 RUM beacon。不要把 
 
 Pages hash preview 可能因同源 HttpOnly cookie、OAuth callback hostname 與 Turnstile hostname 清單而不適合完整驗證管理員登入。請在受控的 staging custom domain 或正式 canonical domain 驗收：
 
-- therapist 只能看到被指派病患；
-- admin 可以看到所有病患；
+- therapist 只能看到被指派使用者；
+- admin 可以看到所有使用者；
 - JSON / CSV 篩選與下載；
 - 草稿、發布、取消發布、編輯與刪除文章；
 - 問答中心只顯示已發布 Card，點開後才載入完整內容；
@@ -216,7 +216,7 @@ npm run test:changed-trainer-smoke
 
 - migration 已套用；
 - D1 / KV / R2 bindings 正確；
-- 第一位管理員與治療師角色、病患指派已建立；
+- 第一位管理員、已授權角色與使用者指派已建立；
 - Turnstile keys 與 explicit required flags 正確；
 - R2 custom domain、CORS、manifest 上傳與遠端 verifier 全部通過；
 - Web Analytics token 已設定；

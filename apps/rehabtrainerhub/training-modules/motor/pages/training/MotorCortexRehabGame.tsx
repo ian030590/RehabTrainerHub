@@ -146,10 +146,10 @@ const liveStateIntervalMs = 45;
 const handCursorRadius = 18;
 
 const drills: readonly DrillDefinition[] = [
-  { id: 'bounce', referenceName: 'Therapy Module 1', accent: '#2f855a' },
-  { id: 'vertical', referenceName: 'Therapy Module 2', accent: '#0f766e' },
-  { id: 'horizontal', referenceName: 'Therapy Module 3', accent: '#b45309' },
-  { id: 'random', referenceName: 'Therapy Module 4', accent: '#be123c' },
+  { id: 'bounce', referenceName: 'Tracking Mode 1', accent: '#2f855a' },
+  { id: 'vertical', referenceName: 'Tracking Mode 2', accent: '#0f766e' },
+  { id: 'horizontal', referenceName: 'Tracking Mode 3', accent: '#b45309' },
+  { id: 'random', referenceName: 'Tracking Mode 4', accent: '#be123c' },
 ];
 
 const difficulties: readonly DifficultyDefinition[] = [
@@ -162,9 +162,9 @@ const durationOptions = [45, 60, 90] as const;
 
 const copy = {
   zh: {
-    title: '動作皮質復健訓練',
-    configLabel: '攝影機動作訓練設定',
-    drill: '訓練模組',
+    title: '手部目標追蹤練習',
+    configLabel: '手部目標追蹤設定',
+    drill: '追蹤模式',
     drillDesc: '選擇這次要練習的手部追蹤任務。',
     difficulty: '自適應起始難度',
     difficultyDesc: '系統會依命中表現逐步調整速度與目標大小。',
@@ -185,7 +185,7 @@ const copy = {
     permission: '無法使用攝影機。請允許攝影機權限後再試一次。',
     disconnected: '攝影機已中斷，請確認鏡頭連線後重新開始訓練。',
     initialization: '手部追蹤無法啟動，請確認網路連線後再試一次。',
-    errorTitle: '無法開始動作皮質復健訓練',
+    errorTitle: '無法開始手部目標追蹤練習',
     openDetails: '開啟錯誤細節',
     cameraPreview: '即時手部攝影機預覽',
     tracking: '已追蹤手部',
@@ -199,7 +199,7 @@ const copy = {
     reps: '完成次數',
     level: '自適應等級',
     hold: '維持',
-    resultsTitle: '動作皮質復健訓練完成',
+    resultsTitle: '手部目標追蹤練習完成',
     participant: '訓練使用者',
     interrupted: '中斷維持',
     bestHold: '最佳維持',
@@ -217,10 +217,10 @@ const copy = {
       random: '隨機觸達',
     },
     drillDescriptions: {
-      bounce: '追蹤在畫面中反彈的球，訓練連續手眼協調。',
+      bounce: '追蹤在畫面中反彈的球，進行連續手眼協調練習。',
       vertical: '沿垂直路徑上下追蹤目標，練習肩肘控制與垂直活動範圍。',
       horizontal: '沿水平路徑左右追蹤目標，練習跨中線與側向控制。',
-      random: '快速移到隨機位置並維持，訓練觸達、停止與穩定控制。',
+      random: '快速移到隨機位置並維持，進行觸達、停止與穩定控制練習。',
     },
     difficultyNames: {
       beginner: '初階',
@@ -231,9 +231,9 @@ const copy = {
     interruptedLabel: '中斷',
   },
   en: {
-    title: 'Motor Cortex Rehab',
-    configLabel: 'Camera Motor Training Settings',
-    drill: 'Training Module',
+    title: 'Hand Target Tracking Practice',
+    configLabel: 'Hand Target Tracking Settings',
+    drill: 'Tracking Mode',
     drillDesc: 'Choose the hand-tracking task for this session.',
     difficulty: 'Adaptive Start Level',
     difficultyDesc: 'The system adjusts speed and target size based on hit quality.',
@@ -254,7 +254,7 @@ const copy = {
     permission: 'The camera is unavailable. Allow camera permission and try again.',
     disconnected: 'The camera was disconnected. Check the camera connection and start the training again.',
     initialization: 'Hand tracking could not start. Check the network connection and try again.',
-    errorTitle: 'Unable to Start Motor Cortex Rehab',
+    errorTitle: 'Unable to Start Hand Target Tracking Practice',
     openDetails: 'Open error details',
     cameraPreview: 'Live hand camera preview',
     tracking: 'Hand tracked',
@@ -268,7 +268,7 @@ const copy = {
     reps: 'Reps',
     level: 'Adaptive Level',
     hold: 'Hold',
-    resultsTitle: 'Motor Cortex Rehab Complete',
+    resultsTitle: 'Hand Target Tracking Practice Complete',
     participant: 'Participant',
     interrupted: 'Interrupted Holds',
     bestHold: 'Best Hold',
@@ -289,7 +289,7 @@ const copy = {
       bounce: 'Track a ball as it rebounds around the play field for continuous hand-eye coordination.',
       vertical: 'Follow a target up and down to practice shoulder, elbow, and vertical range control.',
       horizontal: 'Follow a target left and right to practice crossing midline and lateral control.',
-      random: 'Move quickly to random target locations and hold steady to train reach, stop, and stabilization.',
+      random: 'Move quickly to random target locations and hold steady for reach, stop, and stabilization practice.',
     },
     difficultyNames: {
       beginner: 'Beginner',
@@ -1342,4 +1342,3 @@ function FormatHandChoice(handChoice: HandChoice, labels: (typeof copy)['zh'] | 
   if (handChoice === 'right') return labels.handRight;
   return labels.handAny;
 }
-

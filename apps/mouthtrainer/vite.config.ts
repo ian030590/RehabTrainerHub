@@ -3,14 +3,14 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 import { CreateViteHtmlSeoPlugin } from '../../scripts/vite-html-seo';
 
-const seoTitle = 'MouthTrainer | 舌頭動作與口腔訓練 - 居家訓練網';
-const seoDescription = 'MouthTrainer 提供以攝影機辨識舌頭左右方向的口腔動作互動練習，完成校正後即可依專業建議進行訓練。';
+const seoTitle = 'MouthTrainer | 舌頭動作與口腔練習 - 居家訓練網';
+const seoDescription = 'MouthTrainer 提供以攝影機辨識舌頭左右方向的口腔動作互動練習。';
 
 export default defineConfig({
   plugins: [
     react(),
     CreateViteHtmlSeoPlugin({
-      alternateName: '居家舌頭動作訓練',
+      alternateName: '居家舌頭動作練習',
       applicationName: 'MouthTrainer',
       description: seoDescription,
       featureList: ['攝影機舌頭方向辨識', '舌頭左右動作練習'],

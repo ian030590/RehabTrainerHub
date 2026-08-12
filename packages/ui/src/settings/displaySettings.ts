@@ -1,3 +1,13 @@
+export const defaultUiFontSizePx = 18;
+export const minUiFontSizePx = 14;
+export const maxUiFontSizePx = 30;
+
+export type UiTheme = 'light' | 'dark' | 'contrast';
+
+export function IsUiTheme(value: unknown): value is UiTheme {
+  return value === 'light' || value === 'dark' || value === 'contrast';
+}
+
 export interface DisplaySettings {
   fontSizePx: number;
   defaultFontSizePx: number;

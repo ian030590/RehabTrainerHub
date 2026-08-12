@@ -3,14 +3,14 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 import { CreateViteHtmlSeoPlugin } from '../../scripts/vite-html-seo';
 
-const seoTitle = 'MotorTrainer | 上肢動作與手眼協調訓練 - 居家訓練網';
-const seoDescription = 'MotorTrainer 提供畫畫塔防、小行星護盾、手勢指令與手部追蹤等上肢互動練習，協助依專業建議安排居家動作訓練。';
+const seoTitle = 'MotorTrainer | 上肢動作與手眼協調練習 - 居家訓練網';
+const seoDescription = 'MotorTrainer 提供畫畫塔防、小行星護盾、手勢指令與手部追蹤等上肢互動練習。';
 
 export default defineConfig({
     plugins: [
       react(),
       CreateViteHtmlSeoPlugin({
-        alternateName: '居家上肢動作訓練',
+        alternateName: '居家上肢動作練習',
         applicationName: 'MotorTrainer',
         description: seoDescription,
         featureList: ['圖形繪製練習', '手部定位與追蹤', '手勢辨識互動'],

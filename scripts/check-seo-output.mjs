@@ -86,6 +86,9 @@ function ValidateAppSeo(app, appFailures) {
   ValidateNotFoundPage(notFoundPath, label, appFailures);
 
   if (app.role === 'hub') {
+    if (indexHtml !== null && !/<h1\b[^>]*\bid=["']lobby-title["'][^>]*>[\s\S]*?居家訓練工具與衛教資訊[\s\S]*?<\/h1>/i.test(indexHtml)) {
+      appFailures.push(`${indexPath}: Hub homepage must prerender its visible heading in Traditional Chinese.`);
+    }
     ValidateHubPrivatePages(outputDir, sitemapUrls, appFailures);
   }
 }
@@ -388,8 +391,8 @@ function ValidateWebApplication(application, expectedUrl, pageDescription, file,
   if (pageDescription && application.description !== pageDescription) {
     appFailures.push(`${file}: the canonical WebApplication description must match the page metadata.`);
   }
-  if (application.applicationCategory !== 'HealthApplication') {
-    appFailures.push(`${file}: WebApplication.applicationCategory must be HealthApplication.`);
+  if (application.applicationCategory !== 'EducationalApplication') {
+    appFailures.push(`${file}: WebApplication.applicationCategory must be EducationalApplication.`);
   }
   const imageUrl = typeof application.image === 'string'
     ? application.image

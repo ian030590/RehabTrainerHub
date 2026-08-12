@@ -10,6 +10,8 @@ export {
 export type { MediaPipeAssetUrls } from './aiAssets';
 export { AppLoading } from './components/AppLoading';
 export type { AppLoadingProps } from './components/AppLoading';
+export { AppDialog } from './components/AppDialog';
+export type { AppDialogProps } from './components/AppDialog';
 export { CardImagePlaceholder, cardImagePlaceholderSrc } from './components/CardImagePlaceholder';
 export type { CardImagePlaceholderProps } from './components/CardImagePlaceholder';
 export { CloudflareWebAnalytics } from './components/CloudflareWebAnalytics';
@@ -25,6 +27,8 @@ export { EditableSettingRow } from './components/EditableSettingRow';
 export type { EditableSettingRowProps } from './components/EditableSettingRow';
 export { ExternalLinkCard } from './components/ExternalLinkCard';
 export type { ExternalLinkCardProps } from './components/ExternalLinkCard';
+export { InlineAlert } from './components/InlineAlert';
+export type { InlineAlertProps } from './components/InlineAlert';
 export { CreateGeneralSettingsPanelLabels, GeneralSettingsPanel } from './components/GeneralSettingsPanel';
 export type {
   GeneralSettingsLanguage,

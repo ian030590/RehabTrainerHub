@@ -192,15 +192,16 @@ export function ContrastTestPage() {
      return wrapFullscreenRoot(
        <div className="experiment-container" style={{ overflowY: 'auto' }}>
          <div className="acuity-results">
-           <h1 style={{ fontSize: 32 }}>{t('acuity.done') || 'Assessment Complete'}</h1>
+           <h1 style={{ fontSize: 32 }}>{t('acuity.done') || 'Practice Complete'}</h1>
+           <p className="assessment-disclaimer">{t('assess.resultDisclaimer')}</p>
 
            <div className="acuity-result-cards">
              <div className="acuity-result-card">
-               <div className="acuity-result-label">logCS (Weber)</div>
+               <div className="acuity-result-label">logCS reference (Weber)</div>
                <div className="acuity-result-value" style={{ color: 'var(--accent)' }}>{resultLogCSW.toFixed(2)}</div>
              </div>
              <div className="acuity-result-card">
-               <div className="acuity-result-label">Contrast %</div>
+               <div className="acuity-result-label">Presented contrast %</div>
                <div className="acuity-result-value">{(Math.pow(10, -resultLogCSW)*100).toFixed(2)}%</div>
              </div>
            </div>
@@ -218,7 +219,7 @@ export function ContrastTestPage() {
                  <th>{t('acuity.csv.presented') || 'Presented'}</th>
                  <th>{t('acuity.csv.response') || 'Response'}</th>
                  <th>{t('acuity.csv.correct') || 'Correct'}</th>
-                 <th>logCSW</th>
+                 <th>logCS reference</th>
                </tr>
              </thead>
              <tbody>

@@ -1,5 +1,7 @@
+import type { UiTheme } from '../settings/displaySettings';
+
 export type GeneralSettingsLanguage = 'zh' | 'en';
-export type GeneralSettingsTheme = 'light' | 'dark' | 'contrast';
+export type GeneralSettingsTheme = UiTheme;
 
 export interface GeneralSettingsPanelLabels {
   languageTitle: string;

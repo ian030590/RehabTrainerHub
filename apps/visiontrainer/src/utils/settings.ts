@@ -5,8 +5,18 @@
 
 // ── Global Constants ──
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import {
+  defaultUiFontSizePx,
+  IsUiTheme,
+  maxUiFontSizePx,
+  minUiFontSizePx,
+} from '@rehab-trainer/ui/settings/displaySettings';
+import type { UiTheme } from '@rehab-trainer/ui/settings/displaySettings';
 import { CreateUserStore } from '@rehab-trainer/ui/storage/userStore';
 import type { OculomotorPattern, OculomotorTargetShape } from '@rehab-trainer/hub-modules/vision/pages/training/oculomotor/types';
+
+export { defaultUiFontSizePx, maxUiFontSizePx, minUiFontSizePx };
+export type { UiTheme };
 
 export const cardWidthMm = 85.6;
 export const cardHeightMm = 53.98;
@@ -17,15 +27,10 @@ export const calBarLengthPx = 700;
 export const appVersion = '3.0.0';
 export const storagePrefix = 'vision_trainer_';
 export const appSettingsChangedEvent = 'vision-trainer-settings-changed';
-export const defaultUiFontSizePx = 18;
-export const minUiFontSizePx = 14;
-export const maxUiFontSizePx = 30;
-
 export const drivingDurationMinSec = 80;
 export const drivingDurationMaxSec = 240;
 export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel' | 'touch';
 export type DrivingRenderQualityLevel = 'low' | 'medium' | 'high';
-export type UiTheme = 'light' | 'dark' | 'contrast';
 
 // ── Settings ──
 export interface AppSettings {
@@ -137,10 +142,6 @@ function StorageKey(name: string): string {
 }
 
 export const activeUserChangedEvent = 'vision-trainer-active-user-changed';
-
-function IsUiTheme(value: string): value is UiTheme {
-  return value === 'light' || value === 'dark' || value === 'contrast';
-}
 
 export function GetSetting<K extends keyof AppSettings>(key: K): AppSettings[K] {
   const raw = localStorage.getItem(StorageKey(key));

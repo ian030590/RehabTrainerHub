@@ -1,13 +1,18 @@
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import {
+  defaultUiFontSizePx,
+  IsUiTheme,
+  maxUiFontSizePx,
+  minUiFontSizePx,
+} from '@rehab-trainer/ui/settings/displaySettings';
+import type { UiTheme } from '@rehab-trainer/ui/settings/displaySettings';
 import { CreateUserStore } from '@rehab-trainer/ui/storage/userStore';
+
+export { defaultUiFontSizePx, maxUiFontSizePx, minUiFontSizePx };
+export type { UiTheme };
 
 export const storagePrefix = 'mouth_trainer_';
 export const settingsChangedEvent = 'mouth-trainer-settings-changed';
-export const defaultUiFontSizePx = 18;
-export const minUiFontSizePx = 14;
-export const maxUiFontSizePx = 30;
-
-export type UiTheme = 'light' | 'dark' | 'contrast';
 
 interface AppSettings {
   uiFontSizePx: number;
@@ -35,7 +40,7 @@ export function GetSetting<K extends keyof AppSettings>(key: K): AppSettings[K] 
     const value = Number(raw);
     return (Number.isFinite(value) ? value : defaults[key]) as AppSettings[K];
   }
-  if (key === 'uiTheme') return (raw === 'light' || raw === 'dark' || raw === 'contrast' ? raw : defaults[key]) as AppSettings[K];
+  if (key === 'uiTheme') return (IsUiTheme(raw) ? raw : defaults[key]) as AppSettings[K];
   return raw as AppSettings[K];
 }
 

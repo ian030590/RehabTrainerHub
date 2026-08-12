@@ -2,15 +2,16 @@
 
 # MotorTrainer
 
-MotorTrainer is a React rehabilitation training web app for upper- and lower-limb motor practice. It
-combines game-like upper-limb training modules with local settings, user
+MotorTrainer is a React web app for upper- and lower-limb movement practice. It
+combines game-like upper-limb activities with local settings, user
 selection, calibration, and training record helpers. Cognitive games now live
 under BrainTrainer Thinking Training, while speech and oral exercises live under
 MouthTrainer.
 
-> **Disclaimer:** This application is for programming practice and experimental
-> purposes. It is not medical diagnosis, treatment, or rehabilitation advice. If
-> you have medical needs, seek professional medical assistance.
+> **Disclaimer:** This application provides general self-practice tools. It is
+> not a medical device and does not provide individualized assessment, diagnosis,
+> medical orders, or treatment. If you have medical concerns, consult a qualified
+> healthcare professional.
 
 ## Tech Stack
 

@@ -1,11 +1,16 @@
+import {
+  defaultUiFontSizePx,
+  IsUiTheme,
+  maxUiFontSizePx,
+  minUiFontSizePx,
+} from '@rehab-trainer/ui/settings/displaySettings';
+import type { UiTheme } from '@rehab-trainer/ui/settings/displaySettings';
+
+export { defaultUiFontSizePx, maxUiFontSizePx, minUiFontSizePx };
+export type { UiTheme };
+
 export const storagePrefix = 'brain_trainer_';
 export const settingsChangedEvent = 'brain-trainer-settings-changed';
-
-export const defaultUiFontSizePx = 18;
-export const minUiFontSizePx = 14;
-export const maxUiFontSizePx = 30;
-
-export type UiTheme = 'light' | 'dark' | 'contrast';
 
 export interface AppSettings {
   uiFontSizePx: number;
@@ -31,10 +36,6 @@ function StorageKey(name: string) {
   return storagePrefix + name;
 }
 
-function IsTheme(value: string): value is UiTheme {
-  return value === 'light' || value === 'dark' || value === 'contrast';
-}
-
 export function GetSetting<K extends keyof AppSettings>(key: K): AppSettings[K] {
   const settingMeta = appSettingsMeta[key];
   const raw = localStorage.getItem(StorageKey(key));
@@ -53,7 +54,7 @@ export function GetSetting<K extends keyof AppSettings>(key: K): AppSettings[K] 
   }
 
   if (key === 'uiTheme') {
-    return (IsTheme(raw) ? raw : settingMeta.dflt) as AppSettings[K];
+    return (IsUiTheme(raw) ? raw : settingMeta.dflt) as AppSettings[K];
   }
 
   return raw as AppSettings[K];

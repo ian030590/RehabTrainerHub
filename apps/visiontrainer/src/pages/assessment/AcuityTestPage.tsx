@@ -757,6 +757,7 @@ export function AcuityTestPage() {
     <div className="experiment-container" style={{ overflowY: 'auto' }}>
       <div className="acuity-results">
         <h1 style={{ fontSize: 32 }}>{t('acuity.done')}</h1>
+        <p className="assessment-disclaimer">{t('assess.resultDisclaimer')}</p>
 
         <div className="acuity-result-cards">
           <div className="acuity-result-card">

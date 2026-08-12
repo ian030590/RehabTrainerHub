@@ -3,14 +3,14 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 import { CreateViteHtmlSeoPlugin } from '../../scripts/vite-html-seo';
 
-const seoTitle = 'BrainTrainer | 注意力、記憶與認知訓練 - 居家訓練網';
-const seoDescription = 'BrainTrainer 提供注意力、記憶力與高階認知互動練習，包含 UFOV、反應控制、記憶配對、推理與問題解決等訓練。';
+const seoTitle = 'BrainTrainer | 注意力、記憶與認知練習 - 居家訓練網';
+const seoDescription = 'BrainTrainer 提供 UFOV、反應控制、記憶配對、推理與問題解決等注意力、記憶及認知互動練習。';
 
 export default defineConfig({
   plugins: [
     react(),
     CreateViteHtmlSeoPlugin({
-      alternateName: '居家認知訓練',
+      alternateName: '居家認知練習',
       applicationName: 'BrainTrainer',
       description: seoDescription,
       featureList: ['注意力訓練', '記憶力訓練', '高階認知與思考練習'],

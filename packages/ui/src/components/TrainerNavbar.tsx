@@ -109,7 +109,7 @@ export function TrainerNavbar({
         <img src={logoSrc} alt={logoAlt} height={logoHeight} style={logoStyle} />
         <span>
           <strong>{brandLabel}</strong>
-          <small>Rehab Trainer Hub</small>
+          <small>{auth.locale === 'en' ? 'Rehab Trainer Hub' : '居家訓練網'}</small>
         </span>
       </NavLink>
 

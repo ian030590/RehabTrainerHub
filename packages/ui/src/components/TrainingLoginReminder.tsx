@@ -25,13 +25,13 @@ const text = {
   zhTW: {
     title: '建議登入以保存訓練紀錄',
     intro: '你可以不用登入繼續訓練。登入後，訓練紀錄可跨裝置保存與查看。',
-    profilePending: '完成基本資料與醫療史問卷後，紀錄可用於分組分析與服務改善；本平台不提供診斷或個別醫療建議。',
+    profilePending: '完成基本資料與醫療史問卷後，紀錄可用於分組分析與網站改善；本站不提供個別評估、診斷或治療。',
     dismiss: '稍後再說',
   },
   en: {
     title: 'Sign in to save training records',
     intro: 'You can keep training without signing in. After sign-in, training records can be saved and viewed across devices.',
-    profilePending: 'Completing the basic profile and medical history questionnaires helps grouped analysis and service improvement; this platform does not provide diagnosis or individual medical advice.',
+    profilePending: 'Completing the basic profile and medical history questionnaires supports grouped analysis and website improvement; this site does not provide individualized assessment, diagnosis, or treatment.',
     dismiss: 'Later',
   },
 } as const;

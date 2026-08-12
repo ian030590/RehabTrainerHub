@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { TrainingLobby } from './TrainingLobby';
-import { hubFullName } from './hubBrand';
+import { hubSeoTitle } from './hubBrand';
 import {
   CreateSeoMetadata,
   SerializeJsonLd,
@@ -9,7 +9,7 @@ import {
 } from './seo';
 
 export const metadata: Metadata = CreateSeoMetadata({
-  title: hubFullName,
+  title: hubSeoTitle,
   description: siteDescription,
   path: '/',
   absoluteTitle: true,

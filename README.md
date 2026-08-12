@@ -1,4 +1,4 @@
-# RehabTrainerHub
+# 居家訓練網 Rehab Trainer Hub
 
 <p align="center">
   <img src="apps/rehabtrainerhub/public/rehabtrainerhub.svg" alt="Rehab Trainer Hub logo" width="160" />
@@ -6,21 +6,21 @@
 
 ## 中文
 
-RehabTrainerHub 是居家復健訓練入口，整合多個訓練工具：
+居家訓練網是居家練習工具與衛教資訊的整合入口：
 
-- MotorTrainer：上肢與下肢動作復健訓練
-- VisionTrainer：視覺訓練
-- BrainTrainer：認知訓練
-- MouthTrainer：口說、理解與口腔訓練
+- MotorTrainer：上肢、下肢與動作協調練習
+- VisionTrainer：視標、眼動、閱讀與視覺注意力練習
+- BrainTrainer：注意、記憶與思考練習
+- MouthTrainer：口說、理解與口腔動作練習
 
 ## English
 
-RehabTrainerHub is a home rehabilitation training hub that brings multiple trainers together:
+Rehab Trainer Hub brings together home-practice tools and educational information:
 
-- MotorTrainer: upper- and lower-limb motor rehabilitation training
-- VisionTrainer: vision training
-- BrainTrainer: cognitive training
-- MouthTrainer: speech, comprehension, and oral movement training
+- MotorTrainer: upper-limb, lower-limb, and movement-coordination practice
+- VisionTrainer: visual-target, eye-movement, reading, and attention practice
+- BrainTrainer: attention, memory, and thinking practice
+- MouthTrainer: speech, comprehension, and oral-movement practice
 
 ## 資料夾結構 / Folder Structure
 
@@ -63,14 +63,14 @@ RehabTrainerHub is a home rehabilitation training hub that brings multiple train
 
 ## 注意事項 / Notice
 
-本專案用於復健流程練習與軟體原型展示，不能取代醫療診斷、治療或復健建議。
+本專案提供一般資訊與自主練習工具，非醫療機構或職能治療所；不提供個別評估、診斷、醫囑或治療。所有結果只反映當次操作，不是醫療評估、診斷或療效指標。
 
-This project is for rehabilitation workflow practice and software prototyping. It does not replace medical diagnosis, treatment, or rehabilitation advice.
+This project provides general information and self-practice tools. It is not a medical facility or occupational therapy clinic and does not provide individualized assessment, diagnosis, medical orders, or treatment. Results reflect only the current activity.
 
 ## 部署文件 / Deployment
 
 - [Auth and D1 setup](docs/auth-d1-setup.md)
-- [治療師後台與 Cloudflare 擴充設定](docs/admin-cloudflare-setup.md)
+- [管理後台與 Cloudflare 擴充設定](docs/admin-cloudflare-setup.md)
 
 ## 授權 / License
 

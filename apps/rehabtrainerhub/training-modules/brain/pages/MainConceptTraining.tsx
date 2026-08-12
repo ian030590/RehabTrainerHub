@@ -12,6 +12,7 @@ import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResu
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
 import { useNavigate } from 'react-router-dom';
 import { useT, type TranslationKey } from '../i18n';
 import { SaveTrainingRecord, type BrainTrainingRecord } from '../utils/trainingRecords';
@@ -809,13 +810,6 @@ function ToDetailRows(trials: TrialResult[]): Array<Record<string, unknown>> {
     Selected_Sentences: trial.selectedSentenceText,
     Correct_Sentences: trial.correctSentenceText,
   }));
-}
-
-function FormatTestDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
 
 function ValidateTrainingSets(sets: TrainingSet[]): void {

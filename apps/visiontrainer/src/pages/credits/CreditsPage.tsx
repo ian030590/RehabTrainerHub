@@ -18,6 +18,18 @@ export function CreditsPage() {
 
   const githubItems: ReferenceListItem[] = [
     {
+      title: 'Freiburg Vision Test (FrACT) — official site and manual',
+      href: 'https://michaelbach.de/fract/',
+      description: t('credits.fractOfficial.desc'),
+      modules: [
+        moduleChip(visualAssessmentTab, t('assess.landolt.title')),
+        moduleChip(visualAssessmentTab, t('assess.tumblingE.title')),
+        moduleChip(visualAssessmentTab, t('assess.sloan.title')),
+        moduleChip(visualAssessmentTab, t('assess.pl.title')),
+        moduleChip(visualAssessmentTab, t('assess.contrast.title')),
+      ],
+    },
+    {
       title: 'brownhci/WebGazer',
       href: 'https://github.com/brownhci/WebGazer',
       description: t('credits.webgazer.desc'),
@@ -75,10 +87,17 @@ export function CreditsPage() {
     {
       title: 'Bach, M. (1996). The Freiburg Visual Acuity test—automatic measurement of visual acuity. Optometry and Vision Science, 73(1), 49–53. https://doi.org/10.1097/00006324-199601000-00008',
       href: 'https://doi.org/10.1097/00006324-199601000-00008',
+      description: t('credits.fract1996.desc'),
       modules: [
         moduleChip(visualAssessmentTab, t('assess.pl.title')),
         moduleChip(webSettingsTab, t('settings.tab.calibration')),
       ],
+    },
+    {
+      title: 'Bach, M. (2025). Freiburg vision test (FrACT): optimal number of trials? Graefe’s Archive for Clinical and Experimental Ophthalmology, 263, 437–442. https://doi.org/10.1007/s00417-024-06638-z',
+      href: 'https://doi.org/10.1007/s00417-024-06638-z',
+      description: t('credits.fractTrials.desc'),
+      modules: [moduleChip(visualAssessmentTab, t('assess.landolt.title'))],
     },
     {
       title: 'Papoutsaki, A., Sangkloy, P., Laskey, J., Daskalova, N., Huang, J., & Hays, J. (2016). WebGazer: Scalable Webcam Eye Tracking Using User Interactions. Proceedings of the 25th International Joint Conference on Artificial Intelligence (IJCAI 2016), 3839-3845.',

@@ -25,7 +25,7 @@ export function GetTrainerFooterLabels(language: 'zh' | 'en') {
         download: 'Download app',
         privacy: 'Privacy',
         repo: 'GitHub',
-        disclaimer: 'For rehabilitation practice workflow prototyping, not medical advice.',
+        disclaimer: 'General information and self-practice tools only. This site is not a medical facility or occupational therapy clinic and does not provide individualized assessment, diagnosis, medical orders, or treatment.',
         rights: 'All rights reserved.',
       }
     : {
@@ -33,7 +33,7 @@ export function GetTrainerFooterLabels(language: 'zh' | 'en') {
         download: '下載程式',
         privacy: '隱私權政策',
         repo: 'GitHub',
-        disclaimer: '復健練習流程原型，不能取代醫療建議。',
+        disclaimer: '本站提供一般資訊與自主練習工具，非醫療機構或職能治療所；不提供個別評估、診斷、醫囑或治療。',
         rights: '保留所有權利。',
       };
 }
@@ -57,7 +57,7 @@ export function RehabFooter({
     <footer className={className}>
       <div className={innerClassName}>
         <strong>{appName}</strong>
-        <span>{labels?.disclaimer ?? 'For rehabilitation practice workflow prototyping, not medical advice.'}</span>
+        <span>{labels?.disclaimer ?? 'General information and self-practice tools only. This site is not a medical facility or occupational therapy clinic and does not provide individualized assessment, diagnosis, medical orders, or treatment.'}</span>
         <div className="rehab-footer-meta">
           <nav aria-label={labels?.navigation ?? 'Footer navigation'}>
             <a href={hubHref}>{labels?.hub ?? 'Hub'}</a>

@@ -100,18 +100,18 @@ function AdminAccessMessage({
   return (
     <main className="admin-page" id="main-content">
       <header className="page-heading">
-        <p className="page-kicker">Therapist administration</p>
-        <h1>治療師後台</h1>
+        <p className="page-kicker">Administration</p>
+        <h1>管理後台</h1>
       </header>
       <section className="admin-access-notice" role="status">
         <span className="material-symbols-outlined" aria-hidden="true">
           {signedIn ? 'block' : 'lock'}
         </span>
         <div>
-          <h2>{signedIn ? '此帳號沒有後台權限' : '請先登入治療師帳號'}</h2>
+          <h2>{signedIn ? '此帳號沒有後台權限' : '請先登入已授權帳號'}</h2>
           <p>
             {signedIn
-              ? '治療師後台只開放已授權的治療師與系統管理員使用。'
+              ? '管理後台只開放已授權人員與系統管理員使用。'
               : '請使用右上角帳號按鈕登入；系統會依帳號角色判斷存取權限。'}
           </p>
         </div>
@@ -238,7 +238,7 @@ export function AdminDashboard() {
       DownloadFile(csv.blob, csv.filename, csv.blob.type || 'text/csv;charset=utf-8');
       if (csv.truncated) {
         setRecordsNotice(
-          `資料超過 ${csv.rowLimit.toLocaleString('zh-TW')} 筆；已下載最新資料。請縮小日期或患者篩選範圍以分批下載完整紀錄。`,
+          `資料超過 ${csv.rowLimit.toLocaleString('zh-TW')} 筆；已下載最新資料。請縮小日期或使用者篩選範圍以分批下載完整紀錄。`,
         );
       }
     } catch (error) {
@@ -258,19 +258,19 @@ export function AdminDashboard() {
     <main className="admin-page" id="main-content">
       <header className="admin-page-heading">
         <div>
-          <p className="page-kicker">Therapist administration</p>
-          <h1>治療師後台</h1>
-          <p>查看患者訓練資料、下載紀錄，並維護問答中心的衛教文章。</p>
+          <p className="page-kicker">Administration</p>
+          <h1>管理後台</h1>
+          <p>查看使用者訓練資料、下載紀錄，並維護問答中心的衛教文章。</p>
         </div>
         <span className="admin-role-badge">
           <span className="material-symbols-outlined" aria-hidden="true">
             {role === 'admin' ? 'admin_panel_settings' : 'clinical_notes'}
           </span>
-          {role === 'admin' ? '系統管理員' : '治療師'}
+          {role === 'admin' ? '系統管理員' : '已授權人員'}
         </span>
       </header>
 
-      <div className="admin-tabs" aria-label="治療師後台功能" role="tablist">
+      <div className="admin-tabs" aria-label="管理後台功能" role="tablist">
         {tabItems.map((item) => (
           <button
             aria-controls={`admin-panel-${item.id}`}
@@ -302,7 +302,7 @@ export function AdminDashboard() {
           <div>
             <p className="page-kicker">Overview</p>
             <h2>數據總覽</h2>
-            <p>統計範圍會依目前帳號可管理的患者權限顯示。</p>
+            <p>統計範圍會依目前帳號可管理的使用者權限顯示。</p>
           </div>
           <button
             className="admin-button admin-button-secondary"
@@ -341,7 +341,7 @@ export function AdminDashboard() {
               <article>
                 <span className="material-symbols-outlined" aria-hidden="true">groups</span>
                 <div>
-                  <p>可管理患者</p>
+                  <p>可管理使用者</p>
                   <strong>{summary?.patientCount ?? 0}</strong>
                   <small>人</small>
                 </div>
@@ -382,25 +382,25 @@ export function AdminDashboard() {
             <section className="admin-patient-section" aria-labelledby="admin-patient-title">
               <div className="section-title-row">
                 <div>
-                  <p className="page-kicker">Patients</p>
-                  <h2 id="admin-patient-title">患者摘要</h2>
+                  <p className="page-kicker">Users</p>
+                  <h2 id="admin-patient-title">使用者摘要</h2>
                 </div>
-                <p>{patients.length} 位患者</p>
+                <p>{patients.length} 位使用者</p>
               </div>
 
               {patients.length === 0 ? (
                 <div className="admin-state">
                   <span className="material-symbols-outlined" aria-hidden="true">person_off</span>
-                  <h3>目前沒有可管理的患者</h3>
-                  <p>患者完成指派後，摘要會顯示在這裡。</p>
+                  <h3>目前沒有可管理的使用者</h3>
+                  <p>使用者完成指派後，摘要會顯示在這裡。</p>
                 </div>
               ) : (
                 <div className="admin-table-wrap">
                   <table className="admin-table">
-                    <caption className="sr-only">患者訓練摘要</caption>
+                    <caption className="sr-only">使用者訓練摘要</caption>
                     <thead>
                       <tr>
-                        <th scope="col">患者</th>
+                        <th scope="col">使用者</th>
                         <th scope="col">電子郵件</th>
                         <th scope="col">紀錄數</th>
                         <th scope="col">最近訓練</th>
@@ -442,7 +442,7 @@ export function AdminDashboard() {
           <div>
             <p className="page-kicker">Training records</p>
             <h2>訓練紀錄</h2>
-            <p>依患者、日期與訓練器篩選，或下載目前篩選範圍的 CSV。</p>
+            <p>依使用者、日期與訓練器篩選，或下載目前篩選範圍的 CSV。</p>
           </div>
           <button
             className="admin-button admin-button-primary"
@@ -457,14 +457,14 @@ export function AdminDashboard() {
 
         <form className="admin-filter-panel" onSubmit={applyFilters}>
           <label className="admin-field">
-            <span>患者 ID 或選擇患者</span>
+            <span>使用者 ID 或選擇使用者</span>
             <input
               list="admin-patient-options"
               onChange={(event) => setDraftFilters((current) => ({
                 ...current,
                 patientId: event.target.value,
               }))}
-              placeholder="留空代表全部患者"
+              placeholder="留空代表全部使用者"
               type="text"
               value={draftFilters.patientId}
             />
@@ -478,7 +478,7 @@ export function AdminDashboard() {
               ))}
             </datalist>
             {overview?.patientsTruncated && (
-              <small>患者較多，選單僅列出最近訓練的 500 位；仍可直接輸入患者 ID。</small>
+              <small>使用者較多，選單僅列出最近訓練的 500 位；仍可直接輸入使用者 ID。</small>
             )}
           </label>
 
@@ -567,7 +567,7 @@ export function AdminDashboard() {
           <div className="admin-state">
             <span className="material-symbols-outlined" aria-hidden="true">search_off</span>
             <h3>找不到符合條件的紀錄</h3>
-            <p>請調整患者、日期或訓練器篩選條件。</p>
+            <p>請調整使用者、日期或訓練器篩選條件。</p>
           </div>
         )}
 
@@ -578,11 +578,11 @@ export function AdminDashboard() {
             </div>
             <div className="admin-table-wrap">
               <table className="admin-table admin-record-table">
-                <caption className="sr-only">患者訓練紀錄</caption>
+                <caption className="sr-only">使用者訓練紀錄</caption>
                 <thead>
                   <tr>
                     <th scope="col">訓練日期</th>
-                    <th scope="col">患者</th>
+                    <th scope="col">使用者</th>
                     <th scope="col">訓練器</th>
                     <th scope="col">模組</th>
                     <th scope="col">遊戲</th>

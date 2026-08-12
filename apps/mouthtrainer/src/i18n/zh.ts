@@ -20,13 +20,13 @@ export const zh = {
   'mouth.comprehension.body': '這個入口已準備好，之後會加入聽覺理解、詞語理解與日常情境理解練習。',
   'mouth.references.subtitle': 'MouthTrainer 使用的開放原始碼與技術參考。',
   'mouth.links.mouth.title': 'MouthTrainer',
-  'mouth.links.mouth.desc': '口說、理解與口腔動作訓練平台。',
+  'mouth.links.mouth.desc': '口說、理解與口腔動作練習工具。',
   'mouth.links.motor.title': 'MotorTrainer',
-  'mouth.links.motor.desc': '動作訓練平台，提供上肢與下肢訓練入口。',
+  'mouth.links.motor.desc': '上肢與下肢動作練習工具。',
   'mouth.links.vision.title': 'VisionTrainer',
-  'mouth.links.vision.desc': '視覺評估與視覺訓練平台。',
+  'mouth.links.vision.desc': '視覺搜尋、閱讀與辨識練習工具。',
   'mouth.links.brain.title': 'BrainTrainer',
-  'mouth.links.brain.desc': '注意、記憶與思考訓練平台。',
+  'mouth.links.brain.desc': '注意、記憶與思考練習工具。',
 } as const;
 
 export type TranslationKey = keyof typeof zh;

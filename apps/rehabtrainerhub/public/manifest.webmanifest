@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Rehab Trainer Hub 居家訓練網",
+  "name": "居家訓練網",
   "short_name": "居家訓練網",
-  "description": "整合動作、視覺、認知與口腔居家訓練。",
+  "description": "動作、視覺、認知與口腔居家練習工具及衛教資訊。",
   "lang": "zh-TW",
   "start_url": "/",
   "scope": "/",

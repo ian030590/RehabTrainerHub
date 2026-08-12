@@ -327,7 +327,7 @@ function ArticleSelectSql() {
       education_articles.published_at,
       education_articles.created_at,
       education_articles.updated_at,
-      COALESCE(NULLIF(TRIM(app_users.display_name), ''), '治療師團隊') AS author_name
+      COALESCE(NULLIF(TRIM(app_users.display_name), ''), '居家訓練網編輯') AS author_name
     FROM education_articles
     LEFT JOIN app_users ON app_users.id = education_articles.author_user_id
   `;
@@ -346,7 +346,7 @@ function ArticleCardSelectSql() {
       education_articles.published_at,
       education_articles.created_at,
       education_articles.updated_at,
-      COALESCE(NULLIF(TRIM(app_users.display_name), ''), '治療師團隊') AS author_name
+      COALESCE(NULLIF(TRIM(app_users.display_name), ''), '居家訓練網編輯') AS author_name
     FROM education_articles
     LEFT JOIN app_users ON app_users.id = education_articles.author_user_id
   `;

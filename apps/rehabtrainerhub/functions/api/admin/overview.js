@@ -103,7 +103,7 @@ export async function onRequestGet({ request, env }) {
 
     const patients = (patientResult.results || []).map((patient) => ({
       id: patient.id,
-      displayName: patient.display_name || patient.email || 'Patient',
+      displayName: patient.display_name || patient.email || 'User',
       email: patient.email || null,
       recordCount: Number(patient.record_count || 0),
       lastTrainedAt: patient.last_trained_at || null,

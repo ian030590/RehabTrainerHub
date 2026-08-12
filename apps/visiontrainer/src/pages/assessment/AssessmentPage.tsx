@@ -376,7 +376,7 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
         modes: {
           instruction: { label: 'Instructions', description: 'Show instructions only, without scoring.' },
           practice: { label: 'Practice', description: 'Run 5 fixed-speed practice trials with feedback.' },
-          formal: { label: 'Formal Test', description: 'Run the adaptive formal test and save results.' },
+          formal: { label: 'Recorded Practice', description: 'Run the adaptive practice and save results.' },
         },
       }
     : {
@@ -397,9 +397,9 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
           3: '在干擾物中辨認中央車輛，並指出周邊目標方向。',
         },
         modes: {
-          instruction: { label: '說明', description: '只顯示測驗說明，不計分。' },
+          instruction: { label: '說明', description: '只顯示練習說明，不計分。' },
           practice: { label: '練習', description: '以固定速度進行 5 題練習並顯示回饋。' },
-          formal: { label: '正式測驗', description: '進入 adaptive 正式測驗並儲存結果。' },
+          formal: { label: '紀錄練習', description: '進入 adaptive 練習並儲存結果。' },
         },
       };
 }

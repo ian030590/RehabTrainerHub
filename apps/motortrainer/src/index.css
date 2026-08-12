@@ -189,7 +189,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 }
 
 .app-layout .training-panel p,
-.app-layout .app-dialog-content,
 .app-layout .acuity-intro p,
 .app-layout .webgazer-jspsych-instructions p {
   font-size: calc(17px * var(--ui-font-scale));
@@ -203,7 +202,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 }
 
 .app-layout .drawing-defense-background-card-header,
-.app-layout .app-dialog h2,
 .app-layout .webgazer-jspsych-instructions h2,
 .app-layout .webgazer-calibration-steps h4 {
   font-size: calc(16px * var(--ui-font-scale));
@@ -229,117 +227,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   .font-setting-control .btn {
     flex: 1 1 auto;
   }
-}
-.app-dialog-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: var(--bg-overlay-dark);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-.app-dialog {
-  width: min(520px, 100%);
-  display: grid;
-  justify-items: center;
-  gap: 16px;
-  padding: 30px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-modal);
-  text-align: center;
-}
-
-.app-dialog h2 {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 26px;
-}
-
-.app-dialog-content {
-  color: var(--text-secondary);
-  font-size: 16px;
-  line-height: 1.65;
-}
-
-.app-dialog-content p {
-  margin: 0;
-}
-
-.app-dialog-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.app-dialog-error {
-  border-color: var(--error);
-}
-
-.app-dialog-error h2 {
-  color: var(--error);
-}
-
-.inline-alert {
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg-panel);
-  color: var(--text-secondary);
-  font-family: var(--font-family);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.45;
-  text-align: left;
-}
-
-.inline-alert-error {
-  border-color: var(--error);
-  background: var(--bg-error-soft);
-  color: var(--error);
-}
-
-.inline-alert-warning {
-  border-color: var(--warning);
-  background: var(--bg-warning-soft);
-  color: var(--warning);
-}
-
-.inline-alert-action {
-  cursor: pointer;
-}
-
-.training-config > .inline-alert {
-  margin: 14px 28px 0;
-}
-
-.training-start-alert {
-  max-width: 340px;
-  min-height: 44px;
-  margin: 0;
-  padding: 8px 12px;
-}
-
-.training-start-alert-list {
-  max-width: 420px;
-  display: grid;
-  gap: 4px;
-}
-
-.training-start-alert-details {
-  display: grid;
-  gap: 2px;
-  font-weight: 600;
-}
-
-.training-start-alert-details > span::before {
-  content: "- ";
 }
 
 /* ?? Experiment Container ?? */

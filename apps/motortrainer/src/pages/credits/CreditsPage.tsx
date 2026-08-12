@@ -13,7 +13,7 @@ export function CreditsPage() {
   const copy = GetDefaultReferenceListPageLabels(lang);
   const upperLimbModule = t('home.module.upperLimb.title');
   const moduleChip = (tabName: string, moduleName: string) => FormatReferenceModuleChip(tabName, moduleName);
-  const motorCortexTitle = lang === 'en' ? 'Motor Cortex Rehab' : '動作皮質復健訓練';
+  const motorCortexTitle = lang === 'en' ? 'Hand Target Tracking Practice' : '手部目標追蹤練習';
 
   const githubItems: ReferenceListItem[] = [
     {
@@ -36,8 +36,8 @@ export function CreditsPage() {
       title: 'ericosborne97/MotorCortexRehabilitationProgram',
       href: 'https://github.com/ericosborne97/MotorCortexRehabilitationProgram',
       description: lang === 'en'
-        ? 'Camera-based physical therapy companion used as the reference for hand-tracking motor rehab drills, adaptive difficulty, feedback, and session analytics.'
-        : '攝影機手部追蹤物理治療工具，作為手部追蹤動作復健、難度自適應、即時回饋與訓練紀錄的參考。',
+        ? 'Camera-based hand-tracking program used as the reference for target-following tasks, adaptive difficulty, feedback, and session records.'
+        : '攝影機手部追蹤程式，作為目標追蹤任務、難度自適應、即時回饋與練習紀錄的參考。',
       modules: [moduleChip(upperLimbModule, motorCortexTitle)],
     },
     {

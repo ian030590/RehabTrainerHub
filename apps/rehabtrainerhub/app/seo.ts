@@ -3,7 +3,7 @@ import { hubFullName, hubLocalName, hubName } from './hubBrand';
 import { siteUrls } from './siteUrls';
 
 export const siteDescription =
-  '居家訓練網 Rehab Trainer Hub 整合動作、視覺、注意力、記憶、高階認知與口腔訓練模組，並提供每日任務與復健進度追蹤。';
+  '居家訓練網 Rehab Trainer Hub 提供動作、視覺、認知與口腔居家練習工具、衛教資訊、每日任務與訓練紀錄；不提供個別評估、診斷或治療。';
 
 export const seoImage = {
   url: '/icons/pwa-512.png',
@@ -16,14 +16,15 @@ const hubUrl = `${siteUrls.hub}/`;
 const organizationId = `${hubUrl}#organization`;
 const websiteId = `${hubUrl}#website`;
 const hubApplicationId = `${hubUrl}#application`;
+const maintainerId = `${hubUrl}#maintainer`;
 
 const trainerApplications = [
   {
     '@type': 'WebApplication',
     '@id': `${siteUrls.motor}/#application`,
     name: 'MotorTrainer',
-    alternateName: '居家上肢動作訓練',
-    applicationCategory: 'HealthApplication',
+    alternateName: '居家上肢動作練習',
+    applicationCategory: 'EducationalApplication',
     operatingSystem: 'Any',
     browserRequirements: 'Requires a modern web browser with JavaScript enabled.',
     url: `${siteUrls.motor}/`,
@@ -44,12 +45,12 @@ const trainerApplications = [
     '@type': 'WebApplication',
     '@id': `${siteUrls.vision}/#application`,
     name: 'VisionTrainer',
-    alternateName: '居家視覺訓練與評估',
-    applicationCategory: 'HealthApplication',
+    alternateName: '居家視覺練習工具',
+    applicationCategory: 'EducationalApplication',
     operatingSystem: 'Any',
     browserRequirements: 'Requires a modern web browser with JavaScript enabled.',
     url: `${siteUrls.vision}/`,
-    description: 'VisionTrainer 提供視覺評估、眼動、閱讀與視覺注意力練習，適合依專業建議安排居家視覺訓練。',
+    description: 'VisionTrainer 提供螢幕視標、眼動、閱讀、視覺搜尋與注意力練習；結果僅反映當次操作，不作為診斷。',
     image: `${siteUrls.vision}/icons/pwa-512.png`,
     inLanguage: ['zh-TW', 'en'],
     isAccessibleForFree: true,
@@ -58,7 +59,7 @@ const trainerApplications = [
       price: 0,
       priceCurrency: 'TWD',
     },
-    featureList: ['視覺功能評估', '眼球運動訓練', '閱讀與視覺注意力練習'],
+    featureList: ['螢幕視標練習', '眼球運動練習', '閱讀與視覺注意力練習'],
     isPartOf: { '@id': websiteId },
     publisher: { '@id': organizationId },
   },
@@ -66,12 +67,12 @@ const trainerApplications = [
     '@type': 'WebApplication',
     '@id': `${siteUrls.brain}/#application`,
     name: 'BrainTrainer',
-    alternateName: '居家認知訓練',
-    applicationCategory: 'HealthApplication',
+    alternateName: '居家認知練習',
+    applicationCategory: 'EducationalApplication',
     operatingSystem: 'Any',
     browserRequirements: 'Requires a modern web browser with JavaScript enabled.',
     url: `${siteUrls.brain}/`,
-    description: 'BrainTrainer 提供注意、記憶與思考訓練入口，協助依專業建議安排認知訓練練習。',
+    description: 'BrainTrainer 提供注意、記憶、反應控制與思考練習工具。',
     image: `${siteUrls.brain}/icons/pwa-512.png`,
     inLanguage: ['zh-TW', 'en'],
     isAccessibleForFree: true,
@@ -80,7 +81,7 @@ const trainerApplications = [
       price: 0,
       priceCurrency: 'TWD',
     },
-    featureList: ['注意力訓練', '記憶力訓練', '高階認知與思考練習'],
+    featureList: ['注意力練習', '記憶練習', '高階認知與思考練習'],
     isPartOf: { '@id': websiteId },
     publisher: { '@id': organizationId },
   },
@@ -88,8 +89,8 @@ const trainerApplications = [
     '@type': 'WebApplication',
     '@id': `${siteUrls.mouth}/#application`,
     name: 'MouthTrainer',
-    alternateName: '居家舌頭動作訓練',
-    applicationCategory: 'HealthApplication',
+    alternateName: '居家舌頭動作練習',
+    applicationCategory: 'EducationalApplication',
     operatingSystem: 'Any',
     browserRequirements: 'Requires a modern web browser with JavaScript enabled.',
     url: `${siteUrls.mouth}/`,
@@ -155,7 +156,7 @@ export function CreateSeoMetadata({
       title: resolvedTitle,
       description,
       url: canonicalPath,
-      siteName: hubFullName,
+      siteName: hubLocalName,
       locale: 'zh_TW',
       type: 'website',
       images: [seoImage],
@@ -172,8 +173,8 @@ export function CreateSeoMetadata({
 export const websiteJsonLd = {
   '@type': 'WebSite',
   '@id': websiteId,
-  name: hubFullName,
-  alternateName: [hubLocalName, hubName],
+  name: hubLocalName,
+  alternateName: [hubName, hubFullName],
   url: hubUrl,
   inLanguage: 'zh-Hant-TW',
   description: siteDescription,
@@ -182,13 +183,14 @@ export const websiteJsonLd = {
     ...trainerApplications.map((application) => ({ '@id': application['@id'] })),
   ],
   publisher: { '@id': organizationId },
+  creator: { '@id': maintainerId },
 };
 
 export const organizationJsonLd = {
   '@type': 'Organization',
   '@id': organizationId,
-  name: hubFullName,
-  alternateName: [hubLocalName, hubName],
+  name: hubLocalName,
+  alternateName: [hubName, hubFullName],
   url: hubUrl,
   logo: {
     '@type': 'ImageObject',
@@ -197,16 +199,36 @@ export const organizationJsonLd = {
     height: seoImage.height,
   },
   description: siteDescription,
+  founder: { '@id': maintainerId },
+};
+
+export const maintainerJsonLd = {
+  '@type': 'Person',
+  '@id': maintainerId,
+  name: '蔡泓恩',
+  jobTitle: '職能治療師',
+  url: `${hubUrl}qa/#professional-background`,
+  description: '經職能治療師考試及格並領有職能治療師證書，畢業於國立臺灣大學職能治療學系，具視覺功能評估、視覺復能與臨床研究經驗。',
+  alumniOf: {
+    '@type': 'CollegeOrUniversity',
+    name: '國立臺灣大學',
+  },
+  hasCredential: {
+    '@type': 'EducationalOccupationalCredential',
+    name: '職能治療師證書',
+    credentialCategory: '醫事人員專業證書',
+  },
+  knowsAbout: ['職能治療', '視覺功能評估', '視覺復能', '居家訓練工具設計'],
 };
 
 export const hubApplicationJsonLd = {
   '@type': 'WebApplication',
   '@id': hubApplicationId,
-  name: hubFullName,
-  alternateName: [hubLocalName, hubName],
+  name: hubLocalName,
+  alternateName: [hubName, hubFullName],
   url: hubUrl,
   description: siteDescription,
-  applicationCategory: 'HealthApplication',
+  applicationCategory: 'EducationalApplication',
   operatingSystem: 'Any',
   browserRequirements: 'Requires a modern web browser with JavaScript enabled.',
   image: `${siteUrls.hub}${seoImage.url}`,
@@ -217,16 +239,18 @@ export const hubApplicationJsonLd = {
     price: 0,
     priceCurrency: 'TWD',
   },
-  featureList: ['復健訓練模組入口', '每日任務', '訓練紀錄與進度追蹤'],
+  featureList: ['居家練習模組入口', '每日任務', '訓練紀錄與進度追蹤'],
   hasPart: trainerApplications.map((application) => ({ '@id': application['@id'] })),
   isPartOf: { '@id': websiteId },
   publisher: { '@id': organizationId },
+  creator: { '@id': maintainerId },
 };
 
 export const siteJsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
     organizationJsonLd,
+    maintainerJsonLd,
     websiteJsonLd,
     hubApplicationJsonLd,
     ...trainerApplications,

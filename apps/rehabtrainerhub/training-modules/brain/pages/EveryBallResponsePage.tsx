@@ -29,6 +29,7 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { Clamp, FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
@@ -1768,16 +1769,4 @@ function Shuffle<T>(items: readonly T[]): T[] {
 
 function GetDistance(left: NormalizedLandmark, right: NormalizedLandmark): number {
   return Math.hypot(left.x - right.x, left.y - right.y);
-}
-
-function Clamp(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value)) return min;
-  return Math.min(max, Math.max(min, value));
-}
-
-function FormatTestDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }

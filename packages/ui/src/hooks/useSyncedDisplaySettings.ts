@@ -1,11 +1,12 @@
 import { useLayoutEffect } from 'react';
 import { ApplyDisplaySettings } from '../settings/displaySettings';
+import type { UiTheme } from '../settings/displaySettings';
 
 export interface SyncedDisplaySettings {
   defaultFontSizePx: number;
   fontBold: boolean;
   fontSizePx: number;
-  uiTheme: 'light' | 'dark' | 'contrast';
+  uiTheme: UiTheme;
 }
 
 export function useSyncedDisplaySettings(

@@ -16,7 +16,7 @@ import { AccountAvatar } from '@rehab-trainer/ui/components/AccountAvatar';
 import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
 import type { AuthUser } from '@rehab-trainer/ui/auth/authClient';
 import { PwaRegistration } from '@rehab-trainer/ui/pwa';
-import { hubName } from './hubBrand';
+import { hubLocalName, hubName } from './hubBrand';
 import { GetHubUiCopy } from './i18n';
 import { HubLanguageProvider, useHubLanguage } from './i18n/HubLanguage';
 import { siteUrls } from './siteUrls';
@@ -87,11 +87,11 @@ function HubShellContent({ children }: { children: ReactNode }) {
         <PwaRegistration />
         {!isTrainingRoute && (
           <header className="hub-header">
-            <Link className="hub-brand" href="/" aria-label="Rehab Trainer Hub">
+            <Link className="hub-brand" href="/" aria-label={`${hubLocalName} ${hubName}`}>
               <Image src="/rehabtrainerhub.svg" alt="" width={42} height={42} priority />
               <span>
-                <strong>Rehab Trainer Hub</strong>
-                <small>{copy.brandSubtitle}</small>
+                <strong>{hubLocalName}</strong>
+                <small>{hubName}</small>
               </span>
             </Link>
 

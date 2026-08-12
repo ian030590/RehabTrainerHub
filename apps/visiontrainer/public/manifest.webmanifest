@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "VisionTrainer 視覺訓練與評估",
+  "name": "VisionTrainer 視覺練習與紀錄",
   "short_name": "VisionTrainer",
-  "description": "視覺評估、眼動、閱讀與視覺注意力訓練。",
+  "description": "非醫療的視標、眼動、閱讀與視覺注意力練習工具。",
   "lang": "zh-TW",
   "start_url": "/",
   "scope": "/",

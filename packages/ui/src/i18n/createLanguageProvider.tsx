@@ -10,6 +10,7 @@ export interface LanguageContextValue<TKey extends string> {
 }
 
 export interface CreateLanguageProviderOptions<TKey extends string> {
+  deferInitialLanguageDetection?: boolean;
   dictionaries: Record<SupportedLanguage, Readonly<Record<TKey, string>>>;
   storageKey: string;
   fallbackLanguage?: SupportedLanguage;
@@ -56,6 +57,7 @@ function WriteStoredLanguage(storageKey: string, lang: SupportedLanguage) {
 }
 
 export function CreateLanguageProvider<TKey extends string>({
+  deferInitialLanguageDetection = false,
   dictionaries,
   fallbackLanguage = 'zh',
   storageKey,
@@ -64,11 +66,23 @@ export function CreateLanguageProvider<TKey extends string>({
 
   function LanguageProvider({ children }: { children: ReactNode }) {
     const [lang, setLangState] = useState<SupportedLanguage>(() => {
+      if (deferInitialLanguageDetection) return fallbackLanguage;
       const requested = ReadRequestedLanguage();
       if (requested) return requested;
       const saved = ReadStoredLanguage(storageKey);
       return IsSupportedLanguage(saved) ? saved : DetectPreferredLanguage(fallbackLanguage);
     });
+
+    useEffect(() => {
+      if (!deferInitialLanguageDetection) return;
+      const requested = ReadRequestedLanguage();
+      if (requested) {
+        setLangState(requested);
+        return;
+      }
+      const saved = ReadStoredLanguage(storageKey);
+      setLangState(IsSupportedLanguage(saved) ? saved : DetectPreferredLanguage(fallbackLanguage));
+    }, [deferInitialLanguageDetection, fallbackLanguage, storageKey]);
 
     useEffect(() => {
       document.documentElement.lang = lang === 'en' ? 'en' : 'zh-Hant-TW';

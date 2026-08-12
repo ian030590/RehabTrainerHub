@@ -1,20 +1,20 @@
 export const defaultRehabTimeZone = 'Asia/Taipei';
 
 export const achievementDefinitions = [
-  { id: 'streak-7-days', title: '連續復健 7 天', requiredDays: 7 },
-  { id: 'streak-14-days', title: '連續復健 14 天', requiredDays: 14 },
-  { id: 'streak-21-days', title: '連續復健 21 天', requiredDays: 21 },
-  { id: 'streak-1-month', title: '連續復健 1 個月', requiredDays: 30 },
-  { id: 'streak-2-months', title: '連續復健 2 個月', requiredDays: 60 },
-  { id: 'streak-3-months', title: '連續復健 3 個月', requiredDays: 90 },
-  { id: 'streak-4-months', title: '連續復健 4 個月', requiredDays: 120 },
-  { id: 'streak-5-months', title: '連續復健 5 個月', requiredDays: 150 },
-  { id: 'streak-6-months', title: '連續復健 6 個月', requiredDays: 180 },
-  { id: 'streak-1-year', title: '連續復健 1 年', requiredDays: 365 },
-  { id: 'streak-2-years', title: '連續復健 2 年', requiredDays: 730 },
-  { id: 'streak-3-years', title: '連續復健 3 年', requiredDays: 1095 },
-  { id: 'streak-4-years', title: '連續復健 4 年', requiredDays: 1460 },
-  { id: 'streak-5-years', title: '連續復健 5 年', requiredDays: 1825 },
+  { id: 'streak-7-days', title: '連續訓練 7 天', requiredDays: 7 },
+  { id: 'streak-14-days', title: '連續訓練 14 天', requiredDays: 14 },
+  { id: 'streak-21-days', title: '連續訓練 21 天', requiredDays: 21 },
+  { id: 'streak-1-month', title: '連續訓練 1 個月', requiredDays: 30 },
+  { id: 'streak-2-months', title: '連續訓練 2 個月', requiredDays: 60 },
+  { id: 'streak-3-months', title: '連續訓練 3 個月', requiredDays: 90 },
+  { id: 'streak-4-months', title: '連續訓練 4 個月', requiredDays: 120 },
+  { id: 'streak-5-months', title: '連續訓練 5 個月', requiredDays: 150 },
+  { id: 'streak-6-months', title: '連續訓練 6 個月', requiredDays: 180 },
+  { id: 'streak-1-year', title: '連續訓練 1 年', requiredDays: 365 },
+  { id: 'streak-2-years', title: '連續訓練 2 年', requiredDays: 730 },
+  { id: 'streak-3-years', title: '連續訓練 3 年', requiredDays: 1095 },
+  { id: 'streak-4-years', title: '連續訓練 4 年', requiredDays: 1460 },
+  { id: 'streak-5-years', title: '連續訓練 5 年', requiredDays: 1825 },
 ];
 
 export function GetServerDate(now = new Date(), timeZone = defaultRehabTimeZone) {

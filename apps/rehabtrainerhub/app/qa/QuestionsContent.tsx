@@ -41,6 +41,16 @@ export function QuestionsContent() {
         <p>{copy.aboutBody}</p>
       </section>
 
+      <section
+        className="about-site-section"
+        aria-labelledby="professional-background-title"
+        id="professional-background"
+      >
+        <p className="page-kicker">{copy.professionalKicker}</p>
+        <h2 id="professional-background-title">{copy.professionalTitle}</h2>
+        <p>{copy.professionalBody}</p>
+      </section>
+
       <EducationArticles />
 
       <section className="trainer-links-section" aria-labelledby="trainer-links-title">

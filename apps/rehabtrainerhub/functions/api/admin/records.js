@@ -295,7 +295,7 @@ function RecordSelectSql() {
     SELECT
       training_records.id,
       training_records.user_id AS patient_id,
-      COALESCE(app_users.display_name, app_users.email, 'Patient') AS patient_name,
+      COALESCE(app_users.display_name, app_users.email, 'User') AS patient_name,
       app_users.email AS patient_email,
       training_records.app_id,
       training_records.module_id,
@@ -338,16 +338,16 @@ function ToAdminRecordDto(row) {
 function BuildRecordsCsvHeader() {
   return [
     'Record_ID',
-    'Patient_ID',
-    'Patient_Name',
-    'Patient_Email',
+    'User_ID',
+    'Account_Name',
+    'User_Email',
     'App_ID',
     'Module_ID',
     'Game_ID',
     'Training_Date',
     'Saved_At',
     'Difficulty',
-    'User_Name',
+    'Training_Record_Name',
     'Data_Trust',
     'Client_Reported_Payload_JSON',
   ].map(ToSafeCsvCell).join(',');

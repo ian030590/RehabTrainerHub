@@ -285,7 +285,7 @@ export function ArticleManager({ onArticlesChanged }: ArticleManagerProps) {
     <div className="admin-article-manager">
       <div className="admin-section-toolbar">
         <div>
-          <p className="page-kicker">Patient education</p>
+          <p className="page-kicker">Content management</p>
           <h2>衛教文章</h2>
           <p>文章發布後，會以 Card 顯示在問答中心。</p>
         </div>
@@ -336,7 +336,7 @@ export function ArticleManager({ onArticlesChanged }: ArticleManagerProps) {
                 <input
                   maxLength={60}
                   onChange={(event) => updateForm('category', event.target.value)}
-                  placeholder="例如：中風復健"
+                  placeholder="例如：居家練習安全"
                   required
                   type="text"
                   value={form.category}
@@ -350,7 +350,7 @@ export function ArticleManager({ onArticlesChanged }: ArticleManagerProps) {
                   maxLength={100}
                   onChange={(event) => updateForm('slug', event.target.value)}
                   pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                  placeholder="例如：stroke-home-exercise"
+                  placeholder="例如：home-practice-safety"
                   type="text"
                   value={form.slug}
                 />

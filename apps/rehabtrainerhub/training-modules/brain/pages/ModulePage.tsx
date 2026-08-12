@@ -458,7 +458,7 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
         modes: {
           instruction: { label: 'Instructions', description: 'Show instructions only, without scoring.' },
           practice: { label: 'Practice', description: 'Run 5 fixed-speed practice trials with feedback.' },
-          formal: { label: 'Formal Test', description: 'Stop when stable, or at the configured max trials, then save results.' },
+          formal: { label: 'Recorded Practice', description: 'Stop when stable, or at the configured max trials, then save results.' },
         },
       }
     : {
@@ -483,9 +483,9 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
         },
         directions: ['上', '右上', '右', '右下', '下', '左下', '左', '左上'],
         modes: {
-          instruction: { label: '說明', description: '只顯示測驗說明，不計分。' },
+          instruction: { label: '說明', description: '只顯示練習說明，不計分。' },
           practice: { label: '練習', description: '以固定速度進行 5 題練習並顯示回饋。' },
-          formal: { label: '正式測驗', description: '穩定後提前停止，或達到設定最大 trial 數量後儲存結果。' },
+          formal: { label: '紀錄練習', description: '穩定後提前停止，或達到設定最大 trial 數量後儲存結果。' },
         },
       };
 }

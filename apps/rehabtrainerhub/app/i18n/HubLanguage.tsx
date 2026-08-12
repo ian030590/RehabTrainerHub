@@ -24,6 +24,7 @@ function FlattenTranslations(value: unknown, prefix = '', target: Record<string,
 }
 
 const language = CreateLanguageProvider<string>({
+  deferInitialLanguageDetection: true,
   dictionaries: {
     zh: FlattenTranslations(zhTW.hubUi),
     en: FlattenTranslations(en.hubUi),

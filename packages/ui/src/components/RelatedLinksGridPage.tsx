@@ -19,11 +19,11 @@ export function GetDefaultRelatedLinksPageLabels(language: 'zh' | 'en') {
   return language === 'en'
     ? {
         title: 'Related Sites',
-        subtitle: 'Official websites in the RehabTrainerHub ecosystem',
+        subtitle: 'Related training tools from Rehab Trainer Hub',
       }
     : {
         title: '相關網站',
-        subtitle: 'RehabTrainerHub 生態系的正式網站',
+        subtitle: '居家訓練網的相關訓練工具',
       };
 }
 
@@ -32,24 +32,24 @@ export type RelatedTrainerSite = keyof SiteUrls;
 const relatedSiteCopy = {
   zh: {
     hub: {
-      title: 'RehabTrainerHub',
-      description: '居家訓練入口平台，整理各項居家訓練工具。',
+      title: '居家訓練網',
+      description: '居家練習工具與衛教資訊的整合入口。',
     },
     motor: {
       title: 'MotorTrainer',
-      description: '動作訓練平台，提供上肢與下肢訓練入口。',
+      description: '上肢、下肢與動作協調練習工具。',
     },
     vision: {
       title: 'VisionTrainer',
-      description: '視覺評估與視覺訓練平台。',
+      description: '視覺辨識、眼球運動與閱讀練習工具。',
     },
     brain: {
       title: 'BrainTrainer',
-      description: '注意、記憶與思考訓練平台。',
+      description: '注意、記憶與思考練習工具。',
     },
     mouth: {
       title: 'MouthTrainer',
-      description: '口說、理解與口腔動作訓練平台。',
+      description: '口說、理解與口腔動作練習工具。',
     },
   },
   en: {
@@ -59,19 +59,19 @@ const relatedSiteCopy = {
     },
     motor: {
       title: 'MotorTrainer',
-      description: 'Motor rehabilitation platform with upper- and lower-limb training areas.',
+      description: 'Upper-limb, lower-limb, and movement-coordination practice tools.',
     },
     vision: {
       title: 'VisionTrainer',
-      description: 'Visual assessment and visual training platform.',
+      description: 'Visual recognition, eye-movement, and reading practice tools.',
     },
     brain: {
       title: 'BrainTrainer',
-      description: 'Attention, memory, and thinking practice platform.',
+      description: 'Attention, memory, and thinking practice tools.',
     },
     mouth: {
       title: 'MouthTrainer',
-      description: 'Speech, comprehension, and oral-movement training platform.',
+      description: 'Speech, comprehension, and oral-movement practice tools.',
     },
   },
 } as const;

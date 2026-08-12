@@ -231,7 +231,16 @@ function EducationArticleCard({ article }: { article: ArticleCard }) {
         </div>
         <h3>{article.title}</h3>
         <p className="education-article-summary">{article.summary}</p>
-        <p className="education-article-author">{copy.author}: {article.authorName}</p>
+        <p className="education-article-author">
+          {copy.author}:{' '}
+          {article.authorName === '蔡泓恩' ? (
+            <a href="#professional-background">{article.authorName}</a>
+          ) : article.authorName}
+          {' · '}{copy.updated}:{' '}
+          <time dateTime={article.updatedAt}>
+            {FormatPublishedDate(article.updatedAt, locale)}
+          </time>
+        </p>
         <details onToggle={handleToggle}>
           <summary>
             <span>{copy.read}</span>
