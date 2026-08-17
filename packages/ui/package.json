@@ -53,6 +53,8 @@
     "./downloadFile": "./src/downloadFile.ts",
     "./embeddedTraining": "./src/embeddedTraining.ts",
     "./fullscreen": "./src/fullscreen.ts",
+    "./gamePlatform": "./src/gamePlatform.ts",
+    "./jsPsychLifecycle": "./src/jsPsychLifecycle.ts",
     "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
     "./hooks/useFullscreenTrainingRoot": "./src/hooks/useFullscreenTrainingRoot.ts",
     "./hooks/useMediaPermissionPreflight": "./src/hooks/useMediaPermissionPreflight.ts",
@@ -72,6 +74,7 @@
     "./ufovResults": "./src/ufovResults.ts"
   },
   "peerDependencies": {
+    "jspsych": "^8.2.1",
     "react": "^19.1.0",
     "react-router-dom": "^7.6.1"
   },

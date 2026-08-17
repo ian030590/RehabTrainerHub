@@ -21,7 +21,7 @@ import { GetHubUiCopy } from './i18n';
 import { HubLanguageProvider, useHubLanguage } from './i18n/HubLanguage';
 import { siteUrls } from './siteUrls';
 
-const navigationHrefs = ['/', '/progress/', '/qa/', '/download/'] as const;
+const navigationHrefs = ['/', '/games/', '/progress/', '/qa/', '/download/'] as const;
 
 function IsStaffUser(user: AuthUser | null): boolean {
   const role = (user as (AuthUser & { role?: unknown }) | null)?.role;
@@ -148,6 +148,16 @@ function HubShellContent({ children }: { children: ReactNode }) {
                   id="hub-account-panel"
                 >
                   {user && <p className="account-name">{user.displayName}</p>}
+                  {user && (
+                    <Link
+                      aria-current={pathname.startsWith('/developer/') ? 'page' : undefined}
+                      className="account-admin-link"
+                      href="/developer/"
+                    >
+                      <span className="material-symbols-outlined" aria-hidden="true">extension</span>
+                      {copy.developer}
+                    </Link>
+                  )}
                   {isStaff && (
                     <Link
                       aria-current={pathname.startsWith('/admin/') ? 'page' : undefined}

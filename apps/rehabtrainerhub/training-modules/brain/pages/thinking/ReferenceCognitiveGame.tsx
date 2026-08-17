@@ -6,7 +6,8 @@ import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { useT } from '../../i18n';
 import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { FormatTestDate, WriteJsPsychData } from '@rehab-trainer/ui/trainingGameUtils';
+import { FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
+import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import {
   difficulties,
   reactionTrialOptions,
@@ -112,11 +113,13 @@ export function ReferenceCognitiveGame({
   const { t } = useT();
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
+  const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
   const phaseRef = useRef<GamePhase>('menu');
   const stateRef = useRef<CognitiveGameState | null>(null);
   const metricsRef = useRef<RuntimeMetrics>({ elapsed: 0 });
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const renderRef = useRef<() => void>(() => undefined);
   const finishGameRef = useRef<(result: GameResult) => void>(() => undefined);
   const lastRenderSecondRef = useRef(-1);
@@ -188,6 +191,7 @@ export function ReferenceCognitiveGame({
       Total_Duration_Seconds: Number(metricsRef.current.elapsed.toFixed(1)),
       ...timingData.details,
     };
+    jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
     setResult(record);
     setPhase('results');
     void SaveTrainingSessionRecord({
@@ -204,7 +208,6 @@ export function ReferenceCognitiveGame({
       },
       detailRows: timingData.detailRows,
     });
-    WriteJsPsychData(jsPsychRef, record as unknown as Record<string, unknown>, 'Unable to write reference cognitive result to jsPsych data.');
   }, [difficulty, gameId, metaTitle, setPhase, trainingModuleId]);
 
   finishGameRef.current = finishGame;
@@ -216,17 +219,23 @@ export function ReferenceCognitiveGame({
 
     const app = appRef.current;
     if (!app || !(await ResizePixiAppToElement(app, pixiHostRef.current))) return;
-    metricsRef.current = { elapsed: 0 };
-    lastRenderSecondRef.current = -1;
-    stateRef.current = CreateInitialState(gameId, difficulty, reactionTrials);
-    setResult(null);
-    setPhase('playing');
-    renderRef.current();
-    FlushPixiRender();
-    if (stateRef.current?.kind === 'whack-a-mole') ScheduleNextWhackTarget(stateRef.current);
+    await jsPsychLifecycleRef.current?.start({
+      moduleId: `brain:${gameId}`,
+      onStart: () => {
+        metricsRef.current = { elapsed: 0 };
+        lastRenderSecondRef.current = -1;
+        stateRef.current = CreateInitialState(gameId, difficulty, reactionTrials);
+        setResult(null);
+        setPhase('playing');
+        renderRef.current();
+        FlushPixiRender();
+        if (stateRef.current?.kind === 'whack-a-mole') ScheduleNextWhackTarget(stateRef.current);
+      },
+    });
   }, [difficulty, enterTrainingFullscreen, gameId, reactionTrials, setPhase]);
 
   const returnToMenu = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
     jsPsychRef.current?.pluginAPI.clearAllTimeouts();
     setPhase('menu');
     setResult(null);
@@ -344,7 +353,19 @@ export function ReferenceCognitiveGame({
   }, []);
 
   useEffect(() => {
-    jsPsychRef.current = initJsPsych();
+    const host = jsPsychHostRef.current;
+    if (!host) return;
+
+    const jsPsych = initJsPsych({ display_element: host });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychRef.current = jsPsych;
+    jsPsychLifecycleRef.current = lifecycle;
+
+    return () => {
+      lifecycle.dispose();
+      if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
+      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
@@ -431,6 +452,7 @@ export function ReferenceCognitiveGame({
 
   return (
     <div ref={fullscreenRootRef} className={`cognitive-reference-game cognitive-reference-phase-${phase}`} style={{ '--cognitive-game-accent': cognitiveAccentCss } as CSSProperties}>
+      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
       <div ref={pixiHostRef} className="cognitive-pixi-stage" />
       {phase === 'playing' && (stateRef.current?.kind === 'sokoban' || stateRef.current?.kind === 'maze') && (
         <MobileDirectionPad

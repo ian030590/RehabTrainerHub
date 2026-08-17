@@ -109,6 +109,44 @@ export { CreateCsvContent, EnsureCsvUtf8Bom, ToCsvCell } from './csv';
 export type { CsvCellValue, CsvRow } from './csv';
 export { DownloadCsvFile, DownloadFile } from './downloadFile';
 export { EnterFullscreenFromUserGesture, ExitFullscreenIfActive, WaitForFullscreenLayout } from './fullscreen';
+export {
+  gamePlatformCapabilities,
+  gamePlatformLifecycleMessageType,
+  gamePlatformManifestSchemaVersion,
+  gamePlatformMaxFiles,
+  gamePlatformMaxPayloadBytes,
+  gamePlatformMaxResultMetrics,
+  gamePlatformMessageSchema,
+  gamePlatformOpaqueOrigin,
+  gamePlatformResultMessageType,
+  gamePlatformRunSessionTokenLength,
+  gamePlatformSessionNonceMaxLength,
+  gamePlatformSessionNonceMinLength,
+  gamePlatformSupportedJsPsychMajorVersion,
+  IsGamePlatformLifecycleMessage,
+  IsGamePlatformManifest,
+  IsGamePlatformMessage,
+  IsGamePlatformResultMessage,
+  IsTrustedGamePlatformFrameMessage,
+} from './gamePlatform';
+export type {
+  GamePlatformCapability,
+  GamePlatformLifecycleMessage,
+  GamePlatformLifecycleMessageV1,
+  GamePlatformLifecyclePayload,
+  GamePlatformLifecyclePhase,
+  GamePlatformManifest,
+  GamePlatformManifestV1,
+  GamePlatformMessage,
+  GamePlatformMessageEvent,
+  GamePlatformMessageV1,
+  GamePlatformMetricValue,
+  GamePlatformResultMessage,
+  GamePlatformResultMessageV1,
+  GamePlatformResultMetrics,
+  GamePlatformResultPayload,
+  GamePlatformResultStatus,
+} from './gamePlatform';
 export { CreateUseActiveUser } from './hooks/useActiveUser';
 export { useFullscreenTrainingRoot } from './hooks/useFullscreenTrainingRoot';
 export {

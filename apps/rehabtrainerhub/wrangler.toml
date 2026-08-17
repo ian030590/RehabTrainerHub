@@ -15,3 +15,16 @@ id = "9671f8f8995240a3a5fc6b870c66b561"
 [[r2_buckets]]
 binding = "ASSET_BUCKET"
 bucket_name = "rehab-storage"
+
+# Developer uploads remain private until both automated scanning and an admin
+# review approve the exact content digest. The isolated runner never receives
+# this binding.
+[[r2_buckets]]
+binding = "GAME_QUARANTINE_BUCKET"
+bucket_name = "rehab-game-quarantine"
+
+# Only immutable, approved game releases are copied here. The isolated runner
+# receives read-only access by convention and has no auth or D1 bindings.
+[[r2_buckets]]
+binding = "GAME_RELEASE_BUCKET"
+bucket_name = "rehab-game-releases"

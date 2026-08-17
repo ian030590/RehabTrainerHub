@@ -12,6 +12,10 @@ if (!dryRun && (!accountId || !apiToken)) {
 const pagesApps = DiscoverPagesApps();
 console.log(`Syncing canonical domains for ${pagesApps.length} discovered Cloudflare Pages project(s).`);
 for (const app of pagesApps) {
+  if (app.usesBuiltInPagesDomain) {
+    console.log(`Skipping built-in Pages domain for ${app.projectName}: ${app.hostname}`);
+    continue;
+  }
   if (dryRun) {
     console.log(`$ cloudflare pages domain ensure ${app.projectName} ${app.hostname}`);
     continue;

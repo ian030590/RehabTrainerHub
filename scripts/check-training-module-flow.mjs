@@ -241,6 +241,151 @@ for (const { files, ids, tokens } of implementationGroups) {
   }
 }
 
+const externalRuntimeAdapterTokens = [
+  'initJsPsych(',
+  'new JsPsychExternalLifecycle(',
+  'jsPsychLifecycleRef.current?.start({',
+  'jsPsychLifecycleRef.current?.finish(',
+  'jsPsychLifecycleRef.current?.abort({',
+  'lifecycle.dispose()',
+];
+
+const jsPsychLifecycleGroups = [
+  {
+    status: 'native-timeline',
+    ids: [
+      'vision:moving-card',
+      'vision:oculomotor-training',
+      'vision:gabor-patching',
+      'vision:reading-training',
+      'vision:driving-rehab',
+    ],
+    files: [
+      'vision/pages/training/TrainingPage.tsx',
+      'vision/experiment/plugins/pixi-moving-card.ts',
+      'vision/experiment/plugins/pixi-oculomotor-training.ts',
+      'vision/experiment/plugins/pixi-gabor-patching.ts',
+      'vision/experiment/plugins/pixi-reading-training.ts',
+      'vision/experiment/plugins/three-driving-rehab.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['brain:ufov'],
+    files: ['brain/pages/ufov/UfovPage.tsx'],
+    tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['brain:every-ball-response'],
+    files: ['brain/pages/EveryBallResponsePage.tsx'],
+    tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
+  },
+  {
+    status: 'external-runtime-adapter',
+    ids: ['vision:hart-chart'],
+    files: ['vision/pages/training/HartChartPage.tsx'],
+    tokens: [
+      'initJsPsych(',
+      'new JsPsychExternalLifecycle(',
+      'lifecycle.start({',
+      'jsPsychLifecycleRef.current?.finish({',
+      'jsPsychLifecycleRef.current?.abort({',
+      'lifecycle.dispose()',
+    ],
+    forbiddenTokens: ['WriteJsPsychData'],
+  },
+  {
+    status: 'external-runtime-adapter',
+    ids: ['brain:main-concept'],
+    files: ['brain/pages/MainConceptTraining.tsx'],
+    tokens: [
+      'initJsPsych(',
+      'new JsPsychExternalLifecycle(',
+      'jsPsychLifecycleRef.current?.start({',
+      'jsPsychLifecycleRef.current?.finish({',
+      'jsPsychLifecycleRef.current?.abort({',
+      'lifecycle.dispose()',
+    ],
+    forbiddenTokens: ['WriteJsPsychData'],
+  },
+  {
+    status: 'external-runtime-adapter',
+    ids: ReferenceCognitiveCatalogIds(),
+    files: ['brain/pages/thinking/ReferenceCognitiveGame.tsx'],
+    tokens: [
+      'initJsPsych(',
+      'new JsPsychExternalLifecycle(',
+      'jsPsychLifecycleRef.current?.start({',
+      'jsPsychLifecycleRef.current?.finish(',
+      'jsPsychLifecycleRef.current?.abort({',
+      'lifecycle.dispose()',
+    ],
+    forbiddenTokens: ['WriteJsPsychData'],
+  },
+  ...Object.entries({
+    'motor:drawing-defense': 'motor/pages/training/DrawingTowerDefenseGame.tsx',
+    'motor:asteroid-shield': 'motor/pages/training/AsteroidShieldGame.tsx',
+    'motor:gesture-battler': 'motor/pages/training/GestureBattlerGame.tsx',
+    'motor:motor-cortex-rehab': 'motor/pages/training/MotorCortexRehabGame.tsx',
+    'brain:minesweeper': 'brain/pages/thinking/MinesweeperGame.tsx',
+    'mouth:tongue-catch': 'mouth/pages/training/TongueCatchGame.tsx',
+  }).map(([id, file]) => ({
+    status: 'external-runtime-adapter',
+    ids: [id],
+    files: [file],
+    tokens: externalRuntimeAdapterTokens,
+    forbiddenTokens: ['WriteJsPsychData'],
+  })),
+];
+
+const jsPsychLifecycleIds = jsPsychLifecycleGroups.flatMap(({ ids }) => ids);
+assert.deepEqual(
+  [...jsPsychLifecycleIds].sort(),
+  [...catalogIds].sort(),
+  'Every catalog module must have exactly one explicit jsPsych lifecycle classification.',
+);
+
+for (const { files, forbiddenTokens = [], ids, status, tokens } of jsPsychLifecycleGroups) {
+  const source = files.map((file) => (
+    readFileSync(resolve(moduleRoot, file), 'utf8')
+  )).join('\n');
+  for (const token of tokens) {
+    assert.ok(
+      source.includes(token),
+      `${ids.join(', ')} is missing ${status} jsPsych evidence "${token}".`,
+    );
+  }
+  for (const token of forbiddenTokens) {
+    assert.ok(
+      !source.includes(token),
+      `${ids.join(', ')} lifecycle status is stale because it now contains "${token}".`,
+    );
+  }
+}
+
+const externalLifecycleAdapterSource = readFileSync(
+  resolve(repoRoot, 'packages/ui/src/jsPsychLifecycle.ts'),
+  'utf8',
+);
+for (const token of [
+  'implements JsPsychPlugin',
+  'this.jsPsych.run([',
+  'this.jsPsych.finishTrial(',
+  'this.jsPsych.abortExperiment(',
+  'this.jsPsych.pluginAPI.clearAllTimeouts()',
+]) {
+  assert.ok(
+    externalLifecycleAdapterSource.includes(token),
+    `The renderer-independent jsPsych lifecycle adapter is missing "${token}".`,
+  );
+}
+
+const pendingJsPsychIds = jsPsychLifecycleGroups
+  .filter(({ status }) => status === 'utility-only-pending')
+  .flatMap(({ ids }) => ids);
+
 const permissionImplementations = {
   'motor:asteroid-shield': 'motor/pages/training/AsteroidShieldGame.tsx',
   'motor:gesture-battler': 'motor/pages/training/GestureBattlerGame.tsx',
@@ -277,6 +422,11 @@ assert.ok(
 
 console.log(
   `Training flow contract passed for ${catalogIds.length} Hub-owned modules, ${implementationGroups.length} runtime flows, and ${Object.keys(hostImports).length} Trainer hosts.`,
+);
+console.log(
+  pendingJsPsychIds.length > 0
+    ? `jsPsych lifecycle: ${catalogIds.length - pendingJsPsychIds.length} managed by native timelines/adapters; ${pendingJsPsychIds.length} still utility-only (${pendingJsPsychIds.join(', ')}).`
+    : `jsPsych lifecycle: all ${catalogIds.length} modules are managed by native timelines or external-runtime adapters; none remain utility-only.`,
 );
 
 function ReferenceCognitiveCatalogIds() {

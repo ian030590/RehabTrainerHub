@@ -2,12 +2,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import QRCode from 'qrcode';
+import { initJsPsych } from 'jspsych';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { NotifyHubTrainingAbort } from '@rehab-trainer/ui/embeddedTraining';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { useT } from '../../i18n';
 import { SaveTrainingRecord } from '../../utils/trainingRecords';
@@ -144,6 +146,8 @@ function HartChartRuntime() {
   const [qrOpen, setQrOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const workspaceRef = useRef<HTMLDivElement>(null);
   const decoderPanelRef = useRef<HTMLElement>(null);
   const decoderDragActiveRef = useRef(false);
@@ -170,6 +174,24 @@ function HartChartRuntime() {
 
   const complete = decodableIndexes.length > 0
     && decodableIndexes.every((index) => answers[index] === decoder.tokens[index].char);
+
+  useEffect(() => {
+    const host = jsPsychHostRef.current;
+    if (!host) return;
+
+    const jsPsych = initJsPsych({ display_element: host });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychLifecycleRef.current = lifecycle;
+    void lifecycle.start({
+      moduleId: 'vision:hart-chart',
+      onStart: () => setStartedAt(Date.now()),
+    });
+
+    return () => {
+      lifecycle.dispose();
+      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     setAnswers(Array(decoder.tokens.length).fill(''));
@@ -210,16 +232,17 @@ function HartChartRuntime() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [qrOpen]);
 
-  useTrainingAbort({
-    active: phase === 'playing',
-    abortOnEscape: !qrOpen,
-    onAbort: () => navigate('/'),
-  });
-
   const exitTraining = () => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
     NotifyHubTrainingAbort();
     navigate('/');
   };
+
+  useTrainingAbort({
+    active: phase === 'playing',
+    abortOnEscape: !qrOpen,
+    onAbort: exitTraining,
+  });
 
   const resetChart = () => {
     setSeed(CreateHartSeed());
@@ -360,6 +383,13 @@ function HartChartRuntime() {
       trial_type: 'hart-chart-decoder',
     };
 
+    jsPsychLifecycleRef.current?.finish({
+      duration_ms: nextResult.durationMs,
+      attempts: nextResult.attempts,
+      target_count: nextResult.targetCount,
+      accuracy_percent: nextResult.accuracy,
+      hints_used: nextResult.hintsUsed,
+    });
     setResult(nextResult);
     setPhase('results');
     void SaveTrainingRecord({
@@ -376,6 +406,7 @@ function HartChartRuntime() {
   if (phase === 'results' && result) {
     return (
       <main className="experiment-container experiment-container-scrollable hart-results-container">
+        <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
         <div className="experiment-results">
           <h1>{t('hart.results.title')}</h1>
           <ResultSummary
@@ -405,6 +436,7 @@ function HartChartRuntime() {
 
   return (
     <main className={`hart-page ${decoderOpen ? `hart-page-decoder-open hart-decoder-dock-${decoderDock}` : ''}`}>
+      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
       <header className="hart-topbar">
         <div className="hart-topbar-leading">
           <button className="btn btn-ghost hart-back-button" type="button" onClick={exitTraining}>

@@ -255,8 +255,9 @@ export const en = {
     navigation: {
       brandSubtitle: 'Home practice hub',
       navigationLabel: 'Rehab Trainer Hub navigation',
-      navigationItems: ['Training Lobby', 'Progress', 'Education', 'Download app'],
+      navigationItems: ['Training Lobby', 'Game platform', 'Progress', 'Education', 'Download app'],
       accountMenu: 'Account menu',
+      developer: 'Developer submissions',
       admin: 'Administration',
       switchLanguage: 'Switch language to Traditional Chinese',
       flagLabel: 'English (United States)',

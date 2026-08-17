@@ -9,6 +9,7 @@ export default function Robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
+        disallow: '/api/',
       },
     ],
     sitemap: new URL('/sitemap.xml', siteUrls.hub).href,

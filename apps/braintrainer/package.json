@@ -10,7 +10,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node ../../scripts/check-trainer-entrypoints.mjs && tsc -b && vite build && node ../../scripts/check-vite-html-shell.mjs dist/index.html && npm run test:route-smoke && node ../../scripts/emit-pwa-assets.mjs dist && node ../../scripts/check-seo-output.mjs",
+    "build": "node ../../scripts/check-trainer-entrypoints.mjs && tsc -b && vite build && node ../../scripts/check-vite-html-shell.mjs dist/index.html && npm run test:route-smoke && node ../../scripts/emit-pwa-assets.mjs dist && node ../../scripts/emit-official-game-pwas.mjs dist && node ../../scripts/check-seo-output.mjs",
     "test:entrypoints": "node ../../scripts/check-trainer-entrypoints.mjs",
     "test:production-shell": "node ../../scripts/check-vite-html-shell.mjs dist/index.html",
     "test:seo": "node ../../scripts/check-seo-output.mjs",

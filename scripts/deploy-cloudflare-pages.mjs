@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CreateCloudflareDeploymentEnvironment } from './gamehost-environment.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appsRoot = join(repoRoot, 'apps');
@@ -106,7 +107,7 @@ function RunWrangler(args, options = {}) {
   const spawnOptions = {
     cwd: repoRoot,
     encoding: shouldCapture ? 'utf8' : undefined,
-    env: process.env,
+    env: CreateCloudflareDeploymentEnvironment(process.env),
     stdio: shouldCapture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
   };
 
@@ -327,7 +328,7 @@ function SyncCustomDomains() {
   console.log(`$ node ${args.map(ShellQuote).join(' ')}`);
   const result = spawnSync(process.execPath, args, {
     cwd: repoRoot,
-    env: process.env,
+    env: CreateCloudflareDeploymentEnvironment(process.env),
     stdio: 'inherit',
   });
   if (result.status !== 0) {

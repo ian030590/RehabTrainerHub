@@ -113,6 +113,11 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   }, [closeOverlay]);
 
   const moduleCopy = GetTrainingModuleCopy(module, locale);
+  const delegatedFeatures = module.mediaPermission === 'camera-or-microphone'
+    ? 'autoplay; camera; microphone; fullscreen'
+    : module.mediaPermission === 'camera' || module.mediaPermission === 'camera-optional'
+      ? 'autoplay; camera; fullscreen'
+      : 'autoplay; fullscreen';
 
   return (
     <dialog
@@ -133,13 +138,13 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
           <span className="training-loading-spinner" aria-hidden="true" />
         </div>
         <iframe
-          allow="autoplay; camera; microphone; gamepad; fullscreen"
+          allow={delegatedFeatures}
           allowFullScreen
           className={isLoaded ? 'is-loaded' : undefined}
           onLoad={() => setIsLoaded(true)}
           referrerPolicy="strict-origin-when-cross-origin"
           ref={frameRef}
-          sandbox="allow-downloads allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"
+          sandbox="allow-downloads allow-modals allow-same-origin allow-scripts"
           src={sourceUrl}
           title={t('embeddedTraining.frameTitle', { title: moduleCopy.title })}
         />

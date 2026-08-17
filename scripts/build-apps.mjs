@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CreateGamehostBuildEnvironment } from './gamehost-environment.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appsRoot = join(repoRoot, 'apps');
@@ -31,6 +32,7 @@ function DiscoverBuildableApps() {
       return {
         name: pkg.name ?? ToPosixPath(relative(repoRoot, appDir)),
         path: ToPosixPath(relative(repoRoot, appDir)),
+        role: pkg.rehabTrainer?.role,
       };
     })
     .filter(Boolean)
@@ -47,9 +49,14 @@ function RunBuild(app) {
   }
 
   const command = GetCommand('npm', ['--prefix', app.path, 'run', 'build']);
+  const buildEnvironment = cloudflarePages
+    ? { ...process.env, CF_PAGES: '1' }
+    : process.env;
   const result = spawnSync(command.file, command.args, {
     cwd: repoRoot,
-    env: cloudflarePages ? { ...process.env, CF_PAGES: '1' } : process.env,
+    env: app.role === 'gamehost'
+      ? CreateGamehostBuildEnvironment(buildEnvironment)
+      : buildEnvironment,
     stdio: 'inherit',
   });
 

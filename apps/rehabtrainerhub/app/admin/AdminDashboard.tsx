@@ -9,6 +9,7 @@ import {
 import { DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import { useHubAuth } from '../HubNavigation';
 import { ArticleManager } from './ArticleManager';
+import { GameReleaseManager } from './GameReleaseManager';
 import {
   FetchAdminOverview,
   FetchAdminRecords,
@@ -18,7 +19,7 @@ import {
   type AdminRecordsResponse,
 } from './adminApi';
 
-type AdminTab = 'overview' | 'records' | 'articles';
+type AdminTab = 'overview' | 'records' | 'articles' | 'games';
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 type StaffRole = 'therapist' | 'admin';
 
@@ -27,6 +28,7 @@ const tabItems: readonly { id: AdminTab; label: string; icon: string }[] = [
   { id: 'records', label: '訓練紀錄', icon: 'table_view' },
   { id: 'articles', label: '衛教文章', icon: 'article' },
 ];
+const gameReviewTab = { id: 'games', label: '遊戲審核', icon: 'extension' } as const;
 
 const emptyFilters: AdminRecordFilters = {
   patientId: '',
@@ -124,6 +126,7 @@ export function AdminDashboard() {
   const { user } = useHubAuth();
   const role = GetUserRole(user);
   const isStaff = IsStaffRole(role);
+  const availableTabItems = role === 'admin' ? [...tabItems, gameReviewTab] : tabItems;
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [overview, setOverview] = useState<AdminOverviewResponse | null>(null);
   const [overviewStatus, setOverviewStatus] = useState<LoadStatus>('idle');
@@ -197,15 +200,15 @@ export function AdminDashboard() {
   };
 
   const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    const currentIndex = tabItems.findIndex((item) => item.id === activeTab);
+    const currentIndex = availableTabItems.findIndex((item) => item.id === activeTab);
     let nextIndex = currentIndex;
-    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabItems.length;
-    if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabItems.length) % tabItems.length;
+    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % availableTabItems.length;
+    if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + availableTabItems.length) % availableTabItems.length;
     if (event.key === 'Home') nextIndex = 0;
-    if (event.key === 'End') nextIndex = tabItems.length - 1;
+    if (event.key === 'End') nextIndex = availableTabItems.length - 1;
     if (nextIndex === currentIndex) return;
     event.preventDefault();
-    selectTab(tabItems[nextIndex].id);
+    selectTab(availableTabItems[nextIndex].id);
   };
 
   const applyFilters = (event: FormEvent<HTMLFormElement>) => {
@@ -271,7 +274,7 @@ export function AdminDashboard() {
       </header>
 
       <div className="admin-tabs" aria-label="管理後台功能" role="tablist">
-        {tabItems.map((item) => (
+        {availableTabItems.map((item) => (
           <button
             aria-controls={`admin-panel-${item.id}`}
             aria-selected={activeTab === item.id}
@@ -651,6 +654,19 @@ export function AdminDashboard() {
       >
         <ArticleManager onArticlesChanged={() => setOverviewKey((current) => current + 1)} />
       </section>
+
+      {role === 'admin' && (
+        <section
+          aria-labelledby="admin-tab-games"
+          className="admin-tab-panel"
+          hidden={activeTab !== 'games'}
+          id="admin-panel-games"
+          role="tabpanel"
+          tabIndex={0}
+        >
+          <GameReleaseManager />
+        </section>
+      )}
     </main>
   );
 }

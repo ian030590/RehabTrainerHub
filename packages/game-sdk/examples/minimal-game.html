@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>按鈕反應練習</title>
+    <link rel="stylesheet" href="/runtime/jspsych-8.2.3.css" />
+    <script src="/runtime/jspsych-8.2.3.js"></script>
+    <style>
+      body { margin: 0; background: Canvas; color: CanvasText; }
+      .practice-card { display: grid; gap: 1rem; justify-items: center; padding: 3rem 1rem; text-align: center; }
+      .practice-button { min-width: 10rem; min-height: 3rem; font: inherit; }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { RunTrainerHubJsPsychGame } from '/runtime/trainerhub-game-sdk-0.1.0.js';
+
+      class OneButtonPracticePlugin {
+        static info = {
+          name: 'one-button-practice',
+          version: '1.0.0',
+          parameters: {},
+          data: {},
+        };
+
+        constructor(jsPsych) {
+          this.jsPsych = jsPsych;
+        }
+
+        trial(displayElement) {
+          const startedAt = performance.now();
+          const card = document.createElement('main');
+          card.className = 'practice-card';
+          const prompt = document.createElement('p');
+          prompt.textContent = '看到按鈕後按一下。';
+          const button = document.createElement('button');
+          button.className = 'practice-button jspsych-btn';
+          button.type = 'button';
+          button.textContent = '按這裡';
+          button.addEventListener('click', () => {
+            this.jsPsych.finishTrial({
+              correct: true,
+              response_time_ms: Math.round(performance.now() - startedAt),
+            });
+          }, { once: true });
+          card.append(prompt, button);
+          displayElement.replaceChildren(card);
+        }
+      }
+
+      const timeline = [{ type: OneButtonPracticePlugin }];
+
+      async function startGame() {
+        await RunTrainerHubJsPsychGame({
+          initJsPsych: jsPsychModule.initJsPsych,
+          timeline,
+          summarize(jsPsych) {
+            const trials = jsPsych.data.get();
+            return {
+              status: 'completed',
+              score: trials.filter({ correct: true }).count(),
+              trialCount: trials.count(),
+              metrics: {
+                average_response_ms: Math.round(trials.select('response_time_ms').mean()),
+              },
+            };
+          },
+        });
+      }
+
+      void startGame();
+    </script>
+  </body>
+</html>

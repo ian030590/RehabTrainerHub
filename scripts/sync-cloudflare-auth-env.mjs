@@ -3,7 +3,11 @@ import { spawnSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { DiscoverPagesApps, defaultRepoRoot } from './pages-apps.mjs';
+import {
+  DiscoverPagesApps,
+  IsAuthPagesApp,
+  defaultRepoRoot,
+} from './pages-apps.mjs';
 
 const wranglerPrefix = ['--yes', 'wrangler@4'];
 const dryRun = process.argv.includes('--dry-run');
@@ -87,7 +91,15 @@ function GetPublicVariables(pagesApps, authBaseUrl) {
   return variables;
 }
 
-function GetProjectSecrets(project, publicVariables, authBaseUrl, allowedOrigins) {
+function GetProjectSecrets(
+  project,
+  publicVariables,
+  authBaseUrl,
+  allowedOrigins,
+  gameRunnerOrigin,
+) {
+  if (!IsAuthPagesApp(project)) return null;
+
   const turnstile = GetTurnstileConfiguration();
   const secrets = project.role === 'hub'
     ? {
@@ -108,6 +120,7 @@ function GetProjectSecrets(project, publicVariables, authBaseUrl, allowedOrigins
     secrets.TURNSTILE_REQUIRED = turnstile.required;
     secrets.TURNSTILE_RECORDS_REQUIRED = turnstile.recordsRequired;
     secrets.ASSET_PUBLIC_BASE_URL = assetPublicBaseUrl;
+    if (gameRunnerOrigin) secrets.GAME_RUNNER_ORIGIN = gameRunnerOrigin;
   }
 
   return secrets;
@@ -146,22 +159,39 @@ async function Main() {
   const pagesApps = DiscoverPagesApps();
   const hubs = pagesApps.filter((app) => app.role === 'hub');
   if (hubs.length !== 1) throw new Error('Exactly one Pages app must declare rehabTrainer.role as hub.');
+  const gamehosts = pagesApps.filter((app) => app.role === 'gamehost');
+  if (gamehosts.length > 1) {
+    throw new Error('At most one Pages app may declare rehabTrainer.role as gamehost.');
+  }
 
   const authBaseUrl = NormalizeUrl(process.env.AUTH_API_BASE?.trim() || hubs[0].siteUrl);
-  const allowedOrigins = [...new Set([
+  const gameRunnerOrigin = gamehosts[0]?.siteUrl ?? '';
+  const allowedOrigins = GetAllowedAuthOrigins(
+    pagesApps,
     authBaseUrl,
-    ...pagesApps.map((app) => app.siteUrl),
-    ...(process.env.AUTH_ALLOWED_ORIGINS ?? '').split(',').map((origin) => origin.trim()).filter(Boolean),
-  ])].join(',');
+    process.env.AUTH_ALLOWED_ORIGINS ?? '',
+  );
   const publicVariables = GetPublicVariables(pagesApps, authBaseUrl);
   const tempDir = dryRun ? '' : await mkdtemp(join(tmpdir(), 'rehab-pages-env-'));
 
   try {
-    console.log(`Syncing environment to ${pagesApps.length} discovered Cloudflare Pages project(s).`);
+    const authProjects = pagesApps.filter(IsAuthPagesApp);
+    console.log(`Syncing auth environment to ${authProjects.length} of ${pagesApps.length} discovered Cloudflare Pages project(s).`);
     console.log(`Auth API base: ${authBaseUrl}`);
+    console.log(`Auth allowed origins: ${allowedOrigins}`);
 
     for (const project of pagesApps) {
-      const secrets = GetProjectSecrets(project, publicVariables, authBaseUrl, allowedOrigins);
+      const secrets = GetProjectSecrets(
+        project,
+        publicVariables,
+        authBaseUrl,
+        allowedOrigins,
+        gameRunnerOrigin,
+      );
+      if (!secrets) {
+        console.log(`- ${project.projectName}: skipped; gamehost receives no auth environment.`);
+        continue;
+      }
       console.log(`- ${project.projectName}: ${Object.keys(secrets).sort().join(', ')}`);
       const secretFile = dryRun
         ? `${project.projectName}.pages-env.json`
@@ -179,6 +209,43 @@ async function Main() {
   } finally {
     if (tempDir) await rm(tempDir, { recursive: true, force: true });
   }
+}
+
+function GetAllowedAuthOrigins(pagesApps, authBaseUrl, configuredOrigins) {
+  const blockedGamehostOrigins = new Set(
+    pagesApps
+      .filter((app) => app.role === 'gamehost')
+      .flatMap((app) => [app.siteUrl, app.deploymentUrl])
+      .map(NormalizeUrl),
+  );
+  if (blockedGamehostOrigins.has(authBaseUrl)) {
+    throw new Error('AUTH_API_BASE must not use a gamehost origin.');
+  }
+
+  const additionalOrigins = configuredOrigins
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .map((origin) => {
+      try {
+        return NormalizeUrl(origin);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+  const blockedConfiguredOrigin = additionalOrigins.find((origin) => (
+    blockedGamehostOrigins.has(origin)
+  ));
+  if (blockedConfiguredOrigin) {
+    throw new Error(`AUTH_ALLOWED_ORIGINS must not include gamehost origin ${blockedConfiguredOrigin}.`);
+  }
+
+  return [...new Set([
+    authBaseUrl,
+    ...pagesApps.filter(IsAuthPagesApp).map((app) => app.siteUrl),
+    ...additionalOrigins,
+  ])].join(',');
 }
 
 await Main();

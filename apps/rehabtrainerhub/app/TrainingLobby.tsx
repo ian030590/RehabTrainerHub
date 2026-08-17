@@ -3,7 +3,9 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TrainingOverlay } from './train/TrainingOverlay';
+import { PackageGameOverlay } from './train/PackageGameOverlay';
 import {
+  BuildTrainingGameInstallHref,
   BuildTrainingModuleHref,
   BuildTrainingModuleImageSrc,
   GetTrainingModuleCopy,
@@ -18,6 +20,10 @@ import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlac
 import { GetHubUiCopy } from './i18n';
 import { useHubLanguage } from './i18n/HubLanguage';
 import { hubFullName } from './hubBrand';
+import {
+  FetchPublishedGames,
+  type PublishedGame,
+} from './publishedGames';
 
 const trainerVisuals: Record<TrainerCatalogId, {
   name: string;
@@ -47,6 +53,16 @@ const trainerVisuals: Record<TrainerCatalogId, {
 };
 
 const prefetchedTrainingUrls = new Set<string>();
+const publishedCategoryPurposes: Readonly<Record<string, TrainingPurposeId>> = {
+  attention: 'attention',
+  general: 'higher-cognition',
+  'higher-cognition': 'higher-cognition',
+  language: 'language',
+  memory: 'memory',
+  movement: 'upper-limb',
+  oral: 'oral',
+  vision: 'vision',
+};
 
 function PreloadTrainingModule(module: TrainingCatalogModule) {
   const href = BuildTrainingModuleHref(module);
@@ -64,17 +80,45 @@ export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
   const [activeModule, setActiveModule] = useState<TrainingCatalogModule | null>(null);
+  const [activePackageGame, setActivePackageGame] = useState<PublishedGame | null>(null);
+  const [publishedGames, setPublishedGames] = useState<PublishedGame[]>([]);
+  const [publishedGamesError, setPublishedGamesError] = useState(false);
   const handleCloseOverlay = useCallback(() => setActiveModule(null), []);
+  const handleClosePackageOverlay = useCallback(() => setActivePackageGame(null), []);
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).lobby;
+  const platformCopy = language === 'en'
+    ? {
+        catalogUnavailable: 'Developer games are temporarily unavailable. Built-in games are still available.',
+        developer: 'Developer',
+        developerLibrary: 'Developer games',
+        install: 'Install game',
+        officialLibrary: 'Rehab Trainer Hub built-in games',
+        play: 'Play on platform',
+        reviewed: 'Reviewed release',
+        summaryFallback: 'A home-practice activity provided by its developer.',
+        version: 'Version',
+      }
+    : {
+        catalogUnavailable: '開發者遊戲目前無法載入；內建遊戲仍可正常使用。',
+        developer: '開發者',
+        developerLibrary: '開發者遊戲',
+        install: '安裝此遊戲',
+        officialLibrary: '居家訓練網內建遊戲',
+        play: '在平台遊玩',
+        reviewed: '已審核版本',
+        summaryFallback: '開發者提供的居家練習活動。',
+        version: '版本',
+      };
   const normalizedQuery = query.trim().toLocaleLowerCase(locale);
 
   const purposeCounts = useMemo(() => new Map(
     trainingPurposes.map((purpose) => [
       purpose.id,
-      trainingCatalog.filter((module) => module.purpose === purpose.id).length,
+      trainingCatalog.filter((module) => module.purpose === purpose.id).length
+        + publishedGames.filter((game) => publishedCategoryPurposes[game.category] === purpose.id).length,
     ]),
-  ), []);
+  ), [publishedGames]);
 
   const visibleModules = useMemo(() => trainingCatalog.filter((module) => {
     const title = GetTrainingModuleCopy(module, locale).title.toLocaleLowerCase(locale);
@@ -83,6 +127,24 @@ export function TrainingLobby() {
       || selectedPurposes.includes(module.purpose);
     return matchesSearch && matchesPurpose;
   }), [locale, normalizedQuery, selectedPurposes]);
+
+  const visiblePublishedGames = useMemo(() => publishedGames.filter((game) => {
+    const searchable = `${game.title} ${game.summary} ${game.developerName}`.toLocaleLowerCase(locale);
+    const purpose = publishedCategoryPurposes[game.category] ?? 'higher-cognition';
+    return (!normalizedQuery || searchable.includes(normalizedQuery))
+      && (selectedPurposes.length === 0 || selectedPurposes.includes(purpose));
+  }), [locale, normalizedQuery, publishedGames, selectedPurposes]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setPublishedGamesError(false);
+    void FetchPublishedGames(controller.signal)
+      .then(setPublishedGames)
+      .catch(() => {
+        if (!controller.signal.aborted) setPublishedGamesError(true);
+      });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const origins = new Set(trainingCatalog.map((module) => (
@@ -103,6 +165,19 @@ export function TrainingLobby() {
     return () => links.forEach((link) => link.remove());
   }, []);
 
+  useEffect(() => {
+    const origins = new Set(publishedGames.map((game) => new URL(game.release.launchUrl).origin));
+    const links = [...origins].map((origin) => {
+      const preconnect = document.createElement('link');
+      preconnect.rel = 'preconnect';
+      preconnect.href = origin;
+      preconnect.crossOrigin = 'anonymous';
+      document.head.append(preconnect);
+      return preconnect;
+    });
+    return () => links.forEach((link) => link.remove());
+  }, [publishedGames]);
+
   const togglePurpose = (purposeId: TrainingPurposeId) => {
     setSelectedPurposes((current) => (
       current.includes(purposeId)
@@ -120,6 +195,9 @@ export function TrainingLobby() {
     <>
     {activeModule && (
       <TrainingOverlay module={activeModule} onClose={handleCloseOverlay} />
+    )}
+    {activePackageGame && (
+      <PackageGameOverlay game={activePackageGame} onClose={handleClosePackageOverlay} />
     )}
     <main className="lobby-page" id="main-content">
       <section className="lobby-heading" aria-labelledby="lobby-title">
@@ -172,10 +250,26 @@ export function TrainingLobby() {
         <section className="module-results" aria-labelledby="result-title">
           <div className="result-heading">
             <h2 id="result-title">{copy.allModules}</h2>
-            <p aria-live="polite">{t('lobby.moduleCount', { count: visibleModules.length })}</p>
+            <p aria-live="polite">{t('lobby.moduleCount', { count: visibleModules.length + visiblePublishedGames.length })}</p>
           </div>
 
-          {visibleModules.length > 0 ? (
+          {publishedGamesError && (
+            <p className="catalog-load-notice" role="status">
+              {platformCopy.catalogUnavailable}
+            </p>
+          )}
+
+          {visibleModules.length > 0 && (
+            <div className="library-section-heading">
+              <div>
+                <p className="page-kicker">Official library</p>
+                <h3>{platformCopy.officialLibrary}</h3>
+              </div>
+              <span>{visibleModules.length}</span>
+            </div>
+          )}
+
+          {visibleModules.length > 0 && (
             <div className="module-grid">
               {visibleModules.map((module) => {
                 const moduleCopy = GetTrainingModuleCopy(module, locale);
@@ -185,19 +279,9 @@ export function TrainingLobby() {
                 return (
                   <article
                     aria-label={`${copy.start}: ${moduleCopy.title}`}
-                    className={`module-card trainer-${module.trainer}`}
+                    className={`module-card official-game-card trainer-${module.trainer}`}
                     key={module.catalogId}
-                    onClick={() => setActiveModule(module)}
-                    onFocus={() => PreloadTrainingModule(module)}
-                    onKeyDown={(event) => {
-                      if (event.key !== 'Enter' && event.key !== ' ') return;
-                      event.preventDefault();
-                      setActiveModule(module);
-                    }}
-                    onPointerDown={() => PreloadTrainingModule(module)}
                     onPointerEnter={() => PreloadTrainingModule(module)}
-                    role="button"
-                    tabIndex={0}
                   >
                     <div className="module-card-visual" aria-label={moduleCopy.title} role="img">
                       <CardImagePlaceholder src={BuildTrainingModuleImageSrc(module)} />
@@ -214,19 +298,85 @@ export function TrainingLobby() {
                       </div>
                       <h3>{moduleCopy.title}</h3>
                       <p>{moduleCopy.description}</p>
-                      <div className="module-card-footer">
-                        <span>{trainer.name}</span>
-                        <span className="module-card-action" aria-hidden="true">
+                      <div className="module-card-footer official-game-actions">
+                        <button
+                          onClick={() => setActiveModule(module)}
+                          onFocus={() => PreloadTrainingModule(module)}
+                          onPointerDown={() => PreloadTrainingModule(module)}
+                          type="button"
+                        >
                           {copy.start}
                           <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                        </span>
+                        </button>
+                        <a
+                          href={BuildTrainingGameInstallHref(module)}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          {platformCopy.install}
+                          <span className="material-symbols-outlined" aria-hidden="true">download</span>
+                        </a>
                       </div>
                     </div>
                   </article>
                 );
               })}
             </div>
-          ) : (
+          )}
+
+          {visiblePublishedGames.length > 0 && (
+            <div className="library-section-heading community-library-heading">
+              <div>
+                <p className="page-kicker">Developer library</p>
+                <h3>{platformCopy.developerLibrary}</h3>
+              </div>
+              <span>{visiblePublishedGames.length}</span>
+            </div>
+          )}
+
+          {visiblePublishedGames.length > 0 && (
+            <div className="module-grid community-game-grid">
+              {visiblePublishedGames.map((game) => {
+                const purposeId = publishedCategoryPurposes[game.category] ?? 'higher-cognition';
+                const purpose = GetTrainingPurpose(purposeId);
+                return (
+                  <article className="module-card community-game-card" key={game.release.id}>
+                    <div className="community-game-visual" aria-hidden="true">
+                      <span className="material-symbols-outlined">extension</span>
+                      <small>jsPsych 8</small>
+                    </div>
+                    <div className="module-card-content">
+                      <div className="module-card-meta">
+                        <span>{language === 'en' ? purpose.labelEn : purpose.label}</span>
+                        <span className="verified-release-badge">
+                          <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
+                          {platformCopy.reviewed}
+                        </span>
+                      </div>
+                      <h3>{game.title}</h3>
+                      <p>{game.summary || platformCopy.summaryFallback}</p>
+                      <dl className="community-game-details">
+                        <div><dt>{platformCopy.developer}</dt><dd>{game.developerName}</dd></div>
+                        <div><dt>{platformCopy.version}</dt><dd>{game.release.version}</dd></div>
+                      </dl>
+                      <div className="community-game-actions">
+                        <button onClick={() => setActivePackageGame(game)} type="button">
+                          <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                          {platformCopy.play}
+                        </button>
+                        <a href={game.release.installUrl} rel="noopener noreferrer" target="_blank">
+                          <span className="material-symbols-outlined" aria-hidden="true">download</span>
+                          {platformCopy.install}
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
+          {visibleModules.length === 0 && visiblePublishedGames.length === 0 && (
             <div className="empty-results">
               <span className="material-symbols-outlined" aria-hidden="true">search_off</span>
               <h3>{copy.noResultsTitle}</h3>

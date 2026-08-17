@@ -36,6 +36,7 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { useT } from '../../i18n';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
@@ -47,7 +48,7 @@ import {
   PrepareAudioFeedback,
 } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { Clamp, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
 
@@ -391,7 +392,9 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     handControlEnabled: true,
     handChoice: 'any' as HandChoice,
   });
+  const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   useTrainingConfigReady(phase === 'menu');
@@ -439,7 +442,19 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   }, [difficulty, durationSec, handChoice, handControlEnabled, maxHp, shieldSizePercent]);
 
   useEffect(() => {
-    jsPsychRef.current = initJsPsych();
+    const host = jsPsychHostRef.current;
+    if (!host) return;
+
+    const jsPsych = initJsPsych({ display_element: host });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychRef.current = jsPsych;
+    jsPsychLifecycleRef.current = lifecycle;
+
+    return () => {
+      lifecycle.dispose();
+      if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
+      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
@@ -502,6 +517,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     sceneRef.current?.threats.forEach((threat) => threat.sprite.destroy());
     if (sceneRef.current) sceneRef.current.threats = [];
     PlayGameEndSound(gameResult, jsPsychRef);
+    jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
     setResult(record);
     setPhase('results');
     stopVision();
@@ -530,11 +546,6 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       },
       detailRows: record.Object_Records.map((item) => ({ ...item })),
     });
-    WriteJsPsychData(
-      jsPsychRef,
-      record as unknown as Record<string, unknown>,
-      'Unable to write asteroid shield result to jsPsych data.',
-    );
   }, [labels.title, setPhase, stopVision]);
 
   const beginPlaying = useCallback(() => {
@@ -596,102 +607,112 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const fullscreenPromise = enterTrainingFullscreen();
     PrepareAudioFeedback(jsPsychRef);
     await fullscreenPromise;
-    stopVision();
-    setVisionError('');
-    setShowVisionError(false);
-
-    if (!texturesRef.current) {
-      const app = appRef.current;
-      if (!app) return;
-      setStatusMessage(labels.initialization);
-      setPhase('initializing');
-      try {
-        const textures = await LoadAssetTextures();
-        if (!mountedRef.current) return;
-        texturesRef.current = textures;
-        ResetAsteroidScene(app, sceneRef, textures);
-      } catch (error) {
-        console.warn('Unable to load asteroid shield assets.', error);
-        setVisionError(labels.initialization);
-        setShowVisionError(true);
-        setPhase('menu');
-        return;
-      }
-    }
-
-    if (!configRef.current.handControlEnabled) {
-      beginPlaying();
-      return;
-    }
-
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setVisionError(labels.unsupported);
-      setShowVisionError(true);
-      beginPlaying();
-      return;
-    }
-
-    setStatusMessage(labels.loadingCamera);
-    setPhase('initializing');
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: 'user',
-          width: { ideal: 960 },
-          height: { ideal: 720 },
-        },
-      });
-      cameraStreamRef.current = stream;
-      const cameraTrack = stream.getVideoTracks()[0];
-      if (!cameraTrack) throw new Error('Camera track is unavailable.');
-      cameraTrack.addEventListener('ended', () => {
-        if (!mountedRef.current || cameraStreamRef.current !== stream) return;
-        setVisionError(labels.disconnected);
-        setShowVisionError(true);
+    await jsPsychLifecycleRef.current?.start({
+      moduleId: 'motor:asteroid-shield',
+      onStart: async () => {
         stopVision();
-      }, { once: true });
+        setVisionError('');
+        setShowVisionError(false);
 
-      const video = videoRef.current;
-      if (!video) throw new Error('Camera preview is unavailable.');
-      video.srcObject = stream;
-      await video.play();
+        if (!texturesRef.current) {
+          const app = appRef.current;
+          if (!app) {
+            jsPsychLifecycleRef.current?.abort({ abort_reason: 'renderer-unavailable' });
+            return;
+          }
+          setStatusMessage(labels.initialization);
+          setPhase('initializing');
+          try {
+            const textures = await LoadAssetTextures();
+            if (!mountedRef.current) return;
+            texturesRef.current = textures;
+            ResetAsteroidScene(app, sceneRef, textures);
+          } catch (error) {
+            console.warn('Unable to load asteroid shield assets.', error);
+            setVisionError(labels.initialization);
+            setShowVisionError(true);
+            setPhase('menu');
+            jsPsychLifecycleRef.current?.abort({ abort_reason: 'asset-load-error' });
+            return;
+          }
+        }
 
-      setStatusMessage(labels.loadingModel);
-      const landmarker = await LoadMediaPipeWithFallback(
-        mediaPipeAssetCandidates,
-        async ({ wasmUrl, handLandmarkerModelUrl }) => {
-          const vision = await FilesetResolver.forVisionTasks(wasmUrl);
-          return HandLandmarker.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: handLandmarkerModelUrl },
-            runningMode: 'VIDEO',
-            numHands: configRef.current.handChoice === 'any' ? 1 : 2,
-            minHandDetectionConfidence: 0.5,
-            minHandPresenceConfidence: 0.5,
-            minTrackingConfidence: 0.5,
+        if (!configRef.current.handControlEnabled) {
+          beginPlaying();
+          return;
+        }
+
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setVisionError(labels.unsupported);
+          setShowVisionError(true);
+          beginPlaying();
+          return;
+        }
+
+        setStatusMessage(labels.loadingCamera);
+        setPhase('initializing');
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              facingMode: 'user',
+              width: { ideal: 960 },
+              height: { ideal: 720 },
+            },
           });
-        },
-      );
-      if (!mountedRef.current) {
-        landmarker.close();
-        return;
-      }
-      handLandmarkerRef.current = landmarker;
-      setIsHandTrackingActive(true);
-      beginPlaying();
-      animationFrameRef.current = window.requestAnimationFrame(handleHandFrame);
-    } catch (error) {
-      console.warn('Unable to initialize asteroid shield hand control.', error);
-      setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
-        ? labels.permission
-        : labels.initialization);
-      setShowVisionError(true);
-      stopVision();
-      beginPlaying();
-    }
+          cameraStreamRef.current = stream;
+          const cameraTrack = stream.getVideoTracks()[0];
+          if (!cameraTrack) throw new Error('Camera track is unavailable.');
+          cameraTrack.addEventListener('ended', () => {
+            if (!mountedRef.current || cameraStreamRef.current !== stream) return;
+            setVisionError(labels.disconnected);
+            setShowVisionError(true);
+            stopVision();
+          }, { once: true });
+
+          const video = videoRef.current;
+          if (!video) throw new Error('Camera preview is unavailable.');
+          video.srcObject = stream;
+          await video.play();
+
+          setStatusMessage(labels.loadingModel);
+          const landmarker = await LoadMediaPipeWithFallback(
+            mediaPipeAssetCandidates,
+            async ({ wasmUrl, handLandmarkerModelUrl }) => {
+              const vision = await FilesetResolver.forVisionTasks(wasmUrl);
+              return HandLandmarker.createFromOptions(vision, {
+                baseOptions: { modelAssetPath: handLandmarkerModelUrl },
+                runningMode: 'VIDEO',
+                numHands: configRef.current.handChoice === 'any' ? 1 : 2,
+                minHandDetectionConfidence: 0.5,
+                minHandPresenceConfidence: 0.5,
+                minTrackingConfidence: 0.5,
+              });
+            },
+          );
+          if (!mountedRef.current) {
+            landmarker.close();
+            return;
+          }
+          handLandmarkerRef.current = landmarker;
+          setIsHandTrackingActive(true);
+          beginPlaying();
+          animationFrameRef.current = window.requestAnimationFrame(handleHandFrame);
+        } catch (error) {
+          console.warn('Unable to initialize asteroid shield hand control.', error);
+          setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
+            ? labels.permission
+            : labels.initialization);
+          setShowVisionError(true);
+          stopVision();
+          beginPlaying();
+        }
+      },
+    });
   }, [beginPlaying, enterTrainingFullscreen, handleHandFrame, labels, setPhase, stopVision]);
 
   const returnToMenu = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
     stopVision();
     ClearAsteroidScene(sceneRef.current);
     metricsRef.current = CreateEmptyMetrics(configRef.current.maxHp);
@@ -701,6 +722,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   }, [setPhase, stopVision]);
 
   const exitGame = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
     stopVision();
     onExit();
   }, [onExit, stopVision]);
@@ -833,6 +855,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
 
   return (
     <div ref={fullscreenRootRef} className={`asteroid-shield-game asteroid-shield-phase-${phase}`}>
+      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
       <div ref={pixiHostRef} className="asteroid-shield-stage" />
 
       <div className={`asteroid-shield-camera ${phase === 'playing' && isHandTrackingActive ? '' : 'asteroid-shield-camera-hidden'}`}>
@@ -1564,4 +1587,3 @@ function ResizePixiAppToElement(app: Application, element: HTMLElement | null): 
   app.canvas.style.width = `${width}px`;
   app.canvas.style.height = `${height}px`;
 }
-

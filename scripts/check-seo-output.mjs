@@ -18,7 +18,7 @@ const trainerSiteUrls = [
 ];
 
 const apps = validateAll
-  ? DiscoverPagesApps(defaultRepoRoot)
+  ? DiscoverPagesApps(defaultRepoRoot).filter((app) => app.role !== 'gamehost')
   : [DiscoverCurrentApp()];
 
 for (const app of apps) {
@@ -72,17 +72,17 @@ function ValidateAppSeo(app, appFailures) {
   const sitemap = ReadUtf8File(sitemapPath, label, appFailures);
   const indexHtml = ReadUtf8File(indexPath, label, appFailures);
 
-  if (robots !== null) ValidateRobots(robots, robotsPath, siteUrl, appFailures);
+  if (robots !== null) ValidateRobots(robots, robotsPath, siteUrl, app.role, appFailures);
   const sitemapUrls = sitemap === null
     ? []
     : ValidateSitemap(sitemap, sitemapPath, siteUrl, app.role, appFailures);
 
   if (indexHtml !== null) {
-    ValidateIndexableHtml(indexHtml, indexPath, siteUrl, appFailures);
+    ValidateIndexableHtml(indexHtml, indexPath, siteUrl, appFailures, app.role === 'hub');
     ValidateJsonLd(indexHtml, indexPath, siteUrl, app.role, appFailures);
   }
 
-  ValidateSitemapPages(sitemapUrls, outputDir, siteUrl, appFailures);
+  ValidateSitemapPages(sitemapUrls, outputDir, siteUrl, app.role, appFailures);
   ValidateNotFoundPage(notFoundPath, label, appFailures);
 
   if (app.role === 'hub') {
@@ -90,10 +90,11 @@ function ValidateAppSeo(app, appFailures) {
       appFailures.push(`${indexPath}: Hub homepage must prerender its visible heading in Traditional Chinese.`);
     }
     ValidateHubPrivatePages(outputDir, sitemapUrls, appFailures);
+    ValidateHubGamesPage(outputDir, sitemapUrls, appFailures);
   }
 }
 
-function ValidateRobots(source, file, siteUrl, appFailures) {
+function ValidateRobots(source, file, siteUrl, role, appFailures) {
   if (Buffer.byteLength(source, 'utf8') > 500 * 1024) {
     appFailures.push(`${file}: robots.txt exceeds Google's 500 KiB limit.`);
   }
@@ -123,6 +124,19 @@ function ValidateRobots(source, file, siteUrl, appFailures) {
   }
   if (directives.some((directive) => directive.name === 'disallow' && directive.value === '/')) {
     appFailures.push(`${file}: blocks the entire site with "Disallow: /".`);
+  }
+  if (role === 'hub') {
+    const apiDisallows = directives.filter((directive) => (
+      directive.name === 'disallow' && directive.value === '/api/'
+    ));
+    if (apiDisallows.length !== 1) {
+      appFailures.push(`${file}: Hub robots.txt must disallow only the non-page /api/ prefix once.`);
+    }
+    for (const route of ['/admin/', '/developer/', '/progress/', '/train/']) {
+      if (directives.some((directive) => directive.name === 'disallow' && directive.value === route)) {
+        appFailures.push(`${file}: ${route} must remain crawlable so its noindex directive can be read.`);
+      }
+    }
   }
 
   const sitemapDirectives = directives.filter((directive) => directive.name === 'sitemap');
@@ -171,7 +185,7 @@ function ValidateSitemap(source, file, siteUrl, role, appFailures) {
   }
 
   const expectedUrls = role === 'hub'
-    ? ['', 'qa/', 'privacy/', 'download/'].map((path) => `${siteUrl}${path}`)
+    ? ['', 'games/', 'qa/', 'privacy/', 'download/'].map((path) => `${siteUrl}${path}`)
     : [siteUrl];
   if (!HaveSameValues(urls, expectedUrls)) {
     appFailures.push(`${file}: expected only these canonical public URLs: ${expectedUrls.join(', ')}.`);
@@ -224,9 +238,10 @@ function ParseSitemapXml(source, file, appFailures) {
   return entries;
 }
 
-function ValidateSitemapPages(urls, outputDir, siteUrl, appFailures) {
+function ValidateSitemapPages(urls, outputDir, siteUrl, role, appFailures) {
   const titles = new Map();
   const descriptions = new Map();
+  const headings = new Map();
 
   for (const value of urls) {
     let url;
@@ -244,13 +259,14 @@ function ValidateSitemapPages(urls, outputDir, siteUrl, appFailures) {
     const html = ReadUtf8File(file, value, appFailures);
     if (html === null) continue;
 
-    const result = ValidateIndexableHtml(html, file, value, appFailures);
+    const result = ValidateIndexableHtml(html, file, value, appFailures, role === 'hub');
     RecordUniqueValue(titles, result.title, file, 'title', appFailures);
     RecordUniqueValue(descriptions, result.description, file, 'meta description', appFailures);
+    if (role === 'hub') RecordUniqueValue(headings, result.heading, file, 'H1', appFailures);
   }
 }
 
-function ValidateIndexableHtml(html, file, canonicalUrl, appFailures) {
+function ValidateIndexableHtml(html, file, canonicalUrl, appFailures, requireHeading = false) {
   if (!/^<!doctype html>/i.test(html.trimStart())) {
     appFailures.push(`${file}: missing HTML doctype.`);
   }
@@ -259,6 +275,12 @@ function ValidateIndexableHtml(html, file, canonicalUrl, appFailures) {
     .map((match) => DecodeHtml(match[1].trim()));
   if (titles.length !== 1 || !titles[0]) {
     appFailures.push(`${file}: must contain exactly one non-empty <title>.`);
+  }
+
+  const headings = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/gi)]
+    .map((match) => DecodeHtml(match[1].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()));
+  if (requireHeading && (headings.length !== 1 || !headings[0])) {
+    appFailures.push(`${file}: must contain exactly one non-empty visible H1.`);
   }
 
   const description = FindMetaContent(html, 'name', 'description');
@@ -316,7 +338,7 @@ function ValidateIndexableHtml(html, file, canonicalUrl, appFailures) {
     }
   }
 
-  return { title: pageTitle, description: description ?? '' };
+  return { title: pageTitle, description: description ?? '', heading: headings[0] ?? '' };
 }
 
 function ValidateJsonLd(html, file, siteUrl, role, appFailures) {
@@ -420,7 +442,7 @@ function GetReferenceIds(value) {
 }
 
 function ValidateHubPrivatePages(outputDir, sitemapUrls, appFailures) {
-  for (const route of ['admin/', 'progress/', 'train/']) {
+  for (const route of ['admin/', 'developer/', 'progress/', 'train/']) {
     const publicUrlSuffix = `/${route}`;
     if (sitemapUrls.some((value) => new URL(value).pathname === publicUrlSuffix)) {
       appFailures.push(`${join(outputDir, 'sitemap.xml')}: private route ${publicUrlSuffix} must not be listed.`);
@@ -433,6 +455,37 @@ function ValidateHubPrivatePages(outputDir, sitemapUrls, appFailures) {
     if (!robots || !/\bnoindex\b/i.test(robots)) {
       appFailures.push(`${file}: private route must declare noindex.`);
     }
+  }
+}
+
+function ValidateHubGamesPage(outputDir, sitemapUrls, appFailures) {
+  const publicUrlSuffix = '/games/';
+  if (!sitemapUrls.some((value) => new URL(value).pathname === publicUrlSuffix)) {
+    appFailures.push(`${join(outputDir, 'sitemap.xml')}: missing the public game-platform page.`);
+  }
+
+  const file = join(outputDir, 'games', 'index.html');
+  const html = ReadUtf8File(file, publicUrlSuffix, appFailures);
+  if (html === null) return;
+  const requiredVisibleCopy = [
+    '居家練習遊戲平台',
+    'PWA',
+    'HTML',
+    'ZIP',
+    'jsPsych 8',
+    '獨立的網域',
+    'allow-scripts',
+    'postMessage',
+    '自動掃描',
+    '人工審核',
+  ];
+  for (const copy of requiredVisibleCopy) {
+    if (!html.includes(copy)) {
+      appFailures.push(`${file}: game-platform explanation is missing ${JSON.stringify(copy)}.`);
+    }
+  }
+  if (!/href=["']\/developer\/["']/i.test(html)) {
+    appFailures.push(`${file}: game-platform explanation must link to the noindex developer portal.`);
   }
 }
 

@@ -56,7 +56,10 @@ export function InitializePwa(): void {
   });
 
   if ('serviceWorker' in navigator) {
-    void navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(() => undefined);
+    const isStandaloneGamePath = /^\/games\/[a-z0-9-]+\//.test(window.location.pathname);
+    if (!isStandaloneGamePath) {
+      void navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(() => undefined);
+    }
   }
 }
 

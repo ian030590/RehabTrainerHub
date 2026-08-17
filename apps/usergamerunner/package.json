@@ -1,0 +1,19 @@
+{
+  "name": "@rehab-trainer/usergamerunner",
+  "private": true,
+  "version": "0.1.0",
+  "homepage": "https://trainerhub-user-games.pages.dev",
+  "rehabTrainer": {
+    "role": "gamehost"
+  },
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "dependencies": {
+    "@rehab-trainer/game-sdk": "0.1.0",
+    "jspsych": "8.2.3"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs"
+  }
+}

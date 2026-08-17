@@ -34,7 +34,7 @@ import {
   type TongueTrainingSettings,
 } from '../../utils/tongueRehabStorage';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { Clamp, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
@@ -52,6 +52,7 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 import { MouthTrainingRulesPanel } from './MouthTrainingRulesPanel';
@@ -200,7 +201,10 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   });
   const configRef = useRef<TongueTrainingSettings>({ ...defaultTongueSettings });
   const metricsRef = useRef<SessionMetrics>(CreateSessionMetrics());
+  const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
+  const calibrationResultsRef = useRef<Array<{ class_label: TongueClass; sample_count: number }>>([]);
   const finishSessionRef = useRef<() => void>(() => undefined);
 
   const activeUser = getActiveUser() || '';
@@ -235,7 +239,19 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, [activeUser, config]);
 
   useEffect(() => {
-    jsPsychRef.current = initJsPsych();
+    const host = jsPsychHostRef.current;
+    if (!host) return;
+
+    const jsPsych = initJsPsych({ display_element: host });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychRef.current = jsPsych;
+    jsPsychLifecycleRef.current = lifecycle;
+
+    return () => {
+      lifecycle.dispose();
+      if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
+      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
@@ -297,12 +313,10 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     setIsCapturing(false);
     setCalibrationProgress(1);
     const currentStep = calibrationSteps[calibrationIndexRef.current];
-    WriteJsPsychData(jsPsychRef, {
-      trial_type: 'tongue-calibration',
+    calibrationResultsRef.current.push({
       class_label: currentStep.label,
       sample_count: calibrationCaptureRef.current.samples,
-      participant_id: getActiveUser() || 'Unknown',
-    }, 'Unable to write tongue calibration data to jsPsych.');
+    });
 
     const nextIndex = calibrationIndexRef.current + 1;
     if (nextIndex < calibrationSteps.length) {
@@ -403,82 +417,90 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     }
     PrepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
-    if (appRef.current) ResizePixiAppToElement(appRef.current, pixiHostRef.current);
-    stopVision();
-    setVisionError('');
-    setShowVisionError(false);
-    setStatusMessage(t('tongue.loading.camera'));
-    setPhase('initializing');
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: 'user',
-          width: { ideal: 960 },
-          height: { ideal: 720 },
-        },
-      });
-      cameraStreamRef.current = stream;
-      const cameraTrack = stream.getVideoTracks()[0];
-      if (!cameraTrack) throw new Error('Camera track is unavailable.');
-      cameraTrack.addEventListener('ended', () => {
-        if (!mountedRef.current || cameraStreamRef.current !== stream) return;
-        setVisionError(t('tongue.error.disconnected'));
-        setShowVisionError(true);
+    await jsPsychLifecycleRef.current?.start({
+      moduleId: 'mouth:tongue-catch',
+      onStart: async () => {
+        if (appRef.current) ResizePixiAppToElement(appRef.current, pixiHostRef.current);
         stopVision();
-        setPhase('menu');
-      }, { once: true });
-      const video = videoRef.current;
-      if (!video) throw new Error('Camera preview is unavailable.');
-      video.srcObject = stream;
-      await video.play();
+        setVisionError('');
+        setShowVisionError(false);
+        setStatusMessage(t('tongue.loading.camera'));
+        setPhase('initializing');
 
-      setStatusMessage(t('tongue.loading.model'));
-      await tf.ready();
-      const landmarker = await LoadMediaPipeWithFallback(
-        mediaPipeAssetCandidates,
-        async ({ wasmUrl, faceLandmarkerModelUrl }) => {
-          const vision = await FilesetResolver.forVisionTasks(wasmUrl);
-          return FaceLandmarker.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: faceLandmarkerModelUrl },
-            runningMode: 'VIDEO',
-            numFaces: 1,
-            minFaceDetectionConfidence: 0.5,
-            minFacePresenceConfidence: 0.5,
-            minTrackingConfidence: 0.5,
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              facingMode: 'user',
+              width: { ideal: 960 },
+              height: { ideal: 720 },
+            },
           });
-        },
-      );
-      if (!mountedRef.current) {
-        landmarker.close();
-        return;
-      }
-      faceLandmarkerRef.current = landmarker;
+          cameraStreamRef.current = stream;
+          const cameraTrack = stream.getVideoTracks()[0];
+          if (!cameraTrack) throw new Error('Camera track is unavailable.');
+          cameraTrack.addEventListener('ended', () => {
+            if (!mountedRef.current || cameraStreamRef.current !== stream) return;
+            setVisionError(t('tongue.error.disconnected'));
+            setShowVisionError(true);
+            stopVision();
+            jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
+            setPhase('menu');
+          }, { once: true });
+          const video = videoRef.current;
+          if (!video) throw new Error('Camera preview is unavailable.');
+          video.srcObject = stream;
+          await video.play();
 
-      classifierRef.current?.dispose();
-      const classifier = knnClassifier.create();
-      classifierRef.current = classifier;
+          setStatusMessage(t('tongue.loading.model'));
+          await tf.ready();
+          const landmarker = await LoadMediaPipeWithFallback(
+            mediaPipeAssetCandidates,
+            async ({ wasmUrl, faceLandmarkerModelUrl }) => {
+              const vision = await FilesetResolver.forVisionTasks(wasmUrl);
+              return FaceLandmarker.createFromOptions(vision, {
+                baseOptions: { modelAssetPath: faceLandmarkerModelUrl },
+                runningMode: 'VIDEO',
+                numFaces: 1,
+                minFaceDetectionConfidence: 0.5,
+                minFacePresenceConfidence: 0.5,
+                minTrackingConfidence: 0.5,
+              });
+            },
+          );
+          if (!mountedRef.current) {
+            landmarker.close();
+            return;
+          }
+          faceLandmarkerRef.current = landmarker;
 
-      lastDetectionAtRef.current = 0;
-      lastVideoTimeRef.current = -1;
-      animationFrameRef.current = window.requestAnimationFrame(processFrame);
-      classifier.clearAllClasses();
-      calibrationIndexRef.current = 0;
-      calibrationCaptureRef.current = { active: false, startedAt: 0, samples: 0 };
-      setCalibrationIndex(0);
-      setCalibrationProgress(0);
-      setIsCapturing(false);
-      setPhase('calibration');
-    } catch (error) {
-      console.error('Unable to initialize tongue training.', error);
-      stopVision();
-      setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
-        ? t('tongue.error.permission')
-        : t('tongue.error.initialization'));
-      setShowVisionError(true);
-      setPhase('menu');
-    }
+          classifierRef.current?.dispose();
+          const classifier = knnClassifier.create();
+          classifierRef.current = classifier;
+
+          lastDetectionAtRef.current = 0;
+          lastVideoTimeRef.current = -1;
+          animationFrameRef.current = window.requestAnimationFrame(processFrame);
+          classifier.clearAllClasses();
+          calibrationResultsRef.current = [];
+          calibrationIndexRef.current = 0;
+          calibrationCaptureRef.current = { active: false, startedAt: 0, samples: 0 };
+          setCalibrationIndex(0);
+          setCalibrationProgress(0);
+          setIsCapturing(false);
+          setPhase('calibration');
+        } catch (error) {
+          console.error('Unable to initialize tongue training.', error);
+          stopVision();
+          setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
+            ? t('tongue.error.permission')
+            : t('tongue.error.initialization'));
+          setShowVisionError(true);
+          jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
+          setPhase('menu');
+        }
+      },
+    });
   }, [enterTrainingFullscreen, processFrame, setPhase, stopVision, t]);
 
   const startCalibrationCapture = useCallback(() => {
@@ -520,6 +542,10 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       Edge_Chance_Percent: Math.round(configSnapshot.edgeChance * 100),
       Apple_Results: metrics.appleResults.map((apple) => ({ ...apple })),
     };
+    jsPsychLifecycleRef.current?.finish({
+      ...session,
+      Calibration_Results: calibrationResultsRef.current.map((item) => ({ ...item })),
+    });
     setResult(session);
     setPhase('results');
     stopVision();
@@ -549,11 +575,6 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
         Apple_Caught: apple.caught,
       })),
     });
-    WriteJsPsychData(
-      jsPsychRef,
-      session as unknown as Record<string, unknown>,
-      'Unable to write tongue training result to jsPsych data.',
-    );
   }, [setPhase, stopVision, t]);
 
   finishSessionRef.current = finishSession;
@@ -628,6 +649,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, []);
 
   const returnToMenu = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
     stopVision();
     setPhase('menu');
     setResult(null);
@@ -639,6 +661,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, [setPhase, stopVision]);
 
   const exitGame = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
     stopVision();
     onExit();
   }, [onExit, stopVision]);
@@ -663,6 +686,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
 
   return (
     <div ref={fullscreenRootRef} className={`tongue-catch tongue-catch-phase-${phase}`}>
+      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
       <video
         ref={videoRef}
         className="tongue-catch-video"

@@ -27,13 +27,14 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { useT } from '../../i18n';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 import { getActiveUser } from '../../utils/settings';
 import { PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { Clamp, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
 
@@ -321,7 +322,9 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   const targetRef = useRef<TargetState | null>(null);
   const handRef = useRef<HandState>({ x: 0, y: 0, visible: false, handedness: null, lastSeenAt: 0 });
   const metricsRef = useRef<SessionMetrics>(CreateEmptyMetrics());
+  const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   useTrainingConfigReady(phase === 'menu');
   const [drill, setDrill] = useState<DrillId>('bounce');
@@ -378,7 +381,19 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   }, []);
 
   useEffect(() => {
-    jsPsychRef.current = initJsPsych();
+    const host = jsPsychHostRef.current;
+    if (!host) return;
+
+    const jsPsych = initJsPsych({ display_element: host });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychRef.current = jsPsych;
+    jsPsychLifecycleRef.current = lifecycle;
+
+    return () => {
+      lifecycle.dispose();
+      if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
+      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
@@ -459,6 +474,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     };
 
     PlayGameEndSound('Victory', jsPsychRef);
+    jsPsychLifecycleRef.current?.finish(session as unknown as Record<string, unknown>);
     setResult(session);
     setPhase('results');
     stopVision();
@@ -485,11 +501,6 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       },
       detailRows: session.Event_Records.map((event) => ({ ...event }) as Record<string, unknown>),
     });
-    WriteJsPsychData(
-      jsPsychRef,
-      session as unknown as Record<string, unknown>,
-      'Unable to write motor cortex rehab result to jsPsych data.',
-    );
   }, [activeDrill.referenceName, difficulty, drill, handChoice, labels, setPhase, speedScale, stopVision, targetSizeScale]);
 
   const processFrame = useCallback((now: number) => {
@@ -593,78 +604,86 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
 
     PrepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
-    stopVision();
-    resetGameState();
-    setResult(null);
-    setVisionError('');
-    setShowVisionError(false);
-    setStatusMessage(labels.loadingCamera);
-    setPhase('initializing');
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: 'user',
-          width: { ideal: 960 },
-          height: { ideal: 720 },
-        },
-      });
-      cameraStreamRef.current = stream;
-      const cameraTrack = stream.getVideoTracks()[0];
-      if (!cameraTrack) throw new Error('Camera track is unavailable.');
-      cameraTrack.addEventListener('ended', () => {
-        if (!mountedRef.current || cameraStreamRef.current !== stream) return;
-        setVisionError(labels.disconnected);
-        setShowVisionError(true);
+    await jsPsychLifecycleRef.current?.start({
+      moduleId: 'motor:motor-cortex-rehab',
+      onStart: async () => {
         stopVision();
-        setPhase('menu');
-      }, { once: true });
+        resetGameState();
+        setResult(null);
+        setVisionError('');
+        setShowVisionError(false);
+        setStatusMessage(labels.loadingCamera);
+        setPhase('initializing');
 
-      const video = videoRef.current;
-      if (!video) throw new Error('Camera preview is unavailable.');
-      video.srcObject = stream;
-      await video.play();
-
-      setStatusMessage(labels.loadingModel);
-      const landmarker = await LoadMediaPipeWithFallback(
-        mediaPipeAssetCandidates,
-        async ({ wasmUrl, handLandmarkerModelUrl }) => {
-          const vision = await FilesetResolver.forVisionTasks(wasmUrl);
-          return HandLandmarker.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: handLandmarkerModelUrl },
-            runningMode: 'VIDEO',
-            numHands: handChoice === 'any' ? 1 : 2,
-            minHandDetectionConfidence: 0.5,
-            minHandPresenceConfidence: 0.5,
-            minTrackingConfidence: 0.5,
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              facingMode: 'user',
+              width: { ideal: 960 },
+              height: { ideal: 720 },
+            },
           });
-        },
-      );
-      if (!mountedRef.current) {
-        landmarker.close();
-        return;
-      }
-      handLandmarkerRef.current = landmarker;
-      metricsRef.current = {
-        ...CreateEmptyMetrics(),
-        startedAt: performance.now(),
-        lastTickAt: performance.now(),
-      };
-      setPhase('playing');
-      animationFrameRef.current = window.requestAnimationFrame(processFrame);
-    } catch (error) {
-      console.warn('Unable to initialize motor cortex rehab.', error);
-      setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
-        ? labels.permission
-        : labels.initialization);
-      setShowVisionError(true);
-      setPhase('menu');
-      stopVision();
-    }
+          cameraStreamRef.current = stream;
+          const cameraTrack = stream.getVideoTracks()[0];
+          if (!cameraTrack) throw new Error('Camera track is unavailable.');
+          cameraTrack.addEventListener('ended', () => {
+            if (!mountedRef.current || cameraStreamRef.current !== stream) return;
+            setVisionError(labels.disconnected);
+            setShowVisionError(true);
+            stopVision();
+            jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
+            setPhase('menu');
+          }, { once: true });
+
+          const video = videoRef.current;
+          if (!video) throw new Error('Camera preview is unavailable.');
+          video.srcObject = stream;
+          await video.play();
+
+          setStatusMessage(labels.loadingModel);
+          const landmarker = await LoadMediaPipeWithFallback(
+            mediaPipeAssetCandidates,
+            async ({ wasmUrl, handLandmarkerModelUrl }) => {
+              const vision = await FilesetResolver.forVisionTasks(wasmUrl);
+              return HandLandmarker.createFromOptions(vision, {
+                baseOptions: { modelAssetPath: handLandmarkerModelUrl },
+                runningMode: 'VIDEO',
+                numHands: handChoice === 'any' ? 1 : 2,
+                minHandDetectionConfidence: 0.5,
+                minHandPresenceConfidence: 0.5,
+                minTrackingConfidence: 0.5,
+              });
+            },
+          );
+          if (!mountedRef.current) {
+            landmarker.close();
+            return;
+          }
+          handLandmarkerRef.current = landmarker;
+          metricsRef.current = {
+            ...CreateEmptyMetrics(),
+            startedAt: performance.now(),
+            lastTickAt: performance.now(),
+          };
+          setPhase('playing');
+          animationFrameRef.current = window.requestAnimationFrame(processFrame);
+        } catch (error) {
+          console.warn('Unable to initialize motor cortex rehab.', error);
+          setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
+            ? labels.permission
+            : labels.initialization);
+          setShowVisionError(true);
+          jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
+          setPhase('menu');
+          stopVision();
+        }
+      },
+    });
   }, [enterTrainingFullscreen, handChoice, labels, processFrame, resetGameState, setPhase, stopVision]);
 
   const returnToMenu = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
     stopVision();
     resetGameState();
     setResult(null);
@@ -674,6 +693,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   }, [resetGameState, setPhase, stopVision]);
 
   const exitGame = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
     stopVision();
     onExit();
   }, [onExit, stopVision]);
@@ -701,6 +721,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       className={`motor-cortex-game motor-cortex-phase-${phase} motor-cortex-drill-${drill}`}
       style={stageStyle}
     >
+      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
       <div className={`motor-cortex-camera ${phase === 'playing' || phase === 'initializing' ? '' : 'motor-cortex-camera-hidden'}`}>
         <video ref={videoRef} muted playsInline aria-label={labels.cameraPreview} />
         <canvas ref={handCanvasRef} aria-hidden="true" />

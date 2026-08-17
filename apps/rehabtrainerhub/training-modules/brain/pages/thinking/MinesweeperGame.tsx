@@ -5,7 +5,8 @@ import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { useT, type TranslationKey } from '../../i18n';
 import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { Clamp, FormatTestDate, WriteJsPsychData } from '@rehab-trainer/ui/trainingGameUtils';
+import { Clamp, FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
+import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
   TrainingConfigOptionGroup,
@@ -89,9 +90,11 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   const { t } = useT();
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const elapsedMillisRef = useRef(0);
   const playStartedAtRef = useRef<number>(Date.now());
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const [phase, setPhase] = useState<MinesweeperPhase>('menu');
   useTrainingConfigReady(phase === 'menu');
   const [difficulty, setDifficulty] = useState<MinesweeperDifficulty>(defaultDifficulty);
@@ -125,7 +128,19 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   }, [boardMetrics.pixelHeight, boardMetrics.pixelWidth]);
 
   useEffect(() => {
-    jsPsychRef.current = initJsPsych();
+    const host = jsPsychHostRef.current;
+    if (!host) return;
+
+    const jsPsych = initJsPsych({ display_element: host });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychRef.current = jsPsych;
+    jsPsychLifecycleRef.current = lifecycle;
+
+    return () => {
+      lifecycle.dispose();
+      if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
+      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+    };
   }, []);
 
   const finishGame = useCallback((nextBoard: Cell[][], gameResult: GameResult) => {
@@ -138,6 +153,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
       Game_Result: gameResult,
       Total_Duration_Seconds: Number(duration.toFixed(1)),
     };
+    jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
     setBoard(nextBoard);
     setResult(record);
     setPhase('results');
@@ -153,29 +169,34 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
         Total_Duration_Seconds: record.Total_Duration_Seconds,
       },
     });
-    WriteJsPsychData(jsPsychRef, record as unknown as Record<string, unknown>, 'Unable to write minesweeper result to jsPsych data.');
   }, [difficulty, gameTitle]);
 
   const startGame = useCallback(async () => {
     PrepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
 
-    const nextRows = selectedBoardConfig.rows;
-    const nextCols = selectedBoardConfig.cols;
-    const nextMineCount = selectedBoardConfig.mines;
-    setBoardRows(nextRows);
-    setBoardCols(nextCols);
-    setMineCount(nextMineCount);
-    setBoard(CreateEmptyBoard(nextRows, nextCols));
-    setMinesGenerated(false);
-    setFlagMode(false);
-    setResult(null);
-    elapsedMillisRef.current = 0;
-    playStartedAtRef.current = Date.now();
-    setPhase('playing');
+    await jsPsychLifecycleRef.current?.start({
+      moduleId: 'brain:minesweeper',
+      onStart: () => {
+        const nextRows = selectedBoardConfig.rows;
+        const nextCols = selectedBoardConfig.cols;
+        const nextMineCount = selectedBoardConfig.mines;
+        setBoardRows(nextRows);
+        setBoardCols(nextCols);
+        setMineCount(nextMineCount);
+        setBoard(CreateEmptyBoard(nextRows, nextCols));
+        setMinesGenerated(false);
+        setFlagMode(false);
+        setResult(null);
+        elapsedMillisRef.current = 0;
+        playStartedAtRef.current = Date.now();
+        setPhase('playing');
+      },
+    });
   }, [enterTrainingFullscreen, selectedBoardConfig]);
 
   const returnToMenu = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
     setPhase('menu');
     setResult(null);
     setFlagMode(false);
@@ -245,6 +266,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
 
   return (
     <div ref={fullscreenRootRef} className={`minesweeper-game minesweeper-phase-${phase}`}>
+      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
       {phase === 'menu' && (
         <div className="training-panel">
           <TrainingConfigPanel
@@ -633,4 +655,3 @@ function GetCanvasCell(event: PointerEvent<HTMLCanvasElement>, rows: number, col
 function FormatSeconds(value: number, t: (key: TranslationKey, params?: Record<string, string | number>) => string) {
   return t('training.secondsShort', { value });
 }
-

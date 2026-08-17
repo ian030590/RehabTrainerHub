@@ -1,5 +1,6 @@
 // Canonical Hub-owned BrainTrainer module; bundled by the BrainTrainer host.
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { initJsPsych } from 'jspsych';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import {
   TrainingConfigOptionGroup,
@@ -12,6 +13,7 @@ import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResu
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
 import { useNavigate } from 'react-router-dom';
 import { useT, type TranslationKey } from '../i18n';
@@ -320,6 +322,8 @@ export function MainConceptTraining({ onExit }: { onExit?: () => void } = {}) {
   const { t, lang } = useT();
   const navigate = useNavigate();
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
+  const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const [phase, setPhase] = useState<Phase>('menu');
   useTrainingConfigReady(phase === 'menu');
   const [selectedSetId, setSelectedSetId] = useState(trainingSets[0].id);
@@ -341,6 +345,20 @@ export function MainConceptTraining({ onExit }: { onExit?: () => void } = {}) {
   const progressText = `${currentIndex + 1} / ${activeSet.questions.length}`;
   const locked = Boolean(acceptedTrial);
 
+  useEffect(() => {
+    const host = jsPsychHostRef.current;
+    if (!host) return;
+
+    const jsPsych = initJsPsych({ display_element: host });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychLifecycleRef.current = lifecycle;
+
+    return () => {
+      lifecycle.dispose();
+      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+    };
+  }, []);
+
   const openInstructions = async () => {
     await enterTrainingFullscreen();
     setFeedback(null);
@@ -351,19 +369,25 @@ export function MainConceptTraining({ onExit }: { onExit?: () => void } = {}) {
 
   const startSession = async () => {
     await enterTrainingFullscreen();
-    const firstQuestion = activeSet.questions[0];
-    setCurrentIndex(0);
-    setAnswer(CreateEmptyAnswer(firstQuestion));
-    setFeedback(null);
-    setAcceptedTrial(null);
-    setAttempts({});
-    setResults([]);
-    setSummary(null);
-    setStartedAt(Date.now());
-    setPhase('playing');
+    await jsPsychLifecycleRef.current?.start({
+      moduleId: 'brain:main-concept',
+      onStart: () => {
+        const firstQuestion = activeSet.questions[0];
+        setCurrentIndex(0);
+        setAnswer(CreateEmptyAnswer(firstQuestion));
+        setFeedback(null);
+        setAcceptedTrial(null);
+        setAttempts({});
+        setResults([]);
+        setSummary(null);
+        setStartedAt(Date.now());
+        setPhase('playing');
+      },
+    });
   };
 
   const returnToMenu = () => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
     setPhase('menu');
     setFeedback(null);
     setAcceptedTrial(null);
@@ -472,6 +496,13 @@ export function MainConceptTraining({ onExit }: { onExit?: () => void } = {}) {
       durationSeconds,
       trials: finalResults,
     };
+    jsPsychLifecycleRef.current?.finish({
+      set_id: activeSet.id,
+      total_questions: nextSummary.total,
+      correct_count: nextSummary.correct,
+      accuracy_percent: nextSummary.accuracy,
+      duration_ms: nextSummary.durationSeconds * 1000,
+    });
     setSummary(nextSummary);
     setFeedback(null);
     setAcceptedTrial(null);
@@ -500,6 +531,7 @@ export function MainConceptTraining({ onExit }: { onExit?: () => void } = {}) {
 
   const wrapFullscreenRoot = (content: ReactNode) => (
     <div ref={fullscreenRootRef} className={`main-concept-fullscreen-root main-concept-fullscreen-root-${phase}`}>
+      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
       {content}
     </div>
   );

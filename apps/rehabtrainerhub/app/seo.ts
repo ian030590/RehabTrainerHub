@@ -3,7 +3,10 @@ import { hubFullName, hubLocalName, hubName } from './hubBrand';
 import { siteUrls } from './siteUrls';
 
 export const siteDescription =
-  '居家訓練網 Rehab Trainer Hub 提供動作、視覺、認知與口腔居家練習工具、衛教資訊、每日任務與訓練紀錄；不提供個別評估、診斷或治療。';
+  '居家訓練網 Rehab Trainer Hub 是可安裝的居家練習遊戲平台，提供動作、視覺、認知與口腔練習、衛教資訊、每日任務與當次紀錄；不提供個別評估、診斷或治療。';
+
+export const gamePlatformDescription =
+  '居家訓練網提供內建與經審核的開發者居家練習遊戲；可在平台遊玩，也能將每個遊戲以 PWA 單獨安裝，並了解 HTML／ZIP 投稿與隔離執行機制。';
 
 export const seoImage = {
   url: '/icons/pwa-512.png',
@@ -239,7 +242,11 @@ export const hubApplicationJsonLd = {
     price: 0,
     priceCurrency: 'TWD',
   },
-  featureList: ['居家練習模組入口', '每日任務', '訓練紀錄與進度追蹤'],
+  featureList: [
+    '內建與經審核的開發者居家練習遊戲',
+    '平台遊玩與單一遊戲 PWA 安裝',
+    '每日任務與當次紀錄',
+  ],
   hasPart: trainerApplications.map((application) => ({ '@id': application['@id'] })),
   isPartOf: { '@id': websiteId },
   publisher: { '@id': organizationId },

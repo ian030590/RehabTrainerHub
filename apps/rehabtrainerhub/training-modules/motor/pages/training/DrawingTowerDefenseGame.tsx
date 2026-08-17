@@ -7,7 +7,7 @@ import { useT, type TranslationKey } from '../../i18n';
 import { getActiveUser } from '../../utils/settings';
 import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { Clamp, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
@@ -19,6 +19,7 @@ import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResu
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import type { TFunction } from './types';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
 
@@ -183,7 +184,9 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     strictness: defaultRecognitionStrictness,
     strokeWaitMs: defaultJudgeDelayMs,
   });
+  const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   useTrainingConfigReady(phase === 'menu');
@@ -231,7 +234,19 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   }, [difficulty, gameDurationSec, maxHp, speed, strictness, strokeWaitMs]);
 
   useEffect(() => {
-    jsPsychRef.current = initJsPsych();
+    const host = jsPsychHostRef.current;
+    if (!host) return;
+
+    const jsPsych = initJsPsych({ display_element: host });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychRef.current = jsPsych;
+    jsPsychLifecycleRef.current = lifecycle;
+
+    return () => {
+      lifecycle.dispose();
+      if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
+      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+    };
   }, []);
 
   const clearDrawingInput = useCallback(() => {
@@ -292,6 +307,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       Game_Result: gameResult,
       Enemy_Results: enemyResultsRef.current.map((enemyResult) => ({ ...enemyResult })),
     };
+    jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
     setResult(record);
     setPhase('results');
     void SaveTrainingSessionRecord({
@@ -320,7 +336,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         Enemy_Defeated: enemyResult.Defeated,
       })),
     });
-    WriteJsPsychData(jsPsychRef, record as unknown as Record<string, unknown>, 'Unable to write drawing tower defense result to jsPsych data.');
   }, [clearDrawingInput, recordEnemyOutcome, setPhase, t]);
 
   const drawLayout = useCallback((app: Application) => {
@@ -498,18 +513,24 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
 
     const app = appRef.current;
     if (!app) return;
-    ResizePixiAppToElement(app, pixiHostRef.current);
-    clearPixiState();
-    app.stage.removeChildren();
-    drawLayout(app);
-    const initialHp = configRef.current.maxHp;
-    metricsRef.current = { defeated: 0, hp: initialHp, spawned: 0, elapsed: 0, spawnTimer: 0, nextId: 1 };
-    enemyResultsRef.current = [];
-    setResult(null);
-    setPhase('playing');
+    await jsPsychLifecycleRef.current?.start({
+      moduleId: 'motor:drawing-defense',
+      onStart: () => {
+        ResizePixiAppToElement(app, pixiHostRef.current);
+        clearPixiState();
+        app.stage.removeChildren();
+        drawLayout(app);
+        const initialHp = configRef.current.maxHp;
+        metricsRef.current = { defeated: 0, hp: initialHp, spawned: 0, elapsed: 0, spawnTimer: 0, nextId: 1 };
+        enemyResultsRef.current = [];
+        setResult(null);
+        setPhase('playing');
+      },
+    });
   }, [clearPixiState, drawLayout, enterTrainingFullscreen, setPhase]);
 
   const returnToMenu = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
     const app = appRef.current;
     clearPixiState();
     if (app) {
@@ -671,6 +692,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
 
   return (
     <div ref={fullscreenRootRef} className={`drawing-defense drawing-defense-phase-${phase}`} style={backgroundStyle}>
+      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
       <div ref={pixiHostRef} className="drawing-defense-stage" />
       <div ref={overlayRef} className="drawing-defense-input" />
 

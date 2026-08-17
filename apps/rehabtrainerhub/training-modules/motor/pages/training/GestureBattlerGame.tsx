@@ -15,7 +15,7 @@ import { useT, type TranslationKey } from '../../i18n';
 import { getActiveUser } from '../../utils/settings';
 import { PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
-import { Clamp, FormatTestDate, WriteJsPsychData } from './gameUtils';
+import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
@@ -33,6 +33,7 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
@@ -214,7 +215,9 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   const targetGestureRef = useRef<GestureId>(1);
   const attackActiveRef = useRef(false);
   const mountedRef = useRef(true);
+  const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const configRef = useRef<GestureConfig>({
     enemyMaxHp: defaultEnemyHp,
     holdDuration: defaultHoldDuration,
@@ -275,7 +278,19 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   }, [cameraPermission.status, t]);
 
   useEffect(() => {
-    jsPsychRef.current = initJsPsych();
+    const host = jsPsychHostRef.current;
+    if (!host) return;
+
+    const jsPsych = initJsPsych({ display_element: host });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychRef.current = jsPsych;
+    jsPsychLifecycleRef.current = lifecycle;
+
+    return () => {
+      lifecycle.dispose();
+      if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
+      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+    };
   }, []);
 
   const clearHandCanvas = useCallback(() => {
@@ -351,6 +366,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       Cast_Records: metrics.casts.map((cast) => ({ ...cast })),
     };
     PlayGameEndSound('Victory', jsPsychRef);
+    jsPsychLifecycleRef.current?.finish(session as unknown as Record<string, unknown>);
     setResult(session);
     setPhase('results');
     stopVision();
@@ -372,11 +388,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       },
       detailRows: gestureStats.map((stat) => ({ ...stat })),
     });
-    WriteJsPsychData(
-      jsPsychRef,
-      session as unknown as Record<string, unknown>,
-      'Unable to write gesture battler result to jsPsych data.',
-    );
   }, [setPhase, stopVision, t]);
 
   const triggerAttack = useCallback(async (gesture: GestureId, similarity: number) => {
@@ -646,85 +657,93 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     // Keep the fixed game surface in the normal document so two-finger pinch zoom
     // remains available, while desktop retains the immersive fullscreen flow.
     if (!IsMobileGameViewport()) await enterTrainingFullscreen();
-    if (appRef.current) ResizePixiAppToElement(appRef.current, pixiHostRef.current);
-    stopVision();
-    setVisionError('');
-    setShowVisionError(false);
-    setStatusMessage(t('gesture.loading.camera'));
-    setPhase('initializing');
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: 'user',
-          width: { ideal: 960 },
-          height: { ideal: 720 },
-        },
-      });
-      cameraStreamRef.current = stream;
-      const cameraTrack = stream.getVideoTracks()[0];
-      if (!cameraTrack) throw new Error('Camera track is unavailable.');
-      cameraTrack.addEventListener('ended', () => {
-        if (!mountedRef.current || cameraStreamRef.current !== stream) return;
-        setVisionError(t('gesture.error.disconnected'));
-        setShowVisionError(true);
+    await jsPsychLifecycleRef.current?.start({
+      moduleId: 'motor:gesture-battler',
+      onStart: async () => {
+        if (appRef.current) ResizePixiAppToElement(appRef.current, pixiHostRef.current);
         stopVision();
-        setPhase('menu');
-      }, { once: true });
-      const video = videoRef.current;
-      if (!video) throw new Error('Camera preview is unavailable.');
-      video.srcObject = stream;
-      await video.play();
+        setVisionError('');
+        setShowVisionError(false);
+        setStatusMessage(t('gesture.loading.camera'));
+        setPhase('initializing');
 
-      setStatusMessage(t('gesture.loading.model'));
-      const landmarker = await LoadMediaPipeWithFallback(
-        mediaPipeAssetCandidates,
-        async ({ wasmUrl, handLandmarkerModelUrl }) => {
-          const vision = await FilesetResolver.forVisionTasks(wasmUrl);
-          return HandLandmarker.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: handLandmarkerModelUrl },
-            runningMode: 'VIDEO',
-            numHands: 1,
-            minHandDetectionConfidence: 0.5,
-            minHandPresenceConfidence: 0.5,
-            minTrackingConfidence: 0.5,
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              facingMode: 'user',
+              width: { ideal: 960 },
+              height: { ideal: 720 },
+            },
           });
-        },
-      );
-      if (!mountedRef.current) {
-        landmarker.close();
-        return;
-      }
-      handLandmarkerRef.current = landmarker;
-      romRef.current = { closed: null, open: null };
-      gestureProfilesRef.current = {};
-      calibrationIndexRef.current = 0;
-      calibrationCapturingRef.current = false;
-      calibrationHoldStartRef.current = null;
-      calibrationSamplesRef.current = [];
-      lastHandSeenAtRef.current = 0;
-      lastDetectionAtRef.current = 0;
-      lastVideoTimeRef.current = -1;
-      setCalibrationIndex(0);
-      setIsCalibrationCapturing(false);
-      setCalibrationProgress(0);
-      setCalibrationNotice('');
-      setResult(null);
-      setPhase('calibration');
-      animationFrameRef.current = window.requestAnimationFrame(processFrame);
-    } catch (error) {
-      console.error('Unable to initialize gesture recognition.', error);
-      stopVision();
-      setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
-        ? t('gesture.error.permission')
-        : t('gesture.error.initialization'));
-      setShowVisionError(true);
-      setPhase('menu');
-    }
+          cameraStreamRef.current = stream;
+          const cameraTrack = stream.getVideoTracks()[0];
+          if (!cameraTrack) throw new Error('Camera track is unavailable.');
+          cameraTrack.addEventListener('ended', () => {
+            if (!mountedRef.current || cameraStreamRef.current !== stream) return;
+            setVisionError(t('gesture.error.disconnected'));
+            setShowVisionError(true);
+            stopVision();
+            jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
+            setPhase('menu');
+          }, { once: true });
+          const video = videoRef.current;
+          if (!video) throw new Error('Camera preview is unavailable.');
+          video.srcObject = stream;
+          await video.play();
+
+          setStatusMessage(t('gesture.loading.model'));
+          const landmarker = await LoadMediaPipeWithFallback(
+            mediaPipeAssetCandidates,
+            async ({ wasmUrl, handLandmarkerModelUrl }) => {
+              const vision = await FilesetResolver.forVisionTasks(wasmUrl);
+              return HandLandmarker.createFromOptions(vision, {
+                baseOptions: { modelAssetPath: handLandmarkerModelUrl },
+                runningMode: 'VIDEO',
+                numHands: 1,
+                minHandDetectionConfidence: 0.5,
+                minHandPresenceConfidence: 0.5,
+                minTrackingConfidence: 0.5,
+              });
+            },
+          );
+          if (!mountedRef.current) {
+            landmarker.close();
+            return;
+          }
+          handLandmarkerRef.current = landmarker;
+          romRef.current = { closed: null, open: null };
+          gestureProfilesRef.current = {};
+          calibrationIndexRef.current = 0;
+          calibrationCapturingRef.current = false;
+          calibrationHoldStartRef.current = null;
+          calibrationSamplesRef.current = [];
+          lastHandSeenAtRef.current = 0;
+          lastDetectionAtRef.current = 0;
+          lastVideoTimeRef.current = -1;
+          setCalibrationIndex(0);
+          setIsCalibrationCapturing(false);
+          setCalibrationProgress(0);
+          setCalibrationNotice('');
+          setResult(null);
+          setPhase('calibration');
+          animationFrameRef.current = window.requestAnimationFrame(processFrame);
+        } catch (error) {
+          console.error('Unable to initialize gesture recognition.', error);
+          stopVision();
+          setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
+            ? t('gesture.error.permission')
+            : t('gesture.error.initialization'));
+          setShowVisionError(true);
+          jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
+          setPhase('menu');
+        }
+      },
+    });
   }, [enterTrainingFullscreen, processFrame, setPhase, stopVision, t]);
 
   const returnToMenu = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
     stopVision();
     resetHold(false);
     calibrationCapturingRef.current = false;
@@ -735,6 +754,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   }, [resetHold, setPhase, stopVision]);
 
   const exitGame = useCallback(() => {
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
     stopVision();
     onExit();
   }, [onExit, stopVision]);
@@ -817,6 +837,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
   return (
     <div ref={fullscreenRootRef} className={`gesture-battler gesture-battler-phase-${phase}`}>
+      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
       <div ref={pixiHostRef} className="gesture-battler-stage" />
 
       <button

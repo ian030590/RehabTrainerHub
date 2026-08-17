@@ -3,6 +3,11 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const defaultRepoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+export const pagesAppRoles = ['hub', 'trainer', 'gamehost'];
+
+export function IsAuthPagesApp(app) {
+  return app?.role === 'hub' || app?.role === 'trainer';
+}
 
 export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
   const appsRoot = join(repoRoot, 'apps');
@@ -23,8 +28,8 @@ export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
       if (!projectName || !outputDir) {
         throw new Error(`${ToPosixPath(relative(repoRoot, wranglerPath))} must define name and pages_build_output_dir.`);
       }
-      if (!['hub', 'trainer'].includes(role)) {
-        throw new Error(`${ToPosixPath(relative(repoRoot, packagePath))} must define rehabTrainer.role as hub or trainer.`);
+      if (!pagesAppRoles.includes(role)) {
+        throw new Error(`${ToPosixPath(relative(repoRoot, packagePath))} must define rehabTrainer.role as ${FormatChoices(pagesAppRoles)}.`);
       }
       if (!pkg.homepage) {
         throw new Error(`${ToPosixPath(relative(repoRoot, packagePath))} must define its canonical homepage URL.`);
@@ -32,6 +37,7 @@ export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
 
       const siteUrl = NormalizeSiteUrl(pkg.homepage, packagePath);
       const appPath = ToPosixPath(relative(repoRoot, appDir));
+      const deploymentUrl = `https://${projectName}.pages.dev`;
       return {
         appName: entry.name,
         appPath,
@@ -40,10 +46,11 @@ export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
         outputPath: ToPosixPath(join(appPath, outputDir)),
         packageName: pkg.name,
         projectName,
-        deploymentUrl: `https://${projectName}.pages.dev`,
+        deploymentUrl,
         role,
         siteUrl,
         hostname: new URL(siteUrl).hostname,
+        usesBuiltInPagesDomain: siteUrl === deploymentUrl,
         urlEnvName: `${ToEnvironmentName(projectName)}_URL`,
       };
     })
@@ -121,4 +128,10 @@ function EnsureUnique(items, key) {
 
 function ToPosixPath(value) {
   return value.replaceAll('\\', '/');
+}
+
+function FormatChoices(values) {
+  return values.length === 1
+    ? values[0]
+    : `${values.slice(0, -1).join(', ')}, or ${values.at(-1)}`;
 }

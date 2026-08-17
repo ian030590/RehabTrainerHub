@@ -255,8 +255,9 @@ export const zhTW = {
     navigation: {
       brandSubtitle: '居家訓練網',
       navigationLabel: '居家訓練網 Rehab Trainer Hub 導覽',
-      navigationItems: ['訓練大廳', '進度追蹤', '衛教資訊', '下載程式'],
+      navigationItems: ['訓練大廳', '遊戲平台', '進度追蹤', '衛教資訊', '下載程式'],
       accountMenu: '帳戶選單',
+      developer: '開發者投稿',
       admin: '管理後台',
       switchLanguage: '切換為英文',
       flagLabel: '繁體中文（台灣）',

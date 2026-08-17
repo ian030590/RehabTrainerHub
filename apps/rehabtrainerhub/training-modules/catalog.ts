@@ -464,6 +464,14 @@ export function BuildTrainingModuleHref(
   return `${urls[module.trainer]}/#${module.entryPath}`;
 }
 
+export function BuildTrainingGameInstallHref(
+  module: TrainingCatalogModule,
+  urls: SiteUrls = defaultSiteUrls,
+): string {
+  const trainerOrigin = urls[module.trainer].replace(/\/+$/, '');
+  return `${trainerOrigin}/games/${encodeURIComponent(module.runtimeId)}/`;
+}
+
 export function BuildTrainingModuleImageSrc(
   module: TrainingCatalogModule,
   urls: SiteUrls = defaultSiteUrls,

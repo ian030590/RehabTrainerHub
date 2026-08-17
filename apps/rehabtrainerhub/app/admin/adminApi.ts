@@ -69,6 +69,41 @@ export interface AdminAssetResponse {
   key: string;
 }
 
+export type GameReleaseReviewStatus = 'blocked' | 'pending_review' | 'publishing' | 'approved' | 'rejected' | 'revoked';
+
+export interface AdminGameScanFinding {
+  severity: 'block' | 'review';
+  code: string;
+  filePath: string | null;
+  message: string;
+}
+
+export interface AdminGameRelease {
+  id: string;
+  gameId: string;
+  slug: string;
+  title: string;
+  summary: string;
+  category: string;
+  developerName: string;
+  owner: { id: string; displayName: string };
+  version: string;
+  artifactType: 'html' | 'zip';
+  entryPath: string;
+  status: GameReleaseReviewStatus;
+  contentSha256: string;
+  packageBytes: number;
+  uncompressedBytes: number;
+  fileCount: number;
+  jsPsychVersion: string;
+  capabilities: string[];
+  scan: { blockCount?: number; reviewCount?: number };
+  findings: AdminGameScanFinding[];
+  reviewNote: string | null;
+  submittedAt: string;
+  reviewedAt: string | null;
+}
+
 export class AdminApiError extends Error {
   status: number;
 
@@ -237,4 +272,39 @@ export async function UploadAdminAsset(file: File): Promise<AdminAssetResponse> 
       body: formData,
     }),
   );
+}
+
+export async function FetchAdminGameReleases(
+  status?: GameReleaseReviewStatus,
+  signal?: AbortSignal,
+): Promise<AdminGameRelease[]> {
+  const payload = await ReadJson<{ releases: AdminGameRelease[] }>(
+    await AdminFetch('/api/admin/game-releases', { signal }, { status }),
+  );
+  return payload.releases;
+}
+
+export async function ReviewAdminGameRelease(
+  releaseId: string,
+  decision: 'approve' | 'reject' | 'revoke',
+  note: string,
+  evidence: { sourceReviewed: boolean; playTested: boolean; metadataReviewed: boolean },
+): Promise<void> {
+  await AdminFetch(`/api/admin/game-releases/${encodeURIComponent(releaseId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ decision, note, ...evidence }),
+  });
+}
+
+export async function DownloadAdminGameReleaseArtifact(
+  releaseId: string,
+): Promise<{ blob: Blob; filename: string }> {
+  const response = await AdminFetch(
+    `/api/admin/game-releases/${encodeURIComponent(releaseId)}/artifact`,
+  );
+  const disposition = response.headers.get('Content-Disposition') ?? '';
+  const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1]
+    ?? `game-release-${releaseId}.zip`;
+  return { blob: await response.blob(), filename };
 }
