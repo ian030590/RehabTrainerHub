@@ -21,7 +21,7 @@ import { GetHubUiCopy } from './i18n';
 import { HubLanguageProvider, useHubLanguage } from './i18n/HubLanguage';
 import { siteUrls } from './siteUrls';
 
-const navigationHrefs = ['/', '/games/', '/progress/', '/qa/', '/download/'] as const;
+const navigationHrefs = ['/', '/progress/', '/qa/', '/download/'] as const;
 
 function IsStaffUser(user: AuthUser | null): boolean {
   const role = (user as (AuthUser & { role?: unknown }) | null)?.role;
@@ -192,12 +192,14 @@ function HubShellContent({ children }: { children: ReactNode }) {
           <RehabFooter
             appName="Rehab Trainer Hub"
             className="hub-footer"
+            developerHref="/developer/"
             downloadHref="/download/"
             innerClassName="hub-footer-inner"
             privacyHref="/privacy/"
             showRights={false}
             labels={{
               hub: copy.footer.hub,
+              developer: copy.footer.developer,
               download: copy.footer.download,
               privacy: copy.footer.privacy,
               repo: 'GitHub',

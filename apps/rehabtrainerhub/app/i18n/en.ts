@@ -255,7 +255,7 @@ export const en = {
     navigation: {
       brandSubtitle: 'Home practice hub',
       navigationLabel: 'Rehab Trainer Hub navigation',
-      navigationItems: ['Training Lobby', 'Game platform', 'Progress', 'Education', 'Download app'],
+      navigationItems: ['Training Lobby', 'Progress', 'Education', 'Download app'],
       accountMenu: 'Account menu',
       developer: 'Developer submissions',
       admin: 'Administration',
@@ -263,6 +263,7 @@ export const en = {
       flagLabel: 'English (United States)',
       footer: {
         hub: 'Home',
+        developer: 'Developer options',
         download: 'Download app',
         privacy: 'Privacy',
         disclaimer: 'General home-practice tools and educational information only. This site is not a medical facility or occupational therapy clinic and does not provide diagnosis, medical orders, or individualized treatment.',

@@ -90,7 +90,6 @@ function ValidateAppSeo(app, appFailures) {
       appFailures.push(`${indexPath}: Hub homepage must prerender its visible heading in Traditional Chinese.`);
     }
     ValidateHubPrivatePages(outputDir, sitemapUrls, appFailures);
-    ValidateHubGamesPage(outputDir, sitemapUrls, appFailures);
   }
 }
 
@@ -185,7 +184,7 @@ function ValidateSitemap(source, file, siteUrl, role, appFailures) {
   }
 
   const expectedUrls = role === 'hub'
-    ? ['', 'games/', 'qa/', 'privacy/', 'download/'].map((path) => `${siteUrl}${path}`)
+    ? ['', 'qa/', 'privacy/', 'download/'].map((path) => `${siteUrl}${path}`)
     : [siteUrl];
   if (!HaveSameValues(urls, expectedUrls)) {
     appFailures.push(`${file}: expected only these canonical public URLs: ${expectedUrls.join(', ')}.`);
@@ -455,37 +454,6 @@ function ValidateHubPrivatePages(outputDir, sitemapUrls, appFailures) {
     if (!robots || !/\bnoindex\b/i.test(robots)) {
       appFailures.push(`${file}: private route must declare noindex.`);
     }
-  }
-}
-
-function ValidateHubGamesPage(outputDir, sitemapUrls, appFailures) {
-  const publicUrlSuffix = '/games/';
-  if (!sitemapUrls.some((value) => new URL(value).pathname === publicUrlSuffix)) {
-    appFailures.push(`${join(outputDir, 'sitemap.xml')}: missing the public game-platform page.`);
-  }
-
-  const file = join(outputDir, 'games', 'index.html');
-  const html = ReadUtf8File(file, publicUrlSuffix, appFailures);
-  if (html === null) return;
-  const requiredVisibleCopy = [
-    '居家練習遊戲平台',
-    'PWA',
-    'HTML',
-    'ZIP',
-    'jsPsych 8',
-    '獨立的網域',
-    'allow-scripts',
-    'postMessage',
-    '自動掃描',
-    '人工審核',
-  ];
-  for (const copy of requiredVisibleCopy) {
-    if (!html.includes(copy)) {
-      appFailures.push(`${file}: game-platform explanation is missing ${JSON.stringify(copy)}.`);
-    }
-  }
-  if (!/href=["']\/developer\/["']/i.test(html)) {
-    appFailures.push(`${file}: game-platform explanation must link to the noindex developer portal.`);
   }
 }
 

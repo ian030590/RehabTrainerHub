@@ -139,49 +139,65 @@ export function DeveloperPortal() {
     }
   };
 
-  if (!user) {
-    return (
-      <main className="admin-page" id="main-content">
-        <header className="page-heading">
-          <p className="page-kicker">Developer</p>
-          <h1>開發者投稿</h1>
-          <p>請先使用右上角帳戶選單登入，再上傳 HTML 或 ZIP 遊戲包。</p>
-        </header>
-      </main>
-    );
-  }
-
   return (
     <main className="admin-page developer-page" id="main-content">
       <header className="page-heading">
-        <p className="page-kicker">Developer</p>
-        <h1>開發者遊戲投稿</h1>
+        <p className="page-kicker">Developer Portal</p>
+        <h1>居家練習遊戲開發與投稿</h1>
         <p>
-          上傳未混淆的 HTML，或含本機圖片、音效與程式碼的 ZIP。遊戲必須使用平台提供的
-          jsPsych 8 與 Game SDK 管理流程，並透過 bridge 回報非識別性的當次結果。
+          居家訓練網提供開放的遊戲平台架構。開發者可使用 jsPsych 8 開發 HTML/ZIP 居家練習遊戲，
+          經自動化掃描與人工審核後發布至平台，並支援使用者單獨安裝 PWA。
         </p>
       </header>
 
-      <section className="developer-security-notice" aria-labelledby="developer-security-title">
-        <h2 id="developer-security-title">執行與審核規則</h2>
+      <section className="about-site-section" aria-labelledby="developer-package-title">
+        <p className="page-kicker">Portable package</p>
+        <h2 id="developer-package-title">遊戲封裝規格：一個 HTML，或包含資產的 ZIP</h2>
+        <p>
+          開發者可提交單一 HTML 檔案，或提交根目錄含有 <code>index.html</code> 的 ZIP 壓縮檔；圖片、音效、字型與程式碼都必須放在遊戲包內。
+        </p>
         <ul>
-          <li>ZIP 根目錄必須有 <code>index.html</code>；圖片、音效與遊戲自己的程式碼都必須包含在遊戲包內。</li>
-          <li>
-            jsPsych {platformJsPsychVersion} 與 Game SDK 由隔離執行站提供；請引用
-            <code>{platformJsPsychUrl}</code>、<code>{platformJsPsychCssUrl}</code> 與 <code>{platformGameSdkUrl}</code>，
-            不要把這兩套 vendor 程式碼放進 HTML 或 ZIP。
-          </li>
-          <li>請以 <code>RunTrainerHubJsPsychGame()</code> 啟動 timeline。</li>
-          <li>禁止 fetch、XMLHttpRequest、WebSocket、Cookie、導頁、Worker、eval 與外部網址。</li>
-          <li>程式碼不得壓縮或混淆；自動掃描只是初篩，通過後仍須人工試玩與審閱。</li>
-          <li>核准版本會在完全獨立的遊戲網域，以 <code>sandbox=&quot;allow-scripts&quot;</code> 執行。</li>
-          <li>嚴格沙盒不開放相機、麥克風、定位或帳戶資料；請勿要求或蒐集個資。</li>
+          <li><strong>檔案大小限制</strong>：上傳套件上限為 12 MB；解壓縮後總大小上限為 24 MB，單一檔案上限 8 MB。</li>
+          <li><strong>ZIP 結構</strong>：必須直接以 <code>index.html</code> 為根目錄進入點，不得包在多層子資料夾內。</li>
+          <li><strong>流程與生命週期</strong>：遊戲必須使用 jsPsych 8 管理實驗流程與刺激呈現，並以 <code>RunTrainerHubJsPsychGame()</code> 啟動。</li>
+          <li><strong>平台 Runtime 引用</strong>：jsPsych {platformJsPsychVersion} 與 Game SDK 由隔離執行站固定提供，請直接引用 <code>{platformJsPsychUrl}</code>、<code>{platformJsPsychCssUrl}</code> 與 <code>{platformGameSdkUrl}</code>，請勿自行打包 vendor 庫。</li>
         </ul>
       </section>
 
-      <div className="developer-layout">
-        <section className="admin-tab-panel" aria-labelledby="developer-upload-title">
-          <h2 id="developer-upload-title">上傳新版本</h2>
+      <section className="developer-security-notice" aria-labelledby="developer-rules-title">
+        <h2 id="developer-rules-title">程式碼安全規範與阻擋規則</h2>
+        <ul>
+          <li><strong>禁止混淆程式碼</strong>：投稿必須為未經混淆（Unobfuscated）的原始碼，單行不得超過 5000 字元，逃脫字元密度需低於 5%。</li>
+          <li><strong>阻斷外部通訊</strong>：禁止使用 <code>fetch</code>、<code>XMLHttpRequest</code>、<code>WebSocket</code>、<code>EventSource</code>、<code>sendBeacon</code> 或 <code>WebRTC</code>。</li>
+          <li><strong>禁止憑證與導頁操作</strong>：禁止存取 <code>document.cookie</code>、<code>window.location</code>、<code>window.top</code>、<code>window.open</code> 或使用 <code>eval</code> / <code>new Function</code>。</li>
+          <li><strong>禁止多執行緒與動態腳本</strong>：禁止註冊 <code>ServiceWorker</code>、建立 <code>Worker</code> / <code>SharedWorker</code> 或動態載入外部腳本。</li>
+          <li><strong>無個資蒐集</strong>：嚴格沙盒不開放相機、麥克風、定位或帳戶資料；請勿在遊戲中要求使用者輸入個資。</li>
+        </ul>
+      </section>
+
+      <section className="about-site-section" aria-labelledby="developer-sandbox-title">
+        <p className="page-kicker">Security architecture</p>
+        <h2 id="developer-sandbox-title">第三方遊戲的隔離與審核機制</h2>
+        <ul>
+          <li><strong>物理隔離（Separate Domain）</strong>：核准的遊戲檔案在與帳戶平台完全獨立的網域（<code>trainerhub-user-games.pages.dev</code>）執行，完全無法讀取 <code>trainerhub.cc</code> 的 Cookie 或登入憑證。</li>
+          <li><strong>沙盒機制（Strict Iframe Sandbox）</strong>：平台一律以 <code>sandbox=&quot;allow-scripts&quot;</code> iframe 載入遊戲，絕不開放 <code>allow-same-origin</code> 或 <code>allow-top-navigation</code>。</li>
+          <li><strong>阻斷外連 CSP</strong>：遊戲靜態檔案套用嚴格內容安全策略（<code>connect-src 'none'; worker-src 'none'; form-action 'none'</code>），防止資料外傳。</li>
+          <li><strong>安全通訊橋樑</strong>：遊戲透過 <code>MessageChannel</code> 私有通訊埠回傳非識別性的當次彙總結果，以 session nonce 與遞增序號防禦重放攻擊。</li>
+          <li><strong>自動掃描與人工審核</strong>：上傳時自動掃描 18 種危險 API；審核人員會在無憑證隔離環境試玩並查核原始碼，經 3 項查核確認後始可發布。</li>
+        </ul>
+      </section>
+
+      {!user ? (
+        <section className="admin-tab-panel">
+          <h2>登入以開始投稿</h2>
+          <p>
+            請先點擊右上角的帳戶頭像進行登入。登入後即可在此上傳 HTML 或 ZIP 遊戲包、查看自動掃描結果與人工審核進度。
+          </p>
+        </section>
+      ) : (
+        <div className="developer-layout">
+          <section className="admin-tab-panel" aria-labelledby="developer-upload-title">
+            <h2 id="developer-upload-title">上傳新版本</h2>
           <form className="developer-upload-form" onSubmit={(event) => void submit(event)}>
             <label className="admin-field">
               <span>遊戲識別碼</span>
@@ -314,6 +330,7 @@ export function DeveloperPortal() {
           </div>
         </section>
       </div>
+      )}
     </main>
   );
 }

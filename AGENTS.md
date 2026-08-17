@@ -4,25 +4,33 @@
 
 npm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
 
-- `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions。
+- `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、API、審核後台、開發者入口）。
+- `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），負責以 sandboxed iframe 載入第三方 HTML/ZIP 遊戲並提供 PWA。
 - `apps/motortrainer`、`apps/visiontrainer`、`apps/braintrainer`、`apps/mouthtrainer`：Vite React trainers。
 
-共用 UI、auth、layout、settings、storage：`packages/ui/src`。靜態資產：各 app `public/`，通常 `public/assets/`。D1 migrations：`apps/rehabtrainerhub/migrations/`。
+共用 UI、auth、layout、settings、storage、gamePlatform 規範：`packages/ui/src`。
+開發者遊戲 SDK：`packages/game-sdk`（`@rehab-trainer/game-sdk`）。
+靜態資產：各 app `public/`，通常 `public/assets/`。
+D1 migrations：`apps/rehabtrainerhub/migrations/`。
+R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待審上傳暫存）、`rehab-game-releases`（已核准不可變發布）。
 
 ## 建置、測試與開發指令
 
 - `npm run dev`：Turbo 啟動全部 dev servers。
 - `npm run dev:hub`、`npm run dev:motor`、`npm run dev:vision`、`npm run dev:brain`：啟動單一 app。
-- `npm run build`：透過 `scripts/build-apps.mjs` 建置全部 app。
+- `npm run build`：執行測試 gate 並透過 `scripts/build-apps.mjs` 建置全部 app。
 - `npm run build:cloudflare`：建置 Cloudflare Pages 輸出。
-- `npm run build:hub|motor|mouth|vision|brain`：建置單一 app。
+- `npm run build:hub|motor|mouth|vision|brain|gamerunner`：建置單一 app。
+- `npm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
+- `npm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
+- `npm run test:game-platform`：驗證遊戲套件掃描器與 SDK。
 - `npm --prefix apps/<app> run preview`：預覽 Vite app 或 Hub 輸出。
 
 高風險 trainer 變更完成前執行 `npm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。
 
 修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後執行 `npm --workspace @rehab-trainer/motortrainer run test:asteroid-shield-fullscreen`；驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
 
-無完整測試套件；針對性 build 為最低驗證。
+無完整測試套件；針對性 build 與 `npm run test:hub-functions`、`npm run test:gamerunner` 為最低驗證。
 
 ## 程式風格與命名規範
 
@@ -52,6 +60,36 @@ Hub 與各 trainer 為獨立 PWA；各自保留 manifest、app identity、scope�
 共用 shell CSS 放 `packages/ui/src/components/TrainerApp.css` 或 package stylesheet：cards、dialogs、trainer setup、results、tables、routed selection、buttons、forms、layout primitives。App `index.css` 只留產品視覺、遊戲/刺激 renderer、app overrides。搬共用 component 時同步搬 CSS，盡量刪本地重複。
 
 Trainers 維持一致檔名/資料夾，例如 `pages/settings/SettingsPage.tsx`、`pages/links/LinksPage.tsx`。相同概念勿用不同本地命名；行為不同時用明確 app-specific 名稱。
+
+### 遊戲平台與沙盒執行規範
+
+本平台提供開放開發者上傳 HTML/ZIP 居家練習遊戲的 Steam 式體驗，必須嚴格遵守以下五層安全防護架構：
+
+1. **物理隔離（Separate Domain）**：
+   - 主平台（`trainerhub.cc`，處理登入、個人紀錄、資料庫）與遊戲執行器（`trainerhub-user-games.pages.dev`，只負責靜態檔案與 jsPsych 執行）必須完全分開。
+   - `usergamerunner` Cloudflare Pages 專案**嚴禁綁定 D1、KV 認證或任何使用者私密資料**，僅具備 `rehab-game-releases` R2 bucket 的唯讀讀取能力。
+
+2. **沙盒機制（Strict Iframe Sandbox）**：
+   - 主平台載入第三方遊戲時，一律使用 `<iframe sandbox="allow-scripts">`。
+   - **絕對禁止**加上 `allow-same-origin`（防止突破同源隔離讀取憑證）或 `allow-top-navigation`（防止重導向至釣魚網站）。
+
+3. **阻斷外連（Restrictive CSP）**：
+   - 所有 package 靜態檔案回傳時強制套用 CSP：`default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'none'; worker-src 'none'; form-action 'none'; frame-ancestors 'self' https://trainerhub.cc;`。
+   - 禁止遊戲向任何外部伺服器發起 `fetch`、`XMLHttpRequest`、`WebSocket` 或 `WebRTC`。
+
+4. **安全通訊橋樑（postMessage & MessageChannel）**：
+   - 遊戲端必須引用 `@rehab-trainer/game-sdk`，透過私有 `MessageChannel` 傳送生命週期與彙總成果。
+   - 主平台驗證由 `sessionNonce` + 單調遞增 `sequence` 防禦重放攻擊；成績寫入透過後端一次性 `game_run_sessions` Token（SHA-256 驗證）防偽。
+   - 彙總指標自動過濾所有含 `auth|email|jwt|name|password|token|user` 等敏感欄位。
+
+5. **自動化掃描與人工審核門檻**：
+   - 上傳檢查（`gamePackages.js`）：自動阻擋 18 種危險 API（fetch、XHR、cookie、location、eval、Worker 等）、單行超過 5000 字元或逃脫字元密度 > 5% 的混淆代碼。
+   - 審核發布（`GameReleaseManager.tsx` + `admin/game-releases/[id].js`）：管理者須在無敏感憑證之隔離環境下載試玩，且必須完成「原始碼查核、隔離試玩、公開描述確認」3 項勾選後，才能發起具備 Lease 鎖定的 R2 搬遷與發布作業。
+
+6. **獨立 PWA 與生命週期**：
+   - 每個遊戲發布版本均在 `/games/{gameId}/{version}/` 提供專屬 Manifest 與 Service Worker，快取僅限該遊戲路徑與平台 runtime。
+   - 若遊戲被撤回（Revoked），執行器與 Service Worker 在偵測到 404/410 後自動自毀快取並關閉。
+
 
 ## 測試指引
 

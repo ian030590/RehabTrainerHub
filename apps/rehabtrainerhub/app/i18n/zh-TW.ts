@@ -255,7 +255,7 @@ export const zhTW = {
     navigation: {
       brandSubtitle: '居家訓練網',
       navigationLabel: '居家訓練網 Rehab Trainer Hub 導覽',
-      navigationItems: ['訓練大廳', '遊戲平台', '進度追蹤', '衛教資訊', '下載程式'],
+      navigationItems: ['訓練大廳', '進度追蹤', '衛教資訊', '下載程式'],
       accountMenu: '帳戶選單',
       developer: '開發者投稿',
       admin: '管理後台',
@@ -263,6 +263,7 @@ export const zhTW = {
       flagLabel: '繁體中文（台灣）',
       footer: {
         hub: '首頁',
+        developer: '開發者選項',
         download: '下載程式',
         privacy: '隱私權政策',
         disclaimer: '本站提供一般居家練習工具與衛教資訊，並非醫療機構或職能治療所；不提供診斷、醫囑或個別治療，也不能取代專業評估與治療。',
