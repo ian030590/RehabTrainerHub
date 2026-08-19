@@ -2,9 +2,14 @@ import { useSearchParams } from 'react-router-dom';
 import { useT } from '../../i18n';
 import { SaveTrainingRecord } from '../../utils/trainingRecords';
 import type { TrialData } from '@rehab-trainer/hub-modules/vision/pages/training/types';
-import { UfovPage, type SubtestId, type UfovRunMode, type UfovTrainingRecord } from './ufov/UfovPage';
+import {
+  PeripheralAttentionPage,
+  type SubtestId,
+  type PeripheralAttentionRunMode,
+  type PeripheralAttentionTrainingRecord,
+} from './peripheral-attention/PeripheralAttentionPage';
 
-export function UfovAssessmentPage() {
+export function PeripheralAttentionAssessmentPage() {
   const { lang } = useT();
   const [searchParams] = useSearchParams();
   const initialSubtestId = ParseSubtestId(searchParams.get('subtest'));
@@ -12,7 +17,7 @@ export function UfovAssessmentPage() {
   const autoStart = searchParams.get('start') === '1';
 
   return (
-    <UfovPage
+    <PeripheralAttentionPage
       appName="VisionTrainer"
       backPath="/assessment"
       lang={lang}
@@ -20,7 +25,7 @@ export function UfovAssessmentPage() {
       initialSubtestId={initialSubtestId}
       initialMode={initialMode}
       autoStart={autoStart}
-      onSaveRecord={SaveUfovRecord}
+      onSaveRecord={SavePeripheralAttentionRecord}
     />
   );
 }
@@ -31,12 +36,12 @@ function ParseSubtestId(value: string | null): SubtestId {
   return 1;
 }
 
-function ParseRunMode(value: string | null): UfovRunMode {
+function ParseRunMode(value: string | null): PeripheralAttentionRunMode {
   if (value === 'instruction' || value === 'practice' || value === 'formal') return value;
   return 'formal';
 }
 
-async function SaveUfovRecord(record: UfovTrainingRecord) {
+async function SavePeripheralAttentionRecord(record: PeripheralAttentionTrainingRecord) {
   await SaveTrainingRecord({
     userName: record.userName,
     moduleId: record.moduleId,
@@ -45,11 +50,11 @@ async function SaveUfovRecord(record: UfovTrainingRecord) {
       ufovDetails: record.details,
       ufovSummary: record.details?.ufovSummary,
     },
-    results: ToUfovTrialData(record),
+    results: ToPeripheralAttentionTrialData(record),
   });
 }
 
-function ToUfovTrialData(record: UfovTrainingRecord): TrialData[] {
+function ToPeripheralAttentionTrialData(record: PeripheralAttentionTrainingRecord): TrialData[] {
   return (record.detailRows ?? []).map((row, index) => ({
     ...row,
     trial_index: index,

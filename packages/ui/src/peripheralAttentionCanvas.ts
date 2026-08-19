@@ -1,23 +1,36 @@
-export type UfovCanvasPhase = 'fixation' | 'stimulus' | 'mask';
-export type UfovCanvasTarget = 'car' | 'truck';
+export type PeripheralAttentionCanvasPhase = 'fixation' | 'stimulus' | 'mask';
+export type PeripheralAttentionCanvasTarget = 'car' | 'truck';
 
-export interface UfovCanvasSlot {
+export interface PeripheralAttentionCanvasSlot {
   axis: number;
   ring: number;
   x: number;
   y: number;
 }
 
-export interface UfovCanvasStageOptions {
+export interface PeripheralAttentionCanvasStageOptions {
   ariaLabel: string;
-  phase: UfovCanvasPhase;
-  centralTarget: UfovCanvasTarget;
+  phase: PeripheralAttentionCanvasPhase;
+  centralTarget: PeripheralAttentionCanvasTarget;
   hasPeripheral: boolean;
   hasDistractors: boolean;
-  peripheralSlot?: UfovCanvasSlot;
-  slots: readonly UfovCanvasSlot[];
+  peripheralSlot?: PeripheralAttentionCanvasSlot;
+  slots: readonly PeripheralAttentionCanvasSlot[];
   maskImageData?: ImageData | null;
 }
+
+export interface PeripheralAttentionScreenGeometry {
+  maxVisualAngleDeg: number;
+  isOverLimit: boolean;
+  suggestedDistanceCm?: number;
+}
+
+// Backward compatibility types
+export type UfovCanvasPhase = PeripheralAttentionCanvasPhase;
+export type UfovCanvasTarget = PeripheralAttentionCanvasTarget;
+export type UfovCanvasSlot = PeripheralAttentionCanvasSlot;
+export type UfovCanvasStageOptions = PeripheralAttentionCanvasStageOptions;
+export type UfovScreenGeometry = PeripheralAttentionScreenGeometry;
 
 interface CanvasSize {
   context: CanvasRenderingContext2D;
@@ -36,7 +49,7 @@ const vehicleHeight = 48;
 const distractorWidth = centerBoxSize;
 const distractorHeight = 96;
 
-export function EnsureUfovCanvasStage(displayElement: HTMLElement, ariaLabel: string) {
+export function EnsurePeripheralAttentionCanvasStage(displayElement: HTMLElement, ariaLabel: string) {
   const currentStage = displayElement.querySelector<HTMLDivElement>(`.${canvasStageClass}`);
   if (currentStage) {
     currentStage.setAttribute('aria-label', ariaLabel);
@@ -56,13 +69,19 @@ export function EnsureUfovCanvasStage(displayElement: HTMLElement, ariaLabel: st
   return stage;
 }
 
-export function RenderUfovCanvasStage(displayElement: HTMLElement, options: UfovCanvasStageOptions) {
-  const stage = EnsureUfovCanvasStage(displayElement, options.ariaLabel);
-  DrawUfovCanvasStage(stage, options);
+export function RenderPeripheralAttentionCanvasStage(
+  displayElement: HTMLElement,
+  options: PeripheralAttentionCanvasStageOptions,
+) {
+  const stage = EnsurePeripheralAttentionCanvasStage(displayElement, options.ariaLabel);
+  DrawPeripheralAttentionCanvasStage(stage, options);
   return stage;
 }
 
-export function DrawUfovCanvasStage(stage: HTMLElement, options: UfovCanvasStageOptions) {
+export function DrawPeripheralAttentionCanvasStage(
+  stage: HTMLElement,
+  options: PeripheralAttentionCanvasStageOptions,
+) {
   stage.setAttribute('aria-label', options.ariaLabel);
   const canvas = GetStageCanvas(stage);
   const size = ResizeCanvasToStage(canvas, stage);
@@ -90,11 +109,34 @@ export function DrawUfovCanvasStage(stage: HTMLElement, options: UfovCanvasStage
   }
 }
 
-export function PrepareUfovNoiseMask(stage: HTMLElement) {
+export function PreparePeripheralAttentionNoiseMask(stage: HTMLElement) {
   const canvas = GetStageCanvas(stage);
   const size = ResizeCanvasToStage(canvas, stage);
   if (!size) return null;
   return CreateNoiseImageData(size.context, canvas.width, canvas.height);
+}
+
+// Backward compatibility function aliases
+export function EnsureUfovCanvasStage(displayElement: HTMLElement, ariaLabel: string) {
+  return EnsurePeripheralAttentionCanvasStage(displayElement, ariaLabel);
+}
+
+export function RenderUfovCanvasStage(
+  displayElement: HTMLElement,
+  options: PeripheralAttentionCanvasStageOptions,
+) {
+  return RenderPeripheralAttentionCanvasStage(displayElement, options);
+}
+
+export function DrawUfovCanvasStage(
+  stage: HTMLElement,
+  options: PeripheralAttentionCanvasStageOptions,
+) {
+  return DrawPeripheralAttentionCanvasStage(stage, options);
+}
+
+export function PrepareUfovNoiseMask(stage: HTMLElement) {
+  return PreparePeripheralAttentionNoiseMask(stage);
 }
 
 function GetStageCanvas(stage: HTMLElement) {
@@ -146,7 +188,7 @@ function DrawCentralStimulus(
   context: CanvasRenderingContext2D,
   centerX: number,
   centerY: number,
-  target: UfovCanvasTarget,
+  target: PeripheralAttentionCanvasTarget,
 ) {
   DrawCenterBox(context, centerX, centerY);
   DrawVehicle(context, centerX, centerY, target, vehicleScale);
@@ -154,7 +196,7 @@ function DrawCentralStimulus(
 
 function DrawPeripheralStimuli(
   context: CanvasRenderingContext2D,
-  options: UfovCanvasStageOptions,
+  options: PeripheralAttentionCanvasStageOptions,
   width: number,
   height: number,
 ) {
@@ -165,8 +207,8 @@ function DrawPeripheralStimuli(
     const isTarget = slot.axis === targetSlot.axis && slot.ring === targetSlot.ring;
     if (!isTarget && !options.hasDistractors) return;
 
-    const pointX = width * slot.x / 100;
-    const pointY = height * slot.y / 100;
+    const pointX = (width * slot.x) / 100;
+    const pointY = (height * slot.y) / 100;
     if (isTarget) {
       DrawVehicle(context, pointX, pointY, 'car', vehicleScale);
     } else {
@@ -179,7 +221,7 @@ function DrawVehicle(
   context: CanvasRenderingContext2D,
   centerX: number,
   centerY: number,
-  target: UfovCanvasTarget,
+  target: PeripheralAttentionCanvasTarget,
   scale: number,
 ) {
   context.save();

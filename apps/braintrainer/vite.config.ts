@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from 'node:url';
 import { CreateViteHtmlSeoPlugin } from '../../scripts/vite-html-seo';
 
 const seoTitle = 'BrainTrainer | 注意力、記憶與認知練習 - 居家訓練網';
-const seoDescription = 'BrainTrainer 提供 UFOV、反應控制、記憶配對、推理與問題解決等注意力、記憶及認知互動練習。';
+const seoDescription = 'BrainTrainer 提供周邊注意力、反應控制、記憶配對、推理與問題解決等注意力、記憶及認知互動練習。';
 
 export default defineConfig({
   plugins: [

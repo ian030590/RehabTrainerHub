@@ -153,8 +153,8 @@ const implementationGroups = [
     ids: ['brain:ufov'],
     files: [
       'brain/pages/ModulePage.tsx',
-      'brain/pages/UFOVPage.tsx',
-      'brain/pages/ufov/UfovPage.tsx',
+      'brain/pages/PeripheralAttentionPage.tsx',
+      'brain/pages/peripheral-attention/PeripheralAttentionPage.tsx',
     ],
     tokens: [
       'setIsUfovConfigOpen(true)',
@@ -273,7 +273,7 @@ const jsPsychLifecycleGroups = [
   {
     status: 'native-timeline',
     ids: ['brain:ufov'],
-    files: ['brain/pages/ufov/UfovPage.tsx'],
+    files: ['brain/pages/peripheral-attention/PeripheralAttentionPage.tsx'],
     tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
   },
   {

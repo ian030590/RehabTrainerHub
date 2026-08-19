@@ -1,0 +1,113 @@
+import type { PeripheralAttentionConfigLabels, PeripheralAttentionCopy, PeripheralAttentionRuleSection } from './types';
+
+export const peripheralAttentionEnCopy: PeripheralAttentionCopy = {
+  title: 'Peripheral Attention Training',
+  intro: 'Complete three stages for processing speed, divided attention, and selective attention. This is a non-medical practice tool; results are not cognitive assessments, diagnoses, or treatment advice.',
+  restart: 'Restart',
+  car: 'Car',
+  truck: 'Truck',
+  correct: 'Correct',
+  incorrect: 'Try again',
+  trial: 'Trial',
+  results: 'Response Results',
+  aborted: 'Aborted',
+  saveNote: 'Saved to {appName} training records.',
+  csvOnlyNote: 'Complete results can be downloaded as CSV.',
+  practiceResult: 'Practice correct',
+  downloadCsv: 'Download CSV',
+  backHome: 'Back to List',
+  backLobby: 'Back to Lobby',
+  actualProcessingSpeed: 'Reference stimulus presentation time',
+  tableTrial: 'Trial',
+  tableVehicle: 'Target vehicle',
+  tableDirection: 'Peripheral direction',
+  tableCorrect: 'Correct',
+  tableProcessingSpeed: 'Actual stimulus presentation time',
+  directionAccuracy: 'Direction accuracy',
+  contrastLabel: 'Contrast',
+  anglesLabel: 'Eccentricity / Vehicle Size',
+  noPeripheral: 'None',
+  directions: ['Up', 'Up right', 'Right', 'Down right', 'Down', 'Down left', 'Left', 'Up left'],
+  subtests: {
+    1: 'Subtest 1 Processing Speed',
+    2: 'Subtest 2 Divided Attention',
+    3: 'Subtest 3 Selective Attention',
+  },
+  instructions: {
+    1: 'Look at the center box. After the stimulus appears, choose whether the center item was a car or truck.',
+    2: 'Look at the center box. After the stimulus appears, choose the center vehicle, then choose the peripheral target direction.',
+    3: 'Look at the center box. After the stimulus appears, identify the center vehicle among distractors and choose the peripheral target direction.',
+  },
+};
+
+export const peripheralAttentionEnConfigLabels: PeripheralAttentionConfigLabels = {
+  settingsTitle: 'Peripheral Attention Settings',
+  chooseSubtest: 'Choose Subtest',
+  chooseTrialCount: 'Choose Max Trial Count',
+  customTrialCount: 'Custom',
+  chooseDirections: 'Stimulus Directions (3x3 Compass Grid)',
+  chooseMode: 'Choose Flow',
+  anglesTitle: 'Peripheral Eccentricity & Vehicle Size',
+  contrastTitle: 'Contrast Control',
+  contrastDesc: 'Adjust background darkness to control contrast; targets remain white.',
+  contrastStrength: 'Contrast Intensity',
+  contrastLow: '5% (Low contrast / Gray)',
+  contrastMid: '50% (Medium)',
+  contrastHigh: '100% (High / Black)',
+  eccentricityTitle: 'Peripheral Eccentricity',
+  eccentricityLow: '5.0° (Central)',
+  eccentricityMid: '20.0°',
+  eccentricityHigh: '35.0° (Peripheral limit)',
+  vehicleSizeTitle: 'Vehicle Size Angle',
+  vehicleSizeSmall: '0.8° (Fine / Hard)',
+  vehicleSizeStandard: '2.5° (Standard)',
+  vehicleSizeLarge: '5.0° (Clear / Easy)',
+  directionsTitle: 'Stimulus Directions (3x3 Compass Grid)',
+  directionsDesc: 'Arranged in a 3x3 spatial compass grid; click directions to toggle or center to select all.',
+  directionsBadge: '{n}/8 Directions Active',
+  centerAll: 'All',
+  centerAllActive: 'All Active',
+  geometryWarning: 'Target visual angle ({targetAngle}°) exceeds screen extent maximum ({maxAngle}°). Suggested viewing distance: < {suggestedDistance} cm, or reduce eccentricity angle.',
+  start: 'Start',
+  cancel: 'Cancel',
+  subtestUnavailable: 'This subtest is unavailable on this device',
+  subtests: {
+    1: 'Subtest 1 Processing Speed',
+    2: 'Subtest 2 Divided Attention',
+    3: 'Subtest 3 Selective Attention',
+  },
+  instructions: {
+    1: 'Identify whether the center item is a car or truck.',
+    2: 'Identify the center vehicle and the peripheral target direction.',
+    3: 'Identify the center vehicle among distractors and the peripheral target direction.',
+  },
+  modes: {
+    instruction: { label: 'Instructions', description: 'Show instructions only, without scoring.' },
+    practice: { label: 'Practice', description: 'Run 5 fixed-speed practice trials with feedback.' },
+    formal: { label: 'Recorded Practice', description: 'Run the adaptive practice and save results.' },
+  },
+  directions: ['Up', 'Up right', 'Right', 'Down right', 'Down', 'Down left', 'Left', 'Up left'],
+};
+
+export function GetPeripheralAttentionEnRuleSections(subtestTitle: string): PeripheralAttentionRuleSection[] {
+  return [
+    {
+      title: 'Task Goal',
+      description: `Complete ${subtestTitle} by identifying the central item and, when required, the peripheral direction.`,
+      items: [
+        'Look at the center first and identify whether the central vehicle is a car or truck.',
+        'For divided or selective attention trials, also report the peripheral target direction.',
+        'Practice mode gives feedback; formal mode stops early when stable or at the configured max trials.',
+      ],
+    },
+    {
+      title: 'Results',
+      description: 'The result records accuracy, processing speed, direction responses, and the actual trial count.',
+    },
+  ];
+}
+
+// Backward-compatibility exports
+export function GetUfovEnRuleSections(subtestTitle: string): PeripheralAttentionRuleSection[] {
+  return GetPeripheralAttentionEnRuleSections(subtestTitle);
+}

@@ -21,7 +21,7 @@ const TrainingPage = lazy(() => import('@rehab-trainer/hub-modules/vision/pages/
 const AssessmentPage = lazy(() => import('./pages/assessment/AssessmentPage').then((module) => ({ default: module.AssessmentPage })));
 const AcuityTestPage = lazy(() => import('./pages/assessment/AcuityTestPage').then((module) => ({ default: module.AcuityTestPage })));
 const ContrastTestPage = lazy(() => import('./pages/assessment/ContrastTestPage').then((module) => ({ default: module.ContrastTestPage })));
-const UfovAssessmentPage = lazy(() => import('./pages/assessment/UfovAssessmentPage').then((module) => ({ default: module.UfovAssessmentPage })));
+const PeripheralAttentionAssessmentPage = lazy(() => import('./pages/assessment/PeripheralAttentionAssessmentPage').then((module) => ({ default: module.PeripheralAttentionAssessmentPage })));
 const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((module) => ({ default: module.CreditsPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
 const HartChartPage = lazy(() => import('@rehab-trainer/hub-modules/vision/pages/training/HartChartPage').then((module) => ({ default: module.HartChartPage })));
@@ -65,7 +65,7 @@ export function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/assessment" element={<AssessmentPage />} />
-          <Route path="/assessment/ufov" element={<UfovAssessmentPage />} />
+          <Route path="/assessment/ufov" element={<PeripheralAttentionAssessmentPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/credits" element={<CreditsPage />} />
           <Route path="/links" element={<LinksPage />} />

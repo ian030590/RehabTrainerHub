@@ -19,7 +19,7 @@ import {
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
 const ReferencesPage = lazy(() => import('./pages/ReferencesPage').then((module) => ({ default: module.ReferencesPage })));
 const LinksPage = lazy(() => import('./pages/links/LinksPage').then((module) => ({ default: module.LinksPage })));
-const UFOVPage = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/UFOVPage').then((module) => ({ default: module.UFOVPage })));
+const PeripheralAttentionPage = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/PeripheralAttentionPage').then((module) => ({ default: module.PeripheralAttentionPage })));
 const EveryBallResponsePage = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/EveryBallResponsePage').then((module) => ({ default: module.EveryBallResponsePage })));
 const ThinkingTraining = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/thinking/ThinkingTraining').then((module) => ({ default: module.ThinkingTraining })));
 const MainConceptTraining = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/MainConceptTraining').then((module) => ({ default: module.MainConceptTraining })));
@@ -49,7 +49,7 @@ export function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Navigate to="/attention-training" replace />} />
           <Route path="/attention-training" element={<ModulePage moduleId="attention" />} />
-          <Route path="/attention-training/ufov" element={<UFOVPage />} />
+          <Route path="/attention-training/ufov" element={<PeripheralAttentionPage />} />
           <Route path="/attention-training/every-ball-response" element={<EveryBallResponsePage />} />
           <Route path="/memory-training" element={<ModulePage moduleId="memory" />} />
           <Route path="/thinking-training" element={<ThinkingTraining />} />

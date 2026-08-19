@@ -16,7 +16,7 @@ import { useAppSetting } from '../../utils/useAppSetting';
 import { assessments } from './assessmentDefinitions';
 import type { AssessmentId } from './assessmentDefinitions';
 import type { TestType } from './logic/optotypeRenderer';
-import type { SubtestId, UfovRunMode } from './ufov/UfovPage';
+import type { SubtestId, UfovRunMode } from './peripheral-attention/PeripheralAttentionPage';
 
 export function AssessmentPage() {
   const { lang, t } = useT();
@@ -357,7 +357,7 @@ function IsMobileOrTabletDevice(deviceKind: ReturnType<typeof DetectDisplayDevic
 function GetUfovConfigLabels(lang: 'zh' | 'en') {
   return lang === 'en'
     ? {
-        settingsTitle: 'UFOV Settings',
+        settingsTitle: 'Peripheral Attention Settings',
         chooseSubtest: 'Choose Subtest',
         chooseMode: 'Choose Flow',
         start: 'Start',
@@ -380,7 +380,7 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
         },
       }
     : {
-        settingsTitle: 'UFOV 設定',
+        settingsTitle: '周邊注意力設定',
         chooseSubtest: '選擇 Subtest',
         chooseMode: '選擇流程',
         start: '開始',

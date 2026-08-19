@@ -1,11 +1,17 @@
-// Canonical Hub-owned BrainTrainer UFOV entry.
+// Canonical Hub-owned BrainTrainer Peripheral Attention entry.
 import { Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { useT } from '../i18n';
 import { SaveTrainingRecord } from '../utils/trainingRecords';
-import { UfovPage, type SubtestId, type UfovRunMode, type UfovTargetAxis, type UfovTrainingRecord } from './ufov/UfovPage';
+import {
+  PeripheralAttentionPage as BasePeripheralAttentionPage,
+  type SubtestId,
+  type PeripheralAttentionRunMode,
+  type PeripheralAttentionTargetAxis,
+  type PeripheralAttentionTrainingRecord,
+} from './peripheral-attention/PeripheralAttentionPage';
 
-export function UFOVPage() {
+export function PeripheralAttentionPage() {
   const { lang } = useT();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -20,7 +26,7 @@ export function UFOVPage() {
   }
 
   return (
-    <UfovPage
+    <BasePeripheralAttentionPage
       appName="BrainTrainer"
       backPath="/attention-training"
       lang={lang}
@@ -30,7 +36,7 @@ export function UFOVPage() {
       trialCount={trialCount}
       targetAxes={targetAxes}
       autoStart={autoStart}
-      onSaveRecord={(record: UfovTrainingRecord) => SaveTrainingRecord(record)}
+      onSaveRecord={(record: PeripheralAttentionTrainingRecord) => SaveTrainingRecord(record)}
     />
   );
 }
@@ -41,7 +47,7 @@ function ParseSubtestId(value: string | null): SubtestId {
   return 1;
 }
 
-function ParseRunMode(value: string | null): UfovRunMode {
+function ParseRunMode(value: string | null): PeripheralAttentionRunMode {
   if (value === 'instruction' || value === 'practice' || value === 'formal') return value;
   return 'formal';
 }
@@ -52,11 +58,11 @@ function ParseTrialCount(value: string | null): number {
   return Math.max(1, Math.min(240, Math.round(parsed)));
 }
 
-function ParseTargetAxes(value: string | null): UfovTargetAxis[] {
+function ParseTargetAxes(value: string | null): PeripheralAttentionTargetAxis[] {
   const axes = value
     ?.split(',')
     .map((item) => Number(item))
-    .filter((axis): axis is UfovTargetAxis => Number.isInteger(axis) && axis >= 0 && axis <= 7) ?? [];
+    .filter((axis): axis is PeripheralAttentionTargetAxis => Number.isInteger(axis) && axis >= 0 && axis <= 7) ?? [];
 
   return axes.length > 0 ? Array.from(new Set(axes)) : [0, 1, 2, 3, 4, 5, 6, 7];
 }

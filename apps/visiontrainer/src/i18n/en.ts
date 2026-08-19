@@ -465,7 +465,7 @@ export const en: Record<TranslationKey, string> = {
   'exp.res.score': 'Score:',
   'assess.contrast.title': 'Contrast Recognition Practice',
   'assess.contrast.desc': 'Identify visual targets at different contrast levels and produce reference values',
-  'assess.ufov.title': 'UFOV Attention Practice',
+  'assess.ufov.title': 'Peripheral Attention Training',
   'assess.ufov.desc': 'Record reference values across visual processing, divided attention, and selective attention activities.',
   'assess.contrast.resultsTitle': 'Contrast Recognition Reference Results',
   'common.back': 'Back',

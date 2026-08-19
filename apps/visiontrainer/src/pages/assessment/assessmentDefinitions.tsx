@@ -63,7 +63,7 @@ export const assessments: readonly AssessmentDefinition[] = [
   },
   {
     id: 'ufov',
-    imagePath: '/assets/training-modules/assessment-ufov.webp',
+    imagePath: '/assets/training-modules/assessment-peripheral-attention.webp',
     titleKey: 'assess.ufov.title',
     descriptionKey: 'assess.ufov.desc',
   },

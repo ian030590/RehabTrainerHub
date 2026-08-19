@@ -9,33 +9,33 @@ import {
 import { ExitFullscreenIfActive, WaitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import {
-  DrawUfovCanvasStage,
-  EnsureUfovCanvasStage,
-  PrepareUfovNoiseMask,
-  RenderUfovCanvasStage,
-  type UfovCanvasPhase,
-} from '@rehab-trainer/ui/ufovCanvas';
+  DrawPeripheralAttentionCanvasStage,
+  EnsurePeripheralAttentionCanvasStage,
+  PreparePeripheralAttentionNoiseMask,
+  RenderPeripheralAttentionCanvasStage,
+  type PeripheralAttentionCanvasPhase,
+} from '@rehab-trainer/ui/peripheralAttentionCanvas';
 import {
-  EstimateUfovThresholdMs,
+  EstimatePeripheralAttentionThresholdMs,
   GetFastestCorrectStimulusDurationMs,
-  GetUfovDirectionAccuracy,
-  ShouldStopUfovAdaptiveRun,
-  ufovAdaptiveStop,
-  type UfovDirectionAccuracy,
-} from '@rehab-trainer/ui/ufovResults';
+  GetPeripheralAttentionDirectionAccuracy,
+  ShouldStopPeripheralAttentionAdaptiveRun,
+  type PeripheralAttentionDirectionAccuracy,
+} from '@rehab-trainer/ui/peripheralAttentionResults';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { useNavigate } from 'react-router-dom';
-import '@rehab-trainer/ui/components/UfovPage.css';
+import '@rehab-trainer/ui/components/PeripheralAttentionPage.css';
 
 type CentralTarget = 'car' | 'truck';
 type Direction = 'up' | 'down';
 export type SubtestId = 1 | 2 | 3;
-export type UfovRunMode = 'instruction' | 'practice' | 'formal';
-type UfovLabels = (typeof copy)[keyof typeof copy];
+export type PeripheralAttentionRunMode = 'instruction' | 'practice' | 'formal';
+export type UfovRunMode = PeripheralAttentionRunMode;
+type PeripheralAttentionLabels = (typeof copy)[keyof typeof copy];
 type DetailRow = Record<string, unknown>;
 
-export interface UfovTrainingRecord {
+export interface PeripheralAttentionTrainingRecord {
   id: string;
   savedAt: string;
   trainingDate?: string;
@@ -48,16 +48,21 @@ export interface UfovTrainingRecord {
   detailRows?: DetailRow[];
 }
 
-export interface UfovPageProps {
+export type UfovTrainingRecord = PeripheralAttentionTrainingRecord;
+export type UfovDirectionAccuracy = PeripheralAttentionDirectionAccuracy;
+
+export interface PeripheralAttentionPageProps {
   appName: string;
   backPath: string;
   lang: 'zh' | 'en';
   moduleId: string;
   initialSubtestId?: SubtestId;
-  initialMode?: UfovRunMode;
+  initialMode?: PeripheralAttentionRunMode;
   autoStart?: boolean;
-  onSaveRecord?: (record: UfovTrainingRecord) => Promise<void> | void;
+  onSaveRecord?: (record: PeripheralAttentionTrainingRecord) => Promise<void> | void;
 }
+
+export type UfovPageProps = PeripheralAttentionPageProps;
 
 interface Subtest {
   id: SubtestId;
@@ -109,48 +114,62 @@ interface SubtestResult {
   aborted: boolean;
 }
 
-interface RunState {
-  minDurationFrames: number;
-  subtestIndex: number;
-  practiceLeft: number;
-  testTrial: number;
-  durationFrames: number;
-  stepFrames: number;
-  maxDurationFrames: number;
-  practiceDurationFrames: number;
-  refreshMs: number;
-  reversals: number[];
-  lastDirection: Direction | null;
-  limitStreak: number;
-  failAtMaxStreak: number;
-  subtestTrials: TrialRecord[];
-  allTrials: TrialRecord[];
-  results: SubtestResult[];
+interface PeripheralAttentionRunConfig {
+  subtestId: SubtestId;
+  mode: PeripheralAttentionRunMode;
 }
 
-interface UfovExperimentData {
-  results: SubtestResult[];
-  trials: TrialRecord[];
+interface AdaptiveState {
+  direction: Direction;
+  stepFrames: number;
+  reversals: number[];
+  limitStreak: number;
+  failAtMaxStreak: number;
+}
+
+interface ExperimentPluginInfo {
+  name: string;
+  version: string;
+  parameters: {
+    labels: { type: ParameterType.OBJECT; default: undefined };
+    refresh_ms: { type: ParameterType.FLOAT; default: undefined };
+    refresh_hz: { type: ParameterType.FLOAT; default: undefined };
+    refresh_is_60hz_family: { type: ParameterType.BOOL; default: undefined };
+    refresh_device_kind: { type: ParameterType.STRING; default: undefined };
+    config: { type: ParameterType.OBJECT; default: undefined };
+  };
+  data: {
+    subtest_id: { type: ParameterType.INT };
+    mode: { type: ParameterType.STRING };
+    refresh_ms: { type: ParameterType.FLOAT };
+    refresh_hz: { type: ParameterType.FLOAT };
+    refresh_is_60hz_family: { type: ParameterType.BOOL };
+    refresh_device_kind: { type: ParameterType.STRING };
+    trials: { type: ParameterType.OBJECT };
+    results: { type: ParameterType.OBJECT };
+    aborted: { type: ParameterType.BOOL };
+  };
+}
+
+interface PeripheralAttentionExperimentData {
+  subtest_id: SubtestId;
+  mode: PeripheralAttentionRunMode;
   refresh_ms: number;
   refresh_hz: number;
   refresh_is_60hz_family: boolean;
   refresh_device_kind: DisplayRefreshInfo['deviceKind'];
+  trials: TrialRecord[];
+  results: SubtestResult[];
   aborted: boolean;
-  mode: UfovRunMode;
-  subtest_id: SubtestId;
 }
 
-interface UfovRunConfig {
-  subtestId: SubtestId;
-  mode: UfovRunMode;
-}
-
-const subtests: Subtest[] = [
+const subtests: readonly Subtest[] = [
   { id: 1, hasPeripheral: false, hasDistractors: false },
   { id: 2, hasPeripheral: true, hasDistractors: false },
   { id: 3, hasPeripheral: true, hasDistractors: true },
 ];
 const practiceTrials = 5;
+const maxTestTrials = 48;
 const minDurationFrames = 1;
 const maxDurationMs = 500;
 const practiceDurationMs = 250;
@@ -165,7 +184,7 @@ const peripheralTargetSlots = slots.filter((slot) => slot.ring === outerRingInde
 
 const copy = {
   zh: {
-    title: 'UFOV 注意力練習',
+    title: '周邊注意力訓練',
     intro: '完成中央目標辨識、分散注意與選擇性注意三階段。本工具為非醫療練習，結果不代表診斷或治療建議。',
     restart: '重新開始',
     car: '汽車',
@@ -180,6 +199,7 @@ const copy = {
     practiceResult: '練習答對',
     downloadCsv: '下載 CSV',
     backHome: '返回主畫面',
+    backLobby: '返回大廳',
     actualProcessingSpeed: '刺激呈現時間參考值',
     tableTrial: '題次',
     tableVehicle: '題目車子種類',
@@ -201,7 +221,7 @@ const copy = {
     },
   },
   en: {
-    title: 'UFOV Attention Practice',
+    title: 'Peripheral Attention Training',
     intro: 'Complete central-target recognition, divided-attention, and selective-attention activities. This is non-medical practice; results do not represent a diagnosis or treatment advice.',
     restart: 'Restart',
     car: 'Car',
@@ -216,6 +236,7 @@ const copy = {
     practiceResult: 'Practice correct',
     downloadCsv: 'Download CSV',
     backHome: 'Back to Home',
+    backLobby: 'Back to Lobby',
     actualProcessingSpeed: 'Reference stimulus presentation time',
     tableTrial: 'Trial',
     tableVehicle: 'Target vehicle',
@@ -236,251 +257,283 @@ const copy = {
       3: 'Look at the center box. After the stimulus appears, identify the center vehicle among distractors and choose the peripheral target direction.',
     },
   },
-} as const;
+};
 
-const ufovInfo = {
-  name: 'ufov-experiment',
+const experimentPluginInfo: ExperimentPluginInfo = {
+  name: 'peripheral-attention-experiment',
   version: '1.0.0',
   parameters: {
-    labels: {
-      type: ParameterType.COMPLEX,
-      default: copy.zh,
-    },
-    refresh_ms: {
-      type: ParameterType.FLOAT,
-      default: 16.67,
-    },
-    refresh_hz: {
-      type: ParameterType.FLOAT,
-      default: 60,
-    },
-    refresh_is_60hz_family: {
-      type: ParameterType.BOOL,
-      default: true,
-    },
-    refresh_device_kind: {
-      type: ParameterType.STRING,
-      default: 'unknown',
-    },
-    config: {
-      type: ParameterType.COMPLEX,
-      default: { subtestId: 1, mode: 'formal' } satisfies UfovRunConfig,
-    },
+    labels: { type: ParameterType.OBJECT, default: undefined },
+    refresh_ms: { type: ParameterType.FLOAT, default: undefined },
+    refresh_hz: { type: ParameterType.FLOAT, default: undefined },
+    refresh_is_60hz_family: { type: ParameterType.BOOL, default: undefined },
+    refresh_device_kind: { type: ParameterType.STRING, default: undefined },
+    config: { type: ParameterType.OBJECT, default: undefined },
   },
   data: {
-    results: { type: ParameterType.COMPLEX },
-    trials: { type: ParameterType.COMPLEX },
+    subtest_id: { type: ParameterType.INT },
+    mode: { type: ParameterType.STRING },
     refresh_ms: { type: ParameterType.FLOAT },
     refresh_hz: { type: ParameterType.FLOAT },
     refresh_is_60hz_family: { type: ParameterType.BOOL },
     refresh_device_kind: { type: ParameterType.STRING },
+    trials: { type: ParameterType.OBJECT },
+    results: { type: ParameterType.OBJECT },
     aborted: { type: ParameterType.BOOL },
-    mode: { type: ParameterType.STRING },
-    subtest_id: { type: ParameterType.INT },
   },
-} as const;
+};
 
-type UfovInfo = typeof ufovInfo;
+class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPluginInfo> {
+  static readonly info = experimentPluginInfo;
 
-class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
-  static info = ufovInfo;
+  constructor(private readonly jsPsych: JsPsych) {}
 
-  constructor(private jsPsych: JsPsych) {}
-
-  trial(displayElement: HTMLElement, trial: TrialType<UfovInfo>) {
-    void this.runExperiment(displayElement, trial);
-  }
-
-  private async runExperiment(displayElement: HTMLElement, trial: TrialType<UfovInfo>) {
-    const labels = trial.labels as UfovLabels;
-    const config = trial.config as UfovRunConfig;
-    const subtestIndex = subtests.findIndex((item) => item.id === config.subtestId);
-    const refreshMs = Number(trial.refresh_ms) > 0 ? Number(trial.refresh_ms) : 1000 / 60;
-    const maxDurationFrames = MsToFrameCount(maxDurationMs, refreshMs);
-    const run: RunState = {
-      minDurationFrames: minDurationFrames,
-      subtestIndex: subtestIndex >= 0 ? subtestIndex : 0,
-      practiceLeft: practiceTrials,
-      testTrial: 0,
-      durationFrames: maxDurationFrames,
-      stepFrames: MsToFrameCount(startStepMs, refreshMs),
-      maxDurationFrames,
-      practiceDurationFrames: MsToFrameCount(practiceDurationMs, refreshMs),
-      refreshMs,
+  async trial(
+    displayElement: HTMLElement,
+    trial: TrialType<ExperimentPluginInfo>,
+    onLoad?: () => void,
+  ) {
+    onLoad?.();
+    const labels = trial.labels as PeripheralAttentionLabels;
+    const refreshMs = Number(trial.refresh_ms) || (1000 / 60);
+    const config = trial.config as PeripheralAttentionRunConfig;
+    const subtest = subtests.find((item) => item.id === config.subtestId) ?? subtests[0];
+    const trials: TrialRecord[] = [];
+    const results: SubtestResult[] = [];
+    const minStep = minStepFrames;
+    const maxDurationFrames = Math.max(minDurationFrames, MsToFrameCount(maxDurationMs, refreshMs));
+    const practiceDurationFrames = Math.max(minDurationFrames, MsToFrameCount(practiceDurationMs, refreshMs));
+    const startStepFrames = Math.max(minStep, MsToFrameCount(startStepMs, refreshMs));
+    const isPracticeMode = config.mode === 'practice';
+    const totalPracticeTrials = practiceTrials;
+    const currentDurationFrames = isPracticeMode ? practiceDurationFrames : maxDurationFrames;
+    let durationFrames = currentDurationFrames;
+    let adaptiveState: AdaptiveState = {
+      direction: 'down',
+      stepFrames: startStepFrames,
       reversals: [],
-      lastDirection: null,
       limitStreak: 0,
       failAtMaxStreak: 0,
-      subtestTrials: [],
-      allTrials: [],
-      results: [],
     };
+    let aborted = false;
 
-    this.resetSubtest(run, run.subtestIndex);
-    const aborted = await this.runSubtest(displayElement, labels, run, config.mode);
-    run.results.push({
-      subtestId: subtests[run.subtestIndex].id,
-      thresholdMs: config.mode === 'formal' && !aborted
-        ? EstimateUfovThresholdMs(run, run.subtestTrials, FramesToMs(run.maxDurationFrames, run.refreshMs))
-        : AverageTrialDuration(run.subtestTrials),
-      trialCount: run.subtestTrials.filter((item) => !item.practice).length,
+    try {
+      const practiceLimit = isPracticeMode ? totalPracticeTrials : 0;
+      for (let index = 0; index < practiceLimit; index += 1) {
+        const stimulus = this.createStimulus(subtest, true, index + 1, practiceDurationFrames, refreshMs);
+        const record = await this.runTrial(displayElement, labels, subtest, stimulus, refreshMs);
+        trials.push(record);
+        this.showFeedback(displayElement, labels, record.correct);
+        await WaitMs(this.jsPsych, 300);
+      }
+
+      if (!isPracticeMode) {
+        let testTrialNumber = 0;
+        while (testTrialNumber < maxTestTrials) {
+          testTrialNumber += 1;
+          const stimulus = this.createStimulus(subtest, false, testTrialNumber, durationFrames, refreshMs);
+          const record = await this.runTrial(displayElement, labels, subtest, stimulus, refreshMs);
+          trials.push(record);
+
+          adaptiveState = this.updateAdaptiveState(
+            adaptiveState,
+            record.correct,
+            durationFrames,
+            minDurationFrames,
+            maxDurationFrames,
+            minStep,
+            refreshMs,
+          );
+          durationFrames = this.nextDurationFrames(
+            durationFrames,
+            record.correct,
+            adaptiveState.stepFrames,
+            minDurationFrames,
+            maxDurationFrames,
+          );
+
+          if (ShouldStopPeripheralAttentionAdaptiveRun({
+            testTrial: testTrialNumber,
+            reversals: adaptiveState.reversals,
+            refreshMs,
+            limitStreak: adaptiveState.limitStreak,
+            failAtMaxStreak: adaptiveState.failAtMaxStreak,
+          })) {
+            break;
+          }
+        }
+      }
+    } catch {
+      aborted = true;
+    }
+
+    const testTrials = trials.filter((item) => !item.practice);
+    const formalThreshold = EstimatePeripheralAttentionThresholdMs({
+      testTrial: testTrials.length,
+      reversals: adaptiveState.reversals,
+      refreshMs,
+      limitStreak: adaptiveState.limitStreak,
+      failAtMaxStreak: adaptiveState.failAtMaxStreak,
+    }, testTrials, maxDurationMs);
+    const practiceThreshold = isPracticeMode ? practiceDurationMs : AverageTrialDuration(trials);
+    const thresholdMs = config.mode === 'formal' ? formalThreshold : practiceThreshold;
+
+    results.push({
+      subtestId: subtest.id,
+      thresholdMs,
+      trialCount: trials.length,
       aborted,
     });
 
-    displayElement.replaceChildren();
     this.jsPsych.finishTrial({
-      results: run.results,
-      trials: run.allTrials,
-      refresh_ms: trial.refresh_ms,
-      refresh_hz: trial.refresh_hz,
-      refresh_is_60hz_family: trial.refresh_is_60hz_family,
-      refresh_device_kind: trial.refresh_device_kind,
-      aborted: run.results.some((item) => item.aborted),
+      subtest_id: subtest.id,
       mode: config.mode,
-      subtest_id: subtests[run.subtestIndex].id,
+      refresh_ms: Number(trial.refresh_ms) || refreshMs,
+      refresh_hz: Number(trial.refresh_hz) || (1000 / refreshMs),
+      refresh_is_60hz_family: Boolean(trial.refresh_is_60hz_family),
+      refresh_device_kind: String(trial.refresh_device_kind || 'desktop') as DisplayRefreshInfo['deviceKind'],
+      trials,
+      results,
+      aborted,
     });
   }
 
-  private resetSubtest(run: RunState, subtestIndex: number) {
-    run.subtestIndex = subtestIndex;
-    run.practiceLeft = practiceTrials;
-    run.testTrial = 0;
-    run.durationFrames = Math.max(run.maxDurationFrames, run.minDurationFrames);
-    run.stepFrames = MsToFrameCount(startStepMs, run.refreshMs);
-    run.reversals = [];
-    run.lastDirection = null;
-    run.limitStreak = 0;
-    run.failAtMaxStreak = 0;
-    run.subtestTrials = [];
-  }
-
-  private async runSubtest(displayElement: HTMLElement, labels: UfovLabels, run: RunState, mode: UfovRunMode) {
-    let aborted = false;
-    while (mode === 'practice' && run.practiceLeft > 0) {
-      const record = await this.runOneTrial(displayElement, labels, run, true);
-      run.subtestTrials.push(record);
-      run.allTrials.push(record);
-      run.practiceLeft -= 1;
-      this.showFeedback(displayElement, labels, record.correct);
-      await WaitMs(this.jsPsych, 850);
-    }
-    if (mode === 'practice') return false;
-    if (mode === 'instruction') return false;
-
-    while (!aborted) {
-      const record = await this.runOneTrial(displayElement, labels, run, false);
-      run.subtestTrials.push(record);
-      run.allTrials.push(record);
-      this.updateStaircase(run, record);
-      const done = ShouldStopUfovAdaptiveRun(run);
-      aborted = run.failAtMaxStreak >= ufovAdaptiveStop.failAtMaxStreakLimit;
-      if (done) return aborted;
-      await WaitMs(this.jsPsych, 250);
-    }
-    return aborted;
-  }
-
-  private async runOneTrial(displayElement: HTMLElement, labels: UfovLabels, run: RunState, practice: boolean) {
-    const subtest = subtests[run.subtestIndex];
-    const durationFrames = practice
-      ? Math.max(run.practiceDurationFrames, run.minDurationFrames)
-      : run.durationFrames;
-    const stimulus: TrialStimulus = {
+  private createStimulus(
+    subtest: Subtest,
+    practice: boolean,
+    trialNumber: number,
+    durationFrames: number,
+    refreshMs: number,
+  ): TrialStimulus {
+    const centralTarget: CentralTarget = Math.random() < 0.5 ? 'car' : 'truck';
+    const peripheralSlot = subtest.hasPeripheral ? PickPeripheralTargetSlot() : undefined;
+    return {
       subtestId: subtest.id,
       practice,
-      trialNumber: practice ? practiceTrials - run.practiceLeft + 1 : run.testTrial + 1,
+      trialNumber,
       durationFrames,
       displayFrameCount: durationFrames,
-      plannedDurationMs: FramesToMs(durationFrames, run.refreshMs),
-      centralTarget: Math.random() > 0.5 ? 'car' : 'truck',
-      peripheralSlot: subtest.hasPeripheral ? PickPeripheralTargetSlot() : undefined,
+      plannedDurationMs: FramesToMs(durationFrames, refreshMs),
+      centralTarget,
+      peripheralSlot,
     };
+  }
+
+  private updateAdaptiveState(
+    state: AdaptiveState,
+    correct: boolean,
+    currentFrames: number,
+    minFrames: number,
+    maxFrames: number,
+    minStep: number,
+    refreshMs: number,
+  ): AdaptiveState {
+    const nextDirection: Direction = correct ? 'down' : 'up';
+    const reversed = state.direction !== nextDirection;
+    const reversals = reversed ? [...state.reversals, FramesToMs(currentFrames, refreshMs)] : state.reversals;
+    const halvedStep = reversed ? Math.max(minStep, Math.floor(state.stepFrames / 2)) : state.stepFrames;
+    const limitStreak = (correct && currentFrames <= minFrames) || (!correct && currentFrames >= maxFrames)
+      ? state.limitStreak + 1
+      : 0;
+    const failAtMaxStreak = !correct && currentFrames >= maxFrames ? state.failAtMaxStreak + 1 : 0;
+
+    return {
+      direction: nextDirection,
+      stepFrames: halvedStep,
+      reversals,
+      limitStreak,
+      failAtMaxStreak,
+    };
+  }
+
+  private nextDurationFrames(
+    currentFrames: number,
+    correct: boolean,
+    stepFrames: number,
+    minFrames: number,
+    maxFrames: number,
+  ) {
+    const delta = correct ? -stepFrames : stepFrames;
+    return Clamp(currentFrames + delta, minFrames, maxFrames);
+  }
+
+  private async runTrial(
+    displayElement: HTMLElement,
+    labels: PeripheralAttentionLabels,
+    subtest: Subtest,
+    stimulus: TrialStimulus,
+    refreshMs: number,
+  ): Promise<TrialRecord> {
+    const stage = EnsurePeripheralAttentionCanvasStage(displayElement, labels.subtests[stimulus.subtestId]);
+    const maskImageData = PreparePeripheralAttentionNoiseMask(stage);
 
     this.renderStage(displayElement, labels, 'fixation', subtest, stimulus);
     await WaitMs(this.jsPsych, fixationMs);
-    const presentation = await this.presentStimulusForFrames(displayElement, labels, subtest, stimulus, run.refreshMs);
+
+    const timing = await this.presentStimulus(stage, labels, subtest, stimulus, maskImageData, refreshMs);
     await WaitMs(this.jsPsych, maskMs);
 
-    const responseStartedAt = performance.now();
+    const startTime = performance.now();
     const centralResponse = await this.askCentral(displayElement, labels);
-    const peripheralResponse = subtest.hasPeripheral
-      ? await this.askAxis(displayElement, labels)
-      : undefined;
+    const peripheralResponse = subtest.hasPeripheral ? await this.askAxis(displayElement, labels) : undefined;
+    const responseTimeMs = performance.now() - startTime;
+
     const correct = centralResponse === stimulus.centralTarget
       && (!subtest.hasPeripheral || peripheralResponse === stimulus.peripheralSlot?.axis);
 
     return {
-      subtestId: subtest.id,
-      practice,
+      subtestId: stimulus.subtestId,
+      practice: stimulus.practice,
       trialNumber: stimulus.trialNumber,
       durationFrames: stimulus.durationFrames,
       displayFrameCount: stimulus.displayFrameCount,
       plannedDurationMs: stimulus.plannedDurationMs,
-      durationMs: presentation.actualDurationMs,
-      actualDurationMs: presentation.actualDurationMs,
-      actualFrameCount: presentation.actualFrameCount,
-      droppedFrameCount: presentation.droppedFrameCount,
+      durationMs: FramesToMs(stimulus.durationFrames, refreshMs),
+      actualDurationMs: timing.actualDurationMs,
+      actualFrameCount: timing.actualFrameCount,
+      droppedFrameCount: timing.droppedFrameCount,
       centralTarget: stimulus.centralTarget,
       centralResponse,
       peripheralAxis: stimulus.peripheralSlot?.axis,
       peripheralResponse,
       correct,
-      responseTimeMs: performance.now() - responseStartedAt,
+      responseTimeMs,
     };
   }
 
-  private updateStaircase(run: RunState, record: TrialRecord) {
-    run.testTrial += 1;
-    const direction: Direction = record.correct ? 'down' : 'up';
-    if (run.lastDirection && run.lastDirection !== direction) {
-      run.reversals.push(record.durationMs);
-      run.stepFrames = Math.max(minStepFrames, Math.round(run.stepFrames * 0.75));
-    }
-    run.lastDirection = direction;
-
-    const deltaFrames = record.correct ? -run.stepFrames : run.stepFrames * 3;
-    const nextDurationFrames = Clamp(record.durationFrames + deltaFrames, run.minDurationFrames, run.maxDurationFrames);
-    const atLimit = nextDurationFrames === record.durationFrames
-      && (nextDurationFrames === run.minDurationFrames || nextDurationFrames === run.maxDurationFrames);
-    run.limitStreak = atLimit ? run.limitStreak + 1 : 0;
-    run.failAtMaxStreak = !record.correct && record.durationFrames >= run.maxDurationFrames ? run.failAtMaxStreak + 1 : 0;
-    run.durationFrames = nextDurationFrames;
-  }
-
-  private presentStimulusForFrames(
-    displayElement: HTMLElement,
-    labels: UfovLabels,
+  private presentStimulus(
+    stage: HTMLElement,
+    labels: PeripheralAttentionLabels,
     subtest: Subtest,
     stimulus: TrialStimulus,
+    maskImageData: ImageData | null,
     refreshMs: number,
   ) {
     return new Promise<{ actualDurationMs: number; actualFrameCount: number; droppedFrameCount: number }>((resolve) => {
-      const stage = EnsureUfovCanvasStage(displayElement, labels.subtests[stimulus.subtestId]);
-      const maskImageData = PrepareUfovNoiseMask(stage);
-      if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
-        DrawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus));
-        this.jsPsych.pluginAPI.setTimeout(() => {
-          DrawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
-          resolve({
-            actualDurationMs: stimulus.plannedDurationMs,
-            actualFrameCount: stimulus.displayFrameCount,
-            droppedFrameCount: 0,
-          });
-        }, stimulus.plannedDurationMs);
-        return;
-      }
-
       let startTimestamp = 0;
       let elapsedFrames = 0;
 
-      window.requestAnimationFrame((timestamp) => {
-        startTimestamp = timestamp;
-        DrawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus));
+      window.requestAnimationFrame((firstTimestamp) => {
+        startTimestamp = firstTimestamp;
+        DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus));
+
+        if (stimulus.displayFrameCount <= 1) {
+          window.requestAnimationFrame((nextTimestamp) => {
+            DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
+            const actualDurationMs = nextTimestamp - startTimestamp;
+            resolve({
+              actualDurationMs,
+              actualFrameCount: 1,
+              droppedFrameCount: Math.max(0, Math.round(actualDurationMs / refreshMs) - 1),
+            });
+          });
+          return;
+        }
 
         const tick = (nextTimestamp: number) => {
           elapsedFrames += 1;
           if (elapsedFrames >= stimulus.displayFrameCount) {
-            DrawUfovCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
+            DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
             const actualDurationMs = nextTimestamp - startTimestamp;
             resolve({
               actualDurationMs,
@@ -498,13 +551,13 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     });
   }
 
-  private renderStage(displayElement: HTMLElement, labels: UfovLabels, phase: 'fixation' | 'stimulus' | 'mask', subtest: Subtest, stimulus: TrialStimulus) {
-    RenderUfovCanvasStage(displayElement, this.getCanvasStageOptions(labels, phase, subtest, stimulus));
+  private renderStage(displayElement: HTMLElement, labels: PeripheralAttentionLabels, phase: 'fixation' | 'stimulus' | 'mask', subtest: Subtest, stimulus: TrialStimulus) {
+    RenderPeripheralAttentionCanvasStage(displayElement, this.getCanvasStageOptions(labels, phase, subtest, stimulus));
   }
 
   private getCanvasStageOptions(
-    labels: UfovLabels,
-    phase: UfovCanvasPhase,
+    labels: PeripheralAttentionLabels,
+    phase: PeripheralAttentionCanvasPhase,
     subtest: Subtest,
     stimulus: TrialStimulus,
     maskImageData?: ImageData | null,
@@ -521,7 +574,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     };
   }
 
-  private askCentral(displayElement: HTMLElement, labels: UfovLabels) {
+  private askCentral(displayElement: HTMLElement, labels: PeripheralAttentionLabels) {
     return new Promise<CentralTarget>((resolve) => {
       const stage = document.createElement('div');
       stage.className = 'ufov-stage ufov-response-stage';
@@ -536,7 +589,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     });
   }
 
-  private askAxis(displayElement: HTMLElement, labels: UfovLabels) {
+  private askAxis(displayElement: HTMLElement, labels: PeripheralAttentionLabels) {
     return new Promise<number>((resolve) => {
       const stage = document.createElement('div');
       stage.className = 'ufov-stage ufov-response-stage';
@@ -570,7 +623,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
     });
   }
 
-  private showFeedback(displayElement: HTMLElement, labels: UfovLabels, correct: boolean) {
+  private showFeedback(displayElement: HTMLElement, labels: PeripheralAttentionLabels, correct: boolean) {
     const stage = document.createElement('div');
     stage.className = 'ufov-stage ufov-response-stage';
     const feedback = document.createElement('p');
@@ -582,7 +635,7 @@ class UfovExperimentPlugin implements JsPsychPlugin<UfovInfo> {
   }
 }
 
-export function UfovPage({
+export function PeripheralAttentionPage({
   appName,
   backPath,
   lang,
@@ -591,7 +644,7 @@ export function UfovPage({
   initialMode = 'formal',
   autoStart = false,
   onSaveRecord,
-}: UfovPageProps) {
+}: PeripheralAttentionPageProps) {
   const navigate = useNavigate();
   const labels = copy[lang];
   const displayRef = useRef<HTMLDivElement | null>(null);
@@ -603,18 +656,19 @@ export function UfovPage({
   const [instructionSubtest, setInstructionSubtest] = useState<SubtestId | null>(null);
   const [results, setResults] = useState<SubtestResult[]>([]);
   const [resultTrials, setResultTrials] = useState<TrialRecord[]>([]);
-  const [directionAccuracy, setDirectionAccuracy] = useState<UfovDirectionAccuracy[]>([]);
-  const [savedRecord, setSavedRecord] = useState<UfovTrainingRecord | null>(null);
+  const [directionAccuracy, setDirectionAccuracy] = useState<PeripheralAttentionDirectionAccuracy[]>([]);
+  const [savedRecord, setSavedRecord] = useState<PeripheralAttentionTrainingRecord | null>(null);
 
-  const finishExperiment = useCallback((data: UfovExperimentData) => {
+  const finishExperiment = useCallback((data: PeripheralAttentionExperimentData) => {
     const now = new Date();
     const isFormal = data.mode === 'formal';
     const correctCount = data.trials.filter((item) => item.correct).length;
-    const nextDirectionAccuracy = GetUfovDirectionAccuracy(data.trials);
+    const nextDirectionAccuracy = GetPeripheralAttentionDirectionAccuracy(data.trials);
     const primaryResult = data.results[0];
     const thresholdProcessingSpeedMs = primaryResult ? RoundMs(primaryResult.thresholdMs) : 0;
-    const bestCorrectProcessingSpeedMs = RoundMs(GetFastestCorrectStimulusDurationMs(data.trials, thresholdProcessingSpeedMs));
-    const processingSpeedMs = thresholdProcessingSpeedMs;
+    const processingSpeedMs = isFormal
+      ? RoundMs(GetFastestCorrectStimulusDurationMs(data.trials, thresholdProcessingSpeedMs))
+      : thresholdProcessingSpeedMs;
     const thresholds = isFormal
       ? Object.fromEntries(data.results.map((item) => [`subtest${item.subtestId}`, item.thresholdMs]))
       : {};
@@ -624,7 +678,7 @@ export function UfovPage({
       trialCount: item.trialCount,
       aborted: item.aborted,
     }));
-    const record: UfovTrainingRecord = {
+    const record: PeripheralAttentionTrainingRecord = {
       id: `ufov_${now.getTime().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
       savedAt: now.toISOString(),
       trainingDate: FormatDate(now),
@@ -644,12 +698,12 @@ export function UfovPage({
         correctCount,
         trialCount: data.trials.length,
         processingSpeedMs,
-        bestCorrectProcessingSpeedMs,
+        bestCorrectProcessingSpeedMs: processingSpeedMs,
         thresholdProcessingSpeedMs,
         summaryScoreMs: processingSpeedMs,
         ufovSummary: summary,
-        directionAccuracy: nextDirectionAccuracy,
         ...thresholds,
+        directionAccuracy: nextDirectionAccuracy,
         aborted: data.aborted,
       },
       detailRows: data.trials.map((item) => ({
@@ -660,9 +714,6 @@ export function UfovPage({
         Target_Vehicle_Label: FormatVehicle(item.centralTarget, labels),
         Peripheral_Axis: item.peripheralAxis ?? '',
         Peripheral_Direction: FormatAxis(item.peripheralAxis, labels),
-        Peripheral_Direction_Correct: typeof item.peripheralAxis === 'number'
-          ? item.peripheralResponse === item.peripheralAxis
-          : '',
         Correct: item.correct,
         Processing_Speed_ms: RoundMs(item.actualDurationMs),
         Requested_Display_Frames: item.durationFrames,
@@ -687,7 +738,7 @@ export function UfovPage({
     void ExitFullscreenIfActive();
   }, [labels, moduleId, onSaveRecord]);
 
-  const startRun = async (config: UfovRunConfig) => {
+  const startRun = async (config: PeripheralAttentionRunConfig) => {
     const displayElement = displayRef.current;
     if (!displayElement) return;
     if (jsPsychRef.current) {
@@ -718,15 +769,15 @@ export function UfovPage({
           return;
         }
         const values = jsPsych.data.get().last(1).values();
-        const data = values[0] as Partial<UfovExperimentData> | undefined;
+        const data = values[0] as Partial<PeripheralAttentionExperimentData> | undefined;
         if (!data?.results || !data.trials) return;
-        finishExperiment(data as UfovExperimentData);
+        finishExperiment(data as PeripheralAttentionExperimentData);
       },
     });
     jsPsychRef.current = jsPsych;
 
     jsPsych.run([{
-      type: UfovExperimentPlugin,
+      type: PeripheralAttentionExperimentPlugin,
       labels,
       refresh_ms: measured.refreshMs,
       refresh_hz: measured.refreshHz,
@@ -750,14 +801,14 @@ export function UfovPage({
     setInstructionSubtest(null);
     setResults([]);
     setResultTrials([]);
-    setSavedRecord(null);
     setDirectionAccuracy([]);
+    setSavedRecord(null);
     void ExitFullscreenIfActive();
     navigate(backPath);
   }, [backPath, navigate]);
 
   useTrainingAbort({
-    active: isRunning || instructionSubtest !== null,
+    active: isRunning,
     onAbort: abortRun,
   });
 
@@ -787,11 +838,11 @@ export function UfovPage({
 
   return (
     <main className="page-content ufov-page" id="main-content">
-      <section className="ufov-shell" aria-labelledby="ufov-title">
+      <section className="ufov-shell" aria-labelledby="peripheral-attention-title">
         <div className="ufov-panel">
           {!isRunning && (
             <>
-              <h1 className="section-title" id="ufov-title">{labels.title}</h1>
+              <h1 className="section-title" id="peripheral-attention-title">{labels.title}</h1>
               <p className="section-subtitle">{labels.intro}</p>
             </>
           )}
@@ -803,8 +854,8 @@ export function UfovPage({
             </div>
           )}
           {instructionSubtest && (
-            <section className="ufov-instructions" aria-labelledby="ufov-instructions-title">
-              <h2 id="ufov-instructions-title">{labels.subtests[instructionSubtest]}</h2>
+            <section className="ufov-instructions" aria-labelledby="peripheral-attention-instructions-title">
+              <h2 id="peripheral-attention-instructions-title">{labels.subtests[instructionSubtest]}</h2>
               <p>{labels.instructions[instructionSubtest]}</p>
               <div className="ufov-actions">
                 <button className="btn btn-primary" type="button" onClick={() => navigate(backPath)}>
@@ -815,8 +866,8 @@ export function UfovPage({
           )}
           <div ref={displayRef} />
           {savedRecord && (
-            <section className="ufov-results" aria-labelledby="ufov-results-title">
-              <h2 className="section-title" id="ufov-results-title">{labels.results}</h2>
+            <section className="ufov-results" aria-labelledby="peripheral-attention-results-title">
+              <h2 className="section-title" id="peripheral-attention-results-title">{labels.results}</h2>
               <ResultSummary
                 items={[
                   { label: labels.actualProcessingSpeed, value: `${RoundMs(Number(savedRecord.details?.processingSpeedMs ?? 0))} ms` },
@@ -837,7 +888,7 @@ export function UfovPage({
                   { label: labels.trial, value: savedRecord.detailRows?.length ?? 0 },
                 ]}
               />
-              {directionAccuracy.some((item) => item.total > 0) && (
+              {directionAccuracy.length > 0 && (
                 <div className="ufov-table-wrap">
                   <h3 className="ufov-direction-accuracy-title">{labels.directionAccuracy}</h3>
                   <table className="results-table">
@@ -845,19 +896,17 @@ export function UfovPage({
                       <tr>
                         <th>{labels.tableDirection}</th>
                         <th>{labels.tableCorrect}</th>
-                        <th>{labels.directionAccuracy}</th>
+                        <th>%</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {directionAccuracy
-                        .filter((item) => item.total > 0)
-                        .map((item) => (
-                          <tr key={item.axis}>
-                            <td>{FormatAxis(item.axis, labels)}</td>
-                            <td>{item.correct} / {item.total}</td>
-                            <td>{FormatAccuracy(item.accuracyPercent)}</td>
-                          </tr>
-                        ))}
+                      {directionAccuracy.map((stat) => (
+                        <tr key={stat.axis}>
+                          <td>{FormatAxis(stat.axis, labels)}</td>
+                          <td>{`${stat.correct}/${stat.total}`}</td>
+                          <td>{`${stat.accuracyPercent}%`}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -901,7 +950,7 @@ export function UfovPage({
                 className="config-actions ufov-result-actions"
                 backLabel={labels.backHome}
                 onBackHome={() => navigate(backPath)}
-                hubLabel={lang === 'zh' ? '返回大廳' : 'Back to Lobby'}
+                hubLabel={labels.backLobby}
               />
             </section>
           )}
@@ -911,11 +960,11 @@ export function UfovPage({
   );
 }
 
-function FormatPracticeScore(record: UfovTrainingRecord) {
+function FormatPracticeScore(record: PeripheralAttentionTrainingRecord) {
   return `${Number(record.details?.correctCount ?? 0)}/${Number(record.details?.trialCount ?? 0)}`;
 }
 
-function GetResultTrialCount(record: UfovTrainingRecord, result: SubtestResult) {
+function GetResultTrialCount(record: PeripheralAttentionTrainingRecord, result: SubtestResult) {
   return record.difficulty === 'formal'
     ? result.trialCount
     : Number(record.details?.trialCount ?? 0);
@@ -931,7 +980,7 @@ function ResponseButton(label: string, className: string, onClick: () => void, t
   return button;
 }
 
-function VehicleButton(target: CentralTarget, labels: UfovLabels, onClick: () => void) {
+function VehicleButton(target: CentralTarget, labels: PeripheralAttentionLabels, onClick: () => void) {
   const button = ResponseButton(
     target === 'car' ? labels.car : labels.truck,
     'btn btn-primary ufov-choice',
@@ -1013,19 +1062,15 @@ function RoundMs(value: number) {
   return Number(value.toFixed(2));
 }
 
-function FormatVehicle(target: CentralTarget, labels: UfovLabels) {
+function FormatVehicle(target: CentralTarget, labels: PeripheralAttentionLabels) {
   return target === 'car' ? labels.car : labels.truck;
 }
 
-function FormatAxis(axis: number | undefined, labels: UfovLabels) {
+function FormatAxis(axis: number | undefined, labels: PeripheralAttentionLabels) {
   return typeof axis === 'number' ? labels.directions[axis] : labels.noPeripheral;
 }
 
-function FormatAccuracy(value: number) {
-  return `${Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)}%`;
-}
-
-function FormatSaveNote(labels: UfovLabels, appName: string) {
+function FormatSaveNote(labels: PeripheralAttentionLabels, appName: string) {
   return labels.saveNote.replace('{appName}', appName);
 }
 

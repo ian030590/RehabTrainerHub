@@ -1,4 +1,4 @@
-export interface UfovStimulusDurationTrial {
+export interface PeripheralAttentionStimulusDurationTrial {
   practice?: boolean;
   correct?: boolean;
   actualDurationMs?: unknown;
@@ -6,20 +6,20 @@ export interface UfovStimulusDurationTrial {
   plannedDurationMs?: unknown;
 }
 
-export interface UfovDirectionTrial {
+export interface PeripheralAttentionDirectionTrial {
   practice?: boolean;
   peripheralAxis?: unknown;
   peripheralResponse?: unknown;
 }
 
-export interface UfovDirectionAccuracy {
+export interface PeripheralAttentionDirectionAccuracy {
   axis: number;
   correct: number;
   total: number;
   accuracyPercent: number;
 }
 
-export interface UfovAdaptiveRunState {
+export interface PeripheralAttentionAdaptiveRunState {
   testTrial: number;
   reversals: readonly number[];
   refreshMs: number;
@@ -27,7 +27,7 @@ export interface UfovAdaptiveRunState {
   failAtMaxStreak: number;
 }
 
-export const ufovAdaptiveStop = {
+export const peripheralAttentionAdaptiveStop = {
   minTestTrials: 12,
   maxTestTrials: 60,
   minStableReversals: 6,
@@ -36,8 +36,15 @@ export const ufovAdaptiveStop = {
   stableLimitStreak: 3,
 } as const;
 
+// Backward compatibility types
+export type UfovStimulusDurationTrial = PeripheralAttentionStimulusDurationTrial;
+export type UfovDirectionTrial = PeripheralAttentionDirectionTrial;
+export type UfovDirectionAccuracy = PeripheralAttentionDirectionAccuracy;
+export type UfovAdaptiveRunState = PeripheralAttentionAdaptiveRunState;
+export const ufovAdaptiveStop = peripheralAttentionAdaptiveStop;
+
 export function GetFastestCorrectStimulusDurationMs(
-  trials: readonly UfovStimulusDurationTrial[],
+  trials: readonly PeripheralAttentionStimulusDurationTrial[],
   fallbackMs = 0,
 ): number {
   const durations = trials
@@ -48,10 +55,10 @@ export function GetFastestCorrectStimulusDurationMs(
   return durations.length > 0 ? Math.min(...durations) : fallbackMs;
 }
 
-export function GetUfovDirectionAccuracy(
-  trials: readonly UfovDirectionTrial[],
+export function GetPeripheralAttentionDirectionAccuracy(
+  trials: readonly PeripheralAttentionDirectionTrial[],
   axes: readonly number[] = [0, 1, 2, 3, 4, 5, 6, 7],
-): UfovDirectionAccuracy[] {
+): PeripheralAttentionDirectionAccuracy[] {
   const stats = new Map<number, { correct: number; total: number }>(
     axes.map((axis) => [axis, { correct: 0, total: 0 }]),
   );
@@ -79,26 +86,26 @@ export function GetUfovDirectionAccuracy(
   });
 }
 
-export function ShouldStopUfovAdaptiveRun(
-  run: UfovAdaptiveRunState,
-  maxTestTrials: number = ufovAdaptiveStop.maxTestTrials,
+export function ShouldStopPeripheralAttentionAdaptiveRun(
+  run: PeripheralAttentionAdaptiveRunState,
+  maxTestTrials: number = peripheralAttentionAdaptiveStop.maxTestTrials,
 ) {
-  const trialLimit = NormalizePositiveInteger(maxTestTrials, ufovAdaptiveStop.maxTestTrials);
-  return run.failAtMaxStreak >= ufovAdaptiveStop.failAtMaxStreakLimit
+  const trialLimit = NormalizePositiveInteger(maxTestTrials, peripheralAttentionAdaptiveStop.maxTestTrials);
+  return run.failAtMaxStreak >= peripheralAttentionAdaptiveStop.failAtMaxStreakLimit
     || run.testTrial >= trialLimit
-    || HasStableUfovThreshold(run)
+    || HasStablePeripheralAttentionThreshold(run)
     || (
-      run.testTrial >= ufovAdaptiveStop.minTestTrials
-      && run.limitStreak >= ufovAdaptiveStop.stableLimitStreak
+      run.testTrial >= peripheralAttentionAdaptiveStop.minTestTrials
+      && run.limitStreak >= peripheralAttentionAdaptiveStop.stableLimitStreak
     );
 }
 
-export function EstimateUfovThresholdMs(
-  run: UfovAdaptiveRunState,
-  trials: readonly UfovStimulusDurationTrial[],
+export function EstimatePeripheralAttentionThresholdMs(
+  run: PeripheralAttentionAdaptiveRunState,
+  trials: readonly PeripheralAttentionStimulusDurationTrial[],
   fallbackMs: number,
 ) {
-  if (run.limitStreak >= ufovAdaptiveStop.stableLimitStreak) {
+  if (run.limitStreak >= peripheralAttentionAdaptiveStop.stableLimitStreak) {
     const formalDurations = trials
       .filter((trial) => !trial.practice && trial.correct)
       .map((trial) => GetTrialDurationMs(trial))
@@ -107,7 +114,7 @@ export function EstimateUfovThresholdMs(
   }
 
   if (run.reversals.length >= 4) {
-    const recentReversals = run.reversals.slice(-ufovAdaptiveStop.stableReversalWindow);
+    const recentReversals = run.reversals.slice(-peripheralAttentionAdaptiveStop.stableReversalWindow);
     return recentReversals.reduce((sum, value) => sum + value, 0) / recentReversals.length;
   }
 
@@ -120,11 +127,11 @@ export function EstimateUfovThresholdMs(
   return formalDurations.reduce((sum, value) => sum + value, 0) / formalDurations.length;
 }
 
-function HasStableUfovThreshold(run: UfovAdaptiveRunState) {
-  if (run.testTrial < ufovAdaptiveStop.minTestTrials) return false;
-  if (run.reversals.length < ufovAdaptiveStop.minStableReversals) return false;
+function HasStablePeripheralAttentionThreshold(run: PeripheralAttentionAdaptiveRunState) {
+  if (run.testTrial < peripheralAttentionAdaptiveStop.minTestTrials) return false;
+  if (run.reversals.length < peripheralAttentionAdaptiveStop.minStableReversals) return false;
 
-  const recentReversals = run.reversals.slice(-ufovAdaptiveStop.stableReversalWindow);
+  const recentReversals = run.reversals.slice(-peripheralAttentionAdaptiveStop.stableReversalWindow);
   const min = Math.min(...recentReversals);
   const max = Math.max(...recentReversals);
   const toleranceMs = Math.max(run.refreshMs * 3, 25);
@@ -135,7 +142,7 @@ function NormalizePositiveInteger(value: number, fallback: number) {
   return Number.isFinite(value) ? Math.max(1, Math.round(value)) : fallback;
 }
 
-function GetTrialDurationMs(trial: UfovStimulusDurationTrial): number | null {
+function GetTrialDurationMs(trial: PeripheralAttentionStimulusDurationTrial): number | null {
   const actual = Number(trial.actualDurationMs);
   if (Number.isFinite(actual) && actual > 0) return actual;
 
@@ -144,4 +151,27 @@ function GetTrialDurationMs(trial: UfovStimulusDurationTrial): number | null {
 
   const planned = Number(trial.plannedDurationMs);
   return Number.isFinite(planned) && planned > 0 ? planned : null;
+}
+
+// Backward compatibility function aliases
+export function GetUfovDirectionAccuracy(
+  trials: readonly PeripheralAttentionDirectionTrial[],
+  axes?: readonly number[],
+): PeripheralAttentionDirectionAccuracy[] {
+  return GetPeripheralAttentionDirectionAccuracy(trials, axes);
+}
+
+export function ShouldStopUfovAdaptiveRun(
+  run: PeripheralAttentionAdaptiveRunState,
+  maxTestTrials?: number,
+) {
+  return ShouldStopPeripheralAttentionAdaptiveRun(run, maxTestTrials);
+}
+
+export function EstimateUfovThresholdMs(
+  run: PeripheralAttentionAdaptiveRunState,
+  trials: readonly PeripheralAttentionStimulusDurationTrial[],
+  fallbackMs: number,
+) {
+  return EstimatePeripheralAttentionThresholdMs(run, trials, fallbackMs);
 }

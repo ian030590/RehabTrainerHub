@@ -51,7 +51,7 @@ const manifestEntries: ReadonlyArray<readonly [
   ['vision:reading-training', 'vision/experiment/plugins/pixi-reading-training.ts'],
   ['vision:driving-rehab', 'vision/experiment/plugins/three-driving-rehab.ts'],
   ['vision:hart-chart', 'vision/pages/training/HartChartPage.tsx'],
-  ['brain:ufov', 'brain/pages/UFOVPage.tsx'],
+  ['brain:ufov', 'brain/pages/PeripheralAttentionPage.tsx'],
   ['brain:every-ball-response', 'brain/pages/EveryBallResponsePage.tsx', 'camera-or-microphone'],
   ['brain:main-concept', 'brain/pages/MainConceptTraining.tsx'],
   ['brain:minesweeper', 'brain/pages/thinking/MinesweeperGame.tsx'],

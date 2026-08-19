@@ -21,11 +21,11 @@ import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/
 import { useT, type TranslationKey } from '../i18n';
 import { GetReferenceCognitiveModules } from './thinking/cognitive/constants';
 import type { ReferenceGameId } from './thinking/cognitive/types';
-import type { SubtestId, UfovRunMode, UfovTargetAxis } from './ufov/UfovPage';
+import type { SubtestId, UfovRunMode, UfovTargetAxis } from './peripheral-attention/PeripheralAttentionPage';
 
 const LoadReferenceCognitiveGame = () => import('./thinking/ReferenceCognitiveGame');
 const LoadEveryBallResponsePage = () => import('./EveryBallResponsePage');
-const LoadUfovPage = () => import('./UFOVPage');
+const LoadUfovPage = () => import('./PeripheralAttentionPage');
 const ReferenceCognitiveGame = lazy(() => LoadReferenceCognitiveGame().then((module) => ({ default: module.ReferenceCognitiveGame })));
 const EveryBallResponsePage = lazy(() => LoadEveryBallResponsePage().then((module) => ({ default: module.EveryBallResponsePage })));
 
@@ -435,7 +435,7 @@ function GetUfovRuleSections(lang: 'zh' | 'en', subtestTitle: string) {
 function GetUfovConfigLabels(lang: 'zh' | 'en') {
   return lang === 'en'
     ? {
-        settingsTitle: 'UFOV Settings',
+        settingsTitle: 'Peripheral Attention Settings',
         chooseSubtest: 'Choose Subtest',
         chooseTrialCount: 'Choose Max Trial Count',
         customTrialCount: 'Custom',
@@ -462,7 +462,7 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
         },
       }
     : {
-        settingsTitle: 'UFOV 設定',
+        settingsTitle: '周邊注意力設定',
         chooseSubtest: '選擇 Subtest',
         chooseTrialCount: '選擇最大 Trial 數量',
         customTrialCount: '自訂',

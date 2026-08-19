@@ -781,9 +781,10 @@ function CreateBoundaryResultPayload(finalMetricKeyLength) {
 }
 
 function HeaderBlock(source, pathPattern) {
-  const start = source.indexOf(`${pathPattern}\n`);
+  const normalizedSource = source.replace(/\r\n/g, '\n');
+  const start = normalizedSource.indexOf(`${pathPattern}\n`);
   assert.notEqual(start, -1, `missing header block ${pathPattern}`);
-  const remainder = source.slice(start + pathPattern.length + 1);
+  const remainder = normalizedSource.slice(start + pathPattern.length + 1);
   const end = remainder.search(/\n(?=\/)/);
   return end === -1 ? remainder : remainder.slice(0, end);
 }

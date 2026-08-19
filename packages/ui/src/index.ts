@@ -196,17 +196,46 @@ export {
 } from './trainerTheme';
 export type { TrainerThemeOverrides } from './trainerTheme';
 export {
+  DrawPeripheralAttentionCanvasStage,
+  EnsurePeripheralAttentionCanvasStage,
+  PreparePeripheralAttentionNoiseMask,
+  RenderPeripheralAttentionCanvasStage,
   DrawUfovCanvasStage,
   EnsureUfovCanvasStage,
   PrepareUfovNoiseMask,
   RenderUfovCanvasStage,
-} from './ufovCanvas';
-export type { UfovCanvasPhase, UfovCanvasSlot, UfovCanvasStageOptions, UfovCanvasTarget } from './ufovCanvas';
+} from './peripheralAttentionCanvas';
+export type {
+  PeripheralAttentionCanvasPhase,
+  PeripheralAttentionCanvasSlot,
+  PeripheralAttentionCanvasStageOptions,
+  PeripheralAttentionCanvasTarget,
+  PeripheralAttentionScreenGeometry,
+  UfovCanvasPhase,
+  UfovCanvasSlot,
+  UfovCanvasStageOptions,
+  UfovCanvasTarget,
+  UfovScreenGeometry,
+} from './peripheralAttentionCanvas';
 export {
-  EstimateUfovThresholdMs,
+  EstimatePeripheralAttentionThresholdMs,
   GetFastestCorrectStimulusDurationMs,
+  GetPeripheralAttentionDirectionAccuracy,
+  ShouldStopPeripheralAttentionAdaptiveRun,
+  peripheralAttentionAdaptiveStop,
+  EstimateUfovThresholdMs,
   GetUfovDirectionAccuracy,
   ShouldStopUfovAdaptiveRun,
   ufovAdaptiveStop,
-} from './ufovResults';
-export type { UfovAdaptiveRunState, UfovDirectionAccuracy } from './ufovResults';
+} from './peripheralAttentionResults';
+export type {
+  PeripheralAttentionAdaptiveRunState,
+  PeripheralAttentionDirectionAccuracy,
+  PeripheralAttentionDirectionTrial,
+  PeripheralAttentionStimulusDurationTrial,
+  UfovAdaptiveRunState,
+  UfovDirectionAccuracy,
+  UfovDirectionTrial,
+  UfovStimulusDurationTrial,
+} from './peripheralAttentionResults';
+

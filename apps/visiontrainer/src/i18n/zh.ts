@@ -464,7 +464,7 @@ export const zh = {
   'exp.res.score': '分數:',
   'assess.contrast.title': '對比辨識練習',
   'assess.contrast.desc': '辨別不同對比度的視標並產生參考數值',
-  'assess.ufov.title': 'UFOV 注意力練習',
+  'assess.ufov.title': '周邊注意力訓練',
   'assess.ufov.desc': '依三階段任務記錄視覺處理、分散注意與選擇性注意的參考數值。',
   'assess.contrast.resultsTitle': '對比辨識參考結果',
   'common.back': '返回',
