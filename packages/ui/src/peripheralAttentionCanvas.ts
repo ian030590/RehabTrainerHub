@@ -17,12 +17,16 @@ export interface PeripheralAttentionCanvasStageOptions {
   peripheralSlot?: PeripheralAttentionCanvasSlot;
   slots: readonly PeripheralAttentionCanvasSlot[];
   maskImageData?: ImageData | null;
+  geometry?: PeripheralAttentionScreenGeometry;
+  contrastPercent?: number;
 }
 
 export interface PeripheralAttentionScreenGeometry {
   maxVisualAngleDeg: number;
   isOverLimit: boolean;
   suggestedDistanceCm?: number;
+  radiusPx?: number;
+  vehicleScale?: number;
 }
 
 // Backward compatibility types
@@ -41,13 +45,8 @@ interface CanvasSize {
 
 const canvasStageClass = 'ufov-canvas-stage';
 const canvasClass = 'ufov-stage-canvas';
-const centerBoxSize = 80;
-const centerBoxBorder = 5;
-const vehicleScale = 0.72;
-const vehicleWidth = 72;
-const vehicleHeight = 48;
-const distractorWidth = centerBoxSize;
-const distractorHeight = 96;
+const baseVehicleWidth = 72;
+const baseVehicleHeight = 56;
 
 export function EnsurePeripheralAttentionCanvasStage(displayElement: HTMLElement, ariaLabel: string) {
   const currentStage = displayElement.querySelector<HTMLDivElement>(`.${canvasStageClass}`);
@@ -94,18 +93,22 @@ export function DrawPeripheralAttentionCanvasStage(
 
   const { context, cssWidth, cssHeight, dpr } = size;
   context.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const contrastPercent = Clamp(Number(options.contrastPercent) || 100, 5, 100);
+  const backgroundValue = Math.round(255 * (1 - contrastPercent / 100));
+  const backgroundColor = `rgb(${backgroundValue}, ${backgroundValue}, ${backgroundValue})`;
   context.clearRect(0, 0, cssWidth, cssHeight);
-  context.fillStyle = '#000';
+  context.fillStyle = backgroundColor;
   context.fillRect(0, 0, cssWidth, cssHeight);
+  const metrics = GetStageMetrics(cssWidth, cssHeight, options.geometry);
 
   if (options.phase === 'fixation') {
-    DrawCenterBox(context, cssWidth / 2, cssHeight / 2);
+    DrawCenterBox(context, cssWidth / 2, cssHeight / 2, metrics.centerBoxSize, metrics.centerBoxBorder);
     return;
   }
 
-  DrawCentralStimulus(context, cssWidth / 2, cssHeight / 2, options.centralTarget);
+  DrawCentralStimulus(context, cssWidth / 2, cssHeight / 2, options.centralTarget, metrics, backgroundColor);
   if (options.hasPeripheral && options.peripheralSlot) {
-    DrawPeripheralStimuli(context, options, cssWidth, cssHeight);
+    DrawPeripheralStimuli(context, options, cssWidth, cssHeight, metrics, backgroundColor);
   }
 }
 
@@ -171,16 +174,37 @@ function ResizeCanvasToStage(canvas: HTMLCanvasElement, stage: HTMLElement): Can
   return { context, cssWidth, cssHeight, dpr };
 }
 
-function DrawCenterBox(context: CanvasRenderingContext2D, centerX: number, centerY: number) {
-  const offset = centerBoxSize / 2;
-  const strokeOffset = centerBoxBorder / 2;
+function GetStageMetrics(cssWidth: number, cssHeight: number, geometry?: PeripheralAttentionScreenGeometry) {
+  const baseDimension = Math.min(cssWidth, cssHeight);
+  const standardScale = baseDimension / 1080;
+  const maxAvailableRadius = baseDimension * 0.44;
+  const outerRadius = Number.isFinite(geometry?.radiusPx)
+    ? Math.min(maxAvailableRadius, geometry!.radiusPx!)
+    : maxAvailableRadius;
+  const scale = Number.isFinite(geometry?.vehicleScale)
+    ? geometry!.vehicleScale!
+    : (110 * standardScale * 0.58) / baseVehicleWidth;
+  return {
+    centerBoxSize: Math.max(48, baseVehicleWidth * scale * 1.5),
+    centerBoxBorder: Math.max(2, 3 * standardScale),
+    vehicleScale: scale,
+    radii: [outerRadius * 0.333, outerRadius * 0.666, outerRadius],
+    distractorWidth: 92 * standardScale * (scale / 0.88),
+    distractorHeight: 90 * standardScale * (scale / 0.88),
+    distractorStroke: Math.max(2, 3.5 * standardScale),
+  };
+}
+
+function DrawCenterBox(context: CanvasRenderingContext2D, centerX: number, centerY: number, size: number, border: number) {
+  const offset = size / 2;
+  const strokeOffset = border / 2;
   context.strokeStyle = '#fff';
-  context.lineWidth = centerBoxBorder;
+  context.lineWidth = border;
   context.strokeRect(
     centerX - offset + strokeOffset,
     centerY - offset + strokeOffset,
-    centerBoxSize - centerBoxBorder,
-    centerBoxSize - centerBoxBorder,
+    size - border,
+    size - border,
   );
 }
 
@@ -189,9 +213,11 @@ function DrawCentralStimulus(
   centerX: number,
   centerY: number,
   target: PeripheralAttentionCanvasTarget,
+  metrics: ReturnType<typeof GetStageMetrics>,
+  backgroundColor: string,
 ) {
-  DrawCenterBox(context, centerX, centerY);
-  DrawVehicle(context, centerX, centerY, target, vehicleScale);
+  DrawCenterBox(context, centerX, centerY, metrics.centerBoxSize, metrics.centerBoxBorder);
+  DrawVehicle(context, centerX, centerY, target, metrics.vehicleScale, backgroundColor);
 }
 
 function DrawPeripheralStimuli(
@@ -199,6 +225,8 @@ function DrawPeripheralStimuli(
   options: PeripheralAttentionCanvasStageOptions,
   width: number,
   height: number,
+  metrics: ReturnType<typeof GetStageMetrics>,
+  backgroundColor: string,
 ) {
   const targetSlot = options.peripheralSlot;
   if (!targetSlot) return;
@@ -207,12 +235,14 @@ function DrawPeripheralStimuli(
     const isTarget = slot.axis === targetSlot.axis && slot.ring === targetSlot.ring;
     if (!isTarget && !options.hasDistractors) return;
 
-    const pointX = (width * slot.x) / 100;
-    const pointY = (height * slot.y) / 100;
+    const angle = (-90 + slot.axis * 45) * Math.PI / 180;
+    const radius = metrics.radii[slot.ring] ?? metrics.radii[metrics.radii.length - 1];
+    const pointX = width / 2 + Math.cos(angle) * radius;
+    const pointY = height / 2 + Math.sin(angle) * radius;
     if (isTarget) {
-      DrawVehicle(context, pointX, pointY, 'car', vehicleScale);
+      DrawVehicle(context, pointX, pointY, 'car', metrics.vehicleScale, backgroundColor);
     } else {
-      DrawTriangleDistractor(context, pointX, pointY);
+      DrawTriangleDistractor(context, pointX, pointY, metrics.distractorWidth, metrics.distractorHeight, metrics.distractorStroke, backgroundColor);
     }
   });
 }
@@ -223,87 +253,72 @@ function DrawVehicle(
   centerY: number,
   target: PeripheralAttentionCanvasTarget,
   scale: number,
+  backgroundColor: string,
 ) {
   context.save();
   context.translate(centerX, centerY);
   context.scale(scale, scale);
-  context.translate(-vehicleWidth / 2, -vehicleHeight / 2);
-
-  context.fillStyle = '#fff';
-  context.strokeStyle = '#fff';
-  context.lineWidth = 3;
-
-  if (target === 'truck') {
-    DrawTruckRoof(context);
-  } else {
-    DrawCarRoof(context);
-  }
-
-  context.fillStyle = '#fff';
-  context.fillRect(4, 23, 64, 15);
-  DrawWheel(context, 17, 39);
-  DrawWheel(context, 55, 39);
+  context.translate(-baseVehicleWidth / 2, -baseVehicleHeight / 2);
+  if (target === 'truck') DrawTruck(context, backgroundColor);
+  else DrawCar(context, backgroundColor);
   context.restore();
 }
 
-function DrawCarRoof(context: CanvasRenderingContext2D) {
-  context.fillStyle = '#fff';
+function DrawRoundedPolygon(context: CanvasRenderingContext2D, points: { x: number; y: number }[], radius: number) {
   context.beginPath();
-  context.moveTo(22.2, 7);
-  context.lineTo(49.8, 7);
-  context.lineTo(59, 29);
-  context.lineTo(13, 29);
+  const last = points[points.length - 1];
+  const first = points[0];
+  context.moveTo((last.x + first.x) / 2, (last.y + first.y) / 2);
+  points.forEach((point, index) => {
+    const next = points[(index + 1) % points.length];
+    context.arcTo(point.x, point.y, next.x, next.y, radius);
+  });
   context.closePath();
   context.fill();
-
-  context.fillStyle = '#000';
-  context.fillRect(24, 15, 10, 9);
-  context.fillRect(38, 15, 10, 9);
 }
 
-function DrawTruckRoof(context: CanvasRenderingContext2D) {
+function DrawCar(context: CanvasRenderingContext2D, backgroundColor: string) {
   context.fillStyle = '#fff';
   context.beginPath();
-  context.moveTo(36, 7);
-  context.lineTo(50.26, 7);
-  context.lineTo(59, 29);
-  context.lineTo(36, 29);
+  context.moveTo(21, 1.5); context.lineTo(51, 1.5); context.quadraticCurveTo(55.5, 1.5, 57.8, 6.5);
+  context.lineTo(71.5, 38.5); context.quadraticCurveTo(73.5, 43.5, 68, 44.5); context.lineTo(66.5, 44.5);
+  context.arc(54.5, 44.5, 12, 0, Math.PI, true); context.lineTo(42.5, 46); context.lineTo(29.5, 46); context.lineTo(29.5, 44.5);
+  context.arc(17.5, 44.5, 12, 0, Math.PI, true); context.lineTo(5.5, 44.5); context.quadraticCurveTo(-1.5, 43.5, .5, 38.5);
+  context.lineTo(14.2, 6.5); context.quadraticCurveTo(16.5, 1.5, 21, 1.5);
   context.closePath();
   context.fill();
-
-  context.fillStyle = '#000';
-  context.fillRect(42, 15, 10, 9);
+  context.fillStyle = backgroundColor;
+  DrawRoundedPolygon(context, [{ x: 21, y: 5.5 }, { x: 33.2, y: 5.5 }, { x: 33.2, y: 21.5 }, { x: 15, y: 21.5 }], 3.5);
+  DrawRoundedPolygon(context, [{ x: 38.8, y: 5.5 }, { x: 51, y: 5.5 }, { x: 57, y: 21.5 }, { x: 38.8, y: 21.5 }], 3.5);
+  DrawVehicleWheels(context);
 }
 
-function DrawWheel(context: CanvasRenderingContext2D, centerX: number, centerY: number) {
-  context.beginPath();
-  context.arc(centerX, centerY, 7, 0, Math.PI * 2);
-  context.fillStyle = '#000';
-  context.fill();
-  context.strokeStyle = '#fff';
-  context.lineWidth = 3;
-  context.stroke();
-}
-
-function DrawTriangleDistractor(context: CanvasRenderingContext2D, centerX: number, centerY: number) {
-  const left = centerX - distractorWidth / 2;
-  const top = centerY - distractorHeight / 2;
-
+function DrawTruck(context: CanvasRenderingContext2D, backgroundColor: string) {
   context.fillStyle = '#fff';
   context.beginPath();
-  context.moveTo(centerX, top + distractorHeight);
-  context.lineTo(left, top);
-  context.lineTo(left + distractorWidth, top);
+  context.moveTo(38.8, 1.5); context.lineTo(51, 1.5); context.quadraticCurveTo(55.5, 1.5, 57.8, 6.5);
+  context.lineTo(71.5, 38.5); context.quadraticCurveTo(73.5, 43.5, 68, 44.5); context.lineTo(66.5, 44.5);
+  context.arc(54.5, 44.5, 12, 0, Math.PI, true); context.lineTo(42.5, 46); context.lineTo(29.5, 46); context.lineTo(29.5, 44.5);
+  context.arc(17.5, 44.5, 12, 0, Math.PI, true); context.lineTo(5.5, 44.5); context.quadraticCurveTo(-1.5, 43.5, .5, 38.5);
+  context.lineTo(3.5, 31.5); context.lineTo(37.5, 31.5); context.lineTo(37.5, 3.5); context.quadraticCurveTo(37.5, 1.5, 39.5, 1.5);
   context.closePath();
   context.fill();
+  context.fillStyle = backgroundColor;
+  DrawRoundedPolygon(context, [{ x: 38.8, y: 5.5 }, { x: 51, y: 5.5 }, { x: 57, y: 21.5 }, { x: 38.8, y: 21.5 }], 3.5);
+  DrawVehicleWheels(context);
+}
 
-  context.fillStyle = '#000';
+function DrawVehicleWheels(context: CanvasRenderingContext2D) {
+  context.fillStyle = '#fff';
+  [17.5, 54.5].forEach((x) => { context.beginPath(); context.arc(x, 44.5, 8.5, 0, Math.PI * 2); context.fill(); });
+}
+
+function DrawTriangleDistractor(context: CanvasRenderingContext2D, centerX: number, centerY: number, width: number, height: number, strokeWidth: number, backgroundColor: string) {
+  const left = centerX - width / 2;
+  const top = centerY - height / 2;
   context.beginPath();
-  context.moveTo(centerX, top + distractorHeight - 10);
-  context.lineTo(left + 7, top + 6);
-  context.lineTo(left + distractorWidth - 7, top + 6);
-  context.closePath();
-  context.fill();
+  context.moveTo(left, top); context.lineTo(left + width, top); context.lineTo(centerX, top + height);
+  context.closePath(); context.fillStyle = backgroundColor; context.fill(); context.strokeStyle = '#fff'; context.lineWidth = strokeWidth; context.stroke();
 }
 
 function DrawNoiseMask(
@@ -328,4 +343,8 @@ function CreateNoiseImageData(context: CanvasRenderingContext2D, width: number, 
     imageData.data[index + 3] = 255;
   }
   return imageData;
+}
+
+function Clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }

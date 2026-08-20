@@ -32,6 +32,13 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 
 無完整測試套件；針對性 build 與 `npm run test:hub-functions`、`npm run test:gamerunner` 為最低驗證。
 
+## CI/CD 維護
+
+- `.github/workflows/ci.yml` 在 PR 與非 `main` push 的應用程式、package、script、lockfile、Turbo 或 workflow 變更時執行；純文件變更不得啟動 CI。
+- `.github/workflows/deploy-cloudflare-pages.yml` 只在 `main` 上的可部署變更時執行。部署前的驗證以 matrix 平行執行；新增 gate 時加入兩份 workflow 的 matrix，並維持相同命令。
+- `npm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `npm run build:cloudflare:only`，不可再序列重跑同一批測試。
+- 變更 workflow 觸發範圍、測試命令或 build gate 時，必須同步更新本節，並確認 workflow 自身路徑仍會觸發驗證。
+
 ## 程式風格與命名規範
 
 使用 TypeScript、React functional components、既有模式。共用行為放 `packages/ui`，不在 trainers 重複。優先 CSS variables/theme tokens，禁止硬編碼顏色。2 spaces；components PascalCase；functions/variables camelCase；檔名明確對應功能。

@@ -15,6 +15,7 @@ import {
   PreparePeripheralAttentionNoiseMask,
   RenderPeripheralAttentionCanvasStage,
   type PeripheralAttentionCanvasPhase,
+  type PeripheralAttentionScreenGeometry,
 } from '@rehab-trainer/ui/peripheralAttentionCanvas';
 import {
   EstimatePeripheralAttentionThresholdMs,
@@ -30,6 +31,7 @@ type CentralTarget = 'car' | 'truck';
 type Direction = 'up' | 'down';
 export type SubtestId = 1 | 2 | 3;
 export type PeripheralAttentionRunMode = 'instruction' | 'practice' | 'formal';
+export type PeripheralAttentionStopCondition = 'adaptive_80' | 'fixed_trials';
 export type PeripheralAttentionTargetAxis = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type UfovRunMode = PeripheralAttentionRunMode;
 export type UfovTargetAxis = PeripheralAttentionTargetAxis;
@@ -60,6 +62,10 @@ export interface PeripheralAttentionPageProps {
   initialMode?: PeripheralAttentionRunMode;
   trialCount?: number;
   targetAxes?: PeripheralAttentionTargetAxis[];
+  stopCondition?: PeripheralAttentionStopCondition;
+  contrastPercent?: number;
+  targetVisualAngleDeg?: number;
+  vehicleVisualAngleDeg?: number;
   autoStart?: boolean;
   onSaveRecord?: (record: PeripheralAttentionTrainingRecord) => Promise<void> | void;
 }
@@ -107,6 +113,9 @@ interface TrialRecord {
   peripheralResponse?: number;
   correct: boolean;
   responseTimeMs: number;
+  contrastPercent: number;
+  targetVisualAngleDeg: number;
+  vehicleVisualAngleDeg: number;
 }
 
 interface SubtestResult {
@@ -121,6 +130,11 @@ interface PeripheralAttentionRunConfig {
   mode: PeripheralAttentionRunMode;
   trialCount: number;
   targetAxes: readonly PeripheralAttentionTargetAxis[];
+  stopCondition: PeripheralAttentionStopCondition;
+  contrastPercent: number;
+  targetVisualAngleDeg: number;
+  vehicleVisualAngleDeg: number;
+  geometry: PeripheralAttentionScreenGeometry;
 }
 
 interface AdaptiveState {
@@ -147,6 +161,10 @@ interface ExperimentPluginInfo {
     mode: { type: ParameterType.STRING };
     configured_trial_count: { type: ParameterType.INT };
     target_axes: { type: ParameterType.OBJECT };
+    stop_condition: { type: ParameterType.STRING };
+    contrast_percent: { type: ParameterType.FLOAT };
+    target_visual_angle_deg: { type: ParameterType.FLOAT };
+    vehicle_visual_angle_deg: { type: ParameterType.FLOAT };
     refresh_ms: { type: ParameterType.FLOAT };
     refresh_hz: { type: ParameterType.FLOAT };
     refresh_is_60hz_family: { type: ParameterType.BOOL };
@@ -162,6 +180,10 @@ interface PeripheralAttentionExperimentData {
   mode: PeripheralAttentionRunMode;
   configured_trial_count: number;
   target_axes: PeripheralAttentionTargetAxis[];
+  stop_condition: PeripheralAttentionStopCondition;
+  contrast_percent: number;
+  target_visual_angle_deg: number;
+  vehicle_visual_angle_deg: number;
   refresh_ms: number;
   refresh_hz: number;
   refresh_is_60hz_family: boolean;
@@ -194,7 +216,7 @@ const peripheralTargetSlots = slots.filter((slot) => slot.ring === outerRingInde
 
 const copy = {
   zh: {
-    title: '周邊注意力訓練',
+    title: '周邊視野訓練',
     intro: '完成處理速度、分散注意力與選擇性注意力三階段活動。本活動為非醫療練習工具，結果不代表認知評估、診斷或治療建議。',
     restart: '重新開始',
     car: '汽車',
@@ -230,7 +252,7 @@ const copy = {
     },
   },
   en: {
-    title: 'Peripheral Attention Training',
+    title: 'Peripheral Visual Field Training',
     intro: 'Complete three stages for processing speed, divided attention, and selective attention. This is a non-medical practice tool; results are not cognitive assessments, diagnoses, or treatment advice.',
     restart: 'Restart',
     car: 'Car',
@@ -301,6 +323,10 @@ const experimentPluginInfo: ExperimentPluginInfo = {
     mode: { type: ParameterType.STRING },
     configured_trial_count: { type: ParameterType.INT },
     target_axes: { type: ParameterType.OBJECT },
+    stop_condition: { type: ParameterType.STRING },
+    contrast_percent: { type: ParameterType.FLOAT },
+    target_visual_angle_deg: { type: ParameterType.FLOAT },
+    vehicle_visual_angle_deg: { type: ParameterType.FLOAT },
     refresh_ms: { type: ParameterType.FLOAT },
     refresh_hz: { type: ParameterType.FLOAT },
     refresh_is_60hz_family: { type: ParameterType.BOOL },
@@ -326,7 +352,9 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     const refreshMs = Number(trial.refresh_ms) || (1000 / 60);
     const config = trial.config as PeripheralAttentionRunConfig;
     const subtest = subtests.find((item) => item.id === config.subtestId) ?? subtests[0];
-    const maxTestTrials = NormalizeTrialCount(config.trialCount);
+    const maxTestTrials = config.stopCondition === 'fixed_trials'
+      ? NormalizeTrialCount(config.trialCount)
+      : 60;
     const targetAxes = NormalizeTargetAxes(config.targetAxes);
     const trials: TrialRecord[] = [];
     const results: SubtestResult[] = [];
@@ -351,7 +379,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       const practiceLimit = isPracticeMode ? totalPracticeTrials : 0;
       for (let index = 0; index < practiceLimit; index += 1) {
         const stimulus = this.createStimulus(subtest, true, index + 1, practiceDurationFrames, refreshMs, targetAxes);
-        const record = await this.runTrial(displayElement, labels, subtest, stimulus, refreshMs);
+        const record = await this.runTrial(displayElement, labels, subtest, stimulus, refreshMs, config);
         trials.push(record);
         this.showFeedback(displayElement, labels, record.correct);
         await WaitMs(this.jsPsych, 300);
@@ -362,7 +390,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
         while (testTrialNumber < maxTestTrials) {
           testTrialNumber += 1;
           const stimulus = this.createStimulus(subtest, false, testTrialNumber, durationFrames, refreshMs, targetAxes);
-          const record = await this.runTrial(displayElement, labels, subtest, stimulus, refreshMs);
+          const record = await this.runTrial(displayElement, labels, subtest, stimulus, refreshMs, config);
           trials.push(record);
 
           adaptiveState = this.updateAdaptiveState(
@@ -382,7 +410,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
             maxDurationFrames,
           );
 
-          if (ShouldStopPeripheralAttentionAdaptiveRun({
+          if (config.stopCondition === 'fixed_trials' ? testTrialNumber >= maxTestTrials : ShouldStopPeripheralAttentionAdaptiveRun({
             testTrial: testTrialNumber,
             reversals: adaptiveState.reversals,
             refreshMs,
@@ -420,6 +448,10 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       mode: config.mode,
       configured_trial_count: maxTestTrials,
       target_axes: targetAxes,
+      stop_condition: config.stopCondition,
+      contrast_percent: config.contrastPercent,
+      target_visual_angle_deg: config.targetVisualAngleDeg,
+      vehicle_visual_angle_deg: config.vehicleVisualAngleDeg,
       refresh_ms: Number(trial.refresh_ms) || refreshMs,
       refresh_hz: Number(trial.refresh_hz) || (1000 / refreshMs),
       refresh_is_60hz_family: Boolean(trial.refresh_is_60hz_family),
@@ -464,7 +496,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     const nextDirection: Direction = correct ? 'down' : 'up';
     const reversed = state.direction !== nextDirection;
     const reversals = reversed ? [...state.reversals, FramesToMs(currentFrames, refreshMs)] : state.reversals;
-    const halvedStep = reversed ? Math.max(minStep, Math.floor(state.stepFrames / 2)) : state.stepFrames;
+    const halvedStep = reversed ? Math.max(minStep, Math.round(state.stepFrames * 0.75)) : state.stepFrames;
     const limitStreak = (correct && currentFrames <= minFrames) || (!correct && currentFrames >= maxFrames)
       ? state.limitStreak + 1
       : 0;
@@ -486,7 +518,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     minFrames: number,
     maxFrames: number,
   ) {
-    const delta = correct ? -stepFrames : stepFrames;
+    const delta = correct ? -stepFrames : stepFrames * 3;
     return Clamp(currentFrames + delta, minFrames, maxFrames);
   }
 
@@ -496,14 +528,15 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     subtest: Subtest,
     stimulus: TrialStimulus,
     refreshMs: number,
+    config: PeripheralAttentionRunConfig,
   ): Promise<TrialRecord> {
     const stage = EnsurePeripheralAttentionCanvasStage(displayElement, labels.subtests[stimulus.subtestId]);
     const maskImageData = PreparePeripheralAttentionNoiseMask(stage);
 
-    this.renderStage(displayElement, labels, 'fixation', subtest, stimulus);
+    this.renderStage(displayElement, labels, 'fixation', subtest, stimulus, config);
     await WaitMs(this.jsPsych, fixationMs);
 
-    const timing = await this.presentStimulus(stage, labels, subtest, stimulus, maskImageData, refreshMs);
+    const timing = await this.presentStimulus(stage, labels, subtest, stimulus, maskImageData, refreshMs, config);
     await WaitMs(this.jsPsych, maskMs);
 
     const startTime = performance.now();
@@ -531,6 +564,9 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       peripheralResponse,
       correct,
       responseTimeMs,
+      contrastPercent: config.contrastPercent,
+      targetVisualAngleDeg: config.targetVisualAngleDeg,
+      vehicleVisualAngleDeg: config.vehicleVisualAngleDeg,
     };
   }
 
@@ -541,6 +577,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     stimulus: TrialStimulus,
     maskImageData: ImageData | null,
     refreshMs: number,
+    config: PeripheralAttentionRunConfig,
   ) {
     return new Promise<{ actualDurationMs: number; actualFrameCount: number; droppedFrameCount: number }>((resolve) => {
       let startTimestamp = 0;
@@ -548,11 +585,11 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
 
       window.requestAnimationFrame((firstTimestamp) => {
         startTimestamp = firstTimestamp;
-        DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus));
+        DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus, undefined, config));
 
         if (stimulus.displayFrameCount <= 1) {
           window.requestAnimationFrame((nextTimestamp) => {
-            DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
+            DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData, config));
             const actualDurationMs = nextTimestamp - startTimestamp;
             resolve({
               actualDurationMs,
@@ -566,7 +603,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
         const tick = (nextTimestamp: number) => {
           elapsedFrames += 1;
           if (elapsedFrames >= stimulus.displayFrameCount) {
-            DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData));
+            DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData, config));
             const actualDurationMs = nextTimestamp - startTimestamp;
             resolve({
               actualDurationMs,
@@ -590,8 +627,9 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     phase: 'fixation' | 'stimulus' | 'mask',
     subtest: Subtest,
     stimulus: TrialStimulus,
+    config: PeripheralAttentionRunConfig,
   ) {
-    RenderPeripheralAttentionCanvasStage(displayElement, this.getCanvasStageOptions(labels, phase, subtest, stimulus));
+    RenderPeripheralAttentionCanvasStage(displayElement, this.getCanvasStageOptions(labels, phase, subtest, stimulus, undefined, config));
   }
 
   private getCanvasStageOptions(
@@ -600,6 +638,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     subtest: Subtest,
     stimulus: TrialStimulus,
     maskImageData?: ImageData | null,
+    config?: PeripheralAttentionRunConfig,
   ) {
     return {
       ariaLabel: labels.subtests[stimulus.subtestId],
@@ -610,6 +649,8 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       peripheralSlot: stimulus.peripheralSlot,
       slots: slots,
       maskImageData,
+      geometry: config?.geometry,
+      contrastPercent: config?.contrastPercent,
     };
   }
 
@@ -683,6 +724,10 @@ export function PeripheralAttentionPage({
   initialMode = 'formal',
   trialCount = defaultMaxTestTrials,
   targetAxes = [...peripheralAttentionTargetAxes] as PeripheralAttentionTargetAxis[],
+  stopCondition = 'adaptive_80',
+  contrastPercent = 100,
+  targetVisualAngleDeg = 15,
+  vehicleVisualAngleDeg = 2.5,
   autoStart = false,
   onSaveRecord,
 }: PeripheralAttentionPageProps) {
@@ -735,6 +780,11 @@ export function PeripheralAttentionPage({
         subtest: data.subtest_id,
         mode: data.mode,
         configuredTrialCount: data.configured_trial_count,
+        stopCondition: data.stop_condition,
+        confidenceThreshold: data.stop_condition === 'adaptive_80' ? '80%' : '',
+        contrastPercent: data.contrast_percent,
+        targetVisualAngleDeg: data.target_visual_angle_deg,
+        vehicleVisualAngleDeg: data.vehicle_visual_angle_deg,
         targetAxes: data.target_axes,
         targetDirections: data.target_axes.map((axis) => FormatAxis(axis, labels)).join(' | '),
         correctCount,
@@ -766,6 +816,9 @@ export function PeripheralAttentionPage({
         Peripheral_Response: item.peripheralResponse ?? '',
         Peripheral_Response_Direction: FormatAxis(item.peripheralResponse, labels),
         Response_Time_ms: Math.round(item.responseTimeMs),
+        Contrast_Percent: item.contrastPercent,
+        Target_Visual_Angle_Deg: item.targetVisualAngleDeg,
+        Vehicle_Visual_Angle_Deg: item.vehicleVisualAngleDeg,
       })),
     };
     setResults(data.results);
@@ -857,8 +910,18 @@ export function PeripheralAttentionPage({
       setInstructionSubtest(initialSubtestId);
       return;
     }
-    void startRun({ subtestId: initialSubtestId, mode: initialMode, trialCount, targetAxes });
-  }, [autoStart, initialMode, initialSubtestId, savedRecord, targetAxes, trialCount]);
+    void startRun({
+      subtestId: initialSubtestId,
+      mode: initialMode,
+      trialCount,
+      targetAxes,
+      stopCondition,
+      contrastPercent: Clamp(contrastPercent, 5, 100),
+      targetVisualAngleDeg: Clamp(targetVisualAngleDeg, 5, 35),
+      vehicleVisualAngleDeg: Clamp(vehicleVisualAngleDeg, .8, 5),
+      geometry: CalculateScreenGeometry(53.1, 29.9, 50, Clamp(targetVisualAngleDeg, 5, 35), Clamp(vehicleVisualAngleDeg, .8, 5)),
+    });
+  }, [autoStart, contrastPercent, initialMode, initialSubtestId, savedRecord, stopCondition, targetAxes, targetVisualAngleDeg, trialCount, vehicleVisualAngleDeg]);
 
   useEffect(() => () => {
     if (jsPsychRef.current) {
@@ -1018,17 +1081,34 @@ function CreateStimulusSquare(target: CentralTarget) {
 }
 
 function CreateVehicleIcon(target: CentralTarget) {
-  const vehicle = document.createElement('span');
-  vehicle.className = `ufov-vehicle ufov-vehicle-${target}`;
-  const roof = document.createElement('span');
-  roof.className = 'ufov-vehicle-roof';
-  const body = document.createElement('span');
-  body.className = 'ufov-vehicle-body';
-  const leftWheel = document.createElement('span');
-  leftWheel.className = 'ufov-vehicle-wheel ufov-vehicle-wheel-left';
-  const rightWheel = document.createElement('span');
-  rightWheel.className = 'ufov-vehicle-wheel ufov-vehicle-wheel-right';
-  vehicle.append(roof, body, leftWheel, rightWheel);
+  const svgNs = 'http://www.w3.org/2000/svg';
+  const vehicle = document.createElementNS(svgNs, 'svg');
+  vehicle.setAttribute('viewBox', '0 0 72 56');
+  vehicle.setAttribute('class', `ufov-vehicle ufov-vehicle-${target}`);
+  vehicle.setAttribute('aria-hidden', 'true');
+  const body = document.createElementNS(svgNs, 'path');
+  body.setAttribute('fill', '#fff');
+  body.setAttribute('d', target === 'car'
+    ? 'M 21 1.5 L 51 1.5 Q 55.5 1.5 57.8 6.5 L 71.5 38.5 Q 73.5 43.5 68 44.5 L 66.5 44.5 A 12 12 0 0 0 42.5 44.5 L 42.5 46 L 29.5 46 L 29.5 44.5 A 12 12 0 0 0 5.5 44.5 L 4.5 44.5 Q -1.5 43.5 .5 38.5 L 14.2 6.5 Q 16.5 1.5 21 1.5 Z'
+    : 'M 38.8 1.5 L 51 1.5 Q 55.5 1.5 57.8 6.5 L 71.5 38.5 Q 73.5 43.5 68 44.5 L 66.5 44.5 A 12 12 0 0 0 42.5 44.5 L 42.5 46 L 29.5 46 L 29.5 44.5 A 12 12 0 0 0 5.5 44.5 L 4.5 44.5 Q -1.5 43.5 .5 38.5 L 3.5 31.5 L 37.5 31.5 L 37.5 3.5 Q 37.5 1.5 38.8 1.5 Z');
+  vehicle.appendChild(body);
+  const windows = target === 'car'
+    ? [
+        'M 24.5 5.5 L 30.2 5.5 Q 33.2 5.5 33.2 8.5 L 33.2 18.5 Q 33.2 21.5 30.2 21.5 L 17.5 21.5 Q 14.5 21.5 15.5 18.5 L 20 8.5 Q 21 5.5 24.5 5.5 Z',
+        'M 41.8 5.5 L 47.5 5.5 Q 51 5.5 52 8.5 L 56.5 18.5 Q 57.5 21.5 54.5 21.5 L 41.8 21.5 Q 38.8 21.5 38.8 18.5 L 38.8 8.5 Q 38.8 5.5 41.8 5.5 Z',
+      ]
+    : ['M 41.8 5.5 L 47.5 5.5 Q 51 5.5 52 8.5 L 56.5 18.5 Q 57.5 21.5 54.5 21.5 L 41.8 21.5 Q 38.8 21.5 38.8 18.5 L 38.8 8.5 Q 38.8 5.5 41.8 5.5 Z'];
+  windows.forEach((d) => {
+    const windowPath = document.createElementNS(svgNs, 'path');
+    windowPath.setAttribute('d', d);
+    windowPath.setAttribute('fill', '#000');
+    vehicle.appendChild(windowPath);
+  });
+  [17.5, 54.5].forEach((cx) => {
+    const wheel = document.createElementNS(svgNs, 'circle');
+    wheel.setAttribute('cx', String(cx)); wheel.setAttribute('cy', '44.5'); wheel.setAttribute('r', '8.5'); wheel.setAttribute('fill', '#fff');
+    vehicle.appendChild(wheel);
+  });
   return vehicle;
 }
 
@@ -1118,4 +1198,18 @@ function FormatDate(date: Date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function CalculateScreenGeometry(screenWidthCm: number, screenHeightCm: number, viewingDistanceCm: number, targetAngleDeg: number, vehicleAngleDeg: number): PeripheralAttentionScreenGeometry {
+  const screenWidthPx = window.screen.width || window.innerWidth || 1920;
+  const screenHeightPx = window.screen.height || window.innerHeight || 1080;
+  const pixelsPerCm = ((screenWidthPx / screenWidthCm) + (screenHeightPx / screenHeightCm)) / 2;
+  const halfMinExtentCm = Math.min(screenWidthCm, screenHeightCm) / 2;
+  const maxVisualAngleDeg = Math.atan(halfMinExtentCm / viewingDistanceCm) * 180 / Math.PI;
+  const suggestedDistanceCm = targetAngleDeg > maxVisualAngleDeg
+    ? halfMinExtentCm / Math.tan(targetAngleDeg * Math.PI / 180)
+    : undefined;
+  const radiusPx = viewingDistanceCm * Math.tan(targetAngleDeg * Math.PI / 180) * pixelsPerCm;
+  const vehicleWidthPx = Math.max(20, 2 * viewingDistanceCm * Math.tan((vehicleAngleDeg / 2) * Math.PI / 180) * pixelsPerCm);
+  return { maxVisualAngleDeg, isOverLimit: targetAngleDeg > maxVisualAngleDeg, suggestedDistanceCm, radiusPx, vehicleScale: vehicleWidthPx / 72 };
 }

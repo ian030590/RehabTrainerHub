@@ -20,7 +20,7 @@ export const zh = {
   'module.openAction': '開始',
   'module.attention.title': '注意訓練',
   'module.attention.intro': '選擇性注意、持續注意與分配注意相關練習分類。',
-  'module.attention.ufov.title': '周邊注意力訓練',
+  'module.attention.ufov.title': '周邊視野訓練',
   'module.attention.ufov.body': '以三階段自適應活動練習處理速度、分散注意力與選擇性注意力。',
   'module.attention.ufov.action': '開始練習',
   'module.attention.everyBall.title': '有球必應',

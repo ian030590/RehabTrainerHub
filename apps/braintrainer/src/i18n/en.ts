@@ -21,7 +21,7 @@ export const en = {
   'module.openAction': 'Start',
   'module.attention.title': 'Attention Training',
   'module.attention.intro': 'Practice categories for selective, sustained, and divided attention.',
-  'module.attention.ufov.title': 'Peripheral Attention Training',
+  'module.attention.ufov.title': 'Peripheral Visual Field Training',
   'module.attention.ufov.body': 'A three-stage adaptive activity for practising processing speed, divided attention, and selective attention.',
   'module.attention.ufov.action': 'Start Training',
   'module.attention.everyBall.title': 'Every Ball Gets a Response',

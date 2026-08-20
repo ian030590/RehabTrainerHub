@@ -5,6 +5,11 @@ import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
+import {
+  PeripheralAttentionContrastSlider,
+  PeripheralAttentionEccentricitySlider,
+  PeripheralAttentionVehicleAngleSlider,
+} from '@rehab-trainer/ui/components/PeripheralAttentionConfigComponents';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import {
   TrainingConfigOptionGroup,
@@ -21,7 +26,7 @@ import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/
 import { useT, type TranslationKey } from '../i18n';
 import { GetReferenceCognitiveModules } from './thinking/cognitive/constants';
 import type { ReferenceGameId } from './thinking/cognitive/types';
-import type { SubtestId, UfovRunMode, UfovTargetAxis } from './peripheral-attention/PeripheralAttentionPage';
+import type { PeripheralAttentionStopCondition, SubtestId, UfovRunMode, UfovTargetAxis } from './peripheral-attention/PeripheralAttentionPage';
 
 const LoadReferenceCognitiveGame = () => import('./thinking/ReferenceCognitiveGame');
 const LoadEveryBallResponsePage = () => import('./EveryBallResponsePage');
@@ -107,6 +112,10 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const [selectedUfovTrialCount, setSelectedUfovTrialCount] = useState(48);
   const [customUfovTrialCountInput, setCustomUfovTrialCountInput] = useState('');
   const [selectedUfovAxes, setSelectedUfovAxes] = useState<UfovTargetAxis[]>([0, 1, 2, 3, 4, 5, 6, 7]);
+  const [selectedUfovStopCondition, setSelectedUfovStopCondition] = useState<PeripheralAttentionStopCondition>('adaptive_80');
+  const [ufovContrastPercent, setUfovContrastPercent] = useState(100);
+  const [ufovTargetVisualAngleDeg, setUfovTargetVisualAngleDeg] = useState(15);
+  const [ufovVehicleVisualAngleDeg, setUfovVehicleVisualAngleDeg] = useState(2.5);
   const [isUfovRulesOpen, setIsUfovRulesOpen] = useState(false);
   useTrainingConfigReady(isUfovConfigOpen);
   const ufovLabels = GetUfovConfigLabels(lang);
@@ -136,6 +145,10 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
       mode: selectedUfovMode,
       trials: String(selectedUfovTrialCount),
       axes: selectedUfovAxes.join(','),
+      stop: selectedUfovStopCondition,
+      contrast: String(ufovContrastPercent),
+      angle: String(ufovTargetVisualAngleDeg),
+      vehicleAngle: String(ufovVehicleVisualAngleDeg),
       start: '1',
     }).toString()}`, { state: trainingFlowLaunchState });
   };
@@ -243,6 +256,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
             { value: ufovLabels.modes[selectedUfovMode].label },
             { value: selectedUfovTrialCount },
             { value: `${selectedUfovAxes.length}/8` },
+            { value: `${ufovContrastPercent}% · ${ufovTargetVisualAngleDeg.toFixed(1)}° · ${ufovVehicleVisualAngleDeg.toFixed(1)}°` },
           ]}
           actions={(
             <TrainingConfigNavigationActions
@@ -331,6 +345,47 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
               ))}
             </TrainingConfigOptionGroup>
           </TrainingConfigSection>
+
+          <TrainingConfigSection title={ufovLabels.anglesTitle} wide>
+            <PeripheralAttentionEccentricitySlider
+              lang={lang}
+              value={ufovTargetVisualAngleDeg}
+              onChange={setUfovTargetVisualAngleDeg}
+            />
+            <PeripheralAttentionVehicleAngleSlider
+              lang={lang}
+              value={ufovVehicleVisualAngleDeg}
+              onChange={setUfovVehicleVisualAngleDeg}
+            />
+            <PeripheralAttentionContrastSlider
+              lang={lang}
+              value={ufovContrastPercent}
+              onChange={setUfovContrastPercent}
+            />
+          </TrainingConfigSection>
+
+          {selectedUfovMode === 'formal' && (
+            <TrainingConfigSection title={lang === 'en' ? 'Stopping condition' : '終止條件'}>
+              <TrainingConfigOptionGroup columns={2}>
+                <button
+                  className={`training-option ${selectedUfovStopCondition === 'adaptive_80' ? 'active' : ''}`}
+                  onClick={() => setSelectedUfovStopCondition('adaptive_80')}
+                  type="button"
+                >
+                  <span className="training-option-title">{lang === 'en' ? '80% confidence threshold' : '信度 80% 門檻'}</span>
+                  <span className="training-option-meta">{lang === 'en' ? 'Adaptive staircase; ends on a stable threshold.' : '自適應階梯法；門檻穩定後結束。'}</span>
+                </button>
+                <button
+                  className={`training-option ${selectedUfovStopCondition === 'fixed_trials' ? 'active' : ''}`}
+                  onClick={() => setSelectedUfovStopCondition('fixed_trials')}
+                  type="button"
+                >
+                  <span className="training-option-title">{lang === 'en' ? 'Fixed trial count' : '固定題數'}</span>
+                  <span className="training-option-meta">{lang === 'en' ? 'Ends at the selected number of trials.' : '完成所選題數後結束。'}</span>
+                </button>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
+          )}
         </ConfigDialog>
       )}
       {isUfovRulesOpen && (
@@ -353,6 +408,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
               { value: ufovLabels.modes[selectedUfovMode].label },
               { value: selectedUfovTrialCount },
               { value: `${selectedUfovAxes.length}/8` },
+              { value: selectedUfovStopCondition === 'adaptive_80' ? '80%' : selectedUfovTrialCount },
             ]}
             sections={GetUfovRuleSections(lang, ufovLabels.subtests[effectiveUfovSubtest])}
             startLabel={ruleLabels.start}
