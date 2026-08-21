@@ -398,25 +398,27 @@ summary:focus-visible {
   width: min(var(--page-max), calc(100% - 56px));
   min-height: 64px;
   margin: 0 auto;
-  gap: 20px;
+  gap: 12px;
   color: var(--text-muted);
   font-size: 0.82rem;
 }
 
 .hub-footer-inner strong {
   color: var(--heading);
+  white-space: nowrap;
 }
 
 .hub-footer-inner nav {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .hub-footer-inner a {
   color: var(--primary);
   font-weight: 700;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .hub-brand {
@@ -1104,6 +1106,7 @@ summary:focus-visible {
 .official-game-actions > button {
   flex: 1 1 0;
   width: auto;
+  white-space: nowrap;
 }
 
 .official-game-actions > a {
@@ -2482,14 +2485,20 @@ summary:focus-visible {
   .hub-footer-inner {
     align-items: flex-start;
     flex-wrap: wrap;
-    width: calc(100% - 32px);
+    width: calc(100% - 24px);
     min-height: 0;
     padding: 12px 0;
-    gap: 6px 14px;
+    gap: 6px 8px;
   }
 
   .hub-footer-inner > span {
     flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .hub-footer-inner nav {
+    flex-wrap: wrap;
+    gap: 6px 8px;
   }
 
   .hub-footer-inner a {

@@ -103,7 +103,7 @@ export function TrainingLobby() {
         catalogUnavailable: '開發者遊戲目前無法載入；內建遊戲仍可正常使用。',
         developer: '開發者',
         developerLibrary: '開發者遊戲',
-        install: '安裝此遊戲',
+        install: '安裝遊戲',
         officialLibrary: '居家訓練網內建遊戲',
         play: '在平台遊玩',
         reviewed: '已審核版本',
