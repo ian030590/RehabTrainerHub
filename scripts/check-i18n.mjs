@@ -53,7 +53,7 @@ function CollectObjectKeys(source, fileName) {
   const sourceFile = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const keys = new Set();
 
-  function visit(node, prefix = '') {
+  function Visit(node, prefix = '') {
     if (ts.isObjectLiteralExpression(node)) {
       for (const property of node.properties) {
         if (!ts.isPropertyAssignment(property)) continue;
@@ -61,17 +61,17 @@ function CollectObjectKeys(source, fileName) {
         if (!name) continue;
         const key = prefix ? `${prefix}.${name}` : name;
         if (ts.isObjectLiteralExpression(property.initializer)) {
-          visit(property.initializer, key);
+          Visit(property.initializer, key);
         } else {
           keys.add(key);
         }
       }
       return;
     }
-    ts.forEachChild(node, (child) => visit(child, prefix));
+    ts.forEachChild(node, (child) => Visit(child, prefix));
   }
 
-  visit(sourceFile);
+  Visit(sourceFile);
   return keys;
 }
 
