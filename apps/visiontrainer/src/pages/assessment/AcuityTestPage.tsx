@@ -38,6 +38,7 @@ import type {
 import { getActiveUser, GetSetting } from '../../utils/settings';
 import { PixelFromDegree } from '../../utils/spatialUtils';
 import { soundManager } from '../../utils/soundManager';
+import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
@@ -193,7 +194,16 @@ export function AcuityTestPage() {
   const gazeExtensionRef = useRef<any>(null);
   const calibrationContainerRef = useRef<HTMLDivElement>(null);
   const calibrationJsPsychRef = useRef<any>(null);
+  const lifecycleHostRef = useRef<HTMLDivElement>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const startAttemptRef = useRef(0);
+
+  const ensureJsPsychLifecycle = useCallback(() => {
+    if (jsPsychLifecycleRef.current || !lifecycleHostRef.current) return jsPsychLifecycleRef.current;
+    const jsPsych = initJsPsych({ display_element: lifecycleHostRef.current });
+    jsPsychLifecycleRef.current = new JsPsychExternalLifecycle(jsPsych);
+    return jsPsychLifecycleRef.current;
+  }, []);
 
   const userName = getActiveUser() || t('exp.unknownUser');
 
@@ -247,8 +257,17 @@ export function AcuityTestPage() {
       setPhase('isi');
     };
 
+    const startManagedRun = async () => {
+      const lifecycle = ensureJsPsychLifecycle();
+      if (!lifecycle) return;
+      await lifecycle.start({
+        moduleId: `vision:acuity:${testType}`,
+        onStart: begin,
+      });
+    };
+
     if (!isWebGazerPL) {
-      begin();
+      await startManagedRun();
       return;
     }
 
@@ -265,7 +284,7 @@ export function AcuityTestPage() {
       extension.resume();
       calibrationJsPsychRef.current = null;
       setWebGazerStatus('ready');
-      begin();
+      await startManagedRun();
     } catch (error) {
       if (attemptId !== startAttemptRef.current) return;
       calibrationJsPsychRef.current = null;
@@ -273,7 +292,7 @@ export function AcuityTestPage() {
       setWebGazerMessage(t('acuity.wgFailed'));
       console.error(error);
     }
-  }, [enterTrainingFullscreen, isWebGazerPL, runWebGazerCalibration, testType, t, webGazerStatus]);
+  }, [ensureJsPsychLifecycle, enterTrainingFullscreen, isWebGazerPL, runWebGazerCalibration, testType, t, webGazerStatus]);
 
   const drawStimulus = useCallback(() => {
     const canvas = canvasRef.current;
@@ -343,6 +362,10 @@ export function AcuityTestPage() {
     if (trialRef.current > totalTrials) {
       setTrialRecords([...recordsRef.current]);
       soundManager.destroy();
+      jsPsychLifecycleRef.current?.finish({
+        module_id: `vision:acuity:${testType}`,
+        trial_count: recordsRef.current.length,
+      });
       setPhase('results');
       return;
     }
@@ -625,6 +648,8 @@ export function AcuityTestPage() {
     } catch {
       // WebGazer cleanup should not block navigation.
     }
+    jsPsychLifecycleRef.current?.dispose();
+    jsPsychLifecycleRef.current = null;
   }, []);
 
   const abortTest = useCallback(() => {
@@ -642,6 +667,7 @@ export function AcuityTestPage() {
     } catch {
       // WebGazer cleanup should not block navigation.
     }
+    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-assessment' });
     calibrationJsPsychRef.current = null;
     navigate('/assessment');
   }, [navigate]);
@@ -653,6 +679,7 @@ export function AcuityTestPage() {
 
   const wrapFullscreenRoot = (content: React.ReactNode) => (
     <div ref={fullscreenRootRef} className={`acuity-fullscreen-root acuity-fullscreen-root-${phase}`}>
+      <div ref={lifecycleHostRef} aria-hidden="true" style={{ display: 'none' }} />
       {content}
       {isWebGazerPL && webGazerStatus === 'starting' && (
         <div className="webgazer-fullscreen-overlay">
@@ -734,7 +761,7 @@ export function AcuityTestPage() {
         {/* Abort button */}
         <button
           className="acuity-abort-btn"
-          onClick={() => navigate('/assessment')}
+          onClick={abortTest}
           title={t('btn.cancel')}
         >
           ✕

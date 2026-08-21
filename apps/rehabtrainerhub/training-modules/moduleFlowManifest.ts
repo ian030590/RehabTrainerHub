@@ -13,8 +13,13 @@ export type TrainingMediaPermission =
   | 'camera-optional'
   | 'camera-or-microphone';
 
+export type TrainingJsPsychLifecycle =
+  | 'native-timeline'
+  | 'external-runtime-adapter';
+
 export interface TrainingModuleFlowManifestEntry {
   flow: readonly TrainingFlowStep[];
+  jsPsychLifecycle: TrainingJsPsychLifecycle;
   mediaPermission: TrainingMediaPermission;
   sourcePath: string;
 }
@@ -40,25 +45,26 @@ const manifestEntries: ReadonlyArray<readonly [
   catalogId: string,
   sourcePath: string,
   mediaPermission?: TrainingMediaPermission,
+  jsPsychLifecycle?: TrainingJsPsychLifecycle,
 ]> = [
-  ['motor:drawing-defense', 'motor/pages/training/DrawingTowerDefenseGame.tsx'],
-  ['motor:asteroid-shield', 'motor/pages/training/AsteroidShieldGame.tsx', 'camera-optional'],
-  ['motor:gesture-battler', 'motor/pages/training/GestureBattlerGame.tsx', 'camera'],
-  ['motor:motor-cortex-rehab', 'motor/pages/training/MotorCortexRehabGame.tsx', 'camera'],
-  ['vision:moving-card', 'vision/experiment/plugins/pixi-moving-card.ts'],
-  ['vision:oculomotor-training', 'vision/experiment/plugins/pixi-oculomotor-training.ts', 'camera-optional'],
-  ['vision:gabor-patching', 'vision/experiment/plugins/pixi-gabor-patching.ts'],
-  ['vision:reading-training', 'vision/experiment/plugins/pixi-reading-training.ts'],
-  ['vision:driving-rehab', 'vision/experiment/plugins/three-driving-rehab.ts'],
-  ['vision:hart-chart', 'vision/pages/training/HartChartPage.tsx'],
-  ['brain:ufov', 'brain/pages/PeripheralAttentionPage.tsx'],
-  ['brain:every-ball-response', 'brain/pages/EveryBallResponsePage.tsx', 'camera-or-microphone'],
-  ['brain:main-concept', 'brain/pages/MainConceptTraining.tsx'],
-  ['brain:minesweeper', 'brain/pages/thinking/MinesweeperGame.tsx'],
+  ['motor:drawing-defense', 'motor/pages/training/DrawingTowerDefenseGame.tsx', 'none', 'external-runtime-adapter'],
+  ['motor:asteroid-shield', 'motor/pages/training/AsteroidShieldGame.tsx', 'camera-optional', 'external-runtime-adapter'],
+  ['motor:gesture-battler', 'motor/pages/training/GestureBattlerGame.tsx', 'camera', 'external-runtime-adapter'],
+  ['motor:motor-cortex-rehab', 'motor/pages/training/MotorCortexRehabGame.tsx', 'camera', 'external-runtime-adapter'],
+  ['vision:moving-card', 'vision/experiment/plugins/pixi-moving-card.ts', 'none', 'native-timeline'],
+  ['vision:oculomotor-training', 'vision/experiment/plugins/pixi-oculomotor-training.ts', 'camera-optional', 'native-timeline'],
+  ['vision:gabor-patching', 'vision/experiment/plugins/pixi-gabor-patching.ts', 'none', 'native-timeline'],
+  ['vision:reading-training', 'vision/experiment/plugins/pixi-reading-training.ts', 'none', 'native-timeline'],
+  ['vision:driving-rehab', 'vision/experiment/plugins/three-driving-rehab.ts', 'none', 'native-timeline'],
+  ['vision:hart-chart', 'vision/pages/training/HartChartPage.tsx', 'none', 'external-runtime-adapter'],
+  ['brain:ufov', 'brain/pages/PeripheralAttentionPage.tsx', 'none', 'native-timeline'],
+  ['brain:every-ball-response', 'brain/pages/EveryBallResponsePage.tsx', 'camera-or-microphone', 'native-timeline'],
+  ['brain:main-concept', 'brain/pages/MainConceptTraining.tsx', 'none', 'external-runtime-adapter'],
+  ['brain:minesweeper', 'brain/pages/thinking/MinesweeperGame.tsx', 'none', 'external-runtime-adapter'],
   ...referenceCognitiveIds.map((catalogId) => (
-    [catalogId, 'brain/pages/thinking/ReferenceCognitiveGame.tsx'] as const
+    [catalogId, 'brain/pages/thinking/ReferenceCognitiveGame.tsx', 'none', 'external-runtime-adapter'] as const
   )),
-  ['mouth:tongue-catch', 'mouth/pages/training/TongueCatchGame.tsx', 'camera'],
+  ['mouth:tongue-catch', 'mouth/pages/training/TongueCatchGame.tsx', 'camera', 'external-runtime-adapter'],
 ];
 
 export const trainingModuleFlowManifest: Readonly<Record<
@@ -68,10 +74,12 @@ export const trainingModuleFlowManifest: Readonly<Record<
   catalogId,
   sourcePath,
   mediaPermission = 'none',
+  jsPsychLifecycle = 'external-runtime-adapter',
 ]) => [
   catalogId,
   {
     flow: standardTrainingFlow,
+    jsPsychLifecycle,
     mediaPermission,
     sourcePath,
   },

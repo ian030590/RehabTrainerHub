@@ -347,6 +347,21 @@ assert.deepEqual(
   'Every catalog module must have exactly one explicit jsPsych lifecycle classification.',
 );
 
+const manifestLifecycleValues = new Set(['native-timeline', 'external-runtime-adapter']);
+for (const catalogId of catalogIds) {
+  const lifecycle = trainingModuleFlowManifest[catalogId].jsPsychLifecycle;
+  assert.ok(
+    manifestLifecycleValues.has(lifecycle),
+    `${catalogId} must declare a valid jsPsych lifecycle in the flow manifest.`,
+  );
+  const expectedLifecycle = jsPsychLifecycleGroups.find(({ ids }) => ids.includes(catalogId))?.status;
+  assert.equal(
+    lifecycle,
+    expectedLifecycle,
+    `${catalogId} flow manifest lifecycle must match its executable lifecycle evidence.`,
+  );
+}
+
 for (const { files, forbiddenTokens = [], ids, status, tokens } of jsPsychLifecycleGroups) {
   const source = files.map((file) => (
     readFileSync(resolve(moduleRoot, file), 'utf8')

@@ -23,6 +23,7 @@ import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfi
 import { trainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { GetTrainingCatalogModules } from '@rehab-trainer/hub-modules/catalog';
 import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
+import { GetPeripheralAttentionConfigLabels } from '@rehab-trainer/ui/i18n/peripheralAttention';
 import { useT, type TranslationKey } from '../i18n';
 import { GetReferenceCognitiveModules } from './thinking/cognitive/constants';
 import type { ReferenceGameId } from './thinking/cognitive/types';
@@ -118,7 +119,10 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const [ufovVehicleVisualAngleDeg, setUfovVehicleVisualAngleDeg] = useState(2.5);
   const [isUfovRulesOpen, setIsUfovRulesOpen] = useState(false);
   useTrainingConfigReady(isUfovConfigOpen);
-  const ufovLabels = GetUfovConfigLabels(lang);
+  const ufovLabels = {
+    ...GetUfovConfigLabels(lang),
+    anglesTitle: GetPeripheralAttentionConfigLabels(lang).anglesTitle,
+  };
   const isSmallScreenDevice = IsMobileOrTabletDevice(DetectDisplayDeviceKind());
   const effectiveUfovSubtest = isSmallScreenDevice ? 1 : selectedUfovSubtest;
   const ruleLabels = GetBrainRuleLabels(lang);
