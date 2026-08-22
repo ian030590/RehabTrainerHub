@@ -127,6 +127,13 @@ class WebGazerInitCameraPlugin implements JsPsychPlugin<InitCameraInfo> {
     const startedAt = performance.now();
     const readyTimeoutMs = Math.max(5000, Number(trial.ready_timeout_ms) || 20000);
     const readyStableMs = Math.max(100, Number(trial.ready_stable_ms) || 350);
+    const buttonText = trial.button_text ?? 'Start calibration';
+    const loadingText = trial.loading_text ?? 'Starting the camera...';
+    const waitingFaceText = trial.waiting_face_text ?? 'Center your face in the camera view. The button will unlock when tracking is ready.';
+    const readyText = trial.ready_text ?? 'Face detected. You can start calibration.';
+    const timeoutText = trial.timeout_text ?? 'Eye tracking did not become ready. Check camera permission and lighting, then retry.';
+    const retryText = trial.retry_text ?? 'Retry';
+    const errorText = trial.error_text ?? 'The eye tracker could not start. Check camera permission and retry.';
     let pollId: number | undefined;
     let timeoutId: number | undefined;
     let stableSince: number | undefined;
@@ -160,7 +167,7 @@ class WebGazerInitCameraPlugin implements JsPsychPlugin<InitCameraInfo> {
       this.jsPsych.finishTrial({ webgazer_status: 'render_error' });
       return;
     }
-    button.textContent = trial.button_text;
+    button.textContent = buttonText;
 
     const clearWaiters = () => {
       if (pollId !== undefined) window.clearInterval(pollId);
@@ -204,8 +211,8 @@ class WebGazerInitCameraPlugin implements JsPsychPlugin<InitCameraInfo> {
       const currentAttempt = ++attempt;
       clearWaiters();
       button.disabled = true;
-      button.textContent = trial.button_text;
-      setStatus(trial.loading_text);
+      button.textContent = buttonText;
+      setStatus(loadingText);
 
       try {
         if (!extension) throw new Error('WebGazer extension is not available');
@@ -220,7 +227,7 @@ class WebGazerInitCameraPlugin implements JsPsychPlugin<InitCameraInfo> {
         }
         extension.showVideo?.();
         extension.resume?.();
-        setStatus(trial.waiting_face_text);
+        setStatus(waitingFaceText);
 
         await new Promise<void>((resolve, reject) => {
           const startedWaitingAt = performance.now();
@@ -244,25 +251,25 @@ class WebGazerInitCameraPlugin implements JsPsychPlugin<InitCameraInfo> {
 
         if (currentAttempt !== attempt || disposed) return;
         button.disabled = false;
-        button.textContent = trial.button_text;
-        setStatus(trial.ready_text);
+        button.textContent = buttonText;
+        setStatus(readyText);
       } catch (error) {
         if (currentAttempt !== attempt || disposed) return;
         extension?.pause?.();
         extension?.hideVideo?.();
         button.disabled = false;
-        button.textContent = trial.retry_text;
+        button.textContent = retryText;
         setStatus(
           error instanceof Error && error.message.includes('timed out')
-            ? trial.timeout_text
-            : trial.error_text,
+            ? timeoutText
+            : errorText,
           true,
         );
       }
     };
 
     button.addEventListener('click', () => {
-      if (!button.disabled && button.textContent === trial.button_text && IsFaceReady(extension ?? {})) {
+      if (!button.disabled && button.textContent === buttonText && IsFaceReady(extension ?? {})) {
         finish();
       } else if (!button.disabled) {
         void runAttempt();

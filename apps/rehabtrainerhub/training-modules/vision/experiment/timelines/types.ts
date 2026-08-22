@@ -30,6 +30,12 @@ export interface BuildTimelineOverrides {
       instruction2: string;
       instruction3: string;
       title: string;
+      loadingText?: string;
+      waitingFaceText?: string;
+      readyText?: string;
+      timeoutText?: string;
+      retryText?: string;
+      errorText?: string;
     };
   };
   gabor?: {
