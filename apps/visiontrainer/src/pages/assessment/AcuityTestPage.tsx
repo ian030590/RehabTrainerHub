@@ -45,6 +45,7 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
 import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
 import {
+  CleanupWebGazerRuntime,
   CreateWebGazerCalibrationTimeline,
   ResetWebGazerCalibrationData,
 } from '../../utils/webgazerCalibration';
@@ -230,6 +231,12 @@ export function AcuityTestPage() {
       instruction2: t('settings.wg.inst2'),
       instruction3: t('settings.wg.inst3'),
       buttonText: t('settings.wg.startBtn'),
+      loadingText: t('settings.wg.loading'),
+      waitingFaceText: t('settings.wg.waitingFace'),
+      readyText: t('settings.wg.ready'),
+      timeoutText: t('settings.wg.timeout'),
+      retryText: t('settings.wg.retry'),
+      errorText: t('settings.wg.errorStart'),
     }) as any);
 
     if (attemptId !== startAttemptRef.current) return null;
@@ -628,6 +635,7 @@ export function AcuityTestPage() {
     } catch {
       // WebGazer cleanup should not block returning to the intro.
     }
+    CleanupWebGazerRuntime();
     calibrationJsPsychRef.current = null;
     setWebGazerStatus('idle');
     setWebGazerMessage('');
@@ -648,6 +656,7 @@ export function AcuityTestPage() {
     } catch {
       // WebGazer cleanup should not block navigation.
     }
+    CleanupWebGazerRuntime();
     jsPsychLifecycleRef.current?.dispose();
     jsPsychLifecycleRef.current = null;
   }, []);
@@ -667,6 +676,7 @@ export function AcuityTestPage() {
     } catch {
       // WebGazer cleanup should not block navigation.
     }
+    CleanupWebGazerRuntime();
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-assessment' });
     calibrationJsPsychRef.current = null;
     navigate('/assessment');

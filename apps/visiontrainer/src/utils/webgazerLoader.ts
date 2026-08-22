@@ -1,4 +1,10 @@
-type WebGazerWindow = Window & { webgazer?: unknown };
+export const webGazerRuntimeVersion = '3.5.3';
+
+type WebGazerWindow = Window & {
+  webgazer?: {
+    params?: { faceMeshSolutionPath?: string };
+  };
+};
 
 let loadPromise: Promise<void> | null = null;
 
@@ -18,9 +24,9 @@ function GetWebGazerScriptUrls(): string[] {
   const urls: string[] = [];
   const assetBaseUrl = NormalizeHttpsUrl(import.meta.env.VITE_AI_ASSET_BASE_URL);
   if (assetBaseUrl) {
-    urls.push(`${assetBaseUrl}/ai/webgazer/local-v1/webgazer.js`);
+    urls.push(`${assetBaseUrl}/ai/webgazer/${webGazerRuntimeVersion}/webgazer.js`);
   }
-  urls.push(new URL(`${import.meta.env.BASE_URL}webgazer.js`, window.location.origin).href);
+  urls.push(new URL(`${import.meta.env.BASE_URL}assets/webgazer/${webGazerRuntimeVersion}/webgazer.js`, window.location.origin).href);
   return [...new Set(urls)];
 }
 
@@ -29,7 +35,11 @@ async function LoadFirstAvailableScript(urls: readonly string[]): Promise<void> 
   for (const url of urls) {
     try {
       await LoadScript(url);
-      if ((window as WebGazerWindow).webgazer) return;
+      const webgazer = (window as WebGazerWindow).webgazer;
+      if (webgazer) {
+        ConfigureWebGazerAssetPath(webgazer, url);
+        return;
+      }
       throw new Error(`WebGazer did not initialize after loading ${url}`);
     } catch (error) {
       lastError = error;
@@ -44,13 +54,26 @@ function LoadScript(url: string): Promise<void> {
     script.async = true;
     script.dataset.webgazerRuntime = 'true';
     script.src = url;
-    script.addEventListener('load', () => resolve(), { once: true });
+    const timeoutId = window.setTimeout(() => {
+      script.remove();
+      reject(new Error(`Timed out loading WebGazer from ${url}`));
+    }, 15000);
+    script.addEventListener('load', () => {
+      window.clearTimeout(timeoutId);
+      resolve();
+    }, { once: true });
     script.addEventListener('error', () => {
+      window.clearTimeout(timeoutId);
       script.remove();
       reject(new Error(`Unable to load WebGazer from ${url}`));
     }, { once: true });
     document.head.appendChild(script);
   });
+}
+
+function ConfigureWebGazerAssetPath(webgazer: NonNullable<WebGazerWindow['webgazer']>, scriptUrl: string) {
+  if (!webgazer.params) return;
+  webgazer.params.faceMeshSolutionPath = new URL('./mediapipe/face_mesh/', scriptUrl).href;
 }
 
 function NormalizeHttpsUrl(value?: string): string {

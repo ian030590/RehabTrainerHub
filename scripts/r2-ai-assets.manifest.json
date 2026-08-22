@@ -45,11 +45,74 @@
       "sha256": "8a3092d34c79d3f57e6ba8592105e8a90f6b07c27891ffecd14cca428bfd3e31"
     },
     {
-      "source": "apps/visiontrainer/public/webgazer.js",
-      "key": "ai/webgazer/local-v1/webgazer.js",
+      "source": "apps/visiontrainer/public/assets/webgazer/3.5.3/webgazer.js",
+      "key": "ai/webgazer/3.5.3/webgazer.js",
       "contentType": "text/javascript; charset=utf-8",
-      "size": 3492461,
-      "sha256": "65840eaae573c10c1d015b432b447c04607bb2d709be6302482c0e7582975dde"
+      "size": 1895169,
+      "sha256": "e276d085eb490b5ba65481c368371be03b1a358d12d95336af0a8239f643f8e0"
+    },
+    {
+      "source": "apps/visiontrainer/public/assets/webgazer/3.5.3/LICENSE.md",
+      "key": "ai/webgazer/3.5.3/LICENSE.md",
+      "contentType": "text/plain; charset=utf-8",
+      "size": 732,
+      "sha256": "b13be3f2b49a9fc6efb72a7201061e4b77da4a2dfb2c2b0e89d625295c4398f6"
+    },
+    {
+      "source": "apps/visiontrainer/public/assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh.binarypb",
+      "key": "ai/webgazer/3.5.3/mediapipe/face_mesh/face_mesh.binarypb",
+      "contentType": "application/octet-stream",
+      "size": 939,
+      "sha256": "139546bf05aebb33e2611b6b945f3a1629c316ca924e33cec1547c85ddef9f53"
+    },
+    {
+      "source": "apps/visiontrainer/public/assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh.js",
+      "key": "ai/webgazer/3.5.3/mediapipe/face_mesh/face_mesh.js",
+      "contentType": "text/javascript; charset=utf-8",
+      "size": 65044,
+      "sha256": "a1c69dd75610526040494cd5fdc5ce0882f520184632ab3bf08d5ae6889fe7b0"
+    },
+    {
+      "source": "apps/visiontrainer/public/assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_packed_assets.data",
+      "key": "ai/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_packed_assets.data",
+      "contentType": "application/octet-stream",
+      "size": 3986256,
+      "sha256": "dbe5905c582c0462cdaea17e7e6ecea92edaa8cccc515c5e2e7291f2cbb5fb99"
+    },
+    {
+      "source": "apps/visiontrainer/public/assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_packed_assets_loader.js",
+      "key": "ai/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_packed_assets_loader.js",
+      "contentType": "text/javascript; charset=utf-8",
+      "size": 9126,
+      "sha256": "fd8614e85cf1f7ecf8ea371ec088ae0e85941cd6155e8b80330175e8129b58af"
+    },
+    {
+      "source": "apps/visiontrainer/public/assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_simd_wasm_bin.js",
+      "key": "ai/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_simd_wasm_bin.js",
+      "contentType": "text/javascript; charset=utf-8",
+      "size": 330187,
+      "sha256": "e331fd5b355adcf08b92b74417e9437d5877d2a9acace8cac1d6c678785b3f57"
+    },
+    {
+      "source": "apps/visiontrainer/public/assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_simd_wasm_bin.wasm",
+      "key": "ai/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_simd_wasm_bin.wasm",
+      "contentType": "application/wasm",
+      "size": 6161697,
+      "sha256": "fb9e9cfe8b83a914e40eab2efd3b0d92a61f82a7c968589f223ab2a7e331d314"
+    },
+    {
+      "source": "apps/visiontrainer/public/assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_wasm_bin.js",
+      "key": "ai/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_wasm_bin.js",
+      "contentType": "text/javascript; charset=utf-8",
+      "size": 330182,
+      "sha256": "68dcacddb41013a2e23860565e0e1103c7f6865c722d3bfccdf6f9f7cc717fdf"
+    },
+    {
+      "source": "apps/visiontrainer/public/assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_wasm_bin.wasm",
+      "key": "ai/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_wasm_bin.wasm",
+      "contentType": "application/wasm",
+      "size": 6084312,
+      "sha256": "54522fa25c505bf094242f969b4e4919125eb0dadccb568f2af171bbd65865f9"
     },
     {
       "sourceUrl": "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",

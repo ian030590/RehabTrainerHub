@@ -21,7 +21,7 @@ import { DestroyPixiTrainingRuntime } from '../../utils/pixiPool';
 import { soundManager } from '../../utils/soundManager';
 import { SaveTrainingRecord } from '../../utils/trainingRecords';
 import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
-import { ResetWebGazerCalibrationData } from '../../utils/webgazerCalibration';
+import { CleanupWebGazerRuntime, ResetWebGazerCalibrationData } from '../../utils/webgazerCalibration';
 import {
   GetDrivingInputCapabilitiesSnapshot,
   IsDrivingControlModeAvailable,
@@ -279,6 +279,12 @@ function TrainingRuntimePage() {
             instruction2: t('settings.wg.inst2'),
             instruction3: t('settings.wg.inst3'),
             buttonText: t('settings.wg.startBtn'),
+            loadingText: t('settings.wg.loading'),
+            waitingFaceText: t('settings.wg.waitingFace'),
+            readyText: t('settings.wg.ready'),
+            timeoutText: t('settings.wg.timeout'),
+            retryText: t('settings.wg.retry'),
+            errorText: t('settings.wg.errorStart'),
           },
         },
         gabor: {
@@ -320,10 +326,12 @@ function TrainingRuntimePage() {
       DestroyPixiTrainingRuntime(moduleId);
       if (moduleId === 'driving-rehab') DisposeDrivingRehabRuntime();
       const activeJsPsych = jsPsychRef.current;
-      if (!activeJsPsych) return;
-      skipFinishRef.current = true;
       jsPsychRef.current = null;
-      activeJsPsych.abortExperiment();
+      if (activeJsPsych) {
+        skipFinishRef.current = true;
+        activeJsPsych.abortExperiment();
+      }
+      CleanupWebGazerRuntime();
     };
   }, [
     phase,

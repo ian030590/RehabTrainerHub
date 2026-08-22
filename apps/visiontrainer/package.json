@@ -22,7 +22,6 @@
     "@jspsych/extension-webgazer": "^1.2.0",
     "@jspsych/plugin-html-button-response": "^2.1.0",
     "@jspsych/plugin-webgazer-calibrate": "^2.1.0",
-    "@jspsych/plugin-webgazer-init-camera": "^2.1.0",
     "jspsych": "^8.2.1",
     "pixi.js": "^8.18.1",
     "qrcode": "^1.5.4",

@@ -27,6 +27,7 @@ import { PixelFromMillimeter } from '../../utils/spatialUtils';
 import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
 import {
   CreateWebGazerCalibrationTimeline,
+  CleanupWebGazerRuntime,
   ResetWebGazerCalibrationData,
 } from '../../utils/webgazerCalibration';
 
@@ -265,6 +266,7 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
   // React commits a conditionally-rendered Portal to the DOM.
   const containerRef = useRef<HTMLDivElement>(null);
   const jsPsychRef = useRef<any>(null);
+  const calibrationCancelledRef = useRef(false);
   const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const calibratedAt = GetSetting('webGazerCalibrationAt');
@@ -273,11 +275,13 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
   React.useEffect(() => {
     return () => {
       if (jsPsychRef.current) {
+        calibrationCancelledRef.current = true;
         try {
-          jsPsychRef.current.endExperiment?.();
+          jsPsychRef.current.abortExperiment?.();
         } catch {
           // Ignore cleanup errors
         }
+        CleanupWebGazerRuntime();
         jsPsychRef.current = null;
       }
     };
@@ -322,6 +326,7 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
 
   const startJsPsych = (container: HTMLDivElement) => {
     container.replaceChildren();
+    calibrationCancelledRef.current = false;
     try {
       const jsPsych = initJsPsych({
         display_element: container,
@@ -329,6 +334,10 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
           { type: WebGazerExtension },
         ] as any,
         on_finish: () => {
+          if (calibrationCancelledRef.current) {
+            jsPsychRef.current = null;
+            return;
+          }
           SetSetting('webGazerCalibrationAt', new Date().toISOString());
           jsPsychRef.current = null;
           setStatus('done');
@@ -345,6 +354,12 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
         instruction2: t('settings.wg.inst2'),
         instruction3: t('settings.wg.inst3'),
         buttonText: t('settings.wg.startBtn'),
+        loadingText: t('settings.wg.loading'),
+        waitingFaceText: t('settings.wg.waitingFace'),
+        readyText: t('settings.wg.ready'),
+        timeoutText: t('settings.wg.timeout'),
+        retryText: t('settings.wg.retry'),
+        errorText: t('settings.wg.errorStart'),
       }) as any);
     } catch (error) {
       jsPsychRef.current = null;
@@ -394,12 +409,15 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
 
   const cancelCalibration = () => {
     if (jsPsychRef.current) {
+      calibrationCancelledRef.current = true;
+      const activeJsPsych = jsPsychRef.current;
+      jsPsychRef.current = null;
       try {
-        jsPsychRef.current.endExperiment?.();
+        activeJsPsych.abortExperiment?.();
       } catch {
         // Ignore cleanup errors
       }
-      jsPsychRef.current = null;
+      CleanupWebGazerRuntime();
     }
     setStatus('idle');
     setMessage('');

@@ -289,6 +289,18 @@ body #webgazer-calibrate-container #calibration-point {
   cursor: not-allowed;
 }
 
+.webgazer-fullscreen-stage #webgazer-init-status {
+  min-height: 1.5em;
+  margin: 12px 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.webgazer-fullscreen-stage #webgazer-init-status.error {
+  color: var(--danger, #c0392b);
+}
+
 .webgazer-fullscreen-stage .jspsych-btn:hover:not(:disabled) {
   opacity: 0.85;
 }
