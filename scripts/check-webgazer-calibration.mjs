@@ -17,6 +17,7 @@ const en = await read('apps/visiontrainer/src/i18n/en.ts');
 const manifest = JSON.parse(await read('scripts/r2-ai-assets.manifest.json'));
 const runtimePath = 'apps/visiontrainer/public/assets/webgazer/3.5.3/webgazer.js';
 const runtime = await read(runtimePath);
+const gitAttributes = await read('.gitattributes');
 
 assert.equal(
   calibration.includes("@jspsych/plugin-webgazer-init-camera"),
@@ -41,6 +42,10 @@ assert.equal(loader.includes('local-v1'), false, 'the obsolete WebGazer runtime 
 assert.ok(runtime.includes('faceMeshSolutionPath:"./mediapipe/face_mesh"'), 'the self-hosted runtime must default to local MediaPipe assets');
 assert.equal(settings.includes('endExperiment'), false, 'jsPsych cleanup must use the supported abortExperiment API');
 assert.ok(settings.includes('abortExperiment'), 'settings cancel must abort the active jsPsych timeline');
+assert.ok(
+  gitAttributes.includes('apps/visiontrainer/public/assets/webgazer/3.5.3/** -text'),
+  'vendored WebGazer assets must be protected from line-ending conversion',
+);
 
 const runtimeAssets = [
   ['webgazer.js', 'text/javascript; charset=utf-8'],

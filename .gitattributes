@@ -1,0 +1,4 @@
+# Vendored WebGazer runtime files are integrity-pinned R2 assets. Keep their
+# upstream bytes unchanged on every checkout; line-ending conversion would
+# invalidate the manifest size and SHA-256 values.
+apps/visiontrainer/public/assets/webgazer/3.5.3/** -text
