@@ -108,9 +108,11 @@ assert.deepEqual(hub.retiredProjectNames.sort(), [
   'visiontrainer',
 ]);
 for (const projectName of hub.retiredProjectNames) {
+  const pruneIndex = output.indexOf(`cloudflare pages project deployments prune ${projectName}`);
   const clearIndex = output.indexOf(`cloudflare pages project domains clear ${projectName}`);
   const retireIndex = output.indexOf(`cloudflare pages project retire ${projectName}`);
-  assert.ok(clearIndex >= 0, `Retired project domains must be cleared: ${projectName}`);
+  assert.ok(pruneIndex >= 0, `Retired project deployments must be pruned: ${projectName}`);
+  assert.ok(pruneIndex < clearIndex, `Deployments must be pruned before domains are cleared: ${projectName}`);
   assert.ok(clearIndex < retireIndex, `Retired project domains must be cleared before deletion: ${projectName}`);
 }
 for (const hostname of hub.redirectHostnames) {
@@ -199,6 +201,74 @@ assert.deepEqual(sanitizedDeploymentEnvironment, {
   CLOUDFLARE_ACCOUNT_ID: 'account-id',
   CLOUDFLARE_API_TOKEN: 'deployment-token',
 });
+
+await CheckRetiredProjectCleanup();
+
+async function CheckRetiredProjectCleanup() {
+  const originalFetch = globalThis.fetch;
+  const originalAccountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const originalApiToken = process.env.CLOUDFLARE_API_TOKEN;
+  const requests = [];
+  let deploymentLists = 0;
+  process.env.CLOUDFLARE_ACCOUNT_ID = 'test-account';
+  process.env.CLOUDFLARE_API_TOKEN = 'test-token';
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(input);
+    const path = `${url.pathname.slice(url.pathname.indexOf('/pages/projects/'))}${url.search}`;
+    const method = init.method ?? 'GET';
+    requests.push(`${method} ${path}`);
+
+    if (method === 'GET' && path === '/pages/projects/visiontrainer') {
+      return JsonResponse({ canonical_deployment: { id: 'active-deployment' } });
+    }
+    if (method === 'GET' && /^\/pages\/projects\/(?:motor|brain|mouth)trainer$/.test(path)) {
+      return new Response(null, { status: 404 });
+    }
+    if (method === 'GET' && path === '/pages/projects/visiontrainer/deployments') {
+      deploymentLists += 1;
+      return JsonResponse(deploymentLists === 1
+        ? [{ id: 'old-deployment-1' }, { id: 'active-deployment' }]
+        : deploymentLists === 2
+          ? [{ id: 'old-deployment-2' }, { id: 'active-deployment' }]
+          : [{ id: 'active-deployment' }]);
+    }
+    if (method === 'GET' && path === '/pages/projects/visiontrainer/domains') {
+      return JsonResponse([{ name: 'vision.trainerhub.cc' }]);
+    }
+    if (method === 'GET' && path === '/pages/projects/rehabtrainerhub/domains') {
+      return JsonResponse(['trainerhub.cc', ...hub.redirectHostnames].map((name) => ({ name, status: 'active' })));
+    }
+    if (method === 'DELETE') return JsonResponse({});
+    throw new Error(`Unexpected mocked Cloudflare request: ${method} ${path}`);
+  };
+
+  try {
+    await import(`./sync-cloudflare-pages-domains.mjs?test=${Date.now()}`);
+  } finally {
+    globalThis.fetch = originalFetch;
+    RestoreEnvironment('CLOUDFLARE_ACCOUNT_ID', originalAccountId);
+    RestoreEnvironment('CLOUDFLARE_API_TOKEN', originalApiToken);
+  }
+
+  const firstDelete = requests.indexOf('DELETE /pages/projects/visiontrainer/deployments/old-deployment-1?force=true');
+  const secondDelete = requests.indexOf('DELETE /pages/projects/visiontrainer/deployments/old-deployment-2?force=true');
+  const domainDelete = requests.indexOf('DELETE /pages/projects/visiontrainer/domains/vision.trainerhub.cc');
+  const projectDelete = requests.indexOf('DELETE /pages/projects/visiontrainer');
+  const hubDomainCheck = requests.indexOf('GET /pages/projects/rehabtrainerhub/domains');
+  assert.equal(deploymentLists, 3, 'Deployment cleanup must relist until only production remains.');
+  assert.equal(requests.some((request) => request.includes('/deployments/active-deployment')), false);
+  for (const index of [firstDelete, secondDelete, domainDelete, projectDelete, hubDomainCheck]) assert.ok(index >= 0);
+  assert.ok(firstDelete < secondDelete && secondDelete < domainDelete && domainDelete < projectDelete && projectDelete < hubDomainCheck);
+}
+
+function JsonResponse(result) {
+  return Response.json({ success: true, result });
+}
+
+function RestoreEnvironment(name, value) {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
+}
 
 function EscapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

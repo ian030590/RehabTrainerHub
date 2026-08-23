@@ -35,10 +35,10 @@
 - `trainerhub-user-games.pages.dev` 保持獨立，禁止使用 `trainerhub.cc` 子網域。
 - 四個退役 trainer custom domains 綁到 `rehabtrainerhub`，由
   `functions/_middleware.js` 對任何路徑回 301。
-- `scripts/sync-cloudflare-pages-domains.mjs` 在 Hub 部署完成後，先解除舊
+- `scripts/sync-cloudflare-pages-domains.mjs` 在 Hub 部署完成後，先清除舊
   `motortrainer`、`visiontrainer`、`braintrainer`、`mouthtrainer` Pages projects
-  的 custom domains，再刪除舊 projects 並將這些 domains 加到 Hub。此流程需要
-  Pages Write 權限。
+  的非現行 deployments，再解除 custom domains、刪除舊 projects，並將這些
+  domains 加到 Hub。此流程需要 Pages Write 權限。
 
 唯一 sitemap 是 `https://trainerhub.cc/sitemap.xml`；不得重新建立 trainer
 sitemap、canonical、manifest、相關網站頁或 auth origin。
