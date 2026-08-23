@@ -108,10 +108,20 @@ assert.deepEqual(hub.retiredProjectNames.sort(), [
   'visiontrainer',
 ]);
 for (const projectName of hub.retiredProjectNames) {
-  assert.ok(output.includes(`cloudflare pages project retire ${projectName}`));
+  const clearIndex = output.indexOf(`cloudflare pages project domains clear ${projectName}`);
+  const retireIndex = output.indexOf(`cloudflare pages project retire ${projectName}`);
+  assert.ok(clearIndex >= 0, `Retired project domains must be cleared: ${projectName}`);
+  assert.ok(clearIndex < retireIndex, `Retired project domains must be cleared before deletion: ${projectName}`);
 }
 for (const hostname of hub.redirectHostnames) {
-  assert.ok(output.includes(`cloudflare pages domain ensure ${hub.projectName} ${hostname}`));
+  const ensureIndex = output.indexOf(`cloudflare pages domain ensure ${hub.projectName} ${hostname}`);
+  assert.ok(ensureIndex >= 0, `Redirect domain must be assigned to the Hub: ${hostname}`);
+  for (const projectName of hub.retiredProjectNames) {
+    assert.ok(
+      output.indexOf(`cloudflare pages project retire ${projectName}`) < ensureIndex,
+      `Retired projects must be deleted before assigning ${hostname} to the Hub.`,
+    );
+  }
 }
 const hubEnvironmentLine = output
   .split(/\r?\n/)

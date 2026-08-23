@@ -17,12 +17,21 @@ for (const app of pagesApps) {
       throw new Error(`Refusing to retire active Pages project: ${projectName}`);
     }
     if (dryRun) {
+      console.log(`$ cloudflare pages project domains clear ${projectName}`);
       console.log(`$ cloudflare pages project retire ${projectName}`);
       continue;
     }
     if (await ProjectExists(projectName)) {
+      const projectPath = `/pages/projects/${encodeURIComponent(projectName)}`;
+      const domains = await ApiRequest('GET', `${projectPath}/domains`);
+      if (!Array.isArray(domains)) throw new Error(`Unable to list Pages domains for ${projectName}.`);
+      for (const domain of domains) {
+        if (!domain?.name) throw new Error(`Pages project ${projectName} returned a domain without a name.`);
+        console.log(`Removing ${domain.name} from ${projectName}...`);
+        await ApiRequest('DELETE', `${projectPath}/domains/${encodeURIComponent(domain.name)}`);
+      }
       console.log(`Retiring Cloudflare Pages project ${projectName}...`);
-      await ApiRequest('DELETE', `/pages/projects/${encodeURIComponent(projectName)}`);
+      await ApiRequest('DELETE', projectPath);
     }
   }
 }
