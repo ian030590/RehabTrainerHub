@@ -4,6 +4,10 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appsRoot = join(repoRoot, 'apps');
+const trainingRuntimesRoot = join(appsRoot, 'rehabtrainerhub', 'training-runtimes');
+const trainingRuntimeDirectories = readdirSync(trainingRuntimesRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => join(trainingRuntimesRoot, entry.name));
 const forbiddenRuntimeImports = [
   '@jspsych',
   '@mediapipe',
@@ -19,25 +23,32 @@ const appEntrypoints = readdirSync(appsRoot, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => `apps/${entry.name}/src/App.tsx`)
   .filter((file) => existsSync(resolve(repoRoot, file)));
+appEntrypoints.push(...trainingRuntimeDirectories
+  .map((directory) => join(directory, 'src', 'App.tsx'))
+  .filter(existsSync));
 
 const appRuntimeEntrypoints = readdirSync(appsRoot, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => `apps/${entry.name}/src/main.tsx`)
   .filter((file) => existsSync(resolve(repoRoot, file)));
+appRuntimeEntrypoints.push(...trainingRuntimeDirectories
+  .map((directory) => join(directory, 'src', 'main.tsx'))
+  .filter(existsSync));
 
 const viteConfigFiles = readdirSync(appsRoot, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => `apps/${entry.name}/vite.config.ts`)
   .filter((file) => existsSync(resolve(repoRoot, file)));
+viteConfigFiles.push(...trainingRuntimeDirectories
+  .map((directory) => join(directory, 'vite.config.ts'))
+  .filter(existsSync));
 
-const trainerHtmlEntrypoints = readdirSync(appsRoot, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && entry.name.endsWith('trainer'))
-  .map((entry) => `apps/${entry.name}/index.html`)
-  .filter((file) => existsSync(resolve(repoRoot, file)));
+const trainerHtmlEntrypoints = trainingRuntimeDirectories
+  .map((directory) => join(directory, 'index.html'))
+  .filter(existsSync);
 
-const trainerSourceFiles = readdirSync(appsRoot, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && entry.name.endsWith('trainer'))
-  .flatMap((entry) => CollectSourceFiles(resolve(appsRoot, entry.name, 'src')));
+const trainerSourceFiles = trainingRuntimeDirectories
+  .flatMap((directory) => CollectSourceFiles(join(directory, 'src')));
 const hubTrainingModuleSourceFiles = CollectSourceFiles(
   resolve(appsRoot, 'rehabtrainerhub', 'training-modules'),
 );
@@ -45,7 +56,7 @@ const hubTrainingModuleSourceFiles = CollectSourceFiles(
 const protectedEntrypoints = Unique([
   ...appRuntimeEntrypoints,
   ...appEntrypoints,
-  'apps/motortrainer/src/pages/HomePage.tsx',
+  'apps/rehabtrainerhub/training-runtimes/motor/src/App.tsx',
   'apps/rehabtrainerhub/training-modules/motor/pages/training/UpperLimbTraining.tsx',
   'apps/rehabtrainerhub/training-modules/brain/pages/thinking/ThinkingTraining.tsx',
   'apps/rehabtrainerhub/training-modules/mouth/pages/training/OralTraining.tsx',

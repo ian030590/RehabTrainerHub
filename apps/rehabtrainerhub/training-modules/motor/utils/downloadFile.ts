@@ -1,1 +1,1 @@
-export * from '../../../../motortrainer/src/utils/downloadFile';
+export * from '../../../training-runtimes/motor/src/utils/downloadFile';

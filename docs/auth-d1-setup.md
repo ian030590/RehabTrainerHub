@@ -1,18 +1,10 @@
 # Auth and D1 Setup
 
-RehabTrainerHub uses the Hub Pages project as the central auth API for:
+Rehab Trainer Hub 使用同源 Pages Functions 提供 Google OAuth、個人資料與
+訓練紀錄 D1 儲存。四個內建 training runtimes 位於 `trainerhub.cc/runtimes/*`，
+不再使用跨站 bearer-token 還原或 trainer origin 白名單。
 
-- Google OAuth login
-- Anonymous profile collection after login
-- Signed-in training record storage in Cloudflare D1
-
-MotorTrainer, VisionTrainer, and future Pages apps call the Hub API with a bearer token. If there is no token, records stay in each browser's IndexedDB.
-
-The Hub also sets a first-party session cookie. Other sites try to restore that shared Hub session on load, and the login popup can reuse the same Hub session when browser third-party cookie rules block silent restoration.
-
-## Cloudflare D1
-
-The production D1 database has been created:
+## D1
 
 ```text
 name: rehab_db
@@ -20,32 +12,24 @@ database_id: 0f4e6bb2-cf41-4051-ad74-19bb501fe9dd
 region: APAC
 ```
 
-Deployments apply migrations automatically before publishing Pages. To apply them manually:
+手動套用 migration：
 
 ```bash
 npx --yes wrangler@4 d1 migrations apply rehab_db --config apps/rehabtrainerhub/wrangler.toml --remote
 ```
 
-## OAuth Redirect URI
+## OAuth callback
 
-Register this exact callback URL in the Google Cloud Console OAuth client's
-**Authorized redirect URIs**:
+Google Cloud Console 只登記：
 
 ```text
 https://trainerhub.cc/api/auth/callback
 ```
 
-MotorTrainer, VisionTrainer, and BrainTrainer still use this same Hub callback
-because their login popup starts from `https://trainerhub.cc/api/auth/start`.
-Adding only the trainer site URLs, such as `https://motor.trainerhub.cc` or
-`https://vision.trainerhub.cc`, does not satisfy Google's `redirect_uri` check.
+正式 `AUTH_BASE_URL` 必須是 `https://trainerhub.cc`。四個退役 trainer domain
+不得加入 OAuth redirect URI 或 `AUTH_ALLOWED_ORIGINS`。
 
-The production auth base URL is `https://trainerhub.cc`. If `AUTH_BASE_URL` is
-set manually, it must also be the Hub origin, not an individual trainer origin.
-
-## GitHub Actions Secrets
-
-Set these GitHub Actions secrets in the repository or in the `cloudflare-pages` environment:
+## Deployment secrets
 
 ```text
 AUTH_SESSION_SECRET=<random 32+ character secret>
@@ -55,52 +39,5 @@ GOOGLE_CLIENT_SECRET=<google oauth client secret>
 TURNSTILE_SECRET_KEY=<optional Cloudflare Turnstile secret>
 ```
 
-`AUTH_SESSION_SECRET` and `AUTH_STATE_SECRET` are app-owned random signing secrets. They are not Google values. Generate long random strings and keep them only in GitHub Actions secrets or Cloudflare environment variables.
-
-## GitHub Actions Variables
-
-Public URL variables are generated automatically. Optional Cloudflare feature variables are
-documented in [admin-cloudflare-setup.md](admin-cloudflare-setup.md), including Turnstile,
-Web Analytics, and the R2 asset custom domain.
-
-## Cloudflare Pages Environment Sync
-
-GitHub Actions runs `scripts/sync-cloudflare-auth-env.mjs` during deployment:
-
-- Every Pages project receives shared client auth config with the canonical public URLs.
-- The Hub project additionally receives:
-  `AUTH_BASE_URL`, `AUTH_ALLOWED_ORIGINS`, `AUTH_SESSION_SECRET`, `AUTH_STATE_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`.
-- D1 migrations are applied for projects that define `database_name` and `migrations_dir` in `wrangler.toml`.
-- New Pages apps are discovered from `apps/*/wrangler.toml`, so they are included without editing the workflow.
-- GitHub Actions is the source of truth. The sync uses `wrangler pages secret bulk`, so Cloudflare Pages values are overwritten with the current GitHub Actions secrets and variables on each deployment.
-
-For local or manual sync:
-
-```bash
-AUTH_SESSION_SECRET=<secret> AUTH_STATE_SECRET=<secret> GOOGLE_CLIENT_ID=<id> GOOGLE_CLIENT_SECRET=<secret> node scripts/sync-cloudflare-auth-env.mjs
-```
-
-The runtime code can fall back to `AUTH_SESSION_SECRET` if `AUTH_STATE_SECRET` is absent, but the CI/CD sync script requires both secrets so production deployments stay explicit.
-
-## Trainer And Future App Environment Variables
-
-Shared auth client code uses `https://trainerhub.cc`.
-
-## Privacy and Profile Fields
-
-Privacy policy URL:
-
-```text
-https://trainerhub.cc/privacy/
-```
-
-The first login shows a privacy notice before OAuth starts. After OAuth returns, the profile form asks for:
-
-- Age range
-- Gender
-- Nationality
-- Physician-diagnosed chronic condition categories
-- Smoking habit and frequency when applicable
-- Alcohol habit and frequency when applicable
-
-The chronic condition form explicitly reminds users not to guess or self-diagnose without a physician diagnosis.
+GitHub Actions 是 Pages secrets 的來源；部署時會同步 Hub 環境並自動套用 D1
+migrations。隱私權政策固定為 `https://trainerhub.cc/privacy/`。

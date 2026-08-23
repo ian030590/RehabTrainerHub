@@ -1,1 +1,1 @@
-export * from '../../../../mouthtrainer/src/components/InlineAlert';
+export * from '../../../training-runtimes/mouth/src/components/InlineAlert';

@@ -45,7 +45,7 @@
       "sha256": "8a3092d34c79d3f57e6ba8592105e8a90f6b07c27891ffecd14cca428bfd3e31"
     },
     {
-      "source": "apps/visiontrainer/public/webgazer.js",
+      "source": "apps/rehabtrainerhub/training-runtimes/vision/public/webgazer.js",
       "key": "ai/webgazer/local-v1/webgazer.js",
       "contentType": "text/javascript; charset=utf-8",
       "size": 3492461,
@@ -73,14 +73,14 @@
       "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff"
     },
     {
-      "source": "apps/motortrainer/public/assets/StarSky.png",
+      "source": "apps/rehabtrainerhub/training-runtimes/motor/public/assets/StarSky.png",
       "key": "game-assets/motortrainer/star-sky/v1/StarSky.png",
       "contentType": "image/png",
       "size": 4650499,
       "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d"
     },
     {
-      "source": "apps/visiontrainer/public/assets/driving/reference-car-game/vehicals/car.glb",
+      "source": "apps/rehabtrainerhub/public/assets/driving/reference-car-game/vehicals/car.glb",
       "key": "game-assets/visiontrainer/reference-car/v1/car.glb",
       "contentType": "model/gltf-binary",
       "size": 6062428,

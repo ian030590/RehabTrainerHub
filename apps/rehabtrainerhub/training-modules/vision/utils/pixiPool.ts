@@ -1,1 +1,1 @@
-export * from '../../../../visiontrainer/src/utils/pixiPool';
+export * from '../../../training-runtimes/vision/src/utils/pixiPool';

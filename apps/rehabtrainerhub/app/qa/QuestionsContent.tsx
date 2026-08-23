@@ -2,27 +2,7 @@
 
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
-import { siteUrls } from '../siteUrls';
 import { EducationArticles } from './EducationArticles';
-
-const trainerLinks = [
-  {
-    id: 'motor',
-    name: 'MotorTrainer',
-  },
-  {
-    id: 'vision',
-    name: 'VisionTrainer',
-  },
-  {
-    id: 'brain',
-    name: 'BrainTrainer',
-  },
-  {
-    id: 'mouth',
-    name: 'MouthTrainer',
-  },
-] as const;
 
 export function QuestionsContent() {
   const { language } = useHubLanguage();
@@ -52,28 +32,6 @@ export function QuestionsContent() {
       </section>
 
       <EducationArticles />
-
-      <section className="trainer-links-section" aria-labelledby="trainer-links-title">
-        <div className="section-title-row">
-          <div>
-            <p className="page-kicker">{copy.servicesKicker}</p>
-            <h2 id="trainer-links-title">{copy.servicesTitle}</h2>
-          </div>
-        </div>
-        <div className="trainer-link-grid">
-          {trainerLinks.map((trainer) => (
-            <a
-              className={`trainer-link-card trainer-${trainer.id}`}
-              href={siteUrls[trainer.id]}
-              key={trainer.id}
-            >
-              <span className="material-symbols-outlined" aria-hidden="true">open_in_new</span>
-              <h3>{trainer.name}</h3>
-              <p>{copy.trainerDescriptions[trainer.id]}</p>
-            </a>
-          ))}
-        </div>
-      </section>
     </main>
   );
 }

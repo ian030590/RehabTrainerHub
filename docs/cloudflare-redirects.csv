@@ -1,4 +1,5 @@
 source_url,target_url,status_code
-<old-motor-deployment-host>/*,https://motor.trainerhub.cc/${1},301
-<old-vision-deployment-host>/*,https://vision.trainerhub.cc/${1},301
-<old-brain-deployment-host>/*,https://brain.trainerhub.cc/${1},301
+motor.trainerhub.cc/*,https://trainerhub.cc/,301
+vision.trainerhub.cc/*,https://trainerhub.cc/,301
+brain.trainerhub.cc/*,https://trainerhub.cc/,301
+mouth.trainerhub.cc/*,https://trainerhub.cc/,301

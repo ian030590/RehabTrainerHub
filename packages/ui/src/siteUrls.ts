@@ -1,9 +1,5 @@
 export const defaultSiteUrls = {
   hub: 'https://trainerhub.cc',
-  motor: 'https://motor.trainerhub.cc',
-  vision: 'https://vision.trainerhub.cc',
-  brain: 'https://brain.trainerhub.cc',
-  mouth: 'https://mouth.trainerhub.cc',
 } as const;
 
 export type SiteUrlKey = keyof typeof defaultSiteUrls;

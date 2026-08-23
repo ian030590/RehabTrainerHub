@@ -1,1 +1,1 @@
-export * from '../../../../visiontrainer/src/i18n';
+export * from '../../../training-runtimes/vision/src/i18n';

@@ -7,10 +7,7 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const defaultManifestPath = resolve(repoRoot, 'scripts/r2-ai-assets.manifest.json');
 const defaultCorsOrigins = [
-  'https://motor.trainerhub.cc',
-  'https://vision.trainerhub.cc',
-  'https://brain.trainerhub.cc',
-  'https://mouth.trainerhub.cc',
+  'https://trainerhub.cc',
 ];
 const oneYearSeconds = 365 * 24 * 60 * 60;
 

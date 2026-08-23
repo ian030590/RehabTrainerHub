@@ -95,6 +95,24 @@ for (const blockedOrigin of new Set([gamehost.siteUrl, gamehost.deploymentUrl]))
 }
 
 const hub = pagesApps.find((app) => app.role === 'hub');
+assert.deepEqual(hub.redirectHostnames.sort(), [
+  'brain.trainerhub.cc',
+  'motor.trainerhub.cc',
+  'mouth.trainerhub.cc',
+  'vision.trainerhub.cc',
+]);
+assert.deepEqual(hub.retiredProjectNames.sort(), [
+  'braintrainer',
+  'motortrainer',
+  'mouthtrainer',
+  'visiontrainer',
+]);
+for (const projectName of hub.retiredProjectNames) {
+  assert.ok(output.includes(`cloudflare pages project retire ${projectName}`));
+}
+for (const hostname of hub.redirectHostnames) {
+  assert.ok(output.includes(`cloudflare pages domain ensure ${hub.projectName} ${hostname}`));
+}
 const hubEnvironmentLine = output
   .split(/\r?\n/)
   .find((line) => (

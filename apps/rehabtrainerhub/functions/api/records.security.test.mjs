@@ -37,7 +37,7 @@ const attackerToken = await CreateSessionForUser(env, attacker);
 const anonymousRead = await onRequestGet({
   request: new Request('https://trainerhub.cc/api/records?appId=motortrainer', {
     headers: {
-      Origin: 'https://motor.trainerhub.cc',
+      Origin: 'https://trainerhub.cc',
     },
   }),
   env,
@@ -47,7 +47,7 @@ assert.equal(anonymousRead.status, 401);
 const missingAppId = await onRequestGet({
   request: new Request('https://trainerhub.cc/api/records', {
     headers: {
-      Origin: 'https://motor.trainerhub.cc',
+      Origin: 'https://trainerhub.cc',
       Authorization: `Bearer ${victimToken}`,
     },
   }),
@@ -59,7 +59,7 @@ const overwrite = await onRequestPost({
   request: new Request('https://trainerhub.cc/api/records', {
     method: 'POST',
     headers: {
-      Origin: 'https://motor.trainerhub.cc',
+      Origin: 'https://trainerhub.cc',
       Authorization: `Bearer ${attackerToken}`,
       'Content-Type': 'application/json',
     },
@@ -73,7 +73,7 @@ const allowedInsert = await onRequestPost({
   request: new Request('https://trainerhub.cc/api/records', {
     method: 'POST',
     headers: {
-      Origin: 'https://motor.trainerhub.cc',
+      Origin: 'https://trainerhub.cc',
       Authorization: `Bearer ${attackerToken}`,
       'Content-Type': 'application/json',
     },
@@ -93,7 +93,7 @@ const oversizedPayload = await onRequestPost({
   request: new Request('https://trainerhub.cc/api/records', {
     method: 'POST',
     headers: {
-      Origin: 'https://motor.trainerhub.cc',
+      Origin: 'https://trainerhub.cc',
       Authorization: `Bearer ${attackerToken}`,
       'Content-Type': 'application/json',
     },
@@ -114,7 +114,7 @@ const overlongModule = await onRequestPost({
   request: new Request('https://trainerhub.cc/api/records', {
     method: 'POST',
     headers: {
-      Origin: 'https://motor.trainerhub.cc',
+      Origin: 'https://trainerhub.cc',
       Authorization: `Bearer ${attackerToken}`,
       'Content-Type': 'application/json',
     },
@@ -134,7 +134,7 @@ assert.equal(overlongModule.status, 400);
 const victimRecords = await onRequestGet({
   request: new Request('https://trainerhub.cc/api/records?appId=motortrainer', {
     headers: {
-      Origin: 'https://motor.trainerhub.cc',
+      Origin: 'https://trainerhub.cc',
       Authorization: `Bearer ${victimToken}`,
     },
   }),

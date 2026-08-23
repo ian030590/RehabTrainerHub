@@ -1,138 +1,43 @@
 # Repository Settings
 
-Use this checklist after pushing the monorepo to GitHub.
+## GitHub
 
-## GitHub Repository
+- Default branch: `main`
+- CI: `.github/workflows/ci.yml`
+- Cloudflare deploy: `.github/workflows/deploy-cloudflare-pages.yml`
+- Package manager: root `package.json` 指定的 npm
+- Validation: `npm run build`
+- Cloudflare build: `npm run build:cloudflare`
 
-- Default branch: `main`.
-- Actions: enabled.
-- CI workflow: `.github/workflows/ci.yml`.
-- Cloudflare Pages deploy workflow: `.github/workflows/deploy-cloudflare-pages.yml`.
-- Package manager: npm, pinned in root `package.json`.
-- Validation command: `npm run build`.
-- Cloudflare build command: `npm run build:cloudflare`.
-- Dependabot: root, apps, and `packages/ui` npm metadata.
+## Cloudflare Pages
 
-## Cloudflare Pages Projects
+| Project | Role | Output |
+| --- | --- | --- |
+| `rehabtrainerhub` | Hub、API、四個同源 training runtimes | `apps/rehabtrainerhub/out` |
+| `trainerhub-user-games` | 無 auth／D1 的第三方遊戲隔離執行器 | `apps/usergamerunner/dist` |
 
-GitHub Actions discovers Pages apps from `apps/*/wrangler.toml`, creates missing
-Cloudflare Pages projects with Wrangler, and deploys built output. Pages
-projects do not need their own Git build settings.
+`apps/rehabtrainerhub/training-runtimes/{motor,vision,brain,mouth}` 由 Hub build
+產生到 `/runtimes/*`，不是 Pages project、獨立網站或獨立 PWA。
 
-| Project | Root directory | Build command | Output directory |
-| --- | --- | --- | --- |
-| `rehabtrainerhub` | `/` | `npm ci --workspaces=false && npm run build:cloudflare` | `apps/rehabtrainerhub/out` |
-| `motortrainer` | `/` | `npm ci --workspaces=false && npm run build:cloudflare` | `apps/motortrainer/dist` |
-| `visiontrainer` | `/` | `npm ci --workspaces=false && npm run build:cloudflare` | `apps/visiontrainer/dist` |
+## Secrets 與 variables
 
-Set Node.js compatibility to Node 24 or newer.
+部署需要 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、
+`AUTH_SESSION_SECRET`、`AUTH_STATE_SECRET`、`GOOGLE_CLIENT_ID`、
+`GOOGLE_CLIENT_SECRET`；啟用 Turnstile 時另設 `TURNSTILE_SECRET_KEY`。
 
-To add a new Pages app, create `apps/<app>/package.json` with `scripts.build`
-and `apps/<app>/wrangler.toml` with:
+公開 variables 包含 `TURNSTILE_SITE_KEY`、`TURNSTILE_REQUIRED`、
+`TURNSTILE_RECORDS_REQUIRED`、`CF_WEB_ANALYTICS_TOKEN`、
+`R2_AI_ASSET_BUCKET`、`AI_ASSET_BASE_URL` 與 `ASSET_PUBLIC_BASE_URL`。
 
-```toml
-name = "cloudflare-pages-project-name"
-compatibility_date = "2026-07-02"
-pages_build_output_dir = "dist"
-```
+## Domains 與退役流程
 
-The root `npm run build` command builds every app under `apps/*` that defines a
-build script. Use `npm run build:cloudflare` before Cloudflare deployment; it
-sets `CF_PAGES=1` for every app so Cloudflare-specific output checks run. The
-deploy workflow creates the Cloudflare Pages project when it does not already
-exist, uses `main` as the production branch, then deploys
-`apps/<app>/<pages_build_output_dir>`.
+- `trainerhub.cc` 綁定 `rehabtrainerhub`。
+- `trainerhub-user-games.pages.dev` 保持獨立，禁止使用 `trainerhub.cc` 子網域。
+- 四個退役 trainer custom domains 綁到 `rehabtrainerhub`，由
+  `functions/_middleware.js` 對任何路徑回 301。
+- `scripts/sync-cloudflare-pages-domains.mjs` 在 Hub 部署完成後刪除舊
+  `motortrainer`、`visiontrainer`、`braintrainer`、`mouthtrainer` Pages projects，
+  再將舊 custom domains 加到 Hub。此流程需要 Pages Write 權限。
 
-## GitHub Secrets
-
-Required for `.github/workflows/deploy-cloudflare-pages.yml`:
-
-- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with account-level Cloudflare
-  Pages edit access and D1 edit access so the workflow can list, create, deploy
-  Pages projects, and apply D1 migrations.
-- `CLOUDFLARE_ACCOUNT_ID`: Cloudflare account ID that owns the Pages projects.
-- `AUTH_SESSION_SECRET`: long random app-owned session signing secret for the
-  Hub auth API.
-- `AUTH_STATE_SECRET`: long random app-owned OAuth state signing secret for the
-  Hub auth API.
-- `GOOGLE_CLIENT_ID`: Google OAuth client ID for the Hub callback URL.
-- `GOOGLE_CLIENT_SECRET`: Google OAuth client secret for the Hub callback URL.
-- `TURNSTILE_SECRET_KEY`: Cloudflare Turnstile server-side Siteverify secret.
-  Required when `TURNSTILE_REQUIRED` or `TURNSTILE_RECORDS_REQUIRED` is `1`.
-
-The deploy workflow syncs auth environment secrets to Cloudflare Pages before
-deploying. Every Pages project discovered from `apps/*/wrangler.toml` receives
-the shared client auth base URL. The `rehabtrainerhub` project also receives
-the Google OAuth and session signing secrets. GitHub Actions is the source of truth
-for these values; each deploy overwrites the corresponding Cloudflare Pages
-secrets and variables through `wrangler pages secret bulk`. This keeps future
-Pages apps on the same login system without adding per-site Cloudflare settings
-by hand.
-
-## Environment Variables
-
-Canonical production URLs:
-
-- Hub: `https://trainerhub.cc`
-- MotorTrainer: `https://motor.trainerhub.cc`
-- VisionTrainer: `https://vision.trainerhub.cc`
-- BrainTrainer: `https://brain.trainerhub.cc`
-
-These values are fixed in source and drive Hub CTA links, each app's
-related-sites page, Vite canonical metadata, auth API base URLs, and production
-sitemaps.
-
-Use repository or Pages variables for public runtime settings. Use secrets only
-for private credentials such as Cloudflare API tokens and Discord webhook values.
-
-Recommended GitHub Variables for the Cloudflare Pages environment:
-
-- `TURNSTILE_SITE_KEY`: public Turnstile widget site key.
-- `TURNSTILE_REQUIRED`: `1` to require Turnstile on register, password login,
-  and OAuth start; otherwise `0`.
-- `TURNSTILE_RECORDS_REQUIRED`: `1` to require Turnstile before training record
-  uploads; otherwise `0`.
-- `CF_WEB_ANALYTICS_TOKEN`: Cloudflare Web Analytics site token.
-- `R2_AI_ASSET_BUCKET`: R2 bucket name that stores versioned MediaPipe,
-  WebGazer, and large trainer runtime assets. The deploy workflow syncs
-  `scripts/r2-ai-assets.manifest.json` to this bucket before verifying the
-  public CDN URLs.
-- `AI_ASSET_BASE_URL`: public R2 asset CDN origin, for example
-  `https://assets.trainerhub.cc`.
-- `ASSET_PUBLIC_BASE_URL`: public R2 base URL used for uploaded article covers.
-  Usually the same value as `AI_ASSET_BASE_URL`.
-
-## Custom Domains
-
-Recommended mapping:
-
-- `trainerhub.cc` -> `rehabtrainerhub`
-- `motor.trainerhub.cc` -> `motortrainer`
-- `vision.trainerhub.cc` -> `visiontrainer`
-- `brain.trainerhub.cc` -> `braintrainer`
-
-The public site URLs are fixed in source. Do not configure alternate public URL
-environment variables for production builds.
-
-## SEO
-
-- Next.js metadata is defined in `apps/rehabtrainerhub/app/layout.tsx`.
-- `robots.txt` is generated by `apps/rehabtrainerhub/app/robots.ts`.
-- Hub `sitemap.xml` is generated by `apps/rehabtrainerhub/app/sitemap.ts`.
-- Trainer `robots.txt` and `sitemap.xml` files live under each trainer
-  `public/` directory.
-- MotorTrainer, VisionTrainer, and BrainTrainer inject canonical metadata
-  during Vite builds from fixed production URLs.
-- Submit each production sitemap to Google Search Console after domain setup:
-  `https://trainerhub.cc/sitemap.xml`,
-  `https://motor.trainerhub.cc/sitemap.xml`,
-  `https://vision.trainerhub.cc/sitemap.xml`, and
-  `https://brain.trainerhub.cc/sitemap.xml`.
-
-## Redirects And Archive
-
-- Configure Cloudflare Bulk Redirects from old temporary deployment hosts to
-  the new production paths or subdomains.
-- The old standalone trainer repositories are archived.
-- Nested app `.git` and `.github` directories have been removed so the apps are
-  tracked as ordinary monorepo folders.
+唯一 sitemap 是 `https://trainerhub.cc/sitemap.xml`；不得重新建立 trainer
+sitemap、canonical、manifest、相關網站頁或 auth origin。

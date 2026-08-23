@@ -49,8 +49,6 @@ export type {
 export { GetTrainerFooterLabels, GetTrainerSkipLinkLabel, RehabFooter } from './components/RehabFooter';
 export type { RehabFooterProps } from './components/RehabFooter';
 export { AccountAvatar } from './components/AccountAvatar';
-export { CreateRelatedTrainerLinks, GetDefaultRelatedLinksPageLabels, RelatedLinksGridPage } from './components/RelatedLinksGridPage';
-export type { RelatedLinkItem, RelatedLinksGridPageProps, RelatedTrainerSite } from './components/RelatedLinksGridPage';
 export { ResultSummary } from './components/ResultSummary';
 export type { ResultSummaryItem, ResultSummaryProps } from './components/ResultSummary';
 export { SelectionCard } from './components/SelectionCard';

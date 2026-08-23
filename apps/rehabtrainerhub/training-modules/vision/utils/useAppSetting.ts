@@ -1,1 +1,1 @@
-export * from '../../../../visiontrainer/src/utils/useAppSetting';
+export * from '../../../training-runtimes/vision/src/utils/useAppSetting';

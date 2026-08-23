@@ -1,1 +1,1 @@
-export * from '../../../../visiontrainer/src/utils/mathUtils';
+export * from '../../../training-runtimes/vision/src/utils/mathUtils';

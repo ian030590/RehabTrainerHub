@@ -1,1 +1,1 @@
-export * from '../../../../braintrainer/src/utils/trainingRecords';
+export * from '../../../training-runtimes/brain/src/utils/trainingRecords';

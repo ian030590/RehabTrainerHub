@@ -1,1 +1,1 @@
-export * from '../../../../../../visiontrainer/src/pages/assessment/logic/optotypeRenderer';
+export * from '../../../../../training-runtimes/vision/src/pages/assessment/logic/optotypeRenderer';

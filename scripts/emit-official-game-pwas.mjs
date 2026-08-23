@@ -26,90 +26,77 @@ const windowsReservedNamePattern = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(scriptDirectory, '..');
 const outputArgument = process.argv[2];
-if (!outputArgument) throw new Error('Usage: emit-official-game-pwas.mjs <trainer-output-directory>');
+if (!outputArgument) throw new Error('Usage: emit-official-game-pwas.mjs <hub-output-directory>');
 
 const outputDirectory = resolve(process.cwd(), outputArgument);
 const appDirectory = dirname(outputDirectory);
 const appName = basename(appDirectory);
-const trainerByApp = new Map([
-  ['motortrainer', 'motor'],
-  ['visiontrainer', 'vision'],
-  ['braintrainer', 'brain'],
-  ['mouthtrainer', 'mouth'],
-]);
-const trainer = trainerByApp.get(appName);
-const expectedOutputDirectory = resolve(repositoryRoot, 'apps', appName, 'dist');
-if (!trainer
-  || basename(outputDirectory) !== 'dist'
+const trainers = ['motor', 'vision', 'brain', 'mouth'];
+const expectedOutputDirectory = resolve(repositoryRoot, 'apps/rehabtrainerhub/out');
+if (appName !== 'rehabtrainerhub'
+  || basename(outputDirectory) !== 'out'
   || outputDirectory !== expectedOutputDirectory) {
-  throw new Error('Official game PWAs may only be emitted into a known trainer dist directory.');
+  throw new Error('Official game PWAs may only be emitted into the Hub output directory.');
 }
 
 const catalogPath = resolve(repositoryRoot, 'apps/rehabtrainerhub/training-modules/catalog.ts');
 const catalogSource = await readFile(catalogPath, 'utf8');
 const catalogGames = ReadCatalogSeeds(catalogSource);
 ValidateCatalogGames(catalogGames);
-const games = catalogGames.filter((game) => game.trainer === trainer);
-if (games.length === 0) throw new Error(`No catalog games found for ${trainer}.`);
-
 const gamesDirectory = resolve(outputDirectory, 'games');
 if (dirname(gamesDirectory) !== outputDirectory || basename(gamesDirectory) !== 'games') {
-  throw new Error('Refusing to write games outside the trainer build output.');
+  throw new Error('Refusing to write games outside the Hub build output.');
 }
 await rm(gamesDirectory, { recursive: true, force: true });
 
-const rootHtml = await readFile(resolve(outputDirectory, 'index.html'), 'utf8');
 const rootManifest = JSON.parse(await readFile(resolve(outputDirectory, 'manifest.webmanifest'), 'utf8'));
 const packageJson = JSON.parse(await readFile(resolve(appDirectory, 'package.json'), 'utf8'));
-const shellUrls = ExtractShellUrls(rootHtml, rootManifest);
-const shellFiles = shellUrls.map(ResolveOutputFile);
-const shellMetadata = await Promise.all(shellFiles.map(async (filePath) => {
-  const metadata = await stat(filePath);
-  if (!metadata.isFile()) throw new Error(`PWA shell resource is not a file: ${filePath}`);
-  return { filePath, size: metadata.size };
-}));
-const shellPrecacheBytes = shellMetadata.reduce((total, item) => total + item.size, 0);
-if (shellPrecacheBytes > maximumShellPrecacheBytes) {
-  throw new Error(`Official game shell precache exceeds ${maximumShellPrecacheBytes} bytes.`);
-}
-const baseRevision = await CreateBaseRevision(
-  shellFiles,
-  packageJson.version ?? '0.0.0',
-  rootHtml,
-);
-
-for (const game of games) {
-  const gameDirectory = resolve(gamesDirectory, game.id);
-  if (dirname(gameDirectory) !== gamesDirectory) {
-    throw new Error(`Unsafe official game output path: ${game.id}`);
+let emittedGameCount = 0;
+for (const trainer of trainers) {
+  const games = catalogGames.filter((game) => game.trainer === trainer);
+  if (games.length === 0) throw new Error(`No catalog games found for ${trainer}.`);
+  const rootHtml = await readFile(resolve(outputDirectory, 'runtimes', trainer, 'index.html'), 'utf8');
+  const shellUrls = ExtractShellUrls(rootHtml, rootManifest);
+  const shellFiles = shellUrls.map(ResolveOutputFile);
+  const shellMetadata = await Promise.all(shellFiles.map(async (filePath) => {
+    const metadata = await stat(filePath);
+    if (!metadata.isFile()) throw new Error(`PWA shell resource is not a file: ${filePath}`);
+    return { filePath, size: metadata.size };
+  }));
+  const shellPrecacheBytes = shellMetadata.reduce((total, item) => total + item.size, 0);
+  if (shellPrecacheBytes > maximumShellPrecacheBytes) {
+    throw new Error(`Official game shell precache exceeds ${maximumShellPrecacheBytes} bytes.`);
   }
-  await mkdir(gameDirectory, { recursive: true });
-  const basePath = `/games/${game.id}/`;
-  const startUrl = `${basePath}#${game.path}`;
-  const description = `${game.title}的單一遊戲安裝入口；結果僅為當次練習紀錄。`;
-  const manifest = {
-    ...rootManifest,
-    id: basePath,
-    name: `${game.title}｜居家訓練網`,
-    short_name: Array.from(game.title).slice(0, 18).join(''),
-    description,
-    start_url: startUrl,
-    scope: basePath,
-  };
-  const html = BuildGameHtml(rootHtml, game, basePath, description);
-  const revision = CreateGameRevision(baseRevision, game, manifest, html);
-  const serviceWorker = BuildGameServiceWorker({
-    basePath,
-    gameId: game.id,
-    revision,
-    shellUrls,
-  });
-  ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker });
-  await Promise.all([
-    writeFile(resolve(gameDirectory, 'index.html'), html),
-    writeFile(resolve(gameDirectory, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`),
-    writeFile(resolve(gameDirectory, 'sw.js'), serviceWorker),
-  ]);
+  const baseRevision = await CreateBaseRevision(shellFiles, packageJson.version ?? '0.0.0', rootHtml);
+
+  for (const game of games) {
+    const gameDirectory = resolve(gamesDirectory, game.id);
+    if (dirname(gameDirectory) !== gamesDirectory) throw new Error(`Unsafe official game output path: ${game.id}`);
+    await mkdir(gameDirectory, { recursive: true });
+    const basePath = `/games/${game.id}/`;
+    const description = `${game.title}的單一遊戲安裝入口；結果僅為當次練習紀錄。`;
+    const manifest = {
+      ...rootManifest,
+      id: basePath,
+      name: `${game.title}｜居家訓練網`,
+      short_name: Array.from(game.title).slice(0, 18).join(''),
+      description,
+      start_url: `${basePath}#${game.path}`,
+      scope: basePath,
+    };
+    const html = BuildGameHtml(rootHtml, game, basePath, description);
+    const revision = CreateGameRevision(baseRevision, game, manifest, html);
+    const serviceWorker = BuildGameServiceWorker({ basePath, gameId: game.id, revision, shellUrls, trainer });
+    ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker, trainer });
+    await Promise.all([
+      writeFile(resolve(gameDirectory, 'index.html'), html),
+      writeFile(resolve(gameDirectory, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`),
+      writeFile(resolve(gameDirectory, 'sw.js'), serviceWorker),
+    ]);
+    emittedGameCount += 1;
+  }
+
+  console.log(`Emitted ${games.length} ${trainer} game PWAs (${FormatBytes(shellPrecacheBytes)} shell, ${baseRevision}).`);
 }
 
 const headersPath = resolve(outputDirectory, '_headers');
@@ -119,10 +106,7 @@ if (!headers.includes(headerMarker)) {
   await writeFile(headersPath, `${headers.trimEnd()}\n\n${headerMarker}\n/games/*\n  X-Robots-Tag: noindex, nofollow, noarchive\n  Referrer-Policy: no-referrer\n\n/games/*/sw.js\n  Cache-Control: no-cache, no-store, must-revalidate\n\n/games/*/manifest.webmanifest\n  Cache-Control: public, max-age=300\n`);
 }
 
-console.log(
-  `Emitted ${games.length} standalone ${trainer} game PWAs `
-  + `(${FormatBytes(shellPrecacheBytes)} shared shell per game, ${baseRevision}).`,
-);
+console.log(`Emitted ${emittedGameCount} Hub-hosted official game PWAs.`);
 
 function BuildGameHtml(source, game, basePath, description) {
   const clientConfiguration = SerializeForInlineScript({
@@ -211,6 +195,9 @@ function BuildGameHtml(source, game, basePath, description) {
       /<link\b(?=[^>]*\brel=["']manifest["'])[^>]*>/i,
       `<link rel="manifest" href="${basePath}manifest.webmanifest" />`,
     );
+  if (!/<link\b(?=[^>]*\brel=["']manifest["'])/i.test(html)) {
+    html = html.replace('</head>', `  <link rel="manifest" href="${basePath}manifest.webmanifest" />\n</head>`);
+  }
   html = html.replace(
     '</head>',
     `  <meta name="robots" content="noindex,nofollow,noarchive" />\n  ${boot}\n</head>`,
@@ -219,7 +206,7 @@ function BuildGameHtml(source, game, basePath, description) {
   return html;
 }
 
-function BuildGameServiceWorker({ basePath, gameId, revision, shellUrls }) {
+function BuildGameServiceWorker({ basePath, gameId, revision, shellUrls, trainer }) {
   const cachePrefix = `trainerhub-official-game:${trainer}:${gameId}:`;
   const cacheName = `${cachePrefix}${revision}`;
   const precacheUrls = [...new Set([
@@ -334,7 +321,7 @@ function ValidateCatalogGames(games) {
       || ids.has(game.id)) {
       throw new Error(`Unsafe or duplicate official game id: ${game.id}`);
     }
-    if (!trainerByApp.has([...trainerByApp.entries()].find(([, value]) => value === game.trainer)?.[0] ?? '')) {
+    if (!trainers.includes(game.trainer)) {
       throw new Error(`Unknown trainer for official game ${game.id}.`);
     }
     if (typeof game.path !== 'string'
@@ -445,7 +432,7 @@ function CreateGameRevision(baseRevision, game, manifest, html) {
     .slice(0, 16);
 }
 
-function ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker }) {
+function ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker, trainer }) {
   if (manifest.id !== basePath || manifest.scope !== basePath || !manifest.start_url.startsWith(basePath)) {
     throw new Error(`Invalid generated manifest scope for ${game.id}.`);
   }
