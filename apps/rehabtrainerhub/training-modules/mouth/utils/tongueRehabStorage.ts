@@ -1,1 +1,1 @@
-export * from '../../../../mouthtrainer/src/utils/tongueRehabStorage';
+export * from '../../../training-runtimes/mouth/src/utils/tongueRehabStorage';

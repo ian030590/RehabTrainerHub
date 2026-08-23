@@ -10,12 +10,6 @@ const args = process.argv.slice(2);
 const validateAll = args.includes('--all');
 const failures = [];
 const hubSiteUrl = 'https://trainerhub.cc/';
-const trainerSiteUrls = [
-  'https://motor.trainerhub.cc/',
-  'https://vision.trainerhub.cc/',
-  'https://brain.trainerhub.cc/',
-  'https://mouth.trainerhub.cc/',
-];
 
 const apps = validateAll
   ? DiscoverPagesApps(defaultRepoRoot).filter((app) => app.role !== 'gamehost')
@@ -357,7 +351,7 @@ function ValidateJsonLd(html, file, siteUrl, role, appFailures) {
   }
 
   const nodes = values.flatMap(FlattenJsonLd);
-  const applicationUrls = role === 'hub' ? [hubSiteUrl, ...trainerSiteUrls] : [siteUrl];
+  const applicationUrls = [role === 'hub' ? hubSiteUrl : siteUrl];
   const applicationIds = applicationUrls.map((url) => `${url}#application`);
   for (const applicationUrl of applicationUrls) {
     const applicationId = `${applicationUrl}#application`;
@@ -387,14 +381,13 @@ function ValidateJsonLd(html, file, siteUrl, role, appFailures) {
         appFailures.push(`${file}: WebSite.publisher must reference the canonical Organization @id.`);
       }
       if (!HaveSameValues(GetReferenceIds(website.hasPart), applicationIds)) {
-        appFailures.push(`${file}: WebSite.hasPart must reference the Hub and all four trainer applications.`);
+        appFailures.push(`${file}: WebSite.hasPart must reference only the canonical Hub application.`);
       }
     }
 
     const hubApplication = nodes.find((node) => node?.['@id'] === `${siteUrl}#application`);
-    const trainerApplicationIds = trainerSiteUrls.map((url) => `${url}#application`);
-    if (hubApplication && !HaveSameValues(GetReferenceIds(hubApplication.hasPart), trainerApplicationIds)) {
-      appFailures.push(`${file}: Hub WebApplication.hasPart must reference all four trainer applications.`);
+    if (hubApplication && GetReferenceIds(hubApplication.hasPart).length > 0) {
+      appFailures.push(`${file}: Hub WebApplication must not reference retired trainer websites.`);
     }
   }
 }

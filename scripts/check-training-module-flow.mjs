@@ -53,17 +53,17 @@ for (const catalogId of catalogIds) {
 }
 
 const hostImports = {
-  motortrainer: '@rehab-trainer/hub-modules/motor/',
-  visiontrainer: '@rehab-trainer/hub-modules/vision/',
-  braintrainer: '@rehab-trainer/hub-modules/brain/',
-  mouthtrainer: '@rehab-trainer/hub-modules/mouth/',
+  motor: '@rehab-trainer/hub-modules/motor/',
+  vision: '@rehab-trainer/hub-modules/vision/',
+  brain: '@rehab-trainer/hub-modules/brain/',
+  mouth: '@rehab-trainer/hub-modules/mouth/',
 };
 
 for (const [trainer, expectedImport] of Object.entries(hostImports)) {
-  const appSource = readFileSync(resolve(repoRoot, `apps/${trainer}/src/App.tsx`), 'utf8');
+  const appSource = readFileSync(resolve(repoRoot, `apps/rehabtrainerhub/training-runtimes/${trainer}/src/App.tsx`), 'utf8');
   assert.ok(
     appSource.includes(expectedImport),
-    `${trainer} must load its canonical runtime from the Hub module namespace.`,
+    `${trainer} runtime must load its canonical module from the Hub namespace.`,
   );
 }
 
@@ -436,7 +436,7 @@ assert.ok(
 );
 
 console.log(
-  `Training flow contract passed for ${catalogIds.length} Hub-owned modules, ${implementationGroups.length} runtime flows, and ${Object.keys(hostImports).length} Trainer hosts.`,
+  `Training flow contract passed for ${catalogIds.length} Hub-owned modules, ${implementationGroups.length} runtime flows, and ${Object.keys(hostImports).length} Hub runtimes.`,
 );
 console.log(
   pendingJsPsychIds.length > 0

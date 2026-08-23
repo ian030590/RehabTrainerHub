@@ -1,1 +1,1 @@
-export * from '../../../../visiontrainer/src/utils/soundManager';
+export * from '../../../training-runtimes/vision/src/utils/soundManager';

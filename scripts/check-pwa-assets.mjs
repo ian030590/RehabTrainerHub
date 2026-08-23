@@ -16,8 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { platformRuntimeContract } from '../apps/usergamerunner/functions/_lib/runtime.js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const apps = ['rehabtrainerhub', 'motortrainer', 'visiontrainer', 'braintrainer', 'mouthtrainer'];
-const trainerApps = ['motortrainer', 'visiontrainer', 'braintrainer', 'mouthtrainer'];
+const apps = ['rehabtrainerhub'];
 
 for (const app of apps) {
   const publicDir = resolve(repoRoot, 'apps', app, 'public');
@@ -43,14 +42,8 @@ for (const app of apps) {
   }
 }
 
-for (const app of trainerApps) {
-  const packageJson = JSON.parse(readFileSync(resolve(repoRoot, 'apps', app, 'package.json'), 'utf8'));
-  assert.match(
-    packageJson.scripts.build,
-    /emit-pwa-assets\.mjs dist.*emit-official-game-pwas\.mjs dist/,
-    `${app} must generate scoped game PWAs after its root PWA`,
-  );
-}
+const hubPackage = JSON.parse(readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/package.json'), 'utf8'));
+assert.match(hubPackage.scripts.build, /build-training-runtimes\.mjs.*emit-official-game-pwas\.mjs out/);
 
 const gameRunnerBuild = spawnSync(
   process.execPath,
@@ -125,10 +118,10 @@ try {
   const headers = readFileSync(resolve(outputDir, '_headers'), 'utf8');
   assert.match(
     headers,
-    /Content-Security-Policy: frame-ancestors 'self' https:\/\/trainerhub\.cc.*http:\/\/localhost:\*/,
+    /Content-Security-Policy: frame-ancestors 'self'/,
   );
 } finally {
   rmSync(fixtureRoot, { recursive: true, force: true });
 }
 
-console.log(`Validated PWA manifests and icons for ${apps.length} apps.`);
+console.log(`Validated the Hub PWA manifest, icons, runtimes, and isolated game runner.`);

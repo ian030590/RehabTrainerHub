@@ -1,1 +1,1 @@
-export * from '../../../../visiontrainer/src/utils/webgazerLoader';
+export * from '../../../training-runtimes/vision/src/utils/webgazerLoader';

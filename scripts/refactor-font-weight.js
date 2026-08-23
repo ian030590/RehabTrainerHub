@@ -3,8 +3,8 @@ const path = require('path');
 
 const files = [
   'apps/rehabtrainerhub/app/globals.css',
-  'apps/motortrainer/src/index.css',
-  'apps/visiontrainer/src/index.css',
+  'apps/rehabtrainerhub/training-runtimes/motor/src/index.css',
+  'apps/rehabtrainerhub/training-runtimes/vision/src/index.css',
   'apps/rehabtrainerhub/training-modules/vision/pages/training/hart-chart.css'
 ];
 

@@ -4,9 +4,9 @@
 
 npm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
 
-- `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、API、審核後台、開發者入口）。
+- `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、內建訓練 runtime、API、審核後台、開發者入口）。
 - `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），負責以 sandboxed iframe 載入第三方 HTML/ZIP 遊戲並提供 PWA。
-- `apps/motortrainer`、`apps/visiontrainer`、`apps/braintrainer`、`apps/mouthtrainer`：Vite React trainers。
+- `apps/rehabtrainerhub/training-runtimes/`：Hub 同源的 `motor`、`vision`、`brain`、`mouth` Vite runtime；不是獨立網站或 workspace app。
 
 共用 UI、auth、layout、settings、storage、gamePlatform 規範：`packages/ui/src`。
 開發者遊戲 SDK：`packages/game-sdk`（`@rehab-trainer/game-sdk`）。
@@ -17,10 +17,10 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 ## 建置、測試與開發指令
 
 - `npm run dev`：Turbo 啟動全部 dev servers。
-- `npm run dev:hub`、`npm run dev:motor`、`npm run dev:vision`、`npm run dev:brain`：啟動單一 app。
+- `npm run dev:hub`：啟動 Hub。
 - `npm run build`：執行測試 gate 並透過 `scripts/build-apps.mjs` 建置全部 app。
 - `npm run build:cloudflare`：建置 Cloudflare Pages 輸出。
-- `npm run build:hub|motor|mouth|vision|brain|gamerunner`：建置單一 app。
+- `npm run build:hub|gamerunner`：建置單一 app；Hub build 會一併建置四個內建 training runtimes。
 - `npm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
 - `npm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
 - `npm run test:game-platform`：驗證遊戲套件掃描器與 SDK。
@@ -28,7 +28,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 
 高風險 trainer 變更完成前執行 `npm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。此 gate 包含 training flow、assessment jsPsych lifecycle 與 i18n dictionary parity 檢查。
 
-修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後執行 `npm --workspace @rehab-trainer/motortrainer run test:asteroid-shield-fullscreen`；驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
+修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後，至少執行 `npm run test:entrypoints` 與 `npm run build:hub`，驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
 
 無完整測試套件；針對性 build 與 `npm run test:hub-functions`、`npm run test:gamerunner`、`npm run test:training-flow`、`npm run test:assessment-lifecycle`、`npm run test:i18n` 為最低驗證。
 
@@ -53,16 +53,16 @@ Hub 禁止複製/分叉 trainer 設定表單、defaults、validation、rules、r
 
 ### 訓練 Overlay 流程
 
-Hub 與 trainer 使用同一份 trainer-owned config/runtime：
+Hub 大廳與 Hub 內建 runtime 使用同一份 module-owned config/runtime：
 
 - Hub 點「開始訓練」：只在訓練大廳上生成 trainer config overlay；背景不切換、不導向 trainer 網站。
-- Trainer 點模組：只在目前頁籤/清單上生成同一 config overlay；不切到獨立設定頁。
+- 內建 runtime 只由 Hub overlay 或單一遊戲 PWA 載入，不建立獨立 trainer 網站。
 - 可保留 query/hash deep link；開 config 不得卸載背景頁。
 - 開始後由原 trainer runtime 接管 renderer、canvas、input、fullscreen lifecycle。
-- 結果頁依來源只顯示一個按鈕：Hub 顯示「返回大廳」並關閉 Hub overlay；trainer 顯示「返回清單」並關閉模組 overlay、回原清單。禁止同時顯示兩者；禁止把 Hub 載入 trainer iframe。
-- Hub/trainer active、complete、exit 透過共用嵌入訊息協定同步；必須驗證 origin 與 window source。
+- 結果頁依來源只顯示一個按鈕：Hub 顯示「返回大廳」並關閉 Hub overlay；單一遊戲 PWA 顯示返回入口。禁止同時顯示兩者。
+- Hub/runtime active、complete、exit 透過共用嵌入訊息協定同步；必須驗證同源 origin 與 window source。
 
-Hub 與各 trainer 為獨立 PWA；各自保留 manifest、app identity、scope、同來源下載頁。安裝來源只安裝該 app。Hub 內嵌 trainer 不得改頂層來源或導向其他 trainer 網站。
+只有 Hub 是平台 PWA；每個正式遊戲仍可保留 `/games/{gameId}/` 的獨立 scope。四個內建 runtime 不得有自己的 manifest、canonical、sitemap、下載頁或外部 trainer domain。
 
 共用 shell CSS 放 `packages/ui/src/components/TrainerApp.css` 或 package stylesheet：cards、dialogs、trainer setup、results、tables、routed selection、buttons、forms、layout primitives。App `index.css` 只留產品視覺、遊戲/刺激 renderer、app overrides。搬共用 component 時同步搬 CSS，盡量刪本地重複。
 
@@ -100,7 +100,7 @@ Trainers 維持一致檔名/資料夾，例如 `pages/settings/SettingsPage.tsx`
 
 ## 測試指引
 
-無正式完整框架。UI、auth、routing、共用 package 變更：build 受影響 app + 至少一個代表 trainer。Cloudflare Function 變更：盡量對修改檔執行 `node --check`。
+無正式完整框架。UI、auth、routing、共用 package 變更：build Hub 並對四個 runtime 執行 TypeScript 檢查。Cloudflare Function 變更：盡量對修改檔執行 `node --check`。
 
 ## 台灣醫療與職能治療法規文案
 
@@ -127,8 +127,8 @@ Trainers 維持一致檔名/資料夾，例如 `pages/settings/SettingsPage.tsx`
 - E-E-A-T 不是可直接保證排名的單一分數。內容先服務讀者並回答實際問題，不為搜尋流量大量產生相似頁面、重寫他站內容或虛構新鮮度；AI 協助內容需保留人工查核、發布責任與適當揭露。
 - 醫療、健康、科學與軟體效度敘述優先引用官方文件、原始研究或同儕審查論文。FrACT 相關內容引用[官方網站／手冊](https://michaelbach.de/fract/)、實際採用的版本與對應研究，並同時揭露校正需求及本站未經等效驗證。
 - `ProfilePage` 只用於主要內容確實聚焦單一作者的專頁，不得套在混合問答／文章列表頁；所有 structured data 皆須代表頁面可見內容並以 Rich Results Test 驗證。
-- Hub 與四個 trainers 的跨站連結使用可理解的品牌錨文字，例如「居家訓練網」，避免只寫網址或模糊的「點這裡」。獨立 PWA、canonical 與 sitemap 仍各自指向所屬正式 origin。
-- SEO 或 E-E-A-T 變更至少執行受影響 app build 與 `npm run test:seo`；修改 manifest 再執行 `npm run test:pwa`，修改共用 UI、語言初始化或 entrypoint 再執行 `npm run test:entrypoints`。最後直接檢查 `out/index.html`／`dist/index.html` 的 title、H1、description、canonical、robots、JSON-LD、繁體中文可見內容及不得出現的 104 URL。
+- 不得重新加入 `motor.trainerhub.cc`、`vision.trainerhub.cc`、`brain.trainerhub.cc`、`mouth.trainerhub.cc` 的公開連結、canonical、sitemap 或 auth origin；這些退役 hostname 只保留 301 設定。
+- SEO 或 E-E-A-T 變更至少執行 Hub build 與 `npm run test:seo`；修改 manifest 再執行 `npm run test:pwa`，修改共用 UI、語言初始化或 entrypoint 再執行 `npm run test:entrypoints`。最後直接檢查 `apps/rehabtrainerhub/out/index.html` 的 title、H1、description、canonical、robots、JSON-LD、繁體中文可見內容及不得出現的 104 URL。
 
 SEO 判斷以 Google Search Central 的[以使用者為優先的實用內容指南](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)、[Sitemap 指南](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap)、[結構化資料指南](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)及[ProfilePage 指南](https://developers.google.com/search/docs/appearance/structured-data/profile-page)最新版本為準；規範變更時更新實作與檢查腳本，不以舊 SEO 慣例覆蓋官方說明。
 

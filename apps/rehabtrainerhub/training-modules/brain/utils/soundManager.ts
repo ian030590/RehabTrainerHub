@@ -1,1 +1,1 @@
-export * from '../../../../braintrainer/src/utils/soundManager';
+export * from '../../../training-runtimes/brain/src/utils/soundManager';

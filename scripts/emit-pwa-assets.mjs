@@ -36,11 +36,7 @@ const workerTemplate = await readFile(
 const worker = workerTemplate
   .replace("'__CACHE_NAME__'", JSON.stringify(cacheName))
   .replace("/* __PRECACHE_URLS__ */ ['/']", JSON.stringify(precacheUrls));
-const appName = basename(dirname(outputDir));
-const trainerApps = new Set(['motortrainer', 'visiontrainer', 'braintrainer', 'mouthtrainer']);
-const frameAncestors = trainerApps.has(appName)
-  ? "'self' https://trainerhub.cc https://rehabtrainerhub.pages.dev https://*.rehabtrainerhub.pages.dev http://localhost:* http://127.0.0.1:*"
-  : "'self'";
+const frameAncestors = "'self'";
 
 await writeFile(resolve(outputDir, 'sw.js'), worker);
 await writeFile(

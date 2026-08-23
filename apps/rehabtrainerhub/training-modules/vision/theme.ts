@@ -1,1 +1,1 @@
-export * from '../../../visiontrainer/src/theme';
+export * from '../../training-runtimes/vision/src/theme';

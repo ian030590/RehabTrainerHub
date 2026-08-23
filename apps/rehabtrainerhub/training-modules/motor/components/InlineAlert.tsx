@@ -1,1 +1,1 @@
-export * from '../../../../motortrainer/src/components/InlineAlert';
+export * from '../../../training-runtimes/motor/src/components/InlineAlert';

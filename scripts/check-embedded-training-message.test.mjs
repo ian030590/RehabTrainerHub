@@ -102,26 +102,26 @@ test('embedded training reports active state to its verified Hub origin', (conte
   }), false);
 });
 
-test('Hub accepts messages only from the expected Trainer origin and frame', () => {
+test('Hub accepts messages only from the expected same-origin runtime frame', () => {
   const expectedSource = {};
   assert.equal(embeddedTraining.IsTrustedTrainingFrameMessage(
-    { origin: 'https://vision.trainerhub.cc', source: expectedSource },
-    'https://vision.trainerhub.cc',
+    { origin: 'https://trainerhub.cc', source: expectedSource },
+    'https://trainerhub.cc',
     expectedSource,
   ), true);
   assert.equal(embeddedTraining.IsTrustedTrainingFrameMessage(
     { origin: 'https://attacker.example', source: expectedSource },
-    'https://vision.trainerhub.cc',
+    'https://trainerhub.cc',
     expectedSource,
   ), false);
   assert.equal(embeddedTraining.IsTrustedTrainingFrameMessage(
-    { origin: 'https://vision.trainerhub.cc', source: {} },
-    'https://vision.trainerhub.cc',
+    { origin: 'https://trainerhub.cc', source: {} },
+    'https://trainerhub.cc',
     expectedSource,
   ), false);
   assert.equal(embeddedTraining.IsTrustedTrainingFrameMessage(
-    { origin: 'https://vision.trainerhub.cc', source: null },
-    'https://vision.trainerhub.cc',
+    { origin: 'https://trainerhub.cc', source: null },
+    'https://trainerhub.cc',
     null,
   ), false);
 });

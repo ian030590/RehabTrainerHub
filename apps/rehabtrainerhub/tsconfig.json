@@ -6,6 +6,7 @@
       "DOM.Iterable",
       "ES2022"
     ],
+    "types": ["vite/client"],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -45,6 +46,7 @@
   ],
   "exclude": [
     "node_modules",
+    "training-runtimes",
     "training-modules/motor",
     "training-modules/vision",
     "training-modules/brain",

@@ -1,1 +1,1 @@
-export * from '../../../../mouthtrainer/src/components/MediaDeviceErrorDialog';
+export * from '../../../training-runtimes/mouth/src/components/MediaDeviceErrorDialog';

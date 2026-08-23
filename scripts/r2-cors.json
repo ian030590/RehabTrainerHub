@@ -4,15 +4,7 @@
       "allowed": {
         "origins": [
           "https://trainerhub.cc",
-          "https://motor.trainerhub.cc",
-          "https://vision.trainerhub.cc",
-          "https://brain.trainerhub.cc",
-          "https://mouth.trainerhub.cc",
           "https://rehabtrainerhub.pages.dev",
-          "https://motortrainer.pages.dev",
-          "https://visiontrainer.pages.dev",
-          "https://braintrainer.pages.dev",
-          "https://mouthtrainer.pages.dev",
           "http://localhost:3000",
           "http://localhost:5173",
           "http://localhost:5174",

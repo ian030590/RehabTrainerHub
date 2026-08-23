@@ -31,11 +31,3 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
-
-# Nested app generated output
-apps/visiontrainer/node_modules/
-apps/visiontrainer/tsconfig.tsbuildinfo
-apps/motortrainer/node_modules/
-apps/motortrainer/.wrangler/
-apps/motortrainer/tsconfig.tsbuildinfo
-apps/motortrainer/temp.gz

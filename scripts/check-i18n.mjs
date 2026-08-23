@@ -8,10 +8,10 @@ import ts from 'typescript';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const dictionaryPairs = [
-  ...['motortrainer', 'visiontrainer', 'braintrainer', 'mouthtrainer'].map((app) => ({
-    label: `${app} trainer`,
-    zh: `apps/${app}/src/i18n/${app === 'mouthtrainer' ? 'zh' : 'zh'}.ts`,
-    en: `apps/${app}/src/i18n/en.ts`,
+  ...['motor', 'vision', 'brain', 'mouth'].map((runtime) => ({
+    label: `${runtime} runtime`,
+    zh: `apps/rehabtrainerhub/training-runtimes/${runtime}/src/i18n/zh.ts`,
+    en: `apps/rehabtrainerhub/training-runtimes/${runtime}/src/i18n/en.ts`,
   })),
   {
     label: 'Hub',

@@ -9,7 +9,7 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const checks = [
   {
     id: 'vision:acuity',
-    file: 'apps/visiontrainer/src/pages/assessment/AcuityTestPage.tsx',
+    file: 'apps/rehabtrainerhub/training-runtimes/vision/src/pages/assessment/AcuityTestPage.tsx',
     lifecycle: 'external-runtime-adapter',
     required: [
       'new JsPsychExternalLifecycle(',
@@ -21,13 +21,13 @@ const checks = [
   },
   {
     id: 'vision:contrast',
-    file: 'apps/visiontrainer/src/pages/assessment/ContrastTestPage.tsx',
+    file: 'apps/rehabtrainerhub/training-runtimes/vision/src/pages/assessment/ContrastTestPage.tsx',
     lifecycle: 'native-timeline',
     required: ['initJsPsych(', 'jsPsych.run(', 'abortExperiment('],
   },
   {
     id: 'vision:ufov-assessment',
-    file: 'apps/visiontrainer/src/pages/assessment/peripheral-attention/PeripheralAttentionPage.tsx',
+    file: 'apps/rehabtrainerhub/training-runtimes/vision/src/pages/assessment/peripheral-attention/PeripheralAttentionPage.tsx',
     lifecycle: 'native-timeline',
     required: ['initJsPsych(', 'jsPsych.run(', 'finishTrial(', 'abortExperiment('],
   },

@@ -1,9 +1,5 @@
 const defaultAllowedOrigins = [
   'https://trainerhub.cc',
-  'https://motor.trainerhub.cc',
-  'https://vision.trainerhub.cc',
-  'https://brain.trainerhub.cc',
-  'https://mouth.trainerhub.cc',
 ];
 const defaultAuthBaseUrl = 'https://trainerhub.cc';
 

@@ -31,7 +31,6 @@
     "./components/ReferenceListPage": "./src/components/ReferenceListPage.tsx",
     "./components/ReferenceListPage.css": "./src/components/ReferenceListPage.css",
     "./components/RehabFooter": "./src/components/RehabFooter.tsx",
-    "./components/RelatedLinksGridPage": "./src/components/RelatedLinksGridPage.tsx",
     "./components/ResultSummary": "./src/components/ResultSummary.tsx",
     "./components/SelectionCard": "./src/components/SelectionCard.tsx",
     "./components/SettingsTabs": "./src/components/SettingsTabs.tsx",

@@ -94,9 +94,9 @@ await AssertSessionStatus(
 
 const allowedSession = await AssertSessionStatus(
   'https://trainerhub.cc/api/auth/session',
-  'https://motor.trainerhub.cc',
+  'https://trainerhub.cc',
   200,
-  'https://motor.trainerhub.cc',
+  'https://trainerhub.cc',
 );
 const allowedSessionBody = await allowedSession.json();
 assert.equal(allowedSessionBody.token, token);
@@ -105,8 +105,8 @@ assert.equal(allowedSessionBody.user.profile, undefined);
 await AssertSessionStatus(
   'https://trainerhub.cc/api/auth/session',
   'https://mouth.trainerhub.cc',
-  200,
-  'https://mouth.trainerhub.cc',
+  403,
+  null,
 );
 
 const localDevSession = await AssertSessionStatus(
@@ -131,7 +131,7 @@ assert.equal(blockedRecords.status, 403);
 const allowedRecords = await getRecords({
   request: new Request('https://trainerhub.cc/api/records?appId=motortrainer', {
     headers: {
-      Origin: 'https://motor.trainerhub.cc',
+      Origin: 'https://trainerhub.cc',
       Authorization: `Bearer ${token}`,
     },
   }),

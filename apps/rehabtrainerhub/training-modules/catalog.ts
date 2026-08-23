@@ -1,4 +1,4 @@
-import { defaultSiteUrls, type SiteUrls } from '@rehab-trainer/ui/siteUrls';
+import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import {
   GetTrainingModuleFlowManifest,
   type TrainingFlowStep,
@@ -459,24 +459,20 @@ export function GetTrainingModuleCopy(
 
 export function BuildTrainingModuleHref(
   module: TrainingCatalogModule,
-  urls: SiteUrls = defaultSiteUrls,
 ): string {
-  return `${urls[module.trainer]}/#${module.entryPath}`;
+  return `${defaultSiteUrls.hub}/runtimes/${module.trainer}/#${module.entryPath}`;
 }
 
 export function BuildTrainingGameInstallHref(
   module: TrainingCatalogModule,
-  urls: SiteUrls = defaultSiteUrls,
 ): string {
-  const trainerOrigin = urls[module.trainer].replace(/\/+$/, '');
-  return `${trainerOrigin}/games/${encodeURIComponent(module.runtimeId)}/`;
+  return `${defaultSiteUrls.hub}/games/${encodeURIComponent(module.runtimeId)}/`;
 }
 
 export function BuildTrainingModuleImageSrc(
   module: TrainingCatalogModule,
-  urls: SiteUrls = defaultSiteUrls,
 ): string {
-  return `${urls[module.trainer].replace(/\/+$/, '')}${module.imagePath}`;
+  return `${defaultSiteUrls.hub}${module.imagePath}`;
 }
 
 export function BuildHubTrainingHref(module: TrainingCatalogModule): string {

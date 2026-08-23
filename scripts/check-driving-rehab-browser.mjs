@@ -15,7 +15,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const appDir = resolve(repoRoot, 'apps', 'visiontrainer');
+const appDir = resolve(repoRoot, 'apps', 'rehabtrainerhub', 'training-runtimes', 'vision');
 const distDir = resolve(appDir, 'dist');
 const distIndex = resolve(distDir, 'index.html');
 const viteBin = resolve(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
@@ -23,7 +23,7 @@ const browserPath = FindBrowserPath();
 const timeoutMs = 45_000;
 
 if (!existsSync(distIndex)) {
-  throw new Error(`VisionTrainer production output is missing: ${distIndex}\nRun npm run build:vision first.`);
+  throw new Error(`Hub vision runtime output is missing: ${distIndex}\nRun npm run build:hub first.`);
 }
 if (!existsSync(viteBin)) {
   throw new Error(`Vite preview executable is missing: ${viteBin}`);

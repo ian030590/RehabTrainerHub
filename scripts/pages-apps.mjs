@@ -3,10 +3,10 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const defaultRepoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-export const pagesAppRoles = ['hub', 'trainer', 'gamehost'];
+export const pagesAppRoles = ['hub', 'gamehost'];
 
 export function IsAuthPagesApp(app) {
-  return app?.role === 'hub' || app?.role === 'trainer';
+  return app?.role === 'hub';
 }
 
 export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
@@ -36,6 +36,8 @@ export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
       }
 
       const siteUrl = NormalizeSiteUrl(pkg.homepage, packagePath);
+      const redirectHostnames = ReadHostnameList(pkg.rehabTrainer?.redirectDomains, packagePath, 'redirectDomains');
+      const retiredProjectNames = ReadProjectNameList(pkg.rehabTrainer?.retiredProjects, packagePath);
       const appPath = ToPosixPath(relative(repoRoot, appDir));
       const deploymentUrl = `https://${projectName}.pages.dev`;
       return {
@@ -48,6 +50,8 @@ export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
         projectName,
         deploymentUrl,
         role,
+        redirectHostnames,
+        retiredProjectNames,
         siteUrl,
         hostname: new URL(siteUrl).hostname,
         usesBuiltInPagesDomain: siteUrl === deploymentUrl,
@@ -63,44 +67,6 @@ export function DiscoverPagesApps(repoRoot = defaultRepoRoot) {
   return apps;
 }
 
-export function SelectChangedTrainers(pagesApps, changedFiles) {
-  const trainers = pagesApps.filter((app) => app.role === 'trainer');
-  if (!changedFiles) return trainers;
-
-  const selectedNames = new Set();
-  let sharedChange = false;
-  for (const rawFile of changedFiles) {
-    const file = ToPosixPath(rawFile).replace(/^\.\//, '');
-    if (!file.startsWith('apps/')) {
-      sharedChange ||= IsRuntimeOrPipelineFile(file);
-      continue;
-    }
-
-    const hubModuleMatch = file.match(
-      /^apps\/rehabtrainerhub\/training-modules\/(motor|vision|brain|mouth)(?:\/|$)/,
-    );
-    if (hubModuleMatch) {
-      selectedNames.add(`${hubModuleMatch[1]}trainer`);
-      continue;
-    }
-    if (file === 'apps/rehabtrainerhub/training-modules/catalog.ts') {
-      sharedChange = true;
-      continue;
-    }
-
-    const trainer = trainers.find((app) => file === app.appPath || file.startsWith(`${app.appPath}/`));
-    if (trainer) selectedNames.add(trainer.appName);
-  }
-
-  return sharedChange
-    ? trainers
-    : trainers.filter((app) => selectedNames.has(app.appName));
-}
-
-function IsRuntimeOrPipelineFile(file) {
-  return /\.(?:cjs|css|js|json|jsx|mjs|sass|scss|toml|ts|tsx|ya?ml)$/.test(file);
-}
-
 function ReadTomlString(toml, key) {
   const match = toml.match(new RegExp(`^\\s*${key}\\s*=\\s*["']([^"']+)["']\\s*$`, 'm'));
   return match?.[1];
@@ -112,6 +78,28 @@ function NormalizeSiteUrl(value, packagePath) {
     throw new Error(`${packagePath} homepage must be an HTTPS origin without a path, query, or hash.`);
   }
   return url.origin;
+}
+
+function ReadHostnameList(values, packagePath, field) {
+  if (values === undefined) return [];
+  if (!Array.isArray(values)) throw new Error(`${packagePath} rehabTrainer.${field} must be an array.`);
+  return values.map((value) => {
+    const hostname = String(value).trim().toLowerCase();
+    if (!/^[a-z0-9.-]+$/.test(hostname) || hostname.includes('..')) {
+      throw new Error(`${packagePath} contains an invalid ${field} hostname: ${value}`);
+    }
+    return hostname;
+  });
+}
+
+function ReadProjectNameList(values, packagePath) {
+  if (values === undefined) return [];
+  if (!Array.isArray(values)) throw new Error(`${packagePath} rehabTrainer.retiredProjects must be an array.`);
+  return values.map((value) => {
+    const name = String(value).trim();
+    if (!/^[a-z0-9-]+$/.test(name)) throw new Error(`${packagePath} contains an invalid retired project name: ${value}`);
+    return name;
+  });
 }
 
 function ToEnvironmentName(value) {

@@ -1,1 +1,1 @@
-export * from '../../../../mouthtrainer/src/utils/settings';
+export * from '../../../training-runtimes/mouth/src/utils/settings';

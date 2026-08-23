@@ -1,1 +1,1 @@
-export * from '../../../../motortrainer/src/utils/soundManager';
+export * from '../../../training-runtimes/motor/src/utils/soundManager';

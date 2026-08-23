@@ -7,15 +7,16 @@ const repoRoot = resolve(import.meta.dirname, '..');
 const read = (relativePath) => readFile(resolve(repoRoot, relativePath), 'utf8');
 const readBytes = (relativePath) => readFile(resolve(repoRoot, relativePath));
 
-const calibration = await read('apps/visiontrainer/src/utils/webgazerCalibration.ts');
-const loader = await read('apps/visiontrainer/src/utils/webgazerLoader.ts');
-const settings = await read('apps/visiontrainer/src/pages/settings/SettingsPage.tsx');
+const visionRuntime = 'apps/rehabtrainerhub/training-runtimes/vision';
+const calibration = await read(`${visionRuntime}/src/utils/webgazerCalibration.ts`);
+const loader = await read(`${visionRuntime}/src/utils/webgazerLoader.ts`);
+const settings = await read(`${visionRuntime}/src/pages/settings/SettingsPage.tsx`);
 const training = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/TrainingPage.tsx');
-const acuity = await read('apps/visiontrainer/src/pages/assessment/AcuityTestPage.tsx');
-const zh = await read('apps/visiontrainer/src/i18n/zh.ts');
-const en = await read('apps/visiontrainer/src/i18n/en.ts');
+const acuity = await read(`${visionRuntime}/src/pages/assessment/AcuityTestPage.tsx`);
+const zh = await read(`${visionRuntime}/src/i18n/zh.ts`);
+const en = await read(`${visionRuntime}/src/i18n/en.ts`);
 const manifest = JSON.parse(await read('scripts/r2-ai-assets.manifest.json'));
-const runtimePath = 'apps/visiontrainer/public/assets/webgazer/3.5.3/webgazer.js';
+const runtimePath = `${visionRuntime}/public/assets/webgazer/3.5.3/webgazer.js`;
 const runtime = await read(runtimePath);
 const gitAttributes = await read('.gitattributes');
 
@@ -43,7 +44,7 @@ assert.ok(runtime.includes('faceMeshSolutionPath:"./mediapipe/face_mesh"'), 'the
 assert.equal(settings.includes('endExperiment'), false, 'jsPsych cleanup must use the supported abortExperiment API');
 assert.ok(settings.includes('abortExperiment'), 'settings cancel must abort the active jsPsych timeline');
 assert.ok(
-  gitAttributes.includes('apps/visiontrainer/public/assets/webgazer/3.5.3/** -text'),
+  gitAttributes.includes(`${visionRuntime}/public/assets/webgazer/3.5.3/** -text`),
   'vendored WebGazer assets must be protected from line-ending conversion',
 );
 
@@ -59,7 +60,7 @@ const runtimeAssets = [
   ['mediapipe/face_mesh/face_mesh_solution_wasm_bin.wasm', 'application/wasm'],
 ];
 for (const [relativePath, contentType] of runtimeAssets) {
-  const source = `apps/visiontrainer/public/assets/webgazer/3.5.3/${relativePath}`;
+  const source = `${visionRuntime}/public/assets/webgazer/3.5.3/${relativePath}`;
   const key = `ai/webgazer/3.5.3/${relativePath}`;
   const asset = manifest.assets.find((candidate) => candidate.key === key);
   assert.ok(asset, `R2 manifest is missing ${key}`);
