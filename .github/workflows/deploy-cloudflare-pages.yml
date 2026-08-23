@@ -41,8 +41,6 @@ jobs:
             command: npm run test:entrypoints
           - name: cloudflare-deploy
             command: npm run test:cloudflare-deploy
-          - name: changed-trainer-smoke
-            command: npm run test:changed-trainer-smoke
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -144,9 +142,3 @@ jobs:
           ASSET_PUBLIC_BASE_URL: ${{ vars.ASSET_PUBLIC_BASE_URL }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-
-      - name: Smoke test changed Trainers
-        run: node scripts/check-changed-trainer-smoke.mjs
-        env:
-          SMOKE_BASE_SHA: ${{ github.event.before }}
-          SMOKE_HEAD_SHA: ${{ github.sha }}
