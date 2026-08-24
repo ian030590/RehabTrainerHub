@@ -17,13 +17,48 @@ for (const app of pagesApps) {
       throw new Error(`Refusing to retire active Pages project: ${projectName}`);
     }
     if (dryRun) {
+      console.log(`$ cloudflare pages project deployments prune ${projectName}`);
+      console.log(`$ cloudflare pages project domains clear ${projectName}`);
       console.log(`$ cloudflare pages project retire ${projectName}`);
       continue;
     }
-    if (await ProjectExists(projectName)) {
+    const project = await GetProject(projectName);
+    if (project) {
+      const projectPath = `/pages/projects/${encodeURIComponent(projectName)}`;
+      await PruneDeployments(projectName, projectPath, project.canonical_deployment?.id);
+      const domains = await ApiRequest('GET', `${projectPath}/domains`);
+      if (!Array.isArray(domains)) throw new Error(`Unable to list Pages domains for ${projectName}.`);
+      for (const domain of domains) {
+        if (!domain?.name) throw new Error(`Pages project ${projectName} returned a domain without a name.`);
+        console.log(`Removing ${domain.name} from ${projectName}...`);
+        await ApiRequest('DELETE', `${projectPath}/domains/${encodeURIComponent(domain.name)}`);
+      }
       console.log(`Retiring Cloudflare Pages project ${projectName}...`);
-      await ApiRequest('DELETE', `/pages/projects/${encodeURIComponent(projectName)}`);
+      await ApiRequest('DELETE', projectPath);
     }
+  }
+}
+
+async function PruneDeployments(projectName, projectPath, canonicalDeploymentId) {
+  let removed = 0;
+  while (true) {
+    const deployments = await ApiRequest('GET', `${projectPath}/deployments`);
+    if (!Array.isArray(deployments)) throw new Error(`Unable to list Pages deployments for ${projectName}.`);
+    if (deployments.some((deployment) => !deployment?.id)) {
+      throw new Error(`Pages project ${projectName} returned a deployment without an id.`);
+    }
+
+    const inactiveDeployments = deployments.filter(({ id }) => id !== canonicalDeploymentId);
+    if (inactiveDeployments.length === 0) {
+      if (removed > 0) console.log(`Removed ${removed} inactive deployment(s) from ${projectName}.`);
+      return;
+    }
+
+    console.log(`Removing ${inactiveDeployments.length} inactive deployment(s) from ${projectName}...`);
+    for (const deployment of inactiveDeployments) {
+      await ApiRequest('DELETE', `${projectPath}/deployments/${encodeURIComponent(deployment.id)}?force=true`);
+    }
+    removed += inactiveDeployments.length;
   }
 }
 
@@ -69,14 +104,15 @@ async function Request(app, method, suffix = '', body) {
   return ApiRequest(method, `/pages/projects/${encodeURIComponent(app.projectName)}/domains${suffix}`, body);
 }
 
-async function ProjectExists(projectName) {
+async function GetProject(projectName) {
   const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/pages/projects/${encodeURIComponent(projectName)}`, {
     headers: { Authorization: `Bearer ${apiToken}` },
   });
   if (response.status === 404) return false;
   const payload = await response.json().catch(() => null);
   if (!response.ok || payload?.success === false) throw new Error(`Unable to inspect Pages project ${projectName}.`);
-  return true;
+  if (!payload?.result) throw new Error(`Cloudflare returned no Pages project data for ${projectName}.`);
+  return payload.result;
 }
 
 async function ApiRequest(method, path, body) {

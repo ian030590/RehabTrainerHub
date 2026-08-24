@@ -205,7 +205,7 @@ function ListExistingProjectNames() {
 
     const names = new Set(
       items
-        .map((item) => item?.name ?? item?.project_name)
+        .map((item) => item?.name ?? item?.project_name ?? item?.['Project Name'])
         .filter((name) => typeof name === 'string' && name.length > 0),
     );
 
