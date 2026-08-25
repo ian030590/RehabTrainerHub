@@ -333,7 +333,10 @@ export function GetLanguageNeutralFeedbackCounts(state: LanguageNeutralGameState
     case 'sudoku':
     case 'latin-square':
     case 'magic-square':
-      return { success: CountCorrectEditableCells(state), errors: state.errors };
+      // Number-grid entries are exploratory until the whole board is solved.
+      // Keep per-cell changes silent; the completed board owns the only
+      // success sound through finishGame('Victory').
+      return { success: 0, errors: state.errors };
     case 'simon-says':
       return { success: state.moves, errors: state.errors };
     case 'tic-tac-toe':
@@ -659,7 +662,7 @@ function HandleConnect4Tap(state: Connect4State, index: number, elapsed: number,
     return;
   }
   if (state.board.every(Boolean)) {
-    finishGame('Defeat');
+    finishGame('Draw');
     return;
   }
   state.aiMoveAt = elapsed + aiTurnDelaySeconds;
@@ -678,7 +681,7 @@ function TakeConnect4AiTurn(
   }
   const aiLine = FindConnect4Line(state.board, state.rows, state.cols, 'A');
   if (aiLine) QueueConnect4Result(state, 'Defeat', elapsed, aiLine);
-  else if (state.board.every(Boolean)) finishGame?.('Defeat');
+  else if (state.board.every(Boolean)) finishGame?.('Draw');
 }
 
 function DrawConnect4(app: Application, state: Connect4State, onTap: (index: number) => void, _t: TFunction, elapsed = 0) {
@@ -841,7 +844,7 @@ function HandleHexTap(state: HexState, index: number, elapsed: number, finishGam
     return;
   }
   if (state.board.every(Boolean)) {
-    finishGame('Defeat');
+    finishGame('Draw');
     return;
   }
   state.aiMoveAt = elapsed + aiTurnDelaySeconds;
@@ -853,7 +856,8 @@ function TakeHexAiTurn(state: HexState, finishGame?: (result: GameResult) => voi
     state.board[aiMove] = 2;
     state.aiMoves += 1;
   }
-  if (HasHexPath(state, 2) || state.board.every(Boolean)) finishGame?.('Defeat');
+  if (HasHexPath(state, 2)) finishGame?.('Defeat');
+  else if (state.board.every(Boolean)) finishGame?.('Draw');
 }
 
 function DrawHex(app: Application, state: HexState, onTap: (index: number) => void, _t: TFunction) {
@@ -1261,7 +1265,13 @@ function IsDotsBoardFull(state: DotsAndBoxesState) {
 
 function FinishDotsIfFull(state: DotsAndBoxesState, finishGame: (result: GameResult) => void) {
   if (!IsDotsBoardFull(state)) return false;
-  finishGame(state.playerScore > state.aiScore ? 'Victory' : 'Defeat');
+  finishGame(
+    state.playerScore > state.aiScore
+      ? 'Victory'
+      : state.playerScore === state.aiScore
+        ? 'Draw'
+        : 'Defeat',
+  );
   return true;
 }
 

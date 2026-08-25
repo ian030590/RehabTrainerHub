@@ -42,22 +42,28 @@ assert.equal(
   'the camera initialization plugin must not be forked locally',
 );
 for (const marker of [
+  "calibration_mode: 'click'",
+  'repetitions_per_point: 2',
+  'randomize_calibration_order: true',
+  'show_validation_data: true',
+  'CleanupWebGazerRuntime',
+]) {
+  assert.ok(calibration.includes(marker), `official WebGazer flow contract missing: ${marker}`);
+}
+for (const forbidden of [
   'StartHeadPositionGuidance',
   'StartInitCameraFailureRecovery',
-  "'too-far'",
-  "'too-close'",
-  'button.dataset.headPositionReady',
-  'stopImmediatePropagation',
-  'WebGazerValidatePlugin',
-  'show_validation_data: true',
+  'ClassifyHeadDistance',
+  'GetHeadDistanceStatus',
   'StartValidationResultsPresentation',
-  'ResumeWebGazerForValidation',
-  'CleanupWebGazerRuntime',
-  'activeInitCameraCleanup',
-  'activeInitFailureCleanup',
-  'activeValidationCleanup',
+  'calibration_points:',
+  'validation_points:',
 ]) {
-  assert.ok(calibration.includes(marker), `native WebGazer flow contract missing: ${marker}`);
+  assert.equal(
+    calibration.includes(forbidden),
+    false,
+    `camera positioning and 9-point defaults must stay owned by official jsPsych plugins: ${forbidden}`,
+  );
 }
 assert.ok(loader.includes('Timed out loading WebGazer'), 'script loading must have a timeout');
 assert.ok(loader.includes("webGazerRuntimeVersion = '3.5.3'"), 'WebGazer must use a pinned runtime version');
@@ -96,7 +102,12 @@ for (const host of [training]) {
   assert.ok(host.includes('CleanupWebGazerRuntime'), 'every WebGazer host must clean up the runtime');
 }
 assert.ok(oculomotorTimeline.includes('show_gaze_point'), 'the timeline must forward the gazepoint display setting');
-assert.ok(oculomotorPlugin.includes('setGazeListener'), 'the training plugin must consume live WebGazer samples');
+assert.ok(oculomotorTimeline.includes("import WebGazerExtension from '@jspsych/extension-webgazer'"), 'the formal trial must use the official WebGazer extension');
+assert.ok(oculomotorTimeline.includes('extensions: enableWebGazer'), 'the formal trial must activate the official WebGazer extension');
+assert.ok(oculomotorPlugin.includes('onGazeUpdate?.(handleGazePrediction)'), 'formal gaze coordinates must come from the official WebGazer extension');
+assert.ok(oculomotorPlugin.includes("'jspsych-webgazer-extension'"), 'saved results must declare the official coordinate source');
+assert.ok(oculomotorPlugin.includes('setGazeListener?.(handleEyeFeatures)'), 'raw eye features must only feed pupil and blink estimates');
+assert.ok(oculomotorPlugin.includes('hideVideo'), 'the formal trial must hide the camera preview');
 assert.ok(oculomotorPlugin.includes('showPredictions'), 'the training plugin must support visible gazepoints');
 assert.ok(oculomotorPlugin.includes('gaze_sample_columns'), 'the training plugin must store the raw sample schema');
 assert.ok(oculomotorPlugin.includes('gaze_samples'), 'the training plugin must store every accepted gaze/target sample');
@@ -104,6 +115,7 @@ assert.ok(oculomotorPlugin.includes('time_to_first_fixation_ms'), 'the training 
 assert.equal(oculomotorPlugin.includes("wgState === 'calibration'"), false, 'training must not overwrite native calibration data');
 assert.equal(oculomotorPlugin.includes('recordScreenPosition'), false, 'training must not inject fake center calibration clicks');
 assert.ok(training.includes("item.trial_type === 'pixi-oculomotor-training'"), 'calibration trials must not replace the training result');
+assert.ok(training.includes('StripRedundantWebGazerExtensionData'), 'saved records must deduplicate official raw coordinates');
 assert.ok(oculomotorResults.includes('FindOculomotorResult'), 'results must use the canonical trial selector');
 assert.ok(oculomotorResultData.includes("oculomotorTrialType = 'pixi-oculomotor-training'"), 'results must identify the Pixi training trial');
 assert.ok(oculomotorResultData.includes('result.trial_type === oculomotorTrialType'), 'results must select the Pixi training trial');
@@ -113,6 +125,7 @@ for (const exportSource of [trainingResultCsv, trainingRecords]) {
     'exp.csv.targetDistanceSd',
     'exp.csv.timeToFirstFixation',
     'exp.csv.pupilSizeEstimate',
+    'exp.csv.pupilSizeSd',
     'exp.csv.blinkCountEstimate',
     'exp.csv.gazeSampleCount',
     'exp.csv.gazeTimestamp',
@@ -126,14 +139,11 @@ for (const exportSource of [trainingResultCsv, trainingRecords]) {
 }
 for (const dictionary of [zh, en]) {
   for (const key of [
-    'settings.wg.moveCloser',
-    'settings.wg.moveFarther',
-    'settings.wg.validationResultTitle',
-    'settings.wg.validationButton',
     'exp.res.meanTargetDistance',
     'exp.res.targetDistanceSd',
     'exp.res.timeToFirstFixation',
     'exp.res.pupilSizeEstimate',
+    'exp.res.pupilSizeSd',
     'exp.res.blinkCountEstimate',
   ]) {
     assert.ok(dictionary.includes(`'${key}'`), `translation key missing: ${key}`);

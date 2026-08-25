@@ -4,6 +4,14 @@
 `training-runtimes/*` 透過 `@rehab-trainer/hub-modules/*` 編譯這些程式碼；
 Hub 大廳透過 `catalog.ts` 與 `moduleFlowManifest.ts` 裝載相同模組資料。
 
+四個 trainer 統一遵循單向組合：
+
+`Hub catalog -> training-runtimes/<trainer> shell -> training-modules/<trainer>`
+
+`training-runtimes/*/src/App.tsx` 只負責 route、layout、語系與顯示設定，並以
+dynamic import 載入對應 trainer module。頁面、config、rules、game loop、renderer、
+input 與 results 實作不得放在 runtime shell 的 `src/pages/`。
+
 所有可玩的 catalog 模組必須依序提供：
 
 1. 訓練卡片
@@ -14,7 +22,8 @@ Hub 大廳透過 `catalog.ts` 與 `moduleFlowManifest.ts` 裝載相同模組資�
 
 `motor/`、`vision/`、`brain/`、`mouth/` 保有各自的 renderer、game loop、
 input 與媒體 lifecycle。目錄內少量 `i18n/`、`components/`、`utils/` 檔案是
-Hub runtime adapter，讓模組使用對應語系、設定與紀錄儲存；它們不是第二份 runtime。
+runtime shell adapter，讓模組使用對應語系、設定與紀錄儲存；它們不是第二份 runtime，
+也不得包含遊戲流程或 renderer 狀態。
 
 重型依賴必須留在模組的動態 import 後方。卡片 hover、focus 或 pointer down
 可以預載程式碼，但 Pixi、jsPsych、Three、MediaPipe、TensorFlow 與實際媒體

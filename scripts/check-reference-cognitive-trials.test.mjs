@@ -21,6 +21,14 @@ async function ImportStandaloneTypeScriptModule(path) {
   return import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 }
 
+function SourceBetween(source, startMarker, endMarker) {
+  const start = source.indexOf(startMarker);
+  const end = source.indexOf(endMarker, start + startMarker.length);
+  assert.ok(start >= 0, `missing source marker: ${startMarker}`);
+  assert.ok(end > start, `missing source marker: ${endMarker}`);
+  return source.slice(start, end);
+}
+
 test('trial record helpers produce deterministic millisecond records', async () => {
   const {
     CreateReactionTrialRecord,
@@ -139,4 +147,31 @@ test('reference cognitive games persist and render complete per-trial contracts'
   assert.match(trialLogic, /replaySequence:\s*true/);
   assert.doesNotMatch(languageNeutral, /Math\.sin\(elapsed\s*\*\s*24\)/);
   assert.doesNotMatch(trialLogic, /state\.errors \+= 1;\s*finishGame\('Defeat'\)/);
+});
+
+test('number grids stay silent until completion and board games preserve draws', async () => {
+  const source = await readFile(languageNeutralPath, 'utf8');
+  const feedback = SourceBetween(
+    source,
+    'export function GetLanguageNeutralFeedbackCounts',
+    'export function DrawLanguageNeutralGame',
+  );
+  assert.match(
+    feedback,
+    /case 'sudoku':[\s\S]*?case 'magic-square':[\s\S]*?return \{ success: 0, errors: state\.errors \}/,
+    'number-grid edits must not trigger per-cell success audio',
+  );
+
+  const connect4Player = SourceBetween(source, 'function HandleConnect4Tap', 'function TakeConnect4AiTurn');
+  const connect4Ai = SourceBetween(source, 'function TakeConnect4AiTurn', 'function DrawConnect4');
+  assert.match(connect4Player, /state\.board\.every\(Boolean\)[\s\S]*?finishGame\('Draw'\)/);
+  assert.match(connect4Ai, /state\.board\.every\(Boolean\)[\s\S]*?finishGame\?\.\('Draw'\)/);
+
+  const hexPlayer = SourceBetween(source, 'function HandleHexTap', 'function TakeHexAiTurn');
+  const hexAi = SourceBetween(source, 'function TakeHexAiTurn', 'function DrawHex');
+  assert.match(hexPlayer, /state\.board\.every\(Boolean\)[\s\S]*?finishGame\('Draw'\)/);
+  assert.match(hexAi, /state\.board\.every\(Boolean\)[\s\S]*?finishGame\?\.\('Draw'\)/);
+
+  const dotsFinish = SourceBetween(source, 'function FinishDotsIfFull', 'function DrawDotsLine');
+  assert.match(dotsFinish, /state\.playerScore === state\.aiScore[\s\S]*?\? 'Draw'/);
 });

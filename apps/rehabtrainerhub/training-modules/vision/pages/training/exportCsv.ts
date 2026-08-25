@@ -53,6 +53,7 @@ export function DownloadTrainingCsv({
       t('exp.csv.targetDistanceSd'),
       t('exp.csv.timeToFirstFixation'),
       t('exp.csv.pupilSizeEstimate'),
+      t('exp.csv.pupilSizeSd'),
       t('exp.csv.blinkCountEstimate'),
       t('exp.csv.gazeSampleCount'),
       t('exp.csv.gazeTimestamp'),
@@ -94,6 +95,7 @@ export function DownloadTrainingCsv({
       result?.target_distance_sd_px ?? '',
       result?.time_to_first_fixation_ms ?? '',
       result?.average_pupil_size_px ?? '',
+      result?.pupil_size_sd_px ?? '',
       result?.blink_count ?? '',
       result?.gaze_sample_count ?? result?.gaze_samples?.length ?? 0,
     ];

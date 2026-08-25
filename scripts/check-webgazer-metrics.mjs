@@ -60,38 +60,6 @@ function CreateEyePatch(width, height, darkPixels) {
   return { data, width, height };
 }
 
-test('classifies head distance from MediaPipe cheek landmarks', () => {
-  const landmarks = CreateLandmarks();
-  const options = { tooFarBelowRatio: 0.25, tooCloseAboveRatio: 0.45 };
-  landmarks[234] = [400, 200, 0];
-  landmarks[454] = [600, 200, 0];
-  assert.equal(metrics.CalculateFaceWidthRatio(landmarks, 1000), 0.2);
-  assert.equal(metrics.ClassifyHeadDistance(landmarks, 1000, options), 'too-far');
-
-  landmarks[454] = [750, 200, 0];
-  assert.equal(metrics.ClassifyHeadDistance(landmarks, 1000, options), 'ready');
-
-  landmarks[454] = [900, 200, 0];
-  assert.equal(metrics.ClassifyHeadDistance(landmarks, 1000, options), 'too-close');
-
-  const normalizedLandmarks = CreateLandmarks();
-  normalizedLandmarks[234] = [0.2, 0.5, 0];
-  normalizedLandmarks[454] = [0.4, 0.5, 0];
-  AssertNearlyEqual(
-    metrics.CalculateFaceWidthRatio(normalizedLandmarks, 1000),
-    0.2,
-    'normalized face width ratio',
-  );
-  assert.equal(metrics.ClassifyHeadDistance(normalizedLandmarks, 1000, options), 'too-far');
-  normalizedLandmarks[454] = [0.55, 0.5, 0];
-  assert.equal(metrics.ClassifyHeadDistance(normalizedLandmarks, 1000, options), 'ready');
-  normalizedLandmarks[454] = [0.7, 0.5, 0];
-  assert.equal(metrics.ClassifyHeadDistance(normalizedLandmarks, 1000, options), 'too-close');
-
-  assert.equal(metrics.ClassifyHeadDistance(null, 1000, options), 'unavailable');
-  assert.equal(metrics.ClassifyHeadDistance(landmarks, 0, options), 'unavailable');
-});
-
 test('calculates eye aspect ratio and counts only completed blink transitions', () => {
   const landmarks = CreateLandmarks();
   SetEyeLandmarks(landmarks, 0, {
@@ -185,6 +153,7 @@ test('creates compact samples and summarizes distance, TTFF, pupil, blink, and A
   );
   assert.equal(summary.timeToFirstFixationMs, 100);
   assert.equal(summary.averagePupilSizePx, 3);
+  assert.equal(summary.pupilSizeStandardDeviationPx, 1);
   assert.equal(summary.blinkCount, 1);
   assert.equal(summary.aoiSampleCount, 2);
   assert.equal(summary.aoiScore, 67);
@@ -213,6 +182,7 @@ test('creates compact samples and summarizes distance, TTFF, pupil, blink, and A
       distanceStandardDeviationPx: null,
       gazeSampleCount: 0,
       meanDistancePx: null,
+      pupilSizeStandardDeviationPx: null,
       timeToFirstFixationMs: null,
     },
   );

@@ -467,6 +467,7 @@ export function BuildTrainingRecordsCsv(records: TrainingRecord[], t: TFunction)
     t('exp.csv.targetDistanceSd'),
     t('exp.csv.timeToFirstFixation'),
     t('exp.csv.pupilSizeEstimate'),
+    t('exp.csv.pupilSizeSd'),
     t('exp.csv.blinkCountEstimate'),
     t('exp.csv.gazeSampleCount'),
     t('exp.csv.gazeTimestamp'),
@@ -513,6 +514,7 @@ function ToCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
       result.target_distance_sd_px ?? '',
       result.time_to_first_fixation_ms ?? '',
       result.average_pupil_size_px ?? '',
+      result.pupil_size_sd_px ?? '',
       result.blink_count ?? '',
       result.gaze_sample_count ?? samples.length,
     ];
@@ -637,7 +639,7 @@ function ToCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
 }
 
 function EmptyOculomotorTrackingColumns(): string[] {
-  return Array.from({ length: 15 }, () => '');
+  return Array.from({ length: 16 }, () => '');
 }
 
 function ToTrainingRecord(value: unknown): TrainingRecord | null {

@@ -204,9 +204,7 @@ body .webgazer-fullscreen-stage #webgazer-validate-container,
   margin-top: 120px !important;
 }
 
-/* ?? Webcam video container ??
-   The plugin injects <style id="webgazer-center-style"> with !important,
-   so we use body-level specificity AND a MutationObserver in the component. */
+/* The official init-camera plugin injects a centering style with !important. */
 body #webgazerVideoContainer {
   top: 20px !important;
   left: 50% !important;
@@ -264,103 +262,6 @@ body #webgazer-calibrate-container #calibration-point,
 .webgazer-fullscreen-stage .jspsych-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.webgazer-fullscreen-stage #webgazer-init-status {
-  min-height: 1.5em;
-  margin: 12px 0;
-  color: var(--text-secondary);
-  font-size: 15px;
-  line-height: 1.5;
-}
-
-.webgazer-fullscreen-stage #webgazer-init-status.error {
-  color: var(--error);
-}
-
-.webgazer-fullscreen-stage #webgazer-init-status[data-state='too-far'],
-.webgazer-fullscreen-stage #webgazer-init-status[data-state='too-close'] {
-  color: var(--error);
-}
-
-.webgazer-fullscreen-stage #webgazer-init-status[data-state='stabilizing'] {
-  color: var(--warning);
-}
-
-.webgazer-fullscreen-stage #webgazer-init-status[data-state='ready'] {
-  color: var(--success);
-}
-
-.webgazer-init-recovery {
-  width: min(520px, calc(100vw - 40px));
-  margin: 24px auto;
-  padding: 18px;
-  border: 1px solid var(--error);
-  border-radius: var(--radius-m);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  text-align: center;
-}
-
-.webgazer-init-recovery p {
-  margin: 0 0 14px;
-  color: var(--error);
-}
-
-.webgazer-validation-result {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 5;
-  width: min(440px, calc(100vw - 40px));
-  padding: 22px;
-  transform: translate(-50%, -50%);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-ambient);
-  text-align: center;
-}
-
-.webgazer-validation-result h2 {
-  margin: 0 0 10px;
-  font-size: 22px;
-  line-height: 1.25;
-}
-
-.webgazer-validation-result p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.webgazer-validation-legend {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin: 14px 0;
-  color: var(--text-secondary);
-  font-size: 13px;
-}
-
-.webgazer-validation-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.webgazer-validation-legend span::before {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--success);
-  content: '';
-}
-
-.webgazer-validation-legend .is-outside::before {
-  background: var(--error);
 }
 
 .webgazer-fullscreen-stage .jspsych-btn:hover:not(:disabled) {

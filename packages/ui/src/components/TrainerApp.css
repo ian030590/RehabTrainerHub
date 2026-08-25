@@ -1535,6 +1535,39 @@ body[data-training-embed="hub"] #root,
   transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+/* Shared test-config control language: every training setup uses the same
+   touch target, shape, focus treatment, and active state. */
+.training-config .training-option {
+  min-height: 68px;
+  padding: 12px 14px;
+  border-width: 1.5px;
+  border-radius: var(--radius-m);
+  background: var(--bg-card);
+  box-shadow: none;
+}
+
+.training-config .training-option:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.training-config .training-option:active {
+  transform: scale(0.985);
+}
+
+.training-config .training-option.active {
+  border-color: var(--accent);
+  background: var(--bg-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.training-config .training-option:focus-visible,
+.training-config input[type="range"]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 3px;
+}
+
 .training-option:hover {
   border-color: var(--border-hover);
   background: var(--bg-card-hover);
@@ -1784,6 +1817,57 @@ body[data-training-embed="hub"] #root,
 
 .range-control input {
   accent-color: var(--accent);
+}
+
+.training-config input[type="range"],
+.range-control input[type="range"] {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  accent-color: var(--accent);
+  background: transparent;
+  cursor: pointer;
+}
+
+.training-config input[type="range"]::-webkit-slider-runnable-track,
+.range-control input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  border-radius: 999px;
+  background: var(--bg-panel);
+}
+
+.training-config input[type="range"]::-moz-range-track,
+.range-control input[type="range"]::-moz-range-track {
+  height: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  border-radius: 999px;
+  background: var(--bg-panel);
+}
+
+.training-config input[type="range"]::-webkit-slider-thumb,
+.range-control input[type="range"]::-webkit-slider-thumb {
+  width: 24px;
+  height: 24px;
+  margin-top: -9px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 3px solid var(--bg-elevated);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 2px 6px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.training-config input[type="range"]::-moz-range-thumb,
+.range-control input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--bg-elevated);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 2px 6px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 .range-control output {

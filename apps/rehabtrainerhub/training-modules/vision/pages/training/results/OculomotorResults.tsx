@@ -56,6 +56,12 @@ export function OculomotorResults({
       value: FormatPixels(result.average_pupil_size_px, t),
     });
   }
+  if (result?.pupil_size_sd_px !== undefined) {
+    summaryItems.push({
+      label: t('exp.res.pupilSizeSd'),
+      value: FormatPixels(result.pupil_size_sd_px, t),
+    });
+  }
   if (result?.blink_count !== undefined) {
     summaryItems.push({
       label: t('exp.res.blinkCountEstimate'),

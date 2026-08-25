@@ -85,6 +85,13 @@ function WaitForUsableLayout(element: HTMLElement): Promise<void> {
   });
 }
 
+function StripRedundantWebGazerExtensionData(result: TrialData): TrialData {
+  const compactResult = { ...result };
+  delete compactResult.webgazer_data;
+  delete compactResult.webgazer_targets;
+  return compactResult;
+}
+
 export function TrainingPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -215,7 +222,9 @@ function TrainingRuntimePage() {
 
       const jsPsych = initJsPsych({
         display_element: container,
-        extensions: enableWebGazer ? [{ type: WebGazerExtension }] : [],
+        extensions: enableWebGazer
+          ? [{ type: WebGazerExtension, params: { sampling_interval: 100 } }]
+          : [],
         on_finish: async () => {
           if (skipFinishRef.current) {
             skipFinishRef.current = false;
@@ -223,7 +232,9 @@ function TrainingRuntimePage() {
           }
           const timelineData = jsPsych.data.get().values() as TrialData[];
           const data = moduleId === 'oculomotor-training'
-            ? timelineData.filter((item) => item.trial_type === 'pixi-oculomotor-training')
+            ? timelineData
+              .filter((item) => item.trial_type === 'pixi-oculomotor-training')
+              .map(StripRedundantWebGazerExtensionData)
             : timelineData;
           await SaveTrainingRecord({
             results: data,
@@ -286,17 +297,6 @@ function TrainingRuntimePage() {
             instruction2: t('settings.wg.inst2'),
             instruction3: t('settings.wg.inst3'),
             buttonText: t('settings.wg.startBtn'),
-            loadingText: t('settings.wg.loading'),
-            waitingFaceText: t('settings.wg.waitingFace'),
-            readyText: t('settings.wg.headReady'),
-            timeoutText: t('settings.wg.timeout'),
-            retryText: t('settings.wg.retry'),
-            errorText: t('settings.wg.errorStart'),
-            moveCloserText: t('settings.wg.moveCloser'),
-            moveFartherText: t('settings.wg.moveFarther'),
-            validationResultText: t('settings.wg.validationInstruction'),
-            validationButtonText: t('settings.wg.validationButton'),
-            validationResultTitle: t('settings.wg.validationResultTitle'),
           },
         },
         gabor: {

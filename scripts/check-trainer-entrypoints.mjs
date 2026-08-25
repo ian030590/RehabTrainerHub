@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -84,6 +84,10 @@ for (const htmlEntrypoint of trainerHtmlEntrypoints) {
   CheckHtmlEntrypoint(htmlEntrypoint);
 }
 
+for (const runtimeDirectory of trainingRuntimeDirectories) {
+  CheckRuntimeModuleOwnership(runtimeDirectory);
+}
+
 for (const sourceFile of [...trainerSourceFiles, ...hubTrainingModuleSourceFiles]) {
   CheckTrainingUiContract(sourceFile);
 }
@@ -154,6 +158,40 @@ function CheckHtmlEntrypoint(htmlFile) {
         `${htmlFile}: eagerly loads heavy runtime ${match[1]}; load it from the owning module after config interaction`,
       );
     }
+  }
+}
+
+function CheckRuntimeModuleOwnership(runtimeDirectory) {
+  const trainer = basename(runtimeDirectory);
+  const appFile = join(runtimeDirectory, 'src', 'App.tsx');
+  const relativeAppFile = RelativeToRepo(appFile);
+  const appSource = readFileSync(appFile, 'utf8');
+  const trainerModulePrefix = `@rehab-trainer/hub-modules/${trainer}/`;
+
+  if (!appSource.includes(trainerModulePrefix)) {
+    violations.push(
+      `${relativeAppFile}: runtime shell must load trainer-owned implementations from ${trainerModulePrefix}`,
+    );
+  }
+
+  for (const specifier of GetStaticImports(appSource)) {
+    if (specifier.startsWith('@rehab-trainer/hub-modules/')) {
+      violations.push(
+        `${relativeAppFile}: statically imports ${specifier}; runtime shells must lazy-load trainer modules`,
+      );
+    }
+
+    if (/^\.\.?\/(?:.*\/)?pages\//.test(specifier)) {
+      violations.push(
+        `${relativeAppFile}: loads local page ${specifier}; move trainer implementation to training-modules/${trainer}`,
+      );
+    }
+  }
+
+  for (const sourceFile of CollectSourceFiles(join(runtimeDirectory, 'src', 'pages'))) {
+    violations.push(
+      `${RelativeToRepo(sourceFile)}: runtime-local page implementations are forbidden; move this file to training-modules/${trainer}`,
+    );
   }
 }
 

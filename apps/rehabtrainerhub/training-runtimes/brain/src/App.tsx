@@ -7,7 +7,6 @@ import { useSyncedDisplaySettings } from '@rehab-trainer/ui/hooks/useSyncedDispl
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
-import { ModulePage } from '@rehab-trainer/hub-modules/brain/pages/ModulePage';
 import { siteUrls } from './utils/siteUrls';
 import {
   defaultUiFontSizePx,
@@ -15,6 +14,7 @@ import {
   GetSetting,
 } from './utils/settings';
 
+const ModulePage = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/ModulePage').then((module) => ({ default: module.ModulePage })));
 const PeripheralAttentionPage = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/PeripheralAttentionPage').then((module) => ({ default: module.PeripheralAttentionPage })));
 const EveryBallResponsePage = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/EveryBallResponsePage').then((module) => ({ default: module.EveryBallResponsePage })));
 const ThinkingTraining = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/thinking/ThinkingTraining').then((module) => ({ default: module.ThinkingTraining })));

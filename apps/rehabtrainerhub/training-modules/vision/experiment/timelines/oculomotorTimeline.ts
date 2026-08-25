@@ -1,4 +1,5 @@
 // Timeline local to the Hub-owned oculomotor module.
+import WebGazerExtension from '@jspsych/extension-webgazer';
 import PixiOculomotorTrainingPlugin from '../plugins/pixi-oculomotor-training';
 import { GetSetting } from '../../utils/settings';
 import { PixelFromDegree, PixelFromMillimeter } from '../../utils/spatialUtils';
@@ -33,12 +34,6 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
       instruction2: 'Look at each point, then click or tap its center twice.',
       instruction3: 'Keep your head steady until all points are complete.',
       buttonText: 'Start Calibration',
-      moveCloserText: 'Move closer to the camera.',
-      moveFartherText: 'Move farther from the camera.',
-      readyText: 'Head position is ready. Please keep still.',
-      validationResultText: 'The colored dots show each gaze estimate relative to its target area.',
-      validationButtonText: 'Continue to training',
-      validationResultTitle: 'Calibration result',
     }));
   }
 
@@ -62,6 +57,9 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
     show_gaze_point: enableWebGazer && showGazepoint,
     round_number: 1,
     total_rounds: 1,
+    extensions: enableWebGazer
+      ? [{ type: WebGazerExtension, params: { targets: [] } }]
+      : undefined,
   });
 
   return timeline;

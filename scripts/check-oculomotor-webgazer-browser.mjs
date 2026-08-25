@@ -125,31 +125,19 @@ try {
   await cdp.Send('Page.navigate', { url: navigationUrl }, sessionId);
 
   await WaitForSelector(cdp, sessionId, '#webgazer-init-container #jspsych-wg-cont', timeoutMs);
-  const nativeInitState = await WaitForHeadState(cdp, sessionId, 'too-far', timeoutMs);
+  const nativeInitState = await ReadNativeInitState(cdp, sessionId);
   assert.equal(nativeInitState.hasNativeContainer, true, 'native jsPsych camera-init DOM is missing');
-  assert.equal(nativeInitState.state, 'too-far', 'initial head state must request moving closer');
-  assert.equal(nativeInitState.disabled, true, 'camera continue must be gated while too far');
-  assert.match(nativeInitState.text, /too far|move closer/i);
+  assert.equal(nativeInitState.disabled, true, 'official camera init must wait for a centered face');
+  assert.equal(nativeInitState.videoVisible, true, 'head positioning must show the camera preview');
+  assert.equal(nativeInitState.feedbackVisible, true, 'head positioning must show official face feedback');
 
-  const bypassBlocked = await Evaluate(cdp, sessionId, `(() => {
-    const button = document.querySelector('#jspsych-wg-cont');
-    button.disabled = false;
-    button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-    return {
-      disabled: button.disabled,
-      stillInInit: Boolean(document.querySelector('#webgazer-init-container')),
-    };
-  })()`);
-  assert.deepEqual(bypassBlocked, { disabled: true, stillInInit: true }, 'head gate was bypassed');
-
-  await SetHeadState(cdp, sessionId, 'too-close');
-  const tooCloseState = await WaitForHeadState(cdp, sessionId, 'too-close', timeoutMs);
-  assert.equal(tooCloseState.disabled, true, 'camera continue must be gated while too close');
-  assert.match(tooCloseState.text, /too close|farther/i);
-
-  await SetHeadState(cdp, sessionId, 'ready');
-  const readyState = await WaitForHeadState(cdp, sessionId, 'ready', timeoutMs);
-  assert.equal(readyState.disabled, false, 'camera continue must unlock at a stable distance');
+  await SetFaceCentered(cdp, sessionId);
+  await WaitForValue(
+    cdp,
+    sessionId,
+    `document.querySelector('#jspsych-wg-cont')?.disabled === false`,
+    timeoutMs,
+  );
   await ClickDomSelector(cdp, sessionId, '#jspsych-wg-cont');
 
   await WaitForSelector(cdp, sessionId, '#webgazer-calibrate-container #calibration-point', timeoutMs);
@@ -167,22 +155,15 @@ try {
   assert.equal(calibrationState.starts, 1, 'native mouse calibration must start exactly once');
 
   await WaitForSelector(cdp, sessionId, '#webgazer-validate-container .validation-point', timeoutMs);
-  await WaitForSelector(
-    cdp,
-    sessionId,
-    '#webgazer-validate-container [data-webgazer-validation-result]',
-    timeoutMs,
-  );
+  await WaitForSelector(cdp, sessionId, '#webgazer-validate-container #cont', timeoutMs);
   const validationState = await Evaluate(cdp, sessionId, `(() => ({
     centroids: document.querySelectorAll('#webgazer-validate-container .validation-centroid').length,
     points: document.querySelectorAll('#webgazer-validate-container .raw-data-point').length,
-    panel: Boolean(document.querySelector('[data-webgazer-validation-result]')),
-    title: document.querySelector('[data-webgazer-validation-result] h2')?.textContent?.trim() ?? '',
+    customPanel: Boolean(document.querySelector('[data-webgazer-validation-result]')),
   }))()`);
   assert.equal(validationState.centroids, 9, 'native validation must draw all 9 ROI centroids');
   assert.ok(validationState.points > 0, 'native validation must draw raw gaze points');
-  assert.equal(validationState.panel, true, 'calibration result panel is missing');
-  assert.match(validationState.title, /calibration results/i);
+  assert.equal(validationState.customPanel, false, 'validation must not be wrapped in custom result UI');
   await ClickDomSelector(cdp, sessionId, '#webgazer-validate-container #cont');
 
   await WaitForSelector(cdp, sessionId, '.oculomotor-training-trial canvas', timeoutMs);
@@ -192,16 +173,15 @@ try {
   const liveGazePoint = await Evaluate(cdp, sessionId, `(() => ({
     display: document.querySelector('#webgazerGazeDot')?.style.display ?? null,
     hasCanvas: Boolean(document.querySelector('.oculomotor-training-trial canvas')),
+    videoDisplay: document.querySelector('#webgazerVideoContainer')?.style.display ?? null,
+    overlayDisplay: document.querySelector('#webgazerFaceOverlay')?.style.display ?? null,
+    feedbackDisplay: document.querySelector('#webgazerFaceFeedbackBox')?.style.display ?? null,
   }))()`);
   assert.equal(liveGazePoint.hasCanvas, true, 'oculomotor training canvas is missing');
   assert.notEqual(liveGazePoint.display, 'none', 'configured gaze point is not visible during training');
-
-  // The first mock blink occurs while paused and must not be counted. A second
-  // blink occurs after resume and must exist in both raw data and the summary.
-  await WaitForValue(cdp, sessionId, 'window.__wgSmoke.trainingTick >= 5', timeoutMs);
-  await ClickDomSelector(cdp, sessionId, '.oculomotor-pause-button');
-  await WaitForValue(cdp, sessionId, 'window.__wgSmoke.trainingTick >= 16', timeoutMs);
-  await ClickDomSelector(cdp, sessionId, '.oculomotor-pause-button');
+  assert.equal(liveGazePoint.videoDisplay, 'none', 'formal training must hide the camera preview');
+  assert.equal(liveGazePoint.overlayDisplay, 'none', 'formal training must hide face landmarks');
+  assert.equal(liveGazePoint.feedbackDisplay, 'none', 'formal training must hide face feedback');
 
   await WaitForValue(cdp, sessionId, 'window.__wgSmoke.savedPayloads.length === 1', timeoutMs);
   await WaitForSelector(cdp, sessionId, '.results-summary', timeoutMs);
@@ -223,11 +203,11 @@ try {
   console.log([
     'Oculomotor WebGazer browser smoke passed.',
     'Vendored WebGazer 3.5.3 production bundle executed in Chromium.',
-    'Native jsPsych camera init: too-far -> too-close -> ready with guarded continue.',
+    'Official jsPsych camera init: preview visible and continue gated until centered.',
     'Native jsPsych calibration: 9 points x 2 clicks.',
-    `Native jsPsych validation: ${validationState.points} raw points, 9 centroids, result panel shown.`,
+    `Native jsPsych validation: ${validationState.points} raw points and 9 centroids.`,
     `Training: ${resultState.result.gaze_sample_count} paired gaze/target samples; gaze point shown then hidden.`,
-    `Metrics: mean=${resultState.result.mean_target_distance_px}px, SD=${resultState.result.target_distance_sd_px}px, TTFF=${resultState.result.time_to_first_fixation_ms}ms, pupil=${resultState.result.average_pupil_size_px}px, blinks=${resultState.result.blink_count}.`,
+    `Metrics: mean=${resultState.result.mean_target_distance_px}px, SD=${resultState.result.target_distance_sd_px}px, TTFF=${resultState.result.time_to_first_fixation_ms}ms, pupil=${resultState.result.average_pupil_size_px}px, pupil SD=${resultState.result.pupil_size_sd_px}px, blinks=${resultState.result.blink_count}.`,
   ].join('\n'));
 } catch (error) {
   console.error(error.stack || error);
@@ -251,6 +231,7 @@ function AssertSavedResult(state) {
   const result = state.result;
   assert.ok(result, 'saved oculomotor result is missing');
   assert.equal(result.trial_type, 'pixi-oculomotor-training');
+  assert.equal(result.gaze_coordinate_source, 'jspsych-webgazer-extension');
   assert.ok(Number.isFinite(result.mean_target_distance_px), 'mean target distance');
   assert.ok(result.mean_target_distance_px > 0 && result.mean_target_distance_px < 20);
   assert.ok(Number.isFinite(result.target_distance_sd_px), 'target distance SD');
@@ -258,8 +239,10 @@ function AssertSavedResult(state) {
   assert.ok(Number.isFinite(result.time_to_first_fixation_ms), 'Time to First Fixation');
   assert.ok(result.time_to_first_fixation_ms >= 0 && result.time_to_first_fixation_ms < 1000);
   assert.ok(Number.isFinite(result.average_pupil_size_px) && result.average_pupil_size_px > 0);
-  assert.equal(result.blink_count, 1, 'only the in-training blink should be counted');
+  assert.ok(Number.isFinite(result.pupil_size_sd_px) && result.pupil_size_sd_px >= 0);
+  assert.equal(result.blink_count, 1, 'the in-training blink should be counted');
   assert.ok(Number.isInteger(result.gaze_sample_count) && result.gaze_sample_count >= 20);
+  assert.equal(result.webgazer_data, undefined, 'redundant extension samples must not bloat saved records');
   assert.deepEqual(result.gaze_sample_columns, [
     't_ms',
     'gaze_x',
@@ -288,14 +271,15 @@ function AssertSavedResult(state) {
   );
   assert.deepEqual(
     [...new Set(result.gaze_samples.map((sample) => sample[8]))],
-    [0, 1],
-    'pause/resume must start a new fixation segment',
+    [0],
+    'uninterrupted training should stay in one fixation segment',
   );
   for (const label of [
-    'Mean target distance',
-    'Target distance standard deviation',
+    'Mean gaze-point-to-target-center distance',
+    'Gaze-point-to-target-center distance standard deviation',
     'Time to First Fixation',
     'Mean pupil size',
+    'Pupil size SD',
     'Estimated blink count',
     'Gaze sample count',
   ]) {
@@ -339,8 +323,8 @@ function CreateBootstrapSource() {
     const smokeState = window.__wgSmoke = {
       active: false,
       calibrationClicks: 0,
+      faceCentered: false,
       gazeListener: null,
-      headState: 'too-far',
       mouseCalibrationStarts: 0,
       predictionCounter: 0,
       predictionPointCalls: [],
@@ -419,7 +403,7 @@ function CreateBootstrapSource() {
       overlay.height = 480;
       const feedback = document.createElement('div');
       feedback.id = 'webgazerFaceFeedbackBox';
-      feedback.style.cssText = 'position:absolute;inset:20px;border:3px solid green';
+      feedback.style.cssText = 'position:absolute;inset:20px;border:3px solid red';
       container.append(video, canvas, overlay, feedback);
       document.body.appendChild(container);
       const gazeDot = document.createElement('div');
@@ -440,18 +424,7 @@ function CreateBootstrapSource() {
     };
     const GetPositions = () => {
       const positions = Array.from({ length: 468 }, () => [0, 0, 0]);
-      const span = smokeState.headState === 'too-far'
-        ? 0.12
-        : smokeState.headState === 'too-close'
-          ? 0.62
-          : 0.38;
-      positions[234] = [0.5 - span / 2, 0.5, 0];
-      positions[454] = [0.5 + span / 2, 0.5, 0];
-      const closed = (
-        smokeState.trainingTick >= 12 && smokeState.trainingTick <= 14
-      ) || (
-        smokeState.trainingTick >= 24 && smokeState.trainingTick <= 26
-      );
+      const closed = smokeState.trainingTick >= 12 && smokeState.trainingTick <= 14;
       SetEye(positions, [33, 133, 159, 145, 158, 153], 0.29, closed);
       SetEye(positions, [362, 263, 386, 374, 385, 380], 0.65, closed);
       return positions;
@@ -521,7 +494,7 @@ function CreateBootstrapSource() {
       showFaceFeedbackBox(show) {
         const box = EnsureWebGazerDom().querySelector('#webgazerFaceFeedbackBox');
         box.style.display = show ? 'block' : 'none';
-        box.style.borderColor = 'green';
+        box.style.borderColor = smokeState.faceCentered ? 'green' : 'red';
         return webgazer;
       },
       showPredictionPoints(show) {
@@ -569,32 +542,27 @@ function CreateBootstrapSource() {
   `;
 }
 
-async function ReadHeadState(cdpClient, targetSessionId) {
+async function ReadNativeInitState(cdpClient, targetSessionId) {
   return Evaluate(cdpClient, targetSessionId, `(() => {
     const button = document.querySelector('#jspsych-wg-cont');
-    const status = document.querySelector('#webgazer-init-status');
+    const video = document.querySelector('#webgazerVideoContainer');
+    const feedback = document.querySelector('#webgazerFaceFeedbackBox');
     return {
       disabled: button?.disabled ?? null,
       hasNativeContainer: Boolean(document.querySelector('#webgazer-init-container')),
-      state: status?.dataset.state ?? null,
-      text: status?.textContent?.trim() ?? '',
+      videoVisible: Boolean(video) && getComputedStyle(video).display !== 'none',
+      feedbackVisible: Boolean(feedback) && getComputedStyle(feedback).display !== 'none',
     };
   })()`);
 }
 
-async function SetHeadState(cdpClient, targetSessionId, state) {
-  await Evaluate(cdpClient, targetSessionId, `window.__wgSmoke.headState = ${JSON.stringify(state)}; true`);
-}
-
-async function WaitForHeadState(cdpClient, targetSessionId, state, waitTimeoutMs) {
-  const startedAt = Date.now();
-  let lastState;
-  while (Date.now() - startedAt < waitTimeoutMs) {
-    lastState = await ReadHeadState(cdpClient, targetSessionId);
-    if (lastState.state === state) return lastState;
-    await Wait(80);
-  }
-  throw new Error(`Timed out waiting for head state ${state}.\n${JSON.stringify(lastState, null, 2)}`);
+async function SetFaceCentered(cdpClient, targetSessionId) {
+  await Evaluate(cdpClient, targetSessionId, `(() => {
+    window.__wgSmoke.faceCentered = true;
+    const feedback = document.querySelector('#webgazerFaceFeedbackBox');
+    if (feedback instanceof HTMLElement) feedback.style.borderColor = 'green';
+    return true;
+  })()`);
 }
 
 async function ClickDomSelector(cdpClient, targetSessionId, selector) {

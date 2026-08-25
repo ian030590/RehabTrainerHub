@@ -1,5 +1,3 @@
-export type HeadDistanceStatus = 'too-far' | 'too-close' | 'ready' | 'unavailable';
-
 export type FaceLandmark =
   | readonly [x: number, y: number, z?: number]
   | { x: number; y: number; z?: number };
@@ -24,11 +22,6 @@ export interface WebGazerEyePatchLike {
 export interface WebGazerEyeFeaturesLike {
   left?: WebGazerEyePatchLike | null;
   right?: WebGazerEyePatchLike | null;
-}
-
-export interface HeadDistanceOptions {
-  tooFarBelowRatio?: number;
-  tooCloseAboveRatio?: number;
 }
 
 export interface PupilEstimateOptions {
@@ -90,6 +83,7 @@ export interface OculomotorGazeSummary {
   aoiSampleCount: number;
   aoiScore: number | null;
   averagePupilSizePx: number | null;
+  pupilSizeStandardDeviationPx: number | null;
   blinkCount: number;
   distanceStandardDeviationPx: number | null;
   gazeSampleCount: number;
@@ -97,8 +91,6 @@ export interface OculomotorGazeSummary {
   timeToFirstFixationMs: number | null;
 }
 
-const defaultTooFarRatio = 0.18;
-const defaultTooCloseRatio = 0.48;
 const defaultDarkThresholdRatio = 0.35;
 const defaultMinimumContrast = 12;
 const defaultMinimumComponentArea = 2;
@@ -128,48 +120,6 @@ function ReadLandmark(
 
 function Distance(first: Point2D, second: Point2D): number {
   return Math.hypot(first.x - second.x, first.y - second.y);
-}
-
-export function CalculateFaceWidthRatio(
-  landmarks: readonly FaceLandmark[] | null | undefined,
-  frameWidth: number,
-): number | null {
-  if (!IsFiniteNumber(frameWidth) || frameWidth <= 0) return null;
-  const leftCheek = ReadLandmark(landmarks, 234);
-  const rightCheek = ReadLandmark(landmarks, 454);
-  if (!leftCheek || !rightCheek) return null;
-  const cheekDistance = Distance(leftCheek, rightCheek);
-  // Face-landmark runtimes can expose camera pixels or normalized 0..1
-  // coordinates. Supporting both prevents distance guidance from permanently
-  // locking the native jsPsych continue button.
-  const usesNormalizedCoordinates = (
-    Math.abs(leftCheek.x) <= 2
-    && Math.abs(leftCheek.y) <= 2
-    && Math.abs(rightCheek.x) <= 2
-    && Math.abs(rightCheek.y) <= 2
-  );
-  const ratio = usesNormalizedCoordinates ? cheekDistance : cheekDistance / frameWidth;
-  return IsFiniteNumber(ratio) && ratio > 0 ? ratio : null;
-}
-
-export function ClassifyHeadDistance(
-  landmarks: readonly FaceLandmark[] | null | undefined,
-  frameWidth: number,
-  options: HeadDistanceOptions = {},
-): HeadDistanceStatus {
-  const ratio = CalculateFaceWidthRatio(landmarks, frameWidth);
-  if (ratio === null) return 'unavailable';
-
-  const tooFarBelowRatio = IsFiniteNumber(options.tooFarBelowRatio)
-    ? options.tooFarBelowRatio
-    : defaultTooFarRatio;
-  const tooCloseAboveRatio = IsFiniteNumber(options.tooCloseAboveRatio)
-    ? options.tooCloseAboveRatio
-    : defaultTooCloseRatio;
-  if (tooFarBelowRatio <= 0 || tooCloseAboveRatio <= tooFarBelowRatio) return 'unavailable';
-  if (ratio < tooFarBelowRatio) return 'too-far';
-  if (ratio > tooCloseAboveRatio) return 'too-close';
-  return 'ready';
 }
 
 function CalculateSingleEyeAspectRatio(
@@ -528,18 +478,26 @@ export function SummarizeOculomotorGazeSamples(
   const pupilSizes = validSamples
     .map((sample) => sample[6])
     .filter((size): size is number => IsFiniteNumber(size) && size >= 0);
+  const averagePupilSizePx = pupilSizes.length > 0
+    ? pupilSizes.reduce((sum, size) => sum + size, 0) / pupilSizes.length
+    : null;
+  const pupilSizeStandardDeviationPx = averagePupilSizePx === null
+    ? null
+    : Math.sqrt(
+      pupilSizes.reduce((sum, size) => sum + (size - averagePupilSizePx) ** 2, 0)
+      / pupilSizes.length,
+    );
   const aoiSampleCount = distances.filter((distance) => distance <= fixationRadiusPx).length;
 
   return {
     aoiSampleCount,
     aoiScore: gazeSampleCount > 0 ? Math.round((aoiSampleCount / gazeSampleCount) * 100) : null,
-    averagePupilSizePx: pupilSizes.length > 0
-      ? pupilSizes.reduce((sum, size) => sum + size, 0) / pupilSizes.length
-      : null,
+    averagePupilSizePx,
     blinkCount: validSamples.reduce((sum, sample) => sum + (sample[7] === 1 ? 1 : 0), 0),
     distanceStandardDeviationPx,
     gazeSampleCount,
     meanDistancePx,
+    pupilSizeStandardDeviationPx,
     timeToFirstFixationMs: CalculateTimeToFirstFixation(
       validSamples,
       fixationRadiusPx,

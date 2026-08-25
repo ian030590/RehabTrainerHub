@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { GetTrainerFooterLabels, GetTrainerSkipLinkLabel } from '@rehab-trainer/ui/components/RehabFooter';
@@ -7,10 +7,11 @@ import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLogi
 import { useSyncedDisplaySettings } from '@rehab-trainer/ui/hooks/useSyncedDisplaySettings';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
-import { ComprehensionTraining } from './pages/ComprehensionTraining';
-import { OralTraining } from '@rehab-trainer/hub-modules/mouth/pages/training/OralTraining';
 import { defaultUiFontSizePx, GetSetting, settingsChangedEvent } from './utils/settings';
 import { siteUrls } from './utils/siteUrls';
+
+const ComprehensionTraining = lazy(() => import('@rehab-trainer/hub-modules/mouth/pages/training/ComprehensionTraining').then((module) => ({ default: module.ComprehensionTraining })));
+const OralTraining = lazy(() => import('@rehab-trainer/hub-modules/mouth/pages/training/OralTraining').then((module) => ({ default: module.OralTraining })));
 
 export function App() {
   const { lang, t } = useT();

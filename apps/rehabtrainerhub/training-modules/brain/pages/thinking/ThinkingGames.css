@@ -4,6 +4,19 @@
   font-family: var(--font-family);
 }
 
+.training-module-button .selection-card-visual {
+  height: auto;
+  min-height: 184px;
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+}
+
+.training-module-button .selection-card-visual .card-image-placeholder {
+  object-fit: contain;
+  object-position: center;
+}
+
 .cognitive-reference-game {
   --cognitive-game-accent: var(--accent);
   position: fixed;
@@ -36,6 +49,10 @@
   width: 100vw;
   height: 100vh;
   height: 100dvh;
+  max-width: 100%;
+  max-height: 100%;
+  image-rendering: auto;
+  object-fit: contain;
 }
 
 .cognitive-config .training-option.active .training-option-title {
@@ -48,6 +65,17 @@
   box-shadow: inset 0 0 0 1px var(--cognitive-game-accent);
 }
 
+.cognitive-config .training-option {
+  overflow: hidden;
+}
+
+.cognitive-config .cognitive-heart-option {
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding-inline: 8px;
+}
+
 .cognitive-results-container .results-table,
 .minesweeper-results-container .results-table {
   max-width: 720px;
@@ -55,15 +83,20 @@
 
 .cognitive-heart-option .training-option-title,
 .cognitive-heart-icons {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
+  white-space: nowrap;
 }
 
 .cognitive-heart-icon {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
   fill: var(--error);
   stroke: var(--error);
   stroke-width: 1.5;
@@ -77,10 +110,11 @@
 .cognitive-simon-lives {
   position: fixed;
   z-index: 1005;
-  top: max(18px, env(safe-area-inset-top));
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 14px;
+  top: max(16px, env(safe-area-inset-top));
+  left: max(16px, env(safe-area-inset-left));
+  transform: none;
+  max-width: calc(100vw - 32px);
+  padding: 8px 11px;
   border: 1px solid var(--border);
   border-radius: var(--radius-m);
   background: color-mix(in srgb, var(--surface) 88%, transparent);
@@ -88,6 +122,16 @@
   pointer-events: none;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+.cognitive-simon-lives .cognitive-heart-icons {
+  gap: 2px;
+}
+
+.cognitive-simon-lives .cognitive-heart-icon {
+  width: 20px;
+  height: 20px;
+  flex-basis: 20px;
 }
 
 .cognitive-simon-shaking .cognitive-pixi-stage {
@@ -244,5 +288,11 @@
 
   .minesweeper-board-controls {
     flex-wrap: wrap;
+  }
+
+  .cognitive-heart-icon {
+    width: 19px;
+    height: 19px;
+    flex-basis: 19px;
   }
 }

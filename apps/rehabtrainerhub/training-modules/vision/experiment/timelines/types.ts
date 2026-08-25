@@ -31,20 +31,6 @@ export interface BuildTimelineOverrides {
       instruction2: string;
       instruction3: string;
       title: string;
-      loadingText?: string;
-      waitingFaceText?: string;
-      readyText?: string;
-      timeoutText?: string;
-      retryText?: string;
-      errorText?: string;
-      moveCloserText?: string;
-      moveFartherText?: string;
-      stabilizingText?: string;
-      validationResultText?: string;
-      validationWithinText?: string;
-      validationOutsideText?: string;
-      validationButtonText?: string;
-      validationResultTitle?: string;
     };
   };
   gabor?: {

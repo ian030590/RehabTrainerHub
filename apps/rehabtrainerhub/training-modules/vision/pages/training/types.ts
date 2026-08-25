@@ -34,6 +34,7 @@ export interface TrialData {
   refresh_sample_count?: number;
   refresh_measurement_valid?: boolean;
   duration_ms?: number;
+  gaze_coordinate_source?: 'jspsych-webgazer-extension';
   score?: number;
   trial_type?: string;
   reading_time?: number;
@@ -43,10 +44,13 @@ export interface TrialData {
   target_distance_sd_px?: number | null;
   time_to_first_fixation_ms?: number | null;
   average_pupil_size_px?: number | null;
+  pupil_size_sd_px?: number | null;
   blink_count?: number | null;
   gaze_sample_count?: number;
   gaze_sample_columns?: readonly string[];
   gaze_samples?: readonly OculomotorGazeSample[];
+  webgazer_data?: readonly { x: number; y: number; t: number }[];
+  webgazer_targets?: Record<string, unknown>;
   average_rt?: number;
   median_rt?: number;
   valid_event_count?: number;
