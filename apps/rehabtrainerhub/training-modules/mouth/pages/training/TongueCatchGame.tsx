@@ -1,4 +1,4 @@
-// Canonical Hub-owned MouthTrainer module; bundled by the MouthTrainer host.
+// Canonical Hub-owned mouth module; bundled by the mouth runtime.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaceLandmarker, FilesetResolver, type NormalizedLandmark } from '@mediapipe/tasks-vision';
 import * as knnClassifier from '@tensorflow-models/knn-classifier';

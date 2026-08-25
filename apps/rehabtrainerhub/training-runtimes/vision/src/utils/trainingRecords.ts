@@ -5,22 +5,33 @@ import {
   SaveRemoteTrainingRecord,
 } from '@rehab-trainer/ui/auth/authClient';
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
+import {
+  CreateRuntimeStorageNamespace,
+  MigrateLegacyIndexedDbRecords,
+} from '@rehab-trainer/ui/storage/runtimeNamespace';
 import type { TranslationKey } from '../i18n';
 import type { TrialData } from '@rehab-trainer/hub-modules/vision/pages/training/types';
+import { FindOculomotorResult } from '@rehab-trainer/hub-modules/vision/pages/training/oculomotor/resultData';
 import { DownloadCsvFile } from './downloadFile';
 import { GetSetting, storagePrefix } from './settings';
 import { siteUrls } from './siteUrls';
 
 type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;
 
-export const trainingRecordsChangedEvent = 'vision-trainer-training-records-changed';
+const runtimeStorageNamespace = CreateRuntimeStorageNamespace('vision');
+export const trainingRecordsChangedEvent = runtimeStorageNamespace.trainingRecordsChangedEvent;
 
 const legacyTrainingRecordsKey = `${storagePrefix}training_records_v1`;
 const trainingHighScoresKey = `${storagePrefix}training_high_scores_v1`;
-const trainingRecordsDbName = `${storagePrefix}training_records`;
+const trainingRecordsDbName = runtimeStorageNamespace.trainingRecordsDatabaseName;
+const legacyTrainingRecordsDbNames = [
+  'vision_trainer_training_records',
+  'vision-trainer-training-records',
+] as const;
 const trainingRecordsDbVersion = 1;
 const trainingRecordsStore = 'records';
-const remoteAppId = 'visiontrainer';
+const remoteAppId = 'rehabtrainerhub';
+const remoteRuntimeId = 'vision';
 const authApiBase = siteUrls.hub;
 
 const moduleTitleKeys: Record<string, TranslationKey> = {
@@ -41,6 +52,8 @@ export interface TrainingRecordConfig {
   oculomotorSpeedDegPerSec?: number;
   oculomotorTargetSizeMm?: number;
   oculomotorDistractorCount?: number;
+  oculomotorEnableWebgazer?: boolean;
+  oculomotorShowGazepoint?: boolean;
   gaborDurationSec?: number;
   gaborMaxSpots?: number;
   readingWPS?: number;
@@ -93,17 +106,26 @@ export function InitializeTrainingRecords(): Promise<void> {
   return EnsureLegacyRecordsMigrated();
 }
 
-export async function GetTrainingRecords(): Promise<TrainingRecord[]> {
+export async function GetTrainingRecords(
+  options: { includeGazeSamples?: boolean } = {},
+): Promise<TrainingRecord[]> {
   if (HasAuthToken()) {
     try {
-      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId);
+      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId, {
+        runtimeId: remoteRuntimeId,
+        ...options,
+      });
       if (remoteRecords) {
         return remoteRecords
           .map(ToTrainingRecord)
           .filter((record): record is TrainingRecord => record !== null)
           .sort((left, right) => left.savedAt.localeCompare(right.savedAt));
       }
+      if (options.includeGazeSamples) {
+        throw new Error('The authenticated raw training-record export could not be loaded.');
+      }
     } catch (error) {
+      if (options.includeGazeSamples) throw error;
       console.warn('Unable to read remote training records. Falling back to IndexedDB.', error);
     }
   }
@@ -130,7 +152,11 @@ export async function GetTrainingRecords(): Promise<TrainingRecord[]> {
 export async function GetTrainingRecordCount(): Promise<number> {
   if (HasAuthToken()) {
     try {
-      const remoteCount = await GetRemoteTrainingRecordCount(authApiBase, remoteAppId);
+      const remoteCount = await GetRemoteTrainingRecordCount(
+        authApiBase,
+        remoteAppId,
+        remoteRuntimeId,
+      );
       if (remoteCount !== null) return remoteCount;
     } catch (error) {
       console.warn('Unable to count remote training records. Falling back to IndexedDB.', error);
@@ -171,6 +197,7 @@ export async function SaveTrainingRecord(args: SaveTrainingRecordArgs): Promise<
     try {
       const saved = await SaveRemoteTrainingRecord(authApiBase, {
         appId: remoteAppId,
+        runtimeId: remoteRuntimeId,
         record,
       });
       if (saved) {
@@ -199,7 +226,7 @@ export async function SaveTrainingRecord(args: SaveTrainingRecordArgs): Promise<
 }
 
 export async function DownloadAllTrainingRecordsCsv(t: TFunction): Promise<boolean> {
-  const records = await GetTrainingRecords();
+  const records = await GetTrainingRecords({ includeGazeSamples: true });
   if (records.length === 0) return false;
 
   const now = new Date();
@@ -266,6 +293,19 @@ function EnsureLegacyRecordsMigrated(database?: IDBDatabase): Promise<void> {
 }
 
 async function MigrateLegacyRecords(existingDatabase?: IDBDatabase): Promise<void> {
+  const database = existingDatabase ?? await GetTrainingRecordsDatabase();
+  await MigrateLegacyIndexedDbRecords({
+    indexedDb: window.indexedDB,
+    legacyDatabaseNames: legacyTrainingRecordsDbNames,
+    storeName: trainingRecordsStore,
+    writeRecords: async (records) => {
+      await WriteRecordsToDatabase(database, records);
+      UpdateTrainingHighScores(
+        records.map(ToTrainingRecord).filter((record): record is TrainingRecord => record !== null),
+      );
+    },
+  });
+
   const raw = localStorage.getItem(legacyTrainingRecordsKey);
   if (!raw) return;
 
@@ -292,17 +332,24 @@ async function MigrateLegacyRecords(existingDatabase?: IDBDatabase): Promise<voi
     return;
   }
 
-  const database = existingDatabase ?? await GetTrainingRecordsDatabase();
   if (records.length > 0) {
-    const transaction = database.transaction(trainingRecordsStore, 'readwrite');
-    const store = transaction.objectStore(trainingRecordsStore);
-    records.forEach((record) => store.put(record));
-    await TransactionToPromise(transaction);
+    await WriteRecordsToDatabase(database, records);
     UpdateTrainingHighScores(records);
   }
 
   localStorage.removeItem(legacyTrainingRecordsKey);
   window.dispatchEvent(new Event(trainingRecordsChangedEvent));
+}
+
+async function WriteRecordsToDatabase(
+  database: IDBDatabase,
+  records: readonly unknown[],
+): Promise<void> {
+  if (records.length === 0) return;
+  const transaction = database.transaction(trainingRecordsStore, 'readwrite');
+  const store = transaction.objectStore(trainingRecordsStore);
+  records.forEach((record) => store.put(record));
+  await TransactionToPromise(transaction);
 }
 
 function UpdateTrainingHighScores(records: TrainingRecord[]): void {
@@ -341,16 +388,16 @@ function ReadTrainingHighScores(): Record<string, TrainingHighScore> {
 }
 
 function CalculateTrainingScore(record: TrainingRecord): number | null {
-  const firstResult = record.results[0];
+  const firstResult = record.moduleId === 'oculomotor-training'
+    ? FindOculomotorResult(record.results)
+    : record.results[0];
 
   if (record.moduleId === 'gabor-patching') {
     return ToFiniteNumber(firstResult?.score);
   }
 
   if (record.moduleId === 'oculomotor-training') {
-    const aoiScore = ToFiniteNumber(
-      (firstResult as TrialData & { aoi_score?: number } | undefined)?.aoi_score,
-    );
+    const aoiScore = ToFiniteNumber(firstResult?.aoi_score);
     return aoiScore ?? ToFiniteNumber(firstResult?.acquired_targets);
   }
 
@@ -419,6 +466,21 @@ export function BuildTrainingRecordsCsv(records: TrainingRecord[], t: TFunction)
     t('exp.csv.routeProgress'),
     t('exp.csv.readingWps'),
     t('exp.csv.readingCrowding'),
+    t('exp.csv.meanTargetDistance'),
+    t('exp.csv.targetDistanceSd'),
+    t('exp.csv.timeToFirstFixation'),
+    t('exp.csv.pupilSizeEstimate'),
+    t('exp.csv.blinkCountEstimate'),
+    t('exp.csv.gazeSampleCount'),
+    t('exp.csv.gazeTimestamp'),
+    t('exp.csv.gazeX'),
+    t('exp.csv.gazeY'),
+    t('exp.csv.targetX'),
+    t('exp.csv.targetY'),
+    t('exp.csv.targetDistance'),
+    t('exp.csv.samplePupilSizeEstimate'),
+    t('exp.csv.sampleBlinkEstimate'),
+    t('exp.csv.fixationSegment'),
   ];
 
   const rows = records.flatMap((record) => ToCsvRows(record, t));
@@ -443,6 +505,52 @@ function ToCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
     record.moduleId,
     difficulty,
   ];
+
+  if (record.moduleId === 'oculomotor-training') {
+    const result = FindOculomotorResult(record.results);
+    if (!result) return [];
+
+    const samples = Array.isArray(result.gaze_samples) ? result.gaze_samples : [];
+    const summaryColumns = [
+      result.mean_target_distance_px ?? '',
+      result.target_distance_sd_px ?? '',
+      result.time_to_first_fixation_ms ?? '',
+      result.average_pupil_size_px ?? '',
+      result.blink_count ?? '',
+      result.gaze_sample_count ?? samples.length,
+    ];
+    const sampleRows = samples.length > 0 ? samples : [null];
+
+    return sampleRows.map((sample) => [
+      ...base,
+      FormatOculomotorMode(result.mode ?? record.oculomotorMode ?? record.config?.oculomotorMode, t),
+      FormatOculomotorPath(result.pattern ?? record.oculomotorPattern ?? record.config?.oculomotorPattern, t),
+      result.trial_type ?? '',
+      1,
+      result.target ?? '',
+      result.response ?? '',
+      FormatCorrect(result.correct),
+      result.rt ?? '',
+      result.duration_ms ?? '',
+      result.score ?? '',
+      result.acquired_targets ?? '',
+      result.average_fps ?? '',
+      result.aoi_score ?? '',
+      result.response ?? '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ...summaryColumns,
+      ...(sample
+        ? [...sample.slice(0, 8), sample[8] ?? 0]
+        : ['', '', '', '', '', '', '', '', '']),
+    ]);
+  }
 
   if (record.moduleId === 'driving-rehab') {
     const events = firstResult?.driving_events ?? [];
@@ -471,6 +579,7 @@ function ToCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
         firstResult?.route_progress ?? '',
         '',
         '',
+        ...EmptyOculomotorTrackingColumns(),
       ]];
     }
 
@@ -498,6 +607,7 @@ function ToCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
       firstResult?.route_progress ?? '',
       '',
       '',
+      ...EmptyOculomotorTrackingColumns(),
     ]);
   }
 
@@ -525,7 +635,12 @@ function ToCsvRows(record: TrainingRecord, t: TFunction): CsvRow[] {
     result.route_progress ?? '',
     record.moduleId === 'reading-training' ? readingWPS : '',
     record.moduleId === 'reading-training' ? readingCrowding : '',
+    ...EmptyOculomotorTrackingColumns(),
   ]);
+}
+
+function EmptyOculomotorTrackingColumns(): string[] {
+  return Array.from({ length: 15 }, () => '');
 }
 
 function ToTrainingRecord(value: unknown): TrainingRecord | null {

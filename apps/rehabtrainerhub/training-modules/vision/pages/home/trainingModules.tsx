@@ -1,4 +1,4 @@
-// Catalog definitions for Hub-owned VisionTrainer modules.
+// Catalog definitions for Hub-owned vision modules.
 import {
   GetTrainingCatalogModules,
   type TrainingCatalogModule,

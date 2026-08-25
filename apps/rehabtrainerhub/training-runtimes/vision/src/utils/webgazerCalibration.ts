@@ -1,7 +1,9 @@
 import WebGazerCalibratePlugin from '@jspsych/plugin-webgazer-calibrate';
-import { ParameterType } from 'jspsych';
-import type { JsPsych, JsPsychPlugin, TrialType } from 'jspsych';
+import WebGazerInitCameraPlugin from '@jspsych/plugin-webgazer-init-camera';
+import WebGazerValidatePlugin from '@jspsych/plugin-webgazer-validate';
 import { SetSetting } from './settings';
+import { ClassifyHeadDistance } from './webgazerMetrics';
+import type { FaceLandmark, HeadDistanceStatus } from './webgazerMetrics';
 
 export interface WebGazerCalibrationCopy {
   buttonText: string;
@@ -11,278 +13,318 @@ export interface WebGazerCalibrationCopy {
   title: string;
   loadingText?: string;
   waitingFaceText?: string;
+  moveCloserText?: string;
+  moveFartherText?: string;
+  stabilizingText?: string;
   readyText?: string;
   timeoutText?: string;
   retryText?: string;
   errorText?: string;
+  validationResultTitle?: string;
+  validationResultText?: string;
+  validationWithinText?: string;
+  validationOutsideText?: string;
+  validationButtonText?: string;
 }
 
-interface WebGazerExtensionLike {
-  isInitialized?: () => boolean;
-  start?: () => Promise<void>;
-  faceDetected?: () => boolean;
-  showVideo?: () => void;
-  hideVideo?: () => void;
+interface WebGazerLike {
+  clearData?: () => void | Promise<void>;
+  getTracker?: () => {
+    getPositions?: () => readonly FaceLandmark[] | null;
+  };
+  getVideoElementCanvas?: () => HTMLCanvasElement | null;
   pause?: () => void;
-  resume?: () => void;
+  resume?: () => void | Promise<void>;
+  showVideo?: (show: boolean) => void;
+  showFaceOverlay?: (show: boolean) => void;
+  showFaceFeedbackBox?: (show: boolean) => void;
+  stopVideo?: () => void;
+  end?: () => void;
 }
+
+type HeadPositionState = 'waiting' | 'too-far' | 'too-close' | 'stabilizing' | 'ready';
+
+const headPositionStableMs = 350;
 
 let activeInitCameraCleanup: (() => void) | undefined;
+let activeInitFailureCleanup: (() => void) | undefined;
+let activeValidationCleanup: (() => void) | undefined;
 
-const initCameraInfo = {
-  name: 'webgazer-init-camera-trainer',
-  version: '1.0.0',
-  parameters: {
-    instructions: {
-      type: ParameterType.HTML_STRING,
-      default: '',
-    },
-    button_text: {
-      type: ParameterType.STRING,
-      default: 'Start calibration',
-    },
-    loading_text: {
-      type: ParameterType.STRING,
-      default: 'Starting the camera...',
-    },
-    waiting_face_text: {
-      type: ParameterType.STRING,
-      default: 'Center your face in the camera view. The button will unlock when tracking is ready.',
-    },
-    ready_text: {
-      type: ParameterType.STRING,
-      default: 'Face detected. You can start calibration.',
-    },
-    timeout_text: {
-      type: ParameterType.STRING,
-      default: 'Eye tracking did not become ready. Check camera permission and lighting, then retry.',
-    },
-    retry_text: {
-      type: ParameterType.STRING,
-      default: 'Retry',
-    },
-    error_text: {
-      type: ParameterType.STRING,
-      default: 'The eye tracker could not start. Check camera permission and retry.',
-    },
-    ready_timeout_ms: {
-      type: ParameterType.INT,
-      default: 20000,
-    },
-    ready_stable_ms: {
-      type: ParameterType.INT,
-      default: 350,
-    },
-  },
-  data: {
-    load_time: { type: ParameterType.INT },
-    webgazer_status: { type: ParameterType.STRING },
-  },
-} as const;
-
-type InitCameraInfo = typeof initCameraInfo;
-
-function WithTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timeoutId = window.setTimeout(() => {
-      reject(new Error(`WebGazer initialization timed out after ${timeoutMs}ms`));
-    }, timeoutMs);
-    promise.then(
-      (value) => {
-        window.clearTimeout(timeoutId);
-        resolve(value);
-      },
-      (error) => {
-        window.clearTimeout(timeoutId);
-        reject(error);
-      },
-    );
-  });
+function GetWebGazer(): WebGazerLike | undefined {
+  return (window as Window & { webgazer?: WebGazerLike }).webgazer;
 }
 
-function IsFaceReady(extension: WebGazerExtensionLike): boolean {
-  let detected = false;
-  try {
-    detected = extension.faceDetected?.() === true;
-  } catch {
-    detected = false;
-  }
-  if (!detected) return false;
-
-  const feedbackBox = document.querySelector<HTMLElement>('#webgazerFaceFeedbackBox');
-  return !feedbackBox || feedbackBox.style.borderColor === 'green';
+function IsTraditionalChineseDocument() {
+  return document.documentElement.lang.toLowerCase().startsWith('zh');
 }
 
-class WebGazerInitCameraPlugin implements JsPsychPlugin<InitCameraInfo> {
-  static readonly info = initCameraInfo;
+function LocalizedFallback(zh: string, en: string) {
+  return IsTraditionalChineseDocument() ? zh : en;
+}
 
-  constructor(private readonly jsPsych: JsPsych) {}
+function StartInitCameraFailureRecovery(copy: WebGazerCalibrationCopy) {
+  activeInitFailureCleanup?.();
 
-  async trial(
-    displayElement: HTMLElement,
-    trial: TrialType<InitCameraInfo>,
-    onLoad?: () => void,
-  ) {
-    const extension = this.jsPsych.extensions?.webgazer as WebGazerExtensionLike | undefined;
-    const startedAt = performance.now();
-    const readyTimeoutMs = Math.max(5000, Number(trial.ready_timeout_ms) || 20000);
-    const readyStableMs = Math.max(100, Number(trial.ready_stable_ms) || 350);
-    const buttonText = trial.button_text ?? 'Start calibration';
-    const loadingText = trial.loading_text ?? 'Starting the camera...';
-    const waitingFaceText = trial.waiting_face_text ?? 'Center your face in the camera view. The button will unlock when tracking is ready.';
-    const readyText = trial.ready_text ?? 'Face detected. You can start calibration.';
-    const timeoutText = trial.timeout_text ?? 'Eye tracking did not become ready. Check camera permission and lighting, then retry.';
-    const retryText = trial.retry_text ?? 'Retry';
-    const errorText = trial.error_text ?? 'The eye tracker could not start. Check camera permission and retry.';
-    let pollId: number | undefined;
-    let timeoutId: number | undefined;
-    let stableSince: number | undefined;
-    let attempt = 0;
-    let disposed = false;
-    let loaded = false;
-    let resolveTrial: (() => void) | undefined;
-    const trialComplete = new Promise<void>((resolve) => {
-      resolveTrial = resolve;
-    });
+  let disposed = false;
+  let timeoutId: number | undefined;
+  const stage = document.querySelector<HTMLElement>('.webgazer-fullscreen-stage');
+  const observerTarget = stage ?? document.body;
 
-    displayElement.innerHTML = `
-      <div id="webgazer-init-container" class="webgazer-init-container">
-        <div class="webgazer-init-content">
-          ${trial.instructions}
-          <p id="webgazer-init-status" role="status" aria-live="polite"></p>
-          <button id="jspsych-wg-cont" class="jspsych-btn" disabled type="button"></button>
-        </div>
-      </div>`;
+  const showRecovery = (message: string) => {
+    if (disposed || document.querySelector('#webgazer-init-recovery')) return;
+    const host = stage?.querySelector<HTMLElement>('.jspsych-content') ?? stage;
+    if (!host) return;
 
-    const style = document.createElement('style');
-    style.id = 'webgazer-center-style';
-    style.textContent = '#webgazerVideoContainer { top: 20px !important; left: 50% !important; transform: translateX(-50%) !important; }';
-    document.querySelector('#webgazer-center-style')?.remove();
-    document.head.appendChild(style);
+    const panel = document.createElement('section');
+    panel.id = 'webgazer-init-recovery';
+    panel.className = 'webgazer-init-recovery';
+    panel.setAttribute('role', 'alert');
 
-    const statusElement = displayElement.querySelector<HTMLElement>('#webgazer-init-status');
-    const button = displayElement.querySelector<HTMLButtonElement>('#jspsych-wg-cont');
-    if (!statusElement || !button) {
-      style.remove();
-      this.jsPsych.finishTrial({ webgazer_status: 'render_error' });
-      return;
+    const status = document.createElement('p');
+    status.textContent = message;
+    const retryButton = document.createElement('button');
+    retryButton.type = 'button';
+    retryButton.className = 'jspsych-btn';
+    retryButton.textContent = copy.retryText ?? LocalizedFallback('重新嘗試', 'Retry');
+    retryButton.addEventListener('click', () => window.location.reload());
+    panel.append(status, retryButton);
+    host.appendChild(panel);
+  };
+
+  const detectNativeFailure = () => {
+    const content = stage?.textContent ?? '';
+    if (content.includes('eye tracker failed to start')) {
+      showRecovery(copy.errorText ?? LocalizedFallback(
+        '視線追蹤無法啟動。請確認攝影機權限後重試。',
+        'The eye tracker could not start. Check camera permission, then retry.',
+      ));
     }
-    button.textContent = buttonText;
+  };
 
-    const clearWaiters = () => {
-      if (pollId !== undefined) window.clearInterval(pollId);
-      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
-      pollId = undefined;
-      timeoutId = undefined;
-      stableSince = undefined;
-    };
+  const observer = new MutationObserver(detectNativeFailure);
+  observer.observe(observerTarget, { childList: true, subtree: true });
+  timeoutId = window.setTimeout(() => {
+    showRecovery(copy.timeoutText ?? LocalizedFallback(
+      '視線追蹤尚未就緒。請確認攝影機權限與光線後重試。',
+      'Eye tracking did not become ready. Check camera permission and lighting, then retry.',
+    ));
+  }, 20_000);
+  detectNativeFailure();
 
-    const setStatus = (text: string, isError = false) => {
-      statusElement.textContent = text;
-      statusElement.classList.toggle('error', isError);
-    };
+  activeInitFailureCleanup = () => {
+    if (disposed) return;
+    disposed = true;
+    observer.disconnect();
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+    activeInitFailureCleanup = undefined;
+  };
+}
 
-    const disposeTrial = () => {
-      if (disposed) return;
-      disposed = true;
-      attempt += 1;
-      clearWaiters();
-      extension?.pause?.();
-      extension?.hideVideo?.();
-      style.remove();
-      activeInitCameraCleanup = undefined;
-      resolveTrial?.();
-    };
-
-    const abortTrial = () => {
-      disposeTrial();
-    };
-
-    const finish = () => {
-      if (disposed) return;
-      this.jsPsych.finishTrial({
-        load_time: Math.round(performance.now() - startedAt),
-        webgazer_status: 'ready',
-      });
-      disposeTrial();
-    };
-
-    const runAttempt = async () => {
-      const currentAttempt = ++attempt;
-      clearWaiters();
-      button.disabled = true;
-      button.textContent = buttonText;
-      setStatus(loadingText);
-
-      try {
-        if (!extension) throw new Error('WebGazer extension is not available');
-        if (!extension.isInitialized?.()) {
-          if (!extension.start) throw new Error('WebGazer extension cannot start');
-          await WithTimeout(extension.start(), readyTimeoutMs);
-        }
-        if (currentAttempt !== attempt || disposed) return;
-        if (!loaded) {
-          loaded = true;
-          onLoad?.();
-        }
-        extension.showVideo?.();
-        extension.resume?.();
-        setStatus(waitingFaceText);
-
-        await new Promise<void>((resolve, reject) => {
-          const startedWaitingAt = performance.now();
-          pollId = window.setInterval(() => {
-            if (currentAttempt !== attempt || disposed) return;
-            if (IsFaceReady(extension)) {
-              stableSince ??= performance.now();
-              if (performance.now() - stableSince >= readyStableMs) {
-                clearWaiters();
-                resolve();
-              }
-            } else {
-              stableSince = undefined;
-            }
-          }, 100);
-          timeoutId = window.setTimeout(() => {
-            clearWaiters();
-            reject(new Error(`WebGazer face detection timed out after ${Math.round(performance.now() - startedWaitingAt)}ms`));
-          }, readyTimeoutMs);
-        });
-
-        if (currentAttempt !== attempt || disposed) return;
-        button.disabled = false;
-        button.textContent = buttonText;
-        setStatus(readyText);
-      } catch (error) {
-        if (currentAttempt !== attempt || disposed) return;
-        extension?.pause?.();
-        extension?.hideVideo?.();
-        button.disabled = false;
-        button.textContent = retryText;
-        setStatus(
-          error instanceof Error && error.message.includes('timed out')
-            ? timeoutText
-            : errorText,
-          true,
-        );
-      }
-    };
-
-    button.addEventListener('click', () => {
-      if (!button.disabled && button.textContent === buttonText && IsFaceReady(extension ?? {})) {
-        finish();
-      } else if (!button.disabled) {
-        void runAttempt();
-      }
+/**
+ * Estimate camera distance from MediaPipe's cheek-to-cheek landmark span.
+ * The ratio is resolution independent and is intentionally broad: it only
+ * rejects positions where eye tracking quality is predictably poor.
+ */
+function GetHeadDistanceStatus(webgazer: WebGazerLike | undefined): HeadDistanceStatus {
+  try {
+    const positions = webgazer?.getTracker?.()?.getPositions?.();
+    const videoCanvas = webgazer?.getVideoElementCanvas?.();
+    const videoWidth = Number(videoCanvas?.width)
+      || Number(document.querySelector<HTMLVideoElement>('#webgazerVideoFeed')?.videoWidth);
+    return ClassifyHeadDistance(positions, videoWidth, {
+      tooFarBelowRatio: 0.18,
+      tooCloseAboveRatio: 0.52,
     });
-
-    activeInitCameraCleanup = abortTrial;
-
-    await runAttempt();
-    // Keep the async plugin promise pending until the participant clicks the
-    // ready button and jsPsych advances the timeline.
-    await trialComplete;
+  } catch {
+    return 'unavailable';
   }
+}
+
+function IsFaceCentered() {
+  const feedbackBox = document.querySelector<HTMLElement>('#webgazerFaceFeedbackBox');
+  if (!feedbackBox) return false;
+  const borderColor = feedbackBox.style.borderColor
+    || window.getComputedStyle(feedbackBox).borderColor;
+  return borderColor === 'green' || borderColor === 'rgb(0, 128, 0)';
+}
+
+function StartHeadPositionGuidance(copy: WebGazerCalibrationCopy) {
+  activeInitFailureCleanup?.();
+  activeInitCameraCleanup?.();
+
+  const webgazer = GetWebGazer();
+  let stableSince: number | undefined;
+  let currentState: HeadPositionState = 'waiting';
+  let disposed = false;
+
+  const text = {
+    waiting: copy.waitingFaceText ?? LocalizedFallback(
+      '請將臉移入綠色方框中，並直視鏡頭。',
+      'Center your face in the green box and look directly at the camera.',
+    ),
+    tooFar: copy.moveCloserText ?? LocalizedFallback(
+      '距離太遠，請往前靠近鏡頭。',
+      'You are too far from the camera. Please move closer.',
+    ),
+    tooClose: copy.moveFartherText ?? LocalizedFallback(
+      '距離太近，請往後遠離鏡頭。',
+      'You are too close to the camera. Please move farther back.',
+    ),
+    stabilizing: copy.stabilizingText ?? LocalizedFallback(
+      '頭部位置合適，請短暫保持不動。',
+      'Your head position is suitable. Please hold still briefly.',
+    ),
+    ready: copy.readyText ?? LocalizedFallback(
+      '頭部位置已就緒，可以開始校正。',
+      'Head position is ready. You can start calibration.',
+    ),
+  };
+
+  const ensureStatusElement = (button: HTMLButtonElement) => {
+    let status = document.querySelector<HTMLElement>('#webgazer-init-status');
+    if (!status) {
+      status = document.createElement('p');
+      status.id = 'webgazer-init-status';
+      status.setAttribute('role', 'status');
+      status.setAttribute('aria-live', 'polite');
+      button.parentElement?.insertBefore(status, button);
+    }
+    button.setAttribute('aria-describedby', status.id);
+    return status;
+  };
+
+  const update = () => {
+    if (disposed) return false;
+    const button = document.querySelector<HTMLButtonElement>('#jspsych-wg-cont');
+    if (!button) return false;
+
+    const status = ensureStatusElement(button);
+    const headDistanceStatus = GetHeadDistanceStatus(webgazer);
+    const now = performance.now();
+
+    if (headDistanceStatus === 'unavailable') {
+      currentState = 'waiting';
+      stableSince = undefined;
+      status.textContent = text.waiting;
+    } else if (headDistanceStatus === 'too-far') {
+      currentState = 'too-far';
+      stableSince = undefined;
+      status.textContent = text.tooFar;
+    } else if (headDistanceStatus === 'too-close') {
+      currentState = 'too-close';
+      stableSince = undefined;
+      status.textContent = text.tooClose;
+    } else if (!IsFaceCentered()) {
+      currentState = 'waiting';
+      stableSince = undefined;
+      status.textContent = text.waiting;
+    } else {
+      stableSince ??= now;
+      if (now - stableSince >= headPositionStableMs) {
+        currentState = 'ready';
+        status.textContent = text.ready;
+      } else {
+        currentState = 'stabilizing';
+        status.textContent = text.stabilizing;
+      }
+    }
+
+    status.dataset.state = currentState;
+    button.dataset.headPositionReady = String(currentState === 'ready');
+    button.disabled = currentState !== 'ready';
+    return currentState === 'ready';
+  };
+
+  // The native plugin has its own green-box observer. A capturing listener is
+  // needed as well as polling so a native enable event cannot bypass distance
+  // checks in the short interval before the next poll.
+  const guardContinue = (event: MouseEvent) => {
+    const target = event.target;
+    if (!(target instanceof Element) || !target.closest('#jspsych-wg-cont')) return;
+    if (!update()) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  };
+
+  document.addEventListener('click', guardContinue, true);
+  const pollId = window.setInterval(update, 80);
+  update();
+
+  activeInitCameraCleanup = () => {
+    if (disposed) return;
+    disposed = true;
+    window.clearInterval(pollId);
+    document.removeEventListener('click', guardContinue, true);
+    activeInitCameraCleanup = undefined;
+  };
+}
+
+function ResumeWebGazerForValidation() {
+  try {
+    void GetWebGazer()?.resume?.();
+  } catch {
+    // The native validation plugin still owns error handling and trial data.
+  }
+}
+
+function StartValidationResultsPresentation(copy: WebGazerCalibrationCopy) {
+  activeValidationCleanup?.();
+
+  const container = document.querySelector<HTMLElement>('#webgazer-validate-container');
+  if (!container) return;
+
+  const applyResultPresentation = () => {
+    const button = container.querySelector<HTMLButtonElement>('#cont');
+    if (!button || container.querySelector('[data-webgazer-validation-result]')) return;
+
+    const panel = document.createElement('section');
+    panel.className = 'webgazer-validation-result';
+    panel.dataset.webgazerValidationResult = 'true';
+    panel.setAttribute('role', 'status');
+
+    const title = document.createElement('h2');
+    title.textContent = copy.validationResultTitle ?? LocalizedFallback(
+      '校正成果',
+      'Calibration results',
+    );
+
+    const description = document.createElement('p');
+    description.textContent = copy.validationResultText ?? LocalizedFallback(
+      '色點顯示每次視線估測與目標範圍的關係，請確認分佈後繼續。',
+      'The colored dots show each gaze estimate relative to its target area. Review the distribution, then continue.',
+    );
+
+    const legend = document.createElement('div');
+    legend.className = 'webgazer-validation-legend';
+    const within = document.createElement('span');
+    within.className = 'is-within';
+    within.textContent = copy.validationWithinText ?? LocalizedFallback(
+      '目標範圍內',
+      'Inside target range',
+    );
+    const outside = document.createElement('span');
+    outside.className = 'is-outside';
+    outside.textContent = copy.validationOutsideText ?? LocalizedFallback(
+      '目標範圍外',
+      'Outside target range',
+    );
+    legend.append(within, outside);
+
+    button.removeAttribute('style');
+    button.textContent = copy.validationButtonText ?? copy.buttonText;
+    panel.append(title, description, legend, button);
+    container.appendChild(panel);
+  };
+
+  const observer = new MutationObserver(applyResultPresentation);
+  observer.observe(container, { childList: true, subtree: true });
+  applyResultPresentation();
+
+  activeValidationCleanup = () => {
+    observer.disconnect();
+    activeValidationCleanup = undefined;
+  };
 }
 
 const desktopCalibrationPoints = [
@@ -303,43 +345,41 @@ function IsTouchCalibrationViewport() {
 }
 
 export async function ResetWebGazerCalibrationData() {
-  const webgazer = (window as Window & {
-    webgazer?: { clearData?: () => void | Promise<void> };
-  }).webgazer;
-  await webgazer?.clearData?.();
+  await GetWebGazer()?.clearData?.();
 }
 
 /** Stop the global WebGazer runtime when a jsPsych host is unmounted/cancelled. */
 export function CleanupWebGazerRuntime() {
   activeInitCameraCleanup?.();
   activeInitCameraCleanup = undefined;
+  activeInitFailureCleanup?.();
+  activeInitFailureCleanup = undefined;
+  activeValidationCleanup?.();
+  activeValidationCleanup = undefined;
 
-  const webgazer = (window as Window & {
-    webgazer?: {
-      pause?: () => void;
-      showVideo?: (show: boolean) => void;
-      showFaceOverlay?: (show: boolean) => void;
-      showFaceFeedbackBox?: (show: boolean) => void;
-      stopVideo?: () => void;
-      end?: () => void;
-    };
-  }).webgazer;
+  const webgazer = GetWebGazer();
 
-  try {
-    webgazer?.pause?.();
-    webgazer?.showVideo?.(false);
-    webgazer?.showFaceOverlay?.(false);
-    webgazer?.showFaceFeedbackBox?.(false);
-    webgazer?.stopVideo?.();
-    webgazer?.end?.();
-  } catch {
-    // A partially initialized runtime must not prevent the host from closing.
-  }
+  const cleanupActions = [
+    () => webgazer?.pause?.(),
+    () => webgazer?.showVideo?.(false),
+    () => webgazer?.showFaceOverlay?.(false),
+    () => webgazer?.showFaceFeedbackBox?.(false),
+    () => webgazer?.stopVideo?.(),
+    () => webgazer?.end?.(),
+  ];
+  cleanupActions.forEach((cleanup) => {
+    try {
+      cleanup();
+    } catch {
+      // Continue cleaning a partially initialized runtime.
+    }
+  });
   document.querySelector('#webgazer-center-style')?.remove();
 }
 
 export function CreateWebGazerCalibrationTimeline(copy: WebGazerCalibrationCopy): object[] {
   const touchViewport = IsTouchCalibrationViewport();
+  const points = touchViewport ? touchCalibrationPoints : desktopCalibrationPoints;
 
   return [
     {
@@ -353,23 +393,36 @@ export function CreateWebGazerCalibrationTimeline(copy: WebGazerCalibrationCopy)
         </div>
       `,
       button_text: copy.buttonText,
-      loading_text: copy.loadingText,
-      waiting_face_text: copy.waitingFaceText,
-      ready_text: copy.readyText,
-      timeout_text: copy.timeoutText,
-      retry_text: copy.retryText,
-      error_text: copy.errorText,
-      ready_timeout_ms: 20000,
-      ready_stable_ms: 350,
+      on_start: () => StartInitCameraFailureRecovery(copy),
+      on_load: () => StartHeadPositionGuidance(copy),
+      on_finish: () => {
+        activeInitCameraCleanup?.();
+        activeInitFailureCleanup?.();
+      },
     },
     {
       type: WebGazerCalibratePlugin,
-      calibration_points: touchViewport ? touchCalibrationPoints : desktopCalibrationPoints,
+      calibration_points: points,
       calibration_mode: 'click',
       repetitions_per_point: 2,
       randomize_calibration_order: true,
       point_size: touchViewport ? 48 : 28,
-      on_finish: () => SetSetting('webGazerCalibrationAt', new Date().toISOString()),
+    },
+    {
+      type: WebGazerValidatePlugin,
+      validation_points: points,
+      randomize_validation_order: false,
+      roi_radius: touchViewport ? 140 : 120,
+      time_to_saccade: 700,
+      validation_duration: 1200,
+      point_size: touchViewport ? 48 : 28,
+      show_validation_data: true,
+      on_start: ResumeWebGazerForValidation,
+      on_load: () => StartValidationResultsPresentation(copy),
+      on_finish: () => {
+        activeValidationCleanup?.();
+        SetSetting('webGazerCalibrationAt', new Date().toISOString());
+      },
     },
   ];
 }

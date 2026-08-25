@@ -1,4 +1,4 @@
-// Canonical Hub-owned MotorTrainer training route adapter.
+// Canonical Hub-owned motor training-route adapter.
 import { Navigate, useSearchParams } from 'react-router-dom';
 
 export function TrainingPage() {

@@ -1,4 +1,4 @@
-// Renderer-independent helpers local to the Hub-owned MotorTrainer modules.
+// Renderer-independent helpers local to the Hub-owned motor modules.
 export {
   Clamp,
   csvCell,

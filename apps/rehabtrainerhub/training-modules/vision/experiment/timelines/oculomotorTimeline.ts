@@ -21,6 +21,8 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
   const audio = overrides?.oculomotor?.audio ?? GetSetting('oculomotorAudio');
   const bounceJitter = overrides?.oculomotor?.bounceJitter ?? GetSetting('oculomotorBounceJitter');
   const enableWebGazer = GetSetting('oculomotorEnableWebgazer');
+  const showGazepoint = overrides?.oculomotor?.showGazepoint
+    ?? GetSetting('oculomotorShowGazepoint');
 
   const timeline: object[] = [];
 
@@ -31,6 +33,12 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
       instruction2: 'Look at each point, then click or tap its center twice.',
       instruction3: 'Keep your head steady until all points are complete.',
       buttonText: 'Start Calibration',
+      moveCloserText: 'Move closer to the camera.',
+      moveFartherText: 'Move farther from the camera.',
+      readyText: 'Head position is ready. Please keep still.',
+      validationResultText: 'The colored dots show each gaze estimate relative to its target area.',
+      validationButtonText: 'Continue to training',
+      validationResultTitle: 'Calibration result',
     }));
   }
 
@@ -51,6 +59,7 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
     audio,
     bounce_jitter: bounceJitter,
     enable_webgazer: enableWebGazer,
+    show_gaze_point: enableWebGazer && showGazepoint,
     round_number: 1,
     total_rounds: 1,
   });

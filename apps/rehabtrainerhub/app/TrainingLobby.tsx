@@ -26,29 +26,24 @@ import {
 } from './publishedGames';
 
 const trainerVisuals: Record<TrainerCatalogId, {
-  name: string;
   logo: string;
-  logoAlt: string;
+  logoAlt: Readonly<Record<'en' | 'zh', string>>;
 }> = {
   motor: {
-    name: 'MotorTrainer',
     logo: '/assets/motor-logo.svg',
-    logoAlt: 'MotorTrainer',
+    logoAlt: { en: 'Movement practice', zh: '動作練習' },
   },
   vision: {
-    name: 'VisionTrainer',
     logo: '/assets/vision-logo.svg',
-    logoAlt: 'VisionTrainer',
+    logoAlt: { en: 'Visual practice', zh: '視覺練習' },
   },
   brain: {
-    name: 'BrainTrainer',
     logo: '/assets/brain-logo.svg',
-    logoAlt: 'BrainTrainer',
+    logoAlt: { en: 'Cognitive practice', zh: '認知練習' },
   },
   mouth: {
-    name: 'MouthTrainer',
     logo: '/assets/mouth-logo.svg',
-    logoAlt: 'MouthTrainer',
+    logoAlt: { en: 'Oral practice', zh: '口腔練習' },
   },
 };
 
@@ -291,7 +286,7 @@ export function TrainingLobby() {
                         <span>{language === 'en' ? purpose.labelEn : purpose.label}</span>
                         <Image
                           src={trainer.logo}
-                          alt={trainer.logoAlt}
+                          alt={trainer.logoAlt[language]}
                           width={52}
                           height={36}
                         />

@@ -118,7 +118,7 @@ const localDevSession = await AssertSessionStatus(
 assert.equal((await localDevSession.json()).token, token);
 
 const blockedRecords = await getRecords({
-  request: new Request('https://trainerhub.cc/api/records?appId=motortrainer', {
+  request: new Request('https://trainerhub.cc/api/records?appId=rehabtrainerhub&runtimeId=motor', {
     headers: {
       Origin: 'http://localhost:5173',
       Authorization: `Bearer ${token}`,
@@ -129,7 +129,7 @@ const blockedRecords = await getRecords({
 assert.equal(blockedRecords.status, 403);
 
 const allowedRecords = await getRecords({
-  request: new Request('https://trainerhub.cc/api/records?appId=motortrainer', {
+  request: new Request('https://trainerhub.cc/api/records?appId=rehabtrainerhub&runtimeId=motor', {
     headers: {
       Origin: 'https://trainerhub.cc',
       Authorization: `Bearer ${token}`,

@@ -4,6 +4,7 @@ import {
   SaveRemoteTrainingRecord,
 } from '@rehab-trainer/ui/auth/authClient';
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
+import { CreateRuntimeStorageNamespace } from '@rehab-trainer/ui/storage/runtimeNamespace';
 import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import type { TranslationKey } from '../i18n';
 import { GetSetting, storagePrefix } from './settings';
@@ -39,7 +40,9 @@ interface SaveTrainingSessionRecordArgs {
 }
 
 const recordsKey = `${storagePrefix}training_records_v1`;
-const remoteAppId = 'mouthtrainer';
+export const trainingRecordsChangedEvent = CreateRuntimeStorageNamespace('mouth').trainingRecordsChangedEvent;
+const remoteAppId = 'rehabtrainerhub';
+const remoteRuntimeId = 'mouth';
 
 export async function SaveTrainingSessionRecord(args: SaveTrainingSessionRecordArgs): Promise<MouthTrainingRecord | null> {
   const record: MouthTrainingRecord = {
@@ -58,16 +61,21 @@ export async function SaveTrainingSessionRecord(args: SaveTrainingSessionRecordA
 
   if (HasAuthToken()) {
     try {
-      const saved = await SaveRemoteTrainingRecord(siteUrls.hub, { appId: remoteAppId, record });
+      const saved = await SaveRemoteTrainingRecord(siteUrls.hub, {
+        appId: remoteAppId,
+        runtimeId: remoteRuntimeId,
+        record,
+      });
       if (saved) return record;
     } catch (error) {
-      console.warn('Unable to save remote MouthTrainer record. Falling back to localStorage.', error);
+      console.warn('Unable to save remote mouth-practice record. Falling back to localStorage.', error);
     }
   }
 
   const records = ReadLocalRecords();
   records.push(record);
   localStorage.setItem(recordsKey, JSON.stringify(records));
+  window.dispatchEvent(new Event(trainingRecordsChangedEvent));
   return record;
 }
 
@@ -76,17 +84,19 @@ export async function DownloadAllTrainingRecordsCsv(_t: TFunction): Promise<bool
   if (!records.length) return false;
   const date = new Date().toISOString().slice(0, 10);
   const prefix = GetSetting('downloadDirectory');
-  DownloadCsvFile(BuildCsv(records), `${prefix ? `${prefix}_` : ''}mouthtrainer_records_${date}.csv`);
+  DownloadCsvFile(BuildCsv(records), `${prefix ? `${prefix}_` : ''}rehabtrainerhub_mouth_records_${date}.csv`);
   return true;
 }
 
 async function GetRecords(): Promise<MouthTrainingRecord[]> {
   if (HasAuthToken()) {
     try {
-      const records = await GetRemoteTrainingRecords(siteUrls.hub, remoteAppId);
+      const records = await GetRemoteTrainingRecords(siteUrls.hub, remoteAppId, {
+        runtimeId: remoteRuntimeId,
+      });
       if (records) return records.map(ToRecord).filter((record): record is MouthTrainingRecord => Boolean(record));
     } catch (error) {
-      console.warn('Unable to read remote MouthTrainer records. Falling back to localStorage.', error);
+      console.warn('Unable to read remote mouth-practice records. Falling back to localStorage.', error);
     }
   }
   return ReadLocalRecords();

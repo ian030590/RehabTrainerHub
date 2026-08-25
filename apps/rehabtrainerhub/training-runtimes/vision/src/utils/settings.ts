@@ -13,6 +13,10 @@ import {
 } from '@rehab-trainer/ui/settings/displaySettings';
 import type { UiTheme } from '@rehab-trainer/ui/settings/displaySettings';
 import { CreateUserStore } from '@rehab-trainer/ui/storage/userStore';
+import {
+  CreateRuntimeStorageNamespace,
+  MigrateLegacyLocalStorageNamespace,
+} from '@rehab-trainer/ui/storage/runtimeNamespace';
 import type { OculomotorPattern, OculomotorTargetShape } from '@rehab-trainer/hub-modules/vision/pages/training/oculomotor/types';
 
 export { defaultUiFontSizePx, maxUiFontSizePx, minUiFontSizePx };
@@ -25,8 +29,9 @@ export const defaultCalBarLengthMm = 149;
 export const defaultGammaValue = 2.0;
 export const calBarLengthPx = 700;
 export const appVersion = '3.0.0';
-export const storagePrefix = 'vision_trainer_';
-export const appSettingsChangedEvent = 'vision-trainer-settings-changed';
+const runtimeStorageNamespace = CreateRuntimeStorageNamespace('vision');
+export const storagePrefix = runtimeStorageNamespace.storagePrefix;
+export const appSettingsChangedEvent = runtimeStorageNamespace.settingsChangedEvent;
 export const drivingDurationMinSec = 80;
 export const drivingDurationMaxSec = 240;
 export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel' | 'touch';
@@ -67,6 +72,7 @@ export interface AppSettings {
   webGazerCalibrationAt: string;
   displayCalibrationAt: string;
   oculomotorEnableWebgazer: boolean;
+  oculomotorShowGazepoint: boolean;
   readingWPS: number;
   readingCrowding: number;
   readingContrast: number;
@@ -122,6 +128,7 @@ const appSettingsMeta: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> }
   webGazerCalibrationAt: { dflt: '' },
   displayCalibrationAt: { dflt: '' },
   oculomotorEnableWebgazer: { dflt: false },
+  oculomotorShowGazepoint: { dflt: false },
   readingWPS: { dflt: 4, min: 1, max: 20 },
   readingCrowding: { dflt: 1, min: 1, max: 5 },
   readingContrast: { dflt: 0.0, min: 0.0, max: 2.0 },
@@ -141,7 +148,18 @@ function StorageKey(name: string): string {
   return storagePrefix + name;
 }
 
-export const activeUserChangedEvent = 'vision-trainer-active-user-changed';
+export const activeUserChangedEvent = runtimeStorageNamespace.activeUserChangedEvent;
+
+const legacyVisionStoragePrefixes = ['vision_trainer_', 'vision-trainer-'] as const;
+MigrateLegacyLocalStorageNamespace({
+  canonicalPrefix: storagePrefix,
+  legacyPrefixes: legacyVisionStoragePrefixes,
+  suffixRenames: {
+    hart_decoder_dock: 'hart.decoderDock',
+  },
+  mergeJsonArraySuffixes: ['users', 'training_records_v1'],
+  mergeJsonObjectSuffixes: ['training_high_scores_v1'],
+});
 
 export function GetSetting<K extends keyof AppSettings>(key: K): AppSettings[K] {
   const raw = localStorage.getItem(StorageKey(key));

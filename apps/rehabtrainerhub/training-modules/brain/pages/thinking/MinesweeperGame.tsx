@@ -1,4 +1,4 @@
-// Canonical Hub-owned BrainTrainer Minesweeper runtime.
+// Canonical Hub-owned brain Minesweeper runtime.
 import { type CSSProperties, type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { initJsPsych } from 'jspsych';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';

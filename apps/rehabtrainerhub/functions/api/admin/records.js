@@ -18,13 +18,7 @@ import {
   userRoles,
 } from '../../_lib/authorization.js';
 
-const appIds = new Set([
-  'rehabtrainerhub',
-  'motortrainer',
-  'visiontrainer',
-  'braintrainer',
-  'mouthtrainer',
-]);
+const runtimeIds = new Set(['hub', 'motor', 'vision', 'brain', 'mouth']);
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const defaultPageSize = 25;
 const maxPageSize = 100;
@@ -133,7 +127,7 @@ async function ExportRecordsCsv(request, env, user, filters, query, total) {
     targetId: filters.patientId,
     metadata: {
       patientId: filters.patientId,
-      appId: filters.appId,
+      runtimeId: filters.runtimeId,
       dateFrom: filters.dateFrom,
       dateTo: filters.dateTo,
       returnedRows,
@@ -215,7 +209,7 @@ function CreateRecordsCsvStream(env, query, returnedRows) {
 
 function ParseRecordFilters(searchParams) {
   const patientId = NormalizeOptionalFilter(searchParams.get('patientId'), 128);
-  const appId = NormalizeOptionalFilter(searchParams.get('appId'), 64);
+  const runtimeId = NormalizeOptionalFilter(searchParams.get('runtimeId'), 32);
   const dateFrom = NormalizeOptionalFilter(searchParams.get('dateFrom'), 10);
   const dateTo = NormalizeOptionalFilter(searchParams.get('dateTo'), 10);
   const format = searchParams.get('format') || 'json';
@@ -225,10 +219,10 @@ function ParseRecordFilters(searchParams) {
 
   if (
     patientId === undefined
-    || appId === undefined
+    || runtimeId === undefined
     || dateFrom === undefined
     || dateTo === undefined
-    || (appId && !appIds.has(appId))
+    || (runtimeId && !runtimeIds.has(runtimeId))
     || (dateFrom && !datePattern.test(dateFrom))
     || (dateTo && !datePattern.test(dateTo))
     || (dateFrom && dateTo && dateFrom > dateTo)
@@ -242,7 +236,7 @@ function ParseRecordFilters(searchParams) {
 
   return {
     patientId,
-    appId,
+    runtimeId,
     dateFrom,
     dateTo,
     format,
@@ -253,7 +247,10 @@ function ParseRecordFilters(searchParams) {
 }
 
 function BuildRecordQuery(user, filters) {
-  const conditions = ["app_users.role = 'patient'"];
+  const conditions = [
+    "app_users.role = 'patient'",
+    "training_records.app_id = 'rehabtrainerhub'",
+  ];
   const bindings = [];
 
   if (user.role !== userRoles.admin) {
@@ -271,9 +268,9 @@ function BuildRecordQuery(user, filters) {
     conditions.push('training_records.user_id = ?');
     bindings.push(filters.patientId);
   }
-  if (filters.appId) {
-    conditions.push('training_records.app_id = ?');
-    bindings.push(filters.appId);
+  if (filters.runtimeId) {
+    conditions.push('training_records.runtime_id = ?');
+    bindings.push(filters.runtimeId);
   }
   if (filters.dateFrom) {
     conditions.push(`${TrainingDateSql()} >= ?`);
@@ -298,13 +295,14 @@ function RecordSelectSql() {
       COALESCE(app_users.display_name, app_users.email, 'User') AS patient_name,
       app_users.email AS patient_email,
       training_records.app_id,
+      training_records.runtime_id,
       training_records.module_id,
       training_records.game_id,
       ${TrainingDateSql()} AS training_date,
       training_records.saved_at,
       training_records.difficulty,
       training_records.user_name,
-      training_records.payload_json
+      COALESCE(training_records.summary_json, training_records.payload_json) AS payload_json
     FROM training_records
     INNER JOIN app_users ON app_users.id = training_records.user_id
   `;
@@ -322,6 +320,7 @@ function ToAdminRecordDto(row) {
     patientName: row.patient_name,
     patientEmail: row.patient_email || null,
     appId: row.app_id,
+    runtimeId: row.runtime_id,
     moduleId: row.module_id,
     gameId: row.game_id || null,
     trainingDate: row.training_date || null,
@@ -342,6 +341,7 @@ function BuildRecordsCsvHeader() {
     'Account_Name',
     'User_Email',
     'App_ID',
+    'Runtime_ID',
     'Module_ID',
     'Game_ID',
     'Training_Date',
@@ -361,6 +361,7 @@ function BuildRecordsCsvRows(records) {
       record.patientName,
       record.patientEmail,
       record.appId,
+      record.runtimeId,
       record.moduleId,
       record.gameId,
       record.trainingDate,

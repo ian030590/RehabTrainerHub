@@ -95,7 +95,7 @@ assert.doesNotMatch(officialGeneratorSource, /function CollectFiles/);
 
 const fixtureRoot = mkdtempSync(join(tmpdir(), 'rehab-pwa-check-'));
 try {
-  const outputDir = resolve(fixtureRoot, 'motortrainer', 'dist');
+  const outputDir = resolve(fixtureRoot, 'training-runtime', 'dist');
   mkdirSync(resolve(outputDir, '.hidden'), { recursive: true });
   writeFileSync(resolve(outputDir, 'index.html'), '<!doctype html><title>PWA fixture</title>');
   writeFileSync(resolve(outputDir, '404.html'), '<!doctype html><title>Not found</title>');

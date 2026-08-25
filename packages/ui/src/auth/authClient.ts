@@ -1,4 +1,5 @@
 import { ExecuteTurnstileChallenge } from '../turnstileClient';
+import { CreateRuntimeStorageNamespace } from '../storage/runtimeNamespace';
 
 export type AuthProvider = 'google';
 export type AuthLocale = 'zh-TW' | 'en';
@@ -12,27 +13,39 @@ export const authChangedEvent = 'rehab-auth-changed';
 export const authMessageType = 'rehabtrainerhub-auth-session';
 
 const authTokenKey = 'rehabtrainerhub.auth.token';
-const localTrainingStorageKeys = [
-  'motor_trainer_training_records_v1',
-  'motor_trainer_users',
-  'motor_trainer_active_user',
-  'vision_trainer_training_records_v1',
-  'vision_trainer_training_high_scores_v1',
-  'vision_trainer_users',
-  'vision_trainer_active_user',
-  'brain_trainer_training_records_v1',
-  'mouth_trainer_training_records_v1',
-  'mouth_trainer_users',
-  'mouth_trainer_active_user',
-  'mouth_trainer_voice_defender_vocabulary_v1',
-  'mouth_trainer_voice_defender_vocabulary_v2',
+const runtimeStorageNamespaces = [
+  CreateRuntimeStorageNamespace('motor'),
+  CreateRuntimeStorageNamespace('vision'),
+  CreateRuntimeStorageNamespace('brain'),
+  CreateRuntimeStorageNamespace('mouth'),
 ];
-const localTrainingDatabases = [
-  'motor-trainer-training-records',
-  'vision_trainer_training_records',
+const currentLocalTrainingStorageKeyPrefixes = runtimeStorageNamespaces
+  .map((namespace) => namespace.storagePrefix);
+const legacyLocalTrainingStorageKeyPrefixes = [
+  'motor_trainer_',
+  'motor-trainer-',
+  'vision_trainer_',
+  'vision-trainer-',
+  'brain_trainer_',
+  'brain-trainer-',
+  'mouth_trainer_',
+  'mouth-trainer-',
 ];
 const localTrainingStorageKeyPrefixes = [
-  'mouth_trainer_tongue_settings_',
+  ...currentLocalTrainingStorageKeyPrefixes,
+  ...legacyLocalTrainingStorageKeyPrefixes,
+];
+const currentLocalTrainingDatabases = runtimeStorageNamespaces
+  .map((namespace) => namespace.trainingRecordsDatabaseName);
+const legacyLocalTrainingDatabases = [
+  'motor-trainer-training-records',
+  'motor_trainer_training_records',
+  'vision_trainer_training_records',
+  'vision-trainer-training-records',
+];
+const localTrainingDatabases = [
+  ...currentLocalTrainingDatabases,
+  ...legacyLocalTrainingDatabases,
 ];
 let remoteRecordVerification = {
   enabled: false,
@@ -103,8 +116,11 @@ export interface RemoteTrainingRecord {
   trainingDate?: string;
 }
 
+export type RemoteTrainingRuntimeId = 'hub' | 'motor' | 'vision' | 'brain' | 'mouth';
+
 export interface RemoteTrainingRecordPayload {
   appId: string;
+  runtimeId: RemoteTrainingRuntimeId;
   record: RemoteTrainingRecord;
 }
 
@@ -321,9 +337,6 @@ export async function ClearLocalTrainerData(): Promise<void> {
   if (typeof window === 'undefined') return;
 
   try {
-    for (const key of localTrainingStorageKeys) {
-      window.localStorage.removeItem(key);
-    }
     const keys = Array.from(
       { length: window.localStorage.length },
       (_, index) => window.localStorage.key(index),
@@ -466,14 +479,23 @@ export async function SaveRemoteTrainingRecord(
 export async function GetRemoteTrainingRecords(
   apiBase: string | undefined,
   appId: string,
+  options: {
+    runtimeId: RemoteTrainingRuntimeId;
+    includeGazeSamples?: boolean;
+  },
 ): Promise<RemoteTrainingRecord[] | null> {
   const token = GetAuthToken();
   if (!token) return null;
 
   const records: RemoteTrainingRecord[] = [];
   let cursor = '';
-  const pageSize = 100;
-  const maximumPages = 100;
+  const includeGazeSamples = options.includeGazeSamples === true;
+  const pageSize = includeGazeSamples ? 5 : 100;
+  // Raw eye-tracking pages are intentionally small because one record can be
+  // hundreds of KiB. Permit a much larger number of pages for explicit CSV
+  // export while still failing loudly if an implausibly large response would
+  // otherwise consume unbounded browser memory.
+  const maximumPages = includeGazeSamples ? 2000 : 100;
   let pageCount = 0;
   let exceededPaginationLimit = false;
 
@@ -481,7 +503,9 @@ export async function GetRemoteTrainingRecords(
     pageCount += 1;
     const url = new URL(BuildApiUrl(apiBase, '/api/records'), window.location.origin);
     url.searchParams.set('appId', appId);
+    url.searchParams.set('runtimeId', options.runtimeId);
     url.searchParams.set('limit', String(pageSize));
+    if (includeGazeSamples) url.searchParams.set('includeGazeSamples', '1');
     if (cursor) url.searchParams.set('cursor', cursor);
 
     const response = await fetch(url.toString(), {
@@ -521,12 +545,14 @@ export async function GetRemoteTrainingRecords(
 export async function GetRemoteTrainingRecordCount(
   apiBase: string | undefined,
   appId: string,
+  runtimeId: RemoteTrainingRuntimeId,
 ): Promise<number | null> {
   const token = GetAuthToken();
   if (!token) return null;
 
   const url = new URL(BuildApiUrl(apiBase, '/api/records'), window.location.origin);
   url.searchParams.set('appId', appId);
+  url.searchParams.set('runtimeId', runtimeId);
   url.searchParams.set('count', '1');
   const response = await fetch(url.toString(), {
     headers: {

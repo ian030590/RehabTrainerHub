@@ -44,7 +44,7 @@ export function App() {
       <TrainingLoginReminder
         active={isTrainingPath}
         apiBase={apiBase}
-        appName="VisionTrainer"
+        appName={t('nav.brand')}
         locale={locale}
         privacyHref={`${siteUrls.hub}/privacy/`}
         turnstileAuthRequired={import.meta.env.VITE_TURNSTILE_AUTH_REQUIRED === '1'}
@@ -73,7 +73,7 @@ export function App() {
 }
 
 function AppLayout() {
-  const { lang } = useT();
+  const { lang, t } = useT();
   useSyncedDisplaySettings(() => ({
     fontSizePx: GetSetting('uiFontSizePx'),
     defaultFontSizePx: defaultUiFontSizePx,
@@ -88,7 +88,7 @@ function AppLayout() {
       navbar={<Navbar />}
       skipLinkLabel={GetTrainerSkipLinkLabel(lang)}
       footer={{
-        appName: 'VisionTrainer',
+        appName: t('nav.brand'),
         hubHref: siteUrls.hub,
         privacyHref: `${siteUrls.hub}/privacy/`,
         labels: GetTrainerFooterLabels(lang),

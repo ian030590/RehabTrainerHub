@@ -1,4 +1,4 @@
-// Canonical Hub-owned MouthTrainer module rules.
+// Canonical Hub-owned mouth module rules.
 import type { ReactNode } from 'react';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import type { TrainingConfigSummaryItem } from '@rehab-trainer/ui/components/TrainingConfigSummary';

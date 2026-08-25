@@ -40,7 +40,6 @@ export function IsHubOrigin(url: string): boolean {
   try {
     const { hostname, origin, protocol } = new URL(url);
     return origin === 'https://trainerhub.cc'
-      || origin === 'https://rehabtrainerhub.pages.dev'
       || (protocol === 'https:' && hostname.endsWith('.rehabtrainerhub.pages.dev'))
       || (protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1'));
   } catch {

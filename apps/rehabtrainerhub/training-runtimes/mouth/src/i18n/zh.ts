@@ -2,9 +2,9 @@ import { zh as motorZh } from '../../../motor/src/i18n/zh';
 
 export const zh = {
   ...motorZh,
-  'app.loading': '載入 MouthTrainer...',
-  'nav.brand': 'MouthTrainer',
-  'nav.logoAlt': 'MouthTrainer 標誌',
+  'app.loading': '載入口腔練習...',
+  'nav.brand': '口腔練習',
+  'nav.logoAlt': '口腔練習圖示',
   'nav.comprehension': '理解訓練',
   'nav.oral': '口腔訓練',
   'nav.settings': '網頁設定',
@@ -18,14 +18,14 @@ export const zh = {
   'mouth.comprehension.title': '理解訓練',
   'mouth.comprehension.subtitle': '理解訓練模組正在規劃中。',
   'mouth.comprehension.body': '這個入口已準備好，之後會加入聽覺理解、詞語理解與日常情境理解練習。',
-  'mouth.references.subtitle': 'MouthTrainer 使用的開放原始碼與技術參考。',
-  'mouth.links.mouth.title': 'MouthTrainer',
+  'mouth.references.subtitle': '口腔練習使用的開放原始碼與技術參考。',
+  'mouth.links.mouth.title': '口腔練習',
   'mouth.links.mouth.desc': '口說、理解與口腔動作練習工具。',
-  'mouth.links.motor.title': 'MotorTrainer',
+  'mouth.links.motor.title': '動作練習',
   'mouth.links.motor.desc': '上肢與下肢動作練習工具。',
-  'mouth.links.vision.title': 'VisionTrainer',
+  'mouth.links.vision.title': '視覺練習',
   'mouth.links.vision.desc': '視覺搜尋、閱讀與辨識練習工具。',
-  'mouth.links.brain.title': 'BrainTrainer',
+  'mouth.links.brain.title': '認知練習',
   'mouth.links.brain.desc': '注意、記憶與思考練習工具。',
 } as const;
 

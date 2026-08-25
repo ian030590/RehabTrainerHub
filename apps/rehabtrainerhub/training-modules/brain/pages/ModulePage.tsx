@@ -1,4 +1,4 @@
-// Canonical Hub-owned BrainTrainer module dispatcher.
+// Canonical Hub-owned brain module dispatcher.
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';

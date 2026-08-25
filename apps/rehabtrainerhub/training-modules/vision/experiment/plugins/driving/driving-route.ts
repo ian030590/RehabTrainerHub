@@ -42,7 +42,7 @@ const keelung6Lane = RoadWidthFromLanes(6, 2.4);
 const cityHall4Lane = RoadWidthFromLanes(4, 1.8);
 const songshou4Lane = RoadWidthFromLanes(4, 1.8);
 const songzhi6Lane = RoadWidthFromLanes(6, 2.0);
-const lastRouteStorageKey = 'visiontrainer.driving.lastRouteId';
+const lastRouteStorageKey = 'rehabtrainerhub.vision.driving.lastRouteId';
 
 const xinyi3Lane = xinyi6Lane;
 const xinyi4Lane = xinyi8Lane;
@@ -311,9 +311,9 @@ export function BuildDrivingRoute(variant: DrivingRouteVariant): RouteSegment[] 
 export function PickRandomDrivingRoute(): DrivingRouteVariant {
   let storedLastRouteId: string | null = null;
   try {
-    storedLastRouteId = typeof window !== 'undefined'
-      ? window.localStorage?.getItem(lastRouteStorageKey)
-      : null;
+    if (typeof window !== 'undefined') {
+      storedLastRouteId = window.localStorage?.getItem(lastRouteStorageKey);
+    }
   } catch {
     storedLastRouteId = null;
   }

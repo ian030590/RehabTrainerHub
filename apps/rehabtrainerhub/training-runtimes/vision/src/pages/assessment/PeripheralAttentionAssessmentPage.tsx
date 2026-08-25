@@ -10,7 +10,7 @@ import {
 } from './peripheral-attention/PeripheralAttentionPage';
 
 export function PeripheralAttentionAssessmentPage() {
-  const { lang } = useT();
+  const { lang, t } = useT();
   const [searchParams] = useSearchParams();
   const initialSubtestId = ParseSubtestId(searchParams.get('subtest'));
   const initialMode = ParseRunMode(searchParams.get('mode'));
@@ -18,7 +18,7 @@ export function PeripheralAttentionAssessmentPage() {
 
   return (
     <PeripheralAttentionPage
-      appName="VisionTrainer"
+      appName={t('nav.brand')}
       backPath="/assessment"
       lang={lang}
       moduleId="ufov-assessment"

@@ -1,4 +1,4 @@
-/* -- Vision Trainer Global Styles -- */
+/* -- Visual practice runtime styles -- */
 /* Human-Centric Clinical Theme */
 
 :root {
@@ -195,7 +195,9 @@ html, body, #root {
    We override to position:absolute so calibration points (position:absolute, left/top %)
    are placed relative to the full viewport. */
 body .webgazer-fullscreen-stage #webgazer-calibrate-container,
-.webgazer-fullscreen-overlay #webgazer-calibrate-container {
+.webgazer-fullscreen-overlay #webgazer-calibrate-container,
+body .webgazer-fullscreen-stage #webgazer-validate-container,
+.webgazer-fullscreen-overlay #webgazer-validate-container {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
@@ -240,7 +242,8 @@ body #webgazerVideoContainer {
 
 /* ?? Calibration point styling ?? */
 .webgazer-fullscreen-stage #calibration-point,
-body #webgazer-calibrate-container #calibration-point {
+body #webgazer-calibrate-container #calibration-point,
+.webgazer-fullscreen-stage #webgazer-validate-container .validation-point {
   transform: translate(-50%, -50%) !important;
   border: 2px solid var(--text-on-accent) !important;
   background: var(--accent) !important;
@@ -298,7 +301,92 @@ body #webgazer-calibrate-container #calibration-point {
 }
 
 .webgazer-fullscreen-stage #webgazer-init-status.error {
-  color: var(--danger, #c0392b);
+  color: var(--error);
+}
+
+.webgazer-fullscreen-stage #webgazer-init-status[data-state='too-far'],
+.webgazer-fullscreen-stage #webgazer-init-status[data-state='too-close'] {
+  color: var(--error);
+}
+
+.webgazer-fullscreen-stage #webgazer-init-status[data-state='stabilizing'] {
+  color: var(--warning);
+}
+
+.webgazer-fullscreen-stage #webgazer-init-status[data-state='ready'] {
+  color: var(--success);
+}
+
+.webgazer-init-recovery {
+  width: min(520px, calc(100vw - 40px));
+  margin: 24px auto;
+  padding: 18px;
+  border: 1px solid var(--error);
+  border-radius: var(--radius-m);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.webgazer-init-recovery p {
+  margin: 0 0 14px;
+  color: var(--error);
+}
+
+.webgazer-validation-result {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  width: min(440px, calc(100vw - 40px));
+  padding: 22px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-ambient);
+  text-align: center;
+}
+
+.webgazer-validation-result h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.webgazer-validation-result p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.webgazer-validation-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 14px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.webgazer-validation-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.webgazer-validation-legend span::before {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--success);
+  content: '';
+}
+
+.webgazer-validation-legend .is-outside::before {
+  background: var(--error);
 }
 
 .webgazer-fullscreen-stage .jspsych-btn:hover:not(:disabled) {
@@ -330,7 +418,8 @@ body #webgazer-calibrate-container #calibration-point {
 
 @media (any-pointer: coarse) {
   .webgazer-fullscreen-stage #calibration-point,
-  body #webgazer-calibrate-container #calibration-point {
+  body #webgazer-calibrate-container #calibration-point,
+  .webgazer-fullscreen-stage #webgazer-validate-container .validation-point {
     min-width: 48px !important;
     min-height: 48px !important;
   }

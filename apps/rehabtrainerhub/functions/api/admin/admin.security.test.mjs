@@ -29,7 +29,8 @@ const trainingRow = {
   patient_id: 'patient-assigned',
   patient_name: '=SUM(1,1)',
   patient_email: 'assigned@example.test',
-  app_id: 'motortrainer',
+  app_id: 'rehabtrainerhub',
+  runtime_id: 'motor',
   module_id: 'upper-limb-training',
   game_id: 'drawing-defense',
   training_date: '2026-07-24',
@@ -92,6 +93,8 @@ const assignedRecords = await getRecords({
 assert.equal(assignedRecords.status, 200);
 const recordsPayload = await assignedRecords.json();
 assert.equal(recordsPayload.records[0].payload.score, 88);
+assert.equal(recordsPayload.records[0].appId, 'rehabtrainerhub');
+assert.equal(recordsPayload.records[0].runtimeId, 'motor');
 assert.deepEqual(recordsPayload.pagination, {
   page: 1,
   pageSize: 25,
@@ -110,7 +113,18 @@ assert.equal(csvExport.status, 200);
 const csv = await csvExport.text();
 assert.match(csv, /'=SUM\(1,1\)/);
 assert.match(csv, /'@Patient/);
+assert.match(csv, /App_ID,Runtime_ID/);
+assert.match(csv, /rehabtrainerhub,motor/);
 assert.equal(auditWrites, 1);
+
+const invalidRuntime = await getRecords({
+  request: AuthorizedRequest(
+    'https://trainerhub.cc/api/admin/records?runtimeId=motortrainer',
+    therapistToken,
+  ),
+  env,
+});
+assert.equal(invalidRuntime.status, 400);
 
 console.log('admin security checks passed');
 

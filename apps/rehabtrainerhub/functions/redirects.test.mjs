@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { onRequest, retiredTrainerHosts } from './_middleware.js';
+import { canonicalRedirectHosts, onRequest } from './_middleware.js';
 
-for (const hostname of retiredTrainerHosts) {
+for (const hostname of canonicalRedirectHosts) {
   test(`${hostname} redirects every path to the Hub`, async () => {
     let continued = false;
     const response = await onRequest({

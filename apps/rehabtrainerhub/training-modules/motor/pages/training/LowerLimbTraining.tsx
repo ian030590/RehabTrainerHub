@@ -1,4 +1,4 @@
-// Canonical Hub-owned MotorTrainer training route.
+// Canonical Hub-owned motor training route.
 import { GridPageLayout } from '@rehab-trainer/ui/components/GridPageLayout';
 import { useT } from '../../i18n';
 

@@ -5,6 +5,7 @@ import {
 } from '@rehab-trainer/ui/auth/authClient';
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import { DownloadCsvFile, DownloadFile } from '@rehab-trainer/ui/downloadFile';
+import { CreateRuntimeStorageNamespace } from '@rehab-trainer/ui/storage/runtimeNamespace';
 import type { TranslationKey } from '../i18n';
 import { storagePrefix } from './settings';
 import { siteUrls } from './siteUrls';
@@ -37,7 +38,9 @@ interface SaveTrainingSessionRecordArgs {
 }
 
 const trainingRecordsKey = `${storagePrefix}training_records_v1`;
-const remoteAppId = 'braintrainer';
+export const trainingRecordsChangedEvent = CreateRuntimeStorageNamespace('brain').trainingRecordsChangedEvent;
+const remoteAppId = 'rehabtrainerhub';
+const remoteRuntimeId = 'brain';
 const authApiBase = siteUrls.hub;
 
 export async function SaveTrainingRecord(record: BrainTrainingRecord): Promise<void> {
@@ -45,11 +48,12 @@ export async function SaveTrainingRecord(record: BrainTrainingRecord): Promise<v
     try {
       const saved = await SaveRemoteTrainingRecord(authApiBase, {
         appId: remoteAppId,
+        runtimeId: remoteRuntimeId,
         record,
       });
       if (saved) return;
     } catch (error) {
-      console.warn('Unable to save remote BrainTrainer record. Falling back to localStorage.', error);
+      console.warn('Unable to save remote brain-practice record. Falling back to localStorage.', error);
     }
   }
 
@@ -58,6 +62,7 @@ export async function SaveTrainingRecord(record: BrainTrainingRecord): Promise<v
   if (index >= 0) records[index] = record;
   else records.push(record);
   localStorage.setItem(trainingRecordsKey, JSON.stringify(records));
+  window.dispatchEvent(new Event(trainingRecordsChangedEvent));
 }
 
 export async function SaveTrainingSessionRecord(args: SaveTrainingSessionRecordArgs): Promise<void> {
@@ -79,10 +84,12 @@ export async function SaveTrainingSessionRecord(args: SaveTrainingSessionRecordA
 export async function GetTrainingRecords(): Promise<BrainTrainingRecord[]> {
   if (HasAuthToken()) {
     try {
-      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId);
+      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId, {
+        runtimeId: remoteRuntimeId,
+      });
       if (remoteRecords) return remoteRecords.map(ToTrainingRecord).filter((record): record is BrainTrainingRecord => Boolean(record));
     } catch (error) {
-      console.warn('Unable to read remote BrainTrainer records. Falling back to localStorage.', error);
+      console.warn('Unable to read remote brain-practice records. Falling back to localStorage.', error);
     }
   }
 
@@ -92,7 +99,7 @@ export async function GetTrainingRecords(): Promise<BrainTrainingRecord[]> {
 export async function DownloadAllTrainingRecordsCsv(_t: TFunction): Promise<boolean> {
   const records = await GetTrainingRecords();
   if (records.length === 0) return false;
-  DownloadCsvFile(BuildTrainingRecordsCsv(records), `braintrainer_records_${FormatFileDate(new Date())}.csv`);
+  DownloadCsvFile(BuildTrainingRecordsCsv(records), `rehabtrainerhub_brain_records_${FormatFileDate(new Date())}.csv`);
   return true;
 }
 
@@ -180,7 +187,7 @@ function FormatFileDate(date: Date): string {
 }
 
 function SafeFilePart(value: string): string {
-  return value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'braintrainer';
+  return value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'brain-practice';
 }
 
 function CreateRecordId(): string {

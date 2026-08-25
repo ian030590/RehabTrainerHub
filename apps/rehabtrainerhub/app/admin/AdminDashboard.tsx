@@ -32,19 +32,19 @@ const gameReviewTab = { id: 'games', label: '遊戲審核', icon: 'extension' } 
 
 const emptyFilters: AdminRecordFilters = {
   patientId: '',
-  appId: '',
+  runtimeId: '',
   dateFrom: '',
   dateTo: '',
 };
 
 const pageSize = 20;
 
-const appOptions = [
-  { id: 'motortrainer', label: 'MotorTrainer' },
-  { id: 'visiontrainer', label: 'VisionTrainer' },
-  { id: 'braintrainer', label: 'BrainTrainer' },
-  { id: 'mouthtrainer', label: 'MouthTrainer' },
-  { id: 'rehabtrainerhub', label: 'Rehab Trainer Hub' },
+const runtimeOptions = [
+  { id: 'hub', label: '平台' },
+  { id: 'motor', label: '動作練習' },
+  { id: 'vision', label: '視覺練習' },
+  { id: 'brain', label: '認知練習' },
+  { id: 'mouth', label: '口腔練習' },
 ] as const;
 
 function GetUserRole(user: unknown): string {
@@ -81,8 +81,8 @@ function FormatTrainingDate(value: string | null, fallback: string): string {
   }).format(date);
 }
 
-function GetAppLabel(appId: string): string {
-  return appOptions.find((app) => app.id === appId)?.label ?? appId;
+function GetRuntimeLabel(runtimeId: string): string {
+  return runtimeOptions.find((runtime) => runtime.id === runtimeId)?.label ?? runtimeId;
 }
 
 function FormatRecordPayload(payload: Record<string, unknown> | null): string {
@@ -486,17 +486,17 @@ export function AdminDashboard() {
           </label>
 
           <label className="admin-field">
-            <span>訓練器</span>
+            <span>練習分類</span>
             <select
               onChange={(event) => setDraftFilters((current) => ({
                 ...current,
-                appId: event.target.value,
+                runtimeId: event.target.value,
               }))}
-              value={draftFilters.appId}
+              value={draftFilters.runtimeId}
             >
-              <option value="">全部訓練器</option>
-              {appOptions.map((app) => (
-                <option key={app.id} value={app.id}>{app.label}</option>
+              <option value="">全部分類</option>
+              {runtimeOptions.map((runtime) => (
+                <option key={runtime.id} value={runtime.id}>{runtime.label}</option>
               ))}
             </select>
           </label>
@@ -570,7 +570,7 @@ export function AdminDashboard() {
           <div className="admin-state">
             <span className="material-symbols-outlined" aria-hidden="true">search_off</span>
             <h3>找不到符合條件的紀錄</h3>
-            <p>請調整使用者、日期或訓練器篩選條件。</p>
+            <p>請調整使用者、日期或練習分類篩選條件。</p>
           </div>
         )}
 
@@ -586,7 +586,7 @@ export function AdminDashboard() {
                   <tr>
                     <th scope="col">訓練日期</th>
                     <th scope="col">使用者</th>
-                    <th scope="col">訓練器</th>
+                    <th scope="col">練習分類</th>
                     <th scope="col">模組</th>
                     <th scope="col">遊戲</th>
                     <th scope="col">難度</th>
@@ -605,7 +605,7 @@ export function AdminDashboard() {
                         <span>{record.patientName}</span>
                         {record.patientEmail && <small>{record.patientEmail}</small>}
                       </th>
-                      <td>{GetAppLabel(record.appId)}</td>
+                      <td>{GetRuntimeLabel(record.runtimeId)}</td>
                       <td>{record.moduleId}</td>
                       <td>{record.gameId ?? '—'}</td>
                       <td>{record.difficulty ?? '—'}</td>

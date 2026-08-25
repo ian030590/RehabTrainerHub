@@ -1,5 +1,8 @@
-// Types local to the Hub-owned VisionTrainer modules.
+// Types local to the Hub-owned vision modules.
 import type { TranslationKey } from '../../i18n';
+import type { OculomotorGazeSample } from '../../utils/webgazerMetrics';
+
+export type { OculomotorGazeSample } from '../../utils/webgazerMetrics';
 
 export type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;
 
@@ -36,6 +39,14 @@ export interface TrialData {
   reading_time?: number;
   response_text?: string;
   aoi_score?: number;
+  mean_target_distance_px?: number | null;
+  target_distance_sd_px?: number | null;
+  time_to_first_fixation_ms?: number | null;
+  average_pupil_size_px?: number | null;
+  blink_count?: number | null;
+  gaze_sample_count?: number;
+  gaze_sample_columns?: readonly string[];
+  gaze_samples?: readonly OculomotorGazeSample[];
   average_rt?: number;
   median_rt?: number;
   valid_event_count?: number;

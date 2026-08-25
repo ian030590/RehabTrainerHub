@@ -1,4 +1,4 @@
-// Results view local to the Hub-owned VisionTrainer modules.
+// Results view local to the Hub-owned vision modules.
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { Mean, Median } from '../../../utils/mathUtils';
 import type { TFunction, TrialData } from '../types';

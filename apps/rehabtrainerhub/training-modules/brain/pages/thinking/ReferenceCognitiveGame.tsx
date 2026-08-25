@@ -1,4 +1,4 @@
-// Canonical Hub-owned BrainTrainer cognitive runtime.
+// Canonical Hub-owned brain cognitive runtime.
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
 import { Application, type Ticker } from 'pixi.js';
 import { initJsPsych } from 'jspsych';

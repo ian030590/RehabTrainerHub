@@ -5,7 +5,7 @@ import { siteUrls } from '../utils/siteUrls';
 
 export function Navbar() {
   const { lang, t } = useT();
-  const appName = 'VisionTrainer';
+  const appName = t('nav.brand');
   const apiBase = siteUrls.hub;
   const locale = lang === 'en' ? 'en' : 'zh-TW';
   const logoSrc = `${import.meta.env.BASE_URL}assets/logo.svg`;

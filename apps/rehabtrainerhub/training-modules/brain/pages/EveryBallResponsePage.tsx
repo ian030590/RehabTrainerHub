@@ -1,4 +1,4 @@
-// Canonical Hub-owned BrainTrainer module; bundled by the BrainTrainer host.
+// Canonical Hub-owned brain module; bundled by the brain runtime.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FilesetResolver,

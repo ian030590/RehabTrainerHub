@@ -66,7 +66,7 @@ try {
   });
   previewProcess.stdout.on('data', (chunk) => { previewLogs += chunk; });
   previewProcess.stderr.on('data', (chunk) => { previewLogs += chunk; });
-  await WaitForHttp(`http://127.0.0.1:${previewPort}/`, 'VisionTrainer production preview');
+  await WaitForHttp(`http://127.0.0.1:${previewPort}/`, 'visual practice production preview');
 
   browserProcess = spawn(browserPath, [
     '--headless=new',
@@ -300,11 +300,11 @@ function CreateBootstrapSource() {
   return `
     history.replaceState({ usr: { configAndRulesCompleted: true } }, '', location.href);
     localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(token)});
-    localStorage.setItem('vision_trainer_active_user', 'Driving Browser Smoke');
-    localStorage.setItem('vision_trainer_language', 'en');
-    localStorage.setItem('vision_trainer_oculomotorEnableWebgazer', 'false');
-    localStorage.setItem('vision_trainer_drivingControlMode', 'arrow');
-    localStorage.setItem('vision_trainer_drivingRenderQuality', 'high');
+    localStorage.setItem('rehabtrainerhub.vision.active_user', 'Driving Browser Smoke');
+    localStorage.setItem('rehabtrainerhub.vision.language', 'en');
+    localStorage.setItem('rehabtrainerhub.vision.oculomotorEnableWebgazer', 'false');
+    localStorage.setItem('rehabtrainerhub.vision.drivingControlMode', 'arrow');
+    localStorage.setItem('rehabtrainerhub.vision.drivingRenderQuality', 'high');
 
     Object.defineProperty(navigator, 'maxTouchPoints', {
       configurable: true,

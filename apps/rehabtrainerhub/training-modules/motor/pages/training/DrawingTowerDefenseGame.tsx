@@ -1,4 +1,4 @@
-// Canonical Hub-owned MotorTrainer module; bundled by the MotorTrainer host.
+// Canonical Hub-owned motor module; bundled by the motor runtime.
 import { type ChangeEvent, type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Application, Container, Graphics, Text, type Ticker } from 'pixi.js';
 import { initJsPsych } from 'jspsych';
@@ -132,7 +132,7 @@ const rdpClosedEndpointDistancePx = 30;
 const rdpStraightAngleDegrees = 160;
 const starSkyBackgroundImage = CreateRuntimeAssetUrlCandidates(
   import.meta.env.VITE_AI_ASSET_BASE_URL,
-  'game-assets/motortrainer/star-sky/v1/StarSky.png',
+  'game-assets/rehabtrainerhub/motor/star-sky/v1/StarSky.png',
   `${import.meta.env.BASE_URL}assets/StarSky.png`,
 )
   .map((url) => `url("${url}")`)

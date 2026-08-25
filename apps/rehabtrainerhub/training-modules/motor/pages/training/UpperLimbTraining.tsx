@@ -1,4 +1,4 @@
-// Canonical Hub-owned MotorTrainer module dispatcher.
+// Canonical Hub-owned motor module dispatcher.
 import { Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';

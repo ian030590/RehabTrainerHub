@@ -1,4 +1,4 @@
-// Canonical Hub-owned BrainTrainer Peripheral Attention entry.
+// Canonical Hub-owned brain peripheral-attention entry.
 import { Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { useT } from '../i18n';
@@ -13,7 +13,7 @@ import {
 } from './peripheral-attention/PeripheralAttentionPage';
 
 export function PeripheralAttentionPage() {
-  const { lang } = useT();
+  const { lang, t } = useT();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const initialSubtestId = ParseSubtestId(searchParams.get('subtest'));
@@ -32,7 +32,7 @@ export function PeripheralAttentionPage() {
 
   return (
     <BasePeripheralAttentionPage
-      appName="BrainTrainer"
+      appName={t('nav.brand')}
       backPath="/attention-training"
       lang={lang}
       moduleId="attention-training"

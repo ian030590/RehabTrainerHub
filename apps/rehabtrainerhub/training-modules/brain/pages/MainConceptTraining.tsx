@@ -1,4 +1,4 @@
-// Canonical Hub-owned BrainTrainer module; bundled by the BrainTrainer host.
+// Canonical Hub-owned brain module; bundled by the brain runtime.
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { initJsPsych } from 'jspsych';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';

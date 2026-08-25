@@ -8,20 +8,20 @@
 
 居家訓練網是居家練習工具與衛教資訊的整合入口，同時提供 Steam 式遊戲平台，供經審核的開發者上傳 HTML/ZIP 居家練習遊戲：
 
-- MotorTrainer：上肢、下肢與動作協調練習
-- VisionTrainer：視標、眼動、閱讀與視覺注意力練習
-- BrainTrainer：注意、記憶與思考練習
-- MouthTrainer：口說、理解與口腔動作練習
+- 動作練習：上肢、下肢與動作協調活動
+- 視覺練習：視標、眼動、閱讀與視覺注意力活動
+- 認知練習：注意、記憶與思考活動
+- 口腔練習：口說、理解與口腔動作活動
 - 遊戲平台：開發者可上傳 jsPsych 8 HTML/ZIP 居家練習遊戲，經人工審核後在隔離域名安全執行，並支援單一遊戲 PWA 安裝
 
 ## English
 
 Rehab Trainer Hub brings together home-practice tools, educational information, and a Steam-like game platform where approved developers can upload jsPsych 8 HTML/ZIP practice games:
 
-- MotorTrainer: upper-limb, lower-limb, and movement-coordination practice
-- VisionTrainer: visual-target, eye-movement, reading, and attention practice
-- BrainTrainer: attention, memory, and thinking practice
-- MouthTrainer: speech, comprehension, and oral-movement practice
+- Movement Practice: upper-limb, lower-limb, and movement-coordination activities
+- Visual Practice: visual-target, eye-movement, reading, and attention activities
+- Cognitive Practice: attention, memory, and thinking activities
+- Oral Practice: speech, comprehension, and oral-movement activities
 - Game Platform: developers upload jsPsych 8 HTML/ZIP games; after human review, games run in an isolated domain with per-game PWA install support
 
 ## 資料夾結構 / Folder Structure
@@ -29,12 +29,13 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 ```text
 .
 |-- apps/
-|   |-- rehabtrainerhub/   # 入口網站 + 遊戲平台 / Hub site + Game Platform
-|   |-- usergamerunner/    # 隔離遊戲執行環境 / Isolated game runner (trainerhub-user-games.pages.dev)
-|   |-- motortrainer/      # MotorTrainer
-|   |-- visiontrainer/     # VisionTrainer
-|   |-- braintrainer/      # BrainTrainer
-|   `-- mouthtrainer/      # MouthTrainer
+|   |-- rehabtrainerhub/   # 入口網站、遊戲平台與內建練習 runtime / Hub, Game Platform, and built-in practice runtimes
+|   |   `-- training-runtimes/
+|   |       |-- motor/     # 動作練習 / Movement Practice
+|   |       |-- vision/    # 視覺練習 / Visual Practice
+|   |       |-- brain/     # 認知練習 / Cognitive Practice
+|   |       `-- mouth/     # 口腔練習 / Oral Practice
+|   `-- usergamerunner/    # 隔離遊戲執行環境 / Isolated game runner (trainerhub-user-games.pages.dev)
 |-- packages/
 |   |-- ui/                # 共用介面、auth、gamePlatform 型別 / Shared UI, auth, gamePlatform types
 |   |-- game-sdk/          # 開發者遊戲 SDK (@rehab-trainer/game-sdk) / Developer game SDK
@@ -49,8 +50,8 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 
 ## 使用方式
 
-1. 進入 RehabTrainerHub 主畫面。
-2. 選擇內建 trainer（MotorTrainer、VisionTrainer、BrainTrainer、MouthTrainer）或「遊戲庫」中經核准的開發者遊戲。
+1. 進入居家訓練網主畫面。
+2. 選擇內建練習模組（動作練習、視覺練習、認知練習、口腔練習）或「遊戲庫」中經核准的開發者遊戲。
 3. 依需求調整網頁設定，例如語言、字體大小、色彩模式與音效。
 4. 選擇訓練分類與訓練模組或遊戲。
 5. 在訓練前設定畫面確認參數後開始，或於遊戲平台直接以沙盒執行。
@@ -58,8 +59,8 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 
 ## How To Use
 
-1. Open the RehabTrainerHub home screen.
-2. Choose a built-in trainer (MotorTrainer, VisionTrainer, BrainTrainer, MouthTrainer) or an approved developer game from the Game Library.
+1. Open the Rehab Trainer Hub home screen.
+2. Choose a built-in practice module (Movement, Visual, Cognitive, or Oral Practice) or an approved developer game from the Game Library.
 3. Adjust page settings as needed, such as language, font size, color mode, and sound.
 4. Select a training category and module or game.
 5. Confirm pre-training settings and start, or run in sandbox mode via the game platform.

@@ -10,6 +10,12 @@ const appsRoot = join(repoRoot, 'apps');
 const wranglerPrefix = ['--yes', 'wrangler@4'];
 const cloudflarePagesAssetLimitBytes = 25 * 1024 * 1024;
 const deployTimeoutMs = 5 * 60 * 1000; // 5 minutes per deploy
+const permanentlyRetiredProjectNames = new Set([
+  'motortrainer',
+  'visiontrainer',
+  'braintrainer',
+  'mouthtrainer',
+]);
 
 function ToPosixPath(path) {
   return path.replaceAll('\\', '/');
@@ -88,6 +94,54 @@ function DiscoverPagesProjects() {
     })
     .filter(Boolean)
     .sort((a, b) => a.appPath.localeCompare(b.appPath));
+}
+
+function DiscoverRetiredProjectNames() {
+  const retiredProjectNames = new Set(permanentlyRetiredProjectNames);
+
+  for (const entry of readdirSync(appsRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+
+    const packagePath = join(appsRoot, entry.name, 'package.json');
+    if (!existsSync(packagePath)) continue;
+
+    const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
+    const configuredNames = pkg.rehabTrainer?.retiredProjects;
+    if (configuredNames === undefined) continue;
+    if (!Array.isArray(configuredNames)) {
+      throw new Error(
+        `${ToPosixPath(relative(repoRoot, packagePath))} rehabTrainer.retiredProjects must be an array.`,
+      );
+    }
+
+    for (const value of configuredNames) {
+      const projectName = String(value).trim();
+      if (!/^[a-z0-9-]+$/.test(projectName)) {
+        throw new Error(
+          `${ToPosixPath(relative(repoRoot, packagePath))} contains an invalid retired project name: ${value}`,
+        );
+      }
+      retiredProjectNames.add(projectName);
+    }
+  }
+
+  return retiredProjectNames;
+}
+
+function RefuseRetiredProjects(projects) {
+  const retiredProjectNames = DiscoverRetiredProjectNames();
+  const collisions = projects.filter((project) => (
+    retiredProjectNames.has(project.projectName.trim().toLowerCase())
+  ));
+
+  if (collisions.length === 0) return;
+
+  const details = collisions
+    .map((project) => `${project.projectName} (${project.appPath}/wrangler.toml)`)
+    .join(', ');
+  throw new Error(
+    `Refusing to deploy retired Cloudflare Pages project(s): ${details}. Built-in training runtimes must deploy through trainerhub.cc.`,
+  );
 }
 
 function ShellQuote(value) {
@@ -388,6 +442,8 @@ function FormatMiB(bytes) {
 }
 
 const projects = DiscoverPagesProjects();
+
+RefuseRetiredProjects(projects);
 
 if (projects.length === 0) {
   throw new Error('No Cloudflare Pages apps found under apps/*/wrangler.toml.');

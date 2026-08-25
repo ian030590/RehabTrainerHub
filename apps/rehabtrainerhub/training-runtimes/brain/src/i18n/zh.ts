@@ -3,9 +3,9 @@ import { thinkingGamesZh } from './thinkingGames';
 export const zh = {
   ...thinkingGamesZh,
   'btn.selectModule': '選擇此模組',
-  'app.loading': '載入 BrainTrainer...',
-  'nav.brand': 'BrainTrainer',
-  'nav.logoAlt': 'BrainTrainer 標誌',
+  'app.loading': '載入認知練習...',
+  'nav.brand': '認知練習',
+  'nav.logoAlt': '認知練習圖示',
   'nav.attention': '注意訓練',
   'nav.memory': '記憶訓練',
   'nav.thinking': '思考訓練',
@@ -156,10 +156,10 @@ export const zh = {
   'links.subtitle': 'RehabTrainerHub 生態系的正式網站',
   'links.hub.title': 'RehabTrainerHub',
   'links.hub.desc': '居家訓練入口平台，整理各項居家訓練工具。',
-  'links.motor.title': 'MotorTrainer',
-  'links.motor.desc': '動作訓練平台，提供上肢與下肢訓練入口。',
-  'links.vision.title': 'VisionTrainer',
-  'links.vision.desc': '視覺訓練平台，提供視覺搜尋、閱讀眼動與對比辨識練習。',
+  'links.motor.title': '動作練習',
+  'links.motor.desc': '上肢與下肢動作練習工具。',
+  'links.vision.title': '視覺練習',
+  'links.vision.desc': '視覺搜尋、閱讀眼動與對比辨識練習工具。',
 } as const;
 
 export type TranslationKey = keyof typeof zh;

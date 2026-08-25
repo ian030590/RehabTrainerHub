@@ -3,13 +3,19 @@ export const webGazerRuntimeVersion = '3.5.3';
 type WebGazerWindow = Window & {
   webgazer?: {
     params?: { faceMeshSolutionPath?: string };
+    getCurrentPrediction?: (...args: unknown[]) => Promise<unknown>;
+    __rehabPredictionTimestampPatched?: boolean;
   };
 };
 
 let loadPromise: Promise<void> | null = null;
 
 export function EnsureWebGazerLoaded(): Promise<void> {
-  if ((window as WebGazerWindow).webgazer) return Promise.resolve();
+  const loadedWebGazer = (window as WebGazerWindow).webgazer;
+  if (loadedWebGazer) {
+    EnsurePredictionTimestamp(loadedWebGazer);
+    return Promise.resolve();
+  }
   if (loadPromise) return loadPromise;
 
   loadPromise = LoadFirstAvailableScript(GetWebGazerScriptUrls())
@@ -38,6 +44,7 @@ async function LoadFirstAvailableScript(urls: readonly string[]): Promise<void> 
       const webgazer = (window as WebGazerWindow).webgazer;
       if (webgazer) {
         ConfigureWebGazerAssetPath(webgazer, url);
+        EnsurePredictionTimestamp(webgazer);
         return;
       }
       throw new Error(`WebGazer did not initialize after loading ${url}`);
@@ -74,6 +81,25 @@ function LoadScript(url: string): Promise<void> {
 function ConfigureWebGazerAssetPath(webgazer: NonNullable<WebGazerWindow['webgazer']>, scriptUrl: string) {
   if (!webgazer.params) return;
   webgazer.params.faceMeshSolutionPath = new URL('./mediapipe/face_mesh/', scriptUrl).href;
+}
+
+/**
+ * WebGazer 3.5.x does not include a timestamp on getCurrentPrediction(), while
+ * jsPsych's native WebGazer extension and validation plugin use prediction.t
+ * to calculate trial-relative timing and sample rate.
+ */
+function EnsurePredictionTimestamp(webgazer: NonNullable<WebGazerWindow['webgazer']>) {
+  if (webgazer.__rehabPredictionTimestampPatched || !webgazer.getCurrentPrediction) return;
+  const getCurrentPrediction = webgazer.getCurrentPrediction.bind(webgazer);
+  webgazer.getCurrentPrediction = async (...args: unknown[]) => {
+    const prediction = await getCurrentPrediction(...args);
+    if (!prediction || typeof prediction !== 'object') return prediction;
+    const candidate = prediction as Record<string, unknown>;
+    return typeof candidate.t === 'number' && Number.isFinite(candidate.t)
+      ? prediction
+      : { ...candidate, t: performance.now() };
+  };
+  webgazer.__rehabPredictionTimestampPatched = true;
 }
 
 function NormalizeHttpsUrl(value?: string): string {

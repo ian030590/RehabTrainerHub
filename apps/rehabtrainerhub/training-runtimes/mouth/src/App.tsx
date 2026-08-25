@@ -24,7 +24,7 @@ export function App() {
       <TrainingLoginReminder
         active={isTraining}
         apiBase={siteUrls.hub}
-        appName="MouthTrainer"
+        appName={t('nav.brand')}
         locale={lang === 'en' ? 'en' : 'zh-TW'}
         privacyHref={`${siteUrls.hub}/privacy/`}
         turnstileAuthRequired={import.meta.env.VITE_TURNSTILE_AUTH_REQUIRED === '1'}
@@ -46,7 +46,7 @@ export function App() {
 }
 
 function AppLayout() {
-  const { lang } = useT();
+  const { lang, t } = useT();
   useSyncedDisplaySettings(() => ({
     fontSizePx: GetSetting('uiFontSizePx'),
     defaultFontSizePx: defaultUiFontSizePx,
@@ -61,7 +61,7 @@ function AppLayout() {
       navbar={<Navbar />}
       skipLinkLabel={GetTrainerSkipLinkLabel(lang)}
       footer={{
-        appName: 'MouthTrainer',
+        appName: t('nav.brand'),
         hubHref: siteUrls.hub,
         privacyHref: `${siteUrls.hub}/privacy/`,
         repoHref: 'https://github.com/ian030590/RehabTrainerHub',

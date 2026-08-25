@@ -35,6 +35,7 @@ export interface AdminTrainingRecord {
   patientName: string;
   patientEmail: string | null;
   appId: string;
+  runtimeId: string;
   moduleId: string;
   gameId: string | null;
   trainingDate: string | null;
@@ -59,7 +60,7 @@ export interface AdminRecordsResponse {
 
 export interface AdminRecordFilters {
   patientId: string;
-  appId: string;
+  runtimeId: string;
   dateFrom: string;
   dateTo: string;
 }
@@ -178,7 +179,7 @@ export async function FetchAdminRecords(
   return ReadJson<AdminRecordsResponse>(
     await AdminFetch('/api/admin/records', { signal }, {
       patientId: filters.patientId,
-      appId: filters.appId,
+      runtimeId: filters.runtimeId,
       dateFrom: filters.dateFrom,
       dateTo: filters.dateTo,
       page,
@@ -198,7 +199,7 @@ export async function FetchAdminRecordsCsv(
 }> {
   const response = await AdminFetch('/api/admin/records', { signal }, {
     patientId: filters.patientId,
-    appId: filters.appId,
+    runtimeId: filters.runtimeId,
     dateFrom: filters.dateFrom,
     dateTo: filters.dateTo,
     format: 'csv',

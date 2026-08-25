@@ -137,14 +137,14 @@
     },
     {
       "source": "apps/rehabtrainerhub/training-runtimes/motor/public/assets/StarSky.png",
-      "key": "game-assets/motortrainer/star-sky/v1/StarSky.png",
+      "key": "game-assets/rehabtrainerhub/motor/star-sky/v1/StarSky.png",
       "contentType": "image/png",
       "size": 4650499,
       "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d"
     },
     {
       "source": "apps/rehabtrainerhub/public/assets/driving/reference-car-game/vehicals/car.glb",
-      "key": "game-assets/visiontrainer/reference-car/v1/car.glb",
+      "key": "game-assets/rehabtrainerhub/vision/reference-car/v1/car.glb",
       "contentType": "model/gltf-binary",
       "size": 6062428,
       "sha256": "ee9867fc2208c53376e452d9c6009a8f7dc8b15d10f875d115d15ac6f61135cf"

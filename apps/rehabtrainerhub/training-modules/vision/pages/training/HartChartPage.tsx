@@ -12,6 +12,7 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { useT } from '../../i18n';
+import { storagePrefix } from '../../utils/settings';
 import { SaveTrainingRecord } from '../../utils/trainingRecords';
 import {
   ClampHartScale,
@@ -50,7 +51,7 @@ interface DecoderDragPreview {
   height: number;
 }
 
-const decoderDockKey = 'vision_trainer_hart_decoder_dock';
+const decoderDockKey = `${storagePrefix}hart.decoderDock`;
 const decoderDocks: readonly DecoderDock[] = ['left', 'right', 'top', 'bottom'];
 
 function IsDecoderDock(value: string | null): value is DecoderDock {

@@ -1,5 +1,6 @@
 const canonicalOrigin = 'https://trainerhub.cc';
-const retiredTrainerHosts = new Set([
+const canonicalRedirectHosts = new Set([
+  'rehabtrainerhub.pages.dev',
   'motor.trainerhub.cc',
   'vision.trainerhub.cc',
   'brain.trainerhub.cc',
@@ -12,10 +13,10 @@ const retiredTrainerHosts = new Set([
 
 export function onRequest({ request, next }) {
   const url = new URL(request.url);
-  if (retiredTrainerHosts.has(url.hostname.toLowerCase())) {
+  if (canonicalRedirectHosts.has(url.hostname.toLowerCase())) {
     return Response.redirect(`${canonicalOrigin}/`, 301);
   }
   return next();
 }
 
-export { canonicalOrigin, retiredTrainerHosts };
+export { canonicalOrigin, canonicalRedirectHosts };

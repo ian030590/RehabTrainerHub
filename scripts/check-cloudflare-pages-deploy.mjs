@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import {
   CreateCloudflareDeploymentEnvironment,
   CreateGamehostBuildEnvironment,
@@ -14,6 +16,15 @@ import {
 
 const pagesApps = DiscoverPagesApps();
 const deployScript = resolve(defaultRepoRoot, 'scripts/deploy-cloudflare-pages.mjs');
+const retiredStandaloneProjects = [
+  'braintrainer',
+  'motortrainer',
+  'mouthtrainer',
+  'visiontrainer',
+];
+
+CheckRetiredProjectPreflight();
+
 const result = spawnSync(
   process.execPath,
   [deployScript, '--dry-run', '--branch=deployment-test', '--production-branch=main'],
@@ -102,10 +113,7 @@ assert.deepEqual(hub.redirectHostnames.sort(), [
   'vision.trainerhub.cc',
 ]);
 assert.deepEqual(hub.retiredProjectNames.sort(), [
-  'braintrainer',
-  'motortrainer',
-  'mouthtrainer',
-  'visiontrainer',
+  ...retiredStandaloneProjects,
 ]);
 for (const projectName of hub.retiredProjectNames) {
   const pruneIndex = output.indexOf(`cloudflare pages project deployments prune ${projectName}`);
@@ -272,6 +280,63 @@ function RestoreEnvironment(name, value) {
 
 function EscapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function CheckRetiredProjectPreflight() {
+  for (const projectName of retiredStandaloneProjects) {
+    RunRetiredProjectFixture({ projectName });
+  }
+  RunRetiredProjectFixture({
+    projectName: 'repo-defined-retired-project',
+    retiredProjects: ['repo-defined-retired-project'],
+  });
+}
+
+function RunRetiredProjectFixture({ projectName, retiredProjects }) {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'rehab-pages-retired-preflight-'));
+  const fixtureScripts = join(fixtureRoot, 'scripts');
+  const fixtureApp = join(fixtureRoot, 'apps', 'fixture');
+  mkdirSync(fixtureScripts, { recursive: true });
+  mkdirSync(fixtureApp, { recursive: true });
+  copyFileSync(deployScript, join(fixtureScripts, 'deploy-cloudflare-pages.mjs'));
+  copyFileSync(
+    resolve(defaultRepoRoot, 'scripts/gamehost-environment.mjs'),
+    join(fixtureScripts, 'gamehost-environment.mjs'),
+  );
+  writeFileSync(
+    join(fixtureApp, 'package.json'),
+    `${JSON.stringify({
+      name: 'retired-project-fixture',
+      private: true,
+      scripts: { build: 'node -e ""' },
+      ...(retiredProjects ? { rehabTrainer: { retiredProjects } } : {}),
+    }, null, 2)}\n`,
+  );
+  writeFileSync(
+    join(fixtureApp, 'wrangler.toml'),
+    `name = "${projectName}"\npages_build_output_dir = "out"\n`,
+  );
+
+  try {
+    const fixtureResult = spawnSync(
+      process.execPath,
+      [join(fixtureScripts, 'deploy-cloudflare-pages.mjs'), '--dry-run'],
+      { cwd: fixtureRoot, encoding: 'utf8', env: process.env },
+    );
+    if (fixtureResult.error) throw fixtureResult.error;
+    const fixtureOutput = `${fixtureResult.stdout ?? ''}\n${fixtureResult.stderr ?? ''}`;
+    assert.notEqual(fixtureResult.status, 0, `${projectName} must fail the deployment preflight.`);
+    assert.match(
+      fixtureOutput,
+      new RegExp(`Refusing to deploy retired Cloudflare Pages project\\(s\\): ${EscapeRegExp(projectName)}`),
+    );
+    assert.doesNotMatch(fixtureOutput, /\$ npx .*pages project create/);
+    assert.doesNotMatch(fixtureOutput, /\$ npx .*pages deploy/);
+    assert.doesNotMatch(fixtureOutput, /cloudflare pages domain ensure/);
+    assert.doesNotMatch(fixtureOutput, /sync-cloudflare-auth-env/);
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
 }
 
 console.log(`Cloudflare Pages provisioning check passed for ${pagesApps.length} discovered project(s).`);

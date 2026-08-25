@@ -1,4 +1,4 @@
-// Types local to Hub-owned VisionTrainer timelines.
+// Types local to Hub-owned vision timelines.
 import type { DrivingControlMode, DrivingRenderQualityLevel } from '../../utils/settings';
 import type { DrivingWheelCalibration } from '../plugins/driving/driving-input';
 import type { OculomotorMode, OculomotorPattern, OculomotorTargetShape } from '../../pages/training/oculomotor/types';
@@ -24,6 +24,7 @@ export interface BuildTimelineOverrides {
     backgroundImage?: string;
     audio?: string;
     bounceJitter?: number;
+    showGazepoint?: boolean;
     webGazerCalibration?: {
       buttonText: string;
       instruction1: string;
@@ -36,6 +37,14 @@ export interface BuildTimelineOverrides {
       timeoutText?: string;
       retryText?: string;
       errorText?: string;
+      moveCloserText?: string;
+      moveFartherText?: string;
+      stabilizingText?: string;
+      validationResultText?: string;
+      validationWithinText?: string;
+      validationOutsideText?: string;
+      validationButtonText?: string;
+      validationResultTitle?: string;
     };
   };
   gabor?: {

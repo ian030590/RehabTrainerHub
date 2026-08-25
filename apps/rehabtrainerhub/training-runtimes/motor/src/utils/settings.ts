@@ -13,6 +13,10 @@ import {
 } from '@rehab-trainer/ui/settings/displaySettings';
 import type { UiTheme } from '@rehab-trainer/ui/settings/displaySettings';
 import { CreateUserStore } from '@rehab-trainer/ui/storage/userStore';
+import {
+  CreateRuntimeStorageNamespace,
+  MigrateLegacyLocalStorageNamespace,
+} from '@rehab-trainer/ui/storage/runtimeNamespace';
 
 export { defaultUiFontSizePx, maxUiFontSizePx, minUiFontSizePx };
 export type { UiTheme };
@@ -22,7 +26,8 @@ export const cardHeightMm = 53.98;
 export const defaultDistanceCm = 60;
 export const defaultCalBarLengthMm = 149;
 export const calBarLengthPx = 700;
-export const storagePrefix = 'motor_trainer_';
+const runtimeStorageNamespace = CreateRuntimeStorageNamespace('motor');
+export const storagePrefix = runtimeStorageNamespace.storagePrefix;
 export const drivingDurationMinSec = 80;
 export const drivingDurationMaxSec = 240;
 export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel';
@@ -116,8 +121,15 @@ function StorageKey(name: string): string {
   return storagePrefix + name;
 }
 
-export const activeUserChangedEvent = 'motor-trainer-active-user-changed';
-export const settingsChangedEvent = 'motor-trainer-settings-changed';
+export const activeUserChangedEvent = runtimeStorageNamespace.activeUserChangedEvent;
+export const settingsChangedEvent = runtimeStorageNamespace.settingsChangedEvent;
+
+const legacyMotorStoragePrefixes = ['motor_trainer_', 'motor-trainer-'] as const;
+MigrateLegacyLocalStorageNamespace({
+  canonicalPrefix: storagePrefix,
+  legacyPrefixes: legacyMotorStoragePrefixes,
+  mergeJsonArraySuffixes: ['users', 'training_records_v1'],
+});
 
 const settingCache: Partial<AppSettings> = {};
 

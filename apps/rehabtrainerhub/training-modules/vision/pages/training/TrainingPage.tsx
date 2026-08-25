@@ -1,4 +1,4 @@
-// Canonical Hub-owned VisionTrainer runtime dispatcher.
+// Canonical Hub-owned vision runtime dispatcher.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { initJsPsych } from 'jspsych';
@@ -125,6 +125,7 @@ function TrainingRuntimePage() {
   const oculomotorBackgroundColor = searchParams.get('backgroundColor') || GetSetting('oculomotorBackgroundColor');
   const oculomotorCustomTargetImage = GetSetting('oculomotorCustomTargetImage');
   const enableWebGazer = moduleId === 'oculomotor-training' && GetSetting('oculomotorEnableWebgazer');
+  const showGazepoint = enableWebGazer && GetSetting('oculomotorShowGazepoint');
   const requestedDrivingFlash = searchParams.get('redFlash');
   const drivingRedFlashEnabled = requestedDrivingFlash === null
     ? GetSetting('drivingRedFlashEnabled')
@@ -220,7 +221,10 @@ function TrainingRuntimePage() {
             skipFinishRef.current = false;
             return;
           }
-          const data = jsPsych.data.get().values() as TrialData[];
+          const timelineData = jsPsych.data.get().values() as TrialData[];
+          const data = moduleId === 'oculomotor-training'
+            ? timelineData.filter((item) => item.trial_type === 'pixi-oculomotor-training')
+            : timelineData;
           await SaveTrainingRecord({
             results: data,
             userName,
@@ -235,6 +239,8 @@ function TrainingRuntimePage() {
               oculomotorDurationSec,
               oculomotorSpeedDegPerSec,
               oculomotorTargetSizeMm,
+              oculomotorEnableWebgazer: enableWebGazer,
+              oculomotorShowGazepoint: showGazepoint,
               oculomotorDistractorCount: Number.isFinite(oculomotorDistractorCount)
                 ? oculomotorDistractorCount
                 : GetSetting('oculomotorDistractorCount'),
@@ -273,6 +279,7 @@ function TrainingRuntimePage() {
           backgroundColor: oculomotorBackgroundColor,
           targetShape: oculomotorTargetShape,
           customTargetImage: oculomotorCustomTargetImage,
+          showGazepoint,
           webGazerCalibration: {
             title: t('settings.wg.title'),
             instruction1: t('settings.wg.inst1'),
@@ -281,10 +288,15 @@ function TrainingRuntimePage() {
             buttonText: t('settings.wg.startBtn'),
             loadingText: t('settings.wg.loading'),
             waitingFaceText: t('settings.wg.waitingFace'),
-            readyText: t('settings.wg.ready'),
+            readyText: t('settings.wg.headReady'),
             timeoutText: t('settings.wg.timeout'),
             retryText: t('settings.wg.retry'),
             errorText: t('settings.wg.errorStart'),
+            moveCloserText: t('settings.wg.moveCloser'),
+            moveFartherText: t('settings.wg.moveFarther'),
+            validationResultText: t('settings.wg.validationInstruction'),
+            validationButtonText: t('settings.wg.validationButton'),
+            validationResultTitle: t('settings.wg.validationResultTitle'),
           },
         },
         gabor: {
@@ -349,6 +361,7 @@ function TrainingRuntimePage() {
     oculomotorTargetShape,
     oculomotorCustomTargetImage,
     enableWebGazer,
+    showGazepoint,
     gaborDurationSec,
     gaborMaxSpots,
     drivingRedFlashEnabled,

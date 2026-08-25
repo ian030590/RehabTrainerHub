@@ -325,7 +325,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly trafficRedMs = 5400;
   private readonly referenceVehicleUrls = CreateRuntimeAssetUrlCandidates(
     import.meta.env.VITE_AI_ASSET_BASE_URL,
-    'game-assets/visiontrainer/reference-car/v1/car.glb',
+    'game-assets/rehabtrainerhub/vision/reference-car/v1/car.glb',
     '/assets/driving/reference-car-game/vehicals/car.glb',
   );
   private readonly taipeiOsmUrl = '/assets/driving/taipei-osm/taipei-xinyi-osm.json';

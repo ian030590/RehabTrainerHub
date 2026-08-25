@@ -13,6 +13,17 @@ const embeddedCode = ts.transpileModule(embeddedSource, { compilerOptions }).out
 const embeddedUrl = `data:text/javascript;base64,${Buffer.from(embeddedCode).toString('base64')}`;
 const embeddedTraining = await import(embeddedUrl);
 
+test('only canonical Hub, previews, and local development are trusted Hub origins', () => {
+  assert.equal(embeddedTraining.IsHubOrigin('https://trainerhub.cc/train/'), true);
+  assert.equal(
+    embeddedTraining.IsHubOrigin('https://deployment-id.rehabtrainerhub.pages.dev/train/'),
+    true,
+  );
+  assert.equal(embeddedTraining.IsHubOrigin('https://rehabtrainerhub.pages.dev/train/'), false);
+  assert.equal(embeddedTraining.IsHubOrigin('https://visiontrainer.pages.dev/'), false);
+  assert.equal(embeddedTraining.IsHubOrigin('http://127.0.0.1:4173/train/'), true);
+});
+
 test('embedded training reports active state to its verified Hub origin', (context) => {
   const messages = [];
   const windowMock = {

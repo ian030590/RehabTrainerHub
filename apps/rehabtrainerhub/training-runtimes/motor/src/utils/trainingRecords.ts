@@ -4,6 +4,10 @@ import {
   SaveRemoteTrainingRecord,
 } from '@rehab-trainer/ui/auth/authClient';
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
+import {
+  CreateRuntimeStorageNamespace,
+  MigrateLegacyIndexedDbRecords,
+} from '@rehab-trainer/ui/storage/runtimeNamespace';
 import type { TranslationKey } from '../i18n';
 import type { TrialData } from '@rehab-trainer/hub-modules/motor/pages/training/types';
 import { DownloadCsvFile } from './downloadFile';
@@ -12,13 +16,19 @@ import { siteUrls } from './siteUrls';
 
 type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;
 
-export const trainingRecordsChangedEvent = 'motor-trainer-training-records-changed';
+const runtimeStorageNamespace = CreateRuntimeStorageNamespace('motor');
+export const trainingRecordsChangedEvent = runtimeStorageNamespace.trainingRecordsChangedEvent;
 
-const trainingRecordsKey = `${storagePrefix}training_records_v1`;
-const trainingRecordsDatabaseName = 'motor-trainer-training-records';
+const legacyLocalTrainingRecordsKey = `${storagePrefix}training_records_v1`;
+const trainingRecordsDatabaseName = runtimeStorageNamespace.trainingRecordsDatabaseName;
+const legacyTrainingRecordsDatabaseNames = [
+  'motor-trainer-training-records',
+  'motor_trainer_training_records',
+] as const;
 const trainingRecordsDatabaseVersion = 1;
 const trainingRecordsStoreName = 'records';
-const remoteAppId = 'motortrainer';
+const remoteAppId = 'rehabtrainerhub';
+const remoteRuntimeId = 'motor';
 const authApiBase = siteUrls.hub;
 let legacyMigrationPromise: Promise<void> | null = null;
 
@@ -115,7 +125,9 @@ const baseCsvColumns: CsvColumn[] = [
 export async function GetTrainingRecords(): Promise<TrainingRecord[]> {
   if (HasAuthToken()) {
     try {
-      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId);
+      const remoteRecords = await GetRemoteTrainingRecords(authApiBase, remoteAppId, {
+        runtimeId: remoteRuntimeId,
+      });
       if (remoteRecords) {
         return remoteRecords
           .map(ToTrainingRecord)
@@ -190,6 +202,7 @@ async function AppendTrainingRecord(record: TrainingRecord): Promise<TrainingRec
     try {
       const saved = await SaveRemoteTrainingRecord(authApiBase, {
         appId: remoteAppId,
+        runtimeId: remoteRuntimeId,
         record,
       });
       if (saved) {
@@ -237,9 +250,18 @@ async function EnsureLegacyTrainingRecordsMigrated(): Promise<void> {
 }
 
 async function MigrateLegacyTrainingRecords(): Promise<void> {
+  if ('indexedDB' in window) {
+    await MigrateLegacyIndexedDbRecords({
+      indexedDb: window.indexedDB,
+      legacyDatabaseNames: legacyTrainingRecordsDatabaseNames,
+      storeName: trainingRecordsStoreName,
+      writeRecords: WriteTrainingRecords,
+    });
+  }
+
   let raw: string | null = null;
   try {
-    raw = localStorage.getItem(trainingRecordsKey);
+    raw = localStorage.getItem(legacyLocalTrainingRecordsKey);
   } catch (error) {
     console.warn('Unable to inspect legacy training records.', error);
     return;
@@ -260,7 +282,7 @@ async function MigrateLegacyTrainingRecords(): Promise<void> {
     .filter((record): record is TrainingRecord => record !== null);
   await WriteTrainingRecords(records);
   try {
-    localStorage.removeItem(trainingRecordsKey);
+    localStorage.removeItem(legacyLocalTrainingRecordsKey);
   } catch (error) {
     console.warn('Legacy training records were migrated but could not be removed.', error);
   }
@@ -285,7 +307,7 @@ async function WriteTrainingRecord(record: TrainingRecord): Promise<void> {
   await WriteTrainingRecords([record]);
 }
 
-async function WriteTrainingRecords(records: TrainingRecord[]): Promise<void> {
+async function WriteTrainingRecords(records: readonly unknown[]): Promise<void> {
   if (records.length === 0) return;
   const database = await OpenTrainingRecordsDatabase();
   return new Promise((resolve, reject) => {

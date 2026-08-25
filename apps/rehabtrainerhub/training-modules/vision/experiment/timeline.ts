@@ -1,4 +1,4 @@
-// Canonical timeline dispatcher for Hub-owned VisionTrainer modules.
+// Canonical timeline dispatcher for Hub-owned vision modules.
 /**
  * jsPsych timeline dispatcher.
  *

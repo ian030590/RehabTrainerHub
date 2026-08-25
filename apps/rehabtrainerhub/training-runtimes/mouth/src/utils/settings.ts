@@ -7,12 +7,24 @@ import {
 } from '@rehab-trainer/ui/settings/displaySettings';
 import type { UiTheme } from '@rehab-trainer/ui/settings/displaySettings';
 import { CreateUserStore } from '@rehab-trainer/ui/storage/userStore';
+import {
+  CreateRuntimeStorageNamespace,
+  MigrateLegacyLocalStorageNamespace,
+} from '@rehab-trainer/ui/storage/runtimeNamespace';
 
 export { defaultUiFontSizePx, maxUiFontSizePx, minUiFontSizePx };
 export type { UiTheme };
 
-export const storagePrefix = 'mouth_trainer_';
-export const settingsChangedEvent = 'mouth-trainer-settings-changed';
+const runtimeStorageNamespace = CreateRuntimeStorageNamespace('mouth');
+export const storagePrefix = runtimeStorageNamespace.storagePrefix;
+export const settingsChangedEvent = runtimeStorageNamespace.settingsChangedEvent;
+
+const legacyMouthStoragePrefixes = ['mouth_trainer_', 'mouth-trainer-'] as const;
+MigrateLegacyLocalStorageNamespace({
+  canonicalPrefix: storagePrefix,
+  legacyPrefixes: legacyMouthStoragePrefixes,
+  mergeJsonArraySuffixes: ['users', 'training_records_v1'],
+});
 
 interface AppSettings {
   uiFontSizePx: number;
@@ -50,7 +62,7 @@ export function SetSetting<K extends keyof AppSettings>(key: K, value: AppSettin
 }
 
 const userStore = CreateUserStore({
-  activeUserChangedEvent: 'mouth-trainer-active-user-changed',
+  activeUserChangedEvent: runtimeStorageNamespace.activeUserChangedEvent,
   storagePrefix,
 });
 

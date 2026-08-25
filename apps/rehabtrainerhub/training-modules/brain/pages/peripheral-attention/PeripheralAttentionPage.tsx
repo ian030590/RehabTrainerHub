@@ -1,4 +1,4 @@
-// Canonical Hub-owned Peripheral Attention Training runtime; bundled by the BrainTrainer host.
+// Canonical Hub-owned peripheral-attention module; bundled by the brain runtime.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';

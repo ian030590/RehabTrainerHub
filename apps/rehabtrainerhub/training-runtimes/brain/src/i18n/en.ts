@@ -3,9 +3,9 @@ import { thinkingGamesEn } from './thinkingGames';
 
 export const en = {
   ...thinkingGamesEn,
-  'app.loading': 'Loading BrainTrainer...',
-  'nav.brand': 'BrainTrainer',
-  'nav.logoAlt': 'BrainTrainer logo',
+  'app.loading': 'Loading cognitive practice...',
+  'nav.brand': 'Cognitive Practice',
+  'nav.logoAlt': 'Cognitive practice icon',
   'nav.attention': 'Attention',
   'nav.memory': 'Memory',
   'nav.thinking': 'Thinking',
@@ -157,8 +157,8 @@ export const en = {
   'links.subtitle': 'Official websites in the RehabTrainerHub ecosystem',
   'links.hub.title': 'RehabTrainerHub',
   'links.hub.desc': 'Home training portal for the RehabTrainerHub tools.',
-  'links.motor.title': 'MotorTrainer',
+  'links.motor.title': 'Movement Practice',
   'links.motor.desc': 'Upper- and lower-limb movement practice tools.',
-  'links.vision.title': 'VisionTrainer',
-  'links.vision.desc': 'Vision training platform for visual search, reading eye movement, and contrast practice.',
+  'links.vision.title': 'Visual Practice',
+  'links.vision.desc': 'Practice tools for visual search, reading eye movement, and contrast.',
 } satisfies Record<TranslationKey, string>;

@@ -5,12 +5,24 @@ import {
   minUiFontSizePx,
 } from '@rehab-trainer/ui/settings/displaySettings';
 import type { UiTheme } from '@rehab-trainer/ui/settings/displaySettings';
+import {
+  CreateRuntimeStorageNamespace,
+  MigrateLegacyLocalStorageNamespace,
+} from '@rehab-trainer/ui/storage/runtimeNamespace';
 
 export { defaultUiFontSizePx, maxUiFontSizePx, minUiFontSizePx };
 export type { UiTheme };
 
-export const storagePrefix = 'brain_trainer_';
-export const settingsChangedEvent = 'brain-trainer-settings-changed';
+const runtimeStorageNamespace = CreateRuntimeStorageNamespace('brain');
+export const storagePrefix = runtimeStorageNamespace.storagePrefix;
+export const settingsChangedEvent = runtimeStorageNamespace.settingsChangedEvent;
+
+const legacyBrainStoragePrefixes = ['brain_trainer_', 'brain-trainer-'] as const;
+MigrateLegacyLocalStorageNamespace({
+  canonicalPrefix: storagePrefix,
+  legacyPrefixes: legacyBrainStoragePrefixes,
+  mergeJsonArraySuffixes: ['training_records_v1'],
+});
 
 export interface AppSettings {
   uiFontSizePx: number;

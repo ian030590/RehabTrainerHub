@@ -1,4 +1,4 @@
-// Canonical Hub-owned BrainTrainer thinking module dispatcher.
+// Canonical Hub-owned brain thinking-module dispatcher.
 import { Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {

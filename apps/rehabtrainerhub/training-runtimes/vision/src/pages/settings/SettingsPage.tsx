@@ -267,6 +267,7 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const jsPsychRef = useRef<any>(null);
   const calibrationCancelledRef = useRef(false);
+  const startAttemptRef = useRef(0);
   const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const calibratedAt = GetSetting('webGazerCalibrationAt');
@@ -274,16 +275,17 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
   // Cleanup jsPsych on unmount
   React.useEffect(() => {
     return () => {
+      startAttemptRef.current += 1;
+      calibrationCancelledRef.current = true;
       if (jsPsychRef.current) {
-        calibrationCancelledRef.current = true;
         try {
           jsPsychRef.current.abortExperiment?.();
         } catch {
           // Ignore cleanup errors
         }
-        CleanupWebGazerRuntime();
         jsPsychRef.current = null;
       }
+      CleanupWebGazerRuntime();
     };
   }, []);
 
@@ -324,9 +326,9 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
     return () => observer.disconnect();
   }, [status]);
 
-  const startJsPsych = (container: HTMLDivElement) => {
+  const startJsPsych = (container: HTMLDivElement, attempt: number) => {
+    if (attempt !== startAttemptRef.current || calibrationCancelledRef.current) return;
     container.replaceChildren();
-    calibrationCancelledRef.current = false;
     try {
       const jsPsych = initJsPsych({
         display_element: container,
@@ -334,6 +336,8 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
           { type: WebGazerExtension },
         ] as any,
         on_finish: () => {
+          if (attempt !== startAttemptRef.current || jsPsychRef.current !== jsPsych) return;
+          CleanupWebGazerRuntime();
           if (calibrationCancelledRef.current) {
             jsPsychRef.current = null;
             return;
@@ -360,8 +364,12 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
         timeoutText: t('settings.wg.timeout'),
         retryText: t('settings.wg.retry'),
         errorText: t('settings.wg.errorStart'),
+        validationResultTitle: t('settings.wg.validationResultTitle'),
+        validationResultText: t('settings.wg.validationInstruction'),
+        validationButtonText: t('settings.wg.validationDone'),
       }) as any);
     } catch (error) {
+      CleanupWebGazerRuntime();
       jsPsychRef.current = null;
       setStatus('error');
       setMessage(error instanceof Error ? error.message : t('settings.wg.errorFail'));
@@ -369,12 +377,17 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
   };
 
   const runCalibration = async () => {
+    const attempt = startAttemptRef.current + 1;
+    startAttemptRef.current = attempt;
+    calibrationCancelledRef.current = false;
     setStatus('running');
     setMessage(t('settings.wg.startingCam'));
     try {
       await EnsureWebGazerLoaded();
+      if (attempt !== startAttemptRef.current || calibrationCancelledRef.current) return;
       await ResetWebGazerCalibrationData();
     } catch (error) {
+      if (attempt !== startAttemptRef.current || calibrationCancelledRef.current) return;
       console.error('Unable to load WebGazer.', error);
       setStatus('error');
       setMessage(t('settings.wg.errorNotLoaded'));
@@ -386,30 +399,33 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
     // requestAnimationFrame to let React flush the `is-active` class change
     // before jsPsych writes into the container.
     const tryStart = () => {
+      if (attempt !== startAttemptRef.current || calibrationCancelledRef.current) return;
       const container = containerRef.current;
       if (!container) {
         // Should not happen since the Portal is always in the DOM,
         // but retry once after the next paint just in case.
         requestAnimationFrame(() => {
+          if (attempt !== startAttemptRef.current || calibrationCancelledRef.current) return;
           const c = containerRef.current;
           if (!c) {
             setStatus('error');
             setMessage(t('settings.wg.errorContainer'));
             return;
           }
-          startJsPsych(c);
+          startJsPsych(c, attempt);
         });
         return;
       }
-      startJsPsych(container);
+      startJsPsych(container, attempt);
     };
 
     requestAnimationFrame(tryStart);
   };
 
   const cancelCalibration = () => {
+    startAttemptRef.current += 1;
+    calibrationCancelledRef.current = true;
     if (jsPsychRef.current) {
-      calibrationCancelledRef.current = true;
       const activeJsPsych = jsPsychRef.current;
       jsPsychRef.current = null;
       try {
@@ -417,8 +433,8 @@ function WebGazerCalibrationTab({ refresh }: { refresh: () => void }) {
       } catch {
         // Ignore cleanup errors
       }
-      CleanupWebGazerRuntime();
     }
+    CleanupWebGazerRuntime();
     setStatus('idle');
     setMessage('');
   };

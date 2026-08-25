@@ -6,7 +6,7 @@ export const zh = {
   'nav.noUser': '未選擇使用者',
   'nav.downloadScores': '下載紀錄',
   'nav.noScores': '目前沒有可下載的訓練紀錄。',
-  'nav.logoAlt': 'MotorTrainer 標誌',
+  'nav.logoAlt': '動作練習圖示',
   'nav.scoresDownloadError': '無法讀取訓練紀錄，請稍後再試。',
   'nav.toggleMenu': '開關選單',
 
@@ -28,7 +28,7 @@ export const zh = {
   'common.off': '關閉',
 
   // App
-  'app.loading': '載入 MotorTrainer...',
+  'app.loading': '載入動作練習...',
   'app.footer.rights': '保留所有權利。',
 
   // HomePage
@@ -388,7 +388,7 @@ export const zh = {
   'credits.vueMinesweeper.desc': '踩地雷遊戲邏輯與版面互動參考。',
 
   // Extra
-  'nav.brand': 'MotorTrainer',
+  'nav.brand': '動作練習',
   'common.back': '返回',
   'gaborPatching.gameOver': '遊戲結束',
   'gaborPatching.clickToBegin': '點擊開始',
@@ -743,10 +743,6 @@ export const zh = {
   'links.subtitle': 'RehabTrainerHub 生態系的正式網站',
   'links.hub.title': 'RehabTrainerHub',
   'links.hub.desc': '居家訓練入口平台，整理各項居家訓練工具。',
-  'links.visionTrainer.title': 'VisionTrainer',
-  'links.visionTrainer.desc': '視覺能力訓練系統，提供多種視覺訓練項目。',
-  'links.brainTrainer.title': 'BrainTrainer',
-  'links.brainTrainer.desc': '認知訓練平台，整理注意、記憶與思考訓練類別。',
 } as const;
 
 export type TranslationKey = keyof typeof zh;

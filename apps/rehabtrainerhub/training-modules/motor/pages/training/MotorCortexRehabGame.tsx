@@ -1,4 +1,4 @@
-// Canonical Hub-owned MotorTrainer module; bundled by the MotorTrainer host.
+// Canonical Hub-owned motor module; bundled by the motor runtime.
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
   FilesetResolver,

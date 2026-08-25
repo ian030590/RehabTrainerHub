@@ -1,4 +1,4 @@
-// Canonical Hub-owned VisionTrainer config and rules entry.
+// Canonical Hub-owned vision config and rules entry.
 import { useState, useEffect } from 'react';
 import { useT } from '../i18n';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -116,6 +116,7 @@ export function HomePage() {
   const [oculomotorAudio, setOculomotorAudio] = useAppSetting('oculomotorAudio');
   const [oculomotorBounceJitter, setOculomotorBounceJitter] = useAppSetting('oculomotorBounceJitter');
   const [oculomotorEnableWebgazer, setOculomotorEnableWebgazer] = useAppSetting('oculomotorEnableWebgazer');
+  const [oculomotorShowGazepoint, setOculomotorShowGazepoint] = useAppSetting('oculomotorShowGazepoint');
   const [gaborDurationSec, setGaborDurationSec] = useState(60);
   const [gaborMaxSpots, setGaborMaxSpots] = useState(10);
   const [readingWPS, setReadingWPS] = useAppSetting('readingWPS');
@@ -858,6 +859,21 @@ export function HomePage() {
                   type="checkbox"
                   checked={oculomotorEnableWebgazer}
                   onChange={(e) => setOculomotorEnableWebgazer(e.target.checked)}
+                />
+              </label>
+              <label
+                className={`training-option training-option-toggle ${oculomotorShowGazepoint ? 'active' : ''}`}
+                aria-disabled={!oculomotorEnableWebgazer}
+              >
+                <div>
+                  <span className="training-option-title">{t('settings.train.gazepointToggle')}</span>
+                  <span className="training-option-meta">{t('settings.train.gazepointDesc')}</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={oculomotorShowGazepoint}
+                  disabled={!oculomotorEnableWebgazer}
+                  onChange={(e) => setOculomotorShowGazepoint(e.target.checked)}
                 />
               </label>
             </TrainingConfigSection>

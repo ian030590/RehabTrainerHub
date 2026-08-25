@@ -19,7 +19,7 @@ export function Navbar() {
       ]}
       auth={{
         apiBase: siteUrls.hub,
-        appName: 'MouthTrainer',
+        appName: t('nav.brand'),
         locale: lang === 'en' ? 'en' : 'zh-TW',
         turnstileAuthRequired: import.meta.env.VITE_TURNSTILE_AUTH_REQUIRED === '1',
         turnstileSiteKey: import.meta.env.VITE_TURNSTILE_SITE_KEY,

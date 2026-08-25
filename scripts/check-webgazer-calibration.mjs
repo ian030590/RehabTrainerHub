@@ -12,6 +12,12 @@ const calibration = await read(`${visionRuntime}/src/utils/webgazerCalibration.t
 const loader = await read(`${visionRuntime}/src/utils/webgazerLoader.ts`);
 const settings = await read(`${visionRuntime}/src/pages/settings/SettingsPage.tsx`);
 const training = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/TrainingPage.tsx');
+const oculomotorTimeline = await read('apps/rehabtrainerhub/training-modules/vision/experiment/timelines/oculomotorTimeline.ts');
+const oculomotorPlugin = await read('apps/rehabtrainerhub/training-modules/vision/experiment/plugins/pixi-oculomotor-training.ts');
+const oculomotorResults = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/results/OculomotorResults.tsx');
+const oculomotorResultData = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/oculomotor/resultData.ts');
+const trainingResultCsv = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/exportCsv.ts');
+const trainingRecords = await read(`${visionRuntime}/src/utils/trainingRecords.ts`);
 const acuity = await read(`${visionRuntime}/src/pages/assessment/AcuityTestPage.tsx`);
 const zh = await read(`${visionRuntime}/src/i18n/zh.ts`);
 const en = await read(`${visionRuntime}/src/i18n/en.ts`);
@@ -20,25 +26,45 @@ const runtimePath = `${visionRuntime}/public/assets/webgazer/3.5.3/webgazer.js`;
 const runtime = await read(runtimePath);
 const gitAttributes = await read('.gitattributes');
 
-assert.equal(
+assert.ok(
   calibration.includes("@jspsych/plugin-webgazer-init-camera"),
+  'calibration must use the native jsPsych WebGazer init-camera plugin',
+);
+assert.ok(
+  calibration.includes("@jspsych/plugin-webgazer-calibrate"),
+  'calibration must use the native jsPsych WebGazer calibrate plugin',
+);
+assert.ok(
+  calibration.includes("@jspsych/plugin-webgazer-validate"),
+  'calibration must use the native jsPsych WebGazer validate plugin',
+);
+assert.equal(
+  calibration.includes('class WebGazerInitCameraPlugin'),
   false,
-  'calibration must not use the stock permanently-disabled init-camera plugin',
+  'the camera initialization plugin must not be forked locally',
 );
 for (const marker of [
-  'ready_timeout_ms',
-  'ready_stable_ms',
-  'faceDetected',
-  'trial.retry_text',
+  'StartHeadPositionGuidance',
+  'StartInitCameraFailureRecovery',
+  "'too-far'",
+  "'too-close'",
+  'button.dataset.headPositionReady',
+  'stopImmediatePropagation',
+  'WebGazerValidatePlugin',
+  'show_validation_data: true',
+  'StartValidationResultsPresentation',
+  'ResumeWebGazerForValidation',
   'CleanupWebGazerRuntime',
   'activeInitCameraCleanup',
-  'abortTrial',
+  'activeInitFailureCleanup',
+  'activeValidationCleanup',
 ]) {
-  assert.ok(calibration.includes(marker), `WebGazer readiness contract missing: ${marker}`);
+  assert.ok(calibration.includes(marker), `native WebGazer flow contract missing: ${marker}`);
 }
 assert.ok(loader.includes('Timed out loading WebGazer'), 'script loading must have a timeout');
 assert.ok(loader.includes("webGazerRuntimeVersion = '3.5.3'"), 'WebGazer must use a pinned runtime version');
 assert.ok(loader.includes('ConfigureWebGazerAssetPath'), 'the MediaPipe path must follow the loaded script origin');
+assert.ok(loader.includes('EnsurePredictionTimestamp'), 'WebGazer predictions must be timestamped for native validation');
 assert.equal(loader.includes('local-v1'), false, 'the obsolete WebGazer runtime must not be a fallback');
 assert.ok(runtime.includes('faceMeshSolutionPath:"./mediapipe/face_mesh"'), 'the self-hosted runtime must default to local MediaPipe assets');
 assert.equal(settings.includes('endExperiment'), false, 'jsPsych cleanup must use the supported abortExperiment API');
@@ -72,16 +98,47 @@ for (const [relativePath, contentType] of runtimeAssets) {
 }
 for (const host of [settings, training, acuity]) {
   assert.ok(host.includes('CleanupWebGazerRuntime'), 'every WebGazer host must clean up the runtime');
-  assert.ok(host.includes("settings.wg.retry"), 'every calibration host must provide retry copy');
+}
+assert.ok(oculomotorTimeline.includes('show_gaze_point'), 'the timeline must forward the gazepoint display setting');
+assert.ok(oculomotorPlugin.includes('setGazeListener'), 'the training plugin must consume live WebGazer samples');
+assert.ok(oculomotorPlugin.includes('showPredictions'), 'the training plugin must support visible gazepoints');
+assert.ok(oculomotorPlugin.includes('gaze_sample_columns'), 'the training plugin must store the raw sample schema');
+assert.ok(oculomotorPlugin.includes('gaze_samples'), 'the training plugin must store every accepted gaze/target sample');
+assert.ok(oculomotorPlugin.includes('time_to_first_fixation_ms'), 'the training plugin must calculate TTFF');
+assert.equal(oculomotorPlugin.includes("wgState === 'calibration'"), false, 'training must not overwrite native calibration data');
+assert.equal(oculomotorPlugin.includes('recordScreenPosition'), false, 'training must not inject fake center calibration clicks');
+assert.ok(training.includes("item.trial_type === 'pixi-oculomotor-training'"), 'calibration trials must not replace the training result');
+assert.ok(oculomotorResults.includes('FindOculomotorResult'), 'results must use the canonical trial selector');
+assert.ok(oculomotorResultData.includes("oculomotorTrialType = 'pixi-oculomotor-training'"), 'results must identify the Pixi training trial');
+assert.ok(oculomotorResultData.includes('result.trial_type === oculomotorTrialType'), 'results must select the Pixi training trial');
+for (const exportSource of [trainingResultCsv, trainingRecords]) {
+  for (const marker of [
+    'exp.csv.meanTargetDistance',
+    'exp.csv.targetDistanceSd',
+    'exp.csv.timeToFirstFixation',
+    'exp.csv.pupilSizeEstimate',
+    'exp.csv.blinkCountEstimate',
+    'exp.csv.gazeSampleCount',
+    'exp.csv.gazeTimestamp',
+    'exp.csv.gazeX',
+    'exp.csv.gazeY',
+    'exp.csv.targetX',
+    'exp.csv.targetY',
+  ]) {
+    assert.ok(exportSource.includes(marker), `eye-tracking CSV contract missing: ${marker}`);
+  }
 }
 for (const dictionary of [zh, en]) {
   for (const key of [
-    'settings.wg.loading',
-    'settings.wg.waitingFace',
-    'settings.wg.ready',
-    'settings.wg.timeout',
-    'settings.wg.retry',
-    'settings.wg.errorStart',
+    'settings.wg.moveCloser',
+    'settings.wg.moveFarther',
+    'settings.wg.validationResultTitle',
+    'settings.wg.validationButton',
+    'exp.res.meanTargetDistance',
+    'exp.res.targetDistanceSd',
+    'exp.res.timeToFirstFixation',
+    'exp.res.pupilSizeEstimate',
+    'exp.res.blinkCountEstimate',
   ]) {
     assert.ok(dictionary.includes(`'${key}'`), `translation key missing: ${key}`);
   }

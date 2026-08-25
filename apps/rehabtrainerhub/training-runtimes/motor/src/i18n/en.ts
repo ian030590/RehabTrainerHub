@@ -8,7 +8,7 @@ export const en: Record<TranslationKey, string> = {
   'nav.noUser': 'No User Selected',
   'nav.downloadScores': 'Download Records',
   'nav.noScores': 'No training records are available yet.',
-  'nav.logoAlt': 'MotorTrainer logo',
+  'nav.logoAlt': 'Movement practice icon',
   'nav.scoresDownloadError': 'Unable to read training records. Please try again.',
   'nav.toggleMenu': 'Toggle menu',
 
@@ -30,7 +30,7 @@ export const en: Record<TranslationKey, string> = {
   'common.off': 'Off',
 
   // App
-  'app.loading': 'Loading MotorTrainer...',
+  'app.loading': 'Loading movement practice...',
   'app.footer.rights': 'All rights reserved.',
 
   // HomePage
@@ -389,7 +389,7 @@ export const en: Record<TranslationKey, string> = {
   'credits.vueMinesweeper.desc': 'Minesweeper game logic and board interaction reference.',
 
   // Extra
-  'nav.brand': 'MotorTrainer',
+  'nav.brand': 'Movement Practice',
   'common.back': 'Back',
   'gaborPatching.gameOver': 'Game Over',
   'gaborPatching.clickToBegin': 'Click to begin',
@@ -744,8 +744,4 @@ export const en: Record<TranslationKey, string> = {
   'links.subtitle': 'Official websites in the RehabTrainerHub ecosystem',
   'links.hub.title': 'RehabTrainerHub',
   'links.hub.desc': 'Home training portal for the RehabTrainerHub tools.',
-  'links.visionTrainer.title': 'VisionTrainer',
-  'links.visionTrainer.desc': 'Visual training system with various exercises.',
-  'links.brainTrainer.title': 'BrainTrainer',
-  'links.brainTrainer.desc': 'Cognitive training platform for attention, memory, and thinking categories.',
 } satisfies Record<TranslationKey, string>;

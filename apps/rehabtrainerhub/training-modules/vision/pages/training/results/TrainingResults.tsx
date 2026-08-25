@@ -1,4 +1,4 @@
-// Canonical results composition for Hub-owned VisionTrainer modules.
+// Canonical results composition for Hub-owned vision modules.
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import type { TFunction, TrialData } from '../types';
 import { DefaultTrainingResults } from './DefaultTrainingResults';
