@@ -19,6 +19,7 @@ export interface DisplayRefreshMeasureOptions {
   minSampleMs?: number;
   maxSampleMs?: number;
   timeoutMs?: number;
+  signal?: AbortSignal;
 }
 
 const defaultRefreshMs = 1000 / 60;
@@ -31,7 +32,11 @@ const defaultMinimumSampleCount = 8;
 export async function MeasureDisplayRefreshRate(
   options: DisplayRefreshMeasureOptions = {},
 ): Promise<DisplayRefreshInfo> {
+  const signal = options.signal;
   if (typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
+    return CreateRefreshInfo(defaultRefreshMs, [], DetectDisplayDeviceKind());
+  }
+  if (signal?.aborted) {
     return CreateRefreshInfo(defaultRefreshMs, [], DetectDisplayDeviceKind());
   }
 
@@ -79,6 +84,7 @@ export async function MeasureDisplayRefreshRate(
       if (typeof document !== 'undefined') {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       }
+      signal?.removeEventListener('abort', finish);
       resolve();
     };
 
@@ -106,6 +112,11 @@ export async function MeasureDisplayRefreshRate(
 
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+    signal?.addEventListener('abort', finish, { once: true });
+    if (signal?.aborted) {
+      finish();
+      return;
     }
     scheduleFrame();
     watchdogTimeoutId = window.setTimeout(finish, Math.max(30_000, timeoutMs * 10));

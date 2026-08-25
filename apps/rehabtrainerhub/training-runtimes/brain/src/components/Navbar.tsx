@@ -13,8 +13,6 @@ export function Navbar() {
     { to: '/attention-training', label: t('nav.attention') },
     { to: '/memory-training', label: t('nav.memory') },
     { to: '/thinking-training', label: t('nav.thinking') },
-    { to: '/settings', label: t('nav.settings') },
-    { to: '/references', label: t('nav.references') },
   ];
 
   return (

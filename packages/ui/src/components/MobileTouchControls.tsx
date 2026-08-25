@@ -29,11 +29,11 @@ const directionLabels: Record<MobileDirection, string> = {
   right: 'Right',
 };
 
-const directionSymbols: Record<MobileDirection, string> = {
-  up: '↑',
-  down: '↓',
-  left: '←',
-  right: '→',
+const directionIconPaths: Record<MobileDirection, string> = {
+  up: 'M12 19V5M6 11l6-6 6 6',
+  down: 'M12 5v14m6-6-6 6-6-6',
+  left: 'M19 12H5m6-6-6 6 6 6',
+  right: 'M5 12h14m-6-6 6 6-6 6',
 };
 
 export function MobileDirectionPad({
@@ -82,7 +82,16 @@ export function MobileDirectionPad({
           }}
           type="button"
         >
-          {directionSymbols[direction]}
+          <svg aria-hidden="true" className="mobile-touch-icon" viewBox="0 0 24 24">
+            <path
+              d={directionIconPaths[direction]}
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.5"
+            />
+          </svg>
         </button>
       ))}
     </div>

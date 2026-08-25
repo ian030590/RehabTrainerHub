@@ -11,9 +11,6 @@ export function Navbar() {
   const logoSrc = `${import.meta.env.BASE_URL}assets/logo.svg`;
   const navItems = [
     { to: '/', end: true, label: t('nav.trainingList') },
-    { to: '/assessment', label: t('nav.assessment') },
-    { to: '/settings', label: t('nav.settings') },
-    { to: '/credits', label: t('nav.credits') },
   ];
 
   return (

@@ -15,13 +15,7 @@ import {
 } from './utils/settings';
 
 const HomePage = lazy(() => import('@rehab-trainer/hub-modules/vision/pages/HomePage').then((module) => ({ default: module.HomePage })));
-const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
 const TrainingPage = lazy(() => import('@rehab-trainer/hub-modules/vision/pages/training/TrainingPage').then((module) => ({ default: module.TrainingPage })));
-const AssessmentPage = lazy(() => import('./pages/assessment/AssessmentPage').then((module) => ({ default: module.AssessmentPage })));
-const AcuityTestPage = lazy(() => import('./pages/assessment/AcuityTestPage').then((module) => ({ default: module.AcuityTestPage })));
-const ContrastTestPage = lazy(() => import('./pages/assessment/ContrastTestPage').then((module) => ({ default: module.ContrastTestPage })));
-const PeripheralAttentionAssessmentPage = lazy(() => import('./pages/assessment/PeripheralAttentionAssessmentPage').then((module) => ({ default: module.PeripheralAttentionAssessmentPage })));
-const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((module) => ({ default: module.CreditsPage })));
 const HartChartPage = lazy(() => import('@rehab-trainer/hub-modules/vision/pages/training/HartChartPage').then((module) => ({ default: module.HartChartPage })));
 const HartChartDisplayPage = lazy(() => import('@rehab-trainer/hub-modules/vision/pages/training/HartChartPage').then((module) => ({ default: module.HartChartDisplayPage })));
 
@@ -31,10 +25,8 @@ export function App() {
   const apiBase = siteUrls.hub;
   const locale = lang === 'en' ? 'en' : 'zh-TW';
   const isTrainingPath = [
+    '/',
     '/training',
-    '/acuity-test',
-    '/contrast-test',
-    '/assessment/ufov',
     '/hart-chart',
     '/hart-chart/display',
   ].includes(location.pathname);
@@ -53,17 +45,11 @@ export function App() {
       />
       <Routes>
         <Route path="/training" element={<TrainingPage />} />
-        <Route path="/acuity-test" element={<AcuityTestPage />} />
-        <Route path="/contrast-test" element={<ContrastTestPage />} />
         <Route path="/hart-chart" element={<HartChartPage />} />
         <Route path="/hart-chart/display" element={<HartChartDisplayPage />} />
 
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomePage />} />
-          <Route path="/assessment" element={<AssessmentPage />} />
-          <Route path="/assessment/ufov" element={<PeripheralAttentionAssessmentPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/credits" element={<CreditsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

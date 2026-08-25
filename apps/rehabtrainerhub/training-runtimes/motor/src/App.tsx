@@ -14,11 +14,9 @@ import {
   GetSetting,
 } from './utils/settings';
 
-const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
 const TrainingPage = lazy(() => import('@rehab-trainer/hub-modules/motor/pages/training/TrainingPage').then((module) => ({ default: module.TrainingPage })));
 const UpperLimbTraining = lazy(() => import('@rehab-trainer/hub-modules/motor/pages/training/UpperLimbTraining').then((module) => ({ default: module.UpperLimbTraining })));
 const LowerLimbTraining = lazy(() => import('@rehab-trainer/hub-modules/motor/pages/training/LowerLimbTraining').then((module) => ({ default: module.LowerLimbTraining })));
-const CreditsPage = lazy(() => import('./pages/credits/CreditsPage').then((module) => ({ default: module.CreditsPage })));
 
 export function App() {
   const { lang, t } = useT();
@@ -45,8 +43,6 @@ export function App() {
           <Route path="/upper-limb-training" element={<UpperLimbTraining />} />
           <Route path="/lower-limb-training" element={<LowerLimbTraining />} />
           <Route path="/training" element={<TrainingPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/credits" element={<CreditsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

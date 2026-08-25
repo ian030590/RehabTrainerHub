@@ -9,7 +9,7 @@
 居家訓練網是居家練習工具與衛教資訊的整合入口，同時提供 Steam 式遊戲平台，供經審核的開發者上傳 HTML/ZIP 居家練習遊戲：
 
 - 動作練習：上肢、下肢與動作協調活動
-- 視覺練習：視標、眼動、閱讀與視覺注意力活動
+- 視覺練習：移動卡片、眼動、蓋伯斑塊、閱讀、哈特圖與駕駛注意力模擬活動
 - 認知練習：注意、記憶與思考活動
 - 口腔練習：口說、理解與口腔動作活動
 - 遊戲平台：開發者可上傳 jsPsych 8 HTML/ZIP 居家練習遊戲，經人工審核後在隔離域名安全執行，並支援單一遊戲 PWA 安裝
@@ -19,7 +19,7 @@
 Rehab Trainer Hub brings together home-practice tools, educational information, and a Steam-like game platform where approved developers can upload jsPsych 8 HTML/ZIP practice games:
 
 - Movement Practice: upper-limb, lower-limb, and movement-coordination activities
-- Visual Practice: visual-target, eye-movement, reading, and attention activities
+- Visual Practice: moving-card, eye-movement, Gabor-patch, reading, Hart-chart, and driving-attention activities
 - Cognitive Practice: attention, memory, and thinking activities
 - Oral Practice: speech, comprehension, and oral-movement activities
 - Game Platform: developers upload jsPsych 8 HTML/ZIP games; after human review, games run in an isolated domain with per-game PWA install support
@@ -120,14 +120,12 @@ The following projects are referenced by the app pages or used as third-party li
 | Project | Current license check | Notes |
 | --- | --- | --- |
 | brownhci/WebGazer | `GPL-3.0-or-later` in package metadata; GitHub license API did not classify the custom license file | Compatible with AGPL-3.0 for this web app use; preserve upstream notices. |
-| michaelbach/FrACT10 | `GPL-3.0` | Compatible with AGPL-3.0. |
 | styts/eye-training | No GitHub-detected license and no package license found | Reference only. Do not copy or adapt code/assets unless permission is clarified. |
 | Jesper-N/foveaflow | `MIT` | Permissive; compatible with AGPL-3.0. |
 | Fordi/eyegame | `CC-BY-SA-4.0` | Reference only. If code/assets are copied or adapted, preserve CC BY-SA obligations for that material. |
 | visiontherapy/visiontherapy.github.io | `AGPL-3.0` | Compatible with AGPL-3.0. |
 | muthuspark/javascript-games | `MIT` | Permissive; compatible with AGPL-3.0. |
 | antfu/vue-minesweeper | `MIT` | Permissive; compatible with AGPL-3.0. |
-| rbcavanaugh/mainConcept | `AGPL-3.0` | Compatible with AGPL-3.0. |
 | jspsych/jsPsych 8.2.x | `MIT` | Pinned at 8.2.3 in platform runtime; see `apps/usergamerunner/THIRD_PARTY_NOTICES.txt`. |
 
 Last checked: 2026-08-17.

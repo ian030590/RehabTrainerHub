@@ -15,13 +15,11 @@ import './ThinkingGames.css';
 
 const LoadMinesweeperGame = () => import('./MinesweeperGame');
 const LoadReferenceCognitiveGame = () => import('./ReferenceCognitiveGame');
-const LoadMainConceptTraining = () => import('../MainConceptTraining');
 const MinesweeperGame = lazy(() => LoadMinesweeperGame().then((module) => ({ default: module.MinesweeperGame })));
 const ReferenceCognitiveGame = lazy(() => LoadReferenceCognitiveGame().then((module) => ({ default: module.ReferenceCognitiveGame })));
-const MainConceptTraining = lazy(() => LoadMainConceptTraining().then((module) => ({ default: module.MainConceptTraining })));
 
 type ThinkingGameId = 'minesweeper' | ReferenceGameId;
-type ThinkingModuleId = 'main-concept' | ThinkingGameId;
+type ThinkingModuleId = ThinkingGameId;
 const thinkingRouteModules = GetTrainingCatalogModules({
   trainer: 'brain',
   purpose: 'higher-cognition',
@@ -57,8 +55,6 @@ export function ThinkingTraining() {
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
       {activeModule === 'minesweeper'
         ? <MinesweeperGame onExit={closeModule} />
-        : activeModule === 'main-concept'
-          ? <MainConceptTraining onExit={closeModule} />
         : activeModule && IsReferenceGameId(activeModule)
           ? <ReferenceCognitiveGame gameId={activeModule} onExit={closeModule} />
           : null}
@@ -75,11 +71,7 @@ export function ThinkingTraining() {
       cardClassName="training-module-button"
       onSelect={openModule}
       onPreload={(moduleId) => {
-        const loader = moduleId === 'minesweeper'
-          ? LoadMinesweeperGame
-          : moduleId === 'main-concept'
-            ? LoadMainConceptTraining
-            : LoadReferenceCognitiveGame;
+        const loader = moduleId === 'minesweeper' ? LoadMinesweeperGame : LoadReferenceCognitiveGame;
         void loader().catch(() => undefined);
       }}
     >
@@ -89,7 +81,6 @@ export function ThinkingTraining() {
 }
 
 function GetRequestedModule(requestedGameId: string | null): ThinkingModuleId | null {
-  if (requestedGameId === 'main-concept') return 'main-concept';
   if (requestedGameId === 'minesweeper') return 'minesweeper';
   if (IsReferenceGameId(requestedGameId)) return requestedGameId;
   return null;

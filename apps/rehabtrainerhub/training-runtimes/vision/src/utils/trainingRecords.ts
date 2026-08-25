@@ -41,7 +41,6 @@ const moduleTitleKeys: Record<string, TranslationKey> = {
   'reading-training': 'home.module.reading.title',
   'driving-rehab': 'home.module.driving.title',
   'hart-chart': 'home.module.hartChart.title',
-  'ufov-assessment': 'assess.ufov.title',
 };
 
 export interface TrainingRecordConfig {
@@ -64,8 +63,6 @@ export interface TrainingRecordConfig {
   drivingDifficulty?: string;
   drivingControlMode?: string;
   drivingRenderQuality?: string;
-  ufovDetails?: Record<string, unknown>;
-  ufovSummary?: unknown;
 }
 
 export interface TrainingRecord {

@@ -10,7 +10,6 @@ const readBytes = (relativePath) => readFile(resolve(repoRoot, relativePath));
 const visionRuntime = 'apps/rehabtrainerhub/training-runtimes/vision';
 const calibration = await read(`${visionRuntime}/src/utils/webgazerCalibration.ts`);
 const loader = await read(`${visionRuntime}/src/utils/webgazerLoader.ts`);
-const settings = await read(`${visionRuntime}/src/pages/settings/SettingsPage.tsx`);
 const training = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/TrainingPage.tsx');
 const oculomotorTimeline = await read('apps/rehabtrainerhub/training-modules/vision/experiment/timelines/oculomotorTimeline.ts');
 const oculomotorPlugin = await read('apps/rehabtrainerhub/training-modules/vision/experiment/plugins/pixi-oculomotor-training.ts');
@@ -18,7 +17,6 @@ const oculomotorResults = await read('apps/rehabtrainerhub/training-modules/visi
 const oculomotorResultData = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/oculomotor/resultData.ts');
 const trainingResultCsv = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/exportCsv.ts');
 const trainingRecords = await read(`${visionRuntime}/src/utils/trainingRecords.ts`);
-const acuity = await read(`${visionRuntime}/src/pages/assessment/AcuityTestPage.tsx`);
 const zh = await read(`${visionRuntime}/src/i18n/zh.ts`);
 const en = await read(`${visionRuntime}/src/i18n/en.ts`);
 const manifest = JSON.parse(await read('scripts/r2-ai-assets.manifest.json'));
@@ -67,8 +65,6 @@ assert.ok(loader.includes('ConfigureWebGazerAssetPath'), 'the MediaPipe path mus
 assert.ok(loader.includes('EnsurePredictionTimestamp'), 'WebGazer predictions must be timestamped for native validation');
 assert.equal(loader.includes('local-v1'), false, 'the obsolete WebGazer runtime must not be a fallback');
 assert.ok(runtime.includes('faceMeshSolutionPath:"./mediapipe/face_mesh"'), 'the self-hosted runtime must default to local MediaPipe assets');
-assert.equal(settings.includes('endExperiment'), false, 'jsPsych cleanup must use the supported abortExperiment API');
-assert.ok(settings.includes('abortExperiment'), 'settings cancel must abort the active jsPsych timeline');
 assert.ok(
   gitAttributes.includes(`${visionRuntime}/public/assets/webgazer/3.5.3/** -text`),
   'vendored WebGazer assets must be protected from line-ending conversion',
@@ -96,7 +92,7 @@ for (const [relativePath, contentType] of runtimeAssets) {
   assert.equal(asset.size, bytes.byteLength, `R2 manifest size mismatch for ${key}`);
   assert.equal(asset.sha256, createHash('sha256').update(bytes).digest('hex'), `R2 manifest hash mismatch for ${key}`);
 }
-for (const host of [settings, training, acuity]) {
+for (const host of [training]) {
   assert.ok(host.includes('CleanupWebGazerRuntime'), 'every WebGazer host must clean up the runtime');
 }
 assert.ok(oculomotorTimeline.includes('show_gaze_point'), 'the timeline must forward the gazepoint display setting');

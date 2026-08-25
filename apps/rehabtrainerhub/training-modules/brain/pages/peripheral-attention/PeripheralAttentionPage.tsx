@@ -22,6 +22,13 @@ import {
   GetFastestCorrectStimulusDurationMs,
   ShouldStopPeripheralAttentionAdaptiveRun,
 } from '@rehab-trainer/ui/peripheralAttentionResults';
+import {
+  EvaluatePeripheralAttentionFrameSync,
+  GetPeripheralAttentionSyncRecoveryAction,
+  ShouldCountPeripheralAttentionTrial,
+  peripheralAttentionTrialRefreshOptions,
+  type PeripheralAttentionFrameSyncMeasurement,
+} from './peripheralAttentionTiming';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { useNavigate } from 'react-router-dom';
@@ -89,6 +96,7 @@ interface TrialStimulus {
   subtestId: SubtestId;
   practice: boolean;
   trialNumber: number;
+  desiredDurationMs: number;
   durationFrames: number;
   displayFrameCount: number;
   plannedDurationMs: number;
@@ -96,7 +104,7 @@ interface TrialStimulus {
   peripheralSlot?: Slot;
 }
 
-interface TrialRecord {
+interface TrialRecord extends PeripheralAttentionFrameSyncMeasurement {
   subtestId: SubtestId;
   practice: boolean;
   trialNumber: number;
@@ -104,9 +112,11 @@ interface TrialRecord {
   displayFrameCount: number;
   plannedDurationMs: number;
   durationMs: number;
-  actualDurationMs: number;
-  actualFrameCount: number;
-  droppedFrameCount: number;
+  refreshMs: number;
+  refreshHz: number;
+  refreshSampleCount: number;
+  refreshStandardDeviationMs: number;
+  syncRetryCount: number;
   centralTarget: CentralTarget;
   centralResponse: CentralTarget;
   peripheralAxis?: number;
@@ -116,6 +126,22 @@ interface TrialRecord {
   contrastPercent: number;
   targetVisualAngleDeg: number;
   vehicleVisualAngleDeg: number;
+}
+
+interface TimingAttemptRecord extends PeripheralAttentionFrameSyncMeasurement {
+  subtestId: SubtestId;
+  practice: boolean;
+  trialNumber: number;
+  attemptNumber: number;
+  refreshMs: number;
+  refreshHz: number;
+  refreshSampleCount: number;
+  refreshStandardDeviationMs: number;
+}
+
+interface TrialAttemptResult {
+  timingAttempt: TimingAttemptRecord;
+  record: TrialRecord | null;
 }
 
 interface SubtestResult {
@@ -139,7 +165,7 @@ interface PeripheralAttentionRunConfig {
 
 interface AdaptiveState {
   direction: Direction;
-  stepFrames: number;
+  stepMs: number;
   reversals: number[];
   limitStreak: number;
   failAtMaxStreak: number;
@@ -170,6 +196,9 @@ interface ExperimentPluginInfo {
     refresh_is_60hz_family: { type: ParameterType.BOOL };
     refresh_device_kind: { type: ParameterType.STRING };
     trials: { type: ParameterType.OBJECT };
+    timing_attempts: { type: ParameterType.OBJECT };
+    invalid_timing_attempt_count: { type: ParameterType.INT };
+    synchronization_pause_count: { type: ParameterType.INT };
     results: { type: ParameterType.OBJECT };
     aborted: { type: ParameterType.BOOL };
   };
@@ -189,6 +218,9 @@ interface PeripheralAttentionExperimentData {
   refresh_is_60hz_family: boolean;
   refresh_device_kind: DisplayRefreshInfo['deviceKind'];
   trials: TrialRecord[];
+  timing_attempts: TimingAttemptRecord[];
+  invalid_timing_attempt_count: number;
+  synchronization_pause_count: number;
   results: SubtestResult[];
   aborted: boolean;
 }
@@ -208,11 +240,11 @@ const practiceDurationMs = 250;
 const fixationMs = 1000;
 const maskMs = 500;
 const startStepMs = 50;
-const minStepFrames = 1;
 const peripheralAttentionTargetAxes = [0, 1, 2, 3, 4, 5, 6, 7];
 const outerRingIndex = 2;
 const slots = CreateSlots();
 const peripheralTargetSlots = slots.filter((slot) => slot.ring === outerRingIndex);
+const experimentRunAbortSignals = new WeakMap<JsPsych, AbortSignal>();
 
 const copy = {
   zh: {
@@ -238,6 +270,10 @@ const copy = {
     tableDirection: '外圍車子方向',
     tableCorrect: '答對與否',
     tableProcessingSpeed: '刺激呈現時間',
+    syncRetrying: '偵測到畫面更新不穩定，這一題不計分，正在重新同步。',
+    syncPauseTitle: '已暫停以重新同步畫面',
+    syncPauseBody: '剛才的題目沒有計入結果。請保持此頁顯示在前景，準備好後重新檢查畫面更新。',
+    syncResume: '重新檢查並繼續',
     noPeripheral: '無',
     directions: ['上', '右上', '右', '右下', '下', '左下', '左', '左上'],
     subtests: {
@@ -274,6 +310,10 @@ const copy = {
     tableDirection: 'Peripheral Direction',
     tableCorrect: 'Correct',
     tableProcessingSpeed: 'Stimulus Time',
+    syncRetrying: 'Display timing was unstable. This trial was not counted while timing resynchronizes.',
+    syncPauseTitle: 'Paused to resynchronize the display',
+    syncPauseBody: 'The previous trial was not counted. Keep this page visible, then check display timing again when ready.',
+    syncResume: 'Check timing and continue',
     noPeripheral: 'None',
     directions: ['Up', 'Up right', 'Right', 'Down right', 'Down', 'Down left', 'Left', 'Up left'],
     subtests: {
@@ -332,6 +372,9 @@ const experimentPluginInfo: ExperimentPluginInfo = {
     refresh_is_60hz_family: { type: ParameterType.BOOL },
     refresh_device_kind: { type: ParameterType.STRING },
     trials: { type: ParameterType.OBJECT },
+    timing_attempts: { type: ParameterType.OBJECT },
+    invalid_timing_attempt_count: { type: ParameterType.INT },
+    synchronization_pause_count: { type: ParameterType.INT },
     results: { type: ParameterType.OBJECT },
     aborted: { type: ParameterType.BOOL },
   },
@@ -348,6 +391,8 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     onLoad?: () => void,
   ) {
     onLoad?.();
+    const abortSignal = experimentRunAbortSignals.get(this.jsPsych);
+    ThrowIfPeripheralAttentionRunAborted(abortSignal);
     const labels = trial.labels as PeripheralAttentionLabels;
     const refreshMs = Number(trial.refresh_ms) || (1000 / 60);
     const config = trial.config as PeripheralAttentionRunConfig;
@@ -357,63 +402,105 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       : 60;
     const targetAxes = NormalizeTargetAxes(config.targetAxes);
     const trials: TrialRecord[] = [];
+    const timingAttempts: TimingAttemptRecord[] = [];
     const results: SubtestResult[] = [];
-    const minStep = minStepFrames;
-    const maxDurationFrames = Math.max(minDurationFrames, MsToFrameCount(maxDurationMs, refreshMs));
-    const practiceDurationFrames = Math.max(minDurationFrames, MsToFrameCount(practiceDurationMs, refreshMs));
-    const startStepFrames = Math.max(minStep, MsToFrameCount(startStepMs, refreshMs));
     const isPracticeMode = config.mode === 'practice';
     const totalPracticeTrials = practiceTrials;
-    const currentDurationFrames = isPracticeMode ? practiceDurationFrames : maxDurationFrames;
-    let durationFrames = currentDurationFrames;
+    let currentRefreshMs = refreshMs;
+    let durationMs = isPracticeMode ? practiceDurationMs : maxDurationMs;
     let adaptiveState: AdaptiveState = {
       direction: 'down',
-      stepFrames: startStepFrames,
+      stepMs: startStepMs,
       reversals: [],
       limitStreak: 0,
       failAtMaxStreak: 0,
     };
+    let invalidTimingAttemptCount = 0;
+    let synchronizationPauseCount = 0;
     let aborted = false;
 
     try {
       const practiceLimit = isPracticeMode ? totalPracticeTrials : 0;
       for (let index = 0; index < practiceLimit; index += 1) {
-        const stimulus = this.createStimulus(subtest, true, index + 1, practiceDurationFrames, refreshMs, targetAxes);
-        const record = await this.runTrial(displayElement, labels, subtest, stimulus, refreshMs, config);
-        trials.push(record);
-        this.showFeedback(displayElement, labels, record.correct);
-        await WaitMs(this.jsPsych, 300);
+        const stimulus = this.createStimulus(subtest, true, index + 1, practiceDurationMs, currentRefreshMs, targetAxes);
+        const attempt = await this.runTrial(displayElement, labels, subtest, stimulus, currentRefreshMs, config, 1, abortSignal);
+        timingAttempts.push(attempt.timingAttempt);
+        currentRefreshMs = attempt.timingAttempt.refreshMs;
+        if (!attempt.timingAttempt.syncValid) invalidTimingAttemptCount += 1;
+        if (!attempt.record) continue;
+        trials.push(attempt.record);
+        this.showFeedback(displayElement, labels, attempt.record.correct);
+        await WaitMs(this.jsPsych, 300, abortSignal);
       }
 
       if (!isPracticeMode) {
         let testTrialNumber = 0;
+        let attemptNumber = 0;
+        let consecutiveInvalidAttempts = 0;
         while (testTrialNumber < maxTestTrials) {
-          testTrialNumber += 1;
-          const stimulus = this.createStimulus(subtest, false, testTrialNumber, durationFrames, refreshMs, targetAxes);
-          const record = await this.runTrial(displayElement, labels, subtest, stimulus, refreshMs, config);
+          attemptNumber += 1;
+          const stimulus = this.createStimulus(
+            subtest,
+            false,
+            testTrialNumber + 1,
+            durationMs,
+            currentRefreshMs,
+            targetAxes,
+          );
+          const attempt = await this.runTrial(
+            displayElement,
+            labels,
+            subtest,
+            stimulus,
+            currentRefreshMs,
+            config,
+            attemptNumber,
+            abortSignal,
+          );
+          timingAttempts.push(attempt.timingAttempt);
+          currentRefreshMs = attempt.timingAttempt.refreshMs;
+          const shouldCountTrial = ShouldCountPeripheralAttentionTrial(config.mode, attempt.timingAttempt.syncValid);
+          if (!shouldCountTrial) {
+            invalidTimingAttemptCount += 1;
+            consecutiveInvalidAttempts += 1;
+            if (GetPeripheralAttentionSyncRecoveryAction(consecutiveInvalidAttempts) === 'retry') {
+              this.showSynchronizationRetry(displayElement, labels);
+              await WaitMs(this.jsPsych, 450, abortSignal);
+            } else {
+              synchronizationPauseCount += 1;
+              consecutiveInvalidAttempts = 0;
+              await this.waitForSynchronizationResume(displayElement, labels, abortSignal);
+            }
+            continue;
+          }
+
+          const record = attempt.record;
+          if (!record) throw new Error('Synchronized formal trial did not produce a response record.');
+          record.syncRetryCount = attemptNumber - 1;
           trials.push(record);
+          testTrialNumber += 1;
+          attemptNumber = 0;
+          consecutiveInvalidAttempts = 0;
 
           adaptiveState = this.updateAdaptiveState(
             adaptiveState,
             record.correct,
-            durationFrames,
-            minDurationFrames,
-            maxDurationFrames,
-            minStep,
-            refreshMs,
+            record.durationMs,
+            currentRefreshMs,
+            maxDurationMs,
           );
-          durationFrames = this.nextDurationFrames(
-            durationFrames,
+          durationMs = this.nextDurationMs(
+            record.durationMs,
             record.correct,
-            adaptiveState.stepFrames,
-            minDurationFrames,
-            maxDurationFrames,
+            adaptiveState.stepMs,
+            currentRefreshMs,
+            maxDurationMs,
           );
 
           if (config.stopCondition === 'fixed_trials' ? testTrialNumber >= maxTestTrials : ShouldStopPeripheralAttentionAdaptiveRun({
             testTrial: testTrialNumber,
             reversals: adaptiveState.reversals,
-            refreshMs,
+            refreshMs: currentRefreshMs,
             limitStreak: adaptiveState.limitStreak,
             failAtMaxStreak: adaptiveState.failAtMaxStreak,
           }, maxTestTrials)) {
@@ -421,15 +508,18 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
           }
         }
       }
-    } catch {
+    } catch (error) {
+      if (abortSignal?.aborted || IsPeripheralAttentionAbortError(error)) return;
       aborted = true;
     }
+
+    ThrowIfPeripheralAttentionRunAborted(abortSignal);
 
     const testTrials = trials.filter((item) => !item.practice);
     const formalThreshold = EstimatePeripheralAttentionThresholdMs({
       testTrial: testTrials.length,
       reversals: adaptiveState.reversals,
-      refreshMs,
+      refreshMs: currentRefreshMs,
       limitStreak: adaptiveState.limitStreak,
       failAtMaxStreak: adaptiveState.failAtMaxStreak,
     }, testTrials, maxDurationMs);
@@ -439,7 +529,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     results.push({
       subtestId: subtest.id,
       thresholdMs,
-      trialCount: trials.length,
+      trialCount: isPracticeMode ? trials.length : testTrials.length,
       aborted,
     });
 
@@ -457,6 +547,9 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       refresh_is_60hz_family: Boolean(trial.refresh_is_60hz_family),
       refresh_device_kind: String(trial.refresh_device_kind || 'desktop') as DisplayRefreshInfo['deviceKind'],
       trials,
+      timing_attempts: timingAttempts,
+      invalid_timing_attempt_count: invalidTimingAttemptCount,
+      synchronization_pause_count: synchronizationPauseCount,
       results,
       aborted,
     });
@@ -466,16 +559,18 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     subtest: Subtest,
     practice: boolean,
     trialNumber: number,
-    durationFrames: number,
+    desiredDurationMs: number,
     refreshMs: number,
     targetAxes: readonly PeripheralAttentionTargetAxis[],
   ): TrialStimulus {
+    const durationFrames = Math.max(minDurationFrames, MsToFrameCount(desiredDurationMs, refreshMs));
     const centralTarget: CentralTarget = Math.random() < 0.5 ? 'car' : 'truck';
     const peripheralSlot = subtest.hasPeripheral ? PickPeripheralTargetSlot(targetAxes) : undefined;
     return {
       subtestId: subtest.id,
       practice,
       trialNumber,
+      desiredDurationMs,
       durationFrames,
       displayFrameCount: durationFrames,
       plannedDurationMs: FramesToMs(durationFrames, refreshMs),
@@ -487,67 +582,110 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
   private updateAdaptiveState(
     state: AdaptiveState,
     correct: boolean,
-    currentFrames: number,
-    minFrames: number,
-    maxFrames: number,
-    minStep: number,
+    currentDurationMs: number,
     refreshMs: number,
+    maximumDurationMs: number,
   ): AdaptiveState {
     const nextDirection: Direction = correct ? 'down' : 'up';
     const reversed = state.direction !== nextDirection;
-    const reversals = reversed ? [...state.reversals, FramesToMs(currentFrames, refreshMs)] : state.reversals;
-    const halvedStep = reversed ? Math.max(minStep, Math.round(state.stepFrames * 0.75)) : state.stepFrames;
-    const limitStreak = (correct && currentFrames <= minFrames) || (!correct && currentFrames >= maxFrames)
+    const reversals = reversed ? [...state.reversals, currentDurationMs] : state.reversals;
+    const halvedStep = reversed ? Math.max(refreshMs, state.stepMs * 0.75) : state.stepMs;
+    const atMinimum = currentDurationMs <= refreshMs * 1.25;
+    const atMaximum = currentDurationMs >= maximumDurationMs - refreshMs * 0.5;
+    const limitStreak = (correct && atMinimum) || (!correct && atMaximum)
       ? state.limitStreak + 1
       : 0;
-    const failAtMaxStreak = !correct && currentFrames >= maxFrames ? state.failAtMaxStreak + 1 : 0;
+    const failAtMaxStreak = !correct && atMaximum ? state.failAtMaxStreak + 1 : 0;
 
     return {
       direction: nextDirection,
-      stepFrames: halvedStep,
+      stepMs: halvedStep,
       reversals,
       limitStreak,
       failAtMaxStreak,
     };
   }
 
-  private nextDurationFrames(
-    currentFrames: number,
+  private nextDurationMs(
+    currentDurationMs: number,
     correct: boolean,
-    stepFrames: number,
-    minFrames: number,
-    maxFrames: number,
+    stepMs: number,
+    minimumDurationMs: number,
+    maximumDurationMs: number,
   ) {
-    const delta = correct ? -stepFrames : stepFrames * 3;
-    return Clamp(currentFrames + delta, minFrames, maxFrames);
+    const delta = correct ? -stepMs : stepMs * 3;
+    return Clamp(currentDurationMs + delta, minimumDurationMs, maximumDurationMs);
   }
 
   private async runTrial(
     displayElement: HTMLElement,
     labels: PeripheralAttentionLabels,
     subtest: Subtest,
-    stimulus: TrialStimulus,
-    refreshMs: number,
+    initialStimulus: TrialStimulus,
+    fallbackRefreshMs: number,
     config: PeripheralAttentionRunConfig,
-  ): Promise<TrialRecord> {
-    const stage = EnsurePeripheralAttentionCanvasStage(displayElement, labels.subtests[stimulus.subtestId]);
+    attemptNumber: number,
+    abortSignal?: AbortSignal,
+  ): Promise<TrialAttemptResult> {
+    const stage = EnsurePeripheralAttentionCanvasStage(displayElement, labels.subtests[initialStimulus.subtestId]);
     const maskImageData = PreparePeripheralAttentionNoiseMask(stage);
 
-    this.renderStage(displayElement, labels, 'fixation', subtest, stimulus, config);
-    await WaitMs(this.jsPsych, fixationMs);
+    this.renderStage(displayElement, labels, 'fixation', subtest, initialStimulus, config);
+    const [trialRefresh] = await Promise.all([
+      MeasureDisplayRefreshRate({ ...peripheralAttentionTrialRefreshOptions, signal: abortSignal }),
+      WaitMs(this.jsPsych, fixationMs, abortSignal),
+    ]);
+    ThrowIfPeripheralAttentionRunAborted(abortSignal);
+    const refreshMs = Number.isFinite(trialRefresh.refreshMs) && trialRefresh.refreshMs > 0
+      ? trialRefresh.refreshMs
+      : fallbackRefreshMs;
+    const durationFrames = Math.max(minDurationFrames, MsToFrameCount(initialStimulus.desiredDurationMs, refreshMs));
+    const stimulus: TrialStimulus = {
+      ...initialStimulus,
+      durationFrames,
+      displayFrameCount: durationFrames,
+      plannedDurationMs: FramesToMs(durationFrames, refreshMs),
+    };
 
-    const timing = await this.presentStimulus(stage, labels, subtest, stimulus, maskImageData, refreshMs, config);
-    await WaitMs(this.jsPsych, maskMs);
+    const timing = await this.presentStimulus(
+      stage,
+      labels,
+      subtest,
+      stimulus,
+      maskImageData,
+      trialRefresh,
+      config,
+      abortSignal,
+    );
+    const timingAttempt: TimingAttemptRecord = {
+      ...timing,
+      subtestId: stimulus.subtestId,
+      practice: stimulus.practice,
+      trialNumber: stimulus.trialNumber,
+      attemptNumber,
+      refreshMs,
+      refreshHz: refreshMs > 0 ? 1000 / refreshMs : 0,
+      refreshSampleCount: trialRefresh.sampleCount,
+      refreshStandardDeviationMs: trialRefresh.standardDeviationMs,
+    };
+    await WaitMs(this.jsPsych, maskMs, abortSignal);
+
+    if (!ShouldCountPeripheralAttentionTrial(config.mode, timing.syncValid)) {
+      return { timingAttempt, record: null };
+    }
 
     const startTime = performance.now();
-    const centralResponse = await this.askCentral(displayElement, labels);
-    const peripheralResponse = subtest.hasPeripheral ? await this.askAxis(displayElement, labels) : undefined;
+    const centralResponse = await this.askCentral(displayElement, labels, abortSignal);
+    const peripheralResponse = subtest.hasPeripheral
+      ? await this.askAxis(displayElement, labels, abortSignal)
+      : undefined;
     const responseTimeMs = performance.now() - startTime;
 
     const correct = centralResponse === stimulus.centralTarget
       && (!subtest.hasPeripheral || peripheralResponse === stimulus.peripheralSlot?.axis);
 
-    return {
+    const record: TrialRecord = {
+      ...timing,
       subtestId: stimulus.subtestId,
       practice: stimulus.practice,
       trialNumber: stimulus.trialNumber,
@@ -555,9 +693,11 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       displayFrameCount: stimulus.displayFrameCount,
       plannedDurationMs: stimulus.plannedDurationMs,
       durationMs: FramesToMs(stimulus.durationFrames, refreshMs),
-      actualDurationMs: timing.actualDurationMs,
-      actualFrameCount: timing.actualFrameCount,
-      droppedFrameCount: timing.droppedFrameCount,
+      refreshMs,
+      refreshHz: refreshMs > 0 ? 1000 / refreshMs : 0,
+      refreshSampleCount: trialRefresh.sampleCount,
+      refreshStandardDeviationMs: trialRefresh.standardDeviationMs,
+      syncRetryCount: 0,
       centralTarget: stimulus.centralTarget,
       centralResponse,
       peripheralAxis: stimulus.peripheralSlot?.axis,
@@ -568,6 +708,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       targetVisualAngleDeg: config.targetVisualAngleDeg,
       vehicleVisualAngleDeg: config.vehicleVisualAngleDeg,
     };
+    return { timingAttempt, record };
   }
 
   private presentStimulus(
@@ -576,47 +717,96 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     subtest: Subtest,
     stimulus: TrialStimulus,
     maskImageData: ImageData | null,
-    refreshMs: number,
+    refreshInfo: DisplayRefreshInfo,
     config: PeripheralAttentionRunConfig,
+    abortSignal?: AbortSignal,
   ) {
-    return new Promise<{ actualDurationMs: number; actualFrameCount: number; droppedFrameCount: number }>((resolve) => {
-      let startTimestamp = 0;
+    return new Promise<PeripheralAttentionFrameSyncMeasurement>((resolve, reject) => {
+      const frameTimestamps: number[] = [];
       let elapsedFrames = 0;
+      let frameId = 0;
+      let watchdogTimeoutId = 0;
+      let finished = false;
+      let visibilityInterrupted = typeof document !== 'undefined' && document.visibilityState !== 'visible';
+      const handleVisibilityChange = () => {
+        if (document.visibilityState !== 'visible') visibilityInterrupted = true;
+      };
 
-      window.requestAnimationFrame((firstTimestamp) => {
-        startTimestamp = firstTimestamp;
+      const cleanup = () => {
+        if (frameId) window.cancelAnimationFrame(frameId);
+        if (watchdogTimeoutId) window.clearTimeout(watchdogTimeoutId);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        abortSignal?.removeEventListener('abort', abortPresentation);
+      };
+      const abortPresentation = () => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        reject(CreatePeripheralAttentionAbortError());
+      };
+      const finishPresentation = () => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        DrawPeripheralAttentionCanvasStage(
+          stage,
+          this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData, config),
+        );
+        resolve(EvaluatePeripheralAttentionFrameSync({
+          requestedFrameCount: stimulus.displayFrameCount,
+          refreshMs: refreshInfo.refreshMs,
+          refreshMeasured: refreshInfo.measured && !refreshInfo.isFallback,
+          refreshStandardDeviationMs: refreshInfo.standardDeviationMs,
+          frameTimestamps,
+          visibilityInterrupted,
+        }));
+      };
+      const scheduleFrame = (callback: (timestamp: number) => void) => {
+        frameId = window.requestAnimationFrame((timestamp) => {
+          frameId = 0;
+          if (abortSignal?.aborted) {
+            abortPresentation();
+            return;
+          }
+          callback(timestamp);
+        });
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      abortSignal?.addEventListener('abort', abortPresentation, { once: true });
+      if (abortSignal?.aborted) {
+        abortPresentation();
+        return;
+      }
+      watchdogTimeoutId = window.setTimeout(
+        finishPresentation,
+        Math.max(1_000, stimulus.displayFrameCount * Math.max(refreshInfo.refreshMs, 1) * 4),
+      );
+
+      scheduleFrame((firstTimestamp) => {
+        frameTimestamps.push(firstTimestamp);
         DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'stimulus', subtest, stimulus, undefined, config));
 
         if (stimulus.displayFrameCount <= 1) {
-          window.requestAnimationFrame((nextTimestamp) => {
-            DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData, config));
-            const actualDurationMs = nextTimestamp - startTimestamp;
-            resolve({
-              actualDurationMs,
-              actualFrameCount: 1,
-              droppedFrameCount: Math.max(0, Math.round(actualDurationMs / refreshMs) - 1),
-            });
+          scheduleFrame((nextTimestamp) => {
+            frameTimestamps.push(nextTimestamp);
+            finishPresentation();
           });
           return;
         }
 
         const tick = (nextTimestamp: number) => {
+          frameTimestamps.push(nextTimestamp);
           elapsedFrames += 1;
           if (elapsedFrames >= stimulus.displayFrameCount) {
-            DrawPeripheralAttentionCanvasStage(stage, this.getCanvasStageOptions(labels, 'mask', subtest, stimulus, maskImageData, config));
-            const actualDurationMs = nextTimestamp - startTimestamp;
-            resolve({
-              actualDurationMs,
-              actualFrameCount: elapsedFrames,
-              droppedFrameCount: Math.max(0, Math.round(actualDurationMs / refreshMs) - stimulus.displayFrameCount),
-            });
+            finishPresentation();
             return;
           }
 
-          window.requestAnimationFrame(tick);
+          scheduleFrame(tick);
         };
 
-        window.requestAnimationFrame(tick);
+        scheduleFrame(tick);
       });
     });
   }
@@ -654,23 +844,42 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     };
   }
 
-  private askCentral(displayElement: HTMLElement, labels: PeripheralAttentionLabels) {
-    return new Promise<CentralTarget>((resolve) => {
+  private askCentral(
+    displayElement: HTMLElement,
+    labels: PeripheralAttentionLabels,
+    abortSignal?: AbortSignal,
+  ) {
+    return new Promise<CentralTarget>((resolve, reject) => {
       const stage = document.createElement('div');
       stage.className = 'ufov-stage ufov-response-stage';
       const row = document.createElement('div');
       row.className = 'ufov-choice-row';
+      const cleanup = () => abortSignal?.removeEventListener('abort', handleAbort);
+      const finish = (response: CentralTarget) => {
+        cleanup();
+        resolve(response);
+      };
+      const handleAbort = () => {
+        cleanup();
+        reject(CreatePeripheralAttentionAbortError());
+      };
       row.append(
-        VehicleButton('car', labels, () => resolve('car')),
-        VehicleButton('truck', labels, () => resolve('truck')),
+        VehicleButton('car', labels, () => finish('car')),
+        VehicleButton('truck', labels, () => finish('truck')),
       );
       stage.appendChild(row);
       displayElement.replaceChildren(stage);
+      abortSignal?.addEventListener('abort', handleAbort, { once: true });
+      if (abortSignal?.aborted) handleAbort();
     });
   }
 
-  private askAxis(displayElement: HTMLElement, labels: PeripheralAttentionLabels) {
-    return new Promise<number>((resolve) => {
+  private askAxis(
+    displayElement: HTMLElement,
+    labels: PeripheralAttentionLabels,
+    abortSignal?: AbortSignal,
+  ) {
+    return new Promise<number>((resolve, reject) => {
       const stage = document.createElement('div');
       stage.className = 'ufov-stage ufov-response-stage';
       const pad = document.createElement('div');
@@ -686,12 +895,21 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       center.className = 'ufov-axis-center';
       center.setAttribute('aria-hidden', 'true');
       pad.appendChild(center);
+      const cleanup = () => abortSignal?.removeEventListener('abort', handleAbort);
+      const finish = (axis: number) => {
+        cleanup();
+        resolve(axis);
+      };
+      const handleAbort = () => {
+        cleanup();
+        reject(CreatePeripheralAttentionAbortError());
+      };
       peripheralAttentionTargetAxes.forEach((axis) => {
         const point = AxisPoint(axis, 27, true);
         const button = ResponseButton(
           `${axis + 1}. ${labels.directions[axis]}`,
           'ufov-axis-button',
-          () => resolve(axis),
+          () => finish(axis),
           String(axis + 1),
         );
         button.style.left = `${point.x}%`;
@@ -700,6 +918,8 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       });
       stage.appendChild(pad);
       displayElement.replaceChildren(stage);
+      abortSignal?.addEventListener('abort', handleAbort, { once: true });
+      if (abortSignal?.aborted) handleAbort();
     });
   }
 
@@ -712,6 +932,50 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     feedback.setAttribute('aria-label', correct ? labels.correct : labels.incorrect);
     stage.appendChild(feedback);
     displayElement.replaceChildren(stage);
+  }
+
+  private showSynchronizationRetry(displayElement: HTMLElement, labels: PeripheralAttentionLabels) {
+    const stage = document.createElement('div');
+    stage.className = 'ufov-stage ufov-response-stage';
+    const message = document.createElement('p');
+    message.className = 'ufov-feedback';
+    message.textContent = labels.syncRetrying;
+    message.setAttribute('role', 'status');
+    stage.appendChild(message);
+    displayElement.replaceChildren(stage);
+  }
+
+  private waitForSynchronizationResume(
+    displayElement: HTMLElement,
+    labels: PeripheralAttentionLabels,
+    abortSignal?: AbortSignal,
+  ) {
+    return new Promise<void>((resolve, reject) => {
+      const stage = document.createElement('div');
+      stage.className = 'ufov-stage ufov-response-stage';
+      const panel = document.createElement('div');
+      panel.className = 'ufov-sync-pause';
+      const title = document.createElement('h2');
+      title.textContent = labels.syncPauseTitle;
+      const body = document.createElement('p');
+      body.textContent = labels.syncPauseBody;
+      const cleanup = () => abortSignal?.removeEventListener('abort', handleAbort);
+      const resume = () => {
+        cleanup();
+        resolve();
+      };
+      const handleAbort = () => {
+        cleanup();
+        reject(CreatePeripheralAttentionAbortError());
+      };
+      const button = ResponseButton(labels.syncResume, 'btn btn-primary btn-lg', resume);
+      panel.append(title, body, button);
+      stage.appendChild(panel);
+      displayElement.replaceChildren(stage);
+      button.focus();
+      abortSignal?.addEventListener('abort', handleAbort, { once: true });
+      if (abortSignal?.aborted) handleAbort();
+    });
   }
 }
 
@@ -735,7 +999,8 @@ export function PeripheralAttentionPage({
   const labels = copy[lang];
   const displayRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
-  const skipFinishRef = useRef(false);
+  const runAbortControllerRef = useRef<AbortController | null>(null);
+  const runGenerationRef = useRef(0);
   const allowProgrammaticFullscreenExitRef = useRef(false);
   const autoStartRef = useRef(false);
   const [isRunning, setIsRunning] = useState(autoStart && initialMode !== 'instruction');
@@ -747,7 +1012,13 @@ export function PeripheralAttentionPage({
   const finishExperiment = useCallback((data: PeripheralAttentionExperimentData) => {
     const now = new Date();
     const isFormal = data.mode === 'formal';
+    const formalTrials = data.trials.filter((item) => !item.practice);
     const correctCount = data.trials.filter((item) => item.correct).length;
+    const invalidTimingReasonCounts = data.timing_attempts.reduce<Record<string, number>>((counts, attempt) => {
+      if (attempt.syncValid) return counts;
+      counts[attempt.syncReason] = (counts[attempt.syncReason] ?? 0) + 1;
+      return counts;
+    }, {});
     const primaryResult = data.results[0];
     const thresholdProcessingSpeedMs = primaryResult ? RoundMs(primaryResult.thresholdMs) : 0;
     const processingSpeedMs = isFormal
@@ -789,6 +1060,14 @@ export function PeripheralAttentionPage({
         targetDirections: data.target_axes.map((axis) => FormatAxis(axis, labels)).join(' | '),
         correctCount,
         trialCount: data.trials.length,
+        perTrialRafTimingMeasured: true,
+        allFormalTrialsSynchronized: isFormal
+          ? formalTrials.length > 0 && formalTrials.every((item) => item.syncValid)
+          : null,
+        timingAttemptCount: data.timing_attempts.length,
+        invalidTimingAttemptCount: data.invalid_timing_attempt_count,
+        invalidTimingReasonCounts,
+        synchronizationPauseCount: data.synchronization_pause_count,
         processingSpeedMs,
         bestCorrectProcessingSpeedMs: processingSpeedMs,
         thresholdProcessingSpeedMs,
@@ -809,9 +1088,20 @@ export function PeripheralAttentionPage({
         Processing_Speed_ms: RoundMs(item.actualDurationMs),
         Requested_Display_Frames: item.durationFrames,
         Actual_Display_Frames: item.actualFrameCount,
+        Estimated_Display_Frames: item.estimatedDisplayFrameCount,
         Dropped_Frames: item.droppedFrameCount,
         Actual_Duration_ms: RoundMs(item.actualDurationMs),
         Requested_Duration_ms: RoundMs(StimulusDuration(item)),
+        Frame_Sync_Valid: item.syncValid,
+        Frame_Sync_Reason: item.syncReason,
+        Per_Trial_Refresh_ms: RoundMs(item.refreshMs),
+        Per_Trial_Refresh_Hz: RoundMs(item.refreshHz),
+        Per_Trial_Refresh_Samples: item.refreshSampleCount,
+        Per_Trial_Refresh_SD_ms: RoundMs(item.refreshStandardDeviationMs),
+        Measured_Frame_ms: RoundMs(item.measuredFrameMs),
+        Measured_Frame_Jitter_ms: RoundMs(item.frameJitterMs),
+        Max_Frame_Interval_ms: RoundMs(item.maxFrameIntervalMs),
+        Sync_Retry_Count: item.syncRetryCount,
         Central_Response: item.centralResponse,
         Peripheral_Response: item.peripheralResponse ?? '',
         Peripheral_Response_Direction: FormatAxis(item.peripheralResponse, labels),
@@ -834,11 +1124,21 @@ export function PeripheralAttentionPage({
   const startRun = async (config: PeripheralAttentionRunConfig) => {
     const displayElement = displayRef.current;
     if (!displayElement) return;
+    runGenerationRef.current += 1;
+    const runGeneration = runGenerationRef.current;
+    runAbortControllerRef.current?.abort();
     if (jsPsychRef.current) {
-      skipFinishRef.current = true;
       jsPsychRef.current.abortExperiment();
       jsPsychRef.current = null;
     }
+    const runAbortController = new AbortController();
+    const abortSignal = runAbortController.signal;
+    runAbortControllerRef.current = runAbortController;
+    const isCurrentRun = () => (
+      !abortSignal.aborted
+      && runGenerationRef.current === runGeneration
+      && displayRef.current === displayElement
+    );
     displayElement.replaceChildren();
     setInstructionSubtest(null);
     setSavedRecord(null);
@@ -847,8 +1147,10 @@ export function PeripheralAttentionPage({
     setIsRunning(true);
     document.body.classList.add('ufov-game-active');
     await WaitForFullscreenLayout();
+    if (!isCurrentRun()) return;
 
-    const measured = await MeasureDisplayRefreshRate();
+    const measured = await MeasureDisplayRefreshRate({ signal: abortSignal });
+    if (!isCurrentRun()) return;
     const runConfig = measured.isMobileOrTablet && config.subtestId !== 1
       ? { ...config, subtestId: 1 as SubtestId }
       : config;
@@ -856,19 +1158,21 @@ export function PeripheralAttentionPage({
     const jsPsych = initJsPsych({
       display_element: displayElement,
       on_finish: () => {
-        if (skipFinishRef.current) {
-          skipFinishRef.current = false;
-          return;
-        }
+        if (!isCurrentRun()) return;
         const values = jsPsych.data.get().last(1).values();
         const data = values[0] as Partial<PeripheralAttentionExperimentData> | undefined;
         if (!data?.results || !data.trials) return;
+        experimentRunAbortSignals.delete(jsPsych);
+        if (runAbortControllerRef.current === runAbortController) {
+          runAbortControllerRef.current = null;
+        }
         finishExperiment(data as PeripheralAttentionExperimentData);
       },
     });
+    experimentRunAbortSignals.set(jsPsych, abortSignal);
     jsPsychRef.current = jsPsych;
 
-    jsPsych.run([{
+    void jsPsych.run([{
       type: PeripheralAttentionExperimentPlugin,
       labels,
       refresh_ms: measured.refreshMs,
@@ -884,7 +1188,9 @@ export function PeripheralAttentionPage({
       allowProgrammaticFullscreenExitRef.current = false;
       return;
     }
-    skipFinishRef.current = true;
+    runGenerationRef.current += 1;
+    runAbortControllerRef.current?.abort();
+    runAbortControllerRef.current = null;
     if (jsPsychRef.current) {
       jsPsychRef.current.abortExperiment();
       jsPsychRef.current = null;
@@ -924,8 +1230,10 @@ export function PeripheralAttentionPage({
   }, [autoStart, contrastPercent, initialMode, initialSubtestId, savedRecord, stopCondition, targetAxes, targetVisualAngleDeg, trialCount, vehicleVisualAngleDeg]);
 
   useEffect(() => () => {
+    runGenerationRef.current += 1;
+    runAbortControllerRef.current?.abort();
+    runAbortControllerRef.current = null;
     if (jsPsychRef.current) {
-      skipFinishRef.current = true;
       jsPsychRef.current.abortExperiment();
     }
     jsPsychRef.current = null;
@@ -1162,9 +1470,41 @@ function AverageTrialDuration(trials: TrialRecord[]) {
   return trials.reduce((sum, trial) => sum + trial.durationMs, 0) / trials.length;
 }
 
-function WaitMs(jsPsych: JsPsych, durationMs: number) {
-  return new Promise<void>((resolve) => {
-    jsPsych.pluginAPI.setTimeout(resolve, durationMs);
+class PeripheralAttentionAbortError extends Error {
+  constructor() {
+    super('Peripheral attention run aborted.');
+    this.name = 'AbortError';
+  }
+}
+
+function CreatePeripheralAttentionAbortError() {
+  return new PeripheralAttentionAbortError();
+}
+
+function IsPeripheralAttentionAbortError(error: unknown) {
+  return error instanceof PeripheralAttentionAbortError;
+}
+
+function ThrowIfPeripheralAttentionRunAborted(signal?: AbortSignal) {
+  if (signal?.aborted) throw CreatePeripheralAttentionAbortError();
+}
+
+function WaitMs(jsPsych: JsPsych, durationMs: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener('abort', handleAbort);
+      callback();
+    };
+    const timeoutId = jsPsych.pluginAPI.setTimeout(() => finish(resolve), durationMs);
+    const handleAbort = () => {
+      window.clearTimeout(timeoutId);
+      finish(() => reject(CreatePeripheralAttentionAbortError()));
+    };
+    signal?.addEventListener('abort', handleAbort, { once: true });
+    if (signal?.aborted) handleAbort();
   });
 }
 

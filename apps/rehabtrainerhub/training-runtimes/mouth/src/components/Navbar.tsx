@@ -14,8 +14,6 @@ export function Navbar() {
       navItems={[
         { to: '/comprehension-training', label: t('nav.comprehension') },
         { to: '/oral-training', label: t('nav.oral') },
-        { to: '/settings', label: t('nav.settings') },
-        { to: '/references', label: t('nav.credits') },
       ]}
       auth={{
         apiBase: siteUrls.hub,

@@ -8,22 +8,21 @@ import {
   type DeveloperGame,
   type DeveloperReleaseStatus,
 } from './developerApi';
+import {
+  trainingPurposes,
+  type TrainingPurposeId,
+} from '@rehab-trainer/hub-modules/catalog';
 
 const maximumPackageBytes = 12 * 1024 * 1024;
 const platformJsPsychVersion = '8.2.3';
 const platformJsPsychUrl = '/runtime/jspsych-8.2.3.js';
 const platformJsPsychCssUrl = '/runtime/jspsych-8.2.3.css';
 const platformGameSdkUrl = '/runtime/trainerhub-game-sdk-0.1.0.js';
-const categoryOptions = [
-  ['general', '一般活動'],
-  ['movement', '動作練習'],
-  ['vision', '視覺練習'],
-  ['attention', '注意力練習'],
-  ['memory', '記憶練習'],
-  ['higher-cognition', '思考活動'],
-  ['language', '語言活動'],
-  ['oral', '口腔動作練習'],
-] as const;
+const categoryOptions = trainingPurposes.map((theme) => ({
+  label: theme.label['zh-TW'],
+  value: theme.id,
+}));
+const defaultCategory: TrainingPurposeId = 'higher-cognition';
 const capabilityOptions = [
   ['audio', '播放音效'],
   ['fullscreen', '全螢幕'],
@@ -52,7 +51,7 @@ export function DeveloperPortal() {
   const [title, setTitle] = useState('');
   const [developerName, setDeveloperName] = useState('');
   const [summary, setSummary] = useState('');
-  const [category, setCategory] = useState('general');
+  const [category, setCategory] = useState<TrainingPurposeId>(defaultCategory);
   const [version, setVersion] = useState('1.0.0');
   const [capabilities, setCapabilities] = useState<string[]>(['keyboard', 'pointer']);
   const [sourceConfirmed, setSourceConfirmed] = useState(false);
@@ -232,8 +231,13 @@ export function DeveloperPortal() {
             <div className="developer-field-row">
               <label className="admin-field">
                 <span>分類</span>
-                <select onChange={(event) => setCategory(event.target.value)} value={category}>
-                  {categoryOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                <select
+                  onChange={(event) => setCategory(event.target.value as TrainingPurposeId)}
+                  value={category}
+                >
+                  {categoryOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
                 </select>
               </label>
               <label className="admin-field">

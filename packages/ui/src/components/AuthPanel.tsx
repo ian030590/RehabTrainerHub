@@ -1,4 +1,4 @@
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   authChangedEvent,
   type AuthLocale,
@@ -217,6 +217,7 @@ const genderOptions = [
   { value: 'nonbinary', zhTW: '非二元', en: 'Non-binary' },
   { value: 'preferNotToSay', zhTW: '不提供', en: 'Prefer not to say' },
 ] as const;
+const authSessionCheckTimeoutMs = 5_000;
 
 const defaultSmokingFrequency = {
   interval: 'week',
@@ -288,6 +289,8 @@ export function AuthPanel({
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const loadUserGenerationRef = useRef(0);
+  const loadUserAbortRef = useRef<AbortController | null>(null);
   const authOrigin = useMemo(() => GetAuthApiOrigin(apiBase), [apiBase]);
   const resolvedPrivacyHref = useMemo(() => {
     if (privacyHref) return privacyHref;
@@ -309,25 +312,45 @@ export function AuthPanel({
     }
   }, [onAuthChange]);
 
+  const cancelLoadUser = useCallback(() => {
+    loadUserGenerationRef.current += 1;
+    loadUserAbortRef.current?.abort();
+    loadUserAbortRef.current = null;
+  }, []);
+
   const loadUser = useCallback(async (): Promise<AuthUser | null> => {
+    cancelLoadUser();
+    const generation = loadUserGenerationRef.current;
+    const controller = new AbortController();
+    loadUserAbortRef.current = controller;
+    let timedOut = false;
+    const timeoutId = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, authSessionCheckTimeoutMs);
     setError('');
+    let nextUser: AuthUser | null = null;
     try {
-      let nextUser = await FetchCurrentAuthUser(apiBase);
-      if (!nextUser) {
-        const sharedSession = await FetchSharedAuthSession(apiBase);
+      nextUser = await FetchCurrentAuthUser(apiBase, controller.signal);
+      if (!nextUser && !controller.signal.aborted) {
+        const sharedSession = await FetchSharedAuthSession(apiBase, controller.signal);
         if (sharedSession) {
           SetAuthToken(sharedSession.token, false);
           nextUser = sharedSession.user;
         }
       }
-      applyLoadedUser(nextUser);
-      return nextUser;
     } catch (loadError) {
-      console.warn('Unable to load auth user.', loadError);
-      applyLoadedUser(null);
-      return null;
+      if (!controller.signal.aborted) {
+        console.warn('Unable to load auth user.', loadError);
+      }
     }
-  }, [apiBase, applyLoadedUser]);
+    window.clearTimeout(timeoutId);
+    if (loadUserAbortRef.current === controller) loadUserAbortRef.current = null;
+    if (generation !== loadUserGenerationRef.current) return null;
+    if (controller.signal.aborted && !timedOut) return null;
+    applyLoadedUser(nextUser);
+    return nextUser;
+  }, [apiBase, applyLoadedUser, cancelLoadUser]);
 
   useEffect(() => {
     void loadUser();
@@ -339,6 +362,7 @@ export function AuthPanel({
       if (authOrigin && event.origin !== authOrigin) return;
       if (!IsAuthSessionMessage(event.data)) return;
       SetAuthToken(event.data.token);
+      cancelLoadUser();
       applyLoadedUser(event.data.user);
     };
 
@@ -347,8 +371,9 @@ export function AuthPanel({
     return () => {
       window.removeEventListener(authChangedEvent, handleAuthChange);
       window.removeEventListener('message', handleMessage);
+      cancelLoadUser();
     };
-  }, [applyLoadedUser, authOrigin, loadUser]);
+  }, [applyLoadedUser, authOrigin, cancelLoadUser, loadUser]);
 
   const openAccountDialog = async (mode: AccountDialogMode = 'login') => {
     setError('');
@@ -441,6 +466,7 @@ export function AuthPanel({
         turnstileToken: turnstileToken ?? undefined,
       });
       SetAuthToken(session.token);
+      cancelLoadUser();
       applyLoadedUser(session.user);
     } catch (submitError) {
       console.warn('Unable to use password account.', submitError);

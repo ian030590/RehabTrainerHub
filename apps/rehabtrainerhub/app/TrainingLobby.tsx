@@ -1,7 +1,12 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { TrainingOverlay } from './train/TrainingOverlay';
 import { PackageGameOverlay } from './train/PackageGameOverlay';
 import {
@@ -9,12 +14,13 @@ import {
   BuildTrainingModuleHref,
   BuildTrainingModuleImageSrc,
   GetTrainingModuleCopy,
-  GetTrainingPurpose,
+  GetTrainingModuleTheme,
+  GetTrainingThemeId,
   trainingCatalog,
   trainingPurposes,
-  type TrainerCatalogId,
   type TrainingCatalogModule,
   type TrainingPurposeId,
+  type TrainingVisualTheme,
 } from '@rehab-trainer/hub-modules/catalog';
 import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
 import { GetHubUiCopy } from './i18n';
@@ -24,40 +30,9 @@ import {
   FetchPublishedGames,
   type PublishedGame,
 } from './publishedGames';
-
-const trainerVisuals: Record<TrainerCatalogId, {
-  logo: string;
-  logoAlt: Readonly<Record<'en' | 'zh', string>>;
-}> = {
-  motor: {
-    logo: '/assets/motor-logo.svg',
-    logoAlt: { en: 'Movement practice', zh: '動作練習' },
-  },
-  vision: {
-    logo: '/assets/vision-logo.svg',
-    logoAlt: { en: 'Visual practice', zh: '視覺練習' },
-  },
-  brain: {
-    logo: '/assets/brain-logo.svg',
-    logoAlt: { en: 'Cognitive practice', zh: '認知練習' },
-  },
-  mouth: {
-    logo: '/assets/mouth-logo.svg',
-    logoAlt: { en: 'Oral practice', zh: '口腔練習' },
-  },
-};
+import { BuildTrainingThemeStyle } from './trainingThemeStyle';
 
 const prefetchedTrainingUrls = new Set<string>();
-const publishedCategoryPurposes: Readonly<Record<string, TrainingPurposeId>> = {
-  attention: 'attention',
-  general: 'higher-cognition',
-  'higher-cognition': 'higher-cognition',
-  language: 'language',
-  memory: 'memory',
-  movement: 'upper-limb',
-  oral: 'oral',
-  vision: 'vision',
-};
 
 function PreloadTrainingModule(module: TrainingCatalogModule) {
   const href = BuildTrainingModuleHref(module);
@@ -69,6 +44,51 @@ function PreloadTrainingModule(module: TrainingCatalogModule) {
   link.as = 'document';
   link.href = href;
   document.head.append(link);
+}
+
+function TrainingThemeIcon({
+  decorative = false,
+  label,
+  theme,
+}: {
+  decorative?: boolean;
+  label: string;
+  theme: TrainingVisualTheme;
+}) {
+  if (theme.icon.type === 'svg') {
+    return (
+      <Image
+        className="module-card-theme-image"
+        src={theme.icon.value}
+        alt={decorative ? '' : (theme.icon.alt ?? label)}
+        width={52}
+        height={36}
+      />
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className="material-symbols-outlined module-card-theme-icon"
+    >
+      {theme.icon.value}
+    </span>
+  );
+}
+
+function TrainingThemeBadge({
+  language,
+  theme,
+}: {
+  language: 'en' | 'zh';
+  theme: TrainingVisualTheme;
+}) {
+  if (!theme.badge) return null;
+  return (
+    <span className="module-theme-badge">
+      {language === 'en' ? theme.badge.text.en : theme.badge.text['zh-TW']}
+    </span>
+  );
 }
 
 export function TrainingLobby() {
@@ -111,7 +131,7 @@ export function TrainingLobby() {
     trainingPurposes.map((purpose) => [
       purpose.id,
       trainingCatalog.filter((module) => module.purpose === purpose.id).length
-        + publishedGames.filter((game) => publishedCategoryPurposes[game.category] === purpose.id).length,
+        + publishedGames.filter((game) => GetTrainingThemeId(game.category) === purpose.id).length,
     ]),
   ), [publishedGames]);
 
@@ -125,9 +145,9 @@ export function TrainingLobby() {
 
   const visiblePublishedGames = useMemo(() => publishedGames.filter((game) => {
     const searchable = `${game.title} ${game.summary} ${game.developerName}`.toLocaleLowerCase(locale);
-    const purpose = publishedCategoryPurposes[game.category] ?? 'higher-cognition';
+    const purpose = GetTrainingThemeId(game.category);
     return (!normalizedQuery || searchable.includes(normalizedQuery))
-      && (selectedPurposes.length === 0 || selectedPurposes.includes(purpose));
+      && (selectedPurposes.length === 0 || (purpose !== null && selectedPurposes.includes(purpose)));
   }), [locale, normalizedQuery, publishedGames, selectedPurposes]);
 
   useEffect(() => {
@@ -235,7 +255,7 @@ export function TrainingLobby() {
                   onChange={() => togglePurpose(purpose.id)}
                   type="checkbox"
                 />
-                <span>{language === 'en' ? purpose.labelEn : purpose.label}</span>
+                <span>{language === 'en' ? purpose.label.en : purpose.label['zh-TW']}</span>
                 <small>{purposeCounts.get(purpose.id) ?? 0}</small>
               </label>
             ))}
@@ -268,28 +288,27 @@ export function TrainingLobby() {
             <div className="module-grid">
               {visibleModules.map((module) => {
                 const moduleCopy = GetTrainingModuleCopy(module, locale);
-                const purpose = GetTrainingPurpose(module.purpose);
-                const trainer = trainerVisuals[module.trainer];
+                const theme = GetTrainingModuleTheme(module);
+                const themeLabel = language === 'en' ? theme.label.en : theme.label['zh-TW'];
 
                 return (
                   <article
                     aria-label={`${copy.start}: ${moduleCopy.title}`}
-                    className={`module-card official-game-card trainer-${module.trainer}`}
+                    className="module-card official-game-card"
                     key={module.catalogId}
                     onPointerEnter={() => PreloadTrainingModule(module)}
+                    style={BuildTrainingThemeStyle(theme)}
                   >
                     <div className="module-card-visual" aria-label={moduleCopy.title} role="img">
                       <CardImagePlaceholder src={BuildTrainingModuleImageSrc(module)} />
                     </div>
                     <div className="module-card-content">
                       <div className="module-card-meta">
-                        <span>{language === 'en' ? purpose.labelEn : purpose.label}</span>
-                        <Image
-                          src={trainer.logo}
-                          alt={trainer.logoAlt[language]}
-                          width={52}
-                          height={36}
-                        />
+                        <span>{themeLabel}</span>
+                        <span className="module-card-theme-adornments">
+                          <TrainingThemeBadge language={language} theme={theme} />
+                          <TrainingThemeIcon label={themeLabel} theme={theme} />
+                        </span>
                       </div>
                       <h3>{moduleCopy.title}</h3>
                       <p>{moduleCopy.description}</p>
@@ -332,20 +351,27 @@ export function TrainingLobby() {
           {visiblePublishedGames.length > 0 && (
             <div className="module-grid community-game-grid">
               {visiblePublishedGames.map((game) => {
-                const purposeId = publishedCategoryPurposes[game.category] ?? 'higher-cognition';
-                const purpose = GetTrainingPurpose(purposeId);
+                const theme = GetTrainingModuleTheme(game.category);
+                const themeLabel = language === 'en' ? theme.label.en : theme.label['zh-TW'];
                 return (
-                  <article className="module-card community-game-card" key={game.release.id}>
+                  <article
+                    className="module-card community-game-card"
+                    key={game.release.id}
+                    style={BuildTrainingThemeStyle(theme)}
+                  >
                     <div className="community-game-visual" aria-hidden="true">
-                      <span className="material-symbols-outlined">extension</span>
+                      <TrainingThemeIcon decorative label={themeLabel} theme={theme} />
                       <small>jsPsych 8</small>
                     </div>
                     <div className="module-card-content">
                       <div className="module-card-meta">
-                        <span>{language === 'en' ? purpose.labelEn : purpose.label}</span>
-                        <span className="verified-release-badge">
-                          <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
-                          {platformCopy.reviewed}
+                        <span>{themeLabel}</span>
+                        <span className="module-card-theme-adornments">
+                          <TrainingThemeBadge language={language} theme={theme} />
+                          <span className="verified-release-badge">
+                            <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
+                            {platformCopy.reviewed}
+                          </span>
                         </span>
                       </div>
                       <h3>{game.title}</h3>

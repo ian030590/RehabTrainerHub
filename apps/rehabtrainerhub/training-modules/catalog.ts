@@ -5,18 +5,104 @@ import {
   type TrainingMediaPermission,
 } from './moduleFlowManifest';
 
-export const trainingPurposes = [
-  { id: 'upper-limb', label: '上肢動作', labelEn: 'Upper-limb movement' },
-  { id: 'lower-limb', label: '下肢動作', labelEn: 'Lower-limb movement' },
-  { id: 'vision', label: '視覺訓練', labelEn: 'Vision training' },
-  { id: 'attention', label: '注意力訓練', labelEn: 'Attention training' },
-  { id: 'memory', label: '記憶力訓練', labelEn: 'Memory training' },
-  { id: 'higher-cognition', label: '高階認知訓練', labelEn: 'Higher cognition training' },
-  { id: 'language', label: '語言訓練', labelEn: 'Language training' },
-  { id: 'oral', label: '口腔訓練', labelEn: 'Oral training' },
-] as const;
+export type ThemeIconType = 'material-symbol' | 'svg';
 
-export type TrainingPurposeId = (typeof trainingPurposes)[number]['id'];
+export interface ThemeIconConfig {
+  type: ThemeIconType;
+  value: string;
+  alt?: string;
+}
+
+export interface TrainingVisualTheme {
+  id: string;
+  label: {
+    'zh-TW': string;
+    en: string;
+  };
+  icon: ThemeIconConfig;
+  colors: {
+    primary: string;
+    dark?: string;
+    surfaceMixRatio?: number;
+  };
+  badge?: {
+    text: {
+      'zh-TW': string;
+      en: string;
+    };
+  };
+  aliases?: readonly string[];
+}
+
+type TrainingVisualThemeDefinition = Omit<TrainingVisualTheme, 'id'>;
+
+function DefineTrainingThemes<
+  const Themes extends Readonly<Record<string, TrainingVisualThemeDefinition>>,
+>(themes: Themes): {
+  readonly [ThemeId in keyof Themes]: Readonly<Themes[ThemeId] & { id: ThemeId }>;
+} {
+  return Object.fromEntries(
+    Object.entries(themes).map(([id, theme]) => [id, { ...theme, id }]),
+  ) as {
+    readonly [ThemeId in keyof Themes]: Readonly<Themes[ThemeId] & { id: ThemeId }>;
+  };
+}
+
+export const trainingThemes = DefineTrainingThemes({
+  'upper-limb': {
+    label: { 'zh-TW': '上肢動作', en: 'Upper-limb movement' },
+    icon: { type: 'svg', value: '/assets/motor-logo.svg', alt: 'MotorTrainer' },
+    colors: { primary: '#005eb8', dark: '#00478d' },
+    aliases: ['movement'],
+  },
+  'lower-limb': {
+    label: { 'zh-TW': '下肢動作', en: 'Lower-limb movement' },
+    icon: { type: 'svg', value: '/assets/motor-logo.svg', alt: 'MotorTrainer' },
+    colors: { primary: '#005eb8', dark: '#00478d' },
+  },
+  vision: {
+    label: { 'zh-TW': '視覺訓練', en: 'Vision training' },
+    icon: { type: 'svg', value: '/assets/vision-logo.svg', alt: 'VisionTrainer' },
+    colors: { primary: '#006c47', dark: '#005235' },
+  },
+  attention: {
+    label: { 'zh-TW': '注意力訓練', en: 'Attention training' },
+    icon: { type: 'svg', value: '/assets/brain-logo.svg', alt: 'BrainTrainer' },
+    colors: { primary: '#7a4a24', dark: '#5a3519', surfaceMixRatio: 10 },
+  },
+  memory: {
+    label: { 'zh-TW': '記憶力訓練', en: 'Memory training' },
+    icon: { type: 'svg', value: '/assets/brain-logo.svg', alt: 'BrainTrainer' },
+    colors: { primary: '#7a4a24', dark: '#5a3519', surfaceMixRatio: 10 },
+  },
+  'higher-cognition': {
+    label: { 'zh-TW': '高階認知訓練', en: 'Higher cognition training' },
+    icon: { type: 'svg', value: '/assets/brain-logo.svg', alt: 'BrainTrainer' },
+    colors: { primary: '#7a4a24', dark: '#5a3519', surfaceMixRatio: 10 },
+    aliases: ['general'],
+  },
+  language: {
+    label: { 'zh-TW': '語言訓練', en: 'Language training' },
+    icon: { type: 'svg', value: '/assets/brain-logo.svg', alt: 'BrainTrainer' },
+    colors: { primary: '#7a4a24', dark: '#5a3519', surfaceMixRatio: 10 },
+  },
+  oral: {
+    label: { 'zh-TW': '口腔訓練', en: 'Oral training' },
+    icon: { type: 'svg', value: '/assets/mouth-logo.svg', alt: 'MouthTrainer' },
+    colors: { primary: '#6750a4', dark: '#4f378b', surfaceMixRatio: 9 },
+  },
+});
+
+export const defaultTrainingTheme: TrainingVisualTheme = {
+  id: 'default',
+  label: { 'zh-TW': '一般訓練', en: 'General practice' },
+  icon: { type: 'material-symbol', value: 'sports_esports' },
+  colors: { primary: '#005eb8', dark: '#00478d', surfaceMixRatio: 8 },
+};
+
+export type TrainingPurposeId = keyof typeof trainingThemes;
+
+export const trainingPurposes = Object.values(trainingThemes);
 export type TrainerCatalogId = 'motor' | 'vision' | 'brain' | 'mouth';
 export type TrainingModuleKind =
   | 'motor-upper'
@@ -249,17 +335,6 @@ const seeds: readonly TrainingCatalogSeed[] = [
     focusKey: 'cognitive.simon.focus',
   },
   {
-    id: 'main-concept',
-    trainer: 'brain',
-    purpose: 'higher-cognition',
-    kind: 'brain-route',
-    path: '/thinking-training?game=main-concept',
-    zh: ['主旨概念訓練', '閱讀敘事內容，辨識支持主旨的句子與必要元素。'],
-    en: ['Main Concept Training', 'Read narratives and identify sentences and elements that support the main concept.'],
-    titleKey: 'module.thinking.mainConcept.title',
-    descriptionKey: 'module.thinking.mainConcept.body',
-  },
-  {
     id: 'minesweeper',
     trainer: 'brain',
     purpose: 'higher-cognition',
@@ -362,32 +437,6 @@ const seeds: readonly TrainingCatalogSeed[] = [
     focusKey: 'cognitive.hex.focus',
   },
   {
-    id: 'set-game',
-    trainer: 'brain',
-    purpose: 'higher-cognition',
-    kind: 'brain-reference',
-    path: '/thinking-training?game=set-game',
-    zh: ['Set 圖卡', '依多項特徵找出全同或全異的三張圖卡。'],
-    en: ['Set Game', 'Find three cards whose features are each all the same or all different.'],
-    titleKey: 'cognitive.set.title',
-    descriptionKey: 'cognitive.set.desc',
-    referenceTitleKey: 'cognitive.set.referenceTitle',
-    focusKey: 'cognitive.set.focus',
-  },
-  {
-    id: 'sokoban',
-    trainer: 'brain',
-    purpose: 'higher-cognition',
-    kind: 'brain-reference',
-    path: '/thinking-training?game=sokoban',
-    zh: ['推箱子', '規劃路徑將箱子推到目標位置。'],
-    en: ['Sokoban', 'Plan a route and push every box onto a target.'],
-    titleKey: 'cognitive.sokoban.title',
-    descriptionKey: 'cognitive.sokoban.desc',
-    referenceTitleKey: 'cognitive.sokoban.referenceTitle',
-    focusKey: 'cognitive.sokoban.focus',
-  },
-  {
     id: 'maze',
     trainer: 'brain',
     purpose: 'higher-cognition',
@@ -479,6 +528,37 @@ export function BuildHubTrainingHref(module: TrainingCatalogModule): string {
   return `/train/?module=${encodeURIComponent(module.catalogId)}`;
 }
 
+export type TrainingThemeLookup =
+  | { purpose?: string | null }
+  | string
+  | null
+  | undefined;
+
+export function GetTrainingModuleTheme(
+  moduleOrPurposeId?: TrainingThemeLookup,
+): TrainingVisualTheme {
+  const purposeId = GetTrainingThemeId(moduleOrPurposeId);
+  return purposeId ? trainingThemes[purposeId] : defaultTrainingTheme;
+}
+
+export function GetTrainingThemeId(
+  moduleOrPurposeId?: TrainingThemeLookup,
+): TrainingPurposeId | null {
+  const purposeId = typeof moduleOrPurposeId === 'string'
+    ? moduleOrPurposeId
+    : moduleOrPurposeId?.purpose;
+  if (!purposeId) return null;
+  if (Object.hasOwn(trainingThemes, purposeId)) return purposeId as TrainingPurposeId;
+  return trainingPurposes.find((theme) => (
+    (theme as TrainingVisualTheme).aliases?.includes(purposeId)
+  ))?.id ?? null;
+}
+
 export function GetTrainingPurpose(purposeId: TrainingPurposeId) {
-  return trainingPurposes.find((purpose) => purpose.id === purposeId) ?? trainingPurposes[0];
+  const theme = GetTrainingModuleTheme(purposeId);
+  return {
+    id: theme.id,
+    label: theme.label['zh-TW'],
+    labelEn: theme.label.en,
+  };
 }

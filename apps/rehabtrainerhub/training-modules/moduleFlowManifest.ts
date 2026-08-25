@@ -36,8 +36,6 @@ const referenceCognitiveIds = [
   'brain:connect4',
   'brain:dots-and-boxes',
   'brain:hex',
-  'brain:set-game',
-  'brain:sokoban',
   'brain:maze',
 ] as const;
 
@@ -59,7 +57,6 @@ const manifestEntries: ReadonlyArray<readonly [
   ['vision:hart-chart', 'vision/pages/training/HartChartPage.tsx', 'none', 'external-runtime-adapter'],
   ['brain:ufov', 'brain/pages/PeripheralAttentionPage.tsx', 'none', 'native-timeline'],
   ['brain:every-ball-response', 'brain/pages/EveryBallResponsePage.tsx', 'camera-or-microphone', 'native-timeline'],
-  ['brain:main-concept', 'brain/pages/MainConceptTraining.tsx', 'none', 'external-runtime-adapter'],
   ['brain:minesweeper', 'brain/pages/thinking/MinesweeperGame.tsx', 'none', 'external-runtime-adapter'],
   ...referenceCognitiveIds.map((catalogId) => (
     [catalogId, 'brain/pages/thinking/ReferenceCognitiveGame.tsx', 'none', 'external-runtime-adapter'] as const

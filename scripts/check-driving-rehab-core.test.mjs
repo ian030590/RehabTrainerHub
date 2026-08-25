@@ -578,6 +578,24 @@ test('display refresh measurement pauses across hidden visibility gaps', async (
   );
 });
 
+test('display refresh measurement cancels pending rAF work on abort', async () => {
+  const result = await WithFakeDisplayTimingEnvironment([100, 116.67, 133.33], async () => {
+    const controller = new AbortController();
+    const measurement = MeasureDisplayRefreshRate({
+      sampleCount: 20,
+      minimumSampleCount: 8,
+      timeoutMs: 2_000,
+      signal: controller.signal,
+    });
+    controller.abort();
+    return measurement;
+  });
+
+  assert.equal(result.measured, false);
+  assert.equal(result.isFallback, true);
+  assert.equal(result.sampleCount, 0);
+});
+
 test('reaction times align to the measured 59.94-360 Hz display frame grid', () => {
   const frameCount = 12;
   const expectedRoundedRt = new Map([

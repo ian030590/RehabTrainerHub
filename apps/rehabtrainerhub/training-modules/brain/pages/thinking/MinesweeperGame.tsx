@@ -1,5 +1,14 @@
 // Canonical Hub-owned brain Minesweeper runtime.
-import { type CSSProperties, type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type CSSProperties,
+  type PointerEvent,
+  type WheelEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { initJsPsych } from 'jspsych';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { useT, type TranslationKey } from '../../i18n';
@@ -22,7 +31,6 @@ import { BrainTrainingRulesPanel } from './BrainTrainingRulesPanel';
 
 type MinesweeperPhase = 'menu' | 'rules' | 'playing' | 'results';
 type MinesweeperDifficulty = 'Beginner' | 'Intermediate' | 'Advanced';
-type BoardPresetId = 'compact' | 'classic-easy' | 'classic-medium' | 'classic-hard' | 'large' | 'dense' | 'custom';
 type GameResult = 'Victory' | 'Defeat';
 
 interface MinesweeperGameProps {
@@ -55,23 +63,21 @@ const difficulties: Record<MinesweeperDifficulty, DifficultyConfig> = {
   Advanced: { labelKey: 'minesweeper.diff.advanced', density: 0.24, descriptionKey: 'minesweeper.diff.advancedDesc' },
 };
 
-const boardPresets: Record<Exclude<BoardPresetId, 'custom'>, { label: string; rows: number; cols: number; mines?: number; descriptionKey: TranslationKey }> = {
-  compact: { label: '6x6', rows: 6, cols: 6, descriptionKey: 'minesweeper.preset.compactDesc' },
-  'classic-easy': { label: '9x9 / 10', rows: 9, cols: 9, mines: 10, descriptionKey: 'minesweeper.preset.classicEasyDesc' },
-  'classic-medium': { label: '16x16 / 40', rows: 16, cols: 16, mines: 40, descriptionKey: 'minesweeper.preset.classicMediumDesc' },
-  'classic-hard': { label: '16x30 / 99', rows: 16, cols: 30, mines: 99, descriptionKey: 'minesweeper.preset.classicHardDesc' },
+const boardPresets = {
+  small: { label: '6x6', rows: 6, cols: 6, descriptionKey: 'minesweeper.preset.smallDesc' },
+  medium: { label: '16x16', rows: 16, cols: 16, descriptionKey: 'minesweeper.preset.mediumDesc' },
   large: { label: '20x20', rows: 20, cols: 20, descriptionKey: 'minesweeper.preset.largeDesc' },
-  dense: { label: '80x80', rows: 80, cols: 80, descriptionKey: 'minesweeper.preset.denseDesc' },
-};
+} as const satisfies Record<string, { label: string; rows: number; cols: number; descriptionKey: TranslationKey }>;
+type BoardPresetId = keyof typeof boardPresets;
 const defaultDifficulty: MinesweeperDifficulty = 'Beginner';
-const defaultBoardPreset: BoardPresetId = 'compact';
+const defaultBoardPreset: BoardPresetId = 'small';
 const defaultBoardRows = boardPresets[defaultBoardPreset].rows;
 const defaultBoardCols = boardPresets[defaultBoardPreset].cols;
-const defaultCustomBoardSize = 12;
-const mobileBoardViewportPercent = 70;
-const mobileBoardWidthLimit = `${mobileBoardViewportPercent}vw`;
-const mobileBoardHeightLimit = `${mobileBoardViewportPercent}vh`;
-const desktopBoardInlineMarginPx = 48;
+const boardViewportWidthRatio = 0.75;
+const boardViewportHeightRatio = 1;
+const minBoardZoom = 0.5;
+const maxBoardZoom = 3;
+const boardZoomStep = 0.25;
 
 const minesweeperAccent = '#7A4A24';
 
@@ -90,6 +96,10 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   const { t } = useT();
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const activeTouchPointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
+  const pinchGestureRef = useRef(false);
+  const boardZoomRef = useRef(1);
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const elapsedMillisRef = useRef(0);
   const playStartedAtRef = useRef<number>(Date.now());
@@ -99,10 +109,11 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   useTrainingConfigReady(phase === 'menu');
   const [difficulty, setDifficulty] = useState<MinesweeperDifficulty>(defaultDifficulty);
   const [boardPreset, setBoardPreset] = useState<BoardPresetId>(defaultBoardPreset);
-  const [customBoardSize, setCustomBoardSize] = useState(defaultCustomBoardSize);
+  const [boardZoom, setBoardZoom] = useState(1);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [board, setBoard] = useState<Cell[][]>(() => CreateEmptyBoard(defaultBoardRows, defaultBoardCols));
-  const [boardRows, setBoardRows] = useState(defaultBoardRows);
-  const [boardCols, setBoardCols] = useState(defaultBoardCols);
+  const [boardRows, setBoardRows] = useState<number>(defaultBoardRows);
+  const [boardCols, setBoardCols] = useState<number>(defaultBoardCols);
   const [mineCount, setMineCount] = useState(CalculateMineCount(defaultBoardRows, defaultBoardCols, difficulties[defaultDifficulty].density));
   const [minesGenerated, setMinesGenerated] = useState(false);
   const [flagMode, setFlagMode] = useState(false);
@@ -111,21 +122,43 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   const activeConfig = difficulties[difficulty];
   const activeDifficultyLabel = t(activeConfig.labelKey);
   const activeDifficultyDescription = t(activeConfig.descriptionKey);
-  const selectedBoardConfig = useMemo(() => GetSelectedBoardConfig(boardPreset, customBoardSize, activeConfig.density), [activeConfig.density, boardPreset, customBoardSize]);
+  const selectedBoardConfig = useMemo(() => GetSelectedBoardConfig(boardPreset, activeConfig.density), [activeConfig.density, boardPreset]);
   const selectedMineCount = selectedBoardConfig.mines;
   const selectedDensityPercent = Math.round((selectedMineCount / Math.max(1, selectedBoardConfig.rows * selectedBoardConfig.cols)) * 100);
-  const isCustomBoardSize = boardPreset === 'custom';
   const boardMetrics = useMemo(() => GetBoardMetrics(boardRows, boardCols), [boardCols, boardRows]);
   const gameTitle = t('training.minesweeper.title');
 
   const canvasStyle = useMemo<CSSProperties>(() => {
+    const aspectRatio = boardMetrics.pixelWidth / Math.max(1, boardMetrics.pixelHeight);
+    const responsiveWidth = Math.min(
+      viewportSize.width * boardViewportWidthRatio,
+      viewportSize.height * boardViewportHeightRatio * aspectRatio,
+    );
     return {
-      width: `min(${boardMetrics.pixelWidth}px, calc(100vw - ${desktopBoardInlineMarginPx}px), ${mobileBoardWidthLimit})`,
+      width: `${Math.max(1, responsiveWidth) * boardZoom}px`,
       aspectRatio: `${boardMetrics.pixelWidth} / ${boardMetrics.pixelHeight}`,
       height: 'auto',
-      maxHeight: mobileBoardHeightLimit,
     };
-  }, [boardMetrics.pixelHeight, boardMetrics.pixelWidth]);
+  }, [boardMetrics.pixelHeight, boardMetrics.pixelWidth, boardZoom, viewportSize.height, viewportSize.width]);
+
+  boardZoomRef.current = boardZoom;
+
+  useEffect(() => {
+    const syncViewportSize = () => {
+      const viewport = window.visualViewport;
+      setViewportSize({
+        width: viewport?.width ?? window.innerWidth,
+        height: viewport?.height ?? window.innerHeight,
+      });
+    };
+    syncViewportSize();
+    window.addEventListener('resize', syncViewportSize);
+    window.visualViewport?.addEventListener('resize', syncViewportSize);
+    return () => {
+      window.removeEventListener('resize', syncViewportSize);
+      window.visualViewport?.removeEventListener('resize', syncViewportSize);
+    };
+  }, []);
 
   useEffect(() => {
     const host = jsPsychHostRef.current;
@@ -187,6 +220,11 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
         setBoard(CreateEmptyBoard(nextRows, nextCols));
         setMinesGenerated(false);
         setFlagMode(false);
+        setBoardZoom(1);
+        boardZoomRef.current = 1;
+        activeTouchPointersRef.current.clear();
+        pinchStartRef.current = null;
+        pinchGestureRef.current = false;
         setResult(null);
         elapsedMillisRef.current = 0;
         playStartedAtRef.current = Date.now();
@@ -200,6 +238,9 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     setPhase('menu');
     setResult(null);
     setFlagMode(false);
+    activeTouchPointersRef.current.clear();
+    pinchStartRef.current = null;
+    pinchGestureRef.current = false;
   }, []);
 
   const toggleFlagAt = useCallback((x: number, y: number) => {
@@ -243,9 +284,8 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     setBoard(openedBoard);
   }, [board, finishGame, mineCount, minesGenerated, phase]);
 
-  const handleCanvasPointerDown = useCallback((event: PointerEvent<HTMLCanvasElement>) => {
+  const activateCanvasCell = useCallback((event: PointerEvent<HTMLCanvasElement>) => {
     if (phase !== 'playing') return;
-    event.preventDefault();
     const position = GetCanvasCell(event, boardRows, boardCols);
     if (!position) return;
     if (event.button === 2 || flagMode) {
@@ -254,6 +294,63 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
     }
     revealAt(position.x, position.y);
   }, [boardCols, boardRows, flagMode, phase, revealAt, toggleFlagAt]);
+
+  const setClampedBoardZoom = useCallback((value: number) => {
+    const nextZoom = Math.round(Clamp(value, minBoardZoom, maxBoardZoom) * 100) / 100;
+    boardZoomRef.current = nextZoom;
+    setBoardZoom(nextZoom);
+  }, []);
+
+  const handleCanvasPointerDown = useCallback((event: PointerEvent<HTMLCanvasElement>) => {
+    if (phase !== 'playing') return;
+    event.preventDefault();
+    if (event.pointerType !== 'touch') {
+      activateCanvasCell(event);
+      return;
+    }
+    event.currentTarget.setPointerCapture(event.pointerId);
+    activeTouchPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (activeTouchPointersRef.current.size < 2) return;
+    const [first, second] = [...activeTouchPointersRef.current.values()];
+    pinchStartRef.current = {
+      distance: GetPointerDistance(first, second),
+      zoom: boardZoomRef.current,
+    };
+    pinchGestureRef.current = true;
+  }, [activateCanvasCell, phase]);
+
+  const handleCanvasPointerMove = useCallback((event: PointerEvent<HTMLCanvasElement>) => {
+    if (event.pointerType !== 'touch' || !activeTouchPointersRef.current.has(event.pointerId)) return;
+    event.preventDefault();
+    activeTouchPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const pinchStart = pinchStartRef.current;
+    if (!pinchStart || activeTouchPointersRef.current.size < 2 || pinchStart.distance <= 0) return;
+    const [first, second] = [...activeTouchPointersRef.current.values()];
+    setClampedBoardZoom(pinchStart.zoom * (GetPointerDistance(first, second) / pinchStart.distance));
+  }, [setClampedBoardZoom]);
+
+  const finishCanvasPointer = useCallback((event: PointerEvent<HTMLCanvasElement>, cancelled: boolean) => {
+    if (event.pointerType !== 'touch') return;
+    event.preventDefault();
+    const wasTracked = activeTouchPointersRef.current.has(event.pointerId);
+    const wasPinchGesture = pinchGestureRef.current;
+    if (!cancelled && wasTracked && !wasPinchGesture && activeTouchPointersRef.current.size === 1) {
+      activateCanvasCell(event);
+    }
+    activeTouchPointersRef.current.delete(event.pointerId);
+    if (activeTouchPointersRef.current.size < 2) pinchStartRef.current = null;
+    if (activeTouchPointersRef.current.size === 0) pinchGestureRef.current = false;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, [activateCanvasCell]);
+
+  const handleCanvasWheel = useCallback((event: WheelEvent<HTMLCanvasElement>) => {
+    if (phase !== 'playing' || event.deltaY === 0) return;
+    event.preventDefault();
+    const factor = event.deltaY < 0 ? 1.1 : 0.9;
+    setClampedBoardZoom(boardZoomRef.current * factor);
+  }, [phase, setClampedBoardZoom]);
 
   useTrainingAbort({
     active: phase === 'playing',
@@ -314,7 +411,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
               <TrainingConfigSection
                 title={t('minesweeper.config.boardSize')}
                 description={`${selectedBoardConfig.rows}x${selectedBoardConfig.cols}`}
-                value={isCustomBoardSize ? t('training.custom') : t('training.default')}
+                value={selectedBoardConfig.label}
               >
                 <TrainingConfigOptionGroup className="minesweeper-preset-grid">
                   {Object.entries(boardPresets).map(([id, preset]) => (
@@ -328,27 +425,6 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
                       <span className="training-option-meta">{t(preset.descriptionKey)}</span>
                     </button>
                   ))}
-                  <label
-                    className={`training-option training-option-custom ${isCustomBoardSize ? 'active' : ''}`}
-                    onClick={() => setBoardPreset('custom')}
-                  >
-                    <span className="training-option-title">{t('training.custom')}</span>
-                    <input
-                      className="training-number-input"
-                      type="number"
-                      min="4"
-                      max="100"
-                      step="1"
-                      value={customBoardSize}
-                      onChange={(event) => {
-                        const value = Clamp(Number(event.target.value), 4, 100);
-                        setCustomBoardSize(value);
-                        setBoardPreset('custom');
-                      }}
-                      onFocus={() => setBoardPreset('custom')}
-                      aria-label={t('minesweeper.config.customBoardSize')}
-                    />
-                  </label>
                 </TrainingConfigOptionGroup>
               </TrainingConfigSection>
           </TrainingConfigPanel>
@@ -383,10 +459,42 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
             className={`minesweeper-canvas ${flagMode ? 'flag-mode' : ''}`}
             style={canvasStyle}
             onPointerDown={handleCanvasPointerDown}
+            onPointerMove={handleCanvasPointerMove}
+            onPointerUp={(event) => finishCanvasPointer(event, false)}
+            onPointerCancel={(event) => finishCanvasPointer(event, true)}
+            onWheel={handleCanvasWheel}
             onContextMenu={(event) => event.preventDefault()}
             aria-label={t('minesweeper.boardAria')}
           />
           <div className="minesweeper-board-controls">
+            <div className="minesweeper-zoom-controls" role="group" aria-label={t('minesweeper.zoom.group')}>
+              <button
+                className="btn btn-sm btn-secondary minesweeper-zoom-button"
+                type="button"
+                onClick={() => setClampedBoardZoom(boardZoomRef.current - boardZoomStep)}
+                disabled={boardZoom <= minBoardZoom}
+                aria-label={t('minesweeper.zoom.out')}
+              >
+                −
+              </button>
+              <button
+                className="btn btn-sm btn-secondary minesweeper-zoom-reset"
+                type="button"
+                onClick={() => setClampedBoardZoom(1)}
+                aria-label={t('minesweeper.zoom.reset')}
+              >
+                {Math.round(boardZoom * 100)}%
+              </button>
+              <button
+                className="btn btn-sm btn-secondary minesweeper-zoom-button"
+                type="button"
+                onClick={() => setClampedBoardZoom(boardZoomRef.current + boardZoomStep)}
+                disabled={boardZoom >= maxBoardZoom}
+                aria-label={t('minesweeper.zoom.in')}
+              >
+                +
+              </button>
+            </div>
             <button
               className={`btn btn-sm ${flagMode ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setFlagMode((current) => !current)}
@@ -441,23 +549,18 @@ function CloneBoard(board: Cell[][]): Cell[][] {
   return board.map((row) => row.map((cell) => ({ ...cell })));
 }
 
-function GetSelectedBoardConfig(presetId: BoardPresetId, customBoardSize: number, density: number) {
-  if (presetId !== 'custom') {
-    const preset = boardPresets[presetId];
-    return {
-      label: preset.label,
-      rows: preset.rows,
-      cols: preset.cols,
-      mines: preset.mines ?? CalculateMineCount(preset.rows, preset.cols, density),
-    };
-  }
-  const size = Clamp(Math.round(customBoardSize), 4, 100);
+function GetSelectedBoardConfig(presetId: BoardPresetId, density: number) {
+  const preset = boardPresets[presetId];
   return {
-    label: `${size}x${size}`,
-    rows: size,
-    cols: size,
-    mines: CalculateMineCount(size, size, density),
+    label: preset.label,
+    rows: preset.rows,
+    cols: preset.cols,
+    mines: CalculateMineCount(preset.rows, preset.cols, density),
   };
+}
+
+function GetPointerDistance(first: { x: number; y: number }, second: { x: number; y: number }) {
+  return Math.hypot(second.x - first.x, second.y - first.y);
 }
 
 function CalculateMineCount(rows: number, cols: number, density: number): number {

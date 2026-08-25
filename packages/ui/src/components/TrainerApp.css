@@ -1853,6 +1853,8 @@ body[data-training-embed="hub"] #root,
   gap: 2px;
   pointer-events: auto;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .mobile-touch-button {
@@ -1880,6 +1882,12 @@ body[data-training-embed="hub"] #root,
   border-color: rgba(255, 255, 255, 0.9);
   background: rgba(37, 99, 235, 0.72);
   transform: scale(0.96);
+}
+
+.mobile-touch-icon {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
 }
 
 .mobile-touch-up {

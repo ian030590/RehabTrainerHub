@@ -9,7 +9,8 @@ export const cognitiveBg = 0xf7f1ea;
 export const cognitiveBorder = 0xd8c6b7;
 export const cognitiveText = 0x201a16;
 export const cognitiveTextMuted = 0x594235;
-export const cognitiveBoardRatio = 0.6;
+export const cognitiveBoardWidthRatio = 0.75;
+export const cognitiveBoardHeightRatio = 1;
 const mobileCognitiveMaxMinorAxis = 640;
 
 export function DrawBackground(app: Application) {
@@ -24,8 +25,8 @@ export function IsMobileCognitiveViewport(app: Application) {
 
 export function GetResponsiveBoardMaxSize(app: Application) {
   return {
-    width: app.renderer.width * cognitiveBoardRatio,
-    height: app.renderer.height * cognitiveBoardRatio,
+    width: app.renderer.width * cognitiveBoardWidthRatio,
+    height: app.renderer.height * cognitiveBoardHeightRatio,
   };
 }
 

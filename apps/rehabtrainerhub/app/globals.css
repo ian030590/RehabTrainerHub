@@ -877,7 +877,7 @@ summary:focus-visible {
 .module-card {
   --trainer-color: var(--primary);
   --trainer-color-dark: var(--primary-hover);
-  --trainer-surface: var(--primary-soft);
+  --trainer-surface: color-mix(in srgb, var(--trainer-color) 8%, var(--surface));
   display: flex;
   min-width: 0;
   min-height: 390px;
@@ -893,39 +893,15 @@ summary:focus-visible {
 }
 
 .module-card:hover,
-.module-card:focus-visible {
+.module-card:focus-within {
   border-color: color-mix(in srgb, var(--trainer-color) 44%, var(--border));
   box-shadow: 0 25px 30px color-mix(in srgb, var(--trainer-color) 14%, transparent);
   transform: translateY(-4px);
 }
 
-.module-card:focus-visible {
+.module-card:focus-within {
   outline: 3px solid var(--trainer-color);
   outline-offset: 4px;
-}
-
-.module-card.trainer-motor {
-  --trainer-color: #005eb8;
-  --trainer-color-dark: #00478d;
-  --trainer-surface: color-mix(in srgb, #005eb8 8%, var(--surface));
-}
-
-.module-card.trainer-vision {
-  --trainer-color: #006c47;
-  --trainer-color-dark: #005235;
-  --trainer-surface: color-mix(in srgb, #006c47 8%, var(--surface));
-}
-
-.module-card.trainer-brain {
-  --trainer-color: #7a4a24;
-  --trainer-color-dark: #5a3519;
-  --trainer-surface: color-mix(in srgb, #7a4a24 10%, var(--surface));
-}
-
-.module-card.trainer-mouth {
-  --trainer-color: #6750a4;
-  --trainer-color-dark: #4f378b;
-  --trainer-surface: color-mix(in srgb, #6750a4 9%, var(--surface));
 }
 
 .module-card-visual {
@@ -983,6 +959,29 @@ summary:focus-visible {
   object-fit: contain;
 }
 
+.module-card-theme-adornments {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.module-theme-badge {
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--trainer-color) 42%, var(--border));
+  border-radius: 999px;
+  color: var(--trainer-color-dark);
+  background: var(--surface);
+  white-space: nowrap;
+}
+
+.module-card-meta .module-card-theme-icon {
+  width: 52px;
+  height: 36px;
+  color: var(--trainer-color-dark);
+  font-size: 32px;
+}
+
 .module-card h3 {
   margin-bottom: 8px;
   font-size: 1.50rem;
@@ -1027,7 +1026,7 @@ summary:focus-visible {
 }
 
 .module-card:hover .module-card-action,
-.module-card:focus-visible .module-card-action,
+.module-card:focus-within .module-card-action,
 .module-card-footer a:hover,
 .module-card-footer button:hover {
   background: var(--trainer-color-dark);
@@ -1294,6 +1293,7 @@ summary:focus-visible {
 .recent-module-card {
   --trainer-color: var(--primary);
   --trainer-color-dark: var(--primary-hover);
+  --trainer-surface: color-mix(in srgb, var(--trainer-color) 8%, var(--surface));
   display: flex;
   min-height: 154px;
   flex-direction: column;
@@ -1301,13 +1301,8 @@ summary:focus-visible {
   padding: 20px;
   border: 1px solid color-mix(in srgb, var(--trainer-color) 30%, var(--border));
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--trainer-color) 10%, var(--surface));
+  background: var(--trainer-surface);
 }
-
-.recent-module-card.trainer-motor { --trainer-color: #005eb8; --trainer-color-dark: #00478d; }
-.recent-module-card.trainer-vision { --trainer-color: #006c47; --trainer-color-dark: #005235; }
-.recent-module-card.trainer-brain { --trainer-color: #7a4a24; --trainer-color-dark: #5a3519; }
-.recent-module-card.trainer-mouth { --trainer-color: #6750a4; --trainer-color-dark: #4f378b; }
 
 .recent-module-card > span {
   color: var(--trainer-color-dark);
@@ -3134,12 +3129,22 @@ summary:focus-visible {
   align-content: center;
   justify-items: center;
   gap: 8px;
-  color: var(--primary);
-  background: linear-gradient(145deg, var(--primary-soft), var(--accent-blue-soft));
+  color: var(--trainer-color-dark);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--trainer-color) 12%, var(--surface)),
+    color-mix(in srgb, var(--trainer-color) 24%, var(--surface))
+  );
 }
 
 .community-game-visual .material-symbols-outlined {
   font-size: 4rem;
+}
+
+.community-game-visual .module-card-theme-image {
+  width: 104px;
+  height: 72px;
+  object-fit: contain;
 }
 
 .community-game-visual small,
@@ -3200,16 +3205,34 @@ summary:focus-visible {
   gap: 5px;
   min-height: 44px;
   padding: 8px 12px;
-  border: 1px solid var(--primary);
   border-radius: var(--radius);
-  color: var(--text-on-accent);
-  background: var(--primary);
   font-weight: 800;
   text-align: center;
   text-decoration: none;
 }
 
-.community-game-actions a,
+.community-game-actions button,
+.community-game-actions a {
+  border: 1px solid var(--trainer-color);
+}
+
+.community-game-actions button {
+  color: var(--text-on-accent);
+  background: var(--trainer-color);
+}
+
+.community-game-actions a {
+  color: var(--trainer-color-dark);
+  background: var(--surface);
+}
+
+.package-game-toolbar-actions button,
+.package-game-toolbar-actions a {
+  border: 1px solid var(--primary);
+  color: var(--text-on-accent);
+  background: var(--primary);
+}
+
 .package-game-toolbar-actions a {
   color: var(--primary);
   background: var(--surface);

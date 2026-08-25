@@ -9,3 +9,4 @@
 9. 小行星護盾防衛移除使用方向鍵控制的選項，並且要讓使用者設定操作方式：滑鼠、體感操作（MediaPipe）
 10. 迷宮如果是在平板或手機，請在右下角出現可點擊（不可選取）的方向鍵，讓平板、手機使用者也可以操控方向。方向鍵不要使用emoji，請用免費的svg icon。
 11. runtime只保留模組部分，移除設定跟參考部分。vision的runtime移除Visual Target Practice
+12. 請確認ufov使用rAF有確認每一個trial的framerate，並且正式測驗中不會出現無法sync的情況

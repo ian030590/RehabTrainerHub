@@ -83,17 +83,20 @@ async function StartOAuth(request, env) {
     }
   }
 
+  const config = providers[provider];
+  const clientId = String(env[config.clientId] || '').trim();
+  if (!clientId) {
+    return ErrorResponse(request, env, `${config.clientId} is not configured.`, 503);
+  }
+  if (provider === 'google' && !/^[a-z0-9-]+\.apps\.googleusercontent\.com$/i.test(clientId)) {
+    return ErrorResponse(request, env, 'GOOGLE_CLIENT_ID is not a Google OAuth web client ID.', 503);
+  }
+
   const limitError = await RateLimitResponse(request, env, 'oauth-start', {
     limit: 10,
     windowSeconds: 60,
   });
   if (limitError) return limitError;
-
-  const config = providers[provider];
-  const clientId = env[config.clientId];
-  if (!clientId) {
-    return ErrorResponse(request, env, `${config.clientId} is not configured.`, 503);
-  }
 
   const authBaseUrl = GetAuthBaseUrl(request, env);
   const redirectUri = `${authBaseUrl}/api/auth/callback`;
@@ -123,6 +126,7 @@ async function StartOAuth(request, env) {
   authUrl.searchParams.set('scope', config.scope);
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('prompt', 'select_account');
+  authUrl.searchParams.set('include_granted_scopes', 'true');
 
   const redirectResponse = Response.redirect(authUrl.toString(), 302);
   const headers = new Headers(redirectResponse.headers);

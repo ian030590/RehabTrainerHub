@@ -10,13 +10,14 @@ import {
 import {
   BuildHubTrainingHref,
   GetTrainingModuleCopy,
-  GetTrainingPurpose,
+  GetTrainingModuleTheme,
   trainingCatalog,
 } from '@rehab-trainer/hub-modules/catalog';
 import { useHubAuth } from '../HubNavigation';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { siteUrls } from '../siteUrls';
+import { BuildTrainingThemeStyle } from '../trainingThemeStyle';
 import { TrophyIcon } from '../TrophyIcon';
 
 const emptyAchievements: RehabAchievement[] = [
@@ -188,11 +189,15 @@ export function ProgressDashboard() {
           <div className="recent-module-grid">
             {recentModules.map((module) => {
               const moduleCopy = GetTrainingModuleCopy(module, locale);
-              const purpose = GetTrainingPurpose(module.purpose);
+              const theme = GetTrainingModuleTheme(module);
 
               return (
-                <article className={`recent-module-card trainer-${module.trainer}`} key={module.catalogId}>
-                  <span>{language === 'en' ? purpose.labelEn : purpose.label}</span>
+                <article
+                  className="recent-module-card"
+                  key={module.catalogId}
+                  style={BuildTrainingThemeStyle(theme)}
+                >
+                  <span>{language === 'en' ? theme.label.en : theme.label['zh-TW']}</span>
                   <h3>{moduleCopy.title}</h3>
                   <Link href={BuildHubTrainingHref(module)}>
                     {copy.start}

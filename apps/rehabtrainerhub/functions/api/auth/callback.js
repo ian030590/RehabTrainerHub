@@ -227,8 +227,8 @@ function OauthFailureResponse(request, error) {
 }
 
 async function GetGoogleIdentity(env, code, redirectUri) {
-  const clientId = env.GOOGLE_CLIENT_ID;
-  const clientSecret = env.GOOGLE_CLIENT_SECRET;
+  const clientId = String(env.GOOGLE_CLIENT_ID || '').trim();
+  const clientSecret = String(env.GOOGLE_CLIENT_SECRET || '').trim();
   if (!clientId || !clientSecret) throw new Error('Google OAuth credentials are not configured.');
 
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {

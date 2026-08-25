@@ -105,16 +105,16 @@ function GetRuleSections(gameId: string, lang: 'zh' | 'en') {
         isZh,
         '等待訊號出現後再點擊，訓練反應時間與抑制控制。',
         'Wait for the signal, then click quickly to train reaction time and inhibition.',
-        ['訊號出現前不要提前點擊。', '看到開始訊號後立刻點擊目標區。', '完成設定題數後進入結算。'],
-        ['Do not click before the signal appears.', 'Click the target area as soon as the go signal appears.', 'The session ends after the configured number of trials.'],
+        ['訊號出現前不要提前點擊。', '看到開始訊號後立刻點擊目標區。', '每次訊號都會記錄成功或提前點擊，以及反應毫秒數。', '完成設定題數後進入結算。'],
+        ['Do not click before the signal appears.', 'Click the target area as soon as the go signal appears.', 'Every signal records success or false start with its response time in milliseconds.', 'The session ends after the configured number of trials.'],
       );
     case 'whack-a-mole':
       return BuildRules(
         isZh,
         '在時間內點擊出現的目標，訓練視覺搜尋與注意力轉移。',
         'Click targets as they appear within the time limit.',
-        ['目標會在不同位置短暫出現。', '盡快點擊目標，漏掉或點錯會影響成績。', '時間結束後自動結算。'],
-        ['Targets appear briefly in different positions.', 'Click quickly; missed or incorrect clicks affect the result.', 'The session ends automatically when time expires.'],
+        ['目標會在不同位置短暫出現。', '盡快點擊目標，漏掉或點錯會影響成績。', '每次目標或點擊都會記錄命中、逾時或點錯，以及反應毫秒數。', '時間結束後自動結算。'],
+        ['Targets appear briefly in different positions.', 'Click quickly; missed or incorrect clicks affect the result.', 'Every target or tap records hit, expired, or wrong tap with its response time in milliseconds.', 'The session ends automatically when time expires.'],
       );
     case 'sliding-puzzle':
       return BuildRules(
@@ -133,13 +133,37 @@ function GetRuleSections(gameId: string, lang: 'zh' | 'en') {
         ['Tap a blank cell to cycle its value.', 'Complete the row, column, box, or sum rule for the selected difficulty.', 'The session ends when every blank matches the solution.'],
       );
     case 'simon-says':
-      return BuildRules(
-        isZh,
-        '記住顏色亮起順序，並在輪到你時重複。',
-        'Remember the color sequence and repeat it when prompted.',
-        ['觀看階段請不要點擊。', '輸入錯誤會立即結束，完成目標輪數即成功。'],
-        ['Do not tap during the watch phase.', 'A wrong input ends the session; reaching the target round succeeds.'],
-      );
+      return isZh
+        ? [
+            {
+              title: '遊玩方式',
+              description: '記住每次單次跳動並亮起霓虹的顏色順序，輪到你時依序點擊。',
+              items: [
+                '觀看階段請不要點擊；滑入與點擊有不同的動畫，點擊時會播放聲音。',
+                '答錯會扣一顆心、左右晃動提示，並重播同一組順序讓你再試。',
+                '只有生命降到 0 才會結束；完成目標記憶長度即成功。',
+              ],
+            },
+            {
+              title: '成績計算',
+              description: '結算會逐次顯示記憶長度、是否正確與作答毫秒數。',
+            },
+          ]
+        : [
+            {
+              title: 'How to Play',
+              description: 'Remember each color after its single neon bounce, then tap the sequence in order.',
+              items: [
+                'Do not tap during the watch phase. Hover and click use distinct animations, and each click plays a sound.',
+                'A wrong answer costs one heart, shakes the board, and replays the same sequence for another attempt.',
+                'The session ends only at zero lives; completing the target memory length succeeds.',
+              ],
+            },
+            {
+              title: 'Results',
+              description: 'Results list memory length, correctness, and response time in milliseconds for every attempt.',
+            },
+          ];
     case 'tic-tac-toe':
       return BuildRules(
         isZh,
@@ -171,22 +195,6 @@ function GetRuleSections(gameId: string, lang: 'zh' | 'en') {
         'Connect your two sides before the computer connects its sides.',
         ['你是藍色，目標是連接上方與下方。', '電腦是紅色，會嘗試連接左右兩側。'],
         ['You are blue and connect top to bottom.', 'The computer is red and connects left to right.'],
-      );
-    case 'set-game':
-      return BuildRules(
-        isZh,
-        '找出三張在每個特徵上都全同或全異的圖卡。',
-        'Find three cards where every feature is all same or all different.',
-        ['依序點選三張圖卡。', '有效組合會替換新卡，錯誤組合會清除選取。'],
-        ['Tap three cards.', 'Valid sets are replaced; invalid selections are cleared.'],
-      );
-    case 'sokoban':
-      return BuildRules(
-        isZh,
-        '推動箱子到指定目標格。',
-        'Push boxes onto target cells.',
-        ['可用方向鍵移動，也可點擊相鄰格移動。', '若相鄰格有箱子且後方可通行，就會推動箱子。', '每次訓練會抽選不同關卡。'],
-        ['Use arrow keys or tap an adjacent cell to move.', 'If a box is adjacent and the next cell is clear, it is pushed.', 'Each session draws from varied level layouts.'],
       );
     case 'maze':
       return BuildRules(

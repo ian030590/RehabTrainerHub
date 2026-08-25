@@ -101,6 +101,9 @@ test('submission metadata remains release-scoped until an administrator publishe
   assert.match(migrationSource, /submitted_title TEXT NOT NULL/);
   assert.match(migrationSource, /publication_lease_id TEXT/);
   assert.match(submissionSource, /submitted_developer_name, submitted_title, submitted_summary, submitted_category/);
+  assert.match(submissionSource, /const categoryPattern = \/\^\[a-z0-9\]/);
+  assert.match(submissionSource, /categoryPattern\.test\(category\)/);
+  assert.doesNotMatch(submissionSource, /allowedCategories/);
   assert.doesNotMatch(
     submissionSource,
     /UPDATE developer_games\s+SET[\s\S]{0,240}developer_display_name/i,

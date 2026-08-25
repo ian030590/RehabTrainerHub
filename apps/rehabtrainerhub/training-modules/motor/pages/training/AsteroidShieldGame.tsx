@@ -58,7 +58,8 @@ type GameResult = 'Victory' | 'Defeat';
 type HandChoice = 'any' | 'left' | 'right';
 type ThreatKind = 'normal' | 'heavy' | 'lethal' | 'energy';
 type ThreatOutcome = 'shielded' | 'hit' | 'collected' | 'missed';
-type ControlSource = 'mouse' | 'keyboard' | 'hand' | 'none';
+type ControlMode = 'mouse' | 'mediapipe';
+type ControlSource = ControlMode;
 
 interface AsteroidShieldGameProps {
   onExit: () => void;
@@ -155,8 +156,8 @@ interface SessionRecord {
   Duration_Seconds: number;
   Starting_HP: number;
   Shield_Size_Percent: number;
-  Hand_Control_Enabled: boolean;
-  Tracking_Hand: HandChoice;
+  Control_Mode: ControlMode;
+  Tracking_Hand: HandChoice | null;
   Total_Duration_Seconds: number;
   Final_HP: number;
   Score: number;
@@ -192,7 +193,6 @@ const assetUrls = {
 
 const detectionIntervalMs = 66;
 const trackingGraceMs = 260;
-const manualControlGraceMs = 850;
 const speedLevelStep = 15;
 const durationOptions = [45, 60, 90] as const;
 const hpOptions = [6, 10, 14] as const;
@@ -244,8 +244,10 @@ const copy = {
     hpDesc: '飛船可承受的總傷害。暗色小行星若命中會直接結束。',
     shieldSize: '護盾大小',
     shieldSizeDesc: '較大的透明護盾更接近保護飛船的視覺，也降低攔截難度。',
-    handControl: 'MediaPipe 手部控制',
-    handControlDesc: '開啟後可用手掌位置控制護盾，同時保留滑鼠與方向鍵。',
+    controlMode: '操作方式',
+    controlModeDesc: '選擇使用滑鼠，或以 MediaPipe 追蹤手掌位置的體感操作。',
+    mouseControl: '滑鼠',
+    mediaPipeControl: '體感操作（MediaPipe）',
     hand: '追蹤手',
     handDesc: '選擇任一可見手，或指定左手/右手。',
     privacyTitle: '攝影機影像只在本機分析',
@@ -259,15 +261,14 @@ const copy = {
     loadingTitle: '準備手部追蹤',
     loadingCamera: '正在啟動攝影機，請允許瀏覽器使用攝影機。',
     loadingModel: '正在載入 MediaPipe 手部模型。',
-    cameraFallback: '攝影機無法使用，已改用滑鼠與方向鍵繼續訓練。',
     cameraPreview: '即時手部攝影機預覽',
     tracking: '已追蹤手部',
     finding: '請把手放入畫面',
-    unsupported: '此瀏覽器不支援攝影機存取，已改用滑鼠與方向鍵。',
-    permission: '無法使用攝影機。請允許攝影機權限，或使用滑鼠與方向鍵。',
-    disconnected: '攝影機已中斷，手部控制停止。仍可用滑鼠與方向鍵。',
-    initialization: '手部追蹤無法啟動，已改用滑鼠與方向鍵。',
-    errorTitle: '手部控制無法啟動',
+    unsupported: '此瀏覽器不支援攝影機存取，已改用滑鼠。',
+    permission: '無法使用攝影機。請允許攝影機權限，否則將改用滑鼠。',
+    disconnected: '攝影機已中斷，體感操作停止，已改用滑鼠。',
+    initialization: '手部追蹤無法啟動，已改用滑鼠。',
+    errorTitle: '體感操作無法啟動',
     openDetails: '開啟錯誤詳情',
     statusScore: '分數',
     resultTitle: '護盾防衛訓練完成',
@@ -300,8 +301,10 @@ const copy = {
     hpDesc: 'Total damage the ship can take. A dark asteroid hit ends the session.',
     shieldSize: 'Shield Size',
     shieldSizeDesc: 'A larger transparent shield looks protective and lowers interception load.',
-    handControl: 'MediaPipe Hand Control',
-    handControlDesc: 'When enabled, palm position controls the shield while mouse and arrow keys remain active.',
+    controlMode: 'Control Method',
+    controlModeDesc: 'Choose mouse control or motion control that tracks palm position with MediaPipe.',
+    mouseControl: 'Mouse',
+    mediaPipeControl: 'Motion Control (MediaPipe)',
     hand: 'Tracking Hand',
     handDesc: 'Use either visible hand or specify left/right hand tracking.',
     privacyTitle: 'Camera video is analyzed on this device',
@@ -315,15 +318,14 @@ const copy = {
     loadingTitle: 'Preparing Hand Tracking',
     loadingCamera: 'Starting the camera. Allow browser camera access when prompted.',
     loadingModel: 'Loading the MediaPipe hand model.',
-    cameraFallback: 'Camera is unavailable. Continuing with mouse and arrow keys.',
     cameraPreview: 'Live hand camera preview',
     tracking: 'Hand tracked',
     finding: 'Place your hand in the frame',
-    unsupported: 'This browser does not support camera access. Continuing with mouse and arrow keys.',
-    permission: 'Camera access is unavailable. Allow camera permission or use mouse and arrow keys.',
-    disconnected: 'The camera disconnected. Hand control stopped; mouse and arrow keys still work.',
-    initialization: 'Hand tracking could not start. Continuing with mouse and arrow keys.',
-    errorTitle: 'Unable to Start Hand Control',
+    unsupported: 'This browser does not support camera access. Continuing with mouse control.',
+    permission: 'Camera access is unavailable. Allow camera permission or the session will use mouse control.',
+    disconnected: 'The camera disconnected. Motion control stopped and the session switched to mouse control.',
+    initialization: 'Hand tracking could not start. Continuing with mouse control.',
+    errorTitle: 'Unable to Start Motion Control',
     openDetails: 'Open error details',
     statusScore: 'Score',
     resultTitle: 'Asteroid Shield Training Complete',
@@ -376,9 +378,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   const animationFrameRef = useRef<number | null>(null);
   const lastDetectionAtRef = useRef(0);
   const lastVideoTimeRef = useRef(-1);
-  const lastManualControlAtRef = useRef(0);
   const shieldAngleRef = useRef(-Math.PI / 2);
-  const keysRef = useRef({ up: false, down: false, left: false, right: false });
+  const activeControlModeRef = useRef<ControlMode>('mouse');
   const handRef = useRef<HandState>({ x: 0, y: 0, visible: false, lastSeenAt: 0 });
   const phaseRef = useRef<GamePhase>('menu');
   const mountedRef = useRef(true);
@@ -389,7 +390,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     durationSec: defaultDurationSeconds,
     maxHp: defaultHp,
     shieldSizePercent: defaultShieldSizePercent,
-    handControlEnabled: true,
+    controlMode: 'mouse' as ControlMode,
     handChoice: 'any' as HandChoice,
   });
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
@@ -402,7 +403,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   const [durationSec, setDurationSec] = useState(defaultDurationSeconds);
   const [maxHp, setMaxHp] = useState(defaultHp);
   const [shieldSizePercent, setShieldSizePercent] = useState(defaultShieldSizePercent);
-  const [handControlEnabled, setHandControlEnabled] = useState(true);
+  const [controlMode, setControlMode] = useState<ControlMode>('mouse');
   const [handChoice, setHandChoice] = useState<HandChoice>('any');
   const [statusMessage, setStatusMessage] = useState('');
   const [visionError, setVisionError] = useState('');
@@ -410,7 +411,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   const [isHandTrackingActive, setIsHandTrackingActive] = useState(false);
   const [result, setResult] = useState<SessionRecord | null>(null);
   const cameraPermission = useMediaPermissionPreflight({
-    active: phase === 'menu' && handControlEnabled,
+    active: phase === 'menu' && controlMode === 'mediapipe',
     video: true,
   });
   const canRetryCameraPermission = CanRetryMediaPermission(cameraPermission.status);
@@ -421,9 +422,11 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     { label: labels.duration, value: `${durationSec}s` },
     { label: labels.hp, value: maxHp },
     { label: labels.shieldSize, value: `${shieldSizePercent}%` },
-    { label: labels.handControl, value: handControlEnabled ? t('common.on') : t('common.off') },
-    { label: labels.hand, value: FormatHandChoice(handChoice, labels) },
-  ], [difficulty, durationSec, handChoice, handControlEnabled, labels, maxHp, shieldSizePercent, t]);
+    { label: labels.controlMode, value: FormatControlMode(controlMode, labels) },
+    ...(controlMode === 'mediapipe'
+      ? [{ label: labels.hand, value: FormatHandChoice(handChoice, labels) }]
+      : []),
+  ], [controlMode, difficulty, durationSec, handChoice, labels, maxHp, shieldSizePercent]);
 
   const setPhase = useCallback((nextPhase: GamePhase) => {
     phaseRef.current = nextPhase;
@@ -436,10 +439,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       durationSec,
       maxHp,
       shieldSizePercent,
-      handControlEnabled,
+      controlMode,
       handChoice,
     };
-  }, [difficulty, durationSec, handChoice, handControlEnabled, maxHp, shieldSizePercent]);
+  }, [controlMode, difficulty, durationSec, handChoice, maxHp, shieldSizePercent]);
 
   useEffect(() => {
     const host = jsPsychHostRef.current;
@@ -458,12 +461,15 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   }, []);
 
   useEffect(() => {
-    if (cameraPermission.status === 'unsupported') {
+    if (controlMode !== 'mediapipe') {
+      setVisionError('');
+      setShowVisionError(false);
+    } else if (cameraPermission.status === 'unsupported') {
       setVisionError(labels.unsupported);
     } else if (cameraPermission.status === 'denied' || cameraPermission.status === 'error') {
       setVisionError(labels.permission);
     }
-  }, [cameraPermission.status, labels.permission, labels.unsupported]);
+  }, [cameraPermission.status, controlMode, labels.permission, labels.unsupported]);
 
   const stopVision = useCallback(() => {
     if (animationFrameRef.current !== null) {
@@ -500,8 +506,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       Duration_Seconds: config.durationSec,
       Starting_HP: config.maxHp,
       Shield_Size_Percent: config.shieldSizePercent,
-      Hand_Control_Enabled: config.handControlEnabled,
-      Tracking_Hand: config.handChoice,
+      Control_Mode: config.controlMode,
+      Tracking_Hand: config.controlMode === 'mediapipe' ? config.handChoice : null,
       Total_Duration_Seconds: totalDuration,
       Final_HP: metrics.hp,
       Score: metrics.score,
@@ -532,7 +538,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         Duration_Seconds: record.Duration_Seconds,
         Starting_HP: record.Starting_HP,
         Shield_Size_Percent: record.Shield_Size_Percent,
-        Hand_Control_Enabled: record.Hand_Control_Enabled,
+        Control_Mode: record.Control_Mode,
         Tracking_Hand: record.Tracking_Hand,
         Total_Duration_Seconds: record.Total_Duration_Seconds,
         Final_HP: record.Final_HP,
@@ -559,6 +565,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       ...CreateEmptyMetrics(config.maxHp),
       startedAt: performance.now(),
       lastTickAt: performance.now(),
+      lastControlSource: activeControlModeRef.current,
     };
     resultRecordsRef.current = [];
     shieldAngleRef.current = -Math.PI / 2;
@@ -586,11 +593,9 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       if (selection) {
         const point = GetHandCursorPoint(selection.landmarks, rect.width, rect.height);
         handRef.current = { x: point.x, y: point.y, visible: true, lastSeenAt: now };
-        if (now - lastManualControlAtRef.current > manualControlGraceMs) {
-          const layout = GetShieldLayout(rect.width, rect.height, configRef.current.shieldSizePercent, shieldAngleRef.current);
-          shieldAngleRef.current = Math.atan2(point.y - layout.shipY, point.x - layout.shipX);
-          metricsRef.current.lastControlSource = 'hand';
-        }
+        const layout = GetShieldLayout(rect.width, rect.height, configRef.current.shieldSizePercent, shieldAngleRef.current);
+        shieldAngleRef.current = Math.atan2(point.y - layout.shipY, point.x - layout.shipX);
+        metricsRef.current.lastControlSource = 'mediapipe';
       } else if (now - handRef.current.lastSeenAt > trackingGraceMs) {
         handRef.current = { ...handRef.current, visible: false };
       }
@@ -598,6 +603,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       console.warn('Hand detection failed for asteroid shield.', error);
       setVisionError(labels.initialization);
       setShowVisionError(true);
+      activeControlModeRef.current = 'mouse';
+      metricsRef.current.lastControlSource = 'mouse';
       stopVision();
     }
   }, [labels.initialization, stopVision]);
@@ -637,7 +644,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
           }
         }
 
-        if (!configRef.current.handControlEnabled) {
+        if (configRef.current.controlMode === 'mouse') {
+          activeControlModeRef.current = 'mouse';
           beginPlaying();
           return;
         }
@@ -645,6 +653,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         if (!navigator.mediaDevices?.getUserMedia) {
           setVisionError(labels.unsupported);
           setShowVisionError(true);
+          activeControlModeRef.current = 'mouse';
           beginPlaying();
           return;
         }
@@ -667,6 +676,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             if (!mountedRef.current || cameraStreamRef.current !== stream) return;
             setVisionError(labels.disconnected);
             setShowVisionError(true);
+            activeControlModeRef.current = 'mouse';
+            metricsRef.current.lastControlSource = 'mouse';
             stopVision();
           }, { once: true });
 
@@ -695,6 +706,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             return;
           }
           handLandmarkerRef.current = landmarker;
+          activeControlModeRef.current = 'mediapipe';
           setIsHandTrackingActive(true);
           beginPlaying();
           animationFrameRef.current = window.requestAnimationFrame(handleHandFrame);
@@ -704,6 +716,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             ? labels.permission
             : labels.initialization);
           setShowVisionError(true);
+          activeControlModeRef.current = 'mouse';
           stopVision();
           beginPlaying();
         }
@@ -766,7 +779,6 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
           metricsRef,
           configRef,
           shieldAngleRef,
-          keysRef,
           resultRecordsRef,
           onSuccess: () => PlaySuccessSound(jsPsychRef),
           onFailure: () => PlayFailureSound(jsPsychRef),
@@ -809,11 +821,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const host = pixiHostRef.current;
     if (!host) return;
     const updateFromPointer = (event: PointerEvent) => {
-      if (phaseRef.current !== 'playing') return;
+      if (phaseRef.current !== 'playing' || activeControlModeRef.current !== 'mouse') return;
       const rect = host.getBoundingClientRect();
       const layout = GetShieldLayout(rect.width, rect.height, configRef.current.shieldSizePercent, shieldAngleRef.current);
       shieldAngleRef.current = Math.atan2(event.clientY - rect.top - layout.shipY, event.clientX - rect.left - layout.shipX);
-      lastManualControlAtRef.current = performance.now();
       metricsRef.current.lastControlSource = 'mouse';
     };
     host.addEventListener('pointerdown', updateFromPointer);
@@ -821,33 +832,6 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     return () => {
       host.removeEventListener('pointerdown', updateFromPointer);
       host.removeEventListener('pointermove', updateFromPointer);
-    };
-  }, []);
-
-  useEffect(() => {
-    const setKey = (key: string, pressed: boolean) => {
-      if (key === 'ArrowUp') keysRef.current.up = pressed;
-      else if (key === 'ArrowDown') keysRef.current.down = pressed;
-      else if (key === 'ArrowLeft') keysRef.current.left = pressed;
-      else if (key === 'ArrowRight') keysRef.current.right = pressed;
-      else return false;
-      return true;
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!setKey(event.key, true)) return;
-      if (phaseRef.current === 'playing') event.preventDefault();
-      lastManualControlAtRef.current = performance.now();
-      metricsRef.current.lastControlSource = 'keyboard';
-    };
-    const onKeyUp = (event: KeyboardEvent) => {
-      if (!setKey(event.key, false)) return;
-      if (phaseRef.current === 'playing') event.preventDefault();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
     };
   }, []);
 
@@ -874,7 +858,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             actions={(
               <TrainingConfigNavigationActions
                 cancelLabel={t('training.cancel')}
-                loading={handControlEnabled && (cameraPermission.status === 'idle' || cameraPermission.status === 'requesting')}
+                loading={controlMode === 'mediapipe' && (cameraPermission.status === 'idle' || cameraPermission.status === 'requesting')}
                 nextLabel={t('training.rules')}
                 onCancel={exitGame}
                 onNext={() => setPhase('rules')}
@@ -974,51 +958,55 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             </TrainingConfigSection>
 
             <TrainingConfigSection
-              title={labels.handControl}
-              description={labels.handControlDesc}
-              value={handControlEnabled ? t('common.on') : t('common.off')}
+              title={labels.controlMode}
+              description={labels.controlModeDesc}
+              value={FormatControlMode(controlMode, labels)}
             >
               <TrainingConfigOptionGroup columns={2}>
                 <button
-                  className={`training-option ${handControlEnabled ? 'active' : ''}`}
+                  className={`training-option ${controlMode === 'mouse' ? 'active' : ''}`}
                   type="button"
-                  onClick={() => setHandControlEnabled(true)}
+                  onClick={() => setControlMode('mouse')}
                 >
-                  <span className="training-option-title">{t('common.on')}</span>
+                  <span className="training-option-title">{labels.mouseControl}</span>
                 </button>
                 <button
-                  className={`training-option asteroid-shield-hand-control-off ${!handControlEnabled ? 'active' : ''}`}
+                  className={`training-option ${controlMode === 'mediapipe' ? 'active' : ''}`}
                   type="button"
-                  onClick={() => setHandControlEnabled(false)}
+                  onClick={() => setControlMode('mediapipe')}
                 >
-                  <span className="training-option-title">{t('common.off')}</span>
+                  <span className="training-option-title">{labels.mediaPipeControl}</span>
                 </button>
               </TrainingConfigOptionGroup>
             </TrainingConfigSection>
 
-            <TrainingConfigSection
-              title={labels.hand}
-              description={labels.handDesc}
-              value={FormatHandChoice(handChoice, labels)}
-            >
-              <TrainingConfigOptionGroup columns={3}>
-                {handChoices.map((value) => (
-                  <button
-                    className={`training-option ${handChoice === value ? 'active' : ''}`}
-                    key={value}
-                    type="button"
-                    onClick={() => setHandChoice(value)}
-                  >
-                    <span className="training-option-title">{FormatHandChoice(value, labels)}</span>
-                  </button>
-                ))}
-              </TrainingConfigOptionGroup>
-            </TrainingConfigSection>
+            {controlMode === 'mediapipe' && (
+              <>
+                <TrainingConfigSection
+                  title={labels.hand}
+                  description={labels.handDesc}
+                  value={FormatHandChoice(handChoice, labels)}
+                >
+                  <TrainingConfigOptionGroup columns={3}>
+                    {handChoices.map((value) => (
+                      <button
+                        className={`training-option ${handChoice === value ? 'active' : ''}`}
+                        key={value}
+                        type="button"
+                        onClick={() => setHandChoice(value)}
+                      >
+                        <span className="training-option-title">{FormatHandChoice(value, labels)}</span>
+                      </button>
+                    ))}
+                  </TrainingConfigOptionGroup>
+                </TrainingConfigSection>
 
-            <TrainingConfigNotice
-              title={labels.privacyTitle}
-              description={labels.privacyDesc}
-            />
+                <TrainingConfigNotice
+                  title={labels.privacyTitle}
+                  description={labels.privacyDesc}
+                />
+              </>
+            )}
           </TrainingConfigPanel>
         </div>
       )}
@@ -1139,7 +1127,7 @@ function CreateEmptyMetrics(maxHp: number): SessionMetrics {
     spawned: 0,
     nextId: 1,
     speedLevel: 1,
-    lastControlSource: 'none',
+    lastControlSource: 'mouse',
   };
 }
 
@@ -1200,7 +1188,6 @@ function UpdateAsteroidGame({
   metricsRef,
   configRef,
   shieldAngleRef,
-  keysRef,
   resultRecordsRef,
   onSuccess,
   onFailure,
@@ -1216,12 +1203,11 @@ function UpdateAsteroidGame({
       durationSec: number;
       maxHp: number;
       shieldSizePercent: number;
-      handControlEnabled: boolean;
+      controlMode: ControlMode;
       handChoice: HandChoice;
     };
   };
   shieldAngleRef: { current: number };
-  keysRef: { current: { up: boolean; down: boolean; left: boolean; right: boolean } };
   resultRecordsRef: { current: ThreatRecord[] };
   onSuccess: () => void;
   onFailure: () => void;
@@ -1234,7 +1220,6 @@ function UpdateAsteroidGame({
   const dt = Math.min(ticker.deltaMS / 1000, 0.05);
   metrics.elapsedMs += dt * 1000;
   metrics.spawnTimerSec += dt;
-  ApplyKeyboardShieldControl(keysRef.current, shieldAngleRef, metrics);
   const layout = UpdateSceneLayout(app, scene, config.shieldSizePercent, shieldAngleRef.current);
   scene.background.tilePosition.y += dt * (10 + metrics.speedLevel * 3);
 
@@ -1368,18 +1353,6 @@ function GetShieldLayout(width: number, height: number, shieldSizePercent: numbe
     shieldY: shipY + Math.sin(shieldAngle) * shieldOffset,
     shieldRadius,
   };
-}
-
-function ApplyKeyboardShieldControl(
-  keys: { up: boolean; down: boolean; left: boolean; right: boolean },
-  shieldAngleRef: { current: number },
-  metrics: SessionMetrics,
-): void {
-  const x = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-  const y = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
-  if (x === 0 && y === 0) return;
-  shieldAngleRef.current = Math.atan2(y, x);
-  metrics.lastControlSource = 'keyboard';
 }
 
 function SpawnThreat(
@@ -1576,6 +1549,10 @@ function FormatHandChoice(handChoice: HandChoice, labels: (typeof copy)['zh'] | 
   if (handChoice === 'left') return labels.handLeft;
   if (handChoice === 'right') return labels.handRight;
   return labels.handAny;
+}
+
+function FormatControlMode(controlMode: ControlMode, labels: (typeof copy)['zh'] | (typeof copy)['en']): string {
+  return controlMode === 'mediapipe' ? labels.mediaPipeControl : labels.mouseControl;
 }
 
 function ResizePixiAppToElement(app: Application, element: HTMLElement | null): void {

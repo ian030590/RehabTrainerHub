@@ -1,5 +1,5 @@
 // Hub-owned language-neutral cognitive runtimes.
-import { Application, Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js';
+import { Application, Container, Graphics } from 'pixi.js';
 import type { TFunction } from '../types';
 import type {
   CognitiveGameState,
@@ -13,12 +13,12 @@ import type {
   NumberGridState,
   ReferenceGameId,
   ResultStats,
-  SetCard,
-  SetGameState,
   SimonState,
-  SokobanState,
+  SimonTapResult,
+  SimonTrialRecord,
   TicTacToeState,
 } from './types';
+import { CreateSimonState, HandleSimonTap } from './trialRecords';
 import {
   AddText,
   GetGridLayout,
@@ -43,8 +43,6 @@ const languageNeutralKinds: readonly LanguageNeutralGameKind[] = [
   'connect4',
   'dots-and-boxes',
   'hex',
-  'set-game',
-  'sokoban',
   'maze',
 ];
 
@@ -57,15 +55,12 @@ const originalBlue = 0x3498db;
 const originalBlueDark = 0x2980b9;
 const originalBlueEdge = 0x2471a3;
 const originalGreen = 0x2ecc71;
-const originalGreenDark = 0x27ae60;
 const originalRed = 0xe74c3c;
 const originalRedDark = 0xc0392b;
 const originalRedEdge = 0xa93226;
 const originalYellow = 0xf1c40f;
 const originalConnect4Yellow = 0xfacc15;
 const originalConnect4Red = 0xdc143c;
-const originalPurple = 0x9b59b6;
-const originalBoardDark = 0x34495e;
 const originalText = 0x2c3e50;
 const originalLight = 0xecf0f1;
 const originalLightMuted = 0xf5f5f5;
@@ -73,9 +68,12 @@ const originalBorder = 0xbdc3c7;
 const originalGrayBorder = 0xdee2e6;
 const playerColor = originalBlue;
 const aiColor = originalRed;
-const setColors = [originalRed, originalGreenDark, originalPurple];
 const empty = 0;
 const dotsVerticalOffset = 1300;
+const aiTurnDelaySeconds = 1;
+const simonLightSeconds = 0.36;
+const simonLightGapSeconds = 0.14;
+const simonClickAnimationSeconds = 0.18;
 const directionByKey: Partial<Record<string, GridDirection>> = {
   ArrowUp: { dx: 0, dy: -1 },
   ArrowDown: { dx: 0, dy: 1 },
@@ -83,47 +81,7 @@ const directionByKey: Partial<Record<string, GridDirection>> = {
   ArrowRight: { dx: 1, dy: 0 },
 };
 
-interface SokobanAssetTextures {
-  player: Texture;
-  crate: Texture;
-  target: Texture;
-}
-
-const sokobanAssetBaseUrl = `${import.meta.env.BASE_URL}assets/sokoban`;
-let sokobanAssetTextures: SokobanAssetTextures | null = null;
-let sokobanAssetTexturePromise: Promise<SokobanAssetTextures> | null = null;
-
-export async function LoadSokobanAssetTextures(): Promise<void> {
-  if (sokobanAssetTextures) return;
-  sokobanAssetTexturePromise ??= Promise.all([
-    Assets.load<Texture>(`${sokobanAssetBaseUrl}/player.png`),
-    Assets.load<Texture>(`${sokobanAssetBaseUrl}/crate.png`),
-    Assets.load<Texture>(`${sokobanAssetBaseUrl}/target.png`),
-  ]).then(([player, crate, target]) => ({ player, crate, target }));
-  sokobanAssetTextures = await sokobanAssetTexturePromise;
-}
-
 type GridDirection = { dx: number; dy: number };
-
-const sokobanLevels = [
-  ['WWWWWW', 'W....W', 'W.B..W', 'W.T..W', 'W..P.W', 'WWWWWW'],
-  ['WWWWWWWW', 'W......W', 'W.B..B.W', 'W..TT..W', 'W...P..W', 'W......W', 'WWWWWWWW'],
-  ['WWWWWWWW', 'WT....TW', 'W.WBBW.W', 'W..P...W', 'W......W', 'WWWWWWWW'],
-  ['WWWWWWWWW', 'W.......W', 'W..BBB..W', 'W..TTT..W', 'W...P...W', 'W.......W', 'WWWWWWWWW'],
-  ['WWWWWWWW', 'W......W', 'W.T.B..W', 'W.TWBP.W', 'W......W', 'WWWWWWWW'],
-  ['WWWWWWWWW', 'W...W...W', 'W.B.W.T.W', 'W.B...T.W', 'W.P.W...W', 'WWWWWWWWW'],
-  ['WWWWWWWW', 'WTT....W', 'WB.B...W', 'W......W', 'W...P..W', 'WWWWWWWW'],
-  ['WWWWWWWWW', 'W...T...W', 'W..T.T..W', 'W.B.B.B.W', 'W...P...W', 'W.......W', 'WWWWWWWWW'],
-  ['WWWWWWWWWW', 'W........W', 'W.BWWWB..W', 'W.TW.WT..W', 'W..W.W...W', 'W...P....W', 'WWWWWWWWWW'],
-] as const;
-
-const sokobanLevelChoices: Record<Difficulty, number[]> = {
-  Beginner: [0, 1, 4],
-  Intermediate: [2, 3, 5, 6],
-  Advanced: [5, 7, 8],
-};
-
-const lastSokobanLevelByDifficulty: Partial<Record<Difficulty, number>> = {};
 const lastMazeSignatureByDifficulty: Partial<Record<Difficulty, string>> = {};
 
 export function IsLanguageNeutralGameState(state: CognitiveGameState): state is LanguageNeutralGameState {
@@ -133,12 +91,13 @@ export function IsLanguageNeutralGameState(state: CognitiveGameState): state is 
 export function CreateLanguageNeutralGameState(
   gameId: ReferenceGameId,
   difficulty: Difficulty,
+  simonLives = 3,
 ): LanguageNeutralGameState | null {
   switch (gameId) {
     case 'sudoku':
       return CreateMergedSudokuState(difficulty);
     case 'simon-says':
-      return CreateSimonState(difficulty);
+      return CreateSimonState(difficulty, simonLives);
     case 'tic-tac-toe':
       return CreateTicTacToeState(difficulty);
     case 'connect4':
@@ -147,10 +106,6 @@ export function CreateLanguageNeutralGameState(
       return CreateDotsAndBoxesState(difficulty);
     case 'hex':
       return CreateHexState(difficulty);
-    case 'set-game':
-      return CreateSetGameState(difficulty);
-    case 'sokoban':
-      return CreateSokobanState(difficulty);
     case 'maze':
       return CreateMazeState(difficulty);
     default:
@@ -163,7 +118,8 @@ export function HandleLanguageNeutralGameTap(
   index: number,
   elapsed: number,
   finishGame: (result: GameResult) => void,
-) {
+  recordSimonTrial?: (trial: SimonTrialRecord) => void,
+): SimonTapResult | null {
   switch (state.kind) {
     case 'sudoku':
     case 'latin-square':
@@ -171,25 +127,22 @@ export function HandleLanguageNeutralGameTap(
       HandleNumberGridTap(state, index, finishGame);
       break;
     case 'simon-says':
-      HandleSimonTap(state, index, elapsed, finishGame);
-      break;
+      {
+        const result = HandleSimonTap(state, index, elapsed);
+        if (result.trial) recordSimonTrial?.(result.trial);
+        return result;
+      }
     case 'tic-tac-toe':
-      HandleTicTacToeTap(state, index, finishGame);
+      HandleTicTacToeTap(state, index, elapsed, finishGame);
       break;
     case 'connect4':
       HandleConnect4Tap(state, index, elapsed, finishGame);
       break;
     case 'dots-and-boxes':
-      HandleDotsAndBoxesTap(state, index, finishGame);
+      HandleDotsAndBoxesTap(state, index, elapsed, finishGame);
       break;
     case 'hex':
-      HandleHexTap(state, index, finishGame);
-      break;
-    case 'set-game':
-      HandleSetTap(state, index, finishGame);
-      break;
-    case 'sokoban':
-      HandleSokobanTap(state, index, finishGame);
+      HandleHexTap(state, index, elapsed, finishGame);
       break;
     case 'maze':
       HandleMazeTap(state, index, finishGame);
@@ -197,6 +150,7 @@ export function HandleLanguageNeutralGameTap(
     default:
       break;
   }
+  return null;
 }
 
 export function HandleLanguageNeutralGameKey(
@@ -206,10 +160,6 @@ export function HandleLanguageNeutralGameKey(
 ) {
   const direction = directionByKey[key];
   if (!direction) return false;
-  if (state.kind === 'sokoban') {
-    MoveSokoban(state, direction, finishGame);
-    return true;
-  }
   if (state.kind === 'maze') {
     MoveMaze(state, direction, finishGame);
     return true;
@@ -222,15 +172,56 @@ export function UpdateLanguageNeutralTimedState(
   elapsed: number,
   render: () => void,
   finishGame?: (result: GameResult) => void,
+  onSimonInputStart?: () => void,
 ) {
+  if (state.kind === 'tic-tac-toe') {
+    if (state.aiMoveAt !== null && elapsed >= state.aiMoveAt) {
+      state.aiMoveAt = null;
+      TakeTicTacToeAiTurn(state, finishGame);
+      render();
+    }
+    return;
+  }
   if (state.kind === 'connect4') {
     const hadDrops = state.drops.length > 0;
     state.drops = state.drops.filter((drop) => elapsed - drop.startedAt < 0.45);
-    if (hadDrops || state.pendingResult) render();
+    let tookAiTurn = false;
+    if (state.aiMoveAt !== null && elapsed >= state.aiMoveAt) {
+      state.aiMoveAt = null;
+      TakeConnect4AiTurn(state, elapsed, finishGame);
+      tookAiTurn = true;
+    }
+    if (hadDrops || tookAiTurn || state.pendingResult) render();
     if (state.pendingResult && elapsed >= state.pendingResult.finishAt) finishGame?.(state.pendingResult.result);
     return;
   }
-  if (state.kind !== 'simon-says' || state.status !== 'showing') return;
+  if (state.kind === 'dots-and-boxes') {
+    if (state.aiMoveAt !== null && elapsed >= state.aiMoveAt) {
+      state.aiMoveAt = null;
+      TakeDotsAndBoxesAiTurn(state, elapsed, finishGame);
+      render();
+    }
+    return;
+  }
+  if (state.kind === 'hex') {
+    if (state.aiMoveAt !== null && elapsed >= state.aiMoveAt) {
+      state.aiMoveAt = null;
+      TakeHexAiTurn(state, finishGame);
+      render();
+    }
+    return;
+  }
+  if (state.kind !== 'simon-says') return;
+  if (state.pressedStartedAt !== null) {
+    if (elapsed - state.pressedStartedAt < simonClickAnimationSeconds) {
+      render();
+    } else {
+      state.pressedIndex = null;
+      state.pressedStartedAt = null;
+      render();
+    }
+  }
+  if (state.status !== 'showing') return;
   if (state.litIndex !== null && elapsed < state.nextStepAt) {
     render();
     return;
@@ -238,19 +229,23 @@ export function UpdateLanguageNeutralTimedState(
   if (elapsed < state.nextStepAt) return;
   if (state.litIndex !== null) {
     state.litIndex = null;
-    state.nextStepAt = elapsed + 0.2;
+    state.litStartedAt = null;
+    state.nextStepAt = elapsed + simonLightGapSeconds;
     render();
     return;
   }
   if (state.showIndex < state.sequence.length) {
     state.litIndex = state.sequence[state.showIndex];
+    state.litStartedAt = elapsed;
     state.showIndex += 1;
-    state.nextStepAt = elapsed + 0.55;
+    state.nextStepAt = elapsed + simonLightSeconds;
     render();
     return;
   }
   state.status = 'input';
   state.inputIndex = 0;
+  state.attemptStartedAt = elapsed;
+  onSimonInputStart?.();
   render();
 }
 
@@ -261,7 +256,7 @@ export function IsLanguageNeutralAutoSuccess(state: LanguageNeutralGameState) {
     case 'magic-square':
       return IsNumberGridSolved(state);
     case 'simon-says':
-      return state.sequence.length >= state.targetRounds && state.status === 'input';
+      return state.trials.some((trial) => trial.correct && trial.memoryLength >= state.targetRounds);
     case 'tic-tac-toe':
       return CheckMarkWin(state.board, state.size, state.winLength, 'X');
     case 'connect4':
@@ -270,10 +265,6 @@ export function IsLanguageNeutralAutoSuccess(state: LanguageNeutralGameState) {
       return IsDotsBoardFull(state) && state.playerScore > state.aiScore;
     case 'hex':
       return HasHexPath(state, 1);
-    case 'set-game':
-      return state.found >= state.targetSets;
-    case 'sokoban':
-      return IsSokobanSolved(state);
     case 'maze':
       return state.current === state.end;
     default:
@@ -288,15 +279,24 @@ export function BuildLanguageNeutralResultStats(state: LanguageNeutralGameState)
     case 'magic-square':
       return BuildNumberGridStats(state);
     case 'simon-says':
-      return {
-        score: Math.max(0, (state.sequence.length - 1) * 120 + state.moves * 5 - state.errors * 40),
-        accuracy: state.moves + state.errors > 0 ? Math.round((state.moves / (state.moves + state.errors)) * 100) : 0,
-        moves: state.moves,
-        attempts: state.moves + state.errors,
-        success: Math.max(0, state.sequence.length - 1),
-        errors: state.errors,
-        details: { targetRounds: state.targetRounds, currentRound: state.sequence.length },
-      };
+      {
+        const successfulRounds = state.trials.filter((trial) => trial.correct).length;
+        const totalRounds = state.trials.length;
+        return {
+          score: Math.max(0, successfulRounds * 120 + state.moves * 5 - state.errors * 40),
+          accuracy: totalRounds > 0 ? Math.round((successfulRounds / totalRounds) * 100) : 0,
+          moves: state.moves,
+          attempts: totalRounds,
+          success: successfulRounds,
+          errors: state.errors,
+          details: {
+            targetRounds: state.targetRounds,
+            currentRound: state.sequence.length,
+            maxLives: state.maxLives,
+            livesRemaining: state.lives,
+          },
+        };
+      }
     case 'tic-tac-toe':
       return BuildBoardAiStats(state.moves, state.aiMoves, state.errors, CheckMarkWin(state.board, state.size, state.winLength, 'X'), { size: state.size, winLength: state.winLength });
     case 'connect4':
@@ -313,26 +313,6 @@ export function BuildLanguageNeutralResultStats(state: LanguageNeutralGameState)
       };
     case 'hex':
       return BuildBoardAiStats(state.moves, state.aiMoves, state.errors, HasHexPath(state, 1), { size: state.size });
-    case 'set-game':
-      return {
-        score: Math.max(0, state.found * 160 - state.errors * 35),
-        accuracy: state.moves > 0 ? Math.round((state.found / state.moves) * 100) : 0,
-        moves: state.moves,
-        attempts: state.moves,
-        success: state.found,
-        errors: state.errors,
-        details: { targetSets: state.targetSets, cardsRemaining: state.deck.length },
-      };
-    case 'sokoban':
-      return {
-        score: Math.max(0, CountSolvedBoxes(state) * 150 - state.pushes * 4 - state.errors * 25),
-        accuracy: state.moves + state.errors > 0 ? Math.round((state.moves / (state.moves + state.errors)) * 100) : 0,
-        moves: state.moves,
-        attempts: state.moves + state.errors,
-        success: CountSolvedBoxes(state),
-        errors: state.errors,
-        details: { pushes: state.pushes, boxes: state.boxes.length },
-      };
     case 'maze':
       return {
         score: Math.max(0, 1000 - state.moves * 8 - state.errors * 25),
@@ -362,10 +342,6 @@ export function GetLanguageNeutralFeedbackCounts(state: LanguageNeutralGameState
       return { success: state.moves, errors: state.errors };
     case 'dots-and-boxes':
       return { success: state.playerScore, errors: state.errors + state.aiScore };
-    case 'set-game':
-      return { success: state.found, errors: state.errors };
-    case 'sokoban':
-      return { success: CountSolvedBoxes(state), errors: state.errors };
     case 'maze':
       return { success: state.moves, errors: state.errors };
     default:
@@ -400,12 +376,6 @@ export function DrawLanguageNeutralGame(
       break;
     case 'hex':
       DrawHex(app, state, onTap, t);
-      break;
-    case 'set-game':
-      DrawSetGame(app, state, onTap, t);
-      break;
-    case 'sokoban':
-      DrawSokoban(app, state, onTap, t);
       break;
     case 'maze':
       DrawMaze(app, state, onTap, t, elapsed);
@@ -538,42 +508,6 @@ function DrawNumberGridLines(app: Application, startX: number, startY: number, c
   app.stage.addChild(major);
 }
 
-function CreateSimonState(difficulty: Difficulty): SimonState {
-  return {
-    kind: 'simon-says',
-    sequence: [Math.floor(Math.random() * 4)],
-    inputIndex: 0,
-    litIndex: null,
-    showIndex: 0,
-    nextStepAt: 0.45,
-    targetRounds: [5, 7, 9][DifficultyIndex(difficulty)],
-    status: 'showing',
-    moves: 0,
-    errors: 0,
-  };
-}
-
-function HandleSimonTap(state: SimonState, index: number, elapsed: number, finishGame: (result: GameResult) => void) {
-  if (state.status !== 'input' || index < 0 || index > 3) return;
-  if (state.sequence[state.inputIndex] !== index) {
-    state.errors += 1;
-    finishGame('Defeat');
-    return;
-  }
-  state.moves += 1;
-  state.inputIndex += 1;
-  if (state.inputIndex < state.sequence.length) return;
-  if (state.sequence.length >= state.targetRounds) {
-    finishGame('Victory');
-    return;
-  }
-  state.sequence.push(Math.floor(Math.random() * 4));
-  state.status = 'showing';
-  state.showIndex = 0;
-  state.litIndex = null;
-  state.nextStepAt = elapsed + 0.55;
-}
-
 function DrawSimon(app: Application, state: SimonState, elapsed: number, onTap: (index: number) => void, _t: TFunction) {
   const boardMax = GetResponsiveBoardMaxSize(app);
   const boardSize = Math.floor(Math.min(IsMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 320, boardMax.width, boardMax.height));
@@ -599,6 +533,10 @@ function DrawSimon(app: Application, state: SimonState, elapsed: number, onTap: 
       button.corner,
       state.litIndex === index ? button.activeColor : button.color,
       state.litIndex === index,
+      state.litStartedAt,
+      state.pressedIndex === index,
+      state.pressedStartedAt,
+      state.status === 'input',
       elapsed,
       index,
       onTap,
@@ -618,13 +556,15 @@ function CreateTicTacToeState(difficulty: Difficulty): TicTacToeState {
     size,
     winLength: diff === 2 ? 4 : 3,
     board: Array.from({ length: size * size }, () => null),
+    aiMoveAt: null,
     moves: 0,
     aiMoves: 0,
     errors: 0,
   };
 }
 
-function HandleTicTacToeTap(state: TicTacToeState, index: number, finishGame: (result: GameResult) => void) {
+function HandleTicTacToeTap(state: TicTacToeState, index: number, elapsed: number, finishGame: (result: GameResult) => void) {
+  if (state.aiMoveAt !== null) return;
   if (state.board[index]) {
     state.errors += 1;
     return;
@@ -639,13 +579,20 @@ function HandleTicTacToeTap(state: TicTacToeState, index: number, finishGame: (r
     finishGame('Draw');
     return;
   }
+  state.aiMoveAt = elapsed + aiTurnDelaySeconds;
+}
+
+function TakeTicTacToeAiTurn(state: TicTacToeState, finishGame?: (result: GameResult) => void) {
   const aiMove = ChooseTicTacToeMove(state);
   if (aiMove !== null) {
     state.board[aiMove] = 'O';
     state.aiMoves += 1;
   }
-  if (CheckMarkWin(state.board, state.size, state.winLength, 'O')) finishGame('Defeat');
-  if (state.board.every(Boolean)) finishGame('Draw');
+  if (CheckMarkWin(state.board, state.size, state.winLength, 'O')) {
+    finishGame?.('Defeat');
+    return;
+  }
+  if (state.board.every(Boolean)) finishGame?.('Draw');
 }
 
 function DrawTicTacToe(app: Application, state: TicTacToeState, onTap: (index: number) => void, _t: TFunction) {
@@ -689,6 +636,7 @@ function CreateConnect4State(): Connect4State {
     drops: [],
     winningLine: [],
     pendingResult: null,
+    aiMoveAt: null,
     moves: 0,
     aiMoves: 0,
     errors: 0,
@@ -696,7 +644,7 @@ function CreateConnect4State(): Connect4State {
 }
 
 function HandleConnect4Tap(state: Connect4State, index: number, elapsed: number, finishGame: (result: GameResult) => void) {
-  if (state.drops.length > 0 || state.pendingResult) return;
+  if (state.drops.length > 0 || state.pendingResult || state.aiMoveAt !== null) return;
   const col = index % state.cols;
   const playerRow = DropConnect4Disc(state, col, 'P');
   if (playerRow === null) {
@@ -710,6 +658,18 @@ function HandleConnect4Tap(state: Connect4State, index: number, elapsed: number,
     QueueConnect4Result(state, 'Victory', elapsed, playerLine);
     return;
   }
+  if (state.board.every(Boolean)) {
+    finishGame('Defeat');
+    return;
+  }
+  state.aiMoveAt = elapsed + aiTurnDelaySeconds;
+}
+
+function TakeConnect4AiTurn(
+  state: Connect4State,
+  elapsed: number,
+  finishGame?: (result: GameResult) => void,
+) {
   const aiCol = ChooseConnect4Move(state);
   if (aiCol !== null) {
     const aiRow = DropConnect4Disc(state, aiCol, 'A');
@@ -718,7 +678,7 @@ function HandleConnect4Tap(state: Connect4State, index: number, elapsed: number,
   }
   const aiLine = FindConnect4Line(state.board, state.rows, state.cols, 'A');
   if (aiLine) QueueConnect4Result(state, 'Defeat', elapsed, aiLine);
-  else if (state.board.every(Boolean)) finishGame('Defeat');
+  else if (state.board.every(Boolean)) finishGame?.('Defeat');
 }
 
 function DrawConnect4(app: Application, state: Connect4State, onTap: (index: number) => void, _t: TFunction, elapsed = 0) {
@@ -780,6 +740,7 @@ function CreateDotsAndBoxesState(difficulty: Difficulty): DotsAndBoxesState {
     hLines: Array.from({ length: size * (size - 1) }, () => null),
     vLines: Array.from({ length: (size - 1) * size }, () => null),
     boxes: Array.from({ length: (size - 1) * (size - 1) }, () => null),
+    aiMoveAt: null,
     moves: 0,
     aiMoves: 0,
     errors: 0,
@@ -788,7 +749,8 @@ function CreateDotsAndBoxesState(difficulty: Difficulty): DotsAndBoxesState {
   };
 }
 
-function HandleDotsAndBoxesTap(state: DotsAndBoxesState, index: number, finishGame: (result: GameResult) => void) {
+function HandleDotsAndBoxesTap(state: DotsAndBoxesState, index: number, elapsed: number, finishGame: (result: GameResult) => void) {
+  if (state.aiMoveAt !== null) return;
   const move = ParseDotsLineIndex(state, index);
   if (!move || IsDotsLineDrawn(state, move.horizontal, move.index)) {
     state.errors += 1;
@@ -800,20 +762,29 @@ function HandleDotsAndBoxesTap(state: DotsAndBoxesState, index: number, finishGa
   state.moves += 1;
   if (FinishDotsIfFull(state, finishGame)) return;
   if (completed > 0) return;
-  for (let turn = 0; turn < 12 && !IsDotsBoardFull(state); turn += 1) {
-    const aiMove = ChooseDotsMove(state);
-    if (!aiMove) break;
-    SetDotsLine(state, aiMove.horizontal, aiMove.index, 'A');
-    const aiCompleted = ClaimDotsBoxes(state, aiMove.horizontal, aiMove.index, 'A');
-    state.aiScore += aiCompleted;
-    state.aiMoves += 1;
-    if (FinishDotsIfFull(state, finishGame) || aiCompleted === 0) break;
-  }
+  state.aiMoveAt = elapsed + aiTurnDelaySeconds;
+}
+
+function TakeDotsAndBoxesAiTurn(
+  state: DotsAndBoxesState,
+  elapsed: number,
+  finishGame?: (result: GameResult) => void,
+) {
+  if (IsDotsBoardFull(state)) return;
+  const aiMove = ChooseDotsMove(state);
+  if (!aiMove) return;
+  SetDotsLine(state, aiMove.horizontal, aiMove.index, 'A');
+  const aiCompleted = ClaimDotsBoxes(state, aiMove.horizontal, aiMove.index, 'A');
+  state.aiScore += aiCompleted;
+  state.aiMoves += 1;
+  if (finishGame && FinishDotsIfFull(state, finishGame)) return;
+  if (aiCompleted > 0) state.aiMoveAt = elapsed + aiTurnDelaySeconds;
 }
 
 function DrawDotsAndBoxes(app: Application, state: DotsAndBoxesState, onTap: (index: number) => void, _t: TFunction) {
   const padding = 16;
-  const { cell, startX, startY } = GetGridLayout(app, state.size, state.size, 72, 0, padding);
+  const boardSpan = state.size - 1;
+  const { cell, startX, startY } = GetGridLayout(app, boardSpan, boardSpan, 72, 0, padding);
   const board = new Graphics();
   board.rect(
     startX - padding,
@@ -854,10 +825,11 @@ function DrawDotsAndBoxes(app: Application, state: DotsAndBoxesState, onTap: (in
 
 function CreateHexState(difficulty: Difficulty): HexState {
   const size = [5, 7, 9][DifficultyIndex(difficulty)];
-  return { kind: 'hex', size, board: Array.from({ length: size * size }, () => 0), moves: 0, aiMoves: 0, errors: 0 };
+  return { kind: 'hex', size, board: Array.from({ length: size * size }, () => 0), aiMoveAt: null, moves: 0, aiMoves: 0, errors: 0 };
 }
 
-function HandleHexTap(state: HexState, index: number, finishGame: (result: GameResult) => void) {
+function HandleHexTap(state: HexState, index: number, elapsed: number, finishGame: (result: GameResult) => void) {
+  if (state.aiMoveAt !== null) return;
   if (state.board[index] !== 0) {
     state.errors += 1;
     return;
@@ -868,22 +840,28 @@ function HandleHexTap(state: HexState, index: number, finishGame: (result: GameR
     finishGame('Victory');
     return;
   }
+  if (state.board.every(Boolean)) {
+    finishGame('Defeat');
+    return;
+  }
+  state.aiMoveAt = elapsed + aiTurnDelaySeconds;
+}
+
+function TakeHexAiTurn(state: HexState, finishGame?: (result: GameResult) => void) {
   const aiMove = ChooseHexMove(state);
   if (aiMove !== null) {
     state.board[aiMove] = 2;
     state.aiMoves += 1;
   }
-  if (HasHexPath(state, 2) || state.board.every(Boolean)) finishGame('Defeat');
+  if (HasHexPath(state, 2) || state.board.every(Boolean)) finishGame?.('Defeat');
 }
 
 function DrawHex(app: Application, state: HexState, onTap: (index: number) => void, _t: TFunction) {
   const boardMax = GetResponsiveBoardMaxSize(app);
-  const preferredRadius = IsMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 31;
   const horizontalFactor = (state.size * 1.5 - 0.5) * Math.sqrt(3);
   const verticalFactor = state.size * 1.5 + 0.5;
   const edgePadding = 24;
   const radius = Math.floor(Math.max(8, Math.min(
-    preferredRadius,
     (boardMax.width - edgePadding) / horizontalFactor,
     (boardMax.height - edgePadding) / verticalFactor,
   )));
@@ -914,224 +892,6 @@ function DrawHex(app: Application, state: HexState, onTap: (index: number) => vo
     node.addChild(g);
     app.stage.addChild(node);
   });
-}
-
-function CreateSetGameState(difficulty: Difficulty): SetGameState {
-  const deck = Shuffle(CreateSetDeck());
-  const board = deck.splice(0, 12);
-  const state: SetGameState = {
-    kind: 'set-game',
-    deck,
-    board,
-    selected: [],
-    found: 0,
-    targetSets: [4, 6, 8][DifficultyIndex(difficulty)],
-    moves: 0,
-    errors: 0,
-  };
-  EnsureSetAvailable(state);
-  return state;
-}
-
-function HandleSetTap(state: SetGameState, index: number, finishGame: (result: GameResult) => void) {
-  if (!state.board[index]) return;
-  state.selected = state.selected.includes(index)
-    ? state.selected.filter((selected) => selected !== index)
-    : [...state.selected, index];
-  if (state.selected.length !== 3) return;
-  state.moves += 1;
-  const cards = state.selected.map((selected) => state.board[selected]);
-  if (IsValidSet(cards[0], cards[1], cards[2])) {
-    state.found += 1;
-    [...state.selected].sort((a, b) => b - a).forEach((selected) => {
-      const next = state.deck.shift();
-      if (next) state.board[selected] = next;
-      else state.board.splice(selected, 1);
-    });
-    state.selected = [];
-    EnsureSetAvailable(state);
-    if (state.found >= state.targetSets) finishGame('Victory');
-    return;
-  }
-  state.errors += 1;
-  state.selected = [];
-}
-
-function DrawSetGame(app: Application, state: SetGameState, onTap: (index: number) => void, _t: TFunction) {
-  const cols = 4;
-  const rows = Math.ceil(state.board.length / cols);
-  const gap = 10;
-  const padding = 15;
-  const boardMax = GetResponsiveBoardMaxSize(app);
-  const preferredCardWidth = IsMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 120;
-  const availableWidth = boardMax.width - padding * 2 - gap * (cols - 1);
-  const availableHeight = boardMax.height - padding * 2 - gap * (rows - 1);
-  const cardWidth = Math.floor(Math.min(preferredCardWidth, availableWidth / cols, (availableHeight / rows) * 1.5));
-  const cardHeight = Math.floor(cardWidth * (80 / 120));
-  const boardWidth = cols * cardWidth + (cols - 1) * gap + padding * 2;
-  const boardHeight = rows * cardHeight + (rows - 1) * gap + padding * 2;
-  const startX = (app.renderer.width - boardWidth) / 2 + padding;
-  const startY = (app.renderer.height - boardHeight) / 2 + padding;
-  const board = new Graphics();
-  board.rect(startX - padding, startY - padding, boardWidth, boardHeight).fill(originalBoardDark);
-  app.stage.addChild(board);
-
-  state.board.forEach((card, index) => {
-    const row = Math.floor(index / cols);
-    const col = index % cols;
-    const selected = state.selected.includes(index);
-    const node = InteractiveNode(onTap, index);
-    node.x = startX + col * (cardWidth + gap);
-    node.y = startY + row * (cardHeight + gap);
-    const g = new Graphics();
-    g.rect(0, 0, cardWidth, cardHeight)
-      .fill(0xffffff)
-      .stroke({ color: selected ? originalBlue : originalBorder, width: 3 });
-    node.addChild(g);
-    if (selected) {
-      const selectedGlow = new Graphics();
-      selectedGlow.rect(-3, -3, cardWidth + 6, cardHeight + 6).stroke({ color: originalBlue, width: 3, alpha: 0.4 });
-      node.addChild(selectedGlow);
-    }
-    DrawSetCard(node, card, cardWidth, cardHeight);
-    app.stage.addChild(node);
-  });
-}
-
-function CreateSokobanState(difficulty: Difficulty): SokobanState {
-  const levelIndex = ChooseSokobanLevelIndex(difficulty);
-  const layout = sokobanLevels[levelIndex];
-  const walls: number[] = [];
-  const boxes: number[] = [];
-  const targets: number[] = [];
-  let player = 0;
-  layout.forEach((line, row) => {
-    [...line].forEach((char, col) => {
-      const index = row * line.length + col;
-      if (char === '#' || char === 'W') walls.push(index);
-      if (char === '$' || char === '*' || char === 'B' || char === 'O') boxes.push(index);
-      if (char === 'T' || char === '*' || char === 'O' || char === '+') targets.push(index);
-      if (char === '@' || char === '+' || char === 'P') player = index;
-    });
-  });
-  return { kind: 'sokoban', rows: layout.length, cols: layout[0].length, walls, boxes, targets, player, moves: 0, pushes: 0, errors: 0 };
-}
-
-function ChooseSokobanLevelIndex(difficulty: Difficulty) {
-  const choices = sokobanLevelChoices[difficulty];
-  const previous = lastSokobanLevelByDifficulty[difficulty];
-  const available = choices.filter((index) => index !== previous);
-  const picked = available[Math.floor(Math.random() * available.length)] ?? choices[0];
-  lastSokobanLevelByDifficulty[difficulty] = picked;
-  return picked;
-}
-
-function HandleSokobanTap(state: SokobanState, index: number, finishGame: (result: GameResult) => void) {
-  const playerRow = Math.floor(state.player / state.cols);
-  const playerCol = state.player % state.cols;
-  const targetRow = Math.floor(index / state.cols);
-  const targetCol = index % state.cols;
-  MoveSokoban(state, { dx: targetCol - playerCol, dy: targetRow - playerRow }, finishGame);
-}
-
-function MoveSokoban(state: SokobanState, direction: GridDirection, finishGame: (result: GameResult) => void) {
-  if (Math.abs(direction.dx) + Math.abs(direction.dy) !== 1) {
-    state.errors += 1;
-    return;
-  }
-  const row = Math.floor(state.player / state.cols);
-  const col = state.player % state.cols;
-  const nextRow = row + direction.dy;
-  const nextCol = col + direction.dx;
-  const next = nextRow * state.cols + nextCol;
-  const boxAt = state.boxes.indexOf(next);
-  if (IsSokobanBlocked(state, nextRow, nextCol)) {
-    state.errors += 1;
-    return;
-  }
-  if (boxAt >= 0) {
-    const boxNextRow = nextRow + direction.dy;
-    const boxNextCol = nextCol + direction.dx;
-    const boxNext = boxNextRow * state.cols + boxNextCol;
-    if (IsSokobanBlocked(state, boxNextRow, boxNextCol) || state.boxes.includes(boxNext)) {
-      state.errors += 1;
-      return;
-    }
-    state.boxes[boxAt] = boxNext;
-    state.pushes += 1;
-  }
-  state.player = next;
-  state.moves += 1;
-  if (IsSokobanSolved(state)) finishGame('Victory');
-}
-
-function IsSokobanBlocked(state: SokobanState, row: number, col: number) {
-  return row < 0 || row >= state.rows || col < 0 || col >= state.cols || state.walls.includes(row * state.cols + col);
-}
-
-function DrawSokoban(app: Application, state: SokobanState, onTap: (index: number) => void, _t: TFunction) {
-  const { cell, gap, startX, startY } = GetGridLayout(app, state.cols, state.rows, 50, 0);
-  const board = new Graphics();
-  board.rect(startX, startY, state.cols * cell, state.rows * cell).fill(0xf5f5dc).stroke({ color: 0x333333, width: 3 });
-  app.stage.addChild(board);
-
-  for (let index = 0; index < state.rows * state.cols; index += 1) {
-    const row = Math.floor(index / state.cols);
-    const col = index % state.cols;
-    const node = InteractiveNode(onTap, index);
-    node.x = startX + col * (cell + gap);
-    node.y = startY + row * (cell + gap);
-    const wall = state.walls.includes(index);
-    const target = state.targets.includes(index);
-    const box = state.boxes.includes(index);
-    const g = new Graphics();
-    if (wall) {
-      g.rect(0, 0, cell, cell).fill(0x654321).stroke({ color: 0x4a3520, width: 2 });
-      g.moveTo(0, cell / 2).lineTo(cell, cell / 2).stroke({ color: 0x4a3520, width: 2 });
-    }
-    node.addChild(g);
-    if (target) {
-      if (sokobanAssetTextures) {
-        node.addChild(CreateSokobanSprite(sokobanAssetTextures.target, cell, 1));
-      } else {
-        const fallbackTarget = new Graphics();
-        fallbackTarget.circle(cell / 2, cell / 2, cell / 4).fill(0x34d399).stroke({ color: 0x059669, width: 2 });
-        node.addChild(fallbackTarget);
-      }
-    }
-    if (box) {
-      const onTarget = state.targets.includes(index);
-      if (sokobanAssetTextures) {
-        node.addChild(CreateSokobanSprite(sokobanAssetTextures.crate, cell, 0.9));
-      } else {
-        const fallbackBox = new Graphics();
-        fallbackBox.rect(4, 4, cell - 8, cell - 8).fill(0xef4444).stroke({ color: 0xb91c1c, width: 2 });
-        node.addChild(fallbackBox);
-      }
-      if (onTarget) {
-        const targetGlow = new Graphics();
-        targetGlow.roundRect(3, 3, cell - 6, cell - 6, 8).stroke({ color: 0x10b981, width: 3, alpha: 0.95 });
-        node.addChild(targetGlow);
-      }
-    }
-    if (state.player === index) {
-      if (sokobanAssetTextures) {
-        node.addChild(CreateSokobanSprite(sokobanAssetTextures.player, cell, 0.94));
-      } else {
-        const fallbackPlayer = new Graphics();
-        fallbackPlayer.circle(cell / 2, cell / 2, cell / 2 - 6).fill(0x2196f3).stroke({ color: 0x1565c0, width: 3 });
-        node.addChild(fallbackPlayer);
-      }
-    }
-    app.stage.addChild(node);
-  }
-}
-
-function CreateSokobanSprite(texture: Texture, cell: number, scale: number) {
-  const size = cell * scale;
-  const sprite = new Sprite({ texture, anchor: 0.5, width: size, height: size });
-  sprite.position.set(cell / 2, cell / 2);
-  return sprite;
 }
 
 function CreateMazeState(difficulty: Difficulty): MazeState {
@@ -1255,24 +1015,45 @@ function DrawSimonButton(
   corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
   color: number,
   active: boolean,
+  litStartedAt: number | null,
+  pressed: boolean,
+  pressedStartedAt: number | null,
+  interactive: boolean,
   elapsed: number,
   index: number,
   onTap: (index: number) => void,
 ) {
-  const node = InteractiveNode(onTap, index);
+  const node = new Container();
   const g = new Graphics();
   const r = size;
-  const pulse = active ? 0.5 + Math.sin(elapsed * 24) * 0.5 : 0;
-  const shift = active ? size * (0.07 + pulse * 0.03) : 0;
-  const dx = corner.includes('left') ? -shift : shift;
-  const dy = corner.includes('top') ? -shift : shift;
-  x += dx;
-  y += dy;
+  const lightProgress = active && litStartedAt !== null
+    ? Math.min(1, Math.max(0, (elapsed - litStartedAt) / simonLightSeconds))
+    : 1;
+  const clickProgress = pressed && pressedStartedAt !== null
+    ? Math.min(1, Math.max(0, (elapsed - pressedStartedAt) / simonClickAnimationSeconds))
+    : 1;
+  const lightBounce = active ? Math.sin(lightProgress * Math.PI) : 0;
+  const clickBounce = pressed ? Math.sin(clickProgress * Math.PI) : 0;
+  const baseScale = 1 + lightBounce * 0.1 - clickBounce * 0.07;
+  const centerX = x + size / 2;
+  const centerY = y + size / 2;
+
+  node.pivot.set(centerX, centerY);
+  node.position.set(centerX, centerY);
+  node.scale.set(baseScale);
+  if (interactive) {
+    node.eventMode = 'static';
+    node.cursor = 'pointer';
+    node.on('pointerover', () => node.scale.set(baseScale * 1.04));
+    node.on('pointerout', () => node.scale.set(baseScale));
+    node.on('pointertap', () => onTap(index));
+  }
 
   if (active) {
     const glow = new Graphics();
-    glow.roundRect(x - size * 0.06, y - size * 0.06, size * 1.12, size * 1.12, size * 0.18)
-      .fill({ color, alpha: 0.34 + pulse * 0.24 });
+    glow.roundRect(x - size * 0.08, y - size * 0.08, size * 1.16, size * 1.16, size * 0.2)
+      .fill({ color, alpha: 0.24 })
+      .stroke({ color: 0xffffff, width: 5, alpha: 0.88 });
     node.addChild(glow);
   }
 
@@ -1293,8 +1074,15 @@ function DrawSimonButton(
       .lineTo(x, y + size).closePath();
   }
 
-  g.fill({ color, alpha: active ? 1 : 0.45 }).stroke({ color: active ? 0xffffff : 0x333333, width: active ? 7 : 4 });
+  g.fill({ color, alpha: active ? 1 : pressed ? 0.82 : 0.55 })
+    .stroke({ color: active || pressed ? 0xffffff : 0x333333, width: active ? 7 : pressed ? 6 : 4 });
   node.addChild(g);
+  if (pressed) {
+    const clickFlash = new Graphics();
+    clickFlash.roundRect(x + size * 0.1, y + size * 0.1, size * 0.8, size * 0.8, size * 0.16)
+      .stroke({ color: 0xffffff, width: 5, alpha: 1 - clickProgress });
+    node.addChild(clickFlash);
+  }
   app.stage.addChild(node);
 }
 
@@ -1568,81 +1356,6 @@ function GetHexNeighbors(index: number, size: number) {
   ]
     .filter(([r, c]) => r >= 0 && r < size && c >= 0 && c < size)
     .map(([r, c]) => r * size + c);
-}
-
-function CreateSetDeck(): SetCard[] {
-  const deck: SetCard[] = [];
-  for (let color = 0; color < 3; color += 1) {
-    for (let shape = 0; shape < 3; shape += 1) {
-      for (let fill = 0; fill < 3; fill += 1) {
-        for (let count = 1; count <= 3; count += 1) {
-          deck.push({ id: `${color}${shape}${fill}${count}`, color, shape, fill, count });
-        }
-      }
-    }
-  }
-  return deck;
-}
-
-function IsValidSet(first: SetCard, second: SetCard, third: SetCard) {
-  return (['color', 'shape', 'fill', 'count'] as const).every((key) => {
-    const values = [first[key], second[key], third[key]];
-    return new Set(values).size !== 2;
-  });
-}
-
-function EnsureSetAvailable(state: SetGameState) {
-  while (!FindSet(state.board) && state.deck.length > 0 && state.board.length < 18) {
-    state.board.push(...state.deck.splice(0, 3));
-  }
-}
-
-function FindSet(cards: SetCard[]) {
-  for (let a = 0; a < cards.length - 2; a += 1) {
-    for (let b = a + 1; b < cards.length - 1; b += 1) {
-      for (let c = b + 1; c < cards.length; c += 1) {
-        if (IsValidSet(cards[a], cards[b], cards[c])) return [a, b, c];
-      }
-    }
-  }
-  return null;
-}
-
-function DrawSetCard(container: Container, card: SetCard, width: number, height: number) {
-  const shapeGap = height / (card.count + 1);
-  const shapeRadius = Math.min(width, height) * 0.22;
-  for (let i = 0; i < card.count; i += 1) {
-    DrawSetShape(container, card, width / 2, shapeGap * (i + 1), shapeRadius);
-  }
-}
-
-function DrawSetShape(container: Container, card: SetCard, cx: number, cy: number, radius: number) {
-  const g = new Graphics();
-  const color = setColors[card.color];
-  if (card.shape === 0) {
-    g.moveTo(cx, cy - radius).lineTo(cx + radius, cy).lineTo(cx, cy + radius).lineTo(cx - radius, cy).closePath();
-  } else if (card.shape === 1) {
-    g.ellipse(cx, cy, radius, radius * 0.62);
-  } else {
-    g.roundRect(cx - radius, cy - radius * 0.55, radius * 2, radius * 1.1, radius * 0.45);
-  }
-  if (card.fill === 0) g.fill(color);
-  if (card.fill === 1) g.fill({ color, alpha: 0.22 });
-  g.stroke({ color, width: 3 });
-  if (card.fill === 1) {
-    for (let x = cx - radius * 0.7; x <= cx + radius * 0.7; x += 8) {
-      g.moveTo(x, cy - radius * 0.5).lineTo(x + 8, cy + radius * 0.5).stroke({ color, width: 1 });
-    }
-  }
-  container.addChild(g);
-}
-
-function IsSokobanSolved(state: SokobanState) {
-  return state.boxes.length === state.targets.length && state.boxes.every((box) => state.targets.includes(box));
-}
-
-function CountSolvedBoxes(state: SokobanState) {
-  return state.boxes.filter((box) => state.targets.includes(box)).length;
 }
 
 function GenerateMaze(size: number, startIndex: number): MazeCell[] {

@@ -21,16 +21,9 @@ import {
 } from '../../_lib/gamePackages.js';
 
 const maximumMultipartBytes = gamePackageLimits.maximumCompressedBytes + 128 * 1024;
-const allowedCategories = new Set([
-  'attention',
-  'general',
-  'higher-cognition',
-  'language',
-  'memory',
-  'movement',
-  'oral',
-  'vision',
-]);
+// Theme IDs are registry-owned Hub labels. Keep the API forward-compatible
+// with newly registered labels while still accepting only bounded slug data.
+const categoryPattern = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);
@@ -337,7 +330,7 @@ function NormalizeSubmissionInput(formData) {
     || !title
     || !developerName
     || summary === null
-    || !allowedCategories.has(category)
+    || !categoryPattern.test(category)
     || !capabilities
     || jsPsychVersion !== gamePackageRuntimeContract.jsPsychVersion
   ) {

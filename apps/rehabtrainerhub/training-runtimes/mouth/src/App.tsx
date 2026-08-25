@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { GetTrainerFooterLabels, GetTrainerSkipLinkLabel } from '@rehab-trainer/ui/components/RehabFooter';
@@ -11,9 +11,6 @@ import { ComprehensionTraining } from './pages/ComprehensionTraining';
 import { OralTraining } from '@rehab-trainer/hub-modules/mouth/pages/training/OralTraining';
 import { defaultUiFontSizePx, GetSetting, settingsChangedEvent } from './utils/settings';
 import { siteUrls } from './utils/siteUrls';
-
-const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
-const ReferencesPage = lazy(() => import('./pages/ReferencesPage').then((module) => ({ default: module.ReferencesPage })));
 
 export function App() {
   const { lang, t } = useT();
@@ -36,8 +33,6 @@ export function App() {
           <Route path="/" element={<Navigate to="/oral-training" replace />} />
           <Route path="/comprehension-training" element={<ComprehensionTraining />} />
           <Route path="/oral-training" element={<OralTraining />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/references" element={<ReferencesPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

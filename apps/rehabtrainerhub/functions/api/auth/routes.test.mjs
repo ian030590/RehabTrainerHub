@@ -11,6 +11,20 @@ const startResponse = await startAuth({
 assert.notEqual(startResponse.status, 404, 'OAuth start must be handled by a Pages Function, not the static 404 page.');
 assert.equal(startResponse.status, 400);
 
+const invalidGoogleClientResponse = await startAuth({
+  request: new Request('https://trainerhub.cc/api/auth/start?provider=google&privacyAccepted=1&returnTo=https%3A%2F%2Ftrainerhub.cc%2F'),
+  env: {
+    AUTH_BASE_URL: 'https://trainerhub.cc',
+    GOOGLE_CLIENT_ID: 'not-a-google-web-client',
+  },
+});
+assert.equal(invalidGoogleClientResponse.status, 503);
+assert.match(
+  await invalidGoogleClientResponse.text(),
+  /Google OAuth web client ID/,
+  'OAuth start must reject API keys, service accounts, secrets, and other malformed Google client IDs before redirecting.',
+);
+
 const callbackResponse = await callbackAuth({
   request: new Request('https://trainerhub.cc/api/auth/callback'),
   env,

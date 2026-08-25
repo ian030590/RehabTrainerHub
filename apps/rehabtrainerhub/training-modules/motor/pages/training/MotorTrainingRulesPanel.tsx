@@ -97,9 +97,9 @@ function GetMotorRuleSections(gameId: string, lang: 'zh' | 'en') {
         ? [
             {
               title: '玩法',
-              description: '移動護盾攔截飛向飛船的小行星；操作包含方向控制、反應與持續注意任務。',
+              description: '移動護盾攔截飛向飛船的小行星；操作包含定位、反應與持續注意任務。',
               items: [
-                '可用滑鼠、方向鍵，或開啟 MediaPipe 後用手部位置控制護盾方向。',
+                '依設定使用滑鼠，或透過 MediaPipe 追蹤手掌位置控制護盾。體感操作無法啟動時會改用滑鼠。',
                 '藍色小行星造成少量傷害，綠色小行星傷害較高，暗色小行星若命中會直接結束。',
                 '能量石碰到護盾或飛船會恢復耐久；每累積一段攔截數，小行星速度會提升。',
               ],
@@ -114,7 +114,7 @@ function GetMotorRuleSections(gameId: string, lang: 'zh' | 'en') {
               title: 'How to Play',
               description: 'Move the shield to intercept asteroids before they reach the spaceship.',
               items: [
-                'Use the mouse, arrow keys, or MediaPipe hand position to aim the shield.',
+                'Use the configured mouse control or MediaPipe palm tracking to aim the shield. If motion control cannot start, the session switches to mouse control.',
                 'Blue asteroids deal light damage, green asteroids deal heavier damage, and dark asteroids end the session if they hit.',
                 'Energy rocks restore durability; asteroid speed increases after repeated successful blocks.',
               ],
@@ -352,22 +352,6 @@ function GetMotorRuleSections(gameId: string, lang: 'zh' | 'en') {
         'Connect your two sides before the computer connects its sides.',
         ['你是藍色，目標是連接上方與下方。', '電腦是紅色，會嘗試連接左右兩側。'],
         ['You are blue and connect top to bottom.', 'The computer is red and connects left to right.'],
-      );
-    case 'set-game':
-      return BuildReferenceRules(
-        isZh,
-        '找出三張在每個特徵上都全同或全異的圖卡。',
-        'Find three cards where every feature is all same or all different.',
-        ['依序點選三張圖卡。', '有效組合會替換新卡，錯誤組合會清除選取。'],
-        ['Tap three cards.', 'Valid sets are replaced; invalid selections are cleared.'],
-      );
-    case 'sokoban':
-      return BuildReferenceRules(
-        isZh,
-        '推動箱子到指定目標格。',
-        'Push boxes onto target cells.',
-        ['可用方向鍵移動，也可點擊相鄰格移動。', '若相鄰格有箱子且後方可通行，就會推動箱子。', '每次訓練會抽選不同關卡。'],
-        ['Use arrow keys or tap an adjacent cell to move.', 'If a box is adjacent and the next cell is clear, it is pushed.', 'Each session draws from varied level layouts.'],
       );
     case 'maze':
       return BuildReferenceRules(

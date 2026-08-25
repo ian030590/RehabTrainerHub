@@ -2,7 +2,8 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { reactionConfig } from './constants';
 import type { TFunction } from '../types';
-import type { Difficulty, GameResult, ReactionState, ResultStats } from './types';
+import type { Difficulty, ReactionState, ReactionTrialRecord, ResultStats } from './types';
+import { CreateReactionTrialRecord } from './trialRecords';
 import {
   AddText,
   Average,
@@ -24,10 +25,12 @@ export function CreateReactionState(targetTrials: number): ReactionState {
     kind: 'reaction-time',
     status: 'waiting',
     attempts: [],
+    trials: [],
     falseStarts: 0,
     targetTrials,
     goAt: null,
     goStartedAt: null,
+    waitStartedAt: null,
     lastReactionMs: null,
   };
 }
@@ -36,37 +39,51 @@ export function HandleReactionStateTap(
   state: ReactionState,
   tapMs: number,
   difficulty: Difficulty,
-  finishGame: (result: GameResult) => void,
   scheduleGo: (delayMs: number, goAtMs: number) => void,
-) {
+): ReactionTrialRecord | null {
   if (state.status === 'waiting' || state.status === 'result' || state.status === 'too-early') {
     const cfg = reactionConfig[difficulty];
     const delayMs = (cfg.minDelay + Math.random() * (cfg.maxDelay - cfg.minDelay)) * 1000;
-    const goAtMs = performance.now() + delayMs;
+    const goAtMs = tapMs + delayMs;
     state.status = 'ready';
     state.goAt = goAtMs;
     state.goStartedAt = null;
+    state.waitStartedAt = tapMs;
     state.lastReactionMs = null;
     scheduleGo(delayMs, goAtMs);
-    return;
+    return null;
   }
   if (state.status === 'ready') {
+    const trial = CreateReactionTrialRecord(
+      state.trials.length + 1,
+      'false-start',
+      state.waitStartedAt,
+      tapMs,
+    );
+    state.trials.push(trial);
     state.falseStarts += 1;
     state.status = 'too-early';
     state.goAt = null;
-    return;
+    state.waitStartedAt = null;
+    return trial;
   }
   if (state.status === 'go' && state.goStartedAt !== null) {
-    const reactionMs = Math.max(0, Math.round(tapMs - state.goStartedAt));
-    state.attempts.push(reactionMs);
-    state.lastReactionMs = reactionMs;
+    const trial = CreateReactionTrialRecord(
+      state.trials.length + 1,
+      'success',
+      state.goStartedAt,
+      tapMs,
+    );
+    state.trials.push(trial);
+    state.attempts.push(trial.reactionTimeMs);
+    state.lastReactionMs = trial.reactionTimeMs;
     state.status = 'result';
     state.goAt = null;
     state.goStartedAt = null;
-    if (state.attempts.length >= state.targetTrials) {
-      finishGame('Victory');
-    }
+    state.waitStartedAt = null;
+    return trial;
   }
+  return null;
 }
 
 export function ShowReactionGo(state: ReactionState, onsetMs: number) {

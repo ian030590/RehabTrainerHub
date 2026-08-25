@@ -15,19 +15,16 @@ import {
   GetSetting,
 } from './utils/settings';
 
-const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })));
-const ReferencesPage = lazy(() => import('./pages/ReferencesPage').then((module) => ({ default: module.ReferencesPage })));
 const PeripheralAttentionPage = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/PeripheralAttentionPage').then((module) => ({ default: module.PeripheralAttentionPage })));
 const EveryBallResponsePage = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/EveryBallResponsePage').then((module) => ({ default: module.EveryBallResponsePage })));
 const ThinkingTraining = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/thinking/ThinkingTraining').then((module) => ({ default: module.ThinkingTraining })));
-const MainConceptTraining = lazy(() => import('@rehab-trainer/hub-modules/brain/pages/MainConceptTraining').then((module) => ({ default: module.MainConceptTraining })));
 
 export function App() {
   const { lang, t } = useT();
   const location = useLocation();
   const apiBase = siteUrls.hub;
   const locale = lang === 'en' ? 'en' : 'zh-TW';
-  const trainingPaths = new Set(['/', '/attention-training', '/attention-training/ufov', '/attention-training/every-ball-response', '/memory-training', '/thinking-training', '/thinking-training/main-concept']);
+  const trainingPaths = new Set(['/', '/attention-training', '/attention-training/ufov', '/attention-training/every-ball-response', '/memory-training', '/thinking-training']);
 
   return (
     <Suspense fallback={<AppLoading label={t('app.loading')} />}>
@@ -49,9 +46,6 @@ export function App() {
           <Route path="/attention-training/every-ball-response" element={<EveryBallResponsePage />} />
           <Route path="/memory-training" element={<ModulePage moduleId="memory" />} />
           <Route path="/thinking-training" element={<ThinkingTraining />} />
-          <Route path="/thinking-training/main-concept" element={<MainConceptTraining />} />
-          <Route path="/references" element={<ReferencesPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

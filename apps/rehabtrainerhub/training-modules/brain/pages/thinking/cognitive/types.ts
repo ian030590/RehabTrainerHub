@@ -13,8 +13,6 @@ export type ReferenceGameId =
   | 'connect4'
   | 'dots-and-boxes'
   | 'hex'
-  | 'set-game'
-  | 'sokoban'
   | 'maze';
 
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
@@ -80,11 +78,21 @@ export interface ReactionState {
   kind: 'reaction-time';
   status: 'waiting' | 'ready' | 'go' | 'result' | 'too-early';
   attempts: number[];
+  trials: ReactionTrialRecord[];
   falseStarts: number;
   targetTrials: number;
   goAt: number | null;
   goStartedAt: number | null;
+  waitStartedAt: number | null;
   lastReactionMs: number | null;
+}
+
+export type ReactionTrialOutcome = 'success' | 'false-start';
+
+export interface ReactionTrialRecord {
+  trialNumber: number;
+  outcome: ReactionTrialOutcome;
+  reactionTimeMs: number;
 }
 
 export interface WhackState {
@@ -101,6 +109,22 @@ export interface WhackState {
   misses: number;
   taps: number;
   hitReactionMs: number[];
+  trials: TargetTrialRecord[];
+}
+
+export type TargetTrialOutcome = 'hit' | 'expired' | 'wrong-tap';
+
+export interface TargetTrialRecord {
+  trialNumber: number;
+  outcome: TargetTrialOutcome;
+  reactionTimeMs: number;
+  targetIndex: number | null;
+  tappedIndex: number | null;
+}
+
+export interface WhackTapResult {
+  trial: TargetTrialRecord;
+  targetCompleted: boolean;
 }
 
 export interface SlidingState {
@@ -128,12 +152,33 @@ export interface SimonState {
   sequence: number[];
   inputIndex: number;
   litIndex: number | null;
+  litStartedAt: number | null;
   showIndex: number;
   nextStepAt: number;
   targetRounds: number;
-  status: 'showing' | 'input';
+  status: 'showing' | 'input' | 'ended';
+  lives: number;
+  maxLives: number;
+  attemptStartedAt: number | null;
+  pressedIndex: number | null;
+  pressedStartedAt: number | null;
+  trials: SimonTrialRecord[];
   moves: number;
   errors: number;
+}
+
+export interface SimonTrialRecord {
+  trialNumber: number;
+  memoryLength: number;
+  correct: boolean;
+  durationMs: number;
+}
+
+export interface SimonTapResult {
+  accepted: boolean;
+  trial: SimonTrialRecord | null;
+  gameResult: GameResult | null;
+  replaySequence: boolean;
 }
 
 export interface TicTacToeState {
@@ -141,6 +186,7 @@ export interface TicTacToeState {
   size: number;
   winLength: number;
   board: Array<'X' | 'O' | null>;
+  aiMoveAt: number | null;
   moves: number;
   aiMoves: number;
   errors: number;
@@ -154,6 +200,7 @@ export interface Connect4State {
   drops: Array<{ index: number; mark: 'P' | 'A'; startedAt: number }>;
   winningLine: number[];
   pendingResult: { result: GameResult; finishAt: number } | null;
+  aiMoveAt: number | null;
   moves: number;
   aiMoves: number;
   errors: number;
@@ -165,6 +212,7 @@ export interface DotsAndBoxesState {
   hLines: Array<'P' | 'A' | null>;
   vLines: Array<'P' | 'A' | null>;
   boxes: Array<'P' | 'A' | null>;
+  aiMoveAt: number | null;
   moves: number;
   aiMoves: number;
   errors: number;
@@ -176,40 +224,9 @@ export interface HexState {
   kind: 'hex';
   size: number;
   board: number[];
+  aiMoveAt: number | null;
   moves: number;
   aiMoves: number;
-  errors: number;
-}
-
-export interface SetCard {
-  id: string;
-  color: number;
-  shape: number;
-  fill: number;
-  count: number;
-}
-
-export interface SetGameState {
-  kind: 'set-game';
-  deck: SetCard[];
-  board: SetCard[];
-  selected: number[];
-  found: number;
-  targetSets: number;
-  moves: number;
-  errors: number;
-}
-
-export interface SokobanState {
-  kind: 'sokoban';
-  rows: number;
-  cols: number;
-  walls: number[];
-  boxes: number[];
-  targets: number[];
-  player: number;
-  moves: number;
-  pushes: number;
   errors: number;
 }
 
@@ -242,6 +259,4 @@ export type CognitiveGameState =
   | Connect4State
   | DotsAndBoxesState
   | HexState
-  | SetGameState
-  | SokobanState
   | MazeState;

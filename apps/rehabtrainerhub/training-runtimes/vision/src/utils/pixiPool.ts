@@ -16,7 +16,6 @@ export const pixiRuntimeScopes = {
   oculomotor: 'training:oculomotor-training',
   gaborPatching: 'training:gabor-patching',
   reading: 'training:reading-training',
-  contrastAssessment: 'assessment:contrast-sensitivity',
 } as const;
 
 export type PixiRuntimeScope = typeof pixiRuntimeScopes[keyof typeof pixiRuntimeScopes];

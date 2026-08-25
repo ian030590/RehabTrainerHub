@@ -12,8 +12,6 @@ export function Navbar() {
   const navItems = [
     { to: '/upper-limb-training', label: t('home.module.upperLimb.title') },
     { to: '/lower-limb-training', label: t('home.module.lowerLimb.title') },
-    { to: '/settings', label: t('nav.settings') },
-    { to: '/credits', label: t('nav.credits') },
   ];
 
   return (

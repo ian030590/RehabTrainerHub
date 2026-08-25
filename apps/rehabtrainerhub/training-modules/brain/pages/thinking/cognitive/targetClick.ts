@@ -1,7 +1,8 @@
 // Hub-owned target-click runtime.
 import { Application, Container, Graphics } from 'pixi.js';
 import { whackConfig } from './constants';
-import type { Difficulty, ResultStats, WhackState } from './types';
+import type { Difficulty, ResultStats, TargetTrialRecord, WhackState, WhackTapResult } from './types';
+import { CreateTargetTrialRecord } from './trialRecords';
 import {
   Average,
   GetGridLayout,
@@ -32,21 +33,42 @@ export function CreateWhackState(difficulty: Difficulty): WhackState {
     misses: 0,
     taps: 0,
     hitReactionMs: [],
+    trials: [],
   };
 }
 
-export function HandleWhackTap(state: WhackState, index: number, tapMs: number) {
+export function HandleWhackTap(state: WhackState, index: number, tapMs: number): WhackTapResult | null {
+  if (state.activeIndex === null) return null;
   state.taps += 1;
+  const targetIndex = state.activeIndex;
+  const targetStartedAt = state.targetStartedAt;
   if (state.activeIndex === index) {
+    const trial = CreateTargetTrialRecord(
+      state.trials.length + 1,
+      'hit',
+      targetStartedAt,
+      tapMs,
+      targetIndex,
+      index,
+    );
+    state.trials.push(trial);
     state.hits += 1;
-    if (state.targetStartedAt !== null) {
-      state.hitReactionMs.push(Math.max(0, Math.round(tapMs - state.targetStartedAt)));
-    }
+    state.hitReactionMs.push(trial.reactionTimeMs);
     ScheduleNextTarget(state, tapMs);
-    return true;
+    return { trial, targetCompleted: true };
   }
+  const trial = CreateTargetTrialRecord(
+    state.trials.length + 1,
+    'wrong-tap',
+    targetStartedAt,
+    tapMs,
+    targetIndex,
+    index,
+  );
+  state.trials.push(trial);
   state.misses += 1;
-  return false;
+  if (targetIndex !== null) ScheduleNextTarget(state, tapMs);
+  return { trial, targetCompleted: targetIndex !== null };
 }
 
 export function UpdateWhackTimedState(state: WhackState, elapsed: number, render: () => void) {
@@ -63,11 +85,20 @@ export function ShowWhackTarget(state: WhackState, onsetMs: number) {
   return true;
 }
 
-export function ExpireWhackTarget(state: WhackState, nowMs: number) {
-  if (state.activeIndex === null) return false;
+export function ExpireWhackTarget(state: WhackState, nowMs: number): TargetTrialRecord | null {
+  if (state.activeIndex === null) return null;
+  const trial = CreateTargetTrialRecord(
+    state.trials.length + 1,
+    'expired',
+    state.targetStartedAt,
+    nowMs,
+    state.activeIndex,
+    null,
+  );
+  state.trials.push(trial);
   state.misses += 1;
   ScheduleNextTarget(state, nowMs);
-  return true;
+  return trial;
 }
 
 function ScheduleNextTarget(state: WhackState, nowMs: number) {
@@ -86,9 +117,9 @@ export function BuildWhackResultStats(state: WhackState): ResultStats {
   const best = state.hitReactionMs.length > 0 ? Math.min(...state.hitReactionMs) : 0;
   return {
     score: Math.max(0, state.hits * 100 - state.misses * 25),
-    accuracy: state.taps > 0 ? Math.round((state.hits / state.taps) * 100) : 0,
+    accuracy: state.trials.length > 0 ? Math.round((state.hits / state.trials.length) * 100) : 0,
     moves: 0,
-    attempts: state.taps,
+    attempts: state.trials.length,
     success: state.hits,
     errors: state.misses,
     details: { gridSize: state.gridSize, targetMs: state.targetMs, hitReactionMs: state.hitReactionMs, averageMs: avg, bestMs: best },

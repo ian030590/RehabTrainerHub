@@ -171,16 +171,28 @@ export interface RehabProgress {
 
 export function GetAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(authTokenKey);
+  try {
+    return window.localStorage.getItem(authTokenKey);
+  } catch {
+    return null;
+  }
 }
 
 export function SetAuthToken(token: string, dispatchEvent = true): void {
-  window.localStorage.setItem(authTokenKey, token);
+  try {
+    window.localStorage.setItem(authTokenKey, token);
+  } catch {
+    // Cookie-backed shared sessions still allow sign-in when storage is unavailable.
+  }
   if (dispatchEvent) window.dispatchEvent(new Event(authChangedEvent));
 }
 
 export function ClearAuthToken(): void {
-  window.localStorage.removeItem(authTokenKey);
+  try {
+    window.localStorage.removeItem(authTokenKey);
+  } catch {
+    // Keep logout/session invalidation usable in storage-restricted browsers.
+  }
   window.dispatchEvent(new Event(authChangedEvent));
 }
 
@@ -283,7 +295,10 @@ export function IsAuthSessionMessage(value: unknown): value is AuthSessionMessag
   return message.type === authMessageType && typeof message.token === 'string';
 }
 
-export async function FetchCurrentAuthUser(apiBase?: string): Promise<AuthUser | null> {
+export async function FetchCurrentAuthUser(
+  apiBase?: string,
+  signal?: AbortSignal,
+): Promise<AuthUser | null> {
   const token = GetAuthToken();
   if (!token) return null;
 
@@ -291,6 +306,7 @@ export async function FetchCurrentAuthUser(apiBase?: string): Promise<AuthUser |
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    signal,
   });
 
   if (response.status === 401) {
@@ -306,9 +322,13 @@ export async function FetchCurrentAuthUser(apiBase?: string): Promise<AuthUser |
   return payload.user ?? null;
 }
 
-export async function FetchSharedAuthSession(apiBase?: string): Promise<SharedAuthSession | null> {
+export async function FetchSharedAuthSession(
+  apiBase?: string,
+  signal?: AbortSignal,
+): Promise<SharedAuthSession | null> {
   const response = await fetch(BuildApiUrl(apiBase, '/api/auth/session'), {
     credentials: 'include',
+    signal,
   });
 
   if (response.status === 401) return null;
