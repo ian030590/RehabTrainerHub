@@ -405,6 +405,32 @@ export function TrainingLobby() {
           )}
         </section>
       </div>
+
+      <section className="lobby-guide" aria-labelledby="lobby-guide-title">
+        <header>
+          <p className="page-kicker">{copy.guide.kicker}</p>
+          <h2 id="lobby-guide-title">{copy.guide.title}</h2>
+          <p>{copy.guide.definition}</p>
+        </header>
+        <div className="lobby-guide-sections">
+          <section>
+            <h3>{copy.guide.chooseTitle}</h3>
+            <p>{copy.guide.chooseBody}</p>
+          </section>
+          <section>
+            <h3>{copy.guide.recordsTitle}</h3>
+            <p>{copy.guide.recordsBody}</p>
+          </section>
+          <section>
+            <h3>{copy.guide.limitsTitle}</h3>
+            <p>{copy.guide.limitsBody}</p>
+          </section>
+        </div>
+        <nav aria-label={copy.guide.kicker} className="lobby-guide-links">
+          <a href="/qa/">{copy.guide.aboutLink}</a>
+          <a href="/privacy/">{copy.guide.privacyLink}</a>
+        </nav>
+      </section>
     </main>
     </>
   );

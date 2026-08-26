@@ -60,6 +60,7 @@ function ValidateAppSeo(app, appFailures) {
 
   const robotsPath = join(outputDir, 'robots.txt');
   const sitemapPath = join(outputDir, 'sitemap.xml');
+  const llmsPath = join(outputDir, 'llms.txt');
   const indexPath = join(outputDir, 'index.html');
   const notFoundPath = join(outputDir, '404.html');
   const robots = ReadUtf8File(robotsPath, label, appFailures);
@@ -83,8 +84,43 @@ function ValidateAppSeo(app, appFailures) {
     if (indexHtml !== null && !/<h1\b[^>]*\bid=["']lobby-title["'][^>]*>[\s\S]*?訓練大廳[\s\S]*?<\/h1>/i.test(indexHtml)) {
       appFailures.push(`${indexPath}: Hub homepage must prerender its visible heading in Traditional Chinese.`);
     }
+    if (indexHtml !== null && !/<h2\b[^>]*\bid=["']lobby-guide-title["'][^>]*>居家訓練網是什麼？<\/h2>/i.test(indexHtml)) {
+      appFailures.push(`${indexPath}: Hub homepage must prerender its visible site definition.`);
+    }
+    const llms = ReadUtf8File(llmsPath, 'Hub llms.txt', appFailures);
+    if (llms !== null) ValidateLlmsTxt(llms, llmsPath, siteUrl, appFailures);
     ValidateHubQaPerson(join(outputDir, 'qa', 'index.html'), appFailures);
     ValidateHubPrivatePages(outputDir, sitemapUrls, appFailures);
+  }
+}
+
+function ValidateLlmsTxt(source, file, siteUrl, appFailures) {
+  if (/<html\b/i.test(source)) {
+    appFailures.push(`${file}: llms.txt must be Markdown-flavored plain text, not HTML.`);
+  }
+  if (!/^# 居家訓練網\s*$/m.test(source)) {
+    appFailures.push(`${file}: llms.txt must start with the canonical local brand name as its H1.`);
+  }
+  if (!/^> \S.+$/m.test(source)) {
+    appFailures.push(`${file}: llms.txt must provide a concise blockquote summary.`);
+  }
+  if (!/not individualized assessment, diagnosis, medical orders, treatment/i.test(source)) {
+    appFailures.push(`${file}: llms.txt must preserve the site's non-service boundary.`);
+  }
+
+  const urls = [...source.matchAll(/\]\((https:\/\/[^)]+)\)/g)].map((match) => match[1]);
+  const expectedUrls = [
+    siteUrl,
+    `${siteUrl}qa/`,
+    `${siteUrl}download/`,
+    `${siteUrl}privacy/`,
+    `${siteUrl}sitemap.xml`,
+  ];
+  if (!HaveSameValues(urls, expectedUrls)) {
+    appFailures.push(`${file}: llms.txt must link only to canonical public discovery resources.`);
+  }
+  if (/\b(?:motor|vision|brain|mouth)\.trainerhub\.cc\b|104\.com/i.test(source)) {
+    appFailures.push(`${file}: llms.txt contains a retired trainer domain or prohibited profile URL.`);
   }
 }
 
