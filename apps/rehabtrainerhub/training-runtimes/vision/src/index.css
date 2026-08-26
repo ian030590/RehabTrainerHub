@@ -84,8 +84,7 @@ html, body, #root {
   margin-top: 12px;
 }
 
-.webgazer-calibration-message,
-.webgazer-pl-message {
+.webgazer-calibration-message {
   margin-top: 12px;
   color: var(--text-secondary);
   font-size: 13px;
@@ -93,32 +92,12 @@ html, body, #root {
   text-align: center;
 }
 
-.webgazer-calibration-message.error,
-.webgazer-pl-message.error {
+.webgazer-calibration-message.error {
   color: var(--error);
 }
 
-/* Full-screen overlay for WebGazer calibration.
-   Rendered via React Portal on document.body, so it must cover everything.
-   Always in the DOM (no conditional rendering) to guarantee containerRef is
-   populated before jsPsych is initialised; visibility is toggled by .is-active. */
-.webgazer-fullscreen-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  z-index: 99999;
-  background: var(--bg);
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.webgazer-fullscreen-overlay.is-active {
-  display: block;
-}
-
+/* The jsPsych host fills the training route. Native WebGazer plugins retain
+   ownership of their own camera, calibration, and validation DOM. */
 .webgazer-fullscreen-stage {
   position: absolute;
   inset: 0;
@@ -127,7 +106,6 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* jsPsych display element must fill the entire stage */
 .webgazer-fullscreen-stage > .jspsych-display-element,
 .webgazer-fullscreen-stage .jspsych-display-element {
   position: absolute !important;
@@ -138,7 +116,6 @@ html, body, #root {
   overflow: hidden !important;
 }
 
-/* jsPsych content wrapper flex-centers its children */
 .webgazer-fullscreen-stage .jspsych-content-wrapper {
   position: absolute !important;
   inset: 0 !important;
@@ -150,7 +127,6 @@ html, body, #root {
   justify-content: center !important;
 }
 
-/* jsPsych content fills the viewport */
 .webgazer-fullscreen-stage .jspsych-content {
   max-width: none !important;
   width: 100% !important;
@@ -164,66 +140,7 @@ html, body, #root {
   text-align: center;
 }
 
-/* ?? Calibrate container ??
-   The plugin sets inline style="position:relative; width:100vw; height:100vh".
-   We override to position:absolute so calibration points (position:absolute, left/top %)
-   are placed relative to the full viewport. */
-body .webgazer-fullscreen-stage #webgazer-calibrate-container,
-.webgazer-fullscreen-overlay #webgazer-calibrate-container,
-body .webgazer-fullscreen-stage #webgazer-validate-container,
-.webgazer-fullscreen-overlay #webgazer-validate-container {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  transform: none !important;
-}
-
-/* ?? Init-camera container ?? */
-.webgazer-fullscreen-stage #webgazer-init-container {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.webgazer-fullscreen-stage #webgazer-init-container > div {
-  position: relative !important;
-  left: auto !important;
-  top: auto !important;
-  width: min(720px, calc(100vw - 40px)) !important;
-  transform: none !important;
-  margin-top: 120px !important;
-}
-
-/* The official init-camera plugin injects a centering style with !important. */
-body #webgazerVideoContainer {
-  top: 20px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  margin: 0 !important;
-}
-
-/* ?? Calibration point styling ?? */
-.webgazer-fullscreen-stage #calibration-point,
-body #webgazer-calibrate-container #calibration-point,
-.webgazer-fullscreen-stage #webgazer-validate-container .validation-point {
-  transform: translate(-50%, -50%) !important;
-  border: 2px solid var(--text-on-accent) !important;
-  background: var(--accent) !important;
-  box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 18%, transparent);
-  touch-action: manipulation;
-}
-
-.webgazer-jspsych-instructions {
+.webgazer-flow-instructions {
   width: min(680px, calc(100vw - 40px));
   padding: 28px;
   border: 1px solid var(--border);
@@ -234,13 +151,13 @@ body #webgazer-calibrate-container #calibration-point,
   margin: 0 auto 16px;
 }
 
-.webgazer-jspsych-instructions h2 {
+.webgazer-flow-instructions h1 {
   margin-bottom: 14px;
   font-size: 24px;
   line-height: 1.25;
 }
 
-.webgazer-jspsych-instructions p {
+.webgazer-flow-instructions p {
   margin: 10px 0;
   color: var(--text-secondary);
   font-size: 16px;
@@ -268,43 +185,8 @@ body #webgazer-calibrate-container #calibration-point,
   opacity: 0.85;
 }
 
-.webgazer-cancel-btn {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 10001;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  color: var(--text-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 8px 18px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: var(--fw-medium);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.webgazer-cancel-btn:hover {
-  background: rgba(255, 85, 85, 0.2);
-  border-color: rgba(255, 85, 85, 0.4);
-  color: var(--error);
-}
-
 @media (any-pointer: coarse) {
-  .webgazer-fullscreen-stage #calibration-point,
-  body #webgazer-calibrate-container #calibration-point,
-  .webgazer-fullscreen-stage #webgazer-validate-container .validation-point {
-    min-width: 48px !important;
-    min-height: 48px !important;
-  }
-
-  .webgazer-fullscreen-stage #webgazer-init-container > div {
-    width: calc(100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)) !important;
-    margin-top: min(210px, 32dvh) !important;
-  }
-
-  .webgazer-jspsych-instructions {
+  .webgazer-flow-instructions {
     width: 100%;
     padding: 18px;
   }
@@ -314,40 +196,14 @@ body #webgazer-calibrate-container #calibration-point,
     min-height: 48px;
   }
 
-  .webgazer-cancel-btn {
-    top: max(8px, env(safe-area-inset-top));
-    right: max(8px, env(safe-area-inset-right));
-    min-height: 44px;
-  }
 }
 
-@media (any-pointer: coarse) and (max-height: 600px) and (orientation: landscape) {
-  body #webgazerVideoContainer {
-    top: max(4px, env(safe-area-inset-top)) !important;
-    transform: translateX(-50%) scale(0.58) !important;
-    transform-origin: top center !important;
-  }
-
-  .webgazer-fullscreen-stage #webgazer-init-container > div {
-    width: min(620px, calc(100vw - 140px)) !important;
-    margin-top: 112px !important;
-  }
-
-  .webgazer-jspsych-instructions {
-    margin-bottom: 8px;
-    padding: 10px 14px;
-  }
-
-  .webgazer-jspsych-instructions h2 {
-    margin-bottom: 5px;
-    font-size: 18px;
-  }
-
-  .webgazer-jspsych-instructions p {
-    margin: 3px 0;
-    font-size: 13px;
-    line-height: 1.35;
-  }
+/* Keep the native init-camera plugin's fixed 800px instruction block within
+   the jsPsych host on narrow screens; the plugin still owns all camera DOM. */
+.webgazer-fullscreen-stage :has(> .webgazer-native-camera-instructions) {
+  left: 50% !important;
+  width: min(800px, calc(100vw - 32px)) !important;
+  transform: translateX(-50%);
 }
 
 /* ?? Calibration ?? */

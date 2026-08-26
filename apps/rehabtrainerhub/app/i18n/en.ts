@@ -19,7 +19,8 @@ export const en = {
       },
     },
     lobby: {
-      title: 'Home Training Tools and Educational Information',
+      kicker: 'Rehab Trainer Hub',
+      title: 'Training Lobby',
       intro: 'Practice within your own limits. If you have an illness, injury, or concern, consult a physician or legally practicing healthcare professional first. Results record only the current session.',
       searchLabel: 'Search module names',
       searchPlaceholder: 'Search training modules',

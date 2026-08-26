@@ -49,6 +49,8 @@ export interface TrialData {
   gaze_sample_count?: number;
   gaze_sample_columns?: readonly string[];
   gaze_samples?: readonly OculomotorGazeSample[];
+  webgazer_data_consumed?: boolean;
+  webgazer_sample_count?: number;
   webgazer_data?: readonly { x: number; y: number; t: number }[];
   webgazer_targets?: Record<string, unknown>;
   average_rt?: number;

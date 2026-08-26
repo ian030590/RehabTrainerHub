@@ -85,13 +85,6 @@ function WaitForUsableLayout(element: HTMLElement): Promise<void> {
   });
 }
 
-function StripRedundantWebGazerExtensionData(result: TrialData): TrialData {
-  const compactResult = { ...result };
-  delete compactResult.webgazer_data;
-  delete compactResult.webgazer_targets;
-  return compactResult;
-}
-
 export function TrainingPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -234,7 +227,6 @@ function TrainingRuntimePage() {
           const data = moduleId === 'oculomotor-training'
             ? timelineData
               .filter((item) => item.trial_type === 'pixi-oculomotor-training')
-              .map(StripRedundantWebGazerExtensionData)
             : timelineData;
           await SaveTrainingRecord({
             results: data,
@@ -276,6 +268,7 @@ function TrainingRuntimePage() {
 
       const timeline = await BuildTimeline(moduleId, {
         difficulty,
+        jsPsych,
         totalRounds,
         oculomotor: {
           mode: oculomotorMode,
@@ -292,11 +285,28 @@ function TrainingRuntimePage() {
           customTargetImage: oculomotorCustomTargetImage,
           showGazepoint,
           webGazerCalibration: {
+            beginInstructions: t('settings.wg.beginInstructions'),
+            beginPrompt: t('settings.wg.beginPrompt'),
+            beginTitle: t('settings.wg.beginTitle'),
             title: t('settings.wg.title'),
+            cameraInstructions: t('settings.wg.cameraInstructions'),
+            cameraPermissionButtonText: t('settings.wg.cameraPermissionButton'),
+            cameraTitle: t('settings.wg.cameraTitle'),
+            calibrationDoneText: t('settings.wg.calibrationDone'),
+            continueButtonText: t('settings.wg.continueButton'),
             instruction1: t('settings.wg.inst1'),
             instruction2: t('settings.wg.inst2'),
             instruction3: t('settings.wg.inst3'),
             buttonText: t('settings.wg.startBtn'),
+            recalibrateInstructions: t('settings.wg.recalibrateInstructions'),
+            recalibrateTitle: t('settings.wg.recalibrateTitle'),
+            showDataMissing: t('settings.wg.showDataMissing'),
+            showDataPrompt: t('settings.wg.showDataPrompt'),
+            showDataSummary: t('settings.wg.showDataSummary'),
+            showDataTitle: t('settings.wg.showDataTitle'),
+            validationInstructions: t('settings.wg.validationInstructions'),
+            validationNoClick: t('settings.wg.validationNoClick'),
+            validationTitle: t('settings.wg.validationTitle'),
           },
         },
         gabor: {

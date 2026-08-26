@@ -280,6 +280,7 @@ function IsBoundedOculomotorEyeTrackingRecord(input) {
   ) return false;
 
   const [result] = input.record.results;
+  const nativeWebGazerSamples = result?.webgazer_data;
   if (
     !IsPlainObject(result)
     || result.trial_type !== 'pixi-oculomotor-training'
@@ -290,13 +291,20 @@ function IsBoundedOculomotorEyeTrackingRecord(input) {
     || result.gaze_samples.length > maximumEyeTrackingSamples
     || result.gaze_sample_count !== result.gaze_samples.length
     || !HasValidEyeTrackingSamples(result.gaze_samples)
+    || (nativeWebGazerSamples !== undefined && (
+      !Array.isArray(nativeWebGazerSamples)
+      || nativeWebGazerSamples.length > maximumEyeTrackingSamples
+      || result.webgazer_sample_count !== nativeWebGazerSamples.length
+      || !HasValidNativeWebGazerSamples(nativeWebGazerSamples)
+    ))
+    || (result.webgazer_data_consumed === true && !Array.isArray(nativeWebGazerSamples))
   ) return false;
 
   const baseInput = {
     ...input,
     record: {
       ...input.record,
-      results: [{ ...result, gaze_samples: [] }],
+      results: [{ ...result, gaze_samples: [], webgazer_data: [] }],
     },
   };
   return GetJsonByteLength(baseInput) <= maximumDefaultRecordRequestBytes;
@@ -352,6 +360,16 @@ function HasValidEyeTrackingSamples(samples) {
   });
 }
 
+function HasValidNativeWebGazerSamples(samples) {
+  return samples.every((sample) => {
+    if (!IsPlainObject(sample)) return false;
+    return Number.isFinite(sample.x)
+      && Number.isFinite(sample.y)
+      && Number.isFinite(sample.t)
+      && sample.t >= 0;
+  });
+}
+
 function PrepareRecordForRead(record, includeGazeSamples) {
   return includeGazeSamples ? record : RemoveGazeSamples(record);
 }
@@ -360,18 +378,26 @@ function RemoveGazeSamples(value) {
   if (Array.isArray(value)) return value.map(RemoveGazeSamples);
   if (!IsPlainObject(value)) return value;
 
-  let omitted = false;
+  let pairedSamplesOmitted = false;
+  let nativeSamplesOmitted = false;
   const entries = [];
   Object.entries(value).forEach(([key, item]) => {
     if (key === 'gaze_samples') {
-      omitted = true;
+      pairedSamplesOmitted = true;
       return;
     }
-    if (key === 'gaze_samples_omitted') return;
+    if (key === 'webgazer_data') {
+      nativeSamplesOmitted = true;
+      return;
+    }
+    if (key === 'gaze_samples_omitted' || key === 'webgazer_data_omitted') return;
     entries.push([key, RemoveGazeSamples(item)]);
   });
-  if (omitted || value.gaze_samples_omitted === true) {
+  if (pairedSamplesOmitted || value.gaze_samples_omitted === true) {
     entries.push(['gaze_samples_omitted', true]);
+  }
+  if (nativeSamplesOmitted || value.webgazer_data_omitted === true) {
+    entries.push(['webgazer_data_omitted', true]);
   }
   return Object.fromEntries(entries);
 }
@@ -436,7 +462,7 @@ function IsPlainObject(value) {
 
 function IsSafeRecordValue(value, depth = 0, state = { nodes: 0 }) {
   state.nodes += 1;
-  if (state.nodes > 40000 || depth > 8) return false;
+  if (state.nodes > 60000 || depth > 8) return false;
   if (
     value === null
     || typeof value === 'boolean'

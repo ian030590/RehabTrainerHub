@@ -211,6 +211,11 @@ const eyeTrackingSamples = Array.from({ length: 3000 }, (_, index) => ([
   0,
   0,
 ]));
+const nativeWebGazerSamples = Array.from({ length: 3000 }, (_, index) => ({
+  x: 320,
+  y: 240,
+  t: index * 100,
+}));
 const allowedEyeTrackingRecord = await onRequestPost({
   request: new Request('https://trainerhub.cc/api/records', {
     method: 'POST',
@@ -231,6 +236,10 @@ const allowedEyeTrackingRecord = await onRequestPost({
           gaze_sample_columns: eyeTrackingColumns,
           gaze_sample_count: eyeTrackingSamples.length,
           gaze_samples: eyeTrackingSamples,
+          gaze_coordinate_source: 'jspsych-webgazer-extension',
+          webgazer_data: nativeWebGazerSamples,
+          webgazer_data_consumed: true,
+          webgazer_sample_count: nativeWebGazerSamples.length,
         }],
       },
     }),
@@ -254,6 +263,9 @@ assert.equal(summarizedEyeTrackingPayload.records.length, 1);
 assert.equal(summarizedEyeTrackingPayload.records[0].results[0].gaze_sample_count, 3000);
 assert.equal(summarizedEyeTrackingPayload.records[0].results[0].gaze_samples, undefined);
 assert.equal(summarizedEyeTrackingPayload.records[0].results[0].gaze_samples_omitted, true);
+assert.equal(summarizedEyeTrackingPayload.records[0].results[0].webgazer_data, undefined);
+assert.equal(summarizedEyeTrackingPayload.records[0].results[0].webgazer_data_omitted, true);
+assert.equal(summarizedEyeTrackingPayload.records[0].results[0].webgazer_sample_count, 3000);
 
 const detailedEyeTrackingRecords = await onRequestGet({
   request: new Request(
@@ -270,6 +282,7 @@ const detailedEyeTrackingRecords = await onRequestGet({
 assert.equal(detailedEyeTrackingRecords.status, 200);
 const detailedEyeTrackingPayload = await detailedEyeTrackingRecords.json();
 assert.equal(detailedEyeTrackingPayload.records[0].results[0].gaze_samples.length, 3000);
+assert.equal(detailedEyeTrackingPayload.records[0].results[0].webgazer_data.length, 3000);
 
 const excessiveDetailedPageSize = await onRequestGet({
   request: new Request(
@@ -454,6 +467,41 @@ const malformedEyeTrackingRecord = await onRequestPost({
   env,
 });
 assert.equal(malformedEyeTrackingRecord.status, 413);
+
+const malformedNativeWebGazerRecord = await onRequestPost({
+  request: new Request('https://trainerhub.cc/api/records', {
+    method: 'POST',
+    headers: {
+      Origin: 'https://trainerhub.cc',
+      Authorization: `Bearer ${attackerToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      appId: 'rehabtrainerhub',
+      runtimeId: 'vision',
+      record: {
+        ...attackerRecord,
+        id: 'malformed-native-webgazer-record-id',
+        moduleId: 'oculomotor-training',
+        results: [{
+          trial_type: 'pixi-oculomotor-training',
+          gaze_sample_columns: eyeTrackingColumns,
+          gaze_sample_count: 0,
+          gaze_samples: [],
+          webgazer_data: Array.from({ length: 1500 }, (_, index) => ({
+            x: 'not-a-coordinate',
+            y: 240,
+            t: index * 100,
+          })),
+          webgazer_data_consumed: true,
+          webgazer_sample_count: 1500,
+        }],
+      },
+    }),
+  }),
+  env,
+});
+assert.equal(malformedNativeWebGazerRecord.status, 413);
 
 const oversizedPayload = await onRequestPost({
   request: new Request('https://trainerhub.cc/api/records', {

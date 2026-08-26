@@ -563,23 +563,31 @@ const pendingJsPsychIds = jsPsychLifecycleGroups
   .filter(({ status }) => status === 'utility-only-pending')
   .flatMap(({ ids }) => ids);
 
-const permissionImplementations = {
+const configPermissionImplementations = {
   'motor:asteroid-shield': 'motor/pages/training/AsteroidShieldGame.tsx',
   'motor:gesture-battler': 'motor/pages/training/GestureBattlerGame.tsx',
   'motor:motor-cortex-rehab': 'motor/pages/training/MotorCortexRehabGame.tsx',
-  'vision:oculomotor-training': 'vision/pages/HomePage.tsx',
   'brain:every-ball-response': 'brain/pages/EveryBallResponsePage.tsx',
   'mouth:tongue-catch': 'mouth/pages/training/TongueCatchGame.tsx',
+};
+const nativeTimelinePermissionImplementations = {
+  'vision:oculomotor-training': resolve(
+    repoRoot,
+    'apps/rehabtrainerhub/training-runtimes/vision/src/utils/webgazerCalibration.ts',
+  ),
 };
 const permissionModuleIds = catalogIds.filter((catalogId) => (
   trainingModuleFlowManifest[catalogId].mediaPermission !== 'none'
 ));
 assert.deepEqual(
   permissionModuleIds.sort(),
-  Object.keys(permissionImplementations).sort(),
+  [
+    ...Object.keys(configPermissionImplementations),
+    ...Object.keys(nativeTimelinePermissionImplementations),
+  ].sort(),
   'The media-permission manifest must match the modules that request camera or microphone access.',
 );
-for (const [catalogId, file] of Object.entries(permissionImplementations)) {
+for (const [catalogId, file] of Object.entries(configPermissionImplementations)) {
   const source = readFileSync(resolve(moduleRoot, file), 'utf8');
   assert.ok(
     source.includes('useMediaPermissionPreflight'),
@@ -588,6 +596,14 @@ for (const [catalogId, file] of Object.entries(permissionImplementations)) {
   assert.ok(
     source.includes('.retry'),
     `${catalogId} must offer a permission retry after denial or failure.`,
+  );
+}
+for (const [catalogId, file] of Object.entries(nativeTimelinePermissionImplementations)) {
+  const source = readFileSync(file, 'utf8');
+  assert.ok(
+    source.includes("from '@jspsych/plugin-webgazer-init-camera'")
+      && source.includes('type: WebGazerInitCameraPlugin'),
+    `${catalogId} must request camera permission through its native jsPsych init_camera trial.`,
   );
 }
 

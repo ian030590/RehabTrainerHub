@@ -3,7 +3,10 @@ import WebGazerExtension from '@jspsych/extension-webgazer';
 import PixiOculomotorTrainingPlugin from '../plugins/pixi-oculomotor-training';
 import { GetSetting } from '../../utils/settings';
 import { PixelFromDegree, PixelFromMillimeter } from '../../utils/spatialUtils';
-import { CreateWebGazerCalibrationTimeline } from '../../utils/webgazerCalibration';
+import {
+  ConsumeOfficialWebGazerTrialData,
+  CreateWebGazerExperimentTimeline,
+} from '../../utils/webgazerCalibration';
 import type { BuildTimelineOverrides } from './types';
 
 export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): object[] {
@@ -25,19 +28,7 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
   const showGazepoint = overrides?.oculomotor?.showGazepoint
     ?? GetSetting('oculomotorShowGazepoint');
 
-  const timeline: object[] = [];
-
-  if (enableWebGazer) {
-    timeline.push(...CreateWebGazerCalibrationTimeline(overrides?.oculomotor?.webGazerCalibration ?? {
-      title: 'WebGazer Calibration',
-      instruction1: 'Allow camera access and center your face in the camera view.',
-      instruction2: 'Look at each point, then click or tap its center twice.',
-      instruction3: 'Keep your head steady until all points are complete.',
-      buttonText: 'Start Calibration',
-    }));
-  }
-
-  timeline.push({
+  const trial = {
     type: PixiOculomotorTrainingPlugin,
     mode,
     pattern,
@@ -58,9 +49,49 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
     round_number: 1,
     total_rounds: 1,
     extensions: enableWebGazer
-      ? [{ type: WebGazerExtension, params: { targets: [] } }]
+      ? [{
+          type: WebGazerExtension,
+          params: { targets: ['.oculomotor-training-trial'] },
+        }]
       : undefined,
-  });
+    on_finish: enableWebGazer ? ConsumeOfficialWebGazerTrialData : undefined,
+  };
 
-  return timeline;
+  if (!enableWebGazer) return [trial];
+  if (!overrides?.jsPsych) {
+    throw new Error('The jsPsych instance is required for the official WebGazer flow.');
+  }
+
+  return CreateWebGazerExperimentTimeline(
+    overrides.jsPsych,
+    overrides.oculomotor?.webGazerCalibration ?? {
+      beginInstructions: 'Eye tracking is ready. The moving-target trial is next.',
+      beginPrompt: 'Press Enter or Space to begin.',
+      beginTitle: 'Begin eye-movement practice',
+      buttonText: 'Start calibration',
+      calibrationDoneText: 'Calibration and validation are complete.',
+      cameraInstructions: 'The next screen will request camera access and help position your face.',
+      cameraPermissionButtonText: 'Got it',
+      cameraTitle: 'Camera access',
+      continueButtonText: 'Continue',
+      instruction1: 'Center your face in the camera view and look directly at the camera. Continue becomes available when the feedback box turns green.',
+      instruction2: 'Look at each point, then click or tap its center twice.',
+      instruction3: 'Keep your head steady until all points are complete.',
+      recalibrateInstructions: 'The first validation was below the accuracy threshold. Please calibrate once more.',
+      recalibrateTitle: 'Repeat calibration',
+      showDataMissing: 'No valid gaze samples were captured during this trial.',
+      showDataPrompt: 'Press Enter or Space to view the practice result.',
+      showDataSummary: 'The eye-movement trial captured {count} native WebGazer samples.',
+      showDataTitle: 'Eye-tracking data captured',
+      title: 'WebGazer calibration',
+      validationInstructions: 'Look at each point while calibration accuracy is measured.',
+      validationNoClick: 'Do not click the points during validation.',
+      validationTitle: 'Validate calibration',
+    },
+    trial,
+    {
+      images: [customTargetImage, backgroundImage],
+      audio: [audio],
+    },
+  );
 }

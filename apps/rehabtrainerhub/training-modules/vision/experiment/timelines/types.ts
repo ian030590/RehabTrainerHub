@@ -1,5 +1,7 @@
 // Types local to Hub-owned vision timelines.
+import type { JsPsych } from 'jspsych';
 import type { DrivingControlMode, DrivingRenderQualityLevel } from '../../utils/settings';
+import type { WebGazerCalibrationCopy } from '../../utils/webgazerCalibration';
 import type { DrivingWheelCalibration } from '../plugins/driving/driving-input';
 import type { OculomotorMode, OculomotorPattern, OculomotorTargetShape } from '../../pages/training/oculomotor/types';
 import type { ReadingStory } from '../../pages/training/reading/types';
@@ -8,6 +10,7 @@ export type AppLanguage = 'zh' | 'en';
 
 export interface BuildTimelineOverrides {
   difficulty?: string;
+  jsPsych?: JsPsych;
   totalRounds?: number;
   oculomotor?: {
     mode?: OculomotorMode;
@@ -25,13 +28,7 @@ export interface BuildTimelineOverrides {
     audio?: string;
     bounceJitter?: number;
     showGazepoint?: boolean;
-    webGazerCalibration?: {
-      buttonText: string;
-      instruction1: string;
-      instruction2: string;
-      instruction3: string;
-      title: string;
-    };
+    webGazerCalibration?: WebGazerCalibrationCopy;
   };
   gabor?: {
     durationSec?: number;

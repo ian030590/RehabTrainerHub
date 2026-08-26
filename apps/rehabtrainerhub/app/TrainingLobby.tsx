@@ -25,7 +25,6 @@ import {
 import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
 import { GetHubUiCopy } from './i18n';
 import { useHubLanguage } from './i18n/HubLanguage';
-import { hubFullName } from './hubBrand';
 import {
   FetchPublishedGames,
   type PublishedGame,
@@ -217,9 +216,9 @@ export function TrainingLobby() {
     <main className="lobby-page" id="main-content">
       <section className="lobby-heading" aria-labelledby="lobby-title">
         <div>
-          <p className="page-kicker">{hubFullName}</p>
+          <p className="page-kicker">{copy.kicker}</p>
           <h1 id="lobby-title">
-            <span className="sr-only">{hubFullName} </span>
+            <span className="sr-only">{copy.kicker} </span>
             {copy.title}
           </h1>
           <p>{copy.intro}</p>

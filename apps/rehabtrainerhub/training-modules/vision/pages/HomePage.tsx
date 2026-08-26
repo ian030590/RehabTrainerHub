@@ -11,11 +11,6 @@ import {
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
-import {
-  CanRetryMediaPermission,
-  GetMediaPermissionRetryLabel,
-  useMediaPermissionPreflight,
-} from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
@@ -135,12 +130,6 @@ export function HomePage() {
     drivingControlMode,
     drivingInputCapabilities,
   ) && (drivingControlMode !== 'wheel' || drivingWheelCalibration.calibrated);
-  const webGazerPermission = useMediaPermissionPreflight({
-    active: expandedModule === 'oculomotor-training' && oculomotorEnableWebgazer,
-    video: true,
-  });
-  const canRetryWebGazerPermission = CanRetryMediaPermission(webGazerPermission.status);
-  const retryPermissionLabel = GetMediaPermissionRetryLabel(lang);
   const rulesLabels = GetRulesLabels(lang);
   const showRulesButtonLabel = rulesLabels.next;
   const rulesStartButtonLabel = rulesLabels.start;
@@ -475,44 +464,14 @@ export function HomePage() {
     <TrainingConfigNavigationActions
       cancelLabel={t('btn.cancel')}
       disabled={isStartingTraining || (
-        expandedModule === 'oculomotor-training'
-        && oculomotorEnableWebgazer
-        && webGazerPermission.status !== 'granted'
-      ) || (
         expandedModule === 'driving-rehab'
         && !drivingControlModeAvailable
       )}
-      loading={isStartingTraining || (
-        expandedModule === 'oculomotor-training'
-        && oculomotorEnableWebgazer
-        && (webGazerPermission.status === 'idle' || webGazerPermission.status === 'requesting')
-      )}
+      loading={isStartingTraining}
       nextLabel={showRulesButtonLabel}
       onCancel={handleCloseConfig}
       onNext={handleShowRules}
-    >
-      {expandedModule === 'oculomotor-training' && oculomotorEnableWebgazer && (
-        <div
-          className={`webgazer-pl-message ${['denied', 'unsupported', 'error'].includes(webGazerPermission.status) ? 'error' : ''}`}
-          role={['denied', 'unsupported', 'error'].includes(webGazerPermission.status) ? 'alert' : 'status'}
-        >
-          {webGazerPermission.status === 'granted'
-            ? t('settings.wg.permissionReady')
-            : ['denied', 'unsupported', 'error'].includes(webGazerPermission.status)
-              ? t('settings.wg.permissionError')
-              : t('settings.wg.startingCam')}
-          {canRetryWebGazerPermission && (
-            <button
-              className="btn btn-secondary"
-              type="button"
-              onClick={webGazerPermission.retry}
-            >
-              {retryPermissionLabel}
-            </button>
-          )}
-        </div>
-      )}
-    </TrainingConfigNavigationActions>
+    />
   );
 
   return (

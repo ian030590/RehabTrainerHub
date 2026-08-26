@@ -9,13 +9,14 @@ const target = await FindTrainingTarget();
 const cdp = await ConnectCdp(target.webSocketDebuggerUrl);
 const observed = {
   calibration: false,
+  calibrationDone: false,
   cameraLabels: new Set(),
   formalPreviewHidden: false,
   gazePoint: false,
   init: false,
   initPreview: false,
+  recalibration: false,
   validation: false,
-  validationResult: false,
 };
 const browserErrors = [];
 let previousStage = '';
@@ -218,15 +219,16 @@ async function BrowserSnapshot() {
 
   return {
     calibration: Boolean(document.querySelector('#webgazer-calibrate-container')),
+    calibrationDone: Boolean(document.querySelector('[data-webgazer-step="calibration_done"]')),
     cameraPermission: permission || 'unavailable',
     formalPreviewHidden: formalTrial && !videoVisible,
     gazePointVisible,
     init: Boolean(document.querySelector('#webgazer-init-container')),
     initPreviewVisible: Boolean(document.querySelector('#webgazer-init-container')) && videoVisible,
+    recalibration: Boolean(document.querySelector('[data-webgazer-step="recalibrate_instructions"]')),
     record,
     results: Boolean(document.querySelector('.results-score')),
     validation: Boolean(document.querySelector('#webgazer-validate-container')),
-    validationResult: Boolean(document.querySelector('#webgazer-validate-container #cont')),
     videoTracks,
     webgazerApi: {
       begin: typeof window.webgazer?.begin,
@@ -240,8 +242,9 @@ function UpdateObserved(snapshot) {
   if (snapshot.init) observed.init = true;
   if (snapshot.initPreviewVisible) observed.initPreview = true;
   if (snapshot.calibration) observed.calibration = true;
+  if (snapshot.calibrationDone) observed.calibrationDone = true;
+  if (snapshot.recalibration) observed.recalibration = true;
   if (snapshot.validation) observed.validation = true;
-  if (snapshot.validationResult) observed.validationResult = true;
   if (snapshot.formalPreviewHidden) observed.formalPreviewHidden = true;
   if (snapshot.gazePointVisible) observed.gazePoint = true;
   for (const track of snapshot.videoTracks || []) {
@@ -252,7 +255,8 @@ function UpdateObserved(snapshot) {
 function GetStage(snapshot) {
   if (snapshot.record) return 'results-saved';
   if (snapshot.results) return 'results-rendered';
-  if (snapshot.validationResult) return 'validation-results';
+  if (snapshot.calibrationDone) return 'calibration-done';
+  if (snapshot.recalibration) return 'recalibration-instructions';
   if (snapshot.validation) return 'validation';
   if (snapshot.calibration) return 'calibration';
   if (snapshot.init) return snapshot.initPreviewVisible ? 'head-position-with-preview' : 'head-position';
@@ -263,6 +267,7 @@ function GetStage(snapshot) {
 function ValidateAcceptance(snapshot, state, errors) {
   const trial = snapshot.record?.result;
   const samples = Array.isArray(trial?.gaze_samples) ? trial.gaze_samples : [];
+  const nativeSamples = Array.isArray(trial?.webgazer_data) ? trial.webgazer_data : [];
   const pointPairsValid = samples.length > 0 && samples.every((sample) => (
     Array.isArray(sample)
     && sample.length >= 9
@@ -272,6 +277,7 @@ function ValidateAcceptance(snapshot, state, errors) {
     && Number.isFinite(sample[8])
   ));
   const checks = {
+    calibrationDoneSeen: state.calibrationDone,
     calibrationStageSeen: state.calibration,
     cameraPermissionGranted: snapshot.cameraPermission === 'granted',
     cameraTrackSeen: state.cameraLabels.size > 0,
@@ -282,7 +288,15 @@ function ValidateAcceptance(snapshot, state, errors) {
     meanDistanceCalculated: Number.isFinite(trial?.mean_target_distance_px),
     nativeWebGazerApi: snapshot.webgazerApi?.begin === 'function'
       && snapshot.webgazerApi?.prediction === 'function'
-      && snapshot.webgazerApi?.faceMeshSolutionPath === './mediapipe/face_mesh',
+      && typeof snapshot.webgazerApi?.faceMeshSolutionPath === 'string'
+      && /\/mediapipe\/face_mesh\/?$/.test(snapshot.webgazerApi.faceMeshSolutionPath),
+    nativeWebGazerDataRetained: nativeSamples.length > 0
+      && nativeSamples.length === trial?.webgazer_sample_count
+      && nativeSamples.every((sample) => (
+        Number.isFinite(sample?.x)
+        && Number.isFinite(sample?.y)
+        && Number.isFinite(sample?.t)
+      )),
     noBrowserErrors: errors.length === 0,
     officialCoordinateSource: trial?.gaze_coordinate_source === 'jspsych-webgazer-extension',
     pointPairsValid,
@@ -292,19 +306,21 @@ function ValidateAcceptance(snapshot, state, errors) {
     standardDeviationCalculated: Number.isFinite(trial?.target_distance_sd_px),
     timeToFirstFixationCalculated: Object.hasOwn(trial || {}, 'time_to_first_fixation_ms'),
     blinkCountCalculated: Number.isFinite(trial?.blink_count),
-    validationResultSeen: state.validationResult,
-    validationStageSeen: state.validation,
+    nativeValidationStageSeen: state.validation,
     webGazerEnabledInRecord: snapshot.record?.config?.oculomotorEnableWebgazer === true,
+    webGazerNativeDataConsumed: trial?.webgazer_data_consumed === true,
     gazePointEnabledInRecord: snapshot.record?.config?.oculomotorShowGazepoint === true,
   };
   return {
     passed: Object.values(checks).every(Boolean),
     checks,
     cameraLabels: [...state.cameraLabels],
+    recalibrationSeen: state.recalibration,
     metrics: {
       averagePupilSizePx: trial?.average_pupil_size_px ?? null,
       blinkCount: trial?.blink_count ?? null,
       gazeSampleCount: samples.length,
+      nativeWebGazerSampleCount: nativeSamples.length,
       meanTargetDistancePx: trial?.mean_target_distance_px ?? null,
       pupilSizeSdPx: trial?.pupil_size_sd_px ?? null,
       targetDistanceSdPx: trial?.target_distance_sd_px ?? null,

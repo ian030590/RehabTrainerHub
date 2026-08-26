@@ -16,6 +16,7 @@ const outputIndex = resolve(outputDir, 'index.html');
 const viteBin = resolve(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
 const browserPath = FindBrowserPath();
 const timeoutMs = 60_000;
+const formalTrialTargetSelector = '.oculomotor-training-trial';
 
 if (!existsSync(outputIndex)) {
   throw new Error(`Built Vision runtime is missing: ${outputIndex}\nRun npm run build:hub first.`);
@@ -124,6 +125,8 @@ try {
 
   await cdp.Send('Page.navigate', { url: navigationUrl }, sessionId);
 
+  await WaitAndClickInstruction(cdp, sessionId, 'camera_instructions');
+
   await WaitForSelector(cdp, sessionId, '#webgazer-init-container #jspsych-wg-cont', timeoutMs);
   const nativeInitState = await ReadNativeInitState(cdp, sessionId);
   assert.equal(nativeInitState.hasNativeContainer, true, 'native jsPsych camera-init DOM is missing');
@@ -140,31 +143,67 @@ try {
   );
   await ClickDomSelector(cdp, sessionId, '#jspsych-wg-cont');
 
-  await WaitForSelector(cdp, sessionId, '#webgazer-calibrate-container #calibration-point', timeoutMs);
-  for (let index = 0; index < 18; index += 1) {
-    await ClickDomSelector(cdp, sessionId, '#webgazer-calibrate-container #calibration-point');
-    if (index < 17) {
-      await WaitForValue(cdp, sessionId, `window.__wgSmoke.calibrationClicks >= ${index + 1}`, timeoutMs);
-    }
-  }
-  const calibrationState = await Evaluate(cdp, sessionId, `({
+  await WaitAndClickInstruction(cdp, sessionId, 'calibration_instructions');
+  await CompleteNativeCalibration(cdp, sessionId, 10);
+  const initialCalibrationState = await Evaluate(cdp, sessionId, `({
     clicks: window.__wgSmoke.calibrationClicks,
     starts: window.__wgSmoke.mouseCalibrationStarts,
+    points: window.__wgSmoke.calibrationPointsByRun[0] ?? [],
   })`);
-  assert.equal(calibrationState.clicks, 18, 'native 9-point x2 click calibration count');
-  assert.equal(calibrationState.starts, 1, 'native mouse calibration must start exactly once');
+  assert.equal(initialCalibrationState.clicks, 10, 'native 5-point x2 click calibration count');
+  assert.equal(initialCalibrationState.starts, 1, 'native mouse calibration must start once');
+  AssertFivePointsTwice(initialCalibrationState.points, 'initial calibration');
 
+  await WaitAndClickInstruction(cdp, sessionId, 'validation_instructions');
   await WaitForSelector(cdp, sessionId, '#webgazer-validate-container .validation-point', timeoutMs);
-  await WaitForSelector(cdp, sessionId, '#webgazer-validate-container #cont', timeoutMs);
-  const validationState = await Evaluate(cdp, sessionId, `(() => ({
-    centroids: document.querySelectorAll('#webgazer-validate-container .validation-centroid').length,
-    points: document.querySelectorAll('#webgazer-validate-container .raw-data-point').length,
-    customPanel: Boolean(document.querySelector('[data-webgazer-validation-result]')),
-  }))()`);
-  assert.equal(validationState.centroids, 9, 'native validation must draw all 9 ROI centroids');
-  assert.ok(validationState.points > 0, 'native validation must draw raw gaze points');
-  assert.equal(validationState.customPanel, false, 'validation must not be wrapped in custom result UI');
-  await ClickDomSelector(cdp, sessionId, '#webgazer-validate-container #cont');
+  await WaitForSelector(cdp, sessionId, '[data-webgazer-step="recalibrate_instructions"]', timeoutMs);
+  const failedValidationState = await Evaluate(cdp, sessionId, `({
+    runs: window.__wgSmoke.validationRuns,
+    pointCounts: window.__wgSmoke.validationPointCounts,
+    sawValidationResultContinue: window.__wgSmoke.sawValidationResultContinue,
+    sawCustomValidationPanel: window.__wgSmoke.sawCustomValidationPanel,
+  })`);
+  assert.equal(failedValidationState.runs, 1, 'the first native validation must run once');
+  assert.deepEqual(failedValidationState.pointCounts, [5], 'the first validation must use 5 points');
+  assert.equal(
+    failedValidationState.sawValidationResultContinue,
+    false,
+    'native validation must auto-finish without a custom result continue button',
+  );
+  assert.equal(
+    failedValidationState.sawCustomValidationPanel,
+    false,
+    'validation must not be wrapped in custom result UI',
+  );
+
+  await ClickInstructionButton(cdp, sessionId, 'recalibrate_instructions');
+  await CompleteNativeCalibration(cdp, sessionId, 20);
+  const recalibrationState = await Evaluate(cdp, sessionId, `({
+    clicks: window.__wgSmoke.calibrationClicks,
+    starts: window.__wgSmoke.mouseCalibrationStarts,
+    points: window.__wgSmoke.calibrationPointsByRun[1] ?? [],
+  })`);
+  assert.equal(recalibrationState.clicks, 20, 'recalibration must add another 5 points x2');
+  assert.equal(recalibrationState.starts, 2, 'native mouse calibration must restart for recalibration');
+  AssertFivePointsTwice(recalibrationState.points, 'recalibration');
+
+  await WaitAndClickInstruction(cdp, sessionId, 'validation_instructions');
+  await WaitForSelector(cdp, sessionId, '#webgazer-validate-container .validation-point', timeoutMs);
+  await WaitForSelector(cdp, sessionId, '[data-webgazer-step="calibration_done"]', timeoutMs);
+  const validationState = await Evaluate(cdp, sessionId, `({
+    runs: window.__wgSmoke.validationRuns,
+    pointCounts: window.__wgSmoke.validationPointCounts,
+    sawValidationResultContinue: window.__wgSmoke.sawValidationResultContinue,
+    sawCustomValidationPanel: window.__wgSmoke.sawCustomValidationPanel,
+  })`);
+  assert.equal(validationState.runs, 2, 'validation must run again after recalibration');
+  assert.deepEqual(validationState.pointCounts, [5, 5], 'both validation rounds must use 5 points');
+  assert.equal(validationState.sawValidationResultContinue, false);
+  assert.equal(validationState.sawCustomValidationPanel, false);
+
+  await ClickInstructionButton(cdp, sessionId, 'calibration_done');
+  await WaitForSelector(cdp, sessionId, '[data-webgazer-step="begin"]', timeoutMs);
+  await PressKey(cdp, sessionId, 'Enter');
 
   await WaitForSelector(cdp, sessionId, '.oculomotor-training-trial canvas', timeoutMs);
   await WaitForValue(cdp, sessionId, `window.__wgSmoke.predictionPointCalls.some(
@@ -183,6 +222,23 @@ try {
   assert.equal(liveGazePoint.overlayDisplay, 'none', 'formal training must hide face landmarks');
   assert.equal(liveGazePoint.feedbackDisplay, 'none', 'formal training must hide face feedback');
 
+  await WaitForSelector(cdp, sessionId, '[data-webgazer-step="show_data"]', timeoutMs);
+  const showDataState = await Evaluate(cdp, sessionId, `(() => {
+    const text = document.querySelector('[data-webgazer-step="show_data"]')?.textContent ?? '';
+    const match = text.match(/captured\\s+(\\d+)\\s+gaze samples/i);
+    return {
+      savedCount: window.__wgSmoke.savedPayloads.length,
+      sampleCount: match ? Number(match[1]) : null,
+      text,
+    };
+  })()`);
+  assert.equal(showDataState.savedCount, 0, 'the experiment must wait at show_data before saving');
+  assert.ok(
+    Number.isInteger(showDataState.sampleCount) && showDataState.sampleCount > 0,
+    `show_data must report native extension samples: ${showDataState.text}`,
+  );
+  await PressKey(cdp, sessionId, 'Enter');
+
   await WaitForValue(cdp, sessionId, 'window.__wgSmoke.savedPayloads.length === 1', timeoutMs);
   await WaitForSelector(cdp, sessionId, '.results-summary', timeoutMs);
   const resultState = await Evaluate(cdp, sessionId, `(() => {
@@ -195,18 +251,36 @@ try {
       resultText: document.querySelector('.results-summary')?.textContent ?? '',
       predictionPointCalls: window.__wgSmoke.predictionPointCalls,
       gazeDotDisplay: document.querySelector('#webgazerGazeDot')?.style.display ?? null,
+      observedFlowSteps: window.__wgSmoke.observedFlowSteps,
     };
   })()`);
-  AssertSavedResult(resultState);
+  AssertSavedResult(resultState, showDataState.sampleCount);
+  assert.deepEqual(resultState.observedFlowSteps, [
+    'preload',
+    'camera_instructions',
+    'init_camera',
+    'calibration_instructions',
+    'calibration',
+    'validation_instructions',
+    'validation',
+    'recalibrate',
+    'calibration',
+    'validation_instructions',
+    'validation',
+    'calibration_done',
+    'begin',
+    'trial',
+    'show_data',
+  ], 'official jsPsych flow, including the executed recalibration branch');
   AssertNoCriticalBrowserFailures(cdp.events, sessionId, navigationUrl);
 
   console.log([
     'Oculomotor WebGazer browser smoke passed.',
     'Vendored WebGazer 3.5.3 production bundle executed in Chromium.',
     'Official jsPsych camera init: preview visible and continue gated until centered.',
-    'Native jsPsych calibration: 9 points x 2 clicks.',
-    `Native jsPsych validation: ${validationState.points} raw points and 9 centroids.`,
-    `Training: ${resultState.result.gaze_sample_count} paired gaze/target samples; gaze point shown then hidden.`,
+    'Native jsPsych calibration: 5 points x 2 clicks, repeated after forced validation failure.',
+    'Native jsPsych validation: first round below 50% forced recalibration; second round passed.',
+    `Training: ${resultState.result.webgazer_sample_count} native and ${resultState.result.gaze_sample_count} paired gaze/target samples; gaze point shown then hidden.`,
     `Metrics: mean=${resultState.result.mean_target_distance_px}px, SD=${resultState.result.target_distance_sd_px}px, TTFF=${resultState.result.time_to_first_fixation_ms}ms, pupil=${resultState.result.average_pupil_size_px}px, pupil SD=${resultState.result.pupil_size_sd_px}px, blinks=${resultState.result.blink_count}.`,
   ].join('\n'));
 } catch (error) {
@@ -224,7 +298,7 @@ try {
   rmSync(browserProfileDir, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
 }
 
-function AssertSavedResult(state) {
+function AssertSavedResult(state, showDataSampleCount) {
   assert.equal(state.appId, 'rehabtrainerhub', 'record must use the canonical Hub app id');
   assert.equal(state.runtimeId, 'vision', 'record must use the Hub vision runtime scope');
   assert.equal(state.resultCount, 1, 'only the Pixi oculomotor trial should be saved');
@@ -232,6 +306,37 @@ function AssertSavedResult(state) {
   assert.ok(result, 'saved oculomotor result is missing');
   assert.equal(result.trial_type, 'pixi-oculomotor-training');
   assert.equal(result.gaze_coordinate_source, 'jspsych-webgazer-extension');
+  assert.equal(result.webgazer_data_consumed, true, 'native extension data must be consumed');
+  assert.ok(
+    Number.isInteger(result.webgazer_sample_count) && result.webgazer_sample_count > 0,
+    'native extension sample count',
+  );
+  assert.equal(
+    result.webgazer_sample_count,
+    showDataSampleCount,
+    'show_data and the persisted native extension sample count must agree',
+  );
+  assert.ok(
+    result.webgazer_sample_count >= result.gaze_sample_count,
+    'native extension sampling should include every rate-limited paired gaze row',
+  );
+  assert.ok(Array.isArray(result.webgazer_data), 'canonical jsPsych webgazer_data must be retained');
+  assert.equal(
+    result.webgazer_data.length,
+    result.webgazer_sample_count,
+    'canonical payload length must match the validated native sample count',
+  );
+  result.webgazer_data.forEach((sample, index) => {
+    for (const field of ['x', 'y', 't']) {
+      assert.ok(Number.isFinite(sample?.[field]), `native gaze sample ${index} ${field}`);
+    }
+  });
+  const targetBounds = result.webgazer_targets?.[formalTrialTargetSelector];
+  assert.ok(targetBounds, `native extension target ${formalTrialTargetSelector} is missing`);
+  for (const field of ['x', 'y', 'top', 'bottom', 'left', 'right', 'width', 'height']) {
+    assert.ok(Number.isFinite(targetBounds[field]), `native extension target ${field}`);
+  }
+  assert.ok(targetBounds.width > 0 && targetBounds.height > 0, 'native extension target bounds');
   assert.ok(Number.isFinite(result.mean_target_distance_px), 'mean target distance');
   assert.ok(result.mean_target_distance_px > 0 && result.mean_target_distance_px < 20);
   assert.ok(Number.isFinite(result.target_distance_sd_px), 'target distance SD');
@@ -242,7 +347,6 @@ function AssertSavedResult(state) {
   assert.ok(Number.isFinite(result.pupil_size_sd_px) && result.pupil_size_sd_px >= 0);
   assert.equal(result.blink_count, 1, 'the in-training blink should be counted');
   assert.ok(Number.isInteger(result.gaze_sample_count) && result.gaze_sample_count >= 20);
-  assert.equal(result.webgazer_data, undefined, 'redundant extension samples must not bloat saved records');
   assert.deepEqual(result.gaze_sample_columns, [
     't_ms',
     'gaze_x',
@@ -323,14 +427,41 @@ function CreateBootstrapSource() {
     const smokeState = window.__wgSmoke = {
       active: false,
       calibrationClicks: 0,
+      calibrationPointsByRun: [],
       faceCentered: false,
       gazeListener: null,
       mouseCalibrationStarts: 0,
+      observedFlowSteps: [],
       predictionCounter: 0,
       predictionPointCalls: [],
       savedPayloads: [],
+      sawCustomValidationPanel: false,
+      sawValidationResultContinue: false,
       trainingTick: 0,
+      validationPointCounts: [],
+      validationRuns: 0,
     };
+
+    const RecordFlowStep = () => {
+      smokeState.sawValidationResultContinue ||= Boolean(
+        document.querySelector('#webgazer-validate-container #cont'),
+      );
+      smokeState.sawCustomValidationPanel ||= Boolean(
+        document.querySelector('[data-webgazer-validation-result]'),
+      );
+
+      const declaredStep = document.querySelector('[data-webgazer-step]')
+        ?.getAttribute('data-webgazer-step');
+      let step = declaredStep === 'recalibrate_instructions' ? 'recalibrate' : declaredStep;
+      if (!step && document.querySelector('#webgazer-init-container')) step = 'init_camera';
+      if (!step && document.querySelector('#webgazer-calibrate-container')) step = 'calibration';
+      if (!step && document.querySelector('#webgazer-validate-container')) step = 'validation';
+      if (!step && document.querySelector('.oculomotor-training-trial')) step = 'trial';
+      if (!step) return;
+      if (smokeState.observedFlowSteps.length === 0) smokeState.observedFlowSteps.push('preload');
+      if (smokeState.observedFlowSteps.at(-1) !== step) smokeState.observedFlowSteps.push(step);
+    };
+    new MutationObserver(RecordFlowStep).observe(document, { childList: true, subtree: true });
 
     const originalFetch = window.fetch.bind(window);
     const smokeUser = ${JSON.stringify(user)};
@@ -429,6 +560,8 @@ function CreateBootstrapSource() {
       SetEye(positions, [362, 263, 386, 374, 385, 380], 0.65, closed);
       return positions;
     };
+    const seenValidationContainers = new WeakSet();
+    const seenValidationPoints = new WeakSet();
     const PredictionTarget = () => {
       const canvas = document.querySelector('.oculomotor-training-trial canvas');
       if (canvas) {
@@ -438,8 +571,23 @@ function CreateBootstrapSource() {
       }
       const point = document.querySelector('#webgazer-validate-container .validation-point');
       if (point) {
+        const container = point.closest('#webgazer-validate-container');
+        if (container && !seenValidationContainers.has(container)) {
+          seenValidationContainers.add(container);
+          smokeState.validationRuns += 1;
+          smokeState.validationPointCounts.push(0);
+        }
+        if (!seenValidationPoints.has(point)) {
+          seenValidationPoints.add(point);
+          smokeState.validationPointCounts[smokeState.validationRuns - 1] += 1;
+        }
         const rect = point.getBoundingClientRect();
-        return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        const target = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        // Keep the first validation completely outside the 200 px ROI so the
+        // official <50% conditional branch must execute. The second run is centered.
+        return smokeState.validationRuns === 1
+          ? { x: target.x + 450, y: target.y + 450 }
+          : target;
       }
       return { x: innerWidth / 2, y: innerHeight / 2 };
     };
@@ -509,8 +657,14 @@ function CreateBootstrapSource() {
       },
       addMouseEventListeners() {
         smokeState.mouseCalibrationStarts += 1;
+        smokeState.calibrationPointsByRun.push([]);
         mouseCalibrationListener = (event) => {
-          if (event.target?.id === 'calibration-point') smokeState.calibrationClicks += 1;
+          if (event.target?.id === 'calibration-point') {
+            smokeState.calibrationClicks += 1;
+            smokeState.calibrationPointsByRun.at(-1).push(
+              event.target.style.left + ',' + event.target.style.top,
+            );
+          }
         };
         document.addEventListener('click', mouseCalibrationListener, true);
         return webgazer;
@@ -563,6 +717,73 @@ async function SetFaceCentered(cdpClient, targetSessionId) {
     if (feedback instanceof HTMLElement) feedback.style.borderColor = 'green';
     return true;
   })()`);
+}
+
+async function WaitAndClickInstruction(cdpClient, targetSessionId, step) {
+  await WaitForSelector(
+    cdpClient,
+    targetSessionId,
+    `[data-webgazer-step="${step}"]`,
+    timeoutMs,
+  );
+  await ClickInstructionButton(cdpClient, targetSessionId, step);
+}
+
+async function ClickInstructionButton(cdpClient, targetSessionId, step) {
+  const state = await Evaluate(cdpClient, targetSessionId, `(() => ({
+    hasStep: Boolean(document.querySelector(${JSON.stringify(`[data-webgazer-step="${step}"]`)})),
+    buttonCount: document.querySelectorAll('#jspsych-html-button-response-btngroup button').length,
+  }))()`);
+  assert.equal(state.hasStep, true, `instruction step ${step} is missing`);
+  assert.equal(state.buttonCount, 1, `instruction step ${step} must have exactly one native button`);
+  await ClickDomSelector(cdpClient, targetSessionId, '#jspsych-html-button-response-btngroup button');
+}
+
+async function CompleteNativeCalibration(cdpClient, targetSessionId, expectedTotalClicks) {
+  let clickCount = await Evaluate(cdpClient, targetSessionId, 'window.__wgSmoke.calibrationClicks');
+  while (clickCount < expectedTotalClicks) {
+    await WaitForSelector(
+      cdpClient,
+      targetSessionId,
+      '#webgazer-calibrate-container #calibration-point',
+      timeoutMs,
+    );
+    await ClickDomSelector(cdpClient, targetSessionId, '#webgazer-calibrate-container #calibration-point');
+    clickCount += 1;
+    await WaitForValue(
+      cdpClient,
+      targetSessionId,
+      `window.__wgSmoke.calibrationClicks >= ${clickCount}`,
+      timeoutMs,
+    );
+  }
+}
+
+function AssertFivePointsTwice(points, label) {
+  assert.equal(points.length, 10, `${label} click count`);
+  const counts = new Map();
+  points.forEach((point) => counts.set(point, (counts.get(point) ?? 0) + 1));
+  assert.deepEqual(
+    [...counts.keys()].sort(),
+    ['25%,25%', '25%,75%', '50%,50%', '75%,25%', '75%,75%'],
+    `${label} official 5-point layout`,
+  );
+  assert.deepEqual([...counts.values()].sort(), [2, 2, 2, 2, 2], `${label} repetitions`);
+}
+
+async function PressKey(cdpClient, targetSessionId, key) {
+  const keyDefinition = key === 'Enter'
+    ? { key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, nativeVirtualKeyCode: 13 }
+    : { key: ' ', code: 'Space', windowsVirtualKeyCode: 32, nativeVirtualKeyCode: 32 };
+  await cdpClient.Send('Input.dispatchKeyEvent', {
+    type: 'keyDown',
+    ...keyDefinition,
+  }, targetSessionId);
+  await cdpClient.Send('Input.dispatchKeyEvent', {
+    type: 'keyUp',
+    ...keyDefinition,
+  }, targetSessionId);
+  await Wait(25);
 }
 
 async function ClickDomSelector(cdpClient, targetSessionId, selector) {

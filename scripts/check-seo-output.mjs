@@ -80,7 +80,7 @@ function ValidateAppSeo(app, appFailures) {
   ValidateNotFoundPage(notFoundPath, label, appFailures);
 
   if (app.role === 'hub') {
-    if (indexHtml !== null && !/<h1\b[^>]*\bid=["']lobby-title["'][^>]*>[\s\S]*?居家訓練工具與衛教資訊[\s\S]*?<\/h1>/i.test(indexHtml)) {
+    if (indexHtml !== null && !/<h1\b[^>]*\bid=["']lobby-title["'][^>]*>[\s\S]*?訓練大廳[\s\S]*?<\/h1>/i.test(indexHtml)) {
       appFailures.push(`${indexPath}: Hub homepage must prerender its visible heading in Traditional Chinese.`);
     }
     ValidateHubPrivatePages(outputDir, sitemapUrls, appFailures);

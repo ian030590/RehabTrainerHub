@@ -19,7 +19,8 @@ export const zhTW = {
       },
     },
     lobby: {
-      title: '居家訓練工具與衛教資訊',
+      kicker: '居家訓練網',
+      title: '訓練大廳',
       intro: '請依自身狀況量力練習；如有疾病、受傷或疑慮，先詢問醫師或依法執業醫事人員。各項結果僅為練習紀錄。',
       searchLabel: '搜尋模組名稱',
       searchPlaceholder: '搜尋訓練模組',

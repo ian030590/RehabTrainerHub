@@ -170,7 +170,7 @@ interface WebGazerRuntimeLike {
 interface WebGazerExtensionLike {
   hidePredictions?: () => void;
   hideVideo?: () => void;
-  onGazeUpdate?: (
+  onGazeUpdate: (
     callback: (prediction: WebGazerPrediction | null) => void,
   ) => () => void;
   pause?: () => void;
@@ -397,6 +397,14 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
     const enableWebgazer = trial.enable_webgazer as boolean;
     const showGazePoint = enableWebgazer && (trial.show_gaze_point as boolean);
     const aoiRadiusPx = PixelFromDegree(5);
+    const webGazerExtension = self.jsPsych.extensions?.webgazer as unknown as
+      | WebGazerExtensionLike
+      | undefined;
+    const subscribeToOfficialGazeUpdates = webGazerExtension?.onGazeUpdate?.bind(webGazerExtension);
+
+    if (enableWebgazer && typeof subscribeToOfficialGazeUpdates !== 'function') {
+      throw new Error('The native jsPsych WebGazer extension is unavailable for the formal trial.');
+    }
 
     const runWithApp = (app: Application) => {
       AttachPixiTrialCanvas(oculomotorPixiScope, wrapper);
@@ -493,9 +501,6 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       let latestEyeFeatures: WebGazerEyeFeaturesLike | null = null;
       let stopOfficialGazeUpdates: (() => void) | undefined;
       const webGazerRuntime = (window as Window & { webgazer?: WebGazerRuntimeLike }).webgazer;
-      const webGazerExtension = self.jsPsych.extensions?.webgazer as
-        | WebGazerExtensionLike
-        | undefined;
 
       const handleEyeFeatures = (prediction: WebGazerRawPrediction | null) => {
         if (ended || paused) return;
@@ -716,9 +721,6 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           acquired_targets: acquiredTargets,
           average_fps: Math.round(averageFps * 10) / 10,
           duration_ms: elapsed,
-          gaze_coordinate_source: enableWebgazer
-            ? 'jspsych-webgazer-extension'
-            : undefined,
           aoi_score: enableWebgazer ? (gazeSummary.aoiScore ?? 0) : undefined,
           mean_target_distance_px: enableWebgazer
             ? RoundToTenth(gazeSummary.meanDistancePx)
@@ -933,7 +935,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
 
       if (enableWebgazer) {
         webGazerRuntime?.setGazeListener?.(handleEyeFeatures);
-        stopOfficialGazeUpdates = webGazerExtension?.onGazeUpdate?.(handleGazePrediction);
+        stopOfficialGazeUpdates = subscribeToOfficialGazeUpdates!(handleGazePrediction);
         webGazerExtension?.hideVideo?.();
         webGazerExtension?.resume?.();
         if (showGazePoint) webGazerExtension?.showPredictions?.();
