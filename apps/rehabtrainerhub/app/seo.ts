@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { hubFullName, hubLocalName, hubName } from './hubBrand';
+import { zhTW } from './i18n';
 import { siteUrls } from './siteUrls';
 
 export const siteDescription =
@@ -19,7 +20,7 @@ const hubUrl = `${siteUrls.hub}/`;
 const organizationId = `${hubUrl}#organization`;
 const websiteId = `${hubUrl}#website`;
 const hubApplicationId = `${hubUrl}#application`;
-const maintainerId = `${hubUrl}#maintainer`;
+const maintainerId = `${hubUrl}qa/#professional-background`;
 
 export function CreateSeoMetadata({
   title,
@@ -92,7 +93,6 @@ export const websiteJsonLd = {
   description: siteDescription,
   hasPart: [{ '@id': hubApplicationId }],
   publisher: { '@id': organizationId },
-  creator: { '@id': maintainerId },
 };
 
 export const organizationJsonLd = {
@@ -108,7 +108,6 @@ export const organizationJsonLd = {
     height: seoImage.height,
   },
   description: siteDescription,
-  founder: { '@id': maintainerId },
 };
 
 export const maintainerJsonLd = {
@@ -116,8 +115,8 @@ export const maintainerJsonLd = {
   '@id': maintainerId,
   name: '蔡泓恩',
   jobTitle: '職能治療師',
-  url: `${hubUrl}qa/#professional-background`,
-  description: '經職能治療師考試及格並領有職能治療師證書，畢業於國立臺灣大學職能治療學系，具視覺功能評估、視覺復能與臨床研究經驗。',
+  url: maintainerId,
+  description: zhTW.hubUi.questions.professionalBody,
   alumniOf: {
     '@type': 'CollegeOrUniversity',
     name: '國立臺灣大學',
@@ -155,17 +154,20 @@ export const hubApplicationJsonLd = {
   ],
   isPartOf: { '@id': websiteId },
   publisher: { '@id': organizationId },
-  creator: { '@id': maintainerId },
 };
 
 export const siteJsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
     organizationJsonLd,
-    maintainerJsonLd,
     websiteJsonLd,
     hubApplicationJsonLd,
   ],
+};
+
+export const maintainerPageJsonLd = {
+  '@context': 'https://schema.org',
+  ...maintainerJsonLd,
 };
 
 export function SerializeJsonLd(value: unknown) {
