@@ -918,7 +918,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       {phase === 'menu' && (
         <div className="training-panel gesture-menu-panel">
           <TrainingConfigPanel
-            className="gesture-config"
             label={t('gesture.config.label')}
             title={t('training.gesture.title')}
             summaryTitle={t('training.gesture.title')}

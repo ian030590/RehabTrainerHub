@@ -893,7 +893,6 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
       {phase === 'menu' && (
         <div className="training-panel every-ball-panel">
           <TrainingConfigPanel
-            className="every-ball-config"
             label={labels.configLabel}
             title={labels.title}
             summaryTitle={labels.title}
@@ -1029,7 +1028,6 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
       {phase === 'rules' && (
         <div className="training-panel every-ball-panel">
           <TrainingRulesPanel
-            className="every-ball-config"
             label={labels.rulesLabel}
             title={selectedLevelLabels.title}
             summaryTitle={labels.title}

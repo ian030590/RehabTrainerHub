@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import { StartTrainingButton } from './StartTrainingButton';
+import { TrainingConfigNavigationActions } from './TrainingConfigNavigationActions';
 import { TrainingConfigPanel, TrainingConfigSection } from './TrainingConfigPanel';
 import type { TrainingConfigSummaryItem } from './TrainingConfigSummary';
 
@@ -61,18 +61,14 @@ export function TrainingRulesPanel({
       aria-label={ariaLabel}
       aria-modal={ariaModal}
       actions={(
-        <>
-          <StartTrainingButton
-            className={startClassName}
-            disabled={startDisabled}
-            onClick={onStart}
-          >
-            {startLabel}
-          </StartTrainingButton>
-          <button className="btn btn-ghost btn-lg" type="button" onClick={onBack}>
-            {backLabel}
-          </button>
-        </>
+        <TrainingConfigNavigationActions
+          cancelLabel={backLabel}
+          disabled={startDisabled}
+          nextClassName={startClassName}
+          nextLabel={startLabel}
+          onCancel={onBack}
+          onNext={onStart}
+        />
       )}
     >
       {sections.map((section, index) => (

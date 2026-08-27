@@ -1,5 +1,5 @@
-import { type ChangeEvent } from 'react';
 import type { PeripheralAttentionScreenGeometry } from '../peripheralAttentionCanvas';
+import { TrainingConfigRangeField } from './TrainingConfigRangeField';
 import {
   defaultPeripheralAttentionConfigLabels,
   GetPeripheralAttentionConfigLabels,
@@ -38,55 +38,18 @@ export function PeripheralAttentionContrastSlider({
   lang = 'zh',
 }: PeripheralAttentionContrastSliderProps) {
   const l = { ...defaultPeripheralAttentionConfigLabels[lang], ...labels };
-  const bgVal = Math.round(255 * (1 - value / 100));
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value, 10);
-    if (!Number.isNaN(val)) {
-      onChange(Math.max(5, Math.min(100, val)));
-    }
-  };
-
   return (
-    <div className="training-slider-group">
-      <div className="training-slider-header">
-        <div className="training-slider-title-row">
-          <span className="training-slider-label">{l.contrastStrength}</span>
-          <span className="training-slider-badge-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-            <span
-              style={{
-                width: '14px',
-                height: '14px',
-                borderRadius: '3px',
-                border: '1px solid #fff',
-                backgroundColor: `rgb(${bgVal}, ${bgVal}, ${bgVal})`,
-                display: 'inline-block',
-              }}
-              aria-hidden="true"
-            />
-            {value}%
-          </span>
-        </div>
-        <p className="training-slider-desc">{l.contrastDesc}</p>
-      </div>
-      <div className="training-slider-wrapper">
-        <input
-          type="range"
-          min="5"
-          max="100"
-          step="1"
-          value={value}
-          onChange={handleChange}
-          className="training-slider-input"
-          aria-label={l.contrastStrength}
-        />
-        <div className="training-slider-scale">
-          <span>{l.contrastLow}</span>
-          <span>{l.contrastMid}</span>
-          <span>{l.contrastHigh}</span>
-        </div>
-      </div>
-    </div>
+    <TrainingConfigRangeField
+      label={l.contrastStrength}
+      value={value}
+      valueLabel={`${value}%`}
+      description={l.contrastDesc}
+      min={5}
+      max={100}
+      step={1}
+      scaleLabels={[l.contrastLow, l.contrastMid, l.contrastHigh]}
+      onValueChange={(nextValue) => onChange(Math.max(5, Math.min(100, nextValue)))}
+    />
   );
 }
 
@@ -111,39 +74,17 @@ export function PeripheralAttentionEccentricitySlider({
 }: PeripheralAttentionEccentricitySliderProps) {
   const l = { ...defaultPeripheralAttentionConfigLabels[lang], ...labels };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    if (!Number.isNaN(val)) {
-      onChange(Math.max(5.0, Math.min(35.0, val)));
-    }
-  };
-
   return (
-    <div className="training-slider-group">
-      <div className="training-slider-header">
-        <div className="training-slider-title-row">
-          <span className="training-slider-label">{l.eccentricityTitle}</span>
-          <span className="training-slider-badge-pill">{value.toFixed(1)}°</span>
-        </div>
-      </div>
-      <div className="training-slider-wrapper">
-        <input
-          type="range"
-          min="5.0"
-          max="35.0"
-          step="0.5"
-          value={value}
-          onChange={handleChange}
-          className="training-slider-input"
-          aria-label={l.eccentricityTitle}
-        />
-        <div className="training-slider-scale">
-          <span>{l.eccentricityLow}</span>
-          <span>{l.eccentricityMid}</span>
-          <span>{l.eccentricityHigh}</span>
-        </div>
-      </div>
-    </div>
+    <TrainingConfigRangeField
+      label={l.eccentricityTitle}
+      value={value}
+      valueLabel={`${value.toFixed(1)}°`}
+      min={5}
+      max={35}
+      step={0.5}
+      scaleLabels={[l.eccentricityLow, l.eccentricityMid, l.eccentricityHigh]}
+      onValueChange={(nextValue) => onChange(Math.max(5, Math.min(35, nextValue)))}
+    />
   );
 }
 
@@ -168,39 +109,17 @@ export function PeripheralAttentionVehicleAngleSlider({
 }: PeripheralAttentionVehicleAngleSliderProps) {
   const l = { ...defaultPeripheralAttentionConfigLabels[lang], ...labels };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    if (!Number.isNaN(val)) {
-      onChange(Math.max(0.8, Math.min(5.0, val)));
-    }
-  };
-
   return (
-    <div className="training-slider-group">
-      <div className="training-slider-header">
-        <div className="training-slider-title-row">
-          <span className="training-slider-label">{l.vehicleSizeTitle}</span>
-          <span className="training-slider-badge-pill">{value.toFixed(1)}°</span>
-        </div>
-      </div>
-      <div className="training-slider-wrapper">
-        <input
-          type="range"
-          min="0.8"
-          max="5.0"
-          step="0.1"
-          value={value}
-          onChange={handleChange}
-          className="training-slider-input"
-          aria-label={l.vehicleSizeTitle}
-        />
-        <div className="training-slider-scale">
-          <span>{l.vehicleSizeSmall}</span>
-          <span>{l.vehicleSizeStandard}</span>
-          <span>{l.vehicleSizeLarge}</span>
-        </div>
-      </div>
-    </div>
+    <TrainingConfigRangeField
+      label={l.vehicleSizeTitle}
+      value={value}
+      valueLabel={`${value.toFixed(1)}°`}
+      min={0.8}
+      max={5}
+      step={0.1}
+      scaleLabels={[l.vehicleSizeSmall, l.vehicleSizeStandard, l.vehicleSizeLarge]}
+      onValueChange={(nextValue) => onChange(Math.max(0.8, Math.min(5, nextValue)))}
+    />
   );
 }
 
@@ -268,13 +187,11 @@ export function PeripheralAttentionNineGridCompass({
 
   return (
     <div className="training-direction-compass-container">
-      <div className="training-slider-header" style={{ marginBottom: '12px' }}>
-        <div className="training-slider-title-row">
-          <span className="training-slider-label">{l.directionsTitle}</span>
-          <span className="training-slider-badge-pill">{badgeText}</span>
-        </div>
-        <p className="training-slider-desc">{l.directionsDesc}</p>
+      <div className="training-range-field-header">
+        <span className="training-range-field-label">{l.directionsTitle}</span>
+        <output className="training-range-field-value">{badgeText}</output>
       </div>
+      <p className="training-range-field-description">{l.directionsDesc}</p>
 
       <div className="training-direction-compass-grid">
         {cells.map((cell, index) => {

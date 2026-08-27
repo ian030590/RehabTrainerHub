@@ -495,12 +495,12 @@ function GetUfovRuleSections(lang: 'zh' | 'en', subtestTitle: string) {
 function GetUfovConfigLabels(lang: 'zh' | 'en') {
   return lang === 'en'
     ? {
-        settingsTitle: 'Peripheral Attention Settings',
-        chooseSubtest: 'Choose Subtest',
-        chooseTrialCount: 'Choose Max Trial Count',
+        settingsTitle: 'Peripheral Visual Field Training',
+        chooseSubtest: 'Training stage',
+        chooseTrialCount: 'Maximum trials',
         customTrialCount: 'Custom',
-        chooseDirections: 'Choose Stimulus Directions',
-        chooseMode: 'Choose Flow',
+        chooseDirections: 'Peripheral stimulus directions',
+        chooseMode: 'Practice flow',
         start: 'Start',
         cancel: 'Cancel',
         subtestUnavailable: 'This subtest is unavailable on this device',
@@ -522,12 +522,12 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
         },
       }
     : {
-        settingsTitle: '周邊注意力設定',
-        chooseSubtest: '選擇 Subtest',
-        chooseTrialCount: '選擇最大 Trial 數量',
+        settingsTitle: '周邊視野訓練',
+        chooseSubtest: '訓練階段',
+        chooseTrialCount: '最大題數',
         customTrialCount: '自訂',
-        chooseDirections: '選擇刺激呈現方向',
-        chooseMode: '選擇流程',
+        chooseDirections: '周邊刺激方向',
+        chooseMode: '練習流程',
         start: '開始',
         cancel: '取消',
         subtestUnavailable: '此裝置無法使用這個 subtest',

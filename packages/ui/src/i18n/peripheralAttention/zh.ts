@@ -1,7 +1,7 @@
 import type { PeripheralAttentionConfigLabels, PeripheralAttentionCopy, PeripheralAttentionRuleSection } from './types';
 
 export const peripheralAttentionZhCopy: PeripheralAttentionCopy = {
-  title: '周邊注意力訓練',
+  title: '周邊視野訓練',
   intro: '完成處理速度、分散注意力與選擇性注意力三階段活動。本活動為非醫療練習工具，結果不代表認知評估、診斷或治療建議。',
   restart: '重新開始',
   car: '汽車',
@@ -41,24 +41,24 @@ export const peripheralAttentionZhCopy: PeripheralAttentionCopy = {
 };
 
 export const peripheralAttentionZhConfigLabels: PeripheralAttentionConfigLabels = {
-  settingsTitle: '周邊注意力設定',
-  chooseSubtest: '選擇 Subtest',
-  chooseTrialCount: '選擇最大 Trial 數量',
+  settingsTitle: '周邊視野訓練',
+  chooseSubtest: '訓練階段',
+  chooseTrialCount: '最大題數',
   customTrialCount: '自訂',
-  chooseDirections: '刺激呈現方向 (九宮格方位選擇)',
-  chooseMode: '選擇流程',
+  chooseDirections: '周邊刺激方向',
+  chooseMode: '練習流程',
   anglesTitle: '周邊偏心視角與車子大小',
   contrastTitle: '對比度控制 (Contrast)',
   contrastDesc: '調整底色控制對比，目標物始終為白色',
-  contrastStrength: '對比度強度',
+    contrastStrength: '刺激對比度',
   contrastLow: '5% (極低對比/灰底)',
   contrastMid: '50% (中對比)',
   contrastHigh: '100% (高對比/純黑底)',
-  eccentricityTitle: '周邊偏心視角 (Eccentricity)',
+  eccentricityTitle: '周邊刺激偏心視角',
   eccentricityLow: '5.0° (中央偏近)',
   eccentricityMid: '20.0°',
   eccentricityHigh: '35.0° (周邊極限)',
-  vehicleSizeTitle: '車子大小視角 (Vehicle Size)',
+  vehicleSizeTitle: '車子大小視角',
   vehicleSizeSmall: '0.8° (精細難)',
   vehicleSizeStandard: '2.5° (標準)',
   vehicleSizeLarge: '5.0° (清晰易)',

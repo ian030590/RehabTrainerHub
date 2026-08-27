@@ -244,6 +244,7 @@ assert.ok(
 const durationConfig = home.slice(durationConfigIndex, home.indexOf("title={t('home.config.speedAndSize')}", durationConfigIndex));
 assert.ok(
   durationConfig.includes('type="range"')
+    && durationConfig.includes('value={oculomotorDurationSec}')
     && durationConfig.includes('min="15"')
     && durationConfig.includes('max="300"'),
   'oculomotor duration must use a bounded range slider',

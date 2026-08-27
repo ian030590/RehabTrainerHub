@@ -4,6 +4,7 @@ import { useT } from '../i18n';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
+import { TrainingConfigRangeField } from '@rehab-trainer/ui/components/TrainingConfigRangeField';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import { TrainingFilePickerButton } from '@rehab-trainer/ui/components/TrainingFilePickerButton';
@@ -654,20 +655,16 @@ export function HomePage() {
               title={t('home.config.durationSec')}
               value={`${oculomotorDurationSec}s`}
             >
-              <label className="training-option training-option-field">
-                <span className="training-option-title">{oculomotorDurationSec}s</span>
-                <input
-                  className="training-slider"
-                  type="range"
-                  min="15"
-                  max="300"
-                  step="1"
-                  value={oculomotorDurationSec}
-                  aria-label={t('home.config.durationSec')}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => setOculomotorDurationSec(parseInt(e.target.value, 10))}
-                />
-              </label>
+              <input
+                type="range"
+                min="15"
+                max="300"
+                step="1"
+                value={oculomotorDurationSec}
+                aria-label={t('home.config.durationSec')}
+                onClick={(event) => event.stopPropagation()}
+                onChange={(event) => setOculomotorDurationSec(Number(event.target.value))}
+              />
             </TrainingConfigSection>
 
             <TrainingConfigSection title={t('home.config.speedAndSize')} wide>
@@ -686,62 +683,40 @@ export function HomePage() {
                 ))}
               </div>
               <TrainingConfigOptionGroup columns={3}>
-                <label className="training-option training-option-field">
-                  <span className="training-option-title">{t('home.config.speed')} ({oculomotorSpeedDegPerSec})</span>
-                  <input
-                    className="training-slider"
-                    type="range"
-                    min="2"
-                    max="80"
-                    step="1"
-                    value={oculomotorSpeedDegPerSec}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      const value = parseFloat(e.target.value);
-                      if (Number.isFinite(value)) {
-                        setOculomotorSpeedDegPerSec(Math.max(2, Math.min(80, value)));
-                      }
-                    }}
-                  />
-                </label>
-                <label className="training-option training-option-field">
-                  <span className="training-option-title">{t('home.config.size')} ({oculomotorTargetSizeMm})</span>
-                  <input
-                    className="training-slider"
-                    type="range"
-                    min="2"
-                    max="100"
-                    step="1"
-                    value={oculomotorTargetSizeMm}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      const value = parseFloat(e.target.value);
-                      if (Number.isFinite(value)) {
-                        setOculomotorTargetSizeMm(Math.max(2, Math.min(100, value)));
-                      }
-                    }}
-                  />
-                </label>
-                <label className="training-option training-option-field">
-                  <span className="training-option-title">{t('home.config.distractors')} ({oculomotorDistractorCount})</span>
-                  <input
-                    className="training-slider"
-                    type="range"
-                    min="0"
-                    max="12"
-                    step="1"
-                    value={oculomotorDistractorCount}
-                    disabled={oculomotorMode !== 'multi-object'}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value, 10);
-                      if (Number.isFinite(value)) {
-                        setOculomotorDistractorCount(Math.max(0, Math.min(12, value)));
-                      }
-                    }}
-                    style={{ opacity: oculomotorMode === 'multi-object' ? 1 : 0.5 }}
-                  />
-                </label>
+                <TrainingConfigRangeField
+                  label={t('home.config.speed')}
+                  value={oculomotorSpeedDegPerSec}
+                  valueLabel={`${oculomotorSpeedDegPerSec}°/s`}
+                  min={2}
+                  max={80}
+                  step={1}
+                  scaleLabels={['2', '41', '80']}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={(value) => setOculomotorSpeedDegPerSec(Math.max(2, Math.min(80, value)))}
+                />
+                <TrainingConfigRangeField
+                  label={t('home.config.size')}
+                  value={oculomotorTargetSizeMm}
+                  valueLabel={`${oculomotorTargetSizeMm} mm`}
+                  min={2}
+                  max={100}
+                  step={1}
+                  scaleLabels={['2 mm', '51 mm', '100 mm']}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={(value) => setOculomotorTargetSizeMm(Math.max(2, Math.min(100, value)))}
+                />
+                <TrainingConfigRangeField
+                  label={t('home.config.distractors')}
+                  value={oculomotorDistractorCount}
+                  valueLabel={oculomotorDistractorCount}
+                  min={0}
+                  max={12}
+                  step={1}
+                  scaleLabels={['0', '6', '12']}
+                  disabled={oculomotorMode !== 'multi-object'}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={(value) => setOculomotorDistractorCount(Math.max(0, Math.min(12, value)))}
+                />
               </TrainingConfigOptionGroup>
             </TrainingConfigSection>
 
@@ -775,19 +750,17 @@ export function HomePage() {
                     {oculomotorColorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </label>
-                <label className="training-option training-option-field">
-                  <span className="training-option-title">{t('home.config.opacity')} ({oculomotorTargetOpacity})</span>
-                  <input
-                    className="training-slider"
-                    type="range"
-                    min="0.1"
-                    max="1.0"
-                    step="0.1"
-                    value={oculomotorTargetOpacity}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => setOculomotorTargetOpacity(parseFloat(e.target.value))}
-                  />
-                </label>
+                <TrainingConfigRangeField
+                  label={t('home.config.opacity')}
+                  value={oculomotorTargetOpacity}
+                  valueLabel={`${Math.round(oculomotorTargetOpacity * 100)}%`}
+                  min={0.1}
+                  max={1}
+                  step={0.1}
+                  scaleLabels={['10%', '50%', '100%']}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={setOculomotorTargetOpacity}
+                />
               </TrainingConfigOptionGroup>
             </TrainingConfigSection>
 
@@ -813,19 +786,17 @@ export function HomePage() {
                 </label>
               </TrainingConfigOptionGroup>
               <TrainingConfigOptionGroup className="training-option-grid-spaced" columns={2}>
-                <label className="training-option training-option-field">
-                  <span className="training-option-title">{t('home.config.bounceJitter')} ({oculomotorBounceJitter})</span>
-                  <input
-                    className="training-slider"
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={oculomotorBounceJitter}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => setOculomotorBounceJitter(parseInt(e.target.value, 10))}
-                  />
-                </label>
+                <TrainingConfigRangeField
+                  label={t('home.config.bounceJitter')}
+                  value={oculomotorBounceJitter}
+                  valueLabel={`${oculomotorBounceJitter}%`}
+                  min={0}
+                  max={100}
+                  step={1}
+                  scaleLabels={['0', '50', '100']}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={setOculomotorBounceJitter}
+                />
               </TrainingConfigOptionGroup>
             </TrainingConfigSection>
 
@@ -904,7 +875,6 @@ export function HomePage() {
             {/* Duration */}
             <TrainingConfigSection title={t('home.config.gaborDuration')} value={`${gaborDurationSec}s`}>
               <input
-                className="training-slider"
                 type="range"
                 min="15"
                 max="300"
@@ -917,26 +887,16 @@ export function HomePage() {
 
             {/* Max Spots */}
             <TrainingConfigSection title={t('home.config.gaborMaxSpots')} value={gaborMaxSpots}>
-              <TrainingConfigOptionGroup columns="auto">
-                <label className="training-option training-option-field">
-                  <span className="training-option-title">{t('home.config.gaborMaxSpots')} ({gaborMaxSpots})</span>
-                <input
-                  className="training-slider"
-                  type="range"
-                  min="3"
-                  max="50"
-                  step="1"
-                  value={gaborMaxSpots}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value, 10);
-                    if (Number.isFinite(value)) {
-                      setGaborMaxSpots(Math.max(3, Math.min(50, value)));
-                    }
-                  }}
-                />
-                </label>
-              </TrainingConfigOptionGroup>
+              <input
+                type="range"
+                min="3"
+                max="50"
+                step="1"
+                value={gaborMaxSpots}
+                aria-label={t('home.config.gaborMaxSpots')}
+                onClick={(event) => event.stopPropagation()}
+                onChange={(event) => setGaborMaxSpots(Math.max(3, Math.min(50, Number(event.target.value))))}
+              />
             </TrainingConfigSection>
 
         </ConfigDialog>
@@ -954,52 +914,40 @@ export function HomePage() {
 
             <TrainingConfigSection title={t('home.config.readingSettings')} wide>
               <TrainingConfigOptionGroup columns={3}>
-                <label className="training-option training-option-field">
-                  <span className="training-option-title">{t('home.config.readingWps')} ({readingWPS})</span>
-                  <input
-                    className="training-slider"
-                    type="range"
-                    min="1"
-                    max="20"
-                    step="1"
-                    value={readingWPS}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value, 10);
-                      if (Number.isFinite(value)) setReadingWPS(Math.max(1, Math.min(20, value)));
-                    }}
-                  />
-                </label>
-                <label className="training-option training-option-field">
-                  <span className="training-option-title">{t('home.config.readingCrowding')} ({readingCrowding})</span>
-                  <input
-                    className="training-slider"
-                    type="range"
-                    min="1"
-                    max="5"
-                    step="1"
-                    value={readingCrowding}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value, 10);
-                      if (Number.isFinite(value)) setReadingCrowding(Math.max(1, Math.min(5, value)));
-                    }}
-                  />
-                </label>
-                <label className="training-option training-option-field">
-                  <span className="training-option-meta">{t('home.config.readingContrast')}</span>
-                  <input
-                    className="training-slider"
-                    type="range"
-                    min="0.0"
-                    max="2.0"
-                    step="0.1"
-                    value={readingContrast}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => setReadingContrast(parseFloat(e.target.value))}
-                  />
-                  <span className="training-option-title">{readingContrast.toFixed(1)}</span>
-                </label>
+                <TrainingConfigRangeField
+                  label={t('home.config.readingWps')}
+                  value={readingWPS}
+                  valueLabel={`${readingWPS} WPS`}
+                  min={1}
+                  max={20}
+                  step={1}
+                  scaleLabels={['1', '10', '20']}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={(value) => setReadingWPS(Math.max(1, Math.min(20, value)))}
+                />
+                <TrainingConfigRangeField
+                  label={t('home.config.readingCrowding')}
+                  value={readingCrowding}
+                  valueLabel={readingCrowding}
+                  min={1}
+                  max={5}
+                  step={1}
+                  scaleLabels={['1', '3', '5']}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={(value) => setReadingCrowding(Math.max(1, Math.min(5, value)))}
+                />
+                <TrainingConfigRangeField
+                  label={t('home.config.readingContrast')}
+                  value={readingContrast}
+                  valueLabel={`${readingContrast.toFixed(1)} logCS`}
+                  description={t('home.config.readingContrastDesc')}
+                  min={0}
+                  max={2}
+                  step={0.1}
+                  scaleLabels={['0.0', '1.0', '2.0']}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={setReadingContrast}
+                />
               </TrainingConfigOptionGroup>
             </TrainingConfigSection>
 
@@ -1187,7 +1135,7 @@ export function HomePage() {
           actions={configActions}
         >
             <TrainingConfigSection
-              title={t('home.module.hartChart.title')}
+              title={t('home.config.hartChartSetup')}
               description={t('home.config.hartChartSummary')}
               wide
             />

@@ -1331,7 +1331,9 @@ body[data-training-embed="hub"] #root,
   color: var(--text-primary);
   font-size: calc(32px * var(--ui-font-scale, 1));
   font-weight: var(--ui-font-heading-weight, 800);
+  letter-spacing: -0.02em;
   line-height: 1.15;
+  text-wrap: balance;
 }
 
 .training-config .config-summary {
@@ -1362,6 +1364,7 @@ body[data-training-embed="hub"] #root,
   color: var(--text-secondary);
   font-size: calc(13px * var(--ui-font-scale, 1));
   font-weight: var(--fw-bold, 700);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -1374,7 +1377,9 @@ body[data-training-embed="hub"] #root,
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 28px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 6px 28px 2px;
+  scrollbar-gutter: stable;
 }
 
 .training-config-body-single {
@@ -1428,6 +1433,7 @@ body[data-training-embed="hub"] #root,
   font-size: calc(16px * var(--ui-font-scale, 1));
   font-weight: var(--ui-font-heading-weight, 800);
   line-height: 1.25;
+  text-wrap: balance;
 }
 
 .training-setting-title-row {
@@ -1449,6 +1455,11 @@ body[data-training-embed="hub"] #root,
   background: var(--bg-card);
   color: var(--text-secondary);
   cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+
+.training-setting-help:active {
+  transform: scale(0.96);
 }
 
 .training-setting-help.is-open {
@@ -1459,9 +1470,11 @@ body[data-training-embed="hub"] #root,
 
 .training-setting-header p {
   margin: 0;
+  max-width: 62ch;
   color: var(--text-secondary);
-  font-size: calc(13px * var(--ui-font-scale, 1));
-  line-height: 1.45;
+  font-size: calc(14px * var(--ui-font-scale, 1));
+  line-height: 1.55;
+  text-wrap: pretty;
 }
 
 .training-setting-header > span {
@@ -1476,6 +1489,7 @@ body[data-training-embed="hub"] #root,
   color: var(--accent-dark);
   font-size: calc(13px * var(--ui-font-scale, 1));
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -1589,15 +1603,110 @@ body[data-training-embed="hub"] #root,
   font-size: calc(16px * var(--ui-font-scale, 1));
   font-weight: 800;
   line-height: 1.25;
+  text-wrap: pretty;
 }
 
 .training-option-meta {
   width: 100%;
   overflow-wrap: anywhere;
   color: var(--text-muted);
+  font-size: calc(13px * var(--ui-font-scale, 1));
+  font-weight: var(--fw-medium, 600);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.training-range-field {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: default;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.training-setting > .training-range-field + .training-range-field {
+  margin-top: 10px;
+}
+
+.training-range-field:has(input:focus-visible) {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.training-range-field:has(input:disabled) {
+  color: var(--text-muted);
+  opacity: 0.52;
+}
+
+.training-range-field-header {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.training-range-field-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: calc(15px * var(--ui-font-scale, 1));
+  font-weight: 800;
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+
+.training-range-field-value {
+  min-height: 30px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-m);
+  background: var(--bg-accent-soft);
+  color: var(--accent-dark);
+  font-size: calc(13px * var(--ui-font-scale, 1));
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.training-range-field-description {
+  color: var(--text-secondary);
+  font-size: calc(13px * var(--ui-font-scale, 1));
+  font-weight: var(--fw-medium, 600);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.training-range-field-scale {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  color: var(--text-muted);
   font-size: calc(12px * var(--ui-font-scale, 1));
   font-weight: var(--fw-medium, 600);
   line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+.training-range-field-scale > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.training-range-field-scale > span:nth-child(2) {
+  text-align: center;
+}
+
+.training-range-field-scale > span:last-child {
+  text-align: right;
 }
 
 .training-option.active .training-option-title {
@@ -1667,20 +1776,43 @@ body[data-training-embed="hub"] #root,
   accent-color: var(--accent);
 }
 
-.training-config .config-actions {
+.training-config > .config-actions {
   flex: 0 0 auto;
+  display: block;
+  margin: 0;
+  padding: 16px 28px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elevated);
+  box-shadow: 0 -10px 24px color-mix(in srgb, var(--text-primary) 5%, transparent);
+}
+
+.training-config-navigation-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.training-config-action-feedback {
+  min-width: 0;
+}
+
+.training-config-action-feedback > * {
+  max-width: none;
+}
+
+.training-config-navigation-buttons {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  margin: 18px 28px 28px;
 }
 
 .training-config-body .config-actions {
   margin: 18px 0 28px;
 }
 
-.training-config .config-actions .btn {
+.training-config > .config-actions .btn {
   border-radius: var(--radius-m);
 }
 
@@ -2278,7 +2410,7 @@ body[data-training-embed="hub"] #root,
   }
 
   .training-config .config-summary,
-  .training-config .config-actions {
+  .training-config > .config-actions {
     margin-left: 12px;
     margin-right: 12px;
   }
@@ -2303,7 +2435,7 @@ body[data-training-embed="hub"] #root,
 
   .training-config-label {
     margin-bottom: 2px;
-    font-size: calc(10px * var(--ui-font-scale, 1));
+    font-size: calc(12px * var(--ui-font-scale, 1));
   }
 
   .training-config .config-summary {
@@ -2314,9 +2446,9 @@ body[data-training-embed="hub"] #root,
 
   .training-config .config-summary span,
   .training-config .config-summary strong {
-    min-height: 28px;
-    padding: 4px 8px;
-    font-size: calc(11px * var(--ui-font-scale, 1));
+    min-height: 32px;
+    padding: 5px 9px;
+    font-size: calc(12px * var(--ui-font-scale, 1));
   }
 
   .training-rule-section::before {
@@ -2325,7 +2457,7 @@ body[data-training-embed="hub"] #root,
 
   .training-config-body {
     grid-template-columns: 1fr;
-    padding: 0 12px 2px;
+    padding: 2px 16px 8px;
   }
 
   .training-option-grid-two,
@@ -2346,6 +2478,10 @@ body[data-training-embed="hub"] #root,
     grid-column: 1 / -1;
   }
 
+  .training-option-grid > .training-range-field {
+    grid-column: 1 / -1;
+  }
+
   .training-setting {
     padding: 12px 0;
   }
@@ -2359,19 +2495,21 @@ body[data-training-embed="hub"] #root,
   .training-setting-title-row h2,
   .training-setting-header h2 {
     margin: 0;
-    font-size: calc(14px * var(--ui-font-scale, 1));
-    line-height: 1.22;
+    font-size: calc(16px * var(--ui-font-scale, 1));
+    line-height: 1.25;
   }
 
   .training-setting-help {
     display: inline-flex;
+    width: 44px;
+    height: 44px;
   }
 
   .training-setting-description {
     display: none;
     margin-top: 6px !important;
-    font-size: calc(11px * var(--ui-font-scale, 1)) !important;
-    line-height: 1.42 !important;
+    font-size: calc(13px * var(--ui-font-scale, 1)) !important;
+    line-height: 1.5 !important;
   }
 
   .training-setting-description[data-mobile-open="true"] {
@@ -2379,9 +2517,9 @@ body[data-training-embed="hub"] #root,
   }
 
   .training-setting-header > span {
-    min-height: 26px;
-    padding: 3px 8px;
-    font-size: calc(11px * var(--ui-font-scale, 1));
+    min-height: 32px;
+    padding: 4px 9px;
+    font-size: calc(12px * var(--ui-font-scale, 1));
   }
 
   .training-option {
@@ -2390,36 +2528,74 @@ body[data-training-embed="hub"] #root,
     border-radius: var(--radius-s);
   }
 
+  .training-config .training-option {
+    min-height: 72px;
+    padding: 12px;
+  }
+
   .training-option-title {
-    font-size: calc(14px * var(--ui-font-scale, 1));
+    font-size: calc(15px * var(--ui-font-scale, 1));
   }
 
   .training-option-meta {
     display: -webkit-box;
     overflow: hidden;
-    font-size: calc(10px * var(--ui-font-scale, 1));
-    line-height: 1.25;
+    font-size: calc(12px * var(--ui-font-scale, 1));
+    line-height: 1.4;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
   }
 
-  .training-config .config-actions,
-  .training-config .config-actions .btn,
+  .training-range-field {
+    gap: 7px;
+    padding: 11px 12px;
+  }
+
+  .training-range-field-label {
+    font-size: calc(14px * var(--ui-font-scale, 1));
+  }
+
+  .training-range-field-value {
+    min-height: 32px;
+    font-size: calc(12px * var(--ui-font-scale, 1));
+  }
+
+  .training-range-field-description,
+  .training-range-field-scale {
+    font-size: calc(12px * var(--ui-font-scale, 1));
+  }
+
   .training-actions,
   .training-actions .btn {
     width: 100%;
   }
 
-  .training-config .config-actions {
+  .training-config > .config-actions {
     margin: 0;
-    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
     background: var(--bg-elevated);
   }
 
-  .training-config .config-actions .btn {
+  .training-config-navigation-actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .training-config-navigation-buttons {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .training-config > .config-actions .btn {
+    width: auto;
     min-height: 48px;
     padding: 10px 16px;
     font-size: calc(15px * var(--ui-font-scale, 1));
+  }
+
+  .training-config-navigation-buttons .config-start-btn {
+    width: 100%;
   }
 
   .training-config-notice {
@@ -2571,13 +2747,20 @@ body[data-training-embed="hub"] #root,
     display: none;
   }
 
-  .training-config .config-actions {
-    flex-wrap: nowrap;
+  .training-config > .config-actions {
     padding-top: 6px;
     padding-bottom: calc(6px + env(safe-area-inset-bottom));
   }
 
-  .training-config .config-actions .btn {
+  .training-config-navigation-actions {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .training-config-navigation-buttons {
+    display: flex;
+  }
+
+  .training-config > .config-actions .btn {
     min-height: 42px;
     padding: 8px 12px;
   }

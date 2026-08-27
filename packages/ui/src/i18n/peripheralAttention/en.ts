@@ -41,16 +41,16 @@ export const peripheralAttentionEnCopy: PeripheralAttentionCopy = {
 };
 
 export const peripheralAttentionEnConfigLabels: PeripheralAttentionConfigLabels = {
-  settingsTitle: 'Peripheral Attention Settings',
-  chooseSubtest: 'Choose Subtest',
-  chooseTrialCount: 'Choose Max Trial Count',
+  settingsTitle: 'Peripheral Visual Field Training',
+  chooseSubtest: 'Training stage',
+  chooseTrialCount: 'Maximum trials',
   customTrialCount: 'Custom',
-  chooseDirections: 'Stimulus Directions (3x3 Compass Grid)',
-  chooseMode: 'Choose Flow',
+  chooseDirections: 'Peripheral stimulus directions',
+  chooseMode: 'Practice flow',
   anglesTitle: 'Peripheral Eccentricity & Vehicle Size',
   contrastTitle: 'Contrast Control',
   contrastDesc: 'Adjust background darkness to control contrast; targets remain white.',
-  contrastStrength: 'Contrast Intensity',
+    contrastStrength: 'Stimulus contrast',
   contrastLow: '5% (Low contrast / Gray)',
   contrastMid: '50% (Medium)',
   contrastHigh: '100% (High / Black)',
