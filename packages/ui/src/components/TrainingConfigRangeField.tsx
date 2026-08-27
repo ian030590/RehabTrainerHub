@@ -54,5 +54,5 @@ export function TrainingSlider({
 }
 
 /** @deprecated Use TrainingSlider. */
-export const TrainingConfigRangeField = TrainingSlider;
+export { TrainingSlider as TrainingConfigRangeField };
 export type TrainingSliderProps = TrainingConfigRangeFieldProps;
