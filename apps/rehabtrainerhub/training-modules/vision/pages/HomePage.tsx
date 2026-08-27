@@ -574,24 +574,53 @@ export function HomePage() {
           actions={configActions}
         >
             <TrainingConfigSection
+              title={t('settings.train.wgToggle')}
+              value={oculomotorEnableWebgazer ? t('common.on') : t('common.off')}
+            >
+              <label className={`training-option training-option-toggle ${oculomotorEnableWebgazer ? 'active' : ''}`}>
+                <div>
+                  <span className="training-option-title">{t('settings.train.wgToggle')}</span>
+                  <span className="training-option-meta">{t('settings.train.wgDesc')}</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={oculomotorEnableWebgazer}
+                  onChange={(e) => setOculomotorEnableWebgazer(e.target.checked)}
+                />
+              </label>
+              <label
+                className={`training-option training-option-toggle ${oculomotorShowGazepoint ? 'active' : ''}`}
+                aria-disabled={!oculomotorEnableWebgazer}
+              >
+                <div>
+                  <span className="training-option-title">{t('settings.train.gazepointToggle')}</span>
+                  <span className="training-option-meta">{t('settings.train.gazepointDesc')}</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={oculomotorShowGazepoint}
+                  disabled={!oculomotorEnableWebgazer}
+                  onChange={(e) => setOculomotorShowGazepoint(e.target.checked)}
+                />
+              </label>
+            </TrainingConfigSection>
+
+            <TrainingConfigSection
               title={t('home.config.trainingMode')}
               value={t(`preset.mode.${oculomotorMode}` as any)}
             >
-              <TrainingConfigOptionGroup columns={3}>
+              <select
+                className="input"
+                value={oculomotorMode}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => setOculomotorMode(e.target.value as typeof oculomotorMode)}
+              >
                 {oculomotorModes.map((mode) => (
-                  <button
-                    key={mode.id}
-                    className={`training-option ${oculomotorMode === mode.id ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOculomotorMode(mode.id);
-                    }}
-                  >
-                    <span className="training-option-title">{t(`preset.mode.${mode.id}` as any)}</span>
-                    <span className="training-option-meta">{t(`preset.mode.${mode.id}Desc` as any)}</span>
-                  </button>
+                  <option key={mode.id} value={mode.id}>
+                    {t(`preset.mode.${mode.id}` as any)}
+                  </option>
                 ))}
-              </TrainingConfigOptionGroup>
+              </select>
             </TrainingConfigSection>
 
             {oculomotorMode !== 'lilac-chaser' && (
@@ -616,37 +645,20 @@ export function HomePage() {
               title={t('home.config.durationSec')}
               value={`${oculomotorDurationSec}s`}
             >
-              <TrainingConfigOptionGroup columns={4}>
-                {durationPresets.map((duration) => (
-                  <button
-                    key={duration}
-                    className={`training-option ${oculomotorDurationSec === duration ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOculomotorDurationSec(duration);
-                    }}
-                  >
-                    <span className="training-option-title">{duration}s</span>
-                  </button>
-                ))}
-                <label className={`training-option training-option-custom ${durationPresets.includes(oculomotorDurationSec) ? '' : 'active'}`}>
-                  <span className="training-option-title">{t('home.config.custom')}</span>
-                  <input
-                    className="training-number-input"
-                    type="number"
-                    min="15"
-                    max="300"
-                    value={oculomotorDurationSec}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value, 10);
-                      if (Number.isFinite(value)) {
-                        setOculomotorDurationSec(Math.max(15, Math.min(300, value)));
-                      }
-                    }}
-                  />
-                </label>
-              </TrainingConfigOptionGroup>
+              <label className="training-option training-option-field">
+                <span className="training-option-title">{oculomotorDurationSec}s</span>
+                <input
+                  className="training-slider"
+                  type="range"
+                  min="15"
+                  max="300"
+                  step="1"
+                  value={oculomotorDurationSec}
+                  aria-label={t('home.config.durationSec')}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => setOculomotorDurationSec(parseInt(e.target.value, 10))}
+                />
+              </label>
             </TrainingConfigSection>
 
             <TrainingConfigSection title={t('home.config.speedAndSize')} wide>
@@ -803,38 +815,6 @@ export function HomePage() {
                   />
                 </label>
               </TrainingConfigOptionGroup>
-            </TrainingConfigSection>
-
-            <TrainingConfigSection
-              title={t('settings.train.wgToggle')}
-              value={oculomotorEnableWebgazer ? t('common.on') : t('common.off')}
-            >
-              <label className={`training-option training-option-toggle ${oculomotorEnableWebgazer ? 'active' : ''}`}>
-                <div>
-                  <span className="training-option-title">{t('settings.train.wgToggle')}</span>
-                  <span className="training-option-meta">{t('settings.train.wgDesc')}</span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={oculomotorEnableWebgazer}
-                  onChange={(e) => setOculomotorEnableWebgazer(e.target.checked)}
-                />
-              </label>
-              <label
-                className={`training-option training-option-toggle ${oculomotorShowGazepoint ? 'active' : ''}`}
-                aria-disabled={!oculomotorEnableWebgazer}
-              >
-                <div>
-                  <span className="training-option-title">{t('settings.train.gazepointToggle')}</span>
-                  <span className="training-option-meta">{t('settings.train.gazepointDesc')}</span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={oculomotorShowGazepoint}
-                  disabled={!oculomotorEnableWebgazer}
-                  onChange={(e) => setOculomotorShowGazepoint(e.target.checked)}
-                />
-              </label>
             </TrainingConfigSection>
 
             <TrainingConfigSection

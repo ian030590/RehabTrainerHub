@@ -224,6 +224,30 @@ assert.equal(
   false,
   'HomePage must leave camera acquisition exclusively to the native init_camera trial',
 );
+const oculomotorConfigStart = home.indexOf(
+  "expandedModule === 'oculomotor-training' && rulesModule !== 'oculomotor-training'",
+);
+assert.ok(oculomotorConfigStart >= 0, 'oculomotor training config must remain present');
+const webGazerConfigIndex = home.indexOf("title={t('settings.train.wgToggle')}", oculomotorConfigStart);
+const trainingModeConfigIndex = home.indexOf("title={t('home.config.trainingMode')}", oculomotorConfigStart);
+const durationConfigIndex = home.indexOf("title={t('home.config.durationSec')}", oculomotorConfigStart);
+assert.ok(
+  webGazerConfigIndex > oculomotorConfigStart
+    && webGazerConfigIndex < trainingModeConfigIndex,
+  'WebGazer analysis settings must be the first oculomotor config section',
+);
+const trainingModeConfig = home.slice(trainingModeConfigIndex, durationConfigIndex);
+assert.ok(
+  trainingModeConfig.includes('<select') && trainingModeConfig.includes('value={oculomotorMode}'),
+  'oculomotor training mode must use a select control',
+);
+const durationConfig = home.slice(durationConfigIndex, home.indexOf("title={t('home.config.speedAndSize')}", durationConfigIndex));
+assert.ok(
+  durationConfig.includes('type="range"')
+    && durationConfig.includes('min="15"')
+    && durationConfig.includes('max="300"'),
+  'oculomotor duration must use a bounded range slider',
+);
 assert.ok(oculomotorTimeline.includes('show_gaze_point'), 'the timeline must forward the gazepoint display setting');
 assert.ok(oculomotorTimeline.includes("import WebGazerExtension from '@jspsych/extension-webgazer'"), 'the formal trial must use the official WebGazer extension');
 assert.ok(oculomotorTimeline.includes('extensions: enableWebGazer'), 'the formal trial must activate the official WebGazer extension');
