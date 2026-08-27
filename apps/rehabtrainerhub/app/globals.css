@@ -99,7 +99,12 @@ h2,
 h3 {
   color: var(--heading);
   font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 h1 {
@@ -475,6 +480,7 @@ summary:focus-visible {
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
+  transition: color 200ms ease, background-color 200ms ease, transform 200ms ease;
 }
 
 .hub-nav a::after {
@@ -499,6 +505,10 @@ summary:focus-visible {
   background: var(--primary);
 }
 
+.hub-nav a:active {
+  transform: translateY(1px);
+}
+
 .account-menu {
   position: relative;
   justify-self: end;
@@ -520,11 +530,17 @@ summary:focus-visible {
   border: 0;
   border-radius: 50%;
   background: transparent;
+  transition: background-color 200ms ease, transform 200ms ease;
 }
 
 .hub-language-toggle:hover,
 .hub-language-toggle:focus-visible {
   background: var(--primary-soft);
+}
+
+.hub-language-toggle:active,
+.account-menu-button:active {
+  transform: scale(0.96);
 }
 
 .hub-language-toggle img {
@@ -547,6 +563,7 @@ summary:focus-visible {
   border-radius: 50%;
   color: #39434a;
   background: transparent;
+  transition: color 200ms ease, background-color 200ms ease, transform 200ms ease;
 }
 
 .account-menu-button:hover,
@@ -717,6 +734,10 @@ summary:focus-visible {
   align-items: end;
   gap: 40px;
   padding: 42px 30px 30px;
+}
+
+.lobby-heading > div {
+  max-width: 46rem;
 }
 
 .lobby-heading p:last-child {
@@ -918,6 +939,12 @@ summary:focus-visible {
   transform: translateX(2px);
 }
 
+.filter-option:has(input:checked) {
+  color: var(--primary-hover);
+  background: var(--primary-soft);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
 .filter-option input {
   width: 22px;
   height: 22px;
@@ -929,6 +956,7 @@ summary:focus-visible {
   min-width: 24px;
   color: var(--text-muted);
   font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
@@ -949,6 +977,7 @@ summary:focus-visible {
 .result-heading p {
   color: var(--text-muted);
   font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .module-grid {
@@ -1074,7 +1103,7 @@ summary:focus-visible {
   flex: 1 1 auto;
   margin-bottom: 20px;
   color: var(--text-muted);
-  font-size: 0.93rem;
+  font-size: 1rem;
   line-height: 1.6;
 }
 
@@ -1102,7 +1131,7 @@ summary:focus-visible {
   background: var(--trainer-color);
   border: none;
   cursor: pointer;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   font-weight: 700;
   text-decoration: none;
   transition: background-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
@@ -1121,6 +1150,13 @@ summary:focus-visible {
 .module-card-footer button:focus-visible {
   outline: 3px solid var(--trainer-color);
   outline-offset: 3px;
+}
+
+.module-card-footer a:active,
+.module-card-footer button:active,
+.community-game-actions a:active,
+.community-game-actions button:active {
+  transform: translateY(1px) scale(0.98);
 }
 
 .module-card-footer .material-symbols-outlined {
@@ -2638,12 +2674,46 @@ summary:focus-visible {
   .filter-panel {
     position: static;
     max-height: none;
-    padding: 22px 18px;
+    padding: 16px 0 8px;
     margin: 22px 18px 0;
+    overflow: hidden;
+    border-width: 1px 0 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .filter-heading {
+    padding-bottom: 0;
+    margin-bottom: 10px;
   }
 
   .filter-panel fieldset {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    gap: 8px;
+    padding: 0 0 8px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+
+  .filter-option {
+    flex: 0 0 auto;
+    grid-template-columns: 22px auto auto;
+    min-height: 48px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    scroll-snap-align: start;
+  }
+
+  .filter-option:hover {
+    transform: none;
+  }
+
+  .filter-option:has(input:checked) {
+    border-color: color-mix(in srgb, var(--primary) 46%, var(--border));
+    box-shadow: inset 0 -3px 0 var(--primary);
   }
 
   .module-results {
