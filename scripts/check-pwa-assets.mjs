@@ -120,6 +120,10 @@ try {
     headers,
     /Content-Security-Policy: frame-ancestors 'self'/,
   );
+  assert.match(
+    headers,
+    /Strict-Transport-Security: max-age=31536000; includeSubDomains/,
+  );
 } finally {
   rmSync(fixtureRoot, { recursive: true, force: true });
 }

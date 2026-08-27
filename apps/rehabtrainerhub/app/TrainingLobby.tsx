@@ -298,8 +298,16 @@ export function TrainingLobby() {
                     onPointerEnter={() => PreloadTrainingModule(module)}
                     style={BuildTrainingThemeStyle(theme)}
                   >
-                    <div className="module-card-visual" aria-label={moduleCopy.title} role="img">
-                      <CardImagePlaceholder src={BuildTrainingModuleImageSrc(module)} />
+                    <div className="module-card-visual">
+                      <CardImagePlaceholder
+                        alt={language === 'en'
+                          ? `${moduleCopy.title} activity preview: ${moduleCopy.description}`
+                          : `${moduleCopy.title}活動畫面：${moduleCopy.description}`}
+                        height={360}
+                        loading="lazy"
+                        src={BuildTrainingModuleImageSrc(module)}
+                        width={640}
+                      />
                     </div>
                     <div className="module-card-content">
                       <div className="module-card-meta">
@@ -411,6 +419,7 @@ export function TrainingLobby() {
           <p className="page-kicker">{copy.guide.kicker}</p>
           <h2 id="lobby-guide-title">{copy.guide.title}</h2>
           <p>{copy.guide.definition}</p>
+          <p className="lobby-guide-updated">{copy.guide.updated}</p>
         </header>
         <div className="lobby-guide-sections">
           <section>
@@ -418,16 +427,29 @@ export function TrainingLobby() {
             <p>{copy.guide.chooseBody}</p>
           </section>
           <section>
+            <h3>{copy.guide.prepareTitle}</h3>
+            <p>{copy.guide.prepareBody}</p>
+          </section>
+          <section>
             <h3>{copy.guide.recordsTitle}</h3>
             <p>{copy.guide.recordsBody}</p>
+          </section>
+          <section>
+            <h3>{copy.guide.privacyTitle}</h3>
+            <p>{copy.guide.privacyBody}</p>
           </section>
           <section>
             <h3>{copy.guide.limitsTitle}</h3>
             <p>{copy.guide.limitsBody}</p>
           </section>
+          <section>
+            <h3>{copy.guide.reviewTitle}</h3>
+            <p>{copy.guide.reviewBody}</p>
+          </section>
         </div>
         <nav aria-label={copy.guide.kicker} className="lobby-guide-links">
-          <a href="/qa/">{copy.guide.aboutLink}</a>
+          <a href="/about/">{copy.guide.aboutLink}</a>
+          <a href="/qa/">{copy.guide.educationLink}</a>
           <a href="/privacy/">{copy.guide.privacyLink}</a>
         </nav>
       </section>

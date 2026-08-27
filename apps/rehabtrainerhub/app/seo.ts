@@ -21,6 +21,9 @@ const organizationId = `${hubUrl}#organization`;
 const websiteId = `${hubUrl}#website`;
 const hubApplicationId = `${hubUrl}#application`;
 const maintainerId = `${hubUrl}qa/#professional-background`;
+const repositoryUrl = 'https://github.com/ian030590/RehabTrainerHub';
+
+export const siteContentLastModified = '2026-08-27';
 
 export function CreateSeoMetadata({
   title,
@@ -91,6 +94,7 @@ export const websiteJsonLd = {
   url: hubUrl,
   inLanguage: 'zh-Hant-TW',
   description: siteDescription,
+  dateModified: siteContentLastModified,
   hasPart: [{ '@id': hubApplicationId }],
   publisher: { '@id': organizationId },
 };
@@ -108,6 +112,13 @@ export const organizationJsonLd = {
     height: seoImage.height,
   },
   description: siteDescription,
+  sameAs: [repositoryUrl],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'technical support',
+    url: `${repositoryUrl}/issues`,
+    availableLanguage: ['zh-TW', 'en'],
+  },
 };
 
 export const maintainerJsonLd = {
@@ -156,12 +167,37 @@ export const hubApplicationJsonLd = {
   publisher: { '@id': organizationId },
 };
 
+const homepageFaqCopy = zhTW.hubUi.lobby.guide;
+
+export const homepageFaqJsonLd = {
+  '@type': 'FAQPage',
+  '@id': `${hubUrl}#faq`,
+  inLanguage: 'zh-Hant-TW',
+  mainEntity: [
+    [homepageFaqCopy.title, homepageFaqCopy.definition],
+    [homepageFaqCopy.chooseTitle, homepageFaqCopy.chooseBody],
+    [homepageFaqCopy.prepareTitle, homepageFaqCopy.prepareBody],
+    [homepageFaqCopy.recordsTitle, homepageFaqCopy.recordsBody],
+    [homepageFaqCopy.privacyTitle, homepageFaqCopy.privacyBody],
+    [homepageFaqCopy.limitsTitle, homepageFaqCopy.limitsBody],
+    [homepageFaqCopy.reviewTitle, homepageFaqCopy.reviewBody],
+  ].map(([name, text]) => ({
+    '@type': 'Question',
+    name,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text,
+    },
+  })),
+};
+
 export const siteJsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
     organizationJsonLd,
     websiteJsonLd,
     hubApplicationJsonLd,
+    homepageFaqJsonLd,
   ],
 };
 

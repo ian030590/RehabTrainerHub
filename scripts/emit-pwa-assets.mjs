@@ -44,6 +44,7 @@ await writeFile(
   [
     '/*',
     `  Content-Security-Policy: frame-ancestors ${frameAncestors}`,
+    '  Strict-Transport-Security: max-age=31536000; includeSubDomains',
     '',
     '/sw.js',
     '  Cache-Control: no-cache, no-store, must-revalidate',

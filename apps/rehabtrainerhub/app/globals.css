@@ -773,10 +773,32 @@ summary:focus-visible {
   max-width: 860px;
 }
 
-.lobby-guide > header > p:last-child {
+.lobby-guide > header > h2 + p {
   margin: 14px 0 0;
   color: var(--text-muted);
   line-height: 1.8;
+}
+
+.lobby-guide .lobby-guide-updated {
+  font-size: 0.85rem;
+}
+
+.about-page .page-heading > p:last-child,
+.about-page-updated {
+  max-width: 860px;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+.about-site-section a {
+  color: var(--primary);
+  font-weight: 750;
+  text-underline-offset: 4px;
+}
+
+.about-page-updated {
+  margin: 32px 0 0;
+  font-size: 0.85rem;
 }
 
 .lobby-guide-sections {
@@ -791,9 +813,13 @@ summary:focus-visible {
   padding: 26px 28px 28px 0;
 }
 
-.lobby-guide-sections > section + section {
+.lobby-guide-sections > section:not(:nth-child(3n + 1)) {
   padding-left: 28px;
   border-left: 1px solid var(--border);
+}
+
+.lobby-guide-sections > section:nth-child(n + 4) {
+  border-top: 1px solid var(--border);
 }
 
 .lobby-guide-sections h3 {
@@ -2445,10 +2471,13 @@ summary:focus-visible {
     padding: 24px 0;
   }
 
-  .lobby-guide-sections > section + section {
+  .lobby-guide-sections > section:not(:nth-child(3n + 1)) {
     padding-left: 0;
-    border-top: 1px solid var(--border);
     border-left: 0;
+  }
+
+  .lobby-guide-sections > section + section {
+    border-top: 1px solid var(--border);
   }
 
   .lobby-heading {

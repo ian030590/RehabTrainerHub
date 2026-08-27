@@ -89,6 +89,7 @@ function ValidateAppSeo(app, appFailures) {
     }
     const llms = ReadUtf8File(llmsPath, 'Hub llms.txt', appFailures);
     if (llms !== null) ValidateLlmsTxt(llms, llmsPath, siteUrl, appFailures);
+    ValidateHubAbout(join(outputDir, 'about', 'index.html'), appFailures);
     ValidateHubQaPerson(join(outputDir, 'qa', 'index.html'), appFailures);
     ValidateHubPrivatePages(outputDir, sitemapUrls, appFailures);
   }
@@ -111,6 +112,7 @@ function ValidateLlmsTxt(source, file, siteUrl, appFailures) {
   const urls = [...source.matchAll(/\]\((https:\/\/[^)]+)\)/g)].map((match) => match[1]);
   const expectedUrls = [
     siteUrl,
+    `${siteUrl}about/`,
     `${siteUrl}qa/`,
     `${siteUrl}download/`,
     `${siteUrl}privacy/`,
@@ -215,7 +217,7 @@ function ValidateSitemap(source, file, siteUrl, role, appFailures) {
   }
 
   const expectedUrls = role === 'hub'
-    ? ['', 'qa/', 'privacy/', 'download/'].map((path) => `${siteUrl}${path}`)
+    ? ['', 'about/', 'qa/', 'privacy/', 'download/'].map((path) => `${siteUrl}${path}`)
     : [siteUrl];
   if (!HaveSameValues(urls, expectedUrls)) {
     appFailures.push(`${file}: expected only these canonical public URLs: ${expectedUrls.join(', ')}.`);
@@ -399,6 +401,7 @@ function ValidateJsonLd(html, file, siteUrl, role, appFailures) {
       [`${siteUrl}#website`, 'WebSite'],
       [`${siteUrl}#organization`, 'Organization'],
       [`${siteUrl}#application`, 'WebApplication'],
+      [`${siteUrl}#faq`, 'FAQPage'],
     ]);
     const unexpectedHomepageNodes = nodes.filter((node) => {
       if (!node?.['@type']) return false;
@@ -407,7 +410,7 @@ function ValidateJsonLd(html, file, siteUrl, role, appFailures) {
       return !expectedType || types.length !== 1 || types[0] !== expectedType;
     });
     if (unexpectedHomepageNodes.length > 0) {
-      appFailures.push(`${file}: Hub homepage JSON-LD must contain only Organization, WebSite, and WebApplication nodes.`);
+      appFailures.push(`${file}: Hub homepage JSON-LD contains an unsupported top-level node.`);
     }
     const website = nodes.find((node) => node?.['@id'] === `${siteUrl}#website` && HasType(node, 'WebSite'));
     const organization = nodes.find((node) => node?.['@id'] === `${siteUrl}#organization` && HasType(node, 'Organization'));
@@ -425,6 +428,65 @@ function ValidateJsonLd(html, file, siteUrl, role, appFailures) {
     const hubApplication = nodes.find((node) => node?.['@id'] === `${siteUrl}#application`);
     if (hubApplication && GetReferenceIds(hubApplication.hasPart).length > 0) {
       appFailures.push(`${file}: Hub WebApplication must not reference retired trainer websites.`);
+    }
+    if (organization) {
+      const sameAs = Array.isArray(organization.sameAs) ? organization.sameAs : [];
+      if (!sameAs.includes('https://github.com/ian030590/RehabTrainerHub')) {
+        appFailures.push(`${file}: Organization.sameAs must identify the visible official GitHub repository.`);
+      }
+      if (organization.contactPoint?.url !== 'https://github.com/ian030590/RehabTrainerHub/issues') {
+        appFailures.push(`${file}: Organization.contactPoint must match the visible public issue-reporting channel.`);
+      }
+    }
+    ValidateHomepageFaq(
+      nodes.find((node) => node?.['@id'] === `${siteUrl}#faq` && HasType(node, 'FAQPage')),
+      html,
+      file,
+      appFailures,
+    );
+  }
+}
+
+function ValidateHomepageFaq(faq, html, file, appFailures) {
+  if (!faq) {
+    appFailures.push(`${file}: missing the canonical homepage FAQPage JSON-LD node.`);
+    return;
+  }
+  if (!Array.isArray(faq.mainEntity) || faq.mainEntity.length < 5) {
+    appFailures.push(`${file}: FAQPage must include the visible homepage questions.`);
+    return;
+  }
+
+  const visibleText = GetVisibleText(html);
+  for (const question of faq.mainEntity) {
+    const answer = question?.acceptedAnswer?.text;
+    if (!HasType(question, 'Question') || !HasType(question?.acceptedAnswer, 'Answer')) {
+      appFailures.push(`${file}: FAQPage entries must use Question and Answer types.`);
+      continue;
+    }
+    for (const value of [question.name, answer]) {
+      if (typeof value !== 'string' || !value.trim() || !visibleText.includes(value)) {
+        appFailures.push(`${file}: FAQPage text must be non-empty and match visible homepage content.`);
+      }
+    }
+  }
+}
+
+function ValidateHubAbout(file, appFailures) {
+  const html = ReadUtf8File(file, 'Hub About page', appFailures);
+  if (html === null) return;
+  const visibleText = GetVisibleText(html);
+  for (const text of ['關於居家訓練網', '不提供醫療服務', '內容責任', 'GitHub']) {
+    if (!visibleText.includes(text)) {
+      appFailures.push(`${file}: About page is missing visible trust content: ${text}.`);
+    }
+  }
+  for (const url of [
+    'https://github.com/ian030590/RehabTrainerHub',
+    'https://github.com/ian030590/RehabTrainerHub/issues',
+  ]) {
+    if (!html.includes(`href="${url}"`)) {
+      appFailures.push(`${file}: About page must link to ${url}.`);
     }
   }
 }
@@ -452,14 +514,7 @@ function ValidateHubQaPerson(file, appFailures) {
     }
   }
 
-  const visibleText = DecodeHtml(
-    html
-      .replace(/<script\b[\s\S]*?<\/script>/gi, ' ')
-      .replace(/<style\b[\s\S]*?<\/style>/gi, ' ')
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim(),
-  );
+  const visibleText = GetVisibleText(html);
   for (const property of ['name', 'jobTitle', 'description']) {
     if (person[property] && !visibleText.includes(person[property])) {
       appFailures.push(`${file}: Person.${property} must match visible QA page content.`);
@@ -567,6 +622,17 @@ function ReadUtf8File(file, label, appFailures) {
     appFailures.push(`${file}: contains invalid UTF-8 data.`);
   }
   return source;
+}
+
+function GetVisibleText(html) {
+  return DecodeHtml(
+    html
+      .replace(/<script\b[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style\b[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  );
 }
 
 function FindMetaContent(html, attributeName, attributeValue) {

@@ -1,4 +1,5 @@
 export interface RehabFooterProps {
+  aboutHref?: string;
   appName?: string;
   className?: string;
   developerHref?: string;
@@ -9,6 +10,7 @@ export interface RehabFooterProps {
   repoHref?: string;
   showRights?: boolean;
   labels?: {
+    about?: string;
     hub?: string;
     developer?: string;
     download?: string;
@@ -47,6 +49,7 @@ export function GetTrainerSkipLinkLabel(language: 'zh' | 'en') {
 }
 
 export function RehabFooter({
+  aboutHref,
   appName = 'Rehab Trainer Hub',
   className = 'rehab-footer',
   developerHref,
@@ -66,6 +69,7 @@ export function RehabFooter({
         <div className="rehab-footer-meta">
           <nav aria-label={labels?.navigation ?? 'Footer navigation'}>
             <a href={hubHref}>{labels?.hub ?? 'Hub'}</a>
+            {aboutHref && <a href={aboutHref}>{labels?.about ?? 'About'}</a>}
             {developerHref && <a href={developerHref}>{labels?.developer ?? 'Developer options'}</a>}
             {downloadHref && <a href={downloadHref}>{labels?.download ?? 'Download app'}</a>}
             {privacyHref && <a href={privacyHref}>{labels?.privacy ?? 'Privacy'}</a>}

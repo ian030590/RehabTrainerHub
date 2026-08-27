@@ -190,6 +190,7 @@ function HubShellContent({ children }: { children: ReactNode }) {
         <div className={`hub-content${isTrainingRoute ? ' hub-content-training' : ''}`}>{children}</div>
         {!isTrainingRoute && (
           <RehabFooter
+            aboutHref="/about/"
             appName="Rehab Trainer Hub"
             className="hub-footer"
             developerHref="/developer/"
@@ -198,6 +199,7 @@ function HubShellContent({ children }: { children: ReactNode }) {
             privacyHref="/privacy/"
             showRights={false}
             labels={{
+              about: language === 'en' ? 'About' : '關於本站',
               hub: copy.footer.hub,
               developer: copy.footer.developer,
               download: copy.footer.download,
