@@ -1,5 +1,5 @@
 import type { PeripheralAttentionScreenGeometry } from '../peripheralAttentionCanvas';
-import { TrainingConfigRangeField } from './TrainingConfigRangeField';
+import { TrainingSlider } from './TrainingConfigRangeField';
 import {
   defaultPeripheralAttentionConfigLabels,
   GetPeripheralAttentionConfigLabels,
@@ -39,7 +39,7 @@ export function PeripheralAttentionContrastSlider({
 }: PeripheralAttentionContrastSliderProps) {
   const l = { ...defaultPeripheralAttentionConfigLabels[lang], ...labels };
   return (
-    <TrainingConfigRangeField
+    <TrainingSlider
       label={l.contrastStrength}
       value={value}
       valueLabel={`${value}%`}
@@ -75,7 +75,7 @@ export function PeripheralAttentionEccentricitySlider({
   const l = { ...defaultPeripheralAttentionConfigLabels[lang], ...labels };
 
   return (
-    <TrainingConfigRangeField
+    <TrainingSlider
       label={l.eccentricityTitle}
       value={value}
       valueLabel={`${value.toFixed(1)}°`}
@@ -110,7 +110,7 @@ export function PeripheralAttentionVehicleAngleSlider({
   const l = { ...defaultPeripheralAttentionConfigLabels[lang], ...labels };
 
   return (
-    <TrainingConfigRangeField
+    <TrainingSlider
       label={l.vehicleSizeTitle}
       value={value}
       valueLabel={`${value.toFixed(1)}°`}
@@ -186,12 +186,12 @@ export function PeripheralAttentionNineGridCompass({
   const badgeText = l.directionsBadge.replace('{n}', String(selectedAxes.length));
 
   return (
-    <div className="training-direction-compass-container">
-      <div className="training-range-field-header">
-        <span className="training-range-field-label">{l.directionsTitle}</span>
-        <output className="training-range-field-value">{badgeText}</output>
+    <div className="training-slider training-direction-compass-container">
+      <div className="training-slider-header">
+        <span className="training-slider-label">{l.directionsTitle}</span>
+        <output className="training-slider-value">{badgeText}</output>
       </div>
-      <p className="training-range-field-description">{l.directionsDesc}</p>
+      <p className="training-slider-description">{l.directionsDesc}</p>
 
       <div className="training-direction-compass-grid">
         {cells.map((cell, index) => {

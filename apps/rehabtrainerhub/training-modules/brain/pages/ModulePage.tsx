@@ -4,10 +4,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
-import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import {
   PeripheralAttentionContrastSlider,
   PeripheralAttentionEccentricitySlider,
+  PeripheralAttentionNineGridCompass,
   PeripheralAttentionVehicleAngleSlider,
 } from '@rehab-trainer/ui/components/PeripheralAttentionConfigComponents';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
@@ -110,8 +110,6 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const [isUfovConfigOpen, setIsUfovConfigOpen] = useState(false);
   const [selectedUfovSubtest, setSelectedUfovSubtest] = useState<SubtestId>(1);
   const [selectedUfovMode, setSelectedUfovMode] = useState<UfovRunMode>('formal');
-  const [selectedUfovTrialCount, setSelectedUfovTrialCount] = useState(48);
-  const [customUfovTrialCountInput, setCustomUfovTrialCountInput] = useState('');
   const [selectedUfovAxes, setSelectedUfovAxes] = useState<UfovTargetAxis[]>([0, 1, 2, 3, 4, 5, 6, 7]);
   const [selectedUfovStopCondition, setSelectedUfovStopCondition] = useState<PeripheralAttentionStopCondition>('adaptive_80');
   const [ufovContrastPercent, setUfovContrastPercent] = useState(100);
@@ -147,7 +145,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
     navigate(`/attention-training/ufov?${new URLSearchParams({
       subtest: String(effectiveUfovSubtest),
       mode: selectedUfovMode,
-      trials: String(selectedUfovTrialCount),
+      trials: '48',
       axes: selectedUfovAxes.join(','),
       stop: selectedUfovStopCondition,
       contrast: String(ufovContrastPercent),
@@ -170,28 +168,6 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isUfovRulesOpen]);
-
-  const handleTrialPreset = (value: number) => {
-    setSelectedUfovTrialCount(value);
-    setCustomUfovTrialCountInput('');
-  };
-
-  const handleCustomTrialCount = (value: string) => {
-    setCustomUfovTrialCountInput(value);
-    const parsed = Number(value);
-    if (Number.isFinite(parsed) && parsed >= 1 && parsed <= 240) {
-      setSelectedUfovTrialCount(Math.round(parsed));
-    }
-  };
-
-  const toggleTargetAxis = (axis: UfovTargetAxis) => {
-    setSelectedUfovAxes((current) => {
-      if (current.includes(axis)) {
-        return current.length > 1 ? current.filter((item) => item !== axis) : current;
-      }
-      return [...current, axis].sort((left, right) => left - right);
-    });
-  };
 
   return (
     <main className="page-content training-module-selection-page" id="main-content">
@@ -258,7 +234,6 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
           summaryItems={[
             { value: ufovLabels.subtests[selectedUfovSubtest] },
             { value: ufovLabels.modes[selectedUfovMode].label },
-            { value: selectedUfovTrialCount },
             { value: `${selectedUfovAxes.length}/8` },
             { value: `${ufovContrastPercent}% · ${ufovTargetVisualAngleDeg.toFixed(1)}° · ${ufovVehicleVisualAngleDeg.toFixed(1)}°` },
           ]}
@@ -299,36 +274,32 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
             </TrainingConfigOptionGroup>
           </TrainingConfigSection>
 
-          <TrainingConfigSection title={ufovLabels.chooseTrialCount} value={selectedUfovTrialCount}>
-            <NumberPresetSelector
-              value={selectedUfovTrialCount}
-              customValue={customUfovTrialCountInput}
-              presets={[16, 48, 60]}
-              min={1}
-              max={240}
-              placeholder={ufovLabels.customTrialCount}
-              onPresetSelect={handleTrialPreset}
-              onCustomChange={handleCustomTrialCount}
-            />
-          </TrainingConfigSection>
+          {selectedUfovMode === 'formal' && (
+            <TrainingConfigSection title={lang === 'en' ? 'Stopping condition' : '終止條件'}>
+              <TrainingConfigOptionGroup columns={2}>
+                <button className={`training-option ${selectedUfovStopCondition === 'adaptive_80' ? 'active' : ''}`} onClick={() => setSelectedUfovStopCondition('adaptive_80')} type="button">
+                  <span className="training-option-title">{lang === 'en' ? '80% confidence threshold' : '信度 80% 門檻'}</span>
+                  <span className="training-option-meta">{lang === 'en' ? 'Adaptive staircase; ends on a stable threshold.' : '自適應階梯法；門檻穩定後結束。'}</span>
+                </button>
+                <button className={`training-option ${selectedUfovStopCondition === 'fixed_trials' ? 'active' : ''}`} onClick={() => setSelectedUfovStopCondition('fixed_trials')} type="button">
+                  <span className="training-option-title">{lang === 'en' ? 'Fixed trial count' : '固定題數'}</span>
+                  <span className="training-option-meta">{lang === 'en' ? 'Ends after the standard 48 recorded trials.' : '完成標準 48 題紀錄後結束。'}</span>
+                </button>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
+          )}
 
           <TrainingConfigSection
             title={ufovLabels.chooseDirections}
             value={`${selectedUfovAxes.length}/8`}
             wide
           >
-            <TrainingConfigOptionGroup columns={4}>
-              {ufovTargetAxes.map((axis) => (
-                <button
-                  className={`training-option ${selectedUfovAxes.includes(axis) ? 'active' : ''}`}
-                  key={axis}
-                  onClick={() => toggleTargetAxis(axis)}
-                  type="button"
-                >
-                  <span className="training-option-title">{axis + 1}. {ufovLabels.directions[axis]}</span>
-                </button>
-              ))}
-            </TrainingConfigOptionGroup>
+            <PeripheralAttentionNineGridCompass
+              lang={lang}
+              selectedAxes={selectedUfovAxes}
+              onChange={setSelectedUfovAxes}
+              labels={ufovLabels}
+            />
           </TrainingConfigSection>
 
           <TrainingConfigSection
@@ -368,28 +339,6 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
             />
           </TrainingConfigSection>
 
-          {selectedUfovMode === 'formal' && (
-            <TrainingConfigSection title={lang === 'en' ? 'Stopping condition' : '終止條件'}>
-              <TrainingConfigOptionGroup columns={2}>
-                <button
-                  className={`training-option ${selectedUfovStopCondition === 'adaptive_80' ? 'active' : ''}`}
-                  onClick={() => setSelectedUfovStopCondition('adaptive_80')}
-                  type="button"
-                >
-                  <span className="training-option-title">{lang === 'en' ? '80% confidence threshold' : '信度 80% 門檻'}</span>
-                  <span className="training-option-meta">{lang === 'en' ? 'Adaptive staircase; ends on a stable threshold.' : '自適應階梯法；門檻穩定後結束。'}</span>
-                </button>
-                <button
-                  className={`training-option ${selectedUfovStopCondition === 'fixed_trials' ? 'active' : ''}`}
-                  onClick={() => setSelectedUfovStopCondition('fixed_trials')}
-                  type="button"
-                >
-                  <span className="training-option-title">{lang === 'en' ? 'Fixed trial count' : '固定題數'}</span>
-                  <span className="training-option-meta">{lang === 'en' ? 'Ends at the selected number of trials.' : '完成所選題數後結束。'}</span>
-                </button>
-              </TrainingConfigOptionGroup>
-            </TrainingConfigSection>
-          )}
         </ConfigDialog>
       )}
       {isUfovRulesOpen && (
@@ -410,9 +359,8 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
             summaryItems={[
               { value: ufovLabels.subtests[effectiveUfovSubtest] },
               { value: ufovLabels.modes[selectedUfovMode].label },
-              { value: selectedUfovTrialCount },
               { value: `${selectedUfovAxes.length}/8` },
-              { value: selectedUfovStopCondition === 'adaptive_80' ? '80%' : selectedUfovTrialCount },
+              { value: selectedUfovStopCondition === 'adaptive_80' ? '80%' : '48' },
             ]}
             sections={GetUfovRuleSections(lang, ufovLabels.subtests[effectiveUfovSubtest])}
             startLabel={ruleLabels.start}
@@ -434,7 +382,6 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
 
 const ufovSubtests: SubtestId[] = [1, 2, 3];
 const ufovRunModes: UfovRunMode[] = ['practice', 'formal'];
-const ufovTargetAxes: UfovTargetAxis[] = [0, 1, 2, 3, 4, 5, 6, 7];
 
 function IsMobileOrTabletDevice(deviceKind: ReturnType<typeof DetectDisplayDeviceKind>) {
   return deviceKind === 'phone' || deviceKind === 'tablet';
@@ -467,7 +414,7 @@ function GetUfovRuleSections(lang: 'zh' | 'en', subtestTitle: string) {
           items: [
             'Look at the center first and identify whether the central vehicle is a car or truck.',
             'For divided or selective attention trials, also report the peripheral target direction.',
-            'Practice mode gives feedback; formal mode stops early when stable or at the configured max trials.',
+            'Practice mode gives feedback; formal mode stops early when stable or after the standard 48 recorded trials.',
           ],
         },
         {
@@ -482,7 +429,7 @@ function GetUfovRuleSections(lang: 'zh' | 'en', subtestTitle: string) {
           items: [
             '每題先看中央刺激，判斷中央車輛是汽車或卡車。',
             '分散注意或選擇性注意題型中，還要回報周邊目標所在方向。',
-            '練習模式會提供回饋；正式模式會穩定後提前停止，或跑到設定的最大題數。',
+            '練習模式會提供回饋；正式模式會穩定後提前停止，或完成標準 48 題紀錄。',
           ],
         },
         {
@@ -497,7 +444,7 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
     ? {
         settingsTitle: 'Peripheral Visual Field Training',
         chooseSubtest: 'Training stage',
-        chooseTrialCount: 'Maximum trials',
+        chooseTrialCount: 'Stopping condition',
         customTrialCount: 'Custom',
         chooseDirections: 'Peripheral stimulus directions',
         chooseMode: 'Practice flow',
@@ -518,13 +465,13 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
         modes: {
           instruction: { label: 'Instructions', description: 'Show instructions only, without scoring.' },
           practice: { label: 'Practice', description: 'Run 5 fixed-speed practice trials with feedback.' },
-          formal: { label: 'Recorded Practice', description: 'Stop when stable, or at the configured max trials, then save results.' },
+          formal: { label: 'Recorded Practice', description: 'Stop when stable, or after the standard 48 recorded trials, then save results.' },
         },
       }
     : {
         settingsTitle: '周邊視野訓練',
         chooseSubtest: '訓練階段',
-        chooseTrialCount: '最大題數',
+        chooseTrialCount: '終止條件',
         customTrialCount: '自訂',
         chooseDirections: '周邊刺激方向',
         chooseMode: '練習流程',
@@ -545,7 +492,7 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
         modes: {
           instruction: { label: '說明', description: '只顯示練習說明，不計分。' },
           practice: { label: '練習', description: '以固定速度進行 5 題練習並顯示回饋。' },
-          formal: { label: '紀錄練習', description: '穩定後提前停止，或達到設定最大 trial 數量後儲存結果。' },
+          formal: { label: '紀錄練習', description: '穩定後提前停止，或完成標準 48 題紀錄後儲存結果。' },
         },
       };
 }

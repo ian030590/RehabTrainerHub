@@ -10,7 +10,7 @@ export interface TrainingConfigRangeFieldProps
   onValueChange: (value: number) => void;
 }
 
-export function TrainingConfigRangeField({
+export function TrainingSlider({
   label,
   value,
   valueLabel = value,
@@ -25,12 +25,12 @@ export function TrainingConfigRangeField({
   const inputId = id ?? generatedId;
 
   return (
-    <label className="training-range-field" htmlFor={inputId}>
-      <span className="training-range-field-header">
-        <span className="training-range-field-label">{label}</span>
-        <output className="training-range-field-value" htmlFor={inputId}>{valueLabel}</output>
+    <label className="training-slider" htmlFor={inputId}>
+      <span className="training-slider-header">
+        <span className="training-slider-label">{label}</span>
+        <output className="training-slider-value" htmlFor={inputId}>{valueLabel}</output>
       </span>
-      {description && <span className="training-range-field-description">{description}</span>}
+      {description && <span className="training-slider-description">{description}</span>}
       <input
         {...inputProps}
         id={inputId}
@@ -45,10 +45,14 @@ export function TrainingConfigRangeField({
         }}
       />
       {scaleLabels && (
-        <span className="training-range-field-scale" aria-hidden="true">
+        <span className="training-slider-scale" aria-hidden="true">
           {scaleLabels.map((scaleLabel, index) => <span key={index}>{scaleLabel}</span>)}
         </span>
       )}
     </label>
   );
 }
+
+/** @deprecated Use TrainingSlider. */
+export const TrainingConfigRangeField = TrainingSlider;
+export type TrainingSliderProps = TrainingConfigRangeFieldProps;

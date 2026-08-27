@@ -1709,6 +1709,75 @@ body[data-training-embed="hub"] #root,
   text-align: right;
 }
 
+/* Unified range control: TrainingSlider uses the former range-field anatomy. */
+.training-slider {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: default;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.training-slider:has(input:focus-visible) {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.training-slider-header { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.training-slider-label { min-width: 0; overflow-wrap: anywhere; font-size: calc(15px * var(--ui-font-scale, 1)); font-weight: 800; line-height: 1.3; text-wrap: pretty; }
+.training-slider-value { min-height: 30px; display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; padding: 4px 10px; border-radius: var(--radius-m); background: var(--bg-accent-soft); color: var(--accent-dark); font-size: calc(13px * var(--ui-font-scale, 1)); font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.training-slider-description { color: var(--text-secondary); font-size: calc(13px * var(--ui-font-scale, 1)); font-weight: var(--fw-medium, 600); line-height: 1.5; text-wrap: pretty; }
+.training-slider-scale { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; color: var(--text-muted); font-size: calc(12px * var(--ui-font-scale, 1)); font-weight: var(--fw-medium, 600); line-height: 1.35; font-variant-numeric: tabular-nums; }
+.training-slider-scale > span { min-width: 0; overflow-wrap: anywhere; }
+.training-slider-scale > span:nth-child(2) { text-align: center; }
+.training-slider-scale > span:last-child { text-align: right; }
+
+/* Legacy direct range inputs keep their compact input-only presentation. */
+input.training-slider {
+  min-width: 0;
+  display: inline-block;
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: none;
+}
+
+.training-direction-compass-container { width: 100%; }
+.training-direction-compass-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 520px;
+  margin: 12px auto 0;
+}
+.training-compass-btn {
+  min-height: 76px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
+  padding: 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.training-compass-btn.active { border-color: var(--accent); background: var(--bg-accent-soft); color: var(--accent-dark); }
+.training-compass-arrow { font-size: 26px; line-height: 1; }
+.training-compass-label { font-size: calc(12px * var(--ui-font-scale, 1)); font-weight: 700; text-align: center; }
+.training-compass-center .training-compass-arrow { font-size: 14px; font-weight: 900; letter-spacing: .04em; }
+
 .training-option.active .training-option-title {
   color: var(--accent-dark);
 }
@@ -1770,7 +1839,8 @@ body[data-training-embed="hub"] #root,
   margin-top: 10px;
 }
 
-.training-slider {
+.training-slider > input[type="range"],
+.training-slider-input {
   width: 100%;
   height: 34px;
   accent-color: var(--accent);

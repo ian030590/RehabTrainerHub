@@ -663,7 +663,7 @@ export function ReferenceCognitiveGame({
                   value={<HeartIcons count={simonLives} />}
                 >
                   <input
-                    className="training-slider"
+                    className="training-slider-input"
                     type="range"
                     min="1"
                     max="5"
@@ -682,7 +682,7 @@ export function ReferenceCognitiveGame({
                   value={t('training.count', { value: reactionTrials })}
                 >
                   <input
-                    className="training-slider"
+                    className="training-slider-input"
                     type="range"
                     min="5"
                     max="12"
@@ -699,7 +699,7 @@ export function ReferenceCognitiveGame({
                   value={FormatSeconds(whackDurationSec, t)}
                 >
                   <input
-                    className="training-slider"
+                    className="training-slider-input"
                     type="range"
                     min="30"
                     max="60"
