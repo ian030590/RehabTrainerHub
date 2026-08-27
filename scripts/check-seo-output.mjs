@@ -60,6 +60,7 @@ function ValidateAppSeo(app, appFailures) {
 
   const robotsPath = join(outputDir, 'robots.txt');
   const sitemapPath = join(outputDir, 'sitemap.xml');
+  const llmsPath = join(outputDir, 'llms.txt');
   const indexPath = join(outputDir, 'index.html');
   const notFoundPath = join(outputDir, '404.html');
   const robots = ReadUtf8File(robotsPath, label, appFailures);
@@ -83,7 +84,43 @@ function ValidateAppSeo(app, appFailures) {
     if (indexHtml !== null && !/<h1\b[^>]*\bid=["']lobby-title["'][^>]*>[\s\S]*?訓練大廳[\s\S]*?<\/h1>/i.test(indexHtml)) {
       appFailures.push(`${indexPath}: Hub homepage must prerender its visible heading in Traditional Chinese.`);
     }
+    if (indexHtml !== null && !/<h2\b[^>]*\bid=["']lobby-guide-title["'][^>]*>居家訓練網是什麼？<\/h2>/i.test(indexHtml)) {
+      appFailures.push(`${indexPath}: Hub homepage must prerender its visible site definition.`);
+    }
+    const llms = ReadUtf8File(llmsPath, 'Hub llms.txt', appFailures);
+    if (llms !== null) ValidateLlmsTxt(llms, llmsPath, siteUrl, appFailures);
+    ValidateHubQaPerson(join(outputDir, 'qa', 'index.html'), appFailures);
     ValidateHubPrivatePages(outputDir, sitemapUrls, appFailures);
+  }
+}
+
+function ValidateLlmsTxt(source, file, siteUrl, appFailures) {
+  if (/<html\b/i.test(source)) {
+    appFailures.push(`${file}: llms.txt must be Markdown-flavored plain text, not HTML.`);
+  }
+  if (!/^# 居家訓練網\s*$/m.test(source)) {
+    appFailures.push(`${file}: llms.txt must start with the canonical local brand name as its H1.`);
+  }
+  if (!/^> \S.+$/m.test(source)) {
+    appFailures.push(`${file}: llms.txt must provide a concise blockquote summary.`);
+  }
+  if (!/not individualized assessment, diagnosis, medical orders, treatment/i.test(source)) {
+    appFailures.push(`${file}: llms.txt must preserve the site's non-service boundary.`);
+  }
+
+  const urls = [...source.matchAll(/\]\((https:\/\/[^)]+)\)/g)].map((match) => match[1]);
+  const expectedUrls = [
+    siteUrl,
+    `${siteUrl}qa/`,
+    `${siteUrl}download/`,
+    `${siteUrl}privacy/`,
+    `${siteUrl}sitemap.xml`,
+  ];
+  if (!HaveSameValues(urls, expectedUrls)) {
+    appFailures.push(`${file}: llms.txt must link only to canonical public discovery resources.`);
+  }
+  if (/\b(?:motor|vision|brain|mouth)\.trainerhub\.cc\b|104\.com/i.test(source)) {
+    appFailures.push(`${file}: llms.txt contains a retired trainer domain or prohibited profile URL.`);
   }
 }
 
@@ -335,22 +372,8 @@ function ValidateIndexableHtml(html, file, canonicalUrl, appFailures, requireHea
 }
 
 function ValidateJsonLd(html, file, siteUrl, role, appFailures) {
-  const values = [];
-  for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
-    const attributes = ReadAttributes(match[1]);
-    if (attributes.type?.toLowerCase() !== 'application/ld+json') continue;
-    try {
-      values.push(JSON.parse(match[2].trim()));
-    } catch (error) {
-      appFailures.push(`${file}: contains invalid JSON-LD (${error.message}).`);
-    }
-  }
-  if (values.length === 0) {
-    appFailures.push(`${file}: missing JSON-LD structured data.`);
-    return;
-  }
-
-  const nodes = values.flatMap(FlattenJsonLd);
+  const nodes = ParseJsonLdNodes(html, file, appFailures);
+  if (!nodes) return;
   const applicationUrls = [role === 'hub' ? hubSiteUrl : siteUrl];
   const applicationIds = applicationUrls.map((url) => `${url}#application`);
   for (const applicationUrl of applicationUrls) {
@@ -372,6 +395,20 @@ function ValidateJsonLd(html, file, siteUrl, role, appFailures) {
   }
 
   if (role === 'hub') {
+    const expectedHomepageNodes = new Map([
+      [`${siteUrl}#website`, 'WebSite'],
+      [`${siteUrl}#organization`, 'Organization'],
+      [`${siteUrl}#application`, 'WebApplication'],
+    ]);
+    const unexpectedHomepageNodes = nodes.filter((node) => {
+      if (!node?.['@type']) return false;
+      const expectedType = expectedHomepageNodes.get(node?.['@id']);
+      const types = Array.isArray(node?.['@type']) ? node['@type'] : [node['@type']];
+      return !expectedType || types.length !== 1 || types[0] !== expectedType;
+    });
+    if (unexpectedHomepageNodes.length > 0) {
+      appFailures.push(`${file}: Hub homepage JSON-LD must contain only Organization, WebSite, and WebApplication nodes.`);
+    }
     const website = nodes.find((node) => node?.['@id'] === `${siteUrl}#website` && HasType(node, 'WebSite'));
     const organization = nodes.find((node) => node?.['@id'] === `${siteUrl}#organization` && HasType(node, 'Organization'));
     if (!website) appFailures.push(`${file}: missing the canonical WebSite JSON-LD node.`);
@@ -390,6 +427,62 @@ function ValidateJsonLd(html, file, siteUrl, role, appFailures) {
       appFailures.push(`${file}: Hub WebApplication must not reference retired trainer websites.`);
     }
   }
+}
+
+function ValidateHubQaPerson(file, appFailures) {
+  const html = ReadUtf8File(file, 'Hub QA page', appFailures);
+  if (html === null) return;
+  const nodes = ParseJsonLdNodes(html, file, appFailures);
+  if (!nodes) return;
+
+  const personId = `${hubSiteUrl}qa/#professional-background`;
+  const people = nodes.filter((node) => node?.['@id'] === personId && HasType(node, 'Person'));
+  if (people.length !== 1) {
+    appFailures.push(`${file}: expected exactly one Person JSON-LD node with @id ${personId}.`);
+    return;
+  }
+
+  const person = people[0];
+  if (person.url !== personId) {
+    appFailures.push(`${file}: Person.url must match the visible professional background anchor.`);
+  }
+  for (const property of ['name', 'jobTitle', 'description']) {
+    if (typeof person[property] !== 'string' || !person[property].trim()) {
+      appFailures.push(`${file}: Person.${property} must be non-empty.`);
+    }
+  }
+
+  const visibleText = DecodeHtml(
+    html
+      .replace(/<script\b[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style\b[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  );
+  for (const property of ['name', 'jobTitle', 'description']) {
+    if (person[property] && !visibleText.includes(person[property])) {
+      appFailures.push(`${file}: Person.${property} must match visible QA page content.`);
+    }
+  }
+}
+
+function ParseJsonLdNodes(html, file, appFailures) {
+  const values = [];
+  for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
+    const attributes = ReadAttributes(match[1]);
+    if (attributes.type?.toLowerCase() !== 'application/ld+json') continue;
+    try {
+      values.push(JSON.parse(match[2].trim()));
+    } catch (error) {
+      appFailures.push(`${file}: contains invalid JSON-LD (${error.message}).`);
+    }
+  }
+  if (values.length === 0) {
+    appFailures.push(`${file}: missing JSON-LD structured data.`);
+    return null;
+  }
+  return values.flatMap(FlattenJsonLd);
 }
 
 function ValidateWebApplication(application, expectedUrl, pageDescription, file, appFailures) {

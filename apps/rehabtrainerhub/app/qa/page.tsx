@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
-import { CreateSeoMetadata } from '../seo';
+import {
+  CreateSeoMetadata,
+  maintainerPageJsonLd,
+  SerializeJsonLd,
+} from '../seo';
 import { QuestionsContent } from './QuestionsContent';
 
 export const metadata: Metadata = CreateSeoMetadata({
@@ -9,5 +13,14 @@ export const metadata: Metadata = CreateSeoMetadata({
 });
 
 export default function QuestionsPage() {
-  return <QuestionsContent />;
+  return (
+    <>
+      <script
+        id="maintainer-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: SerializeJsonLd(maintainerPageJsonLd) }}
+      />
+      <QuestionsContent />
+    </>
+  );
 }
