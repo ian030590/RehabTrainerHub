@@ -1,5 +1,5 @@
 // Canonical Hub-owned motor module; bundled by the motor runtime.
-import { type ChangeEvent, type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Application, Container, Graphics, Text, type Ticker } from 'pixi.js';
 import { initJsPsych } from 'jspsych';
 import { CreateRuntimeAssetUrlCandidates } from '@rehab-trainer/ui/aiAssets';
@@ -10,6 +10,7 @@ import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
 import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
+import { TrainingFilePickerButton } from '@rehab-trainer/ui/components/TrainingFilePickerButton';
 import {
   TrainingConfigOptionGroup,
   TrainingConfigPanel,
@@ -540,8 +541,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     setPhase('menu');
   }, [clearPixiState, drawLayout, setPhase]);
 
-  const handleBackgroundImageUpload = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleBackgroundImageUpload = useCallback((file: File | undefined) => {
     if (!file || !file.type.startsWith('image/')) return;
     if (uploadedBackgroundUrlRef.current) URL.revokeObjectURL(uploadedBackgroundUrlRef.current);
     const imageUrl = URL.createObjectURL(file);
@@ -760,10 +760,10 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                     className={`training-option training-option-custom ${isCustomHp ? 'active' : ''}`}
                     onClick={() => setMaxHp(customHp)}
                   >
-                    <span className="training-option-title">{t('training.custom')}</span>
+                    <span className="training-option-title">{t('training.custom')} ({customHp})</span>
                     <input
-                      className="training-number-input"
-                      type="number"
+                      className="training-slider"
+                      type="range"
                       min="1"
                       max="20"
                       step="1"
@@ -801,10 +801,10 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                     className={`training-option training-option-custom ${!isPresetGameDuration ? 'active' : ''}`}
                     onClick={() => setGameDurationSec(customGameDurationSec)}
                   >
-                    <span className="training-option-title">{t('training.custom')}</span>
+                    <span className="training-option-title">{t('training.custom')} ({customGameDurationSec}s)</span>
                     <input
-                      className="training-number-input"
-                      type="number"
+                      className="training-slider"
+                      type="range"
                       min="1"
                       max="1800"
                       step="1"
@@ -849,10 +849,10 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                     className={`training-option training-option-custom ${isCustomSpeed ? 'active' : ''}`}
                     onClick={() => setSpeed(customSpeed)}
                   >
-                    <span className="training-option-title">{t('training.custom')}</span>
+                    <span className="training-option-title">{t('training.custom')} ({customSpeed})</span>
                     <input
-                      className="training-number-input"
-                      type="number"
+                      className="training-slider"
+                      type="range"
                       min="1"
                       max="170"
                       step="1"
@@ -903,10 +903,10 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                     className={`training-option training-option-custom ${!strokeWaitOptions.includes(strokeWaitMs as typeof strokeWaitOptions[number]) ? 'active' : ''}`}
                     onClick={() => setStrokeWaitMs(customStrokeWaitMs)}
                   >
-                    <span className="training-option-title">{t('training.custom')}</span>
+                    <span className="training-option-title">{t('training.custom')} ({customStrokeWaitMs}ms)</span>
                     <input
-                      className="training-number-input"
-                      type="number"
+                      className="training-slider"
+                      type="range"
                       min="180"
                       max="600"
                       step="10"
@@ -959,13 +959,10 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                       <strong>{uploadedBackgroundUrl ? t('drawing.config.uploaded') : t('drawing.config.notUploaded')}</strong>
                     </div>
                     <span className="training-option-meta">{uploadedBackgroundName}</span>
-                    <span className="drawing-defense-upload-action">{t('drawing.config.selectImage')}</span>
-                    <input
-                      type="file"
+                    <TrainingFilePickerButton
                       accept="image/*"
-                      hidden
-                      onChange={handleBackgroundImageUpload}
-                      aria-label={t('drawing.config.uploadAria')}
+                      label={t('drawing.config.selectImage')}
+                      onFile={handleBackgroundImageUpload}
                     />
                   </label>
                 </div>

@@ -6,6 +6,7 @@ import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
+import { TrainingFilePickerButton } from '@rehab-trainer/ui/components/TrainingFilePickerButton';
 import {
   TrainingConfigOptionGroup,
   TrainingConfigSection,
@@ -34,6 +35,15 @@ import { trainingModules } from './home/trainingModules';
 import type { TrainingModuleId } from './home/trainingModules';
 import type { OculomotorPattern, OculomotorTargetShape } from './training/oculomotor/types';
 import type { DrivingControlMode, DrivingRenderQualityLevel } from '../utils/settings';
+
+const oculomotorColorOptions = [
+  { value: '#FFFFFF', label: '白色' },
+  { value: '#FFD166', label: '黃色' },
+  { value: '#06D6A0', label: '綠色' },
+  { value: '#118AB2', label: '藍色' },
+  { value: '#EF476F', label: '紅色' },
+  { value: '#000000', label: '黑色' },
+] as const;
 
 function PreloadTrainingRoute(): Promise<unknown> {
   return import('./training/TrainingPage');
@@ -678,12 +688,13 @@ export function HomePage() {
               </div>
               <TrainingConfigOptionGroup columns={3}>
                 <label className="training-option training-option-field">
-                  <span className="training-option-meta">{t('home.config.speed')}</span>
+                  <span className="training-option-title">{t('home.config.speed')} ({oculomotorSpeedDegPerSec})</span>
                   <input
-                    className="training-number-input"
-                    type="number"
+                    className="training-slider"
+                    type="range"
                     min="2"
                     max="80"
+                    step="1"
                     value={oculomotorSpeedDegPerSec}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {
@@ -695,12 +706,13 @@ export function HomePage() {
                   />
                 </label>
                 <label className="training-option training-option-field">
-                  <span className="training-option-meta">{t('home.config.size')}</span>
+                  <span className="training-option-title">{t('home.config.size')} ({oculomotorTargetSizeMm})</span>
                   <input
-                    className="training-number-input"
-                    type="number"
+                    className="training-slider"
+                    type="range"
                     min="2"
                     max="100"
+                    step="1"
                     value={oculomotorTargetSizeMm}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {
@@ -712,12 +724,13 @@ export function HomePage() {
                   />
                 </label>
                 <label className="training-option training-option-field">
-                  <span className="training-option-meta">{t('home.config.distractors')}</span>
+                  <span className="training-option-title">{t('home.config.distractors')} ({oculomotorDistractorCount})</span>
                   <input
-                    className="training-number-input"
-                    type="number"
+                    className="training-slider"
+                    type="range"
                     min="0"
                     max="12"
+                    step="1"
                     value={oculomotorDistractorCount}
                     disabled={oculomotorMode !== 'multi-object'}
                     onClick={(e) => e.stopPropagation()}
@@ -737,21 +750,31 @@ export function HomePage() {
               <TrainingConfigOptionGroup columns={3}>
                 <label className="training-option training-option-field training-option-color-field">
                   <span className="training-option-title">{t('home.config.targetColor')}</span>
-                  <input
-                    type="color"
+                  <select
+                    className="input"
                     value={oculomotorTargetColor}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => setOculomotorTargetColor(e.target.value)}
-                  />
+                  >
+                    {!oculomotorColorOptions.some((option) => option.value === oculomotorTargetColor) && (
+                      <option value={oculomotorTargetColor}>{oculomotorTargetColor}</option>
+                    )}
+                    {oculomotorColorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  </select>
                 </label>
                 <label className="training-option training-option-field training-option-color-field">
                   <span className="training-option-title">{t('home.config.bgColor')}</span>
-                  <input
-                    type="color"
+                  <select
+                    className="input"
                     value={oculomotorBackgroundColor}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => setOculomotorBackgroundColor(e.target.value)}
-                  />
+                  >
+                    {!oculomotorColorOptions.some((option) => option.value === oculomotorBackgroundColor) && (
+                      <option value={oculomotorBackgroundColor}>{oculomotorBackgroundColor}</option>
+                    )}
+                    {oculomotorColorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  </select>
                 </label>
                 <label className="training-option training-option-field">
                   <span className="training-option-title">{t('home.config.opacity')} ({oculomotorTargetOpacity})</span>
@@ -773,12 +796,7 @@ export function HomePage() {
               <TrainingConfigOptionGroup columns={2}>
                 <label className="training-option training-option-field">
                   <span className="training-option-title">{t('home.config.bgImage')}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => handleBackgroundImageChange(e.target.files?.[0])}
-                  />
+                  <TrainingFilePickerButton accept="image/*" label={t('home.config.bgImage')} onFile={handleBackgroundImageChange} />
                   {oculomotorBackgroundImage && (
                     <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setOculomotorBackgroundImage(''); }}>
                       {t('btn.delete')}
@@ -787,12 +805,7 @@ export function HomePage() {
                 </label>
                 <label className="training-option training-option-field">
                   <span className="training-option-title">{t('home.config.audio')}</span>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => handleAudioChange(e.target.files?.[0])}
-                  />
+                  <TrainingFilePickerButton accept="audio/*" label={t('home.config.audio')} onFile={handleAudioChange} />
                   {oculomotorAudio && (
                     <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setOculomotorAudio(''); }}>
                       {t('btn.delete')}
@@ -837,13 +850,7 @@ export function HomePage() {
               </TrainingConfigOptionGroup>
               {oculomotorTargetShape === 'custom' && (
                 <div className="custom-image-field">
-                  <input
-                    className="input"
-                    type="file"
-                    accept="image/*"
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => handleCustomTargetImageChange(e.target.files?.[0])}
-                  />
+                  <TrainingFilePickerButton accept="image/*" label={t('home.config.custom')} onFile={handleCustomTargetImageChange} />
                   {oculomotorCustomTargetImage && (
                     <div className="custom-image-preview">
                       <img src={oculomotorCustomTargetImage} alt={t('home.config.customTargetPreview')} />
@@ -911,12 +918,13 @@ export function HomePage() {
                   </button>
                 ))}
                 <label className={`training-option training-option-custom ${durationPresets.includes(gaborDurationSec) ? '' : 'active'}`}>
-                  <span className="training-option-title">{t('home.config.custom')}</span>
+                  <span className="training-option-title">{t('home.config.custom')} ({gaborDurationSec}s)</span>
                   <input
-                    className="training-number-input"
-                    type="number"
+                    className="training-slider"
+                    type="range"
                     min="15"
                     max="300"
+                    step="1"
                     value={gaborDurationSec}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {
@@ -934,12 +942,13 @@ export function HomePage() {
             <TrainingConfigSection title={t('home.config.gaborMaxSpots')} value={gaborMaxSpots}>
               <TrainingConfigOptionGroup columns="auto">
                 <label className="training-option training-option-field">
-                  <span className="training-option-title">{t('home.config.gaborMaxSpots')}</span>
+                  <span className="training-option-title">{t('home.config.gaborMaxSpots')} ({gaborMaxSpots})</span>
                 <input
-                  className="training-number-input"
-                  type="number"
+                  className="training-slider"
+                  type="range"
                   min="3"
                   max="50"
+                  step="1"
                   value={gaborMaxSpots}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) => {
@@ -969,12 +978,13 @@ export function HomePage() {
             <TrainingConfigSection title={t('home.config.readingSettings')} wide>
               <TrainingConfigOptionGroup columns={3}>
                 <label className="training-option training-option-field">
-                  <span className="training-option-meta">{t('home.config.readingWps')}</span>
+                  <span className="training-option-title">{t('home.config.readingWps')} ({readingWPS})</span>
                   <input
-                    className="training-number-input"
-                    type="number"
+                    className="training-slider"
+                    type="range"
                     min="1"
                     max="20"
+                    step="1"
                     value={readingWPS}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {
@@ -984,12 +994,13 @@ export function HomePage() {
                   />
                 </label>
                 <label className="training-option training-option-field">
-                  <span className="training-option-meta">{t('home.config.readingCrowding')}</span>
+                  <span className="training-option-title">{t('home.config.readingCrowding')} ({readingCrowding})</span>
                   <input
-                    className="training-number-input"
-                    type="number"
+                    className="training-slider"
+                    type="range"
                     min="1"
                     max="5"
+                    step="1"
                     value={readingCrowding}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {

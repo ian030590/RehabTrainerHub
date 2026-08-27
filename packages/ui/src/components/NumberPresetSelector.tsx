@@ -33,15 +33,16 @@ export function NumberPresetSelector({
           <span className="training-option-title">{preset}</span>
         </button>
       ))}
-      <label className={`training-option training-option-custom ${customValue ? 'active' : ''}`}>
-        <span className="training-option-title">{placeholder}</span>
+      <label className={`training-option training-option-field training-option-custom ${customValue ? 'active' : ''}`}>
+        <span className="training-option-title">{customValue || value}</span>
         <input
-          className="training-number-input"
-          type="number"
+          className="training-slider"
+          type="range"
           min={min}
           max={max}
-          placeholder={placeholder}
-          value={customValue}
+          step="1"
+          aria-label={placeholder}
+          value={customValue || value}
           onChange={(event) => onCustomChange(event.target.value)}
         />
       </label>

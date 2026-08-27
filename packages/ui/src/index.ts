@@ -74,6 +74,8 @@ export type {
 } from './components/TrainingConfigPanel';
 export { TrainingConfigSummary } from './components/TrainingConfigSummary';
 export type { TrainingConfigSummaryItem, TrainingConfigSummaryProps } from './components/TrainingConfigSummary';
+export { TrainingFilePickerButton } from './components/TrainingFilePickerButton';
+export type { TrainingFilePickerButtonProps } from './components/TrainingFilePickerButton';
 export { TrainingRulesPanel } from './components/TrainingRulesPanel';
 export type { TrainingRuleSection, TrainingRulesPanelProps } from './components/TrainingRulesPanel';
 export { TrainingResultActions } from './components/TrainingResultActions';

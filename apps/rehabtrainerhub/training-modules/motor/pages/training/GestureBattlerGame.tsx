@@ -988,10 +988,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                     className={`training-option training-option-custom ${isCustomEnemyHp ? 'active' : ''}`}
                     onClick={() => setEnemyMaxHp(customEnemyHp)}
                   >
-                    <span className="training-option-title">{t('training.custom')}</span>
+                    <span className="training-option-title">{t('training.custom')} ({customEnemyHp})</span>
                     <input
-                      className="training-number-input"
-                      type="number"
+                      className="training-slider"
+                      type="range"
                       min="1"
                       max="100"
                       step="1"
@@ -1028,10 +1028,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                     className={`training-option training-option-custom ${isCustomHoldDuration ? 'active' : ''}`}
                     onClick={() => setHoldDuration(customHoldDuration)}
                   >
-                    <span className="training-option-title">{t('training.custom')}</span>
+                    <span className="training-option-title">{t('training.custom')} ({customHoldDuration}s)</span>
                     <input
-                      className="training-number-input"
-                      type="number"
+                      className="training-slider"
+                      type="range"
                       min="0.5"
                       max="10"
                       step="0.1"

@@ -954,12 +954,6 @@ body[data-training-embed="hub"] #root,
   box-shadow: var(--shadow-modal, var(--shadow-floating));
 }
 
-.training-number-input::-webkit-outer-spin-button,
-.training-number-input::-webkit-inner-spin-button {
-  margin: 0;
-  -webkit-appearance: none;
-}
-
 .custom-image-field {
   margin-top: 12px;
 }
@@ -1625,30 +1619,11 @@ body[data-training-embed="hub"] #root,
   background: var(--bg-card);
 }
 
-.training-option-field input[type="file"] {
-  width: 100%;
-  margin-top: 8px;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: calc(12px * var(--ui-font-scale, 1));
-}
-
 .training-option-color-field {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-}
-
-.training-option-color-field input[type="color"] {
-  width: 52px;
-  height: 34px;
-  flex: 0 0 auto;
-  padding: 0;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-s);
-  background: transparent;
-  cursor: pointer;
 }
 
 .training-option-toggle {
@@ -1684,26 +1659,6 @@ body[data-training-embed="hub"] #root,
 
 .training-option-grid-spaced {
   margin-top: 10px;
-}
-
-.training-number-input {
-  width: 100%;
-  height: 30px;
-  margin-top: 3px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-s);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-family: var(--font-family);
-  font-size: calc(14px * var(--ui-font-scale, 1));
-  font-weight: var(--fw-bold, 700);
-  text-align: center;
-  outline: none;
-}
-
-.training-number-input:focus {
-  border-color: var(--accent);
 }
 
 .training-slider {
@@ -1817,6 +1772,41 @@ body[data-training-embed="hub"] #root,
 
 .range-control input {
   accent-color: var(--accent);
+}
+
+.training-file-picker-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.training-file-picker-button {
+  align-self: flex-start;
+  min-height: 44px;
+}
+
+/* Training settings use one predictable control height. Numeric entry is
+   intentionally represented by the shared slider instead of free-form boxes. */
+.training-config .training-option-field .training-slider {
+  flex: 1 1 auto;
+  min-height: 44px;
+  margin-top: 2px;
+}
+
+.training-config .training-option-field .input,
+.training-config > .training-config-body select.input {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 2px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg-panel);
+  color: var(--text-primary);
 }
 
 .training-config input[type="range"],
