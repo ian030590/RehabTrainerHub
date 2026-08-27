@@ -351,7 +351,6 @@ export function HomePage() {
 
   const calibrated = IsCalibrated();
   const roundsPresets = [3, 5, 10, 15];
-  const durationPresets = [30, 60, 90, 120];
   const targetShapeOptions: { key: OculomotorTargetShape; label: string }[] = [
     { key: 'circle', label: t('home.shape.circle') },
     { key: 'star', label: t('home.shape.star') },
@@ -904,38 +903,16 @@ export function HomePage() {
 
             {/* Duration */}
             <TrainingConfigSection title={t('home.config.gaborDuration')} value={`${gaborDurationSec}s`}>
-              <TrainingConfigOptionGroup columns={4}>
-                {durationPresets.map((duration) => (
-                  <button
-                    key={duration}
-                    className={`training-option ${gaborDurationSec === duration ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setGaborDurationSec(duration);
-                    }}
-                  >
-                    <span className="training-option-title">{duration}s</span>
-                  </button>
-                ))}
-                <label className={`training-option training-option-custom ${durationPresets.includes(gaborDurationSec) ? '' : 'active'}`}>
-                  <span className="training-option-title">{t('home.config.custom')} ({gaborDurationSec}s)</span>
-                  <input
-                    className="training-slider"
-                    type="range"
-                    min="15"
-                    max="300"
-                    step="1"
-                    value={gaborDurationSec}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value, 10);
-                      if (Number.isFinite(value)) {
-                        setGaborDurationSec(Math.max(15, Math.min(300, value)));
-                      }
-                    }}
-                  />
-                </label>
-              </TrainingConfigOptionGroup>
+              <input
+                className="training-slider"
+                type="range"
+                min="15"
+                max="300"
+                step="1"
+                value={gaborDurationSec}
+                aria-label={t('home.config.gaborDuration')}
+                onChange={(e) => setGaborDurationSec(Number(e.target.value))}
+              />
             </TrainingConfigSection>
 
             {/* Max Spots */}

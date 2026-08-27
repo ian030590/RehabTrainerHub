@@ -215,7 +215,6 @@ const levels: readonly LevelDefinition[] = [
   { id: 2, trialCount: 16, passAccuracy: 85 },
   { id: 3, trialCount: 20, passAccuracy: 80 },
 ];
-const trialCountOptions = [8, 16, 20, 24, 32] as const;
 const distractorBalls: readonly BallId[] = ['soccer', 'tennis', 'beach'];
 const feedbackMs = 550;
 const stimulusMs = 900;
@@ -973,18 +972,16 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
               value={trialCount}
               wide
             >
-              <TrainingConfigOptionGroup columns={5}>
-                {trialCountOptions.map((count) => (
-                  <button
-                    className={`training-option ${trialCount === count ? 'active' : ''}`}
-                    key={count}
-                    type="button"
-                    onClick={() => setTrialCount(count)}
-                  >
-                    <span className="training-option-title">{count}</span>
-                  </button>
-                ))}
-              </TrainingConfigOptionGroup>
+              <input
+                className="training-slider"
+                type="range"
+                min="8"
+                max="32"
+                step="1"
+                value={trialCount}
+                aria-label={labels.trials}
+                onChange={(event) => setTrialCount(Number(event.target.value))}
+              />
             </TrainingConfigSection>
 
             <TrainingConfigSection

@@ -109,10 +109,7 @@ interface SessionRecord {
 
 const shapes: readonly ShapeId[] = ['circle', 'cross', 'square', 'triangle', 'vertical-line', 'horizontal-line'];
 const defaultJudgeDelayMs = 300;
-const strokeWaitOptions = [220, defaultJudgeDelayMs, 350] as const;
-const hpOptions = [1, 3, 5] as const;
 const gameDurationOptions = [30, 60, 300, null] as const;
-const enemySpeedOptions = [5, 15, 30] as const;
 const defaultHp = 3;
 const defaultEnemySpeed = 5;
 const minRecognitionStrictness = 10;
@@ -195,12 +192,9 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   const [gameDurationSec, setGameDurationSec] = useState<GameDurationSeconds>(defaultGameDurationSeconds);
   const [customGameDurationSec, setCustomGameDurationSec] = useState(defaultCustomGameDurationSeconds);
   const [maxHp, setMaxHp] = useState(defaultHp);
-  const [customHp, setCustomHp] = useState(defaultHp);
   const [speed, setSpeed] = useState(defaultEnemySpeed);
-  const [customSpeed, setCustomSpeed] = useState(defaultEnemySpeed);
   const [strictness, setStrictness] = useState(defaultRecognitionStrictness);
   const [strokeWaitMs, setStrokeWaitMs] = useState(defaultJudgeDelayMs);
-  const [customStrokeWaitMs, setCustomStrokeWaitMs] = useState(defaultJudgeDelayMs);
   const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('stars');
   const backgroundColor = defaultBackgroundColor;
   const [uploadedBackgroundUrl, setUploadedBackgroundUrl] = useState<string | null>(null);
@@ -211,8 +205,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   const activeDifficultyLabel = t(activeConfig.labelKey);
   const activeDifficultyDescription = t(activeConfig.descriptionKey);
   const isPresetGameDuration = gameDurationOptions.includes(gameDurationSec as typeof gameDurationOptions[number]);
-  const isCustomHp = !hpOptions.includes(maxHp as typeof hpOptions[number]);
-  const isCustomSpeed = !enemySpeedOptions.includes(speed as typeof enemySpeedOptions[number]);
   const gameDurationLabel = FormatGameDuration(gameDurationSec, t);
   const backgroundSummary =
     backgroundMode === 'stars' ? t('drawing.background.stars') : backgroundMode === 'color' ? backgroundColor : t('drawing.background.customImage');
@@ -743,41 +735,10 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
               <TrainingConfigSection
                 title={t('drawing.config.hp')}
                 description={t('drawing.config.hpValue', { value: maxHp })}
-                value={isCustomHp ? t('training.custom') : t('training.default')}
+                value={maxHp}
               >
-                <TrainingConfigOptionGroup columns={4}>
-                  {hpOptions.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={`training-option ${maxHp === option ? 'active' : ''}`}
-                      onClick={() => setMaxHp(option)}
-                    >
-                      <span className="training-option-title">{t('drawing.config.hpValue', { value: option })}</span>
-                    </button>
-                  ))}
-                  <label
-                    className={`training-option training-option-custom ${isCustomHp ? 'active' : ''}`}
-                    onClick={() => setMaxHp(customHp)}
-                  >
-                    <span className="training-option-title">{t('training.custom')} ({customHp})</span>
-                    <input
-                      className="training-slider"
-                      type="range"
-                      min="1"
-                      max="20"
-                      step="1"
-                      value={customHp}
-                      onChange={(event) => {
-                        const value = Clamp(Number(event.target.value), 1, 20);
-                        setCustomHp(value);
-                        setMaxHp(value);
-                      }}
-                      onFocus={() => setMaxHp(customHp)}
-                      aria-label={t('drawing.config.customHp')}
-                    />
-                  </label>
-                </TrainingConfigOptionGroup>
+                <input className="training-slider" type="range" min="1" max="20" step="1" value={maxHp}
+                  aria-label={t('drawing.config.hp')} onChange={(event) => setMaxHp(Clamp(Number(event.target.value), 1, 20))} />
               </TrainingConfigSection>
 
               <TrainingConfigSection
@@ -786,87 +747,23 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                 value={gameDurationSec === defaultGameDurationSeconds ? t('training.default') : isPresetGameDuration ? t('training.optional') : t('training.custom')}
                 wide
               >
-                <TrainingConfigOptionGroup className="training-duration-grid">
-                  {gameDurationOptions.filter((option) => option !== null).map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={`training-option ${gameDurationSec === option ? 'active' : ''}`}
-                      onClick={() => setGameDurationSec(option)}
-                    >
-                      <span className="training-option-title">{FormatGameDuration(option, t)}</span>
-                    </button>
-                  ))}
-                  <label
-                    className={`training-option training-option-custom ${!isPresetGameDuration ? 'active' : ''}`}
-                    onClick={() => setGameDurationSec(customGameDurationSec)}
-                  >
-                    <span className="training-option-title">{t('training.custom')} ({customGameDurationSec}s)</span>
-                    <input
-                      className="training-slider"
-                      type="range"
-                      min="1"
-                      max="1800"
-                      step="1"
-                      value={customGameDurationSec}
-                      onChange={(event) => {
-                        const value = Clamp(Number(event.target.value), 1, 1800);
-                        setCustomGameDurationSec(value);
-                        setGameDurationSec(value);
-                      }}
-                      onFocus={() => setGameDurationSec(customGameDurationSec)}
-                      aria-label={t('drawing.config.customDuration')}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className={`training-option ${gameDurationSec === null ? 'active' : ''}`}
-                    onClick={() => setGameDurationSec(null)}
-                  >
-                    <span className="training-option-title">{t('drawing.config.infiniteMode')}</span>
-                  </button>
-                </TrainingConfigOptionGroup>
+                <input className="training-slider" type="range" min="1" max="1800" step="1"
+                  value={gameDurationSec ?? customGameDurationSec} disabled={gameDurationSec === null}
+                  aria-label={t('drawing.config.gameDuration')}
+                  onChange={(event) => { const value = Clamp(Number(event.target.value), 1, 1800); setCustomGameDurationSec(value); setGameDurationSec(value); }} />
+                <label className="training-checkbox-row">
+                  <input type="checkbox" checked={gameDurationSec === null} onChange={(event) => setGameDurationSec(event.target.checked ? null : customGameDurationSec)} />
+                  <span>{t('drawing.config.infiniteMode')}</span>
+                </label>
               </TrainingConfigSection>
 
               <TrainingConfigSection
                 title={t('drawing.config.enemySpeed')}
                 description={t('drawing.config.speedValue', { value: speed })}
-                value={isCustomSpeed ? t('training.custom') : t('training.default')}
+                value={speed}
               >
-                <TrainingConfigOptionGroup className="training-speed-grid">
-                  {enemySpeedOptions.map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={`training-option ${speed === option ? 'active' : ''}`}
-                      onClick={() => setSpeed(option)}
-                    >
-                      <span className="training-option-title">{option}</span>
-                      <span className="training-option-meta">{t('drawing.config.speedUnit')}</span>
-                    </button>
-                  ))}
-                  <label
-                    className={`training-option training-option-custom ${isCustomSpeed ? 'active' : ''}`}
-                    onClick={() => setSpeed(customSpeed)}
-                  >
-                    <span className="training-option-title">{t('training.custom')} ({customSpeed})</span>
-                    <input
-                      className="training-slider"
-                      type="range"
-                      min="1"
-                      max="170"
-                      step="1"
-                      value={customSpeed}
-                      onChange={(event) => {
-                        const value = Clamp(Number(event.target.value), 1, 170);
-                        setCustomSpeed(value);
-                        setSpeed(value);
-                      }}
-                      onFocus={() => setSpeed(customSpeed)}
-                      aria-label={t('drawing.config.customEnemySpeed')}
-                    />
-                  </label>
-                </TrainingConfigOptionGroup>
+                <input className="training-slider" type="range" min="1" max="170" step="1" value={speed}
+                  aria-label={t('drawing.config.enemySpeed')} onChange={(event) => setSpeed(Clamp(Number(event.target.value), 1, 170))} />
               </TrainingConfigSection>
 
               <TrainingConfigSection
@@ -888,39 +785,8 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                 title={t('drawing.config.strokeWait')}
                 description={t('drawing.config.waitValue', { value: strokeWaitMs })}
               >
-                <TrainingConfigOptionGroup className="training-wait-grid">
-                  {strokeWaitOptions.map((wait) => (
-                    <button
-                      key={wait}
-                      type="button"
-                      className={`training-option ${strokeWaitMs === wait ? 'active' : ''}`}
-                      onClick={() => setStrokeWaitMs(wait)}
-                    >
-                      <span className="training-option-title">{wait / 1000}s</span>
-                    </button>
-                  ))}
-                  <label
-                    className={`training-option training-option-custom ${!strokeWaitOptions.includes(strokeWaitMs as typeof strokeWaitOptions[number]) ? 'active' : ''}`}
-                    onClick={() => setStrokeWaitMs(customStrokeWaitMs)}
-                  >
-                    <span className="training-option-title">{t('training.custom')} ({customStrokeWaitMs}ms)</span>
-                    <input
-                      className="training-slider"
-                      type="range"
-                      min="180"
-                      max="600"
-                      step="10"
-                      value={customStrokeWaitMs}
-                      onChange={(event) => {
-                        const value = Clamp(Number(event.target.value), 180, 600);
-                        setCustomStrokeWaitMs(value);
-                        setStrokeWaitMs(value);
-                      }}
-                      onFocus={() => setStrokeWaitMs(customStrokeWaitMs)}
-                      aria-label={t('drawing.config.customStrokeWait')}
-                    />
-                  </label>
-                </TrainingConfigOptionGroup>
+                <input className="training-slider" type="range" min="180" max="600" step="10" value={strokeWaitMs}
+                  aria-label={t('drawing.config.strokeWait')} onChange={(event) => setStrokeWaitMs(Clamp(Number(event.target.value), 180, 600))} />
               </TrainingConfigSection>
 
               <TrainingConfigSection

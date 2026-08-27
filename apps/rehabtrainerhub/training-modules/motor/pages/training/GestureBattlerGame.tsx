@@ -133,10 +133,6 @@ const detectionIntervalMs = 66;
 const defaultEnemyHp = 10;
 const defaultHoldDuration = 2;
 const defaultStrictness = 0.7;
-const enemyHpOptions = [5, 10, 15] as const;
-const holdDurationOptions = [1.5, 2, 3] as const;
-const defaultCustomEnemyHp = 8;
-const defaultCustomHoldDuration = 2.5;
 const gestures: readonly GestureId[] = [1, 2, 3, 4, 5];
 const moveColors = [0x38bdf8, 0xf8fafc, 0x4ade80, 0xfb923c, 0xfacc15] as const;
 const moveNameKeys: Record<GestureId, TranslationKey> = {
@@ -235,9 +231,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   useTrainingConfigReady(phase === 'menu');
   const [enemyMaxHp, setEnemyMaxHp] = useState(defaultEnemyHp);
-  const [customEnemyHp, setCustomEnemyHp] = useState(defaultCustomEnemyHp);
   const [holdDuration, setHoldDuration] = useState(defaultHoldDuration);
-  const [customHoldDuration, setCustomHoldDuration] = useState(defaultCustomHoldDuration);
   const [strictnessThreshold, setStrictnessThreshold] = useState(defaultStrictness);
   const [targetMode, setTargetMode] = useState<TargetMode>('free');
   const [calibrationIndex, setCalibrationIndex] = useState(0);
@@ -831,8 +825,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   const activeCalibrationStep = calibrationSteps[calibrationIndex];
   const targetModeLabel = targetMode === 'free' ? t('gesture.config.free') : t('gesture.config.directed');
   const combatEnemyHpPercent = Clamp((combatEnemyHp / enemyMaxHp) * 100, 0, 100);
-  const isCustomEnemyHp = !enemyHpOptions.includes(enemyMaxHp as typeof enemyHpOptions[number]);
-  const isCustomHoldDuration = !holdDurationOptions.includes(holdDuration as typeof holdDurationOptions[number]);
   const resultRows = useMemo(() => result?.Gesture_Stats ?? [], [result]);
 
   return (
@@ -973,39 +965,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                 description={t('gesture.config.enemyHpDesc')}
                 value={enemyMaxHp}
               >
-                <TrainingConfigOptionGroup columns={4}>
-                  {enemyHpOptions.map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`training-option ${enemyMaxHp === value ? 'active' : ''}`}
-                      onClick={() => setEnemyMaxHp(value)}
-                    >
-                      <span className="training-option-title">{t('training.count', { value })}</span>
-                    </button>
-                  ))}
-                  <label
-                    className={`training-option training-option-custom ${isCustomEnemyHp ? 'active' : ''}`}
-                    onClick={() => setEnemyMaxHp(customEnemyHp)}
-                  >
-                    <span className="training-option-title">{t('training.custom')} ({customEnemyHp})</span>
-                    <input
-                      className="training-slider"
-                      type="range"
-                      min="1"
-                      max="100"
-                      step="1"
-                      value={customEnemyHp}
-                      onChange={(event) => {
-                        const value = Clamp(Number(event.target.value), 1, 100);
-                        setCustomEnemyHp(value);
-                        setEnemyMaxHp(value);
-                      }}
-                      onFocus={() => setEnemyMaxHp(customEnemyHp)}
-                      aria-label={t('gesture.config.customEnemyHp')}
-                    />
-                  </label>
-                </TrainingConfigOptionGroup>
+                <input className="training-slider" type="range" min="1" max="100" step="1" value={enemyMaxHp}
+                  aria-label={t('gesture.config.enemyHp')} onChange={(event) => setEnemyMaxHp(Clamp(Number(event.target.value), 1, 100))} />
               </TrainingConfigSection>
 
               <TrainingConfigSection
@@ -1013,39 +974,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                 description={t('gesture.config.holdDurationDesc')}
                 value={`${holdDuration}s`}
               >
-                <TrainingConfigOptionGroup columns={4}>
-                  {holdDurationOptions.map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`training-option ${holdDuration === value ? 'active' : ''}`}
-                      onClick={() => setHoldDuration(value)}
-                    >
-                      <span className="training-option-title">{value}s</span>
-                    </button>
-                  ))}
-                  <label
-                    className={`training-option training-option-custom ${isCustomHoldDuration ? 'active' : ''}`}
-                    onClick={() => setHoldDuration(customHoldDuration)}
-                  >
-                    <span className="training-option-title">{t('training.custom')} ({customHoldDuration}s)</span>
-                    <input
-                      className="training-slider"
-                      type="range"
-                      min="0.5"
-                      max="10"
-                      step="0.1"
-                      value={customHoldDuration}
-                      onChange={(event) => {
-                        const value = Clamp(Number(event.target.value), 0.5, 10);
-                        setCustomHoldDuration(value);
-                        setHoldDuration(value);
-                      }}
-                      onFocus={() => setHoldDuration(customHoldDuration)}
-                      aria-label={t('gesture.config.customHoldDuration')}
-                    />
-                  </label>
-                </TrainingConfigOptionGroup>
+                <input className="training-slider" type="range" min="0.5" max="10" step="0.1" value={holdDuration}
+                  aria-label={t('gesture.config.holdDuration')} onChange={(event) => setHoldDuration(Clamp(Number(event.target.value), 0.5, 10))} />
               </TrainingConfigSection>
 
               <TrainingConfigSection

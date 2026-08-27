@@ -10,10 +10,8 @@ import { FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import {
   difficulties,
-  reactionTrialOptions,
   referenceCognitiveModules,
   sessionLimitOptions,
-  whackDurationOptions,
 } from './cognitive/constants';
 import {
   CreateLightsState,
@@ -664,21 +662,16 @@ export function ReferenceCognitiveGame({
                   description={t('cognitive.config.livesDesc')}
                   value={<HeartIcons count={simonLives} />}
                 >
-                  <TrainingConfigOptionGroup columns={3}>
-                    {[1, 3, 5].map((value) => (
-                      <button
-                        key={value}
-                        type="button"
-                        className={`training-option cognitive-heart-option ${simonLives === value ? 'active' : ''}`}
-                        aria-label={t('cognitive.config.livesOption', { count: value })}
-                        onClick={() => setSimonLives(value)}
-                      >
-                        <span className="training-option-title" aria-hidden="true">
-                          <HeartIcons count={value} />
-                        </span>
-                      </button>
-                    ))}
-                  </TrainingConfigOptionGroup>
+                  <input
+                    className="training-slider"
+                    type="range"
+                    min="1"
+                    max="5"
+                    step="2"
+                    value={simonLives}
+                    aria-label={t('cognitive.config.livesOption', { count: simonLives })}
+                    onChange={(event) => setSimonLives(Number(event.target.value))}
+                  />
                 </TrainingConfigSection>
               )}
 
@@ -688,18 +681,16 @@ export function ReferenceCognitiveGame({
                   description={t('cognitive.config.reactionTrialsDesc')}
                   value={t('training.count', { value: reactionTrials })}
                 >
-                  <TrainingConfigOptionGroup columns={3}>
-                    {reactionTrialOptions.map((value) => (
-                      <button
-                        key={value}
-                        type="button"
-                        className={`training-option ${reactionTrials === value ? 'active' : ''}`}
-                        onClick={() => setReactionTrials(value)}
-                      >
-                        <span className="training-option-title">{t('training.count', { value })}</span>
-                      </button>
-                    ))}
-                  </TrainingConfigOptionGroup>
+                  <input
+                    className="training-slider"
+                    type="range"
+                    min="5"
+                    max="12"
+                    step="1"
+                    value={reactionTrials}
+                    aria-label={t('cognitive.config.reactionTrials')}
+                    onChange={(event) => setReactionTrials(Number(event.target.value))}
+                  />
                 </TrainingConfigSection>
               ) : gameId === 'whack-a-mole' ? (
                 <TrainingConfigSection
@@ -707,18 +698,16 @@ export function ReferenceCognitiveGame({
                   description={t('cognitive.config.trainingDurationDesc')}
                   value={FormatSeconds(whackDurationSec, t)}
                 >
-                  <TrainingConfigOptionGroup columns={3}>
-                    {whackDurationOptions.map((value) => (
-                      <button
-                        key={value}
-                        type="button"
-                        className={`training-option ${whackDurationSec === value ? 'active' : ''}`}
-                        onClick={() => setWhackDurationSec(value)}
-                      >
-                        <span className="training-option-title">{FormatSeconds(value, t)}</span>
-                      </button>
-                    ))}
-                  </TrainingConfigOptionGroup>
+                  <input
+                    className="training-slider"
+                    type="range"
+                    min="30"
+                    max="60"
+                    step="1"
+                    value={whackDurationSec}
+                    aria-label={t('cognitive.config.trainingDuration')}
+                    onChange={(event) => setWhackDurationSec(Number(event.target.value))}
+                  />
                 </TrainingConfigSection>
               ) : (
                 <TrainingConfigSection
@@ -726,18 +715,18 @@ export function ReferenceCognitiveGame({
                   description={sessionLimitSec === null ? t('cognitive.config.noTimeLimit') : t('cognitive.config.finishWithin', { seconds: sessionLimitSec })}
                   value={FormatLimit(sessionLimitSec, t)}
                 >
-                  <TrainingConfigOptionGroup className="training-duration-grid">
+                  <select
+                    className="input training-config-select"
+                    value={sessionLimitSec === null ? 'none' : String(sessionLimitSec)}
+                    aria-label={t('cognitive.config.timeLimit')}
+                    onChange={(event) => setSessionLimitSec(event.target.value === 'none' ? null : Number(event.target.value))}
+                  >
                     {sessionLimitOptions.map((value) => (
-                      <button
-                        key={String(value)}
-                        type="button"
-                        className={`training-option ${sessionLimitSec === value ? 'active' : ''}`}
-                        onClick={() => setSessionLimitSec(value)}
-                      >
-                        <span className="training-option-title">{FormatLimit(value, t)}</span>
-                      </button>
+                      <option key={String(value)} value={value === null ? 'none' : String(value)}>
+                        {FormatLimit(value, t)}
+                      </option>
                     ))}
-                  </TrainingConfigOptionGroup>
+                  </select>
                 </TrainingConfigSection>
               )}
 

@@ -1797,6 +1797,42 @@ body[data-training-embed="hub"] #root,
   margin-top: 2px;
 }
 
+.training-range-control {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.training-setting > .training-slider {
+  display: block;
+  width: 100%;
+}
+
+.training-range-value {
+  min-width: 72px;
+  color: var(--accent-dark);
+  font-size: calc(16px * var(--ui-font-scale, 1));
+  font-weight: 800;
+  text-align: left;
+}
+
+.training-checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.training-checkbox-row input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--accent);
+}
+
 .training-config .training-option-field .input,
 .training-config > .training-config-body select.input {
   width: 100%;
@@ -1819,6 +1855,10 @@ body[data-training-embed="hub"] #root,
   accent-color: var(--accent);
   background: transparent;
   cursor: pointer;
+}
+
+.training-config .training-range-control input[type="range"] {
+  min-height: 56px;
 }
 
 .training-config input[type="range"]::-webkit-slider-runnable-track,

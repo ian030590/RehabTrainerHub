@@ -787,18 +787,19 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
                 description={t('tongue.config.durationDesc')}
                 value={t('training.secondsShort', { value: config.durationSec })}
               >
-                <TrainingConfigOptionGroup columns={3}>
-                  {[60, 90, 120].map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`training-option ${config.durationSec === value ? 'active' : ''}`}
-                      onClick={() => setConfig((current) => ({ ...current, durationSec: value }))}
-                    >
-                      <span className="training-option-title">{t('training.secondsShort', { value })}</span>
-                    </button>
-                  ))}
-                </TrainingConfigOptionGroup>
+                <input
+                  className="training-slider"
+                  type="range"
+                  min="30"
+                  max="180"
+                  step="1"
+                  value={config.durationSec}
+                  aria-label={t('tongue.config.duration')}
+                  onChange={(event) => setConfig((current) => ({
+                    ...current,
+                    durationSec: Number(event.target.value),
+                  }))}
+                />
               </TrainingConfigSection>
 
               <TrainingConfigSection

@@ -139,7 +139,7 @@ test('reference cognitive games persist and render complete per-trial contracts'
   assert.match(target, /if \(state\.activeIndex === null\) return null/);
   assert.match(target, /state\.trials\.push\(trial\)/);
 
-  assert.match(reference, /\[1,\s*3,\s*5\]\.map/);
+  assert.match(reference, /type="range"/);
   assert.match(reference, /<svg/);
   assert.match(languageNeutral, /CreateSimonState/);
   assert.match(languageNeutral, /HandleSimonTap/);
