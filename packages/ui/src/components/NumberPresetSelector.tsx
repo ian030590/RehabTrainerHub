@@ -25,7 +25,7 @@ export function NumberPresetSelector({
     <div className="training-range-control">
       <span className="training-range-value">{customValue || value}</span>
       <input
-        className="training-slider-input"
+        className="training-slider"
         type="range"
         min={min}
         max={max}

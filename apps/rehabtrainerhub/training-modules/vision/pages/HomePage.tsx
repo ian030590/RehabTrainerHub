@@ -668,7 +668,7 @@ export function HomePage() {
             </TrainingConfigSection>
 
             <TrainingConfigSection title={t('home.config.speedAndSize')} wide>
-              <div className="training-config-inline-actions">
+              <div className="training-config-actions">
                 {[1, 2, 4, 8].map(mult => (
                   <button
                     key={mult}
@@ -1030,7 +1030,7 @@ export function HomePage() {
               value={drivingControlOptions.find((option) => option.key === drivingControlMode)?.label}
               wide
             >
-              <div className="training-config-inline-actions">
+              <div className="training-config-actions">
                 <button
                   className="btn btn-secondary btn-sm"
                   type="button"
@@ -1061,7 +1061,7 @@ export function HomePage() {
                 ))}
               </TrainingConfigOptionGroup>
               {drivingControlMode === 'wheel' && drivingInputCapabilities.wheelDevice && (
-                <div className="training-config-inline-actions" role="status" aria-live="polite">
+                <div className="training-config-actions" role="status" aria-live="polite">
                   <span className="training-option-meta">
                     {drivingWheelCalibration.phase === 'idle'
                       ? drivingWheelCalibration.calibrated
@@ -1117,7 +1117,7 @@ export function HomePage() {
                 </div>
               )}
               {!drivingControlModeAvailable && (
-                <div className="training-config-inline-actions" role="status" aria-live="polite">
+                <div className="training-config-actions" role="status" aria-live="polite">
                   <span className="training-option-meta">
                     {t('home.config.drivingControlUnavailable')}
                   </span>

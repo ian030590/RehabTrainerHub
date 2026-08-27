@@ -972,7 +972,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
               wide
             >
               <input
-                className="training-slider-input"
+                className="training-slider"
                 type="range"
                 min="8"
                 max="32"
