@@ -83,6 +83,7 @@ export type { TrainingRuleSection, TrainingRulesPanelProps } from './components/
 export { TrainingResultActions } from './components/TrainingResultActions';
 export type { TrainingResultActionsProps } from './components/TrainingResultActions';
 export { TrainerAppLayout } from './components/TrainerAppLayout';
+export { TrainerRouteOutlet } from './components/TrainerRouteOutlet';
 export type { TrainerAppLayoutProps } from './components/TrainerAppLayout';
 export { TrainingModuleSelectionPage } from './components/TrainingModuleSelectionPage';
 export type {

@@ -46,6 +46,7 @@
     "./components/PeripheralAttentionPage.css": "./src/components/PeripheralAttentionPage.css",
     "./components/TrainerApp.css": "./src/components/TrainerApp.css",
     "./components/TrainerAppLayout": "./src/components/TrainerAppLayout.tsx",
+    "./components/TrainerRouteOutlet": "./src/components/TrainerRouteOutlet.tsx",
     "./components/TrainerNavbar": "./src/components/TrainerNavbar.tsx",
     "./components/UfovConfigComponents": "./src/components/PeripheralAttentionConfigComponents.tsx",
     "./components/UfovPage.css": "./src/components/PeripheralAttentionPage.css",

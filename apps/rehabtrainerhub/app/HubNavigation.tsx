@@ -187,7 +187,14 @@ function HubShellContent({ children }: { children: ReactNode }) {
           </header>
         )}
 
-        <div className={`hub-content${isTrainingRoute ? ' hub-content-training' : ''}`}>{children}</div>
+        <div className={`hub-content${isTrainingRoute ? ' hub-content-training' : ''}`}>
+          <div
+            className={`hub-route-transition${isTrainingRoute ? ' hub-route-transition-training' : ''}`}
+            key={pathname}
+          >
+            {children}
+          </div>
+        </div>
         {!isTrainingRoute && (
           <RehabFooter
             aboutHref="/about/"

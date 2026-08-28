@@ -541,7 +541,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     setUploadedBackgroundUrl(imageUrl);
     setUploadedBackgroundName(file.name);
     setBackgroundMode('image');
-    event.target.value = '';
   }, []);
 
   useEffect(() => {

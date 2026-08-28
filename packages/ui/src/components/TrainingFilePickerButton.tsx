@@ -21,7 +21,10 @@ export function TrainingFilePickerButton({ accept, label, onFile }: TrainingFile
         accept={accept}
         tabIndex={-1}
         aria-hidden="true"
-        onChange={(event) => onFile(event.target.files?.[0])}
+        onChange={(event) => {
+          onFile(event.currentTarget.files?.[0]);
+          event.currentTarget.value = '';
+        }}
       />
     </>
   );

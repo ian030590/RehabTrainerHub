@@ -39,7 +39,6 @@ import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
   TrainingConfigNotice,
-  TrainingConfigOptionGroup,
   TrainingConfigPanel,
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';

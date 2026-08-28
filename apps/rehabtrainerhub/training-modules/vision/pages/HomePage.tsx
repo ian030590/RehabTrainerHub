@@ -5,7 +5,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import { TrainingConfigRangeField } from '@rehab-trainer/ui/components/TrainingConfigRangeField';
-import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import { TrainingFilePickerButton } from '@rehab-trainer/ui/components/TrainingFilePickerButton';
 import {
@@ -106,7 +105,6 @@ export function HomePage() {
   useTrainingConfigReady(expandedModule !== null && rulesModule === null);
   const [localDifficulty, setLocalDifficulty] = useAppSetting('difficulty');
   const [localRounds, setLocalRounds] = useAppSetting('totalRounds');
-  const [customRoundsInput, setCustomRoundsInput] = useState('');
   const [oculomotorMode, setOculomotorMode] = useAppSetting('oculomotorMode');
   const [oculomotorPattern, setOculomotorPattern] = useAppSetting('oculomotorPattern');
   const [oculomotorDurationSec, setOculomotorDurationSec] = useAppSetting('oculomotorDurationSec');
@@ -285,19 +283,6 @@ export function HomePage() {
     navigate(`/training?${params.toString()}`, { state: trainingFlowLaunchState });
   };
 
-  const handleRoundsPreset = (rounds: number) => {
-    setLocalRounds(rounds);
-    setCustomRoundsInput('');
-  };
-
-  const handleCustomRoundsChange = (val: string) => {
-    setCustomRoundsInput(val);
-    const num = parseInt(val, 10);
-    if (!isNaN(num) && num >= 1 && num <= 100) {
-      setLocalRounds(num);
-    }
-  };
-
   const handleCustomTargetImageChange = (file: File | undefined) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -351,7 +336,6 @@ export function HomePage() {
   };
 
   const calibrated = IsCalibrated();
-  const roundsPresets = [3, 5, 10, 15];
   const targetShapeOptions: { key: OculomotorTargetShape; label: string }[] = [
     { key: 'circle', label: t('home.shape.circle') },
     { key: 'star', label: t('home.shape.star') },
@@ -558,15 +542,14 @@ export function HomePage() {
 
             {/* Rounds */}
             <TrainingConfigSection title={t('home.config.rounds')} value={localRounds}>
-              <NumberPresetSelector
+              <input
+                type="range"
                 value={localRounds}
-                customValue={customRoundsInput}
-                presets={roundsPresets}
                 min={1}
                 max={100}
-                placeholder={t('home.config.custom')}
-                onPresetSelect={handleRoundsPreset}
-                onCustomChange={handleCustomRoundsChange}
+                step={1}
+                aria-label={t('home.config.rounds')}
+                onChange={(event) => setLocalRounds(Number(event.target.value))}
               />
             </TrainingConfigSection>
 
@@ -668,20 +651,6 @@ export function HomePage() {
             </TrainingConfigSection>
 
             <TrainingConfigSection title={t('home.config.speedAndSize')} wide>
-              <div className="training-config-actions">
-                {[1, 2, 4, 8].map(mult => (
-                  <button
-                    key={mult}
-                    className="btn btn-secondary btn-sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOculomotorSpeedDegPerSec(Math.min(80, oculomotorSpeedDegPerSec * mult));
-                    }}
-                  >
-                    {mult}x
-                  </button>
-                ))}
-              </div>
               <TrainingConfigOptionGroup columns={3}>
                 <TrainingConfigRangeField
                   label={t('home.config.speed')}
@@ -1030,18 +999,16 @@ export function HomePage() {
               value={drivingControlOptions.find((option) => option.key === drivingControlMode)?.label}
               wide
             >
-              <div className="training-config-actions">
-                <button
-                  className="btn btn-secondary btn-sm"
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    drivingInputCapabilities.rescan();
-                  }}
-                >
-                  {t('home.config.drivingRescanInputs')}
-                </button>
-              </div>
+              <button
+                className="btn btn-secondary btn-sm training-config-rescan-inputs"
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  drivingInputCapabilities.rescan();
+                }}
+              >
+                {t('home.config.drivingRescanInputs')}
+              </button>
               <TrainingConfigOptionGroup columns={4}>
                 {drivingControlOptions.map((option) => (
                   <button
@@ -1061,7 +1028,7 @@ export function HomePage() {
                 ))}
               </TrainingConfigOptionGroup>
               {drivingControlMode === 'wheel' && drivingInputCapabilities.wheelDevice && (
-                <div className="training-config-actions" role="status" aria-live="polite">
+                <div className="training-config-control-status" role="status" aria-live="polite">
                   <span className="training-option-meta">
                     {drivingWheelCalibration.phase === 'idle'
                       ? drivingWheelCalibration.calibrated
@@ -1117,7 +1084,7 @@ export function HomePage() {
                 </div>
               )}
               {!drivingControlModeAvailable && (
-                <div className="training-config-actions" role="status" aria-live="polite">
+                <div className="training-config-control-status" role="status" aria-live="polite">
                   <span className="training-option-meta">
                     {t('home.config.drivingControlUnavailable')}
                   </span>

@@ -1,8 +1,9 @@
 import { Suspense, lazy } from 'react';
-import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { GetTrainerFooterLabels, GetTrainerSkipLinkLabel } from '@rehab-trainer/ui/components/RehabFooter';
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
+import { TrainerRouteOutlet } from '@rehab-trainer/ui/components/TrainerRouteOutlet';
 import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
 import { useSyncedDisplaySettings } from '@rehab-trainer/ui/hooks/useSyncedDisplaySettings';
 import { Navbar } from './components/Navbar';
@@ -64,7 +65,7 @@ function AppLayout() {
         labels: GetTrainerFooterLabels(lang),
       }}
     >
-      <Outlet />
+      <TrainerRouteOutlet />
     </TrainerAppLayout>
   );
 }
