@@ -81,6 +81,8 @@ async function ValidateGameOutput(gameId) {
   assert.match(html, /<meta\b[^>]*\bname=["']robots["'][^>]*\bcontent=["'][^"']*noindex/i);
   assert.doesNotMatch(html, /<link\b(?=[^>]*\brel=["']canonical["'])/i);
   assert.doesNotMatch(html, /application\/ld\+json/i);
+  assert.match(html, /id=["']official-game-offline["']/i);
+  assert.match(html, /install-offline-pack/);
   ValidateDocumentResourceUrls(html, gameId);
 
   assert.equal(manifest.id, basePath, `${gameId} manifest id`);
@@ -90,6 +92,30 @@ async function ValidateGameOutput(gameId) {
   ValidateManifestUrls(manifest, gameId);
 
   new Script(serviceWorker, { filename: `${gameId}/sw.js` });
+  assert.match(serviceWorker, /PrecacheShell\(\)/);
+  assert.match(serviceWorker, /InstallOfflinePack\(event\.source\)/);
+  assert.match(serviceWorker, /type !== 'install-offline-pack'/);
+  assert.doesNotMatch(
+    serviceWorker,
+    /const precacheUrls|\.\.\.moduleUrls|moduleUrls\b/,
+    `${gameId} install precache must not include the module engine closure.`,
+  );
+  assert.match(serviceWorker, /const shellPrecacheUrls/);
+  const shellPrecacheMatch = serviceWorker.match(
+    /const shellPrecacheUrls = Object\.freeze\((\[[\s\S]*?\])\);/,
+  );
+  assert.ok(shellPrecacheMatch, `${gameId} shell precache declaration is missing.`);
+  const shellPrecacheUrls = JSON.parse(shellPrecacheMatch[1]);
+  assert.equal(
+    shellPrecacheUrls.some((url) => /\/offline-manifests\//i.test(url)),
+    false,
+    `${gameId} install must not fetch the offline manifest before explicit download.`,
+  );
+  assert.doesNotMatch(
+    serviceWorker,
+    /shellPrecacheUrls[\s\S]{0,500}(?:pixi-|mediapipe|tensorflow|webgazer|three-driving)/i,
+    `${gameId} shell precache must not include a heavy engine asset.`,
+  );
   assert.match(
     serviceWorker,
     new RegExp(`cachePrefix = [^;]*official-game:[^;]*:${EscapeRegExp(gameId)}:`),
@@ -97,6 +123,22 @@ async function ValidateGameOutput(gameId) {
   assert.match(serviceWorker, new RegExp(`scopePath = [^;]*${EscapeRegExp(basePath)}`));
   assert.match(serviceWorker, /crypto\.subtle\.digest\(['"]SHA-256['"]/);
   assert.match(serviceWorker, /credentials:\s*['"]omit['"]/);
+  assert.match(serviceWorker, /stagingCachePrefix/);
+  assert.match(serviceWorker, /caches\.open\(stagingCacheName\)/);
+  assert.match(serviceWorker, /caches\.delete\(stagingCacheName\)/);
+  assert.match(serviceWorker, /resources\.length > 512/);
+  assert.match(serviceWorker, /(?:256 \* 1024 \* 1024|268435456)/);
+  assert.match(
+    serviceWorker,
+    /url\.origin === self\.location\.origin[\s\S]{0,120}runtimeDestinations\.has/,
+    `${gameId} Service Worker must not cache cross-origin runtime requests.`,
+  );
+  assert.match(serviceWorker, /allowedRuntimePrefixes/);
+  assert.match(serviceWorker, /IsAllowedRuntimePath\(url\.pathname\)/);
+  assert.match(serviceWorker, /'\/runtimes\/'/);
+  assert.match(serviceWorker, /'\/runtime-assets\/'/);
+  assert.match(serviceWorker, /'\/assets\/'/);
+  assert.match(serviceWorker, /'\/icons\/'/);
   assert.match(serviceWorker, /status === 404 \|\| response\.status === 410/);
   assert.doesNotMatch(serviceWorker, /https?:\/\//i, `${gameId} Service Worker must not hard-code an external URL.`);
 
@@ -122,7 +164,7 @@ async function ValidateGameOutput(gameId) {
   assert.match(
     serviceWorker,
     new RegExp(EscapeRegExp(`/offline-manifests/${gameId}/${offlineManifest.version}.json`)),
-    `${gameId} Service Worker must precache its immutable offline manifest.`,
+    `${gameId} Service Worker must reference its immutable offline manifest for explicit download.`,
   );
   await ValidateOfflineResources(offlineManifest, gameId, basePath);
 }

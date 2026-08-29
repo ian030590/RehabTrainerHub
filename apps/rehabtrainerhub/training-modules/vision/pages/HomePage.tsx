@@ -167,14 +167,6 @@ export function HomePage() {
   const showRulesButtonLabel = rulesLabels.next;
   const rulesStartButtonLabel = rulesLabels.start;
 
-  // Preload the route chunk shortly after the home page is interactive.
-  useEffect(() => {
-    const timerId = window.setTimeout(() => {
-      void PreloadTrainingRoute();
-    }, 0);
-    return () => window.clearTimeout(timerId);
-  }, []);
-
   const enginePreloadRef = useRef<ReturnType<typeof CreateSingleFlightPreloadCache> | null>(null);
   const enginePreloadCache = enginePreloadRef.current ?? CreateSingleFlightPreloadCache();
   enginePreloadRef.current = enginePreloadCache;

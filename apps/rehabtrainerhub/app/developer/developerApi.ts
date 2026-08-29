@@ -2,6 +2,10 @@ import {
   BuildApiUrl,
   GetAuthToken,
 } from '@rehab-trainer/ui/auth/authClient';
+import type {
+  GamePlatformLicense,
+  GamePlatformLicenseId,
+} from '@rehab-trainer/training-contracts';
 
 export type DeveloperReleaseStatus = 'blocked' | 'pending_review' | 'publishing' | 'approved' | 'rejected' | 'revoked';
 export type DeveloperManualReviewStatus = 'requested' | 'in_review' | 'changes_requested' | 'approved' | 'rejected';
@@ -20,21 +24,42 @@ export interface DeveloperRelease {
   id: string;
   version: string;
   status: DeveloperReleaseStatus;
+  licenseId: GamePlatformLicenseId;
+  license: GamePlatformLicense;
   contentSha256: string;
   packageBytes: number;
   uncompressedBytes: number;
   fileCount: number;
   submissionId: string | null;
+  submissionAttempt?: number;
   scan: {
+    status?: 'queued' | 'running' | 'passed' | 'flagged' | 'failed';
     blockCount?: number;
     reviewCount?: number;
     findingCodes?: string[];
   };
   manualReviewStatus: DeveloperManualReviewStatus | null;
   findings: DeveloperValidationFinding[];
+  attempts?: DeveloperSubmissionAttempt[];
   reviewNote: string | null;
   submittedAt: string;
   reviewedAt: string | null;
+}
+
+export interface DeveloperSubmissionAttempt {
+  id: string;
+  attempt: number;
+  artifactSha256: string;
+  packageBytes: number;
+  submittedAt: string;
+  updatedAt: string;
+  scanRunId: string | null;
+  scanAttempt: number | null;
+  scanStatus: 'queued' | 'running' | 'passed' | 'flagged' | 'failed';
+  reportSha256: string | null;
+  errorCode: string | null;
+  hardBlockCount: number;
+  reviewCount: number;
 }
 
 export interface DeveloperGame {
@@ -61,11 +86,13 @@ export interface GameSubmissionInput {
   version: string;
   jsPsychVersion: string;
   capabilities: string[];
+  licenseId: GamePlatformLicenseId;
 }
 
 export interface GameSubmissionResponse {
   game: Pick<DeveloperGame, 'id' | 'slug' | 'title'>;
   release: DeveloperRelease & {
+    submissionAttempt: number;
     findings: Array<{
       severity: 'block' | 'review' | 'info';
       code: string;
@@ -86,6 +113,17 @@ export interface ManualReviewRequestResponse {
   };
 }
 
+export interface DeveloperNotification {
+  id: string;
+  gameId: string;
+  releaseId: string | null;
+  submissionId: string | null;
+  kind: 'request-changes' | 'rejected' | 'revoked' | 'validation-failed' | 'review-requested';
+  payload: Record<string, unknown>;
+  deliveredAt: string | null;
+  createdAt: string;
+}
+
 export async function FetchDeveloperGames(signal?: AbortSignal): Promise<DeveloperGame[]> {
   const response = await DeveloperFetch('/api/developer/games', { signal });
   const payload = await response.json() as { games?: DeveloperGame[] };
@@ -103,11 +141,18 @@ export async function SubmitDeveloperGame(input: GameSubmissionInput): Promise<G
   formData.set('version', input.version);
   formData.set('jsPsychVersion', input.jsPsychVersion);
   formData.set('capabilities', JSON.stringify(input.capabilities));
+  formData.set('licenseId', input.licenseId);
   const response = await DeveloperFetch('/api/developer/games', {
     method: 'POST',
     body: formData,
   });
   return response.json() as Promise<GameSubmissionResponse>;
+}
+
+export async function FetchDeveloperNotifications(signal?: AbortSignal): Promise<DeveloperNotification[]> {
+  const response = await DeveloperFetch('/api/developer/notifications', { signal });
+  const payload = await response.json() as { notifications?: DeveloperNotification[] };
+  return payload.notifications ?? [];
 }
 
 export async function RequestDeveloperGameManualReview(

@@ -6,6 +6,10 @@ import {
   gamePlatformMaxUploadBytes,
   gamePlatformPackageLimits,
   gamePlatformRuntimeContract,
+  gamePlatformLicenses,
+  offlinePackLimits,
+  GetGamePlatformLicense,
+  IsPublishableGameLicense,
   CanTransitionTrainingHostState,
   CreateTrainingEnvelope,
   CreateTrainingHostConnect,
@@ -17,16 +21,24 @@ import {
   IsTrainingModuleId,
   CreateSingleFlightPreloadCache,
   SanitizeTrainingMetrics,
+  CreateTrainingRunResult,
+  IsTrainingRunResult,
   TransitionTrainingHostState,
   ValidateTrainingModuleManifest,
   ValidateTrainingEnvelope,
   CanonicalizeGameScanReport,
+  CanApplyGameScanReport,
   CreateGameScanReport,
   CreateGameScanReportDigest,
+  CreateGameValidationJob,
   CreateGameValidationJobKey,
+  CreateGameValidationQueueMessage,
+  CreateGameValidationResultMessage,
   IsGameScanReportForJob,
+  IsGameValidationQueueMessage,
   IsSignedGameScanReport,
   ValidateUnsignedGameScanEvidence,
+  VerifySignedGameScanReport,
 } from './index.js';
 
 test('keeps the game capability and runtime contract renderer-independent', () => {
@@ -45,6 +57,11 @@ test('keeps the game capability and runtime contract renderer-independent', () =
     gameSdkVersion: '0.1.0',
     gameSdkUrl: '/runtime/trainerhub-game-sdk-0.1.0.js',
   });
+  assert.equal(GetGamePlatformLicense('MIT'), gamePlatformLicenses[1]);
+  assert.equal(GetGamePlatformLicense('unknown'), null);
+  assert.equal(IsPublishableGameLicense('MIT'), true);
+  assert.equal(IsPublishableGameLicense('not-declared'), false);
+  assert.equal(Object.isFrozen(gamePlatformLicenses), true);
   assert.equal(gamePlatformMaxUploadBytes, 12 * 1024 * 1024);
   assert.deepEqual(gamePlatformPackageLimits, {
     maximumCompressedBytes: 12 * 1024 * 1024,
@@ -56,6 +73,11 @@ test('keeps the game capability and runtime contract renderer-independent', () =
     maximumTotalTextBytes: 4 * 1024 * 1024,
     maximumZipRatio: 100,
   });
+  assert.deepEqual(offlinePackLimits, {
+    maximumResourceCount: 512,
+    maximumTotalBytes: 256 * 1024 * 1024,
+  });
+  assert.equal(Object.isFrozen(offlinePackLimits), true);
 });
 
 test('keeps the training result record allowlist dependency-free and ordered', async () => {
@@ -129,6 +151,42 @@ test('validates module ids and filters sensitive metrics', () => {
     score: 3,
     valid: true,
   });
+});
+
+test('creates one normalized run-result envelope for every lifecycle owner', () => {
+  const result = CreateTrainingRunResult({
+    moduleId: 'vision:moving-card',
+    moduleVersion: '1.0.0',
+    status: 'completed',
+    startedAt: new Date(0).toISOString(),
+    durationMs: 123,
+    trialCount: 5,
+    score: 4,
+    metrics: { accuracy: 0.8, userId: 'must-not-cross' },
+  });
+  assert.deepEqual(result, {
+    schemaVersion: 1,
+    moduleId: 'vision:moving-card',
+    moduleVersion: '1.0.0',
+    status: 'completed',
+    startedAt: new Date(0).toISOString(),
+    durationMs: 123,
+    trialCount: 5,
+    score: 4,
+    metrics: { accuracy: 0.8 },
+  });
+  assert.equal(Object.isFrozen(result), true);
+  assert.equal(IsTrainingRunResult(result), true);
+  assert.equal(IsTrainingRunResult({ ...result, metrics: { userId: 'secret' } }), false);
+  assert.throws(
+    () => CreateTrainingRunResult({
+      moduleId: 'vision:moving-card',
+      moduleVersion: '1.0.0',
+      status: 'completed',
+      durationMs: -1,
+    }),
+    /durationMs/,
+  );
 });
 
 test('rejects unsafe host identifiers and unfiltered result metrics', () => {
@@ -344,6 +402,8 @@ test('bounds validator evidence, binds reports to one attempt, and canonicalizes
     completedAt: '2026-08-29T00:10:00.000Z',
   });
   assert.equal(report.verdict, 'manual-review-eligible');
+  assert.deepEqual(report.observedNetworkAttempts, evidence.observedNetworkAttempts);
+  assert.equal(Object.isFrozen(report.observedNetworkAttempts), true);
   assert.equal(IsGameScanReportForJob(report, job, Date.parse(job.issuedAt)), true);
   assert.equal(IsGameScanReportForJob(report, { ...job, attempt: 1 }, Date.parse(job.issuedAt)), false);
   assert.match(CanonicalizeGameScanReport(report), /"alpha":"1.0".*"zeta":"2.0"/);
@@ -385,4 +445,184 @@ test('truncated or malformed validator evidence can only produce a hard-block re
   });
   assert.equal(report.verdict, 'hard-block');
   assert.equal(report.findings[0].code, 'validator-truncated');
+});
+
+test('queue messages are bounded, path-safe, and idempotent by job attempt', () => {
+  const job = CreateGameValidationJob({
+    jobId: 'job-queue-1',
+    attempt: 3,
+    jobNonce: 'nonce-queue-123456',
+    submissionId: 'submission-queue-1',
+    artifactSha256: 'd'.repeat(64),
+    policyVersion: 'validator-v1',
+    issuedAt: '2026-08-29T00:00:00.000Z',
+    expiresAt: '2026-08-29T00:15:00.000Z',
+  });
+  const message = CreateGameValidationQueueMessage({
+    job,
+    artifactKey: 'quarantine/developer-1/release-1/digest/artifact',
+    fileKeys: ['quarantine/developer-1/release-1/digest/files/index.html'],
+    enqueuedAt: '2026-08-29T00:00:01.000Z',
+  });
+  assert.equal(message.key, 'job-queue-1:3');
+  assert.equal(IsGameValidationQueueMessage(message), true);
+  assert.equal(Object.isFrozen(message), true);
+  assert.equal(Object.isFrozen(message.fileKeys), true);
+  assert.throws(() => CreateGameValidationQueueMessage({
+    job,
+    artifactKey: '../escape',
+    fileKeys: ['quarantine/developer-1/release-1/digest/files/index.html'],
+  }), /bounded contract/);
+});
+
+test('result envelopes are bounded and reuse the exact job/report identity', async () => {
+  const job = CreateGameValidationJob({
+    jobId: 'job-result-1',
+    attempt: 1,
+    jobNonce: 'nonce-result-123456',
+    submissionId: 'submission-result-1',
+    artifactSha256: '1'.repeat(64),
+    policyVersion: 'validator-v1',
+    issuedAt: '2026-08-29T00:00:00.000Z',
+    expiresAt: '2026-08-29T01:00:00.000Z',
+  });
+  const report = CreateGameScanReport({
+    job,
+    evidence: {
+      schemaVersion: 1,
+      jobId: job.jobId,
+      attempt: job.attempt,
+      jobNonce: job.jobNonce,
+      artifactSha256: job.artifactSha256,
+      observedNetworkAttempts: [],
+      findings: [],
+      truncated: false,
+    },
+    toolVersions: { controller: '1.0' },
+    completedAt: '2026-08-29T00:10:00.000Z',
+  });
+  const message = CreateGameValidationResultMessage({
+    job,
+    signedReport: {
+      report,
+      reportSha256: await CreateGameScanReportDigest(report),
+      attestation: { keyId: 'controller-1', algorithm: 'Ed25519', value: 'A'.repeat(32) },
+    },
+    receivedAt: '2026-08-29T00:10:01.000Z',
+  });
+  assert.equal(message.type, 'scan-result');
+  assert.equal(IsSignedGameScanReport(message.signedReport), true);
+  assert.equal(Object.isFrozen(message), true);
+  assert.throws(() => CreateGameValidationResultMessage({
+    job,
+    signedReport: {
+      ...message.signedReport,
+      report: { ...report, jobId: 'different-job' },
+    },
+  }), /bounded contract/);
+});
+
+test('report application requires a live CAS row and matching nonce/hash', () => {
+  const job = {
+    jobId: 'job-cas-1',
+    attempt: 1,
+    jobNonce: 'nonce-cas-123456',
+    submissionId: 'submission-cas-1',
+    artifactSha256: 'e'.repeat(64),
+    policyVersion: 'validator-v1',
+    limitsProfile: 'uploaded-game-v1',
+    issuedAt: '2026-08-29T00:00:00.000Z',
+    expiresAt: '2026-08-29T01:00:00.000Z',
+  };
+  const report = CreateGameScanReport({
+    job,
+    evidence: {
+      schemaVersion: 1,
+      jobId: job.jobId,
+      attempt: job.attempt,
+      jobNonce: job.jobNonce,
+      artifactSha256: job.artifactSha256,
+      observedNetworkAttempts: [],
+      findings: [],
+      truncated: false,
+    },
+    toolVersions: { validator: '1.0' },
+    completedAt: '2026-08-29T00:10:00.000Z',
+  });
+  assert.equal(CanApplyGameScanReport({
+    currentStatus: 'running',
+    currentJobNonce: job.jobNonce,
+    currentArtifactSha256: job.artifactSha256,
+    job,
+    report,
+    now: Date.parse('2026-08-29T00:10:00.000Z'),
+  }), true);
+  assert.equal(CanApplyGameScanReport({
+    currentStatus: 'passed',
+    currentJobNonce: job.jobNonce,
+    currentArtifactSha256: job.artifactSha256,
+    job,
+    report,
+  }), false);
+  assert.equal(CanApplyGameScanReport({
+    currentStatus: 'running',
+    currentJobNonce: 'stale-nonce',
+    currentArtifactSha256: job.artifactSha256,
+    job,
+    report,
+  }), false);
+});
+
+test('controller attestation verifies digest, signature, and key rotation boundaries', async () => {
+  const keyPair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
+  const job = {
+    jobId: 'job-sign-1',
+    attempt: 1,
+    jobNonce: 'nonce-sign-123456',
+    submissionId: 'submission-sign-1',
+    artifactSha256: 'f'.repeat(64),
+    policyVersion: 'validator-v1',
+    limitsProfile: 'uploaded-game-v1',
+    issuedAt: '2026-08-29T00:00:00.000Z',
+    expiresAt: '2026-08-29T01:00:00.000Z',
+  };
+  const report = CreateGameScanReport({
+    job,
+    evidence: {
+      schemaVersion: 1,
+      jobId: job.jobId,
+      attempt: job.attempt,
+      jobNonce: job.jobNonce,
+      artifactSha256: job.artifactSha256,
+      observedNetworkAttempts: [],
+      findings: [],
+      truncated: false,
+    },
+    toolVersions: { controller: '1.0' },
+    completedAt: '2026-08-29T00:10:00.000Z',
+  });
+  const signature = await crypto.subtle.sign(
+    { name: 'Ed25519' },
+    keyPair.privateKey,
+    new TextEncoder().encode(CanonicalizeGameScanReport(report)),
+  );
+  const encodedSignature = Buffer.from(signature).toString('base64url');
+  const signed = {
+    report,
+    reportSha256: await CreateGameScanReportDigest(report),
+    attestation: { keyId: 'controller-1', algorithm: 'Ed25519', value: encodedSignature },
+  };
+  assert.deepEqual(await VerifySignedGameScanReport(signed, keyPair.publicKey), {
+    ok: true,
+    keyId: 'controller-1',
+  });
+  assert.deepEqual(await VerifySignedGameScanReport({
+    ...signed,
+    reportSha256: '0'.repeat(64),
+  }, keyPair.publicKey), { ok: false, code: 'report-digest-mismatch' });
+  assert.deepEqual(await VerifySignedGameScanReport(signed, {
+    kty: 'OKP',
+    crv: 'Ed25519',
+    x: 'invalid-public-key',
+  }), { ok: false, code: 'invalid-signature' });
 });

@@ -23,16 +23,54 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import type { TFunction } from './types';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
 import { DrawingDefensePlugin } from '../../experiment/plugins/drawing-defense-lifecycle';
+import {
+  drawingDefenseConfigBounds,
+  drawingDefenseDefaults,
+  type DrawingDefenseConfig,
+  type DrawingDefenseDifficulty,
+} from '../../drawing-defense/config';
 
-type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
+type Difficulty = DrawingDefenseDifficulty;
 type ShapeId = 'circle' | 'cross' | 'square' | 'triangle' | 'vertical-line' | 'horizontal-line';
 type GamePhase = 'menu' | 'rules' | 'playing' | 'results';
 type GameResult = 'Victory' | 'Defeat';
 type BackgroundMode = 'stars' | 'color' | 'image';
 type GameDurationSeconds = number | null;
 
-interface DrawingTowerDefenseGameProps {
+export interface DrawingDefenseSessionRecord {
+  Test_Date: string;
+  Participant_ID: string;
+  Difficulty: Difficulty;
+  Game_Time_Seconds: GameDurationSeconds;
+  Starting_HP: number;
+  Enemy_Speed: number;
+  Recognition_Strictness: number;
+  Stroke_Wait_Milliseconds: number;
+  Total_Duration_Seconds: number;
+  Enemies_Spawned: number;
+  Enemies_Defeated: number;
+  HP_Remaining: number;
+  Game_Result: GameResult;
+  Enemy_Results: EnemyResult[];
+}
+
+export interface DrawingDefenseHostControl {
+  autoStart?: boolean;
+  config?: Readonly<DrawingDefenseConfig>;
+  onStarted?(): void;
+  onCompleted?(result: DrawingDefenseSessionRecord): void;
+  onAborted?(): void;
+  registerControls?(controls: {
+    pause(): void;
+    resume(): void;
+  } | null): void;
+  signal?: AbortSignal;
+  skipUserGuard?: boolean;
+}
+
+export interface DrawingTowerDefenseGameProps {
   onExit: () => void;
+  hostControl?: DrawingDefenseHostControl;
 }
 
 interface DifficultyConfig {
@@ -64,32 +102,18 @@ interface EnemyResult {
   Defeated: boolean;
 }
 
-interface SessionRecord {
-  Test_Date: string;
-  Participant_ID: string;
-  Difficulty: Difficulty;
-  Game_Time_Seconds: GameDurationSeconds;
-  Starting_HP: number;
-  Enemy_Speed: number;
-  Recognition_Strictness: number;
-  Stroke_Wait_Milliseconds: number;
-  Total_Duration_Seconds: number;
-  Enemies_Spawned: number;
-  Enemies_Defeated: number;
-  HP_Remaining: number;
-  Game_Result: GameResult;
-  Enemy_Results: EnemyResult[];
-}
+type SessionRecord = DrawingDefenseSessionRecord;
 
 const shapes: readonly ShapeId[] = ['circle', 'cross', 'square', 'triangle', 'vertical-line', 'horizontal-line'];
-const defaultJudgeDelayMs = 300;
+const defaultDifficulty: Difficulty = drawingDefenseDefaults.difficulty;
+const defaultJudgeDelayMs = drawingDefenseDefaults.strokeWaitMs;
 const gameDurationOptions = [30, 60, 300, null] as const;
-const defaultHp = 3;
-const defaultEnemySpeed = 5;
-const minRecognitionStrictness = 10;
-const defaultRecognitionStrictness = 20;
-const maxRecognitionStrictness = 90;
-const defaultGameDurationSeconds: GameDurationSeconds = 30;
+const defaultHp = drawingDefenseDefaults.maxHp;
+const defaultEnemySpeed = drawingDefenseDefaults.speed;
+const minRecognitionStrictness = drawingDefenseConfigBounds.strictness.min;
+const defaultRecognitionStrictness = drawingDefenseDefaults.strictness;
+const maxRecognitionStrictness = drawingDefenseConfigBounds.strictness.max;
+const defaultGameDurationSeconds: GameDurationSeconds = drawingDefenseDefaults.gameDurationSec;
 const defaultCustomGameDurationSeconds = 120;
 const enemyVisualHeight = 98;
 const enemySpawnY = -enemyVisualHeight - 8;
@@ -103,7 +127,6 @@ const maxRdpEpsilonRatio = 0.1;
 const rdpClosedEndpointDistancePx = 30;
 const rdpStraightAngleDegrees = 160;
 const starSkyBackgroundImage = CreateRuntimeAssetUrlCandidates(
-  import.meta.env.VITE_AI_ASSET_BASE_URL,
   'game-assets/rehabtrainerhub/motor/star-sky/v1/StarSky.png',
   `${import.meta.env.BASE_URL}assets/StarSky.png`,
 )
@@ -128,8 +151,10 @@ const shapeLabelKeys: Record<ShapeId, TranslationKey> = {
 // browser. Any future research export must use an explicit, authenticated,
 // first-party consent flow rather than a hidden game-side request.
 
-export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps) {
+export function DrawingTowerDefenseGame({ onExit, hostControl }: DrawingTowerDefenseGameProps) {
   const { t } = useT();
+  const hostControlRef = useRef(hostControl);
+  hostControlRef.current = hostControl;
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -147,26 +172,36 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   const metricsRef = useRef({ defeated: 0, hp: defaultHp, spawned: 0, elapsed: 0, spawnTimer: 0, nextId: 1 });
   const phaseRef = useRef<GamePhase>('menu');
   const configRef = useRef({
-    difficulty: 'Beginner' as Difficulty,
-    gameDurationSec: defaultGameDurationSeconds,
-    maxHp: defaultHp,
-    speed: defaultEnemySpeed,
-    strictness: defaultRecognitionStrictness,
-    strokeWaitMs: defaultJudgeDelayMs,
+    difficulty: hostControl?.config?.difficulty ?? defaultDifficulty,
+    gameDurationSec: hostControl?.config?.gameDurationSec === null
+      ? null
+      : hostControl?.config?.gameDurationSec ?? defaultGameDurationSeconds,
+    maxHp: hostControl?.config?.maxHp ?? defaultHp,
+    speed: hostControl?.config?.speed ?? defaultEnemySpeed,
+    strictness: hostControl?.config?.strictness ?? defaultRecognitionStrictness,
+    strokeWaitMs: hostControl?.config?.strokeWaitMs ?? defaultJudgeDelayMs,
   });
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const jsPsychRunSequenceRef = useRef(0);
+  const autoStartRequestedRef = useRef(false);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const [isPixiReady, setIsPixiReady] = useState(false);
   useTrainingConfigReady(phase === 'menu');
-  const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
-  const [gameDurationSec, setGameDurationSec] = useState<GameDurationSeconds>(defaultGameDurationSeconds);
+  const [difficulty, setDifficulty] = useState<Difficulty>(
+    hostControl?.config?.difficulty ?? defaultDifficulty,
+  );
+  const [gameDurationSec, setGameDurationSec] = useState<GameDurationSeconds>(
+    hostControl?.config?.gameDurationSec === null
+      ? null
+      : hostControl?.config?.gameDurationSec ?? defaultGameDurationSeconds,
+  );
   const [customGameDurationSec, setCustomGameDurationSec] = useState(defaultCustomGameDurationSeconds);
-  const [maxHp, setMaxHp] = useState(defaultHp);
-  const [speed, setSpeed] = useState(defaultEnemySpeed);
-  const [strictness, setStrictness] = useState(defaultRecognitionStrictness);
-  const [strokeWaitMs, setStrokeWaitMs] = useState(defaultJudgeDelayMs);
+  const [maxHp, setMaxHp] = useState(hostControl?.config?.maxHp ?? defaultHp);
+  const [speed, setSpeed] = useState(hostControl?.config?.speed ?? defaultEnemySpeed);
+  const [strictness, setStrictness] = useState(hostControl?.config?.strictness ?? defaultRecognitionStrictness);
+  const [strokeWaitMs, setStrokeWaitMs] = useState(hostControl?.config?.strokeWaitMs ?? defaultJudgeDelayMs);
   const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('stars');
   const backgroundColor = defaultBackgroundColor;
   const [uploadedBackgroundUrl, setUploadedBackgroundUrl] = useState<string | null>(null);
@@ -304,6 +339,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         Enemy_Defeated: enemyResult.Defeated,
       })),
     });
+    hostControlRef.current?.onCompleted?.(record);
   }, [clearDrawingInput, recordEnemyOutcome, setPhase, t]);
 
   const drawLayout = useCallback((app: Application) => {
@@ -426,9 +462,9 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   }, [recordEnemyOutcome, t]);
 
   const startGame = useCallback(async () => {
-    if (!VerifySelectedTrainingUser()) return;
+    if (!hostControlRef.current?.skipUserGuard && !VerifySelectedTrainingUser()) return;
     PrepareAudioFeedback(jsPsychRef);
-    await enterTrainingFullscreen();
+    if (!hostControlRef.current?.autoStart) await enterTrainingFullscreen();
 
     const app = appRef.current;
     if (!app) return;
@@ -449,6 +485,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         enemyResultsRef.current = [];
         setResult(null);
         setPhase('playing');
+        hostControlRef.current?.onStarted?.();
       },
     }]).catch(() => {
       if (phaseRef.current !== 'playing') return;
@@ -457,7 +494,14 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     });
   }, [clearPixiState, drawLayout, enterTrainingFullscreen, setPhase]);
 
+  useEffect(() => {
+    if (!hostControlRef.current?.autoStart || !isPixiReady || phase !== 'menu' || autoStartRequestedRef.current) return;
+    autoStartRequestedRef.current = true;
+    void startGame();
+  }, [isPixiReady, phase, startGame]);
+
   const returnToMenu = useCallback(() => {
+    const wasRunning = phaseRef.current === 'playing' || phaseRef.current === 'results';
     const jsPsych = jsPsychRef.current;
     if (jsPsych?.getCurrentTrial()) {
       jsPsych.abortExperiment(undefined, {
@@ -472,7 +516,26 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       drawLayout(app);
     }
     setPhase('menu');
+    if (wasRunning) hostControlRef.current?.onAborted?.();
   }, [clearPixiState, drawLayout, setPhase]);
+
+  useEffect(() => {
+    const signal = hostControlRef.current?.signal;
+    if (!signal) return undefined;
+    const onAbort = () => returnToMenu();
+    signal.addEventListener('abort', onAbort, { once: true });
+    return () => signal.removeEventListener('abort', onAbort);
+  }, [returnToMenu]);
+
+  useEffect(() => {
+    const registerControls = hostControlRef.current?.registerControls;
+    if (!registerControls) return undefined;
+    registerControls({
+      pause: () => { jsPsychRef.current?.pauseExperiment(); },
+      resume: () => { jsPsychRef.current?.resumeExperiment(); },
+    });
+    return () => registerControls(null);
+  }, []);
 
   const handleBackgroundImageUpload = useCallback((file: File | undefined) => {
     if (!file || !file.type.startsWith('image/')) return;
@@ -502,6 +565,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       if (cancelled) return;
       host.appendChild(app.canvas);
       app.canvas.className = 'drawing-defense-canvas';
+      setIsPixiReady(true);
       drawLayout(app);
       app.ticker.add((ticker: Ticker) => {
         if (phaseRef.current !== 'playing') return;
@@ -568,6 +632,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     window.addEventListener('resize', onResize);
     return () => {
       cancelled = true;
+      setIsPixiReady(false);
       window.removeEventListener('resize', onResize);
       app.destroy(true, { children: true, texture: true });
       appRef.current = null;
@@ -628,7 +693,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       <div ref={pixiHostRef} className="drawing-defense-stage" />
       <div ref={overlayRef} className="drawing-defense-input" />
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !hostControl?.autoStart && (
         <div className="training-panel">
           <TrainingConfigPanel
             label={t('drawing.config.label')}
@@ -777,7 +842,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         </div>
       )}
 
-      {phase === 'rules' && (
+      {phase === 'rules' && !hostControl?.autoStart && (
         <div className="training-panel">
           <MotorTrainingRulesPanel
             gameId="drawing-defense"
@@ -798,7 +863,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         </div>
       )}
 
-      {phase === 'results' && result && (
+      {phase === 'results' && result && !hostControl?.autoStart && (
         <div className="experiment-container experiment-container-scrollable drawing-defense-results-container">
           <div className="experiment-results">
             <h1>{t('drawing.results.complete')}</h1>

@@ -8,6 +8,7 @@ import { NotifyHubTrainingAbort } from '@rehab-trainer/ui/embeddedTraining';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { useT } from '../../i18n';
+import { GetTrainingModuleManifest } from '../../../moduleFlowManifest';
 import { BuildTimeline } from '../../experiment/timeline';
 import { ParseDrivingWheelCalibration } from '../../experiment/plugins/driving/driving-input';
 import { DisposeDrivingRehabRuntime } from '../../experiment/plugins/driving/driving-runtime-lifecycle';
@@ -20,6 +21,10 @@ import {
 import { DestroyPixiTrainingRuntime } from '../../utils/pixiPool';
 import { soundManager } from '../../utils/soundManager';
 import { SaveTrainingRecord } from '../../utils/trainingRecords';
+import {
+  IsVisionNativeRunModule,
+  SummarizeVisionTrainingRun,
+} from '../../utils/trainingRunResult';
 import { EnsureWebGazerLoaded } from '../../utils/webgazerLoader';
 import { CleanupWebGazerRuntime, ResetWebGazerCalibrationData } from '../../utils/webgazerCalibration';
 import {
@@ -170,6 +175,7 @@ function TrainingRuntimePage() {
       : null
   ));
   const jsPsychRef = useRef<JsPsych | null>(null);
+  const runStartedAtRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const skipFinishRef = useRef(false);
   const userName = getActiveUser() || t('exp.unknownUser');
@@ -229,6 +235,16 @@ function TrainingRuntimePage() {
             ? timelineData
               .filter((item) => item.trial_type === 'pixi-oculomotor-training')
             : timelineData;
+          const runResult = IsVisionNativeRunModule(moduleId)
+            ? SummarizeVisionTrainingRun({
+              moduleId,
+              moduleVersion: GetTrainingModuleManifest(`vision:${moduleId}`).implementationVersion,
+              status: 'completed',
+              startedAt: runStartedAtRef.current ?? Date.now(),
+              endedAt: Date.now(),
+              trials: data,
+            })
+            : undefined;
           await SaveTrainingRecord({
             results: data,
             userName,
@@ -258,6 +274,7 @@ function TrainingRuntimePage() {
               drivingControlMode,
               drivingRenderQuality,
             },
+            runResult,
           });
           soundManager.destroy();
           DestroyPixiTrainingRuntime(moduleId);
@@ -332,6 +349,7 @@ function TrainingRuntimePage() {
 
       if (cancelled) return;
       jsPsychRef.current = jsPsych;
+      runStartedAtRef.current = Date.now();
       jsPsych.run(timeline as any);
     };
 
@@ -351,6 +369,7 @@ function TrainingRuntimePage() {
       if (moduleId === 'driving-rehab') DisposeDrivingRehabRuntime();
       const activeJsPsych = jsPsychRef.current;
       jsPsychRef.current = null;
+      runStartedAtRef.current = null;
       if (activeJsPsych) {
         skipFinishRef.current = true;
         activeJsPsych.abortExperiment();

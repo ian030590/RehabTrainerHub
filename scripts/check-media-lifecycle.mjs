@@ -92,7 +92,7 @@ assert.match(
 );
 
 const webgazerCalibrationSource = ReadSource(
-  'apps/rehabtrainerhub/training-runtimes/vision/src/utils/webgazerCalibration.ts',
+  'apps/rehabtrainerhub/training-modules/vision/utils/webgazerCalibration.ts',
 );
 assert.match(
   webgazerCalibrationSource,

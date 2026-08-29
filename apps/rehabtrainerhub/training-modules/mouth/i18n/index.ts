@@ -1,1 +1,2 @@
-export * from '../../../training-runtimes/mouth/src/i18n';
+export { LanguageProvider, useT, type Language } from './i18n';
+export type { TranslationKey } from './zh';

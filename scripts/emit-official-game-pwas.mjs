@@ -18,9 +18,12 @@ import {
 import { fileURLToPath } from 'node:url';
 import { Script } from 'node:vm';
 import ts from 'typescript';
+import { offlinePackLimits } from '../packages/training-contracts/src/index.js';
 
 const generatorRevision = '2026-08-17-official-game-pwa-v2';
 const maximumShellPrecacheBytes = 12 * 1024 * 1024;
+const maximumOfflinePackResourceCount = offlinePackLimits.maximumResourceCount;
+const maximumOfflinePackBytes = offlinePackLimits.maximumTotalBytes;
 const gameIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const windowsReservedNamePattern = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -78,18 +81,9 @@ for (const trainer of trainers) {
     resolve(outputDirectory, 'runtimes', trainer, '.vite', 'manifest.json'),
     'utf8',
   ));
-  const shellUrls = ExtractShellUrls(rootHtml, rootManifest);
-  const shellFiles = shellUrls.map(ResolveOutputFile);
-  const shellMetadata = await Promise.all(shellFiles.map(async (filePath) => {
-    const metadata = await stat(filePath);
-    if (!metadata.isFile()) throw new Error(`PWA shell resource is not a file: ${filePath}`);
-    return { filePath, size: metadata.size };
-  }));
-  const shellPrecacheBytes = shellMetadata.reduce((total, item) => total + item.size, 0);
-  if (shellPrecacheBytes > maximumShellPrecacheBytes) {
-    throw new Error(`Official game shell precache exceeds ${maximumShellPrecacheBytes} bytes.`);
-  }
-  const baseRevision = await CreateBaseRevision(shellFiles, packageJson.version ?? '0.0.0', rootHtml);
+  const rootShellUrls = ExtractShellUrls(rootHtml, rootManifest);
+  let largestShellPrecacheBytes = 0;
+  let lastBaseRevision = '';
 
   for (const game of games) {
     const gameDirectory = resolve(gamesDirectory, game.id);
@@ -97,6 +91,31 @@ for (const trainer of trainers) {
     await mkdir(gameDirectory, { recursive: true });
     const basePath = `/games/${game.id}/`;
     const description = `${game.title}的單一遊戲安裝入口；結果僅為當次練習紀錄。`;
+    const shellModulePath = ResolvePwaShellModulePath(trainer, game.path);
+    // The launcher route itself must stay light. Its lazy child imports are
+    // intentionally excluded here; the selected module closure below is the
+    // only place allowed to bring an engine/renderer chunk into the offline
+    // pack.
+    const shellModuleUrls = ResolveRuntimeModuleUrls(
+      runtimeManifest,
+      shellModulePath,
+      trainer,
+      { includeDynamicImports: false },
+    );
+    const shellUrls = [...new Set([...rootShellUrls, ...shellModuleUrls])].sort();
+    const shellFiles = shellUrls.map(ResolveOutputFile);
+    const shellMetadata = await Promise.all(shellFiles.map(async (filePath) => {
+      const metadata = await stat(filePath);
+      if (!metadata.isFile()) throw new Error(`PWA shell resource is not a file: ${filePath}`);
+      return { filePath, size: metadata.size };
+    }));
+    const shellPrecacheBytes = shellMetadata.reduce((total, item) => total + item.size, 0);
+    if (shellPrecacheBytes > maximumShellPrecacheBytes) {
+      throw new Error(`Official game shell precache exceeds ${maximumShellPrecacheBytes} bytes.`);
+    }
+    largestShellPrecacheBytes = Math.max(largestShellPrecacheBytes, shellPrecacheBytes);
+    const baseRevision = await CreateBaseRevision(shellFiles, packageJson.version ?? '0.0.0', rootHtml);
+    lastBaseRevision = baseRevision;
     const manifest = {
       ...rootManifest,
       id: basePath,
@@ -118,6 +137,7 @@ for (const trainer of trainers) {
       manifest,
       html,
       runtimeAssetDescriptors,
+      shellUrls,
     );
     const moduleUrls = ResolveRuntimeModuleUrls(runtimeManifest, game.sourcePath, trainer);
     const offlineManifest = await BuildOfflineManifest({
@@ -136,7 +156,6 @@ for (const trainer of trainers) {
     const serviceWorker = BuildGameServiceWorker({
       basePath,
       gameId: game.id,
-      moduleUrls,
       offlineManifestUrl,
       revision,
       shellUrls,
@@ -166,7 +185,7 @@ for (const trainer of trainers) {
     emittedGameCount += 1;
   }
 
-  console.log(`Emitted ${games.length} ${trainer} game PWAs (${FormatBytes(shellPrecacheBytes)} shell, ${baseRevision}).`);
+  console.log(`Emitted ${games.length} ${trainer} game PWAs (up to ${FormatBytes(largestShellPrecacheBytes)} shell, ${lastBaseRevision}).`);
 }
 
 const headersPath = resolve(outputDirectory, '_headers');
@@ -196,6 +215,10 @@ function BuildGameHtml(source, game, basePath, description) {
     #official-game-install { position: fixed; z-index: 2147483000; inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto auto; padding: 8px; border: 1px solid ButtonBorder; border-radius: 10px; background: Canvas; color: CanvasText; box-shadow: 0 4px 18px color-mix(in srgb, CanvasText 18%, transparent); }
     #official-game-install[hidden] { display: none; }
     #official-game-install button { min-height: 42px; padding: 8px 14px; border: 1px solid ButtonBorder; border-radius: 999px; color: ButtonText; background: ButtonFace; font: inherit; font-weight: 700; cursor: pointer; }
+    #official-game-offline { position: fixed; z-index: 2147482999; inset: auto auto max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); display: grid; gap: 4px; max-width: min(23rem, calc(100vw - 24px)); padding: 8px; border: 1px solid ButtonBorder; border-radius: 10px; background: Canvas; color: CanvasText; box-shadow: 0 4px 18px color-mix(in srgb, CanvasText 18%, transparent); }
+    #official-game-offline button { min-height: 42px; padding: 8px 14px; border: 1px solid ButtonBorder; border-radius: 999px; color: ButtonText; background: ButtonFace; font: inherit; font-weight: 700; cursor: pointer; }
+    #official-game-offline button:disabled { cursor: wait; opacity: .65; }
+    #official-game-offline-status { margin: 0; font-size: .82rem; }
   </style>
   <script>
     (() => {
@@ -237,6 +260,38 @@ function BuildGameHtml(source, game, basePath, description) {
           installPrompt = null;
         });
         if (window.matchMedia('(display-mode: standalone)').matches && shell) shell.hidden = true;
+
+        const offlineShell = document.getElementById('official-game-offline');
+        const offlineButton = offlineShell?.querySelector('button');
+        const offlineStatus = document.getElementById('official-game-offline-status');
+        const setOfflineStatus = (message) => {
+          if (offlineStatus) offlineStatus.textContent = message;
+        };
+        offlineButton?.addEventListener('click', async () => {
+          if (!('serviceWorker' in navigator)) {
+            setOfflineStatus('此瀏覽器不支援離線下載。');
+            return;
+          }
+          offlineButton.disabled = true;
+          setOfflineStatus('正在下載離線資源…');
+          try {
+            const registration = await navigator.serviceWorker.ready;
+            if (!registration.active) throw new Error('service worker is not active');
+            registration.active.postMessage({ type: 'install-offline-pack' });
+          } catch {
+            offlineButton.disabled = false;
+            setOfflineStatus('離線資源下載失敗，請稍後再試。');
+          }
+        });
+        navigator.serviceWorker?.addEventListener('message', (event) => {
+          if (event.data?.type === 'offline-pack-ready') {
+            offlineButton?.remove();
+            setOfflineStatus('離線資源已準備完成。');
+          } else if (event.data?.type === 'offline-pack-failed') {
+            if (offlineButton) offlineButton.disabled = false;
+            setOfflineStatus('離線資源下載失敗，請稍後再試。');
+          }
+        });
       });
       Object.defineProperty(window, '__TRAINERHUB_OFFICIAL_GAME__', {
         configurable: false,
@@ -253,6 +308,7 @@ function BuildGameHtml(source, game, basePath, description) {
     })();
   </script>`;
   const installShell = `<aside id="official-game-install" hidden aria-live="polite"><button type="button">安裝此遊戲</button></aside>`;
+  const offlineShell = `<aside id="official-game-offline" aria-live="polite"><button type="button">下載離線資源</button><p id="official-game-offline-status">需要離線使用時再下載活動資源。</p></aside>`;
   let html = source
     .replace(/<html\b([^>]*)>/i, '<html$1 data-official-game-pwa="true">')
     // A standalone game PWA must not silently pull fonts, scripts, or other
@@ -284,14 +340,13 @@ function BuildGameHtml(source, game, basePath, description) {
     '</head>',
     `  <meta name="robots" content="noindex,nofollow,noarchive" />\n  ${boot}\n</head>`,
   );
-  html = html.replace(/(<body\b[^>]*>)/i, `$1\n  ${installShell}`);
+  html = html.replace(/(<body\b[^>]*>)/i, `$1\n  ${installShell}\n  ${offlineShell}`);
   return html;
 }
 
 function BuildGameServiceWorker({
   basePath,
   gameId,
-  moduleUrls,
   offlineManifestUrl,
   revision,
   shellUrls,
@@ -299,31 +354,45 @@ function BuildGameServiceWorker({
 }) {
   const cachePrefix = `trainerhub-official-game:${trainer}:${gameId}:`;
   const cacheName = `${cachePrefix}${revision}`;
-  const precacheUrls = [...new Set([
+  const shellPrecacheUrls = [...new Set([
     basePath,
     `${basePath}manifest.webmanifest`,
-    offlineManifestUrl,
     ...shellUrls,
-    ...moduleUrls,
   ])].sort();
   return `'use strict';
 const cachePrefix = ${JSON.stringify(cachePrefix)};
 const cacheName = ${JSON.stringify(cacheName)};
+const stagingCachePrefix = ${JSON.stringify(`${cachePrefix}staging:`)};
 const scopePath = ${JSON.stringify(basePath)};
 const launcherUrl = new URL(scopePath, self.location.origin).href;
 const offlineManifestUrl = ${JSON.stringify(offlineManifestUrl)};
-const precacheUrls = Object.freeze(${JSON.stringify(precacheUrls)});
-const precachePaths = new Set(precacheUrls.map((value) => new URL(value, self.location.origin).pathname));
+const shellPrecacheUrls = Object.freeze(${JSON.stringify(shellPrecacheUrls)});
+const shellPrecachePaths = new Set(shellPrecacheUrls.map((value) => new URL(value, self.location.origin).pathname));
+const allowedRuntimePrefixes = Object.freeze([
+  scopePath,
+  '/runtimes/',
+  '/runtime-assets/',
+  '/assets/',
+  '/icons/',
+]);
 const runtimeDestinations = new Set(['audio', 'font', 'image', 'script', 'style', 'track', 'video', 'worker']);
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(Precache().then(() => self.skipWaiting()));
+  // Installing the PWA must not download the selected module's Pixi/model
+  // graph. Those resources are installed only after an explicit user action.
+  event.waitUntil(PrecacheShell().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(caches.keys().then((keys) => Promise.all(
     keys.filter((key) => key.startsWith(cachePrefix) && key !== cacheName).map((key) => caches.delete(key)),
-  )).then(() => self.clients.claim()));
+)).then(() => self.clients.claim()));
+});
+
+self.addEventListener('message', (event) => {
+  if (!event.data || typeof event.data !== 'object'
+    || event.data.type !== 'install-offline-pack') return;
+  event.waitUntil(InstallOfflinePack(event.source));
 });
 
 self.addEventListener('fetch', (event) => {
@@ -334,14 +403,20 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(NetworkFirstLauncher(request));
     return;
   }
-  if (url.origin === self.location.origin && precachePaths.has(url.pathname) && !url.search) {
+  if (url.origin === self.location.origin && shellPrecachePaths.has(url.pathname) && !url.search) {
     event.respondWith(CacheFirst(request));
     return;
   }
-  if (request.mode !== 'navigate' && runtimeDestinations.has(request.destination)) {
+  if (url.origin === self.location.origin
+    && IsAllowedRuntimePath(url.pathname)
+    && request.mode !== 'navigate' && runtimeDestinations.has(request.destination)) {
     event.respondWith(CacheFirst(request));
   }
 });
+
+function IsAllowedRuntimePath(pathname) {
+  return allowedRuntimePrefixes.some((prefix) => pathname.startsWith(prefix));
+}
 
 async function NetworkFirstLauncher(request) {
   try {
@@ -360,33 +435,75 @@ async function NetworkFirstLauncher(request) {
   }
 }
 
-async function Precache() {
-  const manifestResponse = await fetch(offlineManifestUrl, { cache: 'no-store' });
-  if (!manifestResponse.ok) throw new Error('Offline manifest is unavailable.');
-  const manifest = await manifestResponse.clone().json();
-  if (!manifest || manifest.schemaVersion !== 1 || !Array.isArray(manifest.resources)) {
-    throw new Error('Offline manifest is invalid.');
-  }
+async function PrecacheShell() {
   const cache = await caches.open(cacheName);
-  for (const resource of manifest.resources) {
-    if (!resource || typeof resource.url !== 'string' || !Number.isSafeInteger(resource.byteSize)
-      || !/^[a-f0-9]{64}$/i.test(resource.sha256)) throw new Error('Offline resource metadata is invalid.');
-    const url = new URL(resource.url, self.location.origin);
-    if (url.origin !== self.location.origin || url.hash || !url.pathname.startsWith(scopePath)
-      && !url.pathname.startsWith('/runtimes/') && !url.pathname.startsWith('/assets/')
-      && !url.pathname.startsWith('/runtime-assets/') && !url.pathname.startsWith('/icons/')) {
-      throw new Error('Offline resource escapes the platform scope.');
-    }
+  for (const value of shellPrecacheUrls) {
+    const url = new URL(value, self.location.origin);
     const response = await fetch(url, { cache: 'no-store', credentials: 'omit' });
-    if (!response.ok || response.type === 'opaque') throw new Error('Offline resource fetch failed.');
-    const bytes = await response.clone().arrayBuffer();
-    if (bytes.byteLength !== resource.byteSize) throw new Error('Offline resource size mismatch.');
-    const digest = await crypto.subtle.digest('SHA-256', bytes);
-    const hash = [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, '0')).join('');
-    if (hash !== resource.sha256.toLowerCase()) throw new Error('Offline resource hash mismatch.');
+    if (!response.ok || response.type === 'opaque') throw new Error('PWA shell resource fetch failed.');
     await cache.put(url, response);
   }
-  await cache.put(offlineManifestUrl, manifestResponse);
+}
+
+async function InstallOfflinePack(client) {
+  let stagingCacheName = null;
+  let stagingCache = null;
+  try {
+    const manifestResponse = await fetch(offlineManifestUrl, {
+      cache: 'no-store',
+      credentials: 'omit',
+    });
+    if (!manifestResponse.ok) throw new Error('Offline manifest is unavailable.');
+    const manifest = await manifestResponse.clone().json();
+    if (!manifest || manifest.schemaVersion !== 1 || !Array.isArray(manifest.resources)) {
+      throw new Error('Offline manifest is invalid.');
+    }
+    stagingCacheName = stagingCachePrefix + String(manifest.version || 'unknown') + ':' + CreateInstallNonce();
+    if (manifest.resources.length > ${maximumOfflinePackResourceCount}) throw new Error('Offline pack has too many resources.');
+    const totalBytes = manifest.resources.reduce((total, resource) => total + resource.byteSize, 0);
+    if (!Number.isSafeInteger(totalBytes) || totalBytes > ${maximumOfflinePackBytes}) {
+      throw new Error('Offline pack is too large.');
+    }
+    // Verify every response in a temporary cache first. CacheStorage has no
+    // rename primitive, so the active cache is touched only after the full
+    // manifest has passed origin, size, status and SHA-256 checks.
+    stagingCache = await caches.open(stagingCacheName);
+    for (const resource of manifest.resources) {
+      if (!resource || typeof resource.url !== 'string' || !Number.isSafeInteger(resource.byteSize)
+        || !/^[a-f0-9]{64}$/i.test(resource.sha256)) throw new Error('Offline resource metadata is invalid.');
+      const url = new URL(resource.url, self.location.origin);
+      if (url.origin !== self.location.origin || url.hash || !IsAllowedRuntimePath(url.pathname)) {
+        throw new Error('Offline resource escapes the platform scope.');
+      }
+      const response = await fetch(url, { cache: 'no-store', credentials: 'omit' });
+      if (!response.ok || response.type === 'opaque') throw new Error('Offline resource fetch failed.');
+      const bytes = await response.clone().arrayBuffer();
+      if (bytes.byteLength !== resource.byteSize) throw new Error('Offline resource size mismatch.');
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      const hash = [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, '0')).join('');
+      if (hash !== resource.sha256.toLowerCase()) throw new Error('Offline resource hash mismatch.');
+      await stagingCache.put(url, response);
+    }
+    const cache = await caches.open(cacheName);
+    for (const resource of manifest.resources) {
+      const url = new URL(resource.url, self.location.origin);
+      const staged = await stagingCache.match(url);
+      if (!staged) throw new Error('Offline resource disappeared during commit.');
+      await cache.put(url, staged.clone());
+    }
+    await cache.put(offlineManifestUrl, manifestResponse);
+    client?.postMessage({ type: 'offline-pack-ready', version: manifest.version });
+  } catch (error) {
+    client?.postMessage({ type: 'offline-pack-failed' });
+    throw error;
+  } finally {
+    if (stagingCacheName) await caches.delete(stagingCacheName);
+  }
+}
+
+function CreateInstallNonce() {
+  if (typeof crypto?.randomUUID === 'function') return crypto.randomUUID();
+  return String(Date.now()) + '-' + Math.random().toString(36).slice(2);
 }
 
 async function CacheFirst(request) {
@@ -573,7 +690,43 @@ function ReadPropertyName(name) {
   return null;
 }
 
-function ResolveRuntimeModuleUrls(runtimeManifest, sourcePath, trainer) {
+function ResolvePwaShellModulePath(trainer, gamePath) {
+  const pathname = new URL(gamePath, 'https://trainer-build.invalid').pathname;
+  const paths = {
+    motor: {
+      '/upper-limb-training': 'motor/pages/training/UpperLimbTraining.tsx',
+      '/lower-limb-training': 'motor/pages/training/LowerLimbTraining.tsx',
+      '/training': 'motor/pages/training/TrainingPage.tsx',
+    },
+    vision: {
+      '/': 'vision/pages/HomePage.tsx',
+      '/training': 'vision/pages/training/TrainingPage.tsx',
+      '/hart-chart': 'vision/pages/training/HartChartPage.tsx',
+      '/hart-chart/display': 'vision/pages/training/HartChartPage.tsx',
+    },
+    brain: {
+      '/attention-training': 'brain/pages/ModulePage.tsx',
+      '/attention-training/ufov': 'brain/pages/PeripheralAttentionPage.tsx',
+      '/attention-training/every-ball-response': 'brain/pages/EveryBallResponsePage.tsx',
+      '/memory-training': 'brain/pages/ModulePage.tsx',
+      '/thinking-training': 'brain/pages/thinking/ThinkingTraining.tsx',
+    },
+    mouth: {
+      '/oral-training': 'mouth/pages/training/OralTraining.tsx',
+      '/comprehension-training': 'mouth/pages/training/ComprehensionTraining.tsx',
+    },
+  };
+  const sourcePath = paths[trainer]?.[pathname];
+  if (!sourcePath) throw new Error(`No official PWA shell module is mapped for ${trainer}:${pathname}.`);
+  return sourcePath;
+}
+
+function ResolveRuntimeModuleUrls(
+  runtimeManifest,
+  sourcePath,
+  trainer,
+  { includeDynamicImports = true } = {},
+) {
   if (typeof sourcePath !== 'string' || sourcePath.length === 0) {
     throw new Error(`Missing runtime source path for ${trainer} module.`);
   }
@@ -587,7 +740,7 @@ function ResolveRuntimeModuleUrls(runtimeManifest, sourcePath, trainer) {
         && runtimeManifest[key]?.isDynamicEntry === true
       ));
   if (!entryKey) throw new Error(`Runtime manifest has no entry for ${expectedKey}.`);
-  const keys = CollectManifestClosure(runtimeManifest, entryKey);
+  const keys = CollectManifestClosure(runtimeManifest, entryKey, includeDynamicImports);
   const urls = new Set();
   for (const key of keys) {
     const entry = runtimeManifest[key];
@@ -599,7 +752,7 @@ function ResolveRuntimeModuleUrls(runtimeManifest, sourcePath, trainer) {
   return [...urls].sort();
 }
 
-function CollectManifestClosure(runtimeManifest, rootKey) {
+function CollectManifestClosure(runtimeManifest, rootKey, includeDynamicImports = true) {
   const visited = new Set();
   const pending = [rootKey];
   while (pending.length > 0) {
@@ -608,7 +761,9 @@ function CollectManifestClosure(runtimeManifest, rootKey) {
     visited.add(key);
     const entry = runtimeManifest[key];
     if (!entry) continue;
-    const dynamicImports = key === 'index.html' ? [] : (entry.dynamicImports ?? []);
+    const dynamicImports = includeDynamicImports && key !== 'index.html'
+      ? (entry.dynamicImports ?? [])
+      : [];
     for (const importedKey of [...(entry.imports ?? []), ...dynamicImports]) {
       pending.push(importedKey);
     }
@@ -742,7 +897,14 @@ async function CreateBaseRevision(files, version, html) {
   return hash.digest('hex').slice(0, 16);
 }
 
-function CreateGameRevision(baseRevision, game, manifest, html, runtimeAssetDescriptors = []) {
+function CreateGameRevision(
+  baseRevision,
+  game,
+  manifest,
+  html,
+  runtimeAssetDescriptors = [],
+  shellUrls = [],
+) {
   return createHash('sha256')
     .update(generatorRevision)
     .update(baseRevision)
@@ -750,6 +912,7 @@ function CreateGameRevision(baseRevision, game, manifest, html, runtimeAssetDesc
     .update(JSON.stringify(manifest))
     .update(html)
     .update(JSON.stringify(runtimeAssetDescriptors))
+    .update(JSON.stringify(shellUrls))
     .digest('hex')
     .slice(0, 16);
 }
@@ -871,7 +1034,7 @@ function ValidateGeneratedOutput({
     throw new Error(`Generated offline manifest is invalid for ${game.id}.`);
   }
   if (!serviceWorker.includes(offlineManifestUrl)) {
-    throw new Error(`Generated service worker does not precache the offline manifest for ${game.id}.`);
+    throw new Error(`Generated service worker does not reference the offline manifest for ${game.id}.`);
   }
   if (!/^\/offline-manifests\/[a-z0-9-]+\/latest\.json$/.test(latestOfflineManifestUrl)
     || latestOfflineManifestUrl !== `/offline-manifests/${game.id}/latest.json`) {

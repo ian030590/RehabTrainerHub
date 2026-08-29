@@ -23,16 +23,20 @@ export interface TrainingRunContext<TConfig> {
   mountElement: HTMLElement;
   signal: AbortSignal;
   sessionNonce: string;
+  /** Host locale is presentation context, not part of module configuration. */
+  language?: 'zh' | 'en';
 }
 
 export interface TrainingConfigProps<TConfig> {
   value: Readonly<TConfig>;
   onChange(value: TConfig): void;
   onValidityChange?(valid: boolean): void;
+  language?: 'zh' | 'en';
 }
 
 export interface TrainingRulesProps {
   onReady?(): void;
+  language?: 'zh' | 'en';
 }
 
 export interface PreparedTrainingEngine<TConfig> {

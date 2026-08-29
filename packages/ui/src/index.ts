@@ -7,7 +7,10 @@ export {
   LoadMediaPipeWithFallback,
   mediaPipeTasksVisionVersion,
 } from './aiAssets';
-export type { MediaPipeAssetUrls } from './aiAssets';
+export type {
+  MediaPipeAssetUrls,
+  RuntimeAssetCandidateOptions,
+} from './aiAssets';
 export { CreateOfficialHostIframePolicy, officialTrainingHostRoutePrefix } from './officialTrainingHostPolicy';
 export type {
   OfficialHostIframePolicy,
@@ -180,6 +183,7 @@ export {
   CreateOfflinePackManager,
   GetOfflinePackManager,
   GetOfflinePackTotalBytes,
+  MigrateLegacyOfflineCache,
   ParseOfflinePackManifest,
   ValidateOfflinePack,
   offlinePackCacheName,
@@ -191,6 +195,8 @@ export type {
   OfflinePackManifestPayload,
   OfflinePackManager,
   OfflinePackManagerOptions,
+  OfflinePackMigrationOptions,
+  OfflinePackMigrationResult,
   OfflinePackMetadataStore,
   OfflinePackProgress,
   OfflinePackReference,

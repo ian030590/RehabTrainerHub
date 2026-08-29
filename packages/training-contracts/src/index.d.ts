@@ -20,6 +20,12 @@ export interface GamePlatformRuntimeContract {
   readonly gameSdkVersion: '0.1.0';
   readonly gameSdkUrl: '/runtime/trainerhub-game-sdk-0.1.0.js';
 }
+export type GamePlatformLicenseId = 'CC-BY-4.0' | 'MIT' | 'Apache-2.0' | 'proprietary' | 'not-declared';
+export interface GamePlatformLicense {
+  readonly id: GamePlatformLicenseId;
+  readonly label: string;
+  readonly url: string | null;
+}
 export interface GamePlatformPackageLimits {
   readonly maximumCompressedBytes: number;
   readonly maximumFileBytes: number;
@@ -30,6 +36,11 @@ export interface GamePlatformPackageLimits {
   readonly maximumTotalTextBytes: number;
   readonly maximumZipRatio: number;
 }
+export interface OfflinePackLimits {
+  readonly maximumResourceCount: 512;
+  readonly maximumTotalBytes: 268435456;
+}
+export const offlinePackLimits: OfflinePackLimits;
 
 export type GameValidationFindingDisposition =
   | 'hard-block'
@@ -49,6 +60,27 @@ export interface GameValidationJob {
   limitsProfile: 'uploaded-game-v1';
   issuedAt: string;
   expiresAt: string;
+}
+
+export const gameValidationQueueSchema: 'trainerhub.game-validation/v1';
+export const gameValidationQueueType: 'scan-request';
+export const gameValidationResultType: 'scan-result';
+export const gameValidationJobTtlSeconds: 900;
+export interface GameValidationQueueMessage {
+  schema: 'trainerhub.game-validation/v1';
+  type: 'scan-request';
+  key: string;
+  job: GameValidationJob;
+  artifactKey: string;
+  fileKeys: readonly string[];
+  enqueuedAt: string;
+}
+export interface GameValidationResultMessage {
+  schema: 'trainerhub.game-validation/v1';
+  type: 'scan-result';
+  job: GameValidationJob;
+  signedReport: SignedGameScanReport;
+  receivedAt: string;
 }
 
 export interface GameScanFinding {
@@ -91,6 +123,7 @@ export interface GameScanReport {
   policyVersion: string;
   toolVersions: Readonly<Record<string, string>>;
   verdict: GameScanVerdict;
+  observedNetworkAttempts: readonly GameNetworkAttempt[];
   findings: readonly GameScanFinding[];
   completedAt: string;
 }
@@ -295,6 +328,9 @@ export const trainingDomains: readonly TrainingDomain[];
 export const trainingCapabilities: readonly TrainingCapability[];
 export const gamePlatformCapabilities: readonly GamePlatformCapability[];
 export const gamePlatformRuntimeContract: GamePlatformRuntimeContract;
+export const gamePlatformLicenses: readonly GamePlatformLicense[];
+export function GetGamePlatformLicense(value: unknown): GamePlatformLicense | null;
+export function IsPublishableGameLicense(value: unknown): boolean;
 export const gamePlatformMaxUploadBytes: 12582912;
 export const gamePlatformPackageLimits: GamePlatformPackageLimits;
 export const gameValidationSchemaVersion: 1;
@@ -307,11 +343,27 @@ export const gameValidationLimits: Readonly<{
   maximumPathLength: 256;
   maximumCodeLength: 96;
   maximumToolCount: 32;
+  maximumArtifactKeyLength: 512;
+  maximumFileKeyCount: 192;
 }>;
 export const gameValidationFindingDispositions: readonly GameValidationFindingDisposition[];
 export const gameValidationNetworkKinds: readonly GameValidationNetworkKind[];
 export const gameValidationNetworkTargetClasses: readonly GameValidationNetworkTargetClass[];
 export function IsGameValidationJob(value: unknown): value is GameValidationJob;
+export function CreateGameValidationJob(input: Partial<GameValidationJob> & Pick<GameValidationJob, 'jobId' | 'attempt' | 'jobNonce' | 'submissionId' | 'artifactSha256' | 'policyVersion'>): Readonly<GameValidationJob>;
+export function IsGameValidationQueueMessage(value: unknown): value is GameValidationQueueMessage;
+export function IsGameValidationResultMessage(value: unknown): value is GameValidationResultMessage;
+export function CreateGameValidationQueueMessage(input: {
+  job: GameValidationJob;
+  artifactKey: string;
+  fileKeys: readonly string[];
+  enqueuedAt?: string;
+}): Readonly<GameValidationQueueMessage>;
+export function CreateGameValidationResultMessage(input: {
+  job: GameValidationJob;
+  signedReport: SignedGameScanReport;
+  receivedAt?: string;
+}): Readonly<GameValidationResultMessage>;
 export function IsGameScanFinding(value: unknown): value is GameScanFinding;
 export function IsGameNetworkAttempt(value: unknown): value is GameNetworkAttempt;
 export function IsUnsignedGameScanEvidence(value: unknown): value is UnsignedGameScanEvidence;
@@ -334,9 +386,21 @@ export function IsGameScanReportForJob(
   job: unknown,
   now?: number,
 ): report is GameScanReport;
+export function CanApplyGameScanReport(input: {
+  currentStatus: 'queued' | 'running' | string;
+  currentJobNonce: string;
+  currentArtifactSha256: string;
+  job: GameValidationJob;
+  report: unknown;
+  now?: number;
+}): report is GameScanReport;
 export function CanonicalizeGameScanReport(report: GameScanReport): string;
 export function CreateGameScanReportDigest(report: GameScanReport): Promise<string>;
 export function IsSignedGameScanReport(value: unknown): value is SignedGameScanReport;
+export function VerifySignedGameScanReport(
+  value: unknown,
+  publicKey: CryptoKey | JsonWebKey,
+): Promise<{ ok: true; keyId: string } | { ok: false; code: 'invalid-schema' | 'report-digest-mismatch' | 'invalid-public-key' | 'invalid-signature' }>;
 export function FreezeGameValidationJob(job: GameValidationJob): Readonly<GameValidationJob>;
 export const trainingProtocolSchema: 'trainerhub.training/v1';
 export function IsTrainingModuleId(value: unknown): value is TrainingModuleId;
@@ -344,6 +408,17 @@ export function CreateTrainingModuleId(domain: TrainingDomain, slug: string): Tr
 export function ValidateTrainingModuleManifest(input: unknown): ValidationSuccess<TrainingModuleManifest> | ValidationFailure;
 export function AssertTrainingModuleManifest(input: unknown): TrainingModuleManifest;
 export function SanitizeTrainingMetrics(metrics: unknown): Readonly<Record<string, number | boolean | null>>;
+export function CreateTrainingRunResult(input: {
+  moduleId: TrainingModuleId;
+  moduleVersion: string;
+  status: 'completed' | 'aborted';
+  startedAt?: string;
+  durationMs?: number;
+  trialCount?: number;
+  score?: number;
+  metrics?: unknown;
+}): Readonly<TrainingRunResult>;
+export function IsTrainingRunResult(value: unknown): value is TrainingRunResult;
 export function CreateTrainingEnvelope<TPayload>(input: {
   sessionNonce: string;
   moduleId: TrainingModuleId;

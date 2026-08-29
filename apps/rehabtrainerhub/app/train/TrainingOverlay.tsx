@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  BuildTrainingModuleHref,
   GetTrainingModuleCopy,
   type TrainingCatalogModule,
 } from '@rehab-trainer/hub-modules/catalog';
@@ -39,6 +40,9 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
 
   const sourceUrl = useMemo(() => {
     const url = new URL(CreateOfficialHostIframePolicy(module.manifest, { origin: hostOrigin }).src);
+    // Resolve the route from the catalog/registry single source of truth;
+    // policy still owns the origin and capability query construction.
+    url.pathname = new URL(BuildTrainingModuleHref(module)).pathname;
     url.searchParams.set('lang', language);
     return url.toString();
   }, [hostOrigin, language, module.manifest]);

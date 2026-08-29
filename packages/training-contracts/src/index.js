@@ -35,6 +35,33 @@ const gamePlatformRuntimeContractValue = Object.freeze({
   gameSdkVersion: '0.1.0',
   gameSdkUrl: '/runtime/trainerhub-game-sdk-0.1.0.js',
 });
+const gamePlatformLicensesValue = Object.freeze([
+  Object.freeze({
+    id: 'CC-BY-4.0',
+    label: 'Creative Commons Attribution 4.0 International',
+    url: 'https://creativecommons.org/licenses/by/4.0/',
+  }),
+  Object.freeze({
+    id: 'MIT',
+    label: 'MIT License',
+    url: 'https://opensource.org/license/mit/',
+  }),
+  Object.freeze({
+    id: 'Apache-2.0',
+    label: 'Apache License 2.0',
+    url: 'https://www.apache.org/licenses/LICENSE-2.0',
+  }),
+  Object.freeze({
+    id: 'proprietary',
+    label: 'Developer-provided proprietary terms',
+    url: null,
+  }),
+  Object.freeze({
+    id: 'not-declared',
+    label: 'License not declared',
+    url: null,
+  }),
+]);
 const gamePlatformMaxUploadBytesValue = 12 * 1024 * 1024;
 const gamePlatformPackageLimitsValue = Object.freeze({
   maximumCompressedBytes: gamePlatformMaxUploadBytesValue,
@@ -45,6 +72,13 @@ const gamePlatformPackageLimitsValue = Object.freeze({
   maximumTotalBytes: 24 * 1024 * 1024,
   maximumTotalTextBytes: 4 * 1024 * 1024,
   maximumZipRatio: 100,
+});
+// Shared offline-pack bounds. The browser manager and generated official-game
+// service workers consume this renderer-independent contract so a UI cannot
+// silently accept a pack larger than the worker can install.
+const offlinePackLimitsValue = Object.freeze({
+  maximumResourceCount: 512,
+  maximumTotalBytes: 256 * 1024 * 1024,
 });
 const lifecycleModes = Object.freeze(['native-timeline', 'legacy-adapter-exempt']);
 const offlinePolicies = Object.freeze(['required', 'optional', 'never']);
@@ -106,8 +140,18 @@ export const trainingDomains = trainingDomainValues;
 export const trainingCapabilities = trainingCapabilityValues;
 export const gamePlatformCapabilities = gamePlatformCapabilityValues;
 export const gamePlatformRuntimeContract = gamePlatformRuntimeContractValue;
+export const gamePlatformLicenses = gamePlatformLicensesValue;
+export function GetGamePlatformLicense(value) {
+  const id = typeof value === 'string' ? value.trim() : '';
+  return gamePlatformLicensesValue.find((license) => license.id === id) || null;
+}
+export function IsPublishableGameLicense(value) {
+  const license = GetGamePlatformLicense(value);
+  return Boolean(license && license.id !== 'not-declared');
+}
 export const gamePlatformMaxUploadBytes = gamePlatformMaxUploadBytesValue;
 export const gamePlatformPackageLimits = gamePlatformPackageLimitsValue;
+export const offlinePackLimits = offlinePackLimitsValue;
 export const trainingProtocolSchema = 'trainerhub.training/v1';
 export const trainingHostConnectSchema = trainingHostConnectSchemaValue;
 export const trainingHostMessageSchema = trainingHostMessageSchemaValue;
@@ -117,23 +161,34 @@ export { CreateSingleFlightPreloadCache } from './singleFlightPreload.js';
 export {
   AssertGameScanReport,
   CanonicalizeGameScanReport,
+  CanApplyGameScanReport,
   CreateGameScanReport,
   CreateGameScanReportDigest,
+  CreateGameValidationJob,
   CreateGameValidationJobKey,
+  CreateGameValidationQueueMessage,
+  CreateGameValidationResultMessage,
   DetermineGameScanVerdict,
   FreezeGameValidationJob,
   IsGameScanFinding,
   IsGameNetworkAttempt,
   IsGameScanReport,
   IsGameScanReportForJob,
+  IsGameValidationQueueMessage,
+  IsGameValidationResultMessage,
   IsGameValidationJob,
   IsSignedGameScanReport,
   IsUnsignedGameScanEvidence,
   ValidateUnsignedGameScanEvidence,
+  VerifySignedGameScanReport,
   gameValidationFindingDispositions,
   gameValidationLimits,
+  gameValidationJobTtlSeconds,
   gameValidationNetworkKinds,
   gameValidationNetworkTargetClasses,
+  gameValidationQueueSchema,
+  gameValidationQueueType,
+  gameValidationResultType,
   gameValidationSchemaVersion,
 } from './gameValidation.js';
 
@@ -261,6 +316,53 @@ export function SanitizeTrainingMetrics(metrics) {
     else if (typeof value === 'boolean' || value === null) output[key] = value;
   }
   return Object.freeze(output);
+}
+
+/**
+ * Build the one result envelope shared by native jsPsych timelines, the
+ * external compatibility adapter, and the official host bridge. Keeping
+ * normalization here prevents each module from inventing slightly different
+ * duration/count/metric handling at the protocol boundary.
+ */
+export function CreateTrainingRunResult({
+  moduleId,
+  moduleVersion,
+  status,
+  startedAt = new Date().toISOString(),
+  durationMs = 0,
+  trialCount = 0,
+  score,
+  metrics = {},
+}) {
+  if (!IsTrainingModuleId(moduleId) || !IsNonEmptyString(moduleVersion)) {
+    throw new TypeError('A valid training module id and version are required.');
+  }
+  if (!['completed', 'aborted'].includes(status)) {
+    throw new TypeError('Training result status is invalid.');
+  }
+  if (typeof startedAt !== 'string' || Number.isNaN(Date.parse(startedAt))) {
+    throw new TypeError('Training result startedAt must be a valid date.');
+  }
+  if (!IsFiniteInteger(durationMs) || durationMs < 0) {
+    throw new TypeError('Training result durationMs must be a non-negative integer.');
+  }
+  if (!IsFiniteInteger(trialCount) || trialCount < 0) {
+    throw new TypeError('Training result trialCount must be a non-negative integer.');
+  }
+  if (score !== undefined && (typeof score !== 'number' || !Number.isFinite(score))) {
+    throw new TypeError('Training result score must be finite.');
+  }
+  return Object.freeze({
+    schemaVersion: 1,
+    moduleId,
+    moduleVersion,
+    status,
+    startedAt,
+    durationMs,
+    trialCount,
+    ...(score === undefined ? {} : { score }),
+    metrics: SanitizeTrainingMetrics(metrics),
+  });
 }
 
 export function CreateTrainingEnvelope({ sessionNonce, moduleId, sequence, payload }) {
@@ -419,7 +521,7 @@ function IsPlatformAssetPath(value) {
   return /^\/runtime-assets\/[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*\/[a-f0-9]{64}\/(?:[^/]+\/)*[^/]+$/i.test(value);
 }
 
-function IsTrainingRunResult(value) {
+export function IsTrainingRunResult(value) {
   return IsRecord(value)
     && value.schemaVersion === 1
     && IsTrainingModuleId(value.moduleId)

@@ -71,7 +71,6 @@ function GetPublicVariables(pagesApps, authBaseUrl) {
     VITE_TURNSTILE_RECORDS_REQUIRED: turnstile.recordsRequired,
     NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN: GetOptionalEnv('CF_WEB_ANALYTICS_TOKEN'),
     VITE_CF_WEB_ANALYTICS_TOKEN: GetOptionalEnv('CF_WEB_ANALYTICS_TOKEN'),
-    VITE_AI_ASSET_BASE_URL: GetOptionalEnv('AI_ASSET_BASE_URL'),
   };
   Object.assign(variables, sharedPublicVariables);
 
@@ -114,8 +113,7 @@ function GetProjectSecrets(
     : { ...publicVariables };
 
   if (project.role === 'hub') {
-    const assetPublicBaseUrl = GetOptionalEnv('ASSET_PUBLIC_BASE_URL')
-      || GetOptionalEnv('AI_ASSET_BASE_URL');
+    const assetPublicBaseUrl = GetOptionalEnv('ASSET_PUBLIC_BASE_URL');
     secrets.TURNSTILE_SECRET_KEY = turnstile.secretKey;
     secrets.TURNSTILE_REQUIRED = turnstile.required;
     secrets.TURNSTILE_RECORDS_REQUIRED = turnstile.recordsRequired;

@@ -1,1 +1,3 @@
-export * from '../../../training-runtimes/vision/src/i18n';
+export { LanguageProvider, useT } from './i18n';
+export type { Language } from './i18n';
+export type { TranslationKey } from './zh';

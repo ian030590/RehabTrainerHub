@@ -666,7 +666,7 @@ const configPermissionImplementations = {
 const nativeTimelinePermissionImplementations = {
   'vision:oculomotor-training': resolve(
     repoRoot,
-    'apps/rehabtrainerhub/training-runtimes/vision/src/utils/webgazerCalibration.ts',
+    'apps/rehabtrainerhub/training-modules/vision/utils/webgazerCalibration.ts',
   ),
 };
 const permissionModuleIds = catalogIds.filter((catalogId) => (

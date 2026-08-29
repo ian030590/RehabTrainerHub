@@ -5,6 +5,7 @@ import { hubLocalName, hubSeoTitle } from './hubBrand';
 import { siteDescription } from './seo';
 import { siteUrls } from './siteUrls';
 import './globals.css';
+import './official-training-host/OfficialTrainingHost.css';
 import '@rehab-trainer/ui/components/AuthPanel.css';
 import '@rehab-trainer/ui/components/InstallAppPage.css';
 import '@rehab-trainer/ui/components/OfflinePackControl.css';

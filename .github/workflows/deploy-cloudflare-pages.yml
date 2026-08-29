@@ -36,6 +36,12 @@ jobs:
             command: pnpm run test:pnpm-policy
           - name: architecture-invariants
             command: pnpm run test:architecture
+          - name: training-protocol
+            command: pnpm run test:training-protocol
+          - name: bundle-budgets
+            command: pnpm run test:bundle-budgets
+          - name: training-integration
+            command: pnpm run test:training-integration
           - name: training-contracts
             command: pnpm run test:training-contracts
           - name: heavy-load-boundary
@@ -48,10 +54,14 @@ jobs:
             command: pnpm run test:training-privacy
           - name: game-validator-state
             command: pnpm run test:game-validator
+          - name: game-review-security
+            command: pnpm run test:game-review-security
           - name: naming
             command: pnpm run test:naming
           - name: pwa
             command: pnpm run test:pwa
+          - name: offline-packs
+            command: pnpm run test:offline-packs
           - name: hub-functions
             command: pnpm run test:hub-functions
           - name: gamerunner
@@ -62,17 +72,17 @@ jobs:
             command: pnpm run test:cloudflare-deploy
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           version: 11.24.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -90,17 +100,17 @@ jobs:
     environment: cloudflare-pages
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           version: 11.24.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -151,7 +161,6 @@ jobs:
           VITE_TURNSTILE_RECORDS_REQUIRED: ${{ vars.TURNSTILE_RECORDS_REQUIRED }}
           NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
           VITE_CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
-          VITE_AI_ASSET_BASE_URL: ${{ github.ref == 'refs/heads/main' && vars.AI_ASSET_BASE_URL || '' }}
 
       - name: Ensure and deploy Cloudflare Pages projects
         timeout-minutes: 15
@@ -166,7 +175,6 @@ jobs:
           TURNSTILE_REQUIRED: ${{ vars.TURNSTILE_REQUIRED }}
           TURNSTILE_RECORDS_REQUIRED: ${{ vars.TURNSTILE_RECORDS_REQUIRED }}
           CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
-          AI_ASSET_BASE_URL: ${{ vars.AI_ASSET_BASE_URL }}
           ASSET_PUBLIC_BASE_URL: ${{ vars.ASSET_PUBLIC_BASE_URL }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}

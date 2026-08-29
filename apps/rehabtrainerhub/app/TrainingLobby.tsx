@@ -97,9 +97,11 @@ export function TrainingLobby() {
   const platformCopy = language === 'en'
     ? {
         catalogUnavailable: 'Developer games are temporarily unavailable. Built-in games are still available.',
+        clientReported: 'Results are client-reported',
         developer: 'Developer',
         developerLibrary: 'Developer games',
         install: 'Install game',
+        license: 'License',
         offlineCapacity: 'Not enough browser storage is available for this offline pack.',
         offlineChecking: 'Checking offline pack…',
         offlineDownload: 'Download offline pack',
@@ -115,14 +117,17 @@ export function TrainingLobby() {
         officialLibrary: 'Rehab Trainer Hub built-in games',
         play: 'Play on platform',
         reviewed: 'Reviewed release',
+        thirdParty: 'Third-party game',
         summaryFallback: 'A home-practice activity provided by its developer.',
         version: 'Version',
       }
     : {
         catalogUnavailable: '開發者遊戲目前無法載入；內建遊戲仍可正常使用。',
+        clientReported: '結果為使用者端回報',
         developer: '開發者',
         developerLibrary: '開發者遊戲',
         install: '安裝遊戲',
+        license: '授權',
         offlineCapacity: '瀏覽器可用儲存空間不足，無法下載此離線包。',
         offlineChecking: '正在檢查離線包…',
         offlineDownload: '下載離線包',
@@ -138,6 +143,7 @@ export function TrainingLobby() {
         officialLibrary: '居家訓練網內建遊戲',
         play: '在平台遊玩',
         reviewed: '已審核版本',
+        thirdParty: '第三方社群遊戲',
         summaryFallback: '開發者提供的居家練習活動。',
         version: '版本',
       };
@@ -176,19 +182,6 @@ export function TrainingLobby() {
       });
     return () => controller.abort();
   }, []);
-
-  useEffect(() => {
-    const origins = new Set(publishedGames.map((game) => new URL(game.release.launchUrl).origin));
-    const links = [...origins].map((origin) => {
-      const preconnect = document.createElement('link');
-      preconnect.rel = 'preconnect';
-      preconnect.href = origin;
-      preconnect.crossOrigin = 'anonymous';
-      document.head.append(preconnect);
-      return preconnect;
-    });
-    return () => links.forEach((link) => link.remove());
-  }, [publishedGames]);
 
   const togglePurpose = (purposeId: TrainingPurposeId) => {
     setSelectedPurposes((current) => (
@@ -387,6 +380,7 @@ export function TrainingLobby() {
                             <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
                             {platformCopy.reviewed}
                           </span>
+                          <span className="third-party-game-badge">{platformCopy.thirdParty}</span>
                         </span>
                       </div>
                       <h3>{game.title}</h3>
@@ -394,7 +388,9 @@ export function TrainingLobby() {
                       <dl className="community-game-details">
                         <div><dt>{platformCopy.developer}</dt><dd>{game.developerName}</dd></div>
                         <div><dt>{platformCopy.version}</dt><dd>{game.release.version}</dd></div>
+                        <div><dt>{platformCopy.license}</dt><dd>{game.release.license.label}</dd></div>
                       </dl>
+                      <small className="community-game-trust-note">{platformCopy.clientReported}</small>
                       <div className="community-game-actions">
                         <button onClick={() => setActivePackageGame(game)} type="button">
                           <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>

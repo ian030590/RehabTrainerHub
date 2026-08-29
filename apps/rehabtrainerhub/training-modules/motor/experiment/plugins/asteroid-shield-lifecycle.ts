@@ -66,7 +66,7 @@ export class AsteroidShieldPlugin implements JsPsychPlugin<AsteroidShieldInfo> {
   ): void {
     onLoad?.();
     this.jsPsych.finishTrial(
-      CreateLifecycleSimulationData(trial.module_id, trial.run_token, simulationMode, simulationOptions),
+      CreateLifecycleSimulationData(trial.module_id ?? 'motor:asteroid-shield', trial.run_token ?? '', simulationMode, simulationOptions),
     );
   }
 

@@ -7,26 +7,63 @@ export interface MediaPipeAssetUrls {
   faceLandmarkerModelUrl: string;
 }
 
+export interface RuntimeAssetCandidateOptions {
+  /**
+   * Keep the legacy Vite asset as an explicit opt-in for local development.
+   * Production callers must use the platform-owned immutable URL only.
+   */
+  allowLocalFallback?: boolean;
+}
+
 const platformAssetBasePath = '/runtime-assets';
 
 export function CreateRuntimeAssetUrlCandidates(
-  assetBaseUrl: string | undefined,
   objectKey: string,
   fallbackUrl: string,
+  options?: RuntimeAssetCandidateOptions,
+): string[];
+/**
+ * @deprecated Pass only the object key and same-origin fallback. The legacy
+ * asset-base argument is accepted for source compatibility but ignored.
+ */
+export function CreateRuntimeAssetUrlCandidates(
+  _assetBaseUrl: string | undefined,
+  objectKey: string,
+  fallbackUrl: string,
+  options?: RuntimeAssetCandidateOptions,
+): string[];
+export function CreateRuntimeAssetUrlCandidates(
+  objectKeyOrAssetBaseUrl: string | undefined,
+  fallbackOrObjectKey: string,
+  legacyFallbackOrOptions?: string | RuntimeAssetCandidateOptions,
+  options: RuntimeAssetCandidateOptions = {},
 ): string[] {
-  const normalizedBaseUrl = NormalizeAssetBaseUrl(assetBaseUrl);
+  const isNewSignature = typeof legacyFallbackOrOptions === 'object'
+    && legacyFallbackOrOptions !== null;
+  const objectKey = legacyFallbackOrOptions === undefined || isNewSignature
+    ? objectKeyOrAssetBaseUrl
+    : fallbackOrObjectKey;
+  const fallbackUrl = legacyFallbackOrOptions === undefined || isNewSignature
+    ? fallbackOrObjectKey
+    : legacyFallbackOrOptions;
+  const candidateOptions = isNewSignature ? legacyFallbackOrOptions : options;
   const normalizedObjectKey = String(objectKey || '').trim().replace(/^\/+/, '');
   const normalizedFallbackUrl = String(fallbackUrl || '').trim();
-  if (!normalizedObjectKey || !normalizedFallbackUrl) return [];
+  if (!IsSafeRuntimeAssetKey(normalizedObjectKey) || !normalizedFallbackUrl) return [];
   const platformUrl = `${platformAssetBasePath}/${normalizedObjectKey}`;
-  return normalizedBaseUrl
-    ? [platformUrl, `${normalizedBaseUrl}/${normalizedObjectKey}`, normalizedFallbackUrl]
-    : [platformUrl, normalizedFallbackUrl];
+  // Runtime assets are deliberately same-origin. An environment-provided
+  // absolute URL is not a security boundary: accepting it here would let a
+  // deployment silently reintroduce cross-origin model/CDN requests and
+  // break the PWA's no-egress contract. Keep a relative fallback only for
+  // local, same-origin build output.
+  return (candidateOptions.allowLocalFallback ?? IsLocalDevelopmentOrigin())
+    && IsSameOriginRelativeUrl(normalizedFallbackUrl)
+    ? [platformUrl, normalizedFallbackUrl]
+    : [platformUrl];
 }
 
-export function CreateMediaPipeAssetUrls(assetBaseUrl?: string): MediaPipeAssetUrls {
-  const normalizedBaseUrl = NormalizeAssetBaseUrl(assetBaseUrl);
-  const baseUrl = normalizedBaseUrl || platformAssetBasePath;
+export function CreateMediaPipeAssetUrls(_assetBaseUrl?: string): MediaPipeAssetUrls {
+  const baseUrl = platformAssetBasePath;
 
   return {
     wasmUrl:
@@ -66,13 +103,45 @@ export async function LoadMediaPipeWithFallback<T>(
     : new Error('Unable to load MediaPipe assets.');
 }
 
-function NormalizeAssetBaseUrl(value?: string) {
-  const normalized = String(value || '').trim().replace(/\/+$/, '');
-  if (!normalized) return '';
-  try {
-    const url = new URL(normalized);
-    return url.protocol === 'https:' ? url.href.replace(/\/+$/, '') : '';
-  } catch {
-    return '';
+function IsSameOriginRelativeUrl(value: string): boolean {
+  if (!value
+    || value.startsWith('//')
+    || value.includes('\\')
+    || value.includes('%')
+    || /^[a-z][a-z\d+.-]*:/i.test(value)
+    || value.split(/[?#]/, 1)[0].split('/').some((segment) => segment === '.' || segment === '..')) {
+    return false;
   }
+  try {
+    const url = new URL(value, 'https://runtime.invalid');
+    return url.origin === 'https://runtime.invalid'
+      && !url.username
+      && !url.password
+      && !url.search
+      && !url.hash;
+  } catch {
+    return false;
+  }
+}
+
+function IsSafeRuntimeAssetKey(value: string): boolean {
+  return value.length > 0
+    && value.length <= 512
+    && !value.includes('\\')
+    && !value.includes('%')
+    && !value.split('/').some((segment) => (
+      segment.length === 0 || segment === '.' || segment === '..'
+    ))
+    && /^[A-Za-z0-9._/-]+$/.test(value);
+}
+
+function IsLocalDevelopmentOrigin(): boolean {
+  const location = (globalThis as {
+    location?: { protocol?: string; hostname?: string };
+  }).location;
+  if (!location || location.protocol !== 'http:') return false;
+  return location.hostname === 'localhost'
+    || location.hostname === '127.0.0.1'
+    || location.hostname === '[::1]'
+    || location.hostname === '::1';
 }

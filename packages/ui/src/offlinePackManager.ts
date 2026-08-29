@@ -1,3 +1,5 @@
+import { offlinePackLimits } from '@rehab-trainer/training-contracts';
+
 /**
  * Origin-wide offline pack coordinator for official training/game assets.
  *
@@ -13,10 +15,13 @@ export const offlinePackMetadataKey = 'rehab-trainer-offline-packs-v1' as const;
 export const offlinePackMetadataSchemaVersion = 1 as const;
 
 const stagingCachePrefix = 'rehab-trainer-offline-staging-v1:';
+const legacyOfflineCachePattern = /^rehab-trainer-offline-v0$/;
 const indexedDbName = 'rehab-trainer-offline-v1';
 const indexedDbStoreName = 'metadata';
 const indexedDbRecordKey = 'packs';
 const leaseDurationMs = 15 * 60 * 1000;
+const maximumOfflinePackResourceCount = offlinePackLimits.maximumResourceCount;
+const maximumOfflinePackBytes = offlinePackLimits.maximumTotalBytes;
 const sha256Pattern = /^[a-f0-9]{64}$/i;
 const packIdPattern = /^[a-z0-9](?:[a-z0-9._:-]{0,126}[a-z0-9])?$/i;
 const packVersionPattern = /^[A-Za-z0-9][A-Za-z0-9._+-]{0,63}$/;
@@ -84,6 +89,22 @@ export interface OfflinePackManager {
   remove(pack: Pick<OfflinePackDescriptor, 'id' | 'version'>): Promise<void>;
   reconcile(): Promise<void>;
   list(): Promise<readonly OfflinePackReference[]>;
+}
+
+export interface OfflinePackMigrationOptions {
+  cacheStorage: CacheStorage;
+  metadataStore: OfflinePackMetadataStore;
+  legacyCacheName: string;
+  pack: OfflinePackDescriptor;
+  removeLegacyCache?: boolean;
+  now?: () => number;
+}
+
+export interface OfflinePackMigrationResult {
+  status: 'migrated' | 'missing' | 'corrupt' | 'skipped';
+  copiedResources: number;
+  missingUrls: readonly string[];
+  legacyCacheRemoved: boolean;
 }
 
 /**
@@ -303,6 +324,95 @@ export function CreateOfflinePackManager(
   });
 }
 
+/**
+ * Migrate one explicitly identified v0 cache into the origin-wide reference
+ * set. The caller supplies the current immutable manifest, so a legacy cache
+ * is copied only when every URL, byte count and SHA-256 matches that manifest.
+ * Unknown cache names are rejected and no cache other than the named v0 cache
+ * can be removed. This is intentionally an explicit one-shot operation rather
+ * than an automatic sweep: old game scopes must never be guessed from cache
+ * names during a service-worker upgrade.
+ */
+export async function MigrateLegacyOfflineCache({
+  cacheStorage,
+  metadataStore,
+  legacyCacheName,
+  pack,
+  removeLegacyCache = true,
+  now = () => Date.now(),
+}: OfflinePackMigrationOptions): Promise<OfflinePackMigrationResult> {
+  if (!cacheStorage || !metadataStore || !legacyOfflineCachePattern.test(legacyCacheName)) {
+    throw new TypeError('Only the explicitly supported v0 offline cache can be migrated.');
+  }
+  ValidateOfflinePack(pack);
+  const source = await cacheStorage.open(legacyCacheName);
+  const sourceResponses: Array<[OfflinePackResource, Response]> = [];
+  const missingUrls: string[] = [];
+  for (const resource of pack.resources) {
+    const response = await source.match(CreateRequest(resource.url));
+    if (!response) {
+      missingUrls.push(CreateRequest(resource.url).url);
+      continue;
+    }
+    const bytes = new Uint8Array(await response.clone().arrayBuffer());
+    if (bytes.byteLength !== resource.byteSize
+      || await Sha256Hex(bytes) !== resource.sha256.toLowerCase()) {
+      return {
+        status: 'corrupt',
+        copiedResources: 0,
+        missingUrls: Object.freeze([]),
+        legacyCacheRemoved: false,
+      };
+    }
+    sourceResponses.push([resource, response]);
+  }
+  if (missingUrls.length > 0) {
+    return {
+      status: 'missing',
+      copiedResources: 0,
+      missingUrls: Object.freeze(missingUrls),
+      legacyCacheRemoved: false,
+    };
+  }
+
+  const references = await metadataStore.read();
+  AssertNoImmutableResourceConflicts(pack, references.filter((candidate) => candidate.status === 'ready'));
+  const target = await cacheStorage.open(offlinePackCacheName);
+  const urls = pack.resources.map((resource) => CreateRequest(resource.url).url);
+  try {
+    for (const [resource, response] of sourceResponses) {
+      await target.put(CreateRequest(resource.url), response.clone());
+    }
+    const retained = references.filter((candidate) => candidate.id !== pack.id);
+    retained.push({
+      ...ClonePack(pack, now()),
+      status: 'ready',
+      leaseExpiresAt: null,
+      updatedAt: now(),
+    });
+    await metadataStore.write(retained);
+  } catch (error) {
+    const referencedByOtherPack = new Set(
+      references
+        .filter((candidate) => candidate.status === 'ready' && candidate.id !== pack.id)
+        .flatMap((candidate) => candidate.resources.map((resource) => CreateRequest(resource.url).url)),
+    );
+    for (const url of urls) {
+      if (!referencedByOtherPack.has(url)) await target.delete(CreateRequest(url));
+    }
+    throw error;
+  }
+
+  let legacyCacheRemoved = false;
+  if (removeLegacyCache) legacyCacheRemoved = await cacheStorage.delete(legacyCacheName);
+  return {
+    status: 'migrated',
+    copiedResources: sourceResponses.length,
+    missingUrls: Object.freeze([]),
+    legacyCacheRemoved,
+  };
+}
+
 export function ValidateOfflinePack(pack: Pick<OfflinePackDescriptor, 'id' | 'version' | 'scope' | 'resources'>): void {
   if (!packIdPattern.test(pack.id)) throw new TypeError('Offline pack id is invalid.');
   if (!packVersionPattern.test(pack.version)) throw new TypeError('Offline pack version is invalid.');
@@ -310,11 +420,19 @@ export function ValidateOfflinePack(pack: Pick<OfflinePackDescriptor, 'id' | 've
   if (!Array.isArray(pack.resources) || pack.resources.length === 0) {
     throw new TypeError('Offline pack must contain at least one resource.');
   }
+  if (pack.resources.length > maximumOfflinePackResourceCount) {
+    throw new TypeError('Offline pack contains too many resources.');
+  }
   const seen = new Set<string>();
+  let totalBytes = 0;
   for (const resource of pack.resources) {
     if (!resource || typeof resource.url !== 'string' || !Number.isSafeInteger(resource.byteSize) || resource.byteSize < 0
       || (resource.required !== undefined && typeof resource.required !== 'boolean')) {
       throw new TypeError('Offline pack resource metadata is invalid.');
+    }
+    totalBytes += resource.byteSize;
+    if (!Number.isSafeInteger(totalBytes) || totalBytes > maximumOfflinePackBytes) {
+      throw new TypeError('Offline pack exceeds the supported size limit.');
     }
     if (!sha256Pattern.test(resource.sha256)) throw new TypeError(`Invalid offline pack hash: ${resource.url}`);
     const url = CreateRequest(resource.url).url;

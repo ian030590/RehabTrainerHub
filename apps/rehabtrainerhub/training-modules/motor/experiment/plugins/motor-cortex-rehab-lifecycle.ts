@@ -66,7 +66,7 @@ export class MotorCortexRehabPlugin implements JsPsychPlugin<MotorCortexRehabInf
   ): void {
     onLoad?.();
     this.jsPsych.finishTrial(
-      CreateLifecycleSimulationData(trial.module_id, trial.run_token, simulationMode, simulationOptions),
+      CreateLifecycleSimulationData(trial.module_id ?? 'motor:motor-cortex-rehab', trial.run_token ?? '', simulationMode, simulationOptions),
     );
   }
 

@@ -61,6 +61,10 @@ export async function onRequestGet({ request, env }) {
           scan.queued_at,
           scan.started_at,
           scan.completed_at,
+          scan_report.report_sha256 AS attested_report_sha256,
+          scan_report.attestation_key_id,
+          scan_report.received_at AS report_received_at,
+          scan_report.report_json,
           review.id AS review_request_id,
           review.status AS review_status,
           review.reason AS review_reason,
@@ -91,6 +95,8 @@ export async function onRequestGet({ request, env }) {
            FROM game_scan_runs AS latest
            WHERE latest.submission_id = submission.id
          )
+        LEFT JOIN game_scan_reports AS scan_report
+          ON scan_report.scan_run_id = scan.id
         LEFT JOIN game_review_requests AS review
           ON review.id = (
             SELECT latest_review.id
@@ -175,6 +181,15 @@ function MapSubmission(row) {
       queuedAt: row.queued_at,
       startedAt: row.started_at,
       completedAt: row.completed_at,
+      report: row.attested_report_sha256
+        ? {
+          sha256: row.attested_report_sha256,
+          attestationKeyId: row.attestation_key_id,
+          receivedAt: row.report_received_at,
+          verdict: SafeJson(row.report_json, {}).verdict || null,
+          networkAttempts: SafeJson(row.report_json, {}).observedNetworkAttempts || [],
+        }
+        : null,
     },
     review: row.review_request_id
       ? {

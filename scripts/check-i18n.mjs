@@ -9,9 +9,9 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const dictionaryPairs = [
   ...['motor', 'vision', 'brain', 'mouth'].map((runtime) => ({
-    label: `${runtime} runtime`,
-    zh: `apps/rehabtrainerhub/training-runtimes/${runtime}/src/i18n/zh.ts`,
-    en: `apps/rehabtrainerhub/training-runtimes/${runtime}/src/i18n/en.ts`,
+    label: `${runtime} training module`,
+    zh: `apps/rehabtrainerhub/training-modules/${runtime}/i18n/zh.ts`,
+    en: `apps/rehabtrainerhub/training-modules/${runtime}/i18n/en.ts`,
   })),
   {
     label: 'Hub',

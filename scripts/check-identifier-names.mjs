@@ -13,6 +13,7 @@ const frameworkFunctionNames = new Set([
   'generateViewport',
   'middleware',
 ]);
+const reactComponentWrapperNames = new Set(['forwardRef', 'lazy', 'memo']);
 const failures = [];
 
 for (const fileName of CollectSourceFiles(repoRoot)) {
@@ -46,7 +47,9 @@ function CheckSourceFile(fileName) {
   const CheckNode = (node) => {
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
       const isFunctionValue = Boolean(node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer)));
-      if (!IsCamelCase(node.name.text) && !(isFunctionValue && IsPascalCase(node.name.text)) && !IsLazyComponent(node)) {
+      if (!IsCamelCase(node.name.text)
+        && !(isFunctionValue && IsPascalCase(node.name.text))
+        && !IsReactComponentWrapper(node)) {
         AddFailure(sourceFile, node.name, 'variables must use camelCase');
       }
     }
@@ -87,9 +90,10 @@ function IsAllowedFunctionName(name) {
     || frameworkFunctionNames.has(name);
 }
 
-function IsLazyComponent(node) {
+function IsReactComponentWrapper(node) {
   if (!IsPascalCase(node.name.text) || !ts.isCallExpression(node.initializer)) return false;
-  return ts.isIdentifier(node.initializer.expression) && node.initializer.expression.text === 'lazy';
+  return ts.isIdentifier(node.initializer.expression)
+    && reactComponentWrapperNames.has(node.initializer.expression.text);
 }
 
 function AddFailure(sourceFile, node, message) {

@@ -113,6 +113,55 @@ test('admin approval still requires a passed scan without hard blocks', async ()
   assert.equal((await approved.json()).reviewRequest.status, 'approved');
 });
 
+test('admin approval requires per-finding override evidence for eligible findings', async () => {
+  const missingEvidence = await reviewManualRequest({
+    request: RequestWithAuth(
+      'https://trainerhub.cc/api/admin/game-submissions/submission-1/review',
+      adminToken,
+      { method: 'PUT', body: JSON.stringify({ decision: 'approve', note: 'Reviewed', sourceReviewed: true, playTested: true, metadataReviewed: true }) },
+    ),
+    env: {
+      AUTH_SESSION_SECRET: secret,
+      REHAB_DB: CreateDb({
+        user: admin,
+        review: { id: 'review-1', scan_run_id: 'scan-1', review_status: 'in_review', scan_status: 'passed', hard_block_count: 0, owner_user_id: developer.id, game_id: 'game-1' },
+        findings: [{ id: 'finding-1', disposition: 'manual-review' }],
+      }),
+    },
+    params: { id: 'submission-1' },
+  });
+  assert.equal(missingEvidence.status, 400);
+
+  const approved = await reviewManualRequest({
+    request: RequestWithAuth(
+      'https://trainerhub.cc/api/admin/game-submissions/submission-1/review',
+      adminToken,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          decision: 'approve',
+          note: 'Reviewed',
+          sourceReviewed: true,
+          playTested: true,
+          metadataReviewed: true,
+          overrides: [{ findingId: 'finding-1', decision: 'dismiss', reason: 'Local-only API reference is unreachable.', evidence: 'Isolated play test recorded no network attempt.' }],
+        }),
+      },
+    ),
+    env: {
+      AUTH_SESSION_SECRET: secret,
+      REHAB_DB: CreateDb({
+        user: admin,
+        review: { id: 'review-1', scan_run_id: 'scan-1', review_status: 'in_review', scan_status: 'passed', hard_block_count: 0, owner_user_id: developer.id, game_id: 'game-1' },
+        findings: [{ id: 'finding-1', disposition: 'manual-review' }],
+      }),
+    },
+    params: { id: 'submission-1' },
+  });
+  assert.equal(approved.status, 200);
+  assert.deepEqual((await approved.json()).reviewRequest.overrideFindingIds, ['finding-1']);
+});
+
 function RequestWithAuth(url, token, init = {}) {
   const headers = new Headers(init.headers);
   headers.set('Origin', 'https://trainerhub.cc');

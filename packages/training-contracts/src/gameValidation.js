@@ -17,7 +17,14 @@ export const gameValidationLimits = Object.freeze({
   maximumPathLength: 256,
   maximumCodeLength: 96,
   maximumToolCount: 32,
+  maximumArtifactKeyLength: 512,
+  maximumFileKeyCount: 192,
 });
+
+export const gameValidationQueueSchema = 'trainerhub.game-validation/v1';
+export const gameValidationQueueType = 'scan-request';
+export const gameValidationResultType = 'scan-result';
+export const gameValidationJobTtlSeconds = 15 * 60;
 
 export const gameValidationFindingDispositions = Object.freeze([
   'hard-block',
@@ -52,6 +59,133 @@ export function IsGameValidationJob(value) {
     || !IsIsoDate(value.issuedAt)
     || !IsIsoDate(value.expiresAt)) return false;
   return Date.parse(value.expiresAt) > Date.parse(value.issuedAt);
+}
+
+/**
+ * Build a short-lived job envelope. The queue payload contains no user
+ * credentials; the controller uses the opaque quarantine keys to read the
+ * already-hashed artifact and file inventory.
+ */
+export function CreateGameValidationJob(input) {
+  if (!IsRecord(input)) throw new TypeError('A validation job input is required.');
+  const issuedAt = input.issuedAt === undefined ? new Date().toISOString() : input.issuedAt;
+  const expiresAt = input.expiresAt === undefined
+    ? new Date(Date.parse(issuedAt) + gameValidationJobTtlSeconds * 1000).toISOString()
+    : input.expiresAt;
+  const job = {
+    jobId: input.jobId,
+    attempt: input.attempt,
+    jobNonce: input.jobNonce,
+    submissionId: input.submissionId,
+    artifactSha256: typeof input.artifactSha256 === 'string'
+      ? input.artifactSha256.toLowerCase()
+      : input.artifactSha256,
+    policyVersion: input.policyVersion,
+    limitsProfile: input.limitsProfile ?? 'uploaded-game-v1',
+    issuedAt,
+    expiresAt,
+  };
+  return FreezeGameValidationJob(job);
+}
+
+export function IsGameValidationQueueMessage(value) {
+  return IsRecord(value)
+    && value.schema === gameValidationQueueSchema
+    && value.type === gameValidationQueueType
+    && IsGameValidationJob(value.job)
+    && IsSafeQueueKey(value.artifactKey)
+    && Array.isArray(value.fileKeys)
+    && value.fileKeys.length <= gameValidationLimits.maximumFileKeyCount
+    && value.fileKeys.every(IsSafeQueueKey)
+    && value.fileKeys.length > 0
+    && IsIsoDate(value.enqueuedAt);
+}
+
+export function IsGameValidationResultMessage(value) {
+  return IsRecord(value)
+    && value.schema === gameValidationQueueSchema
+    && value.type === gameValidationResultType
+    && IsGameValidationJob(value.job)
+    && IsSignedGameScanReport(value.signedReport)
+    && IsIsoDate(value.receivedAt);
+}
+
+/**
+ * Build the controller-to-Hub result envelope and enforce the same transport
+ * bound used by queue requests. Keeping creation here prevents a worker from
+ * accidentally emitting an unbounded report or a job object that differs
+ * from the signed payload.
+ */
+export function CreateGameValidationResultMessage({
+  job,
+  signedReport,
+  receivedAt = undefined,
+}) {
+  const message = {
+    schema: gameValidationQueueSchema,
+    type: gameValidationResultType,
+    job: FreezeGameValidationJob(job),
+    signedReport,
+    receivedAt: receivedAt ?? new Date().toISOString(),
+  };
+  if (!IsGameValidationResultMessage(message) || !IsReportBoundToJob(message.signedReport.report, message.job)) {
+    throw new TypeError('Validation result message does not match the bounded contract.');
+  }
+  const encodedBytes = new TextEncoder().encode(JSON.stringify(message));
+  if (encodedBytes.byteLength > gameValidationLimits.maximumTransportBytes) {
+    throw new TypeError('Validation result message exceeds the transport limit.');
+  }
+  return Object.freeze(message);
+}
+
+function IsReportBoundToJob(report, job) {
+  return IsGameScanReport(report)
+    && IsGameValidationJob(job)
+    && report.jobId === job.jobId
+    && report.attempt === job.attempt
+    && report.jobNonce === job.jobNonce
+    && report.submissionId === job.submissionId
+    && report.artifactSha256.toLowerCase() === job.artifactSha256.toLowerCase()
+    && report.policyVersion === job.policyVersion;
+}
+
+export function CreateGameValidationQueueMessage({ job, artifactKey, fileKeys, enqueuedAt = undefined }) {
+  const frozenJob = FreezeGameValidationJob(job);
+  const message = {
+    schema: gameValidationQueueSchema,
+    type: gameValidationQueueType,
+    key: CreateGameValidationJobKey(frozenJob.jobId, frozenJob.attempt),
+    job: frozenJob,
+    artifactKey,
+    fileKeys: [...(fileKeys ?? [])],
+    enqueuedAt: enqueuedAt ?? new Date().toISOString(),
+  };
+  if (!IsGameValidationQueueMessage(message)) {
+    throw new TypeError('Validation queue message does not match the bounded contract.');
+  }
+  const encodedBytes = new TextEncoder().encode(JSON.stringify(message));
+  if (encodedBytes.byteLength > gameValidationLimits.maximumTransportBytes) {
+    throw new TypeError('Validation queue message exceeds the transport limit.');
+  }
+  return Object.freeze({
+    ...message,
+    fileKeys: Object.freeze([...message.fileKeys]),
+  });
+}
+
+/**
+ * Result application is a compare-and-set operation. A report is accepted
+ * only while its row is still queued/running and its nonce/hash match the
+ * job that was issued for that attempt. Callers must perform the conditional
+ * UPDATE using this predicate; this helper deliberately performs no I/O.
+ */
+export function CanApplyGameScanReport({ currentStatus, currentJobNonce, currentArtifactSha256, job, report, now = Date.now() }) {
+  return (currentStatus === 'queued' || currentStatus === 'running')
+    && IsGameValidationJob(job)
+    && currentJobNonce === job.jobNonce
+    && typeof currentArtifactSha256 === 'string'
+    && currentArtifactSha256.toLowerCase() === job.artifactSha256.toLowerCase()
+    && IsGameScanReportForJob(report, job, now);
 }
 
 export function IsGameScanFinding(value) {
@@ -126,6 +260,9 @@ export function CreateGameScanReport({ job, evidence, toolVersions, completedAt 
   if (!IsGameValidationJob(job)) throw new TypeError('Invalid game validation job.');
   const evidenceResult = ValidateUnsignedGameScanEvidence(evidence, job);
   const normalizedTools = NormalizeToolVersions(toolVersions);
+  const observedNetworkAttempts = IsUnsignedGameScanEvidence(evidence)
+    ? evidence.observedNetworkAttempts
+    : [];
   if (!evidenceResult.ok) {
     const resourceFinding = {
       disposition: 'hard-block',
@@ -149,6 +286,7 @@ export function CreateGameScanReport({ job, evidence, toolVersions, completedAt 
       policyVersion: job.policyVersion,
       toolVersions: normalizedTools,
       verdict: 'hard-block',
+      observedNetworkAttempts,
       findings,
       completedAt: NormalizeCompletedAt(completedAt),
     });
@@ -164,6 +302,7 @@ export function CreateGameScanReport({ job, evidence, toolVersions, completedAt 
     policyVersion: job.policyVersion,
     toolVersions: normalizedTools,
     verdict: DetermineGameScanVerdict(normalizedFindings),
+    observedNetworkAttempts: evidenceResult.value.observedNetworkAttempts,
     findings: normalizedFindings,
     completedAt: NormalizeCompletedAt(completedAt),
   });
@@ -184,6 +323,9 @@ export function IsGameScanReport(value) {
       IsBoundedString(key, 1, 64) && IsBoundedString(version, 1, 128)
     ))
     && ['pass', 'changes-required', 'manual-review-eligible', 'hard-block'].includes(value.verdict)
+    && Array.isArray(value.observedNetworkAttempts)
+    && value.observedNetworkAttempts.length <= gameValidationLimits.maximumNetworkAttemptCount
+    && value.observedNetworkAttempts.every(IsGameNetworkAttempt)
     && Array.isArray(value.findings)
     && value.findings.length <= gameValidationLimits.maximumFindingCount
     && value.findings.every(IsGameScanFinding)
@@ -233,6 +375,45 @@ export function IsSignedGameScanReport(value) {
     && IsBase64Url(value.attestation.value);
 }
 
+/**
+ * Verify the controller attestation and the report digest before a result is
+ * admitted to the Hub. A caller may pass a CryptoKey or an Ed25519 JWK from a
+ * versioned public-key registry. Unknown key formats fail closed.
+ */
+export async function VerifySignedGameScanReport(value, publicKey) {
+  if (!IsSignedGameScanReport(value)) return { ok: false, code: 'invalid-schema' };
+  const reportSha256 = await CreateGameScanReportDigest(value.report);
+  if (value.reportSha256.toLowerCase() !== reportSha256) {
+    return { ok: false, code: 'report-digest-mismatch' };
+  }
+  let verificationKey = publicKey;
+  try {
+    if (!IsCryptoVerificationKey(publicKey)) {
+      if (!IsEd25519PublicJwk(publicKey)) return { ok: false, code: 'invalid-public-key' };
+      verificationKey = await crypto.subtle.importKey(
+        'jwk',
+        publicKey,
+        { name: 'Ed25519' },
+        false,
+        ['verify'],
+      );
+    }
+    const signature = DecodeBase64Url(value.attestation.value);
+    const payload = new TextEncoder().encode(CanonicalizeGameScanReport(value.report));
+    const valid = await crypto.subtle.verify(
+      { name: 'Ed25519' },
+      verificationKey,
+      signature,
+      payload,
+    );
+    return valid
+      ? { ok: true, keyId: value.attestation.keyId }
+      : { ok: false, code: 'invalid-signature' };
+  } catch {
+    return { ok: false, code: 'invalid-signature' };
+  }
+}
+
 export function FreezeGameValidationJob(job) {
   if (!IsGameValidationJob(job)) throw new TypeError('Invalid game validation job.');
   return Object.freeze({ ...job });
@@ -280,6 +461,7 @@ function FreezeReport(value) {
     ...value,
     artifactSha256: value.artifactSha256.toLowerCase(),
     toolVersions: Object.freeze({ ...value.toolVersions }),
+    observedNetworkAttempts: Object.freeze(value.observedNetworkAttempts.map((attempt) => Object.freeze({ ...attempt }))),
     findings: Object.freeze(value.findings.map((finding) => Object.freeze({
       filePath: null,
       line: null,
@@ -298,6 +480,41 @@ function SortJsonValue(value) {
 
 function IsRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function IsSafeQueueKey(value) {
+  return typeof value === 'string'
+    && value.length > 0
+    && value.length <= gameValidationLimits.maximumArtifactKeyLength
+    && !value.startsWith('/')
+    && !value.includes('\\')
+    && !value.split('/').includes('..')
+    && !/[\u0000-\u001f\u007f]/.test(value);
+}
+
+function IsCryptoVerificationKey(value) {
+  return value !== null
+    && typeof value === 'object'
+    && value.type === 'public'
+    && value.algorithm?.name === 'Ed25519';
+}
+
+function IsEd25519PublicJwk(value) {
+  return IsRecord(value)
+    && value.kty === 'OKP'
+    && value.crv === 'Ed25519'
+    && typeof value.x === 'string'
+    && value.x.length >= 16;
+}
+
+function DecodeBase64Url(value) {
+  const normalized = value.replaceAll('-', '+').replaceAll('_', '/');
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+  if (typeof atob === 'function') {
+    const binary = atob(padded);
+    return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  }
+  throw new TypeError('Base64 decoder is unavailable.');
 }
 
 function IsOpaqueIdentifier(value) {

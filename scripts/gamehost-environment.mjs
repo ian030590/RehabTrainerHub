@@ -12,6 +12,9 @@ const restrictedPrefixes = [
 const restrictedNames = new Set([
   'ASSET_PUBLIC_BASE_URL',
   'NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN',
+  // Keep the historical Vite name denied even though runtime loaders no
+  // longer consume it; this prevents stale deployment environments from
+  // reaching a game-host bundle.
   'VITE_AI_ASSET_BASE_URL',
   'VITE_CF_WEB_ANALYTICS_TOKEN',
 ]);

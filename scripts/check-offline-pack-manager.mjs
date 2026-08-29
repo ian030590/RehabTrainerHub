@@ -10,6 +10,7 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const {
   CreateOfflinePackManager,
   GetOfflinePackTotalBytes,
+  MigrateLegacyOfflineCache,
   ParseOfflinePackManifest,
   offlinePackCacheName,
   ValidateOfflinePack,
@@ -184,6 +185,39 @@ assert.equal(await cacheStorage.open(offlinePackCacheName).then((cache) => cache
 await manager.remove(packTwo);
 assert.equal(await cacheStorage.open(offlinePackCacheName).then((cache) => cache.has('/runtimes/motor/assets/shared.js')), false);
 
+const legacyPack = await CreatePack('official-game:legacy', 'v2', [
+  ['/games/demo/legacy.js', Uint8Array.from([3, 4, 5])],
+]);
+const legacyCache = await cacheStorage.open('rehab-trainer-offline-v0');
+await legacyCache.put(
+  new Request('https://trainerhub.invalid/games/demo/legacy.js'),
+  new Response(Uint8Array.from([3, 4, 5])),
+);
+const migration = await MigrateLegacyOfflineCache({
+  cacheStorage,
+  metadataStore: metadata,
+  legacyCacheName: 'rehab-trainer-offline-v0',
+  pack: legacyPack,
+  now: () => Date.parse('2026-08-29T00:00:00.000Z'),
+});
+assert.deepEqual(migration, {
+  status: 'migrated',
+  copiedResources: 1,
+  missingUrls: [],
+  legacyCacheRemoved: true,
+});
+assert.deepEqual(await manager.verify(legacyPack), 'ready');
+assert.equal((await cacheStorage.keys()).includes('rehab-trainer-offline-v0'), false);
+await assert.rejects(
+  () => MigrateLegacyOfflineCache({
+    cacheStorage,
+    metadataStore: metadata,
+    legacyCacheName: 'other-game-cache',
+    pack: legacyPack,
+  }),
+  /explicitly supported v0/,
+);
+
 const corruptPack = await CreatePack('official-game:corrupt', 'v1', [
   ['/games/demo/corrupt.js', Uint8Array.from([1, 1, 1])],
 ]);
@@ -217,6 +251,32 @@ assert.throws(
   }),
   /escapes/i,
 );
+assert.throws(
+  () => ValidateOfflinePack({
+    id: 'official-game:too-many',
+    version: 'v1',
+    scope: '/games/demo/',
+    resources: Array.from({ length: 513 }, (_, index) => ({
+      url: `/games/demo/${index}.js`,
+      byteSize: 0,
+      sha256: 'a'.repeat(64),
+    })),
+  }),
+  /too many resources/i,
+);
+assert.throws(
+  () => ValidateOfflinePack({
+    id: 'official-game:too-large',
+    version: 'v1',
+    scope: '/games/demo/',
+    resources: [{
+      url: '/games/demo/large.js',
+      byteSize: 256 * 1024 * 1024 + 1,
+      sha256: 'a'.repeat(64),
+    }],
+  }),
+  /size limit/i,
+);
 
 const orphanCache = await cacheStorage.open(offlinePackCacheName);
 await orphanCache.put(new Request('https://trainerhub.invalid/games/demo/orphan.js'), new Response('orphan'));
@@ -248,7 +308,14 @@ async function Sha256(bytes) {
 
 async function LoadManager() {
   const sourcePath = resolve(repoRoot, 'packages/ui/src/offlinePackManager.ts');
-  const output = ts.transpileModule(readFileSync(sourcePath, 'utf8'), {
+  // The fallback module is a data URL, so resolve the dependency-free limits
+  // contract explicitly instead of relying on Node's workspace package map.
+  // This keeps the contract test runnable after a clean pCloud checkout where
+  // no symlinked package entries are present.
+  const contractsPath = resolve(repoRoot, 'packages/training-contracts/src/index.js');
+  const source = readFileSync(sourcePath, 'utf8')
+    .replaceAll('@rehab-trainer/training-contracts', pathToFileURL(contractsPath).href);
+  const output = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.ESNext,
       target: ts.ScriptTarget.ES2022,
@@ -256,7 +323,5 @@ async function LoadManager() {
     },
     fileName: sourcePath,
   }).outputText;
-  return import(`${pathToFileURL(sourcePath).href}?check=${Date.now()}`).catch(async () => (
-    import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`)
-  ));
+  return import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 }

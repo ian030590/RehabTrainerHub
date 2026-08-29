@@ -72,7 +72,7 @@ export class GestureBattlerPlugin implements JsPsychPlugin<GestureBattlerInfo> {
   ): void {
     onLoad?.();
     this.jsPsych.finishTrial(
-      CreateLifecycleSimulationData(trial.module_id, trial.run_token, simulationMode, simulationOptions),
+      CreateLifecycleSimulationData(trial.module_id ?? 'motor:gesture-battler', trial.run_token ?? '', simulationMode, simulationOptions),
     );
   }
 

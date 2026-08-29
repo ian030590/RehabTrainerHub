@@ -8,8 +8,8 @@
   "description": "Turborepo monorepo for Rehab Trainer Hub and its isolated user-game runner.",
   "scripts": {
     "install:pcloud": "node scripts/prepare-pnpm-pcloud.mjs && corepack pnpm install --frozen-lockfile",
-    "build": "corepack pnpm run test:pnpm-policy && corepack pnpm run test:architecture && corepack pnpm run test:training-contracts && corepack pnpm run test:game-validator && corepack pnpm run test:naming && corepack pnpm run test:pwa && corepack pnpm run test:hub-functions && corepack pnpm run test:gamerunner && corepack pnpm run test:entrypoints && node scripts/build-apps.mjs",
-    "build:cloudflare": "corepack pnpm run test:pnpm-policy && corepack pnpm run test:architecture && corepack pnpm run test:training-contracts && corepack pnpm run test:game-validator && corepack pnpm run test:naming && corepack pnpm run test:pwa && corepack pnpm run test:hub-functions && corepack pnpm run test:gamerunner && corepack pnpm run test:entrypoints && corepack pnpm run test:cloudflare-deploy && node scripts/build-apps.mjs --cloudflare-pages",
+    "build": "corepack pnpm run test:pnpm-policy && corepack pnpm run test:architecture && corepack pnpm run test:training-integration && corepack pnpm run test:training-contracts && corepack pnpm run test:game-validator && corepack pnpm run test:naming && corepack pnpm run test:pwa && corepack pnpm run test:hub-functions && corepack pnpm run test:gamerunner && corepack pnpm run test:entrypoints && node scripts/build-apps.mjs",
+    "build:cloudflare": "corepack pnpm run test:pnpm-policy && corepack pnpm run test:architecture && corepack pnpm run test:training-integration && corepack pnpm run test:training-contracts && corepack pnpm run test:game-validator && corepack pnpm run test:naming && corepack pnpm run test:pwa && corepack pnpm run test:hub-functions && corepack pnpm run test:gamerunner && corepack pnpm run test:entrypoints && corepack pnpm run test:cloudflare-deploy && node scripts/build-apps.mjs --cloudflare-pages",
     "build:cloudflare:only": "node scripts/build-apps.mjs --cloudflare-pages",
     "build:hub": "corepack pnpm --filter @rehab-trainer/rehabtrainerhub run build",
     "build:gamerunner": "corepack pnpm --filter @rehab-trainer/usergamerunner run build",
@@ -27,25 +27,31 @@
     "test:driving-rehab-browser": "node scripts/check-driving-rehab-browser.mjs",
     "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs",
     "test:embedded-training": "node --test scripts/check-embedded-training-message.test.mjs",
+    "test:training-protocol": "node --test scripts/check-embedded-training-message.test.mjs && node scripts/check-official-training-host.mjs",
     "test:game-platform": "node --test scripts/check-game-platform.test.mjs packages/game-sdk/src/index.test.mjs",
-    "test:game-validator": "node --test scripts/check-game-validation-state.test.mjs",
+    "test:game-review-security": "node --test apps/rehabtrainerhub/functions/api/admin/game-releases/[id]/diff.security.test.mjs apps/rehabtrainerhub/functions/api/admin/game-releases/[id]/source.security.test.mjs apps/rehabtrainerhub/functions/api/game-platform-reports.security.test.mjs",
+    "test:game-validator": "node --test scripts/check-game-validation-state.test.mjs apps/rehabtrainerhub/functions/_lib/gameValidationController.test.mjs",
     "test:training-flow": "node scripts/check-training-module-flow.mjs && node --test scripts/check-reference-cognitive-trials.test.mjs scripts/check-training-theme.test.mjs",
     "test:webgazer": "node scripts/check-webgazer-calibration.mjs && node scripts/check-webgazer-metrics.mjs",
     "test:media-lifecycle": "node scripts/check-media-lifecycle.mjs",
-    "test:training-lifecycle": "node scripts/check-training-lifecycle.mjs",
+    "test:training-lifecycle": "node scripts/check-training-lifecycle.mjs && node scripts/check-component-training-engine.mjs",
     "test:training-privacy": "node scripts/check-training-privacy-boundary.mjs",
     "test:webgazer-browser": "node scripts/check-oculomotor-webgazer-browser.mjs",
+    "test:official-game-pwa-browser": "node scripts/check-official-game-pwa-browser.mjs",
     "test:hub-functions": "node --test \"apps/rehabtrainerhub/functions/**/*.test.mjs\"",
     "test:gamerunner": "node --test apps/usergamerunner/tests/gamehost.test.mjs",
     "test:naming": "node scripts/check-identifier-names.mjs",
     "test:training-config-styles": "node scripts/check-training-config-styles.mjs",
     "test:pwa": "node scripts/check-pwa-assets.mjs && corepack pnpm run test:offline-pack",
     "test:offline-pack": "node scripts/check-offline-pack-manager.mjs",
+    "test:offline-packs": "node scripts/check-offline-pack-manager.mjs && node scripts/check-pwa-assets.mjs",
+    "test:bundle-budgets": "node scripts/check-bundle-budgets.mjs",
     "test:seo": "node scripts/check-seo-output.mjs --all",
     "test:pnpm-policy": "node scripts/check-pnpm-pcloud.mjs",
     "test:heavy-load-boundary": "node scripts/check-heavy-load-boundary.mjs",
     "test:runtime-build-manifest": "node scripts/check-runtime-build-manifest.mjs",
-    "test:training-contracts": "node --test packages/training-contracts/src/index.test.mjs && node scripts/check-training-module-flow.mjs && node scripts/check-official-training-host.mjs",
+    "test:training-contracts": "node --test packages/training-contracts/src/index.test.mjs && node scripts/check-native-run-result.mjs && node scripts/check-native-setup-types.mjs && node scripts/check-native-timeline-engine.mjs && node scripts/check-training-module-flow.mjs && node scripts/check-official-training-host.mjs",
+    "test:training-integration": "node scripts/check-training-integration.mjs",
     "test:architecture": "node --test scripts/check-architecture-invariants.test.mjs"
   },
   "dependencies": {
@@ -80,6 +86,6 @@
     "vite": "^6.3.5"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.23.2 <23"
   }
 }

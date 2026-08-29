@@ -109,7 +109,7 @@ GitHub `cloudflare-pages` environment 設定：
 
 Server 端會檢查 Siteverify 結果、預期 action 與 hostname。訓練紀錄使用 explicit execution：只在要上傳時取得一次性 token，不會在遊戲過程持續執行 challenge。
 
-## 4. R2、CORS 與 AI 資產 CDN
+## 4. R2、CORS 與平台資產
 
 1. 建立 R2 bucket，並讓 Hub 的 `ASSET_BUCKET` binding 指向該 bucket。
 2. 綁定正式 custom domain，例如 `assets.trainerhub.cc`。正式環境不要以 `r2.dev` 當長期資產網址。
@@ -151,14 +151,17 @@ AI_ASSET_BASE_URL=https://assets.trainerhub.cc
 ASSET_PUBLIC_BASE_URL=https://assets.trainerhub.cc
 ```
 
-- `AI_ASSET_BASE_URL`：平台控制 R2 custom domain 的受控 fallback（可選）；runtime 會先嘗試同源 `/runtime-assets/` route。
+- `AI_ASSET_BASE_URL`：僅供 R2 資產驗證與部署工具記錄 custom domain；瀏覽器 runtime 不會使用此值組合外部 URL，也不提供 CDN fallback。所有 MediaPipe、WebGazer 與遊戲資產一律經平台同源 `/runtime-assets/` route 載入。
 - `ASSET_PUBLIC_BASE_URL`：後台文章封面上傳後可公開存取的 base URL。
 - MediaPipe 載入只接受平台控制的版本化資產路徑；資產缺失時明確失敗。
 - Hub 的 vision runtime 只載入平台控制的 R2 WebGazer 或同源版本化副本。
-- 星空背景與 3D 車輛會先走同源唯讀 asset route，再使用平台控制的 R2 custom domain，最後才使用 Pages 內的本地副本。
+- 星空背景與 3D 車輛只走同源唯讀 asset route；只有 localhost 開發環境可明確
+  opt-in 使用 Pages 內的同源本地副本，production 缺失時必須明確失敗。
 - `/runtime-assets/*` 只允許 manifest 內的 AI／遊戲資產 key，透過 `ASSET_BUCKET` 唯讀讀取，回傳 immutable cache 與 `nosniff`／same-origin headers；CORS 僅回應同源請求，不接受可配置的跨來源 proxy，也不得把它改成任意 R2 proxy。
 
-`main` production build 可注入平台控制的 R2 AI base 作 fallback；未設定資產 base 的 preview 會使用同源 `/runtime-assets/` 路徑，缺少資產時明確失敗，不會向第三方服務發出請求。
+`main` production build 可注入 `AI_ASSET_BASE_URL` 供 R2 驗證／部署 metadata；它不會
+進入瀏覽器 runtime，也不會成為 fallback。未設定資產 base 的 preview 仍使用同源
+`/runtime-assets/` 路徑，缺少資產時明確失敗，不會向第三方服務發出請求。
 
 ## 5. KV 文章快取
 

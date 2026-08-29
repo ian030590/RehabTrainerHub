@@ -4,9 +4,11 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useHubAuth } from '../HubNavigation';
 import {
   FetchDeveloperGames,
+  FetchDeveloperNotifications,
   RequestDeveloperGameManualReview,
   SubmitDeveloperGame,
   type DeveloperGame,
+  type DeveloperNotification,
   type DeveloperReleaseStatus,
 } from './developerApi';
 import {
@@ -15,9 +17,12 @@ import {
 } from '@rehab-trainer/hub-modules/catalog';
 import {
   gamePlatformCapabilities,
+  gamePlatformLicenses,
   gamePlatformPackageLimits,
   gamePlatformRuntimeContract,
+  IsPublishableGameLicense,
   type GamePlatformCapability,
+  type GamePlatformLicenseId,
 } from '@rehab-trainer/training-contracts';
 
 const maximumPackageBytes = gamePlatformPackageLimits.maximumCompressedBytes;
@@ -42,6 +47,7 @@ const capabilityOptions = gamePlatformCapabilities.map((capability) => [
   capability,
   capabilityLabels[capability],
 ] as const);
+const publishableLicenseOptions = gamePlatformLicenses.filter(IsPublishableGameLicense);
 const statusCopy: Record<DeveloperReleaseStatus, string> = {
   blocked: '自動掃描阻擋',
   pending_review: '等待人工審核',
@@ -54,6 +60,7 @@ const statusCopy: Record<DeveloperReleaseStatus, string> = {
 export function DeveloperPortal() {
   const { user } = useHubAuth();
   const [games, setGames] = useState<DeveloperGame[]>([]);
+  const [notifications, setNotifications] = useState<DeveloperNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadKey, setLoadKey] = useState(0);
@@ -66,6 +73,7 @@ export function DeveloperPortal() {
   const [summary, setSummary] = useState('');
   const [category, setCategory] = useState<TrainingPurposeId>(defaultCategory);
   const [version, setVersion] = useState('1.0.0');
+  const [licenseId, setLicenseId] = useState<GamePlatformLicenseId>('CC-BY-4.0');
   const [capabilities, setCapabilities] = useState<string[]>(['keyboard', 'pointer']);
   const [sourceConfirmed, setSourceConfirmed] = useState(false);
   const [manualReviewReasons, setManualReviewReasons] = useState<Record<string, string>>({});
@@ -74,13 +82,20 @@ export function DeveloperPortal() {
   useEffect(() => {
     if (!user) {
       setGames([]);
+      setNotifications([]);
       return;
     }
     const controller = new AbortController();
     setIsLoading(true);
     setError('');
-    void FetchDeveloperGames(controller.signal)
-      .then(setGames)
+    void Promise.all([
+      FetchDeveloperGames(controller.signal),
+      FetchDeveloperNotifications(controller.signal),
+    ])
+      .then(([nextGames, nextNotifications]) => {
+        setGames(nextGames);
+        setNotifications(nextNotifications);
+      })
       .catch((nextError: unknown) => {
         if (controller.signal.aborted) return;
         setError(nextError instanceof Error ? nextError.message : '目前無法載入投稿。');
@@ -139,6 +154,7 @@ export function DeveloperPortal() {
         version: version.trim(),
         jsPsychVersion: platformJsPsychVersion,
         capabilities,
+        licenseId,
       });
       setMessage(response.release.status === 'blocked'
         ? `已完成掃描，但偵測到 ${response.release.scan.blockCount ?? response.release.findings.length} 個阻擋項目。`
@@ -294,6 +310,30 @@ export function DeveloperPortal() {
               </label>
             </div>
 
+            <label className="admin-field">
+              <span>遊戲授權條款</span>
+              <select
+                onChange={(event) => setLicenseId(event.target.value as GamePlatformLicenseId)}
+                value={licenseId}
+              >
+                {publishableLicenseOptions.map((license) => (
+                  <option key={license.id} value={license.id}>{license.label}（{license.id}）</option>
+                ))}
+              </select>
+              <small>
+                請確認你有權發布遊戲包內所有程式碼與素材；管理員會在公開前核對授權。{' '}
+                {publishableLicenseOptions.find((license) => license.id === licenseId)?.url && (
+                  <a
+                    href={publishableLicenseOptions.find((license) => license.id === licenseId)?.url ?? undefined}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    查看條款
+                  </a>
+                )}
+              </small>
+            </label>
+
             <fieldset className="developer-capabilities">
               <legend>需要的基本能力</legend>
               {capabilityOptions.map(([value, label]) => (
@@ -334,6 +374,23 @@ export function DeveloperPortal() {
         </section>
 
         <section className="admin-tab-panel" aria-labelledby="developer-releases-title">
+          {notifications.length > 0 && (
+            <aside className="developer-notifications" aria-labelledby="developer-notifications-title">
+              <div className="section-title-row">
+                <h2 id="developer-notifications-title">Review updates</h2>
+                <span>{notifications.length}</span>
+              </div>
+              <ul>
+                {notifications.slice(0, 5).map((notification) => (
+                  <li key={notification.id}>
+                    <strong>{FormatNotificationKind(notification.kind)}</strong>
+                    <time dateTime={notification.createdAt}>{new Date(notification.createdAt).toLocaleString()}</time>
+                    {typeof notification.payload.note === 'string' && <p>{notification.payload.note}</p>}
+                  </li>
+                ))}
+              </ul>
+            </aside>
+          )}
           <div className="section-title-row">
             <div>
               <p className="page-kicker">Submissions</p>
@@ -362,6 +419,31 @@ export function DeveloperPortal() {
                       <small>
                         {release.fileCount} 個檔案 · {FormatBytes(release.uncompressedBytes)} · SHA-256 {release.contentSha256.slice(0, 12)}…
                       </small>
+                      <small>
+                        授權：{release.license.url ? (
+                          <a href={release.license.url} rel="noreferrer" target="_blank">{release.license.label}</a>
+                        ) : release.license.label}
+                      </small>
+                      <small className="developer-release-attempt">
+                        Submission attempt {release.submissionAttempt ?? '—'}
+                      </small>
+                      {(release.attempts?.length ?? 0) > 1 && (
+                        <details className="developer-submission-history">
+                          <summary>Submission history ({release.attempts?.length})</summary>
+                          <ol>
+                            {release.attempts?.map((attempt) => (
+                              <li key={attempt.id}>
+                                <strong>Attempt {attempt.attempt}</strong>
+                                <span>{FormatAttemptStatus(attempt.scanStatus)}</span>
+                                <small>
+                                  {new Date(attempt.submittedAt).toLocaleString()} · SHA-256 {attempt.artifactSha256.slice(0, 12)}
+                                </small>
+                                {attempt.errorCode && <small>{attempt.errorCode}</small>}
+                              </li>
+                            ))}
+                          </ol>
+                        </details>
+                      )}
                       {release.reviewNote && <p>審核備註：{release.reviewNote}</p>}
                       {release.findings.length > 0 && (
                         <details className="developer-validation-findings">
@@ -448,4 +530,26 @@ function FormatFindingDisposition(value: DeveloperGame['releases'][number]['find
   if (value === 'fix-or-manual-review') return '可修改或申請人工判讀';
   if (value === 'manual-review') return '需人工判讀';
   return '提示';
+}
+
+function FormatAttemptStatus(value: NonNullable<DeveloperGame['releases'][number]['attempts']>[number]['scanStatus']): string {
+  const labels: Record<typeof value, string> = {
+    queued: 'Queued',
+    running: 'Running',
+    passed: 'Passed',
+    flagged: 'Flagged',
+    failed: 'Failed',
+  };
+  return labels[value];
+}
+
+function FormatNotificationKind(value: DeveloperNotification['kind']): string {
+  const labels: Record<DeveloperNotification['kind'], string> = {
+    'request-changes': 'Changes requested',
+    rejected: 'Submission rejected',
+    revoked: 'Release revoked',
+    'validation-failed': 'Validation failed',
+    'review-requested': 'Manual review requested',
+  };
+  return labels[value];
 }

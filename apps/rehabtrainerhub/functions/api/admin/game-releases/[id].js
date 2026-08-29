@@ -10,6 +10,12 @@ import {
   GetAuthenticatedUser,
 } from '../../../_lib/authorization.js';
 import { ReadJsonBody } from '../../../_lib/request.js';
+import { CreateGamePlatformNotificationStatement } from '../../../_lib/gameNotifications.js';
+import {
+  GetGamePlatformLicense,
+  IsPublishableGameLicense,
+  gamePlatformLicenses,
+} from '@rehab-trainer/training-contracts';
 
 const maximumReviewBodyBytes = 8 * 1024;
 const maximumReleaseManifestBytes = 512 * 1024;
@@ -52,9 +58,26 @@ export async function onRequestPut({ request, env, params }) {
           developer_games.slug,
           game_releases.submitted_title AS title,
           game_releases.submitted_summary AS summary,
-          game_releases.submitted_category AS category
+          game_releases.submitted_category AS category,
+          developer_games.owner_user_id,
+          latest_scan.status AS scan_status,
+          latest_scan.attempt AS scan_attempt,
+          COALESCE((
+            SELECT COUNT(*)
+            FROM game_validation_findings AS validation_block
+            WHERE validation_block.scan_run_id = latest_scan.id
+              AND validation_block.disposition = 'hard-block'
+          ), 0) AS validation_hard_block_count
         FROM game_releases
         INNER JOIN developer_games ON developer_games.id = game_releases.game_id
+        LEFT JOIN game_scan_runs AS latest_scan
+          ON latest_scan.id = (
+            SELECT current_scan.id
+            FROM game_scan_runs AS current_scan
+            WHERE current_scan.submission_id = game_releases.submission_id
+            ORDER BY current_scan.attempt DESC
+            LIMIT 1
+          )
         WHERE game_releases.id = ?
         LIMIT 1
       `)
@@ -87,6 +110,14 @@ export async function onRequestPut({ request, env, params }) {
     if (release.status === 'blocked') {
       return ErrorResponse(request, env, 'A release with blocking scan findings cannot be approved.', 409);
     }
+    if (release.scan_status !== 'passed' || Number(release.validation_hard_block_count) > 0) {
+      return ErrorResponse(request, env, 'The latest validation scan must pass without hard-block findings before publication.', 409);
+    }
+    const license = GetGamePlatformLicense(release.license_id);
+    if (!license || !IsPublishableGameLicense(license.id)) {
+      return ErrorResponse(request, env, 'A declared license is required before publication.', 409);
+    }
+    const licenseId = license.id;
     if (!['pending_review', 'publishing'].includes(release.status)) {
       return ErrorResponse(request, env, 'This release is not awaiting approval.', 409);
     }
@@ -219,6 +250,7 @@ export async function onRequestPut({ request, env, params }) {
           sourceReviewed,
           playTested,
           metadataReviewed,
+          licenseId,
         },
       }, release.id, publicationLeaseId),
     ]);
@@ -235,6 +267,7 @@ export async function onRequestPut({ request, env, params }) {
         slug: release.slug,
         version: release.version,
         contentSha256: release.content_sha256,
+        license: MapGameLicense(release.license_id),
       },
     });
   } catch (error) {
@@ -276,7 +309,7 @@ async function RevokeApprovedRelease(db, bucket, release, user, note) {
         WHERE id = ? AND active_release_id = ?
       `)
       .bind(now, release.game_id, release.id),
-    CreateAdminAuditStatement(db, {
+      CreateAdminAuditStatement(db, {
       actorUserId: user.id,
       action: 'developer_game.revoke',
       targetType: 'game_release',
@@ -288,7 +321,16 @@ async function RevokeApprovedRelease(db, bucket, release, user, note) {
         slug: release.slug,
         version: release.version,
       },
-    }),
+      }),
+      CreateGamePlatformNotificationStatement(db, {
+        recipientUserId: release.owner_user_id,
+        gameId: release.game_id,
+        releaseId: release.id,
+        submissionId: release.submission_id || null,
+        kind: 'revoked',
+        payload: { note, version: release.version },
+        createdAt: now,
+      }),
   ]);
   return ReadChangedRows(results[0]) === 1;
 }
@@ -304,7 +346,7 @@ async function UpdateRejectedRelease(db, release, user, note) {
         WHERE id = ? AND status IN ('blocked', 'pending_review', 'rejected')
       `)
       .bind(user.id, note || null, now, now, release.id),
-    CreateAdminAuditStatement(db, {
+      CreateAdminAuditStatement(db, {
       actorUserId: user.id,
       action: 'developer_game.reject',
       targetType: 'game_release',
@@ -315,7 +357,16 @@ async function UpdateRejectedRelease(db, release, user, note) {
         note: note || undefined,
         version: release.version,
       },
-    }),
+      }),
+      CreateGamePlatformNotificationStatement(db, {
+        recipientUserId: release.owner_user_id,
+        gameId: release.game_id,
+        releaseId: release.id,
+        submissionId: release.submission_id || null,
+        kind: 'rejected',
+        payload: { note: note || null, version: release.version },
+        createdAt: now,
+      }),
   ]);
   return ReadChangedRows(results[0]) === 1;
 }
@@ -390,10 +441,16 @@ function CreateReleaseManifest(release, files, approvedAt, status) {
       name: 'jspsych',
       major: 8,
     },
+    license: MapGameLicense(release.license_id),
     capabilities: SafeJson(release.capabilities_json, []),
     contentSha256: release.content_sha256,
     approvedAt,
   };
+}
+
+function MapGameLicense(value) {
+  return GetGamePlatformLicense(value)
+    || gamePlatformLicenses[gamePlatformLicenses.length - 1];
 }
 
 async function PublishReleaseManifest(bucket, key, stagingManifest, release) {

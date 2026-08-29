@@ -38,6 +38,7 @@ import { useNavigate } from 'react-router-dom';
 import { useT } from '../i18n';
 import { SaveTrainingRecord, type BrainTrainingRecord } from '../utils/trainingRecords';
 import './EveryBallResponsePage.css';
+import type { EveryBallResponseConfig } from '../every-ball-response/config';
 
 type Phase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
 type InputMode = 'camera' | 'microphone';
@@ -54,13 +55,7 @@ interface LevelDefinition {
   passAccuracy: number;
 }
 
-interface GameConfig {
-  levelId: LevelDefinition['id'];
-  inputMode: InputMode;
-  fixationStyle: FixationStyle;
-  trialCount: number;
-  microphoneSensitivity: number;
-}
+export type GameConfig = EveryBallResponseConfig;
 
 interface TrialPlan {
   trialNumber: number;
@@ -91,7 +86,7 @@ interface TrialRecord {
   Fixation_ms: number;
 }
 
-interface SessionSummary {
+export interface SessionSummary {
   date: string;
   participant: string;
   levelTitle: string;
@@ -222,9 +217,7 @@ const stimulusMs = 900;
 const responseWindowMs = 1800;
 const fixationMinMs = 1000;
 const fixationMaxMs = 3000;
-const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates(
-  import.meta.env.VITE_AI_ASSET_BASE_URL,
-);
+const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates();
 const cameraDetectionIntervalMs = 70;
 const cameraGestureCooldownMs = 480;
 const clapCloseDistance = 0.12;
@@ -573,9 +566,27 @@ const copy: Record<'zh' | 'en', EveryBallLabels> = {
   },
 };
 
-export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) {
+export interface EveryBallResponseHostControl {
+  autoStart?: boolean;
+  config?: Readonly<EveryBallResponseConfig>;
+  onStarted?(): void;
+  onCompleted?(result: SessionSummary): void;
+  onAborted?(): void;
+  registerControls?(controls: { pause(): void; resume(): void } | null): void;
+  signal?: AbortSignal;
+  skipUserGuard?: boolean;
+}
+
+export interface EveryBallResponsePageProps {
+  onExit?: () => void;
+  hostControl?: EveryBallResponseHostControl;
+}
+
+export function EveryBallResponsePage({ onExit, hostControl }: EveryBallResponsePageProps = {}) {
   const { lang } = useT();
   const labels = copy[lang];
+  const hostControlRef = useRef(hostControl);
+  hostControlRef.current = hostControl;
   const navigate = useNavigate();
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const stageHostRef = useRef<HTMLDivElement | null>(null);
@@ -588,14 +599,16 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
   const mountedRef = useRef(true);
   const phaseRef = useRef<Phase>('menu');
   const visualRef = useRef<VisualState>({ phase: 'idle' });
+  const autoStartRequestedRef = useRef(false);
 
   const [phase, setPhaseState] = useState<Phase>('menu');
   useTrainingConfigReady(phase === 'menu');
-  const [levelId, setLevelId] = useState<LevelDefinition['id']>(1);
-  const [inputMode, setInputMode] = useState<InputMode>('camera');
-  const [fixationStyle, setFixationStyle] = useState<FixationStyle>('cross');
-  const [trialCount, setTrialCount] = useState(levels[0].trialCount);
-  const [microphoneSensitivity, setMicrophoneSensitivity] = useState(0.65);
+  const [levelId, setLevelId] = useState<LevelDefinition['id']>(hostControl?.config?.levelId ?? 1);
+  const [inputMode, setInputMode] = useState<InputMode>(hostControl?.config?.inputMode ?? 'camera');
+  const [fixationStyle, setFixationStyle] = useState<FixationStyle>(hostControl?.config?.fixationStyle ?? 'cross');
+  const [trialCount, setTrialCount] = useState(hostControl?.config?.trialCount ?? levels[0].trialCount);
+  const [microphoneSensitivity, setMicrophoneSensitivity] = useState(hostControl?.config?.microphoneSensitivity ?? 0.65);
+  const [isStageReady, setIsStageReady] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [inputLevel, setInputLevel] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
@@ -682,6 +695,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
         appRef.current = app;
         host.appendChild(app.canvas);
         app.canvas.className = 'every-ball-canvas';
+        setIsStageReady(true);
         app.renderer.on('resize', onResize);
         DrawEveryBallScene(app, visualRef.current, labels);
       } catch (error) {
@@ -704,6 +718,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
       if (appRef.current === app) {
         appRef.current = null;
       }
+      setIsStageReady(false);
       destroyApp();
     };
   }, [labels, stopInput]);
@@ -744,6 +759,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
   };
 
   const returnToMenu = useCallback(async () => {
+    const wasRunning = ['initializing', 'playing', 'results'].includes(phaseRef.current);
     jsPsychRef.current?.abortExperiment();
     jsPsychRef.current = null;
     await stopInput();
@@ -752,7 +768,26 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
     setStatusMessage('');
     drawVisual({ phase: 'idle' });
     setPhase('menu');
+    if (wasRunning) hostControlRef.current?.onAborted?.();
   }, [drawVisual, setPhase, stopInput]);
+
+  useEffect(() => {
+    const signal = hostControlRef.current?.signal;
+    if (!signal) return undefined;
+    const onAbort = () => { void returnToMenu(); };
+    signal.addEventListener('abort', onAbort, { once: true });
+    return () => signal.removeEventListener('abort', onAbort);
+  }, [returnToMenu]);
+
+  useEffect(() => {
+    const registerControls = hostControlRef.current?.registerControls;
+    if (!registerControls) return undefined;
+    registerControls({
+      pause: () => { jsPsychRef.current?.pauseExperiment(); },
+      resume: () => { jsPsychRef.current?.resumeExperiment(); },
+    });
+    return () => registerControls(null);
+  }, []);
 
   const exitToAttentionTraining = useCallback(async () => {
     await stopInput();
@@ -801,10 +836,11 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
       detailRows: nextSummary.trials.map((trial) => ({ ...trial })),
     };
     void SaveTrainingRecord(record);
+    hostControlRef.current?.onCompleted?.(nextSummary);
   }, [drawVisual, setPhase, stopInput]);
 
   const startSession = useCallback(async () => {
-    await enterTrainingFullscreen();
+    if (!hostControlRef.current?.autoStart) await enterTrainingFullscreen();
     await stopInput();
     jsPsychRef.current?.abortExperiment();
     inputControllerRef.current.cancelWaiting();
@@ -812,6 +848,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
     setSummary(null);
     setStatusMessage(inputMode === 'camera' ? labels.initializingCamera : labels.initializingMicrophone);
     setPhase('initializing');
+    hostControlRef.current?.onStarted?.();
 
     const plans = CreateTrialPlans(levelId, trialCount);
     const jsPsych = initJsPsych();
@@ -919,6 +956,12 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
     trialCount,
   ]);
 
+  useEffect(() => {
+    if (!hostControlRef.current?.autoStart || !isStageReady || phase !== 'menu' || autoStartRequestedRef.current) return;
+    autoStartRequestedRef.current = true;
+    void startSession();
+  }, [isStageReady, phase, startSession]);
+
   const summaryItems = useMemo(() => [
     { label: labels.level, value: selectedLevelLabels.shortTitle },
     { label: labels.inputMode, value: inputModeLabel },
@@ -934,7 +977,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
         <canvas ref={cameraOverlayRef} aria-hidden="true" />
       </div>
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !hostControl?.autoStart && (
         <div className="training-panel every-ball-panel">
           <TrainingConfigPanel
             label={labels.configLabel}
@@ -1069,7 +1112,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
         </div>
       )}
 
-      {phase === 'rules' && (
+      {phase === 'rules' && !hostControl?.autoStart && (
         <div className="training-panel every-ball-panel">
           <TrainingRulesPanel
             label={labels.rulesLabel}
@@ -1148,7 +1191,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
         />
       )}
 
-      {phase === 'results' && summary && (
+      {phase === 'results' && summary && !hostControl?.autoStart && (
         <div className="experiment-container experiment-container-scrollable every-ball-results-container">
           <div className="experiment-results every-ball-results">
             <h1>{labels.resultTitle}</h1>

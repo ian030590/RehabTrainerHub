@@ -7,6 +7,7 @@ import type {
   ArticleCard,
   ArticleInput,
 } from '../articleTypes';
+import type { GamePlatformLicense } from '@rehab-trainer/training-contracts';
 
 export interface AdminOverviewSummary {
   patientCount: number;
@@ -86,23 +87,66 @@ export interface AdminGameRelease {
   title: string;
   summary: string;
   category: string;
+  license: GamePlatformLicense;
   developerName: string;
   owner: { id: string; displayName: string };
   version: string;
   artifactType: 'html' | 'zip';
   entryPath: string;
   status: GameReleaseReviewStatus;
+  submissionId: string | null;
   contentSha256: string;
   packageBytes: number;
   uncompressedBytes: number;
   fileCount: number;
   jsPsychVersion: string;
   capabilities: string[];
+  files: Array<{
+    path: string;
+    byteSize: number;
+    contentType: string;
+    sha256: string;
+  }>;
   scan: { blockCount?: number; reviewCount?: number };
   findings: AdminGameScanFinding[];
   reviewNote: string | null;
   submittedAt: string;
   reviewedAt: string | null;
+}
+
+export type AdminGameReportStatus = 'open' | 'in_review' | 'resolved' | 'rejected';
+export type AdminGameReportReason = 'safety' | 'copyright' | 'privacy' | 'content' | 'other';
+
+export interface AdminGameReport {
+  id: string;
+  gameId: string;
+  releaseId: string;
+  slug: string;
+  title: string;
+  version: string;
+  reason: AdminGameReportReason;
+  details: string;
+  status: AdminGameReportStatus;
+  resolutionNote: string | null;
+  resolvedAt: string | null;
+  reporterDisplayName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminGameReleaseDiff {
+  currentAttempt: number | null;
+  previousAttempt: number | null;
+  truncated: boolean;
+  changes: Array<{
+    path: string;
+    status: 'added' | 'removed' | 'changed';
+    before: { byteSize: number; contentType: string; sha256: string } | null;
+    after: { byteSize: number; contentType: string; sha256: string } | null;
+    beforeText?: string | null;
+    afterText?: string | null;
+    contentTruncated?: boolean;
+  }>;
 }
 
 export type GameValidationQueue =
@@ -119,6 +163,13 @@ export interface AdminGameValidationFinding {
   line: number | null;
   column: number | null;
   messageKey: string;
+}
+
+export interface AdminGameFindingOverride {
+  findingId: string;
+  decision: 'accept' | 'dismiss';
+  reason: string;
+  evidence: string;
 }
 
 export interface AdminGameSubmission {
@@ -145,6 +196,18 @@ export interface AdminGameSubmission {
     queuedAt: string | null;
     startedAt: string | null;
     completedAt: string | null;
+    report: {
+      sha256: string;
+      attestationKeyId: string;
+      receivedAt: string;
+      verdict: 'pass' | 'changes-required' | 'manual-review-eligible' | 'hard-block' | null;
+      networkAttempts: Array<{
+        kind: string;
+        targetClass: string;
+        targetSample: string;
+        count: number;
+      }>;
+    } | null;
   };
   review: {
     id: string;
@@ -337,6 +400,28 @@ export async function FetchAdminGameReleases(
   return payload.releases;
 }
 
+export async function FetchAdminGameReports(
+  status?: AdminGameReportStatus,
+  signal?: AbortSignal,
+): Promise<AdminGameReport[]> {
+  const payload = await ReadJson<{ reports: AdminGameReport[] }>(
+    await AdminFetch('/api/admin/game-reports', { signal }, { status }),
+  );
+  return payload.reports;
+}
+
+export async function UpdateAdminGameReport(
+  reportId: string,
+  status: AdminGameReportStatus,
+  resolutionNote: string,
+): Promise<void> {
+  await AdminFetch('/api/admin/game-reports', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reportId, status, resolutionNote }),
+  });
+}
+
 export async function FetchAdminGameValidationQueue(
   queue: GameValidationQueue,
   signal?: AbortSignal,
@@ -352,11 +437,12 @@ export async function ReviewAdminGameSubmission(
   decision: 'approve' | 'reject' | 'request-changes',
   note: string,
   evidence: { sourceReviewed: boolean; playTested: boolean; metadataReviewed: boolean },
+  overrides: AdminGameFindingOverride[] = [],
 ): Promise<void> {
   await AdminFetch(`/api/admin/game-submissions/${encodeURIComponent(submissionId)}/review`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ decision, note, ...evidence }),
+    body: JSON.stringify({ decision, note, ...evidence, overrides }),
   });
 }
 
@@ -383,4 +469,29 @@ export async function DownloadAdminGameReleaseArtifact(
   const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1]
     ?? `game-release-${releaseId}.zip`;
   return { blob: await response.blob(), filename };
+}
+
+export async function FetchAdminGameReleaseSource(
+  releaseId: string,
+  path: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const response = await AdminFetch(
+    `/api/admin/game-releases/${encodeURIComponent(releaseId)}/source`,
+    { signal },
+    { path },
+  );
+  return response.text();
+}
+
+export async function FetchAdminGameReleaseDiff(
+  releaseId: string,
+  signal?: AbortSignal,
+): Promise<AdminGameReleaseDiff> {
+  return ReadJson<AdminGameReleaseDiff>(
+    await AdminFetch(
+      `/api/admin/game-releases/${encodeURIComponent(releaseId)}/diff`,
+      { signal },
+    ),
+  );
 }

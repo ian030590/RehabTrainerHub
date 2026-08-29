@@ -21,3 +21,51 @@
   min-height: 100vh;
   width: 100%;
 }
+
+.native-training-surface {
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  grid-template: auto 1fr / 1fr;
+  gap: 1rem;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: var(--background);
+  color: var(--text-primary);
+  box-sizing: border-box;
+}
+
+.native-training-setup {
+  width: min(48rem, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+
+.native-training-setup section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.native-training-setup label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.native-training-setup input,
+.native-training-setup select,
+.native-training-setup button {
+  min-height: 2.75rem;
+  font: inherit;
+}
+
+.native-training-setup button {
+  width: fit-content;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+}
+
+.native-training-mount {
+  min-height: 0;
+  position: relative;
+}

@@ -1,6 +1,6 @@
 # 居家訓練網系統架構優化藍圖
 
-狀態：In progress（Phase 0–2 基礎垂直切片、Phase 3 Vision preload/abort 與 build-manifest 驗收切片、Phase 4 五個指定影音模組 native jsPsych lifecycle + data-only simulation、Phase 5 root shell + dependency closure/offline pack 基礎、同源 allowlisted runtime-assets 與 AI/WASM/WebGazer 離線閉包、Phase 6 migration/狀態 gate 與 Phase 7 審查 API/UI 垂直切片、內建 Drawing Defense 隱私邊界與回歸 gate 已實作；其餘項目依清單逐步切換）
+狀態：In progress（Phase 0–2 基礎垂直切片、Phase 3 Vision preload/abort 與 build-manifest 驗收切片、Phase 4 五個指定影音模組 native jsPsych lifecycle + data-only simulation、Phase 5 root shell + dependency closure/offline pack 基礎、同源 allowlisted runtime-assets 與 AI/WASM/WebGazer 離線閉包、官方遊戲 PWA staged 離線安裝、Phase 6 migration/狀態 gate 與 Phase 7 審查 API/UI 垂直切片、10 個目標模組的 host setup/engine 切片、內建 Drawing Defense 隱私邊界與回歸 gate 已實作；瀏覽器/部署驗收與 legacy brain 遷移仍依清單逐步完成）
 
 盤點日期：2026-08-29
 
@@ -72,16 +72,16 @@
 | --- | --- | --- |
 | Vision：moving / oculomotor / gabor / reading | `native-timeline` | 保留，補強行為測試與 loading boundary |
 | Brain：UFOV | `native-timeline` | 保留，將 config/rules 與 engine chunk 明確切開 |
-| Motor 四個遊戲 | `external-runtime-adapter` | 逐一改成 module-owned custom plugin/timeline |
-| Mouth：tongue-catch | `external-runtime-adapter` | 改成 module-owned custom plugin/timeline |
+| Motor 四個遊戲 | module-owned lifecycle scaffold；Hub 已接入 native host setup/engine | 保持 component-owned renderer/input，持續補行為與瀏覽器驗收 |
+| Mouth：tongue-catch | module-owned lifecycle scaffold；Hub 已接入 native host setup/engine | 保持 component-owned renderer/model/stream，持續補行為與瀏覽器驗收 |
 | Hart Chart（排除） | `external-runtime-adapter` | 本輪不轉換，維持回歸測試 |
 | Driving（排除） | `native-timeline` | 本輪不轉換，維持 Three/fullscreen 回歸測試 |
 
-因此，需求中的 10 個模組目前都已由 jsPsych 管理至少一層生命週期；本次優化的重點是把 adapter 模組升級成真正由 trial/plugin 擁有 start、finish、abort 與 cleanup，而不是再次加入另一套 jsPsych utility。
+因此，需求中的 10 個模組目前都已由 jsPsych 管理至少一層生命週期；Motor/Mouth 的 custom lifecycle plugin 已完成，但 component 仍自行建立 jsPsych run。下一個垂直切片必須把 component-owned run 移入 module setup/engine，避免以第二個 jsPsych instance 假裝完成 host migration。
 
-### 2.3 目前的 ownership 仍有反向依賴
+### 2.3 ownership 已收斂，保留相容 adapter
 
-雖然文件宣告 `training-modules` 是實作唯一來源，但多個 module 檔案仍反向 re-export `training-runtimes/*` 內容，例如：
+這一輪已把 module 的 canonical 實作與 category runtime adapter 分開；`training-modules` 不再 import 或 re-export `training-runtimes/*`。下列檔案曾是反向依賴的主要風險點，現在均已搬到 module-owned 實作，僅保留 runtime -> module 的單向相容匯出：
 
 - `training-modules/motor/utils/settings.ts`
 - `training-modules/vision/utils/pixiPool.ts`
@@ -89,20 +89,20 @@
 - `training-modules/brain/utils/trainingRecords.ts`
 - mouth / motor / vision 的 i18n、settings、records、sound 與部分 component adapter
 
-這使依賴實際變成循環概念：
+舊版依賴曾形成循環概念：
 
 ```text
 runtime shell -> training module -> runtime shell utility
 ```
 
-目標必須改成單向：
+目前依賴已收斂為單向：
 
 ```text
 Hub/official host -> module setup -> module engine
                   -> packages/ui / packages/training-contracts
 ```
 
-### 2.4 重型載入時機早於規則頁
+### 2.4 重型載入時機（基線問題與尚待切換範圍）
 
 目前有三個明確問題：
 
@@ -548,11 +548,10 @@ export interface ReviewedGameReleaseManifest {
 
 ### 5.3 CDN 策略
 
-Production asset resolver 的優先順序應是：
-
-1. 同源、版本化、由 R2/Pages 提供的 `/runtime-assets/{name}/{version}/{sha}/...`
-2. 平台控制的 asset domain，具固定 CORS、CORP、CSP allowlist 與 immutable cache
-3. 開發環境的本地 fallback
+Production asset resolver 只接受同源、版本化、由 R2/Pages route 提供的
+`/runtime-assets/{name}/{version}/{sha}/...`；開發環境若需要 fallback，也只能是
+同源 localhost 的本地 Pages asset，且必須明確以 `allowLocalFallback` opt-in（未指定時
+resolver 會依 localhost origin 自動判斷）。不得由 runtime 組合外部 asset domain 或第三方 CDN URL。
 
 不應有 production 第三方 public fallback。現有 `aiAssets.ts` 的 jsDelivr/Google fallback 與「平台不向外部服務傳送請求」目標衝突，也讓供應鏈與離線行為依賴第三方。
 
@@ -828,7 +827,7 @@ Steam 式平台可同時有兩個 tier；不應為了相同 UI，假裝它們具
 8. Dependabot 的 `package-ecosystem: npm` 是 GitHub 對 JavaScript registry 的名稱，可保留；但 lockfile/path 與 grouping 要驗證 pnpm。
 9. pnpm 11 的非 registry/auth project settings 以 `pnpm-workspace.yaml` 為準；不要同時在 `.npmrc` 重複 `nodeLinker` 等設定。
 10. `allowBuilds` 與 legacy `onlyBuiltDependencies` 選一份受測的 canonical policy；預設拒絕未核准 dependency install scripts。
-11. `.node-version`、`engines.node` 與 CI 對齊為 Node 22.23.2。現在工作 shell 是 Node 26 且沒有 pnpm/Corepack，不能拿此 shell 的結果當 migration 驗收。
+11. `.node-version`、`engines.node` 與 CI 對齊為 Node 22.23.2。`.node-version` 是版本單一來源，`scripts/check-pnpm-pcloud.mjs` 會驗證 root `engines.node` 為對應的 `>=22.23.2 <23` 範圍。若工作 shell 不是這個 pinned Node 版本，或 pCloud 的 pnpm store 正被其他程序鎖定，不能拿該 shell 的結果當 migration 驗收。
 12. 因此 repo 曾為無 symlink 環境設定特殊安裝模式，先保留 hoisted/copy 相容策略，並以 `dedupeInjectedDeps: false` 避免 injected workspace dependency 去重時退回 symlink；另在標準 Linux CI 加一個 dependency declaration audit，防止 hoist 掩蓋 undeclared dependency。
 13. 兩份 GitHub workflow 以 pinned commit SHA 的 `pnpm/action-setup` provision 11.24.0，再由 pinned `actions/setup-node` 讀 `.node-version` 並啟用 pnpm cache；隨後才跑 frozen install。Cloudflare Pages 正式部署沿用該 GitHub job build 完的 artifact + Wrangler，不讓 dashboard 再執行另一套 install；若保留 direct preview build，也必須使用相同 Node/pnpm pin 與 frozen lock。
 
@@ -872,24 +871,26 @@ pnpm run build:cloudflare
 ### Phase 2：單一 official-training-host
 
 - [x] 建立輕量 host：route、embedded protocol、locale、display settings、error boundary、fullscreen target。（目前 route 與 typed protocol 已完成；locale/display settings 仍由相容 runtime 提供。）
-- [ ] Hub/PWA shell 在 rules-visible 建立 fresh host iframe，透過 typed envelope 驅動 module run handle；離開後移除 document。（Hub overlay 已完成 fresh host iframe 與 legacy `prepare` 相容橋接；單一遊戲 PWA 與 module setup 尚未切換。）
+- [x] Hub shell 在 rules-visible 建立 fresh host iframe，透過 typed envelope 驅動 module run handle；離開後移除 document。（Hub overlay 已完成 fresh host iframe、legacy `prepare` 相容橋接，以及 10 個目標模組與 Every Ball 的 native setup host 切片。）
+- [ ] 單一遊戲 PWA 在 rules-visible 使用同一份 fresh host／typed envelope 並完成完整 browser lifecycle（目前仍待部署後驗收）。
 - [x] 建立 manifest capability -> Permissions-Policy/iframe allow/fullscreen/referrer 的中央 policy generator；官方與第三方 iframe component 分離。
-- [ ] Host 僅 dynamic import setup；entry graph 禁止所有 heavy packages。
+- [x] Host 僅 dynamic import setup；entry graph 禁止所有 heavy packages。（10 個目標模組與 Every Ball setup 已由 registry/factory 動態載入並通過 static heavy-import gate；其餘 brain legacy adapter 保留在相容 iframe 路徑。）
 - [x] 先用一個低風險 module 做 shadow route/parity。（全 catalog 目前先經相容橋接，尚未切除舊 runtime。）
-- [ ] 保留舊 `/runtimes/{trainer}/` deep link adapter，不立刻刪除。
-- [ ] 將 settings/records/i18n ownership 從 runtime 搬到 module 或 `packages/ui`，消除 module -> runtime re-export。
+- [x] 保留舊 `/runtimes/{trainer}/` deep link adapter，不立刻刪除（`BuildLegacyTrainingModuleHref` 僅供 official host 相容橋接；不得成為新入口）。
+- [x] 將 settings/records/i18n ownership 從 runtime 搬到 module 或 `packages/ui`，消除 module -> runtime re-export。四類 module 現在保有 canonical settings/records/i18n/asset helpers，category runtime 僅透過 `@rehab-trainer/hub-modules/*` 相容匯出；shared shell 元件仍放 `packages/ui`。
 
 驗收：依賴圖只有 `host -> module -> contracts/ui`；module source 不再引用 `training-runtimes`；host entry 不含 `initJsPsych` 且連續兩局的 `Window/jsPsych/renderer` identity 全部不同；未宣告 camera/microphone/fullscreen 的 iframe browser test 均被拒絕。
 
 ### Phase 3：Rules-visible loading boundary
 
-- 本輪已先完成 Vision vertical slice：`CreateSingleFlightPreloadCache` 將同一 module 的 rules-visible preload 合併為單一 promise，離開/換模組時以 `AbortController` 清理 Pixi warmup；WebGazer script loader 也支援 abort 與 script node cleanup。四個 Vite runtime 現在輸出 `.vite/manifest.json`，Hub build 會執行 `check-runtime-build-manifest.mjs`，驗證 root entry 的 static closure 不含 heavy chunk。這些是 boundary 的可驗收基礎，尚未代表所有 module 都已改成 `loadEngine.ts` 的完整 setup/engine 物理切分，也尚未完成瀏覽器 network test。
+- 本輪已先完成 Vision vertical slice：`CreateSingleFlightPreloadCache` 將同一 module 的 rules-visible preload 合併為單一 promise，離開/換模組時以 `AbortController` 清理 Pixi warmup；WebGazer script loader 也支援 abort 與 script node cleanup。四個 Vite runtime 現在輸出 `.vite/manifest.json`，Hub build 會執行 `check-runtime-build-manifest.mjs`，驗證 root entry 的 static closure 不含 heavy chunk。10 個目標模組與 Every Ball 已建立 module-owned setup/engine boundary；仍有 component 內部的 jsPsych 實例與 brain legacy adapter 待後續收斂，且尚未完成瀏覽器 network test。
 
-- [ ] 每個遊戲拆成 manifest/config/rules/setup 與 engine 兩個 chunk boundary。
+- [x] 每個遊戲拆成 manifest/config/rules/setup 與 engine 兩個 chunk boundary。（Vision moving/oculomotor/gabor/reading、Brain UFOV/Every Ball、Motor drawing/asteroid/gesture/motor-cortex 與 Mouth Tongue Catch 已完成 setup factory + engine boundary；單一 PWA browser boundary 尚待部署驗收。）
 - [x] Selection card 的 hover/focus/touch 不再觸發 runtime preload；card 只負責圖片與 setup UI。
-- [x] 現有 Vision config 在 rules-visible transition 才以單一 promise 觸發 engine preload（正式 module `loadEngine({ trigger: 'rules-visible' })` 邊界仍待 Phase 3 vertical slice）。
-- [ ] 返回/離開用 AbortController；重複開關規則不得建立第二份 engine。
-- [ ] 加入 build-manifest assertion 與 Playwright network test：規則前不得請求 heavy chunks/models。
+- [x] 現有 Vision/UFOV config 在 rules-visible transition 才以單一 promise 觸發 engine preload（正式 module `loadEngine({ trigger: 'rules-visible' })` 已由 shared setup factory 實作；其餘 legacy module 仍待切換）。
+- [x] 返回/離開用 AbortController；重複開關規則不得建立第二份 engine（`CreateSingleFlightPreloadCache` 擁有每次 preload 的 controller，rules cleanup/模組切換會 clear/dispose；跨頁完整瀏覽器驗收仍待執行）。
+- [x] 加入 build-manifest assertion：規則前不得把 heavy chunks/models 放入 root static closure。（Hub build 會執行 `check-runtime-build-manifest.mjs`、`check-bundle-budgets.mjs --require-output` 與 `check-native-setup-types.mjs`；CI 的 source gate 由 `test:bundle-budgets` 執行。）
+- [ ] 執行 Playwright network test：規則前不得請求 heavy chunks/models。（`scripts/check-official-game-pwa-browser.mjs` 已提供部署後 network gate，但目前環境沒有 Playwright/browser，尚待部署執行。）
 - [x] camera/microphone preflight 後立即 stop；實際 stream 只在 trial start 存活（共用 preflight 與 `test:media-lifecycle`）。
 
 驗收：除使用者明確發起、只寫 cache 的 offline pack download 外，10 個目標遊戲在 card/config 階段都沒有 jsPsych/Pixi/Three/MediaPipe/TF/WebGazer network request、module execution 或 instance。
@@ -901,8 +902,8 @@ pnpm run build:cloudflare
 - [x] 先轉 `drawing-defense`，建立可複用但不持有 renderer state 的 plugin scaffold（Pixi/input/game state 仍由 module component 擁有）。
 - [x] 依序轉 `gesture-battler`、`motor-cortex-rehab`、`asteroid-shield`。
 - [x] 最後轉 `tongue-catch`，特別驗證 TF tensor/classifier、MediaPipe 與 stream cleanup。
-- [ ] 保留 Vision 四遊戲與 UFOV native timeline，改用統一 contract/summarizer。
-- [ ] Hart/Driving 標為本輪 exempt；不得成為新遊戲範本。
+- [x] 保留 Vision 四遊戲與 UFOV native timeline，改用統一 contract/summarizer。（Vision 四遊戲與 UFOV 均由 module-owned setup/engine 產生統一 `TrainingRunResult`，並由紀錄層驗證保存；Hart/Driving 仍依 exemption。）
+- [x] Hart/Driving 標為本輪 exempt；不得成為新遊戲範本（flow manifest 有明確 `hart-chart`／`driving-simulation` exemption metadata，且架構測試鎖定）。
 - [x] 將目前 token-presence test 升級成 lifecycle 行為測試：start/finish/abort/unmount/error/dispose（native plugin start/error/stale 與 adapter finish/abort/dispose）。
 - [x] custom plugin 實作 data-only simulation，讓 trial/result schema 可在 CI 快速驗證（不啟動 renderer、模型或媒體；fixture identity 由共用 helper 覆寫並鎖定）。
 
@@ -916,49 +917,50 @@ pnpm run build:cloudflare
 - [x] 新增離線下載、進度、容量、完整性、更新與移除 UI（共用 `OfflinePackControl` 僅在使用者按下離線下載時讀取 `latest.json`，並交由 origin-wide `OfflinePackManager` 驗證與安裝）。
 - [x] 將 public CDN fallback 從 production resolver 移除（只保留平台控制的同源/版本化資產路徑）。
 - [x] 內建 Drawing Defense 不再由瀏覽器自動上傳筆跡影像或參與者識別資料；以 `test:training-privacy` 鎖定無外傳 API 的回歸邊界。
-- [x] 把 WebGazer/MediaPipe/model 資產移至平台控制的 immutable version path（同源 `/runtime-assets/*` 唯讀 route + R2 manifest；外部 asset base 僅作受控 fallback）。
-- [x] Hub build 在產生官方 PWA 後執行產物完整性 gate（同源資源、manifest／Service Worker scope、offline closure SHA-256、R2 runtime asset descriptor 與 immutable/latest 一致性）。
-- [ ] 針對 fresh install -> airplane mode 做每遊戲 browser test。
-- [ ] 驗證舊 offline cache migration，不要誤刪其他遊戲 scope。
+- [x] 把 WebGazer/MediaPipe/model 資產移至平台控制的 immutable version path（同源 `/runtime-assets/*` 唯讀 route + R2 manifest；production resolver 不接受外部 asset base，`AI_ASSET_BASE_URL` 僅供 R2 驗證／部署工具）。
+- [x] Hub build 在產生官方 PWA 後執行產物完整性 gate（同源資源、manifest／Service Worker scope、offline closure SHA-256、R2 runtime asset descriptor 與 immutable/latest 一致性）；Service Worker 安裝期不請求 offline manifest，只有明確下載訊息才會 staged 驗證並快取，fetch cache 也限制在遊戲 scope 與平台資產 prefix。
+- [ ] 針對 fresh install -> airplane mode 做每遊戲 browser test。（`scripts/check-official-game-pwa-browser.mjs` 支援 `OFFICIAL_GAME_PWA_GAME_IDS` 逗號清單，會對每個 scope 驗證 Service Worker 啟用、明確下載並完成離線包交易，再以同一 profile 斷網開新頁確認遊戲可啟動；仍需在具瀏覽器的 CI/驗收環境逐一執行並保留離線結果。）
+- [x] 驗證舊 offline cache migration，不要誤刪其他遊戲 scope（`MigrateLegacyOfflineCache` 只接受明確的 v0 cache + manifest，並以契約測試確認不會刪除其他 scope；fresh-install/airplane browser test 仍待部署環境驗收）。
 
 驗收：Hub 首訪不再 precache 全部遊戲；已標示「離線可用」的單一遊戲可在全新離線 session 啟動並完成/儲存當次紀錄；移除 A 不會刪除仍被 B 引用的共用 asset。
 
 ### Phase 6：非同步 game validator
 
-目前 intake 會在 quarantine 後以同一個 batch 寫入 submission、scan run、finding 與 audit provenance；同步 scanner 仍是 request 內的第一道 fail-fast，尚未接上真正的 queue/controller/executor，因此不可把現行結果宣稱為完整 malware CI。
+目前 intake 會在 quarantine 後以同一個 batch 寫入 submission、scan run、finding 與 audit provenance；同步 scanner 仍是 request 內的第一道 fail-fast。已補上 bounded queue/result envelope、controller attestation 驗證、報告 ledger 與 CAS 套用介面；正式 Queue/controller/executor 的部署綁定仍未啟用，因此不可把同步結果宣稱為完整 malware CI。
 
 - [x] 新增 additive D1 migration，拆開 submission、scan run、review request、release；目前仍保留舊同步 release flow 作相容遷移層。
-- [ ] Hub intake 寫 quarantine 與 enqueue；request 不等待完整 CI。
-- [ ] 建立可信 controller 與無 secret、無 Internet、有限資源的 disposable executor；只有 controller 持有專用 attestation key。
-- [ ] 加入 parser/AST、malware signature、framework contract 與 dynamic smoke。
-- [ ] scan report 綁 job ID/attempt/nonce/expiry/artifact hash/policy/tool versions，由 controller attestation 後透過 result queue 回 Hub。
-- [ ] 所有 queue job 以 unique key + compare-and-set 保持 idempotent；timeout/infra failure 可安全 retry，stale/replayed report 不改狀態。
+- [x] Hub intake 寫 quarantine 與 enqueue；request 不等待完整 CI（未設定 Queue binding 時維持同步 fail-fast，設定後回傳 `202`；正式 controller/executor 部署仍是環境工作）。
+- [ ] 建立可信 controller 與無 secret、無 Internet、有限資源的 disposable executor；只有 controller 持有專用 attestation key（已加入 read-only controller、bounded disposable-executor contract 與 Ed25519 signer library；正式隔離 Worker/VM、資源限制與部署 attestation key 仍待環境接線）。
+- [x] 加入 JavaScript parser/AST 結構檢查、high-signal malware signature corpus 與 framework contract（`acorn` pinned static pass、syntax/dynamic import findings）；dynamic smoke executor 仍待隔離部署。
+- [x] scan report 綁 job ID/attempt/nonce/expiry/artifact hash/policy/tool versions；Hub 已提供 controller attestation、bounded result envelope 與一次性 ledger/CAS consumer，正式 controller/result queue 部署仍待環境接線。
+- [x] 所有 queue job 以 unique key + compare-and-set 保持 idempotent；timeout/infra failure 會標記可重試的 failed 狀態，stale/replayed report 不改狀態（實際 queue retry/backoff 仍由 controller deployment 提供）。
 - [x] 保留現有同步 scanner 作第一道 fail-fast，不把它稱為完整 security boundary；新增獨立狀態 contract/gate 防止 hard-block 被發布。
 
 驗收：惡意 fixture 無法連網、讀到 secret 或寫 release bucket；相同 job 重送不會產生兩份 release/status transition。
 
 ### Phase 7：Developer/Admin workflow
 
-目前已完成 finding 詳細列表、eligible manual-review request、管理員 validation queue 與三項 evidence 操作；同一 target semver 的多次未發布 attempts、完整 source diff/dynamic report、通知與 retention/reconciliation 仍待後續切片。
+目前已完成 finding 詳細列表、eligible manual-review request、管理員 validation queue、三項 evidence、source viewer、bounded source/inventory diff、attested dynamic report、通知、bounded retention/reconciliation endpoint 與 public report moderation；scheduler 綁定與 publisher profile 仍待後續切片。
 
 - [x] Developer 顯示 finding 細節、沿用上傳入口修正重送，並提供 eligible manual review request。
-- [ ] 將修正版重送升級為明確的 attempt/history UI，避免同一 target semver 與舊 evidence 混用。
-- [ ] 同一 target semver 支援多個未發布 attempts；公開版本仍 immutable unique。
+- [x] 將修正版重送升級為明確的 attempt/history UI，避免同一 target semver 與舊 evidence 混用。
+- [x] 同一 target semver 支援多個未發布 attempts；公開版本仍 immutable unique。
 - [x] Admin 顯示送審原始檔下載、scan provenance、validation queue 與 evidence checklist。
-- [ ] 補上 source diff/dynamic report；server 端已禁止 hard-block approve，manual-review request/decision 已寫 audit，仍需逐 finding override evidence。
-- [ ] 增加 request-changes/reject/revoke 通知與 retention/reconciliation job。
-- [ ] 公開 catalog 加第三方標示、publisher profile、license、檢舉/下架入口與法規文案 gate。
+- [x] 補上 source viewer、同一 target semver 的 bounded source/inventory diff 與 controller dynamic report；內容以純文字呈現、network attempts 綁 attested report，server 端已禁止 hard-block approve，manual-review request/decision 與逐 finding override evidence 已寫 audit／D1。diff 對大型/二進位檔只回 hash，不執行 HTML。
+- [x] 增加 request-changes/reject/revoke 通知與 retention/reconciliation library/endpoint（通知資料表、寫入與開發者讀取、protected-state cleanup、bounded orphan R2 inventory pass 已完成；正式 scheduler 綁定仍待部署）。
+- [x] 公開 catalog 加第三方／社群標示、`client_reported` 信任說明、共用 license metadata、檢舉與管理員處理入口及公開 metadata/法規文案 gate；publisher profile 與逐行 source diff 仍待後續切片。
 
 驗收：開發者能完成「被判定 -> 看懂原因 -> 修正重送」或「說明誤判 -> 人工審查」閉環；任何 artifact 改變都使舊 scan/review evidence 失效。
 
 ### Phase 8：切換與刪除 category runtimes
 
-- [ ] 全 catalog launch URL 切到 official host。
+- [x] 全 catalog launch URL 切到 official host（Hub lobby/overlay 與 progress deep link 均透過 `/train` 或 registry 產生的 `/official-training-host/{domain}/{slug}/`；`/runtimes/*` 僅保留相容 adapter）。
 - [x] official per-game PWA 改由 module-owned flow manifest 的 runtime asset groups + Vite manifest dependency closure 生成；AI/WASM/WebGazer/3D 資產以同源 hash descriptor 納入 offline manifest。
-- [ ] 驗證 Hub overlay、單一 PWA、deep link、歷史紀錄與 storage migration。
-- [ ] 更新所有 scripts、R2 asset source path、browser tests 與文件。
+- [x] 建立 Hub overlay、單一 PWA、deep link、歷史紀錄與 storage migration 的靜態整合契約（`test:training-integration`）。
+- [ ] 在部署環境驗證上述流程的真實 browser 行為（官方 PWA browser gate 可用 `OFFICIAL_GAME_PWA_GAME_IDS` 涵蓋多個 fresh page／Service Worker／offline shell；真實 Hub overlay、deep link、歷史紀錄與 storage migration 仍待執行）。
+- [ ] 更新所有 scripts、R2 asset source path、browser tests 與文件。（PWA/整合/離線與 deployment-only browser scripts、R2 manifest checks、部署文件已同步；category runtime asset source 與實際 browser/部署驗收仍隨 runtime roots 切除處理。）
 - [ ] 保留必要 301/route adapter 後刪除四個 `training-runtimes/{trainer}` build roots。
-- [ ] 不重新建立已退役的 trainer hostname、manifest、canonical 或 sitemap。
+- [x] 不重新建立已退役的 trainer hostname、manifest、canonical 或 sitemap（僅保留明確 301 redirect、migration 與部署清理測試；架構 gate 會阻擋新的公開入口）。
 
 驗收：build 不再 loop 四個 trainer；刪除任一類別 shell 不影響其他 module，且所有正式遊戲仍可獨立安裝/執行。
 
@@ -986,17 +988,18 @@ pnpm run build:hub
 新增 gates：
 
 - `test:training-contracts`：manifest/schema/registry/transition/property tests
-- `test:training-protocol`：iframe handshake、command correlation/timeout/replay、所有 async state abort/fail/dispose、capability permission denial
+- `test:training-integration`：catalog、official host、單一遊戲 PWA、進度 deep link 與 storage migration 的靜態整合契約
+- `test:training-protocol`：iframe handshake、command correlation/timeout/replay、所有 async state abort/fail/dispose、capability permission denial（已成為 root script，並由 CI matrix 執行）
 - `test:heavy-load-boundary`：card/config/rules preload 邊界與 host entry heavy-import 靜態 gate
 - `test:media-lifecycle`：共用 media permission preflight 與實際 stream start/stop 邊界
-- `test:training-lifecycle`：native drawing scaffold 與既有 adapter 的 start/abort/finish/dispose 行為；其餘 module 行為測試隨 native conversion 逐步擴充
+- `test:training-lifecycle`：五個 custom native plugin、既有 adapter 與 shared component training engine 的 start/abort/finish/dispose 行為；component setup 的型別、heavy-import 與 host callback 邊界由 `test:training-contracts` 與 `test:heavy-load-boundary` 鎖定
 - `test:training-privacy`：內建訓練不得從瀏覽器自動上傳筆跡、影像或參與者識別資料
 - `test:heavy-load-boundary`：規則前 network/import graph 不含 heavy dependency
 - `test:runtime-build-manifest`：每個 Vite runtime 的 root static closure、dynamic entry 與 asset path
-- `test:bundle-budgets`：entry、setup、engine、asset closure 與 root precache budget
-- `test:offline-packs`：fresh-cache offline browser、shared-asset reference/GC、concurrent install/remove
+- `test:bundle-budgets`：entry、setup、engine、asset closure 與 root precache budget（`scripts/check-bundle-budgets.mjs` 先驗證 source contract；有 build output 時可用 `--require-output` 加強）
+- `test:offline-packs`：fresh-cache offline browser、shared-asset reference/GC、concurrent install/remove（靜態 manager/asset gate 已可在 CI 執行；browser 部分仍由部署 gate 執行）
 - `test:game-validator`：malicious corpus、false-positive corpus、idempotency、nonce/replay/attestation、no-egress
-- `test:game-review-security`：source viewer escaping/nosniff、Hub origin 不執行 quarantine、review profile 無 credential
+- `test:game-review-security`：source viewer escaping/nosniff、Hub origin 不執行 quarantine、review profile 無 credential（已成為 root script，並由 CI matrix 執行）
 - `test:pnpm-policy`：frozen lock、workspace protocol、approved build scripts、undeclared dependency
 - `test:architecture`：module/runtime ownership、jsPsych lifecycle 宣告、official/third-party iframe policy、PWA scope、game validation 狀態軸與 pCloud 安裝不變量
 

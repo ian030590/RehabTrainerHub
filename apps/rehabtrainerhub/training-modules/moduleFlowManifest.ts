@@ -25,6 +25,8 @@ export type TrainingJsPsychLifecycle =
   | 'native-timeline'
   | 'external-runtime-adapter';
 
+export type TrainingLifecycleExemption = 'hart-chart' | 'driving-simulation';
+
 /**
  * Build-time asset groups owned by a module. The group is deliberately a
  * stable capability name rather than an URL: the platform asset manifest is
@@ -43,6 +45,7 @@ export interface TrainingModuleFlowManifestEntry {
   purposeId: string;
   flow: readonly TrainingFlowStep[];
   jsPsychLifecycle: TrainingJsPsychLifecycle;
+  lifecycleExemption?: TrainingLifecycleExemption;
   mediaPermission: TrainingMediaPermission;
   runtimeAssetGroups: readonly TrainingRuntimeAssetGroup[];
   sourcePath: string;
@@ -116,6 +119,7 @@ const manifestEntries: ReadonlyArray<readonly [
   sourcePath: string,
   mediaPermission?: TrainingMediaPermission,
   jsPsychLifecycle?: TrainingJsPsychLifecycle,
+  lifecycleExemption?: TrainingLifecycleExemption,
 ]> = [
   ['motor:drawing-defense', 'motor/pages/training/DrawingTowerDefenseGame.tsx', 'none', 'native-timeline'],
   ['motor:asteroid-shield', 'motor/pages/training/AsteroidShieldGame.tsx', 'camera-optional', 'native-timeline'],
@@ -125,8 +129,8 @@ const manifestEntries: ReadonlyArray<readonly [
   ['vision:oculomotor-training', 'vision/experiment/plugins/pixi-oculomotor-training.ts', 'camera-optional', 'native-timeline'],
   ['vision:gabor-patching', 'vision/experiment/plugins/pixi-gabor-patching.ts', 'none', 'native-timeline'],
   ['vision:reading-training', 'vision/experiment/plugins/pixi-reading-training.ts', 'none', 'native-timeline'],
-  ['vision:driving-rehab', 'vision/experiment/plugins/three-driving-rehab.ts', 'none', 'native-timeline'],
-  ['vision:hart-chart', 'vision/pages/training/HartChartPage.tsx', 'none', 'external-runtime-adapter'],
+  ['vision:driving-rehab', 'vision/experiment/plugins/three-driving-rehab.ts', 'none', 'native-timeline', 'driving-simulation'],
+  ['vision:hart-chart', 'vision/pages/training/HartChartPage.tsx', 'none', 'external-runtime-adapter', 'hart-chart'],
   ['brain:ufov', 'brain/pages/PeripheralAttentionPage.tsx', 'none', 'native-timeline'],
   ['brain:every-ball-response', 'brain/pages/EveryBallResponsePage.tsx', 'camera-or-microphone', 'native-timeline'],
   ['brain:minesweeper', 'brain/pages/thinking/MinesweeperGame.tsx', 'none', 'external-runtime-adapter'],
@@ -144,12 +148,14 @@ export const trainingModuleFlowManifest: Readonly<Record<
   sourcePath,
   mediaPermission = 'none',
   jsPsychLifecycle = 'external-runtime-adapter',
+  lifecycleExemption = undefined,
 ]) => [
   catalogId,
   {
     purposeId: purposeByCatalogId[catalogId],
     flow: standardTrainingFlow,
     jsPsychLifecycle,
+    ...(lifecycleExemption ? { lifecycleExemption } : {}),
     mediaPermission,
     runtimeAssetGroups: Object.freeze([...(runtimeAssetGroupsByCatalogId[catalogId] ?? [])]),
     sourcePath,

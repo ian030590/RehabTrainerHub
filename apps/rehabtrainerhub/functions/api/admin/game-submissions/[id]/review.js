@@ -10,10 +10,13 @@ import {
   GetAuthenticatedUser,
 } from '../../../../_lib/authorization.js';
 import { ReadJsonBody } from '../../../../_lib/request.js';
+import { CreateGamePlatformNotificationStatement } from '../../../../_lib/gameNotifications.js';
 
 const maximumBodyBytes = 16 * 1024;
 const maximumNoteLength = 2_000;
 const decisions = Object.freeze(['approve', 'reject', 'request-changes']);
+const maximumOverrides = 50;
+const maximumOverrideReasonLength = 2_000;
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);
@@ -42,6 +45,8 @@ export async function onRequestPut({ request, env, params }) {
       playTested: body.value?.playTested === true,
       metadataReviewed: body.value?.metadataReviewed === true,
     };
+    const overrides = NormalizeOverrides(body.value?.overrides);
+    if (overrides === null) return ErrorResponse(request, env, 'Invalid finding override evidence.', 400);
     if (!decisions.includes(decision) || note === null) {
       return ErrorResponse(request, env, 'Invalid review decision.', 400);
     }
@@ -57,6 +62,24 @@ export async function onRequestPut({ request, env, params }) {
 
     if (decision === 'approve' && (review.scan_status !== 'passed' || review.hard_block_count > 0)) {
       return ErrorResponse(request, env, 'A hard-blocked or unpassed scan cannot be approved.', 409);
+    }
+
+    const findings = await ReadFindings(db, review.scan_run_id);
+    const eligibleFindings = findings.filter((finding) => (
+      finding.disposition === 'fix-or-manual-review'
+      || finding.disposition === 'manual-review'
+    ));
+    if (decision === 'approve') {
+      const overrideIds = new Set(overrides.map((override) => override.findingId));
+      if (overrides.length !== eligibleFindings.length
+        || eligibleFindings.some((finding) => !overrideIds.has(finding.id))) {
+        return ErrorResponse(request, env, 'Every eligible finding requires explicit override evidence before approval.', 400);
+      }
+      if (overrides.some((override) => !eligibleFindings.some((finding) => finding.id === override.findingId))) {
+        return ErrorResponse(request, env, 'Hard-block or unknown findings cannot be overridden.', 400);
+      }
+    } else if (overrides.some((override) => !findings.some((finding) => finding.id === override.findingId))) {
+      return ErrorResponse(request, env, 'Override evidence references an unknown finding.', 400);
     }
 
     const nextStatus = decision === 'approve'
@@ -80,18 +103,56 @@ export async function onRequestPut({ request, env, params }) {
       return ErrorResponse(request, env, 'The review request changed while it was being processed.', 409);
     }
 
+    const statements = [];
+    if (overrides.length > 0) {
+      overrides.forEach((override) => {
+        const finding = findings.find((candidate) => candidate.id === override.findingId);
+        if (!finding || finding.disposition === 'hard-block') return;
+        statements.push(db
+          .prepare(`
+            INSERT INTO game_validation_overrides (
+              id, submission_id, scan_run_id, review_request_id, finding_id,
+              reviewer_user_id, decision, reason, evidence_json, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `)
+          .bind(
+            crypto.randomUUID(),
+            submissionId,
+            review.scan_run_id,
+            review.id,
+            finding.id,
+            user.id,
+            override.decision,
+            override.reason,
+            JSON.stringify({ evidence: override.evidence }),
+            now,
+          ));
+      });
+    }
+    if (nextStatus === 'changes_requested' || nextStatus === 'rejected') {
+      statements.push(CreateGamePlatformNotificationStatement(db, {
+        recipientUserId: review.owner_user_id,
+        gameId: review.game_id,
+        submissionId,
+        kind: nextStatus === 'changes_requested' ? 'request-changes' : 'rejected',
+        payload: { note: note || null, reviewRequestId: review.id },
+        createdAt: now,
+      }));
+    }
+    statements.push(CreateAdminAuditStatement(db, {
+      actorUserId: user.id,
+      action: `admin_game_submission.${nextStatus}`,
+      targetType: 'game_submission',
+      targetId: submissionId,
+      metadata: {
+        evidence,
+        overrides: overrides.map((override) => override.findingId),
+        reviewRequestId: review.id,
+        scanRunId: review.scan_run_id,
+      },
+    }));
     await db.batch([
-      CreateAdminAuditStatement(db, {
-        actorUserId: user.id,
-        action: `admin_game_submission.${nextStatus}`,
-        targetType: 'game_submission',
-        targetId: submissionId,
-        metadata: {
-          evidence,
-          reviewRequestId: review.id,
-          scanRunId: review.scan_run_id,
-        },
-      }),
+      ...statements,
     ]);
 
     return JsonResponse(request, env, {
@@ -100,6 +161,7 @@ export async function onRequestPut({ request, env, params }) {
         submissionId,
         status: nextStatus,
         reviewedAt: now,
+        overrideFindingIds: overrides.map((override) => override.findingId),
       },
     });
   } catch (error) {
@@ -114,6 +176,8 @@ async function ReadLatestReview(db, submissionId) {
       SELECT
         review.id,
         review.scan_run_id,
+        submission.owner_user_id,
+        submission.game_id,
         review.status AS review_status,
         scan.status AS scan_status,
         (
@@ -123,6 +187,7 @@ async function ReadLatestReview(db, submissionId) {
             AND finding.disposition = 'hard-block'
         ) AS hard_block_count
       FROM game_review_requests AS review
+      INNER JOIN game_submissions AS submission ON submission.id = review.submission_id
       INNER JOIN game_scan_runs AS scan ON scan.id = review.scan_run_id
       WHERE review.submission_id = ?
       ORDER BY review.updated_at DESC
@@ -147,4 +212,36 @@ function NormalizeNote(value) {
     && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(note)
     ? note
     : null;
+}
+
+async function ReadFindings(db, scanRunId) {
+  const result = await db
+    .prepare(`
+      SELECT id, disposition
+      FROM game_validation_findings
+      WHERE scan_run_id = ?
+      ORDER BY id
+      LIMIT 200
+    `)
+    .bind(scanRunId)
+    .all();
+  return result.results || [];
+}
+
+function NormalizeOverrides(value) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > maximumOverrides) return null;
+  const overrides = value.map((item) => {
+    if (!item || typeof item !== 'object') return null;
+    const findingId = NormalizeIdentifier(item.findingId);
+    const decision = String(item.decision || '').trim();
+    const reason = NormalizeNote(item.reason);
+    const evidence = NormalizeNote(item.evidence);
+    if (!findingId || !['accept', 'dismiss'].includes(decision) || reason === null || evidence === null) return null;
+    if (reason.length > maximumOverrideReasonLength || evidence.length > maximumOverrideReasonLength) return null;
+    return { findingId, decision, reason, evidence };
+  });
+  if (overrides.some((override) => !override)) return null;
+  const ids = overrides.map((override) => override.findingId);
+  return new Set(ids).size === ids.length ? overrides : null;
 }

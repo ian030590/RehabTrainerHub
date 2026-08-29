@@ -172,6 +172,7 @@ test('approval fences the public release pointer with conditional R2 writes', as
   assert.equal(manifestWrites.length, 2);
   assert.deepEqual(manifestWrites[0].options.onlyIf, { etagDoesNotMatch: '*' });
   assert.equal(manifestWrites[0].manifest.status, 'staging');
+  assert.equal(manifestWrites[0].manifest.license.id, 'MIT');
   assert.deepEqual(manifestWrites[1].options.onlyIf, { etagMatches: 'staging-etag' });
   assert.equal(manifestWrites[1].manifest.status, 'approved');
   const publicMetadataUpdate = approvalDb.lastBatch.find((statement) => (
@@ -183,6 +184,38 @@ test('approval fences the public release pointer with conditional R2 writes', as
     'A reviewed summary.',
     'attention',
   ]);
+});
+
+test('approval cannot publish while the latest validator scan is still processing', async () => {
+  const fileBytes = new TextEncoder().encode('<!doctype html><title>Reviewed</title>');
+  const fileSha256 = await Sha256Hex(fileBytes);
+  const approvalDb = CreateApprovalDb({ fileBytes, fileSha256, scanStatus: 'queued' });
+  const response = await reviewRelease({
+    request: AuthorizedRequest(
+      'https://trainerhub.cc/api/admin/game-releases/release-1',
+      tokens['admin-1'],
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          decision: 'approve',
+          note: 'Reviewed in the isolated profile.',
+          sourceReviewed: true,
+          playTested: true,
+          metadataReviewed: true,
+        }),
+      },
+    ),
+    env: {
+      AUTH_SESSION_SECRET: secret,
+      GAME_QUARANTINE_BUCKET: { async get() { return null; } },
+      GAME_RELEASE_BUCKET: { async get() { return null; }, async put() { return null; } },
+      REHAB_DB: approvalDb,
+    },
+    params: { id: 'release-1' },
+  });
+  assert.equal(response.status, 409);
+  assert.equal(approvalDb.lastBatch.length, 0);
 });
 
 test('a stale publisher cannot overwrite a release pointer changed by revoke or retry', async () => {
@@ -355,7 +388,7 @@ function AuthorizedRequest(url, token, init = {}) {
   return new Request(url, { ...init, headers });
 }
 
-function CreateApprovalDb({ batchChanges = [1, 1, 1], fileBytes, fileSha256 }) {
+function CreateApprovalDb({ batchChanges = [1, 1, 1], fileBytes, fileSha256, scanStatus = 'passed' }) {
   const release = {
     id: 'release-1',
     game_id: 'game-1',
@@ -370,9 +403,14 @@ function CreateApprovalDb({ batchChanges = [1, 1, 1], fileBytes, fileSha256 }) {
     summary: 'A reviewed summary.',
     category: 'attention',
     content_sha256: 'b'.repeat(64),
+    submission_id: 'submission-1',
+    scan_status: scanStatus,
+    scan_attempt: 1,
+    validation_hard_block_count: 0,
     file_count: 1,
     entry_path: 'index.html',
     capabilities_json: '[]',
+    license_id: 'MIT',
   };
   const db = {
     lastBatch: [],
@@ -470,6 +508,7 @@ function CreateRevocationDb() {
                   summary: '',
                   category: 'general',
                   content_sha256: 'a'.repeat(64),
+                  license_id: 'MIT',
                 };
               }
               return bound.first?.() ?? null;

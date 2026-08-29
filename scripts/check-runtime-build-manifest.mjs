@@ -27,6 +27,20 @@ for (const trainer of trainers) {
     assert.ok(!IsHeavyChunk(key, chunk), `${trainer}: root entry statically imports heavy chunk ${key}.`);
   }
 
+  // Keep the assertion source-aware as well as filename-aware. Vite may
+  // change a chunk's generated name, but a package source path still tells us
+  // whether a future refactor accidentally moves a heavy dependency into the
+  // root entry. This protects the rules-visible loading boundary from hash
+  // renames and minifier changes.
+  for (const [key, chunk] of Object.entries(manifest)) {
+    if (!IsHeavySource(key, chunk)) continue;
+    assert.equal(
+      staticClosure.has(key),
+      false,
+      `${trainer}: heavy source ${key} must stay outside the root static closure.`,
+    );
+  }
+
   for (const dynamicKey of entry.dynamicImports) {
     const dynamicEntry = manifest[dynamicKey];
     assert.ok(dynamicEntry?.isDynamicEntry, `${trainer}: ${dynamicKey} must be a dynamic entry.`);
@@ -61,6 +75,11 @@ function CollectStaticClosure(manifest, rootKey) {
 
 function IsHeavyChunk(key, chunk) {
   return heavyChunkPattern.test(key) || heavyChunkPattern.test(chunk?.file ?? '') || heavyChunkPattern.test(chunk?.name ?? '');
+}
+
+function IsHeavySource(key, chunk) {
+  return /(?:node_modules[\\/]?(?:jspsych|pixi\.js|three|@mediapipe|@tensorflow|webgazer)|training-modules[\\/].*(?:experiment|pages[\\/].*Training))/i
+    .test(`${key} ${chunk?.src ?? ''}`);
 }
 
 function AssertSafeAssetReference(trainerRoot, trainer, key, file) {

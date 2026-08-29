@@ -94,6 +94,9 @@ importers:
 
   apps/rehabtrainerhub:
     dependencies:
+      acorn:
+        specifier: 8.18.0
+        version: 8.18.0
       '@rehab-trainer/training-contracts':
         specifier: workspace:*
         version: file:packages/training-contracts

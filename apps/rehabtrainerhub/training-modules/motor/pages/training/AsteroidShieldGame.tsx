@@ -52,18 +52,41 @@ import { AsteroidShieldPlugin } from '../../experiment/plugins/asteroid-shield-l
 import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
+import {
+  asteroidShieldDefaults,
+  asteroidShieldDurationOptions,
+  asteroidShieldHpOptions,
+  asteroidShieldSizeOptions,
+  asteroidShieldHandChoiceOptions,
+  type AsteroidShieldConfig,
+  type AsteroidShieldControlMode,
+  type AsteroidShieldDifficulty,
+  type AsteroidShieldHandChoice,
+} from '../../asteroid-shield/config';
 
-type DifficultyId = 'beginner' | 'intermediate' | 'advanced';
+type DifficultyId = AsteroidShieldDifficulty;
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
 type GameResult = 'Victory' | 'Defeat';
-type HandChoice = 'any' | 'left' | 'right';
+type HandChoice = AsteroidShieldHandChoice;
 type ThreatKind = 'normal' | 'heavy' | 'lethal' | 'energy';
 type ThreatOutcome = 'shielded' | 'hit' | 'collected' | 'missed';
-type ControlMode = 'mouse' | 'mediapipe';
+type ControlMode = AsteroidShieldControlMode;
 type ControlSource = ControlMode;
 
-interface AsteroidShieldGameProps {
+export interface AsteroidShieldHostControl {
+  autoStart?: boolean;
+  config?: Readonly<AsteroidShieldConfig>;
+  onStarted?(): void;
+  onCompleted?(result: AsteroidShieldSessionRecord): void;
+  onAborted?(): void;
+  registerControls?(controls: { pause(): void; resume(): void } | null): void;
+  signal?: AbortSignal;
+  skipUserGuard?: boolean;
+}
+
+export interface AsteroidShieldGameProps {
   onExit: () => void;
+  hostControl?: AsteroidShieldHostControl;
 }
 
 interface DifficultyDefinition {
@@ -150,7 +173,7 @@ interface ThreatRecord {
   Control_Source: ControlSource;
 }
 
-interface SessionRecord {
+export interface AsteroidShieldSessionRecord {
   Test_Date: string;
   Participant_ID: string;
   Difficulty: DifficultyId;
@@ -171,6 +194,8 @@ interface SessionRecord {
   Object_Records: ThreatRecord[];
 }
 
+type SessionRecord = AsteroidShieldSessionRecord;
+
 interface HandState {
   x: number;
   y: number;
@@ -178,9 +203,7 @@ interface HandState {
   lastSeenAt: number;
 }
 
-const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates(
-  import.meta.env.VITE_AI_ASSET_BASE_URL,
-);
+const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates();
 const assetBaseUrl = `${import.meta.env.BASE_URL}assets/asteroid-shield/`;
 const assetUrls = {
   background: `${assetBaseUrl}background.png`,
@@ -195,13 +218,12 @@ const assetUrls = {
 const detectionIntervalMs = 66;
 const trackingGraceMs = 260;
 const speedLevelStep = 15;
-const durationOptions = [45, 60, 90] as const;
-const hpOptions = [6, 10, 14] as const;
-const handChoices: readonly HandChoice[] = ['any', 'left', 'right'];
-const shieldSizeOptions = [115, 135, 155] as const;
-const defaultDurationSeconds = 60;
-const defaultHp = 10;
-const defaultShieldSizePercent = 135;
+const durationOptions = asteroidShieldDurationOptions;
+const hpOptions = asteroidShieldHpOptions;
+const handChoices: readonly HandChoice[] = asteroidShieldHandChoiceOptions;
+const shieldSizeOptions = asteroidShieldSizeOptions;
+const defaultHp = asteroidShieldDefaults.maxHp;
+const defaultShieldSizePercent = asteroidShieldDefaults.shieldSizePercent;
 
 const difficulties: readonly DifficultyDefinition[] = [
   {
@@ -364,9 +386,11 @@ const outcomeCopyKeys: Record<ThreatOutcome, 'shielded' | 'hit' | 'collected' | 
   missed: 'missed',
 };
 
-export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
+export function AsteroidShieldGame({ onExit, hostControl }: AsteroidShieldGameProps) {
   const { lang, t } = useT();
   const labels = copy[lang];
+  const hostControlRef = useRef(hostControl);
+  hostControlRef.current = hostControl;
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -386,27 +410,30 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   const mountedRef = useRef(true);
   const resultRecordsRef = useRef<ThreatRecord[]>([]);
   const metricsRef = useRef<SessionMetrics>(CreateEmptyMetrics(defaultHp));
-  const configRef = useRef({
-    difficulty: 'beginner' as DifficultyId,
-    durationSec: defaultDurationSeconds,
-    maxHp: defaultHp,
-    shieldSizePercent: defaultShieldSizePercent,
-    controlMode: 'mouse' as ControlMode,
-    handChoice: 'any' as HandChoice,
+  const configRef = useRef<AsteroidShieldConfig>({
+    difficulty: hostControl?.config?.difficulty ?? asteroidShieldDefaults.difficulty,
+    durationSec: hostControl?.config?.durationSec ?? asteroidShieldDefaults.durationSec,
+    maxHp: hostControl?.config?.maxHp ?? asteroidShieldDefaults.maxHp,
+    shieldSizePercent: hostControl?.config?.shieldSizePercent ?? asteroidShieldDefaults.shieldSizePercent,
+    controlMode: hostControl?.config?.controlMode ?? asteroidShieldDefaults.controlMode,
+    handChoice: hostControl?.config?.handChoice ?? asteroidShieldDefaults.handChoice,
   });
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const runSequenceRef = useRef(0);
   const runTokenRef = useRef<string | null>(null);
+  const autoStartRequestedRef = useRef(false);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const [isPixiReady, setIsPixiReady] = useState(false);
+  const [isJsPsychReady, setIsJsPsychReady] = useState(false);
   useTrainingConfigReady(phase === 'menu');
-  const [difficulty, setDifficulty] = useState<DifficultyId>('beginner');
-  const [durationSec, setDurationSec] = useState(defaultDurationSeconds);
-  const [maxHp, setMaxHp] = useState(defaultHp);
-  const [shieldSizePercent, setShieldSizePercent] = useState(defaultShieldSizePercent);
-  const [controlMode, setControlMode] = useState<ControlMode>('mouse');
-  const [handChoice, setHandChoice] = useState<HandChoice>('any');
+  const [difficulty, setDifficulty] = useState<DifficultyId>(configRef.current.difficulty);
+  const [durationSec, setDurationSec] = useState(configRef.current.durationSec);
+  const [maxHp, setMaxHp] = useState(configRef.current.maxHp);
+  const [shieldSizePercent, setShieldSizePercent] = useState(configRef.current.shieldSizePercent);
+  const [controlMode, setControlMode] = useState<ControlMode>(configRef.current.controlMode);
+  const [handChoice, setHandChoice] = useState<HandChoice>(configRef.current.handChoice);
   const [statusMessage, setStatusMessage] = useState('');
   const [visionError, setVisionError] = useState('');
   const [showVisionError, setShowVisionError] = useState(false);
@@ -452,6 +479,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
 
     const jsPsych = initJsPsych({ display_element: host });
     jsPsychRef.current = jsPsych;
+    setIsJsPsychReady(true);
 
     return () => {
       jsPsych.abortExperiment(undefined, {
@@ -462,6 +490,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       jsPsych.pluginAPI.clearAllTimeouts();
       runTokenRef.current = null;
       if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
+      setIsJsPsychReady(false);
     };
   }, []);
 
@@ -570,6 +599,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       },
       detailRows: record.Object_Records.map((item) => ({ ...item })),
     });
+    hostControlRef.current?.onCompleted?.(record);
   }, [labels.title, setPhase, stopVision]);
 
   const beginPlaying = useCallback(() => {
@@ -628,8 +658,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   }, [labels.initialization, stopVision]);
 
   const startGame = useCallback(async () => {
-    if (!VerifySelectedTrainingUser()) return;
-    const fullscreenPromise = enterTrainingFullscreen();
+    if (!hostControlRef.current?.skipUserGuard && !VerifySelectedTrainingUser()) return;
+    const fullscreenPromise = hostControlRef.current?.autoStart
+      ? Promise.resolve()
+      : enterTrainingFullscreen();
     PrepareAudioFeedback(jsPsychRef);
     await fullscreenPromise;
     const jsPsych = jsPsychRef.current;
@@ -646,6 +678,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         setVisionError('');
         setShowVisionError(false);
         setPhase('initializing');
+        hostControlRef.current?.onStarted?.();
 
         if (!texturesRef.current) {
           const app = appRef.current;
@@ -772,6 +805,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   }, [beginPlaying, enterTrainingFullscreen, handleHandFrame, labels, setPhase, stopVision]);
 
   const returnToMenu = useCallback(() => {
+    const wasRunning = ['initializing', 'playing', 'results'].includes(phaseRef.current);
     jsPsychRef.current?.abortExperiment(undefined, {
       lifecycle_status: 'aborted',
       module_id: 'motor:asteroid-shield',
@@ -784,7 +818,26 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     resultRecordsRef.current = [];
     setResult(null);
     setPhase('menu');
+    if (wasRunning) hostControlRef.current?.onAborted?.();
   }, [setPhase, stopVision]);
+
+  useEffect(() => {
+    const signal = hostControlRef.current?.signal;
+    if (!signal) return undefined;
+    const onAbort = () => returnToMenu();
+    signal.addEventListener('abort', onAbort, { once: true });
+    return () => signal.removeEventListener('abort', onAbort);
+  }, [returnToMenu]);
+
+  useEffect(() => {
+    const registerControls = hostControlRef.current?.registerControls;
+    if (!registerControls) return undefined;
+    registerControls({
+      pause: () => { jsPsychRef.current?.pauseExperiment(); },
+      resume: () => { jsPsychRef.current?.resumeExperiment(); },
+    });
+    return () => registerControls(null);
+  }, []);
 
   const exitGame = useCallback(() => {
     jsPsychRef.current?.abortExperiment(undefined, {
@@ -825,6 +878,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       texturesRef.current = textures;
       host.appendChild(app.canvas);
       app.canvas.className = 'asteroid-shield-canvas';
+      setIsPixiReady(true);
       ResetAsteroidScene(app, sceneRef, textures);
       onResize();
       app.ticker.add((ticker: Ticker) => {
@@ -871,8 +925,19 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       appRef.current = null;
       texturesRef.current = null;
       sceneRef.current = null;
+      setIsPixiReady(false);
     };
   }, [finishGame]);
+
+  useEffect(() => {
+    if (!hostControlRef.current?.autoStart
+      || !isPixiReady
+      || !isJsPsychReady
+      || phase !== 'menu'
+      || autoStartRequestedRef.current) return;
+    autoStartRequestedRef.current = true;
+    void startGame();
+  }, [isJsPsychReady, isPixiReady, phase, startGame]);
 
   useEffect(() => {
     const host = pixiHostRef.current;
@@ -905,7 +970,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         <span>{handRef.current.visible ? labels.tracking : labels.finding}</span>
       </div>
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !hostControl?.autoStart && (
         <div className="training-panel">
           <TrainingConfigPanel
             label={labels.configLabel}
@@ -1068,7 +1133,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         </div>
       )}
 
-      {phase === 'rules' && (
+      {phase === 'rules' && !hostControl?.autoStart && (
         <div className="training-panel">
           <MotorTrainingRulesPanel
             gameId="asteroid-shield"
@@ -1094,7 +1159,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         </div>
       )}
 
-      {phase === 'results' && result && (
+      {phase === 'results' && result && !hostControl?.autoStart && (
         <div className="experiment-container experiment-container-scrollable asteroid-shield-results-container">
           <div className="experiment-results">
             <h1>{labels.resultTitle}</h1>

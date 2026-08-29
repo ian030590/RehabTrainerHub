@@ -1,1 +1,1 @@
-export * from '../../../training-runtimes/vision/src/utils/downloadFile';
+export { DownloadCsvFile, DownloadFile } from '@rehab-trainer/ui/downloadFile';

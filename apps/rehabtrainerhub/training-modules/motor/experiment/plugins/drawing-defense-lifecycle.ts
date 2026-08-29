@@ -73,7 +73,7 @@ export class DrawingDefensePlugin implements JsPsychPlugin<DrawingDefenseInfo> {
   ): void {
     onLoad?.();
     this.jsPsych.finishTrial(
-      CreateLifecycleSimulationData(trial.module_id, trial.run_token, simulationMode, simulationOptions),
+      CreateLifecycleSimulationData(trial.module_id ?? 'motor:drawing-defense', trial.run_token ?? '', simulationMode, simulationOptions),
     );
   }
 

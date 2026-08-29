@@ -7,6 +7,7 @@ const repoRoot = resolve(join(fileURLToPath(new URL('.', import.meta.url)), '..'
 const packagePath = join(repoRoot, 'package.json');
 const workspacePath = join(repoRoot, 'pnpm-workspace.yaml');
 const npmrcPath = join(repoRoot, '.npmrc');
+const nodeVersionPath = join(repoRoot, '.node-version');
 
 function Fail(message) {
   throw new Error(`[pnpm-pcloud] ${message}`);
@@ -37,8 +38,26 @@ function AssertPackageManager(pkg) {
   if (!/prepare-pnpm-pcloud\.mjs\s*&&\s*corepack pnpm install --frozen-lockfile/.test(pkg.scripts?.['install:pcloud'] ?? '')) {
     Fail('install:pcloud must prepare pCloud metadata before a frozen corepack pnpm install.');
   }
-  if (pkg.engines?.node !== '>=22') {
-    Fail('root engines.node must remain >=22.');
+  AssertNodeVersion(pkg);
+}
+
+function AssertNodeVersion(pkg) {
+  if (!existsSync(nodeVersionPath)) Fail('.node-version is missing.');
+  // Windows tooling may keep this tiny file as UTF-16LE with a BOM. Decode
+  // that representation explicitly so the policy gate checks the value,
+  // rather than depending on the editor's line-ending/encoding choice.
+  const nodeVersionBytes = readFileSync(nodeVersionPath);
+  const nodeVersion = (nodeVersionBytes[0] === 0xff && nodeVersionBytes[1] === 0xfe
+    ? nodeVersionBytes.toString('utf16le')
+    : nodeVersionBytes.toString('utf8'))
+    .replace(/^\uFEFF/, '')
+    .trim();
+  const match = /^v(\d+)\.(\d+)\.(\d+)$/.exec(nodeVersion);
+  if (!match) Fail('.node-version must contain one exact vMAJOR.MINOR.PATCH value.');
+  const [, major, minor, patch] = match;
+  const expectedRange = `>=${major}.${minor}.${patch} <${Number(major) + 1}`;
+  if (pkg.engines?.node !== expectedRange) {
+    Fail(`root engines.node must match .node-version (${expectedRange}).`);
   }
 }
 

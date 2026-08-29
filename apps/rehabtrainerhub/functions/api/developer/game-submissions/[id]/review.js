@@ -14,6 +14,7 @@ import {
   gameValidationFindingDispositions,
 } from '../../../../_lib/gameValidationState.js';
 import { ReadJsonBody } from '../../../../_lib/request.js';
+import { CreateGamePlatformNotificationStatement } from '../../../../_lib/gameNotifications.js';
 
 const maximumBodyBytes = 16 * 1024;
 const maximumReasonLength = 2_000;
@@ -112,6 +113,14 @@ export async function onRequestPost({ request, env, params }) {
           scanRunId: submission.scan_run_id,
         },
       }),
+      CreateGamePlatformNotificationStatement(db, {
+        recipientUserId: user.id,
+        gameId: submission.game_id,
+        submissionId: submission.id,
+        kind: 'review-requested',
+        payload: { findingIds, reviewRequestId },
+        createdAt: now,
+      }),
     ];
     await db.batch(statements);
 
@@ -140,6 +149,7 @@ async function ReadSubmissionForOwner(db, submissionId, ownerUserId) {
       SELECT
         game_submissions.id,
         game_submissions.artifact_sha256,
+        game_submissions.game_id,
         game_scan_runs.id AS scan_run_id,
         game_scan_runs.status AS scan_status,
         COALESCE((
