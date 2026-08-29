@@ -4,6 +4,17 @@ import {
 } from '@rehab-trainer/ui/auth/authClient';
 
 export type DeveloperReleaseStatus = 'blocked' | 'pending_review' | 'publishing' | 'approved' | 'rejected' | 'revoked';
+export type DeveloperManualReviewStatus = 'requested' | 'in_review' | 'changes_requested' | 'approved' | 'rejected';
+
+export interface DeveloperValidationFinding {
+  id: string;
+  disposition: 'hard-block' | 'fix-or-manual-review' | 'manual-review' | 'info';
+  code: string;
+  filePath: string | null;
+  line: number | null;
+  column: number | null;
+  messageKey: string;
+}
 
 export interface DeveloperRelease {
   id: string;
@@ -13,11 +24,14 @@ export interface DeveloperRelease {
   packageBytes: number;
   uncompressedBytes: number;
   fileCount: number;
+  submissionId: string | null;
   scan: {
     blockCount?: number;
     reviewCount?: number;
     findingCodes?: string[];
   };
+  manualReviewStatus: DeveloperManualReviewStatus | null;
+  findings: DeveloperValidationFinding[];
   reviewNote: string | null;
   submittedAt: string;
   reviewedAt: string | null;
@@ -61,6 +75,17 @@ export interface GameSubmissionResponse {
   };
 }
 
+export interface ManualReviewRequestResponse {
+  reviewRequest: {
+    id: string;
+    submissionId: string;
+    scanRunId: string;
+    findingIds: string[];
+    status: 'requested';
+    requestedAt: string;
+  };
+}
+
 export async function FetchDeveloperGames(signal?: AbortSignal): Promise<DeveloperGame[]> {
   const response = await DeveloperFetch('/api/developer/games', { signal });
   const payload = await response.json() as { games?: DeveloperGame[] };
@@ -83,6 +108,21 @@ export async function SubmitDeveloperGame(input: GameSubmissionInput): Promise<G
     body: formData,
   });
   return response.json() as Promise<GameSubmissionResponse>;
+}
+
+export async function RequestDeveloperGameManualReview(
+  submissionId: string,
+  reason: string,
+): Promise<ManualReviewRequestResponse> {
+  const response = await DeveloperFetch(
+    `/api/developer/game-submissions/${encodeURIComponent(submissionId)}/review`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    },
+  );
+  return response.json() as Promise<ManualReviewRequestResponse>;
 }
 
 async function DeveloperFetch(path: string, init: RequestInit): Promise<Response> {

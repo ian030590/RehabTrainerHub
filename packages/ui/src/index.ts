@@ -8,6 +8,22 @@ export {
   mediaPipeTasksVisionVersion,
 } from './aiAssets';
 export type { MediaPipeAssetUrls } from './aiAssets';
+export { CreateOfficialHostIframePolicy, officialTrainingHostRoutePrefix } from './officialTrainingHostPolicy';
+export type {
+  OfficialHostIframePolicy,
+  OfficialHostIframePolicyOptions,
+  OfficialIframeFeature,
+} from './officialTrainingHostPolicy';
+export {
+  CreateOfficialHostAllowAttribute,
+  IsTrustedReadyEvent,
+  OfficialTrainingHostSession,
+} from './officialTrainingHostProtocol';
+export type {
+  OfficialTrainingHostReadyMessage,
+  OfficialTrainingHostSessionOptions,
+  TrainingHostCommandInput,
+} from './officialTrainingHostProtocol';
 export { AppLoading } from './components/AppLoading';
 export type { AppLoadingProps } from './components/AppLoading';
 export { AppDialog } from './components/AppDialog';
@@ -187,6 +203,17 @@ export {
   trainingFlowLaunchState,
 } from './trainingFlow';
 export type { TrainingFlowLaunchState } from './trainingFlow';
+export type {
+  EnginePreloadContext,
+  PreparedTrainingEngine,
+  TrainingAssetResolver,
+  TrainingConfigProps,
+  TrainingResultPresenterProps,
+  TrainingRulesProps,
+  TrainingRunContext,
+  TrainingSetupLoader,
+  TrainingSetupModule,
+} from './trainingHostContract';
 export {
   ApplyThemeTokens,
   cssColors,

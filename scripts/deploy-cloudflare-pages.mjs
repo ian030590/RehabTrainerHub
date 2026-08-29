@@ -7,7 +7,7 @@ import { CreateCloudflareDeploymentEnvironment } from './gamehost-environment.mj
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appsRoot = join(repoRoot, 'apps');
-const wranglerPrefix = ['--yes', 'wrangler@4'];
+const wranglerPrefix = ['dlx', 'wrangler@4'];
 const cloudflarePagesAssetLimitBytes = 25 * 1024 * 1024;
 const deployTimeoutMs = 5 * 60 * 1000; // 5 minutes per deploy
 const permanentlyRetiredProjectNames = new Set([
@@ -150,14 +150,14 @@ function ShellQuote(value) {
 
 function RunWrangler(args, options = {}) {
   const commandArgs = [...wranglerPrefix, ...args];
-  console.log(`$ npx ${commandArgs.map(ShellQuote).join(' ')}`);
+  console.log(`$ pnpm ${commandArgs.map(ShellQuote).join(' ')}`);
 
   if (dryRun) {
     return '';
   }
 
   const shouldCapture = options.capture || options.allowProjectAlreadyExists;
-  const command = GetCommand('npx', commandArgs);
+  const command = GetCommand('pnpm', commandArgs);
   const spawnOptions = {
     cwd: repoRoot,
     encoding: shouldCapture ? 'utf8' : undefined,
@@ -179,7 +179,7 @@ function RunWrangler(args, options = {}) {
   if (result.error) {
     // spawnSync sets result.error for ETIMEDOUT, spawn failures, etc.
     if (result.error.code === 'ETIMEDOUT') {
-      throw new Error(`Wrangler timed out after ${options.timeout / 1000}s: npx ${commandArgs.join(' ')}`);
+      throw new Error(`Wrangler timed out after ${options.timeout / 1000}s: pnpm ${commandArgs.join(' ')}`);
     }
     throw result.error;
   }
@@ -199,7 +199,7 @@ function RunWrangler(args, options = {}) {
       process.stderr.write(result.stderr ?? '');
     }
 
-    throw new Error(`Wrangler failed (${exitInfo}): npx ${commandArgs.join(' ')}`);
+    throw new Error(`Wrangler failed (${exitInfo}): pnpm ${commandArgs.join(' ')}`);
   }
 
   return result.stdout ?? '';
@@ -395,7 +395,7 @@ function ValidateProjectOutput(project) {
   const absoluteOutputPath = join(repoRoot, project.outputPath);
   if (!existsSync(absoluteOutputPath)) {
     throw new Error(
-      `${project.outputPath} does not exist. Run npm run build:cloudflare before deploying ${project.projectName}.`,
+      `${project.outputPath} does not exist. Run pnpm run build:cloudflare before deploying ${project.projectName}.`,
     );
   }
 
@@ -408,7 +408,7 @@ function ValidateProjectOutput(project) {
       [
         `${project.projectName} output contains files larger than Cloudflare Pages' 25 MiB limit:`,
         details,
-        'Rebuild with npm run build:cloudflare before deploying.',
+        'Rebuild with pnpm run build:cloudflare before deploying.',
       ].join('\n'),
     );
   }

@@ -105,6 +105,58 @@ export interface AdminGameRelease {
   reviewedAt: string | null;
 }
 
+export type GameValidationQueue =
+  | 'ready-for-review'
+  | 'manual-review-requested'
+  | 'security-blocked'
+  | 'processing';
+
+export interface AdminGameValidationFinding {
+  id: string;
+  disposition: 'hard-block' | 'fix-or-manual-review' | 'manual-review' | 'info';
+  code: string;
+  filePath: string | null;
+  line: number | null;
+  column: number | null;
+  messageKey: string;
+}
+
+export interface AdminGameSubmission {
+  id: string;
+  gameId: string;
+  slug: string;
+  title: string;
+  summary: string;
+  category: string;
+  owner: { id: string; displayName: string };
+  targetVersion: string;
+  artifactType: 'html' | 'zip';
+  artifactSha256: string;
+  packageBytes: number;
+  submittedAt: string;
+  scan: {
+    id: string | null;
+    attempt: number | null;
+    status: 'queued' | 'running' | 'passed' | 'flagged' | 'failed' | null;
+    policyVersion: string | null;
+    toolVersions: Record<string, string>;
+    reportSha256: string | null;
+    errorCode: string | null;
+    queuedAt: string | null;
+    startedAt: string | null;
+    completedAt: string | null;
+  };
+  review: {
+    id: string;
+    status: 'requested' | 'in_review' | 'changes_requested' | 'approved' | 'rejected';
+    reason: string;
+    note: string | null;
+    requestedAt: string;
+  } | null;
+  findings: AdminGameValidationFinding[];
+  canApprove: boolean;
+}
+
 export class AdminApiError extends Error {
   status: number;
 
@@ -283,6 +335,29 @@ export async function FetchAdminGameReleases(
     await AdminFetch('/api/admin/game-releases', { signal }, { status }),
   );
   return payload.releases;
+}
+
+export async function FetchAdminGameValidationQueue(
+  queue: GameValidationQueue,
+  signal?: AbortSignal,
+): Promise<AdminGameSubmission[]> {
+  const payload = await ReadJson<{ submissions: AdminGameSubmission[] }>(
+    await AdminFetch('/api/admin/game-validation', { signal }, { queue }),
+  );
+  return payload.submissions;
+}
+
+export async function ReviewAdminGameSubmission(
+  submissionId: string,
+  decision: 'approve' | 'reject' | 'request-changes',
+  note: string,
+  evidence: { sourceReviewed: boolean; playTested: boolean; metadataReviewed: boolean },
+): Promise<void> {
+  await AdminFetch(`/api/admin/game-submissions/${encodeURIComponent(submissionId)}/review`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ decision, note, ...evidence }),
+  });
 }
 
 export async function ReviewAdminGameRelease(

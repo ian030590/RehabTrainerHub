@@ -5,9 +5,9 @@
 - Default branch: `main`
 - CI: `.github/workflows/ci.yml`
 - Cloudflare deploy: `.github/workflows/deploy-cloudflare-pages.yml`
-- Package manager: root `package.json` 指定的 npm
-- Validation: `npm run build`
-- Cloudflare build: `npm run build:cloudflare`
+- Package manager: root `package.json` pins pnpm 11.24.0
+- Validation: `pnpm run build`
+- Cloudflare build: `pnpm run build:cloudflare`
 
 ## Cloudflare Pages
 

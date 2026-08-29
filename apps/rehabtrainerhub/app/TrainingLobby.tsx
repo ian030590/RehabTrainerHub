@@ -11,7 +11,6 @@ import { TrainingOverlay } from './train/TrainingOverlay';
 import { PackageGameOverlay } from './train/PackageGameOverlay';
 import {
   BuildTrainingGameInstallHref,
-  BuildTrainingModuleHref,
   BuildTrainingModuleImageSrc,
   GetTrainingModuleCopy,
   GetTrainingModuleTheme,
@@ -30,20 +29,6 @@ import {
   type PublishedGame,
 } from './publishedGames';
 import { BuildTrainingThemeStyle } from './trainingThemeStyle';
-
-const prefetchedTrainingUrls = new Set<string>();
-
-function PreloadTrainingModule(module: TrainingCatalogModule) {
-  const href = BuildTrainingModuleHref(module);
-  if (prefetchedTrainingUrls.has(href)) return;
-  prefetchedTrainingUrls.add(href);
-
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
-  link.as = 'document';
-  link.href = href;
-  document.head.append(link);
-}
 
 function TrainingThemeIcon({
   decorative = false,
@@ -158,25 +143,6 @@ export function TrainingLobby() {
         if (!controller.signal.aborted) setPublishedGamesError(true);
       });
     return () => controller.abort();
-  }, []);
-
-  useEffect(() => {
-    const origins = new Set(trainingCatalog.map((module) => (
-      new URL(BuildTrainingModuleHref(module)).origin
-    )));
-    const links = [...origins].flatMap((origin) => {
-      const preconnect = document.createElement('link');
-      preconnect.rel = 'preconnect';
-      preconnect.href = origin;
-      preconnect.crossOrigin = 'anonymous';
-      const dnsPrefetch = document.createElement('link');
-      dnsPrefetch.rel = 'dns-prefetch';
-      dnsPrefetch.href = origin;
-      document.head.append(preconnect, dnsPrefetch);
-      return [preconnect, dnsPrefetch];
-    });
-
-    return () => links.forEach((link) => link.remove());
   }, []);
 
   useEffect(() => {
@@ -295,7 +261,6 @@ export function TrainingLobby() {
                     aria-label={`${copy.start}: ${moduleCopy.title}`}
                     className="module-card official-game-card"
                     key={module.catalogId}
-                    onPointerEnter={() => PreloadTrainingModule(module)}
                     style={BuildTrainingThemeStyle(theme)}
                   >
                     <div className="module-card-visual">
@@ -322,8 +287,6 @@ export function TrainingLobby() {
                       <div className="module-card-footer official-game-actions">
                         <button
                           onClick={() => setActiveModule(module)}
-                          onFocus={() => PreloadTrainingModule(module)}
-                          onPointerDown={() => PreloadTrainingModule(module)}
                           type="button"
                         >
                           {copy.start}

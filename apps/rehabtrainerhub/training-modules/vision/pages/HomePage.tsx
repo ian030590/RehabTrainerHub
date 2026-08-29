@@ -1,5 +1,5 @@
 // Canonical Hub-owned vision config and rules entry.
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useT } from '../i18n';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
@@ -151,14 +151,26 @@ export function HomePage() {
     return () => window.clearTimeout(timerId);
   }, []);
 
-  // Warm up the selected training route and engine when a module panel expands.
+  const enginePreloadRef = useRef<{
+    moduleId: TrainingModuleId;
+    promise: Promise<unknown>;
+  } | null>(null);
+
+  const preloadEngineOnce = (moduleId: TrainingModuleId) => {
+    const current = enginePreloadRef.current;
+    if (current?.moduleId === moduleId) return current.promise;
+    const promise = PreloadTrainingEngine(moduleId);
+    enginePreloadRef.current = { moduleId, promise };
+    return promise;
+  };
+
+  // Rules are the only normal UI transition allowed to request a heavy engine
+  // chunk. Card/config rendering remains setup-only; a repeated open/close of
+  // the same rules panel reuses the same preload promise.
   useEffect(() => {
-    if (!expandedModule) return;
-    void Promise.all([
-      PreloadTrainingRoute(),
-      PreloadTrainingEngine(expandedModule),
-    ]).catch(() => undefined);
-  }, [expandedModule]);
+    if (!rulesModule) return;
+    void preloadEngineOnce(rulesModule).catch(() => undefined);
+  }, [rulesModule]);
 
   useEffect(() => {
     if (!rulesModule) return;
@@ -218,7 +230,7 @@ export function HomePage() {
 
     if (moduleToStart === 'hart-chart') {
       try {
-        await PreloadTrainingEngine(moduleToStart);
+        await preloadEngineOnce(moduleToStart);
         navigate('/hart-chart', { state: trainingFlowLaunchState });
       } catch (error) {
         console.error('Hart Chart preload failed:', error);
@@ -233,7 +245,7 @@ export function HomePage() {
     try {
       await Promise.all([
         PreloadTrainingRoute(),
-        PreloadTrainingEngine(moduleToStart),
+        preloadEngineOnce(moduleToStart),
       ]);
     } catch (error) {
       console.error('Training preload failed:', error);

@@ -23,6 +23,8 @@ export const gamePlatformMaxResultTrialCount = 100_000;
 export const gamePlatformSessionNonceMinLength = 32;
 export const gamePlatformSessionNonceMaxLength = 128;
 
+// Keep this browser-only module dependency-free. Cloudflare Functions consume
+// the parity-checked copy exported from training-contracts.
 export const gamePlatformCapabilities = [
   'audio',
   'fullscreen',

@@ -2,14 +2,24 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const moduleRoot = resolve(repoRoot, 'apps/rehabtrainerhub/training-modules');
 const catalogSource = readFileSync(resolve(moduleRoot, 'catalog.ts'), 'utf8');
 const manifestSource = readFileSync(resolve(moduleRoot, 'moduleFlowManifest.ts'), 'utf8');
-const manifestCode = ts.transpileModule(manifestSource, {
+// The checker evaluates a transpiled module through a data URL. Rewrite the
+// workspace package import to an absolute file URL because bare package
+// specifiers have no package scope when their parent is a data URL.
+const trainingContractsRuntimeUrl = pathToFileURL(
+  resolve(repoRoot, 'packages/training-contracts/src/index.js'),
+).href;
+const manifestExecutableSource = manifestSource.replace(
+  /from ['"]@rehab-trainer\/training-contracts['"]/g,
+  `from '${trainingContractsRuntimeUrl}'`,
+);
+const manifestCode = ts.transpileModule(manifestExecutableSource, {
   compilerOptions: {
     module: ts.ModuleKind.ESNext,
     target: ts.ScriptTarget.ES2022,
@@ -19,11 +29,16 @@ const manifestUrl = `data:text/javascript;base64,${Buffer.from(manifestCode).toS
 const {
   standardTrainingFlow,
   trainingModuleFlowManifest,
+  trainingModuleManifests,
+  trainingModuleRegistry,
 } = await import(manifestUrl);
 
 const catalogIds = [...catalogSource.matchAll(
   /\{\s*id:\s*'([^']+)',\s*trainer:\s*'([^']+)'/g,
 )].map((match) => `${match[2]}:${match[1]}`);
+const catalogPurposes = new Map([...catalogSource.matchAll(
+  /\{\s*id:\s*'([^']+)',\s*trainer:\s*'([^']+)',\s*purpose:\s*'([^']+)'/g,
+)].map((match) => [`${match[2]}:${match[1]}`, match[3]]));
 const manifestIds = Object.keys(trainingModuleFlowManifest);
 
 assert.equal(
@@ -35,6 +50,35 @@ assert.deepEqual(
   [...manifestIds].sort(),
   [...catalogIds].sort(),
   'Every catalog module must have exactly one Hub-owned flow manifest.',
+);
+const generatedManifestIds = Object.keys(trainingModuleManifests);
+assert.deepEqual(
+  generatedManifestIds.sort(),
+  [...catalogIds].sort(),
+  'Generated module manifests must cover exactly the catalog modules.',
+);
+const generatedOrders = new Set();
+for (const [catalogId, entry] of Object.entries(trainingModuleRegistry)) {
+  assert.equal(entry.manifest.id, catalogId, `Generated manifest id must match ${catalogId}.`);
+  assert.equal(
+    entry.manifest.purposeId,
+    catalogPurposes.get(catalogId),
+    `Generated manifest purpose must match the catalog seed for ${catalogId}.`,
+  );
+  assert.equal(
+    entry.manifest.purposeId,
+    trainingModuleFlowManifest[catalogId].purposeId,
+    `Flow and generated manifest purpose must match for ${catalogId}.`,
+  );
+  assert.equal(entry.sourcePath, trainingModuleFlowManifest[catalogId].sourcePath, `Generated source path must match ${catalogId}.`);
+  assert.deepEqual(entry.manifest.flow, standardTrainingFlow, `Generated flow must be standard for ${catalogId}.`);
+  assert.ok(!generatedOrders.has(entry.manifest.catalogOrder), `Generated catalogOrder must be unique for ${catalogId}.`);
+  generatedOrders.add(entry.manifest.catalogOrder);
+}
+assert.equal(
+  generatedOrders.size,
+  catalogIds.length,
+  'Generated module manifests must have unique catalogOrder values.',
 );
 for (const retiredCatalogId of ['brain:main-concept', 'brain:set-game', 'brain:sokoban']) {
   assert.ok(!catalogIds.includes(retiredCatalogId), `${retiredCatalogId} must remain fully retired from the catalog.`);

@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { strToU8, zipSync } from 'fflate';
 import { platformRuntimeContract } from '../../../usergamerunner/functions/_lib/runtime.js';
+import { gamePlatformPackageLimits } from '@rehab-trainer/training-contracts';
 import {
   GamePackageError,
   InspectGamePackage,
@@ -10,6 +11,7 @@ import {
   NormalizeGameSlug,
   NormalizeGameVersion,
   NormalizePackagePath,
+  gamePackageLimits,
   gamePackageRuntimeContract,
 } from './gamePackages.js';
 
@@ -149,7 +151,15 @@ test('normalizes identifiers, paths, and baseline capabilities', () => {
     NormalizeGameCapabilities('["pointer","audio","pointer"]'),
     ['audio', 'pointer'],
   );
+  assert.deepEqual(
+    NormalizeGameCapabilities('["touch","gamepad"]'),
+    ['gamepad', 'touch'],
+  );
   assert.equal(NormalizeGameCapabilities('["camera"]'), null);
+});
+
+test('scanner and developer UI consume one package-limit contract', () => {
+  assert.deepEqual(gamePackageLimits, gamePlatformPackageLimits);
 });
 
 test('requires full semantic versions and runner-safe ASCII paths', () => {

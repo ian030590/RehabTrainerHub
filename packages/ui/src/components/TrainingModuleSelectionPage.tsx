@@ -21,7 +21,6 @@ export interface TrainingModuleSelectionPageProps<TModuleId extends string> {
   cardClassName?: string;
   children?: ReactNode;
   onSelect: (moduleId: TModuleId) => void;
-  onPreload?: (moduleId: TModuleId) => void;
 }
 
 export function TrainingModuleSelectionPage<TModuleId extends string>({
@@ -35,7 +34,6 @@ export function TrainingModuleSelectionPage<TModuleId extends string>({
   cardClassName,
   children,
   onSelect,
-  onPreload,
 }: TrainingModuleSelectionPageProps<TModuleId>) {
   const pageClassName = [className, 'training-module-selection-page']
     .filter((value, index, values) => values.indexOf(value) === index)
@@ -59,7 +57,6 @@ export function TrainingModuleSelectionPage<TModuleId extends string>({
             actionLabel={typeof actionLabel === 'function' ? actionLabel(module) : actionLabel ?? module.actionLabel}
             className={cardClassName}
             onSelect={() => onSelect(module.id)}
-            onPreload={onPreload ? () => onPreload(module.id) : undefined}
           />
         ))}
       </div>

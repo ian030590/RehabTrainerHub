@@ -9,7 +9,7 @@ import {
   defaultRepoRoot,
 } from './pages-apps.mjs';
 
-const wranglerPrefix = ['--yes', 'wrangler@4'];
+const wranglerPrefix = ['dlx', 'wrangler@4'];
 const dryRun = process.argv.includes('--dry-run');
 
 function NormalizeUrl(value) {
@@ -140,10 +140,10 @@ function ShellQuote(value) {
 
 function RunWrangler(args) {
   const commandArgs = [...wranglerPrefix, ...args];
-  console.log(`$ npx ${commandArgs.map(ShellQuote).join(' ')}`);
+  console.log(`$ pnpm ${commandArgs.map(ShellQuote).join(' ')}`);
   if (dryRun) return;
 
-  const command = GetCommand('npx', commandArgs);
+  const command = GetCommand('pnpm', commandArgs);
   const result = spawnSync(command.file, command.args, {
     cwd: defaultRepoRoot,
     env: process.env,
@@ -151,7 +151,7 @@ function RunWrangler(args) {
   });
   if (result.status !== 0) {
     if (result.error) throw result.error;
-    throw new Error(`Wrangler failed with exit code ${result.status}: npx ${commandArgs.join(' ')}`);
+    throw new Error(`Wrangler failed with exit code ${result.status}: pnpm ${commandArgs.join(' ')}`);
   }
 }
 

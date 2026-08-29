@@ -59,6 +59,8 @@
     "./fullscreen": "./src/fullscreen.ts",
     "./gamePlatform": "./src/gamePlatform.ts",
     "./jsPsychLifecycle": "./src/jsPsychLifecycle.ts",
+    "./officialTrainingHostPolicy": "./src/officialTrainingHostPolicy.ts",
+    "./officialTrainingHostProtocol": "./src/officialTrainingHostProtocol.ts",
     "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
     "./hooks/useFullscreenTrainingRoot": "./src/hooks/useFullscreenTrainingRoot.ts",
     "./hooks/useMediaPermissionPreflight": "./src/hooks/useMediaPermissionPreflight.ts",
@@ -78,6 +80,7 @@
     "./storage/userStore": "./src/storage/userStore.ts",
     "./trainerTheme": "./src/trainerTheme.ts",
     "./trainingFlow": "./src/trainingFlow.ts",
+    "./trainingHostContract": "./src/trainingHostContract.ts",
     "./trainingGameUtils": "./src/trainingGameUtils.ts",
     "./ufovCanvas": "./src/peripheralAttentionCanvas.ts",
     "./ufovResults": "./src/peripheralAttentionResults.ts"
@@ -86,6 +89,9 @@
     "jspsych": "^8.2.1",
     "react": "^19.1.0",
     "react-router-dom": "^7.6.1"
+  },
+  "dependencies": {
+    "@rehab-trainer/training-contracts": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.1.4",

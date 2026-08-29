@@ -15,7 +15,7 @@ region: APAC
 手動套用 migration：
 
 ```bash
-npx --yes wrangler@4 d1 migrations apply rehab_db --config apps/rehabtrainerhub/wrangler.toml --remote
+pnpm dlx wrangler@4 d1 migrations apply rehab_db --config apps/rehabtrainerhub/wrangler.toml --remote
 ```
 
 ## OAuth callback

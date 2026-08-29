@@ -2,7 +2,7 @@
 
 ## 專案結構與模組組織
 
-npm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
+pnpm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
 
 - `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、內建訓練 runtime、API、審核後台、開發者入口）。
 - `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），負責以 sandboxed iframe 載入第三方 HTML/ZIP 遊戲並提供 PWA。
@@ -16,27 +16,32 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 
 ## 建置、測試與開發指令
 
-- `npm run dev`：Turbo 啟動全部 dev servers。
-- `npm run dev:hub`：啟動 Hub。
-- `npm run build`：執行測試 gate 並透過 `scripts/build-apps.mjs` 建置全部 app。
-- `npm run build:cloudflare`：建置 Cloudflare Pages 輸出。
-- `npm run build:hub|gamerunner`：建置單一 app；Hub build 會一併建置四個內建 training runtimes。
-- `npm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
-- `npm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
-- `npm run test:game-platform`：驗證遊戲套件掃描器與 SDK。
-- `npm --prefix apps/<app> run preview`：預覽 Vite app 或 Hub 輸出。
+本專案使用 pnpm 11.24.0。pCloud 不支援 symlink／junction，因此 `pnpm-workspace.yaml` 固定使用 `nodeLinker: hoisted`、`packageImportMethod: copy`、`injectWorkspacePackages: true`、`dedupeInjectedDeps: false`、`preferSymlinkedExecutables: false` 與 `symlink: false`；安裝後以 `pnpm run test:pnpm-policy` 驗證依賴樹沒有連結。
 
-高風險 trainer 變更完成前執行 `npm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。此 gate 包含 training flow、assessment jsPsych lifecycle 與 i18n dictionary parity 檢查。
+- `pnpm run dev`：Turbo 啟動全部 dev servers。
+- `pnpm run dev:hub`：啟動 Hub。
+- `pnpm run build`：執行測試 gate 並透過 `scripts/build-apps.mjs` 建置全部 app。
+- `pnpm run build:cloudflare`：建置 Cloudflare Pages 輸出。
+- `pnpm run build:hub|gamerunner`：建置單一 app；Hub build 會一併建置四個內建 training runtimes。
+- `pnpm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
+- `pnpm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
+- `pnpm run test:game-platform`：驗證遊戲套件掃描器與 SDK。
+- `pnpm run test:game-validator`：驗證上傳掃描／審核／發布三條狀態軸不可繞過。
+- `pnpm run test:architecture`：驗證模組 ownership、lifecycle、iframe/PWA 邊界、驗證流程與 pCloud 安裝不變量。
+- `pnpm run test:heavy-load-boundary`：驗證 card/config 不會提早載入重型 engine，且 rules 只共用單一 preload promise。
+- `pnpm --filter <workspace-package> run preview`：預覽 Vite app 或 Hub 輸出。
 
-修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後，至少執行 `npm run test:entrypoints` 與 `npm run build:hub`，驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
+高風險 trainer 變更完成前執行 `pnpm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。此 gate 包含 training flow、assessment jsPsych lifecycle 與 i18n dictionary parity 檢查。
 
-無完整測試套件；針對性 build 與 `npm run test:hub-functions`、`npm run test:gamerunner`、`npm run test:training-flow`、`npm run test:assessment-lifecycle`、`npm run test:i18n` 為最低驗證。
+修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後，至少執行 `pnpm run test:entrypoints` 與 `pnpm run build:hub`，驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
+
+無完整測試套件；針對性 build 與 `pnpm run test:hub-functions`、`pnpm run test:gamerunner`、`pnpm run test:game-validator`、`pnpm run test:training-flow`、`pnpm run test:assessment-lifecycle`、`pnpm run test:i18n` 為最低驗證。
 
 ## CI/CD 維護
 
 - `.github/workflows/ci.yml` 在 PR 與非 `main` push 的應用程式、package、script、lockfile、Turbo 或 workflow 變更時執行；純文件變更不得啟動 CI。
 - `.github/workflows/deploy-cloudflare-pages.yml` 只在 `main` 上的可部署變更時執行。部署前的驗證以 matrix 平行執行；新增 gate 時加入兩份 workflow 的 matrix，並維持相同命令。
-- `npm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `npm run build:cloudflare:only`，不可再序列重跑同一批測試。
+- `pnpm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `pnpm run build:cloudflare:only`，不可再序列重跑同一批測試。
 - 變更 workflow 觸發範圍、測試命令或 build gate 時，必須同步更新本節，並確認 workflow 自身路徑仍會觸發驗證。
 
 ## 程式風格與命名規範
@@ -128,7 +133,7 @@ Trainers 維持一致檔名/資料夾，例如 `pages/settings/SettingsPage.tsx`
 - 醫療、健康、科學與軟體效度敘述優先引用官方文件、原始研究或同儕審查論文。FrACT 相關內容引用[官方網站／手冊](https://michaelbach.de/fract/)、實際採用的版本與對應研究，並同時揭露校正需求及本站未經等效驗證。
 - `ProfilePage` 只用於主要內容確實聚焦單一作者的專頁，不得套在混合問答／文章列表頁；所有 structured data 皆須代表頁面可見內容並以 Rich Results Test 驗證。
 - 不得重新加入 `motor.trainerhub.cc`、`vision.trainerhub.cc`、`brain.trainerhub.cc`、`mouth.trainerhub.cc` 的公開連結、canonical、sitemap 或 auth origin；這些退役 hostname 只保留 301 設定。
-- SEO 或 E-E-A-T 變更至少執行 Hub build 與 `npm run test:seo`；修改 manifest 再執行 `npm run test:pwa`，修改共用 UI、語言初始化或 entrypoint 再執行 `npm run test:entrypoints`。最後直接檢查 `apps/rehabtrainerhub/out/index.html` 的 title、H1、description、canonical、robots、JSON-LD、繁體中文可見內容及不得出現的 104 URL。
+- SEO 或 E-E-A-T 變更至少執行 Hub build 與 `pnpm run test:seo`；修改 manifest 再執行 `pnpm run test:pwa`，修改共用 UI、語言初始化或 entrypoint 再執行 `pnpm run test:entrypoints`。最後直接檢查 `apps/rehabtrainerhub/out/index.html` 的 title、H1、description、canonical、robots、JSON-LD、繁體中文可見內容及不得出現的 104 URL。
 
 SEO 判斷以 Google Search Central 的[以使用者為優先的實用內容指南](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)、[Sitemap 指南](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap)、[結構化資料指南](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)及[ProfilePage 指南](https://developers.google.com/search/docs/appearance/structured-data/profile-page)最新版本為準；規範變更時更新實作與檢查腳本，不以舊 SEO 慣例覆蓋官方說明。
 

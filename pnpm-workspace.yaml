@@ -1,0 +1,14 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+allowBuilds:
+  core-js: true
+  esbuild: true
+
+nodeLinker: hoisted
+packageImportMethod: copy
+injectWorkspacePackages: true
+dedupeInjectedDeps: false
+preferSymlinkedExecutables: false
+symlink: false

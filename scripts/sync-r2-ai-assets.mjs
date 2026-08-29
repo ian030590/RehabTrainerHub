@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const defaultManifestPath = resolve(repoRoot, 'scripts/r2-ai-assets.manifest.json');
-const wranglerPrefix = ['--yes', 'wrangler@4'];
+const wranglerPrefix = ['dlx', 'wrangler@4'];
 const dryRun = process.argv.includes('--dry-run');
 const maximumRemoteAssetBytes = 100 * 1024 * 1024;
 
@@ -129,10 +129,10 @@ async function DownloadRemoteAsset(sourceUrl, temporaryDirectory, assetIndex) {
 
 function RunWrangler(args) {
   const commandArgs = [...wranglerPrefix, ...args];
-  console.log(`$ npx ${commandArgs.map(ShellQuote).join(' ')}`);
+  console.log(`$ pnpm ${commandArgs.map(ShellQuote).join(' ')}`);
   if (dryRun) return;
 
-  const command = GetCommand('npx', commandArgs);
+  const command = GetCommand('pnpm', commandArgs);
   const result = spawnSync(command.file, command.args, {
     cwd: repoRoot,
     env: process.env,

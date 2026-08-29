@@ -112,6 +112,6 @@ credential or API token is ever sent to the game.
 ## Local verification
 
 ```sh
-npm --prefix apps/usergamerunner test
-npm --prefix apps/usergamerunner run build
+pnpm --filter @rehab-trainer/usergamerunner test
+pnpm --filter @rehab-trainer/usergamerunner run build
 ```

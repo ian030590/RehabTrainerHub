@@ -27,7 +27,7 @@ rehab-game-releases    # immutable approved files, Hub + runner bindings
 Apply the D1 migration before deploying code that exposes the upload API:
 
 ```powershell
-npx wrangler d1 migrations apply rehab_db --remote --config apps/rehabtrainerhub/wrangler.toml
+pnpm dlx wrangler@4 d1 migrations apply rehab_db --remote --config apps/rehabtrainerhub/wrangler.toml
 ```
 
 Set `GAME_RUNNER_ORIGIN` on the Hub Pages project to the exact HTTPS origin of
@@ -177,11 +177,11 @@ Run these before deployment:
 ```powershell
 node --test apps/rehabtrainerhub/functions/_lib/gamePackages.test.mjs
 node --test scripts/check-game-platform.test.mjs
-npm --prefix apps/usergamerunner test
-npm --prefix apps/usergamerunner run build
-npm run test:hub-functions
-npm run test:cloudflare-deploy
-npm run test:seo
+pnpm --filter @rehab-trainer/usergamerunner test
+pnpm --filter @rehab-trainer/usergamerunner run build
+pnpm run test:hub-functions
+pnpm run test:cloudflare-deploy
+pnpm run test:seo
 ```
 
 After deployment, verify that a runner game route and its manifest/service

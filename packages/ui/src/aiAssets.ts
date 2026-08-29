@@ -7,9 +7,7 @@ export interface MediaPipeAssetUrls {
   faceLandmarkerModelUrl: string;
 }
 
-const fallbackWasmUrl =
-  `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${mediaPipeTasksVisionVersion}/wasm`;
-const fallbackModelBaseUrl = 'https://storage.googleapis.com/mediapipe-models';
+const platformAssetBasePath = '/runtime-assets';
 
 export function CreateRuntimeAssetUrlCandidates(
   assetBaseUrl: string | undefined,
@@ -27,37 +25,24 @@ export function CreateRuntimeAssetUrlCandidates(
 
 export function CreateMediaPipeAssetUrls(assetBaseUrl?: string): MediaPipeAssetUrls {
   const normalizedBaseUrl = NormalizeAssetBaseUrl(assetBaseUrl);
-  if (!normalizedBaseUrl) {
-    return {
-      wasmUrl: fallbackWasmUrl,
-      handLandmarkerModelUrl:
-        `${fallbackModelBaseUrl}/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
-      poseLandmarkerLiteModelUrl:
-        `${fallbackModelBaseUrl}/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
-      faceLandmarkerModelUrl:
-        `${fallbackModelBaseUrl}/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
-    };
-  }
+  const baseUrl = normalizedBaseUrl || platformAssetBasePath;
 
   return {
     wasmUrl:
-      `${normalizedBaseUrl}/ai/mediapipe/tasks-vision/${mediaPipeTasksVisionVersion}/wasm`,
+      `${baseUrl}/ai/mediapipe/tasks-vision/${mediaPipeTasksVisionVersion}/wasm`,
     handLandmarkerModelUrl:
-      `${normalizedBaseUrl}/ai/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+      `${baseUrl}/ai/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
     poseLandmarkerLiteModelUrl:
-      `${normalizedBaseUrl}/ai/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
+      `${baseUrl}/ai/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
     faceLandmarkerModelUrl:
-      `${normalizedBaseUrl}/ai/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+      `${baseUrl}/ai/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
   };
 }
 
 export function CreateMediaPipeAssetUrlCandidates(
   assetBaseUrl?: string,
 ): MediaPipeAssetUrls[] {
-  const fallback = CreateMediaPipeAssetUrls();
-  return NormalizeAssetBaseUrl(assetBaseUrl)
-    ? [CreateMediaPipeAssetUrls(assetBaseUrl), fallback]
-    : [fallback];
+  return [CreateMediaPipeAssetUrls(assetBaseUrl)];
 }
 
 export async function LoadMediaPipeWithFallback<T>(
@@ -71,10 +56,7 @@ export async function LoadMediaPipeWithFallback<T>(
     } catch (error) {
       lastError = error;
       if (index < candidates.length - 1) {
-        console.warn(
-          'Unable to load MediaPipe assets from the configured CDN. Falling back to the pinned public source.',
-          error,
-        );
+        console.warn('Unable to load MediaPipe assets from the configured platform source.', error);
       }
     }
   }

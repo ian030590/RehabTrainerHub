@@ -93,6 +93,14 @@ assert.match(officialGeneratorSource, /runtimeDestinations/);
 assert.match(officialGeneratorSource, /data-official-game-pwa/);
 assert.doesNotMatch(officialGeneratorSource, /function CollectFiles/);
 
+const rootPwaGeneratorSource = readFileSync(
+  resolve(repoRoot, 'scripts/emit-pwa-assets.mjs'),
+  'utf8',
+);
+assert.match(rootPwaGeneratorSource, /maximumRootShellPrecacheBytes/);
+assert.match(rootPwaGeneratorSource, /runtime-assets/);
+assert.match(rootPwaGeneratorSource, /IsRootShellFile/);
+
 const fixtureRoot = mkdtempSync(join(tmpdir(), 'rehab-pwa-check-'));
 try {
   const outputDir = resolve(fixtureRoot, 'training-runtime', 'dist');
@@ -113,6 +121,9 @@ try {
   assert.equal(worker.includes('.DS_Store'), false);
   assert.equal(worker.includes('.hidden'), false);
   assert.equal(worker.includes('/404.html'), false);
+  assert.match(worker, /root Hub worker owns only the application shell/);
+  assert.match(worker, /url\.pathname\.startsWith\('\/runtimes\/'\)/);
+  assert.match(worker, /url\.pathname\.startsWith\('\/official-training-host\/'\)/);
   assert.match(worker, /caches\.match\(request, \{ ignoreSearch: true \}\)/);
 
   const headers = readFileSync(resolve(outputDir, '_headers'), 'utf8');

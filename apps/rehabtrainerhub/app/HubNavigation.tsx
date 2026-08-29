@@ -53,7 +53,9 @@ function HubShellContent({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const { language, locale, setLanguage } = useHubLanguage();
   const isStaff = IsStaffUser(user);
-  const isTrainingRoute = pathname === '/train' || pathname.startsWith('/train/');
+  const isTrainingRoute = pathname === '/train'
+    || pathname.startsWith('/train/')
+    || pathname.startsWith('/official-training-host/');
   const copy = GetHubUiCopy(language).navigation;
   const nextLanguage = language === 'en' ? 'zh' : 'en';
 

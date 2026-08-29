@@ -3280,6 +3280,40 @@ summary:focus-visible {
   gap: 8px;
 }
 
+.developer-validation-findings,
+.developer-manual-review {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--surface-muted);
+}
+
+.developer-validation-findings ul {
+  display: grid;
+  gap: 8px;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.developer-validation-findings li {
+  display: grid;
+  gap: 2px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.developer-validation-findings li span {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.developer-manual-review .admin-field {
+  margin: 0;
+}
+
 .release-status {
   display: inline-flex;
   padding: 3px 9px;

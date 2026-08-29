@@ -1,0 +1,23 @@
+.official-training-host {
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  grid-template: 1fr / 1fr;
+  background: var(--background);
+}
+
+.official-training-host-status {
+  align-self: center;
+  justify-self: center;
+  margin: 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.official-training-host-frame {
+  border: 0;
+  display: block;
+  grid-area: 1 / 1;
+  min-height: 100vh;
+  width: 100%;
+}

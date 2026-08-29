@@ -23,13 +23,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/clean-next-output.mjs && next build && node scripts/build-training-runtimes.mjs && node ../../scripts/emit-pwa-assets.mjs out && node ../../scripts/emit-official-game-pwas.mjs out && node ../../scripts/check-seo-output.mjs",
-    "preview": "npx serve out"
+    "preview": "pnpm dlx serve out"
   },
   "dependencies": {
     "fflate": "~0.8.2",
     "next": "^16.2.10",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "@rehab-trainer/training-contracts": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.10.2",

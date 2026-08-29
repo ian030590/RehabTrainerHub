@@ -23,13 +23,6 @@ const GestureBattlerGame = lazy(() => LoadGestureBattlerGame().then((module) => 
 const MotorCortexRehabGame = lazy(() => LoadMotorCortexRehabGame().then((module) => ({ default: module.MotorCortexRehabGame })));
 
 type UpperLimbModuleId = 'drawing-defense' | 'asteroid-shield' | 'gesture-battler' | 'motor-cortex-rehab';
-const moduleLoaders: Record<UpperLimbModuleId, () => Promise<unknown>> = {
-  'drawing-defense': LoadDrawingTowerDefenseGame,
-  'asteroid-shield': LoadAsteroidShieldGame,
-  'gesture-battler': LoadGestureBattlerGame,
-  'motor-cortex-rehab': LoadMotorCortexRehabGame,
-};
-
 const upperLimbCatalogModules = GetTrainingCatalogModules({
   trainer: 'motor',
   purpose: 'upper-limb',
@@ -79,9 +72,6 @@ export function UpperLimbTraining() {
       actionLabel={t('btn.selectModule')}
       cardClassName="training-module-button"
       onSelect={openModule}
-      onPreload={(moduleId) => {
-        void moduleLoaders[moduleId]().catch(() => undefined);
-      }}
     >
       {activeTraining}
     </TrainingModuleSelectionPage>

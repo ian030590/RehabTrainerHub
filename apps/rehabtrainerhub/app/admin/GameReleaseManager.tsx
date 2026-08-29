@@ -4,9 +4,13 @@ import { useEffect, useState } from 'react';
 import { DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import {
   DownloadAdminGameReleaseArtifact,
+  FetchAdminGameValidationQueue,
   FetchAdminGameReleases,
+  ReviewAdminGameSubmission,
   ReviewAdminGameRelease,
   type AdminGameRelease,
+  type AdminGameSubmission,
+  type GameValidationQueue,
   type GameReleaseReviewStatus,
 } from './adminApi';
 
@@ -22,6 +26,7 @@ const statusLabels: Readonly<Record<GameReleaseReviewStatus, string>> = {
 export function GameReleaseManager() {
   const [filter, setFilter] = useState<GameReleaseReviewStatus | ''>('pending_review');
   const [releases, setReleases] = useState<AdminGameRelease[]>([]);
+  const [validationSubmissions, setValidationSubmissions] = useState<AdminGameSubmission[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState('');
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -51,6 +56,28 @@ export function GameReleaseManager() {
     return () => controller.abort();
   }, [filter, reloadKey]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    const queues: GameValidationQueue[] = [
+      'ready-for-review',
+      'manual-review-requested',
+      'security-blocked',
+      'processing',
+    ];
+    void Promise.all(queues.map((queue) => (
+      FetchAdminGameValidationQueue(queue, controller.signal).catch((loadError: unknown) => {
+        if (!controller.signal.aborted) console.warn(`Unable to load validation queue: ${queue}.`, loadError);
+        return [];
+      })
+    ))).then((queueResults) => {
+      if (controller.signal.aborted) return;
+      const unique = new Map<string, AdminGameSubmission>();
+      queueResults.flat().forEach((submission) => unique.set(submission.id, submission));
+      setValidationSubmissions([...unique.values()]);
+    });
+    return () => controller.abort();
+  }, [reloadKey]);
+
   const review = async (release: AdminGameRelease, decision: 'approve' | 'reject' | 'revoke') => {
     const verb = decision === 'approve' ? '核准並發布' : decision === 'revoke' ? '緊急下架' : '退回';
     if (!window.confirm(`確定要${verb}「${release.title}」v${release.version}？`)) return;
@@ -67,6 +94,35 @@ export function GameReleaseManager() {
     } catch (reviewError) {
       console.warn('Unable to review game release.', reviewError);
       setError('審核操作失敗；檔案未發布，請確認儲存空間與版本狀態後再試。');
+    } finally {
+      setBusyId('');
+    }
+  };
+
+  const reviewValidationSubmission = async (
+    submission: AdminGameSubmission,
+    decision: 'approve' | 'reject' | 'request-changes',
+  ) => {
+    const verb = decision === 'approve' ? '通過人工判讀' : decision === 'request-changes' ? '要求修改' : '退回人工判讀';
+    if (!window.confirm(`確定要對「${submission.title}」v${submission.targetVersion}${verb}？`)) return;
+    setBusyId(`submission:${submission.id}`);
+    setError('');
+    try {
+      const reviewEvidence = evidence[submission.id] ?? {
+        sourceReviewed: false,
+        playTested: false,
+        metadataReviewed: false,
+      };
+      await ReviewAdminGameSubmission(
+        submission.id,
+        decision,
+        notes[submission.id] ?? '',
+        reviewEvidence,
+      );
+      setReloadKey((current) => current + 1);
+    } catch (reviewError) {
+      console.warn('Unable to review validation submission.', reviewError);
+      setError('人工判讀操作失敗；submission 狀態未變更，請重新載入後再試。');
     } finally {
       setBusyId('');
     }
@@ -118,6 +174,145 @@ export function GameReleaseManager() {
         <button className="admin-button admin-button-secondary" onClick={() => setReloadKey((key) => key + 1)} type="button">
           重新載入
         </button>
+      )}
+      {validationSubmissions.length > 0 && (
+        <section className="admin-validation-queue" aria-label="非同步驗證佇列">
+          <h3>非同步驗證佇列</h3>
+          <p>這些 submission 與舊版 release 分開管理；hard-block 只能修正後重新送審，不能在後台直接放行。</p>
+          <div className="admin-game-release-list">
+            {validationSubmissions.map((submission) => (
+              <article className="admin-game-release" key={`submission-${submission.id}`}>
+                <header>
+                  <div>
+                    <span className={`release-status release-status-${submission.scan.status ?? 'processing'}`}>
+                      {submission.scan.status ?? '處理中'}
+                    </span>
+                    <h3>{submission.title} <small>v{submission.targetVersion}</small></h3>
+                    <p>{submission.owner.displayName} · {submission.artifactType.toUpperCase()} · attempt {submission.scan.attempt ?? '—'}</p>
+                  </div>
+                  <dl>
+                    <div><dt>發現</dt><dd>{submission.findings.length}</dd></div>
+                    <div><dt>套件</dt><dd>{FormatBytes(submission.packageBytes)}</dd></div>
+                    <div><dt>人工覆核</dt><dd>{submission.review?.status ?? '尚未申請'}</dd></div>
+                  </dl>
+                </header>
+                <details open={submission.findings.length > 0}>
+                  <summary>驗證發現（{submission.findings.length}）</summary>
+                  {submission.findings.length === 0 ? (
+                    <p>目前沒有 finding；仍須依 release checklist 完成人工查核。</p>
+                  ) : (
+                    <ul className="admin-game-findings">
+                      {submission.findings.map((finding) => (
+                        <li key={finding.id}>
+                          <strong>{finding.disposition} · {finding.code}</strong>
+                          <span>{finding.filePath ?? '整個套件'}</span>
+                          <p>{finding.messageKey}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </details>
+                <dl className="admin-game-identifiers">
+                  <div><dt>Artifact SHA-256</dt><dd><code>{submission.artifactSha256}</code></dd></div>
+                  <div><dt>Policy</dt><dd><code>{submission.scan.policyVersion ?? '—'}</code></dd></div>
+                </dl>
+                {submission.review && ['requested', 'in_review'].includes(submission.review.status) && (
+                  <div className="admin-game-review-actions">
+                    <label className="admin-field">
+                      <span>人工判讀備註</span>
+                      <textarea
+                        maxLength={2000}
+                        onChange={(event) => setNotes((current) => ({ ...current, [submission.id]: event.target.value }))}
+                        placeholder="記錄 finding 查核結果、試玩結果或需要修改的項目"
+                        rows={3}
+                        value={notes[submission.id] ?? ''}
+                      />
+                    </label>
+                    <fieldset className="admin-game-evidence">
+                      <legend>人工判讀紀錄</legend>
+                      <label>
+                        <input
+                          checked={evidence[submission.id]?.sourceReviewed ?? false}
+                          onChange={(event) => setEvidence((current) => ({
+                            ...current,
+                            [submission.id]: {
+                              sourceReviewed: event.target.checked,
+                              playTested: current[submission.id]?.playTested ?? false,
+                              metadataReviewed: current[submission.id]?.metadataReviewed ?? false,
+                            },
+                          }))}
+                          type="checkbox"
+                        />
+                        已閱讀原始碼並核對爭議 finding
+                      </label>
+                      <label>
+                        <input
+                          checked={evidence[submission.id]?.playTested ?? false}
+                          onChange={(event) => setEvidence((current) => ({
+                            ...current,
+                            [submission.id]: {
+                              sourceReviewed: current[submission.id]?.sourceReviewed ?? false,
+                              playTested: event.target.checked,
+                              metadataReviewed: current[submission.id]?.metadataReviewed ?? false,
+                            },
+                          }))}
+                          type="checkbox"
+                        />
+                        已在隔離、無帳戶資料的環境完成試玩
+                      </label>
+                      <label>
+                        <input
+                          checked={evidence[submission.id]?.metadataReviewed ?? false}
+                          onChange={(event) => setEvidence((current) => ({
+                            ...current,
+                            [submission.id]: {
+                              sourceReviewed: current[submission.id]?.sourceReviewed ?? false,
+                              playTested: current[submission.id]?.playTested ?? false,
+                              metadataReviewed: event.target.checked,
+                            },
+                          }))}
+                          type="checkbox"
+                        />
+                        已核對公開描述且沒有未經證實的醫療或療效宣稱
+                      </label>
+                    </fieldset>
+                    <div>
+                      <button
+                        className="admin-button admin-button-primary"
+                        disabled={busyId === `submission:${submission.id}`
+                          || submission.scan.status !== 'passed'
+                          || submission.findings.some((finding) => finding.disposition === 'hard-block')
+                          || !evidence[submission.id]?.sourceReviewed
+                          || !evidence[submission.id]?.playTested
+                          || !evidence[submission.id]?.metadataReviewed}
+                        onClick={() => void reviewValidationSubmission(submission, 'approve')}
+                        type="button"
+                      >
+                        通過人工判讀
+                      </button>
+                      <button
+                        className="admin-button admin-button-secondary"
+                        disabled={busyId === `submission:${submission.id}`}
+                        onClick={() => void reviewValidationSubmission(submission, 'request-changes')}
+                        type="button"
+                      >
+                        要求修改
+                      </button>
+                      <button
+                        className="admin-button admin-button-secondary"
+                        disabled={busyId === `submission:${submission.id}`}
+                        onClick={() => void reviewValidationSubmission(submission, 'reject')}
+                        type="button"
+                      >
+                        退回申請
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
       )}
       {status === 'ready' && releases.length === 0 && (
         <div className="admin-state">

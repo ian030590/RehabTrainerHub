@@ -9,7 +9,7 @@
 - Framework entrypoints retain their required names, including Next.js `generate...` functions and Cloudflare Pages `onRequest...` handlers.
 - External contracts retain their supplied spelling: URL paths, CSS class names, storage keys, event names, environment variables, JSON fields, database columns, and third-party files are not renamed.
 
-`npm run test:naming` checks authored JavaScript and TypeScript. Build output, public third-party assets, and generated directories are excluded.
+`pnpm run test:naming` checks authored JavaScript and TypeScript. Build output, public third-party assets, and generated directories are excluded.
 
 ## Dead code
 

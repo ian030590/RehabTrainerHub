@@ -1,3 +1,5 @@
+import { gamePlatformCapabilities } from '@rehab-trainer/training-contracts';
+
 export const releaseSchemaVersion = 1;
 export const maxReleaseBytes = 512 * 1024;
 export const maxReleaseFiles = 192;
@@ -8,14 +10,7 @@ const gameIdPattern = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
 const versionPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
 const fileSegmentPattern = /^[0-9A-Za-z._-]+$/;
 const sha256Pattern = /^[0-9a-f]{64}$/;
-const allowedCapabilities = new Set([
-  'audio',
-  'fullscreen',
-  'gamepad',
-  'keyboard',
-  'pointer',
-  'touch',
-]);
+const allowedCapabilities = new Set(gamePlatformCapabilities);
 
 export class ReleaseValidationError extends Error {}
 

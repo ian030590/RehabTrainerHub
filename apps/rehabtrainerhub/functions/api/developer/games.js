@@ -16,6 +16,7 @@ import {
   NormalizeGameCapabilities,
   NormalizeGameSlug,
   NormalizeGameVersion,
+  gameValidationIntakePolicy,
   gamePackageLimits,
   gamePackageRuntimeContract,
 } from '../../_lib/gamePackages.js';
@@ -60,7 +61,35 @@ export async function onRequestGet({ request, env }) {
           game_releases.package_bytes,
           game_releases.uncompressed_bytes,
           game_releases.file_count,
+          game_releases.submission_id,
           game_releases.scan_summary_json,
+          (
+            SELECT latest_review.status
+            FROM game_review_requests AS latest_review
+            WHERE latest_review.submission_id = game_releases.submission_id
+            ORDER BY latest_review.updated_at DESC
+            LIMIT 1
+          ) AS validation_review_status,
+          COALESCE((
+            SELECT json_group_array(json_object(
+              'id', finding.id,
+              'disposition', finding.disposition,
+              'code', finding.code,
+              'filePath', finding.file_path,
+              'line', finding.line_number,
+              'column', finding.column_number,
+              'messageKey', finding.message_key
+            ))
+            FROM game_validation_findings AS finding
+            INNER JOIN game_scan_runs AS finding_run
+              ON finding_run.id = finding.scan_run_id
+            WHERE finding_run.submission_id = game_releases.submission_id
+              AND finding_run.attempt = (
+                SELECT MAX(latest.attempt)
+                FROM game_scan_runs AS latest
+                WHERE latest.submission_id = game_releases.submission_id
+              )
+          ), '[]') AS validation_findings_json,
           game_releases.review_note,
           game_releases.submitted_at,
           game_releases.reviewed_at
@@ -126,6 +155,9 @@ export async function onRequestPost({ request, env }) {
     if (existingRelease) return ErrorResponse(request, env, 'This game version already exists.', 409);
 
     const releaseId = crypto.randomUUID();
+    const submissionId = crypto.randomUUID();
+    const scanRunId = crypto.randomUUID();
+    const jobNonce = crypto.randomUUID();
     const quarantinePrefix = `quarantine/${user.id}/${releaseId}/${inspection.contentSha256}`;
     quarantineCleanup = {
       bucket: quarantineBucket,
@@ -169,6 +201,22 @@ export async function onRequestPost({ request, env }) {
       reviewCount: inspection.reviewCount,
       findingCodes: [...new Set(inspection.findings.map((finding) => finding.code))],
     };
+    const scanStatus = inspection.blockCount > 0 ? 'flagged' : 'passed';
+    const scanEvidence = {
+      schemaVersion: 1,
+      submissionId,
+      scanRunId,
+      artifactSha256: inspection.contentSha256,
+      policyVersion: gameValidationIntakePolicy.policyVersion,
+      findings: inspection.findings.map((finding) => ({
+        code: finding.code,
+        filePath: finding.filePath || null,
+        severity: finding.severity,
+      })),
+    };
+    const reportSha256 = await Sha256Hex(
+      new TextEncoder().encode(JSON.stringify(scanEvidence)),
+    );
     const statements = [];
     if (!existingGame) {
       statements.push(db
@@ -190,6 +238,29 @@ export async function onRequestPost({ request, env }) {
           now,
         ));
     }
+    // Insert the submission before the release row because the migration adds
+    // a foreign key from game_releases.submission_id to game_submissions.id.
+    statements.push(db
+      .prepare(`
+        INSERT INTO game_submissions (
+          id, game_id, owner_user_id, target_version, artifact_type,
+          entry_path, artifact_sha256, package_bytes,
+          submitted_at, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .bind(
+        submissionId,
+        gameId,
+        user.id,
+        input.version,
+        inspection.artifactType,
+        inspection.entryPath,
+        inspection.contentSha256,
+        inspection.packageBytes,
+        now,
+        now,
+        now,
+      ));
     statements.push(db
       .prepare(`
         INSERT INTO game_releases (
@@ -197,9 +268,13 @@ export async function onRequestPost({ request, env }) {
           submitted_developer_name, submitted_title, submitted_summary, submitted_category,
           artifact_type, entry_path, status,
           content_sha256, package_bytes, uncompressed_bytes, file_count,
+          submission_id,
           jspsych_version, capabilities_json, files_json, scan_summary_json,
           submitted_at, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (
+          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )
       `)
       .bind(
         releaseId,
@@ -216,10 +291,35 @@ export async function onRequestPost({ request, env }) {
         inspection.packageBytes,
         inspection.totalBytes,
         inspection.files.length,
+        submissionId,
         input.jsPsychVersion,
         JSON.stringify(input.capabilities),
         JSON.stringify(publicFiles),
         JSON.stringify(scanSummary),
+        now,
+        now,
+        now,
+      ));
+    statements.push(db
+      .prepare(`
+        INSERT INTO game_scan_runs (
+          id, submission_id, attempt, job_nonce, artifact_sha256,
+          policy_version, limits_profile, status, tool_versions_json,
+          report_sha256, queued_at, started_at, completed_at, created_at, updated_at
+        ) VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .bind(
+        scanRunId,
+        submissionId,
+        jobNonce,
+        inspection.contentSha256,
+        gameValidationIntakePolicy.policyVersion,
+        gameValidationIntakePolicy.limitsProfile,
+        scanStatus,
+        JSON.stringify(gameValidationIntakePolicy.toolVersions),
+        reportSha256,
+        now,
+        now,
         now,
         now,
         now,
@@ -233,6 +333,20 @@ export async function onRequestPost({ request, env }) {
         `)
         .bind(
           releaseId,
+          file.path,
+          file.contentType,
+          file.byteSize,
+          file.sha256,
+          `${quarantinePrefix}/files/${file.path}`,
+        ));
+      statements.push(db
+        .prepare(`
+          INSERT INTO game_submission_files (
+            submission_id, path, content_type, byte_size, sha256, quarantine_key
+          ) VALUES (?, ?, ?, ?, ?, ?)
+        `)
+        .bind(
+          submissionId,
           file.path,
           file.contentType,
           file.byteSize,
@@ -256,6 +370,25 @@ export async function onRequestPost({ request, env }) {
           finding.message,
           now,
         ));
+      statements.push(db
+        .prepare(`
+          INSERT INTO game_validation_findings (
+            id, scan_run_id, disposition, code, file_path,
+            line_number, column_number, message_key, evidence_json, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+        .bind(
+          crypto.randomUUID(),
+          scanRunId,
+          MapFindingDisposition(finding.severity),
+          finding.code,
+          finding.filePath || null,
+          finding.line || null,
+          finding.column || null,
+          finding.message,
+          JSON.stringify({ severity: finding.severity }),
+          now,
+        ));
     });
     statements.push(CreateAdminAuditStatement(db, {
       actorUserId: user.id,
@@ -266,7 +399,10 @@ export async function onRequestPost({ request, env }) {
         contentSha256: inspection.contentSha256,
         fileCount: inspection.files.length,
         gameId,
+        reportSha256,
+        scanRunId,
         status: releaseStatus,
+        submissionId,
         version: input.version,
       },
     }));
@@ -281,6 +417,8 @@ export async function onRequestPost({ request, env }) {
       },
       release: {
         id: releaseId,
+        submissionId,
+        scanRunId,
         version: input.version,
         status: releaseStatus,
         contentSha256: inspection.contentSha256,
@@ -302,6 +440,19 @@ export async function onRequestPost({ request, env }) {
     console.error('Unable to submit a developer game.', error);
     return ErrorResponse(request, env, 'Unable to submit the game package.', 500);
   }
+}
+
+function MapFindingDisposition(severity) {
+  if (severity === 'block') return 'hard-block';
+  if (severity === 'review') return 'fix-or-manual-review';
+  return 'info';
+}
+
+async function Sha256Hex(bytes) {
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 async function DeleteQuarantineObjectsBestEffort({ bucket, keys }) {
@@ -394,7 +545,10 @@ function GroupDeveloperGames(rows) {
         packageBytes: row.package_bytes,
         uncompressedBytes: row.uncompressed_bytes,
         fileCount: row.file_count,
+        submissionId: row.submission_id || null,
         scan: SafeJson(row.scan_summary_json, {}),
+        manualReviewStatus: row.validation_review_status || null,
+        findings: SafeArrayJson(row.validation_findings_json),
         reviewNote: row.review_note,
         submittedAt: row.submitted_at,
         reviewedAt: row.reviewed_at,
@@ -410,4 +564,9 @@ function SafeJson(value, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function SafeArrayJson(value) {
+  const parsed = SafeJson(value, []);
+  return Array.isArray(parsed) ? parsed : [];
 }

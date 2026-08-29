@@ -47,9 +47,6 @@ export function OralTraining() {
       actionLabel={t('btn.selectModule')}
       cardClassName="training-module-button"
       onSelect={openModule}
-      onPreload={() => {
-        void LoadTongueCatchGame().catch(() => undefined);
-      }}
     >
       {activeModule === 'tongue-catch' && (
         <Suspense fallback={<AppLoading label={t('app.loading')} />}>

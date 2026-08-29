@@ -26,13 +26,33 @@ runtime shell adapter，讓模組使用對應語系、設定與紀錄儲存；�
 也不得包含遊戲流程或 renderer 狀態。
 
 重型依賴必須留在模組的動態 import 後方。卡片 hover、focus 或 pointer down
-可以預載程式碼，但 Pixi、jsPsych、Three、MediaPipe、TensorFlow 與實際媒體
-stream 只能在對應流程階段初始化。
+只能預載圖片與無副作用的 setup metadata；Pixi、jsPsych、Three、MediaPipe、
+TensorFlow 與實際媒體 stream 只能在 rules-visible 之後、由 module-owned
+`loadEngine()`/`startRun()` 初始化。返回設定或離開時必須 abort 並釋放整個 run。
+
+新模組的最小目錄契約為：
+
+```text
+<domain>/<slug>/
+  manifest.ts       # 只含 metadata、capability、PWA 與資產 hash
+  config.ts         # defaults + unknown-field stripping + validation
+  ConfigPanel.tsx   # 不得 import engine/heavy dependency
+  RulesPanel.tsx    # 規則與 preload progress，不建立 renderer/media
+  loadEngine.ts     # rules-visible 後才 dynamic import engine
+  engine/
+    plugin.ts       # module-owned jsPsych plugin/timeline
+    renderer.ts     # renderer、input、model、stream 的同局生命週期
+    results.ts      # bounded aggregate metrics
+```
+
+Manifest 必須能由 `@rehab-trainer/training-contracts` 驗證，並加入 generated
+registry；不得在 Hub route、四個 category runtime 或另一模組複製 ID、defaults
+或 capability。Hart chart 與駕駛注意力模擬練習是明確 exempt，不可作為新模組範本。
 
 修改本目錄後至少執行：
 
 ```sh
-npm run test:entrypoints
-npm run test:training-flow
-npm run build:hub
+pnpm run test:entrypoints
+pnpm run test:training-flow
+pnpm run build:hub
 ```

@@ -1,9 +1,13 @@
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
+import { officialTrainingHostRoutePrefix } from '@rehab-trainer/ui/officialTrainingHostPolicy';
 import {
   GetTrainingModuleFlowManifest,
+  GetTrainingModuleManifest,
+  GetTrainingModulePurposeId,
   type TrainingFlowStep,
   type TrainingMediaPermission,
 } from './moduleFlowManifest';
+import type { TrainingModuleManifest } from '@rehab-trainer/training-contracts';
 
 export type ThemeIconType = 'material-symbol' | 'svg';
 
@@ -118,6 +122,7 @@ export interface LocalizedTrainingCopy {
 
 export interface TrainingCatalogModule {
   catalogId: string;
+  manifest: TrainingModuleManifest;
   runtimeId: string;
   trainer: TrainerCatalogId;
   purpose: TrainingPurposeId;
@@ -464,16 +469,22 @@ const seeds: readonly TrainingCatalogSeed[] = [
 
 export const trainingCatalog: readonly TrainingCatalogModule[] = seeds.map((seed) => {
   const catalogId = `${seed.trainer}:${seed.id}`;
+  const moduleManifest = GetTrainingModuleManifest(catalogId);
   const flowManifest = GetTrainingModuleFlowManifest(catalogId);
+  if (GetTrainingModulePurposeId(catalogId) !== seed.purpose
+    || moduleManifest.purposeId !== seed.purpose) {
+    throw new Error(`Catalog purpose does not match the generated manifest for ${catalogId}.`);
+  }
   return {
     catalogId,
+    manifest: moduleManifest,
     runtimeId: seed.id,
     trainer: seed.trainer,
     purpose: seed.purpose,
     kind: seed.kind,
     entryPath: seed.path,
     imagePath: `/assets/training-modules/${seed.id}.webp`,
-    flow: flowManifest.flow,
+    flow: moduleManifest.flow,
     mediaPermission: flowManifest.mediaPermission,
     sourcePath: flowManifest.sourcePath,
     copy: {
@@ -507,6 +518,18 @@ export function GetTrainingModuleCopy(
 }
 
 export function BuildTrainingModuleHref(
+  module: TrainingCatalogModule,
+): string {
+  return `${defaultSiteUrls.hub}${officialTrainingHostRoutePrefix}/${encodeURIComponent(module.trainer)}/${encodeURIComponent(module.runtimeId)}/`;
+}
+
+/**
+ * Compatibility URL used only by official-training-host while a module is
+ * being migrated to its native setup/engine boundary. New callers must use
+ * BuildTrainingModuleHref so the Hub never launches a category runtime
+ * directly.
+ */
+export function BuildLegacyTrainingModuleHref(
   module: TrainingCatalogModule,
 ): string {
   return `${defaultSiteUrls.hub}/runtimes/${module.trainer}/#${module.entryPath}`;

@@ -70,10 +70,6 @@ export function ThinkingTraining() {
       actionLabel={t('btn.selectModule')}
       cardClassName="training-module-button"
       onSelect={openModule}
-      onPreload={(moduleId) => {
-        const loader = moduleId === 'minesweeper' ? LoadMinesweeperGame : LoadReferenceCognitiveGame;
-        void loader().catch(() => undefined);
-      }}
     >
       {activeTraining}
     </TrainingModuleSelectionPage>

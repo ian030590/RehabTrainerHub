@@ -35,6 +35,7 @@ const packageContentSecurityPolicy = [
   "connect-src 'none'",
   "child-src 'none'",
   "frame-src 'none'",
+  `frame-ancestors 'self' ${trustedPlatformOrigin}`,
   "font-src 'self' data:",
   "form-action 'none'",
   "img-src 'self' data: blob:",

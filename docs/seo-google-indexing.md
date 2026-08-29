@@ -13,8 +13,8 @@
 ## 驗證
 
 ```powershell
-npm run build:hub
-npm run test:seo
+pnpm run build:hub
+pnpm run test:seo
 ```
 
 部署後確認：

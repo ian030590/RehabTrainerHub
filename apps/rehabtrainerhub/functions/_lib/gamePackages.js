@@ -1,34 +1,30 @@
 import { unzipSync } from 'fflate';
+import {
+  gamePlatformCapabilities,
+  gamePlatformPackageLimits,
+  gamePlatformRuntimeContract,
+} from '@rehab-trainer/training-contracts';
 
-export const gamePackageLimits = Object.freeze({
-  maximumCompressedBytes: 12 * 1024 * 1024,
-  maximumFileBytes: 8 * 1024 * 1024,
-  maximumFileCount: 192,
-  maximumFindingCount: 200,
-  maximumTextLineLength: 5000,
-  maximumTotalBytes: 24 * 1024 * 1024,
-  maximumTotalTextBytes: 4 * 1024 * 1024,
-  maximumZipRatio: 100,
-});
+export const gamePackageLimits = gamePlatformPackageLimits;
 
 // Keep these root-relative URLs synchronized with the isolated runner's
 // functions/_lib/runtime.js contract. Root-relative URLs always resolve on the
 // runner origin, including when production moves to another registrable domain.
-export const gamePackageRuntimeContract = Object.freeze({
-  jsPsychVersion: '8.2.3',
-  jsPsychUrl: '/runtime/jspsych-8.2.3.js',
-  jsPsychCssUrl: '/runtime/jspsych-8.2.3.css',
-  gameSdkVersion: '0.1.0',
-  gameSdkUrl: '/runtime/trainerhub-game-sdk-0.1.0.js',
+export const gamePackageRuntimeContract = gamePlatformRuntimeContract;
+
+// The synchronous intake scanner remains a fail-fast UX gate while the
+// asynchronous validation controller is rolled out. Keep its provenance in a
+// named policy object so API rows and later queue jobs share one vocabulary.
+export const gameValidationIntakePolicy = Object.freeze({
+  policyVersion: 'sync-intake-v1',
+  limitsProfile: 'uploaded-game-v1',
+  toolVersions: Object.freeze({
+    staticScanner: 'game-packages-1',
+  }),
 });
 
 const entryPath = 'index.html';
-const allowedCapabilities = new Set([
-  'audio',
-  'fullscreen',
-  'keyboard',
-  'pointer',
-]);
+const allowedCapabilities = new Set(gamePlatformCapabilities);
 const contentTypes = new Map([
   ['.css', 'text/css; charset=utf-8'],
   ['.gif', 'image/gif'],
