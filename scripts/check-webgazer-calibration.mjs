@@ -180,6 +180,11 @@ for (const forbiddenSelector of [
 }
 assert.ok(loader.includes('Timed out loading WebGazer'), 'script loading must have a timeout');
 assert.ok(loader.includes("webGazerRuntimeVersion = '3.5.3'"), 'WebGazer must use a pinned runtime version');
+assert.match(loader, /EnsureWebGazerLoaded\(signal\?: AbortSignal\)/, 'WebGazer loading must accept an abort signal');
+assert.match(loader, /signal\?\.addEventListener\('abort'/, 'WebGazer script loading must remove a pending script on abort');
+assert.match(training, /const setupController = new AbortController\(\)/, 'visual training must own a setup abort controller');
+assert.match(training, /EnsureWebGazerLoaded\(setupController\.signal\)/, 'visual training must pass its setup signal to WebGazer');
+assert.match(training, /setupController\.abort\('training-unmounted'\)/, 'visual training must abort setup on unmount');
 assert.ok(loader.includes('ConfigureWebGazerAssetPath'), 'the MediaPipe path must follow the loaded script origin');
 assert.ok(loader.includes('EnsurePredictionTimestamp'), 'WebGazer predictions must be timestamped for native validation');
 assert.equal(loader.includes('local-v1'), false, 'the obsolete WebGazer runtime must not be a fallback');

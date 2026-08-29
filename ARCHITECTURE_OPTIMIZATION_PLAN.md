@@ -1,8 +1,8 @@
 # 居家訓練網系統架構優化藍圖
 
-狀態：In progress（Phase 0–2 基礎垂直切片、Phase 5 root shell、Phase 6 migration/狀態 gate 與 Phase 7 審查 API/UI 垂直切片已實作；其餘項目依清單逐步切換）
+狀態：In progress（Phase 0–2 基礎垂直切片、Phase 3 Vision preload/abort 與 build-manifest 驗收切片、Phase 4 五個指定影音模組 native jsPsych lifecycle + data-only simulation、Phase 5 root shell + dependency closure/offline pack 基礎、同源 allowlisted runtime-assets 與 AI/WASM/WebGazer 離線閉包、Phase 6 migration/狀態 gate 與 Phase 7 審查 API/UI 垂直切片、內建 Drawing Defense 隱私邊界與回歸 gate 已實作；其餘項目依清單逐步切換）
 
-盤點日期：2026-08-28
+盤點日期：2026-08-29
 
 適用範圍：Hub 內建訓練、開發者遊戲平台、隔離執行器、PWA、CI/CD 與套件管理
 
@@ -852,7 +852,7 @@ pnpm run build:cloudflare
 
 - [x] 完成第 8 節所有 package manager、CI/CD 與文件切換。
 - [ ] 在乾淨 checkout 執行 frozen install、全部現有 gates 與 Cloudflare build（本機 pCloud 的 pnpm store 目前被另一個 Node 程序鎖定，尚未把這項驗收誤標為完成）。
-- [ ] 記錄四個 runtime entry/chunk/PWA precache baseline 與各大型 asset bytes。
+- [x] 記錄四個 runtime entry/chunk/PWA precache baseline 與各大型 asset bytes（`docs/runtime-baseline.json`；不記錄 hashed filename）。
 - [x] 暫時禁止新增新的 category runtime utility/re-export。
 - [x] 建立 ADR：任意 HTML residual risk、兩種 upload tier、CDN policy、PWA offline 定義。
 
@@ -863,9 +863,9 @@ pnpm run build:cloudflare
 - [x] 新增 `packages/training-contracts`，不得依賴 React、jsPsych 或 renderer。
 - [x] 定義 manifest、config validation、run result、asset、lifecycle 與 message schemas。
 - [x] 先由既有 catalog/flow seed 產生 validated module manifest 與 registry；後續仍需將 catalog seed 完全反向聚合至 manifest。
-- [ ] 由 manifest 產生完整 host registry、official PWA metadata、record allowlist 與測試清單（目前只完成 Hub registry 與中央 runtime contract）。
+- [x] 由 manifest 產生完整 host registry、official PWA metadata、record allowlist 與測試清單（`trainingModuleRegistry`；catalog launch URL 直接讀 registry）。
 - [x] 把 game capability、jsPsych/SDK runtime version、上傳大小上限從 scanner/runner/developer UI 的複本移至 renderer-independent contract；trainer IDs 與 PWA closure 仍待後續切片。
-- [ ] 加入 circular dependency 與 forbidden import gate。
+- [x] 加入 circular dependency 與 forbidden import gate（`test:architecture`）。
 
 驗收：新增 fixture module 只新增一個 module directory，即可自動出現在測試 registry；缺任何 contract 欄位會 build fail。
 
@@ -883,35 +883,41 @@ pnpm run build:cloudflare
 
 ### Phase 3：Rules-visible loading boundary
 
+- 本輪已先完成 Vision vertical slice：`CreateSingleFlightPreloadCache` 將同一 module 的 rules-visible preload 合併為單一 promise，離開/換模組時以 `AbortController` 清理 Pixi warmup；WebGazer script loader 也支援 abort 與 script node cleanup。四個 Vite runtime 現在輸出 `.vite/manifest.json`，Hub build 會執行 `check-runtime-build-manifest.mjs`，驗證 root entry 的 static closure 不含 heavy chunk。這些是 boundary 的可驗收基礎，尚未代表所有 module 都已改成 `loadEngine.ts` 的完整 setup/engine 物理切分，也尚未完成瀏覽器 network test。
+
 - [ ] 每個遊戲拆成 manifest/config/rules/setup 與 engine 兩個 chunk boundary。
 - [x] Selection card 的 hover/focus/touch 不再觸發 runtime preload；card 只負責圖片與 setup UI。
 - [x] 現有 Vision config 在 rules-visible transition 才以單一 promise 觸發 engine preload（正式 module `loadEngine({ trigger: 'rules-visible' })` 邊界仍待 Phase 3 vertical slice）。
 - [ ] 返回/離開用 AbortController；重複開關規則不得建立第二份 engine。
 - [ ] 加入 build-manifest assertion 與 Playwright network test：規則前不得請求 heavy chunks/models。
-- [ ] camera/microphone preflight 後立即 stop；實際 stream 只在 trial start 存活。
+- [x] camera/microphone preflight 後立即 stop；實際 stream 只在 trial start 存活（共用 preflight 與 `test:media-lifecycle`）。
 
 驗收：除使用者明確發起、只寫 cache 的 offline pack download 外，10 個目標遊戲在 card/config 階段都沒有 jsPsych/Pixi/Three/MediaPipe/TF/WebGazer network request、module execution 或 instance。
 
 ### Phase 4：jsPsych native plugin 收斂
 
-- [ ] 先轉 `drawing-defense`，建立可複用但不持有 renderer state 的 plugin scaffold。
-- [ ] 依序轉 `gesture-battler`、`motor-cortex-rehab`、`asteroid-shield`。
-- [ ] 最後轉 `tongue-catch`，特別驗證 TF tensor/classifier、MediaPipe 與 stream cleanup。
+- `drawing-defense`、`gesture-battler`、`motor-cortex-rehab`、`asteroid-shield` 與 `tongue-catch` 已完成 native lifecycle scaffold；plugin 只呼叫 module-owned `on_start` 並以 `finishTrial`/`abortExperiment` 由 component 結束，不保存 Pixi、pointer、model、stream 或 game state。每個 plugin 的 start/error/stale-run 行為已由 `test:training-lifecycle` 覆蓋；其餘認知模組仍維持相容 adapter。
+
+- [x] 先轉 `drawing-defense`，建立可複用但不持有 renderer state 的 plugin scaffold（Pixi/input/game state 仍由 module component 擁有）。
+- [x] 依序轉 `gesture-battler`、`motor-cortex-rehab`、`asteroid-shield`。
+- [x] 最後轉 `tongue-catch`，特別驗證 TF tensor/classifier、MediaPipe 與 stream cleanup。
 - [ ] 保留 Vision 四遊戲與 UFOV native timeline，改用統一 contract/summarizer。
 - [ ] Hart/Driving 標為本輪 exempt；不得成為新遊戲範本。
-- [ ] 將目前 token-presence test 升級成 lifecycle 行為測試：start/finish/abort/unmount/error/dispose。
-- [ ] custom plugin 實作 data-only simulation，讓 trial/result schema 可在 CI 快速驗證。
+- [x] 將目前 token-presence test 升級成 lifecycle 行為測試：start/finish/abort/unmount/error/dispose（native plugin start/error/stale 與 adapter finish/abort/dispose）。
+- [x] custom plugin 實作 data-only simulation，讓 trial/result schema 可在 CI 快速驗證（不啟動 renderer、模型或媒體；fixture identity 由共用 helper 覆寫並鎖定）。
 
 驗收：目標 10 個 manifest 全為 `native-timeline`；external adapter 只剩明確 exempt 或非本次 brain legacy modules，並有移除期限/owner。
 
 ### Phase 5：PWA 與資產供應
 
 - [x] root service worker 改為 shell-only precache（排除 runtimes、games、runtime-assets、offline-manifests、模型/WASM/3D 資產，並設 8 MiB shell budget）。
-- [ ] build 產生每個 module 的 dependency closure/offline manifest。
-- [ ] 建立 origin-wide `OfflinePackManager`、pack reference set、staging/ready transaction、lease 與 reconcile/GC。
-- [ ] 新增離線下載、進度、容量、完整性、更新與移除 UI。
+- [x] build 產生每個 module 的 dependency closure/offline manifest（官方遊戲 PWA 會從 Vite manifest 產生 module closure、逐檔 SHA-256 與 bounded offline manifest；不把 category runtime 的其他遊戲 dynamic imports 帶入）。
+- [x] 建立 origin-wide `OfflinePackManager`、pack reference set、staging/ready transaction、lease、reconcile/GC、IndexedDB 持久化 fallback 與 immutable URL 衝突檢查（`packages/ui/src/offlinePackManager.ts`；完整 UI 與瀏覽器端驗收仍待後續切片）。
+- [x] 新增離線下載、進度、容量、完整性、更新與移除 UI（共用 `OfflinePackControl` 僅在使用者按下離線下載時讀取 `latest.json`，並交由 origin-wide `OfflinePackManager` 驗證與安裝）。
 - [x] 將 public CDN fallback 從 production resolver 移除（只保留平台控制的同源/版本化資產路徑）。
-- [ ] 把 WebGazer/MediaPipe/model 資產移至平台控制的 immutable version path。
+- [x] 內建 Drawing Defense 不再由瀏覽器自動上傳筆跡影像或參與者識別資料；以 `test:training-privacy` 鎖定無外傳 API 的回歸邊界。
+- [x] 把 WebGazer/MediaPipe/model 資產移至平台控制的 immutable version path（同源 `/runtime-assets/*` 唯讀 route + R2 manifest；外部 asset base 僅作受控 fallback）。
+- [x] Hub build 在產生官方 PWA 後執行產物完整性 gate（同源資源、manifest／Service Worker scope、offline closure SHA-256、R2 runtime asset descriptor 與 immutable/latest 一致性）。
 - [ ] 針對 fresh install -> airplane mode 做每遊戲 browser test。
 - [ ] 驗證舊 offline cache migration，不要誤刪其他遊戲 scope。
 
@@ -948,7 +954,7 @@ pnpm run build:cloudflare
 ### Phase 8：切換與刪除 category runtimes
 
 - [ ] 全 catalog launch URL 切到 official host。
-- [ ] official per-game PWA 改由 module manifest/asset closure 生成。
+- [x] official per-game PWA 改由 module-owned flow manifest 的 runtime asset groups + Vite manifest dependency closure 生成；AI/WASM/WebGazer/3D 資產以同源 hash descriptor 納入 offline manifest。
 - [ ] 驗證 Hub overlay、單一 PWA、deep link、歷史紀錄與 storage migration。
 - [ ] 更新所有 scripts、R2 asset source path、browser tests 與文件。
 - [ ] 保留必要 301/route adapter 後刪除四個 `training-runtimes/{trainer}` build roots。
@@ -965,6 +971,8 @@ pnpm run test:naming
 pnpm run test:training-flow
 pnpm run test:assessment-lifecycle
 pnpm run test:entrypoints
+pnpm run test:media-lifecycle
+pnpm run test:runtime-build-manifest # after pnpm run build:hub
 pnpm run test:i18n
 pnpm run test:pwa
 pnpm run test:game-platform
@@ -980,8 +988,11 @@ pnpm run build:hub
 - `test:training-contracts`：manifest/schema/registry/transition/property tests
 - `test:training-protocol`：iframe handshake、command correlation/timeout/replay、所有 async state abort/fail/dispose、capability permission denial
 - `test:heavy-load-boundary`：card/config/rules preload 邊界與 host entry heavy-import 靜態 gate
-- `test:training-lifecycle`：所有目標 module 的 start/abort/finish/unmount/dispose
+- `test:media-lifecycle`：共用 media permission preflight 與實際 stream start/stop 邊界
+- `test:training-lifecycle`：native drawing scaffold 與既有 adapter 的 start/abort/finish/dispose 行為；其餘 module 行為測試隨 native conversion 逐步擴充
+- `test:training-privacy`：內建訓練不得從瀏覽器自動上傳筆跡、影像或參與者識別資料
 - `test:heavy-load-boundary`：規則前 network/import graph 不含 heavy dependency
+- `test:runtime-build-manifest`：每個 Vite runtime 的 root static closure、dynamic entry 與 asset path
 - `test:bundle-budgets`：entry、setup、engine、asset closure 與 root precache budget
 - `test:offline-packs`：fresh-cache offline browser、shared-asset reference/GC、concurrent install/remove
 - `test:game-validator`：malicious corpus、false-positive corpus、idempotency、nonce/replay/attestation、no-egress
@@ -1031,3 +1042,4 @@ Asteroid Shield、fullscreen 或 Pixi canvas 尺寸變更仍至少執行 `test:e
 - pnpm 11 的 project settings 以 `pnpm-workspace.yaml` 為主，`.npmrc` 只處理 registry/auth：<https://pnpm.io/settings>
 - Cloudflare Container 可用 deny-by-default 的 outbound policy；若採用此實作，validator 必須設定無 Internet 並且不持有 production secrets：<https://developers.cloudflare.com/containers/platform-details/outbound-traffic/>
 - Cloudflare Workers Web Crypto 支援 Ed25519 sign/verify；實作仍需固定 canonical payload 與 key rotation policy：<https://developers.cloudflare.com/workers/runtime-apis/web-crypto/>
+本輪新增 gate：`test:media-lifecycle` 驗證共用 camera/microphone preflight 會立即停止權限探測 stream，module 的實際 stream 只在 jsPsych run 後建立並於 dispose 停止；`test:runtime-build-manifest`（由 `build:hub` 在 runtime build 後執行）驗證 Vite root static closure 不含 heavy chunk，並檢查 dynamic module asset path 與 manifest 完整性。

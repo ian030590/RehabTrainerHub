@@ -42,12 +42,30 @@ if (appName !== 'rehabtrainerhub'
 const catalogPath = resolve(repositoryRoot, 'apps/rehabtrainerhub/training-modules/catalog.ts');
 const catalogSource = await readFile(catalogPath, 'utf8');
 const catalogGames = ReadCatalogSeeds(catalogSource);
+const flowManifestSource = await readFile(
+  resolve(repositoryRoot, 'apps/rehabtrainerhub/training-modules/moduleFlowManifest.ts'),
+  'utf8',
+);
+const sourcePathsByCatalogId = ReadFlowSourcePaths(flowManifestSource);
+const runtimeAssetGroupsByCatalogId = ReadFlowRuntimeAssetGroups(flowManifestSource);
+const platformRuntimeAssets = await ReadPlatformRuntimeAssets();
+for (const game of catalogGames) {
+  const catalogId = `${game.trainer}:${game.id}`;
+  game.sourcePath = sourcePathsByCatalogId.get(catalogId) ?? null;
+  game.runtimeAssetGroups = runtimeAssetGroupsByCatalogId.get(catalogId) ?? [];
+}
 ValidateCatalogGames(catalogGames);
 const gamesDirectory = resolve(outputDirectory, 'games');
 if (dirname(gamesDirectory) !== outputDirectory || basename(gamesDirectory) !== 'games') {
   throw new Error('Refusing to write games outside the Hub build output.');
 }
 await rm(gamesDirectory, { recursive: true, force: true });
+const offlineManifestsDirectory = resolve(outputDirectory, 'offline-manifests');
+if (dirname(offlineManifestsDirectory) !== outputDirectory
+  || basename(offlineManifestsDirectory) !== 'offline-manifests') {
+  throw new Error('Refusing to write offline manifests outside the Hub build output.');
+}
+await rm(offlineManifestsDirectory, { recursive: true, force: true });
 
 const rootManifest = JSON.parse(await readFile(resolve(outputDirectory, 'manifest.webmanifest'), 'utf8'));
 const packageJson = JSON.parse(await readFile(resolve(appDirectory, 'package.json'), 'utf8'));
@@ -56,6 +74,10 @@ for (const trainer of trainers) {
   const games = catalogGames.filter((game) => game.trainer === trainer);
   if (games.length === 0) throw new Error(`No catalog games found for ${trainer}.`);
   const rootHtml = await readFile(resolve(outputDirectory, 'runtimes', trainer, 'index.html'), 'utf8');
+  const runtimeManifest = JSON.parse(await readFile(
+    resolve(outputDirectory, 'runtimes', trainer, '.vite', 'manifest.json'),
+    'utf8',
+  ));
   const shellUrls = ExtractShellUrls(rootHtml, rootManifest);
   const shellFiles = shellUrls.map(ResolveOutputFile);
   const shellMetadata = await Promise.all(shellFiles.map(async (filePath) => {
@@ -85,13 +107,61 @@ for (const trainer of trainers) {
       scope: basePath,
     };
     const html = BuildGameHtml(rootHtml, game, basePath, description);
-    const revision = CreateGameRevision(baseRevision, game, manifest, html);
-    const serviceWorker = BuildGameServiceWorker({ basePath, gameId: game.id, revision, shellUrls, trainer });
-    ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker, trainer });
+    const runtimeAssetDescriptors = BuildRuntimeAssetDescriptors(
+      game,
+      trainer,
+      platformRuntimeAssets,
+    );
+    const revision = CreateGameRevision(
+      baseRevision,
+      game,
+      manifest,
+      html,
+      runtimeAssetDescriptors,
+    );
+    const moduleUrls = ResolveRuntimeModuleUrls(runtimeManifest, game.sourcePath, trainer);
+    const offlineManifest = await BuildOfflineManifest({
+      basePath,
+      game,
+      html,
+      manifest,
+      moduleUrls,
+      revision,
+      runtimeAssetDescriptors,
+      shellUrls,
+      trainer,
+    });
+    const offlineManifestUrl = `/offline-manifests/${game.id}/${revision}.json`;
+    const latestOfflineManifestUrl = `/offline-manifests/${game.id}/latest.json`;
+    const serviceWorker = BuildGameServiceWorker({
+      basePath,
+      gameId: game.id,
+      moduleUrls,
+      offlineManifestUrl,
+      revision,
+      shellUrls,
+      trainer,
+    });
+    ValidateGeneratedOutput({
+      basePath,
+      game,
+      html,
+      manifest,
+      offlineManifest,
+      offlineManifestUrl,
+      latestOfflineManifestUrl,
+      serviceWorker,
+      trainer,
+    });
+    const offlineManifestPath = resolve(outputDirectory, ...offlineManifestUrl.slice(1).split('/'));
+    const latestOfflineManifestPath = resolve(outputDirectory, ...latestOfflineManifestUrl.slice(1).split('/'));
+    await mkdir(dirname(offlineManifestPath), { recursive: true });
     await Promise.all([
       writeFile(resolve(gameDirectory, 'index.html'), html),
       writeFile(resolve(gameDirectory, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`),
       writeFile(resolve(gameDirectory, 'sw.js'), serviceWorker),
+      writeFile(offlineManifestPath, `${JSON.stringify(offlineManifest, null, 2)}\n`),
+      writeFile(latestOfflineManifestPath, `${JSON.stringify(offlineManifest, null, 2)}\n`),
     ]);
     emittedGameCount += 1;
   }
@@ -103,7 +173,14 @@ const headersPath = resolve(outputDirectory, '_headers');
 const headers = await readFile(headersPath, 'utf8');
 const headerMarker = '# Official per-game PWA assets';
 if (!headers.includes(headerMarker)) {
-  await writeFile(headersPath, `${headers.trimEnd()}\n\n${headerMarker}\n/games/*\n  X-Robots-Tag: noindex, nofollow, noarchive\n  Referrer-Policy: no-referrer\n\n/games/*/sw.js\n  Cache-Control: no-cache, no-store, must-revalidate\n\n/games/*/manifest.webmanifest\n  Cache-Control: public, max-age=300\n`);
+  await writeFile(headersPath, `${headers.trimEnd()}\n\n${headerMarker}\n/games/*\n  X-Robots-Tag: noindex, nofollow, noarchive\n  Referrer-Policy: no-referrer\n\n/games/*/sw.js\n  Cache-Control: no-cache, no-store, must-revalidate\n\n/games/*/manifest.webmanifest\n  Cache-Control: public, max-age=300\n\n/offline-manifests/*\n  Cache-Control: public, max-age=31536000, immutable\n`);
+}
+if (!headers.includes('/offline-manifests/*/latest.json')) {
+  const nextHeaders = await readFile(headersPath, 'utf8');
+  await writeFile(
+    headersPath,
+    `${nextHeaders.trimEnd()}\n\n/offline-manifests/*/latest.json\n  Cache-Control: public, max-age=300\n`,
+  );
 }
 
 console.log(`Emitted ${emittedGameCount} Hub-hosted official game PWAs.`);
@@ -178,6 +255,11 @@ function BuildGameHtml(source, game, basePath, description) {
   const installShell = `<aside id="official-game-install" hidden aria-live="polite"><button type="button">安裝此遊戲</button></aside>`;
   let html = source
     .replace(/<html\b([^>]*)>/i, '<html$1 data-official-game-pwa="true">')
+    // A standalone game PWA must not silently pull fonts, scripts, or other
+    // resources from an arbitrary origin. Keep the official shell fully
+    // same-origin; the platform can ship reviewed assets under /assets/.
+    .replace(/<link\b(?=[^>]*\b(?:href|src)=["'](?:https?:)?\/\/)[^>]*>\s*/gi, '')
+    .replace(/<script\b(?=[^>]*\bsrc=["'](?:https?:)?\/\/)[^>]*>\s*<\/script>\s*/gi, '')
     .replace(/<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>\s*/gi, '')
     .replace(/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*>\s*/gi, '')
     .replace(/<meta\b(?=[^>]*(?:\bproperty=["']og:|\bname=["']twitter:))[^>]*>\s*/gi, '')
@@ -206,25 +288,36 @@ function BuildGameHtml(source, game, basePath, description) {
   return html;
 }
 
-function BuildGameServiceWorker({ basePath, gameId, revision, shellUrls, trainer }) {
+function BuildGameServiceWorker({
+  basePath,
+  gameId,
+  moduleUrls,
+  offlineManifestUrl,
+  revision,
+  shellUrls,
+  trainer,
+}) {
   const cachePrefix = `trainerhub-official-game:${trainer}:${gameId}:`;
   const cacheName = `${cachePrefix}${revision}`;
   const precacheUrls = [...new Set([
     basePath,
     `${basePath}manifest.webmanifest`,
+    offlineManifestUrl,
     ...shellUrls,
+    ...moduleUrls,
   ])].sort();
   return `'use strict';
 const cachePrefix = ${JSON.stringify(cachePrefix)};
 const cacheName = ${JSON.stringify(cacheName)};
 const scopePath = ${JSON.stringify(basePath)};
 const launcherUrl = new URL(scopePath, self.location.origin).href;
+const offlineManifestUrl = ${JSON.stringify(offlineManifestUrl)};
 const precacheUrls = Object.freeze(${JSON.stringify(precacheUrls)});
 const precachePaths = new Set(precacheUrls.map((value) => new URL(value, self.location.origin).pathname));
 const runtimeDestinations = new Set(['audio', 'font', 'image', 'script', 'style', 'track', 'video', 'worker']);
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(cacheName).then((cache) => cache.addAll(precacheUrls)).then(() => self.skipWaiting()));
+  event.waitUntil(Precache().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -267,6 +360,35 @@ async function NetworkFirstLauncher(request) {
   }
 }
 
+async function Precache() {
+  const manifestResponse = await fetch(offlineManifestUrl, { cache: 'no-store' });
+  if (!manifestResponse.ok) throw new Error('Offline manifest is unavailable.');
+  const manifest = await manifestResponse.clone().json();
+  if (!manifest || manifest.schemaVersion !== 1 || !Array.isArray(manifest.resources)) {
+    throw new Error('Offline manifest is invalid.');
+  }
+  const cache = await caches.open(cacheName);
+  for (const resource of manifest.resources) {
+    if (!resource || typeof resource.url !== 'string' || !Number.isSafeInteger(resource.byteSize)
+      || !/^[a-f0-9]{64}$/i.test(resource.sha256)) throw new Error('Offline resource metadata is invalid.');
+    const url = new URL(resource.url, self.location.origin);
+    if (url.origin !== self.location.origin || url.hash || !url.pathname.startsWith(scopePath)
+      && !url.pathname.startsWith('/runtimes/') && !url.pathname.startsWith('/assets/')
+      && !url.pathname.startsWith('/runtime-assets/') && !url.pathname.startsWith('/icons/')) {
+      throw new Error('Offline resource escapes the platform scope.');
+    }
+    const response = await fetch(url, { cache: 'no-store', credentials: 'omit' });
+    if (!response.ok || response.type === 'opaque') throw new Error('Offline resource fetch failed.');
+    const bytes = await response.clone().arrayBuffer();
+    if (bytes.byteLength !== resource.byteSize) throw new Error('Offline resource size mismatch.');
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    const hash = [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, '0')).join('');
+    if (hash !== resource.sha256.toLowerCase()) throw new Error('Offline resource hash mismatch.');
+    await cache.put(url, response);
+  }
+  await cache.put(offlineManifestUrl, manifestResponse);
+}
+
 async function CacheFirst(request) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
@@ -283,6 +405,49 @@ async function DisableGamePwa() {
   ]);
 }
 `;
+}
+
+async function BuildOfflineManifest({
+  basePath,
+  game,
+  html,
+  manifest,
+  moduleUrls,
+  revision,
+  runtimeAssetDescriptors,
+  shellUrls,
+  trainer,
+}) {
+  const resources = [
+    basePath,
+    `${basePath}manifest.webmanifest`,
+    ...shellUrls,
+    ...moduleUrls,
+  ];
+  const descriptors = [];
+  for (const url of [...new Set(resources)].sort()) {
+    const bytes = url === basePath
+      ? Buffer.from(html)
+      : url === `${basePath}manifest.webmanifest`
+        ? Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`)
+        : await readFile(ResolveOutputFile(url));
+    descriptors.push({
+      url,
+      byteSize: bytes.byteLength,
+      sha256: createHash('sha256').update(bytes).digest('hex'),
+      required: true,
+    });
+  }
+  return {
+    schemaVersion: 1,
+    kind: 'official-training-offline-pack',
+    packId: `official-game:${game.id}`,
+    moduleId: `${trainer}:${game.id}`,
+    version: revision,
+    scope: basePath,
+    resources: [...descriptors, ...runtimeAssetDescriptors]
+      .sort((left, right) => left.url.localeCompare(right.url)),
+  };
 }
 
 function ReadCatalogSeeds(source) {
@@ -311,6 +476,155 @@ function ReadCatalogSeeds(source) {
   });
 }
 
+function ReadFlowSourcePaths(source) {
+  const sourceFile = ts.createSourceFile('moduleFlowManifest.ts', source, ts.ScriptTarget.Latest, true);
+  let entries = null;
+  sourceFile.forEachChild((node) => {
+    if (!ts.isVariableStatement(node)) return;
+    for (const declaration of node.declarationList.declarations) {
+      if (ts.isIdentifier(declaration.name) && declaration.name.text === 'manifestEntries') {
+        entries = UnwrapExpression(declaration.initializer);
+      }
+    }
+  });
+  if (!entries || !ts.isArrayLiteralExpression(entries)) {
+    throw new Error('Unable to read training module flow entries.');
+  }
+  const sourcePaths = new Map();
+  for (const element of entries.elements) {
+    const tuple = UnwrapExpression(element);
+    if (ts.isSpreadElement(tuple)) {
+      const spread = tuple.getText(sourceFile);
+      const callbackPath = spread.match(/\[\s*catalogId\s*,\s*(['"])([^'"]+)\1/);
+      const idsBlock = source.match(/const\s+referenceCognitiveIds\s*=\s*\[([\s\S]*?)\]\s*as\s+const/);
+      if (!spread.startsWith('...referenceCognitiveIds.map') || !callbackPath || !idsBlock) {
+        throw new Error('Unsupported spread training module flow entry.');
+      }
+      for (const match of idsBlock[1].matchAll(/['"]([^'"]+)['"]/g)) {
+        const catalogId = match[1];
+        if (sourcePaths.has(catalogId)) throw new Error(`Duplicate training flow entry: ${catalogId}`);
+        sourcePaths.set(catalogId, callbackPath[2]);
+      }
+      continue;
+    }
+    if (!ts.isArrayLiteralExpression(tuple) || tuple.elements.length < 2) {
+      throw new Error('Training module flow entry must be a tuple.');
+    }
+    const catalogId = ReadString(tuple.elements[0]);
+    const sourcePath = ReadString(tuple.elements[1]);
+    if (sourcePaths.has(catalogId)) throw new Error(`Duplicate training flow entry: ${catalogId}`);
+    sourcePaths.set(catalogId, sourcePath);
+  }
+  return sourcePaths;
+}
+
+function ReadFlowRuntimeAssetGroups(source) {
+  const sourceFile = ts.createSourceFile('moduleFlowManifest.ts', source, ts.ScriptTarget.Latest, true);
+  let initializer = null;
+  sourceFile.forEachChild((node) => {
+    if (!ts.isVariableStatement(node)) return;
+    for (const declaration of node.declarationList.declarations) {
+      if (ts.isIdentifier(declaration.name)
+        && declaration.name.text === 'runtimeAssetGroupsByCatalogId') {
+        initializer = UnwrapStaticObject(declaration.initializer);
+      }
+    }
+  });
+  if (!initializer || !ts.isObjectLiteralExpression(initializer)) {
+    throw new Error('Unable to read module runtime asset groups.');
+  }
+  const groupsByCatalogId = new Map();
+  for (const property of initializer.properties) {
+    if (!ts.isPropertyAssignment(property)) {
+      throw new Error('Runtime asset group map must use properties.');
+    }
+    const catalogId = ReadPropertyName(property.name);
+    const value = UnwrapExpression(property.initializer);
+    if (!catalogId || !value || !ts.isArrayLiteralExpression(value)) {
+      throw new Error('Runtime asset group map contains an invalid entry.');
+    }
+    const groups = value.elements.map((element) => ReadString(element));
+    if (groups.some((group) => !group || !/^[a-z][a-z0-9-]{1,31}$/.test(group))) {
+      throw new Error(`Invalid runtime asset group for ${catalogId}.`);
+    }
+    if (groupsByCatalogId.has(catalogId)) {
+      throw new Error(`Duplicate runtime asset groups: ${catalogId}`);
+    }
+    groupsByCatalogId.set(catalogId, [...new Set(groups)]);
+  }
+  return groupsByCatalogId;
+}
+
+function UnwrapStaticObject(node) {
+  const expression = UnwrapExpression(node);
+  if (expression && ts.isCallExpression(expression)
+    && ts.isPropertyAccessExpression(expression.expression)
+    && ts.isIdentifier(expression.expression.expression)
+    && expression.expression.expression.text === 'Object'
+    && expression.expression.name.text === 'freeze'
+    && expression.arguments.length === 1) {
+    return UnwrapExpression(expression.arguments[0]);
+  }
+  return expression;
+}
+
+function ReadPropertyName(name) {
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) return name.text;
+  return null;
+}
+
+function ResolveRuntimeModuleUrls(runtimeManifest, sourcePath, trainer) {
+  if (typeof sourcePath !== 'string' || sourcePath.length === 0) {
+    throw new Error(`Missing runtime source path for ${trainer} module.`);
+  }
+  const expectedKey = `../../training-modules/${sourcePath}`;
+  const sourceName = sourcePath.split('/').pop()?.replace(/\.[^.]+$/, '');
+  const entryKey = runtimeManifest[expectedKey]
+    ? expectedKey
+    : Object.keys(runtimeManifest).find((key) => runtimeManifest[key]?.src === expectedKey)
+      ?? Object.keys(runtimeManifest).find((key) => (
+        runtimeManifest[key]?.name === sourceName
+        && runtimeManifest[key]?.isDynamicEntry === true
+      ));
+  if (!entryKey) throw new Error(`Runtime manifest has no entry for ${expectedKey}.`);
+  const keys = CollectManifestClosure(runtimeManifest, entryKey);
+  const urls = new Set();
+  for (const key of keys) {
+    const entry = runtimeManifest[key];
+    if (!entry) continue;
+    AddManifestAssetUrl(urls, trainer, entry.file);
+    for (const css of entry.css ?? []) AddManifestAssetUrl(urls, trainer, css);
+    for (const asset of entry.assets ?? []) AddManifestAssetUrl(urls, trainer, asset);
+  }
+  return [...urls].sort();
+}
+
+function CollectManifestClosure(runtimeManifest, rootKey) {
+  const visited = new Set();
+  const pending = [rootKey];
+  while (pending.length > 0) {
+    const key = pending.pop();
+    if (visited.has(key)) continue;
+    visited.add(key);
+    const entry = runtimeManifest[key];
+    if (!entry) continue;
+    const dynamicImports = key === 'index.html' ? [] : (entry.dynamicImports ?? []);
+    for (const importedKey of [...(entry.imports ?? []), ...dynamicImports]) {
+      pending.push(importedKey);
+    }
+  }
+  return visited;
+}
+
+function AddManifestAssetUrl(urls, trainer, file) {
+  if (typeof file !== 'string' || !file.startsWith('assets/')) return;
+  const url = `/runtimes/${trainer}/${file}`;
+  if (!/^\/runtimes\/[a-z]+\/assets\/[A-Za-z0-9._/-]+$/.test(url)) {
+    throw new Error(`Unsafe runtime manifest asset: ${url}`);
+  }
+  urls.add(url);
+}
+
 function ValidateCatalogGames(games) {
   const ids = new Set();
   for (const game of games) {
@@ -336,6 +650,13 @@ function ValidateCatalogGames(games) {
       || game.title.length > 120
       || /[\u0000-\u001f\u007f]/.test(game.title)) {
       throw new Error(`Unsafe title for official game ${game.id}.`);
+    }
+    if (typeof game.sourcePath !== 'string' || game.sourcePath.length === 0) {
+      throw new Error(`Missing runtime source path for official game ${game.id}.`);
+    }
+    if (!Array.isArray(game.runtimeAssetGroups)
+      || game.runtimeAssetGroups.some((group) => typeof group !== 'string')) {
+      throw new Error(`Invalid runtime asset groups for official game ${game.id}.`);
     }
     ids.add(game.id);
   }
@@ -421,18 +742,110 @@ async function CreateBaseRevision(files, version, html) {
   return hash.digest('hex').slice(0, 16);
 }
 
-function CreateGameRevision(baseRevision, game, manifest, html) {
+function CreateGameRevision(baseRevision, game, manifest, html, runtimeAssetDescriptors = []) {
   return createHash('sha256')
     .update(generatorRevision)
     .update(baseRevision)
     .update(JSON.stringify(game))
     .update(JSON.stringify(manifest))
     .update(html)
+    .update(JSON.stringify(runtimeAssetDescriptors))
     .digest('hex')
     .slice(0, 16);
 }
 
-function ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker, trainer }) {
+async function ReadPlatformRuntimeAssets() {
+  const manifestPath = resolve(repositoryRoot, 'scripts/r2-ai-assets.manifest.json');
+  let manifest;
+  try {
+    manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  } catch (error) {
+    throw new Error(`Unable to read platform runtime asset manifest: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  if (manifest?.schemaVersion !== 1 || !Array.isArray(manifest.assets)) {
+    throw new Error('Platform runtime asset manifest must use schemaVersion 1 and define assets.');
+  }
+  const assets = manifest.assets.map((asset) => {
+    if (!IsSafeRuntimeAssetKey(asset?.key)
+      || !Number.isSafeInteger(asset.size)
+      || asset.size <= 0
+      || typeof asset.contentType !== 'string'
+      || !/^[a-f0-9]{64}$/.test(asset.sha256 || '')) {
+      throw new Error(`Invalid platform runtime asset descriptor: ${JSON.stringify(asset?.key)}`);
+    }
+    return Object.freeze({
+      key: asset.key,
+      size: asset.size,
+      sha256: asset.sha256,
+      contentType: asset.contentType,
+    });
+  });
+  if (new Set(assets.map((asset) => asset.key)).size !== assets.length) {
+    throw new Error('Platform runtime asset manifest contains duplicate keys.');
+  }
+  return Object.freeze(assets);
+}
+
+function BuildRuntimeAssetDescriptors(game, trainer, assets) {
+  const selectedKeys = new Set();
+  const addPrefix = (prefix) => assets
+    .filter((asset) => asset.key.startsWith(prefix))
+    .forEach((asset) => selectedKeys.add(asset.key));
+  const addKey = (key) => {
+    if (!assets.some((asset) => asset.key === key)) {
+      throw new Error(`Platform runtime asset is missing from the manifest: ${key}`);
+    }
+    selectedKeys.add(key);
+  };
+
+  const groupResolvers = {
+    'mediapipe-wasm': () => addPrefix('ai/mediapipe/tasks-vision/'),
+    'mediapipe-hand': () => addPrefix('ai/mediapipe-models/hand_landmarker/'),
+    'mediapipe-face': () => addPrefix('ai/mediapipe-models/face_landmarker/'),
+    'mediapipe-pose': () => addPrefix('ai/mediapipe-models/pose_landmarker/'),
+    'webgazer': () => addPrefix('ai/webgazer/'),
+    'star-sky': () => addKey('game-assets/rehabtrainerhub/motor/star-sky/v1/StarSky.png'),
+    'reference-car': () => addKey('game-assets/rehabtrainerhub/vision/reference-car/v1/car.glb'),
+  };
+  const groups = Array.isArray(game.runtimeAssetGroups) ? game.runtimeAssetGroups : [];
+  for (const group of groups) {
+    const resolveGroup = groupResolvers[group];
+    if (!resolveGroup) throw new Error(`Unknown runtime asset group for ${trainer}:${game.id}: ${group}`);
+    resolveGroup();
+  }
+
+  return [...selectedKeys]
+    .map((key) => assets.find((asset) => asset.key === key))
+    .filter(Boolean)
+    .map((asset) => ({
+      url: `/runtime-assets/${asset.key}`,
+      byteSize: asset.size,
+      sha256: asset.sha256,
+      contentType: asset.contentType,
+      required: true,
+    }))
+    .sort((left, right) => left.url.localeCompare(right.url));
+}
+
+function IsSafeRuntimeAssetKey(value) {
+  return typeof value === 'string'
+    && value.length > 0
+    && !value.startsWith('/')
+    && !value.includes('\\')
+    && !value.split('/').some((segment) => !segment || segment === '.' || segment === '..')
+    && /^[A-Za-z0-9._/-]+$/.test(value);
+}
+function ValidateGeneratedOutput({
+  basePath,
+  game,
+  html,
+  manifest,
+  offlineManifest,
+  offlineManifestUrl,
+  latestOfflineManifestUrl,
+  serviceWorker,
+  trainer,
+}) {
   if (manifest.id !== basePath || manifest.scope !== basePath || !manifest.start_url.startsWith(basePath)) {
     throw new Error(`Invalid generated manifest scope for ${game.id}.`);
   }
@@ -443,6 +856,26 @@ function ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker
   }
   if (!serviceWorker.includes(`trainerhub-official-game:${trainer}:${game.id}:`)) {
     throw new Error(`Generated service worker identity is invalid for ${game.id}.`);
+  }
+  if (offlineManifest?.schemaVersion !== 1
+    || offlineManifest.packId !== `official-game:${game.id}`
+    || offlineManifest.moduleId !== `${trainer}:${game.id}`
+    || offlineManifest.scope !== basePath
+    || !Array.isArray(offlineManifest.resources)
+    || offlineManifest.resources.length === 0
+    || !offlineManifest.resources.every((resource) => (
+      typeof resource?.url === 'string'
+      && Number.isSafeInteger(resource.byteSize)
+      && /^[a-f0-9]{64}$/i.test(resource.sha256)
+    ))) {
+    throw new Error(`Generated offline manifest is invalid for ${game.id}.`);
+  }
+  if (!serviceWorker.includes(offlineManifestUrl)) {
+    throw new Error(`Generated service worker does not precache the offline manifest for ${game.id}.`);
+  }
+  if (!/^\/offline-manifests\/[a-z0-9-]+\/latest\.json$/.test(latestOfflineManifestUrl)
+    || latestOfflineManifestUrl !== `/offline-manifests/${game.id}/latest.json`) {
+    throw new Error(`Generated latest offline manifest path is invalid for ${game.id}.`);
   }
   new Script(serviceWorker, { filename: `${game.id}/sw.js` });
 }

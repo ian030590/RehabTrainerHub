@@ -29,6 +29,7 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { StopMediaStream } from '@rehab-trainer/ui/mediaStream';
 import { Clamp, FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
@@ -253,6 +254,10 @@ const everyBallInfo = {
       type: ParameterType.FUNCTION,
       default: null,
     },
+    on_input_start: {
+      type: ParameterType.FUNCTION,
+      default: null,
+    },
   },
   data: {
     trials: { type: ParameterType.COMPLEX },
@@ -281,10 +286,12 @@ class EveryBallExperimentPlugin implements JsPsychPlugin<EveryBallInfo> {
     const labels = trial.labels as unknown as EveryBallLabels;
     const controller = trial.input_controller as unknown as ResponseInputController;
     const notify = trial.on_visual_change as unknown as ((visual: VisualState) => void) | null;
+    const startInput = trial.on_input_start as unknown as (() => void | Promise<void>) | null;
     const records: TrialRecord[] = [];
     let aborted = false;
 
     try {
+      await startInput?.();
       for (const plan of plans) {
         notify?.({
           phase: 'fixation',
@@ -332,6 +339,7 @@ class EveryBallExperimentPlugin implements JsPsychPlugin<EveryBallInfo> {
 
     controller.cancelWaiting();
     notify?.({ phase: 'idle' });
+    if (this.jsPsych.getCurrentTrial()?.type !== EveryBallExperimentPlugin) return;
     this.jsPsych.finishTrial({
       trials: records,
       aborted,
@@ -805,33 +813,11 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
     setStatusMessage(inputMode === 'camera' ? labels.initializingCamera : labels.initializingMicrophone);
     setPhase('initializing');
 
-    try {
-      inputRuntimeRef.current = inputMode === 'camera'
-        ? await CreateCameraRuntime({
-            video: RequireElement(videoRef.current),
-            overlay: RequireElement(cameraOverlayRef.current),
-            controller: inputControllerRef.current,
-            onStatus: (status) => {
-              if (mountedRef.current) setStatusMessage(status);
-            },
-          }, labels)
-        : await CreateMicrophoneRuntime({
-            sensitivity: microphoneSensitivity,
-            controller: inputControllerRef.current,
-            onLevel: (level) => {
-              if (mountedRef.current) setInputLevel(level);
-            },
-            onStatus: (status) => {
-              if (mountedRef.current) setStatusMessage(status);
-            },
-          }, labels);
+    const plans = CreateTrialPlans(levelId, trialCount);
+    const jsPsych = initJsPsych();
+    jsPsychRef.current = jsPsych;
 
-      if (!mountedRef.current) return;
-      const plans = CreateTrialPlans(levelId, trialCount);
-      const jsPsych = initJsPsych();
-      jsPsychRef.current = jsPsych;
-      setPhase('playing');
-      drawVisual({ phase: 'idle' });
+    try {
       void jsPsych.run([{
         type: EveryBallExperimentPlugin,
         trials: plans,
@@ -845,11 +831,69 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
           microphoneSensitivity,
         } satisfies GameConfig,
         on_visual_change: drawVisual,
+        on_input_start: async () => {
+          try {
+            const runtime = inputMode === 'camera'
+              ? await CreateCameraRuntime({
+                  video: RequireElement(videoRef.current),
+                  overlay: RequireElement(cameraOverlayRef.current),
+                  controller: inputControllerRef.current,
+                  onStatus: (status) => {
+                    if (mountedRef.current) setStatusMessage(status);
+                  },
+                }, labels)
+              : await CreateMicrophoneRuntime({
+                  sensitivity: microphoneSensitivity,
+                  controller: inputControllerRef.current,
+                  onLevel: (level) => {
+                    if (mountedRef.current) setInputLevel(level);
+                  },
+                  onStatus: (status) => {
+                    if (mountedRef.current) setStatusMessage(status);
+                  },
+                }, labels);
+
+            if (!mountedRef.current || phaseRef.current !== 'initializing') {
+              await runtime.stop();
+              throw CreateAbortError();
+            }
+            inputRuntimeRef.current = runtime;
+            setPhase('playing');
+            drawVisual({ phase: 'idle' });
+          } catch (error) {
+            await stopInput();
+            if (
+              mountedRef.current
+              && phaseRef.current === 'initializing'
+              && !IsAbortError(error)
+            ) {
+              setErrorMessage(GetStartErrorMessage(error, inputMode, labels));
+              setStatusMessage('');
+            }
+            throw error;
+          }
+        },
       }]).then(() => {
-        if (!mountedRef.current || phaseRef.current !== 'playing') return;
         const values = jsPsych.data.get().last(1).values();
         const data = values[0] as EveryBallExperimentData | undefined;
-        if (data) completeSession(data, labels, activeLevel, inputModeLabel);
+        if (!data || data.aborted) {
+          void stopInput();
+          if (mountedRef.current && phaseRef.current === 'initializing') {
+            setStatusMessage('');
+            drawVisual({ phase: 'idle' });
+            setPhase('menu');
+          }
+          return;
+        }
+        if (!mountedRef.current || phaseRef.current !== 'playing') return;
+        completeSession(data, labels, activeLevel, inputModeLabel);
+      }).catch((error: unknown) => {
+        void stopInput();
+        if (!mountedRef.current || phaseRef.current === 'menu') return;
+        setErrorMessage(GetStartErrorMessage(error, inputMode, labels));
+        setStatusMessage('');
+        drawVisual({ phase: 'idle' });
+        setPhase('menu');
       });
     } catch (error) {
       console.warn('Unable to start Every Ball Response.', error);
@@ -1267,8 +1311,9 @@ async function CreateCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
     },
   });
   const video = options.video;
-  video.srcObject = stream;
-  await video.play();
+  try {
+    video.srcObject = stream;
+    await video.play();
 
   options.onStatus(labels.initializingCamera);
   const { handLandmarker, poseLandmarker } = await LoadMediaPipeWithFallback(
@@ -1370,17 +1415,23 @@ async function CreateCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
   };
   animationFrame = window.requestAnimationFrame(processFrame);
 
-  return {
-    stop: () => {
-      stopped = true;
-      window.cancelAnimationFrame(animationFrame);
-      stream.getTracks().forEach((track) => track.stop());
-      video.srcObject = null;
-      handLandmarker.close();
-      poseLandmarker.close();
-      ClearCameraOverlay(options.overlay);
-    },
-  };
+    return {
+      stop: () => {
+        stopped = true;
+        window.cancelAnimationFrame(animationFrame);
+        StopMediaStream(stream);
+        video.srcObject = null;
+        handLandmarker.close();
+        poseLandmarker.close();
+        ClearCameraOverlay(options.overlay);
+      },
+    };
+  } catch (error) {
+    StopMediaStream(stream);
+    video.srcObject = null;
+    ClearCameraOverlay(options.overlay);
+    throw error;
+  }
 }
 
 async function CreateMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels: EveryBallLabels): Promise<InputRuntime> {
@@ -1400,13 +1451,16 @@ async function CreateMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels
     },
     video: false,
   });
-  const audioContext = new audioContextConstructor();
-  await audioContext.resume();
-  const source = audioContext.createMediaStreamSource(stream);
-  const analyser = audioContext.createAnalyser();
-  analyser.fftSize = 1024;
-  analyser.smoothingTimeConstant = 0.45;
-  source.connect(analyser);
+  let audioContext: AudioContext | null = null;
+  try {
+    const context = new audioContextConstructor();
+    audioContext = context;
+    await context.resume();
+    const source = context.createMediaStreamSource(stream);
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.45;
+    source.connect(analyser);
 
   const timeSamples = new Float32Array(analyser.fftSize);
   const freqSamples = new Uint8Array(analyser.frequencyBinCount);
@@ -1435,19 +1489,26 @@ async function CreateMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels
   };
   animationFrame = window.requestAnimationFrame(tick);
 
-  return {
-    stop: async () => {
-      stopped = true;
-      window.cancelAnimationFrame(animationFrame);
-      stream.getTracks().forEach((track) => track.stop());
-      source.disconnect();
-      analyser.disconnect();
-      if (audioContext.state !== 'closed') {
-        await audioContext.close().catch(() => undefined);
-      }
-      options.onLevel(0);
-    },
-  };
+    return {
+      stop: async () => {
+        stopped = true;
+        window.cancelAnimationFrame(animationFrame);
+        StopMediaStream(stream);
+        source.disconnect();
+        analyser.disconnect();
+        if (context.state !== 'closed') {
+          await context.close().catch(() => undefined);
+        }
+        options.onLevel(0);
+      },
+    };
+  } catch (error) {
+    StopMediaStream(stream);
+    if (audioContext && audioContext.state !== 'closed') {
+      await audioContext.close().catch(() => undefined);
+    }
+    throw error;
+  }
 }
 
 function DrawEveryBallScene(app: Application, visual: VisualState, labels: EveryBallLabels): void {
@@ -1732,6 +1793,14 @@ function GetInitializedPixiApp(app: Application | null): Application | null {
 function RequireElement<T>(element: T | null): T {
   if (!element) throw new Error('Required browser element is unavailable.');
   return element;
+}
+
+function CreateAbortError(): DOMException {
+  return new DOMException('Training run was cancelled.', 'AbortError');
+}
+
+function IsAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
 }
 
 function WaitMs(jsPsych: JsPsych, durationMs: number): Promise<void> {

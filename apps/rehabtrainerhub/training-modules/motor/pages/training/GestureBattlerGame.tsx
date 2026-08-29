@@ -15,6 +15,7 @@ import { useT, type TranslationKey } from '../../i18n';
 import { getActiveUser } from '../../utils/settings';
 import { PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { GestureBattlerPlugin } from '../../experiment/plugins/gesture-battler-lifecycle';
 import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
@@ -33,7 +34,7 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
+import { StopMediaStream } from '@rehab-trainer/ui/mediaStream';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
@@ -213,7 +214,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   const mountedRef = useRef(true);
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
-  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
+  const runSequenceRef = useRef(0);
+  const runTokenRef = useRef<string | null>(null);
   const configRef = useRef<GestureConfig>({
     enemyMaxHp: defaultEnemyHp,
     holdDuration: defaultHoldDuration,
@@ -276,14 +278,17 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     if (!host) return;
 
     const jsPsych = initJsPsych({ display_element: host });
-    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychRef.current = jsPsych;
-    jsPsychLifecycleRef.current = lifecycle;
 
     return () => {
-      lifecycle.dispose();
+      jsPsych.abortExperiment(undefined, {
+        lifecycle_status: 'disposed',
+        module_id: 'motor:gesture-battler',
+        run_token: runTokenRef.current,
+      });
+      jsPsych.pluginAPI.clearAllTimeouts();
+      runTokenRef.current = null;
       if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
-      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
     };
   }, []);
 
@@ -297,7 +302,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       window.cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    StopMediaStream(cameraStreamRef.current);
     cameraStreamRef.current = null;
     const video = videoRef.current;
     if (video) video.srcObject = null;
@@ -360,7 +365,20 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       Cast_Records: metrics.casts.map((cast) => ({ ...cast })),
     };
     PlayGameEndSound('Victory', jsPsychRef);
-    jsPsychLifecycleRef.current?.finish(session as unknown as Record<string, unknown>);
+    const jsPsych = jsPsychRef.current;
+    const currentTrial = jsPsych?.getCurrentTrial();
+    if (
+      jsPsych
+      && currentTrial?.type === GestureBattlerPlugin
+      && currentTrial.run_token === runTokenRef.current
+    ) {
+      jsPsych.finishTrial({
+        ...session,
+        lifecycle_status: 'completed',
+        module_id: 'motor:gesture-battler',
+        run_token: runTokenRef.current,
+      });
+    }
     setResult(session);
     setPhase('results');
     stopVision();
@@ -651,9 +669,16 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     // Keep the fixed game surface in the normal document so two-finger pinch zoom
     // remains available, while desktop retains the immersive fullscreen flow.
     if (!IsMobileGameViewport()) await enterTrainingFullscreen();
-    await jsPsychLifecycleRef.current?.start({
-      moduleId: 'motor:gesture-battler',
-      onStart: async () => {
+    const jsPsych = jsPsychRef.current;
+    if (!jsPsych) return;
+    const runToken = `motor:gesture-battler:${runSequenceRef.current + 1}`;
+    runSequenceRef.current += 1;
+    runTokenRef.current = runToken;
+    void jsPsych.run([{
+      type: GestureBattlerPlugin,
+      module_id: 'motor:gesture-battler',
+      run_token: runToken,
+      on_start: async () => {
         if (appRef.current) ResizePixiAppToElement(appRef.current, pixiHostRef.current);
         stopVision();
         setVisionError('');
@@ -670,6 +695,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
               height: { ideal: 720 },
             },
           });
+          if (!mountedRef.current || phaseRef.current !== 'initializing') {
+            StopMediaStream(stream);
+            return;
+          }
           cameraStreamRef.current = stream;
           const cameraTrack = stream.getVideoTracks()[0];
           if (!cameraTrack) throw new Error('Camera track is unavailable.');
@@ -678,7 +707,12 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             setVisionError(t('gesture.error.disconnected'));
             setShowVisionError(true);
             stopVision();
-            jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
+            jsPsych.abortExperiment(undefined, {
+              lifecycle_status: 'aborted',
+              module_id: 'motor:gesture-battler',
+              run_token: runToken,
+              abort_reason: 'camera-disconnected',
+            });
             setPhase('menu');
           }, { once: true });
           const video = videoRef.current;
@@ -701,8 +735,11 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
               });
             },
           );
-          if (!mountedRef.current) {
+          if (!mountedRef.current || phaseRef.current !== 'initializing') {
             landmarker.close();
+            StopMediaStream(stream);
+            if (cameraStreamRef.current === stream) cameraStreamRef.current = null;
+            if (videoRef.current?.srcObject === stream) videoRef.current.srcObject = null;
             return;
           }
           handLandmarkerRef.current = landmarker;
@@ -729,15 +766,31 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             ? t('gesture.error.permission')
             : t('gesture.error.initialization'));
           setShowVisionError(true);
-          jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
+          jsPsych.abortExperiment(undefined, {
+            lifecycle_status: 'aborted',
+            module_id: 'motor:gesture-battler',
+            run_token: runToken,
+            abort_reason: 'initialization-error',
+          });
           setPhase('menu');
+          throw error;
         }
       },
+    }]).catch((error: unknown) => {
+      if (!mountedRef.current || phaseRef.current === 'menu') return;
+      console.warn('Gesture Battler jsPsych run ended unexpectedly.', error);
+      stopVision();
+      setPhase('menu');
     });
   }, [enterTrainingFullscreen, processFrame, setPhase, stopVision, t]);
 
   const returnToMenu = useCallback(() => {
-    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
+    jsPsychRef.current?.abortExperiment(undefined, {
+      lifecycle_status: 'aborted',
+      module_id: 'motor:gesture-battler',
+      run_token: runTokenRef.current,
+      abort_reason: 'return-to-menu',
+    });
     stopVision();
     resetHold(false);
     calibrationCapturingRef.current = false;
@@ -748,7 +801,12 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   }, [resetHold, setPhase, stopVision]);
 
   const exitGame = useCallback(() => {
-    jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
+    jsPsychRef.current?.abortExperiment(undefined, {
+      lifecycle_status: 'aborted',
+      module_id: 'motor:gesture-battler',
+      run_token: runTokenRef.current,
+      abort_reason: 'exit-training',
+    });
     stopVision();
     onExit();
   }, [onExit, stopVision]);

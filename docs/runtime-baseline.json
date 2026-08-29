@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-29",
+  "source": "apps/rehabtrainerhub/out after pnpm build:hub",
+  "notes": [
+    "Hashed Vite filenames are intentionally omitted; this file records structural payload sizes only.",
+    "The baseline is a comparison point for chunk-boundary and offline-pack changes, not a release budget."
+  ],
+  "runtimes": {
+    "motor": {
+      "entryHtmlBytes": 1533,
+      "javascriptBytes": 1313112,
+      "stylesheetBytes": 567282,
+      "outputFileCount": 27,
+      "largeAssets": [
+        { "path": "assets/StarSky.png", "bytes": 4650499 },
+        { "path": "assets/pixi-runtime.js", "bytes": 591119 },
+        { "path": "assets/index.css", "bytes": 567282 }
+      ]
+    },
+    "vision": {
+      "entryHtmlBytes": 1368,
+      "javascriptBytes": 4622984,
+      "stylesheetBytes": 555833,
+      "outputFileCount": 62,
+      "largeAssets": [
+        { "path": "assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_simd_wasm_bin.wasm", "bytes": 6161697 },
+        { "path": "assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_wasm_bin.wasm", "bytes": 6084312 },
+        { "path": "assets/webgazer/3.5.3/mediapipe/face_mesh/face_mesh_solution_packed_assets.data", "bytes": 3986256 },
+        { "path": "assets/webgazer/3.5.3/webgazer.js", "bytes": 1895169 },
+        { "path": "assets/three-runtime.js", "bytes": 601190 },
+        { "path": "assets/index.css", "bytes": 542104 }
+      ]
+    },
+    "brain": {
+      "entryHtmlBytes": 1302,
+      "javascriptBytes": 1260648,
+      "stylesheetBytes": 76997,
+      "outputFileCount": 31,
+      "largeAssets": []
+    },
+    "mouth": {
+      "entryHtmlBytes": 1260,
+      "javascriptBytes": 2780183,
+      "stylesheetBytes": 541807,
+      "outputFileCount": 20,
+      "largeAssets": [
+        { "path": "assets/TongueCatchGame.js", "bytes": 2094428 },
+        { "path": "assets/index.css", "bytes": 541807 }
+      ]
+    }
+  },
+  "officialGamePwaShells": {
+    "motor": { "gameCount": 4, "precacheUrlsPerGame": 10, "shellBytesMin": 1454225, "shellBytesMax": 1454273 },
+    "vision": { "gameCount": 6, "precacheUrlsPerGame": 8, "shellBytesMin": 1412876, "shellBytesMax": 1412924 },
+    "brain": { "gameCount": 15, "precacheUrlsPerGame": 8, "shellBytesMin": 885361, "shellBytesMax": 885440 },
+    "mouth": { "gameCount": 1, "precacheUrlsPerGame": 8, "shellBytesMin": 1392665, "shellBytesMax": 1392665 }
+  }
+}

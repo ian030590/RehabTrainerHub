@@ -15,9 +15,18 @@ const manifestSource = readFileSync(resolve(moduleRoot, 'moduleFlowManifest.ts')
 const trainingContractsRuntimeUrl = pathToFileURL(
   resolve(repoRoot, 'packages/training-contracts/src/index.js'),
 ).href;
+// The registry owns the route prefix through the UI policy module. The
+// checker runs from a data URL, so provide the dependency-free exported value
+// without teaching the checker a second module-resolution system.
+const officialHostPolicyRuntimeUrl = `data:text/javascript;base64,${Buffer.from(
+  "export const officialTrainingHostRoutePrefix = '/official-training-host';",
+).toString('base64')}`;
 const manifestExecutableSource = manifestSource.replace(
   /from ['"]@rehab-trainer\/training-contracts['"]/g,
   `from '${trainingContractsRuntimeUrl}'`,
+).replace(
+  /from ['"]@rehab-trainer\/ui\/officialTrainingHostPolicy['"]/g,
+  `from '${officialHostPolicyRuntimeUrl}'`,
 );
 const manifestCode = ts.transpileModule(manifestExecutableSource, {
   compilerOptions: {
@@ -473,6 +482,51 @@ const externalRuntimeAdapterTokens = [
 const jsPsychLifecycleGroups = [
   {
     status: 'native-timeline',
+    ids: ['motor:drawing-defense'],
+    files: [
+      'motor/pages/training/DrawingTowerDefenseGame.tsx',
+      'motor/experiment/plugins/drawing-defense-lifecycle.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run([', 'DrawingDefensePlugin', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['motor:gesture-battler'],
+    files: [
+      'motor/pages/training/GestureBattlerGame.tsx',
+      'motor/experiment/plugins/gesture-battler-lifecycle.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run([', 'GestureBattlerPlugin', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['motor:motor-cortex-rehab'],
+    files: [
+      'motor/pages/training/MotorCortexRehabGame.tsx',
+      'motor/experiment/plugins/motor-cortex-rehab-lifecycle.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run([', 'MotorCortexRehabPlugin', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['motor:asteroid-shield'],
+    files: [
+      'motor/pages/training/AsteroidShieldGame.tsx',
+      'motor/experiment/plugins/asteroid-shield-lifecycle.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run([', 'AsteroidShieldPlugin', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['mouth:tongue-catch'],
+    files: [
+      'mouth/pages/training/TongueCatchGame.tsx',
+      'mouth/experiment/plugins/tongue-catch-lifecycle.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run([', 'TongueCatchPlugin', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
     ids: [
       'vision:moving-card',
       'vision:oculomotor-training',
@@ -531,12 +585,7 @@ const jsPsychLifecycleGroups = [
     forbiddenTokens: ['WriteJsPsychData'],
   },
   ...Object.entries({
-    'motor:drawing-defense': 'motor/pages/training/DrawingTowerDefenseGame.tsx',
-    'motor:asteroid-shield': 'motor/pages/training/AsteroidShieldGame.tsx',
-    'motor:gesture-battler': 'motor/pages/training/GestureBattlerGame.tsx',
-    'motor:motor-cortex-rehab': 'motor/pages/training/MotorCortexRehabGame.tsx',
     'brain:minesweeper': 'brain/pages/thinking/MinesweeperGame.tsx',
-    'mouth:tongue-catch': 'mouth/pages/training/TongueCatchGame.tsx',
   }).map(([id, file]) => ({
     status: 'external-runtime-adapter',
     ids: [id],

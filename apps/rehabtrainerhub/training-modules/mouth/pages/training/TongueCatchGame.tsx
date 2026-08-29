@@ -34,6 +34,7 @@ import {
   type TongueTrainingSettings,
 } from '../../utils/tongueRehabStorage';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { TongueCatchPlugin } from '../../experiment/plugins/tongue-catch-lifecycle';
 import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
@@ -51,7 +52,7 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
+import { StopMediaStream } from '@rehab-trainer/ui/mediaStream';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 import { MouthTrainingRulesPanel } from './MouthTrainingRulesPanel';
@@ -202,9 +203,10 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   const metricsRef = useRef<SessionMetrics>(CreateSessionMetrics());
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
-  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const calibrationResultsRef = useRef<Array<{ class_label: TongueClass; sample_count: number }>>([]);
   const finishSessionRef = useRef<() => void>(() => undefined);
+  const runSequenceRef = useRef(0);
+  const runTokenRef = useRef<string | null>(null);
 
   const activeUser = getActiveUser() || '';
   const [phase, setPhaseState] = useState<GamePhase>('menu');
@@ -242,14 +244,17 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     if (!host) return;
 
     const jsPsych = initJsPsych({ display_element: host });
-    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychRef.current = jsPsych;
-    jsPsychLifecycleRef.current = lifecycle;
 
     return () => {
-      lifecycle.dispose();
+      jsPsych.abortExperiment(undefined, {
+        lifecycle_status: 'disposed',
+        module_id: 'mouth:tongue-catch',
+        run_token: runTokenRef.current,
+      });
+      jsPsych.pluginAPI.clearAllTimeouts();
+      runTokenRef.current = null;
       if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
-      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
     };
   }, []);
 
@@ -270,7 +275,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       window.cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    StopMediaStream(cameraStreamRef.current);
     cameraStreamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
     faceLandmarkerRef.current?.close();
@@ -416,9 +421,16 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     }
     PrepareAudioFeedback(jsPsychRef);
     await enterTrainingFullscreen();
-    await jsPsychLifecycleRef.current?.start({
-      moduleId: 'mouth:tongue-catch',
-      onStart: async () => {
+    const jsPsych = jsPsychRef.current;
+    if (!jsPsych) return;
+    const runToken = `mouth:tongue-catch:${runSequenceRef.current + 1}`;
+    runSequenceRef.current += 1;
+    runTokenRef.current = runToken;
+    void jsPsych.run([{
+      type: TongueCatchPlugin,
+      module_id: 'mouth:tongue-catch',
+      run_token: runToken,
+      on_start: async () => {
         if (appRef.current) ResizePixiAppToElement(appRef.current, pixiHostRef.current);
         stopVision();
         setVisionError('');
@@ -435,6 +447,10 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
               height: { ideal: 720 },
             },
           });
+          if (!mountedRef.current || phaseRef.current !== 'initializing') {
+            StopMediaStream(stream);
+            return;
+          }
           cameraStreamRef.current = stream;
           const cameraTrack = stream.getVideoTracks()[0];
           if (!cameraTrack) throw new Error('Camera track is unavailable.');
@@ -443,7 +459,12 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
             setVisionError(t('tongue.error.disconnected'));
             setShowVisionError(true);
             stopVision();
-            jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
+            jsPsych.abortExperiment(undefined, {
+              lifecycle_status: 'aborted',
+              module_id: 'mouth:tongue-catch',
+              run_token: runToken,
+              abort_reason: 'camera-disconnected',
+            });
             setPhase('menu');
           }, { once: true });
           const video = videoRef.current;
@@ -467,8 +488,11 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
               });
             },
           );
-          if (!mountedRef.current) {
+          if (!mountedRef.current || phaseRef.current !== 'initializing') {
             landmarker.close();
+            StopMediaStream(stream);
+            if (cameraStreamRef.current === stream) cameraStreamRef.current = null;
+            if (videoRef.current?.srcObject === stream) videoRef.current.srcObject = null;
             return;
           }
           faceLandmarkerRef.current = landmarker;
@@ -495,10 +519,23 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
             ? t('tongue.error.permission')
             : t('tongue.error.initialization'));
           setShowVisionError(true);
-          jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
+          jsPsych.abortExperiment(undefined, {
+            lifecycle_status: 'aborted',
+            module_id: 'mouth:tongue-catch',
+            run_token: runToken,
+            abort_reason: 'initialization-error',
+          });
           setPhase('menu');
+          throw error;
         }
       },
+    }]).catch((error: unknown) => {
+      if (!mountedRef.current || phaseRef.current === 'menu') return;
+      console.warn('Tongue Catch jsPsych run ended unexpectedly.', error);
+      stopVision();
+      classifierRef.current?.dispose();
+      classifierRef.current = null;
+      setPhase('menu');
     });
   }, [enterTrainingFullscreen, processFrame, setPhase, stopVision, t]);
 
@@ -541,10 +578,21 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       Edge_Chance_Percent: Math.round(configSnapshot.edgeChance * 100),
       Apple_Results: metrics.appleResults.map((apple) => ({ ...apple })),
     };
-    jsPsychLifecycleRef.current?.finish({
-      ...session,
-      Calibration_Results: calibrationResultsRef.current.map((item) => ({ ...item })),
-    });
+    const jsPsych = jsPsychRef.current;
+    const currentTrial = jsPsych?.getCurrentTrial();
+    if (
+      jsPsych
+      && currentTrial?.type === TongueCatchPlugin
+      && currentTrial.run_token === runTokenRef.current
+    ) {
+      jsPsych.finishTrial({
+        ...session,
+        Calibration_Results: calibrationResultsRef.current.map((item) => ({ ...item })),
+        lifecycle_status: 'completed',
+        module_id: 'mouth:tongue-catch',
+        run_token: runTokenRef.current,
+      });
+    }
     setResult(session);
     setPhase('results');
     stopVision();
@@ -648,7 +696,12 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, []);
 
   const returnToMenu = useCallback(() => {
-    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
+    jsPsychRef.current?.abortExperiment(undefined, {
+      lifecycle_status: 'aborted',
+      module_id: 'mouth:tongue-catch',
+      run_token: runTokenRef.current,
+      abort_reason: 'return-to-menu',
+    });
     stopVision();
     setPhase('menu');
     setResult(null);
@@ -660,7 +713,12 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   }, [setPhase, stopVision]);
 
   const exitGame = useCallback(() => {
-    jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
+    jsPsychRef.current?.abortExperiment(undefined, {
+      lifecycle_status: 'aborted',
+      module_id: 'mouth:tongue-catch',
+      run_token: runTokenRef.current,
+      abort_reason: 'exit-training',
+    });
     stopVision();
     onExit();
   }, [onExit, stopVision]);

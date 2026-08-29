@@ -30,6 +30,80 @@ export interface GamePlatformPackageLimits {
   readonly maximumTotalTextBytes: number;
   readonly maximumZipRatio: number;
 }
+
+export type GameValidationFindingDisposition =
+  | 'hard-block'
+  | 'fix-or-manual-review'
+  | 'manual-review'
+  | 'info';
+export type GameValidationNetworkKind = 'fetch' | 'navigation' | 'websocket' | 'webrtc' | 'resource';
+export type GameValidationNetworkTargetClass = 'same-runner-origin' | 'external-origin' | 'opaque';
+
+export interface GameValidationJob {
+  jobId: string;
+  attempt: number;
+  jobNonce: string;
+  submissionId: string;
+  artifactSha256: string;
+  policyVersion: string;
+  limitsProfile: 'uploaded-game-v1';
+  issuedAt: string;
+  expiresAt: string;
+}
+
+export interface GameScanFinding {
+  disposition: GameValidationFindingDisposition;
+  code: string;
+  filePath?: string | null;
+  line?: number | null;
+  column?: number | null;
+  messageKey: string;
+  evidence?: string | null;
+}
+
+export interface GameNetworkAttempt {
+  kind: GameValidationNetworkKind;
+  targetClass: GameValidationNetworkTargetClass;
+  targetSample: string;
+  count: number;
+}
+
+export interface UnsignedGameScanEvidence {
+  schemaVersion: 1;
+  jobId: string;
+  attempt: number;
+  jobNonce: string;
+  artifactSha256: string;
+  observedNetworkAttempts: readonly GameNetworkAttempt[];
+  findings: readonly GameScanFinding[];
+  truncated: boolean;
+}
+
+export type GameScanVerdict = 'pass' | 'changes-required' | 'manual-review-eligible' | 'hard-block';
+
+export interface GameScanReport {
+  schemaVersion: 1;
+  jobId: string;
+  attempt: number;
+  jobNonce: string;
+  submissionId: string;
+  artifactSha256: string;
+  policyVersion: string;
+  toolVersions: Readonly<Record<string, string>>;
+  verdict: GameScanVerdict;
+  findings: readonly GameScanFinding[];
+  completedAt: string;
+}
+
+export interface SignedGameScanReport {
+  report: GameScanReport;
+  reportSha256: string;
+  attestation: {
+    keyId: string;
+    algorithm: 'Ed25519';
+    value: string;
+  };
+}
 export type TrainingHostCommandType = 'prepare' | 'start' | 'pause' | 'resume' | 'abort' | 'dispose';
 export type TrainingHostState =
   | 'card'
@@ -187,6 +261,34 @@ export interface ValidationFailure {
 export const trainingHostConnectSchema: 'trainerhub.training/connect/v1';
 export const trainingHostMessageSchema: 'trainerhub.training/host/v1';
 export const trainingHostProtocolVersion: 1;
+export const trainingRunResultFields: readonly [
+  'schemaVersion',
+  'moduleId',
+  'moduleVersion',
+  'status',
+  'startedAt',
+  'durationMs',
+  'trialCount',
+  'score',
+  'metrics',
+];
+
+export interface SingleFlightPreloadOptions<T> {
+  dispose?: (value: T) => void | Promise<void>;
+}
+
+export interface SingleFlightPreloadCache<T = unknown> {
+  load(
+    key: string,
+    loader: (signal: AbortSignal) => T | PromiseLike<T>,
+    options?: SingleFlightPreloadOptions<T>,
+  ): Promise<T>;
+  abort(key?: string, reason?: string): boolean;
+  clear(key?: string): boolean;
+  has(key: string): boolean;
+}
+
+export function CreateSingleFlightPreloadCache<T = unknown>(): SingleFlightPreloadCache<T>;
 
 export const standardTrainingFlow: readonly ['card', 'config', 'rules', 'training', 'results'];
 export const trainingDomains: readonly TrainingDomain[];
@@ -195,6 +297,47 @@ export const gamePlatformCapabilities: readonly GamePlatformCapability[];
 export const gamePlatformRuntimeContract: GamePlatformRuntimeContract;
 export const gamePlatformMaxUploadBytes: 12582912;
 export const gamePlatformPackageLimits: GamePlatformPackageLimits;
+export const gameValidationSchemaVersion: 1;
+export const gameValidationLimits: Readonly<{
+  maximumTransportBytes: 1048576;
+  maximumFindingCount: 200;
+  maximumNetworkAttemptCount: 100;
+  maximumTargetSampleLength: 256;
+  maximumMessageLength: 2048;
+  maximumPathLength: 256;
+  maximumCodeLength: 96;
+  maximumToolCount: 32;
+}>;
+export const gameValidationFindingDispositions: readonly GameValidationFindingDisposition[];
+export const gameValidationNetworkKinds: readonly GameValidationNetworkKind[];
+export const gameValidationNetworkTargetClasses: readonly GameValidationNetworkTargetClass[];
+export function IsGameValidationJob(value: unknown): value is GameValidationJob;
+export function IsGameScanFinding(value: unknown): value is GameScanFinding;
+export function IsGameNetworkAttempt(value: unknown): value is GameNetworkAttempt;
+export function IsUnsignedGameScanEvidence(value: unknown): value is UnsignedGameScanEvidence;
+export function ValidateUnsignedGameScanEvidence(
+  value: unknown,
+  expectedJob?: GameValidationJob,
+): ValidationSuccess<UnsignedGameScanEvidence> | { ok: false; code: 'invalid-schema' | 'job-mismatch' | 'truncated' };
+export function CreateGameValidationJobKey(jobId: string, attempt: number): string;
+export function DetermineGameScanVerdict(findings: readonly GameScanFinding[]): GameScanVerdict;
+export function CreateGameScanReport(input: {
+  job: GameValidationJob;
+  evidence: unknown;
+  toolVersions: Readonly<Record<string, string>>;
+  completedAt?: string;
+}): GameScanReport;
+export function IsGameScanReport(value: unknown): value is GameScanReport;
+export function AssertGameScanReport(value: unknown): GameScanReport;
+export function IsGameScanReportForJob(
+  report: unknown,
+  job: unknown,
+  now?: number,
+): report is GameScanReport;
+export function CanonicalizeGameScanReport(report: GameScanReport): string;
+export function CreateGameScanReportDigest(report: GameScanReport): Promise<string>;
+export function IsSignedGameScanReport(value: unknown): value is SignedGameScanReport;
+export function FreezeGameValidationJob(job: GameValidationJob): Readonly<GameValidationJob>;
 export const trainingProtocolSchema: 'trainerhub.training/v1';
 export function IsTrainingModuleId(value: unknown): value is TrainingModuleId;
 export function CreateTrainingModuleId(domain: TrainingDomain, slug: string): TrainingModuleId;

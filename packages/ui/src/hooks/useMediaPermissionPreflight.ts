@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { StopMediaStream } from '../mediaStream';
 
 export type MediaPermissionPreflightStatus =
   | 'idle'
@@ -67,7 +68,7 @@ function RequestMediaPermission(audio: boolean, video: boolean, force: boolean):
     audio,
     video: video ? { facingMode: 'user' } : false,
   }).then((stream) => {
-    stream.getTracks().forEach((track) => track.stop());
+    StopMediaStream(stream);
     entry.status = 'granted';
   }).catch((error: unknown) => {
     entry.error = error;

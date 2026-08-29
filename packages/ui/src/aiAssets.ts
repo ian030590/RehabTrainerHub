@@ -18,9 +18,10 @@ export function CreateRuntimeAssetUrlCandidates(
   const normalizedObjectKey = String(objectKey || '').trim().replace(/^\/+/, '');
   const normalizedFallbackUrl = String(fallbackUrl || '').trim();
   if (!normalizedObjectKey || !normalizedFallbackUrl) return [];
+  const platformUrl = `${platformAssetBasePath}/${normalizedObjectKey}`;
   return normalizedBaseUrl
-    ? [`${normalizedBaseUrl}/${normalizedObjectKey}`, normalizedFallbackUrl]
-    : [normalizedFallbackUrl];
+    ? [platformUrl, `${normalizedBaseUrl}/${normalizedObjectKey}`, normalizedFallbackUrl]
+    : [platformUrl, normalizedFallbackUrl];
 }
 
 export function CreateMediaPipeAssetUrls(assetBaseUrl?: string): MediaPipeAssetUrls {

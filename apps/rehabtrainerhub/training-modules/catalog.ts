@@ -1,9 +1,9 @@
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
-import { officialTrainingHostRoutePrefix } from '@rehab-trainer/ui/officialTrainingHostPolicy';
 import {
   GetTrainingModuleFlowManifest,
   GetTrainingModuleManifest,
   GetTrainingModulePurposeId,
+  GetTrainingModuleRegistryEntry,
   type TrainingFlowStep,
   type TrainingMediaPermission,
 } from './moduleFlowManifest';
@@ -520,7 +520,7 @@ export function GetTrainingModuleCopy(
 export function BuildTrainingModuleHref(
   module: TrainingCatalogModule,
 ): string {
-  return `${defaultSiteUrls.hub}${officialTrainingHostRoutePrefix}/${encodeURIComponent(module.trainer)}/${encodeURIComponent(module.runtimeId)}/`;
+  return `${defaultSiteUrls.hub}${GetTrainingModuleRegistryEntry(module.catalogId).hostPath}`;
 }
 
 /**
@@ -539,6 +539,15 @@ export function BuildTrainingGameInstallHref(
   module: TrainingCatalogModule,
 ): string {
   return `${defaultSiteUrls.hub}/games/${encodeURIComponent(module.runtimeId)}/`;
+}
+
+export function BuildTrainingGameOfflineManifestHref(
+  module: TrainingCatalogModule,
+): string {
+  const registryEntry = GetTrainingModuleRegistryEntry(module.catalogId);
+  // Keep this same-origin relative so OfflinePackManager also works in local
+  // previews and cannot be pointed at a different asset origin by catalog data.
+  return `${registryEntry.officialPwa.offlineManifestPathPrefix}latest.json`;
 }
 
 export function BuildTrainingModuleImageSrc(

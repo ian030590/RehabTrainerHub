@@ -15,10 +15,18 @@ import {
   IsTrainingHostEvent,
   IsTrainingHostCommand,
   IsTrainingModuleId,
+  CreateSingleFlightPreloadCache,
   SanitizeTrainingMetrics,
   TransitionTrainingHostState,
   ValidateTrainingModuleManifest,
   ValidateTrainingEnvelope,
+  CanonicalizeGameScanReport,
+  CreateGameScanReport,
+  CreateGameScanReportDigest,
+  CreateGameValidationJobKey,
+  IsGameScanReportForJob,
+  IsSignedGameScanReport,
+  ValidateUnsignedGameScanEvidence,
 } from './index.js';
 
 test('keeps the game capability and runtime contract renderer-independent', () => {
@@ -48,6 +56,22 @@ test('keeps the game capability and runtime contract renderer-independent', () =
     maximumTotalTextBytes: 4 * 1024 * 1024,
     maximumZipRatio: 100,
   });
+});
+
+test('keeps the training result record allowlist dependency-free and ordered', async () => {
+  const contracts = await import('./index.js');
+  assert.deepEqual([...contracts.trainingRunResultFields], [
+    'schemaVersion',
+    'moduleId',
+    'moduleVersion',
+    'status',
+    'startedAt',
+    'durationMs',
+    'trialCount',
+    'score',
+    'metrics',
+  ]);
+  assert.equal(Object.isFrozen(contracts.trainingRunResultFields), true);
 });
 
 const validManifest = {
@@ -216,4 +240,149 @@ test('keeps host lifecycle transitions explicit and terminal', () => {
   assert.equal(TransitionTrainingHostState('running', 'abort'), 'aborting');
   assert.equal(CanTransitionTrainingHostState('disposed', 'start'), false);
   assert.throws(() => TransitionTrainingHostState('disposed', 'start'));
+});
+
+test('deduplicates rules-visible preloads and disposes a retained resource once', async () => {
+  const cache = CreateSingleFlightPreloadCache();
+  let loadCount = 0;
+  let disposeCount = 0;
+  const first = cache.load('vision:moving-card', async (signal) => {
+    loadCount += 1;
+    assert.equal(signal.aborted, false);
+    return { engine: 'pixi' };
+  }, { dispose: () => { disposeCount += 1; } });
+  const second = cache.load('vision:moving-card', () => {
+    loadCount += 1;
+    return { engine: 'duplicate' };
+  });
+
+  assert.equal(first, second);
+  assert.deepEqual(await first, { engine: 'pixi' });
+  assert.equal(loadCount, 1);
+  assert.equal(cache.has('vision:moving-card'), true);
+  assert.equal(cache.clear('vision:moving-card'), true);
+  assert.equal(disposeCount, 1);
+  assert.equal(cache.has('vision:moving-card'), false);
+});
+
+test('aborts an in-flight preload and does not start a second loader', async () => {
+  const cache = CreateSingleFlightPreloadCache();
+  let loadCount = 0;
+  let observedSignal;
+  let resolveLoader;
+  const first = cache.load('vision:oculomotor-training', (signal) => {
+    loadCount += 1;
+    observedSignal = signal;
+    return new Promise((resolve) => { resolveLoader = resolve; });
+  });
+  const second = cache.load('vision:oculomotor-training', () => {
+    loadCount += 1;
+    return 'duplicate';
+  });
+  assert.equal(first, second);
+  await Promise.resolve();
+  assert.equal(loadCount, 1);
+  assert.equal(cache.abort('vision:oculomotor-training', 'rules-closed'), true);
+  assert.equal(observedSignal.aborted, true);
+  resolveLoader('late-engine');
+  await assert.rejects(first, { name: 'AbortError' });
+  assert.equal(cache.has('vision:oculomotor-training'), false);
+});
+
+test('superseding a loaded preload disposes the previous module before replacement', async () => {
+  const cache = CreateSingleFlightPreloadCache();
+  const disposed = [];
+  await cache.load('vision:moving-card', () => 'moving-card', {
+    dispose: (value) => disposed.push(value),
+  });
+  await cache.load('vision:gabor-patching', () => 'gabor-patching', {
+    dispose: (value) => disposed.push(value),
+  });
+  assert.deepEqual(disposed, ['moving-card']);
+  assert.equal(cache.has('vision:gabor-patching'), true);
+});
+
+test('bounds validator evidence, binds reports to one attempt, and canonicalizes signing input', async () => {
+  const job = {
+    jobId: 'job-1',
+    attempt: 2,
+    jobNonce: 'nonce-1234567890123456',
+    submissionId: 'submission-1',
+    artifactSha256: 'a'.repeat(64),
+    policyVersion: 'validator-v1',
+    limitsProfile: 'uploaded-game-v1',
+    issuedAt: '2026-08-29T00:00:00.000Z',
+    expiresAt: '2026-08-29T01:00:00.000Z',
+  };
+  const evidence = {
+    schemaVersion: 1,
+    jobId: job.jobId,
+    attempt: job.attempt,
+    jobNonce: job.jobNonce,
+    artifactSha256: job.artifactSha256,
+    observedNetworkAttempts: [{
+      kind: 'fetch',
+      targetClass: 'external-origin',
+      targetSample: 'https://example.invalid',
+      count: 1,
+    }],
+    findings: [{
+      disposition: 'fix-or-manual-review',
+      code: 'network-fetch',
+      filePath: 'index.html',
+      line: 4,
+      column: 1,
+      messageKey: 'game.validation.networkFetch',
+    }],
+    truncated: false,
+  };
+  assert.equal(ValidateUnsignedGameScanEvidence(evidence, job).ok, true);
+  const report = CreateGameScanReport({
+    job,
+    evidence,
+    toolVersions: { zeta: '2.0', alpha: '1.0' },
+    completedAt: '2026-08-29T00:10:00.000Z',
+  });
+  assert.equal(report.verdict, 'manual-review-eligible');
+  assert.equal(IsGameScanReportForJob(report, job, Date.parse(job.issuedAt)), true);
+  assert.equal(IsGameScanReportForJob(report, { ...job, attempt: 1 }, Date.parse(job.issuedAt)), false);
+  assert.match(CanonicalizeGameScanReport(report), /"alpha":"1.0".*"zeta":"2.0"/);
+  assert.match(await CreateGameScanReportDigest(report), /^[a-f0-9]{64}$/);
+  assert.equal(IsSignedGameScanReport({
+    report,
+    reportSha256: 'b'.repeat(64),
+    attestation: { keyId: 'controller-1', algorithm: 'Ed25519', value: 'A'.repeat(32) },
+  }), true);
+  assert.equal(CreateGameValidationJobKey(job.jobId, job.attempt), 'job-1:2');
+});
+
+test('truncated or malformed validator evidence can only produce a hard-block report', () => {
+  const job = {
+    jobId: 'job-2',
+    attempt: 1,
+    jobNonce: 'nonce-2234567890123456',
+    submissionId: 'submission-2',
+    artifactSha256: 'c'.repeat(64),
+    policyVersion: 'validator-v1',
+    limitsProfile: 'uploaded-game-v1',
+    issuedAt: '2026-08-29T00:00:00.000Z',
+    expiresAt: '2026-08-29T01:00:00.000Z',
+  };
+  const report = CreateGameScanReport({
+    job,
+    evidence: {
+      schemaVersion: 1,
+      jobId: job.jobId,
+      attempt: job.attempt,
+      jobNonce: job.jobNonce,
+      artifactSha256: job.artifactSha256,
+      observedNetworkAttempts: [],
+      findings: [],
+      truncated: true,
+    },
+    toolVersions: { validator: '1.0' },
+    completedAt: '2026-08-29T00:10:00.000Z',
+  });
+  assert.equal(report.verdict, 'hard-block');
+  assert.equal(report.findings[0].code, 'validator-truncated');
 });

@@ -16,6 +16,9 @@ import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfi
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
 import { trainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
+import {
+  CreateSingleFlightPreloadCache,
+} from '@rehab-trainer/training-contracts';
 import { GetTrainingModuleCopy } from '@rehab-trainer/hub-modules/catalog';
 import {
   GetDrivingInputCapabilitiesSnapshot,
@@ -49,46 +52,67 @@ function PreloadTrainingRoute(): Promise<unknown> {
   return import('./training/TrainingPage');
 }
 
-async function PreloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknown> {
+async function PreloadTrainingEngine(moduleId: TrainingModuleId, signal: AbortSignal): Promise<unknown> {
+  ThrowIfAborted(signal);
   if (moduleId === 'hart-chart') {
-    return import('./training/HartChartPage');
+    const result = await import('./training/HartChartPage');
+    ThrowIfAborted(signal);
+    return result;
   }
 
   if (moduleId === 'driving-rehab') {
-    return import('../experiment/plugins/three-driving-rehab');
+    const result = await import('../experiment/plugins/three-driving-rehab');
+    ThrowIfAborted(signal);
+    return result;
   }
 
   const { WarmUpPixiTrainingRuntime } = await import('../utils/pixiPool');
+  ThrowIfAborted(signal);
 
   if (moduleId === 'moving-card') {
     return Promise.all([
       import('../experiment/plugins/pixi-moving-card'),
-      WarmUpPixiTrainingRuntime(moduleId),
+      WarmUpPixiTrainingRuntime(moduleId, signal),
     ]);
   }
 
   if (moduleId === 'oculomotor-training') {
     return Promise.all([
       import('../experiment/plugins/pixi-oculomotor-training'),
-      WarmUpPixiTrainingRuntime(moduleId),
+      WarmUpPixiTrainingRuntime(moduleId, signal),
     ]);
   }
 
   if (moduleId === 'gabor-patching') {
     return Promise.all([
       import('../experiment/plugins/pixi-gabor-patching'),
-      WarmUpPixiTrainingRuntime(moduleId),
+      WarmUpPixiTrainingRuntime(moduleId, signal),
     ]);
   }
 
   if (moduleId === 'reading-training') {
     return Promise.all([
       import('../experiment/plugins/pixi-reading-training'),
-      WarmUpPixiTrainingRuntime(moduleId),
+      WarmUpPixiTrainingRuntime(moduleId, signal),
     ]);
   }
 
   return Promise.resolve();
+}
+
+function ThrowIfAborted(signal: AbortSignal): void {
+  if (signal.aborted) {
+    const error = new Error('Training engine preload was aborted.');
+    error.name = 'AbortError';
+    throw error;
+  }
+}
+
+function DisposeTrainingEngine(moduleId: TrainingModuleId): void {
+  if (!['moving-card', 'oculomotor-training', 'gabor-patching', 'reading-training'].includes(moduleId)) return;
+  void import('../utils/pixiPool').then(({ DestroyPixiTrainingRuntime }) => {
+    DestroyPixiTrainingRuntime(moduleId);
+  }).catch(() => undefined);
 }
 
 export function HomePage() {
@@ -151,17 +175,17 @@ export function HomePage() {
     return () => window.clearTimeout(timerId);
   }, []);
 
-  const enginePreloadRef = useRef<{
-    moduleId: TrainingModuleId;
-    promise: Promise<unknown>;
-  } | null>(null);
+  const enginePreloadRef = useRef<ReturnType<typeof CreateSingleFlightPreloadCache> | null>(null);
+  const enginePreloadCache = enginePreloadRef.current ?? CreateSingleFlightPreloadCache();
+  enginePreloadRef.current = enginePreloadCache;
+  const preserveEnginePreloadRef = useRef(false);
 
   const preloadEngineOnce = (moduleId: TrainingModuleId) => {
-    const current = enginePreloadRef.current;
-    if (current?.moduleId === moduleId) return current.promise;
-    const promise = PreloadTrainingEngine(moduleId);
-    enginePreloadRef.current = { moduleId, promise };
-    return promise;
+    return enginePreloadCache.load(
+      moduleId,
+      (signal) => PreloadTrainingEngine(moduleId, signal),
+      { dispose: () => DisposeTrainingEngine(moduleId) },
+    );
   };
 
   // Rules are the only normal UI transition allowed to request a heavy engine
@@ -169,7 +193,12 @@ export function HomePage() {
   // the same rules panel reuses the same preload promise.
   useEffect(() => {
     if (!rulesModule) return;
-    void preloadEngineOnce(rulesModule).catch(() => undefined);
+    const moduleId = rulesModule;
+    void preloadEngineOnce(moduleId).catch(() => undefined);
+    return () => {
+      if (!preserveEnginePreloadRef.current) enginePreloadRef.current?.clear(moduleId);
+      preserveEnginePreloadRef.current = false;
+    };
   }, [rulesModule]);
 
   useEffect(() => {
@@ -188,6 +217,7 @@ export function HomePage() {
   // ── Handlers ──
   const handleCardClick = (moduleId: TrainingModuleId) => {
     if (isStartingTraining) return;
+    enginePreloadRef.current?.clear();
     setRulesModule(null);
     setExpandedModule(expandedModule === moduleId ? null : moduleId);
   };
@@ -203,6 +233,8 @@ export function HomePage() {
       NotifyHubTrainingExit();
       return;
     }
+    preserveEnginePreloadRef.current = false;
+    enginePreloadRef.current?.clear();
     setRulesModule(null);
     setExpandedModule(null);
   };
@@ -225,6 +257,7 @@ export function HomePage() {
         return;
       }
     }
+    preserveEnginePreloadRef.current = true;
     setIsStartingTraining(true);
     await EnterFullscreenFromUserGesture(document.documentElement);
 
@@ -234,6 +267,8 @@ export function HomePage() {
         navigate('/hart-chart', { state: trainingFlowLaunchState });
       } catch (error) {
         console.error('Hart Chart preload failed:', error);
+        preserveEnginePreloadRef.current = false;
+        enginePreloadRef.current?.clear(moduleToStart);
         setIsStartingTraining(false);
         alert(t('home.trainingLoadError'));
       }
@@ -249,6 +284,8 @@ export function HomePage() {
       ]);
     } catch (error) {
       console.error('Training preload failed:', error);
+      preserveEnginePreloadRef.current = false;
+      enginePreloadRef.current?.clear(moduleToStart);
       setIsStartingTraining(false);
       alert(t('home.trainingLoadError'));
       return;

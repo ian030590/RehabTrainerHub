@@ -89,6 +89,17 @@ const trainingHostStateTransitions = Object.freeze({
   disposing: Object.freeze({ disposed: 'disposed' }),
   disposed: Object.freeze({}),
 });
+const trainingRunResultFieldValues = Object.freeze([
+  'schemaVersion',
+  'moduleId',
+  'moduleVersion',
+  'status',
+  'startedAt',
+  'durationMs',
+  'trialCount',
+  'score',
+  'metrics',
+]);
 
 export const standardTrainingFlow = flowSteps;
 export const trainingDomains = trainingDomainValues;
@@ -101,6 +112,30 @@ export const trainingProtocolSchema = 'trainerhub.training/v1';
 export const trainingHostConnectSchema = trainingHostConnectSchemaValue;
 export const trainingHostMessageSchema = trainingHostMessageSchemaValue;
 export const trainingHostProtocolVersion = trainingHostProtocolVersionValue;
+export const trainingRunResultFields = trainingRunResultFieldValues;
+export { CreateSingleFlightPreloadCache } from './singleFlightPreload.js';
+export {
+  AssertGameScanReport,
+  CanonicalizeGameScanReport,
+  CreateGameScanReport,
+  CreateGameScanReportDigest,
+  CreateGameValidationJobKey,
+  DetermineGameScanVerdict,
+  FreezeGameValidationJob,
+  IsGameScanFinding,
+  IsGameNetworkAttempt,
+  IsGameScanReport,
+  IsGameScanReportForJob,
+  IsGameValidationJob,
+  IsSignedGameScanReport,
+  IsUnsignedGameScanEvidence,
+  ValidateUnsignedGameScanEvidence,
+  gameValidationFindingDispositions,
+  gameValidationLimits,
+  gameValidationNetworkKinds,
+  gameValidationNetworkTargetClasses,
+  gameValidationSchemaVersion,
+} from './gameValidation.js';
 
 export function IsTrainingModuleId(value) {
   if (typeof value !== 'string') return false;

@@ -52,6 +52,12 @@ jobs:
             command: pnpm run test:training-contracts
           - name: heavy-load-boundary
             command: pnpm run test:heavy-load-boundary
+          - name: media-lifecycle
+            command: pnpm run test:media-lifecycle
+          - name: training-lifecycle
+            command: pnpm run test:training-lifecycle
+          - name: training-privacy
+            command: pnpm run test:training-privacy
           - name: game-validator-state
             command: pnpm run test:game-validator
           - name: naming

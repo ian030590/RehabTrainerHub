@@ -36,7 +36,7 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
+import { StopMediaStream } from '@rehab-trainer/ui/mediaStream';
 import { useT } from '../../i18n';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
@@ -48,6 +48,7 @@ import {
   PrepareAudioFeedback,
 } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { AsteroidShieldPlugin } from '../../experiment/plugins/asteroid-shield-lifecycle';
 import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
@@ -395,7 +396,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   });
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
-  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
+  const runSequenceRef = useRef(0);
+  const runTokenRef = useRef<string | null>(null);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   useTrainingConfigReady(phase === 'menu');
@@ -449,14 +451,17 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     if (!host) return;
 
     const jsPsych = initJsPsych({ display_element: host });
-    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychRef.current = jsPsych;
-    jsPsychLifecycleRef.current = lifecycle;
 
     return () => {
-      lifecycle.dispose();
+      jsPsych.abortExperiment(undefined, {
+        lifecycle_status: 'disposed',
+        module_id: 'motor:asteroid-shield',
+        run_token: runTokenRef.current,
+      });
+      jsPsych.pluginAPI.clearAllTimeouts();
+      runTokenRef.current = null;
       if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
-      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
     };
   }, []);
 
@@ -476,7 +481,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       window.cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    StopMediaStream(cameraStreamRef.current);
     cameraStreamRef.current = null;
     const video = videoRef.current;
     if (video) video.srcObject = null;
@@ -523,7 +528,20 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     sceneRef.current?.threats.forEach((threat) => threat.sprite.destroy());
     if (sceneRef.current) sceneRef.current.threats = [];
     PlayGameEndSound(gameResult, jsPsychRef);
-    jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
+    const jsPsych = jsPsychRef.current;
+    const currentTrial = jsPsych?.getCurrentTrial();
+    if (
+      jsPsych
+      && currentTrial?.type === AsteroidShieldPlugin
+      && currentTrial.run_token === runTokenRef.current
+    ) {
+      jsPsych.finishTrial({
+        ...record,
+        lifecycle_status: 'completed',
+        module_id: 'motor:asteroid-shield',
+        run_token: runTokenRef.current,
+      });
+    }
     setResult(record);
     setPhase('results');
     stopVision();
@@ -614,24 +632,36 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const fullscreenPromise = enterTrainingFullscreen();
     PrepareAudioFeedback(jsPsychRef);
     await fullscreenPromise;
-    await jsPsychLifecycleRef.current?.start({
-      moduleId: 'motor:asteroid-shield',
-      onStart: async () => {
+    const jsPsych = jsPsychRef.current;
+    if (!jsPsych) return;
+    const runToken = `motor:asteroid-shield:${runSequenceRef.current + 1}`;
+    runSequenceRef.current += 1;
+    runTokenRef.current = runToken;
+    void jsPsych.run([{
+      type: AsteroidShieldPlugin,
+      module_id: 'motor:asteroid-shield',
+      run_token: runToken,
+      on_start: async () => {
         stopVision();
         setVisionError('');
         setShowVisionError(false);
+        setPhase('initializing');
 
         if (!texturesRef.current) {
           const app = appRef.current;
           if (!app) {
-            jsPsychLifecycleRef.current?.abort({ abort_reason: 'renderer-unavailable' });
+            jsPsych.abortExperiment(undefined, {
+              lifecycle_status: 'aborted',
+              module_id: 'motor:asteroid-shield',
+              run_token: runToken,
+              abort_reason: 'renderer-unavailable',
+            });
             return;
           }
           setStatusMessage(labels.initialization);
-          setPhase('initializing');
           try {
             const textures = await LoadAssetTextures();
-            if (!mountedRef.current) return;
+            if (!mountedRef.current || phaseRef.current !== 'initializing') return;
             texturesRef.current = textures;
             ResetAsteroidScene(app, sceneRef, textures);
           } catch (error) {
@@ -639,7 +669,12 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             setVisionError(labels.initialization);
             setShowVisionError(true);
             setPhase('menu');
-            jsPsychLifecycleRef.current?.abort({ abort_reason: 'asset-load-error' });
+            jsPsych.abortExperiment(undefined, {
+              lifecycle_status: 'aborted',
+              module_id: 'motor:asteroid-shield',
+              run_token: runToken,
+              abort_reason: 'asset-load-error',
+            });
             return;
           }
         }
@@ -669,6 +704,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
               height: { ideal: 720 },
             },
           });
+          if (!mountedRef.current || phaseRef.current !== 'initializing') {
+            StopMediaStream(stream);
+            return;
+          }
           cameraStreamRef.current = stream;
           const cameraTrack = stream.getVideoTracks()[0];
           if (!cameraTrack) throw new Error('Camera track is unavailable.');
@@ -701,8 +740,11 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
               });
             },
           );
-          if (!mountedRef.current) {
+          if (!mountedRef.current || phaseRef.current !== 'initializing') {
             landmarker.close();
+            StopMediaStream(stream);
+            if (cameraStreamRef.current === stream) cameraStreamRef.current = null;
+            if (videoRef.current?.srcObject === stream) videoRef.current.srcObject = null;
             return;
           }
           handLandmarkerRef.current = landmarker;
@@ -721,11 +763,21 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
           beginPlaying();
         }
       },
+    }]).catch((error: unknown) => {
+      if (!mountedRef.current || phaseRef.current === 'menu') return;
+      console.warn('Asteroid Shield jsPsych run ended unexpectedly.', error);
+      stopVision();
+      setPhase('menu');
     });
   }, [beginPlaying, enterTrainingFullscreen, handleHandFrame, labels, setPhase, stopVision]);
 
   const returnToMenu = useCallback(() => {
-    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
+    jsPsychRef.current?.abortExperiment(undefined, {
+      lifecycle_status: 'aborted',
+      module_id: 'motor:asteroid-shield',
+      run_token: runTokenRef.current,
+      abort_reason: 'return-to-menu',
+    });
     stopVision();
     ClearAsteroidScene(sceneRef.current);
     metricsRef.current = CreateEmptyMetrics(configRef.current.maxHp);
@@ -735,7 +787,12 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   }, [setPhase, stopVision]);
 
   const exitGame = useCallback(() => {
-    jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
+    jsPsychRef.current?.abortExperiment(undefined, {
+      lifecycle_status: 'aborted',
+      module_id: 'motor:asteroid-shield',
+      run_token: runTokenRef.current,
+      abort_reason: 'exit-training',
+    });
     stopVision();
     onExit();
   }, [onExit, stopVision]);

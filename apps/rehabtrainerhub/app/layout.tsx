@@ -7,6 +7,7 @@ import { siteUrls } from './siteUrls';
 import './globals.css';
 import '@rehab-trainer/ui/components/AuthPanel.css';
 import '@rehab-trainer/ui/components/InstallAppPage.css';
+import '@rehab-trainer/ui/components/OfflinePackControl.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrls.hub),

@@ -24,12 +24,20 @@ assert.doesNotMatch(lobbySource, /on(?:Focus|PointerEnter|PointerDown|TouchStart
   'The Hub lobby must not attach runtime preload handlers to catalog cards.');
 
 const visionHomeSource = Read('apps/rehabtrainerhub/training-modules/vision/pages/HomePage.tsx');
-assert.match(visionHomeSource, /if \(!rulesModule\) return;[\s\S]{0,240}preloadEngineOnce\(rulesModule\)/,
+assert.match(visionHomeSource, /const moduleId = rulesModule;[\s\S]{0,400}preloadEngineOnce\(moduleId\)/,
   'Vision engine preloading must be triggered from the rules-visible transition.');
 assert.doesNotMatch(visionHomeSource, /PreloadTrainingEngine\(expandedModule\)/,
   'Config expansion must not preload a heavy vision engine.');
 assert.match(visionHomeSource, /enginePreloadRef/,
   'Vision rules preload must reuse one promise for repeated open/close transitions.');
+assert.match(visionHomeSource, /CreateSingleFlightPreloadCache/,
+  'Vision rules preload must use the shared single-flight cache.');
+assert.match(visionHomeSource, /AbortSignal/,
+  'Vision engine loading must receive an AbortSignal.');
+assert.match(visionHomeSource, /enginePreloadRef\.current\?\.clear/,
+  'Leaving rules/config must clear and dispose the pending engine preload.');
+assert.match(visionHomeSource, /WarmUpPixiTrainingRuntime\(moduleId, signal\)/,
+  'Pixi warmup must observe the rules preload abort signal.');
 
 const hostSource = Read('apps/rehabtrainerhub/app/official-training-host/OfficialTrainingHost.tsx');
 for (const heavyToken of [

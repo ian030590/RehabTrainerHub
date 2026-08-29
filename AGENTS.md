@@ -31,11 +31,11 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 - `pnpm run test:heavy-load-boundary`：驗證 card/config 不會提早載入重型 engine，且 rules 只共用單一 preload promise。
 - `pnpm --filter <workspace-package> run preview`：預覽 Vite app 或 Hub 輸出。
 
-高風險 trainer 變更完成前執行 `pnpm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。此 gate 包含 training flow、assessment jsPsych lifecycle 與 i18n dictionary parity 檢查。
+高風險 trainer 變更完成前執行 `pnpm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。此 gate 包含 training flow、assessment jsPsych lifecycle、training plugin lifecycle、media permission/stream disposal、trainer privacy boundary 與 i18n dictionary parity 檢查；media-only 變更也可直接執行 `pnpm run test:media-lifecycle`，plugin/lifecycle 變更可直接執行 `pnpm run test:training-lifecycle`。
 
 修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後，至少執行 `pnpm run test:entrypoints` 與 `pnpm run build:hub`，驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
 
-無完整測試套件；針對性 build 與 `pnpm run test:hub-functions`、`pnpm run test:gamerunner`、`pnpm run test:game-validator`、`pnpm run test:training-flow`、`pnpm run test:assessment-lifecycle`、`pnpm run test:i18n` 為最低驗證。
+無完整測試套件；針對性 build 與 `pnpm run test:hub-functions`、`pnpm run test:gamerunner`、`pnpm run test:game-validator`、`pnpm run test:training-flow`、`pnpm run test:assessment-lifecycle`、`pnpm run test:media-lifecycle`、`pnpm run test:training-lifecycle`、`pnpm run test:training-privacy`、`pnpm run test:i18n` 為最低驗證。
 
 ## CI/CD 維護
 

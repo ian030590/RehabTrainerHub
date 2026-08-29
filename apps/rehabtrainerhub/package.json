@@ -22,7 +22,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/clean-next-output.mjs && next build && node scripts/build-training-runtimes.mjs && node ../../scripts/emit-pwa-assets.mjs out && node ../../scripts/emit-official-game-pwas.mjs out && node ../../scripts/check-seo-output.mjs",
+    "build": "node scripts/clean-next-output.mjs && next build && node scripts/build-training-runtimes.mjs && node ../../scripts/check-runtime-build-manifest.mjs && node ../../scripts/emit-pwa-assets.mjs out && node ../../scripts/emit-official-game-pwas.mjs out && node ../../scripts/check-official-game-pwa-output.mjs out && node ../../scripts/check-seo-output.mjs",
     "preview": "pnpm dlx serve out"
   },
   "dependencies": {

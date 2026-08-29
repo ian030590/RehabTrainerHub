@@ -30,6 +30,8 @@ export { AppDialog } from './components/AppDialog';
 export type { AppDialogProps } from './components/AppDialog';
 export { CardImagePlaceholder, cardImagePlaceholderSrc } from './components/CardImagePlaceholder';
 export type { CardImagePlaceholderProps } from './components/CardImagePlaceholder';
+export { OfflinePackControl } from './components/OfflinePackControl';
+export type { OfflinePackControlLabels, OfflinePackControlProps } from './components/OfflinePackControl';
 export { CloudflareWebAnalytics } from './components/CloudflareWebAnalytics';
 export type { CloudflareWebAnalyticsProps } from './components/CloudflareWebAnalytics';
 export { ConfigDialog } from './components/ConfigDialog';
@@ -173,6 +175,28 @@ export {
   GetMediaPermissionRetryLabel,
   useMediaPermissionPreflight,
 } from './hooks/useMediaPermissionPreflight';
+export { StopMediaStream } from './mediaStream';
+export {
+  CreateOfflinePackManager,
+  GetOfflinePackManager,
+  GetOfflinePackTotalBytes,
+  ParseOfflinePackManifest,
+  ValidateOfflinePack,
+  offlinePackCacheName,
+  offlinePackMetadataKey,
+  offlinePackMetadataSchemaVersion,
+} from './offlinePackManager';
+export type {
+  OfflinePackDescriptor,
+  OfflinePackManifestPayload,
+  OfflinePackManager,
+  OfflinePackManagerOptions,
+  OfflinePackMetadataStore,
+  OfflinePackProgress,
+  OfflinePackReference,
+  OfflinePackResource,
+  OfflinePackStatus,
+} from './offlinePackManager';
 export type {
   MediaPermissionPreflightResult,
   MediaPermissionPreflightStatus,

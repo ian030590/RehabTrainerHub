@@ -10,7 +10,7 @@ import {
 import { TrainingOverlay } from './train/TrainingOverlay';
 import { PackageGameOverlay } from './train/PackageGameOverlay';
 import {
-  BuildTrainingGameInstallHref,
+  BuildTrainingGameOfflineManifestHref,
   BuildTrainingModuleImageSrc,
   GetTrainingModuleCopy,
   GetTrainingModuleTheme,
@@ -22,6 +22,7 @@ import {
   type TrainingVisualTheme,
 } from '@rehab-trainer/hub-modules/catalog';
 import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
+import { OfflinePackControl } from '@rehab-trainer/ui/components/OfflinePackControl';
 import { GetHubUiCopy } from './i18n';
 import { useHubLanguage } from './i18n/HubLanguage';
 import {
@@ -75,6 +76,13 @@ function TrainingThemeBadge({
   );
 }
 
+function FormatBytes(value: number): string {
+  if (!Number.isFinite(value) || value < 0) return '—';
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
@@ -92,6 +100,18 @@ export function TrainingLobby() {
         developer: 'Developer',
         developerLibrary: 'Developer games',
         install: 'Install game',
+        offlineCapacity: 'Not enough browser storage is available for this offline pack.',
+        offlineChecking: 'Checking offline pack…',
+        offlineDownload: 'Download offline pack',
+        offlineError: 'The offline pack is unavailable. Please try again later.',
+        offlineInstall: 'Installing offline pack…',
+        offlineIntegrity: 'Installed data changed; choose update to repair it.',
+        offlineProgress: (completed: number, total: number) => `Offline pack progress: ${completed}/${total}`,
+        offlineQuota: (bytes: number) => `Browser quota ${FormatBytes(bytes)}`,
+        offlineReady: 'Available offline',
+        offlineRemove: 'Remove offline copy',
+        offlineSize: (bytes: number) => `${FormatBytes(bytes)} offline`,
+        offlineUpdate: 'Update offline pack',
         officialLibrary: 'Rehab Trainer Hub built-in games',
         play: 'Play on platform',
         reviewed: 'Reviewed release',
@@ -103,6 +123,18 @@ export function TrainingLobby() {
         developer: '開發者',
         developerLibrary: '開發者遊戲',
         install: '安裝遊戲',
+        offlineCapacity: '瀏覽器可用儲存空間不足，無法下載此離線包。',
+        offlineChecking: '正在檢查離線包…',
+        offlineDownload: '下載離線包',
+        offlineError: '離線包目前無法取得，請稍後再試。',
+        offlineInstall: '正在安裝離線包…',
+        offlineIntegrity: '已安裝資料與目前版本不同，請選擇更新修復。',
+        offlineProgress: (completed: number, total: number) => `離線包進度：${completed}/${total}`,
+        offlineQuota: (bytes: number) => `瀏覽器配額 ${FormatBytes(bytes)}`,
+        offlineReady: '已可離線使用',
+        offlineRemove: '移除離線副本',
+        offlineSize: (bytes: number) => `離線大小 ${FormatBytes(bytes)}`,
+        offlineUpdate: '更新離線包',
         officialLibrary: '居家訓練網內建遊戲',
         play: '在平台遊玩',
         reviewed: '已審核版本',
@@ -292,14 +324,27 @@ export function TrainingLobby() {
                           {copy.start}
                           <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                         </button>
-                        <a
-                          href={BuildTrainingGameInstallHref(module)}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        >
-                          {platformCopy.install}
-                          <span className="material-symbols-outlined" aria-hidden="true">download</span>
-                        </a>
+                        <OfflinePackControl
+                          expectedModuleId={module.catalogId}
+                          expectedPackId={`official-game:${module.runtimeId}`}
+                          labels={{
+                            capacity: platformCopy.offlineCapacity,
+                            checking: platformCopy.offlineChecking,
+                            download: platformCopy.offlineDownload,
+                            error: platformCopy.offlineError,
+                            installing: platformCopy.offlineInstall,
+                            integrity: platformCopy.offlineIntegrity,
+                            progress: platformCopy.offlineProgress,
+                            quota: platformCopy.offlineQuota,
+                            ready: platformCopy.offlineReady,
+                            remove: platformCopy.offlineRemove,
+                            size: platformCopy.offlineSize,
+                            update: platformCopy.offlineUpdate,
+                            unavailable: platformCopy.offlineError,
+                          }}
+                          manifestUrl={BuildTrainingGameOfflineManifestHref(module)}
+                          icon={<span className="material-symbols-outlined" aria-hidden="true">download</span>}
+                        />
                       </div>
                     </div>
                   </article>

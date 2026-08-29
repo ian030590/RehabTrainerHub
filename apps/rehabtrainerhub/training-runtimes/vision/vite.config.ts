@@ -11,6 +11,7 @@ export default defineConfig({
   server: { watch: { usePolling: true, interval: 750, ignored: ['**/tsconfig.json', '**/tsconfig.*.json', '**/*.tsbuildinfo'] } },
   build: {
     outDir: '../../out/runtimes/vision', assetsDir: 'assets', emptyOutDir: true,
+    manifest: '.vite/manifest.json',
     rollupOptions: { output: { manualChunks(id) {
       const normalizedId = id.replaceAll('\\', '/');
       if (normalizedId.includes('/node_modules/three/')) return 'three-runtime';

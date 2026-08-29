@@ -1,8 +1,10 @@
 import {
   AssertTrainingModuleManifest,
+  trainingRunResultFields,
   type TrainingCapability,
   type TrainingModuleManifest,
 } from '@rehab-trainer/training-contracts';
+import { officialTrainingHostRoutePrefix } from '@rehab-trainer/ui/officialTrainingHostPolicy';
 
 export const standardTrainingFlow = [
   'card',
@@ -23,11 +25,26 @@ export type TrainingJsPsychLifecycle =
   | 'native-timeline'
   | 'external-runtime-adapter';
 
+/**
+ * Build-time asset groups owned by a module. The group is deliberately a
+ * stable capability name rather than an URL: the platform asset manifest is
+ * the only place that resolves it to versioned, hashed bytes.
+ */
+export type TrainingRuntimeAssetGroup =
+  | 'mediapipe-wasm'
+  | 'mediapipe-hand'
+  | 'mediapipe-face'
+  | 'mediapipe-pose'
+  | 'webgazer'
+  | 'star-sky'
+  | 'reference-car';
+
 export interface TrainingModuleFlowManifestEntry {
   purposeId: string;
   flow: readonly TrainingFlowStep[];
   jsPsychLifecycle: TrainingJsPsychLifecycle;
   mediaPermission: TrainingMediaPermission;
+  runtimeAssetGroups: readonly TrainingRuntimeAssetGroup[];
   sourcePath: string;
 }
 
@@ -78,6 +95,20 @@ const purposeByCatalogId: Readonly<Record<string, string>> = Object.freeze({
   'mouth:tongue-catch': 'oral',
 });
 
+// Module-owned declarations keep the PWA generator independent from game
+// identifiers. Runtime URLs and hashes are resolved from the platform's
+// versioned R2 manifest during the build; a module never embeds a CDN URL.
+const runtimeAssetGroupsByCatalogId: Readonly<Record<string, readonly TrainingRuntimeAssetGroup[]>> = Object.freeze({
+  'motor:drawing-defense': ['star-sky'],
+  'motor:asteroid-shield': ['mediapipe-wasm', 'mediapipe-hand'],
+  'motor:gesture-battler': ['mediapipe-wasm', 'mediapipe-hand'],
+  'motor:motor-cortex-rehab': ['mediapipe-wasm', 'mediapipe-hand'],
+  'vision:oculomotor-training': ['webgazer'],
+  'vision:driving-rehab': ['reference-car'],
+  'brain:every-ball-response': ['mediapipe-wasm', 'mediapipe-hand', 'mediapipe-pose'],
+  'mouth:tongue-catch': ['mediapipe-wasm', 'mediapipe-face'],
+});
+
 export const trainingModuleImplementationVersion = '1.0.0' as const;
 
 const manifestEntries: ReadonlyArray<readonly [
@@ -86,10 +117,10 @@ const manifestEntries: ReadonlyArray<readonly [
   mediaPermission?: TrainingMediaPermission,
   jsPsychLifecycle?: TrainingJsPsychLifecycle,
 ]> = [
-  ['motor:drawing-defense', 'motor/pages/training/DrawingTowerDefenseGame.tsx', 'none', 'external-runtime-adapter'],
-  ['motor:asteroid-shield', 'motor/pages/training/AsteroidShieldGame.tsx', 'camera-optional', 'external-runtime-adapter'],
-  ['motor:gesture-battler', 'motor/pages/training/GestureBattlerGame.tsx', 'camera', 'external-runtime-adapter'],
-  ['motor:motor-cortex-rehab', 'motor/pages/training/MotorCortexRehabGame.tsx', 'camera', 'external-runtime-adapter'],
+  ['motor:drawing-defense', 'motor/pages/training/DrawingTowerDefenseGame.tsx', 'none', 'native-timeline'],
+  ['motor:asteroid-shield', 'motor/pages/training/AsteroidShieldGame.tsx', 'camera-optional', 'native-timeline'],
+  ['motor:gesture-battler', 'motor/pages/training/GestureBattlerGame.tsx', 'camera', 'native-timeline'],
+  ['motor:motor-cortex-rehab', 'motor/pages/training/MotorCortexRehabGame.tsx', 'camera', 'native-timeline'],
   ['vision:moving-card', 'vision/experiment/plugins/pixi-moving-card.ts', 'none', 'native-timeline'],
   ['vision:oculomotor-training', 'vision/experiment/plugins/pixi-oculomotor-training.ts', 'camera-optional', 'native-timeline'],
   ['vision:gabor-patching', 'vision/experiment/plugins/pixi-gabor-patching.ts', 'none', 'native-timeline'],
@@ -102,13 +133,13 @@ const manifestEntries: ReadonlyArray<readonly [
   ...referenceCognitiveIds.map((catalogId) => (
     [catalogId, 'brain/pages/thinking/ReferenceCognitiveGame.tsx', 'none', 'external-runtime-adapter'] as const
   )),
-  ['mouth:tongue-catch', 'mouth/pages/training/TongueCatchGame.tsx', 'camera', 'external-runtime-adapter'],
+  ['mouth:tongue-catch', 'mouth/pages/training/TongueCatchGame.tsx', 'camera', 'native-timeline'],
 ];
 
 export const trainingModuleFlowManifest: Readonly<Record<
   string,
   TrainingModuleFlowManifestEntry
->> = Object.fromEntries(manifestEntries.map(([
+>> = Object.freeze(Object.fromEntries(manifestEntries.map(([
   catalogId,
   sourcePath,
   mediaPermission = 'none',
@@ -120,9 +151,10 @@ export const trainingModuleFlowManifest: Readonly<Record<
     flow: standardTrainingFlow,
     jsPsychLifecycle,
     mediaPermission,
+    runtimeAssetGroups: Object.freeze([...(runtimeAssetGroupsByCatalogId[catalogId] ?? [])]),
     sourcePath,
   },
-]));
+])));
 
 function GetManifestCapabilities(mediaPermission: TrainingMediaPermission): readonly TrainingCapability[] {
   // Every official training surface can enter its module-owned fullscreen
@@ -168,27 +200,65 @@ function BuildTrainingModuleManifest(
   });
 }
 
-export const trainingModuleManifests: Readonly<Record<string, TrainingModuleManifest>> = Object.fromEntries(
+export const trainingModuleManifests: Readonly<Record<string, TrainingModuleManifest>> = Object.freeze(Object.fromEntries(
   manifestEntries.map(([catalogId, , mediaPermission = 'none', jsPsychLifecycle = 'external-runtime-adapter'], catalogOrder) => [
     catalogId,
     BuildTrainingModuleManifest(catalogId, mediaPermission, jsPsychLifecycle, catalogOrder),
   ]),
-);
+));
 
 export interface TrainingRegistryEntry {
   manifest: TrainingModuleManifest;
   sourcePath: string;
+  hostPath: string;
+  officialPwa: {
+    scope: string;
+    manifestPath: string;
+    serviceWorkerPath: string;
+    offlineManifestPathPrefix: string;
+  };
+  recordAllowlist: readonly string[];
+  testIds: readonly string[];
+}
+
+function BuildTrainingRegistryEntry(
+  catalogId: string,
+  manifest: TrainingModuleManifest,
+): TrainingRegistryEntry {
+  const [domain, slug] = catalogId.split(':');
+  const hostPath = `${officialTrainingHostRoutePrefix}/${encodeURIComponent(domain)}/${encodeURIComponent(slug)}/`;
+  const gameScope = `/games/${encodeURIComponent(slug)}/`;
+  return Object.freeze({
+    manifest,
+    sourcePath: trainingModuleFlowManifest[catalogId].sourcePath,
+    hostPath,
+    officialPwa: Object.freeze({
+      scope: gameScope,
+      manifestPath: `${gameScope}manifest.webmanifest`,
+      serviceWorkerPath: `${gameScope}sw.js`,
+      offlineManifestPathPrefix: `/offline-manifests/${encodeURIComponent(slug)}/`,
+    }),
+    recordAllowlist: trainingRunResultFields,
+    testIds: Object.freeze([
+      `training-flow:${catalogId}`,
+      `training-lifecycle:${catalogId}`,
+      `official-pwa:${catalogId}`,
+    ]),
+  });
 }
 
 export const trainingModuleRegistry: Readonly<Record<string, TrainingRegistryEntry>> = Object.freeze(
   Object.fromEntries(Object.entries(trainingModuleManifests).map(([catalogId, manifest]) => [
     catalogId,
-    Object.freeze({
-      manifest,
-      sourcePath: trainingModuleFlowManifest[catalogId].sourcePath,
-    }),
+    BuildTrainingRegistryEntry(catalogId, manifest),
   ])),
 );
+
+export function GetTrainingModuleRegistryEntry(catalogId: string): TrainingRegistryEntry {
+  const entry = trainingModuleRegistry[catalogId];
+  if (!entry) throw new Error(`Missing Hub training-module registry entry for ${catalogId}.`);
+  return entry;
+}
 
 export function GetTrainingModuleManifest(catalogId: string): TrainingModuleManifest {
   const manifest = trainingModuleManifests[catalogId];

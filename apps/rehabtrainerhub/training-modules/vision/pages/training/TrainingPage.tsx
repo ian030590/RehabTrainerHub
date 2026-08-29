@@ -198,13 +198,14 @@ function TrainingRuntimePage() {
     const container = containerRef.current;
 
     let cancelled = false;
+    const setupController = new AbortController();
 
     const setupExperiment = async () => {
       await WaitForUsableLayout(container);
       if (cancelled) return;
 
       if (enableWebGazer) {
-        await EnsureWebGazerLoaded();
+        await EnsureWebGazerLoaded(setupController.signal);
         await ResetWebGazerCalibrationData();
         if (cancelled) return;
       }
@@ -344,6 +345,7 @@ function TrainingRuntimePage() {
 
     return () => {
       cancelled = true;
+      setupController.abort('training-unmounted');
       soundManager.destroy();
       DestroyPixiTrainingRuntime(moduleId);
       if (moduleId === 'driving-rehab') DisposeDrivingRehabRuntime();

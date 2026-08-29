@@ -151,13 +151,14 @@ AI_ASSET_BASE_URL=https://assets.trainerhub.cc
 ASSET_PUBLIC_BASE_URL=https://assets.trainerhub.cc
 ```
 
-- `AI_ASSET_BASE_URL`：MediaPipe WASM、`.task` 模型、WebGazer，以及大型遊戲圖片 / 3D 模型的主要來源。
+- `AI_ASSET_BASE_URL`：平台控制 R2 custom domain 的受控 fallback（可選）；runtime 會先嘗試同源 `/runtime-assets/` route。
 - `ASSET_PUBLIC_BASE_URL`：後台文章封面上傳後可公開存取的 base URL。
 - MediaPipe 載入只接受平台控制的版本化資產路徑；資產缺失時明確失敗。
 - Hub 的 vision runtime 只載入平台控制的 R2 WebGazer 或同源版本化副本。
-- 星空背景與 3D 車輛會優先使用 R2，失敗時保留 Pages 內的本地副本。
+- 星空背景與 3D 車輛會先走同源唯讀 asset route，再使用平台控制的 R2 custom domain，最後才使用 Pages 內的本地副本。
+- `/runtime-assets/*` 只允許 manifest 內的 AI／遊戲資產 key，透過 `ASSET_BUCKET` 唯讀讀取，回傳 immutable cache 與 `nosniff`／same-origin headers；CORS 僅回應同源請求，不接受可配置的跨來源 proxy，也不得把它改成任意 R2 proxy。
 
-`main` production build 必須注入平台控制的 R2 AI base；未設定資產 base 的 preview 只會使用同源 `/runtime-assets/` 路徑，缺少資產時明確失敗，不會向第三方服務發出請求。
+`main` production build 可注入平台控制的 R2 AI base 作 fallback；未設定資產 base 的 preview 會使用同源 `/runtime-assets/` 路徑，缺少資產時明確失敗，不會向第三方服務發出請求。
 
 ## 5. KV 文章快取
 

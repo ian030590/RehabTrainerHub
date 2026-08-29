@@ -185,13 +185,20 @@ function GetPixiAppManager(scope: PixiRuntimeScope): PixiAppManager {
   return manager;
 }
 
-export function WarmUpPixiRuntime(scope: PixiRuntimeScope): Promise<void> {
-  return GetPixiAppManager(scope).warmUp();
+export async function WarmUpPixiRuntime(scope: PixiRuntimeScope, signal?: AbortSignal): Promise<void> {
+  ThrowIfAborted(signal);
+  const manager = GetPixiAppManager(scope);
+  await manager.warmUp();
+  if (signal?.aborted) {
+    manager.destroy();
+    pixiAppManagers.delete(scope);
+    ThrowIfAborted(signal);
+  }
 }
 
-export function WarmUpPixiTrainingRuntime(moduleId: string): Promise<void> {
+export function WarmUpPixiTrainingRuntime(moduleId: string, signal?: AbortSignal): Promise<void> {
   const scope = GetPixiTrainingRuntimeScope(moduleId);
-  return scope ? WarmUpPixiRuntime(scope) : Promise.resolve();
+  return scope ? WarmUpPixiRuntime(scope, signal) : Promise.resolve();
 }
 
 export function DestroyPixiRuntime(scope: PixiRuntimeScope): void {
@@ -256,4 +263,11 @@ export function RunPixiTrial(
     errorElement.textContent = `PixiJS initialization failed: ${message}`;
     displayElement.appendChild(errorElement);
   });
+}
+
+function ThrowIfAborted(signal?: AbortSignal): void {
+  if (!signal?.aborted) return;
+  const error = new Error('Pixi runtime preload was aborted.');
+  error.name = 'AbortError';
+  throw error;
 }

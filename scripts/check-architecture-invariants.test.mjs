@@ -28,10 +28,6 @@ const inScopeLifecycleExceptions = new Set([
 // These are the existing compatibility adapters. A new module may not add a
 // second legacy lifecycle path; it must start with the native jsPsych owner.
 const knownLegacyAdapterIds = new Set([
-  'motor:drawing-defense',
-  'motor:asteroid-shield',
-  'motor:gesture-battler',
-  'motor:motor-cortex-rehab',
   'vision:hart-chart',
   'brain:minesweeper',
   'brain:reaction-time',
@@ -46,7 +42,6 @@ const knownLegacyAdapterIds = new Set([
   'brain:dots-and-boxes',
   'brain:hex',
   'brain:maze',
-  'mouth:tongue-catch',
 ]);
 
 const manifestModule = await LoadTypeScriptModule(
@@ -55,6 +50,9 @@ const manifestModule = await LoadTypeScriptModule(
     '@rehab-trainer/training-contracts': pathToFileURL(
       resolve(repoRoot, 'packages/training-contracts/src/index.js'),
     ).href,
+    '@rehab-trainer/ui/officialTrainingHostPolicy': `data:text/javascript;base64,${Buffer.from(
+      "export const officialTrainingHostRoutePrefix = '/official-training-host';",
+    ).toString('base64')}`,
   },
 );
 
@@ -84,6 +82,34 @@ test('module identity and lifecycle remain generated from one registry', () => {
     assert.deepEqual([...generatedManifest.flow], expectedFlow);
     assert.equal(generatedManifest.lifecycle.owner, 'jspsych');
     assert.equal(registryEntry.sourcePath, flowEntry.sourcePath);
+    assert.ok(Array.isArray(flowEntry.runtimeAssetGroups));
+    assert.ok(flowEntry.runtimeAssetGroups.every((group) => /^[a-z][a-z0-9-]{1,31}$/.test(group)));
+    assert.equal(
+      registryEntry.hostPath,
+      `/official-training-host/${id.replace(':', '/')}/`,
+      `host path must be generated for ${id}`,
+    );
+    const slug = id.slice(id.indexOf(':') + 1);
+    assert.equal(registryEntry.officialPwa.scope, `/games/${slug}/`);
+    assert.equal(registryEntry.officialPwa.manifestPath, `/games/${slug}/manifest.webmanifest`);
+    assert.equal(registryEntry.officialPwa.serviceWorkerPath, `/games/${slug}/sw.js`);
+    assert.equal(registryEntry.officialPwa.offlineManifestPathPrefix, `/offline-manifests/${slug}/`);
+    assert.deepEqual([...registryEntry.recordAllowlist], [
+      'schemaVersion',
+      'moduleId',
+      'moduleVersion',
+      'status',
+      'startedAt',
+      'durationMs',
+      'trialCount',
+      'score',
+      'metrics',
+    ]);
+    assert.deepEqual([...registryEntry.testIds], [
+      `training-flow:${id}`,
+      `training-lifecycle:${id}`,
+      `official-pwa:${id}`,
+    ]);
     assert.ok(
       existsSync(resolve(moduleRoot, ...flowEntry.sourcePath.split('/'))),
       `canonical module source is missing for ${id}: ${flowEntry.sourcePath}`,
@@ -121,6 +147,8 @@ test('module and runtime ownership stays directional and compatibility-only', ()
   assert.equal(sdkPackage.exports['.'].default, './src/index.js');
 
   const moduleFiles = CollectFiles(moduleRoot, /\.(?:ts|tsx)$/);
+  const moduleGraph = BuildLocalDependencyGraph(moduleFiles);
+  assert.deepEqual(FindDependencyCycles(moduleGraph), [], 'training module source must not contain circular dependencies');
   for (const filePath of moduleFiles) {
     const source = readFileSync(filePath, 'utf8');
     if (!source.includes('training-runtimes')) continue;
@@ -246,6 +274,7 @@ test('root and per-game PWA cache ownership remain separate', () => {
   const rootGeneratorSource = Read('scripts/emit-pwa-assets.mjs');
   const registrationSource = Read('packages/ui/src/pwa.tsx');
   const officialGeneratorSource = Read('scripts/emit-official-game-pwas.mjs');
+  const officialOutputCheckerSource = Read('scripts/check-official-game-pwa-output.mjs');
   const runnerRendererSource = Read('apps/usergamerunner/functions/_lib/render.js');
 
   assert.equal(rootManifest.id, '/');
@@ -265,9 +294,35 @@ test('root and per-game PWA cache ownership remain separate', () => {
   assert.match(officialGeneratorSource, /BuildGameServiceWorker/);
   assert.match(officialGeneratorSource, /trainerhub-official-game/);
   assert.match(officialGeneratorSource, /data-official-game-pwa/);
+  assert.match(officialOutputCheckerSource, /ValidateOfflineResources/);
+  assert.match(officialOutputCheckerSource, /ReadRuntimeAssetManifest/);
+  assert.match(officialOutputCheckerSource, /same-origin output/);
   assert.match(runnerRendererSource, /manifest\.webmanifest/);
   assert.match(runnerRendererSource, /RenderServiceWorker/);
   assert.match(runnerRendererSource, /trainerhub-game:/);
+});
+
+test('platform runtime assets stay same-origin, allowlisted, and immutable', () => {
+  const routeSource = Read('apps/rehabtrainerhub/functions/runtime-assets/[[path]].js');
+  const generatorSource = Read('scripts/emit-official-game-pwas.mjs');
+  const resolverSource = Read('packages/ui/src/aiAssets.ts');
+  const webgazerLoaderSource = Read(
+    'apps/rehabtrainerhub/training-runtimes/vision/src/utils/webgazerLoader.ts',
+  );
+
+  assert.match(routeSource, /ASSET_BUCKET/);
+  assert.match(routeSource, /allowedKeyPattern/);
+  assert.match(routeSource, /max-age=31536000, immutable/);
+  assert.match(routeSource, /Cross-Origin-Resource-Policy/);
+  assert.doesNotMatch(routeSource, /Access-Control-Allow-Origin['"]?\s*[:,]\s*['"]\*['"]/);
+  assert.match(generatorSource, /ReadPlatformRuntimeAssets/);
+  assert.match(generatorSource, /ReadFlowRuntimeAssetGroups/);
+  assert.match(generatorSource, /BuildRuntimeAssetDescriptors/);
+  assert.match(generatorSource, /runtimeAssetDescriptors/);
+  assert.doesNotMatch(generatorSource, /switch\s*\(`\$\{trainer\}:\$\{game\.id\}`\)/);
+  assert.match(Read('apps/rehabtrainerhub/training-modules/moduleFlowManifest.ts'), /runtimeAssetGroupsByCatalogId/);
+  assert.match(resolverSource, /platformUrl/);
+  assert.match(webgazerLoaderSource, /runtime-assets\/ai\/webgazer/);
 });
 
 test('game validation keeps scan, review, and publication gates independent', () => {
@@ -366,6 +421,68 @@ function CollectFiles(directory, filePattern) {
     }
   }
   return files;
+}
+
+function BuildLocalDependencyGraph(files) {
+  const knownFiles = new Set(files.map((filePath) => NormalizePath(filePath)));
+  const graph = new Map(files.map((filePath) => [NormalizePath(filePath), []]));
+  for (const filePath of files) {
+    const normalizedFile = NormalizePath(filePath);
+    const source = readFileSync(filePath, 'utf8');
+    const imports = [
+      ...source.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g),
+      ...source.matchAll(/\bimport\s*\(\s*['"]([^'"]+)['"]/g),
+    ].map((match) => match[1]).filter((specifier) => specifier.startsWith('.'));
+    for (const specifier of imports) {
+      const target = ResolveLocalModule(filePath, specifier, knownFiles);
+      if (target) graph.get(normalizedFile).push(target);
+    }
+  }
+  return graph;
+}
+
+function ResolveLocalModule(fromFile, specifier, knownFiles) {
+  const base = resolve(dirname(fromFile), specifier);
+  const candidates = [
+    base,
+    `${base}.ts`,
+    `${base}.tsx`,
+    `${base}.js`,
+    `${base}.jsx`,
+    join(base, 'index.ts'),
+    join(base, 'index.tsx'),
+    join(base, 'index.js'),
+  ];
+  return candidates.map(NormalizePath).find((candidate) => knownFiles.has(candidate)) ?? null;
+}
+
+function FindDependencyCycles(graph) {
+  const visiting = new Set();
+  const visited = new Set();
+  const stack = [];
+  const cycles = [];
+
+  function Visit(node) {
+    if (visiting.has(node)) {
+      const start = stack.indexOf(node);
+      cycles.push([...stack.slice(start), node].map((filePath) => relative(repoRoot, filePath).replaceAll('\\\\', '/')));
+      return;
+    }
+    if (visited.has(node)) return;
+    visiting.add(node);
+    stack.push(node);
+    for (const dependency of graph.get(node) ?? []) Visit(dependency);
+    stack.pop();
+    visiting.delete(node);
+    visited.add(node);
+  }
+
+  for (const node of graph.keys()) Visit(node);
+  return cycles;
+}
+
+function NormalizePath(filePath) {
+  return resolve(filePath);
 }
 
 function AssertNoHeavyStaticImport(source, label) {

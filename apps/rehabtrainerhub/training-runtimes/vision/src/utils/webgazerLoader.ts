@@ -10,7 +10,8 @@ type WebGazerWindow = Window & {
 
 let loadPromise: Promise<void> | null = null;
 
-export function EnsureWebGazerLoaded(): Promise<void> {
+export function EnsureWebGazerLoaded(signal?: AbortSignal): Promise<void> {
+  ThrowIfAborted(signal);
   const loadedWebGazer = (window as WebGazerWindow).webgazer;
   if (loadedWebGazer) {
     EnsurePredictionTimestamp(loadedWebGazer);
@@ -18,7 +19,7 @@ export function EnsureWebGazerLoaded(): Promise<void> {
   }
   if (loadPromise) return loadPromise;
 
-  loadPromise = LoadFirstAvailableScript(GetWebGazerScriptUrls())
+  loadPromise = LoadFirstAvailableScript(GetWebGazerScriptUrls(), signal)
     .catch((error) => {
       loadPromise = null;
       throw error;
@@ -28,6 +29,11 @@ export function EnsureWebGazerLoaded(): Promise<void> {
 
 function GetWebGazerScriptUrls(): string[] {
   const urls: string[] = [];
+  const platformAssetUrl = new URL(
+    `/runtime-assets/ai/webgazer/${webGazerRuntimeVersion}/webgazer.js`,
+    window.location.origin,
+  ).href;
+  urls.push(platformAssetUrl);
   const assetBaseUrl = NormalizeHttpsUrl(import.meta.env.VITE_AI_ASSET_BASE_URL);
   if (assetBaseUrl) {
     urls.push(`${assetBaseUrl}/ai/webgazer/${webGazerRuntimeVersion}/webgazer.js`);
@@ -36,11 +42,12 @@ function GetWebGazerScriptUrls(): string[] {
   return [...new Set(urls)];
 }
 
-async function LoadFirstAvailableScript(urls: readonly string[]): Promise<void> {
+async function LoadFirstAvailableScript(urls: readonly string[], signal?: AbortSignal): Promise<void> {
   let lastError: unknown;
   for (const url of urls) {
+    ThrowIfAborted(signal);
     try {
-      await LoadScript(url);
+      await LoadScript(url, signal);
       const webgazer = (window as WebGazerWindow).webgazer;
       if (webgazer) {
         ConfigureWebGazerAssetPath(webgazer, url);
@@ -49,33 +56,67 @@ async function LoadFirstAvailableScript(urls: readonly string[]): Promise<void> 
       }
       throw new Error(`WebGazer did not initialize after loading ${url}`);
     } catch (error) {
+      if (IsAbortError(error)) throw error;
       lastError = error;
     }
   }
   throw lastError instanceof Error ? lastError : new Error('Unable to load WebGazer.');
 }
 
-function LoadScript(url: string): Promise<void> {
+function LoadScript(url: string, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.async = true;
     script.dataset.webgazerRuntime = 'true';
     script.src = url;
+    let settled = false;
     const timeoutId = window.setTimeout(() => {
-      script.remove();
-      reject(new Error(`Timed out loading WebGazer from ${url}`));
+      Fail(new Error(`Timed out loading WebGazer from ${url}`));
     }, 15000);
-    script.addEventListener('load', () => {
+    const cleanup = () => {
       window.clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', onAbort);
+    };
+    const Succeed = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
       resolve();
-    }, { once: true });
-    script.addEventListener('error', () => {
-      window.clearTimeout(timeoutId);
+    };
+    const Fail = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
       script.remove();
-      reject(new Error(`Unable to load WebGazer from ${url}`));
+      reject(error);
+    };
+    const onAbort = () => Fail(CreateAbortError(signal?.reason));
+    signal?.addEventListener('abort', onAbort, { once: true });
+    if (signal?.aborted) {
+      onAbort();
+      return;
+    }
+    script.addEventListener('load', Succeed, { once: true });
+    script.addEventListener('error', () => {
+      Fail(new Error(`Unable to load WebGazer from ${url}`));
     }, { once: true });
     document.head.appendChild(script);
   });
+}
+
+function ThrowIfAborted(signal?: AbortSignal): void {
+  if (!signal?.aborted) return;
+  throw CreateAbortError(signal.reason);
+}
+
+function IsAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError';
+}
+
+function CreateAbortError(reason: unknown): Error {
+  const error = new Error(reason ? `WebGazer load aborted: ${String(reason)}` : 'WebGazer load aborted.');
+  error.name = 'AbortError';
+  return error;
 }
 
 function ConfigureWebGazerAssetPath(webgazer: NonNullable<WebGazerWindow['webgazer']>, scriptUrl: string) {

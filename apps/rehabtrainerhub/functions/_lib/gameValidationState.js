@@ -1,3 +1,5 @@
+import { gameValidationFindingDispositions } from '@rehab-trainer/training-contracts';
+
 const scanTransitions = Object.freeze({
   queued: Object.freeze(['running']),
   running: Object.freeze(['passed', 'flagged', 'failed']),
@@ -28,12 +30,7 @@ export const gameValidationStatuses = Object.freeze({
   publication: Object.freeze(Object.keys(publicationTransitions)),
 });
 
-export const gameValidationFindingDispositions = Object.freeze([
-  'hard-block',
-  'fix-or-manual-review',
-  'manual-review',
-  'info',
-]);
+export { gameValidationFindingDispositions };
 
 export function CanTransitionGameScanStatus(from, to) {
   return HasTransition(scanTransitions, from, to);
