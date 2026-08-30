@@ -827,11 +827,11 @@ Steam 式平台可同時有兩個 tier；不應為了相同 UI，假裝它們具
 8. Dependabot 的 `package-ecosystem: npm` 是 GitHub 對 JavaScript registry 的名稱，可保留；但 lockfile/path 與 grouping 要驗證 pnpm。
 9. pnpm 11 的非 registry/auth project settings 以 `pnpm-workspace.yaml` 為準；不要同時在 `.npmrc` 重複 `nodeLinker` 等設定。
 10. `allowBuilds` 與 legacy `onlyBuiltDependencies` 選一份受測的 canonical policy；預設拒絕未核准 dependency install scripts。
-11. `.node-version`、`engines.node` 與 CI 對齊為 Node 22.23.2。`.node-version` 是版本單一來源，`scripts/check-pnpm-pcloud.mjs` 會驗證 root `engines.node` 為對應的 `>=22.23.2 <23` 範圍。若工作 shell 不是這個 pinned Node 版本，或 pCloud 的 pnpm store 正被其他程序鎖定，不能拿該 shell 的結果當 migration 驗收。
+11. `.node-version`、`engines.node` 與 CI 對齊為 Node 24.20.0。`.node-version` 是版本單一來源，架構 gate 會驗證 root `engines.node` 為對應的 `>=24.20.0 <25` 範圍。若工作 shell 不是這個 pinned Node 版本，不能拿該 shell 的結果當 migration 驗收。
 12. 因此 repo 曾為無 symlink 環境設定特殊安裝模式，先保留 hoisted/copy 相容策略，並以 `dedupeInjectedDeps: false` 避免 injected workspace dependency 去重時退回 symlink；另在標準 Linux CI 加一個 dependency declaration audit，防止 hoist 掩蓋 undeclared dependency。
-13. 兩份 GitHub workflow 以 pinned commit SHA 的 `pnpm/action-setup` provision 11.24.0，再由 pinned `actions/setup-node` 讀 `.node-version` 並啟用 pnpm cache；隨後才跑 frozen install。Cloudflare Pages 正式部署沿用該 GitHub job build 完的 artifact + Wrangler，不讓 dashboard 再執行另一套 install；若保留 direct preview build，也必須使用相同 Node/pnpm pin 與 frozen lock。
+13. 兩份 GitHub workflow 以 pinned commit SHA 的 `pnpm/action-setup` 讀取根 `package.json` 的 `packageManager`（唯一 pnpm 版本來源），再由 pinned `actions/setup-node` 讀 `.node-version` 並啟用 pnpm cache；隨後才跑 frozen install。Cloudflare Pages 正式部署沿用該 GitHub job build 完的 artifact + Wrangler，不讓 dashboard 再執行另一套 install；若保留 direct preview build，也必須使用相同 Node/pnpm pin 與 frozen lock。
 
-本機 bootstrap 只負責安裝 package-manager executable：Node 22 環境優先使用其支援的 Corepack；若該發行版未附 Corepack，使用 pnpm 官方 standalone/toolchain 安裝方式取得 exact 11.24.0。完成後所有 workspace dependency 安裝、更新、script 與 filter 操作都只用 pnpm，不用 npm 產生或改 lockfile。
+本機 bootstrap 只負責安裝 package-manager executable：Node 24 環境優先使用其支援的 Corepack；若該發行版未附 Corepack，使用 pnpm 官方 standalone/toolchain 安裝方式取得 exact 11.24.0。完成後所有 workspace dependency 安裝、更新、script 與 filter 操作都只用 pnpm，不用 npm 產生或改 lockfile。
 
 標準命令目標：
 

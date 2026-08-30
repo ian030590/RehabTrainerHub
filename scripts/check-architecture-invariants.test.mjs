@@ -693,7 +693,11 @@ test('CI workflows pin third-party actions and provision the repository toolchai
       assert.match(versionComment ?? '', /^v\S+$/, `${workflowPath} action ${reference} must document its tag`);
     }
     assert.match(workflowSource, /pnpm\/action-setup@[0-9a-f]{40}[ \t]+# v4/);
-    assert.match(workflowSource, /version:\s*11\.24\.0/);
+    assert.doesNotMatch(
+      workflowSource,
+      /^\s+version:\s*11\.24\.0\s*$/m,
+      `${workflowPath} must take pnpm's version from packageManager, not duplicate it in action inputs`,
+    );
     assert.match(workflowSource, /actions\/setup-node@[0-9a-f]{40}[ \t]+# v6/);
     assert.match(workflowSource, /node-version-file:\s*\.node-version/);
     assert.match(workflowSource, /cache:\s*pnpm/);

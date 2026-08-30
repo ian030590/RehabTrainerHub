@@ -6,8 +6,8 @@
 - CI: `.github/workflows/ci.yml`
 - Cloudflare deploy: `.github/workflows/deploy-cloudflare-pages.yml`
 - Package manager: root `package.json` pins pnpm 11.24.0
-- Node.js: `.node-version` pins 22.23.2; root `engines.node` accepts only
-  `>=22.23.2 <23`. CI and deployment read the same `.node-version` file.
+- Node.js: `.node-version` pins 24.20.0; root `engines.node` accepts only
+  `>=24.20.0 <25`. CI and deployment read the same `.node-version` file.
 - Validation: `pnpm run build`
 - Cloudflare build: `pnpm run build:cloudflare`
 - Training integration gate: `pnpm run test:training-integration` (runs in both CI verification matrices)
