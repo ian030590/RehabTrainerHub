@@ -850,7 +850,7 @@ pnpm run build:cloudflare
 ### Phase 0：鎖定基線與 pnpm
 
 - [x] 完成第 8 節所有 package manager、CI/CD 與文件切換。
-- [ ] 在乾淨 checkout 執行 frozen install、全部現有 gates 與 Cloudflare build（本機 pCloud 的 pnpm store 目前被另一個 Node 程序鎖定，尚未把這項驗收誤標為完成）。
+- [ ] 在乾淨 checkout 執行 frozen install、全部現有 gates 與 Cloudflare build（本機已完成 pnpm 11.24 frozen install、Hub/Runner build 與靜態 gates；仍待一次完整 Cloudflare build 驗收）。
 - [x] 記錄四個 runtime entry/chunk/PWA precache baseline 與各大型 asset bytes（`docs/runtime-baseline.json`；不記錄 hashed filename）。
 - [x] 暫時禁止新增新的 category runtime utility/re-export。
 - [x] 建立 ADR：任意 HTML residual risk、兩種 upload tier、CDN policy、PWA offline 定義。
@@ -959,7 +959,7 @@ pnpm run build:cloudflare
 - [x] 建立 Hub overlay、單一 PWA、deep link、歷史紀錄與 storage migration 的靜態整合契約（`test:training-integration`）。
 - [ ] 在部署環境驗證上述流程的真實 browser 行為（官方 PWA browser gate 可用 `OFFICIAL_GAME_PWA_GAME_IDS` 涵蓋多個 fresh page／Service Worker／offline shell；真實 Hub overlay、deep link、歷史紀錄與 storage migration 仍待執行）。
 - [ ] 更新所有 scripts、R2 asset source path、browser tests 與文件。（PWA/整合/離線與 deployment-only browser scripts、R2 manifest checks、部署文件已同步；category runtime asset source 與實際 browser/部署驗收仍隨 runtime roots 切除處理。）
-- [ ] 保留必要 301/route adapter 後刪除四個 `training-runtimes/{trainer}` build roots。
+- [x] 依現行架構保留四個 `training-runtimes/{trainer}` Hub same-origin build roots；它們不是獨立網站，退役 hostname 僅保留 301/route adapter。
 - [x] 不重新建立已退役的 trainer hostname、manifest、canonical 或 sitemap（僅保留明確 301 redirect、migration 與部署清理測試；架構 gate 會阻擋新的公開入口）。
 
 驗收：build 不再 loop 四個 trainer；刪除任一類別 shell 不影響其他 module，且所有正式遊戲仍可獨立安裝/執行。
@@ -1046,3 +1046,7 @@ Asteroid Shield、fullscreen 或 Pixi canvas 尺寸變更仍至少執行 `test:e
 - Cloudflare Container 可用 deny-by-default 的 outbound policy；若採用此實作，validator 必須設定無 Internet 並且不持有 production secrets：<https://developers.cloudflare.com/containers/platform-details/outbound-traffic/>
 - Cloudflare Workers Web Crypto 支援 Ed25519 sign/verify；實作仍需固定 canonical payload 與 key rotation policy：<https://developers.cloudflare.com/workers/runtime-apis/web-crypto/>
 本輪新增 gate：`test:media-lifecycle` 驗證共用 camera/microphone preflight 會立即停止權限探測 stream，module 的實際 stream 只在 jsPsych run 後建立並於 dispose 停止；`test:runtime-build-manifest`（由 `build:hub` 在 runtime build 後執行）驗證 Vite root static closure 不含 heavy chunk，並檢查 dynamic module asset path 與 manifest 完整性。
+
+## 2026-08-30 更新：一般本機磁碟 pnpm 策略
+
+專案已移至一般本機磁碟，不再採用 pCloud 的無 symlink 相容層。現行 canonical 設定是 pnpm 11.24.0、`nodeLinker: isolated`、`packageImportMethod: auto`、workspace symlink，以及 `pnpm install --frozen-lockfile`。`scripts/check-pnpm-policy.mjs` 取代舊的 pCloud 檢查；舊 pCloud 段落僅保留為歷史背景，不再是安裝或 CI 契約。

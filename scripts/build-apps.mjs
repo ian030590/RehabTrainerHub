@@ -44,11 +44,11 @@ function RunBuild(app) {
 
   if (dryRun) {
     const prefix = cloudflarePages ? 'CF_PAGES=1 ' : '';
-    console.log(`$ ${prefix}corepack pnpm --filter ${app.name} run build`);
+    console.log(`$ ${prefix}pnpm --filter ${app.name} run build`);
     return;
   }
 
-  const command = GetCommand('corepack', ['pnpm', '--filter', app.name, 'run', 'build']);
+  const command = GetCommand('pnpm', ['--filter', app.name, 'run', 'build']);
   const buildEnvironment = cloudflarePages
     ? { ...process.env, CF_PAGES: '1' }
     : process.env;

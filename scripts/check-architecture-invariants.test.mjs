@@ -602,7 +602,7 @@ test('game validation keeps scan, review, and publication gates independent', ()
   assert.match(adminUiSource, /admin-game-source-content/);
 });
 
-test('pCloud installation policy stays explicit and link-free', () => {
+test('pnpm workspace policy uses the standard isolated linker', () => {
   const rootPackage = ReadJson('package.json');
   const workspaceSource = Read('pnpm-workspace.yaml');
   const npmrcSource = Read('.npmrc');
@@ -618,8 +618,14 @@ test('pCloud installation policy stays explicit and link-free', () => {
   assert.equal(rootPackage.engines?.node, `>=${nodeMajor}.${nodeMinor}.${nodePatch} <${Number(nodeMajor) + 1}`);
   assert.equal(Object.hasOwn(rootPackage, 'workspaces'), false);
   assert.doesNotMatch(JSON.stringify(rootPackage.scripts), /\bnpm\s+(?:install|ci|run)\b/);
-  assert.match(rootPackage.scripts['install:pcloud'], /prepare-pnpm-pcloud\.mjs/);
-  assert.match(rootPackage.scripts['install:pcloud'], /corepack pnpm install --frozen-lockfile/);
+  for (const setting of [
+    'nodeLinker: isolated',
+    'packageImportMethod: auto',
+    'preferSymlinkedExecutables: true',
+    'symlink: true',
+  ]) {
+    assert.match(workspaceSource, new RegExp(EscapeRegExp(setting)));
+  }
   for (const setting of [
     'nodeLinker: hoisted',
     'packageImportMethod: copy',
@@ -628,7 +634,7 @@ test('pCloud installation policy stays explicit and link-free', () => {
     'preferSymlinkedExecutables: false',
     'symlink: false',
   ]) {
-    assert.match(workspaceSource, new RegExp(EscapeRegExp(setting)));
+    assert.doesNotMatch(workspaceSource, new RegExp(EscapeRegExp(setting)));
   }
   assert.doesNotMatch(npmrcSource, /^\s*(?:link-workspace-packages|prefer-workspace-packages)\s*=\s*true\s*$/m);
   assert.match(
@@ -645,12 +651,12 @@ test('pCloud installation policy stays explicit and link-free', () => {
   assert.equal(
     hubNextTsconfig.compilerOptions?.incremental,
     false,
-    'Next must use a non-incremental tsconfig on pCloud to avoid locked .tsbuildinfo writes.',
+    'Next must use a non-incremental tsconfig in production builds.',
   );
   assert.doesNotMatch(
     hubNextConfigSource,
     /ignoreBuildErrors\s*:/,
-    'pCloud compatibility must not suppress TypeScript diagnostics.',
+    'local filesystem compatibility must not suppress TypeScript diagnostics.',
   );
 });
 

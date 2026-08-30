@@ -16,7 +16,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 
 ## 建置、測試與開發指令
 
-本專案使用 pnpm 11.24.0。pCloud 不支援 symlink／junction，因此 `pnpm-workspace.yaml` 固定使用 `nodeLinker: hoisted`、`packageImportMethod: copy`、`injectWorkspacePackages: true`、`dedupeInjectedDeps: false`、`preferSymlinkedExecutables: false` 與 `symlink: false`；安裝後以 `pnpm run test:pnpm-policy` 驗證依賴樹沒有連結。
+本專案使用 pnpm 11.24.0。一般本機磁碟採用 pnpm 標準 isolated linker 與 workspace symlink；安裝後以 `pnpm run test:pnpm-policy` 驗證 lockfile、workspace protocol 與依賴宣告。
 
 - `pnpm run dev`：Turbo 啟動全部 dev servers。
 - `pnpm run dev:hub`：啟動 Hub。
@@ -27,7 +27,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 - `pnpm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
 - `pnpm run test:game-platform`：驗證遊戲套件掃描器與 SDK。
 - `pnpm run test:game-validator`：驗證上傳掃描／審核／發布三條狀態軸不可繞過。
-- `pnpm run test:architecture`：驗證模組 ownership、lifecycle、iframe/PWA 邊界、驗證流程與 pCloud 安裝不變量。
+- `pnpm run test:architecture`：驗證模組 ownership、lifecycle、iframe/PWA 邊界、驗證流程與 pnpm 安裝不變量。
 - `pnpm run test:heavy-load-boundary`：驗證 card/config 不會提早載入重型 engine，且 rules 只共用單一 preload promise。
 - `pnpm --filter <workspace-package> run preview`：預覽 Vite app 或 Hub 輸出。
 

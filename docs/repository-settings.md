@@ -13,9 +13,9 @@
 - Training integration gate: `pnpm run test:training-integration` (runs in both CI verification matrices)
 - Protocol/review/budget gates: `pnpm run test:training-protocol`,
   `pnpm run test:game-review-security`, and `pnpm run test:bundle-budgets`.
-- Workspace installs use `nodeLinker: hoisted`, `packageImportMethod: copy`,
-  and `symlink: false` for pCloud compatibility. Do not create symlinks in the
-  repository or switch back to npm/package-lock workflows.
+- Workspace installs use pnpm's standard `nodeLinker: isolated`,
+  `packageImportMethod: auto`, and workspace symlinks on normal local disks.
+  Do not switch back to npm/package-lock workflows.
 
 ## Cloudflare Pages
 

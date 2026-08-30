@@ -310,7 +310,7 @@ async function LoadManager() {
   const sourcePath = resolve(repoRoot, 'packages/ui/src/offlinePackManager.ts');
   // The fallback module is a data URL, so resolve the dependency-free limits
   // contract explicitly instead of relying on Node's workspace package map.
-  // This keeps the contract test runnable after a clean pCloud checkout where
+  // This keeps the contract test runnable after a clean checkout where
   // no symlinked package entries are present.
   const contractsPath = resolve(repoRoot, 'packages/training-contracts/src/index.js');
   const source = readFileSync(sourcePath, 'utf8')

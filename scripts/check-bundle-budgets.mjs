@@ -110,5 +110,5 @@ function FormatMiB(bytes) {
 }
 
 function EscapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
+  return value.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&');
 }

@@ -4,7 +4,7 @@
  * Deployment-only browser acceptance for an official game PWA.
  *
  * Playwright is intentionally an optional tool for this repository: the
- * normal pCloud install and static gates must not download a browser. CI or a
+ * normal dependency install and static gates must not download a browser. CI or a
  * release operator can install Playwright in its own environment and invoke
  * this script with OFFICIAL_GAME_PWA_BASE_URL set to a deployed Hub origin.
  */
@@ -116,7 +116,7 @@ try {
 
     // A fresh page in the same browser profile must be able to boot from the
     // game-scoped cache without a network. This is the deployment-only part of
-    // the gate; it intentionally never runs during pCloud installation.
+    // the gate; it intentionally never runs during dependency installation.
     await context.setOffline(true);
     const offlinePage = await context.newPage();
     await offlinePage.goto(gameUrl, { waitUntil: 'domcontentloaded' });

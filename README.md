@@ -57,15 +57,13 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 
 ```bash
 corepack enable
-corepack pnpm run install:pcloud
+pnpm install --frozen-lockfile
 ```
 
 > [!NOTE]
-> **雲端硬碟 / 無 Symlink 支援環境注意事項（例如 Windows pCloud、網路磁碟等）**：
-> 專案在 `pnpm-workspace.yaml` 固定使用 `nodeLinker: hoisted`、`packageImportMethod: copy`、`injectWorkspacePackages: true`、`dedupeInjectedDeps: false`、`preferSymlinkedExecutables: false` 與 `symlink: false`，不建立 symlink／junction。pCloud 不允許覆寫 pnpm 的隱藏 metadata，因此使用 `corepack pnpm run install:pcloud`（只清理 pnpm 自己產生的 `.package-map.json`／`.modules.yaml`／`.pnpm-workspace-state-v1.json` 後再 frozen install）；安裝完成後執行 `corepack pnpm run test:pnpm-policy`，檢查套件管理器、lockfile 與依賴樹。
+> 一般本機磁碟使用 pnpm 的 isolated linker 與 workspace symlink；安裝完成後可執行 `pnpm run test:pnpm-policy`，檢查套件管理器、lockfile 與 workspace 依賴宣告。
 > ```bash
-> corepack pnpm run install:pcloud
-> corepack pnpm run test:pnpm-policy
+> pnpm run test:pnpm-policy
 > ```
 
 ### 常用指令 / Common Commands
@@ -88,7 +86,7 @@ corepack pnpm run install:pcloud
 | `pnpm run test:hub-functions` | 驗證 Hub Cloudflare Functions 後端 API 與安全防護測試 |
 | `pnpm run test:gamerunner` | 驗證隔離遊戲執行器路由、沙盒隔離與安全性標頭 |
 | `pnpm run test:game-platform` | 驗證第三方遊戲套件安全掃描器與 SDK 契約 |
-| `pnpm run test:architecture` | 驗證模組 ownership、生命週期、iframe/PWA 邊界、審核狀態軸與 pCloud 安裝契約 |
+| `pnpm run test:architecture` | 驗證模組 ownership、生命週期、iframe/PWA 邊界、審核狀態軸與 pnpm 安裝契約 |
 | `pnpm run test:pwa` | 驗證 Hub 及各練習模組的 PWA Manifest 與 Assets |
 | `pnpm run test:naming` | 檢查程式碼命名規範與保留字元衝突 |
 | `pnpm run test:seo` | 檢查可索引頁面之 SEO Meta、Canonical、JSON-LD 與繁中預渲染結構 |

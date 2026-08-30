@@ -14,5 +14,8 @@ for (const trainer of ['motor', 'vision', 'brain', 'mouth']) {
   await build({
     configFile: resolve(runtimeRoot, 'vite.config.ts'),
     root: runtimeRoot,
+    // Use Vite's native runner on Windows. The default esbuild config loader
+    // can mis-resolve workspace paths when the isolated pnpm linker is used.
+    configLoader: 'runner',
   });
 }

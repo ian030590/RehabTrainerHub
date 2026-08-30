@@ -6,9 +6,10 @@ allowBuilds:
   core-js: true
   esbuild: true
 
-nodeLinker: hoisted
-packageImportMethod: copy
-injectWorkspacePackages: true
-dedupeInjectedDeps: false
-preferSymlinkedExecutables: false
-symlink: false
+# Keep the standard isolated linker on a normal local disk. Workspace packages
+# are linked by pnpm and registry packages use pnpm's clone/hardlink/copy
+# fallback, which keeps dependency declarations honest and reproducible.
+nodeLinker: isolated
+packageImportMethod: auto
+preferSymlinkedExecutables: true
+symlink: true

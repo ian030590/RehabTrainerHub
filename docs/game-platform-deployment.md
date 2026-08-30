@@ -231,7 +231,7 @@ Deployment acceptance can run `pnpm run test:official-game-pwa-browser` with
 `OFFICIAL_GAME_PWA_BASE_URL` and `OFFICIAL_GAME_PWA_GAME_IDS` (a comma-separated
 list of slugs) set. The singular `OFFICIAL_GAME_PWA_GAME_ID` remains supported
 for one-game smoke tests. The script is
-deliberately not part of the pCloud install: it requires a Playwright browser
+deliberately not part of the normal dependency install: it requires a Playwright browser
 and a deployed origin. It blocks cross-origin requests, checks the
 rules-visible loading boundary, explicitly installs the bounded offline pack,
 then opens a fresh page with the browser network disabled for every selected
