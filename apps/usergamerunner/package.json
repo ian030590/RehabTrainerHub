@@ -10,7 +10,7 @@
   "type": "module",
   "dependencies": {
     "@rehab-trainer/training-contracts": "workspace:*",
-    "jspsych": "8.2.3"
+    "jspsych": "8.3.0"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
