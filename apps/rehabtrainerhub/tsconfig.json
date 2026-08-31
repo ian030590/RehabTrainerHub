@@ -6,7 +6,9 @@
       "DOM.Iterable",
       "ES2022"
     ],
-    "types": ["vite/client"],
+    "types": [
+      "vite/client"
+    ],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -19,7 +21,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "jsx": "react-jsx",
-    "incremental": true,
     "paths": {
       "@rehab-trainer/ui": [
         "../../packages/ui/src/index.ts"
@@ -35,7 +36,8 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "incremental": true
   },
   "include": [
     "next-env.d.ts",

@@ -324,7 +324,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly trafficYellowMs = 1800;
   private readonly trafficRedMs = 5400;
   private readonly referenceVehicleUrls = CreateRuntimeAssetUrlCandidates(
-    import.meta.env.VITE_AI_ASSET_BASE_URL,
     'game-assets/rehabtrainerhub/vision/reference-car/v1/car.glb',
     '/assets/driving/reference-car-game/vehicals/car.glb',
   );
@@ -3005,7 +3004,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         (error) => {
           if (candidateIndex + 1 < this.referenceVehicleUrls.length) {
             console.warn(
-              'Unable to load the reference vehicle from the configured CDN. Falling back locally.',
+              'Unable to load the reference vehicle from the platform asset route. Falling back to local geometry.',
               error,
             );
             loadCandidate(candidateIndex + 1);

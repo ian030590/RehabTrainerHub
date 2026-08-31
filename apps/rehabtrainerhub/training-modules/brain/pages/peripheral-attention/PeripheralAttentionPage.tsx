@@ -1,6 +1,7 @@
 // Canonical Hub-owned peripheral-attention module; bundled by the brain runtime.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import type { TrainingRunResult } from '@rehab-trainer/training-contracts';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
@@ -22,6 +23,8 @@ import {
   GetFastestCorrectStimulusDurationMs,
   ShouldStopPeripheralAttentionAdaptiveRun,
 } from '@rehab-trainer/ui/peripheralAttentionResults';
+import { GetTrainingModuleManifest } from '../../../moduleFlowManifest';
+import { SummarizePeripheralAttentionRun } from './peripheralAttentionRunResult';
 import {
   EvaluatePeripheralAttentionFrameSync,
   GetPeripheralAttentionSyncRecoveryAction,
@@ -56,6 +59,7 @@ export interface PeripheralAttentionTrainingRecord {
   difficulty: string;
   details?: DetailRow;
   detailRows?: DetailRow[];
+  runResult?: TrainingRunResult;
 }
 
 export type UfovTrainingRecord = PeripheralAttentionTrainingRecord;
@@ -241,10 +245,25 @@ const fixationMs = 1000;
 const maskMs = 500;
 const startStepMs = 50;
 const peripheralAttentionTargetAxes = [0, 1, 2, 3, 4, 5, 6, 7];
+export const peripheralAttentionDisplayCalibration = Object.freeze({
+  screenWidthCm: 53.1,
+  screenHeightCm: 29.9,
+  viewingDistanceCm: 50,
+});
 const outerRingIndex = 2;
 const slots = CreateSlots();
 const peripheralTargetSlots = slots.filter((slot) => slot.ring === outerRingIndex);
 const experimentRunAbortSignals = new WeakMap<JsPsych, AbortSignal>();
+
+/** Register the host-owned abort signal for the native UFOV plugin. */
+export function RegisterPeripheralAttentionAbortSignal(jsPsych: JsPsych, signal: AbortSignal): void {
+  experimentRunAbortSignals.set(jsPsych, signal);
+}
+
+/** Remove a signal when a native host disposes a jsPsych instance. */
+export function ClearPeripheralAttentionAbortSignal(jsPsych: JsPsych): void {
+  experimentRunAbortSignals.delete(jsPsych);
+}
 
 const copy = {
   zh: {
@@ -329,6 +348,10 @@ const copy = {
   },
 };
 
+export function GetPeripheralAttentionLabels(language: 'zh' | 'en'): PeripheralAttentionLabels {
+  return copy[language];
+}
+
 const experimentPluginInfo: ExperimentPluginInfo = {
   name: 'peripheral-attention-experiment',
   version: '1.0.0',
@@ -380,7 +403,7 @@ const experimentPluginInfo: ExperimentPluginInfo = {
   },
 };
 
-class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPluginInfo> {
+export class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPluginInfo> {
   static readonly info = experimentPluginInfo;
 
   constructor(private readonly jsPsych: JsPsych) {}
@@ -1008,6 +1031,7 @@ export function PeripheralAttentionPage({
   const [results, setResults] = useState<SubtestResult[]>([]);
   const [resultTrials, setResultTrials] = useState<TrialRecord[]>([]);
   const [savedRecord, setSavedRecord] = useState<PeripheralAttentionTrainingRecord | null>(null);
+  const runStartedAtRef = useRef<number | null>(null);
 
   const finishExperiment = useCallback((data: PeripheralAttentionExperimentData) => {
     const now = new Date();
@@ -1033,6 +1057,16 @@ export function PeripheralAttentionPage({
       trialCount: item.trialCount,
       aborted: item.aborted,
     }));
+    const runResult = SummarizePeripheralAttentionRun({
+      moduleId,
+      moduleVersion: GetTrainingModuleManifest('brain:ufov').implementationVersion,
+      status: data.aborted ? 'aborted' : 'completed',
+      startedAt: runStartedAtRef.current ?? now,
+      endedAt: now,
+      trials: data.trials,
+      results: data.results,
+      invalidTimingAttemptCount: data.invalid_timing_attempt_count,
+    });
     const record: PeripheralAttentionTrainingRecord = {
       id: `ufov_${now.getTime().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
       savedAt: now.toISOString(),
@@ -1042,6 +1076,7 @@ export function PeripheralAttentionPage({
       gameId: 'ufov',
       gameTitle: labels.title,
       difficulty: data.mode,
+      runResult,
       details: {
         refreshMs: RoundMs(data.refresh_ms),
         refreshHz: RoundMs(data.refresh_hz),
@@ -1134,6 +1169,7 @@ export function PeripheralAttentionPage({
     const runAbortController = new AbortController();
     const abortSignal = runAbortController.signal;
     runAbortControllerRef.current = runAbortController;
+    runStartedAtRef.current = Date.now();
     const isCurrentRun = () => (
       !abortSignal.aborted
       && runGenerationRef.current === runGeneration
@@ -1162,14 +1198,14 @@ export function PeripheralAttentionPage({
         const values = jsPsych.data.get().last(1).values();
         const data = values[0] as Partial<PeripheralAttentionExperimentData> | undefined;
         if (!data?.results || !data.trials) return;
-        experimentRunAbortSignals.delete(jsPsych);
+        ClearPeripheralAttentionAbortSignal(jsPsych);
         if (runAbortControllerRef.current === runAbortController) {
           runAbortControllerRef.current = null;
         }
         finishExperiment(data as PeripheralAttentionExperimentData);
       },
     });
-    experimentRunAbortSignals.set(jsPsych, abortSignal);
+    RegisterPeripheralAttentionAbortSignal(jsPsych, abortSignal);
     jsPsychRef.current = jsPsych;
 
     void jsPsych.run([{
@@ -1191,6 +1227,7 @@ export function PeripheralAttentionPage({
     runGenerationRef.current += 1;
     runAbortControllerRef.current?.abort();
     runAbortControllerRef.current = null;
+    runStartedAtRef.current = null;
     if (jsPsychRef.current) {
       jsPsychRef.current.abortExperiment();
       jsPsychRef.current = null;
@@ -1225,7 +1262,13 @@ export function PeripheralAttentionPage({
       contrastPercent: Clamp(contrastPercent, 5, 100),
       targetVisualAngleDeg: Clamp(targetVisualAngleDeg, 5, 35),
       vehicleVisualAngleDeg: Clamp(vehicleVisualAngleDeg, .8, 5),
-      geometry: CalculateScreenGeometry(53.1, 29.9, 50, Clamp(targetVisualAngleDeg, 5, 35), Clamp(vehicleVisualAngleDeg, .8, 5)),
+      geometry: CalculateScreenGeometry(
+        peripheralAttentionDisplayCalibration.screenWidthCm,
+        peripheralAttentionDisplayCalibration.screenHeightCm,
+        peripheralAttentionDisplayCalibration.viewingDistanceCm,
+        Clamp(targetVisualAngleDeg, 5, 35),
+        Clamp(vehicleVisualAngleDeg, .8, 5),
+      ),
     });
   }, [autoStart, contrastPercent, initialMode, initialSubtestId, savedRecord, stopCondition, targetAxes, targetVisualAngleDeg, trialCount, vehicleVisualAngleDeg]);
 
@@ -1540,7 +1583,7 @@ function FormatDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function CalculateScreenGeometry(screenWidthCm: number, screenHeightCm: number, viewingDistanceCm: number, targetAngleDeg: number, vehicleAngleDeg: number): PeripheralAttentionScreenGeometry {
+export function CalculateScreenGeometry(screenWidthCm: number, screenHeightCm: number, viewingDistanceCm: number, targetAngleDeg: number, vehicleAngleDeg: number): PeripheralAttentionScreenGeometry {
   const screenWidthPx = window.screen.width || window.innerWidth || 1920;
   const screenHeightPx = window.screen.height || window.innerHeight || 1080;
   const pixelsPerCm = ((screenWidthPx / screenWidthCm) + (screenHeightPx / screenHeightCm)) / 2;

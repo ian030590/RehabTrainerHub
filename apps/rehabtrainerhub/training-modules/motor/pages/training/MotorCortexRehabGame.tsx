@@ -1,4 +1,5 @@
 // Canonical Hub-owned motor module; bundled by the motor runtime.
+import './MotorCortexRehabGame.css';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
   FilesetResolver,
@@ -27,24 +28,44 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
+import { StopMediaStream } from '@rehab-trainer/ui/mediaStream';
 import { useT } from '../../i18n';
 import { InlineAlert } from '../../components/InlineAlert';
 import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
 import { getActiveUser } from '../../utils/settings';
 import { PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
 import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { MotorCortexRehabPlugin } from '../../experiment/plugins/motor-cortex-rehab-lifecycle';
 import { Clamp, FormatTestDate } from './gameUtils';
 import { VerifySelectedTrainingUser } from './selectedUserGuard';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
+import {
+  motorCortexRehabDefaults,
+  type MotorCortexDifficulty,
+  type MotorCortexDrill,
+  type MotorCortexHandChoice,
+  type MotorCortexRehabConfig,
+} from '../../motor-cortex-rehab/config';
 
-type DrillId = 'bounce' | 'vertical' | 'horizontal' | 'random';
-type DifficultyId = 'beginner' | 'intermediate' | 'advanced';
-type HandChoice = 'any' | 'left' | 'right';
+type DrillId = MotorCortexDrill;
+type DifficultyId = MotorCortexDifficulty;
+type HandChoice = MotorCortexHandChoice;
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
 
-interface MotorCortexRehabGameProps {
+export interface MotorCortexRehabHostControl {
+  autoStart?: boolean;
+  config?: Readonly<MotorCortexRehabConfig>;
+  onStarted?(): void;
+  onCompleted?(result: MotorCortexRehabSessionRecord): void;
+  onAborted?(): void;
+  registerControls?(controls: { pause(): void; resume(): void } | null): void;
+  signal?: AbortSignal;
+  skipUserGuard?: boolean;
+}
+
+export interface MotorCortexRehabGameProps {
   onExit: () => void;
+  hostControl?: MotorCortexRehabHostControl;
 }
 
 interface DrillDefinition {
@@ -102,7 +123,7 @@ interface DrillEventRecord {
   Adaptive_Level: number;
 }
 
-interface SessionRecord {
+export interface MotorCortexRehabSessionRecord {
   Test_Date: string;
   Participant_ID: string;
   Drill: string;
@@ -121,6 +142,8 @@ interface SessionRecord {
   Event_Records: DrillEventRecord[];
 }
 
+type SessionRecord = MotorCortexRehabSessionRecord;
+
 interface LiveState {
   timeRemaining: number;
   accuracy: number;
@@ -138,9 +161,7 @@ interface LiveState {
   insideTarget: boolean;
 }
 
-const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates(
-  import.meta.env.VITE_AI_ASSET_BASE_URL,
-);
+const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates();
 const detectionIntervalMs = 66;
 const trackingGraceMs = 240;
 const liveStateIntervalMs = 45;
@@ -304,9 +325,11 @@ const copy = {
 
 const handLabels: readonly HandChoice[] = ['any', 'left', 'right'];
 
-export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
+export function MotorCortexRehabGame({ onExit, hostControl }: MotorCortexRehabGameProps) {
   const { lang, t } = useT();
   const labels = copy[lang];
+  const hostControlRef = useRef(hostControl);
+  hostControlRef.current = hostControl;
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const stageRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -324,15 +347,27 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   const metricsRef = useRef<SessionMetrics>(CreateEmptyMetrics());
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
-  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
+  const runSequenceRef = useRef(0);
+  const runTokenRef = useRef<string | null>(null);
+  const autoStartRequestedRef = useRef(false);
+  const configRef = useRef<MotorCortexRehabConfig>({
+    drill: hostControl?.config?.drill ?? motorCortexRehabDefaults.drill,
+    difficulty: hostControl?.config?.difficulty ?? motorCortexRehabDefaults.difficulty,
+    durationSec: hostControl?.config?.durationSec ?? motorCortexRehabDefaults.durationSec,
+    handChoice: hostControl?.config?.handChoice ?? motorCortexRehabDefaults.handChoice,
+    targetSizeScale: hostControl?.config?.targetSizeScale ?? motorCortexRehabDefaults.targetSizeScale,
+    speedScale: hostControl?.config?.speedScale ?? motorCortexRehabDefaults.speedScale,
+  });
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const [isStageReady, setIsStageReady] = useState(false);
+  const [isJsPsychReady, setIsJsPsychReady] = useState(false);
   useTrainingConfigReady(phase === 'menu');
-  const [drill, setDrill] = useState<DrillId>('bounce');
-  const [difficulty, setDifficulty] = useState<DifficultyId>('beginner');
-  const [durationSec, setDurationSec] = useState<(typeof durationOptions)[number]>(60);
-  const [handChoice, setHandChoice] = useState<HandChoice>('any');
-  const [targetSizeScale, setTargetSizeScale] = useState(1);
-  const [speedScale, setSpeedScale] = useState(1);
+  const [drill, setDrill] = useState<DrillId>(configRef.current.drill);
+  const [difficulty, setDifficulty] = useState<DifficultyId>(configRef.current.difficulty);
+  const [durationSec, setDurationSec] = useState<(typeof durationOptions)[number]>(configRef.current.durationSec as (typeof durationOptions)[number]);
+  const [handChoice, setHandChoice] = useState<HandChoice>(configRef.current.handChoice);
+  const [targetSizeScale, setTargetSizeScale] = useState(configRef.current.targetSizeScale);
+  const [speedScale, setSpeedScale] = useState(configRef.current.speedScale);
   const [statusMessage, setStatusMessage] = useState('');
   const [visionError, setVisionError] = useState('');
   const [showVisionError, setShowVisionError] = useState(false);
@@ -354,7 +389,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     insideTarget: false,
   });
   const cameraPermission = useMediaPermissionPreflight({
-    active: phase === 'menu',
+    active: phase === 'menu' && !hostControl?.autoStart,
     video: true,
   });
   const canRetryCameraPermission = CanRetryMediaPermission(cameraPermission.status);
@@ -370,7 +405,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       window.cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    StopMediaStream(cameraStreamRef.current);
     cameraStreamRef.current = null;
     const video = videoRef.current;
     if (video) video.srcObject = null;
@@ -381,18 +416,27 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   }, []);
 
   useEffect(() => {
+    configRef.current = { drill, difficulty, durationSec, handChoice, targetSizeScale, speedScale };
+  }, [difficulty, drill, durationSec, handChoice, speedScale, targetSizeScale]);
+
+  useEffect(() => {
     const host = jsPsychHostRef.current;
     if (!host) return;
 
     const jsPsych = initJsPsych({ display_element: host });
-    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychRef.current = jsPsych;
-    jsPsychLifecycleRef.current = lifecycle;
+    setIsJsPsychReady(true);
 
     return () => {
-      lifecycle.dispose();
+      jsPsych.abortExperiment(undefined, {
+        lifecycle_status: 'disposed',
+        module_id: 'motor:motor-cortex-rehab',
+        run_token: runTokenRef.current,
+      });
+      jsPsych.pluginAPI.clearAllTimeouts();
+      runTokenRef.current = null;
       if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
-      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
+      setIsJsPsychReady(false);
     };
   }, []);
 
@@ -404,9 +448,12 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     }
   }, [cameraPermission.status, labels.permission, labels.unsupported]);
 
-  useEffect(() => () => {
-    mountedRef.current = false;
-    stopVision();
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      stopVision();
+    };
   }, [stopVision]);
 
   const activeDrill = useMemo(() => drills.find((item) => item.id === drill) ?? drills[0], [drill]);
@@ -474,7 +521,20 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     };
 
     PlayGameEndSound('Victory', jsPsychRef);
-    jsPsychLifecycleRef.current?.finish(session as unknown as Record<string, unknown>);
+    const jsPsych = jsPsychRef.current;
+    const currentTrial = jsPsych?.getCurrentTrial();
+    if (
+      jsPsych
+      && currentTrial?.type === MotorCortexRehabPlugin
+      && currentTrial.run_token === runTokenRef.current
+    ) {
+      jsPsych.finishTrial({
+        ...session,
+        lifecycle_status: 'completed',
+        module_id: 'motor:motor-cortex-rehab',
+        run_token: runTokenRef.current,
+      });
+    }
     setResult(session);
     setPhase('results');
     stopVision();
@@ -501,6 +561,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
       },
       detailRows: session.Event_Records.map((event) => ({ ...event }) as Record<string, unknown>),
     });
+    hostControlRef.current?.onCompleted?.(session);
   }, [activeDrill.referenceName, difficulty, drill, handChoice, labels, setPhase, speedScale, stopVision, targetSizeScale]);
 
   const processFrame = useCallback((now: number) => {
@@ -545,10 +606,20 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
           }
         } catch (error) {
           console.warn('Hand landmark detection failed.', error);
+          const runToken = runTokenRef.current;
+          if (!runToken) return;
+          runTokenRef.current = null;
           setVisionError(labels.initialization);
           setShowVisionError(true);
-          stopVision();
+          jsPsychRef.current?.abortExperiment(undefined, {
+            lifecycle_status: 'aborted',
+            module_id: 'motor:motor-cortex-rehab',
+            run_token: runToken,
+            abort_reason: 'landmark-detection-error',
+          });
           setPhase('menu');
+          stopVision();
+          hostControlRef.current?.onAborted?.();
           return;
         }
       }
@@ -595,25 +666,44 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   ]);
 
   const startTraining = useCallback(async () => {
-    if (!VerifySelectedTrainingUser()) return;
+    if (!hostControlRef.current?.skipUserGuard && !VerifySelectedTrainingUser()) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       setVisionError(labels.unsupported);
       setShowVisionError(true);
+      hostControlRef.current?.onAborted?.();
       return;
     }
 
     PrepareAudioFeedback(jsPsychRef);
-    await enterTrainingFullscreen();
-    await jsPsychLifecycleRef.current?.start({
-      moduleId: 'motor:motor-cortex-rehab',
-      onStart: async () => {
+    if (!hostControlRef.current?.autoStart) await enterTrainingFullscreen();
+    const jsPsych = jsPsychRef.current;
+    if (!jsPsych) return;
+    const runToken = `motor:motor-cortex-rehab:${runSequenceRef.current + 1}`;
+    runSequenceRef.current += 1;
+    runTokenRef.current = runToken;
+    const isCurrentRun = () => (
+      mountedRef.current
+      && runTokenRef.current === runToken
+      && !hostControlRef.current?.signal?.aborted
+    );
+    const isCurrentInitialization = () => (
+      isCurrentRun()
+      && phaseRef.current === 'initializing'
+    );
+    setPhase('initializing');
+    void jsPsych.run([{
+      type: MotorCortexRehabPlugin,
+      module_id: 'motor:motor-cortex-rehab',
+      run_token: runToken,
+      on_start: async () => {
+        if (!isCurrentRun()) return;
         stopVision();
         resetGameState();
         setResult(null);
         setVisionError('');
         setShowVisionError(false);
         setStatusMessage(labels.loadingCamera);
-        setPhase('initializing');
+        hostControlRef.current?.onStarted?.();
 
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
@@ -624,22 +714,42 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
               height: { ideal: 720 },
             },
           });
+          if (!isCurrentInitialization()) {
+            StopMediaStream(stream);
+            return;
+          }
           cameraStreamRef.current = stream;
           const cameraTrack = stream.getVideoTracks()[0];
           if (!cameraTrack) throw new Error('Camera track is unavailable.');
           cameraTrack.addEventListener('ended', () => {
-            if (!mountedRef.current || cameraStreamRef.current !== stream) return;
+            if (!mountedRef.current
+              || cameraStreamRef.current !== stream
+              || runTokenRef.current !== runToken) return;
+            runTokenRef.current = null;
             setVisionError(labels.disconnected);
             setShowVisionError(true);
-            stopVision();
-            jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
+            jsPsych.abortExperiment(undefined, {
+              lifecycle_status: 'aborted',
+              module_id: 'motor:motor-cortex-rehab',
+              run_token: runToken,
+              abort_reason: 'camera-disconnected',
+            });
             setPhase('menu');
+            stopVision();
+            hostControlRef.current?.onAborted?.();
           }, { once: true });
 
           const video = videoRef.current;
           if (!video) throw new Error('Camera preview is unavailable.');
           video.srcObject = stream;
           await video.play();
+
+          if (!isCurrentInitialization()) {
+            StopMediaStream(stream);
+            if (cameraStreamRef.current === stream) cameraStreamRef.current = null;
+            if (videoRef.current?.srcObject === stream) videoRef.current.srcObject = null;
+            return;
+          }
 
           setStatusMessage(labels.loadingModel);
           const landmarker = await LoadMediaPipeWithFallback(
@@ -656,8 +766,11 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
               });
             },
           );
-          if (!mountedRef.current) {
+          if (!isCurrentInitialization()) {
             landmarker.close();
+            StopMediaStream(stream);
+            if (cameraStreamRef.current === stream) cameraStreamRef.current = null;
+            if (videoRef.current?.srcObject === stream) videoRef.current.srcObject = null;
             return;
           }
           handLandmarkerRef.current = landmarker;
@@ -669,31 +782,114 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
           setPhase('playing');
           animationFrameRef.current = window.requestAnimationFrame(processFrame);
         } catch (error) {
+          // A route change or host abort can detach the video while play() or
+          // the model request is still pending. Treat it as teardown rather
+          // than showing an initialization error for a disposed run.
+          if (!isCurrentInitialization()) return;
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            runTokenRef.current = null;
+            jsPsych.abortExperiment(undefined, {
+              lifecycle_status: 'aborted',
+              module_id: 'motor:motor-cortex-rehab',
+              run_token: runToken,
+              abort_reason: 'initialization-aborted',
+            });
+            setPhase('menu');
+            stopVision();
+            hostControlRef.current?.onAborted?.();
+            return;
+          }
           console.warn('Unable to initialize motor cortex rehab.', error);
+          runTokenRef.current = null;
           setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
             ? labels.permission
             : labels.initialization);
           setShowVisionError(true);
-          jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
+          jsPsych.abortExperiment(undefined, {
+            lifecycle_status: 'aborted',
+            module_id: 'motor:motor-cortex-rehab',
+            run_token: runToken,
+            abort_reason: 'initialization-error',
+          });
           setPhase('menu');
           stopVision();
+          hostControlRef.current?.onAborted?.();
         }
       },
+    }]).catch((error: unknown) => {
+      if (!mountedRef.current
+        || phaseRef.current === 'menu'
+        || runTokenRef.current !== runToken) return;
+      console.warn('Motor Cortex Rehab jsPsych run ended unexpectedly.', error);
+      runTokenRef.current = null;
+      stopVision();
+      setPhase('menu');
+      hostControlRef.current?.onAborted?.();
     });
   }, [enterTrainingFullscreen, handChoice, labels, processFrame, resetGameState, setPhase, stopVision]);
 
   const returnToMenu = useCallback(() => {
-    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
+    const wasRunning = ['initializing', 'playing'].includes(phaseRef.current);
+    const runToken = runTokenRef.current;
+    runTokenRef.current = null;
+    setPhase('menu');
+    jsPsychRef.current?.abortExperiment(undefined, {
+      lifecycle_status: 'aborted',
+      module_id: 'motor:motor-cortex-rehab',
+      run_token: runToken,
+      abort_reason: 'return-to-menu',
+    });
     stopVision();
     resetGameState();
     setResult(null);
     setVisionError('');
     setShowVisionError(false);
-    setPhase('menu');
+    if (wasRunning) hostControlRef.current?.onAborted?.();
   }, [resetGameState, setPhase, stopVision]);
 
+  useEffect(() => {
+    const signal = hostControlRef.current?.signal;
+    if (!signal) return undefined;
+    const onAbort = () => returnToMenu();
+    signal.addEventListener('abort', onAbort, { once: true });
+    return () => signal.removeEventListener('abort', onAbort);
+  }, [returnToMenu]);
+
+  useEffect(() => {
+    const registerControls = hostControlRef.current?.registerControls;
+    if (!registerControls) return undefined;
+    registerControls({
+      pause: () => { jsPsychRef.current?.pauseExperiment(); },
+      resume: () => { jsPsychRef.current?.resumeExperiment(); },
+    });
+    return () => registerControls(null);
+  }, []);
+
+  useEffect(() => {
+    setIsStageReady(true);
+    return () => setIsStageReady(false);
+  }, []);
+
+  useEffect(() => {
+    if (!hostControlRef.current?.autoStart
+      || !isStageReady
+      || !isJsPsychReady
+      || phase !== 'menu'
+      || autoStartRequestedRef.current) return;
+    autoStartRequestedRef.current = true;
+    void startTraining();
+  }, [isJsPsychReady, isStageReady, phase, startTraining]);
+
   const exitGame = useCallback(() => {
-    jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
+    const runToken = runTokenRef.current;
+    runTokenRef.current = null;
+    setPhase('menu');
+    jsPsychRef.current?.abortExperiment(undefined, {
+      lifecycle_status: 'aborted',
+      module_id: 'motor:motor-cortex-rehab',
+      run_token: runToken,
+      abort_reason: 'exit-training',
+    });
     stopVision();
     onExit();
   }, [onExit, stopVision]);
@@ -728,7 +924,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
         <span>{liveState.handVisible ? labels.tracking : labels.finding}</span>
       </div>
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !hostControl?.autoStart && (
         <div className="training-panel">
           <TrainingConfigPanel
             label={labels.configLabel}
@@ -887,7 +1083,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
         </div>
       )}
 
-      {phase === 'rules' && (
+      {phase === 'rules' && !hostControl?.autoStart && (
         <div className="training-panel">
           <MotorTrainingRulesPanel
             gameId="motor-cortex-rehab"
@@ -961,7 +1157,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
         </div>
       )}
 
-      {phase === 'results' && result && (
+      {phase === 'results' && result && !hostControl?.autoStart && (
         <div className="experiment-container experiment-container-scrollable motor-cortex-results-container">
           <div className="experiment-results">
             <h1>{labels.resultsTitle}</h1>

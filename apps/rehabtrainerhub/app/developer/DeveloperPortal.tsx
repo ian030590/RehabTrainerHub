@@ -4,31 +4,50 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useHubAuth } from '../HubNavigation';
 import {
   FetchDeveloperGames,
+  FetchDeveloperNotifications,
+  RequestDeveloperGameManualReview,
   SubmitDeveloperGame,
   type DeveloperGame,
+  type DeveloperNotification,
   type DeveloperReleaseStatus,
 } from './developerApi';
 import {
   trainingPurposes,
   type TrainingPurposeId,
 } from '@rehab-trainer/hub-modules/catalog';
+import {
+  gamePlatformCapabilities,
+  gamePlatformLicenses,
+  gamePlatformPackageLimits,
+  gamePlatformRuntimeContract,
+  IsPublishableGameLicense,
+  type GamePlatformCapability,
+  type GamePlatformLicenseId,
+} from '@rehab-trainer/training-contracts';
 
-const maximumPackageBytes = 12 * 1024 * 1024;
-const platformJsPsychVersion = '8.2.3';
-const platformJsPsychUrl = '/runtime/jspsych-8.2.3.js';
-const platformJsPsychCssUrl = '/runtime/jspsych-8.2.3.css';
-const platformGameSdkUrl = '/runtime/trainerhub-game-sdk-0.1.0.js';
+const maximumPackageBytes = gamePlatformPackageLimits.maximumCompressedBytes;
+const platformJsPsychVersion = gamePlatformRuntimeContract.jsPsychVersion;
+const platformJsPsychUrl = gamePlatformRuntimeContract.jsPsychUrl;
+const platformJsPsychCssUrl = gamePlatformRuntimeContract.jsPsychCssUrl;
+const platformGameSdkUrl = gamePlatformRuntimeContract.gameSdkUrl;
 const categoryOptions = trainingPurposes.map((theme) => ({
   label: theme.label['zh-TW'],
   value: theme.id,
 }));
 const defaultCategory: TrainingPurposeId = 'higher-cognition';
-const capabilityOptions = [
-  ['audio', '播放音效'],
-  ['fullscreen', '全螢幕'],
-  ['keyboard', '鍵盤輸入'],
-  ['pointer', '滑鼠／觸控指標'],
-] as const;
+const capabilityLabels: Record<GamePlatformCapability, string> = {
+  audio: '播放音效',
+  fullscreen: '全螢幕',
+  gamepad: '遊戲手把',
+  keyboard: '鍵盤輸入',
+  pointer: '滑鼠／指標',
+  touch: '觸控',
+};
+const capabilityOptions = gamePlatformCapabilities.map((capability) => [
+  capability,
+  capabilityLabels[capability],
+] as const);
+const publishableLicenseOptions = gamePlatformLicenses.filter(IsPublishableGameLicense);
 const statusCopy: Record<DeveloperReleaseStatus, string> = {
   blocked: '自動掃描阻擋',
   pending_review: '等待人工審核',
@@ -41,6 +60,7 @@ const statusCopy: Record<DeveloperReleaseStatus, string> = {
 export function DeveloperPortal() {
   const { user } = useHubAuth();
   const [games, setGames] = useState<DeveloperGame[]>([]);
+  const [notifications, setNotifications] = useState<DeveloperNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadKey, setLoadKey] = useState(0);
@@ -53,19 +73,29 @@ export function DeveloperPortal() {
   const [summary, setSummary] = useState('');
   const [category, setCategory] = useState<TrainingPurposeId>(defaultCategory);
   const [version, setVersion] = useState('1.0.0');
+  const [licenseId, setLicenseId] = useState<GamePlatformLicenseId>('CC-BY-4.0');
   const [capabilities, setCapabilities] = useState<string[]>(['keyboard', 'pointer']);
   const [sourceConfirmed, setSourceConfirmed] = useState(false);
+  const [manualReviewReasons, setManualReviewReasons] = useState<Record<string, string>>({});
+  const [manualReviewBusyId, setManualReviewBusyId] = useState('');
 
   useEffect(() => {
     if (!user) {
       setGames([]);
+      setNotifications([]);
       return;
     }
     const controller = new AbortController();
     setIsLoading(true);
     setError('');
-    void FetchDeveloperGames(controller.signal)
-      .then(setGames)
+    void Promise.all([
+      FetchDeveloperGames(controller.signal),
+      FetchDeveloperNotifications(controller.signal),
+    ])
+      .then(([nextGames, nextNotifications]) => {
+        setGames(nextGames);
+        setNotifications(nextNotifications);
+      })
       .catch((nextError: unknown) => {
         if (controller.signal.aborted) return;
         setError(nextError instanceof Error ? nextError.message : '目前無法載入投稿。');
@@ -98,7 +128,7 @@ export function DeveloperPortal() {
     const extensionAllowed = /\.(?:html?|zip)$/i.test(file.name);
     if (!extensionAllowed || file.size <= 0 || file.size > maximumPackageBytes) {
       setPackageFile(null);
-      setError('請選擇 12 MB 以下的 HTML 或 ZIP 檔案。');
+      setError(`請選擇 ${FormatBytes(maximumPackageBytes)} 以下的 HTML 或 ZIP 檔案。`);
       return;
     }
     setPackageFile(file);
@@ -124,6 +154,7 @@ export function DeveloperPortal() {
         version: version.trim(),
         jsPsychVersion: platformJsPsychVersion,
         capabilities,
+        licenseId,
       });
       setMessage(response.release.status === 'blocked'
         ? `已完成掃描，但偵測到 ${response.release.scan.blockCount ?? response.release.findings.length} 個阻擋項目。`
@@ -135,6 +166,28 @@ export function DeveloperPortal() {
       setError(nextError instanceof Error ? nextError.message : '目前無法送出遊戲包。');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const requestManualReview = async (release: DeveloperGame['releases'][number]) => {
+    if (!release.submissionId) return;
+    const reason = (manualReviewReasons[release.id] ?? '').trim();
+    if (reason.length < 2) {
+      setError('請先說明為何掃描發現可能是誤判，至少輸入 2 個字元。');
+      return;
+    }
+    setManualReviewBusyId(release.id);
+    setError('');
+    setMessage('');
+    try {
+      await RequestDeveloperGameManualReview(release.submissionId, reason);
+      setMessage(`v${release.version} 已送出人工判讀申請；管理員會在隔離環境查核。`);
+      setManualReviewReasons((current) => ({ ...current, [release.id]: '' }));
+      setLoadKey((current) => current + 1);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : '目前無法申請人工判讀。');
+    } finally {
+      setManualReviewBusyId('');
     }
   };
 
@@ -156,7 +209,7 @@ export function DeveloperPortal() {
           開發者可提交單一 HTML 檔案，或提交根目錄含有 <code>index.html</code> 的 ZIP 壓縮檔；圖片、音效、字型與程式碼都必須放在遊戲包內。
         </p>
         <ul>
-          <li><strong>檔案大小限制</strong>：上傳套件上限為 12 MB；解壓縮後總大小上限為 24 MB，單一檔案上限 8 MB。</li>
+          <li><strong>檔案大小限制</strong>：上傳套件上限為 {FormatBytes(maximumPackageBytes)}；解壓縮後總大小上限為 {FormatBytes(gamePlatformPackageLimits.maximumTotalBytes)}，單一檔案上限 {FormatBytes(gamePlatformPackageLimits.maximumFileBytes)}。</li>
           <li><strong>ZIP 結構</strong>：必須直接以 <code>index.html</code> 為根目錄進入點，不得包在多層子資料夾內。</li>
           <li><strong>流程與生命週期</strong>：遊戲必須使用 jsPsych 8 管理實驗流程與刺激呈現，並以 <code>RunTrainerHubJsPsychGame()</code> 啟動。</li>
           <li><strong>平台 Runtime 引用</strong>：jsPsych {platformJsPsychVersion} 與 Game SDK 由隔離執行站固定提供，請直接引用 <code>{platformJsPsychUrl}</code>、<code>{platformJsPsychCssUrl}</code> 與 <code>{platformGameSdkUrl}</code>，請勿自行打包 vendor 庫。</li>
@@ -257,6 +310,30 @@ export function DeveloperPortal() {
               </label>
             </div>
 
+            <label className="admin-field">
+              <span>遊戲授權條款</span>
+              <select
+                onChange={(event) => setLicenseId(event.target.value as GamePlatformLicenseId)}
+                value={licenseId}
+              >
+                {publishableLicenseOptions.map((license) => (
+                  <option key={license.id} value={license.id}>{license.label}（{license.id}）</option>
+                ))}
+              </select>
+              <small>
+                請確認你有權發布遊戲包內所有程式碼與素材；管理員會在公開前核對授權。{' '}
+                {publishableLicenseOptions.find((license) => license.id === licenseId)?.url && (
+                  <a
+                    href={publishableLicenseOptions.find((license) => license.id === licenseId)?.url ?? undefined}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    查看條款
+                  </a>
+                )}
+              </small>
+            </label>
+
             <fieldset className="developer-capabilities">
               <legend>需要的基本能力</legend>
               {capabilityOptions.map(([value, label]) => (
@@ -279,7 +356,7 @@ export function DeveloperPortal() {
                 required
                 type="file"
               />
-              <small>{packageFile ? `${packageFile.name}（${FormatBytes(packageFile.size)}）` : '上限 12 MB'}</small>
+              <small>{packageFile ? `${packageFile.name}（${FormatBytes(packageFile.size)}）` : `上限 ${FormatBytes(maximumPackageBytes)}`}</small>
             </label>
 
             <label className="developer-confirmation">
@@ -297,6 +374,23 @@ export function DeveloperPortal() {
         </section>
 
         <section className="admin-tab-panel" aria-labelledby="developer-releases-title">
+          {notifications.length > 0 && (
+            <aside className="developer-notifications" aria-labelledby="developer-notifications-title">
+              <div className="section-title-row">
+                <h2 id="developer-notifications-title">Review updates</h2>
+                <span>{notifications.length}</span>
+              </div>
+              <ul>
+                {notifications.slice(0, 5).map((notification) => (
+                  <li key={notification.id}>
+                    <strong>{FormatNotificationKind(notification.kind)}</strong>
+                    <time dateTime={notification.createdAt}>{new Date(notification.createdAt).toLocaleString()}</time>
+                    {typeof notification.payload.note === 'string' && <p>{notification.payload.note}</p>}
+                  </li>
+                ))}
+              </ul>
+            </aside>
+          )}
           <div className="section-title-row">
             <div>
               <p className="page-kicker">Submissions</p>
@@ -325,7 +419,81 @@ export function DeveloperPortal() {
                       <small>
                         {release.fileCount} 個檔案 · {FormatBytes(release.uncompressedBytes)} · SHA-256 {release.contentSha256.slice(0, 12)}…
                       </small>
+                      <small>
+                        授權：{release.license.url ? (
+                          <a href={release.license.url} rel="noreferrer" target="_blank">{release.license.label}</a>
+                        ) : release.license.label}
+                      </small>
+                      <small className="developer-release-attempt">
+                        Submission attempt {release.submissionAttempt ?? '—'}
+                      </small>
+                      {(release.attempts?.length ?? 0) > 1 && (
+                        <details className="developer-submission-history">
+                          <summary>Submission history ({release.attempts?.length})</summary>
+                          <ol>
+                            {release.attempts?.map((attempt) => (
+                              <li key={attempt.id}>
+                                <strong>Attempt {attempt.attempt}</strong>
+                                <span>{FormatAttemptStatus(attempt.scanStatus)}</span>
+                                <small>
+                                  {new Date(attempt.submittedAt).toLocaleString()} · SHA-256 {attempt.artifactSha256.slice(0, 12)}
+                                </small>
+                                {attempt.errorCode && <small>{attempt.errorCode}</small>}
+                              </li>
+                            ))}
+                          </ol>
+                        </details>
+                      )}
                       {release.reviewNote && <p>審核備註：{release.reviewNote}</p>}
+                      {release.findings.length > 0 && (
+                        <details className="developer-validation-findings">
+                          <summary>查看掃描發現（{release.findings.length}）</summary>
+                          <ul>
+                            {release.findings.map((finding) => (
+                              <li key={finding.id}>
+                                <strong>{FormatFindingDisposition(finding.disposition)} · {finding.code}</strong>
+                                <span>{finding.filePath ?? '整個套件'}{finding.line ? `:${finding.line}` : ''}</span>
+                                <p>{finding.messageKey}</p>
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
+                      {release.scan.reviewCount && release.scan.reviewCount > 0 && release.submissionId && (
+                        <div className="developer-manual-review">
+                          <p>
+                            掃描標記 {release.scan.reviewCount} 個需判讀項目。若你認為是誤判，可提供理由請求人工查核；hard-block 必須修改後重新上傳。
+                          </p>
+                          {release.manualReviewStatus && (
+                            <small>人工判讀狀態：{FormatManualReviewStatus(release.manualReviewStatus)}</small>
+                          )}
+                          {!['requested', 'in_review', 'approved'].includes(release.manualReviewStatus ?? '') && (
+                            <>
+                              <label className="admin-field">
+                                <span>人工判讀理由</span>
+                                <textarea
+                                  maxLength={2000}
+                                  onChange={(event) => setManualReviewReasons((current) => ({
+                                    ...current,
+                                    [release.id]: event.target.value,
+                                  }))}
+                                  placeholder="說明該 finding 為何不會造成外連、憑證存取或其他安全風險"
+                                  rows={2}
+                                  value={manualReviewReasons[release.id] ?? ''}
+                                />
+                              </label>
+                              <button
+                                className="admin-button admin-button-secondary"
+                                disabled={manualReviewBusyId === release.id || (manualReviewReasons[release.id] ?? '').trim().length < 2}
+                                onClick={() => void requestManualReview(release)}
+                                type="button"
+                              >
+                                {manualReviewBusyId === release.id ? '送出申請中…' : '要求人工判讀'}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -344,4 +512,44 @@ function FormatBytes(value: number): string {
   if (value < 1024) return `${value} B`;
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
   return `${(value / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function FormatManualReviewStatus(value: NonNullable<DeveloperGame['releases'][number]['manualReviewStatus']>): string {
+  const labels: Record<typeof value, string> = {
+    requested: '已申請',
+    in_review: '管理員處理中',
+    changes_requested: '需補充或修改',
+    approved: '人工判讀通過',
+    rejected: '人工判讀未通過',
+  };
+  return labels[value];
+}
+
+function FormatFindingDisposition(value: DeveloperGame['releases'][number]['findings'][number]['disposition']): string {
+  if (value === 'hard-block') return '阻擋（需修改）';
+  if (value === 'fix-or-manual-review') return '可修改或申請人工判讀';
+  if (value === 'manual-review') return '需人工判讀';
+  return '提示';
+}
+
+function FormatAttemptStatus(value: NonNullable<DeveloperGame['releases'][number]['attempts']>[number]['scanStatus']): string {
+  const labels: Record<typeof value, string> = {
+    queued: 'Queued',
+    running: 'Running',
+    passed: 'Passed',
+    flagged: 'Flagged',
+    failed: 'Failed',
+  };
+  return labels[value];
+}
+
+function FormatNotificationKind(value: DeveloperNotification['kind']): string {
+  const labels: Record<DeveloperNotification['kind'], string> = {
+    'request-changes': 'Changes requested',
+    rejected: 'Submission rejected',
+    revoked: 'Release revoked',
+    'validation-failed': 'Validation failed',
+    'review-requested': 'Manual review requested',
+  };
+  return labels[value];
 }

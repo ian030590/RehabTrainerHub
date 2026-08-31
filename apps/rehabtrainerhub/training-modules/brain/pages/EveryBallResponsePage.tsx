@@ -29,6 +29,7 @@ import {
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { StopMediaStream } from '@rehab-trainer/ui/mediaStream';
 import { Clamp, FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
@@ -37,6 +38,7 @@ import { useNavigate } from 'react-router-dom';
 import { useT } from '../i18n';
 import { SaveTrainingRecord, type BrainTrainingRecord } from '../utils/trainingRecords';
 import './EveryBallResponsePage.css';
+import type { EveryBallResponseConfig } from '../every-ball-response/config';
 
 type Phase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
 type InputMode = 'camera' | 'microphone';
@@ -53,13 +55,7 @@ interface LevelDefinition {
   passAccuracy: number;
 }
 
-interface GameConfig {
-  levelId: LevelDefinition['id'];
-  inputMode: InputMode;
-  fixationStyle: FixationStyle;
-  trialCount: number;
-  microphoneSensitivity: number;
-}
+export type GameConfig = EveryBallResponseConfig;
 
 interface TrialPlan {
   trialNumber: number;
@@ -90,7 +86,7 @@ interface TrialRecord {
   Fixation_ms: number;
 }
 
-interface SessionSummary {
+export interface SessionSummary {
   date: string;
   participant: string;
   levelTitle: string;
@@ -126,12 +122,14 @@ interface CameraRuntimeOptions {
   video: HTMLVideoElement;
   overlay: HTMLCanvasElement;
   controller: ResponseInputController;
+  signal: AbortSignal;
   onStatus: (status: string) => void;
 }
 
 interface MicrophoneRuntimeOptions {
   sensitivity: number;
   controller: ResponseInputController;
+  signal: AbortSignal;
   onLevel: (level: number) => void;
   onStatus: (status: string) => void;
 }
@@ -221,9 +219,7 @@ const stimulusMs = 900;
 const responseWindowMs = 1800;
 const fixationMinMs = 1000;
 const fixationMaxMs = 3000;
-const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates(
-  import.meta.env.VITE_AI_ASSET_BASE_URL,
-);
+const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates();
 const cameraDetectionIntervalMs = 70;
 const cameraGestureCooldownMs = 480;
 const clapCloseDistance = 0.12;
@@ -250,6 +246,10 @@ const everyBallInfo = {
       default: null,
     },
     on_visual_change: {
+      type: ParameterType.FUNCTION,
+      default: null,
+    },
+    on_input_start: {
       type: ParameterType.FUNCTION,
       default: null,
     },
@@ -281,10 +281,12 @@ class EveryBallExperimentPlugin implements JsPsychPlugin<EveryBallInfo> {
     const labels = trial.labels as unknown as EveryBallLabels;
     const controller = trial.input_controller as unknown as ResponseInputController;
     const notify = trial.on_visual_change as unknown as ((visual: VisualState) => void) | null;
+    const startInput = trial.on_input_start as unknown as (() => void | Promise<void>) | null;
     const records: TrialRecord[] = [];
     let aborted = false;
 
     try {
+      await startInput?.();
       for (const plan of plans) {
         notify?.({
           phase: 'fixation',
@@ -332,6 +334,7 @@ class EveryBallExperimentPlugin implements JsPsychPlugin<EveryBallInfo> {
 
     controller.cancelWaiting();
     notify?.({ phase: 'idle' });
+    if (this.jsPsych.getCurrentTrial()?.type !== EveryBallExperimentPlugin) return;
     this.jsPsych.finishTrial({
       trials: records,
       aborted,
@@ -565,9 +568,27 @@ const copy: Record<'zh' | 'en', EveryBallLabels> = {
   },
 };
 
-export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) {
+export interface EveryBallResponseHostControl {
+  autoStart?: boolean;
+  config?: Readonly<EveryBallResponseConfig>;
+  onStarted?(): void;
+  onCompleted?(result: SessionSummary): void;
+  onAborted?(): void;
+  registerControls?(controls: { pause(): void; resume(): void } | null): void;
+  signal?: AbortSignal;
+  skipUserGuard?: boolean;
+}
+
+export interface EveryBallResponsePageProps {
+  onExit?: () => void;
+  hostControl?: EveryBallResponseHostControl;
+}
+
+export function EveryBallResponsePage({ onExit, hostControl }: EveryBallResponsePageProps = {}) {
   const { lang } = useT();
   const labels = copy[lang];
+  const hostControlRef = useRef(hostControl);
+  hostControlRef.current = hostControl;
   const navigate = useNavigate();
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const stageHostRef = useRef<HTMLDivElement | null>(null);
@@ -576,25 +597,29 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
   const appRef = useRef<Application | null>(null);
   const inputControllerRef = useRef(new ResponseInputController());
   const inputRuntimeRef = useRef<InputRuntime | null>(null);
+  const inputInitializationAbortRef = useRef<AbortController | null>(null);
+  const inputRunTokenRef = useRef(0);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const mountedRef = useRef(true);
   const phaseRef = useRef<Phase>('menu');
   const visualRef = useRef<VisualState>({ phase: 'idle' });
+  const autoStartRequestedRef = useRef(false);
 
   const [phase, setPhaseState] = useState<Phase>('menu');
   useTrainingConfigReady(phase === 'menu');
-  const [levelId, setLevelId] = useState<LevelDefinition['id']>(1);
-  const [inputMode, setInputMode] = useState<InputMode>('camera');
-  const [fixationStyle, setFixationStyle] = useState<FixationStyle>('cross');
-  const [trialCount, setTrialCount] = useState(levels[0].trialCount);
-  const [microphoneSensitivity, setMicrophoneSensitivity] = useState(0.65);
+  const [levelId, setLevelId] = useState<LevelDefinition['id']>(hostControl?.config?.levelId ?? 1);
+  const [inputMode, setInputMode] = useState<InputMode>(hostControl?.config?.inputMode ?? 'camera');
+  const [fixationStyle, setFixationStyle] = useState<FixationStyle>(hostControl?.config?.fixationStyle ?? 'cross');
+  const [trialCount, setTrialCount] = useState(hostControl?.config?.trialCount ?? levels[0].trialCount);
+  const [microphoneSensitivity, setMicrophoneSensitivity] = useState(hostControl?.config?.microphoneSensitivity ?? 0.65);
+  const [isStageReady, setIsStageReady] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [inputLevel, setInputLevel] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [visual, setVisual] = useState<VisualState>({ phase: 'idle' });
   const mediaPermission = useMediaPermissionPreflight({
-    active: phase === 'menu',
+    active: phase === 'menu' && !hostControl?.autoStart,
     audio: inputMode === 'microphone',
     video: inputMode === 'camera',
   });
@@ -626,6 +651,9 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
   }, [inputMode, labels.error, mediaPermission.status]);
 
   const stopInput = useCallback(async () => {
+    inputRunTokenRef.current += 1;
+    inputInitializationAbortRef.current?.abort();
+    inputInitializationAbortRef.current = null;
     inputControllerRef.current.cancelWaiting();
     const runtime = inputRuntimeRef.current;
     inputRuntimeRef.current = null;
@@ -674,6 +702,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
         appRef.current = app;
         host.appendChild(app.canvas);
         app.canvas.className = 'every-ball-canvas';
+        setIsStageReady(true);
         app.renderer.on('resize', onResize);
         DrawEveryBallScene(app, visualRef.current, labels);
       } catch (error) {
@@ -696,6 +725,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
       if (appRef.current === app) {
         appRef.current = null;
       }
+      setIsStageReady(false);
       destroyApp();
     };
   }, [labels, stopInput]);
@@ -736,19 +766,44 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
   };
 
   const returnToMenu = useCallback(async () => {
-    jsPsychRef.current?.abortExperiment();
+    const wasRunning = ['initializing', 'playing'].includes(phaseRef.current);
+    const jsPsych = jsPsychRef.current;
     jsPsychRef.current = null;
-    await stopInput();
+    const inputStopped = stopInput();
+    jsPsych?.abortExperiment();
+    await inputStopped;
     setSummary(null);
     setErrorMessage('');
     setStatusMessage('');
     drawVisual({ phase: 'idle' });
     setPhase('menu');
+    if (wasRunning) hostControlRef.current?.onAborted?.();
   }, [drawVisual, setPhase, stopInput]);
 
+  useEffect(() => {
+    const signal = hostControlRef.current?.signal;
+    if (!signal) return undefined;
+    const onAbort = () => { void returnToMenu(); };
+    signal.addEventListener('abort', onAbort, { once: true });
+    return () => signal.removeEventListener('abort', onAbort);
+  }, [returnToMenu]);
+
+  useEffect(() => {
+    const registerControls = hostControlRef.current?.registerControls;
+    if (!registerControls) return undefined;
+    registerControls({
+      pause: () => { jsPsychRef.current?.pauseExperiment(); },
+      resume: () => { jsPsychRef.current?.resumeExperiment(); },
+    });
+    return () => registerControls(null);
+  }, []);
+
   const exitToAttentionTraining = useCallback(async () => {
-    await stopInput();
-    jsPsychRef.current?.abortExperiment();
+    const jsPsych = jsPsychRef.current;
+    jsPsychRef.current = null;
+    const inputStopped = stopInput();
+    jsPsych?.abortExperiment();
+    await inputStopped;
     if (onExit) {
       onExit();
       return;
@@ -793,49 +848,53 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
       detailRows: nextSummary.trials.map((trial) => ({ ...trial })),
     };
     void SaveTrainingRecord(record);
+    hostControlRef.current?.onCompleted?.(nextSummary);
   }, [drawVisual, setPhase, stopInput]);
 
   const startSession = useCallback(async () => {
-    await enterTrainingFullscreen();
+    if (!hostControlRef.current?.autoStart) await enterTrainingFullscreen();
+    if (!mountedRef.current || hostControlRef.current?.signal?.aborted) return;
     await stopInput();
-    jsPsychRef.current?.abortExperiment();
-    inputControllerRef.current.cancelWaiting();
+    const previousJsPsych = jsPsychRef.current;
+    jsPsychRef.current = null;
+    previousJsPsych?.abortExperiment();
+    const inputController = new ResponseInputController();
+    const inputAbort = new AbortController();
+    const inputRunToken = inputRunTokenRef.current + 1;
+    inputRunTokenRef.current = inputRunToken;
+    inputInitializationAbortRef.current = inputAbort;
+    inputControllerRef.current = inputController;
     setErrorMessage('');
     setSummary(null);
     setStatusMessage(inputMode === 'camera' ? labels.initializingCamera : labels.initializingMicrophone);
     setPhase('initializing');
 
-    try {
-      inputRuntimeRef.current = inputMode === 'camera'
-        ? await CreateCameraRuntime({
-            video: RequireElement(videoRef.current),
-            overlay: RequireElement(cameraOverlayRef.current),
-            controller: inputControllerRef.current,
-            onStatus: (status) => {
-              if (mountedRef.current) setStatusMessage(status);
-            },
-          }, labels)
-        : await CreateMicrophoneRuntime({
-            sensitivity: microphoneSensitivity,
-            controller: inputControllerRef.current,
-            onLevel: (level) => {
-              if (mountedRef.current) setInputLevel(level);
-            },
-            onStatus: (status) => {
-              if (mountedRef.current) setStatusMessage(status);
-            },
-          }, labels);
+    const plans = CreateTrialPlans(levelId, trialCount);
+    let jsPsych: ReturnType<typeof initJsPsych> | null = null;
+    const isCurrentAttempt = () => (
+      mountedRef.current
+      && inputRunTokenRef.current === inputRunToken
+      && inputInitializationAbortRef.current === inputAbort
+      && inputControllerRef.current === inputController
+      && !inputAbort.signal.aborted
+      && !hostControlRef.current?.signal?.aborted
+    );
+    const isCurrentRun = () => isCurrentAttempt()
+      && jsPsych !== null
+      && jsPsychRef.current === jsPsych;
+    const isCurrentInitialization = () => isCurrentRun()
+      && phaseRef.current === 'initializing';
 
-      if (!mountedRef.current) return;
-      const plans = CreateTrialPlans(levelId, trialCount);
-      const jsPsych = initJsPsych();
-      jsPsychRef.current = jsPsych;
-      setPhase('playing');
-      drawVisual({ phase: 'idle' });
-      void jsPsych.run([{
+    try {
+      const createdJsPsych = initJsPsych();
+      jsPsych = createdJsPsych;
+      jsPsychRef.current = createdJsPsych;
+      if (!isCurrentRun()) throw CreateAbortError();
+      hostControlRef.current?.onStarted?.();
+      void createdJsPsych.run([{
         type: EveryBallExperimentPlugin,
         trials: plans,
-        input_controller: inputControllerRef.current,
+        input_controller: inputController,
         labels,
         config: {
           levelId,
@@ -844,20 +903,88 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
           trialCount,
           microphoneSensitivity,
         } satisfies GameConfig,
-        on_visual_change: drawVisual,
+        on_visual_change: (nextVisual: VisualState) => {
+          if (isCurrentRun()) drawVisual(nextVisual);
+        },
+        on_input_start: async () => {
+          if (!isCurrentInitialization()) throw CreateAbortError();
+          try {
+            const runtime = inputMode === 'camera'
+              ? await CreateCameraRuntime({
+                  video: RequireElement(videoRef.current),
+                  overlay: RequireElement(cameraOverlayRef.current),
+                  controller: inputController,
+                  signal: inputAbort.signal,
+                  onStatus: (status) => {
+                    if (isCurrentRun()) setStatusMessage(status);
+                  },
+                }, labels)
+              : await CreateMicrophoneRuntime({
+                  sensitivity: microphoneSensitivity,
+                  controller: inputController,
+                  signal: inputAbort.signal,
+                  onLevel: (level) => {
+                    if (isCurrentRun()) setInputLevel(level);
+                  },
+                  onStatus: (status) => {
+                    if (isCurrentRun()) setStatusMessage(status);
+                  },
+                }, labels);
+
+            if (!isCurrentInitialization()) {
+              await runtime.stop();
+              throw CreateAbortError();
+            }
+            inputRuntimeRef.current = runtime;
+            setPhase('playing');
+            drawVisual({ phase: 'idle' });
+          } catch (error) {
+            if (
+              isCurrentInitialization()
+              && !IsAbortError(error)
+            ) {
+              setErrorMessage(GetStartErrorMessage(error, inputMode, labels));
+              setStatusMessage('');
+            }
+            throw error;
+          }
+        },
       }]).then(() => {
-        if (!mountedRef.current || phaseRef.current !== 'playing') return;
-        const values = jsPsych.data.get().last(1).values();
+        if (!isCurrentRun()) return;
+        const values = createdJsPsych.data.get().last(1).values();
         const data = values[0] as EveryBallExperimentData | undefined;
-        if (data) completeSession(data, labels, activeLevel, inputModeLabel);
+        if (!data || data.aborted) {
+          void stopInput();
+          setStatusMessage('');
+          drawVisual({ phase: 'idle' });
+          setPhase('menu');
+          hostControlRef.current?.onAborted?.();
+          return;
+        }
+        if (phaseRef.current !== 'playing') return;
+        completeSession(data, labels, activeLevel, inputModeLabel);
+      }).catch((error: unknown) => {
+        if (!isCurrentRun()) return;
+        void stopInput();
+        if (!IsAbortError(error)) {
+          setErrorMessage(GetStartErrorMessage(error, inputMode, labels));
+        }
+        setStatusMessage('');
+        drawVisual({ phase: 'idle' });
+        setPhase('menu');
+        hostControlRef.current?.onAborted?.();
       });
     } catch (error) {
       console.warn('Unable to start Every Ball Response.', error);
+      if (!isCurrentAttempt()) return;
       await stopInput();
-      setErrorMessage(GetStartErrorMessage(error, inputMode, labels));
+      if (!IsAbortError(error)) {
+        setErrorMessage(GetStartErrorMessage(error, inputMode, labels));
+      }
       setStatusMessage('');
       drawVisual({ phase: 'idle' });
       setPhase('menu');
+      hostControlRef.current?.onAborted?.();
     }
   }, [
     activeLevel,
@@ -875,6 +1002,12 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
     trialCount,
   ]);
 
+  useEffect(() => {
+    if (!hostControlRef.current?.autoStart || !isStageReady || phase !== 'menu' || autoStartRequestedRef.current) return;
+    autoStartRequestedRef.current = true;
+    void startSession();
+  }, [isStageReady, phase, startSession]);
+
   const summaryItems = useMemo(() => [
     { label: labels.level, value: selectedLevelLabels.shortTitle },
     { label: labels.inputMode, value: inputModeLabel },
@@ -890,7 +1023,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
         <canvas ref={cameraOverlayRef} aria-hidden="true" />
       </div>
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !hostControl?.autoStart && (
         <div className="training-panel every-ball-panel">
           <TrainingConfigPanel
             label={labels.configLabel}
@@ -1025,7 +1158,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
         </div>
       )}
 
-      {phase === 'rules' && (
+      {phase === 'rules' && !hostControl?.autoStart && (
         <div className="training-panel every-ball-panel">
           <TrainingRulesPanel
             label={labels.rulesLabel}
@@ -1104,7 +1237,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
         />
       )}
 
-      {phase === 'results' && summary && (
+      {phase === 'results' && summary && !hostControl?.autoStart && (
         <div className="experiment-container experiment-container-scrollable every-ball-results-container">
           <div className="experiment-results every-ball-results">
             <h1>{labels.resultTitle}</h1>
@@ -1258,6 +1391,7 @@ async function CreateCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
     throw new Error(labels.error.cameraUnsupported);
   }
 
+  ThrowIfAborted(options.signal);
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: false,
     video: {
@@ -1266,121 +1400,150 @@ async function CreateCameraRuntime(options: CameraRuntimeOptions, labels: EveryB
       height: { ideal: 720 },
     },
   });
-  const video = options.video;
-  video.srcObject = stream;
-  await video.play();
-
-  options.onStatus(labels.initializingCamera);
-  const { handLandmarker, poseLandmarker } = await LoadMediaPipeWithFallback(
-    mediaPipeAssetCandidates,
-    async ({
-      wasmUrl,
-      handLandmarkerModelUrl,
-      poseLandmarkerLiteModelUrl,
-    }) => {
-      const vision = await FilesetResolver.forVisionTasks(wasmUrl);
-      const handLandmarker = await HandLandmarker.createFromOptions(vision, {
-        baseOptions: { modelAssetPath: handLandmarkerModelUrl },
-        runningMode: 'VIDEO',
-        numHands: 2,
-        minHandDetectionConfidence: 0.48,
-        minHandPresenceConfidence: 0.48,
-        minTrackingConfidence: 0.48,
-      });
-      try {
-        const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-          baseOptions: { modelAssetPath: poseLandmarkerLiteModelUrl },
-          runningMode: 'VIDEO',
-          numPoses: 1,
-          minPoseDetectionConfidence: 0.45,
-          minPosePresenceConfidence: 0.45,
-          minTrackingConfidence: 0.45,
-        });
-        return { handLandmarker, poseLandmarker };
-      } catch (error) {
-        handLandmarker.close();
-        throw error;
-      }
-    },
-  );
-
   let animationFrame = 0;
   let stopped = false;
-  let lastDetectionAt = 0;
-  let lastVideoTime = -1;
-  let lastClapDistance = Number.POSITIVE_INFINITY;
-  let lastThighContact = false;
-  let lastGestureAt = 0;
-  let lastStatus = '';
-
-  const updateStatus = (status: string) => {
-    if (status === lastStatus) return;
-    lastStatus = status;
-    options.onStatus(status);
-  };
-
-  const processFrame = (now: number) => {
-    animationFrame = window.requestAnimationFrame(processFrame);
-    if (stopped || now - lastDetectionAt < cameraDetectionIntervalMs) return;
-    if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || video.currentTime === lastVideoTime) return;
-    lastVideoTime = video.currentTime;
-    lastDetectionAt = now;
-
-    const handResult = handLandmarker.detectForVideo(video, now);
-    const poseResult = poseLandmarker.detectForVideo(video, now);
-    const handLandmarks = handResult.landmarks;
-    const poseLandmarks = poseResult.landmarks[0];
-    DrawCameraOverlay(options.overlay, video, handLandmarks, poseLandmarks);
-
-    const handCenters = handLandmarks.map(GetPalmCenter);
-    if (handCenters.length === 0) {
-      updateStatus(labels.cameraFinding);
-      lastClapDistance = Number.POSITIVE_INFINITY;
-      lastThighContact = false;
-      return;
+  let handLandmarker: HandLandmarker | null = null;
+  let poseLandmarker: PoseLandmarker | null = null;
+  const video = options.video;
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    window.cancelAnimationFrame(animationFrame);
+    const ownsVideo = video.srcObject === stream;
+    StopMediaStream(stream);
+    if (ownsVideo) {
+      video.srcObject = null;
+      ClearCameraOverlay(options.overlay);
     }
+    handLandmarker?.close();
+    handLandmarker = null;
+    poseLandmarker?.close();
+    poseLandmarker = null;
+  };
+  try {
+    ThrowIfAborted(options.signal);
+    video.srcObject = stream;
+    await video.play();
+    ThrowIfAborted(options.signal);
 
-    updateStatus(labels.cameraTracking);
-    let emitted = false;
-    if (handCenters.length >= 2) {
-      const distance = GetDistance(handCenters[0], handCenters[1]);
+    options.onStatus(labels.initializingCamera);
+    const landmarks = await LoadMediaPipeWithFallback(
+      mediaPipeAssetCandidates,
+      async ({
+        wasmUrl,
+        handLandmarkerModelUrl,
+        poseLandmarkerLiteModelUrl,
+      }) => {
+        const vision = await FilesetResolver.forVisionTasks(wasmUrl);
+        ThrowIfAborted(options.signal);
+        const nextHandLandmarker = await HandLandmarker.createFromOptions(vision, {
+          baseOptions: { modelAssetPath: handLandmarkerModelUrl },
+          runningMode: 'VIDEO',
+          numHands: 2,
+          minHandDetectionConfidence: 0.48,
+          minHandPresenceConfidence: 0.48,
+          minTrackingConfidence: 0.48,
+        });
+        try {
+          ThrowIfAborted(options.signal);
+          const nextPoseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+            baseOptions: { modelAssetPath: poseLandmarkerLiteModelUrl },
+            runningMode: 'VIDEO',
+            numPoses: 1,
+            minPoseDetectionConfidence: 0.45,
+            minPosePresenceConfidence: 0.45,
+            minTrackingConfidence: 0.45,
+          });
+          try {
+            ThrowIfAborted(options.signal);
+            return { handLandmarker: nextHandLandmarker, poseLandmarker: nextPoseLandmarker };
+          } catch (error) {
+            nextPoseLandmarker.close();
+            throw error;
+          }
+        } catch (error) {
+          nextHandLandmarker.close();
+          throw error;
+        }
+      },
+    );
+    handLandmarker = landmarks.handLandmarker;
+    poseLandmarker = landmarks.poseLandmarker;
+    ThrowIfAborted(options.signal);
+
+    let lastDetectionAt = 0;
+    let lastVideoTime = -1;
+    let lastClapDistance = Number.POSITIVE_INFINITY;
+    let lastThighContact = false;
+    let lastGestureAt = 0;
+    let lastStatus = '';
+
+    const updateStatus = (status: string) => {
+      if (status === lastStatus || stopped || options.signal.aborted) return;
+      lastStatus = status;
+      options.onStatus(status);
+    };
+
+    const processFrame = (now: number) => {
+      if (stopped || options.signal.aborted) return;
+      animationFrame = window.requestAnimationFrame(processFrame);
+      if (now - lastDetectionAt < cameraDetectionIntervalMs) return;
+      if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || video.currentTime === lastVideoTime) return;
+      lastVideoTime = video.currentTime;
+      lastDetectionAt = now;
+
+      const activeHandLandmarker = handLandmarker;
+      const activePoseLandmarker = poseLandmarker;
+      if (!activeHandLandmarker || !activePoseLandmarker) return;
+      const handResult = activeHandLandmarker.detectForVideo(video, now);
+      const poseResult = activePoseLandmarker.detectForVideo(video, now);
+      const handLandmarks = handResult.landmarks;
+      const poseLandmarks = poseResult.landmarks[0];
+      DrawCameraOverlay(options.overlay, video, handLandmarks, poseLandmarks);
+
+      const handCenters = handLandmarks.map(GetPalmCenter);
+      if (handCenters.length === 0) {
+        updateStatus(labels.cameraFinding);
+        lastClapDistance = Number.POSITIVE_INFINITY;
+        lastThighContact = false;
+        return;
+      }
+
+      updateStatus(labels.cameraTracking);
+      let emitted = false;
+      if (handCenters.length >= 2) {
+        const distance = GetDistance(handCenters[0], handCenters[1]);
+        if (
+          distance <= clapCloseDistance
+          && lastClapDistance >= clapOpenDistance
+          && now - lastGestureAt >= cameraGestureCooldownMs
+        ) {
+          options.controller.emit('clap', 'camera');
+          lastGestureAt = now;
+          emitted = true;
+        }
+        lastClapDistance = distance;
+      }
+
+      const thighContact = IsThighContact(handCenters, poseLandmarks);
       if (
-        distance <= clapCloseDistance
-        && lastClapDistance >= clapOpenDistance
+        !emitted
+        && thighContact
+        && !lastThighContact
         && now - lastGestureAt >= cameraGestureCooldownMs
       ) {
-        options.controller.emit('clap', 'camera');
+        options.controller.emit('thigh', 'camera');
         lastGestureAt = now;
-        emitted = true;
       }
-      lastClapDistance = distance;
-    }
+      lastThighContact = thighContact;
+    };
+    animationFrame = window.requestAnimationFrame(processFrame);
 
-    const thighContact = IsThighContact(handCenters, poseLandmarks);
-    if (
-      !emitted
-      && thighContact
-      && !lastThighContact
-      && now - lastGestureAt >= cameraGestureCooldownMs
-    ) {
-      options.controller.emit('thigh', 'camera');
-      lastGestureAt = now;
-    }
-    lastThighContact = thighContact;
-  };
-  animationFrame = window.requestAnimationFrame(processFrame);
-
-  return {
-    stop: () => {
-      stopped = true;
-      window.cancelAnimationFrame(animationFrame);
-      stream.getTracks().forEach((track) => track.stop());
-      video.srcObject = null;
-      handLandmarker.close();
-      poseLandmarker.close();
-      ClearCameraOverlay(options.overlay);
-    },
-  };
+    return { stop };
+  } catch (error) {
+    stop();
+    throw error;
+  }
 }
 
 async function CreateMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels: EveryBallLabels): Promise<InputRuntime> {
@@ -1392,6 +1555,7 @@ async function CreateMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels
     throw new Error(labels.error.microphoneUnsupported);
   }
 
+  ThrowIfAborted(options.signal);
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: {
       echoCancellation: false,
@@ -1400,54 +1564,68 @@ async function CreateMicrophoneRuntime(options: MicrophoneRuntimeOptions, labels
     },
     video: false,
   });
-  const audioContext = new audioContextConstructor();
-  await audioContext.resume();
-  const source = audioContext.createMediaStreamSource(stream);
-  const analyser = audioContext.createAnalyser();
-  analyser.fftSize = 1024;
-  analyser.smoothingTimeConstant = 0.45;
-  source.connect(analyser);
-
-  const timeSamples = new Float32Array(analyser.fftSize);
-  const freqSamples = new Uint8Array(analyser.frequencyBinCount);
+  let audioContext: AudioContext | null = null;
+  let source: MediaStreamAudioSourceNode | null = null;
+  let analyser: AnalyserNode | null = null;
   let animationFrame = 0;
   let stopped = false;
-  let lastTriggerAt = 0;
-  let belowThreshold = true;
-  const threshold = MicrophoneThreshold(options.sensitivity);
-  options.onStatus(labels.microphoneReady);
-
-  const tick = (now: number) => {
-    animationFrame = window.requestAnimationFrame(tick);
+  const stop = async () => {
     if (stopped) return;
-    analyser.getFloatTimeDomainData(timeSamples);
-    const rms = CalculateRms(timeSamples);
-    options.onLevel(ToMeterLevel(rms));
-    if (rms < threshold * 0.62) {
-      belowThreshold = true;
-      return;
+    stopped = true;
+    window.cancelAnimationFrame(animationFrame);
+    StopMediaStream(stream);
+    source?.disconnect();
+    analyser?.disconnect();
+    if (audioContext && audioContext.state !== 'closed') {
+      await audioContext.close().catch(() => undefined);
     }
-    if (!belowThreshold || rms < threshold || now - lastTriggerAt < microphoneCooldownMs) return;
-    belowThreshold = false;
-    lastTriggerAt = now;
-    analyser.getByteFrequencyData(freqSamples);
-    options.controller.emit(ClassifyTapSound(freqSamples), 'microphone');
+    options.onLevel(0);
   };
-  animationFrame = window.requestAnimationFrame(tick);
+  try {
+    ThrowIfAborted(options.signal);
+    const context = new audioContextConstructor();
+    audioContext = context;
+    await context.resume();
+    ThrowIfAborted(options.signal);
+    source = context.createMediaStreamSource(stream);
+    analyser = context.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.45;
+    source.connect(analyser);
 
-  return {
-    stop: async () => {
-      stopped = true;
-      window.cancelAnimationFrame(animationFrame);
-      stream.getTracks().forEach((track) => track.stop());
-      source.disconnect();
-      analyser.disconnect();
-      if (audioContext.state !== 'closed') {
-        await audioContext.close().catch(() => undefined);
+    ThrowIfAborted(options.signal);
+    const timeSamples = new Float32Array(analyser.fftSize);
+    const freqSamples = new Uint8Array(analyser.frequencyBinCount);
+    let lastTriggerAt = 0;
+    let belowThreshold = true;
+    const threshold = MicrophoneThreshold(options.sensitivity);
+    options.onStatus(labels.microphoneReady);
+
+    const tick = (now: number) => {
+      if (stopped || options.signal.aborted) return;
+      animationFrame = window.requestAnimationFrame(tick);
+      const activeAnalyser = analyser;
+      if (!activeAnalyser) return;
+      activeAnalyser.getFloatTimeDomainData(timeSamples);
+      const rms = CalculateRms(timeSamples);
+      options.onLevel(ToMeterLevel(rms));
+      if (rms < threshold * 0.62) {
+        belowThreshold = true;
+        return;
       }
-      options.onLevel(0);
-    },
-  };
+      if (!belowThreshold || rms < threshold || now - lastTriggerAt < microphoneCooldownMs) return;
+      belowThreshold = false;
+      lastTriggerAt = now;
+      activeAnalyser.getByteFrequencyData(freqSamples);
+      options.controller.emit(ClassifyTapSound(freqSamples), 'microphone');
+    };
+    animationFrame = window.requestAnimationFrame(tick);
+
+    return { stop };
+  } catch (error) {
+    await stop();
+    throw error;
+  }
 }
 
 function DrawEveryBallScene(app: Application, visual: VisualState, labels: EveryBallLabels): void {
@@ -1732,6 +1910,18 @@ function GetInitializedPixiApp(app: Application | null): Application | null {
 function RequireElement<T>(element: T | null): T {
   if (!element) throw new Error('Required browser element is unavailable.');
   return element;
+}
+
+function CreateAbortError(): DOMException {
+  return new DOMException('Training run was cancelled.', 'AbortError');
+}
+
+function ThrowIfAborted(signal: AbortSignal): void {
+  if (signal.aborted) throw CreateAbortError();
+}
+
+function IsAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
 }
 
 function WaitMs(jsPsych: JsPsych, durationMs: number): Promise<void> {

@@ -3,14 +3,18 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { strToU8, zipSync } from 'fflate';
 import { platformRuntimeContract } from '../../../usergamerunner/functions/_lib/runtime.js';
+import { gamePlatformPackageLimits } from '@rehab-trainer/training-contracts';
 import {
   GamePackageError,
   InspectGamePackage,
   NormalizeGameCapabilities,
+  NormalizeGameLicense,
   NormalizeGameSlug,
   NormalizeGameVersion,
   NormalizePackagePath,
+  gamePackageLimits,
   gamePackageRuntimeContract,
+  malwareSignatureCatalog,
 } from './gamePackages.js';
 
 const validHtml = `<!doctype html>
@@ -149,7 +153,21 @@ test('normalizes identifiers, paths, and baseline capabilities', () => {
     NormalizeGameCapabilities('["pointer","audio","pointer"]'),
     ['audio', 'pointer'],
   );
+  assert.deepEqual(
+    NormalizeGameCapabilities('["touch","gamepad"]'),
+    ['gamepad', 'touch'],
+  );
   assert.equal(NormalizeGameCapabilities('["camera"]'), null);
+});
+
+test('normalizes only the shared publishable license catalog', () => {
+  assert.equal(NormalizeGameLicense('MIT'), 'MIT');
+  assert.equal(NormalizeGameLicense(' not-declared '), 'not-declared');
+  assert.equal(NormalizeGameLicense('unknown'), null);
+});
+
+test('scanner and developer UI consume one package-limit contract', () => {
+  assert.deepEqual(gamePackageLimits, gamePlatformPackageLimits);
 });
 
 test('requires full semantic versions and runner-safe ASCII paths', () => {
@@ -175,6 +193,41 @@ test('comments cannot spoof jsPsych/SDK use and computed globals are blocked', a
   assert.ok(result.findings.some((finding) => finding.code === 'missing-platform-jspsych-runtime'));
   assert.ok(result.findings.some((finding) => finding.code === 'missing-platform-sdk-runtime'));
   assert.ok(result.findings.some((finding) => finding.code === 'computed-global-access'));
+});
+
+test('parses JavaScript files and blocks syntax or dynamic execution bypasses', async () => {
+  const malformed = zipSync({
+    'index.html': strToU8(validHtml),
+    'game.js': strToU8('const broken = ;'),
+  });
+  const malformedResult = await InspectGamePackage(
+    FakeFile('malformed.zip', 'application/zip', malformed),
+  );
+  assert.ok(malformedResult.findings.some(
+    (finding) => finding.code === 'javascript-syntax-error' && finding.filePath === 'game.js',
+  ));
+
+  const dynamicImport = zipSync({
+    'index.html': strToU8(validHtml),
+    'game.js': strToU8('void import("./payload.js");'),
+  });
+  const dynamicResult = await InspectGamePackage(
+    FakeFile('dynamic.zip', 'application/zip', dynamicImport),
+  );
+  assert.ok(dynamicResult.findings.some(
+    (finding) => finding.code === 'dynamic-code' && finding.filePath === 'game.js',
+  ));
+});
+
+test('keeps high-signal malware signatures in the bounded scanner policy', async () => {
+  assert.ok(malwareSignatureCatalog.length >= 3);
+  const bytes = zipSync({
+    'index.html': strToU8(validHtml),
+    'game.js': strToU8('const miner = "coinhive"; const command = "child_process";'),
+  });
+  const result = await InspectGamePackage(FakeFile('malware.zip', 'application/zip', bytes));
+  assert.ok(result.findings.some((finding) => finding.code === 'malware-cryptominer'));
+  assert.ok(result.findings.some((finding) => finding.code === 'malware-command-exec'));
 });
 
 function FakeFile(name, type, bytes) {

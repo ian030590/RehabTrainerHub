@@ -76,6 +76,12 @@ test('release validator requires approval, jsPsych 8, hashes, and an allowlisted
   assert.equal(validated.runtime.name, 'jspsych');
   assert.equal(validated.files.length, 2);
   assert.deepEqual(validated.capabilities, ['audio']);
+  const licensed = ValidateRelease({ ...release, license: { id: 'MIT', label: 'MIT License', url: 'https://opensource.org/license/mit/' } }, release.gameId, release.version);
+  assert.equal(licensed.license.id, 'MIT');
+  assert.throws(
+    () => ValidateRelease({ ...release, license: { id: 'not-declared', label: 'License not declared', url: null } }, release.gameId, release.version),
+    ReleaseValidationError,
+  );
 
   assert.throws(
     () => ValidateRelease({ ...release, status: 'pending' }, release.gameId, release.version),
@@ -614,6 +620,7 @@ function BuildRelease(overrides = {}) {
     description: 'A practice game',
     runtime: { name: 'jspsych', major: 8 },
     capabilities: ['audio'],
+    license: { id: 'MIT', label: 'MIT License', url: 'https://opensource.org/license/mit/' },
     contentSha256: sha256,
     approvedAt: '2026-08-17T00:00:00.000Z',
     entry: 'index.html',

@@ -28,6 +28,8 @@
     "./components/MobileTouchControls": "./src/components/MobileTouchControls.tsx",
     "./components/EditableSettingRow": "./src/components/EditableSettingRow.tsx",
     "./components/NumberPresetSelector": "./src/components/NumberPresetSelector.tsx",
+    "./components/OfflinePackControl": "./src/components/OfflinePackControl.tsx",
+    "./components/OfflinePackControl.css": "./src/components/OfflinePackControl.css",
     "./components/ReferenceListPage": "./src/components/ReferenceListPage.tsx",
     "./components/ReferenceListPage.css": "./src/components/ReferenceListPage.css",
     "./components/RehabFooter": "./src/components/RehabFooter.tsx",
@@ -39,6 +41,7 @@
     "./components/TrainingConfigRangeField": "./src/components/TrainingConfigRangeField.tsx",
     "./components/TrainingConfigNavigationActions": "./src/components/TrainingConfigNavigationActions.tsx",
     "./components/TrainingConfigSummary": "./src/components/TrainingConfigSummary.tsx",
+    "./components/TrainingSetupPanel": "./src/components/TrainingSetupPanel.tsx",
     "./components/TrainingResultActions": "./src/components/TrainingResultActions.tsx",
     "./components/TrainingRulesPanel": "./src/components/TrainingRulesPanel.tsx",
     "./components/TrainingModuleSelectionPage": "./src/components/TrainingModuleSelectionPage.tsx",
@@ -46,7 +49,6 @@
     "./components/PeripheralAttentionPage.css": "./src/components/PeripheralAttentionPage.css",
     "./components/TrainerApp.css": "./src/components/TrainerApp.css",
     "./components/TrainerAppLayout": "./src/components/TrainerAppLayout.tsx",
-    "./components/TrainerRouteOutlet": "./src/components/TrainerRouteOutlet.tsx",
     "./components/TrainerNavbar": "./src/components/TrainerNavbar.tsx",
     "./components/UfovConfigComponents": "./src/components/PeripheralAttentionConfigComponents.tsx",
     "./components/UfovPage.css": "./src/components/PeripheralAttentionPage.css",
@@ -59,6 +61,9 @@
     "./fullscreen": "./src/fullscreen.ts",
     "./gamePlatform": "./src/gamePlatform.ts",
     "./jsPsychLifecycle": "./src/jsPsychLifecycle.ts",
+    "./officialTrainingHostPolicy": "./src/officialTrainingHostPolicy.ts",
+    "./officialTrainingHostProtocol": "./src/officialTrainingHostProtocol.ts",
+    "./offlinePackManager": "./src/offlinePackManager.ts",
     "./hooks/useActiveUser": "./src/hooks/useActiveUser.ts",
     "./hooks/useFullscreenTrainingRoot": "./src/hooks/useFullscreenTrainingRoot.ts",
     "./hooks/useMediaPermissionPreflight": "./src/hooks/useMediaPermissionPreflight.ts",
@@ -78,6 +83,7 @@
     "./storage/userStore": "./src/storage/userStore.ts",
     "./trainerTheme": "./src/trainerTheme.ts",
     "./trainingFlow": "./src/trainingFlow.ts",
+    "./trainingHostContract": "./src/trainingHostContract.ts",
     "./trainingGameUtils": "./src/trainingGameUtils.ts",
     "./ufovCanvas": "./src/peripheralAttentionCanvas.ts",
     "./ufovResults": "./src/peripheralAttentionResults.ts"
@@ -86,6 +92,9 @@
     "jspsych": "^8.2.1",
     "react": "^19.1.0",
     "react-router-dom": "^7.6.1"
+  },
+  "dependencies": {
+    "@rehab-trainer/training-contracts": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.1.4",

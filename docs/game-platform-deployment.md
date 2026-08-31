@@ -27,8 +27,46 @@ rehab-game-releases    # immutable approved files, Hub + runner bindings
 Apply the D1 migration before deploying code that exposes the upload API:
 
 ```powershell
-npx wrangler d1 migrations apply rehab_db --remote --config apps/rehabtrainerhub/wrangler.toml
+pnpm dlx wrangler@4 d1 migrations apply rehab_db --remote --config apps/rehabtrainerhub/wrangler.toml
 ```
+
+Migrations `0011_game_submission_attempts.sql` through
+`0014_game_release_metadata.sql` add immutable submission-attempt history,
+per-finding override evidence, durable developer notifications, the attested
+controller report ledger, public game reports, and release license metadata.
+Apply all four before enabling resubmission, public reporting, or the internal
+result endpoint. New submissions must declare one of the platform license
+options; the approval endpoint rejects the legacy `not-declared` default.
+
+The asynchronous validator is enabled only when all of these deployment
+values are present:
+
+- `GAME_VALIDATION_QUEUE`: a Cloudflare Queue producer binding. The queue
+  consumer/controller is a separate Worker with no user credentials and no
+  general Internet access.
+- `GAME_VALIDATION_RESULT_TOKEN`: a private controller-to-Hub ingest token.
+- `GAME_VALIDATION_ATTESTATION_KEYS_JSON`: a JSON object mapping active
+  controller `keyId` values to Ed25519 public JWKs. Rotate keys by adding a new
+  key, deploying the controller, then removing the old key after its queue
+  leases expire.
+- `GAME_MAINTENANCE_TOKEN`: a separate deployment-only bearer token for the
+  retention/reconciliation endpoint. Store it only in the scheduler secret
+  store; it is never exposed to Hub users or uploaded games.
+
+The repository includes a read-only controller contract in
+`functions/_lib/gameValidationController.js`. It validates that queue keys
+belong to the job's artifact hash, reads only quarantine objects, bounds the
+executor input, requires a bounded unsigned evidence result, and signs the
+canonical report with an injected Ed25519 key. `CreateDisposableGameExecutor`
+adds the synchronous parser/signature pass and deliberately emits a
+`dynamic-smoke-not-run` manual-review finding until a no-network browser/VM
+adapter is supplied. Deploy that controller and adapter as a separate Worker
+or disposable VM; do not run developer bytes inside Hub Pages Functions.
+
+If the producer binding is absent the Hub keeps the synchronous intake scan as
+the fail-fast triage path; it never reports that full CI ran. If a queue send
+fails, the scan is marked `failed` and the quarantine artifact is retained for
+reconciliation rather than being published.
 
 Set `GAME_RUNNER_ORIGIN` on the Hub Pages project to the exact HTTPS origin of
 the runner. Do not include a path, query, credentials, wildcard, or trailing
@@ -47,12 +85,22 @@ Keep the runner code and deployment identity minimal, monitor writes to the
 release bucket, and never bind the quarantine bucket.
 
 Configure a quarantine retention policy (90 days is the default operational
-target) and a scheduled reconciliation job that removes prefixes with no D1
-release row. The upload handler best-effort deletes objects when its D1 batch
-fails, but storage lifecycle and reconciliation are still required for Worker
-termination and partial outage cases. Shorter retention for rejected/blocked
-submissions may be added only after preserving the audit metadata required by
-your review policy.
+target) and call `POST /api/internal/game-platform-maintenance` from a
+deployment scheduler with `Authorization: Bearer $GAME_MAINTENANCE_TOKEN`.
+The bounded job removes only expired, unpublished prefixes whose D1 inventory
+is valid and keeps submission/scan/review/audit metadata. It also removes old
+delivered notifications (default 365 days). Protected approved, publishing,
+revoked, or actively reviewed submissions are never selected. When the R2
+binding supports `list`, the same job performs a bounded orphan pass: only
+old, valid `quarantine/{owner}/{release}/{sha256}/...` objects with no D1
+inventory and no protected prefix are deleted; malformed, recent, or
+protected objects are retained. The upload handler best-effort deletes
+objects when its D1 batch fails, but storage lifecycle and reconciliation are
+still required for Worker termination and partial outage cases; the scheduler
+should alert on `skippedSubmissions`, `skippedOrphanObjects`, and
+`orphanListingTruncated`. Shorter retention for rejected/blocked submissions
+may be added only after preserving the audit metadata required by your review
+policy.
 
 ## Release flow
 
@@ -66,11 +114,26 @@ your review policy.
    with no account session, secrets, personal files, or unrestricted network.
    Never open the raw artifact in a daily-use browser. Keyword scanning is
    triage, not the security boundary.
+   The admin console can compare the current submission with the previous
+   attempt for the same target version. This bounded diff returns file hashes
+   and small UTF-8 text snippets only; it never renders or executes package
+   content.
 5. Approval re-reads every quarantined object and verifies its size and hash.
+   It also requires a declared license and records that license in the
+   immutable release manifest and public catalog.
 6. The Hub copies that exact version to the immutable release prefix and only
    then switches the catalog's active release.
 7. The runner serves only an `approved` release manifest whose files match its
    allowlist. A missing, staging, malformed, or changed object fails closed.
+
+For an asynchronous scan, the request returns after quarantine and the D1
+attempt rows are committed (`202`). The controller claims the `queued` scan by
+nonce/hash compare-and-set, runs static/parser/malware/dynamic checks in its
+disposable no-network executor, signs the bounded report, and posts it to
+`/api/internal/game-validation-results`. The Hub verifies the ingest token,
+Ed25519 signature, report digest, expiry, artifact hash, and attempt before a
+second compare-and-set. Replayed or stale reports cannot change a completed
+run.
 
 Published prefixes follow this contract:
 
@@ -152,6 +215,30 @@ worker, and cache prefix under the runner. The install action must open the
 runner URL as a top-level page; `trainerhub.cc` cannot invoke another origin's
 install prompt.
 
+Built-in Hub activities use the same per-game PWA shape under
+`/games/{gameId}/`, but their service worker has two explicit phases. Installing
+the PWA precaches only the launcher, web manifest, and the selected module's
+lightweight shell closure. It does not
+download Pixi, Three, MediaPipe, TensorFlow, WebGazer, model, or WASM bytes.
+The launcher exposes a separate "download offline resources" action; only that
+user action sends `install-offline-pack` to the game service worker. The worker
+then fetches the immutable manifest, validates same-origin URLs, byte sizes, and
+SHA-256 digests in a temporary staging cache before copying verified responses to
+the game-scoped cache. A PWA install therefore remains small, while offline play
+is explicit and integrity-checked.
+
+Deployment acceptance can run `pnpm run test:official-game-pwa-browser` with
+`OFFICIAL_GAME_PWA_BASE_URL` and `OFFICIAL_GAME_PWA_GAME_IDS` (a comma-separated
+list of slugs) set. The singular `OFFICIAL_GAME_PWA_GAME_ID` remains supported
+for one-game smoke tests. The script is
+deliberately not part of the normal dependency install: it requires a Playwright browser
+and a deployed origin. It blocks cross-origin requests, checks the
+rules-visible loading boundary, explicitly installs the bounded offline pack,
+then opens a fresh page with the browser network disabled for every selected
+game to verify that each game-scoped cache can boot its launcher and selected
+training surface. The offline step is intentionally deployment-only because it
+downloads the real closure and needs a browser Service Worker implementation.
+
 The controlled launcher checks the release status every minute and whenever the
 browser returns online. Its service worker bypasses the HTTP cache while online
 for every allowlisted release URL, then falls back to the precache only when the
@@ -176,12 +263,18 @@ Run these before deployment:
 
 ```powershell
 node --test apps/rehabtrainerhub/functions/_lib/gamePackages.test.mjs
+node --test apps/rehabtrainerhub/functions/_lib/gameValidationQueue.test.mjs
+node --test apps/rehabtrainerhub/functions/_lib/gameValidationController.test.mjs
+node --test apps/rehabtrainerhub/functions/api/internal/game-validation-results.test.mjs
+node 'apps/rehabtrainerhub/functions/api/admin/game-releases/[id]/diff.security.test.mjs'
 node --test scripts/check-game-platform.test.mjs
-npm --prefix apps/usergamerunner test
-npm --prefix apps/usergamerunner run build
-npm run test:hub-functions
-npm run test:cloudflare-deploy
-npm run test:seo
+node scripts/check-offline-pack-manager.mjs
+pnpm --filter @rehab-trainer/usergamerunner test
+pnpm --filter @rehab-trainer/usergamerunner run build
+pnpm run test:hub-functions
+pnpm run test:cloudflare-deploy
+pnpm run test:seo
+pnpm run test:bundle-budgets
 ```
 
 After deployment, verify that a runner game route and its manifest/service

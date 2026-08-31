@@ -143,6 +143,62 @@
       "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d"
     },
     {
+      "source": "apps/rehabtrainerhub/training-runtimes/motor/public/assets/asteroid-shield/background.png",
+      "key": "game-assets/rehabtrainerhub/motor/asteroid-shield/v1/background.png",
+      "contentType": "image/png",
+      "size": 2880,
+      "sha256": "8245e3d8c5341981135b1699de877fdc994e52cc180ad63ebc18948f63241e61"
+    },
+    {
+      "source": "apps/rehabtrainerhub/training-runtimes/motor/public/assets/asteroid-shield/ship.png",
+      "key": "game-assets/rehabtrainerhub/motor/asteroid-shield/v1/ship.png",
+      "contentType": "image/png",
+      "size": 2698,
+      "sha256": "648ec1635979fb867d08bfd0c56f011d6559dd953a13c73109c6186a3069f7ee"
+    },
+    {
+      "source": "apps/rehabtrainerhub/training-runtimes/motor/public/assets/asteroid-shield/shield.png",
+      "key": "game-assets/rehabtrainerhub/motor/asteroid-shield/v1/shield.png",
+      "contentType": "image/png",
+      "size": 3623,
+      "sha256": "163e95197fc734e1f99c54661691022eecdd9534123cbb2a28b287065ea4d5cc"
+    },
+    {
+      "source": "apps/rehabtrainerhub/training-runtimes/motor/public/assets/asteroid-shield/asteroid-blue.png",
+      "key": "game-assets/rehabtrainerhub/motor/asteroid-shield/v1/asteroid-blue.png",
+      "contentType": "image/png",
+      "size": 966,
+      "sha256": "e3f16177774a9adc4beb4ad1320d764dedab7046f14b2eaf62bcae5eaa131a70"
+    },
+    {
+      "source": "apps/rehabtrainerhub/training-runtimes/motor/public/assets/asteroid-shield/asteroid-green.png",
+      "key": "game-assets/rehabtrainerhub/motor/asteroid-shield/v1/asteroid-green.png",
+      "contentType": "image/png",
+      "size": 881,
+      "sha256": "b36318f9a94ab639aa0ee79e5f95768b46278faeb72a1717bdcf15c9c2155eaa"
+    },
+    {
+      "source": "apps/rehabtrainerhub/training-runtimes/motor/public/assets/asteroid-shield/asteroid-dark.png",
+      "key": "game-assets/rehabtrainerhub/motor/asteroid-shield/v1/asteroid-dark.png",
+      "contentType": "image/png",
+      "size": 1967,
+      "sha256": "2a554ef11b2d23e227333e61606513b0e1f1075c541cc1d1531bdf71b678ec61"
+    },
+    {
+      "source": "apps/rehabtrainerhub/training-runtimes/motor/public/assets/asteroid-shield/energy-rock.png",
+      "key": "game-assets/rehabtrainerhub/motor/asteroid-shield/v1/energy-rock.png",
+      "contentType": "image/png",
+      "size": 584,
+      "sha256": "1e5ba2c4df6d56ca0fb46bde94324d4902c9dbbd03f53dc04a018f52306f7f10"
+    },
+    {
+      "source": "apps/rehabtrainerhub/training-runtimes/mouth/public/assets/tongue-apple.svg",
+      "key": "game-assets/rehabtrainerhub/mouth/tongue-catch/v1/tongue-apple.svg",
+      "contentType": "image/svg+xml",
+      "size": 409,
+      "sha256": "9e76767093baf8f4b2ef420f7684189fa596f4c226d7e6392f77eda7729ac77c"
+    },
+    {
       "source": "apps/rehabtrainerhub/public/assets/driving/reference-car-game/vehicals/car.glb",
       "key": "game-assets/rehabtrainerhub/vision/reference-car/v1/car.glb",
       "contentType": "model/gltf-binary",

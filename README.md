@@ -37,13 +37,14 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 |   |       `-- mouth/     # 口腔練習 / Oral Practice
 |   `-- usergamerunner/    # 隔離遊戲執行環境 / Isolated game runner (trainerhub-user-games.pages.dev)
 |-- packages/
+|   |-- training-contracts/ # renderer-independent module, lifecycle, and validation contracts
 |   |-- ui/                # 共用介面、auth、gamePlatform 型別 / Shared UI, auth, gamePlatform types
 |   |-- game-sdk/          # 開發者遊戲 SDK (@rehab-trainer/game-sdk) / Developer game SDK
 |   |-- config-eslint/     # 共用 ESLint 設定 / Shared ESLint config
 |   `-- config-tailwind/   # 共用 Tailwind 設定 / Shared Tailwind config
 |-- docs/                  # 文件 / Documentation
 |-- scripts/               # 腳本 / Scripts
-|-- package-lock.json
+|-- pnpm-lock.yaml
 |-- package.json
 `-- turbo.json
 ```
@@ -52,42 +53,43 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 
 ### 安裝相依套件 / Dependency Installation
 
-本專案採用 npm monorepo 架構。各模組與內建 runtime 依賴在根目錄集中解析：
+本專案採用 pnpm workspace 架構。各模組與內建 runtime 依賴在根目錄集中解析：
 
 ```bash
-npm install
+corepack enable
+pnpm install --frozen-lockfile
 ```
 
 > [!NOTE]
-> **雲端硬碟 / 無 Symlink 支援環境注意事項（例如 Windows pCloud、網路磁碟等）**：
-> 在虛擬檔案系統中，npm 預設嘗試建立符號連結（symlinks）會引發 `EISDIR` 或 `EPERM` 錯誤。專案根目錄已提供 `.npmrc`（設定 `workspaces=false`），執行 `npm install` 時會自動採用無 symlink 的相依模式；亦可手動透過以下指令安裝：
+> 一般本機磁碟使用 pnpm 的 isolated linker 與 workspace symlink；安裝完成後可執行 `pnpm run test:pnpm-policy`，檢查套件管理器、lockfile 與 workspace 依賴宣告。
 > ```bash
-> npm install --no-workspaces
+> pnpm run test:pnpm-policy
 > ```
 
 ### 常用指令 / Common Commands
 
 | 指令 / Command | 說明 (ZH) | Description (EN) |
 | --- | --- | --- |
-| `npm run dev` | 透過 Turbo 啟動所有應用的本機開發伺服器 | Start all local dev servers via Turbo |
-| `npm run dev:hub` | 僅啟動 Hub 主平台開發伺服器 | Start Hub dev server only |
-| `npm run build` | 執行所有測試驗證與全站 Production 建置 | Run full test gates and build all apps |
-| `npm run build:hub` | 建置 Hub 主平台與四個內建 Training Runtimes | Build Hub app and 4 built-in training runtimes |
-| `npm run build:gamerunner` | 建置隔離遊戲執行器靜態殼層 | Build isolated game runner static shell |
-| `npm run build:cloudflare` | 執行本機完整驗證並建置 Cloudflare Pages 輸出 | Run full local verification and build Cloudflare Pages output |
-| `npm run preview:hub` | 預覽 Hub 建置輸出 | Preview built Hub output |
+| `pnpm run dev` | 透過 Turbo 啟動所有應用的本機開發伺服器 | Start all local dev servers via Turbo |
+| `pnpm run dev:hub` | 僅啟動 Hub 主平台開發伺服器 | Start Hub dev server only |
+| `pnpm run build` | 執行所有測試驗證與全站 Production 建置 | Run full test gates and build all apps |
+| `pnpm run build:hub` | 建置 Hub 主平台與四個內建 Training Runtimes | Build Hub app and 4 built-in training runtimes |
+| `pnpm run build:gamerunner` | 建置隔離遊戲執行器靜態殼層 | Build isolated game runner static shell |
+| `pnpm run build:cloudflare` | 執行本機完整驗證並建置 Cloudflare Pages 輸出 | Run full local verification and build Cloudflare Pages output |
+| `pnpm run preview:hub` | 預覽 Hub 建置輸出 | Preview built Hub output |
 
 ### 測試與驗證指令 / Verification & Test Commands
 
 | 測試指令 / Command | 驗證項目 |
 | --- | --- |
-| `npm run test:entrypoints` | 驗證入口流程、白畫面防護、訓練流程、jsPsych 生命週期與 i18n 字典完整性 |
-| `npm run test:hub-functions` | 驗證 Hub Cloudflare Functions 後端 API 與安全防護測試 |
-| `npm run test:gamerunner` | 驗證隔離遊戲執行器路由、沙盒隔離與安全性標頭 |
-| `npm run test:game-platform` | 驗證第三方遊戲套件安全掃描器與 SDK 契約 |
-| `npm run test:pwa` | 驗證 Hub 及各練習模組的 PWA Manifest 與 Assets |
-| `npm run test:naming` | 檢查程式碼命名規範與保留字元衝突 |
-| `npm run test:seo` | 檢查可索引頁面之 SEO Meta、Canonical、JSON-LD 與繁中預渲染結構 |
+| `pnpm run test:entrypoints` | 驗證入口流程、白畫面防護、訓練流程、jsPsych 生命週期與 i18n 字典完整性 |
+| `pnpm run test:hub-functions` | 驗證 Hub Cloudflare Functions 後端 API 與安全防護測試 |
+| `pnpm run test:gamerunner` | 驗證隔離遊戲執行器路由、沙盒隔離與安全性標頭 |
+| `pnpm run test:game-platform` | 驗證第三方遊戲套件安全掃描器與 SDK 契約 |
+| `pnpm run test:architecture` | 驗證模組 ownership、生命週期、iframe/PWA 邊界、審核狀態軸與 pnpm 安裝契約 |
+| `pnpm run test:pwa` | 驗證 Hub 及各練習模組的 PWA Manifest 與 Assets |
+| `pnpm run test:naming` | 檢查程式碼命名規範與保留字元衝突 |
+| `pnpm run test:seo` | 檢查可索引頁面之 SEO Meta、Canonical、JSON-LD 與繁中預渲染結構 |
 
 ## 使用方式
 

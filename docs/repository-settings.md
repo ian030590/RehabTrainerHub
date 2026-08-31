@@ -5,9 +5,17 @@
 - Default branch: `main`
 - CI: `.github/workflows/ci.yml`
 - Cloudflare deploy: `.github/workflows/deploy-cloudflare-pages.yml`
-- Package manager: root `package.json` 指定的 npm
-- Validation: `npm run build`
-- Cloudflare build: `npm run build:cloudflare`
+- Package manager: root `package.json` pins pnpm 11.24.0
+- Node.js: `.node-version` pins 24.20.0; root `engines.node` accepts only
+  `>=24.20.0 <25`. CI and deployment read the same `.node-version` file.
+- Validation: `pnpm run build`
+- Cloudflare build: `pnpm run build:cloudflare`
+- Training integration gate: `pnpm run test:training-integration` (runs in both CI verification matrices)
+- Protocol/review/budget gates: `pnpm run test:training-protocol`,
+  `pnpm run test:game-review-security`, and `pnpm run test:bundle-budgets`.
+- Workspace installs use pnpm's standard `nodeLinker: isolated`,
+  `packageImportMethod: auto`, and workspace symlinks on normal local disks.
+  Do not switch back to npm/package-lock workflows.
 
 ## Cloudflare Pages
 
@@ -27,7 +35,10 @@
 
 公開 variables 包含 `TURNSTILE_SITE_KEY`、`TURNSTILE_REQUIRED`、
 `TURNSTILE_RECORDS_REQUIRED`、`CF_WEB_ANALYTICS_TOKEN`、
-`R2_AI_ASSET_BUCKET`、`AI_ASSET_BASE_URL` 與 `ASSET_PUBLIC_BASE_URL`。
+`R2_AI_ASSET_BUCKET`、`AI_ASSET_BASE_URL` 與 `ASSET_PUBLIC_BASE_URL`；其中
+`AI_ASSET_BASE_URL` 只供 R2 資產驗證／部署工具使用，runtime 資產載入固定走同源
+`/runtime-assets/*`，不得作為 CDN 或跨來源 fallback；舊 Pages asset 只可在 localhost
+開發時明確 opt-in。
 
 ## Domains 與退役流程
 

@@ -1,20 +1,5 @@
-import {
-  Children,
-  cloneElement,
-  isValidElement,
-  useId,
-  useState,
-  type HTMLAttributes,
-  type InputHTMLAttributes,
-  type ReactElement,
-  type ReactNode,
-  type Ref,
-} from 'react';
+import { useId, useState, type HTMLAttributes, type ReactNode, type Ref } from 'react';
 import { icons } from './Icons';
-import {
-  GetTrainingSliderScaleLabels,
-  TrainingSliderFrame,
-} from './TrainingConfigRangeField';
 import { TrainingConfigSummary, type TrainingConfigSummaryItem } from './TrainingConfigSummary';
 
 type PanelAriaProps = Pick<HTMLAttributes<HTMLDivElement>, 'aria-label' | 'aria-modal' | 'role'>;
@@ -65,23 +50,6 @@ const optionColumnClassNames: Record<Exclude<TrainingConfigOptionColumns, 'auto'
 
 function JoinClassNames(...classNames: Array<string | false | null | undefined>) {
   return classNames.filter(Boolean).join(' ');
-}
-
-type RangeInputElement = ReactElement<InputHTMLAttributes<HTMLInputElement>, 'input'>;
-
-function IsRangeInputElement(child: ReactNode): child is RangeInputElement {
-  return isValidElement<InputHTMLAttributes<HTMLInputElement>>(child)
-    && child.type === 'input'
-    && child.props.type === 'range';
-}
-
-function GetTrainingSliderInputClassName(className?: string) {
-  const preservedClassNames = className
-    ?.split(/\s+/)
-    .filter((name) => name && name !== 'training-slider' && name !== 'training-slider-input')
-    .join(' ');
-
-  return JoinClassNames(preservedClassNames, 'training-slider-input');
 }
 
 export function TrainingConfigPanel({
@@ -142,41 +110,6 @@ export function TrainingConfigSection({
   const hasValue = value !== undefined && value !== null && value !== '';
   const descriptionId = useId();
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
-  const childItems = Children.toArray(children);
-  const rangeInput = childItems.length === 1 && IsRangeInputElement(childItems[0])
-    ? childItems[0]
-    : null;
-
-  if (rangeInput) {
-    const inputId = rangeInput.props.id ?? `${descriptionId}-range`;
-    const inputLabel = rangeInput.props['aria-label'] ?? (typeof title === 'string' ? title : undefined);
-
-    return (
-      <section
-        {...sectionProps}
-        ref={ref}
-        className={JoinClassNames('training-setting', wide && 'training-setting-wide', className)}
-      >
-        <TrainingSliderFrame
-          inputId={inputId}
-          label={title}
-          valueLabel={hasValue ? value : rangeInput.props.value}
-          description={description}
-          scaleLabels={GetTrainingSliderScaleLabels(
-            rangeInput.props.min,
-            rangeInput.props.max,
-            rangeInput.props.step,
-          )}
-        >
-          {cloneElement(rangeInput, {
-            id: inputId,
-            className: GetTrainingSliderInputClassName(rangeInput.props.className),
-            'aria-label': inputLabel,
-          })}
-        </TrainingSliderFrame>
-      </section>
-    );
-  }
 
   return (
     <section

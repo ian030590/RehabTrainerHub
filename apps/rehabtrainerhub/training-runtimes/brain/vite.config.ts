@@ -9,5 +9,10 @@ export default defineConfig({
     '@rehab-trainer/hub-modules': fileURLToPath(new URL('../../training-modules', import.meta.url)),
   } },
   server: { watch: { ignored: ['**/tsconfig.json', '**/tsconfig.*.json', '**/*.tsbuildinfo'] } },
-  build: { outDir: '../../out/runtimes/brain', assetsDir: 'assets', emptyOutDir: true },
+  build: {
+    outDir: '../../out/runtimes/brain',
+    assetsDir: 'assets',
+    emptyOutDir: true,
+    manifest: '.vite/manifest.json',
+  },
 });

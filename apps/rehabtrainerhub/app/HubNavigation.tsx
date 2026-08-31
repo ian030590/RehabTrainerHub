@@ -53,7 +53,9 @@ function HubShellContent({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const { language, locale, setLanguage } = useHubLanguage();
   const isStaff = IsStaffUser(user);
-  const isTrainingRoute = pathname === '/train' || pathname.startsWith('/train/');
+  const isTrainingRoute = pathname === '/train'
+    || pathname.startsWith('/train/')
+    || pathname.startsWith('/official-training-host/');
   const copy = GetHubUiCopy(language).navigation;
   const nextLanguage = language === 'en' ? 'zh' : 'en';
 
@@ -187,14 +189,7 @@ function HubShellContent({ children }: { children: ReactNode }) {
           </header>
         )}
 
-        <div className={`hub-content${isTrainingRoute ? ' hub-content-training' : ''}`}>
-          <div
-            className={`hub-route-transition${isTrainingRoute ? ' hub-route-transition-training' : ''}`}
-            key={pathname}
-          >
-            {children}
-          </div>
-        </div>
+        <div className={`hub-content${isTrainingRoute ? ' hub-content-training' : ''}`}>{children}</div>
         {!isTrainingRoute && (
           <RehabFooter
             aboutHref="/about/"

@@ -1,0 +1,480 @@
+.gesture-battler {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #dce9c8;
+  color: #17201a;
+  font-family: var(--font-family);
+}
+
+.gesture-battler-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.gesture-battler-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.gesture-mobile-back {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  z-index: 30;
+  width: 46px;
+  height: 46px;
+  display: none;
+  place-items: center;
+  padding: 0;
+  border: 3px solid var(--border);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bg-card) 94%, transparent);
+  color: var(--text-primary);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--text-primary) 24%, transparent);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.gesture-mobile-back svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.6;
+}
+
+.gesture-combat-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.gesture-enemy-status {
+  position: absolute;
+  top: calc(8% + env(safe-area-inset-top));
+  right: max(5%, env(safe-area-inset-right));
+  width: min(360px, 34vw);
+  padding: 12px 16px;
+  border: 4px solid var(--bg-card);
+  background: color-mix(in srgb, var(--bg-card) 94%, transparent);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 3px var(--border);
+  font-family: "Courier New", monospace;
+}
+
+.gesture-enemy-status > div:first-child,
+.gesture-hp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gesture-enemy-status > div:first-child strong {
+  font-size: clamp(16px, 2vw, 23px);
+}
+
+.gesture-enemy-status > div:first-child span {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.gesture-hp-row {
+  margin-top: 8px;
+}
+
+.gesture-hp-row > span {
+  color: var(--warning);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.gesture-hp-row > div {
+  flex: 1;
+  height: 16px;
+  padding: 2px;
+  border: 2px solid var(--border);
+  background: color-mix(in srgb, var(--border) 82%, var(--bg-card));
+}
+
+.gesture-hp-row i {
+  display: block;
+  height: 100%;
+  background: var(--success);
+  transition: width 260ms steps(6);
+}
+
+.gesture-hp-row > strong {
+  min-width: 52px;
+  font-size: 12px;
+  text-align: right;
+}
+
+.gesture-move-menu {
+  position: absolute;
+  right: max(4%, env(safe-area-inset-right));
+  bottom: max(4.5%, env(safe-area-inset-bottom));
+  width: min(560px, 44vw);
+  min-height: 190px;
+  padding: 14px 16px;
+  border: 5px solid var(--bg-card);
+  background: color-mix(in srgb, var(--bg-card) 97%, transparent);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 4px var(--border);
+  font-family: "Courier New", monospace;
+}
+
+.gesture-move-menu header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 9px;
+  border-bottom: 3px solid var(--border);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.gesture-move-menu header strong {
+  color: var(--warning);
+}
+
+.gesture-move-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 12px;
+  padding-top: 9px;
+}
+
+.gesture-move {
+  min-height: 30px;
+  display: grid;
+  grid-template-columns: 18px 24px minmax(0, 1fr) 25px;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px;
+  color: var(--text-primary);
+  font-size: clamp(12px, 1.35vw, 17px);
+  font-weight: 800;
+}
+
+.gesture-move.selected {
+  background: color-mix(in srgb, var(--success) 14%, var(--bg-card));
+  color: var(--text-primary);
+}
+
+.gesture-move.disabled {
+  color: var(--text-secondary);
+  opacity: 0.55;
+}
+
+.gesture-pointer {
+  color: var(--warning);
+  font-size: 16px;
+}
+
+.gesture-move b {
+  color: var(--success);
+}
+
+.gesture-cast-ring {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--success) var(--gesture-progress),
+    color-mix(in srgb, var(--border) 22%, var(--bg-card)) 0
+  );
+}
+
+.gesture-menu-panel {
+  background:
+    linear-gradient(rgba(242, 244, 243, 0.86), rgba(242, 244, 243, 0.86)),
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(23, 32, 26, 0.08) 7px 8px);
+}
+
+.gesture-camera {
+  position: fixed;
+  top: calc(18px + env(safe-area-inset-top));
+  left: calc(18px + env(safe-area-inset-left));
+  z-index: 8;
+  width: min(260px, 24vw);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 4px solid #f8faf0;
+  border-radius: 4px;
+  background: #17201a;
+  box-shadow:
+    0 0 0 3px #273329,
+    8px 8px 0 rgba(23, 32, 26, 0.2);
+}
+
+.gesture-camera-hidden {
+  display: none;
+}
+
+.gesture-orientation-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding:
+    calc(24px + env(safe-area-inset-top))
+    calc(24px + env(safe-area-inset-right))
+    calc(24px + env(safe-area-inset-bottom))
+    calc(24px + env(safe-area-inset-left));
+  background: #17201a;
+  color: #f8faf0;
+  text-align: center;
+}
+
+.gesture-orientation-gate strong {
+  font-size: calc(30px * var(--ui-font-scale, 1));
+  line-height: 1.2;
+}
+
+.gesture-orientation-gate > span:last-child {
+  max-width: 440px;
+  color: #dce9c8;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.gesture-orientation-phone {
+  position: relative;
+  width: 54px;
+  height: 88px;
+  border: 4px solid currentColor;
+  border-radius: 8px;
+  animation: gesture-phone-turn 1.8s ease-in-out infinite;
+}
+
+.gesture-orientation-phone::after {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: translateX(-50%);
+}
+
+@keyframes gesture-phone-turn {
+  0%, 20% { transform: rotate(0); }
+  60%, 100% { transform: rotate(-90deg); }
+}
+
+@media (orientation: portrait) and (pointer: coarse) {
+  .gesture-orientation-gate {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gesture-orientation-phone {
+    animation: none;
+    transform: rotate(-90deg);
+  }
+}
+
+.gesture-camera video,
+.gesture-camera canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.gesture-camera canvas {
+  pointer-events: none;
+}
+
+.gesture-camera > span {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  padding: 5px 7px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #f8fafc;
+  font-family: var(--font-family);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.gesture-calibration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background:
+    linear-gradient(rgba(226, 237, 207, 0.9), rgba(226, 237, 207, 0.9)),
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(23, 32, 26, 0.1) 7px 8px);
+}
+
+.gesture-loading-card,
+.gesture-calibration-card {
+  width: min(760px, calc(100vw - 48px));
+  padding: 30px;
+  border: 4px solid #f8faf0;
+  border-radius: 5px;
+  background: #f8faf0;
+  box-shadow:
+    0 0 0 4px #273329,
+    12px 12px 0 rgba(39, 51, 41, 0.2);
+}
+
+.gesture-loading-card {
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.gesture-loader {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #cbd9b5;
+  border-top-color: #4d7c0f;
+  border-radius: 50%;
+  animation: gesture-spin 0.8s linear infinite;
+}
+
+@keyframes gesture-spin {
+  to { transform: rotate(360deg); }
+}
+
+.gesture-calibration-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  align-items: center;
+  gap: 28px;
+}
+
+.gesture-calibration-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gesture-calibration-copy {
+  display: grid;
+  gap: 15px;
+}
+
+.gesture-step-count {
+  width: fit-content;
+  padding: 6px 9px;
+  border: 2px solid #273329;
+  background: #e7f2d5;
+  color: #365314;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.gesture-calibration-progress {
+  height: 22px;
+  overflow: hidden;
+  border: 3px solid #273329;
+  background: #d7dfcb;
+}
+
+.gesture-calibration-progress span {
+  display: block;
+  height: 100%;
+  background:
+    repeating-linear-gradient(90deg, #65a30d 0 12px, #84cc16 12px 24px);
+  transition: width 80ms linear;
+}
+
+.gesture-calibration-copy > strong {
+  color: #365314;
+  font-size: 15px;
+}
+
+.gesture-calibration-notice {
+  padding: 9px 11px;
+  border: 2px solid #a16207;
+  background: #fef3c7;
+  color: #713f12;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.gesture-cue {
+  position: relative;
+  width: 200px;
+  height: 230px;
+  display: grid;
+  place-items: center;
+}
+
+.gesture-cue svg {
+  width: 180px;
+  height: 220px;
+  overflow: visible;
+  fill: #8fa79a;
+  stroke: #273329;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.gesture-cue svg .extended {
+  fill: #f3c98b;
+}
+
+.gesture-cue > strong {
+  position: absolute;
+  right: 3px;
+  bottom: 4px;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: 4px solid #273329;
+  background: #fef08a;
+  color: #17201a;
+  font-family: var(--font-family);
+  font-size: 34px;
+}
+
+.gesture-results-container {
+  z-index: 12;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)),
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(23, 32, 26, 0.08) 7px 8px);
+}
+
+.gesture-result-summary {
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+}
+

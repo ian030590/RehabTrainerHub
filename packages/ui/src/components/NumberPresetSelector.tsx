@@ -1,5 +1,3 @@
-import { TrainingSlider } from './TrainingConfigRangeField';
-
 export interface NumberPresetSelectorProps {
   value: number;
   customValue: string;
@@ -23,16 +21,19 @@ export function NumberPresetSelector({
 }: NumberPresetSelectorProps) {
   void presets;
   void onPresetSelect;
-  const selectedValue = Number(customValue || value);
-
   return (
-    <TrainingSlider
-      label={placeholder}
-      value={selectedValue}
-      min={min}
-      max={max}
-      step={1}
-      onValueChange={(nextValue) => onCustomChange(String(nextValue))}
-    />
+    <div className="training-range-control">
+      <span className="training-range-value">{customValue || value}</span>
+      <input
+        className="training-slider"
+        type="range"
+        min={min}
+        max={max}
+        step="1"
+        aria-label={placeholder}
+        value={customValue || value}
+        onChange={(event) => onCustomChange(event.target.value)}
+      />
+    </div>
   );
 }

@@ -44,6 +44,11 @@ for (const app of apps) {
 
 const hubPackage = JSON.parse(readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/package.json'), 'utf8'));
 assert.match(hubPackage.scripts.build, /build-training-runtimes\.mjs.*emit-official-game-pwas\.mjs out/);
+assert.match(
+  hubPackage.scripts.build,
+  /check-official-game-pwa-output\.mjs out/,
+  'Hub build must verify emitted official game PWA output before SEO checks.',
+);
 
 const gameRunnerBuild = spawnSync(
   process.execPath,
@@ -86,12 +91,47 @@ const officialGeneratorSource = readFileSync(
   resolve(repoRoot, 'scripts/emit-official-game-pwas.mjs'),
   'utf8',
 );
+const officialOutputCheckerSource = readFileSync(
+  resolve(repoRoot, 'scripts/check-official-game-pwa-output.mjs'),
+  'utf8',
+);
 assert.match(officialGeneratorSource, /maximumShellPrecacheBytes/);
 assert.match(officialGeneratorSource, /ValidateCatalogGames/);
 assert.match(officialGeneratorSource, /ValidateGeneratedOutput/);
 assert.match(officialGeneratorSource, /runtimeDestinations/);
 assert.match(officialGeneratorSource, /data-official-game-pwa/);
+assert.match(officialGeneratorSource, /offline-manifests/);
+assert.match(officialGeneratorSource, /latestOfflineManifestUrl/);
+assert.match(officialGeneratorSource, /\/offline-manifests\/\*\/latest\.json/);
+assert.match(officialGeneratorSource, /BuildOfflineManifest/);
+assert.match(officialGeneratorSource, /ResolveRuntimeModuleUrls/);
+assert.match(officialGeneratorSource, /ResolvePwaShellModulePath/);
+assert.match(officialGeneratorSource, /includeDynamicImports: false/);
+assert.match(officialGeneratorSource, /PrecacheShell/);
+assert.match(officialGeneratorSource, /install-offline-pack/);
+assert.match(officialGeneratorSource, /stagingCachePrefix/);
+assert.match(officialGeneratorSource, /caches\.open\(stagingCacheName\)/);
+assert.match(officialGeneratorSource, /caches\.delete\(stagingCacheName\)/);
+assert.match(officialGeneratorSource, /url\.origin === self\.location\.origin[\s\S]{0,120}runtimeDestinations\.has/);
+assert.match(officialGeneratorSource, /allowedRuntimePrefixes/);
+assert.match(officialGeneratorSource, /IsAllowedRuntimePath\(url\.pathname\)/);
+assert.match(officialGeneratorSource, /ReadPlatformRuntimeAssets/);
+assert.match(officialGeneratorSource, /ReadFlowRuntimeAssetGroups/);
+assert.match(officialGeneratorSource, /BuildRuntimeAssetDescriptors/);
+assert.match(officialGeneratorSource, /runtimeAssetDescriptors/);
 assert.doesNotMatch(officialGeneratorSource, /function CollectFiles/);
+assert.match(officialGeneratorSource, /same-origin/);
+assert.match(officialOutputCheckerSource, /ValidateOfflineResources/);
+assert.match(officialOutputCheckerSource, /runtimeAssetManifest/);
+assert.match(officialOutputCheckerSource, /crypto\.subtle\.digest|createHash/);
+
+const rootPwaGeneratorSource = readFileSync(
+  resolve(repoRoot, 'scripts/emit-pwa-assets.mjs'),
+  'utf8',
+);
+assert.match(rootPwaGeneratorSource, /maximumRootShellPrecacheBytes/);
+assert.match(rootPwaGeneratorSource, /runtime-assets/);
+assert.match(rootPwaGeneratorSource, /IsRootShellFile/);
 
 const fixtureRoot = mkdtempSync(join(tmpdir(), 'rehab-pwa-check-'));
 try {
@@ -113,6 +153,9 @@ try {
   assert.equal(worker.includes('.DS_Store'), false);
   assert.equal(worker.includes('.hidden'), false);
   assert.equal(worker.includes('/404.html'), false);
+  assert.match(worker, /root Hub worker owns only the application shell/);
+  assert.match(worker, /url\.pathname\.startsWith\('\/runtimes\/'\)/);
+  assert.match(worker, /url\.pathname\.startsWith\('\/official-training-host\/'\)/);
   assert.match(worker, /caches\.match\(request, \{ ignoreSearch: true \}\)/);
 
   const headers = readFileSync(resolve(outputDir, '_headers'), 'utf8');

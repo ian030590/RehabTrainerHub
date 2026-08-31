@@ -50,7 +50,7 @@
 node apps/rehabtrainerhub/functions/_lib/auth.origin.test.mjs
 node --check apps/rehabtrainerhub/functions/_lib/auth.js
 node --check apps/rehabtrainerhub/functions/api/records.js
-npm run build:hub
+pnpm run build:hub
 ```
 
 預期結果：

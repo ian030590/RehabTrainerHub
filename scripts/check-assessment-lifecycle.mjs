@@ -16,11 +16,11 @@ const visionNavbar = readFileSync(resolve(
 ), 'utf8');
 const visionZh = readFileSync(resolve(
   repoRoot,
-  'apps/rehabtrainerhub/training-runtimes/vision/src/i18n/zh.ts',
+  'apps/rehabtrainerhub/training-modules/vision/i18n/zh.ts',
 ), 'utf8');
 const visionEn = readFileSync(resolve(
   repoRoot,
-  'apps/rehabtrainerhub/training-runtimes/vision/src/i18n/en.ts',
+  'apps/rehabtrainerhub/training-modules/vision/i18n/en.ts',
 ), 'utf8');
 const visionStyles = readFileSync(resolve(
   repoRoot,
@@ -57,7 +57,7 @@ for (const runtime of ['motor', 'vision', 'brain', 'mouth']) {
   for (const locale of ['zh', 'en']) {
     const dictionary = readFileSync(resolve(
       repoRoot,
-      `apps/rehabtrainerhub/training-runtimes/${runtime}/src/i18n/${locale}.ts`,
+      `apps/rehabtrainerhub/training-modules/${runtime}/i18n/${locale}.ts`,
     ), 'utf8');
     for (const retiredShellKey of [
       "'nav.settings'",

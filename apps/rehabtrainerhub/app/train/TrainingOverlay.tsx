@@ -6,13 +6,12 @@ import {
   GetTrainingModuleCopy,
   type TrainingCatalogModule,
 } from '@rehab-trainer/hub-modules/catalog';
+import { CreateOfficialHostIframePolicy } from '@rehab-trainer/ui/officialTrainingHostPolicy';
 import {
-  IsHubTrainingActiveMessage,
-  IsHubTrainingCompleteMessage,
-  IsHubTrainingExitMessage,
-  IsHubTrainingReadyMessage,
-  IsTrustedTrainingFrameMessage,
-} from '@rehab-trainer/ui/embeddedTraining';
+  CreateOfficialHostAllowAttribute,
+  IsTrustedReadyEvent,
+  OfficialTrainingHostSession,
+} from '@rehab-trainer/ui/officialTrainingHostProtocol';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 
@@ -24,12 +23,14 @@ interface TrainingOverlayProps {
 export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const hostSessionRef = useRef<OfficialTrainingHostSession | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [isTrainingComplete, setIsTrainingComplete] = useState(false);
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).embeddedTraining;
+  const hostOrigin = typeof window === 'undefined' ? undefined : window.location.origin;
 
   const closeOverlay = useCallback(() => {
     const dialog = dialogRef.current;
@@ -38,11 +39,13 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   }, [onClose]);
 
   const sourceUrl = useMemo(() => {
-    const url = new URL(BuildTrainingModuleHref(module));
-    url.searchParams.set('embed', 'hub');
+    const url = new URL(CreateOfficialHostIframePolicy(module.manifest, { origin: hostOrigin }).src);
+    // Resolve the route from the catalog/registry single source of truth;
+    // policy still owns the origin and capability query construction.
+    url.pathname = new URL(BuildTrainingModuleHref(module)).pathname;
     url.searchParams.set('lang', language);
     return url.toString();
-  }, [language, module]);
+  }, [hostOrigin, language, module.manifest]);
 
   // Open the native dialog when mounted
   useEffect(() => {
@@ -67,29 +70,44 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
     const trainerOrigin = new URL(sourceUrl).origin;
 
     const handleMessage = (event: MessageEvent<unknown>) => {
-      if (!IsTrustedTrainingFrameMessage(
-        event,
-        trainerOrigin,
-        frameRef.current?.contentWindow ?? null,
-      )) {
+      const frame = frameRef.current;
+      if (!frame || !IsTrustedReadyEvent(event, trainerOrigin, frame, module.manifest.id)) return;
+
+      const session = new OfficialTrainingHostSession({
+        iframe: frame,
+        manifest: module.manifest,
+        origin: trainerOrigin,
+        onEvent: (hostEvent) => {
+          if (hostEvent.type === 'prepared') {
+            setIsReady(true);
+          } else if (hostEvent.type === 'started') {
+            setIsTrainingActive(true);
+          } else if (hostEvent.type === 'completed') {
+            setIsTrainingActive(false);
+            setIsTrainingComplete(true);
+          } else if (hostEvent.type === 'aborted' || hostEvent.type === 'disposed') {
+            closeOverlay();
+          } else if (hostEvent.type === 'failed') {
+            setIsReady(true);
+          }
+        },
+      });
+      if (!session.connect(event)) {
+        session.dispose();
         return;
       }
-
-      if (IsHubTrainingActiveMessage(event.data)) {
-        setIsTrainingActive(event.data.active);
-      } else if (IsHubTrainingCompleteMessage(event.data)) {
-        setIsTrainingActive(false);
-        setIsTrainingComplete(true);
-      } else if (IsHubTrainingReadyMessage(event.data)) {
-        setIsReady(true);
-      } else if (IsHubTrainingExitMessage(event.data)) {
-        closeOverlay();
-      }
+      hostSessionRef.current?.dispose();
+      hostSessionRef.current = session;
+      void session.send({ type: 'prepare', config: {} }).catch(() => setIsReady(true));
     };
 
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [closeOverlay, sourceUrl]);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      hostSessionRef.current?.dispose();
+      hostSessionRef.current = null;
+    };
+  }, [closeOverlay, module.manifest, sourceUrl]);
 
   // A trainer normally removes the loading stage with the ready message. If
   // its bootstrap fails before React mounts, expose the iframe after a short
@@ -113,11 +131,14 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   }, [closeOverlay]);
 
   const moduleCopy = GetTrainingModuleCopy(module, locale);
-  const delegatedFeatures = module.mediaPermission === 'camera-or-microphone'
-    ? 'autoplay; camera; microphone; fullscreen'
-    : module.mediaPermission === 'camera' || module.mediaPermission === 'camera-optional'
-      ? 'autoplay; camera; fullscreen'
-      : 'autoplay; fullscreen';
+  const iframePolicy = useMemo(
+    () => CreateOfficialHostIframePolicy(module.manifest, { origin: hostOrigin }),
+    [hostOrigin, module.manifest],
+  );
+  const delegatedFeatures = useMemo(
+    () => CreateOfficialHostAllowAttribute(module.manifest),
+    [module.manifest],
+  );
 
   return (
     <dialog
@@ -139,12 +160,12 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         </div>
         <iframe
           allow={delegatedFeatures}
-          allowFullScreen
+          allowFullScreen={iframePolicy.allowFullscreen}
           className={isLoaded ? 'is-loaded' : undefined}
           onLoad={() => setIsLoaded(true)}
-          referrerPolicy="strict-origin-when-cross-origin"
+          referrerPolicy={iframePolicy.referrerPolicy}
           ref={frameRef}
-          sandbox="allow-downloads allow-modals allow-same-origin allow-scripts"
+          sandbox={iframePolicy.sandboxTokens.join(' ')}
           src={sourceUrl}
           title={t('embeddedTraining.frameTitle', { title: moduleCopy.title })}
         />

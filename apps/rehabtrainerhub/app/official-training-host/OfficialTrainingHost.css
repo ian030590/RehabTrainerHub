@@ -1,0 +1,62 @@
+.official-training-host {
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  grid-template: 1fr / 1fr;
+  background: var(--background);
+}
+
+.official-training-host-status {
+  align-self: center;
+  justify-self: center;
+  margin: 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.official-training-host-frame {
+  border: 0;
+  display: block;
+  grid-area: 1 / 1;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.native-training-surface {
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  grid-template: auto 1fr / 1fr;
+  gap: 1rem;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: var(--background);
+  color: var(--text-primary);
+  box-sizing: border-box;
+}
+
+.native-training-setup {
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  align-content: start;
+}
+
+.native-training-result {
+  width: min(38rem, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m, var(--radius));
+  background: var(--bg-card, var(--surface));
+  color: var(--text-primary, var(--text));
+  box-shadow: var(--shadow-floating, var(--shadow-md));
+  text-align: center;
+}
+
+.native-training-mount {
+  min-height: 0;
+  position: relative;
+}

@@ -1,3 +1,8 @@
+import {
+  gamePlatformLicenses,
+  type GamePlatformLicense,
+} from '@rehab-trainer/training-contracts';
+
 export interface PublishedGameRelease {
   id: string;
   version: string;
@@ -6,6 +11,7 @@ export interface PublishedGameRelease {
   approvedAt: string;
   launchUrl: string;
   installUrl: string;
+  license: GamePlatformLicense;
 }
 
 export interface PublishedGame {
@@ -16,6 +22,8 @@ export interface PublishedGame {
   category: string;
   developerName: string;
   updatedAt: string;
+  publisherType: 'third-party';
+  resultTrust: 'client_reported';
   release: PublishedGameRelease;
 }
 
@@ -39,12 +47,25 @@ function IsPublishedGame(value: unknown): value is PublishedGame {
     && typeof game.summary === 'string'
     && typeof game.category === 'string'
     && typeof game.developerName === 'string'
+    && game.publisherType === 'third-party'
+    && game.resultTrust === 'client_reported'
     && Boolean(game.release)
     && typeof game.release?.id === 'string'
     && typeof game.release.version === 'string'
     && Array.isArray(game.release.capabilities)
+    && IsGameLicense(game.release.license)
     && IsIsolatedRunnerUrl(game.release.launchUrl)
     && IsIsolatedRunnerUrl(game.release.installUrl);
+}
+
+function IsGameLicense(value: unknown): value is GamePlatformLicense {
+  if (!value || typeof value !== 'object') return false;
+  const license = value as Partial<GamePlatformLicense>;
+  if (typeof license.id !== 'string') return false;
+  const knownLicense = gamePlatformLicenses.find((candidate) => candidate.id === license.id);
+  return Boolean(knownLicense)
+    && license.label === knownLicense?.label
+    && license.url === knownLicense?.url;
 }
 
 function IsIsolatedRunnerUrl(value: unknown): value is string {

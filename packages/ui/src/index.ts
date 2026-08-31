@@ -7,13 +7,34 @@ export {
   LoadMediaPipeWithFallback,
   mediaPipeTasksVisionVersion,
 } from './aiAssets';
-export type { MediaPipeAssetUrls } from './aiAssets';
+export type {
+  MediaPipeAssetUrls,
+  RuntimeAssetCandidateOptions,
+} from './aiAssets';
+export { CreateOfficialHostIframePolicy, officialTrainingHostRoutePrefix } from './officialTrainingHostPolicy';
+export type {
+  OfficialHostIframePolicy,
+  OfficialHostIframePolicyOptions,
+  OfficialIframeFeature,
+} from './officialTrainingHostPolicy';
+export {
+  CreateOfficialHostAllowAttribute,
+  IsTrustedReadyEvent,
+  OfficialTrainingHostSession,
+} from './officialTrainingHostProtocol';
+export type {
+  OfficialTrainingHostReadyMessage,
+  OfficialTrainingHostSessionOptions,
+  TrainingHostCommandInput,
+} from './officialTrainingHostProtocol';
 export { AppLoading } from './components/AppLoading';
 export type { AppLoadingProps } from './components/AppLoading';
 export { AppDialog } from './components/AppDialog';
 export type { AppDialogProps } from './components/AppDialog';
 export { CardImagePlaceholder, cardImagePlaceholderSrc } from './components/CardImagePlaceholder';
 export type { CardImagePlaceholderProps } from './components/CardImagePlaceholder';
+export { OfflinePackControl } from './components/OfflinePackControl';
+export type { OfflinePackControlLabels, OfflinePackControlProps } from './components/OfflinePackControl';
 export { CloudflareWebAnalytics } from './components/CloudflareWebAnalytics';
 export type { CloudflareWebAnalyticsProps } from './components/CloudflareWebAnalytics';
 export { ConfigDialog } from './components/ConfigDialog';
@@ -76,6 +97,19 @@ export type {
 } from './components/TrainingConfigPanel';
 export { TrainingConfigSummary } from './components/TrainingConfigSummary';
 export type { TrainingConfigSummaryItem, TrainingConfigSummaryProps } from './components/TrainingConfigSummary';
+export {
+  TrainingSetupCheckbox,
+  TrainingSetupChoiceGrid,
+  TrainingSetupPanel,
+  TrainingSetupRulesPanel,
+} from './components/TrainingSetupPanel';
+export type {
+  TrainingSetupCheckboxProps,
+  TrainingSetupChoice,
+  TrainingSetupChoiceGridProps,
+  TrainingSetupPanelProps,
+  TrainingSetupRulesPanelProps,
+} from './components/TrainingSetupPanel';
 export { TrainingFilePickerButton } from './components/TrainingFilePickerButton';
 export type { TrainingFilePickerButtonProps } from './components/TrainingFilePickerButton';
 export { TrainingRulesPanel } from './components/TrainingRulesPanel';
@@ -83,7 +117,6 @@ export type { TrainingRuleSection, TrainingRulesPanelProps } from './components/
 export { TrainingResultActions } from './components/TrainingResultActions';
 export type { TrainingResultActionsProps } from './components/TrainingResultActions';
 export { TrainerAppLayout } from './components/TrainerAppLayout';
-export { TrainerRouteOutlet } from './components/TrainerRouteOutlet';
 export type { TrainerAppLayoutProps } from './components/TrainerAppLayout';
 export { TrainingModuleSelectionPage } from './components/TrainingModuleSelectionPage';
 export type {
@@ -157,6 +190,31 @@ export {
   GetMediaPermissionRetryLabel,
   useMediaPermissionPreflight,
 } from './hooks/useMediaPermissionPreflight';
+export { StopMediaStream } from './mediaStream';
+export {
+  CreateOfflinePackManager,
+  GetOfflinePackManager,
+  GetOfflinePackTotalBytes,
+  MigrateLegacyOfflineCache,
+  ParseOfflinePackManifest,
+  ValidateOfflinePack,
+  offlinePackCacheName,
+  offlinePackMetadataKey,
+  offlinePackMetadataSchemaVersion,
+} from './offlinePackManager';
+export type {
+  OfflinePackDescriptor,
+  OfflinePackManifestPayload,
+  OfflinePackManager,
+  OfflinePackManagerOptions,
+  OfflinePackMigrationOptions,
+  OfflinePackMigrationResult,
+  OfflinePackMetadataStore,
+  OfflinePackProgress,
+  OfflinePackReference,
+  OfflinePackResource,
+  OfflinePackStatus,
+} from './offlinePackManager';
 export type {
   MediaPermissionPreflightResult,
   MediaPermissionPreflightStatus,
@@ -187,6 +245,17 @@ export {
   trainingFlowLaunchState,
 } from './trainingFlow';
 export type { TrainingFlowLaunchState } from './trainingFlow';
+export type {
+  EnginePreloadContext,
+  PreparedTrainingEngine,
+  TrainingAssetResolver,
+  TrainingConfigProps,
+  TrainingResultPresenterProps,
+  TrainingRulesProps,
+  TrainingRunContext,
+  TrainingSetupLoader,
+  TrainingSetupModule,
+} from './trainingHostContract';
 export {
   ApplyThemeTokens,
   cssColors,

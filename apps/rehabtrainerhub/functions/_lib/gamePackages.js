@@ -1,34 +1,40 @@
 import { unzipSync } from 'fflate';
+import {
+  gamePlatformCapabilities,
+  gamePlatformLicenses,
+  GetGamePlatformLicense,
+  IsPublishableGameLicense,
+  gamePlatformPackageLimits,
+  gamePlatformRuntimeContract,
+} from '@rehab-trainer/training-contracts';
+import { parse as parseJavaScript } from 'acorn';
 
-export const gamePackageLimits = Object.freeze({
-  maximumCompressedBytes: 12 * 1024 * 1024,
-  maximumFileBytes: 8 * 1024 * 1024,
-  maximumFileCount: 192,
-  maximumFindingCount: 200,
-  maximumTextLineLength: 5000,
-  maximumTotalBytes: 24 * 1024 * 1024,
-  maximumTotalTextBytes: 4 * 1024 * 1024,
-  maximumZipRatio: 100,
-});
+export const gamePackageLimits = gamePlatformPackageLimits;
 
 // Keep these root-relative URLs synchronized with the isolated runner's
 // functions/_lib/runtime.js contract. Root-relative URLs always resolve on the
 // runner origin, including when production moves to another registrable domain.
-export const gamePackageRuntimeContract = Object.freeze({
-  jsPsychVersion: '8.2.3',
-  jsPsychUrl: '/runtime/jspsych-8.2.3.js',
-  jsPsychCssUrl: '/runtime/jspsych-8.2.3.css',
-  gameSdkVersion: '0.1.0',
-  gameSdkUrl: '/runtime/trainerhub-game-sdk-0.1.0.js',
+export const gamePackageRuntimeContract = gamePlatformRuntimeContract;
+export const gameLicenseCatalog = gamePlatformLicenses;
+export { IsPublishableGameLicense };
+
+export function NormalizeGameLicense(value) {
+  return GetGamePlatformLicense(value)?.id || null;
+}
+
+// The synchronous intake scanner remains a fail-fast UX gate while the
+// asynchronous validation controller is rolled out. Keep its provenance in a
+// named policy object so API rows and later queue jobs share one vocabulary.
+export const gameValidationIntakePolicy = Object.freeze({
+  policyVersion: 'sync-intake-v1',
+  limitsProfile: 'uploaded-game-v1',
+  toolVersions: Object.freeze({
+    staticScanner: 'game-packages-2-acorn-8.18.0',
+  }),
 });
 
 const entryPath = 'index.html';
-const allowedCapabilities = new Set([
-  'audio',
-  'fullscreen',
-  'keyboard',
-  'pointer',
-]);
+const allowedCapabilities = new Set(gamePlatformCapabilities);
 const contentTypes = new Map([
   ['.css', 'text/css; charset=utf-8'],
   ['.gif', 'image/gif'],
@@ -76,6 +82,27 @@ const blockedSourcePatterns = [
   ['base-element', /<\s*base\b/i, 'The base element is not allowed.'],
   ['meta-refresh', /<\s*meta\b[^>]*http-equiv\s*=\s*["']?refresh/i, 'Meta refresh is not allowed.'],
 ];
+// Keep a small, reviewable signature corpus in the intake policy. These are
+// high-signal browser-delivery indicators rather than a promise of malware
+// detection; every hit is retained as evidence for manual review as well as
+// blocking known command-execution/cryptominer payloads.
+export const malwareSignatureCatalog = Object.freeze([
+  Object.freeze({
+    code: 'malware-cryptominer',
+    pattern: /\b(?:coinhive|cryptonight|xmrig|stratum\+tcp)\b/i,
+    message: 'Known browser cryptominer signatures are not allowed.',
+  }),
+  Object.freeze({
+    code: 'malware-command-exec',
+    pattern: /\b(?:child_process|process\.mainModule|powershell(?:\.exe)?|cmd\.exe)\b/i,
+    message: 'Command-execution signatures are not allowed.',
+  }),
+  Object.freeze({
+    code: 'malware-persistence',
+    pattern: /\b(?:navigator\.serviceWorker|CacheStorage\s*\.open|importScripts)\b/i,
+    message: 'Persistence or worker bootstrap signatures are not allowed.',
+  }),
+]);
 
 export function NormalizeGameCapabilities(value) {
   let parsed = value;
@@ -513,6 +540,25 @@ function ScanSource(path, source, findings) {
       AddFinding(findings, { severity: 'block', code, filePath: path, message });
     }
   }
+  for (const signature of malwareSignatureCatalog) {
+    if (signature.pattern.test(source)) {
+      AddFinding(findings, {
+        severity: 'block',
+        code: signature.code,
+        filePath: path,
+        message: signature.message,
+      });
+    }
+  }
+  // Regex scanning remains useful for HTML attributes and deliberately
+  // conservative triage, but it cannot distinguish malformed JavaScript or
+  // syntax hidden behind comments/strings. Parse executable source as a
+  // second, dependency-pinned pass and inspect the resulting AST. A parser
+  // failure is a hard block: the controller must never execute code that the
+  // intake scanner could not understand.
+  if (['.js', '.mjs'].includes(GetExtension(path))) {
+    ScanJavaScriptAst(path, source, findings);
+  }
   if (source.split(/\r?\n/).some((line) => line.length > gamePackageLimits.maximumTextLineLength)) {
     AddFinding(findings, {
       severity: 'block',
@@ -530,6 +576,161 @@ function ScanSource(path, source, findings) {
       message: 'The source contains an unusually high amount of encoded text.',
     });
   }
+}
+
+function ScanJavaScriptAst(path, source, findings) {
+  let tree;
+  try {
+    tree = parseJavaScript(source, {
+      ecmaVersion: 'latest',
+      allowHashBang: true,
+      locations: true,
+      sourceType: /(^|\n|;)\s*(?:import|export)\b/.test(source) ? 'module' : 'script',
+    });
+  } catch (error) {
+    AddFinding(findings, {
+      severity: 'block',
+      code: 'javascript-syntax-error',
+      filePath: path,
+      line: Number(error?.loc?.line) || null,
+      column: Number(error?.loc?.column) || null,
+      message: 'JavaScript source could not be parsed by the platform validator.',
+    });
+    return;
+  }
+
+  WalkJavaScriptAst(tree, (node) => {
+    const location = {
+      line: Number(node?.loc?.start?.line) || null,
+      column: Number(node?.loc?.start?.column) || null,
+    };
+    if (node.type === 'ImportExpression') {
+      AddFinding(findings, {
+        severity: 'block',
+        code: 'dynamic-code',
+        filePath: path,
+        ...location,
+        message: 'Dynamic import is not allowed in an uploaded game package.',
+      });
+      return;
+    }
+    if (node.type === 'NewExpression') {
+      const constructorName = GetStaticIdentifierName(node.callee);
+      if (constructorName === 'Worker' || constructorName === 'SharedWorker') {
+        AddFinding(findings, {
+          severity: 'block',
+          code: 'worker',
+          filePath: path,
+          ...location,
+          message: 'Uploaded code cannot create workers.',
+        });
+      } else if (constructorName === 'Function') {
+        AddFinding(findings, {
+          severity: 'block',
+          code: 'dynamic-code',
+          filePath: path,
+          ...location,
+          message: 'Dynamic code evaluation is not allowed.',
+        });
+      } else if (constructorName === 'RTCPeerConnection' || constructorName === 'webkitRTCPeerConnection') {
+        AddFinding(findings, {
+          severity: 'block',
+          code: 'network-webrtc',
+          filePath: path,
+          ...location,
+          message: 'WebRTC peer connections are not allowed.',
+        });
+      }
+      return;
+    }
+    if (node.type === 'CallExpression') {
+      const calleeName = GetStaticIdentifierName(node.callee);
+      const callFinding = {
+        fetch: ['network-fetch', 'fetch is not allowed; game results must use the platform bridge.'],
+        XMLHttpRequest: ['network-xhr', 'XMLHttpRequest is not allowed.'],
+        WebSocket: ['network-websocket', 'WebSocket is not allowed.'],
+        EventSource: ['network-event-source', 'EventSource is not allowed.'],
+        sendBeacon: ['network-beacon', 'sendBeacon is not allowed.'],
+        eval: ['dynamic-code', 'Dynamic code evaluation is not allowed.'],
+        Function: ['dynamic-code', 'Dynamic code evaluation is not allowed.'],
+      }[calleeName];
+      if (callFinding) {
+        AddFinding(findings, {
+          severity: 'block',
+          code: callFinding[0],
+          filePath: path,
+          ...location,
+          message: callFinding[1],
+        });
+      }
+      return;
+    }
+    if (node.type === 'MemberExpression') {
+      const memberName = GetStaticMemberName(node);
+      if (memberName === 'document.cookie') {
+        AddFinding(findings, {
+          severity: 'block',
+          code: 'cookie-access',
+          filePath: path,
+          ...location,
+          message: 'Cookie access is not allowed.',
+        });
+      } else if (memberName === 'window.location' || memberName === 'location') {
+        AddFinding(findings, {
+          severity: 'block',
+          code: 'navigation',
+          filePath: path,
+          ...location,
+          message: 'Page navigation is not allowed.',
+        });
+      }
+    }
+  });
+}
+
+function WalkJavaScriptAst(root, visit) {
+  const stack = [root];
+  const visited = new Set();
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (!node || typeof node !== 'object' || visited.has(node)) continue;
+    visited.add(node);
+    if (typeof node.type === 'string') visit(node);
+    for (const [key, value] of Object.entries(node)) {
+      if (key === 'loc' || key === 'start' || key === 'end') continue;
+      if (Array.isArray(value)) {
+        for (let index = value.length - 1; index >= 0; index -= 1) {
+          if (value[index] && typeof value[index] === 'object') stack.push(value[index]);
+        }
+      } else if (value && typeof value === 'object') {
+        stack.push(value);
+      }
+    }
+  }
+}
+
+function GetStaticIdentifierName(node) {
+  if (!node) return null;
+  if (node.type === 'Identifier') return node.name;
+  if (node.type === 'MemberExpression' && !node.computed && node.property?.type === 'Identifier') {
+    return node.property.name;
+  }
+  return null;
+}
+
+function GetStaticMemberName(node) {
+  if (!node || node.type !== 'MemberExpression') return null;
+  const property = node.computed
+    ? node.property?.type === 'Literal' && typeof node.property.value === 'string'
+      ? node.property.value
+      : null
+    : node.property?.type === 'Identifier'
+      ? node.property.name
+      : null;
+  if (!property) return null;
+  const object = node.object;
+  if (object?.type === 'Identifier') return `${object.name}.${property}`;
+  return null;
 }
 
 function HasExactClassicScriptSource(html, expectedUrl) {

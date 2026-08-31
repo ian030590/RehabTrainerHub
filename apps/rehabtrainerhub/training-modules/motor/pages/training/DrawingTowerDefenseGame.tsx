@@ -1,4 +1,5 @@
 // Canonical Hub-owned motor module; bundled by the motor runtime.
+import './DrawingTowerDefenseGame.css';
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Application, Container, Graphics, Text, type Ticker } from 'pixi.js';
 import { initJsPsych } from 'jspsych';
@@ -20,19 +21,57 @@ import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResu
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import type { TFunction } from './types';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
+import { DrawingDefensePlugin } from '../../experiment/plugins/drawing-defense-lifecycle';
+import {
+  drawingDefenseConfigBounds,
+  drawingDefenseDefaults,
+  type DrawingDefenseConfig,
+  type DrawingDefenseDifficulty,
+} from '../../drawing-defense/config';
 
-type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
+type Difficulty = DrawingDefenseDifficulty;
 type ShapeId = 'circle' | 'cross' | 'square' | 'triangle' | 'vertical-line' | 'horizontal-line';
 type GamePhase = 'menu' | 'rules' | 'playing' | 'results';
 type GameResult = 'Victory' | 'Defeat';
 type BackgroundMode = 'stars' | 'color' | 'image';
 type GameDurationSeconds = number | null;
 
-interface DrawingTowerDefenseGameProps {
+export interface DrawingDefenseSessionRecord {
+  Test_Date: string;
+  Participant_ID: string;
+  Difficulty: Difficulty;
+  Game_Time_Seconds: GameDurationSeconds;
+  Starting_HP: number;
+  Enemy_Speed: number;
+  Recognition_Strictness: number;
+  Stroke_Wait_Milliseconds: number;
+  Total_Duration_Seconds: number;
+  Enemies_Spawned: number;
+  Enemies_Defeated: number;
+  HP_Remaining: number;
+  Game_Result: GameResult;
+  Enemy_Results: EnemyResult[];
+}
+
+export interface DrawingDefenseHostControl {
+  autoStart?: boolean;
+  config?: Readonly<DrawingDefenseConfig>;
+  onStarted?(): void;
+  onCompleted?(result: DrawingDefenseSessionRecord): void;
+  onAborted?(): void;
+  registerControls?(controls: {
+    pause(): void;
+    resume(): void;
+  } | null): void;
+  signal?: AbortSignal;
+  skipUserGuard?: boolean;
+}
+
+export interface DrawingTowerDefenseGameProps {
   onExit: () => void;
+  hostControl?: DrawingDefenseHostControl;
 }
 
 interface DifficultyConfig {
@@ -64,58 +103,18 @@ interface EnemyResult {
   Defeated: boolean;
 }
 
-interface DrawingSampleMetadata {
-  sampleId: string;
-  createdAt: string;
-  participantId: string;
-  targetShape: ShapeId | null;
-  targetShapeLabel: string | null;
-  recognizedShape: ShapeId | null;
-  recognizedShapeLabel: string | null;
-  matched: boolean;
-  difficulty: Difficulty;
-  gameTimeSeconds: GameDurationSeconds;
-  enemyNumber: number | null;
-  elapsedSeconds: number;
-  elapsedSinceTargetSpawnSeconds: number | null;
-  enemySpeed: number;
-  recognitionStrictness: number;
-  strokeWaitMilliseconds: number;
-  strokeCount: number;
-  pointCount: number;
-  sourceCanvasWidth: number | null;
-  sourceCanvasHeight: number | null;
-  boundingBox: ReturnType<typeof GetBox>;
-  imageFormat: 'png-transparent';
-  imageSize: number;
-}
-
-interface SessionRecord {
-  Test_Date: string;
-  Participant_ID: string;
-  Difficulty: Difficulty;
-  Game_Time_Seconds: GameDurationSeconds;
-  Starting_HP: number;
-  Enemy_Speed: number;
-  Recognition_Strictness: number;
-  Stroke_Wait_Milliseconds: number;
-  Total_Duration_Seconds: number;
-  Enemies_Spawned: number;
-  Enemies_Defeated: number;
-  HP_Remaining: number;
-  Game_Result: GameResult;
-  Enemy_Results: EnemyResult[];
-}
+type SessionRecord = DrawingDefenseSessionRecord;
 
 const shapes: readonly ShapeId[] = ['circle', 'cross', 'square', 'triangle', 'vertical-line', 'horizontal-line'];
-const defaultJudgeDelayMs = 300;
+const defaultDifficulty: Difficulty = drawingDefenseDefaults.difficulty;
+const defaultJudgeDelayMs = drawingDefenseDefaults.strokeWaitMs;
 const gameDurationOptions = [30, 60, 300, null] as const;
-const defaultHp = 3;
-const defaultEnemySpeed = 5;
-const minRecognitionStrictness = 10;
-const defaultRecognitionStrictness = 20;
-const maxRecognitionStrictness = 90;
-const defaultGameDurationSeconds: GameDurationSeconds = 30;
+const defaultHp = drawingDefenseDefaults.maxHp;
+const defaultEnemySpeed = drawingDefenseDefaults.speed;
+const minRecognitionStrictness = drawingDefenseConfigBounds.strictness.min;
+const defaultRecognitionStrictness = drawingDefenseDefaults.strictness;
+const maxRecognitionStrictness = drawingDefenseConfigBounds.strictness.max;
+const defaultGameDurationSeconds: GameDurationSeconds = drawingDefenseDefaults.gameDurationSec;
 const defaultCustomGameDurationSeconds = 120;
 const enemyVisualHeight = 98;
 const enemySpawnY = -enemyVisualHeight - 8;
@@ -129,18 +128,13 @@ const maxRdpEpsilonRatio = 0.1;
 const rdpClosedEndpointDistancePx = 30;
 const rdpStraightAngleDegrees = 160;
 const starSkyBackgroundImage = CreateRuntimeAssetUrlCandidates(
-  import.meta.env.VITE_AI_ASSET_BASE_URL,
   'game-assets/rehabtrainerhub/motor/star-sky/v1/StarSky.png',
-  `${import.meta.env.BASE_URL}assets/StarSky.png`,
+  '/runtimes/motor/assets/StarSky.png',
 )
-  .map((url) => `url("${url}")`)
-  .join(', ');
-const drawingSampleUploadEndpoint = import.meta.env.VITE_DRAWING_SAMPLE_UPLOAD_URL?.trim() || '/api/drawing-samples';
-const drawingSampleUploadToken = import.meta.env.VITE_DRAWING_SAMPLE_UPLOAD_TOKEN?.trim() || '';
-const drawingSampleImageSize = 256;
-const drawingSampleImagePadding = 24;
-const drawingSampleStrokeWidth = 14;
-
+  // CSS image layers are composited, not treated as fallback candidates. The
+  // resolver returns only the immutable platform URL in production and the
+  // local Vite asset as the final local-development candidate.
+  .at(-1);
 const difficulties: Record<Difficulty, DifficultyConfig> = {
   Beginner: { labelKey: 'drawing.diff.beginner', spawnMode: 'after-clear-delay', spawnIntervalSec: 2, descriptionKey: 'drawing.diff.beginnerDesc' },
   Intermediate: { labelKey: 'drawing.diff.intermediate', spawnMode: 'after-clear', spawnIntervalSec: 0, descriptionKey: 'drawing.diff.intermediateDesc' },
@@ -156,8 +150,14 @@ const shapeLabelKeys: Record<ShapeId, TranslationKey> = {
   'horizontal-line': 'drawing.shape.horizontalLine',
 };
 
-export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps) {
+// Drawing data stays in the session result and is never uploaded from the
+// browser. Any future research export must use an explicit, authenticated,
+// first-party consent flow rather than a hidden game-side request.
+
+export function DrawingTowerDefenseGame({ onExit, hostControl }: DrawingTowerDefenseGameProps) {
   const { t } = useT();
+  const hostControlRef = useRef(hostControl);
+  hostControlRef.current = hostControl;
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const pixiHostRef = useRef<HTMLDivElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -175,26 +175,36 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   const metricsRef = useRef({ defeated: 0, hp: defaultHp, spawned: 0, elapsed: 0, spawnTimer: 0, nextId: 1 });
   const phaseRef = useRef<GamePhase>('menu');
   const configRef = useRef({
-    difficulty: 'Beginner' as Difficulty,
-    gameDurationSec: defaultGameDurationSeconds,
-    maxHp: defaultHp,
-    speed: defaultEnemySpeed,
-    strictness: defaultRecognitionStrictness,
-    strokeWaitMs: defaultJudgeDelayMs,
+    difficulty: hostControl?.config?.difficulty ?? defaultDifficulty,
+    gameDurationSec: hostControl?.config?.gameDurationSec === null
+      ? null
+      : hostControl?.config?.gameDurationSec ?? defaultGameDurationSeconds,
+    maxHp: hostControl?.config?.maxHp ?? defaultHp,
+    speed: hostControl?.config?.speed ?? defaultEnemySpeed,
+    strictness: hostControl?.config?.strictness ?? defaultRecognitionStrictness,
+    strokeWaitMs: hostControl?.config?.strokeWaitMs ?? defaultJudgeDelayMs,
   });
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
-  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
+  const jsPsychRunSequenceRef = useRef(0);
+  const autoStartRequestedRef = useRef(false);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const [isPixiReady, setIsPixiReady] = useState(false);
   useTrainingConfigReady(phase === 'menu');
-  const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
-  const [gameDurationSec, setGameDurationSec] = useState<GameDurationSeconds>(defaultGameDurationSeconds);
+  const [difficulty, setDifficulty] = useState<Difficulty>(
+    hostControl?.config?.difficulty ?? defaultDifficulty,
+  );
+  const [gameDurationSec, setGameDurationSec] = useState<GameDurationSeconds>(
+    hostControl?.config?.gameDurationSec === null
+      ? null
+      : hostControl?.config?.gameDurationSec ?? defaultGameDurationSeconds,
+  );
   const [customGameDurationSec, setCustomGameDurationSec] = useState(defaultCustomGameDurationSeconds);
-  const [maxHp, setMaxHp] = useState(defaultHp);
-  const [speed, setSpeed] = useState(defaultEnemySpeed);
-  const [strictness, setStrictness] = useState(defaultRecognitionStrictness);
-  const [strokeWaitMs, setStrokeWaitMs] = useState(defaultJudgeDelayMs);
+  const [maxHp, setMaxHp] = useState(hostControl?.config?.maxHp ?? defaultHp);
+  const [speed, setSpeed] = useState(hostControl?.config?.speed ?? defaultEnemySpeed);
+  const [strictness, setStrictness] = useState(hostControl?.config?.strictness ?? defaultRecognitionStrictness);
+  const [strokeWaitMs, setStrokeWaitMs] = useState(hostControl?.config?.strokeWaitMs ?? defaultJudgeDelayMs);
   const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('stars');
   const backgroundColor = defaultBackgroundColor;
   const [uploadedBackgroundUrl, setUploadedBackgroundUrl] = useState<string | null>(null);
@@ -211,7 +221,11 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   const backgroundModeLabel =
     backgroundMode === 'stars' ? t('drawing.background.image') : backgroundMode === 'color' ? t('drawing.background.color') : t('drawing.background.customImage');
   const backgroundStyle = useMemo<CSSProperties>(() => {
-    if (backgroundMode === 'stars') return { backgroundImage: starSkyBackgroundImage };
+    if (backgroundMode === 'stars') {
+      return starSkyBackgroundImage
+        ? { backgroundImage: `url("${starSkyBackgroundImage}")` }
+        : { backgroundImage: 'none', backgroundColor };
+    }
     if (backgroundMode === 'image' && uploadedBackgroundUrl) {
       return { backgroundImage: `url("${uploadedBackgroundUrl}")` };
     }
@@ -231,14 +245,17 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     if (!host) return;
 
     const jsPsych = initJsPsych({ display_element: host });
-    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychRef.current = jsPsych;
-    jsPsychLifecycleRef.current = lifecycle;
 
     return () => {
-      lifecycle.dispose();
+      if (jsPsych.getCurrentTrial()) {
+        jsPsych.abortExperiment(undefined, {
+          lifecycle_status: 'disposed',
+          module_id: 'motor:drawing-defense',
+        });
+      }
+      jsPsych.pluginAPI.clearAllTimeouts();
       if (jsPsychRef.current === jsPsych) jsPsychRef.current = null;
-      if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
     };
   }, []);
 
@@ -300,7 +317,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       Game_Result: gameResult,
       Enemy_Results: enemyResultsRef.current.map((enemyResult) => ({ ...enemyResult })),
     };
-    jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
+    jsPsychRef.current?.finishTrial(record as unknown as Record<string, unknown>);
     setResult(record);
     setPhase('results');
     void SaveTrainingSessionRecord({
@@ -329,6 +346,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         Enemy_Defeated: enemyResult.Defeated,
       })),
     });
+    hostControlRef.current?.onCompleted?.(record);
   }, [clearDrawingInput, recordEnemyOutcome, setPhase, t]);
 
   const drawLayout = useCallback((app: Application) => {
@@ -418,52 +436,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     layer.stroke({ color: 0x005eb8, width: 7, alpha: 0.9, cap: 'round', join: 'round' });
   }, []);
 
-  const queueDrawingSampleUpload = useCallback((strokes: Point[][], recognition: ShapeId | null, target: Enemy | undefined, matched: boolean) => {
-    if (matched || !target) return;
-
-    const sampleStrokes = CloneUsableStrokes(strokes);
-    const points = FlattenStrokes(sampleStrokes);
-    if (points.length < 2 || StrokesPathLength(sampleStrokes) < 8) return;
-
-    const participantId = getActiveUser() || 'Unknown';
-    const createdAt = new Date();
-    const sampleId = CreateDrawingSampleId(createdAt, participantId, target.shape);
-    const stageRect = overlayRef.current?.getBoundingClientRect();
-    const targetResult = enemyResultsRef.current[target.resultIndex];
-    const elapsedSinceTargetSpawnSeconds = Number(Math.max(0, metricsRef.current.elapsed - target.spawnedAtSec).toFixed(2));
-    const metadata: DrawingSampleMetadata = {
-      sampleId,
-      createdAt: createdAt.toISOString(),
-      participantId,
-      targetShape: target.shape,
-      targetShapeLabel: GetShapeLabel(target.shape, t),
-      recognizedShape: recognition,
-      recognizedShapeLabel: recognition ? GetShapeLabel(recognition, t) : null,
-      matched,
-      difficulty: configRef.current.difficulty,
-      gameTimeSeconds: configRef.current.gameDurationSec,
-      enemyNumber: targetResult?.Enemy_Number ?? null,
-      elapsedSeconds: Number(metricsRef.current.elapsed.toFixed(2)),
-      elapsedSinceTargetSpawnSeconds,
-      enemySpeed: configRef.current.speed,
-      recognitionStrictness: configRef.current.strictness,
-      strokeWaitMilliseconds: configRef.current.strokeWaitMs,
-      strokeCount: sampleStrokes.length,
-      pointCount: points.length,
-      sourceCanvasWidth: stageRect ? Math.round(stageRect.width) : null,
-      sourceCanvasHeight: stageRect ? Math.round(stageRect.height) : null,
-      boundingBox: GetBox(points),
-      imageFormat: 'png-transparent',
-      imageSize: drawingSampleImageSize,
-    };
-
-    void CreateDrawingSampleBlob(sampleStrokes)
-      .then((blob) => UploadDrawingSample(blob, metadata))
-      .catch((error) => {
-        console.warn('Unable to upload drawing sample to Discord.', error);
-      });
-  }, [t]);
-
   const handlePointerEnd = useCallback(() => {
     if (!isDrawingRef.current) return;
     isDrawingRef.current = false;
@@ -478,9 +450,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       recognitionTimerRef.current = null;
       const recognition = RecognizeShape(strokesRef.current, configRef.current.strictness);
       const matchedTarget = recognition ? FindClosestEnemyByShape(enemiesRef.current, recognition) : undefined;
-      const target = matchedTarget ?? enemiesRef.current[0];
-      const matched = Boolean(matchedTarget);
-      queueDrawingSampleUpload(strokesRef.current, recognition, target, matched);
       if (matchedTarget) {
         PlaySuccessSound(jsPsychRef);
         recordEnemyOutcome(matchedTarget, true);
@@ -497,18 +466,23 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         drawingLayerRef.current?.clear();
       }, 650);
     }, configRef.current.strokeWaitMs);
-  }, [queueDrawingSampleUpload, recordEnemyOutcome, t]);
+  }, [recordEnemyOutcome, t]);
 
   const startGame = useCallback(async () => {
-    if (!VerifySelectedTrainingUser()) return;
+    if (!hostControlRef.current?.skipUserGuard && !VerifySelectedTrainingUser()) return;
     PrepareAudioFeedback(jsPsychRef);
-    await enterTrainingFullscreen();
+    if (!hostControlRef.current?.autoStart) await enterTrainingFullscreen();
 
     const app = appRef.current;
     if (!app) return;
-    await jsPsychLifecycleRef.current?.start({
-      moduleId: 'motor:drawing-defense',
-      onStart: () => {
+    const jsPsych = jsPsychRef.current;
+    if (!jsPsych) return;
+    const runToken = `motor:drawing-defense:${++jsPsychRunSequenceRef.current}`;
+    void jsPsych.run([{
+      type: DrawingDefensePlugin,
+      module_id: 'motor:drawing-defense',
+      run_token: runToken,
+      on_start: () => {
         ResizePixiAppToElement(app, pixiHostRef.current);
         clearPixiState();
         app.stage.removeChildren();
@@ -518,12 +492,30 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         enemyResultsRef.current = [];
         setResult(null);
         setPhase('playing');
+        hostControlRef.current?.onStarted?.();
       },
+    }]).catch(() => {
+      if (phaseRef.current !== 'playing') return;
+      clearPixiState();
+      setPhase('menu');
     });
   }, [clearPixiState, drawLayout, enterTrainingFullscreen, setPhase]);
 
+  useEffect(() => {
+    if (!hostControlRef.current?.autoStart || !isPixiReady || phase !== 'menu' || autoStartRequestedRef.current) return;
+    autoStartRequestedRef.current = true;
+    void startGame();
+  }, [isPixiReady, phase, startGame]);
+
   const returnToMenu = useCallback(() => {
-    jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
+    const wasRunning = phaseRef.current === 'playing' || phaseRef.current === 'results';
+    const jsPsych = jsPsychRef.current;
+    if (jsPsych?.getCurrentTrial()) {
+      jsPsych.abortExperiment(undefined, {
+        lifecycle_status: 'aborted',
+        module_id: 'motor:drawing-defense',
+      });
+    }
     const app = appRef.current;
     clearPixiState();
     if (app) {
@@ -531,7 +523,26 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       drawLayout(app);
     }
     setPhase('menu');
+    if (wasRunning) hostControlRef.current?.onAborted?.();
   }, [clearPixiState, drawLayout, setPhase]);
+
+  useEffect(() => {
+    const signal = hostControlRef.current?.signal;
+    if (!signal) return undefined;
+    const onAbort = () => returnToMenu();
+    signal.addEventListener('abort', onAbort, { once: true });
+    return () => signal.removeEventListener('abort', onAbort);
+  }, [returnToMenu]);
+
+  useEffect(() => {
+    const registerControls = hostControlRef.current?.registerControls;
+    if (!registerControls) return undefined;
+    registerControls({
+      pause: () => { jsPsychRef.current?.pauseExperiment(); },
+      resume: () => { jsPsychRef.current?.resumeExperiment(); },
+    });
+    return () => registerControls(null);
+  }, []);
 
   const handleBackgroundImageUpload = useCallback((file: File | undefined) => {
     if (!file || !file.type.startsWith('image/')) return;
@@ -561,6 +572,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       if (cancelled) return;
       host.appendChild(app.canvas);
       app.canvas.className = 'drawing-defense-canvas';
+      setIsPixiReady(true);
       drawLayout(app);
       app.ticker.add((ticker: Ticker) => {
         if (phaseRef.current !== 'playing') return;
@@ -627,6 +639,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     window.addEventListener('resize', onResize);
     return () => {
       cancelled = true;
+      setIsPixiReady(false);
       window.removeEventListener('resize', onResize);
       app.destroy(true, { children: true, texture: true });
       appRef.current = null;
@@ -687,7 +700,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       <div ref={pixiHostRef} className="drawing-defense-stage" />
       <div ref={overlayRef} className="drawing-defense-input" />
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !hostControl?.autoStart && (
         <div className="training-panel">
           <TrainingConfigPanel
             label={t('drawing.config.label')}
@@ -836,7 +849,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         </div>
       )}
 
-      {phase === 'rules' && (
+      {phase === 'rules' && !hostControl?.autoStart && (
         <div className="training-panel">
           <MotorTrainingRulesPanel
             gameId="drawing-defense"
@@ -857,7 +870,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         </div>
       )}
 
-      {phase === 'results' && result && (
+      {phase === 'results' && result && !hostControl?.autoStart && (
         <div className="experiment-container experiment-container-scrollable drawing-defense-results-container">
           <div className="experiment-results">
             <h1>{t('drawing.results.complete')}</h1>
@@ -911,87 +924,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       )}
     </div>
   );
-}
-
-function CloneUsableStrokes(strokes: Point[][]): Point[][] {
-  return strokes
-    .filter((stroke) => stroke.length >= 2)
-    .map((stroke) => stroke.map((point) => ({ x: point.x, y: point.y })));
-}
-
-function CreateDrawingSampleBlob(strokes: Point[][]): Promise<Blob> {
-  const points = FlattenStrokes(strokes);
-  if (points.length < 2) {
-    return Promise.reject(new Error('Drawing sample has no usable points.'));
-  }
-
-  const box = GetBox(points);
-  const width = Math.max(1, box.maxX - box.minX);
-  const height = Math.max(1, box.maxY - box.minY);
-  const canvas = document.createElement('canvas');
-  canvas.width = drawingSampleImageSize;
-  canvas.height = drawingSampleImageSize;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return Promise.reject(new Error('Canvas 2D context is unavailable.'));
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#111827';
-  ctx.lineWidth = drawingSampleStrokeWidth;
-
-  const drawableSize = drawingSampleImageSize - drawingSampleImagePadding * 2;
-  const scale = drawableSize / Math.max(width, height);
-  const offsetX = (drawingSampleImageSize - width * scale) / 2 - box.minX * scale;
-  const offsetY = (drawingSampleImageSize - height * scale) / 2 - box.minY * scale;
-
-  ctx.beginPath();
-  strokes.forEach((stroke) => {
-    stroke.forEach((point, index) => {
-      const x = point.x * scale + offsetX;
-      const y = point.y * scale + offsetY;
-      if (index === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-  });
-  ctx.stroke();
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error('Unable to encode drawing sample PNG.'));
-    }, 'image/png');
-  });
-}
-
-async function UploadDrawingSample(blob: Blob, metadata: DrawingSampleMetadata): Promise<void> {
-  const filename = `drawing_${metadata.targetShape ?? 'unknown'}_${metadata.matched ? 'hit' : 'miss'}_${metadata.sampleId}.png`;
-  const body = new FormData();
-  body.append('image', blob, filename);
-  body.append('metadata', JSON.stringify(metadata));
-
-  const response = await fetch(drawingSampleUploadEndpoint, {
-    method: 'POST',
-    headers: drawingSampleUploadToken ? { 'x-drawing-upload-token': drawingSampleUploadToken } : undefined,
-    body,
-  });
-
-  if (!response.ok) {
-    const text = await response.text().catch(() => '');
-    throw new Error(`Upload failed with ${response.status}${text ? `: ${text}` : ''}`);
-  }
-}
-
-function CreateDrawingSampleId(date: Date, participantId: string, targetShape: ShapeId | null): string {
-  const timestamp = date.toISOString().replace(/\D/g, '').slice(0, 17);
-  const user = SanitizeFilenamePart(participantId) || 'user';
-  const shape = targetShape ?? 'unknown';
-  const random = Math.random().toString(36).slice(2, 8);
-  return `${timestamp}_${user}_${shape}_${random}`;
-}
-
-function SanitizeFilenamePart(value: string): string {
-  return value.trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
 }
 
 function FindClosestEnemyByShape(enemies: Enemy[], shape: ShapeId): Enemy | undefined {
@@ -1436,10 +1368,6 @@ interface StrokeLineFeatures {
 
 function FlattenStrokes(strokes: Point[][]): Point[] {
   return strokes.flatMap((stroke) => stroke);
-}
-
-function StrokesPathLength(strokes: Point[][]): number {
-  return strokes.reduce((sum, stroke) => sum + PathLength(stroke), 0);
 }
 
 function GetStrokeLineFeatures(stroke: Point[]): StrokeLineFeatures | null {

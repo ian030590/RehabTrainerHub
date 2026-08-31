@@ -1,3 +1,1 @@
-import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
-
-export const siteUrls = defaultSiteUrls;
+export * from '@rehab-trainer/hub-modules/vision/utils/siteUrls';

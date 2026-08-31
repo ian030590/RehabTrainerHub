@@ -5,6 +5,10 @@ import {
   RejectDisallowedOrigin,
   RequireDatabase,
 } from '../_lib/auth.js';
+import {
+  gamePlatformLicenses,
+  GetGamePlatformLicense,
+} from '@rehab-trainer/training-contracts';
 
 const defaultGameRunnerOrigin = 'https://trainerhub-user-games.pages.dev';
 
@@ -35,12 +39,14 @@ export async function onRequestGet({ request, env }) {
           game_releases.version,
           game_releases.content_sha256,
           game_releases.capabilities_json,
+          game_releases.license_id,
           game_releases.reviewed_at
         FROM developer_games
         INNER JOIN game_releases
-          ON game_releases.id = developer_games.active_release_id
+         ON game_releases.id = developer_games.active_release_id
          AND game_releases.game_id = developer_games.id
          AND game_releases.status = 'approved'
+         AND game_releases.license_id <> 'not-declared'
         WHERE developer_games.status = 'published'
         ORDER BY developer_games.updated_at DESC, developer_games.slug
         LIMIT 500
@@ -56,6 +62,9 @@ export async function onRequestGet({ request, env }) {
         category: row.category,
         developerName: row.developer_display_name,
         updatedAt: row.updated_at,
+        publisherType: 'third-party',
+          resultTrust: 'client_reported',
+          license: MapGameLicense(row.license_id),
         release: {
           id: row.release_id,
           version: row.version,
@@ -76,6 +85,11 @@ export async function onRequestGet({ request, env }) {
     console.error('Unable to load the published game catalog.', error);
     return ErrorResponse(request, env, 'Unable to load games.', 500);
   }
+}
+
+function MapGameLicense(value) {
+  return GetGamePlatformLicense(value)
+    || gamePlatformLicenses[gamePlatformLicenses.length - 1];
 }
 
 function GetGameRunnerOrigin(env) {

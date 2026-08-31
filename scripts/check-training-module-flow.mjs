@@ -2,14 +2,33 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const moduleRoot = resolve(repoRoot, 'apps/rehabtrainerhub/training-modules');
 const catalogSource = readFileSync(resolve(moduleRoot, 'catalog.ts'), 'utf8');
 const manifestSource = readFileSync(resolve(moduleRoot, 'moduleFlowManifest.ts'), 'utf8');
-const manifestCode = ts.transpileModule(manifestSource, {
+// The checker evaluates a transpiled module through a data URL. Rewrite the
+// workspace package import to an absolute file URL because bare package
+// specifiers have no package scope when their parent is a data URL.
+const trainingContractsRuntimeUrl = pathToFileURL(
+  resolve(repoRoot, 'packages/training-contracts/src/index.js'),
+).href;
+// The registry owns the route prefix through the UI policy module. The
+// checker runs from a data URL, so provide the dependency-free exported value
+// without teaching the checker a second module-resolution system.
+const officialHostPolicyRuntimeUrl = `data:text/javascript;base64,${Buffer.from(
+  "export const officialTrainingHostRoutePrefix = '/official-training-host';",
+).toString('base64')}`;
+const manifestExecutableSource = manifestSource.replace(
+  /from ['"]@rehab-trainer\/training-contracts['"]/g,
+  `from '${trainingContractsRuntimeUrl}'`,
+).replace(
+  /from ['"]@rehab-trainer\/ui\/officialTrainingHostPolicy['"]/g,
+  `from '${officialHostPolicyRuntimeUrl}'`,
+);
+const manifestCode = ts.transpileModule(manifestExecutableSource, {
   compilerOptions: {
     module: ts.ModuleKind.ESNext,
     target: ts.ScriptTarget.ES2022,
@@ -19,11 +38,16 @@ const manifestUrl = `data:text/javascript;base64,${Buffer.from(manifestCode).toS
 const {
   standardTrainingFlow,
   trainingModuleFlowManifest,
+  trainingModuleManifests,
+  trainingModuleRegistry,
 } = await import(manifestUrl);
 
 const catalogIds = [...catalogSource.matchAll(
   /\{\s*id:\s*'([^']+)',\s*trainer:\s*'([^']+)'/g,
 )].map((match) => `${match[2]}:${match[1]}`);
+const catalogPurposes = new Map([...catalogSource.matchAll(
+  /\{\s*id:\s*'([^']+)',\s*trainer:\s*'([^']+)',\s*purpose:\s*'([^']+)'/g,
+)].map((match) => [`${match[2]}:${match[1]}`, match[3]]));
 const manifestIds = Object.keys(trainingModuleFlowManifest);
 
 assert.equal(
@@ -35,6 +59,35 @@ assert.deepEqual(
   [...manifestIds].sort(),
   [...catalogIds].sort(),
   'Every catalog module must have exactly one Hub-owned flow manifest.',
+);
+const generatedManifestIds = Object.keys(trainingModuleManifests);
+assert.deepEqual(
+  generatedManifestIds.sort(),
+  [...catalogIds].sort(),
+  'Generated module manifests must cover exactly the catalog modules.',
+);
+const generatedOrders = new Set();
+for (const [catalogId, entry] of Object.entries(trainingModuleRegistry)) {
+  assert.equal(entry.manifest.id, catalogId, `Generated manifest id must match ${catalogId}.`);
+  assert.equal(
+    entry.manifest.purposeId,
+    catalogPurposes.get(catalogId),
+    `Generated manifest purpose must match the catalog seed for ${catalogId}.`,
+  );
+  assert.equal(
+    entry.manifest.purposeId,
+    trainingModuleFlowManifest[catalogId].purposeId,
+    `Flow and generated manifest purpose must match for ${catalogId}.`,
+  );
+  assert.equal(entry.sourcePath, trainingModuleFlowManifest[catalogId].sourcePath, `Generated source path must match ${catalogId}.`);
+  assert.deepEqual(entry.manifest.flow, standardTrainingFlow, `Generated flow must be standard for ${catalogId}.`);
+  assert.ok(!generatedOrders.has(entry.manifest.catalogOrder), `Generated catalogOrder must be unique for ${catalogId}.`);
+  generatedOrders.add(entry.manifest.catalogOrder);
+}
+assert.equal(
+  generatedOrders.size,
+  catalogIds.length,
+  'Generated module manifests must have unique catalogOrder values.',
 );
 for (const retiredCatalogId of ['brain:main-concept', 'brain:set-game', 'brain:sokoban']) {
   assert.ok(!catalogIds.includes(retiredCatalogId), `${retiredCatalogId} must remain fully retired from the catalog.`);
@@ -429,6 +482,51 @@ const externalRuntimeAdapterTokens = [
 const jsPsychLifecycleGroups = [
   {
     status: 'native-timeline',
+    ids: ['motor:drawing-defense'],
+    files: [
+      'motor/pages/training/DrawingTowerDefenseGame.tsx',
+      'motor/experiment/plugins/drawing-defense-lifecycle.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run([', 'DrawingDefensePlugin', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['motor:gesture-battler'],
+    files: [
+      'motor/pages/training/GestureBattlerGame.tsx',
+      'motor/experiment/plugins/gesture-battler-lifecycle.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run([', 'GestureBattlerPlugin', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['motor:motor-cortex-rehab'],
+    files: [
+      'motor/pages/training/MotorCortexRehabGame.tsx',
+      'motor/experiment/plugins/motor-cortex-rehab-lifecycle.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run([', 'MotorCortexRehabPlugin', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['motor:asteroid-shield'],
+    files: [
+      'motor/pages/training/AsteroidShieldGame.tsx',
+      'motor/experiment/plugins/asteroid-shield-lifecycle.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run([', 'AsteroidShieldPlugin', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['mouth:tongue-catch'],
+    files: [
+      'mouth/pages/training/TongueCatchGame.tsx',
+      'mouth/experiment/plugins/tongue-catch-lifecycle.ts',
+    ],
+    tokens: ['initJsPsych(', 'jsPsych.run([', 'TongueCatchPlugin', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
     ids: [
       'vision:moving-card',
       'vision:oculomotor-training',
@@ -456,7 +554,9 @@ const jsPsychLifecycleGroups = [
     status: 'native-timeline',
     ids: ['brain:every-ball-response'],
     files: ['brain/pages/EveryBallResponsePage.tsx'],
-    tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
+    // The initialized lifecycle is intentionally captured as a per-run value so
+    // stale async callbacks cannot operate on a later run.
+    tokens: ['initJsPsych(', ['jsPsych.run(', 'createdJsPsych.run('], 'finishTrial('],
   },
   {
     status: 'external-runtime-adapter',
@@ -487,12 +587,7 @@ const jsPsychLifecycleGroups = [
     forbiddenTokens: ['WriteJsPsychData'],
   },
   ...Object.entries({
-    'motor:drawing-defense': 'motor/pages/training/DrawingTowerDefenseGame.tsx',
-    'motor:asteroid-shield': 'motor/pages/training/AsteroidShieldGame.tsx',
-    'motor:gesture-battler': 'motor/pages/training/GestureBattlerGame.tsx',
-    'motor:motor-cortex-rehab': 'motor/pages/training/MotorCortexRehabGame.tsx',
     'brain:minesweeper': 'brain/pages/thinking/MinesweeperGame.tsx',
-    'mouth:tongue-catch': 'mouth/pages/training/TongueCatchGame.tsx',
   }).map(([id, file]) => ({
     status: 'external-runtime-adapter',
     ids: [id],
@@ -529,9 +624,10 @@ for (const { files, forbiddenTokens = [], ids, status, tokens } of jsPsychLifecy
     readFileSync(resolve(moduleRoot, file), 'utf8')
   )).join('\n');
   for (const token of tokens) {
+    const alternatives = Array.isArray(token) ? token : [token];
     assert.ok(
-      source.includes(token),
-      `${ids.join(', ')} is missing ${status} jsPsych evidence "${token}".`,
+      alternatives.some((candidate) => source.includes(candidate)),
+      `${ids.join(', ')} is missing ${status} jsPsych evidence "${alternatives.join('" or "')}".`,
     );
   }
   for (const token of forbiddenTokens) {
@@ -573,7 +669,7 @@ const configPermissionImplementations = {
 const nativeTimelinePermissionImplementations = {
   'vision:oculomotor-training': resolve(
     repoRoot,
-    'apps/rehabtrainerhub/training-runtimes/vision/src/utils/webgazerCalibration.ts',
+    'apps/rehabtrainerhub/training-modules/vision/utils/webgazerCalibration.ts',
   ),
 };
 const permissionModuleIds = catalogIds.filter((catalogId) => (

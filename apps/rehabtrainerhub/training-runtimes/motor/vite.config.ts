@@ -12,6 +12,7 @@ export default defineConfig({
   server: { watch: { ignored: ['**/tsconfig.json', '**/tsconfig.*.json', '**/*.tsbuildinfo'] } },
   build: {
     outDir: '../../out/runtimes/motor', assetsDir: 'assets', emptyOutDir: true,
+    manifest: '.vite/manifest.json',
     rollupOptions: { output: { manualChunks: CreateRuntimeChunks } },
   },
 });

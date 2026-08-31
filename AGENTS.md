@@ -2,10 +2,10 @@
 
 ## 專案結構與模組組織
 
-npm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
+pnpm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
 
 - `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、內建訓練 runtime、API、審核後台、開發者入口）。
-- `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），負責以 sandboxed iframe 載入第三方 HTML/ZIP 遊戲並提供 PWA。
+- `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），負責以 sandboxed iframe 載入第三方 HTML/ZIP 遊戲、執行 Game SDK 生命週期與可選的 jsPsych runtime，並提供 PWA。
 - `apps/rehabtrainerhub/training-runtimes/`：Hub 同源的 `motor`、`vision`、`brain`、`mouth` Vite runtime；不是獨立網站或 workspace app。
 
 共用 UI、auth、layout、settings、storage、gamePlatform 規範：`packages/ui/src`。
@@ -16,27 +16,38 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 
 ## 建置、測試與開發指令
 
-- `npm run dev`：Turbo 啟動全部 dev servers。
-- `npm run dev:hub`：啟動 Hub。
-- `npm run build`：執行測試 gate 並透過 `scripts/build-apps.mjs` 建置全部 app。
-- `npm run build:cloudflare`：建置 Cloudflare Pages 輸出。
-- `npm run build:hub|gamerunner`：建置單一 app；Hub build 會一併建置四個內建 training runtimes。
-- `npm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
-- `npm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
-- `npm run test:game-platform`：驗證遊戲套件掃描器與 SDK。
-- `npm --prefix apps/<app> run preview`：預覽 Vite app 或 Hub 輸出。
+本專案使用 pnpm 11.24.0。一般本機磁碟採用 pnpm 標準 isolated linker 與 workspace symlink；安裝後以 `pnpm run test:pnpm-policy` 驗證 lockfile、workspace protocol 與依賴宣告。
 
-高風險 trainer 變更完成前執行 `npm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。此 gate 包含 training flow、assessment jsPsych lifecycle 與 i18n dictionary parity 檢查。
+- `pnpm run dev`：Turbo 啟動全部 dev servers。
+- `pnpm run dev:hub`：啟動 Hub。
+- `pnpm run build`：執行測試 gate 並透過 `scripts/build-apps.mjs` 建置全部 app。
+- `pnpm run build:cloudflare`：建置 Cloudflare Pages 輸出。
+- `pnpm run build:hub|gamerunner`：建置單一 app；Hub build 會一併建置四個內建 training runtimes。
+- `pnpm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
+- `pnpm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
+- `pnpm run test:game-platform`：驗證遊戲套件掃描器與 SDK。
+- `pnpm run test:game-validator`：驗證上傳掃描／審核／發布三條狀態軸不可繞過。
+- `pnpm run test:architecture`：驗證模組 ownership、lifecycle、iframe/PWA 邊界、驗證流程與 pnpm 安裝不變量。
+- `pnpm run test:heavy-load-boundary`：驗證 card/config 不會提早載入重型 engine，且 rules 只共用單一 preload promise。
+- `pnpm run test:repository-health`：驗證 HEAD、canonical Git index/refs 與檔名沒有同步衝突副本；Git 狀態不一致時不得建立提交或宣稱基線已驗收。
+- `pnpm run test:training-startability-state`：快速驗證 engine 預載成功後一定離開 loading、回到可開始的規則狀態。
+- `pnpm run test:official-training-runtime-browser`：先建置 Hub，再以 Chromium 對所有 native setup 模組走完設定、規則就緒、開始與畫面掛載，並對第一個模組建立 fresh 第二局。
+- `pnpm --filter <workspace-package> run preview`：預覽 Vite app 或 Hub 輸出。
 
-修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後，至少執行 `npm run test:entrypoints` 與 `npm run build:hub`，驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
+高風險 trainer 變更完成前執行 `pnpm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。此 gate 包含 training flow、assessment jsPsych lifecycle、training plugin lifecycle、media permission/stream disposal、trainer privacy boundary 與 i18n dictionary parity 檢查；media-only 變更也可直接執行 `pnpm run test:media-lifecycle`，plugin/lifecycle 變更可直接執行 `pnpm run test:training-lifecycle`。
 
-無完整測試套件；針對性 build 與 `npm run test:hub-functions`、`npm run test:gamerunner`、`npm run test:training-flow`、`npm run test:assessment-lifecycle`、`npm run test:i18n` 為最低驗證。
+修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後，至少執行 `pnpm run test:entrypoints` 與 `pnpm run build:hub`，驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
+
+修改 `official-training-host`、setup/engine loader、`TrainingRunHandle`、config → rules → start 狀態轉移，或可能讓開始按鈕永久停用／遊戲無法掛載的程式後，必須同時執行 `pnpm run test:training-startability-state` 與 `pnpm run test:official-training-runtime-browser`。僅通過型別、token、import graph 或 build 不得視為可運行驗收。
+
+無完整測試套件；針對性 build 與 `pnpm run test:hub-functions`、`pnpm run test:gamerunner`、`pnpm run test:game-validator`、`pnpm run test:training-flow`、`pnpm run test:assessment-lifecycle`、`pnpm run test:media-lifecycle`、`pnpm run test:training-lifecycle`、`pnpm run test:training-privacy`、`pnpm run test:i18n` 為最低驗證。
 
 ## CI/CD 維護
 
 - `.github/workflows/ci.yml` 在 PR 與非 `main` push 的應用程式、package、script、lockfile、Turbo 或 workflow 變更時執行；純文件變更不得啟動 CI。
 - `.github/workflows/deploy-cloudflare-pages.yml` 只在 `main` 上的可部署變更時執行。部署前的驗證以 matrix 平行執行；新增 gate 時加入兩份 workflow 的 matrix，並維持相同命令。
-- `npm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `npm run build:cloudflare:only`，不可再序列重跑同一批測試。
+- repository health、training startability state 與 official training runtime browser 必須同時存在於兩份 workflow matrix；browser gate 的 timeout 必須涵蓋 Hub build 與所有 native setup 模組的實際啟動。
+- `pnpm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `pnpm run build:cloudflare:only`，不可再序列重跑同一批測試。
 - 變更 workflow 觸發範圍、測試命令或 build gate 時，必須同步更新本節，並確認 workflow 自身路徑仍會觸發驗證。
 
 ## 程式風格與命名規範
@@ -48,6 +59,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 可共享的邏輯、UI、樣式、auth、settings、routing helper、footer/navbar 放 `packages/ui/src` 或共用 helper；app 只傳 label、顏色、URL、模組清單等專屬資料。編輯 app-specific 檔案前，先檢查 `TrainerNavbar`、`TrainerAppLayout`、`AuthPanel`、共用 settings utilities/CSS/storage/auth helpers。app 組合共用元件，不分叉版本。
 
 玩家訓練 runtime 例外：每個訓練體驗自行擁有 runtime、game loop、renderer/canvas lifecycle、input、jsPsych/Pixi/Three timeline/plugin、刺激與遊戲內 UI。禁止跨模組集中長生命週期引擎狀態、依賴其他模組 runtime helper/視覺規則。只共享 React shell：routing、auth、settings form、layout、navigation、結果組合、renderer-independent utilities。
+
+平台必要契約是 module-owned `TrainingRunHandle`（官方遊戲）或 Game SDK bridge（第三方遊戲）；native/custom engine、component-owned loop 與 jsPsych plugin/timeline 都是可選內部實作。不得以 manifest、scanner、runner 或 CI 要求所有遊戲必須使用 jsPsych。
 
 Hub 禁止複製/分叉 trainer 設定表單、defaults、validation、rules、runtime。Hub 僅依 training catalog 裝載 trainer-owned config entry；trainer config 變更須自動反映，無需改 Hub。Hub 只負責選擇、container、history、exit、瀏覽器權限委派。Pixi、jsPsych、Three、MediaPipe、TensorFlow runtime/lifecycle 仍屬各模組。
 
@@ -73,7 +86,7 @@ Trainers 維持一致檔名/資料夾，例如 `pages/settings/SettingsPage.tsx`
 本平台提供開放開發者上傳 HTML/ZIP 居家練習遊戲的 Steam 式體驗，必須嚴格遵守以下五層安全防護架構：
 
 1. **物理隔離（Separate Domain）**：
-   - 主平台（`trainerhub.cc`，處理登入、個人紀錄、資料庫）與遊戲執行器（`trainerhub-user-games.pages.dev`，只負責靜態檔案與 jsPsych 執行）必須完全分開。
+   - 主平台（`trainerhub.cc`，處理登入、個人紀錄、資料庫）與遊戲執行器（`trainerhub-user-games.pages.dev`，只負責靜態檔案、Game SDK 生命週期與可選 jsPsych runtime）必須完全分開。
    - `usergamerunner` Cloudflare Pages 專案**嚴禁綁定 D1、KV 認證或任何使用者私密資料**，僅具備 `rehab-game-releases` R2 bucket 的唯讀讀取能力。
 
 2. **沙盒機制（Strict Iframe Sandbox）**：
@@ -128,7 +141,7 @@ Trainers 維持一致檔名/資料夾，例如 `pages/settings/SettingsPage.tsx`
 - 醫療、健康、科學與軟體效度敘述優先引用官方文件、原始研究或同儕審查論文。FrACT 相關內容引用[官方網站／手冊](https://michaelbach.de/fract/)、實際採用的版本與對應研究，並同時揭露校正需求及本站未經等效驗證。
 - `ProfilePage` 只用於主要內容確實聚焦單一作者的專頁，不得套在混合問答／文章列表頁；所有 structured data 皆須代表頁面可見內容並以 Rich Results Test 驗證。
 - 不得重新加入 `motor.trainerhub.cc`、`vision.trainerhub.cc`、`brain.trainerhub.cc`、`mouth.trainerhub.cc` 的公開連結、canonical、sitemap 或 auth origin；這些退役 hostname 只保留 301 設定。
-- SEO 或 E-E-A-T 變更至少執行 Hub build 與 `npm run test:seo`；修改 manifest 再執行 `npm run test:pwa`，修改共用 UI、語言初始化或 entrypoint 再執行 `npm run test:entrypoints`。最後直接檢查 `apps/rehabtrainerhub/out/index.html` 的 title、H1、description、canonical、robots、JSON-LD、繁體中文可見內容及不得出現的 104 URL。
+- SEO 或 E-E-A-T 變更至少執行 Hub build 與 `pnpm run test:seo`；修改 manifest 再執行 `pnpm run test:pwa`，修改共用 UI、語言初始化或 entrypoint 再執行 `pnpm run test:entrypoints`。最後直接檢查 `apps/rehabtrainerhub/out/index.html` 的 title、H1、description、canonical、robots、JSON-LD、繁體中文可見內容及不得出現的 104 URL。
 
 SEO 判斷以 Google Search Central 的[以使用者為優先的實用內容指南](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)、[Sitemap 指南](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap)、[結構化資料指南](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)及[ProfilePage 指南](https://developers.google.com/search/docs/appearance/structured-data/profile-page)最新版本為準；規範變更時更新實作與檢查腳本，不以舊 SEO 慣例覆蓋官方說明。
 

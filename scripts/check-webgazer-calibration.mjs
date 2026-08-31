@@ -8,8 +8,9 @@ const read = (relativePath) => readFile(resolve(repoRoot, relativePath), 'utf8')
 const readBytes = (relativePath) => readFile(resolve(repoRoot, relativePath));
 
 const visionRuntime = 'apps/rehabtrainerhub/training-runtimes/vision';
-const calibration = await read(`${visionRuntime}/src/utils/webgazerCalibration.ts`);
-const loader = await read(`${visionRuntime}/src/utils/webgazerLoader.ts`);
+const visionModule = 'apps/rehabtrainerhub/training-modules/vision';
+const calibration = await read(`${visionModule}/utils/webgazerCalibration.ts`);
+const loader = await read(`${visionModule}/utils/webgazerLoader.ts`);
 const home = await read('apps/rehabtrainerhub/training-modules/vision/pages/HomePage.tsx');
 const training = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/TrainingPage.tsx');
 const oculomotorTimeline = await read('apps/rehabtrainerhub/training-modules/vision/experiment/timelines/oculomotorTimeline.ts');
@@ -17,9 +18,9 @@ const oculomotorPlugin = await read('apps/rehabtrainerhub/training-modules/visio
 const oculomotorResults = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/results/OculomotorResults.tsx');
 const oculomotorResultData = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/oculomotor/resultData.ts');
 const trainingResultCsv = await read('apps/rehabtrainerhub/training-modules/vision/pages/training/exportCsv.ts');
-const trainingRecords = await read(`${visionRuntime}/src/utils/trainingRecords.ts`);
-const zh = await read(`${visionRuntime}/src/i18n/zh.ts`);
-const en = await read(`${visionRuntime}/src/i18n/en.ts`);
+const trainingRecords = await read(`${visionModule}/utils/trainingRecords.ts`);
+const zh = await read(`${visionModule}/i18n/zh.ts`);
+const en = await read(`${visionModule}/i18n/en.ts`);
 const visionCss = await read(`${visionRuntime}/src/index.css`);
 const manifest = JSON.parse(await read('scripts/r2-ai-assets.manifest.json'));
 const runtimePath = `${visionRuntime}/public/assets/webgazer/3.5.3/webgazer.js`;
@@ -180,6 +181,11 @@ for (const forbiddenSelector of [
 }
 assert.ok(loader.includes('Timed out loading WebGazer'), 'script loading must have a timeout');
 assert.ok(loader.includes("webGazerRuntimeVersion = '3.5.3'"), 'WebGazer must use a pinned runtime version');
+assert.match(loader, /EnsureWebGazerLoaded\(signal\?: AbortSignal\)/, 'WebGazer loading must accept an abort signal');
+assert.match(loader, /signal\?\.addEventListener\('abort'/, 'WebGazer script loading must remove a pending script on abort');
+assert.match(training, /const setupController = new AbortController\(\)/, 'visual training must own a setup abort controller');
+assert.match(training, /EnsureWebGazerLoaded\(setupController\.signal\)/, 'visual training must pass its setup signal to WebGazer');
+assert.match(training, /setupController\.abort\('training-unmounted'\)/, 'visual training must abort setup on unmount');
 assert.ok(loader.includes('ConfigureWebGazerAssetPath'), 'the MediaPipe path must follow the loaded script origin');
 assert.ok(loader.includes('EnsurePredictionTimestamp'), 'WebGazer predictions must be timestamped for native validation');
 assert.equal(loader.includes('local-v1'), false, 'the obsolete WebGazer runtime must not be a fallback');

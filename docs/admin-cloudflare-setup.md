@@ -1,6 +1,6 @@
 # 管理後台與 Cloudflare 上線指南
 
-本文件涵蓋 `/admin`、D1、KV、R2、Turnstile、Web Analytics，以及 AI 模型 CDN 的正式環境設定。程式可在未設定 Cloudflare 額外服務時建置；需要的綁定或金鑰未就緒時，受影響功能會明確失敗或採用既定 CDN fallback，不會默默降低驗證強度。
+本文件涵蓋 `/admin`、D1、KV、R2、Turnstile、Web Analytics，以及平台控制的 AI 模型資產服務設定。程式可在未設定 Cloudflare 額外服務時建置；需要的綁定或金鑰未就緒時，受影響功能會明確失敗，不會退回第三方 CDN 或默默降低驗證強度。
 
 ## 架構與權限
 
@@ -30,7 +30,7 @@ Article cover / AI assets -> R2 -> assets.trainerhub.cc -> Cloudflare CDN
 先套用 migration，再部署依賴新 schema 的版本：
 
 ```bash
-npx --yes wrangler@4 d1 migrations apply rehab_db \
+pnpm dlx wrangler@4 d1 migrations apply rehab_db \
   --config apps/rehabtrainerhub/wrangler.toml --remote
 ```
 
@@ -53,7 +53,7 @@ Cloudflare API token 至少需涵蓋本流程使用的 Pages、D1、KV 與 R2 �
 先查詢使用者：
 
 ```bash
-npx --yes wrangler@4 d1 execute rehab_db \
+pnpm dlx wrangler@4 d1 execute rehab_db \
   --config apps/rehabtrainerhub/wrangler.toml --remote \
   --command "SELECT id, display_name, email, role FROM app_users ORDER BY created_at DESC"
 ```
@@ -61,11 +61,11 @@ npx --yes wrangler@4 d1 execute rehab_db \
 設定角色：
 
 ```bash
-npx --yes wrangler@4 d1 execute rehab_db \
+pnpm dlx wrangler@4 d1 execute rehab_db \
   --config apps/rehabtrainerhub/wrangler.toml --remote \
   --command "UPDATE app_users SET role='admin', updated_at=datetime('now') WHERE id='ADMIN_USER_ID'"
 
-npx --yes wrangler@4 d1 execute rehab_db \
+pnpm dlx wrangler@4 d1 execute rehab_db \
   --config apps/rehabtrainerhub/wrangler.toml --remote \
   --command "UPDATE app_users SET role='therapist', updated_at=datetime('now') WHERE id='THERAPIST_USER_ID'"
 ```
@@ -73,7 +73,7 @@ npx --yes wrangler@4 d1 execute rehab_db \
 建立已授權人員與使用者關聯（資料表沿用既有欄位名稱）：
 
 ```bash
-npx --yes wrangler@4 d1 execute rehab_db \
+pnpm dlx wrangler@4 d1 execute rehab_db \
   --config apps/rehabtrainerhub/wrangler.toml --remote \
   --command "INSERT INTO therapist_patient_assignments (therapist_id, patient_id, assigned_by_user_id, assigned_at, updated_at) VALUES ('THERAPIST_USER_ID', 'PATIENT_USER_ID', 'ADMIN_USER_ID', datetime('now'), datetime('now')) ON CONFLICT(therapist_id, patient_id) DO UPDATE SET assigned_by_user_id=excluded.assigned_by_user_id, updated_at=excluded.updated_at"
 ```
@@ -81,7 +81,7 @@ npx --yes wrangler@4 d1 execute rehab_db \
 解除指派：
 
 ```bash
-npx --yes wrangler@4 d1 execute rehab_db \
+pnpm dlx wrangler@4 d1 execute rehab_db \
   --config apps/rehabtrainerhub/wrangler.toml --remote \
   --command "DELETE FROM therapist_patient_assignments WHERE therapist_id='THERAPIST_USER_ID' AND patient_id='PATIENT_USER_ID'"
 ```
@@ -109,14 +109,14 @@ GitHub `cloudflare-pages` environment 設定：
 
 Server 端會檢查 Siteverify 結果、預期 action 與 hostname。訓練紀錄使用 explicit execution：只在要上傳時取得一次性 token，不會在遊戲過程持續執行 challenge。
 
-## 4. R2、CORS 與 AI 資產 CDN
+## 4. R2、CORS 與平台資產
 
 1. 建立 R2 bucket，並讓 Hub 的 `ASSET_BUCKET` binding 指向該 bucket。
 2. 綁定正式 custom domain，例如 `assets.trainerhub.cc`。正式環境不要以 `r2.dev` 當長期資產網址。
 3. 套用 CORS：
 
 ```bash
-npx --yes wrangler@4 r2 bucket cors set R2_BUCKET_NAME \
+pnpm dlx wrangler@4 r2 bucket cors set R2_BUCKET_NAME \
   --file scripts/r2-cors.json
 ```
 
@@ -151,13 +151,17 @@ AI_ASSET_BASE_URL=https://assets.trainerhub.cc
 ASSET_PUBLIC_BASE_URL=https://assets.trainerhub.cc
 ```
 
-- `AI_ASSET_BASE_URL`：MediaPipe WASM、`.task` 模型、WebGazer，以及大型遊戲圖片 / 3D 模型的主要來源。
+- `AI_ASSET_BASE_URL`：僅供 R2 資產驗證與部署工具記錄 custom domain；瀏覽器 runtime 不會使用此值組合外部 URL，也不提供 CDN fallback。所有 MediaPipe、WebGazer 與遊戲資產一律經平台同源 `/runtime-assets/` route 載入。
 - `ASSET_PUBLIC_BASE_URL`：後台文章封面上傳後可公開存取的 base URL。
-- MediaPipe 載入失敗時會退回固定版本的官方 / jsDelivr 資源。
-- Hub 的 vision runtime 會先載入 R2 WebGazer，再由本地 loader 退回 `/runtimes/vision/webgazer.js`。
-- 星空背景與 3D 車輛會優先使用 R2，失敗時保留 Pages 內的本地副本。
+- MediaPipe 載入只接受平台控制的版本化資產路徑；資產缺失時明確失敗。
+- Hub 的 vision runtime 只載入平台控制的 R2 WebGazer 或同源版本化副本。
+- 星空背景與 3D 車輛只走同源唯讀 asset route；只有 localhost 開發環境可明確
+  opt-in 使用 Pages 內的同源本地副本，production 缺失時必須明確失敗。
+- `/runtime-assets/*` 只允許 manifest 內的 AI／遊戲資產 key，透過 `ASSET_BUCKET` 唯讀讀取，回傳 immutable cache 與 `nosniff`／same-origin headers；CORS 僅回應同源請求，不接受可配置的跨來源 proxy，也不得把它改成任意 R2 proxy。
 
-只有 `main` production build 會注入 R2 AI base；未綁定 production custom domain 的 preview build 會使用 fallback，避免產生無法存取的 hash-preview 資產網址。
+`main` production build 可注入 `AI_ASSET_BASE_URL` 供 R2 驗證／部署 metadata；它不會
+進入瀏覽器 runtime，也不會成為 fallback。未設定資產 base 的 preview 仍使用同源
+`/runtime-assets/` 路徑，缺少資產時明確失敗，不會向第三方服務發出請求。
 
 ## 5. KV 文章快取
 
@@ -196,10 +200,10 @@ Pages hash preview 可能因同源 HttpOnly cookie、OAuth callback hostname 與
 ## 9. 驗證指令
 
 ```bash
-npm run test:hub-functions
-npm run test:entrypoints
-npm run build:hub
-npm run test:cloudflare-deploy
+pnpm run test:hub-functions
+pnpm run test:entrypoints
+pnpm run build:hub
+pnpm run test:cloudflare-deploy
 ```
 
 正式發布前最後確認：

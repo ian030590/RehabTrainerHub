@@ -22,19 +22,24 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/clean-next-output.mjs && next build && node scripts/build-training-runtimes.mjs && node ../../scripts/emit-pwa-assets.mjs out && node ../../scripts/emit-official-game-pwas.mjs out && node ../../scripts/check-seo-output.mjs",
-    "preview": "npx serve out"
+    "prebuild": "tsc --noEmit --incremental false -p tsconfig.json",
+    "build": "node scripts/clean-next-output.mjs && next build && node scripts/build-training-runtimes.mjs && node ../../scripts/check-runtime-build-manifest.mjs && node ../../scripts/emit-pwa-assets.mjs out && node ../../scripts/emit-official-game-pwas.mjs out && node ../../scripts/check-official-game-pwa-output.mjs out && node ../../scripts/check-bundle-budgets.mjs --require-output && node ../../scripts/check-seo-output.mjs",
+    "preview": "pnpm dlx serve out"
   },
   "dependencies": {
+    "acorn": "8.18.0",
     "fflate": "~0.8.2",
     "next": "^16.2.10",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "@rehab-trainer/training-contracts": "workspace:*"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.5.2",
     "@types/node": "^24.10.2",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5"
   }
 }

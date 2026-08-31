@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   CreateGamePlatformRunnerCommandMessage,
   gamePlatformLifecycleMessageType,
@@ -23,6 +23,39 @@ interface PackageGameOverlayProps {
 
 export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
   const { language } = useHubLanguage();
+  const reportCopy = language === 'en'
+    ? {
+        button: 'Report game',
+        category: 'Category',
+        details: 'Details',
+        placeholder: 'Describe the safety, copyright, privacy, or content concern.',
+        submit: 'Submit report',
+        submitting: 'Submitting…',
+        submitted: 'Report submitted for administrator review.',
+        signIn: 'Sign in is required to report a game.',
+        error: 'The report could not be submitted. Please try again.',
+        safety: 'Safety',
+        copyright: 'Copyright',
+        privacy: 'Privacy',
+        content: 'Content',
+        other: 'Other',
+      }
+    : {
+        button: '檢舉遊戲',
+        category: '類別',
+        details: '說明',
+        placeholder: '請描述安全、著作權、隱私或內容疑慮。',
+        submit: '送出檢舉',
+        submitting: '送出中…',
+        submitted: '檢舉已送交管理員查核。',
+        signIn: '檢舉遊戲需要先登入。',
+        error: '檢舉送出失敗，請稍後再試。',
+        safety: '安全性',
+        copyright: '著作權',
+        privacy: '隱私',
+        content: '內容',
+        other: '其他',
+      };
   const frameRef = useRef<HTMLIFrameElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const lastSequenceRef = useRef(-1);
@@ -41,6 +74,10 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
   const [isActive, setIsActive] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState<'safety' | 'copyright' | 'privacy' | 'content' | 'other'>('safety');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportState, setReportState] = useState<'idle' | 'submitting' | 'submitted' | 'error'>('idle');
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'guest' | 'error'>('idle');
   const sessionNonce = useMemo(CreateSessionNonce, [game.release.id]);
   const sourceUrl = useMemo(() => {
@@ -117,6 +154,37 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
       saveInFlightRef.current = false;
     }
   }, [ensureRunSession, game.release.id, sessionNonce]);
+
+  const submitReport = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (reportDetails.trim().length < 2) {
+      setReportState('error');
+      return;
+    }
+    setReportState('submitting');
+    try {
+      const response = await fetch('/api/games/report', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          releaseId: game.release.id,
+          reason: reportReason,
+          details: reportDetails.trim(),
+        }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: unknown } | null;
+        if (response.status === 401) throw new Error(reportCopy.signIn);
+        throw new Error(typeof payload?.error === 'string' ? payload.error : reportCopy.error);
+      }
+      setReportState('submitted');
+      setReportDetails('');
+    } catch (error) {
+      console.warn('Unable to submit a game report.', error);
+      setReportState('error');
+    }
+  };
 
   useEffect(() => {
     dialogRef.current?.showModal();
@@ -219,12 +287,48 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
           <a href={game.release.installUrl} rel="noopener noreferrer" target="_blank">
             安裝此遊戲
           </a>
+          <button onClick={() => setIsReportOpen((open) => !open)} type="button">
+            {reportCopy.button}
+          </button>
           <button disabled={isClosing} onClick={requestClose} type="button">
             <span className="material-symbols-outlined" aria-hidden="true">close</span>
             關閉
           </button>
         </div>
       </header>
+      {isReportOpen && (
+        <form className="package-game-report" onSubmit={(event) => void submitReport(event)}>
+          <label>
+            <span>{reportCopy.category}</span>
+            <select
+              onChange={(event) => setReportReason(event.target.value as typeof reportReason)}
+              value={reportReason}
+            >
+              <option value="safety">{reportCopy.safety}</option>
+              <option value="copyright">{reportCopy.copyright}</option>
+              <option value="privacy">{reportCopy.privacy}</option>
+              <option value="content">{reportCopy.content}</option>
+              <option value="other">{reportCopy.other}</option>
+            </select>
+          </label>
+          <label>
+            <span>{reportCopy.details}</span>
+            <textarea
+              maxLength={2000}
+              onChange={(event) => setReportDetails(event.target.value)}
+              placeholder={reportCopy.placeholder}
+              required
+              rows={3}
+              value={reportDetails}
+            />
+          </label>
+          <button disabled={reportState === 'submitting'} type="submit">
+            {reportState === 'submitting' ? reportCopy.submitting : reportCopy.submit}
+          </button>
+          {reportState === 'submitted' && <span role="status">{reportCopy.submitted}</span>}
+          {reportState === 'error' && <span role="alert">{reportCopy.error}</span>}
+        </form>
+      )}
       <div className={`package-game-frame${isReady ? ' is-ready' : ''}`}>
         {!isReady && (
           <div className="training-loading-stage" role="status">

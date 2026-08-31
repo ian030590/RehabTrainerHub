@@ -30,6 +30,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // The root Hub worker owns only the application shell. Official runtime and
+  // per-game scopes have their own cache/offline-pack ownership; never place
+  // their heavy models, WASM, or game artifacts in the root cache.
+  if (
+    url.pathname.startsWith('/runtimes/')
+    || url.pathname.startsWith('/games/')
+    || url.pathname.startsWith('/runtime-assets/')
+    || url.pathname.startsWith('/offline-manifests/')
+    || url.pathname.startsWith('/official-training-host/')
+  ) {
+    return;
+  }
+
   const isVersionedAsset = url.pathname.startsWith('/assets/')
     && /-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$/.test(url.pathname);
   event.respondWith(isVersionedAsset ? CacheFirst(request) : NetworkFirst(request));

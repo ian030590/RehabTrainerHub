@@ -6,6 +6,7 @@ import {
   RequireDatabase,
 } from '../../_lib/auth.js';
 import { GetAuthenticatedUser } from '../../_lib/authorization.js';
+import { GetGamePlatformLicense, gamePlatformLicenses } from '@rehab-trainer/training-contracts';
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);
@@ -47,6 +48,17 @@ export async function onRequestGet({ request, env }) {
         INNER JOIN developer_games ON developer_games.id = game_releases.game_id
         INNER JOIN app_users ON app_users.id = developer_games.owner_user_id
         WHERE (? IS NULL OR game_releases.status = ?)
+          AND NOT EXISTS (
+            SELECT 1
+            FROM game_scan_runs AS pending_scan
+            WHERE pending_scan.submission_id = game_releases.submission_id
+              AND pending_scan.attempt = (
+                SELECT MAX(latest_scan.attempt)
+                FROM game_scan_runs AS latest_scan
+                WHERE latest_scan.submission_id = game_releases.submission_id
+              )
+              AND pending_scan.status IN ('queued', 'running')
+          )
         ORDER BY
           CASE game_releases.status
             WHEN 'pending_review' THEN 0
@@ -77,6 +89,8 @@ function MapRelease(row) {
     title: row.title,
     summary: row.summary,
     category: row.category,
+    license: GetGamePlatformLicense(row.license_id)
+      || gamePlatformLicenses[gamePlatformLicenses.length - 1],
     developerName: row.submitted_developer_name,
     owner: {
       id: row.owner_user_id,
@@ -86,6 +100,7 @@ function MapRelease(row) {
     artifactType: row.artifact_type,
     entryPath: row.entry_path,
     status: row.status,
+    submissionId: row.submission_id || null,
     contentSha256: row.content_sha256,
     packageBytes: row.package_bytes,
     uncompressedBytes: row.uncompressed_bytes,

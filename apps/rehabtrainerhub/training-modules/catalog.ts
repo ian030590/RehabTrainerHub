@@ -1,9 +1,13 @@
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import {
   GetTrainingModuleFlowManifest,
+  GetTrainingModuleManifest,
+  GetTrainingModulePurposeId,
+  GetTrainingModuleRegistryEntry,
   type TrainingFlowStep,
   type TrainingMediaPermission,
 } from './moduleFlowManifest';
+import type { TrainingModuleManifest } from '@rehab-trainer/training-contracts';
 
 export type ThemeIconType = 'material-symbol' | 'svg';
 
@@ -118,6 +122,7 @@ export interface LocalizedTrainingCopy {
 
 export interface TrainingCatalogModule {
   catalogId: string;
+  manifest: TrainingModuleManifest;
   runtimeId: string;
   trainer: TrainerCatalogId;
   purpose: TrainingPurposeId;
@@ -464,16 +469,22 @@ const seeds: readonly TrainingCatalogSeed[] = [
 
 export const trainingCatalog: readonly TrainingCatalogModule[] = seeds.map((seed) => {
   const catalogId = `${seed.trainer}:${seed.id}`;
+  const moduleManifest = GetTrainingModuleManifest(catalogId);
   const flowManifest = GetTrainingModuleFlowManifest(catalogId);
+  if (GetTrainingModulePurposeId(catalogId) !== seed.purpose
+    || moduleManifest.purposeId !== seed.purpose) {
+    throw new Error(`Catalog purpose does not match the generated manifest for ${catalogId}.`);
+  }
   return {
     catalogId,
+    manifest: moduleManifest,
     runtimeId: seed.id,
     trainer: seed.trainer,
     purpose: seed.purpose,
     kind: seed.kind,
     entryPath: seed.path,
     imagePath: `/assets/training-modules/${seed.id}.webp`,
-    flow: flowManifest.flow,
+    flow: moduleManifest.flow,
     mediaPermission: flowManifest.mediaPermission,
     sourcePath: flowManifest.sourcePath,
     copy: {
@@ -509,6 +520,18 @@ export function GetTrainingModuleCopy(
 export function BuildTrainingModuleHref(
   module: TrainingCatalogModule,
 ): string {
+  return `${defaultSiteUrls.hub}${GetTrainingModuleRegistryEntry(module.catalogId).hostPath}`;
+}
+
+/**
+ * Compatibility URL used only by official-training-host while a module is
+ * being migrated to its native setup/engine boundary. New callers must use
+ * BuildTrainingModuleHref so the Hub never launches a category runtime
+ * directly.
+ */
+export function BuildLegacyTrainingModuleHref(
+  module: TrainingCatalogModule,
+): string {
   return `${defaultSiteUrls.hub}/runtimes/${module.trainer}/#${module.entryPath}`;
 }
 
@@ -516,6 +539,15 @@ export function BuildTrainingGameInstallHref(
   module: TrainingCatalogModule,
 ): string {
   return `${defaultSiteUrls.hub}/games/${encodeURIComponent(module.runtimeId)}/`;
+}
+
+export function BuildTrainingGameOfflineManifestHref(
+  module: TrainingCatalogModule,
+): string {
+  const registryEntry = GetTrainingModuleRegistryEntry(module.catalogId);
+  // Keep this same-origin relative so OfflinePackManager also works in local
+  // previews and cannot be pointed at a different asset origin by catalog data.
+  return `${registryEntry.officialPwa.offlineManifestPathPrefix}latest.json`;
 }
 
 export function BuildTrainingModuleImageSrc(

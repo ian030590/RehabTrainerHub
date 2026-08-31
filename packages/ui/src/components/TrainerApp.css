@@ -108,28 +108,6 @@ a {
   color: inherit;
 }
 
-:where(
-  a[href],
-  button,
-  input,
-  select,
-  textarea,
-  summary,
-  [role="button"],
-  [role="menuitem"],
-  [role="tab"]
-) {
-  transition:
-    background-color 180ms ease,
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    color 180ms ease,
-    filter 180ms ease,
-    opacity 180ms ease,
-    text-decoration-color 180ms ease,
-    transform 180ms ease;
-}
-
 body[data-ui-font-bold="true"] .app-layout :where(
   a,
   button,
@@ -163,7 +141,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 4px;
-  transition: background-color 180ms ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -185,16 +162,6 @@ body[data-ui-font-bold="true"] .app-layout :where(
   color: var(--text-primary);
   font-size: var(--ui-font-size, 18px);
   font-weight: var(--ui-font-weight, var(--fw-regular, 500));
-}
-
-.trainer-route-transition {
-  width: 100%;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  animation: trainerRouteEnter 260ms cubic-bezier(0.2, 0.75, 0.25, 1);
 }
 
 html[data-training-embed="hub"],
@@ -311,9 +278,6 @@ body[data-training-embed="hub"] #root,
   height: 3px;
   background: transparent;
   content: '';
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: background-color 180ms ease, transform 180ms ease;
 }
 
 .trainer-hub-nav-link:hover,
@@ -323,7 +287,6 @@ body[data-training-embed="hub"] #root,
 
 .trainer-hub-nav-link.is-active::after {
   background: var(--accent);
-  transform: scaleX(1);
 }
 
 .trainer-account-menu {
@@ -991,11 +954,6 @@ body[data-training-embed="hub"] #root,
   box-shadow: var(--shadow-modal, var(--shadow-floating));
 }
 
-.config-modal-overlay > .training-config {
-  transform-origin: center center;
-  animation: trainingConfigExpand 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
 .custom-image-field {
   margin-top: 12px;
 }
@@ -1582,7 +1540,7 @@ body[data-training-embed="hub"] #root,
   cursor: pointer;
   font-family: var(--font-family);
   text-align: left;
-  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 /* Shared test-config control language: every training setup uses the same
@@ -1757,29 +1715,18 @@ body[data-training-embed="hub"] #root,
   display: grid;
   align-content: start;
   gap: 8px;
-  color: var(--text-primary);
-  cursor: default;
-}
-
-.training-slider-control {
-  min-width: 0;
-  display: grid;
-  align-content: start;
-  gap: 8px;
   padding: 12px 14px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-m);
   background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: default;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.training-slider:has(input:focus-visible) .training-slider-control {
+.training-slider:has(input:focus-visible) {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 1px var(--accent);
-}
-
-.training-slider:has(input:disabled) .training-slider-control {
-  opacity: 0.56;
 }
 
 .training-slider-header { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -1880,19 +1827,11 @@ input.training-slider {
   cursor: pointer;
 }
 
-.training-option-toggle + .training-option-toggle {
-  margin-top: 8px;
-}
-
-.training-config-control-status {
+.training-config-actions {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
-  margin-top: 10px;
-}
-
-.training-config-rescan-inputs {
   margin-bottom: 10px;
 }
 
@@ -2068,7 +2007,7 @@ input.training-slider {
   width: 100%;
 }
 
-.training-setting > input.training-slider {
+.training-setting > .training-slider {
   display: block;
   width: 100%;
 }
@@ -2969,28 +2908,6 @@ input.training-slider {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes trainerRouteEnter {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.995);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes trainingConfigExpand {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
   }
 }
 

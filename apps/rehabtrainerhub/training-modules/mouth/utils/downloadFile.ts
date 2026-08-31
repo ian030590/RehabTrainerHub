@@ -1,1 +1,1 @@
-export * from '../../../training-runtimes/mouth/src/utils/downloadFile';
+export { DownloadCsvFile, DownloadFile } from '@rehab-trainer/ui/downloadFile';

@@ -1,1 +1,1 @@
-export * from '../../../training-runtimes/motor/src/components/InlineAlert';
+export { InlineAlert } from '@rehab-trainer/ui/components/InlineAlert';

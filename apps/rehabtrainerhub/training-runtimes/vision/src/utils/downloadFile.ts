@@ -1,1 +1,1 @@
-export { DownloadCsvFile, DownloadFile } from '@rehab-trainer/ui/downloadFile';
+export * from '@rehab-trainer/hub-modules/vision/utils/downloadFile';

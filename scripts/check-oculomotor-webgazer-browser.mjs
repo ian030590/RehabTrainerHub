@@ -19,7 +19,7 @@ const timeoutMs = 60_000;
 const formalTrialTargetSelector = '.oculomotor-training-trial';
 
 if (!existsSync(outputIndex)) {
-  throw new Error(`Built Vision runtime is missing: ${outputIndex}\nRun npm run build:hub first.`);
+  throw new Error(`Built Vision runtime is missing: ${outputIndex}\nRun pnpm run build:hub first.`);
 }
 if (!existsSync(viteBin)) throw new Error(`Vite preview executable is missing: ${viteBin}`);
 if (!browserPath) throw new Error('No Chromium-based browser executable was found.');

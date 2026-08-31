@@ -23,7 +23,7 @@ const browserPath = FindBrowserPath();
 const timeoutMs = 45_000;
 
 if (!existsSync(distIndex)) {
-  throw new Error(`Hub vision runtime output is missing: ${distIndex}\nRun npm run build:hub first.`);
+  throw new Error(`Hub vision runtime output is missing: ${distIndex}\nRun pnpm run build:hub first.`);
 }
 if (!existsSync(viteBin)) {
   throw new Error(`Vite preview executable is missing: ${viteBin}`);

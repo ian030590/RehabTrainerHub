@@ -31,7 +31,6 @@ import type { PeripheralAttentionStopCondition, SubtestId, UfovRunMode, UfovTarg
 
 const LoadReferenceCognitiveGame = () => import('./thinking/ReferenceCognitiveGame');
 const LoadEveryBallResponsePage = () => import('./EveryBallResponsePage');
-const LoadUfovPage = () => import('./PeripheralAttentionPage');
 const ReferenceCognitiveGame = lazy(() => LoadReferenceCognitiveGame().then((module) => ({ default: module.ReferenceCognitiveGame })));
 const EveryBallResponsePage = lazy(() => LoadEveryBallResponsePage().then((module) => ({ default: module.EveryBallResponsePage })));
 
@@ -189,14 +188,6 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
               className={isPlayable ? '' : 'placeholder-card'}
               disabled={!isPlayable}
               isSelected={activeModule === card.gameId}
-              onPreload={() => {
-                const loader = isUfovCard
-                  ? LoadUfovPage
-                  : card.gameId === 'every-ball-response'
-                    ? LoadEveryBallResponsePage
-                    : LoadReferenceCognitiveGame;
-                void loader().catch(() => undefined);
-              }}
               onSelect={() => {
                 if (card.gameId) {
                   openModule(card.gameId);

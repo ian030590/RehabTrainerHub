@@ -10,8 +10,7 @@ import {
 import { TrainingOverlay } from './train/TrainingOverlay';
 import { PackageGameOverlay } from './train/PackageGameOverlay';
 import {
-  BuildTrainingGameInstallHref,
-  BuildTrainingModuleHref,
+  BuildTrainingGameOfflineManifestHref,
   BuildTrainingModuleImageSrc,
   GetTrainingModuleCopy,
   GetTrainingModuleTheme,
@@ -23,6 +22,7 @@ import {
   type TrainingVisualTheme,
 } from '@rehab-trainer/hub-modules/catalog';
 import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
+import { OfflinePackControl } from '@rehab-trainer/ui/components/OfflinePackControl';
 import { GetHubUiCopy } from './i18n';
 import { useHubLanguage } from './i18n/HubLanguage';
 import {
@@ -30,20 +30,6 @@ import {
   type PublishedGame,
 } from './publishedGames';
 import { BuildTrainingThemeStyle } from './trainingThemeStyle';
-
-const prefetchedTrainingUrls = new Set<string>();
-
-function PreloadTrainingModule(module: TrainingCatalogModule) {
-  const href = BuildTrainingModuleHref(module);
-  if (prefetchedTrainingUrls.has(href)) return;
-  prefetchedTrainingUrls.add(href);
-
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
-  link.as = 'document';
-  link.href = href;
-  document.head.append(link);
-}
 
 function TrainingThemeIcon({
   decorative = false,
@@ -90,6 +76,13 @@ function TrainingThemeBadge({
   );
 }
 
+function FormatBytes(value: number): string {
+  if (!Number.isFinite(value) || value < 0) return '—';
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
@@ -104,23 +97,53 @@ export function TrainingLobby() {
   const platformCopy = language === 'en'
     ? {
         catalogUnavailable: 'Developer games are temporarily unavailable. Built-in games are still available.',
+        clientReported: 'Results are client-reported',
         developer: 'Developer',
         developerLibrary: 'Developer games',
         install: 'Install game',
+        license: 'License',
+        offlineCapacity: 'Not enough browser storage is available for this offline pack.',
+        offlineChecking: 'Checking offline pack…',
+        offlineDownload: 'Download offline pack',
+        offlineError: 'The offline pack is unavailable. Please try again later.',
+        offlineInstall: 'Installing offline pack…',
+        offlineIntegrity: 'Installed data changed; choose update to repair it.',
+        offlineProgress: (completed: number, total: number) => `Offline pack progress: ${completed}/${total}`,
+        offlineQuota: (bytes: number) => `Browser quota ${FormatBytes(bytes)}`,
+        offlineReady: 'Available offline',
+        offlineRemove: 'Remove offline copy',
+        offlineSize: (bytes: number) => `${FormatBytes(bytes)} offline`,
+        offlineUpdate: 'Update offline pack',
         officialLibrary: 'Rehab Trainer Hub built-in games',
         play: 'Play on platform',
         reviewed: 'Reviewed release',
+        thirdParty: 'Third-party game',
         summaryFallback: 'A home-practice activity provided by its developer.',
         version: 'Version',
       }
     : {
         catalogUnavailable: '開發者遊戲目前無法載入；內建遊戲仍可正常使用。',
+        clientReported: '結果為使用者端回報',
         developer: '開發者',
         developerLibrary: '開發者遊戲',
         install: '安裝遊戲',
+        license: '授權',
+        offlineCapacity: '瀏覽器可用儲存空間不足，無法下載此離線包。',
+        offlineChecking: '正在檢查離線包…',
+        offlineDownload: '下載離線包',
+        offlineError: '離線包目前無法取得，請稍後再試。',
+        offlineInstall: '正在安裝離線包…',
+        offlineIntegrity: '已安裝資料與目前版本不同，請選擇更新修復。',
+        offlineProgress: (completed: number, total: number) => `離線包進度：${completed}/${total}`,
+        offlineQuota: (bytes: number) => `瀏覽器配額 ${FormatBytes(bytes)}`,
+        offlineReady: '已可離線使用',
+        offlineRemove: '移除離線副本',
+        offlineSize: (bytes: number) => `離線大小 ${FormatBytes(bytes)}`,
+        offlineUpdate: '更新離線包',
         officialLibrary: '居家訓練網內建遊戲',
         play: '在平台遊玩',
         reviewed: '已審核版本',
+        thirdParty: '第三方社群遊戲',
         summaryFallback: '開發者提供的居家練習活動。',
         version: '版本',
       };
@@ -159,38 +182,6 @@ export function TrainingLobby() {
       });
     return () => controller.abort();
   }, []);
-
-  useEffect(() => {
-    const origins = new Set(trainingCatalog.map((module) => (
-      new URL(BuildTrainingModuleHref(module)).origin
-    )));
-    const links = [...origins].flatMap((origin) => {
-      const preconnect = document.createElement('link');
-      preconnect.rel = 'preconnect';
-      preconnect.href = origin;
-      preconnect.crossOrigin = 'anonymous';
-      const dnsPrefetch = document.createElement('link');
-      dnsPrefetch.rel = 'dns-prefetch';
-      dnsPrefetch.href = origin;
-      document.head.append(preconnect, dnsPrefetch);
-      return [preconnect, dnsPrefetch];
-    });
-
-    return () => links.forEach((link) => link.remove());
-  }, []);
-
-  useEffect(() => {
-    const origins = new Set(publishedGames.map((game) => new URL(game.release.launchUrl).origin));
-    const links = [...origins].map((origin) => {
-      const preconnect = document.createElement('link');
-      preconnect.rel = 'preconnect';
-      preconnect.href = origin;
-      preconnect.crossOrigin = 'anonymous';
-      document.head.append(preconnect);
-      return preconnect;
-    });
-    return () => links.forEach((link) => link.remove());
-  }, [publishedGames]);
 
   const togglePurpose = (purposeId: TrainingPurposeId) => {
     setSelectedPurposes((current) => (
@@ -294,8 +285,8 @@ export function TrainingLobby() {
                   <article
                     aria-label={`${copy.start}: ${moduleCopy.title}`}
                     className="module-card official-game-card"
+                    data-training-module-id={module.catalogId}
                     key={module.catalogId}
-                    onPointerEnter={() => PreloadTrainingModule(module)}
                     style={BuildTrainingThemeStyle(theme)}
                   >
                     <div className="module-card-visual">
@@ -321,22 +312,34 @@ export function TrainingLobby() {
                       <p>{moduleCopy.description}</p>
                       <div className="module-card-footer official-game-actions">
                         <button
+                          data-training-action="launch"
                           onClick={() => setActiveModule(module)}
-                          onFocus={() => PreloadTrainingModule(module)}
-                          onPointerDown={() => PreloadTrainingModule(module)}
                           type="button"
                         >
                           {copy.start}
                           <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                         </button>
-                        <a
-                          href={BuildTrainingGameInstallHref(module)}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        >
-                          {platformCopy.install}
-                          <span className="material-symbols-outlined" aria-hidden="true">download</span>
-                        </a>
+                        <OfflinePackControl
+                          expectedModuleId={module.catalogId}
+                          expectedPackId={`official-game:${module.runtimeId}`}
+                          labels={{
+                            capacity: platformCopy.offlineCapacity,
+                            checking: platformCopy.offlineChecking,
+                            download: platformCopy.offlineDownload,
+                            error: platformCopy.offlineError,
+                            installing: platformCopy.offlineInstall,
+                            integrity: platformCopy.offlineIntegrity,
+                            progress: platformCopy.offlineProgress,
+                            quota: platformCopy.offlineQuota,
+                            ready: platformCopy.offlineReady,
+                            remove: platformCopy.offlineRemove,
+                            size: platformCopy.offlineSize,
+                            update: platformCopy.offlineUpdate,
+                            unavailable: platformCopy.offlineError,
+                          }}
+                          manifestUrl={BuildTrainingGameOfflineManifestHref(module)}
+                          icon={<span className="material-symbols-outlined" aria-hidden="true">download</span>}
+                        />
                       </div>
                     </div>
                   </article>
@@ -379,6 +382,7 @@ export function TrainingLobby() {
                             <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
                             {platformCopy.reviewed}
                           </span>
+                          <span className="third-party-game-badge">{platformCopy.thirdParty}</span>
                         </span>
                       </div>
                       <h3>{game.title}</h3>
@@ -386,7 +390,9 @@ export function TrainingLobby() {
                       <dl className="community-game-details">
                         <div><dt>{platformCopy.developer}</dt><dd>{game.developerName}</dd></div>
                         <div><dt>{platformCopy.version}</dt><dd>{game.release.version}</dd></div>
+                        <div><dt>{platformCopy.license}</dt><dd>{game.release.license.label}</dd></div>
                       </dl>
+                      <small className="community-game-trust-note">{platformCopy.clientReported}</small>
                       <div className="community-game-actions">
                         <button onClick={() => setActivePackageGame(game)} type="button">
                           <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>

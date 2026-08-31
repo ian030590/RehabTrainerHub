@@ -191,42 +191,40 @@ export function PeripheralAttentionNineGridCompass({
         <span className="training-slider-label">{l.directionsTitle}</span>
         <output className="training-slider-value">{badgeText}</output>
       </div>
-      <div className="training-slider-control">
-        <p className="training-slider-description">{l.directionsDesc}</p>
+      <p className="training-slider-description">{l.directionsDesc}</p>
 
-        <div className="training-direction-compass-grid">
-          {cells.map((cell, index) => {
-            if (cell.isCenter) {
-              return (
-                <button
-                  key="center-all"
-                  type="button"
-                  className={`training-compass-btn training-compass-center ${isAllSelected ? 'active' : ''}`}
-                  onClick={toggleAll}
-                  aria-pressed={isAllSelected}
-                >
-                  <span className="training-compass-arrow">{cell.arrow}</span>
-                  <span className="training-compass-label">{cell.label}</span>
-                </button>
-              );
-            }
-
-            const axis = cell.axis!;
-            const isSelected = selectedAxes.includes(axis);
+      <div className="training-direction-compass-grid">
+        {cells.map((cell, index) => {
+          if (cell.isCenter) {
             return (
               <button
-                key={`axis-${axis}-${index}`}
+                key="center-all"
                 type="button"
-                className={`training-compass-btn ${isSelected ? 'active' : ''}`}
-                onClick={() => toggleAxis(axis)}
-                aria-pressed={isSelected}
+                className={`training-compass-btn training-compass-center ${isAllSelected ? 'active' : ''}`}
+                onClick={toggleAll}
+                aria-pressed={isAllSelected}
               >
                 <span className="training-compass-arrow">{cell.arrow}</span>
                 <span className="training-compass-label">{cell.label}</span>
               </button>
             );
-          })}
-        </div>
+          }
+
+          const axis = cell.axis!;
+          const isSelected = selectedAxes.includes(axis);
+          return (
+            <button
+              key={`axis-${axis}-${index}`}
+              type="button"
+              className={`training-compass-btn ${isSelected ? 'active' : ''}`}
+              onClick={() => toggleAxis(axis)}
+              aria-pressed={isSelected}
+            >
+              <span className="training-compass-arrow">{cell.arrow}</span>
+              <span className="training-compass-label">{cell.label}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -61,7 +61,7 @@
 }
 
 .reference-item-link:hover .reference-item-title {
-  text-decoration-color: currentColor;
+  text-decoration: underline;
 }
 
 .reference-item-link:focus-visible {
@@ -75,9 +75,6 @@
   font-weight: var(--ui-font-heading-weight, 700);
   line-height: 1.45;
   overflow-wrap: anywhere;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  transition: color 180ms ease-out, text-decoration-color 180ms ease-out;
 }
 
 .reference-item-description {

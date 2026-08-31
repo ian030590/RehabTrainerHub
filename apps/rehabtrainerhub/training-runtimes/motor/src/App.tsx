@@ -2,10 +2,9 @@ import { Suspense, lazy } from 'react';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { GetTrainerFooterLabels, GetTrainerSkipLinkLabel } from '@rehab-trainer/ui/components/RehabFooter';
 import { TrainerAppLayout } from '@rehab-trainer/ui/components/TrainerAppLayout';
-import { TrainerRouteOutlet } from '@rehab-trainer/ui/components/TrainerRouteOutlet';
 import { TrainingLoginReminder } from '@rehab-trainer/ui/components/TrainingLoginReminder';
 import { useSyncedDisplaySettings } from '@rehab-trainer/ui/hooks/useSyncedDisplaySettings';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { useT } from './i18n';
 import { siteUrls } from './utils/siteUrls';
@@ -75,7 +74,7 @@ function AppLayout() {
         labels: GetTrainerFooterLabels(lang),
       }}
     >
-      <TrainerRouteOutlet />
+      <Outlet />
     </TrainerAppLayout>
   );
 }

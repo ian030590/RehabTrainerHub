@@ -330,8 +330,8 @@ function RunRetiredProjectFixture({ projectName, retiredProjects }) {
       fixtureOutput,
       new RegExp(`Refusing to deploy retired Cloudflare Pages project\\(s\\): ${EscapeRegExp(projectName)}`),
     );
-    assert.doesNotMatch(fixtureOutput, /\$ npx .*pages project create/);
-    assert.doesNotMatch(fixtureOutput, /\$ npx .*pages deploy/);
+    assert.doesNotMatch(fixtureOutput, /\$ pnpm .*pages project create/);
+    assert.doesNotMatch(fixtureOutput, /\$ pnpm .*pages deploy/);
     assert.doesNotMatch(fixtureOutput, /cloudflare pages domain ensure/);
     assert.doesNotMatch(fixtureOutput, /sync-cloudflare-auth-env/);
   } finally {

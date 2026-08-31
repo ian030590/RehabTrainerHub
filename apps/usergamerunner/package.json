@@ -9,7 +9,7 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "dependencies": {
-    "@rehab-trainer/game-sdk": "0.1.0",
+    "@rehab-trainer/training-contracts": "workspace:*",
     "jspsych": "8.2.3"
   },
   "scripts": {

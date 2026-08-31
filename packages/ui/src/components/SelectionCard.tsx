@@ -12,7 +12,6 @@ export interface SelectionCardProps {
   imageSrc?: string;
   className?: string;
   onSelect: () => void;
-  onPreload?: () => void;
 }
 
 export function SelectionCard({
@@ -26,7 +25,6 @@ export function SelectionCard({
   imageSrc,
   className = '',
   onSelect,
-  onPreload,
 }: SelectionCardProps) {
   return (
     <button
@@ -35,9 +33,6 @@ export function SelectionCard({
       aria-expanded={isSelected}
       disabled={disabled}
       onClick={onSelect}
-      onFocus={onPreload}
-      onPointerEnter={onPreload}
-      onTouchStart={onPreload}
     >
       <span className="selection-card-visual" aria-hidden="true">
         <CardImagePlaceholder src={imageSrc} />

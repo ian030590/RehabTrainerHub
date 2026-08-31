@@ -1,10 +1,11 @@
 // Canonical Hub-owned vision config and rules entry.
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useT } from '../i18n';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import { TrainingConfigRangeField } from '@rehab-trainer/ui/components/TrainingConfigRangeField';
+import { NumberPresetSelector } from '@rehab-trainer/ui/components/NumberPresetSelector';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
 import { TrainingFilePickerButton } from '@rehab-trainer/ui/components/TrainingFilePickerButton';
 import {
@@ -16,6 +17,9 @@ import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfi
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
 import { trainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
+import {
+  CreateSingleFlightPreloadCache,
+} from '@rehab-trainer/training-contracts';
 import { GetTrainingModuleCopy } from '@rehab-trainer/hub-modules/catalog';
 import {
   GetDrivingInputCapabilitiesSnapshot,
@@ -49,46 +53,67 @@ function PreloadTrainingRoute(): Promise<unknown> {
   return import('./training/TrainingPage');
 }
 
-async function PreloadTrainingEngine(moduleId: TrainingModuleId): Promise<unknown> {
+async function PreloadTrainingEngine(moduleId: TrainingModuleId, signal: AbortSignal): Promise<unknown> {
+  ThrowIfAborted(signal);
   if (moduleId === 'hart-chart') {
-    return import('./training/HartChartPage');
+    const result = await import('./training/HartChartPage');
+    ThrowIfAborted(signal);
+    return result;
   }
 
   if (moduleId === 'driving-rehab') {
-    return import('../experiment/plugins/three-driving-rehab');
+    const result = await import('../experiment/plugins/three-driving-rehab');
+    ThrowIfAborted(signal);
+    return result;
   }
 
   const { WarmUpPixiTrainingRuntime } = await import('../utils/pixiPool');
+  ThrowIfAborted(signal);
 
   if (moduleId === 'moving-card') {
     return Promise.all([
       import('../experiment/plugins/pixi-moving-card'),
-      WarmUpPixiTrainingRuntime(moduleId),
+      WarmUpPixiTrainingRuntime(moduleId, signal),
     ]);
   }
 
   if (moduleId === 'oculomotor-training') {
     return Promise.all([
       import('../experiment/plugins/pixi-oculomotor-training'),
-      WarmUpPixiTrainingRuntime(moduleId),
+      WarmUpPixiTrainingRuntime(moduleId, signal),
     ]);
   }
 
   if (moduleId === 'gabor-patching') {
     return Promise.all([
       import('../experiment/plugins/pixi-gabor-patching'),
-      WarmUpPixiTrainingRuntime(moduleId),
+      WarmUpPixiTrainingRuntime(moduleId, signal),
     ]);
   }
 
   if (moduleId === 'reading-training') {
     return Promise.all([
       import('../experiment/plugins/pixi-reading-training'),
-      WarmUpPixiTrainingRuntime(moduleId),
+      WarmUpPixiTrainingRuntime(moduleId, signal),
     ]);
   }
 
   return Promise.resolve();
+}
+
+function ThrowIfAborted(signal: AbortSignal): void {
+  if (signal.aborted) {
+    const error = new Error('Training engine preload was aborted.');
+    error.name = 'AbortError';
+    throw error;
+  }
+}
+
+function DisposeTrainingEngine(moduleId: TrainingModuleId): void {
+  if (!['moving-card', 'oculomotor-training', 'gabor-patching', 'reading-training'].includes(moduleId)) return;
+  void import('../utils/pixiPool').then(({ DestroyPixiTrainingRuntime }) => {
+    DestroyPixiTrainingRuntime(moduleId);
+  }).catch(() => undefined);
 }
 
 export function HomePage() {
@@ -105,6 +130,7 @@ export function HomePage() {
   useTrainingConfigReady(expandedModule !== null && rulesModule === null);
   const [localDifficulty, setLocalDifficulty] = useAppSetting('difficulty');
   const [localRounds, setLocalRounds] = useAppSetting('totalRounds');
+  const [customRoundsInput, setCustomRoundsInput] = useState('');
   const [oculomotorMode, setOculomotorMode] = useAppSetting('oculomotorMode');
   const [oculomotorPattern, setOculomotorPattern] = useAppSetting('oculomotorPattern');
   const [oculomotorDurationSec, setOculomotorDurationSec] = useAppSetting('oculomotorDurationSec');
@@ -143,22 +169,31 @@ export function HomePage() {
   const showRulesButtonLabel = rulesLabels.next;
   const rulesStartButtonLabel = rulesLabels.start;
 
-  // Preload the route chunk shortly after the home page is interactive.
-  useEffect(() => {
-    const timerId = window.setTimeout(() => {
-      void PreloadTrainingRoute();
-    }, 0);
-    return () => window.clearTimeout(timerId);
-  }, []);
+  const enginePreloadRef = useRef<ReturnType<typeof CreateSingleFlightPreloadCache> | null>(null);
+  const enginePreloadCache = enginePreloadRef.current ?? CreateSingleFlightPreloadCache();
+  enginePreloadRef.current = enginePreloadCache;
+  const preserveEnginePreloadRef = useRef(false);
 
-  // Warm up the selected training route and engine when a module panel expands.
+  const preloadEngineOnce = (moduleId: TrainingModuleId) => {
+    return enginePreloadCache.load(
+      moduleId,
+      (signal) => PreloadTrainingEngine(moduleId, signal),
+      { dispose: () => DisposeTrainingEngine(moduleId) },
+    );
+  };
+
+  // Rules are the only normal UI transition allowed to request a heavy engine
+  // chunk. Card/config rendering remains setup-only; a repeated open/close of
+  // the same rules panel reuses the same preload promise.
   useEffect(() => {
-    if (!expandedModule) return;
-    void Promise.all([
-      PreloadTrainingRoute(),
-      PreloadTrainingEngine(expandedModule),
-    ]).catch(() => undefined);
-  }, [expandedModule]);
+    if (!rulesModule) return;
+    const moduleId = rulesModule;
+    void preloadEngineOnce(moduleId).catch(() => undefined);
+    return () => {
+      if (!preserveEnginePreloadRef.current) enginePreloadRef.current?.clear(moduleId);
+      preserveEnginePreloadRef.current = false;
+    };
+  }, [rulesModule]);
 
   useEffect(() => {
     if (!rulesModule) return;
@@ -176,6 +211,7 @@ export function HomePage() {
   // ── Handlers ──
   const handleCardClick = (moduleId: TrainingModuleId) => {
     if (isStartingTraining) return;
+    enginePreloadRef.current?.clear();
     setRulesModule(null);
     setExpandedModule(expandedModule === moduleId ? null : moduleId);
   };
@@ -191,6 +227,8 @@ export function HomePage() {
       NotifyHubTrainingExit();
       return;
     }
+    preserveEnginePreloadRef.current = false;
+    enginePreloadRef.current?.clear();
     setRulesModule(null);
     setExpandedModule(null);
   };
@@ -213,15 +251,18 @@ export function HomePage() {
         return;
       }
     }
+    preserveEnginePreloadRef.current = true;
     setIsStartingTraining(true);
     await EnterFullscreenFromUserGesture(document.documentElement);
 
     if (moduleToStart === 'hart-chart') {
       try {
-        await PreloadTrainingEngine(moduleToStart);
+        await preloadEngineOnce(moduleToStart);
         navigate('/hart-chart', { state: trainingFlowLaunchState });
       } catch (error) {
         console.error('Hart Chart preload failed:', error);
+        preserveEnginePreloadRef.current = false;
+        enginePreloadRef.current?.clear(moduleToStart);
         setIsStartingTraining(false);
         alert(t('home.trainingLoadError'));
       }
@@ -233,10 +274,12 @@ export function HomePage() {
     try {
       await Promise.all([
         PreloadTrainingRoute(),
-        PreloadTrainingEngine(moduleToStart),
+        preloadEngineOnce(moduleToStart),
       ]);
     } catch (error) {
       console.error('Training preload failed:', error);
+      preserveEnginePreloadRef.current = false;
+      enginePreloadRef.current?.clear(moduleToStart);
       setIsStartingTraining(false);
       alert(t('home.trainingLoadError'));
       return;
@@ -281,6 +324,19 @@ export function HomePage() {
     }
 
     navigate(`/training?${params.toString()}`, { state: trainingFlowLaunchState });
+  };
+
+  const handleRoundsPreset = (rounds: number) => {
+    setLocalRounds(rounds);
+    setCustomRoundsInput('');
+  };
+
+  const handleCustomRoundsChange = (val: string) => {
+    setCustomRoundsInput(val);
+    const num = parseInt(val, 10);
+    if (!isNaN(num) && num >= 1 && num <= 100) {
+      setLocalRounds(num);
+    }
   };
 
   const handleCustomTargetImageChange = (file: File | undefined) => {
@@ -336,6 +392,7 @@ export function HomePage() {
   };
 
   const calibrated = IsCalibrated();
+  const roundsPresets = [3, 5, 10, 15];
   const targetShapeOptions: { key: OculomotorTargetShape; label: string }[] = [
     { key: 'circle', label: t('home.shape.circle') },
     { key: 'star', label: t('home.shape.star') },
@@ -542,14 +599,15 @@ export function HomePage() {
 
             {/* Rounds */}
             <TrainingConfigSection title={t('home.config.rounds')} value={localRounds}>
-              <input
-                type="range"
+              <NumberPresetSelector
                 value={localRounds}
+                customValue={customRoundsInput}
+                presets={roundsPresets}
                 min={1}
                 max={100}
-                step={1}
-                aria-label={t('home.config.rounds')}
-                onChange={(event) => setLocalRounds(Number(event.target.value))}
+                placeholder={t('home.config.custom')}
+                onPresetSelect={handleRoundsPreset}
+                onCustomChange={handleCustomRoundsChange}
               />
             </TrainingConfigSection>
 
@@ -651,6 +709,20 @@ export function HomePage() {
             </TrainingConfigSection>
 
             <TrainingConfigSection title={t('home.config.speedAndSize')} wide>
+              <div className="training-config-actions">
+                {[1, 2, 4, 8].map(mult => (
+                  <button
+                    key={mult}
+                    className="btn btn-secondary btn-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOculomotorSpeedDegPerSec(Math.min(80, oculomotorSpeedDegPerSec * mult));
+                    }}
+                  >
+                    {mult}x
+                  </button>
+                ))}
+              </div>
               <TrainingConfigOptionGroup columns={3}>
                 <TrainingConfigRangeField
                   label={t('home.config.speed')}
@@ -999,16 +1071,18 @@ export function HomePage() {
               value={drivingControlOptions.find((option) => option.key === drivingControlMode)?.label}
               wide
             >
-              <button
-                className="btn btn-secondary btn-sm training-config-rescan-inputs"
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  drivingInputCapabilities.rescan();
-                }}
-              >
-                {t('home.config.drivingRescanInputs')}
-              </button>
+              <div className="training-config-actions">
+                <button
+                  className="btn btn-secondary btn-sm"
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    drivingInputCapabilities.rescan();
+                  }}
+                >
+                  {t('home.config.drivingRescanInputs')}
+                </button>
+              </div>
               <TrainingConfigOptionGroup columns={4}>
                 {drivingControlOptions.map((option) => (
                   <button
@@ -1028,7 +1102,7 @@ export function HomePage() {
                 ))}
               </TrainingConfigOptionGroup>
               {drivingControlMode === 'wheel' && drivingInputCapabilities.wheelDevice && (
-                <div className="training-config-control-status" role="status" aria-live="polite">
+                <div className="training-config-actions" role="status" aria-live="polite">
                   <span className="training-option-meta">
                     {drivingWheelCalibration.phase === 'idle'
                       ? drivingWheelCalibration.calibrated
@@ -1084,7 +1158,7 @@ export function HomePage() {
                 </div>
               )}
               {!drivingControlModeAvailable && (
-                <div className="training-config-control-status" role="status" aria-live="polite">
+                <div className="training-config-actions" role="status" aria-live="polite">
                   <span className="training-option-meta">
                     {t('home.config.drivingControlUnavailable')}
                   </span>
