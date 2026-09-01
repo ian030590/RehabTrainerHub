@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appDir = resolve(repoRoot, 'apps', 'rehabtrainerhub');
+const outputRoot = resolve(appDir, 'out');
 const outputDir = resolve(repoRoot, 'apps', 'rehabtrainerhub', 'out', 'games', 'oculomotor-training');
 const outputIndex = resolve(outputDir, 'index.html');
 const viteBin = resolve(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
@@ -28,7 +29,8 @@ const previewPort = await GetAvailablePort();
 const debugPort = await GetAvailablePort();
 const browserProfileDir = mkdtempSync(join(tmpdir(), 'oculomotor-webgazer-browser-'));
 const baseUrl = `http://127.0.0.1:${previewPort}/`;
-const navigationUrl = `${baseUrl}#/training?module=oculomotor-training&mode=lilac-chaser&duration=5`;
+const gameBaseUrl = `${baseUrl}games/oculomotor-training/`;
+const navigationUrl = `${gameBaseUrl}#/?module=oculomotor-training`;
 
 let previewProcess;
 let browserProcess;
@@ -47,7 +49,7 @@ try {
     String(previewPort),
     '--strictPort',
     '--outDir',
-    outputDir,
+    outputRoot,
     '--logLevel',
     'warn',
   ], {
@@ -56,7 +58,7 @@ try {
   });
   previewProcess.stdout.on('data', (chunk) => { previewLogs += chunk; });
   previewProcess.stderr.on('data', (chunk) => { previewLogs += chunk; });
-  await WaitForHttp(baseUrl, 'Oculomotor game production preview');
+  await WaitForHttp(gameBaseUrl, 'Oculomotor game production preview');
 
   browserProcess = spawn(browserPath, [
     '--headless=new',
@@ -102,7 +104,7 @@ try {
 
   const vendoredRuntime = await Evaluate(cdp, sessionId, `new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = ${JSON.stringify(`${baseUrl}assets/webgazer/3.5.3/webgazer.js`)};
+    script.src = ${JSON.stringify(`${gameBaseUrl}assets/webgazer/3.5.3/webgazer.js`)};
     script.onload = () => resolve({
       begin: typeof window.webgazer?.begin,
       prediction: typeof window.webgazer?.getCurrentPrediction,
@@ -124,6 +126,20 @@ try {
   }, sessionId);
 
   await cdp.Send('Page.navigate', { url: navigationUrl }, sessionId);
+
+  await WaitForSelector(
+    cdp,
+    sessionId,
+    '.config-modal-panel:not(.training-rules) .config-start-btn',
+    timeoutMs,
+  );
+  await ClickDomSelector(
+    cdp,
+    sessionId,
+    '.config-modal-panel:not(.training-rules) .config-start-btn',
+  );
+  await WaitForSelector(cdp, sessionId, '.training-rules .config-start-btn', timeoutMs);
+  await ClickDomSelector(cdp, sessionId, '.training-rules .config-start-btn');
 
   await WaitAndClickInstruction(cdp, sessionId, 'camera_instructions');
 
@@ -421,8 +437,22 @@ function CreateBootstrapSource() {
     localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(token)});
     localStorage.setItem('rehabtrainerhub.vision.active_user', 'WebGazer Browser Smoke');
     localStorage.setItem('rehabtrainerhub.vision.language', 'en');
+    localStorage.setItem('rehabtrainerhub.vision.oculomotorDurationSec', '15');
     localStorage.setItem('rehabtrainerhub.vision.oculomotorEnableWebgazer', 'true');
+    localStorage.setItem('rehabtrainerhub.vision.oculomotorMode', 'lilac-chaser');
     localStorage.setItem('rehabtrainerhub.vision.oculomotorShowGazepoint', 'true');
+
+    const smokeMediaDevices = navigator.mediaDevices ?? {};
+    Object.defineProperty(smokeMediaDevices, 'getUserMedia', {
+      configurable: true,
+      value: async () => ({ getTracks: () => [{ stop() {} }] }),
+    });
+    if (!navigator.mediaDevices) {
+      Object.defineProperty(navigator, 'mediaDevices', {
+        configurable: true,
+        value: smokeMediaDevices,
+      });
+    }
 
     const smokeState = window.__wgSmoke = {
       active: false,
@@ -816,7 +846,7 @@ async function WaitForValue(cdpClient, targetSessionId, expression, waitTimeoutM
     lastState = await Evaluate(cdpClient, targetSessionId, `(() => ({
       matched: Boolean(${expression}),
       href: location.href,
-      bodyText: document.body.innerText.slice(0, 1200),
+      bodyText: document.body?.innerText.slice(0, 1200) ?? '',
     }))()`);
     if (lastState?.matched) return;
     await Wait(100);

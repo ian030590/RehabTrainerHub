@@ -32,7 +32,10 @@ function GetWebGazerScriptUrls(): string[] {
   if (assetBaseUrl) {
     urls.push(`${assetBaseUrl}/ai/webgazer/${webGazerRuntimeVersion}/webgazer.js`);
   }
-  urls.push(new URL(`${import.meta.env.BASE_URL}assets/webgazer/${webGazerRuntimeVersion}/webgazer.js`, window.location.origin).href);
+  urls.push(new URL(
+    `${import.meta.env.BASE_URL}assets/webgazer/${webGazerRuntimeVersion}/webgazer.js`,
+    document.baseURI,
+  ).href);
   return [...new Set(urls)];
 }
 

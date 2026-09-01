@@ -184,6 +184,15 @@ assert.ok(loader.includes('Timed out loading WebGazer'), 'script loading must ha
 assert.ok(loader.includes("webGazerRuntimeVersion = '3.5.3'"), 'WebGazer must use a pinned runtime version');
 assert.ok(loader.includes('ConfigureWebGazerAssetPath'), 'the MediaPipe path must follow the loaded script origin');
 assert.ok(loader.includes('EnsurePredictionTimestamp'), 'WebGazer predictions must be timestamped for native validation');
+assert.ok(
+  loader.includes('document.baseURI'),
+  'the local WebGazer fallback must resolve within the current per-game PWA base path',
+);
+assert.equal(
+  loader.includes('window.location.origin'),
+  false,
+  'the local WebGazer fallback must not incorrectly resolve from the Hub origin root',
+);
 assert.equal(loader.includes('local-v1'), false, 'the obsolete WebGazer runtime must not be a fallback');
 assert.ok(runtime.includes('faceMeshSolutionPath:"./mediapipe/face_mesh"'), 'the self-hosted runtime must default to local MediaPipe assets');
 assert.ok(
