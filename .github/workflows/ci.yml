@@ -65,7 +65,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --workspaces
+        run: npm ci --workspaces --include-workspace-root
 
       - name: Run verification
         run: ${{ matrix.command }}

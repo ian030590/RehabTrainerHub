@@ -122,6 +122,13 @@ test('root builds and both Cloudflare workflows retain the architecture gate', a
   ]) {
     const workflow = await readFile(resolve(repositoryRoot, workflowPath), 'utf8');
     assert.equal((workflow.match(/command: npm run test:game-architecture/g) ?? []).length, 1);
+    const installSteps = workflow.match(/run: npm ci[^\r\n]*/g) ?? [];
+    assert.ok(installSteps.length > 0, `${workflowPath} must install dependencies.`);
+    assert.equal(
+      installSteps.every((step) => step === 'run: npm ci --workspaces --include-workspace-root'),
+      true,
+      `${workflowPath} must install root Vite/runtime dependencies as well as workspaces.`,
+    );
     assert.match(workflow, /- "scripts\/\*\*"/);
     assert.match(workflow, /- "\.github\/workflows\/\*\*"/);
   }
