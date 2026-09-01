@@ -144,7 +144,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
           onLoad={() => setIsLoaded(true)}
           referrerPolicy="strict-origin-when-cross-origin"
           ref={frameRef}
-          sandbox="allow-downloads allow-modals allow-same-origin allow-scripts"
+          sandbox="allow-downloads allow-modals allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox"
           src={sourceUrl}
           title={t('embeddedTraining.frameTitle', { title: moduleCopy.title })}
         />
