@@ -54,7 +54,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --workspaces=false
+        run: npm ci --workspaces
 
       - name: Run verification
         run: ${{ matrix.command }}
@@ -77,7 +77,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --workspaces=false
+        run: npm ci --workspaces
 
       - name: Discover Pages app environment
         run: node scripts/write-pages-env.mjs >> "$GITHUB_ENV"
