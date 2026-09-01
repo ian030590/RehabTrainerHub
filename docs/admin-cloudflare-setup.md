@@ -154,7 +154,7 @@ ASSET_PUBLIC_BASE_URL=https://assets.trainerhub.cc
 - `AI_ASSET_BASE_URL`：MediaPipe WASM、`.task` 模型、WebGazer，以及大型遊戲圖片 / 3D 模型的主要來源。
 - `ASSET_PUBLIC_BASE_URL`：後台文章封面上傳後可公開存取的 base URL。
 - MediaPipe 載入失敗時會退回固定版本的官方 / jsDelivr 資源。
-- Hub 的 vision runtime 會先載入 R2 WebGazer，再由本地 loader 退回 `/runtimes/vision/webgazer.js`。
+- 需要眼動輸入的官方遊戲會先載入 R2 WebGazer，再由該遊戲目錄內的本地 loader 與固定版本資產退回。
 - 星空背景與 3D 車輛會優先使用 R2，失敗時保留 Pages 內的本地副本。
 
 只有 `main` production build 會注入 R2 AI base；未綁定 production custom domain 的 preview build 會使用 fallback，避免產生無法存取的 hash-preview 資產網址。
@@ -173,11 +173,11 @@ ASSET_PUBLIC_BASE_URL=https://assets.trainerhub.cc
 CF_WEB_ANALYTICS_TOKEN=<site token>
 ```
 
-Hub 與內建 runtimes 只有在 token 存在時才注入 RUM beacon。不要把 user ID、email、訓練 payload 或醫療資訊放入 analytics 參數。上線後依 browser 與 device type 觀察 Core Web Vitals。
+Hub 與官方遊戲只有在 token 存在時才注入 RUM beacon。不要把 user ID、email、訓練 payload 或醫療資訊放入 analytics 參數。上線後依 browser 與 device type 觀察 Core Web Vitals。
 
 ## 7. 低效能裝置提示
 
-四個 Hub 內建 runtime 共用進場檢測：取樣約 45–60 個 animation frames，並參考 `hardwareConcurrency` 與可用時的 `deviceMemory`。低效能裝置只顯示可關閉提示，不會直接阻擋練習流程。
+官方遊戲共用進場檢測：取樣約 45–60 個 animation frames，並參考 `hardwareConcurrency` 與可用時的 `deviceMemory`。低效能裝置只顯示可關閉提示，不會直接阻擋練習流程。
 
 未來若要自動降低 MediaPipe 偵測幀率、renderer 解析度或 WebGL 效果，應在各訓練模組內依 renderer 特性實作，不要把長生命週期的遊戲狀態放進共用 UI package。
 

@@ -123,6 +123,7 @@ export interface TrainingCatalogModule {
   purpose: TrainingPurposeId;
   kind: TrainingModuleKind;
   entryPath: string;
+  settingsPath: string;
   imagePath: string;
   flow: readonly TrainingFlowStep[];
   mediaPermission: TrainingMediaPermission;
@@ -472,6 +473,7 @@ export const trainingCatalog: readonly TrainingCatalogModule[] = seeds.map((seed
     purpose: seed.purpose,
     kind: seed.kind,
     entryPath: seed.path,
+    settingsPath: `/games/${seed.id}/settings.json`,
     imagePath: `/assets/training-modules/${seed.id}.webp`,
     flow: flowManifest.flow,
     mediaPermission: flowManifest.mediaPermission,
@@ -509,13 +511,19 @@ export function GetTrainingModuleCopy(
 export function BuildTrainingModuleHref(
   module: TrainingCatalogModule,
 ): string {
-  return `${defaultSiteUrls.hub}/runtimes/${module.trainer}/#${module.entryPath}`;
+  return `/games/${encodeURIComponent(module.runtimeId)}/`;
+}
+
+export function BuildTrainingModuleSettingsHref(
+  module: TrainingCatalogModule,
+): string {
+  return module.settingsPath;
 }
 
 export function BuildTrainingGameInstallHref(
   module: TrainingCatalogModule,
 ): string {
-  return `${defaultSiteUrls.hub}/games/${encodeURIComponent(module.runtimeId)}/`;
+  return `/games/${encodeURIComponent(module.runtimeId)}/`;
 }
 
 export function BuildTrainingModuleImageSrc(

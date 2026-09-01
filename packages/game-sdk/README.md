@@ -22,8 +22,10 @@ current runner origin and can be cached by the per-game service worker:
   async function startGame() {
     await RunTrainerHubJsPsychGame({
       initJsPsych: jsPsychModule.initJsPsych,
-      timeline: [/* your jsPsych trials */],
-      summarize(jsPsych) {
+      timeline(settings) {
+        return BuildTimeline(settings);
+      },
+      summarize(jsPsych, settings) {
         return {
           status: 'completed',
           score: jsPsych.data.get().filter({ correct: true }).count(),
@@ -43,6 +45,9 @@ names, account identifiers, tokens, free text, or raw trial data. The runner
 transfers a one-time private `MessagePort` to the SDK and validates the same
 schema again before relaying a result to `trainerhub.cc`.
 
-See [`examples/minimal-game.html`](examples/minimal-game.html) for a complete
-single-file package. The game package contract and security restrictions are
+The platform validates the root `settings.json` file before opening the game.
+`timeline(settings)` receives only those validated slider, list, and checkbox
+values. See [`examples/minimal-game.html`](examples/minimal-game.html) and
+[`examples/settings.json`](examples/settings.json) for a complete package. The
+game package contract and security restrictions are
 documented in [`docs/developer-game-packages.md`](../../docs/developer-game-packages.md).

@@ -28,6 +28,7 @@ import {
   useMediaPermissionPreflight,
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
+import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { Clamp, FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
 import { Application, Container, Graphics, Text } from 'pixi.js';
@@ -582,6 +583,8 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
   const visualRef = useRef<VisualState>({ phase: 'idle' });
 
   const [phase, setPhaseState] = useState<Phase>('menu');
+  const hostedSettings = useHostedGameSettings();
+  const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
   const [levelId, setLevelId] = useState<LevelDefinition['id']>(1);
   const [inputMode, setInputMode] = useState<InputMode>('camera');
@@ -610,6 +613,18 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
     phaseRef.current = nextPhase;
     setPhaseState(nextPhase);
   }, []);
+
+  useEffect(() => {
+    if (!hostedSettings || hostedSettingsAppliedRef.current) return;
+    hostedSettingsAppliedRef.current = true;
+    setLevelId(hostedSettings.difficulty === 'hard'
+      ? 3
+      : hostedSettings.difficulty === 'medium'
+        ? 2
+        : 1);
+    if (typeof hostedSettings.rounds === 'number') setTrialCount(hostedSettings.rounds);
+    setPhase('rules');
+  }, [hostedSettings, setPhase]);
 
   useEffect(() => {
     if (mediaPermission.status === 'granted') {

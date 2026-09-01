@@ -118,12 +118,20 @@ function ScanStaticImportGraph(filePath, entrypoint, visited) {
 }
 
 function CheckViteBaseConfig(configFile) {
-  const source = readFileSync(resolve(repoRoot, configFile), 'utf8');
+  const absoluteConfigFile = resolve(repoRoot, configFile);
+  const source = readFileSync(absoluteConfigFile, 'utf8');
+  const isOfficialGameAdapter = absoluteConfigFile.startsWith(`${trainingRuntimesRoot}\\`)
+    || absoluteConfigFile.startsWith(`${trainingRuntimesRoot}/`);
 
-  if (/\bbase\s*:\s*['"]\.\/['"]/.test(source)) {
+  if (isOfficialGameAdapter && !/\bbase\s*:\s*['"]\.\/['"]/.test(source)) {
     violations.push(
-      `${configFile}: uses Vite base './'; use '/' so direct nested trainer routes load production assets`,
+      `${configFile}: official game adapters must use relative assets inside /games/{gameId}/`,
     );
+  } else if (!isOfficialGameAdapter && /\bbase\s*:\s*['"]\.\/['"]/.test(source)) {
+    violations.push(`${configFile}: uses Vite base './'; direct nested app routes require an absolute base`);
+  }
+  if (isOfficialGameAdapter && /out[\\/]runtimes/.test(source)) {
+    violations.push(`${configFile}: retired /runtimes/* output must not be restored`);
   }
 }
 

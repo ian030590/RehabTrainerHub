@@ -140,6 +140,38 @@ test('accepts safe ZIP assets and records their digests', async () => {
   assert.ok(result.files.every((file) => /^[a-f0-9]{64}$/.test(file.sha256)));
 });
 
+test('requires and validates root settings.json for a submitted game slug', async () => {
+  const validSettings = JSON.stringify({
+    schemaVersion: 1,
+    gameId: 'safe-game',
+    sections: [{
+      id: 'training',
+      title: { 'zh-TW': '活動設定', en: 'Session settings' },
+      fields: [{
+        key: 'rounds',
+        type: 'slider',
+        label: { 'zh-TW': '回合數', en: 'Rounds' },
+        default: 5,
+        min: 1,
+        max: 10,
+        step: 1,
+      }],
+    }],
+  });
+  const result = await InspectGamePackage(FakeFile('game.zip', 'application/zip', zipSync({
+    'index.html': strToU8(validHtml),
+    'settings.json': strToU8(validSettings),
+  })), 'safe-game');
+  assert.equal(result.settings.gameId, 'safe-game');
+
+  await assert.rejects(
+    InspectGamePackage(FakeFile('game.zip', 'application/zip', zipSync({
+      'index.html': strToU8(validHtml),
+    })), 'safe-game'),
+    (error) => error instanceof GamePackageError && error.code === 'missing-settings',
+  );
+});
+
 test('normalizes identifiers, paths, and baseline capabilities', () => {
   assert.equal(NormalizeGameSlug('safe-game'), 'safe-game');
   assert.equal(NormalizeGameSlug('../unsafe'), null);

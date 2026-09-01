@@ -25,7 +25,8 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
     gameId: release.gameId,
     gameVersion: release.version,
     healthUrl: new URL(basePath, runnerOrigin).href,
-    serviceWorkerUrl,
+     serviceWorkerUrl,
+    standaloneSettings: embedOptions.standaloneSettings ?? {},
     trustedPlatformOrigin,
   });
 
@@ -80,7 +81,8 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
         const resultStatuses = new Set(['completed', 'aborted']);
         const sensitiveMetricKey = /(auth|authorization|birthday|cookie|credential|dob|email|jwt|name|participant|password|phone|secret|session|token|user)/i;
         let lastAcceptedSequence = -1;
-        let gamePort = null;
+         let gamePort = null;
+         let pendingSettings = null;
         let gameFrameInitialized = false;
         let gameFrameFailed = false;
 
@@ -92,13 +94,14 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
           }
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
+         document.addEventListener('DOMContentLoaded', () => {
           const installButton = document.getElementById('install-button');
           const status = document.getElementById('runner-status');
           const gameFrame = document.getElementById('game-frame');
           let installPrompt = null;
 
-          gameFrame.addEventListener('load', () => handleGameFrameLoad(gameFrame, status));
+           if (!config.embedMode) pendingSettings = config.standaloneSettings;
+           gameFrame.addEventListener('load', () => handleGameFrameLoad(gameFrame, status));
           gameFrame.src = config.entryUrl;
 
           window.addEventListener('beforeinstallprompt', (event) => {
@@ -151,7 +154,7 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
           window.addEventListener('online', checkReleaseHealth);
         });
 
-        let releaseHealthCheckActive = false;
+         let releaseHealthCheckActive = false;
 
         async function verifyReleaseHealth(gameFrame, status) {
           if (releaseHealthCheckActive || gameFrameFailed) return;
@@ -211,27 +214,47 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
           announceToPlatform(sanitized);
         }
 
-        function receivePlatformMessage(message) {
-          if (!isExactPlainObject(
-            message,
-            ['schema', 'type', 'sessionId', 'sessionNonce', 'command'],
-          )
-            || message.schema !== messageSchema
-            || message.type !== 'trainerhub.runner:command'
-            || message.sessionId !== sessionId
-            || message.sessionNonce !== sessionNonce
-              || !['pause', 'resume', 'exit'].includes(message.command)) {
-            return;
-          }
-          if (!gamePort || gameFrameFailed) return;
-          gamePort.postMessage({
-            schema: messageSchema,
-            type: 'trainerhub.host:command',
-            sessionId,
-            sessionNonce,
-            command: message.command,
-          });
-        }
+         function receivePlatformMessage(message) {
+           if (!isPlainRecord(message)
+             || message.schema !== messageSchema
+             || message.sessionId !== sessionId
+             || message.sessionNonce !== sessionNonce) return;
+           if (message.type === 'trainerhub.runner:settings') {
+             if (!isExactPlainObject(
+               message,
+               ['schema', 'type', 'sessionId', 'sessionNonce', 'settings'],
+             ) || !isSafeSettings(message.settings)) return;
+             pendingSettings = Object.fromEntries(Object.entries(message.settings));
+             forwardSettingsToGame();
+             return;
+           }
+           if (!isExactPlainObject(
+             message,
+             ['schema', 'type', 'sessionId', 'sessionNonce', 'command'],
+           )
+             || message.type !== 'trainerhub.runner:command'
+             || !['pause', 'resume', 'exit'].includes(message.command)
+             || !gamePort
+             || gameFrameFailed) return;
+           gamePort.postMessage({
+             schema: messageSchema,
+             type: 'trainerhub.host:command',
+             sessionId,
+             sessionNonce,
+             command: message.command,
+           });
+         }
+
+         function forwardSettingsToGame() {
+           if (!gamePort || !pendingSettings || gameFrameFailed) return;
+           gamePort.postMessage({
+             schema: messageSchema,
+             type: 'trainerhub.host:settings',
+             sessionId,
+             sessionNonce,
+             settings: pendingSettings,
+           });
+         }
 
         function handleGameFrameLoad(gameFrame, status) {
           if (gameFrameInitialized) {
@@ -246,14 +269,15 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
           });
           gamePort.addEventListener('messageerror', () => failGameFrameClosed(gameFrame, status), { once: true });
           gamePort.start();
-          gameFrame.contentWindow.postMessage({
+           gameFrame.contentWindow.postMessage({
             schema: messageSchema,
             type: 'trainerhub.host:init',
             gameId: config.gameId,
             gameVersion: config.gameVersion,
             sessionId,
             sessionNonce,
-          }, '*', [channel.port2]);
+           }, '*', [channel.port2]);
+           forwardSettingsToGame();
         }
 
         function failGameFrameClosed(gameFrame, status) {
@@ -332,7 +356,7 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
           };
         }
 
-        function isSafeMetrics(value) {
+         function isSafeMetrics(value) {
           if (!isPlainRecord(value)) return false;
           const keys = Reflect.ownKeys(value);
           return keys.length <= 512 && keys.every((key) => {
@@ -343,7 +367,21 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
             const metric = value[key];
             return metric === null || typeof metric === 'boolean' || Number.isFinite(metric);
           });
-        }
+         }
+
+         function isSafeSettings(value) {
+           if (!isPlainRecord(value)) return false;
+           const keys = Reflect.ownKeys(value);
+           return keys.length <= 64 && keys.every((key) => {
+             if (typeof key !== 'string'
+               || !Object.prototype.propertyIsEnumerable.call(value, key)
+               || !/^[a-z][A-Za-z0-9_.-]{0,63}$/.test(key)) return false;
+             const setting = value[key];
+             return typeof setting === 'boolean'
+               || (typeof setting === 'string' && setting.length <= 80)
+               || Number.isFinite(setting);
+           });
+         }
 
         function isPayloadSizeAllowed(value) {
           return new TextEncoder().encode(JSON.stringify(value)).byteLength <= maximumResultPayloadBytes;

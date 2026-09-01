@@ -49,12 +49,15 @@
         }
       }
 
-      const timeline = [{ type: OneButtonPracticePlugin }];
-
       async function startGame() {
         await RunTrainerHubJsPsychGame({
           initJsPsych: jsPsychModule.initJsPsych,
-          timeline,
+          timeline(settings) {
+            return Array.from(
+              { length: Number(settings.rounds ?? 1) },
+              () => ({ type: OneButtonPracticePlugin }),
+            );
+          },
           summarize(jsPsych) {
             const trials = jsPsych.data.get();
             return {

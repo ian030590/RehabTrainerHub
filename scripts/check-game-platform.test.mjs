@@ -223,6 +223,38 @@ test('binds runner readiness and lifecycle commands to the opaque frame session'
   ));
 });
 
+test('binds selected settings to the opaque runner session', () => {
+  const sessionId = 'runner_session_1234567890abcdef1234567890abcdef';
+  const message = gamePlatform.CreateGamePlatformRunnerSettingsMessage(
+    sessionId,
+    sessionNonce,
+    { difficulty: 'normal', rounds: 12, sound: true },
+  );
+
+  assert.deepEqual(message, {
+    schema: gamePlatform.gamePlatformMessageSchema,
+    type: gamePlatform.gamePlatformRunnerSettingsMessageType,
+    sessionId,
+    sessionNonce,
+    settings: { difficulty: 'normal', rounds: 12, sound: true },
+  });
+  assert.equal(gamePlatform.IsGamePlatformRunnerSettingsMessage(
+    message,
+    sessionId,
+    sessionNonce,
+  ), true);
+  assert.equal(gamePlatform.IsGamePlatformRunnerSettingsMessage(
+    { ...message, sessionNonce: `${sessionNonce}x` },
+    sessionId,
+    sessionNonce,
+  ), false);
+  assert.throws(() => gamePlatform.CreateGamePlatformRunnerSettingsMessage(
+    sessionId,
+    sessionNonce,
+    { token: 'never-allowed' },
+  ));
+});
+
 test('matches the game-runs API numeric and UTF-8 byte limits', () => {
   assert.equal(gamePlatform.gamePlatformMaxResultDurationMs, 86_400_000);
   assert.equal(gamePlatform.gamePlatformMaxResultTrialCount, 100_000);

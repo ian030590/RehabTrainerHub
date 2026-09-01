@@ -1,5 +1,5 @@
 // Canonical Hub-owned brain module dispatcher.
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
@@ -20,6 +20,7 @@ import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { useRoutedTrainingModule } from '@rehab-trainer/ui/hooks/useRoutedTrainingModule';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
+import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { trainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { GetTrainingCatalogModules } from '@rehab-trainer/hub-modules/catalog';
 import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
@@ -102,6 +103,8 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   ];
   const requestedGameId = searchParams.get('game');
   const isUfovRequested = moduleId === 'attention' && requestedGameId === 'ufov';
+  const hostedSettings = useHostedGameSettings();
+  const hostedSettingsAppliedRef = useRef(false);
   const requestedModule = moduleCards.find((card) => card.gameId === requestedGameId)?.gameId ?? null;
   const { activeModule, openModule, closeModule } = useRoutedTrainingModule<ModuleGameId>({
     requestedModule,
@@ -113,6 +116,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const [selectedUfovAxes, setSelectedUfovAxes] = useState<UfovTargetAxis[]>([0, 1, 2, 3, 4, 5, 6, 7]);
   const [selectedUfovStopCondition, setSelectedUfovStopCondition] = useState<PeripheralAttentionStopCondition>('adaptive_80');
   const [ufovContrastPercent, setUfovContrastPercent] = useState(100);
+  const [ufovTrialCount, setUfovTrialCount] = useState(48);
   const [ufovTargetVisualAngleDeg, setUfovTargetVisualAngleDeg] = useState(15);
   const [ufovVehicleVisualAngleDeg, setUfovVehicleVisualAngleDeg] = useState(2.5);
   const [isUfovRulesOpen, setIsUfovRulesOpen] = useState(false);
@@ -138,6 +142,23 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
     if (isUfovRequested) setIsUfovConfigOpen(true);
   }, [isUfovRequested]);
 
+  useEffect(() => {
+    if (!isUfovRequested || !hostedSettings || hostedSettingsAppliedRef.current) return;
+    hostedSettingsAppliedRef.current = true;
+    if (hostedSettings.mode === 'practice' || hostedSettings.mode === 'formal') {
+      setSelectedUfovMode(hostedSettings.mode);
+    }
+    if (typeof hostedSettings.trialCount === 'number') {
+      setUfovTrialCount(hostedSettings.trialCount);
+      setSelectedUfovStopCondition('fixed_trials');
+    }
+    if (typeof hostedSettings.contrastPercent === 'number') {
+      setUfovContrastPercent(hostedSettings.contrastPercent);
+    }
+    setIsUfovConfigOpen(false);
+    setIsUfovRulesOpen(true);
+  }, [hostedSettings, isUfovRequested]);
+
   const handleStartUfov = async () => {
     await EnterFullscreenFromUserGesture(document.documentElement);
     setIsUfovConfigOpen(false);
@@ -145,7 +166,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
     navigate(`/attention-training/ufov?${new URLSearchParams({
       subtest: String(effectiveUfovSubtest),
       mode: selectedUfovMode,
-      trials: '48',
+      trials: String(ufovTrialCount),
       axes: selectedUfovAxes.join(','),
       stop: selectedUfovStopCondition,
       contrast: String(ufovContrastPercent),
@@ -360,7 +381,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
               { value: ufovLabels.subtests[effectiveUfovSubtest] },
               { value: ufovLabels.modes[selectedUfovMode].label },
               { value: `${selectedUfovAxes.length}/8` },
-              { value: selectedUfovStopCondition === 'adaptive_80' ? '80%' : '48' },
+              { value: selectedUfovStopCondition === 'adaptive_80' ? '80%' : String(ufovTrialCount) },
             ]}
             sections={GetUfovRuleSections(lang, ufovLabels.subtests[effectiveUfovSubtest])}
             startLabel={ruleLabels.start}

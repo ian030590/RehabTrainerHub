@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "gameId": "hart-chart",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "視標設定",
+        "en": "Chart settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "往返次數",
+            "en": "Alternations"
+          },
+          "default": 10,
+          "min": 5,
+          "max": 30,
+          "step": 5,
+          "unit": {
+            "zh-TW": "次",
+            "en": "times"
+          }
+        },
+        {
+          "key": "chartSize",
+          "type": "list",
+          "label": {
+            "zh-TW": "視標大小",
+            "en": "Chart size"
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "large",
+              "label": {
+                "zh-TW": "大",
+                "en": "Large"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "中",
+                "en": "Medium"
+              }
+            },
+            {
+              "value": "small",
+              "label": {
+                "zh-TW": "小",
+                "en": "Small"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

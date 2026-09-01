@@ -4,7 +4,8 @@
 
 唯一公開可索引網站是 `https://trainerhub.cc/`，唯一 sitemap 是
 `https://trainerhub.cc/sitemap.xml`。Hub sitemap 僅列公開且有實質靜態內容的頁面；
-`/admin/`、`/progress/`、`/train/`、`/runtimes/*` 與 `/games/*` 不加入 sitemap。
+`/admin/`、`/progress/`、`/train/` 與 `/games/*` 不加入 sitemap；退役的
+`/runtimes/*` 也不得重新發布或加入 sitemap。
 
 `motor.trainerhub.cc`、`vision.trainerhub.cc`、`brain.trainerhub.cc`、
 `mouth.trainerhub.cc` 已退役，任何 path 都應 301 到 `https://trainerhub.cc/`，

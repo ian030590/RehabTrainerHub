@@ -64,6 +64,7 @@ export async function onRequestGet({ request, env }) {
           approvedAt: row.reviewed_at,
           launchUrl: `${runnerOrigin}${releasePath}`,
           installUrl: `${runnerOrigin}${releasePath}`,
+          settingsUrl: `${runnerOrigin}${releasePath}package/settings.json`,
         },
       };
     });

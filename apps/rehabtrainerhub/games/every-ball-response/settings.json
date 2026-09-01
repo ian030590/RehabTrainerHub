@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "gameId": "every-ball-response",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "難度",
+            "en": "Difficulty"
+          },
+          "description": {
+            "zh-TW": "選擇這次活動的刺激與操作難度。",
+            "en": "Choose the stimulus and control difficulty for this session."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "簡單",
+                "en": "Easy"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "中等",
+                "en": "Medium"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "困難",
+                "en": "Hard"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "回合數",
+            "en": "Rounds"
+          },
+          "description": {
+            "zh-TW": "設定這次活動要完成的回合數。",
+            "en": "Set the number of rounds in this session."
+          },
+          "default": 20,
+          "min": 5,
+          "max": 60,
+          "step": 5,
+          "unit": {
+            "zh-TW": "回合",
+            "en": "rounds"
+          }
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在操作與結果時播放提示音。",
+            "en": "Play audio cues during interactions and results."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

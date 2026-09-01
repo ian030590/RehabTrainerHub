@@ -181,7 +181,7 @@ try {
   const stateResult = await cdp.Send('Runtime.evaluate', {
     expression: `JSON.stringify({
       href: location.href,
-      rootHtml: document.querySelector('#root')?.outerHTML || '',
+      rootHtml: document.querySelector('#root, #__next')?.outerHTML || document.body.innerHTML || '',
       bodyText: document.body.innerText || '',
       selectorMatches: ${JSON.stringify(expectedSelectors)}.map((selector) => ({
         selector,
@@ -386,11 +386,14 @@ async function WaitForClickableBounds(cdp, sessionId, selector, timeoutMs) {
 function FindBrowserPath() {
   const envCandidates = [
     process.env.BROWSER_EXECUTABLE_PATH,
+    process.env.BRAVE_BIN,
     process.env.EDGE_BIN,
     process.env.CHROME_BIN,
   ].filter(Boolean);
   const pathCandidates = [
     ...envCandidates,
+    'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe',
+    'C:/Program Files (x86)/BraveSoftware/Brave-Browser/Application/brave.exe',
     'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
     'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
     'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -408,7 +411,7 @@ function FindBrowserPath() {
     }
   }
 
-  for (const command of ['msedge', 'microsoft-edge', 'google-chrome', 'chrome', 'chromium']) {
+  for (const command of ['brave', 'msedge', 'microsoft-edge', 'google-chrome', 'chrome', 'chromium']) {
     const result = spawnSync(command, ['--version'], { encoding: 'utf8' });
     if (!result.error && result.status === 0) {
       return command;

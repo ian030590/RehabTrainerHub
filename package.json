@@ -11,8 +11,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run test:naming && npm run test:pwa && npm run test:hub-functions && npm run test:gamerunner && npm run test:entrypoints && node scripts/build-apps.mjs",
-    "build:cloudflare": "npm run test:naming && npm run test:pwa && npm run test:hub-functions && npm run test:gamerunner && npm run test:entrypoints && npm run test:cloudflare-deploy && node scripts/build-apps.mjs --cloudflare-pages",
+    "build": "npm run test:naming && npm run test:pwa && npm run test:game-architecture && npm run test:hub-functions && npm run test:gamerunner && npm run test:entrypoints && node scripts/build-apps.mjs",
+    "build:cloudflare": "npm run test:naming && npm run test:pwa && npm run test:game-architecture && npm run test:hub-functions && npm run test:gamerunner && npm run test:entrypoints && npm run test:cloudflare-deploy && node scripts/build-apps.mjs --cloudflare-pages",
     "build:cloudflare:only": "node scripts/build-apps.mjs --cloudflare-pages",
     "build:hub": "npm --prefix apps/rehabtrainerhub run build",
     "build:gamerunner": "npm --prefix apps/usergamerunner run build",
@@ -30,7 +30,10 @@
     "test:driving-rehab-browser": "node scripts/check-driving-rehab-browser.mjs",
     "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs",
     "test:embedded-training": "node --test scripts/check-embedded-training-message.test.mjs",
-    "test:game-platform": "node --test scripts/check-game-platform.test.mjs packages/game-sdk/src/index.test.mjs",
+    "test:game-platform": "node --test scripts/check-game-platform.test.mjs packages/game-sdk/src/index.test.mjs packages/game-settings/src/index.test.mjs",
+    "test:game-architecture": "node --test scripts/check-game-directory-architecture.test.mjs",
+    "test:game-architecture:built": "node scripts/check-built-game-architecture.mjs apps/rehabtrainerhub/out",
+    "test:game-architecture:browser": "node --test scripts/check-game-architecture-browser.test.mjs",
     "test:training-flow": "node scripts/check-training-module-flow.mjs && node --test scripts/check-reference-cognitive-trials.test.mjs scripts/check-training-theme.test.mjs",
     "test:webgazer": "node scripts/check-webgazer-calibration.mjs && node scripts/check-webgazer-metrics.mjs",
     "test:webgazer-browser": "node scripts/check-oculomotor-webgazer-browser.mjs",

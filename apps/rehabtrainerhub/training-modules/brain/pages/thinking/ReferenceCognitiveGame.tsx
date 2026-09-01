@@ -87,6 +87,7 @@ import { MobileDirectionPad, type MobileDirection } from '@rehab-trainer/ui/comp
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
+import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { BrainTrainingRulesPanel } from './BrainTrainingRulesPanel';
 import './ThinkingGames.css';
@@ -137,6 +138,8 @@ export function ReferenceCognitiveGame({
   const simonShakeTimeoutRef = useRef<number | null>(null);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const hostedSettings = useHostedGameSettings();
+  const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
   const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
   const [sessionLimitSec, setSessionLimitSec] = useState<SessionLimitSeconds>(null);
@@ -494,6 +497,29 @@ export function ReferenceCognitiveGame({
       if (cognitiveTrialLifecycleRef.current === trialLifecycle) cognitiveTrialLifecycleRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!hostedSettings || hostedSettingsAppliedRef.current) return;
+    hostedSettingsAppliedRef.current = true;
+    setDifficulty(hostedSettings.difficulty === 'hard'
+      ? 'Advanced'
+      : hostedSettings.difficulty === 'medium'
+        ? 'Intermediate'
+        : 'Beginner');
+    if (typeof hostedSettings.timeLimitSec === 'number') {
+      setSessionLimitSec(hostedSettings.timeLimitSec === 0 ? null : hostedSettings.timeLimitSec);
+    }
+    if (gameId === 'reaction-time' && typeof hostedSettings.rounds === 'number') {
+      setReactionTrials(hostedSettings.rounds);
+    }
+    if (gameId === 'whack-a-mole' && typeof hostedSettings.durationSec === 'number') {
+      setWhackDurationSec(hostedSettings.durationSec);
+    }
+    if (gameId === 'simon-says' && typeof hostedSettings.lives === 'number') {
+      setSimonLives(hostedSettings.lives);
+    }
+    setPhase('rules');
+  }, [gameId, hostedSettings, setPhase]);
 
   useEffect(() => () => {
     if (simonShakeTimeoutRef.current !== null) window.clearTimeout(simonShakeTimeoutRef.current);

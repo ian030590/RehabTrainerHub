@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { ApplyThemeTokens, type TrainerThemeOverrides } from '@rehab-trainer/ui/trainerTheme';
+import { InstallHostedGameSettingsReceiver } from '@rehab-trainer/ui/embeddedTraining';
 import { App } from './App';
 import { LanguageProvider } from './i18n';
 import 'jspsych/css/jspsych.css';
@@ -33,6 +34,7 @@ const mouthTheme: TrainerThemeOverrides = {
 };
 
 ApplyThemeTokens(document.documentElement, mouthTheme);
+InstallHostedGameSettingsReceiver();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element #root was not found.');

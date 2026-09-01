@@ -42,6 +42,8 @@ jobs:
             command: npm run test:naming
           - name: pwa
             command: npm run test:pwa
+          - name: game-architecture
+            command: npm run test:game-architecture
           - name: hub-functions
             command: npm run test:hub-functions
           - name: gamerunner

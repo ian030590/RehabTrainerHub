@@ -109,7 +109,7 @@ export async function onRequestPost({ request, env }) {
     const formData = await request.formData();
     const input = NormalizeSubmissionInput(formData);
     if (!input) return ErrorResponse(request, env, 'Invalid game submission metadata.', 400);
-    const inspection = await InspectGamePackage(formData.get('package'));
+    const inspection = await InspectGamePackage(formData.get('package'), input.slug);
     const db = RequireDatabase(env);
     const existingGame = await db
       .prepare('SELECT id, owner_user_id FROM developer_games WHERE slug = ? LIMIT 1')

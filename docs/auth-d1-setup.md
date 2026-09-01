@@ -1,8 +1,8 @@
 # Auth and D1 Setup
 
 Rehab Trainer Hub 使用同源 Pages Functions 提供 Google OAuth、個人資料與
-訓練紀錄 D1 儲存。四個內建 training runtimes 位於 `trainerhub.cc/runtimes/*`，
-不再使用跨站 bearer-token 還原或 trainer origin 白名單。
+訓練紀錄 D1 儲存。官方遊戲位於 `trainerhub.cc/games/{gameId}/`，
+舊的 `/runtimes/*` 不再發布；第三方遊戲仍只在無 auth／D1 的隔離域名執行。
 
 ## D1
 

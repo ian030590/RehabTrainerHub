@@ -14,6 +14,10 @@ import {
   RenderServiceWorker,
   trustedPlatformOrigin,
 } from './_lib/render.js';
+import {
+  GetGameSettingsDefaults,
+  ParseGameSettingsDefinition,
+} from '@rehab-trainer/game-settings';
 
 const commonPermissionsPolicy = [
   'accelerometer=()',
@@ -97,7 +101,13 @@ export async function HandleRequest(context) {
     if (embedOptions === false) {
       return ErrorResponse(400, '嵌入工作階段參數無效。');
     }
-    const rendered = RenderLauncher(release, route.basePath, url.origin, embedOptions);
+    const standaloneSettings = embedOptions.embedMode
+      ? {}
+      : await LoadStandaloneSettings(context.env.GAME_RELEASE_BUCKET, route, release);
+    const rendered = RenderLauncher(release, route.basePath, url.origin, {
+      ...embedOptions,
+      standaloneSettings,
+    });
     const launcherCsp = [
       "default-src 'none'",
       "base-uri 'none'",
@@ -147,6 +157,24 @@ export async function HandleRequest(context) {
   }
 
   return ErrorResponse(404, '找不到遊戲。');
+}
+
+async function LoadStandaloneSettings(bucket, route, release) {
+  const settingsFile = release.files.find((candidate) => candidate.path === 'settings.json');
+  if (!settingsFile) return {};
+  const object = await bucket.get(PackageKey(route.gameId, route.version, settingsFile.path));
+  if (!object
+    || object.size !== settingsFile.size
+    || object.customMetadata?.sha256 !== settingsFile.sha256
+    || object.size > 64 * 1024) return {};
+  try {
+    return GetGameSettingsDefaults(ParseGameSettingsDefinition(
+      JSON.parse(await object.text()),
+      route.gameId,
+    ));
+  } catch {
+    return {};
+  }
 }
 
 async function LoadApprovedRelease(bucket, gameId, version) {

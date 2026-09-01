@@ -2,7 +2,7 @@
 
 const options = ParseArguments(process.argv.slice(2));
 const debuggerBaseUrl = `http://127.0.0.1:${options.debugPort}`;
-const trainingUrlFragment = '/runtimes/vision/#/training?module=oculomotor-training';
+const trainingUrlFragment = '/games/oculomotor-training/#/training?module=oculomotor-training';
 const deadline = Date.now() + options.timeoutMs;
 
 const target = await FindTrainingTarget();

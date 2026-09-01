@@ -13,11 +13,13 @@
 
 | Project | Role | Output |
 | --- | --- | --- |
-| `rehabtrainerhub` | Hub、API、四個同源 training runtimes | `apps/rehabtrainerhub/out` |
+| `rehabtrainerhub` | Hub、API、各自獨立的同源官方遊戲 | `apps/rehabtrainerhub/out` |
 | `trainerhub-user-games` | 無 auth／D1 的第三方遊戲隔離執行器 | `apps/usergamerunner/dist` |
 
-`apps/rehabtrainerhub/training-runtimes/{motor,vision,brain,mouth}` 由 Hub build
-產生到 `/runtimes/*`，不是 Pages project、獨立網站或獨立 PWA。
+`apps/rehabtrainerhub/games/{gameId}` 是每款官方遊戲的來源根目錄。Hub build
+輸出到 `/games/{gameId}/`；每款遊戲有自己的 settings、manifest、service worker
+與 PWA scope。`training-runtimes/{motor,vision,brain,mouth}` 只保留為既有程式碼的
+建置相容 adapter，不會產生或發布 `/runtimes/*`。
 
 ## Secrets 與 variables
 

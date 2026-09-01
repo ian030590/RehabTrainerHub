@@ -43,7 +43,14 @@ for (const app of apps) {
 }
 
 const hubPackage = JSON.parse(readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/package.json'), 'utf8'));
-assert.match(hubPackage.scripts.build, /build-training-runtimes\.mjs.*emit-official-game-pwas\.mjs out/);
+assert.match(hubPackage.scripts.build, /build-official-game-shells\.mjs.*emit-official-game-pwas\.mjs out/);
+const trainingCatalogSource = readFileSync(
+  resolve(repoRoot, 'apps/rehabtrainerhub/training-modules/catalog.ts'),
+  'utf8',
+);
+assert.doesNotMatch(trainingCatalogSource, /\/runtimes\//);
+assert.match(trainingCatalogSource, /return `\/games\/\$\{encodeURIComponent\(module\.runtimeId\)\}\//);
+assert.match(trainingCatalogSource, /settingsPath: `\/games\/\$\{seed\.id\}\/settings\.json`/);
 
 const gameRunnerBuild = spawnSync(
   process.execPath,
@@ -128,4 +135,4 @@ try {
   rmSync(fixtureRoot, { recursive: true, force: true });
 }
 
-console.log(`Validated the Hub PWA manifest, icons, runtimes, and isolated game runner.`);
+console.log('Validated the Hub PWA manifest, icons, game directories, and isolated game runner.');

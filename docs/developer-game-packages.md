@@ -11,10 +11,11 @@ Uploads are limited to 12 MiB compressed, 24 MiB expanded, 8 MiB per file,
 192 files, and 4 MiB of total executable/text source. These conservative
 limits keep synchronous quarantine inspection within the Worker memory budget.
 
-Upload either one `.html` file or a ZIP with this shape:
+Upload a ZIP with this shape:
 
 ```text
 index.html
+settings.json
 game.js
 styles.css
 assets/
@@ -23,12 +24,57 @@ assets/
 ```
 
 - ZIP `index.html` must be at the root.
+- `settings.json` must be at the root and its `gameId` must match the submitted game slug.
 - Use a full semantic version such as `1.0.0` or `1.1.0-beta.1`.
 - Paths may contain only ASCII letters, numbers, `.`, `_`, `-`, and `/`.
 - Bundle the game's own images, audio, styles, plugins, and other dependencies.
 - Submit readable, unminified, unobfuscated source.
 - Do not add a manifest or service worker; the platform creates both.
 - Do **not** include jsPsych or the TrainerHub Game SDK in the HTML/ZIP.
+
+## Platform-generated settings UI
+
+The Hub reads `settings.json` before it creates the game iframe. The schema
+supports the platform's fixed `slider`, `list`, and `checkbox` controls; games
+must not duplicate this setup screen inside their own HTML. Localized labels
+are required in Traditional Chinese and English.
+
+```json
+{
+  "schemaVersion": 1,
+  "gameId": "example-game",
+  "sections": [
+    {
+      "id": "training",
+      "title": { "zh-TW": "活動設定", "en": "Session settings" },
+      "fields": [
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": { "zh-TW": "回合數", "en": "Rounds" },
+          "default": 10,
+          "min": 5,
+          "max": 40,
+          "step": 5,
+          "unit": { "zh-TW": "回合", "en": "rounds" }
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": { "zh-TW": "聲音回饋", "en": "Sound feedback" },
+          "default": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+The Hub validates selected values against this same schema, packages them as a
+plain object, and sends them only after the isolated runner and private channel
+are ready. `RunTrainerHubJsPsychGame` exposes the validated object to the game;
+do not place personal information, credentials, URLs, or free-text fields in
+settings.
 
 ## Platform runtime
 

@@ -10,8 +10,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const appDir = resolve(repoRoot, 'apps', 'rehabtrainerhub', 'training-runtimes', 'vision');
-const outputDir = resolve(repoRoot, 'apps', 'rehabtrainerhub', 'out', 'runtimes', 'vision');
+const appDir = resolve(repoRoot, 'apps', 'rehabtrainerhub');
+const outputDir = resolve(repoRoot, 'apps', 'rehabtrainerhub', 'out', 'games', 'oculomotor-training');
 const outputIndex = resolve(outputDir, 'index.html');
 const viteBin = resolve(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
 const browserPath = FindBrowserPath();
@@ -19,7 +19,7 @@ const timeoutMs = 60_000;
 const formalTrialTargetSelector = '.oculomotor-training-trial';
 
 if (!existsSync(outputIndex)) {
-  throw new Error(`Built Vision runtime is missing: ${outputIndex}\nRun npm run build:hub first.`);
+  throw new Error(`Built oculomotor game is missing: ${outputIndex}\nRun npm run build:hub first.`);
 }
 if (!existsSync(viteBin)) throw new Error(`Vite preview executable is missing: ${viteBin}`);
 if (!browserPath) throw new Error('No Chromium-based browser executable was found.');
@@ -27,7 +27,7 @@ if (!browserPath) throw new Error('No Chromium-based browser executable was foun
 const previewPort = await GetAvailablePort();
 const debugPort = await GetAvailablePort();
 const browserProfileDir = mkdtempSync(join(tmpdir(), 'oculomotor-webgazer-browser-'));
-const baseUrl = `http://127.0.0.1:${previewPort}/runtimes/vision/`;
+const baseUrl = `http://127.0.0.1:${previewPort}/`;
 const navigationUrl = `${baseUrl}#/training?module=oculomotor-training&mode=lilac-chaser&duration=5`;
 
 let previewProcess;
@@ -56,7 +56,7 @@ try {
   });
   previewProcess.stdout.on('data', (chunk) => { previewLogs += chunk; });
   previewProcess.stderr.on('data', (chunk) => { previewLogs += chunk; });
-  await WaitForHttp(baseUrl, 'Vision runtime production preview');
+  await WaitForHttp(baseUrl, 'Oculomotor game production preview');
 
   browserProcess = spawn(browserPath, [
     '--headless=new',
@@ -868,8 +868,11 @@ async function Evaluate(cdpClient, targetSessionId, expression) {
 function FindBrowserPath() {
   const candidates = [
     process.env.BROWSER_EXECUTABLE_PATH,
+    process.env.BRAVE_BIN,
     process.env.EDGE_BIN,
     process.env.CHROME_BIN,
+    'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe',
+    'C:/Program Files (x86)/BraveSoftware/Brave-Browser/Application/brave.exe',
     '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',

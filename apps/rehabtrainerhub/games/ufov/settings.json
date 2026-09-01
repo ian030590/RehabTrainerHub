@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "gameId": "ufov",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "mode",
+          "type": "list",
+          "label": {
+            "zh-TW": "活動模式",
+            "en": "Activity mode"
+          },
+          "default": "practice",
+          "options": [
+            {
+              "value": "practice",
+              "label": {
+                "zh-TW": "練習模式",
+                "en": "Practice"
+              }
+            },
+            {
+              "value": "formal",
+              "label": {
+                "zh-TW": "正式模式",
+                "en": "Formal"
+              }
+            }
+          ]
+        },
+        {
+          "key": "trialCount",
+          "type": "slider",
+          "label": {
+            "zh-TW": "測試次數",
+            "en": "Trial count"
+          },
+          "default": 30,
+          "min": 10,
+          "max": 120,
+          "step": 10,
+          "unit": {
+            "zh-TW": "次",
+            "en": "trials"
+          }
+        },
+        {
+          "key": "contrastPercent",
+          "type": "slider",
+          "label": {
+            "zh-TW": "刺激對比",
+            "en": "Stimulus contrast"
+          },
+          "default": 100,
+          "min": 20,
+          "max": 100,
+          "step": 10,
+          "unit": {
+            "zh-TW": "%",
+            "en": "%"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -4,6 +4,8 @@ export const gamePlatformLifecycleMessageType = 'trainerhub.game:lifecycle' as c
 export const gamePlatformResultMessageType = 'trainerhub.game:result' as const;
 export const gamePlatformRunnerReadyMessageType = 'trainerhub.runner:ready' as const;
 export const gamePlatformRunnerCommandMessageType = 'trainerhub.runner:command' as const;
+export const gamePlatformRunnerSettingsMessageType = 'trainerhub.runner:settings' as const;
+export const gamePlatformHostSettingsMessageType = 'trainerhub.host:settings' as const;
 export const gamePlatformOpaqueOrigin = 'null' as const;
 export const gamePlatformSupportedJsPsychMajorVersion = 8 as const;
 const gamePlatformGameRunRequestMaxBytes = 16 * 1024;
@@ -62,6 +64,7 @@ export interface GamePlatformLifecyclePayload {
 
 export type GamePlatformResultStatus = 'completed' | 'aborted';
 export type GamePlatformRunnerCommand = 'pause' | 'resume' | 'exit';
+export type GamePlatformSettingsValues = Record<string, string | number | boolean>;
 export type GamePlatformMetricValue = number | boolean | null;
 export type GamePlatformResultMetrics = Record<string, GamePlatformMetricValue>;
 
@@ -116,6 +119,14 @@ export interface GamePlatformRunnerCommandMessageV1 {
   command: GamePlatformRunnerCommand;
 }
 
+export interface GamePlatformRunnerSettingsMessageV1 {
+  schema: typeof gamePlatformMessageSchema;
+  type: typeof gamePlatformRunnerSettingsMessageType;
+  sessionId: string;
+  sessionNonce: string;
+  settings: GamePlatformSettingsValues;
+}
+
 export type GamePlatformMessageEvent = Pick<
   MessageEvent<GamePlatformMessage>,
   'data' | 'origin' | 'source'
@@ -143,6 +154,13 @@ const runnerReadyRequiredKeys = [
   'gameVersion',
   'sessionId',
   'sessionNonce',
+] as const;
+const runnerSettingsRequiredKeys = [
+  'schema',
+  'type',
+  'sessionId',
+  'sessionNonce',
+  'settings',
 ] as const;
 const runnerCommandSet: ReadonlySet<string> = new Set<GamePlatformRunnerCommand>([
   'pause',
@@ -315,6 +333,44 @@ export function CreateGamePlatformRunnerCommandMessage(
   };
 }
 
+export function CreateGamePlatformRunnerSettingsMessage(
+  sessionId: string,
+  sessionNonce: string,
+  settings: GamePlatformSettingsValues,
+): GamePlatformRunnerSettingsMessageV1 {
+  if (!IsValidSessionIdentifier(sessionId)
+    || !IsValidSessionNonce(sessionNonce)
+    || !IsGamePlatformSettingsValues(settings)) {
+    throw new TypeError('Invalid game runner settings.');
+  }
+  return {
+    schema: gamePlatformMessageSchema,
+    type: gamePlatformRunnerSettingsMessageType,
+    sessionId,
+    sessionNonce,
+    settings: { ...settings },
+  };
+}
+
+export function IsGamePlatformRunnerSettingsMessage(
+  value: unknown,
+  expectedSessionId?: string,
+  expectedSessionNonce?: string,
+): value is GamePlatformRunnerSettingsMessageV1 {
+  try {
+    return IsExactPlainObject(value, runnerSettingsRequiredKeys)
+      && value.schema === gamePlatformMessageSchema
+      && value.type === gamePlatformRunnerSettingsMessageType
+      && IsValidSessionIdentifier(value.sessionId)
+      && IsValidSessionNonce(value.sessionNonce)
+      && (!expectedSessionId || value.sessionId === expectedSessionId)
+      && (!expectedSessionNonce || value.sessionNonce === expectedSessionNonce)
+      && IsGamePlatformSettingsValues(value.settings);
+  } catch {
+    return false;
+  }
+}
+
 function IsMessageEnvelope(
   value: unknown,
   expectedType: typeof gamePlatformLifecycleMessageType | typeof gamePlatformResultMessageType,
@@ -342,6 +398,21 @@ function IsGamePlatformResultMetrics(value: unknown): value is GamePlatformResul
     && /^[a-z][A-Za-z0-9_.-]{0,63}$/.test(key)
     && !sensitiveMetricKeyPattern.test(key)
     && (value[key] === null || typeof value[key] === 'boolean' || IsFiniteNumber(value[key])));
+}
+
+function IsGamePlatformSettingsValues(value: unknown): value is GamePlatformSettingsValues {
+  if (!IsPlainObject(value)) return false;
+  const keys = Reflect.ownKeys(value);
+  return keys.length <= 64 && keys.every((key) => {
+    if (typeof key !== 'string'
+      || !Object.prototype.propertyIsEnumerable.call(value, key)
+      || !/^[a-z][A-Za-z0-9_.-]{0,63}$/.test(key)
+      || sensitiveMetricKeyPattern.test(key)) return false;
+    const setting = value[key];
+    return typeof setting === 'boolean'
+      || (typeof setting === 'string' && setting.length <= 80)
+      || IsFiniteNumber(setting);
+  });
 }
 
 function IsSupportedJsPsychVersion(value: unknown): value is string {

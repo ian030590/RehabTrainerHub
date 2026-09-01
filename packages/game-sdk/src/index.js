@@ -3,6 +3,7 @@ const lifecycleMessageType = 'trainerhub.game:lifecycle';
 const resultMessageType = 'trainerhub.game:result';
 const hostInitMessageType = 'trainerhub.host:init';
 const hostCommandMessageType = 'trainerhub.host:command';
+const hostSettingsMessageType = 'trainerhub.host:settings';
 const maximumResultDurationMs = 24 * 60 * 60 * 1000;
 const maximumResultPayloadBytes = 16_000;
 const maximumResultTrialCount = 100_000;
@@ -20,8 +21,10 @@ export async function RunTrainerHubJsPsychGame({
   jsPsychOptions = {},
   summarize,
 }) {
-  if (typeof initJsPsych !== 'function' || !Array.isArray(timeline) || timeline.length === 0) {
-    throw new TypeError('initJsPsych and a non-empty timeline are required.');
+  if (typeof initJsPsych !== 'function'
+    || (!Array.isArray(timeline) && typeof timeline !== 'function')
+    || (Array.isArray(timeline) && timeline.length === 0)) {
+    throw new TypeError('initJsPsych and a non-empty timeline (or timeline factory) are required.');
   }
   if (typeof summarize !== 'function') {
     throw new TypeError('summarize(jsPsych) must return an aggregate result.');
@@ -71,14 +74,19 @@ export async function RunTrainerHubJsPsychGame({
 
   try {
     await bridge.Ready;
+    const settings = await bridge.Settings;
+    const resolvedTimeline = typeof timeline === 'function' ? await timeline(settings) : timeline;
+    if (!Array.isArray(resolvedTimeline) || resolvedTimeline.length === 0) {
+      throw new TypeError('The timeline factory must return a non-empty timeline.');
+    }
     bridge.ReportLifecycle('ready', 0);
-    await jsPsych.run(timeline);
+    await jsPsych.run(resolvedTimeline);
     const result = wasAborted
       ? { status: 'aborted' }
-      : NormalizeAggregateResult(await summarize(jsPsych), 'completed');
+      : NormalizeAggregateResult(await summarize(jsPsych, settings), 'completed');
     bridge.ReportResult(result);
     bridge.ReportLifecycle(result.status === 'completed' ? 'completed' : 'aborted', result.status === 'completed' ? 1 : undefined);
-    return { jsPsych, result };
+    return { jsPsych, result, settings };
   } catch (error) {
     if (bridge.IsConnected) {
       bridge.ReportResult({ status: 'aborted' });
@@ -98,18 +106,27 @@ export function CreateTrainerHubGameBridge() {
   let disposed = false;
   const commandListeners = new Set();
   let resolveReady;
+  let resolveSettings;
   const ready = new Promise((resolve) => {
     resolveReady = resolve;
   });
+  const settingsReady = new Promise((resolve) => {
+    resolveSettings = resolve;
+  });
 
-  const handleHostCommand = (message) => {
-    if (disposed
-      || !session
-      || !IsExactObject(message, ['schema', 'type', 'sessionId', 'sessionNonce', 'command'])
+  const handleHostMessage = (message) => {
+    if (disposed || !session || !IsPlainObject(message)
       || message.schema !== messageSchema
-      || message.type !== hostCommandMessageType
       || message.sessionId !== session.sessionId
-      || message.sessionNonce !== session.sessionNonce
+      || message.sessionNonce !== session.sessionNonce) return;
+    if (message.type === hostSettingsMessageType
+      && IsExactObject(message, ['schema', 'type', 'sessionId', 'sessionNonce', 'settings'])
+      && IsSettings(message.settings)) {
+      resolveSettings(Object.freeze({ ...message.settings }));
+      return;
+    }
+    if (message.type !== hostCommandMessageType
+      || !IsExactObject(message, ['schema', 'type', 'sessionId', 'sessionNonce', 'command'])
       || !validCommands.has(message.command)) return;
     commandListeners.forEach((listener) => listener({ command: message.command }));
   };
@@ -125,7 +142,7 @@ export function CreateTrainerHubGameBridge() {
       || !event.ports[0]
       || session) return;
     hostPort = event.ports[0];
-    hostPort.addEventListener('message', (portEvent) => handleHostCommand(portEvent.data));
+    hostPort.addEventListener('message', (portEvent) => handleHostMessage(portEvent.data));
     hostPort.start();
     session = Object.freeze({
       gameId: message.gameId,
@@ -151,6 +168,7 @@ export function CreateTrainerHubGameBridge() {
 
   return {
     Ready: ready,
+    Settings: settingsReady,
     get IsConnected() {
       return session !== null && !disposed;
     },
@@ -185,6 +203,21 @@ export function CreateTrainerHubGameBridge() {
       window.removeEventListener('message', handleMessage);
     },
   };
+}
+
+function IsSettings(value) {
+  if (!IsPlainObject(value)) return false;
+  const keys = Reflect.ownKeys(value);
+  return keys.length <= 64 && keys.every((key) => {
+    if (typeof key !== 'string'
+      || !Object.prototype.propertyIsEnumerable.call(value, key)
+      || !/^[a-z][A-Za-z0-9_.-]{0,63}$/.test(key)
+      || sensitiveMetricKeyPattern.test(key)) return false;
+    const setting = value[key];
+    return typeof setting === 'boolean'
+      || (typeof setting === 'string' && setting.length <= 80)
+      || Number.isFinite(setting);
+  });
 }
 
 export function NormalizeAggregateResult(value, fallbackStatus) {

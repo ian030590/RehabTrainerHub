@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "gameId": "gabor-patching",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "刺激設定",
+        "en": "Stimulus settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "難度",
+            "en": "Difficulty"
+          },
+          "description": {
+            "zh-TW": "選擇這次活動的刺激與操作難度。",
+            "en": "Choose the stimulus and control difficulty for this session."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "簡單",
+                "en": "Easy"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "中等",
+                "en": "Medium"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "困難",
+                "en": "Hard"
+              }
+            }
+          ]
+        },
+        {
+          "key": "durationSec",
+          "type": "slider",
+          "label": {
+            "zh-TW": "刺激時間",
+            "en": "Stimulus duration"
+          },
+          "default": 60,
+          "min": 30,
+          "max": 180,
+          "step": 15,
+          "unit": {
+            "zh-TW": "秒",
+            "en": "sec"
+          }
+        },
+        {
+          "key": "maxSpots",
+          "type": "slider",
+          "label": {
+            "zh-TW": "最大刺激數",
+            "en": "Maximum patches"
+          },
+          "default": 8,
+          "min": 3,
+          "max": 20,
+          "step": 1
+        }
+      ]
+    }
+  ]
+}

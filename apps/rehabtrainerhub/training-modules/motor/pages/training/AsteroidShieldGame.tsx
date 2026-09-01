@@ -35,6 +35,7 @@ import {
   useMediaPermissionPreflight,
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
+import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { useT } from '../../i18n';
@@ -398,6 +399,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const hostedSettings = useHostedGameSettings();
+  const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
   const [difficulty, setDifficulty] = useState<DifficultyId>('beginner');
   const [durationSec, setDurationSec] = useState(defaultDurationSeconds);
@@ -834,6 +837,17 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       host.removeEventListener('pointermove', updateFromPointer);
     };
   }, []);
+
+  useEffect(() => {
+    if (!hostedSettings || hostedSettingsAppliedRef.current) return;
+    hostedSettingsAppliedRef.current = true;
+    setDifficulty(NormalizeAsteroidDifficulty(hostedSettings.difficulty));
+    if (typeof hostedSettings.durationSec === 'number') setDurationSec(hostedSettings.durationSec);
+    if (typeof hostedSettings.sensitivity === 'number') {
+      setShieldSizePercent(Math.round(70 + hostedSettings.sensitivity * 5));
+    }
+    setPhase('rules');
+  }, [hostedSettings, setPhase]);
 
   const latestRows = result?.Object_Records.slice(-10) ?? [];
 
@@ -1549,6 +1563,12 @@ function FormatHandChoice(handChoice: HandChoice, labels: (typeof copy)['zh'] | 
   if (handChoice === 'left') return labels.handLeft;
   if (handChoice === 'right') return labels.handRight;
   return labels.handAny;
+}
+
+function NormalizeAsteroidDifficulty(value: unknown): DifficultyId {
+  if (value === 'hard' || value === 'advanced') return 'advanced';
+  if (value === 'medium' || value === 'intermediate') return 'intermediate';
+  return 'beginner';
 }
 
 function FormatControlMode(controlMode: ControlMode, labels: (typeof copy)['zh'] | (typeof copy)['en']): string {

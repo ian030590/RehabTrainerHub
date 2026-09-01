@@ -4,11 +4,13 @@ import { HashRouter } from 'react-router-dom';
 import { App } from './App';
 import { LanguageProvider } from './i18n';
 import { ApplyThemeTokens } from './theme';
+import { InstallHostedGameSettingsReceiver } from '@rehab-trainer/ui/embeddedTraining';
 import '@rehab-trainer/ui/components/GridPageLayout.css';
 import './index.css';
 import '@rehab-trainer/ui/components/TrainerApp.css';
 
 ApplyThemeTokens();
+InstallHostedGameSettingsReceiver();
 
 const rootElement = document.getElementById('root');
 

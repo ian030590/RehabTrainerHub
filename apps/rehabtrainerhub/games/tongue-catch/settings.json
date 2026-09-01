@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "gameId": "tongue-catch",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "口部動作設定",
+        "en": "Oral movement settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "sensitivityPercent",
+          "type": "slider",
+          "label": {
+            "zh-TW": "動作靈敏度",
+            "en": "Movement sensitivity"
+          },
+          "default": 65,
+          "min": 45,
+          "max": 95,
+          "step": 5,
+          "unit": {
+            "zh-TW": "%",
+            "en": "%"
+          }
+        },
+        {
+          "key": "durationSec",
+          "type": "slider",
+          "label": {
+            "zh-TW": "活動時間",
+            "en": "Session duration"
+          },
+          "description": {
+            "zh-TW": "設定這次活動進行的時間。",
+            "en": "Set how long this activity will run."
+          },
+          "default": 60,
+          "min": 30,
+          "max": 300,
+          "step": 15,
+          "unit": {
+            "zh-TW": "秒",
+            "en": "sec"
+          }
+        },
+        {
+          "key": "edgeChancePercent",
+          "type": "slider",
+          "label": {
+            "zh-TW": "邊緣目標比例",
+            "en": "Edge target ratio"
+          },
+          "default": 40,
+          "min": 0,
+          "max": 90,
+          "step": 5,
+          "unit": {
+            "zh-TW": "%",
+            "en": "%"
+          }
+        }
+      ]
+    }
+  ]
+}

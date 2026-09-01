@@ -50,6 +50,7 @@ import {
   useMediaPermissionPreflight,
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
+import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { InlineAlert } from '../../components/InlineAlert';
@@ -208,6 +209,8 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
 
   const activeUser = getActiveUser() || '';
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const hostedSettings = useHostedGameSettings();
+  const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
   const [config, setConfig] = useState<TongueTrainingSettings>(() => (
     activeUser ? GetTongueTrainingSettings(activeUser) : { ...defaultTongueSettings }
@@ -231,6 +234,24 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     phaseRef.current = next;
     setPhaseState(next);
   }, []);
+
+  useEffect(() => {
+    if (!hostedSettings || hostedSettingsAppliedRef.current) return;
+    hostedSettingsAppliedRef.current = true;
+    setConfig((current) => ({
+      ...current,
+      ...(typeof hostedSettings.durationSec === 'number'
+        ? { durationSec: hostedSettings.durationSec }
+        : {}),
+      ...(typeof hostedSettings.sensitivityPercent === 'number'
+        ? { sensitivity: hostedSettings.sensitivityPercent / 100 }
+        : {}),
+      ...(typeof hostedSettings.edgeChancePercent === 'number'
+        ? { edgeChance: hostedSettings.edgeChancePercent / 100 }
+        : {}),
+    }));
+    setPhase('rules');
+  }, [hostedSettings, setPhase]);
 
   useEffect(() => {
     configRef.current = config;

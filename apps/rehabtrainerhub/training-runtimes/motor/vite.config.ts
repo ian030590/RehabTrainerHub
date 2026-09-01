@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/runtimes/motor/',
+  base: './',
   plugins: [react()],
   resolve: { alias: {
     '@rehab-trainer/ui': fileURLToPath(new URL('../../../../packages/ui/src', import.meta.url)),
@@ -11,7 +11,7 @@ export default defineConfig({
   } },
   server: { watch: { ignored: ['**/tsconfig.json', '**/tsconfig.*.json', '**/*.tsbuildinfo'] } },
   build: {
-    outDir: '../../out/runtimes/motor', assetsDir: 'assets', emptyOutDir: true,
+    outDir: '../../out/.official-game-shells/motor', assetsDir: 'assets', emptyOutDir: true,
     rollupOptions: { output: { manualChunks: CreateRuntimeChunks } },
   },
 });

@@ -24,6 +24,41 @@ import {
 
 const textEncoder = new TextEncoder();
 const sha256 = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+const settingsSource = JSON.stringify({
+  schemaVersion: 1,
+  gameId: 'reaction-time',
+  sections: [{
+    id: 'training',
+    title: { 'zh-TW': '當次設定', en: 'Session settings' },
+    fields: [
+      {
+        key: 'difficulty',
+        type: 'list',
+        label: { 'zh-TW': '難度', en: 'Difficulty' },
+        default: 'medium',
+        options: [
+          { value: 'easy', label: { 'zh-TW': '簡單', en: 'Easy' } },
+          { value: 'medium', label: { 'zh-TW': '中等', en: 'Medium' } },
+        ],
+      },
+      {
+        key: 'rounds',
+        type: 'slider',
+        label: { 'zh-TW': '回合數', en: 'Rounds' },
+        default: 10,
+        min: 5,
+        max: 50,
+        step: 5,
+      },
+      {
+        key: 'soundEnabled',
+        type: 'checkbox',
+        label: { 'zh-TW': '音效', en: 'Sound feedback' },
+        default: true,
+      },
+    ],
+  }],
+});
 
 class MockBucket {
   constructor(objects) {
@@ -137,7 +172,11 @@ test('launcher is a noindex PWA shell with an opaque-origin iframe and strict re
   assert.match(html, /event\.source === window\.parent/);
   assert.match(html, /event\.origin === config\.trustedPlatformOrigin/);
   assert.match(html, /message\.sessionNonce !== sessionNonce/);
+  assert.match(html, /message\.sessionId !== sessionId/);
   assert.match(html, /message\.sequence <= lastAcceptedSequence/);
+  assert.match(html, /message\.type === 'trainerhub\.runner:settings'/);
+  assert.match(html, /type: 'trainerhub\.host:settings'/);
+  assert.match(html, /settings: pendingSettings/);
   assert.match(html, /trainerhub\.game-platform\/v1/);
   assert.match(html, /trainerhub\.game:lifecycle/);
   assert.match(html, /trainerhub\.game:result/);
@@ -150,6 +189,39 @@ test('launcher is a noindex PWA shell with an opaque-origin iframe and strict re
   assert.match(html, /key\.startsWith\(config\.cachePrefix\)/);
   assert.match(html, /https:\/\/trainerhub\.cc/);
   assert.doesNotMatch(html, /apiToken|accessToken|authToken/);
+});
+
+test('standalone launcher loads settings.json defaults while Hub embed waits for platform settings', async () => {
+  const baseRelease = BuildRelease();
+  const release = BuildRelease({
+    files: [
+      ...baseRelease.files,
+      {
+        path: 'settings.json',
+        size: textEncoder.encode(settingsSource).byteLength,
+        sha256,
+        contentType: 'application/json',
+      },
+    ],
+  });
+
+  const standalone = await HandleRequest(CreateContext('/games/reaction-time/1.0.0/', release));
+  const standaloneHtml = await standalone.text();
+  assert.equal(standalone.status, 200);
+  assert.match(
+    standaloneHtml,
+    /"standaloneSettings":\{"difficulty":"medium","rounds":10,"soundEnabled":true\}/,
+  );
+
+  const sessionNonce = 'Abcdefghijklmnopqrstuvwxyz_1234567890';
+  const embedded = await HandleRequest(CreateContext(
+    `/games/reaction-time/1.0.0/?embed=hub&session=${sessionNonce}`,
+    release,
+  ));
+  const embeddedHtml = await embedded.text();
+  assert.equal(embedded.status, 200);
+  assert.match(embeddedHtml, /"standaloneSettings":\{\}/);
+  assert.doesNotMatch(embeddedHtml, /"standaloneSettings":\{"difficulty"/);
 });
 
 test('Hub embed mode uses only a valid caller-provided session nonce', async () => {
@@ -631,6 +703,7 @@ function CreateContext(path, release = BuildRelease()) {
     [ReleaseKey(release.gameId, release.version)]: JSON.stringify(release),
     [PackageKey(release.gameId, release.version, 'index.html')]: html,
     [PackageKey(release.gameId, release.version, 'assets/tone.mp3')]: new Uint8Array([1, 2, 3, 4]),
+    [PackageKey(release.gameId, release.version, 'settings.json')]: settingsSource,
   };
   return {
     request: new Request(`https://trainerhub-user-games.pages.dev${path}`),

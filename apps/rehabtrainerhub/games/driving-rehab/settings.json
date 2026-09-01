@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "gameId": "driving-rehab",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "模擬設定",
+        "en": "Simulation settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "難度",
+            "en": "Difficulty"
+          },
+          "description": {
+            "zh-TW": "選擇這次活動的刺激與操作難度。",
+            "en": "Choose the stimulus and control difficulty for this session."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "簡單",
+                "en": "Easy"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "中等",
+                "en": "Medium"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "困難",
+                "en": "Hard"
+              }
+            }
+          ]
+        },
+        {
+          "key": "renderQuality",
+          "type": "list",
+          "label": {
+            "zh-TW": "畫面品質",
+            "en": "Rendering quality"
+          },
+          "default": "high",
+          "options": [
+            {
+              "value": "high",
+              "label": {
+                "zh-TW": "高",
+                "en": "High"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "中",
+                "en": "Medium"
+              }
+            },
+            {
+              "value": "low",
+              "label": {
+                "zh-TW": "低",
+                "en": "Low"
+              }
+            }
+          ]
+        },
+        {
+          "key": "controlMode",
+          "type": "list",
+          "label": {
+            "zh-TW": "控制方式",
+            "en": "Control method"
+          },
+          "default": "arrow",
+          "options": [
+            {
+              "value": "arrow",
+              "label": {
+                "zh-TW": "方向鍵",
+                "en": "Arrow keys"
+              }
+            },
+            {
+              "value": "wasd",
+              "label": {
+                "zh-TW": "WASD 鍵",
+                "en": "WASD keys"
+              }
+            },
+            {
+              "value": "gamepad",
+              "label": {
+                "zh-TW": "方向盤／控制器",
+                "en": "Wheel or gamepad"
+              }
+            },
+            {
+              "value": "touch",
+              "label": {
+                "zh-TW": "觸控",
+                "en": "Touch"
+              }
+            }
+          ]
+        },
+        {
+          "key": "redFlashEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "危險紅光提示",
+            "en": "Hazard red-flash cue"
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

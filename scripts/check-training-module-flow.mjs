@@ -614,7 +614,7 @@ assert.ok(
 );
 
 console.log(
-  `Training flow contract passed for ${catalogIds.length} Hub-owned modules, ${implementationGroups.length} runtime flows, and ${Object.keys(hostImports).length} Hub runtimes.`,
+  `Training flow contract passed for ${catalogIds.length} Hub-owned games, ${implementationGroups.length} game flows, and ${Object.keys(hostImports).length} source adapters.`,
 );
 console.log(
   pendingJsPsychIds.length > 0

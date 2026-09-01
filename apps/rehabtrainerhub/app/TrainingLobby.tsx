@@ -162,7 +162,7 @@ export function TrainingLobby() {
 
   useEffect(() => {
     const origins = new Set(trainingCatalog.map((module) => (
-      new URL(BuildTrainingModuleHref(module)).origin
+      new URL(BuildTrainingModuleHref(module), window.location.origin).origin
     )));
     const links = [...origins].flatMap((origin) => {
       const preconnect = document.createElement('link');

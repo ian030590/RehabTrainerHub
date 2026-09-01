@@ -1,6 +1,7 @@
 export type TrainerHubLifecyclePhase = 'ready' | 'started' | 'paused' | 'resumed' | 'completed' | 'aborted';
 export type TrainerHubResultStatus = 'completed' | 'aborted';
 export type TrainerHubMetric = number | boolean | null;
+export type TrainerHubSettings = Readonly<Record<string, string | number | boolean>>;
 
 export interface TrainerHubAggregateResult {
   status?: TrainerHubResultStatus;
@@ -17,6 +18,7 @@ export interface TrainerHubGameBridge {
     sessionId: string;
     sessionNonce: string;
   }>>;
+  readonly Settings: Promise<TrainerHubSettings>;
   readonly IsConnected: boolean;
   AddCommandListener(listener: (event: { command: 'pause' | 'resume' | 'exit' }) => void): void;
   RemoveCommandListener(listener: (event: { command: 'pause' | 'resume' | 'exit' }) => void): void;
@@ -33,9 +35,12 @@ export interface RunTrainerHubJsPsychGameOptions {
     resumeExperiment?(): void;
     abortExperiment?(reason?: string): void;
   };
-  timeline: unknown[];
+  timeline: unknown[] | ((settings: TrainerHubSettings) => unknown[] | Promise<unknown[]>);
   jsPsychOptions?: Record<string, unknown>;
-  summarize: (jsPsych: unknown) => TrainerHubAggregateResult | Promise<TrainerHubAggregateResult>;
+  summarize: (
+    jsPsych: unknown,
+    settings: TrainerHubSettings,
+  ) => TrainerHubAggregateResult | Promise<TrainerHubAggregateResult>;
 }
 
 export function CreateTrainerHubGameBridge(): TrainerHubGameBridge;
@@ -45,4 +50,4 @@ export function NormalizeAggregateResult(
 ): Required<Pick<TrainerHubAggregateResult, 'status'>> & Omit<TrainerHubAggregateResult, 'status'>;
 export function RunTrainerHubJsPsychGame(
   options: RunTrainerHubJsPsychGameOptions,
-): Promise<{ jsPsych: unknown; result: TrainerHubAggregateResult }>;
+): Promise<{ jsPsych: unknown; result: TrainerHubAggregateResult; settings: TrainerHubSettings }>;

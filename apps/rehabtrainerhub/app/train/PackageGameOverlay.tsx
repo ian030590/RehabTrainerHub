@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ParseGameSettingsDefinition,
+  type GameSettingsDefinition,
+  type GameSettingsValues,
+} from '@rehab-trainer/game-settings';
+import {
   CreateGamePlatformRunnerCommandMessage,
+  CreateGamePlatformRunnerSettingsMessage,
   gamePlatformLifecycleMessageType,
   gamePlatformResultMessageType,
   IsTrustedGamePlatformFrameMessage,
@@ -15,6 +21,8 @@ import {
 } from '@rehab-trainer/ui/auth/authClient';
 import type { PublishedGame } from '../publishedGames';
 import { useHubLanguage } from '../i18n/HubLanguage';
+import { Button } from '../components/ui/button';
+import { GameSettingsForm } from './GameSettingsForm';
 
 interface PackageGameOverlayProps {
   game: PublishedGame;
@@ -37,6 +45,10 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
   const closeTimerRef = useRef<number | null>(null);
   const closingRef = useRef(false);
   const fallbackReadyTimerRef = useRef<number | null>(null);
+  const [definition, setDefinition] = useState<GameSettingsDefinition | null>(null);
+  const [settingsError, setSettingsError] = useState(false);
+  const [settingsRequestKey, setSettingsRequestKey] = useState(0);
+  const [configuredSettings, setConfiguredSettings] = useState<GameSettingsValues | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -49,6 +61,20 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
     url.searchParams.set('session', sessionNonce);
     return url.toString();
   }, [game.release.launchUrl, sessionNonce]);
+
+  const sendSettingsToRunner = useCallback((runnerSessionId?: string) => {
+    const frameWindow = frameRef.current?.contentWindow;
+    const currentRunnerSessionId = runnerSessionId ?? runnerSessionIdRef.current;
+    if (!frameWindow || !currentRunnerSessionId || !configuredSettings) return;
+    frameWindow.postMessage(
+      CreateGamePlatformRunnerSettingsMessage(
+        currentRunnerSessionId,
+        sessionNonce,
+        configuredSettings,
+      ),
+      '*',
+    );
+  }, [configuredSettings, sessionNonce]);
 
   const ensureRunSession = useCallback(() => {
     const key = `${game.release.id}:${sessionNonce}`;
@@ -135,6 +161,27 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
   }, [ensureRunSession]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    setDefinition(null);
+    setSettingsError(false);
+    void fetch(game.release.settingsUrl, {
+      cache: 'no-store',
+      credentials: 'omit',
+      mode: 'cors',
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Unable to load settings.json (${response.status}).`);
+        return ParseGameSettingsDefinition(await response.json(), game.slug);
+      })
+      .then(setDefinition)
+      .catch(() => {
+        if (!controller.signal.aborted) setSettingsError(true);
+      });
+    return () => controller.abort();
+  }, [game.release.settingsUrl, game.slug, settingsRequestKey]);
+
+  useEffect(() => {
     const handleMessage = (event: MessageEvent<unknown>) => {
       if (IsTrustedGamePlatformRunnerReadyMessage(
         event,
@@ -145,6 +192,7 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
       )) {
         runnerSessionIdRef.current = event.data.sessionId;
         setIsReady(true);
+        sendSettingsToRunner(event.data.sessionId);
         return;
       }
       if (!IsTrustedGamePlatformFrameMessage(
@@ -174,7 +222,7 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [finishClose, game.release.version, game.slug, persistResult, sessionNonce]);
+  }, [finishClose, game.release.version, game.slug, persistResult, sendSettingsToRunner, sessionNonce]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -193,7 +241,52 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
       className={`package-game-overlay${isActive ? ' is-active' : ''}${isComplete ? ' is-complete' : ''}`}
       ref={dialogRef}
     >
-      <header className="package-game-toolbar">
+      {!configuredSettings && definition && (
+        <GameSettingsForm
+          definition={definition}
+          language={language}
+          onCancel={requestClose}
+          onSubmit={setConfiguredSettings}
+          title={game.title}
+        />
+      )}
+
+      {!configuredSettings && !definition && (
+        <div className="grid h-full place-items-center bg-[var(--background)] p-6 text-center">
+          {!settingsError ? (
+            <div className="grid justify-items-center gap-3" role="status">
+              <span className="training-loading-spinner" aria-hidden="true" />
+              <p className="m-0 font-bold text-[var(--text-muted)]">
+                {language === 'en' ? 'Loading game settings…' : '正在載入遊戲設定…'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid max-w-md justify-items-center gap-4" role="alert">
+              <span aria-hidden="true" className="material-symbols-outlined text-4xl text-[var(--error)]">error</span>
+              <div>
+                <h2 className="m-0 text-xl font-black text-[var(--heading)]">
+                  {language === 'en' ? 'Settings could not be loaded' : '無法載入遊戲設定'}
+                </h2>
+                <p className="mt-2 mb-0 text-[var(--text-muted)]">
+                  {language === 'en'
+                    ? 'This release does not contain a valid settings.json file.'
+                    : '這個發布版本未包含有效的 settings.json。'}
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button onClick={requestClose} type="button" variant="outline">
+                  {language === 'en' ? 'Back to lobby' : '返回大廳'}
+                </Button>
+                <Button onClick={() => setSettingsRequestKey((key) => key + 1)} type="button">
+                  {language === 'en' ? 'Try again' : '重新載入'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {configuredSettings && <><header className="package-game-toolbar">
         <div>
           <small>{game.developerName} · v{game.release.version}</small>
           <strong>{game.title}</strong>
@@ -245,7 +338,7 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
           src={sourceUrl}
           title={`${game.title}（隔離執行）`}
         />
-      </div>
+      </div></>}
     </dialog>
   );
 }

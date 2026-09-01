@@ -1,5 +1,5 @@
 // Canonical Hub-owned vision config and rules entry.
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useT } from '../i18n';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
@@ -13,6 +13,7 @@ import {
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
+import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
 import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
 import { trainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
@@ -98,6 +99,8 @@ export function HomePage() {
   const requestedModule = trainingModules.find(
     (module) => module.id === searchParams.get('module'),
   )?.id ?? null;
+  const hostedSettings = useHostedGameSettings();
+  const hostedSettingsAppliedRef = useRef(false);
 
   // ── Module expansion state ──
   const [expandedModule, setExpandedModule] = useState<TrainingModuleId | null>(requestedModule);
@@ -142,6 +145,74 @@ export function HomePage() {
   const rulesLabels = GetRulesLabels(lang);
   const showRulesButtonLabel = rulesLabels.next;
   const rulesStartButtonLabel = rulesLabels.start;
+
+  useEffect(() => {
+    if (!hostedSettings || !requestedModule || hostedSettingsAppliedRef.current) return;
+    hostedSettingsAppliedRef.current = true;
+    const difficulty = NormalizeVisionDifficulty(hostedSettings.difficulty);
+    setLocalDifficulty(difficulty);
+    if (typeof hostedSettings.rounds === 'number') setLocalRounds(hostedSettings.rounds);
+
+    if (requestedModule === 'oculomotor-training') {
+      const path = hostedSettings.movementPath;
+      const pattern: OculomotorPattern = path === 'horizontal'
+        ? 'horizontalSweep'
+        : path === 'vertical'
+          ? 'verticalSweep'
+          : path === 'circle'
+            ? 'circle'
+            : 'randomWalk';
+      setOculomotorPattern(pattern);
+      if (typeof hostedSettings.durationSec === 'number') setOculomotorDurationSec(hostedSettings.durationSec);
+      if (typeof hostedSettings.speed === 'number') setOculomotorSpeedDegPerSec(Math.max(2, hostedSettings.speed * 2));
+      if (typeof hostedSettings.targetSize === 'number') setOculomotorTargetSizeMm(Math.min(50, hostedSettings.targetSize));
+      if (typeof hostedSettings.webgazerEnabled === 'boolean') setOculomotorEnableWebgazer(hostedSettings.webgazerEnabled);
+      if (typeof hostedSettings.gazePointVisible === 'boolean') setOculomotorShowGazepoint(hostedSettings.gazePointVisible);
+    } else if (requestedModule === 'gabor-patching') {
+      if (typeof hostedSettings.durationSec === 'number') setGaborDurationSec(hostedSettings.durationSec);
+      if (typeof hostedSettings.maxSpots === 'number') setGaborMaxSpots(hostedSettings.maxSpots);
+    } else if (requestedModule === 'reading-training') {
+      if (typeof hostedSettings.wordsPerMinute === 'number') setReadingWPS(hostedSettings.wordsPerMinute / 60);
+      if (typeof hostedSettings.crowding === 'number') setReadingCrowding(hostedSettings.crowding / 100);
+      if (typeof hostedSettings.contrast === 'number') setReadingContrast(hostedSettings.contrast / 100);
+    } else if (requestedModule === 'driving-rehab') {
+      setDrivingDifficulty(difficulty);
+      if (hostedSettings.renderQuality === 'high'
+        || hostedSettings.renderQuality === 'medium'
+        || hostedSettings.renderQuality === 'low') {
+        setDrivingRenderQuality(hostedSettings.renderQuality);
+      }
+      if (hostedSettings.controlMode === 'arrow'
+        || hostedSettings.controlMode === 'wasd'
+        || hostedSettings.controlMode === 'wheel'
+        || hostedSettings.controlMode === 'touch') {
+        setDrivingControlMode(hostedSettings.controlMode);
+      }
+      if (typeof hostedSettings.redFlashEnabled === 'boolean') {
+        setDrivingRedFlashEnabled(hostedSettings.redFlashEnabled);
+      }
+    }
+    setExpandedModule(requestedModule);
+    setRulesModule(requestedModule);
+  }, [
+    hostedSettings,
+    requestedModule,
+    setDrivingControlMode,
+    setDrivingDifficulty,
+    setDrivingRedFlashEnabled,
+    setDrivingRenderQuality,
+    setLocalDifficulty,
+    setLocalRounds,
+    setOculomotorDurationSec,
+    setOculomotorEnableWebgazer,
+    setOculomotorPattern,
+    setOculomotorShowGazepoint,
+    setOculomotorSpeedDegPerSec,
+    setOculomotorTargetSizeMm,
+    setReadingContrast,
+    setReadingCrowding,
+    setReadingWPS,
+  ]);
 
   // Preload the route chunk shortly after the home page is interactive.
   useEffect(() => {
@@ -1160,6 +1231,12 @@ function GetRulesLabels(lang: string) {
         back: '回設定',
         summary: '目前設定',
       };
+}
+
+function NormalizeVisionDifficulty(value: unknown): 'beginner' | 'intermediate' | 'advanced' {
+  if (value === 'hard' || value === 'advanced') return 'advanced';
+  if (value === 'medium' || value === 'intermediate') return 'intermediate';
+  return 'beginner';
 }
 
 function GetVisionRuleSections(

@@ -137,6 +137,83 @@ test('Hub accepts messages only from the expected same-origin runtime frame', ()
   ), false);
 });
 
+test('official games accept settings only from their verified Hub parent', (context) => {
+  const parent = {};
+  const listeners = new Map();
+  const dispatchedEvents = [];
+  const windowMock = {
+    location: {
+      pathname: '/games/drawing-defense/',
+      search: '?embed=hub',
+    },
+    parent,
+    top: {},
+    addEventListener(type, listener) {
+      listeners.set(type, listener);
+    },
+    removeEventListener(type, listener) {
+      if (listeners.get(type) === listener) listeners.delete(type);
+    },
+    dispatchEvent(event) {
+      dispatchedEvents.push(event);
+      return true;
+    },
+  };
+  windowMock.self = windowMock;
+  class TestCustomEvent {
+    constructor(type, init) {
+      this.detail = init?.detail;
+      this.type = type;
+    }
+  }
+
+  Object.defineProperty(globalThis, 'CustomEvent', {
+    configurable: true,
+    value: TestCustomEvent,
+  });
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: windowMock });
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { referrer: 'https://trainerhub.cc/train/?module=motor%3Adrawing-defense' },
+  });
+  context.after(() => {
+    delete globalThis.CustomEvent;
+    delete globalThis.document;
+    delete globalThis.window;
+  });
+
+  const sessionNonce = 'b'.repeat(64);
+  const message = embeddedTraining.CreateHubGameSettingsMessage(
+    'drawing-defense',
+    sessionNonce,
+    { difficulty: 'medium', durationSec: 60, soundEnabled: true },
+  );
+  assert.equal(embeddedTraining.IsHubGameSettingsMessage(message, 'drawing-defense'), true);
+  assert.equal(embeddedTraining.IsHubGameSettingsMessage(
+    { ...message, token: 'never-allowed' },
+    'drawing-defense',
+  ), false);
+  assert.throws(() => embeddedTraining.CreateHubGameSettingsMessage(
+    'drawing-defense',
+    sessionNonce,
+    { authToken: 'never-allowed' },
+  ));
+
+  const remove = embeddedTraining.InstallHostedGameSettingsReceiver();
+  const handleMessage = listeners.get('message');
+  assert.equal(typeof handleMessage, 'function');
+  handleMessage({ data: message, origin: 'https://attacker.example', source: parent });
+  handleMessage({ data: message, origin: 'https://trainerhub.cc', source: {} });
+  assert.equal(embeddedTraining.GetHostedGameSettings(), null);
+
+  handleMessage({ data: message, origin: 'https://trainerhub.cc', source: parent });
+  assert.deepEqual(embeddedTraining.GetHostedGameSettings(), message.settings);
+  assert.equal(dispatchedEvents.at(-1)?.type, 'rehab-trainer:game-settings-ready');
+  assert.deepEqual(dispatchedEvents.at(-1)?.detail, message.settings);
+  remove();
+  assert.equal(listeners.has('message'), false);
+});
+
 test('training results expose exactly one source-aware navigation button', () => {
   assert.equal((resultActionsSource.match(/<button\b/g) ?? []).length, 1);
   assert.equal(resultActionsSource.includes('downloadLabel'), false);

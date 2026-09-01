@@ -25,6 +25,7 @@ import {
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
+import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
 import { BrainTrainingRulesPanel } from './BrainTrainingRulesPanel';
@@ -106,6 +107,8 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const [phase, setPhase] = useState<MinesweeperPhase>('menu');
+  const hostedSettings = useHostedGameSettings();
+  const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
   const [difficulty, setDifficulty] = useState<MinesweeperDifficulty>(defaultDifficulty);
   const [boardPreset, setBoardPreset] = useState<BoardPresetId>(defaultBoardPreset);
@@ -118,6 +121,20 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   const [minesGenerated, setMinesGenerated] = useState(false);
   const [flagMode, setFlagMode] = useState(false);
   const [result, setResult] = useState<SessionRecord | null>(null);
+
+  useEffect(() => {
+    if (!hostedSettings || hostedSettingsAppliedRef.current) return;
+    hostedSettingsAppliedRef.current = true;
+    setDifficulty(hostedSettings.difficulty === 'hard'
+      ? 'Advanced'
+      : hostedSettings.difficulty === 'medium'
+        ? 'Intermediate'
+        : 'Beginner');
+    if (hostedSettings.boardSize === 'small'
+      || hostedSettings.boardSize === 'medium'
+      || hostedSettings.boardSize === 'large') setBoardPreset(hostedSettings.boardSize);
+    setPhase('rules');
+  }, [hostedSettings]);
 
   const activeConfig = difficulties[difficulty];
   const activeDifficultyLabel = t(activeConfig.labelKey);

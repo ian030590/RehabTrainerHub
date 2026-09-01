@@ -949,8 +949,11 @@ async function Evaluate(cdpClient, targetSessionId, expression) {
 function FindBrowserPath() {
   const candidates = [
     process.env.BROWSER_EXECUTABLE_PATH,
+    process.env.BRAVE_BIN,
     process.env.EDGE_BIN,
     process.env.CHROME_BIN,
+    'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe',
+    'C:/Program Files (x86)/BraveSoftware/Brave-Browser/Application/brave.exe',
     'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
     'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
     'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -963,7 +966,7 @@ function FindBrowserPath() {
   for (const candidate of candidates) {
     if (candidate && existsSync(candidate)) return candidate;
   }
-  for (const command of ['msedge', 'microsoft-edge', 'google-chrome', 'chrome', 'chromium']) {
+  for (const command of ['brave', 'msedge', 'microsoft-edge', 'google-chrome', 'chrome', 'chromium']) {
     const result = spawnSync(command, ['--version'], { encoding: 'utf8' });
     if (!result.error && result.status === 0) return command;
   }

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "gameId": "minimal-game",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "fields": [
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "回合數",
+            "en": "Rounds"
+          },
+          "default": 5,
+          "min": 1,
+          "max": 20,
+          "step": 1,
+          "unit": {
+            "zh-TW": "回合",
+            "en": "rounds"
+          }
+        }
+      ]
+    }
+  ]
+}

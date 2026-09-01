@@ -137,7 +137,7 @@ const hartChartSource = readFileSync(resolve(
 assert.match(hartChartSource, /`\$\{storagePrefix\}hart\.decoderDock`/);
 assert.doesNotMatch(hartChartSource, /vision[_-]trainer/);
 
-console.log('Hub runtime storage namespace check passed.');
+console.log('Official game adapter storage namespace check passed.');
 
 function CreateFakeIndexedDb(recordsByDatabaseName) {
   const deletedDatabaseNames = [];

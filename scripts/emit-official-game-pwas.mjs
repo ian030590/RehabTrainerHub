@@ -2,8 +2,10 @@
 
 import { createHash } from 'node:crypto';
 import {
+  cp,
   mkdir,
   readFile,
+  readdir,
   rm,
   stat,
   writeFile,
@@ -13,13 +15,13 @@ import {
   dirname,
   relative,
   resolve,
-  sep,
 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Script } from 'node:vm';
 import ts from 'typescript';
+import { ParseGameSettingsDefinition } from '../packages/game-settings/src/index.js';
 
-const generatorRevision = '2026-08-17-official-game-pwa-v2';
+const generatorRevision = '2026-09-01-game-directory-v3';
 const maximumShellPrecacheBytes = 12 * 1024 * 1024;
 const gameIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const windowsReservedNamePattern = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
@@ -44,6 +46,8 @@ const catalogSource = await readFile(catalogPath, 'utf8');
 const catalogGames = ReadCatalogSeeds(catalogSource);
 ValidateCatalogGames(catalogGames);
 const gamesDirectory = resolve(outputDirectory, 'games');
+const shellsDirectory = resolve(outputDirectory, '.official-game-shells');
+const sourceGamesDirectory = resolve(appDirectory, 'games');
 if (dirname(gamesDirectory) !== outputDirectory || basename(gamesDirectory) !== 'games') {
   throw new Error('Refusing to write games outside the Hub build output.');
 }
@@ -55,15 +59,19 @@ let emittedGameCount = 0;
 for (const trainer of trainers) {
   const games = catalogGames.filter((game) => game.trainer === trainer);
   if (games.length === 0) throw new Error(`No catalog games found for ${trainer}.`);
-  const rootHtml = await readFile(resolve(outputDirectory, 'runtimes', trainer, 'index.html'), 'utf8');
-  const shellUrls = ExtractShellUrls(rootHtml, rootManifest);
-  const shellFiles = shellUrls.map(ResolveOutputFile);
+  const shellDirectory = resolve(shellsDirectory, trainer);
+  const rootHtml = await readFile(resolve(shellDirectory, 'index.html'), 'utf8');
+  const shellFiles = await ListFiles(shellDirectory);
   const shellMetadata = await Promise.all(shellFiles.map(async (filePath) => {
     const metadata = await stat(filePath);
     if (!metadata.isFile()) throw new Error(`PWA shell resource is not a file: ${filePath}`);
     return { filePath, size: metadata.size };
   }));
-  const shellPrecacheBytes = shellMetadata.reduce((total, item) => total + item.size, 0);
+  const shellBytes = shellMetadata.reduce((total, item) => total + item.size, 0);
+  const precacheMetadata = shellMetadata.filter(({ filePath }) => (
+    ShouldPrecacheShellFile(relative(shellDirectory, filePath))
+  ));
+  const shellPrecacheBytes = precacheMetadata.reduce((total, item) => total + item.size, 0);
   if (shellPrecacheBytes > maximumShellPrecacheBytes) {
     throw new Error(`Official game shell precache exceeds ${maximumShellPrecacheBytes} bytes.`);
   }
@@ -74,6 +82,13 @@ for (const trainer of trainers) {
     if (dirname(gameDirectory) !== gamesDirectory) throw new Error(`Unsafe official game output path: ${game.id}`);
     await mkdir(gameDirectory, { recursive: true });
     const basePath = `/games/${game.id}/`;
+    await cp(shellDirectory, gameDirectory, { recursive: true });
+    const shellUrls = precacheMetadata
+      .map(({ filePath }) => filePath)
+      .map((filePath) => `${basePath}${relative(shellDirectory, filePath).replaceAll('\\', '/')}`)
+      .sort();
+    const settingsSource = await readFile(resolve(sourceGamesDirectory, game.id, 'settings.json'), 'utf8');
+    ParseGameSettingsDefinition(JSON.parse(settingsSource), game.id);
     const description = `${game.title}的單一遊戲安裝入口；結果僅為當次練習紀錄。`;
     const manifest = {
       ...rootManifest,
@@ -86,17 +101,18 @@ for (const trainer of trainers) {
     };
     const html = BuildGameHtml(rootHtml, game, basePath, description);
     const revision = CreateGameRevision(baseRevision, game, manifest, html);
-    const serviceWorker = BuildGameServiceWorker({ basePath, gameId: game.id, revision, shellUrls, trainer });
-    ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker, trainer });
+    const serviceWorker = BuildGameServiceWorker({ basePath, gameId: game.id, revision, shellUrls });
+    ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker });
     await Promise.all([
       writeFile(resolve(gameDirectory, 'index.html'), html),
       writeFile(resolve(gameDirectory, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`),
+      writeFile(resolve(gameDirectory, 'settings.json'), settingsSource),
       writeFile(resolve(gameDirectory, 'sw.js'), serviceWorker),
     ]);
     emittedGameCount += 1;
   }
 
-  console.log(`Emitted ${games.length} ${trainer} game PWAs (${FormatBytes(shellPrecacheBytes)} shell, ${baseRevision}).`);
+  console.log(`Emitted ${games.length} ${trainer} game PWAs (${FormatBytes(shellPrecacheBytes)} precached of ${FormatBytes(shellBytes)}, ${baseRevision}).`);
 }
 
 const headersPath = resolve(outputDirectory, '_headers');
@@ -107,6 +123,7 @@ if (!headers.includes(headerMarker)) {
 }
 
 console.log(`Emitted ${emittedGameCount} Hub-hosted official game PWAs.`);
+await rm(shellsDirectory, { recursive: true, force: true });
 
 function BuildGameHtml(source, game, basePath, description) {
   const clientConfiguration = SerializeForInlineScript({
@@ -206,12 +223,13 @@ function BuildGameHtml(source, game, basePath, description) {
   return html;
 }
 
-function BuildGameServiceWorker({ basePath, gameId, revision, shellUrls, trainer }) {
-  const cachePrefix = `trainerhub-official-game:${trainer}:${gameId}:`;
+function BuildGameServiceWorker({ basePath, gameId, revision, shellUrls }) {
+  const cachePrefix = `trainerhub-official-game:${gameId}:`;
   const cacheName = `${cachePrefix}${revision}`;
   const precacheUrls = [...new Set([
     basePath,
     `${basePath}manifest.webmanifest`,
+    `${basePath}settings.json`,
     ...shellUrls,
   ])].sort();
   return `'use strict';
@@ -341,37 +359,15 @@ function ValidateCatalogGames(games) {
   }
 }
 
-function ExtractShellUrls(html, manifest) {
-  const urls = new Set();
-  const tagPattern = /<(?:script|link)\b[^>]*(?:src|href)=["']([^"']+)["'][^>]*>/gi;
-  for (const match of html.matchAll(tagPattern)) AddShellUrl(urls, match[1]);
-  for (const icon of Array.isArray(manifest.icons) ? manifest.icons : []) {
-    if (icon && typeof icon === 'object') AddShellUrl(urls, icon.src);
-  }
-  urls.delete('/manifest.webmanifest');
-  urls.delete('/sw.js');
-  return [...urls].sort();
-}
-
-function AddShellUrl(urls, value) {
-  if (typeof value !== 'string' || !value.startsWith('/')) return;
-  const url = new URL(value, 'https://trainer-build.invalid');
-  if (url.origin !== 'https://trainer-build.invalid' || url.search || url.hash || url.pathname === '/') return;
-  urls.add(url.pathname);
-}
-
-function ResolveOutputFile(publicUrl) {
-  const url = new URL(publicUrl, 'https://trainer-build.invalid');
-  const segments = url.pathname.split('/').slice(1).map((segment) => decodeURIComponent(segment));
-  if (segments.length === 0 || segments.some((segment) => !segment || segment === '.' || segment === '..' || segment.includes('\\'))) {
-    throw new Error(`Unsafe shell resource URL: ${publicUrl}`);
-  }
-  const filePath = resolve(outputDirectory, ...segments);
-  const outputRelativePath = relative(outputDirectory, filePath);
-  if (outputRelativePath === '..' || outputRelativePath.startsWith(`..${sep}`)) {
-    throw new Error(`Shell resource escaped the build output: ${publicUrl}`);
-  }
-  return filePath;
+function ShouldPrecacheShellFile(relativePath) {
+  const normalizedPath = relativePath.replaceAll('\\', '/').toLowerCase();
+  if (normalizedPath === 'index.html'
+    || normalizedPath === 'manifest.webmanifest'
+    || normalizedPath === 'sw.js') return false;
+  // Camera/ML binaries are copied into every game but fetched and cached only when
+  // a game actually needs them. Precaching both WASM variants would make install
+  // fail on storage-constrained devices and adds more than 16 MiB to every vision game.
+  return !/\.(?:bin|data|onnx|tflite|wasm)(?:$|\?)/i.test(normalizedPath);
 }
 
 function ReadStringProperty(object, name) {
@@ -432,7 +428,7 @@ function CreateGameRevision(baseRevision, game, manifest, html) {
     .slice(0, 16);
 }
 
-function ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker, trainer }) {
+function ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker }) {
   if (manifest.id !== basePath || manifest.scope !== basePath || !manifest.start_url.startsWith(basePath)) {
     throw new Error(`Invalid generated manifest scope for ${game.id}.`);
   }
@@ -441,10 +437,19 @@ function ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker
     || /application\/ld\+json/i.test(html)) {
     throw new Error(`Generated game HTML retained conflicting SEO metadata for ${game.id}.`);
   }
-  if (!serviceWorker.includes(`trainerhub-official-game:${trainer}:${game.id}:`)) {
+  if (!serviceWorker.includes(`trainerhub-official-game:${game.id}:`)) {
     throw new Error(`Generated service worker identity is invalid for ${game.id}.`);
   }
   new Script(serviceWorker, { filename: `${game.id}/sw.js` });
+}
+
+async function ListFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const nested = await Promise.all(entries.map((entry) => {
+    const path = resolve(directory, entry.name);
+    return entry.isDirectory() ? ListFiles(path) : [path];
+  }));
+  return nested.flat().sort();
 }
 
 function SerializeForInlineScript(value) {

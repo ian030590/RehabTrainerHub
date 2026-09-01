@@ -1,4 +1,5 @@
 import { unzipSync } from 'fflate';
+import { ParseGameSettingsDefinition } from '@rehab-trainer/game-settings';
 
 export const gamePackageLimits = Object.freeze({
   maximumCompressedBytes: 12 * 1024 * 1024,
@@ -23,6 +24,7 @@ export const gamePackageRuntimeContract = Object.freeze({
 });
 
 const entryPath = 'index.html';
+const settingsPath = 'settings.json';
 const allowedCapabilities = new Set([
   'audio',
   'fullscreen',
@@ -91,7 +93,7 @@ export function NormalizeGameCapabilities(value) {
   return normalized.every((item) => allowedCapabilities.has(item)) ? normalized : null;
 }
 
-export async function InspectGamePackage(file) {
+export async function InspectGamePackage(file, expectedGameId) {
   if (!IsUploadedFile(file)) {
     throw new GamePackageError('A game HTML or ZIP file is required.', 'missing-package');
   }
@@ -107,7 +109,24 @@ export async function InspectGamePackage(file) {
   if (!rawFiles.has(entryPath)) {
     throw new GamePackageError('The package root must contain index.html.', 'missing-entry');
   }
+  if (expectedGameId && !rawFiles.has(settingsPath)) {
+    throw new GamePackageError('The package root must contain settings.json.', 'missing-settings');
+  }
   const entryHtml = DecodeUtf8(rawFiles.get(entryPath), entryPath);
+  let settings = null;
+  if (rawFiles.has(settingsPath)) {
+    try {
+      settings = ParseGameSettingsDefinition(
+        JSON.parse(DecodeUtf8(rawFiles.get(settingsPath), settingsPath)),
+        expectedGameId,
+      );
+    } catch (error) {
+      throw new GamePackageError(
+        error instanceof Error ? error.message : 'settings.json is invalid.',
+        'invalid-settings',
+      );
+    }
+  }
 
   const files = [];
   const findings = [];
@@ -217,6 +236,7 @@ export async function InspectGamePackage(file) {
     packageData: packageBytes,
     packageBytes: packageBytes.byteLength,
     reviewCount,
+    settings,
     totalBytes,
   };
 }

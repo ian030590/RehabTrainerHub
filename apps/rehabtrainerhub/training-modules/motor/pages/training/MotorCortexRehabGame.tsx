@@ -26,6 +26,7 @@ import {
   useMediaPermissionPreflight,
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
+import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { useT } from '../../i18n';
@@ -326,6 +327,8 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const hostedSettings = useHostedGameSettings();
+  const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
   const [drill, setDrill] = useState<DrillId>('bounce');
   const [difficulty, setDifficulty] = useState<DifficultyId>('beginner');
@@ -364,6 +367,32 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     phaseRef.current = nextPhase;
     setPhaseState(nextPhase);
   }, []);
+
+  useEffect(() => {
+    if (!hostedSettings || hostedSettingsAppliedRef.current) return;
+    hostedSettingsAppliedRef.current = true;
+    if (hostedSettings.difficulty === 'hard' || hostedSettings.difficulty === 'advanced') {
+      setDifficulty('advanced');
+    } else if (hostedSettings.difficulty === 'medium' || hostedSettings.difficulty === 'intermediate') {
+      setDifficulty('intermediate');
+    } else {
+      setDifficulty('beginner');
+    }
+    if (hostedSettings.drill === 'bounce'
+      || hostedSettings.drill === 'vertical'
+      || hostedSettings.drill === 'horizontal'
+      || hostedSettings.drill === 'random') setDrill(hostedSettings.drill);
+    if (hostedSettings.durationSec === 45
+      || hostedSettings.durationSec === 60
+      || hostedSettings.durationSec === 90) setDurationSec(hostedSettings.durationSec);
+    if (typeof hostedSettings.targetSizePercent === 'number') {
+      setTargetSizeScale(hostedSettings.targetSizePercent / 100);
+    }
+    if (typeof hostedSettings.speedPercent === 'number') {
+      setSpeedScale(hostedSettings.speedPercent / 100);
+    }
+    setPhase('rules');
+  }, [hostedSettings, setPhase]);
 
   const stopVision = useCallback(() => {
     if (animationFrameRef.current !== null) {

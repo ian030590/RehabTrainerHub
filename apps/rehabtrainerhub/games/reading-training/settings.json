@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "gameId": "reading-training",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "閱讀設定",
+        "en": "Reading settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "wordsPerMinute",
+          "type": "slider",
+          "label": {
+            "zh-TW": "呈現速度",
+            "en": "Presentation speed"
+          },
+          "default": 240,
+          "min": 60,
+          "max": 600,
+          "step": 20,
+          "unit": {
+            "zh-TW": "字／分",
+            "en": "wpm"
+          }
+        },
+        {
+          "key": "crowding",
+          "type": "slider",
+          "label": {
+            "zh-TW": "文字間距",
+            "en": "Text spacing"
+          },
+          "default": 100,
+          "min": 80,
+          "max": 180,
+          "step": 10,
+          "unit": {
+            "zh-TW": "%",
+            "en": "%"
+          }
+        },
+        {
+          "key": "contrast",
+          "type": "slider",
+          "label": {
+            "zh-TW": "文字對比",
+            "en": "Text contrast"
+          },
+          "default": 100,
+          "min": 20,
+          "max": 100,
+          "step": 10,
+          "unit": {
+            "zh-TW": "%",
+            "en": "%"
+          }
+        }
+      ]
+    }
+  ]
+}

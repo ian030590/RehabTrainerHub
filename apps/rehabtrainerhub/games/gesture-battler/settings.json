@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "gameId": "gesture-battler",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "手勢設定",
+        "en": "Gesture settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "enemyMaxHp",
+          "type": "slider",
+          "label": {
+            "zh-TW": "對手耐久度",
+            "en": "Opponent durability"
+          },
+          "default": 10,
+          "min": 1,
+          "max": 100,
+          "step": 1
+        },
+        {
+          "key": "holdDurationSec",
+          "type": "slider",
+          "label": {
+            "zh-TW": "手勢維持時間",
+            "en": "Gesture hold duration"
+          },
+          "default": 2,
+          "min": 0.5,
+          "max": 10,
+          "step": 0.5,
+          "unit": {
+            "zh-TW": "秒",
+            "en": "sec"
+          }
+        },
+        {
+          "key": "strictnessPercent",
+          "type": "slider",
+          "label": {
+            "zh-TW": "辨識嚴格度",
+            "en": "Recognition strictness"
+          },
+          "default": 70,
+          "min": 50,
+          "max": 90,
+          "step": 5,
+          "unit": {
+            "zh-TW": "%",
+            "en": "%"
+          }
+        },
+        {
+          "key": "targetMode",
+          "type": "list",
+          "label": {
+            "zh-TW": "目標模式",
+            "en": "Target mode"
+          },
+          "default": "free",
+          "options": [
+            {
+              "value": "free",
+              "label": {
+                "zh-TW": "自由手勢",
+                "en": "Free gestures"
+              }
+            },
+            {
+              "value": "directed",
+              "label": {
+                "zh-TW": "指定手勢",
+                "en": "Directed gestures"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

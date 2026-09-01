@@ -32,6 +32,7 @@ import {
   useMediaPermissionPreflight,
 } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
+import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { InlineAlert } from '../../components/InlineAlert';
@@ -229,6 +230,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   });
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const hostedSettings = useHostedGameSettings();
+  const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
   const [enemyMaxHp, setEnemyMaxHp] = useState(defaultEnemyHp);
   const [holdDuration, setHoldDuration] = useState(defaultHoldDuration);
@@ -258,6 +261,20 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     phaseRef.current = nextPhase;
     setPhaseState(nextPhase);
   }, []);
+
+  useEffect(() => {
+    if (!hostedSettings || hostedSettingsAppliedRef.current) return;
+    hostedSettingsAppliedRef.current = true;
+    if (typeof hostedSettings.enemyMaxHp === 'number') setEnemyMaxHp(hostedSettings.enemyMaxHp);
+    if (typeof hostedSettings.holdDurationSec === 'number') setHoldDuration(hostedSettings.holdDurationSec);
+    if (typeof hostedSettings.strictnessPercent === 'number') {
+      setStrictnessThreshold(hostedSettings.strictnessPercent / 100);
+    }
+    if (hostedSettings.targetMode === 'free' || hostedSettings.targetMode === 'directed') {
+      setTargetMode(hostedSettings.targetMode);
+    }
+    setPhase('rules');
+  }, [hostedSettings, setPhase]);
 
   useEffect(() => {
     configRef.current = { enemyMaxHp, holdDuration, strictnessThreshold, targetMode };

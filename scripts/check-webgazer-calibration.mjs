@@ -4,7 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const repoRoot = resolve(import.meta.dirname, '..');
-const read = (relativePath) => readFile(resolve(repoRoot, relativePath), 'utf8');
+const read = async (relativePath) => (
+  (await readFile(resolve(repoRoot, relativePath), 'utf8')).replaceAll('\r\n', '\n')
+);
 const readBytes = (relativePath) => readFile(resolve(repoRoot, relativePath));
 
 const visionRuntime = 'apps/rehabtrainerhub/training-runtimes/vision';

@@ -89,6 +89,19 @@ test('uses the one-time private message port for lifecycle and commands', async 
   });
   assert.equal((await bridge.Ready).sessionNonce, sessionNonce);
 
+  channel.port1.postMessage({
+    schema: 'trainerhub.game-platform/v1',
+    type: 'trainerhub.host:settings',
+    sessionId,
+    sessionNonce,
+    settings: { difficulty: 'normal', rounds: 12, sound: true },
+  });
+  assert.deepEqual(await bridge.Settings, {
+    difficulty: 'normal',
+    rounds: 12,
+    sound: true,
+  });
+
   const lifecycle = new Promise((resolve) => {
     channel.port1.addEventListener('message', (event) => resolve(event.data), { once: true });
     channel.port1.start();

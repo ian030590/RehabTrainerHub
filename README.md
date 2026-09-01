@@ -29,16 +29,14 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 ```text
 .
 |-- apps/
-|   |-- rehabtrainerhub/   # 入口網站、遊戲平台與內建練習 runtime / Hub, Game Platform, and built-in practice runtimes
-|   |   `-- training-runtimes/
-|   |       |-- motor/     # 動作練習 / Movement Practice
-|   |       |-- vision/    # 視覺練習 / Visual Practice
-|   |       |-- brain/     # 認知練習 / Cognitive Practice
-|   |       `-- mouth/     # 口腔練習 / Oral Practice
+|   |-- rehabtrainerhub/   # 入口網站、遊戲平台與官方遊戲 / Hub, Game Platform, and official games
+|   |   `-- games/
+|   |       `-- <game-id>/ # 每款遊戲的獨立根目錄與 settings.json / Per-game root and settings.json
 |   `-- usergamerunner/    # 隔離遊戲執行環境 / Isolated game runner (trainerhub-user-games.pages.dev)
 |-- packages/
 |   |-- ui/                # 共用介面、auth、gamePlatform 型別 / Shared UI, auth, gamePlatform types
 |   |-- game-sdk/          # 開發者遊戲 SDK (@rehab-trainer/game-sdk) / Developer game SDK
+|   |-- game-settings/     # settings.json schema 與驗證器 / settings.json schema and validator
 |   |-- config-eslint/     # 共用 ESLint 設定 / Shared ESLint config
 |   `-- config-tailwind/   # 共用 Tailwind 設定 / Shared Tailwind config
 |-- docs/                  # 文件 / Documentation
@@ -52,7 +50,7 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 
 ### 安裝相依套件 / Dependency Installation
 
-本專案採用 npm monorepo 架構。各模組與內建 runtime 依賴在根目錄集中解析：
+本專案採用 npm monorepo 架構。Hub、官方遊戲與隔離執行器的依賴在根目錄集中解析：
 
 ```bash
 npm install
@@ -72,7 +70,7 @@ npm install
 | `npm run dev` | 透過 Turbo 啟動所有應用的本機開發伺服器 | Start all local dev servers via Turbo |
 | `npm run dev:hub` | 僅啟動 Hub 主平台開發伺服器 | Start Hub dev server only |
 | `npm run build` | 執行所有測試驗證與全站 Production 建置 | Run full test gates and build all apps |
-| `npm run build:hub` | 建置 Hub 主平台與四個內建 Training Runtimes | Build Hub app and 4 built-in training runtimes |
+| `npm run build:hub` | 建置 Hub 主平台與每款官方遊戲的獨立 `/games/{gameId}/` 輸出 | Build the Hub and independent `/games/{gameId}/` official game outputs |
 | `npm run build:gamerunner` | 建置隔離遊戲執行器靜態殼層 | Build isolated game runner static shell |
 | `npm run build:cloudflare` | 執行本機完整驗證並建置 Cloudflare Pages 輸出 | Run full local verification and build Cloudflare Pages output |
 | `npm run preview:hub` | 預覽 Hub 建置輸出 | Preview built Hub output |
@@ -85,6 +83,9 @@ npm install
 | `npm run test:hub-functions` | 驗證 Hub Cloudflare Functions 後端 API 與安全防護測試 |
 | `npm run test:gamerunner` | 驗證隔離遊戲執行器路由、沙盒隔離與安全性標頭 |
 | `npm run test:game-platform` | 驗證第三方遊戲套件安全掃描器與 SDK 契約 |
+| `npm run test:game-architecture` | 驗證逐遊戲目錄、settings schema、統一 config UI、iframe 與 postMessage 架構契約 |
+| `npm run test:game-architecture:built` | 驗證 Hub 建置產物只有獨立 `/games/{gameId}/`，且沒有 `/runtimes/*` |
+| `npm run test:game-architecture:browser` | 使用本機 Brave 驗證大廳可開啟由 `settings.json` 生成的統一 config UI |
 | `npm run test:pwa` | 驗證 Hub 及各練習模組的 PWA Manifest 與 Assets |
 | `npm run test:naming` | 檢查程式碼命名規範與保留字元衝突 |
 | `npm run test:seo` | 檢查可索引頁面之 SEO Meta、Canonical、JSON-LD 與繁中預渲染結構 |

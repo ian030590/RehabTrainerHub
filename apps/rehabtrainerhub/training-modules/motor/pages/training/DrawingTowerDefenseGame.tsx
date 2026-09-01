@@ -19,6 +19,7 @@ import {
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
+import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import type { TFunction } from './types';
@@ -187,6 +188,8 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const hostedSettings = useHostedGameSettings();
+  const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
   const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
   const [gameDurationSec, setGameDurationSec] = useState<GameDurationSeconds>(defaultGameDurationSeconds);
@@ -542,6 +545,17 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     setUploadedBackgroundName(file.name);
     setBackgroundMode('image');
   }, []);
+
+  useEffect(() => {
+    if (!hostedSettings || hostedSettingsAppliedRef.current) return;
+    hostedSettingsAppliedRef.current = true;
+    setDifficulty(ToTitleDifficulty(hostedSettings.difficulty));
+    if (typeof hostedSettings.durationSec === 'number') {
+      setGameDurationSec(hostedSettings.durationSec);
+      setCustomGameDurationSec(hostedSettings.durationSec);
+    }
+    setPhase('rules');
+  }, [hostedSettings, setPhase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -911,6 +925,12 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       )}
     </div>
   );
+}
+
+function ToTitleDifficulty(value: unknown): Difficulty {
+  if (value === 'hard' || value === 'advanced') return 'Advanced';
+  if (value === 'medium' || value === 'intermediate') return 'Intermediate';
+  return 'Beginner';
 }
 
 function CloneUsableStrokes(strokes: Point[][]): Point[][] {

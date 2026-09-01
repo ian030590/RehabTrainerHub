@@ -22,14 +22,23 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/clean-next-output.mjs && next build && node scripts/build-training-runtimes.mjs && node ../../scripts/emit-pwa-assets.mjs out && node ../../scripts/emit-official-game-pwas.mjs out && node ../../scripts/check-seo-output.mjs",
+    "build": "node scripts/clean-next-output.mjs && next build && node scripts/build-official-game-shells.mjs && node ../../scripts/emit-pwa-assets.mjs out && node ../../scripts/emit-official-game-pwas.mjs out && node ../../scripts/check-built-game-architecture.mjs out && node ../../scripts/check-seo-output.mjs",
     "preview": "npx serve out"
   },
   "dependencies": {
+    "@rehab-trainer/game-settings": "1.0.0",
+    "@radix-ui/react-checkbox": "^1.3.11",
+    "@radix-ui/react-select": "^2.3.7",
+    "@radix-ui/react-slider": "^1.4.7",
+    "@tailwindcss/postcss": "^4.3.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "fflate": "~0.8.2",
     "next": "^16.2.10",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.2",

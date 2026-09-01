@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "gameId": "oculomotor-training",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "移動刺激設定",
+        "en": "Moving stimulus settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "movementPath",
+          "type": "list",
+          "label": {
+            "zh-TW": "移動路徑",
+            "en": "Movement path"
+          },
+          "default": "horizontal",
+          "options": [
+            {
+              "value": "horizontal",
+              "label": {
+                "zh-TW": "水平",
+                "en": "Horizontal"
+              }
+            },
+            {
+              "value": "vertical",
+              "label": {
+                "zh-TW": "垂直",
+                "en": "Vertical"
+              }
+            },
+            {
+              "value": "circle",
+              "label": {
+                "zh-TW": "圓形",
+                "en": "Circular"
+              }
+            },
+            {
+              "value": "random",
+              "label": {
+                "zh-TW": "隨機",
+                "en": "Random"
+              }
+            }
+          ]
+        },
+        {
+          "key": "durationSec",
+          "type": "slider",
+          "label": {
+            "zh-TW": "活動時間",
+            "en": "Session duration"
+          },
+          "description": {
+            "zh-TW": "設定這次活動進行的時間。",
+            "en": "Set how long this activity will run."
+          },
+          "default": 60,
+          "min": 30,
+          "max": 300,
+          "step": 15,
+          "unit": {
+            "zh-TW": "秒",
+            "en": "sec"
+          }
+        },
+        {
+          "key": "speed",
+          "type": "slider",
+          "label": {
+            "zh-TW": "移動速度",
+            "en": "Movement speed"
+          },
+          "default": 5,
+          "min": 1,
+          "max": 10,
+          "step": 1
+        },
+        {
+          "key": "targetSize",
+          "type": "slider",
+          "label": {
+            "zh-TW": "刺激大小",
+            "en": "Stimulus size"
+          },
+          "default": 48,
+          "min": 24,
+          "max": 96,
+          "step": 4,
+          "unit": {
+            "zh-TW": "px",
+            "en": "px"
+          }
+        }
+      ]
+    },
+    {
+      "id": "optional",
+      "title": {
+        "zh-TW": "選用功能",
+        "en": "Optional features"
+      },
+      "description": {
+        "zh-TW": "啟用前請確認裝置與環境適合使用。",
+        "en": "Check that your device and environment are suitable before enabling these features."
+      },
+      "fields": [
+        {
+          "key": "webgazerEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "啟用鏡頭眼動追蹤",
+            "en": "Enable camera gaze tracking"
+          },
+          "default": false
+        },
+        {
+          "key": "gazePointVisible",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "顯示注視點",
+            "en": "Show gaze point"
+          },
+          "default": false
+        }
+      ]
+    }
+  ]
+}

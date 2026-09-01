@@ -222,4 +222,4 @@ for (const retiredFile of [
   assert.equal(existsSync(resolve(repoRoot, retiredFile)), false, `Retired runtime file must stay deleted: ${retiredFile}`);
 }
 
-console.log('Runtime shells remain module-only and retired Vision visual-target routes stay absent.');
+console.log('Build adapters remain module-only and retired Vision visual-target routes stay absent.');
