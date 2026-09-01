@@ -1,3 +1,8 @@
+import {
+  IsTrainerCategoryId,
+  type TrainerCatalogId,
+} from '@rehab-trainer/hub-modules/catalog';
+
 export interface PublishedGameRelease {
   id: string;
   version: string;
@@ -14,6 +19,7 @@ export interface PublishedGame {
   slug: string;
   title: string;
   summary: string;
+  trainer: TrainerCatalogId;
   category: string;
   developerName: string;
   updatedAt: string;
@@ -38,6 +44,7 @@ function IsPublishedGame(value: unknown): value is PublishedGame {
     && typeof game.slug === 'string'
     && typeof game.title === 'string'
     && typeof game.summary === 'string'
+    && IsTrainerCategoryId(game.trainer)
     && typeof game.category === 'string'
     && typeof game.developerName === 'string'
     && Boolean(game.release)

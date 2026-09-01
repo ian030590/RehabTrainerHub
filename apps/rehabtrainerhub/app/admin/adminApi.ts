@@ -85,6 +85,7 @@ export interface AdminGameRelease {
   slug: string;
   title: string;
   summary: string;
+  trainer: string;
   category: string;
   developerName: string;
   owner: { id: string; displayName: string };

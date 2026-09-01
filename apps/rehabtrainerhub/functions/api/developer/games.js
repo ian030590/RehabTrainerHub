@@ -19,11 +19,9 @@ import {
   gamePackageLimits,
   gamePackageRuntimeContract,
 } from '../../_lib/gamePackages.js';
+import { IsGameTagPair } from '../../../training-modules/gameTags.js';
 
 const maximumMultipartBytes = gamePackageLimits.maximumCompressedBytes + 128 * 1024;
-// Theme IDs are registry-owned Hub labels. Keep the API forward-compatible
-// with newly registered labels while still accepting only bounded slug data.
-const categoryPattern = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);
@@ -44,6 +42,7 @@ export async function onRequestGet({ request, env }) {
           developer_games.developer_display_name,
           developer_games.title,
           developer_games.summary,
+          developer_games.trainer,
           developer_games.category,
           developer_games.status,
           developer_games.active_release_id,
@@ -54,6 +53,7 @@ export async function onRequestGet({ request, env }) {
           game_releases.submitted_developer_name,
           game_releases.submitted_title,
           game_releases.submitted_summary,
+          game_releases.submitted_trainer,
           game_releases.submitted_category,
           game_releases.status AS release_status,
           game_releases.content_sha256,
@@ -175,8 +175,8 @@ export async function onRequestPost({ request, env }) {
         .prepare(`
           INSERT INTO developer_games (
             id, slug, owner_user_id, developer_display_name,
-            title, summary, category, status, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)
+            title, summary, trainer, category, status, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)
         `)
         .bind(
           gameId,
@@ -185,6 +185,7 @@ export async function onRequestPost({ request, env }) {
           input.developerName,
           input.title,
           input.summary,
+          input.trainer,
           input.category,
           now,
           now,
@@ -194,12 +195,13 @@ export async function onRequestPost({ request, env }) {
       .prepare(`
         INSERT INTO game_releases (
           id, game_id, version,
-          submitted_developer_name, submitted_title, submitted_summary, submitted_category,
+          submitted_developer_name, submitted_title, submitted_summary,
+          submitted_trainer, submitted_category,
           artifact_type, entry_path, status,
           content_sha256, package_bytes, uncompressed_bytes, file_count,
           jspsych_version, capabilities_json, files_json, scan_summary_json,
           submitted_at, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .bind(
         releaseId,
@@ -208,6 +210,7 @@ export async function onRequestPost({ request, env }) {
         input.developerName,
         input.title,
         input.summary,
+        input.trainer,
         input.category,
         inspection.artifactType,
         inspection.entryPath,
@@ -267,6 +270,8 @@ export async function onRequestPost({ request, env }) {
         fileCount: inspection.files.length,
         gameId,
         status: releaseStatus,
+        trainer: input.trainer,
+        purpose: input.category,
         version: input.version,
       },
     }));
@@ -321,7 +326,8 @@ function NormalizeSubmissionInput(formData) {
   const title = NormalizeText(formData.get('title'), 2, 120);
   const developerName = NormalizeText(formData.get('developerName'), 2, 80);
   const summary = NormalizeText(formData.get('summary'), 0, 500);
-  const category = String(formData.get('category') || 'general').trim();
+  const trainer = String(formData.get('trainer') || '').trim();
+  const category = String(formData.get('category') || '').trim();
   const capabilities = NormalizeGameCapabilities(formData.get('capabilities') || '[]');
   const jsPsychVersion = String(formData.get('jsPsychVersion') || '').trim();
   if (
@@ -330,13 +336,23 @@ function NormalizeSubmissionInput(formData) {
     || !title
     || !developerName
     || summary === null
-    || !categoryPattern.test(category)
+    || !IsGameTagPair(trainer, category)
     || !capabilities
     || jsPsychVersion !== gamePackageRuntimeContract.jsPsychVersion
   ) {
     return null;
   }
-  return { capabilities, category, developerName, jsPsychVersion, slug, summary, title, version };
+  return {
+    capabilities,
+    category,
+    developerName,
+    jsPsychVersion,
+    slug,
+    summary,
+    title,
+    trainer,
+    version,
+  };
 }
 
 function NormalizeText(value, minimumLength, maximumLength) {
@@ -376,6 +392,7 @@ function GroupDeveloperGames(rows) {
         developerName: row.submitted_developer_name || row.developer_display_name,
         title: row.submitted_title || row.title,
         summary: row.submitted_summary ?? row.summary,
+        trainer: row.submitted_trainer || row.trainer,
         category: row.submitted_category || row.category,
         status: row.status,
         activeReleaseId: row.active_release_id,

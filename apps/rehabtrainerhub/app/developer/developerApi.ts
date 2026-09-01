@@ -29,6 +29,7 @@ export interface DeveloperGame {
   developerName: string;
   title: string;
   summary: string;
+  trainer: string;
   category: string;
   status: 'draft' | 'published' | 'suspended';
   activeReleaseId: string | null;
@@ -43,6 +44,7 @@ export interface GameSubmissionInput {
   title: string;
   developerName: string;
   summary: string;
+  trainer: string;
   category: string;
   version: string;
   jsPsychVersion: string;
@@ -74,6 +76,7 @@ export async function SubmitDeveloperGame(input: GameSubmissionInput): Promise<G
   formData.set('title', input.title);
   formData.set('developerName', input.developerName);
   formData.set('summary', input.summary);
+  formData.set('trainer', input.trainer);
   formData.set('category', input.category);
   formData.set('version', input.version);
   formData.set('jsPsychVersion', input.jsPsychVersion);

@@ -58,7 +58,7 @@ export function GameSettingsForm({
 
   return (
     <form
-      className="mx-auto flex h-full w-full max-w-5xl flex-col overflow-hidden bg-[var(--background)] text-[var(--text)]"
+      className="game-settings-form mx-auto flex w-full max-w-2xl flex-col overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)] text-[var(--text)] shadow-[var(--shadow-md)]"
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit(NormalizeGameSettingsValues(definition, values));
@@ -71,8 +71,8 @@ export function GameSettingsForm({
         <p className="mt-2 mb-0 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">{copy.intro}</p>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-7">
-        <div className="grid gap-5 lg:grid-cols-2">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-7">
+        <div className="mx-auto grid w-full gap-5">
           {definition.sections.map((section) => (
             <section
               className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6"

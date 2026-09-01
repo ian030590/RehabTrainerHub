@@ -22,6 +22,8 @@ import {
 import type { PublishedGame } from '../publishedGames';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { Button } from '../components/ui/button';
+import { GetTrainerCategoryTheme } from '@rehab-trainer/hub-modules/catalog';
+import { BuildTrainingThemeStyle } from '../trainingThemeStyle';
 import { GameSettingsForm } from './GameSettingsForm';
 
 interface PackageGameOverlayProps {
@@ -238,8 +240,11 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
   return (
     <dialog
       aria-label={`${game.title} 遊戲視窗`}
-      className={`package-game-overlay${isActive ? ' is-active' : ''}${isComplete ? ' is-complete' : ''}`}
+      className={`package-game-overlay ${configuredSettings
+        ? 'package-game-overlay-runtime'
+        : 'package-game-overlay-config'}${isActive ? ' is-active' : ''}${isComplete ? ' is-complete' : ''}`}
       ref={dialogRef}
+      style={BuildTrainingThemeStyle(GetTrainerCategoryTheme(game.trainer))}
     >
       {!configuredSettings && definition && (
         <GameSettingsForm

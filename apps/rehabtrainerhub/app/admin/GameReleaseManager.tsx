@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 import { DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import {
+  trainerCategoryTags,
+  trainingPurposes,
+} from '@rehab-trainer/hub-modules/catalog';
+import {
   DownloadAdminGameReleaseArtifact,
   FetchAdminGameReleases,
   ReviewAdminGameRelease,
@@ -146,7 +150,14 @@ export function GameReleaseManager() {
               <h4>預計公開內容</h4>
               <dl>
                 <div><dt>開發者名稱</dt><dd>{release.developerName}</dd></div>
-                <div><dt>分類</dt><dd>{release.category}</dd></div>
+                <div>
+                  <dt>遊戲大分類</dt>
+                  <dd>{trainerCategoryTags.find((tag) => tag.id === release.trainer)?.label['zh-TW'] ?? release.trainer}</dd>
+                </div>
+                <div>
+                  <dt>大廳篩選標籤</dt>
+                  <dd>{trainingPurposes.find((tag) => tag.id === release.category)?.label['zh-TW'] ?? release.category}</dd>
+                </div>
               </dl>
               <p><strong>遊戲名稱：</strong>{release.title}</p>
               <p><strong>公開摘要：</strong>{release.summary || '（未提供摘要）'}</p>

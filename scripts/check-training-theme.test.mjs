@@ -19,7 +19,10 @@ function TranspileStandaloneModule(source) {
 }
 
 async function ImportCatalogThemeContract() {
-  const source = await readFile(catalogPath, 'utf8');
+  const [source, gameTagsSource] = await Promise.all([
+    readFile(catalogPath, 'utf8'),
+    readFile('apps/rehabtrainerhub/training-modules/gameTags.js', 'utf8'),
+  ]);
   const registryStart = source.indexOf('export type ThemeIconType');
   const registryEndMarker = 'export const trainingPurposes = Object.values(trainingThemes);';
   const registryEnd = source.indexOf(registryEndMarker, registryStart) + registryEndMarker.length;
@@ -27,6 +30,7 @@ async function ImportCatalogThemeContract() {
   const resolverEnd = source.indexOf('export function GetTrainingPurpose', resolverStart);
   assert.ok(registryStart >= 0 && registryEnd > registryStart && resolverStart >= 0 && resolverEnd > resolverStart);
   return TranspileStandaloneModule([
+    gameTagsSource,
     source.slice(registryStart, registryEnd),
     source.slice(resolverStart, resolverEnd),
   ].join('\n'));
@@ -35,8 +39,10 @@ async function ImportCatalogThemeContract() {
 test('theme resolver handles IDs, aliases, and absent metadata', async () => {
   const {
     defaultTrainingTheme,
+    GetTrainerCategoryTheme,
     GetTrainingModuleTheme,
     GetTrainingThemeId,
+    trainingPurposeIds,
     trainingPurposes,
     trainingThemes,
   } = await ImportCatalogThemeContract();
@@ -51,10 +57,31 @@ test('theme resolver handles IDs, aliases, and absent metadata', async () => {
   assert.equal(GetTrainingThemeId({}), null);
   assert.equal(GetTrainingModuleTheme('not-registered'), defaultTrainingTheme);
   assert.equal(GetTrainingModuleTheme(), defaultTrainingTheme);
+  assert.equal(GetTrainerCategoryTheme('motor').colors.primary, '#005eb8');
+  assert.equal(GetTrainerCategoryTheme('mouth').colors.primary, '#6750a4');
+  assert.equal(GetTrainerCategoryTheme('brain').colors.primary, '#7a4a24');
+  assert.equal(GetTrainerCategoryTheme('vision').colors.primary, '#006c47');
+  assert.equal(GetTrainerCategoryTheme('unknown'), defaultTrainingTheme);
   assert.deepEqual(
     trainingPurposes.map((theme) => theme.id),
     Object.keys(trainingThemes),
   );
+  assert.deepEqual(trainingPurposeIds, Object.keys(trainingThemes));
+});
+
+test('developer game tags require compatible major and filter categories', async () => {
+  const gameTags = await import(new URL(
+    '../apps/rehabtrainerhub/training-modules/gameTags.js',
+    import.meta.url,
+  ));
+
+  assert.equal(gameTags.IsGameTagPair('motor', 'upper-limb'), true);
+  assert.equal(gameTags.IsGameTagPair('mouth', 'oral'), true);
+  assert.equal(gameTags.IsGameTagPair('brain', 'attention'), true);
+  assert.equal(gameTags.IsGameTagPair('vision', 'vision'), true);
+  assert.equal(gameTags.IsGameTagPair('motor', 'attention'), false);
+  assert.equal(gameTags.IsGameTagPair('', 'upper-limb'), false);
+  assert.equal(gameTags.IsGameTagPair('brain', ''), false);
 });
 
 test('theme style builder applies color fallbacks and bounded surface ratios', async () => {

@@ -75,11 +75,37 @@ if (styleSource.includes('.training-config-actions')) {
 
 const hubNavigationSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/HubNavigation.tsx'), 'utf8');
 const hubStyleSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/globals.css'), 'utf8');
+const gameSettingsFormSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/train/GameSettingsForm.tsx'), 'utf8');
+const trainingOverlaySource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/train/TrainingOverlay.tsx'), 'utf8');
+const packageGameOverlaySource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/train/PackageGameOverlay.tsx'), 'utf8');
 if (!hubNavigationSource.includes('key={pathname}')) {
   failures.push('HubNavigation does not key its subroute transition by pathname');
 }
 for (const required of ['.hub-route-transition {', '@keyframes hubRouteEnter']) {
   if (!hubStyleSource.includes(required)) failures.push(`Hub globals.css is missing ${required}`);
+}
+for (const required of [
+  'game-settings-form mx-auto flex w-full max-w-2xl',
+  'className="mx-auto grid w-full gap-5"',
+  'rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6',
+]) {
+  if (!gameSettingsFormSource.includes(required)) failures.push(`Hub game settings form is missing ${required}`);
+}
+for (const required of [
+  '.training-overlay-config::backdrop',
+  '.package-game-overlay.package-game-overlay-config::backdrop',
+  'backdrop-filter: blur(12px)',
+  '.game-settings-form {',
+]) {
+  if (!hubStyleSource.includes(required)) failures.push(`Hub config overlay styles are missing ${required}`);
+}
+for (const [label, source] of [
+  ['built-in overlay', trainingOverlaySource],
+  ['developer-game overlay', packageGameOverlaySource],
+]) {
+  for (const required of ['GetTrainerCategoryTheme', 'BuildTrainingThemeStyle']) {
+    if (!source.includes(required)) failures.push(`${label} is missing ${required}`);
+  }
 }
 
 if (failures.length) {

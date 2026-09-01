@@ -52,6 +52,7 @@ export async function onRequestPut({ request, env, params }) {
           developer_games.slug,
           game_releases.submitted_title AS title,
           game_releases.submitted_summary AS summary,
+          game_releases.submitted_trainer AS trainer,
           game_releases.submitted_category AS category
         FROM game_releases
         INNER JOIN developer_games ON developer_games.id = game_releases.game_id
@@ -184,7 +185,7 @@ export async function onRequestPut({ request, env, params }) {
       db
         .prepare(`
           UPDATE developer_games
-          SET developer_display_name = ?, title = ?, summary = ?, category = ?,
+          SET developer_display_name = ?, title = ?, summary = ?, trainer = ?, category = ?,
               status = 'published', active_release_id = ?, updated_at = ?
           WHERE id = ?
             AND EXISTS (
@@ -199,6 +200,7 @@ export async function onRequestPut({ request, env, params }) {
           release.submitted_developer_name,
           release.title,
           release.summary,
+          release.trainer,
           release.category,
           release.id,
           now,
@@ -379,6 +381,10 @@ function CreateReleaseManifest(release, files, approvedAt, status) {
     name: release.title,
     shortName: release.title.slice(0, 30).replace(/[\uD800-\uDBFF]$/, ''),
     description: release.summary,
+    tags: {
+      trainer: release.trainer,
+      purpose: release.category,
+    },
     entry: release.entry_path,
     files: files.map((file) => ({
       path: file.path,

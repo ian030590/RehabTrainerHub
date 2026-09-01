@@ -9,6 +9,7 @@ import {
 import {
   BuildTrainingModuleHref,
   BuildTrainingModuleSettingsHref,
+  GetTrainerCategoryTheme,
   GetTrainingModuleCopy,
   type TrainingCatalogModule,
 } from '@rehab-trainer/hub-modules/catalog';
@@ -23,6 +24,7 @@ import {
 import { Button } from '../components/ui/button';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
+import { BuildTrainingThemeStyle } from '../trainingThemeStyle';
 import { GameSettingsForm } from './GameSettingsForm';
 
 interface TrainingOverlayProps {
@@ -159,6 +161,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         ? 'training-overlay-runtime'
         : 'training-overlay-config'}`}
       ref={dialogRef}
+      style={BuildTrainingThemeStyle(GetTrainerCategoryTheme(module.trainer))}
     >
       {!configuredSettings && definition && (
         <GameSettingsForm

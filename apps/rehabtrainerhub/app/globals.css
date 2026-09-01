@@ -431,6 +431,27 @@ summary:focus-visible {
   background: transparent;
 }
 
+.training-overlay-config,
+.package-game-overlay.package-game-overlay-config {
+  --primary: var(--trainer-color);
+  --primary-hover: var(--trainer-color-dark);
+  --primary-soft: var(--trainer-surface);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.training-overlay-config::backdrop,
+.package-game-overlay.package-game-overlay-config::backdrop {
+  background: var(--bg-overlay);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.game-settings-form {
+  max-height: calc(100dvh - 32px);
+}
+
 .training-overlay-runtime {
   background: var(--background);
 }
@@ -3222,6 +3243,11 @@ summary:focus-visible {
   gap: 14px;
 }
 
+.developer-tag-row,
+.developer-version-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .developer-capabilities {
   display: flex;
   flex-wrap: wrap;
@@ -3489,11 +3515,15 @@ summary:focus-visible {
   margin: 0;
   overflow: hidden;
   border: 0;
-  background: var(--background);
+  background: transparent;
 }
 
 .package-game-overlay::backdrop {
-  background: var(--bg-overlay);
+  background: transparent;
+}
+
+.package-game-overlay-runtime {
+  background: var(--background);
 }
 
 .package-game-toolbar {

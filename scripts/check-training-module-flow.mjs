@@ -8,6 +8,7 @@ import ts from 'typescript';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const moduleRoot = resolve(repoRoot, 'apps/rehabtrainerhub/training-modules');
 const catalogSource = readFileSync(resolve(moduleRoot, 'catalog.ts'), 'utf8');
+const gameTagsSource = readFileSync(resolve(moduleRoot, 'gameTags.js'), 'utf8');
 const manifestSource = readFileSync(resolve(moduleRoot, 'moduleFlowManifest.ts'), 'utf8');
 const manifestCode = ts.transpileModule(manifestSource, {
   compilerOptions: {
@@ -113,9 +114,14 @@ assert.ok(lobbySource.includes('GetTrainingThemeId(game.category)'), 'Published-
 assert.ok(lobbySource.includes('TrainingThemeIcon decorative'), 'Published-game cards must render their registry-owned theme icon.');
 assert.ok(lobbySource.includes('<TrainingThemeBadge'), 'Theme badges must have a shared lobby consumer.');
 assert.ok(developerPortalSource.includes('categoryOptions = trainingPurposes.map'), 'Developer category options must derive from the theme registry.');
+assert.ok(developerPortalSource.includes('trainerCategoryTags.map'), 'Developer uploads must require a registry-owned major category tag.');
+assert.ok(developerPortalSource.includes('.filter((option) => option.trainer === trainer)'), 'Developer filter tags must stay compatible with the selected major category.');
 assert.ok(!developerPortalSource.includes("['general', '一般活動']"), 'Developer categories must not keep a parallel label registry.');
-assert.ok(developerGamesApiSource.includes('categoryPattern.test(category)'), 'The upload API must accept future bounded theme IDs.');
-assert.ok(!developerGamesApiSource.includes('allowedCategories'), 'The upload API must not keep a parallel theme whitelist.');
+assert.ok(developerGamesApiSource.includes('IsGameTagPair(trainer, category)'), 'The upload API must validate both registry-owned game tags.');
+for (const trainerId of ['motor', 'mouth', 'brain', 'vision']) {
+  assert.ok(gameTagsSource.includes(`id: '${trainerId}'`), `The shared tag registry is missing ${trainerId}.`);
+}
+assert.ok(gameTagsSource.includes("'upper-limb': 'motor'"), 'Filter options must map to a compatible major category.');
 for (const retiredSelector of ['trainer-motor', 'trainer-vision', 'trainer-brain', 'trainer-mouth']) {
   assert.ok(!lobbyCssSource.includes(retiredSelector), `Lobby CSS must not depend on .${retiredSelector}.`);
 }

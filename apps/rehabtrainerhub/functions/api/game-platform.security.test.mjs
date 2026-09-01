@@ -91,26 +91,27 @@ test('catalog refuses a runner under trainerhub.cc', async () => {
   assert.equal(response.status, 503);
 });
 
-test('submission metadata remains release-scoped until an administrator publishes it', async () => {
-  const [submissionSource, reviewSource, migrationSource] = await Promise.all([
+test('submission metadata and game tags remain release-scoped until an administrator publishes them', async () => {
+  const [submissionSource, reviewSource, migrationSource, tagMigrationSource] = await Promise.all([
     readFile(new URL('./developer/games.js', import.meta.url), 'utf8'),
     readFile(new URL('./admin/game-releases/[id].js', import.meta.url), 'utf8'),
     readFile(new URL('../../migrations/0007_game_platform.sql', import.meta.url), 'utf8'),
+    readFile(new URL('../../migrations/0010_game_category_tags.sql', import.meta.url), 'utf8'),
   ]);
   assert.match(migrationSource, /submitted_developer_name TEXT NOT NULL/);
   assert.match(migrationSource, /submitted_title TEXT NOT NULL/);
   assert.match(migrationSource, /publication_lease_id TEXT/);
-  assert.match(submissionSource, /submitted_developer_name, submitted_title, submitted_summary, submitted_category/);
-  assert.match(submissionSource, /const categoryPattern = \/\^\[a-z0-9\]/);
-  assert.match(submissionSource, /categoryPattern\.test\(category\)/);
-  assert.doesNotMatch(submissionSource, /allowedCategories/);
+  assert.match(tagMigrationSource, /ADD COLUMN trainer TEXT NOT NULL/);
+  assert.match(tagMigrationSource, /ADD COLUMN submitted_trainer TEXT NOT NULL/);
+  assert.match(submissionSource, /submitted_developer_name, submitted_title, submitted_summary,[\s\S]*submitted_trainer, submitted_category/);
+  assert.match(submissionSource, /IsGameTagPair\(trainer, category\)/);
   assert.doesNotMatch(
     submissionSource,
     /UPDATE developer_games\s+SET[\s\S]{0,240}developer_display_name/i,
   );
   assert.match(
     reviewSource,
-    /UPDATE developer_games\s+SET developer_display_name = \?, title = \?, summary = \?, category = \?/i,
+    /UPDATE developer_games\s+SET developer_display_name = \?, title = \?, summary = \?, trainer = \?, category = \?/i,
   );
   assert.match(
     reviewSource,
@@ -172,15 +173,17 @@ test('approval fences the public release pointer with conditional R2 writes', as
   assert.equal(manifestWrites.length, 2);
   assert.deepEqual(manifestWrites[0].options.onlyIf, { etagDoesNotMatch: '*' });
   assert.equal(manifestWrites[0].manifest.status, 'staging');
+  assert.deepEqual(manifestWrites[0].manifest.tags, { trainer: 'brain', purpose: 'attention' });
   assert.deepEqual(manifestWrites[1].options.onlyIf, { etagMatches: 'staging-etag' });
   assert.equal(manifestWrites[1].manifest.status, 'approved');
   const publicMetadataUpdate = approvalDb.lastBatch.find((statement) => (
     /UPDATE developer_games\s+SET developer_display_name/i.test(statement.sql)
   ));
-  assert.deepEqual(publicMetadataUpdate.args.slice(0, 4), [
+  assert.deepEqual(publicMetadataUpdate.args.slice(0, 5), [
     'Reviewed Studio',
     'Reviewed Game',
     'A reviewed summary.',
+    'brain',
     'attention',
   ]);
 });
@@ -365,9 +368,11 @@ function CreateApprovalDb({ batchChanges = [1, 1, 1], fileBytes, fileSha256 }) {
     submitted_developer_name: 'Reviewed Studio',
     submitted_title: 'Reviewed Game',
     submitted_summary: 'A reviewed summary.',
+    submitted_trainer: 'brain',
     submitted_category: 'attention',
     title: 'Reviewed Game',
     summary: 'A reviewed summary.',
+    trainer: 'brain',
     category: 'attention',
     content_sha256: 'b'.repeat(64),
     file_count: 1,
@@ -468,6 +473,7 @@ function CreateRevocationDb() {
                   slug: 'sample-game',
                   title: 'Sample Game',
                   summary: '',
+                  trainer: 'brain',
                   category: 'general',
                   content_sha256: 'a'.repeat(64),
                 };

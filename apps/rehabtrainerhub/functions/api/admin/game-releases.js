@@ -29,6 +29,7 @@ export async function onRequestGet({ request, env }) {
           developer_games.slug,
           game_releases.submitted_title AS title,
           game_releases.submitted_summary AS summary,
+          game_releases.submitted_trainer AS trainer,
           game_releases.submitted_category AS category,
           developer_games.owner_user_id,
           app_users.display_name AS owner_display_name,
@@ -76,6 +77,7 @@ function MapRelease(row) {
     slug: row.slug,
     title: row.title,
     summary: row.summary,
+    trainer: row.trainer,
     category: row.category,
     developerName: row.submitted_developer_name,
     owner: {

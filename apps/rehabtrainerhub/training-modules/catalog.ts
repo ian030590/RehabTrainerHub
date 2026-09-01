@@ -4,6 +4,19 @@ import {
   type TrainingFlowStep,
   type TrainingMediaPermission,
 } from './moduleFlowManifest';
+import {
+  GetTrainerCategoryTag,
+  GetTrainingPurposeTrainerId,
+  IsTrainerCategoryId,
+  trainerCategoryTags,
+} from './gameTags.js';
+import type { TrainerCategoryId } from './gameTags.js';
+
+export {
+  GetTrainingPurposeTrainerId,
+  IsTrainerCategoryId,
+  trainerCategoryTags,
+};
 
 export type ThemeIconType = 'material-symbol' | 'svg';
 
@@ -103,7 +116,7 @@ export const defaultTrainingTheme: TrainingVisualTheme = {
 export type TrainingPurposeId = keyof typeof trainingThemes;
 
 export const trainingPurposes = Object.values(trainingThemes);
-export type TrainerCatalogId = 'motor' | 'vision' | 'brain' | 'mouth';
+export type TrainerCatalogId = TrainerCategoryId;
 export type TrainingModuleKind =
   | 'motor-upper'
   | 'vision'
@@ -547,6 +560,15 @@ export function GetTrainingModuleTheme(
 ): TrainingVisualTheme {
   const purposeId = GetTrainingThemeId(moduleOrPurposeId);
   return purposeId ? trainingThemes[purposeId] : defaultTrainingTheme;
+}
+
+export function GetTrainerCategoryTheme(
+  trainer?: TrainerCatalogId | string | null,
+): TrainingVisualTheme {
+  const themePurposeId = GetTrainerCategoryTag(trainer)?.themePurposeId;
+  return themePurposeId
+    ? GetTrainingModuleTheme(themePurposeId)
+    : defaultTrainingTheme;
 }
 
 export function GetTrainingThemeId(

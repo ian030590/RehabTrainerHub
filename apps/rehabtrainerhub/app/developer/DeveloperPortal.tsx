@@ -9,7 +9,10 @@ import {
   type DeveloperReleaseStatus,
 } from './developerApi';
 import {
+  GetTrainingPurposeTrainerId,
+  trainerCategoryTags,
   trainingPurposes,
+  type TrainerCatalogId,
   type TrainingPurposeId,
 } from '@rehab-trainer/hub-modules/catalog';
 
@@ -20,9 +23,9 @@ const platformJsPsychCssUrl = '/runtime/jspsych-8.2.3.css';
 const platformGameSdkUrl = '/runtime/trainerhub-game-sdk-0.1.0.js';
 const categoryOptions = trainingPurposes.map((theme) => ({
   label: theme.label['zh-TW'],
+  trainer: GetTrainingPurposeTrainerId(theme.id),
   value: theme.id,
 }));
-const defaultCategory: TrainingPurposeId = 'higher-cognition';
 const capabilityOptions = [
   ['audio', '播放音效'],
   ['fullscreen', '全螢幕'],
@@ -51,7 +54,8 @@ export function DeveloperPortal() {
   const [title, setTitle] = useState('');
   const [developerName, setDeveloperName] = useState('');
   const [summary, setSummary] = useState('');
-  const [category, setCategory] = useState<TrainingPurposeId>(defaultCategory);
+  const [trainer, setTrainer] = useState<TrainerCatalogId | ''>('');
+  const [category, setCategory] = useState<TrainingPurposeId | ''>('');
   const [version, setVersion] = useState('1.0.0');
   const [capabilities, setCapabilities] = useState<string[]>(['keyboard', 'pointer']);
   const [sourceConfirmed, setSourceConfirmed] = useState(false);
@@ -108,8 +112,8 @@ export function DeveloperPortal() {
     event.preventDefault();
     setError('');
     setMessage('');
-    if (!packageFile || !sourceConfirmed) {
-      setError('請選擇檔案，並確認原始碼未混淆且不含外部通訊。');
+    if (!packageFile || !sourceConfirmed || !trainer || !category) {
+      setError('請選擇遊戲大分類與篩選標籤、上傳檔案，並確認原始碼未混淆且不含外部通訊。');
       return;
     }
     setIsSubmitting(true);
@@ -120,6 +124,7 @@ export function DeveloperPortal() {
         title: title.trim(),
         developerName: developerName.trim(),
         summary: summary.trim(),
+        trainer,
         category,
         version: version.trim(),
         jsPsychVersion: platformJsPsychVersion,
@@ -228,18 +233,44 @@ export function DeveloperPortal() {
               <textarea maxLength={500} onChange={(event) => setSummary(event.target.value)} rows={4} value={summary} />
             </label>
 
-            <div className="developer-field-row">
+            <div className="developer-field-row developer-tag-row">
               <label className="admin-field">
-                <span>分類</span>
+                <span>遊戲大分類</span>
                 <select
-                  onChange={(event) => setCategory(event.target.value as TrainingPurposeId)}
-                  value={category}
+                  onChange={(event) => {
+                    setTrainer(event.target.value as TrainerCatalogId);
+                    setCategory('');
+                  }}
+                  required
+                  value={trainer}
                 >
-                  {categoryOptions.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
+                  <option disabled value="">請選擇 motor、mouth、brain 或 vision</option>
+                  {trainerCategoryTags.map((option) => (
+                    <option key={option.id} value={option.id}>{option.label['zh-TW']}（{option.id}）</option>
                   ))}
                 </select>
+                <small>此分類會決定設定畫面的主題顏色。</small>
               </label>
+              <label className="admin-field">
+                <span>大廳篩選標籤</span>
+                <select
+                  disabled={!trainer}
+                  onChange={(event) => setCategory(event.target.value as TrainingPurposeId)}
+                  required
+                  value={category}
+                >
+                  <option disabled value="">請選擇 filter panel 對應項目</option>
+                  {categoryOptions
+                    .filter((option) => option.trainer === trainer)
+                    .map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                </select>
+                <small>只會列出所選大分類可使用的篩選項目。</small>
+              </label>
+            </div>
+
+            <div className="developer-field-row developer-version-row">
               <label className="admin-field">
                 <span>版本</span>
                 <input
@@ -313,6 +344,11 @@ export function DeveloperPortal() {
                   <p className="page-kicker">{game.slug}</p>
                   <h3>{game.title}</h3>
                   <p>公開開發者：{game.developerName}</p>
+                  <p>
+                    大分類：{trainerCategoryTags.find((tag) => tag.id === game.trainer)?.label['zh-TW'] ?? game.trainer}
+                    {' · '}
+                    篩選標籤：{categoryOptions.find((tag) => tag.value === game.category)?.label ?? game.category}
+                  </p>
                   {game.summary && <p>{game.summary}</p>}
                 </div>
                 <ul>
