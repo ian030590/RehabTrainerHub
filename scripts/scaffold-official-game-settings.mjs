@@ -6,6 +6,11 @@ import { ParseGameSettingsDefinition } from '../packages/game-settings/src/index
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const gamesRoot = resolve(repositoryRoot, 'apps/rehabtrainerhub/games');
 const force = process.argv.includes('--force');
+const sections = Sections;
+const cognitiveSettings = CognitiveSettings;
+const slider = Slider;
+const list = List;
+const checkbox = Checkbox;
 
 const text = (zh, en) => ({ 'zh-TW': zh, en });
 const option = (value, zh, en) => ({ value, label: text(zh, en) });
@@ -195,7 +200,7 @@ for (const [gameId, sectionList] of Object.entries(definitions)) {
 
 console.log(`Scaffolded ${Object.keys(definitions).length} official game settings files.`);
 
-function sections(primaryZh, primaryEn, primaryFields, secondaryFields = []) {
+function Sections(primaryZh, primaryEn, primaryFields, secondaryFields = []) {
   const result = [{
     id: 'training',
     title: text(primaryZh, primaryEn),
@@ -213,7 +218,7 @@ function sections(primaryZh, primaryEn, primaryFields, secondaryFields = []) {
   return result;
 }
 
-function cognitiveSettings(includeTimeLimit = true) {
+function CognitiveSettings(includeTimeLimit = true) {
   return sections('活動設定', 'Session settings', [
     difficulty,
     ...(includeTimeLimit ? [timeLimit] : []),
@@ -221,7 +226,7 @@ function cognitiveSettings(includeTimeLimit = true) {
   ]);
 }
 
-function slider(key, zh, en, defaultValue, min, max, step, unitZh, unitEn) {
+function Slider(key, zh, en, defaultValue, min, max, step, unitZh, unitEn) {
   return {
     key,
     type: 'slider',
@@ -234,11 +239,11 @@ function slider(key, zh, en, defaultValue, min, max, step, unitZh, unitEn) {
   };
 }
 
-function list(key, zh, en, defaultValue, options) {
+function List(key, zh, en, defaultValue, options) {
   return { key, type: 'list', label: text(zh, en), default: defaultValue, options };
 }
 
-function checkbox(key, zh, en, defaultValue) {
+function Checkbox(key, zh, en, defaultValue) {
   return { key, type: 'checkbox', label: text(zh, en), default: defaultValue };
 }
 

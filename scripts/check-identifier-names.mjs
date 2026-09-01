@@ -46,7 +46,9 @@ function CheckSourceFile(fileName) {
   const CheckNode = (node) => {
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
       const isFunctionValue = Boolean(node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer)));
-      if (!IsCamelCase(node.name.text) && !(isFunctionValue && IsPascalCase(node.name.text)) && !IsLazyComponent(node)) {
+      if (!IsCamelCase(node.name.text)
+        && !(isFunctionValue && IsPascalCase(node.name.text))
+        && !IsReactComponentVariable(node)) {
         AddFailure(sourceFile, node.name, 'variables must use camelCase');
       }
     }
@@ -87,9 +89,33 @@ function IsAllowedFunctionName(name) {
     || frameworkFunctionNames.has(name);
 }
 
-function IsLazyComponent(node) {
-  if (!IsPascalCase(node.name.text) || !ts.isCallExpression(node.initializer)) return false;
-  return ts.isIdentifier(node.initializer.expression) && node.initializer.expression.text === 'lazy';
+function IsReactComponentVariable(node) {
+  if (!IsPascalCase(node.name.text)
+    || node.getSourceFile().scriptKind !== ts.ScriptKind.TSX
+    || !node.initializer) return false;
+  const initializer = UnwrapExpression(node.initializer);
+  if (ts.isPropertyAccessExpression(initializer)) {
+    return IsPascalCase(initializer.name.text);
+  }
+  if (!ts.isCallExpression(initializer)) return false;
+  const callee = UnwrapExpression(initializer.expression);
+  const calleeName = ts.isIdentifier(callee)
+    ? callee.text
+    : ts.isPropertyAccessExpression(callee)
+      ? callee.name.text
+      : '';
+  return ['forwardRef', 'lazy', 'memo'].includes(calleeName);
+}
+
+function UnwrapExpression(node) {
+  let current = node;
+  while (ts.isAsExpression(current)
+    || ts.isSatisfiesExpression(current)
+    || ts.isParenthesizedExpression(current)
+    || ts.isTypeAssertionExpression(current)) {
+    current = current.expression;
+  }
+  return current;
 }
 
 function AddFailure(sourceFile, node, message) {
