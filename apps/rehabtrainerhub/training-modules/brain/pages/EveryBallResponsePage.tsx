@@ -21,6 +21,10 @@ import {
 import { MobileActionControls } from '@rehab-trainer/ui/components/MobileTouchControls';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
+import {
+  IsEmbeddedHubTraining,
+  RequestHubTrainingConfiguration,
+} from '@rehab-trainer/ui/embeddedTraining';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import {
   CanRetryMediaPermission,
@@ -583,6 +587,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
   const visualRef = useRef<VisualState>({ phase: 'idle' });
 
   const [phase, setPhaseState] = useState<Phase>('menu');
+  const isEmbeddedHubTraining = IsEmbeddedHubTraining();
   const hostedSettings = useHostedGameSettings();
   const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
@@ -613,6 +618,10 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
     phaseRef.current = nextPhase;
     setPhaseState(nextPhase);
   }, []);
+
+  const showConfiguration = useCallback(() => {
+    if (!RequestHubTrainingConfiguration()) setPhase('menu');
+  }, [setPhase]);
 
   useEffect(() => {
     if (!hostedSettings || hostedSettingsAppliedRef.current) return;
@@ -758,8 +767,8 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
     setErrorMessage('');
     setStatusMessage('');
     drawVisual({ phase: 'idle' });
-    setPhase('menu');
-  }, [drawVisual, setPhase, stopInput]);
+    showConfiguration();
+  }, [drawVisual, showConfiguration, stopInput]);
 
   const exitToAttentionTraining = useCallback(async () => {
     await stopInput();
@@ -872,7 +881,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
       setErrorMessage(GetStartErrorMessage(error, inputMode, labels));
       setStatusMessage('');
       drawVisual({ phase: 'idle' });
-      setPhase('menu');
+      showConfiguration();
     }
   }, [
     activeLevel,
@@ -886,6 +895,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
     levelId,
     microphoneSensitivity,
     setPhase,
+    showConfiguration,
     stopInput,
     trialCount,
   ]);
@@ -905,7 +915,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
         <canvas ref={cameraOverlayRef} aria-hidden="true" />
       </div>
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !isEmbeddedHubTraining && (
         <div className="training-panel every-ball-panel">
           <TrainingConfigPanel
             label={labels.configLabel}
@@ -1064,7 +1074,7 @@ export function EveryBallResponsePage({ onExit }: { onExit?: () => void } = {}) 
             startLabel={labels.start}
             backLabel={labels.backSettings}
             onStart={() => void startSession()}
-            onBack={() => setPhase('menu')}
+            onBack={showConfiguration}
           />
         </div>
       )}

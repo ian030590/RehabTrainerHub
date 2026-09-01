@@ -25,6 +25,10 @@ import {
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import {
+  IsEmbeddedHubTraining,
+  RequestHubTrainingConfiguration,
+} from '@rehab-trainer/ui/embeddedTraining';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import {
   CanRetryMediaPermission,
@@ -230,6 +234,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
   });
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const isEmbeddedHubTraining = IsEmbeddedHubTraining();
   const hostedSettings = useHostedGameSettings();
   const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
@@ -261,6 +266,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     phaseRef.current = nextPhase;
     setPhaseState(nextPhase);
   }, []);
+
+  const showConfiguration = useCallback(() => {
+    if (!RequestHubTrainingConfiguration()) setPhase('menu');
+  }, [setPhase]);
 
   useEffect(() => {
     if (!hostedSettings || hostedSettingsAppliedRef.current) return;
@@ -652,15 +661,16 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       setVisionError(t('gesture.error.initialization'));
       setShowVisionError(true);
       stopVision();
-      setPhase('menu');
+      showConfiguration();
     }
-  }, [handleCalibrationHand, handleCombatHand, handleNoHand, resetHold, setPhase, stopVision, t]);
+  }, [handleCalibrationHand, handleCombatHand, handleNoHand, resetHold, showConfiguration, stopVision, t]);
 
   const startCalibration = useCallback(async () => {
     if (!VerifySelectedTrainingUser()) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       setVisionError(t('gesture.error.unsupported'));
       setShowVisionError(true);
+      showConfiguration();
       return;
     }
     PrepareAudioFeedback(jsPsychRef);
@@ -696,7 +706,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             setShowVisionError(true);
             stopVision();
             jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
-            setPhase('menu');
+            showConfiguration();
           }, { once: true });
           const video = videoRef.current;
           if (!video) throw new Error('Camera preview is unavailable.');
@@ -747,11 +757,11 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             : t('gesture.error.initialization'));
           setShowVisionError(true);
           jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
-          setPhase('menu');
+          showConfiguration();
         }
       },
     });
-  }, [enterTrainingFullscreen, processFrame, setPhase, stopVision, t]);
+  }, [enterTrainingFullscreen, processFrame, setPhase, showConfiguration, stopVision, t]);
 
   const returnToMenu = useCallback(() => {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
@@ -761,8 +771,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     setIsCalibrationCapturing(false);
     setResult(null);
     setVisionError('');
-    setPhase('menu');
-  }, [resetHold, setPhase, stopVision]);
+    showConfiguration();
+  }, [resetHold, showConfiguration, stopVision]);
 
   const exitGame = useCallback(() => {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
@@ -932,7 +942,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         </div>
       )}
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !isEmbeddedHubTraining && (
         <div className="training-panel gesture-menu-panel">
           <TrainingConfigPanel
             label={t('gesture.config.label')}
@@ -1057,7 +1067,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
               { label: t('gesture.config.targetMode'), value: targetModeLabel },
             ]}
             onStart={() => void startCalibration()}
-            onBack={() => setPhase('menu')}
+            onBack={showConfiguration}
           />
         </div>
       )}

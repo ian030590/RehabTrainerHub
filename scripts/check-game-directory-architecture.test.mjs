@@ -190,6 +190,8 @@ test('both official and developer overlays configure before mounting their ifram
   assert.match(officialOverlay, /\{!configuredSettings && definition && \([\s\S]*?<GameSettingsForm/);
   assert.match(officialOverlay, /\{configuredSettings && \([\s\S]*?<iframe/);
   assert.match(officialOverlay, /CreateHubGameSettingsMessage\(module\.runtimeId, sessionNonce, configuredSettings\)/);
+  assert.match(officialOverlay, /IsHubTrainingConfigureMessage\(event\.data\)/);
+  assert.match(officialOverlay, /setConfiguredSettings\(null\)/);
   assert.match(officialOverlay, /new URL\(BuildTrainingModuleHref\(module\), window\.location\.origin\)/);
 
   assert.equal((packageOverlay.match(/<iframe\b/g) ?? []).length, 1);

@@ -17,6 +17,7 @@ import {
   CreateHubGameSettingsMessage,
   IsHubTrainingActiveMessage,
   IsHubTrainingCompleteMessage,
+  IsHubTrainingConfigureMessage,
   IsHubTrainingExitMessage,
   IsHubTrainingReadyMessage,
   IsTrustedTrainingFrameMessage,
@@ -122,6 +123,12 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
       } else if (IsHubTrainingReadyMessage(event.data)) {
         setIsReady(true);
         sendSettingsToFrame();
+      } else if (IsHubTrainingConfigureMessage(event.data)) {
+        setIsTrainingActive(false);
+        setIsTrainingComplete(false);
+        setIsLoaded(false);
+        setIsReady(false);
+        setConfiguredSettings(null);
       } else if (IsHubTrainingExitMessage(event.data)) {
         closeOverlay();
       }

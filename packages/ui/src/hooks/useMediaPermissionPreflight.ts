@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { RequestHubTrainingConfiguration } from '../embeddedTraining';
 
 export type MediaPermissionPreflightStatus =
   | 'idle'
@@ -52,6 +53,7 @@ function RequestMediaPermission(audio: boolean, video: boolean, force: boolean):
 
   if (!navigator.mediaDevices?.getUserMedia) {
     const error = new Error('Media device access is not supported by this browser.');
+    RequestHubTrainingConfiguration();
     const promise = Promise.reject(error);
     promise.catch(() => undefined);
     return promise;
@@ -73,6 +75,11 @@ function RequestMediaPermission(audio: boolean, video: boolean, force: boolean):
     entry.error = error;
     entry.status = IsPermissionDenied(error) ? 'denied' : 'error';
     if (permissionRequests.get(key) === entry) permissionRequests.delete(key);
+    // This request can finish after a hosted runtime has already advanced from
+    // config to rules. Notify the Hub here, before React effect cancellation can
+    // discard the result, so a denied device never exposes the retired runtime
+    // config screen.
+    RequestHubTrainingConfiguration();
     throw error;
   });
   entry.promise.catch(() => undefined);

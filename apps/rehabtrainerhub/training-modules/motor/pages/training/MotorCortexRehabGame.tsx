@@ -19,6 +19,10 @@ import {
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import {
+  IsEmbeddedHubTraining,
+  RequestHubTrainingConfiguration,
+} from '@rehab-trainer/ui/embeddedTraining';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import {
   CanRetryMediaPermission,
@@ -327,6 +331,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
   const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const isEmbeddedHubTraining = IsEmbeddedHubTraining();
   const hostedSettings = useHostedGameSettings();
   const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
@@ -367,6 +372,10 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     phaseRef.current = nextPhase;
     setPhaseState(nextPhase);
   }, []);
+
+  const showConfiguration = useCallback(() => {
+    if (!RequestHubTrainingConfiguration()) setPhase('menu');
+  }, [setPhase]);
 
   useEffect(() => {
     if (!hostedSettings || hostedSettingsAppliedRef.current) return;
@@ -577,7 +586,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
           setVisionError(labels.initialization);
           setShowVisionError(true);
           stopVision();
-          setPhase('menu');
+          showConfiguration();
           return;
         }
       }
@@ -618,6 +627,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     handChoice,
     labels,
     setPhase,
+    showConfiguration,
     speedScale,
     stopVision,
     targetSizeScale,
@@ -628,6 +638,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     if (!navigator.mediaDevices?.getUserMedia) {
       setVisionError(labels.unsupported);
       setShowVisionError(true);
+      showConfiguration();
       return;
     }
 
@@ -662,7 +673,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
             setShowVisionError(true);
             stopVision();
             jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
-            setPhase('menu');
+            showConfiguration();
           }, { once: true });
 
           const video = videoRef.current;
@@ -704,12 +715,12 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
             : labels.initialization);
           setShowVisionError(true);
           jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
-          setPhase('menu');
+          showConfiguration();
           stopVision();
         }
       },
     });
-  }, [enterTrainingFullscreen, handChoice, labels, processFrame, resetGameState, setPhase, stopVision]);
+  }, [enterTrainingFullscreen, handChoice, labels, processFrame, resetGameState, setPhase, showConfiguration, stopVision]);
 
   const returnToMenu = useCallback(() => {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
@@ -718,8 +729,8 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
     setResult(null);
     setVisionError('');
     setShowVisionError(false);
-    setPhase('menu');
-  }, [resetGameState, setPhase, stopVision]);
+    showConfiguration();
+  }, [resetGameState, showConfiguration, stopVision]);
 
   const exitGame = useCallback(() => {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
@@ -757,7 +768,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
         <span>{liveState.handVisible ? labels.tracking : labels.finding}</span>
       </div>
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !isEmbeddedHubTraining && (
         <div className="training-panel">
           <TrainingConfigPanel
             label={labels.configLabel}
@@ -924,7 +935,7 @@ export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
             summaryTitle={labels.title}
             summaryItems={summaryItems}
             onStart={() => void startTraining()}
-            onBack={() => setPhase('menu')}
+            onBack={showConfiguration}
           />
         </div>
       )}

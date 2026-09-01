@@ -43,6 +43,10 @@ import {
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import {
+  IsEmbeddedHubTraining,
+  RequestHubTrainingConfiguration,
+} from '@rehab-trainer/ui/embeddedTraining';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import {
   CanRetryMediaPermission,
@@ -209,6 +213,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
 
   const activeUser = getActiveUser() || '';
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const isEmbeddedHubTraining = IsEmbeddedHubTraining();
   const hostedSettings = useHostedGameSettings();
   const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
@@ -234,6 +239,10 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
     phaseRef.current = next;
     setPhaseState(next);
   }, []);
+
+  const showConfiguration = useCallback(() => {
+    if (!RequestHubTrainingConfiguration()) setPhase('menu');
+  }, [setPhase]);
 
   useEffect(() => {
     if (!hostedSettings || hostedSettingsAppliedRef.current) return;
@@ -424,15 +433,16 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
       setVisionError(t('tongue.error.initialization'));
       setShowVisionError(true);
       stopVision();
-      setPhase('menu');
+      showConfiguration();
     }
-  }, [classifyFeature, finishCalibrationStep, setPhase, stopVision, syncRecognition, t]);
+  }, [classifyFeature, finishCalibrationStep, showConfiguration, stopVision, syncRecognition, t]);
 
   const startSession = useCallback(async () => {
     if (!VerifySelectedTrainingUser()) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       setVisionError(t('tongue.error.unsupported'));
       setShowVisionError(true);
+      showConfiguration();
       return;
     }
     PrepareAudioFeedback(jsPsychRef);
@@ -465,7 +475,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
             setShowVisionError(true);
             stopVision();
             jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
-            setPhase('menu');
+            showConfiguration();
           }, { once: true });
           const video = videoRef.current;
           if (!video) throw new Error('Camera preview is unavailable.');
@@ -517,11 +527,11 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
             : t('tongue.error.initialization'));
           setShowVisionError(true);
           jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
-          setPhase('menu');
+          showConfiguration();
         }
       },
     });
-  }, [enterTrainingFullscreen, processFrame, setPhase, stopVision, t]);
+  }, [enterTrainingFullscreen, processFrame, setPhase, showConfiguration, stopVision, t]);
 
   const startCalibrationCapture = useCallback(() => {
     const classifier = classifierRef.current;
@@ -671,14 +681,14 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
   const returnToMenu = useCallback(() => {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
     stopVision();
-    setPhase('menu');
+    showConfiguration();
     setResult(null);
     setRecognition({ label: 'Rest', confidence: 0, faceVisible: false });
     recognitionRef.current = { label: 'Rest', confidence: 0, faceVisible: false };
     const app = appRef.current;
     const appleTexture = appleTextureRef.current;
     if (app && appleTexture) ResetTongueScene(app, sceneRef, appleTexture);
-  }, [setPhase, stopVision]);
+  }, [showConfiguration, stopVision]);
 
   const exitGame = useCallback(() => {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
@@ -724,7 +734,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
         aria-hidden="true"
       />
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !isEmbeddedHubTraining && (
         <div className="training-panel tongue-menu-panel">
           <TrainingConfigPanel
             className="tongue-config"
@@ -894,7 +904,7 @@ export function TongueCatchGame({ onExit }: TongueCatchGameProps) {
             summaryTitle={t('tongue.title')}
             summaryItems={tongueSummaryItems}
             onStart={() => void startSession()}
-            onBack={() => setPhase('menu')}
+            onBack={showConfiguration}
           />
         </div>
       )}

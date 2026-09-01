@@ -111,6 +111,22 @@ test('embedded training reports active state to its verified Hub origin', (conte
   assert.equal(embeddedTraining.IsHubTrainingExitMessage({
     type: 'rehab-trainer:training-complete',
   }), false);
+
+  assert.equal(embeddedTraining.RequestHubTrainingConfiguration(), true);
+  assert.deepEqual(messages.shift(), [
+    { type: 'rehab-trainer:training-active', active: false },
+    'https://trainerhub.cc',
+  ]);
+  assert.deepEqual(messages.shift(), [
+    { type: 'rehab-trainer:training-configure' },
+    'https://trainerhub.cc',
+  ]);
+  assert.equal(embeddedTraining.IsHubTrainingConfigureMessage({
+    type: 'rehab-trainer:training-configure',
+  }), true);
+  assert.equal(embeddedTraining.IsHubTrainingConfigureMessage({
+    type: 'rehab-trainer:training-exit',
+  }), false);
 });
 
 test('Hub accepts messages only from the expected same-origin runtime frame', () => {

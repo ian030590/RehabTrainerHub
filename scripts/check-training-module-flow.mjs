@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
@@ -573,6 +573,7 @@ const configPermissionImplementations = {
   'motor:asteroid-shield': 'motor/pages/training/AsteroidShieldGame.tsx',
   'motor:gesture-battler': 'motor/pages/training/GestureBattlerGame.tsx',
   'motor:motor-cortex-rehab': 'motor/pages/training/MotorCortexRehabGame.tsx',
+  'vision:oculomotor-training': 'vision/pages/training/TrainingPage.tsx',
   'brain:every-ball-response': 'brain/pages/EveryBallResponsePage.tsx',
   'mouth:tongue-catch': 'mouth/pages/training/TongueCatchGame.tsx',
 };
@@ -582,26 +583,63 @@ const nativeTimelinePermissionImplementations = {
     'apps/rehabtrainerhub/training-runtimes/vision/src/utils/webgazerCalibration.ts',
   ),
 };
+const mediaPermissionPreflightSource = readFileSync(
+  resolve(repoRoot, 'packages/ui/src/hooks/useMediaPermissionPreflight.ts'),
+  'utf8',
+);
+assert.ok(
+  mediaPermissionPreflightSource.includes('RequestHubTrainingConfiguration()'),
+  'Media preflight failures must request the Hub-owned form even when a phase change cancels the consuming effect.',
+);
+const directMediaAccessFiles = [
+  ...ListTypeScriptFiles(moduleRoot),
+  ...ListTypeScriptFiles(resolve(repoRoot, 'apps/rehabtrainerhub/training-runtimes')),
+].filter((file) => {
+  const source = readFileSync(file, 'utf8');
+  return /mediaDevices\??\.getUserMedia|WebGazerInitCameraPlugin/.test(source);
+}).map((file) => relative(repoRoot, file).replaceAll('\\', '/')).sort();
+const expectedDirectMediaAccessFiles = [
+  ...Object.values(configPermissionImplementations)
+    .filter((file) => file !== 'vision/pages/training/TrainingPage.tsx')
+    .map((file) => `apps/rehabtrainerhub/training-modules/${file}`),
+  ...Object.values(nativeTimelinePermissionImplementations)
+    .map((file) => relative(repoRoot, file).replaceAll('\\', '/')),
+].sort();
+assert.deepEqual(
+  directMediaAccessFiles,
+  expectedDirectMediaAccessFiles,
+  'Every direct camera or microphone caller must belong to a declared media-permission module.',
+);
 const permissionModuleIds = catalogIds.filter((catalogId) => (
   trainingModuleFlowManifest[catalogId].mediaPermission !== 'none'
 ));
 assert.deepEqual(
   permissionModuleIds.sort(),
-  [
-    ...Object.keys(configPermissionImplementations),
-    ...Object.keys(nativeTimelinePermissionImplementations),
-  ].sort(),
+  Object.keys(configPermissionImplementations).sort(),
   'The media-permission manifest must match the modules that request camera or microphone access.',
 );
 for (const [catalogId, file] of Object.entries(configPermissionImplementations)) {
   const source = readFileSync(resolve(moduleRoot, file), 'utf8');
   assert.ok(
     source.includes('useMediaPermissionPreflight'),
-    `${catalogId} must request its camera or microphone permission during config.`,
+    `${catalogId} must preflight its camera or microphone permission before training.`,
   );
   assert.ok(
-    source.includes('.retry'),
-    `${catalogId} must offer a permission retry after denial or failure.`,
+    source.includes('RequestHubTrainingConfiguration'),
+    `${catalogId} must return denied media access to the Hub-owned settings form.`,
+  );
+}
+for (const [catalogId, file] of Object.entries(configPermissionImplementations)) {
+  if (catalogId === 'vision:oculomotor-training') continue;
+  const source = readFileSync(resolve(moduleRoot, file), 'utf8');
+  assert.ok(
+    source.includes("phase === 'menu' && !isEmbeddedHubTraining"),
+    `${catalogId} must never render its retired runtime config while embedded in the Hub.`,
+  );
+  assert.equal(
+    (source.match(/setPhase\('menu'\)/g) ?? []).length,
+    1,
+    `${catalogId} may return to its local PWA config only behind the hosted-configuration fallback.`,
   );
 }
 for (const [catalogId, file] of Object.entries(nativeTimelinePermissionImplementations)) {
@@ -643,4 +681,12 @@ function ReferenceCognitiveCatalogIds() {
     'brain:hex',
     'brain:maze',
   ];
+}
+
+function ListTypeScriptFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = resolve(directory, entry.name);
+    if (entry.isDirectory()) return ListTypeScriptFiles(path);
+    return /\.tsx?$/.test(entry.name) ? [path] : [];
+  });
 }

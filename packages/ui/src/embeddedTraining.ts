@@ -2,6 +2,7 @@ export const hubTrainingCompleteMessageType = 'rehab-trainer:training-complete' 
 export const hubTrainingActiveMessageType = 'rehab-trainer:training-active' as const;
 export const hubTrainingExitMessageType = 'rehab-trainer:training-exit' as const;
 export const hubTrainingReadyMessageType = 'rehab-trainer:training-ready' as const;
+export const hubTrainingConfigureMessageType = 'rehab-trainer:training-configure' as const;
 export const hubGameSettingsSchema = 'rehab-trainer.game-settings/v1' as const;
 export const hubGameSettingsMessageType = 'rehab-trainer:game-settings' as const;
 
@@ -30,11 +31,16 @@ export interface HubTrainingReadyMessage {
   type: typeof hubTrainingReadyMessageType;
 }
 
+export interface HubTrainingConfigureMessage {
+  type: typeof hubTrainingConfigureMessageType;
+}
+
 type HubTrainingMessage =
   | HubTrainingCompleteMessage
   | HubTrainingActiveMessage
   | HubTrainingExitMessage
-  | HubTrainingReadyMessage;
+  | HubTrainingReadyMessage
+  | HubTrainingConfigureMessage;
 
 let hostedGameSettings: Readonly<Record<string, string | number | boolean>> | null = null;
 let removeHostedGameSettingsListener: (() => void) | null = null;
@@ -177,6 +183,18 @@ export function NotifyHubTrainingReady() {
   PostHubTrainingMessage({ type: hubTrainingReadyMessageType });
 }
 
+/**
+ * Ask the verified Hub parent to unmount this runtime and show its catalog-owned
+ * settings form again. Standalone game PWAs return false and keep their local
+ * configuration flow.
+ */
+export function RequestHubTrainingConfiguration(): boolean {
+  if (!IsEmbeddedHubTraining()) return false;
+  NotifyHubTrainingActive(false);
+  PostHubTrainingMessage({ type: hubTrainingConfigureMessageType });
+  return true;
+}
+
 export function IsHubTrainingCompleteMessage(value: unknown): value is HubTrainingCompleteMessage {
   return typeof value === 'object'
     && value !== null
@@ -205,6 +223,13 @@ export function IsHubTrainingReadyMessage(value: unknown): value is HubTrainingR
     && value !== null
     && 'type' in value
     && value.type === hubTrainingReadyMessageType;
+}
+
+export function IsHubTrainingConfigureMessage(value: unknown): value is HubTrainingConfigureMessage {
+  return typeof value === 'object'
+    && value !== null
+    && 'type' in value
+    && value.type === hubTrainingConfigureMessageType;
 }
 
 function GetOfficialGameIdFromPath(pathname: string): string | null {

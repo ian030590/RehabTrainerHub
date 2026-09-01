@@ -4,7 +4,11 @@ import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-route
 import { initJsPsych } from 'jspsych';
 import type { JsPsych } from 'jspsych';
 import WebGazerExtension from '@jspsych/extension-webgazer';
-import { NotifyHubTrainingAbort } from '@rehab-trainer/ui/embeddedTraining';
+import {
+  NotifyHubTrainingAbort,
+  RequestHubTrainingConfiguration,
+} from '@rehab-trainer/ui/embeddedTraining';
+import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { useT } from '../../i18n';
@@ -155,6 +159,10 @@ function TrainingRuntimePage() {
   );
 
   const [phase, setPhase] = useState<Phase>('running');
+  const cameraPermission = useMediaPermissionPreflight({
+    active: enableWebGazer && phase === 'running',
+    video: true,
+  });
   const [results, setResults] = useState<TrialData[]>([]);
   const [acceptedDrivingInputKey, setAcceptedDrivingInputKey] = useState<string | null>(() => (
     moduleId === 'driving-rehab'
@@ -184,6 +192,14 @@ function TrainingRuntimePage() {
         : t('home.config.drivingWheelMissing');
 
   useEffect(() => {
+    if (!enableWebGazer
+      || !['denied', 'error', 'unsupported'].includes(cameraPermission.status)) return;
+    if (!RequestHubTrainingConfiguration()) {
+      navigate(`/?module=${encodeURIComponent(moduleId)}`, { replace: true });
+    }
+  }, [cameraPermission.status, enableWebGazer, moduleId, navigate]);
+
+  useEffect(() => {
     if (moduleId === 'driving-rehab' && drivingInputAvailable) {
       setAcceptedDrivingInputKey(drivingInputKey);
     }
@@ -192,6 +208,7 @@ function TrainingRuntimePage() {
   useEffect(() => {
     if (phase !== 'running') return;
     if (!drivingInputAccepted) return;
+    if (enableWebGazer && cameraPermission.status !== 'granted') return;
     if (!containerRef.current) return;
     if (jsPsychRef.current) return;
 
@@ -338,8 +355,10 @@ function TrainingRuntimePage() {
       if (cancelled) return;
       console.error('Unable to initialize visual training.', error);
       alert(t('home.trainingLoadError'));
-      NotifyHubTrainingAbort();
-      navigate('/');
+      if (!RequestHubTrainingConfiguration()) {
+        NotifyHubTrainingAbort();
+        navigate('/');
+      }
     });
 
     return () => {
@@ -371,6 +390,7 @@ function TrainingRuntimePage() {
     oculomotorTargetShape,
     oculomotorCustomTargetImage,
     enableWebGazer,
+    cameraPermission.status,
     showGazepoint,
     gaborDurationSec,
     gaborMaxSpots,

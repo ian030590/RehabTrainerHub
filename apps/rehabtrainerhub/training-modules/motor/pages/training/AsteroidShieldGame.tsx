@@ -28,6 +28,10 @@ import {
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
+import {
+  IsEmbeddedHubTraining,
+  RequestHubTrainingConfiguration,
+} from '@rehab-trainer/ui/embeddedTraining';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import {
   CanRetryMediaPermission,
@@ -399,6 +403,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
 
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const isEmbeddedHubTraining = IsEmbeddedHubTraining();
   const hostedSettings = useHostedGameSettings();
   const hostedSettingsAppliedRef = useRef(false);
   useTrainingConfigReady(phase === 'menu');
@@ -435,6 +440,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     phaseRef.current = nextPhase;
     setPhaseState(nextPhase);
   }, []);
+
+  const showConfiguration = useCallback(() => {
+    if (!RequestHubTrainingConfiguration()) setPhase('menu');
+  }, [setPhase]);
 
   useEffect(() => {
     configRef.current = {
@@ -641,7 +650,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             console.warn('Unable to load asteroid shield assets.', error);
             setVisionError(labels.initialization);
             setShowVisionError(true);
-            setPhase('menu');
+            showConfiguration();
             jsPsychLifecycleRef.current?.abort({ abort_reason: 'asset-load-error' });
             return;
           }
@@ -656,8 +665,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         if (!navigator.mediaDevices?.getUserMedia) {
           setVisionError(labels.unsupported);
           setShowVisionError(true);
-          activeControlModeRef.current = 'mouse';
-          beginPlaying();
+          showConfiguration();
           return;
         }
 
@@ -682,6 +690,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             activeControlModeRef.current = 'mouse';
             metricsRef.current.lastControlSource = 'mouse';
             stopVision();
+            showConfiguration();
           }, { once: true });
 
           const video = videoRef.current;
@@ -721,11 +730,12 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
           setShowVisionError(true);
           activeControlModeRef.current = 'mouse';
           stopVision();
-          beginPlaying();
+          jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-initialization-error' });
+          showConfiguration();
         }
       },
     });
-  }, [beginPlaying, enterTrainingFullscreen, handleHandFrame, labels, setPhase, stopVision]);
+  }, [beginPlaying, enterTrainingFullscreen, handleHandFrame, labels, setPhase, showConfiguration, stopVision]);
 
   const returnToMenu = useCallback(() => {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
@@ -734,8 +744,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     metricsRef.current = CreateEmptyMetrics(configRef.current.maxHp);
     resultRecordsRef.current = [];
     setResult(null);
-    setPhase('menu');
-  }, [setPhase, stopVision]);
+    showConfiguration();
+  }, [showConfiguration, stopVision]);
 
   const exitGame = useCallback(() => {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
@@ -862,7 +872,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         <span>{handRef.current.visible ? labels.tracking : labels.finding}</span>
       </div>
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !isEmbeddedHubTraining && (
         <div className="training-panel">
           <TrainingConfigPanel
             label={labels.configLabel}
@@ -1033,7 +1043,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             summaryTitle={labels.title}
             summaryItems={summaryItems}
             onStart={() => void startGame()}
-            onBack={() => setPhase('menu')}
+            onBack={showConfiguration}
           />
         </div>
       )}
