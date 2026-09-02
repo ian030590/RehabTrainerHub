@@ -274,13 +274,13 @@ export function TrainingLobby() {
           )}
 
           {visibleModules.length > 0 && (
-            <div className="library-section-heading">
+            <header className="library-section-heading">
               <div>
                 <p className="page-kicker">Official library</p>
                 <h3>{platformCopy.officialLibrary}</h3>
               </div>
               <span>{visibleModules.length}</span>
-            </div>
+            </header>
           )}
 
           {visibleModules.length > 0 && (
@@ -346,13 +346,13 @@ export function TrainingLobby() {
           )}
 
           {visiblePublishedGames.length > 0 && (
-            <div className="library-section-heading community-library-heading">
+            <header className="library-section-heading community-library-heading">
               <div>
                 <p className="page-kicker">Developer library</p>
                 <h3>{platformCopy.developerLibrary}</h3>
               </div>
               <span>{visiblePublishedGames.length}</span>
-            </div>
+            </header>
           )}
 
           {visiblePublishedGames.length > 0 && (

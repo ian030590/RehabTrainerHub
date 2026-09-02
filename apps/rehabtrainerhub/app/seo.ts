@@ -92,7 +92,7 @@ export const websiteJsonLd = {
   name: hubLocalName,
   alternateName: [hubName, hubFullName],
   url: hubUrl,
-  inLanguage: 'zh-Hant-TW',
+  inLanguage: 'zh-TW',
   description: siteDescription,
   dateModified: siteContentLastModified,
   hasPart: [{ '@id': hubApplicationId }],
@@ -172,7 +172,7 @@ const homepageFaqCopy = zhTW.hubUi.lobby.guide;
 export const homepageFaqJsonLd = {
   '@type': 'FAQPage',
   '@id': `${hubUrl}#faq`,
-  inLanguage: 'zh-Hant-TW',
+  inLanguage: 'zh-TW',
   mainEntity: [
     [homepageFaqCopy.title, homepageFaqCopy.definition],
     [homepageFaqCopy.chooseTitle, homepageFaqCopy.chooseBody],
@@ -205,6 +205,56 @@ export const maintainerPageJsonLd = {
   '@context': 'https://schema.org',
   ...maintainerJsonLd,
 };
+
+export function CreatePageJsonLd({
+  name,
+  description,
+  path,
+  type = 'WebPage',
+}: {
+  name: string;
+  description: string;
+  path: string;
+  type?: 'AboutPage' | 'WebPage';
+}) {
+  const canonicalPath = path === '/' ? '/' : `${path.replace(/\/+$/, '')}/`;
+  const url = new URL(canonicalPath, siteUrls.hub).href;
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': type,
+        '@id': `${url}#webpage`,
+        url,
+        name,
+        description,
+        inLanguage: 'zh-TW',
+        isPartOf: { '@id': websiteId },
+        publisher: { '@id': organizationId },
+        breadcrumb: { '@id': `${url}#breadcrumb` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${url}#breadcrumb`,
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: hubLocalName,
+            item: hubUrl,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name,
+            item: url,
+          },
+        ],
+      },
+    ],
+  };
+}
 
 export function SerializeJsonLd(value: unknown) {
   return JSON.stringify(value).replaceAll('<', '\\u003c');

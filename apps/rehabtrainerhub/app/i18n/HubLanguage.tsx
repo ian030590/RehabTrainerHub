@@ -37,7 +37,7 @@ function HubDocumentLanguage({ children }: { children: ReactNode }) {
   const { lang } = language.useT();
 
   useEffect(() => {
-    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-Hant-TW';
+    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-TW';
     document.documentElement.dataset.locale = lang === 'en' ? 'en' : 'zh-TW';
   }, [lang]);
 

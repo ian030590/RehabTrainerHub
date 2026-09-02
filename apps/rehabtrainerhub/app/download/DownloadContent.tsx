@@ -7,7 +7,7 @@ export function DownloadContent() {
   const { language } = useHubLanguage();
   return (
     <InstallAppPage
-      appName="Rehab Trainer Hub"
+      appName="居家訓練網"
       guideAssetBaseUrl="/assets/pwa-install"
       locale={language}
     />

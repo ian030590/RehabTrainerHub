@@ -102,13 +102,13 @@ export function EducationArticles() {
 
   return (
     <section className="education-articles-section" aria-labelledby="education-articles-title">
-      <div className="section-title-row">
+      <header className="section-title-row">
         <div>
           <p className="page-kicker">{copy.kicker}</p>
           <h2 id="education-articles-title">{copy.title}</h2>
         </div>
         {status === 'ready' && articles.length > 0 && <p>{t('educationArticles.count', { count: articles.length })}</p>}
-      </div>
+      </header>
 
       {status === 'loading' && (
         <div aria-label={copy.loading} className="education-articles-state" role="status">

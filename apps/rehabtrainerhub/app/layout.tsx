@@ -22,18 +22,6 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: hubLocalName,
   },
-  keywords: [
-    '居家訓練網',
-    '居家訓練工具',
-    '居家訓練平台',
-    '居家練習',
-    '衛教資訊',
-    '動作練習',
-    '視覺練習',
-    '認知練習',
-    '口腔動作練習',
-    'Rehab Trainer Hub',
-  ],
   icons: {
     icon: '/rehabtrainerhub.svg',
     apple: '/icons/apple-touch-icon.png',
@@ -54,7 +42,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-Hant-TW" data-locale="zh-TW">
+    <html lang="zh-TW" data-locale="zh-TW">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

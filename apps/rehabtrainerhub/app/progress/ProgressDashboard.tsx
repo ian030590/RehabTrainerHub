@@ -128,7 +128,7 @@ export function ProgressDashboard() {
       </section>
 
       <section className="daily-section" aria-labelledby="daily-title">
-        <div className="section-title-row">
+        <header className="section-title-row">
           <div>
             <p className="page-kicker">{copy.today}</p>
             <h2 id="daily-title">{copy.dailyTasks}</h2>
@@ -138,7 +138,7 @@ export function ProgressDashboard() {
               {dateFormatter.format(new Date(`${progress.serverDate}T00:00:00+08:00`))}
             </time>
           )}
-        </div>
+        </header>
 
         <div className="daily-task-list">
           {(progress?.dailyTasks ?? [
@@ -170,12 +170,12 @@ export function ProgressDashboard() {
       </section>
 
       <section className="recent-module-section" aria-labelledby="recent-modules-title">
-        <div className="section-title-row">
+        <header className="section-title-row">
           <div>
             <p className="page-kicker">{copy.recentlyPlayed}</p>
             <h2 id="recent-modules-title">{copy.recentlyPlayed}</h2>
           </div>
-        </div>
+        </header>
 
         {status === 'loading' ? (
           <div
@@ -213,7 +213,7 @@ export function ProgressDashboard() {
       </section>
 
       <section className="achievement-section" aria-labelledby="achievement-title">
-        <div className="section-title-row">
+        <header className="section-title-row">
           <div>
             <p className="page-kicker">{copy.milestones}</p>
             <h2 id="achievement-title">{copy.achievements}</h2>
@@ -222,7 +222,7 @@ export function ProgressDashboard() {
             current: achievements.filter((achievement) => achievement.achieved).length,
             total: achievements.length,
           })}</p>
-        </div>
+        </header>
 
         <div className="achievement-grid">
           {achievements.map((achievement) => (
