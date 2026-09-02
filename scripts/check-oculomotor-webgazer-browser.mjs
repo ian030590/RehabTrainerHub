@@ -159,7 +159,29 @@ try {
   );
   await ClickDomSelector(cdp, sessionId, '#jspsych-wg-cont');
 
+  await Evaluate(cdp, sessionId, 'window.__wgSmoke.eyeSignalAvailable = false');
   await WaitAndClickInstruction(cdp, sessionId, 'calibration_instructions');
+  await WaitForSelector(
+    cdp,
+    sessionId,
+    '[data-webgazer-step="calibration_signal_check"][data-webgazer-signal-state="missing"]',
+    timeoutMs,
+  );
+  const missingSignalState = await Evaluate(cdp, sessionId, `(() => ({
+    calibrationStarted: Boolean(document.querySelector('#webgazer-calibrate-container')),
+    previewVisible: getComputedStyle(document.querySelector('#webgazerVideoContainer')).display !== 'none',
+    buttons: [...document.querySelectorAll('.webgazer-signal-actions button')]
+      .map((button) => button.textContent.trim()),
+  }))()`);
+  assert.equal(missingSignalState.calibrationStarted, false, 'calibration must not start without an eye signal');
+  assert.equal(missingSignalState.previewVisible, true, 'the missing-signal reminder must keep the face preview visible');
+  assert.deepEqual(
+    missingSignalState.buttons,
+    ['Check again', 'Do not record eye-tracking results this time'],
+    'the reminder must offer retry and explicit eye-score opt-out actions',
+  );
+  await Evaluate(cdp, sessionId, 'window.__wgSmoke.eyeSignalAvailable = true');
+  await ClickDomSelector(cdp, sessionId, '.webgazer-signal-actions button:first-child');
   await CompleteNativeCalibration(cdp, sessionId, 10);
   const initialCalibrationState = await Evaluate(cdp, sessionId, `({
     clicks: window.__wgSmoke.calibrationClicks,
@@ -170,7 +192,30 @@ try {
   assert.equal(initialCalibrationState.starts, 1, 'native mouse calibration must start once');
   AssertFivePointsTwice(initialCalibrationState.points, 'initial calibration');
 
+  await Evaluate(cdp, sessionId, 'window.__wgSmoke.eyeSignalAvailable = false');
   await WaitAndClickInstruction(cdp, sessionId, 'validation_instructions');
+  await WaitForSelector(
+    cdp,
+    sessionId,
+    '[data-webgazer-step="validation_signal_check"][data-webgazer-signal-state="missing"]',
+    timeoutMs,
+  );
+  const missingValidationSignalState = await Evaluate(cdp, sessionId, `({
+    validationStarted: Boolean(document.querySelector('#webgazer-validate-container')),
+    previewVisible: getComputedStyle(document.querySelector('#webgazerVideoContainer')).display !== 'none',
+  })`);
+  assert.equal(
+    missingValidationSignalState.validationStarted,
+    false,
+    'validation must not start without an eye signal',
+  );
+  assert.equal(
+    missingValidationSignalState.previewVisible,
+    true,
+    'the validation reminder must keep the face preview visible',
+  );
+  await Evaluate(cdp, sessionId, 'window.__wgSmoke.eyeSignalAvailable = true');
+  await ClickDomSelector(cdp, sessionId, '.webgazer-signal-actions button:first-child');
   await WaitForSelector(cdp, sessionId, '#webgazer-validate-container .validation-point', timeoutMs);
   await WaitForSelector(cdp, sessionId, '[data-webgazer-step="recalibrate_instructions"]', timeoutMs);
   const failedValidationState = await Evaluate(cdp, sessionId, `({
@@ -276,24 +321,160 @@ try {
     'camera_instructions',
     'init_camera',
     'calibration_instructions',
+    'calibration_signal_check',
     'calibration',
     'validation_instructions',
+    'validation_signal_check',
     'validation',
     'recalibrate',
+    'calibration_signal_check',
     'calibration',
     'validation_instructions',
+    'validation_signal_check',
     'validation',
     'calibration_done',
     'begin',
     'trial',
     'show_data',
   ], 'official jsPsych flow, including the executed recalibration branch');
+
+  await Evaluate(cdp, sessionId, `(() => {
+    Object.assign(window.__wgSmoke, {
+      calibrationClicks: 0,
+      calibrationPointsByRun: [],
+      eyeSignalAvailable: true,
+      faceCentered: false,
+      mouseCalibrationStarts: 0,
+      observedFlowSteps: [],
+      predictionPointCalls: [],
+      savedPayloads: [],
+      validationPointCounts: [],
+      validationRuns: 0,
+    });
+    return true;
+  })()`);
+  await cdp.Send('Page.navigate', { url: navigationUrl }, sessionId);
+  await WaitForSelector(
+    cdp,
+    sessionId,
+    '.config-modal-panel:not(.training-rules) .config-start-btn',
+    timeoutMs,
+  );
+  await ClickDomSelector(
+    cdp,
+    sessionId,
+    '.config-modal-panel:not(.training-rules) .config-start-btn',
+  );
+  await WaitForSelector(cdp, sessionId, '.training-rules .config-start-btn', timeoutMs);
+  await ClickDomSelector(cdp, sessionId, '.training-rules .config-start-btn');
+  await WaitAndClickInstruction(cdp, sessionId, 'camera_instructions');
+  await WaitForSelector(cdp, sessionId, '#webgazer-init-container #jspsych-wg-cont', timeoutMs);
+  await SetFaceCentered(cdp, sessionId);
+  await WaitForValue(
+    cdp,
+    sessionId,
+    `document.querySelector('#jspsych-wg-cont')?.disabled === false`,
+    timeoutMs,
+  );
+  await ClickDomSelector(cdp, sessionId, '#jspsych-wg-cont');
+  const validationRunsBeforeOptOut = await Evaluate(
+    cdp,
+    sessionId,
+    'window.__wgSmoke.validationRuns',
+  );
+  await Evaluate(cdp, sessionId, 'window.__wgSmoke.eyeSignalAvailable = false');
+  await WaitAndClickInstruction(cdp, sessionId, 'calibration_instructions');
+  await WaitForSelector(
+    cdp,
+    sessionId,
+    '[data-webgazer-step="calibration_signal_check"][data-webgazer-signal-state="missing"]',
+    timeoutMs,
+  );
+  await ClickDomSelector(cdp, sessionId, '.webgazer-signal-skip');
+  await WaitForSelector(cdp, sessionId, '[data-webgazer-step="calibration_done"]', timeoutMs);
+  const skippedCalibrationState = await Evaluate(cdp, sessionId, `({
+    calibrationClicks: window.__wgSmoke.calibrationClicks,
+    validationRuns: window.__wgSmoke.validationRuns,
+    videoDisplay: document.querySelector('#webgazerVideoContainer')?.style.display ?? null,
+  })`);
+  assert.equal(skippedCalibrationState.calibrationClicks, 0, 'opt-out must skip native calibration');
+  assert.equal(
+    skippedCalibrationState.validationRuns,
+    validationRunsBeforeOptOut,
+    'opt-out must skip native validation',
+  );
+  assert.equal(skippedCalibrationState.videoDisplay, 'none', 'opt-out must stop the camera preview');
+
+  await ClickInstructionButton(cdp, sessionId, 'calibration_done');
+  await WaitForSelector(cdp, sessionId, '[data-webgazer-step="begin"]', timeoutMs);
+  const trainingPredictionShowsBeforeOptOutTrial = await Evaluate(
+    cdp,
+    sessionId,
+    `window.__wgSmoke.predictionPointCalls.filter(
+      (entry) => entry.show === true && entry.phase === 'training'
+    ).length`,
+  );
+  await PressKey(cdp, sessionId, 'Enter');
+  await WaitForSelector(cdp, sessionId, '.oculomotor-training-trial canvas', timeoutMs);
+  const skippedTrainingState = await Evaluate(cdp, sessionId, `({
+    trainingPredictionShowCount: window.__wgSmoke.predictionPointCalls.filter(
+      (entry) => entry.show === true && entry.phase === 'training'
+    ).length,
+  })`);
+  assert.equal(
+    skippedTrainingState.trainingPredictionShowCount,
+    trainingPredictionShowsBeforeOptOutTrial,
+    'opted-out training must not display or sample the gaze point',
+  );
+  await WaitForSelector(cdp, sessionId, '[data-webgazer-step="show_data"]', timeoutMs);
+  const skippedSummary = await Evaluate(cdp, sessionId, `
+    document.querySelector('[data-webgazer-step="show_data"]')?.textContent ?? ''
+  `);
+  assert.match(skippedSummary, /recording was skipped/i, 'opt-out summary must disclose the skipped recording');
+  await PressKey(cdp, sessionId, 'Enter');
+  await WaitForValue(cdp, sessionId, 'window.__wgSmoke.savedPayloads.length === 1', timeoutMs);
+  await WaitForSelector(cdp, sessionId, '.results-summary', timeoutMs);
+  const skippedResultState = await Evaluate(cdp, sessionId, `(() => {
+    const result = window.__wgSmoke.savedPayloads[0]?.record?.results?.[0];
+    return {
+      result,
+      resultCount: window.__wgSmoke.savedPayloads[0]?.record?.results?.length ?? 0,
+      observedFlowSteps: window.__wgSmoke.observedFlowSteps,
+    };
+  })()`);
+  assert.equal(skippedResultState.resultCount, 1, 'opt-out must still save the non-eye-tracking practice');
+  assert.equal(skippedResultState.result?.eye_tracking_recording, 'skipped_by_participant');
+  for (const field of [
+    'aoi_score',
+    'gaze_coordinate_source',
+    'gaze_sample_count',
+    'gaze_samples',
+    'mean_target_distance_px',
+    'webgazer_data',
+    'webgazer_data_consumed',
+  ]) {
+    assert.equal(field in skippedResultState.result, false, `opt-out result must omit ${field}`);
+  }
+  assert.deepEqual(skippedResultState.observedFlowSteps, [
+    'preload',
+    'camera_instructions',
+    'init_camera',
+    'calibration_instructions',
+    'calibration_signal_check',
+    'calibration_done',
+    'begin',
+    'trial',
+    'show_data',
+  ], 'opt-out must bypass calibration and validation while retaining the practice');
   AssertNoCriticalBrowserFailures(cdp.events, sessionId, navigationUrl);
 
   console.log([
     'Oculomotor WebGazer browser smoke passed.',
     'Vendored WebGazer 3.5.3 production bundle executed in Chromium.',
     'Official jsPsych camera init: preview visible and continue gated until centered.',
+    'Three-second eye-signal gates: missing signal blocked both calibration and validation while keeping the preview visible.',
+    'Missing-signal reminder: retry and explicit eye-score opt-out actions were available.',
+    'Eye-score opt-out: camera stopped, calibration and validation were bypassed, and eye metrics were omitted.',
     'Native jsPsych calibration: 5 points x 2 clicks, repeated after forced validation failure.',
     'Native jsPsych validation: first round below 50% forced recalibration; second round passed.',
     `Training: ${resultState.result.webgazer_sample_count} native and ${resultState.result.gaze_sample_count} paired gaze/target samples; gaze point shown then hidden.`,
@@ -354,7 +535,10 @@ function AssertSavedResult(state, showDataSampleCount) {
   }
   assert.ok(targetBounds.width > 0 && targetBounds.height > 0, 'native extension target bounds');
   assert.ok(Number.isFinite(result.mean_target_distance_px), 'mean target distance');
-  assert.ok(result.mean_target_distance_px > 0 && result.mean_target_distance_px < 20);
+  assert.ok(
+    result.mean_target_distance_px > 0 && result.mean_target_distance_px < 20,
+    `mean target distance should stay within the mock offset: ${result.mean_target_distance_px}; samples=${JSON.stringify(result.gaze_samples?.slice(0, 4))}`,
+  );
   assert.ok(Number.isFinite(result.target_distance_sd_px), 'target distance SD');
   assert.ok(result.target_distance_sd_px > 0, 'target distance SD must reflect changing gaze');
   assert.ok(Number.isFinite(result.time_to_first_fixation_ms), 'Time to First Fixation');
@@ -458,6 +642,7 @@ function CreateBootstrapSource() {
       active: false,
       calibrationClicks: 0,
       calibrationPointsByRun: [],
+      eyeSignalAvailable: true,
       faceCentered: false,
       gazeListener: null,
       mouseCalibrationStarts: 0,
@@ -596,8 +781,7 @@ function CreateBootstrapSource() {
       const canvas = document.querySelector('.oculomotor-training-trial canvas');
       if (canvas) {
         const rect = canvas.getBoundingClientRect();
-        const hudHeight = Math.max(58, Math.min(72, rect.height * 0.09));
-        return { x: rect.left + rect.width / 2, y: rect.top + (rect.height + hudHeight) / 2 };
+        return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
       }
       const point = document.querySelector('#webgazer-validate-container .validation-point');
       if (point) {
@@ -660,7 +844,9 @@ function CreateBootstrapSource() {
       pause() { smokeState.active = false; return webgazer; },
       resume() { smokeState.active = true; return webgazer; },
       clearData() { smokeState.calibrationClicks = 0; return Promise.resolve(); },
-      getCurrentPrediction() { return Promise.resolve(MakePrediction()); },
+      getCurrentPrediction() {
+        return Promise.resolve(smokeState.eyeSignalAvailable ? MakePrediction() : null);
+      },
       getTracker() { return { predictionReady: true, getPositions: GetPositions }; },
       getVideoElementCanvas() { return document.querySelector('#webgazerVideoCanvas'); },
       showVideo(show) { EnsureWebGazerDom().style.display = show ? 'block' : 'none'; return webgazer; },

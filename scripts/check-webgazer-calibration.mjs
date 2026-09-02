@@ -33,8 +33,10 @@ const expectedOfficialFlowOrder = [
   'camera_instructions',
   'init_camera',
   'calibration_instructions',
+  'calibration_signal_check',
   'calibration',
   'validation_instructions',
+  'validation_signal_check',
   'validation',
   'recalibrate',
   'calibration_done',
@@ -49,7 +51,7 @@ assert.ok(flowOrderBlock, 'officialWebGazerFlowOrder must be declared as a reado
 assert.deepEqual(
   [...flowOrderBlock[1].matchAll(/['"]([^'"]+)['"]/g)].map((match) => match[1]),
   expectedOfficialFlowOrder,
-  'the public WebGazer flow order must exactly match the official 12-node example',
+  'the public WebGazer flow order must include native calibration plus both signal gates',
 );
 
 const implementationFlowBlock = calibration.match(/const flow\s*=\s*\[([\s\S]*?)\];/);
@@ -61,8 +63,10 @@ assert.deepEqual(
     'cameraInstructions',
     'initCamera',
     'calibrationInstructions',
+    'calibrationSignalCheck',
     'calibration',
     'validationInstructions',
+    'validationSignalCheck',
     'validation',
     'recalibrate',
     'calibrationDone',
@@ -70,7 +74,7 @@ assert.deepEqual(
     'formalTrial',
     'showData',
   ],
-  'the executable timeline must use the exact official 12-node order',
+  'the executable timeline must use the declared native-plugin and signal-gate order',
 );
 
 for (const pluginPackage of [
@@ -136,15 +140,37 @@ const recalibrationBlock = calibration.match(
 assert.ok(recalibrationBlock, 'the conditional recalibration timeline must exist');
 assert.deepEqual(
   recalibrationBlock[1].split(',').map((entry) => entry.trim()).filter(Boolean),
-  ['recalibrateInstructions', 'calibration', 'validationInstructions', 'validation'],
-  'failed validation must repeat instructions, calibration, and validation',
+  [
+    'recalibrateInstructions',
+    'calibrationSignalCheck',
+    'calibration',
+    'validationInstructions',
+    'validationSignalCheck',
+    'validation',
+  ],
+  'failed validation must repeat signal-gated calibration and validation',
 );
 for (const marker of [
   'const minimumPercentInRoi = 50',
   'value < minimumPercentInRoi',
-  'conditional_function: () => ShouldRecalibrate(jsPsych)',
+  'runState.recordEyeTracking && ShouldRecalibrate(jsPsych)',
 ]) {
   assert.ok(calibration.includes(marker), `conditional recalibration contract missing: ${marker}`);
+}
+for (const marker of [
+  'const eyeSignalCheckDurationMs = 3000',
+  "CreateEyeSignalCheck(jsPsych, copy, 'calibration', runState)",
+  "CreateEyeSignalCheck(jsPsych, copy, 'validation', runState)",
+  'extension?.showVideo?.()',
+  'extension?.onGazeUpdate?.',
+  'extension?.startSampleInterval?.(eyeSignalSamplingIntervalMs)',
+  'if (IsValidEyeSignal(prediction)) finishWithSignal()',
+  "eye_tracking_recording: 'skipped_by_participant'",
+  'runState.recordEyeTracking = false',
+  'delete untrackedFormalTrial.extensions',
+  'enable_webgazer: false',
+]) {
+  assert.ok(calibration.includes(marker), `eye-signal gate contract missing: ${marker}`);
 }
 for (const forbidden of [
   'StartHeadPositionGuidance',
@@ -363,6 +389,16 @@ for (const dictionary of [zh, en]) {
     'exp.res.pupilSizeEstimate',
     'exp.res.pupilSizeSd',
     'exp.res.blinkCountEstimate',
+    'settings.wg.signalCheckCalibration',
+    'settings.wg.signalCheckInstructions',
+    'settings.wg.signalCheckTitle',
+    'settings.wg.signalCheckValidation',
+    'settings.wg.signalMissingInstructions',
+    'settings.wg.signalMissingTitle',
+    'settings.wg.signalRetryButton',
+    'settings.wg.signalSkipButton',
+    'settings.wg.signalSkippedText',
+    'settings.wg.signalSkippedTitle',
   ]) {
     assert.ok(dictionary.includes(`'${key}'`), `translation key missing: ${key}`);
   }

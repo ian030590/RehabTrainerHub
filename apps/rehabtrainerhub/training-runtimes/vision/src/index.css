@@ -164,6 +164,55 @@ html, body, #root {
   line-height: 1.7;
 }
 
+.webgazer-signal-panel {
+  position: relative;
+}
+
+.webgazer-signal-progress {
+  width: min(320px, 80%);
+  height: 6px;
+  margin: 20px auto 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.webgazer-signal-progress::after {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  content: '';
+  transform-origin: left;
+  animation: webgazer-signal-check 3s linear forwards;
+}
+
+.webgazer-signal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.webgazer-fullscreen-stage .webgazer-signal-skip {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+@keyframes webgazer-signal-check {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .webgazer-signal-progress::after {
+    animation: none;
+  }
+}
+
 .webgazer-fullscreen-stage .jspsych-btn {
   background: var(--accent);
   color: #fff;

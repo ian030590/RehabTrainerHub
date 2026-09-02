@@ -34,6 +34,7 @@ export interface TrialData {
   refresh_sample_count?: number;
   refresh_measurement_valid?: boolean;
   duration_ms?: number;
+  eye_tracking_recording?: 'recorded' | 'skipped_by_participant';
   gaze_coordinate_source?: 'jspsych-webgazer-extension';
   score?: number;
   trial_type?: string;

@@ -12,8 +12,10 @@ export const officialWebGazerFlowOrder = [
   'camera_instructions',
   'init_camera',
   'calibration_instructions',
+  'calibration_signal_check',
   'calibration',
   'validation_instructions',
+  'validation_signal_check',
   'validation',
   'recalibrate',
   'calibration_done',
@@ -35,6 +37,16 @@ export interface WebGazerCalibrationCopy {
   instruction1: string;
   instruction2: string;
   instruction3: string;
+  signalCheckCalibration: string;
+  signalCheckInstructions: string;
+  signalCheckTitle: string;
+  signalCheckValidation: string;
+  signalMissingInstructions: string;
+  signalMissingTitle: string;
+  signalRetryButtonText: string;
+  signalSkipButtonText: string;
+  signalSkippedText: string;
+  signalSkippedTitle: string;
   recalibrateInstructions: string;
   recalibrateTitle: string;
   showDataMissing: string;
@@ -62,6 +74,22 @@ interface WebGazerLike {
   stopVideo?: () => void;
 }
 
+interface WebGazerExtensionLike {
+  hideVideo?: () => void;
+  onGazeUpdate?: (callback: (prediction: unknown) => void) => (() => void);
+  pause?: () => void;
+  resume?: () => void;
+  showVideo?: () => void;
+  startSampleInterval?: (interval?: number) => void;
+  stopSampleInterval?: () => void;
+}
+
+type EyeSignalStage = 'calibration' | 'validation';
+
+interface EyeTrackingRunState {
+  recordEyeTracking: boolean;
+}
+
 type WebGazerTrialData = Record<string, unknown> & {
   gaze_samples?: unknown[];
   webgazer_data?: unknown[];
@@ -76,9 +104,15 @@ const officialCalibrationPoints = [
 ] as const;
 
 const minimumPercentInRoi = 50;
+const eyeSignalCheckDurationMs = 3000;
+const eyeSignalSamplingIntervalMs = 100;
 
 function GetWebGazer(): WebGazerLike | undefined {
   return (window as Window & { webgazer?: WebGazerLike }).webgazer;
+}
+
+function GetWebGazerExtension(jsPsych: JsPsych): WebGazerExtensionLike | undefined {
+  return jsPsych.extensions?.webgazer as unknown as WebGazerExtensionLike | undefined;
 }
 
 function CreateInstructionPanel(step: string, title: string, paragraphs: readonly string[]) {
@@ -100,6 +134,178 @@ function ShouldRecalibrate(jsPsych: JsPsych): boolean {
       || !Number.isFinite(value)
       || value < minimumPercentInRoi
     ));
+}
+
+function IsValidEyeSignal(prediction: unknown): boolean {
+  if (!prediction || typeof prediction !== 'object') return false;
+  const candidate = prediction as Record<string, unknown>;
+  return [candidate.x, candidate.y].every((value) => (
+    typeof value === 'number' && Number.isFinite(value)
+  ));
+}
+
+function CreateSignalCheckPanel(
+  step: string,
+  title: string,
+  paragraphs: readonly string[],
+  state: 'checking' | 'missing',
+) {
+  return `
+    <section
+      class="webgazer-flow-instructions webgazer-signal-panel"
+      data-webgazer-step="${step}"
+      data-webgazer-signal-state="${state}"
+      ${state === 'missing' ? 'role="alert"' : 'aria-live="polite"'}
+    >
+      <h1>${title}</h1>
+      ${paragraphs.map((paragraph) => `<p>${paragraph}</p>`).join('')}
+      ${state === 'checking' ? '<div class="webgazer-signal-progress" aria-hidden="true"></div>' : ''}
+    </section>
+  `;
+}
+
+function CreateEyeSignalCheck(
+  jsPsych: JsPsych,
+  copy: WebGazerCalibrationCopy,
+  stage: EyeSignalStage,
+  runState: EyeTrackingRunState,
+) {
+  const step = `${stage}_signal_check`;
+  const stageInstructions = stage === 'calibration'
+    ? copy.signalCheckCalibration
+    : copy.signalCheckValidation;
+  let cleanupActiveCheck = () => {};
+
+  return {
+    type: HtmlButtonResponsePlugin,
+    stimulus: CreateSignalCheckPanel(
+      step,
+      copy.signalCheckTitle,
+      [stageInstructions, copy.signalCheckInstructions],
+      'checking',
+    ),
+    choices: [],
+    data: {
+      eye_signal_stage: stage,
+      webgazer_flow_step: step,
+    },
+    on_load: () => {
+      const extension = GetWebGazerExtension(jsPsych);
+      const displayElement = jsPsych.getDisplayElement();
+      let attempts = 0;
+      let settled = false;
+      let timeoutId = 0;
+      let stopGazeUpdates: (() => void) | undefined;
+
+      const stopCheckCycle = () => {
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+          timeoutId = 0;
+        }
+        stopGazeUpdates?.();
+        stopGazeUpdates = undefined;
+        extension?.stopSampleInterval?.();
+      };
+
+      const stopPreview = () => {
+        extension?.pause?.();
+        extension?.hideVideo?.();
+      };
+
+      const finishWithSignal = () => {
+        if (settled) return;
+        settled = true;
+        stopCheckCycle();
+        stopPreview();
+        jsPsych.finishTrial({
+          eye_signal_check_attempts: attempts,
+          eye_signal_detected: true,
+          eye_tracking_recording: 'recorded',
+        });
+      };
+
+      const skipEyeTracking = () => {
+        if (settled) return;
+        settled = true;
+        runState.recordEyeTracking = false;
+        stopCheckCycle();
+        CleanupWebGazerRuntime();
+        jsPsych.finishTrial({
+          eye_signal_check_attempts: attempts,
+          eye_signal_detected: false,
+          eye_tracking_recording: 'skipped_by_participant',
+        });
+      };
+
+      const startCheck = () => {
+        if (settled) return;
+        attempts += 1;
+        stopCheckCycle();
+        displayElement.innerHTML = CreateSignalCheckPanel(
+          step,
+          copy.signalCheckTitle,
+          [stageInstructions, copy.signalCheckInstructions],
+          'checking',
+        );
+
+        extension?.showVideo?.();
+        extension?.resume?.();
+        stopGazeUpdates = extension?.onGazeUpdate?.((prediction) => {
+          if (IsValidEyeSignal(prediction)) finishWithSignal();
+        });
+        extension?.startSampleInterval?.(eyeSignalSamplingIntervalMs);
+
+        timeoutId = window.setTimeout(() => {
+          if (settled) return;
+          stopCheckCycle();
+          displayElement.innerHTML = CreateSignalCheckPanel(
+            step,
+            copy.signalMissingTitle,
+            [copy.signalMissingInstructions],
+            'missing',
+          );
+
+          const panel = displayElement.querySelector<HTMLElement>('[data-webgazer-signal-state="missing"]');
+          if (!panel) return;
+          const actions = document.createElement('div');
+          actions.className = 'webgazer-signal-actions';
+
+          const retryButton = document.createElement('button');
+          retryButton.type = 'button';
+          retryButton.className = 'jspsych-btn';
+          retryButton.textContent = copy.signalRetryButtonText;
+          retryButton.addEventListener('click', startCheck, { once: true });
+
+          const skipButton = document.createElement('button');
+          skipButton.type = 'button';
+          skipButton.className = 'jspsych-btn webgazer-signal-skip';
+          skipButton.textContent = copy.signalSkipButtonText;
+          skipButton.addEventListener('click', skipEyeTracking, { once: true });
+
+          actions.append(retryButton, skipButton);
+          panel.append(actions);
+        }, eyeSignalCheckDurationMs);
+      };
+
+      cleanupActiveCheck = () => {
+        settled = true;
+        stopCheckCycle();
+        stopPreview();
+      };
+      startCheck();
+    },
+    on_finish: () => cleanupActiveCheck(),
+  };
+}
+
+function RunWhileRecordingEyeTracking(
+  trial: object,
+  runState: EyeTrackingRunState,
+) {
+  return {
+    timeline: [trial],
+    conditional_function: () => runState.recordEyeTracking,
+  };
 }
 
 function CountOfficialWebGazerSamples(data: WebGazerTrialData): number {
@@ -179,6 +385,7 @@ export function CreateWebGazerExperimentTimeline(
   trial: object,
   preloadAssets: WebGazerPreloadAssets = {},
 ): object[] {
+  const runState: EyeTrackingRunState = { recordEyeTracking: true };
   const preload = {
     type: PreloadPlugin,
     images: [...(preloadAssets.images ?? [])].filter(Boolean),
@@ -210,7 +417,7 @@ export function CreateWebGazerExperimentTimeline(
     data: { webgazer_flow_step: 'init_camera' },
   };
 
-  const calibrationInstructions = {
+  const nativeCalibrationInstructions = {
     type: HtmlButtonResponsePlugin,
     stimulus: CreateInstructionPanel(
       'calibration_instructions',
@@ -221,7 +428,7 @@ export function CreateWebGazerExperimentTimeline(
     data: { webgazer_flow_step: 'calibration_instructions' },
   };
 
-  const calibration = {
+  const nativeCalibration = {
     type: WebGazerCalibratePlugin,
     calibration_points: officialCalibrationPoints.map((point) => [...point]),
     calibration_mode: 'click',
@@ -230,7 +437,7 @@ export function CreateWebGazerExperimentTimeline(
     data: { webgazer_flow_step: 'calibration' },
   };
 
-  const validationInstructions = {
+  const nativeValidationInstructions = {
     type: HtmlButtonResponsePlugin,
     stimulus: CreateInstructionPanel(
       'validation_instructions',
@@ -242,7 +449,7 @@ export function CreateWebGazerExperimentTimeline(
     data: { webgazer_flow_step: 'validation_instructions' },
   };
 
-  const validation = {
+  const nativeValidation = {
     type: WebGazerValidatePlugin,
     validation_points: officialCalibrationPoints.map((point) => [...point]),
     roi_radius: 200,
@@ -253,6 +460,25 @@ export function CreateWebGazerExperimentTimeline(
       webgazer_flow_step: 'validation',
     },
   };
+
+  const calibrationInstructions = RunWhileRecordingEyeTracking(
+    nativeCalibrationInstructions,
+    runState,
+  );
+  const calibrationSignalCheck = RunWhileRecordingEyeTracking(
+    CreateEyeSignalCheck(jsPsych, copy, 'calibration', runState),
+    runState,
+  );
+  const calibration = RunWhileRecordingEyeTracking(nativeCalibration, runState);
+  const validationInstructions = RunWhileRecordingEyeTracking(
+    nativeValidationInstructions,
+    runState,
+  );
+  const validationSignalCheck = RunWhileRecordingEyeTracking(
+    CreateEyeSignalCheck(jsPsych, copy, 'validation', runState),
+    runState,
+  );
+  const validation = RunWhileRecordingEyeTracking(nativeValidation, runState);
 
   const recalibrateInstructions = {
     type: HtmlButtonResponsePlugin,
@@ -268,11 +494,15 @@ export function CreateWebGazerExperimentTimeline(
   const recalibrate = {
     timeline: [
       recalibrateInstructions,
+      calibrationSignalCheck,
       calibration,
       validationInstructions,
+      validationSignalCheck,
       validation,
     ],
-    conditional_function: () => ShouldRecalibrate(jsPsych),
+    conditional_function: () => (
+      runState.recordEyeTracking && ShouldRecalibrate(jsPsych)
+    ),
     data: {
       phase: 'recalibration',
       webgazer_flow_step: 'recalibrate',
@@ -281,15 +511,17 @@ export function CreateWebGazerExperimentTimeline(
 
   const calibrationDone = {
     type: HtmlButtonResponsePlugin,
-    stimulus: CreateInstructionPanel(
+    stimulus: () => CreateInstructionPanel(
       'calibration_done',
-      copy.title,
-      [copy.calibrationDoneText],
+      runState.recordEyeTracking ? copy.title : copy.signalSkippedTitle,
+      [runState.recordEyeTracking ? copy.calibrationDoneText : copy.signalSkippedText],
     ),
     choices: [copy.continueButtonText],
     data: { webgazer_flow_step: 'calibration_done' },
     on_finish: () => {
-      SetSetting('webGazerCalibrationAt', new Date().toISOString());
+      if (runState.recordEyeTracking) {
+        SetSetting('webGazerCalibrationAt', new Date().toISOString());
+      }
     },
   };
 
@@ -304,12 +536,39 @@ export function CreateWebGazerExperimentTimeline(
     data: { webgazer_flow_step: 'begin' },
   };
 
-  const formalTrial = {
+  const trackedFormalTrial = {
     ...trial,
     data: {
       ...((trial as { data?: Record<string, unknown> }).data ?? {}),
+      eye_tracking_recording: 'recorded',
       webgazer_flow_step: 'trial',
     },
+  };
+
+  const untrackedFormalTrial = {
+    ...(trial as Record<string, unknown>),
+    enable_webgazer: false,
+    show_gaze_point: false,
+    data: {
+      ...((trial as { data?: Record<string, unknown> }).data ?? {}),
+      eye_tracking_recording: 'skipped_by_participant',
+      webgazer_flow_step: 'trial',
+    },
+  };
+  delete untrackedFormalTrial.extensions;
+  delete untrackedFormalTrial.on_finish;
+
+  const formalTrial = {
+    timeline: [
+      {
+        timeline: [trackedFormalTrial],
+        conditional_function: () => runState.recordEyeTracking,
+      },
+      {
+        timeline: [untrackedFormalTrial],
+        conditional_function: () => !runState.recordEyeTracking,
+      },
+    ],
   };
 
   const showData = {
@@ -322,12 +581,14 @@ export function CreateWebGazerExperimentTimeline(
         && typeof trialData.webgazer_sample_count === 'number'
         ? trialData.webgazer_sample_count
         : 0;
-      const summary = sampleCount > 0
-        ? copy.showDataSummary.replace('{count}', String(sampleCount))
-        : copy.showDataMissing;
+      const summary = !runState.recordEyeTracking
+        ? copy.signalSkippedText
+        : sampleCount > 0
+          ? copy.showDataSummary.replace('{count}', String(sampleCount))
+          : copy.showDataMissing;
       return CreateInstructionPanel(
         'show_data',
-        copy.showDataTitle,
+        runState.recordEyeTracking ? copy.showDataTitle : copy.signalSkippedTitle,
         [summary, copy.showDataPrompt],
       );
     },
@@ -340,8 +601,10 @@ export function CreateWebGazerExperimentTimeline(
     cameraInstructions,
     initCamera,
     calibrationInstructions,
+    calibrationSignalCheck,
     calibration,
     validationInstructions,
+    validationSignalCheck,
     validation,
     recalibrate,
     calibrationDone,
