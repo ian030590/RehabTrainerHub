@@ -17,7 +17,13 @@ import {
   CreateRuntimeStorageNamespace,
   MigrateLegacyLocalStorageNamespace,
 } from '@rehab-trainer/ui/storage/runtimeNamespace';
-import type { OculomotorPattern, OculomotorTargetShape } from '@rehab-trainer/hub-modules/vision/pages/training/oculomotor/types';
+import type {
+  OculomotorBehavior,
+  OculomotorLetterWeight,
+  OculomotorPattern,
+  OculomotorSpeedUnit,
+  OculomotorTargetShape,
+} from '@rehab-trainer/hub-modules/vision/pages/training/oculomotor/types';
 
 export { defaultUiFontSizePx, maxUiFontSizePx, minUiFontSizePx };
 export type { UiTheme };
@@ -59,7 +65,13 @@ export interface AppSettings {
   oculomotorDurationSec: number;
   oculomotorSpeedDegPerSec: number;
   oculomotorTargetSizeMm: number;
+  oculomotorBehavior: OculomotorBehavior;
+  oculomotorSpeedUnit: OculomotorSpeedUnit;
+  oculomotorSpeedValue: number;
+  oculomotorTargetRadiusPx: number;
+  oculomotorTargetCount: number;
   oculomotorDistractorCount: number;
+  oculomotorDistractorBrightness: number;
   oculomotorTargetColor: string;
   oculomotorBackgroundColor: string;
   oculomotorTargetShape: OculomotorTargetShape;
@@ -68,6 +80,16 @@ export interface AppSettings {
   oculomotorBackgroundImage: string;
   oculomotorAudio: string;
   oculomotorBounceJitter: number;
+  oculomotorMotionDirection: 1 | -1;
+  oculomotorShowTrail: boolean;
+  oculomotorLetterEnabled: boolean;
+  oculomotorLetterColor: string;
+  oculomotorLetterWeight: OculomotorLetterWeight;
+  oculomotorLetterScale: number;
+  oculomotorLilacChaserScale: number;
+  oculomotorLilacChaserColor: string;
+  oculomotorViewingDistanceCm: number;
+  oculomotorCssPxPerCm: number;
   preferentialLookingInputMode: 'keyboard' | 'webgazer';
   webGazerCalibrationAt: string;
   displayCalibrationAt: string;
@@ -115,15 +137,31 @@ const appSettingsMeta: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> }
   oculomotorDurationSec:  { dflt: 60,   min: 15,   max: 300 },
   oculomotorSpeedDegPerSec: { dflt: 10, min: 2,    max: 80 },
   oculomotorTargetSizeMm: { dflt: 10,   min: 2,    max: 50 },
-  oculomotorDistractorCount: { dflt: 5, min: 0,    max: 12 },
-  oculomotorTargetColor:   { dflt: '#FFFFFF' },
+  oculomotorBehavior: { dflt: 'constant' },
+  oculomotorSpeedUnit: { dflt: 'deg/s' },
+  oculomotorSpeedValue: { dflt: 20, min: 0.01, max: 143 },
+  oculomotorTargetRadiusPx: { dflt: 35, min: 4, max: 100 },
+  oculomotorTargetCount: { dflt: 1, min: 1, max: 6 },
+  oculomotorDistractorCount: { dflt: 5, min: 0, max: 10 },
+  oculomotorDistractorBrightness: { dflt: 0.7, min: 0.35, max: 1 },
+  oculomotorTargetColor:   { dflt: '#76d900' },
   oculomotorBackgroundColor: { dflt: '#000000' },
   oculomotorTargetShape:   { dflt: 'circle' },
   oculomotorCustomTargetImage: { dflt: '' },
-  oculomotorTargetOpacity: { dflt: 1.0, min: 0.1, max: 1.0 },
+  oculomotorTargetOpacity: { dflt: 1.0, min: 0, max: 1.0 },
   oculomotorBackgroundImage: { dflt: '' },
   oculomotorAudio: { dflt: '' },
   oculomotorBounceJitter: { dflt: 0, min: 0, max: 100 },
+  oculomotorMotionDirection: { dflt: 1 },
+  oculomotorShowTrail: { dflt: false },
+  oculomotorLetterEnabled: { dflt: false },
+  oculomotorLetterColor: { dflt: '#000000' },
+  oculomotorLetterWeight: { dflt: 600 },
+  oculomotorLetterScale: { dflt: 0.5, min: 0.45, max: 1.2 },
+  oculomotorLilacChaserScale: { dflt: 1, min: 0.75, max: 1.25 },
+  oculomotorLilacChaserColor: { dflt: '#ff00fe' },
+  oculomotorViewingDistanceCm: { dflt: 60, min: 20, max: 120 },
+  oculomotorCssPxPerCm: { dflt: 37.8, min: 10, max: 120 },
   preferentialLookingInputMode: { dflt: 'keyboard' },
   webGazerCalibrationAt: { dflt: '' },
   displayCalibrationAt: { dflt: '' },

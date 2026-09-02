@@ -2,7 +2,6 @@
 import WebGazerExtension from '@jspsych/extension-webgazer';
 import PixiOculomotorTrainingPlugin from '../plugins/pixi-oculomotor-training';
 import { GetSetting } from '../../utils/settings';
-import { PixelFromDegree, PixelFromMillimeter } from '../../utils/spatialUtils';
 import {
   ConsumeOfficialWebGazerTrialData,
   CreateWebGazerExperimentTimeline,
@@ -13,9 +12,14 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
   const mode = overrides?.oculomotor?.mode ?? GetSetting('oculomotorMode');
   const pattern = overrides?.oculomotor?.pattern ?? GetSetting('oculomotorPattern');
   const durationSec = overrides?.oculomotor?.durationSec ?? GetSetting('oculomotorDurationSec');
-  const speedDegPerSec = overrides?.oculomotor?.speedDegPerSec ?? GetSetting('oculomotorSpeedDegPerSec');
-  const targetSizeMm = overrides?.oculomotor?.targetSizeMm ?? GetSetting('oculomotorTargetSizeMm');
+  const behavior = overrides?.oculomotor?.behavior ?? GetSetting('oculomotorBehavior');
+  const speedUnit = overrides?.oculomotor?.speedUnit ?? GetSetting('oculomotorSpeedUnit');
+  const speedValue = overrides?.oculomotor?.speedValue ?? GetSetting('oculomotorSpeedValue');
+  const targetRadiusPx = overrides?.oculomotor?.targetRadiusPx ?? GetSetting('oculomotorTargetRadiusPx');
+  const targetCount = overrides?.oculomotor?.targetCount ?? GetSetting('oculomotorTargetCount');
   const distractorCount = overrides?.oculomotor?.distractorCount ?? GetSetting('oculomotorDistractorCount');
+  const distractorBrightness = overrides?.oculomotor?.distractorBrightness
+    ?? GetSetting('oculomotorDistractorBrightness');
   const targetColor = overrides?.oculomotor?.targetColor ?? GetSetting('oculomotorTargetColor');
   const backgroundColor = overrides?.oculomotor?.backgroundColor ?? GetSetting('oculomotorBackgroundColor');
   const targetShape = overrides?.oculomotor?.targetShape ?? GetSetting('oculomotorTargetShape');
@@ -24,6 +28,19 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
   const backgroundImage = overrides?.oculomotor?.backgroundImage ?? GetSetting('oculomotorBackgroundImage');
   const audio = overrides?.oculomotor?.audio ?? GetSetting('oculomotorAudio');
   const bounceJitter = overrides?.oculomotor?.bounceJitter ?? GetSetting('oculomotorBounceJitter');
+  const motionDirection = overrides?.oculomotor?.motionDirection ?? GetSetting('oculomotorMotionDirection');
+  const showTrail = overrides?.oculomotor?.showTrail ?? GetSetting('oculomotorShowTrail');
+  const letterEnabled = overrides?.oculomotor?.letterEnabled ?? GetSetting('oculomotorLetterEnabled');
+  const letterColor = overrides?.oculomotor?.letterColor ?? GetSetting('oculomotorLetterColor');
+  const letterWeight = overrides?.oculomotor?.letterWeight ?? GetSetting('oculomotorLetterWeight');
+  const letterScale = overrides?.oculomotor?.letterScale ?? GetSetting('oculomotorLetterScale');
+  const lilacChaserScale = overrides?.oculomotor?.lilacChaserScale
+    ?? GetSetting('oculomotorLilacChaserScale');
+  const lilacChaserColor = overrides?.oculomotor?.lilacChaserColor
+    ?? GetSetting('oculomotorLilacChaserColor');
+  const viewingDistanceCm = overrides?.oculomotor?.viewingDistanceCm
+    ?? GetSetting('oculomotorViewingDistanceCm');
+  const cssPxPerCm = overrides?.oculomotor?.cssPxPerCm ?? GetSetting('oculomotorCssPxPerCm');
   const enableWebGazer = GetSetting('oculomotorEnableWebgazer');
   const showGazepoint = overrides?.oculomotor?.showGazepoint
     ?? GetSetting('oculomotorShowGazepoint');
@@ -32,10 +49,16 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
     type: PixiOculomotorTrainingPlugin,
     mode,
     pattern,
+    behavior,
     duration_ms: Math.round(durationSec * 1000),
-    speed_px_per_sec: PixelFromDegree(speedDegPerSec),
-    target_radius_px: Math.max(6, PixelFromMillimeter(targetSizeMm) / 2),
+    speed_value: speedValue,
+    speed_unit: speedUnit,
+    viewing_distance_cm: viewingDistanceCm,
+    css_px_per_cm: cssPxPerCm,
+    target_radius_px: targetRadiusPx,
+    target_count: targetCount,
     distractor_count: distractorCount,
+    distractor_brightness: distractorBrightness,
     target_color: targetColor,
     background_color: backgroundColor,
     target_shape: targetShape,
@@ -44,6 +67,14 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
     background_image: backgroundImage,
     audio,
     bounce_jitter: bounceJitter,
+    motion_direction: motionDirection,
+    show_trail: showTrail,
+    letter_enabled: letterEnabled,
+    letter_color: letterColor,
+    letter_weight: letterWeight,
+    letter_scale: letterScale,
+    lilac_chaser_scale: lilacChaserScale,
+    lilac_chaser_color: lilacChaserColor,
     enable_webgazer: enableWebGazer,
     show_gaze_point: enableWebGazer && showGazepoint,
     round_number: 1,

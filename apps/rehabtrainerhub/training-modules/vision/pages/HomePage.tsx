@@ -29,12 +29,23 @@ import { IsCalibrated } from '../utils/settings';
 import { soundManager } from '../utils/soundManager';
 import { useAppSetting } from '../utils/useAppSetting';
 import {
+  isOculomotorBehavior,
+  isOculomotorMode,
+  isOculomotorPattern,
+  isOculomotorSpeedUnit,
+  isOculomotorTargetShape,
+  oculomotorBehaviors,
   oculomotorModes,
   oculomotorPatterns,
+  oculomotorSpeedUnits,
 } from './training/oculomotor/presets';
 import { trainingModules } from './home/trainingModules';
 import type { TrainingModuleId } from './home/trainingModules';
-import type { OculomotorPattern, OculomotorTargetShape } from './training/oculomotor/types';
+import type {
+  OculomotorLetterWeight,
+  OculomotorPattern,
+  OculomotorTargetShape,
+} from './training/oculomotor/types';
 import type { DrivingControlMode, DrivingRenderQualityLevel } from '../utils/settings';
 
 const oculomotorColorOptions = [
@@ -111,9 +122,13 @@ export function HomePage() {
   const [oculomotorMode, setOculomotorMode] = useAppSetting('oculomotorMode');
   const [oculomotorPattern, setOculomotorPattern] = useAppSetting('oculomotorPattern');
   const [oculomotorDurationSec, setOculomotorDurationSec] = useAppSetting('oculomotorDurationSec');
-  const [oculomotorSpeedDegPerSec, setOculomotorSpeedDegPerSec] = useAppSetting('oculomotorSpeedDegPerSec');
-  const [oculomotorTargetSizeMm, setOculomotorTargetSizeMm] = useAppSetting('oculomotorTargetSizeMm');
+  const [oculomotorBehavior, setOculomotorBehavior] = useAppSetting('oculomotorBehavior');
+  const [oculomotorSpeedUnit, setOculomotorSpeedUnit] = useAppSetting('oculomotorSpeedUnit');
+  const [oculomotorSpeedValue, setOculomotorSpeedValue] = useAppSetting('oculomotorSpeedValue');
+  const [oculomotorTargetRadiusPx, setOculomotorTargetRadiusPx] = useAppSetting('oculomotorTargetRadiusPx');
+  const [oculomotorTargetCount, setOculomotorTargetCount] = useAppSetting('oculomotorTargetCount');
   const [oculomotorDistractorCount, setOculomotorDistractorCount] = useAppSetting('oculomotorDistractorCount');
+  const [oculomotorDistractorBrightness, setOculomotorDistractorBrightness] = useAppSetting('oculomotorDistractorBrightness');
   const [oculomotorTargetColor, setOculomotorTargetColor] = useAppSetting('oculomotorTargetColor');
   const [oculomotorBackgroundColor, setOculomotorBackgroundColor] = useAppSetting('oculomotorBackgroundColor');
   const [oculomotorTargetShape, setOculomotorTargetShape] = useAppSetting('oculomotorTargetShape');
@@ -122,6 +137,16 @@ export function HomePage() {
   const [oculomotorBackgroundImage, setOculomotorBackgroundImage] = useAppSetting('oculomotorBackgroundImage');
   const [oculomotorAudio, setOculomotorAudio] = useAppSetting('oculomotorAudio');
   const [oculomotorBounceJitter, setOculomotorBounceJitter] = useAppSetting('oculomotorBounceJitter');
+  const [oculomotorMotionDirection, setOculomotorMotionDirection] = useAppSetting('oculomotorMotionDirection');
+  const [oculomotorShowTrail, setOculomotorShowTrail] = useAppSetting('oculomotorShowTrail');
+  const [oculomotorLetterEnabled, setOculomotorLetterEnabled] = useAppSetting('oculomotorLetterEnabled');
+  const [oculomotorLetterColor, setOculomotorLetterColor] = useAppSetting('oculomotorLetterColor');
+  const [oculomotorLetterWeight, setOculomotorLetterWeight] = useAppSetting('oculomotorLetterWeight');
+  const [oculomotorLetterScale, setOculomotorLetterScale] = useAppSetting('oculomotorLetterScale');
+  const [oculomotorLilacChaserScale, setOculomotorLilacChaserScale] = useAppSetting('oculomotorLilacChaserScale');
+  const [oculomotorLilacChaserColor, setOculomotorLilacChaserColor] = useAppSetting('oculomotorLilacChaserColor');
+  const [oculomotorViewingDistanceCm, setOculomotorViewingDistanceCm] = useAppSetting('oculomotorViewingDistanceCm');
+  const [oculomotorCssPxPerCm, setOculomotorCssPxPerCm] = useAppSetting('oculomotorCssPxPerCm');
   const [oculomotorEnableWebgazer, setOculomotorEnableWebgazer] = useAppSetting('oculomotorEnableWebgazer');
   const [oculomotorShowGazepoint, setOculomotorShowGazepoint] = useAppSetting('oculomotorShowGazepoint');
   const [gaborDurationSec, setGaborDurationSec] = useState(60);
@@ -154,18 +179,64 @@ export function HomePage() {
     if (typeof hostedSettings.rounds === 'number') setLocalRounds(hostedSettings.rounds);
 
     if (requestedModule === 'oculomotor-training') {
-      const path = hostedSettings.movementPath;
-      const pattern: OculomotorPattern = path === 'horizontal'
-        ? 'horizontalSweep'
-        : path === 'vertical'
-          ? 'verticalSweep'
-          : path === 'circle'
-            ? 'circle'
-            : 'randomWalk';
-      setOculomotorPattern(pattern);
+      if (typeof hostedSettings.mode === 'string' && isOculomotorMode(hostedSettings.mode)) {
+        setOculomotorMode(hostedSettings.mode);
+      }
+      if (typeof hostedSettings.movementPath === 'string') {
+        const path = hostedSettings.movementPath;
+        const legacyPattern: OculomotorPattern = path === 'horizontal'
+          ? 'horizontalSweep'
+          : path === 'vertical'
+            ? 'verticalSweep'
+            : path === 'random'
+              ? 'randomWalk'
+              : path === 'circle'
+                ? 'circle'
+                : 'randomWalk';
+        setOculomotorPattern(isOculomotorPattern(path) ? path : legacyPattern);
+      }
+      if (typeof hostedSettings.behavior === 'string' && isOculomotorBehavior(hostedSettings.behavior)) {
+        setOculomotorBehavior(hostedSettings.behavior);
+      }
       if (typeof hostedSettings.durationSec === 'number') setOculomotorDurationSec(hostedSettings.durationSec);
-      if (typeof hostedSettings.speed === 'number') setOculomotorSpeedDegPerSec(Math.max(2, hostedSettings.speed * 2));
-      if (typeof hostedSettings.targetSize === 'number') setOculomotorTargetSizeMm(Math.min(50, hostedSettings.targetSize));
+      if (typeof hostedSettings.speedUnit === 'string' && isOculomotorSpeedUnit(hostedSettings.speedUnit)) {
+        setOculomotorSpeedUnit(hostedSettings.speedUnit);
+      }
+      if (typeof hostedSettings.speedValue === 'number') setOculomotorSpeedValue(hostedSettings.speedValue);
+      else if (typeof hostedSettings.speed === 'number') setOculomotorSpeedValue(Math.max(0.1, hostedSettings.speed * 2));
+      if (typeof hostedSettings.targetSizePx === 'number') setOculomotorTargetRadiusPx(hostedSettings.targetSizePx);
+      else if (typeof hostedSettings.targetSize === 'number') setOculomotorTargetRadiusPx(hostedSettings.targetSize / 2);
+      if (typeof hostedSettings.targetCount === 'number') setOculomotorTargetCount(hostedSettings.targetCount);
+      if (typeof hostedSettings.distractorCount === 'number') setOculomotorDistractorCount(hostedSettings.distractorCount);
+      if (typeof hostedSettings.distractorBrightness === 'number') {
+        setOculomotorDistractorBrightness(hostedSettings.distractorBrightness);
+      }
+      if (typeof hostedSettings.targetColor === 'string') setOculomotorTargetColor(hostedSettings.targetColor);
+      if (typeof hostedSettings.targetOpacity === 'number') setOculomotorTargetOpacity(hostedSettings.targetOpacity);
+      if (typeof hostedSettings.targetShape === 'string' && isOculomotorTargetShape(hostedSettings.targetShape)) {
+        setOculomotorTargetShape(hostedSettings.targetShape);
+      }
+      if (hostedSettings.motionDirection === 1 || hostedSettings.motionDirection === -1) {
+        setOculomotorMotionDirection(hostedSettings.motionDirection);
+      }
+      if (typeof hostedSettings.showTrail === 'boolean') setOculomotorShowTrail(hostedSettings.showTrail);
+      if (typeof hostedSettings.letterEnabled === 'boolean') setOculomotorLetterEnabled(hostedSettings.letterEnabled);
+      if (typeof hostedSettings.letterColor === 'string') setOculomotorLetterColor(hostedSettings.letterColor);
+      if (typeof hostedSettings.letterWeight === 'number'
+        && [400, 500, 600, 700, 800].includes(hostedSettings.letterWeight)) {
+        setOculomotorLetterWeight(hostedSettings.letterWeight as OculomotorLetterWeight);
+      }
+      if (typeof hostedSettings.letterScale === 'number') setOculomotorLetterScale(hostedSettings.letterScale);
+      if (typeof hostedSettings.lilacChaserScale === 'number') {
+        setOculomotorLilacChaserScale(hostedSettings.lilacChaserScale);
+      }
+      if (typeof hostedSettings.lilacChaserBallColor === 'string') {
+        setOculomotorLilacChaserColor(hostedSettings.lilacChaserBallColor);
+      }
+      if (typeof hostedSettings.viewingDistanceCm === 'number') {
+        setOculomotorViewingDistanceCm(hostedSettings.viewingDistanceCm);
+      }
+      if (typeof hostedSettings.cssPxPerCm === 'number') setOculomotorCssPxPerCm(hostedSettings.cssPxPerCm);
       if (typeof hostedSettings.webgazerEnabled === 'boolean') setOculomotorEnableWebgazer(hostedSettings.webgazerEnabled);
       if (typeof hostedSettings.gazePointVisible === 'boolean') setOculomotorShowGazepoint(hostedSettings.gazePointVisible);
     } else if (requestedModule === 'gabor-patching') {
@@ -203,12 +274,31 @@ export function HomePage() {
     setDrivingRenderQuality,
     setLocalDifficulty,
     setLocalRounds,
+    setOculomotorBehavior,
+    setOculomotorCssPxPerCm,
+    setOculomotorDistractorBrightness,
+    setOculomotorDistractorCount,
     setOculomotorDurationSec,
     setOculomotorEnableWebgazer,
+    setOculomotorLetterColor,
+    setOculomotorLetterEnabled,
+    setOculomotorLetterScale,
+    setOculomotorLetterWeight,
+    setOculomotorLilacChaserColor,
+    setOculomotorLilacChaserScale,
+    setOculomotorMode,
+    setOculomotorMotionDirection,
     setOculomotorPattern,
     setOculomotorShowGazepoint,
-    setOculomotorSpeedDegPerSec,
-    setOculomotorTargetSizeMm,
+    setOculomotorShowTrail,
+    setOculomotorSpeedUnit,
+    setOculomotorSpeedValue,
+    setOculomotorTargetColor,
+    setOculomotorTargetCount,
+    setOculomotorTargetOpacity,
+    setOculomotorTargetRadiusPx,
+    setOculomotorTargetShape,
+    setOculomotorViewingDistanceCm,
     setReadingContrast,
     setReadingCrowding,
     setReadingWPS,
@@ -323,8 +413,10 @@ export function HomePage() {
       params.set('mode', oculomotorMode);
       params.set('pattern', oculomotorPattern);
       params.set('duration', String(oculomotorDurationSec));
-      params.set('speed', String(oculomotorSpeedDegPerSec));
-      params.set('size', String(oculomotorTargetSizeMm));
+      params.set('speed', String(oculomotorSpeedValue));
+      params.set('speedUnit', oculomotorSpeedUnit);
+      params.set('size', String(oculomotorTargetRadiusPx));
+      params.set('targets', String(oculomotorTargetCount));
       params.set('distractors', String(oculomotorDistractorCount));
       params.set('targetColor', oculomotorTargetColor);
       params.set('backgroundColor', oculomotorBackgroundColor);
@@ -409,8 +501,10 @@ export function HomePage() {
   const calibrated = IsCalibrated();
   const targetShapeOptions: { key: OculomotorTargetShape; label: string }[] = [
     { key: 'circle', label: t('home.shape.circle') },
+    { key: 'ring', label: t('home.shape.ring') },
     { key: 'star', label: t('home.shape.star') },
     { key: 'square', label: t('home.shape.square') },
+    { key: 'diamond', label: t('home.shape.diamond') },
     { key: 'cross', label: t('home.shape.cross') },
     { key: 'triangle', label: t('home.shape.triangle') },
     { key: 'custom', label: t('home.shape.custom') },
@@ -687,7 +781,7 @@ export function HomePage() {
               </select>
             </TrainingConfigSection>
 
-            {oculomotorMode !== 'lilac-chaser' && (
+            {oculomotorMode === 'pursuit' && (
               <TrainingConfigSection
                 title={t('home.config.movementPath')}
                 value={t(`preset.path.${oculomotorPattern}` as any)}
@@ -700,6 +794,35 @@ export function HomePage() {
                 >
                   {oculomotorPatterns.map((pattern) => (
                     <option key={pattern.id} value={pattern.id}>{t(`preset.path.${pattern.id}` as any)}</option>
+                  ))}
+                </select>
+              </TrainingConfigSection>
+            )}
+
+            {oculomotorMode !== 'lilac-chaser' && (
+              <TrainingConfigSection
+                title={t('home.config.motionFeel')}
+                value={oculomotorBehaviors.find((behavior) => behavior.id === oculomotorBehavior)?.label}
+              >
+                <select
+                  className="input"
+                  value={oculomotorBehavior}
+                  onClick={(event) => event.stopPropagation()}
+                  onChange={(event) => setOculomotorBehavior(event.target.value as typeof oculomotorBehavior)}
+                >
+                  {oculomotorBehaviors.map((behavior) => (
+                    <option key={behavior.id} value={behavior.id}>
+                      {lang === 'en'
+                        ? ({
+                            constant: 'Steady speed',
+                            wavePattern: 'Speed wave',
+                            surgePattern: 'Short bursts',
+                            alternatingPattern: 'Alternating pace',
+                            climbPattern: 'Build and reset',
+                            sizePulse: 'Size pulse',
+                          } as const)[behavior.id]
+                        : behavior.label}
+                    </option>
                   ))}
                 </select>
               </TrainingConfigSection>
@@ -721,60 +844,87 @@ export function HomePage() {
               />
             </TrainingConfigSection>
 
+            {oculomotorMode !== 'lilac-chaser' && (
             <TrainingConfigSection title={t('home.config.speedAndSize')} wide>
-              <TrainingConfigOptionGroup columns={3}>
+              <TrainingConfigOptionGroup columns={4}>
+                <label className="training-option training-option-field">
+                  <span className="training-option-title">{t('home.config.speedUnit')}</span>
+                  <select
+                    className="input"
+                    value={oculomotorSpeedUnit}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={(event) => setOculomotorSpeedUnit(event.target.value as typeof oculomotorSpeedUnit)}
+                  >
+                    {oculomotorSpeedUnits.map((unit) => (
+                      <option key={unit.id} value={unit.id}>{unit.label}</option>
+                    ))}
+                  </select>
+                </label>
                 <TrainingConfigRangeField
                   label={t('home.config.speed')}
-                  value={oculomotorSpeedDegPerSec}
-                  valueLabel={`${oculomotorSpeedDegPerSec}°/s`}
-                  min={2}
-                  max={80}
-                  step={1}
-                  scaleLabels={['2', '41', '80']}
+                  value={oculomotorSpeedValue}
+                  valueLabel={`${oculomotorSpeedValue} ${oculomotorSpeedUnit}`}
+                  min={oculomotorSpeedUnit === 'screen/s' ? 0.01 : 0.1}
+                  max={oculomotorSpeedUnit === 'cm/s' ? 143 : oculomotorSpeedUnit === 'screen/s' ? 6 : 100}
+                  step={oculomotorSpeedUnit === 'screen/s' ? 0.01 : 0.1}
+                  scaleLabels={oculomotorSpeedUnit === 'cm/s'
+                    ? ['0.1', '71.5', '143']
+                    : oculomotorSpeedUnit === 'screen/s'
+                      ? ['0.01', '3', '6']
+                      : ['0.1', '50', '100']}
                   onClick={(event) => event.stopPropagation()}
-                  onValueChange={(value) => setOculomotorSpeedDegPerSec(Math.max(2, Math.min(80, value)))}
+                  onValueChange={setOculomotorSpeedValue}
                 />
                 <TrainingConfigRangeField
                   label={t('home.config.size')}
-                  value={oculomotorTargetSizeMm}
-                  valueLabel={`${oculomotorTargetSizeMm} mm`}
-                  min={2}
+                  value={oculomotorTargetRadiusPx}
+                  valueLabel={`${oculomotorTargetRadiusPx} px`}
+                  min={4}
                   max={100}
                   step={1}
-                  scaleLabels={['2 mm', '51 mm', '100 mm']}
+                  scaleLabels={['4 px', '52 px', '100 px']}
                   onClick={(event) => event.stopPropagation()}
-                  onValueChange={(value) => setOculomotorTargetSizeMm(Math.max(2, Math.min(100, value)))}
+                  onValueChange={setOculomotorTargetRadiusPx}
+                />
+                <TrainingConfigRangeField
+                  label={t('home.config.targets')}
+                  value={oculomotorTargetCount}
+                  valueLabel={oculomotorTargetCount}
+                  min={1}
+                  max={6}
+                  step={1}
+                  scaleLabels={['1', '3', '6']}
+                  disabled={oculomotorMode !== 'multi-object'}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={setOculomotorTargetCount}
                 />
                 <TrainingConfigRangeField
                   label={t('home.config.distractors')}
                   value={oculomotorDistractorCount}
                   valueLabel={oculomotorDistractorCount}
                   min={0}
-                  max={12}
+                  max={10}
                   step={1}
-                  scaleLabels={['0', '6', '12']}
+                  scaleLabels={['0', '5', '10']}
                   disabled={oculomotorMode !== 'multi-object'}
                   onClick={(event) => event.stopPropagation()}
-                  onValueChange={(value) => setOculomotorDistractorCount(Math.max(0, Math.min(12, value)))}
+                  onValueChange={setOculomotorDistractorCount}
                 />
               </TrainingConfigOptionGroup>
             </TrainingConfigSection>
+            )}
 
             <TrainingConfigSection title={t('home.config.colors')} wide>
               <TrainingConfigOptionGroup columns={3}>
                 <label className="training-option training-option-field training-option-color-field">
                   <span className="training-option-title">{t('home.config.targetColor')}</span>
-                  <select
+                  <input
                     className="input"
+                    type="color"
                     value={oculomotorTargetColor}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => setOculomotorTargetColor(e.target.value)}
-                  >
-                    {!oculomotorColorOptions.some((option) => option.value === oculomotorTargetColor) && (
-                      <option value={oculomotorTargetColor}>{oculomotorTargetColor}</option>
-                    )}
-                    {oculomotorColorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                  </select>
+                  />
                 </label>
                 <label className="training-option training-option-field training-option-color-field">
                   <span className="training-option-title">{t('home.config.bgColor')}</span>
@@ -794,15 +944,159 @@ export function HomePage() {
                   label={t('home.config.opacity')}
                   value={oculomotorTargetOpacity}
                   valueLabel={`${Math.round(oculomotorTargetOpacity * 100)}%`}
-                  min={0.1}
+                  min={0}
                   max={1}
                   step={0.1}
-                  scaleLabels={['10%', '50%', '100%']}
+                  scaleLabels={['0%', '50%', '100%']}
                   onClick={(event) => event.stopPropagation()}
                   onValueChange={setOculomotorTargetOpacity}
                 />
+                <TrainingConfigRangeField
+                  label={t('home.config.distractorBrightness')}
+                  value={oculomotorDistractorBrightness}
+                  valueLabel={`${Math.round(oculomotorDistractorBrightness * 100)}%`}
+                  min={0.35}
+                  max={1}
+                  step={0.01}
+                  scaleLabels={['35%', '70%', '100%']}
+                  disabled={oculomotorMode !== 'multi-object'}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={setOculomotorDistractorBrightness}
+                />
               </TrainingConfigOptionGroup>
             </TrainingConfigSection>
+
+            <TrainingConfigSection title={t('home.config.motionOptions')} wide>
+              <TrainingConfigOptionGroup columns={2}>
+                <label className="training-option training-option-field">
+                  <span className="training-option-title">{t('home.config.motionDirection')}</span>
+                  <select
+                    className="input"
+                    value={oculomotorMotionDirection}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={(event) => setOculomotorMotionDirection(Number(event.target.value) === -1 ? -1 : 1)}
+                  >
+                    <option value={1}>{t('home.config.forward')}</option>
+                    <option value={-1}>{t('home.config.reverse')}</option>
+                  </select>
+                </label>
+                <label className={`training-option training-option-toggle ${oculomotorShowTrail ? 'active' : ''}`}>
+                  <span className="training-option-title">{t('home.config.showTrail')}</span>
+                  <input
+                    type="checkbox"
+                    checked={oculomotorShowTrail}
+                    onChange={(event) => setOculomotorShowTrail(event.target.checked)}
+                  />
+                </label>
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
+
+            <TrainingConfigSection title={t('home.config.screenCalibration')} wide>
+              <TrainingConfigOptionGroup columns={2}>
+                <TrainingConfigRangeField
+                  label={t('home.config.viewingDistance')}
+                  value={oculomotorViewingDistanceCm}
+                  valueLabel={`${oculomotorViewingDistanceCm} cm`}
+                  min={20}
+                  max={120}
+                  step={1}
+                  scaleLabels={['20 cm', '60 cm', '120 cm']}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={setOculomotorViewingDistanceCm}
+                />
+                <TrainingConfigRangeField
+                  label={t('home.config.cssPxPerCm')}
+                  value={oculomotorCssPxPerCm}
+                  valueLabel={`${oculomotorCssPxPerCm} px/cm`}
+                  min={10}
+                  max={120}
+                  step={0.1}
+                  scaleLabels={['10', '65', '120']}
+                  onClick={(event) => event.stopPropagation()}
+                  onValueChange={setOculomotorCssPxPerCm}
+                />
+              </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
+
+            <TrainingConfigSection title={t('home.config.letterOverlay')} wide>
+              <label className={`training-option training-option-toggle ${oculomotorLetterEnabled ? 'active' : ''}`}>
+                <span className="training-option-title">{t('home.config.showLetters')}</span>
+                <input
+                  type="checkbox"
+                  checked={oculomotorLetterEnabled}
+                  onChange={(event) => setOculomotorLetterEnabled(event.target.checked)}
+                />
+              </label>
+              {oculomotorLetterEnabled && (
+                <TrainingConfigOptionGroup className="training-option-grid-spaced" columns={3}>
+                  <label className="training-option training-option-field training-option-color-field">
+                    <span className="training-option-title">{t('home.config.letterColor')}</span>
+                    <input
+                      className="input"
+                      type="color"
+                      value={oculomotorLetterColor}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(event) => setOculomotorLetterColor(event.target.value)}
+                    />
+                  </label>
+                  <label className="training-option training-option-field">
+                    <span className="training-option-title">{t('home.config.letterWeight')}</span>
+                    <select
+                      className="input"
+                      value={oculomotorLetterWeight}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(event) => setOculomotorLetterWeight(Number(event.target.value) as OculomotorLetterWeight)}
+                    >
+                      {[400, 500, 600, 700, 800].map((weight) => (
+                        <option key={weight} value={weight}>{weight}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <TrainingConfigRangeField
+                    label={t('home.config.letterScale')}
+                    value={oculomotorLetterScale}
+                    valueLabel={`${Math.round(oculomotorLetterScale * 100)}%`}
+                    min={0.45}
+                    max={1.2}
+                    step={0.01}
+                    scaleLabels={['45%', '82%', '120%']}
+                    onClick={(event) => event.stopPropagation()}
+                    onValueChange={setOculomotorLetterScale}
+                  />
+                </TrainingConfigOptionGroup>
+              )}
+            </TrainingConfigSection>
+
+            {oculomotorMode === 'lilac-chaser' && (
+              <TrainingConfigSection title="Lilac Chaser" wide>
+                <TrainingConfigOptionGroup columns={2}>
+                  <label className="training-option training-option-field">
+                    <span className="training-option-title">{t('home.config.lilacColor')}</span>
+                    <select
+                      className="input"
+                      value={oculomotorLilacChaserColor}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(event) => setOculomotorLilacChaserColor(event.target.value)}
+                    >
+                      {['#ff00fe', '#ff3030', '#245cff', '#ffcc00', '#00d7ff'].map((color) => (
+                        <option key={color} value={color}>{color}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <TrainingConfigRangeField
+                    label={t('home.config.lilacScale')}
+                    value={oculomotorLilacChaserScale}
+                    valueLabel={`${oculomotorLilacChaserScale.toFixed(2)}×`}
+                    min={0.75}
+                    max={1.25}
+                    step={0.05}
+                    scaleLabels={['0.75×', '1×', '1.25×']}
+                    onClick={(event) => event.stopPropagation()}
+                    onValueChange={setOculomotorLilacChaserScale}
+                  />
+                </TrainingConfigOptionGroup>
+              </TrainingConfigSection>
+            )}
 
             <TrainingConfigSection title={t('home.config.advancedConfig')} wide>
               <TrainingConfigOptionGroup columns={2}>

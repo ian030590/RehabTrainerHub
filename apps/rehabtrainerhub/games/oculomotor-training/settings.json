@@ -3,111 +3,302 @@
   "gameId": "oculomotor-training",
   "sections": [
     {
-      "id": "training",
+      "id": "drill",
       "title": {
-        "zh-TW": "移動刺激設定",
-        "en": "Moving stimulus settings"
+        "zh-TW": "活動模式",
+        "en": "Drill"
       },
       "description": {
-        "zh-TW": "設定值只用於這次活動。",
-        "en": "These values apply only to this session."
+        "zh-TW": "模式與動態節奏參照 FoveaFlow；移動路徑只套用於追視模式。",
+        "en": "Modes and motion behaviors follow FoveaFlow. The motion path applies to pursuit mode."
       },
       "fields": [
         {
+          "key": "mode",
+          "type": "list",
+          "label": { "zh-TW": "活動模式", "en": "Drill" },
+          "default": "pursuit",
+          "options": [
+            { "value": "pursuit", "label": { "zh-TW": "追視", "en": "Smooth Pursuit" } },
+            { "value": "reaction-jumps", "label": { "zh-TW": "跳視", "en": "Reaction Jumps" } },
+            { "value": "multi-object", "label": { "zh-TW": "多目標追蹤", "en": "Multiple Distractions" } },
+            { "value": "lilac-chaser", "label": { "zh-TW": "周邊固視", "en": "Lilac Chaser" } }
+          ]
+        },
+        {
           "key": "movementPath",
           "type": "list",
-          "label": {
-            "zh-TW": "移動路徑",
-            "en": "Movement path"
-          },
-          "default": "horizontal",
+          "label": { "zh-TW": "移動路徑", "en": "Motion path" },
+          "default": "randomWalk",
           "options": [
-            {
-              "value": "horizontal",
-              "label": {
-                "zh-TW": "水平",
-                "en": "Horizontal"
-              }
-            },
-            {
-              "value": "vertical",
-              "label": {
-                "zh-TW": "垂直",
-                "en": "Vertical"
-              }
-            },
-            {
-              "value": "circle",
-              "label": {
-                "zh-TW": "圓形",
-                "en": "Circular"
-              }
-            },
-            {
-              "value": "random",
-              "label": {
-                "zh-TW": "隨機",
-                "en": "Random"
-              }
-            }
+            { "value": "randomWalk", "label": { "zh-TW": "隨機", "en": "Random" } },
+            { "value": "circle", "label": { "zh-TW": "圓形", "en": "Circle" } },
+            { "value": "ellipse", "label": { "zh-TW": "橢圓形", "en": "Ellipse" } },
+            { "value": "figureEight", "label": { "zh-TW": "8 字形", "en": "Figure eight" } },
+            { "value": "wave", "label": { "zh-TW": "波浪", "en": "Wave" } },
+            { "value": "diagonal", "label": { "zh-TW": "對角線", "en": "Diagonal" } },
+            { "value": "bounce", "label": { "zh-TW": "反彈", "en": "Bounce" } },
+            { "value": "directionChange", "label": { "zh-TW": "急轉向", "en": "Hard turns" } },
+            { "value": "horizontalSweep", "label": { "zh-TW": "水平掃視", "en": "Horizontal sweep" } },
+            { "value": "verticalSweep", "label": { "zh-TW": "垂直掃視", "en": "Vertical sweep" } },
+            { "value": "downRightSweep", "label": { "zh-TW": "右下掃視", "en": "Down-right sweep" } },
+            { "value": "downLeftSweep", "label": { "zh-TW": "左下掃視", "en": "Down-left sweep" } },
+            { "value": "perimeterLoop", "label": { "zh-TW": "邊緣循環", "en": "Edge loop" } },
+            { "value": "diamondLoop", "label": { "zh-TW": "菱形循環", "en": "Diamond loop" } },
+            { "value": "clover", "label": { "zh-TW": "四葉草", "en": "Clover" } },
+            { "value": "zigZag", "label": { "zh-TW": "之字形", "en": "Zigzag" } },
+            { "value": "stairStep", "label": { "zh-TW": "階梯", "en": "Stair steps" } },
+            { "value": "lissajous", "label": { "zh-TW": "李沙育圖形", "en": "Lissajous" } },
+            { "value": "hourglass", "label": { "zh-TW": "沙漏", "en": "Hourglass" } },
+            { "value": "cornerTour", "label": { "zh-TW": "角落巡迴", "en": "Corner tour" } }
+          ]
+        },
+        {
+          "key": "behavior",
+          "type": "list",
+          "label": { "zh-TW": "動態節奏", "en": "Motion feel" },
+          "default": "constant",
+          "options": [
+            { "value": "constant", "label": { "zh-TW": "穩定速度", "en": "Steady speed" } },
+            { "value": "wavePattern", "label": { "zh-TW": "速度波動", "en": "Speed wave" } },
+            { "value": "surgePattern", "label": { "zh-TW": "短促加速", "en": "Short bursts" } },
+            { "value": "alternatingPattern", "label": { "zh-TW": "交替節奏", "en": "Alternating pace" } },
+            { "value": "climbPattern", "label": { "zh-TW": "逐步加速後重置", "en": "Build and reset" } },
+            { "value": "sizePulse", "label": { "zh-TW": "大小脈動", "en": "Size pulse" } }
           ]
         },
         {
           "key": "durationSec",
           "type": "slider",
-          "label": {
-            "zh-TW": "活動時間",
-            "en": "Session duration"
-          },
-          "description": {
-            "zh-TW": "設定這次活動進行的時間。",
-            "en": "Set how long this activity will run."
-          },
+          "label": { "zh-TW": "活動時間", "en": "Session duration" },
           "default": 60,
-          "min": 30,
+          "min": 15,
           "max": 300,
-          "step": 15,
-          "unit": {
-            "zh-TW": "秒",
-            "en": "sec"
-          }
+          "step": 1,
+          "unit": { "zh-TW": "秒", "en": "sec" }
+        }
+      ]
+    },
+    {
+      "id": "motion",
+      "title": { "zh-TW": "移動與螢幕校正", "en": "Motion and screen calibration" },
+      "fields": [
+        {
+          "key": "speedUnit",
+          "type": "list",
+          "label": { "zh-TW": "速度單位", "en": "Speed unit" },
+          "default": "deg/s",
+          "options": [
+            { "value": "deg/s", "label": { "zh-TW": "度／秒", "en": "deg/s" } },
+            { "value": "cm/s", "label": { "zh-TW": "公分／秒", "en": "cm/s" } },
+            { "value": "screen/s", "label": { "zh-TW": "螢幕／秒", "en": "screen/s" } }
+          ]
         },
         {
-          "key": "speed",
+          "key": "speedValue",
           "type": "slider",
-          "label": {
-            "zh-TW": "移動速度",
-            "en": "Movement speed"
+          "label": { "zh-TW": "移動速度", "en": "Speed" },
+          "description": {
+            "zh-TW": "依上方所選單位解讀；各單位會在執行時限制於 FoveaFlow 的安全範圍。",
+            "en": "Uses the selected unit and is clamped to FoveaFlow's range for that unit at runtime."
           },
-          "default": 5,
+          "default": 20,
+          "min": 0.1,
+          "max": 143,
+          "step": 0.1
+        },
+        {
+          "key": "motionDirection",
+          "type": "list",
+          "label": { "zh-TW": "移動方向", "en": "Direction" },
+          "description": {
+            "zh-TW": "反向只套用於可循環的預測性路徑。",
+            "en": "Reverse applies to reversible predictive paths."
+          },
+          "default": 1,
+          "options": [
+            { "value": 1, "label": { "zh-TW": "正向", "en": "Forward" } },
+            { "value": -1, "label": { "zh-TW": "反向", "en": "Reverse" } }
+          ]
+        },
+        {
+          "key": "showTrail",
+          "type": "checkbox",
+          "label": { "zh-TW": "顯示移動軌跡", "en": "Show trail" },
+          "default": false
+        },
+        {
+          "key": "viewingDistanceCm",
+          "type": "slider",
+          "label": { "zh-TW": "觀看距離", "en": "Viewing distance" },
+          "default": 60,
+          "min": 20,
+          "max": 120,
+          "step": 1,
+          "unit": { "zh-TW": "公分", "en": "cm" }
+        },
+        {
+          "key": "cssPxPerCm",
+          "type": "slider",
+          "label": { "zh-TW": "每公分 CSS 像素", "en": "CSS pixels/cm" },
+          "default": 37.8,
+          "min": 10,
+          "max": 120,
+          "step": 0.1
+        }
+      ]
+    },
+    {
+      "id": "targets",
+      "title": { "zh-TW": "目標與干擾物", "en": "Targets and distractors" },
+      "description": {
+        "zh-TW": "目標與干擾物數量只套用於多目標追蹤模式。",
+        "en": "Target and distractor counts apply to Multiple Distractions mode."
+      },
+      "fields": [
+        {
+          "key": "targetCount",
+          "type": "slider",
+          "label": { "zh-TW": "目標數量", "en": "Targets" },
+          "default": 1,
           "min": 1,
+          "max": 6,
+          "step": 1
+        },
+        {
+          "key": "distractorCount",
+          "type": "slider",
+          "label": { "zh-TW": "干擾物數量", "en": "Distractors" },
+          "default": 5,
+          "min": 0,
           "max": 10,
           "step": 1
         },
         {
-          "key": "targetSize",
+          "key": "targetColor",
+          "type": "color",
+          "label": { "zh-TW": "目標顏色", "en": "Ball color" },
+          "default": "#76d900"
+        },
+        {
+          "key": "distractorBrightness",
           "type": "slider",
-          "label": {
-            "zh-TW": "刺激大小",
-            "en": "Stimulus size"
-          },
-          "default": 48,
-          "min": 24,
-          "max": 96,
-          "step": 4,
-          "unit": {
-            "zh-TW": "px",
-            "en": "px"
-          }
+          "label": { "zh-TW": "干擾物顏色亮度", "en": "Distractor color brightness" },
+          "default": 0.7,
+          "min": 0.35,
+          "max": 1,
+          "step": 0.01
+        },
+        {
+          "key": "targetOpacity",
+          "type": "slider",
+          "label": { "zh-TW": "目標不透明度", "en": "Target opacity" },
+          "default": 1,
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        },
+        {
+          "key": "targetShape",
+          "type": "list",
+          "label": { "zh-TW": "目標形狀", "en": "Target form" },
+          "default": "circle",
+          "options": [
+            { "value": "circle", "label": { "zh-TW": "圓形", "en": "Circle" } },
+            { "value": "ring", "label": { "zh-TW": "圓環", "en": "Ring" } },
+            { "value": "square", "label": { "zh-TW": "正方形", "en": "Square" } },
+            { "value": "diamond", "label": { "zh-TW": "菱形", "en": "Diamond" } },
+            { "value": "triangle", "label": { "zh-TW": "三角形", "en": "Triangle" } },
+            { "value": "cross", "label": { "zh-TW": "十字", "en": "Cross" } }
+          ]
+        },
+        {
+          "key": "targetSizePx",
+          "type": "slider",
+          "label": { "zh-TW": "目標半徑", "en": "Target radius" },
+          "default": 35,
+          "min": 4,
+          "max": 100,
+          "step": 1,
+          "unit": { "zh-TW": "px", "en": "px" }
+        }
+      ]
+    },
+    {
+      "id": "letters",
+      "title": { "zh-TW": "字母疊加", "en": "Letter overlay" },
+      "fields": [
+        {
+          "key": "letterEnabled",
+          "type": "checkbox",
+          "label": { "zh-TW": "在目標上顯示字母", "en": "Show target letters" },
+          "default": false
+        },
+        {
+          "key": "letterColor",
+          "type": "color",
+          "label": { "zh-TW": "字母顏色", "en": "Letter color" },
+          "default": "#000000"
+        },
+        {
+          "key": "letterWeight",
+          "type": "list",
+          "label": { "zh-TW": "字重", "en": "Letter weight" },
+          "default": 600,
+          "options": [
+            { "value": 400, "label": { "zh-TW": "一般", "en": "Regular" } },
+            { "value": 500, "label": { "zh-TW": "中等", "en": "Medium" } },
+            { "value": 600, "label": { "zh-TW": "半粗體", "en": "Semibold" } },
+            { "value": 700, "label": { "zh-TW": "粗體", "en": "Bold" } },
+            { "value": 800, "label": { "zh-TW": "特粗體", "en": "Heavy" } }
+          ]
+        },
+        {
+          "key": "letterScale",
+          "type": "slider",
+          "label": { "zh-TW": "字母大小比例", "en": "Letter text size" },
+          "default": 0.5,
+          "min": 0.45,
+          "max": 1.2,
+          "step": 0.01
+        }
+      ]
+    },
+    {
+      "id": "lilac",
+      "title": { "zh-TW": "周邊固視模式", "en": "Lilac Chaser" },
+      "description": {
+        "zh-TW": "下列設定只套用於周邊固視模式。",
+        "en": "These settings apply only to Lilac Chaser mode."
+      },
+      "fields": [
+        {
+          "key": "lilacChaserBallColor",
+          "type": "list",
+          "label": { "zh-TW": "圓點顏色", "en": "Ball color" },
+          "default": "#ff00fe",
+          "options": [
+            { "value": "#ff00fe", "label": { "zh-TW": "洋紅", "en": "Magenta" } },
+            { "value": "#ff3030", "label": { "zh-TW": "紅色", "en": "Red" } },
+            { "value": "#245cff", "label": { "zh-TW": "藍色", "en": "Blue" } },
+            { "value": "#ffcc00", "label": { "zh-TW": "金色", "en": "Gold" } },
+            { "value": "#00d7ff", "label": { "zh-TW": "青色", "en": "Cyan" } }
+          ]
+        },
+        {
+          "key": "lilacChaserScale",
+          "type": "slider",
+          "label": { "zh-TW": "圖形縮放", "en": "Scale" },
+          "default": 1,
+          "min": 0.75,
+          "max": 1.25,
+          "step": 0.05
         }
       ]
     },
     {
       "id": "optional",
-      "title": {
-        "zh-TW": "選用功能",
-        "en": "Optional features"
-      },
+      "title": { "zh-TW": "選用眼動追蹤", "en": "Optional gaze tracking" },
       "description": {
         "zh-TW": "啟用前請確認裝置與環境適合使用。",
         "en": "Check that your device and environment are suitable before enabling these features."
@@ -116,19 +307,13 @@
         {
           "key": "webgazerEnabled",
           "type": "checkbox",
-          "label": {
-            "zh-TW": "啟用鏡頭眼動追蹤",
-            "en": "Enable camera gaze tracking"
-          },
+          "label": { "zh-TW": "啟用鏡頭眼動追蹤", "en": "Enable camera gaze tracking" },
           "default": false
         },
         {
           "key": "gazePointVisible",
           "type": "checkbox",
-          "label": {
-            "zh-TW": "顯示注視點",
-            "en": "Show gaze point"
-          },
+          "label": { "zh-TW": "顯示注視點", "en": "Show gaze point" },
           "default": false
         }
       ]

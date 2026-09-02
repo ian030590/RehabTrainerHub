@@ -39,6 +39,12 @@ const definition = {
         label: { 'zh-TW': '聲音', en: 'Sound' },
         default: true,
       },
+      {
+        key: 'targetColor',
+        type: 'color',
+        label: { 'zh-TW': '目標顏色', en: 'Target color' },
+        default: '#76d900',
+      },
     ],
   }],
 };
@@ -50,6 +56,7 @@ test('validates settings.json and creates complete defaults', () => {
     rounds: 10,
     mode: 'practice',
     soundEnabled: true,
+    targetColor: '#76d900',
   });
 });
 
@@ -58,12 +65,15 @@ test('normalizes selected values and rejects unknown or out-of-range values', ()
     rounds: 20,
     mode: 'formal',
     soundEnabled: false,
+    targetColor: '#ffcc00',
   }), {
     rounds: 20,
     mode: 'formal',
     soundEnabled: false,
+    targetColor: '#ffcc00',
   });
   assert.throws(() => NormalizeGameSettingsValues(definition, { rounds: 7 }));
+  assert.throws(() => NormalizeGameSettingsValues(definition, { targetColor: 'red' }));
   assert.throws(() => NormalizeGameSettingsValues(definition, { unexpected: true }));
 });
 

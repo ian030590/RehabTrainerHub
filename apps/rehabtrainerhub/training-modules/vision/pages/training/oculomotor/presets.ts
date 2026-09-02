@@ -1,5 +1,11 @@
 // Presets local to the Hub-owned oculomotor module.
-import type { OculomotorMode, OculomotorPattern } from './types';
+import type {
+  OculomotorBehavior,
+  OculomotorMode,
+  OculomotorPattern,
+  OculomotorSpeedUnit,
+  OculomotorTargetShape,
+} from './types';
 
 export const oculomotorModes: Array<{
   id: OculomotorMode;
@@ -18,43 +24,70 @@ export const oculomotorPatterns: Array<{
 }> = [
   { id: 'randomWalk', label: '隨機路徑 (Random Walk)' },
   { id: 'circle', label: '圓形 (Circle)' },
-  { id: 'oval', label: '橢圓形 (Oval)' },
+  { id: 'ellipse', label: '橢圓形 (Ellipse)' },
   { id: 'figureEight', label: '8 字形 (Figure Eight)' },
+  { id: 'wave', label: '波浪 (Wave)' },
+  { id: 'diagonal', label: '斜向 (Diagonal)' },
+  { id: 'bounce', label: '反彈 (Bounce)' },
+  { id: 'directionChange', label: '急轉向 (Hard Turns)' },
   { id: 'horizontalSweep', label: '水平掃視 (Horizontal Sweep)' },
   { id: 'verticalSweep', label: '垂直掃視 (Vertical Sweep)' },
-  { id: 'bounce', label: '反彈 (Bounce)' },
-  { id: 'diagonal', label: '斜向 (Diagonal)' },
-  { id: 'spiralBloom', label: '螺旋 (Spiral Bloom)' },
+  { id: 'downRightSweep', label: '右下掃視 (Down-right Sweep)' },
+  { id: 'downLeftSweep', label: '左下掃視 (Down-left Sweep)' },
+  { id: 'perimeterLoop', label: '邊緣循環 (Edge Loop)' },
+  { id: 'diamondLoop', label: '菱形循環 (Diamond Loop)' },
+  { id: 'clover', label: '四葉草 (Clover)' },
   { id: 'zigZag', label: '折線 (ZigZag)' },
-  { id: 'triangle', label: '三角形 (Triangle)' },
-  { id: 'square', label: '正方形 (Square)' },
-  { id: 'rectangle', label: '長方形 (Rectangle)' },
-  { id: 'parallelogram', label: '平行四邊形 (Parallelogram)' },
-  { id: 'rhombus', label: '菱形 (Rhombus)' },
-  { id: 'trapezoid', label: '梯形 (Trapezoid)' },
-  { id: 'kite', label: '鳶形 (Kite)' },
-  { id: 'pentagon', label: '五邊形 (Pentagon)' },
-  { id: 'hexagon', label: '六邊形 (Hexagon)' },
-  { id: 'heptagon', label: '七邊形 (Heptagon)' },
-  { id: 'octagon', label: '八邊形 (Octagon)' },
-  { id: 'nonagon', label: '九邊形 (Nonagon)' },
-  { id: 'decagon', label: '十邊形 (Decagon)' },
-  { id: 'hexagram', label: '六芒星 (Hexagram)' },
-  { id: 'decagram', label: '十芒星 (Decagram)' },
-  { id: 'superellipse', label: '超橢圓 (Superellipse)' },
-  { id: 'deltoid', label: '三角星 (Deltoid)' },
-  { id: 'randomizedSmooth', label: '平滑隨機 (Randomized Smooth)' },
-  { id: 'peekaboo', label: '躲貓貓 (Peek-a-boo)' },
+  { id: 'stairStep', label: '階梯 (Stair Steps)' },
+  { id: 'lissajous', label: '李沙育圖形 (Lissajous)' },
+  { id: 'hourglass', label: '沙漏 (Hourglass)' },
+  { id: 'cornerTour', label: '角落巡迴 (Corner Tour)' },
+];
+
+export const oculomotorBehaviors: Array<{
+  id: OculomotorBehavior;
+  label: string;
+}> = [
+  { id: 'constant', label: '穩定速度' },
+  { id: 'wavePattern', label: '速度波動' },
+  { id: 'surgePattern', label: '短促加速' },
+  { id: 'alternatingPattern', label: '交替節奏' },
+  { id: 'climbPattern', label: '逐步加速後重置' },
+  { id: 'sizePulse', label: '大小脈動' },
+];
+
+export const oculomotorSpeedUnits: Array<{
+  id: OculomotorSpeedUnit;
+  label: string;
+}> = [
+  { id: 'deg/s', label: '度／秒 (deg/s)' },
+  { id: 'cm/s', label: '公分／秒 (cm/s)' },
+  { id: 'screen/s', label: '螢幕／秒 (screen/s)' },
 ];
 
 export const isOculomotorMode = (value: string): value is OculomotorMode =>
   oculomotorModes.some((mode) => mode.id === value);
 
 export const isOculomotorPattern = (value: string): value is OculomotorPattern =>
-  oculomotorPatterns.some((pattern) => pattern.id === value);
+  oculomotorPatterns.some((pattern) => pattern.id === value)
+  || value === 'teleport'
+  || value === 'multipleObjectTracking';
+
+export const isOculomotorBehavior = (value: string): value is OculomotorBehavior =>
+  oculomotorBehaviors.some((behavior) => behavior.id === value);
+
+export const isOculomotorSpeedUnit = (value: string): value is OculomotorSpeedUnit =>
+  oculomotorSpeedUnits.some((unit) => unit.id === value);
+
+export const isOculomotorTargetShape = (value: string): value is OculomotorTargetShape =>
+  ['circle', 'ring', 'star', 'square', 'diamond', 'cross', 'triangle', 'custom'].includes(value);
 
 export const getOculomotorModeLabel = (id: string) =>
   oculomotorModes.find((mode) => mode.id === id)?.label ?? id;
 
 export const getOculomotorPatternLabel = (id: string) =>
-  oculomotorPatterns.find((pattern) => pattern.id === id)?.label ?? id;
+  id === 'teleport'
+    ? '跳躍定位 (Reaction Jumps)'
+    : id === 'multipleObjectTracking'
+      ? '多目標追蹤 (Multiple Object Tracking)'
+      : oculomotorPatterns.find((pattern) => pattern.id === id)?.label ?? id;

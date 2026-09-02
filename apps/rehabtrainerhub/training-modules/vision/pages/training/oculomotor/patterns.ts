@@ -136,6 +136,7 @@ const sampleSingle = (
       const angle = travelPx / radius;
       return [cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius] satisfies [number, number];
     }
+    case 'ellipse':
     case 'oval': {
       const angle = travelPx / Math.max(1, Math.min(rx, ry));
       return [cx + Math.cos(angle) * rx, cy + Math.sin(angle) * ry] satisfies [number, number];
@@ -144,10 +145,27 @@ const sampleSingle = (
       const angle = (travelPx / Math.max(1, Math.min(rx, ry))) * 0.78;
       return [cx + Math.sin(angle) * rx, cy + Math.sin(angle * 2) * ry * 0.72] satisfies [number, number];
     }
+    case 'wave': {
+      const angle = travelPx / Math.max(1, Math.min(rx, ry));
+      return [
+        cx + Math.cos(angle) * rx,
+        cy + Math.sin(angle * 3) * ry * 0.42,
+      ] satisfies [number, number];
+    }
     case 'horizontalSweep':
       return [left + pingPong(travelPx, width), cy] satisfies [number, number];
     case 'verticalSweep':
       return [cx, top + pingPong(travelPx, height)] satisfies [number, number];
+    case 'downRightSweep': {
+      const diagonalLength = Math.max(1, Math.hypot(width, height));
+      const progress = pingPong(travelPx, diagonalLength) / diagonalLength;
+      return [left + width * progress, top + height * progress] satisfies [number, number];
+    }
+    case 'downLeftSweep': {
+      const diagonalLength = Math.max(1, Math.hypot(width, height));
+      const progress = pingPong(travelPx, diagonalLength) / diagonalLength;
+      return [right - width * progress, top + height * progress] satisfies [number, number];
+    }
     case 'bounce':
       return [
         left + pingPong(travelPx * 0.93 + width * 0.18, width),
@@ -155,6 +173,43 @@ const sampleSingle = (
       ] satisfies [number, number];
     case 'diagonal':
       return [left + pingPong(travelPx * 0.72, width), top + pingPong(travelPx, height)] satisfies [number, number];
+    case 'directionChange': {
+      const segmentPx = Math.max(240, Math.min(width, height) * 0.55);
+      const bucket = Math.floor(Math.max(0, travelPx) / segmentPx);
+      const progress = (Math.max(0, travelPx) - bucket * segmentPx) / segmentPx;
+      return [
+        interpolate(
+          rng.rangeAt(40_000 + bucket * 2, left, right),
+          rng.rangeAt(40_000 + (bucket + 1) * 2, left, right),
+          progress,
+        ),
+        interpolate(
+          rng.rangeAt(40_001 + bucket * 2, top, bottom),
+          rng.rangeAt(40_001 + (bucket + 1) * 2, top, bottom),
+          progress,
+        ),
+      ] satisfies [number, number];
+    }
+    case 'teleport': {
+      const jumpDistancePx = clamp(Math.min(width, height) * 0.55, 420, 820);
+      const bucket = Math.floor(Math.max(0, travelPx) / jumpDistancePx);
+      return [
+        rng.rangeAt(bucket * 2, left, right),
+        rng.rangeAt(bucket * 2 + 1, top, bottom),
+      ] satisfies [number, number];
+    }
+    case 'perimeterLoop':
+      return pointOnSegment([[left, top], [right, top], [right, bottom], [left, bottom]], travelPx);
+    case 'diamondLoop':
+      return pointOnSegment([[cx, top], [right, cy], [cx, bottom], [left, cy]], travelPx);
+    case 'clover': {
+      const angle = travelPx / Math.max(1, Math.min(rx, ry));
+      const petal = 0.58 + 0.3 * Math.cos(angle * 4);
+      return [
+        cx + Math.cos(angle) * rx * petal,
+        cy + Math.sin(angle) * ry * petal,
+      ] satisfies [number, number];
+    }
     case 'spiralBloom': {
       const angle = (travelPx / Math.max(1, Math.min(rx, ry))) * 0.72;
       const bloom = 0.42 + 0.5 * ((1 - Math.cos(angle)) / 2);
@@ -168,6 +223,42 @@ const sampleSingle = (
         return [x, y] satisfies [number, number];
       });
       return pointOnSegment(points, travelPx * 1.08);
+    }
+    case 'stairStep': {
+      const rows = 4;
+      const columns = 5;
+      const points = Array.from({ length: rows * columns }, (_, index) => {
+        const row = index % rows;
+        const column = Math.floor(index / rows) % columns;
+        return [
+          left + (column * width) / (columns - 1),
+          top + (row * height) / (rows - 1),
+        ] satisfies [number, number];
+      });
+      return pointOnSegment(points, travelPx);
+    }
+    case 'lissajous': {
+      const angle = travelPx / Math.max(1, Math.min(rx, ry));
+      return [
+        cx + Math.sin(angle * 3 + Math.PI / 2) * rx,
+        cy + Math.sin(angle * 2) * ry,
+      ] satisfies [number, number];
+    }
+    case 'hourglass': {
+      const angle = travelPx / Math.max(1, Math.min(rx, ry));
+      const vertical = Math.sin(angle);
+      const pinch = 0.22 + 0.74 * Math.abs(vertical);
+      return [cx + Math.sin(angle * 2) * rx * pinch, cy + vertical * ry] satisfies [number, number];
+    }
+    case 'cornerTour': {
+      const insetX = width * 0.18;
+      const insetY = height * 0.18;
+      return pointOnSegment([
+        [left, top],
+        [right - insetX, top + insetY],
+        [right, bottom],
+        [left + insetX, bottom - insetY],
+      ], travelPx);
     }
     case 'triangle': return pointOnSegment(generatePolygon(3), travelPx);
     case 'square': return pointOnSegment([
@@ -256,7 +347,10 @@ export const sampleOculomotorPatternInto = (
     return baseAlpha * ((phase - 0.9) * 10);
   };
 
-  if ((pattern !== 'randomWalk' && pattern !== 'peekaboo') || params.distractorCount <= 0) {
+  const supportsMultipleObjects = pattern === 'randomWalk'
+    || pattern === 'peekaboo'
+    || pattern === 'multipleObjectTracking';
+  if (!supportsMultipleObjects || params.targetCount + params.distractorCount <= 1) {
     const [x, y] = sampleSingle(pattern, arena, params, rng);
     const alpha = getPeekabooAlpha(params.travelPx, params.opacity ?? 1);
     return writeFrame(frames, 0, x, y, params, params.colorA, 'target', alpha);

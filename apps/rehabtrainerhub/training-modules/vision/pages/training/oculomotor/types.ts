@@ -8,12 +8,26 @@ export type OculomotorMode =
 export type OculomotorPattern =
   | 'randomWalk'
   | 'circle'
+  | 'ellipse'
   | 'oval'
   | 'figureEight'
+  | 'wave'
   | 'horizontalSweep'
   | 'verticalSweep'
+  | 'downRightSweep'
+  | 'downLeftSweep'
   | 'bounce'
   | 'diagonal'
+  | 'directionChange'
+  | 'teleport'
+  | 'perimeterLoop'
+  | 'diamondLoop'
+  | 'clover'
+  | 'stairStep'
+  | 'lissajous'
+  | 'hourglass'
+  | 'cornerTour'
+  | 'multipleObjectTracking'
   | 'spiralBloom'
   | 'zigZag'
   | 'triangle'
@@ -38,11 +52,25 @@ export type OculomotorPattern =
 
 export type OculomotorTargetShape =
   | 'circle'
+  | 'ring'
   | 'star'
   | 'square'
+  | 'diamond'
   | 'cross'
   | 'triangle'
   | 'custom';
+
+export type OculomotorSpeedUnit = 'deg/s' | 'cm/s' | 'screen/s';
+
+export type OculomotorBehavior =
+  | 'constant'
+  | 'wavePattern'
+  | 'surgePattern'
+  | 'alternatingPattern'
+  | 'climbPattern'
+  | 'sizePulse';
+
+export type OculomotorLetterWeight = 400 | 500 | 600 | 700 | 800;
 
 export interface Arena {
   width: number;

@@ -63,7 +63,7 @@ test('catalog and game roots retain one exact settings definition per official g
       for (const field of section.fields) fieldTypes.add(field.type);
     }
   }
-  assert.deepEqual([...fieldTypes].sort(), ['checkbox', 'list', 'slider']);
+  assert.deepEqual([...fieldTypes].sort(), ['checkbox', 'color', 'list', 'slider']);
 });
 
 test('Hub builds per-game outputs and cannot restore a public trainer runtime', async () => {

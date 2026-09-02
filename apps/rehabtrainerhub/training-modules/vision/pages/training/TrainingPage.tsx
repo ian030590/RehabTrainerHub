@@ -35,8 +35,9 @@ import {
 import {
   isOculomotorMode,
   isOculomotorPattern,
+  isOculomotorSpeedUnit,
+  isOculomotorTargetShape,
 } from './oculomotor/presets';
-import type { OculomotorTargetShape } from './oculomotor/types';
 import { getRandomStory } from './reading/stories';
 import { TrainingResults } from './results/TrainingResults';
 import type { TrialData } from './types';
@@ -116,18 +117,40 @@ function TrainingRuntimePage() {
     : GetSetting('oculomotorPattern');
   const oculomotorDurationSec = parseInt(searchParams.get('duration') || '', 10)
     || GetSetting('oculomotorDurationSec');
-  const oculomotorSpeedDegPerSec = parseFloat(searchParams.get('speed') || '')
-    || GetSetting('oculomotorSpeedDegPerSec');
-  const oculomotorTargetSizeMm = parseFloat(searchParams.get('size') || '')
-    || GetSetting('oculomotorTargetSizeMm');
+  const oculomotorSpeedValue = parseFloat(searchParams.get('speed') || '')
+    || GetSetting('oculomotorSpeedValue');
+  const requestedSpeedUnit = searchParams.get('speedUnit') || GetSetting('oculomotorSpeedUnit');
+  const oculomotorSpeedUnit = isOculomotorSpeedUnit(requestedSpeedUnit)
+    ? requestedSpeedUnit
+    : GetSetting('oculomotorSpeedUnit');
+  const oculomotorTargetRadiusPx = parseFloat(searchParams.get('size') || '')
+    || GetSetting('oculomotorTargetRadiusPx');
+  const oculomotorTargetCount = parseInt(searchParams.get('targets') || '', 10)
+    || GetSetting('oculomotorTargetCount');
   const oculomotorDistractorCount = parseInt(searchParams.get('distractors') || '', 10);
   const requestedTargetShape = searchParams.get('shape') || GetSetting('oculomotorTargetShape');
-  const oculomotorTargetShape = IsOculomotorTargetShape(requestedTargetShape)
+  const oculomotorTargetShape = isOculomotorTargetShape(requestedTargetShape)
     ? requestedTargetShape
     : GetSetting('oculomotorTargetShape');
   const oculomotorTargetColor = searchParams.get('targetColor') || GetSetting('oculomotorTargetColor');
   const oculomotorBackgroundColor = searchParams.get('backgroundColor') || GetSetting('oculomotorBackgroundColor');
   const oculomotorCustomTargetImage = GetSetting('oculomotorCustomTargetImage');
+  const oculomotorBehavior = GetSetting('oculomotorBehavior');
+  const oculomotorDistractorBrightness = GetSetting('oculomotorDistractorBrightness');
+  const oculomotorTargetOpacity = GetSetting('oculomotorTargetOpacity');
+  const oculomotorBackgroundImage = GetSetting('oculomotorBackgroundImage');
+  const oculomotorAudio = GetSetting('oculomotorAudio');
+  const oculomotorBounceJitter = GetSetting('oculomotorBounceJitter');
+  const oculomotorMotionDirection = GetSetting('oculomotorMotionDirection');
+  const oculomotorShowTrail = GetSetting('oculomotorShowTrail');
+  const oculomotorLetterEnabled = GetSetting('oculomotorLetterEnabled');
+  const oculomotorLetterColor = GetSetting('oculomotorLetterColor');
+  const oculomotorLetterWeight = GetSetting('oculomotorLetterWeight');
+  const oculomotorLetterScale = GetSetting('oculomotorLetterScale');
+  const oculomotorLilacChaserScale = GetSetting('oculomotorLilacChaserScale');
+  const oculomotorLilacChaserColor = GetSetting('oculomotorLilacChaserColor');
+  const oculomotorViewingDistanceCm = GetSetting('oculomotorViewingDistanceCm');
+  const oculomotorCssPxPerCm = GetSetting('oculomotorCssPxPerCm');
   const enableWebGazer = moduleId === 'oculomotor-training' && GetSetting('oculomotorEnableWebgazer');
   const showGazepoint = enableWebGazer && GetSetting('oculomotorShowGazepoint');
   const requestedDrivingFlash = searchParams.get('redFlash');
@@ -257,8 +280,25 @@ function TrainingRuntimePage() {
               oculomotorMode,
               oculomotorPattern,
               oculomotorDurationSec,
-              oculomotorSpeedDegPerSec,
-              oculomotorTargetSizeMm,
+              oculomotorBehavior,
+              oculomotorSpeedUnit,
+              oculomotorSpeedValue,
+              oculomotorTargetRadiusPx,
+              oculomotorTargetCount,
+              oculomotorDistractorBrightness,
+              oculomotorTargetColor,
+              oculomotorTargetOpacity,
+              oculomotorTargetShape,
+              oculomotorMotionDirection,
+              oculomotorShowTrail,
+              oculomotorLetterEnabled,
+              oculomotorLetterColor,
+              oculomotorLetterWeight,
+              oculomotorLetterScale,
+              oculomotorLilacChaserScale,
+              oculomotorLilacChaserColor,
+              oculomotorViewingDistanceCm,
+              oculomotorCssPxPerCm,
               oculomotorEnableWebgazer: enableWebGazer,
               oculomotorShowGazepoint: showGazepoint,
               oculomotorDistractorCount: Number.isFinite(oculomotorDistractorCount)
@@ -291,15 +331,33 @@ function TrainingRuntimePage() {
           mode: oculomotorMode,
           pattern: oculomotorPattern,
           durationSec: oculomotorDurationSec,
-          speedDegPerSec: oculomotorSpeedDegPerSec,
-          targetSizeMm: oculomotorTargetSizeMm,
+          behavior: oculomotorBehavior,
+          speedUnit: oculomotorSpeedUnit,
+          speedValue: oculomotorSpeedValue,
+          targetRadiusPx: oculomotorTargetRadiusPx,
+          targetCount: oculomotorTargetCount,
           distractorCount: Number.isFinite(oculomotorDistractorCount)
             ? oculomotorDistractorCount
             : GetSetting('oculomotorDistractorCount'),
+          distractorBrightness: oculomotorDistractorBrightness,
           targetColor: oculomotorTargetColor,
           backgroundColor: oculomotorBackgroundColor,
           targetShape: oculomotorTargetShape,
           customTargetImage: oculomotorCustomTargetImage,
+          opacity: oculomotorTargetOpacity,
+          backgroundImage: oculomotorBackgroundImage,
+          audio: oculomotorAudio,
+          bounceJitter: oculomotorBounceJitter,
+          motionDirection: oculomotorMotionDirection,
+          showTrail: oculomotorShowTrail,
+          letterEnabled: oculomotorLetterEnabled,
+          letterColor: oculomotorLetterColor,
+          letterWeight: oculomotorLetterWeight,
+          letterScale: oculomotorLetterScale,
+          lilacChaserScale: oculomotorLilacChaserScale,
+          lilacChaserColor: oculomotorLilacChaserColor,
+          viewingDistanceCm: oculomotorViewingDistanceCm,
+          cssPxPerCm: oculomotorCssPxPerCm,
           showGazepoint,
           webGazerCalibration: {
             beginInstructions: t('settings.wg.beginInstructions'),
@@ -382,13 +440,31 @@ function TrainingRuntimePage() {
     oculomotorMode,
     oculomotorPattern,
     oculomotorDurationSec,
-    oculomotorSpeedDegPerSec,
-    oculomotorTargetSizeMm,
+    oculomotorBehavior,
+    oculomotorSpeedUnit,
+    oculomotorSpeedValue,
+    oculomotorTargetRadiusPx,
+    oculomotorTargetCount,
     oculomotorDistractorCount,
+    oculomotorDistractorBrightness,
     oculomotorTargetColor,
     oculomotorBackgroundColor,
     oculomotorTargetShape,
     oculomotorCustomTargetImage,
+    oculomotorTargetOpacity,
+    oculomotorBackgroundImage,
+    oculomotorAudio,
+    oculomotorBounceJitter,
+    oculomotorMotionDirection,
+    oculomotorShowTrail,
+    oculomotorLetterEnabled,
+    oculomotorLetterColor,
+    oculomotorLetterWeight,
+    oculomotorLetterScale,
+    oculomotorLilacChaserScale,
+    oculomotorLilacChaserColor,
+    oculomotorViewingDistanceCm,
+    oculomotorCssPxPerCm,
     enableWebGazer,
     cameraPermission.status,
     showGazepoint,
@@ -490,8 +566,4 @@ function TrainingRuntimePage() {
       onBackHome={() => navigate('/')}
     />
   );
-}
-
-function IsOculomotorTargetShape(value: string): value is OculomotorTargetShape {
-  return ['circle', 'star', 'square', 'cross', 'triangle', 'custom'].includes(value);
 }

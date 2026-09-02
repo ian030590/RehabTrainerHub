@@ -33,7 +33,22 @@ import type {
 } from '../../utils/webgazerMetrics';
 import { createRng } from '../../pages/training/oculomotor/random';
 import { sampleOculomotorPatternInto } from '../../pages/training/oculomotor/patterns';
-import type { Arena, OculomotorMode, OculomotorPattern, OculomotorTargetShape, TargetFrame } from '../../pages/training/oculomotor/types';
+import {
+  ConvertOculomotorSpeedToPixels,
+  DarkenOculomotorColor,
+  GetOculomotorRadiusPx,
+  GetOculomotorTravelPx,
+  IsOculomotorPatternReversible,
+} from '../../pages/training/oculomotor/profiles';
+import type {
+  Arena,
+  OculomotorBehavior,
+  OculomotorMode,
+  OculomotorPattern,
+  OculomotorSpeedUnit,
+  OculomotorTargetShape,
+  TargetFrame,
+} from '../../pages/training/oculomotor/types';
 import { getOculomotorModeLabel, getOculomotorPatternLabel } from '../../pages/training/oculomotor/presets';
 
 const info = {
@@ -52,21 +67,45 @@ const info = {
       type: ParameterType.INT,
       default: 60_000,
     },
-    speed_px_per_sec: {
+    behavior: {
+      type: ParameterType.STRING,
+      default: 'constant',
+    },
+    speed_value: {
       type: ParameterType.FLOAT,
-      default: 260,
+      default: 20,
+    },
+    speed_unit: {
+      type: ParameterType.STRING,
+      default: 'deg/s',
+    },
+    viewing_distance_cm: {
+      type: ParameterType.FLOAT,
+      default: 60,
+    },
+    css_px_per_cm: {
+      type: ParameterType.FLOAT,
+      default: 37.8,
     },
     target_radius_px: {
       type: ParameterType.FLOAT,
-      default: 26,
+      default: 35,
+    },
+    target_count: {
+      type: ParameterType.INT,
+      default: 1,
     },
     distractor_count: {
       type: ParameterType.INT,
       default: 5,
     },
+    distractor_brightness: {
+      type: ParameterType.FLOAT,
+      default: 0.7,
+    },
     target_color: {
       type: ParameterType.STRING,
-      default: '#3FB950',
+      default: '#76d900',
     },
     background_color: {
       type: ParameterType.STRING,
@@ -95,6 +134,38 @@ const info = {
     bounce_jitter: {
       type: ParameterType.INT,
       default: 0,
+    },
+    motion_direction: {
+      type: ParameterType.INT,
+      default: 1,
+    },
+    show_trail: {
+      type: ParameterType.BOOL,
+      default: false,
+    },
+    letter_enabled: {
+      type: ParameterType.BOOL,
+      default: false,
+    },
+    letter_color: {
+      type: ParameterType.STRING,
+      default: '#000000',
+    },
+    letter_weight: {
+      type: ParameterType.INT,
+      default: 600,
+    },
+    letter_scale: {
+      type: ParameterType.FLOAT,
+      default: 0.5,
+    },
+    lilac_chaser_scale: {
+      type: ParameterType.FLOAT,
+      default: 1,
+    },
+    lilac_chaser_color: {
+      type: ParameterType.STRING,
+      default: '#ff00fe',
     },
     round_number: {
       type: ParameterType.INT,
@@ -220,20 +291,11 @@ const drawTargetShape = (
   frame: TargetFrame,
   isReactionFlash: boolean,
   shape: OculomotorTargetShape,
-  backgroundColor: number,
 ) => {
   const outer = frame.radiusPx;
-  const inner = Math.max(2, outer * 0.42);
   const ringColor = frame.role === 'target' ? 0xffffff : pixiColors.borderHover;
 
   drawShape(gfx, shape, frame.x, frame.y, outer, frame.color, frame.alpha);
-
-  if (shape === 'circle') {
-    gfx.circle(frame.x, frame.y, inner).fill({
-      color: backgroundColor,
-      alpha: frame.role === 'target' ? 0.18 : 0.45,
-    });
-  }
 
   if (frame.role === 'target') {
     strokeShape(gfx, shape, frame.x, frame.y, outer, isReactionFlash ? pixiColors.success : ringColor, isReactionFlash ? 4 : 2);
@@ -249,6 +311,14 @@ const drawShape = (
   color: number,
   alpha: number,
 ) => {
+  if (shape === 'ring') {
+    gfx.circle(x, y, radius).stroke({
+      color,
+      width: Math.max(3, radius * 0.28),
+      alpha,
+    });
+    return;
+  }
   if (shape === 'square') {
     gfx.rect(x - radius, y - radius, radius * 2, radius * 2).fill({ color, alpha });
     return;
@@ -258,6 +328,15 @@ const drawShape = (
       x, y - radius,
       x + radius * 0.95, y + radius * 0.72,
       x - radius * 0.95, y + radius * 0.72,
+    ]).fill({ color, alpha });
+    return;
+  }
+  if (shape === 'diamond') {
+    gfx.poly([
+      x, y - radius * 1.25,
+      x + radius * 1.25, y,
+      x, y + radius * 1.25,
+      x - radius * 1.25, y,
     ]).fill({ color, alpha });
     return;
   }
@@ -292,6 +371,10 @@ const strokeShape = (
   color: number,
   width: number,
 ) => {
+  if (shape === 'ring') {
+    gfx.circle(x, y, radius).stroke({ color, width, alpha: 0.88 });
+    return;
+  }
   if (shape === 'square') {
     gfx.rect(x - radius, y - radius, radius * 2, radius * 2).stroke({
       color,
@@ -305,6 +388,15 @@ const strokeShape = (
       x, y - radius,
       x + radius * 0.95, y + radius * 0.72,
       x - radius * 0.95, y + radius * 0.72,
+    ]).stroke({ color, width, alpha: 0.88 });
+    return;
+  }
+  if (shape === 'diamond') {
+    gfx.poly([
+      x, y - radius * 1.25,
+      x + radius * 1.25, y,
+      x, y + radius * 1.25,
+      x - radius * 1.25, y,
     ]).stroke({ color, width, alpha: 0.88 });
     return;
   }
@@ -342,9 +434,26 @@ const parseCssHexColor = (value: unknown, fallback: number): number => {
 };
 
 const parseTargetShape = (value: unknown): OculomotorTargetShape => {
-  return ['circle', 'star', 'square', 'cross', 'triangle', 'custom'].includes(String(value))
+  return ['circle', 'ring', 'star', 'square', 'diamond', 'cross', 'triangle', 'custom'].includes(String(value))
     ? value as OculomotorTargetShape
     : 'circle';
+};
+
+const parseBehavior = (value: unknown): OculomotorBehavior => {
+  return [
+    'constant',
+    'wavePattern',
+    'surgePattern',
+    'alternatingPattern',
+    'climbPattern',
+    'sizePulse',
+  ].includes(String(value)) ? value as OculomotorBehavior : 'constant';
+};
+
+const parseSpeedUnit = (value: unknown): OculomotorSpeedUnit => {
+  return ['deg/s', 'cm/s', 'screen/s'].includes(String(value))
+    ? value as OculomotorSpeedUnit
+    : 'deg/s';
 };
 
 class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
@@ -369,20 +478,57 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
 
     const mode = trial.mode as OculomotorMode;
     const pattern = trial.pattern as OculomotorPattern;
+    const activePattern: OculomotorPattern = mode === 'reaction-jumps'
+      ? 'teleport'
+      : mode === 'multi-object'
+        ? 'multipleObjectTracking'
+        : pattern;
     const durationMs = Math.max(5_000, trial.duration_ms as number);
-    const speedPxPerSec = Math.max(20, trial.speed_px_per_sec as number);
-    const radiusPx = Math.max(6, trial.target_radius_px as number);
-    const distractorCount = Math.max(0, trial.distractor_count as number);
-    const targetColor = parseCssHexColor(trial.target_color, pixiColors.success);
+    const behavior = parseBehavior(trial.behavior);
+    const speedUnit = parseSpeedUnit(trial.speed_unit);
+    const speedMaximum = speedUnit === 'cm/s' ? 143 : speedUnit === 'screen/s' ? 6 : 100;
+    const speedValue = Math.min(speedMaximum, Math.max(
+      speedUnit === 'screen/s' ? 0.01 : 0.1,
+      trial.speed_value as number,
+    ));
+    const viewingDistanceCm = Math.min(120, Math.max(20, trial.viewing_distance_cm as number));
+    const cssPxPerCm = Math.min(120, Math.max(10, trial.css_px_per_cm as number));
+    const baseRadiusPx = Math.min(100, Math.max(4, trial.target_radius_px as number));
+    const targetCount = Math.min(6, Math.max(1, Math.round(trial.target_count as number)));
+    const distractorCount = Math.min(10, Math.max(0, Math.round(trial.distractor_count as number)));
+    const distractorBrightness = Math.min(1, Math.max(0.35, trial.distractor_brightness as number));
+    const parsedTargetColor = parseCssHexColor(trial.target_color, 0x76d900);
+    const targetColor = ((parsedTargetColor >> 16) & 0xff) >= 240
+      && ((parsedTargetColor >> 8) & 0xff) <= 32
+      && (parsedTargetColor & 0xff) <= 32
+      ? 0xffb020
+      : parsedTargetColor;
+    const distractorColor = DarkenOculomotorColor(targetColor, distractorBrightness);
     const backgroundColor = parseCssHexColor(trial.background_color, pixiColors.bg);
     const targetShape = parseTargetShape(trial.target_shape);
     const customTargetImage = typeof trial.custom_target_image === 'string'
       ? trial.custom_target_image
       : '';
-    const opacity = Math.max(0.1, Math.min(1.0, trial.opacity as number));
+    const opacity = Math.max(0, Math.min(1.0, trial.opacity as number));
     const backgroundImage = typeof trial.background_image === 'string' ? trial.background_image : '';
     const customAudio = typeof trial.audio === 'string' ? trial.audio : '';
     const bounceJitter = Math.max(0, trial.bounce_jitter as number);
+    const motionDirection = trial.motion_direction === -1 ? -1 : 1;
+    const showTrail = Boolean(trial.show_trail) && IsOculomotorPatternReversible(activePattern);
+    const letterEnabled = Boolean(trial.letter_enabled);
+    const letterColor = parseCssHexColor(trial.letter_color, 0x000000);
+    const letterWeight = trial.letter_weight === 400
+      ? '400'
+      : trial.letter_weight === 500
+        ? '500'
+        : trial.letter_weight === 700
+          ? '700'
+          : trial.letter_weight === 800
+            ? '800'
+            : '600';
+    const letterScale = Math.min(1.2, Math.max(0.45, trial.letter_scale as number));
+    const lilacChaserScale = Math.min(1.25, Math.max(0.75, trial.lilac_chaser_scale as number));
+    const lilacChaserColor = parseCssHexColor(trial.lilac_chaser_color, 0xff00fe);
     const rng = createRng(Math.floor(Math.random() * 2_147_483_646) + 1);
     let ended = false;
     let paused = false;
@@ -412,6 +558,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       const startTime = performance.now();
       const bgGfx = new Graphics();
       const guideGfx = new Graphics();
+      const trailGfx = new Graphics();
       const targetGfx = new Graphics();
       const hudGfx = new Graphics();
       const lilacGfx = new Graphics();
@@ -422,6 +569,9 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       const reactionLetter = new Text();
       const frames: TargetFrame[] = [];
       const targetSprites: Sprite[] = [];
+      const targetLetters: Text[] = [];
+      const trailFrames: Array<Array<Pick<TargetFrame, 'x' | 'y' | 'radiusPx' | 'color' | 'alpha'>>> = [];
+      let lastTrailSampleMs = -Infinity;
       const customTexture = targetShape === 'custom' && customTargetImage
         ? Texture.from(customTargetImage)
         : null;
@@ -429,7 +579,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       let latestTarget: TargetFrame | null = null;
       let hudVisible = false;
 
-      app.stage.addChild(bgGfx, guideGfx, lilacGfx, targetGfx, reactionLetter, hudGfx, titleText, metaText, timeText, exitText);
+      app.stage.addChild(bgGfx, guideGfx, trailGfx, lilacGfx, targetGfx, reactionLetter, hudGfx, titleText, metaText, timeText, exitText);
 
       let audioElement: HTMLAudioElement | null = null;
       if (customAudio) {
@@ -470,7 +620,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       };
       reactionLetter.style = {
         fontFamily: typography.fontFamily,
-        fontSize: Math.max(18, radiusPx * 0.92),
+        fontSize: Math.max(18, baseRadiusPx * 0.92),
         fontWeight: '800',
         fill: backgroundColor,
       };
@@ -479,7 +629,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       titleText.text = modeTitle[mode] ?? '眼動訓練';
       metaText.text = mode === 'lilac-chaser'
         ? 'Lilac Chaser'
-        : `${getOculomotorModeLabel(mode)} · ${getOculomotorPatternLabel(pattern)}`;
+        : `${getOculomotorModeLabel(mode)} · ${getOculomotorPatternLabel(activePattern)}`;
 
       const getArena = (): Arena => ({
         width: Math.max(1, app.screen.width),
@@ -638,21 +788,26 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         exitText.y = buttonY + 12;
       };
 
-      const drawGuides = (arena: Arena, hudHeight: number) => {
+      const drawGuides = (arena: Arena) => {
         const cx = arena.width / 2;
-        const cy = (arena.height + hudHeight) / 2;
+        const cy = arena.height / 2;
 
         guideGfx.clear();
 
         if (mode === 'lilac-chaser') {
+          const minSide = Math.min(arena.width, arena.height);
+          const crossArm = minSide * 0.0132 * lilacChaserScale;
           guideGfx
             .rect(0, 0, arena.width, arena.height)
-            .fill({ color: backgroundColor })
-            .moveTo(cx - 14, cy)
-            .lineTo(cx + 14, cy)
-            .moveTo(cx, cy - 14)
-            .lineTo(cx, cy + 14)
-            .stroke({ color: 0x050505, width: 3 });
+            .fill({ color: 0xd8d8da })
+            .moveTo(cx - crossArm, cy)
+            .lineTo(cx + crossArm, cy)
+            .moveTo(cx, cy - crossArm)
+            .lineTo(cx, cy + crossArm)
+            .stroke({
+              color: 0x050505,
+              width: Math.max(2, minSide * 0.0125 * lilacChaserScale),
+            });
           return;
         }
 
@@ -667,11 +822,11 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       };
 
       const drawLilacChaser = (arena: Arena, elapsedSec: number) => {
-        const hudHeight = Math.max(58, Math.min(72, arena.height * 0.09));
         const cx = arena.width / 2;
-        const cy = (arena.height + hudHeight) / 2;
-        const orbit = Math.min(arena.width, arena.height - hudHeight) * 0.31;
-        const dotRadius = Math.max(8, orbit * 0.13);
+        const cy = arena.height / 2;
+        const minSide = Math.min(arena.width, arena.height);
+        const orbit = minSide * 0.3381 * lilacChaserScale;
+        const dotRadius = Math.max(4, minSide * 0.0399 * lilacChaserScale);
         const hiddenIndex = Math.floor(elapsedSec * 10) % lilacDotCount;
 
         lilacGfx.clear();
@@ -680,7 +835,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           const angle = -Math.PI / 2 + (i / lilacDotCount) * fullCircle;
           lilacGfx
             .circle(cx + Math.cos(angle) * orbit, cy + Math.sin(angle) * orbit, dotRadius)
-            .fill({ color: 0xff00fe, alpha: 0.86 });
+            .fill({ color: lilacChaserColor });
         }
       };
 
@@ -717,7 +872,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           target: modeTitle[mode] ?? mode,
           response,
           mode,
-          pattern,
+          pattern: activePattern,
           acquired_targets: acquiredTargets,
           average_fps: Math.round(averageFps * 10) / 10,
           duration_ms: elapsed,
@@ -746,6 +901,87 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           fixation_duration_ms: enableWebgazer ? minimumFixationDurationMs : undefined,
           gaze_sample_columns: enableWebgazer ? [...oculomotorGazeSampleColumns] : undefined,
           gaze_samples: enableWebgazer ? gazeSamples : undefined,
+        });
+      };
+
+      const ensureTargetLetter = (index: number) => {
+        if (!targetLetters[index]) {
+          const text = new Text();
+          text.anchor.set(0.5);
+          app.stage.addChild(text);
+          targetLetters[index] = text;
+        }
+        return targetLetters[index];
+      };
+
+      const hideTargetLetters = (fromIndex = 0) => {
+        for (let index = fromIndex; index < targetLetters.length; index += 1) {
+          targetLetters[index].visible = false;
+        }
+      };
+
+      const drawTargetLetters = (count: number, elapsedSec: number, jumpBucket: number) => {
+        if (!letterEnabled) {
+          hideTargetLetters();
+          return;
+        }
+        const bucket = mode === 'reaction-jumps' ? jumpBucket : Math.floor(elapsedSec / 2);
+        const formScale = targetShape === 'cross'
+          ? 0.72
+          : targetShape === 'diamond'
+            ? 0.86
+            : targetShape === 'ring'
+              ? 0.82
+              : targetShape === 'square'
+                ? 1.05
+                : targetShape === 'triangle'
+                  ? 0.76
+                  : 1;
+        for (let index = 0; index < count; index += 1) {
+          const frame = frames[index];
+          const text = ensureTargetLetter(index);
+          text.text = String.fromCharCode(65 + ((bucket * 7 + index * 11) % 26));
+          text.style = {
+            fontFamily: typography.fontFamily,
+            fontSize: Math.max(6, frame.radiusPx * formScale * letterScale),
+            fontWeight: letterWeight,
+            fill: letterColor,
+          };
+          text.x = frame.x;
+          text.y = frame.y;
+          text.alpha = frame.alpha;
+          text.visible = true;
+        }
+        hideTargetLetters(count);
+      };
+
+      const drawTrail = (count: number, elapsedMs: number) => {
+        trailGfx.clear();
+        if (!showTrail) {
+          trailFrames.length = 0;
+          return;
+        }
+        if (elapsedMs - lastTrailSampleMs >= 55) {
+          lastTrailSampleMs = elapsedMs;
+          trailFrames.push(frames
+            .slice(0, count)
+            .filter((frame) => frame.role === 'target')
+            .map(({ x, y, radiusPx, color, alpha }) => ({ x, y, radiusPx, color, alpha })));
+          if (trailFrames.length > 16) trailFrames.shift();
+        }
+        trailFrames.forEach((snapshot, snapshotIndex) => {
+          const ageAlpha = ((snapshotIndex + 1) / trailFrames.length) * 0.28;
+          snapshot.forEach((frame) => {
+            drawShape(
+              trailGfx,
+              targetShape === 'custom' ? 'circle' : targetShape,
+              frame.x,
+              frame.y,
+              frame.radiusPx,
+              frame.color,
+              frame.alpha * ageAlpha,
+            );
+          });
         });
       };
 
@@ -824,7 +1060,6 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         const elapsedMs = getElapsedMs();
         const elapsedSec = elapsedMs / 1000;
         const remainingMs = Math.max(0, durationMs - elapsedMs);
-        const hudHeight = Math.max(58, Math.min(72, arena.height * 0.09));
 
         bgGfx.clear().rect(0, 0, arena.width, arena.height).fill({
           color: backgroundColor,
@@ -837,7 +1072,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           bgSprite.y = 0;
         }
 
-        drawGuides(arena, hudHeight);
+        drawGuides(arena);
         drawHud(remainingMs);
 
         targetGfx.clear();
@@ -846,10 +1081,13 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         lilacGfx.visible = mode === 'lilac-chaser';
 
         if (mode === 'lilac-chaser') {
+          trailGfx.clear();
+          trailFrames.length = 0;
+          hideTargetLetters();
           latestTarget = {
             x: arena.width / 2,
-            y: (arena.height + hudHeight) / 2,
-            radiusPx,
+            y: arena.height / 2,
+            radiusPx: baseRadiusPx,
             color: targetColor,
             alpha: 1,
             role: 'target',
@@ -858,15 +1096,21 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           return;
         }
 
-        const activePattern = mode === 'reaction-jumps'
-          ? 'randomWalk'
-          : mode === 'multi-object'
-            ? 'randomWalk'
-            : pattern;
-        const jumpBucket = Math.floor(elapsedSec / 1.15);
-        const travelPx = mode === 'reaction-jumps'
-          ? jumpBucket * Math.max(260, Math.min(arena.width, arena.height) * 0.55)
-          : elapsedSec * speedPxPerSec;
+        const speedPxPerSec = ConvertOculomotorSpeedToPixels(
+          speedValue,
+          speedUnit,
+          arena,
+          viewingDistanceCm,
+          cssPxPerCm,
+        );
+        const radiusPx = GetOculomotorRadiusPx(behavior, elapsedSec, baseRadiusPx);
+        const direction = IsOculomotorPatternReversible(activePattern) ? motionDirection : 1;
+        const travelPx = GetOculomotorTravelPx(behavior, elapsedSec, speedPxPerSec) * direction;
+        const reactionJumpDistancePx = Math.min(
+          820,
+          Math.max(420, Math.min(arena.width, arena.height) * 0.55),
+        );
+        const jumpBucket = Math.floor(Math.abs(travelPx) / reactionJumpDistancePx);
         const count = sampleOculomotorPatternInto(
           frames,
           activePattern,
@@ -875,10 +1119,10 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
             radiusPx,
             speedPxPerSec,
             travelPx,
-            targetCount: 1,
+            targetCount: mode === 'multi-object' ? targetCount : 1,
             distractorCount: mode === 'multi-object' ? distractorCount : 0,
             colorA: targetColor,
-            colorB: pixiColors.accent,
+            colorB: distractorColor,
             opacity,
             jitter: bounceJitter,
           },
@@ -886,6 +1130,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         );
 
         latestTarget = frames[0] ?? null;
+        drawTrail(count, elapsedMs);
         const isReactionFlash = performance.now() < flashUntil;
         for (let i = 0; i < count; i += 1) {
           if (customTexture) {
@@ -899,17 +1144,11 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
               sprite.alpha = frames[i].alpha;
             }
           } else {
-            drawTargetShape(targetGfx, frames[i], isReactionFlash && i === 0, targetShape, backgroundColor);
+            drawTargetShape(targetGfx, frames[i], isReactionFlash && i === 0, targetShape);
           }
         }
         hideTargetSprites(count);
-
-        if (mode === 'reaction-jumps' && latestTarget) {
-          reactionLetter.text = String.fromCharCode(65 + (jumpBucket % 26));
-          reactionLetter.x = latestTarget.x;
-          reactionLetter.y = latestTarget.y;
-          reactionLetter.visible = true;
-        }
+        drawTargetLetters(count, elapsedSec, jumpBucket);
       };
 
       const tick = () => {

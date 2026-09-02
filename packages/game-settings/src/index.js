@@ -5,7 +5,8 @@ export const gameSettingsMaximumJsonBytes = 64 * 1024;
 const identifierPattern = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
 const fieldKeyPattern = /^[a-z][A-Za-z0-9_.-]{0,63}$/;
 const sensitiveFieldKeyPattern = /(auth|authorization|birthday|cookie|credential|dob|email|jwt|name|participant|password|phone|secret|session|token|user)/i;
-const fieldTypes = new Set(['checkbox', 'list', 'slider']);
+const fieldTypes = new Set(['checkbox', 'color', 'list', 'slider']);
+const colorPattern = /^#[0-9a-f]{6}$/i;
 
 export function IsGameSettingsDefinition(value, expectedGameId) {
   try {
@@ -87,6 +88,10 @@ export function NormalizeGameSettingsValues(definition, value) {
     if (field.type === 'checkbox' && typeof selected !== 'boolean') {
       throw new TypeError(`${field.key} must be a boolean.`);
     }
+    if (field.type === 'color'
+      && (typeof selected !== 'string' || !colorPattern.test(selected))) {
+      throw new TypeError(`${field.key} must be a six-digit hex color.`);
+    }
     if (field.type === 'slider'
       && (!Number.isFinite(selected)
         || selected < field.min
@@ -120,6 +125,14 @@ function ValidateField(field, label) {
     if (!IsExactObject(field, ['key', 'type', 'label', 'default'], ['description'])
       || typeof field.default !== 'boolean') {
       throw new TypeError(`${field.key || label} is not a valid checkbox.`);
+    }
+    return;
+  }
+  if (field.type === 'color') {
+    if (!IsExactObject(field, ['key', 'type', 'label', 'default'], ['description'])
+      || typeof field.default !== 'string'
+      || !colorPattern.test(field.default)) {
+      throw new TypeError(`${field.key || label} is not a valid color.`);
     }
     return;
   }

@@ -3,7 +3,14 @@ import type { JsPsych } from 'jspsych';
 import type { DrivingControlMode, DrivingRenderQualityLevel } from '../../utils/settings';
 import type { WebGazerCalibrationCopy } from '../../utils/webgazerCalibration';
 import type { DrivingWheelCalibration } from '../plugins/driving/driving-input';
-import type { OculomotorMode, OculomotorPattern, OculomotorTargetShape } from '../../pages/training/oculomotor/types';
+import type {
+  OculomotorBehavior,
+  OculomotorLetterWeight,
+  OculomotorMode,
+  OculomotorPattern,
+  OculomotorSpeedUnit,
+  OculomotorTargetShape,
+} from '../../pages/training/oculomotor/types';
 import type { ReadingStory } from '../../pages/training/reading/types';
 
 export type AppLanguage = 'zh' | 'en';
@@ -16,9 +23,13 @@ export interface BuildTimelineOverrides {
     mode?: OculomotorMode;
     pattern?: OculomotorPattern;
     durationSec?: number;
-    speedDegPerSec?: number;
-    targetSizeMm?: number;
+    behavior?: OculomotorBehavior;
+    speedUnit?: OculomotorSpeedUnit;
+    speedValue?: number;
+    targetRadiusPx?: number;
+    targetCount?: number;
     distractorCount?: number;
+    distractorBrightness?: number;
     targetColor?: string;
     backgroundColor?: string;
     targetShape?: OculomotorTargetShape;
@@ -27,6 +38,16 @@ export interface BuildTimelineOverrides {
     backgroundImage?: string;
     audio?: string;
     bounceJitter?: number;
+    motionDirection?: 1 | -1;
+    showTrail?: boolean;
+    letterEnabled?: boolean;
+    letterColor?: string;
+    letterWeight?: OculomotorLetterWeight;
+    letterScale?: number;
+    lilacChaserScale?: number;
+    lilacChaserColor?: string;
+    viewingDistanceCm?: number;
+    cssPxPerCm?: number;
     showGazepoint?: boolean;
     webGazerCalibration?: WebGazerCalibrationCopy;
   };

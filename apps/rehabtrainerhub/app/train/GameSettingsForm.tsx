@@ -150,6 +150,31 @@ function GameSettingControl({
     );
   }
 
+  if (field.type === 'color') {
+    const colorValue = typeof value === 'string' ? value : field.default;
+    return (
+      <label className="grid cursor-pointer gap-2" htmlFor={`game-setting-${field.key}`}>
+        <span className="grid gap-0.5">
+          <span className="font-extrabold text-[var(--heading)]">{label}</span>
+          {description && <span className="text-sm leading-5 text-[var(--text-muted)]">{description}</span>}
+        </span>
+        <span className="flex min-h-11 items-center gap-3 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2">
+          <input
+            aria-label={label}
+            className="h-8 w-12 cursor-pointer rounded border-0 bg-transparent p-0"
+            id={`game-setting-${field.key}`}
+            onChange={(event) => onChange(event.target.value)}
+            type="color"
+            value={colorValue}
+          />
+          <output className="font-mono text-sm font-black uppercase text-[var(--heading)]">
+            {colorValue}
+          </output>
+        </span>
+      </label>
+    );
+  }
+
   if (field.type === 'slider') {
     const numericValue = typeof value === 'number' ? value : field.default;
     const unit = field.unit ? ResolveGameSettingsText(field.unit, locale) : '';

@@ -23,6 +23,11 @@ export interface GameSettingCheckboxField extends GameSettingFieldBase {
   default: boolean;
 }
 
+export interface GameSettingColorField extends GameSettingFieldBase {
+  type: 'color';
+  default: string;
+}
+
 export interface GameSettingSliderField extends GameSettingFieldBase {
   type: 'slider';
   default: number;
@@ -40,6 +45,7 @@ export interface GameSettingListField extends GameSettingFieldBase {
 
 export type GameSettingField =
   | GameSettingCheckboxField
+  | GameSettingColorField
   | GameSettingSliderField
   | GameSettingListField;
 
