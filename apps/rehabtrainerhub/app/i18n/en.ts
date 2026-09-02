@@ -37,8 +37,8 @@ export const en = {
       guide: {
         kicker: 'How it works',
         title: 'What is Rehab Trainer Hub?',
-        definition: 'Rehab Trainer Hub is a free, installable web application for general home-practice tools and educational information. It brings together self-directed movement, visual, cognitive, and oral activities, including built-in games and reviewed developer games. Users can compare activities, adjust stimulus parameters, and start a session in the browser. The site is not a medical facility or occupational therapy clinic and does not provide individualized assessment, diagnosis, medical orders, or treatment.',
-        updated: 'Site content and feature description last updated: August 27, 2026',
+        definition: 'Rehab Trainer Hub (trainerhub.cc) is a free, installable web application for general home-practice tools and educational information. It brings together self-directed movement, visual, cognitive, and oral activities, including built-in games and reviewed developer games. Users can compare activities, adjust stimulus parameters, and start a session in the browser. The site is not a medical facility or occupational therapy clinic and does not provide individualized assessment, diagnosis, medical orders, or treatment.',
+        updated: 'Site content and feature description last updated: September 2, 2026',
         chooseTitle: 'How do I choose a home-practice activity?',
         chooseBody: 'Use the purpose filters or name search, read the operating summary on each activity card, and then choose an item to try. Categories organize activities; they do not determine a disease, ability, or suitable population. If you are unsure whether an activity fits your current condition, or have an illness, injury, or concern, consult a physician or legally practicing healthcare professional first.',
         prepareTitle: 'What should I prepare before starting?',

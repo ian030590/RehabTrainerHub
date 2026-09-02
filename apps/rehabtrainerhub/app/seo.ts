@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { hubFullName, hubLocalName, hubName } from './hubBrand';
+import { hubAlternateNames, hubFullName, hubLocalName } from './hubBrand';
 import { zhTW } from './i18n';
 import { siteUrls } from './siteUrls';
 
 export const siteDescription =
-  '居家訓練網 Rehab Trainer Hub 是可安裝的居家練習遊戲平台，提供動作、視覺、認知與口腔練習、衛教資訊、每日任務與當次紀錄；不提供個別評估、診斷或治療。';
+  '居家訓練網（Rehab Trainer Hub，trainerhub.cc）提供居家練習遊戲、衛教資訊與當次紀錄；不提供個別評估、診斷或治療。';
 
 export const gamePlatformDescription =
   '居家訓練網提供內建與經審核的開發者居家練習遊戲；可在平台遊玩，也能將每個遊戲以 PWA 單獨安裝，並了解 HTML／ZIP 投稿與隔離執行機制。';
@@ -23,7 +23,7 @@ const hubApplicationId = `${hubUrl}#application`;
 const maintainerId = `${hubUrl}qa/#professional-background`;
 const repositoryUrl = 'https://github.com/ian030590/RehabTrainerHub';
 
-export const siteContentLastModified = '2026-08-27';
+export const siteContentLastModified = '2026-09-02';
 
 export function CreateSeoMetadata({
   title,
@@ -90,7 +90,7 @@ export const websiteJsonLd = {
   '@type': 'WebSite',
   '@id': websiteId,
   name: hubLocalName,
-  alternateName: [hubName, hubFullName],
+  alternateName: hubAlternateNames,
   url: hubUrl,
   inLanguage: 'zh-TW',
   description: siteDescription,
@@ -103,7 +103,7 @@ export const organizationJsonLd = {
   '@type': 'Organization',
   '@id': organizationId,
   name: hubLocalName,
-  alternateName: [hubName, hubFullName],
+  alternateName: hubAlternateNames,
   url: hubUrl,
   logo: {
     '@type': 'ImageObject',
@@ -144,7 +144,7 @@ export const hubApplicationJsonLd = {
   '@type': 'WebApplication',
   '@id': hubApplicationId,
   name: hubLocalName,
-  alternateName: [hubName, hubFullName],
+  alternateName: hubAlternateNames,
   url: hubUrl,
   description: siteDescription,
   applicationCategory: 'EducationalApplication',
