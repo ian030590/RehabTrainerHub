@@ -32,6 +32,7 @@ export interface WebGazerCalibrationCopy {
   calibrationDoneText: string;
   cameraInstructions: string;
   cameraPermissionButtonText: string;
+  cameraPreviewLabel: string;
   cameraTitle: string;
   continueButtonText: string;
   instruction1: string;
@@ -106,6 +107,7 @@ const officialCalibrationPoints = [
 const minimumPercentInRoi = 50;
 const eyeSignalCheckDurationMs = 3000;
 const eyeSignalSamplingIntervalMs = 100;
+const webGazerLivePreviewClass = 'webgazer-live-preview';
 
 function GetWebGazer(): WebGazerLike | undefined {
   return (window as Window & { webgazer?: WebGazerLike }).webgazer;
@@ -113,6 +115,22 @@ function GetWebGazer(): WebGazerLike | undefined {
 
 function GetWebGazerExtension(jsPsych: JsPsych): WebGazerExtensionLike | undefined {
   return jsPsych.extensions?.webgazer as unknown as WebGazerExtensionLike | undefined;
+}
+
+function ActivateWebGazerPreview(label: string): void {
+  const container = document.querySelector<HTMLElement>('#webgazerVideoContainer');
+  if (!container) return;
+  container.classList.add(webGazerLivePreviewClass);
+  container.setAttribute('aria-label', label);
+  container.setAttribute('role', 'img');
+}
+
+function DeactivateWebGazerPreview(): void {
+  const container = document.querySelector<HTMLElement>('#webgazerVideoContainer');
+  if (!container) return;
+  container.classList.remove(webGazerLivePreviewClass);
+  container.removeAttribute('aria-label');
+  container.removeAttribute('role');
 }
 
 function CreateInstructionPanel(step: string, title: string, paragraphs: readonly string[]) {
@@ -210,6 +228,7 @@ function CreateEyeSignalCheck(
       const stopPreview = () => {
         extension?.pause?.();
         extension?.hideVideo?.();
+        DeactivateWebGazerPreview();
       };
 
       const finishWithSignal = () => {
@@ -249,6 +268,7 @@ function CreateEyeSignalCheck(
         );
 
         extension?.showVideo?.();
+        ActivateWebGazerPreview(copy.cameraPreviewLabel);
         extension?.resume?.();
         stopGazeUpdates = extension?.onGazeUpdate?.((prediction) => {
           if (IsValidEyeSignal(prediction)) finishWithSignal();
@@ -356,6 +376,7 @@ export async function ResetWebGazerCalibrationData() {
 /** Stop the global WebGazer runtime when a jsPsych host is unmounted/cancelled. */
 export function CleanupWebGazerRuntime() {
   const webgazer = GetWebGazer();
+  DeactivateWebGazerPreview();
   const cleanupActions = [
     () => webgazer?.pause?.(),
     () => webgazer?.showVideo?.(false),
@@ -415,6 +436,8 @@ export function CreateWebGazerExperimentTimeline(
     `,
     button_text: copy.continueButtonText,
     data: { webgazer_flow_step: 'init_camera' },
+    on_load: () => ActivateWebGazerPreview(copy.cameraPreviewLabel),
+    on_finish: DeactivateWebGazerPreview,
   };
 
   const nativeCalibrationInstructions = {

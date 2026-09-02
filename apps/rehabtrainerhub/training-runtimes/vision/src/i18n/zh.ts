@@ -242,6 +242,7 @@ export const zh = {
   'settings.wg.cameraTitle': '攝影機權限',
   'settings.wg.cameraInstructions': '下一個畫面會請求攝影機權限並顯示即時頭像預覽。請用預覽確認完整臉部位於框內，距離不會過近或過遠；初始化可能需要數十秒。',
   'settings.wg.cameraPermissionButton': '我知道了',
+  'settings.wg.cameraPreviewLabel': '顯示臉部位置回饋的即時頭像預覽',
   'settings.wg.continueButton': '繼續',
   'settings.wg.inst1': '請允許瀏覽器使用攝影機，並讓臉部位於攝影機畫面中央；回饋框轉為綠色後即可按下「繼續」。',
   'settings.wg.inst2': '開始後會依序出現校正點。請先注視圓點中心，再用滑鼠點擊該圓點；每個位置會重複 2 次。',

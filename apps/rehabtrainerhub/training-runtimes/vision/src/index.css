@@ -164,6 +164,19 @@ html, body, #root {
   line-height: 1.7;
 }
 
+/* WebGazer appends its preview directly to body without a z-index. Keep the
+   live video and face overlay above the fixed training stage while positioning. */
+.webgazer-live-preview {
+  top: max(20px, env(safe-area-inset-top)) !important;
+  left: calc(50% - 160px) !important;
+  z-index: 1100 !important;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+}
+
 .webgazer-signal-panel {
   position: relative;
 }

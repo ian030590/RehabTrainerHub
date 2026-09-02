@@ -244,6 +244,7 @@ export const en: Record<TranslationKey, string> = {
   'settings.wg.cameraTitle': 'Camera Access',
   'settings.wg.cameraInstructions': 'The next screen will request camera access and show a live face preview. Use it to confirm that your full face is in the frame and is not too close to or too far from the camera. Initialization may take several seconds.',
   'settings.wg.cameraPermissionButton': 'Got it',
+  'settings.wg.cameraPreviewLabel': 'Live camera preview with face-position feedback',
   'settings.wg.continueButton': 'Continue',
   'settings.wg.inst1': 'Allow webcam access and center your face in the camera view. Continue becomes available when the feedback box turns green.',
   'settings.wg.inst2': 'Calibration points will appear. Fixate on the dot center, then click it. Each point repeats twice.',

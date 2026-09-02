@@ -366,6 +366,7 @@ function TrainingRuntimePage() {
             title: t('settings.wg.title'),
             cameraInstructions: t('settings.wg.cameraInstructions'),
             cameraPermissionButtonText: t('settings.wg.cameraPermissionButton'),
+            cameraPreviewLabel: t('settings.wg.cameraPreviewLabel'),
             cameraTitle: t('settings.wg.cameraTitle'),
             calibrationDoneText: t('settings.wg.calibrationDone'),
             continueButtonText: t('settings.wg.continueButton'),

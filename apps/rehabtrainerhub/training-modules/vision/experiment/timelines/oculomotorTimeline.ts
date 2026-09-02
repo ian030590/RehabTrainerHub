@@ -103,6 +103,7 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
       calibrationDoneText: 'Calibration and validation are complete.',
       cameraInstructions: 'The next screen will request camera access and help position your face.',
       cameraPermissionButtonText: 'Got it',
+      cameraPreviewLabel: 'Live camera preview with face-position feedback',
       cameraTitle: 'Camera access',
       continueButtonText: 'Continue',
       instruction1: 'Center your face in the camera view and look directly at the camera. Continue becomes available when the feedback box turns green.',

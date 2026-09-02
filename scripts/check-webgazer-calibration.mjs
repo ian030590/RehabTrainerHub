@@ -162,6 +162,9 @@ for (const marker of [
   "CreateEyeSignalCheck(jsPsych, copy, 'calibration', runState)",
   "CreateEyeSignalCheck(jsPsych, copy, 'validation', runState)",
   'extension?.showVideo?.()',
+  'ActivateWebGazerPreview(copy.cameraPreviewLabel)',
+  "const webGazerLivePreviewClass = 'webgazer-live-preview'",
+  'on_load: () => ActivateWebGazerPreview(copy.cameraPreviewLabel)',
   'extension?.onGazeUpdate?.',
   'extension?.startSampleInterval?.(eyeSignalSamplingIntervalMs)',
   'if (IsValidEyeSignal(prediction)) finishWithSignal()',
@@ -189,6 +192,11 @@ for (const forbidden of [
 assert.ok(
   visionCss.includes('.webgazer-flow-instructions'),
   'module-owned instruction panels must keep their scoped presentation styles',
+);
+assert.ok(
+  visionCss.includes('.webgazer-live-preview')
+    && visionCss.includes('z-index: 1100 !important'),
+  'the body-level WebGazer preview must render above the fixed training stage',
 );
 for (const forbiddenSelector of [
   '#webgazer-init-container',
@@ -399,6 +407,7 @@ for (const dictionary of [zh, en]) {
     'settings.wg.signalSkipButton',
     'settings.wg.signalSkippedText',
     'settings.wg.signalSkippedTitle',
+    'settings.wg.cameraPreviewLabel',
   ]) {
     assert.ok(dictionary.includes(`'${key}'`), `translation key missing: ${key}`);
   }

@@ -149,6 +149,8 @@ try {
   assert.equal(nativeInitState.disabled, true, 'official camera init must wait for a centered face');
   assert.equal(nativeInitState.videoVisible, true, 'head positioning must show the camera preview');
   assert.equal(nativeInitState.feedbackVisible, true, 'head positioning must show official face feedback');
+  assert.equal(nativeInitState.hasLivePreviewClass, true, 'camera init must promote the live preview above the training stage');
+  assert.equal(nativeInitState.previewUnobscured, true, 'camera init preview must be visually unobscured');
 
   await SetFaceCentered(cdp, sessionId);
   await WaitForValue(
@@ -170,11 +172,20 @@ try {
   const missingSignalState = await Evaluate(cdp, sessionId, `(() => ({
     calibrationStarted: Boolean(document.querySelector('#webgazer-calibrate-container')),
     previewVisible: getComputedStyle(document.querySelector('#webgazerVideoContainer')).display !== 'none',
+    previewUnobscured: (() => {
+      const preview = document.querySelector('#webgazerVideoContainer');
+      const rect = preview?.getBoundingClientRect();
+      return Boolean(rect) && document.elementsFromPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+      ).some((element) => element === preview || preview.contains(element));
+    })(),
     buttons: [...document.querySelectorAll('.webgazer-signal-actions button')]
       .map((button) => button.textContent.trim()),
   }))()`);
   assert.equal(missingSignalState.calibrationStarted, false, 'calibration must not start without an eye signal');
   assert.equal(missingSignalState.previewVisible, true, 'the missing-signal reminder must keep the face preview visible');
+  assert.equal(missingSignalState.previewUnobscured, true, 'the missing-signal preview must remain visually unobscured');
   assert.deepEqual(
     missingSignalState.buttons,
     ['Check again', 'Do not record eye-tracking results this time'],
@@ -734,7 +745,7 @@ function CreateBootstrapSource() {
       if (container) return container;
       container = document.createElement('div');
       container.id = 'webgazerVideoContainer';
-      container.style.cssText = 'position:fixed;z-index:99999;top:20px;left:20px;width:320px;height:240px';
+      container.style.cssText = 'position:fixed;top:20px;left:20px;width:320px;height:240px';
       const video = document.createElement('video');
       video.id = 'webgazerVideoFeed';
       Object.defineProperty(video, 'videoWidth', { configurable: true, value: 640 });
@@ -917,11 +928,17 @@ async function ReadNativeInitState(cdpClient, targetSessionId) {
     const button = document.querySelector('#jspsych-wg-cont');
     const video = document.querySelector('#webgazerVideoContainer');
     const feedback = document.querySelector('#webgazerFaceFeedbackBox');
+    const rect = video?.getBoundingClientRect();
     return {
       disabled: button?.disabled ?? null,
       hasNativeContainer: Boolean(document.querySelector('#webgazer-init-container')),
+      hasLivePreviewClass: video?.classList.contains('webgazer-live-preview') ?? false,
       videoVisible: Boolean(video) && getComputedStyle(video).display !== 'none',
       feedbackVisible: Boolean(feedback) && getComputedStyle(feedback).display !== 'none',
+      previewUnobscured: Boolean(rect) && document.elementsFromPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+      ).some((element) => element === video || video.contains(element)),
     };
   })()`);
 }
