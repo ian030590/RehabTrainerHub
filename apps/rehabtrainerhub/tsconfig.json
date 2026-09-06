@@ -29,6 +29,9 @@
       ],
       "@rehab-trainer/hub-modules/*": [
         "./training-modules/*"
+      ],
+      "@rehab-trainer/games/*": [
+        "./games/*"
       ]
     },
     "plugins": [
@@ -46,6 +49,7 @@
   ],
   "exclude": [
     "node_modules",
+    "games",
     "training-runtimes",
     "training-modules/motor",
     "training-modules/vision",

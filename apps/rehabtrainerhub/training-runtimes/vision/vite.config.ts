@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: { alias: {
     '@rehab-trainer/ui': fileURLToPath(new URL('../../../../packages/ui/src', import.meta.url)),
     '@rehab-trainer/hub-modules': fileURLToPath(new URL('../../training-modules', import.meta.url)),
+    '@rehab-trainer/games': fileURLToPath(new URL('../../games', import.meta.url)),
   } },
   server: { watch: { usePolling: true, interval: 750, ignored: ['**/tsconfig.json', '**/tsconfig.*.json', '**/*.tsbuildinfo'] } },
   build: {

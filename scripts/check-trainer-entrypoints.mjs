@@ -241,6 +241,13 @@ function ResolveProjectImport(importerPath, specifier) {
     );
   }
 
+  if (specifier.startsWith('@rehab-trainer/games/')) {
+    return ResolveModule(
+      resolve(repoRoot, 'apps/rehabtrainerhub/games'),
+      specifier.slice('@rehab-trainer/games/'.length),
+    );
+  }
+
   return null;
 }
 

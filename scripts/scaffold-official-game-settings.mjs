@@ -111,6 +111,12 @@ const definitions = {
     duration(60, 300),
     slider('speed', '移動速度', 'Movement speed', 5, 1, 10, 1),
     slider('targetSize', '刺激大小', 'Stimulus size', 48, 24, 96, 4, 'px', 'px'),
+    {
+      key: 'targetColor',
+      type: 'color',
+      label: text('目標顏色', 'Target color'),
+      default: '#76d900',
+    },
   ], [
     checkbox('webgazerEnabled', '啟用鏡頭眼動追蹤', 'Enable camera gaze tracking', false),
     checkbox('gazePointVisible', '顯示注視點', 'Show gaze point', false),
