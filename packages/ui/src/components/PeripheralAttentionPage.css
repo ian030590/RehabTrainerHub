@@ -418,4 +418,114 @@ body.ufov-game-active .ufov-stage {
     height: var(--ufov-center-box-size);
     font-size: 20px;
   }
+
+  .spatial-grid-compass {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
+
+/* 8方向空間搜尋表現儀表板 (Spatial Search Dashboard) */
+.spatial-dashboard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg-card);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+  width: 100%;
+  max-width: 960px;
+  margin: 12px auto;
+}
+
+.spatial-dashboard-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.spatial-dashboard-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.spatial-grid-compass {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.compass-card {
+  padding: 12px 14px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compass-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.compass-card-dir {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.compass-card-tag {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 800;
+}
+
+.tag-good {
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.tag-mid {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.tag-poor {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.tag-none {
+  background: rgba(113, 113, 122, 0.2);
+  color: #71717a;
+  border: 1px solid rgba(113, 113, 122, 0.3);
+}
+
+.compass-card-stats {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.compass-card-stats strong {
+  color: var(--text-primary);
+}
+

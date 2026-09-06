@@ -3,16 +3,60 @@
   "gameId": "ufov",
   "sections": [
     {
-      "id": "training",
+      "id": "core",
       "title": {
         "zh-TW": "活動設定",
         "en": "Session settings"
       },
       "description": {
-        "zh-TW": "設定值只用於這次活動。",
-        "en": "These values apply only to this session."
+        "zh-TW": "設定活動核心訓練項目與測驗流程。",
+        "en": "Configure core activity and flow settings."
       },
       "fields": [
+        {
+          "key": "subtestId",
+          "type": "list",
+          "label": {
+            "zh-TW": "訓練項目",
+            "en": "Subtest"
+          },
+          "default": 1,
+          "options": [
+            {
+              "value": 1,
+              "label": {
+                "zh-TW": "Subtest 1 處理速度",
+                "en": "Subtest 1 Processing Speed"
+              },
+              "description": {
+                "zh-TW": "辨認中央目標是汽車或卡車。",
+                "en": "Identify whether the center vehicle is a car or truck."
+              }
+            },
+            {
+              "value": 2,
+              "label": {
+                "zh-TW": "Subtest 2 分散注意力",
+                "en": "Subtest 2 Divided Attention"
+              },
+              "description": {
+                "zh-TW": "辨認中央車輛，並指出周邊目標方向。",
+                "en": "Identify center vehicle and peripheral target direction."
+              }
+            },
+            {
+              "value": 3,
+              "label": {
+                "zh-TW": "Subtest 3 選擇性注意力",
+                "en": "Subtest 3 Selective Attention"
+              },
+              "description": {
+                "zh-TW": "在干擾物中辨認中央車輛，並指出周邊目標方向。",
+                "en": "Identify center vehicle among distractors and peripheral direction."
+              }
+            }
+          ]
+        },
         {
           "key": "mode",
           "type": "list",
@@ -20,20 +64,61 @@
             "zh-TW": "活動模式",
             "en": "Activity mode"
           },
-          "default": "practice",
+          "default": "formal",
           "options": [
+            {
+              "value": "formal",
+              "label": {
+                "zh-TW": "正式模式",
+                "en": "Formal (Recorded)"
+              },
+              "description": {
+                "zh-TW": "階梯測量反應速度並記錄結果。",
+                "en": "Adaptive staircase measurement with result saving."
+              }
+            },
             {
               "value": "practice",
               "label": {
                 "zh-TW": "練習模式",
                 "en": "Practice"
+              },
+              "description": {
+                "zh-TW": "固定題數練習並提供即時答題回饋。",
+                "en": "Fixed practice trials with immediate feedback."
+              }
+            }
+          ]
+        },
+        {
+          "key": "stopCondition",
+          "type": "list",
+          "label": {
+            "zh-TW": "終止條件",
+            "en": "Stop condition"
+          },
+          "default": "adaptive_80",
+          "options": [
+            {
+              "value": "adaptive_80",
+              "label": {
+                "zh-TW": "信度 80% 門檻（推薦）",
+                "en": "80% confidence threshold (Recommended)"
+              },
+              "description": {
+                "zh-TW": "自適應階梯法；收斂出穩定處理速度後結束。",
+                "en": "Adaptive staircase; ends when threshold stabilizes."
               }
             },
             {
-              "value": "formal",
+              "value": "fixed_trials",
               "label": {
-                "zh-TW": "正式模式",
-                "en": "Formal"
+                "zh-TW": "固定題數",
+                "en": "Fixed trial count"
+              },
+              "description": {
+                "zh-TW": "完成指定測試題數後結算。",
+                "en": "Concludes after completing the configured trial count."
               }
             }
           ]
@@ -45,30 +130,237 @@
             "zh-TW": "測試次數",
             "en": "Trial count"
           },
-          "default": 30,
+          "description": {
+            "zh-TW": "正式題或練習題之指定測試上限。",
+            "en": "Configured trial limit for formal or practice sessions."
+          },
+          "default": 48,
           "min": 10,
-          "max": 120,
-          "step": 10,
+          "max": 240,
+          "step": 1,
           "unit": {
-            "zh-TW": "次",
+            "zh-TW": "題",
             "en": "trials"
           }
-        },
+        }
+      ]
+    },
+    {
+      "id": "stimulus",
+      "title": {
+        "zh-TW": "刺激視覺與對比度",
+        "en": "Stimulus visual and contrast"
+      },
+      "description": {
+        "zh-TW": "調整目標大小、周邊偏心距離與刺激對比度。",
+        "en": "Adjust target size, peripheral eccentricity, and contrast."
+      },
+      "fields": [
         {
           "key": "contrastPercent",
           "type": "slider",
           "label": {
-            "zh-TW": "刺激對比",
+            "zh-TW": "刺激對比度",
             "en": "Stimulus contrast"
           },
+          "description": {
+            "zh-TW": "調整背景灰階控制對比，目標物保持白色。",
+            "en": "Controls contrast by background luminance; targets remain white."
+          },
           "default": 100,
-          "min": 20,
+          "min": 5,
           "max": 100,
-          "step": 10,
+          "step": 1,
           "unit": {
             "zh-TW": "%",
             "en": "%"
           }
+        },
+        {
+          "key": "targetVisualAngleDeg",
+          "type": "slider",
+          "label": {
+            "zh-TW": "周邊偏心視角",
+            "en": "Peripheral eccentricity"
+          },
+          "description": {
+            "zh-TW": "周邊目標刺激偏心視角（5.0° 至 35.0°）。",
+            "en": "Peripheral target eccentricity visual angle (5.0° to 35.0°)."
+          },
+          "default": 15,
+          "min": 5,
+          "max": 35,
+          "step": 0.5,
+          "unit": {
+            "zh-TW": "°",
+            "en": "°"
+          }
+        },
+        {
+          "key": "vehicleVisualAngleDeg",
+          "type": "slider",
+          "label": {
+            "zh-TW": "車輛大小視角",
+            "en": "Vehicle size"
+          },
+          "description": {
+            "zh-TW": "車輛刺激圖案視角大小（0.8° 至 5.0°）。",
+            "en": "Vehicle stimulus size visual angle (0.8° to 5.0°)."
+          },
+          "default": 2.5,
+          "min": 0.8,
+          "max": 5,
+          "step": 0.1,
+          "unit": {
+            "zh-TW": "°",
+            "en": "°"
+          }
+        }
+      ]
+    },
+    {
+      "id": "screen",
+      "title": {
+        "zh-TW": "螢幕尺寸與觀看距離校準",
+        "en": "Screen and viewing distance calibration"
+      },
+      "description": {
+        "zh-TW": "輸入螢幕物理尺寸與觀看距離，以精準換算視角參考值。",
+        "en": "Enter physical display dimensions and distance for visual angle conversion."
+      },
+      "fields": [
+        {
+          "key": "screenWidthCm",
+          "type": "slider",
+          "label": {
+            "zh-TW": "螢幕顯示寬度",
+            "en": "Display width"
+          },
+          "default": 53.1,
+          "min": 10,
+          "max": 250,
+          "step": 0.1,
+          "unit": {
+            "zh-TW": "cm",
+            "en": "cm"
+          }
+        },
+        {
+          "key": "screenHeightCm",
+          "type": "slider",
+          "label": {
+            "zh-TW": "螢幕顯示高度",
+            "en": "Display height"
+          },
+          "default": 29.9,
+          "min": 10,
+          "max": 200,
+          "step": 0.1,
+          "unit": {
+            "zh-TW": "cm",
+            "en": "cm"
+          }
+        },
+        {
+          "key": "viewingDistanceCm",
+          "type": "slider",
+          "label": {
+            "zh-TW": "觀看距離",
+            "en": "Viewing distance"
+          },
+          "default": 50,
+          "min": 20,
+          "max": 300,
+          "step": 1,
+          "unit": {
+            "zh-TW": "cm",
+            "en": "cm"
+          }
+        }
+      ]
+    },
+    {
+      "id": "directions",
+      "title": {
+        "zh-TW": "周邊刺激呈現方位",
+        "en": "Peripheral target directions"
+      },
+      "description": {
+        "zh-TW": "勾選啟用的周邊目標出現方位（支援 8 個空間方向）。",
+        "en": "Select enabled presentation directions for peripheral targets."
+      },
+      "fields": [
+        {
+          "key": "axis0Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "上（↑）",
+            "en": "Up (↑)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis1Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "右上（↗）",
+            "en": "Up-Right (↗)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis2Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "右（→）",
+            "en": "Right (→)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis3Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "右下（↘）",
+            "en": "Down-Right (↘)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis4Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "下（↓）",
+            "en": "Down (↓)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis5Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "左下（↙）",
+            "en": "Down-Left (↙)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis6Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "左（←）",
+            "en": "Left (←)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis7Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "左上（↖）",
+            "en": "Up-Left (↖)"
+          },
+          "default": true
         }
       ]
     }

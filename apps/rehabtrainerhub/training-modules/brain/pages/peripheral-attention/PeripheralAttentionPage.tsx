@@ -68,6 +68,7 @@ export interface PeripheralAttentionPageProps {
   backPath: string;
   lang: 'zh' | 'en';
   moduleId: string;
+  subjectId?: string;
   initialSubtestId?: SubtestId;
   initialMode?: PeripheralAttentionRunMode;
   trialCount?: number;
@@ -130,6 +131,7 @@ interface TrialRecord extends PeripheralAttentionFrameSyncMeasurement {
   contrastPercent: number;
   targetVisualAngleDeg: number;
   vehicleVisualAngleDeg: number;
+  mouseTrajectory?: { x: number; y: number; t: number }[];
 }
 
 interface TimingAttemptRecord extends PeripheralAttentionFrameSyncMeasurement {
@@ -261,6 +263,8 @@ const peripheralTargetSlots = slots.filter((slot): slot is TargetSlot => (
 ));
 const experimentRunAbortSignals = new WeakMap<JsPsych, AbortSignal>();
 
+const directionArrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+
 const copy = {
   zh: {
     title: '周邊視野訓練',
@@ -277,6 +281,8 @@ const copy = {
     csvOnlyNote: '完整結果可下載為 CSV。',
     practiceResult: '練習答對',
     downloadCsv: '下載 CSV',
+    downloadCsvClinical: '下載 CSV 數據',
+    downloadJsonTrajectory: '下載 JSON (含軌跡)',
     backHome: '返回清單',
     backLobby: '返回大廳',
     actualProcessingSpeed: '刺激呈現時間',
@@ -291,6 +297,15 @@ const copy = {
     syncResume: '重新檢查並繼續',
     noPeripheral: '無',
     directions: ['上', '右上', '右', '右下', '下', '左下', '左', '左上'],
+    spatialDashboardTitle: '8 方向空間搜尋表現分析',
+    spatialDashboardSubtitle: '計算在不同視野方向（上、右上、右、右下、下、左下、左、左上）的搜尋成功率與反應耗時',
+    compassUntested: '未測試',
+    compassGood: '良好',
+    compassMid: '中等',
+    compassPoor: '偏弱',
+    compassTotal: '呈現次數',
+    compassAvgRt: '平均作答反應',
+    compassAvgDuration: '刺激呈現時間',
     subtests: {
       1: 'Subtest 1 處理速度',
       2: 'Subtest 2 分散注意力',
@@ -317,6 +332,8 @@ const copy = {
     csvOnlyNote: 'Complete results can be downloaded as CSV.',
     practiceResult: 'Practice correct',
     downloadCsv: 'Download CSV',
+    downloadCsvClinical: 'Download CSV Data',
+    downloadJsonTrajectory: 'Download JSON (with Trajectory)',
     backHome: 'Back to List',
     backLobby: 'Back to Lobby',
     actualProcessingSpeed: 'Stimulus Presentation Time',
@@ -331,6 +348,15 @@ const copy = {
     syncResume: 'Check timing and continue',
     noPeripheral: 'None',
     directions: ['Up', 'Up right', 'Right', 'Down right', 'Down', 'Down left', 'Left', 'Up left'],
+    spatialDashboardTitle: '8-Direction Spatial Search Performance',
+    spatialDashboardSubtitle: 'Response rate and reaction time across visual field directions (Up, Up right, Right, Down right, Down, Down left, Left, Up left)',
+    compassUntested: 'Untested',
+    compassGood: 'Good',
+    compassMid: 'Moderate',
+    compassPoor: 'Needs attention',
+    compassTotal: 'Presentations',
+    compassAvgRt: 'Mean reaction time',
+    compassAvgDuration: 'Stimulus duration',
     subtests: {
       1: 'Subtest 1 Processing Speed',
       2: 'Subtest 2 Divided Attention',
@@ -696,10 +722,25 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     }
 
     const startTime = performance.now();
-    const centralResponse = await this.askCentral(displayElement, labels, abortSignal);
-    const peripheralResponse = subtest.hasPeripheral
-      ? await this.askAxis(displayElement, labels, abortSignal)
-      : undefined;
+    const mouseTrajectory: { x: number; y: number; t: number }[] = [];
+    const onMouseMove = (event: MouseEvent) => {
+      mouseTrajectory.push({
+        x: Math.round(event.clientX),
+        y: Math.round(event.clientY),
+        t: Math.round(performance.now() - startTime),
+      });
+    };
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+    let centralResponse: CentralTarget;
+    let peripheralResponse: number | undefined;
+    try {
+      centralResponse = await this.askCentral(displayElement, labels, abortSignal);
+      peripheralResponse = subtest.hasPeripheral
+        ? await this.askAxis(displayElement, labels, abortSignal)
+        : undefined;
+    } finally {
+      window.removeEventListener('mousemove', onMouseMove);
+    }
     const responseTimeMs = performance.now() - startTime;
 
     const correct = centralResponse === stimulus.centralTarget
@@ -728,6 +769,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       contrastPercent: config.contrastPercent,
       targetVisualAngleDeg: config.targetVisualAngleDeg,
       vehicleVisualAngleDeg: config.vehicleVisualAngleDeg,
+      mouseTrajectory: mouseTrajectory.length > 0 ? mouseTrajectory : undefined,
     };
     return { timingAttempt, record };
   }
@@ -1005,6 +1047,7 @@ export function PeripheralAttentionPage({
   backPath,
   lang,
   moduleId,
+  subjectId = '',
   initialSubtestId = 1,
   initialMode = 'formal',
   trialCount = defaultMaxTestTrials,
@@ -1067,6 +1110,7 @@ export function PeripheralAttentionPage({
       gameTitle: labels.title,
       difficulty: data.mode,
       details: {
+        subjectId: subjectId || GetAuthUserNameFromToken() || 'participant',
         refreshMs: RoundMs(data.refresh_ms),
         refreshHz: RoundMs(data.refresh_hz),
         refresh60HzFamily: data.refresh_is_60hz_family,
@@ -1102,8 +1146,10 @@ export function PeripheralAttentionPage({
         ufovSummary: summary,
         ...thresholds,
         aborted: data.aborted,
+        mouseTrajectorySampleCount: data.trials.reduce((sum, item) => sum + (item.mouseTrajectory?.length ?? 0), 0),
       },
       detailRows: data.trials.map((item) => ({
+        Subject_ID: subjectId || '-',
         Subtest: item.subtestId,
         Phase: item.practice ? 'practice' : 'test',
         Trial: item.trialNumber,
@@ -1136,6 +1182,7 @@ export function PeripheralAttentionPage({
         Contrast_Percent: item.contrastPercent,
         Target_Visual_Angle_Deg: item.targetVisualAngleDeg,
         Vehicle_Visual_Angle_Deg: item.vehicleVisualAngleDeg,
+        Mouse_Trajectory_Samples: item.mouseTrajectory?.length ?? 0,
       })),
     };
     setResults(data.results);
@@ -1146,7 +1193,7 @@ export function PeripheralAttentionPage({
     void onSaveRecord?.(record);
     allowProgrammaticFullscreenExitRef.current = true;
     void ExitFullscreenIfActive();
-  }, [labels, moduleId, onSaveRecord]);
+  }, [labels, moduleId, onSaveRecord, subjectId]);
 
   const startRun = async (config: PeripheralAttentionRunConfig) => {
     const displayElement = displayRef.current;
@@ -1281,6 +1328,42 @@ export function PeripheralAttentionPage({
     return () => document.body.classList.remove('ufov-game-active');
   }, [isRunning]);
 
+  const dirStats = peripheralAttentionTargetAxes.map((axis) => {
+    const dirTrials = resultTrials.filter((t) => !t.practice && t.peripheralAxis === axis);
+    const dirCorrect = dirTrials.filter((t) => t.correct).length;
+    const totalCount = dirTrials.length;
+    const acc = totalCount > 0 ? Math.round((dirCorrect / totalCount) * 100) : null;
+    const avgRt = totalCount > 0 ? Math.round(dirTrials.reduce((s, t) => s + (t.responseTimeMs || 0), 0) / totalCount) : 0;
+    const avgDuration = totalCount > 0 ? RoundMs(dirTrials.reduce((s, t) => s + (t.actualDurationMs || t.durationMs || 0), 0) / totalCount) : 0;
+
+    let tagClass = 'tag-none';
+    let tagText = labels.compassUntested;
+    if (acc !== null) {
+      if (acc >= 80) {
+        tagClass = 'tag-good';
+        tagText = `${acc}% ${labels.compassGood}`;
+      } else if (acc >= 50) {
+        tagClass = 'tag-mid';
+        tagText = `${acc}% ${labels.compassMid}`;
+      } else {
+        tagClass = 'tag-poor';
+        tagText = `${acc}% ${labels.compassPoor}`;
+      }
+    }
+
+    return {
+      axis,
+      name: labels.directions[axis],
+      arrow: directionArrows[axis] ?? '',
+      totalCount,
+      acc,
+      avgRt,
+      avgDuration,
+      tagClass,
+      tagText,
+    };
+  });
+
   return (
     <main className="page-content ufov-page" id="main-content">
       <section className="ufov-shell" aria-labelledby="peripheral-attention-title">
@@ -1333,6 +1416,34 @@ export function PeripheralAttentionPage({
                   { label: labels.trial, value: savedRecord.detailRows?.length ?? 0 },
                 ]}
               />
+              {Number(savedRecord.details?.subtest) !== 1 && (
+                <div className="spatial-dashboard">
+                  <div className="spatial-dashboard-title">
+                    <h3>{labels.spatialDashboardTitle}</h3>
+                    <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--muted)' }}>
+                      {labels.spatialDashboardSubtitle}
+                    </p>
+                  </div>
+                  <div className="spatial-grid-compass">
+                    {dirStats.map((dir) => (
+                      <div key={dir.axis} className="compass-card">
+                        <div className="compass-card-header">
+                          <span className="compass-card-dir">
+                            <span style={{ fontSize: '16px' }}>{dir.arrow}</span>
+                            <span>{dir.name}</span>
+                          </span>
+                          <span className={`compass-card-tag ${dir.tagClass}`}>{dir.tagText}</span>
+                        </div>
+                        <div className="compass-card-stats">
+                          <span>{labels.compassTotal}：<strong>{dir.totalCount} {labels.trial}</strong></span>
+                          <span>{labels.compassAvgRt}：<strong>{dir.avgRt > 0 ? `${dir.avgRt} ms` : '--'}</strong></span>
+                          <span>{labels.compassAvgDuration}：<strong>{dir.avgDuration > 0 ? `${dir.avgDuration} ms` : '--'}</strong></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="ufov-table-wrap">
                 <table className="results-table">
                   <thead>
@@ -1367,6 +1478,22 @@ export function PeripheralAttentionPage({
                     ? onSaveRecord ? FormatSaveNote(labels, appName) : labels.csvOnlyNote
                     : `${labels.practiceResult} ${FormatPracticeScore(savedRecord)}`}
                 </strong>
+              </div>
+              <div className="ufov-export-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                <button
+                  className="btn btn-secondary"
+                  type="button"
+                  onClick={() => ExportAutoDownloadCsvs(savedRecord, resultTrials, labels, subjectId, Number(savedRecord.details?.subtest ?? 1) as SubtestId)}
+                >
+                  {labels.downloadCsvClinical}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  type="button"
+                  onClick={() => ExportJsonData(savedRecord, resultTrials, labels, subjectId, Number(savedRecord.details?.subtest ?? 1) as SubtestId)}
+                >
+                  {labels.downloadJsonTrajectory}
+                </button>
               </div>
               <TrainingResultActions
                 className="config-actions ufov-result-actions"
@@ -1559,3 +1686,274 @@ function FormatDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+function CsvEscape(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  const stringValue = String(value);
+  if (/[",\r\n]/.test(stringValue)) {
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+  return stringValue;
+}
+
+function TriggerDownload(filename: string, content: string, mimeType = 'text/csv;charset=utf-8;') {
+  try {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      if (link.parentNode) link.parentNode.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 1500);
+  } catch (error) {
+    console.error('Failed to trigger download:', error);
+  }
+}
+
+function ExportAutoDownloadCsvs(
+  record: PeripheralAttentionTrainingRecord,
+  trials: TrialRecord[],
+  labels: PeripheralAttentionLabels,
+  subjectId: string,
+  subtestId: SubtestId,
+) {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const dateStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+  const timeStr = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  const isoDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const isoTime = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  const subtestCode = `Subtest${subtestId}`;
+
+  const rawScoreFilename = `${dateStr}-${timeStr}-${subtestCode}-原始分數.csv`;
+  const rawScoreHeaders = [
+    '受試者代號',
+    '測驗日期',
+    '測驗時間',
+    'Subtest項目代碼',
+    'Subtest項目名稱',
+    '題次序號',
+    '題次類型',
+    '設定呈現時間 (ms)',
+    '實際呈現時間 (ms)',
+    '呈現影格數',
+    '遺失影格數',
+    '螢幕更新率 (Hz)',
+    '對比度 (%)',
+    '車輛大小視角 (度)',
+    '周邊偏心視角 (度)',
+    '中央目標種類',
+    '中央作答選擇',
+    '中央作答正確',
+    '周邊目標方位代碼',
+    '周邊目標方位名稱',
+    '周邊作答選擇代碼',
+    '周邊作答選擇名稱',
+    '周邊作答正確',
+    '本題整體判定',
+    '作答反應時間 (ms)',
+    '滑鼠軌跡取樣數',
+    '滑鼠軌跡數據 (JSON)',
+  ];
+
+  const rawScoreRows = trials.map((t, idx) => {
+    const trialNum = t.trialNumber || (idx + 1);
+    const isPractice = Boolean(t.practice);
+    const plannedMs = RoundMs(Number(t.plannedDurationMs || t.durationMs || 0));
+    const actualMs = RoundMs(Number(t.actualDurationMs || t.durationMs || 0));
+    const frames = t.actualFrameCount || t.durationFrames || 0;
+    const dropped = t.droppedFrameCount || 0;
+    const fps = RoundMs(t.refreshHz || 60);
+    const contrastStr = `${t.contrastPercent ?? 100}%`;
+    const vehicleSizeStr = `${(t.vehicleVisualAngleDeg ?? 2.5).toFixed(1)}°`;
+    const targetAngleStr = `${(t.targetVisualAngleDeg ?? 15).toFixed(1)}°`;
+
+    const centralTargetName = t.centralTarget === 'car' ? labels.car : labels.truck;
+    const centralRespName = t.centralResponse === 'car' ? labels.car : (t.centralResponse === 'truck' ? labels.truck : (t.centralResponse || ''));
+    const centralCorrectStr = t.centralResponse === t.centralTarget ? 'TRUE' : 'FALSE';
+
+    const hasPeri = typeof t.peripheralAxis === 'number';
+    const periAxis = hasPeri ? t.peripheralAxis : 'N/A';
+    const periDirName = hasPeri ? (labels.directions[t.peripheralAxis!] ?? String(t.peripheralAxis)) : labels.noPeripheral;
+
+    const hasPeriResp = typeof t.peripheralResponse === 'number';
+    const periRespAxis = hasPeriResp ? t.peripheralResponse : 'N/A';
+    const periRespDirName = hasPeriResp ? (labels.directions[t.peripheralResponse!] ?? String(t.peripheralResponse)) : labels.noPeripheral;
+
+    const periCorrectStr = hasPeri ? (t.peripheralResponse === t.peripheralAxis ? 'TRUE' : 'FALSE') : 'N/A';
+    const trialCorrectStr = t.correct ? 'TRUE' : 'FALSE';
+    const userRt = Math.round(t.responseTimeMs || 0);
+    const mouseSamples = Array.isArray(t.mouseTrajectory) ? t.mouseTrajectory.length : 0;
+    const mouseJson = JSON.stringify(t.mouseTrajectory || []);
+
+    return [
+      CsvEscape(subjectId || '-'),
+      CsvEscape(isoDate),
+      CsvEscape(isoTime),
+      CsvEscape(`Subtest ${subtestId}`),
+      CsvEscape(labels.subtests[subtestId]),
+      trialNum,
+      CsvEscape(isPractice ? '練習題' : '正式題'),
+      plannedMs,
+      actualMs,
+      frames,
+      dropped,
+      fps,
+      CsvEscape(contrastStr),
+      CsvEscape(vehicleSizeStr),
+      CsvEscape(targetAngleStr),
+      CsvEscape(centralTargetName),
+      CsvEscape(centralRespName),
+      CsvEscape(centralCorrectStr),
+      CsvEscape(periAxis),
+      CsvEscape(periDirName),
+      CsvEscape(periRespAxis),
+      CsvEscape(periRespDirName),
+      CsvEscape(periCorrectStr),
+      CsvEscape(trialCorrectStr),
+      userRt,
+      mouseSamples,
+      CsvEscape(mouseJson),
+    ].join(',');
+  });
+
+  const rawScoreCsvContent = '\uFEFF' + [
+    rawScoreHeaders.join(','),
+    ...rawScoreRows,
+  ].join('\r\n');
+
+  const statScoreFilename = `${dateStr}-${timeStr}-${subtestCode}-統計成績.csv`;
+  const statHeaders = [
+    '參數項目',
+    '參數代碼',
+    '設定數值',
+    '單位',
+    '詳細說明',
+  ];
+
+  const formalTrials = trials.filter((t) => !t.practice);
+  const practiceCount = trials.filter((t) => t.practice).length;
+  const totalFormalTrials = formalTrials.length;
+  const correctFormalTrials = formalTrials.filter((t) => t.correct).length;
+  const incorrectFormalTrials = totalFormalTrials - correctFormalTrials;
+  const accuracyRate = totalFormalTrials > 0 ? Math.round((correctFormalTrials / totalFormalTrials) * 100) : 0;
+
+  const centralCorrectCount = formalTrials.filter((t) => t.centralResponse === t.centralTarget).length;
+  const centralAccuracy = totalFormalTrials > 0 ? Math.round((centralCorrectCount / totalFormalTrials) * 100) : 0;
+
+  const periTrials = formalTrials.filter((t) => typeof t.peripheralAxis === 'number');
+  const periCorrectCount = periTrials.filter((t) => t.peripheralResponse === t.peripheralAxis).length;
+  const peripheralAccuracy = periTrials.length > 0 ? Math.round((periCorrectCount / periTrials.length) * 100) : null;
+
+  const meanRt = totalFormalTrials > 0
+    ? Math.round(formalTrials.reduce((sum, t) => sum + (t.responseTimeMs || 0), 0) / totalFormalTrials)
+    : 0;
+
+  const dirStats = peripheralAttentionTargetAxes.map((axis) => {
+    const dirTrials = formalTrials.filter((t) => t.peripheralAxis === axis);
+    const dirCorrect = dirTrials.filter((t) => t.correct).length;
+    const dirTotal = dirTrials.length;
+    const acc = dirTotal > 0 ? Math.round((dirCorrect / dirTotal) * 100) : null;
+    const avgRt = dirTotal > 0 ? Math.round(dirTrials.reduce((s, t) => s + (t.responseTimeMs || 0), 0) / dirTotal) : 0;
+    return { axis, name: labels.directions[axis], total: dirTotal, correct: dirCorrect, acc, avgRt };
+  });
+
+  const statRows: [string, string, string | number, string, string][] = [
+    ['測驗日期', 'test_date', isoDate, 'YYYY-MM-DD', '測驗進行日期'],
+    ['測驗時間', 'test_time', isoTime, 'HH:mm:ss', '測驗完成時間'],
+    ['受試者代號', 'subject_id', subjectId || '-', '-', '受試者識別碼'],
+    ['測驗項目代碼', 'subtest_code', `Subtest ${subtestId}`, '-', 'UFOV 測驗核心項目'],
+    ['測驗項目名稱', 'subtest_name', labels.subtests[subtestId] ?? `Subtest ${subtestId}`, '-', labels.instructions[subtestId] ?? ''],
+    ['測驗模式', 'test_mode', record.difficulty === 'formal' ? '正式紀錄 (Formal)' : (record.difficulty === 'practice' ? '練習模式 (Practice)' : '說明模式 (Instruction)'), '-', record.difficulty],
+    ['終止條件設定', 'stop_condition', String(record.details?.stopCondition ?? 'adaptive_80') === 'adaptive_80' ? '80%信度自適應階梯 (Adaptive 80%)' : `固定題數 (${record.details?.configuredTrialCount ?? totalFormalTrials} 題)`, '-', String(record.details?.stopCondition ?? '')],
+    ['處理速度反應門檻 (final_rt)', 'final_threshold_rt_ms', RoundMs(Number(record.details?.thresholdProcessingSpeedMs ?? 0)), 'ms (毫秒)', '階梯法自動收斂出信度80%之處理速度門檻'],
+    ['最快正確呈現時間', 'fastest_correct_duration_ms', RoundMs(Number(record.details?.bestCorrectProcessingSpeedMs ?? 0)), 'ms (毫秒)', '測驗中正確辨識之最短刺激呈現時間'],
+    ['正式題總題數', 'formal_trials_total', totalFormalTrials, '題', '正式測驗完成題數'],
+    ['正式題正確題數', 'formal_trials_correct', correctFormalTrials, '題', '正式測驗答對題數'],
+    ['正式題錯誤題數', 'formal_trials_incorrect', incorrectFormalTrials, '題', '正式測驗答錯題數'],
+    ['整體正確率', 'accuracy_rate_percent', `${accuracyRate}%`, '% (百分比)', '正式測驗正確作答比例'],
+    ['中央目標正確率', 'central_accuracy_percent', `${centralAccuracy}%`, '% (百分比)', '中央車輛辨識正確率'],
+    ['周邊目標正確率', 'peripheral_accuracy_percent', peripheralAccuracy !== null ? `${peripheralAccuracy}%` : 'N/A', peripheralAccuracy !== null ? '% (百分比)' : '-', subtestId !== 1 ? '周邊方位搜尋正確率' : '此Subtest不包含周邊目標'],
+    ['平均作答反應時間', 'mean_response_time_ms', meanRt, 'ms (毫秒)', '受試者自題目出現至點擊完成之平均作答反應時間'],
+    ['練習題完成題數', 'practice_trials_count', practiceCount, '題', '測驗前進行之練習題數'],
+    ['螢幕物理寬度', 'screen_width_cm', Number(record.details?.screenWidthCm ?? 53.1), 'cm (公分)', '校準設定之螢幕物理寬度'],
+    ['螢幕物理高度', 'screen_height_cm', Number(record.details?.screenHeightCm ?? 29.9), 'cm (公分)', '校準設定之螢幕物理高度'],
+    ['觀看距離', 'viewing_distance_cm', Number(record.details?.viewingDistanceCm ?? 50), 'cm (公分)', '受試者與螢幕之設定距離'],
+    ['周邊偏心視角設定', 'target_visual_angle_deg', Number(record.details?.targetVisualAngleDeg ?? 15).toFixed(1), 'deg (度 / °)', '周邊目標刺激物偏心視角'],
+    ['車輛大小視角設定', 'vehicle_visual_angle_deg', Number(record.details?.vehicleVisualAngleDeg ?? 2.5).toFixed(1), 'deg (度 / °)', '車輛刺激物大小視角'],
+    ['刺激對比度設定', 'contrast_percent', `${record.details?.contrastPercent ?? 100}%`, '% (百分比)', '刺激物與背景之對比強度'],
+    ['螢幕即時更新率', 'refresh_rate_hz', Number(record.details?.refreshHz ?? 60), 'Hz (赫茲)', 'rAF 實測畫面更新頻率 (FPS)'],
+    ['影格刷新間隔', 'frame_interval_ms', Number(record.details?.refreshMs ?? 16.67), 'ms (毫秒)', '單一影格持續時間'],
+    ['測驗結束狀態', 'test_aborted', record.details?.aborted ? '中斷 (Aborted)' : '正常完成 (Completed)', '-', record.details?.aborted ? '因達到連續失敗上限或中斷' : '正常完成設定題數或收斂門檻'],
+    ...dirStats.map((d) => [
+      `8方向空間搜尋-${d.name} (${d.axis})`,
+      `spatial_dir_${d.axis}_${d.name}`,
+      d.acc !== null ? `${d.acc}%` : '未測試',
+      d.acc !== null ? '% (百分比)' : '-',
+      `呈現 ${d.total} 次, 答對 ${d.correct} 次, 平均作答耗時 ${d.avgRt > 0 ? `${d.avgRt} ms` : 'N/A'}`,
+    ] as [string, string, string | number, string, string]),
+  ];
+
+  const statScoreCsvContent = '\uFEFF' + [
+    statHeaders.join(','),
+    ...statRows.map((r) => r.map(CsvEscape).join(',')),
+  ].join('\r\n');
+
+  TriggerDownload(rawScoreFilename, rawScoreCsvContent);
+  setTimeout(() => {
+    TriggerDownload(statScoreFilename, statScoreCsvContent);
+  }, 250);
+}
+
+function ExportJsonData(
+  record: PeripheralAttentionTrainingRecord,
+  trials: TrialRecord[],
+  labels: PeripheralAttentionLabels,
+  subjectId: string,
+  subtestId: SubtestId,
+) {
+  const exportObject = {
+    experiment: 'UFOV Assessment & Training',
+    version: '2.0.0-platform',
+    date_time: FormatDate(new Date()),
+    subjectId: subjectId || '-',
+    subtestId,
+    contrast: `${record.details?.contrastPercent ?? 100}%`,
+    targetVisualAngle: `${Number(record.details?.targetVisualAngleDeg ?? 15).toFixed(1)}°`,
+    vehicleVisualAngle: `${Number(record.details?.vehicleVisualAngleDeg ?? 2.5).toFixed(1)}°`,
+    final_rt: Number(record.details?.thresholdProcessingSpeedMs ?? 0),
+    refreshHz: Number(record.details?.refreshHz ?? 60),
+    refreshMs: Number(record.details?.refreshMs ?? 16.67),
+    trials: trials.map((t) => ({
+      subjectId: subjectId || '-',
+      trial_id: t.trialNumber,
+      trial_rt: RoundMs(Number(t.actualDurationMs || t.durationMs || 0)),
+      trial_fps: RoundMs(t.refreshHz || 60),
+      actual_duration_ms: RoundMs(t.actualDurationMs || t.durationMs || 0),
+      planned_duration_ms: RoundMs(t.plannedDurationMs || 0),
+      duration_frames: t.durationFrames,
+      actual_frame_count: t.actualFrameCount || t.durationFrames,
+      dropped_frame_count: t.droppedFrameCount || 0,
+      contrast_percent: t.contrastPercent,
+      vehicle_visual_angle_deg: t.vehicleVisualAngleDeg,
+      central_target: t.centralTarget,
+      central_response: t.centralResponse,
+      central_is_correct: t.centralResponse === t.centralTarget,
+      peripheral_axis: typeof t.peripheralAxis === 'number' ? t.peripheralAxis : null,
+      peripheral_direction: typeof t.peripheralAxis === 'number' ? labels.directions[t.peripheralAxis] : null,
+      peripheral_response: typeof t.peripheralResponse === 'number' ? t.peripheralResponse : null,
+      peripheral_response_direction: typeof t.peripheralResponse === 'number' ? labels.directions[t.peripheralResponse] : null,
+      peripheral_is_correct: typeof t.peripheralAxis === 'number' ? t.peripheralResponse === t.peripheralAxis : null,
+      trial_is_correct: t.correct,
+      user_reaction_time_ms: Math.round(t.responseTimeMs || 0),
+      mouse_trajectory: t.mouseTrajectory || [],
+    })),
+  };
+
+  const jsonContent = JSON.stringify(exportObject, null, 2);
+  TriggerDownload(`ufov_training_data_${new Date().toISOString().slice(0, 10)}.json`, jsonContent, 'application/json;charset=utf-8;');
+}

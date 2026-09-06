@@ -25,7 +25,7 @@ async function ImportTypeScriptModule(relativePath) {
 }
 
 const timing = await ImportTypeScriptModule('./peripheralAttentionTiming.ts');
-const pageSource = await readFile(new URL('./PeripheralAttentionPage.tsx', import.meta.url), 'utf8');
+const pageSource = await readFile(new URL('../PeripheralAttentionPage.tsx', import.meta.url), 'utf8');
 const {
   EvaluatePeripheralAttentionFrameSync,
   GetPeripheralAttentionSyncRecoveryAction,

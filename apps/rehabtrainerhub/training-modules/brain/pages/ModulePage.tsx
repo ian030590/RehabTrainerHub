@@ -125,6 +125,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const [ufovScreenWidthCm, setUfovScreenWidthCm] = useState(53.1);
   const [ufovScreenHeightCm, setUfovScreenHeightCm] = useState(29.9);
   const [ufovViewingDistanceCm, setUfovViewingDistanceCm] = useState(50);
+  const [subjectId, setSubjectId] = useState<string>(() => GetInitialSubjectId());
   const [isUfovRulesOpen, setIsUfovRulesOpen] = useState(false);
   useTrainingConfigReady(isUfovConfigOpen);
   const ufovLabels = {
@@ -199,6 +200,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
       screenWidth: String(ufovScreenWidthCm),
       screenHeight: String(ufovScreenHeightCm),
       distance: String(ufovViewingDistanceCm),
+      subject_id: subjectId,
       start: '1',
     }).toString()}`, { state: trainingFlowLaunchState });
   };
@@ -280,6 +282,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
           ariaLabel={ufovLabels.settingsTitle}
           onClose={closeUfovConfig}
           summaryItems={[
+            { value: `${lang === 'en' ? 'Subject' : '受試者'}: ${subjectId || '--'}` },
             { value: ufovLabels.subtests[selectedUfovSubtest] },
             { value: ufovLabels.modes[selectedUfovMode].label },
             { value: `${selectedUfovAxes.length}/8` },
@@ -299,6 +302,46 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
             />
           )}
         >
+          <TrainingConfigSection
+            title={lang === 'en' ? 'Subject ID' : '受試者代號 (Subject ID)'}
+            description={lang === 'en'
+              ? 'Identifier for this participant; will be included in exported records and CSV reports.'
+              : '輸入受試者識別碼，將自動記錄於測驗報告與匯出之 CSV / JSON 數據中。'}
+            value={subjectId}
+            wide
+          >
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="text"
+                className="training-number-input"
+                style={{ flex: 1, height: '40px' }}
+                value={subjectId}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setSubjectId(next);
+                  try {
+                    if (next.trim()) localStorage.setItem('ufov-subject-id-v1', next.trim());
+                  } catch {}
+                }}
+                placeholder={lang === 'en' ? 'Enter Subject ID...' : '請輸入受試者代號...'}
+              />
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ height: '40px', whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  const next = 'SUBJ_' + Math.random().toString(36).slice(2, 8).toUpperCase();
+                  setSubjectId(next);
+                  try {
+                    localStorage.setItem('ufov-subject-id-v1', next);
+                  } catch {}
+                }}
+              >
+                {lang === 'en' ? 'Random ID' : '隨機產生'}
+              </button>
+            </div>
+          </TrainingConfigSection>
+
           <TrainingConfigSection
             title={ufovLabels.chooseSubtest}
             value={ufovLabels.subtests[selectedUfovSubtest]}
@@ -624,4 +667,20 @@ function GetUfovConfigLabels(lang: 'zh' | 'en') {
           formal: { label: '紀錄練習', description: '穩定後提前停止，或完成標準 48 題紀錄後儲存結果。' },
         },
       };
+}
+
+function GetInitialSubjectId(): string {
+  if (typeof window === 'undefined') return 'SUBJ_' + Math.random().toString(36).slice(2, 8).toUpperCase();
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = params.get('subject_id') || params.get('user_id') || params.get('participant');
+    if (fromUrl?.trim()) return fromUrl.trim();
+    const fromStorage = localStorage.getItem('ufov-subject-id-v1') || localStorage.getItem('oculomotor-subject-id-v1');
+    if (fromStorage?.trim()) return fromStorage.trim();
+  } catch {}
+  const randomId = 'SUBJ_' + Math.random().toString(36).slice(2, 8).toUpperCase();
+  try {
+    localStorage.setItem('ufov-subject-id-v1', randomId);
+  } catch {}
+  return randomId;
 }

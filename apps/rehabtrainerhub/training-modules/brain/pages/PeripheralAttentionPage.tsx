@@ -27,6 +27,7 @@ export function PeripheralAttentionPage() {
   const screenWidthCm = ParseRange(searchParams.get('screenWidth'), 53.1, 10, 250, .1);
   const screenHeightCm = ParseRange(searchParams.get('screenHeight'), 29.9, 10, 200, .1);
   const viewingDistanceCm = ParseRange(searchParams.get('distance'), 50, 20, 300, 1);
+  const subjectId = searchParams.get('subject_id') || searchParams.get('user_id') || searchParams.get('participant') || undefined;
   const autoStart = searchParams.get('start') === '1';
 
   if (!IsTrainingFlowLaunchState(location.state)) {
@@ -39,6 +40,7 @@ export function PeripheralAttentionPage() {
       backPath="/attention-training"
       lang={lang}
       moduleId="attention-training"
+      subjectId={subjectId}
       initialSubtestId={initialSubtestId}
       initialMode={initialMode}
       trialCount={trialCount}
