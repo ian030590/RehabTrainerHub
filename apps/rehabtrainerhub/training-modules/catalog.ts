@@ -8,15 +8,23 @@ import {
   GetTrainerCategoryTag,
   GetTrainingPurposeTrainerId,
   IsTrainerCategoryId,
+  categorySubcategories,
+  majorCategoryIds,
+  majorCategoryTags,
   trainerCategoryTags,
 } from './gameTags.js';
-import type { TrainerCategoryId } from './gameTags.js';
+import type { TrainerCategoryId, MajorCategoryId } from './gameTags.js';
 
 export {
+  GetTrainerCategoryTag,
   GetTrainingPurposeTrainerId,
   IsTrainerCategoryId,
+  categorySubcategories,
+  majorCategoryIds,
+  majorCategoryTags,
   trainerCategoryTags,
 };
+export type { MajorCategoryId, TrainerCategoryId };
 
 export type ThemeIconType = 'material-symbol' | 'svg';
 
@@ -133,7 +141,9 @@ export interface TrainingCatalogModule {
   catalogId: string;
   runtimeId: string;
   trainer: TrainerCatalogId;
+  category: TrainerCategoryId;
   purpose: TrainingPurposeId;
+  subcategory: TrainingPurposeId;
   kind: TrainingModuleKind;
   entryPath: string;
   settingsPath: string;
@@ -483,7 +493,9 @@ export const trainingCatalog: readonly TrainingCatalogModule[] = seeds.map((seed
     catalogId,
     runtimeId: seed.id,
     trainer: seed.trainer,
+    category: seed.trainer,
     purpose: seed.purpose,
+    subcategory: seed.purpose,
     kind: seed.kind,
     entryPath: seed.path,
     settingsPath: `/games/${seed.id}/settings.json`,
@@ -591,4 +603,47 @@ export function GetTrainingPurpose(purposeId: TrainingPurposeId) {
     label: theme.label['zh-TW'],
     labelEn: theme.label.en,
   };
+}
+
+export function GetTrainingModuleCategoryTag(module: TrainingCatalogModule) {
+  return GetTrainerCategoryTag(module.trainer);
+}
+
+export function GetTrainingModuleCategoryLabel(
+  module: TrainingCatalogModule,
+  locale: 'zh' | 'zh-TW' | 'en',
+): string {
+  const tag = GetTrainerCategoryTag(module.trainer);
+  if (!tag) return '';
+  return locale === 'en' ? tag.label.en : tag.label['zh-TW'];
+}
+
+export function GetTrainingModuleSubcategoryLabel(
+  module: TrainingCatalogModule,
+  locale: 'zh' | 'zh-TW' | 'en',
+): string {
+  const theme = GetTrainingModuleTheme(module);
+  return locale === 'en' ? theme.label.en : theme.label['zh-TW'];
+}
+
+export function GetPublishedGameCategoryTag(category: string | undefined | null) {
+  const trainerId = GetTrainingPurposeTrainerId(category);
+  return trainerId ? GetTrainerCategoryTag(trainerId) : null;
+}
+
+export function GetPublishedGameCategoryLabel(
+  category: string | undefined | null,
+  locale: 'zh' | 'zh-TW' | 'en',
+): string {
+  const tag = GetPublishedGameCategoryTag(category);
+  if (!tag) return '';
+  return locale === 'en' ? tag.label.en : tag.label['zh-TW'];
+}
+
+export function GetPublishedGameSubcategoryLabel(
+  category: string | undefined | null,
+  locale: 'zh' | 'zh-TW' | 'en',
+): string {
+  const theme = GetTrainingModuleTheme(category);
+  return locale === 'en' ? theme.label.en : theme.label['zh-TW'];
 }

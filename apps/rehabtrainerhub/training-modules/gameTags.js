@@ -62,3 +62,23 @@ export function IsGameTagPair(trainer, purpose) {
   return IsTrainerCategoryId(trainer)
     && GetTrainingPurposeTrainerId(purpose) === trainer;
 }
+
+export const categorySubcategories = Object.freeze({
+  motor: Object.freeze(['upper-limb', 'lower-limb']),
+  vision: Object.freeze(['vision']),
+  brain: Object.freeze(['attention', 'memory', 'higher-cognition', 'language']),
+  mouth: Object.freeze(['oral']),
+});
+
+export const majorCategoryTags = trainerCategoryTags;
+export const majorCategoryIds = trainerCategoryIds;
+export const trainingCategorySubcategories = categorySubcategories;
+
+export function GetCategorySubcategories(categoryId) {
+  return categorySubcategories[categoryId] ?? Object.freeze([]);
+}
+
+export function GetSubcategoryCategoryTag(purposeId) {
+  const trainerId = GetTrainingPurposeTrainerId(purposeId);
+  return trainerId ? GetTrainerCategoryTag(trainerId) : null;
+}

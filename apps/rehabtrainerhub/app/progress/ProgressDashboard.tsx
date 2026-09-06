@@ -9,7 +9,9 @@ import {
 } from '@rehab-trainer/ui/auth/authClient';
 import {
   BuildHubTrainingHref,
+  GetTrainingModuleCategoryLabel,
   GetTrainingModuleCopy,
+  GetTrainingModuleSubcategoryLabel,
   GetTrainingModuleTheme,
   trainingCatalog,
 } from '@rehab-trainer/hub-modules/catalog';
@@ -191,13 +193,19 @@ export function ProgressDashboard() {
               const moduleCopy = GetTrainingModuleCopy(module, locale);
               const theme = GetTrainingModuleTheme(module);
 
+              const categoryLabel = GetTrainingModuleCategoryLabel(module, locale);
+              const subcategoryLabel = GetTrainingModuleSubcategoryLabel(module, locale);
+
               return (
                 <article
                   className="recent-module-card"
                   key={module.catalogId}
                   style={BuildTrainingThemeStyle(theme)}
                 >
-                  <span>{language === 'en' ? theme.label.en : theme.label['zh-TW']}</span>
+                  <div className="module-card-labels">
+                    <span className="module-category-tag">{categoryLabel}</span>
+                    <span className="module-subcategory-tag">{subcategoryLabel}</span>
+                  </div>
                   <h3>{moduleCopy.title}</h3>
                   <Link href={BuildHubTrainingHref(module)}>
                     {copy.start}

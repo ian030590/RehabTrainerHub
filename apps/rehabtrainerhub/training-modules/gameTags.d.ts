@@ -25,3 +25,14 @@ export function GetTrainingPurposeTrainerId(value: unknown): TrainerCategoryId |
 export function IsTrainerCategoryId(value: unknown): value is TrainerCategoryId;
 export function IsTrainingPurposeId(value: unknown): value is TrainingPurposeTagId;
 export function IsGameTagPair(trainer: unknown, purpose: unknown): boolean;
+
+export type MajorCategoryId = TrainerCategoryId;
+export type MajorCategoryTag = TrainerCategoryTag;
+
+export const categorySubcategories: Readonly<Record<TrainerCategoryId, readonly TrainingPurposeTagId[]>>;
+export const majorCategoryTags: readonly TrainerCategoryTag[];
+export const majorCategoryIds: readonly TrainerCategoryId[];
+export const trainingCategorySubcategories: Readonly<Record<TrainerCategoryId, readonly TrainingPurposeTagId[]>>;
+
+export function GetCategorySubcategories(categoryId: unknown): readonly TrainingPurposeTagId[];
+export function GetSubcategoryCategoryTag(purposeId: unknown): TrainerCategoryTag | null;

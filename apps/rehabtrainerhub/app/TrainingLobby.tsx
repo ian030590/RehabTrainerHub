@@ -13,11 +13,20 @@ import {
   BuildTrainingGameInstallHref,
   BuildTrainingModuleHref,
   BuildTrainingModuleImageSrc,
+  GetPublishedGameCategoryLabel,
+  GetPublishedGameSubcategoryLabel,
+  GetTrainerCategoryTheme,
+  GetTrainingModuleCategoryLabel,
   GetTrainingModuleCopy,
+  GetTrainingModuleSubcategoryLabel,
   GetTrainingModuleTheme,
   GetTrainingThemeId,
+  categorySubcategories,
+  trainerCategoryTags,
   trainingCatalog,
   trainingPurposes,
+  trainingThemes,
+  type TrainerCategoryId,
   type TrainingCatalogModule,
   type TrainingPurposeId,
   type TrainingVisualTheme,
@@ -134,6 +143,24 @@ export function TrainingLobby() {
     ]),
   ), [publishedGames]);
 
+  const categoryCounts = useMemo(() => new Map(
+    trainerCategoryTags.map((category) => {
+      const subs = categorySubcategories[category.id] ?? [];
+      const count = subs.reduce((sum, subId) => sum + (purposeCounts.get(subId) ?? 0), 0);
+      return [category.id, count];
+    }),
+  ), [purposeCounts]);
+
+  const toggleCategory = (categoryId: TrainerCategoryId) => {
+    const subs = categorySubcategories[categoryId] ?? [];
+    const allSelected = subs.length > 0 && subs.every((subId) => selectedPurposes.includes(subId));
+    if (allSelected) {
+      setSelectedPurposes((current) => current.filter((id) => !subs.includes(id)));
+    } else {
+      setSelectedPurposes((current) => [...new Set([...current, ...subs])]);
+    }
+  };
+
   const visibleModules = useMemo(() => trainingCatalog.filter((module) => {
     const title = GetTrainingModuleCopy(module, locale).title.toLocaleLowerCase(locale);
     const matchesSearch = !normalizedQuery || title.includes(normalizedQuery);
@@ -245,20 +272,59 @@ export function TrainingLobby() {
             )}
           </div>
 
-          <fieldset>
-            <legend className="sr-only">{copy.purposeLegend}</legend>
-            {trainingPurposes.map((purpose) => (
-              <label className="filter-option" key={purpose.id}>
-                <input
-                  checked={selectedPurposes.includes(purpose.id)}
-                  onChange={() => togglePurpose(purpose.id)}
-                  type="checkbox"
-                />
-                <span>{language === 'en' ? purpose.label.en : purpose.label['zh-TW']}</span>
-                <small>{purposeCounts.get(purpose.id) ?? 0}</small>
-              </label>
-            ))}
-          </fieldset>
+          <div className="filter-category-groups">
+            {trainerCategoryTags.map((category) => {
+              const subs = categorySubcategories[category.id] ?? [];
+              const isCategoryChecked = subs.length > 0 && subs.every((subId) => selectedPurposes.includes(subId));
+              const isCategoryIndeterminate = !isCategoryChecked && subs.some((subId) => selectedPurposes.includes(subId));
+              const categoryTotalCount = categoryCounts.get(category.id) ?? 0;
+              const categoryTheme = GetTrainerCategoryTheme(category.id);
+              const categoryLabel = language === 'en' ? category.label.en : category.label['zh-TW'];
+
+              return (
+                <fieldset
+                  className="filter-category-group"
+                  data-category={category.id}
+                  key={category.id}
+                  style={BuildTrainingThemeStyle(categoryTheme)}
+                >
+                  <legend className="filter-category-legend">
+                    <label className="filter-category-header">
+                      <input
+                        checked={isCategoryChecked}
+                        onChange={() => toggleCategory(category.id)}
+                        ref={(el) => {
+                          if (el) el.indeterminate = isCategoryIndeterminate;
+                        }}
+                        type="checkbox"
+                      />
+                      <span className="filter-category-name">{categoryLabel}</span>
+                      <small>{categoryTotalCount}</small>
+                    </label>
+                  </legend>
+
+                  <div className="filter-subcategory-list">
+                    {subs.map((subId) => {
+                      const theme = trainingThemes[subId];
+                      const subLabel = language === 'en' ? theme.label.en : theme.label['zh-TW'];
+                      const subCount = purposeCounts.get(subId) ?? 0;
+                      return (
+                        <label className="filter-option filter-subcategory-option" key={subId}>
+                          <input
+                            checked={selectedPurposes.includes(subId)}
+                            onChange={() => togglePurpose(subId)}
+                            type="checkbox"
+                          />
+                          <span>{subLabel}</span>
+                          <small>{subCount}</small>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              );
+            })}
+          </div>
         </aside>
 
         <section className="module-results" aria-labelledby="result-title">
@@ -288,7 +354,8 @@ export function TrainingLobby() {
               {visibleModules.map((module) => {
                 const moduleCopy = GetTrainingModuleCopy(module, locale);
                 const theme = GetTrainingModuleTheme(module);
-                const themeLabel = language === 'en' ? theme.label.en : theme.label['zh-TW'];
+                const categoryLabel = GetTrainingModuleCategoryLabel(module, locale);
+                const subcategoryLabel = GetTrainingModuleSubcategoryLabel(module, locale);
 
                 return (
                   <article
@@ -311,10 +378,13 @@ export function TrainingLobby() {
                     </div>
                     <div className="module-card-content">
                       <div className="module-card-meta">
-                        <span>{themeLabel}</span>
+                        <div className="module-card-labels">
+                          <span className="module-category-tag">{categoryLabel}</span>
+                          <span className="module-subcategory-tag">{subcategoryLabel}</span>
+                        </div>
                         <span className="module-card-theme-adornments">
                           <TrainingThemeBadge language={language} theme={theme} />
-                          <TrainingThemeIcon label={themeLabel} theme={theme} />
+                          <TrainingThemeIcon label={subcategoryLabel} theme={theme} />
                         </span>
                       </div>
                       <h3>{moduleCopy.title}</h3>
@@ -359,7 +429,8 @@ export function TrainingLobby() {
             <div className="module-grid community-game-grid">
               {visiblePublishedGames.map((game) => {
                 const theme = GetTrainingModuleTheme(game.category);
-                const themeLabel = language === 'en' ? theme.label.en : theme.label['zh-TW'];
+                const categoryLabel = GetPublishedGameCategoryLabel(game.category, locale);
+                const subcategoryLabel = GetPublishedGameSubcategoryLabel(game.category, locale);
                 return (
                   <article
                     className="module-card community-game-card"
@@ -367,12 +438,15 @@ export function TrainingLobby() {
                     style={BuildTrainingThemeStyle(theme)}
                   >
                     <div className="community-game-visual" aria-hidden="true">
-                      <TrainingThemeIcon decorative label={themeLabel} theme={theme} />
+                      <TrainingThemeIcon decorative label={subcategoryLabel} theme={theme} />
                       <small>jsPsych 8</small>
                     </div>
                     <div className="module-card-content">
                       <div className="module-card-meta">
-                        <span>{themeLabel}</span>
+                        <div className="module-card-labels">
+                          {categoryLabel && <span className="module-category-tag">{categoryLabel}</span>}
+                          <span className="module-subcategory-tag">{subcategoryLabel}</span>
+                        </div>
                         <span className="module-card-theme-adornments">
                           <TrainingThemeBadge language={language} theme={theme} />
                           <span className="verified-release-badge">
