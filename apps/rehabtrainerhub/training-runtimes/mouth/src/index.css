@@ -70,12 +70,15 @@
 }
 
 .gesture-loader {
+  display: inline-block;
   width: 40px;
   height: 40px;
   border: 3px solid var(--tongue-loader-track);
   border-top-color: var(--tongue-loader-accent);
   border-radius: 50%;
+  box-sizing: border-box;
   animation: tongue-loader-spin 0.8s linear infinite;
+  will-change: transform;
 }
 
 .gesture-calibration-actions {
@@ -374,7 +377,10 @@
 }
 
 @keyframes tongue-loader-spin {
-  to {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
     transform: rotate(360deg);
   }
 }
@@ -497,7 +503,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .gesture-loader {
-    animation: none;
+    animation: tongue-loader-spin 0.8s linear infinite !important;
   }
 
   .tongue-catch-video,

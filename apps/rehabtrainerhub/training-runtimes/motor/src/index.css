@@ -761,16 +761,24 @@ body[data-ui-font-bold="true"] .app-layout :where(
 }
 
 .gesture-loader {
+  display: inline-block;
   width: 40px;
   height: 40px;
   border: 3px solid #cbd9b5;
   border-top-color: #4d7c0f;
   border-radius: 50%;
+  box-sizing: border-box;
   animation: gesture-spin 0.8s linear infinite;
+  will-change: transform;
 }
 
 @keyframes gesture-spin {
-  to { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .gesture-calibration-card {
@@ -1918,6 +1926,9 @@ body[data-ui-font-bold="true"] .app-layout :where(
   }
   .btn:hover, .card-link:hover, .secondary-action:hover, .card:hover, .content-page article:hover {
     transform: none !important;
+  }
+  .gesture-loader {
+    animation: gesture-spin 0.8s linear infinite !important;
   }
 }
 

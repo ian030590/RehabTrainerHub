@@ -341,12 +341,15 @@ summary:focus-visible {
 }
 
 .training-loading-spinner {
+  display: inline-block;
   width: 40px;
   height: 40px;
   border: 3px solid color-mix(in srgb, var(--primary) 18%, transparent);
   border-top-color: var(--primary);
   border-radius: 50%;
+  box-sizing: border-box;
   animation: training-loading-spin 0.8s linear infinite;
+  will-change: transform;
 }
 
 .minimal-loading-spinner {
@@ -356,7 +359,9 @@ summary:focus-visible {
   border: 3px solid color-mix(in srgb, var(--primary) 18%, transparent);
   border-top-color: var(--primary);
   border-radius: 50%;
+  box-sizing: border-box;
   animation: training-loading-spin 0.8s linear infinite;
+  will-change: transform;
 }
 
 .inline-loading-state {
@@ -366,7 +371,12 @@ summary:focus-visible {
 }
 
 @keyframes training-loading-spin {
-  to { transform: rotate(1turn); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .embedded-training-frame iframe {
@@ -1362,11 +1372,6 @@ summary:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .minimal-loading-spinner,
-  .training-loading-spinner {
-    animation: none;
-  }
-
   .embedded-training-frame iframe,
   .training-loading-stage {
     transition: none;
@@ -3277,6 +3282,11 @@ summary:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .minimal-loading-spinner,
+  .training-loading-spinner {
+    animation: training-loading-spin 0.8s linear infinite !important;
   }
 }
 

@@ -483,12 +483,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       borderRadius: '50%',
       boxSizing: 'border-box',
     });
-    if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      spinner.animate(
-        [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
-        { duration: 850, iterations: Infinity },
-      );
-    }
+    spinner.animate(
+      [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
+      { duration: 850, iterations: Infinity },
+    );
 
     overlay.append(spinner);
     root.appendChild(overlay);
