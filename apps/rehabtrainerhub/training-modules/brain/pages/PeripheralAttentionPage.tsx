@@ -24,6 +24,9 @@ export function PeripheralAttentionPage() {
   const contrastPercent = ParseRange(searchParams.get('contrast'), 100, 5, 100, 1);
   const targetVisualAngleDeg = ParseRange(searchParams.get('angle'), 15, 5, 35, .5);
   const vehicleVisualAngleDeg = ParseRange(searchParams.get('vehicleAngle'), 2.5, .8, 5, .1);
+  const screenWidthCm = ParseRange(searchParams.get('screenWidth'), 53.1, 10, 250, .1);
+  const screenHeightCm = ParseRange(searchParams.get('screenHeight'), 29.9, 10, 200, .1);
+  const viewingDistanceCm = ParseRange(searchParams.get('distance'), 50, 20, 300, 1);
   const autoStart = searchParams.get('start') === '1';
 
   if (!IsTrainingFlowLaunchState(location.state)) {
@@ -44,6 +47,9 @@ export function PeripheralAttentionPage() {
       contrastPercent={contrastPercent}
       targetVisualAngleDeg={targetVisualAngleDeg}
       vehicleVisualAngleDeg={vehicleVisualAngleDeg}
+      screenWidthCm={screenWidthCm}
+      screenHeightCm={screenHeightCm}
+      viewingDistanceCm={viewingDistanceCm}
       autoStart={autoStart}
       onSaveRecord={(record: PeripheralAttentionTrainingRecord) => SaveTrainingRecord(record)}
     />

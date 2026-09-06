@@ -7,6 +7,7 @@ import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/Tr
 import {
   PeripheralAttentionContrastSlider,
   PeripheralAttentionEccentricitySlider,
+  PeripheralAttentionGeometryWarning,
   PeripheralAttentionNineGridCompass,
   PeripheralAttentionVehicleAngleSlider,
 } from '@rehab-trainer/ui/components/PeripheralAttentionConfigComponents';
@@ -15,6 +16,7 @@ import {
   TrainingConfigOptionGroup,
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import { TrainingSlider } from '@rehab-trainer/ui/components/TrainingConfigRangeField';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
@@ -25,6 +27,7 @@ import { trainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { GetTrainingCatalogModules } from '@rehab-trainer/hub-modules/catalog';
 import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
 import { GetPeripheralAttentionConfigLabels } from '@rehab-trainer/ui/i18n/peripheralAttention';
+import { CalculatePeripheralAttentionScreenGeometry } from '@rehab-trainer/ui/peripheralAttentionCanvas';
 import { useT, type TranslationKey } from '../i18n';
 import { GetReferenceCognitiveModules } from './thinking/cognitive/constants';
 import type { ReferenceGameId } from './thinking/cognitive/types';
@@ -113,12 +116,15 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const [isUfovConfigOpen, setIsUfovConfigOpen] = useState(false);
   const [selectedUfovSubtest, setSelectedUfovSubtest] = useState<SubtestId>(1);
   const [selectedUfovMode, setSelectedUfovMode] = useState<UfovRunMode>('formal');
-  const [selectedUfovAxes, setSelectedUfovAxes] = useState<UfovTargetAxis[]>([0, 1, 2, 3, 4, 5, 6, 7]);
+  const [selectedUfovAxes, setSelectedUfovAxes] = useState<UfovTargetAxis[]>([...ufovTargetAxes]);
   const [selectedUfovStopCondition, setSelectedUfovStopCondition] = useState<PeripheralAttentionStopCondition>('adaptive_80');
   const [ufovContrastPercent, setUfovContrastPercent] = useState(100);
   const [ufovTrialCount, setUfovTrialCount] = useState(48);
   const [ufovTargetVisualAngleDeg, setUfovTargetVisualAngleDeg] = useState(15);
   const [ufovVehicleVisualAngleDeg, setUfovVehicleVisualAngleDeg] = useState(2.5);
+  const [ufovScreenWidthCm, setUfovScreenWidthCm] = useState(53.1);
+  const [ufovScreenHeightCm, setUfovScreenHeightCm] = useState(29.9);
+  const [ufovViewingDistanceCm, setUfovViewingDistanceCm] = useState(50);
   const [isUfovRulesOpen, setIsUfovRulesOpen] = useState(false);
   useTrainingConfigReady(isUfovConfigOpen);
   const ufovLabels = {
@@ -127,6 +133,13 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   };
   const isSmallScreenDevice = IsMobileOrTabletDevice(DetectDisplayDeviceKind());
   const effectiveUfovSubtest = isSmallScreenDevice ? 1 : selectedUfovSubtest;
+  const ufovGeometry = CalculatePeripheralAttentionScreenGeometry(
+    ufovScreenWidthCm,
+    ufovScreenHeightCm,
+    ufovViewingDistanceCm,
+    ufovTargetVisualAngleDeg,
+    ufovVehicleVisualAngleDeg,
+  );
   const ruleLabels = GetBrainRuleLabels(lang);
 
   const closeUfovConfig = () => {
@@ -145,16 +158,27 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   useEffect(() => {
     if (!isUfovRequested || !hostedSettings || hostedSettingsAppliedRef.current) return;
     hostedSettingsAppliedRef.current = true;
+    if (hostedSettings.subtestId === 1 || hostedSettings.subtestId === 2 || hostedSettings.subtestId === 3) {
+      setSelectedUfovSubtest(hostedSettings.subtestId);
+    }
     if (hostedSettings.mode === 'practice' || hostedSettings.mode === 'formal') {
       setSelectedUfovMode(hostedSettings.mode);
     }
-    if (typeof hostedSettings.trialCount === 'number') {
-      setUfovTrialCount(hostedSettings.trialCount);
+    const hostedTrialCount = GetHostedNumber(hostedSettings, 'trialCount', 1, 240);
+    if (hostedTrialCount !== null) setUfovTrialCount(Math.round(hostedTrialCount));
+    if (hostedSettings.stopCondition === 'adaptive_80' || hostedSettings.stopCondition === 'fixed_trials') {
+      setSelectedUfovStopCondition(hostedSettings.stopCondition);
+    } else if (hostedTrialCount !== null) {
       setSelectedUfovStopCondition('fixed_trials');
     }
-    if (typeof hostedSettings.contrastPercent === 'number') {
-      setUfovContrastPercent(hostedSettings.contrastPercent);
-    }
+    const hostedAxes = ufovTargetAxes.filter((axis) => hostedSettings[`axis${axis}Enabled`] !== false);
+    setSelectedUfovAxes(hostedAxes.length > 0 ? hostedAxes : [...ufovTargetAxes]);
+    ApplyHostedNumber(hostedSettings, 'contrastPercent', 5, 100, setUfovContrastPercent);
+    ApplyHostedNumber(hostedSettings, 'targetVisualAngleDeg', 5, 35, setUfovTargetVisualAngleDeg);
+    ApplyHostedNumber(hostedSettings, 'vehicleVisualAngleDeg', .8, 5, setUfovVehicleVisualAngleDeg);
+    ApplyHostedNumber(hostedSettings, 'screenWidthCm', 10, 250, setUfovScreenWidthCm);
+    ApplyHostedNumber(hostedSettings, 'screenHeightCm', 10, 200, setUfovScreenHeightCm);
+    ApplyHostedNumber(hostedSettings, 'viewingDistanceCm', 20, 300, setUfovViewingDistanceCm);
     setIsUfovConfigOpen(false);
     setIsUfovRulesOpen(true);
   }, [hostedSettings, isUfovRequested]);
@@ -172,6 +196,9 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
       contrast: String(ufovContrastPercent),
       angle: String(ufovTargetVisualAngleDeg),
       vehicleAngle: String(ufovVehicleVisualAngleDeg),
+      screenWidth: String(ufovScreenWidthCm),
+      screenHeight: String(ufovScreenHeightCm),
+      distance: String(ufovViewingDistanceCm),
       start: '1',
     }).toString()}`, { state: trainingFlowLaunchState });
   };
@@ -256,7 +283,9 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
             { value: ufovLabels.subtests[selectedUfovSubtest] },
             { value: ufovLabels.modes[selectedUfovMode].label },
             { value: `${selectedUfovAxes.length}/8` },
+            { value: selectedUfovStopCondition === 'adaptive_80' ? '80%' : String(ufovTrialCount) },
             { value: `${ufovContrastPercent}% · ${ufovTargetVisualAngleDeg.toFixed(1)}° · ${ufovVehicleVisualAngleDeg.toFixed(1)}°` },
+            { value: `${ufovScreenWidthCm.toFixed(1)} × ${ufovScreenHeightCm.toFixed(1)} cm · ${ufovViewingDistanceCm} cm` },
           ]}
           actions={(
             <TrainingConfigNavigationActions
@@ -307,6 +336,17 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
                   <span className="training-option-meta">{lang === 'en' ? 'Ends after the standard 48 recorded trials.' : '完成標準 48 題紀錄後結束。'}</span>
                 </button>
               </TrainingConfigOptionGroup>
+              {selectedUfovStopCondition === 'fixed_trials' && (
+                <TrainingSlider
+                  label={lang === 'en' ? 'Recorded trials' : '紀錄題數'}
+                  value={ufovTrialCount}
+                  valueLabel={`${ufovTrialCount} ${lang === 'en' ? 'trials' : '題'}`}
+                  min={1}
+                  max={240}
+                  step={1}
+                  onValueChange={setUfovTrialCount}
+                />
+              )}
             </TrainingConfigSection>
           )}
 
@@ -340,6 +380,48 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
                 </button>
               ))}
             </TrainingConfigOptionGroup>
+          </TrainingConfigSection>
+
+          <TrainingConfigSection
+            title={lang === 'en' ? 'Screen size and viewing distance' : '螢幕尺寸與觀看距離校準'}
+            description={lang === 'en'
+              ? 'These values convert the stimulus position and size into visual-angle references; they are not a visual-field measurement.'
+              : '這些設定只用於換算刺激位置與大小的視角參考值，不代表視野量測。'}
+            value={`${ufovScreenWidthCm.toFixed(1)} × ${ufovScreenHeightCm.toFixed(1)} cm · ${ufovViewingDistanceCm} cm`}
+            wide
+          >
+            <TrainingSlider
+              label={lang === 'en' ? 'Display width' : '螢幕顯示寬度'}
+              value={ufovScreenWidthCm}
+              valueLabel={`${ufovScreenWidthCm.toFixed(1)} cm`}
+              min={10}
+              max={250}
+              step={0.1}
+              onValueChange={setUfovScreenWidthCm}
+            />
+            <TrainingSlider
+              label={lang === 'en' ? 'Display height' : '螢幕顯示高度'}
+              value={ufovScreenHeightCm}
+              valueLabel={`${ufovScreenHeightCm.toFixed(1)} cm`}
+              min={10}
+              max={200}
+              step={0.1}
+              onValueChange={setUfovScreenHeightCm}
+            />
+            <TrainingSlider
+              label={lang === 'en' ? 'Viewing distance' : '觀看距離'}
+              value={ufovViewingDistanceCm}
+              valueLabel={`${ufovViewingDistanceCm} cm`}
+              min={20}
+              max={300}
+              step={1}
+              onValueChange={setUfovViewingDistanceCm}
+            />
+            <PeripheralAttentionGeometryWarning
+              geometry={ufovGeometry}
+              targetAngle={ufovTargetVisualAngleDeg}
+              lang={lang}
+            />
           </TrainingConfigSection>
 
           <TrainingConfigSection title={ufovLabels.anglesTitle} wide>
@@ -382,6 +464,8 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
               { value: ufovLabels.modes[selectedUfovMode].label },
               { value: `${selectedUfovAxes.length}/8` },
               { value: selectedUfovStopCondition === 'adaptive_80' ? '80%' : String(ufovTrialCount) },
+              { value: `${ufovContrastPercent}% · ${ufovTargetVisualAngleDeg.toFixed(1)}° · ${ufovVehicleVisualAngleDeg.toFixed(1)}°` },
+              { value: `${ufovScreenWidthCm.toFixed(1)} × ${ufovScreenHeightCm.toFixed(1)} cm · ${ufovViewingDistanceCm} cm` },
             ]}
             sections={GetUfovRuleSections(lang, ufovLabels.subtests[effectiveUfovSubtest])}
             startLabel={ruleLabels.start}
@@ -403,6 +487,30 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
 
 const ufovSubtests: SubtestId[] = [1, 2, 3];
 const ufovRunModes: UfovRunMode[] = ['practice', 'formal'];
+const ufovTargetAxes: UfovTargetAxis[] = [0, 1, 2, 3, 4, 5, 6, 7];
+
+function GetHostedNumber(
+  settings: Readonly<Record<string, string | number | boolean>>,
+  key: string,
+  minimum: number,
+  maximum: number,
+) {
+  const value = settings[key];
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(maximum, Math.max(minimum, value))
+    : null;
+}
+
+function ApplyHostedNumber(
+  settings: Readonly<Record<string, string | number | boolean>>,
+  key: string,
+  minimum: number,
+  maximum: number,
+  apply: (value: number) => void,
+) {
+  const value = GetHostedNumber(settings, key, minimum, maximum);
+  if (value !== null) apply(value);
+}
 
 function IsMobileOrTabletDevice(deviceKind: ReturnType<typeof DetectDisplayDeviceKind>) {
   return deviceKind === 'phone' || deviceKind === 'tablet';

@@ -10,11 +10,14 @@ import {
 import { ExitFullscreenIfActive, WaitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import {
+  CalculatePeripheralAttentionScreenGeometry,
+  CreatePeripheralAttentionCanvasSlots,
   DrawPeripheralAttentionCanvasStage,
   EnsurePeripheralAttentionCanvasStage,
   PreparePeripheralAttentionNoiseMask,
   RenderPeripheralAttentionCanvasStage,
   type PeripheralAttentionCanvasPhase,
+  type PeripheralAttentionCanvasSlot,
   type PeripheralAttentionScreenGeometry,
 } from '@rehab-trainer/ui/peripheralAttentionCanvas';
 import {
@@ -73,6 +76,9 @@ export interface PeripheralAttentionPageProps {
   contrastPercent?: number;
   targetVisualAngleDeg?: number;
   vehicleVisualAngleDeg?: number;
+  screenWidthCm?: number;
+  screenHeightCm?: number;
+  viewingDistanceCm?: number;
   autoStart?: boolean;
   onSaveRecord?: (record: PeripheralAttentionTrainingRecord) => Promise<void> | void;
 }
@@ -85,12 +91,10 @@ interface Subtest {
   hasDistractors: boolean;
 }
 
-interface Slot {
-  axis: number;
-  ring: number;
-  x: number;
-  y: number;
-}
+type TargetSlot = PeripheralAttentionCanvasSlot & {
+  axis: PeripheralAttentionTargetAxis;
+  isTargetCandidate: true;
+};
 
 interface TrialStimulus {
   subtestId: SubtestId;
@@ -101,7 +105,7 @@ interface TrialStimulus {
   displayFrameCount: number;
   plannedDurationMs: number;
   centralTarget: CentralTarget;
-  peripheralSlot?: Slot;
+  peripheralSlot?: TargetSlot;
 }
 
 interface TrialRecord extends PeripheralAttentionFrameSyncMeasurement {
@@ -160,11 +164,14 @@ interface PeripheralAttentionRunConfig {
   contrastPercent: number;
   targetVisualAngleDeg: number;
   vehicleVisualAngleDeg: number;
+  screenWidthCm: number;
+  screenHeightCm: number;
+  viewingDistanceCm: number;
   geometry: PeripheralAttentionScreenGeometry;
 }
 
 interface AdaptiveState {
-  direction: Direction;
+  direction: Direction | null;
   stepMs: number;
   reversals: number[];
   limitStreak: number;
@@ -191,6 +198,9 @@ interface ExperimentPluginInfo {
     contrast_percent: { type: ParameterType.FLOAT };
     target_visual_angle_deg: { type: ParameterType.FLOAT };
     vehicle_visual_angle_deg: { type: ParameterType.FLOAT };
+    screen_width_cm: { type: ParameterType.FLOAT };
+    screen_height_cm: { type: ParameterType.FLOAT };
+    viewing_distance_cm: { type: ParameterType.FLOAT };
     refresh_ms: { type: ParameterType.FLOAT };
     refresh_hz: { type: ParameterType.FLOAT };
     refresh_is_60hz_family: { type: ParameterType.BOOL };
@@ -213,6 +223,9 @@ interface PeripheralAttentionExperimentData {
   contrast_percent: number;
   target_visual_angle_deg: number;
   vehicle_visual_angle_deg: number;
+  screen_width_cm: number;
+  screen_height_cm: number;
+  viewing_distance_cm: number;
   refresh_ms: number;
   refresh_hz: number;
   refresh_is_60hz_family: boolean;
@@ -242,8 +255,10 @@ const maskMs = 500;
 const startStepMs = 50;
 const peripheralAttentionTargetAxes = [0, 1, 2, 3, 4, 5, 6, 7];
 const outerRingIndex = 2;
-const slots = CreateSlots();
-const peripheralTargetSlots = slots.filter((slot) => slot.ring === outerRingIndex);
+const slots = CreatePeripheralAttentionCanvasSlots();
+const peripheralTargetSlots = slots.filter((slot): slot is TargetSlot => (
+  slot.ring === outerRingIndex && slot.isTargetCandidate && slot.axis !== null
+));
 const experimentRunAbortSignals = new WeakMap<JsPsych, AbortSignal>();
 
 const copy = {
@@ -367,6 +382,9 @@ const experimentPluginInfo: ExperimentPluginInfo = {
     contrast_percent: { type: ParameterType.FLOAT },
     target_visual_angle_deg: { type: ParameterType.FLOAT },
     vehicle_visual_angle_deg: { type: ParameterType.FLOAT },
+    screen_width_cm: { type: ParameterType.FLOAT },
+    screen_height_cm: { type: ParameterType.FLOAT },
+    viewing_distance_cm: { type: ParameterType.FLOAT },
     refresh_ms: { type: ParameterType.FLOAT },
     refresh_hz: { type: ParameterType.FLOAT },
     refresh_is_60hz_family: { type: ParameterType.BOOL },
@@ -409,7 +427,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     let currentRefreshMs = refreshMs;
     let durationMs = isPracticeMode ? practiceDurationMs : maxDurationMs;
     let adaptiveState: AdaptiveState = {
-      direction: 'down',
+      direction: null,
       stepMs: startStepMs,
       reversals: [],
       limitStreak: 0,
@@ -542,6 +560,9 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
       contrast_percent: config.contrastPercent,
       target_visual_angle_deg: config.targetVisualAngleDeg,
       vehicle_visual_angle_deg: config.vehicleVisualAngleDeg,
+      screen_width_cm: config.screenWidthCm,
+      screen_height_cm: config.screenHeightCm,
+      viewing_distance_cm: config.viewingDistanceCm,
       refresh_ms: Number(trial.refresh_ms) || refreshMs,
       refresh_hz: Number(trial.refresh_hz) || (1000 / refreshMs),
       refresh_is_60hz_family: Boolean(trial.refresh_is_60hz_family),
@@ -587,7 +608,7 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
     maximumDurationMs: number,
   ): AdaptiveState {
     const nextDirection: Direction = correct ? 'down' : 'up';
-    const reversed = state.direction !== nextDirection;
+    const reversed = state.direction !== null && state.direction !== nextDirection;
     const reversals = reversed ? [...state.reversals, currentDurationMs] : state.reversals;
     const halvedStep = reversed ? Math.max(refreshMs, state.stepMs * 0.75) : state.stepMs;
     const atMinimum = currentDurationMs <= refreshMs * 1.25;
@@ -992,6 +1013,9 @@ export function PeripheralAttentionPage({
   contrastPercent = 100,
   targetVisualAngleDeg = 15,
   vehicleVisualAngleDeg = 2.5,
+  screenWidthCm = 53.1,
+  screenHeightCm = 29.9,
+  viewingDistanceCm = 50,
   autoStart = false,
   onSaveRecord,
 }: PeripheralAttentionPageProps) {
@@ -1056,6 +1080,9 @@ export function PeripheralAttentionPage({
         contrastPercent: data.contrast_percent,
         targetVisualAngleDeg: data.target_visual_angle_deg,
         vehicleVisualAngleDeg: data.vehicle_visual_angle_deg,
+        screenWidthCm: data.screen_width_cm,
+        screenHeightCm: data.screen_height_cm,
+        viewingDistanceCm: data.viewing_distance_cm,
         targetAxes: data.target_axes,
         targetDirections: data.target_axes.map((axis) => FormatAxis(axis, labels)).join(' | '),
         correctCount,
@@ -1225,9 +1252,18 @@ export function PeripheralAttentionPage({
       contrastPercent: Clamp(contrastPercent, 5, 100),
       targetVisualAngleDeg: Clamp(targetVisualAngleDeg, 5, 35),
       vehicleVisualAngleDeg: Clamp(vehicleVisualAngleDeg, .8, 5),
-      geometry: CalculateScreenGeometry(53.1, 29.9, 50, Clamp(targetVisualAngleDeg, 5, 35), Clamp(vehicleVisualAngleDeg, .8, 5)),
+      screenWidthCm: Clamp(screenWidthCm, 10, 250),
+      screenHeightCm: Clamp(screenHeightCm, 10, 200),
+      viewingDistanceCm: Clamp(viewingDistanceCm, 20, 300),
+      geometry: CalculatePeripheralAttentionScreenGeometry(
+        Clamp(screenWidthCm, 10, 250),
+        Clamp(screenHeightCm, 10, 200),
+        Clamp(viewingDistanceCm, 20, 300),
+        Clamp(targetVisualAngleDeg, 5, 35),
+        Clamp(vehicleVisualAngleDeg, .8, 5),
+      ),
     });
-  }, [autoStart, contrastPercent, initialMode, initialSubtestId, savedRecord, stopCondition, targetAxes, targetVisualAngleDeg, trialCount, vehicleVisualAngleDeg]);
+  }, [autoStart, contrastPercent, initialMode, initialSubtestId, savedRecord, screenHeightCm, screenWidthCm, stopCondition, targetAxes, targetVisualAngleDeg, trialCount, vehicleVisualAngleDeg, viewingDistanceCm]);
 
   useEffect(() => () => {
     runGenerationRef.current += 1;
@@ -1420,27 +1456,10 @@ function CreateVehicleIcon(target: CentralTarget) {
   return vehicle;
 }
 
-function CreateSlots(): Slot[] {
-  return peripheralAttentionTargetAxes.flatMap((axis) => [9, 18, 27].map((radius, ring) => ({
-    axis,
-    ring,
-    ...AxisPoint(axis, radius, true),
-  })));
-}
-
 function PickPeripheralTargetSlot(targetAxes: readonly PeripheralAttentionTargetAxis[]) {
-  const candidates = peripheralTargetSlots.filter((slot) => targetAxes.includes(slot.axis as PeripheralAttentionTargetAxis));
-  const slots = candidates.length > 0 ? candidates : peripheralTargetSlots;
-  return slots[Math.floor(Math.random() * slots.length)];
-}
-
-function AxisPoint(axis: number, radius: number, compensateStageAspect = false) {
-  const angle = (-90 + axis * 45) * Math.PI / 180;
-  const yRadius = compensateStageAspect ? radius * (800 / 533) : radius;
-  return {
-    x: 50 + Math.cos(angle) * radius,
-    y: 50 + Math.sin(angle) * yRadius,
-  };
+  const candidates = peripheralTargetSlots.filter((slot) => targetAxes.includes(slot.axis));
+  const availableSlots = candidates.length > 0 ? candidates : peripheralTargetSlots;
+  return availableSlots[Math.floor(Math.random() * availableSlots.length)];
 }
 
 function Clamp(value: number, min: number, max: number) {
@@ -1540,16 +1559,3 @@ function FormatDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function CalculateScreenGeometry(screenWidthCm: number, screenHeightCm: number, viewingDistanceCm: number, targetAngleDeg: number, vehicleAngleDeg: number): PeripheralAttentionScreenGeometry {
-  const screenWidthPx = window.screen.width || window.innerWidth || 1920;
-  const screenHeightPx = window.screen.height || window.innerHeight || 1080;
-  const pixelsPerCm = ((screenWidthPx / screenWidthCm) + (screenHeightPx / screenHeightCm)) / 2;
-  const halfMinExtentCm = Math.min(screenWidthCm, screenHeightCm) / 2;
-  const maxVisualAngleDeg = Math.atan(halfMinExtentCm / viewingDistanceCm) * 180 / Math.PI;
-  const suggestedDistanceCm = targetAngleDeg > maxVisualAngleDeg
-    ? halfMinExtentCm / Math.tan(targetAngleDeg * Math.PI / 180)
-    : undefined;
-  const radiusPx = viewingDistanceCm * Math.tan(targetAngleDeg * Math.PI / 180) * pixelsPerCm;
-  const vehicleWidthPx = Math.max(20, 2 * viewingDistanceCm * Math.tan((vehicleAngleDeg / 2) * Math.PI / 180) * pixelsPerCm);
-  return { maxVisualAngleDeg, isOverLimit: targetAngleDeg > maxVisualAngleDeg, suggestedDistanceCm, radiusPx, vehicleScale: vehicleWidthPx / 72 };
-}

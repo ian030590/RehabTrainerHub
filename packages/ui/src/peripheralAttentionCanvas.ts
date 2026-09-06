@@ -2,10 +2,10 @@ export type PeripheralAttentionCanvasPhase = 'fixation' | 'stimulus' | 'mask';
 export type PeripheralAttentionCanvasTarget = 'car' | 'truck';
 
 export interface PeripheralAttentionCanvasSlot {
-  axis: number;
+  axis: number | null;
   ring: number;
-  x: number;
-  y: number;
+  angleDeg: number;
+  isTargetCandidate: boolean;
 }
 
 export interface PeripheralAttentionCanvasStageOptions {
@@ -22,11 +22,15 @@ export interface PeripheralAttentionCanvasStageOptions {
 }
 
 export interface PeripheralAttentionScreenGeometry {
+  screenWidthPx: number;
+  screenHeightPx: number;
+  pixelsPerCm: number;
   maxVisualAngleDeg: number;
   isOverLimit: boolean;
   suggestedDistanceCm?: number;
-  radiusPx?: number;
-  vehicleScale?: number;
+  radiusPx: number;
+  vehicleWidthPx: number;
+  vehicleScale: number;
 }
 
 // Backward compatibility types
@@ -47,6 +51,53 @@ const canvasStageClass = 'ufov-canvas-stage';
 const canvasClass = 'ufov-stage-canvas';
 const baseVehicleWidth = 72;
 const baseVehicleHeight = 56;
+
+export function CreatePeripheralAttentionCanvasSlots(): PeripheralAttentionCanvasSlot[] {
+  return [8, 16, 24].flatMap((count, ring) => Array.from({ length: count }, (_, index) => {
+    const axisStep = count / 8;
+    const isTargetCandidate = ring === 2 && index % axisStep === 0;
+    return {
+      ring,
+      axis: index % axisStep === 0 ? index / axisStep : null,
+      angleDeg: -90 + index * (360 / count),
+      isTargetCandidate,
+    };
+  }));
+}
+
+export function CalculatePeripheralAttentionScreenGeometry(
+  screenWidthCm: number,
+  screenHeightCm: number,
+  viewingDistanceCm: number,
+  targetAngleDeg: number,
+  vehicleAngleDeg: number,
+  screenWidthPx = GetScreenPixels('width', 1920),
+  screenHeightPx = GetScreenPixels('height', 1080),
+): PeripheralAttentionScreenGeometry {
+  const safeWidthCm = Math.max(1, screenWidthCm);
+  const safeHeightCm = Math.max(1, screenHeightCm);
+  const safeDistanceCm = Math.max(1, viewingDistanceCm);
+  const pixelsPerCm = ((screenWidthPx / safeWidthCm) + (screenHeightPx / safeHeightCm)) / 2;
+  const halfMinExtentCm = Math.min(safeWidthCm, safeHeightCm) / 2;
+  const maxVisualAngleDeg = Math.atan(halfMinExtentCm / safeDistanceCm) * 180 / Math.PI;
+  const suggestedDistanceCm = targetAngleDeg > maxVisualAngleDeg
+    ? halfMinExtentCm / Math.tan(targetAngleDeg * Math.PI / 180)
+    : undefined;
+  const radiusPx = safeDistanceCm * Math.tan(targetAngleDeg * Math.PI / 180) * pixelsPerCm;
+  const vehicleWidthPx = Math.max(20, 2 * safeDistanceCm * Math.tan((vehicleAngleDeg / 2) * Math.PI / 180) * pixelsPerCm);
+
+  return {
+    screenWidthPx,
+    screenHeightPx,
+    pixelsPerCm,
+    maxVisualAngleDeg,
+    isOverLimit: targetAngleDeg > maxVisualAngleDeg,
+    suggestedDistanceCm,
+    radiusPx,
+    vehicleWidthPx,
+    vehicleScale: vehicleWidthPx / baseVehicleWidth,
+  };
+}
 
 export function EnsurePeripheralAttentionCanvasStage(displayElement: HTMLElement, ariaLabel: string) {
   const currentStage = displayElement.querySelector<HTMLDivElement>(`.${canvasStageClass}`);
@@ -232,10 +283,12 @@ function DrawPeripheralStimuli(
   if (!targetSlot) return;
 
   options.slots.forEach((slot) => {
-    const isTarget = slot.axis === targetSlot.axis && slot.ring === targetSlot.ring;
+    const isTarget = slot.isTargetCandidate
+      && slot.axis === targetSlot.axis
+      && slot.ring === targetSlot.ring;
     if (!isTarget && !options.hasDistractors) return;
 
-    const angle = (-90 + slot.axis * 45) * Math.PI / 180;
+    const angle = slot.angleDeg * Math.PI / 180;
     const radius = metrics.radii[slot.ring] ?? metrics.radii[metrics.radii.length - 1];
     const pointX = width / 2 + Math.cos(angle) * radius;
     const pointY = height / 2 + Math.sin(angle) * radius;
@@ -347,4 +400,9 @@ function CreateNoiseImageData(context: CanvasRenderingContext2D, width: number, 
 
 function Clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function GetScreenPixels(axis: 'width' | 'height', fallback: number) {
+  if (typeof window === 'undefined') return fallback;
+  return Number(window.screen?.[axis]) || Number(axis === 'width' ? window.innerWidth : window.innerHeight) || fallback;
 }
