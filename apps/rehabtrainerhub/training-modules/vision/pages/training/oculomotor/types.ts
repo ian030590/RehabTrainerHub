@@ -96,4 +96,5 @@ export interface PatternParams {
   colorB: number;
   opacity?: number;
   jitter?: number;
+  targetAxes?: number[];
 }

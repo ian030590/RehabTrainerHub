@@ -95,6 +95,7 @@ export interface AppSettings {
   displayCalibrationAt: string;
   oculomotorEnableWebgazer: boolean;
   oculomotorShowGazepoint: boolean;
+  oculomotorAxes: number[];
   readingWPS: number;
   readingCrowding: number;
   readingContrast: number;
@@ -167,6 +168,7 @@ const appSettingsMeta: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> }
   displayCalibrationAt: { dflt: '' },
   oculomotorEnableWebgazer: { dflt: false },
   oculomotorShowGazepoint: { dflt: false },
+  oculomotorAxes: { dflt: [0, 1, 2, 3, 4, 5, 6, 7] },
   readingWPS: { dflt: 4, min: 1, max: 20 },
   readingCrowding: { dflt: 1, min: 1, max: 5 },
   readingContrast: { dflt: 0.0, min: 0.0, max: 2.0 },
@@ -181,6 +183,9 @@ const appSettingsMeta: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> }
   uiFontBold: { dflt: false },
   uiTheme: { dflt: 'light' },
 };
+
+let cachedOculomotorAxesRaw: string | null = null;
+let cachedOculomotorAxesParsed: number[] = [0, 1, 2, 3, 4, 5, 6, 7];
 
 function StorageKey(name: string): string {
   return storagePrefix + name;
@@ -203,6 +208,20 @@ export function GetSetting<K extends keyof AppSettings>(key: K): AppSettings[K] 
   const raw = localStorage.getItem(StorageKey(key));
   if (raw === null) return appSettingsMeta[key].dflt;
   const settingMeta = appSettingsMeta[key];
+  if (key === 'oculomotorAxes') {
+    if (raw === cachedOculomotorAxesRaw) return cachedOculomotorAxesParsed as AppSettings[K];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'number')) {
+        cachedOculomotorAxesRaw = raw;
+        cachedOculomotorAxesParsed = parsed;
+        return cachedOculomotorAxesParsed as AppSettings[K];
+      }
+    } catch {
+      // fallback
+    }
+    return settingMeta.dflt as AppSettings[K];
+  }
   if (typeof settingMeta.dflt === 'boolean') {
     return (raw === 'true') as AppSettings[K];
   }
@@ -226,7 +245,8 @@ export function GetSetting<K extends keyof AppSettings>(key: K): AppSettings[K] 
 }
 
 export function SetSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
-  localStorage.setItem(StorageKey(key), String(value));
+  const serialized = Array.isArray(value) ? JSON.stringify(value) : String(value);
+  localStorage.setItem(StorageKey(key), serialized);
   window.dispatchEvent(new CustomEvent(appSettingsChangedEvent, { detail: { key } }));
 }
 

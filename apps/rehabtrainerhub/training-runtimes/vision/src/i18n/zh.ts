@@ -104,6 +104,8 @@ export const zh = {
   'home.config.forward': '正向',
   'home.config.reverse': '反向',
   'home.config.showTrail': '顯示移動軌跡',
+  'home.config.motionDirections': '刺激移動區域 (九宮格方位選擇)',
+  'home.config.motionDirectionsDesc': '按照空間九宮格方位排列，決定視覺注視點在哪個區域移動',
   'home.config.screenCalibration': '螢幕與觀看距離',
   'home.config.viewingDistance': '觀看距離',
   'home.config.cssPxPerCm': '每公分 CSS 像素',

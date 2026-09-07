@@ -11,6 +11,10 @@ import {
   TrainingConfigOptionGroup,
   TrainingConfigSection,
 } from '@rehab-trainer/ui/components/TrainingConfigPanel';
+import {
+  PeripheralAttentionNineGridCompass,
+  type PeripheralAttentionTargetAxis,
+} from '@rehab-trainer/ui/components/PeripheralAttentionConfigComponents';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
@@ -149,6 +153,7 @@ export function HomePage() {
   const [oculomotorCssPxPerCm, setOculomotorCssPxPerCm] = useAppSetting('oculomotorCssPxPerCm');
   const [oculomotorEnableWebgazer, setOculomotorEnableWebgazer] = useAppSetting('oculomotorEnableWebgazer');
   const [oculomotorShowGazepoint, setOculomotorShowGazepoint] = useAppSetting('oculomotorShowGazepoint');
+  const [oculomotorAxes, setOculomotorAxes] = useAppSetting('oculomotorAxes');
   const [gaborDurationSec, setGaborDurationSec] = useState(60);
   const [gaborMaxSpots, setGaborMaxSpots] = useState(10);
   const [readingWPS, setReadingWPS] = useAppSetting('readingWPS');
@@ -239,6 +244,15 @@ export function HomePage() {
       if (typeof hostedSettings.cssPxPerCm === 'number') setOculomotorCssPxPerCm(hostedSettings.cssPxPerCm);
       if (typeof hostedSettings.webgazerEnabled === 'boolean') setOculomotorEnableWebgazer(hostedSettings.webgazerEnabled);
       if (typeof hostedSettings.gazePointVisible === 'boolean') setOculomotorShowGazepoint(hostedSettings.gazePointVisible);
+      const nextAxes: number[] = [];
+      for (let i = 0; i < 8; i++) {
+        if (hostedSettings[`axis${i}Enabled`] !== false) {
+          nextAxes.push(i);
+        }
+      }
+      if (nextAxes.length > 0) {
+        setOculomotorAxes(nextAxes);
+      }
     } else if (requestedModule === 'gabor-patching') {
       if (typeof hostedSettings.durationSec === 'number') setGaborDurationSec(hostedSettings.durationSec);
       if (typeof hostedSettings.maxSpots === 'number') setGaborMaxSpots(hostedSettings.maxSpots);
@@ -989,6 +1003,22 @@ export function HomePage() {
                   />
                 </label>
               </TrainingConfigOptionGroup>
+            </TrainingConfigSection>
+
+            <TrainingConfigSection
+              title={t('home.config.motionDirections')}
+              value={`${oculomotorAxes.length}/8`}
+              wide
+            >
+              <PeripheralAttentionNineGridCompass
+                lang={lang}
+                selectedAxes={oculomotorAxes as PeripheralAttentionTargetAxis[]}
+                onChange={setOculomotorAxes}
+                labels={{
+                  directionsTitle: t('home.config.motionDirections'),
+                  directionsDesc: t('home.config.motionDirectionsDesc'),
+                }}
+              />
             </TrainingConfigSection>
 
             <TrainingConfigSection title={t('home.config.screenCalibration')} wide>

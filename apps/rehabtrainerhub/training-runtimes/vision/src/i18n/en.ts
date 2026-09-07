@@ -106,6 +106,8 @@ export const en: Record<TranslationKey, string> = {
   'home.config.forward': 'Forward',
   'home.config.reverse': 'Reverse',
   'home.config.showTrail': 'Show motion trail',
+  'home.config.motionDirections': 'Target motion directions (3x3 Compass Grid)',
+  'home.config.motionDirectionsDesc': 'Arranged in a 3x3 compass grid to determine target movement areas',
   'home.config.screenCalibration': 'Screen and viewing distance',
   'home.config.viewingDistance': 'Viewing distance',
   'home.config.cssPxPerCm': 'CSS pixels per cm',

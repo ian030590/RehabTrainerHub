@@ -73,6 +73,81 @@ const writeFrame = (
   return index + 1;
 };
 
+const gridAxisCells: Record<number, { row: number; col: number }> = {
+  7: { row: 0, col: 0 }, // 左上
+  0: { row: 0, col: 1 }, // 上
+  1: { row: 0, col: 2 }, // 右上
+  6: { row: 1, col: 0 }, // 左
+  2: { row: 1, col: 2 }, // 右
+  5: { row: 2, col: 0 }, // 左下
+  4: { row: 2, col: 1 }, // 下
+  3: { row: 2, col: 2 }, // 右下
+};
+
+interface GridCellBounds {
+  axis: number;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+const getActiveGridDivision = (
+  arena: Arena,
+  margin: number,
+  targetAxes?: number[],
+): {
+  cells: GridCellBounds[];
+  bounds: { left: number; right: number; top: number; bottom: number };
+  isRestricted: boolean;
+} => {
+  const fullLeft = margin;
+  const fullTop = margin;
+  const fullRight = Math.max(fullLeft, arena.width - margin);
+  const fullBottom = Math.max(fullTop, arena.height - margin);
+  const fullWidth = Math.max(1, fullRight - fullLeft);
+  const fullHeight = Math.max(1, fullBottom - fullTop);
+
+  const validAxes = Array.isArray(targetAxes) && targetAxes.length > 0
+    ? targetAxes.filter((a) => Number.isInteger(a) && a >= 0 && a <= 7)
+    : [0, 1, 2, 3, 4, 5, 6, 7];
+  const activeAxes = validAxes.length > 0 ? validAxes : [0, 1, 2, 3, 4, 5, 6, 7];
+
+  if (activeAxes.length === 8) {
+    return {
+      cells: [],
+      bounds: { left: fullLeft, right: fullRight, top: fullTop, bottom: fullBottom },
+      isRestricted: false,
+    };
+  }
+
+  const cells: GridCellBounds[] = activeAxes.map((axis) => {
+    const { row, col } = gridAxisCells[axis];
+    const cellLeft = fullLeft + (col / 3) * fullWidth;
+    const cellRight = fullLeft + ((col + 1) / 3) * fullWidth;
+    const cellTop = fullTop + (row / 3) * fullHeight;
+    const cellBottom = fullTop + ((row + 1) / 3) * fullHeight;
+    return {
+      axis,
+      left: cellLeft,
+      right: cellRight,
+      top: cellTop,
+      bottom: cellBottom,
+    };
+  });
+
+  const bLeft = Math.min(...cells.map((c) => c.left));
+  const bRight = Math.max(...cells.map((c) => c.right));
+  const bTop = Math.min(...cells.map((c) => c.top));
+  const bBottom = Math.max(...cells.map((c) => c.bottom));
+
+  return {
+    cells,
+    bounds: { left: bLeft, right: bRight, top: bTop, bottom: bBottom },
+    isRestricted: true,
+  };
+};
+
 const sampleRandomWalk = (
   rng: Rng,
   travelPx: number,
@@ -80,11 +155,22 @@ const sampleRandomWalk = (
   top: number,
   right: number,
   bottom: number,
+  cells?: GridCellBounds[],
 ) => {
   const segmentPx = 260;
   const bucket = Math.floor(Math.max(0, travelPx) / segmentPx);
   const local = (travelPx - bucket * segmentPx) / segmentPx;
   const smooth = local * local * (3 - 2 * local);
+  if (cells && cells.length > 0) {
+    const cellA = cells[positiveModulo(rng.intAt(bucket * 2 + 100), cells.length)];
+    const cellB = cells[positiveModulo(rng.intAt((bucket + 1) * 2 + 100), cells.length)];
+    const ax = rng.rangeAt(bucket * 2, cellA.left, cellA.right);
+    const ay = rng.rangeAt(bucket * 2 + 1, cellA.top, cellA.bottom);
+    const bx = rng.rangeAt((bucket + 1) * 2, cellB.left, cellB.right);
+    const by = rng.rangeAt((bucket + 1) * 2 + 1, cellB.top, cellB.bottom);
+    return [interpolate(ax, bx, smooth), interpolate(ay, by, smooth)] satisfies [number, number];
+  }
+
   const ax = rng.rangeAt(bucket * 2, left, right);
   const ay = rng.rangeAt(bucket * 2 + 1, top, bottom);
   const bx = rng.rangeAt((bucket + 1) * 2, left, right);
@@ -102,14 +188,16 @@ const sampleSingle = (
     Math.max(params.radiusPx + 18, 24),
     Math.max(24, Math.min(arena.width, arena.height) / 2),
   );
-  const left = margin;
-  const top = margin;
-  const right = Math.max(left, arena.width - margin);
-  const bottom = Math.max(top, arena.height - margin);
+  const { cells: activeCells, bounds, isRestricted } = getActiveGridDivision(
+    arena,
+    margin,
+    params.targetAxes,
+  );
+  const { left, top, right, bottom } = bounds;
   const width = Math.max(1, right - left);
   const height = Math.max(1, bottom - top);
-  const cx = arena.width / 2;
-  const cy = arena.height / 2;
+  const cx = (left + right) / 2;
+  const cy = (top + bottom) / 2;
   const rx = width / 2;
   const ry = height / 2;
   const travelPx = params.travelPx;
@@ -177,6 +265,22 @@ const sampleSingle = (
       const segmentPx = Math.max(240, Math.min(width, height) * 0.55);
       const bucket = Math.floor(Math.max(0, travelPx) / segmentPx);
       const progress = (Math.max(0, travelPx) - bucket * segmentPx) / segmentPx;
+      if (isRestricted && activeCells.length > 0) {
+        const cellA = activeCells[positiveModulo(rng.intAt(bucket * 2 + 500), activeCells.length)];
+        const cellB = activeCells[positiveModulo(rng.intAt((bucket + 1) * 2 + 500), activeCells.length)];
+        return [
+          interpolate(
+            rng.rangeAt(40_000 + bucket * 2, cellA.left, cellA.right),
+            rng.rangeAt(40_000 + (bucket + 1) * 2, cellB.left, cellB.right),
+            progress,
+          ),
+          interpolate(
+            rng.rangeAt(40_001 + bucket * 2, cellA.top, cellA.bottom),
+            rng.rangeAt(40_001 + (bucket + 1) * 2, cellB.top, cellB.bottom),
+            progress,
+          ),
+        ] satisfies [number, number];
+      }
       return [
         interpolate(
           rng.rangeAt(40_000 + bucket * 2, left, right),
@@ -193,6 +297,13 @@ const sampleSingle = (
     case 'teleport': {
       const jumpDistancePx = clamp(Math.min(width, height) * 0.55, 420, 820);
       const bucket = Math.floor(Math.max(0, travelPx) / jumpDistancePx);
+      if (isRestricted && activeCells.length > 0) {
+        const cell = activeCells[positiveModulo(rng.intAt(bucket * 2 + 100), activeCells.length)];
+        return [
+          rng.rangeAt(bucket * 2, cell.left, cell.right),
+          rng.rangeAt(bucket * 2 + 1, cell.top, cell.bottom),
+        ] satisfies [number, number];
+      }
       return [
         rng.rangeAt(bucket * 2, left, right),
         rng.rangeAt(bucket * 2 + 1, top, bottom),
@@ -322,10 +433,10 @@ const sampleSingle = (
       return [interpolate(ax, bx, smooth), interpolate(ay, by, smooth)] satisfies [number, number];
     }
     case 'peekaboo':
-      return sampleRandomWalk(rng, travelPx, left, top, right, bottom);
+      return sampleRandomWalk(rng, travelPx, left, top, right, bottom, isRestricted ? activeCells : undefined);
     case 'randomWalk':
     default:
-      return sampleRandomWalk(rng, travelPx, left, top, right, bottom);
+      return sampleRandomWalk(rng, travelPx, left, top, right, bottom, isRestricted ? activeCells : undefined);
   }
 };
 
@@ -361,10 +472,11 @@ export const sampleOculomotorPatternInto = (
     Math.max(radius + 18, 24),
     Math.max(24, Math.min(arena.width, arena.height) / 2),
   );
-  const left = margin;
-  const top = margin;
-  const width = Math.max(1, arena.width - margin * 2);
-  const height = Math.max(1, arena.height - margin * 2);
+  const { bounds: motBounds } = getActiveGridDivision(arena, margin, params.targetAxes);
+  const left = motBounds.left;
+  const top = motBounds.top;
+  const width = Math.max(1, motBounds.right - motBounds.left);
+  const height = Math.max(1, motBounds.bottom - motBounds.top);
   const total = clamp(params.targetCount + params.distractorCount, 1, 16);
   let count = 0;
 

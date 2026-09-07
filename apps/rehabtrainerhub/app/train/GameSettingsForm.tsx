@@ -7,6 +7,7 @@ import {
   ResolveGameSettingsText,
   type GameSettingField,
   type GameSettingsDefinition,
+  type GameSettingsSection,
   type GameSettingsValues,
 } from '@rehab-trainer/game-settings';
 import { Button } from '../components/ui/button';
@@ -73,35 +74,96 @@ export function GameSettingsForm({
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-7">
         <div className="mx-auto grid w-full gap-5">
-          {definition.sections.map((section) => (
-            <section
-              className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6"
-              key={section.id}
-            >
-              <div className="mb-5">
-                <h3 className="m-0 text-lg font-black tracking-[-0.015em] text-[var(--heading)]">
-                  {ResolveGameSettingsText(section.title, locale)}
-                </h3>
-                {section.description && (
-                  <p className="mt-1 mb-0 text-sm leading-6 text-[var(--text-muted)]">
-                    {ResolveGameSettingsText(section.description, locale)}
-                  </p>
-                )}
-              </div>
-              <div className="grid gap-5">
-                {section.fields.map((field) => (
-                  <GameSettingControl
-                    field={field}
-                    key={field.key}
+          {definition.sections.map((section) => {
+            const isCompass = IsDirectionsCompassSection(section);
+            const activeCompassCount = isCompass
+              ? [0, 1, 2, 3, 4, 5, 6, 7].filter((i) => Boolean(values[`axis${i}Enabled`])).length
+              : 0;
+
+            return (
+              <section
+                className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6"
+                key={section.id}
+              >
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="m-0 text-lg font-black tracking-[-0.015em] text-[var(--heading)]">
+                      {ResolveGameSettingsText(section.title, locale)}
+                    </h3>
+                    {section.description && (
+                      <p className="mt-1 mb-0 text-sm leading-6 text-[var(--text-muted)]">
+                        {ResolveGameSettingsText(section.description, locale)}
+                      </p>
+                    )}
+                  </div>
+                  {isCompass && (
+                    <output className="min-w-20 shrink-0 rounded-[6px] bg-[var(--primary-soft)] px-2.5 py-1 text-center font-mono text-xs font-black tabular-nums text-[var(--primary)]">
+                      {locale === 'en'
+                        ? `${activeCompassCount}/8 directions active`
+                        : `${activeCompassCount}/8 方向啟用`}
+                    </output>
+                  )}
+                </div>
+                {isCompass ? (
+                  <DirectionsCompassSection
                     locale={locale}
-                    onChange={(value) => updateValue(field.key, value)}
-                    portalContainer={portalContainer}
-                    value={values[field.key]}
+                    onToggleAll={() => {
+                      if (activeCompassCount === 8) {
+                        setValues((current) => ({
+                          ...current,
+                          axis0Enabled: true,
+                          axis1Enabled: false,
+                          axis2Enabled: true,
+                          axis3Enabled: false,
+                          axis4Enabled: true,
+                          axis5Enabled: false,
+                          axis6Enabled: true,
+                          axis7Enabled: false,
+                        }));
+                      } else {
+                        setValues((current) => ({
+                          ...current,
+                          axis0Enabled: true,
+                          axis1Enabled: true,
+                          axis2Enabled: true,
+                          axis3Enabled: true,
+                          axis4Enabled: true,
+                          axis5Enabled: true,
+                          axis6Enabled: true,
+                          axis7Enabled: true,
+                        }));
+                      }
+                    }}
+                    onToggleAxis={(axis) => {
+                      const key = `axis${axis}Enabled`;
+                      const isCurrentlyActive = Boolean(values[key]);
+                      if (isCurrentlyActive) {
+                        if (activeCompassCount > 1) {
+                          updateValue(key, false);
+                        }
+                      } else {
+                        updateValue(key, true);
+                      }
+                    }}
+                    values={values}
                   />
-                ))}
-              </div>
-            </section>
-          ))}
+                ) : (
+                  <div className="grid gap-5">
+                    {section.fields.map((field) => (
+                      <GameSettingControl
+                        field={field}
+                        key={field.key}
+                        locale={locale}
+                        onChange={(value) => updateValue(field.key, value)}
+                        portalContainer={portalContainer}
+                        value={values[field.key]}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
       </div>
 
@@ -236,3 +298,95 @@ function GameSettingControl({
     </div>
   );
 }
+
+interface CompassSlot {
+  axis?: number;
+  isCenter?: boolean;
+  arrow: string;
+  labelZh: string;
+  labelEn: string;
+}
+
+const NINE_GRID_COMPASS_SLOTS: CompassSlot[] = [
+  { axis: 7, arrow: '↖', labelZh: '左上', labelEn: 'Up-Left' },
+  { axis: 0, arrow: '↑', labelZh: '上', labelEn: 'Up' },
+  { axis: 1, arrow: '↗', labelZh: '右上', labelEn: 'Up-Right' },
+  { axis: 6, arrow: '←', labelZh: '左', labelEn: 'Left' },
+  { isCenter: true, arrow: 'ALL', labelZh: '全選', labelEn: 'All' },
+  { axis: 2, arrow: '→', labelZh: '右', labelEn: 'Right' },
+  { axis: 5, arrow: '↙', labelZh: '左下', labelEn: 'Down-Left' },
+  { axis: 4, arrow: '↓', labelZh: '下', labelEn: 'Down' },
+  { axis: 3, arrow: '↘', labelZh: '右下', labelEn: 'Down-Right' },
+];
+
+function IsDirectionsCompassSection(section: GameSettingsSection): boolean {
+  return section.id === 'directions'
+    && [0, 1, 2, 3, 4, 5, 6, 7].every((axis) => (
+      section.fields.some((field) => field.key === `axis${axis}Enabled` && field.type === 'checkbox')
+    ));
+}
+
+function DirectionsCompassSection({
+  locale,
+  onToggleAll,
+  onToggleAxis,
+  values,
+}: {
+  locale: 'en' | 'zh-TW';
+  onToggleAll: () => void;
+  onToggleAxis: (axis: number) => void;
+  values: GameSettingsValues;
+}) {
+  const activeCount = [0, 1, 2, 3, 4, 5, 6, 7].filter((i) => Boolean(values[`axis${i}Enabled`])).length;
+  const isAllActive = activeCount === 8;
+
+  return (
+    <div className="mx-auto grid w-full max-w-[440px] grid-cols-3 gap-2.5">
+      {NINE_GRID_COMPASS_SLOTS.map((slot) => {
+        if (slot.isCenter) {
+          return (
+            <button
+              aria-pressed={isAllActive}
+              className={`flex min-h-[66px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[10px] border p-2 select-none transition-all ${
+                isAllActive
+                  ? 'border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--primary)]'
+                  : 'border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text)] hover:border-[var(--primary)] hover:bg-[var(--surface)]'
+              }`}
+              key="center-all"
+              onClick={onToggleAll}
+              type="button"
+            >
+              <span className="text-[15px] font-black tracking-wider leading-none">ALL</span>
+              <span className={`text-xs font-bold ${isAllActive ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`}>
+                {locale === 'en' ? slot.labelEn : slot.labelZh}
+              </span>
+            </button>
+          );
+        }
+
+        const axis = slot.axis!;
+        const isActive = Boolean(values[`axis${axis}Enabled`]);
+
+        return (
+          <button
+            aria-pressed={isActive}
+            className={`flex min-h-[66px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[10px] border p-2 select-none transition-all ${
+              isActive
+                ? 'border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--primary)]'
+                : 'border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text)] hover:border-[var(--primary)] hover:bg-[var(--surface)]'
+            }`}
+            key={`axis-${axis}`}
+            onClick={() => onToggleAxis(axis)}
+            type="button"
+          >
+            <span className="text-2xl font-black leading-none">{slot.arrow}</span>
+            <span className={`text-xs font-bold ${isActive ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`}>
+              {locale === 'en' ? slot.labelEn : slot.labelZh}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+

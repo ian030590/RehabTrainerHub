@@ -50,6 +50,7 @@ export interface BuildTimelineOverrides {
     cssPxPerCm?: number;
     showGazepoint?: boolean;
     webGazerCalibration?: WebGazerCalibrationCopy;
+    targetAxes?: number[];
   };
   gabor?: {
     durationSec?: number;

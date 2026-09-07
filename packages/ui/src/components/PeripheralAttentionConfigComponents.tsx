@@ -165,7 +165,7 @@ export function PeripheralAttentionNineGridCompass({
 
   const toggleAll = () => {
     if (isAllSelected) {
-      onChange([0]);
+      onChange([0, 2, 4, 6]);
     } else {
       onChange([...allAxes]);
     }

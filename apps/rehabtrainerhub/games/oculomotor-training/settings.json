@@ -80,6 +80,91 @@
       ]
     },
     {
+      "id": "directions",
+      "title": {
+        "zh-TW": "移動目標呈現方位",
+        "en": "Target motion directions"
+      },
+      "description": {
+        "zh-TW": "按照九宮格方位排列，決定視覺注視點在哪個區域移動（支援 8 個空間方向）。",
+        "en": "Arranged in a 3x3 compass grid to determine target movement areas."
+      },
+      "fields": [
+        {
+          "key": "axis0Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "上（↑）",
+            "en": "Up (↑)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis1Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "右上（↗）",
+            "en": "Up-Right (↗)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis2Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "右（→）",
+            "en": "Right (→)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis3Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "右下（↘）",
+            "en": "Down-Right (↘)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis4Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "下（↓）",
+            "en": "Down (↓)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis5Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "左下（↙）",
+            "en": "Down-Left (↙)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis6Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "左（←）",
+            "en": "Left (←)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis7Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "左上（↖）",
+            "en": "Up-Left (↖)"
+          },
+          "default": true
+        }
+      ]
+    },
+    {
       "id": "motion",
       "title": { "zh-TW": "移動與螢幕校正", "en": "Motion and screen calibration" },
       "fields": [

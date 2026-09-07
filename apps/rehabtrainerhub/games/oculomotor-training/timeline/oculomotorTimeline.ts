@@ -44,6 +44,7 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
   const enableWebGazer = GetSetting('oculomotorEnableWebgazer');
   const showGazepoint = overrides?.oculomotor?.showGazepoint
     ?? GetSetting('oculomotorShowGazepoint');
+  const targetAxes = overrides?.oculomotor?.targetAxes ?? GetSetting('oculomotorAxes');
 
   const trial = {
     type: PixiOculomotorTrainingPlugin,
@@ -51,6 +52,7 @@ export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): obj
     pattern,
     behavior,
     duration_ms: Math.round(durationSec * 1000),
+    target_axes: targetAxes,
     speed_value: speedValue,
     speed_unit: speedUnit,
     viewing_distance_cm: viewingDistanceCm,

@@ -301,6 +301,7 @@ function TrainingRuntimePage() {
               oculomotorCssPxPerCm,
               oculomotorEnableWebgazer: enableWebGazer,
               oculomotorShowGazepoint: showGazepoint,
+              oculomotorAxes: GetSetting('oculomotorAxes'),
               oculomotorDistractorCount: Number.isFinite(oculomotorDistractorCount)
                 ? oculomotorDistractorCount
                 : GetSetting('oculomotorDistractorCount'),
@@ -359,6 +360,7 @@ function TrainingRuntimePage() {
           viewingDistanceCm: oculomotorViewingDistanceCm,
           cssPxPerCm: oculomotorCssPxPerCm,
           showGazepoint,
+          targetAxes: GetSetting('oculomotorAxes'),
           webGazerCalibration: {
             beginInstructions: t('settings.wg.beginInstructions'),
             beginPrompt: t('settings.wg.beginPrompt'),

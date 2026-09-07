@@ -55,6 +55,10 @@ const info = {
   name: 'pixi-oculomotor-training',
   version: '1.0.0',
   parameters: {
+    target_axes: {
+      type: ParameterType.OBJECT,
+      default: [0, 1, 2, 3, 4, 5, 6, 7],
+    },
     mode: {
       type: ParameterType.STRING,
       default: 'pursuit',
@@ -476,6 +480,11 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
     pauseButton.setAttribute('aria-label', '暫停訓練');
     wrapper.appendChild(pauseButton);
 
+    const rawTargetAxes = trial.target_axes;
+    const targetAxes: number[] = Array.isArray(rawTargetAxes) && rawTargetAxes.length > 0
+      ? (rawTargetAxes as number[]).filter((a) => Number.isInteger(a) && a >= 0 && a <= 7)
+      : [0, 1, 2, 3, 4, 5, 6, 7];
+    const activeTargetAxes = targetAxes.length > 0 ? targetAxes : [0, 1, 2, 3, 4, 5, 6, 7];
     const mode = trial.mode as OculomotorMode;
     const pattern = trial.pattern as OculomotorPattern;
     const activePattern: OculomotorPattern = mode === 'reaction-jumps'
@@ -811,14 +820,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           return;
         }
 
-        const step = 72;
-        for (let x = step; x < arena.width; x += step) {
-          guideGfx.moveTo(x, 0).lineTo(x, arena.height);
-        }
-        for (let y = step; y < arena.height; y += step) {
-          guideGfx.moveTo(0, y).lineTo(arena.width, y);
-        }
-        guideGfx.stroke({ color: pixiColors.border, width: 1, alpha: 0.26 });
+// Clean background without pattern\n        return;
       };
 
       const drawLilacChaser = (arena: Arena, elapsedSec: number) => {
@@ -1125,6 +1127,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
             colorB: distractorColor,
             opacity,
             jitter: bounceJitter,
+            targetAxes: activeTargetAxes,
           },
           rng,
         );
