@@ -3486,18 +3486,6 @@ summary:focus-visible {
   margin-bottom: 0;
 }
 
-.library-section-heading > span {
-  display: grid;
-  min-width: 38px;
-  height: 38px;
-  padding: 0 10px;
-  border-radius: 999px;
-  color: var(--primary);
-  background: var(--primary-soft);
-  font-weight: 800;
-  place-items: center;
-}
-
 .community-library-heading {
   margin-top: 42px;
   padding-top: 28px;

@@ -345,7 +345,6 @@ export function TrainingLobby() {
                 <p className="page-kicker">Official library</p>
                 <h3>{platformCopy.officialLibrary}</h3>
               </div>
-              <span>{visibleModules.length}</span>
             </header>
           )}
 
@@ -421,7 +420,6 @@ export function TrainingLobby() {
                 <p className="page-kicker">Developer library</p>
                 <h3>{platformCopy.developerLibrary}</h3>
               </div>
-              <span>{visiblePublishedGames.length}</span>
             </header>
           )}
 
