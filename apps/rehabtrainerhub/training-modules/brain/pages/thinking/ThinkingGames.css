@@ -6,7 +6,7 @@
 
 .training-module-button .selection-card-visual {
   height: auto;
-  min-height: 184px;
+  min-height: 230px;
   aspect-ratio: 16 / 9;
   display: grid;
   place-items: center;

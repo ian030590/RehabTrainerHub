@@ -1168,7 +1168,7 @@ summary:focus-visible {
 .module-card-visual {
   position: relative;
   display: grid;
-  height: 152px;
+  height: 190px;
   place-items: center;
   align-content: center;
   gap: 6px;

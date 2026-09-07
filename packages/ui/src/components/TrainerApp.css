@@ -686,7 +686,7 @@ body[data-training-embed="hub"] #root,
 
 .selection-card-visual {
   display: block;
-  height: 152px;
+  height: 190px;
   overflow: hidden;
   background: color-mix(in srgb, var(--accent) 12%, var(--bg-card));
 }

@@ -307,7 +307,7 @@ interface CompassSlot {
   labelEn: string;
 }
 
-const NINE_GRID_COMPASS_SLOTS: CompassSlot[] = [
+const nineGridCompassSlots: CompassSlot[] = [
   { axis: 7, arrow: '↖', labelZh: '左上', labelEn: 'Up-Left' },
   { axis: 0, arrow: '↑', labelZh: '上', labelEn: 'Up' },
   { axis: 1, arrow: '↗', labelZh: '右上', labelEn: 'Up-Right' },
@@ -342,7 +342,7 @@ function DirectionsCompassSection({
 
   return (
     <div className="mx-auto grid w-full max-w-[440px] grid-cols-3 gap-2.5">
-      {NINE_GRID_COMPASS_SLOTS.map((slot) => {
+      {nineGridCompassSlots.map((slot) => {
         if (slot.isCenter) {
           return (
             <button
