@@ -1,16 +1,16 @@
 // Hub-owned reaction-time runtime.
 import { Application, Container, Graphics } from 'pixi.js';
-import { reactionConfig } from './constants';
-import type { TFunction } from '../types';
-import type { Difficulty, ReactionState, ReactionTrialRecord, ResultStats } from './types';
-import { CreateReactionTrialRecord } from './trialRecords';
+import { reactionConfig } from '@rehab-trainer/ui/cognitive/constants';
+import type { TFunction } from '@rehab-trainer/ui/cognitive/types';
+import type { Difficulty, ReactionState, ReactionTrialRecord, ResultStats } from '@rehab-trainer/ui/cognitive/types';
+import { CreateReactionTrialRecord } from '@rehab-trainer/ui/cognitive/trialRecords';
 import {
   AddText,
   Average,
   GetResponsiveBoardMaxSize,
   GetPointerEventTimestamp,
   IsMobileCognitiveViewport,
-} from './utils';
+} from '@rehab-trainer/ui/cognitive/utils';
 
 const reactionColors: Record<ReactionState['status'], number> = {
   waiting: 0x3498db,

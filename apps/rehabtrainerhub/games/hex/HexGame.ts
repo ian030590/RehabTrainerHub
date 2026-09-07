@@ -1,2 +1,1 @@
-// Canonical runtime module for hex
-export * from '../_cognitive-shared/languageNeutralGames.ts';
+export * from '@rehab-trainer/ui/cognitive/languageNeutralGames';

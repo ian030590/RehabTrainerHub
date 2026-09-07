@@ -1,4 +1,4 @@
-import type { TrialData } from '../types';
+import type { TrialData } from '../types/types';
 
 export const oculomotorTrialType = 'pixi-oculomotor-training';
 

@@ -31,16 +31,16 @@ async function ImportTypeScriptModule(relativePath, transformSource = (source) =
 
 const [rendering, cameraRig, timing, inputCapabilities, displayTiming] = await Promise.all([
   ImportTypeScriptModule(
-    '../apps/rehabtrainerhub/training-modules/vision/experiment/plugins/driving/driving-rendering.ts',
+    '../apps/rehabtrainerhub/games/driving-rehab/rendering/driving-rendering.ts',
   ),
   ImportTypeScriptModule(
-    '../apps/rehabtrainerhub/training-modules/vision/experiment/plugins/driving/driving-camera.ts',
+    '../apps/rehabtrainerhub/games/driving-rehab/camera/driving-camera.ts',
   ),
   ImportTypeScriptModule(
-    '../apps/rehabtrainerhub/training-modules/vision/experiment/plugins/driving/driving-timing.ts',
+    '../apps/rehabtrainerhub/games/driving-rehab/timing/driving-timing.ts',
   ),
   ImportTypeScriptModule(
-    '../apps/rehabtrainerhub/training-modules/vision/experiment/plugins/driving/driving-input.ts',
+    '../apps/rehabtrainerhub/games/driving-rehab/input/driving-input.ts',
   ),
   ImportTypeScriptModule('../packages/ui/src/displayTiming.ts'),
 ]);

@@ -5,7 +5,7 @@ import type {
   OculomotorPattern,
   OculomotorSpeedUnit,
   OculomotorTargetShape,
-} from './types';
+} from '../types/types';
 
 export const oculomotorModes: Array<{
   id: OculomotorMode;

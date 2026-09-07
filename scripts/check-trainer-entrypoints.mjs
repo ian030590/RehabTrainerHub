@@ -4,10 +4,9 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const appsRoot = join(repoRoot, 'apps');
-const trainingRuntimesRoot = join(appsRoot, 'rehabtrainerhub', 'training-runtimes');
-const trainingRuntimeDirectories = readdirSync(trainingRuntimesRoot, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => join(trainingRuntimesRoot, entry.name));
+const hubRoot = join(appsRoot, 'rehabtrainerhub');
+const gamesRoot = join(hubRoot, 'games');
+
 const forbiddenRuntimeImports = [
   '@jspsych',
   '@mediapipe',
@@ -19,52 +18,39 @@ const forbiddenRuntimeImports = [
   'vosk-browser',
 ];
 
-const appEntrypoints = readdirSync(appsRoot, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => `apps/${entry.name}/src/App.tsx`)
-  .filter((file) => existsSync(resolve(repoRoot, file)));
-appEntrypoints.push(...trainingRuntimeDirectories
-  .map((directory) => join(directory, 'src', 'App.tsx'))
-  .filter(existsSync));
+const retiredDirectories = [
+  join(hubRoot, 'training-runtimes'),
+  join(hubRoot, 'training-modules'),
+  join(gamesRoot, '_shared'),
+];
 
-const appRuntimeEntrypoints = readdirSync(appsRoot, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => `apps/${entry.name}/src/main.tsx`)
-  .filter((file) => existsSync(resolve(repoRoot, file)));
-appRuntimeEntrypoints.push(...trainingRuntimeDirectories
-  .map((directory) => join(directory, 'src', 'main.tsx'))
-  .filter(existsSync));
-
-const viteConfigFiles = readdirSync(appsRoot, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => `apps/${entry.name}/vite.config.ts`)
-  .filter((file) => existsSync(resolve(repoRoot, file)));
-viteConfigFiles.push(...trainingRuntimeDirectories
-  .map((directory) => join(directory, 'vite.config.ts'))
-  .filter(existsSync));
-
-const trainerHtmlEntrypoints = trainingRuntimeDirectories
-  .map((directory) => join(directory, 'index.html'))
-  .filter(existsSync);
-
-const trainerSourceFiles = trainingRuntimeDirectories
-  .flatMap((directory) => CollectSourceFiles(join(directory, 'src')));
-const hubTrainingModuleSourceFiles = CollectSourceFiles(
-  resolve(appsRoot, 'rehabtrainerhub', 'training-modules'),
-);
+const hubAppSourceFiles = CollectSourceFiles(join(hubRoot, 'app'));
 
 const protectedEntrypoints = Unique([
-  ...appRuntimeEntrypoints,
-  ...appEntrypoints,
-  'apps/rehabtrainerhub/training-runtimes/motor/src/App.tsx',
-  'apps/rehabtrainerhub/training-modules/motor/pages/training/UpperLimbTraining.tsx',
-  'apps/rehabtrainerhub/training-modules/brain/pages/thinking/ThinkingTraining.tsx',
-  'apps/rehabtrainerhub/training-modules/mouth/pages/training/OralTraining.tsx',
-  'apps/rehabtrainerhub/training-modules/vision/pages/HomePage.tsx',
-  'apps/rehabtrainerhub/training-modules/brain/pages/ModulePage.tsx',
+  ...hubAppSourceFiles
+    .filter((file) => basename(file).startsWith('page.') || basename(file).startsWith('layout.'))
+    .map(RelativeToRepo),
 ]);
 
+const gameDirectories = readdirSync(gamesRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => join(gamesRoot, entry.name));
+
+const htmlEntrypoints = [
+  ...gameDirectories.map((directory) => join(directory, 'index.html')).filter(existsSync),
+  join(appsRoot, 'usergamerunner', 'public', 'index.html'),
+].filter(existsSync);
+
+const gameSourceFiles = gameDirectories
+  .flatMap((directory) => CollectSourceFiles(directory));
+
 const violations = [];
+
+for (const retiredPath of retiredDirectories) {
+  if (existsSync(retiredPath)) {
+    violations.push(`Retired path must not exist: ${RelativeToRepo(retiredPath)}`);
+  }
+}
 
 for (const entrypoint of protectedEntrypoints) {
   const absolutePath = resolve(repoRoot, entrypoint);
@@ -76,19 +62,11 @@ for (const entrypoint of protectedEntrypoints) {
   ScanStaticImportGraph(absolutePath, entrypoint, new Set());
 }
 
-for (const viteConfigFile of viteConfigFiles) {
-  CheckViteBaseConfig(viteConfigFile);
-}
-
-for (const htmlEntrypoint of trainerHtmlEntrypoints) {
+for (const htmlEntrypoint of htmlEntrypoints) {
   CheckHtmlEntrypoint(htmlEntrypoint);
 }
 
-for (const runtimeDirectory of trainingRuntimeDirectories) {
-  CheckRuntimeModuleOwnership(runtimeDirectory);
-}
-
-for (const sourceFile of [...trainerSourceFiles, ...hubTrainingModuleSourceFiles]) {
+for (const sourceFile of [...gameSourceFiles, ...hubAppSourceFiles]) {
   CheckTrainingUiContract(sourceFile);
 }
 
@@ -96,7 +74,7 @@ if (violations.length > 0) {
   throw new Error(`White-screen smoke test failed:\n${violations.map((line) => `- ${line}`).join('\n')}`);
 }
 
-console.log(`White-screen smoke test passed for ${protectedEntrypoints.length} trainer entrypoints.`);
+console.log(`White-screen smoke test passed for ${protectedEntrypoints.length} protected entrypoints and ${gameDirectories.length} independent games.`);
 
 function ScanStaticImportGraph(filePath, entrypoint, visited) {
   if (visited.has(filePath)) return;
@@ -114,24 +92,6 @@ function ScanStaticImportGraph(filePath, entrypoint, visited) {
     if (resolved && IsScannableSourceFile(resolved)) {
       ScanStaticImportGraph(resolved, entrypoint, visited);
     }
-  }
-}
-
-function CheckViteBaseConfig(configFile) {
-  const absoluteConfigFile = resolve(repoRoot, configFile);
-  const source = readFileSync(absoluteConfigFile, 'utf8');
-  const isOfficialGameAdapter = absoluteConfigFile.startsWith(`${trainingRuntimesRoot}\\`)
-    || absoluteConfigFile.startsWith(`${trainingRuntimesRoot}/`);
-
-  if (isOfficialGameAdapter && !/\bbase\s*:\s*['"]\.\/['"]/.test(source)) {
-    violations.push(
-      `${configFile}: official game adapters must use relative assets inside /games/{gameId}/`,
-    );
-  } else if (!isOfficialGameAdapter && /\bbase\s*:\s*['"]\.\/['"]/.test(source)) {
-    violations.push(`${configFile}: uses Vite base './'; direct nested app routes require an absolute base`);
-  }
-  if (isOfficialGameAdapter && /out[\\/]runtimes/.test(source)) {
-    violations.push(`${configFile}: retired /runtimes/* output must not be restored`);
   }
 }
 
@@ -169,40 +129,6 @@ function CheckHtmlEntrypoint(htmlFile) {
   }
 }
 
-function CheckRuntimeModuleOwnership(runtimeDirectory) {
-  const trainer = basename(runtimeDirectory);
-  const appFile = join(runtimeDirectory, 'src', 'App.tsx');
-  const relativeAppFile = RelativeToRepo(appFile);
-  const appSource = readFileSync(appFile, 'utf8');
-  const trainerModulePrefix = `@rehab-trainer/hub-modules/${trainer}/`;
-
-  if (!appSource.includes(trainerModulePrefix)) {
-    violations.push(
-      `${relativeAppFile}: runtime shell must load trainer-owned implementations from ${trainerModulePrefix}`,
-    );
-  }
-
-  for (const specifier of GetStaticImports(appSource)) {
-    if (specifier.startsWith('@rehab-trainer/hub-modules/')) {
-      violations.push(
-        `${relativeAppFile}: statically imports ${specifier}; runtime shells must lazy-load trainer modules`,
-      );
-    }
-
-    if (/^\.\.?\/(?:.*\/)?pages\//.test(specifier)) {
-      violations.push(
-        `${relativeAppFile}: loads local page ${specifier}; move trainer implementation to training-modules/${trainer}`,
-      );
-    }
-  }
-
-  for (const sourceFile of CollectSourceFiles(join(runtimeDirectory, 'src', 'pages'))) {
-    violations.push(
-      `${RelativeToRepo(sourceFile)}: runtime-local page implementations are forbidden; move this file to training-modules/${trainer}`,
-    );
-  }
-}
-
 function CheckTrainingUiContract(filePath) {
   const source = readFileSync(filePath, 'utf8');
   if (/from\s+['"]@rehab-trainer\/ui\/components\/StartTrainingButton['"]/.test(source)) {
@@ -234,18 +160,15 @@ function ResolveProjectImport(importerPath, specifier) {
     return ResolveModule(resolve(repoRoot, 'packages/ui/src'), specifier.slice('@rehab-trainer/ui/'.length));
   }
 
-  if (specifier.startsWith('@rehab-trainer/hub-modules/')) {
-    return ResolveModule(
-      resolve(repoRoot, 'apps/rehabtrainerhub/training-modules'),
-      specifier.slice('@rehab-trainer/hub-modules/'.length),
-    );
-  }
-
   if (specifier.startsWith('@rehab-trainer/games/')) {
     return ResolveModule(
       resolve(repoRoot, 'apps/rehabtrainerhub/games'),
       specifier.slice('@rehab-trainer/games/'.length),
     );
+  }
+
+  if (specifier === '@rehab-trainer/game-settings') {
+    return ResolveModule(resolve(repoRoot, 'packages/game-settings/src'), 'index');
   }
 
   return null;

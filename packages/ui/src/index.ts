@@ -111,6 +111,8 @@ export type {
 export { CreateCsvContent, EnsureCsvUtf8Bom, ToCsvCell } from './csv';
 export type { CsvCellValue, CsvRow } from './csv';
 export { DownloadCsvFile, DownloadFile } from './downloadFile';
+export type TrialData = Record<string, any>;
+export type TFunction = (key: string, params?: Record<string, any>) => string;
 export { EnterFullscreenFromUserGesture, ExitFullscreenIfActive, WaitForFullscreenLayout } from './fullscreen';
 export {
   gamePlatformCapabilities,

@@ -2,16 +2,17 @@
  * Toutour spotlight onboarding tour styles.
  * Adapted for Rehab Trainer Hub design system.
  * Strictly ZERO gradients, ZERO neon effects, ZERO emojis.
+ * Senior-friendly: large, high-contrast, legible typography for elderly users.
  */
 :root {
   --tt-surface: #ffffff;
   --tt-text: #202428;
-  --tt-muted: #606970;
+  --tt-muted: #4e565f;
   --tt-accent: #146c5b;
   --tt-accent-hover: #0d5547;
   --tt-accent-bg: #e1f1ec;
-  --tt-border: #d4d9de;
-  --tt-radius: 8px;
+  --tt-border: #ccd2d8;
+  --tt-radius: 10px;
   --tt-mask: rgba(20, 24, 28, 0.55);
   --tt-halo: rgba(255, 255, 255, 0.9);
 }
@@ -59,23 +60,23 @@
   position: fixed;
   background: var(--tt-surface);
   color: var(--tt-text);
-  border: 1px solid var(--tt-border);
+  border: 2px solid var(--tt-border);
   border-radius: var(--tt-radius);
-  box-shadow: 0 8px 24px rgba(20, 33, 43, 0.14);
-  padding: 1rem 1.15rem 0.85rem;
+  box-shadow: 0 10px 32px rgba(20, 33, 43, 0.16);
+  padding: 1.4rem 1.6rem 1.25rem;
   width: max-content;
-  max-width: min(340px, calc(100vw - 24px));
+  max-width: min(480px, calc(100vw - 24px));
   font-family: var(--font-body, "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 19px;
+  line-height: 1.6;
   box-sizing: border-box;
 }
 
 #ttTip::before {
   content: '';
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
   background: var(--tt-surface);
   transform: rotate(45deg);
   display: none;
@@ -83,42 +84,42 @@
 
 #ttTip.tip-right::before {
   display: block;
-  left: -6px;
-  top: var(--tt-arrow-off, 20px);
-  border-left: 1px solid var(--tt-border);
-  border-bottom: 1px solid var(--tt-border);
+  left: -8px;
+  top: var(--tt-arrow-off, 24px);
+  border-left: 2px solid var(--tt-border);
+  border-bottom: 2px solid var(--tt-border);
 }
 
 #ttTip.tip-left::before {
   display: block;
-  right: -6px;
-  top: var(--tt-arrow-off, 20px);
-  border-right: 1px solid var(--tt-border);
-  border-top: 1px solid var(--tt-border);
+  right: -8px;
+  top: var(--tt-arrow-off, 24px);
+  border-right: 2px solid var(--tt-border);
+  border-top: 2px solid var(--tt-border);
 }
 
 #ttTip.tip-bottom::before {
   display: block;
-  top: -6px;
-  left: var(--tt-arrow-off, 20px);
-  border-left: 1px solid var(--tt-border);
-  border-top: 1px solid var(--tt-border);
+  top: -8px;
+  left: var(--tt-arrow-off, 24px);
+  border-left: 2px solid var(--tt-border);
+  border-top: 2px solid var(--tt-border);
 }
 
 #ttTip.tip-top::before {
   display: block;
-  bottom: -6px;
-  left: var(--tt-arrow-off, 20px);
-  border-right: 1px solid var(--tt-border);
-  border-bottom: 1px solid var(--tt-border);
+  bottom: -8px;
+  left: var(--tt-arrow-off, 24px);
+  border-right: 2px solid var(--tt-border);
+  border-bottom: 2px solid var(--tt-border);
 }
 
 .tt-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .tt-ico {
@@ -130,52 +131,54 @@
 }
 
 .tt-ico .material-symbols-outlined {
-  font-size: 22px;
-  width: 22px;
-  height: 22px;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
 }
 
 .tt-count {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   background: var(--tt-accent-bg);
   color: var(--tt-accent);
   border-radius: 999px;
-  padding: 0.15rem 0.55rem;
+  padding: 0.25rem 0.85rem;
   letter-spacing: 0.02em;
 }
 
 .tt-title {
-  margin: 0 0 0.35rem;
-  font-size: 15px;
-  font-weight: 700;
+  margin: 0 0 0.6rem;
+  font-size: 24px;
+  font-weight: 800;
   color: var(--tt-text);
   line-height: 1.35;
 }
 
 .tt-body {
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--tt-muted);
+  font-size: 19px;
+  line-height: 1.7;
+  color: var(--tt-text);
+  font-weight: 500;
 }
 
 .tt-foot {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.85rem;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
 }
 
 .tt-btn {
   flex: 1;
-  padding: 0.45rem 0.65rem;
-  border: 1px solid var(--tt-border);
+  padding: 0.75rem 1.2rem;
+  border: 2px solid var(--tt-border);
   background: var(--tt-surface);
   color: var(--tt-text);
   border-radius: var(--tt-radius);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   cursor: pointer;
   line-height: 1.4;
+  min-height: 52px;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
@@ -202,15 +205,16 @@
 .tt-skip {
   display: block;
   width: 100%;
-  margin-top: 0.45rem;
-  padding: 0.25rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
   background: transparent;
   border: none;
   color: var(--tt-muted);
-  font-size: 12px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
 }
 
 .tt-skip:hover,

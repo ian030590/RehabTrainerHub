@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": [
-    "apps/rehabtrainerhub/training-modules/**"
+    "apps/rehabtrainerhub/games/**"
   ],
   "tasks": {
     "build": {

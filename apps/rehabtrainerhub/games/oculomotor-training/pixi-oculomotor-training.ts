@@ -8,15 +8,15 @@
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Graphics, Sprite, Text, Texture } from 'pixi.js';
-import { pixiColors, typography } from '../../theme';
+import { pixiColors, typography } from '@rehab-trainer/ui/trainerTheme';
 import {
   AttachPixiTrialCanvas,
   CleanupPixiTrial,
   CreatePixiTrialContainer,
   RunPixiTrial,
   pixiRuntimeScopes,
-} from '../../utils/pixiPool';
-import { PixelFromDegree } from '../../utils/spatialUtils';
+} from '@rehab-trainer/ui/pixiPool';
+import { PixelFromDegree } from '@rehab-trainer/ui/spatialUtils';
 import {
   CalculateEyeAspectRatio,
   CreateBlinkDetectorState,
@@ -25,21 +25,21 @@ import {
   oculomotorGazeSampleColumns,
   SummarizeOculomotorGazeSamples,
   UpdateBlinkDetector,
-} from '../../utils/webgazerMetrics';
+} from './webgazer/webgazerMetrics';
 import type {
   FaceLandmark,
   OculomotorGazeSample,
   WebGazerEyeFeaturesLike,
-} from '../../utils/webgazerMetrics';
-import { createRng } from '../../pages/training/oculomotor/random';
-import { sampleOculomotorPatternInto } from '../../pages/training/oculomotor/patterns';
+} from './webgazer/webgazerMetrics';
+import { createRng } from './oculomotor/random';
+import { sampleOculomotorPatternInto } from './oculomotor/patterns';
 import {
   ConvertOculomotorSpeedToPixels,
   DarkenOculomotorColor,
   GetOculomotorRadiusPx,
   GetOculomotorTravelPx,
   IsOculomotorPatternReversible,
-} from '../../pages/training/oculomotor/profiles';
+} from './oculomotor/profiles';
 import type {
   Arena,
   OculomotorBehavior,
@@ -48,8 +48,8 @@ import type {
   OculomotorSpeedUnit,
   OculomotorTargetShape,
   TargetFrame,
-} from '../../pages/training/oculomotor/types';
-import { getOculomotorModeLabel, getOculomotorPatternLabel } from '../../pages/training/oculomotor/presets';
+} from './oculomotor/types';
+import { getOculomotorModeLabel, getOculomotorPatternLabel } from './oculomotor/presets';
 
 const info = {
   name: 'pixi-oculomotor-training',

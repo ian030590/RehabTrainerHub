@@ -1,24 +1,20 @@
-import { EnsureCsvUtf8Bom } from './csv';
-
 export function DownloadFile(
-  content: BlobPart | BlobPart[],
+  content: string | Blob,
   filename: string,
   mimeType = 'text/plain;charset=utf-8',
 ): void {
-  const blobParts = Array.isArray(content) ? content : [content];
-  const blob = new Blob(blobParts, { type: mimeType });
+  if (typeof window === 'undefined') return;
+  const blob = typeof content === 'string' ? new Blob([content], { type: mimeType }) : content;
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.style.display = 'none';
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 export function DownloadCsvFile(csvContent: string, filename: string): void {
-  DownloadFile(EnsureCsvUtf8Bom(csvContent), filename, 'text/csv;charset=utf-8');
+  DownloadFile(csvContent, filename, 'text/csv;charset=utf-8');
 }

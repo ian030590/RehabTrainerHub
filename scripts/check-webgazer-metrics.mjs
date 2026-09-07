@@ -6,7 +6,7 @@ import test from 'node:test';
 import ts from 'typescript';
 
 const sourceUrl = new URL(
-  '../apps/rehabtrainerhub/training-runtimes/vision/src/utils/webgazerMetrics.ts',
+  '../apps/rehabtrainerhub/games/oculomotor-training/webgazer/webgazerMetrics.ts',
   import.meta.url,
 );
 const source = await readFile(sourceUrl, 'utf8');

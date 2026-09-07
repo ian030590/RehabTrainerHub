@@ -1,10 +1,10 @@
 // Timeline local to the Hub-owned driving module.
-import { GetSetting } from '../../utils/settings';
-import { ParseDrivingWheelCalibration } from '../plugins/driving/driving-input';
-import type { BuildTimelineOverrides } from './types';
+import { GetSetting } from '@rehab-trainer/ui/settings';
+import { ParseDrivingWheelCalibration } from '../input/driving-input';
+import type { BuildTimelineOverrides } from '../types/types';
 
 export async function BuildDrivingRehabTimeline(overrides?: BuildTimelineOverrides): Promise<object[]> {
-  const { default: ThreeDrivingRehabPlugin } = await import('../plugins/three-driving-rehab');
+  const { default: ThreeDrivingRehabPlugin } = await import('../three-driving-rehab');
 
   const redFlashEnabled = overrides?.driving?.redFlashEnabled ?? GetSetting('drivingRedFlashEnabled');
   const drivingDifficulty = overrides?.driving?.difficulty ?? GetSetting('drivingDifficulty');

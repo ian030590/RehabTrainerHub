@@ -1,8 +1,8 @@
 // Timeline local to the Hub-owned reading module.
 import HtmlButtonResponsePlugin from '@jspsych/plugin-html-button-response';
-import PixiReadingTrainingPlugin from '../plugins/pixi-reading-training';
-import { GetSetting } from '../../utils/settings';
-import type { BuildTimelineOverrides } from './types';
+import PixiReadingTrainingPlugin from '../pixi-reading-training';
+import { GetSetting } from '@rehab-trainer/ui/settings';
+import type { BuildTimelineOverrides } from '../types/types';
 
 export function BuildReadingTimeline(overrides?: BuildTimelineOverrides): object[] {
   const wps = overrides?.reading?.wps ?? GetSetting('readingWPS');

@@ -1,6 +1,6 @@
 // Results view local to the Hub-owned driving module.
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
-import type { TFunction, TrialData } from '../types';
+import type { TFunction, TrialData } from '@rehab-trainer/ui';
 
 interface DrivingResultsProps {
   results: TrialData[];

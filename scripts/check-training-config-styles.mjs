@@ -1,11 +1,9 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const configFiles = [
-  'apps/rehabtrainerhub/training-modules/vision/pages/HomePage.tsx',
-  'apps/rehabtrainerhub/training-modules/brain/pages/ModulePage.tsx',
   'packages/ui/src/components/PeripheralAttentionConfigComponents.tsx',
 ];
 const failures = [];
@@ -38,18 +36,6 @@ for (const required of [
   '<Outlet />',
 ]) {
   if (!routeOutletSource.includes(required)) failures.push(`TrainerRouteOutlet is missing ${required}`);
-}
-
-for (const relativeFile of [
-  'apps/rehabtrainerhub/training-runtimes/brain/src/App.tsx',
-  'apps/rehabtrainerhub/training-runtimes/motor/src/App.tsx',
-  'apps/rehabtrainerhub/training-runtimes/mouth/src/App.tsx',
-  'apps/rehabtrainerhub/training-runtimes/vision/src/App.tsx',
-]) {
-  const source = readFileSync(resolve(root, relativeFile), 'utf8');
-  if (!source.includes('<TrainerRouteOutlet />')) {
-    failures.push(`${relativeFile}: does not use the shared subroute transition outlet`);
-  }
 }
 
 const styleSource = readFileSync(resolve(root, 'packages/ui/src/components/TrainerApp.css'), 'utf8');
@@ -106,6 +92,13 @@ for (const [label, source] of [
   for (const required of ['GetTrainerCategoryTheme', 'BuildTrainingThemeStyle']) {
     if (!source.includes(required)) failures.push(`${label} is missing ${required}`);
   }
+}
+
+if (existsSync(resolve(root, 'apps/rehabtrainerhub/training-modules'))) {
+  failures.push('apps/rehabtrainerhub/training-modules must stay deleted');
+}
+if (existsSync(resolve(root, 'apps/rehabtrainerhub/training-runtimes'))) {
+  failures.push('apps/rehabtrainerhub/training-runtimes must stay deleted');
 }
 
 if (failures.length) {

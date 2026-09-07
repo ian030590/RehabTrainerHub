@@ -19,23 +19,23 @@ import {
   type Ticker,
 } from 'pixi.js';
 import { initJsPsych } from 'jspsych';
-import { useT, type TranslationKey } from '../../i18n';
-import { getActiveUser } from '../../utils/settings';
+import { useT, type TranslationKey } from '@rehab-trainer/ui/i18n/games';
+import { getActiveUser } from '@rehab-trainer/ui/settings';
 import {
   PlayFailureSound,
   PlayGameEndSound,
   PlaySuccessSound,
   PrepareAudioFeedback,
-} from '../../utils/soundManager';
+} from '@rehab-trainer/ui/soundManager';
 import {
   defaultTongueSettings,
   GetTongueTrainingSettings,
   SaveTongueTrainingSettings,
   type TongueTrainingSettings,
-} from '../../utils/tongueRehabStorage';
-import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+} from './storage/tongueRehabStorage';
+import { SaveTrainingSessionRecord } from '@rehab-trainer/ui/storage/trainingRecords';
 import { Clamp, FormatTestDate } from './gameUtils';
-import { VerifySelectedTrainingUser } from './selectedUserGuard';
+import { VerifySelectedTrainingUser } from '@rehab-trainer/ui/selectedUserGuard';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import {
   TrainingConfigNotice,
@@ -57,9 +57,9 @@ import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfi
 import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
-import { InlineAlert } from '../../components/InlineAlert';
-import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
-import { MouthTrainingRulesPanel } from './MouthTrainingRulesPanel';
+import { InlineAlert } from '@rehab-trainer/ui/components/InlineAlert';
+import { MediaDeviceErrorDialog } from '@rehab-trainer/ui/components/MediaDeviceErrorDialog';
+import { MouthTrainingRulesPanel } from '@rehab-trainer/ui/components/rules/MouthTrainingRulesPanel';
 
 type TongueClass = 'Rest' | 'Tongue_Left' | 'Tongue_Right';
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'calibration' | 'playing' | 'results';

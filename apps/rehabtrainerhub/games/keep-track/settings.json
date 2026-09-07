@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "gameId": "keep-track",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定維持追蹤的類別數量與題數。",
+        "en": "Configure target category count and trial length."
+      },
+      "fields": [
+        {
+          "key": "categoryCount",
+          "type": "list",
+          "label": {
+            "zh-TW": "追蹤類別數",
+            "en": "Target category count"
+          },
+          "description": {
+            "zh-TW": "同時在心智中持續維持並更新的目標類別數量。",
+            "en": "Number of target categories to monitor concurrently."
+          },
+          "default": "3",
+          "options": [
+            {
+              "value": "2",
+              "label": {
+                "zh-TW": "2 種目標類別（初級）",
+                "en": "2 Categories (Easy)"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "zh-TW": "3 種目標類別（標準經典）",
+                "en": "3 Categories (Standard)"
+              }
+            },
+            {
+              "value": "4",
+              "label": {
+                "zh-TW": "4 種目標類別（挑戰進階）",
+                "en": "4 Categories (Challenging)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "活動回合數",
+            "en": "Session rounds"
+          },
+          "description": {
+            "zh-TW": "設定本次測驗的單詞流回合數。",
+            "en": "Set total category tracking streams."
+          },
+          "default": 5,
+          "min": 3,
+          "max": 10,
+          "step": 1,
+          "unit": {
+            "zh-TW": "題",
+            "en": "trials"
+          }
+        },
+        {
+          "key": "wordDurationMs",
+          "type": "list",
+          "label": {
+            "zh-TW": "單詞呈現時間",
+            "en": "Word presentation duration"
+          },
+          "description": {
+            "zh-TW": "每個詞語在螢幕上停留的時間。",
+            "en": "Duration of each word shown in milliseconds."
+          },
+          "default": 1800,
+          "options": [
+            {
+              "value": 1400,
+              "label": {
+                "zh-TW": "1.4 秒（緊湊）",
+                "en": "1.4 seconds"
+              }
+            },
+            {
+              "value": 1800,
+              "label": {
+                "zh-TW": "1.8 秒（標準）",
+                "en": "1.8 seconds"
+              }
+            },
+            {
+              "value": 2400,
+              "label": {
+                "zh-TW": "2.4 秒（從容）",
+                "en": "2.4 seconds"
+              }
+            }
+          ]
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "播放單詞出現與作答音效。",
+            "en": "Play audio cues on words and selections."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

@@ -39,9 +39,9 @@ import { Application, Container, Graphics, Text } from 'pixi.js';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { useNavigate } from 'react-router-dom';
-import { useT } from '../i18n';
-import { SaveTrainingRecord, type BrainTrainingRecord } from '../utils/trainingRecords';
-import './EveryBallResponsePage.css';
+import { useT } from '@rehab-trainer/ui/i18n/games';
+import { SaveTrainingRecord, type BrainTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
+import './styles/EveryBallResponsePage.css';
 
 type Phase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
 type InputMode = 'camera' | 'microphone';

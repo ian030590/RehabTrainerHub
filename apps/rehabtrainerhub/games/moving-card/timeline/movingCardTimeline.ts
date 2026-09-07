@@ -1,8 +1,8 @@
 // Timeline local to the Hub-owned moving-card module.
-import PixiMovingCardPlugin from '../plugins/pixi-moving-card';
-import { GetSetting } from '../../utils/settings';
-import { GenerateRandomLetters } from '../../utils/mathUtils';
-import type { BuildTimelineOverrides } from './types';
+import PixiMovingCardPlugin from '../pixi-moving-card';
+import { GetSetting } from '@rehab-trainer/ui/settings';
+import { GenerateRandomLetters } from '@rehab-trainer/ui/mathUtils';
+import type { BuildTimelineOverrides } from '@rehab-trainer/ui';
 
 export function BuildMovingCardTimeline(overrides?: BuildTimelineOverrides): object[] {
   const totalRounds = overrides?.totalRounds ?? GetSetting('totalRounds');

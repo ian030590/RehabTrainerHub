@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import type { TrainingConfigSummaryItem } from '@rehab-trainer/ui/components/TrainingConfigSummary';
-import { useT } from '../../i18n';
+import { useT } from '@rehab-trainer/ui/i18n/games';
 
 interface MouthTrainingRulesPanelProps {
   title: ReactNode;

@@ -3,12 +3,12 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import ts from 'typescript';
 
-const cognitiveRoot = 'apps/rehabtrainerhub/training-modules/brain/pages/thinking';
-const trialRecordsPath = `${cognitiveRoot}/cognitive/trialRecords.ts`;
+const cognitiveRoot = 'packages/ui/src/cognitive';
+const trialRecordsPath = `${cognitiveRoot}/trialRecords.ts`;
 const referenceGamePath = `${cognitiveRoot}/ReferenceCognitiveGame.tsx`;
-const reactionPath = `${cognitiveRoot}/cognitive/reactionTime.ts`;
-const targetPath = `${cognitiveRoot}/cognitive/targetClick.ts`;
-const languageNeutralPath = `${cognitiveRoot}/cognitive/languageNeutralGames.ts`;
+const reactionPath = `${cognitiveRoot}/reactionTime.ts`;
+const targetPath = `${cognitiveRoot}/targetClick.ts`;
+const languageNeutralPath = `${cognitiveRoot}/languageNeutralGames.ts`;
 
 async function ImportStandaloneTypeScriptModule(path) {
   const source = await readFile(path, 'utf8');

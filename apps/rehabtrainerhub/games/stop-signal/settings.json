@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "gameId": "stop-signal",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定煞車訊號出現難度與回合數。",
+        "en": "Configure stop signal delay difficulty and trial counts."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "煞車難度",
+            "en": "Brake difficulty"
+          },
+          "description": {
+            "zh-TW": "難度越高，煞車訊號延遲越長，收手制動越具挑戰。",
+            "en": "Higher difficulty increases stop signal delay before braking."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "入門（早煞車，SSD 150ms）",
+                "en": "Easy (Early cue, SSD 150ms)"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "標準（標準煞車，SSD 250ms）",
+                "en": "Medium (Standard, SSD 250ms)"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "進階（急煞車，SSD 350ms）",
+                "en": "Hard (Late cue, SSD 350ms)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "回合數",
+            "en": "Rounds"
+          },
+          "description": {
+            "zh-TW": "設定本次活動總題數。",
+            "en": "Set total trials in this session."
+          },
+          "default": 30,
+          "min": 15,
+          "max": 60,
+          "step": 5,
+          "unit": {
+            "zh-TW": "題",
+            "en": "trials"
+          }
+        },
+        {
+          "key": "stimulusDurationMs",
+          "type": "list",
+          "label": {
+            "zh-TW": "反應時限",
+            "en": "Response time window"
+          },
+          "description": {
+            "zh-TW": "每題等待方向反應的最長時間。",
+            "en": "Maximum time window allowed to make a directional response."
+          },
+          "default": 2000,
+          "options": [
+            {
+              "value": 1500,
+              "label": {
+                "zh-TW": "1.5 秒（緊湊）",
+                "en": "1.5 seconds (Brisk)"
+              }
+            },
+            {
+              "value": 2000,
+              "label": {
+                "zh-TW": "2.0 秒（標準）",
+                "en": "2.0 seconds (Standard)"
+              }
+            },
+            {
+              "value": 2500,
+              "label": {
+                "zh-TW": "2.5 秒（從容）",
+                "en": "2.5 seconds (Relaxed)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在煞車警示與作答時播放音效。",
+            "en": "Play audio cues for brake warnings and responses."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

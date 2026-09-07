@@ -9,14 +9,14 @@ import {
   type DrivingGamepadSnapshot,
   type DrivingWheelCalibration,
   type DrivingWheelDevice,
-} from '../experiment/plugins/driving/driving-input';
-import { GetSetting, SetSetting } from './settings';
+} from './driving-input';
+import { GetSetting, SetSetting } from '@rehab-trainer/ui/settings';
 
 export {
   IsDrivingControlModeAvailable,
   type DrivingInputCapabilitiesSnapshot,
   type DrivingWheelDevice,
-} from '../experiment/plugins/driving/driving-input';
+} from './driving-input';
 
 const modifierOnlyKeys = new Set([
   'Alt',

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "gameId": "antisaccade",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定反向抑制閃爍刺激難度與題數。",
+        "en": "Configure antisaccade cue duration and trials."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "閃爍提示速度",
+            "en": "Cue flash duration"
+          },
+          "description": {
+            "zh-TW": "閃爍時間越短，需要越快速的自動視覺抑制能力。",
+            "en": "Shorter flash demands faster reflex inhibition."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "入門（提示 350ms）",
+                "en": "Easy (350ms cue)"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "標準（提示 225ms）",
+                "en": "Medium (225ms cue)"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "進階（提示 150ms）",
+                "en": "Hard (150ms cue)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "回合題數",
+            "en": "Trial count"
+          },
+          "description": {
+            "zh-TW": "設定本次活動總題數。",
+            "en": "Set total trials in this session."
+          },
+          "default": 24,
+          "min": 12,
+          "max": 48,
+          "step": 6,
+          "unit": {
+            "zh-TW": "題",
+            "en": "trials"
+          }
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在閃爍與作答時播放音效。",
+            "en": "Play audio cues on flashes and responses."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

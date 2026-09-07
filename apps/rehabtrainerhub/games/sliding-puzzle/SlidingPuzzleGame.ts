@@ -1,13 +1,13 @@
 // Hub-owned sliding-puzzle runtime.
 import { Application, Container, Graphics } from 'pixi.js';
-import { slidingConfig } from './constants';
-import type { Difficulty, GameResult, ResultStats, SlidingState } from './types';
+import { slidingConfig } from '@rehab-trainer/ui/cognitive/constants';
+import type { Difficulty, GameResult, ResultStats, SlidingState } from '@rehab-trainer/ui/cognitive/types';
 import {
   AddText,
   GetGridLayout,
   GetSlidingNeighbors,
   IsSlidingSolved,
-} from './utils';
+} from '@rehab-trainer/ui/cognitive/utils';
 
 const slidingBoardColor = 0x34495e;
 const slidingTileColor = 0x3498db;

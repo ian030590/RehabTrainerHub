@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import ts from 'typescript';
 
-const catalogPath = 'apps/rehabtrainerhub/training-modules/catalog.ts';
+const catalogPath = 'apps/rehabtrainerhub/games/catalog.ts';
 const lobbyPath = 'apps/rehabtrainerhub/app/TrainingLobby.tsx';
 const lobbyCssPath = 'apps/rehabtrainerhub/app/globals.css';
 const themeStylePath = 'apps/rehabtrainerhub/app/trainingThemeStyle.ts';
@@ -21,7 +21,7 @@ function TranspileStandaloneModule(source) {
 async function ImportCatalogThemeContract() {
   const [source, gameTagsSource] = await Promise.all([
     readFile(catalogPath, 'utf8'),
-    readFile('apps/rehabtrainerhub/training-modules/gameTags.js', 'utf8'),
+    readFile('apps/rehabtrainerhub/games/gameTags.js', 'utf8'),
   ]);
   const registryStart = source.indexOf('export type ThemeIconType');
   const registryEndMarker = 'export const trainingPurposes = Object.values(trainingThemes);';
@@ -71,7 +71,7 @@ test('theme resolver handles IDs, aliases, and absent metadata', async () => {
 
 test('developer game tags require compatible major and filter categories', async () => {
   const gameTags = await import(new URL(
-    '../apps/rehabtrainerhub/training-modules/gameTags.js',
+    '../apps/rehabtrainerhub/games/gameTags.js',
     import.meta.url,
   ));
 

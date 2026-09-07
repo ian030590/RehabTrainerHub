@@ -3,12 +3,12 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { Application, Container, Graphics, Text, type Ticker } from 'pixi.js';
 import { initJsPsych } from 'jspsych';
 import { CreateRuntimeAssetUrlCandidates } from '@rehab-trainer/ui/aiAssets';
-import { useT, type TranslationKey } from '../../i18n';
-import { getActiveUser } from '../../utils/settings';
-import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
-import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { useT, type TranslationKey } from '@rehab-trainer/ui/i18n/games';
+import { getActiveUser } from '@rehab-trainer/ui/settings';
+import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '@rehab-trainer/ui/soundManager';
+import { SaveTrainingSessionRecord } from '@rehab-trainer/ui/storage/trainingRecords';
 import { Clamp, FormatTestDate } from './gameUtils';
-import { VerifySelectedTrainingUser } from './selectedUserGuard';
+import { VerifySelectedTrainingUser } from '@rehab-trainer/ui/selectedUserGuard';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
 import { TrainingFilePickerButton } from '@rehab-trainer/ui/components/TrainingFilePickerButton';
 import {
@@ -22,9 +22,9 @@ import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfi
 import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
-import type { TFunction } from './types';
+import type { TFunction } from '@rehab-trainer/ui/cognitive/types';
 import { RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
+import { MotorTrainingRulesPanel } from '@rehab-trainer/ui/components/rules/MotorTrainingRulesPanel';
 
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 type ShapeId = 'circle' | 'cross' | 'square' | 'triangle' | 'vertical-line' | 'horizontal-line';

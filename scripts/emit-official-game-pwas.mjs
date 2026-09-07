@@ -41,7 +41,7 @@ if (appName !== 'rehabtrainerhub'
   throw new Error('Official game PWAs may only be emitted into the Hub output directory.');
 }
 
-const catalogPath = resolve(repositoryRoot, 'apps/rehabtrainerhub/training-modules/catalog.ts');
+const catalogPath = resolve(repositoryRoot, 'apps/rehabtrainerhub/games/catalog.ts');
 const catalogSource = await readFile(catalogPath, 'utf8');
 const catalogGames = ReadCatalogSeeds(catalogSource);
 ValidateCatalogGames(catalogGames);
@@ -56,10 +56,8 @@ await rm(gamesDirectory, { recursive: true, force: true });
 const rootManifest = JSON.parse(await readFile(resolve(outputDirectory, 'manifest.webmanifest'), 'utf8'));
 const packageJson = JSON.parse(await readFile(resolve(appDirectory, 'package.json'), 'utf8'));
 let emittedGameCount = 0;
-for (const trainer of trainers) {
-  const games = catalogGames.filter((game) => game.trainer === trainer);
-  if (games.length === 0) throw new Error(`No catalog games found for ${trainer}.`);
-  const shellDirectory = resolve(shellsDirectory, trainer);
+for (const game of catalogGames) {
+  const shellDirectory = resolve(shellsDirectory, game.id);
   const rootHtml = await readFile(resolve(shellDirectory, 'index.html'), 'utf8');
   const shellFiles = await ListFiles(shellDirectory);
   const shellMetadata = await Promise.all(shellFiles.map(async (filePath) => {
@@ -73,46 +71,42 @@ for (const trainer of trainers) {
   ));
   const shellPrecacheBytes = precacheMetadata.reduce((total, item) => total + item.size, 0);
   if (shellPrecacheBytes > maximumShellPrecacheBytes) {
-    throw new Error(`Official game shell precache exceeds ${maximumShellPrecacheBytes} bytes.`);
+    throw new Error(`Official game shell precache exceeds ${maximumShellPrecacheBytes} bytes for ${game.id}.`);
   }
   const baseRevision = await CreateBaseRevision(shellFiles, packageJson.version ?? '0.0.0', rootHtml);
 
-  for (const game of games) {
-    const gameDirectory = resolve(gamesDirectory, game.id);
-    if (dirname(gameDirectory) !== gamesDirectory) throw new Error(`Unsafe official game output path: ${game.id}`);
-    await mkdir(gameDirectory, { recursive: true });
-    const basePath = `/games/${game.id}/`;
-    await cp(shellDirectory, gameDirectory, { recursive: true });
-    const shellUrls = precacheMetadata
-      .map(({ filePath }) => filePath)
-      .map((filePath) => `${basePath}${relative(shellDirectory, filePath).replaceAll('\\', '/')}`)
-      .sort();
-    const settingsSource = await readFile(resolve(sourceGamesDirectory, game.id, 'settings.json'), 'utf8');
-    ParseGameSettingsDefinition(JSON.parse(settingsSource), game.id);
-    const description = `${game.title}的單一遊戲安裝入口；結果僅為當次練習紀錄。`;
-    const manifest = {
-      ...rootManifest,
-      id: basePath,
-      name: `${game.title}｜居家訓練網`,
-      short_name: Array.from(game.title).slice(0, 18).join(''),
-      description,
-      start_url: `${basePath}#${game.path}`,
-      scope: basePath,
-    };
-    const html = BuildGameHtml(rootHtml, game, basePath, description);
-    const revision = CreateGameRevision(baseRevision, game, manifest, html);
-    const serviceWorker = BuildGameServiceWorker({ basePath, gameId: game.id, revision, shellUrls });
-    ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker });
-    await Promise.all([
-      writeFile(resolve(gameDirectory, 'index.html'), html),
-      writeFile(resolve(gameDirectory, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`),
-      writeFile(resolve(gameDirectory, 'settings.json'), settingsSource),
-      writeFile(resolve(gameDirectory, 'sw.js'), serviceWorker),
-    ]);
-    emittedGameCount += 1;
-  }
-
-  console.log(`Emitted ${games.length} ${trainer} game PWAs (${FormatBytes(shellPrecacheBytes)} precached of ${FormatBytes(shellBytes)}, ${baseRevision}).`);
+  const gameDirectory = resolve(gamesDirectory, game.id);
+  if (dirname(gameDirectory) !== gamesDirectory) throw new Error(`Unsafe official game output path: ${game.id}`);
+  await mkdir(gameDirectory, { recursive: true });
+  const basePath = `/games/${game.id}/`;
+  await cp(shellDirectory, gameDirectory, { recursive: true });
+  const shellUrls = precacheMetadata
+    .map(({ filePath }) => filePath)
+    .map((filePath) => `${basePath}${relative(shellDirectory, filePath).replaceAll('\\', '/')}`)
+    .sort();
+  const settingsSource = await readFile(resolve(sourceGamesDirectory, game.id, 'settings.json'), 'utf8');
+  ParseGameSettingsDefinition(JSON.parse(settingsSource), game.id);
+  const description = `${game.title}的單一遊戲安裝入口；結果僅為當次練習紀錄。`;
+  const manifest = {
+    ...rootManifest,
+    id: basePath,
+    name: `${game.title}｜居家訓練網`,
+    short_name: Array.from(game.title).slice(0, 18).join(''),
+    description,
+    start_url: `${basePath}#${game.path}`,
+    scope: basePath,
+  };
+  const html = BuildGameHtml(rootHtml, game, basePath, description);
+  const revision = CreateGameRevision(baseRevision, game, manifest, html);
+  const serviceWorker = BuildGameServiceWorker({ basePath, gameId: game.id, revision, shellUrls });
+  ValidateGeneratedOutput({ basePath, game, html, manifest, serviceWorker });
+  await Promise.all([
+    writeFile(resolve(gameDirectory, 'index.html'), html),
+    writeFile(resolve(gameDirectory, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`),
+    writeFile(resolve(gameDirectory, 'settings.json'), settingsSource),
+    writeFile(resolve(gameDirectory, 'sw.js'), serviceWorker),
+  ]);
+  emittedGameCount += 1;
 }
 
 const headersPath = resolve(outputDirectory, '_headers');

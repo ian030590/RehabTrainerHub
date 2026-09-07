@@ -45,7 +45,7 @@ for (const app of apps) {
 const hubPackage = JSON.parse(readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/package.json'), 'utf8'));
 assert.match(hubPackage.scripts.build, /build-official-game-shells\.mjs.*emit-official-game-pwas\.mjs out/);
 const trainingCatalogSource = readFileSync(
-  resolve(repoRoot, 'apps/rehabtrainerhub/training-modules/catalog.ts'),
+  resolve(repoRoot, 'apps/rehabtrainerhub/games/catalog.ts'),
   'utf8',
 );
 assert.doesNotMatch(trainingCatalogSource, /\/runtimes\//);

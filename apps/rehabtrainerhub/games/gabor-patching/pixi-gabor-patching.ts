@@ -8,9 +8,9 @@ import {
   CreatePixiTrialContainer,
   RunPixiTrial,
   pixiRuntimeScopes,
-} from '../../utils/pixiPool';
-import { typography } from '../../theme';
-import { soundManager } from '../../utils/soundManager';
+} from '@rehab-trainer/ui/pixiPool';
+import { typography } from '@rehab-trainer/ui/trainerTheme';
+import { soundManager } from '@rehab-trainer/ui/soundManager';
 
 const info = {
   name: 'pixi-gabor-patching',

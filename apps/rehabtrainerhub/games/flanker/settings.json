@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "gameId": "flanker",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定側翼干擾選擇練習的難度與題數。",
+        "en": "Configure difficulty and trial count for flanker selective attention training."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "難度",
+            "en": "Difficulty"
+          },
+          "description": {
+            "zh-TW": "選擇一致、中性與衝突刺激的分布比例。",
+            "en": "Choose distribution of congruent, neutral, and incongruent stimuli."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "初級（同向為主）",
+                "en": "Beginner (Mostly congruent)"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "中級（標準平衡）",
+                "en": "Intermediate (Balanced)"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "高級（高干擾衝突）",
+                "en": "Advanced (High interference)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "回合數",
+            "en": "Rounds"
+          },
+          "description": {
+            "zh-TW": "設定本次活動總題數。",
+            "en": "Set total number of trials in this session."
+          },
+          "default": 20,
+          "min": 10,
+          "max": 60,
+          "step": 5,
+          "unit": {
+            "zh-TW": "題",
+            "en": "trials"
+          }
+        },
+        {
+          "key": "stimulusDurationMs",
+          "type": "list",
+          "label": {
+            "zh-TW": "作答時間",
+            "en": "Response time limit"
+          },
+          "description": {
+            "zh-TW": "每題顯示並等待作答的最長時間。",
+            "en": "Maximum time allowed to respond per trial."
+          },
+          "default": 2000,
+          "options": [
+            {
+              "value": 1200,
+              "label": {
+                "zh-TW": "1.2 秒（快速）",
+                "en": "1.2 seconds (Fast)"
+              }
+            },
+            {
+              "value": 2000,
+              "label": {
+                "zh-TW": "2.0 秒（標準）",
+                "en": "2.0 seconds (Standard)"
+              }
+            },
+            {
+              "value": 3500,
+              "label": {
+                "zh-TW": "3.5 秒（從容）",
+                "en": "3.5 seconds (Relaxed)"
+              }
+            },
+            {
+              "value": 0,
+              "label": {
+                "zh-TW": "不限時",
+                "en": "No time limit"
+              }
+            }
+          ]
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在作答正確或錯誤時播放提示音。",
+            "en": "Play auditory cues for correct and incorrect responses."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

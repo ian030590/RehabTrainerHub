@@ -19,7 +19,7 @@ import {
   gamePackageLimits,
   gamePackageRuntimeContract,
 } from '../../_lib/gamePackages.js';
-import { IsGameTagPair } from '../../../training-modules/gameTags.js';
+import { IsGameTagPair } from '../../../games/gameTags.js';
 
 const maximumMultipartBytes = gamePackageLimits.maximumCompressedBytes + 128 * 1024;
 

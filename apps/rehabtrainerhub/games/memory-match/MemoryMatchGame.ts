@@ -1,13 +1,13 @@
 // Hub-owned memory-match runtime.
 import { Application, Container, Graphics } from 'pixi.js';
-import { cardValues, memoryConfig } from './constants';
-import type { Difficulty, GameResult, MemoryState, ResultStats } from './types';
+import { cardValues, memoryConfig } from '@rehab-trainer/ui/cognitive/constants';
+import type { Difficulty, GameResult, MemoryState, ResultStats } from '@rehab-trainer/ui/cognitive/types';
 import {
   AddText,
   GetGridLayout,
   IsMobileCognitiveViewport,
   Shuffle,
-} from './utils';
+} from '@rehab-trainer/ui/cognitive/utils';
 
 const memoryBoardColor = 0x34495e;
 const memoryCardFront = 0x3498db;

@@ -5,8 +5,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { CreateRuntimeAssetUrlCandidates } from '@rehab-trainer/ui/aiAssets';
 import { MeasureDisplayRefreshRate } from '@rehab-trainer/ui/displayTiming';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
-import { soundManager } from '../../utils/soundManager';
-import { difficultyPresets, hazardTemplates } from './driving/driving-hazards';
+import { soundManager } from '@rehab-trainer/ui/soundManager';
+import { difficultyPresets, hazardTemplates } from './hazards/driving-hazards';
 import {
   drivingRoute,
   drivingRouteVariants,
@@ -14,12 +14,12 @@ import {
   PickRandomDrivingRoute,
   ProjectTaipeiLonLat,
   type DrivingRouteVariant,
-} from './driving/driving-route';
-import { three, type ThreeModule } from './driving/driving-scene';
+} from './route/driving-route';
+import { three, type ThreeModule } from './scenes/driving-scene';
 import {
   CalculateDrivingCameraPose,
   type DrivingCameraMode,
-} from './driving/driving-camera';
+} from './camera/driving-camera';
 import {
   CalculateDrivingViewport,
   CaptureDrivingRendererPassState,
@@ -28,23 +28,23 @@ import {
   RestoreDrivingRendererPassState,
   type DrivingRenderQuality,
   type DrivingRenderQualityLevel,
-} from './driving/driving-rendering';
+} from './rendering/driving-rendering';
 import {
   CalculateDrivingFixedSteps,
   CalculateEstimatedPresentationTime,
   CalculateFrameAlignedReactionTime,
   NormalizeDrivingInputTimestamp,
   SummarizeReactionTimes,
-} from './driving/driving-timing';
+} from './timing/driving-timing';
 import {
   FindDrivingWheelGamepad,
   IsDrivingWheelGamepad,
   ParseDrivingWheelCalibration,
   ReadDrivingWheelInput,
   type DrivingWheelCalibration,
-} from './driving/driving-input';
-import { drivingText, type DrivingText } from './driving/driving-text';
-import { RegisterDrivingRuntimeDisposer } from './driving/driving-runtime-lifecycle';
+} from './input/driving-input';
+import { drivingText, type DrivingText } from './text/driving-text';
+import { RegisterDrivingRuntimeDisposer } from './lifecycle/driving-runtime-lifecycle';
 import type {
   ActiveHazard,
   CollisionBox2D,
@@ -63,7 +63,7 @@ import type {
   TrafficLightState,
   Vec2,
   VehicleResetPose,
-} from './driving/types';
+} from './types/types';
 
 type DrivingTouchKey = 'left' | 'right' | 'up' | 'down';
 

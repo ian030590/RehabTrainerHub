@@ -11,9 +11,9 @@ import {
 } from 'react';
 import { initJsPsych } from 'jspsych';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
-import { useT, type TranslationKey } from '../../i18n';
-import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '../../utils/soundManager';
-import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+import { useT, type TranslationKey } from '@rehab-trainer/ui/i18n/games';
+import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from '@rehab-trainer/ui/soundManager';
+import { SaveTrainingSessionRecord } from '@rehab-trainer/ui/storage/trainingRecords';
 import { Clamp, FormatTestDate } from '@rehab-trainer/ui/trainingGameUtils';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
@@ -29,7 +29,7 @@ import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSett
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
 import { IsEmbeddedHubTraining, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { BrainTrainingRulesPanel } from './BrainTrainingRulesPanel';
+import { BrainTrainingRulesPanel } from '@rehab-trainer/ui/components/rules/BrainTrainingRulesPanel';
 
 type MinesweeperPhase = 'menu' | 'rules' | 'playing' | 'results';
 type MinesweeperDifficulty = 'Beginner' | 'Intermediate' | 'Advanced';

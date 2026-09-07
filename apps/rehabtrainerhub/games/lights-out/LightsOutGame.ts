@@ -1,12 +1,12 @@
 // Hub-owned lights-out runtime.
 import { Application, Container, Graphics } from 'pixi.js';
-import { lightsConfig } from './constants';
-import type { Difficulty, GameResult, LightsOutState, ResultStats } from './types';
+import { lightsConfig } from '@rehab-trainer/ui/cognitive/constants';
+import type { Difficulty, GameResult, LightsOutState, ResultStats } from '@rehab-trainer/ui/cognitive/types';
 import {
   GetGridLayout,
   IsMobileCognitiveViewport,
   ToggleLights,
-} from './utils';
+} from '@rehab-trainer/ui/cognitive/utils';
 
 const lightsBoardColor = 0x1a1a2e;
 const lightsCellOff = 0x16213e;

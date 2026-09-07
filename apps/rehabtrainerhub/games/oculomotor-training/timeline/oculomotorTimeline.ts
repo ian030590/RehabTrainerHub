@@ -1,12 +1,12 @@
 // Timeline local to the Hub-owned oculomotor module.
 import WebGazerExtension from '@jspsych/extension-webgazer';
-import PixiOculomotorTrainingPlugin from '../plugins/pixi-oculomotor-training';
-import { GetSetting } from '../../utils/settings';
+import PixiOculomotorTrainingPlugin from '../pixi-oculomotor-training';
+import { GetSetting } from '@rehab-trainer/ui/settings';
 import {
   ConsumeOfficialWebGazerTrialData,
   CreateWebGazerExperimentTimeline,
-} from '../../utils/webgazerCalibration';
-import type { BuildTimelineOverrides } from './types';
+} from '../webgazer/webgazerCalibration';
+import type { BuildTimelineOverrides } from '../types/types';
 
 export function BuildOculomotorTimeline(overrides?: BuildTimelineOverrides): object[] {
   const mode = overrides?.oculomotor?.mode ?? GetSetting('oculomotorMode');

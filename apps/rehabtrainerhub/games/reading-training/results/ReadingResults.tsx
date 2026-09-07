@@ -1,7 +1,7 @@
 // Results view local to the Hub-owned reading module.
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
-import { useAppSetting } from '../../../utils/useAppSetting';
-import type { TFunction, TrialData } from '../types';
+import { useAppSetting } from '@rehab-trainer/ui/useAppSetting';
+import type { TFunction, TrialData } from '@rehab-trainer/ui';
 
 interface ReadingResultsProps {
   results: TrialData[];

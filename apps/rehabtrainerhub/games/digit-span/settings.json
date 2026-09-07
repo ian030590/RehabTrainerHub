@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "gameId": "digit-span",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定數字廣度記憶的模式與長度。",
+        "en": "Configure digit span memory mode and starting length."
+      },
+      "fields": [
+        {
+          "key": "spanMode",
+          "type": "list",
+          "label": {
+            "zh-TW": "記憶模式",
+            "en": "Span mode"
+          },
+          "description": {
+            "zh-TW": "順向為依原順序回憶；逆向為依相反倒序回憶。",
+            "en": "Forward recalls in original order; backward recalls in reverse order."
+          },
+          "default": "forward",
+          "options": [
+            {
+              "value": "forward",
+              "label": {
+                "zh-TW": "順向回憶（原順序輸入）",
+                "en": "Forward span"
+              }
+            },
+            {
+              "value": "backward",
+              "label": {
+                "zh-TW": "逆向回憶（倒過來輸入）",
+                "en": "Backward span"
+              }
+            }
+          ]
+        },
+        {
+          "key": "startLength",
+          "type": "list",
+          "label": {
+            "zh-TW": "起始位數",
+            "en": "Starting length"
+          },
+          "description": {
+            "zh-TW": "練習開始時的數字串長度。",
+            "en": "Starting digit sequence length."
+          },
+          "default": 3,
+          "options": [
+            {
+              "value": 2,
+              "label": {
+                "zh-TW": "2 位數（入門）",
+                "en": "2 digits"
+              }
+            },
+            {
+              "value": 3,
+              "label": {
+                "zh-TW": "3 位數（標準）",
+                "en": "3 digits"
+              }
+            },
+            {
+              "value": 4,
+              "label": {
+                "zh-TW": "4 位數（進階）",
+                "en": "4 digits"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "總題數",
+            "en": "Trials"
+          },
+          "description": {
+            "zh-TW": "設定本次活動總題數。",
+            "en": "Set total trials in this session."
+          },
+          "default": 10,
+          "min": 5,
+          "max": 20,
+          "step": 1,
+          "unit": {
+            "zh-TW": "題",
+            "en": "trials"
+          }
+        },
+        {
+          "key": "digitSpeedMs",
+          "type": "list",
+          "label": {
+            "zh-TW": "數字切換速度",
+            "en": "Presentation speed"
+          },
+          "description": {
+            "zh-TW": "每個數字展示與間隔的停留速度。",
+            "en": "Display speed per digit."
+          },
+          "default": 1200,
+          "options": [
+            {
+              "value": 800,
+              "label": {
+                "zh-TW": "0.8 秒（快速）",
+                "en": "0.8 seconds (Fast)"
+              }
+            },
+            {
+              "value": 1200,
+              "label": {
+                "zh-TW": "1.2 秒（標準）",
+                "en": "1.2 seconds (Standard)"
+              }
+            },
+            {
+              "value": 1600,
+              "label": {
+                "zh-TW": "1.6 秒（從容）",
+                "en": "1.6 seconds (Relaxed)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在數字切換與作答時播放提示音效。",
+            "en": "Play audio tones during digit display and answers."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

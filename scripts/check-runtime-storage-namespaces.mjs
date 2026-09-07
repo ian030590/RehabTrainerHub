@@ -132,7 +132,7 @@ for (const fixture of [
 
 const hartChartSource = readFileSync(resolve(
   repoRoot,
-  'apps/rehabtrainerhub/training-modules/vision/pages/training/HartChartPage.tsx',
+  'apps/rehabtrainerhub/games/hart-chart/HartChartPage.tsx',
 ), 'utf8');
 assert.match(hartChartSource, /`\$\{storagePrefix\}hart\.decoderDock`/);
 assert.doesNotMatch(hartChartSource, /vision[_-]trainer/);

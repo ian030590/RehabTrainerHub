@@ -31,7 +31,7 @@ import {
   ShouldCountPeripheralAttentionTrial,
   peripheralAttentionTrialRefreshOptions,
   type PeripheralAttentionFrameSyncMeasurement,
-} from './peripheralAttentionTiming';
+} from './timing/peripheralAttentionTiming';
 import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { useNavigate } from 'react-router-dom';

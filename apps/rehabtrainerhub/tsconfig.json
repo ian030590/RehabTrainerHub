@@ -28,7 +28,7 @@
         "../../packages/ui/src/*"
       ],
       "@rehab-trainer/hub-modules/*": [
-        "./training-modules/*"
+        "./games/*"
       ],
       "@rehab-trainer/games/*": [
         "./games/*"
@@ -49,11 +49,7 @@
   ],
   "exclude": [
     "node_modules",
-    "games",
-    "training-runtimes",
-    "training-modules/motor",
-    "training-modules/vision",
-    "training-modules/brain",
-    "training-modules/mouth"
+    "games/*/*",
+    "games/_shared"
   ]
 }

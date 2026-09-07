@@ -17,17 +17,17 @@
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Container, Graphics, Text } from 'pixi.js';
-import { pixiColors, typography } from '../../theme';
-import { ShuffleArray, GenerateRandomLetters, GenerateScatteredPositions } from '../../utils/mathUtils';
-import { PixelFromMillimeter } from '../../utils/spatialUtils';
-import { soundManager } from '../../utils/soundManager';
+import { pixiColors, typography } from '@rehab-trainer/ui/trainerTheme';
+import { ShuffleArray, GenerateRandomLetters, GenerateScatteredPositions } from '@rehab-trainer/ui/mathUtils';
+import { PixelFromMillimeter } from '@rehab-trainer/ui/spatialUtils';
+import { soundManager } from '@rehab-trainer/ui/soundManager';
 import {
   AttachPixiTrialCanvas,
   CleanupPixiTrial,
   CreatePixiTrialContainer,
   RunPixiTrial,
   pixiRuntimeScopes,
-} from '../../utils/pixiPool';
+} from '@rehab-trainer/ui/pixiPool';
 
 // ── Plugin Info ──
 const info = {

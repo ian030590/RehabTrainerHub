@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "gameId": "spatial-span",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定視覺空間工作記憶的呈現模式與起始長度。",
+        "en": "Configure visuospatial working memory span mode and starting length."
+      },
+      "fields": [
+        {
+          "key": "spanMode",
+          "type": "list",
+          "label": {
+            "zh-TW": "記憶模式",
+            "en": "Span mode"
+          },
+          "description": {
+            "zh-TW": "順向為依原順序點選；逆向為依相反倒序點選。",
+            "en": "Forward recalls in original order; backward recalls in reverse order."
+          },
+          "default": "forward",
+          "options": [
+            {
+              "value": "forward",
+              "label": {
+                "zh-TW": "順向回憶（原順序）",
+                "en": "Forward span"
+              }
+            },
+            {
+              "value": "backward",
+              "label": {
+                "zh-TW": "逆向回憶（倒序）",
+                "en": "Backward span"
+              }
+            }
+          ]
+        },
+        {
+          "key": "startLength",
+          "type": "list",
+          "label": {
+            "zh-TW": "起始方塊數",
+            "en": "Starting blocks"
+          },
+          "description": {
+            "zh-TW": "練習開始時的空間方塊序列長度。",
+            "en": "Starting spatial sequence block count."
+          },
+          "default": 3,
+          "options": [
+            {
+              "value": 2,
+              "label": {
+                "zh-TW": "2 塊（入門）",
+                "en": "2 blocks"
+              }
+            },
+            {
+              "value": 3,
+              "label": {
+                "zh-TW": "3 塊（標準）",
+                "en": "3 blocks"
+              }
+            },
+            {
+              "value": 4,
+              "label": {
+                "zh-TW": "4 塊（進階）",
+                "en": "4 blocks"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "總題數",
+            "en": "Trials"
+          },
+          "description": {
+            "zh-TW": "設定本次活動總題數。",
+            "en": "Set total trials in this session."
+          },
+          "default": 10,
+          "min": 5,
+          "max": 20,
+          "step": 1,
+          "unit": {
+            "zh-TW": "題",
+            "en": "trials"
+          }
+        },
+        {
+          "key": "displaySpeedMs",
+          "type": "list",
+          "label": {
+            "zh-TW": "方塊閃爍速度",
+            "en": "Presentation speed"
+          },
+          "description": {
+            "zh-TW": "每個方塊亮起閃爍的停留速度。",
+            "en": "Display duration per block in sequence."
+          },
+          "default": 1200,
+          "options": [
+            {
+              "value": 800,
+              "label": {
+                "zh-TW": "0.8 秒（快速）",
+                "en": "0.8 seconds (Fast)"
+              }
+            },
+            {
+              "value": 1200,
+              "label": {
+                "zh-TW": "1.2 秒（標準）",
+                "en": "1.2 seconds (Standard)"
+              }
+            },
+            {
+              "value": 1600,
+              "label": {
+                "zh-TW": "1.6 秒（從容）",
+                "en": "1.6 seconds (Relaxed)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在方塊亮起與作答時播放音效。",
+            "en": "Play audio feedback during sequence and clicks."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

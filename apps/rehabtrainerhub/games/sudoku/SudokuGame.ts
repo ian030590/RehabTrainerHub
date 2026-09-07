@@ -1,2 +1,1 @@
-// Canonical runtime module for sudoku
-export * from '@rehab-trainer/hub-modules/brain/pages/thinking/cognitive/languageNeutralGames';
+export * from '@rehab-trainer/ui/cognitive/languageNeutralGames';

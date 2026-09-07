@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "gameId": "tower-of-london",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定問題規劃步數難度與題數。",
+        "en": "Configure problem planning step difficulty and trial counts."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "規劃難度",
+            "en": "Planning difficulty"
+          },
+          "description": {
+            "zh-TW": "初級為 2~3 步題型；中級為 3~4 步；高級為 4~5 步。",
+            "en": "Easy uses 2-3 step tasks; medium uses 3-4 steps; hard uses 4-5 steps."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "初級（2~3 步解題）",
+                "en": "Easy (2-3 steps)"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "中級（3~4 步解題）",
+                "en": "Medium (3-4 steps)"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "高級（4~5 步解題）",
+                "en": "Hard (4-5 steps)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "題目數量",
+            "en": "Trials"
+          },
+          "description": {
+            "zh-TW": "設定本次活動完成的題數。",
+            "en": "Set total puzzle tasks in this session."
+          },
+          "default": 6,
+          "min": 3,
+          "max": 12,
+          "step": 1,
+          "unit": {
+            "zh-TW": "題",
+            "en": "puzzles"
+          }
+        },
+        {
+          "key": "showOptimalHint",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "顯示最佳步數提示",
+            "en": "Show optimal step hint"
+          },
+          "description": {
+            "zh-TW": "在畫面上提示此題最少需要幾步完成。",
+            "en": "Display the minimum steps required to solve current puzzle."
+          },
+          "default": true
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在移動彩球與過關時播放音效。",
+            "en": "Play audio cues when moving balls and completing levels."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

@@ -8,32 +8,46 @@ import { ParseGameSettingsDefinition } from '../packages/game-settings/src/index
 const repositoryRoot = resolve(import.meta.dirname, '..');
 const hubRoot = resolve(repositoryRoot, 'apps/rehabtrainerhub');
 const gamesRoot = resolve(hubRoot, 'games');
-const catalogPath = resolve(hubRoot, 'training-modules/catalog.ts');
+const catalogPath = resolve(hubRoot, 'games/catalog.ts');
 const expectedOfficialGameIds = Object.freeze([
+  'antisaccade',
   'asteroid-shield',
+  'attention-network-task',
   'connect4',
+  'digit-span',
   'dots-and-boxes',
   'drawing-defense',
   'driving-rehab',
   'every-ball-response',
+  'flanker',
   'gabor-patching',
   'gesture-battler',
+  'go-nogo',
   'hart-chart',
   'hex',
+  'keep-track',
+  'letter-memory',
   'lights-out',
   'maze',
   'memory-match',
   'minesweeper',
   'motor-cortex-rehab',
   'moving-card',
+  'n-back',
+  'number-letter',
   'oculomotor-training',
+  'plus-minus',
   'reaction-time',
   'reading-training',
   'simon-says',
   'sliding-puzzle',
+  'spatial-span',
+  'stop-signal',
+  'stroop',
   'sudoku',
   'tic-tac-toe',
   'tongue-catch',
+  'tower-of-london',
   'ufov',
   'whack-a-mole',
 ].sort());
@@ -48,6 +62,7 @@ test('catalog and game roots retain one exact settings definition per official g
 
   assert.deepEqual(catalogGameIds, expectedOfficialGameIds);
   assert.deepEqual(gameDirectories, expectedOfficialGameIds);
+  await assert.rejects(access(resolve(gamesRoot, '_shared')), 'games/_shared directory must not exist');
   assert.doesNotMatch(catalogSource, /\/runtimes\//);
   assert.match(catalogSource, /settingsPath: `\/games\/\$\{seed\.id\}\/settings\.json`/);
   assert.match(catalogSource, /return `\/games\/\$\{encodeURIComponent\(module\.runtimeId\)\}\//);
@@ -81,15 +96,8 @@ test('Hub builds per-game outputs and cannot restore a public trainer runtime', 
     /out[\\/]runtimes|resolve\(outputRoot,\s*['"]runtimes['"]\)/,
   );
 
-  for (const adapter of ['brain', 'motor', 'mouth', 'vision']) {
-    const config = await readFile(
-      resolve(hubRoot, 'training-runtimes', adapter, 'vite.config.ts'),
-      'utf8',
-    );
-    assert.match(config, /base:\s*['"]\.\/['"]/);
-    assert.match(config, new RegExp(`out/\\.official-game-shells/${adapter}`));
-    assert.doesNotMatch(config, /out[\\/]runtimes|\/runtimes\//);
-  }
+  await assert.rejects(access(resolve(hubRoot, 'training-modules')));
+  await assert.rejects(access(resolve(hubRoot, 'training-runtimes')));
 
   const emitter = await readFile(resolve(repositoryRoot, 'scripts/emit-official-game-pwas.mjs'), 'utf8');
   assert.match(emitter, /const gamesDirectory = resolve\(outputDirectory, 'games'\)/);
@@ -204,9 +212,9 @@ test('both official and developer overlays configure before mounting their ifram
   assert.doesNotMatch(GetIframeOpeningTag(packageOverlay), /allow-same-origin|allow-top-navigation/);
 });
 
-test('all four compatibility adapters install the verified settings receiver', async () => {
-  for (const adapter of ['brain', 'motor', 'mouth', 'vision']) {
-    const main = await ReadHub(`training-runtimes/${adapter}/src/main.tsx`);
+test('all official games install the verified settings receiver', async () => {
+  for (const gameId of expectedOfficialGameIds) {
+    const main = await readFile(resolve(gamesRoot, gameId, 'main.tsx'), 'utf8');
     assert.match(main, /InstallHostedGameSettingsReceiver\(\)/);
   }
 });

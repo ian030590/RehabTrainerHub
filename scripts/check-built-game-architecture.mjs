@@ -20,7 +20,7 @@ assert.equal(
   'Built game architecture may only be checked in apps/rehabtrainerhub/out.',
 );
 
-test('built Hub retains 26 independent game directories and no public trainer runtimes', async () => {
+test('built Hub retains 40 independent game directories and no public trainer runtimes', async () => {
   const gamesOutputRoot = resolve(outputDirectory, 'games');
   const sourceGamesRoot = resolve(repositoryRoot, 'apps/rehabtrainerhub/games');
   await assert.rejects(lstat(resolve(outputDirectory, 'runtimes')), undefined, 'Public /runtimes must not exist.');
@@ -40,7 +40,7 @@ test('built Hub retains 26 independent game directories and no public trainer ru
 
   const sourceGameIds = await ListDirectories(sourceGamesRoot);
   const outputGameIds = await ListDirectories(gamesOutputRoot);
-  assert.equal(sourceGameIds.length, 26, 'The current official library must retain all 26 games.');
+  assert.equal(sourceGameIds.length, 40, 'The current official library must retain all 40 games.');
   assert.deepEqual(outputGameIds, sourceGameIds, 'Built and source game directories must match exactly.');
 
   for (const gameId of sourceGameIds) {

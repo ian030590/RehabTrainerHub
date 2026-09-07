@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "gameId": "attention-network-task",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定注意網絡測驗難度與題數。",
+        "en": "Configure trial counts and timing."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "提示模式",
+            "en": "Cue condition"
+          },
+          "description": {
+            "zh-TW": "選擇空間提示與中央提示混合模式。",
+            "en": "Configure spatial and central cueing complexity."
+          },
+          "default": "standard",
+          "options": [
+            {
+              "value": "standard",
+              "label": {
+                "zh-TW": "標準模式（綜合提示）",
+                "en": "Standard (Mixed Cues)"
+              }
+            },
+            {
+              "value": "spatial",
+              "label": {
+                "zh-TW": "空間聚焦（上下空間提示）",
+                "en": "Spatial Focus"
+              }
+            },
+            {
+              "value": "double",
+              "label": {
+                "zh-TW": "警覺加強（雙重警示）",
+                "en": "Alerting Focus"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "回合題數",
+            "en": "Trial count"
+          },
+          "description": {
+            "zh-TW": "設定本次活動總題數。",
+            "en": "Set total trials in this session."
+          },
+          "default": 24,
+          "min": 12,
+          "max": 48,
+          "step": 6,
+          "unit": {
+            "zh-TW": "題",
+            "en": "trials"
+          }
+        },
+        {
+          "key": "stimulusDurationMs",
+          "type": "list",
+          "label": {
+            "zh-TW": "反應時限",
+            "en": "Response time window"
+          },
+          "description": {
+            "zh-TW": "箭頭呈現並等待反應的時間。",
+            "en": "Maximum time window allowed to make a response."
+          },
+          "default": 1800,
+          "options": [
+            {
+              "value": 1400,
+              "label": {
+                "zh-TW": "1.4 秒（緊湊）",
+                "en": "1.4 seconds (Fast)"
+              }
+            },
+            {
+              "value": 1800,
+              "label": {
+                "zh-TW": "1.8 秒（標準）",
+                "en": "1.8 seconds (Standard)"
+              }
+            },
+            {
+              "value": 2400,
+              "label": {
+                "zh-TW": "2.4 秒（從容）",
+                "en": "2.4 seconds (Relaxed)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在答對或答錯時播放音效。",
+            "en": "Play audio feedback on responses."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

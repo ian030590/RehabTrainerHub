@@ -1,7 +1,7 @@
 // Timeline local to the Hub-owned Gabor module.
-import PixiGaborPatchingPlugin from '../plugins/pixi-gabor-patching';
-import { GetSetting } from '../../utils/settings';
-import type { BuildTimelineOverrides } from './types';
+import PixiGaborPatchingPlugin from '../pixi-gabor-patching';
+import { GetSetting } from '@rehab-trainer/ui/settings';
+import type { BuildTimelineOverrides } from '@rehab-trainer/ui';
 
 export function BuildGaborPatchingTimeline(overrides?: BuildTimelineOverrides): object[] {
   const durationSec = overrides?.gabor?.durationSec ?? GetSetting('oculomotorDurationSec');

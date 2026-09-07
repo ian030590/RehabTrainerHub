@@ -1,7 +1,7 @@
 // Results view local to the Hub-owned vision modules.
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
-import { Mean, Median } from '../../../utils/mathUtils';
-import type { TFunction, TrialData } from '../types';
+import { Mean, Median } from '@rehab-trainer/ui/mathUtils';
+import type { TFunction, TrialData } from '@rehab-trainer/ui';
 
 interface DefaultTrainingResultsProps {
   results: TrialData[];
@@ -35,17 +35,13 @@ export function DefaultTrainingResults({ results, userName, t }: DefaultTraining
           </tr>
         </thead>
         <tbody>
-          {results.map((result, i) => (
-            <tr key={i}>
-              <td>{i + 1}</td>
-              <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{result.target}</td>
-              <td>{result.response}</td>
-              <td style={{ color: result.correct ? 'var(--success)' : 'var(--error)' }}>
-                {result.correct ? '✓' : '✗'}
-              </td>
-              <td className={result.rt < averageRt ? 'rt-fast' : result.rt > averageRt * 1.5 ? 'rt-slow' : ''}>
-                {result.rt}
-              </td>
+          {results.map((result, index) => (
+            <tr key={index} className={result.correct ? 'row-correct' : 'row-incorrect'}>
+              <td>{index + 1}</td>
+              <td>{result.targetLetter}</td>
+              <td>{result.responseLetter || '-'}</td>
+              <td>{result.correct ? t('exp.res.correct') : t('exp.res.incorrect')}</td>
+              <td>{Math.round(result.rt)} ms</td>
             </tr>
           ))}
         </tbody>

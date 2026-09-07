@@ -1,8 +1,8 @@
 // Results view local to the Hub-owned oculomotor module.
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import type { ResultSummaryItem } from '@rehab-trainer/ui/components/ResultSummary';
-import { FindOculomotorResult } from '../oculomotor/resultData';
-import type { TFunction, TrialData } from '../types';
+import { FindOculomotorResult } from './resultData';
+import type { TFunction, TrialData } from '../types/types';
 
 interface OculomotorResultsProps {
   results: TrialData[];

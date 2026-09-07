@@ -42,20 +42,20 @@ import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfi
 import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
-import { useT } from '../../i18n';
-import { InlineAlert } from '../../components/InlineAlert';
-import { MediaDeviceErrorDialog } from '../../components/MediaDeviceErrorDialog';
-import { getActiveUser } from '../../utils/settings';
+import { useT } from '@rehab-trainer/ui/i18n/games';
+import { InlineAlert } from '@rehab-trainer/ui/components/InlineAlert';
+import { MediaDeviceErrorDialog } from '@rehab-trainer/ui/components/MediaDeviceErrorDialog';
+import { getActiveUser } from '@rehab-trainer/ui/settings';
 import {
   PlayFailureSound,
   PlayGameEndSound,
   PlaySuccessSound,
   PrepareAudioFeedback,
-} from '../../utils/soundManager';
-import { SaveTrainingSessionRecord } from '../../utils/trainingRecords';
+} from '@rehab-trainer/ui/soundManager';
+import { SaveTrainingSessionRecord } from '@rehab-trainer/ui/storage/trainingRecords';
 import { Clamp, FormatTestDate } from './gameUtils';
-import { VerifySelectedTrainingUser } from './selectedUserGuard';
-import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
+import { VerifySelectedTrainingUser } from '@rehab-trainer/ui/selectedUserGuard';
+import { MotorTrainingRulesPanel } from '@rehab-trainer/ui/components/rules/MotorTrainingRulesPanel';
 
 type DifficultyId = 'beginner' | 'intermediate' | 'advanced';
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';

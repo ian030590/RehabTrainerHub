@@ -2,14 +2,14 @@
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Graphics, Text } from 'pixi.js';
-import { typography } from '../../theme';
+import { typography } from '@rehab-trainer/ui/trainerTheme';
 import {
   AttachPixiTrialCanvas,
   CleanupPixiTrial,
   CreatePixiTrialContainer,
   RunPixiTrial,
   pixiRuntimeScopes,
-} from '../../utils/pixiPool';
+} from '@rehab-trainer/ui/pixiPool';
 
 const info = {
   name: 'pixi-reading-training',

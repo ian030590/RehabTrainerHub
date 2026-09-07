@@ -11,16 +11,16 @@ import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreen
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
-import { useT } from '../../i18n';
-import { storagePrefix } from '../../utils/settings';
-import { SaveTrainingRecord } from '../../utils/trainingRecords';
+import { useT } from '@rehab-trainer/ui/i18n/games';
+import { storagePrefix } from '@rehab-trainer/ui/settings';
+import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
 import {
   ClampHartScale,
   CreateHartChart,
   CreateHartDecoder,
   CreateHartSeed,
   ParseHartSeed,
-} from './hartChart';
+} from './logic/hartChart';
 import type {
   CSSProperties,
   ChangeEvent,
@@ -28,8 +28,8 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from 'react';
 import type { HartCell, HartDecoderToken } from './hartChart';
-import type { TrialData } from './types';
-import './hart-chart.css';
+import type { TrialData } from '@rehab-trainer/ui/cognitive/types';
+import './styles/hart-chart.css';
 
 type DecoderDock = 'left' | 'right' | 'top' | 'bottom';
 type HartTrainingPhase = 'playing' | 'results';
@@ -117,10 +117,10 @@ function HartChartGrid({
   );
 }
 
-export function HartChartPage() {
+export function HartChartPage({ standalone = false }: { standalone?: boolean } = {}) {
   const location = useLocation();
 
-  if (!IsTrainingFlowLaunchState(location.state)) {
+  if (!standalone && !IsTrainingFlowLaunchState(location.state)) {
     return <Navigate to="/?module=hart-chart" replace />;
   }
 

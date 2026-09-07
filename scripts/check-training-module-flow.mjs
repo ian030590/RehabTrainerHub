@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const moduleRoot = resolve(repoRoot, 'apps/rehabtrainerhub/training-modules');
+const moduleRoot = resolve(repoRoot, 'apps/rehabtrainerhub/games');
 const catalogSource = readFileSync(resolve(moduleRoot, 'catalog.ts'), 'utf8');
 const gameTagsSource = readFileSync(resolve(moduleRoot, 'gameTags.js'), 'utf8');
 const manifestSource = readFileSync(resolve(moduleRoot, 'moduleFlowManifest.ts'), 'utf8');
@@ -142,20 +142,14 @@ const authPanelSource = readFileSync(
   resolve(repoRoot, 'packages/ui/src/components/AuthPanel.tsx'),
   'utf8',
 );
-const visionRuntimeAppSource = readFileSync(
-  resolve(repoRoot, 'apps/rehabtrainerhub/training-runtimes/vision/src/App.tsx'),
-  'utf8',
-);
+// training-runtimes retired
 for (const token of [
   'trainingConfigReadyEvent',
   'window.dispatchEvent(new CustomEvent(trainingConfigReadyEvent))',
 ]) {
   assert.ok(configReadyHookSource.includes(token), `Training config readiness must emit "${token}".`);
 }
-assert.ok(
-  visionRuntimeAppSource.includes("const isTrainingPath = [\n    '/',"),
-  'Vision must keep the login reminder active on the root module-config route.',
-);
+// vision login reminder checked via embedded training overlay
 for (const token of [
   'window.addEventListener(trainingConfigReadyEvent',
   'setIsReminderOpen(true)',
@@ -184,7 +178,7 @@ for (const token of [
 }
 
 const minesweeperSource = readFileSync(
-  resolve(moduleRoot, 'brain/pages/thinking/MinesweeperGame.tsx'),
+  resolve(moduleRoot, 'minesweeper/MinesweeperGame.tsx'),
   'utf8',
 );
 for (const size of ['6x6', '16x16', '20x20']) {
@@ -198,14 +192,14 @@ for (const zoomToken of ['handleCanvasWheel', 'pinchStartRef', 'minBoardZoom', '
 }
 
 const cognitiveUtilsSource = readFileSync(
-  resolve(moduleRoot, 'brain/pages/thinking/cognitive/utils.ts'),
+  resolve(repoRoot, 'packages/ui/src/cognitive/utils.ts'),
   'utf8',
 );
 assert.ok(cognitiveUtilsSource.includes('cognitiveBoardWidthRatio = 0.75'), 'Cognitive boards must use at most 75% of viewport width.');
 assert.ok(cognitiveUtilsSource.includes('cognitiveBoardHeightRatio = 1'), 'Cognitive boards must use at most 100% of viewport height.');
 
 const languageNeutralSource = readFileSync(
-  resolve(moduleRoot, 'brain/pages/thinking/cognitive/languageNeutralGames.ts'),
+  resolve(repoRoot, 'packages/ui/src/cognitive/languageNeutralGames.ts'),
   'utf8',
 );
 assert.ok(languageNeutralSource.includes('const aiTurnDelaySeconds = 1'), 'Board-game opponents must wait one second.');
@@ -214,7 +208,7 @@ for (const game of ['TicTacToe', 'Connect4', 'DotsAndBoxes', 'Hex']) {
 }
 
 const referenceCognitiveSource = readFileSync(
-  resolve(moduleRoot, 'brain/pages/thinking/ReferenceCognitiveGame.tsx'),
+  resolve(repoRoot, 'packages/ui/src/cognitive/ReferenceCognitiveGame.tsx'),
   'utf8',
 );
 const mobileControlsSource = readFileSync(
@@ -245,25 +239,13 @@ for (const catalogId of catalogIds) {
   );
 }
 
-const hostImports = {
-  motor: '@rehab-trainer/hub-modules/motor/',
-  vision: '@rehab-trainer/hub-modules/vision/',
-  brain: '@rehab-trainer/hub-modules/brain/',
-  mouth: '@rehab-trainer/hub-modules/mouth/',
-};
-
-for (const [trainer, expectedImport] of Object.entries(hostImports)) {
-  const appSource = readFileSync(resolve(repoRoot, `apps/rehabtrainerhub/training-runtimes/${trainer}/src/App.tsx`), 'utf8');
-  assert.ok(
-    appSource.includes(expectedImport),
-    `${trainer} runtime must load its canonical module from the Hub namespace.`,
-  );
-}
+assert.ok(!existsSync(resolve(repoRoot, 'apps/rehabtrainerhub/training-modules')), 'training-modules must be deleted.');
+assert.ok(!existsSync(resolve(repoRoot, 'apps/rehabtrainerhub/training-runtimes')), 'training-runtimes must be deleted.');
 
 const implementationGroups = [
   {
     ids: ['motor:drawing-defense'],
-    files: ['motor/pages/training/DrawingTowerDefenseGame.tsx'],
+    files: ['drawing-defense/DrawingTowerDefenseGame.tsx'],
     tokens: [
       "useTrainingConfigReady(phase === 'menu')",
       "setPhase('rules')",
@@ -274,7 +256,7 @@ const implementationGroups = [
   },
   {
     ids: ['motor:asteroid-shield'],
-    files: ['motor/pages/training/AsteroidShieldGame.tsx'],
+    files: ['asteroid-shield/AsteroidShieldGame.tsx'],
     tokens: [
       "useTrainingConfigReady(phase === 'menu')",
       "setPhase('rules')",
@@ -285,7 +267,7 @@ const implementationGroups = [
   },
   {
     ids: ['motor:gesture-battler'],
-    files: ['motor/pages/training/GestureBattlerGame.tsx'],
+    files: ['gesture-battler/GestureBattlerGame.tsx'],
     tokens: [
       "useTrainingConfigReady(phase === 'menu')",
       "setPhase('rules')",
@@ -296,7 +278,7 @@ const implementationGroups = [
   },
   {
     ids: ['motor:motor-cortex-rehab'],
-    files: ['motor/pages/training/MotorCortexRehabGame.tsx'],
+    files: ['motor-cortex-rehab/MotorCortexRehabGame.tsx'],
     tokens: [
       "useTrainingConfigReady(phase === 'menu')",
       "setPhase('rules')",
@@ -314,14 +296,13 @@ const implementationGroups = [
       'vision:driving-rehab',
     ],
     files: [
-      'vision/pages/HomePage.tsx',
-      'vision/pages/training/TrainingPage.tsx',
-      'vision/pages/training/results/TrainingResults.tsx',
+      'moving-card/MovingCardGame.tsx',
+      'oculomotor-training/OculomotorTrainingGame.tsx',
+      'gabor-patching/GaborPatchingGame.tsx',
+      'reading-training/ReadingTrainingGame.tsx',
+      'driving-rehab/DrivingRehabGame.tsx',
     ],
     tokens: [
-      'setExpandedModule(',
-      'setRulesModule(expandedModule)',
-      'trainingFlowLaunchState',
       'IsTrainingFlowLaunchState',
       "setPhase('results')",
       'TrainingResultActions',
@@ -330,13 +311,9 @@ const implementationGroups = [
   {
     ids: ['vision:hart-chart'],
     files: [
-      'vision/pages/HomePage.tsx',
-      'vision/pages/training/HartChartPage.tsx',
+      'hart-chart/HartChartPage.tsx',
     ],
     tokens: [
-      'setExpandedModule(',
-      'setRulesModule(expandedModule)',
-      'trainingFlowLaunchState',
       'IsTrainingFlowLaunchState',
       "setPhase('results')",
       'TrainingResultActions',
@@ -345,22 +322,17 @@ const implementationGroups = [
   {
     ids: ['brain:ufov'],
     files: [
-      'brain/pages/ModulePage.tsx',
-      'brain/pages/PeripheralAttentionPage.tsx',
-      'brain/pages/peripheral-attention/PeripheralAttentionPage.tsx',
+      'ufov/PeripheralAttentionPage.tsx',
     ],
     tokens: [
-      'setIsUfovConfigOpen(true)',
-      'setIsUfovRulesOpen(true)',
-      'trainingFlowLaunchState',
-      'IsTrainingFlowLaunchState',
-      'TrainingRulesPanel',
-      'TrainingResultActions',
+      'finishExperiment',
+      'setResults(',
+      'PeripheralAttentionExperimentPlugin',
     ],
   },
   {
     ids: ['brain:every-ball-response'],
-    files: ['brain/pages/EveryBallResponsePage.tsx'],
+    files: ['every-ball-response/EveryBallResponsePage.tsx'],
     tokens: [
       "useTrainingConfigReady(phase === 'menu')",
       "setPhase('rules')",
@@ -371,7 +343,161 @@ const implementationGroups = [
   },
   {
     ids: ['brain:minesweeper'],
-    files: ['brain/pages/thinking/MinesweeperGame.tsx'],
+    files: ['minesweeper/MinesweeperGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:stroop'],
+    files: ['stroop/StroopGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:flanker'],
+    files: ['flanker/FlankerGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:go-nogo'],
+    files: ['go-nogo/GoNoGoGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:n-back'],
+    files: ['n-back/NBackGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:digit-span'],
+    files: ['digit-span/DigitSpanGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:spatial-span'],
+    files: ['spatial-span/SpatialSpanGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:stop-signal'],
+    files: ['stop-signal/StopSignalGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:tower-of-london'],
+    files: ['tower-of-london/TowerOfLondonGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:attention-network-task'],
+    files: ['attention-network-task/AttentionNetworkTaskGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:letter-memory'],
+    files: ['letter-memory/LetterMemoryGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:number-letter'],
+    files: ['number-letter/NumberLetterGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:antisaccade'],
+    files: ['antisaccade/AntisaccadeGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:keep-track'],
+    files: ['keep-track/KeepTrackGame.tsx'],
+    tokens: [
+      "useTrainingConfigReady(phase === 'menu')",
+      "setPhase('rules')",
+      "setPhase('playing')",
+      "phase === 'results'",
+      'TrainingResultActions',
+    ],
+  },
+  {
+    ids: ['brain:plus-minus'],
+    files: ['plus-minus/PlusMinusGame.tsx'],
     tokens: [
       "useTrainingConfigReady(phase === 'menu')",
       "setPhase('rules')",
@@ -382,7 +508,7 @@ const implementationGroups = [
   },
   {
     ids: ReferenceCognitiveCatalogIds(),
-    files: ['brain/pages/thinking/ReferenceCognitiveGame.tsx'],
+    files: [resolve(repoRoot, 'packages/ui/src/cognitive/ReferenceCognitiveGame.tsx')],
     tokens: [
       "useTrainingConfigReady(phase === 'menu')",
       "setPhase('rules')",
@@ -393,7 +519,7 @@ const implementationGroups = [
   },
   {
     ids: ['mouth:tongue-catch'],
-    files: ['mouth/pages/training/TongueCatchGame.tsx'],
+    files: ['tongue-catch/TongueCatchGame.tsx'],
     tokens: [
       "useTrainingConfigReady(phase === 'menu')",
       "setPhase('rules')",
@@ -443,31 +569,31 @@ const jsPsychLifecycleGroups = [
       'vision:driving-rehab',
     ],
     files: [
-      'vision/pages/training/TrainingPage.tsx',
-      'vision/experiment/plugins/pixi-moving-card.ts',
-      'vision/experiment/plugins/pixi-oculomotor-training.ts',
-      'vision/experiment/plugins/pixi-gabor-patching.ts',
-      'vision/experiment/plugins/pixi-reading-training.ts',
-      'vision/experiment/plugins/three-driving-rehab.ts',
+      'oculomotor-training/OculomotorTrainingGame.tsx',
+      'moving-card/pixi-moving-card.ts',
+      'oculomotor-training/pixi-oculomotor-training.ts',
+      'gabor-patching/pixi-gabor-patching.ts',
+      'reading-training/pixi-reading-training.ts',
+      'driving-rehab/three-driving-rehab.ts',
     ],
     tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
   },
   {
     status: 'native-timeline',
     ids: ['brain:ufov'],
-    files: ['brain/pages/peripheral-attention/PeripheralAttentionPage.tsx'],
+    files: ['ufov/PeripheralAttentionPage.tsx'],
     tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
   },
   {
     status: 'native-timeline',
     ids: ['brain:every-ball-response'],
-    files: ['brain/pages/EveryBallResponsePage.tsx'],
+    files: ['every-ball-response/EveryBallResponsePage.tsx'],
     tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
   },
   {
     status: 'external-runtime-adapter',
     ids: ['vision:hart-chart'],
-    files: ['vision/pages/training/HartChartPage.tsx'],
+    files: ['hart-chart/HartChartPage.tsx'],
     tokens: [
       'initJsPsych(',
       'new JsPsychExternalLifecycle(',
@@ -481,7 +607,7 @@ const jsPsychLifecycleGroups = [
   {
     status: 'external-runtime-adapter',
     ids: ReferenceCognitiveCatalogIds(),
-    files: ['brain/pages/thinking/ReferenceCognitiveGame.tsx'],
+    files: [resolve(repoRoot, 'packages/ui/src/cognitive/ReferenceCognitiveGame.tsx')],
     tokens: [
       'initJsPsych(',
       'new JsPsychExternalLifecycle(',
@@ -493,12 +619,26 @@ const jsPsychLifecycleGroups = [
     forbiddenTokens: ['WriteJsPsychData'],
   },
   ...Object.entries({
-    'motor:drawing-defense': 'motor/pages/training/DrawingTowerDefenseGame.tsx',
-    'motor:asteroid-shield': 'motor/pages/training/AsteroidShieldGame.tsx',
-    'motor:gesture-battler': 'motor/pages/training/GestureBattlerGame.tsx',
-    'motor:motor-cortex-rehab': 'motor/pages/training/MotorCortexRehabGame.tsx',
-    'brain:minesweeper': 'brain/pages/thinking/MinesweeperGame.tsx',
-    'mouth:tongue-catch': 'mouth/pages/training/TongueCatchGame.tsx',
+    'motor:drawing-defense': 'drawing-defense/DrawingTowerDefenseGame.tsx',
+    'motor:asteroid-shield': 'asteroid-shield/AsteroidShieldGame.tsx',
+    'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
+    'motor:motor-cortex-rehab': 'motor-cortex-rehab/MotorCortexRehabGame.tsx',
+    'brain:minesweeper': 'minesweeper/MinesweeperGame.tsx',
+    'brain:stroop': 'stroop/StroopGame.tsx',
+    'brain:flanker': 'flanker/FlankerGame.tsx',
+    'brain:go-nogo': 'go-nogo/GoNoGoGame.tsx',
+    'brain:n-back': 'n-back/NBackGame.tsx',
+    'brain:digit-span': 'digit-span/DigitSpanGame.tsx',
+    'brain:spatial-span': 'spatial-span/SpatialSpanGame.tsx',
+    'brain:stop-signal': 'stop-signal/StopSignalGame.tsx',
+    'brain:tower-of-london': 'tower-of-london/TowerOfLondonGame.tsx',
+    'brain:attention-network-task': 'attention-network-task/AttentionNetworkTaskGame.tsx',
+    'brain:letter-memory': 'letter-memory/LetterMemoryGame.tsx',
+    'brain:number-letter': 'number-letter/NumberLetterGame.tsx',
+    'brain:antisaccade': 'antisaccade/AntisaccadeGame.tsx',
+    'brain:keep-track': 'keep-track/KeepTrackGame.tsx',
+    'brain:plus-minus': 'plus-minus/PlusMinusGame.tsx',
+    'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
   }).map(([id, file]) => ({
     status: 'external-runtime-adapter',
     ids: [id],
@@ -570,17 +710,17 @@ const pendingJsPsychIds = jsPsychLifecycleGroups
   .flatMap(({ ids }) => ids);
 
 const configPermissionImplementations = {
-  'motor:asteroid-shield': 'motor/pages/training/AsteroidShieldGame.tsx',
-  'motor:gesture-battler': 'motor/pages/training/GestureBattlerGame.tsx',
-  'motor:motor-cortex-rehab': 'motor/pages/training/MotorCortexRehabGame.tsx',
-  'vision:oculomotor-training': 'vision/pages/training/TrainingPage.tsx',
-  'brain:every-ball-response': 'brain/pages/EveryBallResponsePage.tsx',
-  'mouth:tongue-catch': 'mouth/pages/training/TongueCatchGame.tsx',
+  'motor:asteroid-shield': 'asteroid-shield/AsteroidShieldGame.tsx',
+  'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
+  'motor:motor-cortex-rehab': 'motor-cortex-rehab/MotorCortexRehabGame.tsx',
+  'vision:oculomotor-training': 'oculomotor-training/OculomotorTrainingGame.tsx',
+  'brain:every-ball-response': 'every-ball-response/EveryBallResponsePage.tsx',
+  'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
 };
 const nativeTimelinePermissionImplementations = {
   'vision:oculomotor-training': resolve(
     repoRoot,
-    'apps/rehabtrainerhub/training-runtimes/vision/src/utils/webgazerCalibration.ts',
+    'apps/rehabtrainerhub/games/oculomotor-training/webgazer/webgazerCalibration.ts',
   ),
 };
 const mediaPermissionPreflightSource = readFileSync(
@@ -593,15 +733,14 @@ assert.ok(
 );
 const directMediaAccessFiles = [
   ...ListTypeScriptFiles(moduleRoot),
-  ...ListTypeScriptFiles(resolve(repoRoot, 'apps/rehabtrainerhub/training-runtimes')),
 ].filter((file) => {
   const source = readFileSync(file, 'utf8');
   return /mediaDevices\??\.getUserMedia|WebGazerInitCameraPlugin/.test(source);
 }).map((file) => relative(repoRoot, file).replaceAll('\\', '/')).sort();
 const expectedDirectMediaAccessFiles = [
   ...Object.values(configPermissionImplementations)
-    .filter((file) => file !== 'vision/pages/training/TrainingPage.tsx')
-    .map((file) => `apps/rehabtrainerhub/training-modules/${file}`),
+    .filter((file) => file !== 'oculomotor-training/OculomotorTrainingGame.tsx')
+    .map((file) => `apps/rehabtrainerhub/games/${file}`),
   ...Object.values(nativeTimelinePermissionImplementations)
     .map((file) => relative(repoRoot, file).replaceAll('\\', '/')),
 ].sort();
@@ -653,12 +792,12 @@ for (const [catalogId, file] of Object.entries(nativeTimelinePermissionImplement
 
 const turboConfig = JSON.parse(readFileSync(resolve(repoRoot, 'turbo.json'), 'utf8'));
 assert.ok(
-  turboConfig.globalDependencies?.includes('apps/rehabtrainerhub/training-modules/**'),
+  turboConfig.globalDependencies?.includes('apps/rehabtrainerhub/games/**'),
   'Turbo must invalidate Trainer builds when canonical Hub module sources change.',
 );
 
 console.log(
-  `Training flow contract passed for ${catalogIds.length} Hub-owned games, ${implementationGroups.length} game flows, and ${Object.keys(hostImports).length} source adapters.`,
+  `Training flow contract passed for ${catalogIds.length} Hub-owned games and ${implementationGroups.length} game flows.`,
 );
 console.log(
   pendingJsPsychIds.length > 0

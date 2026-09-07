@@ -1,10 +1,9 @@
 // Result export local to the Hub-owned vision modules.
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
-import { GetSetting } from '../../utils/settings';
-import { DownloadCsvFile } from '../../utils/downloadFile';
-import { Mean } from '../../utils/mathUtils';
-import { FindOculomotorResult } from './oculomotor/resultData';
-import type { TFunction, TrialData } from './types';
+import { GetSetting } from '@rehab-trainer/ui/settings';
+import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
+import { Mean } from '@rehab-trainer/ui/mathUtils';
+import type { TFunction, TrialData } from '@rehab-trainer/ui';
 
 interface DownloadTrainingCsvArgs {
   results: TrialData[];

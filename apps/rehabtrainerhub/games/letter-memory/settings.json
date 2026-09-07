@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "gameId": "letter-memory",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定字母串長度與呈現速度。",
+        "en": "Configure stream length and letter presentation pace."
+      },
+      "fields": [
+        {
+          "key": "recallLength",
+          "type": "list",
+          "label": {
+            "zh-TW": "追蹤字母數",
+            "en": "Tracked letters"
+          },
+          "description": {
+            "zh-TW": "始終維持並回憶最後出現的字母數量。",
+            "en": "Number of final letters to report from the running stream."
+          },
+          "default": "4",
+          "options": [
+            {
+              "value": "3",
+              "label": {
+                "zh-TW": "最後 3 個字母（初級）",
+                "en": "Last 3 letters (Easy)"
+              }
+            },
+            {
+              "value": "4",
+              "label": {
+                "zh-TW": "最後 4 個字母（標準經典）",
+                "en": "Last 4 letters (Standard)"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "題數",
+            "en": "Trial count"
+          },
+          "description": {
+            "zh-TW": "設定本次活動測試的字母串回合數。",
+            "en": "Set total letter sequences in this session."
+          },
+          "default": 6,
+          "min": 3,
+          "max": 12,
+          "step": 1,
+          "unit": {
+            "zh-TW": "題",
+            "en": "sequences"
+          }
+        },
+        {
+          "key": "presentationSpeedMs",
+          "type": "list",
+          "label": {
+            "zh-TW": "字母出現間隔",
+            "en": "Presentation pace"
+          },
+          "description": {
+            "zh-TW": "每個字母在螢幕上停留與切換的速度。",
+            "en": "Display time per letter in milliseconds."
+          },
+          "default": 1500,
+          "options": [
+            {
+              "value": 1200,
+              "label": {
+                "zh-TW": "1.2 秒（緊湊）",
+                "en": "1.2 seconds"
+              }
+            },
+            {
+              "value": 1500,
+              "label": {
+                "zh-TW": "1.5 秒（標準）",
+                "en": "1.5 seconds"
+              }
+            },
+            {
+              "value": 2000,
+              "label": {
+                "zh-TW": "2.0 秒（從容）",
+                "en": "2.0 seconds"
+              }
+            }
+          ]
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在字母切換與點擊時播放音效。",
+            "en": "Play audio cues on letter updates and inputs."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}
