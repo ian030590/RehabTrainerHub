@@ -64,7 +64,7 @@ export function RehabFooter({
   return (
     <footer className={className}>
       <div className={innerClassName}>
-        <strong>{appName}</strong>
+        <strong lang="en">{appName}</strong>
         <span>{labels?.disclaimer ?? 'General information and self-practice tools only. This site is not a medical facility or occupational therapy clinic and does not provide individualized assessment, diagnosis, medical orders, or treatment.'}</span>
         <div className="rehab-footer-meta">
           <nav aria-label={labels?.navigation ?? 'Footer navigation'}>
@@ -72,7 +72,7 @@ export function RehabFooter({
             {aboutHref && <a href={aboutHref}>{labels?.about ?? 'About'}</a>}
             {developerHref && <a href={developerHref}>{labels?.developer ?? 'Developer options'}</a>}
             {downloadHref && <a href={downloadHref}>{labels?.download ?? 'Download app'}</a>}
-            {privacyHref && <a href={privacyHref}>{labels?.privacy ?? 'Privacy'}</a>}
+            {privacyHref && <a href={privacyHref}>{labels?.privacy ?? 'Privacy'}</a>}{' '}
             <a href={repoHref} target="_blank" rel="noopener noreferrer">{labels?.repo ?? 'GitHub'}</a>
           </nav>
           {showRights && (

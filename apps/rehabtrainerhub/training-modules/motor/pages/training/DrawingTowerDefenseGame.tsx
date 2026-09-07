@@ -23,6 +23,7 @@ import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSett
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
 import type { TFunction } from './types';
+import { RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
 import { MotorTrainingRulesPanel } from './MotorTrainingRulesPanel';
 
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
@@ -866,7 +867,9 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
               { label: t('drawing.config.background'), value: backgroundSummary },
             ]}
             onStart={() => void startGame()}
-            onBack={() => setPhase('menu')}
+            onBack={() => {
+            if (!RequestHubTrainingConfiguration()) setPhase('menu');
+          }}
           />
         </div>
       )}

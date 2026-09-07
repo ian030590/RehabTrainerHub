@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>居家訓練網 Rehab Trainer Hub</title>
+    <link>https://trainerhub.cc/</link>
+    <description>居家訓練網（Rehab Trainer Hub，trainerhub.cc）提供居家練習遊戲、衛教資訊與當次紀錄；不提供個別評估、診斷或治療。</description>
+    <language>zh-TW</language>
+    <atom:link href="https://trainerhub.cc/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>居家訓練網 訓練大廳</title>
+      <link>https://trainerhub.cc/</link>
+      <guid>https://trainerhub.cc/</guid>
+      <description>在訓練大廳探索肢體活動、視覺訓練、認知活動與口腔練習等多項居家練習遊戲。</description>
+    </item>
+    <item>
+      <title>居家訓練衛教、常見問答與作者背景</title>
+      <link>https://trainerhub.cc/qa/</link>
+      <guid>https://trainerhub.cc/qa/</guid>
+      <description>閱讀居家練習衛教與常見問答，了解作者背景、內容責任及網站使用界線。</description>
+    </item>
+    <item>
+      <title>關於居家訓練網</title>
+      <link>https://trainerhub.cc/about/</link>
+      <guid>https://trainerhub.cc/about/</guid>
+      <description>了解居家訓練網的開發緣起、非服務宣告、內容責任與開源資訊。</description>
+    </item>
+    <item>
+      <title>下載居家訓練網應用程式</title>
+      <link>https://trainerhub.cc/download/</link>
+      <guid>https://trainerhub.cc/download/</guid>
+      <description>了解如何在電腦與行動裝置上安裝居家訓練網 PWA 或單一遊戲獨立捷徑。</description>
+    </item>
+    <item>
+      <title>居家訓練網 隱私權政策</title>
+      <link>https://trainerhub.cc/privacy/</link>
+      <guid>https://trainerhub.cc/privacy/</guid>
+      <description>了解居家訓練網的匿名使用原則、練習紀錄本機儲存機制與第三方服務政策。</description>
+    </item>
+  </channel>
+</rss>

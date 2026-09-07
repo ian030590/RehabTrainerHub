@@ -161,12 +161,20 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
       ? 'autoplay; camera; fullscreen'
       : 'autoplay; fullscreen';
 
+  const handleDialogClick = (event: React.MouseEvent<HTMLDialogElement>) => {
+    if (configuredSettings || isTrainingActive || isTrainingComplete) return;
+    if (event.target === event.currentTarget) {
+      closeOverlay();
+    }
+  };
+
   return (
     <dialog
       aria-label={moduleCopy.title}
       className={`training-overlay ${configuredSettings || isTrainingActive || isTrainingComplete
         ? 'training-overlay-runtime'
         : 'training-overlay-config'}`}
+      onClick={handleDialogClick}
       ref={dialogRef}
       style={BuildTrainingThemeStyle(GetTrainerCategoryTheme(module.trainer))}
     >

@@ -241,4 +241,20 @@ export type {
   UfovDirectionTrial,
   UfovStimulusDurationTrial,
 } from './peripheralAttentionResults';
-
+export {
+  EndTour,
+  IsTourActive,
+  IsTourSeen,
+  MarkTourSeen,
+  ResetTourSeen,
+  ResumeTour,
+  StartTour,
+} from './tour';
+export type {
+  TourEventName,
+  TourLabels,
+  TourOptions,
+  TourStep,
+  TourStepText,
+  TourStepTextObject,
+} from './tour';

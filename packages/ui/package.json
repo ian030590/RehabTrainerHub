@@ -80,7 +80,9 @@
     "./trainingFlow": "./src/trainingFlow.ts",
     "./trainingGameUtils": "./src/trainingGameUtils.ts",
     "./ufovCanvas": "./src/peripheralAttentionCanvas.ts",
-    "./ufovResults": "./src/peripheralAttentionResults.ts"
+    "./ufovResults": "./src/peripheralAttentionResults.ts",
+    "./tour": "./src/tour/index.ts",
+    "./tour/toutour.css": "./src/tour/toutour.css"
   },
   "peerDependencies": {
     "jspsych": "^8.2.1",

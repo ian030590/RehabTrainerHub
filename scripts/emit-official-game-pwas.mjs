@@ -136,6 +136,7 @@ function BuildGameHtml(source, game, basePath, description) {
     #official-game-install { position: fixed; z-index: 2147483000; inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto auto; padding: 8px; border: 1px solid ButtonBorder; border-radius: 10px; background: Canvas; color: CanvasText; box-shadow: 0 4px 18px color-mix(in srgb, CanvasText 18%, transparent); }
     #official-game-install[hidden] { display: none; }
     #official-game-install button { min-height: 42px; padding: 8px 14px; border: 1px solid ButtonBorder; border-radius: 999px; color: ButtonText; background: ButtonFace; font: inherit; font-weight: 700; cursor: pointer; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
   </style>
   <script>
     (() => {
@@ -193,6 +194,9 @@ function BuildGameHtml(source, game, basePath, description) {
     })();
   </script>`;
   const installShell = `<aside id="official-game-install" hidden aria-live="polite"><button type="button">安裝此遊戲</button></aside>`;
+  const gameHeader = `<header class="sr-only"><h1>${EscapeHtml(game.title)}</h1><p>${EscapeHtml(description)}</p><nav><a href="/">返回居家訓練網大廳</a></nav></header>`;
+  const gameTitle = `${EscapeHtml(game.title)}｜居家訓練網`;
+  const socialMeta = `  <meta property="og:title" content="${gameTitle}" />\n  <meta property="og:description" content="${EscapeHtml(description)}" />\n  <meta property="og:url" content="https://trainerhub.cc${basePath}" />\n  <meta property="og:image" content="https://trainerhub.cc/icons/pwa-512.png" />\n  <meta name="twitter:card" content="summary" />\n  <meta name="twitter:title" content="${gameTitle}" />\n  <meta name="twitter:description" content="${EscapeHtml(description)}" />\n  <meta name="twitter:image" content="https://trainerhub.cc/icons/pwa-512.png" />`;
   let html = source
     .replace(/<html\b([^>]*)>/i, '<html$1 data-official-game-pwa="true">')
     .replace(/<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>\s*/gi, '')
@@ -217,9 +221,9 @@ function BuildGameHtml(source, game, basePath, description) {
   }
   html = html.replace(
     '</head>',
-    `  <meta name="robots" content="noindex,nofollow,noarchive" />\n  ${boot}\n</head>`,
+    `  <meta name="robots" content="noindex,nofollow,noarchive" />\n${socialMeta}\n  ${boot}\n</head>`,
   );
-  html = html.replace(/(<body\b[^>]*>)/i, `$1\n  ${installShell}`);
+  html = html.replace(/(<body\b[^>]*>)/i, `$1\n  ${installShell}\n  ${gameHeader}`);
   return html;
 }
 

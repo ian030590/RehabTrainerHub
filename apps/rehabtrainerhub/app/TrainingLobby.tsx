@@ -265,7 +265,7 @@ export function TrainingLobby() {
 
       <div className="lobby-layout">
         <aside className="filter-panel" aria-labelledby="filter-title">
-          <div className="filter-heading">
+          <div className="filter-header">
             <h2 id="filter-title">{copy.filters}</h2>
             {(selectedPurposes.length > 0 || query) && (
               <button onClick={clearFilters} type="button">{copy.clear}</button>
@@ -309,7 +309,11 @@ export function TrainingLobby() {
                       const subLabel = language === 'en' ? theme.label.en : theme.label['zh-TW'];
                       const subCount = purposeCounts.get(subId) ?? 0;
                       return (
-                        <label className="filter-option filter-subcategory-option" key={subId}>
+                        <label
+                          className="filter-option filter-subcategory-option"
+                          key={subId}
+                          style={BuildTrainingThemeStyle(theme)}
+                        >
                           <input
                             checked={selectedPurposes.includes(subId)}
                             onChange={() => togglePurpose(subId)}
@@ -328,7 +332,7 @@ export function TrainingLobby() {
         </aside>
 
         <section className="module-results" aria-labelledby="result-title">
-          <div className="result-heading">
+          <div className="result-header">
             <h2 id="result-title">{copy.allModules}</h2>
             <p aria-live="polite">{t('lobby.moduleCount', { count: visibleModules.length + visiblePublishedGames.length })}</p>
           </div>
@@ -342,7 +346,7 @@ export function TrainingLobby() {
           {visibleModules.length > 0 && (
             <header className="library-section-heading">
               <div>
-                <p className="page-kicker">Official library</p>
+                <p className="page-kicker" lang="en">Official library</p>
                 <h3>{platformCopy.officialLibrary}</h3>
               </div>
             </header>

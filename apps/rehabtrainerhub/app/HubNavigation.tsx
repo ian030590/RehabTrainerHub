@@ -20,6 +20,7 @@ import { hubLocalName, hubName } from './hubBrand';
 import { GetHubUiCopy } from './i18n';
 import { HubLanguageProvider, useHubLanguage } from './i18n/HubLanguage';
 import { siteUrls } from './siteUrls';
+import { StartHubTour, useHubTourAutoStart } from './tour/hubTour';
 
 const navigationHrefs = ['/', '/progress/', '/qa/', '/download/'] as const;
 
@@ -57,6 +58,8 @@ function HubShellContent({ children }: { children: ReactNode }) {
   const copy = GetHubUiCopy(language).navigation;
   const nextLanguage = language === 'en' ? 'zh' : 'en';
 
+  useHubTourAutoStart(language);
+
   useEffect(() => {
     setIsAccountOpen(false);
   }, [pathname]);
@@ -90,8 +93,8 @@ function HubShellContent({ children }: { children: ReactNode }) {
             <Link className="hub-brand" href="/" aria-label={`${hubLocalName} ${hubName}`}>
               <Image src="/rehabtrainerhub.svg" alt="" width={42} height={42} priority />
               <span>
-                <strong>{hubLocalName}</strong>
-                <small>{hubName}</small>
+                <strong>{hubLocalName}</strong>{' '}
+                <small lang="en">{hubName}</small>
               </span>
             </Link>
 
@@ -109,6 +112,18 @@ function HubShellContent({ children }: { children: ReactNode }) {
             </nav>
 
             <div className="hub-header-actions">
+              <button
+                id="hub-guide-button"
+                className="hub-guide-button"
+                onClick={() => StartHubTour(language, { force: true })}
+                title={copy.guideButton}
+                aria-label={copy.guideButton}
+                type="button"
+              >
+                <span className="material-symbols-outlined" aria-hidden="true">explore</span>
+                <span>{copy.guideButton}</span>
+              </button>
+
               <button
                 aria-label={copy.switchLanguage}
                 className="hub-language-toggle"

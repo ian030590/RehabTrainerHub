@@ -1,8 +1,31 @@
 import type { Metadata } from 'next';
+import { hubLocalName } from './hubBrand';
+import { seoImage } from './seo';
+
+const notFoundTitle = `找不到頁面 | ${hubLocalName}`;
+const notFoundDescription = '找不到您要求的居家訓練網頁面。';
 
 export const metadata: Metadata = {
   title: '找不到頁面',
-  description: '找不到您要求的居家訓練網頁面。',
+  description: notFoundDescription,
+  robots: {
+    index: false,
+    follow: false,
+  },
+  openGraph: {
+    title: notFoundTitle,
+    description: notFoundDescription,
+    siteName: hubLocalName,
+    locale: 'zh_TW',
+    type: 'website',
+    images: [seoImage],
+  },
+  twitter: {
+    card: 'summary',
+    title: notFoundTitle,
+    description: notFoundDescription,
+    images: [seoImage.url],
+  },
 };
 
 export default function NotFoundPage() {

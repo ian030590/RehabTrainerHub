@@ -9,6 +9,7 @@ export const en = {
       admin: 'Administration',
       switchLanguage: 'Switch language to Traditional Chinese',
       flagLabel: 'English (United States)',
+      guideButton: 'Site Tour',
       footer: {
         hub: 'Home',
         developer: 'Developer options',
@@ -162,6 +163,38 @@ export const en = {
       useBody: 'Data is used for cross-device sign-in, saving training records, calculating daily tasks and training milestones, and improving website features.',
       permissions: 'Device permissions',
       permissionsBody: 'Training that needs a camera or microphone will request browser permission separately. Live image and sound analysis is generally performed on the user’s device.',
+    },
+    tour: {
+      skip: 'Skip tour',
+      prev: 'Previous',
+      next: 'Next',
+      done: 'Done',
+      steps: {
+        welcome: {
+          title: 'Welcome to Rehab Trainer Hub',
+          text: 'This platform provides self-guided home practice activities and health resources. Practice according to your comfort; results serve as practice records only.',
+        },
+        navigation: {
+          title: 'Main Navigation',
+          text: 'Switch between Training Lobby, Progress, Resources, and Download app to explore features and records.',
+        },
+        search: {
+          title: 'Activity Search',
+          text: 'Type keywords here to quickly find specific practice modules or games.',
+        },
+        filters: {
+          title: 'Category & Purpose Filters',
+          text: 'Filter by Motor, Vision, Brain, or Speech & Oral categories to quickly find suitable practice topics.',
+        },
+        activityCards: {
+          title: 'Practice Activity Cards',
+          text: 'Click "Start training" to adjust parameters and practice; or click "Install game" to use it as a standalone app.',
+        },
+        guideHelp: {
+          title: 'Restart Tour Anytime',
+          text: 'Whenever you want to review features again, click this tour button anytime to reopen the guide.',
+        },
+      },
     },
   },
 } as const;

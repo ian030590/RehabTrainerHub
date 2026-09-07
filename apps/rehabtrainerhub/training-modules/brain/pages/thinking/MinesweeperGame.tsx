@@ -28,6 +28,7 @@ import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfi
 import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
+import { IsEmbeddedHubTraining, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
 import { BrainTrainingRulesPanel } from './BrainTrainingRulesPanel';
 
 type MinesweeperPhase = 'menu' | 'rules' | 'playing' | 'results';
@@ -381,7 +382,7 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
   return (
     <div ref={fullscreenRootRef} className={`minesweeper-game minesweeper-phase-${phase}`}>
       <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
-      {phase === 'menu' && (
+      {phase === 'menu' && !IsEmbeddedHubTraining() && (
         <div className="training-panel">
           <TrainingConfigPanel
             label={t('training.thinking.configLabel')}
@@ -464,7 +465,9 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
               { label: t('minesweeper.config.mineCountLabel'), value: selectedMineCount },
             ]}
             onStart={() => void startGame()}
-            onBack={() => setPhase('menu')}
+            onBack={() => {
+            if (!RequestHubTrainingConfiguration()) setPhase('menu');
+          }}
           />
         </div>
       )}

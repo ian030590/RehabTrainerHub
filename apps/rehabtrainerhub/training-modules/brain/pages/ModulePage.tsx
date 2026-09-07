@@ -2,21 +2,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppLoading } from '@rehab-trainer/ui/components/AppLoading';
-import { ConfigDialog } from '@rehab-trainer/ui/components/ConfigDialog';
-import { TrainingConfigNavigationActions } from '@rehab-trainer/ui/components/TrainingConfigNavigationActions';
-import {
-  PeripheralAttentionContrastSlider,
-  PeripheralAttentionEccentricitySlider,
-  PeripheralAttentionGeometryWarning,
-  PeripheralAttentionNineGridCompass,
-  PeripheralAttentionVehicleAngleSlider,
-} from '@rehab-trainer/ui/components/PeripheralAttentionConfigComponents';
 import { SelectionCard } from '@rehab-trainer/ui/components/SelectionCard';
-import {
-  TrainingConfigOptionGroup,
-  TrainingConfigSection,
-} from '@rehab-trainer/ui/components/TrainingConfigPanel';
-import { TrainingSlider } from '@rehab-trainer/ui/components/TrainingConfigRangeField';
 import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { DetectDisplayDeviceKind } from '@rehab-trainer/ui/displayTiming';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
@@ -25,14 +11,12 @@ import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfi
 import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { trainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { GetTrainingCatalogModules } from '@rehab-trainer/hub-modules/catalog';
-import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
+import {
+  IsEmbeddedHubTraining,
+  NotifyHubTrainingExit,
+  RequestHubTrainingConfiguration,
+} from '@rehab-trainer/ui/embeddedTraining';
 import { GetPeripheralAttentionConfigLabels } from '@rehab-trainer/ui/i18n/peripheralAttention';
-import { CalculatePeripheralAttentionScreenGeometry } from '@rehab-trainer/ui/peripheralAttentionCanvas';
-import { useT, type TranslationKey } from '../i18n';
-import { GetReferenceCognitiveModules } from './thinking/cognitive/constants';
-import type { ReferenceGameId } from './thinking/cognitive/types';
-import type { PeripheralAttentionStopCondition, SubtestId, UfovRunMode, UfovTargetAxis } from './peripheral-attention/PeripheralAttentionPage';
-
 const LoadReferenceCognitiveGame = () => import('./thinking/ReferenceCognitiveGame');
 const LoadEveryBallResponsePage = () => import('./EveryBallResponsePage');
 const LoadUfovPage = () => import('./PeripheralAttentionPage');
@@ -107,6 +91,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
   const requestedGameId = searchParams.get('game');
   const isUfovRequested = moduleId === 'attention' && requestedGameId === 'ufov';
   const hostedSettings = useHostedGameSettings();
+  const isEmbeddedHubTraining = IsEmbeddedHubTraining();
   const hostedSettingsAppliedRef = useRef(false);
   const requestedModule = moduleCards.find((card) => card.gameId === requestedGameId)?.gameId ?? null;
   const { activeModule, openModule, closeModule } = useRoutedTrainingModule<ModuleGameId>({
@@ -142,6 +127,14 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
     ufovVehicleVisualAngleDeg,
   );
   const ruleLabels = GetBrainRuleLabels(lang);
+
+  const handleBackFromUfovRules = () => {
+    if (!RequestHubTrainingConfiguration()) {
+      setIsUfovRulesOpen(false);
+      setIsUfovConfigOpen(false);
+      navigate(`/${moduleId}-training`);
+    }
+  };
 
   const closeUfovConfig = () => {
     if (IsEmbeddedHubTraining()) {
@@ -180,13 +173,11 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
     ApplyHostedNumber(hostedSettings, 'screenWidthCm', 10, 250, setUfovScreenWidthCm);
     ApplyHostedNumber(hostedSettings, 'screenHeightCm', 10, 200, setUfovScreenHeightCm);
     ApplyHostedNumber(hostedSettings, 'viewingDistanceCm', 20, 300, setUfovViewingDistanceCm);
-    setIsUfovConfigOpen(false);
     setIsUfovRulesOpen(true);
   }, [hostedSettings, isUfovRequested]);
 
   const handleStartUfov = async () => {
     await EnterFullscreenFromUserGesture(document.documentElement);
-    setIsUfovConfigOpen(false);
     setIsUfovRulesOpen(false);
     navigate(`/attention-training/ufov?${new URLSearchParams({
       subtest: String(effectiveUfovSubtest),
@@ -210,8 +201,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setIsUfovRulesOpen(false);
-        setIsUfovConfigOpen(true);
+        handleBackFromUfovRules();
       }
     };
 
@@ -277,223 +267,12 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
             )}
         </Suspense>
       </div>
-      {isUfovConfigOpen && (
-        <ConfigDialog
-          ariaLabel={ufovLabels.settingsTitle}
-          onClose={closeUfovConfig}
-          summaryItems={[
-            { value: `${lang === 'en' ? 'Subject' : '受試者'}: ${subjectId || '--'}` },
-            { value: ufovLabels.subtests[selectedUfovSubtest] },
-            { value: ufovLabels.modes[selectedUfovMode].label },
-            { value: `${selectedUfovAxes.length}/8` },
-            { value: selectedUfovStopCondition === 'adaptive_80' ? '80%' : String(ufovTrialCount) },
-            { value: `${ufovContrastPercent}% · ${ufovTargetVisualAngleDeg.toFixed(1)}° · ${ufovVehicleVisualAngleDeg.toFixed(1)}°` },
-            { value: `${ufovScreenWidthCm.toFixed(1)} × ${ufovScreenHeightCm.toFixed(1)} cm · ${ufovViewingDistanceCm} cm` },
-          ]}
-          actions={(
-            <TrainingConfigNavigationActions
-              cancelLabel={ufovLabels.cancel}
-              nextLabel={ruleLabels.next}
-              onCancel={closeUfovConfig}
-              onNext={() => {
-                setIsUfovConfigOpen(false);
-                setIsUfovRulesOpen(true);
-              }}
-            />
-          )}
-        >
-          <TrainingConfigSection
-            title={lang === 'en' ? 'Subject ID' : '受試者代號 (Subject ID)'}
-            description={lang === 'en'
-              ? 'Identifier for this participant; will be included in exported records and CSV reports.'
-              : '輸入受試者識別碼，將自動記錄於測驗報告與匯出之 CSV / JSON 數據中。'}
-            value={subjectId}
-            wide
-          >
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <input
-                type="text"
-                className="training-number-input"
-                style={{ flex: 1, height: '40px' }}
-                value={subjectId}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  setSubjectId(next);
-                  try {
-                    if (next.trim()) localStorage.setItem('ufov-subject-id-v1', next.trim());
-                  } catch {}
-                }}
-                placeholder={lang === 'en' ? 'Enter Subject ID...' : '請輸入受試者代號...'}
-              />
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{ height: '40px', whiteSpace: 'nowrap' }}
-                onClick={() => {
-                  const next = 'SUBJ_' + Math.random().toString(36).slice(2, 8).toUpperCase();
-                  setSubjectId(next);
-                  try {
-                    localStorage.setItem('ufov-subject-id-v1', next);
-                  } catch {}
-                }}
-              >
-                {lang === 'en' ? 'Random ID' : '隨機產生'}
-              </button>
-            </div>
-          </TrainingConfigSection>
-
-          <TrainingConfigSection
-            title={ufovLabels.chooseSubtest}
-            value={ufovLabels.subtests[selectedUfovSubtest]}
-          >
-            <TrainingConfigOptionGroup columns={3}>
-              {ufovSubtests.map((subtestId) => {
-                const subtestBlocked = isSmallScreenDevice && subtestId !== 1;
-                return (
-                  <button
-                    className={`training-option ${selectedUfovSubtest === subtestId ? 'active' : ''}`}
-                    disabled={subtestBlocked}
-                    key={subtestId}
-                    onClick={() => setSelectedUfovSubtest(subtestId)}
-                    type="button"
-                  >
-                    <span className="training-option-title">{ufovLabels.subtests[subtestId]}</span>
-                    <span className="training-option-meta">
-                      {subtestBlocked ? ufovLabels.subtestUnavailable : ufovLabels.instructions[subtestId]}
-                    </span>
-                  </button>
-                );
-              })}
-            </TrainingConfigOptionGroup>
-          </TrainingConfigSection>
-
-          {selectedUfovMode === 'formal' && (
-            <TrainingConfigSection title={lang === 'en' ? 'Stopping condition' : '終止條件'}>
-              <TrainingConfigOptionGroup columns={2}>
-                <button className={`training-option ${selectedUfovStopCondition === 'adaptive_80' ? 'active' : ''}`} onClick={() => setSelectedUfovStopCondition('adaptive_80')} type="button">
-                  <span className="training-option-title">{lang === 'en' ? '80% confidence threshold' : '信度 80% 門檻'}</span>
-                  <span className="training-option-meta">{lang === 'en' ? 'Adaptive staircase; ends on a stable threshold.' : '自適應階梯法；門檻穩定後結束。'}</span>
-                </button>
-                <button className={`training-option ${selectedUfovStopCondition === 'fixed_trials' ? 'active' : ''}`} onClick={() => setSelectedUfovStopCondition('fixed_trials')} type="button">
-                  <span className="training-option-title">{lang === 'en' ? 'Fixed trial count' : '固定題數'}</span>
-                  <span className="training-option-meta">{lang === 'en' ? 'Ends after the standard 48 recorded trials.' : '完成標準 48 題紀錄後結束。'}</span>
-                </button>
-              </TrainingConfigOptionGroup>
-              {selectedUfovStopCondition === 'fixed_trials' && (
-                <TrainingSlider
-                  label={lang === 'en' ? 'Recorded trials' : '紀錄題數'}
-                  value={ufovTrialCount}
-                  valueLabel={`${ufovTrialCount} ${lang === 'en' ? 'trials' : '題'}`}
-                  min={1}
-                  max={240}
-                  step={1}
-                  onValueChange={setUfovTrialCount}
-                />
-              )}
-            </TrainingConfigSection>
-          )}
-
-          <TrainingConfigSection
-            title={ufovLabels.chooseDirections}
-            value={`${selectedUfovAxes.length}/8`}
-            wide
-          >
-            <PeripheralAttentionNineGridCompass
-              lang={lang}
-              selectedAxes={selectedUfovAxes}
-              onChange={setSelectedUfovAxes}
-              labels={ufovLabels}
-            />
-          </TrainingConfigSection>
-
-          <TrainingConfigSection
-            title={ufovLabels.chooseMode}
-            value={ufovLabels.modes[selectedUfovMode].label}
-          >
-            <TrainingConfigOptionGroup columns={3}>
-              {ufovRunModes.map((mode) => (
-                <button
-                  className={`training-option ${selectedUfovMode === mode ? 'active' : ''}`}
-                  key={mode}
-                  onClick={() => setSelectedUfovMode(mode)}
-                  type="button"
-                >
-                  <span className="training-option-title">{ufovLabels.modes[mode].label}</span>
-                  <span className="training-option-meta">{ufovLabels.modes[mode].description}</span>
-                </button>
-              ))}
-            </TrainingConfigOptionGroup>
-          </TrainingConfigSection>
-
-          <TrainingConfigSection
-            title={lang === 'en' ? 'Screen size and viewing distance' : '螢幕尺寸與觀看距離校準'}
-            description={lang === 'en'
-              ? 'These values convert the stimulus position and size into visual-angle references; they are not a visual-field measurement.'
-              : '這些設定只用於換算刺激位置與大小的視角參考值，不代表視野量測。'}
-            value={`${ufovScreenWidthCm.toFixed(1)} × ${ufovScreenHeightCm.toFixed(1)} cm · ${ufovViewingDistanceCm} cm`}
-            wide
-          >
-            <TrainingSlider
-              label={lang === 'en' ? 'Display width' : '螢幕顯示寬度'}
-              value={ufovScreenWidthCm}
-              valueLabel={`${ufovScreenWidthCm.toFixed(1)} cm`}
-              min={10}
-              max={250}
-              step={0.1}
-              onValueChange={setUfovScreenWidthCm}
-            />
-            <TrainingSlider
-              label={lang === 'en' ? 'Display height' : '螢幕顯示高度'}
-              value={ufovScreenHeightCm}
-              valueLabel={`${ufovScreenHeightCm.toFixed(1)} cm`}
-              min={10}
-              max={200}
-              step={0.1}
-              onValueChange={setUfovScreenHeightCm}
-            />
-            <TrainingSlider
-              label={lang === 'en' ? 'Viewing distance' : '觀看距離'}
-              value={ufovViewingDistanceCm}
-              valueLabel={`${ufovViewingDistanceCm} cm`}
-              min={20}
-              max={300}
-              step={1}
-              onValueChange={setUfovViewingDistanceCm}
-            />
-            <PeripheralAttentionGeometryWarning
-              geometry={ufovGeometry}
-              targetAngle={ufovTargetVisualAngleDeg}
-              lang={lang}
-            />
-          </TrainingConfigSection>
-
-          <TrainingConfigSection title={ufovLabels.anglesTitle} wide>
-            <PeripheralAttentionEccentricitySlider
-              lang={lang}
-              value={ufovTargetVisualAngleDeg}
-              onChange={setUfovTargetVisualAngleDeg}
-            />
-            <PeripheralAttentionVehicleAngleSlider
-              lang={lang}
-              value={ufovVehicleVisualAngleDeg}
-              onChange={setUfovVehicleVisualAngleDeg}
-            />
-            <PeripheralAttentionContrastSlider
-              lang={lang}
-              value={ufovContrastPercent}
-              onChange={setUfovContrastPercent}
-            />
-          </TrainingConfigSection>
-
-        </ConfigDialog>
-      )}
       {isUfovRulesOpen && (
         <div
           className="config-modal-overlay fade-in"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
-              setIsUfovRulesOpen(false);
-              setIsUfovConfigOpen(true);
+              handleBackFromUfovRules();
             }
           }}
         >
@@ -514,10 +293,7 @@ export function ModulePage({ moduleId }: { moduleId: ModuleId }) {
             startLabel={ruleLabels.start}
             backLabel={ruleLabels.back}
             onStart={() => void handleStartUfov()}
-            onBack={() => {
-              setIsUfovRulesOpen(false);
-              setIsUfovConfigOpen(true);
-            }}
+            onBack={handleBackFromUfovRules}
             role="dialog"
             aria-modal
             aria-label={`${ufovLabels.subtests[effectiveUfovSubtest]} ${ruleLabels.label}`}

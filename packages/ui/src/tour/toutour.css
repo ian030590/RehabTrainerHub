@@ -1,0 +1,226 @@
+/*!
+ * Toutour spotlight onboarding tour styles.
+ * Adapted for Rehab Trainer Hub design system.
+ * Strictly ZERO gradients, ZERO neon effects, ZERO emojis.
+ */
+:root {
+  --tt-surface: #ffffff;
+  --tt-text: #202428;
+  --tt-muted: #606970;
+  --tt-accent: #146c5b;
+  --tt-accent-hover: #0d5547;
+  --tt-accent-bg: #e1f1ec;
+  --tt-border: #d4d9de;
+  --tt-radius: 8px;
+  --tt-mask: rgba(20, 24, 28, 0.55);
+  --tt-halo: rgba(255, 255, 255, 0.9);
+}
+
+#ttBlock,
+#ttSpot,
+#ttTip {
+  display: none;
+}
+
+#ttBlock.show {
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: transparent;
+}
+
+#ttSpot.show {
+  display: block;
+  position: fixed;
+  pointer-events: auto;
+  box-shadow: 0 0 0 200vmax var(--tt-mask);
+  border: 2px solid var(--tt-accent);
+  border-radius: var(--tt-radius);
+  outline: 1px solid var(--tt-halo);
+  outline-offset: 0;
+  transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
+}
+
+#ttSpot.tt-mask-off {
+  box-shadow: none;
+}
+
+#ttSpot.tt-ring-off {
+  border-color: transparent;
+  outline-color: transparent;
+}
+
+#ttSpot.no-anim {
+  transition: none !important;
+}
+
+#ttTip.show {
+  display: block;
+  position: fixed;
+  background: var(--tt-surface);
+  color: var(--tt-text);
+  border: 1px solid var(--tt-border);
+  border-radius: var(--tt-radius);
+  box-shadow: 0 8px 24px rgba(20, 33, 43, 0.14);
+  padding: 1rem 1.15rem 0.85rem;
+  width: max-content;
+  max-width: min(340px, calc(100vw - 24px));
+  font-family: var(--font-body, "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+#ttTip::before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--tt-surface);
+  transform: rotate(45deg);
+  display: none;
+}
+
+#ttTip.tip-right::before {
+  display: block;
+  left: -6px;
+  top: var(--tt-arrow-off, 20px);
+  border-left: 1px solid var(--tt-border);
+  border-bottom: 1px solid var(--tt-border);
+}
+
+#ttTip.tip-left::before {
+  display: block;
+  right: -6px;
+  top: var(--tt-arrow-off, 20px);
+  border-right: 1px solid var(--tt-border);
+  border-top: 1px solid var(--tt-border);
+}
+
+#ttTip.tip-bottom::before {
+  display: block;
+  top: -6px;
+  left: var(--tt-arrow-off, 20px);
+  border-left: 1px solid var(--tt-border);
+  border-top: 1px solid var(--tt-border);
+}
+
+#ttTip.tip-top::before {
+  display: block;
+  bottom: -6px;
+  left: var(--tt-arrow-off, 20px);
+  border-right: 1px solid var(--tt-border);
+  border-bottom: 1px solid var(--tt-border);
+}
+
+.tt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tt-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tt-accent);
+  line-height: 1;
+}
+
+.tt-ico .material-symbols-outlined {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.tt-count {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--tt-accent-bg);
+  color: var(--tt-accent);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  letter-spacing: 0.02em;
+}
+
+.tt-title {
+  margin: 0 0 0.35rem;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tt-text);
+  line-height: 1.35;
+}
+
+.tt-body {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--tt-muted);
+}
+
+.tt-foot {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.tt-btn {
+  flex: 1;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--tt-border);
+  background: var(--tt-surface);
+  color: var(--tt-text);
+  border-radius: var(--tt-radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tt-btn:hover,
+.tt-btn:focus-visible {
+  border-color: var(--tt-accent);
+  color: var(--tt-accent);
+  background: var(--tt-accent-bg);
+}
+
+.tt-btn-primary {
+  background: var(--tt-accent);
+  border-color: var(--tt-accent);
+  color: #ffffff;
+}
+
+.tt-btn-primary:hover,
+.tt-btn-primary:focus-visible {
+  background: var(--tt-accent-hover);
+  border-color: var(--tt-accent-hover);
+  color: #ffffff;
+}
+
+.tt-skip {
+  display: block;
+  width: 100%;
+  margin-top: 0.45rem;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  color: var(--tt-muted);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tt-skip:hover,
+.tt-skip:focus-visible {
+  color: var(--tt-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ttSpot.show,
+  #ttTip.show {
+    transition: none !important;
+  }
+}

@@ -19,7 +19,11 @@ import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPa
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { EnterFullscreenFromUserGesture } from '@rehab-trainer/ui/fullscreen';
-import { IsEmbeddedHubTraining, NotifyHubTrainingExit } from '@rehab-trainer/ui/embeddedTraining';
+import {
+  IsEmbeddedHubTraining,
+  NotifyHubTrainingExit,
+  RequestHubTrainingConfiguration,
+} from '@rehab-trainer/ui/embeddedTraining';
 import { trainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { GetTrainingModuleCopy } from '@rehab-trainer/hub-modules/catalog';
 import {
@@ -115,6 +119,7 @@ export function HomePage() {
     (module) => module.id === searchParams.get('module'),
   )?.id ?? null;
   const hostedSettings = useHostedGameSettings();
+  const isEmbeddedHubTraining = IsEmbeddedHubTraining();
   const hostedSettingsAppliedRef = useRef(false);
 
   // ── Module expansion state ──
@@ -335,12 +340,19 @@ export function HomePage() {
     ]).catch(() => undefined);
   }, [expandedModule]);
 
+  const handleBackFromRules = () => {
+    if (!RequestHubTrainingConfiguration()) {
+      setRulesModule(null);
+      setExpandedModule(null);
+    }
+  };
+
   useEffect(() => {
     if (!rulesModule) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setRulesModule(null);
+        handleBackFromRules();
       }
     };
 
@@ -690,7 +702,7 @@ export function HomePage() {
       </div>
 
       {/* ── Module Config Panel ── */}
-      {expandedModule === 'moving-card' && rulesModule !== 'moving-card' && (
+      {!isEmbeddedHubTraining && expandedModule === 'moving-card' && rulesModule !== 'moving-card' && (
         <ConfigDialog
           ariaLabel={t('home.module.movingCard.title')}
           onClose={handleCloseConfig}
@@ -735,7 +747,7 @@ export function HomePage() {
         </ConfigDialog>
       )}
 
-      {expandedModule === 'oculomotor-training' && rulesModule !== 'oculomotor-training' && (
+      {!isEmbeddedHubTraining && expandedModule === 'oculomotor-training' && rulesModule !== 'oculomotor-training' && (
         <ConfigDialog
           ariaLabel={t('home.module.oculomotor.title')}
           onClose={handleCloseConfig}
@@ -1206,7 +1218,7 @@ export function HomePage() {
         </ConfigDialog>
       )}
 
-      {expandedModule === 'gabor-patching' && rulesModule !== 'gabor-patching' && (
+      {!isEmbeddedHubTraining && expandedModule === 'gabor-patching' && rulesModule !== 'gabor-patching' && (
         <ConfigDialog
           ariaLabel={t('home.module.gaborPatching.title')}
           onClose={handleCloseConfig}
@@ -1266,7 +1278,7 @@ export function HomePage() {
         </ConfigDialog>
       )}
 
-      {expandedModule === 'reading-training' && rulesModule !== 'reading-training' && (
+      {!isEmbeddedHubTraining && expandedModule === 'reading-training' && rulesModule !== 'reading-training' && (
         <ConfigDialog
           ariaLabel={t('home.module.reading.title')}
           onClose={handleCloseConfig}
@@ -1318,7 +1330,7 @@ export function HomePage() {
         </ConfigDialog>
       )}
 
-      {expandedModule === 'driving-rehab' && rulesModule !== 'driving-rehab' && (
+      {!isEmbeddedHubTraining && expandedModule === 'driving-rehab' && rulesModule !== 'driving-rehab' && (
         <ConfigDialog
           ariaLabel={t('home.module.driving.title')}
           onClose={handleCloseConfig}
@@ -1490,7 +1502,7 @@ export function HomePage() {
         </ConfigDialog>
       )}
 
-      {expandedModule === 'hart-chart' && rulesModule !== 'hart-chart' && (
+      {!isEmbeddedHubTraining && expandedModule === 'hart-chart' && rulesModule !== 'hart-chart' && (
         <ConfigDialog
           ariaLabel={t('home.module.hartChart.title')}
           onClose={handleCloseConfig}
@@ -1509,7 +1521,7 @@ export function HomePage() {
           className="config-modal-overlay fade-in"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
-              setRulesModule(null);
+              handleBackFromRules();
             }
           }}
         >
@@ -1528,7 +1540,7 @@ export function HomePage() {
             )}
             startClassName={isStartingTraining ? 'is-loading' : ''}
             onStart={() => void handleStartTraining()}
-            onBack={() => setRulesModule(null)}
+            onBack={handleBackFromRules}
             role="dialog"
             aria-modal
             aria-label={`${GetTrainingModuleCopy(activeRulesModule.catalogModule, lang).title} ${rulesLabels.label}`}

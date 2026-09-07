@@ -89,6 +89,7 @@ import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreen
 import { useTrainingConfigReady } from '@rehab-trainer/ui/hooks/useTrainingConfigReady';
 import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
+import { IsEmbeddedHubTraining, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
 import { BrainTrainingRulesPanel } from './BrainTrainingRulesPanel';
 import './ThinkingGames.css';
 
@@ -645,7 +646,7 @@ export function ReferenceCognitiveGame({
         />
       )}
 
-      {phase === 'menu' && (
+      {phase === 'menu' && !IsEmbeddedHubTraining() && (
         <div className="training-panel">
           <TrainingConfigPanel
             className="cognitive-config"
@@ -774,7 +775,9 @@ export function ReferenceCognitiveGame({
             summaryTitle={metaTitle}
             summaryItems={configSummaryItems}
             onStart={() => void startGame()}
-            onBack={() => setPhase('menu')}
+            onBack={() => {
+            if (!RequestHubTrainingConfiguration()) setPhase('menu');
+          }}
           />
         </div>
       )}
