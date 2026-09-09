@@ -1,23 +1,24 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { initJsPsych } from 'jspsych';
-import type { JsPsych } from 'jspsych';
+import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
-  NotifyHubTrainingAbort,
-  NotifyHubTrainingComplete,
+NotifyHubTrainingAbort,
+NotifyHubTrainingComplete,
 } from '@rehab-trainer/ui/embeddedTraining';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useT } from '@rehab-trainer/ui/i18n';
-import { GetSetting, getActiveUser } from '@rehab-trainer/ui/settings';
-import { soundManager } from '@rehab-trainer/ui/soundManager';
+import { GetSetting,getActiveUser } from '@rehab-trainer/ui/settings';
+import { soundManager } from './runtime/soundManager';
 import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
-import { BuildDrivingRehabTimeline } from './timeline/drivingRehabTimeline';
-import { DisposeDrivingRehabRuntime } from './engine/driving-runtime-lifecycle';
+import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
+import type { JsPsych } from 'jspsych';
+import { initJsPsych } from 'jspsych';
+import { useCallback,useEffect,useRef,useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ParseDrivingWheelCalibration } from './engine/driving-input';
-import { DrivingResults } from './results/DrivingResults';
+import { DisposeDrivingRehabRuntime } from './engine/driving-runtime-lifecycle';
 import { DownloadTrainingCsv } from './exportCsv';
+import { DrivingResults } from './results/DrivingResults';
+import { BuildDrivingRehabTimeline } from './timeline/drivingRehabTimeline';
 
 export function DrivingRehabGame() {
   const location = useLocation();
@@ -27,7 +28,7 @@ export function DrivingRehabGame() {
   const [results, setResults] = useState<any[]>([]);
   const jsPsychRef = useRef<JsPsych | null>(null);
   const skipFinishRef = useRef(false);
-  const userName = getActiveUser()?.name || 'guest';
+  const userName = getActiveUser() || 'guest';
 
   useEffect(() => {
     if (phase !== 'running') return;
@@ -46,10 +47,10 @@ export function DrivingRehabGame() {
             moduleId: 'driving-rehab',
             gameId: 'driving-rehab',
             gameTitle: t('home.module.driving.title'),
-            difficulty: GetSetting('drivingDifficulty'),
+            difficulty: (GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty')),
             results: data,
           });
-          soundManager.destroy();
+
           DisposeDrivingRehabRuntime();
           setResults(data);
           jsPsychRef.current = null;
@@ -57,13 +58,13 @@ export function DrivingRehabGame() {
         },
       });
 
-      const timeline = BuildDrivingRehabTimeline({
+      const timeline = await BuildDrivingRehabTimeline({
         driving: {
-          redFlashEnabled: GetSetting('drivingRedFlashEnabled'),
-          difficulty: GetSetting('drivingDifficulty'),
-          controlMode: GetSetting('drivingControlMode'),
-          wheelCalibration: ParseDrivingWheelCalibration(GetSetting('drivingWheelCalibration')),
-          renderQuality: GetSetting('drivingRenderQuality'),
+          redFlashEnabled: (GetHostedGameSetting<boolean>('redFlashEnabled')),
+          difficulty: ({ easy: 'beginner', medium: 'intermediate', hard: 'advanced' } as const)[GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty')],
+          controlMode: (GetHostedGameSetting<'arrow' | 'wasd' | 'wheel' | 'touch'>('controlMode')),
+          wheelCalibration: ParseDrivingWheelCalibration(localStorage.getItem('rehab_driving-rehab_wheelCalibration') ?? ''),
+          renderQuality: (GetHostedGameSetting<'low' | 'medium' | 'high'>('renderQuality')),
           language: lang,
         },
       });
@@ -77,7 +78,7 @@ export function DrivingRehabGame() {
 
     return () => {
       cancelled = true;
-      soundManager.destroy();
+
       DisposeDrivingRehabRuntime();
       const active = jsPsychRef.current;
       jsPsychRef.current = null;
@@ -91,7 +92,7 @@ export function DrivingRehabGame() {
   const abortTraining = useCallback(() => {
     if (phase !== 'running') return;
     skipFinishRef.current = true;
-    soundManager.destroy();
+
     jsPsychRef.current?.abortExperiment();
     jsPsychRef.current = null;
     DisposeDrivingRehabRuntime();
@@ -106,18 +107,8 @@ export function DrivingRehabGame() {
 
   return (
     <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
-      <DrivingResults
-        results={results}
-        userName={userName}
-        moduleId="driving-rehab"
-        onRestart={() => setPhase('running')}
-        onExit={() => NotifyHubTrainingComplete()}
-        onDownloadCsv={() => DownloadTrainingCsv({ results, userName, moduleId: 'driving-rehab', t })}
-      />
-      <TrainingResultActions
-        onRestart={() => setPhase('running')}
-        onExit={() => NotifyHubTrainingComplete()}
-      />
+      <DrivingResults results={results} userName={userName} t={t} />
+      <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
     </div>
   );
 }

@@ -1,34 +1,32 @@
 // Canonical Hub-owned Hart Chart runtime and results flow.
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import QRCode from 'qrcode';
-import { initJsPsych } from 'jspsych';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { NotifyHubTrainingAbort } from '@rehab-trainer/ui/embeddedTraining';
-import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
+import { GetHostedGameSetting, NotifyHubTrainingAbort } from '@rehab-trainer/ui/embeddedTraining';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { JsPsychExternalLifecycle } from '@rehab-trainer/ui/jsPsychLifecycle';
-import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import { useT } from '@rehab-trainer/ui/i18n/games';
 import { storagePrefix } from '@rehab-trainer/ui/settings';
 import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
-import {
-  ClampHartScale,
-  CreateHartChart,
-  CreateHartDecoder,
-  CreateHartSeed,
-  ParseHartSeed,
-} from './logic/hartChart';
+import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
+import { initJsPsych } from 'jspsych';
+import QRCode from 'qrcode';
 import type {
-  CSSProperties,
-  ChangeEvent,
-  KeyboardEvent as ReactKeyboardEvent,
-  PointerEvent as ReactPointerEvent,
+CSSProperties,
+ChangeEvent,
+KeyboardEvent as ReactKeyboardEvent,
+PointerEvent as ReactPointerEvent,
 } from 'react';
-import type { HartCell, HartDecoderToken } from './hartChart';
-import type { TrialData } from '@rehab-trainer/ui/cognitive/types';
+import { useEffect,useMemo,useRef,useState } from 'react';
+import { Navigate,useLocation,useNavigate } from 'react-router-dom';
+import type { HartCell,HartDecoderToken } from './logic/hartChart';
+import {
+ClampHartScale,
+CreateHartChart,
+CreateHartDecoder,
+CreateHartSeed
+} from './logic/hartChart';
+import type { TrialData } from '@rehab-trainer/ui';
+import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 import './styles/hart-chart.css';
 
 type DecoderDock = 'left' | 'right' | 'top' | 'bottom';
@@ -132,7 +130,8 @@ function HartChartRuntime() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState<HartTrainingPhase>('playing');
   const [seed, setSeed] = useState(CreateHartSeed);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(() => ({ small: 0.75, medium: 1, large: 1.25 })[GetHostedGameSetting<'small' | 'medium' | 'large'>('chartSize')]);
+  const rounds = GetHostedGameSetting<number>('rounds');
   const [decoderOpen, setDecoderOpen] = useState(false);
   const [decoderDock, setDecoderDock] = useState<DecoderDock>(GetInitialDecoderDock);
   const [decoderDragging, setDecoderDragging] = useState(false);
@@ -155,7 +154,7 @@ function HartChartRuntime() {
   const decoderDragTargetRef = useRef<DecoderDock>(decoderDock);
 
   const chart = useMemo(() => CreateHartChart(seed), [seed]);
-  const decoder = useMemo(() => CreateHartDecoder(chart, seed), [chart, seed]);
+  const decoder = useMemo(() => CreateHartDecoder(chart, seed, rounds), [chart, seed, rounds]);
   const shareUrl = useMemo(() => {
     const baseUrl = window.location.href.split('#')[0];
     const params = new URLSearchParams({
@@ -183,10 +182,7 @@ function HartChartRuntime() {
     const jsPsych = initJsPsych({ display_element: host });
     const lifecycle = new JsPsychExternalLifecycle(jsPsych);
     jsPsychLifecycleRef.current = lifecycle;
-    void lifecycle.start({
-      moduleId: 'vision:hart-chart',
-      onStart: () => setStartedAt(Date.now()),
-    });
+    void lifecycle.start({ moduleId: 'vision:hart-chart', onStart: () => setStartedAt(Date.now()) });
 
     return () => {
       lifecycle.dispose();
@@ -393,7 +389,7 @@ function HartChartRuntime() {
     });
     setResult(nextResult);
     setPhase('results');
-    void SaveTrainingRecord({
+    void SaveTrainingRecord({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), gameId: 'hart-chart', gameTitle: document.title,
       userName: GetAuthUserNameFromToken() ?? '',
       moduleId: 'hart-chart',
       difficulty: 'decoder',
@@ -627,36 +623,6 @@ function HartChartRuntime() {
           </div>
         </div>
       )}
-    </main>
-  );
-}
-
-export function HartChartDisplayPage() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLElement>();
-  const seed = useMemo(() => ParseHartSeed(searchParams.get('seed')), [searchParams]);
-  const scale = ClampHartScale(Number(searchParams.get('scale') ?? '1'));
-  const chart = useMemo(() => CreateHartChart(seed), [seed]);
-
-  useEffect(() => {
-    const enterFullscreen = () => {
-      void enterTrainingFullscreen();
-      window.removeEventListener('pointerdown', enterFullscreen);
-    };
-
-    window.addEventListener('pointerdown', enterFullscreen, { once: true });
-    return () => window.removeEventListener('pointerdown', enterFullscreen);
-  }, [enterTrainingFullscreen]);
-
-  useTrainingAbort({
-    active: true,
-    onAbort: () => navigate('/'),
-  });
-
-  return (
-    <main ref={fullscreenRootRef} className="hart-display-page">
-      <HartChartGrid cells={chart} scale={scale} chartOnly />
     </main>
   );
 }

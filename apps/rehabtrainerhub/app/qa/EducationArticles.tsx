@@ -10,6 +10,7 @@ import { BuildApiUrl } from '@rehab-trainer/ui/auth/authClient';
 import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
 import type {
   ArticleCard,
+  Article,
   ArticleDetailResponse,
   ArticleListResponse,
 } from '../articleTypes';
@@ -30,10 +31,10 @@ function FormatPublishedDate(value: string | null, locale: 'zh-TW' | 'en'): stri
   }).format(date);
 }
 
-export function EducationArticles() {
+export function EducationArticles({ initialArticles }: { initialArticles: Article[] }) {
   const { language, t } = useHubLanguage();
-  const [articles, setArticles] = useState<ArticleCard[]>([]);
-  const [status, setStatus] = useState<LoadStatus>('loading');
+  const [articles, setArticles] = useState<ArticleCard[]>(initialArticles);
+  const [status, setStatus] = useState<LoadStatus>('ready');
   const [requestKey, setRequestKey] = useState(0);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -42,7 +43,6 @@ export function EducationArticles() {
 
   useEffect(() => {
     const controller = new AbortController();
-    setStatus('loading');
     setLoadMoreError('');
     void fetch(BuildApiUrl(undefined, '/api/articles'), {
       headers: { Accept: 'application/json' },
@@ -63,10 +63,10 @@ export function EducationArticles() {
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         console.warn('Unable to load education articles.', error);
-        setStatus('error');
+        if (initialArticles.length === 0) setStatus('error');
       });
     return () => controller.abort();
-  }, [requestKey]);
+  }, [initialArticles.length, requestKey]);
 
   const loadMore = async () => {
     if (!nextCursor || isLoadingMore) return;
@@ -143,7 +143,7 @@ export function EducationArticles() {
         <>
           <div className="education-article-grid">
             {articles.map((article) => (
-              <EducationArticleCard article={article} key={article.id} />
+              <EducationArticleCard article={article} initialContent={initialArticles.find((item) => item.id === article.id && item.updatedAt === article.updatedAt)?.content} key={`${article.id}:${article.updatedAt}`} />
             ))}
           </div>
           {(nextCursor || loadMoreError) && (
@@ -166,10 +166,10 @@ export function EducationArticles() {
   );
 }
 
-function EducationArticleCard({ article }: { article: ArticleCard }) {
+function EducationArticleCard({ article, initialContent }: { article: ArticleCard; initialContent?: string }) {
   const { language, locale } = useHubLanguage();
-  const [content, setContent] = useState('');
-  const [contentStatus, setContentStatus] = useState<ArticleContentStatus>('idle');
+  const [content, setContent] = useState(initialContent ?? '');
+  const [contentStatus, setContentStatus] = useState<ArticleContentStatus>(initialContent === undefined ? 'idle' : 'ready');
   const requestRef = useRef<AbortController | null>(null);
   const copy = GetHubUiCopy(language).educationArticle;
 

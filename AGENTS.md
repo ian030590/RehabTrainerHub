@@ -6,7 +6,7 @@ npm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
 
 - `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、內建訓練 runtime、API、審核後台、開發者入口）。
 - `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），負責以 sandboxed iframe 載入第三方 HTML/ZIP 遊戲並提供 PWA。
-- `apps/rehabtrainerhub/training-runtimes/`：Hub 同源的 `motor`、`vision`、`brain`、`mouth` Vite runtime；不是獨立網站或 workspace app。
+- `apps/rehabtrainerhub/games/{gameId}/`：各遊戲獨立擁有 Vite entry、runtime、規則、i18n 與 `settings.json`；不是 workspace app。共用 React shell 依 JSON 產生 Hub 與單一遊戲 PWA 的設定表單。
 
 共用 UI、auth、layout、settings、storage、gamePlatform 規範：`packages/ui/src`。
 開發者遊戲 SDK：`packages/game-sdk`（`@rehab-trainer/game-sdk`）。
@@ -20,7 +20,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 - `npm run dev:hub`：啟動 Hub。
 - `npm run build`：執行測試 gate 並透過 `scripts/build-apps.mjs` 建置全部 app。
 - `npm run build:cloudflare`：建置 Cloudflare Pages 輸出。
-- `npm run build:hub|gamerunner`：建置單一 app；Hub build 會一併建置四個內建 training runtimes。
+- `npm run build:hub|gamerunner`：建置單一 app；Hub build 會一併建置 40 個內建遊戲。
 - `npm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
 - `npm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
 - `npm run test:game-platform`：驗證遊戲套件掃描器與 SDK。
@@ -37,8 +37,9 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 - `.github/workflows/ci.yml` 在 PR 與非 `main` push 的應用程式、package、script、lockfile、Turbo 或 workflow 變更時執行；純文件變更不得啟動 CI。
 - `.github/workflows/deploy-cloudflare-pages.yml` 只在 `main` 上的可部署變更時執行。部署前的驗證以 matrix 平行執行；新增 gate 時加入兩份 workflow 的 matrix，並維持相同命令。
 - CI/CD 乾淨安裝使用 `npm ci --workspaces --include-workspace-root`；Hub 的內建遊戲相容 build 需要 root 的 Vite 與訓練 runtime dependencies，不得省略 workspace root。
-- `npm run test:game-architecture` 是逐遊戲目錄、`settings.json`、統一 config UI、iframe 與訊息協定的來源架構 gate；CI 與部署 workflow 必須維持同名 matrix 項目。Hub build 另以 `check-built-game-architecture.mjs` 驗證實際輸出不得恢復 `/runtimes/*`。
+- `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、`settings.json`、統一 config UI、iframe 與訊息協定；CI 與部署 workflow 必須維持同名 matrix 項目。Hub build 另以 `check-built-game-architecture.mjs` 驗證實際輸出不得恢復 `/runtimes/*`。
 - `npm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `npm run build:cloudflare:only`，不可再序列重跑同一批測試。
+- `npm run test:seo` 同時驗證文章正文的伺服器渲染與實際 HTML SEO 輸出；兩份 workflow 沿用此命令。
 - 變更 workflow 觸發範圍、測試命令或 build gate 時，必須同步更新本節，並確認 workflow 自身路徑仍會觸發驗證。
 
 ## 程式風格與命名規範

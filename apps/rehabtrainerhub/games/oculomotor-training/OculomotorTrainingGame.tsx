@@ -1,27 +1,28 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { initJsPsych } from 'jspsych';
-import type { JsPsych } from 'jspsych';
+import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
 import WebGazerExtension from '@jspsych/extension-webgazer';
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
-  NotifyHubTrainingAbort,
-  NotifyHubTrainingComplete,
-  RequestHubTrainingConfiguration,
+NotifyHubTrainingAbort,
+NotifyHubTrainingComplete,
+RequestHubTrainingConfiguration,
 } from '@rehab-trainer/ui/embeddedTraining';
 import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useT } from '@rehab-trainer/ui/i18n';
-import { GetSetting, getActiveUser } from '@rehab-trainer/ui/settings';
-import { DestroyPixiTrainingRuntime } from '@rehab-trainer/ui/pixiPool';
-import { soundManager } from '@rehab-trainer/ui/soundManager';
+import { GetSetting,getActiveUser } from '@rehab-trainer/ui/settings';
+import { soundManager } from './runtime/soundManager';
 import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
-import { EnsureWebGazerLoaded } from './webgazer/webgazerLoader';
-import { CleanupWebGazerRuntime } from './webgazer/webgazerCalibration';
-import { BuildOculomotorTimeline } from './timeline/oculomotorTimeline';
-import { OculomotorResults } from './results/OculomotorResults';
+import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
+import type { JsPsych } from 'jspsych';
+import { initJsPsych } from 'jspsych';
+import { useCallback,useEffect,useRef,useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { DownloadTrainingCsv } from './exportCsv';
+import { OculomotorResults } from './results/OculomotorResults';
+import { DestroyPixiTrainingRuntime } from './runtime/pixiPool';
+import { BuildOculomotorTimeline } from './timeline/oculomotorTimeline';
+import { CleanupWebGazerRuntime } from './webgazer/webgazerCalibration';
+import { EnsureWebGazerLoaded } from './webgazer/webgazerLoader';
 
 type Phase = 'running' | 'results';
 
@@ -34,8 +35,8 @@ export function OculomotorTrainingGame() {
   const jsPsychRef = useRef<JsPsych | null>(null);
   const skipFinishRef = useRef(false);
 
-  const userName = getActiveUser()?.name || 'guest';
-  const enableWebGazer = GetSetting('oculomotorEnableWebgazer');
+  const userName = getActiveUser() || 'guest';
+  const enableWebGazer = (GetHostedGameSetting<boolean>('webgazerEnabled'));
   const cameraPermission = useMediaPermissionPreflight({
     active: enableWebGazer && phase === 'running',
     video: true,
@@ -47,7 +48,7 @@ export function OculomotorTrainingGame() {
 
     const setup = async () => {
       if (enableWebGazer) {
-        if (cameraPermission.status === 'blocked') {
+        if (cameraPermission.status === 'denied') {
           alert(t('settings.wg.cameraBlockedAlert'));
           RequestHubTrainingConfiguration();
           return;
@@ -73,7 +74,7 @@ export function OculomotorTrainingGame() {
             difficulty: 'normal',
             results: data,
           });
-          soundManager.destroy();
+
           DestroyPixiTrainingRuntime('oculomotor-training');
           setResults(data);
           jsPsychRef.current = null;
@@ -81,7 +82,7 @@ export function OculomotorTrainingGame() {
         },
       });
 
-      const timeline = BuildOculomotorTimeline();
+      const timeline = BuildOculomotorTimeline(jsPsych, t);
       if (cancelled) return;
       jsPsychRef.current = jsPsych;
       jsPsych.run(timeline as any);
@@ -96,7 +97,7 @@ export function OculomotorTrainingGame() {
 
     return () => {
       cancelled = true;
-      soundManager.destroy();
+
       DestroyPixiTrainingRuntime('oculomotor-training');
       const active = jsPsychRef.current;
       jsPsychRef.current = null;
@@ -111,7 +112,7 @@ export function OculomotorTrainingGame() {
   const abortTraining = useCallback(() => {
     if (phase !== 'running') return;
     skipFinishRef.current = true;
-    soundManager.destroy();
+
     jsPsychRef.current?.abortExperiment();
     jsPsychRef.current = null;
     DestroyPixiTrainingRuntime('oculomotor-training');
@@ -127,25 +128,8 @@ export function OculomotorTrainingGame() {
 
   return (
     <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
-      <OculomotorResults
-        results={results}
-        userName={userName}
-        moduleId="oculomotor-training"
-        onRestart={() => setPhase('running')}
-        onExit={() => NotifyHubTrainingComplete()}
-        onDownloadCsv={() => DownloadTrainingCsv({
-          results,
-          userName,
-          moduleId: 'oculomotor-training',
-          oculomotorMode: GetSetting('oculomotorMode'),
-          oculomotorPattern: GetSetting('oculomotorPattern'),
-          t,
-        })}
-      />
-      <TrainingResultActions
-        onRestart={() => setPhase('running')}
-        onExit={() => NotifyHubTrainingComplete()}
-      />
+      <OculomotorResults results={results} userName={userName} t={t} oculomotorMode={GetHostedGameSetting<string>('mode')} oculomotorPattern={GetHostedGameSetting<string>('movementPath')} />
+      <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
     </div>
   );
 }

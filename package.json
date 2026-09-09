@@ -31,7 +31,7 @@
     "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs",
     "test:embedded-training": "node --test scripts/check-embedded-training-message.test.mjs",
     "test:game-platform": "node --test scripts/check-game-platform.test.mjs packages/game-sdk/src/index.test.mjs packages/game-settings/src/index.test.mjs",
-    "test:game-architecture": "node --test scripts/check-game-directory-architecture.test.mjs",
+    "test:game-architecture": "tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs",
     "test:game-architecture:built": "node scripts/check-built-game-architecture.mjs apps/rehabtrainerhub/out",
     "test:game-architecture:browser": "node --test scripts/check-game-architecture-browser.test.mjs",
     "test:training-flow": "node scripts/check-training-module-flow.mjs && node --test scripts/check-reference-cognitive-trials.test.mjs scripts/check-training-theme.test.mjs",
@@ -42,7 +42,7 @@
     "test:naming": "node scripts/check-identifier-names.mjs",
     "test:training-config-styles": "node scripts/check-training-config-styles.mjs",
     "test:pwa": "node scripts/check-pwa-assets.mjs",
-    "test:seo": "node scripts/check-seo-output.mjs --all"
+    "test:seo": "node --test scripts/check-article-prerender.test.mjs && node scripts/check-seo-output.mjs --all"
   },
   "dependencies": {
     "@jspsych/extension-webgazer": "^1.2.0",

@@ -64,7 +64,10 @@ export function CreateLanguageProvider<TKey extends string>({
 }: CreateLanguageProviderOptions<TKey>) {
   const languageContext = createContext<LanguageContextValue<TKey> | undefined>(undefined);
 
-  function LanguageProvider({ children }: { children: ReactNode }) {
+  function LanguageProvider({ children, dictionaries: suppliedDictionaries = dictionaries }: {
+    children: ReactNode;
+    dictionaries?: Record<SupportedLanguage, Readonly<Record<TKey, string>>>;
+  }) {
     const [lang, setLangState] = useState<SupportedLanguage>(() => {
       if (deferInitialLanguageDetection) return fallbackLanguage;
       const requested = ReadRequestedLanguage();
@@ -94,7 +97,7 @@ export function CreateLanguageProvider<TKey extends string>({
     }, [storageKey]);
 
     const t = useCallback((key: TKey, params?: Record<string, string | number>): string => {
-      let text = dictionaries[lang][key];
+      let text = suppliedDictionaries[lang][key];
       if (!text) return key;
 
       if (params) {
@@ -104,7 +107,7 @@ export function CreateLanguageProvider<TKey extends string>({
       }
 
       return text;
-    }, [dictionaries, lang]);
+    }, [suppliedDictionaries, lang]);
 
     const contextValue = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
 

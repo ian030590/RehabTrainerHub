@@ -5,7 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { CreateRuntimeAssetUrlCandidates } from '@rehab-trainer/ui/aiAssets';
 import { MeasureDisplayRefreshRate } from '@rehab-trainer/ui/displayTiming';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
-import { soundManager } from '@rehab-trainer/ui/soundManager';
+import { soundManager } from './runtime/soundManager';
 import { difficultyPresets, hazardTemplates } from './hazards/driving-hazards';
 import {
   drivingRoute,
@@ -326,9 +326,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly referenceVehicleUrls = CreateRuntimeAssetUrlCandidates(
     import.meta.env.VITE_AI_ASSET_BASE_URL,
     'game-assets/rehabtrainerhub/vision/reference-car/v1/car.glb',
-    '/assets/driving/reference-car-game/vehicals/car.glb',
+    new URL('./models/car.glb', import.meta.url).href,
   );
-  private readonly taipeiOsmUrl = '/assets/driving/taipei-osm/taipei-xinyi-osm.json';
+  private readonly taipeiOsmUrl = new URL('./scenes/taipei-xinyi-osm.json', import.meta.url).href;
 
   private route: RouteSegment[] = [...drivingRoute];
   private readonly hazardTemplates: HazardTemplate[] = [...hazardTemplates];
@@ -362,7 +362,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       this.detachGlobalListeners();
       this.cleanupRenderResources();
     });
-    soundManager.init();
+    soundManager.prepare();
 
     const root = document.createElement('div');
     root.className = 'driving-rehab-root';
@@ -695,8 +695,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       position: 'absolute',
       inset: '0',
       background: 'var(--accent)',
-      mask: 'url(/assets/driving-controls/steering-wheel.svg) center / contain no-repeat',
-      WebkitMask: 'url(/assets/driving-controls/steering-wheel.svg) center / contain no-repeat',
+      mask: `url(${new URL('./textures/steering-wheel.svg', import.meta.url).href}) center / contain no-repeat`,
+      WebkitMask: `url(${new URL('./textures/steering-wheel.svg', import.meta.url).href}) center / contain no-repeat`,
       filter: 'drop-shadow(0 4px 8px var(--bg-overlay))',
       pointerEvents: 'none',
       transition: 'transform 120ms ease-out',
@@ -739,7 +739,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       padding: '9px 24px',
       borderRadius: '18px',
       background: 'color-mix(in srgb, var(--success) 72%, transparent)',
-      backgroundImage: 'url(/assets/driving-controls/car-pedals.svg)',
+      backgroundImage: `url(${new URL('./textures/car-pedals.svg', import.meta.url).href})`,
       backgroundPosition: '25% 52%',
       backgroundRepeat: 'no-repeat',
       backgroundSize: '650% auto',
@@ -754,7 +754,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       padding: '12px 10px',
       borderRadius: '18px',
       background: 'color-mix(in srgb, var(--error) 76%, transparent)',
-      backgroundImage: 'url(/assets/driving-controls/car-pedals.svg)',
+      backgroundImage: `url(${new URL('./textures/car-pedals.svg', import.meta.url).href})`,
       backgroundPosition: '59% 54%',
       backgroundRepeat: 'no-repeat',
       backgroundSize: '650% auto',
@@ -3208,13 +3208,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     ));
 
     if (this.isTrialTimedOut(this.simulationTime, trial)) {
-      soundManager.playRunEnd();
+      soundManager.playEnd('Victory', );
       this.finishTrial(displayElement, 'timeout');
       return;
     }
 
     if (this.isDestinationReached()) {
-      soundManager.playRunEnd();
+      soundManager.playEnd('Victory', );
       this.finishTrial(displayElement, 'completed');
       return;
     }
@@ -3580,7 +3580,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       response: 'red-light-violation',
     };
     this.eventResults.push(result);
-    soundManager.playIncorrect();
+    soundManager.playFailure();
     if (this.hud?.event) {
       this.hud.event.textContent = this.text.redLightViolationMessage;
     }
@@ -4054,10 +4054,10 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     hazard.removeAt = time + 950;
 
     if (collision) {
-      soundManager.playIncorrect();
+      soundManager.playFailure();
       this.vehicleSpeed = Math.min(this.vehicleSpeed, 2.5);
     } else {
-      soundManager.playCorrect();
+      soundManager.playSuccess();
     }
 
     if (this.hud) {
@@ -4101,7 +4101,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (time - this.lastCollisionEventTime < 1200) return;
     this.lastCollisionEventTime = time;
     this.recordDrivingRuleEvent('vehicle-collision', 'collision', { collision: true });
-    soundManager.playIncorrect();
+    soundManager.playFailure();
   }
 
   private isHazardColliding(hazard: ActiveHazard): boolean {

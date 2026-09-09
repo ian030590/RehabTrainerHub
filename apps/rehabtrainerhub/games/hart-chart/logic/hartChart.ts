@@ -77,7 +77,7 @@ export function CreateHartChart(seed: number): HartCell[] {
   return cells;
 }
 
-export function CreateHartDecoder(chart: HartCell[], seed: number): {
+export function CreateHartDecoder(chart: HartCell[], seed: number, rounds?: number): {
   phrase: string;
   tokens: HartDecoderToken[];
 } {
@@ -105,7 +105,15 @@ export function CreateHartDecoder(chart: HartCell[], seed: number): {
     };
   });
 
-  return { phrase, tokens };
+  if (rounds === undefined) return { phrase, tokens };
+  const available = tokens.filter((token) => token.coordinate).length;
+  if (!available) return { phrase, tokens };
+  const repetitions = Math.ceil(rounds / available);
+  let remaining = rounds;
+  const configuredTokens = Array.from({ length: repetitions }, () => tokens)
+    .flatMap((part, index) => index ? [{ char: ' ' }, ...part] : part)
+    .map((token) => token.coordinate && remaining-- > 0 ? token : { char: token.char });
+  return { phrase: Array(repetitions).fill(phrase).join(' '), tokens: configuredTokens };
 }
 
 export function ParseHartSeed(value: string | null): number {

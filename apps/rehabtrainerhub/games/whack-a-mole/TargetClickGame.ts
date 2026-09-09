@@ -1,15 +1,15 @@
 // Hub-owned target-click runtime.
 import { Application, Container, Graphics } from 'pixi.js';
-import { whackConfig } from '@rehab-trainer/ui/cognitive/constants';
-import type { Difficulty, ResultStats, TargetTrialRecord, WhackState, WhackTapResult } from '@rehab-trainer/ui/cognitive/types';
-import { CreateTargetTrialRecord } from '@rehab-trainer/ui/cognitive/trialRecords';
+import { whackConfig } from './runtime/cognitive/constants';
+import type { Difficulty, ResultStats, TargetTrialRecord, WhackState, WhackTapResult } from './runtime/cognitive/types';
+import { CreateTargetTrialRecord } from './runtime/cognitive/trialRecords';
 import {
   Average,
   GetGridLayout,
   GetPointerEventTimestamp,
   IsMobileCognitiveViewport,
   RandomBetween,
-} from '@rehab-trainer/ui/cognitive/utils';
+} from './runtime/cognitive/utils';
 
 const moleBoardColor = 0x8b4513;
 const moleHoleColor = 0x3d2314;

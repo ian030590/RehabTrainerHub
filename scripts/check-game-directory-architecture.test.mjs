@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { access, readFile, readdir } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import test from 'node:test';
 import ts from 'typescript';
 import { ParseGameSettingsDefinition } from '../packages/game-settings/src/index.js';
@@ -113,7 +113,7 @@ test('root builds and both Cloudflare workflows retain the architecture gate', a
   assert.match(rootPackage.scripts['build:cloudflare'], /npm run test:game-architecture/);
   assert.equal(
     rootPackage.scripts['test:game-architecture'],
-    'node --test scripts/check-game-directory-architecture.test.mjs',
+    'tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs',
   );
   assert.equal(
     rootPackage.scripts['test:game-architecture:built'],
@@ -157,7 +157,7 @@ test('browser smoke checks retain Brave support on Windows', async () => {
 });
 
 test('unified config UI remains Tailwind plus shadcn/Radix and mounts inside dialogs', async () => {
-  const form = await ReadHub('app/train/GameSettingsForm.tsx');
+  const form = await ReadUi('components/GameSettingsForm.tsx');
   for (const component of ['Button', 'Checkbox', 'Select', 'Slider']) {
     assert.match(form, new RegExp(`\\b${component}\\b`));
   }
@@ -169,10 +169,10 @@ test('unified config UI remains Tailwind plus shadcn/Radix and mounts inside dia
   assert.match(form, /portalContainer=\{portalContainer\}/);
   assert.match(form, /var\(--(?:background|surface|primary|border|text)/);
 
-  const button = await ReadHub('app/components/ui/button.tsx');
-  const checkbox = await ReadHub('app/components/ui/checkbox.tsx');
-  const select = await ReadHub('app/components/ui/select.tsx');
-  const slider = await ReadHub('app/components/ui/slider.tsx');
+  const button = await ReadUi('components/ui/button.tsx');
+  const checkbox = await ReadUi('components/ui/checkbox.tsx');
+  const select = await ReadUi('components/ui/select.tsx');
+  const slider = await ReadUi('components/ui/slider.tsx');
   assert.match(button, /class-variance-authority/);
   assert.match(button, /buttonVariants = cva/);
   assert.match(checkbox, /@radix-ui\/react-checkbox/);
@@ -216,11 +216,103 @@ test('all official games install the verified settings receiver', async () => {
   for (const gameId of expectedOfficialGameIds) {
     const main = await readFile(resolve(gamesRoot, gameId, 'main.tsx'), 'utf8');
     assert.match(main, /InstallHostedGameSettingsReceiver\(\)/);
+    assert.match(main, /<OfficialGameShell settings=\{settings\}/);
+    assert.match(main, /<LanguageProvider dictionaries=\{dictionaries\}/);
+    assert.match(main, /from ['"]\.\/settings\.json['"]/);
+    await access(resolve(gamesRoot, gameId, 'i18n/zh.ts'));
+    await access(resolve(gamesRoot, gameId, 'i18n/en.ts'));
+  }
+});
+
+test('transitive game imports keep engines and dictionaries within their game', async () => {
+  const configPath = resolve(hubRoot, 'tsconfig.games.json');
+  const config = ts.readConfigFile(configPath, ts.sys.readFile);
+  const { options } = ts.parseJsonConfigFileContent(config.config, ts.sys, hubRoot);
+  for (const gameId of expectedOfficialGameIds) {
+    const seen = new Set();
+    async function Visit(file) {
+      file = resolve(file);
+      if (seen.has(file) || file.includes('node_modules')) return;
+      seen.add(file);
+      const fromGames = relative(gamesRoot, file).replaceAll('\\', '/');
+      if (!fromGames.startsWith('../') && fromGames.includes('/')) {
+        assert.equal(fromGames.split('/')[0], gameId, `${gameId} imports another game: ${fromGames}`);
+      }
+      if (!/\.[cm]?[jt]sx?$/.test(file)) return;
+      const source = await readFile(file, 'utf8');
+      const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+      const imports = [];
+      const assets = [];
+      function Walk(node) {
+        let specifier;
+        if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) specifier = node.moduleSpecifier;
+        if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) specifier = node.arguments[0];
+        if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) specifier = node.argument.literal;
+        if (specifier && ts.isStringLiteralLike(specifier)) imports.push(specifier.text);
+        if (ts.isNewExpression(node) && node.expression.getText(tree) === 'URL' && node.arguments?.length === 2
+          && ts.isStringLiteral(node.arguments[0]) && node.arguments[0].text.startsWith('.')
+          && node.arguments[1].getText(tree) === 'import.meta.url') assets.push(node.arguments[0].text);
+        ts.forEachChild(node, Walk);
+      }
+      Walk(tree);
+      for (const asset of assets) {
+        const target = resolve(dirname(file), asset);
+        if (!fromGames.startsWith('../')) assert.ok(!relative(resolve(gamesRoot, gameId), target).startsWith('..'), `${gameId} imports another game's asset: ${target}`);
+        await access(target);
+      }
+      for (const specifier of imports) {
+        if (file.includes(`${resolve(repositoryRoot, 'packages/ui/src')}`)) {
+          assert.doesNotMatch(specifier, /^(?:pixi\.js|jspsych|three|@jspsych\/|@mediapipe\/|@tensorflow\/)/, `Shared shell imports a game engine: ${file}`);
+        }
+        const target = ts.resolveModuleName(specifier, file, options, ts.sys).resolvedModule?.resolvedFileName
+          ?? (specifier.startsWith('.') && ts.sys.fileExists(resolve(dirname(file), specifier)) ? resolve(dirname(file), specifier) : null);
+        if (target) await Visit(target);
+      }
+    }
+    await Visit(resolve(gamesRoot, gameId, 'main.tsx'));
+  }
+  for (const retired of ['cognitive/ReferenceCognitiveGame.tsx', 'pixiPool.ts', 'jsPsychLifecycle.ts', 'i18n/games/vision/zh.ts']) {
+    await assert.rejects(access(resolve(repositoryRoot, 'packages/ui/src', retired)));
   }
 });
 
 async function ReadHub(relativePath) {
   return readFile(resolve(hubRoot, relativePath), 'utf8');
+}
+
+test('settings getters declare the JSON value type before runtime conversion', async () => {
+  const config = ts.readConfigFile(resolve(hubRoot, 'tsconfig.games.json'), ts.sys.readFile);
+  const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, hubRoot);
+  const program = ts.createProgram(parsed.fileNames, parsed.options);
+  const checker = program.getTypeChecker();
+  const definitions = new Map(await Promise.all(expectedOfficialGameIds.map(async id => [id, JSON.parse(await readFile(resolve(gamesRoot, id, 'settings.json'), 'utf8')).sections.flatMap(section => section.fields)])));
+  for (const source of program.getSourceFiles()) {
+    const gameId = relative(gamesRoot, source.fileName).replaceAll('\\', '/').split('/')[0];
+    const fields = definitions.get(gameId);
+    if (!fields) continue;
+    function Visit(node) {
+      if (ts.isCallExpression(node) && node.expression.getText(source) === 'GetHostedGameSetting' && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) {
+        const key = node.arguments[0].text;
+        const field = fields.find(candidate => candidate.key === key);
+        assert.ok(field, `${gameId}: unknown settings key ${key}`);
+        const type = checker.getTypeAtLocation(node);
+        const types = type.isUnion() ? type.types : [type];
+        for (const value of field.options?.map(option => option.value) ?? [field.default]) {
+          const accepts = types.some(item => item.isLiteral() ? item.value === value
+            : (item.flags & ts.TypeFlags.String) && typeof value === 'string'
+              || (item.flags & ts.TypeFlags.Number) && typeof value === 'number'
+              || (item.flags & ts.TypeFlags.BooleanLike) && typeof value === 'boolean');
+          assert.ok(accepts, `${gameId}.${key}: JSON ${JSON.stringify(value)} is not ${checker.typeToString(type)}`);
+        }
+      }
+      ts.forEachChild(node, Visit);
+    }
+    Visit(source);
+  }
+});
+
+async function ReadUi(relativePath) {
+  return readFile(resolve(repositoryRoot, 'packages/ui/src', relativePath), 'utf8');
 }
 
 function GetIframeOpeningTag(source) {

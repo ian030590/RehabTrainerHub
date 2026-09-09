@@ -1,1 +1,1 @@
-export * from '@rehab-trainer/ui/cognitive/languageNeutralGames';
+export * from './runtime/cognitive/languageNeutralGames';

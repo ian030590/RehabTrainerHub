@@ -28,45 +28,16 @@ export const defaultCalBarLengthMm = 149;
 export const calBarLengthPx = 700;
 const runtimeStorageNamespace = CreateRuntimeStorageNamespace('motor');
 export const storagePrefix = runtimeStorageNamespace.storagePrefix;
-export const drivingDurationMinSec = 80;
-export const drivingDurationMaxSec = 240;
-export type DrivingControlMode = 'arrow' | 'wasd' | 'wheel';
 
 // ── Settings ──
 export interface AppSettings {
   distanceInCM: number;
   calBarLengthInMM: number;
   rulerLengthInMM: number;
-  totalRounds: number;
-  optionCount: number;
-  optionMoveIntervalMs: number;
-  targetPhysicalSizeMm: number;
-  optionPhysicalSizeMm: number;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
   soundVolume: number;
   auditoryFeedbackEnabled: boolean;
   downloadDirectory: string;
-  oculomotorMode: 'pursuit' | 'reaction-jumps' | 'multi-object' | 'lilac-chaser';
-  oculomotorPattern: string;
-  oculomotorDurationSec: number;
-  oculomotorSpeedDegPerSec: number;
-  oculomotorTargetSizeMm: number;
-  oculomotorDistractorCount: number;
-  oculomotorTargetColor: string;
-  oculomotorBackgroundColor: string;
-  oculomotorTargetShape: string;
-  oculomotorCustomTargetImage: string;
-  oculomotorTargetOpacity: number;
-  oculomotorBackgroundImage: string;
-  oculomotorAudio: string;
-  oculomotorBounceJitter: number;
   displayCalibrationAt: string;
-  readingWPS: number;
-  readingStoryId: string;
-  drivingDurationSec: number;
-  drivingRedFlashEnabled: boolean;
-  drivingDifficulty: 'beginner' | 'intermediate' | 'advanced';
-  drivingControlMode: DrivingControlMode;
   uiFontSizePx: number;
   uiFontBold: boolean;
   uiTheme: UiTheme;
@@ -82,36 +53,10 @@ const appSettingsMeta: { [K in keyof AppSettings]: SettingMeta<AppSettings[K]> }
   distanceInCM:           { dflt: defaultDistanceCm,       min: 10,   max: 500 },
   calBarLengthInMM:       { dflt: defaultCalBarLengthMm, min: 1,    max: 10000 },
   rulerLengthInMM:        { dflt: 0,    min: 0,    max: 10000 },
-  totalRounds:            { dflt: 5,    min: 1,    max: 100 },
-  optionCount:            { dflt: 18,   min: 4,    max: 40 },
-  optionMoveIntervalMs:   { dflt: 800,  min: 200,  max: 5000 },
-  targetPhysicalSizeMm:   { dflt: 15,   min: 2,    max: 100 },
-  optionPhysicalSizeMm:   { dflt: 10,   min: 2,    max: 80 },
-  difficulty:             { dflt: 'beginner' },
   soundVolume:            { dflt: 50,   min: 0,    max: 100 },
   auditoryFeedbackEnabled:{ dflt: true },
   downloadDirectory:      { dflt: '' },
-  oculomotorMode:         { dflt: 'pursuit' },
-  oculomotorPattern:      { dflt: 'randomWalk' },
-  oculomotorDurationSec:  { dflt: 60,   min: 15,   max: 300 },
-  oculomotorSpeedDegPerSec: { dflt: 10, min: 2,    max: 80 },
-  oculomotorTargetSizeMm: { dflt: 10,   min: 2,    max: 50 },
-  oculomotorDistractorCount: { dflt: 5, min: 0,    max: 12 },
-  oculomotorTargetColor:   { dflt: '#FFFFFF' },
-  oculomotorBackgroundColor: { dflt: '#000000' },
-  oculomotorTargetShape:   { dflt: 'circle' },
-  oculomotorCustomTargetImage: { dflt: '' },
-  oculomotorTargetOpacity: { dflt: 1.0, min: 0.1, max: 1.0 },
-  oculomotorBackgroundImage: { dflt: '' },
-  oculomotorAudio: { dflt: '' },
-  oculomotorBounceJitter: { dflt: 0, min: 0, max: 100 },
   displayCalibrationAt: { dflt: '' },
-  readingWPS: { dflt: 4, min: 1, max: 20 },
-  readingStoryId: { dflt: 'en_story_01' },
-  drivingDurationSec: { dflt: drivingDurationMinSec, min: drivingDurationMinSec, max: drivingDurationMaxSec },
-  drivingRedFlashEnabled: { dflt: true },
-  drivingDifficulty: { dflt: 'beginner' },
-  drivingControlMode: { dflt: 'arrow' },
   uiFontSizePx: { dflt: defaultUiFontSizePx, min: minUiFontSizePx, max: maxUiFontSizePx },
   uiFontBold: { dflt: false },
   uiTheme: { dflt: 'light' },

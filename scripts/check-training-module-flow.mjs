@@ -192,30 +192,29 @@ for (const zoomToken of ['handleCanvasWheel', 'pinchStartRef', 'minBoardZoom', '
 }
 
 const cognitiveUtilsSource = readFileSync(
-  resolve(repoRoot, 'packages/ui/src/cognitive/utils.ts'),
+  resolve(moduleRoot, 'maze/runtime/cognitive/utils.ts'),
   'utf8',
 );
 assert.ok(cognitiveUtilsSource.includes('cognitiveBoardWidthRatio = 0.75'), 'Cognitive boards must use at most 75% of viewport width.');
 assert.ok(cognitiveUtilsSource.includes('cognitiveBoardHeightRatio = 1'), 'Cognitive boards must use at most 100% of viewport height.');
 
-const languageNeutralSource = readFileSync(
-  resolve(repoRoot, 'packages/ui/src/cognitive/languageNeutralGames.ts'),
-  'utf8',
-);
+const languageNeutralSource = ['tic-tac-toe', 'connect4', 'dots-and-boxes', 'hex'].map((id) => readFileSync(
+  resolve(moduleRoot, `${id}/runtime/cognitive/languageNeutralGames.ts`), 'utf8',
+)).join('\n');
 assert.ok(languageNeutralSource.includes('const aiTurnDelaySeconds = 1'), 'Board-game opponents must wait one second.');
 for (const game of ['TicTacToe', 'Connect4', 'DotsAndBoxes', 'Hex']) {
   assert.ok(languageNeutralSource.includes(`Take${game}AiTurn`), `${game} must defer its computer move through the timed update loop.`);
 }
 
 const referenceCognitiveSource = readFileSync(
-  resolve(repoRoot, 'packages/ui/src/cognitive/ReferenceCognitiveGame.tsx'),
+  resolve(moduleRoot, 'maze/runtime/cognitive/ReferenceCognitiveGame.tsx'),
   'utf8',
 );
 const mobileControlsSource = readFileSync(
   resolve(repoRoot, 'packages/ui/src/components/MobileTouchControls.tsx'),
   'utf8',
 );
-assert.ok(referenceCognitiveSource.includes("stateRef.current?.kind === 'maze'"), 'Maze must expose touch direction controls while playing.');
+assert.ok(referenceCognitiveSource.includes('MobileTouchControls'), 'Maze must expose touch direction controls while playing.');
 assert.ok(!referenceCognitiveSource.includes("stateRef.current?.kind === 'sokoban'"), 'Retired Sokoban controls must not remain.');
 assert.ok(mobileControlsSource.includes('<svg'), 'Mobile direction controls must use SVG icons.');
 assert.ok(!mobileControlsSource.includes("up: '↑'"), 'Mobile direction controls must not use arrow glyphs or emoji.');
@@ -247,8 +246,7 @@ const implementationGroups = [
     ids: ['motor:drawing-defense'],
     files: ['drawing-defense/DrawingTowerDefenseGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -258,8 +256,7 @@ const implementationGroups = [
     ids: ['motor:asteroid-shield'],
     files: ['asteroid-shield/AsteroidShieldGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -269,8 +266,7 @@ const implementationGroups = [
     ids: ['motor:gesture-battler'],
     files: ['gesture-battler/GestureBattlerGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('combat')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -280,8 +276,7 @@ const implementationGroups = [
     ids: ['motor:motor-cortex-rehab'],
     files: ['motor-cortex-rehab/MotorCortexRehabGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -334,8 +329,7 @@ const implementationGroups = [
     ids: ['brain:every-ball-response'],
     files: ['every-ball-response/EveryBallResponsePage.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -345,8 +339,7 @@ const implementationGroups = [
     ids: ['brain:minesweeper'],
     files: ['minesweeper/MinesweeperGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -356,8 +349,7 @@ const implementationGroups = [
     ids: ['brain:stroop'],
     files: ['stroop/StroopGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -367,8 +359,7 @@ const implementationGroups = [
     ids: ['brain:flanker'],
     files: ['flanker/FlankerGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -378,8 +369,7 @@ const implementationGroups = [
     ids: ['brain:go-nogo'],
     files: ['go-nogo/GoNoGoGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -389,8 +379,7 @@ const implementationGroups = [
     ids: ['brain:n-back'],
     files: ['n-back/NBackGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -400,8 +389,7 @@ const implementationGroups = [
     ids: ['brain:digit-span'],
     files: ['digit-span/DigitSpanGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -411,8 +399,7 @@ const implementationGroups = [
     ids: ['brain:spatial-span'],
     files: ['spatial-span/SpatialSpanGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -422,8 +409,7 @@ const implementationGroups = [
     ids: ['brain:stop-signal'],
     files: ['stop-signal/StopSignalGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -433,8 +419,7 @@ const implementationGroups = [
     ids: ['brain:tower-of-london'],
     files: ['tower-of-london/TowerOfLondonGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -444,8 +429,7 @@ const implementationGroups = [
     ids: ['brain:attention-network-task'],
     files: ['attention-network-task/AttentionNetworkTaskGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -455,8 +439,7 @@ const implementationGroups = [
     ids: ['brain:letter-memory'],
     files: ['letter-memory/LetterMemoryGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -466,8 +449,7 @@ const implementationGroups = [
     ids: ['brain:number-letter'],
     files: ['number-letter/NumberLetterGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -477,8 +459,7 @@ const implementationGroups = [
     ids: ['brain:antisaccade'],
     files: ['antisaccade/AntisaccadeGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -488,8 +469,7 @@ const implementationGroups = [
     ids: ['brain:keep-track'],
     files: ['keep-track/KeepTrackGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -499,30 +479,27 @@ const implementationGroups = [
     ids: ['brain:plus-minus'],
     files: ['plus-minus/PlusMinusGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
     ],
   },
-  {
-    ids: ReferenceCognitiveCatalogIds(),
-    files: [resolve(repoRoot, 'packages/ui/src/cognitive/ReferenceCognitiveGame.tsx')],
+  ...ReferenceCognitiveCatalogIds().map(id => ({
+    ids: [id],
+    files: [resolve(moduleRoot, id.split(':')[1], 'runtime/cognitive/ReferenceCognitiveGame.tsx')],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
     ],
-  },
+  })),
   {
     ids: ['mouth:tongue-catch'],
     files: ['tongue-catch/TongueCatchGame.tsx'],
     tokens: [
-      "useTrainingConfigReady(phase === 'menu')",
-      "setPhase('rules')",
+      "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
       'TrainingResultActions',
@@ -607,7 +584,7 @@ const jsPsychLifecycleGroups = [
   {
     status: 'external-runtime-adapter',
     ids: ReferenceCognitiveCatalogIds(),
-    files: [resolve(repoRoot, 'packages/ui/src/cognitive/ReferenceCognitiveGame.tsx')],
+    files: [resolve(moduleRoot, 'maze/runtime/cognitive/ReferenceCognitiveGame.tsx')],
     tokens: [
       'initJsPsych(',
       'new JsPsychExternalLifecycle(',
@@ -689,7 +666,7 @@ for (const { files, forbiddenTokens = [], ids, status, tokens } of jsPsychLifecy
 }
 
 const externalLifecycleAdapterSource = readFileSync(
-  resolve(repoRoot, 'packages/ui/src/jsPsychLifecycle.ts'),
+  resolve(moduleRoot, 'maze/runtime/jsPsychLifecycle.ts'),
   'utf8',
 );
 for (const token of [
@@ -772,13 +749,13 @@ for (const [catalogId, file] of Object.entries(configPermissionImplementations))
   if (catalogId === 'vision:oculomotor-training') continue;
   const source = readFileSync(resolve(moduleRoot, file), 'utf8');
   assert.ok(
-    source.includes("phase === 'menu' && !isEmbeddedHubTraining"),
-    `${catalogId} must never render its retired runtime config while embedded in the Hub.`,
+    !source.includes('<TrainingConfigPanel'),
+    `${catalogId} must use the shared settings.json form.`,
   );
   assert.equal(
     (source.match(/setPhase\('menu'\)/g) ?? []).length,
-    1,
-    `${catalogId} may return to its local PWA config only behind the hosted-configuration fallback.`,
+    0,
+    `${catalogId} must return configuration ownership to the shell.`,
   );
 }
 for (const [catalogId, file] of Object.entries(nativeTimelinePermissionImplementations)) {

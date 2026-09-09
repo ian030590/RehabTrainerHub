@@ -128,6 +128,18 @@ export function GetHostedGameSettings(): Readonly<Record<string, string | number
   return hostedGameSettings;
 }
 
+// Called by the local settings shell after schema validation. The message receiver
+// still checks origin, parent window and game ID before accepting remote input.
+export function SetHostedGameSettings(settings: Readonly<Record<string, string | number | boolean>>): void {
+  hostedGameSettings = Object.freeze({ ...settings });
+}
+
+export function GetHostedGameSetting<T extends string | number | boolean>(key: string): T {
+  const value = hostedGameSettings?.[key];
+  if (value === undefined) throw new Error(`Missing configured game setting: ${key}`);
+  return value as T;
+}
+
 export function IsHubGameSettingsMessage(
   value: unknown,
   expectedGameId?: string,
@@ -185,11 +197,14 @@ export function NotifyHubTrainingReady() {
 
 /**
  * Ask the verified Hub parent to unmount this runtime and show its catalog-owned
- * settings form again. Standalone game PWAs return false and keep their local
- * configuration flow.
+ * settings form again. Standalone game PWAs use the same JSON settings shell.
  */
 export function RequestHubTrainingConfiguration(): boolean {
-  if (!IsEmbeddedHubTraining()) return false;
+  if (!IsEmbeddedHubTraining()) {
+    if (typeof window === 'undefined' || !GetOfficialGameIdFromPath(window.location.pathname)) return false;
+    window.dispatchEvent(new Event('rehab-trainer:standalone-configure'));
+    return true;
+  }
   NotifyHubTrainingActive(false);
   PostHubTrainingMessage({ type: hubTrainingConfigureMessageType });
   return true;

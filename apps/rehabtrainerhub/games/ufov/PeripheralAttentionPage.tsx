@@ -1,41 +1,41 @@
 // Canonical Hub-owned peripheral-attention module; bundled by the brain runtime.
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
+import './styles/PeripheralAttentionPage.css';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
-  MeasureDisplayRefreshRate,
-  type DisplayRefreshInfo,
+MeasureDisplayRefreshRate,
+type DisplayRefreshInfo,
 } from '@rehab-trainer/ui/displayTiming';
-import { ExitFullscreenIfActive, WaitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
+import { ExitFullscreenIfActive,WaitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import {
-  CalculatePeripheralAttentionScreenGeometry,
-  CreatePeripheralAttentionCanvasSlots,
-  DrawPeripheralAttentionCanvasStage,
-  EnsurePeripheralAttentionCanvasStage,
-  PreparePeripheralAttentionNoiseMask,
-  RenderPeripheralAttentionCanvasStage,
-  type PeripheralAttentionCanvasPhase,
-  type PeripheralAttentionCanvasSlot,
-  type PeripheralAttentionScreenGeometry,
-} from '@rehab-trainer/ui/peripheralAttentionCanvas';
-import {
-  EstimatePeripheralAttentionThresholdMs,
-  GetFastestCorrectStimulusDurationMs,
-  ShouldStopPeripheralAttentionAdaptiveRun,
-} from '@rehab-trainer/ui/peripheralAttentionResults';
-import {
-  EvaluatePeripheralAttentionFrameSync,
-  GetPeripheralAttentionSyncRecoveryAction,
-  ShouldCountPeripheralAttentionTrial,
-  peripheralAttentionTrialRefreshOptions,
-  type PeripheralAttentionFrameSyncMeasurement,
-} from './timing/peripheralAttentionTiming';
-import { initJsPsych, JsPsych, ParameterType } from 'jspsych';
-import type { JsPsychPlugin, TrialType } from 'jspsych';
+import type { JsPsychPlugin,TrialType } from 'jspsych';
+import { initJsPsych,JsPsych,ParameterType } from 'jspsych';
+import { useCallback,useEffect,useLayoutEffect,useRef,useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '@rehab-trainer/ui/components/PeripheralAttentionPage.css';
+import {
+CalculatePeripheralAttentionScreenGeometry,
+CreatePeripheralAttentionCanvasSlots,
+DrawPeripheralAttentionCanvasStage,
+EnsurePeripheralAttentionCanvasStage,
+PreparePeripheralAttentionNoiseMask,
+RenderPeripheralAttentionCanvasStage,
+type PeripheralAttentionCanvasPhase,
+type PeripheralAttentionCanvasSlot,
+type PeripheralAttentionScreenGeometry,
+} from './runtime/peripheralAttentionCanvas';
+import {
+EstimatePeripheralAttentionThresholdMs,
+GetFastestCorrectStimulusDurationMs,
+ShouldStopPeripheralAttentionAdaptiveRun,
+} from './runtime/peripheralAttentionResults';
+import {
+EvaluatePeripheralAttentionFrameSync,
+GetPeripheralAttentionSyncRecoveryAction,
+peripheralAttentionTrialRefreshOptions,
+ShouldCountPeripheralAttentionTrial,
+type PeripheralAttentionFrameSyncMeasurement,
+} from './timing/peripheralAttentionTiming';
 
 type CentralTarget = 'car' | 'truck';
 type Direction = 'up' | 'down';
@@ -43,8 +43,6 @@ export type SubtestId = 1 | 2 | 3;
 export type PeripheralAttentionRunMode = 'instruction' | 'practice' | 'formal';
 export type PeripheralAttentionStopCondition = 'adaptive_80' | 'fixed_trials';
 export type PeripheralAttentionTargetAxis = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
-export type UfovRunMode = PeripheralAttentionRunMode;
-export type UfovTargetAxis = PeripheralAttentionTargetAxis;
 type PeripheralAttentionLabels = (typeof copy)[keyof typeof copy];
 type DetailRow = Record<string, unknown>;
 
@@ -60,8 +58,6 @@ export interface PeripheralAttentionTrainingRecord {
   details?: DetailRow;
   detailRows?: DetailRow[];
 }
-
-export type UfovTrainingRecord = PeripheralAttentionTrainingRecord;
 
 export interface PeripheralAttentionPageProps {
   appName: string;
@@ -83,8 +79,6 @@ export interface PeripheralAttentionPageProps {
   autoStart?: boolean;
   onSaveRecord?: (record: PeripheralAttentionTrainingRecord) => Promise<void> | void;
 }
-
-export type UfovPageProps = PeripheralAttentionPageProps;
 
 interface Subtest {
   id: SubtestId;
@@ -968,7 +962,8 @@ class PeripheralAttentionExperimentPlugin implements JsPsychPlugin<ExperimentPlu
         reject(CreatePeripheralAttentionAbortError());
       };
       peripheralAttentionTargetAxes.forEach((axis) => {
-        const point = AxisPoint(axis, 27, true);
+        const angle = (-90 + axis * 45) * Math.PI / 180;
+        const point = { x: 50 + Math.cos(angle) * 27, y: 50 + Math.sin(angle) * 27 };
         const button = ResponseButton(
           `${axis + 1}. ${labels.directions[axis]}`,
           'ufov-axis-button',

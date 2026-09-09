@@ -1,10 +1,13 @@
+import { OfficialGameShell } from '@rehab-trainer/ui/components/OfficialGameShell';
+import '@rehab-trainer/ui/components/TrainerApp.css';
+import { InstallHostedGameSettingsReceiver, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
+import { LanguageProvider } from '@rehab-trainer/ui/i18n/games';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
-import { InstallHostedGameSettingsReceiver } from '@rehab-trainer/ui/embeddedTraining';
-import { LanguageProvider } from '@rehab-trainer/ui/i18n/games';
-import { ReferenceCognitiveGame } from '@rehab-trainer/ui/cognitive/ReferenceCognitiveGame';
-import '@rehab-trainer/ui/components/TrainerApp.css';
+import { dictionaries } from './i18n';
+import { ReferenceCognitiveGame } from './runtime/cognitive/ReferenceCognitiveGame';
+import settings from './settings.json';
 
 InstallHostedGameSettingsReceiver();
 
@@ -13,8 +16,10 @@ if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <HashRouter>
-        <LanguageProvider>
-          <ReferenceCognitiveGame gameId="simon-says" onExit={() => window.history.back()} />
+        <LanguageProvider dictionaries={dictionaries}>
+          <OfficialGameShell settings={settings} title={document.title}>
+          <ReferenceCognitiveGame gameId="simon-says" onExit={() => RequestHubTrainingConfiguration()} />
+          </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>
     </React.StrictMode>,

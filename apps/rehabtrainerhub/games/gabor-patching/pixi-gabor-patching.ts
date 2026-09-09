@@ -8,9 +8,9 @@ import {
   CreatePixiTrialContainer,
   RunPixiTrial,
   pixiRuntimeScopes,
-} from '@rehab-trainer/ui/pixiPool';
+} from './runtime/pixiPool';
 import { typography } from '@rehab-trainer/ui/trainerTheme';
-import { soundManager } from '@rehab-trainer/ui/soundManager';
+import { soundManager } from './runtime/soundManager';
 
 const info = {
   name: 'pixi-gabor-patching',
@@ -119,7 +119,7 @@ function CreateGaborTexture(size: number, freq: number, angle: number): Texture 
       const gauss = Math.exp(-(dx * dx + dy * dy) / (2 * sigma * sigma));
       const phase = dx * Math.cos(angle) + dy * Math.sin(angle);
       const sine = Math.sin(2 * Math.PI * freq * phase);
-      
+
       const intensity = Math.round(128 + 127 * gauss * sine);
       const alpha = Math.round(255 * gauss);
 
@@ -191,7 +191,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
       app.renderer.background.color = trial.background_color ?? '#808080';
       this.resizeListener = () => this.clampActiveSpots();
       app.renderer.on('resize', this.resizeListener);
-      
+
       this.textures = gaborTextureSpecs.map((spec) => (
         GetGaborTexture(spec.size, spec.freq, spec.angle)
       ));
@@ -230,17 +230,17 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
         sprite.y = halfHeight + Math.random() * Math.max(0, this.app.screen.height - halfHeight * 2);
         sprite.rotation = Math.random() * Math.PI * 2;
         sprite.scale.set(minSize);
-        
+
         const maxOp = trial.max_opacity ?? 0.8;
         const targetOpacity = maxOp;
         sprite.alpha = 0;
-        
+
         sprite.eventMode = 'static';
         sprite.cursor = 'pointer';
 
         const spawnTime = performance.now();
         const maxScore = 1000;
-        
+
         let lifetime = 4000;
         if (trial.difficulty === 'intermediate') {
           lifetime = 3000;
@@ -265,7 +265,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
           return;
         }
         if (this.isGameOver || !this.app) return;
-        
+
         const elapsed = time - this.gameStartTime;
         if (elapsed >= (trial.duration_ms ?? 60000)) {
           this.endGame(trial, displayElement);
@@ -279,15 +279,15 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
           const spot = this.spots[i];
           const spotAge = time - spot.spawnTime;
           const progress = Math.min(1, spotAge / spot.lifetime);
-          
+
           const currentSize = spot.minSize + progress * (spot.targetSize - spot.minSize);
           const currentOpacity = progress * spot.targetOpacity;
-          
+
           spot.sprite.scale.set(currentSize);
           spot.sprite.alpha = currentOpacity;
-          
+
           const currentScore = Math.ceil(spot.maxScore * (1 - progress));
-          
+
           if (currentScore <= 0) {
             this.removeSpot(spot);
             this.spots.splice(i, 1);
@@ -323,7 +323,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
 
       // Initial spawn
       for (let i = 0; i < 3; i++) spawnSpot();
-      
+
       this.gameLoopRaf = requestAnimationFrame(loop);
     });
   }
@@ -340,7 +340,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
 
     this.score += finalPoints;
     this.hits += 1;
-    soundManager.playPop();
+    soundManager.playSuccess();
 
     const floatText = new Text({
       text: finalPoints.toString(),
@@ -401,7 +401,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     this.isGameOver = true;
     cancelAnimationFrame(this.gameLoopRaf);
     this.gameLoopRaf = 0;
-    
+
     if (this.keydownListener) {
       window.removeEventListener('keydown', this.keydownListener);
       this.keydownListener = null;

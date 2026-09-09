@@ -68,19 +68,6 @@
             "zh-TW": "回合",
             "en": "rounds"
           }
-        },
-        {
-          "key": "soundEnabled",
-          "type": "checkbox",
-          "label": {
-            "zh-TW": "聲音回饋",
-            "en": "Sound feedback"
-          },
-          "description": {
-            "zh-TW": "在操作與結果時播放提示音。",
-            "en": "Play audio cues during interactions and results."
-          },
-          "default": true
         }
       ]
     }

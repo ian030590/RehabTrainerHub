@@ -234,5 +234,19 @@ test('training results expose exactly one source-aware navigation button', () =>
   assert.equal((resultActionsSource.match(/<button\b/g) ?? []).length, 1);
   assert.equal(resultActionsSource.includes('downloadLabel'), false);
   assert.equal(resultActionsSource.includes('restartLabel'), false);
-  assert.match(resultActionsSource, /isEmbeddedHubTraining \? NotifyHubTrainingExit : onBackHome/);
+  assert.match(resultActionsSource, /isEmbeddedHubTraining \? NotifyHubTrainingExit :/);
+  assert.match(resultActionsSource, /if \(!RequestHubTrainingConfiguration\(\)\) onBackHome\(\)/);
+});
+
+test('standalone games reopen their own configuration without browser history', (context) => {
+  const dispatched = [];
+  const windowMock = { location: { pathname: '/games/n-back/', search: '' }, dispatchEvent: event => dispatched.push(event.type) };
+  windowMock.self = windowMock;
+  windowMock.top = windowMock;
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: windowMock });
+  context.after(() => { delete globalThis.window; });
+  assert.equal(embeddedTraining.RequestHubTrainingConfiguration(), true);
+  assert.deepEqual(dispatched, ['rehab-trainer:standalone-configure']);
+  windowMock.location.pathname = '/qa/';
+  assert.equal(embeddedTraining.RequestHubTrainingConfiguration(), false);
 });

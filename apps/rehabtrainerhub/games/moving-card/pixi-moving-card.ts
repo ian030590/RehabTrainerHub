@@ -20,14 +20,14 @@ import { Application, Container, Graphics, Text } from 'pixi.js';
 import { pixiColors, typography } from '@rehab-trainer/ui/trainerTheme';
 import { ShuffleArray, GenerateRandomLetters, GenerateScatteredPositions } from '@rehab-trainer/ui/mathUtils';
 import { PixelFromMillimeter } from '@rehab-trainer/ui/spatialUtils';
-import { soundManager } from '@rehab-trainer/ui/soundManager';
+import { soundManager } from './runtime/soundManager';
 import {
   AttachPixiTrialCanvas,
   CleanupPixiTrial,
   CreatePixiTrialContainer,
   RunPixiTrial,
   pixiRuntimeScopes,
-} from '@rehab-trainer/ui/pixiPool';
+} from './runtime/pixiPool';
 
 // ── Plugin Info ──
 const info = {
@@ -446,11 +446,11 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
 
           if (gameOpt.isCorrect) {
             drawState('correct');
-            soundManager.playCorrect();
+            soundManager.playSuccess();
             setTimeout(() => EndTrial(rt, true, gameOpt.letters), 350);
           } else {
             drawState('wrong');
-            soundManager.playIncorrect();
+            soundManager.playFailure();
             setTimeout(() => {
               drawState('normal');
               feedbackActive = false;

@@ -1,13 +1,14 @@
+import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
 // Timeline local to the Hub-owned reading module.
 import HtmlButtonResponsePlugin from '@jspsych/plugin-html-button-response';
-import PixiReadingTrainingPlugin from '../pixi-reading-training';
 import { GetSetting } from '@rehab-trainer/ui/settings';
-import type { BuildTimelineOverrides } from '../types/types';
+import PixiReadingTrainingPlugin from '../pixi-reading-training';
+type BuildTimelineOverrides = { reading?: { story?: ReturnType<typeof import('../reading/stories').getRandomStory>; wps?: number; crowding?: number; contrast?: number } };
 
 export function BuildReadingTimeline(overrides?: BuildTimelineOverrides): object[] {
-  const wps = overrides?.reading?.wps ?? GetSetting('readingWPS');
-  const crowding = overrides?.reading?.crowding ?? GetSetting('readingCrowding');
-  const contrast = overrides?.reading?.contrast ?? GetSetting('readingContrast');
+  const wps = overrides?.reading?.wps ?? (GetHostedGameSetting<number>('wordsPerMinute') / 60);
+  const crowding = overrides?.reading?.crowding ?? (GetHostedGameSetting<number>('crowding') / 100);
+  const contrast = overrides?.reading?.contrast ?? (GetHostedGameSetting<number>('contrast') / 100);
   const story = overrides?.reading?.story;
 
   const timeline: object[] = [];

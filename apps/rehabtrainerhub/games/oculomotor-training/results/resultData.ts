@@ -1,4 +1,4 @@
-import type { TrialData } from '../types/types';
+import type { TrialData } from '@rehab-trainer/ui';
 
 export const oculomotorTrialType = 'pixi-oculomotor-training';
 

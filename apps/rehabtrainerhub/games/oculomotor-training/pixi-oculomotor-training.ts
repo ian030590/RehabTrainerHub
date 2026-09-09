@@ -15,7 +15,7 @@ import {
   CreatePixiTrialContainer,
   RunPixiTrial,
   pixiRuntimeScopes,
-} from '@rehab-trainer/ui/pixiPool';
+} from './runtime/pixiPool';
 import { PixelFromDegree } from '@rehab-trainer/ui/spatialUtils';
 import {
   CalculateEyeAspectRatio,

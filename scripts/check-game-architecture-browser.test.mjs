@@ -29,6 +29,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
   const result = await Run(process.execPath, [
     browserSmokeScript,
     '--url', `http://127.0.0.1:${address.port}/`,
+    '--storage', 'rehab_hub_tour_seen=1',
     '--clickSelectors', '.official-game-card button',
     '--allSelectors', [
       'dialog.training-overlay-config form',
@@ -46,6 +47,16 @@ test('Brave renders the settings-driven config UI before mounting an official ga
 
   assert.equal(result.exitCode, 0, `${result.stdout}\n${result.stderr}`);
   assert.match(result.stdout, /Browser route smoke passed/);
+  for (const gameId of ['n-back', 'reaction-time', 'asteroid-shield']) {
+    const standalone = await Run(process.execPath, [
+      browserSmokeScript,
+      '--url', `http://127.0.0.1:${address.port}/games/${gameId}/`,
+      '--clickSelectors', '.game-settings-form button[type="submit"],.training-rules .btn-ghost,.game-settings-form button[type="submit"]',
+      '--allSelectors', '.training-rules,.training-rules button',
+      '--timeoutMs', '10000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(standalone.exitCode, 0, `${gameId}: ${standalone.stdout}\n${standalone.stderr}`);
+  }
 });
 
 async function ServeStaticOutput(request, response) {

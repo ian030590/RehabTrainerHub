@@ -9,7 +9,7 @@ import {
   CreatePixiTrialContainer,
   RunPixiTrial,
   pixiRuntimeScopes,
-} from '@rehab-trainer/ui/pixiPool';
+} from './runtime/pixiPool';
 
 const info = {
   name: 'pixi-reading-training',
@@ -58,12 +58,12 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
     const wps = trial.wps as number;
     const crowding = trial.crowding as number;
     const logCS = trial.contrast as number;
-    
+
     // Convert logCS (log contrast sensitivity) to linear contrast.
     // logCS = -log10(contrast), so contrast = 10^(-logCS).
     // logCS 0 → contrast 1.0 (black text), logCS 1.3 → contrast ~0.05 (very faint).
     const contrast = Math.pow(10, -logCS);
-    const grayVal = Math.round((1 - contrast) * 200); 
+    const grayVal = Math.round((1 - contrast) * 200);
     const hex = grayVal.toString(16).padStart(2, '0');
     const textColor = `#${hex}${hex}${hex}`;
 
@@ -162,10 +162,10 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
         const remaining = contentArray.length - chunkIdx;
         const currentCrowding = Math.min(crowding, remaining);
         const chunkWords = contentArray.slice(chunkIdx, chunkIdx + currentCrowding);
-        
+
         textObj.text = chunkWords.join(' ');
         FitTextToViewport();
-        
+
         const displayTimeMs = (currentCrowding / wps) * 1000;
         chunkIdx += currentCrowding;
 

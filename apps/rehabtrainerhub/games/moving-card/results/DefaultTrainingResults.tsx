@@ -1,7 +1,7 @@
 // Results view local to the Hub-owned vision modules.
+import type { TFunction,TrialData } from '@rehab-trainer/ui';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
-import { Mean, Median } from '@rehab-trainer/ui/mathUtils';
-import type { TFunction, TrialData } from '@rehab-trainer/ui';
+import { Mean,Median } from '@rehab-trainer/ui/mathUtils';
 
 interface DefaultTrainingResultsProps {
   results: TrialData[];

@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const configFiles = [
-  'packages/ui/src/components/PeripheralAttentionConfigComponents.tsx',
+  'packages/ui/src/components/GameSettingsForm.tsx',
 ];
 const failures = [];
 
@@ -61,7 +61,7 @@ if (styleSource.includes('.training-config-actions')) {
 
 const hubNavigationSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/HubNavigation.tsx'), 'utf8');
 const hubStyleSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/globals.css'), 'utf8');
-const gameSettingsFormSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/train/GameSettingsForm.tsx'), 'utf8');
+const gameSettingsFormSource = readFileSync(resolve(root, 'packages/ui/src/components/GameSettingsForm.tsx'), 'utf8');
 const trainingOverlaySource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/train/TrainingOverlay.tsx'), 'utf8');
 const packageGameOverlaySource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/train/PackageGameOverlay.tsx'), 'utf8');
 if (!hubNavigationSource.includes('key={pathname}')) {

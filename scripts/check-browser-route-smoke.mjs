@@ -365,6 +365,7 @@ async function ClickSelectors(cdp, sessionId, selectors, timeoutMs) {
 
 async function WaitForClickableBounds(cdp, sessionId, selector, timeoutMs) {
   const startedAt = Date.now();
+  let obstruction = null;
   while (Date.now() - startedAt < timeoutMs) {
     const result = await cdp.Send('Runtime.evaluate', {
       expression: `(() => {
@@ -373,14 +374,19 @@ async function WaitForClickableBounds(cdp, sessionId, selector, timeoutMs) {
         element.scrollIntoView({ behavior: 'instant', block: 'center', inline: 'center' });
         const rect = element.getBoundingClientRect();
         if (rect.width < 1 || rect.height < 1) return null;
-        return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        const hit = document.elementFromPoint(x, y);
+        if (!hit || !element.contains(hit)) return { blocked: true, x, y, hit: hit?.outerHTML.slice(0, 300), viewport: { width: innerWidth, height: innerHeight } };
+        return { x, y };
       })()`,
       returnByValue: true,
     }, sessionId);
-    if (result.result.value) return result.result.value;
+    if (result.result.value && !result.result.value.blocked) return result.result.value;
+    obstruction = result.result.value;
     await Wait(100);
   }
-  throw new Error(`Timed out waiting for clickable selector: ${selector}`);
+  throw new Error(`Timed out waiting for clickable selector: ${selector} (${JSON.stringify(obstruction)})`);
 }
 
 function FindBrowserPath() {

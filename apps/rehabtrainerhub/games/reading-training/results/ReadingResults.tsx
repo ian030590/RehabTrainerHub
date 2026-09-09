@@ -1,7 +1,7 @@
 // Results view local to the Hub-owned reading module.
+import type { TFunction,TrialData } from '@rehab-trainer/ui';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
-import { useAppSetting } from '@rehab-trainer/ui/useAppSetting';
-import type { TFunction, TrialData } from '@rehab-trainer/ui';
+import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
 
 interface ReadingResultsProps {
   results: TrialData[];
@@ -10,8 +10,8 @@ interface ReadingResultsProps {
 }
 
 export function ReadingResults({ results, userName, t }: ReadingResultsProps) {
-  const [readingSpeed] = useAppSetting('readingWPS');
-  const [crowdingLevel] = useAppSetting('readingCrowding');
+  const readingSpeed = GetHostedGameSetting<number>('wordsPerMinute') / 60;
+  const crowdingLevel = GetHostedGameSetting<number>('crowding') / 100;
   const questions = results.filter((result) => result.trial_type === 'html-button-response');
   const correct = questions.filter((result) => result.correct).length;
   const readingTime = results.find((result) => result.trial_type === 'pixi-reading-training')?.reading_time || 0;

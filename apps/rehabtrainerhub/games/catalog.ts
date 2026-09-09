@@ -1,30 +1,30 @@
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
+import type { MajorCategoryId,TrainerCategoryId } from './gameTags.js';
 import {
-  GetTrainingModuleFlowManifest,
-  type TrainingFlowStep,
-  type TrainingMediaPermission,
-} from './moduleFlowManifest';
-import {
-  GetTrainerCategoryTag,
-  GetTrainingPurposeTrainerId,
-  IsTrainerCategoryId,
-  categorySubcategories,
-  majorCategoryIds,
-  majorCategoryTags,
-  trainerCategoryTags,
+GetTrainerCategoryTag,
+GetTrainingPurposeTrainerId,
+IsTrainerCategoryId,
+categorySubcategories,
+majorCategoryIds,
+majorCategoryTags,
+trainerCategoryTags,
 } from './gameTags.js';
-import type { TrainerCategoryId, MajorCategoryId } from './gameTags.js';
+import {
+GetTrainingModuleFlowManifest,
+type TrainingFlowStep,
+type TrainingMediaPermission,
+} from './moduleFlowManifest';
 
 export {
-  GetTrainerCategoryTag,
-  GetTrainingPurposeTrainerId,
-  IsTrainerCategoryId,
-  categorySubcategories,
-  majorCategoryIds,
-  majorCategoryTags,
-  trainerCategoryTags,
+GetTrainerCategoryTag,
+GetTrainingPurposeTrainerId,
+IsTrainerCategoryId,
+categorySubcategories,
+majorCategoryIds,
+majorCategoryTags,
+trainerCategoryTags
 };
-export type { MajorCategoryId, TrainerCategoryId };
+export type { MajorCategoryId,TrainerCategoryId };
 
 export type ThemeIconType = 'material-symbol' | 'svg';
 

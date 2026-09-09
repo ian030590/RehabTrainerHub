@@ -159,7 +159,7 @@ export function useDrivingWheelCalibration(wheelDevice: DrivingWheelDevice | nul
   const [phase, setPhase] = useState<DrivingWheelCalibrationPhase>('idle');
   const [error, setError] = useState<'steering' | 'throttle' | 'brake' | 'disconnected' | null>(null);
   const [calibration, setCalibration] = useState<DrivingWheelCalibration | null>(() => (
-    ParseDrivingWheelCalibration(GetSetting('drivingWheelCalibration'))
+    ParseDrivingWheelCalibration(localStorage.getItem('rehab_driving-rehab_wheelCalibration') ?? '')
   ));
   const neutralRef = useRef<DrivingGamepadSnapshot | null>(null);
   const samplesRef = useRef<DrivingGamepadSnapshot[]>([]);
@@ -171,7 +171,7 @@ export function useDrivingWheelCalibration(wheelDevice: DrivingWheelDevice | nul
   }, [wheelDevice?.id]);
 
   useEffect(() => {
-    const stored = ParseDrivingWheelCalibration(GetSetting('drivingWheelCalibration'));
+    const stored = ParseDrivingWheelCalibration(localStorage.getItem('rehab_driving-rehab_wheelCalibration') ?? '');
     setCalibration(
       stored?.deviceId === wheelDevice?.id && IsDrivingWheelCalibrationUsable(stored)
         ? stored
@@ -262,7 +262,7 @@ export function useDrivingWheelCalibration(wheelDevice: DrivingWheelDevice | nul
       setPhase('error');
       return;
     }
-    SetSetting('drivingWheelCalibration', JSON.stringify(result.calibration));
+    localStorage.setItem('rehab_driving-rehab_wheelCalibration', JSON.stringify(result.calibration));
     setCalibration(result.calibration);
     setError(null);
     setPhase('idle');

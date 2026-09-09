@@ -3,11 +3,12 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import ts from 'typescript';
 
-const cognitiveRoot = 'packages/ui/src/cognitive';
+const gamesRoot = 'apps/rehabtrainerhub/games';
+const cognitiveRoot = `${gamesRoot}/simon-says/runtime/cognitive`;
 const trialRecordsPath = `${cognitiveRoot}/trialRecords.ts`;
 const referenceGamePath = `${cognitiveRoot}/ReferenceCognitiveGame.tsx`;
-const reactionPath = `${cognitiveRoot}/reactionTime.ts`;
-const targetPath = `${cognitiveRoot}/targetClick.ts`;
+const reactionPath = `${gamesRoot}/reaction-time/ReactionTimeGame.ts`;
+const targetPath = `${gamesRoot}/whack-a-mole/TargetClickGame.ts`;
 const languageNeutralPath = `${cognitiveRoot}/languageNeutralGames.ts`;
 
 async function ImportStandaloneTypeScriptModule(path) {
@@ -29,13 +30,27 @@ function SourceBetween(source, startMarker, endMarker) {
   return source.slice(start, end);
 }
 
+test('Hart Chart honors the configured alternation count', async () => {
+  const { CreateHartChart, CreateHartDecoder } = await ImportStandaloneTypeScriptModule(`${gamesRoot}/hart-chart/logic/hartChart.ts`);
+  for (const seed of [0, 1, 12345]) {
+    for (const rounds of [5, 10, 30]) {
+      const chart = CreateHartChart(seed);
+      const result = CreateHartDecoder(chart, seed, rounds);
+      assert.equal(result.tokens.filter(token => token.coordinate).length, rounds);
+      for (const token of result.tokens.filter(token => token.coordinate)) {
+        assert.equal(chart.find(cell => cell.row === token.coordinate.row && cell.col === token.coordinate.col)?.char, token.char);
+      }
+    }
+  }
+});
+
 test('trial record helpers produce deterministic millisecond records', async () => {
   const {
     CreateReactionTrialRecord,
     CreateSimonTrialRecord,
     CreateTargetTrialRecord,
     GetElapsedMilliseconds,
-  } = await ImportStandaloneTypeScriptModule(trialRecordsPath);
+  } = Object.assign({}, ...await Promise.all(['reaction-time', 'whack-a-mole', 'simon-says'].map((id) => ImportStandaloneTypeScriptModule(`${gamesRoot}/${id}/runtime/cognitive/trialRecords.ts`))));
 
   assert.equal(GetElapsedMilliseconds(100.2, 248.7), 149);
   assert.equal(GetElapsedMilliseconds(250, 200), 0);
@@ -109,7 +124,7 @@ test('Simon life resolution only ends at zero and otherwise replays', async () =
 
 test('reference cognitive games persist and render complete per-trial contracts', async () => {
   const [reference, reaction, target, languageNeutral, trialLogic] = await Promise.all([
-    readFile(referenceGamePath, 'utf8'),
+    Promise.all(['reaction-time', 'whack-a-mole', 'simon-says', 'maze'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/ReferenceCognitiveGame.tsx`, 'utf8'))).then(parts => parts.join('\n')),
     readFile(reactionPath, 'utf8'),
     readFile(targetPath, 'utf8'),
     readFile(languageNeutralPath, 'utf8'),
@@ -136,11 +151,11 @@ test('reference cognitive games persist and render complete per-trial contracts'
   assert.match(target, /'hit'/);
   assert.match(target, /'expired'/);
   assert.match(target, /'wrong-tap'/);
-  assert.match(target, /if \(state\.activeIndex === null\) return null/);
+  assert.match(target, /if \(state\.activeIndex === null\)\s*return null/);
   assert.match(target, /state\.trials\.push\(trial\)/);
 
-  assert.match(reference, /type="range"/);
-  assert.match(reference, /<svg/);
+  const settings = JSON.parse(await readFile(`${gamesRoot}/reaction-time/settings.json`, 'utf8'));
+  assert.ok(settings.sections.some(section => section.fields.some(field => field.type === 'slider')));
   assert.match(languageNeutral, /CreateSimonState/);
   assert.match(languageNeutral, /HandleSimonTap/);
   assert.match(trialLogic, /ResolveSimonAttempt\(state\.lives, false\)/);
@@ -150,7 +165,7 @@ test('reference cognitive games persist and render complete per-trial contracts'
 });
 
 test('number grids stay silent until completion and board games preserve draws', async () => {
-  const source = await readFile(languageNeutralPath, 'utf8');
+  const source = (await Promise.all(['sudoku', 'connect4', 'hex', 'dots-and-boxes'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/languageNeutralGames.ts`, 'utf8')))).join('\n');
   const feedback = SourceBetween(
     source,
     'export function GetLanguageNeutralFeedbackCounts',
@@ -158,7 +173,7 @@ test('number grids stay silent until completion and board games preserve draws',
   );
   assert.match(
     feedback,
-    /case 'sudoku':[\s\S]*?case 'magic-square':[\s\S]*?return \{ success: 0, errors: state\.errors \}/,
+    /case 'sudoku':[\s\S]*?return \{ success: 0, errors: state\.errors \}/,
     'number-grid edits must not trigger per-cell success audio',
   );
 

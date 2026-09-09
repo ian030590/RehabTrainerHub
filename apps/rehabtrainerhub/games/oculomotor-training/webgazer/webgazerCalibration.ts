@@ -543,7 +543,7 @@ export function CreateWebGazerExperimentTimeline(
     data: { webgazer_flow_step: 'calibration_done' },
     on_finish: () => {
       if (runState.recordEyeTracking) {
-        SetSetting('webGazerCalibrationAt', new Date().toISOString());
+        localStorage.setItem('rehab_oculomotor-training_webGazerCalibrationAt', new Date().toISOString());
       }
     },
   };
@@ -568,7 +568,7 @@ export function CreateWebGazerExperimentTimeline(
     },
   };
 
-  const untrackedFormalTrial = {
+  const untrackedFormalTrial: Record<string, unknown> = {
     ...(trial as Record<string, unknown>),
     enable_webgazer: false,
     show_gaze_point: false,

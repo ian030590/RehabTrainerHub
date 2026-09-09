@@ -1,23 +1,24 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { initJsPsych } from 'jspsych';
-import type { JsPsych } from 'jspsych';
+import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
-  NotifyHubTrainingAbort,
-  NotifyHubTrainingComplete,
+NotifyHubTrainingAbort,
+NotifyHubTrainingComplete,
 } from '@rehab-trainer/ui/embeddedTraining';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useT } from '@rehab-trainer/ui/i18n';
-import { GetSetting, getActiveUser } from '@rehab-trainer/ui/settings';
-import { DestroyPixiTrainingRuntime } from '@rehab-trainer/ui/pixiPool';
-import { soundManager } from '@rehab-trainer/ui/soundManager';
+import { GetSetting,getActiveUser } from '@rehab-trainer/ui/settings';
+import { soundManager } from './runtime/soundManager';
 import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
-import { BuildReadingTimeline } from './timeline/readingTimeline';
+import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
+import type { JsPsych } from 'jspsych';
+import { initJsPsych } from 'jspsych';
+import { useCallback,useEffect,useRef,useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { DownloadTrainingCsv } from './exportCsv';
 import { getRandomStory } from './reading/stories';
 import { ReadingResults } from './results/ReadingResults';
-import { DownloadTrainingCsv } from './exportCsv';
+import { DestroyPixiTrainingRuntime } from './runtime/pixiPool';
+import { BuildReadingTimeline } from './timeline/readingTimeline';
 
 export function ReadingTrainingGame() {
   const location = useLocation();
@@ -27,7 +28,7 @@ export function ReadingTrainingGame() {
   const [results, setResults] = useState<any[]>([]);
   const jsPsychRef = useRef<JsPsych | null>(null);
   const skipFinishRef = useRef(false);
-  const userName = getActiveUser()?.name || 'guest';
+  const userName = getActiveUser() || 'guest';
 
   useEffect(() => {
     if (phase !== 'running') return;
@@ -49,7 +50,7 @@ export function ReadingTrainingGame() {
             difficulty: 'normal',
             results: data,
           });
-          soundManager.destroy();
+
           DestroyPixiTrainingRuntime('reading-training');
           setResults(data);
           jsPsychRef.current = null;
@@ -61,9 +62,9 @@ export function ReadingTrainingGame() {
       const timeline = BuildReadingTimeline({
         reading: {
           story,
-          wps: GetSetting('readingWPS'),
-          crowding: GetSetting('readingCrowding'),
-          contrast: GetSetting('readingContrast'),
+          wps: (GetHostedGameSetting<number>('wordsPerMinute') / 60),
+          crowding: (GetHostedGameSetting<number>('crowding') / 100),
+          contrast: (GetHostedGameSetting<number>('contrast') / 100),
         },
       });
 
@@ -76,7 +77,7 @@ export function ReadingTrainingGame() {
 
     return () => {
       cancelled = true;
-      soundManager.destroy();
+
       DestroyPixiTrainingRuntime('reading-training');
       const active = jsPsychRef.current;
       jsPsychRef.current = null;
@@ -90,7 +91,7 @@ export function ReadingTrainingGame() {
   const abortTraining = useCallback(() => {
     if (phase !== 'running') return;
     skipFinishRef.current = true;
-    soundManager.destroy();
+
     jsPsychRef.current?.abortExperiment();
     jsPsychRef.current = null;
     DestroyPixiTrainingRuntime('reading-training');
@@ -105,18 +106,8 @@ export function ReadingTrainingGame() {
 
   return (
     <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
-      <ReadingResults
-        results={results}
-        userName={userName}
-        moduleId="reading-training"
-        onRestart={() => setPhase('running')}
-        onExit={() => NotifyHubTrainingComplete()}
-        onDownloadCsv={() => DownloadTrainingCsv({ results, userName, moduleId: 'reading-training', t })}
-      />
-      <TrainingResultActions
-        onRestart={() => setPhase('running')}
-        onExit={() => NotifyHubTrainingComplete()}
-      />
+      <ReadingResults results={results} userName={userName} t={t} />
+      <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
     </div>
   );
 }

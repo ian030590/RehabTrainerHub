@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "incremental": false
+  },
+  "include": ["games/**/*.ts", "games/**/*.tsx"],
+  "exclude": ["node_modules"]
+}

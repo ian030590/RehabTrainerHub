@@ -81,6 +81,54 @@
             "en": "Play audio cues during interactions and results."
           },
           "default": true
+        },
+        {
+          "key": "optionCount",
+          "type": "slider",
+          "label": {
+            "zh-TW": "選項數量",
+            "en": "Option count"
+          },
+          "default": 18,
+          "min": 4,
+          "max": 40,
+          "step": 1
+        },
+        {
+          "key": "optionMoveIntervalMs",
+          "type": "slider",
+          "label": {
+            "zh-TW": "移動間隔（毫秒）",
+            "en": "Movement interval (ms)"
+          },
+          "default": 800,
+          "min": 200,
+          "max": 5000,
+          "step": 100
+        },
+        {
+          "key": "targetPhysicalSizeMm",
+          "type": "slider",
+          "label": {
+            "zh-TW": "目標大小（毫米）",
+            "en": "Target size (mm)"
+          },
+          "default": 15,
+          "min": 2,
+          "max": 100,
+          "step": 1
+        },
+        {
+          "key": "optionPhysicalSizeMm",
+          "type": "slider",
+          "label": {
+            "zh-TW": "選項大小（毫米）",
+            "en": "Option size (mm)"
+          },
+          "default": 10,
+          "min": 2,
+          "max": 80,
+          "step": 1
         }
       ]
     }

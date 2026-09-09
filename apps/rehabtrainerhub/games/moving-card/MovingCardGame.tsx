@@ -1,22 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { initJsPsych } from 'jspsych';
-import type { JsPsych } from 'jspsych';
+import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
+import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
-  NotifyHubTrainingAbort,
-  NotifyHubTrainingComplete,
+NotifyHubTrainingAbort,
+NotifyHubTrainingComplete,
 } from '@rehab-trainer/ui/embeddedTraining';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import { useT } from '@rehab-trainer/ui/i18n';
-import { GetSetting, getActiveUser } from '@rehab-trainer/ui/settings';
-import { DestroyPixiTrainingRuntime } from '@rehab-trainer/ui/pixiPool';
-import { soundManager } from '@rehab-trainer/ui/soundManager';
+import { GetSetting,getActiveUser } from '@rehab-trainer/ui/settings';
+import { soundManager } from './runtime/soundManager';
 import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
-import { BuildMovingCardTimeline } from './timeline/movingCardTimeline';
-import { DefaultTrainingResults } from './results/DefaultTrainingResults';
+import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
+import type { JsPsych } from 'jspsych';
+import { initJsPsych } from 'jspsych';
+import { useCallback,useEffect,useRef,useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { DownloadTrainingCsv } from './exportCsv';
+import { DefaultTrainingResults } from './results/DefaultTrainingResults';
+import { DestroyPixiTrainingRuntime } from './runtime/pixiPool';
+import { BuildMovingCardTimeline } from './timeline/movingCardTimeline';
 
 export function MovingCardGame() {
   const location = useLocation();
@@ -26,8 +27,8 @@ export function MovingCardGame() {
   const [results, setResults] = useState<any[]>([]);
   const jsPsychRef = useRef<JsPsych | null>(null);
   const skipFinishRef = useRef(false);
-  const userName = getActiveUser()?.name || 'guest';
-  const difficulty = GetSetting('difficulty');
+  const userName = getActiveUser() || 'guest';
+  const difficulty = (GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty'));
 
   useEffect(() => {
     if (phase !== 'running') return;
@@ -49,7 +50,7 @@ export function MovingCardGame() {
             difficulty,
             results: data,
           });
-          soundManager.destroy();
+
           DestroyPixiTrainingRuntime('moving-card');
           setResults(data);
           jsPsychRef.current = null;
@@ -58,8 +59,8 @@ export function MovingCardGame() {
       });
 
       const timeline = BuildMovingCardTimeline({
-        difficulty,
-        totalRounds: GetSetting('totalRounds'),
+        difficulty: ({ easy: 'beginner', medium: 'intermediate', hard: 'advanced' } as const)[difficulty],
+        totalRounds: (GetHostedGameSetting<number>('rounds')),
       });
 
       if (cancelled) return;
@@ -71,7 +72,7 @@ export function MovingCardGame() {
 
     return () => {
       cancelled = true;
-      soundManager.destroy();
+
       DestroyPixiTrainingRuntime('moving-card');
       const active = jsPsychRef.current;
       jsPsychRef.current = null;
@@ -85,7 +86,7 @@ export function MovingCardGame() {
   const abortTraining = useCallback(() => {
     if (phase !== 'running') return;
     skipFinishRef.current = true;
-    soundManager.destroy();
+
     jsPsychRef.current?.abortExperiment();
     jsPsychRef.current = null;
     DestroyPixiTrainingRuntime('moving-card');
@@ -100,19 +101,8 @@ export function MovingCardGame() {
 
   return (
     <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
-      <DefaultTrainingResults
-        results={results}
-        userName={userName}
-        moduleId="moving-card"
-        difficulty={difficulty}
-        onRestart={() => setPhase('running')}
-        onExit={() => NotifyHubTrainingComplete()}
-        onDownloadCsv={() => DownloadTrainingCsv({ results, userName, moduleId: 'moving-card', difficulty, t })}
-      />
-      <TrainingResultActions
-        onRestart={() => setPhase('running')}
-        onExit={() => NotifyHubTrainingComplete()}
-      />
+      <DefaultTrainingResults results={results} userName={userName} t={t} />
+      <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
     </div>
   );
 }

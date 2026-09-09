@@ -19,12 +19,12 @@ const oculomotorResults = await read(`${oculomotorDir}/results/OculomotorResults
 const oculomotorResultData = await read(`${oculomotorDir}/results/resultData.ts`);
 const trainingResultCsv = await read(`${oculomotorDir}/exportCsv.ts`);
 const trainingRecords = await read('packages/ui/src/storage/trainingRecords.ts');
-const zh = await read('packages/ui/src/i18n/games/vision/zh.ts');
-const en = await read('packages/ui/src/i18n/games/vision/en.ts');
+const zh = await read('apps/rehabtrainerhub/games/oculomotor-training/i18n/zh.ts');
+const en = await read('apps/rehabtrainerhub/games/oculomotor-training/i18n/en.ts');
 const sharedAppCss = await read('packages/ui/src/components/TrainerApp.css');
 const oculomotorSettings = JSON.parse(await read(`${oculomotorDir}/settings.json`));
 const manifest = JSON.parse(await read('scripts/r2-ai-assets.manifest.json'));
-const runtimePath = 'apps/rehabtrainerhub/public/assets/webgazer/3.5.3/webgazer.js';
+const runtimePath = 'apps/rehabtrainerhub/games/oculomotor-training/public/assets/webgazer/3.5.3/webgazer.js';
 const runtime = await read(runtimePath);
 const gitAttributes = await read('.gitattributes');
 
@@ -215,7 +215,7 @@ assert.equal(
 assert.equal(loader.includes('local-v1'), false, 'the obsolete WebGazer runtime must not be a fallback');
 assert.ok(runtime.includes('faceMeshSolutionPath:"./mediapipe/face_mesh"'), 'the self-hosted runtime must default to local MediaPipe assets');
 assert.ok(
-  gitAttributes.includes('apps/rehabtrainerhub/public/assets/webgazer/3.5.3/** -text'),
+  gitAttributes.includes('apps/rehabtrainerhub/games/oculomotor-training/public/assets/webgazer/3.5.3/** -text'),
   'vendored WebGazer assets must be protected from line-ending conversion',
 );
 
@@ -231,7 +231,7 @@ const runtimeAssets = [
   ['mediapipe/face_mesh/face_mesh_solution_wasm_bin.wasm', 'application/wasm'],
 ];
 for (const [relativePath, contentType] of runtimeAssets) {
-  const source = `apps/rehabtrainerhub/public/assets/webgazer/3.5.3/${relativePath}`;
+  const source = `apps/rehabtrainerhub/games/oculomotor-training/public/assets/webgazer/3.5.3/${relativePath}`;
   const key = `ai/webgazer/3.5.3/${relativePath}`;
   const asset = manifest.assets.find((candidate) => candidate.key === key);
   assert.ok(asset, `R2 manifest is missing ${key}`);
@@ -365,7 +365,7 @@ for (const dictionary of [zh, en]) {
     'settings.wg.signalSkippedTitle',
     'settings.wg.cameraPreviewLabel',
   ]) {
-    assert.ok(dictionary.includes(`'${key}'`), `translation key missing: ${key}`);
+    assert.match(dictionary, new RegExp(`["']${key.replaceAll('.', '\\.')}["']\\s*:`), `translation key missing: ${key}`);
   }
 }
 

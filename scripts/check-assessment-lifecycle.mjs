@@ -30,7 +30,7 @@ for (const retiredReadmeClaim of [
 // Check dictionaries in packages/ui
 for (const locale of ['zh', 'en']) {
   const dictionary = readFileSync(
-    resolve(repoRoot, `packages/ui/src/i18n/games/vision/${locale}.ts`),
+    resolve(repoRoot, `apps/rehabtrainerhub/games/oculomotor-training/i18n/${locale}.ts`),
     'utf8',
   );
   for (const retiredToken of [

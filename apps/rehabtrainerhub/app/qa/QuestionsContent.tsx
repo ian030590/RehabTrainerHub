@@ -3,8 +3,9 @@
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { EducationArticles } from './EducationArticles';
+import type { Article } from '../articleTypes';
 
-export function QuestionsContent() {
+export function QuestionsContent({ articles }: { articles: Article[] }) {
   const { language } = useHubLanguage();
   const copy = GetHubUiCopy(language).questions;
 
@@ -31,7 +32,7 @@ export function QuestionsContent() {
         <p>{copy.professionalBody}</p>
       </section>
 
-      <EducationArticles />
+      <EducationArticles initialArticles={articles} />
     </main>
   );
 }

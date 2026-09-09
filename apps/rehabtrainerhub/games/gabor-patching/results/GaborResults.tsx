@@ -1,6 +1,6 @@
 // Results view local to the Hub-owned Gabor module.
+import type { TFunction,TrialData } from '@rehab-trainer/ui';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
-import type { TFunction, TrialData } from '@rehab-trainer/ui';
 
 interface GaborResultsProps {
   results: TrialData[];

@@ -105,7 +105,7 @@
               }
             },
             {
-              "value": "gamepad",
+              "value": "wheel",
               "label": {
                 "zh-TW": "方向盤／控制器",
                 "en": "Wheel or gamepad"

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
@@ -8,17 +8,17 @@ import ts from 'typescript';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const dictionaryPairs = [
-  ...['motor', 'vision', 'brain', 'mouth'].map((trainer) => ({
-    label: `${trainer} games`,
-    zh: `packages/ui/src/i18n/games/${trainer}/zh.ts`,
-    en: `packages/ui/src/i18n/games/${trainer}/en.ts`,
+  ...readdirSync(resolve(repoRoot, 'apps/rehabtrainerhub/games'), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map(({ name }) => ({
+    label: name,
+    zh: `apps/rehabtrainerhub/games/${name}/i18n/zh.ts`,
+    en: `apps/rehabtrainerhub/games/${name}/i18n/en.ts`,
   })),
   {
     label: 'Hub',
     zh: 'apps/rehabtrainerhub/app/i18n/zh-TW.ts',
     en: 'apps/rehabtrainerhub/app/i18n/en.ts',
   },
-  ...['peripheralAttention', 'devicePerformanceNotice', 'installApp'].map((name) => ({
+  ...['devicePerformanceNotice', 'installApp'].map((name) => ({
     label: `shared ${name}`,
     zh: `packages/ui/src/i18n/${name}/zh.ts`,
     en: `packages/ui/src/i18n/${name}/en.ts`,

@@ -1,3 +1,4 @@
+import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
 import { GetSetting } from '@rehab-trainer/ui/settings';
@@ -11,9 +12,9 @@ export function DownloadTrainingCsv({ results, userName, moduleId, t }: any) {
   const rows = results.map((result: any) => {
     const baseRow = [userName, dateStr, timeStr, moduleId];
     if (result.trial_type === 'html-button-response') {
-      return [...baseRow, GetSetting('readingWPS'), GetSetting('readingCrowding'), result.target, result.response_text || result.response, result.correct ? '✓' : '✗', result.rt];
+      return [...baseRow, (GetHostedGameSetting<number>('wordsPerMinute') / 60), (GetHostedGameSetting<number>('crowding') / 100), result.target, result.response_text || result.response, result.correct ? '✓' : '✗', result.rt];
     }
-    return [...baseRow, GetSetting('readingWPS'), GetSetting('readingCrowding'), 'Reading Phase', '-', '-', result.reading_time || 0];
+    return [...baseRow, (GetHostedGameSetting<number>('wordsPerMinute') / 60), (GetHostedGameSetting<number>('crowding') / 100), 'Reading Phase', '-', '-', result.reading_time || 0];
   });
   const csvContent = CreateCsvContent([headers, ...rows]);
   DownloadCsvFile(csvContent, `${prefix ? prefix + '_' : ''}${userName}_${moduleId}_${dateStr}.csv`);

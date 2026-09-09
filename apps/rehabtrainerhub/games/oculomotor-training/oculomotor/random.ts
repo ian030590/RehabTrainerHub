@@ -2,6 +2,7 @@
 export interface Rng {
   seed: number;
   randomAt(index: number): number;
+  intAt(index: number): number;
   rangeAt(index: number, min: number, max: number): number;
 }
 
@@ -20,5 +21,6 @@ export const seededRandom = (seed: number, index: number) => {
 export const createRng = (seed: number): Rng => ({
   seed: normalizeSeed(seed),
   randomAt: (index) => seededRandom(seed, index),
+  intAt: (index) => Math.floor(seededRandom(seed, index) * 2_147_483_647),
   rangeAt: (index, min, max) => min + (max - min) * seededRandom(seed, index),
 });

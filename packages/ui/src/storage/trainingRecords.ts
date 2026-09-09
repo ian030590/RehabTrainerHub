@@ -7,7 +7,6 @@ import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import { DownloadCsvFile, DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import { CreateRuntimeStorageNamespace } from '@rehab-trainer/ui/storage/runtimeNamespace';
 import type { TranslationKey } from '../i18n/games';
-import { storagePrefix } from '../settings/settings';
 import { defaultSiteUrls as siteUrls } from '@rehab-trainer/ui/siteUrls';
 
 type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;
