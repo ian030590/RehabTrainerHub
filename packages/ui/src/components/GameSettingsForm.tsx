@@ -35,6 +35,7 @@ export function GameSettingsForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const locale = language === 'en' ? 'en' : 'zh-TW';
+  const startOnly = definition.sections.length === 0;
   const copy = language === 'en'
     ? {
         cancel: 'Back to lobby',
@@ -66,13 +67,13 @@ export function GameSettingsForm({
       }}
       ref={formRef}
     >
-      <header className="border-b border-[var(--border)] bg-[var(--surface)] px-5 py-5 sm:px-8 sm:py-7">
+      {!startOnly && <header className="border-b border-[var(--border)] bg-[var(--surface)] px-5 py-5 sm:px-8 sm:py-7">
         <p className="mb-1 text-xs font-extrabold tracking-[0.12em] text-[var(--primary)] uppercase">{copy.heading}</p>
         <h2 className="m-0 text-balance text-2xl font-black tracking-[-0.025em] text-[var(--heading)] sm:text-3xl">{title}</h2>
         <p className="mt-2 mb-0 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">{copy.intro}</p>
-      </header>
+      </header>}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-7">
+      {!startOnly && <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-7">
         <div className="mx-auto grid w-full gap-5">
           {definition.sections.map((section) => {
             const isCompass = IsDirectionsCompassSection(section);
@@ -165,7 +166,7 @@ export function GameSettingsForm({
             );
           })}
         </div>
-      </div>
+      </div>}
 
       <footer className="flex flex-col-reverse gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-4 sm:flex-row sm:justify-end sm:px-8">
         <Button onClick={onCancel} type="button" variant="outline">{copy.cancel}</Button>
@@ -389,4 +390,3 @@ function DirectionsCompassSection({
     </div>
   );
 }
-

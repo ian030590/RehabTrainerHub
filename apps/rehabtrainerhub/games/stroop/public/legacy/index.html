@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>色彩干擾抑制 / Stroop</title>
+  <link rel="stylesheet" href="jspsych.css">
+  <link rel="stylesheet" href="default_style.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .legacy-tour-preview { align-items: center; background: Canvas; box-sizing: border-box; color: CanvasText; display: grid; gap: 2rem; justify-items: center; min-height: 100vh; padding: clamp(2rem, 7vw, 6rem) 1.5rem; text-align: center; }
+    .legacy-tour-goal, .legacy-tour-stimulus, .legacy-tour-response { border: 2px solid GrayText; border-radius: 10px; box-sizing: border-box; max-width: 52rem; padding: 1.25rem 1.5rem; width: 100%; }
+    .legacy-tour-goal h1 { font-size: clamp(1.7rem, 4vw, 2.8rem); margin: 0; }
+    .legacy-tour-goal p, .legacy-tour-response { font-size: clamp(1rem, 2.5vw, 1.35rem); line-height: 1.65; }
+    .legacy-tour-stimulus { font-family: monospace; font-size: clamp(2rem, 7vw, 5rem); line-height: 1.35; }
+  </style>
+</head>
+<body data-game-id="stroop" data-timeline="stroop_experiment">
+  <main class="legacy-tour-preview">
+    <header class="legacy-tour-goal">
+      <h1>色彩干擾抑制 / Stroop</h1>
+      <p>請先完成頁面導覽；導覽結束後才會開始計時。<br><span lang="en">Complete the tour first; task timing starts only after it ends.</span></p>
+    </header>
+    <section aria-label="Stimulus preview" class="legacy-tour-stimulus">RED　BLUE　GREEN</section>
+    <section class="legacy-tour-response">R = red　B = blue　G = green</section>
+  </main>
+  <script src="js/jquery.min.js"></script>
+  <script src="js/math.min.js"></script>
+  <script src="js/jspsych/jspsych.js"></script>
+  <script src="js/jspsych/plugins/jspsych-text.js"></script>
+  <script src="js/jspsych/poldrack_plugins/jspsych-poldrack-text.js"></script>
+  <script src="js/jspsych/poldrack_plugins/jspsych-poldrack-instructions.js"></script>
+  <script src="js/jspsych/plugins/jspsych-call-function.js"></script>
+  <script src="js/jspsych/poldrack_plugins/jspsych-attention-check.js"></script>
+  <script src="js/jspsych/poldrack_plugins/jspsych-poldrack-single-stim.js"></script>
+  <script src="js/jspsych/plugins/jspsych-survey-text.js"></script>
+  <script src="js/jspsych/poldrack_plugins/jspsych-single-stim-button.js"></script>
+  <script src="js/jspsych/poldrack_plugins/poldrack_utils.js"></script>
+  <script src="js/jspsych/poldrack_plugins/jspsych-poldrack-categorize.js"></script>
+  <script src="experiment.js"></script>
+  <script>
+    window.rehabBilingualize = function () {
+      var specs = [["start_practice_block","text","接下來先進行練習試次。請依文字的墨水顏色按 R、B 或 G，按 Enter 開始。"],["start_test_block","text","練習結束，接下來進入正式試次。作答方式相同，按 Enter 開始。"],["end_block","text","本次作業已完成。按 Enter 查看當次紀錄。"]];
+      specs.push(['feedback_instruct_block', 'text', '請再閱讀作答規則，準備好後按 Enter 重新練習。']);
+      specs.forEach(function (spec) {
+        var trial = window[spec[0]];
+        var property = spec[1];
+        if (!trial || (typeof trial[property] !== 'string' && typeof trial[property] !== 'function')) return;
+        var original = trial[property];
+        trial[property] = function () {
+          var english = typeof original === 'function' ? original.apply(this, arguments) : original;
+          return '<div class="centerbox"><p class="block-text" lang="zh-TW">' + spec[2] + '</p></div>' + english;
+        };
+      });
+      var questionnaire = window.post_task_block;
+      if (questionnaire && Array.isArray(questionnaire.questions) && questionnaire.questions.length) {
+        var prompt = '<p class="center-block-text" lang="zh-TW">請簡述這個作業要求你做什麼。</p>';
+        if (Array.isArray(questionnaire.questions[0])) questionnaire.questions[0][0] = prompt + questionnaire.questions[0][0];
+        else questionnaire.questions[0] = prompt + questionnaire.questions[0];
+      }
+    };
+  </script>
+  <script src="rehab-bridge.js"></script>
+</body>
+</html>

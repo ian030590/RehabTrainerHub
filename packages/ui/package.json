@@ -27,6 +27,7 @@
     "./components/InlineAlert": "./src/components/InlineAlert.tsx",
     "./components/MobileTouchControls": "./src/components/MobileTouchControls.tsx",
     "./components/EditableSettingRow": "./src/components/EditableSettingRow.tsx",
+    "./components/ExpFactoryGame": "./src/components/ExpFactoryGame.tsx",
     "./components/NumberPresetSelector": "./src/components/NumberPresetSelector.tsx",
     "./components/ReferenceListPage": "./src/components/ReferenceListPage.tsx",
     "./components/ReferenceListPage.css": "./src/components/ReferenceListPage.css",

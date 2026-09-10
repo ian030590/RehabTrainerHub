@@ -7,9 +7,25 @@ import { extname, relative, resolve } from 'node:path';
 import test from 'node:test';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
-const outputRoot = resolve(repositoryRoot, 'apps/rehabtrainerhub/out');
+const outputRoot = resolve(process.env.HUB_OUTPUT_ROOT || resolve(repositoryRoot, 'apps/rehabtrainerhub/out'));
 const browserSmokeScript = resolve(repositoryRoot, 'scripts/check-browser-route-smoke.mjs');
 const bravePath = 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
+const expFactoryGameIds = [
+  'stroop',
+  'flanker',
+  'go-nogo',
+  'stop-signal',
+  'attention-network-task',
+  'antisaccade',
+  'n-back',
+  'digit-span',
+  'spatial-span',
+  'letter-memory',
+  'keep-track',
+  'tower-of-london',
+  'number-letter',
+  'plus-minus',
+];
 
 test('Brave renders the settings-driven config UI before mounting an official game', async (context) => {
   assert.equal(existsSync(bravePath), true, `Brave is required at ${bravePath}.`);
@@ -47,12 +63,23 @@ test('Brave renders the settings-driven config UI before mounting an official ga
 
   assert.equal(result.exitCode, 0, `${result.stdout}\n${result.stderr}`);
   assert.match(result.stdout, /Browser route smoke passed/);
-  for (const gameId of ['n-back', 'reaction-time', 'asteroid-shield']) {
+  for (const gameId of expFactoryGameIds) {
+    const guidedGame = await Run(process.execPath, [
+      browserSmokeScript,
+      '--url', `http://127.0.0.1:${address.port}/games/${gameId}/`,
+      '--clickSelectors', '.game-settings-form button[type="submit"],#ttNext,#ttNext,#ttNext',
+      '--allSelectors', '#ttTip:not(.show),.cognitive-reference-game iframe[src="./legacy/index.html"]',
+      '--timeoutMs', '3000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(guidedGame.exitCode, 0, `${gameId}: ${guidedGame.stdout}\n${guidedGame.stderr}`);
+  }
+
+  for (const gameId of ['reaction-time', 'asteroid-shield']) {
     const standalone = await Run(process.execPath, [
       browserSmokeScript,
       '--url', `http://127.0.0.1:${address.port}/games/${gameId}/`,
-      '--clickSelectors', '.game-settings-form button[type="submit"],.training-rules .btn-ghost,.game-settings-form button[type="submit"]',
-      '--allSelectors', '.training-rules,.training-rules button',
+      '--clickSelectors', '.game-settings-form button[type="submit"],#ttNext,#ttNext,#ttNext,.training-rules .btn-ghost,.game-settings-form button[type="submit"],#ttNext,#ttNext,#ttNext',
+      '--allSelectors', '#ttTip:not(.show),.training-rules,.training-rules button',
       '--timeoutMs', '10000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(standalone.exitCode, 0, `${gameId}: ${standalone.stdout}\n${standalone.stderr}`);

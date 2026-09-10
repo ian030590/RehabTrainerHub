@@ -34,7 +34,7 @@
     "test:game-architecture": "tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs",
     "test:game-architecture:built": "node scripts/check-built-game-architecture.mjs apps/rehabtrainerhub/out",
     "test:game-architecture:browser": "node --test scripts/check-game-architecture-browser.test.mjs",
-    "test:training-flow": "node scripts/check-training-module-flow.mjs && node --test scripts/check-reference-cognitive-trials.test.mjs scripts/check-training-theme.test.mjs",
+    "test:training-flow": "node scripts/check-training-module-flow.mjs && node scripts/check-expfactory-originals.mjs && node --test scripts/check-reference-cognitive-trials.test.mjs scripts/check-training-theme.test.mjs",
     "test:webgazer": "node scripts/check-webgazer-calibration.mjs && node scripts/check-webgazer-metrics.mjs",
     "test:webgazer-browser": "node scripts/check-oculomotor-webgazer-browser.mjs",
     "test:hub-functions": "node --test \"apps/rehabtrainerhub/functions/**/*.test.mjs\"",

@@ -224,6 +224,33 @@ test('all official games install the verified settings receiver', async () => {
   }
 });
 
+test('all present and future official games inherit a blocking Toutour guide', async () => {
+  const shell = await ReadUi('components/OfficialGameShell.tsx');
+  for (const token of [
+    'StartTour(steps',
+    'block: true',
+    'data-official-game-tour=',
+    'inert={!tourComplete || undefined}',
+    'officialGameTourCompleteEvent',
+  ]) {
+    assert.ok(shell.includes(token), `OfficialGameShell is missing the Toutour gate "${token}".`);
+  }
+
+  const expFactoryGame = await ReadUi('components/ExpFactoryGame.tsx');
+  assert.match(expFactoryGame, /data-official-game-tour-managed="true"/);
+  assert.match(expFactoryGame, /dispatchEvent\(new Event\(officialGameTourCompleteEvent/);
+  assert.match(expFactoryGame, /StartTour\(steps/);
+
+  const manifest = await readFile(resolve(gamesRoot, 'moduleFlowManifest.ts'), 'utf8');
+  assert.match(manifest, /standardTrainingFlow[\s\S]*?'rules',[\s\S]*?'tour',[\s\S]*?'training'/);
+  assert.match(manifest, /tourTrainingFlow[\s\S]*?'config',[\s\S]*?'tour',[\s\S]*?'training'/);
+
+  for (const gameId of expectedOfficialGameIds) {
+    const main = await readFile(resolve(gamesRoot, gameId, 'main.tsx'), 'utf8');
+    assert.match(main, /<OfficialGameShell settings=\{settings\}/, `${gameId} must inherit the shared Toutour gate.`);
+  }
+});
+
 test('transitive game imports keep engines and dictionaries within their game', async () => {
   const configPath = resolve(hubRoot, 'tsconfig.games.json');
   const config = ts.readConfigFile(configPath, ts.sys.readFile);

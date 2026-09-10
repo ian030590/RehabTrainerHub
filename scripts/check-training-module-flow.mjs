@@ -19,8 +19,27 @@ const manifestCode = ts.transpileModule(manifestSource, {
 const manifestUrl = `data:text/javascript;base64,${Buffer.from(manifestCode).toString('base64')}`;
 const {
   standardTrainingFlow,
+  tourTrainingFlow,
   trainingModuleFlowManifest,
 } = await import(manifestUrl);
+
+const expFactoryGameFiles = Object.freeze({
+  'brain:stroop': 'stroop/StroopGame.tsx',
+  'brain:flanker': 'flanker/FlankerGame.tsx',
+  'brain:go-nogo': 'go-nogo/GoNoGoGame.tsx',
+  'brain:stop-signal': 'stop-signal/StopSignalGame.tsx',
+  'brain:attention-network-task': 'attention-network-task/AttentionNetworkTaskGame.tsx',
+  'brain:antisaccade': 'antisaccade/AntisaccadeGame.tsx',
+  'brain:n-back': 'n-back/NBackGame.tsx',
+  'brain:digit-span': 'digit-span/DigitSpanGame.tsx',
+  'brain:spatial-span': 'spatial-span/SpatialSpanGame.tsx',
+  'brain:letter-memory': 'letter-memory/LetterMemoryGame.tsx',
+  'brain:keep-track': 'keep-track/KeepTrackGame.tsx',
+  'brain:tower-of-london': 'tower-of-london/TowerOfLondonGame.tsx',
+  'brain:number-letter': 'number-letter/NumberLetterGame.tsx',
+  'brain:plus-minus': 'plus-minus/PlusMinusGame.tsx',
+});
+const expFactoryCatalogIds = Object.keys(expFactoryGameFiles);
 
 const catalogIds = [...catalogSource.matchAll(
   /\{\s*id:\s*'([^']+)',\s*trainer:\s*'([^']+)'/g,
@@ -221,10 +240,13 @@ assert.ok(!mobileControlsSource.includes("up: '↑'"), 'Mobile direction control
 
 for (const catalogId of catalogIds) {
   const manifest = trainingModuleFlowManifest[catalogId];
+  const expectedFlow = expFactoryCatalogIds.includes(catalogId)
+    ? tourTrainingFlow
+    : standardTrainingFlow;
   assert.deepEqual(
     manifest.flow,
-    standardTrainingFlow,
-    `${catalogId} must follow card -> config -> rules -> training -> results.`,
+    expectedFlow,
+    `${catalogId} has a stale card-to-results flow.`,
   );
   assert.ok(
     ['none', 'camera', 'camera-optional', 'camera-or-microphone'].includes(
@@ -345,146 +367,11 @@ const implementationGroups = [
       'TrainingResultActions',
     ],
   },
-  {
-    ids: ['brain:stroop'],
-    files: ['stroop/StroopGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:flanker'],
-    files: ['flanker/FlankerGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:go-nogo'],
-    files: ['go-nogo/GoNoGoGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:n-back'],
-    files: ['n-back/NBackGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:digit-span'],
-    files: ['digit-span/DigitSpanGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:spatial-span'],
-    files: ['spatial-span/SpatialSpanGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:stop-signal'],
-    files: ['stop-signal/StopSignalGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:tower-of-london'],
-    files: ['tower-of-london/TowerOfLondonGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:attention-network-task'],
-    files: ['attention-network-task/AttentionNetworkTaskGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:letter-memory'],
-    files: ['letter-memory/LetterMemoryGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:number-letter'],
-    files: ['number-letter/NumberLetterGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:antisaccade'],
-    files: ['antisaccade/AntisaccadeGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:keep-track'],
-    files: ['keep-track/KeepTrackGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
-  {
-    ids: ['brain:plus-minus'],
-    files: ['plus-minus/PlusMinusGame.tsx'],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  },
+  ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
+    ids: [id],
+    files: [file],
+    tokens: ['ExpFactoryGame', 'sourceCommit:'],
+  })),
   ...ReferenceCognitiveCatalogIds().map(id => ({
     ids: [id],
     files: [resolve(moduleRoot, id.split(':')[1], 'runtime/cognitive/ReferenceCognitiveGame.tsx')],
@@ -595,26 +482,22 @@ const jsPsychLifecycleGroups = [
     ],
     forbiddenTokens: ['WriteJsPsychData'],
   },
+  ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
+    status: 'native-timeline',
+    ids: [id],
+    files: [`${file.slice(0, file.indexOf('/'))}/public/legacy/rehab-bridge.js`],
+    tokens: [
+      'window.jsPsych.init({',
+      'timeline: timeline',
+      'window.jsPsych.data.dataAsJSON()',
+    ],
+  })),
   ...Object.entries({
     'motor:drawing-defense': 'drawing-defense/DrawingTowerDefenseGame.tsx',
     'motor:asteroid-shield': 'asteroid-shield/AsteroidShieldGame.tsx',
     'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
     'motor:motor-cortex-rehab': 'motor-cortex-rehab/MotorCortexRehabGame.tsx',
     'brain:minesweeper': 'minesweeper/MinesweeperGame.tsx',
-    'brain:stroop': 'stroop/StroopGame.tsx',
-    'brain:flanker': 'flanker/FlankerGame.tsx',
-    'brain:go-nogo': 'go-nogo/GoNoGoGame.tsx',
-    'brain:n-back': 'n-back/NBackGame.tsx',
-    'brain:digit-span': 'digit-span/DigitSpanGame.tsx',
-    'brain:spatial-span': 'spatial-span/SpatialSpanGame.tsx',
-    'brain:stop-signal': 'stop-signal/StopSignalGame.tsx',
-    'brain:tower-of-london': 'tower-of-london/TowerOfLondonGame.tsx',
-    'brain:attention-network-task': 'attention-network-task/AttentionNetworkTaskGame.tsx',
-    'brain:letter-memory': 'letter-memory/LetterMemoryGame.tsx',
-    'brain:number-letter': 'number-letter/NumberLetterGame.tsx',
-    'brain:antisaccade': 'antisaccade/AntisaccadeGame.tsx',
-    'brain:keep-track': 'keep-track/KeepTrackGame.tsx',
-    'brain:plus-minus': 'plus-minus/PlusMinusGame.tsx',
     'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
   }).map(([id, file]) => ({
     status: 'external-runtime-adapter',

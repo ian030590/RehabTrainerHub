@@ -60,6 +60,13 @@ test('validates settings.json and creates complete defaults', () => {
   });
 });
 
+test('accepts a start-only form with no configurable sections', () => {
+  const startOnly = { schemaVersion: 1, gameId: 'fixed-task', sections: [] };
+  assert.equal(ParseGameSettingsDefinition(startOnly, 'fixed-task'), startOnly);
+  assert.deepEqual(GetGameSettingsDefaults(startOnly), {});
+  assert.deepEqual(NormalizeGameSettingsValues(startOnly, {}), {});
+});
+
 test('normalizes selected values and rejects unknown or out-of-range values', () => {
   assert.deepEqual(NormalizeGameSettingsValues(definition, {
     rounds: 20,

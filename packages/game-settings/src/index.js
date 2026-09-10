@@ -27,8 +27,8 @@ export function ParseGameSettingsDefinition(value, expectedGameId) {
   if (!IsIdentifier(value.gameId) || (expectedGameId && value.gameId !== expectedGameId)) {
     throw new TypeError('settings.json gameId is invalid.');
   }
-  if (!Array.isArray(value.sections) || value.sections.length < 1 || value.sections.length > 16) {
-    throw new TypeError('settings.json must contain between 1 and 16 sections.');
+  if (!Array.isArray(value.sections) || value.sections.length > 16) {
+    throw new TypeError('settings.json cannot contain more than 16 sections.');
   }
   const sectionIds = new Set();
   const fieldKeys = new Set();
@@ -40,7 +40,6 @@ export function ParseGameSettingsDefinition(value, expectedGameId) {
       || !IsLocalizedText(section.title)
       || ('description' in section && !IsLocalizedText(section.description))
       || !Array.isArray(section.fields)
-      || section.fields.length < 1
       || section.fields.length > 32) {
       throw new TypeError(`settings.json sections[${sectionIndex}] is invalid.`);
     }

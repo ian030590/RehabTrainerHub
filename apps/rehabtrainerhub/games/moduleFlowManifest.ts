@@ -1,12 +1,27 @@
-export const standardTrainingFlow = [
+export type TrainingFlowStep =
+  | 'card'
+  | 'config'
+  | 'rules'
+  | 'tour'
+  | 'training'
+  | 'results';
+
+export const standardTrainingFlow: readonly TrainingFlowStep[] = [
   'card',
   'config',
   'rules',
+  'tour',
   'training',
   'results',
 ] as const;
 
-export type TrainingFlowStep = (typeof standardTrainingFlow)[number];
+export const tourTrainingFlow: readonly TrainingFlowStep[] = [
+  'card',
+  'config',
+  'tour',
+  'training',
+  'results',
+] as const;
 export type TrainingMediaPermission =
   | 'none'
   | 'camera'
@@ -29,6 +44,7 @@ const manifestEntries: ReadonlyArray<readonly [
   sourcePath: string,
   mediaPermission?: TrainingMediaPermission,
   jsPsychLifecycle?: TrainingJsPsychLifecycle,
+  flow?: readonly TrainingFlowStep[],
 ]> = [
   ['motor:drawing-defense', 'drawing-defense/DrawingTowerDefenseGame.tsx', 'none', 'external-runtime-adapter'],
   ['motor:asteroid-shield', 'asteroid-shield/AsteroidShieldGame.tsx', 'camera-optional', 'external-runtime-adapter'],
@@ -43,20 +59,20 @@ const manifestEntries: ReadonlyArray<readonly [
   ['brain:ufov', 'ufov/PeripheralAttentionPage.tsx', 'none', 'native-timeline'],
   ['brain:every-ball-response', 'every-ball-response/EveryBallResponsePage.tsx', 'camera-or-microphone', 'native-timeline'],
   ['brain:minesweeper', 'minesweeper/MinesweeperGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:stroop', 'stroop/StroopGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:flanker', 'flanker/FlankerGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:go-nogo', 'go-nogo/GoNoGoGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:n-back', 'n-back/NBackGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:digit-span', 'digit-span/DigitSpanGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:spatial-span', 'spatial-span/SpatialSpanGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:stop-signal', 'stop-signal/StopSignalGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:tower-of-london', 'tower-of-london/TowerOfLondonGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:attention-network-task', 'attention-network-task/AttentionNetworkTaskGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:letter-memory', 'letter-memory/LetterMemoryGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:number-letter', 'number-letter/NumberLetterGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:antisaccade', 'antisaccade/AntisaccadeGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:keep-track', 'keep-track/KeepTrackGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:plus-minus', 'plus-minus/PlusMinusGame.tsx', 'none', 'external-runtime-adapter'],
+  ['brain:stroop', 'stroop/StroopGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:flanker', 'flanker/FlankerGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:go-nogo', 'go-nogo/GoNoGoGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:n-back', 'n-back/NBackGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:digit-span', 'digit-span/DigitSpanGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:spatial-span', 'spatial-span/SpatialSpanGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:stop-signal', 'stop-signal/StopSignalGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:tower-of-london', 'tower-of-london/TowerOfLondonGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:attention-network-task', 'attention-network-task/AttentionNetworkTaskGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:letter-memory', 'letter-memory/LetterMemoryGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:number-letter', 'number-letter/NumberLetterGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:antisaccade', 'antisaccade/AntisaccadeGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:keep-track', 'keep-track/KeepTrackGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:plus-minus', 'plus-minus/PlusMinusGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
   ['brain:reaction-time', 'reaction-time/ReactionTimeGame.ts', 'none', 'external-runtime-adapter'],
   ['brain:whack-a-mole', 'whack-a-mole/TargetClickGame.ts', 'none', 'external-runtime-adapter'],
   ['brain:memory-match', 'memory-match/MemoryMatchGame.ts', 'none', 'external-runtime-adapter'],
@@ -80,10 +96,11 @@ export const trainingModuleFlowManifest: Readonly<Record<
   sourcePath,
   mediaPermission = 'none',
   jsPsychLifecycle = 'external-runtime-adapter',
+  flow = standardTrainingFlow,
 ]) => [
   catalogId,
   {
-    flow: standardTrainingFlow,
+    flow,
     jsPsychLifecycle,
     mediaPermission,
     sourcePath,

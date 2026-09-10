@@ -1,0 +1,41 @@
+.text {
+	text-align: center;
+	font-size: 60px;
+}
+
+
+.centered-shape {
+	position:absolute;
+	top:50%;
+    left:50%;
+	transform: translate(-50%,-50%);
+}
+
+
+
+img {
+    display: block;
+    height: 10vw;
+    position:relative;
+    top:50%;
+    left:50%;
+    transform: translate(-50%,-0%);
+}
+
+
+
+.stim_left {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform: translate(-275%,-50%);
+    
+}
+
+.stim_right {
+    position:absolute;
+    top:50%;
+    left:50%;
+    margin-right:-50%;
+    transform: translate(175%,-50%);
+}
