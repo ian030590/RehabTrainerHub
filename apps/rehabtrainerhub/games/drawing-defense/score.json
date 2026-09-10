@@ -1,0 +1,62 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "drawing-defense",
+  "columns": [
+    {
+      "key": "score",
+      "label": {
+        "zh": "成功得分",
+        "en": "Success score"
+      },
+      "sources": [
+        "Enemy_Defeated"
+      ],
+      "total": "sum"
+    },
+    {
+      "key": "responseSeconds",
+      "label": {
+        "zh": "反應時間",
+        "en": "Response time"
+      },
+      "sources": [
+        "Enemy_Reaction_Time_Seconds"
+      ],
+      "unit": "s"
+    }
+  ],
+  "summary": [
+    {
+      "key": "total",
+      "label": {
+        "zh": "擊退總數",
+        "en": "Enemies defeated"
+      },
+      "sources": [
+        "Enemies_Defeated"
+      ]
+    },
+    {
+      "key": "duration",
+      "label": {
+        "zh": "總時間",
+        "en": "Duration"
+      },
+      "sources": [
+        "Total_Duration_Seconds",
+        "Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "remaining",
+      "label": {
+        "zh": "剩餘能量",
+        "en": "Remaining energy"
+      },
+      "sources": [
+        "HP_Remaining"
+      ]
+    }
+  ]
+}

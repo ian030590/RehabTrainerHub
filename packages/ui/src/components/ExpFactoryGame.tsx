@@ -1,13 +1,10 @@
 import { GetAuthUserNameFromToken } from '../auth/authClient';
-import { EndTour, IsTourActive, StartTour, type TourStep } from '../tour';
 import { FormatTestDate } from '../trainingGameUtils';
 import { useFullscreenTrainingRoot } from '../hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '../hooks/useTrainingAbort';
 import { SaveTrainingSessionRecord } from '../storage/trainingRecords';
 import { TrainingResultActions } from './TrainingResultActions';
-import { officialGameTourCompleteEvent } from './OfficialGameShell';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import '../tour/toutour.css';
 
 const legacyStartMessageType = 'rehab-expfactory:start';
 const legacyAbortMessageType = 'rehab-expfactory:abort';
@@ -47,9 +44,11 @@ export function ExpFactoryGame({ config, onExit }: {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const mountedRef = useRef(true);
   const startedRef = useRef(false);
+  const tourCompleteRef = useRef(false);
+  const legacyLoadedRef = useRef(false);
   const savedRef = useRef(false);
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot();
-  const [phase, setPhase] = useState<'tour' | 'playing' | 'results'>('tour');
+  const [phase, setPhase] = useState<'playing' | 'results'>('playing');
   const [summary, setSummary] = useState<LegacySummary | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -73,61 +72,23 @@ export function ExpFactoryGame({ config, onExit }: {
     postToLegacy(legacyStartMessageType);
   }, [enterTrainingFullscreen, postToLegacy]);
 
-  const finishTour = useCallback(() => {
-    fullscreenRootRef.current?.dispatchEvent(new Event(officialGameTourCompleteEvent, { bubbles: true }));
+  const tryBeginExperiment = useCallback(() => {
+    if (!tourCompleteRef.current || !legacyLoadedRef.current) return;
     void beginExperiment();
-  }, [beginExperiment, fullscreenRootRef]);
+  }, [beginExperiment]);
 
-  const startTour = useCallback(() => {
-    if (startedRef.current) return;
-    const getTarget = (selector: string) => () => (
-      iframeRef.current?.contentDocument?.querySelector<HTMLElement>(selector) ?? null
-    );
-    const bilingual = (copy: { zh: string; en: string }) => (
-      `<p lang="zh-TW">${EscapeHtml(copy.zh)}</p><p lang="en">${EscapeHtml(copy.en)}</p>`
-    );
-    const steps: TourStep[] = [
-      {
-        target: getTarget('.legacy-tour-goal'),
-        title: '練習目標 / Task goal',
-        text: bilingual(config.tour.goal),
-        place: 'bottom',
-      },
-      {
-        target: getTarget('.legacy-tour-stimulus'),
-        title: '畫面刺激 / Stimulus',
-        text: bilingual(config.tour.stimulus),
-        place: 'bottom',
-      },
-      {
-        target: getTarget('.legacy-tour-response'),
-        title: '作答方式 / How to respond',
-        text: bilingual(config.tour.response),
-        place: 'top',
-      },
-    ];
-    const started = StartTour(steps, {
-      allowHTML: true,
-      block: true,
-      labels: {
-        next: '下一步 / Next',
-        prev: '上一步 / Back',
-        done: '開始練習 / Start',
-        skip: '跳過導覽 / Skip tour',
-      },
-      lang: 'zh-TW',
-      storageKey: `rehab_exp_factory_tour_${config.gameId}`,
-      onEvent: (name) => {
-        if ((name === 'tour_done' || name === 'tour_skip') && mountedRef.current) {
-          finishTour();
-        }
-      },
-    });
-    if (!started) finishTour();
-  }, [config, finishTour]);
+  const handleLegacyLoad = useCallback(() => {
+    legacyLoadedRef.current = true;
+    tryBeginExperiment();
+  }, [tryBeginExperiment]);
 
   useEffect(() => {
     mountedRef.current = true;
+    const tourEventName = `rehab-trainer:game-tour-complete:${config.gameId}`;
+    const handleTourComplete = () => {
+      tourCompleteRef.current = true;
+      tryBeginExperiment();
+    };
     const handleMessage = (event: MessageEvent<unknown>) => {
       if (event.origin !== window.location.origin || event.source !== iframeRef.current?.contentWindow) return;
       if (IsLegacyErrorMessage(event.data, config.gameId)) {
@@ -161,18 +122,18 @@ export function ExpFactoryGame({ config, onExit }: {
       });
     };
     window.addEventListener('message', handleMessage);
+    window.addEventListener(tourEventName, handleTourComplete);
     return () => {
       mountedRef.current = false;
       window.removeEventListener('message', handleMessage);
-      if (IsTourActive()) EndTour(false);
+      window.removeEventListener(tourEventName, handleTourComplete);
     };
-  }, [config]);
+  }, [config, tryBeginExperiment]);
 
   return (
     <div
       ref={fullscreenRootRef}
       className="cognitive-reference-game"
-      data-official-game-tour-managed="true"
       style={{
         background: 'var(--background)',
         color: 'var(--text)',
@@ -184,7 +145,7 @@ export function ExpFactoryGame({ config, onExit }: {
         <>
           <iframe
             allow="fullscreen"
-            onLoad={startTour}
+            onLoad={handleLegacyLoad}
             ref={iframeRef}
             sandbox="allow-forms allow-same-origin allow-scripts"
             src="./legacy/index.html"
@@ -318,13 +279,4 @@ function SanitizeTrialRow(value: unknown): Record<string, unknown> {
     ))
     .slice(0, 48)
     .map(([key, entry]) => [key, typeof entry === 'string' ? entry.slice(0, 500) : entry]));
-}
-
-function EscapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

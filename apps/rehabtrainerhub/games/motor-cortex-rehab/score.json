@@ -1,0 +1,52 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "motor-cortex-rehab",
+  "columns": [
+    {
+      "key": "hold",
+      "label": {
+        "zh": "維持時間",
+        "en": "Hold duration"
+      },
+      "sources": [
+        "Hold_Seconds"
+      ],
+      "unit": "s"
+    }
+  ],
+  "summary": [
+    {
+      "key": "reps",
+      "label": {
+        "zh": "完成次數",
+        "en": "Successful repetitions"
+      },
+      "sources": [
+        "Successful_Reps"
+      ]
+    },
+    {
+      "key": "accuracy",
+      "label": {
+        "zh": "準確率",
+        "en": "Accuracy"
+      },
+      "sources": [
+        "Accuracy_Percent"
+      ],
+      "unit": "%"
+    },
+    {
+      "key": "duration",
+      "label": {
+        "zh": "總時間",
+        "en": "Duration"
+      },
+      "sources": [
+        "Total_Duration_Seconds",
+        "Duration_Seconds"
+      ],
+      "unit": "s"
+    }
+  ]
+}

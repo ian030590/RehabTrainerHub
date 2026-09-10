@@ -86,6 +86,61 @@ test('Brave renders the settings-driven config UI before mounting an official ga
   }
 });
 
+test('Brave shows shared score charts and uploads only signed-in sessions', async (context) => {
+  const uploads = [];
+  const server = createServer((request, response) => {
+    const url = new URL(request.url, 'http://127.0.0.1');
+    if (url.pathname === '/api/records' && request.method === 'POST') {
+      let body = '';
+      request.on('data', chunk => { body += chunk; });
+      request.on('end', () => {
+        uploads.push(JSON.parse(body));
+        response.writeHead(201, { 'Content-Type': 'application/json' }).end('{"ok":true}');
+      });
+      return;
+    }
+    const gameId = url.pathname.match(/^\/games\/([a-z0-9-]+)\/$/)?.[1];
+    if (gameId) {
+      void readFile(resolve(outputRoot, 'games', gameId, 'score.json'), 'utf8').then(source => {
+        const definition = JSON.parse(source);
+        const score = { schema: definition.schema, gameId,
+          rounds: [0, 1, 2].map(value => Object.fromEntries(definition.columns.map(field => [field.key, value]))),
+          summary: Object.fromEntries(definition.summary.map(field => [field.key, 3])),
+        };
+        response.writeHead(200, { 'Content-Type': 'text/html' }).end(`<script>
+          let sent = false;
+          addEventListener('message', event => {
+            if (sent || event.source !== parent || event.data.type !== 'rehab-trainer:game-settings') return;
+            sent = true;
+            const message = { type: 'rehab-trainer:game-score', sessionNonce: event.data.sessionNonce, sequence: 1, score: ${JSON.stringify(score)} };
+            parent.postMessage(message, location.origin);
+            parent.postMessage(message, location.origin);
+            parent.postMessage({ type: 'rehab-trainer:training-exit' }, location.origin);
+          });
+          parent.postMessage({ type: 'rehab-trainer:training-ready' }, location.origin);
+        </script>`);
+      }).catch(error => response.writeHead(500).end(String(error)));
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+  for (const signedIn of [false, true]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/`,
+      '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=zh', '--mockAuthUser', String(signedIn),
+      '--clickSelectors', '.official-game-card button,.game-settings-form button[type="submit"]',
+      '--allSelectors', '.training-overlay-score table,.training-overlay-score [data-slot="chart"] svg,dialog.training-overlay-score:not(:has(iframe))',
+      '--text', signedIn ? '已儲存至帳號' : '未登入，本次紀錄不會上傳', '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${result.stdout}\n${result.stderr}`);
+    assert.equal(uploads.length, signedIn ? 1 : 0);
+  }
+  assert.equal(uploads[0].runtimeId, 'hub');
+  assert.equal(uploads[0].record.score.rounds.length, 3);
+});
+
 async function ServeStaticOutput(request, response) {
   try {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1');

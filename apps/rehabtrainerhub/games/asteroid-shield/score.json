@@ -1,0 +1,62 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "asteroid-shield",
+  "columns": [
+    {
+      "key": "score",
+      "label": {
+        "zh": "累計分數",
+        "en": "Cumulative score"
+      },
+      "sources": [
+        "Score_After"
+      ],
+      "total": "last"
+    },
+    {
+      "key": "elapsed",
+      "label": {
+        "zh": "反應時間",
+        "en": "Response time"
+      },
+      "sources": [
+        "Response_Time_Seconds"
+      ],
+      "unit": "s"
+    }
+  ],
+  "summary": [
+    {
+      "key": "score",
+      "label": {
+        "zh": "總分",
+        "en": "Total score"
+      },
+      "sources": [
+        "Score"
+      ]
+    },
+    {
+      "key": "duration",
+      "label": {
+        "zh": "總時間",
+        "en": "Duration"
+      },
+      "sources": [
+        "Total_Duration_Seconds",
+        "Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "blocked",
+      "label": {
+        "zh": "阻擋次數",
+        "en": "Objects blocked"
+      },
+      "sources": [
+        "Objects_Blocked"
+      ]
+    }
+  ]
+}

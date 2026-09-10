@@ -8,6 +8,8 @@ import { HashRouter } from 'react-router-dom';
 import { EveryBallResponsePage } from './EveryBallResponsePage';
 import { dictionaries } from './i18n';
 import settings from './settings.json';
+import score from './score.json';
+import { GameTour } from './tour';
 
 InstallHostedGameSettingsReceiver();
 
@@ -17,8 +19,10 @@ if (rootElement) {
     <React.StrictMode>
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
-          <OfficialGameShell settings={settings} title={document.title}>
+          <OfficialGameShell settings={settings} score={score} title={document.title}>
+          <GameTour>
           <EveryBallResponsePage onExit={() => RequestHubTrainingConfiguration()} />
+          </GameTour>
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

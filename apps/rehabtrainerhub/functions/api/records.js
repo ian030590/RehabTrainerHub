@@ -176,6 +176,7 @@ export async function onRequestPost({ request, env }) {
   if (
     GetJsonByteLength(input) > maximumDefaultRecordRequestBytes
     && !IsBoundedOculomotorEyeTrackingRecord(input)
+    && !IsBoundedGameScoreRecord(input)
   ) {
     return ErrorResponse(request, env, 'Training record payload is too large.', 413);
   }
@@ -214,7 +215,9 @@ export async function onRequestPost({ request, env }) {
 
   const db = RequireDatabase(env);
   const payloadJson = JSON.stringify(payload.record);
-  const summaryJson = payload.runtimeId === 'vision'
+  const summaryJson = payload.record.score
+    ? JSON.stringify({ ...payload.record, score: { ...payload.record.score, rounds: [] }, scoreRoundCount: payload.record.score.rounds.length })
+    : payload.runtimeId === 'vision'
     && payload.record.moduleId === 'oculomotor-training'
     ? JSON.stringify(PrepareRecordForRead(payload.record, false))
     : null;
@@ -412,6 +415,7 @@ function NormalizeRecordPayload(input, serverTimestamp, verifiedTrainingDate) {
     || !runtimeIds.has(runtimeId)
     || !record
     || !IsSafeRecordValue(record)
+    || (record.score !== undefined && !IsBoundedGameScoreRecord(input))
   ) return null;
 
   const rawId = typeof record.id === 'string' ? record.id.trim() : '';
@@ -444,6 +448,24 @@ function IsRuntimeModuleId(runtimeId, moduleId) {
   if (runtimeId === 'hub') return true;
   return moduleId.startsWith(`${runtimeId}:`)
     || runtimeModuleIds.get(runtimeId)?.has(moduleId) === true;
+}
+
+export function IsBoundedGameScoreRecord(input) {
+  const score = input?.record?.score;
+  const metrics = (value) => IsPlainObject(value) && Object.keys(value).length <= 12
+    && Object.entries(value).every(([key, number]) => /^[a-zA-Z][a-zA-Z0-9_]{0,63}$/.test(key)
+      && !/(auth|email|jwt|name|password|token|user|participant|secret|cookie)/i.test(key)
+      && (number === null || (typeof number === 'number' && Number.isFinite(number) && Math.abs(number) <= 1e12)));
+  return input?.appId === 'rehabtrainerhub' && input?.runtimeId === 'hub'
+    && IsPlainObject(input.record)
+    && Object.keys(input.record).every(key => ['id', 'savedAt', 'userName', 'moduleId', 'gameId', 'score'].includes(key))
+    && (input.record.userName === undefined || input.record.userName === '')
+    && IsPlainObject(score) && Object.keys(score).length === 4
+    && score.schema === 'rehab-trainer.game-score/v1'
+    && typeof score.gameId === 'string' && /^[a-z0-9-]{1,80}$/.test(score.gameId)
+    && score.gameId === input.record.gameId && score.gameId === input.record.moduleId
+    && metrics(score.summary) && Array.isArray(score.rounds) && score.rounds.length <= 4000
+    && score.rounds.every(metrics) && GetJsonByteLength(score) <= 450 * 1024;
 }
 
 function NormalizeString(value, maximumLength, optional = false) {

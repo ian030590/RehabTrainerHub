@@ -56,6 +56,8 @@ test('built Hub retains 40 independent game directories and no public trainer ru
     const builtSettings = await readFile(resolve(outputGameDirectory, 'settings.json'));
     assert.deepEqual(builtSettings, sourceSettings, `${gameId} settings.json must be copied byte-for-byte.`);
     ParseGameSettingsDefinition(JSON.parse(builtSettings.toString('utf8')), gameId);
+    assert.deepEqual(await readFile(resolve(outputGameDirectory, 'score.json')),
+      await readFile(resolve(sourceDirectory, 'score.json')), `${gameId} score.json must be copied byte-for-byte.`);
 
     const manifest = JSON.parse(await readFile(resolve(outputGameDirectory, 'manifest.webmanifest'), 'utf8'));
     const basePath = `/games/${gameId}/`;

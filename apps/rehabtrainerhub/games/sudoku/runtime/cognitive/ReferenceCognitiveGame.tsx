@@ -123,15 +123,12 @@ export function ReferenceCognitiveGame({ gameId, onExit, trainingModuleId = 'thi
         jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
         setResult(record);
         setPhase('results');
-        void SaveTrainingSessionRecord({ userName: GetAuthUserNameFromToken() || 'Guest', moduleId: 'sudoku', gameId: 'sudoku', gameTitle: metaTitle, difficulty: 'configured', trainingDate: FormatTestDate(new Date()), details: { userName: participantId,
-moduleId: trainingModuleId,
-trainingDate,
-details: {
+        void SaveTrainingSessionRecord({ userName: participantId, moduleId: trainingModuleId, gameId: 'sudoku', gameTitle: metaTitle, difficulty: 'configured', trainingDate, details: {
                 Game_Result: record.Game_Result,
                 Total_Duration_Seconds: record.Total_Duration_Seconds,
                 ...timingData.details,
             },
-detailRows: timingData.detailRows } });
+detailRows: timingData.detailRows });
     }, [difficulty, gameId, metaTitle, setPhase, trainingModuleId]);
     finishGameRef.current = finishGame;
     const startGame = useCallback(async () => {

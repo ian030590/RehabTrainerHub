@@ -7,6 +7,8 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { dictionaries } from './i18n';
 import settings from './settings.json';
+import score from './score.json';
+import { GameTour } from './tour';
 import { StopSignalGame } from './StopSignalGame';
 
 InstallHostedGameSettingsReceiver();
@@ -17,8 +19,10 @@ if (rootElement) {
     <React.StrictMode>
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
-          <OfficialGameShell settings={settings} title={document.title}>
+          <OfficialGameShell settings={settings} score={score} title={document.title}>
+          <GameTour>
           <StopSignalGame onExit={() => RequestHubTrainingConfiguration()} />
+          </GameTour>
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

@@ -9,6 +9,8 @@ import { DrivingRehabGame } from './DrivingRehabGame';
 import { DrivingWheelSetup } from './input/DrivingWheelSetup';
 import { dictionaries } from './i18n';
 import settings from './settings.json';
+import score from './score.json';
+import { GameTour } from './tour';
 
 InstallHostedGameSettingsReceiver();
 
@@ -18,8 +20,10 @@ if (rootElement) {
     <React.StrictMode>
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
-          <OfficialGameShell settings={settings} title={document.title}>
+          <OfficialGameShell settings={settings} score={score} title={document.title}>
+          <GameTour>
           <DrivingWheelSetup><DrivingRehabGame /></DrivingWheelSetup>
+          </GameTour>
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

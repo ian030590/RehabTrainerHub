@@ -196,7 +196,7 @@ test('both official and developer overlays configure before mounting their ifram
   assert.match(officialOverlay, /fetch\(BuildTrainingModuleSettingsHref\(module\)/);
   assert.match(officialOverlay, /ParseGameSettingsDefinition\(await response\.json\(\), module\.runtimeId\)/);
   assert.match(officialOverlay, /\{!configuredSettings && definition && \([\s\S]*?<GameSettingsForm/);
-  assert.match(officialOverlay, /\{configuredSettings && \([\s\S]*?<iframe/);
+  assert.match(officialOverlay, /\{configuredSettings && !score && \([\s\S]*?<iframe/);
   assert.match(officialOverlay, /CreateHubGameSettingsMessage\(module\.runtimeId, sessionNonce, configuredSettings\)/);
   assert.match(officialOverlay, /IsHubTrainingConfigureMessage\(event\.data\)/);
   assert.match(officialOverlay, /setConfiguredSettings\(null\)/);
@@ -216,7 +216,9 @@ test('all official games install the verified settings receiver', async () => {
   for (const gameId of expectedOfficialGameIds) {
     const main = await readFile(resolve(gamesRoot, gameId, 'main.tsx'), 'utf8');
     assert.match(main, /InstallHostedGameSettingsReceiver\(\)/);
-    assert.match(main, /<OfficialGameShell settings=\{settings\}/);
+    assert.match(main, /<OfficialGameShell settings=\{settings\} score=\{score\}/);
+    assert.match(main, /from ['"]\.\/score\.json['"]/);
+    await access(resolve(gamesRoot, gameId, 'score.json'));
     assert.match(main, /<LanguageProvider dictionaries=\{dictionaries\}/);
     assert.match(main, /from ['"]\.\/settings\.json['"]/);
     await access(resolve(gamesRoot, gameId, 'i18n/zh.ts'));
@@ -224,22 +226,10 @@ test('all official games install the verified settings receiver', async () => {
   }
 });
 
-test('all present and future official games inherit a blocking Toutour guide', async () => {
+test('every official game owns its gameplay-specific Toutour file', async () => {
   const shell = await ReadUi('components/OfficialGameShell.tsx');
-  for (const token of [
-    'StartTour(steps',
-    'block: true',
-    'data-official-game-tour=',
-    'inert={!tourComplete || undefined}',
-    'officialGameTourCompleteEvent',
-  ]) {
-    assert.ok(shell.includes(token), `OfficialGameShell is missing the Toutour gate "${token}".`);
-  }
-
-  const expFactoryGame = await ReadUi('components/ExpFactoryGame.tsx');
-  assert.match(expFactoryGame, /data-official-game-tour-managed="true"/);
-  assert.match(expFactoryGame, /dispatchEvent\(new Event\(officialGameTourCompleteEvent/);
-  assert.match(expFactoryGame, /StartTour\(steps/);
+  assert.doesNotMatch(shell, /StartTour|Toutour|officialGameTourCompleteEvent/);
+  await assert.rejects(access(resolve(repositoryRoot, 'packages/ui/src/components/TourGate.tsx')));
 
   const manifest = await readFile(resolve(gamesRoot, 'moduleFlowManifest.ts'), 'utf8');
   assert.match(manifest, /standardTrainingFlow[\s\S]*?'rules',[\s\S]*?'tour',[\s\S]*?'training'/);
@@ -247,7 +237,14 @@ test('all present and future official games inherit a blocking Toutour guide', a
 
   for (const gameId of expectedOfficialGameIds) {
     const main = await readFile(resolve(gamesRoot, gameId, 'main.tsx'), 'utf8');
-    assert.match(main, /<OfficialGameShell settings=\{settings\}/, `${gameId} must inherit the shared Toutour gate.`);
+    const tour = await readFile(resolve(gamesRoot, gameId, 'tour.tsx'), 'utf8');
+    assert.match(main, /from ['"]\.\/tour['"]/, `${gameId} must import its local Toutour.`);
+    assert.match(main, /<GameTour>/, `${gameId} must mount its local Toutour before the game.`);
+    assert.match(tour, new RegExp(`data-game-tour=\\"${gameId}\\"`));
+    assert.match(tour, /StartTour\(steps/);
+    assert.match(tour, /inert={!complete \|\| undefined}/);
+    assert.doesNotMatch(tour, /TourGate/);
+    assert.match(tour, /goal:|stimulus:|response:/);
   }
 });
 

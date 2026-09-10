@@ -1,0 +1,57 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "simon-says",
+  "columns": [
+    {
+      "key": "score",
+      "label": {
+        "zh": "正確得分",
+        "en": "Correct score"
+      },
+      "sources": [
+        "correct",
+        "Correct"
+      ],
+      "total": "sum"
+    },
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "反應時間",
+        "en": "Response time"
+      },
+      "sources": [
+        "rt",
+        "Reaction_Time_ms",
+        "Response_Time_ms",
+        "reactionTimeMs",
+        "durationMs"
+      ],
+      "unit": "ms"
+    }
+  ],
+  "summary": [
+    {
+      "key": "duration",
+      "label": {
+        "zh": "總時間",
+        "en": "Duration"
+      },
+      "sources": [
+        "Total_Duration_Seconds",
+        "Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "total",
+      "label": {
+        "zh": "正確回合數",
+        "en": "Correct rounds"
+      },
+      "sources": [
+        "Simon_Correct_Trials"
+      ]
+    }
+  ]
+}

@@ -1,4 +1,34 @@
+import { BuildGameScore, IsGameScore, ParseGameScoreDefinition, type GameScore, type GameScoreDefinition } from './gameScore';
+export { IsGameScore, ParseGameScoreDefinition } from './gameScore';
+export type { GameScore, GameScoreDefinition } from './gameScore';
+
 export const hubTrainingCompleteMessageType = 'rehab-trainer:training-complete' as const;
+export const hubGameScoreMessageType = 'rehab-trainer:game-score' as const;
+let hostedSessionNonce: string | null = null;
+let scoreSequence = 0;
+let scoreDefinition: GameScoreDefinition | null = null;
+
+export function IsHubGameScoreMessage(value: unknown, definition: GameScoreDefinition, sessionNonce: string): value is {
+  type: typeof hubGameScoreMessageType; sessionNonce: string; sequence: number; score: GameScore;
+} {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const message = value as Record<string, unknown>;
+  return Object.keys(message).length === 4 && message.type === hubGameScoreMessageType
+    && message.sessionNonce === sessionNonce && message.sequence === 1 && IsGameScore(message.score, definition);
+}
+
+export function SetGameScoreDefinition(value: unknown, gameId: string): void {
+  scoreDefinition = ParseGameScoreDefinition(value, gameId);
+}
+
+export function SendHostedGameScore(record: Parameters<typeof BuildGameScore>[1]): boolean {
+  const origin = GetEmbeddedHubOrigin();
+  if (!origin) return false;
+  if (!scoreDefinition || !hostedSessionNonce) throw new Error('Game score contract is not ready.');
+  const score = BuildGameScore(scoreDefinition, record);
+  window.parent.postMessage({ type: hubGameScoreMessageType, sessionNonce: hostedSessionNonce, sequence: ++scoreSequence, score }, origin);
+  return true;
+}
 export const hubTrainingActiveMessageType = 'rehab-trainer:training-active' as const;
 export const hubTrainingExitMessageType = 'rehab-trainer:training-exit' as const;
 export const hubTrainingReadyMessageType = 'rehab-trainer:training-ready' as const;
@@ -111,6 +141,8 @@ export function InstallHostedGameSettingsReceiver(): () => void {
       || event.origin !== expectedOrigin
       || event.source !== window.parent
       || !IsHubGameSettingsMessage(event.data, expectedGameId)) return;
+    if (hostedSessionNonce !== event.data.sessionNonce) scoreSequence = 0;
+    hostedSessionNonce = event.data.sessionNonce;
     hostedGameSettings = Object.freeze({ ...event.data.settings });
     window.dispatchEvent(new CustomEvent('rehab-trainer:game-settings-ready', {
       detail: hostedGameSettings,

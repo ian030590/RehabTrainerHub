@@ -7,7 +7,10 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { dictionaries } from './i18n';
 import { PeripheralAttentionPage } from './PeripheralAttentionPage';
+import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
 import settings from './settings.json';
+import score from './score.json';
+import { GameTour } from './tour';
 
 InstallHostedGameSettingsReceiver();
 
@@ -15,6 +18,7 @@ function UfovGame() {
   const { lang } = useT();
   return <PeripheralAttentionPage
     appName="UFOV" backPath="/" lang={lang} moduleId="ufov" autoStart
+    onSaveRecord={SaveTrainingRecord}
     initialSubtestId={GetHostedGameSetting<1 | 2 | 3>('subtestId')}
     initialMode={GetHostedGameSetting<'instruction' | 'practice' | 'formal'>('mode')}
     trialCount={GetHostedGameSetting<number>('trialCount')}
@@ -35,8 +39,10 @@ if (rootElement) {
     <React.StrictMode>
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
-          <OfficialGameShell settings={settings} title={document.title}>
+          <OfficialGameShell settings={settings} score={score} title={document.title}>
+          <GameTour>
           <UfovGame />
+          </GameTour>
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

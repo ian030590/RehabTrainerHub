@@ -1,0 +1,31 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "dots-and-boxes",
+  "columns": [
+    {
+      "key": "duration",
+      "label": {
+        "zh": "本局時間",
+        "en": "Round duration"
+      },
+      "sources": [
+        "Total_Duration_Seconds"
+      ],
+      "unit": "s"
+    }
+  ],
+  "summary": [
+    {
+      "key": "duration",
+      "label": {
+        "zh": "總時間",
+        "en": "Duration"
+      },
+      "sources": [
+        "Total_Duration_Seconds",
+        "Duration_Seconds"
+      ],
+      "unit": "s"
+    }
+  ]
+}

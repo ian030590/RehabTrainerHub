@@ -56,6 +56,8 @@ Hub 禁止複製/分叉 trainer 設定表單、defaults、validation、rules、r
 
 ### 訓練 Overlay 流程
 
+內建遊戲另擁有 `score.json`（`rehab-trainer.game-score/v1`），宣告逐回合數值欄位與總計欄位。Hub 驗證 origin/source、設定 sessionNonce、完成 sequence 及分數 schema 後，卸載遊戲並以共用 `training-overlay-score` 顯示表格、圖表與統計；登入時由 Hub 經 `/api/records` 寫入 D1，訪客不上傳。遊戲嵌入 Hub 時不得自行重複寫入紀錄。詳見 `docs/game-score-contract.md`；新增遊戲須同時提供 settings.json 與 score.json。分数契約測試沿用 `test:embedded-training`，後端測試沿用 `test:hub-functions`，輸出檢查須核對兩份 JSON。
+
 Hub 大廳與 Hub 內建 runtime 使用同一份 module-owned config/runtime：
 
 - Hub 點「開始訓練」：只在訓練大廳上生成 trainer config overlay；背景不切換、不導向 trainer 網站。

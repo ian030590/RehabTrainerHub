@@ -1,0 +1,51 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "tongue-catch",
+  "columns": [
+    {
+      "key": "score",
+      "label": {
+        "zh": "接住得分",
+        "en": "Catch score"
+      },
+      "sources": [
+        "Apple_Caught"
+      ],
+      "total": "sum"
+    }
+  ],
+  "summary": [
+    {
+      "key": "score",
+      "label": {
+        "zh": "總分",
+        "en": "Total score"
+      },
+      "sources": [
+        "Score"
+      ]
+    },
+    {
+      "key": "duration",
+      "label": {
+        "zh": "總時間",
+        "en": "Duration"
+      },
+      "sources": [
+        "Total_Duration_Seconds",
+        "Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "missed",
+      "label": {
+        "zh": "錯過次數",
+        "en": "Missed"
+      },
+      "sources": [
+        "Missed"
+      ]
+    }
+  ]
+}

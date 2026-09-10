@@ -1,0 +1,64 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "oculomotor-training",
+  "columns": [
+    {
+      "key": "targets",
+      "label": {
+        "zh": "觸及目標數",
+        "en": "Targets reached"
+      },
+      "sources": [
+        "acquired_targets"
+      ]
+    },
+    {
+      "key": "durationMs",
+      "label": {
+        "zh": "回合時間",
+        "en": "Round duration"
+      },
+      "sources": [
+        "duration_ms"
+      ],
+      "unit": "ms"
+    }
+  ],
+  "summary": [
+    {
+      "key": "total",
+      "label": {
+        "zh": "總分",
+        "en": "Total score"
+      },
+      "sources": [
+        "Score",
+        "Correct_Trials",
+        "Correct_Count"
+      ]
+    },
+    {
+      "key": "accuracy",
+      "label": {
+        "zh": "正確率",
+        "en": "Accuracy"
+      },
+      "sources": [
+        "Accuracy_Percent"
+      ],
+      "unit": "%"
+    },
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "平均反應時間",
+        "en": "Mean response time"
+      },
+      "sources": [
+        "Mean_RT_Ms",
+        "Average_RT_ms"
+      ],
+      "unit": "ms"
+    }
+  ]
+}

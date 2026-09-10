@@ -104,7 +104,7 @@ function IsReactComponentVariable(node) {
     : ts.isPropertyAccessExpression(callee)
       ? callee.name.text
       : '';
-  return ['forwardRef', 'lazy', 'memo'].includes(calleeName);
+  return ['forwardRef', 'lazy', 'memo', 'dynamic'].includes(calleeName);
 }
 
 function UnwrapExpression(node) {

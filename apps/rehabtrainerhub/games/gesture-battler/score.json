@@ -1,0 +1,62 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "gesture-battler",
+  "columns": [
+    {
+      "key": "score",
+      "label": {
+        "zh": "得分",
+        "en": "Score"
+      },
+      "sources": [
+        "Score"
+      ],
+      "total": "sum"
+    },
+    {
+      "key": "similarity",
+      "label": {
+        "zh": "手勢相似度",
+        "en": "Gesture similarity"
+      },
+      "sources": [
+        "Similarity_Percent"
+      ],
+      "unit": "%"
+    }
+  ],
+  "summary": [
+    {
+      "key": "total",
+      "label": {
+        "zh": "成功總次數",
+        "en": "Total successful casts"
+      },
+      "sources": [
+        "Successful_Casts"
+      ]
+    },
+    {
+      "key": "duration",
+      "label": {
+        "zh": "總時間",
+        "en": "Duration"
+      },
+      "sources": [
+        "Total_Duration_Seconds",
+        "Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "interruptions",
+      "label": {
+        "zh": "中斷次數",
+        "en": "Interrupted holds"
+      },
+      "sources": [
+        "Interrupted_Holds"
+      ]
+    }
+  ]
+}

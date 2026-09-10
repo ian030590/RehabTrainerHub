@@ -1,0 +1,70 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "reading-training",
+  "columns": [
+    {
+      "key": "score",
+      "label": {
+        "zh": "正確得分",
+        "en": "Correct score"
+      },
+      "sources": [
+        "correct",
+        "Correct"
+      ],
+      "total": "sum"
+    },
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "反應時間",
+        "en": "Response time"
+      },
+      "sources": [
+        "rt",
+        "Reaction_Time_ms",
+        "Response_Time_ms",
+        "reactionTimeMs",
+        "durationMs"
+      ],
+      "unit": "ms"
+    }
+  ],
+  "summary": [
+    {
+      "key": "total",
+      "label": {
+        "zh": "總分",
+        "en": "Total score"
+      },
+      "sources": [
+        "Score",
+        "Correct_Trials",
+        "Correct_Count"
+      ]
+    },
+    {
+      "key": "accuracy",
+      "label": {
+        "zh": "正確率",
+        "en": "Accuracy"
+      },
+      "sources": [
+        "Accuracy_Percent"
+      ],
+      "unit": "%"
+    },
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "平均反應時間",
+        "en": "Mean response time"
+      },
+      "sources": [
+        "Mean_RT_Ms",
+        "Average_RT_ms"
+      ],
+      "unit": "ms"
+    }
+  ]
+}

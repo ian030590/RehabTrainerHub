@@ -365,7 +365,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                 Successful_Casts: session.Successful_Casts,
                 Interrupted_Holds: session.Interrupted_Holds,
             },
-            detailRows: gestureStats.map((stat) => ({ ...stat })),
+            detailRows: metrics.casts.map((cast) => ({ ...cast, Score: 1 })),
         });
     }, [setPhase, stopVision, t]);
     const triggerAttack = useCallback(async (gesture: GestureId, similarity: number) => {

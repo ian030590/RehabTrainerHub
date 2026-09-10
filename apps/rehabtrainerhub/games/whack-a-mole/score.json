@@ -1,0 +1,58 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "whack-a-mole",
+  "columns": [
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "反應時間",
+        "en": "Response time"
+      },
+      "sources": [
+        "rt",
+        "Reaction_Time_ms",
+        "Response_Time_ms",
+        "reactionTimeMs",
+        "durationMs"
+      ],
+      "unit": "ms"
+    }
+  ],
+  "summary": [
+    {
+      "key": "duration",
+      "label": {
+        "zh": "總時間",
+        "en": "Duration"
+      },
+      "sources": [
+        "Total_Duration_Seconds",
+        "Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "平均反應時間",
+        "en": "Mean response time"
+      },
+      "sources": [
+        "Average_Reaction_Time_ms",
+        "Average_Target_Click_Reaction_Time_ms"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "total",
+      "label": {
+        "zh": "成功次數",
+        "en": "Successful responses"
+      },
+      "sources": [
+        "Reaction_Successes",
+        "Target_Click_Hits"
+      ]
+    }
+  ]
+}

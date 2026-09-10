@@ -37,8 +37,11 @@ for (const [gameId, [commit, expectedHash]] of Object.entries(sources)) {
   const gameSourceFile = readdirSync(root).find((name) => name.endsWith('Game.tsx'));
   assert.ok(gameSourceFile, `${gameId}: game entry is missing.`);
   const gameSource = readFileSync(resolve(root, gameSourceFile), 'utf8');
+  const tourSource = readFileSync(resolve(root, 'tour.tsx'), 'utf8');
   assert.ok(gameSource.includes(`sourceCommit: '${commit}'`), `${gameId}: source commit is stale.`);
   assert.ok(gameSource.includes('ExpFactoryGame'), `${gameId}: shared original-experiment shell is missing.`);
+  assert.ok(tourSource.includes('StartTour(steps'), `${gameId}: local Toutour is missing.`);
+  assert.ok(tourSource.includes("name === 'tour_done' || name === 'tour_skip'"), `${gameId}: local Toutour completion is missing.`);
   assert.ok(!gameSource.includes("('rules')"), `${gameId}: pre-game rules page returned.`);
 
   const settings = JSON.parse(readFileSync(resolve(root, 'settings.json'), 'utf8'));
@@ -69,14 +72,13 @@ for (const [gameId, [commit, expectedHash]] of Object.entries(sources)) {
 
 const shellSource = readFileSync(resolve(repoRoot, 'packages/ui/src/components/ExpFactoryGame.tsx'), 'utf8');
 for (const token of [
-  'StartTour(steps',
-  "name === 'tour_done' || name === 'tour_skip'",
   'void beginExperiment()',
   "postToLegacy(legacyStartMessageType)",
   'event.origin !== window.location.origin',
 ]) {
   assert.ok(shellSource.includes(token), `ExpFactory shell is missing ${token}.`);
 }
+assert.ok(!shellSource.includes('StartTour(steps'), 'ExpFactory shell must not own a generic Toutour.');
 
 const tourStyles = readFileSync(resolve(repoRoot, 'packages/ui/src/tour/toutour.css'), 'utf8');
 assert.ok(!/(?:linear|radial)-gradient|neon/i.test(tourStyles.replace(/\/\*[\s\S]*?\*\//g, '')), 'Toutour styles must stay free of gradients and neon effects.');

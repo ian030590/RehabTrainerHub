@@ -9,9 +9,38 @@ const resultActionsSource = await readFile(
   new URL('../packages/ui/src/components/TrainingResultActions.tsx', import.meta.url),
   'utf8',
 );
-const embeddedCode = ts.transpileModule(embeddedSource, { compilerOptions }).outputText;
+const scoreSource = await readFile(new URL('../packages/ui/src/gameScore.ts', import.meta.url), 'utf8');
+const scoreUrl = `data:text/javascript;base64,${Buffer.from(ts.transpileModule(scoreSource, { compilerOptions }).outputText).toString('base64')}`;
+const gameScore = await import(scoreUrl);
+const embeddedCode = ts.transpileModule(embeddedSource, { compilerOptions }).outputText.replaceAll("'./gameScore'", JSON.stringify(scoreUrl));
 const embeddedUrl = `data:text/javascript;base64,${Buffer.from(embeddedCode).toString('base64')}`;
 const embeddedTraining = await import(embeddedUrl);
+
+test('all 40 score contracts accept bounded numeric rounds and reject unsafe data', async () => {
+  const { readdir } = await import('node:fs/promises');
+  const root = new URL('../apps/rehabtrainerhub/games/', import.meta.url);
+  const games = (await readdir(root, { withFileTypes: true })).filter(entry => entry.isDirectory());
+  assert.equal(games.length, 40);
+  for (const game of games) {
+    const definition = gameScore.ParseGameScoreDefinition(JSON.parse(await readFile(new URL(`${game.name}/score.json`, root), 'utf8')), game.name);
+    const row = Object.fromEntries(definition.columns.map((field, index) => [field.sources[0], index === 0 ? 0 : 12]));
+    const score = gameScore.BuildGameScore(definition, { detailRows: [row, { ...row, userName: 'private' }], details: {} });
+    assert.equal(score.rounds.length, 2, game.name);
+    assert.equal(score.rounds[0][definition.columns[0].key], 0);
+    assert.equal(gameScore.IsGameScore(score, definition), true);
+    const message = { type: embeddedTraining.hubGameScoreMessageType, sessionNonce: 'a'.repeat(64), sequence: 1, score };
+    assert.equal(embeddedTraining.IsHubGameScoreMessage(message, definition, message.sessionNonce), true);
+    assert.equal(embeddedTraining.IsHubGameScoreMessage(message, definition, 'b'.repeat(64)), false);
+    assert.equal(embeddedTraining.IsHubGameScoreMessage({ ...message, sequence: 2 }, definition, message.sessionNonce), false);
+    assert.equal(embeddedTraining.IsHubGameScoreMessage({ ...message, extra: 1 }, definition, message.sessionNonce), false);
+    assert.equal(JSON.stringify(score).includes('private'), false);
+    assert.equal(gameScore.IsGameScore({ ...score, gameId: 'wrong-game' }, definition), false);
+    assert.equal(gameScore.IsGameScore({ ...score, rounds: [{ ...score.rounds[0], authToken: 1 }] }, definition), false);
+    assert.equal(gameScore.IsGameScore({ ...score, rounds: [{ ...score.rounds[0], [definition.columns[0].key]: Infinity }] }, definition), false);
+    assert.equal(gameScore.IsGameScore({ ...score, rounds: Array(4001).fill(score.rounds[0]) }, definition), false);
+    assert.throws(() => gameScore.ParseGameScoreDefinition({ ...definition, columns: [{ ...definition.columns[0], key: 'userName' }] }));
+  }
+});
 
 test('only canonical Hub, previews, and local development are trusted Hub origins', () => {
   assert.equal(embeddedTraining.IsHubOrigin('https://trainerhub.cc/train/'), true);

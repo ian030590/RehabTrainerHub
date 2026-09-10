@@ -21,12 +21,22 @@ import {
   IsHubTrainingExitMessage,
   IsHubTrainingReadyMessage,
   IsTrustedTrainingFrameMessage,
+  hubGameScoreMessageType,
+  IsHubGameScoreMessage,
+  ParseGameScoreDefinition,
+  type GameScore,
+  type GameScoreDefinition,
 } from '@rehab-trainer/ui/embeddedTraining';
+import { HasAuthToken, SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
+import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
+import dynamic from 'next/dynamic';
 import { Button } from '../components/ui/button';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { BuildTrainingThemeStyle } from '../trainingThemeStyle';
 import { GameSettingsForm } from './GameSettingsForm';
+
+const TrainingScore = dynamic(() => import('@rehab-trainer/ui/components/TrainingScore').then(module => module.TrainingScore));
 
 interface TrainingOverlayProps {
   module: TrainingCatalogModule;
@@ -37,6 +47,12 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [definition, setDefinition] = useState<GameSettingsDefinition | null>(null);
+  const [scoreDefinition, setScoreDefinition] = useState<GameScoreDefinition | null>(null);
+  const [score, setScore] = useState<GameScore | null>(null);
+  const acceptedScore = useRef(false);
+  const scoreRecordId = useRef(crypto.randomUUID());
+  const savingRef = useRef(false);
+  const [saveState, setSaveState] = useState<'guest' | 'saving' | 'saved' | 'error'>('guest');
   const [settingsError, setSettingsError] = useState(false);
   const [settingsRequestKey, setSettingsRequestKey] = useState(0);
   const [configuredSettings, setConfiguredSettings] = useState<GameSettingsValues | null>(null);
@@ -47,6 +63,24 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const [sessionNonce] = useState(CreateSessionNonce);
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).embeddedTraining;
+
+  const saveScore = useCallback(async (result: GameScore) => {
+    if (savingRef.current) return;
+    if (!HasAuthToken()) { setSaveState('guest'); return; }
+    savingRef.current = true;
+    setSaveState('saving');
+    try {
+      const saved = await SaveRemoteTrainingRecord(window.location.origin, {
+        appId: 'rehabtrainerhub', runtimeId: 'hub', record: {
+          id: scoreRecordId.current, savedAt: new Date().toISOString(), userName: '',
+          moduleId: module.runtimeId, gameId: module.runtimeId,
+          score: result,
+        },
+      });
+      setSaveState(saved ? 'saved' : 'error');
+    } catch { setSaveState('error'); }
+    finally { savingRef.current = false; }
+  }, [module.runtimeId]);
 
   const closeOverlay = useCallback(() => {
     const dialog = dialogRef.current;
@@ -82,6 +116,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   useEffect(() => {
     const controller = new AbortController();
     setDefinition(null);
+    setScoreDefinition(null);
     setSettingsError(false);
     void fetch(BuildTrainingModuleSettingsHref(module), {
       cache: 'no-store',
@@ -92,7 +127,16 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         if (!response.ok) throw new Error(`Unable to load settings.json (${response.status}).`);
         return ParseGameSettingsDefinition(await response.json(), module.runtimeId);
       })
-      .then(setDefinition)
+      .then(async (settings) => {
+        const response = await fetch(BuildTrainingModuleSettingsHref(module).replace(/settings\.json$/, 'score.json'), {
+          cache: 'no-store', credentials: 'same-origin', signal: controller.signal,
+        });
+        if (!response.ok) throw new Error('Unable to load score.json.');
+        const scoreSettings = ParseGameScoreDefinition(await response.json(), module.runtimeId);
+        if (controller.signal.aborted) return;
+        setScoreDefinition(scoreSettings);
+        setDefinition(settings);
+      })
       .catch(() => {
         if (!controller.signal.aborted) setSettingsError(true);
       });
@@ -115,6 +159,18 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         frameRef.current?.contentWindow ?? null,
       )) return;
 
+      const message = event.data as { type?: unknown; sessionNonce?: unknown; sequence?: unknown; score?: unknown } | null;
+      if (message?.type === hubGameScoreMessageType) {
+        if (acceptedScore.current || !scoreDefinition || !IsHubGameScoreMessage(message, scoreDefinition, sessionNonce)) return;
+        acceptedScore.current = true;
+        setIsTrainingActive(false);
+        setIsTrainingComplete(true);
+        setScore(message.score);
+        void ExitFullscreenIfActive();
+        void saveScore(message.score);
+        return;
+      }
+      if (acceptedScore.current) return;
       if (IsHubTrainingActiveMessage(event.data)) {
         setIsTrainingActive(event.data.active);
       } else if (IsHubTrainingCompleteMessage(event.data)) {
@@ -135,7 +191,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [closeOverlay, configuredSettings, sendSettingsToFrame, sourceOrigin]);
+  }, [closeOverlay, configuredSettings, sendSettingsToFrame, sourceOrigin, scoreDefinition, sessionNonce, saveScore]);
 
   useEffect(() => {
     if (!isLoaded || isReady || !configuredSettings) return;
@@ -171,7 +227,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   return (
     <dialog
       aria-label={moduleCopy.title}
-      className={`training-overlay ${configuredSettings || isTrainingActive || isTrainingComplete
+      className={`training-overlay ${score ? 'training-overlay-score' : configuredSettings || isTrainingActive || isTrainingComplete
         ? 'training-overlay-runtime'
         : 'training-overlay-config'}`}
       onClick={handleDialogClick}
@@ -207,7 +263,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
                 <p className="mt-2 mb-0 text-[var(--text-muted)]">
                   {language === 'en'
                     ? 'The game settings file is missing or invalid.'
-                    : '遊戲的 settings.json 不存在或格式不正確。'}
+                    : '遊戲的 settings.json 或 score.json 不存在或格式不正確。'}
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-2">
@@ -223,7 +279,10 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         </div>
       )}
 
-      {configuredSettings && (
+      {score && scoreDefinition && <TrainingScore score={score} definition={scoreDefinition} title={moduleCopy.title}
+        language={language} onClose={closeOverlay} saveState={saveState} onRetry={() => void saveScore(score)} />}
+
+      {configuredSettings && !score && (
         <div className={`embedded-training-frame ${isReady ? 'is-ready' : ''}`}>
           <div
             aria-label={copy.loading}

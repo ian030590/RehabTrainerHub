@@ -85,6 +85,7 @@ for (const game of catalogGames) {
     .map((filePath) => `${basePath}${relative(shellDirectory, filePath).replaceAll('\\', '/')}`)
     .sort();
   const settingsSource = await readFile(resolve(sourceGamesDirectory, game.id, 'settings.json'), 'utf8');
+  const scoreSource = await readFile(resolve(sourceGamesDirectory, game.id, 'score.json'), 'utf8');
   ParseGameSettingsDefinition(JSON.parse(settingsSource), game.id);
   const description = `${game.title}的單一遊戲安裝入口；結果僅為當次練習紀錄。`;
   const manifest = {
@@ -104,6 +105,7 @@ for (const game of catalogGames) {
     writeFile(resolve(gameDirectory, 'index.html'), html),
     writeFile(resolve(gameDirectory, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`),
     writeFile(resolve(gameDirectory, 'settings.json'), settingsSource),
+    writeFile(resolve(gameDirectory, 'score.json'), scoreSource),
     writeFile(resolve(gameDirectory, 'sw.js'), serviceWorker),
   ]);
   emittedGameCount += 1;
