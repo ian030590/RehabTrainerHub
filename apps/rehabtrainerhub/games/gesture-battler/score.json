@@ -3,59 +3,109 @@
   "gameId": "gesture-battler",
   "columns": [
     {
-      "key": "score",
+      "key": "cast",
       "label": {
-        "zh": "得分",
-        "en": "Score"
+        "zh": "完成維持序號",
+        "en": "Completed hold index"
       },
       "sources": [
-        "Score"
-      ],
-      "total": "sum"
+        "Cast_Number"
+      ]
+    },
+    {
+      "key": "gesture",
+      "label": {
+        "zh": "手勢編碼（1–5）",
+        "en": "Gesture code (1–5)"
+      },
+      "sources": [
+        "Gesture"
+      ]
+    },
+    {
+      "key": "targetGesture",
+      "label": {
+        "zh": "指定手勢編碼",
+        "en": "Target gesture code"
+      },
+      "sources": [
+        "Target_Gesture"
+      ]
     },
     {
       "key": "similarity",
       "label": {
-        "zh": "手勢相似度",
-        "en": "Gesture similarity"
+        "zh": "辨識相似度",
+        "en": "Recognition similarity"
       },
       "sources": [
         "Similarity_Percent"
       ],
       "unit": "%"
+    },
+    {
+      "key": "castAt",
+      "label": {
+        "zh": "完成時活動經過時間",
+        "en": "Elapsed time at completion"
+      },
+      "sources": [
+        "Cast_Time_Seconds"
+      ],
+      "unit": "s"
     }
   ],
   "summary": [
     {
-      "key": "total",
+      "key": "duration",
       "label": {
-        "zh": "成功總次數",
-        "en": "Total successful casts"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
+      },
+      "sources": [
+        "Total_Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "completed",
+      "label": {
+        "zh": "完成維持數",
+        "en": "Completed holds"
       },
       "sources": [
         "Successful_Casts"
       ]
     },
     {
-      "key": "duration",
+      "key": "interrupted",
       "label": {
-        "zh": "總時間",
-        "en": "Duration"
-      },
-      "sources": [
-        "Total_Duration_Seconds",
-        "Duration_Seconds"
-      ],
-      "unit": "s"
-    },
-    {
-      "key": "interruptions",
-      "label": {
-        "zh": "中斷次數",
+        "zh": "中斷維持數",
         "en": "Interrupted holds"
       },
       "sources": [
         "Interrupted_Holds"
+      ]
+    },
+    {
+      "key": "holdSeconds",
+      "label": {
+        "zh": "要求維持時間",
+        "en": "Required hold time"
+      },
+      "sources": [
+        "Hold_Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "threshold",
+      "label": {
+        "zh": "辨識門檻（0–1）",
+        "en": "Recognition threshold (0–1)"
+      },
+      "sources": [
+        "Strictness_Threshold"
       ]
     }
   ]

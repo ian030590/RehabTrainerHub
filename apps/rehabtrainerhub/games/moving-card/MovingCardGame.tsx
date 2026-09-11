@@ -53,6 +53,7 @@ export function MovingCardGame() {
             gameTitle: t('home.module.movingCard.title'),
             difficulty,
             results: data,
+            details: { trialCount: data.filter((row: any) => row.trial_type === 'pixi-moving-card').length, correctCount: data.filter((row: any) => row.trial_type === 'pixi-moving-card' && row.correct === true).length },
           });
 
           DestroyPixiTrainingRuntime('moving-card');

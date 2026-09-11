@@ -466,6 +466,8 @@ function GetTimingResultData(state: CognitiveGameState): {
                 trialNumber: trial.trialNumber,
                 outcome: trial.outcome,
                 reactionTimeMs: trial.reactionTimeMs,
+                outcomeCode: trial.outcome === 'hit' ? 1 : trial.outcome === 'expired' ? 2 : 3,
+                responseMs: trial.outcome === 'hit' ? trial.reactionTimeMs : null,
                 targetIndex: trial.targetIndex,
                 tappedIndex: trial.tappedIndex,
             })),

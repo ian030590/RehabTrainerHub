@@ -3,51 +3,114 @@
   "gameId": "n-back",
   "columns": [
     {
-      "key": "score",
+      "key": "trial",
       "label": {
-        "zh": "正確得分",
-        "en": "Correct score"
+        "zh": "原始時間序列索引",
+        "en": "Original timeline index"
       },
       "sources": [
-        "correct",
-        "Correct"
-      ],
-      "total": "sum"
+        "trial"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "正確（1／0）",
+        "en": "Correct (1/0)"
+      },
+      "sources": [
+        "correct"
+      ]
     },
     {
       "key": "responseMs",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "整段作答時間",
+        "en": "Whole response duration"
       },
       "sources": [
-        "rt",
-        "Reaction_Time_ms",
-        "Response_Time_ms",
-        "reactionTimeMs",
-        "durationMs"
+        "rt"
       ],
       "unit": "ms"
+    },
+    {
+      "key": "setting",
+      "label": {
+        "zh": "字母曝光時間",
+        "en": "Letter exposure"
+      },
+      "sources": [
+        "setting"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "load",
+      "label": {
+        "zh": "N-back 負荷",
+        "en": "N-back load"
+      },
+      "sources": [
+        "load"
+      ]
+    },
+    {
+      "key": "match",
+      "label": {
+        "zh": "符合目標（1／0）",
+        "en": "Target match (1/0)"
+      },
+      "sources": [
+        "match"
+      ]
+    },
+    {
+      "key": "key",
+      "label": {
+        "zh": "按鍵碼（未按=-1）",
+        "en": "Key code (no response=-1)"
+      },
+      "sources": [
+        "key"
+      ]
     }
   ],
   "summary": [
     {
-      "key": "total",
+      "key": "trials",
       "label": {
-        "zh": "總分",
-        "en": "Total score"
+        "zh": "分析單位數",
+        "en": "Analysis units"
       },
       "sources": [
-        "Score",
-        "Correct_Trials",
-        "Correct_Count"
+        "Total_Trials"
+      ]
+    },
+    {
+      "key": "scored",
+      "label": {
+        "zh": "可判定正確的單位數",
+        "en": "Units with correctness"
+      },
+      "sources": [
+        "Scored_Trials"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "正確單位數",
+        "en": "Correct units"
+      },
+      "sources": [
+        "Correct_Trials"
       ]
     },
     {
       "key": "accuracy",
       "label": {
-        "zh": "正確率",
-        "en": "Accuracy"
+        "zh": "單位正確率",
+        "en": "Unit accuracy"
       },
       "sources": [
         "Accuracy_Percent"
@@ -55,14 +118,13 @@
       "unit": "%"
     },
     {
-      "key": "responseMs",
+      "key": "meanResponseMs",
       "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
+        "zh": "有作答單位平均時間（含錯誤）",
+        "en": "Mean response duration (includes errors)"
       },
       "sources": [
-        "Mean_RT_Ms",
-        "Average_RT_ms"
+        "Mean_RT_Ms"
       ],
       "unit": "ms"
     }

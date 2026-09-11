@@ -126,6 +126,12 @@ export function ReferenceCognitiveGame({ gameId, onExit, trainingModuleId = 'thi
         void SaveTrainingSessionRecord({ userName: participantId, moduleId: trainingModuleId, gameId: 'sudoku', gameTitle: metaTitle, difficulty: 'configured', trainingDate, details: {
                 Game_Result: record.Game_Result,
                 Total_Duration_Seconds: record.Total_Duration_Seconds,
+                Moves: state.moves,
+                Completed: gameResult === 'Victory',
+                Errors: state.errors,
+                Board_Size: state.size,
+                Puzzle_Kind: state.kind === 'latin-square' ? 0 : state.kind === 'magic-square' ? 1 : 2,
+                Initial_Blanks: state.givens.filter(given => !given).length,
                 ...timingData.details,
             },
 detailRows: timingData.detailRows });

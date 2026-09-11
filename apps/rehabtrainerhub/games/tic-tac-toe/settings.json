@@ -9,42 +9,42 @@
         "en": "Session settings"
       },
       "description": {
-        "zh-TW": "設定值只用於這次活動。",
-        "en": "These values apply only to this session."
+        "zh-TW": "記錄當次操作表現。隨機題目、對手與時間上限均可能影響結果；打亂步數不等於最短解。",
+        "en": "Records task performance. Random puzzles, opponents and time limits affect results; scramble steps are not optimal solution lengths."
       },
       "fields": [
         {
           "key": "difficulty",
           "type": "list",
           "label": {
-            "zh-TW": "難度",
-            "en": "Difficulty"
+            "zh-TW": "棋盤與連線規則",
+            "en": "Board and winning line"
           },
           "description": {
-            "zh-TW": "選擇這次活動的刺激與操作難度。",
-            "en": "Choose the stimulus and control difficulty for this session."
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
           },
           "default": "medium",
           "options": [
             {
               "value": "easy",
               "label": {
-                "zh-TW": "簡單",
-                "en": "Easy"
+                "zh-TW": "3 × 3／連 3",
+                "en": "3 × 3 / connect 3"
               }
             },
             {
               "value": "medium",
               "label": {
-                "zh-TW": "中等",
-                "en": "Medium"
+                "zh-TW": "4 × 4／連 3",
+                "en": "4 × 4 / connect 3"
               }
             },
             {
               "value": "hard",
               "label": {
-                "zh-TW": "困難",
-                "en": "Hard"
+                "zh-TW": "5 × 5／連 4",
+                "en": "5 × 5 / connect 4"
               }
             }
           ]

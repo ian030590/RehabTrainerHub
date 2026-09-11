@@ -17,34 +17,34 @@
           "key": "difficulty",
           "type": "list",
           "label": {
-            "zh-TW": "難度",
-            "en": "Difficulty"
+            "zh-TW": "視覺搜尋排列",
+            "en": "Visual search arrangement"
           },
           "description": {
-            "zh-TW": "選擇這次活動的刺激與操作難度。",
-            "en": "Choose the stimulus and control difficulty for this session."
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
           },
           "default": "medium",
           "options": [
             {
               "value": "easy",
               "label": {
-                "zh-TW": "簡單",
-                "en": "Easy"
+                "zh-TW": "散佈移位",
+                "en": "Scattered relocation"
               }
             },
             {
               "value": "medium",
               "label": {
-                "zh-TW": "中等",
-                "en": "Medium"
+                "zh-TW": "圓形排列",
+                "en": "Circular arrangement"
               }
             },
             {
               "value": "hard",
               "label": {
-                "zh-TW": "困難",
-                "en": "Hard"
+                "zh-TW": "圓形排列並旋轉",
+                "en": "Circular arrangement with rotation"
               }
             }
           ]

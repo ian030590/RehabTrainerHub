@@ -27,6 +27,10 @@
           "unit": {
             "zh-TW": "%",
             "en": "%"
+          },
+          "description": {
+            "zh-TW": "改變臉部追蹤判定門檻；分析需固定攝影機位置與校正，這不是舌頭力量或活動角度。",
+            "en": "Changes the face tracking detection threshold. Keep camera placement and calibration fixed; this is not tongue force or angle."
           }
         },
         {

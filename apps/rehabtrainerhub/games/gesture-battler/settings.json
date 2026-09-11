@@ -55,6 +55,10 @@
           "unit": {
             "zh-TW": "%",
             "en": "%"
+          },
+          "description": {
+            "zh-TW": "相對於本機手勢校正的相似度門檻；提高數值會要求更接近校正姿勢，不能換算成關節角度。",
+            "en": "Similarity threshold relative to local gesture calibration; higher values require closer matching, not a joint angle."
           }
         },
         {

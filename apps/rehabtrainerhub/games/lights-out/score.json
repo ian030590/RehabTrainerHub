@@ -5,27 +5,86 @@
     {
       "key": "duration",
       "label": {
-        "zh": "本局時間",
-        "en": "Round duration"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
       },
       "sources": [
         "Total_Duration_Seconds"
       ],
       "unit": "s"
+    },
+    {
+      "key": "moves",
+      "label": {
+        "zh": "玩家有效操作次數",
+        "en": "Player valid moves"
+      },
+      "sources": [
+        "Moves"
+      ]
+    },
+    {
+      "key": "completed",
+      "label": {
+        "zh": "完成／獲勝（1／0）",
+        "en": "Completed or won (1/0)"
+      },
+      "sources": [
+        "Completed"
+      ]
+    },
+    {
+      "key": "boardSize",
+      "label": {
+        "zh": "棋盤每邊格／點數",
+        "en": "Board side cells or dots"
+      },
+      "sources": [
+        "Board_Size"
+      ]
     }
   ],
   "summary": [
     {
       "key": "duration",
       "label": {
-        "zh": "總時間",
-        "en": "Duration"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
       },
       "sources": [
-        "Total_Duration_Seconds",
-        "Duration_Seconds"
+        "Total_Duration_Seconds"
       ],
       "unit": "s"
+    },
+    {
+      "key": "moves",
+      "label": {
+        "zh": "玩家有效操作次數",
+        "en": "Player valid moves"
+      },
+      "sources": [
+        "Moves"
+      ]
+    },
+    {
+      "key": "completed",
+      "label": {
+        "zh": "完成／獲勝（1／0）",
+        "en": "Completed or won (1/0)"
+      },
+      "sources": [
+        "Completed"
+      ]
+    },
+    {
+      "key": "boardSize",
+      "label": {
+        "zh": "棋盤每邊格／點數",
+        "en": "Board side cells or dots"
+      },
+      "sources": [
+        "Board_Size"
+      ]
     }
   ]
 }

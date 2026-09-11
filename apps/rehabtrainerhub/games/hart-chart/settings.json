@@ -17,8 +17,8 @@
           "key": "rounds",
           "type": "slider",
           "label": {
-            "zh-TW": "往返次數",
-            "en": "Alternations"
+            "zh-TW": "要求解碼字母數",
+            "en": "Requested decoder letters"
           },
           "default": 10,
           "min": 5,
@@ -27,6 +27,10 @@
           "unit": {
             "zh-TW": "次",
             "en": "times"
+          },
+          "description": {
+            "zh-TW": "依此數量產生字母解碼活動；不是眼球往返次數。實際字母數另存於結果。",
+            "en": "Sets the requested decoder length, not a count of eye movements. Actual target count is stored in results."
           }
         },
         {
@@ -59,7 +63,11 @@
                 "en": "Small"
               }
             }
-          ]
+          ],
+          "description": {
+            "zh-TW": "圖表初始縮放：大 1.25、中 1、小 0.75；遊玩中仍可調整，分析時需固定操作流程。",
+            "en": "Initial chart scale: large 1.25, medium 1, small 0.75. In-game adjustments remain possible; standardize the procedure for analysis."
+          }
         }
       ]
     }

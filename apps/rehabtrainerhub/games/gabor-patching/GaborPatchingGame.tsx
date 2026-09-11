@@ -52,6 +52,7 @@ export function GaborPatchingGame() {
             gameTitle: t('home.module.gaborPatching.title'),
             difficulty: 'normal',
             results: data,
+            details: data.find((row: any) => row.trial_type === 'pixi-gabor-patching') ?? {},
           });
 
           DestroyPixiTrainingRuntime('gabor-patching');

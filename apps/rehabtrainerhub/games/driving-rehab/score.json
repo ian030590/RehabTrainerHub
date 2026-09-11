@@ -3,68 +3,174 @@
   "gameId": "driving-rehab",
   "columns": [
     {
-      "key": "score",
+      "key": "durationMs",
       "label": {
-        "zh": "正確得分",
-        "en": "Correct score"
+        "zh": "駕駛模擬經過時間",
+        "en": "Driving simulation duration"
       },
       "sources": [
-        "correct",
-        "Correct"
-      ],
-      "total": "sum"
-    },
-    {
-      "key": "responseMs",
-      "label": {
-        "zh": "反應時間",
-        "en": "Response time"
-      },
-      "sources": [
-        "rt",
-        "Reaction_Time_ms",
-        "Response_Time_ms",
-        "reactionTimeMs",
-        "durationMs"
+        "duration_ms"
       ],
       "unit": "ms"
+    },
+    {
+      "key": "meanRt",
+      "label": {
+        "zh": "有效事件平均反應時間",
+        "en": "Mean valid event latency"
+      },
+      "sources": [
+        "average_rt"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "medianRt",
+      "label": {
+        "zh": "有效事件反應時間中位數",
+        "en": "Median valid event latency"
+      },
+      "sources": [
+        "median_rt"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "events",
+      "label": {
+        "zh": "有效事件數",
+        "en": "Valid events"
+      },
+      "sources": [
+        "valid_event_count"
+      ]
+    },
+    {
+      "key": "responses",
+      "label": {
+        "zh": "有反應事件數",
+        "en": "Events with responses"
+      },
+      "sources": [
+        "reaction_event_count"
+      ]
+    },
+    {
+      "key": "collisions",
+      "label": {
+        "zh": "碰撞事件数",
+        "en": "Collision events"
+      },
+      "sources": [
+        "collisions"
+      ]
+    },
+    {
+      "key": "deviations",
+      "label": {
+        "zh": "偏離車道次数",
+        "en": "Lane departures"
+      },
+      "sources": [
+        "lane_deviations"
+      ]
+    },
+    {
+      "key": "fps",
+      "label": {
+        "zh": "平均畫面更新率",
+        "en": "Mean frame rate"
+      },
+      "sources": [
+        "average_fps"
+      ],
+      "unit": "Hz"
     }
   ],
   "summary": [
     {
-      "key": "total",
+      "key": "durationMs",
       "label": {
-        "zh": "總分",
-        "en": "Total score"
+        "zh": "駕駛模擬經過時間",
+        "en": "Driving simulation duration"
       },
       "sources": [
-        "Score",
-        "Correct_Trials",
-        "Correct_Count"
+        "duration_ms"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "meanRt",
+      "label": {
+        "zh": "有效事件平均反應時間",
+        "en": "Mean valid event latency"
+      },
+      "sources": [
+        "average_rt"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "medianRt",
+      "label": {
+        "zh": "有效事件反應時間中位數",
+        "en": "Median valid event latency"
+      },
+      "sources": [
+        "median_rt"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "events",
+      "label": {
+        "zh": "有效事件數",
+        "en": "Valid events"
+      },
+      "sources": [
+        "valid_event_count"
       ]
     },
     {
-      "key": "accuracy",
+      "key": "responses",
       "label": {
-        "zh": "正確率",
-        "en": "Accuracy"
+        "zh": "有反應事件數",
+        "en": "Events with responses"
       },
       "sources": [
-        "Accuracy_Percent"
-      ],
-      "unit": "%"
+        "reaction_event_count"
+      ]
     },
     {
-      "key": "responseMs",
+      "key": "collisions",
       "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
+        "zh": "碰撞事件数",
+        "en": "Collision events"
       },
       "sources": [
-        "Mean_RT_Ms",
-        "Average_RT_ms"
+        "collisions"
+      ]
+    },
+    {
+      "key": "deviations",
+      "label": {
+        "zh": "偏離車道次数",
+        "en": "Lane departures"
+      },
+      "sources": [
+        "lane_deviations"
+      ]
+    },
+    {
+      "key": "fps",
+      "label": {
+        "zh": "平均畫面更新率",
+        "en": "Mean frame rate"
+      },
+      "sources": [
+        "average_fps"
       ],
-      "unit": "ms"
+      "unit": "Hz"
     }
   ]
 }

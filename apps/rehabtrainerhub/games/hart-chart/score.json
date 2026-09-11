@@ -3,10 +3,41 @@
   "gameId": "hart-chart",
   "columns": [
     {
+      "key": "durationMs",
+      "label": {
+        "zh": "完成解碼時間",
+        "en": "Decoder completion time"
+      },
+      "sources": [
+        "duration_ms"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "targets",
+      "label": {
+        "zh": "待解碼字母數",
+        "en": "Target letters"
+      },
+      "sources": [
+        "target_count"
+      ]
+    },
+    {
+      "key": "attempts",
+      "label": {
+        "zh": "輸入字母次數",
+        "en": "Letter entries"
+      },
+      "sources": [
+        "attempts"
+      ]
+    },
+    {
       "key": "accuracy",
       "label": {
-        "zh": "正確率",
-        "en": "Accuracy"
+        "zh": "目標數／輸入次數",
+        "en": "Target count / entry count"
       },
       "sources": [
         "accuracy_percent"
@@ -14,62 +45,68 @@
       "unit": "%"
     },
     {
+      "key": "hints",
+      "label": {
+        "zh": "結束時提示開啟（1／0）",
+        "en": "Hints enabled at finish (1/0)"
+      },
+      "sources": [
+        "hints_used"
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "key": "durationMs",
+      "label": {
+        "zh": "完成解碼時間",
+        "en": "Decoder completion time"
+      },
+      "sources": [
+        "duration_ms"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "targets",
+      "label": {
+        "zh": "待解碼字母數",
+        "en": "Target letters"
+      },
+      "sources": [
+        "target_count"
+      ]
+    },
+    {
       "key": "attempts",
       "label": {
-        "zh": "嘗試次數",
-        "en": "Attempts"
+        "zh": "輸入字母次數",
+        "en": "Letter entries"
       },
       "sources": [
         "attempts"
       ]
     },
     {
-      "key": "durationMs",
-      "label": {
-        "zh": "時間",
-        "en": "Duration"
-      },
-      "sources": [
-        "duration_ms"
-      ],
-      "unit": "ms"
-    }
-  ],
-  "summary": [
-    {
-      "key": "total",
-      "label": {
-        "zh": "總分",
-        "en": "Total score"
-      },
-      "sources": [
-        "Score",
-        "Correct_Trials",
-        "Correct_Count"
-      ]
-    },
-    {
       "key": "accuracy",
       "label": {
-        "zh": "正確率",
-        "en": "Accuracy"
+        "zh": "目標數／輸入次數",
+        "en": "Target count / entry count"
       },
       "sources": [
-        "Accuracy_Percent"
+        "accuracy_percent"
       ],
       "unit": "%"
     },
     {
-      "key": "responseMs",
+      "key": "hints",
       "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
+        "zh": "結束時提示開啟（1／0）",
+        "en": "Hints enabled at finish (1/0)"
       },
       "sources": [
-        "Mean_RT_Ms",
-        "Average_RT_ms"
-      ],
-      "unit": "ms"
+        "hints_used"
+      ]
     }
   ]
 }

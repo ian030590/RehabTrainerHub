@@ -5,6 +5,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Script } from 'node:vm';
+import { ParseGameSettingsDefinition } from '../packages/game-settings/src/index.js';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const gameRoot = resolve(repoRoot, 'apps/rehabtrainerhub/games');
@@ -42,7 +43,9 @@ for (const [gameId, [commit, expectedHash]] of Object.entries(sources)) {
   assert.ok(!gameSource.includes("('rules')"), `${gameId}: pre-game rules page returned.`);
 
   const settings = JSON.parse(readFileSync(resolve(root, 'settings.json'), 'utf8'));
-  assert.deepEqual(settings, { schemaVersion: 1, gameId, sections: [] }, `${gameId}: settings must be start-only.`);
+  ParseGameSettingsDefinition(settings, gameId);
+  assert.ok(settings.sections.flatMap(section => section.fields).length > 0, `${gameId}: activity grading settings are missing.`);
+  assert.ok(existsSync(resolve(legacyRoot, 'research.js')), `${gameId}: game-owned research adapter is missing.`);
   assert.ok(!existsSync(resolve(root, 'runtime')), `${gameId}: deleted custom runtime returned.`);
 
   const indexSource = readFileSync(resolve(legacyRoot, 'index.html'), 'utf8');
@@ -54,7 +57,7 @@ for (const [gameId, [commit, expectedHash]] of Object.entries(sources)) {
   assert.ok(!emojiPattern.test(indexSource + gameSource), `${gameId}: emoji found in tour copy.`);
   assert.ok(bridgeSource.includes('var timeline = originalTimeline.slice();'), `${gameId}: native instructions must stay in the timeline.`);
   assert.ok(bridgeSource.includes('window.jsPsych.init({'), `${gameId}: original jsPsych timeline is not started natively.`);
-  assert.ok(bridgeSource.indexOf("event.data.type === startType") < bridgeSource.indexOf('startExperiment();'), `${gameId}: experiment can start before the start message.`);
+  assert.ok(bridgeSource.indexOf("event.data.type === startType") < bridgeSource.indexOf('startExperiment(event.data.settings);'), `${gameId}: experiment can start before the start message.`);
   new Script(bridgeSource, { filename: `${gameId}/rehab-bridge.js` });
   const instruction = { type: 'instructions' };
   const timeline = [instruction, { type: 'task' }];

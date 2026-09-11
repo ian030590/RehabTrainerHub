@@ -17,34 +17,34 @@
           "key": "difficulty",
           "type": "list",
           "label": {
-            "zh-TW": "難度",
-            "en": "Difficulty"
+            "zh-TW": "目標半徑／速度／維持時間",
+            "en": "Radius / speed / hold time"
           },
           "description": {
-            "zh-TW": "選擇這次活動的刺激與操作難度。",
-            "en": "Choose the stimulus and control difficulty for this session."
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
           },
           "default": "medium",
           "options": [
             {
               "value": "easy",
               "label": {
-                "zh-TW": "簡單",
-                "en": "Easy"
+                "zh-TW": "82 px／120 px/s／560 ms",
+                "en": "82 px / 120 px/s / 560 ms"
               }
             },
             {
               "value": "medium",
               "label": {
-                "zh-TW": "中等",
-                "en": "Medium"
+                "zh-TW": "66 px／165 px/s／760 ms",
+                "en": "66 px / 165 px/s / 760 ms"
               }
             },
             {
               "value": "hard",
               "label": {
-                "zh-TW": "困難",
-                "en": "Hard"
+                "zh-TW": "54 px／220 px/s／980 ms",
+                "en": "54 px / 220 px/s / 980 ms"
               }
             }
           ]

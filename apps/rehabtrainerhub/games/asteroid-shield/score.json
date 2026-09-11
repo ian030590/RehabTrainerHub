@@ -3,59 +3,117 @@
   "gameId": "asteroid-shield",
   "columns": [
     {
-      "key": "score",
+      "key": "object",
       "label": {
-        "zh": "累計分數",
-        "en": "Cumulative score"
+        "zh": "物件序號",
+        "en": "Object number"
       },
       "sources": [
-        "Score_After"
-      ],
-      "total": "last"
+        "Object_Number"
+      ]
     },
     {
       "key": "elapsed",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "生成至物件結局時間",
+        "en": "Spawn to outcome time"
       },
       "sources": [
         "Response_Time_Seconds"
       ],
       "unit": "s"
+    },
+    {
+      "key": "damage",
+      "label": {
+        "zh": "造成傷害",
+        "en": "Damage"
+      },
+      "sources": [
+        "Damage"
+      ]
+    },
+    {
+      "key": "hp",
+      "label": {
+        "zh": "結局後耐久",
+        "en": "HP after outcome"
+      },
+      "sources": [
+        "HP_After"
+      ]
+    },
+    {
+      "key": "speedLevel",
+      "label": {
+        "zh": "物件速度級別",
+        "en": "Speed level"
+      },
+      "sources": [
+        "Speed_Level"
+      ]
     }
   ],
   "summary": [
     {
-      "key": "score",
-      "label": {
-        "zh": "總分",
-        "en": "Total score"
-      },
-      "sources": [
-        "Score"
-      ]
-    },
-    {
       "key": "duration",
       "label": {
-        "zh": "總時間",
-        "en": "Duration"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
       },
       "sources": [
-        "Total_Duration_Seconds",
-        "Duration_Seconds"
+        "Total_Duration_Seconds"
       ],
       "unit": "s"
     },
     {
+      "key": "spawned",
+      "label": {
+        "zh": "生成物件數",
+        "en": "Spawned objects"
+      },
+      "sources": [
+        "Objects_Spawned"
+      ]
+    },
+    {
       "key": "blocked",
       "label": {
-        "zh": "阻擋次數",
-        "en": "Objects blocked"
+        "zh": "攔截數",
+        "en": "Blocked objects"
       },
       "sources": [
         "Objects_Blocked"
+      ]
+    },
+    {
+      "key": "hits",
+      "label": {
+        "zh": "飛船被擊中次數",
+        "en": "Ship hits"
+      },
+      "sources": [
+        "Ship_Hits"
+      ]
+    },
+    {
+      "key": "energy",
+      "label": {
+        "zh": "取得能量數",
+        "en": "Energy collected"
+      },
+      "sources": [
+        "Energy_Collected"
+      ]
+    },
+    {
+      "key": "hp",
+      "label": {
+        "zh": "最終耐久",
+        "en": "Final HP"
+      },
+      "sources": [
+        "Final_HP"
       ]
     }
   ]

@@ -3,68 +3,67 @@
   "gameId": "moving-card",
   "columns": [
     {
-      "key": "score",
+      "key": "completed",
       "label": {
-        "zh": "正確得分",
-        "en": "Correct score"
+        "zh": "找到目標（1／0）",
+        "en": "Target found (1/0)"
       },
       "sources": [
-        "correct",
-        "Correct"
-      ],
-      "total": "sum"
+        "correct"
+      ]
     },
     {
-      "key": "responseMs",
+      "key": "searchMs",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "搜尋完成時間（含重試）",
+        "en": "Search completion time (includes retries)"
       },
       "sources": [
-        "rt",
-        "Reaction_Time_ms",
-        "Response_Time_ms",
-        "reactionTimeMs",
-        "durationMs"
+        "rt"
       ],
       "unit": "ms"
+    },
+    {
+      "key": "attempts",
+      "label": {
+        "zh": "選擇次數",
+        "en": "Selection attempts"
+      },
+      "sources": [
+        "attempts"
+      ]
+    },
+    {
+      "key": "errors",
+      "label": {
+        "zh": "錯誤選擇次數",
+        "en": "Incorrect selections"
+      },
+      "sources": [
+        "wrong_attempts"
+      ]
     }
   ],
   "summary": [
     {
-      "key": "total",
+      "key": "trials",
       "label": {
-        "zh": "總分",
-        "en": "Total score"
+        "zh": "完成試次",
+        "en": "Completed trials"
       },
       "sources": [
-        "Score",
-        "Correct_Trials",
-        "Correct_Count"
+        "trialCount"
       ]
     },
     {
-      "key": "accuracy",
+      "key": "completed",
       "label": {
-        "zh": "正確率",
-        "en": "Accuracy"
+        "zh": "找到目標試次",
+        "en": "Trials with target found"
       },
       "sources": [
-        "Accuracy_Percent"
-      ],
-      "unit": "%"
-    },
-    {
-      "key": "responseMs",
-      "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
-      },
-      "sources": [
-        "Mean_RT_Ms",
-        "Average_RT_ms"
-      ],
-      "unit": "ms"
+        "correctCount"
+      ]
     }
   ]
 }

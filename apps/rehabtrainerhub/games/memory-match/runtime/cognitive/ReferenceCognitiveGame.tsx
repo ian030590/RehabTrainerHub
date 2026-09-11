@@ -124,6 +124,11 @@ export function ReferenceCognitiveGame({ gameId, onExit, trainingModuleId = 'thi
         void SaveTrainingSessionRecord({ userName: participantId, moduleId: trainingModuleId, gameId: 'memory-match', gameTitle: metaTitle, difficulty: 'configured', trainingDate, details: {
                 Game_Result: record.Game_Result,
                 Total_Duration_Seconds: record.Total_Duration_Seconds,
+                Moves: state.moves,
+                Completed: gameResult === 'Victory',
+                Errors: state.errors,
+                Matched_Pairs: state.matchedPairs,
+                Target_Pairs: state.pairs,
                 ...timingData.details,
             },
 detailRows: timingData.detailRows });

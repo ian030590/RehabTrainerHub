@@ -3,51 +3,84 @@
   "gameId": "every-ball-response",
   "columns": [
     {
-      "key": "score",
+      "key": "trial",
       "label": {
-        "zh": "正確得分",
-        "en": "Correct score"
+        "zh": "試次序號",
+        "en": "Trial number"
       },
       "sources": [
-        "correct",
+        "Trial_Number"
+      ]
+    },
+    {
+      "key": "level",
+      "label": {
+        "zh": "規則級別",
+        "en": "Rule level"
+      },
+      "sources": [
+        "Level"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "正確（1／0）",
+        "en": "Correct (1/0)"
+      },
+      "sources": [
         "Correct"
-      ],
-      "total": "sum"
+      ]
     },
     {
       "key": "responseMs",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "偵測反應延遲",
+        "en": "Detected response latency"
       },
       "sources": [
-        "rt",
-        "Reaction_Time_ms",
-        "Response_Time_ms",
-        "reactionTimeMs",
-        "durationMs"
+        "Reaction_Time_ms"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "fixationMs",
+      "label": {
+        "zh": "刺激前等待時間",
+        "en": "Foreperiod"
+      },
+      "sources": [
+        "Fixation_ms"
       ],
       "unit": "ms"
     }
   ],
   "summary": [
     {
-      "key": "total",
+      "key": "trials",
       "label": {
-        "zh": "總分",
-        "en": "Total score"
+        "zh": "試次數",
+        "en": "Trials"
       },
       "sources": [
-        "Score",
-        "Correct_Trials",
+        "Trial_Count"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "正確次數",
+        "en": "Correct responses"
+      },
+      "sources": [
         "Correct_Count"
       ]
     },
     {
       "key": "accuracy",
       "label": {
-        "zh": "正確率",
-        "en": "Accuracy"
+        "zh": "規則正確率",
+        "en": "Rule accuracy"
       },
       "sources": [
         "Accuracy_Percent"
@@ -55,13 +88,42 @@
       "unit": "%"
     },
     {
-      "key": "responseMs",
+      "key": "misses",
       "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
+        "zh": "遺漏反應",
+        "en": "Omissions"
       },
       "sources": [
-        "Mean_RT_Ms",
+        "Misses"
+      ]
+    },
+    {
+      "key": "falseAlarms",
+      "label": {
+        "zh": "不應反應時反應",
+        "en": "False alarms"
+      },
+      "sources": [
+        "False_Alarms"
+      ]
+    },
+    {
+      "key": "wrongActions",
+      "label": {
+        "zh": "動作選擇錯誤",
+        "en": "Wrong actions"
+      },
+      "sources": [
+        "Wrong_Actions"
+      ]
+    },
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "有反應試次平均延遲",
+        "en": "Mean latency of responses"
+      },
+      "sources": [
         "Average_RT_ms"
       ],
       "unit": "ms"

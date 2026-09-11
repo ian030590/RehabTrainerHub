@@ -3,56 +3,109 @@
   "gameId": "whack-a-mole",
   "columns": [
     {
-      "key": "responseMs",
+      "key": "trial",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "試次序號",
+        "en": "Trial index"
       },
       "sources": [
-        "rt",
-        "Reaction_Time_ms",
-        "Response_Time_ms",
-        "reactionTimeMs",
-        "durationMs"
+        "trialNumber"
+      ]
+    },
+    {
+      "key": "outcome",
+      "label": {
+        "zh": "結果：命中1／逾時2／誤按3",
+        "en": "Outcome: hit 1 / expired 2 / wrong tap 3"
+      },
+      "sources": [
+        "outcomeCode"
+      ]
+    },
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "命中反應延遲",
+        "en": "Hit response latency"
+      },
+      "sources": [
+        "responseMs"
       ],
       "unit": "ms"
+    },
+    {
+      "key": "targetIndex",
+      "label": {
+        "zh": "目標格索引（0 起）",
+        "en": "Target cell index (zero based)"
+      },
+      "sources": [
+        "targetIndex"
+      ]
+    },
+    {
+      "key": "tappedIndex",
+      "label": {
+        "zh": "點擊格索引（0 起）",
+        "en": "Tapped cell index (zero based)"
+      },
+      "sources": [
+        "tappedIndex"
+      ]
     }
   ],
   "summary": [
     {
       "key": "duration",
       "label": {
-        "zh": "總時間",
-        "en": "Duration"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
       },
       "sources": [
-        "Total_Duration_Seconds",
-        "Duration_Seconds"
+        "Total_Duration_Seconds"
       ],
       "unit": "s"
     },
     {
-      "key": "responseMs",
+      "key": "hits",
       "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
+        "zh": "命中數",
+        "en": "Hits"
       },
       "sources": [
-        "Average_Reaction_Time_ms",
+        "Target_Click_Hits"
+      ]
+    },
+    {
+      "key": "misses",
+      "label": {
+        "zh": "未命中計數（逾時及誤按）",
+        "en": "Miss count (expiry and wrong taps)"
+      },
+      "sources": [
+        "Target_Click_Misses"
+      ]
+    },
+    {
+      "key": "taps",
+      "label": {
+        "zh": "點擊數",
+        "en": "Taps"
+      },
+      "sources": [
+        "Target_Click_Taps"
+      ]
+    },
+    {
+      "key": "meanMs",
+      "label": {
+        "zh": "命中平均反應延遲",
+        "en": "Mean hit latency"
+      },
+      "sources": [
         "Average_Target_Click_Reaction_Time_ms"
       ],
       "unit": "ms"
-    },
-    {
-      "key": "total",
-      "label": {
-        "zh": "成功次數",
-        "en": "Successful responses"
-      },
-      "sources": [
-        "Reaction_Successes",
-        "Target_Click_Hits"
-      ]
     }
   ]
 }

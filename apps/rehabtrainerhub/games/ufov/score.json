@@ -3,68 +3,193 @@
   "gameId": "ufov",
   "columns": [
     {
-      "key": "score",
+      "key": "trial",
       "label": {
-        "zh": "正確得分",
-        "en": "Correct score"
+        "zh": "試次序號",
+        "en": "Trial number"
       },
       "sources": [
-        "correct",
+        "Trial"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "辨識正確（1／0）",
+        "en": "Identification correct (1/0)"
+      },
+      "sources": [
         "Correct"
+      ]
+    },
+    {
+      "key": "subtest",
+      "label": {
+        "zh": "子作業（1／2／3）",
+        "en": "Subtask (1/2/3)"
+      },
+      "sources": [
+        "Subtest"
+      ]
+    },
+    {
+      "key": "axis",
+      "label": {
+        "zh": "周邊方向編碼（0–7）",
+        "en": "Peripheral axis code (0–7)"
+      },
+      "sources": [
+        "Peripheral_Axis"
+      ]
+    },
+    {
+      "key": "exposureMs",
+      "label": {
+        "zh": "實測曝光時間",
+        "en": "Measured exposure"
+      },
+      "sources": [
+        "Actual_Duration_ms"
       ],
-      "total": "sum"
+      "unit": "ms"
+    },
+    {
+      "key": "requestedMs",
+      "label": {
+        "zh": "要求曝光時間",
+        "en": "Requested exposure"
+      },
+      "sources": [
+        "Requested_Duration_ms"
+      ],
+      "unit": "ms"
     },
     {
       "key": "responseMs",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "作答時間",
+        "en": "Response latency"
       },
       "sources": [
-        "rt",
-        "Reaction_Time_ms",
-        "Response_Time_ms",
-        "reactionTimeMs",
-        "durationMs"
+        "Response_Time_ms"
       ],
       "unit": "ms"
-    }
-  ],
-  "summary": [
+    },
     {
-      "key": "total",
+      "key": "syncValid",
       "label": {
-        "zh": "總分",
-        "en": "Total score"
+        "zh": "画面同步有效（1／0）",
+        "en": "Frame synchronization valid (1/0)"
       },
       "sources": [
-        "Score",
-        "Correct_Trials",
-        "Correct_Count"
+        "Frame_Sync_Valid"
       ]
     },
     {
-      "key": "accuracy",
+      "key": "dropped",
       "label": {
-        "zh": "正確率",
-        "en": "Accuracy"
+        "zh": "掉幀數",
+        "en": "Dropped frames"
       },
       "sources": [
-        "Accuracy_Percent"
+        "Dropped_Frames"
+      ]
+    },
+    {
+      "key": "contrast",
+      "label": {
+        "zh": "刺激對比設定",
+        "en": "Stimulus contrast setting"
+      },
+      "sources": [
+        "Contrast_Percent"
       ],
       "unit": "%"
     },
     {
-      "key": "responseMs",
+      "key": "angle",
       "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
+        "zh": "周邊偏心角設定",
+        "en": "Peripheral eccentricity setting"
       },
       "sources": [
-        "Mean_RT_Ms",
-        "Average_RT_ms"
+        "Target_Visual_Angle_Deg"
+      ],
+      "unit": "deg"
+    }
+  ],
+  "summary": [
+    {
+      "key": "trials",
+      "label": {
+        "zh": "已記錄試次",
+        "en": "Recorded trials"
+      },
+      "sources": [
+        "trialCount"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "辨識正確試次",
+        "en": "Correct trials"
+      },
+      "sources": [
+        "correctCount"
+      ]
+    },
+    {
+      "key": "thresholdMs",
+      "label": {
+        "zh": "階梯曝光估計值",
+        "en": "Staircase exposure estimate"
+      },
+      "sources": [
+        "thresholdProcessingSpeedMs"
       ],
       "unit": "ms"
+    },
+    {
+      "key": "bestMs",
+      "label": {
+        "zh": "最短正確曝光（非閾值）",
+        "en": "Shortest correct exposure (not threshold)"
+      },
+      "sources": [
+        "bestCorrectProcessingSpeedMs"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "invalidTiming",
+      "label": {
+        "zh": "無效時序嘗試數",
+        "en": "Invalid timing attempts"
+      },
+      "sources": [
+        "invalidTimingAttemptCount"
+      ]
+    },
+    {
+      "key": "timingAttempts",
+      "label": {
+        "zh": "全部時序嘗試數",
+        "en": "All timing attempts"
+      },
+      "sources": [
+        "timingAttemptCount"
+      ]
+    },
+    {
+      "key": "aborted",
+      "label": {
+        "zh": "中途終止（1／0）",
+        "en": "Aborted (1/0)"
+      },
+      "sources": [
+        "aborted"
+      ]
     }
   ]
 }

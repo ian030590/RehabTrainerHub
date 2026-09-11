@@ -5,27 +5,186 @@
     {
       "key": "duration",
       "label": {
-        "zh": "本局時間",
-        "en": "Round duration"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
       },
       "sources": [
         "Total_Duration_Seconds"
       ],
       "unit": "s"
+    },
+    {
+      "key": "completed",
+      "label": {
+        "zh": "完成（1／0）",
+        "en": "Completed (1/0)"
+      },
+      "sources": [
+        "Completed"
+      ]
+    },
+    {
+      "key": "rows",
+      "label": {
+        "zh": "棋盤列數",
+        "en": "Board rows"
+      },
+      "sources": [
+        "Board_Rows"
+      ]
+    },
+    {
+      "key": "columns",
+      "label": {
+        "zh": "棋盤欄數",
+        "en": "Board columns"
+      },
+      "sources": [
+        "Board_Columns"
+      ]
+    },
+    {
+      "key": "mines",
+      "label": {
+        "zh": "地雷數",
+        "en": "Mine count"
+      },
+      "sources": [
+        "Mine_Count"
+      ]
+    },
+    {
+      "key": "safeCells",
+      "label": {
+        "zh": "非地雷格數",
+        "en": "Safe cells"
+      },
+      "sources": [
+        "Safe_Cells"
+      ]
+    },
+    {
+      "key": "revealedSafe",
+      "label": {
+        "zh": "已揭開非地雷格數",
+        "en": "Revealed safe cells"
+      },
+      "sources": [
+        "Revealed_Safe_Cells"
+      ]
+    },
+    {
+      "key": "correctFlags",
+      "label": {
+        "zh": "地雷上的旗標數",
+        "en": "Flags on mines"
+      },
+      "sources": [
+        "Correct_Flags"
+      ]
+    },
+    {
+      "key": "incorrectFlags",
+      "label": {
+        "zh": "非地雷上的旗標數",
+        "en": "Flags on safe cells"
+      },
+      "sources": [
+        "Incorrect_Flags"
+      ]
     }
   ],
   "summary": [
     {
       "key": "duration",
       "label": {
-        "zh": "總時間",
-        "en": "Duration"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
       },
       "sources": [
-        "Total_Duration_Seconds",
-        "Duration_Seconds"
+        "Total_Duration_Seconds"
       ],
       "unit": "s"
+    },
+    {
+      "key": "completed",
+      "label": {
+        "zh": "完成（1／0）",
+        "en": "Completed (1/0)"
+      },
+      "sources": [
+        "Completed"
+      ]
+    },
+    {
+      "key": "rows",
+      "label": {
+        "zh": "棋盤列數",
+        "en": "Board rows"
+      },
+      "sources": [
+        "Board_Rows"
+      ]
+    },
+    {
+      "key": "columns",
+      "label": {
+        "zh": "棋盤欄數",
+        "en": "Board columns"
+      },
+      "sources": [
+        "Board_Columns"
+      ]
+    },
+    {
+      "key": "mines",
+      "label": {
+        "zh": "地雷數",
+        "en": "Mine count"
+      },
+      "sources": [
+        "Mine_Count"
+      ]
+    },
+    {
+      "key": "safeCells",
+      "label": {
+        "zh": "非地雷格數",
+        "en": "Safe cells"
+      },
+      "sources": [
+        "Safe_Cells"
+      ]
+    },
+    {
+      "key": "revealedSafe",
+      "label": {
+        "zh": "已揭開非地雷格數",
+        "en": "Revealed safe cells"
+      },
+      "sources": [
+        "Revealed_Safe_Cells"
+      ]
+    },
+    {
+      "key": "correctFlags",
+      "label": {
+        "zh": "地雷上的旗標數",
+        "en": "Flags on mines"
+      },
+      "sources": [
+        "Correct_Flags"
+      ]
+    },
+    {
+      "key": "incorrectFlags",
+      "label": {
+        "zh": "非地雷上的旗標數",
+        "en": "Flags on safe cells"
+      },
+      "sources": [
+        "Incorrect_Flags"
+      ]
     }
   ]
 }

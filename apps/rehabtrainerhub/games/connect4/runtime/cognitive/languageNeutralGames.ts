@@ -1,5 +1,6 @@
 // Hub-owned language-neutral cognitive runtimes.
 import { Application,Container,Graphics } from 'pixi.js';
+import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
 import type { CognitiveGameState,Connect4State,Difficulty,GameResult,NumberGridState,ReferenceGameId,SimonTapResult,SimonTrialRecord,TFunction } from './types';
 import { GetGridLayout } from './utils';
 type ReferenceLanguageNeutralGameKind = Exclude<ReferenceGameId, 'memory-match' | 'lights-out' | 'reaction-time' | 'whack-a-mole' | 'sliding-puzzle'>;
@@ -259,8 +260,9 @@ function Connect4Color(mark: 'P' | 'A') {
 }
 function ChooseConnect4Move(state: Connect4State) {
     const available = Array.from({ length: state.cols }, (_, col) => col).filter((col) => !state.board[col]);
-    return FindConnect4WinningColumn(state, 'A', available)
-        ?? FindConnect4WinningColumn(state, 'P', available)
+    const difficulty = GetHostedGameSetting<string>('difficulty');
+    return (difficulty !== 'easy' ? FindConnect4WinningColumn(state, 'A', available) : null)
+        ?? (difficulty === 'hard' ? FindConnect4WinningColumn(state, 'P', available) : null)
         ?? available[Math.floor(Math.random() * available.length)]
         ?? null;
 }

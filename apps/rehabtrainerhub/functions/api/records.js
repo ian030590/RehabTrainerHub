@@ -93,10 +93,18 @@ export async function onRequestGet({ request, env }) {
     && includeGazeSamplesValue !== '1'
   ) return ErrorResponse(request, env, 'Invalid record detail option.', 400);
   const includeGazeSamples = includeGazeSamplesValue === '1';
+  const includeRoundsValue = url.searchParams.get('includeRounds');
+  if (includeRoundsValue !== null && includeRoundsValue !== '0' && includeRoundsValue !== '1') {
+    return ErrorResponse(request, env, 'Invalid round detail option.', 400);
+  }
+  const includeRounds = includeRoundsValue === '1';
+  if (includeRounds && runtimeId !== 'hub') {
+    return ErrorResponse(request, env, 'Score rounds are only available for Hub records.', 400);
+  }
   if (includeGazeSamples && runtimeId !== 'vision') {
     return ErrorResponse(request, env, 'Raw gaze samples are only available for vision records.', 400);
   }
-  const maximumPageSize = includeGazeSamples
+  const maximumPageSize = includeGazeSamples || includeRounds
     ? maximumRawEyeTrackingReadPageSize
     : maximumReadPageSize;
   const pageSize = ParseReadPageSize(url.searchParams.get('limit'), maximumPageSize);
@@ -110,7 +118,7 @@ export async function onRequestGet({ request, env }) {
   const cursorSql = cursor
     ? 'AND (saved_at < ? OR (saved_at = ? AND id < ?))'
     : '';
-  const payloadSelection = includeGazeSamples
+  const payloadSelection = includeGazeSamples || includeRounds
     ? 'payload_json'
     : 'COALESCE(summary_json, payload_json) AS payload_json';
   const statement = db.prepare(`
@@ -458,7 +466,8 @@ export function IsBoundedGameScoreRecord(input) {
       && (number === null || (typeof number === 'number' && Number.isFinite(number) && Math.abs(number) <= 1e12)));
   return input?.appId === 'rehabtrainerhub' && input?.runtimeId === 'hub'
     && IsPlainObject(input.record)
-    && Object.keys(input.record).every(key => ['id', 'savedAt', 'userName', 'moduleId', 'gameId', 'score'].includes(key))
+    && Object.keys(input.record).every(key => ['id', 'savedAt', 'userName', 'moduleId', 'gameId', 'config', 'score'].includes(key))
+    && (input.record.config === undefined || IsBoundedScoreConfig(input.record.config))
     && (input.record.userName === undefined || input.record.userName === '')
     && IsPlainObject(score) && Object.keys(score).length === 4
     && score.schema === 'rehab-trainer.game-score/v1'
@@ -466,6 +475,15 @@ export function IsBoundedGameScoreRecord(input) {
     && score.gameId === input.record.gameId && score.gameId === input.record.moduleId
     && metrics(score.summary) && Array.isArray(score.rounds) && score.rounds.length <= 4000
     && score.rounds.every(metrics) && GetJsonByteLength(score) <= 450 * 1024;
+}
+
+function IsBoundedScoreConfig(config) {
+  return IsPlainObject(config) && Object.keys(config).length <= 64
+    && Object.entries(config).every(([key, value]) => /^[a-z][A-Za-z0-9_.-]{0,63}$/.test(key)
+      && !/(auth|authorization|birthday|cookie|credential|dob|email|jwt|name|participant|password|phone|secret|session|token|user)/i.test(key)
+      && (typeof value === 'boolean'
+        || (typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= 1e9)
+        || (typeof value === 'string' && value.length > 0 && value.length <= 80 && !/[\u0000-\u001f\u007f]/.test(value))));
 }
 
 function NormalizeString(value, maximumLength, optional = false) {

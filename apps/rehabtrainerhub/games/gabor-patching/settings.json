@@ -17,34 +17,34 @@
           "key": "difficulty",
           "type": "list",
           "label": {
-            "zh-TW": "難度",
-            "en": "Difficulty"
+            "zh-TW": "目標存續與生成機率",
+            "en": "Target lifetime and spawn probability"
           },
           "description": {
-            "zh-TW": "選擇這次活動的刺激與操作難度。",
-            "en": "Choose the stimulus and control difficulty for this session."
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
           },
           "default": "medium",
           "options": [
             {
               "value": "easy",
               "label": {
-                "zh-TW": "簡單",
-                "en": "Easy"
+                "zh-TW": "4 秒／每幀 2%",
+                "en": "4 s / 2% per frame"
               }
             },
             {
               "value": "medium",
               "label": {
-                "zh-TW": "中等",
-                "en": "Medium"
+                "zh-TW": "3 秒／每幀 5%",
+                "en": "3 s / 5% per frame"
               }
             },
             {
               "value": "hard",
               "label": {
-                "zh-TW": "困難",
-                "en": "Hard"
+                "zh-TW": "2 秒／每幀 8%",
+                "en": "2 s / 8% per frame"
               }
             }
           ]

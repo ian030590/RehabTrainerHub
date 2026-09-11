@@ -1,6 +1,7 @@
 import { GetAuthUserNameFromToken } from '../auth/authClient';
 import { FormatTestDate } from '../trainingGameUtils';
 import { ExitFullscreenIfActive } from '../fullscreen';
+import { GetHostedGameSettings } from '../embeddedTraining';
 import { useFullscreenTrainingRoot } from '../hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '../hooks/useTrainingAbort';
 import { SaveTrainingSessionRecord } from '../storage/trainingRecords';
@@ -47,7 +48,7 @@ export function ExpFactoryGame({ config, onExit }: {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const postToLegacy = useCallback((type: string) => {
-    iframeRef.current?.contentWindow?.postMessage({ type }, window.location.origin);
+    iframeRef.current?.contentWindow?.postMessage({ type, settings: GetHostedGameSettings() }, window.location.origin);
   }, []);
 
   const handleAbort = useCallback(() => {
@@ -124,7 +125,7 @@ export function ExpFactoryGame({ config, onExit }: {
         return;
       }
       if (!IsLegacyCompleteMessage(event.data, config.gameId)) return;
-      const safeTrials = event.data.trials.slice(0, 2_000).map(SanitizeTrialRow);
+      const safeTrials = event.data.trials.map(SanitizeTrialRow);
       setSummary(event.data.summary);
       void ExitFullscreenIfActive();
       setPhase('results');
@@ -136,7 +137,7 @@ export function ExpFactoryGame({ config, onExit }: {
         moduleId: config.moduleId,
         gameId: config.gameId,
         gameTitle: `${config.title.zh} (${config.title.en})`,
-        difficulty: 'expfactory-original',
+        difficulty: 'expfactory-configured',
         trainingDate: FormatTestDate(new Date()),
         details: {
           Source_Commit: config.sourceCommit,
@@ -276,7 +277,7 @@ function IsLegacyCompleteMessage(value: unknown, gameId: string): value is Legac
   return message.type === legacyCompleteMessageType
     && message.gameId === gameId
     && Array.isArray(message.trials)
-    && message.trials.length <= 5_000
+    && message.trials.length <= 4_000
     && Boolean(summary)
     && Number.isInteger(summary?.totalTrials)
     && Number.isInteger(summary?.scoredTrials)

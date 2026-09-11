@@ -9,8 +9,8 @@
         "en": "Simulation settings"
       },
       "description": {
-        "zh-TW": "設定值只用於這次活動。",
-        "en": "These values apply only to this session."
+        "zh-TW": "依路線、操作方式及顯示效能分層分析反應、碰撞與偏離車道；遊戲結果不代表實際駕駛能力。",
+        "en": "Stratify reaction, collision and lane departure data by route, controls and display performance; game results do not establish real driving ability."
       },
       "fields": [
         {

@@ -3,21 +3,30 @@
   "gameId": "drawing-defense",
   "columns": [
     {
-      "key": "score",
+      "key": "object",
       "label": {
-        "zh": "成功得分",
-        "en": "Success score"
+        "zh": "圖形序號",
+        "en": "Shape number"
+      },
+      "sources": [
+        "Enemy_Number"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "成功清除（1／0）",
+        "en": "Cleared (1/0)"
       },
       "sources": [
         "Enemy_Defeated"
-      ],
-      "total": "sum"
+      ]
     },
     {
-      "key": "responseSeconds",
+      "key": "elapsed",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "生成至結局時間",
+        "en": "Spawn to outcome time"
       },
       "sources": [
         "Enemy_Reaction_Time_Seconds"
@@ -27,35 +36,64 @@
   ],
   "summary": [
     {
-      "key": "total",
+      "key": "duration",
       "label": {
-        "zh": "擊退總數",
-        "en": "Enemies defeated"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
+      },
+      "sources": [
+        "Total_Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "spawned",
+      "label": {
+        "zh": "生成圖形數",
+        "en": "Spawned shapes"
+      },
+      "sources": [
+        "Enemies_Spawned"
+      ]
+    },
+    {
+      "key": "cleared",
+      "label": {
+        "zh": "清除圖形數",
+        "en": "Cleared shapes"
       },
       "sources": [
         "Enemies_Defeated"
       ]
     },
     {
-      "key": "duration",
+      "key": "hp",
       "label": {
-        "zh": "總時間",
-        "en": "Duration"
-      },
-      "sources": [
-        "Total_Duration_Seconds",
-        "Duration_Seconds"
-      ],
-      "unit": "s"
-    },
-    {
-      "key": "remaining",
-      "label": {
-        "zh": "剩餘能量",
-        "en": "Remaining energy"
+        "zh": "剩餘容錯值",
+        "en": "Remaining HP"
       },
       "sources": [
         "HP_Remaining"
+      ]
+    },
+    {
+      "key": "strictness",
+      "label": {
+        "zh": "辨識嚴格度",
+        "en": "Recognition strictness"
+      },
+      "sources": [
+        "Recognition_Strictness"
+      ]
+    },
+    {
+      "key": "speed",
+      "label": {
+        "zh": "下落速度級距",
+        "en": "Fall speed setting"
+      },
+      "sources": [
+        "Enemy_Speed"
       ]
     }
   ]

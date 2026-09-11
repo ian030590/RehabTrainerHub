@@ -3,68 +3,158 @@
   "gameId": "reading-training",
   "columns": [
     {
-      "key": "score",
+      "key": "question",
       "label": {
-        "zh": "正確得分",
-        "en": "Correct score"
+        "zh": "文章內題號（1起算）",
+        "en": "Question within passage (1-based)"
       },
       "sources": [
-        "correct",
-        "Correct"
-      ],
-      "total": "sum"
+        "question_index"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "理解題正確（1／0）",
+        "en": "Comprehension correct (1/0)"
+      },
+      "sources": [
+        "correct"
+      ]
     },
     {
       "key": "responseMs",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "理解題作答時間",
+        "en": "Question response time"
       },
       "sources": [
-        "rt",
-        "Reaction_Time_ms",
-        "Response_Time_ms",
-        "reactionTimeMs",
-        "durationMs"
+        "rt"
       ],
       "unit": "ms"
+    },
+    {
+      "key": "choice",
+      "label": {
+        "zh": "選擇位置（0起算）",
+        "en": "Chosen option (0-based)"
+      },
+      "sources": [
+        "response"
+      ]
+    },
+    {
+      "key": "expectedChoice",
+      "label": {
+        "zh": "正確位置（0起算）",
+        "en": "Correct option (0-based)"
+      },
+      "sources": [
+        "correct_index"
+      ]
+    },
+    {
+      "key": "options",
+      "label": {
+        "zh": "選項數",
+        "en": "Option count"
+      },
+      "sources": [
+        "option_count"
+      ]
     }
   ],
   "summary": [
     {
-      "key": "total",
+      "key": "questions",
       "label": {
-        "zh": "總分",
-        "en": "Total score"
+        "zh": "理解題數",
+        "en": "Comprehension questions"
       },
       "sources": [
-        "Score",
-        "Correct_Trials",
-        "Correct_Count"
+        "questionCount"
       ]
     },
     {
-      "key": "accuracy",
+      "key": "correct",
       "label": {
-        "zh": "正確率",
-        "en": "Accuracy"
+        "zh": "理解題答對數",
+        "en": "Correct comprehension responses"
       },
       "sources": [
-        "Accuracy_Percent"
-      ],
-      "unit": "%"
+        "correctCount"
+      ]
     },
     {
-      "key": "responseMs",
+      "key": "presentationMs",
       "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
+        "zh": "文字呈現流程時間（含倒數）",
+        "en": "Presentation flow time (includes countdown)"
       },
       "sources": [
-        "Mean_RT_Ms",
-        "Average_RT_ms"
+        "reading_time"
       ],
       "unit": "ms"
+    },
+    {
+      "key": "wordCount",
+      "label": {
+        "zh": "文字片段數",
+        "en": "Text token count"
+      },
+      "sources": [
+        "total_words"
+      ]
+    },
+    {
+      "key": "configuredWpm",
+      "label": {
+        "zh": "設定呈現速率（片段／分）",
+        "en": "Configured rate (segments/min)"
+      },
+      "sources": [
+        "configuredWpm"
+      ]
+    },
+    {
+      "key": "presented",
+      "label": {
+        "zh": "已開始呈現片段數",
+        "en": "Segments whose display began"
+      },
+      "sources": [
+        "presented_segments"
+      ]
+    },
+    {
+      "key": "finished",
+      "label": {
+        "zh": "文章完整呈現（1／0）",
+        "en": "Presentation completed (1/0)"
+      },
+      "sources": [
+        "presentation_completed"
+      ]
+    },
+    {
+      "key": "passage",
+      "label": {
+        "zh": "文章編號（1起算）",
+        "en": "Passage index (1-based)"
+      },
+      "sources": [
+        "passage_index"
+      ]
+    },
+    {
+      "key": "language",
+      "label": {
+        "zh": "語言（0中文／1英文）",
+        "en": "Language (0 Chinese / 1 English)"
+      },
+      "sources": [
+        "language_code"
+      ]
     }
   ]
 }

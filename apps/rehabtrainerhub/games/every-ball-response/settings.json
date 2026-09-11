@@ -17,34 +17,34 @@
           "key": "difficulty",
           "type": "list",
           "label": {
-            "zh-TW": "難度",
-            "en": "Difficulty"
+            "zh-TW": "反應規則",
+            "en": "Response rule"
           },
           "description": {
-            "zh-TW": "選擇這次活動的刺激與操作難度。",
-            "en": "Choose the stimulus and control difficulty for this session."
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
           },
           "default": "medium",
           "options": [
             {
               "value": "easy",
               "label": {
-                "zh-TW": "簡單",
-                "en": "Easy"
+                "zh-TW": "單一反應規則",
+                "en": "Single response rule"
               }
             },
             {
               "value": "medium",
               "label": {
-                "zh-TW": "中等",
-                "en": "Medium"
+                "zh-TW": "目標與干擾辨別",
+                "en": "Target / distractor discrimination"
               }
             },
             {
               "value": "hard",
               "label": {
-                "zh-TW": "困難",
-                "en": "Hard"
+                "zh-TW": "多種動作選擇",
+                "en": "Multiple action selection"
               }
             }
           ]

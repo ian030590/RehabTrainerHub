@@ -3,17 +3,44 @@
   "gameId": "reaction-time",
   "columns": [
     {
-      "key": "responseMs",
+      "key": "trial",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "試次序號",
+        "en": "Trial index"
       },
       "sources": [
-        "rt",
-        "Reaction_Time_ms",
-        "Response_Time_ms",
-        "reactionTimeMs",
-        "durationMs"
+        "trialNumber"
+      ]
+    },
+    {
+      "key": "falseStart",
+      "label": {
+        "zh": "提前反應（1／0）",
+        "en": "False start (1/0)"
+      },
+      "sources": [
+        "falseStart"
+      ]
+    },
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "成功反應延遲",
+        "en": "Successful response latency"
+      },
+      "sources": [
+        "responseMs"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "earlyMs",
+      "label": {
+        "zh": "等待開始至提前反應",
+        "en": "Wait onset to false start"
+      },
+      "sources": [
+        "earlyMs"
       ],
       "unit": "ms"
     }
@@ -22,37 +49,54 @@
     {
       "key": "duration",
       "label": {
-        "zh": "總時間",
-        "en": "Duration"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
       },
       "sources": [
-        "Total_Duration_Seconds",
-        "Duration_Seconds"
+        "Total_Duration_Seconds"
       ],
       "unit": "s"
     },
     {
-      "key": "responseMs",
+      "key": "attempts",
       "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
+        "zh": "全部反應次數",
+        "en": "All attempts"
       },
       "sources": [
-        "Average_Reaction_Time_ms",
-        "Average_Target_Click_Reaction_Time_ms"
-      ],
-      "unit": "ms"
+        "Reaction_Attempts"
+      ]
     },
     {
-      "key": "total",
+      "key": "successes",
       "label": {
-        "zh": "成功次數",
+        "zh": "成功反應次數",
         "en": "Successful responses"
       },
       "sources": [
-        "Reaction_Successes",
-        "Target_Click_Hits"
+        "Reaction_Successes"
       ]
+    },
+    {
+      "key": "falseStarts",
+      "label": {
+        "zh": "提前反應次數",
+        "en": "False starts"
+      },
+      "sources": [
+        "False_Starts"
+      ]
+    },
+    {
+      "key": "meanMs",
+      "label": {
+        "zh": "成功反應平均延遲",
+        "en": "Mean successful response latency"
+      },
+      "sources": [
+        "Average_Reaction_Time_ms"
+      ],
+      "unit": "ms"
     }
   ]
 }

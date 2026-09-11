@@ -149,6 +149,8 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
     let feedbackActive = false;
     let moveTimerId: ReturnType<typeof setInterval> | null = null;
     let trialEnded = false;
+    let attempts = 0;
+    let wrongAttempts = 0;
 
     const runWithApp = (app: Application) => {
       AttachPixiTrialCanvas(movingCardPixiScope, wrapper);
@@ -442,6 +444,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
         optContainer.on('pointertap', () => {
           if (feedbackActive || trialEnded) return;
           feedbackActive = true;
+          attempts += 1;
           const rt = Math.round(performance.now() - startTime);
 
           if (gameOpt.isCorrect) {
@@ -449,6 +452,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
             soundManager.playSuccess();
             setTimeout(() => EndTrial(rt, true, gameOpt.letters), 350);
           } else {
+            wrongAttempts += 1;
             drawState('wrong');
             soundManager.playFailure();
             setTimeout(() => {
@@ -598,6 +602,8 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
         self.jsPsych.finishTrial({
           rt,
           correct,
+          attempts,
+          wrong_attempts: wrongAttempts,
           target,
           response,
         });

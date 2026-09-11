@@ -9,8 +9,8 @@
         "en": "Session settings"
       },
       "description": {
-        "zh-TW": "設定活動核心訓練項目與測驗流程。",
-        "en": "Configure core activity and flow settings."
+        "zh-TW": "記錄中央／周邊辨識、刺激曝光時間與逐試次畫面同步；曝光時間不是作答反應時間，亦不代表臨床視野。",
+        "en": "Records central/peripheral identification, stimulus exposure and per-trial frame synchronization. Exposure is distinct from response latency and is not a clinical visual field measure."
       },
       "fields": [
         {

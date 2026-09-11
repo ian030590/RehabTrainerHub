@@ -1,5 +1,39 @@
 {
   "schemaVersion": 1,
   "gameId": "go-nogo",
-  "sections": []
+  "sections": [
+    {
+      "id": "activity",
+      "title": {
+        "zh-TW": "活動分級條件",
+        "en": "Activity grading"
+      },
+      "description": {
+        "zh-TW": "預設值對應原始作業。調整後須以修改版流程記錄與分析，不可套用原作業常模。",
+        "en": "Defaults follow the original task. Analyze changed settings as a modified protocol; original norms do not apply."
+      },
+      "fields": [
+        {
+          "key": "exposureMs",
+          "type": "slider",
+          "label": {
+            "zh-TW": "色塊曝光時間",
+            "en": "Color patch exposure"
+          },
+          "description": {
+            "zh-TW": "改變該項活動需求；研究中請固定條件或預先規劃比較。",
+            "en": "Changes this task demand; keep it fixed or predefine comparisons in the study."
+          },
+          "default": 750,
+          "min": 250,
+          "max": 1000,
+          "step": 50,
+          "unit": {
+            "zh-TW": "ms",
+            "en": "ms"
+          }
+        }
+      ]
+    }
+  ]
 }

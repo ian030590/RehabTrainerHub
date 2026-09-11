@@ -77,6 +77,8 @@ export function OculomotorTrainingGame() {
             gameTitle: t('home.module.oculomotor.title'),
             difficulty: 'normal',
             results: data,
+            details: trainingTrial ?? {},
+            detailRows: trainingTrial ? [trainingTrial] : [],
           });
 
           DestroyPixiTrainingRuntime('oculomotor-training');

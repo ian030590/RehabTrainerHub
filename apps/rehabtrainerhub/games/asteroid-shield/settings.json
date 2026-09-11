@@ -17,34 +17,34 @@
           "key": "difficulty",
           "type": "list",
           "label": {
-            "zh-TW": "難度",
-            "en": "Difficulty"
+            "zh-TW": "生成間隔／基礎速度",
+            "en": "Spawn interval / base speed"
           },
           "description": {
-            "zh-TW": "選擇這次活動的刺激與操作難度。",
-            "en": "Choose the stimulus and control difficulty for this session."
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
           },
           "default": "medium",
           "options": [
             {
               "value": "easy",
               "label": {
-                "zh-TW": "簡單",
-                "en": "Easy"
+                "zh-TW": "1.35 秒／120 px/s",
+                "en": "1.35 s / 120 px/s"
               }
             },
             {
               "value": "medium",
               "label": {
-                "zh-TW": "中等",
-                "en": "Medium"
+                "zh-TW": "1.08 秒／165 px/s",
+                "en": "1.08 s / 165 px/s"
               }
             },
             {
               "value": "hard",
               "label": {
-                "zh-TW": "困難",
-                "en": "Hard"
+                "zh-TW": "0.82 秒／215 px/s",
+                "en": "0.82 s / 215 px/s"
               }
             }
           ]
@@ -73,13 +73,17 @@
           "key": "sensitivity",
           "type": "slider",
           "label": {
-            "zh-TW": "移動靈敏度",
-            "en": "Movement sensitivity"
+            "zh-TW": "護盾大小級距",
+            "en": "Shield size level"
           },
           "default": 5,
           "min": 1,
           "max": 10,
-          "step": 1
+          "step": 1,
+          "description": {
+            "zh-TW": "護盾比例 = 70 + 級距 × 5（75–120%）；較大較容易攔截。此設定不是追蹤靈敏度。",
+            "en": "Shield scale = 70 + level × 5 (75–120%); larger shields ease interception. This is a size control."
+          }
         },
         {
           "key": "soundEnabled",

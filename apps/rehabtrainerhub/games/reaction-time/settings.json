@@ -17,34 +17,34 @@
           "key": "difficulty",
           "type": "list",
           "label": {
-            "zh-TW": "難度",
-            "en": "Difficulty"
+            "zh-TW": "隨機等待區間",
+            "en": "Random foreperiod"
           },
           "description": {
-            "zh-TW": "選擇這次活動的刺激與操作難度。",
-            "en": "Choose the stimulus and control difficulty for this session."
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
           },
           "default": "medium",
           "options": [
             {
               "value": "easy",
               "label": {
-                "zh-TW": "簡單",
-                "en": "Easy"
+                "zh-TW": "1.4–3.2 秒",
+                "en": "1.4–3.2 s"
               }
             },
             {
               "value": "medium",
               "label": {
-                "zh-TW": "中等",
-                "en": "Medium"
+                "zh-TW": "1.8–4.4 秒",
+                "en": "1.8–4.4 s"
               }
             },
             {
               "value": "hard",
               "label": {
-                "zh-TW": "困難",
-                "en": "Hard"
+                "zh-TW": "2.2–5.2 秒",
+                "en": "2.2–5.2 s"
               }
             }
           ]
@@ -53,12 +53,12 @@
           "key": "rounds",
           "type": "slider",
           "label": {
-            "zh-TW": "回合數",
-            "en": "Rounds"
+            "zh-TW": "成功反應目標次數",
+            "en": "Target successful responses"
           },
           "description": {
-            "zh-TW": "設定這次活動要完成的回合數。",
-            "en": "Set the number of rounds in this session."
+            "zh-TW": "提前按下會另記錯誤，不計入成功目標；時間上限可能提早終止。",
+            "en": "False starts are recorded separately and do not count toward the target; a time limit may end the task early."
           },
           "default": 10,
           "min": 5,

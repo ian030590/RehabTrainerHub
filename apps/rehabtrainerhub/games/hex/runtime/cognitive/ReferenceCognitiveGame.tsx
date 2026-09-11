@@ -126,6 +126,11 @@ export function ReferenceCognitiveGame({ gameId, onExit, trainingModuleId = 'thi
         void SaveTrainingSessionRecord({ userName: participantId, moduleId: trainingModuleId, gameId: 'hex', gameTitle: metaTitle, difficulty: 'configured', trainingDate, details: {
                 Game_Result: record.Game_Result,
                 Total_Duration_Seconds: record.Total_Duration_Seconds,
+                Moves: state.moves,
+                Completed: gameResult === 'Victory',
+                Errors: state.errors,
+                Opponent_Moves: state.aiMoves,
+                Board_Size: state.size,
                 ...timingData.details,
             },
 detailRows: timingData.detailRows });

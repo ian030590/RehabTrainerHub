@@ -19,7 +19,8 @@ export function BuildReadingTimeline(overrides?: BuildTimelineOverrides): object
       content_array: story.content_array,
       wps,
       crowding,
-      contrast,
+      contrast: -Math.log10(contrast),
+      data: { passage_index: story.passageIndex, language_code: story.language === 'en' ? 1 : 0 },
     });
 
     const questions = [...(story.questions || [])];
@@ -38,6 +39,8 @@ export function BuildReadingTimeline(overrides?: BuildTimelineOverrides): object
         choices: q.options,
         button_html: (choice: string) => `<button class="reading-qa-btn">${choice}</button>`,
         data: {
+          question_index: story.questions.indexOf(q) + 1,
+          option_count: q.options.length,
           target: q.question,
           correct_index: q.correct_index,
         },

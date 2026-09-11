@@ -74,13 +74,14 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         appId: 'rehabtrainerhub', runtimeId: 'hub', record: {
           id: scoreRecordId.current, savedAt: new Date().toISOString(), userName: '',
           moduleId: module.runtimeId, gameId: module.runtimeId,
+          config: configuredSettings ?? undefined,
           score: result,
         },
       });
       setSaveState(saved ? 'saved' : 'error');
     } catch { setSaveState('error'); }
     finally { savingRef.current = false; }
-  }, [module.runtimeId]);
+  }, [configuredSettings, module.runtimeId]);
 
   const closeOverlay = useCallback(() => {
     const dialog = dialogRef.current;

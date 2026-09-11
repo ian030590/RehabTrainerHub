@@ -5,27 +5,126 @@
     {
       "key": "duration",
       "label": {
-        "zh": "本局時間",
-        "en": "Round duration"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
       },
       "sources": [
         "Total_Duration_Seconds"
       ],
       "unit": "s"
+    },
+    {
+      "key": "moves",
+      "label": {
+        "zh": "玩家有效操作次數",
+        "en": "Player valid moves"
+      },
+      "sources": [
+        "Moves"
+      ]
+    },
+    {
+      "key": "completed",
+      "label": {
+        "zh": "完成／獲勝（1／0）",
+        "en": "Completed or won (1/0)"
+      },
+      "sources": [
+        "Completed"
+      ]
+    },
+    {
+      "key": "errors",
+      "label": {
+        "zh": "無效／錯誤操作次數",
+        "en": "Invalid or incorrect moves"
+      },
+      "sources": [
+        "Errors"
+      ]
+    },
+    {
+      "key": "matchedPairs",
+      "label": {
+        "zh": "完成配對數",
+        "en": "Matched pairs"
+      },
+      "sources": [
+        "Matched_Pairs"
+      ]
+    },
+    {
+      "key": "pairs",
+      "label": {
+        "zh": "目標配對數",
+        "en": "Target pairs"
+      },
+      "sources": [
+        "Target_Pairs"
+      ]
     }
   ],
   "summary": [
     {
       "key": "duration",
       "label": {
-        "zh": "總時間",
-        "en": "Duration"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
       },
       "sources": [
-        "Total_Duration_Seconds",
-        "Duration_Seconds"
+        "Total_Duration_Seconds"
       ],
       "unit": "s"
+    },
+    {
+      "key": "moves",
+      "label": {
+        "zh": "玩家有效操作次數",
+        "en": "Player valid moves"
+      },
+      "sources": [
+        "Moves"
+      ]
+    },
+    {
+      "key": "completed",
+      "label": {
+        "zh": "完成／獲勝（1／0）",
+        "en": "Completed or won (1/0)"
+      },
+      "sources": [
+        "Completed"
+      ]
+    },
+    {
+      "key": "errors",
+      "label": {
+        "zh": "無效／錯誤操作次數",
+        "en": "Invalid or incorrect moves"
+      },
+      "sources": [
+        "Errors"
+      ]
+    },
+    {
+      "key": "matchedPairs",
+      "label": {
+        "zh": "完成配對數",
+        "en": "Matched pairs"
+      },
+      "sources": [
+        "Matched_Pairs"
+      ]
+    },
+    {
+      "key": "pairs",
+      "label": {
+        "zh": "目標配對數",
+        "en": "Target pairs"
+      },
+      "sources": [
+        "Target_Pairs"
+      ]
     }
   ]
 }

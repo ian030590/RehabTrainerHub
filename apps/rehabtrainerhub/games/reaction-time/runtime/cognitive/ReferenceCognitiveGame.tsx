@@ -435,6 +435,9 @@ function GetTimingResultData(state: CognitiveGameState): {
                 trialNumber: trial.trialNumber,
                 outcome: trial.outcome,
                 reactionTimeMs: trial.reactionTimeMs,
+                falseStart: trial.outcome === 'false-start',
+                responseMs: trial.outcome === 'success' ? trial.reactionTimeMs : null,
+                earlyMs: trial.outcome === 'false-start' ? trial.reactionTimeMs : null,
             })),
         };
     }

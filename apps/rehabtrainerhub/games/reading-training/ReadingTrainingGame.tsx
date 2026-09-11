@@ -44,6 +44,8 @@ export function ReadingTrainingGame() {
         on_finish: () => {
           if (skipFinishRef.current) return;
           const data = jsPsych.data.get().values();
+          const questions = data.filter((row: any) => typeof row.correct === 'boolean');
+          const presentation = data.find((row: any) => typeof row.total_words === 'number');
           SaveTrainingRecord({
             id: String(Date.now()),
             savedAt: new Date().toISOString(),
@@ -53,6 +55,18 @@ export function ReadingTrainingGame() {
             gameTitle: t('home.module.reading.title'),
             difficulty: 'normal',
             results: data,
+            detailRows: questions,
+            details: {
+              questionCount: questions.length,
+              correctCount: questions.filter((row: any) => row.correct).length,
+              reading_time: presentation?.reading_time ?? null,
+              total_words: presentation?.total_words ?? null,
+              presented_segments: presentation?.presented_segments ?? null,
+              presentation_completed: presentation?.presentation_completed ?? null,
+              passage_index: presentation?.passage_index ?? null,
+              language_code: presentation?.language_code ?? null,
+              configuredWpm: GetHostedGameSetting<number>('wordsPerMinute'),
+            },
           });
 
           DestroyPixiTrainingRuntime('reading-training');
@@ -63,7 +77,7 @@ export function ReadingTrainingGame() {
         },
       });
 
-      const story = getRandomStory(lang);
+      const story = getRandomStory(lang, GetHostedGameSetting<number>('passage'));
       const timeline = BuildReadingTimeline({
         reading: {
           story,

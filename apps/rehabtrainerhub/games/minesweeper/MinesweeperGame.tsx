@@ -197,6 +197,14 @@ export function MinesweeperGame({ onExit }: MinesweeperGameProps) {
             details: {
                 Game_Result: record.Game_Result,
                 Total_Duration_Seconds: record.Total_Duration_Seconds,
+                Completed: record.Game_Result === 'Victory',
+                Board_Rows: nextBoard.length,
+                Board_Columns: nextBoard[0]?.length ?? 0,
+                Mine_Count: nextBoard.flat().filter(cell => cell.mine).length,
+                Safe_Cells: nextBoard.flat().filter(cell => !cell.mine).length,
+                Revealed_Safe_Cells: nextBoard.flat().filter(cell => !cell.mine && cell.revealed).length,
+                Correct_Flags: nextBoard.flat().filter(cell => cell.mine && cell.flagged).length,
+                Incorrect_Flags: nextBoard.flat().filter(cell => !cell.mine && cell.flagged).length,
             },
         });
     }, [difficulty, gameTitle]);

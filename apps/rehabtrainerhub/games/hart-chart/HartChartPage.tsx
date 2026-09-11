@@ -383,6 +383,10 @@ function HartChartRuntime() {
       duration_ms: nextResult.durationMs,
       score: nextResult.accuracy,
       trial_type: 'hart-chart-decoder',
+      attempts: nextResult.attempts,
+      target_count: nextResult.targetCount,
+      accuracy_percent: nextResult.accuracy,
+      hints_used: nextResult.hintsUsed,
     };
 
     jsPsychLifecycleRef.current?.finish({
@@ -403,6 +407,7 @@ function HartChartRuntime() {
         totalRounds: targetCount,
       },
       results: [trial],
+      details: { ...trial },
     });
   };
 

@@ -32,7 +32,7 @@
       return isCorrect(row.correct);
     }).length;
     var responseTimes = taskRows.map(function (row) {
-      return Number(row.rt);
+      return typeof row.rt === 'number' ? row.rt : NaN;
     }).filter(function (rt) {
       return Number.isFinite(rt) && rt >= 0;
     });
@@ -43,15 +43,15 @@
         totalTrials: taskRows.length,
         scoredTrials: scoredRows.length,
         correctTrials: correctTrials,
-        accuracyPercent: scoredRows.length ? Math.round(correctTrials / scoredRows.length * 100) : null,
+        accuracyPercent: scoredRows.length ? correctTrials / scoredRows.length * 100 : null,
         meanRtMs: responseTimes.length
-          ? Math.round(responseTimes.reduce(function (total, rt) { return total + rt; }, 0) / responseTimes.length)
+          ? responseTimes.reduce(function (total, rt) { return total + rt; }, 0) / responseTimes.length
           : null
       }
     };
   }
 
-  function startExperiment() {
+  function startExperiment(settings) {
     if (started) return;
     started = true;
 
@@ -60,6 +60,7 @@
       var originalTimeline = window[timelineName];
       if (!Array.isArray(originalTimeline)) throw new Error('Original jsPsych timeline was not found.');
       var timeline = originalTimeline.slice();
+      if (window.rehabConfigure) window.rehabConfigure(settings, timeline);
 
       window.jsPsych.init({
         timeline: timeline,
@@ -71,7 +72,7 @@
         on_finish: function () {
           if (aborted) return;
           var rows = JSON.parse(window.jsPsych.data.dataAsJSON());
-          var result = summarize(rows);
+          var result = summarize(window.rehabResearchRows ? window.rehabResearchRows(rows) : rows);
           post({
             type: completeType,
             gameId: gameId,
@@ -92,7 +93,7 @@
   window.addEventListener('message', function (event) {
     if (event.origin !== window.location.origin || event.source !== window.parent || !event.data) return;
     if (event.data.type === startType) {
-      startExperiment();
+      startExperiment(event.data.settings);
     } else if (event.data.type === abortType) {
       aborted = true;
       if (started && window.jsPsych && typeof window.jsPsych.endExperiment === 'function') {

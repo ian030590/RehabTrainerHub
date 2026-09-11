@@ -3,28 +3,42 @@
   "gameId": "simon-says",
   "columns": [
     {
-      "key": "score",
+      "key": "trial",
       "label": {
-        "zh": "正確得分",
-        "en": "Correct score"
+        "zh": "試次序號",
+        "en": "Trial index"
       },
       "sources": [
-        "correct",
-        "Correct"
-      ],
-      "total": "sum"
+        "trialNumber"
+      ]
     },
     {
-      "key": "responseMs",
+      "key": "correct",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "正確（1／0）",
+        "en": "Correct (1/0)"
       },
       "sources": [
-        "rt",
-        "Reaction_Time_ms",
-        "Response_Time_ms",
-        "reactionTimeMs",
+        "correct"
+      ]
+    },
+    {
+      "key": "length",
+      "label": {
+        "zh": "該次序列項數",
+        "en": "Sequence length"
+      },
+      "sources": [
+        "memoryLength"
+      ]
+    },
+    {
+      "key": "recallMs",
+      "label": {
+        "zh": "整段輸入經過時間",
+        "en": "Whole sequence response duration"
+      },
+      "sources": [
         "durationMs"
       ],
       "unit": "ms"
@@ -34,23 +48,42 @@
     {
       "key": "duration",
       "label": {
-        "zh": "總時間",
-        "en": "Duration"
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
       },
       "sources": [
-        "Total_Duration_Seconds",
-        "Duration_Seconds"
+        "Total_Duration_Seconds"
       ],
       "unit": "s"
     },
     {
-      "key": "total",
+      "key": "trials",
       "label": {
-        "zh": "正確回合數",
-        "en": "Correct rounds"
+        "zh": "序列嘗試數",
+        "en": "Sequence attempts"
+      },
+      "sources": [
+        "Simon_Trials"
+      ]
+    },
+    {
+      "key": "correctTrials",
+      "label": {
+        "zh": "正確序列數",
+        "en": "Correct sequences"
       },
       "sources": [
         "Simon_Correct_Trials"
+      ]
+    },
+    {
+      "key": "remainingLives",
+      "label": {
+        "zh": "剩餘容錯次數",
+        "en": "Remaining allowed failures"
+      },
+      "sources": [
+        "Simon_Lives_Remaining"
       ]
     }
   ]

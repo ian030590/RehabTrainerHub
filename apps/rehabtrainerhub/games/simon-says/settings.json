@@ -17,34 +17,34 @@
           "key": "difficulty",
           "type": "list",
           "label": {
-            "zh-TW": "難度",
-            "en": "Difficulty"
+            "zh-TW": "目標序列長度",
+            "en": "Target sequence length"
           },
           "description": {
-            "zh-TW": "選擇這次活動的刺激與操作難度。",
-            "en": "Choose the stimulus and control difficulty for this session."
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
           },
           "default": "medium",
           "options": [
             {
               "value": "easy",
               "label": {
-                "zh-TW": "簡單",
-                "en": "Easy"
+                "zh-TW": "5 項",
+                "en": "5 items"
               }
             },
             {
               "value": "medium",
               "label": {
-                "zh-TW": "中等",
-                "en": "Medium"
+                "zh-TW": "7 項",
+                "en": "7 items"
               }
             },
             {
               "value": "hard",
               "label": {
-                "zh-TW": "困難",
-                "en": "Hard"
+                "zh-TW": "9 項",
+                "en": "9 items"
               }
             }
           ]
@@ -53,16 +53,20 @@
           "key": "lives",
           "type": "slider",
           "label": {
-            "zh-TW": "機會次數",
-            "en": "Lives"
+            "zh-TW": "可容許錯誤次數",
+            "en": "Allowed failed sequences"
           },
           "default": 3,
           "min": 1,
           "max": 5,
-          "step": 1,
+          "step": 2,
           "unit": {
             "zh-TW": "次",
             "en": "lives"
+          },
+          "description": {
+            "zh-TW": "錯誤後重播同一序列；可選 1、3、5 次。",
+            "en": "A failed sequence is replayed; choose 1, 3 or 5 failures."
           }
         },
         {

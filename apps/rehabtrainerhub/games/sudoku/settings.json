@@ -9,42 +9,42 @@
         "en": "Session settings"
       },
       "description": {
-        "zh-TW": "設定值只用於這次活動。",
-        "en": "These values apply only to this session."
+        "zh-TW": "記錄當次操作表現。隨機題目、對手與時間上限均可能影響結果；打亂步數不等於最短解。",
+        "en": "Records task performance. Random puzzles, opponents and time limits affect results; scramble steps are not optimal solution lengths."
       },
       "fields": [
         {
           "key": "difficulty",
           "type": "list",
           "label": {
-            "zh-TW": "難度",
-            "en": "Difficulty"
+            "zh-TW": "數字規則與棋盤條件",
+            "en": "Number rule and board condition"
           },
           "description": {
-            "zh-TW": "選擇這次活動的刺激與操作難度。",
-            "en": "Choose the stimulus and control difficulty for this session."
+            "zh-TW": "三種選項改變解題規則，不是同一數獨任務的等距難度。分開分析，避免將條件差異解讀為能力進步。",
+            "en": "Options change puzzle rules, not equal steps on one Sudoku task. Analyze separately; condition differences are not ability changes."
           },
           "default": "medium",
           "options": [
             {
               "value": "easy",
               "label": {
-                "zh-TW": "簡單",
-                "en": "Easy"
+                "zh-TW": "拉丁方陣 4×4／6 空格",
+                "en": "Latin square 4×4 / 6 blanks"
               }
             },
             {
               "value": "medium",
               "label": {
-                "zh-TW": "中等",
-                "en": "Medium"
+                "zh-TW": "魔方陣 3×3／6 空格",
+                "en": "Magic square 3×3 / 6 blanks"
               }
             },
             {
               "value": "hard",
               "label": {
-                "zh-TW": "困難",
-                "en": "Hard"
+                "zh-TW": "數獨 9×9／50 空格",
+                "en": "Sudoku 9×9 / 50 blanks"
               }
             }
           ]

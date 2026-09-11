@@ -120,7 +120,7 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
       };
       window.addEventListener('keydown', handleKeydown);
 
-      function EndTrial() {
+      function EndTrial(completed = false) {
         if (trialEnded) return;
         trialEnded = true;
         if (timerId) clearTimeout(timerId);
@@ -131,6 +131,8 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
         self.jsPsych.finishTrial({
           reading_time: Math.round(performance.now() - startTime),
           total_words: contentArray.length,
+          presented_segments: chunkIdx,
+          presentation_completed: completed,
         });
       }
 
@@ -155,7 +157,7 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
       function StartReading() {
         if (trialEnded) return;
         if (chunkIdx >= contentArray.length) {
-          EndTrial();
+          EndTrial(true);
           return;
         }
 

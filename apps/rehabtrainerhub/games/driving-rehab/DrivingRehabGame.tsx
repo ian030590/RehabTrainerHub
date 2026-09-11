@@ -53,6 +53,7 @@ export function DrivingRehabGame() {
             gameTitle: t('home.module.driving.title'),
             difficulty: (GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty')),
             results: data,
+            details: data.find((row: any) => row.trial_type === 'three-driving-rehab') ?? {},
           });
 
           DisposeDrivingRehabRuntime();

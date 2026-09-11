@@ -3,68 +3,119 @@
   "gameId": "tower-of-london",
   "columns": [
     {
-      "key": "score",
+      "key": "trial",
       "label": {
-        "zh": "正確得分",
-        "en": "Correct score"
+        "zh": "原始時間序列索引",
+        "en": "Original timeline index"
       },
       "sources": [
-        "correct",
-        "Correct"
-      ],
-      "total": "sum"
+        "trial"
+      ]
     },
     {
-      "key": "responseMs",
+      "key": "correct",
       "label": {
-        "zh": "反應時間",
-        "en": "Response time"
+        "zh": "正確（1／0）",
+        "en": "Correct (1/0)"
       },
       "sources": [
-        "rt",
-        "Reaction_Time_ms",
-        "Response_Time_ms",
-        "reactionTimeMs",
-        "durationMs"
+        "correct"
+      ]
+    },
+    {
+      "key": "setting",
+      "label": {
+        "zh": "每題總操作時限",
+        "en": "Total time limit per problem"
+      },
+      "sources": [
+        "setting"
       ],
       "unit": "ms"
+    },
+    {
+      "key": "problem",
+      "label": {
+        "zh": "題目索引（0 起）",
+        "en": "Problem index (zero based)"
+      },
+      "sources": [
+        "problem"
+      ]
+    },
+    {
+      "key": "problemMs",
+      "label": {
+        "zh": "整題操作時間",
+        "en": "Whole problem duration"
+      },
+      "sources": [
+        "problemMs"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "moves",
+      "label": {
+        "zh": "移動次數",
+        "en": "Moves"
+      },
+      "sources": [
+        "moves"
+      ]
+    },
+    {
+      "key": "minimumMoves",
+      "label": {
+        "zh": "題目最少步數",
+        "en": "Problem minimum moves"
+      },
+      "sources": [
+        "minimumMoves"
+      ]
     }
   ],
   "summary": [
     {
-      "key": "total",
+      "key": "trials",
       "label": {
-        "zh": "總分",
-        "en": "Total score"
+        "zh": "分析單位數",
+        "en": "Analysis units"
       },
       "sources": [
-        "Score",
-        "Correct_Trials",
-        "Correct_Count"
+        "Total_Trials"
+      ]
+    },
+    {
+      "key": "scored",
+      "label": {
+        "zh": "可判定正確的單位數",
+        "en": "Units with correctness"
+      },
+      "sources": [
+        "Scored_Trials"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "正確單位數",
+        "en": "Correct units"
+      },
+      "sources": [
+        "Correct_Trials"
       ]
     },
     {
       "key": "accuracy",
       "label": {
-        "zh": "正確率",
-        "en": "Accuracy"
+        "zh": "單位正確率",
+        "en": "Unit accuracy"
       },
       "sources": [
         "Accuracy_Percent"
       ],
       "unit": "%"
-    },
-    {
-      "key": "responseMs",
-      "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
-      },
-      "sources": [
-        "Mean_RT_Ms",
-        "Average_RT_ms"
-      ],
-      "unit": "ms"
     }
   ]
 }

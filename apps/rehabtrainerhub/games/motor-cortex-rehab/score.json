@@ -3,7 +3,28 @@
   "gameId": "motor-cortex-rehab",
   "columns": [
     {
-      "key": "hold",
+      "key": "event",
+      "label": {
+        "zh": "事件序號",
+        "en": "Event number"
+      },
+      "sources": [
+        "Event_Number"
+      ]
+    },
+    {
+      "key": "atSeconds",
+      "label": {
+        "zh": "事件時活動經過時間",
+        "en": "Elapsed time at event"
+      },
+      "sources": [
+        "Time_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "holdSeconds",
       "label": {
         "zh": "維持時間",
         "en": "Hold duration"
@@ -12,24 +33,77 @@
         "Hold_Seconds"
       ],
       "unit": "s"
+    },
+    {
+      "key": "targetSize",
+      "label": {
+        "zh": "目標大小（像素）",
+        "en": "Target size (pixels)"
+      },
+      "sources": [
+        "Target_Size_Px"
+      ],
+      "unit": "px"
+    },
+    {
+      "key": "level",
+      "label": {
+        "zh": "當時自適應級別",
+        "en": "Adaptive level at event"
+      },
+      "sources": [
+        "Adaptive_Level"
+      ]
+    },
+    {
+      "key": "accuracy",
+      "label": {
+        "zh": "事件時累計目標內時間比例",
+        "en": "Cumulative time in target at event"
+      },
+      "sources": [
+        "Accuracy_Percent"
+      ],
+      "unit": "%"
     }
   ],
   "summary": [
     {
+      "key": "duration",
+      "label": {
+        "zh": "活動時間",
+        "en": "Activity duration"
+      },
+      "sources": [
+        "Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
       "key": "reps",
       "label": {
-        "zh": "完成次數",
-        "en": "Successful repetitions"
+        "zh": "完成維持數",
+        "en": "Completed holds"
       },
       "sources": [
         "Successful_Reps"
       ]
     },
     {
-      "key": "accuracy",
+      "key": "interrupted",
       "label": {
-        "zh": "準確率",
-        "en": "Accuracy"
+        "zh": "中斷維持數",
+        "en": "Interrupted holds"
+      },
+      "sources": [
+        "Interrupted_Holds"
+      ]
+    },
+    {
+      "key": "timeInTarget",
+      "label": {
+        "zh": "目標內時間比例",
+        "en": "Time in target"
       },
       "sources": [
         "Accuracy_Percent"
@@ -37,16 +111,36 @@
       "unit": "%"
     },
     {
-      "key": "duration",
+      "key": "tracking",
       "label": {
-        "zh": "總時間",
-        "en": "Duration"
+        "zh": "手部可追蹤時間比例",
+        "en": "Hand tracking availability"
       },
       "sources": [
-        "Total_Duration_Seconds",
-        "Duration_Seconds"
+        "Hand_Visible_Percent"
+      ],
+      "unit": "%"
+    },
+    {
+      "key": "bestHold",
+      "label": {
+        "zh": "最長維持時間",
+        "en": "Longest hold"
+      },
+      "sources": [
+        "Best_Hold_Seconds"
       ],
       "unit": "s"
+    },
+    {
+      "key": "level",
+      "label": {
+        "zh": "最終自適應級別",
+        "en": "Final adaptive level"
+      },
+      "sources": [
+        "Adaptive_Level"
+      ]
     }
   ]
 }

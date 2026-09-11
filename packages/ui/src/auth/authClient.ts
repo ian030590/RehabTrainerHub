@@ -108,6 +108,7 @@ export interface PasswordAccountLoginPayload {
 
 export interface RemoteTrainingRecord {
   score?: import('../gameScore').GameScore;
+  config?: Record<string, unknown>;
   id: string;
   savedAt: string;
   userName: string;

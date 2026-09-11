@@ -3,7 +3,7 @@ import {
   HasAuthToken,
   SaveRemoteTrainingRecord,
 } from '@rehab-trainer/ui/auth/authClient';
-import { SendHostedGameScore } from '../embeddedTraining';
+import { GetHostedGameSettings, SendHostedGameScore } from '../embeddedTraining';
 import { CreateCsvContent } from '@rehab-trainer/ui/csv';
 import { DownloadCsvFile, DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import { CreateRuntimeStorageNamespace } from '@rehab-trainer/ui/storage/runtimeNamespace';
@@ -67,6 +67,8 @@ const authApiBase = siteUrls.hub;
 
 export async function SaveTrainingRecord(record: BrainTrainingRecord): Promise<void> {
   if (SendHostedGameScore(record)) return;
+  const settings = GetHostedGameSettings();
+  if (settings) record = { ...record, config: { ...record.config, ...settings } };
   if (HasAuthToken()) {
     try {
       const saved = await SaveRemoteTrainingRecord(authApiBase, {

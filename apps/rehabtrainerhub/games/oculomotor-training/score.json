@@ -3,62 +3,176 @@
   "gameId": "oculomotor-training",
   "columns": [
     {
+      "key": "durationMs",
+      "label": {
+        "zh": "刺激活動時間",
+        "en": "Stimulus duration"
+      },
+      "sources": [
+        "duration_ms"
+      ],
+      "unit": "ms"
+    },
+    {
       "key": "targets",
       "label": {
-        "zh": "觸及目標數",
-        "en": "Targets reached"
+        "zh": "程式記錄取得目標數",
+        "en": "Recorded acquired targets"
       },
       "sources": [
         "acquired_targets"
       ]
     },
     {
+      "key": "fps",
+      "label": {
+        "zh": "平均畫面更新率",
+        "en": "Mean frame rate"
+      },
+      "sources": [
+        "average_fps"
+      ],
+      "unit": "Hz"
+    },
+    {
+      "key": "samples",
+      "label": {
+        "zh": "有效注視估計樣本數",
+        "en": "Valid gaze estimate samples"
+      },
+      "sources": [
+        "gaze_sample_count"
+      ]
+    },
+    {
+      "key": "distance",
+      "label": {
+        "zh": "注視估計至目標平均距離",
+        "en": "Mean estimated gaze to target distance"
+      },
+      "sources": [
+        "mean_target_distance_px"
+      ],
+      "unit": "px"
+    },
+    {
+      "key": "distanceSd",
+      "label": {
+        "zh": "注視估計距離標準差",
+        "en": "Estimated gaze distance SD"
+      },
+      "sources": [
+        "target_distance_sd_px"
+      ],
+      "unit": "px"
+    },
+    {
+      "key": "firstFixation",
+      "label": {
+        "zh": "依門檻判定首次停留時間",
+        "en": "Threshold based first fixation latency"
+      },
+      "sources": [
+        "time_to_first_fixation_ms"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "aoiScore",
+      "label": {
+        "zh": "目標區域估計得分",
+        "en": "Estimated target area score"
+      },
+      "sources": [
+        "aoi_score"
+      ]
+    }
+  ],
+  "summary": [
+    {
       "key": "durationMs",
       "label": {
-        "zh": "回合時間",
-        "en": "Round duration"
+        "zh": "刺激活動時間",
+        "en": "Stimulus duration"
       },
       "sources": [
         "duration_ms"
       ],
       "unit": "ms"
-    }
-  ],
-  "summary": [
+    },
     {
-      "key": "total",
+      "key": "targets",
       "label": {
-        "zh": "總分",
-        "en": "Total score"
+        "zh": "程式記錄取得目標數",
+        "en": "Recorded acquired targets"
       },
       "sources": [
-        "Score",
-        "Correct_Trials",
-        "Correct_Count"
+        "acquired_targets"
       ]
     },
     {
-      "key": "accuracy",
+      "key": "fps",
       "label": {
-        "zh": "正確率",
-        "en": "Accuracy"
+        "zh": "平均畫面更新率",
+        "en": "Mean frame rate"
       },
       "sources": [
-        "Accuracy_Percent"
+        "average_fps"
       ],
-      "unit": "%"
+      "unit": "Hz"
     },
     {
-      "key": "responseMs",
+      "key": "samples",
       "label": {
-        "zh": "平均反應時間",
-        "en": "Mean response time"
+        "zh": "有效注視估計樣本數",
+        "en": "Valid gaze estimate samples"
       },
       "sources": [
-        "Mean_RT_Ms",
-        "Average_RT_ms"
+        "gaze_sample_count"
+      ]
+    },
+    {
+      "key": "distance",
+      "label": {
+        "zh": "注視估計至目標平均距離",
+        "en": "Mean estimated gaze to target distance"
+      },
+      "sources": [
+        "mean_target_distance_px"
+      ],
+      "unit": "px"
+    },
+    {
+      "key": "distanceSd",
+      "label": {
+        "zh": "注視估計距離標準差",
+        "en": "Estimated gaze distance SD"
+      },
+      "sources": [
+        "target_distance_sd_px"
+      ],
+      "unit": "px"
+    },
+    {
+      "key": "firstFixation",
+      "label": {
+        "zh": "依門檻判定首次停留時間",
+        "en": "Threshold based first fixation latency"
+      },
+      "sources": [
+        "time_to_first_fixation_ms"
       ],
       "unit": "ms"
+    },
+    {
+      "key": "aoiScore",
+      "label": {
+        "zh": "目標區域估計得分",
+        "en": "Estimated target area score"
+      },
+      "sources": [
+        "aoi_score"
+      ]
     }
   ]
 }

@@ -25,6 +25,12 @@
   box-sizing: border-box;
 }
 
+.drawing-defense-phase-rules .drawing-defense-stage,
+.drawing-defense-phase-rules .drawing-defense-input {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* Modal container matching .game-settings-form */
 .training-panel .training-config,
 .training-panel .training-rules {
