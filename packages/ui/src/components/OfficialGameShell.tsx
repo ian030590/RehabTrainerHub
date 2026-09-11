@@ -7,6 +7,7 @@ import {
   SetHostedGameSettings,
   SetGameScoreDefinition,
 } from '../embeddedTraining';
+import { EnterFullscreenFromUserGesture } from '../fullscreen';
 import { useT } from '../i18n/games';
 import { useHostedGameSettings } from '../hooks/useHostedGameSettings';
 import { GameSettingsForm } from './GameSettingsForm';
@@ -53,6 +54,9 @@ export function OfficialGameShell({ children, settings, score, title }: {
     title={title}
     onCancel={() => window.history.back()}
     onSubmit={(values) => {
+      // The settings submit is the user gesture that browsers require for fullscreen.
+      // Request it before mounting the game runtime, whose iframe load is too late.
+      void EnterFullscreenFromUserGesture(document.documentElement);
       SetHostedGameSettings(values);
       setConfigured(true);
     }}

@@ -166,6 +166,7 @@ export function ExpFactoryGame({ config, onExit }: {
         color: 'var(--text)',
         minHeight: '100dvh',
         position: 'relative',
+        width: '100%',
       }}
     >
       {phase !== 'results' && (

@@ -28,7 +28,7 @@ import {
   type GameScoreDefinition,
 } from '@rehab-trainer/ui/embeddedTraining';
 import { HasAuthToken, SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
-import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
+import { EnterFullscreenFromUserGesture, ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import dynamic from 'next/dynamic';
 import { Button } from '../components/ui/button';
 import { GetHubUiCopy } from '../i18n';
@@ -240,7 +240,12 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
           definition={definition}
           language={language}
           onCancel={closeOverlay}
-          onSubmit={setConfiguredSettings}
+          onSubmit={(values) => {
+            // Preserve the settings button's user activation for fullscreen. The
+            // game iframe is mounted after this event and cannot request it later.
+            void EnterFullscreenFromUserGesture(dialogRef.current);
+            setConfiguredSettings(values);
+          }}
           title={moduleCopy.title}
         />
       )}

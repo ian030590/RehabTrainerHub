@@ -8,6 +8,15 @@
   <link rel="stylesheet" href="jspsych.css">
   <link rel="stylesheet" href="default_style.css">
   <link rel="stylesheet" href="style.css">
+  <style>
+    html, body { width: 100%; height: 100%; min-height: 100%; margin: 0; overflow: hidden; }
+    .jspsych-display-element { position: fixed; inset: 0; width: 100vw !important; height: 100vh !important; min-height: 100dvh; margin: 0 !important; padding: 0 !important; overflow: hidden; background: #fff !important; }
+    .display_stage_background { position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #fff; }
+    .display_stage { position: fixed; inset: 0; width: 100vw; height: 100vh; min-height: 100dvh; margin: 0; padding: 30px; border: 0; border-radius: 0; box-shadow: none; background: #fff; overflow: auto; }
+    .bilingual-centerbox { position: absolute; top: 50%; left: 50%; display: flex; width: min(76vw, 56rem); max-width: calc(100vw - 3rem); max-height: calc(100% - 3rem); height: auto; margin: 0; transform: translate(-50%, -50%); flex-direction: column; justify-content: center; gap: 1.25rem; overflow: auto; text-align: center; }
+    .bilingual-centerbox .bilingual-copy { width: 100%; flex: 0 0 auto; }
+    .bilingual-centerbox .bilingual-copy-zh .block-text, .bilingual-centerbox .bilingual-copy-en .block-text, .bilingual-centerbox .bilingual-copy-zh .center-block-text, .bilingual-centerbox .bilingual-copy-en .center-block-text { width: 100%; height: auto; margin: 0; text-align: center; }
+  </style>
 </head>
 <body data-game-id="digit-span" data-timeline="digit_span_experiment">
   <script src="js/jquery.min.js"></script>
@@ -25,6 +34,13 @@
   <script src="experiment.js"></script>
   <script>
     window.rehabBilingualize = function () {
+      function makeBilingualCenterbox(chinese, english) {
+        var englishMarkup = String(english);
+        var centerbox = englishMarkup.match(/^\s*<div\s+class\s*=\s*["']?centerbox["']?\s*>([\s\S]*)<\/div>\s*$/i);
+        if (centerbox) englishMarkup = centerbox[1];
+        return '<div class="centerbox bilingual-centerbox"><div class="bilingual-copy bilingual-copy-zh" lang="zh-TW"><p class="block-text">' + chinese + '</p></div><div class="bilingual-copy bilingual-copy-en" lang="en">' + englishMarkup + '</div></div>';
+      }
+
       var specs = [["start_test_block","text","請依原順序回想數字。準備好後按 Enter 開始。"],["start_reverse_block","text","接下來請依相反順序回想數字。準備好後按 Enter 開始。"],["end_block","text","本次作業已完成。按 Enter 查看當次紀錄。"]];
       specs.push(['feedback_instruct_block', 'text', '請再閱讀作答規則，準備好後按 Enter 重新練習。']);
       specs.forEach(function (spec) {
@@ -34,7 +50,7 @@
         var original = trial[property];
         trial[property] = function () {
           var english = typeof original === 'function' ? original.apply(this, arguments) : original;
-          return '<div class="centerbox"><p class="block-text" lang="zh-TW">' + spec[2] + '</p></div>' + english;
+          return makeBilingualCenterbox(spec[2], english);
         };
       });
       var questionnaire = window.post_task_block;
