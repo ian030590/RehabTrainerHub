@@ -1,4 +1,7 @@
-import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
+import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
+import { GetHostedGameSetting, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
+import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
 NotifyHubTrainingAbort,
@@ -24,7 +27,8 @@ export function DrivingRehabGame() {
   const location = useLocation();
   void IsTrainingFlowLaunchState(location?.state);
   const { t, lang } = useT();
-  const [phase, setPhase] = useState<'running' | 'results'>('running');
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
+  const [phase, setPhase] = useState<'rules' | 'running' | 'results'>('rules');
   const [results, setResults] = useState<any[]>([]);
   const jsPsychRef = useRef<JsPsych | null>(null);
   const skipFinishRef = useRef(false);
@@ -54,6 +58,7 @@ export function DrivingRehabGame() {
           DisposeDrivingRehabRuntime();
           setResults(data);
           jsPsychRef.current = null;
+          void ExitFullscreenIfActive();
           setPhase('results');
         },
       });
@@ -96,19 +101,70 @@ export function DrivingRehabGame() {
     jsPsychRef.current?.abortExperiment();
     jsPsychRef.current = null;
     DisposeDrivingRehabRuntime();
+    void ExitFullscreenIfActive();
     NotifyHubTrainingAbort();
   }, [phase]);
 
   useTrainingAbort({ active: phase === 'running', onAbort: abortTraining });
 
-  if (phase === 'running') {
-    return <div id="jspsych-target" className="experiment-container" style={{ width: '100vw', height: '100vh' }} />;
-  }
+  const isZh = lang !== 'en';
 
   return (
-    <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
-      <DrivingResults results={results} userName={userName} t={t} />
-      <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
+    <div ref={fullscreenRootRef} className="driving-rehab-game-root" style={{ width: '100%', minHeight: '100dvh' }}>
+      {phase === 'rules' && (
+        <div className="training-panel">
+          <TrainingRulesPanel
+            title={isZh ? '安全駕駛模擬訓練' : 'Driving Rehab Simulation'}
+            label={isZh ? '遊戲規則說明' : 'Game Rules'}
+            summaryTitle={isZh ? '安全駕駛模擬訓練' : 'Driving Rehab Simulation'}
+            summaryItems={[
+              { label: isZh ? '難度' : 'Difficulty', value: GetHostedGameSetting<string>('difficulty') },
+              { label: isZh ? '控制方式' : 'Control Mode', value: GetHostedGameSetting<string>('controlMode') },
+            ]}
+            sections={isZh ? [
+              {
+                title: '操作與玩法',
+                description: '控制車輛在車道內行駛，應對突發路況與剎車提示。',
+                items: [
+                  '依照選擇的控制方式操控車輛轉向與加速。',
+                  '行駛中注意車道維持，避免偏離道路或碰撞邊界。',
+                  '出現紅色警示或突發路況時，迅速踩下煞車。',
+                ],
+              },
+              { title: '成績計算', description: '結算會記錄偏離車道次數、平均反應時間與行駛距離。' },
+            ] : [
+              {
+                title: 'How to Play',
+                description: 'Keep your vehicle in the lane and respond quickly to hazard prompts.',
+                items: [
+                  'Control steering and acceleration using your configured mode.',
+                  'Maintain lane position and avoid running off the road.',
+                  'Brake promptly when red hazard flashes appear.',
+                ],
+              },
+              { title: 'Results', description: 'Records lane deviations, average braking reaction time, and travel distance.' },
+            ]}
+            startLabel={isZh ? '開始訓練' : 'Start Training'}
+            backLabel={isZh ? '回設定' : 'Back to Settings'}
+            onStart={async () => {
+              await enterTrainingFullscreen();
+              setPhase('running');
+            }}
+            onBack={() => RequestHubTrainingConfiguration()}
+          />
+        </div>
+      )}
+
+      {phase === 'running' && (
+        <div id="jspsych-target" className="experiment-container" style={{ width: '100vw', height: '100vh' }} />
+      )}
+
+      {phase === 'results' && (
+        <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
+          <DrivingResults results={results} userName={userName} t={t} />
+          <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
+        </div>
+      )}
     </div>
   );
 }

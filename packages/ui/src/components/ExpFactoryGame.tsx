@@ -1,5 +1,6 @@
 import { GetAuthUserNameFromToken } from '../auth/authClient';
 import { FormatTestDate } from '../trainingGameUtils';
+import { ExitFullscreenIfActive } from '../fullscreen';
 import { useFullscreenTrainingRoot } from '../hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '../hooks/useTrainingAbort';
 import { SaveTrainingSessionRecord } from '../storage/trainingRecords';
@@ -51,6 +52,7 @@ export function ExpFactoryGame({ config, onExit }: {
 
   const handleAbort = useCallback(() => {
     postToLegacy(legacyAbortMessageType);
+    void ExitFullscreenIfActive();
     onExit();
   }, [onExit, postToLegacy]);
 
@@ -65,9 +67,51 @@ export function ExpFactoryGame({ config, onExit }: {
     postToLegacy(legacyStartMessageType);
   }, [enterTrainingFullscreen, postToLegacy]);
 
+  const tryFullscreenOnGesture = useCallback(() => {
+    if (!document.fullscreenElement) {
+      void enterTrainingFullscreen();
+    }
+  }, [enterTrainingFullscreen]);
+
   const handleLegacyLoad = useCallback(() => {
     void beginExperiment();
-  }, [beginExperiment]);
+    try {
+      const doc = iframeRef.current?.contentDocument;
+      if (doc) {
+        doc.addEventListener('pointerdown', tryFullscreenOnGesture, { passive: true });
+        doc.addEventListener('keydown', tryFullscreenOnGesture, { passive: true });
+      }
+    } catch {
+      // Ignore
+    }
+  }, [beginExperiment, tryFullscreenOnGesture]);
+
+  useEffect(() => {
+    if (phase !== 'playing') return;
+
+    window.addEventListener('pointerdown', tryFullscreenOnGesture, { passive: true });
+    window.addEventListener('keydown', tryFullscreenOnGesture, { passive: true });
+
+    let iframeDoc: Document | null = null;
+    try {
+      iframeDoc = iframeRef.current?.contentDocument ?? null;
+      iframeDoc?.addEventListener('pointerdown', tryFullscreenOnGesture, { passive: true });
+      iframeDoc?.addEventListener('keydown', tryFullscreenOnGesture, { passive: true });
+    } catch {
+      // Ignore
+    }
+
+    return () => {
+      window.removeEventListener('pointerdown', tryFullscreenOnGesture);
+      window.removeEventListener('keydown', tryFullscreenOnGesture);
+      try {
+        iframeDoc?.removeEventListener('pointerdown', tryFullscreenOnGesture);
+        iframeDoc?.removeEventListener('keydown', tryFullscreenOnGesture);
+      } catch {
+        // Ignore
+      }
+    };
+  }, [phase, tryFullscreenOnGesture]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -75,12 +119,14 @@ export function ExpFactoryGame({ config, onExit }: {
       if (event.origin !== window.location.origin || event.source !== iframeRef.current?.contentWindow) return;
       if (IsLegacyErrorMessage(event.data, config.gameId)) {
         setErrorMessage(event.data.message);
+        void ExitFullscreenIfActive();
         setPhase('results');
         return;
       }
       if (!IsLegacyCompleteMessage(event.data, config.gameId)) return;
       const safeTrials = event.data.trials.slice(0, 2_000).map(SanitizeTrialRow);
       setSummary(event.data.summary);
+      void ExitFullscreenIfActive();
       setPhase('results');
       if (savedRef.current) return;
       savedRef.current = true;

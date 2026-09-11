@@ -1,4 +1,7 @@
-import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
+import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
+import { GetHostedGameSetting, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
+import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
 NotifyHubTrainingAbort,
@@ -22,8 +25,9 @@ import { BuildMovingCardTimeline } from './timeline/movingCardTimeline';
 export function MovingCardGame() {
   const location = useLocation();
   void IsTrainingFlowLaunchState(location?.state);
-  const { t } = useT();
-  const [phase, setPhase] = useState<'running' | 'results'>('running');
+  const { t, lang } = useT();
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
+  const [phase, setPhase] = useState<'rules' | 'running' | 'results'>('rules');
   const [results, setResults] = useState<any[]>([]);
   const jsPsychRef = useRef<JsPsych | null>(null);
   const skipFinishRef = useRef(false);
@@ -54,6 +58,7 @@ export function MovingCardGame() {
           DestroyPixiTrainingRuntime('moving-card');
           setResults(data);
           jsPsychRef.current = null;
+          void ExitFullscreenIfActive();
           setPhase('results');
         },
       });
@@ -90,19 +95,71 @@ export function MovingCardGame() {
     jsPsychRef.current?.abortExperiment();
     jsPsychRef.current = null;
     DestroyPixiTrainingRuntime('moving-card');
+    void ExitFullscreenIfActive();
     NotifyHubTrainingAbort();
   }, [phase]);
 
   useTrainingAbort({ active: phase === 'running', onAbort: abortTraining });
 
-  if (phase === 'running') {
-    return <div id="jspsych-target" className="experiment-container" style={{ width: '100vw', height: '100vh' }} />;
-  }
+  const isZh = lang !== 'en';
+  const rounds = GetHostedGameSetting<number>('rounds');
 
   return (
-    <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
-      <DefaultTrainingResults results={results} userName={userName} t={t} />
-      <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
+    <div ref={fullscreenRootRef} className="moving-card-game-root" style={{ width: '100%', minHeight: '100dvh' }}>
+      {phase === 'rules' && (
+        <div className="training-panel">
+          <TrainingRulesPanel
+            title={isZh ? '動態卡片視覺追蹤訓練' : 'Dynamic Card Tracking'}
+            label={isZh ? '遊戲規則說明' : 'Game Rules'}
+            summaryTitle={isZh ? '動態卡片訓練' : 'Moving Card Training'}
+            summaryItems={[
+              { label: isZh ? '難度' : 'Difficulty', value: difficulty },
+              { label: isZh ? '回合數' : 'Rounds', value: String(rounds) },
+            ]}
+            sections={isZh ? [
+              {
+                title: '操作與玩法',
+                description: '觀察上方提示的目標卡片，在移動的一群卡片中找出相符者並點擊。',
+                items: [
+                  '注意上方顯示的目標圖案。',
+                  '下方卡片會持續移動與變換位置，考驗動態視力與追蹤能力。',
+                  '點擊正確的目標卡片，盡可能維持高正確率與反應速度。',
+                ],
+              },
+              { title: '成績計算', description: '結算會記錄答對題數、反應時間與正確率。' },
+            ] : [
+              {
+                title: 'How to Play',
+                description: 'Identify the target card from a moving set of cards.',
+                items: [
+                  'Observe the target pattern shown at the top.',
+                  'Cards move across the screen; track them dynamically.',
+                  'Click the matching card as accurately and quickly as possible.',
+                ],
+              },
+              { title: 'Results', description: 'Records correct matches, response latency, and overall accuracy.' },
+            ]}
+            startLabel={isZh ? '開始訓練' : 'Start Training'}
+            backLabel={isZh ? '回設定' : 'Back to Settings'}
+            onStart={async () => {
+              await enterTrainingFullscreen();
+              setPhase('running');
+            }}
+            onBack={() => RequestHubTrainingConfiguration()}
+          />
+        </div>
+      )}
+
+      {phase === 'running' && (
+        <div id="jspsych-target" className="experiment-container" style={{ width: '100vw', height: '100vh' }} />
+      )}
+
+      {phase === 'results' && (
+        <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
+          <DefaultTrainingResults results={results} userName={userName} t={t} />
+          <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
+        </div>
+      )}
     </div>
   );
 }

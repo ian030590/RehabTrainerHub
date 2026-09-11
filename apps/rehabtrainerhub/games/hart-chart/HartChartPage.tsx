@@ -1,8 +1,11 @@
 // Canonical Hub-owned Hart Chart runtime and results flow.
+import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
+import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { GetHostedGameSetting, NotifyHubTrainingAbort } from '@rehab-trainer/ui/embeddedTraining';
+import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
+import { GetHostedGameSetting, NotifyHubTrainingAbort, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '@rehab-trainer/ui/i18n/games';
 import { storagePrefix } from '@rehab-trainer/ui/settings';
@@ -30,7 +33,7 @@ import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 import './styles/hart-chart.css';
 
 type DecoderDock = 'left' | 'right' | 'top' | 'bottom';
-type HartTrainingPhase = 'playing' | 'results';
+type HartTrainingPhase = 'rules' | 'playing' | 'results';
 
 interface HartTrainingResult {
   completedAt: string;
@@ -128,7 +131,8 @@ export function HartChartPage({ standalone = false }: { standalone?: boolean } =
 function HartChartRuntime() {
   const { t, lang } = useT();
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<HartTrainingPhase>('playing');
+  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
+  const [phase, setPhase] = useState<HartTrainingPhase>('rules');
   const [seed, setSeed] = useState(CreateHartSeed);
   const [scale, setScale] = useState(() => ({ small: 0.75, medium: 1, large: 1.25 })[GetHostedGameSetting<'small' | 'medium' | 'large'>('chartSize')]);
   const rounds = GetHostedGameSetting<number>('rounds');
@@ -231,6 +235,7 @@ function HartChartRuntime() {
 
   const exitTraining = () => {
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
+    void ExitFullscreenIfActive();
     NotifyHubTrainingAbort();
     navigate('/');
   };
@@ -387,6 +392,7 @@ function HartChartRuntime() {
       accuracy_percent: nextResult.accuracy,
       hints_used: nextResult.hintsUsed,
     });
+    void ExitFullscreenIfActive();
     setResult(nextResult);
     setPhase('results');
     void SaveTrainingRecord({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), gameId: 'hart-chart', gameTitle: document.title,
@@ -400,41 +406,88 @@ function HartChartRuntime() {
     });
   };
 
-  if (phase === 'results' && result) {
-    return (
-      <main className="experiment-container experiment-container-scrollable hart-results-container">
-        <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
-        <div className="experiment-results">
-          <h1>{t('hart.results.title')}</h1>
-          <ResultSummary
-            items={[
-              { label: t('hart.results.accuracy'), value: `${result.accuracy}%` },
-              { label: t('hart.results.targets'), value: result.targetCount },
-              { label: t('hart.results.attempts'), value: result.attempts },
-              {
-                label: t('hart.results.duration'),
-                value: `${Math.round(result.durationMs / 1000)} ${t('hart.results.seconds')}`,
-              },
-            ]}
-          />
-          <p className="hart-results-phrase">
-            <strong>{t('hart.results.phrase')}</strong>
-            <span>{result.phrase}</span>
-          </p>
-          <TrainingResultActions
-            backLabel={t('exp.backHome')}
-            onBackHome={() => navigate('/')}
-            hubLabel={t('exp.backLobby')}
-          />
-        </div>
-      </main>
-    );
-  }
+  const isZh = lang !== 'en';
+  const chartSize = GetHostedGameSetting<string>('chartSize');
 
   return (
-    <main className={`hart-page ${decoderOpen ? `hart-page-decoder-open hart-decoder-dock-${decoderDock}` : ''}`}>
+    <div ref={fullscreenRootRef} className="hart-chart-game-root" style={{ width: '100%', minHeight: '100dvh' }}>
       <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
-      <header className="hart-topbar">
+      {phase === 'rules' && (
+        <div className="training-panel">
+          <TrainingRulesPanel
+            title={isZh ? 'Hart Chart 視覺調節訓練' : 'Hart Chart Saccadic Training'}
+            label={isZh ? '遊戲規則說明' : 'Game Rules'}
+            summaryTitle={isZh ? 'Hart 字母表訓練' : 'Hart Chart Training'}
+            summaryItems={[
+              { label: isZh ? '視標大小' : 'Chart Size', value: chartSize },
+              { label: isZh ? '往返次數' : 'Rounds', value: String(rounds) },
+            ]}
+            sections={isZh ? [
+              {
+                title: '操作與玩法',
+                description: '利用遠近 Hart 字母表訓練眼球快速跳視與對焦調節。',
+                items: [
+                  '依照上方或解碼器提示的座標（例如 A-3、C-5），在字母表中找出對應字母。',
+                  '依序在輸入框輸入正確的字母解開暗號。',
+                  '可開啟輔助提示或將圖表投影／分享至另一螢幕進行遠近交替對焦。',
+                ],
+              },
+              { title: '成績計算', description: '結算會記錄解碼完成耗時、嘗試次數、正確率與提示使用情形。' },
+            ] : [
+              {
+                title: 'How to Play',
+                description: 'Train saccades and accommodation facility using letter charts.',
+                items: [
+                  'Locate target letters in the chart based on coordinates (e.g., A-3, C-5).',
+                  'Type each decoded letter sequentially into the input boxes to uncover the phrase.',
+                  'Use hints if needed, or scan the QR code to project the chart onto a distant screen.',
+                ],
+              },
+              { title: 'Results', description: 'Records total completion time, attempt count, accuracy, and hint usage.' },
+            ]}
+            startLabel={isZh ? '開始訓練' : 'Start Training'}
+            backLabel={isZh ? '回設定' : 'Back to Settings'}
+            onStart={async () => {
+              await enterTrainingFullscreen();
+              setStartedAt(Date.now());
+              setPhase('playing');
+            }}
+            onBack={() => RequestHubTrainingConfiguration()}
+          />
+        </div>
+      )}
+
+      {phase === 'results' && result && (
+        <main className="experiment-container experiment-container-scrollable hart-results-container">
+          <div className="experiment-results">
+            <h1>{t('hart.results.title')}</h1>
+            <ResultSummary
+              items={[
+                { label: t('hart.results.accuracy'), value: `${result.accuracy}%` },
+                { label: t('hart.results.targets'), value: result.targetCount },
+                { label: t('hart.results.attempts'), value: result.attempts },
+                {
+                  label: t('hart.results.duration'),
+                  value: `${Math.round(result.durationMs / 1000)} ${t('hart.results.seconds')}`,
+                },
+              ]}
+            />
+            <p className="hart-results-phrase">
+              <strong>{t('hart.results.phrase')}</strong>
+              <span>{result.phrase}</span>
+            </p>
+            <TrainingResultActions
+              backLabel={t('exp.backHome')}
+              onBackHome={() => navigate('/')}
+              hubLabel={t('exp.backLobby')}
+            />
+          </div>
+        </main>
+      )}
+
+      {phase === 'playing' && (
+        <main className={`hart-page ${decoderOpen ? `hart-page-decoder-open hart-decoder-dock-${decoderDock}` : ''}`}>
+          <header className="hart-topbar">
         <div className="hart-topbar-leading">
           <button className="btn btn-ghost hart-back-button" type="button" onClick={exitTraining}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -623,6 +676,8 @@ function HartChartRuntime() {
           </div>
         </div>
       )}
-    </main>
+        </main>
+      )}
+    </div>
   );
 }

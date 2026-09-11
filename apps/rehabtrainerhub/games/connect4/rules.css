@@ -1,77 +1,392 @@
-/* Game-owned rules presentation restored from fabfca9. */
-.training-rules {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+/* Game-owned training-panel and rules presentation.
+   Style sheet independently provided for this game; matches game-settings-form. */
+
+.training-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: var(--bg-overlay, rgba(20, 24, 28, 0.54));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  pointer-events: auto;
+  font-family: var(--font-body, var(--font-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif));
+  box-sizing: border-box;
 }
 
-.training-rules .training-config-label {
-  color: var(--accent-dark);
+/* Modal container matching .game-settings-form */
+.training-panel .training-config,
+.training-panel .training-rules {
+  width: 100%;
+  max-width: 42rem; /* max-w-2xl */
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius, 8px);
+  border: 1px solid var(--border, #d4d9de);
+  background: var(--background, #f6f7f9);
+  color: var(--text, #202428);
+  box-shadow: var(--shadow-md, 0 8px 24px rgba(20, 33, 43, 0.12));
+  text-align: left;
+  margin: 0 auto;
 }
 
-.training-rules-body {
+/* Header matching .game-settings-form header */
+.training-panel .training-config-header {
+  border-bottom: 1px solid var(--border, #d4d9de);
+  background: var(--surface, #ffffff);
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .training-panel .training-config-header {
+    padding: 24px 32px;
+  }
+}
+
+.training-panel .training-config-title {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* Category/Subhead label matching .game-settings-form */
+.training-panel .training-config-label {
+  display: block;
+  margin: 0 0 4px 0;
+  font-size: 0.75rem; /* 12px */
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary, #146c5b);
+  line-height: 1;
+}
+
+/* Title matching .game-settings-form h2 */
+.training-panel .training-config h1 {
+  margin: 0;
+  font-size: 1.5rem; /* 24px */
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  color: var(--heading, #14212b);
+  text-wrap: balance;
+}
+
+@media (min-width: 640px) {
+  .training-panel .training-config h1 {
+    font-size: 1.875rem; /* 30px */
+  }
+}
+
+/* Header summary chips matching .game-settings-form badge output */
+.training-panel .training-config-header-side {
+  min-width: 0;
+  max-width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.training-panel .training-config .config-summary,
+.training-panel .training-config-header .config-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 0;
+  text-align: right;
+}
+
+.training-panel .training-config .config-summary span,
+.training-panel .training-config .config-summary strong {
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  background: var(--primary-soft, #e1f1ec);
+  color: var(--primary, #146c5b);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem; /* 12px */
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Scrollable body matching .game-settings-form */
+.training-panel .training-config-body,
+.training-panel .training-rules-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 20px;
+  display: grid;
   grid-template-columns: 1fr;
+  gap: 20px;
+  background: var(--background, #f6f7f9);
+  scrollbar-gutter: stable;
 }
 
-.training-rule-section {
-  position: relative;
+@media (min-width: 640px) {
+  .training-panel .training-config-body,
+  .training-panel .training-rules-body {
+    padding: 24px 32px;
+  }
 }
 
-.training-rule-section::before {
-  content: "";
-  position: absolute;
-  top: 22px;
-  bottom: 22px;
-  left: -12px;
-  width: 3px;
-  border-radius: 999px;
-  background: var(--accent);
-  opacity: 0.72;
+/* Section card matching .game-settings-form section */
+.training-panel .training-setting,
+.training-panel .training-rule-section {
+  position: static;
+  border-radius: var(--radius, 8px);
+  border: 1px solid var(--border, #d4d9de);
+  background: var(--surface, #ffffff);
+  padding: 20px;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(20, 33, 43, 0.08));
+  margin: 0;
 }
 
-.training-rule-list {
+@media (min-width: 640px) {
+  .training-panel .training-setting,
+  .training-panel .training-rule-section {
+    padding: 24px;
+  }
+}
+
+.training-panel .training-rule-section::before {
+  display: none;
+}
+
+.training-panel .training-setting-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+/* Section heading matching .game-settings-form h3 */
+.training-panel .training-setting-header h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.125rem; /* 18px */
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  color: var(--heading, #14212b);
+  line-height: 1.35;
+}
+
+/* Section description matching .game-settings-form description */
+.training-panel .training-setting-header p,
+.training-panel .training-setting-description {
+  margin: 0;
+  max-width: none;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5rem; /* 24px */
+  color: var(--text-muted, #606970);
+}
+
+.training-panel .training-setting-header > span {
+  flex: 0 0 auto;
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--primary-soft, #e1f1ec);
+  color: var(--primary, #146c5b);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem; /* 12px */
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Rule items list */
+.training-panel .training-rule-list {
   counter-reset: training-rule;
   display: grid;
   gap: 10px;
-  margin: 12px 0 0;
+  margin: 14px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.training-rule-list li {
+.training-panel .training-rule-list li {
   counter-increment: training-rule;
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: start;
   gap: 10px;
-  color: var(--text-secondary);
-  font-size: calc(15px * var(--ui-font-scale, 1));
+  color: var(--text, #202428);
+  font-size: 0.875rem; /* 14px */
   line-height: 1.55;
 }
 
-.training-rule-list li::before {
+.training-panel .training-rule-list li::before {
   content: counter(training-rule);
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   display: inline-grid;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--primary, #146c5b) 30%, var(--border, #d4d9de));
   border-radius: 50%;
-  background: var(--bg-accent-soft);
-  color: var(--accent-dark);
-  font-size: calc(12px * var(--ui-font-scale, 1));
+  background: var(--primary-soft, #e1f1ec);
+  color: var(--primary, #146c5b);
+  font-size: 0.75rem; /* 12px */
   font-weight: 800;
   line-height: 1;
 }
 
-.training-rule-note {
+.training-panel .training-rule-note {
   margin: 10px 0 0;
-  color: var(--text-muted);
-  font-size: calc(13px * var(--ui-font-scale, 1));
+  color: var(--text-muted, #606970);
+  font-size: 0.8125rem; /* 13px */
   line-height: 1.55;
 }
 
-@media (max-width: 768px) {
+/* Footer actions matching .game-settings-form footer */
+.training-panel .config-actions,
+.training-panel .training-config > .config-actions {
+  flex: 0 0 auto;
+  display: block;
+  margin: 0;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border, #d4d9de);
+  background: var(--surface, #ffffff);
+  box-shadow: none;
+}
 
-  .training-rule-section::before {
-    display: none;
+@media (min-width: 640px) {
+  .training-panel .config-actions,
+  .training-panel .training-config > .config-actions {
+    padding: 16px 32px;
+  }
+}
+
+.training-panel .training-config-navigation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.training-panel .training-config-action-feedback {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.training-panel .training-config-navigation-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  /* Cancel button first (left), Start button second (right) */
+  flex-direction: row-reverse;
+}
+
+/* Outline button (Back/Cancel) matching Button variant="outline" */
+.training-panel .training-config-navigation-buttons .btn.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: var(--radius, 8px);
+  border: 1px solid var(--border-strong, #aeb6bd);
+  background: var(--surface, #ffffff);
+  color: var(--heading, #14212b);
+  font-family: inherit;
+  font-size: 0.875rem; /* 14px */
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.training-panel .training-config-navigation-buttons .btn.btn-ghost:hover {
+  border-color: var(--primary, #146c5b);
+  color: var(--primary, #146c5b);
+  background: var(--surface, #ffffff);
+}
+
+.training-panel .training-config-navigation-buttons .btn.btn-ghost:active {
+  transform: translateY(1px);
+}
+
+/* Primary button (Start) matching Button size="lg" */
+.training-panel .training-config-navigation-buttons .btn.btn-primary,
+.training-panel .training-config-navigation-buttons .config-start-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 8px 24px;
+  border-radius: var(--radius, 8px);
+  border: 1px solid var(--primary, #146c5b);
+  background: var(--primary, #146c5b);
+  color: var(--text-on-accent, #ffffff);
+  font-family: inherit;
+  font-size: 1rem; /* 16px */
+  font-weight: 800;
+  line-height: 1;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.training-panel .training-config-navigation-buttons .btn.btn-primary:hover,
+.training-panel .training-config-navigation-buttons .config-start-btn:hover {
+  background: var(--primary-hover, #0d5547);
+  border-color: var(--primary-hover, #0d5547);
+  box-shadow: none;
+}
+
+.training-panel .training-config-navigation-buttons .btn.btn-primary:active,
+.training-panel .training-config-navigation-buttons .config-start-btn:active {
+  transform: translateY(1px);
+}
+
+.training-panel .config-start-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 639px) {
+  .training-panel .training-config-navigation-buttons {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+
+  .training-panel .training-config-navigation-buttons .btn.btn-ghost,
+  .training-panel .training-config-navigation-buttons .btn.btn-primary,
+  .training-panel .training-config-navigation-buttons .config-start-btn {
+    width: 100%;
   }
 }

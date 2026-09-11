@@ -1,5 +1,6 @@
 import { OfficialGameShell } from '@rehab-trainer/ui/components/OfficialGameShell';
 import '@rehab-trainer/ui/components/TrainerApp.css';
+import './rules.css';
 import { InstallHostedGameSettingsReceiver } from '@rehab-trainer/ui/embeddedTraining';
 import { LanguageProvider } from '@rehab-trainer/ui/i18n/games';
 import React from 'react';
