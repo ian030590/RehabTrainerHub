@@ -4,7 +4,7 @@ import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
+import { TrainingRulesPanel } from './rules/TrainingRulesPanel';
 import { GetHostedGameSetting, NotifyHubTrainingAbort, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '@rehab-trainer/ui/i18n/games';

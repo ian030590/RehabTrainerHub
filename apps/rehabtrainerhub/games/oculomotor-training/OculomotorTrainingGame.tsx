@@ -1,7 +1,7 @@
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
-import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
+import { TrainingRulesPanel } from './rules/TrainingRulesPanel';
 import WebGazerExtension from '@jspsych/extension-webgazer';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {

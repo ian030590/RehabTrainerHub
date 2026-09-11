@@ -2,7 +2,7 @@ import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreen
 import { OfficialGameShell } from '@rehab-trainer/ui/components/OfficialGameShell';
 import '@rehab-trainer/ui/components/TrainerApp.css';
 import './rules.css';
-import { TrainingRulesPanel } from '@rehab-trainer/ui/components/TrainingRulesPanel';
+import { TrainingRulesPanel } from './rules/TrainingRulesPanel';
 import { GetHostedGameSetting, InstallHostedGameSettingsReceiver, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
 import { LanguageProvider, useT } from '@rehab-trainer/ui/i18n/games';
 import React, { useState } from 'react';
