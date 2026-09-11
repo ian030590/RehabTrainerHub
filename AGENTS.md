@@ -44,6 +44,11 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 
 ## 程式風格與命名規範
 
+### Training panel 長期規範
+
+- 所有遊戲的 `training-panel` 必須使用明確語意標籤：主標題使用 `<h2>`、分段標題使用 `<h3>`、標籤與說明使用 `<p>`，有順序的規則使用 `<ol><li>`；不得以無語意的 `<div>` 或 `<span>` 取代。
+- `training-panel` 內的文字字重至少為 `700`，字體大小以對應設定表單的基準放大 `1.15` 倍，並維持可讀的行高與鍵盤操作。
+
 使用 TypeScript、React functional components、既有模式。共用行為放 `packages/ui`，不在 trainers 重複。優先 CSS variables/theme tokens，禁止硬編碼顏色。2 spaces；components PascalCase；functions/variables camelCase；檔名明確對應功能。
 
 ## 共享邏輯優先

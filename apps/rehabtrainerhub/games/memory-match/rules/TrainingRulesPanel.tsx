@@ -60,8 +60,8 @@ export function TrainingRulesPanel({
     >
       <header className="training-config-header">
         <div className="training-config-title">
-          {label && <span className="training-config-label">{label}</span>}
-          <h1>{title}</h1>
+          {label && <p className="training-config-label">{label}</p>}
+          <h2>{title}</h2>
         </div>
         {summaryItems.length > 0 && (
           <div className="training-config-header-side">
@@ -110,7 +110,7 @@ function TrainingRuleSectionView({ section }: { section: TrainingRuleSection }) 
       <div className="training-setting-header">
         <div>
           <div className="training-setting-title-row">
-            <h2>{section.title}</h2>
+            <h3>{section.title}</h3>
             {hasDescription && (
               <button
                 type="button"
@@ -139,4 +139,3 @@ function TrainingRuleSectionView({ section }: { section: TrainingRuleSection }) 
     </section>
   );
 }
-

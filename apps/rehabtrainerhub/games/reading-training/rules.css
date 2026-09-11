@@ -1,7 +1,11 @@
 /* Game-owned training-panel and rules presentation.
    Style sheet independently provided for this game; matches game-settings-form. */
 
+/* Match this game's Hub GameSettingsForm theme. */
 .training-panel {
+  --primary: #006c47;
+  --primary-hover: #005235;
+  --primary-soft: color-mix(in srgb, #006c47 8%, #ffffff);
   position: fixed;
   inset: 0;
   z-index: 900;
@@ -37,6 +41,8 @@
   box-shadow: var(--shadow-md, 0 8px 24px rgba(20, 33, 43, 0.12));
   text-align: left;
   margin: 0 auto;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 /* Header matching .game-settings-form header */
@@ -66,7 +72,7 @@
 .training-panel .training-config-label {
   display: block;
   margin: 0 0 4px 0;
-  font-size: 0.75rem; /* 12px */
+  font-size: calc(0.75rem * 1.15);
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -75,9 +81,9 @@
 }
 
 /* Title matching .game-settings-form h2 */
-.training-panel .training-config h1 {
+.training-panel .training-config h2 {
   margin: 0;
-  font-size: 1.5rem; /* 24px */
+  font-size: calc(1.5rem * 1.15);
   font-weight: 900;
   letter-spacing: -0.025em;
   line-height: 1.25;
@@ -86,8 +92,8 @@
 }
 
 @media (min-width: 640px) {
-  .training-panel .training-config h1 {
-    font-size: 1.875rem; /* 30px */
+  .training-panel .training-config h2 {
+    font-size: calc(1.875rem * 1.15);
   }
 }
 
@@ -125,7 +131,7 @@
   background: var(--primary-soft, #e1f1ec);
   color: var(--primary, #146c5b);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.75rem; /* 12px */
+  font-size: calc(0.75rem * 1.15);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -184,9 +190,9 @@
 }
 
 /* Section heading matching .game-settings-form h3 */
-.training-panel .training-setting-header h2 {
+.training-panel .training-setting-header h3 {
   margin: 0 0 4px 0;
-  font-size: 1.125rem; /* 18px */
+  font-size: calc(1.125rem * 1.15);
   font-weight: 900;
   letter-spacing: -0.015em;
   color: var(--heading, #14212b);
@@ -198,7 +204,7 @@
 .training-panel .training-setting-description {
   margin: 0;
   max-width: none;
-  font-size: 0.875rem; /* 14px */
+  font-size: calc(0.875rem * 1.15);
   line-height: 1.5rem; /* 24px */
   color: var(--text-muted, #606970);
 }
@@ -214,7 +220,7 @@
   background: var(--primary-soft, #e1f1ec);
   color: var(--primary, #146c5b);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.75rem; /* 12px */
+  font-size: calc(0.75rem * 1.15);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -237,7 +243,7 @@
   align-items: start;
   gap: 10px;
   color: var(--text, #202428);
-  font-size: 0.875rem; /* 14px */
+  font-size: calc(0.875rem * 1.15);
   line-height: 1.55;
 }
 
@@ -251,7 +257,7 @@
   border-radius: 50%;
   background: var(--primary-soft, #e1f1ec);
   color: var(--primary, #146c5b);
-  font-size: 0.75rem; /* 12px */
+  font-size: calc(0.75rem * 1.15);
   font-weight: 800;
   line-height: 1;
 }
@@ -259,7 +265,7 @@
 .training-panel .training-rule-note {
   margin: 10px 0 0;
   color: var(--text-muted, #606970);
-  font-size: 0.8125rem; /* 13px */
+  font-size: calc(0.8125rem * 1.15);
   line-height: 1.55;
 }
 
@@ -315,7 +321,7 @@
   background: var(--surface, #ffffff);
   color: var(--heading, #14212b);
   font-family: inherit;
-  font-size: 0.875rem; /* 14px */
+  font-size: calc(0.875rem * 1.15);
   font-weight: 800;
   line-height: 1;
   text-decoration: none;
@@ -348,7 +354,7 @@
   background: var(--primary, #146c5b);
   color: var(--text-on-accent, #ffffff);
   font-family: inherit;
-  font-size: 1rem; /* 16px */
+  font-size: calc(1rem * 1.15);
   font-weight: 800;
   line-height: 1;
   gap: 8px;
