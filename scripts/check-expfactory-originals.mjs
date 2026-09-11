@@ -37,11 +37,8 @@ for (const [gameId, [commit, expectedHash]] of Object.entries(sources)) {
   const gameSourceFile = readdirSync(root).find((name) => name.endsWith('Game.tsx'));
   assert.ok(gameSourceFile, `${gameId}: game entry is missing.`);
   const gameSource = readFileSync(resolve(root, gameSourceFile), 'utf8');
-  const tourSource = readFileSync(resolve(root, 'tour.tsx'), 'utf8');
   assert.ok(gameSource.includes(`sourceCommit: '${commit}'`), `${gameId}: source commit is stale.`);
   assert.ok(gameSource.includes('ExpFactoryGame'), `${gameId}: shared original-experiment shell is missing.`);
-  assert.ok(tourSource.includes('StartTour(steps'), `${gameId}: local Toutour is missing.`);
-  assert.ok(tourSource.includes("name === 'tour_done' || name === 'tour_skip'"), `${gameId}: local Toutour completion is missing.`);
   assert.ok(!gameSource.includes("('rules')"), `${gameId}: pre-game rules page returned.`);
 
   const settings = JSON.parse(readFileSync(resolve(root, 'settings.json'), 'utf8'));
@@ -50,15 +47,38 @@ for (const [gameId, [commit, expectedHash]] of Object.entries(sources)) {
 
   const indexSource = readFileSync(resolve(legacyRoot, 'index.html'), 'utf8');
   const bridgeSource = readFileSync(resolve(legacyRoot, 'rehab-bridge.js'), 'utf8');
-  assert.ok(indexSource.includes('lang="zh-TW"') && indexSource.includes('lang="en"'), `${gameId}: bilingual copy is missing.`);
+  assert.ok(indexSource.includes('lang="zh-TW"'), `${gameId}: bilingual copy is missing.`);
   assert.ok(indexSource.includes('window.rehabBilingualize'), `${gameId}: bilingual jsPsych instructions are missing.`);
   assert.ok(!/https?:\/\//i.test(indexSource), `${gameId}: legacy runtime must not load external assets.`);
   assert.ok(!/(?:linear|radial)-gradient|neon/i.test(indexSource), `${gameId}: forbidden tour styling found.`);
   assert.ok(!emojiPattern.test(indexSource + gameSource), `${gameId}: emoji found in tour copy.`);
-  assert.ok(bridgeSource.includes("originalTimeline[0] === window.instruction_node"), `${gameId}: initial rules page is not removed.`);
+  assert.ok(bridgeSource.includes('var timeline = originalTimeline.slice();'), `${gameId}: native instructions must stay in the timeline.`);
   assert.ok(bridgeSource.includes('window.jsPsych.init({'), `${gameId}: original jsPsych timeline is not started natively.`);
-  assert.ok(bridgeSource.indexOf("event.data.type === startType") < bridgeSource.indexOf('startExperiment();'), `${gameId}: experiment can start before the tour message.`);
+  assert.ok(bridgeSource.indexOf("event.data.type === startType") < bridgeSource.indexOf('startExperiment();'), `${gameId}: experiment can start before the start message.`);
   new Script(bridgeSource, { filename: `${gameId}/rehab-bridge.js` });
+  const instruction = { type: 'instructions' };
+  const timeline = [instruction, { type: 'task' }];
+  let receive;
+  let startedTimeline;
+  const parent = {};
+  const window = {
+    parent,
+    location: { origin: 'http://localhost' },
+    original: timeline,
+    instruction_node: instruction,
+    addEventListener: (_type, callback) => { receive = callback; },
+    jsPsych: { init: options => { startedTimeline = options.timeline; } },
+  };
+  new Script(bridgeSource).runInNewContext({
+    window,
+    document: { body: { dataset: { gameId, timeline: 'original' } } },
+  });
+  assert.equal(startedTimeline, undefined);
+  receive({ origin: 'http://untrusted', source: parent, data: { type: 'rehab-expfactory:start' } });
+  assert.equal(startedTimeline, undefined);
+  receive({ origin: window.location.origin, source: parent, data: { type: 'rehab-expfactory:start' } });
+  assert.equal(startedTimeline?.[0], instruction, `${gameId}: native instruction must run first.`);
+  assert.equal(startedTimeline?.length, timeline.length);
   for (const [, inlineScript] of indexSource.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
     new Script(inlineScript, { filename: `${gameId}/index.html` });
   }

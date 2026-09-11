@@ -19,7 +19,7 @@ const manifestCode = ts.transpileModule(manifestSource, {
 const manifestUrl = `data:text/javascript;base64,${Buffer.from(manifestCode).toString('base64')}`;
 const {
   standardTrainingFlow,
-  tourTrainingFlow,
+  nativeInstructionTrainingFlow,
   trainingModuleFlowManifest,
 } = await import(manifestUrl);
 
@@ -241,7 +241,7 @@ assert.ok(!mobileControlsSource.includes("up: '↑'"), 'Mobile direction control
 for (const catalogId of catalogIds) {
   const manifest = trainingModuleFlowManifest[catalogId];
   const expectedFlow = expFactoryCatalogIds.includes(catalogId)
-    ? tourTrainingFlow
+    ? nativeInstructionTrainingFlow
     : standardTrainingFlow;
   assert.deepEqual(
     manifest.flow,

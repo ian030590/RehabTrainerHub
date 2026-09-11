@@ -1,5 +1,6 @@
 import { OfficialGameShell } from '@rehab-trainer/ui/components/OfficialGameShell';
 import '@rehab-trainer/ui/components/TrainerApp.css';
+import './rules.css';
 import { InstallHostedGameSettingsReceiver, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
 import { LanguageProvider } from '@rehab-trainer/ui/i18n/games';
 import React from 'react';
@@ -8,7 +9,6 @@ import { HashRouter } from 'react-router-dom';
 import { dictionaries } from './i18n';
 import settings from './settings.json';
 import score from './score.json';
-import { GameTour } from './tour';
 import { TongueCatchGame } from './TongueCatchGame';
 
 InstallHostedGameSettingsReceiver();
@@ -20,9 +20,7 @@ if (rootElement) {
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
           <OfficialGameShell settings={settings} score={score} title={document.title}>
-          <GameTour>
-          <TongueCatchGame onExit={() => RequestHubTrainingConfiguration()} />
-          </GameTour>
+            <TongueCatchGame onExit={() => RequestHubTrainingConfiguration()} />
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

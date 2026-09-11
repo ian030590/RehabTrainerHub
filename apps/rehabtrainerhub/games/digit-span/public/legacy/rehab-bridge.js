@@ -54,15 +54,12 @@
   function startExperiment() {
     if (started) return;
     started = true;
-    document.querySelector('.legacy-tour-preview')?.remove();
 
     try {
       if (typeof window.rehabBilingualize === 'function') window.rehabBilingualize();
       var originalTimeline = window[timelineName];
       if (!Array.isArray(originalTimeline)) throw new Error('Original jsPsych timeline was not found.');
-      var timeline = originalTimeline[0] === window.instruction_node
-        ? originalTimeline.slice(1)
-        : originalTimeline.slice();
+      var timeline = originalTimeline.slice();
 
       window.jsPsych.init({
         timeline: timeline,

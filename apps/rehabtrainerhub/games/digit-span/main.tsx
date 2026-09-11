@@ -9,7 +9,6 @@ import { DigitSpanGame } from './DigitSpanGame';
 import { dictionaries } from './i18n';
 import settings from './settings.json';
 import score from './score.json';
-import { GameTour } from './tour';
 
 InstallHostedGameSettingsReceiver();
 
@@ -20,9 +19,7 @@ if (rootElement) {
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
           <OfficialGameShell settings={settings} score={score} title={document.title}>
-          <GameTour>
-          <DigitSpanGame onExit={() => RequestHubTrainingConfiguration()} />
-          </GameTour>
+            <DigitSpanGame onExit={() => RequestHubTrainingConfiguration()} />
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

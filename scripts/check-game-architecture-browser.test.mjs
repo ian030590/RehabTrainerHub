@@ -67,8 +67,9 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     const guidedGame = await Run(process.execPath, [
       browserSmokeScript,
       '--url', `http://127.0.0.1:${address.port}/games/${gameId}/`,
-      '--clickSelectors', '.game-settings-form button[type="submit"],#ttNext,#ttNext,#ttNext',
-      '--allSelectors', '#ttTip:not(.show),.cognitive-reference-game iframe[src="./legacy/index.html"]',
+      '--clickSelectors', '.game-settings-form button[type="submit"]',
+      '--allSelectors', '.cognitive-reference-game iframe[src="./legacy/index.html"]',
+      '--iframeSelectors', '.jspsych-display-element .block-text',
       '--timeoutMs', '3000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(guidedGame.exitCode, 0, `${gameId}: ${guidedGame.stdout}\n${guidedGame.stderr}`);
@@ -78,8 +79,8 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     const standalone = await Run(process.execPath, [
       browserSmokeScript,
       '--url', `http://127.0.0.1:${address.port}/games/${gameId}/`,
-      '--clickSelectors', '.game-settings-form button[type="submit"],#ttNext,#ttNext,#ttNext,.training-rules .btn-ghost,.game-settings-form button[type="submit"],#ttNext,#ttNext,#ttNext',
-      '--allSelectors', '#ttTip:not(.show),.training-rules,.training-rules button',
+      '--clickSelectors', '.game-settings-form button[type="submit"],.training-rules .btn-ghost,.game-settings-form button[type="submit"]',
+      '--allSelectors', '.training-rules,.training-rules button',
       '--timeoutMs', '10000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(standalone.exitCode, 0, `${gameId}: ${standalone.stdout}\n${standalone.stderr}`);

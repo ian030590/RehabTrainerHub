@@ -9,7 +9,6 @@ import { dictionaries } from './i18n';
 import { PlusMinusGame } from './PlusMinusGame';
 import settings from './settings.json';
 import score from './score.json';
-import { GameTour } from './tour';
 
 InstallHostedGameSettingsReceiver();
 
@@ -20,9 +19,7 @@ if (rootElement) {
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
           <OfficialGameShell settings={settings} score={score} title={document.title}>
-          <GameTour>
-          <PlusMinusGame onExit={() => RequestHubTrainingConfiguration()} />
-          </GameTour>
+            <PlusMinusGame onExit={() => RequestHubTrainingConfiguration()} />
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

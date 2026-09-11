@@ -8,20 +8,6 @@ const config = {
     zh: '反向眼跳抑制',
     en: 'Antisaccade',
   },
-  tour: {
-    goal: {
-      zh: '方塊出現後，把注意移到相反側，辨認短暫出現的箭頭。',
-      en: 'After the square appears, shift attention to the opposite side and identify the brief arrow.',
-    },
-    stimulus: {
-      zh: '注視十字後，一側出現黑色方塊；箭頭隨後在另一側短暫出現並被遮罩。',
-      en: 'After fixation, a black square appears on one side; an arrow briefly appears on the opposite side and is masked.',
-    },
-    response: {
-      zh: '使用左、右或上方向鍵回答箭頭方向。',
-      en: 'Use the Left, Right, or Up Arrow key to report the arrow direction.',
-    },
-  },
 } satisfies ExpFactoryGameConfig;
 
 export function AntisaccadeGame({ onExit }: { onExit: () => void }) {

@@ -9,7 +9,6 @@ import { GoNoGoGame } from './GoNoGoGame';
 import { dictionaries } from './i18n';
 import settings from './settings.json';
 import score from './score.json';
-import { GameTour } from './tour';
 
 InstallHostedGameSettingsReceiver();
 
@@ -20,9 +19,7 @@ if (rootElement) {
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
           <OfficialGameShell settings={settings} score={score} title={document.title}>
-          <GameTour>
-          <GoNoGoGame onExit={() => RequestHubTrainingConfiguration()} />
-          </GameTour>
+            <GoNoGoGame onExit={() => RequestHubTrainingConfiguration()} />
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

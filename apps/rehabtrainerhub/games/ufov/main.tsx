@@ -10,7 +10,6 @@ import { PeripheralAttentionPage } from './PeripheralAttentionPage';
 import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
 import settings from './settings.json';
 import score from './score.json';
-import { GameTour } from './tour';
 
 InstallHostedGameSettingsReceiver();
 
@@ -40,9 +39,7 @@ if (rootElement) {
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
           <OfficialGameShell settings={settings} score={score} title={document.title}>
-          <GameTour>
-          <UfovGame />
-          </GameTour>
+            <UfovGame />
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

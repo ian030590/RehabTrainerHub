@@ -2,7 +2,6 @@ export type TrainingFlowStep =
   | 'card'
   | 'config'
   | 'rules'
-  | 'tour'
   | 'training'
   | 'results';
 
@@ -10,15 +9,13 @@ export const standardTrainingFlow: readonly TrainingFlowStep[] = [
   'card',
   'config',
   'rules',
-  'tour',
   'training',
   'results',
 ] as const;
 
-export const tourTrainingFlow: readonly TrainingFlowStep[] = [
+export const nativeInstructionTrainingFlow: readonly TrainingFlowStep[] = [
   'card',
   'config',
-  'tour',
   'training',
   'results',
 ] as const;
@@ -59,20 +56,20 @@ const manifestEntries: ReadonlyArray<readonly [
   ['brain:ufov', 'ufov/PeripheralAttentionPage.tsx', 'none', 'native-timeline'],
   ['brain:every-ball-response', 'every-ball-response/EveryBallResponsePage.tsx', 'camera-or-microphone', 'native-timeline'],
   ['brain:minesweeper', 'minesweeper/MinesweeperGame.tsx', 'none', 'external-runtime-adapter'],
-  ['brain:stroop', 'stroop/StroopGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:flanker', 'flanker/FlankerGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:go-nogo', 'go-nogo/GoNoGoGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:n-back', 'n-back/NBackGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:digit-span', 'digit-span/DigitSpanGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:spatial-span', 'spatial-span/SpatialSpanGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:stop-signal', 'stop-signal/StopSignalGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:tower-of-london', 'tower-of-london/TowerOfLondonGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:attention-network-task', 'attention-network-task/AttentionNetworkTaskGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:letter-memory', 'letter-memory/LetterMemoryGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:number-letter', 'number-letter/NumberLetterGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:antisaccade', 'antisaccade/AntisaccadeGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:keep-track', 'keep-track/KeepTrackGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
-  ['brain:plus-minus', 'plus-minus/PlusMinusGame.tsx', 'none', 'native-timeline', tourTrainingFlow],
+  ['brain:stroop', 'stroop/StroopGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:flanker', 'flanker/FlankerGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:go-nogo', 'go-nogo/GoNoGoGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:n-back', 'n-back/NBackGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:digit-span', 'digit-span/DigitSpanGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:spatial-span', 'spatial-span/SpatialSpanGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:stop-signal', 'stop-signal/StopSignalGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:tower-of-london', 'tower-of-london/TowerOfLondonGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:attention-network-task', 'attention-network-task/AttentionNetworkTaskGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:letter-memory', 'letter-memory/LetterMemoryGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:number-letter', 'number-letter/NumberLetterGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:antisaccade', 'antisaccade/AntisaccadeGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:keep-track', 'keep-track/KeepTrackGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
+  ['brain:plus-minus', 'plus-minus/PlusMinusGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
   ['brain:reaction-time', 'reaction-time/ReactionTimeGame.ts', 'none', 'external-runtime-adapter'],
   ['brain:whack-a-mole', 'whack-a-mole/TargetClickGame.ts', 'none', 'external-runtime-adapter'],
   ['brain:memory-match', 'memory-match/MemoryMatchGame.ts', 'none', 'external-runtime-adapter'],

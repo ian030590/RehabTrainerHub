@@ -9,7 +9,6 @@ import { dictionaries } from './i18n';
 import { MovingCardGame } from './MovingCardGame';
 import settings from './settings.json';
 import score from './score.json';
-import { GameTour } from './tour';
 
 InstallHostedGameSettingsReceiver();
 
@@ -20,9 +19,7 @@ if (rootElement) {
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
           <OfficialGameShell settings={settings} score={score} title={document.title}>
-          <GameTour>
-          <MovingCardGame />
-          </GameTour>
+            <MovingCardGame />
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

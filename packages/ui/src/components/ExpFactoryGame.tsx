@@ -15,11 +15,6 @@ export interface ExpFactoryGameConfig {
   moduleId: string;
   sourceCommit: string;
   title: { zh: string; en: string };
-  tour: {
-    goal: { zh: string; en: string };
-    stimulus: { zh: string; en: string };
-    response: { zh: string; en: string };
-  };
 }
 
 interface LegacySummary {
@@ -44,8 +39,6 @@ export function ExpFactoryGame({ config, onExit }: {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const mountedRef = useRef(true);
   const startedRef = useRef(false);
-  const tourCompleteRef = useRef(false);
-  const legacyLoadedRef = useRef(false);
   const savedRef = useRef(false);
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot();
   const [phase, setPhase] = useState<'playing' | 'results'>('playing');
@@ -72,23 +65,12 @@ export function ExpFactoryGame({ config, onExit }: {
     postToLegacy(legacyStartMessageType);
   }, [enterTrainingFullscreen, postToLegacy]);
 
-  const tryBeginExperiment = useCallback(() => {
-    if (!tourCompleteRef.current || !legacyLoadedRef.current) return;
+  const handleLegacyLoad = useCallback(() => {
     void beginExperiment();
   }, [beginExperiment]);
 
-  const handleLegacyLoad = useCallback(() => {
-    legacyLoadedRef.current = true;
-    tryBeginExperiment();
-  }, [tryBeginExperiment]);
-
   useEffect(() => {
     mountedRef.current = true;
-    const tourEventName = `rehab-trainer:game-tour-complete:${config.gameId}`;
-    const handleTourComplete = () => {
-      tourCompleteRef.current = true;
-      tryBeginExperiment();
-    };
     const handleMessage = (event: MessageEvent<unknown>) => {
       if (event.origin !== window.location.origin || event.source !== iframeRef.current?.contentWindow) return;
       if (IsLegacyErrorMessage(event.data, config.gameId)) {
@@ -122,13 +104,11 @@ export function ExpFactoryGame({ config, onExit }: {
       });
     };
     window.addEventListener('message', handleMessage);
-    window.addEventListener(tourEventName, handleTourComplete);
     return () => {
       mountedRef.current = false;
       window.removeEventListener('message', handleMessage);
-      window.removeEventListener(tourEventName, handleTourComplete);
     };
-  }, [config, tryBeginExperiment]);
+  }, [config]);
 
   return (
     <div

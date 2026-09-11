@@ -1,5 +1,6 @@
 import { OfficialGameShell } from '@rehab-trainer/ui/components/OfficialGameShell';
 import '@rehab-trainer/ui/components/TrainerApp.css';
+import './rules.css';
 import { InstallHostedGameSettingsReceiver } from '@rehab-trainer/ui/embeddedTraining';
 import { LanguageProvider } from '@rehab-trainer/ui/i18n/games';
 import React from 'react';
@@ -10,7 +11,6 @@ import { DrivingWheelSetup } from './input/DrivingWheelSetup';
 import { dictionaries } from './i18n';
 import settings from './settings.json';
 import score from './score.json';
-import { GameTour } from './tour';
 
 InstallHostedGameSettingsReceiver();
 
@@ -21,9 +21,7 @@ if (rootElement) {
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
           <OfficialGameShell settings={settings} score={score} title={document.title}>
-          <GameTour>
-          <DrivingWheelSetup><DrivingRehabGame /></DrivingWheelSetup>
-          </GameTour>
+            <DrivingWheelSetup><DrivingRehabGame /></DrivingWheelSetup>
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>

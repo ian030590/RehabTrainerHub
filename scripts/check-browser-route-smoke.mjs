@@ -17,6 +17,7 @@ const expectedSelectors = [
   ...ParseSelectorList(args.allSelectors),
 ];
 const clickSelectors = ParseSelectorList(args.clickSelectors);
+const iframeSelectors = ParseSelectorList(args.iframeSelectors);
 const viewportSelectors = ParseSelectorList(args.viewportSelectors);
 const canvasViewportSelectors = ParseSelectorList(args.canvasViewportSelectors);
 const fullscreenSelector = args.fullscreenSelector;
@@ -177,15 +178,29 @@ try {
   await Wait(timeoutMs);
   await ClickSelectors(cdp, sessionId, clickSelectors, timeoutMs);
   if (clickSelectors.length > 0) await Wait(800);
+  const iframeDeadline = Date.now() + timeoutMs;
+  while (iframeSelectors.length && Date.now() < iframeDeadline) {
+    const ready = await cdp.Send('Runtime.evaluate', {
+      expression: `${JSON.stringify(iframeSelectors)}.every(selector => document.querySelector('iframe')?.contentDocument?.querySelector(selector))`,
+      returnByValue: true,
+    }, sessionId);
+    if (ready.result.value) break;
+    await Wait(100);
+  }
 
   const stateResult = await cdp.Send('Runtime.evaluate', {
     expression: `JSON.stringify({
       href: location.href,
       rootHtml: document.querySelector('#root, #__next')?.outerHTML || document.body.innerHTML || '',
       bodyText: document.body.innerText || '',
+      iframeText: document.querySelector('iframe')?.contentDocument?.body?.innerText || '',
       selectorMatches: ${JSON.stringify(expectedSelectors)}.map((selector) => ({
         selector,
         matched: Boolean(document.querySelector(selector)),
+      })),
+      iframeMatches: ${JSON.stringify(iframeSelectors)}.map((selector) => ({
+        selector,
+        matched: Boolean(document.querySelector('iframe')?.contentDocument?.querySelector(selector)),
       })),
       fullscreenMatched: ${fullscreenSelector ? `Boolean(document.fullscreenElement?.matches(${JSON.stringify(fullscreenSelector)}))` : 'true'},
       viewportMatches: ${JSON.stringify(viewportSelectors)}.map((selector) => {
@@ -253,7 +268,7 @@ try {
   if (!state.rootHtml || state.rootHtml === '<div id="root"></div>') {
     failures.push('React root is empty.');
   }
-  for (const selectorMatch of state.selectorMatches) {
+  for (const selectorMatch of [...state.selectorMatches, ...state.iframeMatches]) {
     if (!selectorMatch.matched) {
       failures.push(`Missing expected selector: ${selectorMatch.selector}`);
     }
@@ -288,7 +303,7 @@ try {
   }
 
   if (failures.length > 0) {
-    throw new Error(`Browser route smoke failed for ${testTarget}\n${failures.join('\n')}\n\nPage text:\n${state.bodyText.slice(0, 2000)}`);
+    throw new Error(`Browser route smoke failed for ${testTarget}\n${failures.join('\n')}\n\nPage text:\n${state.bodyText.slice(0, 2000)}\nIframe text:\n${state.iframeText.slice(0, 2000)}`);
   }
 
   console.log(`Browser route smoke passed for ${testTarget}.`);

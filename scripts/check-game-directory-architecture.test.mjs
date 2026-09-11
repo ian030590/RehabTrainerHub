@@ -226,26 +226,24 @@ test('all official games install the verified settings receiver', async () => {
   }
 });
 
-test('every official game owns its gameplay-specific Toutour file', async () => {
-  const shell = await ReadUi('components/OfficialGameShell.tsx');
-  assert.doesNotMatch(shell, /StartTour|Toutour|officialGameTourCompleteEvent/);
-  await assert.rejects(access(resolve(repositoryRoot, 'packages/ui/src/components/TourGate.tsx')));
-
-  const manifest = await readFile(resolve(gamesRoot, 'moduleFlowManifest.ts'), 'utf8');
-  assert.match(manifest, /standardTrainingFlow[\s\S]*?'rules',[\s\S]*?'tour',[\s\S]*?'training'/);
-  assert.match(manifest, /tourTrainingFlow[\s\S]*?'config',[\s\S]*?'tour',[\s\S]*?'training'/);
-
+test('official games have no Toutour dependency and own their rules styles', async () => {
+  const nativeRules = ['moving-card', 'oculomotor-training', 'gabor-patching', 'reading-training', 'hart-chart', 'ufov'];
+  assert.doesNotMatch(await ReadUi('components/TrainerApp.css'), /\.training-rule/);
   for (const gameId of expectedOfficialGameIds) {
     const main = await readFile(resolve(gamesRoot, gameId, 'main.tsx'), 'utf8');
-    const tour = await readFile(resolve(gamesRoot, gameId, 'tour.tsx'), 'utf8');
-    assert.match(main, /from ['"]\.\/tour['"]/, `${gameId} must import its local Toutour.`);
-    assert.match(main, /<GameTour>/, `${gameId} must mount its local Toutour before the game.`);
-    assert.match(tour, new RegExp(`data-game-tour=\\"${gameId}\\"`));
-    assert.match(tour, /StartTour\(steps/);
-    assert.match(tour, /inert={!complete \|\| undefined}/);
-    assert.doesNotMatch(tour, /TourGate/);
-    assert.match(tour, /goal:|stimulus:|response:/);
+    assert.doesNotMatch(main, /GameTour|from ['"]\.\/tour['"]/);
+    await assert.rejects(access(resolve(gamesRoot, gameId, 'tour.tsx')));
+    const files = await readdir(resolve(gamesRoot, gameId));
+    if (files.includes('rules.css')) {
+      assert.match(main, /import ['"]\.\/rules.css['"]/);
+      await access(resolve(gamesRoot, gameId, 'rules.css'));
+    } else if (!nativeRules.includes(gameId)) {
+      await access(resolve(gamesRoot, gameId, 'public/legacy/rehab-bridge.js'));
+    }
   }
+  const shell = await ReadUi('components/ExpFactoryGame.tsx');
+  assert.doesNotMatch(shell, /tourComplete|game-tour-complete/);
+  await access(resolve(hubRoot, 'app/tour/hubTour.ts'));
 });
 
 test('transitive game imports keep engines and dictionaries within their game', async () => {

@@ -8,7 +8,6 @@ import { HashRouter } from 'react-router-dom';
 import { dictionaries } from './i18n';
 import settings from './settings.json';
 import score from './score.json';
-import { GameTour } from './tour';
 import { SpatialSpanGame } from './SpatialSpanGame';
 
 InstallHostedGameSettingsReceiver();
@@ -20,9 +19,7 @@ if (rootElement) {
       <HashRouter>
         <LanguageProvider dictionaries={dictionaries}>
           <OfficialGameShell settings={settings} score={score} title={document.title}>
-          <GameTour>
-          <SpatialSpanGame onExit={() => RequestHubTrainingConfiguration()} />
-          </GameTour>
+            <SpatialSpanGame onExit={() => RequestHubTrainingConfiguration()} />
           </OfficialGameShell>
         </LanguageProvider>
       </HashRouter>
