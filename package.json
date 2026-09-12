@@ -31,7 +31,7 @@
     "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs",
     "test:embedded-training": "node --test scripts/check-embedded-training-message.test.mjs",
     "test:game-platform": "node --test scripts/check-game-platform.test.mjs packages/game-sdk/src/index.test.mjs packages/game-settings/src/index.test.mjs",
-    "test:game-architecture": "tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs",
+    "test:game-architecture": "tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs",
     "test:game-architecture:built": "node scripts/check-built-game-architecture.mjs apps/rehabtrainerhub/out",
     "test:game-architecture:browser": "node --test scripts/check-game-architecture-browser.test.mjs",
     "test:training-flow": "node scripts/check-training-module-flow.mjs && node scripts/check-expfactory-originals.mjs && node --test scripts/check-reference-cognitive-trials.test.mjs scripts/check-training-theme.test.mjs",

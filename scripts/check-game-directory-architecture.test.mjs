@@ -113,7 +113,7 @@ test('root builds and both Cloudflare workflows retain the architecture gate', a
   assert.match(rootPackage.scripts['build:cloudflare'], /npm run test:game-architecture/);
   assert.equal(
     rootPackage.scripts['test:game-architecture'],
-    'tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs',
+    'tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs',
   );
   assert.equal(
     rootPackage.scripts['test:game-architecture:built'],
