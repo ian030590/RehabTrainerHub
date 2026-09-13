@@ -42,9 +42,9 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@types/node": "^24.10.2",
+    "@types/node": "^26.5.1",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
-    "typescript": "~5.8.3"
+    "typescript": "~7.0.2"
   }
 }
