@@ -473,9 +473,17 @@ summary:focus-visible {
 }
 
 .training-overlay-score {
+  overflow-x: hidden;
   overflow-y: auto;
-  padding: 24px 16px;
+  padding:
+    calc(24px + env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    calc(24px + env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
   background: var(--background);
+  overscroll-behavior-y: contain;
+  touch-action: pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
 }
 
 .hub-footer-inner {

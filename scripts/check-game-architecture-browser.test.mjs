@@ -132,7 +132,12 @@ test('Brave shows shared score charts and uploads only signed-in sessions', asyn
       '--url', `http://127.0.0.1:${server.address().port}/`,
       '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=zh', '--mockAuthUser', String(signedIn),
       '--clickSelectors', '.official-game-card button,.game-settings-form button[type="submit"]',
-      '--allSelectors', '.training-overlay-score table,.training-overlay-score [data-slot="chart"] svg,dialog.training-overlay-score:not(:has(iframe))',
+      '--allSelectors', '.training-overlay-score table,.training-overlay-score [data-slot="chart"] svg,dialog.training-overlay-score:not(:has(iframe)),.training-score-priority,.training-score-quality,.training-score-stat-strip',
+      ...(!signedIn ? [
+        '--viewportWidth', '390', '--viewportHeight', '844',
+        '--touchScrollSelector', '.training-overlay-score',
+        '--visibleSelectors', '.training-score-return',
+      ] : []),
       '--text', signedIn ? '已儲存至帳號' : '未登入，本次紀錄不會上傳', '--timeoutMs', '5000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(result.exitCode, 0, `${result.stdout}\n${result.stderr}`);

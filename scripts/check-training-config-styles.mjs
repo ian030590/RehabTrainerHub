@@ -64,6 +64,8 @@ const hubStyleSource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/glob
 const gameSettingsFormSource = readFileSync(resolve(root, 'packages/ui/src/components/GameSettingsForm.tsx'), 'utf8');
 const trainingOverlaySource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/train/TrainingOverlay.tsx'), 'utf8');
 const packageGameOverlaySource = readFileSync(resolve(root, 'apps/rehabtrainerhub/app/train/PackageGameOverlay.tsx'), 'utf8');
+const trainingScoreSource = readFileSync(resolve(root, 'packages/ui/src/components/TrainingScore.tsx'), 'utf8');
+const trainingScoreStyles = readFileSync(resolve(root, 'packages/ui/src/components/TrainingScore.css'), 'utf8');
 if (!hubNavigationSource.includes('key={pathname}')) {
   failures.push('HubNavigation does not key its subroute transition by pathname');
 }
@@ -84,6 +86,40 @@ for (const required of [
   '.game-settings-form {',
 ]) {
   if (!hubStyleSource.includes(required)) failures.push(`Hub config overlay styles are missing ${required}`);
+}
+const scoreOverlayStyles = hubStyleSource.match(/\.training-overlay-score\s*\{([^}]*)\}/)?.[1] ?? '';
+for (const required of [
+  'overflow-y: auto',
+  'touch-action: pan-y pinch-zoom',
+  '-webkit-overflow-scrolling: touch',
+  'env(safe-area-inset-bottom)',
+]) {
+  if (!scoreOverlayStyles.includes(required)) {
+    failures.push(`Hub score overlay must remain touch-scrollable on mobile PWA: missing ${required}`);
+  }
+}
+for (const required of [
+  'training-score-priority',
+  'training-score-quality',
+  'CalculateStatistics',
+  'sampleSd',
+  'completeness',
+  'GetDefaultMetricKey',
+]) {
+  if (!trainingScoreSource.includes(required)) {
+    failures.push(`Hub score analysis hierarchy is missing ${required}`);
+  }
+}
+for (const required of [
+  '.training-score-key-grid',
+  '.training-score-stat-strip',
+  '.training-score-toolbar',
+  'position: sticky',
+  'flex: 0 0 auto',
+]) {
+  if (!trainingScoreStyles.includes(required)) {
+    failures.push(`Hub score result styles are missing ${required}`);
+  }
 }
 for (const [label, source] of [
   ['built-in overlay', trainingOverlaySource],

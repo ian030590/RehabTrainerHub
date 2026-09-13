@@ -20,6 +20,10 @@ const clickSelectors = ParseSelectorList(args.clickSelectors);
 const iframeSelectors = ParseSelectorList(args.iframeSelectors);
 const viewportSelectors = ParseSelectorList(args.viewportSelectors);
 const canvasViewportSelectors = ParseSelectorList(args.canvasViewportSelectors);
+const visibleSelectors = ParseSelectorList(args.visibleSelectors);
+const touchScrollSelector = args.touchScrollSelector;
+const viewportWidth = args.viewportWidth ? Number(args.viewportWidth) : null;
+const viewportHeight = args.viewportHeight ? Number(args.viewportHeight) : null;
 const fullscreenSelector = args.fullscreenSelector;
 const requireFullscreenBeforeAudio = args.fullscreenBeforeAudio === 'true';
 const storageEntries = ParseStorageEntries(args.storage);
@@ -28,7 +32,7 @@ const expectedText = args.text;
 const timeoutMs = Number(args.timeoutMs ?? 12000);
 
 if (expectedSelectors.length === 0 && !externalUrl) {
-  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs (--app <appDir> --route <route> | --url <absoluteUrl>) --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>]');
+  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs (--app <appDir> --route <route> | --url <absoluteUrl>) --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--visibleSelectors <cssSelector,...>] [--touchScrollSelector <cssSelector>] [--viewportWidth <px> --viewportHeight <px>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>]');
 }
 
 const browserPath = FindBrowserPath();
@@ -188,6 +192,24 @@ try {
     await Wait(100);
   }
 
+  if (viewportWidth && viewportHeight) {
+    await cdp.Send('Emulation.setDeviceMetricsOverride', {
+      width: viewportWidth,
+      height: viewportHeight,
+      deviceScaleFactor: 2,
+      mobile: true,
+    }, sessionId);
+    await cdp.Send('Emulation.setTouchEmulationEnabled', {
+      enabled: true,
+      maxTouchPoints: 5,
+    }, sessionId);
+    await Wait(250);
+  }
+
+  const touchScroll = touchScrollSelector
+    ? await TouchScrollElement(cdp, sessionId, touchScrollSelector, timeoutMs)
+    : { matched: true };
+
   const stateResult = await cdp.Send('Runtime.evaluate', {
     expression: `JSON.stringify({
       href: location.href,
@@ -226,6 +248,18 @@ try {
           matched: canvas instanceof HTMLCanvasElement && Boolean(rect) && Math.abs(canvas.width - expectedWidth) <= 2 && Math.abs(canvas.height - expectedHeight) <= 2,
           buffer: canvas instanceof HTMLCanvasElement ? { width: canvas.width, height: canvas.height } : null,
           expected: { width: expectedWidth, height: expectedHeight },
+        };
+      }),
+      visibleMatches: ${JSON.stringify(visibleSelectors)}.map((selector) => {
+        const element = document.querySelector(selector);
+        const rect = element?.getBoundingClientRect();
+        const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+        const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+        return {
+          selector,
+          matched: Boolean(rect && rect.width > 0 && rect.height > 0 && rect.right > 0 && rect.bottom > 0 && rect.left < viewportWidth && rect.top < viewportHeight),
+          rect: rect ? { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height } : null,
+          viewport: { width: viewportWidth, height: viewportHeight },
         };
       }),
       fullscreenBeforeAudio: ${requireFullscreenBeforeAudio ? `(() => {
@@ -289,6 +323,14 @@ try {
       failures.push(`Canvas buffer did not match its viewport: ${canvasViewportMatch.selector} (${JSON.stringify(canvasViewportMatch.buffer)} vs ${JSON.stringify(canvasViewportMatch.expected)})`);
     }
   }
+  for (const visibleMatch of state.visibleMatches) {
+    if (!visibleMatch.matched) {
+      failures.push(`Element was outside the viewport: ${visibleMatch.selector} (${JSON.stringify(visibleMatch.rect)} vs ${JSON.stringify(visibleMatch.viewport)})`);
+    }
+  }
+  if (!touchScroll.matched) {
+    failures.push(`Touch gesture did not scroll ${touchScrollSelector}: ${JSON.stringify(touchScroll)}`);
+  }
   if (!state.fullscreenBeforeAudio) {
     failures.push(`Fullscreen request must precede audio activation. Call order: ${state.callOrder.join(', ')}`);
   }
@@ -316,7 +358,13 @@ try {
   ws?.close();
   await StopProcess(browserProcess);
   await StopProcess(previewProcess);
-  rmSync(userDataDir, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+  await Wait(500);
+  try {
+    rmSync(userDataDir, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+  } catch (error) {
+    if (error?.code !== 'EPERM') throw error;
+    console.warn(`Browser profile cleanup is still locked and will be retried by the next run: ${userDataDir}`);
+  }
 }
 
 function ParseArgs(argv) {
@@ -402,6 +450,64 @@ async function WaitForClickableBounds(cdp, sessionId, selector, timeoutMs) {
     await Wait(100);
   }
   throw new Error(`Timed out waiting for clickable selector: ${selector} (${JSON.stringify(obstruction)})`);
+}
+
+async function TouchScrollElement(cdp, sessionId, selector, timeoutMs) {
+  const startedAt = Date.now();
+  let before = null;
+  while (Date.now() - startedAt < timeoutMs) {
+    const result = await cdp.Send('Runtime.evaluate', {
+      expression: `(() => {
+        const element = document.querySelector(${JSON.stringify(selector)});
+        if (!(element instanceof HTMLElement)) return null;
+        const rect = element.getBoundingClientRect();
+        return {
+          clientHeight: element.clientHeight,
+          scrollHeight: element.scrollHeight,
+          scrollTop: element.scrollTop,
+          touchAction: getComputedStyle(element).touchAction,
+          rect: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom },
+        };
+      })()`,
+      returnByValue: true,
+    }, sessionId);
+    before = result.result.value;
+    if (before && before.scrollHeight > before.clientHeight) break;
+    await Wait(100);
+  }
+  if (!before || before.scrollHeight <= before.clientHeight) {
+    return { matched: false, reason: 'element is not scrollable', before };
+  }
+
+  const x = Math.max(before.rect.left + 20, Math.min(before.rect.right - 20, (before.rect.left + before.rect.right) / 2));
+  const startY = Math.max(before.rect.top + 220, before.rect.bottom - 220);
+  const endY = Math.max(before.rect.top + 90, startY - 320);
+  const touchPoint = (y) => [{ x, y, radiusX: 1, radiusY: 1, force: 1 }];
+  await cdp.Send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: touchPoint(startY) }, sessionId);
+  for (let step = 1; step <= 8; step += 1) {
+    const y = startY + (endY - startY) * step / 8;
+    await cdp.Send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: touchPoint(y) }, sessionId);
+    await Wait(24);
+  }
+  await cdp.Send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }, sessionId);
+  await Wait(350);
+
+  const afterResult = await cdp.Send('Runtime.evaluate', {
+    expression: `(() => {
+      const element = document.querySelector(${JSON.stringify(selector)});
+      return element instanceof HTMLElement ? element.scrollTop : null;
+    })()`,
+    returnByValue: true,
+  }, sessionId);
+  const afterScrollTop = afterResult.result.value;
+  return {
+    matched: typeof afterScrollTop === 'number' && afterScrollTop > before.scrollTop,
+    beforeScrollTop: before.scrollTop,
+    afterScrollTop,
+    clientHeight: before.clientHeight,
+    scrollHeight: before.scrollHeight,
+    touchAction: before.touchAction,
+  };
 }
 
 function FindBrowserPath() {
