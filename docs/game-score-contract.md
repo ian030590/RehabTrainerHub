@@ -6,7 +6,11 @@ Flow: `training-overlay-config` → validated settings message → game → scor
 
 ## Definition
 
-`score.json` uses schema `rehab-trainer.game-score/v1`, the game's `gameId`, `columns`, and `summary`. Each field declares `key`, bilingual `label`, and `sources` (numeric/boolean properties from the game's result record). `unit` is optional. A column can declare `total: "sum"` for per-round points or `total: "last"` for cumulative points.
+`score.json` uses schema `rehab-trainer.game-score/v1`, the game's `gameId`, `presentation`, `columns`, and `summary`. Each field declares `key`, bilingual `label`, and `sources` (numeric/boolean properties from the game's result record). `unit` is optional. A column can declare `total: "sum"` for per-round points or `total: "last"` for cumulative points.
+
+`presentation` contains semantic rendering hints owned by the game: `primarySummaryKeys` selects and orders one to four key outcomes, `qualitySummaryKeys` selects up to four data-quality/context fields, `defaultRoundMetricKey` selects the initial chart/table metric, and `chartType` is either `line` or `bar`. Every referenced key must exist in `summary` or `columns` as appropriate, and primary and quality keys cannot overlap.
+
+The Hub owns the result component, visual hierarchy, responsive layout, styles, interaction, statistics, and chart implementation. A score definition cannot provide CSS, class names, colors, spacing, arbitrary components, or executable renderers. This boundary lets every game express what its results mean without forking how results are rendered.
 
 `columns` read `detailRows`, or jsPsych `results`; a game with only a session result supplies one row from `details`. `summary` reads `details`. Missing numeric values remain `null`, shown as `—`. Boolean results become 0/1. Non-scoring instruction rows without any declared numeric fields are excluded. Scoring formulas remain game-owned; the shared adapter only projects declared fields.
 

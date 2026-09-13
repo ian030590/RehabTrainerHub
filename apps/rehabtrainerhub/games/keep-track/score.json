@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "keep-track",
+  "presentation": {
+    "primarySummaryKeys": ["accuracy","meanResponseMs","correct"],
+    "qualitySummaryKeys": ["trials","scored"],
+    "defaultRoundMetricKey": "responseMs",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "trial",

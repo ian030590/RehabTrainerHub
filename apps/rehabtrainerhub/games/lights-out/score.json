@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "lights-out",
+  "presentation": {
+    "primarySummaryKeys": ["completed","moves","duration"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "completed",
+    "chartType": "bar"
+  },
   "columns": [
     {
       "key": "duration",

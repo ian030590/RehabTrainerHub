@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "tic-tac-toe",
+  "presentation": {
+    "primarySummaryKeys": ["completed","errors","moves","opponentMoves"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "completed",
+    "chartType": "bar"
+  },
   "columns": [
     {
       "key": "duration",

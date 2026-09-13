@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "driving-rehab",
+  "presentation": {
+    "primarySummaryKeys": ["meanRt","medianRt","collisions","deviations"],
+    "qualitySummaryKeys": ["fps"],
+    "defaultRoundMetricKey": "meanRt",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "durationMs",

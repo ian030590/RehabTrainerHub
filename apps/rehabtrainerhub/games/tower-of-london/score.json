@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "tower-of-london",
+  "presentation": {
+    "primarySummaryKeys": ["accuracy","correct"],
+    "qualitySummaryKeys": ["trials","scored"],
+    "defaultRoundMetricKey": "problemMs",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "trial",

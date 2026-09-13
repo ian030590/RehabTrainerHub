@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "dots-and-boxes",
+  "presentation": {
+    "primarySummaryKeys": ["completed","playerBoxes","opponentBoxes","errors"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "playerBoxes",
+    "chartType": "bar"
+  },
   "columns": [
     {
       "key": "duration",

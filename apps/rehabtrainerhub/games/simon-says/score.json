@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "simon-says",
+  "presentation": {
+    "primarySummaryKeys": ["correctTrials","remainingLives","trials"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "correct",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "trial",

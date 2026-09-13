@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "asteroid-shield",
+  "presentation": {
+    "primarySummaryKeys": ["blocked","hits","hp","energy"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "elapsed",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "object",

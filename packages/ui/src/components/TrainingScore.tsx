@@ -3,7 +3,7 @@
 import './TrainingScore.css';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
 import type { GameScore, GameScoreDefinition, ScoreField } from '../gameScore';
 import { Button } from './ui/button';
 import { ChartContainer, ChartTooltip } from './ui/chart';
@@ -26,32 +26,6 @@ interface SummaryMetric {
   value: number;
 }
 
-const qualityFieldPattern = /(invalid|dropped|fps|sync|aborted|interrupted)/i;
-const primaryFieldPattern = /(accuracy|score|threshold|mean|median|best|response|latency|aoi|tracking|correct|completed|success|hit|caught|blocked|distance|fixation|hold|collision|deviation|error|miss|hp|lives)/i;
-const contextFieldPattern = /(duration|trial|attempt|event|sample|target|question|spawn|tap|move|board|level|setting|word|presented|language|passage|load|strictness|speed|angle|contrast)/i;
-const identifierFieldPattern = /^(trial|object|question|cast|event|targetIndex|tappedIndex|condition|setting|location|key|problem|subtest|axis|level|load|boardSize|puzzleKind|choice|expectedChoice|options|language)$/i;
-
-function GetSummaryPriority(field: ScoreField) {
-  if (primaryFieldPattern.test(field.key)) return 0;
-  if (contextFieldPattern.test(field.key)) return 2;
-  return 1;
-}
-
-function GetMetricPriority(field: ScoreField) {
-  if (identifierFieldPattern.test(field.key)) return -100;
-  if (/(accuracy|score|threshold|aoi)/i.test(field.key)) return 60;
-  if (/(response|latency|mean|median|fixation|search|problemMs)/i.test(field.key)) return 55;
-  if (/(correct|completed|success|similarity|tracking|distance|hold|hit|caught|blocked|error|collision|deviation)/i.test(field.key)) return 50;
-  if (/(duration|elapsed|exposure)/i.test(field.key)) return 30;
-  return (field.unit ? 5 : 0) + (field.total ? 5 : 0);
-}
-
-function GetDefaultMetricKey(columns: ScoreField[]) {
-  return columns.reduce((best, field) => (
-    GetMetricPriority(field) > GetMetricPriority(best) ? field : best
-  ), columns[0]).key;
-}
-
 function CalculateStatistics(values: number[]) {
   if (!values.length) return { mean: null, median: null, sampleSd: null, minimum: null, maximum: null };
   const mean = values.reduce((total, value) => total + value, 0) / values.length;
@@ -65,7 +39,7 @@ function CalculateStatistics(values: number[]) {
 }
 
 export function TrainingScore({ score, definition, title, language, onClose, saveState, onRetry }: TrainingScoreProps) {
-  const [metricKey, setMetricKey] = useState(() => GetDefaultMetricKey(definition.columns));
+  const [metricKey, setMetricKey] = useState(definition.presentation.defaultRoundMetricKey);
   const [page, setPage] = useState(0);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const en = language === 'en';
@@ -73,7 +47,7 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
     eyebrow: 'Session results',
     note: 'Practice records only. Values shown here are descriptive and are not a diagnosis or treatment outcome.',
     keyTitle: 'Key outcomes',
-    keyDescription: 'Session-level results supplied by this activity, prioritizing outcome, accuracy, and speed fields.',
+    keyDescription: 'Session-level outcomes explicitly designated by this activity.',
     noSummary: 'No session-level result was provided.',
     contextTitle: 'Record context',
     qualityTitle: 'Data quality',
@@ -105,7 +79,7 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
     eyebrow: '當次成績',
     note: '僅呈現本次練習的描述統計，不代表診斷、治療結果或療效。',
     keyTitle: '重點指標',
-    keyDescription: '優先顯示活動提供的結果、正確性與速度相關彙總值。',
+    keyDescription: '顯示此活動在成績契約中明確指定的當次重點。',
     noSummary: '此活動未提供當次彙總值。',
     contextTitle: '紀錄概況',
     qualityTitle: '資料品質',
@@ -137,7 +111,7 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
 
   useEffect(() => { titleRef.current?.focus(); }, []);
   useEffect(() => {
-    setMetricKey(GetDefaultMetricKey(definition.columns));
+    setMetricKey(definition.presentation.defaultRoundMetricKey);
     setPage(0);
   }, [definition]);
 
@@ -166,14 +140,14 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
     const value = score.summary[summaryField.key];
     return value === null ? [] : [{ field: summaryField, value }];
   });
-  const nonQualityMetrics = summaryMetrics.filter(metric => !qualityFieldPattern.test(metric.field.key));
-  const primaryPool = nonQualityMetrics.length ? nonQualityMetrics : summaryMetrics;
-  const primaryMetrics = [...primaryPool]
-    .sort((a, b) => GetSummaryPriority(a.field) - GetSummaryPriority(b.field))
-    .slice(0, 4);
+  const summaryByKey = new Map(summaryMetrics.map(metric => [metric.field.key, metric]));
+  const primaryMetrics = definition.presentation.primarySummaryKeys
+    .flatMap(key => summaryByKey.get(key) ?? []);
   const primaryKeys = new Set(primaryMetrics.map(metric => metric.field.key));
-  const qualityMetrics = summaryMetrics.filter(metric => qualityFieldPattern.test(metric.field.key) && !primaryKeys.has(metric.field.key));
-  const contextMetrics = summaryMetrics.filter(metric => !primaryKeys.has(metric.field.key) && !qualityFieldPattern.test(metric.field.key));
+  const qualityMetrics = definition.presentation.qualitySummaryKeys
+    .flatMap(key => summaryByKey.get(key) ?? []);
+  const qualityKeys = new Set(qualityMetrics.map(metric => metric.field.key));
+  const contextMetrics = summaryMetrics.filter(metric => !primaryKeys.has(metric.field.key) && !qualityKeys.has(metric.field.key));
 
   const saveMessage = ({
     guest: en ? 'Not signed in · this session is not uploaded.' : '未登入，本次紀錄不會上傳。',
@@ -256,14 +230,21 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
       {values.length > 0 ? <div className="training-score-chart-wrap">
         <p>{copy.trend}<span>{copy.page} {page + 1} / {pageCount}</span></p>
         <ChartContainer config={{ value: { label: field.label[language], color: 'var(--primary)' } }} className="training-score-chart" role="img" aria-label={`${copy.trend} · ${field.label[language]}`}>
-          <LineChart accessibilityLayer data={chartData} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
+          {definition.presentation.chartType === 'bar' ? <BarChart accessibilityLayer data={chartData} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="round" tickLine={false} axisLine={false} />
+            <YAxis width={65} tickLine={false} axisLine={false} />
+            <ChartTooltip contentStyle={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text)' }} labelFormatter={value => `${copy.round} ${value}`} />
+            {statistics.mean !== null && <ReferenceLine y={statistics.mean} stroke="var(--border-strong)" strokeDasharray="5 5" label={{ value: copy.meanReference, fill: 'var(--text-muted)', fontSize: 11, position: 'insideTopRight' }} />}
+            <Bar dataKey={field.key} name={field.label[language]} unit={field.unit} fill="var(--color-value)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+          </BarChart> : <LineChart accessibilityLayer data={chartData} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
             <CartesianGrid vertical={false} />
             <XAxis dataKey="round" tickLine={false} axisLine={false} />
             <YAxis width={65} tickLine={false} axisLine={false} />
             <ChartTooltip contentStyle={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text)' }} labelFormatter={value => `${copy.round} ${value}`} />
             {statistics.mean !== null && <ReferenceLine y={statistics.mean} stroke="var(--border-strong)" strokeDasharray="5 5" label={{ value: copy.meanReference, fill: 'var(--text-muted)', fontSize: 11, position: 'insideTopRight' }} />}
             <Line dataKey={field.key} name={field.label[language]} unit={field.unit} stroke="var(--color-value)" strokeWidth={2.5} type="linear" dot={chartData.length <= 20 ? { r: 3, fill: 'var(--surface)', strokeWidth: 2 } : false} activeDot={{ r: 4 }} connectNulls={false} isAnimationActive={false} />
-          </LineChart>
+          </LineChart>}
         </ChartContainer>
       </div> : <p className="training-score-empty">{copy.noChart}</p>}
     </section>

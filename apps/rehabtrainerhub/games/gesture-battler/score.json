@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "gesture-battler",
+  "presentation": {
+    "primarySummaryKeys": ["completed","holdSeconds","threshold"],
+    "qualitySummaryKeys": ["interrupted"],
+    "defaultRoundMetricKey": "similarity",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "cast",

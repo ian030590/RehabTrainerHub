@@ -104,10 +104,18 @@ for (const required of [
   'CalculateStatistics',
   'sampleSd',
   'completeness',
-  'GetDefaultMetricKey',
+  'definition.presentation.primarySummaryKeys',
+  'definition.presentation.qualitySummaryKeys',
+  'definition.presentation.defaultRoundMetricKey',
+  'definition.presentation.chartType',
 ]) {
   if (!trainingScoreSource.includes(required)) {
     failures.push(`Hub score analysis hierarchy is missing ${required}`);
+  }
+}
+for (const forbidden of ['primaryFieldPattern', 'qualityFieldPattern', 'GetMetricPriority', 'GetDefaultMetricKey']) {
+  if (trainingScoreSource.includes(forbidden)) {
+    failures.push(`Hub score analysis must use score.json presentation semantics instead of key-name heuristic ${forbidden}`);
   }
 }
 for (const required of [

@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "oculomotor-training",
+  "presentation": {
+    "primarySummaryKeys": ["aoiScore","firstFixation","distance","distanceSd"],
+    "qualitySummaryKeys": ["fps","samples"],
+    "defaultRoundMetricKey": "aoiScore",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "durationMs",

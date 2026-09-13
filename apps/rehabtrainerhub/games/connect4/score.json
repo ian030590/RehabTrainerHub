@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "connect4",
+  "presentation": {
+    "primarySummaryKeys": ["completed","errors","moves"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "completed",
+    "chartType": "bar"
+  },
   "columns": [
     {
       "key": "duration",

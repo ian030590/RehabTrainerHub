@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "motor-cortex-rehab",
+  "presentation": {
+    "primarySummaryKeys": ["tracking","timeInTarget","bestHold","reps"],
+    "qualitySummaryKeys": ["interrupted"],
+    "defaultRoundMetricKey": "accuracy",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "event",

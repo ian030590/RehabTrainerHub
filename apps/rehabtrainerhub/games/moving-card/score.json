@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "moving-card",
+  "presentation": {
+    "primarySummaryKeys": ["completed","trials"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "searchMs",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "completed",

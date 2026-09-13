@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "ufov",
+  "presentation": {
+    "primarySummaryKeys": ["thresholdMs","bestMs","correct","trials"],
+    "qualitySummaryKeys": ["invalidTiming","timingAttempts","aborted"],
+    "defaultRoundMetricKey": "exposureMs",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "trial",

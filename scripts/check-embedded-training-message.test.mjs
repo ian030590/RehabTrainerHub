@@ -24,6 +24,13 @@ test('all 40 score contracts accept bounded numeric rounds and reject unsafe dat
   assert.equal(games.length, 40);
   for (const game of games) {
     const definition = gameScore.ParseGameScoreDefinition(JSON.parse(await readFile(new URL(`${game.name}/score.json`, root), 'utf8')), game.name);
+    assert.ok(definition.presentation.primarySummaryKeys.length >= 1, game.name);
+    assert.ok(definition.presentation.primarySummaryKeys.length <= 4, game.name);
+    assert.ok(definition.presentation.qualitySummaryKeys.length <= 4, game.name);
+    assert.ok(['line', 'bar'].includes(definition.presentation.chartType), game.name);
+    assert.ok(definition.columns.some(field => field.key === definition.presentation.defaultRoundMetricKey), game.name);
+    assert.ok(definition.presentation.primarySummaryKeys.every(key => definition.summary.some(field => field.key === key)), game.name);
+    assert.ok(definition.presentation.qualitySummaryKeys.every(key => definition.summary.some(field => field.key === key)), game.name);
     const row = Object.fromEntries(definition.columns.map((field, index) => [field.sources[0], index === 0 ? 0 : 12]));
     const score = gameScore.BuildGameScore(definition, { detailRows: [row, { ...row, userName: 'private' }], details: {} });
     assert.equal(score.rounds.length, 2, game.name);
@@ -40,6 +47,19 @@ test('all 40 score contracts accept bounded numeric rounds and reject unsafe dat
     assert.equal(gameScore.IsGameScore({ ...score, rounds: [{ ...score.rounds[0], [definition.columns[0].key]: Infinity }] }, definition), false);
     assert.equal(gameScore.IsGameScore({ ...score, rounds: Array(4001).fill(score.rounds[0]) }, definition), false);
     assert.throws(() => gameScore.ParseGameScoreDefinition({ ...definition, columns: [{ ...definition.columns[0], key: 'userName' }] }));
+    assert.throws(() => gameScore.ParseGameScoreDefinition({
+      ...definition,
+      presentation: { ...definition.presentation, defaultRoundMetricKey: 'missing' },
+    }));
+    assert.throws(() => gameScore.ParseGameScoreDefinition({
+      ...definition,
+      presentation: { ...definition.presentation, className: 'game-owned-style' },
+    }));
+    assert.throws(() => gameScore.ParseGameScoreDefinition({ ...definition, style: { color: 'red' } }));
+    assert.throws(() => gameScore.ParseGameScoreDefinition({
+      ...definition,
+      columns: [{ ...definition.columns[0], className: 'game-owned-style' }, ...definition.columns.slice(1)],
+    }));
   }
 });
 

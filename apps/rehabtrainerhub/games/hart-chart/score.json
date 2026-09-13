@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "hart-chart",
+  "presentation": {
+    "primarySummaryKeys": ["accuracy","hints","attempts","targets"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "accuracy",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "durationMs",

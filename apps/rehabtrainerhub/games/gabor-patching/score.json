@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "gabor-patching",
+  "presentation": {
+    "primarySummaryKeys": ["score","hits","durationMs"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "score",
+    "chartType": "bar"
+  },
   "columns": [
     {
       "key": "hits",

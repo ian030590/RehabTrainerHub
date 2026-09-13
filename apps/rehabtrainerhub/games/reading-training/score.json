@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "reading-training",
+  "presentation": {
+    "primarySummaryKeys": ["correct","finished","presented","configuredWpm"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "responseMs",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "question",

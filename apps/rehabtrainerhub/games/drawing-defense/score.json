@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "drawing-defense",
+  "presentation": {
+    "primarySummaryKeys": ["cleared","hp","spawned"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "correct",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "object",

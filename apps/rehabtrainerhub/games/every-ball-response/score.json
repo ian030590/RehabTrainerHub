@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "every-ball-response",
+  "presentation": {
+    "primarySummaryKeys": ["accuracy","responseMs","misses","falseAlarms"],
+    "qualitySummaryKeys": ["trials"],
+    "defaultRoundMetricKey": "responseMs",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "trial",

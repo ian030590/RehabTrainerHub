@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "reaction-time",
+  "presentation": {
+    "primarySummaryKeys": ["meanMs","successes","falseStarts","attempts"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "responseMs",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "trial",

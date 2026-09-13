@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "minesweeper",
+  "presentation": {
+    "primarySummaryKeys": ["completed","revealedSafe","correctFlags","incorrectFlags"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "revealedSafe",
+    "chartType": "bar"
+  },
   "columns": [
     {
       "key": "duration",

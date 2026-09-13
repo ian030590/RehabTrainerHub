@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "tongue-catch",
+  "presentation": {
+    "primarySummaryKeys": ["caught","missed","holdSeconds","threshold"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "caught",
+    "chartType": "bar"
+  },
   "columns": [
     {
       "key": "object",

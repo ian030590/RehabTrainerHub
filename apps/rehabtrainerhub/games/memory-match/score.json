@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "memory-match",
+  "presentation": {
+    "primarySummaryKeys": ["completed","matchedPairs","errors","moves"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "matchedPairs",
+    "chartType": "bar"
+  },
   "columns": [
     {
       "key": "duration",

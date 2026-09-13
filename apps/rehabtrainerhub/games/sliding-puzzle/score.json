@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "sliding-puzzle",
+  "presentation": {
+    "primarySummaryKeys": ["completed","errors","moves","duration"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "completed",
+    "chartType": "bar"
+  },
   "columns": [
     {
       "key": "duration",

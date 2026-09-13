@@ -1,6 +1,12 @@
 {
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "whack-a-mole",
+  "presentation": {
+    "primarySummaryKeys": ["hits","misses","meanMs","taps"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "responseMs",
+    "chartType": "line"
+  },
   "columns": [
     {
       "key": "trial",
