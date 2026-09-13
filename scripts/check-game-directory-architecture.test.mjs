@@ -142,18 +142,28 @@ test('root builds and both Cloudflare workflows retain the architecture gate', a
   }
 });
 
-test('browser smoke checks retain Brave support on Windows', async () => {
+test('browser smoke checks retain Brave support on Windows and macOS', async () => {
+  const windowsBravePath = 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
+  const macBravePath = '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser';
   for (const scriptPath of [
     'scripts/check-browser-route-smoke.mjs',
     'scripts/check-driving-rehab-browser.mjs',
     'scripts/check-oculomotor-webgazer-browser.mjs',
   ]) {
     const source = await readFile(resolve(repositoryRoot, scriptPath), 'utf8');
-    const bravePath = 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
     assert.match(source, /process\.env\.BRAVE_BIN/);
-    assert.ok(source.indexOf(bravePath) >= 0, `${scriptPath} must recognize Windows Brave.`);
+    assert.ok(source.includes(windowsBravePath), `${scriptPath} must recognize Windows Brave.`);
+    assert.ok(source.includes(macBravePath), `${scriptPath} must recognize macOS Brave.`);
     assert.match(source, /\['brave',\s*'msedge'/);
   }
+
+  const architectureBrowser = await readFile(
+    resolve(repositoryRoot, 'scripts/check-game-architecture-browser.test.mjs'),
+    'utf8',
+  );
+  assert.match(architectureBrowser, /process\.env\.BRAVE_BIN/);
+  assert.ok(architectureBrowser.includes(windowsBravePath));
+  assert.ok(architectureBrowser.includes(macBravePath));
 });
 
 test('unified config UI remains Tailwind plus shadcn/Radix and mounts inside dialogs', async () => {

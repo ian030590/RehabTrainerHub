@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "license": "AGPL-3.0-only",
   "type": "module",
-  "packageManager": "npm@11.18.0",
+  "packageManager": "npm@11.19.0",
   "description": "Turborepo monorepo for Rehab Trainer Hub and its isolated user-game runner.",
   "workspaces": [
     "apps/*",
@@ -55,7 +55,7 @@
     "@mediapipe/tasks-vision": "0.10.35",
     "@tensorflow-models/knn-classifier": "^1.2.6",
     "@tensorflow/tfjs": "^4.22.0",
-    "jspsych": "^8.2.1",
+    "jspsych": "8.2.3",
     "next": "^16.2.10",
     "pixi.js": "^8.18.1",
     "qrcode": "^1.5.4",
@@ -77,5 +77,9 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "allowScripts": {
+    "core-js": false,
+    "esbuild@0.25.12": true
   }
 }

@@ -3,13 +3,14 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
+import { homedir } from 'node:os';
 import { extname, relative, resolve } from 'node:path';
 import test from 'node:test';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
 const outputRoot = resolve(process.env.HUB_OUTPUT_ROOT || resolve(repositoryRoot, 'apps/rehabtrainerhub/out'));
 const browserSmokeScript = resolve(repositoryRoot, 'scripts/check-browser-route-smoke.mjs');
-const bravePath = 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
+const bravePath = FindBravePath();
 const expFactoryGameIds = [
   'stroop',
   'flanker',
@@ -28,7 +29,7 @@ const expFactoryGameIds = [
 ];
 
 test('Brave renders the settings-driven config UI before mounting an official game', async (context) => {
-  assert.equal(existsSync(bravePath), true, `Brave is required at ${bravePath}.`);
+  assert.ok(bravePath, 'Brave is required. Install it in the standard Windows/macOS location or set BRAVE_BIN.');
   assert.equal((await stat(resolve(outputRoot, 'index.html'))).isFile(), true);
 
   const server = createServer((request, response) => {
@@ -86,6 +87,19 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     assert.equal(standalone.exitCode, 0, `${gameId}: ${standalone.stdout}\n${standalone.stderr}`);
   }
 });
+
+function FindBravePath() {
+  const candidates = [
+    process.env.BRAVE_BIN,
+    process.env.BROWSER_EXECUTABLE_PATH,
+    'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe',
+    'C:/Program Files (x86)/BraveSoftware/Brave-Browser/Application/brave.exe',
+    '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+    resolve(homedir(), 'Applications/Brave Browser.app/Contents/MacOS/Brave Browser'),
+  ];
+
+  return candidates.find((candidate) => candidate && existsSync(candidate)) ?? null;
+}
 
 test('Brave shows shared score charts and uploads only signed-in sessions', async (context) => {
   const uploads = [];

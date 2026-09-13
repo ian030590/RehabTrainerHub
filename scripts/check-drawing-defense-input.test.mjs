@@ -38,9 +38,28 @@ test('drawing defense keeps the pointer surface over a full-size Pixi stage', as
   assert.match(source, /resizeTo:\s*host/);
 });
 
+test('CSS rule parsing supports Windows and macOS line endings', () => {
+  for (const lineEnding of ['\r\n', '\n']) {
+    const selector = ['.drawing-defense-stage,', '.drawing-defense-input'].join(lineEnding);
+    const css = [
+      selector,
+      '{',
+      '  position: absolute;',
+      '  inset: 0;',
+      '}',
+    ].join(lineEnding);
+
+    const rule = ReadCssRule(css, selector);
+    assert.equal(rule.position, 'absolute');
+    assert.equal(rule.inset, '0');
+  }
+});
+
 function ReadCssRule(css, selector) {
-  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const matches = [...css.matchAll(new RegExp(`(?:^|\\n)\\s*${escapedSelector}\\s*\\{([\\s\\S]*?)\\}`, 'g'))];
+  const normalizedCss = NormalizeLineEndings(css);
+  const normalizedSelector = NormalizeLineEndings(selector);
+  const escapedSelector = normalizedSelector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const matches = [...normalizedCss.matchAll(new RegExp(`(?:^|\\n)\\s*${escapedSelector}\\s*\\{([\\s\\S]*?)\\}`, 'g'))];
   const match = matches.at(-1);
   assert.ok(match, `Missing CSS rule for ${selector}`);
 
@@ -56,4 +75,8 @@ function ReadCssRule(css, selector) {
         return [property, declaration.slice(separator + 1).trim()];
       }),
   );
+}
+
+function NormalizeLineEndings(value) {
+  return value.replace(/\r\n?/g, '\n');
 }
