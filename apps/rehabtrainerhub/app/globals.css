@@ -3452,11 +3452,12 @@ summary:focus-visible {
 }
 
 .developer-hero > div > p:last-child {
-  max-width: 66ch;
+  max-width: 62ch;
   margin: 0;
   color: var(--text-muted);
-  font-size: clamp(1rem, 1.6vw, 1.18rem);
-  line-height: 1.75;
+  font-size: clamp(1.1rem, 1.6vw, 1.24rem);
+  line-height: 1.55;
+  letter-spacing: -0.008em;
   text-wrap: pretty;
 }
 
@@ -3474,9 +3475,9 @@ summary:focus-visible {
 .developer-hero-meta dt {
   margin-bottom: 5px;
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.045em;
   text-transform: uppercase;
 }
 
@@ -3506,9 +3507,9 @@ summary:focus-visible {
 .developer-docs-sidebar > p {
   margin: 0 0 12px 42px;
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.045em;
   text-transform: uppercase;
 }
 
@@ -3525,11 +3526,11 @@ summary:focus-visible {
   grid-template-columns: 32px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
-  min-height: 38px;
-  padding: 7px 10px 7px 0;
+  min-height: 42px;
+  padding: 8px 10px 8px 0;
   border-radius: 0 8px 8px 0;
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: 0.98rem;
   font-weight: 700;
   text-decoration: none;
   transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
@@ -3551,16 +3552,28 @@ summary:focus-visible {
 .developer-docs-sidebar a span {
   color: var(--primary);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 0.7rem;
+  font-size: 0.76rem;
   font-variant-numeric: tabular-nums;
 }
 
 .developer-docs-content {
   min-width: 0;
+  font-size: 1.075rem;
+  line-height: 1.58;
+  letter-spacing: -0.008em;
+}
+
+.developer-docs-content :where(p, li, dd) {
+  text-wrap: pretty;
+}
+
+.developer-page .page-kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.045em;
 }
 
 .developer-doc-section {
-  padding: 62px 0 72px;
+  padding: 52px 0 60px;
   border-top: 1px solid var(--border);
   scroll-margin-top: 84px;
 }
@@ -3571,7 +3584,7 @@ summary:focus-visible {
 
 .developer-doc-section > header {
   max-width: 820px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .developer-doc-section > header h2 {
@@ -3586,16 +3599,18 @@ summary:focus-visible {
 .developer-doc-section > h3,
 .developer-code-pair h3,
 .developer-test-columns h3 {
-  margin-top: 32px;
-  margin-bottom: 12px;
-  font-size: 1.05rem;
+  margin-top: 28px;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  line-height: 1.3;
 }
 
 .developer-docs-lead {
-  max-width: 72ch;
+  max-width: 65ch;
   color: var(--text-muted);
-  font-size: 1.05rem;
-  line-height: 1.85;
+  font-size: 1.18rem;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
   text-wrap: pretty;
 }
 
@@ -3611,14 +3626,14 @@ summary:focus-visible {
 }
 
 .developer-route-grid article {
-  min-height: 250px;
+  min-height: 226px;
   padding: 26px;
   background: var(--surface);
 }
 
 .developer-route-number {
   display: block;
-  margin-bottom: 44px;
+  margin-bottom: 30px;
   color: var(--primary);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 0.75rem;
@@ -3627,18 +3642,20 @@ summary:focus-visible {
 }
 
 .developer-route-grid h3 {
-  margin-bottom: 10px;
-  font-size: 1.22rem;
+  margin-bottom: 8px;
+  font-size: 1.3rem;
 }
 
 .developer-route-grid p {
   color: var(--text-muted);
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .developer-route-grid small {
   color: var(--heading);
+  font-size: 0.95rem;
   font-weight: 750;
+  line-height: 1.45;
 }
 
 .developer-callout,
@@ -3669,13 +3686,13 @@ summary:focus-visible {
 .developer-callout p,
 .developer-sign-in-notice p {
   margin: 0;
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .developer-step-list,
 .developer-number-list {
   padding: 0;
-  margin: 30px 0;
+  margin: 24px 0;
   list-style: none;
   counter-reset: developer-step;
 }
@@ -3684,7 +3701,7 @@ summary:focus-visible {
   display: grid;
   grid-template-columns: 46px minmax(0, 1fr);
   gap: 18px;
-  padding: 22px 0;
+  padding: 18px 0;
   border-top: 1px solid var(--border);
 }
 
@@ -3695,7 +3712,7 @@ summary:focus-visible {
 .developer-step-list li > span {
   color: var(--primary);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 800;
 }
 
@@ -3707,7 +3724,7 @@ summary:focus-visible {
 .developer-step-list p,
 .developer-test-columns p {
   color: var(--text-muted);
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .developer-code-block {
@@ -3727,8 +3744,8 @@ summary:focus-visible {
   border-bottom: 1px solid color-mix(in srgb, var(--surface) 16%, transparent);
   color: color-mix(in srgb, var(--surface) 74%, transparent);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
+  font-size: 0.8rem;
+  letter-spacing: 0.015em;
 }
 
 .developer-code-block pre,
@@ -3738,8 +3755,9 @@ summary:focus-visible {
   overflow: auto;
   color: var(--surface);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 0.82rem;
-  line-height: 1.7;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  letter-spacing: 0;
   scrollbar-color: color-mix(in srgb, var(--surface) 34%, transparent) transparent;
 }
 
@@ -3787,9 +3805,81 @@ summary:focus-visible {
   line-height: 1;
 }
 
+.developer-section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  color: var(--primary);
+  font-weight: 800;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.developer-section-link span {
+  font-size: 1.15em;
+  line-height: 1;
+}
+
+.developer-environment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 26px 0 32px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--border);
+}
+
+.developer-environment-grid > section {
+  min-width: 0;
+  padding: 24px;
+  background: var(--surface);
+}
+
+.developer-environment-grid h3 {
+  margin: 0 0 10px;
+  font-size: 1.3rem;
+  line-height: 1.3;
+}
+
+.developer-environment-grid p {
+  margin-bottom: 18px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.developer-environment-grid .developer-code-block {
+  margin-bottom: 0;
+}
+
+.developer-reference-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 14px;
+}
+
+.developer-reference-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary);
+  font-weight: 750;
+  line-height: 1.4;
+  text-underline-offset: 4px;
+}
+
+.developer-reference-links a:focus-visible,
+.developer-section-link:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
 .developer-check-list {
   display: grid;
-  gap: 12px;
+  gap: 9px;
   max-width: 860px;
   padding: 0;
   margin: 24px 0;
@@ -3800,7 +3890,7 @@ summary:focus-visible {
   position: relative;
   padding-left: 28px;
   color: var(--text-muted);
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .developer-check-list li::before {
@@ -3839,8 +3929,8 @@ summary:focus-visible {
 }
 
 .developer-flow strong {
-  font-size: 0.86rem;
-  line-height: 1.35;
+  font-size: 0.95rem;
+  line-height: 1.3;
 }
 
 .developer-definition-list {
@@ -3853,7 +3943,7 @@ summary:focus-visible {
   display: grid;
   grid-template-columns: minmax(150px, 0.28fr) minmax(0, 1fr);
   gap: 24px;
-  padding: 18px 0;
+  padding: 15px 0;
   border-top: 1px solid var(--border);
 }
 
@@ -3869,7 +3959,7 @@ summary:focus-visible {
 .developer-definition-list dd {
   margin: 0;
   color: var(--text-muted);
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .developer-definition-list dd code {
@@ -3905,7 +3995,7 @@ summary:focus-visible {
 .developer-research-grid p {
   margin: 0;
   color: var(--text-muted);
-  line-height: 1.68;
+  line-height: 1.55;
 }
 
 .developer-inline-checks {
@@ -3923,7 +4013,7 @@ summary:focus-visible {
   border-radius: 6px;
   color: var(--text-muted);
   background: var(--surface-muted);
-  font-size: 0.83rem;
+  font-size: 0.92rem;
   font-weight: 700;
 }
 
@@ -3934,11 +4024,11 @@ summary:focus-visible {
 
 .developer-number-list li {
   position: relative;
-  padding: 18px 18px 18px 54px;
+  padding: 15px 18px 15px 54px;
   border-top: 1px solid var(--border);
   color: var(--text-muted);
   counter-increment: developer-step;
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .developer-number-list li:last-child {
@@ -3977,7 +4067,7 @@ summary:focus-visible {
   display: grid;
   gap: 7px;
   color: var(--heading);
-  font-size: 0.84rem;
+  font-size: 0.96rem;
   font-weight: 800;
 }
 
@@ -4031,7 +4121,7 @@ summary:focus-visible {
   padding: 7px 9px 7px 16px;
   border-bottom: 1px solid color-mix(in srgb, var(--surface) 16%, transparent);
   color: color-mix(in srgb, var(--surface) 78%, transparent);
-  font-size: 0.75rem;
+  font-size: 0.84rem;
   font-weight: 700;
 }
 
@@ -4264,6 +4354,7 @@ summary:focus-visible {
 
   .developer-route-grid,
   .developer-research-grid,
+  .developer-environment-grid,
   .developer-prompt-builder form,
   .developer-definition-list > div {
     grid-template-columns: 1fr;

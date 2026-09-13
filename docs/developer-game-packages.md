@@ -30,6 +30,96 @@ Its output separates the third-party package contract from the repository's
 built-in game contract and includes security, accessibility, research, and
 verification gates.
 
+## Local development foundation
+
+The tools have separate jobs: NVM switches Node.js versions, Node.js supplies
+the JavaScript runtime and npm, Git records local history, GitHub hosts the
+remote repository, and GitHub CLI (`gh`) authenticates and operates GitHub from
+the terminal. This repository requires Node.js 22 or later and pins
+`npm@11.19.0` in its root `package.json`.
+
+### Windows 10 or 11
+
+Install Git and GitHub CLI from PowerShell:
+
+```powershell
+winget install --id Git.Git -e --source winget
+winget install --id GitHub.cli --source winget
+```
+
+Download and run `nvm-setup.exe` from the official
+[NVM for Windows releases](https://github.com/coreybutler/nvm-windows/releases).
+Its maintainers recommend removing any standalone Node.js installation first
+to avoid `PATH` conflicts. Reopen PowerShell after installation; `nvm install`
+and `nvm use` commonly require an Administrator shell.
+
+```powershell
+nvm install lts
+nvm use lts
+npm install --global npm@11.19.0
+```
+
+### macOS, Linux, or WSL
+
+Install Git and GitHub CLI for the operating system first. The
+[Git installation guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+and [GitHub CLI installation guide](https://github.com/cli/cli#installation)
+list current platform-specific options. For example:
+
+```bash
+# macOS with Homebrew
+brew install git gh
+
+# Ubuntu, Debian, or WSL; install gh from its official guide
+sudo apt update
+sudo apt install git curl
+```
+
+Native macOS, Linux, and WSL use
+[nvm-sh](https://github.com/nvm-sh/nvm#installing-and-updating), not NVM for
+Windows:
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash
+\. "$HOME/.nvm/nvm.sh"
+command -v nvm
+nvm install --lts
+nvm use --lts
+npm install --global npm@11.19.0
+```
+
+### Connect GitHub and start the repository
+
+Create a GitHub account, then configure the author metadata Git writes into
+commits. Use a GitHub `noreply` address if a private email should not be public.
+`gh auth login --web` performs browser authentication and stores its credential
+through the available system credential store.
+
+```bash
+git config --global user.name "YOUR NAME"
+git config --global user.email "YOUR_GITHUB_EMAIL"
+gh auth login --web
+gh auth status
+
+gh repo clone ian030590/RehabTrainerHub
+cd RehabTrainerHub
+```
+
+Contributors without upstream write access should fork the repository and work
+on a branch in their own fork. Verify the complete local toolchain before
+editing:
+
+```bash
+node --version  # v22 or later
+npm --version   # 11.19.0
+git --version
+gh --version
+
+npm ci --workspaces --include-workspace-root
+npm run test:game-platform
+npm run dev:hub
+```
+
 ## Package layout
 
 Uploads are limited to 12 MiB compressed, 24 MiB expanded, 8 MiB per file,

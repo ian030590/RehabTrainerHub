@@ -4,12 +4,56 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useHubLanguage, type HubLanguage } from '../i18n/HubLanguage';
 import { GetDeveloperCopy } from './developerCopy';
 
-const repositoryUrl = 'https://github.com/ian030590/RehabTrainerHub';
 const codexGuideUrl = 'https://learn.chatgpt.com/docs/codex/cli';
+const environmentGuideUrls = [
+  'https://git-scm.com/book/en/v2/Getting-Started-Installing-Git',
+  'https://github.com/coreybutler/nvm-windows/releases',
+  'https://github.com/nvm-sh/nvm#installing-and-updating',
+  'https://github.com/cli/cli#installation',
+  'https://cli.github.com/manual/gh_auth_login',
+] as const;
 
-const repositorySetup = `git clone ${repositoryUrl}.git
-cd RehabTrainerHub
-npm ci --workspaces --include-workspace-root`;
+const windowsEnvironmentSetup = `# PowerShell
+winget install --id Git.Git -e --source winget
+winget install --id GitHub.cli --source winget
+
+# Download and run nvm-setup.exe from the official Releases page,
+# then reopen PowerShell. Use an Administrator shell for nvm install/use.
+nvm install lts
+nvm use lts
+npm install --global npm@11.19.0`;
+
+const posixEnvironmentSetup = `# macOS with Homebrew
+brew install git gh
+
+# Ubuntu, Debian, or WSL (install gh from its official guide)
+sudo apt update
+sudo apt install git curl
+
+# macOS, Linux, or WSL: install nvm-sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash
+\. "$HOME/.nvm/nvm.sh"
+command -v nvm
+nvm install --lts
+nvm use --lts
+npm install --global npm@11.19.0`;
+
+const gitHubSetup = `git config --global user.name "YOUR NAME"
+git config --global user.email "YOUR_GITHUB_EMAIL"
+
+gh auth login --web
+gh auth status
+gh repo clone ian030590/RehabTrainerHub
+cd RehabTrainerHub`;
+
+const localEnvironmentVerification = `node --version  # v22 or later
+npm --version   # 11.19.0
+git --version
+gh --version
+
+npm ci --workspaces --include-workspace-root
+npm run test:game-platform
+npm run dev:hub`;
 
 const codexInstall = `npm install -g @openai/codex
 codex --version`;
@@ -226,7 +270,53 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             </ol>
             <h3>{copy.quickStart.installTitle}</h3>
             <p>{copy.quickStart.installNote}</p>
-            <CodeBlock label="Terminal">{repositorySetup}</CodeBlock>
+            <a className="developer-section-link" href="#local-environment">
+              {copy.quickStart.installLink}
+              <span aria-hidden="true">↓</span>
+            </a>
+          </DocSection>
+
+          <DocSection eyebrow={copy.localEnvironment.eyebrow} id="local-environment" title={copy.localEnvironment.title}>
+            <p className="developer-docs-lead">{copy.localEnvironment.intro}</p>
+            <h3>{copy.localEnvironment.requirementsTitle}</h3>
+            <dl className="developer-definition-list developer-tool-list">
+              {copy.localEnvironment.requirements.map(([term, description]) => (
+                <div key={term}>
+                  <dt>{term}</dt>
+                  <dd>{description}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="developer-environment-grid">
+              <section>
+                <h3>{copy.localEnvironment.windowsTitle}</h3>
+                <p>{copy.localEnvironment.windowsBody}</p>
+                <CodeBlock label="PowerShell">{windowsEnvironmentSetup}</CodeBlock>
+              </section>
+              <section>
+                <h3>{copy.localEnvironment.posixTitle}</h3>
+                <p>{copy.localEnvironment.posixBody}</p>
+                <CodeBlock label="Terminal">{posixEnvironmentSetup}</CodeBlock>
+              </section>
+            </div>
+            <h3>{copy.localEnvironment.accountTitle}</h3>
+            <p>{copy.localEnvironment.accountBody}</p>
+            <CodeBlock label="Terminal">{gitHubSetup}</CodeBlock>
+            <h3>{copy.localEnvironment.verifyTitle}</h3>
+            <p>{copy.localEnvironment.verifyBody}</p>
+            <CodeBlock label="Terminal">{localEnvironmentVerification}</CodeBlock>
+            <ul className="developer-check-list">
+              {copy.localEnvironment.notes.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+            <h3>{copy.localEnvironment.referencesTitle}</h3>
+            <nav className="developer-reference-links" aria-label={copy.localEnvironment.referencesTitle}>
+              {copy.localEnvironment.references.map((label, index) => (
+                <a href={environmentGuideUrls[index]} key={label} rel="noreferrer" target="_blank">
+                  <span aria-hidden="true">↗</span>
+                  {label}
+                </a>
+              ))}
+            </nav>
           </DocSection>
 
           <DocSection eyebrow={copy.aiAgent.eyebrow} id="ai-agent" title={copy.aiAgent.title}>
