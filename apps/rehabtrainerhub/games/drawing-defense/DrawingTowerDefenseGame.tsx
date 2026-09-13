@@ -529,8 +529,8 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     }, [hostedSettings, setPhase]);
     useEffect(() => {
         let cancelled = false;
+        let initialized = false;
         const app = new Application();
-        appRef.current = app;
         const init = async () => {
             const host = pixiHostRef.current;
             if (!host)
@@ -542,8 +542,12 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
                 resolution: window.devicePixelRatio || 1,
                 resizeTo: host,
             });
-            if (cancelled)
+            initialized = true;
+            if (cancelled) {
+                app.destroy(true, { children: true, texture: true });
                 return;
+            }
+            appRef.current = app;
             host.appendChild(app.canvas);
             app.canvas.className = 'drawing-defense-canvas';
             drawLayout(app);
@@ -613,7 +617,8 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         return () => {
             cancelled = true;
             window.removeEventListener('resize', onResize);
-            app.destroy(true, { children: true, texture: true });
+            if (initialized)
+                app.destroy(true, { children: true, texture: true });
             appRef.current = null;
         };
     }, [drawLayout, finishGame, recordEnemyOutcome, redrawPath, spawnEnemy]);
