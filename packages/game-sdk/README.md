@@ -46,8 +46,13 @@ transfers a one-time private `MessagePort` to the SDK and validates the same
 schema again before relaying a result to `trainerhub.cc`.
 
 The platform validates the root `settings.json` file before opening the game.
-`timeline(settings)` receives only those validated slider, list, and checkbox
-values. See [`examples/minimal-game.html`](examples/minimal-game.html) and
+`timeline(settings)` receives only those validated slider, list, checkbox, and
+color values. See [`examples/minimal-game.html`](examples/minimal-game.html) and
 [`examples/settings.json`](examples/settings.json) for a complete package. The
 game package contract and security restrictions are
 documented in [`docs/developer-game-packages.md`](../../docs/developer-game-packages.md).
+
+Uploaded third-party packages do not use the built-in-game `score.json`
+contract. Return aggregate `score`, `durationMs`, `trialCount`, and `metrics`
+from `summarize()`. Repository-owned games use their separate
+[`docs/game-score-contract.md`](../../docs/game-score-contract.md) contract.

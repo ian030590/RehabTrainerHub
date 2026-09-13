@@ -5,6 +5,31 @@ platform-provided jsPsych 8 runtime must own the experiment lifecycle. PixiJS,
 Three.js, or a custom canvas loop may run inside one game-owned jsPsych custom
 plugin; renderer state must not be shared with another game.
 
+## AI-first quick start
+
+The recommended workflow is specification first, then AI-assisted implementation:
+
+1. Install Git, Node.js 22 or later, and npm 11. Repository contributors run
+   `npm ci --workspaces --include-workspace-root` from the repository root.
+2. Install an AI coding agent. For Codex CLI, follow the current
+   [official installation guide](https://learn.chatgpt.com/docs/codex/cli), or
+   use the npm option: `npm install -g @openai/codex`.
+3. Start `codex` in the repository or standalone game directory. Ask it to read
+   `AGENTS.md`, this contract, `packages/game-settings/src/index.js`, and
+   `packages/game-sdk/src/index.js` before it edits files.
+4. Specify the task demands, stimulus and response sequence, supported input,
+   timing, exit behavior, aggregate metrics, and known limitations before
+   requesting code. Do not let an agent invent research citations or outcome
+   validity.
+5. Generate readable source, review every file, complete keyboard and pointer
+   playthroughs, verify aggregate results on completion and abort, then submit a
+   semantic version through `/developer/`.
+
+The interactive developer page includes a bilingual structured-prompt builder.
+Its output separates the third-party package contract from the repository's
+built-in game contract and includes security, accessibility, research, and
+verification gates.
+
 ## Package layout
 
 Uploads are limited to 12 MiB compressed, 24 MiB expanded, 8 MiB per file,
@@ -35,9 +60,16 @@ assets/
 ## Platform-generated settings UI
 
 The Hub reads `settings.json` before it creates the game iframe. The schema
-supports the platform's fixed `slider`, `list`, and `checkbox` controls; games
-must not duplicate this setup screen inside their own HTML. Localized labels
-are required in Traditional Chinese and English.
+supports the platform's fixed `slider`, `list`, `checkbox`, and six-digit hex
+`color` controls; games must not duplicate this setup screen inside their own
+HTML. Localized labels are required in Traditional Chinese and English.
+
+`schemaVersion` is currently `1`. The contract allows at most 16 sections, 64
+fields, and 64 KiB of JSON. Section identifiers and field keys must be unique.
+Field keys must start with a lowercase ASCII letter and cannot use sensitive
+names such as `auth`, `email`, `name`, `participant`, `session`, `token`, or
+`user`. Lists contain 2–24 unique string or numeric options. Slider defaults
+must fall within their finite `min`/`max` range and align to `step`.
 
 ```json
 {
@@ -75,6 +107,21 @@ plain object, and sends them only after the isolated runner and private channel
 are ready. `RunTrainerHubJsPsychGame` exposes the validated object to the game;
 do not place personal information, credentials, URLs, or free-text fields in
 settings.
+
+## `score.json`: built-in games only
+
+Third-party HTML/ZIP packages do **not** currently include or register
+`score.json`. They return bounded aggregates from the Game SDK `summarize()`
+callback as described below.
+
+Repository contributors working under
+`apps/rehabtrainerhub/games/{gameId}/` must provide both `settings.json` and
+`score.json`. The latter uses `rehab-trainer.game-score/v1` and declares how the
+Hub projects game-owned numeric/boolean fields into the shared result table,
+chart, primary summaries, and data-quality/context summaries. It does not own
+scoring formulas, CSS, or executable renderers. See
+[`game-score-contract.md`](game-score-contract.md) for its exact field,
+presentation, row, numeric, and payload limits.
 
 ## Platform runtime
 
@@ -168,6 +215,25 @@ approved even if the browser appears to permit a call during local testing.
 The upload scanner explicitly rejects bundled copies of jsPsych and the Game
 SDK. It is only triage, not a security boundary; approval still requires human
 source review and a play test in an isolated browser profile or disposable VM.
+
+## Activity design, interpretation, and accessibility
+
+Document the primary task demands separately from secondary visual, auditory,
+attention, movement, and device-operation demands. Keep the adjustable trial
+count, exposure time, interval, stimulus size, randomization, practice trials,
+and stopping conditions explicit. For every aggregate metric, document its
+formula, unit, denominator, missing-value behavior, and likely confounds.
+
+Referencing a published task does not establish equivalent reliability,
+validity, medical-device status, or clinical use. Public copy should describe a
+practice activity, stimulus parameters, and a session record. It must not claim
+diagnosis, prescription, treatment, functional recovery, or guaranteed effects.
+
+Use semantic HTML and real buttons, visible keyboard focus, keyboard-equivalent
+operation, pointer targets of at least 44 by 44 CSS pixels, and reduced-motion
+support. Instructions appear before the interaction. A game must provide a
+reliable exit path and release event listeners, timers, audio, and renderer
+resources on completion or abort.
 
 The redistributed jsPsych MIT notice is published at
 `/runtime/THIRD_PARTY_NOTICES-0.1.0.txt` on the runner.
