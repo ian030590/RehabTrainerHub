@@ -1908,6 +1908,15 @@ summary:focus-visible {
   font-weight: 700;
 }
 
+.professional-website-link {
+  margin-top: 16px;
+  font-weight: 700;
+}
+
+.professional-website-link a {
+  color: var(--primary);
+}
+
 .education-article-card details {
   border-top: 1px solid var(--border);
 }

@@ -149,6 +149,8 @@ export const zhTW = {
       professionalKicker: '作者背景與內容責任',
       professionalTitle: '蔡泓恩｜職能治療師',
       professionalBody: '高考職能治療師。畢業於國立臺灣大學職能治療學系，目前就讀同系碩士班，具視覺功能評估、視覺復能與臨床研究經驗。根據臨床經驗製作此網站，欲透過個人電腦、平板、手機為媒介，提供居家練習方案。本站不是醫療機構或職能治療所；不提供診斷、醫囑或個別化職能治療，使用本站也不建立醫療或職能治療服務關係。專業背景資料確認於 2026 年 8 月 12 日。',
+      professionalWebsiteLabel: '個人網站：',
+      professionalWebsiteLink: '前往蔡泓恩的個人網站',
     },
     privacy: {
       title: '隱私權政策',

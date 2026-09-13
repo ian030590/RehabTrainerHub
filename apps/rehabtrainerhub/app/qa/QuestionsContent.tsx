@@ -5,6 +5,8 @@ import { useHubLanguage } from '../i18n/HubLanguage';
 import { EducationArticles } from './EducationArticles';
 import type { Article } from '../articleTypes';
 
+const personalWebsiteUrl = 'https://ian030590.trainerhub.cc/';
+
 export function QuestionsContent({ articles }: { articles: Article[] }) {
   const { language } = useHubLanguage();
   const copy = GetHubUiCopy(language).questions;
@@ -30,6 +32,12 @@ export function QuestionsContent({ articles }: { articles: Article[] }) {
         <p className="page-kicker">{copy.professionalKicker}</p>
         <h2 id="professional-background-title">{copy.professionalTitle}</h2>
         <p>{copy.professionalBody}</p>
+        <p className="professional-website-link">
+          {copy.professionalWebsiteLabel}{' '}
+          <a href={personalWebsiteUrl} rel="me">
+            {copy.professionalWebsiteLink}
+          </a>
+        </p>
       </section>
 
       <EducationArticles initialArticles={articles} />

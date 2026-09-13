@@ -149,6 +149,8 @@ export const en = {
       professionalKicker: 'Author background and accountability',
       professionalTitle: 'Hung-En Tsai | Occupational Therapist',
       professionalBody: 'Board-Certified Occupational Therapist. Graduated from the Department of Occupational Therapy at National Taiwan University and currently pursuing a Master degree in the same department, with experience in visual function assessment, visual rehabilitation, and clinical research. Based on clinical experience, this website was created to provide home-based practice programs via personal computers, tablets, and mobile phones. This website is not a medical institution or an occupational therapy clinic; it does not provide diagnoses, medical advice, or individualized occupational therapy, and using this website does not establish a medical or occupational therapy service relationship. Professional background verified on August 12, 2026.',
+      professionalWebsiteLabel: 'Personal website:',
+      professionalWebsiteLink: "Visit Hung-En Tsai's personal website",
     },
     privacy: {
       title: 'Privacy Policy',

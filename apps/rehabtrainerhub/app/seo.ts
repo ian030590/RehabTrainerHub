@@ -22,6 +22,7 @@ const websiteId = `${hubUrl}#website`;
 const hubApplicationId = `${hubUrl}#application`;
 const maintainerId = `${hubUrl}qa/#professional-background`;
 const repositoryUrl = 'https://github.com/ian030590/RehabTrainerHub';
+const maintainerPersonalWebsiteUrl = 'https://ian030590.trainerhub.cc/';
 
 export const siteContentLastModified = '2026-09-02';
 
@@ -137,6 +138,7 @@ export const maintainerJsonLd = {
     name: '職能治療師證書',
     credentialCategory: '醫事人員專業證書',
   },
+  sameAs: [maintainerPersonalWebsiteUrl],
   knowsAbout: ['職能治療', '視覺功能評估', '視覺復能', '居家訓練工具設計'],
 };
 
