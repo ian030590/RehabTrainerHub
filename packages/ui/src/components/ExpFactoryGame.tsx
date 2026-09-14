@@ -176,7 +176,7 @@ export function ExpFactoryGame({ config, onExit }: {
             onLoad={handleLegacyLoad}
             ref={iframeRef}
             sandbox="allow-forms allow-same-origin allow-scripts"
-            src="./legacy/index.html"
+            src="./legacy/"
             style={{ border: 0, display: 'block', height: '100dvh', width: '100%' }}
             title={`${config.title.zh} / ${config.title.en}`}
           />

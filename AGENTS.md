@@ -34,6 +34,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 
 ## CI/CD 維護
 
+- `npm run test:pwa` 包含 `test:pwa-navigation`，以本機 HTTP 308 轉址及實際產生的 Service Worker 驗證內嵌頁面預快取、離線導航與舊快取清理；兩份 workflow 的 `pwa` matrix 均執行此命令，不依賴 Brave。
+
 - `.github/workflows/ci.yml` 在 PR 與非 `main` push 的應用程式、package、script、lockfile、Turbo 或 workflow 變更時執行；純文件變更不得啟動 CI。
 - `.github/workflows/deploy-cloudflare-pages.yml` 只在 `main` 上的可部署變更時執行。部署前的驗證以 matrix 平行執行；新增 gate 時加入兩份 workflow 的 matrix，並維持相同命令。
 - CI/CD 乾淨安裝使用 `npm ci --workspaces --include-workspace-root`；Hub 的內建遊戲相容 build 需要 root 的 Vite 與訓練 runtime dependencies，不得省略 workspace root。

@@ -41,7 +41,8 @@
     "test:gamerunner": "node --test apps/usergamerunner/tests/gamehost.test.mjs",
     "test:naming": "node scripts/check-identifier-names.mjs",
     "test:training-config-styles": "node scripts/check-training-config-styles.mjs",
-    "test:pwa": "node scripts/check-pwa-assets.mjs",
+    "test:pwa": "node scripts/check-pwa-assets.mjs && npm run test:pwa-navigation",
+    "test:pwa-navigation": "node --test scripts/check-official-game-navigation.test.mjs",
     "test:seo": "node --test scripts/check-article-prerender.test.mjs && node scripts/check-seo-output.mjs --all"
   },
   "dependencies": {

@@ -96,7 +96,7 @@ const officialGeneratorSource = readFileSync(
 assert.match(officialGeneratorSource, /maximumShellPrecacheBytes/);
 assert.match(officialGeneratorSource, /ValidateCatalogGames/);
 assert.match(officialGeneratorSource, /ValidateGeneratedOutput/);
-assert.match(officialGeneratorSource, /runtimeDestinations/);
+assert.match(readFileSync(resolve(repoRoot, 'scripts/official-game-service-worker.mjs'), 'utf8'), /runtimeDestinations/);
 assert.match(officialGeneratorSource, /data-official-game-pwa/);
 assert.doesNotMatch(officialGeneratorSource, /function CollectFiles/);
 

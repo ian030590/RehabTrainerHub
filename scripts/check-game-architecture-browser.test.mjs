@@ -69,7 +69,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
       browserSmokeScript,
       '--url', `http://127.0.0.1:${address.port}/games/${gameId}/`,
       '--clickSelectors', '.game-settings-form button[type="submit"]',
-      '--allSelectors', '.cognitive-reference-game iframe[src="./legacy/index.html"]',
+      '--allSelectors', '.cognitive-reference-game iframe[src="./legacy/"]',
       '--iframeSelectors', '.jspsych-display-element .block-text',
       '--timeoutMs', '3000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
@@ -164,6 +164,11 @@ test('Brave shows shared score charts and uploads only signed-in sessions', asyn
 async function ServeStaticOutput(request, response) {
   try {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+    // Match Cloudflare Pages so a local smoke test cannot hide index redirects.
+    if (url.pathname.endsWith('/index.html')) {
+      response.writeHead(308, { Location: url.pathname.slice(0, -'index.html'.length) + url.search }).end();
+      return;
+    }
     let pathname = decodeURIComponent(url.pathname);
     if (pathname.endsWith('/')) pathname += 'index.html';
     let filePath = resolve(outputRoot, `.${pathname}`);
