@@ -48,6 +48,8 @@ export const en = {
   "exp.res.refreshHz": "Measured display refresh:",
   "exp.res.refreshUnknown": "Unknown (raw response time used)",
   "exp.res.thCollision": "Collision",
+  "exp.res.thAvoidance": "Successful avoidance",
+  "exp.res.thOtherCollision": "Hit another vehicle",
   "exp.res.thEvent": "Event",
   "exp.res.thFrames": "Reaction frames",
   "exp.res.thRawRt": "Raw input RT (ms)",

@@ -150,6 +150,8 @@ const info = {
     median_rt: { type: ParameterType.INT },
     valid_event_count: { type: ParameterType.INT },
     reaction_event_count: { type: ParameterType.INT },
+    successful_avoidance_count: { type: ParameterType.INT },
+    event_count: { type: ParameterType.INT },
     collisions: { type: ParameterType.INT },
     lane_deviations: { type: ParameterType.INT },
     average_fps: { type: ParameterType.INT },
@@ -210,6 +212,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private vehicleHeading = 0; // radians, 0 = -Z direction
   private vehicleSpeed = 0;
   private steeringInput = 0;
+  private lastResponseSteering = 0;
   private frontWheelAngle = 0;
   private lastYawRate = 0;
   private progress = 0;        // projected distance along route (for hazards/HUD)
@@ -540,6 +543,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.refreshMeasured = false;
     this.activeHazards = [];
     this.eventResults = [];
+    this.lastResponseSteering = 0;
     this.ambientTrafficActors = [];
     this.roadCollisionBoxes = [];
     this.buildingCollisionBoxes = [];
@@ -795,6 +799,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const release = (event: PointerEvent) => {
       event.preventDefault();
       setPressed(false);
+      this.captureSteeringInputTimestamp(event.timeStamp);
     };
 
     button.addEventListener('pointerdown', (event) => {
@@ -805,6 +810,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         this.captureBrakeInputTimestamp(event.timeStamp);
       }
       setPressed(true);
+      this.captureSteeringInputTimestamp(event.timeStamp);
     });
     button.addEventListener('pointerup', release);
     button.addEventListener('pointercancel', release);
@@ -872,6 +878,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         }
         this.keyState.down = pressed;
       }
+      this.captureSteeringInputTimestamp(eventTimestamp);
       return;
     }
     if (this.controlMode === 'wasd') {
@@ -884,6 +891,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         }
         this.keyState.down = pressed;
       }
+      this.captureSteeringInputTimestamp(eventTimestamp);
     }
   }
 
@@ -3162,6 +3170,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     }
     if (brakePressed) this.pendingBrakeTimestamp = null;
     this.lastBrakePressed = brakePressed;
+    const responseSteering = Math.abs(input.steering) > 0.15 ? Math.sign(input.steering) : 0;
+    if (!this.laneResetActive && responseSteering !== 0 && responseSteering !== this.lastResponseSteering) {
+      this.handleHazardResponse(time, responseSteering < 0 ? 'steer-left' : 'steer-right');
+    }
+    this.lastResponseSteering = responseSteering;
 
     const fixedSteps = CalculateDrivingFixedSteps(
       this.simulationAccumulatorMs,
@@ -3302,7 +3315,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.vehicleX += forward.x * this.vehicleSpeed * dt;
     this.vehicleZ += forward.z * this.vehicleSpeed * dt;
 
-    if (this.isVehicleCollidingWithBuilding() || this.isVehicleCollidingWithTraffic()) {
+    const trafficCollision = this.isVehicleCollidingWithTraffic();
+    if (trafficCollision) this.recordAvoidanceTrafficCollision();
+    if (this.isVehicleCollidingWithBuilding() || trafficCollision) {
       this.recordCollisionEvent(time);
       this.vehicleX = previousX;
       this.vehicleZ = previousZ;
@@ -3608,6 +3623,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         hazardDistance,
         startTime: 0,
         presentedAt: null,
+        crossingStarted: false,
         brakeTime: null,
         rt: null,
         preheldBrake: false,
@@ -3627,6 +3643,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           valid: true,
           collision: false,
           brake_preheld: false,
+          avoidance_success: null,
+          other_vehicle_collision: false,
           response: 'pending',
         },
       };
@@ -3635,17 +3653,13 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private createHazardSchedule(): Array<{ template: HazardTemplate; triggerDistance: number }> {
     const scheduledEvents: Array<{ template: HazardTemplate; triggerDistance: number }> = [];
-    let hazardPool = [...this.hazardTemplates].sort(() => Math.random() - 0.5);
-    let triggerDistance = 30 + Math.random() * 35;
+    let triggerDistance = 45;
     const { minHazardInterval, maxHazardInterval } = this.difficultyPreset;
 
     while (triggerDistance < this.routeLength - 40) {
-      if (hazardPool.length === 0) {
-        hazardPool = [...this.hazardTemplates].sort(() => Math.random() - 0.5);
-      }
-      const template = hazardPool.pop()!;
+      const template = this.hazardTemplates[0];
       scheduledEvents.push({ template, triggerDistance });
-      triggerDistance += minHazardInterval + Math.random() * (maxHazardInterval - minHazardInterval);
+      triggerDistance += (minHazardInterval + maxHazardInterval) / 2;
     }
 
     return scheduledEvents;
@@ -3795,6 +3809,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     hazard.hazardDistance = hazardDistance;
     hazard.startTime = time;
     hazard.presentedAt = null;
+    hazard.crossingStarted = false;
     hazard.brakeTime = preheldBrake ? time : null;
     hazard.rt = null;
     hazard.preheldBrake = preheldBrake;
@@ -3818,9 +3833,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       hazard.template.id === 'wrong-way-driver' ? { x: -point.dir.x, z: -point.dir.z } : point.dir,
     );
 
-    this.eventResults.push(hazard.result);
-    this.flashRed();
-    if (this.hud) this.hud.event.textContent = hazard.result.label;
   }
 
   private syncInputPause(time: number) {
@@ -3920,8 +3932,17 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
   private markHazardsPresented(time: number) {
     for (const hazard of this.activeHazards) {
-      if (hazard.active && !hazard.resolved && hazard.group.visible && hazard.presentedAt === null) {
+      if (hazard.active && !hazard.resolved && hazard.group.visible && hazard.crossingStarted && hazard.presentedAt === null) {
         hazard.presentedAt = time;
+        hazard.preheldBrake = this.readInput().brake > 0.35;
+        hazard.brakeTime = null;
+        hazard.result.brake_preheld = hazard.preheldBrake;
+        hazard.result.valid = false;
+        hazard.result.response = 'pending';
+        hazard.result.distance_m = Math.round(this.progress);
+        this.eventResults.push(hazard.result);
+        this.flashRed();
+        if (this.hud) this.hud.event.textContent = hazard.result.label;
       }
     }
   }
@@ -3982,6 +4003,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         const movingPoint = this.getRoutePoint(hazard.currentDistance);
         const routeGap = hazard.currentDistance - this.progress;
         const swerve = this.clamp((54 - routeGap) / 24, 0, 1) ** 2;
+        if (swerve > 0) hazard.crossingStarted = true;
         lateral = this.lerp(hazard.crossingStartLateral, hazard.targetLateral, swerve);
         hazard.group.position.set(
           movingPoint.x + movingPoint.normal.x * lateral,
@@ -4010,13 +4032,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       const collisionNow = !hazard.resolved && this.isHazardColliding(hazard);
       const requiresDodge = hazard.template.id === 'wrong-way-driver';
       const safeBrake = !requiresDodge && hazard.brakeTime !== null && this.vehicleSpeed < 2.4 && !collisionNow && distanceToHazard > -1;
-      const wrongWayDodged = requiresDodge && !collisionNow && this.hasDodgedWrongWayDriver(hazard);
-      const wrongWayOverran = requiresDodge && !collisionNow && !wrongWayDodged && this.hasWrongWayDriverOverrun(hazard);
+      // Keep observing collisions until both vehicles have completely passed.
+      const wrongWayDodged = requiresDodge && !collisionNow && this.hasPassedHazard(hazard);
       const passedHazard = !requiresDodge && !collisionNow && this.hasPassedHazard(hazard);
 
       if (collisionNow) {
-        this.resolveHazard(hazard, time, true, hazard.brakeTime ? 'collision-after-brake' : 'collision-no-brake');
-      } else if (wrongWayOverran) {
         this.resolveHazard(hazard, time, true, hazard.brakeTime ? 'collision-after-brake' : 'collision-no-brake');
       } else if (safeBrake) {
         this.resolveHazard(hazard, time, false, hazard.preheldBrake ? 'invalid-preheld-brake' : 'brake');
@@ -4048,12 +4068,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     hazard.resolved = true;
     hazard.collision = collision;
     hazard.result.collision = collision;
-    hazard.result.response = response;
+    hazard.result.avoidance_success = !collision
+      && !(this.difficultyPreset === difficultyPresets.advanced && hazard.result.other_vehicle_collision);
+    if (hazard.rt === null) hazard.result.response = response;
     hazard.result.rt_ms = hazard.rt;
-    hazard.result.valid = !hazard.preheldBrake && (hazard.rt !== null || response === 'dodge');
+    hazard.result.valid = hazard.rt !== null;
     hazard.removeAt = time + 950;
 
-    if (collision) {
+    if (!hazard.result.avoidance_success) {
       soundManager.playFailure();
       this.vehicleSpeed = Math.min(this.vehicleSpeed, 2.5);
     } else {
@@ -4062,7 +4084,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     if (this.hud) {
       const rtText = hazard.rt !== null ? `${hazard.rt} ms` : this.text.noValidRt;
-      const outcome = collision
+      const outcome = !hazard.result.avoidance_success
         ? this.text.collision
         : response === 'dodge' || response === 'dodge-after-brake'
           ? this.text.dodged
@@ -4102,6 +4124,15 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.lastCollisionEventTime = time;
     this.recordDrivingRuleEvent('vehicle-collision', 'collision', { collision: true });
     soundManager.playFailure();
+  }
+
+  private recordAvoidanceTrafficCollision() {
+    for (const hazard of this.activeHazards) {
+      if (hazard.active && !hazard.resolved && hazard.presentedAt !== null) {
+        hazard.result.other_vehicle_collision = true;
+        if (this.difficultyPreset === difficultyPresets.advanced) hazard.result.avoidance_success = false;
+      }
+    }
   }
 
   private isHazardColliding(hazard: ActiveHazard): boolean {
@@ -4172,7 +4203,9 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private getHazardCollisionBox(hazard: ActiveHazard): CollisionBox2D {
-    const footprint = this.getHazardFootprint(hazard.template.id);
+    const footprint = hazard.group.userData.vehicleKind === 'scooter'
+      ? { halfWidth: 0.45, halfLength: 1.2 }
+      : this.getHazardFootprint(hazard.template.id);
     return {
       centerX: hazard.group.position.x,
       centerZ: hazard.group.position.z,
@@ -4225,32 +4258,29 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private handleBrakePressed(time: number) {
-    const hazard = this.activeHazards.find((item) => item.active && !item.resolved && item.brakeTime === null);
-    if (!hazard || hazard.preheldBrake || hazard.presentedAt === null) return;
-    if (time < hazard.presentedAt) {
-      hazard.preheldBrake = true;
-      hazard.brakeTime = time;
-      hazard.result.brake_preheld = true;
-      hazard.result.valid = false;
-      hazard.result.response = 'invalid-preheld-brake';
-      return;
-    }
+    this.handleHazardResponse(time, 'brake');
+  }
+
+  private handleHazardResponse(time: number, response: 'brake' | 'steer-left' | 'steer-right') {
+    const hazard = this.activeHazards.find((item) => item.active && !item.resolved);
+    if (!hazard || hazard.presentedAt === null || time < hazard.presentedAt) return;
+    if (response === 'brake') hazard.brakeTime ??= time;
+    if (hazard.rt !== null) return;
     const reaction = CalculateFrameAlignedReactionTime(
       hazard.presentedAt,
       time,
       this.refreshMeasured ? this.displayRefreshMs : Number.NaN,
     );
-    hazard.brakeTime = time;
-    hazard.rt = reaction.rtMs;
+    hazard.rt = reaction.rawRtMs;
     hazard.result.rt_ms = hazard.rt;
     hazard.result.raw_rt_ms = reaction.rawRtMs;
     hazard.result.reaction_frames = reaction.frameCount;
-    hazard.result.response = 'brake';
+    hazard.result.response = response;
     hazard.result.valid = true;
     if (this.hud) {
       this.hud.event.textContent = this.format(this.text.brakeReaction, {
         label: hazard.result.label,
-        rt: hazard.rt,
+        rt: Math.round(hazard.rt),
       });
     }
   }
@@ -4268,8 +4298,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         return this.createPlaneMesh();
       case 'drunk-driver':
         return this.createCarMesh(0xf97316);
-      case 'wrong-way-driver':
-        return this.createCarMesh(0xef4444);
+      case 'wrong-way-driver': {
+        const palette = [0xeeeeee, 0x2563eb, 0xef4444, 0xf59e0b, 0x22c55e, 0x0f172a];
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        const isScooter = Math.random() < 0.5;
+        const group = isScooter ? this.createScooterMesh(color) : this.createFallbackVehicle(color).group;
+        group.userData.vehicleKind = isScooter ? 'scooter' : 'car';
+        return group;
+      }
       default:
         return this.createCarMesh(0xef4444);
     }
@@ -4921,7 +4957,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     const duration = this.trialStartTime > 0
       ? Math.round(Math.max(0, this.simulationTime - this.trialStartTime))
       : 0;
-    const validEvents = this.eventResults.filter((event) => event.valid);
+    const rounds = this.eventResults.filter((event) => event.event_id === 'wrong-way-driver');
+    for (const event of rounds) {
+      if (event.response === 'pending') event.response = 'no-response';
+    }
+    const validEvents = rounds.filter((event) => event.valid);
     const validRts = validEvents
       .filter((event) => event.rt_ms !== null)
       .map((event) => event.rt_ms);
@@ -4937,7 +4977,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
 
     this.jsPsych.finishTrial({
       rt: reactionSummary.averageMs,
-      correct: response === 'completed' && collisions === 0,
+      correct: response === 'completed' && rounds.length > 0 && rounds.every(event => event.avoidance_success === true),
       target: this.text.deliveryTarget,
       response,
       duration_ms: duration,
@@ -4945,6 +4985,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       median_rt: reactionSummary.medianMs,
       valid_event_count: validEvents.length,
       reaction_event_count: validRts.length,
+      successful_avoidance_count: rounds.filter(event => event.avoidance_success === true).length,
+      event_count: rounds.length,
       collisions,
       lane_deviations: this.laneDeviationCount,
       average_fps: averageFps,
@@ -4957,7 +4999,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
       route_id: this.selectedRouteVariant?.id ?? 'unknown',
       route_label: this.selectedRouteVariant?.label ?? 'Unknown route',
       route_progress: Math.round(this.progress * 10) / 10,
-      driving_events: this.eventResults,
+      driving_events: rounds,
     });
   }
 
@@ -4998,6 +5040,17 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.pendingBrakeTimestamp = timestamp;
     this.lastBrakePressed = true;
     if (!this.laneResetActive) this.handleBrakePressed(timestamp);
+  }
+
+  private captureSteeringInputTimestamp(value: number) {
+    const steering = Number(this.keyState.right) - Number(this.keyState.left);
+    const previous = this.lastResponseSteering;
+    this.lastResponseSteering = steering;
+    if (!steering || steering === previous || this.laneResetActive
+      || document.visibilityState !== 'visible' || this.visibilityPausedAt !== null) return;
+    const timestamp = this.normalizeInputTimestamp(value);
+    this.excludeInactiveFrameGap(timestamp);
+    this.handleHazardResponse(timestamp, steering < 0 ? 'steer-left' : 'steer-right');
   }
 
   private detachResizeSync() {

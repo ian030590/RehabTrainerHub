@@ -71,6 +71,172 @@ const {
 } = inputCapabilities;
 const { MeasureDisplayRefreshRate } = displayTiming;
 
+// Exercise the runtime methods without creating a WebGL context.
+const drivingSource = await readFile(new URL('../apps/rehabtrainerhub/games/driving-rehab/three-driving-rehab.ts', import.meta.url), 'utf8');
+const drivingAst = ts.createSourceFile('driving.ts', drivingSource, ts.ScriptTarget.Latest, true);
+const runtimeClass = drivingAst.statements.find(node => ts.isClassDeclaration(node));
+const testedMethods = new Set(['markHazardsPresented', 'handleBrakePressed', 'handleHazardResponse', 'createHazardMesh', 'createHazardSchedule', 'getHazardCollisionBox', 'recordAvoidanceTrafficCollision', 'resolveHazard', 'hasPassedHazard', 'captureSteeringInputTimestamp']);
+const methodSource = runtimeClass.members.filter(node => testedMethods.has(node.name?.getText(drivingAst))).map(node => node.getText(drivingAst)).join('\n');
+const harnessCode = ts.transpileModule(`export default class RuntimeHarness { ${methodSource} }`, { compilerOptions }).outputText;
+const hazardDefinitions = await ImportTypeScriptModule('../apps/rehabtrainerhub/games/driving-rehab/hazards/driving-hazards.ts');
+const harnessModule = await import(`data:text/javascript;base64,${Buffer.from(`
+  const CalculateFrameAlignedReactionTime = ${CalculateFrameAlignedReactionTime.toString()};
+  export const difficultyPresets = ${JSON.stringify(hazardDefinitions.difficultyPresets)};
+  const soundManager = { playFailure() {}, playSuccess() {} };
+  ${harnessCode}
+`).toString('base64')}`);
+const RuntimeHarness = harnessModule.default;
+
+function CreateResponseHarness() {
+  const runtime = new RuntimeHarness();
+  const event = { distance_m: 0, rt_ms: null, valid: false, collision: false };
+  const hazard = { active: true, resolved: false, group: { visible: true }, crossingStarted: false, presentedAt: null, rt: null, result: event };
+  Object.assign(runtime, { activeHazards: [hazard], eventResults: [], progress: 123, readInput: () => ({ brake: 0 }), flashRed: () => {}, refreshMeasured: false });
+  return { runtime, hazard, event };
+}
+
+test('driving rounds start at the first rendered lane crossing, not vehicle appearance', () => {
+  const { runtime, hazard } = CreateResponseHarness();
+  runtime.markHazardsPresented(1000);
+  runtime.handleBrakePressed(1100);
+  assert.equal(hazard.presentedAt, null);
+  assert.equal(runtime.eventResults.length, 0);
+  hazard.crossingStarted = true;
+  runtime.markHazardsPresented(2000);
+  runtime.markHazardsPresented(2016);
+  assert.equal(hazard.presentedAt, 2000);
+  assert.equal(runtime.eventResults.length, 1);
+  assert.equal(hazard.result.distance_m, 123);
+});
+
+test('brake and either steering direction record only the first post-crossing response', () => {
+  for (const response of ['brake', 'steer-left', 'steer-right']) {
+    const { runtime, hazard, event } = CreateResponseHarness();
+    hazard.crossingStarted = true;
+    runtime.readInput = () => ({ brake: 1 });
+    runtime.markHazardsPresented(2000);
+    runtime.handleHazardResponse(1990, response);
+    assert.equal(event.rt_ms, null);
+    runtime.handleHazardResponse(2250, response);
+    runtime.handleBrakePressed(2400);
+    assert.equal(event.rt_ms, 250);
+    assert.equal(event.response, response);
+    assert.equal(event.valid, true);
+  }
+});
+
+test('wrong-way appearance randomization supports cars and scooters with different colors', () => {
+  const runtime = new RuntimeHarness();
+  runtime.createScooterMesh = color => ({ userData: {}, color });
+  runtime.createFallbackVehicle = color => ({ group: { userData: {}, color } });
+  const originalRandom = Math.random;
+  try {
+    Math.random = () => 0;
+    const scooter = runtime.createHazardMesh('wrong-way-driver');
+    Math.random = () => 0.99;
+    const car = runtime.createHazardMesh('wrong-way-driver');
+    assert.equal(scooter.userData.vehicleKind, 'scooter');
+    assert.equal(car.userData.vehicleKind, 'car');
+    assert.notEqual(scooter.color, car.color);
+  } finally {
+    Math.random = originalRandom;
+  }
+});
+
+test('driving score keeps each event including unanswered rounds', async () => {
+  const { ParseGameScoreDefinition, BuildGameScore } = await ImportTypeScriptModule('../packages/ui/src/gameScore.ts');
+  const definition = ParseGameScoreDefinition(JSON.parse(await readFile(new URL('../apps/rehabtrainerhub/games/driving-rehab/score.json', import.meta.url), 'utf8')));
+  const score = BuildGameScore(definition, {
+    detailRows: [{ rt_ms: 250, valid: true, collision: false, distance_m: 100, avoidance_success: true, other_vehicle_collision: true }, { rt_ms: null, valid: false, collision: true, distance_m: 200, avoidance_success: false }],
+    details: { average_rt: 250 },
+  });
+  assert.equal(score.rounds.length, 2);
+  assert.deepEqual(score.rounds.map(round => round.rt), [250, null]);
+  assert.equal(score.summary.meanRt, 250);
+  assert.deepEqual(score.rounds.map(round => round.avoided), [1, 0]);
+  assert.equal(score.rounds[0].otherCollision, 1);
+});
+
+test('avoidance records other vehicle collisions and grades them by difficulty independently of RT', () => {
+  for (const difficulty of ['beginner', 'intermediate', 'advanced']) {
+    for (const hitOncoming of [false, true]) {
+      for (const hitOther of [false, true]) {
+        const { runtime, hazard, event } = CreateResponseHarness();
+        runtime.difficultyPreset = harnessModule.difficultyPresets[difficulty];
+        hazard.crossingStarted = true;
+        runtime.markHazardsPresented(1000);
+        runtime.handleHazardResponse(1250, 'steer-left');
+        if (hitOther) runtime.recordAvoidanceTrafficCollision();
+        runtime.resolveHazard(hazard, 2000, hitOncoming, hitOncoming ? 'collision' : 'dodge');
+        assert.equal(event.avoidance_success, !hitOncoming && !(difficulty === 'advanced' && hitOther), `${difficulty}: oncoming=${hitOncoming}, other=${hitOther}`);
+        assert.equal(Boolean(event.other_vehicle_collision), hitOther);
+        assert.equal(event.collision, hitOncoming);
+        assert.equal(event.rt_ms, 250);
+        assert.equal(event.response, 'steer-left');
+      }
+    }
+  }
+});
+
+test('secondary collisions count only during an event and passing requires full clearance', () => {
+  const { runtime, hazard, event } = CreateResponseHarness();
+  runtime.recordAvoidanceTrafficCollision();
+  assert.equal(event.other_vehicle_collision, undefined);
+  runtime.getVehicleCollisionBox = () => ({ halfLength: 2 });
+  runtime.getHazardCollisionBox = () => ({ halfLength: 2 });
+  hazard.currentDistance = runtime.progress;
+  assert.equal(runtime.hasPassedHazard(hazard), false);
+  hazard.currentDistance = runtime.progress - 6;
+  assert.equal(runtime.hasPassedHazard(hazard), true);
+  hazard.presentedAt = 1000;
+  hazard.resolved = true;
+  runtime.recordAvoidanceTrafficCollision();
+  assert.equal(event.other_vehicle_collision, undefined);
+});
+
+test('event scheduling contains only wrong-way drivers', () => {
+  const runtime = new RuntimeHarness();
+  runtime.hazardTemplates = hazardDefinitions.hazardTemplates;
+  runtime.difficultyPreset = hazardDefinitions.difficultyPresets.beginner;
+  runtime.routeLength = 1000;
+  const schedule = runtime.createHazardSchedule();
+  assert.ok(schedule.length > 1);
+  assert.ok(schedule.every(event => event.template.id === 'wrong-way-driver'));
+});
+
+test('advanced secondary collision remains a failure even if the event is unfinished', () => {
+  const { runtime, hazard, event } = CreateResponseHarness();
+  runtime.difficultyPreset = harnessModule.difficultyPresets.advanced;
+  hazard.presentedAt = 1000;
+  runtime.recordAvoidanceTrafficCollision();
+  assert.equal(hazard.resolved, false);
+  assert.equal(event.avoidance_success, false);
+});
+
+test('steering captures input timestamps, ignores held inputs, and accepts a new press', () => {
+  const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  Object.defineProperty(globalThis, 'document', { configurable: true, value: { visibilityState: 'visible' } });
+  try {
+    const { runtime, hazard, event } = CreateResponseHarness();
+    Object.assign(runtime, { keyState: { left: true, right: false }, lastResponseSteering: 0, visibilityPausedAt: null, normalizeInputTimestamp: value => value, excludeInactiveFrameGap() {} });
+    runtime.captureSteeringInputTimestamp(900);
+    hazard.crossingStarted = true;
+    runtime.markHazardsPresented(1000);
+    runtime.captureSteeringInputTimestamp(1100);
+    assert.equal(event.rt_ms, null);
+    runtime.keyState.left = false;
+    runtime.captureSteeringInputTimestamp(1150);
+    runtime.keyState.left = true;
+    runtime.captureSteeringInputTimestamp(1200);
+    runtime.handleBrakePressed(1210);
+    assert.equal(event.rt_ms, 200);
+    assert.equal(event.response, 'steer-left');
+  } finally {
+    if (originalDocument) Object.defineProperty(globalThis, 'document', originalDocument);
+    else delete globalThis.document;
+  }
+});
+
 function AssertNearlyEqual(actual, expected, message, tolerance = 1e-9) {
   assert.ok(
     Math.abs(actual - expected) <= tolerance,

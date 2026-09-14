@@ -48,6 +48,8 @@ export const zh = {
   "exp.res.refreshHz": "實測螢幕刷新率:",
   "exp.res.refreshUnknown": "未知（改用原始反應時間）",
   "exp.res.thCollision": "碰撞",
+  "exp.res.thAvoidance": "成功閃避",
+  "exp.res.thOtherCollision": "撞到其他車",
   "exp.res.thEvent": "事件",
   "exp.res.thFrames": "反應幀數",
   "exp.res.thRawRt": "原始輸入反應時間(ms)",

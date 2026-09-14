@@ -8,9 +8,5 @@ export const difficultyPresets: Record<string, DifficultyPreset> = {
 };
 
 export const hazardTemplates: readonly HazardTemplate[] = [
-  { id: 'child-crossing' },
-  { id: 'plane-crash' },
-  { id: 'drunk-driver' },
-  { id: 'elder-stopped' },
   { id: 'wrong-way-driver' },
 ];

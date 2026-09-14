@@ -2,95 +2,80 @@
   "schema": "rehab-trainer.game-score/v1",
   "gameId": "driving-rehab",
   "presentation": {
-    "primarySummaryKeys": ["meanRt","medianRt","collisions","deviations"],
-    "qualitySummaryKeys": ["fps"],
-    "defaultRoundMetricKey": "meanRt",
+    "primarySummaryKeys": [
+      "meanRt",
+      "avoided",
+      "rounds",
+      "collisions"
+    ],
+    "qualitySummaryKeys": [
+      "fps"
+    ],
+    "defaultRoundMetricKey": "rt",
     "chartType": "line"
   },
   "columns": [
     {
-      "key": "durationMs",
+      "key": "rt",
       "label": {
-        "zh": "駕駛模擬經過時間",
-        "en": "Driving simulation duration"
+        "zh": "回合反應時間",
+        "en": "Round reaction time"
       },
       "sources": [
-        "duration_ms"
+        "rt_ms"
       ],
       "unit": "ms"
     },
     {
-      "key": "meanRt",
+      "key": "avoided",
       "label": {
-        "zh": "有效事件平均反應時間",
-        "en": "Mean valid event latency"
+        "zh": "成功閃避（1＝成功、0＝失敗）",
+        "en": "Avoidance (1 = success, 0 = failure)"
       },
       "sources": [
-        "average_rt"
+        "avoidance_success"
+      ]
+    },
+    {
+      "key": "responded",
+      "label": {
+        "zh": "已反應（1＝是）",
+        "en": "Responded (1 = yes)"
+      },
+      "sources": [
+        "valid"
+      ]
+    },
+    {
+      "key": "collision",
+      "label": {
+        "zh": "撞到逆行車（1＝是）",
+        "en": "Hit oncoming vehicle (1 = yes)"
+      },
+      "sources": [
+        "collision"
+      ]
+    },
+    {
+      "key": "distance",
+      "label": {
+        "zh": "事件發生位置",
+        "en": "Event position"
+      },
+      "sources": [
+        "distance_m"
       ],
-      "unit": "ms"
+      "unit": "m"
     },
     {
-      "key": "medianRt",
+      "key": "otherCollision",
       "label": {
-        "zh": "有效事件反應時間中位數",
-        "en": "Median valid event latency"
+        "zh": "撞到其他車（1＝是）",
+        "en": "Hit another vehicle (1 = yes)"
       },
       "sources": [
-        "median_rt"
-      ],
-      "unit": "ms"
-    },
-    {
-      "key": "events",
-      "label": {
-        "zh": "有效事件數",
-        "en": "Valid events"
-      },
-      "sources": [
-        "valid_event_count"
+        "other_vehicle_collision"
       ]
-    },
-    {
-      "key": "responses",
-      "label": {
-        "zh": "有反應事件數",
-        "en": "Events with responses"
-      },
-      "sources": [
-        "reaction_event_count"
-      ]
-    },
-    {
-      "key": "collisions",
-      "label": {
-        "zh": "碰撞事件数",
-        "en": "Collision events"
-      },
-      "sources": [
-        "collisions"
-      ]
-    },
-    {
-      "key": "deviations",
-      "label": {
-        "zh": "偏離車道次数",
-        "en": "Lane departures"
-      },
-      "sources": [
-        "lane_deviations"
-      ]
-    },
-    {
-      "key": "fps",
-      "label": {
-        "zh": "平均畫面更新率",
-        "en": "Mean frame rate"
-      },
-      "sources": [
-        "average_fps"
-      ],
-      "unit": "Hz"
     }
   ],
   "summary": [
@@ -177,6 +162,26 @@
         "average_fps"
       ],
       "unit": "Hz"
+    },
+    {
+      "key": "avoided",
+      "label": {
+        "zh": "成功閃避回合數",
+        "en": "Successful avoidance rounds"
+      },
+      "sources": [
+        "successful_avoidance_count"
+      ]
+    },
+    {
+      "key": "rounds",
+      "label": {
+        "zh": "事件回合數",
+        "en": "Event rounds"
+      },
+      "sources": [
+        "event_count"
+      ]
     }
   ]
 }

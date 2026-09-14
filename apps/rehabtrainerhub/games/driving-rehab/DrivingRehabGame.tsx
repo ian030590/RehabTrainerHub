@@ -53,6 +53,7 @@ export function DrivingRehabGame() {
             gameTitle: t('home.module.driving.title'),
             difficulty: (GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty')),
             results: data,
+            detailRows: data.find((row: any) => row.trial_type === 'three-driving-rehab')?.driving_events ?? [],
             details: data.find((row: any) => row.trial_type === 'three-driving-rehab') ?? {},
           });
 
@@ -125,25 +126,27 @@ export function DrivingRehabGame() {
             sections={isZh ? [
               {
                 title: '操作與玩法',
-                description: '控制車輛在車道內行駛，應對突發路況與剎車提示。',
+                description: '控制車輛在車道內行駛，注意逆行車輛跨越車道；車種與車身顏色會隨機變換。',
                 items: [
                   '依照選擇的控制方式操控車輛轉向與加速。',
                   '行駛中注意車道維持，避免偏離道路或碰撞邊界。',
-                  '出現紅色警示或突發路況時，迅速踩下煞車。',
+                  '逆行車開始跨越車道時，踩下煞車或向左、向右轉向避讓。',
                 ],
               },
-              { title: '成績計算', description: '結算會記錄偏離車道次數、平均反應時間與行駛距離。' },
+              { title: '成績計算', description: '每次逆行跨車道事件計為一回合，從車輛開始跨車道至首次煞車或左右轉向計算反應時間。預先持續按住的操作不算新反應；沒有反應的回合不填反應時間。' },
+              { title: '成功閃避', description: '未撞到逆行車且雙方已完全通過，才判定成功閃避。高級難度在閃避期間撞到其他車輛也算失敗；中級與初級不因此扣除閃避成功。尚未完成的事件不判定成功或失敗。' },
             ] : [
               {
                 title: 'How to Play',
-                description: 'Keep your vehicle in the lane and respond quickly to hazard prompts.',
+                description: 'Watch for oncoming vehicles crossing lanes. Vehicle types and body colors vary randomly.',
                 items: [
                   'Control steering and acceleration using your configured mode.',
                   'Maintain lane position and avoid running off the road.',
-                  'Brake promptly when red hazard flashes appear.',
+                  'Brake or steer left or right when the oncoming vehicle starts crossing lanes.',
                 ],
               },
-              { title: 'Results', description: 'Records lane deviations, average braking reaction time, and travel distance.' },
+              { title: 'Results', description: 'Each lane-crossing event is one round. Reaction time runs from the start of crossing to the first brake or left/right steering response. Held controls are not new responses; unanswered rounds have no reaction time.' },
+              { title: 'Successful avoidance', description: 'Avoidance succeeds after both vehicles pass without hitting the oncoming vehicle. On advanced difficulty, hitting another vehicle during avoidance also counts as failure; beginner and intermediate still count as successful avoidance. Unfinished events have no outcome yet.' },
             ]}
             startLabel={isZh ? '開始訓練' : 'Start Training'}
             backLabel={isZh ? '回設定' : 'Back to Settings'}

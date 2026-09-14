@@ -41,6 +41,8 @@ export function DrivingResults({ results, userName, t }: DrivingResultsProps) {
             <th>{t('exp.res.thFrames')}</th>
             <th>{t('exp.res.thValid')}</th>
             <th>{t('exp.res.thCollision')}</th>
+            <th>{t('exp.res.thAvoidance')}</th>
+            <th>{t('exp.res.thOtherCollision')}</th>
             <th>{t('exp.res.thResp')}</th>
           </tr>
         </thead>
@@ -59,6 +61,8 @@ export function DrivingResults({ results, userName, t }: DrivingResultsProps) {
               <td style={{ color: event.collision ? 'var(--error)' : 'var(--success)' }}>
                 {event.collision ? '✓' : '✗'}
               </td>
+              <td>{event.avoidance_success === true ? '✓' : event.avoidance_success === false ? '✗' : '-'}</td>
+              <td>{event.other_vehicle_collision ? '✓' : '✗'}</td>
               <td>{event.response}</td>
             </tr>
           ))}

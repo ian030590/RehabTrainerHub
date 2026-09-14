@@ -61,6 +61,8 @@ export interface DrivingEventResult {
   valid: boolean;
   collision: boolean;
   brake_preheld: boolean;
+  avoidance_success?: boolean | null;
+  other_vehicle_collision?: boolean;
   response: string;
 }
 
@@ -72,6 +74,7 @@ export interface ActiveHazard {
   hazardDistance: number;
   startTime: number;
   presentedAt: number | null;
+  crossingStarted: boolean;
   brakeTime: number | null;
   rt: number | null;
   preheldBrake: boolean;
