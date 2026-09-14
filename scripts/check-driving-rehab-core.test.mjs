@@ -85,10 +85,10 @@ const harnessModule = await import(`data:text/javascript;base64,${Buffer.from(`
   const soundManager = { playFailure() {}, playSuccess() {} };
   ${harnessCode}
 `).toString('base64')}`);
-const RuntimeHarness = harnessModule.default;
+const runtimeHarness = harnessModule.default;
 
 function CreateResponseHarness() {
-  const runtime = new RuntimeHarness();
+  const runtime = new runtimeHarness();
   const event = { distance_m: 0, rt_ms: null, valid: false, collision: false };
   const hazard = { active: true, resolved: false, group: { visible: true }, crossingStarted: false, presentedAt: null, rt: null, result: event };
   Object.assign(runtime, { activeHazards: [hazard], eventResults: [], progress: 123, readInput: () => ({ brake: 0 }), flashRed: () => {}, refreshMeasured: false });
@@ -126,7 +126,7 @@ test('brake and either steering direction record only the first post-crossing re
 });
 
 test('wrong-way appearance randomization supports cars and scooters with different colors', () => {
-  const runtime = new RuntimeHarness();
+  const runtime = new runtimeHarness();
   runtime.createScooterMesh = color => ({ userData: {}, color });
   runtime.createFallbackVehicle = color => ({ group: { userData: {}, color } });
   const originalRandom = Math.random;
@@ -195,7 +195,7 @@ test('secondary collisions count only during an event and passing requires full 
 });
 
 test('event scheduling contains only wrong-way drivers', () => {
-  const runtime = new RuntimeHarness();
+  const runtime = new runtimeHarness();
   runtime.hazardTemplates = hazardDefinitions.hazardTemplates;
   runtime.difficultyPreset = hazardDefinitions.difficultyPresets.beginner;
   runtime.routeLength = 1000;
