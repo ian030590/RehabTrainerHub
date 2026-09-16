@@ -10,10 +10,10 @@ const root = resolve(import.meta.dirname, '..');
 const basePath = '/games/plus-minus/';
 const cacheName = 'trainerhub-official-game:plus-minus:regression';
 
-test('all legacy game iframe URLs are precached without Cloudflare index redirects', async (t) => {
+test('all ExpFactory runtime assets are precached without nested iframe documents', async (t) => {
   const source = await readFile(resolve(root, 'packages/ui/src/components/ExpFactoryGame.tsx'), 'utf8');
-  const iframePath = source.match(/src="(\.\/legacy\/[^"\s]*)"/)?.[1];
-  assert.ok(iframePath, 'Expected the legacy iframe source');
+  assert.match(source, /new URL\('\.\/runtime\/', window\.location\.href\)/);
+  assert.doesNotMatch(source, /<iframe|postMessage/);
   const gameRoot = resolve(root, 'apps/rehabtrainerhub/games');
   const games = await readdir(gameRoot, { withFileTypes: true });
   for (const game of games.filter((entry) => entry.isDirectory())) {
@@ -22,15 +22,17 @@ test('all legacy game iframe URLs are precached without Cloudflare index redirec
       .map((file) => readFile(resolve(gameRoot, game.name, file), 'utf8')));
     if (!components.some((component) => component.includes('ExpFactoryGame'))) continue;
     await t.test(game.name, async () => {
-      await readFile(resolve(gameRoot, game.name, 'public/legacy/index.html'));
+      const manifest = JSON.parse(await readFile(resolve(gameRoot, game.name, 'public/runtime/manifest.json'), 'utf8'));
+      assert.ok(manifest.scripts.includes('experiment.js'));
       const scope = `/games/${game.name}/`;
-      const worker = await CreateWorker(t, scope);
+      const runtimeUrls = [scope + 'runtime/manifest.json', scope + 'runtime/experiment.js'];
+      const worker = await CreateWorker(t, scope, runtimeUrls);
       await worker.dispatch('install');
       assert.ok(!worker.requests.some((path) => path.endsWith('/index.html')), 'Precache must use canonical directory URLs');
       worker.offline = true;
-      const response = await worker.navigate(new URL(iframePath, worker.origin + scope).pathname);
-      assert.equal(response.status, 200);
-      assert.equal(await response.text(), '<!doctype html><p>Legacy game</p>');
+      const cacheNames = await worker.caches.keys();
+      const cache = await worker.caches.open(cacheNames[0]);
+      for (const path of runtimeUrls) assert.ok(await cache.match(worker.origin + path), `${path} must be cached.`);
     });
   }
 });
@@ -77,7 +79,7 @@ test('both CI workflows retain the navigation regression through the pwa gate', 
   }
 });
 
-async function CreateWorker(t, scope = basePath) {
+async function CreateWorker(t, scope = basePath, shellUrls = [scope + 'runtime/manifest.json', scope + 'instructions.html']) {
   const requests = [];
   const server = createServer((request, response) => {
     requests.push(request.url);
@@ -132,7 +134,7 @@ async function CreateWorker(t, scope = basePath) {
   const listeners = new Map();
   const code = BuildGameServiceWorker({
     basePath: scope, gameId: scope.split('/')[2], revision: 'regression',
-    shellUrls: [scope + 'legacy/index.html', scope + 'instructions.html'],
+    shellUrls,
   });
   runInNewContext(code, {
     URL, Response, caches, fetch: workerFetch,

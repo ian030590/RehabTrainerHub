@@ -25,11 +25,13 @@ const touchScrollSelector = args.touchScrollSelector;
 const viewportWidth = args.viewportWidth ? Number(args.viewportWidth) : null;
 const viewportHeight = args.viewportHeight ? Number(args.viewportHeight) : null;
 const fullscreenSelector = args.fullscreenSelector;
+const keyPressReadySelector = args.keyPressReadySelector;
 const requireFullscreenBeforeAudio = args.fullscreenBeforeAudio === 'true';
 const storageEntries = ParseStorageEntries(args.storage);
 const mockAuthUser = args.mockAuthUser === 'true';
 const expectedText = args.text;
 const timeoutMs = Number(args.timeoutMs ?? 12000);
+const keyPressReadyTimeoutMs = Number(args.keyPressReadyTimeoutMs ?? timeoutMs);
 
 if (expectedSelectors.length === 0 && !externalUrl) {
   throw new Error('Usage: node scripts/check-browser-route-smoke.mjs (--app <appDir> --route <route> | --url <absoluteUrl>) --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--visibleSelectors <cssSelector,...>] [--touchScrollSelector <cssSelector>] [--viewportWidth <px> --viewportHeight <px>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>]');
@@ -182,6 +184,13 @@ try {
   await Wait(timeoutMs);
   await ClickSelectors(cdp, sessionId, clickSelectors, timeoutMs);
   if (clickSelectors.length > 0) await Wait(800);
+  if (args.keyPress) {
+    if (keyPressReadySelector) await WaitForSelector(cdp, sessionId, keyPressReadySelector, keyPressReadyTimeoutMs);
+    if (args.keyPress !== 'Enter') throw new Error('The keyPress option currently supports Enter.');
+    await cdp.Send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, sessionId);
+    await cdp.Send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, sessionId);
+    await Wait(500);
+  }
   const iframeDeadline = Date.now() + timeoutMs;
   while (iframeSelectors.length && Date.now() < iframeDeadline) {
     const ready = await cdp.Send('Runtime.evaluate', {
@@ -365,6 +374,19 @@ try {
     if (error?.code !== 'EPERM') throw error;
     console.warn(`Browser profile cleanup is still locked and will be retried by the next run: ${userDataDir}`);
   }
+}
+
+async function WaitForSelector(cdp, sessionId, selector, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const result = await cdp.Send('Runtime.evaluate', {
+      expression: `Boolean(document.querySelector(${JSON.stringify(selector)}))`,
+      returnByValue: true,
+    }, sessionId);
+    if (result.result.value) return;
+    await Wait(100);
+  }
+  throw new Error(`Timed out waiting for selector before key press: ${selector}`);
 }
 
 function ParseArgs(argv) {

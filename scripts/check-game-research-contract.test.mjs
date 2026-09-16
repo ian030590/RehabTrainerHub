@@ -9,11 +9,13 @@ const root = new URL('../apps/rehabtrainerhub/games/', import.meta.url);
 const read = (id, file) => readFileSync(new URL(`${id}/${file}`, root), 'utf8');
 const scoreModule = ts.transpileModule(readFileSync(new URL('../packages/ui/src/gameScore.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
 const { ParseGameScoreDefinition, BuildGameScore } = await import(`data:text/javascript;base64,${Buffer.from(scoreModule).toString('base64')}`);
-const legacy = ['antisaccade','attention-network-task','digit-span','flanker','go-nogo','keep-track','letter-memory','n-back','number-letter','plus-minus','spatial-span','stop-signal','stroop','tower-of-london'];
+const runtimeSummaryModule = ts.transpileModule(readFileSync(new URL('../packages/ui/src/expFactoryRuntime.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
+const { SummarizeExpFactoryTrials } = await import(`data:text/javascript;base64,${Buffer.from(runtimeSummaryModule).toString('base64')}`);
+const expFactoryGames = ['antisaccade','attention-network-task','digit-span','flanker','go-nogo','keep-track','letter-memory','n-back','number-letter','plus-minus','spatial-span','stop-signal','stroop','tower-of-london'];
 
 function Adapter(id) {
   const window = { setStims() {}, numbers: Array.from({ length: 90 }, (_, i) => String(10 + i)), add_block: { questions: Array(30).fill('') }, minus_block: { questions: Array(30).fill('') }, alternate_block: { questions: Array(30).fill('') } };
-  new Script(read(id, 'public/legacy/research.js')).runInNewContext({ window });
+  new Script(read(id, 'public/runtime/research.js')).runInNewContext({ window });
   return window;
 }
 const sample = (extra = {}) => ({ exp_stage: 'test', trial_id: 'stim', trial_index: 5, rt: 350, correct: true, correct_response: 90, key_press: 90, ...extra });
@@ -31,8 +33,8 @@ test('every game exposes bounded grading settings and exact numeric score source
   }
 });
 
-test('legacy grading applies its full allowed range and rejects malformed parameters', () => {
-  for (const id of legacy) {
+test('ExpFactory grading applies its full allowed range and rejects malformed parameters', () => {
+  for (const id of expFactoryGames) {
     const definition = JSON.parse(read(id, 'settings.json'));
     const field = definition.sections[0].fields[0];
     for (const value of [field.min, field.default, field.max]) {
@@ -53,7 +55,7 @@ test('legacy grading applies its full allowed range and rejects malformed parame
   }
 });
 
-test('legacy projections retain analysis conditions and exclude instructions and practice', () => {
+test('ExpFactory projections retain analysis conditions and exclude instructions and practice', () => {
   const cases = {
     stroop: [sample({ condition: 'incongruent' }), 'condition', 1],
     flanker: [sample({ condition: 'incompatible' }), 'condition', 1],
@@ -109,25 +111,12 @@ test('Tower of London emits one problem result, not accuracy per move', () => {
   assert.equal(rows[0].rt, null);
 });
 
-test('bridge retains missing RT as null and full precision in summaries', () => {
-  for (const id of legacy) {
-    const window = Adapter(id);
-    const messages = [];
-    let receive;
-    let finish;
+test('React runtime retains missing RT as null and full precision in summaries', () => {
+  for (const id of expFactoryGames) {
     const rows = [sample({ trial_id:'response', correct:true, rt:100.25 }), sample({ trial_id:'response', correct:false, rt:null }), sample({ trial_id:'response', correct:true, rt:101.5 })];
-    window.rehabResearchRows = () => rows;
-    window.rehabConfigure = () => {};
-    window.location = { origin:'https://example.test' };
-    window.parent = { postMessage: message => messages.push(message) };
-    window.original = [];
-    window.addEventListener = (_, callback) => { receive = callback; };
-    window.jsPsych = { init: options => { finish = options.on_finish; }, data: { dataAsJSON: () => '[]' } };
-    new Script(read(id, 'public/legacy/rehab-bridge.js')).runInNewContext({ window, document:{ body:{ dataset:{ gameId:id, timeline:'original' } } } });
-    receive({ origin:window.location.origin, source:window.parent, data:{ type:'rehab-expfactory:start', settings:{} } });
-    finish();
-    assert.equal(messages[0].summary.meanRtMs, 100.875, id);
-    assert.ok(Math.abs(messages[0].summary.accuracyPercent - (200 / 3)) < 1e-12, id);
+    const summary = SummarizeExpFactoryTrials(rows);
+    assert.equal(summary.meanRtMs, 100.875, id);
+    assert.ok(Math.abs(summary.accuracyPercent - (200 / 3)) < 1e-12, id);
   }
 });
 

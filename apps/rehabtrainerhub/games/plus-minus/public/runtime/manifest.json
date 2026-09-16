@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "gameId": "plus-minus",
+  "timelineName": "plus_minus_experiment",
+  "styles": [
+    "jspsych.css",
+    "default_style.css",
+    "shell.css"
+  ],
+  "scripts": [
+    "js/jquery.min.js",
+    "js/math.min.js",
+    "js/jspsych/jspsych.js",
+    "js/jspsych/plugins/jspsych-text.js",
+    "js/jspsych/poldrack_plugins/jspsych-poldrack-text.js",
+    "js/jspsych/poldrack_plugins/jspsych-poldrack-instructions.js",
+    "js/jspsych/plugins/jspsych-call-function.js",
+    "js/jspsych/poldrack_plugins/jspsych-attention-check.js",
+    "js/jspsych/poldrack_plugins/jspsych-poldrack-single-stim.js",
+    "js/jspsych/plugins/jspsych-survey-text.js",
+    "js/jspsych/poldrack_plugins/jspsych-single-stim-button.js",
+    "js/jspsych/poldrack_plugins/poldrack_utils.js",
+    "experiment.js",
+    "localization.js",
+    "research.js"
+  ]
+}

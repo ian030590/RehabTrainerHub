@@ -64,13 +64,26 @@ test('Brave renders the settings-driven config UI before mounting an official ga
 
   assert.equal(result.exitCode, 0, `${result.stdout}\n${result.stderr}`);
   assert.match(result.stdout, /Browser route smoke passed/);
+  const fullscreen = await Run(process.execPath, [
+    browserSmokeScript,
+    '--url', `http://127.0.0.1:${address.port}/`,
+    '--storage', 'rehab_hub_tour_seen=1',
+    '--clickSelectors', '.official-game-card button,dialog.training-overlay-config button[type="submit"]',
+    '--fullscreenSelector', 'html',
+    '--allSelectors', 'dialog.training-overlay-runtime iframe',
+    '--timeoutMs', '10000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(fullscreen.exitCode, 0, `Hub fullscreen: ${fullscreen.stdout}\n${fullscreen.stderr}`);
   for (const gameId of expFactoryGameIds) {
     const guidedGame = await Run(process.execPath, [
       browserSmokeScript,
       '--url', `http://127.0.0.1:${address.port}/games/${gameId}/`,
       '--clickSelectors', '.game-settings-form button[type="submit"]',
-      '--allSelectors', '.cognitive-reference-game iframe[src="./legacy/"]',
-      '--iframeSelectors', '.jspsych-display-element .block-text',
+      '--keyPress', 'Enter',
+      '--keyPressReadySelector', '.display_stage',
+      '--keyPressReadyTimeoutMs', '10000',
+      '--allSelectors', '.cognitive-reference-game .display_stage,.jspsych-display-element .bilingual-copy-zh,#jspsych-instructions-next',
+      '--fullscreenSelector', 'html',
       '--timeoutMs', '3000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(guidedGame.exitCode, 0, `${gameId}: ${guidedGame.stdout}\n${guidedGame.stderr}`);

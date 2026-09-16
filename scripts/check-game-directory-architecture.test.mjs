@@ -248,11 +248,12 @@ test('official games have no Toutour dependency and own their rules styles', asy
       assert.match(main, /import ['"]\.\/rules.css['"]/);
       await access(resolve(gamesRoot, gameId, 'rules.css'));
     } else if (!nativeRules.includes(gameId)) {
-      await access(resolve(gamesRoot, gameId, 'public/legacy/rehab-bridge.js'));
+      await access(resolve(gamesRoot, gameId, 'public/runtime/manifest.json'));
     }
   }
   const shell = await ReadUi('components/ExpFactoryGame.tsx');
   assert.doesNotMatch(shell, /tourComplete|game-tour-complete/);
+  assert.doesNotMatch(shell, /<iframe|postMessage/);
   await access(resolve(hubRoot, 'app/tour/hubTour.ts'));
 });
 

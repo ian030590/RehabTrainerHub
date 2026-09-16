@@ -485,11 +485,11 @@ const jsPsychLifecycleGroups = [
   ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
     status: 'native-timeline',
     ids: [id],
-    files: [`${file.slice(0, file.indexOf('/'))}/public/legacy/rehab-bridge.js`],
+    files: [`${file.slice(0, file.indexOf('/'))}/public/runtime/manifest.json`],
     tokens: [
-      'window.jsPsych.init({',
-      'timeline: timeline',
-      'window.jsPsych.data.dataAsJSON()',
+      '"timelineName":',
+      '"experiment.js"',
+      '"research.js"',
     ],
   })),
   ...Object.entries({
