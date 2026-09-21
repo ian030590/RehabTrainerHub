@@ -4,7 +4,7 @@ import type {
   OculomotorBehavior,
   OculomotorPattern,
   OculomotorSpeedUnit,
-} from '../types/types';
+} from './types';
 
 interface SpeedProfile {
   kind: 'constant' | 'sine' | 'steps' | 'loopRamp';

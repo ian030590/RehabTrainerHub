@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   GetGameSettingsDefaults,
   NormalizeGameSettingsValues,
@@ -11,9 +11,6 @@ import {
   type GameSettingsValues,
 } from '@rehab-trainer/game-settings';
 import { Button } from './ui/button';
-import { Checkbox } from './ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Slider } from './ui/slider';
 
 interface GameSettingsFormProps {
   definition: GameSettingsDefinition;
@@ -32,8 +29,6 @@ export function GameSettingsForm({
 }: GameSettingsFormProps) {
   const defaults = useMemo(() => GetGameSettingsDefaults(definition), [definition]);
   const [values, setValues] = useState<GameSettingsValues>(defaults);
-  const formRef = useRef<HTMLFormElement>(null);
-  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const locale = language === 'en' ? 'en' : 'zh-TW';
   const startOnly = definition.sections.length === 0;
   const copy = language === 'en'
@@ -54,10 +49,6 @@ export function GameSettingsForm({
     setValues((current) => ({ ...current, [key]: value }));
   };
 
-  useEffect(() => {
-    setPortalContainer(formRef.current?.closest('dialog') ?? formRef.current);
-  }, []);
-
   return (
     <form
       className="game-settings-form mx-auto flex w-full max-w-2xl flex-col overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--background)] text-[var(--text)] shadow-[var(--shadow-md)]"
@@ -65,7 +56,6 @@ export function GameSettingsForm({
         event.preventDefault();
         onSubmit(NormalizeGameSettingsValues(definition, values));
       }}
-      ref={formRef}
     >
       {!startOnly && <header className="border-b border-[var(--border)] bg-[var(--surface)] px-5 py-5 sm:px-8 sm:py-7">
         <p className="mb-1 text-xs font-extrabold tracking-[0.12em] text-[var(--primary)] uppercase">{copy.heading}</p>
@@ -156,7 +146,6 @@ export function GameSettingsForm({
                         key={field.key}
                         locale={locale}
                         onChange={(value) => updateValue(field.key, value)}
-                        portalContainer={portalContainer}
                         value={values[field.key]}
                       />
                     ))}
@@ -183,13 +172,11 @@ function GameSettingControl({
   field,
   locale,
   onChange,
-  portalContainer,
   value,
 }: {
   field: GameSettingField;
   locale: 'en' | 'zh-TW';
   onChange: (value: string | number | boolean) => void;
-  portalContainer: HTMLElement | null;
   value: string | number | boolean;
 }) {
   const label = ResolveGameSettingsText(field.label, locale);
@@ -200,10 +187,12 @@ function GameSettingControl({
   if (field.type === 'checkbox') {
     return (
       <label className="flex cursor-pointer items-start gap-3 rounded-[var(--radius)] bg-[var(--surface-muted)] p-4">
-        <Checkbox
+        <input
           aria-label={label}
           checked={Boolean(value)}
-          onCheckedChange={(checked) => onChange(checked === true)}
+          className="peer mt-0.5 size-5 shrink-0 cursor-pointer accent-[var(--primary)]"
+          onChange={(event) => onChange(event.target.checked)}
+          type="checkbox"
         />
         <span className="grid gap-0.5">
           <span className="font-extrabold text-[var(--heading)]">{label}</span>
@@ -252,14 +241,16 @@ function GameSettingControl({
             {numericValue}{unit ? ` ${unit}` : ''}
           </output>
         </div>
-        <Slider
+        <input
           aria-label={label}
+          className="h-8 w-full cursor-pointer accent-[var(--primary)]"
           id={`game-setting-${field.key}`}
           max={field.max}
           min={field.min}
-          onValueChange={([nextValue]) => onChange(nextValue)}
+          onChange={(event) => onChange(event.target.valueAsNumber)}
           step={field.step}
-          value={[numericValue]}
+          type="range"
+          value={numericValue}
         />
         <div aria-hidden="true" className="flex justify-between text-xs font-semibold text-[var(--text-muted)]">
           <span>{field.min}{unit ? ` ${unit}` : ''}</span>
@@ -277,25 +268,23 @@ function GameSettingControl({
         <span className="font-extrabold text-[var(--heading)]">{label}</span>
         {description && <span className="text-sm leading-5 text-[var(--text-muted)]">{description}</span>}
       </label>
-      <Select
-        onValueChange={(encodedValue) => {
-          const optionIndex = Number(encodedValue);
+      <select
+        aria-label={label}
+        className="min-h-11 w-full rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-sm font-bold text-[var(--heading)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
+        id={`game-setting-${field.key}`}
+        onChange={(event) => {
+          const optionIndex = Number(event.target.value);
           const option = field.options[optionIndex];
           if (option) onChange(option.value);
         }}
         value={String(field.options.indexOf(selectedOption))}
       >
-        <SelectTrigger aria-label={label} id={`game-setting-${field.key}`}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent portalContainer={portalContainer}>
-          {field.options.map((option, index) => (
-            <SelectItem key={`${typeof option.value}:${String(option.value)}`} value={String(index)}>
-              {ResolveGameSettingsText(option.label, locale)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        {field.options.map((option, index) => (
+          <option key={`${typeof option.value}:${String(option.value)}`} value={String(index)}>
+            {ResolveGameSettingsText(option.label, locale)}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

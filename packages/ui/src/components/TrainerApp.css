@@ -1245,7 +1245,7 @@ body[data-training-embed="hub"] #root,
   pointer-events: auto;
 }
 
-.training-panel h1 {
+.training-panel h2 {
   font-size: calc(36px * var(--ui-font-scale, 1));
   line-height: 1.2;
 }
@@ -1301,7 +1301,7 @@ body[data-training-embed="hub"] #root,
   font-weight: var(--fw-bold, 700);
 }
 
-.training-config h1 {
+.training-config h2 {
   margin: 0;
   color: var(--text-primary);
   font-size: calc(32px * var(--ui-font-scale, 1));
@@ -1402,7 +1402,7 @@ body[data-training-embed="hub"] #root,
   margin-bottom: 12px;
 }
 
-.training-setting-header h2 {
+.training-setting-header h3 {
   margin: 0 0 4px;
   color: var(--text-primary);
   font-size: calc(16px * var(--ui-font-scale, 1));
@@ -2440,7 +2440,7 @@ input.training-slider {
     padding: 0;
   }
 
-  .training-panel h1 {
+  .training-panel h2 {
     font-size: calc(22px * var(--ui-font-scale, 1));
   }
 
@@ -2492,7 +2492,7 @@ input.training-slider {
     text-align: left;
   }
 
-  .training-config h1 {
+  .training-config h2 {
     font-size: calc(20px * var(--ui-font-scale, 1));
     line-height: 1.16;
   }
@@ -2552,8 +2552,8 @@ input.training-slider {
     margin-bottom: 8px;
   }
 
-  .training-setting-title-row h2,
-  .training-setting-header h2 {
+  .training-setting-title-row h3,
+  .training-setting-header h3 {
     margin: 0;
     font-size: calc(16px * var(--ui-font-scale, 1));
     line-height: 1.25;
@@ -2781,7 +2781,7 @@ input.training-slider {
     display: none;
   }
 
-  .training-config h1 {
+  .training-config h2 {
     font-size: calc(18px * var(--ui-font-scale, 1));
   }
 

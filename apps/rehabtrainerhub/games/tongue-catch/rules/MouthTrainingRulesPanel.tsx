@@ -1,6 +1,6 @@
 // Canonical Hub-owned mouth module rules.
-import type { TrainingConfigSummaryItem } from './TrainingRulesPanel';
-import { TrainingRulesPanel } from './TrainingRulesPanel';
+import type { TrainingConfigSummaryItem } from '@rehab-trainer/ui';
+import { TrainingRulesPanel } from '@rehab-trainer/ui';
 import { useT } from '@rehab-trainer/ui/i18n/games';
 import type { ReactNode } from 'react';
 interface MouthTrainingRulesPanelProps {

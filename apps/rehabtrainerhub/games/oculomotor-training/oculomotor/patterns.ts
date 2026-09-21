@@ -1,5 +1,5 @@
 // Patterns local to the Hub-owned oculomotor module.
-import type { Arena, OculomotorPattern, PatternParams, TargetFrame } from '../types/types';
+import type { Arena, OculomotorPattern, PatternParams, TargetFrame } from './types';
 import type { Rng } from './random';
 
 const tau = Math.PI * 2;

@@ -21,10 +21,10 @@ import {
 } from '@rehab-trainer/ui/auth/authClient';
 import type { PublishedGame } from '../publishedGames';
 import { useHubLanguage } from '../i18n/HubLanguage';
-import { Button } from '../components/ui/button';
+import { Button } from '@rehab-trainer/ui/components/ui/button';
 import { GetTrainerCategoryTheme } from '@rehab-trainer/hub-modules/catalog';
 import { BuildTrainingThemeStyle } from '../trainingThemeStyle';
-import { GameSettingsForm } from './GameSettingsForm';
+import { GameSettingsForm } from '@rehab-trainer/ui/components/GameSettingsForm';
 
 interface PackageGameOverlayProps {
   game: PublishedGame;

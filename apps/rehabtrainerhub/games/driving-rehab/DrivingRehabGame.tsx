@@ -1,7 +1,7 @@
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { GetHostedGameSetting, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { TrainingRulesPanel } from './rules/TrainingRulesPanel';
+import { TrainingRulesPanel } from '@rehab-trainer/ui';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
 NotifyHubTrainingAbort,
@@ -17,8 +17,8 @@ import type { JsPsych } from 'jspsych';
 import { initJsPsych } from 'jspsych';
 import { useCallback,useEffect,useRef,useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ParseDrivingWheelCalibration } from './engine/driving-input';
-import { DisposeDrivingRehabRuntime } from './engine/driving-runtime-lifecycle';
+import { ParseDrivingWheelCalibration } from './input/driving-input';
+import { DisposeDrivingRehabRuntime } from './lifecycle/driving-runtime-lifecycle';
 import { DownloadTrainingCsv } from './exportCsv';
 import { DrivingResults } from './results/DrivingResults';
 import { BuildDrivingRehabTimeline } from './timeline/drivingRehabTimeline';

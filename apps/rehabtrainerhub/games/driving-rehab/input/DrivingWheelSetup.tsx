@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { TrainingRulesPanel } from '../rules/TrainingRulesPanel';
+import { TrainingRulesPanel } from '@rehab-trainer/ui';
 import { GetHostedGameSetting, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
 import { useT } from '@rehab-trainer/ui/i18n/games';
 import { useDrivingInputCapabilities, useDrivingWheelCalibration } from './drivingInputCapabilities';

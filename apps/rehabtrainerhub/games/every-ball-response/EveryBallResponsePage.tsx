@@ -5,7 +5,7 @@ import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
 import { MobileActionControls } from '@rehab-trainer/ui/components/MobileTouchControls';
 import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { TrainingRulesPanel } from './rules/TrainingRulesPanel';
+import { TrainingRulesPanel } from '@rehab-trainer/ui';
 import { IsEmbeddedHubTraining,RequestHubTrainingConfiguration,} from '@rehab-trainer/ui/embeddedTraining';
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';

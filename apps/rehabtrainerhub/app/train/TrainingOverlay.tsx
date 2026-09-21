@@ -30,11 +30,11 @@ import {
 import { HasAuthToken, SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
 import { EnterFullscreenFromUserGesture, ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import dynamic from 'next/dynamic';
-import { Button } from '../components/ui/button';
+import { Button } from '@rehab-trainer/ui/components/ui/button';
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { BuildTrainingThemeStyle } from '../trainingThemeStyle';
-import { GameSettingsForm } from './GameSettingsForm';
+import { GameSettingsForm } from '@rehab-trainer/ui/components/GameSettingsForm';
 
 const TrainingScore = dynamic(() => import('@rehab-trainer/ui/components/TrainingScore').then(module => module.TrainingScore));
 

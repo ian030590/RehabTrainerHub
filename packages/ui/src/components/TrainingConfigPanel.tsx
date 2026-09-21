@@ -107,7 +107,7 @@ export function TrainingConfigPanel({
       <header className="training-config-header">
         <div className="training-config-title">
           {label && <span className="training-config-label">{label}</span>}
-          <h1>{title}</h1>
+          <h2>{title}</h2>
         </div>
         {(hasSummary || headerEnd) && (
           <div className="training-config-header-side">
@@ -187,7 +187,7 @@ export function TrainingConfigSection({
       <div className="training-setting-header">
         <div>
           <div className="training-setting-title-row">
-            <h2>{title}</h2>
+            <h3>{title}</h3>
             {hasDescription && (
               <button
                 type="button"

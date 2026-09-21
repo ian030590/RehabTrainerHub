@@ -1,7 +1,7 @@
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { GetHostedGameSetting, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { TrainingRulesPanel } from './rules/TrainingRulesPanel';
+import { TrainingRulesPanel } from '@rehab-trainer/ui';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
 NotifyHubTrainingAbort,

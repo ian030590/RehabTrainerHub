@@ -166,29 +166,20 @@ test('browser smoke checks retain Brave support on Windows and macOS', async () 
   assert.ok(architectureBrowser.includes(macBravePath));
 });
 
-test('unified config UI remains Tailwind plus shadcn/Radix and mounts inside dialogs', async () => {
+test('unified config UI remains Tailwind with native accessible controls', async () => {
   const form = await ReadUi('components/GameSettingsForm.tsx');
-  for (const component of ['Button', 'Checkbox', 'Select', 'Slider']) {
-    assert.match(form, new RegExp(`\\b${component}\\b`));
-  }
   for (const fieldType of ['checkbox', 'slider']) {
     assert.match(form, new RegExp(`field\\.type === '${fieldType}'`));
   }
-  assert.match(form, /<Select\b/);
+  assert.match(form, /type="checkbox"/);
+  assert.match(form, /type="range"/);
+  assert.match(form, /<select\b/);
   assert.match(form, /NormalizeGameSettingsValues\(definition, values\)/);
-  assert.match(form, /portalContainer=\{portalContainer\}/);
   assert.match(form, /var\(--(?:background|surface|primary|border|text)/);
 
   const button = await ReadUi('components/ui/button.tsx');
-  const checkbox = await ReadUi('components/ui/checkbox.tsx');
-  const select = await ReadUi('components/ui/select.tsx');
-  const slider = await ReadUi('components/ui/slider.tsx');
-  assert.match(button, /class-variance-authority/);
-  assert.match(button, /buttonVariants = cva/);
-  assert.match(checkbox, /@radix-ui\/react-checkbox/);
-  assert.match(select, /@radix-ui\/react-select/);
-  assert.match(select, /SelectPrimitive\.Portal container=\{portalContainer \?\? undefined\}/);
-  assert.match(slider, /@radix-ui\/react-slider/);
+  assert.match(button, /variantClassNames/);
+  assert.doesNotMatch(button, /class-variance-authority/);
 
   const postcss = await ReadHub('postcss.config.mjs');
   const globals = await ReadHub('app/globals.css');
