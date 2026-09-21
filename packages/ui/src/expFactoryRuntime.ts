@@ -6,6 +6,19 @@ export interface ExpFactorySummary {
   meanRtMs: number | null;
 }
 
+export function GetExpFactoryRoundLimit(settings: Record<string, unknown> | null): number | null {
+  const rounds = settings?.rounds;
+  if (rounds === undefined) return null;
+  if (!Number.isInteger(rounds) || (rounds as number) <= 0 || (rounds as number) > 10_000) {
+    throw new Error('Invalid rounds setting.');
+  }
+  return rounds as number;
+}
+
+export function HasReachedExpFactoryRoundLimit(limit: number | null, completedRounds: number): boolean {
+  return limit !== null && completedRounds >= limit;
+}
+
 export function SummarizeExpFactoryTrials(rows: Record<string, unknown>[]): ExpFactorySummary {
   const testRows = rows.filter((row) => row.exp_stage === 'test'
     && (row.trial_id === 'stim' || row.trial_id === 'response' || row.trial_id === 'to_board'));

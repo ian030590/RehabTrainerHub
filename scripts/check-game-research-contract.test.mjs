@@ -10,7 +10,11 @@ const read = (id, file) => readFileSync(new URL(`${id}/${file}`, root), 'utf8');
 const scoreModule = ts.transpileModule(readFileSync(new URL('../packages/ui/src/gameScore.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
 const { ParseGameScoreDefinition, BuildGameScore } = await import(`data:text/javascript;base64,${Buffer.from(scoreModule).toString('base64')}`);
 const runtimeSummaryModule = ts.transpileModule(readFileSync(new URL('../packages/ui/src/expFactoryRuntime.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
-const { SummarizeExpFactoryTrials } = await import(`data:text/javascript;base64,${Buffer.from(runtimeSummaryModule).toString('base64')}`);
+const {
+  GetExpFactoryRoundLimit,
+  HasReachedExpFactoryRoundLimit,
+  SummarizeExpFactoryTrials,
+} = await import(`data:text/javascript;base64,${Buffer.from(runtimeSummaryModule).toString('base64')}`);
 const expFactoryGames = ['antisaccade','attention-network-task','digit-span','flanker','go-nogo','keep-track','letter-memory','n-back','number-letter','plus-minus','spatial-span','stop-signal','stroop','tower-of-london'];
 
 function Adapter(id) {
@@ -53,6 +57,54 @@ test('ExpFactory grading applies its full allowed range and rejects malformed pa
       for (const invalid of [NaN, Infinity, '1000', field.min - field.step, field.max + field.step]) assert.throws(() => window.rehabConfigure({ [field.key]: invalid }, []), id);
     }
   }
+});
+
+test('fixed-length brain games expose bounded end settings and stop at the selected round', () => {
+  const fixedLengthSettings = {
+    ufov: 'trialCount',
+    'every-ball-response': 'rounds',
+    'reaction-time': 'rounds',
+    'plus-minus': 'itemsPerList',
+    antisaccade: 'rounds',
+    'attention-network-task': 'rounds',
+    'digit-span': 'rounds',
+    flanker: 'rounds',
+    'go-nogo': 'rounds',
+    'keep-track': 'rounds',
+    'letter-memory': 'rounds',
+    'n-back': 'rounds',
+    'number-letter': 'rounds',
+    'spatial-span': 'rounds',
+    'stop-signal': 'rounds',
+    stroop: 'rounds',
+  };
+  for (const [id, key] of Object.entries(fixedLengthSettings)) {
+    const fields = JSON.parse(read(id, 'settings.json')).sections.flatMap(section => section.fields);
+    const limit = fields.find(field => field.key === key);
+    assert.ok(limit, `${id}: ${key} setting is missing`);
+    assert.ok(limit.min > 0 && limit.default >= limit.min && limit.default <= limit.max, id);
+  }
+
+  const whackFields = JSON.parse(read('whack-a-mole', 'settings.json')).sections.flatMap(section => section.fields);
+  assert.ok(whackFields.some(field => field.key === 'durationSec'), 'whack-a-mole: duration setting is missing');
+  const simonFields = JSON.parse(read('simon-says', 'settings.json')).sections.flatMap(section => section.fields);
+  assert.ok(simonFields.some(field => field.key === 'difficulty'), 'simon-says: success limit is missing');
+  assert.ok(simonFields.some(field => field.key === 'lives'), 'simon-says: error limit is missing');
+
+  assert.equal(GetExpFactoryRoundLimit({ rounds: 48 }), 48);
+  assert.equal(GetExpFactoryRoundLimit({}), null);
+  for (const invalid of [0, -1, 1.5, '48', 10_001]) {
+    assert.throws(() => GetExpFactoryRoundLimit({ rounds: invalid }));
+  }
+  assert.equal(HasReachedExpFactoryRoundLimit(48, 47), false);
+  assert.equal(HasReachedExpFactoryRoundLimit(48, 48), true);
+  assert.equal(HasReachedExpFactoryRoundLimit(48, 49), true);
+  assert.equal(HasReachedExpFactoryRoundLimit(null, 999), false);
+
+  const antisaccade = Adapter('antisaccade');
+  const target = sample({ trial_id: 'target' });
+  assert.equal(antisaccade.rehabRoundCount([target]), 0);
+  assert.equal(antisaccade.rehabRoundCount([target, sample({ trial_id: 'mask' })]), 1);
 });
 
 test('ExpFactory projections retain analysis conditions and exclude instructions and practice', () => {

@@ -32,6 +32,20 @@
             "zh-TW": "ms",
             "en": "ms"
           }
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": { "zh-TW": "正式作答數", "en": "Test responses" },
+          "description": {
+            "zh-TW": "完成設定數量後自動結束並進入結果；較短流程會依原始順序提前結束，須視為修改版流程。",
+            "en": "Ends at the configured response count. Shorter runs stop in the original order and are a modified protocol."
+          },
+          "default": 350,
+          "min": 50,
+          "max": 350,
+          "step": 50,
+          "unit": { "zh-TW": "題", "en": "responses" }
         }
       ]
     }

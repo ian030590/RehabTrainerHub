@@ -1,7 +1,12 @@
 import { GetAuthUserNameFromToken } from '../auth/authClient';
 import { GetHostedGameSettings } from '../embeddedTraining';
 import { ExitFullscreenIfActive } from '../fullscreen';
-import { SummarizeExpFactoryTrials, type ExpFactorySummary } from '../expFactoryRuntime';
+import {
+  GetExpFactoryRoundLimit,
+  HasReachedExpFactoryRoundLimit,
+  SummarizeExpFactoryTrials,
+  type ExpFactorySummary,
+} from '../expFactoryRuntime';
 import { useFullscreenTrainingRoot } from '../hooks/useFullscreenTrainingRoot';
 import { useTrainingAbort } from '../hooks/useTrainingAbort';
 import { SaveTrainingSessionRecord } from '../storage/trainingRecords';
@@ -43,6 +48,7 @@ interface ExpFactoryRuntimeWindow extends Window {
   jsPsych?: ExpFactoryJsPsych;
   rehabBilingualize?: () => void;
   rehabConfigure?: (settings: Record<string, unknown> | null, timeline: unknown[]) => void;
+  rehabRoundCount?: (rows: Record<string, unknown>[]) => number;
   rehabResearchRows?: (rows: Record<string, unknown>[]) => Record<string, unknown>[];
 }
 
@@ -125,7 +131,9 @@ export function ExpFactoryGame({ config, onExit }: {
 
       runtime.rehabBilingualize?.();
       const timeline = originalTimeline.slice();
-      runtime.rehabConfigure?.(GetHostedGameSettings(), timeline);
+      const settings = GetHostedGameSettings();
+      const roundLimit = GetExpFactoryRoundLimit(settings);
+      runtime.rehabConfigure?.(settings, timeline);
       runtime.getDisplayElement = () => {
         host.replaceChildren();
         const background = document.createElement('div');
@@ -142,7 +150,15 @@ export function ExpFactoryGame({ config, onExit }: {
         timeline,
         display_element: 'getDisplayElement',
         fullscreen: false,
-        on_trial_finish: () => runtime.addID?.(config.gameId),
+        on_trial_finish: () => {
+          runtime.addID?.(config.gameId);
+          if (roundLimit === null || typeof jsPsych.endExperiment !== 'function') return;
+          const rows = JSON.parse(jsPsych.data.dataAsJSON()) as Record<string, unknown>[];
+          const completedRounds = runtime.rehabRoundCount?.(rows)
+            ?? runtime.rehabResearchRows?.(rows).length
+            ?? 0;
+          if (HasReachedExpFactoryRoundLimit(roundLimit, completedRounds)) jsPsych.endExperiment();
+        },
         on_finish: () => {
           if (abortedRef.current) return;
           try {

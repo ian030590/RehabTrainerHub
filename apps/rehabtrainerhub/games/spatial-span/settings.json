@@ -32,6 +32,20 @@
             "zh-TW": "ms",
             "en": "ms"
           }
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": { "zh-TW": "正式回合總數", "en": "Total test rounds" },
+          "description": {
+            "zh-TW": "完成設定回合後自動結束並進入結果；流程依序進行正向與反向回憶，較短流程須視為修改版流程。",
+            "en": "Ends at the configured round count. Forward then reverse recall follows the original order; shorter runs are a modified protocol."
+          },
+          "default": 28,
+          "min": 16,
+          "max": 28,
+          "step": 2,
+          "unit": { "zh-TW": "回合", "en": "rounds" }
         }
       ]
     }

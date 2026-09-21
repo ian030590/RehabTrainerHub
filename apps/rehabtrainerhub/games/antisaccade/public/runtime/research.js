@@ -28,4 +28,7 @@
   window.rehabResearchRows = function(rows) {
     return rows.flatMap(function(r, index) { if (r.exp_stage !== 'test' || r.trial_id !== 'target') return []; var mask = rows[index + 1]; var duringTarget = typeof r.rt === 'number' && r.rt >= 0; var duringMask = mask && mask.trial_id === 'mask' && typeof mask.rt === 'number' && mask.rt >= 0; var answer = duringTarget ? r.key_press : duringMask ? mask.key_press : -1; return [Object.assign(base(r), { correct: answer === r.correct_response, rt: duringTarget ? r.rt : duringMask ? configuredValue + mask.rt : null, omission: answer === -1, location: r.arrow_placement === 'left' ? 0 : 1, key: answer, exposureMs: configuredValue })]; });
   };
+  window.rehabRoundCount = function(rows) {
+    return rows.filter(function(r) { return r.exp_stage === 'test' && r.trial_id === 'mask'; }).length;
+  };
 })();
