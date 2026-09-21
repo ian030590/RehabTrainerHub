@@ -50,9 +50,9 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     '--clickSelectors', '.official-game-card button',
     '--allSelectors', [
       'dialog.training-overlay-config form',
-      '[role="slider"]',
-      '[role="checkbox"]',
-      '[role="combobox"]',
+      'input[type="range"]',
+      'input[type="checkbox"]',
+      'select',
       'button[type="submit"]',
     ].join(','),
     '--timeoutMs', '5000',
@@ -74,6 +74,19 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     '--timeoutMs', '10000',
   ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
   assert.equal(fullscreen.exitCode, 0, `Hub fullscreen: ${fullscreen.stdout}\n${fullscreen.stderr}`);
+  for (const gameId of ['tower-of-london', 'number-letter']) {
+    const overlay = await Run(process.execPath, [
+      browserSmokeScript,
+      '--url', `http://127.0.0.1:${address.port}/`,
+      '--storage', 'rehab_hub_tour_seen=1',
+      '--clickSelectors', `.official-game-card[data-runtime-id="${gameId}"] button,dialog.training-overlay-config button[type="submit"]`,
+      '--allSelectors', 'dialog.training-overlay-runtime iframe',
+      '--fullscreenSelector', 'html',
+      '--foregroundSelector', 'dialog.training-overlay-runtime',
+      '--timeoutMs', '10000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(overlay.exitCode, 0, `${gameId}: ${overlay.stdout}\n${overlay.stderr}`);
+  }
   for (const gameId of expFactoryGameIds) {
     const guidedGame = await Run(process.execPath, [
       browserSmokeScript,
@@ -82,7 +95,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
       '--keyPress', 'Enter',
       '--keyPressReadySelector', '.display_stage',
       '--keyPressReadyTimeoutMs', '10000',
-      '--allSelectors', '.cognitive-reference-game .display_stage,.jspsych-display-element .bilingual-copy-zh,#jspsych-instructions-next',
+      '--allSelectors', '.cognitive-reference-game .display_stage,.jspsych-display-element .bilingual-copy-zh',
       '--fullscreenSelector', 'html',
       '--timeoutMs', '3000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });

@@ -364,6 +364,7 @@ export function TrainingLobby() {
                   <article
                     aria-label={`${copy.start}: ${moduleCopy.title}`}
                     className="module-card official-game-card"
+                    data-runtime-id={module.runtimeId}
                     key={module.catalogId}
                     onPointerEnter={() => PreloadTrainingModule(module)}
                     style={BuildTrainingThemeStyle(theme)}

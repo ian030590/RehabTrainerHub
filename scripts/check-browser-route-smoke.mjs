@@ -25,6 +25,7 @@ const touchScrollSelector = args.touchScrollSelector;
 const viewportWidth = args.viewportWidth ? Number(args.viewportWidth) : null;
 const viewportHeight = args.viewportHeight ? Number(args.viewportHeight) : null;
 const fullscreenSelector = args.fullscreenSelector;
+const foregroundSelector = args.foregroundSelector;
 const keyPressReadySelector = args.keyPressReadySelector;
 const requireFullscreenBeforeAudio = args.fullscreenBeforeAudio === 'true';
 const storageEntries = ParseStorageEntries(args.storage);
@@ -34,7 +35,7 @@ const timeoutMs = Number(args.timeoutMs ?? 12000);
 const keyPressReadyTimeoutMs = Number(args.keyPressReadyTimeoutMs ?? timeoutMs);
 
 if (expectedSelectors.length === 0 && !externalUrl) {
-  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs (--app <appDir> --route <route> | --url <absoluteUrl>) --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--visibleSelectors <cssSelector,...>] [--touchScrollSelector <cssSelector>] [--viewportWidth <px> --viewportHeight <px>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>]');
+  throw new Error('Usage: node scripts/check-browser-route-smoke.mjs (--app <appDir> --route <route> | --url <absoluteUrl>) --selector <cssSelector> [--allSelectors <cssSelector,...>] [--clickSelectors <cssSelector,...>] [--fullscreenSelector <cssSelector>] [--foregroundSelector <cssSelector>] [--fullscreenBeforeAudio true] [--viewportSelectors <cssSelector,...>] [--visibleSelectors <cssSelector,...>] [--touchScrollSelector <cssSelector>] [--viewportWidth <px> --viewportHeight <px>] [--canvasViewportSelectors <cssSelector,...>] [--storage <key=value,...>] [--mockAuthUser true] [--text <text>]');
 }
 
 const browserPath = FindBrowserPath();
@@ -234,6 +235,8 @@ try {
         matched: Boolean(document.querySelector('iframe')?.contentDocument?.querySelector(selector)),
       })),
       fullscreenMatched: ${fullscreenSelector ? `Boolean(document.fullscreenElement?.matches(${JSON.stringify(fullscreenSelector)}))` : 'true'},
+      foregroundMatched: ${foregroundSelector ? `Boolean(document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.closest(${JSON.stringify(foregroundSelector)}))` : 'true'},
+      foregroundElement: ${foregroundSelector ? `document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.outerHTML?.slice(0, 500) ?? null` : 'null'},
       viewportMatches: ${JSON.stringify(viewportSelectors)}.map((selector) => {
         const element = document.querySelector(selector);
         const rect = element?.getBoundingClientRect();
@@ -321,6 +324,9 @@ try {
   }
   if (!state.fullscreenMatched) {
     failures.push(`Fullscreen element did not match: ${fullscreenSelector}`);
+  }
+  if (!state.foregroundMatched) {
+    failures.push(`Foreground element was not inside: ${foregroundSelector} (found ${state.foregroundElement})`);
   }
   for (const viewportMatch of state.viewportMatches) {
     if (!viewportMatch.matched) {

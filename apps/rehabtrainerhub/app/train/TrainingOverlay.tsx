@@ -243,8 +243,13 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
           onSubmit={(values) => {
             // Preserve the settings button's user activation for fullscreen. The
             // game iframe is mounted after this event and cannot request it later.
-            // Native dialog elements cannot be fullscreen targets.
-            void EnterFullscreenFromUserGesture(document.documentElement);
+            // Reopen the dialog after fullscreen so it remains the topmost layer.
+            const dialog = dialogRef.current;
+            const fullscreenRequest = EnterFullscreenFromUserGesture(document.documentElement);
+            dialog?.close();
+            void fullscreenRequest.finally(() => {
+              if (dialog?.isConnected && !dialog.open) dialog.showModal();
+            });
             setConfiguredSettings(values);
           }}
           title={moduleCopy.title}
