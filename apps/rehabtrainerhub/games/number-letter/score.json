@@ -85,8 +85,8 @@
     {
       "key": "trials",
       "label": {
-        "zh": "分析單位數",
-        "en": "Analysis units"
+        "zh": "總題數",
+        "en": "Total items"
       },
       "sources": [
         "Total_Trials"
@@ -95,8 +95,8 @@
     {
       "key": "scored",
       "label": {
-        "zh": "可判定正確的單位數",
-        "en": "Units with correctness"
+        "zh": "可判定正確的題目數",
+        "en": "Scored items"
       },
       "sources": [
         "Scored_Trials"
@@ -105,8 +105,8 @@
     {
       "key": "correct",
       "label": {
-        "zh": "正確單位數",
-        "en": "Correct units"
+        "zh": "答對題數",
+        "en": "Correct items"
       },
       "sources": [
         "Correct_Trials"
@@ -115,8 +115,8 @@
     {
       "key": "accuracy",
       "label": {
-        "zh": "單位正確率",
-        "en": "Unit accuracy"
+        "zh": "整體正確率",
+        "en": "Overall item accuracy"
       },
       "sources": [
         "Accuracy_Percent"
@@ -126,8 +126,8 @@
     {
       "key": "meanResponseMs",
       "label": {
-        "zh": "有作答單位平均時間（含錯誤）",
-        "en": "Mean response duration (includes errors)"
+        "zh": "平均每題作答時間（含錯誤）",
+        "en": "Mean item response time (includes errors)"
       },
       "sources": [
         "Mean_RT_Ms"

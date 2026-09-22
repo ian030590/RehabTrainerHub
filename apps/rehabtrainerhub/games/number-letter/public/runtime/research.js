@@ -15,6 +15,8 @@
     if (value === undefined) value = 0;
     if (!Number.isFinite(value) || value < 0 || value > 5000 || Math.abs((value - 0) / 250 - Math.round((value - 0) / 250)) > 1e-8) throw new Error('Invalid responseWindowMs');
     configuredValue = value;
+    var questionnaire = timeline.indexOf(window.post_task_block);
+    if (questionnaire >= 0) timeline.splice(questionnaire, 1);
     visit(timeline, function(node) { if (node.data && node.data.trial_id === 'stim') { node.timing_response = value || -1; if (!node.stimulus && typeof node.data.stim_id === 'string') node.stimulus = node.data.stim_id; var match = String(node.data.stim_id).match(/([A-Z])([2-9])/); if (match) { node.data.stim_id = match[0]; node.data.correct_response = node.data.stim_place.indexOf('top') === 0 ? (Number(match[2]) % 2 ? 90 : 77) : ('AEIU'.indexOf(match[1]) < 0 ? 90 : 77); } } });
   };
   function task(row) { return row.exp_stage === 'test' && row.trial_id === 'stim'; }

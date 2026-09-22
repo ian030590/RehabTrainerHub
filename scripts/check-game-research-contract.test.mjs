@@ -18,7 +18,7 @@ const {
 const expFactoryGames = ['antisaccade','attention-network-task','digit-span','flanker','go-nogo','keep-track','letter-memory','n-back','number-letter','plus-minus','spatial-span','stop-signal','stroop','tower-of-london'];
 
 function Adapter(id) {
-  const window = { setStims() {}, numbers: Array.from({ length: 90 }, (_, i) => String(10 + i)), add_block: { questions: Array(30).fill('') }, minus_block: { questions: Array(30).fill('') }, alternate_block: { questions: Array(30).fill('') } };
+  const window = { setStims() {}, numbers: Array.from({ length: 90 }, (_, i) => String(10 + i)), practice_numbers: Array.from({ length: 15 }, (_, i) => String(20 + i)), post_task_block: {}, add_block: { questions: Array(30).fill('') }, minus_block: { questions: Array(30).fill('') }, alternate_block: { questions: Array(30).fill('') } };
   new Script(read(id, 'public/runtime/research.js')).runInNewContext({ window });
   return window;
 }
@@ -56,6 +56,16 @@ test('ExpFactory grading applies its full allowed range and rejects malformed pa
       else assert.equal(timed.timing_response, value);
       for (const invalid of [NaN, Infinity, '1000', field.min - field.step, field.max + field.step]) assert.throws(() => window.rehabConfigure({ [field.key]: invalid }, []), id);
     }
+  }
+});
+
+test('each legacy brain game removes its own post-task questionnaire', () => {
+  for (const id of expFactoryGames) {
+    const field = JSON.parse(read(id, 'settings.json')).sections[0].fields[0];
+    const window = Adapter(id);
+    const timeline = [{}, window.post_task_block, {}];
+    window.rehabConfigure({ [field.key]: field.default }, timeline);
+    assert.equal(timeline.includes(window.post_task_block), false, id);
   }
 });
 
@@ -105,9 +115,18 @@ test('fixed-length brain games expose bounded end settings and stop at the selec
   const target = sample({ trial_id: 'target' });
   assert.equal(antisaccade.rehabRoundCount([target]), 0);
   assert.equal(antisaccade.rehabRoundCount([target, sample({ trial_id: 'mask' })]), 1);
+
+  const formalTrialIds = {
+    'attention-network-task': 'stim', flanker: 'stim', 'go-nogo': 'stim', 'n-back': 'stim',
+    'stop-signal': 'stim', stroop: 'stim', 'keep-track': 'response', 'letter-memory': 'response',
+  };
+  for (const [id, trialId] of Object.entries(formalTrialIds)) {
+    const window = Adapter(id);
+    assert.equal(window.rehabRoundCount([sample({ exp_stage: 'practice', trial_id: trialId }), sample({ trial_id: trialId })]), 1, id);
+  }
 });
 
-test('ExpFactory projections retain analysis conditions and exclude instructions and practice', () => {
+test('ExpFactory projections retain analysis conditions and include real practice items', () => {
   const cases = {
     stroop: [sample({ condition: 'incongruent' }), 'condition', 1],
     flanker: [sample({ condition: 'incompatible' }), 'condition', 1],
@@ -119,15 +138,22 @@ test('ExpFactory projections retain analysis conditions and exclude instructions
     'spatial-span': [sample({ trial_id: 'response', num_spaces: 4, condition: 'forward' }), 'reverse', false],
     'number-letter': [sample({ condition: 'rotate_switch', stim_place: 'topleft' }), 'top', true],
   };
+  const practiceGames = new Set(['stroop', 'flanker', 'attention-network-task', 'go-nogo', 'stop-signal', 'n-back']);
   for (const [id, [row, key, expected]] of Object.entries(cases)) {
     const window = Adapter(id);
     const result = window.rehabResearchRows([sample({ exp_stage: 'practice' }), sample({ trial_id: 'instruction' }), row]);
-    assert.equal(result.length, 1, id);
-    assert.equal(result[0][key], expected, id);
+    const expectedLength = practiceGames.has(id) ? 2 : 1;
+    assert.equal(result.length, expectedLength, id);
+    assert.equal(result.at(-1)[key], expected, id);
+    if (practiceGames.has(id)) assert.equal(result[0].practice, true, id);
     const score = BuildGameScore(ParseGameScoreDefinition(JSON.parse(read(id, 'score.json'))), { detailRows: result });
-    assert.equal(score.rounds.length, 1, id);
-    if (id === 'stop-signal') { assert.equal(result[0].correct, true); assert.equal(score.rounds[0].responseMs, null); }
+    assert.equal(score.rounds.length, expectedLength, id);
+    assert.equal(SummarizeExpFactoryTrials(result).totalTrials, expectedLength, id);
+    if (id === 'stop-signal') { assert.equal(result.at(-1).correct, true); assert.equal(score.rounds.at(-1).responseMs, null); }
   }
+
+  const stopSignal = Adapter('stop-signal').rehabResearchRows([sample({ exp_stage: 'NoSS_practice' })])[0];
+  assert.equal(stopSignal.practice, true);
 });
 
 test('antisaccade joins target and mask without counting two trials or measuring eye latency', () => {
@@ -138,29 +164,63 @@ test('antisaccade joins target and mask without counting two trials or measuring
   assert.equal(row.rt, 350);
   assert.equal(row.correct, true);
   assert.equal(window.rehabResearchRows([target])[0].rt, null);
+  assert.equal(window.rehabResearchRows([sample({ ...target, exp_stage: 'practice' }), sample({ ...mask, exp_stage: 'practice' })])[0].practice, true);
 });
 
-test('recall and arithmetic derive item counts from actual responses', () => {
+test('recall and arithmetic derive item results from actual responses', () => {
   const letter = Adapter('letter-memory').rehabResearchRows(['A','B','C','D','E'].map(stimulus => sample({ stimulus })).concat(sample({ trial_id: 'response', responses: '{"Q0":"B C D E"}' })))[0];
   assert.equal(letter.correctItems, 4);
   assert.equal(letter.load, 5);
   assert.equal(letter.correct, true);
   const track = Adapter('keep-track').rehabResearchRows([sample({ category:'animals', stim:'cat' }), sample({ category:'animals', stim:'dog' }), sample({ trial_id:'response', targets:['animals'], load:1, responses:'{"Q0":"dog dog"}' })])[0];
   assert.equal(track.correctItems, 1);
+  const practiceLetter = Adapter('letter-memory').rehabResearchRows(['A','B','C','D','E'].map(stimulus => sample({ exp_stage:'practice', stimulus })).concat(sample({ exp_stage:'practice', trial_id:'response', responses:'{"Q0":"B C D E"}' })))[0];
+  const practiceTrack = Adapter('keep-track').rehabResearchRows([sample({ exp_stage:'practice', category:'animals', stim:'dog' }), sample({ exp_stage:'practice', trial_id:'response', targets:['animals'], load:1, responses:'{"Q0":"dog"}' })])[0];
+  assert.equal(practiceLetter.practice, true);
+  assert.equal(practiceTrack.practice, true);
   const arithmetic = Adapter('plus-minus');
   arithmetic.rehabConfigure({ itemsPerList: 6 }, []);
   const answers = Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`Q${i}`, String(70 + i + (i % 2 ? -3 : 3))]));
-  const row = arithmetic.rehabResearchRows([sample({ condition:'alternate', responses:JSON.stringify(answers) })])[0];
-  assert.equal(row.correctItems, 6);
-  assert.equal(row.requiredItems, 6);
+  const responseTimes = Object.fromEntries(Array.from({ length: 6 }, (_, i) => [`Q${i}`, 200 + i]));
+  const rows = arithmetic.rehabResearchRows([sample({ condition:'alternate', responses:JSON.stringify(answers), response_times:JSON.stringify(responseTimes) })]);
+  assert.equal(rows.length, 6);
+  assert.ok(rows.every(row => row.correct));
+  assert.equal(rows[5].question, 6);
+  assert.equal(rows[5].rt, 205);
+
+  const practiceAnswers = Object.fromEntries(arithmetic.practice_numbers.map((value, i) => [`Q${i}`, value]));
+  const practiceTimes = Object.fromEntries(arithmetic.practice_numbers.map((_, i) => [`Q${i}`, 100 + i]));
+  const practice = arithmetic.rehabResearchRows([sample({ exp_stage:'practice', responses:JSON.stringify(practiceAnswers), response_times:JSON.stringify(practiceTimes) })]);
+  assert.equal(practice.length, 15);
+  assert.ok(practice.every(row => row.practice && row.correct));
+  assert.equal(practice[0].condition, -1);
+  assert.equal(practice[14].rt, 114);
+
+  const score = BuildGameScore(ParseGameScoreDefinition(JSON.parse(read('plus-minus', 'score.json'))), { detailRows: practice.concat(rows) });
+  assert.equal(score.rounds.length, 21);
+  assert.deepEqual(score.rounds[0], { trial: 5, question: 1, practice: 1, setting: 6, condition: -1, correct: 1, responseMs: 100 });
+  assert.equal(score.rounds[20].responseMs, 205);
+
+  const summary = SummarizeExpFactoryTrials(practice.concat(rows));
+  assert.equal(summary.totalTrials, 21);
+  assert.equal(summary.correctTrials, 21);
+  assert.equal(summary.meanRtMs, 2820 / 21);
 });
 
 test('Tower of London emits one problem result, not accuracy per move', () => {
-  const rows = Adapter('tower-of-london').rehabResearchRows([sample({ trial_id:'to_hand', problem_id:0, num_moves_made:1, min_moves:3 }), sample({ trial_id:'to_board', problem_id:0, num_moves_made:4, min_moves:3 }), sample({ trial_id:'feedback', correct:true, problem_time:4200 })]);
-  assert.equal(rows.length, 1);
-  assert.equal(rows[0].problemMs, 4200);
-  assert.equal(rows[0].moves, 4);
-  assert.equal(rows[0].rt, null);
+  const rows = Adapter('tower-of-london').rehabResearchRows([
+    sample({ exp_stage:'practice', trial_id:'to_board', problem_id:'practice', num_moves_made:1, min_moves:1 }),
+    sample({ exp_stage:'practice', trial_id:'feedback', correct:true, problem_time:1200 }),
+    sample({ trial_id:'to_hand', problem_id:0, num_moves_made:1, min_moves:3 }),
+    sample({ trial_id:'to_board', problem_id:0, num_moves_made:4, min_moves:3 }),
+    sample({ trial_id:'feedback', correct:true, problem_time:4200 }),
+  ]);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].practice, true);
+  assert.equal(rows[1].problemMs, 4200);
+  assert.equal(rows[1].moves, 4);
+  assert.equal(rows[1].rt, null);
+  assert.equal(SummarizeExpFactoryTrials(rows).totalTrials, 2);
 });
 
 test('React runtime retains missing RT as null and full precision in summaries', () => {

@@ -15,6 +15,8 @@
     if (value === undefined) value = 1000;
     if (!Number.isFinite(value) || value < 250 || value > 2000 || Math.abs((value - 250) / 250 - Math.round((value - 250) / 250)) > 1e-8) throw new Error('Invalid itemExposureMs');
     configuredValue = value;
+    var questionnaire = timeline.indexOf(window.post_task_block);
+    if (questionnaire >= 0) timeline.splice(questionnaire, 1);
     window.stim_time = value; window.setStims();
   };
   function task(row) { return row.exp_stage === 'test' && row.trial_id === 'stim'; }

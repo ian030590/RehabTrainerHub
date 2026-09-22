@@ -57,6 +57,17 @@ jsPsych.plugins['survey-text'] = (function() {
       $("#jspsych-survey-text-" + i).append('<textarea name="#jspsych-survey-text-response-' + i + '" cols="' + trial.columns[i] + '" rows="' + trial.rows[i] + '"></textarea>');
     }
 
+    var startTime = (new Date()).getTime();
+    var lastResponseTime = startTime;
+    var question_response_times = {};
+    $("div.jspsych-survey-text-question textarea").blur(function() {
+      var index = $(this).parent().attr('id').replace('jspsych-survey-text-', '');
+      if (typeof question_response_times['Q' + index] != 'undefined') return;
+      var responseTime = (new Date()).getTime();
+      question_response_times['Q' + index] = responseTime - lastResponseTime;
+      lastResponseTime = responseTime;
+    });
+
     // add submit button
     display_element.append($('<button>', {
       'id': 'jspsych-survey-text-next',
@@ -81,7 +92,8 @@ jsPsych.plugins['survey-text'] = (function() {
       // save data
       var trialdata = {
         "rt": response_time,
-        "responses": JSON.stringify(question_data)
+        "responses": JSON.stringify(question_data),
+        "response_times": JSON.stringify(question_response_times)
       };
 
       display_element.html('');
@@ -89,8 +101,6 @@ jsPsych.plugins['survey-text'] = (function() {
       // next trial
       jsPsych.finishTrial(trialdata);
     });
-
-    var startTime = (new Date()).getTime();
   };
 
   return plugin;
