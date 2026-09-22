@@ -15,6 +15,7 @@ const migrationNames = [
   '0009_training_record_summaries.sql',
   '0010_game_category_tags.sql',
   '0011_anonymous_subject_records.sql',
+  '0012_separate_authenticated_subjects.sql',
 ];
 const migrations = await Promise.all(migrationNames.map((name) => (
   readFile(new URL(`../../migrations/${name}`, import.meta.url), 'utf8')
@@ -23,9 +24,16 @@ const migrations = await Promise.all(migrationNames.map((name) => (
 test('anonymous subject migration preserves signed records and permits write-only guest rows', () => {
   const db = new DatabaseSync(':memory:');
   db.exec('PRAGMA foreign_keys = ON');
-  db.exec(migrations.slice(0, -1).join('\n'));
+  db.exec(migrations.slice(0, -2).join('\n'));
   SeedSignedRecords(db);
 
+  assert.doesNotThrow(() => db.exec(migrations.at(-2)));
+
+  db.exec(`
+    UPDATE training_records SET subject_id = 'legacy-guest-id' WHERE id = 'legacy-training';
+    UPDATE game_run_sessions SET subject_id = 'legacy-guest-id' WHERE id = 'legacy-session';
+    UPDATE game_runs SET subject_id = 'legacy-guest-id' WHERE id = 'legacy-run';
+  `);
   assert.doesNotThrow(() => db.exec(migrations.at(-1)));
 
   assert.deepEqual(

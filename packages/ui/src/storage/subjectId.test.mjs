@@ -36,6 +36,24 @@ test('keeps a stable in-memory UUID when localStorage is unavailable', async () 
   assert.equal(GetOrCreateSubjectId(), first);
 });
 
+test('uses a separate stable UUID namespace for authenticated records', async () => {
+  const guest = '550e8400-e29b-41d4-a716-446655440000';
+  const storage = CreateStorage([[storageKey, guest]]);
+  SetWindow(storage);
+  const {
+    GetOrCreateAuthenticatedSubjectId,
+    GetOrCreateSubjectId,
+    IsSubjectId,
+  } = await FreshSubjectModule();
+
+  const authenticated = GetOrCreateAuthenticatedSubjectId('account-1');
+  assert.equal(IsSubjectId(authenticated), true);
+  assert.notEqual(authenticated, GetOrCreateSubjectId());
+  assert.equal(GetOrCreateAuthenticatedSubjectId('account-1'), authenticated);
+  assert.notEqual(GetOrCreateAuthenticatedSubjectId('account-2'), authenticated);
+  assert.equal(storage.values.get('rehabtrainerhub.auth-subject-id.v1.account-1'), authenticated);
+});
+
 function CreateStorage(entries = []) {
   const values = new Map(entries);
   return {

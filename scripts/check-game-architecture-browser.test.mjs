@@ -129,6 +129,7 @@ function FindBravePath() {
 
 test('Brave shows shared score charts and uploads guest and signed-in sessions', async (context) => {
   const uploads = [];
+  const guestSubjectId = '550e8400-e29b-41d4-a716-446655440000';
   const server = createServer((request, response) => {
     const url = new URL(request.url, 'http://127.0.0.1');
     if (url.pathname === '/api/records' && request.method === 'POST') {
@@ -173,7 +174,7 @@ test('Brave shows shared score charts and uploads guest and signed-in sessions',
   for (const signedIn of [false, true]) {
     const result = await Run(process.execPath, [browserSmokeScript,
       '--url', `http://127.0.0.1:${server.address().port}/`,
-      '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=zh', '--mockAuthUser', String(signedIn),
+      '--storage', `rehab_hub_tour_seen=1,rehab-trainer-hub-language=zh,rehabtrainerhub.subject-id.v1=${guestSubjectId}`, '--mockAuthUser', String(signedIn),
       '--clickSelectors', '.official-game-card button,.game-settings-form button[type="submit"]',
       '--allSelectors', '.training-overlay-score table,.training-overlay-score [data-slot="chart"] svg,dialog.training-overlay-score:not(:has(iframe)),.training-score-priority,.training-score-quality,.training-score-stat-strip',
       ...(!signedIn ? [
@@ -187,6 +188,7 @@ test('Brave shows shared score charts and uploads guest and signed-in sessions',
     assert.equal(uploads.length, signedIn ? 2 : 1);
     const upload = uploads.at(-1);
     assert.match(upload.body.subjectId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    assert.equal(upload.body.subjectId === guestSubjectId, !signedIn);
     assert.equal(Boolean(upload.authorization), signedIn);
   }
   assert.equal(uploads[0].body.runtimeId, 'hub');

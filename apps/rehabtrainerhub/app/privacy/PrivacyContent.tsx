@@ -25,6 +25,16 @@ export function PrivacyContent() {
       </section>
 
       <section>
+        <h2>{copy.retention}</h2>
+        <p>{copy.retentionBody}</p>
+      </section>
+
+      <section>
+        <h2>{copy.access}</h2>
+        <p>{copy.accessBody}</p>
+      </section>
+
+      <section>
         <h2>{copy.permissions}</h2>
         <p>{copy.permissionsBody}</p>
       </section>

@@ -1,6 +1,6 @@
 import { ExecuteTurnstileChallenge } from '../turnstileClient';
 import { CreateRuntimeStorageNamespace } from '../storage/runtimeNamespace';
-import { GetOrCreateSubjectId } from '../storage/subjectId';
+import { GetOrCreateSubjectId, GetOrCreateSubjectIdForUser } from '../storage/subjectId';
 import {
   DeletePendingRemoteTrainingRecord,
   PutPendingRemoteTrainingRecord,
@@ -478,13 +478,15 @@ export async function SaveRemoteTrainingRecord(
   apiBase: string | undefined,
   payload: RemoteTrainingRecordPayload,
 ): Promise<boolean> {
-  const subjectId = GetOrCreateSubjectId();
   const token = GetAuthToken();
-  const userId = GetAuthUserIdFromToken(token);
+  let userId = GetAuthUserIdFromToken(token);
+  let subjectId = GetOrCreateSubjectIdForUser(userId);
   try {
     const response = await PostRemoteTrainingRecord(apiBase, payload, subjectId, token);
     if (response.status === 401 && token) {
       ClearAuthToken();
+      userId = null;
+      subjectId = GetOrCreateSubjectId();
       const guestResponse = await PostRemoteTrainingRecord(apiBase, payload, subjectId, null);
       if (!guestResponse.ok) throw CreateRemoteRecordSaveError(guestResponse.status);
     } else if (!response.ok) {
@@ -519,12 +521,18 @@ async function FlushPendingRemoteTrainingRecordsNow(): Promise<void> {
   for (const pending of pendingRecords) {
     const currentToken = GetAuthToken();
     const currentUserId = GetAuthUserIdFromToken(currentToken);
-    const token = pending.userId && pending.userId === currentUserId ? currentToken : null;
+    const authenticatedRetry = Boolean(
+      pending.userId
+      && pending.userId === currentUserId
+      && currentToken,
+    );
+    const token = authenticatedRetry ? currentToken : null;
+    const subjectId = authenticatedRetry ? pending.subjectId : GetOrCreateSubjectId();
     try {
       let response = await PostRemoteTrainingRecord(
         pending.apiBase,
         pending.payload,
-        pending.subjectId,
+        subjectId,
         token,
       );
       if (response.status === 401 && token) {
@@ -532,7 +540,7 @@ async function FlushPendingRemoteTrainingRecordsNow(): Promise<void> {
         response = await PostRemoteTrainingRecord(
           pending.apiBase,
           pending.payload,
-          pending.subjectId,
+          GetOrCreateSubjectId(),
           null,
         );
       }
@@ -569,7 +577,7 @@ async function PostRemoteTrainingRecord(
   return response;
 }
 
-function GetAuthUserIdFromToken(token: string | null): string | null {
+export function GetAuthUserIdFromToken(token: string | null): string | null {
   if (!token) return null;
   const [encodedPayload] = token.split('.');
   if (!encodedPayload) return null;

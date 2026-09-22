@@ -18,9 +18,10 @@ import {
 import {
   BuildApiUrl,
   CreateRemoteTrainingRecordVerificationToken,
+  GetAuthUserIdFromToken,
   GetAuthToken,
 } from '@rehab-trainer/ui/auth/authClient';
-import { GetOrCreateSubjectId } from '@rehab-trainer/ui/storage/subjectId';
+import { GetOrCreateSubjectIdForUser } from '@rehab-trainer/ui/storage/subjectId';
 import type { PublishedGame } from '../publishedGames';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { Button } from '@rehab-trainer/ui/components/ui/button';
@@ -375,6 +376,7 @@ async function CreateGameRunSession(
   clientRunId: string,
 ): Promise<string> {
   const token = GetAuthToken();
+  const userId = GetAuthUserIdFromToken(token);
   const turnstileToken = await CreateRemoteTrainingRecordVerificationToken();
   const response = await fetch(BuildApiUrl(undefined, '/api/game-run-sessions'), {
     method: 'POST',
@@ -386,7 +388,7 @@ async function CreateGameRunSession(
     body: JSON.stringify({
       releaseId,
       clientRunId,
-      subjectId: GetOrCreateSubjectId(),
+      subjectId: GetOrCreateSubjectIdForUser(userId),
       turnstileToken,
     }),
   });

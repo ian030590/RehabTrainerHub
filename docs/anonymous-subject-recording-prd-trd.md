@@ -11,15 +11,15 @@
 
 每筆可提交的測驗結果都寫入 D1：
 
-- 未登入：保存 `subject_id`，`user_id = NULL`。
-- 已登入：同時保存 `subject_id` 與由後端 session 判定的 `user_id`。
+- 未登入：保存 guest `subject_id`，`user_id = NULL`。
+- 已登入：保存另一套帳號範圍的 `subject_id` 與由後端 session 判定的 `user_id`；guest Subject ID 永遠不寫入登入紀錄。
 - 登入帳號不得由 request body 指定，前端傳入的任何帳號欄位都不具權威性。
 - Subject ID 不在畫面、URL、下載檔、一般 API response 或應用程式 log 中顯示。
 - Subject ID 只用於資料列關聯，**不是密碼、token、session 或讀取授權依據**。
 
 匿名使用者不會取得 D1 紀錄的讀取能力，也不會在進度追蹤看到資料。`GET /api/records` 與 `GET /api/progress` 繼續要求有效登入 session，並只以 session 中的 `user_id` 查詢；系統不得新增 `GET ...?subjectId=`、`/subjects/{id}/records` 或任何可由 UUID 查資料的 API。
 
-本功能在技術與隱私語意上是「假名化／pseudonymous」，不是不可回復連結的真正匿名：同一瀏覽器的穩定 Subject ID 能串接多次紀錄，而登入後的紀錄同時含有帳號 ID。隱私權政策必須揭露這項處理；不得以「使用者看不到 ID」取代告知或必要的法規審查。
+guest 紀錄使用同一瀏覽器內的穩定假名 ID；登入紀錄則使用另一個帳號範圍 ID，兩個 namespace 不在伺服器端互用。隱私權政策必須揭露這項處理；不得以「使用者看不到 ID」取代告知或必要的法規審查。
 
 ## 2. 背景與現況
 
@@ -50,7 +50,8 @@
 
 ### 3.2 名詞
 
-- **Subject ID**：瀏覽器端以 CSPRNG 產生的 UUID v4，作為同一個網站 origin 內的假名化關聯值。
+- **guest Subject ID**：未登入時由瀏覽器以 CSPRNG 產生的 UUID v4，作為同一個網站 origin 內的假名化關聯值。
+- **authenticated Subject ID**：登入時依帳號範圍在瀏覽器產生並沿用的另一組 UUID v4；不得與 guest Subject ID 交叉使用。
 - **帳號 ID / `user_id`**：由後端驗證登入 session 後取得的 `app_users.id`。
 - **匿名紀錄**：`subject_id` 有值、`user_id` 為 `NULL` 的資料列。
 - **登入紀錄**：`subject_id` 與 `user_id` 都有值的資料列。
@@ -89,8 +90,8 @@
 - Request body 不包含可被信任的 `userId`、email、display name 或 role。
 - Authorization header 缺少時，以匿名紀錄處理。
 - Authorization header 存在但無效或過期時回傳 `401`，不能靜默降級成匿名寫入，以免把原應屬於帳號的資料錯誤脫鉤。
-- 前端收到 `401` 後可清除失效 token，並以相同 record ID、明確不帶 Authorization 的匿名請求重試一次；此行為要有測試且不得把其他帳號附到舊結果。
-- 使用者在匿名測驗完成後才登入，不回填過去紀錄的 `user_id`。同一 Subject ID 可供受控分析辨識同一瀏覽器的狀態轉換，但進度仍只顯示實際登入當下保存的紀錄。
+- 前端收到 `401` 後可清除失效 token，並以相同 record ID、guest Subject ID、明確不帶 Authorization 的匿名請求重試一次；此行為要有測試且不得把其他帳號附到舊結果。
+- 使用者在 guest 測驗完成後才登入，不回填過去紀錄的 `user_id`；登入後改用 authenticated Subject ID，兩套 ID 不可互相寫入。
 - D1 紀錄只保存 `user_id` 外鍵，不重複複製 email 或其他帳號資訊。
 
 #### FR-4：讀取與進度
@@ -100,14 +101,14 @@
 - 登入讀取只接受伺服器驗證的 session，查詢固定加上 `WHERE user_id = session.sub`。
 - 登入 A 即使知道登入 B 或匿名訪客的 Subject ID、record ID，也不能取得對方資料。
 - 管理端維持角色、patient assignment、audit log 與帳號資料 join。匿名列不進入既有治療師／個案 UI。
-- 若未來需要匿名研究匯出，須另立需求、威脅模型與最小權限的受稽核後端流程；不得直接開放以 Subject ID 查詢。
+- 匿名資料分析使用獨立的 `GET /api/admin/anonymous-analysis`；只允許 admin，預設回集合統計，可選受控的集合 CSV 匯出，所有使用寫入 audit log，且不接受 Subject ID 查詢參數。
 
 #### FR-5：背景重試與重複提交
 
 - 上線目標為 at-least-once delivery；record ID 與 run-session token 提供冪等性，D1 最終只留一筆。
 - 首次 POST 失敗或離線時，把最小待送 envelope 暫存於 IndexedDB，不把 auth token 放進 outbox。
 - 在本次頁面、`online` event 與下次進站時靜默重試，成功後立即刪除 outbox 項目。
-- 匿名完成的 envelope 即使稍後登入，也必須以匿名模式補送。
+- guest 完成的 envelope 即使稍後登入，也必須以 guest 模式補送；登入完成的 envelope 使用 authenticated Subject ID，帳號切換時改以新的 guest Subject ID 補送。
 - 登入完成的 envelope 只有在目前驗證 session 為同一帳號時才能補上帳號；若帳號已更換，優先以匿名資料送出，不能誤掛到另一帳號。
 - 瀏覽器永久離線、清除網站資料或不再回訪時，任何純 Web 方案都無法保證最終到達 D1；這是明確限制，不得在 UI 或文件宣稱絕對零遺失。
 
@@ -302,7 +303,7 @@ subject_id TEXT
 - 不同 Subject ID 或不同 scope 使用已存在的 record ID 時回固定的 `409`，錯誤訊息不得透露原 row 的 Subject ID、帳號或是否存在其他醫療資料。
 - 第三方結果沿用 `game_runs.run_session_id` unique index，確保 token 只消耗一次。
 - Outbox 使用 IndexedDB 而不是 localStorage，避免 450 KiB score 或眼動資料迅速耗盡同步 storage quota。
-- Outbox 設上限與保存期限；滿載時優先保留較新的未送紀錄並產生不含 payload／Subject ID 的 operational error metric。實際上限與期限須在隱私與資料保存決策後定稿。
+- Outbox 使用 IndexedDB，最多保留 25 筆，建立後最多保存 30 天；成功上傳立即刪除，清除網站資料時由瀏覽器自然刪除。滿載時優先保留較新的未送紀錄，且 operational error metric 不含 payload／Subject ID。
 
 ### 4.7 安全設計：禁止 UUID 暴力讀取
 
@@ -324,7 +325,7 @@ subject_id TEXT
 | IDOR：修改 query/path 讀他人紀錄 | Deny by default；每次 request 都驗證 session 與資源範圍；不以難猜 ID 取代授權 |
 | 偽造 `user_id`／email | Request schema 不接受；一律由 server session 派生 |
 | 輪替 UUID 大量灌資料 | Turnstile、origin validation、IP + Subject ID rate limit、payload 上限、D1/WAF 告警；不能只限 subject |
-| 猜中 UUID 後污染該 subject | UUID v4 高熵、寫入 schema 限制、rate limit；Subject ID 不影響任何個人 UI 或醫療決策。若未來資料用於研究決策，另評估 server-issued write proof |
+| 猜中 UUID 後污染該 subject | UUID v4 高熵、寫入 schema 限制、rate limit；Subject ID 不影響任何個人 UI 或醫療決策，統計與品質分析不接受 Subject ID 查詢 |
 | 利用 record ID conflict 探測既有資料 | 固定 409 body、不得回原 row；record ID 與 Subject ID 都用 CSPRNG；監測高 conflict 率 |
 | Response、log、URL 洩漏 | Subject ID 只放 HTTPS JSON body；response 最小化；no-store；應用程式 log 禁止記錄 request body、Subject ID、result payload |
 | 同源 XSS 讀取 localStorage | Subject ID 本身不具讀取或授權能力；維持 CSP、輸入輸出編碼與 dependency review。XSS 仍屬高風險事件，因既有 auth token 也在瀏覽器儲存 |
@@ -337,11 +338,11 @@ subject_id TEXT
 ### 4.8 隱私、醫療資訊與資料治理
 
 - 本計畫把測驗結果、眼動樣本、穩定 Subject ID 與其帳號關聯視為高敏感資料處理，不以「沒有顯示姓名」視為已匿名。
-- 同一 Subject ID 會讓匿名紀錄與後續登入紀錄存在可連結性；隱私文件必須如實揭露。
+- guest Subject ID 與 authenticated Subject ID 使用不同 namespace；伺服器不以 guest ID 連結登入紀錄，隱私文件必須如實揭露兩種識別碼的用途。
 - 上線前由台灣個資／醫療法規專業人士確認蒐集依據、告知或同意方式、目的、保存期間、利用範圍、跨境處理、當事人權利與事件通報流程。程式碼審查不能保證主管機關認定合法。
-- 若法律審查要求 affirmative consent，則「完全無 UI」必須讓位給合法告知／同意；Subject ID 本身仍不需顯示。
-- 必須決定匿名紀錄保存期限與到期刪除機制後才能正式開啟 guest ingestion。無限期保存不是本文件的預設。
-- 帳號刪除時，帶 `user_id` 的紀錄依現有 FK 規則刪除；是否同時刪除同 Subject ID 的匿名紀錄，需要法律與產品決策，不能自動把匿名列視為該帳號所有。
+- 隱私權政策說明 guest D1 紀錄永久保存，僅用於網站品質改善與集合統計；瀏覽器 outbox 最多保存 30 天，成功上傳立即刪除。
+- guest 紀錄的 `user_id` 永遠為 `NULL`，不屬於任何帳號；帳號刪除只依現有 FK 規則處理帶 `user_id` 的登入紀錄。
+- 未登入者沒有紀錄讀取或進度查詢能力；匿名分析僅由 admin-only 端點提供集合統計或受控集合匯出，且寫入 audit log。
 - 維運 log 只保留 status、runtime、authenticated boolean、payload size、rate-limit outcome 與 request trace ID；不保留 Subject ID、email 或結果內容。
 - Cloudflare 文件表示 D1 資料在靜態與傳輸中加密；這是基礎設施保護，不能取代應用層授權與最小化。
 
@@ -359,9 +360,10 @@ subject_id TEXT
 | Guest | POST `/api/records` | Origin + validation + Turnstile/rate limit | 僅寫入關聯 | 允許 |
 | Guest | GET `/api/records` | 無有效 session | 不接受 | 401 |
 | Guest | GET `/api/progress` | 無有效 session | 不接受 | 401 |
-| Signed-in user | POST `/api/records` | 有效 session | 寫入關聯；帳號由 session 取得 | 允許 |
+| Signed-in user | POST `/api/records` | 有效 session | 使用 authenticated Subject ID；帳號由 session 取得 | 允許 |
 | Signed-in user | GET records/progress | 有效 session `sub` | 完全不參與查詢 | 只回該帳號資料 |
 | Staff | GET `/api/admin/records` | Staff role + assignment + audit | 不作為授權條件 | 既有帳號個案資料；匿名列排除 |
+| Admin | GET `/api/admin/anonymous-analysis` | Admin role + audit | 不接受 query Subject ID；只回集合資料 | JSON 集合統計或集合 CSV |
 | Hub parent | POST game-run session/result | Origin + optional session + one-time run token | session 建立時寫入；不送 iframe | 允許 |
 | Third-party iframe | 任何 D1/auth API | 無權限、CSP 阻擋 | 不可取得 | 拒絕／無路徑 |
 
@@ -369,9 +371,9 @@ subject_id TEXT
 
 ### 6.1 共用前端
 
-- 新增 `packages/ui/src/storage/subjectId.ts`。
+- 新增 `packages/ui/src/storage/subjectId.ts`，分離 guest 與 authenticated Subject ID namespace。
 - 從 `packages/ui/src/index.ts` 匯出必要 helper。
-- `packages/ui/src/auth/authClient.ts`：guest 也送 POST、附 Subject ID、處理無效 token 與最小 response。
+- `packages/ui/src/auth/authClient.ts`：guest 也送 POST、登入使用另一套 Subject ID、處理無效 token 與最小 response。
 - `packages/ui/src/storage/trainingRecords.ts`：移除只有登入才遠端保存的 guard；保留本機結果需求並接上 outbox。
 - `packages/ui/src/components/TrainerAppLayout.tsx`：初次 mount 初始化 Subject ID。
 - `packages/ui/src/components/TrainingScore.tsx`：移除「未登入不會上傳」錯誤文案，Subject ID 不顯示。
@@ -382,15 +384,18 @@ subject_id TEXT
 - `apps/rehabtrainerhub/app/HubNavigation.tsx`：Hub 初次 mount 初始化。
 - `apps/rehabtrainerhub/app/train/TrainingOverlay.tsx`：移除 guest short-circuit，所有有效 score 都保存。
 - `apps/rehabtrainerhub/app/train/PackageGameOverlay.tsx`：guest 也建立 run session；Subject ID 只送 Hub API。
+- `apps/rehabtrainerhub/app/privacy/PrivacyContent.tsx`：揭露保存期限、用途與 admin-only 集合分析限制。
 - `apps/rehabtrainerhub/app/i18n/{zh-TW,en}.ts` 與 privacy page metadata：更新資料蒐集與登入文案。
 - `docs/game-score-contract.md`：把「Guests do not upload」改為新契約。
 
 ### 6.3 後端與 D1
 
 - `apps/rehabtrainerhub/migrations/0011_anonymous_subject_records.sql`。
+- `apps/rehabtrainerhub/migrations/0012_separate_authenticated_subjects.sql`：清除歷史登入列可能沿用的 guest Subject ID。
 - `apps/rehabtrainerhub/functions/api/records.js`：optional auth write、Subject ID validation、guest rate limit、nullable user、最小 response；GET auth 邊界不放寬。
 - `apps/rehabtrainerhub/functions/api/game-run-sessions.js`：optional auth、Subject ID、guest rate limit。
 - `apps/rehabtrainerhub/functions/api/game-runs.js`：以一次性 session token 消耗 guest 或 signed-in run，從 session 複製身分欄位。
+- `apps/rehabtrainerhub/functions/api/admin/anonymous-analysis.js`：僅 admin 可用的集合統計／受控集合 CSV 匯出，所有使用寫入 audit log，不接受 Subject ID 查詢。
 - 如共用 helper 不足，於 `_lib` 新增小型 UUID validation／optional-session helper；不要建立一套新的 auth abstraction。
 
 ## 7. 驗收標準
@@ -398,8 +403,9 @@ subject_id TEXT
 ### 7.1 Subject ID
 
 - [ ] 清空 localStorage 後首次進站會建立一個有效 UUID v4。
-- [ ] reload、切換頁面與進入不同內建遊戲後值不變。
-- [ ] 登入、登出不改變 Subject ID。
+- [ ] 未登入 reload、切換頁面與進入不同內建遊戲後 guest Subject ID 不變。
+- [ ] guest 測驗只使用 guest Subject ID；登入後使用另一套 authenticated Subject ID。
+- [ ] 同一帳號在同一瀏覽器重載後 authenticated Subject ID 一致；登入／登出不互相重用兩套 ID。
 - [ ] 清除網站資料或換裝置後產生新值，系統不嘗試復原。
 - [ ] localStorage 被禁用時測驗仍可執行並以當頁 memory ID 寫入。
 - [ ] DOM、URL、畫面、下載檔、console 與一般 response 均無 Subject ID。
@@ -445,11 +451,11 @@ subject_id TEXT
    - conflict response cannot enumerate existing scope；
    - IP + Subject rate limits and Turnstile；
    - response omits payload、subject、user。
-3. Migration test：0001 → 0011、legacy preservation、nullable user、trigger/index/FK、cutover old write。
+3. Migration test：0001 → 0012、legacy preservation、清除歷史登入列的 guest ID、nullable user、trigger/index/FK、cutover old write。
 4. Game run tests：guest session、signed session、one-time consume、forged/expired/mismatched token、subject 不進 iframe/result input、retry idempotency。
-5. Browser smoke：guest 完成內建遊戲後 POST body 有 Subject ID、無 Authorization；登入後 body 相同但 header 有 token；reload ID 不變。
+5. Browser smoke：guest 完成內建遊戲後 POST body 有 guest Subject ID、無 Authorization；登入後使用不同 Subject ID 且 header 有 token；reload 各自穩定。
 6. Progress test：匿名 row 不影響任一帳號的 daily tasks、achievement、recent modules。
-7. Admin security test：匿名 row 不出現在 patient list/export；未授權者不能查詢。
+7. Admin security test：匿名 row 不出現在 patient list/export；analysis endpoint 僅 admin、拒絕 Subject ID 查詢、只回集合資料並寫入 audit log。
 
 ### 8.2 必跑指令
 
@@ -495,12 +501,11 @@ npm run build:hub
 
 以下項目未定稿前不得在 production 開啟匿名寫入：
 
-1. 匿名結果與 outbox 的保存期限。
-2. 告知／同意的合法形式，以及是否允許在無 affirmative consent 的情況下蒐集。
-3. 當事人查詢、停止利用、刪除與資料外洩通知流程。
-4. 帳號刪除時，是否及如何處理同 Subject ID 的匿名 rows。
-5. 匿名資料的允許用途：網站品質、統計或研究；未列明用途不得擴張利用。
-6. 誰能直接查詢 production D1，以及 MFA、audit、定期權限複查與離職撤權流程。
+1. 隱私權政策與資料處理告知的最終核准。
+2. 當事人查詢、停止利用、刪除與資料外洩通知流程的最終核准。
+3. guest D1 永久保存與 outbox 30 天保存設定的維運核准。
+4. 匿名資料僅限網站品質改善與集合統計，不得擴張用途。
+5. 只有 admin 可使用匿名分析端點；Cloudflare D1 IAM、MFA、audit、定期權限複查與離職撤權流程。
 
 ## 11. 設計依據
 

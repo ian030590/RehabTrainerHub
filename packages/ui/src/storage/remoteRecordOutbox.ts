@@ -4,6 +4,7 @@ export const remoteTrainingRecordOutboxDatabaseName = 'rehabtrainerhub.remote-re
 
 const storeName = 'records';
 const maximumPendingRecords = 25;
+export const remoteTrainingRecordOutboxRetentionMs = 30 * 24 * 60 * 60 * 1000;
 
 export interface PendingRemoteTrainingRecord {
   apiBase?: string;
@@ -20,29 +21,22 @@ export async function PutPendingRemoteTrainingRecord(
   const database = await OpenOutbox();
   if (!database) return;
   const key = `${item.apiBase ?? ''}:${item.payload.record.id}`;
+  const existing = await ReadOne(database, key);
   await RunTransaction(database, 'readwrite', (store) => store.put({
     ...item,
-    createdAt: new Date().toISOString(),
+    createdAt: existing?.createdAt || new Date().toISOString(),
     key,
   }));
-  const records = await ReadAll(database);
-  const expired = records
-    .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
-    .slice(0, Math.max(0, records.length - maximumPendingRecords));
-  if (expired.length) {
-    await RunTransaction(database, 'readwrite', (store) => {
-      expired.forEach((record) => store.delete(record.key));
-    });
-  }
+  await PrunePendingRemoteTrainingRecords(database, await ReadAll(database));
   database.close();
 }
 
 export async function ReadPendingRemoteTrainingRecords(): Promise<PendingRemoteTrainingRecord[]> {
   const database = await OpenOutbox();
   if (!database) return [];
-  const records = await ReadAll(database);
+  const records = await PrunePendingRemoteTrainingRecords(database, await ReadAll(database));
   database.close();
-  return records.sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+  return records;
 }
 
 export async function DeletePendingRemoteTrainingRecord(key: string): Promise<void> {
@@ -74,6 +68,45 @@ function ReadAll(database: IDBDatabase): Promise<PendingRemoteTrainingRecord[]> 
     request.onsuccess = () => resolve(request.result as PendingRemoteTrainingRecord[]);
     request.onerror = () => resolve([]);
   });
+}
+
+function ReadOne(
+  database: IDBDatabase,
+  key: string,
+): Promise<PendingRemoteTrainingRecord | undefined> {
+  return new Promise((resolve) => {
+    const transaction = database.transaction(storeName, 'readonly');
+    const request = transaction.objectStore(storeName).get(key);
+    request.onsuccess = () => resolve(request.result as PendingRemoteTrainingRecord | undefined);
+    request.onerror = () => resolve(undefined);
+  });
+}
+
+export function IsPendingRemoteTrainingRecordFresh(
+  createdAt: string,
+  now = Date.now(),
+): boolean {
+  const createdAtMs = Date.parse(createdAt);
+  return Number.isFinite(createdAtMs)
+    && now - createdAtMs <= remoteTrainingRecordOutboxRetentionMs;
+}
+
+async function PrunePendingRemoteTrainingRecords(
+  database: IDBDatabase,
+  records: PendingRemoteTrainingRecord[],
+): Promise<PendingRemoteTrainingRecord[]> {
+  const fresh = records
+    .filter((record) => IsPendingRemoteTrainingRecordFresh(record.createdAt))
+    .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+  const retained = fresh.slice(-maximumPendingRecords);
+  const retainedKeys = new Set(retained.map((record) => record.key));
+  const removed = records.filter((record) => !retainedKeys.has(record.key));
+  if (removed.length) {
+    await RunTransaction(database, 'readwrite', (store) => {
+      removed.forEach((record) => store.delete(record.key));
+    });
+  }
+  return retained;
 }
 
 function RunTransaction(
