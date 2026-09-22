@@ -3,6 +3,16 @@ import {
   BuildProgressSummary,
   GetServerDate,
 } from '../_lib/progress.js';
+import { onRequestGet } from './progress.js';
+
+const anonymousProgress = await onRequestGet({
+  request: new Request(
+    'https://trainerhub.cc/api/progress?subjectId=550e8400-e29b-41d4-a716-446655440000',
+    { headers: { Origin: 'https://trainerhub.cc' } },
+  ),
+  env: {},
+});
+assert.equal(anonymousProgress.status, 401);
 
 assert.equal(
   GetServerDate(new Date('2026-07-23T16:30:00.000Z'), 'Asia/Taipei'),

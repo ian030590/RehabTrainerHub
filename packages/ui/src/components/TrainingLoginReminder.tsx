@@ -25,16 +25,16 @@ interface TrainingLoginReminderProps {
 
 const text = {
   zhTW: {
-    title: '建議登入以保存訓練紀錄',
+    title: '登入以跨裝置查看紀錄',
     checking: '正在確認登入狀態…',
-    intro: '你可以不用登入繼續訓練。登入後，訓練紀錄可跨裝置保存與查看。',
+    intro: '不用登入也可繼續；登入後可跨裝置查看帳號紀錄與進度。',
     profilePending: '完成基本資料與醫療史問卷後，紀錄可用於分組分析與網站改善；本站不提供個別評估、診斷或治療。',
     dismiss: '稍後再說',
   },
   en: {
-    title: 'Sign in to save training records',
+    title: 'Sign in to view records across devices',
     checking: 'Checking sign-in status…',
-    intro: 'You can keep training without signing in. After sign-in, training records can be saved and viewed across devices.',
+    intro: 'You can keep training without signing in. After sign-in, you can view account records and progress across devices.',
     profilePending: 'Completing the basic profile and medical history questionnaires supports grouped analysis and website improvement; this site does not provide individualized assessment, diagnosis, or treatment.',
     dismiss: 'Later',
   },

@@ -31,6 +31,11 @@
 `TURNSTILE_RECORDS_REQUIRED`、`CF_WEB_ANALYTICS_TOKEN`、
 `R2_AI_ASSET_BUCKET`、`AI_ASSET_BASE_URL` 與 `ASSET_PUBLIC_BASE_URL`。
 
+伺服器端訪客紀錄另由 `ANONYMOUS_RECORDS_ENABLED` 控制。預設必須為 `0`；套用
+D1 migration、完成隱私與安全審查並確認 `TURNSTILE_RECORDS_REQUIRED=1` 後，才可
+在 `cloudflare-pages` environment 將它設為 `1`。這個值只同步到 Hub Pages
+Functions，不得輸出到前端或 `usergamerunner`。
+
 ## Domains 與退役流程
 
 - `trainerhub.cc` 綁定 `rehabtrainerhub`。

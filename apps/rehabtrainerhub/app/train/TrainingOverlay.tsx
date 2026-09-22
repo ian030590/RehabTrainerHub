@@ -27,7 +27,7 @@ import {
   type GameScore,
   type GameScoreDefinition,
 } from '@rehab-trainer/ui/embeddedTraining';
-import { HasAuthToken, SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
+import { SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
 import { EnterFullscreenFromUserGesture, ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import dynamic from 'next/dynamic';
 import { Button } from '@rehab-trainer/ui/components/ui/button';
@@ -52,7 +52,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const acceptedScore = useRef(false);
   const scoreRecordId = useRef(crypto.randomUUID());
   const savingRef = useRef(false);
-  const [saveState, setSaveState] = useState<'guest' | 'saving' | 'saved' | 'error'>('guest');
+  const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error'>('saving');
   const [settingsError, setSettingsError] = useState(false);
   const [settingsRequestKey, setSettingsRequestKey] = useState(0);
   const [configuredSettings, setConfiguredSettings] = useState<GameSettingsValues | null>(null);
@@ -66,7 +66,6 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
 
   const saveScore = useCallback(async (result: GameScore) => {
     if (savingRef.current) return;
-    if (!HasAuthToken()) { setSaveState('guest'); return; }
     savingRef.current = true;
     setSaveState('saving');
     try {

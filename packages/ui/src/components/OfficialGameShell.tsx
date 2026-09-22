@@ -11,6 +11,11 @@ import { EnterFullscreenFromUserGesture } from '../fullscreen';
 import { useT } from '../i18n/games';
 import { useHostedGameSettings } from '../hooks/useHostedGameSettings';
 import { GameSettingsForm } from './GameSettingsForm';
+import { GetOrCreateSubjectId } from '../storage/subjectId';
+import {
+  ConfigureRemoteTrainingRecordVerification,
+  FlushPendingRemoteTrainingRecords,
+} from '../auth/authClient';
 import './GameSettings.css';
 
 export function OfficialGameShell({ children, settings, score, title }: {
@@ -29,6 +34,23 @@ export function OfficialGameShell({ children, settings, score, title }: {
   const [configured, setConfigured] = useState(false);
   const [session, setSession] = useState(0);
   const embedded = IsEmbeddedHubTraining();
+
+  useEffect(() => {
+    GetOrCreateSubjectId();
+    void FlushPendingRemoteTrainingRecords();
+    const flush = () => { void FlushPendingRemoteTrainingRecords(); };
+    window.addEventListener('online', flush);
+    return () => window.removeEventListener('online', flush);
+  }, []);
+
+  useEffect(() => {
+    ConfigureRemoteTrainingRecordVerification({
+      enabled: import.meta.env.VITE_TURNSTILE_RECORDS_REQUIRED === '1',
+      locale: lang === 'en' ? 'en' : 'zh-TW',
+      siteKey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
+    });
+    return () => ConfigureRemoteTrainingRecordVerification({ enabled: false });
+  }, [lang]);
 
   useEffect(() => {
     if (embedded) NotifyHubTrainingReady();

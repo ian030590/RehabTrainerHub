@@ -6,6 +6,8 @@ import {
 } from './DevicePerformanceNotice';
 import { IsEmbeddedHubTraining } from '../embeddedTraining';
 import { RehabFooter, type RehabFooterProps } from './RehabFooter';
+import { GetOrCreateSubjectId } from '../storage/subjectId';
+import { FlushPendingRemoteTrainingRecords } from '../auth/authClient';
 
 export interface TrainerAppLayoutProps {
   analyticsToken?: string;
@@ -27,6 +29,14 @@ export function TrainerAppLayout({
   skipLinkHref = '#main-content',
 }: TrainerAppLayoutProps) {
   const isEmbeddedHubTraining = IsEmbeddedHubTraining();
+
+  useEffect(() => {
+    GetOrCreateSubjectId();
+    void FlushPendingRemoteTrainingRecords();
+    const flush = () => { void FlushPendingRemoteTrainingRecords(); };
+    window.addEventListener('online', flush);
+    return () => window.removeEventListener('online', flush);
+  }, []);
 
   useEffect(() => {
     if (!isEmbeddedHubTraining) return;

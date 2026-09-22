@@ -91,6 +91,127 @@ test('atomically consumes one session and makes a network retry idempotent', asy
   assert.equal(db.runs.length, 1);
 });
 
+test('stores an unsigned game result under the session subject without exposing it', async () => {
+  const db = CreateGameRunDb();
+  const env = {
+    ANONYMOUS_RECORDS_ENABLED: '1',
+    AUTH_SESSION_SECRET: secret,
+    REHAB_DB: db,
+  };
+  const subjectId = '550e8400-e29b-41d4-a716-446655440000';
+  const sessionResponse = await createGameRunSession({
+    request: AnonymousJsonRequest('/api/game-run-sessions', {
+      releaseId,
+      clientRunId,
+      subjectId,
+    }),
+    env,
+  });
+  assert.equal(sessionResponse.status, 201);
+  assert.equal(db.sessions[0].subjectId, subjectId);
+  assert.equal(db.sessions[0].userId, null);
+
+  const { runSession } = await sessionResponse.json();
+  const resultResponse = await saveGameRun({
+    request: AnonymousJsonRequest('/api/game-runs', {
+      releaseId,
+      clientRunId,
+      runSessionToken: runSession.token,
+      result: { status: 'completed', score: 5 },
+    }),
+    env,
+  });
+  assert.equal(resultResponse.status, 201);
+  const responseBody = await resultResponse.json();
+  assert.deepEqual(Object.keys(responseBody.run).sort(), ['duplicate', 'id', 'resultSource']);
+  assert.equal(db.runs[0].subjectId, subjectId);
+  assert.equal(db.runs[0].userId, null);
+});
+
+test('the kill switch rejects previously issued unsigned run sessions', async () => {
+  const db = CreateGameRunDb();
+  const enabledEnv = {
+    ANONYMOUS_RECORDS_ENABLED: '1',
+    AUTH_SESSION_SECRET: secret,
+    REHAB_DB: db,
+  };
+  const sessionResponse = await createGameRunSession({
+    request: AnonymousJsonRequest('/api/game-run-sessions', {
+      releaseId,
+      clientRunId,
+      subjectId: '550e8400-e29b-41d4-a716-446655440000',
+    }),
+    env: enabledEnv,
+  });
+  const { runSession } = await sessionResponse.json();
+  const input = {
+    releaseId,
+    clientRunId,
+    runSessionToken: runSession.token,
+    result: { status: 'completed', score: 5 },
+  };
+
+  const anonymousResponse = await saveGameRun({
+    request: AnonymousJsonRequest('/api/game-runs', input),
+    env: { AUTH_SESSION_SECRET: secret, REHAB_DB: db },
+  });
+  assert.equal(anonymousResponse.status, 503);
+
+  const signedInResponse = await saveGameRun({
+    request: AuthorizedJsonRequest('/api/game-runs', input),
+    env: { AUTH_SESSION_SECRET: secret, REHAB_DB: db },
+  });
+  assert.equal(signedInResponse.status, 409);
+  assert.equal(db.runs.length, 0);
+});
+
+test('requires a valid subject for unsigned game sessions and keeps the feature gated', async () => {
+  const db = CreateGameRunDb();
+  const anonymousEnv = {
+    ANONYMOUS_RECORDS_ENABLED: '1',
+    AUTH_SESSION_SECRET: secret,
+    REHAB_DB: db,
+  };
+  const missingSubject = await createGameRunSession({
+    request: AnonymousJsonRequest('/api/game-run-sessions', { releaseId, clientRunId }),
+    env: anonymousEnv,
+  });
+  assert.equal(missingSubject.status, 400);
+
+  const invalidSubject = await createGameRunSession({
+    request: AnonymousJsonRequest('/api/game-run-sessions', {
+      releaseId,
+      clientRunId,
+      subjectId: 'guessable-subject-id',
+    }),
+    env: anonymousEnv,
+  });
+  assert.equal(invalidSubject.status, 400);
+
+  const featureDisabled = await createGameRunSession({
+    request: AnonymousJsonRequest('/api/game-run-sessions', {
+      releaseId,
+      clientRunId,
+      subjectId: '550e8400-e29b-41d4-a716-446655440000',
+    }),
+    env: { AUTH_SESSION_SECRET: secret, REHAB_DB: db },
+  });
+  assert.equal(featureDisabled.status, 503);
+
+  const verificationMisconfigured = await createGameRunSession({
+    request: AnonymousJsonRequest('/api/game-run-sessions', {
+      releaseId,
+      clientRunId,
+      subjectId: '550e8400-e29b-41d4-a716-446655440000',
+    }),
+    env: {
+      ...anonymousEnv,
+      TURNSTILE_RECORDS_REQUIRED: '1',
+    },
+  });
+  assert.equal(verificationMisconfigured.status, 503);
+});
+
 test('rejects forged, expired, mismatched, and no-longer-active run sessions', async () => {
   const db = CreateGameRunDb();
   const env = { AUTH_SESSION_SECRET: secret, REHAB_DB: db };
@@ -191,6 +312,17 @@ function AuthorizedJsonRequest(path, body, authToken = token) {
   });
 }
 
+function AnonymousJsonRequest(path, body) {
+  return new Request(`https://trainerhub.cc${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Origin: 'https://trainerhub.cc',
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 function CreateBoundaryResultPayload(finalMetricKeyLength) {
   const metrics = Object.fromEntries(Array.from({ length: 231 }, (_, index) => [
     `m${index.toString(36).padStart(3, '0')}${'x'.repeat(60)}`,
@@ -238,7 +370,7 @@ function CreateStatement(db, sql, args = []) {
         const [tokenSha256, userId, requestedReleaseId, requestedClientRunId] = args;
         const session = db.sessions.find((candidate) => (
           candidate.tokenSha256 === tokenSha256
-          && candidate.userId === userId
+          && (candidate.userId === null || candidate.userId === userId)
           && candidate.releaseId === requestedReleaseId
           && candidate.clientRunId === requestedClientRunId
         ));
@@ -251,11 +383,12 @@ function CreateStatement(db, sql, args = []) {
     },
     async run() {
       if (/INSERT INTO game_run_sessions/i.test(sql)) {
-        const [id, tokenSha256, userId, gameId, requestedReleaseId,
+        const [id, tokenSha256, subjectId, userId, gameId, requestedReleaseId,
           requestedClientRunId, expiresAt, createdAt] = args;
         db.sessions.push({
           id,
           tokenSha256,
+          subjectId,
           userId,
           gameId,
           releaseId: requestedReleaseId,
@@ -267,13 +400,15 @@ function CreateStatement(db, sql, args = []) {
       }
       if (/INSERT INTO game_runs/i.test(sql)) {
         const [id, completed, score, durationMs, resultJson, createdAt,
-          tokenSha256, userId, requestedReleaseId, requestedClientRunId, nowSeconds] = args;
+          tokenSha256, userId, requestedReleaseId, requestedClientRunId, nowSeconds,
+          anonymousRecordsEnabled] = args;
         const session = db.sessions.find((candidate) => (
           candidate.tokenSha256 === tokenSha256
-          && candidate.userId === userId
+          && (candidate.userId === null || candidate.userId === userId)
           && candidate.releaseId === requestedReleaseId
           && candidate.clientRunId === requestedClientRunId
           && candidate.expiresAt > nowSeconds
+          && (candidate.userId !== null || anonymousRecordsEnabled === '1')
           && candidate.releaseId === db.activeReleaseId
           && db.releases.get(candidate.releaseId)?.status === 'approved'
           && !db.runs.some((run) => run.runSessionId === candidate.id)
@@ -287,6 +422,8 @@ function CreateStatement(db, sql, args = []) {
           resultJson,
           createdAt,
           runSessionId: session.id,
+          subjectId: session.subjectId,
+          userId: session.userId,
           resultSource: 'sandbox_client_reported',
         });
         return { success: true, meta: { changes: 1 } };

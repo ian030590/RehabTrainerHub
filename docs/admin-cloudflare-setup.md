@@ -104,8 +104,9 @@ GitHub `cloudflare-pages` environment 設定：
 | Variable | `TURNSTILE_SITE_KEY` | 前端 widget site key |
 | Variable | `TURNSTILE_REQUIRED` | 設為 `1` 才強制保護註冊、密碼登入與 OAuth 啟動 |
 | Variable | `TURNSTILE_RECORDS_REQUIRED` | 設為 `1` 才強制保護訓練紀錄上傳 |
+| Variable | `ANONYMOUS_RECORDS_ENABLED` | 訪客紀錄的 server-side kill switch；完成 migration、隱私與安全審查前維持 `0` |
 
-兩個 required flag 都是明確開關，預設為 `0`。正式環境請先同時設定 site key 與 secret，再把需要的旗標改成 `1`；缺少任一 key 時部署環境同步會拒絕啟用 required 模式。
+兩個 required flag 都是明確開關，預設為 `0`。正式環境請先同時設定 site key 與 secret，再把需要的旗標改成 `1`；缺少任一 key 時部署環境同步會拒絕啟用 required 模式。訪客紀錄正式開啟時，`TURNSTILE_RECORDS_REQUIRED` 必須與 `ANONYMOUS_RECORDS_ENABLED` 一起設為 `1`。
 
 Server 端會檢查 Siteverify 結果、預期 action 與 hostname。訓練紀錄使用 explicit execution：只在要上傳時取得一次性 token，不會在遊戲過程持續執行 challenge。
 

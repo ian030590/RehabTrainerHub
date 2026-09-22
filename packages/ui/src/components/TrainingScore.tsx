@@ -9,7 +9,7 @@ import { Button } from './ui/button';
 import { ChartContainer, ChartTooltip } from './ui/chart';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 
-type SaveState = 'guest' | 'saving' | 'saved' | 'error';
+type SaveState = 'saving' | 'saved' | 'error';
 
 interface TrainingScoreProps {
   score: GameScore;
@@ -150,9 +150,8 @@ export function TrainingScore({ score, definition, title, language, onClose, sav
   const contextMetrics = summaryMetrics.filter(metric => !primaryKeys.has(metric.field.key) && !qualityKeys.has(metric.field.key));
 
   const saveMessage = ({
-    guest: en ? 'Not signed in · this session is not uploaded.' : '未登入，本次紀錄不會上傳。',
     saving: en ? 'Saving…' : '儲存中…',
-    saved: en ? 'Saved to your account.' : '已儲存至帳號。',
+    saved: en ? 'Session record saved.' : '當次紀錄已儲存。',
     error: en ? 'Save failed. Your results remain here; retry before leaving.' : '儲存失敗，成績仍保留於此。離開前可重試。',
   } satisfies Record<SaveState, string>)[saveState];
 

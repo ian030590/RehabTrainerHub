@@ -43,7 +43,7 @@ const chronicOptions = [
 
 const text = {
   zhTW: {
-    statusGuest: '不用登入也可以訓練；登入後可同步訓練紀錄。',
+    statusGuest: '不用登入也可以訓練；登入後可跨裝置查看帳號紀錄與進度。',
     statusSignedIn: '已登入',
     loading: '檢查登入狀態中',
     authEntry: '註冊/登入',
@@ -59,7 +59,7 @@ const text = {
       '會請你填寫基本資料問卷：年齡、性別與國籍。',
       '會請你填寫醫療史問卷：醫師診斷的慢性病類別、抽菸與喝酒習慣。',
       '訓練紀錄會包含使用的工具、訓練項目、難度、時間與分數。',
-      '未登入時仍可開始訓練，訓練紀錄會先保存在此瀏覽器。',
+      '未登入時，網站仍會以儲存在此瀏覽器的隨機假名識別碼保存當次紀錄；登入後的紀錄會另與帳號關聯。',
     ],
     privacySensitive:
       '慢性病欄位請只填寫已由醫師診斷的狀況；若沒有醫師診斷，請勿自行猜測填寫。',
@@ -126,7 +126,7 @@ const text = {
     profileFailed: '資料儲存失敗，請稍後再試。',
   },
   en: {
-    statusGuest: 'You can train without signing in; sign in to sync training records.',
+    statusGuest: 'You can train without signing in; sign in to view account records and progress across devices.',
     statusSignedIn: 'Signed in',
     loading: 'Checking sign-in status',
     authEntry: 'Sign up / sign in',
@@ -142,7 +142,7 @@ const text = {
       'You will complete a basic profile questionnaire: age, gender, and nationality.',
       'You will complete a medical history questionnaire: physician-diagnosed chronic condition categories, smoking habits, and alcohol habits.',
       'Training records include the tool, training item, difficulty, time, and score.',
-      'Without sign-in, training can still start and records are saved in this browser first.',
+      'Without sign-in, the site still saves each session under a random pseudonymous identifier stored in this browser. Signed-in records are also linked to the account.',
     ],
     privacySensitive:
       'For chronic condition fields, only select conditions diagnosed by a physician. Do not guess or self-diagnose.',

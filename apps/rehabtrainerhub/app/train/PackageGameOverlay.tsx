@@ -17,8 +17,10 @@ import {
 } from '@rehab-trainer/ui/gamePlatform';
 import {
   BuildApiUrl,
+  CreateRemoteTrainingRecordVerificationToken,
   GetAuthToken,
 } from '@rehab-trainer/ui/auth/authClient';
+import { GetOrCreateSubjectId } from '@rehab-trainer/ui/storage/subjectId';
 import type { PublishedGame } from '../publishedGames';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { Button } from '@rehab-trainer/ui/components/ui/button';
@@ -41,7 +43,7 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
   const saveInFlightRef = useRef(false);
   const runSessionRequestRef = useRef<{
     key: string;
-    request: Promise<string | null>;
+    request: Promise<string>;
   } | null>(null);
   const runnerSessionIdRef = useRef<string | null>(null);
   const closeTimerRef = useRef<number | null>(null);
@@ -55,7 +57,7 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
   const [isActive, setIsActive] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'guest' | 'error'>('idle');
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const sessionNonce = useMemo(CreateSessionNonce, [game.release.id]);
   const sourceUrl = useMemo(() => {
     const url = new URL(game.release.launchUrl);
@@ -129,10 +131,6 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
     setSaveState('saving');
     try {
       const runSessionToken = await ensureRunSession();
-      if (!runSessionToken) {
-        setSaveState('guest');
-        return;
-      }
       setSaveState(await SaveGameResult(
         game.release.id,
         sessionNonce,
@@ -303,7 +301,6 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
         </p>
         <div className="package-game-toolbar-actions">
           {saveState === 'saved' && <span role="status">當次紀錄已儲存</span>}
-          {saveState === 'guest' && <span role="status">登入後可儲存當次紀錄</span>}
           {saveState === 'saving' && <span role="status">正在儲存當次紀錄…</span>}
           {saveState === 'error' && <span role="alert">當次紀錄未能儲存</span>}
           {saveState === 'error' && pendingResultRef.current && (
@@ -358,14 +355,13 @@ async function SaveGameResult(
   clientRunId: string,
   runSessionToken: string,
   result: GamePlatformResultPayload,
-): Promise<'saved' | 'guest'> {
+): Promise<'saved'> {
   const token = GetAuthToken();
-  if (!token) return 'guest';
   const response = await fetch(BuildApiUrl(undefined, '/api/game-runs'), {
     method: 'POST',
     credentials: 'include',
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ releaseId, clientRunId, runSessionToken, result }),
@@ -377,17 +373,22 @@ async function SaveGameResult(
 async function CreateGameRunSession(
   releaseId: string,
   clientRunId: string,
-): Promise<string | null> {
+): Promise<string> {
   const token = GetAuthToken();
-  if (!token) return null;
+  const turnstileToken = await CreateRemoteTrainingRecordVerificationToken();
   const response = await fetch(BuildApiUrl(undefined, '/api/game-run-sessions'), {
     method: 'POST',
     credentials: 'include',
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ releaseId, clientRunId }),
+    body: JSON.stringify({
+      releaseId,
+      clientRunId,
+      subjectId: GetOrCreateSubjectId(),
+      turnstileToken,
+    }),
   });
   if (!response.ok) throw new Error(`Unable to create game run session. Status ${response.status}`);
   const payload: unknown = await response.json();

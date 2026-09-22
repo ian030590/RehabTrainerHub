@@ -1,5 +1,6 @@
 import {
   ErrorResponse,
+  GetBearerToken,
   JsonResponse,
   OptionsResponse,
   RateLimitResponse,
@@ -15,6 +16,7 @@ import {
   IsTurnstileConfigured,
   VerifyTurnstileToken,
 } from '../_lib/turnstile.js';
+import { IsSubjectId } from '../_lib/gameRuns.js';
 
 const appIds = new Set(['rehabtrainerhub']);
 const runtimeIds = new Set(['hub', 'motor', 'vision', 'brain', 'mouth']);
@@ -56,6 +58,7 @@ const maximumShortFieldLength = 160;
 const defaultReadPageSize = 100;
 const maximumReadPageSize = 100;
 const maximumRawEyeTrackingReadPageSize = 5;
+const anonymousSensitiveKeyPattern = /(auth|birthday|cookie|credential|dob|email|jwt|name|participant|password|patient|phone|secret|session|token|user)/i;
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);
@@ -69,6 +72,9 @@ export async function onRequestGet({ request, env }) {
   if (!session?.sub) return ErrorResponse(request, env, 'Unauthorized.', 401);
 
   const url = new URL(request.url);
+  if (url.searchParams.has('subjectId') || url.searchParams.has('subject_id')) {
+    return ErrorResponse(request, env, 'Subject identifiers cannot be used to read records.', 400);
+  }
   const appId = url.searchParams.get('appId');
   if (!appIds.has(appId)) return ErrorResponse(request, env, 'Invalid app id.', 400);
   const runtimeId = url.searchParams.get('runtimeId');
@@ -158,11 +164,15 @@ export async function onRequestPost({ request, env }) {
   const originError = RejectDisallowedOrigin(request, env);
   if (originError) return originError;
 
-  const session = await RequireSession(request, env);
-  if (!session?.sub) return ErrorResponse(request, env, 'Unauthorized.', 401);
+  const bearerToken = GetBearerToken(request);
+  const session = bearerToken ? await RequireSession(request, env) : null;
+  if (bearerToken && !session?.sub) return ErrorResponse(request, env, 'Unauthorized.', 401);
+  if (!session?.sub && env.ANONYMOUS_RECORDS_ENABLED !== '1') {
+    return ErrorResponse(request, env, 'Anonymous record storage is unavailable.', 503);
+  }
 
   const transientLimit = TransientRateLimitResponse(request, env, 'training-record-siteverify', {
-    identity: session.sub,
+    identity: session?.sub,
     limit: 20,
     windowSeconds: 60,
   });
@@ -181,6 +191,12 @@ export async function onRequestPost({ request, env }) {
   }
 
   const input = parsedBody.value;
+  const subjectId = input?.subjectId === undefined && session?.sub
+    ? null
+    : input?.subjectId;
+  if (subjectId !== null && !IsSubjectId(subjectId)) {
+    return ErrorResponse(request, env, 'Invalid subject identifier.', 400);
+  }
   if (
     GetJsonByteLength(input) > maximumDefaultRecordRequestBytes
     && !IsBoundedOculomotorEyeTrackingRecord(input)
@@ -198,27 +214,20 @@ export async function onRequestPost({ request, env }) {
     }
   }
 
-  const rateLimitError = await RateLimitResponse(request, env, 'training-record-write', {
-    identity: session.sub,
-    identityOnly: true,
-    limit: 10,
-    windowSeconds: 60,
-  });
+  const rateLimitError = await CheckRecordWriteRateLimits(request, env, session?.sub, subjectId);
   if (rateLimitError) return rateLimitError;
-
-  const dailyRateLimitError = await RateLimitResponse(request, env, 'training-record-write-daily', {
-    identity: session.sub,
-    identityOnly: true,
-    limit: 300,
-    windowSeconds: 24 * 60 * 60,
-  });
-  if (dailyRateLimitError) return dailyRateLimitError;
 
   const now = new Date();
   const serverTimestamp = now.toISOString();
   const timeZone = env.REHAB_TIME_ZONE || defaultRehabTimeZone;
   const verifiedTrainingDate = GetServerDate(now, timeZone);
-  const payload = NormalizeRecordPayload(input, serverTimestamp, verifiedTrainingDate);
+  const payload = NormalizeRecordPayload(
+    input,
+    subjectId,
+    serverTimestamp,
+    verifiedTrainingDate,
+    Boolean(session?.sub),
+  );
   if (!payload) return ErrorResponse(request, env, 'Invalid training record payload.', 400);
 
   const db = RequireDatabase(env);
@@ -232,9 +241,9 @@ export async function onRequestPost({ request, env }) {
   const result = await db
     .prepare(`
       INSERT INTO training_records (
-        id, user_id, app_id, runtime_id, module_id, game_id, saved_at, training_date, verified_training_date,
+        id, subject_id, user_id, app_id, runtime_id, module_id, game_id, saved_at, training_date, verified_training_date,
         difficulty, user_name, payload_json, summary_json, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         runtime_id = excluded.runtime_id,
         module_id = excluded.module_id,
@@ -244,14 +253,16 @@ export async function onRequestPost({ request, env }) {
         payload_json = excluded.payload_json,
         summary_json = excluded.summary_json,
         updated_at = excluded.updated_at
-      WHERE training_records.user_id = excluded.user_id
+      WHERE training_records.user_id IS excluded.user_id
+        AND training_records.subject_id IS excluded.subject_id
         AND training_records.app_id = excluded.app_id
         AND training_records.runtime_id = excluded.runtime_id
         AND training_records.module_id = excluded.module_id
     `)
     .bind(
       payload.record.id,
-      session.sub,
+      payload.subjectId,
+      session?.sub || null,
       payload.appId,
       payload.runtimeId,
       payload.record.moduleId,
@@ -272,7 +283,41 @@ export async function onRequestPost({ request, env }) {
     return ErrorResponse(request, env, 'Training record id belongs to a different record scope.', 409);
   }
 
-  return JsonResponse(request, env, { ok: true, record: payload.record }, { status: 201 });
+  return JsonResponse(request, env, { ok: true, recordId: payload.record.id }, { status: 201 });
+}
+
+async function CheckRecordWriteRateLimits(request, env, userId, subjectId) {
+  if (userId) {
+    return await RateLimitResponse(request, env, 'training-record-write', {
+      identity: userId,
+      identityOnly: true,
+      limit: 10,
+      windowSeconds: 60,
+    }) || RateLimitResponse(request, env, 'training-record-write-daily', {
+      identity: userId,
+      identityOnly: true,
+      limit: 300,
+      windowSeconds: 24 * 60 * 60,
+    });
+  }
+
+  return await RateLimitResponse(request, env, 'training-record-write-guest-ip', {
+    limit: 30,
+    windowSeconds: 60,
+  }) || await RateLimitResponse(request, env, 'training-record-write-guest-subject', {
+    identity: subjectId,
+    identityOnly: true,
+    limit: 10,
+    windowSeconds: 60,
+  }) || await RateLimitResponse(request, env, 'training-record-write-guest-ip-daily', {
+    limit: 1000,
+    windowSeconds: 24 * 60 * 60,
+  }) || RateLimitResponse(request, env, 'training-record-write-guest-subject-daily', {
+    identity: subjectId,
+    identityOnly: true,
+    limit: 300,
+    windowSeconds: 24 * 60 * 60,
+  });
 }
 
 function GetJsonByteLength(value) {
@@ -413,7 +458,13 @@ function RemoveGazeSamples(value) {
   return Object.fromEntries(entries);
 }
 
-function NormalizeRecordPayload(input, serverTimestamp, verifiedTrainingDate) {
+function NormalizeRecordPayload(
+  input,
+  subjectId,
+  serverTimestamp,
+  verifiedTrainingDate,
+  isAuthenticated,
+) {
   if (!IsPlainObject(input)) return null;
   const appId = typeof input.appId === 'string' ? input.appId : '';
   const runtimeId = typeof input.runtimeId === 'string' ? input.runtimeId : '';
@@ -435,21 +486,33 @@ function NormalizeRecordPayload(input, serverTimestamp, verifiedTrainingDate) {
   const gameId = NormalizeString(record.gameId, maximumShortFieldLength, true);
   const difficulty = NormalizeString(record.difficulty, maximumShortFieldLength, true);
   if (userName === null || gameId === null || difficulty === null) return null;
+  const storedRecord = isAuthenticated ? record : RemoveAnonymousIdentifiers(record);
 
   return {
     appId,
     runtimeId,
+    subjectId,
     record: {
-      ...record,
+      ...storedRecord,
       id,
       savedAt: serverTimestamp,
-      userName: userName || '',
+      userName: isAuthenticated ? userName || '' : '',
       moduleId,
       gameId: gameId || undefined,
       trainingDate: verifiedTrainingDate,
       difficulty: difficulty || undefined,
     },
   };
+}
+
+function RemoveAnonymousIdentifiers(value) {
+  if (Array.isArray(value)) return value.map(RemoveAnonymousIdentifiers);
+  if (!IsPlainObject(value)) return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => !anonymousSensitiveKeyPattern.test(key))
+      .map(([key, item]) => [key, RemoveAnonymousIdentifiers(item)]),
+  );
 }
 
 function IsRuntimeModuleId(runtimeId, moduleId) {

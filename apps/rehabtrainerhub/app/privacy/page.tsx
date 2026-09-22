@@ -3,7 +3,7 @@ import { CreatePageJsonLd, CreateSeoMetadata, SerializeJsonLd } from '../seo';
 import { PrivacyContent } from './PrivacyContent';
 
 const pageName = '隱私權政策';
-const pageDescription = '了解居家訓練網對登入、基本資料問卷、醫療史問卷、訓練紀錄、攝影機與本機資料的使用方式。';
+const pageDescription = '了解居家訓練網對登入、未登入測驗紀錄、瀏覽器假名識別碼、基本資料問卷、醫療史問卷、攝影機與本機資料的使用方式。';
 
 export const metadata: Metadata = CreateSeoMetadata({
   title: pageName,

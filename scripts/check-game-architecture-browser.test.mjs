@@ -127,7 +127,7 @@ function FindBravePath() {
   return candidates.find((candidate) => candidate && existsSync(candidate)) ?? null;
 }
 
-test('Brave shows shared score charts and uploads only signed-in sessions', async (context) => {
+test('Brave shows shared score charts and uploads guest and signed-in sessions', async (context) => {
   const uploads = [];
   const server = createServer((request, response) => {
     const url = new URL(request.url, 'http://127.0.0.1');
@@ -135,7 +135,10 @@ test('Brave shows shared score charts and uploads only signed-in sessions', asyn
       let body = '';
       request.on('data', chunk => { body += chunk; });
       request.on('end', () => {
-        uploads.push(JSON.parse(body));
+        uploads.push({
+          authorization: request.headers.authorization ?? null,
+          body: JSON.parse(body),
+        });
         response.writeHead(201, { 'Content-Type': 'application/json' }).end('{"ok":true}');
       });
       return;
@@ -178,13 +181,16 @@ test('Brave shows shared score charts and uploads only signed-in sessions', asyn
         '--touchScrollSelector', '.training-overlay-score',
         '--visibleSelectors', '.training-score-return',
       ] : []),
-      '--text', signedIn ? '已儲存至帳號' : '未登入，本次紀錄不會上傳', '--timeoutMs', '5000',
+      '--text', '當次紀錄已儲存', '--timeoutMs', '5000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(result.exitCode, 0, `${result.stdout}\n${result.stderr}`);
-    assert.equal(uploads.length, signedIn ? 1 : 0);
+    assert.equal(uploads.length, signedIn ? 2 : 1);
+    const upload = uploads.at(-1);
+    assert.match(upload.body.subjectId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    assert.equal(Boolean(upload.authorization), signedIn);
   }
-  assert.equal(uploads[0].runtimeId, 'hub');
-  assert.equal(uploads[0].record.score.rounds.length, 3);
+  assert.equal(uploads[0].body.runtimeId, 'hub');
+  assert.equal(uploads[0].body.record.score.rounds.length, 3);
 });
 
 async function ServeStaticOutput(request, response) {

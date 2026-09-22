@@ -28,6 +28,12 @@ function GetOptionalEnv(name) {
   return process.env[name]?.trim() || '';
 }
 
+function GetBooleanEnv(name, fallback = '0') {
+  const value = GetOptionalEnv(name) || fallback;
+  if (!['0', '1'].includes(value)) throw new Error(`${name} must be 0 or 1.`);
+  return value;
+}
+
 function GetTurnstileConfiguration() {
   const siteKey = GetOptionalEnv('TURNSTILE_SITE_KEY');
   const secretKey = GetOptionalEnv('TURNSTILE_SECRET_KEY');
@@ -66,6 +72,7 @@ function GetPublicVariables(pagesApps, authBaseUrl) {
   const sharedPublicVariables = {
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: turnstile.siteKey,
     NEXT_PUBLIC_TURNSTILE_AUTH_REQUIRED: turnstile.required,
+    NEXT_PUBLIC_TURNSTILE_RECORDS_REQUIRED: turnstile.recordsRequired,
     VITE_TURNSTILE_SITE_KEY: turnstile.siteKey,
     VITE_TURNSTILE_AUTH_REQUIRED: turnstile.required,
     VITE_TURNSTILE_RECORDS_REQUIRED: turnstile.recordsRequired,
@@ -116,9 +123,14 @@ function GetProjectSecrets(
   if (project.role === 'hub') {
     const assetPublicBaseUrl = GetOptionalEnv('ASSET_PUBLIC_BASE_URL')
       || GetOptionalEnv('AI_ASSET_BASE_URL');
+    const anonymousRecordsEnabled = GetBooleanEnv('ANONYMOUS_RECORDS_ENABLED');
+    if (anonymousRecordsEnabled === '1' && turnstile.recordsRequired !== '1') {
+      throw new Error('ANONYMOUS_RECORDS_ENABLED=1 requires TURNSTILE_RECORDS_REQUIRED=1.');
+    }
     secrets.TURNSTILE_SECRET_KEY = turnstile.secretKey;
     secrets.TURNSTILE_REQUIRED = turnstile.required;
     secrets.TURNSTILE_RECORDS_REQUIRED = turnstile.recordsRequired;
+    secrets.ANONYMOUS_RECORDS_ENABLED = anonymousRecordsEnabled;
     secrets.ASSET_PUBLIC_BASE_URL = assetPublicBaseUrl;
     if (gameRunnerOrigin) secrets.GAME_RUNNER_ORIGIN = gameRunnerOrigin;
   }

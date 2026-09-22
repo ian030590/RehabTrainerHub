@@ -2,7 +2,7 @@
 
 Each built-in game owns `games/{gameId}/settings.json` and `score.json`. Vite bundles its runtime and dependencies into its own output directory. Hub reads JSON definitions; it does not import game engines or scoring rules.
 
-Flow: `training-overlay-config` → validated settings message → game → score message → `training-overlay-score`. After accepting a score, Hub unmounts the game, exits fullscreen, and displays the shared results component. Signed-in users save through the existing authenticated `/api/records` endpoint into D1 `training_records`, with `runtime_id = hub`. Guests do not upload. No migration is needed because the score is stored in the existing JSON payload.
+Flow: `training-overlay-config` → validated settings message → game → score message → `training-overlay-score`. After accepting a score, Hub unmounts the game, exits fullscreen, and displays the shared results component. Every accepted score is sent through `/api/records` into D1 `training_records`, with `runtime_id = hub` and a browser-generated pseudonymous `subject_id`. Signed-in records also include `user_id`; unsigned records never appear in account progress and cannot be retrieved by `subject_id`. The score remains in the existing JSON payload.
 
 ## Definition
 

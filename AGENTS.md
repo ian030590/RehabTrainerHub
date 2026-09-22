@@ -26,7 +26,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 - `npm run test:game-platform`：驗證遊戲套件掃描器與 SDK。
 - `npm --prefix apps/<app> run preview`：預覽 Vite app 或 Hub 輸出。
 
-高風險 trainer 變更完成前執行 `npm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。此 gate 包含 training flow、assessment jsPsych lifecycle 與 i18n dictionary parity 檢查。
+高風險 trainer 變更完成前執行 `npm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。此 gate 包含 Subject ID helper、training flow、assessment jsPsych lifecycle 與 i18n dictionary parity 檢查。
 
 修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後，至少執行 `npm run test:entrypoints` 與 `npm run build:hub`，驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
 
@@ -63,7 +63,7 @@ Hub 禁止複製/分叉 trainer 設定表單、defaults、validation、rules、r
 
 ### 訓練 Overlay 流程
 
-內建遊戲另擁有 `score.json`（`rehab-trainer.game-score/v1`），宣告逐回合數值欄位與總計欄位。Hub 驗證 origin/source、設定 sessionNonce、完成 sequence 及分數 schema 後，卸載遊戲並以共用 `training-overlay-score` 顯示表格、圖表與統計；登入時由 Hub 經 `/api/records` 寫入 D1，訪客不上傳。遊戲嵌入 Hub 時不得自行重複寫入紀錄。詳見 `docs/game-score-contract.md`；新增遊戲須同時提供 settings.json 與 score.json。分数契約測試沿用 `test:embedded-training`，後端測試沿用 `test:hub-functions`，輸出檢查須核對兩份 JSON。
+內建遊戲另擁有 `score.json`（`rehab-trainer.game-score/v1`），宣告逐回合數值欄位與總計欄位。Hub 驗證 origin/source、設定 sessionNonce、完成 sequence 及分數 schema 後，卸載遊戲並以共用 `training-overlay-score` 顯示表格、圖表與統計；Hub 經 `/api/records` 寫入 D1，訪客以匿名 Subject ID 寫入且不顯示於進度追蹤，登入紀錄另附帳號。遊戲嵌入 Hub 時不得自行重複寫入紀錄。詳見 `docs/game-score-contract.md`；新增遊戲須同時提供 settings.json 與 score.json。分数契約測試沿用 `test:embedded-training`，後端測試沿用 `test:hub-functions`，輸出檢查須核對兩份 JSON。
 
 Hub 大廳與 Hub 內建 runtime 使用同一份 module-owned config/runtime：
 

@@ -67,19 +67,20 @@ const authApiBase = siteUrls.hub;
 
 export async function SaveTrainingRecord(record: BrainTrainingRecord): Promise<void> {
   if (SendHostedGameScore(record)) return;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(record.id)) {
+    record.id = crypto.randomUUID();
+  }
   const settings = GetHostedGameSettings();
   if (settings) record = { ...record, config: { ...record.config, ...settings } };
-  if (HasAuthToken()) {
-    try {
-      const saved = await SaveRemoteTrainingRecord(authApiBase, {
-        appId: remoteAppId,
-        runtimeId: remoteRuntimeId,
-        record,
-      });
-      if (saved) return;
-    } catch (error) {
-      console.warn('Unable to save remote brain-practice record. Falling back to localStorage.', error);
-    }
+  try {
+    const saved = await SaveRemoteTrainingRecord(authApiBase, {
+      appId: remoteAppId,
+      runtimeId: remoteRuntimeId,
+      record,
+    });
+    if (saved) return;
+  } catch (error) {
+    console.warn('Unable to save remote brain-practice record. Falling back to localStorage.', error);
   }
 
   const records = GetLocalTrainingRecords();
@@ -218,6 +219,5 @@ function SafeFilePart(value: string): string {
 }
 
 function CreateRecordId(): string {
-  const randomPart = Math.random().toString(36).slice(2, 10);
-  return `${Date.now().toString(36)}_${randomPart}`;
+  return crypto.randomUUID();
 }

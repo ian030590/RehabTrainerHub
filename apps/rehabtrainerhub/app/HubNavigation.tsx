@@ -14,8 +14,13 @@ import {
 import { AuthPanel } from '@rehab-trainer/ui/components/AuthPanel';
 import { AccountAvatar } from '@rehab-trainer/ui/components/AccountAvatar';
 import { RehabFooter } from '@rehab-trainer/ui/components/RehabFooter';
-import type { AuthUser } from '@rehab-trainer/ui/auth/authClient';
+import {
+  ConfigureRemoteTrainingRecordVerification,
+  FlushPendingRemoteTrainingRecords,
+  type AuthUser,
+} from '@rehab-trainer/ui/auth/authClient';
 import { PwaRegistration } from '@rehab-trainer/ui/pwa';
+import { GetOrCreateSubjectId } from '@rehab-trainer/ui/storage/subjectId';
 import { hubLocalName, hubName } from './hubBrand';
 import { GetHubUiCopy } from './i18n';
 import { HubLanguageProvider, useHubLanguage } from './i18n/HubLanguage';
@@ -59,6 +64,23 @@ function HubShellContent({ children }: { children: ReactNode }) {
   const nextLanguage = language === 'en' ? 'zh' : 'en';
 
   useHubTourAutoStart(language);
+
+  useEffect(() => {
+    GetOrCreateSubjectId();
+    void FlushPendingRemoteTrainingRecords();
+    const flush = () => { void FlushPendingRemoteTrainingRecords(); };
+    window.addEventListener('online', flush);
+    return () => window.removeEventListener('online', flush);
+  }, []);
+
+  useEffect(() => {
+    ConfigureRemoteTrainingRecordVerification({
+      enabled: process.env.NEXT_PUBLIC_TURNSTILE_RECORDS_REQUIRED === '1',
+      locale,
+      siteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+    });
+    return () => ConfigureRemoteTrainingRecordVerification({ enabled: false });
+  }, [locale]);
 
   useEffect(() => {
     setIsAccountOpen(false);

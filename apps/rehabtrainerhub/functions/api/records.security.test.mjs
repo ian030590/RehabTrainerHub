@@ -3,6 +3,7 @@ import { CreateSessionForUser } from '../_lib/auth.js';
 import { onRequestGet, onRequestPost } from './records.js';
 
 const secret = '0123456789abcdef0123456789abcdef';
+const signedSubjectId = '11111111-1111-4111-8111-111111111111';
 const victim = { id: 'victim-user-id', display_name: 'Victim Case' };
 const attacker = { id: 'attacker-user-id', display_name: 'Attacker Case' };
 const victimRecord = {
@@ -157,6 +158,7 @@ const allowedInsert = await onRequestPost({
     body: JSON.stringify({
       appId: 'rehabtrainerhub',
       runtimeId: 'motor',
+      subjectId: signedSubjectId,
       record: { ...attackerRecord, id: 'attacker-record-id' },
     }),
   }),
@@ -164,8 +166,9 @@ const allowedInsert = await onRequestPost({
 });
 assert.equal(allowedInsert.status, 201);
 const insertedPayload = await allowedInsert.json();
-assert.match(insertedPayload.record.trainingDate, /^\d{4}-\d{2}-\d{2}$/);
-assert.notEqual(insertedPayload.record.savedAt, attackerRecord.savedAt);
+assert.deepEqual(insertedPayload, { ok: true, recordId: 'attacker-record-id' });
+assert.equal(env.REHAB_DB.rows.get('attacker-record-id')?.subject_id, signedSubjectId);
+assert.equal(env.REHAB_DB.rows.get('attacker-record-id')?.user_id, attacker.id);
 
 const crossModuleOverwrite = await onRequestPost({
   request: new Request('https://trainerhub.cc/api/records', {
@@ -178,6 +181,7 @@ const crossModuleOverwrite = await onRequestPost({
     body: JSON.stringify({
       appId: 'rehabtrainerhub',
       runtimeId: 'motor',
+      subjectId: signedSubjectId,
       record: {
         ...attackerRecord,
         id: 'attacker-record-id',
@@ -609,7 +613,7 @@ const scoreWrite = await onRequestPost({ request: new Request('https://trainerhu
   body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'hub', record: scoreRecord }),
 }), env });
 assert.equal(scoreWrite.status, 201);
-assert.deepEqual((await scoreWrite.json()).record.score, scoreRecord.score);
+assert.deepEqual(await scoreWrite.json(), { ok: true, recordId: scoreRecord.id });
 const scoreRead = await onRequestGet({ request: new Request('https://trainerhub.cc/api/records?appId=rehabtrainerhub&runtimeId=hub', {
   headers: { Origin: 'https://trainerhub.cc', Authorization: `Bearer ${victimToken}` },
 }), env });
@@ -618,6 +622,138 @@ assert.equal(scoreListRecord.scoreRoundCount, 1500);
 assert.deepEqual(scoreListRecord.score.summary, scoreRecord.score.summary);
 assert.deepEqual(scoreListRecord.score.rounds, []);
 
+const subjectId = '550e8400-e29b-41d4-a716-446655440000';
+const anonymousRecord = {
+  ...victimRecord,
+  id: 'anonymous-record-id',
+  userName: 'Do not persist this name',
+  details: {
+    Participant_ID: 'Do not persist this participant',
+    Score: 9,
+  },
+};
+const anonymousEnv = { ...env, ANONYMOUS_RECORDS_ENABLED: '1' };
+const anonymousWrite = await onRequestPost({
+  request: new Request('https://trainerhub.cc/api/records', {
+    method: 'POST',
+    headers: {
+      Origin: 'https://trainerhub.cc',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      appId: 'rehabtrainerhub',
+      runtimeId: 'motor',
+      subjectId,
+      record: anonymousRecord,
+    }),
+  }),
+  env: anonymousEnv,
+});
+assert.equal(anonymousWrite.status, 201);
+assert.deepEqual(await anonymousWrite.json(), { ok: true, recordId: anonymousRecord.id });
+assert.equal(env.REHAB_DB.rows.get(anonymousRecord.id)?.subject_id, subjectId);
+assert.equal(env.REHAB_DB.rows.get(anonymousRecord.id)?.user_id, null);
+assert.equal(env.REHAB_DB.rows.get(anonymousRecord.id)?.user_name, null);
+const storedAnonymousPayload = JSON.parse(
+  env.REHAB_DB.rows.get(anonymousRecord.id)?.payload_json,
+);
+assert.equal(storedAnonymousPayload.userName, '');
+assert.equal(storedAnonymousPayload.details.Participant_ID, undefined);
+assert.equal(storedAnonymousPayload.details.Score, 9);
+
+const anonymousMissingSubject = await onRequestPost({
+  request: new Request('https://trainerhub.cc/api/records', {
+    method: 'POST',
+    headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      appId: 'rehabtrainerhub',
+      runtimeId: 'motor',
+      record: { ...anonymousRecord, id: 'anonymous-missing-subject' },
+    }),
+  }),
+  env: anonymousEnv,
+});
+assert.equal(anonymousMissingSubject.status, 400);
+
+const anonymousInvalidSubject = await onRequestPost({
+  request: new Request('https://trainerhub.cc/api/records', {
+    method: 'POST',
+    headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      appId: 'rehabtrainerhub',
+      runtimeId: 'motor',
+      subjectId: 'guessable-subject-id',
+      record: { ...anonymousRecord, id: 'anonymous-invalid-subject' },
+    }),
+  }),
+  env: anonymousEnv,
+});
+assert.equal(anonymousInvalidSubject.status, 400);
+
+const anonymousFeatureDisabled = await onRequestPost({
+  request: new Request('https://trainerhub.cc/api/records', {
+    method: 'POST',
+    headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      appId: 'rehabtrainerhub',
+      runtimeId: 'motor',
+      subjectId,
+      record: { ...anonymousRecord, id: 'anonymous-disabled-record' },
+    }),
+  }),
+  env,
+});
+assert.equal(anonymousFeatureDisabled.status, 503);
+
+const invalidBearerDoesNotDowngradeToAnonymous = await onRequestPost({
+  request: new Request('https://trainerhub.cc/api/records', {
+    method: 'POST',
+    headers: {
+      Origin: 'https://trainerhub.cc',
+      Authorization: 'Bearer invalid-token',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      appId: 'rehabtrainerhub',
+      runtimeId: 'motor',
+      subjectId,
+      record: { ...anonymousRecord, id: 'anonymous-invalid-auth-record' },
+    }),
+  }),
+  env: anonymousEnv,
+});
+assert.equal(invalidBearerDoesNotDowngradeToAnonymous.status, 401);
+
+for (const queryName of ['subjectId', 'subject_id']) {
+  const subjectLookup = await onRequestGet({
+    request: new Request(
+      `https://trainerhub.cc/api/records?appId=rehabtrainerhub&runtimeId=motor&${queryName}=${subjectId}`,
+      {
+        headers: {
+          Origin: 'https://trainerhub.cc',
+          Authorization: `Bearer ${victimToken}`,
+        },
+      },
+    ),
+    env: anonymousEnv,
+  });
+  assert.equal(subjectLookup.status, 400);
+  assert.deepEqual(await subjectLookup.json(), {
+    error: 'Subject identifiers cannot be used to read records.',
+  });
+}
+
+const victimRecordsAfterAnonymousWrite = await onRequestGet({
+  request: new Request('https://trainerhub.cc/api/records?appId=rehabtrainerhub&runtimeId=motor', {
+    headers: {
+      Origin: 'https://trainerhub.cc',
+      Authorization: `Bearer ${victimToken}`,
+    },
+  }),
+  env: anonymousEnv,
+});
+assert.deepEqual(await victimRecordsAfterAnonymousWrite.json(), { records: [victimRecord] });
+
 console.log('records security checks passed');
 
 function CreateTrainingRecordsDb(initialRows) {
@@ -625,6 +761,7 @@ function CreateTrainingRecordsDb(initialRows) {
   const rateLimits = new Map();
 
   return {
+    rows,
     prepare(sql) {
       return {
         async run() {
@@ -690,6 +827,7 @@ function CreateTrainingRecordsDb(initialRows) {
               if (/INSERT INTO training_records/i.test(sql)) {
                 const [
                   id,
+                  subjectId,
                   userId,
                   appId,
                   runtimeId,
@@ -710,6 +848,7 @@ function CreateTrainingRecordsDb(initialRows) {
                   current
                   && (
                     current.user_id !== userId
+                    || current.subject_id !== subjectId
                     || current.app_id !== appId
                     || current.runtime_id !== runtimeId
                     || current.module_id !== moduleId
@@ -719,6 +858,7 @@ function CreateTrainingRecordsDb(initialRows) {
                 }
                 rows.set(id, {
                   id,
+                  subject_id: subjectId,
                   user_id: userId,
                   app_id: appId,
                   runtime_id: runtimeId,

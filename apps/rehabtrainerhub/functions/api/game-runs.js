@@ -1,5 +1,8 @@
 import {
+  authCookieName,
   ErrorResponse,
+  GetBearerToken,
+  GetCookieValue,
   JsonResponse,
   OptionsResponse,
   RateLimitResponse,
@@ -28,11 +31,15 @@ export async function onRequestPost({ request, env }) {
   if (originError) return originError;
 
   try {
+    const hasCredentials = Boolean(
+      GetBearerToken(request) || GetCookieValue(request, authCookieName),
+    );
     const user = await GetAuthenticatedUser(request, env);
-    if (!user) return ErrorResponse(request, env, 'Unauthorized.', 401);
-    const rateLimitError = await RateLimitResponse(request, env, 'game-result', {
-      identity: user.id,
-      identityOnly: true,
+    if (hasCredentials && !user) return ErrorResponse(request, env, 'Unauthorized.', 401);
+    if (!user && env.ANONYMOUS_RECORDS_ENABLED !== '1') {
+      return ErrorResponse(request, env, 'Anonymous record storage is unavailable.', 503);
+    }
+    const rateLimitError = await RateLimitResponse(request, env, 'game-result-ip', {
       limit: 120,
       windowSeconds: 60 * 60,
     });
@@ -44,10 +51,17 @@ export async function onRequestPost({ request, env }) {
 
     const db = RequireDatabase(env);
     const tokenSha256 = await HashGameRunSessionToken(body.value.runSessionToken);
+    const tokenRateLimitError = await RateLimitResponse(request, env, 'game-result-token', {
+      identity: tokenSha256,
+      identityOnly: true,
+      limit: 5,
+      windowSeconds: 60 * 60,
+    });
+    if (tokenRateLimitError) return tokenRateLimitError;
     const existing = await FindExistingGameRun(
       db,
       tokenSha256,
-      user.id,
+      user?.id || null,
       body.value.releaseId,
       body.value.clientRunId,
     );
@@ -64,13 +78,13 @@ export async function onRequestPost({ request, env }) {
       inserted = await db
         .prepare(`
         INSERT INTO game_runs (
-          id, game_id, release_id, user_id, client_run_id,
+          id, game_id, release_id, subject_id, user_id, client_run_id,
           completed, score, duration_ms, result_json, created_at,
           run_session_id, result_source
         )
         SELECT
           ?, game_run_sessions.game_id, game_run_sessions.release_id,
-          game_run_sessions.user_id, game_run_sessions.client_run_id,
+          game_run_sessions.subject_id, game_run_sessions.user_id, game_run_sessions.client_run_id,
           ?, ?, ?, ?, ?, game_run_sessions.id, 'sandbox_client_reported'
         FROM game_run_sessions
         INNER JOIN game_releases
@@ -80,10 +94,11 @@ export async function onRequestPost({ request, env }) {
           ON developer_games.id = game_run_sessions.game_id
          AND developer_games.active_release_id = game_run_sessions.release_id
         WHERE game_run_sessions.token_sha256 = ?
-          AND game_run_sessions.user_id = ?
+          AND (game_run_sessions.user_id IS NULL OR game_run_sessions.user_id = ?)
           AND game_run_sessions.release_id = ?
           AND game_run_sessions.client_run_id = ?
           AND game_run_sessions.expires_at > ?
+          AND (game_run_sessions.user_id IS NOT NULL OR ? = '1')
           AND game_releases.status = 'approved'
           AND developer_games.status = 'published'
           AND NOT EXISTS (
@@ -99,10 +114,11 @@ export async function onRequestPost({ request, env }) {
           JSON.stringify(result),
           new Date().toISOString(),
           tokenSha256,
-          user.id,
+          user?.id || null,
           body.value.releaseId,
           body.value.clientRunId,
           Math.floor(Date.now() / 1000),
+          env.ANONYMOUS_RECORDS_ENABLED || '0',
         )
         .run();
     } catch (error) {
@@ -110,7 +126,7 @@ export async function onRequestPost({ request, env }) {
       const racedExisting = await FindExistingGameRun(
         db,
         tokenSha256,
-        user.id,
+        user?.id || null,
         body.value.releaseId,
         body.value.clientRunId,
       );
@@ -123,7 +139,7 @@ export async function onRequestPost({ request, env }) {
       const racedExisting = await FindExistingGameRun(
         db,
         tokenSha256,
-        user.id,
+        user?.id || null,
         body.value.releaseId,
         body.value.clientRunId,
       );
@@ -194,7 +210,7 @@ async function FindExistingGameRun(db, tokenSha256, userId, releaseId, clientRun
       INNER JOIN game_run_sessions
         ON game_run_sessions.id = game_runs.run_session_id
       WHERE game_run_sessions.token_sha256 = ?
-        AND game_run_sessions.user_id = ?
+        AND (game_run_sessions.user_id IS NULL OR game_run_sessions.user_id = ?)
         AND game_run_sessions.release_id = ?
         AND game_run_sessions.client_run_id = ?
       LIMIT 1

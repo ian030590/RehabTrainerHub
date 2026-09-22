@@ -184,6 +184,7 @@ export { defaultSiteUrls, NormalizeSiteUrl } from './siteUrls';
 export type { SiteUrlKey, SiteUrls } from './siteUrls';
 export { CreateUserStore } from './storage/userStore';
 export type { UserStore } from './storage/userStore';
+export { GetOrCreateSubjectId, IsSubjectId, subjectIdStorageKey } from './storage/subjectId';
 export {
   IsTrainingFlowLaunchState,
   trainingFlowLaunchState,

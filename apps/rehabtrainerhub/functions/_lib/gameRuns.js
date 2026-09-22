@@ -1,8 +1,14 @@
 export const gameRunRequestMaximumBytes = 16 * 1024;
 export const gameRunResultMaximumBytes = 16_000;
-export const gameRunSessionRequestMaximumBytes = 1024;
+export const gameRunSessionRequestMaximumBytes = 4 * 1024;
 export const gameRunSessionTokenBytes = 32;
 export const gameRunSessionTtlSeconds = 24 * 60 * 60;
+
+const subjectIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+export function IsSubjectId(value) {
+  return typeof value === 'string' && subjectIdPattern.test(value);
+}
 
 export function IsGameRunIdentifier(value) {
   return typeof value === 'string'

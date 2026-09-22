@@ -1,5 +1,11 @@
 import { ExecuteTurnstileChallenge } from '../turnstileClient';
 import { CreateRuntimeStorageNamespace } from '../storage/runtimeNamespace';
+import { GetOrCreateSubjectId } from '../storage/subjectId';
+import {
+  DeletePendingRemoteTrainingRecord,
+  PutPendingRemoteTrainingRecord,
+  ReadPendingRemoteTrainingRecords,
+} from '../storage/remoteRecordOutbox';
 
 export type AuthProvider = 'google';
 export type AuthLocale = 'zh-TW' | 'en';
@@ -136,6 +142,18 @@ export function ConfigureRemoteTrainingRecordVerification(options: {
     locale: options.locale ?? 'zh-TW',
     siteKey: String(options.siteKey || '').trim(),
   };
+}
+
+export async function CreateRemoteTrainingRecordVerificationToken(): Promise<string | undefined> {
+  if (!remoteRecordVerification.enabled) return undefined;
+  if (!remoteRecordVerification.siteKey) {
+    throw new Error('Training record verification is enabled without a Turnstile site key.');
+  }
+  return ExecuteTurnstileChallenge({
+    action: 'records',
+    language: remoteRecordVerification.locale,
+    siteKey: remoteRecordVerification.siteKey,
+  });
 }
 
 export interface RehabDailyTask {
@@ -460,42 +478,119 @@ export async function SaveRemoteTrainingRecord(
   apiBase: string | undefined,
   payload: RemoteTrainingRecordPayload,
 ): Promise<boolean> {
+  const subjectId = GetOrCreateSubjectId();
   const token = GetAuthToken();
-  if (!token) return false;
-  let turnstileToken: string | undefined;
-  if (remoteRecordVerification.enabled) {
-    if (!remoteRecordVerification.siteKey) {
-      throw new Error('Training record verification is enabled without a Turnstile site key.');
+  const userId = GetAuthUserIdFromToken(token);
+  try {
+    const response = await PostRemoteTrainingRecord(apiBase, payload, subjectId, token);
+    if (response.status === 401 && token) {
+      ClearAuthToken();
+      const guestResponse = await PostRemoteTrainingRecord(apiBase, payload, subjectId, null);
+      if (!guestResponse.ok) throw CreateRemoteRecordSaveError(guestResponse.status);
+    } else if (!response.ok) {
+      throw CreateRemoteRecordSaveError(response.status);
     }
-    turnstileToken = await ExecuteTurnstileChallenge({
-      action: 'records',
-      language: remoteRecordVerification.locale,
-      siteKey: remoteRecordVerification.siteKey,
-    });
+    void FlushPendingRemoteTrainingRecords();
+    return true;
+  } catch (error) {
+    if (ShouldQueueRemoteRecordError(error)) {
+      try {
+        await PutPendingRemoteTrainingRecord({ apiBase, payload, subjectId, userId });
+      } catch {
+        // Preserve the original network/server error if browser storage fails.
+      }
+    }
+    throw error;
   }
+}
+
+let pendingRemoteRecordFlush: Promise<void> | null = null;
+
+export function FlushPendingRemoteTrainingRecords(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  if (pendingRemoteRecordFlush) return pendingRemoteRecordFlush;
+  pendingRemoteRecordFlush = FlushPendingRemoteTrainingRecordsNow()
+    .finally(() => { pendingRemoteRecordFlush = null; });
+  return pendingRemoteRecordFlush;
+}
+
+async function FlushPendingRemoteTrainingRecordsNow(): Promise<void> {
+  const pendingRecords = await ReadPendingRemoteTrainingRecords();
+  for (const pending of pendingRecords) {
+    const currentToken = GetAuthToken();
+    const currentUserId = GetAuthUserIdFromToken(currentToken);
+    const token = pending.userId && pending.userId === currentUserId ? currentToken : null;
+    try {
+      let response = await PostRemoteTrainingRecord(
+        pending.apiBase,
+        pending.payload,
+        pending.subjectId,
+        token,
+      );
+      if (response.status === 401 && token) {
+        ClearAuthToken();
+        response = await PostRemoteTrainingRecord(
+          pending.apiBase,
+          pending.payload,
+          pending.subjectId,
+          null,
+        );
+      }
+      if (response.ok) await DeletePendingRemoteTrainingRecord(pending.key);
+      else if (![429, 503].includes(response.status) && response.status < 500) {
+        await DeletePendingRemoteTrainingRecord(pending.key);
+      }
+    } catch {
+      return;
+    }
+  }
+}
+
+async function PostRemoteTrainingRecord(
+  apiBase: string | undefined,
+  payload: RemoteTrainingRecordPayload,
+  subjectId: string,
+  token: string | null,
+): Promise<Response> {
+  const turnstileToken = await CreateRemoteTrainingRecordVerificationToken();
 
   const response = await fetch(BuildApiUrl(apiBase, '/api/records'), {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       ...payload,
+      subjectId,
       turnstileToken,
     }),
   });
+  return response;
+}
 
-  if (response.status === 401) {
-    ClearAuthToken();
-    return false;
+function GetAuthUserIdFromToken(token: string | null): string | null {
+  if (!token) return null;
+  const [encodedPayload] = token.split('.');
+  if (!encodedPayload) return null;
+  try {
+    const payload = JSON.parse(Base64UrlDecodeUtf8(encodedPayload)) as { sub?: unknown };
+    return typeof payload.sub === 'string' && payload.sub ? payload.sub : null;
+  } catch {
+    return null;
   }
+}
 
-  if (!response.ok) {
-    throw new Error(`Unable to save remote training record. Status ${response.status}`);
-  }
+function CreateRemoteRecordSaveError(status: number): Error & { status: number } {
+  return Object.assign(
+    new Error(`Unable to save remote training record. Status ${status}`),
+    { status },
+  );
+}
 
-  return true;
+function ShouldQueueRemoteRecordError(error: unknown): boolean {
+  const status = (error as { status?: unknown })?.status;
+  return typeof status !== 'number' || status === 429 || status >= 500;
 }
 
 export async function GetRemoteTrainingRecords(
