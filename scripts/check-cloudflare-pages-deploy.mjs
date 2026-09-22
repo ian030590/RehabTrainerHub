@@ -140,6 +140,23 @@ const hubEnvironmentLine = output
     && line.includes('AUTH_ALLOWED_ORIGINS')
   ));
 assert.ok(hubEnvironmentLine?.includes('GAME_RUNNER_ORIGIN'), 'Hub must receive GAME_RUNNER_ORIGIN.');
+for (const requiredSetting of [
+  'ADMIN_ALLOW_BEARER',
+  'AUTH_ALLOW_LOCAL_ORIGINS',
+  'TURNSTILE_SKIP_HOSTNAME_CHECK',
+]) {
+  assert.ok(
+    hubEnvironmentLine?.includes(requiredSetting),
+    `Hub production environment must explicitly configure ${requiredSetting}.`,
+  );
+}
+const migrationIndex = output.indexOf('d1 migrations apply');
+const authEnvironmentIndex = output.indexOf('sync-cloudflare-auth-env.mjs');
+assert.ok(migrationIndex >= 0, 'Hub deployment must apply D1 migrations.');
+assert.ok(
+  migrationIndex < authEnvironmentIndex,
+  'D1 migrations must apply before feature flags are synchronized.',
+);
 
 const rejectedGamehostOrigin = spawnSync(
   process.execPath,

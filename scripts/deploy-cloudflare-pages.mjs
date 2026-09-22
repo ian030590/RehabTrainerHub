@@ -466,11 +466,11 @@ for (const project of projects) {
   EnsureProject(project, existingProjectNames);
 }
 
-SyncAuthEnvironment();
-
 for (const project of projects) {
   ApplyProjectMigrations(project);
 }
+
+SyncAuthEnvironment();
 
 for (const project of projects) {
   DeployProject(project);

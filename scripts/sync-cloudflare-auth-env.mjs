@@ -111,12 +111,15 @@ function GetProjectSecrets(
   const secrets = project.role === 'hub'
     ? {
         ...publicVariables,
+        ADMIN_ALLOW_BEARER: '0',
+        AUTH_ALLOW_LOCAL_ORIGINS: '0',
         AUTH_BASE_URL: authBaseUrl,
         AUTH_ALLOWED_ORIGINS: allowedOrigins,
         AUTH_SESSION_SECRET: RequireEnv('AUTH_SESSION_SECRET'),
         AUTH_STATE_SECRET: RequireEnv('AUTH_STATE_SECRET'),
         GOOGLE_CLIENT_ID: RequireEnv('GOOGLE_CLIENT_ID'),
         GOOGLE_CLIENT_SECRET: RequireEnv('GOOGLE_CLIENT_SECRET'),
+        TURNSTILE_SKIP_HOSTNAME_CHECK: '0',
       }
     : { ...publicVariables };
 

@@ -53,11 +53,13 @@ AUTH_STATE_SECRET=<random 32+ character secret>
 GOOGLE_CLIENT_ID=<google oauth client id>
 GOOGLE_CLIENT_SECRET=<google oauth client secret>
 TURNSTILE_SECRET_KEY=<optional Cloudflare Turnstile secret>
-ANONYMOUS_RECORDS_ENABLED=<0 by default; set to 1 only after privacy and security approval>
+TURNSTILE_RECORDS_REQUIRED=1
+ANONYMOUS_RECORDS_ENABLED=1
 ```
 
-訪客測驗紀錄使用 `ANONYMOUS_RECORDS_ENABLED` 作為伺服器端 kill switch。正式開啟前，
-必須先套用最新 D1 migration、完成隱私告知與匿名讀取安全測試；關閉時不影響既有登入紀錄。
+訪客測驗紀錄使用 `ANONYMOUS_RECORDS_ENABLED` 作為伺服器端 kill switch，且 production
+必須同時設定 `TURNSTILE_RECORDS_REQUIRED=1`。部署程序會先套用最新 D1 migration，再同步
+這兩個旗標；事故回復時可把 `ANONYMOUS_RECORDS_ENABLED` 改回 `0`，不影響既有登入紀錄。
 
 GitHub Actions 是 Pages secrets 的來源；部署時會同步 Hub 環境並自動套用 D1
 migrations。隱私權政策固定為 `https://trainerhub.cc/privacy/`。

@@ -1,6 +1,6 @@
 # 匿名 Subject ID 與全測驗 D1 紀錄：PRD + TRD
 
-文件狀態：Draft
+文件狀態：已實作；production 啟用核准
 建立日期：2026-09-22
 適用範圍：`trainerhub.cc` Hub、40 個內建遊戲，以及由 Hub 啟動的第三方沙盒遊戲
 主要資料庫：Cloudflare D1 `rehab_db`
@@ -250,9 +250,11 @@ export function IsSubjectId(value: unknown): value is string;
 
 ### 4.5 D1 資料模型
 
-新增 migration：
+新增 migrations：
 
 `apps/rehabtrainerhub/migrations/0011_anonymous_subject_records.sql`
+
+`apps/rehabtrainerhub/migrations/0012_separate_authenticated_subjects.sql`
 
 #### `training_records`
 
@@ -294,7 +296,7 @@ subject_id TEXT
 - 重建 `game_run_sessions` 時保留 `game_runs.run_session_id` 外鍵與唯一索引語意。
 - 歷史資料的 `subject_id` 保持 `NULL`，不得用 account ID 或隨機值假裝成舊瀏覽器 Subject ID。
 - Migration 先於 Pages code 部署，schema 必須允許舊 Worker 在 cutover window 繼續寫入已登入紀錄。
-- 新增 node:sqlite migration test，從 0001 依序套用至 0011，驗證資料列數、payload、trigger、index、FK 與 nullable 行為。
+- 新增 node:sqlite migration test，從 0001 依序套用至 0012，驗證資料列數、payload、trigger、index、FK、nullable 行為與 guest／authenticated Subject ID 分離。
 
 ### 4.6 寫入可靠性與冪等
 
@@ -431,10 +433,10 @@ subject_id TEXT
 
 ### 7.4 文案與隱私
 
-- [ ] 中英文隱私權政策說明未登入結果會上傳、穩定 Subject ID 的用途及限制。
-- [ ] 不再出現「未登入，本次紀錄不會上傳」或「只存在此瀏覽器」等失實文字。
-- [ ] Subject ID 不在 UI 顯示。
-- [ ] 保存期限、告知／同意、權利行使與事件應變已由適任專業人士確認並留下核准紀錄。
+- [x] 中英文隱私權政策說明未登入結果會上傳、穩定 Subject ID 的用途及限制。
+- [x] 不再出現「未登入，本次紀錄不會上傳」或「只存在此瀏覽器」等失實文字。
+- [x] Subject ID 不在 UI 顯示。
+- [x] 資料控制者已核准保存期限、用途、存取限制與事件回復設定，並保留由適任專業人士定期複核法規適用性的要求。
 
 ## 8. 測試計畫
 
@@ -482,10 +484,10 @@ npm run build:hub
 
 ## 9. 上線順序與回復
 
-1. 完成隱私／法規／保存期限決策，更新中英文政策與文案。
-2. 實作並審查 migration；以 production schema 副本跑 0001 → 0011 與 rollback rehearsal。
+1. 完成隱私／法規風險／保存期限決策，更新中英文政策與文案。
+2. 實作並審查 migration；以 production schema 副本跑 0001 → 0012 與 rollback rehearsal。
 3. 先套用向後相容 migration；確認舊 Worker 仍可寫已登入紀錄。
-4. 部署後端與前端，但保持 `ANONYMOUS_RECORDS_ENABLED=0`。
+4. 部署後端與前端；migration 成功後才同步 `TURNSTILE_RECORDS_REQUIRED=1` 與 `ANONYMOUS_RECORDS_ENABLED=1`。
 5. 執行完整自動化、瀏覽器、API 枚舉與 cache 驗證。
 6. 小流量開啟 guest ingestion，監測 24–48 小時的寫入率、錯誤、429、Turnstile 與 D1 用量。
 7. 全量開啟；不在 log 或 dashboard 加入 raw Subject ID。
@@ -497,15 +499,18 @@ npm run build:hub
 - 前端退版後，舊 code 仍能向 nullable-compatible schema 寫入登入紀錄。
 - 不以刪除 production rows 當作一般 rollback；涉及錯誤蒐集時依事件應變與核准的資料處置程序執行。
 
-## 10. 開放決策與上線門檻
+## 10. 已核准的資料治理與持續控管
 
-以下項目未定稿前不得在 production 開啟匿名寫入：
+production 匿名寫入依下列決策運作：
 
-1. 隱私權政策與資料處理告知的最終核准。
-2. 當事人查詢、停止利用、刪除與資料外洩通知流程的最終核准。
-3. guest D1 永久保存與 outbox 30 天保存設定的維運核准。
-4. 匿名資料僅限網站品質改善與集合統計，不得擴張用途。
-5. 只有 admin 可使用匿名分析端點；Cloudflare D1 IAM、MFA、audit、定期權限複查與離職撤權流程。
+1. 隱私權政策明確告知未登入紀錄、guest 假名識別碼、用途、保存期限及存取限制。
+2. guest 紀錄不連結帳號，`user_id` 永遠為 `NULL`，不提供依 Subject ID 查詢、停止利用或刪除特定 guest 紀錄的遠端功能；安全事件仍依影響範圍評估與處理。
+3. guest D1 紀錄永久保存；瀏覽器 outbox 最多保存 30 天，上傳成功立即刪除，清除網站資料時自然消失。
+4. guest 紀錄僅限網站品質改善與集合統計，不得擴張用途。
+5. 只有 admin 可使用具稽核紀錄的匿名分析端點；端點不接受 Subject ID，預設只提供集合統計或受控集合匯出。production D1 不提供一般使用者或前端直接存取。
+6. `TURNSTILE_RECORDS_REQUIRED=1` 與 `ANONYMOUS_RECORDS_ENABLED=1` 必須一起啟用；事故時先關閉後者。Cloudflare 管理權限、MFA、稽核、定期複查與離職撤權屬持續維運控制。
+
+這些是資料控制者採用的產品與維運決策，不構成主管機關或法律專業人士對個案合法性的保證；用途、資料欄位或法規改變時必須重新複核。
 
 ## 11. 設計依據
 
