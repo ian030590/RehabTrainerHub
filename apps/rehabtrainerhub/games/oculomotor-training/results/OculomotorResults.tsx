@@ -27,8 +27,13 @@ export function OculomotorResults({
     { label: t('exp.res.fps'), value: result?.average_fps ?? '-' },
   ];
 
-  if (result?.aoi_score !== undefined) {
-    summaryItems.push({ label: t('exp.res.aoi'), value: result.aoi_score });
+  if (result?.aoi_score != null) {
+    summaryItems.push({ label: t('exp.res.aoi'), value: `${result.aoi_score}%` });
+  }
+  if (result?.gaze_threshold_deg != null) {
+    summaryItems.push({ label: t('exp.res.gazeThreshold'), value: `${result.gaze_threshold_deg}°` });
+    summaryItems.push({ label: t('exp.res.validGazeMs'), value: `${result.valid_gaze_ms ?? 0} ms` });
+    summaryItems.push({ label: t('exp.res.inThresholdMs'), value: `${result.in_threshold_ms ?? 0} ms` });
   }
   if (result?.mean_target_distance_px !== undefined) {
     summaryItems.push({

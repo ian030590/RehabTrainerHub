@@ -9,8 +9,8 @@
         "en": "Drill"
       },
       "description": {
-        "zh-TW": "區分刺激控制與攝影機注視估計。角速度需先校正觀看距離及螢幕比例；未啟用或沒有有效樣本時不提供注視指標。",
-        "en": "Separate stimulus control from webcam gaze estimates. Angular speed requires distance and screen calibration; gaze metrics require enabled tracking and valid samples."
+        "zh-TW": "角速度與注視閾值需先量測觀看距離及每公分 CSS 像素；眼動記錄需選擇追蹤來源並取得有效樣本。",
+        "en": "Angular speed and gaze threshold require viewing distance and calibrated CSS pixels per centimeter. Gaze records require a tracker and valid samples."
       },
       "fields": [
         {
@@ -789,13 +789,31 @@
       },
       "fields": [
         {
-          "key": "webgazerEnabled",
-          "type": "checkbox",
+          "key": "eyeTrackingSource",
+          "type": "list",
           "label": {
-            "zh-TW": "啟用鏡頭眼動追蹤",
-            "en": "Enable camera gaze tracking"
+            "zh-TW": "眼動資料來源",
+            "en": "Gaze source"
           },
-          "default": false
+          "default": "off",
+          "options": [
+            { "value": "off", "label": { "zh-TW": "關閉", "en": "Off" } },
+            { "value": "webgazer", "label": { "zh-TW": "WebGazer 攝影機", "en": "WebGazer camera" } },
+            { "value": "tobii", "label": { "zh-TW": "Tobii Eye Tracker 5（需 Windows 專用程式）", "en": "Tobii Eye Tracker 5 (Windows host required)" } }
+          ]
+        },
+        {
+          "key": "gazeThresholdArcmin",
+          "type": "slider",
+          "label": {
+            "zh-TW": "注視距離閾值（無驗證資料時）",
+            "en": "Gaze distance threshold without validation"
+          },
+          "default": 90,
+          "min": 30,
+          "max": 600,
+          "step": 5,
+          "unit": { "zh-TW": "角分", "en": "arcmin" }
         },
         {
           "key": "gazePointVisible",

@@ -106,8 +106,8 @@ for (const marker of [
   'repetitions_per_point: 2',
   'randomize_calibration_order: true',
   'roi_radius: 200',
-  'time_to_saccade: 1000',
-  'validation_duration: 2000',
+  'time_to_saccade: 350',
+  'validation_duration: 1050',
   'post_trial_gap: 1000',
   "task: 'validate'",
   'CleanupWebGazerRuntime',
@@ -115,23 +115,17 @@ for (const marker of [
   assert.ok(calibration.includes(marker), `official WebGazer flow contract missing: ${marker}`);
 }
 
-const pointsStart = calibration.indexOf('const officialCalibrationPoints = [');
-const pointsEnd = calibration.indexOf('] as const;', pointsStart);
-assert.ok(pointsStart >= 0 && pointsEnd > pointsStart, 'official calibration points must be declared');
-const calibrationPoints = [...calibration.slice(pointsStart, pointsEnd).matchAll(/\[(\d+),\s*(\d+)\]/g)]
-  .map((match) => [Number(match[1]), Number(match[2])]);
-assert.deepEqual(
-  calibrationPoints,
-  [[25, 25], [75, 25], [50, 50], [25, 75], [75, 75]],
-  'calibration and validation must use the official five-point layout',
-);
+assert.ok(calibration.includes('const officialCalibrationPoints = [10, 50, 90].flatMap'),
+  'calibration must use the nine-point layout');
+assert.ok(calibration.includes('const officialValidationPoints = [[50, 50], [20, 20], [80, 20], [20, 80], [80, 80]]'),
+  'validation must use the five-point layout');
 assert.ok(
   calibration.includes('calibration_points: officialCalibrationPoints.map'),
-  'the native calibration plugin must receive the official five points',
+  'the native calibration plugin must receive the official nine points',
 );
 assert.ok(
-  calibration.includes('validation_points: officialCalibrationPoints.map'),
-  'the native validation plugin must receive the same official five points',
+  calibration.includes('validation_points: officialValidationPoints'),
+  'the native validation plugin must receive the official five points',
 );
 
 const recalibrationBlock = calibration.match(
@@ -244,7 +238,7 @@ for (const [relativePath, contentType] of runtimeAssets) {
 for (const host of [training]) {
   assert.ok(host.includes('CleanupWebGazerRuntime'), 'every WebGazer host must clean up the runtime');
 }
-const hasWebGazerSetting = oculomotorSettings.sections.some((s) => s.fields.some((f) => f.key === 'enableWebGazer' || f.key === 'webgazerEnabled'));
+const hasWebGazerSetting = oculomotorSettings.sections.some((s) => s.fields.some((f) => f.key === 'eyeTrackingSource' && f.options?.some((o) => o.value === 'webgazer')));
 assert.ok(hasWebGazerSetting, 'WebGazer analysis settings must be present in settings.json');
 const hasModeSetting = oculomotorSettings.sections.some((s) => s.fields.some((f) => f.key === 'oculomotorMode' || f.key === 'mode'));
 assert.ok(hasModeSetting, 'oculomotor training mode setting must be present in settings.json');
@@ -327,8 +321,17 @@ assert.equal(
 assert.ok(oculomotorResults.includes('FindOculomotorResult'), 'results must use the canonical trial selector');
 assert.ok(oculomotorResultData.includes("oculomotorTrialType = 'pixi-oculomotor-training'"), 'results must identify the Pixi training trial');
 assert.ok(oculomotorResultData.includes('result.trial_type === oculomotorTrialType'), 'results must select the Pixi training trial');
-for (const exportSource of [trainingResultCsv, trainingRecords]) {
-  for (const marker of [
+for (const marker of [
+  'gazeRecordColumns',
+  'result?.gaze_records',
+  'gaze_threshold_deg',
+  'valid_gaze_ms',
+  'in_threshold_ms',
+  'eye_tracking_source',
+]) {
+  assert.ok(trainingResultCsv.includes(marker), `oculomotor gaze CSV contract missing: ${marker}`);
+}
+for (const marker of [
     'exp.csv.meanTargetDistance',
     'exp.csv.targetDistanceSd',
     'exp.csv.timeToFirstFixation',
@@ -341,9 +344,8 @@ for (const exportSource of [trainingResultCsv, trainingRecords]) {
     'exp.csv.gazeY',
     'exp.csv.targetX',
     'exp.csv.targetY',
-  ]) {
-    assert.ok(exportSource.includes(marker), `eye-tracking CSV contract missing: ${marker}`);
-  }
+]) {
+  assert.ok(trainingRecords.includes(marker), `saved record CSV contract missing: ${marker}`);
 }
 for (const dictionary of [zh, en]) {
   for (const key of [

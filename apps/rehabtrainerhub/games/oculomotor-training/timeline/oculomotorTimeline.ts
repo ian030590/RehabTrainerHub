@@ -2,6 +2,7 @@ import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
 // Timeline local to the Hub-owned oculomotor module.
 import WebGazerExtension from '@jspsych/extension-webgazer';
 import { GetSetting } from '@rehab-trainer/ui/settings';
+import { CreateTobiiValidationFlow } from '../gaze/tobiiHost';
 import PixiOculomotorTrainingPlugin from '../pixi-oculomotor-training';
 import type { JsPsych } from 'jspsych';
 import {
@@ -38,7 +39,10 @@ export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => st
   const lilacChaserColor = (GetHostedGameSetting<string>('lilacChaserBallColor'));
   const viewingDistanceCm = (GetHostedGameSetting<number>('viewingDistanceCm'));
   const cssPxPerCm = (GetHostedGameSetting<number>('cssPxPerCm'));
-  const enableWebGazer = (GetHostedGameSetting<boolean>('webgazerEnabled'));
+  const eyeTrackingSource = GetHostedGameSetting<'off' | 'webgazer' | 'tobii'>('eyeTrackingSource');
+  const enableWebGazer = eyeTrackingSource === 'webgazer';
+  const enableTobii = eyeTrackingSource === 'tobii';
+  const fallbackThresholdDeg = GetHostedGameSetting<number>('gazeThresholdArcmin') / 60;
   const showGazepoint = (GetHostedGameSetting<boolean>('gazePointVisible'));
   const targetAxes = Array.from({ length: 8 }, (_, axis) => axis).filter((axis) => GetHostedGameSetting<boolean>(`axis${axis}Enabled`));
 
@@ -74,7 +78,9 @@ export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => st
     lilac_chaser_scale: lilacChaserScale,
     lilac_chaser_color: lilacChaserColor,
     enable_webgazer: enableWebGazer,
-    show_gaze_point: enableWebGazer && showGazepoint,
+    eye_tracking_source: eyeTrackingSource,
+    gaze_threshold_deg: fallbackThresholdDeg,
+    show_gaze_point: eyeTrackingSource !== 'off' && showGazepoint,
     round_number: 1,
     total_rounds: 1,
     extensions: enableWebGazer
@@ -86,6 +92,14 @@ export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => st
     on_finish: enableWebGazer ? ConsumeOfficialWebGazerTrialData : undefined,
   };
 
+  if (enableTobii) {
+    const validation = CreateTobiiValidationFlow(cssPxPerCm, viewingDistanceCm);
+    return [validation.timeline, {
+      ...trial,
+      gaze_threshold_deg: () => validation.getThresholdDeg() ?? fallbackThresholdDeg,
+      validation_error_deg: () => validation.getMeanErrorDeg() ?? -1,
+    }];
+  }
   if (!enableWebGazer) return [trial];
   if (!jsPsych) {
     throw new Error('The jsPsych instance is required for the official WebGazer flow.');
@@ -133,5 +147,7 @@ export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => st
       images: [customTargetImage, backgroundImage],
       audio: [audio],
     },
+    cssPxPerCm,
+    viewingDistanceCm,
   );
 }

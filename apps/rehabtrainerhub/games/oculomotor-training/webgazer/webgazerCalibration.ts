@@ -6,6 +6,7 @@ import WebGazerInitCameraPlugin from '@jspsych/plugin-webgazer-init-camera';
 import WebGazerValidatePlugin from '@jspsych/plugin-webgazer-validate';
 import type { JsPsych } from 'jspsych';
 import { SetSetting } from '@rehab-trainer/ui/settings';
+import { ValidationThresholdDeg } from '../gaze/gazeScoring';
 
 export const officialWebGazerFlowOrder = [
   'preload',
@@ -89,6 +90,8 @@ type EyeSignalStage = 'calibration' | 'validation';
 
 interface EyeTrackingRunState {
   recordEyeTracking: boolean;
+  thresholdDeg?: number;
+  validationErrorDeg?: number;
 }
 
 type WebGazerTrialData = Record<string, unknown> & {
@@ -96,13 +99,9 @@ type WebGazerTrialData = Record<string, unknown> & {
   webgazer_data?: unknown[];
 };
 
-const officialCalibrationPoints = [
-  [25, 25],
-  [75, 25],
-  [50, 50],
-  [25, 75],
-  [75, 75],
-] as const;
+const officialCalibrationPoints = [10, 50, 90].flatMap((y) =>
+  [10, 50, 90].map((x) => [x, y]));
+const officialValidationPoints = [[50, 50], [20, 20], [80, 20], [20, 80], [80, 80]];
 
 const minimumPercentInRoi = 50;
 const eyeSignalCheckDurationMs = 3000;
@@ -145,7 +144,8 @@ function CreateInstructionPanel(step: string, title: string, paragraphs: readonl
 function ShouldRecalibrate(jsPsych: JsPsych): boolean {
   const validationData = jsPsych.data.get().filter({ task: 'validate' }).values().at(-1);
   const percentInRoi = validationData?.percent_in_roi;
-  return !Array.isArray(percentInRoi)
+  return validationData?.validation_passed !== true
+    || !Array.isArray(percentInRoi)
     || percentInRoi.length === 0
     || percentInRoi.some((value) => (
       typeof value !== 'number'
@@ -360,6 +360,11 @@ export function ConsumeOfficialWebGazerTrialData(data: WebGazerTrialData): void 
 
   if (!consumedNativeData) {
     data.aoi_score = undefined;
+    data.valid_gaze_ms = undefined;
+    data.invalid_gaze_ms = undefined;
+    data.in_threshold_ms = undefined;
+    data.gaze_records = undefined;
+    data.gaze_record_columns = undefined;
     data.mean_target_distance_px = undefined;
     data.target_distance_sd_px = undefined;
     data.time_to_first_fixation_ms = undefined;
@@ -405,6 +410,8 @@ export function CreateWebGazerExperimentTimeline(
   copy: WebGazerCalibrationCopy,
   trial: object,
   preloadAssets: WebGazerPreloadAssets = {},
+  cssPxPerCm = 37.8,
+  viewingDistanceCm = 60,
 ): object[] {
   const runState: EyeTrackingRunState = { recordEyeTracking: true };
   const preload = {
@@ -474,13 +481,26 @@ export function CreateWebGazerExperimentTimeline(
 
   const nativeValidation = {
     type: WebGazerValidatePlugin,
-    validation_points: officialCalibrationPoints.map((point) => [...point]),
+    validation_points: officialValidationPoints,
     roi_radius: 200,
-    time_to_saccade: 1000,
-    validation_duration: 2000,
+    time_to_saccade: 350,
+    validation_duration: 1050,
     data: {
       task: 'validate',
       webgazer_flow_step: 'validation',
+    },
+    on_finish: (data: Record<string, unknown>) => {
+      const raw = data.raw_gaze as Array<Array<{ x: number; y: number; dx: number; dy: number }>> | undefined;
+      if (!Array.isArray(raw)) return;
+      const targets = raw.map((samples) => samples[0]
+        ? { x: samples[0].x - samples[0].dx, y: samples[0].y - samples[0].dy }
+        : { x: NaN, y: NaN });
+      const result = ValidationThresholdDeg(raw, targets, cssPxPerCm, viewingDistanceCm);
+      runState.thresholdDeg = result?.thresholdDeg;
+      runState.validationErrorDeg = result?.meanErrorDeg;
+      data.validation_error_deg = result?.meanErrorDeg ?? null;
+      data.gaze_threshold_deg = result?.thresholdDeg ?? null;
+      data.validation_passed = result !== null && result.meanErrorDeg <= 3.5;
     },
   };
 
@@ -561,6 +581,8 @@ export function CreateWebGazerExperimentTimeline(
 
   const trackedFormalTrial = {
     ...trial,
+    gaze_threshold_deg: () => runState.thresholdDeg,
+    validation_error_deg: () => runState.validationErrorDeg ?? -1,
     data: {
       ...((trial as { data?: Record<string, unknown> }).data ?? {}),
       eye_tracking_recording: 'recorded',
@@ -571,6 +593,7 @@ export function CreateWebGazerExperimentTimeline(
   const untrackedFormalTrial: Record<string, unknown> = {
     ...(trial as Record<string, unknown>),
     enable_webgazer: false,
+    eye_tracking_source: 'off',
     show_gaze_point: false,
     data: {
       ...((trial as { data?: Record<string, unknown> }).data ?? {}),

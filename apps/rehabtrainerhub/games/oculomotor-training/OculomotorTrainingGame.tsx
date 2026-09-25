@@ -14,13 +14,14 @@ import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '@rehab-trainer/ui/i18n';
 import { GetSetting,getActiveUser } from '@rehab-trainer/ui/settings';
 import { soundManager } from './runtime/soundManager';
-import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
 import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import type { JsPsych } from 'jspsych';
 import { initJsPsych } from 'jspsych';
 import { useCallback,useEffect,useRef,useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { DownloadTrainingCsv } from './exportCsv';
+import { HasTobiiHost } from './gaze/tobiiHost';
+import { SaveOculomotorRecord } from './gaze/recordStorage';
 import { OculomotorResults } from './results/OculomotorResults';
 import { DestroyPixiTrainingRuntime } from './runtime/pixiPool';
 import { BuildOculomotorTimeline } from './timeline/oculomotorTimeline';
@@ -40,7 +41,8 @@ export function OculomotorTrainingGame() {
   const skipFinishRef = useRef(false);
 
   const userName = getActiveUser() || 'guest';
-  const enableWebGazer = (GetHostedGameSetting<boolean>('webgazerEnabled'));
+  const eyeTrackingSource = GetHostedGameSetting<'off' | 'webgazer' | 'tobii'>('eyeTrackingSource');
+  const enableWebGazer = eyeTrackingSource === 'webgazer';
   const cameraPermission = useMediaPermissionPreflight({
     active: enableWebGazer && phase === 'running',
     video: true,
@@ -48,11 +50,19 @@ export function OculomotorTrainingGame() {
 
   useEffect(() => {
     if (phase !== 'running') return;
+    if (enableWebGazer && !['granted', 'denied', 'error', 'unsupported'].includes(cameraPermission.status)) return;
     let cancelled = false;
 
     const setup = async () => {
+      if (eyeTrackingSource === 'tobii' && !HasTobiiHost()) {
+        alert(lang === 'en'
+          ? 'Open this game in the Tobii Windows host to record Eye Tracker 5 gaze.'
+          : '請使用 Tobii Windows 專用程式開啟此遊戲，才能記錄 Eye Tracker 5 注視資料。');
+        RequestHubTrainingConfiguration();
+        return;
+      }
       if (enableWebGazer) {
-        if (cameraPermission.status === 'denied') {
+        if (cameraPermission.status !== 'granted') {
           alert(t('settings.wg.cameraBlockedAlert'));
           RequestHubTrainingConfiguration();
           return;
@@ -68,7 +78,7 @@ export function OculomotorTrainingGame() {
           if (skipFinishRef.current) return;
           const data = jsPsych.data.get().values();
           const trainingTrial = data.find((item: any) => item.trial_type === 'pixi-oculomotor-training');
-          SaveTrainingRecord({
+          void SaveOculomotorRecord({
             id: String(Date.now()),
             savedAt: new Date().toISOString(),
             userName,
@@ -91,6 +101,7 @@ export function OculomotorTrainingGame() {
 
       const timeline = BuildOculomotorTimeline(jsPsych, t);
       if (cancelled) return;
+      skipFinishRef.current = false;
       jsPsychRef.current = jsPsych;
       jsPsych.run(timeline as any);
     };
@@ -114,7 +125,7 @@ export function OculomotorTrainingGame() {
       }
       CleanupWebGazerRuntime();
     };
-  }, [phase, enableWebGazer, cameraPermission.status]);
+  }, [phase, eyeTrackingSource, enableWebGazer, cameraPermission.status, lang]);
 
   const abortTraining = useCallback(() => {
     if (phase !== 'running') return;
@@ -131,6 +142,11 @@ export function OculomotorTrainingGame() {
   useTrainingAbort({ active: phase === 'running', onAbort: abortTraining });
 
   const isZh = lang !== 'en';
+  const hasGazeRecords = results.some((item: any) => (
+    item.trial_type === 'pixi-oculomotor-training'
+    && Array.isArray(item.gaze_records)
+    && item.gaze_records.length > 0
+  ));
   const mode = GetHostedGameSetting<string>('mode');
   const durationSec = GetHostedGameSetting<number>('durationSec');
   const modeLabels: Record<string, string> = {
@@ -193,6 +209,19 @@ export function OculomotorTrainingGame() {
       {phase === 'results' && (
         <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
           <OculomotorResults results={results} userName={userName} t={t} oculomotorMode={GetHostedGameSetting<string>('mode')} oculomotorPattern={GetHostedGameSetting<string>('movementPath')} />
+          {hasGazeRecords && (
+            <div className="results-actions">
+              <button className="btn btn-secondary btn-lg" type="button" onClick={() => DownloadTrainingCsv({
+                results,
+                moduleId: 'oculomotor-training',
+                oculomotorMode: GetHostedGameSetting<string>('mode'),
+                oculomotorPattern: GetHostedGameSetting<string>('movementPath'),
+                t,
+              })}>
+                {isZh ? '下載眼動紀錄 CSV' : 'Download gaze records CSV'}
+              </button>
+            </div>
+          )}
           <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
         </div>
       )}

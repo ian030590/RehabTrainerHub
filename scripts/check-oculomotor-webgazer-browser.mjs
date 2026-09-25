@@ -17,7 +17,6 @@ const outputIndex = resolve(outputDir, 'index.html');
 const viteBin = resolve(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
 const browserPath = FindBrowserPath();
 const timeoutMs = 60_000;
-const formalTrialTargetSelector = '.oculomotor-training-trial';
 
 if (!existsSync(outputIndex)) {
   throw new Error(`Built oculomotor game is missing: ${outputIndex}\nRun npm run build:hub first.`);
@@ -130,16 +129,29 @@ try {
   await WaitForSelector(
     cdp,
     sessionId,
-    '.config-modal-panel:not(.training-rules) .config-start-btn',
+    '.game-settings-form button[type="submit"]',
     timeoutMs,
   );
+  await Evaluate(cdp, sessionId, `(() => {
+    const source = document.querySelector('#game-setting-eyeTrackingSource');
+    source.value = '1';
+    source.dispatchEvent(new Event('change', { bubbles: true }));
+    const mode = document.querySelector('#game-setting-mode');
+    mode.value = '3';
+    mode.dispatchEvent(new Event('change', { bubbles: true }));
+    const duration = document.querySelector('#game-setting-durationSec');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(duration, '15');
+    duration.dispatchEvent(new Event('input', { bubbles: true }));
+    duration.dispatchEvent(new Event('change', { bubbles: true }));
+    document.querySelector('input[aria-label="Show gaze point"]').click();
+  })()`);
   await ClickDomSelector(
     cdp,
     sessionId,
-    '.config-modal-panel:not(.training-rules) .config-start-btn',
+    '.game-settings-form button[type="submit"]',
   );
-  await WaitForSelector(cdp, sessionId, '.training-rules .config-start-btn', timeoutMs);
-  await ClickDomSelector(cdp, sessionId, '.training-rules .config-start-btn');
+  await WaitForSelector(cdp, sessionId, '.training-panel .config-start-btn', timeoutMs);
+  await ClickDomSelector(cdp, sessionId, '.training-panel .config-start-btn');
 
   await WaitAndClickInstruction(cdp, sessionId, 'camera_instructions');
 
@@ -193,15 +205,15 @@ try {
   );
   await Evaluate(cdp, sessionId, 'window.__wgSmoke.eyeSignalAvailable = true');
   await ClickDomSelector(cdp, sessionId, '.webgazer-signal-actions button:first-child');
-  await CompleteNativeCalibration(cdp, sessionId, 10);
+  await CompleteNativeCalibration(cdp, sessionId, 18);
   const initialCalibrationState = await Evaluate(cdp, sessionId, `({
     clicks: window.__wgSmoke.calibrationClicks,
     starts: window.__wgSmoke.mouseCalibrationStarts,
     points: window.__wgSmoke.calibrationPointsByRun[0] ?? [],
   })`);
-  assert.equal(initialCalibrationState.clicks, 10, 'native 5-point x2 click calibration count');
+  assert.equal(initialCalibrationState.clicks, 18, 'native 9-point x2 click calibration count');
   assert.equal(initialCalibrationState.starts, 1, 'native mouse calibration must start once');
-  AssertFivePointsTwice(initialCalibrationState.points, 'initial calibration');
+  AssertNinePointsTwice(initialCalibrationState.points, 'initial calibration');
 
   await Evaluate(cdp, sessionId, 'window.__wgSmoke.eyeSignalAvailable = false');
   await WaitAndClickInstruction(cdp, sessionId, 'validation_instructions');
@@ -249,15 +261,15 @@ try {
   );
 
   await ClickInstructionButton(cdp, sessionId, 'recalibrate_instructions');
-  await CompleteNativeCalibration(cdp, sessionId, 20);
+  await CompleteNativeCalibration(cdp, sessionId, 36);
   const recalibrationState = await Evaluate(cdp, sessionId, `({
     clicks: window.__wgSmoke.calibrationClicks,
     starts: window.__wgSmoke.mouseCalibrationStarts,
     points: window.__wgSmoke.calibrationPointsByRun[1] ?? [],
   })`);
-  assert.equal(recalibrationState.clicks, 20, 'recalibration must add another 5 points x2');
+  assert.equal(recalibrationState.clicks, 36, 'recalibration must add another 9 points x2');
   assert.equal(recalibrationState.starts, 2, 'native mouse calibration must restart for recalibration');
-  AssertFivePointsTwice(recalibrationState.points, 'recalibration');
+  AssertNinePointsTwice(recalibrationState.points, 'recalibration');
 
   await WaitAndClickInstruction(cdp, sessionId, 'validation_instructions');
   await WaitForSelector(cdp, sessionId, '#webgazer-validate-container .validation-point', timeoutMs);
@@ -327,6 +339,17 @@ try {
     };
   })()`);
   AssertSavedResult(resultState, showDataState.sampleCount);
+  await ClickDomSelector(cdp, sessionId, '.results-actions button');
+  const csvState = await Evaluate(cdp, sessionId, `(async () => {
+    const content = await window.__wgSmoke.downloadBlob.text();
+    const lines = content.trim().split(/\\r?\\n/);
+    const headerIndex = lines.findIndex((line) => line.startsWith('sample_index,'));
+    return { header: lines[headerIndex], recordCount: lines.length - headerIndex - 1,
+      firstRow: lines[headerIndex + 1] };
+  })()`);
+  assert.equal(csvState.header, resultState.result.gaze_record_columns.join(','));
+  assert.equal(csvState.recordCount, resultState.result.gaze_record_count);
+  assert.equal(csvState.firstRow.split(',').length, 15);
   assert.deepEqual(resultState.observedFlowSteps, [
     'preload',
     'camera_instructions',
@@ -359,25 +382,39 @@ try {
       observedFlowSteps: [],
       predictionPointCalls: [],
       savedPayloads: [],
+      downloadBlob: null,
       validationPointCounts: [],
       validationRuns: 0,
     });
     return true;
   })()`);
-  await cdp.Send('Page.navigate', { url: navigationUrl }, sessionId);
+  await cdp.Send('Page.reload', { ignoreCache: true }, sessionId);
   await WaitForSelector(
     cdp,
     sessionId,
-    '.config-modal-panel:not(.training-rules) .config-start-btn',
+    '.game-settings-form button[type="submit"]',
     timeoutMs,
   );
+  await Evaluate(cdp, sessionId, `(() => {
+    const source = document.querySelector('#game-setting-eyeTrackingSource');
+    source.value = '1';
+    source.dispatchEvent(new Event('change', { bubbles: true }));
+    const mode = document.querySelector('#game-setting-mode');
+    mode.value = '3';
+    mode.dispatchEvent(new Event('change', { bubbles: true }));
+    const duration = document.querySelector('#game-setting-durationSec');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(duration, '15');
+    duration.dispatchEvent(new Event('input', { bubbles: true }));
+    duration.dispatchEvent(new Event('change', { bubbles: true }));
+    document.querySelector('input[aria-label="Show gaze point"]').click();
+  })()`);
   await ClickDomSelector(
     cdp,
     sessionId,
-    '.config-modal-panel:not(.training-rules) .config-start-btn',
+    '.game-settings-form button[type="submit"]',
   );
-  await WaitForSelector(cdp, sessionId, '.training-rules .config-start-btn', timeoutMs);
-  await ClickDomSelector(cdp, sessionId, '.training-rules .config-start-btn');
+  await WaitForSelector(cdp, sessionId, '.training-panel .config-start-btn', timeoutMs);
+  await ClickDomSelector(cdp, sessionId, '.training-panel .config-start-btn');
   await WaitAndClickInstruction(cdp, sessionId, 'camera_instructions');
   await WaitForSelector(cdp, sessionId, '#webgazer-init-container #jspsych-wg-cont', timeoutMs);
   await SetFaceCentered(cdp, sessionId);
@@ -452,9 +489,14 @@ try {
       resultCount: window.__wgSmoke.savedPayloads[0]?.record?.results?.length ?? 0,
       observedFlowSteps: window.__wgSmoke.observedFlowSteps,
     };
+
   })()`);
   assert.equal(skippedResultState.resultCount, 1, 'opt-out must still save the non-eye-tracking practice');
   assert.equal(skippedResultState.result?.eye_tracking_recording, 'skipped_by_participant');
+  assert.equal(await Evaluate(cdp, sessionId,
+    `[...document.querySelectorAll('button')].some((button) =>
+      button.textContent.includes('Download gaze records CSV'))`), false,
+  'opt-out must not offer an empty gaze CSV');
   for (const field of [
     'aoi_score',
     'gaze_coordinate_source',
@@ -486,7 +528,7 @@ try {
     'Three-second eye-signal gates: missing signal blocked both calibration and validation while keeping the preview visible.',
     'Missing-signal reminder: retry and explicit eye-score opt-out actions were available.',
     'Eye-score opt-out: camera stopped, calibration and validation were bypassed, and eye metrics were omitted.',
-    'Native jsPsych calibration: 5 points x 2 clicks, repeated after forced validation failure.',
+    'Native jsPsych calibration: 9 points x 2 clicks, repeated after forced validation failure.',
     'Native jsPsych validation: first round below 50% forced recalibration; second round passed.',
     `Training: ${resultState.result.webgazer_sample_count} native and ${resultState.result.gaze_sample_count} paired gaze/target samples; gaze point shown then hidden.`,
     `Metrics: mean=${resultState.result.mean_target_distance_px}px, SD=${resultState.result.target_distance_sd_px}px, TTFF=${resultState.result.time_to_first_fixation_ms}ms, pupil=${resultState.result.average_pupil_size_px}px, pupil SD=${resultState.result.pupil_size_sd_px}px, blinks=${resultState.result.blink_count}.`,
@@ -528,27 +570,11 @@ function AssertSavedResult(state, showDataSampleCount) {
     result.webgazer_sample_count >= result.gaze_sample_count,
     'native extension sampling should include every rate-limited paired gaze row',
   );
-  assert.ok(Array.isArray(result.webgazer_data), 'canonical jsPsych webgazer_data must be retained');
-  assert.equal(
-    result.webgazer_data.length,
-    result.webgazer_sample_count,
-    'canonical payload length must match the validated native sample count',
-  );
-  result.webgazer_data.forEach((sample, index) => {
-    for (const field of ['x', 'y', 't']) {
-      assert.ok(Number.isFinite(sample?.[field]), `native gaze sample ${index} ${field}`);
-    }
-  });
-  const targetBounds = result.webgazer_targets?.[formalTrialTargetSelector];
-  assert.ok(targetBounds, `native extension target ${formalTrialTargetSelector} is missing`);
-  for (const field of ['x', 'y', 'top', 'bottom', 'left', 'right', 'width', 'height']) {
-    assert.ok(Number.isFinite(targetBounds[field]), `native extension target ${field}`);
-  }
-  assert.ok(targetBounds.width > 0 && targetBounds.height > 0, 'native extension target bounds');
+  assert.equal('webgazer_data' in result, false, 'raw predictions stay in the game-local CSV');
   assert.ok(Number.isFinite(result.mean_target_distance_px), 'mean target distance');
   assert.ok(
     result.mean_target_distance_px > 0 && result.mean_target_distance_px < 20,
-    `mean target distance should stay within the mock offset: ${result.mean_target_distance_px}; samples=${JSON.stringify(result.gaze_samples?.slice(0, 4))}`,
+    `mean target distance should stay within the mock offset: ${result.mean_target_distance_px}`,
   );
   assert.ok(Number.isFinite(result.target_distance_sd_px), 'target distance SD');
   assert.ok(result.target_distance_sd_px > 0, 'target distance SD must reflect changing gaze');
@@ -569,26 +595,18 @@ function AssertSavedResult(state, showDataSampleCount) {
     'blink_event',
     'fixation_segment',
   ]);
-  assert.equal(result.gaze_samples.length, result.gaze_sample_count);
-  result.gaze_samples.forEach((sample, index) => {
-    assert.equal(sample.length, 9, `gaze sample ${index} compact field count`);
-    for (const column of [0, 1, 2, 3, 4, 5]) {
-      assert.ok(Number.isFinite(sample[column]), `gaze sample ${index} column ${column}`);
-    }
-    assert.ok(sample[6] === null || Number.isFinite(sample[6]), `gaze sample ${index} pupil`);
-    assert.ok(sample[7] === 0 || sample[7] === 1, `gaze sample ${index} blink event`);
-    assert.ok(Number.isInteger(sample[8]) && sample[8] >= 0, `gaze sample ${index} fixation segment`);
-  });
-  assert.equal(
-    result.gaze_samples.filter((sample) => sample[7] === 1).length,
-    1,
-    'raw blink events and summary blink count must agree',
-  );
-  assert.deepEqual(
-    [...new Set(result.gaze_samples.map((sample) => sample[8]))],
-    [0],
-    'uninterrupted training should stay in one fixation segment',
-  );
+  assert.equal('gaze_samples' in result, false, 'raw paired samples stay in the game-local CSV');
+  assert.equal(result.eye_tracking_source, 'webgazer');
+  assert.ok(Number.isFinite(result.validation_error_deg));
+  assert.equal(result.gaze_threshold_deg, Math.round(Math.max(0.5, result.validation_error_deg * 2) * 100) / 100);
+  assert.deepEqual(result.gaze_record_columns, [
+    'sample_index', 'trial_time_ms', 'device_timestamp_us', 'delta_t_ms', 'instant_hz',
+    'gaze_valid', 'gaze_x_px', 'gaze_y_px', 'stimulus_x_px', 'stimulus_y_px',
+    'distance_error_px', 'distance_error_deg', 'is_within_threshold', 'phase', 'direction',
+  ]);
+  assert.equal('gaze_records' in result, false, 'raw synchronized rows stay in the game-local CSV');
+  assert.ok(result.gaze_record_count >= result.gaze_sample_count, 'raw rows also retain invalid gaze samples');
+  assert.ok(result.valid_gaze_ms > 0 && result.in_threshold_ms >= 0);
   for (const label of [
     'Mean gaze-point-to-target-center distance',
     'Gaze-point-to-target-center distance standard deviation',
@@ -632,6 +650,7 @@ function CreateBootstrapSource() {
     localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(token)});
     localStorage.setItem('rehabtrainerhub.vision.active_user', 'WebGazer Browser Smoke');
     localStorage.setItem('rehabtrainerhub.vision.language', 'en');
+    localStorage.setItem('rehab_game_language', 'en');
     localStorage.setItem('rehabtrainerhub.vision.oculomotorDurationSec', '15');
     localStorage.setItem('rehabtrainerhub.vision.oculomotorEnableWebgazer', 'true');
     localStorage.setItem('rehabtrainerhub.vision.oculomotorMode', 'lilac-chaser');
@@ -661,11 +680,18 @@ function CreateBootstrapSource() {
       predictionCounter: 0,
       predictionPointCalls: [],
       savedPayloads: [],
+      downloadBlob: null,
       sawCustomValidationPanel: false,
       sawValidationResultContinue: false,
       trainingTick: 0,
       validationPointCounts: [],
       validationRuns: 0,
+    };
+
+    const createObjectUrl = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = (blob) => {
+      smokeState.downloadBlob = blob;
+      return createObjectUrl(blob);
     };
 
     const RecordFlowStep = () => {
@@ -992,16 +1018,16 @@ async function CompleteNativeCalibration(cdpClient, targetSessionId, expectedTot
   }
 }
 
-function AssertFivePointsTwice(points, label) {
-  assert.equal(points.length, 10, `${label} click count`);
+function AssertNinePointsTwice(points, label) {
+  assert.equal(points.length, 18, `${label} click count`);
   const counts = new Map();
   points.forEach((point) => counts.set(point, (counts.get(point) ?? 0) + 1));
   assert.deepEqual(
     [...counts.keys()].sort(),
-    ['25%,25%', '25%,75%', '50%,50%', '75%,25%', '75%,75%'],
-    `${label} official 5-point layout`,
+    ['10%,10%', '10%,50%', '10%,90%', '50%,10%', '50%,50%', '50%,90%', '90%,10%', '90%,50%', '90%,90%'],
+    `${label} nine-point layout`,
   );
-  assert.deepEqual([...counts.values()].sort(), [2, 2, 2, 2, 2], `${label} repetitions`);
+  assert.deepEqual([...counts.values()].sort(), Array(9).fill(2), `${label} repetitions`);
 }
 
 async function PressKey(cdpClient, targetSessionId, key) {
@@ -1050,11 +1076,21 @@ async function WaitForValue(cdpClient, targetSessionId, expression, waitTimeoutM
       matched: Boolean(${expression}),
       href: location.href,
       bodyText: document.body?.innerText.slice(0, 1200) ?? '',
+      rootHtml: document.querySelector('#root')?.innerHTML.slice(0, 800) ?? '',
+      savedCount: window.__wgSmoke?.savedPayloads?.length ?? null,
     }))()`);
     if (lastState?.matched) return;
     await Wait(100);
   }
-  throw new Error(`Timed out waiting for ${label}.\n${JSON.stringify(lastState, null, 2)}`);
+  const exceptions = cdpClient.events
+    .filter((event) => event.sessionId === targetSessionId && event.method === 'Runtime.exceptionThrown')
+    .map((event) => event.params.exceptionDetails.exception?.description
+      ?? event.params.exceptionDetails.text);
+  const browserConsole = cdpClient.events
+    .filter((event) => event.sessionId === targetSessionId && event.method === 'Runtime.consoleAPICalled')
+    .slice(-8)
+    .map((event) => event.params.args?.map((arg) => arg.value ?? arg.description).join(' '));
+  throw new Error(`Timed out waiting for ${label}.\n${JSON.stringify({ ...lastState, exceptions, browserConsole }, null, 2)}`);
 }
 
 function AssertNoCriticalBrowserFailures(events, targetSessionId, targetUrl) {

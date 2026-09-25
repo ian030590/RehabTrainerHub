@@ -16,7 +16,9 @@ import {
   RunPixiTrial,
   pixiRuntimeScopes,
 } from './runtime/pixiPool';
-import { PixelFromDegree } from '@rehab-trainer/ui/spatialUtils';
+import { AngularDistanceDeg, gazeRecordColumns, SummarizeGazeRecords, ThresholdRadiusPx } from './gaze/gazeScoring';
+import type { GazeRecord } from './gaze/gazeScoring';
+import { SubscribeTobiiGaze } from './gaze/tobiiHost';
 import {
   CalculateEyeAspectRatio,
   CreateBlinkDetectorState,
@@ -183,6 +185,18 @@ const info = {
       type: ParameterType.BOOL,
       default: false,
     },
+    eye_tracking_source: {
+      type: ParameterType.STRING,
+      default: 'off',
+    },
+    gaze_threshold_deg: {
+      type: ParameterType.FLOAT,
+      default: 1.5,
+    },
+    validation_error_deg: {
+      type: ParameterType.FLOAT,
+      default: -1,
+    },
     show_gaze_point: {
       type: ParameterType.BOOL,
       default: false,
@@ -259,7 +273,7 @@ const oculomotorPixiScope = pixiRuntimeScopes.oculomotor;
 const oculomotorContainerStyle = 'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;background:#0D1117;';
 const gazeSamplingIntervalMs = 100;
 const minimumFixationDurationMs = 100;
-const maximumGazeSampleCount = 3500;
+const maximumGazeSampleCount = 36000;
 
 function RoundToTenth(value: number | null): number | null {
   return value === null ? null : Math.round(value * 10) / 10;
@@ -549,9 +563,15 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
     let lastFpsTimestamp = performance.now();
     let flashUntil = 0;
 
-    const enableWebgazer = trial.enable_webgazer as boolean;
-    const showGazePoint = enableWebgazer && (trial.show_gaze_point as boolean);
-    const aoiRadiusPx = PixelFromDegree(5);
+    const eyeTrackingSource = trial.eye_tracking_source as 'off' | 'webgazer' | 'tobii';
+    const enableWebgazer = eyeTrackingSource === 'webgazer';
+    const enableTobii = eyeTrackingSource === 'tobii';
+    const gazeEnabled = enableWebgazer || enableTobii;
+    const showGazePoint = gazeEnabled && (trial.show_gaze_point as boolean);
+    const requestedThresholdDeg = trial.gaze_threshold_deg as number;
+    const gazeThresholdDeg = Number.isFinite(requestedThresholdDeg) && requestedThresholdDeg > 0
+      ? requestedThresholdDeg : 1.5;
+    const aoiRadiusPx = ThresholdRadiusPx(gazeThresholdDeg, cssPxPerCm, viewingDistanceCm);
     const webGazerExtension = self.jsPsych.extensions?.webgazer as unknown as
       | WebGazerExtensionLike
       | undefined;
@@ -569,6 +589,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       const guideGfx = new Graphics();
       const trailGfx = new Graphics();
       const targetGfx = new Graphics();
+      const gazeGfx = new Graphics();
       const hudGfx = new Graphics();
       const lilacGfx = new Graphics();
       const titleText = new Text();
@@ -586,9 +607,13 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         : null;
 
       let latestTarget: TargetFrame | null = null;
+      let previousTargetPoint: { x: number; y: number } | null = null;
+      let targetDirection = 'center';
       let hudVisible = false;
 
-      app.stage.addChild(bgGfx, guideGfx, trailGfx, lilacGfx, targetGfx, reactionLetter, hudGfx, titleText, metaText, timeText, exitText);
+      app.stage.addChild(bgGfx, guideGfx, trailGfx, lilacGfx, targetGfx, reactionLetter, hudGfx, titleText, metaText, timeText, exitText, gazeGfx);
+      gazeGfx.circle(0, 0, 7).fill({ color: pixiColors.accentHover, alpha: 0.85 });
+      gazeGfx.visible = false;
 
       let audioElement: HTMLAudioElement | null = null;
       if (customAudio) {
@@ -652,6 +677,12 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       };
 
       const gazeSamples: OculomotorGazeSample[] = [];
+      const gazeRecords: GazeRecord[] = [];
+      let lastGazeAt: number | null = null;
+      let lastDeviceTimestampUs: number | null = null;
+      let stopTobiiGaze: (() => void) | undefined;
+      let lastJumpBucket = -1;
+      let targetJumpAt = -Infinity;
       let blinkDetectorState = CreateBlinkDetectorState();
       let blinkObservationCount = 0;
       let totalBlinkCount = 0;
@@ -687,18 +718,15 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         }
       };
 
-      const handleGazePrediction = (prediction: WebGazerPrediction | null) => {
+      const recordGaze = (
+        gaze: { x: number; y: number } | null,
+        deviceTimestampUs: number | null,
+        blinkEvent: 0 | 1,
+      ) => {
         if (ended || paused) return;
-        if (
-          !prediction
-          || !latestTarget
-          || !Number.isFinite(prediction.x)
-          || !Number.isFinite(prediction.y)
-        ) {
-          return;
-        }
+        if (!latestTarget || gazeRecords.length >= maximumGazeSampleCount) return;
+        const now = performance.now();
         const elapsedMs = Math.round(getElapsedMs());
-        if (gazeSamples.length >= maximumGazeSampleCount) return;
 
         const canvas = app.canvas as HTMLCanvasElement;
         const canvasRect = canvas.getBoundingClientRect();
@@ -707,15 +735,43 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           x: canvasRect.left + (latestTarget.x / app.screen.width) * canvasRect.width,
           y: canvasRect.top + (latestTarget.y / app.screen.height) * canvasRect.height,
         };
+        const valid = gaze !== null && Number.isFinite(gaze.x) && Number.isFinite(gaze.y);
+        const phase = mode === 'reaction-jumps' && now - targetJumpAt < 200
+          ? 'saccade_latency' : 'training';
+        const deltaMs = deviceTimestampUs !== null && lastDeviceTimestampUs !== null
+          && deviceTimestampUs > lastDeviceTimestampUs
+          ? (deviceTimestampUs - lastDeviceTimestampUs) / 1000
+          : lastGazeAt === null ? 0 : Math.max(0, now - lastGazeAt);
+        lastGazeAt = now;
+        lastDeviceTimestampUs = deviceTimestampUs;
+        const distancePx = valid ? Math.hypot(gaze.x - targetPoint.x, gaze.y - targetPoint.y) : null;
+        const distanceDeg = valid ? AngularDistanceDeg(gaze, targetPoint, cssPxPerCm, viewingDistanceCm) : null;
+        const inThreshold = valid && phase !== 'saccade_latency' && distanceDeg! <= gazeThresholdDeg ? 1 : 0;
+        gazeRecords.push([
+          gazeRecords.length + 1, elapsedMs, deviceTimestampUs, Math.round(deltaMs * 100) / 100,
+          deltaMs > 0 ? Math.round(1000 / deltaMs * 10) / 10 : null,
+          valid ? 1 : 0, valid ? Math.round(gaze.x * 100) / 100 : null,
+          valid ? Math.round(gaze.y * 100) / 100 : null,
+          Math.round(targetPoint.x * 100) / 100, Math.round(targetPoint.y * 100) / 100,
+          distancePx === null ? null : Math.round(distancePx * 100) / 100,
+          distanceDeg === null ? null : Math.round(distanceDeg * 1000) / 1000,
+          inThreshold, phase, targetDirection,
+        ]);
+        gazeGfx.visible = enableTobii && showGazePoint && valid;
+        if (gazeGfx.visible && gaze) {
+          gazeGfx.x = (gaze.x - canvasRect.left) * app.screen.width / canvasRect.width;
+          gazeGfx.y = (gaze.y - canvasRect.top) * app.screen.height / canvasRect.height;
+        }
+        if (!valid) return;
         const pupilEstimate = blinkDetectorState.isClosed
           ? null
           : EstimatePupilSizePx(latestEyeFeatures);
         const sample = CreateOculomotorGazeSample(
           elapsedMs,
-          { x: Math.round(prediction.x), y: Math.round(prediction.y) },
+          { x: Math.round(gaze.x), y: Math.round(gaze.y) },
           { x: Math.round(targetPoint.x), y: Math.round(targetPoint.y) },
           RoundToTenth(pupilEstimate),
-          pendingBlinkEvent,
+          blinkEvent,
           fixationSegment,
         );
         gazeSamples.push([
@@ -729,6 +785,11 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           sample[7],
           sample[8],
         ]);
+      };
+
+      const handleGazePrediction = (prediction: WebGazerPrediction | null) => {
+        if (!prediction) return;
+        recordGaze(blinkDetectorState.isClosed ? null : prediction, null, pendingBlinkEvent);
         pendingBlinkEvent = 0;
       };
 
@@ -850,6 +911,8 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         window.removeEventListener('keydown', handleKeydown);
         stopOfficialGazeUpdates?.();
         stopOfficialGazeUpdates = undefined;
+        stopTobiiGaze?.();
+        stopTobiiGaze = undefined;
         webGazerRuntime?.clearGazeListener?.();
         webGazerExtension?.hidePredictions?.();
         webGazerExtension?.hideVideo?.();
@@ -867,6 +930,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           minimumFixationDurationMs,
           maximumSampleGapMs: gazeSamplingIntervalMs * 2.5,
         });
+        const gazeTiming = SummarizeGazeRecords(gazeRecords);
 
         self.jsPsych.finishTrial({
           rt: elapsed,
@@ -878,14 +942,29 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           acquired_targets: acquiredTargets,
           average_fps: Math.round(averageFps * 10) / 10,
           duration_ms: elapsed,
-          aoi_score: enableWebgazer ? (gazeSummary.aoiScore ?? 0) : undefined,
-          mean_target_distance_px: enableWebgazer
+          screen_width_px: innerWidth,
+          screen_height_px: innerHeight,
+          viewing_distance_cm: viewingDistanceCm,
+          css_px_per_cm: cssPxPerCm,
+          eye_tracking_source: gazeEnabled ? eyeTrackingSource : 'off',
+          validation_error_deg: gazeEnabled
+            ? (typeof trial.validation_error_deg === 'number'
+              && Number.isFinite(trial.validation_error_deg) && trial.validation_error_deg >= 0
+              ? trial.validation_error_deg : null)
+            : undefined,
+          gaze_threshold_deg: gazeEnabled ? Math.round(gazeThresholdDeg * 100) / 100 : undefined,
+          gaze_threshold_arcmin: gazeEnabled ? Math.round(gazeThresholdDeg * 6000) / 100 : undefined,
+          valid_gaze_ms: gazeEnabled ? Math.round(gazeTiming.validMs) : undefined,
+          in_threshold_ms: gazeEnabled ? Math.round(gazeTiming.inThresholdMs) : undefined,
+          invalid_gaze_ms: gazeEnabled ? Math.round(gazeTiming.invalidMs) : undefined,
+          aoi_score: gazeEnabled ? gazeTiming.accuracyPercent : undefined,
+          mean_target_distance_px: gazeEnabled
             ? RoundToTenth(gazeSummary.meanDistancePx)
             : undefined,
-          target_distance_sd_px: enableWebgazer
+          target_distance_sd_px: gazeEnabled
             ? RoundToTenth(gazeSummary.distanceStandardDeviationPx)
             : undefined,
-          time_to_first_fixation_ms: enableWebgazer
+          time_to_first_fixation_ms: gazeEnabled
             ? gazeSummary.timeToFirstFixationMs
             : undefined,
           average_pupil_size_px: enableWebgazer
@@ -897,12 +976,14 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           blink_count: enableWebgazer
             ? (blinkObservationCount > 0 ? totalBlinkCount : null)
             : undefined,
-          gaze_sample_count: enableWebgazer ? gazeSummary.gazeSampleCount : undefined,
+          gaze_sample_count: gazeEnabled ? gazeSummary.gazeSampleCount : undefined,
           gaze_sampling_interval_ms: enableWebgazer ? gazeSamplingIntervalMs : undefined,
-          fixation_radius_px: enableWebgazer ? RoundToTenth(aoiRadiusPx) : undefined,
-          fixation_duration_ms: enableWebgazer ? minimumFixationDurationMs : undefined,
-          gaze_sample_columns: enableWebgazer ? [...oculomotorGazeSampleColumns] : undefined,
-          gaze_samples: enableWebgazer ? gazeSamples : undefined,
+          fixation_radius_px: gazeEnabled ? RoundToTenth(aoiRadiusPx) : undefined,
+          fixation_duration_ms: gazeEnabled ? minimumFixationDurationMs : undefined,
+          gaze_sample_columns: gazeEnabled ? [...oculomotorGazeSampleColumns] : undefined,
+          gaze_samples: gazeEnabled ? gazeSamples : undefined,
+          gaze_record_columns: gazeEnabled ? [...gazeRecordColumns] : undefined,
+          gaze_records: gazeEnabled ? gazeRecords : undefined,
         });
       };
 
@@ -993,6 +1074,8 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           pausedMs += performance.now() - pauseStartedAt;
           paused = false;
           fixationSegment += 1;
+          lastGazeAt = null;
+          lastDeviceTimestampUs = null;
           blinkDetectorState = CreateBlinkDetectorState();
           pendingBlinkEvent = 0;
           pauseButton.textContent = 'Ⅱ';
@@ -1094,6 +1177,8 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
             alpha: 1,
             role: 'target',
           };
+          targetDirection = 'center';
+          previousTargetPoint = { x: latestTarget.x, y: latestTarget.y };
           drawLilacChaser(arena, elapsedSec);
           return;
         }
@@ -1113,6 +1198,11 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           Math.max(420, Math.min(arena.width, arena.height) * 0.55),
         );
         const jumpBucket = Math.floor(Math.abs(travelPx) / reactionJumpDistancePx);
+        if (mode === 'reaction-jumps' && jumpBucket !== lastJumpBucket) {
+          lastJumpBucket = jumpBucket;
+          targetJumpAt = performance.now();
+          fixationSegment += 1;
+        }
         const count = sampleOculomotorPatternInto(
           frames,
           activePattern,
@@ -1133,6 +1223,17 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         );
 
         latestTarget = frames[0] ?? null;
+        if (latestTarget) {
+          if (previousTargetPoint) {
+            const dx = latestTarget.x - previousTargetPoint.x;
+            const dy = latestTarget.y - previousTargetPoint.y;
+            if (Math.hypot(dx, dy) >= 0.5) {
+              const directions = ['right', 'down_right', 'down', 'down_left', 'left', 'up_left', 'up', 'up_right'];
+              targetDirection = directions[(Math.round(Math.atan2(dy, dx) * 4 / Math.PI) + 8) % 8];
+            }
+          }
+          previousTargetPoint = { x: latestTarget.x, y: latestTarget.y };
+        }
         drawTrail(count, elapsedMs);
         const isReactionFlash = performance.now() < flashUntil;
         for (let i = 0; i < count; i += 1) {
@@ -1182,6 +1283,13 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         webGazerExtension?.resume?.();
         if (showGazePoint) webGazerExtension?.showPredictions?.();
         else webGazerExtension?.hidePredictions?.();
+      }
+      if (enableTobii) {
+        stopTobiiGaze = SubscribeTobiiGaze((sample) => {
+          recordGaze(sample.valid
+            ? { x: sample.x * innerWidth, y: sample.y * innerHeight }
+            : null, sample.deviceTimestampMicroseconds, 0);
+        });
       }
       draw();
       app.ticker.add(tick);

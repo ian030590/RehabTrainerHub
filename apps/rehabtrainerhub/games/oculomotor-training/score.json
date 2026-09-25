@@ -86,12 +86,31 @@
     {
       "key": "aoiScore",
       "label": {
-        "zh": "目標區域估計得分",
-        "en": "Estimated target area score"
+        "zh": "有效注視時間內在標比例",
+        "en": "On-target share of valid gaze time"
       },
       "sources": [
         "aoi_score"
-      ]
+      ],
+      "unit": "%"
+    },
+    {
+      "key": "gazeThresholdDeg",
+      "label": { "zh": "注視閾值", "en": "Gaze threshold" },
+      "sources": ["gaze_threshold_deg"],
+      "unit": "deg"
+    },
+    {
+      "key": "validGazeMs",
+      "label": { "zh": "有效注視時間", "en": "Valid gaze duration" },
+      "sources": ["valid_gaze_ms"],
+      "unit": "ms"
+    },
+    {
+      "key": "inThresholdMs",
+      "label": { "zh": "在標時間", "en": "On-target duration" },
+      "sources": ["in_threshold_ms"],
+      "unit": "ms"
     }
   ],
   "summary": [
@@ -173,12 +192,31 @@
     {
       "key": "aoiScore",
       "label": {
-        "zh": "目標區域估計得分",
-        "en": "Estimated target area score"
+        "zh": "有效注視時間內在標比例",
+        "en": "On-target share of valid gaze time"
       },
       "sources": [
         "aoi_score"
-      ]
+      ],
+      "unit": "%"
+    },
+    {
+      "key": "gazeThresholdDeg",
+      "label": { "zh": "注視閾值", "en": "Gaze threshold" },
+      "sources": ["gaze_threshold_deg"],
+      "unit": "deg"
+    },
+    {
+      "key": "validGazeMs",
+      "label": { "zh": "有效注視時間", "en": "Valid gaze duration" },
+      "sources": ["valid_gaze_ms"],
+      "unit": "ms"
+    },
+    {
+      "key": "inThresholdMs",
+      "label": { "zh": "在標時間", "en": "On-target duration" },
+      "sources": ["in_threshold_ms"],
+      "unit": "ms"
     }
   ]
 }

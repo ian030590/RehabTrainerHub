@@ -1,92 +1,66 @@
-import { CreateCsvContent } from '@rehab-trainer/ui/csv';
-import { DownloadCsvFile } from '@rehab-trainer/ui/downloadFile';
-import { GetSetting } from '@rehab-trainer/ui/settings';
+import { gazeRecordColumns } from './gaze/gazeScoring';
 import { FindOculomotorResult } from './results/resultData';
+import { GetAuthToken, GetAuthUserIdFromToken } from '@rehab-trainer/ui/auth/authClient';
+import { GetOrCreateSubjectIdForUser } from '@rehab-trainer/ui/storage/subjectId';
+
+const csvCell = (value: unknown) => {
+  if (value === null || value === undefined) return '';
+  const text = typeof value === 'number' ? String(value) : String(value).replace(/^[=+\-@\t\r]/, "'$&");
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+};
 
 export function DownloadTrainingCsv({
   results,
-  userName,
   moduleId,
   oculomotorMode,
   oculomotorPattern,
   t,
 }: any) {
   if (results.length === 0) return;
-
-  const prefix = GetSetting('downloadDirectory');
-  const dateStr = new Date().toISOString().split('T')[0];
-  const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false }).replace(/:/g, '');
-
-  const headers = [
-    t('exp.csv.user'),
-    t('exp.csv.date'),
-    t('exp.csv.time'),
-    t('exp.csv.module'),
-    t('exp.csv.mode'),
-    t('exp.csv.path'),
-    t('exp.csv.duration'),
-    t('exp.csv.acquired'),
-    t('exp.csv.fps'),
-    t('exp.csv.aoi'),
-    t('exp.csv.status'),
-    t('exp.csv.meanTargetDistance'),
-    t('exp.csv.targetDistanceSd'),
-    t('exp.csv.timeToFirstFixation'),
-    t('exp.csv.pupilSizeEstimate'),
-    t('exp.csv.pupilSizeSd'),
-    t('exp.csv.blinkCountEstimate'),
-    t('exp.csv.gazeSampleCount'),
-    t('exp.csv.gazeTimestamp'),
-    t('exp.csv.gazeX'),
-    t('exp.csv.gazeY'),
-    t('exp.csv.targetX'),
-    t('exp.csv.targetY'),
-    t('exp.csv.targetDistance'),
-    t('exp.csv.samplePupilSizeEstimate'),
-    t('exp.csv.sampleBlinkEstimate'),
-    t('exp.csv.fixationSegment'),
-  ];
-
   const result = FindOculomotorResult(results);
-  const baseRow = [
-    userName,
-    dateStr,
-    timeStr,
-    moduleId,
-    t(`preset.mode.${result?.mode || oculomotorMode}`),
-    t(`preset.path.${result?.pattern || oculomotorPattern}`),
-    result?.duration_ms ?? result?.rt ?? '',
-    result?.acquired_targets ?? 0,
-    result?.average_fps ?? '',
-    result?.aoi_score ?? '',
-    result?.response ?? '',
-    result?.mean_target_distance_px ?? '',
-    result?.target_distance_sd_px ?? '',
-    result?.time_to_first_fixation_ms ?? '',
-    result?.average_pupil_size_px ?? '',
-    result?.pupil_size_sd_px ?? '',
-    result?.blink_count ?? '',
-    result?.gaze_sample_count ?? result?.gaze_samples?.length ?? 0,
-  ];
-  const samples = result?.gaze_samples ?? [];
-  const rows = samples.length > 0
-    ? samples.map((sample: any) => [
-      ...baseRow,
-      sample[0],
-      sample[1],
-      sample[2],
-      sample[3],
-      sample[4],
-      sample[5],
-      sample[6] ?? '',
-      sample[7],
-      sample[8],
-    ])
-    : [[...baseRow, '', '', '', '', '', '', '', '', '']];
+  const subjectId = GetOrCreateSubjectIdForUser(GetAuthUserIdFromToken(GetAuthToken()));
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('sv-SE');
+  const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false }).replace(/:/g, '');
+  const source = result?.eye_tracking_source ?? 'off';
+  const records = Array.isArray(result?.gaze_records) ? result.gaze_records : [];
 
-  const csvContent = CreateCsvContent([headers, ...rows]);
-  DownloadCsvFile(
-    csvContent,
-    `${prefix ? prefix + '_' : ''}${userName}_${moduleId}_${dateStr}.csv`,
-  );
+  const metadata = [
+    ['subject_id', subjectId],
+    ['date', dateStr],
+    ['time', timeStr],
+    ['module', moduleId],
+    ['mode', t(`preset.mode.${result?.mode || oculomotorMode}`)],
+    ['path', t(`preset.path.${result?.pattern || oculomotorPattern}`)],
+    ['eye_tracking_source', source],
+    ['screen_width_px', result?.screen_width_px],
+    ['screen_height_px', result?.screen_height_px],
+    ['viewing_distance_cm', result?.viewing_distance_cm],
+    ['css_px_per_cm', result?.css_px_per_cm],
+    ['duration_ms', result?.duration_ms],
+    ['validation_error_deg', result?.validation_error_deg],
+    ['gaze_threshold_deg', result?.gaze_threshold_deg],
+    ['gaze_threshold_arcmin', result?.gaze_threshold_arcmin],
+    ['valid_gaze_ms', result?.valid_gaze_ms],
+    ['invalid_gaze_ms', result?.invalid_gaze_ms],
+    ['in_threshold_ms', result?.in_threshold_ms],
+    ['accuracy_percent', result?.aoi_score],
+    ['gaze_sample_count', result?.gaze_sample_count],
+    ['average_pupil_size_px_estimate', result?.average_pupil_size_px],
+    ['blink_count_estimate', result?.blink_count],
+  ].map(([key, value]) => [`# ${key}`, value ?? '']);
+  const rows = [
+    ...metadata,
+    [...gazeRecordColumns],
+    ...records,
+  ];
+  const content = `\uFEFF${rows.map((row) => row.map(csvCell).join(',')).join('\r\n')}`;
+  const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${subjectId}_${moduleId}_${dateStr}_${timeStr}_${source}_gaze_record.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
