@@ -84,6 +84,12 @@ jobs:
       - name: Discover Pages app environment
         run: node scripts/write-pages-env.mjs >> "$GITHUB_ENV"
 
+      - name: Ensure private oculomotor R2 bucket
+        run: node scripts/ensure-oculomotor-bucket.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Check runtime asset changes
         id: runtime-assets
         env:

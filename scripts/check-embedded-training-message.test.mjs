@@ -41,6 +41,12 @@ test('all 40 score contracts accept bounded numeric rounds and reject unsafe dat
     assert.equal(embeddedTraining.IsHubGameScoreMessage(message, definition, 'b'.repeat(64)), false);
     assert.equal(embeddedTraining.IsHubGameScoreMessage({ ...message, sequence: 2 }, definition, message.sessionNonce), false);
     assert.equal(embeddedTraining.IsHubGameScoreMessage({ ...message, extra: 1 }, definition, message.sessionNonce), false);
+    if (game.name === 'oculomotor-training') {
+      const metadata = { mode: 'pursuit', eye_tracking_source: 'webgazer', screen_width_px: 1920 };
+      assert.equal(embeddedTraining.IsHubGameScoreMessage({ ...message, metadata }, definition, message.sessionNonce), true);
+      assert.equal(embeddedTraining.IsHubGameScoreMessage({ ...message, metadata: { userName: 'private' } }, definition, message.sessionNonce), false);
+      assert.equal(embeddedTraining.IsHubGameScoreMessage({ ...message, metadata: { mode: '=cmd' } }, definition, message.sessionNonce), false);
+    }
     assert.equal(JSON.stringify(score).includes('private'), false);
     assert.equal(gameScore.IsGameScore({ ...score, gameId: 'wrong-game' }, definition), false);
     assert.equal(gameScore.IsGameScore({ ...score, rounds: [{ ...score.rounds[0], authToken: 1 }] }, definition), false);

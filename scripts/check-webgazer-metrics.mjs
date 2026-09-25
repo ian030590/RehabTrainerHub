@@ -27,6 +27,22 @@ assert.deepEqual(
 
 const moduleUrl = `data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`;
 const metrics = await import(moduleUrl);
+const metadataSource = await readFile(new URL(
+  '../apps/rehabtrainerhub/games/oculomotor-training/gaze/metadata.ts', import.meta.url,
+), 'utf8');
+const metadataModule = await import(`data:text/javascript;base64,${Buffer.from(ts.transpileModule(metadataSource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+}).outputText).toString('base64')}`);
+
+test('oculomotor metadata keeps actual camel-case pattern IDs and excludes scores', () => {
+  assert.deepEqual(metadataModule.BuildOculomotorMetadata({
+    mode: 'reaction-jumps', pattern: 'horizontalSweep', eye_tracking_source: 'webgazer',
+    screen_width_px: 1920, validation_error_deg: null, aoi_score: 99,
+  }), {
+    mode: 'reaction-jumps', pattern: 'horizontalSweep', eye_tracking_source: 'webgazer',
+    screen_width_px: 1920,
+  });
+});
 
 function AssertNearlyEqual(actual, expected, message, tolerance = 1e-9) {
   assert.ok(

@@ -25,6 +25,7 @@ import {
   IsHubGameScoreMessage,
   ParseGameScoreDefinition,
   type GameScore,
+  type GameScoreMetadata,
   type GameScoreDefinition,
 } from '@rehab-trainer/ui/embeddedTraining';
 import { SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
@@ -50,7 +51,8 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const [scoreDefinition, setScoreDefinition] = useState<GameScoreDefinition | null>(null);
   const [score, setScore] = useState<GameScore | null>(null);
   const acceptedScore = useRef(false);
-  const scoreRecordId = useRef(crypto.randomUUID());
+  const [sessionNonce] = useState(CreateSessionNonce);
+  const scoreRecordId = useRef(module.runtimeId === 'oculomotor-training' ? sessionNonce : crypto.randomUUID());
   const savingRef = useRef(false);
   const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error'>('saving');
   const [settingsError, setSettingsError] = useState(false);
@@ -60,11 +62,10 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const [isReady, setIsReady] = useState(false);
   const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [isTrainingComplete, setIsTrainingComplete] = useState(false);
-  const [sessionNonce] = useState(CreateSessionNonce);
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).embeddedTraining;
 
-  const saveScore = useCallback(async (result: GameScore) => {
+  const saveScore = useCallback(async (result: GameScore, metadata?: GameScoreMetadata) => {
     if (savingRef.current) return;
     savingRef.current = true;
     setSaveState('saving');
@@ -75,6 +76,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
           moduleId: module.runtimeId, gameId: module.runtimeId,
           config: configuredSettings ?? undefined,
           score: result,
+          ...(metadata === undefined ? {} : { metadata }),
         },
       });
       setSaveState(saved ? 'saved' : 'error');
@@ -159,7 +161,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         frameRef.current?.contentWindow ?? null,
       )) return;
 
-      const message = event.data as { type?: unknown; sessionNonce?: unknown; sequence?: unknown; score?: unknown } | null;
+      const message = event.data as { type?: unknown; sessionNonce?: unknown; sequence?: unknown; score?: unknown; metadata?: unknown } | null;
       if (message?.type === hubGameScoreMessageType) {
         if (acceptedScore.current || !scoreDefinition || !IsHubGameScoreMessage(message, scoreDefinition, sessionNonce)) return;
         acceptedScore.current = true;
@@ -167,7 +169,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         setIsTrainingComplete(true);
         setScore(message.score);
         void ExitFullscreenIfActive();
-        void saveScore(message.score);
+        void saveScore(message.score, message.metadata);
         return;
       }
       if (acceptedScore.current) return;

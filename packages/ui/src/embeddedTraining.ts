@@ -4,29 +4,48 @@ export type { GameScore, GameScoreDefinition } from './gameScore';
 
 export const hubTrainingCompleteMessageType = 'rehab-trainer:training-complete' as const;
 export const hubGameScoreMessageType = 'rehab-trainer:game-score' as const;
+export type GameScoreMetadata = Record<string, string | number>;
 let hostedSessionNonce: string | null = null;
 let scoreSequence = 0;
 let scoreDefinition: GameScoreDefinition | null = null;
 
 export function IsHubGameScoreMessage(value: unknown, definition: GameScoreDefinition, sessionNonce: string): value is {
   type: typeof hubGameScoreMessageType; sessionNonce: string; sequence: number; score: GameScore;
+  metadata?: GameScoreMetadata;
 } {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const message = value as Record<string, unknown>;
-  return Object.keys(message).length === 4 && message.type === hubGameScoreMessageType
+  const keys = Object.keys(message);
+  return keys.length === (message.metadata === undefined ? 4 : 5)
+    && keys.every(key => ['type', 'sessionNonce', 'sequence', 'score', 'metadata'].includes(key))
+    && (message.metadata === undefined || IsGameScoreMetadata(message.metadata))
+    && message.type === hubGameScoreMessageType
     && message.sessionNonce === sessionNonce && message.sequence === 1 && IsGameScore(message.score, definition);
+}
+
+function IsGameScoreMetadata(value: unknown): value is GameScoreMetadata {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const entries = Object.entries(value);
+  return entries.length <= 20 && entries.every(([key, item]) =>
+    /^[a-z][a-z0-9_]{0,63}$/.test(key)
+    && !/(auth|email|jwt|name|password|token|user|participant|secret|cookie)/i.test(key)
+    && ((typeof item === 'number' && Number.isFinite(item) && item >= 0 && item <= 1e9)
+      || (typeof item === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(item))));
 }
 
 export function SetGameScoreDefinition(value: unknown, gameId: string): void {
   scoreDefinition = ParseGameScoreDefinition(value, gameId);
 }
 
-export function SendHostedGameScore(record: Parameters<typeof BuildGameScore>[1]): boolean {
+export function SendHostedGameScore(record: Parameters<typeof BuildGameScore>[1], metadata?: GameScoreMetadata): boolean {
   const origin = GetEmbeddedHubOrigin();
   if (!origin) return false;
   if (!scoreDefinition || !hostedSessionNonce) throw new Error('Game score contract is not ready.');
+  if (metadata !== undefined && !IsGameScoreMetadata(metadata)) throw new TypeError('Invalid game score metadata.');
   const score = BuildGameScore(scoreDefinition, record);
-  window.parent.postMessage({ type: hubGameScoreMessageType, sessionNonce: hostedSessionNonce, sequence: ++scoreSequence, score }, origin);
+  window.parent.postMessage({ type: hubGameScoreMessageType, sessionNonce: hostedSessionNonce, sequence: ++scoreSequence, score,
+    ...(metadata === undefined ? {} : { metadata }),
+  }, origin);
   return true;
 }
 export const hubTrainingActiveMessageType = 'rehab-trainer:training-active' as const;
@@ -158,6 +177,10 @@ export function InstallHostedGameSettingsReceiver(): () => void {
 
 export function GetHostedGameSettings(): Readonly<Record<string, string | number | boolean>> | null {
   return hostedGameSettings;
+}
+
+export function GetHostedGameSessionNonce(): string | null {
+  return GetEmbeddedHubOrigin() ? hostedSessionNonce : null;
 }
 
 // Called by the local settings shell after schema validation. The message receiver

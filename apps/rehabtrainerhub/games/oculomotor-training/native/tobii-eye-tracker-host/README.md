@@ -11,6 +11,6 @@ WebGazer 使用九點點擊校正、五點驗證；Tobii 沿用 Tobii Experience
 
 每筆裝置樣本或 WebGazer 有效預測，依當下 Pixi 目標位置建立同步資料。`gaze_records` 與下載的 UTF-8 BOM CSV 使用同樣的 15 欄：`sample_index, trial_time_ms, device_timestamp_us, delta_t_ms, instant_hz, gaze_valid, gaze_x_px, gaze_y_px, stimulus_x_px, stimulus_y_px, distance_error_px, distance_error_deg, is_within_threshold, phase, direction`。WebGazer 沒有裝置時間戳，該欄為空；無效 Tobii 樣本的注視座標與誤差為空。CSV 表頭另有受試者代碼、來源、螢幕尺寸、換算比例、驗證誤差、閾值與總計欄位。
 
-在標比例為 `in_threshold_ms / valid_gaze_ms × 100%`。超過 100 ms 的斷訊間隔不計入時間；無效樣本與跳視目標跳動後 200 ms 的轉移期不進入分母。結果頁及 Hub 分數欄位記錄閾值、有效注視時間、在標時間與在標比例。舊的九欄 `gaze_samples` 仍保留給既有距離與首次停留統計。平台的當次紀錄只寫入彙總欄位與逐筆筆數；完整逐筆座標在結果頁由本遊戲下載 CSV，請在離開結果頁前保存。
+在標比例為 `in_threshold_ms / valid_gaze_ms × 100%`。超過 100 ms 的斷訊間隔不計入時間；無效樣本與跳視目標跳動後 200 ms 的轉移期不進入分母。結果頁及 Hub 分數欄位記錄閾值、有效注視時間、在標時間與在標比例。舊的九欄 `gaze_samples` 仍保留給既有距離與首次停留統計。平台的當次紀錄只寫入彙總欄位與逐筆筆數；完整逐筆座標另存於私人 R2 `oculomotor-data` bucket 的 CSV；登入者可在進度頁重新下載。訪客請在離開結果頁前下載副本。若雲端儲存失敗，結果頁會顯示重試與立即下載。
 
 Tobii 的公開 [授權說明](https://developer.tobii.com/vr/sdla/) 將儲存眼動資料作分析列為須另取得授權的用途；在確認本專案的授權涵蓋 CSV 與平台紀錄前，不應發布或使用 Tobii 記錄功能。程式碼沒有包含 Tobii DLL，也沒有通過實機驗證。

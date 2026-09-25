@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
   FetchRehabProgress,
+  GetAuthToken,
   type RehabAchievement,
   type RehabProgress,
 } from '@rehab-trainer/ui/auth/authClient';
@@ -45,12 +46,17 @@ const emptyAchievements: RehabAchievement[] = [
 }));
 
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
+type GazeFile = { recordId: string; uploadedAt: string; size: number };
 
 export function ProgressDashboard() {
   const { user } = useHubAuth();
   const { language, locale, t } = useHubLanguage();
   const [progress, setProgress] = useState<RehabProgress | null>(null);
   const [status, setStatus] = useState<LoadStatus>('idle');
+  const [gazeFiles, setGazeFiles] = useState<GazeFile[]>([]);
+  const [gazeCursor, setGazeCursor] = useState<string | null>(null);
+  const [gazeOwnerId, setGazeOwnerId] = useState<string | null>(null);
+  const [gazeError, setGazeError] = useState(false);
   const copy = GetHubUiCopy(language).progress;
 
   useEffect(() => {
@@ -79,7 +85,69 @@ export function ProgressDashboard() {
     };
   }, [user]);
 
+  useEffect(() => {
+    setGazeFiles([]);
+    setGazeCursor(null);
+    setGazeOwnerId(null);
+    setGazeError(false);
+    if (!user) {
+      return;
+    }
+    const controller = new AbortController();
+    void fetch('/api/oculomotor-data', {
+      headers: { Authorization: `Bearer ${GetAuthToken() ?? ''}` },
+      signal: controller.signal,
+    }).then(async (response) => {
+      if (!response.ok) throw new Error(`Gaze CSV list failed (${response.status}).`);
+      return response.json() as Promise<{ records: GazeFile[]; cursor: string | null }>;
+    }).then(({ records, cursor }) => {
+      if (controller.signal.aborted) return;
+      setGazeFiles(records);
+      setGazeCursor(cursor);
+      setGazeOwnerId(user.id);
+      setGazeError(false);
+    }).catch(() => { if (!controller.signal.aborted) setGazeError(true); });
+    return () => controller.abort();
+  }, [user]);
+
+  const downloadGazeCsv = async (recordId: string) => {
+    try {
+      const response = await fetch(`/api/oculomotor-data?recordId=${encodeURIComponent(recordId)}`, {
+        headers: { Authorization: `Bearer ${GetAuthToken() ?? ''}` },
+      });
+      if (!response.ok) throw new Error(`Gaze CSV download failed (${response.status}).`);
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `oculomotor-${recordId}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setGazeError(true);
+    }
+  };
+
+  const loadMoreGazeFiles = async () => {
+    if (!gazeCursor) return;
+    try {
+      const response = await fetch(`/api/oculomotor-data?cursor=${encodeURIComponent(gazeCursor)}`, {
+        headers: { Authorization: `Bearer ${GetAuthToken() ?? ''}` },
+      });
+      if (!response.ok) throw new Error(`Gaze CSV list failed (${response.status}).`);
+      const payload = await response.json() as { records: GazeFile[]; cursor: string | null };
+      setGazeFiles((current) => [...current, ...payload.records]);
+      setGazeCursor(payload.cursor);
+      setGazeError(false);
+    } catch {
+      setGazeError(true);
+    }
+  };
+
   const achievements = progress?.achievements ?? emptyAchievements;
+  const visibleGazeFiles = gazeOwnerId === user?.id ? gazeFiles : [];
+  const visibleGazeCursor = gazeOwnerId === user?.id ? gazeCursor : null;
   const recentModules = (progress?.recentModules ?? [])
     .map((recentModule) => trainingCatalog.find((module) => module.runtimeId === recentModule.moduleId))
     .filter((module): module is (typeof trainingCatalog)[number] => Boolean(module));
@@ -246,6 +314,27 @@ export function ProgressDashboard() {
           ))}
         </div>
       </section>
+
+      {user && (
+        <section className="daily-section" aria-labelledby="gaze-files-title">
+          <header className="section-title-row">
+            <h2 id="gaze-files-title">{language === 'en' ? 'Eye movement CSV records' : '眼動訓練逐筆座標 CSV'}</h2>
+          </header>
+          {gazeError && <p role="alert">{language === 'en' ? 'Unable to load or download CSV. Please try again.' : '無法載入或下載 CSV，請稍後重試。'}</p>}
+          {visibleGazeFiles.length === 0 && !gazeError && <p>{language === 'en' ? 'No saved gaze CSV yet.' : '目前沒有已儲存的逐筆座標 CSV。'}</p>}
+          <ul>
+            {visibleGazeFiles.map((file) => (
+              <li key={file.recordId}>
+                <time dateTime={file.uploadedAt}>{new Date(file.uploadedAt).toLocaleString(locale)}</time>{' '}
+                <button type="button" onClick={() => void downloadGazeCsv(file.recordId)}>
+                  {language === 'en' ? 'Download CSV' : '下載 CSV'}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {visibleGazeCursor && <button type="button" onClick={() => void loadMoreGazeFiles()}>{language === 'en' ? 'Load more' : '載入更多'}</button>}
+        </section>
+      )}
 
       {progress && (
         <p className="server-date-note">{t('progress.serverDate', { timeZone: progress.timeZone })}</p>

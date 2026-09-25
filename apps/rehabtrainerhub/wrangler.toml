@@ -16,6 +16,11 @@ id = "9671f8f8995240a3a5fc6b870c66b561"
 binding = "ASSET_BUCKET"
 bucket_name = "rehab-storage"
 
+# Private per-sample eye tracking CSVs. Never bind this bucket to usergamerunner.
+[[r2_buckets]]
+binding = "OCULOMOTOR_DATA"
+bucket_name = "oculomotor-data"
+
 # Developer uploads remain private until both automated scanning and an admin
 # review approve the exact content digest. The isolated runner never receives
 # this binding.

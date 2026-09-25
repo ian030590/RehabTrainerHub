@@ -12,7 +12,7 @@ npm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
 開發者遊戲 SDK：`packages/game-sdk`（`@rehab-trainer/game-sdk`）。
 靜態資產：各 app `public/`，通常 `public/assets/`。
 D1 migrations：`apps/rehabtrainerhub/migrations/`。
-R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待審上傳暫存）、`rehab-game-releases`（已核准不可變發布）。
+R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼動逐筆座標 CSV）、`rehab-game-quarantine`（待審上傳暫存）、`rehab-game-releases`（已核准不可變發布）。
 
 ## 建置、測試與開發指令
 
@@ -41,6 +41,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`rehab-game-quarantine`（待�
 - CI/CD 乾淨安裝使用 `npm ci --workspaces --include-workspace-root`；Hub 的內建遊戲相容 build 需要 root 的 Vite 與訓練 runtime dependencies，不得省略 workspace root。
 - `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、`settings.json`、統一 config UI、iframe 與訊息協定；CI 與部署 workflow 必須維持同名 matrix 項目。Hub build 另以 `check-built-game-architecture.mjs` 驗證實際輸出不得恢復 `/runtimes/*`。
 - `npm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `npm run build:cloudflare:only`，不可再序列重跑同一批測試。
+- `npm run test:cloudflare-deploy` 包含私人眼動 R2 bucket 建立流程的冪等性與失敗情境測試；兩份 workflow 維持相同的 `cloudflare-deploy` matrix 命令。
+- 部署 job 先以 Cloudflare API 確認或建立私人 `oculomotor-data` R2 bucket，再部署含 `OCULOMOTOR_DATA` binding 的 Hub；bucket 不設定公開網域，也不綁定 usergamerunner。
 - `npm run test:seo` 同時驗證文章正文的伺服器渲染與實際 HTML SEO 輸出；兩份 workflow 沿用此命令。
 - 變更 workflow 觸發範圍、測試命令或 build gate 時，必須同步更新本節，並確認 workflow 自身路徑仍會觸發驗證。
 

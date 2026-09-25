@@ -622,6 +622,41 @@ assert.equal(scoreListRecord.scoreRoundCount, 1500);
 assert.deepEqual(scoreListRecord.score.summary, scoreRecord.score.summary);
 assert.deepEqual(scoreListRecord.score.rounds, []);
 
+const oculomotorScoreRecord = {
+  ...scoreRecord,
+  id: 'a'.repeat(64),
+  moduleId: 'oculomotor-training',
+  gameId: 'oculomotor-training',
+  metadata: { mode: 'pursuit', pattern: 'horizontalSweep', eye_tracking_source: 'webgazer', screen_width_px: 1920 },
+  score: { schema: 'rehab-trainer.game-score/v1', gameId: 'oculomotor-training', rounds: [], summary: { aoiScore: 80 } },
+};
+const oculomotorScoreWrite = await onRequestPost({ request: new Request('https://trainerhub.cc/api/records', {
+  method: 'POST', headers: { Origin: 'https://trainerhub.cc', Authorization: `Bearer ${victimToken}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'hub', record: oculomotorScoreRecord }),
+}), env });
+assert.equal(oculomotorScoreWrite.status, 201);
+assert.deepEqual(JSON.parse(env.REHAB_DB.rows.get(oculomotorScoreRecord.id).payload_json).metadata, oculomotorScoreRecord.metadata);
+const standaloneOculomotorRecord = {
+  ...attackerRecord,
+  id: 'standalone-oculomotor-metadata',
+  moduleId: 'oculomotor-training',
+  metadata: oculomotorScoreRecord.metadata,
+  results: [{ trial_type: 'pixi-oculomotor-training', mode: 'pursuit', pattern: 'horizontalSweep' }],
+};
+const standaloneOculomotorWrite = await onRequestPost({ request: new Request('https://trainerhub.cc/api/records', {
+  method: 'POST', headers: { Origin: 'https://trainerhub.cc', Authorization: `Bearer ${victimToken}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'vision', record: standaloneOculomotorRecord }),
+}), env });
+assert.equal(standaloneOculomotorWrite.status, 201);
+assert.deepEqual(JSON.parse(env.REHAB_DB.rows.get(standaloneOculomotorRecord.id).payload_json).metadata, oculomotorScoreRecord.metadata);
+const unsafeOculomotorMetadata = await onRequestPost({ request: new Request('https://trainerhub.cc/api/records', {
+  method: 'POST', headers: { Origin: 'https://trainerhub.cc', Authorization: `Bearer ${victimToken}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'hub', record: {
+    ...oculomotorScoreRecord, id: 'b'.repeat(64), metadata: { userName: 'private' },
+  } }),
+}), env });
+assert.equal(unsafeOculomotorMetadata.status, 400);
+
 const subjectId = '550e8400-e29b-41d4-a716-446655440000';
 const anonymousRecord = {
   ...victimRecord,

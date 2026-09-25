@@ -529,8 +529,9 @@ export function IsBoundedGameScoreRecord(input) {
       && (number === null || (typeof number === 'number' && Number.isFinite(number) && Math.abs(number) <= 1e12)));
   return input?.appId === 'rehabtrainerhub' && input?.runtimeId === 'hub'
     && IsPlainObject(input.record)
-    && Object.keys(input.record).every(key => ['id', 'savedAt', 'userName', 'moduleId', 'gameId', 'config', 'score'].includes(key))
+    && Object.keys(input.record).every(key => ['id', 'savedAt', 'userName', 'moduleId', 'gameId', 'config', 'score', 'metadata'].includes(key))
     && (input.record.config === undefined || IsBoundedScoreConfig(input.record.config))
+    && (input.record.metadata === undefined || IsBoundedScoreMetadata(input.record.metadata))
     && (input.record.userName === undefined || input.record.userName === '')
     && IsPlainObject(score) && Object.keys(score).length === 4
     && score.schema === 'rehab-trainer.game-score/v1'
@@ -547,6 +548,14 @@ function IsBoundedScoreConfig(config) {
       && (typeof value === 'boolean'
         || (typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= 1e9)
         || (typeof value === 'string' && value.length > 0 && value.length <= 80 && !/[\u0000-\u001f\u007f]/.test(value))));
+}
+
+function IsBoundedScoreMetadata(metadata) {
+  return IsPlainObject(metadata) && Object.keys(metadata).length <= 20
+    && Object.entries(metadata).every(([key, value]) => /^[a-z][a-z0-9_]{0,63}$/.test(key)
+      && !/(auth|email|jwt|name|password|token|user|participant|secret|cookie)/i.test(key)
+      && ((typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1e9)
+        || (typeof value === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(value))));
 }
 
 function NormalizeString(value, maximumLength, optional = false) {

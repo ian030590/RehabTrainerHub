@@ -40,9 +40,10 @@ Hub Pages Functions 使用：
 REHAB_DB       D1
 ARTICLE_CACHE  KV
 ASSET_BUCKET   R2
+OCULOMOTOR_DATA R2 (private eye-tracking CSV)
 ```
 
-`apps/rehabtrainerhub/wrangler.toml` 已宣告三個 production binding。Pages 部署前必須先建立 KV 與 R2 資源，並在設定檔填入 KV namespace ID 與 R2 bucket name。
+`apps/rehabtrainerhub/wrangler.toml` 已宣告所需的 production bindings。部署 workflow 會以既有 Cloudflare API 憑證確認或建立私人 `oculomotor-data` bucket；其他 KV 與 R2 資源仍須預先建立並填入設定檔。
 
 Cloudflare API token 至少需涵蓋本流程使用的 Pages、D1、KV 與 R2 編輯權限，並設定正確的 `CLOUDFLARE_ACCOUNT_ID`。請將 token 放在 GitHub environment secret，不要寫入 repository。
 

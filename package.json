@@ -28,7 +28,7 @@
     "test:i18n": "node scripts/check-i18n.mjs",
     "test:driving-rehab": "node --test scripts/check-driving-rehab-core.test.mjs",
     "test:driving-rehab-browser": "node scripts/check-driving-rehab-browser.mjs",
-    "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs",
+    "test:cloudflare-deploy": "node scripts/check-cloudflare-pages-deploy.mjs && node --test scripts/ensure-oculomotor-bucket.test.mjs",
     "test:embedded-training": "node --test scripts/check-embedded-training-message.test.mjs",
     "test:game-platform": "node --test scripts/check-game-platform.test.mjs packages/game-sdk/src/index.test.mjs packages/game-settings/src/index.test.mjs",
     "test:game-architecture": "tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs",

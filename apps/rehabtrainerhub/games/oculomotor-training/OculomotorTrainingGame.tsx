@@ -1,6 +1,7 @@
 import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
 import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
-import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
+import { GetHostedGameSessionNonce, GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
+import { GetAuthToken } from '@rehab-trainer/ui/auth/authClient';
 import { TrainingRulesPanel } from '@rehab-trainer/ui';
 import WebGazerExtension from '@jspsych/extension-webgazer';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
@@ -21,7 +22,7 @@ import { useCallback,useEffect,useRef,useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { DownloadTrainingCsv } from './exportCsv';
 import { HasTobiiHost } from './gaze/tobiiHost';
-import { SaveOculomotorRecord } from './gaze/recordStorage';
+import { SaveOculomotorGazeRecords, SaveOculomotorRecord, SendOculomotorHostedScore } from './gaze/recordStorage';
 import { OculomotorResults } from './results/OculomotorResults';
 import { DestroyPixiTrainingRuntime } from './runtime/pixiPool';
 import { BuildOculomotorTimeline } from './timeline/oculomotorTimeline';
@@ -37,6 +38,8 @@ export function OculomotorTrainingGame() {
   const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
   const [phase, setPhase] = useState<Phase>('rules');
   const [results, setResults] = useState<any[]>([]);
+  const [gazeSaveState, setGazeSaveState] = useState<'saving' | 'saved' | 'error'>('saving');
+  const completedRecordRef = useRef<Parameters<typeof SaveOculomotorRecord>[0] | null>(null);
   const jsPsychRef = useRef<JsPsych | null>(null);
   const skipFinishRef = useRef(false);
 
@@ -78,8 +81,8 @@ export function OculomotorTrainingGame() {
           if (skipFinishRef.current) return;
           const data = jsPsych.data.get().values();
           const trainingTrial = data.find((item: any) => item.trial_type === 'pixi-oculomotor-training');
-          void SaveOculomotorRecord({
-            id: String(Date.now()),
+          const completedRecord = {
+            id: GetHostedGameSessionNonce() ?? crypto.randomUUID(),
             savedAt: new Date().toISOString(),
             userName,
             moduleId: 'oculomotor-training',
@@ -89,7 +92,15 @@ export function OculomotorTrainingGame() {
             results: data,
             details: trainingTrial ?? {},
             detailRows: trainingTrial ? [trainingTrial] : [],
-          });
+          } as Parameters<typeof SaveOculomotorRecord>[0];
+          completedRecordRef.current = completedRecord;
+          setGazeSaveState('saving');
+          void SaveOculomotorRecord(completedRecord)
+            .then((saved) => setGazeSaveState(saved ? 'saved' : 'error'))
+            .catch((error) => {
+              console.error('Unable to save oculomotor data.', error);
+              setGazeSaveState('error');
+            });
 
           DestroyPixiTrainingRuntime('oculomotor-training');
           setResults(data);
@@ -211,6 +222,33 @@ export function OculomotorTrainingGame() {
           <OculomotorResults results={results} userName={userName} t={t} oculomotorMode={GetHostedGameSetting<string>('mode')} oculomotorPattern={GetHostedGameSetting<string>('movementPath')} />
           {hasGazeRecords && (
             <div className="results-actions">
+              <p role="status" aria-live="polite">
+                {gazeSaveState === 'saving'
+                  ? (isZh ? '逐筆座標 CSV 儲存中…' : 'Saving gaze CSV…')
+                  : gazeSaveState === 'saved'
+                    ? GetAuthToken()
+                      ? (isZh ? '逐筆座標 CSV 已儲存，可於進度頁重新下載。' : 'Gaze CSV saved. Download it later from Progress.')
+                      : (isZh ? '逐筆座標 CSV 已儲存；訪客請立即下載副本。' : 'Gaze CSV saved. Guests should download a copy now.')
+                    : (isZh ? '逐筆座標 CSV 尚未存到雲端，請重試或立即下載。' : 'Gaze CSV was not saved online. Retry or download it now.')}
+              </p>
+              {gazeSaveState === 'error' && (
+                <button className="btn btn-secondary btn-lg" type="button" onClick={() => {
+                  const record = completedRecordRef.current;
+                  if (!record) return;
+                  setGazeSaveState('saving');
+                  void SaveOculomotorGazeRecords(record)
+                    .then((saved) => {
+                      setGazeSaveState(saved ? 'saved' : 'error');
+                      if (saved) SendOculomotorHostedScore(record);
+                    })
+                    .catch((error) => {
+                      console.error('Unable to retry saving oculomotor data.', error);
+                      setGazeSaveState('error');
+                    });
+                }}>
+                  {isZh ? '重試儲存 CSV' : 'Retry saving CSV'}
+                </button>
+              )}
               <button className="btn btn-secondary btn-lg" type="button" onClick={() => DownloadTrainingCsv({
                 results,
                 moduleId: 'oculomotor-training',
