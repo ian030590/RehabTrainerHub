@@ -1,7 +1,6 @@
 import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
 // Timeline local to the Hub-owned oculomotor module.
 import WebGazerExtension from '@jspsych/extension-webgazer';
-import { GetSetting } from '@rehab-trainer/ui/settings';
 import { CreateTobiiValidationFlow } from '../gaze/tobiiHost';
 import PixiOculomotorTrainingPlugin from '../pixi-oculomotor-training';
 import type { JsPsych } from 'jspsych';
@@ -11,7 +10,7 @@ CreateWebGazerExperimentTimeline,
 } from '../webgazer/webgazerCalibration';
 
 export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => string): object[] {
-  const mode = (GetHostedGameSetting<'pursuit' | 'reaction-jumps' | 'multi-object' | 'lilac-chaser'>('mode'));
+  const mode = (GetHostedGameSetting<'vor' | 'pursuit' | 'saccade' | 'fixation' | 'reaction-jumps' | 'multi-object' | 'lilac-chaser'>('mode'));
   const pattern = (GetHostedGameSetting<string>('movementPath'));
   const durationSec = (GetHostedGameSetting<number>('durationSec'));
   const behavior = (GetHostedGameSetting<string>('behavior'));
@@ -38,7 +37,19 @@ export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => st
   const lilacChaserScale = (GetHostedGameSetting<number>('lilacChaserScale'));
   const lilacChaserColor = (GetHostedGameSetting<string>('lilacChaserBallColor'));
   const viewingDistanceCm = (GetHostedGameSetting<number>('viewingDistanceCm'));
-  const cssPxPerCm = (GetHostedGameSetting<number>('cssPxPerCm'));
+  const screenWidthCm = GetHostedGameSetting<number>('screenWidthCm');
+  const screenHeightCm = GetHostedGameSetting<number>('screenHeightCm');
+  const cssPxPerCm = innerWidth / screenWidthCm;
+  const cssPxPerCmY = innerHeight / screenHeightCm;
+  const referenceSettings = {
+    run_mode: GetHostedGameSetting<'evaluation' | 'predictable' | 'random'>('runMode'),
+    stimulus_type: GetHostedGameSetting<'white_dot' | 'red_in_white' | 'numbers_dot'>('stimulusType'),
+    target_size_arcmin: GetHostedGameSetting<number>('targetSizeArcmin'),
+    speed_arcmin_sec: GetHostedGameSetting<number>('speedArcminSec'),
+    dwell_ms: GetHostedGameSetting<number>('dwellMs'),
+    hold_ms: GetHostedGameSetting<number>('holdSec') * 1000,
+    vor_change_ms: GetHostedGameSetting<number>('vorChangeMs'),
+  };
   const eyeTrackingSource = GetHostedGameSetting<'off' | 'webgazer' | 'tobii'>('eyeTrackingSource');
   const enableWebGazer = eyeTrackingSource === 'webgazer';
   const enableTobii = eyeTrackingSource === 'tobii';
@@ -55,8 +66,12 @@ export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => st
     target_axes: targetAxes,
     speed_value: speedValue,
     speed_unit: speedUnit,
+    ...referenceSettings,
     viewing_distance_cm: viewingDistanceCm,
+    screen_width_cm: screenWidthCm,
+    screen_height_cm: screenHeightCm,
     css_px_per_cm: cssPxPerCm,
+    css_px_per_cm_y: cssPxPerCmY,
     target_radius_px: targetRadiusPx,
     target_count: targetCount,
     distractor_count: distractorCount,
@@ -93,12 +108,17 @@ export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => st
   };
 
   if (enableTobii) {
-    const validation = CreateTobiiValidationFlow(cssPxPerCm, viewingDistanceCm);
-    return [validation.timeline, {
+    const validation = CreateTobiiValidationFlow(cssPxPerCm, viewingDistanceCm, cssPxPerCmY);
+    const trackedTrial = {
       ...trial,
       gaze_threshold_deg: () => validation.getThresholdDeg() ?? fallbackThresholdDeg,
       validation_error_deg: () => validation.getMeanErrorDeg() ?? -1,
-    }];
+    };
+    return [validation.timeline,
+      { timeline: [trackedTrial], conditional_function: validation.isRecording },
+      { timeline: [{ ...trial, eye_tracking_source: 'off', show_gaze_point: false }],
+        conditional_function: () => !validation.isRecording() },
+    ];
   }
   if (!enableWebGazer) return [trial];
   if (!jsPsych) {
@@ -111,16 +131,16 @@ export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => st
       beginInstructions: t('settings.wg.beginInstructions'),
       beginPrompt: t('settings.wg.beginPrompt'),
       beginTitle: t('settings.wg.beginTitle'),
-      buttonText: 'Start calibration',
-      calibrationDoneText: 'Calibration and validation are complete.',
+      buttonText: t('settings.wg.startCalibration'),
+      calibrationDoneText: t('settings.wg.calibrationComplete'),
       cameraInstructions: t('settings.wg.cameraInstructions'),
-      cameraPermissionButtonText: 'Got it',
+      cameraPermissionButtonText: t('settings.wg.cameraContinue'),
       cameraPreviewLabel: t('settings.wg.cameraPreviewLabel'),
       cameraTitle: t('settings.wg.cameraTitle'),
-      continueButtonText: 'Continue',
-      instruction1: 'Center your face in the camera view and look directly at the camera. Continue becomes available when the feedback box turns green.',
-      instruction2: 'Look at each point, then click or tap its center twice.',
-      instruction3: 'Keep your head steady until all points are complete.',
+      continueButtonText: t('settings.wg.continue'),
+      instruction1: t('settings.wg.positionInstruction'),
+      instruction2: t('settings.wg.clickInstruction'),
+      instruction3: t('settings.wg.steadyInstruction'),
       signalCheckCalibration: t('settings.wg.signalCheckCalibration'),
       signalCheckInstructions: t('settings.wg.signalCheckInstructions'),
       signalCheckTitle: t('settings.wg.signalCheckTitle'),
@@ -141,6 +161,7 @@ export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => st
       validationInstructions: t('settings.wg.validationInstructions'),
       validationNoClick: t('settings.wg.validationNoClick'),
       validationTitle: t('settings.wg.validationTitle'),
+      viewportChangedText: t('settings.wg.viewportChanged'),
     },
     trial,
     {
@@ -149,5 +170,6 @@ export function BuildOculomotorTimeline(jsPsych: JsPsych, t: (key: string) => st
     },
     cssPxPerCm,
     viewingDistanceCm,
+    cssPxPerCmY,
   );
 }

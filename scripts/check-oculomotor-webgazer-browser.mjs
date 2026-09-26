@@ -134,10 +134,10 @@ try {
   );
   await Evaluate(cdp, sessionId, `(() => {
     const source = document.querySelector('#game-setting-eyeTrackingSource');
-    source.value = '1';
+    source.value = [...source.options].find((option) => option.textContent.includes('WebGazer'))?.value ?? '0';
     source.dispatchEvent(new Event('change', { bubbles: true }));
     const mode = document.querySelector('#game-setting-mode');
-    mode.value = '3';
+    mode.value = [...mode.options].find((option) => option.textContent.includes('Central target recognition'))?.value ?? '3';
     mode.dispatchEvent(new Event('change', { bubbles: true }));
     const duration = document.querySelector('#game-setting-durationSec');
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(duration, '15');
@@ -397,10 +397,10 @@ try {
   );
   await Evaluate(cdp, sessionId, `(() => {
     const source = document.querySelector('#game-setting-eyeTrackingSource');
-    source.value = '1';
+    source.value = [...source.options].find((option) => option.textContent.includes('WebGazer'))?.value ?? '0';
     source.dispatchEvent(new Event('change', { bubbles: true }));
     const mode = document.querySelector('#game-setting-mode');
-    mode.value = '3';
+    mode.value = [...mode.options].find((option) => option.textContent.includes('Central target recognition'))?.value ?? '3';
     mode.dispatchEvent(new Event('change', { bubbles: true }));
     const duration = document.querySelector('#game-setting-durationSec');
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(duration, '15');
@@ -994,7 +994,8 @@ async function ClickInstructionButton(cdpClient, targetSessionId, step) {
     buttonCount: document.querySelectorAll('#jspsych-html-button-response-btngroup button').length,
   }))()`);
   assert.equal(state.hasStep, true, `instruction step ${step} is missing`);
-  assert.equal(state.buttonCount, 1, `instruction step ${step} must have exactly one native button`);
+  assert.equal(state.buttonCount, step === 'recalibrate_instructions' ? 2 : 1,
+    `instruction step ${step} must have the expected native choices`);
   await ClickDomSelector(cdpClient, targetSessionId, '#jspsych-html-button-response-btngroup button');
 }
 

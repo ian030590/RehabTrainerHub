@@ -59,6 +59,7 @@ export interface WebGazerCalibrationCopy {
   validationInstructions: string;
   validationNoClick: string;
   validationTitle: string;
+  viewportChangedText: string;
 }
 
 export interface WebGazerPreloadAssets {
@@ -90,6 +91,7 @@ type EyeSignalStage = 'calibration' | 'validation';
 
 interface EyeTrackingRunState {
   recordEyeTracking: boolean;
+  skipReason?: 'signal' | 'viewport';
   thresholdDeg?: number;
   validationErrorDeg?: number;
 }
@@ -247,6 +249,7 @@ function CreateEyeSignalCheck(
         if (settled) return;
         settled = true;
         runState.recordEyeTracking = false;
+        runState.skipReason = 'signal';
         stopCheckCycle();
         CleanupWebGazerRuntime();
         jsPsych.finishTrial({
@@ -412,8 +415,20 @@ export function CreateWebGazerExperimentTimeline(
   preloadAssets: WebGazerPreloadAssets = {},
   cssPxPerCm = 37.8,
   viewingDistanceCm = 60,
+  cssPxPerCmY = cssPxPerCm,
 ): object[] {
   const runState: EyeTrackingRunState = { recordEyeTracking: true };
+  const calibrationViewport = { width: innerWidth, height: innerHeight };
+  const viewportMatches = () => innerWidth === calibrationViewport.width
+    && innerHeight === calibrationViewport.height;
+  const stopForViewportChange = (data: Record<string, unknown>) => {
+    if (viewportMatches()) return false;
+    runState.recordEyeTracking = false;
+    runState.skipReason = 'viewport';
+    data.calibration_viewport_changed = true;
+    CleanupWebGazerRuntime();
+    return true;
+  };
   const preload = {
     type: PreloadPlugin,
     images: [...(preloadAssets.images ?? [])].filter(Boolean),
@@ -465,6 +480,7 @@ export function CreateWebGazerExperimentTimeline(
     repetitions_per_point: 2,
     randomize_calibration_order: true,
     data: { webgazer_flow_step: 'calibration' },
+    on_finish: (data: Record<string, unknown>) => { stopForViewportChange(data); },
   };
 
   const nativeValidationInstructions = {
@@ -490,12 +506,16 @@ export function CreateWebGazerExperimentTimeline(
       webgazer_flow_step: 'validation',
     },
     on_finish: (data: Record<string, unknown>) => {
+      if (stopForViewportChange(data)) {
+        data.validation_passed = false;
+        return;
+      }
       const raw = data.raw_gaze as Array<Array<{ x: number; y: number; dx: number; dy: number }>> | undefined;
       if (!Array.isArray(raw)) return;
       const targets = raw.map((samples) => samples[0]
         ? { x: samples[0].x - samples[0].dx, y: samples[0].y - samples[0].dy }
         : { x: NaN, y: NaN });
-      const result = ValidationThresholdDeg(raw, targets, cssPxPerCm, viewingDistanceCm);
+      const result = ValidationThresholdDeg(raw, targets, cssPxPerCm, viewingDistanceCm, cssPxPerCmY);
       runState.thresholdDeg = result?.thresholdDeg;
       runState.validationErrorDeg = result?.meanErrorDeg;
       data.validation_error_deg = result?.meanErrorDeg ?? null;
@@ -525,13 +545,22 @@ export function CreateWebGazerExperimentTimeline(
 
   const recalibrateInstructions = {
     type: HtmlButtonResponsePlugin,
-    stimulus: CreateInstructionPanel(
-      'recalibrate_instructions',
-      copy.recalibrateTitle,
-      [copy.recalibrateInstructions],
-    ),
-    choices: [copy.continueButtonText],
+    stimulus: () => {
+      const validation = jsPsych.data.get().filter({ task: 'validate' }).values().at(-1);
+      const error = typeof validation?.validation_error_deg === 'number'
+        ? `${validation.validation_error_deg.toFixed(2)}°` : '—';
+      return CreateInstructionPanel('recalibrate_instructions', copy.recalibrateTitle,
+        [copy.recalibrateInstructions, `平均誤差／Mean error: ${error}（需 ≤ 3.5°）`]);
+    },
+    choices: [copy.continueButtonText, copy.signalSkipButtonText],
     data: { webgazer_flow_step: 'recalibrate_instructions' },
+    on_finish: (data: Record<string, unknown>) => {
+      if (data.response === 1) {
+        runState.recordEyeTracking = false;
+        runState.skipReason = 'signal';
+        CleanupWebGazerRuntime();
+      }
+    },
   };
 
   const recalibrate = {
@@ -546,6 +575,7 @@ export function CreateWebGazerExperimentTimeline(
     conditional_function: () => (
       runState.recordEyeTracking && ShouldRecalibrate(jsPsych)
     ),
+    loop_function: () => runState.recordEyeTracking && ShouldRecalibrate(jsPsych),
     data: {
       phase: 'recalibration',
       webgazer_flow_step: 'recalibrate',
@@ -557,7 +587,9 @@ export function CreateWebGazerExperimentTimeline(
     stimulus: () => CreateInstructionPanel(
       'calibration_done',
       runState.recordEyeTracking ? copy.title : copy.signalSkippedTitle,
-      [runState.recordEyeTracking ? copy.calibrationDoneText : copy.signalSkippedText],
+      [runState.recordEyeTracking
+        ? `${copy.calibrationDoneText} 平均誤差／Mean error: ${runState.validationErrorDeg?.toFixed(2) ?? '—'}°；本次門檻／Threshold: ${runState.thresholdDeg?.toFixed(2) ?? '—'}°。`
+        : runState.skipReason === 'viewport' ? copy.viewportChangedText : copy.signalSkippedText],
     ),
     choices: [copy.continueButtonText],
     data: { webgazer_flow_step: 'calibration_done' },
@@ -570,10 +602,11 @@ export function CreateWebGazerExperimentTimeline(
 
   const begin = {
     type: HtmlKeyboardResponsePlugin,
-    stimulus: CreateInstructionPanel(
+    stimulus: () => CreateInstructionPanel(
       'begin',
       copy.beginTitle,
-      [copy.beginInstructions, copy.beginPrompt],
+      [runState.recordEyeTracking ? copy.beginInstructions
+        : runState.skipReason === 'viewport' ? copy.viewportChangedText : copy.signalSkippedText, copy.beginPrompt],
     ),
     choices: ['Enter', ' '],
     data: { webgazer_flow_step: 'begin' },
@@ -608,7 +641,10 @@ export function CreateWebGazerExperimentTimeline(
     timeline: [
       {
         timeline: [trackedFormalTrial],
-        conditional_function: () => runState.recordEyeTracking,
+        conditional_function: () => {
+          if (runState.recordEyeTracking) stopForViewportChange({});
+          return runState.recordEyeTracking;
+        },
       },
       {
         timeline: [untrackedFormalTrial],
@@ -628,7 +664,7 @@ export function CreateWebGazerExperimentTimeline(
         ? trialData.webgazer_sample_count
         : 0;
       const summary = !runState.recordEyeTracking
-        ? copy.signalSkippedText
+        ? runState.skipReason === 'viewport' ? copy.viewportChangedText : copy.signalSkippedText
         : sampleCount > 0
           ? copy.showDataSummary.replace('{count}', String(sampleCount))
           : copy.showDataMissing;

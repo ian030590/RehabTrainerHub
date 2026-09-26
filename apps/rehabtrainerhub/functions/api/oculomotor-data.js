@@ -19,12 +19,16 @@ const columns = [
   'distance_error_px', 'distance_error_deg', 'is_within_threshold', 'phase', 'direction',
 ];
 const metadataKeys = [
-  'mode', 'pattern', 'eye_tracking_source', 'screen_width_px', 'screen_height_px',
-  'viewing_distance_cm', 'css_px_per_cm', 'duration_ms', 'validation_error_deg',
+  'mode', 'pattern', 'run_mode', 'stimulus_type', 'eye_tracking_source',
+  'screen_width_px', 'screen_height_px', 'screen_width_cm', 'screen_height_cm',
+  'viewing_distance_cm', 'css_px_per_cm', 'css_px_per_cm_y', 'duration_ms',
+  'target_size_arcmin', 'speed_arcmin_sec', 'dwell_ms', 'hold_ms', 'vor_change_ms',
+  'validation_error_deg',
   'gaze_threshold_deg', 'gaze_threshold_arcmin', 'gaze_sampling_interval_ms',
   'fixation_radius_px', 'fixation_duration_ms',
 ];
-const textMetadataKeys = new Set(['mode', 'pattern', 'eye_tracking_source']);
+const textMetadataKeys = new Set(['mode', 'pattern', 'run_mode', 'stimulus_type', 'eye_tracking_source']);
+const phases = new Set(['training', 'saccade_latency', 'cross', 'movement', 'dwell', 'hold', 'vor']);
 const directions = new Set([
   'center', 'right', 'down_right', 'down', 'down_left', 'left', 'up_left', 'up', 'up_right',
 ]);
@@ -168,12 +172,12 @@ function IsValidUpload(value) {
   return value.records.every((row, index) => {
     if (!Array.isArray(row) || row.length !== columns.length
       || row[0] !== index + 1
-      || !Number.isInteger(row[1]) || row[1] < previousTime || row[1] > 301000
+      || !Number.isInteger(row[1]) || row[1] < previousTime || row[1] > 1200000
       || (row[2] !== null && (!Number.isSafeInteger(row[2]) || row[2] < 0))
       || ![5, 12].every((at) => row[at] === 0 || row[at] === 1)
       || ![3, 4, 6, 7, 8, 9, 10, 11].every((at) => row[at] === null
         || (typeof row[at] === 'number' && Number.isFinite(row[at]) && row[at] >= -1e6 && row[at] <= 1e6))
-      || !['training', 'saccade_latency'].includes(row[13])
+      || !phases.has(row[13])
       || !directions.has(row[14])) return false;
     if (row[8] === null || row[9] === null || row[3] === null) return false;
     if ([3, 4, 10, 11].some((at) => row[at] !== null && row[at] < 0)) return false;

@@ -34,6 +34,8 @@ import type {
   WebGazerEyeFeaturesLike,
 } from './webgazer/webgazerMetrics';
 import { createRng } from './oculomotor/random';
+import { BuildReferenceDrill } from './oculomotor/referenceDrills';
+import type { ReferenceFrame, ReferenceMode, ReferenceRunMode } from './oculomotor/referenceDrills';
 import { sampleOculomotorPatternInto } from './oculomotor/patterns';
 import {
   ConvertOculomotorSpeedToPixels,
@@ -85,6 +87,15 @@ const info = {
       type: ParameterType.STRING,
       default: 'deg/s',
     },
+    run_mode: { type: ParameterType.STRING, default: 'predictable' },
+    stimulus_type: { type: ParameterType.STRING, default: 'white_dot' },
+    target_size_arcmin: { type: ParameterType.FLOAT, default: 60 },
+    speed_arcmin_sec: { type: ParameterType.FLOAT, default: 300 },
+    dwell_ms: { type: ParameterType.INT, default: 500 },
+    hold_ms: { type: ParameterType.INT, default: 2_000 },
+    vor_change_ms: { type: ParameterType.INT, default: 500 },
+    screen_width_cm: { type: ParameterType.FLOAT, default: 53 },
+    screen_height_cm: { type: ParameterType.FLOAT, default: 30 },
     viewing_distance_cm: {
       type: ParameterType.FLOAT,
       default: 60,
@@ -93,6 +104,7 @@ const info = {
       type: ParameterType.FLOAT,
       default: 37.8,
     },
+    css_px_per_cm_y: { type: ParameterType.FLOAT, default: 37.8 },
     target_radius_px: {
       type: ParameterType.FLOAT,
       default: 35,
@@ -298,7 +310,10 @@ function ReadSafeAreaInsets(probe: HTMLElement): SafeAreaInsets {
 }
 
 const modeTitle: Record<OculomotorMode, string> = {
+  vor: '眼動訓練 · 中央目標辨識',
   pursuit: '眼動訓練 · 追視',
+  saccade: '眼動訓練 · 跳視',
+  fixation: '眼動訓練 · 定點注視',
   'reaction-jumps': '眼動訓練 · 跳視',
   'multi-object': '眼動訓練 · 多目標追蹤',
   'lilac-chaser': '眼動訓練 · 周邊固視',
@@ -515,8 +530,18 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       trial.speed_value as number,
     ));
     const viewingDistanceCm = Math.min(120, Math.max(20, trial.viewing_distance_cm as number));
-    const cssPxPerCm = Math.min(120, Math.max(10, trial.css_px_per_cm as number));
-    const baseRadiusPx = Math.min(100, Math.max(4, trial.target_radius_px as number));
+    const screenWidthCm = Math.max(1, trial.screen_width_cm as number);
+    const screenHeightCm = Math.max(1, trial.screen_height_cm as number);
+    const cssPxPerCm = innerWidth / screenWidthCm;
+    const cssPxPerCmY = innerHeight / screenHeightCm;
+    const useReferenceDrill = mode === 'vor' || mode === 'saccade' || mode === 'fixation'
+      || (mode === 'pursuit' && activePattern === 'reference');
+    const targetSizeArcmin = Math.max(1, trial.target_size_arcmin as number);
+    const stimulusType = mode === 'vor' ? 'numbers_dot' : trial.stimulus_type as string;
+    const visualDiameterCm = 2 * viewingDistanceCm * Math.tan(targetSizeArcmin * Math.PI / 21600);
+    const baseRadiusPx = useReferenceDrill
+      ? Math.min(100, Math.max(4, visualDiameterCm * cssPxPerCm / 2))
+      : Math.min(100, Math.max(4, trial.target_radius_px as number));
     const targetCount = Math.min(6, Math.max(1, Math.round(trial.target_count as number)));
     const distractorCount = Math.min(10, Math.max(0, Math.round(trial.distractor_count as number)));
     const distractorBrightness = Math.min(1, Math.max(0.35, trial.distractor_brightness as number));
@@ -537,7 +562,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
     const customAudio = typeof trial.audio === 'string' ? trial.audio : '';
     const bounceJitter = Math.max(0, trial.bounce_jitter as number);
     const motionDirection = trial.motion_direction === -1 ? -1 : 1;
-    const showTrail = Boolean(trial.show_trail) && IsOculomotorPatternReversible(activePattern);
+    const showTrail = Boolean(trial.show_trail) && (useReferenceDrill || IsOculomotorPatternReversible(activePattern));
     const letterEnabled = Boolean(trial.letter_enabled);
     const letterColor = parseCssHexColor(trial.letter_color, 0x000000);
     const letterWeight = trial.letter_weight === 400
@@ -553,6 +578,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
     const lilacChaserScale = Math.min(1.25, Math.max(0.75, trial.lilac_chaser_scale as number));
     const lilacChaserColor = parseCssHexColor(trial.lilac_chaser_color, 0xff00fe);
     const rng = createRng(Math.floor(Math.random() * 2_147_483_646) + 1);
+    let randomIndex = 0;
     let ended = false;
     let paused = false;
     let pauseStartedAt = 0;
@@ -669,6 +695,33 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         width: Math.max(1, app.screen.width),
         height: Math.max(1, app.screen.height),
       });
+      const initialArena = getArena();
+      const referenceDrill = useReferenceDrill ? BuildReferenceDrill({
+        mode: mode as ReferenceMode,
+        runMode: trial.run_mode as ReferenceRunMode,
+        width: initialArena.width,
+        height: initialArena.height,
+        radiusPx: baseRadiusPx,
+        speedArcminSec: trial.speed_arcmin_sec as number,
+        viewingDistanceCm,
+        pxPerCmX: cssPxPerCm,
+        pxPerCmY: cssPxPerCmY,
+        durationMs,
+        dwellMs: trial.dwell_ms as number,
+        holdMs: trial.hold_ms as number,
+        changeMs: trial.vor_change_ms as number,
+        directions: activeTargetAxes,
+        reverseOrder: motionDirection === -1,
+        random: () => rng.randomAt(randomIndex++),
+        movementProgress: (elapsed, total) => {
+          const travelled = GetOculomotorTravelPx(behavior, elapsed / 1000, 1);
+          const planned = GetOculomotorTravelPx(behavior, total / 1000, 1);
+          return planned > 0 ? travelled / planned : 1;
+        },
+      }) : null;
+      let referenceFrame: ReferenceFrame | null = null;
+      const stimulusColors = [...new Set([targetColor, pixiColors.warning,
+        pixiColors.error, pixiColors.accentHover, pixiColors.border])];
 
       const getElapsedMs = () => {
         const now = performance.now();
@@ -682,6 +735,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
       let lastDeviceTimestampUs: number | null = null;
       let stopTobiiGaze: (() => void) | undefined;
       let lastJumpBucket = -1;
+      let lastReferenceTargetIndex = -1;
       let targetJumpAt = -Infinity;
       let blinkDetectorState = CreateBlinkDetectorState();
       let blinkObservationCount = 0;
@@ -736,8 +790,10 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           y: canvasRect.top + (latestTarget.y / app.screen.height) * canvasRect.height,
         };
         const valid = gaze !== null && Number.isFinite(gaze.x) && Number.isFinite(gaze.y);
-        const phase = mode === 'reaction-jumps' && now - targetJumpAt < 200
-          ? 'saccade_latency' : 'training';
+        const phase = (mode === 'reaction-jumps' && now - targetJumpAt < 200)
+          || (mode === 'saccade' && referenceFrame?.phase === 'dwell'
+            && elapsedMs - referenceFrame.phaseStartMs < 200)
+          ? 'saccade_latency' : referenceFrame?.phase ?? 'training';
         const deltaMs = deviceTimestampUs !== null && lastDeviceTimestampUs !== null
           && deviceTimestampUs > lastDeviceTimestampUs
           ? (deviceTimestampUs - lastDeviceTimestampUs) / 1000
@@ -745,7 +801,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         lastGazeAt = now;
         lastDeviceTimestampUs = deviceTimestampUs;
         const distancePx = valid ? Math.hypot(gaze.x - targetPoint.x, gaze.y - targetPoint.y) : null;
-        const distanceDeg = valid ? AngularDistanceDeg(gaze, targetPoint, cssPxPerCm, viewingDistanceCm) : null;
+        const distanceDeg = valid ? AngularDistanceDeg(gaze, targetPoint, cssPxPerCm, viewingDistanceCm, cssPxPerCmY) : null;
         const inThreshold = valid && phase !== 'saccade_latency' && distanceDeg! <= gazeThresholdDeg ? 1 : 0;
         gazeRecords.push([
           gazeRecords.length + 1, elapsedMs, deviceTimestampUs, Math.round(deltaMs * 100) / 100,
@@ -909,6 +965,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         app.renderer.off('resize', handleResize);
         app.stage.off('pointertap', handleStageTap);
         window.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
         stopOfficialGazeUpdates?.();
         stopOfficialGazeUpdates = undefined;
         stopTobiiGaze?.();
@@ -939,13 +996,23 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           response,
           mode,
           pattern: activePattern,
-          acquired_targets: acquiredTargets,
+          acquired_targets: referenceDrill ? referenceDrill.completedAt(elapsed) : acquiredTargets,
           average_fps: Math.round(averageFps * 10) / 10,
           duration_ms: elapsed,
           screen_width_px: innerWidth,
           screen_height_px: innerHeight,
           viewing_distance_cm: viewingDistanceCm,
+          screen_width_cm: screenWidthCm,
+          screen_height_cm: screenHeightCm,
           css_px_per_cm: cssPxPerCm,
+          css_px_per_cm_y: cssPxPerCmY,
+          run_mode: useReferenceDrill ? trial.run_mode : undefined,
+          target_size_arcmin: useReferenceDrill ? targetSizeArcmin : undefined,
+          stimulus_type: useReferenceDrill ? stimulusType : undefined,
+          speed_arcmin_sec: useReferenceDrill ? trial.speed_arcmin_sec : undefined,
+          dwell_ms: useReferenceDrill ? trial.dwell_ms : undefined,
+          hold_ms: useReferenceDrill ? trial.hold_ms : undefined,
+          vor_change_ms: mode === 'vor' ? trial.vor_change_ms : undefined,
           eye_tracking_source: gazeEnabled ? eyeTrackingSource : 'off',
           validation_error_deg: gazeEnabled
             ? (typeof trial.validation_error_deg === 'number'
@@ -1132,19 +1199,31 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
         if (event.code === 'Escape') finish('手動結束');
       };
 
-      const handleResize = () => draw();
+      const handleFullscreenChange = () => {
+        if (!document.fullscreenElement) finish('離開全螢幕');
+      };
+
+      const handleResize = () => {
+        if (referenceDrill && (Math.abs(app.screen.width - initialArena.width) > 1
+          || Math.abs(app.screen.height - initialArena.height) > 1)) {
+          finish('畫面尺寸變更');
+          return;
+        }
+        draw();
+      };
 
       app.stage.eventMode = 'static';
       app.stage.hitArea = app.screen;
       app.stage.on('pointertap', handleStageTap);
       window.addEventListener('keydown', handleKeydown);
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
       app.renderer.on('resize', handleResize);
 
       const draw = () => {
         const arena = getArena();
         const elapsedMs = getElapsedMs();
         const elapsedSec = elapsedMs / 1000;
-        const remainingMs = Math.max(0, durationMs - elapsedMs);
+        const remainingMs = Math.max(0, (referenceDrill?.endMs ?? durationMs) - elapsedMs);
 
         bgGfx.clear().rect(0, 0, arena.width, arena.height).fill({
           color: backgroundColor,
@@ -1180,6 +1259,67 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
           targetDirection = 'center';
           previousTargetPoint = { x: latestTarget.x, y: latestTarget.y };
           drawLilacChaser(arena, elapsedSec);
+          return;
+        }
+
+        if (referenceDrill) {
+          referenceFrame = referenceDrill.frameAt(elapsedMs);
+          const frame = referenceFrame;
+          if (mode === 'saccade' && frame.phase === 'dwell' && frame.targetIndex !== lastReferenceTargetIndex) {
+            lastReferenceTargetIndex = frame.targetIndex;
+            fixationSegment += 1;
+          }
+          const stimulusIndex = mode === 'vor' || mode === 'saccade'
+            ? frame.targetIndex : Math.floor(elapsedMs / 500);
+          frames[0] = {
+            x: frame.x,
+            y: frame.y,
+            radiusPx: GetOculomotorRadiusPx(behavior, elapsedSec, baseRadiusPx),
+            color: stimulusType === 'numbers_dot'
+              ? stimulusColors[stimulusIndex % stimulusColors.length] : targetColor,
+            alpha: opacity,
+            role: 'target',
+          };
+          latestTarget = frames[0];
+          targetDirection = frame.direction === null ? 'center'
+            : ['up', 'up_right', 'right', 'down_right', 'down', 'down_left', 'left', 'up_left'][frame.direction];
+          const count = mode === 'vor' || frame.phase === 'cross' ? 1 : 1 + distractorCount;
+          for (let index = 1; index < count; index += 1) {
+            const angle = (index / Math.max(1, distractorCount)) * Math.PI * 2 + elapsedSec * 0.35;
+            const orbit = Math.min(arena.width, arena.height) * 0.28;
+            frames[index] = {
+              x: arena.width / 2 + Math.cos(angle) * orbit,
+              y: arena.height / 2 + Math.sin(angle) * orbit,
+              radiusPx: baseRadiusPx,
+              color: distractorColor,
+              alpha: opacity,
+              role: 'distractor',
+            };
+          }
+          drawTrail(1, elapsedMs);
+          for (let index = 0; index < count; index += 1) {
+            drawTargetShape(targetGfx, frames[index], false,
+              index === 0 && frame.phase === 'cross' ? 'cross'
+                : index === 0 && stimulusType !== 'white_dot' ? 'circle' : targetShape);
+            if (index === 0 && stimulusType === 'red_in_white' && frame.phase !== 'cross') {
+              targetGfx.circle(frame.x, frame.y, frames[0].radiusPx * 0.4)
+                .fill({ color: pixiColors.error, alpha: frames[0].alpha });
+            }
+          }
+          if (stimulusType === 'numbers_dot' && frame.phase !== 'cross') {
+            reactionLetter.text = String(stimulusIndex % 10);
+            const color = frames[0].color;
+            const brightness = ((color >> 16) & 0xff) * 0.299
+              + ((color >> 8) & 0xff) * 0.587 + (color & 0xff) * 0.114;
+            reactionLetter.style.fill = brightness > 140 ? backgroundColor : pixiColors.bgCard;
+            reactionLetter.x = frame.x;
+            reactionLetter.y = frame.y;
+            reactionLetter.visible = true;
+            hideTargetLetters();
+          } else {
+            drawTargetLetters(1, elapsedSec, frame.targetIndex);
+          }
+          previousTargetPoint = { x: frame.x, y: frame.y };
           return;
         }
 
@@ -1270,7 +1410,7 @@ class PixiOculomotorTrainingPlugin implements JsPsychPlugin<Info> {
 
         if (!paused) {
           draw();
-          if (getElapsedMs() >= durationMs) finish('完成');
+          if (getElapsedMs() >= (referenceDrill?.endMs ?? durationMs)) finish('完成');
         } else {
           draw();
         }

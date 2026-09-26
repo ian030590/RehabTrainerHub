@@ -3,14 +3,38 @@
   "gameId": "oculomotor-training",
   "sections": [
     {
+      "id": "display",
+      "title": { "zh-TW": "螢幕與眼動來源", "en": "Display and gaze source" },
+      "description": {
+        "zh-TW": "先量測可視螢幕寬高與觀看距離。WebGazer 會在全螢幕進行九點校正及五點驗證；Tobii 須先在 Tobii Experience 校正，再進行五點驗證。",
+        "en": "Measure visible display size and viewing distance. WebGazer runs nine-point calibration and five-point validation in fullscreen. Calibrate Tobii in Tobii Experience before five-point validation."
+      },
+      "fields": [
+        { "key": "screenWidthCm", "type": "slider", "label": { "zh-TW": "可視螢幕寬度", "en": "Visible screen width" }, "default": 53, "min": 15, "max": 150, "step": 0.5, "unit": { "zh-TW": "公分", "en": "cm" } },
+        { "key": "screenHeightCm", "type": "slider", "label": { "zh-TW": "可視螢幕高度", "en": "Visible screen height" }, "default": 30, "min": 10, "max": 100, "step": 0.5, "unit": { "zh-TW": "公分", "en": "cm" } },
+        { "key": "viewingDistanceCm", "type": "slider", "label": { "zh-TW": "觀看距離", "en": "Viewing distance" }, "default": 60, "min": 20, "max": 120, "step": 1, "unit": { "zh-TW": "公分", "en": "cm" } },
+        {
+          "key": "eyeTrackingSource", "type": "list",
+          "label": { "zh-TW": "眼動資料來源", "en": "Gaze source" },
+          "default": "webgazer",
+          "options": [
+            { "value": "webgazer", "label": { "zh-TW": "WebGazer 攝影機（校正＋驗證）", "en": "WebGazer camera (calibrate and validate)" } },
+            { "value": "tobii", "label": { "zh-TW": "Tobii Eye Tracker 5（Windows 專用程式）", "en": "Tobii Eye Tracker 5 (Windows host)" } },
+            { "value": "off", "label": { "zh-TW": "不記錄眼動", "en": "No gaze recording" } }
+          ]
+        },
+        { "key": "tobiiCalibrated", "type": "checkbox", "label": { "zh-TW": "已在 Tobii Experience 為本次使用者完成校正", "en": "Participant calibrated in Tobii Experience" }, "default": false }
+      ]
+    },
+    {
       "id": "drill",
       "title": {
         "zh-TW": "活動模式",
         "en": "Drill"
       },
       "description": {
-        "zh-TW": "角速度與注視閾值需先量測觀看距離及每公分 CSS 像素；眼動記錄需選擇追蹤來源並取得有效樣本。",
-        "en": "Angular speed and gaze threshold require viewing distance and calibrated CSS pixels per centimeter. Gaze records require a tracker and valid samples."
+        "zh-TW": "以中央辨識、追視、跳視及定點注視為主；下方路徑與節奏是附加選項。",
+        "en": "Central recognition, pursuit, saccade, and fixation are the primary drills; paths and pacing below are additional options."
       },
       "fields": [
         {
@@ -28,6 +52,18 @@
                 "zh-TW": "追視",
                 "en": "Smooth Pursuit"
               }
+            },
+            {
+              "value": "saccade",
+              "label": { "zh-TW": "跳視", "en": "Saccade" }
+            },
+            {
+              "value": "fixation",
+              "label": { "zh-TW": "定點注視", "en": "Fixation" }
+            },
+            {
+              "value": "vor",
+              "label": { "zh-TW": "中央目標辨識", "en": "Central target recognition" }
             },
             {
               "value": "reaction-jumps",
@@ -53,14 +89,152 @@
           ]
         },
         {
+          "key": "durationSec",
+          "type": "slider",
+          "label": {
+            "zh-TW": "活動時間",
+            "en": "Session duration"
+          },
+          "default": 60,
+          "min": 15,
+          "max": 300,
+          "step": 1,
+          "unit": {
+            "zh-TW": "秒",
+            "en": "sec"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reference",
+      "title": { "zh-TW": "基本活動參數", "en": "Core drill settings" },
+      "description": { "zh-TW": "評估模式走完指定方向即結束；固定及隨機模式依活動時間結束。中央辨識只使用變換間隔。", "en": "Evaluation ends after the selected directions; predictable and random runs use the session duration. Central recognition uses the change interval." },
+      "fields": [
+        { "key": "runMode", "type": "list", "label": { "zh-TW": "進行方式", "en": "Run mode" }, "default": "predictable", "options": [
+          { "value": "evaluation", "label": { "zh-TW": "指定方向各完成一輪", "en": "Evaluation sequence" } },
+          { "value": "predictable", "label": { "zh-TW": "固定順序", "en": "Predictable" } },
+          { "value": "random", "label": { "zh-TW": "隨機順序", "en": "Random" } }
+        ] },
+        { "key": "stimulusType", "type": "list", "label": { "zh-TW": "目標標記", "en": "Target marker" }, "description": { "zh-TW": "中央目標辨識固定為變色數字；其他基本模式可選擇標記。", "en": "Central recognition always uses changing colors and digits; choose a marker for other core drills." }, "default": "white_dot", "options": [
+          { "value": "white_dot", "label": { "zh-TW": "單色圓點", "en": "Solid dot" } },
+          { "value": "red_in_white", "label": { "zh-TW": "圓點加對比中心", "en": "Dot with contrast center" } },
+          { "value": "numbers_dot", "label": { "zh-TW": "變色數字圓點", "en": "Changing color and digit" } }
+        ] },
+        { "key": "targetSizeArcmin", "type": "slider", "label": { "zh-TW": "目標視角直徑", "en": "Target visual angle diameter" }, "default": 60, "min": 10, "max": 600, "step": 5, "unit": { "zh-TW": "角分", "en": "arcmin" } },
+        { "key": "speedArcminSec", "type": "slider", "label": { "zh-TW": "追視／定點移動角速度", "en": "Pursuit/fixation angular speed" }, "default": 300, "min": 30, "max": 1200, "step": 10, "unit": { "zh-TW": "角分／秒", "en": "arcmin/s" } },
+        { "key": "dwellMs", "type": "slider", "label": { "zh-TW": "跳視停留時間", "en": "Saccade dwell time" }, "default": 500, "min": 200, "max": 3000, "step": 50, "unit": { "zh-TW": "毫秒", "en": "ms" } },
+        { "key": "holdSec", "type": "slider", "label": { "zh-TW": "定點注視時間", "en": "Fixation hold time" }, "default": 2, "min": 0.5, "max": 10, "step": 0.5, "unit": { "zh-TW": "秒", "en": "sec" } },
+        { "key": "vorChangeMs", "type": "slider", "label": { "zh-TW": "中央目標變換間隔", "en": "Central target change interval" }, "default": 500, "min": 200, "max": 2000, "step": 50, "unit": { "zh-TW": "毫秒", "en": "ms" } }
+      ]
+    },
+    {
+      "id": "directions",
+      "title": {
+        "zh-TW": "移動目標呈現方位",
+        "en": "Target motion directions"
+      },
+      "description": {
+        "zh-TW": "按照九宮格方位排列，決定視覺注視點在哪個區域移動（支援 8 個空間方向）。",
+        "en": "Arranged in a 3x3 compass grid to determine target movement areas."
+      },
+      "fields": [
+        {
+          "key": "axis0Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "上（↑）",
+            "en": "Up (↑)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis1Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "右上（↗）",
+            "en": "Up-Right (↗)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis2Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "右（→）",
+            "en": "Right (→)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis3Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "右下（↘）",
+            "en": "Down-Right (↘)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis4Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "下（↓）",
+            "en": "Down (↓)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis5Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "左下（↙）",
+            "en": "Down-Left (↙)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis6Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "左（←）",
+            "en": "Left (←)"
+          },
+          "default": true
+        },
+        {
+          "key": "axis7Enabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "左上（↖）",
+            "en": "Up-Left (↖)"
+          },
+          "default": true
+        }
+      ]
+    },
+    {
+      "id": "motion",
+      "title": {
+        "zh-TW": "進階路徑與節奏",
+        "en": "Additional paths and pacing"
+      },
+      "description": { "zh-TW": "其他路徑與速度單位只套用於追視的非標準路徑；節奏、方向及軌跡可搭配基本模式。", "en": "Other paths and speed units apply to nonstandard pursuit paths. Pacing, direction and trail also work with core drills." },
+      "fields": [
+        {
           "key": "movementPath",
           "type": "list",
           "label": {
             "zh-TW": "移動路徑",
             "en": "Motion path"
           },
-          "default": "randomWalk",
+          "description": { "zh-TW": "追視模式使用；其他基本模式依各自固定流程。", "en": "Used by pursuit; other core drills use their own sequence." },
+          "default": "reference",
           "options": [
+            {
+              "value": "reference",
+              "label": { "zh-TW": "標準中心至邊緣路徑", "en": "Standard center-to-edge path" }
+            },
             {
               "value": "randomWalk",
               "label": {
@@ -257,116 +431,6 @@
           ]
         },
         {
-          "key": "durationSec",
-          "type": "slider",
-          "label": {
-            "zh-TW": "活動時間",
-            "en": "Session duration"
-          },
-          "default": 60,
-          "min": 15,
-          "max": 300,
-          "step": 1,
-          "unit": {
-            "zh-TW": "秒",
-            "en": "sec"
-          }
-        }
-      ]
-    },
-    {
-      "id": "directions",
-      "title": {
-        "zh-TW": "移動目標呈現方位",
-        "en": "Target motion directions"
-      },
-      "description": {
-        "zh-TW": "按照九宮格方位排列，決定視覺注視點在哪個區域移動（支援 8 個空間方向）。",
-        "en": "Arranged in a 3x3 compass grid to determine target movement areas."
-      },
-      "fields": [
-        {
-          "key": "axis0Enabled",
-          "type": "checkbox",
-          "label": {
-            "zh-TW": "上（↑）",
-            "en": "Up (↑)"
-          },
-          "default": true
-        },
-        {
-          "key": "axis1Enabled",
-          "type": "checkbox",
-          "label": {
-            "zh-TW": "右上（↗）",
-            "en": "Up-Right (↗)"
-          },
-          "default": true
-        },
-        {
-          "key": "axis2Enabled",
-          "type": "checkbox",
-          "label": {
-            "zh-TW": "右（→）",
-            "en": "Right (→)"
-          },
-          "default": true
-        },
-        {
-          "key": "axis3Enabled",
-          "type": "checkbox",
-          "label": {
-            "zh-TW": "右下（↘）",
-            "en": "Down-Right (↘)"
-          },
-          "default": true
-        },
-        {
-          "key": "axis4Enabled",
-          "type": "checkbox",
-          "label": {
-            "zh-TW": "下（↓）",
-            "en": "Down (↓)"
-          },
-          "default": true
-        },
-        {
-          "key": "axis5Enabled",
-          "type": "checkbox",
-          "label": {
-            "zh-TW": "左下（↙）",
-            "en": "Down-Left (↙)"
-          },
-          "default": true
-        },
-        {
-          "key": "axis6Enabled",
-          "type": "checkbox",
-          "label": {
-            "zh-TW": "左（←）",
-            "en": "Left (←)"
-          },
-          "default": true
-        },
-        {
-          "key": "axis7Enabled",
-          "type": "checkbox",
-          "label": {
-            "zh-TW": "左上（↖）",
-            "en": "Up-Left (↖)"
-          },
-          "default": true
-        }
-      ]
-    },
-    {
-      "id": "motion",
-      "title": {
-        "zh-TW": "移動與螢幕校正",
-        "en": "Motion and screen calibration"
-      },
-      "fields": [
-        {
           "key": "speedUnit",
           "type": "list",
           "label": {
@@ -422,8 +486,8 @@
             "en": "Direction"
           },
           "description": {
-            "zh-TW": "反向只套用於可循環的預測性路徑。",
-            "en": "Reverse applies to reversible predictive paths."
+            "zh-TW": "標準模式反轉選定方向順序；其他路徑只反轉可逆移動。",
+            "en": "Reverses selected direction order in standard drills and reversible motion in other paths."
           },
           "default": 1,
           "options": [
@@ -451,34 +515,6 @@
             "en": "Show trail"
           },
           "default": false
-        },
-        {
-          "key": "viewingDistanceCm",
-          "type": "slider",
-          "label": {
-            "zh-TW": "觀看距離",
-            "en": "Viewing distance"
-          },
-          "default": 60,
-          "min": 20,
-          "max": 120,
-          "step": 1,
-          "unit": {
-            "zh-TW": "公分",
-            "en": "cm"
-          }
-        },
-        {
-          "key": "cssPxPerCm",
-          "type": "slider",
-          "label": {
-            "zh-TW": "每公分 CSS 像素",
-            "en": "CSS pixels/cm"
-          },
-          "default": 37.8,
-          "min": 10,
-          "max": 120,
-          "step": 0.1
         }
       ]
     },
@@ -489,8 +525,8 @@
         "en": "Targets and distractors"
       },
       "description": {
-        "zh-TW": "目標與干擾物數量只套用於多目標追蹤模式。",
-        "en": "Target and distractor counts apply to Multiple Distractions mode."
+        "zh-TW": "干擾物可加入追視、跳視與定點注視；目標數量只套用於多目標模式。",
+        "en": "Distractors can appear in pursuit, saccade and fixation; target count applies to Multiple Distractions."
       },
       "fields": [
         {
@@ -512,7 +548,7 @@
             "zh-TW": "干擾物數量",
             "en": "Distractors"
           },
-          "default": 5,
+          "default": 0,
           "min": 0,
           "max": 10,
           "step": 1
@@ -524,7 +560,7 @@
             "zh-TW": "目標顏色",
             "en": "Ball color"
           },
-          "default": "#76d900"
+          "default": "#ffffff"
         },
         {
           "key": "distractorBrightness",
@@ -607,8 +643,8 @@
           "key": "targetSizePx",
           "type": "slider",
           "label": {
-            "zh-TW": "目標半徑",
-            "en": "Target radius"
+            "zh-TW": "進階路徑目標半徑",
+            "en": "Other-path target radius"
           },
           "default": 35,
           "min": 4,
@@ -780,28 +816,14 @@
     {
       "id": "optional",
       "title": {
-        "zh-TW": "選用眼動追蹤",
-        "en": "Optional gaze tracking"
+        "zh-TW": "眼動顯示選項",
+        "en": "Gaze display options"
       },
       "description": {
         "zh-TW": "啟用前請確認裝置與環境適合使用。",
         "en": "Check that your device and environment are suitable before enabling these features."
       },
       "fields": [
-        {
-          "key": "eyeTrackingSource",
-          "type": "list",
-          "label": {
-            "zh-TW": "眼動資料來源",
-            "en": "Gaze source"
-          },
-          "default": "off",
-          "options": [
-            { "value": "off", "label": { "zh-TW": "關閉", "en": "Off" } },
-            { "value": "webgazer", "label": { "zh-TW": "WebGazer 攝影機", "en": "WebGazer camera" } },
-            { "value": "tobii", "label": { "zh-TW": "Tobii Eye Tracker 5（需 Windows 專用程式）", "en": "Tobii Eye Tracker 5 (Windows host required)" } }
-          ]
-        },
         {
           "key": "gazeThresholdArcmin",
           "type": "slider",

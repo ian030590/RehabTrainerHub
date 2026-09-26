@@ -12,7 +12,10 @@ export const oculomotorModes: Array<{
   label: string;
   desc: string;
 }> = [
+  { id: 'vor', label: '中央目標辨識', desc: '中央目標變換' },
   { id: 'pursuit', label: '追視', desc: '平滑追蹤' },
+  { id: 'saccade', label: '跳視', desc: '九宮格跳轉' },
+  { id: 'fixation', label: '定點注視', desc: '邊緣停留' },
   { id: 'reaction-jumps', label: '跳視', desc: '快速定位' },
   { id: 'multi-object', label: '多目標', desc: '干擾追蹤' },
   { id: 'lilac-chaser', label: '周邊', desc: '中心固視' },
@@ -22,6 +25,7 @@ export const oculomotorPatterns: Array<{
   id: OculomotorPattern;
   label: string;
 }> = [
+  { id: 'reference', label: '標準中心至邊緣' },
   { id: 'randomWalk', label: '隨機路徑 (Random Walk)' },
   { id: 'circle', label: '圓形 (Circle)' },
   { id: 'ellipse', label: '橢圓形 (Ellipse)' },

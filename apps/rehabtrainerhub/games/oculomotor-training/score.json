@@ -3,7 +3,7 @@
   "gameId": "oculomotor-training",
   "presentation": {
     "primarySummaryKeys": ["aoiScore","firstFixation","distance","distanceSd"],
-    "qualitySummaryKeys": ["fps","samples"],
+    "qualitySummaryKeys": ["validationErrorDeg","gazeThresholdDeg","fps","samples"],
     "defaultRoundMetricKey": "aoiScore",
     "chartType": "line"
   },
@@ -98,6 +98,12 @@
       "key": "gazeThresholdDeg",
       "label": { "zh": "注視閾值", "en": "Gaze threshold" },
       "sources": ["gaze_threshold_deg"],
+      "unit": "deg"
+    },
+    {
+      "key": "validationErrorDeg",
+      "label": { "zh": "五點驗證平均角度誤差", "en": "Five-point validation mean angular error" },
+      "sources": ["validation_error_deg"],
       "unit": "deg"
     },
     {
@@ -204,6 +210,12 @@
       "key": "gazeThresholdDeg",
       "label": { "zh": "注視閾值", "en": "Gaze threshold" },
       "sources": ["gaze_threshold_deg"],
+      "unit": "deg"
+    },
+    {
+      "key": "validationErrorDeg",
+      "label": { "zh": "五點驗證平均角度誤差", "en": "Five-point validation mean angular error" },
+      "sources": ["validation_error_deg"],
       "unit": "deg"
     },
     {

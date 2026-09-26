@@ -115,6 +115,33 @@ test('private R2 CSV stores canonical rows and only the owner can list or read i
   assert.equal((await Get('?subjectId=22222222-2222-4222-8222-222222222222', owner, env)).status, 400);
 });
 
+test('reference drills store physical geometry, validation metadata, and phase rows', async () => {
+  const env = CreateEnv();
+  const phases = ['cross', 'movement', 'dwell', 'hold', 'vor'];
+  const payload = {
+    ...valid,
+    metadata: {
+      ...valid.metadata,
+      mode: 'fixation', run_mode: 'evaluation', stimulus_type: 'numbers_dot',
+      screen_width_cm: 53, screen_height_cm: 30, viewing_distance_cm: 60,
+      css_px_per_cm_y: 36, target_size_arcmin: 60, speed_arcmin_sec: 300,
+      validation_error_deg: 2.1, gaze_threshold_deg: 4.2,
+    },
+    records: phases.map((phase, index) => {
+      const row = [...valid.records[0]];
+      row[0] = index + 1;
+      row[1] = index === 4 ? 400000 : index * 100;
+      row[13] = phase;
+      return row;
+    }),
+  };
+  assert.equal((await Post(payload, null, env)).status, 201);
+  const csv = env.objects.get(`guests/${subjectId}/${id}.csv`).csv;
+  assert.match(csv, /# screen_width_cm,53\r\n# screen_height_cm,30\r\n/);
+  assert.match(csv, /# validation_error_deg,2\.1\r\n# gaze_threshold_deg,4\.2\r\n/);
+  assert.match(csv, /400000[^\r\n]*,vor,right\r\n$/);
+});
+
 test('rejects forged, malformed, oversized, and cross-origin uploads before R2', async () => {
   const env = CreateEnv();
   const cases = [

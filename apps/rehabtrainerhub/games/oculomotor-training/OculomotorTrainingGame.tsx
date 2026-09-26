@@ -13,7 +13,7 @@ RequestHubTrainingConfiguration,
 import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
 import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
 import { useT } from '@rehab-trainer/ui/i18n';
-import { GetSetting,getActiveUser } from '@rehab-trainer/ui/settings';
+import { getActiveUser } from '@rehab-trainer/ui/settings';
 import { soundManager } from './runtime/soundManager';
 import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
 import type { JsPsych } from 'jspsych';
@@ -161,7 +161,10 @@ export function OculomotorTrainingGame() {
   const mode = GetHostedGameSetting<string>('mode');
   const durationSec = GetHostedGameSetting<number>('durationSec');
   const modeLabels: Record<string, string> = {
+    vor: isZh ? '中央目標辨識' : 'Central target recognition',
     pursuit: isZh ? '追視' : 'Smooth Pursuit',
+    saccade: isZh ? '跳視' : 'Saccade',
+    fixation: isZh ? '定點注視' : 'Fixation',
     'reaction-jumps': isZh ? '跳視' : 'Reaction Jumps',
     'multi-object': isZh ? '多目標追蹤' : 'Multiple Distractions',
     'lilac-chaser': isZh ? '周邊固視' : 'Lilac Chaser',
@@ -178,34 +181,52 @@ export function OculomotorTrainingGame() {
             summaryItems={[
               { label: isZh ? '活動模式' : 'Mode', value: modeLabels[mode] ?? mode },
               { label: isZh ? '活動時間' : 'Duration', value: `${durationSec} ${isZh ? '秒' : 's'}` },
+              { label: isZh ? '眼動來源' : 'Gaze source', value: eyeTrackingSource === 'webgazer' ? 'WebGazer' : eyeTrackingSource === 'tobii' ? 'Tobii' : isZh ? '不記錄' : 'Off' },
             ]}
             sections={isZh ? [
               {
                 title: '操作與玩法',
-                description: '透過目標追蹤與跳視注視，加強眼球平滑追視與注視穩定度。',
+                description: '先確認螢幕尺寸及觀看距離，再跟隨或注視畫面目標。',
                 items: [
                   '頭部保持放鬆並面向螢幕中央。',
-                  '僅轉動雙眼跟隨畫面上移動或跳躍的目標標記。',
-                  '盡量保持視線精確對準目標，維持流暢追蹤。',
+                  'WebGazer 會先進行九點校正與五點驗證；Tobii 需先在 Tobii Experience 校正。',
+                  '活動中依選擇的模式跟隨或注視目標；不適時按 Esc 結束。',
                 ],
               },
-              { title: '成績計算', description: '結算會記錄活動時長、模式及追蹤歷程。' },
+              { title: '當次紀錄', description: '有眼動資料時顯示驗證誤差、當次注視門檻及目標停留比例；數值僅供本次活動參考。' },
             ] : [
               {
                 title: 'How to Play',
-                description: 'Improve smooth pursuit and fixation stability with moving targets.',
+                description: 'Confirm display size and viewing distance, then follow or fixate on the target.',
                 items: [
                   'Keep your head relaxed and centered towards the screen.',
-                  'Follow the moving or jumping target using only your eyes.',
-                  'Maintain precise fixation and smooth tracking across the path.',
+                  'WebGazer runs nine-point calibration and five-point validation. Calibrate Tobii in Tobii Experience first.',
+                  'Follow the selected drill. Press Escape to stop if uncomfortable.',
                 ],
               },
-              { title: 'Results', description: 'Records session duration, mode settings, and tracking history.' },
+              { title: 'Session record', description: 'When gaze is recorded, shows validation error, this session’s threshold, and on-target time share.' },
             ]}
             startLabel={isZh ? '開始訓練' : 'Start Training'}
             backLabel={isZh ? '回設定' : 'Back to Settings'}
             onStart={async () => {
-              await enterTrainingFullscreen();
+              if (mode !== 'vor' && !Array.from({ length: 8 }, (_, axis) => axis)
+                .some((axis) => GetHostedGameSetting<boolean>(`axis${axis}Enabled`))) {
+                alert(isZh ? '請至少選擇一個移動目標方位。' : 'Select at least one target direction.');
+                return;
+              }
+              if (eyeTrackingSource === 'tobii' && !GetHostedGameSetting<boolean>('tobiiCalibrated')) {
+                alert(isZh ? '請先在 Tobii Experience 為本次使用者完成校正，並在設定勾選確認。' : 'Calibrate this participant in Tobii Experience and confirm it in settings.');
+                return;
+              }
+              if (eyeTrackingSource === 'tobii' && !HasTobiiHost()) {
+                alert(isZh ? '請使用 Tobii Windows 專用程式開啟此遊戲。' : 'Open this game in the Tobii Windows host.');
+                return;
+              }
+              const entered = await enterTrainingFullscreen();
+              if (!entered) {
+                alert(isZh ? '此活動需要全螢幕，請允許全螢幕後重試。' : 'This drill requires fullscreen. Allow fullscreen and try again.');
+                return;
+              }
               setPhase('running');
             }}
             onBack={() => RequestHubTrainingConfiguration()}

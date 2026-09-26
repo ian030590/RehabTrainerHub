@@ -17,8 +17,9 @@ export function AngularDistanceDeg(
   target: GazePoint,
   cssPxPerCm: number,
   viewingDistanceCm: number,
+  cssPxPerCmY = cssPxPerCm,
 ): number {
-  const distanceCm = Math.hypot(gaze.x - target.x, gaze.y - target.y) / cssPxPerCm;
+  const distanceCm = Math.hypot((gaze.x - target.x) / cssPxPerCm, (gaze.y - target.y) / cssPxPerCmY);
   return 2 * Math.atan(distanceCm / (2 * viewingDistanceCm)) * 180 / Math.PI;
 }
 
@@ -35,6 +36,7 @@ export function ValidationThresholdDeg(
   targets: readonly GazePoint[],
   cssPxPerCm: number,
   viewingDistanceCm: number,
+  cssPxPerCmY = cssPxPerCm,
 ): { meanErrorDeg: number; thresholdDeg: number; validPoints: number } | null {
   const errors = pointSamples.flatMap((samples, index) => {
     if (samples.length < 3 || !targets[index]) return [];
@@ -43,9 +45,9 @@ export function ValidationThresholdDeg(
       return values[Math.floor(values.length / 2)];
     };
     const gaze = { x: median(samples.map((sample) => sample.x)), y: median(samples.map((sample) => sample.y)) };
-    return [AngularDistanceDeg(gaze, targets[index], cssPxPerCm, viewingDistanceCm)];
+    return [AngularDistanceDeg(gaze, targets[index], cssPxPerCm, viewingDistanceCm, cssPxPerCmY)];
   });
-  if (errors.length < 3) return null;
+  if (targets.length !== 5 || pointSamples.length !== 5 || errors.length !== 5) return null;
   const meanErrorDeg = errors.reduce((sum, error) => sum + error, 0) / errors.length;
   return { meanErrorDeg, thresholdDeg: Math.max(0.5, meanErrorDeg * 2), validPoints: errors.length };
 }

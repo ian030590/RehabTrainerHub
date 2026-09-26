@@ -1,11 +1,15 @@
 // Types local to the Hub-owned oculomotor module.
 export type OculomotorMode =
+  | 'vor'
   | 'pursuit'
+  | 'saccade'
+  | 'fixation'
   | 'reaction-jumps'
   | 'multi-object'
   | 'lilac-chaser';
 
 export type OculomotorPattern =
+  | 'reference'
   | 'randomWalk'
   | 'circle'
   | 'ellipse'

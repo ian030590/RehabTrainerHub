@@ -31,6 +31,9 @@ export function OculomotorResults({
     summaryItems.push({ label: t('exp.res.aoi'), value: `${result.aoi_score}%` });
   }
   if (result?.gaze_threshold_deg != null) {
+    if (result.validation_error_deg != null) {
+      summaryItems.push({ label: t('exp.res.validationError'), value: `${Number(result.validation_error_deg).toFixed(2)}°` });
+    }
     summaryItems.push({ label: t('exp.res.gazeThreshold'), value: `${result.gaze_threshold_deg}°` });
     summaryItems.push({ label: t('exp.res.validGazeMs'), value: `${result.valid_gaze_ms ?? 0} ms` });
     summaryItems.push({ label: t('exp.res.inThresholdMs'), value: `${result.in_threshold_ms ?? 0} ms` });
