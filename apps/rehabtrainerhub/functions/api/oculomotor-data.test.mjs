@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CreateSessionForUser } from '../_lib/auth.js';
 import { onRequestGet, onRequestPost } from './oculomotor-data.js';
+import { BuildOculomotorCsvRows } from '../../games/oculomotor-training/oculomotorCsvRows.ts';
 
 const id = '11111111-1111-4111-8111-111111111111';
 const subjectId = '22222222-2222-4222-8222-222222222222';
@@ -115,9 +116,41 @@ test('private R2 CSV stores canonical rows and only the owner can list or read i
   assert.equal((await Get('?subjectId=22222222-2222-4222-8222-222222222222', owner, env)).status, 400);
 });
 
+test('reference WebGazer rows and metadata are stored in the private CSV', async () => {
+  const env = CreateEnv();
+  const owner = await CreateSessionForUser(env, { id: 'owner' });
+  const payload = {
+    ...valid,
+    metadata: {
+      mode: 'pursuit', run_mode: 'predictable', stimulus_type: 'white_dot',
+      eye_tracking_source: 'webgazer', screen_width_px: 1920, screen_height_px: 1080,
+      screen_width_cm: 53, screen_height_cm: 30, viewing_distance_cm: 60,
+      validation_error_deg: 1.2, gaze_threshold_deg: 2.4, gaze_sampling_interval_ms: 34,
+    },
+    records: BuildOculomotorCsvRows([{
+      sample_index: 1, trial_time_ms: 12.6, device_timestamp_us: 1000000,
+      delta_t_ms: 30.3, instant_hz: 33, gaze_valid: 1,
+      gaze_x_px: 320, gaze_y_px: 240, stimulus_x_px: 330, stimulus_y_px: 245,
+      distance_error_px: 11.18, distance_error_deg: 0.2,
+      is_within_threshold: 1, phase: 'movement', direction: 'rightUp',
+    }, {
+      sample_index: 2, trial_time_ms: 50.1, device_timestamp_us: 1030300,
+      delta_t_ms: 30.3, instant_hz: 33, gaze_valid: 0,
+      gaze_x_px: '', gaze_y_px: '', stimulus_x_px: 330, stimulus_y_px: 245,
+      distance_error_px: '', distance_error_deg: '',
+      is_within_threshold: 0, phase: 'arrival_frame', direction: 'middleUp',
+    }]),
+  };
+  assert.equal((await Post(payload, owner, env)).status, 201);
+  const csv = env.objects.get(`users/owner/${id}.csv`).csv;
+  assert.match(csv, /# validation_error_deg,1\.2\r\n# gaze_threshold_deg,2\.4\r\n/);
+  assert.match(csv, /1,13,1000000,30\.3,33,1,320,240,330,245,11\.18,0\.2,1,movement,up_right\r\n/);
+  assert.match(csv, /2,50,1030300,30\.3,33,0,,,330,245,,,0,arrival_frame,up\r\n$/);
+});
+
 test('reference drills store physical geometry, validation metadata, and phase rows', async () => {
   const env = CreateEnv();
-  const phases = ['cross', 'movement', 'dwell', 'hold', 'vor'];
+  const phases = ['idle', 'cross', 'movement', 'arrival_frame', 'dwell', 'hold', 'vor'];
   const payload = {
     ...valid,
     metadata: {
@@ -130,7 +163,7 @@ test('reference drills store physical geometry, validation metadata, and phase r
     records: phases.map((phase, index) => {
       const row = [...valid.records[0]];
       row[0] = index + 1;
-      row[1] = index === 4 ? 400000 : index * 100;
+      row[1] = index === phases.length - 1 ? 400000 : index * 100;
       row[13] = phase;
       return row;
     }),
@@ -148,6 +181,7 @@ test('rejects forged, malformed, oversized, and cross-origin uploads before R2',
     { ...valid, recordId: '../other/record' },
     { ...valid, subjectId: 'public' },
     { ...valid, source: 'off' },
+    { ...valid, source: 'tobii', metadata: { ...valid.metadata, eye_tracking_source: 'tobii' } },
     { ...valid, metadata: { aoi_score: 100 } },
     { ...valid, metadata: { ...valid.metadata, eye_tracking_source: 'tobii' } },
     { ...valid, metadata: { ...valid.metadata, mode: '=cmd' } },

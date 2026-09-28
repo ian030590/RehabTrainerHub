@@ -1,289 +1,263 @@
-import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
-import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
-import { GetHostedGameSessionNonce, GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
-import { GetAuthToken } from '@rehab-trainer/ui/auth/authClient';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { TrainingRulesPanel } from '@rehab-trainer/ui';
-import WebGazerExtension from '@jspsych/extension-webgazer';
+import { GetAuthToken, GetAuthUserIdFromToken, SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
 import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
 import {
-NotifyHubTrainingAbort,
-NotifyHubTrainingComplete,
-RequestHubTrainingConfiguration,
+  GetHostedGameSettings,
+  GetHostedGameSessionNonce,
+  NotifyHubTrainingActive,
+  RequestHubTrainingConfiguration,
+  SendHostedGameScore,
 } from '@rehab-trainer/ui/embeddedTraining';
+import { EnterFullscreenFromUserGesture, ExitFullscreenIfActive, WaitForFullscreenLayout } from '@rehab-trainer/ui/fullscreen';
 import { useMediaPermissionPreflight } from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
-import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { useT } from '@rehab-trainer/ui/i18n';
-import { getActiveUser } from '@rehab-trainer/ui/settings';
-import { soundManager } from './runtime/soundManager';
-import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
-import type { JsPsych } from 'jspsych';
-import { initJsPsych } from 'jspsych';
-import { useCallback,useEffect,useRef,useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { DownloadTrainingCsv } from './exportCsv';
-import { HasTobiiHost } from './gaze/tobiiHost';
-import { SaveOculomotorGazeRecords, SaveOculomotorRecord, SendOculomotorHostedScore } from './gaze/recordStorage';
-import { OculomotorResults } from './results/OculomotorResults';
-import { DestroyPixiTrainingRuntime } from './runtime/pixiPool';
-import { BuildOculomotorTimeline } from './timeline/oculomotorTimeline';
-import { CleanupWebGazerRuntime } from './webgazer/webgazerCalibration';
-import { EnsureWebGazerLoaded } from './webgazer/webgazerLoader';
+import { useT } from '@rehab-trainer/ui/i18n/games';
+import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
+import { GetOrCreateSubjectIdForUser } from '@rehab-trainer/ui/storage/subjectId';
+import { UploadOculomotorCsv, type OculomotorCsvUpload } from './uploadOculomotorCsv';
 
 type Phase = 'rules' | 'running' | 'results';
+type ExperimentResult = {
+  actual_duration_ms: number;
+  completed_targets: number;
+  accuracy_rate: number | null;
+  in_threshold_sec: number | null;
+  valid_sec: number | null;
+  blink_sec: number | null;
+  gaze_sample_count: number | null;
+  threshold_deg: number | null;
+  validation_error_deg: number | null;
+  estimated_refresh_hz: number | null;
+  end_reason: string;
+  module: string;
+  eye_tracking_source: 'webgazer' | 'off';
+};
+
+type UploadStatus = 'idle' | 'saving' | 'saved' | 'error' | 'empty';
+
+const modeNames: Record<string, [string, string]> = {
+  vor: ['中央目標辨識', 'Central target recognition'],
+  pursuit: ['追視', 'Smooth pursuit'],
+  saccade: ['跳視', 'Saccade'],
+  fixation: ['定點注視', 'Fixation'],
+};
 
 export function OculomotorTrainingGame() {
-  const location = useLocation();
-  void IsTrainingFlowLaunchState(location?.state);
-  const { t, lang } = useT();
-  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
+  const { lang } = useT();
+  const zh = lang !== 'en';
   const [phase, setPhase] = useState<Phase>('rules');
-  const [results, setResults] = useState<any[]>([]);
-  const [gazeSaveState, setGazeSaveState] = useState<'saving' | 'saved' | 'error'>('saving');
-  const completedRecordRef = useRef<Parameters<typeof SaveOculomotorRecord>[0] | null>(null);
-  const jsPsychRef = useRef<JsPsych | null>(null);
-  const skipFinishRef = useRef(false);
-
-  const userName = getActiveUser() || 'guest';
-  const eyeTrackingSource = GetHostedGameSetting<'off' | 'webgazer' | 'tobii'>('eyeTrackingSource');
-  const enableWebGazer = eyeTrackingSource === 'webgazer';
+  const [result, setResult] = useState<ExperimentResult | null>(null);
+  const [error, setError] = useState('');
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>('idle');
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const completedRef = useRef(false);
+  const finalizedRef = useRef(false);
+  const uploadingRef = useRef(false);
+  const uploadRef = useRef<OculomotorCsvUpload | null>(null);
+  const recordIdRef = useRef<string>(crypto.randomUUID());
+  const settings = GetHostedGameSettings();
+  const source = settings?.eyeTrackingSource;
   const cameraPermission = useMediaPermissionPreflight({
-    active: enableWebGazer && phase === 'running',
+    active: phase === 'running' && source === 'webgazer',
     video: true,
   });
 
+  const abort = useCallback(() => {
+    NotifyHubTrainingActive(false);
+    void ExitFullscreenIfActive();
+    RequestHubTrainingConfiguration();
+  }, []);
+
+  useEffect(() => {
+    if (phase !== 'running' || source !== 'webgazer') return;
+    if (['denied', 'unsupported', 'error'].includes(cameraPermission.status)) {
+      setError(zh ? '攝影機未取得授權，請在瀏覽器允許使用後重試。' : 'Camera access was not granted. Allow it in the browser and retry.');
+      abort();
+    }
+  }, [abort, cameraPermission.status, phase, source, zh]);
+
+  const sendSettings = useCallback(() => {
+    if (!settings || (source === 'webgazer' && cameraPermission.status !== 'granted')) return;
+    frameRef.current?.contentWindow?.postMessage({
+      type: 'oculomotor:start',
+      settings: { ...settings, subjectId: GetOrCreateSubjectIdForUser(GetAuthUserIdFromToken(GetAuthToken())) },
+    }, window.location.origin);
+  }, [cameraPermission.status, settings, source]);
+
+  const finishRecord = useCallback((completed: ExperimentResult) => {
+    if (finalizedRef.current) return;
+    finalizedRef.current = true;
+    const record = {
+      id: recordIdRef.current, savedAt: new Date().toISOString(), userName: '',
+      moduleId: 'oculomotor-training', gameId: 'oculomotor-training',
+      gameTitle: '眼動練習', difficulty: 'normal',
+      config: settings ?? undefined,
+      details: { ...completed }, detailRows: [{ ...completed }],
+    };
+    if (!SendHostedGameScore(record, { mode: completed.module, eye_tracking_source: completed.eye_tracking_source })) {
+      void SaveRemoteTrainingRecord(defaultSiteUrls.hub, {
+        appId: 'rehabtrainerhub', runtimeId: 'vision', record,
+      }).catch((saveError) => console.error('Unable to save oculomotor summary.', saveError));
+    }
+  }, [settings]);
+
+  const saveUpload = useCallback((completed: ExperimentResult, upload: OculomotorCsvUpload) => {
+    if (uploadingRef.current) return;
+    uploadingRef.current = true;
+    setUploadStatus('saving');
+    setError('');
+    void UploadOculomotorCsv(recordIdRef.current, upload).then(() => {
+      uploadingRef.current = false;
+      setUploadStatus('saved');
+      finishRecord(completed);
+    }).catch((uploadError) => {
+      uploadingRef.current = false;
+      setUploadStatus('error');
+      setError(uploadError instanceof Error ? uploadError.message : 'CSV upload failed.');
+    });
+  }, [finishRecord]);
+
   useEffect(() => {
     if (phase !== 'running') return;
-    if (enableWebGazer && !['granted', 'denied', 'error', 'unsupported'].includes(cameraPermission.status)) return;
-    let cancelled = false;
-
-    const setup = async () => {
-      if (eyeTrackingSource === 'tobii' && !HasTobiiHost()) {
-        alert(lang === 'en'
-          ? 'Open this game in the Tobii Windows host to record Eye Tracker 5 gaze.'
-          : '請使用 Tobii Windows 專用程式開啟此遊戲，才能記錄 Eye Tracker 5 注視資料。');
-        RequestHubTrainingConfiguration();
-        return;
-      }
-      if (enableWebGazer) {
-        if (cameraPermission.status !== 'granted') {
-          alert(t('settings.wg.cameraBlockedAlert'));
-          RequestHubTrainingConfiguration();
-          return;
+    const onMessage = (event: MessageEvent<unknown>) => {
+      if (event.origin !== window.location.origin || event.source !== frameRef.current?.contentWindow) return;
+      const message = event.data as { type?: unknown; result?: unknown; upload?: unknown; message?: unknown } | null;
+      if (message?.type === 'oculomotor:ready') {
+        sendSettings();
+      } else if (message?.type === 'oculomotor:active') {
+        NotifyHubTrainingActive(true);
+      } else if (message?.type === 'oculomotor:abort') {
+        abort();
+      } else if (message?.type === 'oculomotor:error') {
+        setError(typeof message.message === 'string' ? message.message : 'Experiment error.');
+        abort();
+      } else if (message?.type === 'oculomotor:complete' && !completedRef.current && isExperimentResult(message.result)) {
+        completedRef.current = true;
+        const completed = message.result;
+        recordIdRef.current = GetHostedGameSessionNonce() ?? recordIdRef.current;
+        setResult(completed);
+        setPhase('results');
+        NotifyHubTrainingActive(false);
+        void ExitFullscreenIfActive();
+        if (completed.eye_tracking_source === 'webgazer' && completed.gaze_sample_count) {
+          if (!isOculomotorCsvUpload(message.upload)
+            || message.upload.records.length !== completed.gaze_sample_count) {
+            setUploadStatus('error');
+            setError('Eye movement samples are unavailable for CSV upload.');
+            return;
+          }
+          uploadRef.current = message.upload;
+          saveUpload(completed, message.upload);
+        } else {
+          setUploadStatus(completed.eye_tracking_source === 'webgazer' ? 'empty' : 'idle');
+          finishRecord(completed);
         }
-        await EnsureWebGazerLoaded();
       }
-      if (cancelled) return;
-
-      const jsPsych = initJsPsych({
-        display_element: 'jspsych-target',
-        extensions: enableWebGazer ? [{ type: WebGazerExtension }] : [],
-        on_finish: () => {
-          if (skipFinishRef.current) return;
-          const data = jsPsych.data.get().values();
-          const trainingTrial = data.find((item: any) => item.trial_type === 'pixi-oculomotor-training');
-          const completedRecord = {
-            id: GetHostedGameSessionNonce() ?? crypto.randomUUID(),
-            savedAt: new Date().toISOString(),
-            userName,
-            moduleId: 'oculomotor-training',
-            gameId: 'oculomotor-training',
-            gameTitle: t('home.module.oculomotor.title'),
-            difficulty: 'normal',
-            results: data,
-            details: trainingTrial ?? {},
-            detailRows: trainingTrial ? [trainingTrial] : [],
-          } as Parameters<typeof SaveOculomotorRecord>[0];
-          completedRecordRef.current = completedRecord;
-          setGazeSaveState('saving');
-          void SaveOculomotorRecord(completedRecord)
-            .then((saved) => setGazeSaveState(saved ? 'saved' : 'error'))
-            .catch((error) => {
-              console.error('Unable to save oculomotor data.', error);
-              setGazeSaveState('error');
-            });
-
-          DestroyPixiTrainingRuntime('oculomotor-training');
-          setResults(data);
-          jsPsychRef.current = null;
-          void ExitFullscreenIfActive();
-          setPhase('results');
-        },
-      });
-
-      const timeline = BuildOculomotorTimeline(jsPsych, t);
-      if (cancelled) return;
-      skipFinishRef.current = false;
-      jsPsychRef.current = jsPsych;
-      jsPsych.run(timeline as any);
     };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [abort, finishRecord, phase, saveUpload, sendSettings]);
 
-    void setup().catch((err) => {
-      if (cancelled) return;
-      console.error('Unable to run oculomotor training', err);
-      CleanupWebGazerRuntime();
-      NotifyHubTrainingAbort();
-    });
+  if (!settings) return null;
+  const mode = String(settings.module);
+  const modeName = modeNames[mode]?.[zh ? 0 : 1] ?? mode;
+  const sourceName = source === 'webgazer' ? 'WebGazer' : zh ? '不記錄' : 'Off';
 
-    return () => {
-      cancelled = true;
-
-      DestroyPixiTrainingRuntime('oculomotor-training');
-      const active = jsPsychRef.current;
-      jsPsychRef.current = null;
-      if (active) {
-        skipFinishRef.current = true;
-        active.abortExperiment();
-      }
-      CleanupWebGazerRuntime();
-    };
-  }, [phase, eyeTrackingSource, enableWebGazer, cameraPermission.status, lang]);
-
-  const abortTraining = useCallback(() => {
-    if (phase !== 'running') return;
-    skipFinishRef.current = true;
-
-    jsPsychRef.current?.abortExperiment();
-    jsPsychRef.current = null;
-    DestroyPixiTrainingRuntime('oculomotor-training');
-    CleanupWebGazerRuntime();
-    void ExitFullscreenIfActive();
-    NotifyHubTrainingAbort();
-  }, [phase]);
-
-  useTrainingAbort({ active: phase === 'running', onAbort: abortTraining });
-
-  const isZh = lang !== 'en';
-  const hasGazeRecords = results.some((item: any) => (
-    item.trial_type === 'pixi-oculomotor-training'
-    && Array.isArray(item.gaze_records)
-    && item.gaze_records.length > 0
-  ));
-  const mode = GetHostedGameSetting<string>('mode');
-  const durationSec = GetHostedGameSetting<number>('durationSec');
-  const modeLabels: Record<string, string> = {
-    vor: isZh ? '中央目標辨識' : 'Central target recognition',
-    pursuit: isZh ? '追視' : 'Smooth Pursuit',
-    saccade: isZh ? '跳視' : 'Saccade',
-    fixation: isZh ? '定點注視' : 'Fixation',
-    'reaction-jumps': isZh ? '跳視' : 'Reaction Jumps',
-    'multi-object': isZh ? '多目標追蹤' : 'Multiple Distractions',
-    'lilac-chaser': isZh ? '周邊固視' : 'Lilac Chaser',
-  };
-
-  return (
-    <div ref={fullscreenRootRef} className="oculomotor-training-game-root" style={{ width: '100%', minHeight: '100dvh' }}>
-      {phase === 'rules' && (
-        <div className="training-panel">
-          <TrainingRulesPanel
-            title={isZh ? '眼球動作控制訓練' : 'Oculomotor Training'}
-            label={isZh ? '遊戲規則說明' : 'Game Rules'}
-            summaryTitle={isZh ? '眼球運動訓練' : 'Oculomotor Training'}
-            summaryItems={[
-              { label: isZh ? '活動模式' : 'Mode', value: modeLabels[mode] ?? mode },
-              { label: isZh ? '活動時間' : 'Duration', value: `${durationSec} ${isZh ? '秒' : 's'}` },
-              { label: isZh ? '眼動來源' : 'Gaze source', value: eyeTrackingSource === 'webgazer' ? 'WebGazer' : eyeTrackingSource === 'tobii' ? 'Tobii' : isZh ? '不記錄' : 'Off' },
-            ]}
-            sections={isZh ? [
-              {
-                title: '操作與玩法',
-                description: '先確認螢幕尺寸及觀看距離，再跟隨或注視畫面目標。',
-                items: [
-                  '頭部保持放鬆並面向螢幕中央。',
-                  'WebGazer 會先進行九點校正與五點驗證；Tobii 需先在 Tobii Experience 校正。',
-                  '活動中依選擇的模式跟隨或注視目標；不適時按 Esc 結束。',
-                ],
-              },
-              { title: '當次紀錄', description: '有眼動資料時顯示驗證誤差、當次注視門檻及目標停留比例；數值僅供本次活動參考。' },
-            ] : [
-              {
-                title: 'How to Play',
-                description: 'Confirm display size and viewing distance, then follow or fixate on the target.',
-                items: [
-                  'Keep your head relaxed and centered towards the screen.',
-                  'WebGazer runs nine-point calibration and five-point validation. Calibrate Tobii in Tobii Experience first.',
-                  'Follow the selected drill. Press Escape to stop if uncomfortable.',
-                ],
-              },
-              { title: 'Session record', description: 'When gaze is recorded, shows validation error, this session’s threshold, and on-target time share.' },
-            ]}
-            startLabel={isZh ? '開始訓練' : 'Start Training'}
-            backLabel={isZh ? '回設定' : 'Back to Settings'}
-            onStart={async () => {
-              if (mode !== 'vor' && !Array.from({ length: 8 }, (_, axis) => axis)
-                .some((axis) => GetHostedGameSetting<boolean>(`axis${axis}Enabled`))) {
-                alert(isZh ? '請至少選擇一個移動目標方位。' : 'Select at least one target direction.');
-                return;
-              }
-              if (eyeTrackingSource === 'tobii' && !GetHostedGameSetting<boolean>('tobiiCalibrated')) {
-                alert(isZh ? '請先在 Tobii Experience 為本次使用者完成校正，並在設定勾選確認。' : 'Calibrate this participant in Tobii Experience and confirm it in settings.');
-                return;
-              }
-              if (eyeTrackingSource === 'tobii' && !HasTobiiHost()) {
-                alert(isZh ? '請使用 Tobii Windows 專用程式開啟此遊戲。' : 'Open this game in the Tobii Windows host.');
-                return;
-              }
-              const entered = await enterTrainingFullscreen();
-              if (!entered) {
-                alert(isZh ? '此活動需要全螢幕，請允許全螢幕後重試。' : 'This drill requires fullscreen. Allow fullscreen and try again.');
-                return;
-              }
-              setPhase('running');
-            }}
-            onBack={() => RequestHubTrainingConfiguration()}
+  return <div className="oculomotor-game">
+    {phase === 'rules' && <div className="training-panel">
+      <TrainingRulesPanel
+        title={zh ? '眼動練習' : 'Oculomotor practice'}
+        label={zh ? '活動說明' : 'Instructions'}
+        summaryTitle={zh ? '本次設定' : 'Session settings'}
+        summaryItems={[
+          { label: zh ? '活動' : 'Drill', value: modeName },
+          { label: zh ? '眼動來源' : 'Gaze source', value: sourceName },
+        ]}
+        sections={[{
+          title: zh ? '實驗程序' : 'Experiment procedure',
+          description: zh
+            ? '使用參考專案的目標移動、時間安排、WebGazer 校正與五點驗證。'
+            : 'Uses the reference target movement, timing, WebGazer calibration, and five point validation.',
+          items: zh ? [
+            '先確認螢幕尺寸與觀看距離，活動會使用全螢幕。',
+            '選擇 WebGazer 時，請允許攝影機，完成九點校正與五點驗證。',
+            '觀看或跟隨目標；按 Esc 可結束當次活動。',
+          ] : [
+            'Confirm screen size and viewing distance. The activity uses fullscreen.',
+            'For WebGazer, allow camera access, then complete nine point calibration and five point validation.',
+            'Watch or follow the target. Press Escape to end the session.',
+          ],
+        }]}
+        startLabel={zh ? '開始練習' : 'Start practice'}
+        backLabel={zh ? '返回設定' : 'Back to settings'}
+        onStart={() => {
+          completedRef.current = false;
+          finalizedRef.current = false;
+          uploadRef.current = null;
+          setUploadStatus('idle');
+          setError('');
+          void EnterFullscreenFromUserGesture(document.documentElement).then(async () => {
+            await WaitForFullscreenLayout();
+            setPhase('running');
+          });
+        }}
+        onBack={RequestHubTrainingConfiguration}
+      />
+    </div>}
+    {phase === 'running' && <>
+      {error && <p role="alert">{error}</p>}
+      {source !== 'webgazer' || cameraPermission.status === 'granted'
+        ? <iframe
+            ref={frameRef}
+            title={zh ? '眼動實驗' : 'Oculomotor experiment'}
+            src="./reference/index.html"
+            allow="camera; fullscreen"
+            onLoad={sendSettings}
+            className="oculomotor-experiment-frame"
           />
-        </div>
-      )}
+        : <p role="status">{zh ? '準備攝影機中…' : 'Preparing camera…'}</p>}
+    </>}
+    {phase === 'results' && result && <section className="oculomotor-results training-panel">
+      <h2>{zh ? '當次紀錄' : 'Session record'}</h2>
+      <h3>{modeName}</h3>
+      {uploadStatus === 'saving' && <p role="status">{zh ? '正在上傳眼動 CSV…' : 'Uploading eye movement CSV…'}</p>}
+      {uploadStatus === 'saved' && <p role="status">{zh ? '眼動 CSV 已儲存至私人雲端空間。' : 'Eye movement CSV saved to private storage.'}</p>}
+      {uploadStatus === 'empty' && <p role="status">{zh ? '本次沒有可上傳的眼動逐筆資料。' : 'No eye movement samples were captured for upload.'}</p>}
+      {uploadStatus === 'error' && <p role="alert">
+        {zh ? '眼動 CSV 尚未上傳成功。' : 'Eye movement CSV was not uploaded.'} {error}
+        {uploadRef.current && <button type="button" className="btn btn-primary" onClick={() => saveUpload(result, uploadRef.current!)}>
+          {zh ? '重試上傳' : 'Retry upload'}
+        </button>}
+      </p>}
+      <p>{zh ? '完成目標數' : 'Completed targets'}：{result.completed_targets}</p>
+      <p>{zh ? '刺激時間' : 'Stimulus duration'}：{(result.actual_duration_ms / 1000).toFixed(1)} s</p>
+      {result.accuracy_rate !== null && <p>{zh ? '有效眼動時間在標比例' : 'On target share of valid gaze time'}：{result.accuracy_rate}%</p>}
+      {result.validation_error_deg !== null && <p>{zh ? '五點驗證平均誤差' : 'Five point validation mean error'}：{result.validation_error_deg}°</p>}
+      <p>{zh ? '這些數值僅為當次刺激參數與練習紀錄，不代表診斷或療效。' : 'These values describe this session’s stimulus and activity. They do not indicate diagnosis or treatment effect.'}</p>
+      {uploadStatus !== 'saving' && <TrainingResultActions onBackHome={() => window.location.reload()} backLabel={zh ? '返回入口' : 'Back to start'} hubLabel={zh ? '返回大廳' : 'Back to lobby'} />}
+    </section>}
+  </div>;
+}
 
-      {phase === 'running' && (
-        <div id="jspsych-target" className="experiment-container" style={{ width: '100vw', height: '100vh' }} />
-      )}
+function isExperimentResult(value: unknown): value is ExperimentResult {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const result = value as Record<string, unknown>;
+  return typeof result.module === 'string' && Object.hasOwn(modeNames, result.module)
+    && (result.eye_tracking_source === 'webgazer' || result.eye_tracking_source === 'off')
+    && typeof result.end_reason === 'string'
+    && Number.isFinite(result.actual_duration_ms)
+    && Number.isFinite(result.completed_targets)
+    && ['accuracy_rate', 'in_threshold_sec', 'valid_sec', 'blink_sec', 'gaze_sample_count',
+      'threshold_deg', 'validation_error_deg', 'estimated_refresh_hz'].every((key) =>
+        result[key] === null || (typeof result[key] === 'number' && Number.isFinite(result[key])));
+}
 
-      {phase === 'results' && (
-        <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
-          <OculomotorResults results={results} userName={userName} t={t} oculomotorMode={GetHostedGameSetting<string>('mode')} oculomotorPattern={GetHostedGameSetting<string>('movementPath')} />
-          {hasGazeRecords && (
-            <div className="results-actions">
-              <p role="status" aria-live="polite">
-                {gazeSaveState === 'saving'
-                  ? (isZh ? '逐筆座標 CSV 儲存中…' : 'Saving gaze CSV…')
-                  : gazeSaveState === 'saved'
-                    ? GetAuthToken()
-                      ? (isZh ? '逐筆座標 CSV 已儲存，可於進度頁重新下載。' : 'Gaze CSV saved. Download it later from Progress.')
-                      : (isZh ? '逐筆座標 CSV 已儲存；訪客請立即下載副本。' : 'Gaze CSV saved. Guests should download a copy now.')
-                    : (isZh ? '逐筆座標 CSV 尚未存到雲端，請重試或立即下載。' : 'Gaze CSV was not saved online. Retry or download it now.')}
-              </p>
-              {gazeSaveState === 'error' && (
-                <button className="btn btn-secondary btn-lg" type="button" onClick={() => {
-                  const record = completedRecordRef.current;
-                  if (!record) return;
-                  setGazeSaveState('saving');
-                  void SaveOculomotorGazeRecords(record)
-                    .then((saved) => {
-                      setGazeSaveState(saved ? 'saved' : 'error');
-                      if (saved) SendOculomotorHostedScore(record);
-                    })
-                    .catch((error) => {
-                      console.error('Unable to retry saving oculomotor data.', error);
-                      setGazeSaveState('error');
-                    });
-                }}>
-                  {isZh ? '重試儲存 CSV' : 'Retry saving CSV'}
-                </button>
-              )}
-              <button className="btn btn-secondary btn-lg" type="button" onClick={() => DownloadTrainingCsv({
-                results,
-                moduleId: 'oculomotor-training',
-                oculomotorMode: GetHostedGameSetting<string>('mode'),
-                oculomotorPattern: GetHostedGameSetting<string>('movementPath'),
-                t,
-              })}>
-                {isZh ? '下載眼動紀錄 CSV' : 'Download gaze records CSV'}
-              </button>
-            </div>
-          )}
-          <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
-        </div>
-      )}
-    </div>
-  );
+function isOculomotorCsvUpload(value: unknown): value is OculomotorCsvUpload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const upload = value as Record<string, unknown>;
+  return Array.isArray(upload.records) && upload.records.length > 0 && upload.records.length <= 36000
+    && upload.records.every((row) => row && typeof row === 'object' && !Array.isArray(row))
+    && !!upload.metadata && typeof upload.metadata === 'object' && !Array.isArray(upload.metadata)
+    && Object.values(upload.metadata).every((item) => typeof item === 'string'
+      || (typeof item === 'number' && Number.isFinite(item)));
 }

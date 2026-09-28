@@ -48,7 +48,7 @@ const manifestEntries: ReadonlyArray<readonly [
   ['motor:gesture-battler', 'gesture-battler/GestureBattlerGame.tsx', 'camera', 'external-runtime-adapter'],
   ['motor:motor-cortex-rehab', 'motor-cortex-rehab/MotorCortexRehabGame.tsx', 'camera', 'external-runtime-adapter'],
   ['vision:moving-card', 'moving-card/pixi-moving-card.ts', 'none', 'native-timeline'],
-  ['vision:oculomotor-training', 'oculomotor-training/pixi-oculomotor-training.ts', 'camera-optional', 'native-timeline'],
+  ['vision:oculomotor-training', 'oculomotor-training/public/reference/experiment.js', 'camera-optional', 'native-timeline'],
   ['vision:gabor-patching', 'gabor-patching/pixi-gabor-patching.ts', 'none', 'native-timeline'],
   ['vision:reading-training', 'reading-training/pixi-reading-training.ts', 'none', 'native-timeline'],
   ['vision:driving-rehab', 'driving-rehab/three-driving-rehab.ts', 'none', 'native-timeline'],

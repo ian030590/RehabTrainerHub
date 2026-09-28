@@ -123,7 +123,6 @@ assert.deepEqual(failedIndexedDb.deletedDatabaseNames, []);
 
 for (const fixture of [
   'scripts/check-driving-rehab-browser.mjs',
-  'scripts/check-oculomotor-webgazer-browser.mjs',
 ]) {
   const source = readFileSync(resolve(repoRoot, fixture), 'utf8');
   assert.doesNotMatch(source, /vision[_-]trainer/);

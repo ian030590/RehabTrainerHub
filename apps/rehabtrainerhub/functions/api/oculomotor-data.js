@@ -28,7 +28,7 @@ const metadataKeys = [
   'fixation_radius_px', 'fixation_duration_ms',
 ];
 const textMetadataKeys = new Set(['mode', 'pattern', 'run_mode', 'stimulus_type', 'eye_tracking_source']);
-const phases = new Set(['training', 'saccade_latency', 'cross', 'movement', 'dwell', 'hold', 'vor']);
+const phases = new Set(['training', 'saccade_latency', 'idle', 'cross', 'movement', 'arrival_frame', 'dwell', 'hold', 'vor']);
 const directions = new Set([
   'center', 'right', 'down_right', 'down', 'down_left', 'left', 'up_left', 'up', 'up_right',
 ]);
@@ -159,7 +159,7 @@ function IsValidUpload(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)
     || !recordIdPattern.test(value.recordId)
     || !IsSubjectId(value.subjectId)
-    || !['webgazer', 'tobii'].includes(value.source)
+    || value.source !== 'webgazer'
     || !Array.isArray(value.records) || value.records.length < 1
     || value.records.length > maximumSamples
     || !value.metadata || typeof value.metadata !== 'object' || Array.isArray(value.metadata)

@@ -36,7 +36,7 @@
     "test:game-architecture:browser": "node --test scripts/check-game-architecture-browser.test.mjs",
     "test:training-flow": "node scripts/check-training-module-flow.mjs && node scripts/check-expfactory-originals.mjs && node --test scripts/check-reference-cognitive-trials.test.mjs scripts/check-training-theme.test.mjs",
     "test:webgazer": "node scripts/check-webgazer-calibration.mjs && node scripts/check-webgazer-metrics.mjs",
-    "test:webgazer-browser": "node scripts/check-oculomotor-webgazer-browser.mjs",
+    "test:webgazer-browser": "node scripts/check-oculomotor-webgazer-browser.mjs && node scripts/check-oculomotor-webgazer-browser.mjs --camera-only && node scripts/check-oculomotor-webgazer-browser.mjs --upload-only",
     "test:hub-functions": "node --test \"apps/rehabtrainerhub/functions/**/*.test.mjs\"",
     "test:gamerunner": "node --test apps/usergamerunner/tests/gamehost.test.mjs",
     "test:naming": "node scripts/check-identifier-names.mjs",

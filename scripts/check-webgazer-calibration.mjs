@@ -1,374 +1,42 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { ParseGameSettingsDefinition } from '../packages/game-settings/src/index.js';
 
-const repoRoot = resolve(import.meta.dirname, '..');
-const read = async (relativePath) => (
-  (await readFile(resolve(repoRoot, relativePath), 'utf8')).replaceAll('\r\n', '\n')
-);
-const readBytes = (relativePath) => readFile(resolve(repoRoot, relativePath));
+const base = resolve('apps/rehabtrainerhub/games/oculomotor-training');
+const read = (name) => readFileSync(resolve(base, name), 'utf8');
+const runtime = read('public/reference/experiment.js');
+const config = ParseGameSettingsDefinition(JSON.parse(read('settings.json')), 'oculomotor-training');
+const fields = config.sections.flatMap(section => section.fields);
+const field = (key) => fields.find(item => item.key === key);
 
-const oculomotorDir = 'apps/rehabtrainerhub/games/oculomotor-training';
-const calibration = await read(`${oculomotorDir}/webgazer/webgazerCalibration.ts`);
-const loader = await read(`${oculomotorDir}/webgazer/webgazerLoader.ts`);
-const training = await read(`${oculomotorDir}/OculomotorTrainingGame.tsx`);
-const oculomotorTimeline = await read(`${oculomotorDir}/timeline/oculomotorTimeline.ts`);
-const oculomotorPlugin = await read(`${oculomotorDir}/pixi-oculomotor-training.ts`);
-const oculomotorResults = await read(`${oculomotorDir}/results/OculomotorResults.tsx`);
-const oculomotorResultData = await read(`${oculomotorDir}/results/resultData.ts`);
-const trainingResultCsv = await read(`${oculomotorDir}/exportCsv.ts`);
-const trainingRecords = await read('packages/ui/src/storage/trainingRecords.ts');
-const zh = await read('apps/rehabtrainerhub/games/oculomotor-training/i18n/zh.ts');
-const en = await read('apps/rehabtrainerhub/games/oculomotor-training/i18n/en.ts');
-const sharedAppCss = await read('packages/ui/src/components/TrainerApp.css');
-const oculomotorSettings = JSON.parse(await read(`${oculomotorDir}/settings.json`));
-const manifest = JSON.parse(await read('scripts/r2-ai-assets.manifest.json'));
-const runtimePath = 'apps/rehabtrainerhub/games/oculomotor-training/public/assets/webgazer/3.5.3/webgazer.js';
-const runtime = await read(runtimePath);
-const gitAttributes = await read('.gitattributes');
-
-const expectedOfficialFlowOrder = [
-  'preload',
-  'camera_instructions',
-  'init_camera',
-  'calibration_instructions',
-  'calibration_signal_check',
-  'calibration',
-  'validation_instructions',
-  'validation_signal_check',
-  'validation',
-  'recalibrate',
-  'calibration_done',
-  'begin',
-  'trial',
-  'show_data',
-];
-const flowOrderBlock = calibration.match(
-  /export const officialWebGazerFlowOrder\s*=\s*\[([\s\S]*?)\]\s*as const;/,
-);
-assert.ok(flowOrderBlock, 'officialWebGazerFlowOrder must be declared as a readonly array');
-assert.deepEqual(
-  [...flowOrderBlock[1].matchAll(/['"]([^'"]+)['"]/g)].map((match) => match[1]),
-  expectedOfficialFlowOrder,
-  'the public WebGazer flow order must include native calibration plus both signal gates',
-);
-
-const implementationFlowBlock = calibration.match(/const flow\s*=\s*\[([\s\S]*?)\];/);
-assert.ok(implementationFlowBlock, 'the complete WebGazer flow must be assembled in one timeline');
-assert.deepEqual(
-  implementationFlowBlock[1].split(',').map((entry) => entry.trim()).filter(Boolean),
-  [
-    'preload',
-    'cameraInstructions',
-    'initCamera',
-    'calibrationInstructions',
-    'calibrationSignalCheck',
-    'calibration',
-    'validationInstructions',
-    'validationSignalCheck',
-    'validation',
-    'recalibrate',
-    'calibrationDone',
-    'begin',
-    'formalTrial',
-    'showData',
-  ],
-  'the executable timeline must use the declared native-plugin and signal-gate order',
-);
-
-for (const pluginPackage of [
-  '@jspsych/plugin-preload',
-  '@jspsych/plugin-html-button-response',
-  '@jspsych/plugin-html-keyboard-response',
-  '@jspsych/plugin-webgazer-init-camera',
-  '@jspsych/plugin-webgazer-calibrate',
-  '@jspsych/plugin-webgazer-validate',
-]) {
-  assert.ok(
-    calibration.includes(`from '${pluginPackage}'`),
-    `official WebGazer flow must use the native plugin: ${pluginPackage}`,
-  );
+assert.deepEqual(field('module').options.map(option => option.value), ['vor', 'pursuit', 'saccade', 'fixation']);
+assert.deepEqual(field('eyeTrackingSource').options.map(option => option.value), ['webgazer', 'off']);
+assert.equal(fields.filter(item => /^axis[0-7]Enabled$/.test(item.key)).length, 8);
+for (const [key, value] of Object.entries({ vorTotalSec: 30, pursuitTotalSec: 45, saccadeTotalSec: 45, fixationTotalSec: 60 })) {
+  assert.equal(field(key).default, value);
 }
-assert.equal(
-  calibration.includes('class WebGazerInitCameraPlugin'),
-  false,
-  'the camera initialization plugin must not be forked locally',
-);
-for (const marker of [
-  'type: PreloadPlugin',
-  'type: HtmlButtonResponsePlugin',
-  'type: HtmlKeyboardResponsePlugin',
-  'type: WebGazerInitCameraPlugin',
-  'type: WebGazerCalibratePlugin',
-  'type: WebGazerValidatePlugin',
-  "calibration_mode: 'click'",
-  'repetitions_per_point: 2',
-  'randomize_calibration_order: true',
-  'roi_radius: 200',
-  'time_to_saccade: 350',
-  'validation_duration: 1050',
-  'post_trial_gap: 1000',
-  "task: 'validate'",
-  'CleanupWebGazerRuntime',
-]) {
-  assert.ok(calibration.includes(marker), `official WebGazer flow contract missing: ${marker}`);
+assert.match(runtime, /calibration_points: \[\[10,10\],\[50,10\],\[90,10\],\[10,50\],\[50,50\],\[90,50\],\[10,90\],\[50,90\],\[90,90\]\]/);
+assert.match(runtime, /repetitions_per_point: 2/);
+assert.match(runtime, /\}, 1050\);[\s\S]*\}, 350\);/);
+assert.match(runtime, /const PASS_THRESHOLD_DEG = 3\.5/);
+assert.match(runtime, /Math\.max\(0\.5, meanErrorDeg \* 2\)/);
+assert.match(runtime, /nowPerf - saccadeOnsetMs < 200/);
+assert.match(runtime, /const effectiveDeltaMs = deltaMs > 100 \? 30\.3 : deltaMs/);
+assert.match(runtime, /\["middleUp", "rightUp", "rightMiddle", "rightDown", "middleDown", "leftDown", "leftMiddle", "leftUp"\]/);
+assert.match(runtime, /fallBackToUntrackedSession\(data\.error \|\| "Camera setup failed\."\)/);
+assert.match(runtime, /AppState\.pending\.eyeTrackingSource === EYE_SOURCE_OFF/);
+assert.match(runtime, /type: OptionalWebGazerCameraPlugin/);
+assert.match(runtime, /type: GazeValidationPlugin/);
+assert.doesNotMatch(runtime + read('settings.json') + read('OculomotorTrainingGame.tsx'), /TobiiBridge|EYE_SOURCE_TOBII|tobiiCalibrated|"tobii"/i);
+
+for (const [name, expected] of Object.entries({
+  'jspsych.js': '0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c',
+  'webgazer.js': '6210f977f5d146b40cfe82f0b845113171441ffbcb7aabdb2d65717507957081',
+})) {
+  const actual = createHash('sha256').update(readFileSync(resolve(base, 'public/reference', name))).digest('hex');
+  assert.equal(actual, expected, `${name} must retain the referenced vendor implementation`);
 }
 
-assert.ok(calibration.includes('const officialCalibrationPoints = [10, 50, 90].flatMap'),
-  'calibration must use the nine-point layout');
-assert.ok(calibration.includes('const officialValidationPoints = [[50, 50], [20, 20], [80, 20], [20, 80], [80, 80]]'),
-  'validation must use the five-point layout');
-assert.ok(
-  calibration.includes('calibration_points: officialCalibrationPoints.map'),
-  'the native calibration plugin must receive the official nine points',
-);
-assert.ok(
-  calibration.includes('validation_points: officialValidationPoints'),
-  'the native validation plugin must receive the official five points',
-);
-
-const recalibrationBlock = calibration.match(
-  /const recalibrate\s*=\s*\{[\s\S]*?timeline:\s*\[([\s\S]*?)\],\s*conditional_function:/,
-);
-assert.ok(recalibrationBlock, 'the conditional recalibration timeline must exist');
-assert.deepEqual(
-  recalibrationBlock[1].split(',').map((entry) => entry.trim()).filter(Boolean),
-  [
-    'recalibrateInstructions',
-    'calibrationSignalCheck',
-    'calibration',
-    'validationInstructions',
-    'validationSignalCheck',
-    'validation',
-  ],
-  'failed validation must repeat signal-gated calibration and validation',
-);
-for (const marker of [
-  'const minimumPercentInRoi = 50',
-  'value < minimumPercentInRoi',
-  'runState.recordEyeTracking && ShouldRecalibrate(jsPsych)',
-]) {
-  assert.ok(calibration.includes(marker), `conditional recalibration contract missing: ${marker}`);
-}
-for (const marker of [
-  'const eyeSignalCheckDurationMs = 3000',
-  "CreateEyeSignalCheck(jsPsych, copy, 'calibration', runState)",
-  "CreateEyeSignalCheck(jsPsych, copy, 'validation', runState)",
-  'extension?.showVideo?.()',
-  'ActivateWebGazerPreview(copy.cameraPreviewLabel)',
-  "const webGazerLivePreviewClass = 'webgazer-live-preview'",
-  'on_load: () => ActivateWebGazerPreview(copy.cameraPreviewLabel)',
-  'extension?.onGazeUpdate?.',
-  'extension?.startSampleInterval?.(eyeSignalSamplingIntervalMs)',
-  'if (IsValidEyeSignal(prediction)) finishWithSignal()',
-  "eye_tracking_recording: 'skipped_by_participant'",
-  'runState.recordEyeTracking = false',
-  'delete untrackedFormalTrial.extensions',
-  'enable_webgazer: false',
-]) {
-  assert.ok(calibration.includes(marker), `eye-signal gate contract missing: ${marker}`);
-}
-for (const forbidden of [
-  'StartHeadPositionGuidance',
-  'StartInitCameraFailureRecovery',
-  'ClassifyHeadDistance',
-  'GetHeadDistanceStatus',
-  'StartValidationResultsPresentation',
-  'show_validation_data: true',
-]) {
-  assert.equal(
-    calibration.includes(forbidden),
-    false,
-    `camera positioning and validation UI must stay owned by official jsPsych plugins: ${forbidden}`,
-  );
-}
-assert.ok(
-  sharedAppCss.includes('.webgazer-flow-instructions'),
-  'module-owned instruction panels must keep their scoped presentation styles',
-);
-assert.ok(
-  sharedAppCss.includes('.webgazer-live-preview')
-    && sharedAppCss.includes('z-index: 1100 !important'),
-  'the body-level WebGazer preview must render above the fixed training stage',
-);
-// native jsPsych WebGazer UI preserved
-assert.ok(loader.includes('Timed out loading WebGazer'), 'script loading must have a timeout');
-assert.ok(loader.includes("webGazerRuntimeVersion = '3.5.3'"), 'WebGazer must use a pinned runtime version');
-assert.ok(loader.includes('ConfigureWebGazerAssetPath'), 'the MediaPipe path must follow the loaded script origin');
-assert.ok(loader.includes('EnsurePredictionTimestamp'), 'WebGazer predictions must be timestamped for native validation');
-assert.ok(
-  loader.includes('document.baseURI'),
-  'the local WebGazer fallback must resolve within the current per-game PWA base path',
-);
-assert.equal(
-  loader.includes('window.location.origin'),
-  false,
-  'the local WebGazer fallback must not incorrectly resolve from the Hub origin root',
-);
-assert.equal(loader.includes('local-v1'), false, 'the obsolete WebGazer runtime must not be a fallback');
-assert.ok(runtime.includes('faceMeshSolutionPath:"./mediapipe/face_mesh"'), 'the self-hosted runtime must default to local MediaPipe assets');
-assert.ok(
-  gitAttributes.includes('apps/rehabtrainerhub/games/oculomotor-training/public/assets/webgazer/3.5.3/** -text'),
-  'vendored WebGazer assets must be protected from line-ending conversion',
-);
-
-const runtimeAssets = [
-  ['webgazer.js', 'text/javascript; charset=utf-8'],
-  ['mediapipe/face_mesh/face_mesh.binarypb', 'application/octet-stream'],
-  ['mediapipe/face_mesh/face_mesh.js', 'text/javascript; charset=utf-8'],
-  ['mediapipe/face_mesh/face_mesh_solution_packed_assets.data', 'application/octet-stream'],
-  ['mediapipe/face_mesh/face_mesh_solution_packed_assets_loader.js', 'text/javascript; charset=utf-8'],
-  ['mediapipe/face_mesh/face_mesh_solution_simd_wasm_bin.js', 'text/javascript; charset=utf-8'],
-  ['mediapipe/face_mesh/face_mesh_solution_simd_wasm_bin.wasm', 'application/wasm'],
-  ['mediapipe/face_mesh/face_mesh_solution_wasm_bin.js', 'text/javascript; charset=utf-8'],
-  ['mediapipe/face_mesh/face_mesh_solution_wasm_bin.wasm', 'application/wasm'],
-];
-for (const [relativePath, contentType] of runtimeAssets) {
-  const source = `apps/rehabtrainerhub/games/oculomotor-training/public/assets/webgazer/3.5.3/${relativePath}`;
-  const key = `ai/webgazer/3.5.3/${relativePath}`;
-  const asset = manifest.assets.find((candidate) => candidate.key === key);
-  assert.ok(asset, `R2 manifest is missing ${key}`);
-  assert.equal(asset.source, source, `R2 manifest source mismatch for ${key}`);
-  assert.equal(asset.contentType, contentType, `R2 manifest content type mismatch for ${key}`);
-  const bytes = await readBytes(source);
-  assert.equal(asset.size, bytes.byteLength, `R2 manifest size mismatch for ${key}`);
-  assert.equal(asset.sha256, createHash('sha256').update(bytes).digest('hex'), `R2 manifest hash mismatch for ${key}`);
-}
-for (const host of [training]) {
-  assert.ok(host.includes('CleanupWebGazerRuntime'), 'every WebGazer host must clean up the runtime');
-}
-const hasWebGazerSetting = oculomotorSettings.sections.some((s) => s.fields.some((f) => f.key === 'eyeTrackingSource' && f.options?.some((o) => o.value === 'webgazer')));
-assert.ok(hasWebGazerSetting, 'WebGazer analysis settings must be present in settings.json');
-const hasModeSetting = oculomotorSettings.sections.some((s) => s.fields.some((f) => f.key === 'oculomotorMode' || f.key === 'mode'));
-assert.ok(hasModeSetting, 'oculomotor training mode setting must be present in settings.json');
-const durationField = oculomotorSettings.sections.flatMap((s) => s.fields).find((f) => f.key === 'oculomotorDurationSec' || f.key === 'durationSec');
-assert.ok(durationField && durationField.type === 'slider' && durationField.min >= 15 && durationField.max <= 300, 'oculomotor duration must use a bounded range slider');
-assert.ok(oculomotorTimeline.includes('show_gaze_point'), 'the timeline must forward the gazepoint display setting');
-assert.ok(oculomotorTimeline.includes("import WebGazerExtension from '@jspsych/extension-webgazer'"), 'the formal trial must use the official WebGazer extension');
-assert.ok(oculomotorTimeline.includes('extensions: enableWebGazer'), 'the formal trial must activate the official WebGazer extension');
-assert.ok(
-  /params:\s*\{\s*targets:\s*\['\.oculomotor-training-trial(?: canvas)?'\]\s*\}/.test(oculomotorTimeline),
-  'the official extension must measure the formal Pixi trial target',
-);
-assert.ok(
-  oculomotorTimeline.includes('on_finish: enableWebGazer ? ConsumeOfficialWebGazerTrialData : undefined'),
-  'the formal trial must consume native extension data before persistence',
-);
-assert.ok(
-  oculomotorPlugin.includes('webGazerExtension?.onGazeUpdate?.bind(webGazerExtension)')
-    && oculomotorPlugin.includes('subscribeToOfficialGazeUpdates!(handleGazePrediction)'),
-  'formal gaze coordinates must come from the official WebGazer extension callback',
-);
-assert.equal(
-  oculomotorPlugin.includes('onGazeUpdate?.(handleGazePrediction)'),
-  false,
-  'the formal trial must fail loudly instead of silently skipping an unavailable extension callback',
-);
-assert.ok(oculomotorPlugin.includes('setGazeListener?.(handleEyeFeatures)'), 'raw eye features must only feed pupil and blink estimates');
-assert.ok(oculomotorPlugin.includes('hideVideo'), 'the formal trial must hide the camera preview');
-assert.ok(oculomotorPlugin.includes('showPredictions'), 'the training plugin must support visible gazepoints');
-assert.ok(oculomotorPlugin.includes('gaze_sample_columns'), 'the training plugin must store the raw sample schema');
-assert.ok(oculomotorPlugin.includes('gaze_samples'), 'the training plugin must store every accepted gaze/target sample');
-assert.ok(oculomotorPlugin.includes('time_to_first_fixation_ms'), 'the training plugin must calculate TTFF');
-assert.equal(oculomotorPlugin.includes("wgState === 'calibration'"), false, 'training must not overwrite native calibration data');
-assert.equal(oculomotorPlugin.includes('recordScreenPosition'), false, 'training must not inject fake center calibration clicks');
-assert.ok(training.includes("item.trial_type === 'pixi-oculomotor-training'"), 'calibration trials must not replace the training result');
-assert.ok(
-  calibration.includes('export function ConsumeOfficialWebGazerTrialData'),
-  'native extension data must have a dedicated formal-trial consumer',
-);
-const consumerStart = calibration.indexOf('export function ConsumeOfficialWebGazerTrialData');
-const consumerEnd = calibration.indexOf('\n}\n\nexport async function ResetWebGazerCalibrationData', consumerStart);
-assert.ok(consumerStart >= 0 && consumerEnd > consumerStart, 'native extension data consumer must be complete');
-const consumer = calibration.slice(consumerStart, consumerEnd);
-for (const marker of [
-  'CountOfficialWebGazerSamples(data)',
-  'officialSampleCount > 0 && pairedSampleCount > 0',
-  'data.webgazer_sample_count = officialSampleCount',
-  'data.webgazer_data_consumed = consumedNativeData',
-  "'jspsych-webgazer-extension'",
-  'if (!consumedNativeData)',
-  'data.aoi_score = undefined',
-  'data.mean_target_distance_px = undefined',
-  'data.target_distance_sd_px = undefined',
-  'data.time_to_first_fixation_ms = undefined',
-  'data.average_pupil_size_px = undefined',
-  'data.pupil_size_sd_px = undefined',
-  'data.blink_count = undefined',
-]) {
-  assert.ok(consumer.includes(marker), `native extension data consumer contract missing: ${marker}`);
-}
-assert.equal(
-  /\bdelete\s+[^;\n]*webgazer_data/.test(consumer),
-  false,
-  'the canonical jsPsych webgazer_data payload must remain in the saved formal trial',
-);
-assert.ok(
-  calibration.includes('trialData?.webgazer_data_consumed === true'),
-  'show_data must only report captured gaze samples after native and paired data were consumed',
-);
-assert.equal(
-  training.includes('StripRedundantWebGazerExtensionData'),
-  false,
-  'TrainingPage must not strip native extension data before the formal trial consumes it',
-);
-assert.equal(
-  /\bdelete\s+[^;\n]*webgazer_data/.test(training),
-  false,
-  'TrainingPage must not directly delete native extension data',
-);
-assert.ok(oculomotorResults.includes('FindOculomotorResult'), 'results must use the canonical trial selector');
-assert.ok(oculomotorResultData.includes("oculomotorTrialType = 'pixi-oculomotor-training'"), 'results must identify the Pixi training trial');
-assert.ok(oculomotorResultData.includes('result.trial_type === oculomotorTrialType'), 'results must select the Pixi training trial');
-for (const marker of [
-  'gazeRecordColumns',
-  'result?.gaze_records',
-  'gaze_threshold_deg',
-  'valid_gaze_ms',
-  'in_threshold_ms',
-  'eye_tracking_source',
-]) {
-  assert.ok(trainingResultCsv.includes(marker), `oculomotor gaze CSV contract missing: ${marker}`);
-}
-for (const marker of [
-    'exp.csv.meanTargetDistance',
-    'exp.csv.targetDistanceSd',
-    'exp.csv.timeToFirstFixation',
-    'exp.csv.pupilSizeEstimate',
-    'exp.csv.pupilSizeSd',
-    'exp.csv.blinkCountEstimate',
-    'exp.csv.gazeSampleCount',
-    'exp.csv.gazeTimestamp',
-    'exp.csv.gazeX',
-    'exp.csv.gazeY',
-    'exp.csv.targetX',
-    'exp.csv.targetY',
-]) {
-  assert.ok(trainingRecords.includes(marker), `saved record CSV contract missing: ${marker}`);
-}
-for (const dictionary of [zh, en]) {
-  for (const key of [
-    'exp.res.meanTargetDistance',
-    'exp.res.targetDistanceSd',
-    'exp.res.timeToFirstFixation',
-    'exp.res.pupilSizeEstimate',
-    'exp.res.pupilSizeSd',
-    'exp.res.blinkCountEstimate',
-    'settings.wg.signalCheckCalibration',
-    'settings.wg.signalCheckInstructions',
-    'settings.wg.signalCheckTitle',
-    'settings.wg.signalCheckValidation',
-    'settings.wg.signalMissingInstructions',
-    'settings.wg.signalMissingTitle',
-    'settings.wg.signalRetryButton',
-    'settings.wg.signalSkipButton',
-    'settings.wg.signalSkippedText',
-    'settings.wg.signalSkippedTitle',
-    'settings.wg.cameraPreviewLabel',
-  ]) {
-    assert.match(dictionary, new RegExp(`["']${key.replaceAll('.', '\\.')}["']\\s*:`), `translation key missing: ${key}`);
-  }
-}
-
-console.log('WebGazer calibration contract passed.');
+console.log('Reference WebGazer protocol and settings contract passed.');

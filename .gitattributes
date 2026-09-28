@@ -1,4 +1,3 @@
-# Vendored WebGazer runtime files are integrity-pinned R2 assets. Keep their
-# upstream bytes unchanged on every checkout; line-ending conversion would
-# invalidate the manifest size and SHA-256 values.
-apps/rehabtrainerhub/games/oculomotor-training/public/assets/webgazer/3.5.3/** -text
+# Keep the reference experiment's vendored jsPsych and WebGazer bundles byte-for-byte.
+apps/rehabtrainerhub/games/oculomotor-training/public/reference/jspsych.js -text
+apps/rehabtrainerhub/games/oculomotor-training/public/reference/webgazer.js -text

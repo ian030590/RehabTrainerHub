@@ -307,14 +307,12 @@ const implementationGroups = [
   {
     ids: [
       'vision:moving-card',
-      'vision:oculomotor-training',
       'vision:gabor-patching',
       'vision:reading-training',
       'vision:driving-rehab',
     ],
     files: [
       'moving-card/MovingCardGame.tsx',
-      'oculomotor-training/OculomotorTrainingGame.tsx',
       'gabor-patching/GaborPatchingGame.tsx',
       'reading-training/ReadingTrainingGame.tsx',
       'driving-rehab/DrivingRehabGame.tsx',
@@ -324,6 +322,11 @@ const implementationGroups = [
       "setPhase('results')",
       'TrainingResultActions',
     ],
+  },
+  {
+    ids: ['vision:oculomotor-training'],
+    files: ['oculomotor-training/OculomotorTrainingGame.tsx'],
+    tokens: ['useMediaPermissionPreflight', "setPhase('running')", "setPhase('results')", 'SendHostedGameScore', 'TrainingResultActions'],
   },
   {
     ids: ['vision:hart-chart'],
@@ -427,19 +430,23 @@ const jsPsychLifecycleGroups = [
     status: 'native-timeline',
     ids: [
       'vision:moving-card',
-      'vision:oculomotor-training',
       'vision:gabor-patching',
       'vision:reading-training',
       'vision:driving-rehab',
     ],
     files: [
-      'oculomotor-training/OculomotorTrainingGame.tsx',
+      'moving-card/MovingCardGame.tsx',
       'moving-card/pixi-moving-card.ts',
-      'oculomotor-training/pixi-oculomotor-training.ts',
       'gabor-patching/pixi-gabor-patching.ts',
       'reading-training/pixi-reading-training.ts',
       'driving-rehab/three-driving-rehab.ts',
     ],
+    tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
+  },
+  {
+    status: 'native-timeline',
+    ids: ['vision:oculomotor-training'],
+    files: ['oculomotor-training/public/reference/experiment.js'],
     tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],
   },
   {
@@ -580,7 +587,7 @@ const configPermissionImplementations = {
 const nativeTimelinePermissionImplementations = {
   'vision:oculomotor-training': resolve(
     repoRoot,
-    'apps/rehabtrainerhub/games/oculomotor-training/webgazer/webgazerCalibration.ts',
+    'apps/rehabtrainerhub/games/oculomotor-training/public/reference/experiment.js',
   ),
 };
 const mediaPermissionPreflightSource = readFileSync(
@@ -601,8 +608,6 @@ const expectedDirectMediaAccessFiles = [
   ...Object.values(configPermissionImplementations)
     .filter((file) => file !== 'oculomotor-training/OculomotorTrainingGame.tsx')
     .map((file) => `apps/rehabtrainerhub/games/${file}`),
-  ...Object.values(nativeTimelinePermissionImplementations)
-    .map((file) => relative(repoRoot, file).replaceAll('\\', '/')),
 ].sort();
 assert.deepEqual(
   directMediaAccessFiles,
@@ -644,9 +649,10 @@ for (const [catalogId, file] of Object.entries(configPermissionImplementations))
 for (const [catalogId, file] of Object.entries(nativeTimelinePermissionImplementations)) {
   const source = readFileSync(file, 'utf8');
   assert.ok(
-    source.includes("from '@jspsych/plugin-webgazer-init-camera'")
-      && source.includes('type: WebGazerInitCameraPlugin'),
-    `${catalogId} must request camera permission through its native jsPsych init_camera trial.`,
+    source.includes('type: OptionalWebGazerCameraPlugin')
+      && source.includes('type: window.jsPsychWebgazerCalibrate')
+      && source.includes('type: GazeValidationPlugin'),
+    `${catalogId} must run the reference camera, calibration, and validation trials.`,
   );
 }
 
