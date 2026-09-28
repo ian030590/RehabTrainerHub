@@ -62,7 +62,8 @@ const gameRunnerOutput = resolve(repoRoot, 'apps/usergamerunner/dist');
 for (const [publicUrl, sourcePath] of [
   [platformRuntimeContract.jsPsychUrl, 'node_modules/jspsych/dist/index.browser.js'],
   [platformRuntimeContract.jsPsychCssUrl, 'node_modules/jspsych/css/jspsych.css'],
-  [platformRuntimeContract.gameSdkUrl, 'packages/game-sdk/src/index.js'],
+  [platformRuntimeContract.gameBridgeUrl, 'apps/usergamerunner/runtime/gameBridge-1.0.0.js'],
+  [platformRuntimeContract.legacyGameSdkUrl, 'apps/usergamerunner/runtime/gameBridge-1.0.0.js'],
   [platformRuntimeContract.noticesUrl, 'apps/usergamerunner/THIRD_PARTY_NOTICES.txt'],
   [platformRuntimeContract.icon192Url, 'apps/rehabtrainerhub/public/icons/pwa-192.png'],
   [platformRuntimeContract.icon512Url, 'apps/rehabtrainerhub/public/icons/pwa-512.png'],

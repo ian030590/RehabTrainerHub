@@ -56,18 +56,19 @@ not trusted from developer input.
 - `/games/{gameId}/{version}/package/{path}` serves only allowlisted files.
 - `/runtime/jspsych-8.2.3.js` and `/runtime/jspsych-8.2.3.css` are the pinned
   jsPsych browser runtime and standard styles.
-- `/runtime/trainerhub-game-sdk-0.1.0.js` is the pinned platform lifecycle SDK.
+- `/runtime/trainerhub-game-bridge-1.0.0.js` is the pinned platform lifecycle bridge.
+- `/runtime/trainerhub-game-sdk-0.1.0.js` remains available for approved older releases.
 - `/runtime/THIRD_PARTY_NOTICES-0.1.0.txt` retains the redistributed jsPsych MIT
   license and attribution.
 
 The build copies these runtime files from the workspace rather than a CDN. It
-fails closed if the installed jsPsych or SDK version, expected API marker, file
+fails closed if the installed jsPsych version, expected bridge API marker, file
 size, PNG dimensions, or copied digest does not match the controlled contract.
 Developer packages reference the versioned root-relative URLs and must not
-bundle their own jsPsych or Game SDK copy. `/runtime/*` is static output outside
+bundle their own jsPsych or bridge copy. `/runtime/*` is static output outside
 the R2 package route, so an uploaded game cannot overwrite it.
 
-Sandboxed ES modules request the SDK with an opaque `Origin: null`. Runtime
+Sandboxed ES modules request the bridge with an opaque `Origin: null`. Runtime
 assets therefore have explicit `Access-Control-Allow-Origin: *` and
 `Cross-Origin-Resource-Policy: cross-origin`, along with strict MIME types,
 `nosniff`, immutable caching, and `noindex` headers. These assets contain no
@@ -81,7 +82,7 @@ installations replace their controlled launcher. An authoritative online
 `404`/`410` closes the game, clears only that release cache prefix, and
 unregisters its worker.
 
-The service worker also precaches the two JavaScript runtimes, jsPsych CSS,
+The service worker also precaches jsPsych, both bridge URLs, jsPsych CSS,
 license notice, and controlled 192/512 PNG icons. Each manifest keeps its
 game-specific SVG icon and includes the raster icons for broader PWA install
 support.

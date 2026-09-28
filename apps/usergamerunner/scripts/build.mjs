@@ -12,15 +12,9 @@ const outputDirectory = resolve(appRoot, 'dist');
 const runtimeDirectory = resolve(outputDirectory, 'runtime');
 
 const jsPsychPackage = await ReadJson(resolve(workspaceRoot, 'node_modules/jspsych/package.json'));
-const gameSdkPackage = await ReadJson(resolve(workspaceRoot, 'packages/game-sdk/package.json'));
 if (jsPsychPackage.version !== platformRuntimeContract.jsPsychVersion) {
   throw new Error(
     `The game runner supports jsPsych ${platformRuntimeContract.jsPsychVersion}, but node_modules contains ${jsPsychPackage.version ?? 'an unknown version'}. Update the runtime contract deliberately before building.`,
-  );
-}
-if (gameSdkPackage.version !== platformRuntimeContract.gameSdkVersion) {
-  throw new Error(
-    `The game runner supports Game SDK ${platformRuntimeContract.gameSdkVersion}, but the workspace package is ${gameSdkPackage.version ?? 'an unknown version'}. Update the versioned runtime URL deliberately before building.`,
   );
 }
 
@@ -38,18 +32,31 @@ const runtimeAssets = [
     },
   },
   {
-    label: 'TrainerHub Game SDK',
-    source: resolve(workspaceRoot, 'packages/game-sdk/src/index.js'),
-    destination: RuntimeDestination(platformRuntimeContract.gameSdkUrl),
+    label: 'TrainerHub game bridge',
+    source: resolve(appRoot, 'runtime/gameBridge-1.0.0.js'),
+    destination: RuntimeDestination(platformRuntimeContract.gameBridgeUrl),
     minimumBytes: 4 * 1024,
     maximumBytes: 128 * 1024,
     validate(source) {
       if (!source.includes('export async function RunTrainerHubJsPsychGame(')
         || !source.includes("const messageSchema = 'trainerhub.game-platform/v1';")) {
-        throw new Error('The Game SDK does not expose the expected versioned lifecycle contract.');
+        throw new Error('The game bridge does not expose the expected versioned lifecycle contract.');
       }
       if (/\bimport\s*(?:\(|[^;\n]*?\bfrom\s*)["']https?:/i.test(source)) {
-        throw new Error('The Game SDK runtime must not load a module from a CDN.');
+        throw new Error('The game bridge must not load a module from a CDN.');
+      }
+    },
+  },
+  {
+    label: 'Legacy TrainerHub game bridge',
+    source: resolve(appRoot, 'runtime/gameBridge-1.0.0.js'),
+    destination: RuntimeDestination(platformRuntimeContract.legacyGameSdkUrl),
+    minimumBytes: 4 * 1024,
+    maximumBytes: 128 * 1024,
+    validate(source) {
+      // Approved releases reference this immutable URL; keep its original bytes.
+      if (Sha256(source) !== '6585745be320db4927dce938354f62e7a80f32bb600308b677a2e2768ad1cf0e') {
+        throw new Error('The legacy game bridge must retain its original content.');
       }
     },
   },

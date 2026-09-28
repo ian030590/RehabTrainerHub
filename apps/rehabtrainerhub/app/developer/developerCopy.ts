@@ -5,7 +5,7 @@ const copy = {
     header: {
       kicker: 'Developer documentation',
       title: '開發居家練習遊戲',
-      intro: '從活動設計、AI 協作、設定介面到安全投稿，依照平台目前實際契約完成一個可審核、可安裝的 jsPsych 8 遊戲。',
+      intro: '規劃 RehabBuilder 製作的居家練習遊戲，了解套件規格、安全投稿與人工審核流程。RehabBuilder 仍在規劃中。',
       version: '文件對應平台契約 v1',
       scope: '第三方投稿 + 內建遊戲貢獻',
     },
@@ -20,7 +20,7 @@ const copy = {
       ['package', '套件結構'],
       ['settings-json', 'settings.json'],
       ['score-json', 'score.json'],
-      ['sdk', 'Game SDK'],
+      ['bridge', '平台通訊橋樑'],
       ['research', '研究與內容規範'],
       ['accessibility', '可及性'],
       ['security', '安全限制'],
@@ -31,12 +31,12 @@ const copy = {
     overview: {
       eyebrow: 'Overview',
       title: '先選對開發路徑',
-      body: '平台有兩種不同契約。一般開發者提交 HTML／ZIP，由隔離執行站載入 jsPsych 與 Game SDK；倉庫貢獻者則在 Hub 內建立完整的內建遊戲模組。兩者不可混用。',
+      body: '第三方遊戲預計由 RehabBuilder 視覺化製作並匯出 HTML／ZIP；執行站提供 jsPsych 與內部通訊橋樑。倉庫貢獻者仍可在 Hub 內建立內建遊戲模組。RehabBuilder 尚未完成。',
       routes: [
         {
           number: '01',
           title: '第三方遊戲投稿',
-          body: '根目錄必須有 index.html 與 settings.json。遊戲透過 Game SDK 回傳彙總結果；投稿套件目前不讀取 score.json。',
+          body: 'RehabBuilder 預計匯出根目錄含 index.html 與 settings.json 的套件；平台通訊橋樑接收彙總結果，投稿套件不讀取 score.json。',
           detail: '適合獨立開發者與單一 HTML／ZIP 遊戲。',
         },
         {
@@ -50,17 +50,17 @@ const copy = {
     },
     quickStart: {
       eyebrow: 'Quick start',
-      title: '以 AI 為主的開發流程',
-      intro: '讓 AI Agent 負責盤點契約、產生初版、執行測試與修正；開發者仍須逐項確認活動內容、原始碼、安全限制與結果解釋。',
+      title: '遊戲投稿流程',
+      intro: 'RehabBuilder 規劃提供視覺化遊戲製作與 Hub 相容匯出。正式投稿仍須檢查活動內容、原始碼、安全限制與結果解釋。',
       steps: [
-        ['準備環境', '安裝 Git、Node.js 22 以上與 npm 11。若要貢獻倉庫，先 clone 專案並執行乾淨安裝。'],
-        ['啟動 AI Agent', '在專案或遊戲資料夾執行 Codex，先要求它閱讀 AGENTS.md、此文件與實際 schema，再開始寫程式。'],
-        ['先寫活動規格', '定義活動需求、刺激參數、每回合流程、停止方式、輸入裝置、彙總指標與限制，暫時不要產生程式碼。'],
-        ['產生並驗證', '建立 index.html、settings.json 與遊戲原始碼；倉庫內建遊戲再建立 score.json，執行對應測試並人工操作。'],
-        ['送審前複核', '確認雙語、鍵盤／觸控、無外連、無個資、未混淆、沒有自行打包 jsPsych 或 SDK，再建立新版本投稿。'],
+        ['規劃活動', '定義任務需求、刺激參數、輸入方式、停止條件、彙總指標與用途限制。'],
+        ['使用 RehabBuilder', '待視覺化編輯器完成後製作與試玩活動，匯出 Hub 相容套件；目前尚未提供此功能。'],
+        ['核對活動設計卡', '確認每個結果欄位的公式、單位、分母與可能混淆因素，並標明尚未驗證的用途。'],
+        ['產生並驗證', 'Hub 套件須含 index.html、settings.json 與可閱讀的原始碼；檢查正常完成、中止與結果數值。'],
+        ['送審前複核', '確認雙語、鍵盤／觸控、無外連、無個資、未混淆、沒有自行打包平台 runtime，再建立新版本投稿。'],
       ],
       installTitle: '倉庫開發環境',
-      installNote: '第一次開發請先完成下一章的本機環境設定，再啟動 AI Agent。第三方投稿者可以只製作遊戲資料夾；若要使用範例與自動驗證，則需下載完整倉庫。',
+      installNote: '以下本機環境與 AI Agent 指引供倉庫內建遊戲貢獻者使用；一般投稿者不必安裝 SDK。',
       installLink: '前往本機開發環境',
     },
     localEnvironment: {
@@ -113,7 +113,7 @@ const copy = {
     architecture: {
       eyebrow: 'Architecture',
       title: '平台如何載入遊戲',
-      flow: ['Hub 產生設定表單', '驗證 settings', '隔離 iframe', 'SDK 私有通道', '彙總結果', 'Hub 儲存紀錄'],
+      flow: ['Hub 產生設定表單', '驗證 settings', '隔離 iframe', '私有通訊橋樑', '彙總結果', 'Hub 儲存紀錄'],
       body: 'Hub 只負責設定表單、容器、登入紀錄與離開流程。第三方程式在獨立網域的 sandbox="allow-scripts" iframe 執行，無法讀取主平台 Cookie；平台以 MessageChannel 傳送已驗證設定與接收彙總結果。',
       boundaryTitle: '責任邊界',
       boundaries: [
@@ -130,8 +130,8 @@ const copy = {
         '上傳檔最多 12 MiB；解壓縮後最多 24 MiB；單檔最多 8 MiB。',
         '最多 192 個檔案；可執行與文字原始碼合計最多 4 MiB。',
         '提交可閱讀、未壓縮、未混淆的原始碼；單行不得超過 5,000 字元。',
-        '不要加入 manifest、service worker、jsPsych 或 TrainerHub Game SDK；平台會提供。',
-        '第三方套件不需要 score.json；結果由 SDK summarize() 回傳。',
+        '不要加入 manifest、service worker、jsPsych 或平台通訊橋樑；執行站會提供。',
+        '第三方套件不需要 score.json；遊戲透過平台通訊橋樑回傳彙總結果。',
       ],
     },
     settings: {
@@ -157,7 +157,7 @@ const copy = {
       eyebrow: 'Built-in games only',
       title: 'score.json：內建遊戲的結果投影',
       body: 'score.json 僅用於倉庫內 40 個內建遊戲。它告訴 Hub 如何把遊戲結果中的數值／布林欄位投影成共用表格、圖表與摘要；它不包含計分公式或可執行 renderer。',
-      externalNotice: '第三方 HTML／ZIP 投稿目前不解析 score.json。請在 Game SDK 的 summarize() 回傳 score、durationMs、trialCount 與 metrics。',
+      externalNotice: '第三方 HTML／ZIP 投稿目前不解析 score.json。遊戲須透過平台通訊橋樑回傳 score、durationMs、trialCount 與 metrics。',
       rules: [
         'schema 固定為 rehab-trainer.game-score/v1；gameId 與 settings.json 相同。',
         'columns 與 summary 各 1–12 欄，每欄提供 key、zh／en label 與 sources；unit、total 可省略。',
@@ -166,10 +166,10 @@ const copy = {
         '不同構念不得合併成同一來源；反應時間、正確率、完成量與品質指標應分欄並保留單位。',
       ],
     },
-    sdk: {
-      eyebrow: '@rehab-trainer/game-sdk',
-      title: 'Game SDK 與 jsPsych 生命週期',
-      body: '第三方遊戲必須使用平台提供的 jsPsych 8.2.3 與 Game SDK 0.1.0。SDK 會等待私有 MessagePort 與設定，處理 pause／resume／exit，並在 timeline 結束時驗證彙總結果。',
+    bridge: {
+      eyebrow: 'Platform runtime',
+      title: 'jsPsych 與平台通訊橋樑',
+      body: '投稿套件須使用執行站提供的 jsPsych 8.2.3 與版本化通訊橋樑。橋樑接收私有 MessagePort 與設定，處理暫停、繼續與離開，並驗證彙總結果。未來由 RehabBuilder 匯出符合此契約的套件。',
       runtimeTitle: '固定 runtime 路徑',
       resultTitle: 'summarize() 可回傳',
       resultRules: [
@@ -181,7 +181,7 @@ const copy = {
       ],
       lifecycleTitle: '實作重點',
       lifecycle: [
-        '不要在頂層 await RunTrainerHubJsPsychGame()；iframe load 後才會收到私有通道。',
+        '私有通道在 iframe 載入後建立；匯出套件須等待通道與已驗證設定。',
         '自訂 canvas／renderer 應放在單一 jsPsych plugin 內，並在 finish 或 abort 路徑解除 listener 與釋放資源。',
         'timeline(settings) 只使用已驗證設定；summarize(jsPsych, settings) 只產生非識別彙總值。',
       ],
@@ -322,7 +322,7 @@ const copy = {
     header: {
       kicker: 'Developer documentation',
       title: 'Build a home-practice game',
-      intro: 'Follow the platform’s current contracts from activity design and AI collaboration through configuration, security review, and submission of an installable jsPsych 8 game.',
+      intro: 'Plan a home-practice game for RehabBuilder and review the package, security, and manual approval requirements. RehabBuilder is still planned.',
       version: 'Platform contract v1',
       scope: 'Third-party submissions + built-in contributions',
     },
@@ -337,7 +337,7 @@ const copy = {
       ['package', 'Package structure'],
       ['settings-json', 'settings.json'],
       ['score-json', 'score.json'],
-      ['sdk', 'Game SDK'],
+      ['bridge', 'Platform bridge'],
       ['research', 'Research & content'],
       ['accessibility', 'Accessibility'],
       ['security', 'Security limits'],
@@ -348,12 +348,12 @@ const copy = {
     overview: {
       eyebrow: 'Overview',
       title: 'Choose the correct development path',
-      body: 'The platform has two distinct contracts. General developers submit HTML/ZIP packages that load jsPsych and the Game SDK in the isolated runner. Repository contributors build a complete first-party game module inside the Hub. Do not mix the two contracts.',
+      body: 'RehabBuilder is planned as the visual editor for third-party HTML/ZIP games. The isolated runner supplies jsPsych and an internal communication bridge. Repository contributors can still build first-party game modules in the Hub. RehabBuilder is not available yet.',
       routes: [
         {
           number: '01',
           title: 'Third-party game submission',
-          body: 'The package root requires index.html and settings.json. The game returns aggregate results through the Game SDK; submitted packages do not currently use score.json.',
+          body: 'RehabBuilder is expected to export a package with index.html and settings.json at the root. The platform bridge receives aggregate results; submitted packages do not use score.json.',
           detail: 'For independent developers and portable HTML/ZIP games.',
         },
         {
@@ -367,17 +367,17 @@ const copy = {
     },
     quickStart: {
       eyebrow: 'Quick start',
-      title: 'An AI-first development loop',
-      intro: 'Use an AI agent to inspect contracts, draft the first implementation, run tests, and correct failures. A developer must still verify the activity content, source code, safety limits, and interpretation of every result.',
+      title: 'Game submission flow',
+      intro: 'RehabBuilder is planned to provide visual game editing and Hub-compatible export. Every submission still needs checks for activity content, source code, safety limits, and result interpretation.',
       steps: [
-        ['Prepare the environment', 'Install Git, Node.js 22 or later, and npm 11. Repository contributors should clone the project and perform a clean install.'],
-        ['Start the AI agent', 'Run Codex in the project or game folder. Ask it to read AGENTS.md, this guide, and the actual schemas before writing code.'],
-        ['Specify the activity first', 'Define task demands, stimulus parameters, each trial, exit behavior, input devices, aggregate metrics, and limitations before asking for code.'],
-        ['Generate and verify', 'Create index.html, settings.json, and game source. Built-in games also need score.json. Run the relevant tests and complete a hands-on playthrough.'],
-        ['Review before submission', 'Check both languages, keyboard and touch, network isolation, data minimization, readable source, and platform-provided runtimes before submitting a new version.'],
+        ['Plan the activity', 'Define task demands, stimulus parameters, input methods, stopping conditions, aggregate metrics, and intended-use limits.'],
+        ['Use RehabBuilder', 'When the visual editor is ready, build and preview the activity, then export a Hub-compatible package. This feature is not available yet.'],
+        ['Review the activity design card', 'Check each result formula, unit, denominator, and likely confound, and mark any unvalidated intended use.'],
+        ['Export and verify', 'A Hub package needs index.html, settings.json, and readable source. Check completion, abort, and result values.'],
+        ['Review before submission', 'Check both languages, keyboard and touch, network isolation, data minimization, readable source, and no bundled platform runtime before submitting a new version.'],
       ],
       installTitle: 'Repository development environment',
-      installNote: 'Complete the local-environment chapter before starting an AI agent. Third-party developers may work in a standalone game folder; clone the full repository when you need its examples and automated validation gates.',
+      installNote: 'The local environment and AI agent chapters below are for repository contributors building first-party games. Third-party submitters do not need to install an SDK.',
       installLink: 'Set up the local environment',
     },
     localEnvironment: {
@@ -430,7 +430,7 @@ const copy = {
     architecture: {
       eyebrow: 'Architecture',
       title: 'How the platform loads a game',
-      flow: ['Hub renders settings', 'Validate settings', 'Isolated iframe', 'Private SDK channel', 'Aggregate result', 'Hub stores record'],
+      flow: ['Hub renders settings', 'Validate settings', 'Isolated iframe', 'Private bridge channel', 'Aggregate result', 'Hub stores record'],
       body: 'The Hub owns configuration, containment, account records, and exit flow. Third-party code runs on a separate origin in a sandbox="allow-scripts" iframe and cannot read Hub cookies. A MessageChannel carries validated settings and aggregate results.',
       boundaryTitle: 'Ownership boundaries',
       boundaries: [
@@ -447,8 +447,8 @@ const copy = {
         'Upload size: 12 MiB; expanded size: 24 MiB; individual file: 8 MiB.',
         'At most 192 files and 4 MiB of executable plus text source.',
         'Submit readable, unminified, unobfuscated source with no line longer than 5,000 characters.',
-        'Do not add a manifest, service worker, jsPsych, or the TrainerHub Game SDK; the platform supplies them.',
-        'Third-party packages do not need score.json; return results from SDK summarize().',
+        'Do not add a manifest, service worker, jsPsych, or the platform bridge; the runner supplies them.',
+        'Third-party packages do not need score.json; games return aggregates through the platform bridge.',
       ],
     },
     settings: {
@@ -474,7 +474,7 @@ const copy = {
       eyebrow: 'Built-in games only',
       title: 'score.json: project built-in results',
       body: 'score.json is used only by the repository’s 40 built-in games. It tells the Hub how numeric and boolean game results map to shared tables, charts, and summaries. It contains neither scoring formulas nor executable renderers.',
-      externalNotice: 'Third-party HTML/ZIP submissions do not currently parse score.json. Return score, durationMs, trialCount, and metrics from the Game SDK summarize() callback.',
+      externalNotice: 'Third-party HTML/ZIP submissions do not parse score.json. Games return score, durationMs, trialCount, and metrics through the platform bridge.',
       rules: [
         'schema is rehab-trainer.game-score/v1. gameId matches settings.json.',
         'columns and summary each contain 1–12 fields with key, zh/en label, and sources; unit and total are optional.',
@@ -483,10 +483,10 @@ const copy = {
         'Do not merge unlike constructs into one source. Keep reaction time, accuracy, quantity, and quality in distinct fields with units.',
       ],
     },
-    sdk: {
-      eyebrow: '@rehab-trainer/game-sdk',
-      title: 'Game SDK and the jsPsych lifecycle',
-      body: 'Third-party games must use platform-hosted jsPsych 8.2.3 and Game SDK 0.1.0. The SDK waits for the private MessagePort and settings, handles pause/resume/exit, and validates the aggregate result after the timeline finishes.',
+    bridge: {
+      eyebrow: 'Platform runtime',
+      title: 'jsPsych and the platform bridge',
+      body: 'Submitted games use runner-hosted jsPsych 8.2.3 and a versioned communication bridge. The bridge receives the private MessagePort and settings, handles pause, resume, and exit, and validates aggregate results. RehabBuilder is planned to export packages that meet this contract.',
       runtimeTitle: 'Fixed runtime paths',
       resultTitle: 'summarize() may return',
       resultRules: [
@@ -498,7 +498,7 @@ const copy = {
       ],
       lifecycleTitle: 'Implementation details',
       lifecycle: [
-        'Do not top-level await RunTrainerHubJsPsychGame(); the private channel arrives after the iframe load event.',
+        'The private channel arrives after iframe load; exported packages must wait for it and validated settings.',
         'Keep a custom canvas or renderer inside one jsPsych plugin, and remove listeners and release resources in finish and abort paths.',
         'timeline(settings) consumes only validated settings; summarize(jsPsych, settings) produces only non-identifying aggregates.',
       ],

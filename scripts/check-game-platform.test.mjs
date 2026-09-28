@@ -69,22 +69,22 @@ test('validates a versioned jsPsych game manifest and rejects unsafe variants', 
 test('pins uploaded games to runner-owned, versioned runtime URLs', async () => {
   assert.deepEqual(platformRuntimeContract, {
     jsPsychVersion: '8.2.3',
-    gameSdkVersion: '0.1.0',
     jsPsychUrl: '/runtime/jspsych-8.2.3.js',
     jsPsychCssUrl: '/runtime/jspsych-8.2.3.css',
-    gameSdkUrl: '/runtime/trainerhub-game-sdk-0.1.0.js',
+    gameBridgeUrl: '/runtime/trainerhub-game-bridge-1.0.0.js',
+    legacyGameSdkUrl: '/runtime/trainerhub-game-sdk-0.1.0.js',
     noticesUrl: '/runtime/THIRD_PARTY_NOTICES-0.1.0.txt',
     icon192Url: '/runtime/icons/trainerhub-192-v1.png',
     icon512Url: '/runtime/icons/trainerhub-512-v1.png',
   });
 
   const sample = await readFile(
-    new URL('../packages/game-sdk/examples/minimal-game.html', import.meta.url),
+    new URL('../apps/usergamerunner/tests/fixtures/minimal-game.html', import.meta.url),
     'utf8',
   );
   assert.ok(sample.includes(platformRuntimeContract.jsPsychUrl));
   assert.ok(sample.includes(platformRuntimeContract.jsPsychCssUrl));
-  assert.ok(sample.includes(platformRuntimeContract.gameSdkUrl));
+  assert.ok(sample.includes(platformRuntimeContract.gameBridgeUrl));
   assert.match(sample, /initJsPsych: jsPsychModule\.initJsPsych/);
   assert.doesNotMatch(sample, /vendor\/jspsych|trainerhub-game-sdk\.js/);
 });

@@ -35,7 +35,6 @@ Rehab Trainer Hub brings together home-practice tools, educational information, 
 |   `-- usergamerunner/    # 隔離遊戲執行環境 / Isolated game runner (trainerhub-user-games.pages.dev)
 |-- packages/
 |   |-- ui/                # 共用介面、auth、gamePlatform 型別 / Shared UI, auth, gamePlatform types
-|   |-- game-sdk/          # 開發者遊戲 SDK (@rehab-trainer/game-sdk) / Developer game SDK
 |   |-- game-settings/     # settings.json schema 與驗證器 / settings.json schema and validator
 |   |-- config-eslint/     # 共用 ESLint 設定 / Shared ESLint config
 |   `-- config-tailwind/   # 共用 Tailwind 設定 / Shared Tailwind config
@@ -82,7 +81,7 @@ npm install
 | `npm run test:entrypoints` | 驗證入口流程、白畫面防護、訓練流程、jsPsych 生命週期與 i18n 字典完整性 |
 | `npm run test:hub-functions` | 驗證 Hub Cloudflare Functions 後端 API 與安全防護測試 |
 | `npm run test:gamerunner` | 驗證隔離遊戲執行器路由、沙盒隔離與安全性標頭 |
-| `npm run test:game-platform` | 驗證第三方遊戲套件安全掃描器與 SDK 契約 |
+| `npm run test:game-platform` | 驗證第三方遊戲套件安全掃描器與平台通訊契約 |
 | `npm run test:game-architecture` | 驗證逐遊戲目錄、settings schema、統一 config UI、iframe 與 postMessage 架構契約 |
 | `npm run test:game-architecture:built` | 驗證 Hub 建置產物只有獨立 `/games/{gameId}/`，且沒有 `/runtimes/*` |
 | `npm run test:game-architecture:browser` | 使用本機 Brave 驗證大廳可開啟由 `settings.json` 生成的統一 config UI |
@@ -115,7 +114,7 @@ npm install
 1. **物理隔離（Separate Domain）**：遊戲檔案完全部署在獨立網域（`trainerhub-user-games.pages.dev`），與主平台（`trainerhub.cc`）徹底分開，受同源政策（SOP）強制隔離，無法存取主平台的 Cookie 或登入憑證。
 2. **沙盒機制（Strict Iframe Sandbox）**：主平台以 `<iframe sandbox="allow-scripts">` 嵌入遊戲，禁止 `allow-same-origin` 與 `allow-top-navigation`。
 3. **阻斷外連（Restrictive CSP）**：執行環境施加 `connect-src 'none'`、`worker-src 'none'`、`form-action 'none'`，禁止遊戲向外連線竊取資料。
-4. **安全通訊橋樑（postMessage & MessageChannel）**：遊戲透過 `@rehab-trainer/game-sdk` 的 MessageChannel 與外層通訊，使用 session nonce 與 sequence 防止重放攻擊，僅回傳非敏感的彙總指標。
+4. **安全通訊橋樑（postMessage & MessageChannel）**：遊戲透過隔離執行站提供的版本化通訊橋樑與外層通訊，使用 session nonce 與 sequence 防止重放攻擊，僅回傳非敏感的彙總指標。RehabBuilder 規劃作為視覺化遊戲製作工具，投稿仍須經掃描與人工審核。
 5. **自動掃描與人工審核**：上傳時自動阻擋 18 種危險 API 模式（fetch、XHR、WebSocket、cookie、location 等）與混淆程式碼；管理員於隔離環境試玩並查核原始碼，經 3 項查核勾選後始可核准上架。
 
 ## 注意事項 / Notice

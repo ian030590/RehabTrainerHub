@@ -155,38 +155,7 @@ const scoreExample = `{
 
 const runtimePaths = `/runtime/jspsych-8.2.3.js
 /runtime/jspsych-8.2.3.css
-/runtime/trainerhub-game-sdk-0.1.0.js`;
-
-const sdkExample = `<link rel="stylesheet" href="/runtime/jspsych-8.2.3.css" />
-<script src="/runtime/jspsych-8.2.3.js"></script>
-<script type="module">
-  import { RunTrainerHubJsPsychGame }
-    from '/runtime/trainerhub-game-sdk-0.1.0.js';
-
-  async function startGame() {
-    await RunTrainerHubJsPsychGame({
-      initJsPsych: jsPsychModule.initJsPsych,
-      timeline(settings) {
-        return buildTimeline(settings);
-      },
-      summarize(jsPsych) {
-        const trials = jsPsych.data.get();
-        return {
-          status: 'completed',
-          score: trials.filter({ correct: true }).count(),
-          trialCount: trials.count(),
-          metrics: {
-            median_response_ms: trials
-              .select('responseMs')
-              .median(),
-          },
-        };
-      },
-    });
-  }
-
-  void startGame();
-</script>`;
+/runtime/trainerhub-game-bridge-1.0.0.js`;
 
 const validationCommands = `npm run test:game-platform
 npm run test:game-architecture
@@ -395,18 +364,17 @@ export function DeveloperGuide({ children }: DeveloperGuideProps) {
             <CodeBlock label="score.json">{scoreExample}</CodeBlock>
           </DocSection>
 
-          <DocSection eyebrow={copy.sdk.eyebrow} id="sdk" title={copy.sdk.title}>
-            <p className="developer-docs-lead">{copy.sdk.body}</p>
-            <h3>{copy.sdk.runtimeTitle}</h3>
+          <DocSection eyebrow={copy.bridge.eyebrow} id="bridge" title={copy.bridge.title}>
+            <p className="developer-docs-lead">{copy.bridge.body}</p>
+            <h3>{copy.bridge.runtimeTitle}</h3>
             <CodeBlock label="Runtime">{runtimePaths}</CodeBlock>
-            <CodeBlock label="index.html">{sdkExample}</CodeBlock>
-            <h3>{copy.sdk.resultTitle}</h3>
+            <h3>{copy.bridge.resultTitle}</h3>
             <ul className="developer-check-list">
-              {copy.sdk.resultRules.map((item) => <li key={item}>{item}</li>)}
+              {copy.bridge.resultRules.map((item) => <li key={item}>{item}</li>)}
             </ul>
-            <h3>{copy.sdk.lifecycleTitle}</h3>
+            <h3>{copy.bridge.lifecycleTitle}</h3>
             <ol className="developer-number-list">
-              {copy.sdk.lifecycle.map((item) => <li key={item}>{item}</li>)}
+              {copy.bridge.lifecycle.map((item) => <li key={item}>{item}</li>)}
             </ol>
           </DocSection>
 
@@ -627,8 +595,8 @@ function BuildAgentPrompt(fields: PromptFields, language: HubLanguage): string {
       ? `Create an isolated module at apps/rehabtrainerhub/games/{gameId}/. It must own its runtime and include settings.json and score.json, import both in main.tsx, and register both with OfficialGameShell. Do not move renderer or game-loop state into shared packages.`
       : `在 apps/rehabtrainerhub/games/{gameId}/ 建立獨立模組。模組自行擁有 runtime，必須包含 settings.json 與 score.json，在 main.tsx 匯入兩者並向 OfficialGameShell 註冊。不得把 renderer 或 game-loop 長生命週期狀態移入共用 package。`)
     : (language === 'en'
-      ? `Create readable, unminified index.html, settings.json, source, styles, and local assets at the package root. Use platform jsPsych 8.2.3 and Game SDK 0.1.0 from /runtime/. Run the timeline through RunTrainerHubJsPsychGame(). Do not create score.json, a manifest, or a service worker and do not bundle jsPsych or the SDK.`
-      : `在套件根目錄建立可閱讀、未壓縮的 index.html、settings.json、原始碼、樣式與本地資產。從 /runtime/ 使用平台 jsPsych 8.2.3 與 Game SDK 0.1.0，並以 RunTrainerHubJsPsychGame() 執行 timeline。不要建立 score.json、manifest 或 service worker，也不要自行打包 jsPsych 或 SDK。`);
+      ? `Prepare an activity specification for RehabBuilder. Its Hub export must contain readable index.html, settings.json, source, styles, and local assets, and use the runner's versioned jsPsych runtime and game bridge. Keep the existing upload scan and manual review. RehabBuilder is planned; do not claim that its export is available yet.`
+      : `為 RehabBuilder 準備活動規格。未來 Hub 匯出需包含可閱讀的 index.html、settings.json、原始碼、樣式與本地資產，並使用執行站版本化的 jsPsych runtime 與遊戲通訊橋樑。維持既有上傳掃描與人工審核。RehabBuilder 尚在規劃中，不要宣稱目前可匯出。`);
 
   if (language === 'en') {
     return `# Role
@@ -662,14 +630,14 @@ Use semantic HTML, visible keyboard focus, 44×44 CSS-pixel targets, keyboard eq
 
 # Deliverables
 1. First report assumptions, missing decisions, inspected contracts, and an implementation plan.
-2. Implement all complete files without placeholders.
+2. ${fields.route === 'built-in' ? 'Implement complete game files without placeholders.' : 'Write a complete activity specification for RehabBuilder; do not claim its Hub export is available yet.'}
 3. Explain the file structure, settings, scoring/results, lifecycle cleanup, and research limitations.
 4. Run the smallest relevant tests, then the required repository gates for the selected route. Report exact commands and results.
 5. Review the final diff for security, i18n, accessibility, sensitive fields, and unsupported medical claims.`;
   }
 
   return `# 角色
-你是一名資深 Web RD，並具備職能治療活動分析與學術研究素養。修改前先完整閱讀 AGENTS.md，並檢查倉庫目前實際 schema、SDK 與測試，不依賴臆測或舊文件。
+你是一名資深 Web RD，並具備職能治療活動分析與學術研究素養。修改前先完整閱讀 AGENTS.md，並檢查倉庫目前實際 schema、遊戲通訊契約與測試，不依賴臆測或舊文件。
 
 # 目標
 以「${value(fields.title)}」為名稱，製作${route}。
@@ -699,7 +667,7 @@ ${routeContract}
 
 # 交付要求
 1. 先回報假設、缺少決策、已查核契約與實作計畫。
-2. 完整實作所有檔案，不可留下 placeholder。
+2. ${fields.route === 'built-in' ? '完整實作所有檔案，不可留下 placeholder。' : '撰寫完整的 RehabBuilder 活動規格；不要宣稱 Hub 匯出功能已可使用。'}
 3. 說明檔案結構、settings、分數／結果、生命週期清理與研究限制。
 4. 先跑最小相關測試，再跑此開發路徑要求的倉庫 gate；列出完整命令與結果。
 5. 最後審查 diff 的安全、i18n、可及性、敏感欄位與不當醫療宣稱。`;

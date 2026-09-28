@@ -19,7 +19,7 @@ const validHtml = `<!doctype html>
 <script src="/runtime/jspsych-8.2.3.js"></script>
 <main id="jspsych-target"></main>
 <script type="module">
-  import { RunTrainerHubJsPsychGame } from '/runtime/trainerhub-game-sdk-0.1.0.js';
+  import { RunTrainerHubJsPsychGame } from '/runtime/trainerhub-game-bridge-1.0.0.js';
   async function startGame() {
     await RunTrainerHubJsPsychGame({
       initJsPsych: jsPsychModule.initJsPsych,
@@ -45,14 +45,13 @@ test('scanner and runner publish one exact platform runtime contract', () => {
     jsPsychVersion: platformRuntimeContract.jsPsychVersion,
     jsPsychUrl: platformRuntimeContract.jsPsychUrl,
     jsPsychCssUrl: platformRuntimeContract.jsPsychCssUrl,
-    gameSdkVersion: platformRuntimeContract.gameSdkVersion,
-    gameSdkUrl: platformRuntimeContract.gameSdkUrl,
+    gameBridgeUrl: platformRuntimeContract.gameBridgeUrl,
   });
 });
 
 test('accepts the complete platform-runtime sample package', async () => {
   const sample = await readFile(
-    new URL('../../../../packages/game-sdk/examples/minimal-game.html', import.meta.url),
+    new URL('../../../usergamerunner/tests/fixtures/minimal-game.html', import.meta.url),
   );
   const result = await InspectGamePackage(FakeFile('minimal-game.html', 'text/html', sample));
   assert.equal(result.blockCount, 0);
@@ -62,7 +61,7 @@ test('accepts the complete platform-runtime sample package', async () => {
 test('requires fixed runner runtime URLs and rejects bundled platform vendors', async () => {
   const wrongRuntime = validHtml
     .replace('/runtime/jspsych-8.2.3.js', './vendor/jspsych.js')
-    .replace('/runtime/trainerhub-game-sdk-0.1.0.js', 'https://cdn.invalid/game-sdk.js');
+    .replace('/runtime/trainerhub-game-bridge-1.0.0.js', 'https://cdn.invalid/game-bridge.js');
   const wrongResult = await InspectGamePackage(
     FakeFile('index.html', 'text/html', strToU8(wrongRuntime)),
   );
@@ -70,9 +69,20 @@ test('requires fixed runner runtime URLs and rejects bundled platform vendors', 
     (finding) => finding.code === 'missing-platform-jspsych-runtime',
   ));
   assert.ok(wrongResult.findings.some(
-    (finding) => finding.code === 'missing-platform-sdk-runtime',
+    (finding) => finding.code === 'missing-platform-bridge-runtime',
   ));
   assert.ok(wrongResult.findings.some((finding) => finding.code === 'external-url'));
+
+  const legacyRuntime = validHtml.replace(
+    '/runtime/trainerhub-game-bridge-1.0.0.js',
+    '/runtime/trainerhub-game-sdk-0.1.0.js',
+  );
+  const legacyResult = await InspectGamePackage(
+    FakeFile('index.html', 'text/html', strToU8(legacyRuntime)),
+  );
+  assert.ok(legacyResult.findings.some(
+    (finding) => finding.code === 'missing-platform-bridge-runtime',
+  ));
 
   const moduleJsPsych = validHtml.replace(
     '<script src="/runtime/jspsych-8.2.3.js">',
@@ -91,6 +101,7 @@ test('requires fixed runner runtime URLs and rejects bundled platform vendors', 
       var jsPsychModule = (function (exports) { return exports; })({});
       var initJsPsych = jsPsychModule.initJsPsych;
     `),
+    'vendor/trainerhub-game-bridge-1.0.0.js': strToU8('export const bundled = true;'),
   });
   const bundledResult = await InspectGamePackage(
     FakeFile('game.zip', 'application/zip', bundled),
@@ -98,6 +109,10 @@ test('requires fixed runner runtime URLs and rejects bundled platform vendors', 
   assert.ok(bundledResult.findings.some(
     (finding) => finding.code === 'bundled-platform-runtime'
       && finding.filePath === 'vendor/jspsych.js',
+  ));
+  assert.ok(bundledResult.findings.some(
+    (finding) => finding.code === 'bundled-platform-runtime'
+      && finding.filePath === 'vendor/trainerhub-game-bridge-1.0.0.js',
   ));
 });
 
@@ -195,7 +210,7 @@ test('requires full semantic versions and runner-safe ASCII paths', () => {
   assert.equal(NormalizePackagePath('entry.js?raw'), null);
 });
 
-test('comments cannot spoof jsPsych/SDK use and computed globals are blocked', async () => {
+test('comments cannot spoof jsPsych/bridge use and computed globals are blocked', async () => {
   const bypass = `<!doctype html><script>
     // initJsPsych(
     // await RunTrainerHubJsPsychGame(
@@ -205,7 +220,7 @@ test('comments cannot spoof jsPsych/SDK use and computed globals are blocked', a
   assert.ok(result.findings.some((finding) => finding.code === 'missing-jspsych'));
   assert.ok(result.findings.some((finding) => finding.code === 'missing-platform-bridge'));
   assert.ok(result.findings.some((finding) => finding.code === 'missing-platform-jspsych-runtime'));
-  assert.ok(result.findings.some((finding) => finding.code === 'missing-platform-sdk-runtime'));
+  assert.ok(result.findings.some((finding) => finding.code === 'missing-platform-bridge-runtime'));
   assert.ok(result.findings.some((finding) => finding.code === 'computed-global-access'));
 });
 

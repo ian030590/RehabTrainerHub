@@ -9,7 +9,7 @@ npm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
 - `apps/rehabtrainerhub/games/{gameId}/`：各遊戲獨立擁有 Vite entry、runtime、規則、i18n 與 `settings.json`；不是 workspace app。共用 React shell 依 JSON 產生 Hub 與單一遊戲 PWA 的設定表單。
 
 共用 UI、auth、layout、settings、storage、gamePlatform 規範：`packages/ui/src`。
-開發者遊戲 SDK：`packages/game-sdk`（`@rehab-trainer/game-sdk`）。
+第三方遊戲通訊橋樑由 `apps/usergamerunner/runtime/` 維護；RehabBuilder 規劃負責視覺化遊戲製作與 Hub 套件匯出，本倉庫不提供開發者 SDK 套件。
 靜態資產：各 app `public/`，通常 `public/assets/`。
 D1 migrations：`apps/rehabtrainerhub/migrations/`。
 R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼動逐筆 CSV，含新版 WebGazer 上傳與舊版歷史紀錄）、`rehab-game-quarantine`（待審上傳暫存）、`rehab-game-releases`（已核准不可變發布）。新版眼動練習另由瀏覽器下載原參考格式的 CSV。
@@ -23,7 +23,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `npm run build:hub|gamerunner`：建置單一 app；Hub build 會一併建置 40 個內建遊戲。
 - `npm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
 - `npm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
-- `npm run test:game-platform`：驗證遊戲套件掃描器與 SDK。
+- `npm run test:game-platform`：驗證遊戲套件掃描器與平台通訊橋樑。
 - `npm --prefix apps/<app> run preview`：預覽 Vite app 或 Hub 輸出。
 
 高風險 trainer 變更完成前執行 `npm run test:entrypoints`：entrypoint、routing、entrypoint 引入的共用 layout/UI，或可能把 Pixi、jsPsych、Three.js、MediaPipe、TensorFlow、Vosk 帶入 entry bundle、造成白畫面的變更。此 gate 包含 Subject ID helper、training flow、assessment jsPsych lifecycle 與 i18n dictionary parity 檢查。
@@ -39,6 +39,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `.github/workflows/ci.yml` 在 PR 與非 `main` push 的應用程式、package、script、lockfile、Turbo 或 workflow 變更時執行；純文件變更不得啟動 CI。
 - `.github/workflows/deploy-cloudflare-pages.yml` 只在 `main` 上的可部署變更時執行。部署前的驗證以 matrix 平行執行；新增 gate 時加入兩份 workflow 的 matrix，並維持相同命令。
 - CI/CD 乾淨安裝使用 `npm ci --workspaces --include-workspace-root`；Hub 的內建遊戲相容 build 需要 root 的 Vite 與訓練 runtime dependencies，不得省略 workspace root。
+- `test:game-platform` 由兩份 workflow 的 `test:entrypoints` matrix 間接執行，涵蓋遊戲通訊橋樑、訊息協定與設定 schema；SDK workspace 已移除。兩份 workflow 維持相同的 `test:entrypoints` 命令。
 - `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、`settings.json`、統一 config UI、iframe 與訊息協定；CI 與部署 workflow 必須維持同名 matrix 項目。Hub build 另以 `check-built-game-architecture.mjs` 驗證實際輸出不得恢復 `/runtimes/*`。
 - `npm run test:webgazer` 驗證眼動練習參考實驗的 WebGazer/jsPsych bundle 完整性、校正與驗證程序、`settings.json` 與 `score.json` 欄位；包含於 `test:entrypoints`。網頁版沒有原生 Tobii 橋接。
 - `npm run test:webgazer-browser` 以本機 Brave 驗證眼動練習設定、無眼動刺激與成績流程、雙層同源 iframe 的相機權限，以及 R2 CSV 上傳失敗重試；此項為本機測試，不加入 Linux CI matrix。
@@ -101,7 +102,7 @@ Trainers 維持一致檔名/資料夾，例如 `pages/settings/SettingsPage.tsx`
    - 禁止遊戲向任何外部伺服器發起 `fetch`、`XMLHttpRequest`、`WebSocket` 或 `WebRTC`。
 
 4. **安全通訊橋樑（postMessage & MessageChannel）**：
-   - 遊戲端必須引用 `@rehab-trainer/game-sdk`，透過私有 `MessageChannel` 傳送生命週期與彙總成果。
+   - 新投稿遊戲必須引用隔離執行站提供的版本化通訊橋樑，透過私有 `MessageChannel` 傳送生命週期與彙總成果；舊版 SDK URL 僅供已發布遊戲相容使用。
    - 主平台驗證由 `sessionNonce` + 單調遞增 `sequence` 防禦重放攻擊；成績寫入透過後端一次性 `game_run_sessions` Token（SHA-256 驗證）防偽。
    - 彙總指標自動過濾所有含 `auth|email|jwt|name|password|token|user` 等敏感欄位。
 

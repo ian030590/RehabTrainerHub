@@ -614,9 +614,11 @@ test('platform runtime is static, CORS-readable from an opaque sandbox, and non-
     assert.match(block, /X-Robots-Tag: noindex, nofollow, noarchive/);
   }
 
-  const staticContext = CreateContext(platformRuntimeContract.gameSdkUrl);
-  assert.equal(await (await HandleRequest(staticContext)).text(), 'static');
-  assert.equal(staticContext.env.GAME_RELEASE_BUCKET.requestedKeys.length, 0);
+  for (const url of [platformRuntimeContract.gameBridgeUrl, platformRuntimeContract.legacyGameSdkUrl]) {
+    const staticContext = CreateContext(url);
+    assert.equal(await (await HandleRequest(staticContext)).text(), 'static');
+    assert.equal(staticContext.env.GAME_RELEASE_BUCKET.requestedKeys.length, 0);
+  }
 });
 
 test('the pinned jsPsych browser artifact exposes the documented classic API', async () => {

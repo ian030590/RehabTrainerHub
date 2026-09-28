@@ -19,8 +19,7 @@ export const gamePackageRuntimeContract = Object.freeze({
   jsPsychVersion: '8.2.3',
   jsPsychUrl: '/runtime/jspsych-8.2.3.js',
   jsPsychCssUrl: '/runtime/jspsych-8.2.3.css',
-  gameSdkVersion: '0.1.0',
-  gameSdkUrl: '/runtime/trainerhub-game-sdk-0.1.0.js',
+  gameBridgeUrl: '/runtime/trainerhub-game-bridge-1.0.0.js',
 });
 
 const entryPath = 'index.html';
@@ -194,13 +193,13 @@ export async function InspectGamePackage(file, expectedGameId) {
   if (!HasExactNamedModuleImport(
     sourceCorpus,
     'RunTrainerHubJsPsychGame',
-    gamePackageRuntimeContract.gameSdkUrl,
+    gamePackageRuntimeContract.gameBridgeUrl,
   )) {
     AddFinding(findings, {
       severity: 'block',
-      code: 'missing-platform-sdk-runtime',
+      code: 'missing-platform-bridge-runtime',
       filePath: entryPath,
-      message: `Import RunTrainerHubJsPsychGame from ${gamePackageRuntimeContract.gameSdkUrl}.`,
+      message: `Import RunTrainerHubJsPsychGame from ${gamePackageRuntimeContract.gameBridgeUrl}.`,
     });
   }
 
@@ -212,7 +211,7 @@ export async function InspectGamePackage(file, expectedGameId) {
       severity: 'block',
       code: 'missing-jspsych',
       filePath: entryPath,
-      message: 'Pass the platform jsPsychModule.initJsPsych initializer to the Game SDK.',
+      message: 'Pass the platform jsPsychModule.initJsPsych initializer to the game bridge.',
     });
   }
   if (!/\bawait\s+RunTrainerHubJsPsychGame\s*\(/.test(executableCorpus)) {
@@ -525,7 +524,7 @@ function ScanSource(path, source, findings) {
       severity: 'block',
       code: 'bundled-platform-runtime',
       filePath: path,
-      message: 'Do not bundle jsPsych or the TrainerHub Game SDK; load the reviewed platform runtime from /runtime/.',
+      message: 'Do not bundle jsPsych or the TrainerHub game bridge; load the reviewed platform runtime from /runtime/.',
     });
   }
   for (const [code, pattern, message] of blockedSourcePatterns) {
@@ -575,7 +574,7 @@ function HasExactNamedModuleImport(source, exportedName, expectedUrl) {
 }
 
 function IsBundledPlatformRuntime(path, source) {
-  const knownRuntimeName = /(?:^|\/)(?:jspsych(?:\.browser)?(?:\.min)?|trainerhub-game-sdk(?:-[0-9.]+)?(?:\.min)?)\.(?:js|mjs)$/i;
+  const knownRuntimeName = /(?:^|\/)(?:jspsych(?:\.browser)?(?:\.min)?|trainerhub-game-(?:sdk|bridge)(?:-[0-9.]+)?(?:\.min)?)\.(?:js|mjs)$/i;
   return knownRuntimeName.test(path)
     || (/\bvar\s+jsPsychModule\s*=\s*\(function\s*\(exports\)/.test(source)
       && /\bvar\s+initJsPsych\s*=\s*jsPsychModule\.initJsPsych\b/.test(source))
