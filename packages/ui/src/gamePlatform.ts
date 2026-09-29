@@ -8,16 +8,9 @@ export const gamePlatformRunnerSettingsMessageType = 'trainerhub.runner:settings
 export const gamePlatformHostSettingsMessageType = 'trainerhub.host:settings' as const;
 export const gamePlatformOpaqueOrigin = 'null' as const;
 export const gamePlatformSupportedJsPsychMajorVersion = 8 as const;
-const gamePlatformGameRunRequestMaxBytes = 80 * 1024;
-const gamePlatformGameRunIdentifierMaxLength = 128;
 export const gamePlatformRunSessionTokenLength = 64;
-// JSON.stringify({ releaseId, clientRunId, runSessionToken, result }) adds
-// 64 syntax/key bytes plus the three bounded string values around `result`.
-const gamePlatformGameRunJsonEnvelopeBytes = 64
-  + (2 * gamePlatformGameRunIdentifierMaxLength)
-  + gamePlatformRunSessionTokenLength;
-export const gamePlatformMaxPayloadBytes = gamePlatformGameRunRequestMaxBytes
-  - gamePlatformGameRunJsonEnvelopeBytes;
+export const gamePlatformMaxPayloadBytes = 64 * 1024;
+const gamePlatformMaxAggregatePayloadBytes = 16_000;
 export const gamePlatformMaxFiles = 192;
 export const gamePlatformMaxResultMetrics = 512;
 export const gamePlatformMaxResultDurationMs = 24 * 60 * 60 * 1000;
@@ -247,7 +240,9 @@ export function IsGamePlatformResultMessage(
     if ('detailRows' in value.payload && (!Array.isArray(value.payload.detailRows)
       || value.payload.detailRows.length > 500
       || value.payload.detailRows.some(row => !IsGamePlatformResultMetrics(row) || Object.keys(row).length > 12))) return false;
-    return IsPayloadSizeAllowed(value.payload);
+    if (('details' in value.payload) !== ('detailRows' in value.payload)) return false;
+    return IsPayloadSizeAllowed(value.payload,
+      'details' in value.payload ? gamePlatformMaxPayloadBytes : gamePlatformMaxAggregatePayloadBytes);
   } catch {
     return false;
   }
@@ -457,10 +452,10 @@ function IsValidSessionIdentifier(value: unknown): value is string {
     && /^[A-Za-z0-9._-]+$/.test(value);
 }
 
-function IsPayloadSizeAllowed(value: unknown): boolean {
+function IsPayloadSizeAllowed(value: unknown, maxBytes: number = gamePlatformMaxPayloadBytes): boolean {
   const serialized = JSON.stringify(value);
   return typeof serialized === 'string'
-    && new TextEncoder().encode(serialized).byteLength <= gamePlatformMaxPayloadBytes;
+    && new TextEncoder().encode(serialized).byteLength <= maxBytes;
 }
 
 function IsFiniteNumber(value: unknown): value is number {
