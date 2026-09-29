@@ -258,7 +258,7 @@ test('binds selected settings to the opaque runner session', () => {
 test('matches the game-runs API numeric and UTF-8 byte limits', () => {
   assert.equal(gamePlatform.gamePlatformMaxResultDurationMs, 86_400_000);
   assert.equal(gamePlatform.gamePlatformMaxResultTrialCount, 100_000);
-  assert.equal(gamePlatform.gamePlatformMaxPayloadBytes, 16_000);
+  assert.equal(gamePlatform.gamePlatformMaxPayloadBytes, 64 * 1024);
 
   const maximumNumericMessage = CreateResultMessage({
     payload: {
@@ -279,7 +279,7 @@ test('matches the game-runs API numeric and UTF-8 byte limits', () => {
   }), sessionNonce, 0), false);
 
   const maximumPayload = CreateBoundaryResultPayload(22);
-  assert.equal(JsonBytes(maximumPayload), gamePlatform.gamePlatformMaxPayloadBytes);
+  assert.equal(JsonBytes(maximumPayload), 16_000);
   assert.equal(gamePlatform.IsGamePlatformResultMessage(CreateResultMessage({
     payload: maximumPayload,
   }), sessionNonce, 0), true);
@@ -291,9 +291,31 @@ test('matches the game-runs API numeric and UTF-8 byte limits', () => {
   })), 16 * 1024);
 
   const oversizedPayload = CreateBoundaryResultPayload(23);
-  assert.equal(JsonBytes(oversizedPayload), gamePlatform.gamePlatformMaxPayloadBytes + 1);
+  assert.equal(JsonBytes(oversizedPayload), 16_001);
   assert.equal(gamePlatform.IsGamePlatformResultMessage(CreateResultMessage({
     payload: oversizedPayload,
+  }), sessionNonce, 0), false);
+
+  const detailedPayload = {
+    status: 'completed',
+    details: { meanReactionMs: 420 },
+    detailRows: Array.from({ length: 500 }, (_, trial) => ({ trial, reactionMs: 420, durationMs: 420 })),
+  };
+  assert.equal(JsonBytes(detailedPayload) > 16_000, true);
+  assert.equal(JsonBytes(detailedPayload) < gamePlatform.gamePlatformMaxPayloadBytes, true);
+  assert.equal(gamePlatform.IsGamePlatformResultMessage(CreateResultMessage({
+    payload: detailedPayload,
+  }), sessionNonce, 0), true);
+  assert.equal(gamePlatform.IsGamePlatformResultMessage(CreateResultMessage({
+    payload: { status: 'completed', details: detailedPayload.details },
+  }), sessionNonce, 0), false);
+  assert.equal(gamePlatform.IsGamePlatformResultMessage(CreateResultMessage({
+    payload: {
+      ...detailedPayload,
+      detailRows: Array.from({ length: 500 }, () => Object.fromEntries(
+        Array.from({ length: 12 }, (_, index) => [`metric${index}`, 420]),
+      )),
+    },
   }), sessionNonce, 0), false);
 });
 
