@@ -48,7 +48,7 @@ test('Hub authorizes Builder, receives a package, accepts submission, and stores
   const env = {
     AUTH_SESSION_SECRET: authSecret,
     BUILDER_CLIENT_SECRET: builderSecret,
-    REHAB_DB: d1(sqlite),
+    REHAB_DB: CreateD1(sqlite),
     GAME_QUARANTINE_BUCKET: {
       async put(key, value) { quarantineObjects.set(key, value); },
       async delete(keys) { for (const key of keys) quarantineObjects.delete(key); },
@@ -164,7 +164,7 @@ test('Hub authorizes Builder, receives a package, accepts submission, and stores
   }
 });
 
-function d1(db) {
+function CreateD1(db) {
   return {
     prepare(sql) {
       const statement = db.prepare(sql);
