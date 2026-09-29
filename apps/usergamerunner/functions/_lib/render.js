@@ -6,7 +6,7 @@ import {
 
 export const trustedPlatformOrigin = 'https://trainerhub.cc';
 const maximumResultDurationMs = 24 * 60 * 60 * 1000;
-const maximumResultPayloadBytes = 16_000;
+const maximumResultPayloadBytes = 64 * 1024;
 const maximumResultTrialCount = 100_000;
 const releaseHealthCheckIntervalMs = 60 * 1000;
 const runnerCacheRevision = '2026-08-17-platform-runtime-v3';
@@ -323,7 +323,7 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
           if (!isExactPlainObject(
             message.payload,
             ['status'],
-            ['score', 'durationMs', 'trialCount', 'metrics'],
+            ['score', 'durationMs', 'trialCount', 'metrics', 'details', 'detailRows'],
           ) || !resultStatuses.has(message.payload.status)) return null;
 
           const payload = { status: message.payload.status };
@@ -346,6 +346,15 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
           if ('metrics' in message.payload) {
             if (!isSafeMetrics(message.payload.metrics)) return null;
             payload.metrics = Object.fromEntries(Object.entries(message.payload.metrics));
+          }
+          if ('details' in message.payload) {
+            if (!isSafeMetrics(message.payload.details) || Object.keys(message.payload.details).length > 12) return null;
+            payload.details = Object.fromEntries(Object.entries(message.payload.details));
+          }
+          if ('detailRows' in message.payload) {
+            if (!Array.isArray(message.payload.detailRows) || message.payload.detailRows.length > 500
+              || message.payload.detailRows.some(row => !isSafeMetrics(row) || Object.keys(row).length > 12)) return null;
+            payload.detailRows = message.payload.detailRows.map(row => Object.fromEntries(Object.entries(row)));
           }
           return {
             schema: messageSchema,

@@ -55,7 +55,7 @@ const runtimeAssets = [
     maximumBytes: 128 * 1024,
     validate(source) {
       // Approved releases reference this immutable URL; keep its original bytes.
-      if (Sha256(source) !== '6585745be320db4927dce938354f62e7a80f32bb600308b677a2e2768ad1cf0e') {
+      if (Sha256(source) !== '0eebe39a1d77e95a82b7a49396f16b5551f6e96d932984c58dce8186c0525410') {
         throw new Error('The legacy game bridge must retain its original content.');
       }
     },

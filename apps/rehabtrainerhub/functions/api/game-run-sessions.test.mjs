@@ -91,6 +91,34 @@ test('atomically consumes one session and makes a network retry idempotent', asy
   assert.equal(db.runs.length, 1);
 });
 
+test('stores an aborted native run with score.json projection and rejects undeclared fields', async () => {
+  const db = CreateGameRunDb();
+  db.releases.get(releaseId).jspsych_version = 'none';
+  const definition = { schema: 'rehab-trainer.game-score/v1', gameId: 'sample-game',
+    presentation: { primarySummaryKeys: ['accuracy'], qualitySummaryKeys: [], defaultRoundMetricKey: 'correct', chartType: 'bar' },
+    columns: [{ key: 'correct', label: { zh: '正確', en: 'Correct' }, sources: ['correct'] }],
+    summary: [{ key: 'accuracy', label: { zh: '正確率', en: 'Accuracy' }, sources: ['accuracy'] }] };
+  const env = { AUTH_SESSION_SECRET: secret, REHAB_DB: db, GAME_RELEASE_BUCKET: {
+    async get(key) { assert.equal(key, 'releases/sample-game/1.0.0/files/score.json'); return { text: async () => JSON.stringify(definition) }; },
+  } };
+  const { runSession } = await (await IssueSession(env)).json();
+  const input = { releaseId, clientRunId, runSessionToken: runSession.token,
+    result: { status: 'aborted', durationMs: 1200, details: { accuracy: 50 }, detailRows: [{ correct: true }] } };
+  const response = await saveGameRun({ request: AuthorizedJsonRequest('/api/game-runs', input), env });
+  assert.equal(response.status, 201);
+  assert.deepEqual(JSON.parse(db.runs[0].resultJson).scoreProjection,
+    { schema: definition.schema, gameId: 'sample-game', rounds: [{ correct: 1 }], summary: { accuracy: 50 } });
+  assert.equal(db.runs[0].completed, 0);
+
+  const second = await IssueSession(env);
+  const { runSession: nextSession } = await second.json();
+  const invalid = await saveGameRun({ request: AuthorizedJsonRequest('/api/game-runs', {
+    ...input, runSessionToken: nextSession.token,
+    result: { ...input.result, detailRows: [{ correct: true, extra: 7 }] },
+  }), env });
+  assert.equal(invalid.status, 400);
+});
+
 test('stores an unsigned game result under the session subject without exposing it', async () => {
   const db = CreateGameRunDb();
   const env = {
@@ -366,6 +394,10 @@ function CreateStatement(db, sql, args = []) {
           ? { id: release.id, game_id: release.game_id }
           : null;
       }
+      if (/SELECT game_releases\.version,game_releases\.jspsych_version,developer_games\.slug/i.test(sql)) {
+        const release = db.releases.get(args[0]);
+        return release ? { version: '1.0.0', jspsych_version: release.jspsych_version, slug: 'sample-game' } : null;
+      }
       if (/FROM game_runs[\s\S]+INNER JOIN game_run_sessions/i.test(sql)) {
         const [tokenSha256, userId, requestedReleaseId, requestedClientRunId] = args;
         const session = db.sessions.find((candidate) => (
@@ -401,7 +433,7 @@ function CreateStatement(db, sql, args = []) {
       if (/INSERT INTO game_runs/i.test(sql)) {
         const [id, completed, score, durationMs, resultJson, createdAt,
           tokenSha256, userId, requestedReleaseId, requestedClientRunId, nowSeconds,
-          anonymousRecordsEnabled] = args;
+          anonymousRecordsEnabled, nativeDetailsFlag] = args;
         const session = db.sessions.find((candidate) => (
           candidate.tokenSha256 === tokenSha256
           && (candidate.userId === null || candidate.userId === userId)
@@ -411,6 +443,7 @@ function CreateStatement(db, sql, args = []) {
           && (candidate.userId !== null || anonymousRecordsEnabled === '1')
           && candidate.releaseId === db.activeReleaseId
           && db.releases.get(candidate.releaseId)?.status === 'approved'
+          && (db.releases.get(candidate.releaseId)?.jspsych_version !== 'none' || nativeDetailsFlag === '1')
           && !db.runs.some((run) => run.runSessionId === candidate.id)
         ));
         if (!session) return { success: true, meta: { changes: 0 } };

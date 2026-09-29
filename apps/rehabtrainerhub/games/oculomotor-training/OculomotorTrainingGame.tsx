@@ -239,7 +239,7 @@ export function OculomotorTrainingGame() {
   </div>;
 }
 
-function isExperimentResult(value: unknown): value is ExperimentResult {
+const isExperimentResult = (value: unknown): value is ExperimentResult => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const result = value as Record<string, unknown>;
   return typeof result.module === 'string' && Object.hasOwn(modeNames, result.module)
@@ -250,9 +250,9 @@ function isExperimentResult(value: unknown): value is ExperimentResult {
     && ['accuracy_rate', 'in_threshold_sec', 'valid_sec', 'blink_sec', 'gaze_sample_count',
       'threshold_deg', 'validation_error_deg', 'estimated_refresh_hz'].every((key) =>
         result[key] === null || (typeof result[key] === 'number' && Number.isFinite(result[key])));
-}
+};
 
-function isOculomotorCsvUpload(value: unknown): value is OculomotorCsvUpload {
+const isOculomotorCsvUpload = (value: unknown): value is OculomotorCsvUpload => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const upload = value as Record<string, unknown>;
   return Array.isArray(upload.records) && upload.records.length > 0 && upload.records.length <= 36000
@@ -260,4 +260,4 @@ function isOculomotorCsvUpload(value: unknown): value is OculomotorCsvUpload {
     && !!upload.metadata && typeof upload.metadata === 'object' && !Array.isArray(upload.metadata)
     && Object.values(upload.metadata).every((item) => typeof item === 'string'
       || (typeof item === 'number' && Number.isFinite(item)));
-}
+};

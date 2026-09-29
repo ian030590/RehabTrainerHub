@@ -393,8 +393,8 @@ function CreateReleaseManifest(release, files, approvedAt, status) {
       contentType: file.content_type,
     })),
     runtime: {
-      name: 'jspsych',
-      major: 8,
+      name: release.jspsych_version === 'none' ? 'native' : 'jspsych',
+      major: release.jspsych_version === 'none' ? 1 : 8,
     },
     capabilities: SafeJson(release.capabilities_json, []),
     contentSha256: release.content_sha256,

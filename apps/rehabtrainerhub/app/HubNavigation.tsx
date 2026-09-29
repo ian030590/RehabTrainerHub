@@ -195,6 +195,12 @@ function HubShellContent({ children }: { children: ReactNode }) {
                       {copy.developer}
                     </Link>
                   )}
+                  {user && (
+                    <a className="account-admin-link" href="https://builder.trainerhub.cc/">
+                      <span className="material-symbols-outlined" aria-hidden="true">dashboard_customize</span>
+                      {language === 'en' ? 'Activity Builder' : '活動編輯器'}
+                    </a>
+                  )}
                   {isStaff && (
                     <Link
                       aria-current={pathname.startsWith('/admin/') ? 'page' : undefined}

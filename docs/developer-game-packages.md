@@ -1,23 +1,36 @@
 # Developer game package contract
 
-Developer games are ordinary HTML/CSS/JavaScript packages. RehabBuilder is
-planned as the visual editor that exports Hub-compatible packages; its export
-is not available yet. The platform-provided jsPsych 8 runtime must own the
-experiment lifecycle. PixiJS,
-Three.js, or a custom canvas loop may run inside one game-owned jsPsych custom
-plugin; renderer state must not be shared with another game.
+Developer games are ordinary HTML/CSS/JavaScript packages. There are two
+submission contracts. Select **Native HTML + score.json** for a new game or a
+RehabBuilder ZIP. The existing **jsPsych 8 + platform bridge** contract remains
+available for older submissions. Neither contract requires a downloadable SDK.
 
-## Planned RehabBuilder workflow
+Native ZIP packages put `index.html`, `settings.json`, and `score.json` at the
+root. The game calculates its own result fields; `score.json` declares their
+labels, mapping, and presentation. The isolated runner gives the game a private
+MessagePort and validated settings after launch. It accepts one bounded final
+`trainerhub.game:result` message with `details` and `detailRows`. These contain
+only numeric, Boolean, or null values with safe field names. The Hub validates
+and projects them through the reviewed `score.json` before D1 storage. No
+identifying patient information belongs in the package, settings, or results.
 
-The intended workflow is specification, visual editing, preview, then a separate
-Hub-compatible ZIP export. The exported ZIP will still enter the existing upload
-scanner and manual review queue. A standalone offline HTML export cannot use
-the runner's `/runtime/*` URLs and is not itself a Hub submission.
+Native games may use plain JavaScript or another self-contained implementation.
+They do not need jsPsych or the legacy bridge script. The platform still scans,
+isolates, reviews, and approves every submission before it can record results.
+See the native export in the separate RehabBuilder repository for a complete
+example.
+
+## RehabBuilder workflow
+
+The workflow is specification, visual editing, preview, then Hub submission or
+ZIP export. The exported ZIP enters the existing upload scanner and manual
+review queue. A standalone offline HTML export runs locally and is not itself
+a Hub submission.
 
 1. Specify task demands, stimulus and response sequence, supported input,
    timing, exit behavior, aggregate metrics, and known limitations.
-2. When RehabBuilder is ready, create and preview the activity there. Export a
-   Hub-compatible ZIP containing readable source and `settings.json`.
+2. Create and preview the activity in RehabBuilder. Export a Hub-compatible ZIP
+   containing readable source, `settings.json`, and `score.json`.
 3. Review every file, complete keyboard and pointer playthroughs, and verify
    aggregate results on completion and abort.
 4. Submit a semantic version through `/developer/`. Automated scanning and
@@ -127,6 +140,7 @@ Upload a ZIP with this shape:
 ```text
 index.html
 settings.json
+score.json
 game.js
 styles.css
 assets/
@@ -136,6 +150,7 @@ assets/
 
 - ZIP `index.html` must be at the root.
 - `settings.json` must be at the root and its `gameId` must match the submitted game slug.
+- Native packages must also put `score.json` at the root; legacy jsPsych packages may omit it.
 - Use a full semantic version such as `1.0.0` or `1.1.0-beta.1`.
 - Paths may contain only ASCII letters, numbers, `.`, `_`, `-`, and `/`.
 - Bundle the game's own images, audio, styles, plugins, and other dependencies.
@@ -194,11 +209,19 @@ are ready. The platform bridge exposes the validated object to the game;
 do not place personal information, credentials, URLs, or free-text fields in
 settings.
 
-## `score.json`: built-in games only
+## `score.json`: native submissions and built-in games
 
-Third-party HTML/ZIP packages do **not** currently include or register
-`score.json`. They return bounded aggregates through the platform bridge as
-described below.
+Native third-party ZIP packages must include `score.json` at the root and select
+**Native HTML + score.json** in the submission form. The `gameId` must match
+the package slug and `settings.json`. The supported schema is
+`rehab-trainer.game-score/v1`: `columns` map `detailRows`, `summary` maps
+`details`, and `presentation` selects the visible summaries, chart, and round
+metric. Each section declares 1–12 unique fields. Its sources contain only
+safe, non-identifying numeric or Boolean keys. A standalone HTML download may
+calculate and display results locally without sending them to the Hub.
+
+Legacy jsPsych submissions keep their existing bridge and aggregate payload;
+they do not need `score.json`.
 
 Repository contributors working under
 `apps/rehabtrainerhub/games/{gameId}/` must provide both `settings.json` and
@@ -209,7 +232,7 @@ scoring formulas, CSS, or executable renderers. See
 [`game-score-contract.md`](game-score-contract.md) for its exact field,
 presentation, row, numeric, and payload limits.
 
-## Platform runtime
+## Legacy jsPsych platform runtime
 
 The isolated runner publishes the reviewed runtime at fixed, root-relative
 URLs on its own origin:

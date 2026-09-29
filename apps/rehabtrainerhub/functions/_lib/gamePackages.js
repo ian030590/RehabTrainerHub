@@ -1,5 +1,6 @@
 import { unzipSync } from 'fflate';
 import { ParseGameSettingsDefinition } from '@rehab-trainer/game-settings';
+import { ParseThirdPartyScore } from './thirdPartyScore.js';
 
 export const gamePackageLimits = Object.freeze({
   maximumCompressedBytes: 12 * 1024 * 1024,
@@ -24,6 +25,7 @@ export const gamePackageRuntimeContract = Object.freeze({
 
 const entryPath = 'index.html';
 const settingsPath = 'settings.json';
+const scorePath = 'score.json';
 const allowedCapabilities = new Set([
   'audio',
   'fullscreen',
@@ -92,7 +94,7 @@ export function NormalizeGameCapabilities(value) {
   return normalized.every((item) => allowedCapabilities.has(item)) ? normalized : null;
 }
 
-export async function InspectGamePackage(file, expectedGameId) {
+export async function InspectGamePackage(file, expectedGameId, requireScore = false) {
   if (!IsUploadedFile(file)) {
     throw new GamePackageError('A game HTML or ZIP file is required.', 'missing-package');
   }
@@ -111,6 +113,9 @@ export async function InspectGamePackage(file, expectedGameId) {
   if (expectedGameId && !rawFiles.has(settingsPath)) {
     throw new GamePackageError('The package root must contain settings.json.', 'missing-settings');
   }
+  if (expectedGameId && requireScore && !rawFiles.has(scorePath)) {
+    throw new GamePackageError('The package root must contain score.json.', 'missing-score');
+  }
   const entryHtml = DecodeUtf8(rawFiles.get(entryPath), entryPath);
   let settings = null;
   if (rawFiles.has(settingsPath)) {
@@ -124,6 +129,15 @@ export async function InspectGamePackage(file, expectedGameId) {
         error instanceof Error ? error.message : 'settings.json is invalid.',
         'invalid-settings',
       );
+    }
+  }
+  let score = null;
+  if (rawFiles.has(scorePath)) {
+    if (rawFiles.get(scorePath).byteLength > 32 * 1024) throw new GamePackageError('score.json exceeds 32 KiB.', 'score-size');
+    try {
+      score = ParseThirdPartyScore(JSON.parse(DecodeUtf8(rawFiles.get(scorePath), scorePath)), expectedGameId || settings?.gameId);
+    } catch (error) {
+      throw new GamePackageError(error instanceof Error ? error.message : 'Invalid score.json.', 'invalid-score');
     }
   }
 
@@ -182,7 +196,7 @@ export async function InspectGamePackage(file, expectedGameId) {
     });
   }
 
-  if (!HasExactClassicScriptSource(entryHtml, gamePackageRuntimeContract.jsPsychUrl)) {
+  if (!score && !HasExactClassicScriptSource(entryHtml, gamePackageRuntimeContract.jsPsychUrl)) {
     AddFinding(findings, {
       severity: 'block',
       code: 'missing-platform-jspsych-runtime',
@@ -190,7 +204,7 @@ export async function InspectGamePackage(file, expectedGameId) {
       message: `Load the platform jsPsych ${gamePackageRuntimeContract.jsPsychVersion} runtime from ${gamePackageRuntimeContract.jsPsychUrl}.`,
     });
   }
-  if (!HasExactNamedModuleImport(
+  if (!score && !HasExactNamedModuleImport(
     sourceCorpus,
     'RunTrainerHubJsPsychGame',
     gamePackageRuntimeContract.gameBridgeUrl,
@@ -206,7 +220,7 @@ export async function InspectGamePackage(file, expectedGameId) {
   const passesJsPsychInitializer = /\binitJsPsych\s*\(/.test(executableCorpus)
     || /\binitJsPsych\s*:\s*(?:jsPsychModule\s*\.\s*)?initJsPsych\b/.test(executableCorpus)
     || /\{\s*initJsPsych\s*[,}]/.test(executableCorpus);
-  if (!passesJsPsychInitializer) {
+  if (!score && !passesJsPsychInitializer) {
     AddFinding(findings, {
       severity: 'block',
       code: 'missing-jspsych',
@@ -214,7 +228,7 @@ export async function InspectGamePackage(file, expectedGameId) {
       message: 'Pass the platform jsPsychModule.initJsPsych initializer to the game bridge.',
     });
   }
-  if (!/\bawait\s+RunTrainerHubJsPsychGame\s*\(/.test(executableCorpus)) {
+  if (!score && !/\bawait\s+RunTrainerHubJsPsychGame\s*\(/.test(executableCorpus)) {
     AddFinding(findings, {
       severity: 'block',
       code: 'missing-platform-bridge',
@@ -235,6 +249,7 @@ export async function InspectGamePackage(file, expectedGameId) {
     packageData: packageBytes,
     packageBytes: packageBytes.byteLength,
     reviewCount,
+    score,
     settings,
     totalBytes,
   };

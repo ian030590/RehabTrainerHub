@@ -19,6 +19,7 @@ import {
   IsGameRunSessionToken,
 } from '../_lib/gameRuns.js';
 import { ReadJsonBody } from '../_lib/request.js';
+import { ParseThirdPartyScore, ProjectThirdPartyScore } from '../_lib/thirdPartyScore.js';
 
 const sensitiveKeyPattern = /(auth|birthday|cookie|credential|dob|email|jwt|name|participant|password|phone|secret|session|token|user)/i;
 
@@ -73,6 +74,20 @@ export async function onRequestPost({ request, env }) {
 
     const id = crypto.randomUUID();
     const result = body.value.result;
+    let storedResult = result;
+    if (result.details && result.detailRows) {
+      const release = await db.prepare(`SELECT game_releases.version,game_releases.jspsych_version,developer_games.slug
+        FROM game_releases INNER JOIN developer_games ON developer_games.id=game_releases.game_id
+        WHERE game_releases.id=? LIMIT 1`).bind(body.value.releaseId).first();
+      if (!release || release.jspsych_version !== 'none' || !env.GAME_RELEASE_BUCKET?.get) return ErrorResponse(request, env, 'Native score definition unavailable.', 400);
+      const object = await env.GAME_RELEASE_BUCKET.get(`releases/${release.slug}/${release.version}/files/score.json`);
+      if (!object) return ErrorResponse(request, env, 'Native score definition unavailable.', 400);
+      let definition;
+      try { definition = ParseThirdPartyScore(JSON.parse(await object.text()), release.slug); }
+      catch { return ErrorResponse(request, env, 'Native score definition invalid.', 400); }
+      try { storedResult = { ...result, scoreProjection: ProjectThirdPartyScore(definition, result.details, result.detailRows) }; }
+      catch { return ErrorResponse(request, env, 'Game score exceeds supported limits.', 400); }
+    }
     let inserted;
     try {
       inserted = await db
@@ -100,6 +115,7 @@ export async function onRequestPost({ request, env }) {
           AND game_run_sessions.expires_at > ?
           AND (game_run_sessions.user_id IS NOT NULL OR ? = '1')
           AND game_releases.status = 'approved'
+          AND (game_releases.jspsych_version != 'none' OR ? = '1')
           AND developer_games.status = 'published'
           AND NOT EXISTS (
             SELECT 1 FROM game_runs consumed_run
@@ -111,7 +127,7 @@ export async function onRequestPost({ request, env }) {
           result.status === 'completed' ? 1 : 0,
           result.score ?? null,
           result.durationMs ?? null,
-          JSON.stringify(result),
+          JSON.stringify(storedResult),
           new Date().toISOString(),
           tokenSha256,
           user?.id || null,
@@ -119,6 +135,7 @@ export async function onRequestPost({ request, env }) {
           body.value.clientRunId,
           Math.floor(Date.now() / 1000),
           env.ANONYMOUS_RECORDS_ENABLED || '0',
+          result.details ? '1' : '0',
         )
         .run();
     } catch (error) {
@@ -165,7 +182,7 @@ function IsGameRunInput(value) {
     || !IsGameRunIdentifier(value.clientRunId)
     || !IsGameRunSessionToken(value.runSessionToken)) return false;
   const result = value.result;
-  if (!IsExactObject(result, ['status'], ['score', 'durationMs', 'trialCount', 'metrics'])) return false;
+  if (!IsExactObject(result, ['status'], ['score', 'durationMs', 'trialCount', 'metrics', 'details', 'detailRows'])) return false;
   if (!['completed', 'aborted'].includes(result.status)) return false;
   if ('score' in result && !IsFiniteNumber(result.score)) return false;
   if ('durationMs' in result && (
@@ -179,7 +196,11 @@ function IsGameRunInput(value) {
     || result.trialCount > 100_000
   )) return false;
   if ('metrics' in result && !IsMetrics(result.metrics)) return false;
-  return new TextEncoder().encode(JSON.stringify(result)).byteLength <= gameRunResultMaximumBytes;
+  if ('details' in result && (!IsMetrics(result.details) || Object.keys(result.details).length > 12)) return false;
+  if ('detailRows' in result && (!Array.isArray(result.detailRows) || result.detailRows.length > 500
+    || result.detailRows.some(row => !IsMetrics(row) || Object.keys(row).length > 12))) return false;
+  if (('details' in result) !== ('detailRows' in result)) return false;
+  return new TextEncoder().encode(JSON.stringify(result)).byteLength <= ('details' in result ? gameRunResultMaximumBytes : 16_000);
 }
 
 function IsMetrics(value) {
@@ -188,7 +209,7 @@ function IsMetrics(value) {
   return entries.length <= 512 && entries.every(([key, metric]) => (
     /^[a-z][A-Za-z0-9_.-]{0,63}$/.test(key)
     && !sensitiveKeyPattern.test(key)
-    && (metric === null || typeof metric === 'boolean' || IsFiniteNumber(metric))
+    && (metric === null || typeof metric === 'boolean' || (IsFiniteNumber(metric) && Math.abs(metric) <= 1e12))
   ));
 }
 

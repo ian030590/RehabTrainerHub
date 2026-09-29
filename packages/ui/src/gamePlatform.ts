@@ -8,7 +8,7 @@ export const gamePlatformRunnerSettingsMessageType = 'trainerhub.runner:settings
 export const gamePlatformHostSettingsMessageType = 'trainerhub.host:settings' as const;
 export const gamePlatformOpaqueOrigin = 'null' as const;
 export const gamePlatformSupportedJsPsychMajorVersion = 8 as const;
-const gamePlatformGameRunRequestMaxBytes = 16 * 1024;
+const gamePlatformGameRunRequestMaxBytes = 80 * 1024;
 const gamePlatformGameRunIdentifierMaxLength = 128;
 export const gamePlatformRunSessionTokenLength = 64;
 // JSON.stringify({ releaseId, clientRunId, runSessionToken, result }) adds
@@ -79,6 +79,8 @@ export interface GamePlatformResultPayload {
   durationMs?: number;
   trialCount?: number;
   metrics?: GamePlatformResultMetrics;
+  details?: GamePlatformResultMetrics;
+  detailRows?: GamePlatformResultMetrics[];
 }
 
 interface GamePlatformMessageEnvelope {
@@ -146,7 +148,7 @@ const messageRequiredKeys = ['schema', 'type', 'sessionNonce', 'sequence', 'payl
 const lifecyclePayloadRequiredKeys = ['phase'] as const;
 const lifecyclePayloadOptionalKeys = ['progress'] as const;
 const resultPayloadRequiredKeys = ['status'] as const;
-const resultPayloadOptionalKeys = ['score', 'durationMs', 'trialCount', 'metrics'] as const;
+const resultPayloadOptionalKeys = ['score', 'durationMs', 'trialCount', 'metrics', 'details', 'detailRows'] as const;
 const runnerReadyRequiredKeys = [
   'schema',
   'type',
@@ -240,6 +242,11 @@ export function IsGamePlatformResultMessage(
         || value.payload.trialCount < 0
         || value.payload.trialCount > gamePlatformMaxResultTrialCount)) return false;
     if ('metrics' in value.payload && !IsGamePlatformResultMetrics(value.payload.metrics)) return false;
+    if ('details' in value.payload && (!IsGamePlatformResultMetrics(value.payload.details)
+      || Object.keys(value.payload.details).length > 12)) return false;
+    if ('detailRows' in value.payload && (!Array.isArray(value.payload.detailRows)
+      || value.payload.detailRows.length > 500
+      || value.payload.detailRows.some(row => !IsGamePlatformResultMetrics(row) || Object.keys(row).length > 12))) return false;
     return IsPayloadSizeAllowed(value.payload);
   } catch {
     return false;
@@ -416,6 +423,7 @@ function IsGamePlatformSettingsValues(value: unknown): value is GamePlatformSett
 }
 
 function IsSupportedJsPsychVersion(value: unknown): value is string {
+  if (value === 'none') return true;
   if (!IsSemanticVersion(value)) return false;
   return Number(value.split('.')[0]) === gamePlatformSupportedJsPsychMajorVersion;
 }

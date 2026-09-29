@@ -5,7 +5,7 @@ const copy = {
     header: {
       kicker: 'Developer documentation',
       title: '開發居家練習遊戲',
-      intro: '規劃 RehabBuilder 製作的居家練習遊戲，了解套件規格、安全投稿與人工審核流程。RehabBuilder 仍在規劃中。',
+      intro: '了解 RehabBuilder 原生套件與舊版 jsPsych 套件的投稿規格、安全檢查及人工審核流程。',
       version: '文件對應平台契約 v1',
       scope: '第三方投稿 + 內建遊戲貢獻',
     },
@@ -31,12 +31,12 @@ const copy = {
     overview: {
       eyebrow: 'Overview',
       title: '先選對開發路徑',
-      body: '第三方遊戲預計由 RehabBuilder 視覺化製作並匯出 HTML／ZIP；執行站提供 jsPsych 與內部通訊橋樑。倉庫貢獻者仍可在 Hub 內建立內建遊戲模組。RehabBuilder 尚未完成。',
+      body: '第三方遊戲可使用 RehabBuilder 製作原生 HTML／ZIP，或沿用 jsPsych 8 與平台橋樑。原生投稿包含 settings.json 與 score.json；內建遊戲仍由倉庫貢獻者維護。',
       routes: [
         {
           number: '01',
           title: '第三方遊戲投稿',
-          body: 'RehabBuilder 預計匯出根目錄含 index.html 與 settings.json 的套件；平台通訊橋樑接收彙總結果，投稿套件不讀取 score.json。',
+          body: 'RehabBuilder 匯出根目錄含 index.html、settings.json 與 score.json 的原生套件；遊戲自行計分，Hub 驗證並投影結果。舊版 jsPsych 投稿仍可沿用。',
           detail: '適合獨立開發者與單一 HTML／ZIP 遊戲。',
         },
         {
@@ -51,10 +51,10 @@ const copy = {
     quickStart: {
       eyebrow: 'Quick start',
       title: '遊戲投稿流程',
-      intro: 'RehabBuilder 規劃提供視覺化遊戲製作與 Hub 相容匯出。正式投稿仍須檢查活動內容、原始碼、安全限制與結果解釋。',
+      intro: '原生遊戲可用 RehabBuilder 視覺化製作並匯出 Hub 相容套件。正式投稿仍須檢查活動內容、原始碼、安全限制與結果解釋。',
       steps: [
         ['規劃活動', '定義任務需求、刺激參數、輸入方式、停止條件、彙總指標與用途限制。'],
-        ['使用 RehabBuilder', '待視覺化編輯器完成後製作與試玩活動，匯出 Hub 相容套件；目前尚未提供此功能。'],
+        ['使用 RehabBuilder', '在 Builder 製作與試玩活動，匯出含 settings.json 與 score.json 的套件；公開服務仍須部署。'],
         ['核對活動設計卡', '確認每個結果欄位的公式、單位、分母與可能混淆因素，並標明尚未驗證的用途。'],
         ['產生並驗證', 'Hub 套件須含 index.html、settings.json 與可閱讀的原始碼；檢查正常完成、中止與結果數值。'],
         ['送審前複核', '確認雙語、鍵盤／觸控、無外連、無個資、未混淆、沒有自行打包平台 runtime，再建立新版本投稿。'],
@@ -131,7 +131,7 @@ const copy = {
         '最多 192 個檔案；可執行與文字原始碼合計最多 4 MiB。',
         '提交可閱讀、未壓縮、未混淆的原始碼；單行不得超過 5,000 字元。',
         '不要加入 manifest、service worker、jsPsych 或平台通訊橋樑；執行站會提供。',
-        '第三方套件不需要 score.json；遊戲透過平台通訊橋樑回傳彙總結果。',
+        '原生套件必須提供 score.json，並透過私有通道回傳數值結果；舊版 jsPsych 套件沿用橋樑，不需要 score.json。',
       ],
     },
     settings: {
@@ -155,9 +155,9 @@ const copy = {
     },
     score: {
       eyebrow: 'Built-in games only',
-      title: 'score.json：內建遊戲的結果投影',
-      body: 'score.json 僅用於倉庫內 40 個內建遊戲。它告訴 Hub 如何把遊戲結果中的數值／布林欄位投影成共用表格、圖表與摘要；它不包含計分公式或可執行 renderer。',
-      externalNotice: '第三方 HTML／ZIP 投稿目前不解析 score.json。遊戲須透過平台通訊橋樑回傳 score、durationMs、trialCount 與 metrics。',
+      title: 'score.json：原生與內建遊戲的結果投影',
+      body: '原生投稿與內建遊戲使用 score.json，宣告遊戲結果的數值／布林欄位如何呈現為表格、圖表與摘要；計分公式由遊戲執行。',
+      externalNotice: '原生 ZIP 必須提供 score.json，遊戲透過私有通道回傳 details 與 detailRows；舊版 jsPsych 投稿仍回傳彙總指標。',
       rules: [
         'schema 固定為 rehab-trainer.game-score/v1；gameId 與 settings.json 相同。',
         'columns 與 summary 各 1–12 欄，每欄提供 key、zh／en label 與 sources；unit、total 可省略。',
@@ -168,8 +168,8 @@ const copy = {
     },
     bridge: {
       eyebrow: 'Platform runtime',
-      title: 'jsPsych 與平台通訊橋樑',
-      body: '投稿套件須使用執行站提供的 jsPsych 8.2.3 與版本化通訊橋樑。橋樑接收私有 MessagePort 與設定，處理暫停、繼續與離開，並驗證彙總結果。未來由 RehabBuilder 匯出符合此契約的套件。',
+      title: '舊版 jsPsych 與平台通訊橋樑',
+      body: '本節適用舊版 jsPsych 投稿：執行站提供 jsPsych 8.2.3 與版本化橋樑。原生 HTML 投稿可使用自己的程式碼，透過隔離執行站的私有 MessagePort 接收設定與回傳結果。',
       runtimeTitle: '固定 runtime 路徑',
       resultTitle: 'summarize() 可回傳',
       resultRules: [
@@ -322,7 +322,7 @@ const copy = {
     header: {
       kicker: 'Developer documentation',
       title: 'Build a home-practice game',
-      intro: 'Plan a home-practice game for RehabBuilder and review the package, security, and manual approval requirements. RehabBuilder is still planned.',
+      intro: 'Review the native RehabBuilder and legacy jsPsych package contracts, security checks, and manual approval process.',
       version: 'Platform contract v1',
       scope: 'Third-party submissions + built-in contributions',
     },
@@ -348,12 +348,12 @@ const copy = {
     overview: {
       eyebrow: 'Overview',
       title: 'Choose the correct development path',
-      body: 'RehabBuilder is planned as the visual editor for third-party HTML/ZIP games. The isolated runner supplies jsPsych and an internal communication bridge. Repository contributors can still build first-party game modules in the Hub. RehabBuilder is not available yet.',
+      body: 'Third-party games can use RehabBuilder to create native HTML/ZIP packages or keep the jsPsych 8 platform bridge contract. Native submissions include settings.json and score.json; repository contributors still maintain built-in games.',
       routes: [
         {
           number: '01',
           title: 'Third-party game submission',
-          body: 'RehabBuilder is expected to export a package with index.html and settings.json at the root. The platform bridge receives aggregate results; submitted packages do not use score.json.',
+          body: 'RehabBuilder exports native packages with index.html, settings.json, and score.json at the root. The game calculates values; the Hub validates and projects results. Legacy jsPsych packages remain supported.',
           detail: 'For independent developers and portable HTML/ZIP games.',
         },
         {
@@ -368,10 +368,10 @@ const copy = {
     quickStart: {
       eyebrow: 'Quick start',
       title: 'Game submission flow',
-      intro: 'RehabBuilder is planned to provide visual game editing and Hub-compatible export. Every submission still needs checks for activity content, source code, safety limits, and result interpretation.',
+      intro: 'RehabBuilder provides visual game editing and Hub-compatible export for native games. Every submission still needs content, source, security, and result checks.',
       steps: [
         ['Plan the activity', 'Define task demands, stimulus parameters, input methods, stopping conditions, aggregate metrics, and intended-use limits.'],
-        ['Use RehabBuilder', 'When the visual editor is ready, build and preview the activity, then export a Hub-compatible package. This feature is not available yet.'],
+        ['Use RehabBuilder', 'Build and preview the activity, then export a package with settings.json and score.json. The public Builder service still needs deployment.'],
         ['Review the activity design card', 'Check each result formula, unit, denominator, and likely confound, and mark any unvalidated intended use.'],
         ['Export and verify', 'A Hub package needs index.html, settings.json, and readable source. Check completion, abort, and result values.'],
         ['Review before submission', 'Check both languages, keyboard and touch, network isolation, data minimization, readable source, and no bundled platform runtime before submitting a new version.'],
@@ -448,7 +448,7 @@ const copy = {
         'At most 192 files and 4 MiB of executable plus text source.',
         'Submit readable, unminified, unobfuscated source with no line longer than 5,000 characters.',
         'Do not add a manifest, service worker, jsPsych, or the platform bridge; the runner supplies them.',
-        'Third-party packages do not need score.json; games return aggregates through the platform bridge.',
+        'Native packages require score.json and return numeric results through a private channel. Legacy jsPsych packages keep the bridge and do not need score.json.',
       ],
     },
     settings: {
@@ -472,9 +472,9 @@ const copy = {
     },
     score: {
       eyebrow: 'Built-in games only',
-      title: 'score.json: project built-in results',
-      body: 'score.json is used only by the repository’s 40 built-in games. It tells the Hub how numeric and boolean game results map to shared tables, charts, and summaries. It contains neither scoring formulas nor executable renderers.',
-      externalNotice: 'Third-party HTML/ZIP submissions do not parse score.json. Games return score, durationMs, trialCount, and metrics through the platform bridge.',
+      title: 'score.json: native and built-in results',
+      body: 'Native submissions and built-in games use score.json to map numeric and boolean game results to shared tables, charts, and summaries. Scoring formulas run in the game.',
+      externalNotice: 'Native ZIP packages must include score.json and return details and detailRows through the private channel. Legacy jsPsych packages still return aggregates.',
       rules: [
         'schema is rehab-trainer.game-score/v1. gameId matches settings.json.',
         'columns and summary each contain 1–12 fields with key, zh/en label, and sources; unit and total are optional.',
@@ -485,8 +485,8 @@ const copy = {
     },
     bridge: {
       eyebrow: 'Platform runtime',
-      title: 'jsPsych and the platform bridge',
-      body: 'Submitted games use runner-hosted jsPsych 8.2.3 and a versioned communication bridge. The bridge receives the private MessagePort and settings, handles pause, resume, and exit, and validates aggregate results. RehabBuilder is planned to export packages that meet this contract.',
+      title: 'Legacy jsPsych and platform bridge',
+      body: 'This section applies to legacy jsPsych submissions. The runner supplies jsPsych 8.2.3 and a versioned bridge. Native HTML games may use their own code and the isolated runner’s private MessagePort for settings and results.',
       runtimeTitle: 'Fixed runtime paths',
       resultTitle: 'summarize() may return',
       resultRules: [

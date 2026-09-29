@@ -146,8 +146,9 @@ export function ValidateRelease(value, expectedGameId, expectedVersion) {
   if (value.shortName !== undefined) AssertBoundedText(value.shortName, 1, 30, 'shortName');
   if (value.description !== undefined) AssertBoundedText(value.description, 0, 500, 'description');
   AssertPlainRecord(value.runtime, 'runtime');
-  if (value.runtime.name !== 'jspsych' || value.runtime.major !== 8) {
-    Fail('Only the approved jsPsych 8 runtime is supported.');
+  if (!((value.runtime.name === 'jspsych' && value.runtime.major === 8)
+    || (value.runtime.name === 'native' && value.runtime.major === 1))) {
+    Fail('Unsupported game runtime.');
   }
   if (value.contentSha256 !== undefined
     && (typeof value.contentSha256 !== 'string' || !sha256Pattern.test(value.contentSha256))) {
@@ -217,7 +218,7 @@ export function ValidateRelease(value, expectedGameId, expectedVersion) {
     name: value.name.trim(),
     shortName: (value.shortName ?? value.name).trim().slice(0, 30),
     description: value.description?.trim() || '居家訓練網遊戲',
-    runtime: Object.freeze({ name: 'jspsych', major: 8 }),
+    runtime: Object.freeze({ name: value.runtime.name, major: value.runtime.major }),
     capabilities: Object.freeze([...(value.capabilities ?? [])]),
     contentSha256: value.contentSha256,
     approvedAt: value.approvedAt,

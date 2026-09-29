@@ -1,5 +1,5 @@
-export const gameRunRequestMaximumBytes = 16 * 1024;
-export const gameRunResultMaximumBytes = 16_000;
+export const gameRunRequestMaximumBytes = 80 * 1024;
+export const gameRunResultMaximumBytes = 64 * 1024;
 export const gameRunSessionRequestMaximumBytes = 4 * 1024;
 export const gameRunSessionTokenBytes = 32;
 export const gameRunSessionTtlSeconds = 24 * 60 * 60;

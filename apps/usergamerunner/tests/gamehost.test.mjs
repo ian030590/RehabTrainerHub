@@ -181,7 +181,7 @@ test('launcher is a noindex PWA shell with an opaque-origin iframe and strict re
   assert.match(html, /trainerhub\.game:lifecycle/);
   assert.match(html, /trainerhub\.game:result/);
   assert.match(html, /const maximumResultDurationMs = 86400000/);
-  assert.match(html, /const maximumResultPayloadBytes = 16000/);
+  assert.match(html, /const maximumResultPayloadBytes = 65536/);
   assert.match(html, /const maximumResultTrialCount = 100000/);
   assert.match(html, /method: 'HEAD'/);
   assert.match(html, /cache: 'no-store'/);
@@ -440,13 +440,18 @@ test('result relay enforces the game-runs API numeric and byte limits', async ()
   });
   assert.equal(resultAnnouncements().length, 1);
 
-  const maximumPayload = CreateBoundaryResultPayload(22);
-  assert.equal(textEncoder.encode(JSON.stringify(maximumPayload)).byteLength, 16_000);
-  await postResult(1, maximumPayload);
+  const formerBoundary = CreateBoundaryResultPayload(23);
+  assert.equal(textEncoder.encode(JSON.stringify(formerBoundary)).byteLength, 16_001);
+  await postResult(1, formerBoundary);
   assert.equal(resultAnnouncements().length, 2);
 
-  const oversizedPayload = CreateBoundaryResultPayload(23);
-  assert.equal(textEncoder.encode(JSON.stringify(oversizedPayload)).byteLength, 16_001);
+  const oversizedPayload = {
+    status: 'completed',
+    detailRows: Array.from({ length: 500 }, () => Object.fromEntries(
+      Array.from({ length: 6 }, (_, index) => [`metric${index}`, 123456789012]),
+    )),
+  };
+  assert.ok(textEncoder.encode(JSON.stringify(oversizedPayload)).byteLength > 65_536);
   await postResult(2, oversizedPayload);
   assert.equal(resultAnnouncements().length, 2);
   relay.gamePort.close();

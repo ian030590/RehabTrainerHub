@@ -173,11 +173,28 @@ test('requires and validates root settings.json for a submitted game slug', asyn
       }],
     }],
   });
+  const validScore = JSON.stringify({
+    schema: 'rehab-trainer.game-score/v1', gameId: 'safe-game',
+    presentation: { primarySummaryKeys: ['accuracy'], qualitySummaryKeys: [], defaultRoundMetricKey: 'correct', chartType: 'bar' },
+    columns: [{ key: 'correct', label: { zh: '正確', en: 'Correct' }, sources: ['correct'] }],
+    summary: [{ key: 'accuracy', label: { zh: '正確率', en: 'Accuracy' }, sources: ['accuracy'], unit: '%' }],
+  });
   const result = await InspectGamePackage(FakeFile('game.zip', 'application/zip', zipSync({
-    'index.html': strToU8(validHtml),
+    'index.html': strToU8('<!doctype html><meta charset="utf-8"><button id="go">Go</button><script>document.getElementById("go").onclick = () => {};</script>'),
     'settings.json': strToU8(validSettings),
-  })), 'safe-game');
+    'score.json': strToU8(validScore),
+  })), 'safe-game', true);
   assert.equal(result.settings.gameId, 'safe-game');
+  assert.equal(result.score.gameId, 'safe-game');
+  assert.equal(result.blockCount, 0);
+
+  await assert.rejects(
+    InspectGamePackage(FakeFile('game.zip', 'application/zip', zipSync({
+      'index.html': strToU8(validHtml),
+      'settings.json': strToU8(validSettings),
+    })), 'safe-game', true),
+    (error) => error instanceof GamePackageError && error.code === 'missing-score',
+  );
 
   await assert.rejects(
     InspectGamePackage(FakeFile('game.zip', 'application/zip', zipSync({
