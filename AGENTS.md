@@ -1,5 +1,12 @@
 # 倉庫指引
 
+## 測試先行與最小實作（TDD）
+
+- 所有功能開發與重構，先寫可執行、能反映使用者行為的測試，確認測試因尚未實作的需求而失敗，再修改產品程式碼。
+- 只寫足以讓測試通過的產品程式碼；通過後才在測試保護下整理重複與命名，避免預先建立未使用的抽象或額外功能。
+- UI 重構先以測試鎖定既有功能、導航、設定、訓練啟動與完成流程；新增行動版或平板版互動時，先加入對應測試。不得為了讓測試通過而刪除既有功能或放寬安全檢查。
+- 每次提交附上測試的失敗原因、修正後結果及相關回歸驗證；若無法自動化測試，先記錄可重現的人工驗收步驟與限制。
+
 ## 專案結構與模組組織
 
 npm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
@@ -40,6 +47,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `.github/workflows/deploy-cloudflare-pages.yml` 只在 `main` 上的可部署變更時執行。部署前的驗證以 matrix 平行執行；新增 gate 時加入兩份 workflow 的 matrix，並維持相同命令。
 - CI/CD 乾淨安裝使用 `npm ci --workspaces --include-workspace-root`；Hub 的內建遊戲相容 build 需要 root 的 Vite 與訓練 runtime dependencies，不得省略 workspace root。
 - `test:game-platform` 由兩份 workflow 的 `test:entrypoints` matrix 間接執行，涵蓋遊戲通訊橋樑、訊息協定與設定 schema；SDK workspace 已移除。兩份 workflow 維持相同的 `test:entrypoints` 命令。
+- Hub 單一四路由導覽與 `aria-current` 契約由 `scripts/check-hub-navigation.test.mjs` 驗證，包含於兩份 workflow 共用的 `test:entrypoints` 命令；手機導覽與平板無水平溢出另以本機 Brave browser smoke 驗證。
 - `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、`settings.json`、統一 config UI、iframe 與訊息協定；CI 與部署 workflow 必須維持同名 matrix 項目。Hub build 另以 `check-built-game-architecture.mjs` 驗證實際輸出不得恢復 `/runtimes/*`。
 - `npm run test:webgazer` 驗證眼動練習參考實驗的 WebGazer/jsPsych bundle 完整性、校正與驗證程序、`settings.json` 與 `score.json` 欄位；包含於 `test:entrypoints`。網頁版沒有原生 Tobii 橋接。
 - `npm run test:webgazer-browser` 以本機 Brave 驗證眼動練習設定、無眼動刺激與成績流程、雙層同源 iframe 的相機權限，以及 R2 CSV 上傳失敗重試；此項為本機測試，不加入 Linux CI matrix。

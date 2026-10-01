@@ -195,6 +195,102 @@ test('Brave shows shared score charts and uploads guest and signed-in sessions',
   assert.equal(uploads[0].body.record.score.rounds.length, 3);
 });
 
+test('Brave Hub header actions have 44px targets at 390px', async (context) => {
+  assert.ok(bravePath, 'Brave is required for local Hub UI browser checks.');
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise((resolveListen, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolveListen);
+  });
+  context.after(() => new Promise((resolveClose) => server.close(resolveClose)));
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`,
+    '--storage', 'rehab_hub_tour_seen=1',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--allSelectors', '.hub-guide-button,.hub-language-toggle,.account-menu-button',
+    '--browserAssertion', `['.hub-guide-button','.hub-language-toggle','.account-menu-button'].every(selector => {
+      const rect = document.querySelector(selector)?.getBoundingClientRect();
+      return rect && rect.width >= 44 && rect.height >= 44;
+    })`,
+    '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 0, `${result.stdout}\n${result.stderr}`);
+});
+
+test('Brave keeps one Hub navigation usable at 320px, 390px, 768px, and 1024px', async (context) => {
+  assert.ok(bravePath, 'Brave is required for local Hub UI browser checks.');
+  assert.equal((await stat(resolve(outputRoot, 'index.html'))).isFile(), true);
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise((resolveListen, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolveListen);
+  });
+  context.after(() => new Promise((resolveClose) => server.close(resolveClose)));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const routes = ['/', '/progress/', '/qa/', '/download/'];
+  const env = { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath };
+
+  for (const width of [320, 390, 768, 1024]) {
+    for (const route of routes) {
+      const browserAssertion = `(() => {
+        const navs = [...document.querySelectorAll('nav.hub-nav')];
+        const nav = navs[0];
+        const main = document.querySelector('main#main-content');
+        if (navs.length !== 1 || !main) return false;
+        const hrefs = [...nav.querySelectorAll('a[href]')].map(link => new URL(link.href).pathname);
+        const current = [...nav.querySelectorAll('a[aria-current="page"]')];
+        if (hrefs.join('|') !== '/|/progress/|/qa/|/download/' || current.length !== 1
+          || new URL(current[0].href).pathname !== ${JSON.stringify(route)}
+          || document.documentElement.scrollWidth > innerWidth + 1) return false;
+        const rect = nav.getBoundingClientRect();
+        if (${width} >= 768) {
+          return getComputedStyle(nav).position !== 'fixed' && rect.top < 160
+            && main.getBoundingClientRect().top >= nav.closest('header').getBoundingClientRect().bottom - 2;
+        }
+        const headerButtons = ['.hub-guide-button', '.hub-language-toggle', '.account-menu-button']
+          .map(selector => document.querySelector(selector));
+        if (headerButtons.some(button => !button || button.getBoundingClientRect().width < 44
+          || button.getBoundingClientRect().height < 44)) return false;
+        if (getComputedStyle(nav).position !== 'fixed' || Math.abs(rect.bottom - innerHeight) > 2
+          || rect.height < 44 || [...nav.querySelectorAll('a')].some(link => link.getBoundingClientRect().height < 44
+            || parseFloat(getComputedStyle(link).fontSize) < 14)) return false;
+        document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight;
+        return main.lastElementChild.getBoundingClientRect().bottom <= rect.top - 8;
+      })()`;
+      const result = await Run(process.execPath, [browserSmokeScript,
+        '--url', `${origin}${route}`,
+        '--storage', 'rehab_hub_tour_seen=1',
+        '--viewportWidth', String(width), '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+        '--allSelectors', 'nav.hub-nav,main#main-content',
+        '--browserAssertion', browserAssertion,
+        '--timeoutMs', '5000',
+      ], env);
+      assert.equal(result.exitCode, 0, `${width}px ${route}: ${result.stdout}\n${result.stderr}`);
+    }
+  }
+
+  const clicked = await Run(process.execPath, [browserSmokeScript,
+    '--url', `${origin}/`,
+    '--storage', 'rehab_hub_tour_seen=1',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--clickSelectors', '.hub-nav a[href="/qa/"]',
+    '--allSelectors', 'main#main-content.qa-page,.hub-nav a[href="/qa/"][aria-current="page"]',
+    '--browserAssertion', `location.pathname.replace(/\\/$/, '') === '/qa' && getComputedStyle(document.querySelector('.hub-nav')).position === 'fixed'`,
+    '--timeoutMs', '5000',
+  ], env);
+  assert.equal(clicked.exitCode, 0, `390px navigation click: ${clicked.stdout}\n${clicked.stderr}`);
+
+  const training = await Run(process.execPath, [browserSmokeScript,
+    '--url', `${origin}/train/`,
+    '--storage', 'rehab_hub_tour_seen=1',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--allSelectors', '.hub-shell-training',
+    '--browserAssertion', `!document.querySelector('.hub-nav,.hub-header,.hub-footer')`,
+    '--timeoutMs', '5000',
+  ], env);
+  assert.equal(training.exitCode, 0, `Training route: ${training.stdout}\n${training.stderr}`);
+});
+
 async function ServeStaticOutput(request, response) {
   try {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1');

@@ -28,6 +28,7 @@ import { siteUrls } from './siteUrls';
 import { StartHubTour, useHubTourAutoStart } from './tour/hubTour';
 
 const navigationHrefs = ['/', '/progress/', '/qa/', '/download/'] as const;
+const navigationIcons = ['home', 'monitoring', 'menu_book', 'download'] as const;
 
 function IsStaffUser(user: AuthUser | null): boolean {
   const role = (user as (AuthUser & { role?: unknown }) | null)?.role;
@@ -111,6 +112,11 @@ function HubShellContent({ children }: { children: ReactNode }) {
       <div className={`hub-shell${isTrainingRoute ? ' hub-shell-training' : ''}`}>
         <PwaRegistration />
         {!isTrainingRoute && (
+          <a className="hub-skip-link" href="#main-content">
+            {language === 'en' ? 'Skip to main content' : '跳至主要內容'}
+          </a>
+        )}
+        {!isTrainingRoute && (
           <header className="hub-header">
             <Link className="hub-brand" href="/" aria-label={`${hubLocalName} ${hubName}`}>
               <Image src="/rehabtrainerhub.svg" alt="" width={42} height={42} priority />
@@ -126,8 +132,16 @@ function HubShellContent({ children }: { children: ReactNode }) {
                   ? pathname === '/'
                   : pathname.startsWith(href);
                 return (
-                  <Link className={isActive ? 'is-active' : ''} href={href} key={href}>
-                    {copy.navigationItems[index]}
+                  <Link
+                    aria-current={isActive ? 'page' : undefined}
+                    className={isActive ? 'is-active' : ''}
+                    href={href}
+                    key={href}
+                  >
+                    <span className="material-symbols-outlined hub-nav-icon" aria-hidden="true">
+                      {navigationIcons[index]}
+                    </span>
+                    <span>{copy.navigationItems[index]}</span>
                   </Link>
                 );
               })}

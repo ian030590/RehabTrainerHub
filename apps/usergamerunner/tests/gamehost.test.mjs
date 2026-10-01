@@ -408,12 +408,13 @@ test('launcher transfers one private port and fails closed after a frame navigat
   transferredMessages[0].ports[0].close();
 });
 
-test('result relay enforces the game-runs API numeric and byte limits', async () => {
+test('result relay enforces aggregate and native score byte limits', async (context) => {
   const sessionNonce = 'Abcdefghijklmnopqrstuvwxyz_1234567890';
   const response = await HandleRequest(CreateContext(
     `/games/reaction-time/1.0.0/?embed=hub&session=${sessionNonce}`,
   ));
   const relay = RunLauncherMessageRelay(await response.text());
+  context.after(() => relay.gamePort.close());
   const resultAnnouncements = () => relay.announcements.filter(
     ({ message }) => message.type === 'trainerhub.game:result',
   );
@@ -443,6 +444,18 @@ test('result relay enforces the game-runs API numeric and byte limits', async ()
   const formerBoundary = CreateBoundaryResultPayload(23);
   assert.equal(textEncoder.encode(JSON.stringify(formerBoundary)).byteLength, 16_001);
   await postResult(1, formerBoundary);
+  assert.equal(resultAnnouncements().length, 1);
+
+  const maximumNativePayload = CreateNativeBoundaryResultPayload(65_536);
+  assert.equal(textEncoder.encode(JSON.stringify(maximumNativePayload)).byteLength, 65_536);
+  await postResult(1, maximumNativePayload);
+  assert.equal(resultAnnouncements().length, 2);
+
+  const oversizedNativePayload = CreateNativeBoundaryResultPayload(65_537);
+  assert.equal(textEncoder.encode(JSON.stringify(oversizedNativePayload)).byteLength, 65_537);
+  await postResult(2, oversizedNativePayload);
+  await postResult(2, { status: 'completed', details: {} });
+  await postResult(2, { status: 'completed', detailRows: [] });
   assert.equal(resultAnnouncements().length, 2);
 
   const oversizedPayload = {
@@ -454,7 +467,6 @@ test('result relay enforces the game-runs API numeric and byte limits', async ()
   assert.ok(textEncoder.encode(JSON.stringify(oversizedPayload)).byteLength > 65_536);
   await postResult(2, oversizedPayload);
   assert.equal(resultAnnouncements().length, 2);
-  relay.gamePort.close();
 });
 
 test('manifest and service worker are unique and scoped to one release', async () => {
@@ -858,6 +870,25 @@ function CreateBoundaryResultPayload(finalMetricKeyLength) {
   ]));
   metrics[`z${'q'.repeat(finalMetricKeyLength - 1)}`] = 0;
   return { status: 'completed', metrics };
+}
+
+function CreateNativeBoundaryResultPayload(targetBytes) {
+  const row = Object.fromEntries(Array.from({ length: 12 }, (_, index) => [`m${index}`, 0]));
+  const payload = {
+    status: 'completed',
+    details: {},
+    detailRows: Array.from({ length: 500 }, () => ({ ...row })),
+  };
+  let remaining = targetBytes - textEncoder.encode(JSON.stringify(payload)).byteLength;
+  for (const detailRow of payload.detailRows) {
+    const padding = Math.min(61, remaining);
+    if (padding <= 0) break;
+    delete detailRow.m0;
+    detailRow[`m0${'x'.repeat(padding)}`] = 0;
+    remaining -= padding;
+  }
+  assert.equal(remaining, 0);
+  return payload;
 }
 
 function HeaderBlock(source, pathPattern) {

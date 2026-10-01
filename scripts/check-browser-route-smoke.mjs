@@ -21,6 +21,7 @@ const iframeSelectors = ParseSelectorList(args.iframeSelectors);
 const viewportSelectors = ParseSelectorList(args.viewportSelectors);
 const canvasViewportSelectors = ParseSelectorList(args.canvasViewportSelectors);
 const visibleSelectors = ParseSelectorList(args.visibleSelectors);
+const browserAssertion = args.browserAssertion;
 const touchScrollSelector = args.touchScrollSelector;
 const viewportWidth = args.viewportWidth ? Number(args.viewportWidth) : null;
 const viewportHeight = args.viewportHeight ? Number(args.viewportHeight) : null;
@@ -102,6 +103,19 @@ try {
   const target = await cdp.Send('Target.createTarget', { url: 'about:blank' });
   const attached = await cdp.Send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
   const sessionId = attached.sessionId;
+
+  if (viewportWidth && viewportHeight && args.viewportBeforeClick === 'true') {
+    await cdp.Send('Emulation.setDeviceMetricsOverride', {
+      width: viewportWidth,
+      height: viewportHeight,
+      deviceScaleFactor: 2,
+      mobile: true,
+    }, sessionId);
+    await cdp.Send('Emulation.setTouchEmulationEnabled', {
+      enabled: true,
+      maxTouchPoints: 5,
+    }, sessionId);
+  }
 
   await cdp.Send('Runtime.enable', undefined, sessionId);
   await cdp.Send('Page.enable', undefined, sessionId);
@@ -202,7 +216,7 @@ try {
     await Wait(100);
   }
 
-  if (viewportWidth && viewportHeight) {
+  if (viewportWidth && viewportHeight && args.viewportBeforeClick !== 'true') {
     await cdp.Send('Emulation.setDeviceMetricsOverride', {
       width: viewportWidth,
       height: viewportHeight,
@@ -281,7 +295,8 @@ try {
         return fullscreenIndex >= 0 && (audioIndex < 0 || fullscreenIndex < audioIndex);
       })()` : 'true'},
       callOrder: ${requireFullscreenBeforeAudio ? 'window.__trainerSmokeCallOrder ?? []' : '[]'},
-      textMatched: ${expectedText ? `document.body.innerText.includes(${JSON.stringify(expectedText)})` : 'true'}
+      textMatched: ${expectedText ? `document.body.innerText.includes(${JSON.stringify(expectedText)})` : 'true'},
+      browserAssertionMatched: ${browserAssertion ? `Boolean(${browserAssertion})` : 'true'}
     })`,
     returnByValue: true,
   }, sessionId);
@@ -321,6 +336,9 @@ try {
   }
   if (!state.textMatched) {
     failures.push(`Missing expected text: ${expectedText}`);
+  }
+  if (!state.browserAssertionMatched) {
+    failures.push(`Browser assertion failed: ${browserAssertion}`);
   }
   if (!state.fullscreenMatched) {
     failures.push(`Fullscreen element did not match: ${fullscreenSelector}`);

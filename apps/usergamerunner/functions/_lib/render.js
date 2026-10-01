@@ -6,6 +6,7 @@ import {
 
 export const trustedPlatformOrigin = 'https://trainerhub.cc';
 const maximumResultDurationMs = 24 * 60 * 60 * 1000;
+const maximumAggregateResultPayloadBytes = 16_000;
 const maximumResultPayloadBytes = 64 * 1024;
 const maximumResultTrialCount = 100_000;
 const releaseHealthCheckIntervalMs = 60 * 1000;
@@ -76,6 +77,7 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
         const sessionNonce = config.embedSessionNonce ?? createRandomId();
         const lifecyclePhases = new Set(['ready', 'started', 'paused', 'resumed', 'completed', 'aborted']);
         const maximumResultDurationMs = ${maximumResultDurationMs};
+        const maximumAggregateResultPayloadBytes = ${maximumAggregateResultPayloadBytes};
         const maximumResultPayloadBytes = ${maximumResultPayloadBytes};
         const maximumResultTrialCount = ${maximumResultTrialCount};
         const resultStatuses = new Set(['completed', 'aborted']);
@@ -209,7 +211,12 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
             : message.type === resultMessageType
               ? sanitizeResultMessage(message)
               : null;
-          if (!sanitized || !isPayloadSizeAllowed(sanitized.payload)) return;
+          if (!sanitized || !isPayloadSizeAllowed(
+            sanitized.payload,
+            sanitized.type === resultMessageType && 'details' in sanitized.payload
+              ? maximumResultPayloadBytes
+              : maximumAggregateResultPayloadBytes,
+          )) return;
           lastAcceptedSequence = message.sequence;
           announceToPlatform(sanitized);
         }
@@ -324,7 +331,8 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
             message.payload,
             ['status'],
             ['score', 'durationMs', 'trialCount', 'metrics', 'details', 'detailRows'],
-          ) || !resultStatuses.has(message.payload.status)) return null;
+          ) || !resultStatuses.has(message.payload.status)
+            || ('details' in message.payload) !== ('detailRows' in message.payload)) return null;
 
           const payload = { status: message.payload.status };
           if ('score' in message.payload) {
@@ -392,8 +400,8 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
            });
          }
 
-        function isPayloadSizeAllowed(value) {
-          return new TextEncoder().encode(JSON.stringify(value)).byteLength <= maximumResultPayloadBytes;
+        function isPayloadSizeAllowed(value, maximumBytes) {
+          return new TextEncoder().encode(JSON.stringify(value)).byteLength <= maximumBytes;
         }
 
         function isExactPlainObject(value, requiredKeys, optionalKeys = []) {
