@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { access, readFile, readdir } from 'node:fs/promises';
 import { dirname, relative, resolve } from 'node:path';
 import test from 'node:test';
@@ -51,6 +52,19 @@ const expectedOfficialGameIds = Object.freeze([
   'ufov',
   'whack-a-mole',
 ].sort());
+
+test('official games contain no tracked conflicted source copies', () => {
+  const tracked = execFileSync('git', ['ls-files', '-z', '--', 'apps/rehabtrainerhub/games'], {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+  }).split('\0').filter(Boolean);
+  const artifacts = tracked.filter((file) => {
+    const gameId = file.split('/')[3];
+    return expectedOfficialGameIds.includes(gameId)
+      && /\s+\((?:conflicted|copy(?: \d+)?)\)\.[cm]?[jt]sx?$/i.test(file);
+  });
+  assert.deepEqual(artifacts, [], 'Remove tracked duplicate or conflicted game source files.');
+});
 
 test('catalog and game roots retain one exact settings definition per official game', async () => {
   const catalogSource = await readFile(catalogPath, 'utf8');
