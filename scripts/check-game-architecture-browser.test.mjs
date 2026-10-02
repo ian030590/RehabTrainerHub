@@ -281,7 +281,7 @@ test('Brave plays Simon Says on phone and tablet without canvas', async (context
         };
         const difficulty = await waitFor('.game-settings-form select');
         if (!difficulty) return 'settings missing';
-        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, 'easy');
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
         difficulty.dispatchEvent(new Event('change', { bubbles: true }));
         await new Promise(resolve => setTimeout(resolve, 50));
         document.querySelector('.game-settings-form button[type="submit"]').click();
@@ -313,6 +313,100 @@ test('Brave plays Simon Says on phone and tablet without canvas', async (context
       '--timeoutMs', '5000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(result.exitCode, 0, `${width}px Simon Says canvas fallback: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
+test('Brave completes Memory Match on phone and tablet without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Memory Match browser check.');
+  assert.equal((await stat(resolve(outputRoot, 'games/memory-match/index.html'))).isFile(), true);
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  for (const width of [390, 768]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/games/memory-match/`,
+      '--viewportWidth', String(width), '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+      '--startupScript', 'HTMLCanvasElement.prototype.getContext = () => null; Math.random = () => 0;',
+      '--browserScenario', `(async () => {
+        const waitFor = async (selector, timeoutMs = 10000) => {
+          const deadline = Date.now() + timeoutMs;
+          while (!document.querySelector(selector) && Date.now() < deadline) {
+            await new Promise(resolve => setTimeout(resolve, 20));
+          }
+          return document.querySelector(selector);
+        };
+        const waitUntil = async (check, timeoutMs = 2000) => {
+          const deadline = Date.now() + timeoutMs;
+          while (!check() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+          return check();
+        };
+        const difficulty = await waitFor('.game-settings-form select');
+        if (!difficulty) return 'settings missing';
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
+        difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+        const limit = document.querySelectorAll('.game-settings-form select')[1];
+        if (!limit) return 'limit setting missing';
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(limit, '1');
+        limit.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 50));
+        document.querySelector('.game-settings-form button[type="submit"]').click();
+        const start = await waitFor('.training-rules .config-start-btn');
+        if (!start) return 'rules missing';
+        start.click();
+        if (!await waitFor('[data-memory-card]')) return 'native board missing';
+        const cards = [...document.querySelectorAll('[data-memory-card]')];
+        if (cards.length !== 12 || cards.some(card => {
+          const rect = card.getBoundingClientRect();
+          return !(card instanceof HTMLButtonElement) || rect.width < 44 || rect.height < 44;
+        }) || document.documentElement.scrollWidth > innerWidth + 1) return 'board layout';
+        const progress = document.querySelector('.memory-progress');
+        if (progress?.getAttribute('aria-live') === 'polite') return 'countdown announces every second';
+        if (!document.querySelector('.memory-progress')?.textContent.includes('60')) {
+          return 'timed setting missing: ' + limit.value + ' / ' + document.querySelector('.memory-progress')?.textContent;
+        }
+        const nativeNow = Date.now;
+        Date.now = () => nativeNow() + 120000;
+        await new Promise(resolve => setTimeout(resolve, 350));
+        Date.now = nativeNow;
+        if (!document.querySelector('[data-memory-card]')) return 'clock adjustment ended session';
+        const cardStyle = getComputedStyle(cards[0]);
+        if (cardStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || parseFloat(cardStyle.borderRadius) === 0) {
+          return 'card theme missing';
+        }
+        const remembered = new Map();
+        const seen = new Set();
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+          if (document.querySelector('.experiment-results')) break;
+          if (cards.every(card => card.dataset.memoryState === 'matched')) break;
+          const hidden = cards.map((card, index) => card.dataset.memoryState === 'hidden' ? index : -1).filter(index => index >= 0);
+          const first = hidden[0];
+          if (first === undefined) return 'hidden cards missing';
+          cards[first].click();
+          if (!await waitUntil(() => cards[first].dataset.memoryState === 'revealed')) return 'first card did not reveal';
+          const firstValue = cards[first].textContent.trim();
+          seen.add(first);
+          remembered.set(firstValue, [...new Set([...(remembered.get(firstValue) || []), first])]);
+          const second = remembered.get(firstValue).find(index => index !== first && cards[index].dataset.memoryState === 'hidden')
+            ?? hidden.find(index => index !== first && !seen.has(index))
+            ?? hidden.find(index => index !== first);
+          if (second === undefined) return 'second card missing';
+          cards[second].click();
+          if (!await waitUntil(() => document.querySelector('.experiment-results') || cards[second].dataset.memoryState !== 'hidden')) return 'second card did not reveal';
+          if (document.querySelector('.experiment-results')) break;
+          const secondValue = cards[second].textContent.trim();
+          seen.add(second);
+          remembered.set(secondValue, [...new Set([...(remembered.get(secondValue) || []), second])]);
+          if (firstValue !== secondValue && !await waitUntil(() => cards[first].dataset.memoryState === 'hidden' && cards[second].dataset.memoryState === 'hidden', 1500)) return 'mismatch did not flip back';
+        }
+        const results = await waitFor('.experiment-results');
+        const actions = [...(results?.querySelectorAll('button') ?? [])].filter(button => button.offsetParent !== null);
+        return Boolean(results) && actions.length === 1 && document.documentElement.scrollWidth <= innerWidth + 1;
+      })()`,
+      '--allSelectors', '.experiment-results',
+      '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px Memory Match canvas fallback: ${result.stdout}\n${result.stderr}`);
   }
 });
 

@@ -48,7 +48,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - CI/CD 乾淨安裝使用 `npm ci --workspaces --include-workspace-root`；Hub 的內建遊戲相容 build 需要 root 的 Vite 與訓練 runtime dependencies，不得省略 workspace root。
 - `test:game-platform` 由兩份 workflow 的 `test:entrypoints` matrix 間接執行，涵蓋遊戲通訊橋樑、訊息協定與設定 schema；SDK workspace 已移除。兩份 workflow 維持相同的 `test:entrypoints` 命令。
 - Hub 單一四路由導覽與 `aria-current` 契約由 `scripts/check-hub-navigation.test.mjs` 驗證，包含於兩份 workflow 共用的 `test:entrypoints` 命令；手機導覽與平板無水平溢出另以本機 Brave browser smoke 驗證。
-- `test:training-flow` 包含反應時間、打地鼠與順序記憶的回合、期限及成績欄位測試；兩份 workflow 仍透過 `test:entrypoints` 執行此命令，手機／平板實際操作另由本機 Brave browser smoke 驗證。
+- `test:training-flow` 包含反應時間、打地鼠、順序記憶與記憶配對的回合、期限及成績欄位測試；兩份 workflow 仍透過 `test:entrypoints` 執行此命令，手機／平板實際操作另由本機 Brave browser smoke 驗證。
 - `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、`settings.json`、統一 config UI、iframe 與訊息協定；CI 與部署 workflow 必須維持同名 matrix 項目。Hub build 另以 `check-built-game-architecture.mjs` 驗證實際輸出不得恢復 `/runtimes/*`。
 - `npm run test:webgazer` 驗證眼動練習參考實驗的 WebGazer/jsPsych bundle 完整性、校正與驗證程序、`settings.json` 與 `score.json` 欄位；包含於 `test:entrypoints`。網頁版沒有原生 Tobii 橋接。
 - `npm run test:webgazer-browser` 以本機 Brave 驗證眼動練習設定、無眼動刺激與成績流程、雙層同源 iframe 的相機權限，以及 R2 CSV 上傳失敗重試；此項為本機測試，不加入 Linux CI matrix。

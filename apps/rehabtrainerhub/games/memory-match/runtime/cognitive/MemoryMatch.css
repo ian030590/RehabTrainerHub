@@ -1,0 +1,77 @@
+.memory-game {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  min-height: 100dvh;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.memory-play {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  text-align: center;
+}
+
+.memory-play h1,
+.memory-play p {
+  margin: 0;
+}
+
+.memory-progress {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.memory-board {
+  box-sizing: border-box;
+  display: grid;
+  width: min(100%, 36rem, 70dvh);
+  grid-template-columns: repeat(var(--memory-cols), minmax(0, 1fr));
+  gap: clamp(6px, 1vmin, 12px);
+}
+
+.memory-card {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  aspect-ratio: 1;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font: inherit;
+  font-size: clamp(1.25rem, 5vmin, 2.5rem);
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.memory-card[data-memory-state='revealed'] {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.memory-card[data-memory-state='matched'] {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 20%, var(--bg-card));
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.memory-card:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.memory-results .training-result-summary {
+  max-width: 720px;
+}

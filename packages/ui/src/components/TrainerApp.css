@@ -2,6 +2,15 @@
 @import './InstallAppPage.css';
 
 :root {
+  --bg: Canvas;
+  --bg-card: Canvas;
+  --accent: LinkText;
+  --success: Highlight;
+  --text-on-accent: Canvas;
+  --text-primary: CanvasText;
+  --focus: Highlight;
+  --radius: 8px;
+  --font-family: system-ui, sans-serif;
   --bg-error-soft: color-mix(in srgb, var(--error) 10%, var(--bg-card));
   --bg-warning-soft: color-mix(in srgb, var(--warning) 14%, var(--bg-card));
 }
