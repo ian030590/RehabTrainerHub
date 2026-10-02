@@ -127,6 +127,150 @@ function FindBravePath() {
   return candidates.find((candidate) => candidate && existsSync(candidate)) ?? null;
 }
 
+test('Brave keeps reaction-time playable on phone and tablet without canvas support', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the reaction-time browser check.');
+  assert.equal((await stat(resolve(outputRoot, 'games/reaction-time/index.html'))).isFile(), true);
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise((resolveListen, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolveListen);
+  });
+  context.after(() => new Promise((resolveClose) => server.close(resolveClose)));
+
+  for (const width of [390, 768]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/games/reaction-time/`,
+    '--viewportWidth', String(width), '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--startupScript', 'HTMLCanvasElement.prototype.getContext = () => null; Math.random = () => 0;',
+    '--clickSelectors', '.game-settings-form button[type="submit"],.training-rules .config-start-btn,[data-reaction-target]',
+    '--browserScenario', `(async () => {
+      const target = document.querySelector('[data-reaction-target]');
+      if (!(target instanceof HTMLButtonElement) || target.dataset.reactionState !== 'ready') return false;
+      const rect = target.getBoundingClientRect();
+      if (rect.width < 44 || rect.height < 44 || document.documentElement.scrollWidth > innerWidth + 1) return false;
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        const deadline = Date.now() + 6000;
+        while (target.dataset.reactionState !== 'go' && Date.now() < deadline) {
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+        if (target.dataset.reactionState !== 'go') return false;
+        target.click();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        if (attempt < 9) target.click();
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return Boolean(document.querySelector('.experiment-results'));
+    })()`,
+    '--allSelectors', '.cognitive-reference-game,.experiment-results,.cognitive-trial-results-table',
+    '--visibleSelectors', '.experiment-results',
+    '--browserAssertion', `(() => {
+      const rows = document.querySelectorAll('.cognitive-trial-results-table tbody tr');
+      const actions = [...document.querySelectorAll('.experiment-results button')].filter(button => button.offsetParent !== null);
+      return rows.length === 10 && actions.length === 1 && document.documentElement.scrollWidth <= innerWidth + 1;
+    })()`,
+    '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px reaction-time canvas fallback: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
+test('Brave shows a retry when an embedded game never reports ready', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the embedded loading check.');
+  const server = createServer((request, response) => {
+    if (new URL(request.url, 'http://127.0.0.1').pathname === '/games/reaction-time/') {
+      response.writeHead(200, { 'Content-Type': 'text/html' }).end('<!doctype html><title>Game unavailable</title>');
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`,
+    '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=en',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--clickSelectors', '.official-game-card[data-runtime-id="reaction-time"] button,dialog.training-overlay-config button[type="submit"]',
+    '--browserScenario', `(async () => {
+      const deadline = Date.now() + 10000;
+      while (!document.querySelector('.embedded-training-frame [role="alert"]') && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      const frame = document.querySelector('.embedded-training-frame');
+      const retry = frame?.querySelector('[data-training-retry]');
+      if (!retry || frame.classList.contains('is-ready')) return false;
+      const oldIframe = frame.querySelector('iframe');
+      retry.click();
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return frame.querySelector('iframe') !== oldIframe
+        && !frame.querySelector('[role="alert"]')
+        && Boolean(frame.querySelector('[role="status"]'));
+    })()`,
+    '--allSelectors', '.embedded-training-frame iframe',
+    '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 0, `${result.stdout}\n${result.stderr}`);
+});
+
+test('Brave completes the real reaction-time game inside Hub without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Hub reaction-time check.');
+  const server = createServer((request, response) => {
+    if (request.url === '/api/records' && request.method === 'POST') {
+      request.resume();
+      response.writeHead(201, { 'Content-Type': 'application/json' }).end('{"ok":true}');
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`,
+    '--storage', 'rehab_hub_tour_seen=1',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--startupScript', 'HTMLCanvasElement.prototype.getContext = () => null; Math.random = () => 0;',
+    '--clickSelectors', '.official-game-card[data-runtime-id="reaction-time"] button,dialog.training-overlay-config button[type="submit"]',
+    '--browserScenario', `(async () => {
+      const iframe = document.querySelector('dialog.training-overlay-runtime iframe');
+      const deadline = Date.now() + 10000;
+      while (!iframe?.contentDocument?.querySelector('.training-rules .config-start-btn') && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      const game = iframe?.contentDocument;
+      if (!game?.querySelector('.training-rules .config-start-btn')) return 'rules missing';
+      game.querySelector('.training-rules .config-start-btn').click();
+      const targetDeadline = Date.now() + 5000;
+      while (!game.querySelector('[data-reaction-target]') && Date.now() < targetDeadline) {
+        await new Promise(resolve => setTimeout(resolve, 20));
+      }
+      const target = game.querySelector('[data-reaction-target]');
+      if (!target) return 'target missing';
+      target.click();
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        const goDeadline = Date.now() + 6000;
+        while (target.dataset.reactionState !== 'go' && Date.now() < goDeadline) {
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+        if (target.dataset.reactionState !== 'go') return 'GO missing at attempt ' + attempt;
+        target.click();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        if (attempt < 9) target.click();
+      }
+      const scoreDeadline = Date.now() + 5000;
+      while (!document.querySelector('.training-overlay-score table') && Date.now() < scoreDeadline) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      return Boolean(document.querySelector('.training-overlay-score table'))
+        && !document.querySelector('.training-overlay-score iframe')
+        && document.documentElement.scrollWidth <= innerWidth + 1;
+    })()`,
+    '--allSelectors', '.training-overlay-score table',
+    '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 0, `${result.stdout}\n${result.stderr}`);
+});
+
 test('Brave shows shared score charts and uploads guest and signed-in sessions', async (context) => {
   const uploads = [];
   const guestSubjectId = '550e8400-e29b-41d4-a716-446655440000';

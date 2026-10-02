@@ -46,19 +46,13 @@ test('Hart Chart honors the configured alternation count', async () => {
 
 test('trial record helpers produce deterministic millisecond records', async () => {
   const {
-    CreateReactionTrialRecord,
     CreateSimonTrialRecord,
     CreateTargetTrialRecord,
     GetElapsedMilliseconds,
-  } = Object.assign({}, ...await Promise.all(['reaction-time', 'whack-a-mole', 'simon-says'].map((id) => ImportStandaloneTypeScriptModule(`${gamesRoot}/${id}/runtime/cognitive/trialRecords.ts`))));
+  } = Object.assign({}, ...await Promise.all(['whack-a-mole', 'simon-says'].map((id) => ImportStandaloneTypeScriptModule(`${gamesRoot}/${id}/runtime/cognitive/trialRecords.ts`))));
 
   assert.equal(GetElapsedMilliseconds(100.2, 248.7), 149);
   assert.equal(GetElapsedMilliseconds(250, 200), 0);
-  assert.deepEqual(CreateReactionTrialRecord(2, 'false-start', 1000, 1325.4), {
-    trialNumber: 2,
-    outcome: 'false-start',
-    reactionTimeMs: 325,
-  });
   assert.deepEqual(CreateTargetTrialRecord(4, 'wrong-tap', 2000, 2260, 5, 2), {
     trialNumber: 4,
     outcome: 'wrong-tap',
@@ -124,7 +118,7 @@ test('Simon life resolution only ends at zero and otherwise replays', async () =
 
 test('reference cognitive games persist and render complete per-trial contracts', async () => {
   const [reference, reaction, target, languageNeutral, trialLogic] = await Promise.all([
-    Promise.all(['reaction-time', 'whack-a-mole', 'simon-says', 'maze'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/ReferenceCognitiveGame.tsx`, 'utf8'))).then(parts => parts.join('\n')),
+    Promise.all(['whack-a-mole', 'simon-says', 'maze'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/ReferenceCognitiveGame.tsx`, 'utf8'))).then(parts => parts.join('\n')),
     readFile(reactionPath, 'utf8'),
     readFile(targetPath, 'utf8'),
     readFile(languageNeutralPath, 'utf8'),
@@ -136,7 +130,7 @@ test('reference cognitive games persist and render complete per-trial contracts'
   assert.match(reference, /lifecycle\.start\(\{/);
   assert.match(reference, /lifecycle\.finish\(data\)/);
   assert.doesNotMatch(reference, /\.data\.write/);
-  for (const kind of ['reaction', 'target', 'simon']) {
+  for (const kind of ['target', 'simon']) {
     assert.match(reference, new RegExp(`StartCognitiveTrial\\('${kind}'\\)`));
     assert.match(reference, new RegExp(`FinishCognitiveTrial\\('${kind}'`));
   }

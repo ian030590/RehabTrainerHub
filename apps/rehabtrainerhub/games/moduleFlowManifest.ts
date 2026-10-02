@@ -27,7 +27,8 @@ export type TrainingMediaPermission =
 
 export type TrainingJsPsychLifecycle =
   | 'native-timeline'
-  | 'external-runtime-adapter';
+  | 'external-runtime-adapter'
+  | 'browser-native';
 
 export interface TrainingModuleFlowManifestEntry {
   flow: readonly TrainingFlowStep[];
@@ -70,7 +71,7 @@ const manifestEntries: ReadonlyArray<readonly [
   ['brain:antisaccade', 'antisaccade/AntisaccadeGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
   ['brain:keep-track', 'keep-track/KeepTrackGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
   ['brain:plus-minus', 'plus-minus/PlusMinusGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
-  ['brain:reaction-time', 'reaction-time/ReactionTimeGame.ts', 'none', 'external-runtime-adapter'],
+  ['brain:reaction-time', 'reaction-time/ReactionTimeGame.ts', 'none', 'browser-native'],
   ['brain:whack-a-mole', 'whack-a-mole/TargetClickGame.ts', 'none', 'external-runtime-adapter'],
   ['brain:memory-match', 'memory-match/MemoryMatchGame.ts', 'none', 'external-runtime-adapter'],
   ['brain:simon-says', 'simon-says/SimonSaysGame.ts', 'none', 'external-runtime-adapter'],

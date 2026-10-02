@@ -122,6 +122,7 @@ try {
   await cdp.Send('Network.enable', undefined, sessionId);
   await cdp.Send('Log.enable', undefined, sessionId);
   const bootstrapStatements = [];
+  if (args.startupScript) bootstrapStatements.push(args.startupScript);
   if (mockAuthUser) {
     const tokenPayload = Buffer.from(JSON.stringify({
       sub: 'route-smoke-user',
@@ -199,6 +200,16 @@ try {
   await Wait(timeoutMs);
   await ClickSelectors(cdp, sessionId, clickSelectors, timeoutMs);
   if (clickSelectors.length > 0) await Wait(800);
+  if (args.browserScenario) {
+    const scenario = await cdp.Send('Runtime.evaluate', {
+      expression: args.browserScenario,
+      awaitPromise: true,
+      returnByValue: true,
+    }, sessionId);
+    if (scenario.exceptionDetails || scenario.result?.value !== true) {
+      throw new Error(`Browser scenario failed: ${scenario.exceptionDetails?.text ?? scenario.result?.value}`);
+    }
+  }
   if (args.keyPress) {
     if (keyPressReadySelector) await WaitForSelector(cdp, sessionId, keyPressReadySelector, keyPressReadyTimeoutMs);
     if (args.keyPress !== 'Enter') throw new Error('The keyPress option currently supports Enter.');

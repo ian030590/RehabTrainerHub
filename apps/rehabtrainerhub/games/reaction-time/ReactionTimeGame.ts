@@ -1,155 +1,124 @@
-// Hub-owned reaction-time runtime.
-import { Application, Container, Graphics } from 'pixi.js';
-import { reactionConfig } from './runtime/cognitive/constants';
-import type { TFunction } from './runtime/cognitive/types';
-import type { Difficulty, ReactionState, ReactionTrialRecord, ResultStats } from './runtime/cognitive/types';
-import { CreateReactionTrialRecord } from './runtime/cognitive/trialRecords';
-import {
-  AddText,
-  Average,
-  GetResponsiveBoardMaxSize,
-  GetPointerEventTimestamp,
-  IsMobileCognitiveViewport,
-} from './runtime/cognitive/utils';
+export type ReactionDifficulty = 'easy' | 'medium' | 'hard';
+export type ReactionStatus = 'waiting' | 'ready' | 'go' | 'result' | 'too-early';
 
-const reactionColors: Record<ReactionState['status'], number> = {
-  waiting: 0x3498db,
-  ready: 0xe74c3c,
-  go: 0x2ecc71,
-  result: 0x3498db,
-  'too-early': 0xe67e22,
+export interface ReactionTrialRecord {
+  trialNumber: number;
+  outcome: 'success' | 'false-start';
+  reactionTimeMs: number;
+}
+
+export interface ReactionState {
+  status: ReactionStatus;
+  targetTrials: number;
+  trials: ReactionTrialRecord[];
+  attempts: number[];
+  falseStarts: number;
+  waitStartedAt: number | null;
+  goStartedAt: number | null;
+  lastReactionMs: number | null;
+}
+
+const waitRangeMs: Record<ReactionDifficulty, readonly [number, number]> = {
+  easy: [1400, 3200],
+  medium: [1800, 4400],
+  hard: [2200, 5200],
 };
 
 export function CreateReactionState(targetTrials: number): ReactionState {
   return {
-    kind: 'reaction-time',
     status: 'waiting',
-    attempts: [],
-    trials: [],
-    falseStarts: 0,
     targetTrials,
-    goAt: null,
-    goStartedAt: null,
+    trials: [],
+    attempts: [],
+    falseStarts: 0,
     waitStartedAt: null,
+    goStartedAt: null,
     lastReactionMs: null,
   };
 }
 
-export function HandleReactionStateTap(
+export function StartReactionAttempt(
   state: ReactionState,
-  tapMs: number,
-  difficulty: Difficulty,
-  scheduleGo: (delayMs: number, goAtMs: number) => void,
-): ReactionTrialRecord | null {
-  if (state.status === 'waiting' || state.status === 'result' || state.status === 'too-early') {
-    const cfg = reactionConfig[difficulty];
-    const delayMs = (cfg.minDelay + Math.random() * (cfg.maxDelay - cfg.minDelay)) * 1000;
-    const goAtMs = tapMs + delayMs;
-    state.status = 'ready';
-    state.goAt = goAtMs;
-    state.goStartedAt = null;
-    state.waitStartedAt = tapMs;
-    state.lastReactionMs = null;
-    scheduleGo(delayMs, goAtMs);
-    return null;
-  }
-  if (state.status === 'ready') {
-    const trial = CreateReactionTrialRecord(
-      state.trials.length + 1,
-      'false-start',
-      state.waitStartedAt,
-      tapMs,
-    );
-    state.trials.push(trial);
-    state.falseStarts += 1;
-    state.status = 'too-early';
-    state.goAt = null;
-    state.waitStartedAt = null;
-    return trial;
-  }
-  if (state.status === 'go' && state.goStartedAt !== null) {
-    const trial = CreateReactionTrialRecord(
-      state.trials.length + 1,
-      'success',
-      state.goStartedAt,
-      tapMs,
-    );
-    state.trials.push(trial);
-    state.attempts.push(trial.reactionTimeMs);
-    state.lastReactionMs = trial.reactionTimeMs;
-    state.status = 'result';
-    state.goAt = null;
-    state.goStartedAt = null;
-    state.waitStartedAt = null;
-    return trial;
-  }
-  return null;
+  difficulty: ReactionDifficulty,
+  nowMs: number,
+  random = Math.random,
+): number | null {
+  if (state.status !== 'waiting' && state.status !== 'result' && state.status !== 'too-early') return null;
+  const [minimum, maximum] = waitRangeMs[difficulty];
+  const delayMs = Math.round(minimum + random() * (maximum - minimum));
+  state.status = 'ready';
+  state.waitStartedAt = nowMs;
+  state.goStartedAt = null;
+  state.lastReactionMs = null;
+  return delayMs;
 }
 
-export function ShowReactionGo(state: ReactionState, onsetMs: number) {
+export function ShowReactionGo(state: ReactionState): boolean {
   if (state.status !== 'ready') return false;
   state.status = 'go';
-  state.goAt = null;
-  state.goStartedAt = onsetMs;
   return true;
 }
 
-export function UpdateReactionTimedState(state: ReactionState, elapsed: number, render: () => void) {
-  void state;
-  void elapsed;
-  void render;
+export function MarkReactionGoVisible(state: ReactionState, nowMs: number): boolean {
+  if (state.status !== 'go' || state.goStartedAt !== null) return false;
+  state.goStartedAt = nowMs;
+  return true;
 }
 
-export function IsReactionAutoSuccess(state: ReactionState) {
+export function HandleReactionTap(state: ReactionState, nowMs: number): ReactionTrialRecord | null {
+  if (state.status !== 'ready' && (state.status !== 'go' || state.goStartedAt === null)) return null;
+  const outcome = state.status === 'ready' ? 'false-start' : 'success';
+  const startedAt = outcome === 'false-start' ? state.waitStartedAt : state.goStartedAt;
+  const trial = {
+    trialNumber: state.trials.length + 1,
+    outcome,
+    reactionTimeMs: Math.max(0, Math.round(nowMs - (startedAt ?? nowMs))),
+  } satisfies ReactionTrialRecord;
+  state.trials.push(trial);
+  if (outcome === 'success') {
+    state.attempts.push(trial.reactionTimeMs);
+    state.lastReactionMs = trial.reactionTimeMs;
+    state.status = 'result';
+  } else {
+    state.falseStarts += 1;
+    state.status = 'too-early';
+  }
+  state.waitStartedAt = null;
+  state.goStartedAt = null;
+  return trial;
+}
+
+export function IsReactionAutoSuccess(state: ReactionState): boolean {
   return state.attempts.length >= state.targetTrials;
 }
 
-export function BuildReactionResultStats(state: ReactionState): ResultStats {
-  const avg = Average(state.attempts) ?? 0;
-  const best = state.attempts.length > 0 ? Math.min(...state.attempts) : 0;
-  const attemptsWithFalseStarts = state.attempts.length + state.falseStarts;
+export function BuildReactionResultData(
+  state: ReactionState,
+  durationSec: number,
+  result: 'Victory' | 'Defeat',
+) {
+  const meanMs = state.attempts.length
+    ? Math.round(state.attempts.reduce((total, value) => total + value, 0) / state.attempts.length)
+    : 0;
   return {
-    score: Math.max(0, Math.round(1000 - avg * 1.8 - state.falseStarts * 80)),
-    accuracy: attemptsWithFalseStarts > 0 ? Math.round((state.attempts.length / attemptsWithFalseStarts) * 100) : 0,
-    moves: 0,
-    attempts: attemptsWithFalseStarts,
-    success: state.attempts.length,
-    errors: state.falseStarts,
-    details: { attemptsMs: state.attempts, averageMs: avg, bestMs: best },
+    details: {
+      Game_Result: result,
+      Total_Duration_Seconds: durationSec,
+      Reaction_Trials: state.targetTrials,
+      Reaction_Attempts: state.trials.length,
+      Reaction_Successes: state.attempts.length,
+      False_Starts: state.falseStarts,
+      Reaction_Times_ms: state.attempts.join('|'),
+      Average_Reaction_Time_ms: meanMs,
+      Best_Reaction_Time_ms: state.attempts.length ? Math.min(...state.attempts) : 0,
+    },
+    detailRows: state.trials.map((trial) => ({
+      trialNumber: trial.trialNumber,
+      outcome: trial.outcome,
+      reactionTimeMs: trial.reactionTimeMs,
+      falseStart: trial.outcome === 'false-start' ? 1 : 0,
+      responseMs: trial.outcome === 'success' ? trial.reactionTimeMs : null,
+      earlyMs: trial.outcome === 'false-start' ? trial.reactionTimeMs : null,
+    })),
   };
-}
-
-export function DrawReaction(app: Application, state: ReactionState, onTap: (tapMs: number) => void, t: TFunction) {
-  const w = app.renderer.width;
-  const h = app.renderer.height;
-  const maxSize = GetResponsiveBoardMaxSize(app);
-  const scale = Math.min(
-    IsMobileCognitiveViewport(app) ? Number.POSITIVE_INFINITY : 1,
-    maxSize.width / 500,
-    maxSize.height / 300,
-  );
-  const boxW = Math.floor(500 * scale);
-  const boxH = Math.floor(300 * scale);
-  const x = (w - boxW) / 2;
-  const y = (h - boxH) / 2;
-  const labels = {
-    waiting: t('cognitive.reaction.waiting'),
-    ready: t('cognitive.reaction.ready'),
-    go: t('cognitive.reaction.go'),
-    result: state.lastReactionMs === null ? t('cognitive.reaction.complete') : `${state.lastReactionMs} ms`,
-    'too-early': t('cognitive.reaction.tooEarly'),
-  };
-  const node = new Container();
-  node.eventMode = 'static';
-  node.cursor = 'pointer';
-  node.on('pointertap', (event) => onTap(GetPointerEventTimestamp(event)));
-  const g = new Graphics();
-  g.rect(x, y, boxW, boxH).fill(reactionColors[state.status]);
-  node.addChild(g);
-  AddText(node, labels[state.status], w / 2, y + boxH / 2, {
-    fontSize: state.status === 'result' && state.lastReactionMs !== null ? 56 : 32,
-    fontWeight: '400',
-    fill: '#FFFFFF',
-  });
-  app.stage.addChild(node);
 }

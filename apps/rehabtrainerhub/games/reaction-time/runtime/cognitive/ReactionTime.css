@@ -1,0 +1,85 @@
+.reaction-game {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  min-height: 100dvh;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.reaction-play {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  text-align: center;
+}
+
+.reaction-play h1,
+.reaction-play p {
+  margin: 0;
+}
+
+.reaction-play p {
+  max-width: 38rem;
+}
+
+.reaction-progress {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.reaction-target {
+  width: min(100%, 34rem);
+  min-height: clamp(220px, 40dvh, 340px);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: clamp(1.5rem, 6vw, 2.75rem);
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.reaction-target[data-reaction-state='ready'] {
+  background: var(--warning);
+  color: var(--text-primary);
+}
+
+.reaction-target[data-reaction-state='go'] {
+  background: var(--success);
+  color: var(--text-on-accent);
+}
+
+.reaction-target[data-reaction-state='too-early'] {
+  background: var(--error);
+  color: var(--text-on-accent);
+}
+
+.reaction-target:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.cognitive-trial-results {
+  width: min(100%, 720px);
+  margin: 24px auto;
+}
+
+.cognitive-trial-table-scroll {
+  max-height: min(42vh, 420px);
+  overflow: auto;
+}
+
+.cognitive-trial-results-table {
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}

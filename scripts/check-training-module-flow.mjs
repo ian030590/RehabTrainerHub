@@ -386,6 +386,11 @@ const implementationGroups = [
     ],
   })),
   {
+    ids: ['brain:reaction-time'],
+    files: ['reaction-time/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-reaction-target'],
+  },
+  {
     ids: ['mouth:tongue-catch'],
     files: ['tongue-catch/TongueCatchGame.tsx'],
     tokens: [
@@ -489,6 +494,13 @@ const jsPsychLifecycleGroups = [
     ],
     forbiddenTokens: ['WriteJsPsychData'],
   },
+  {
+    status: 'browser-native',
+    ids: ['brain:reaction-time'],
+    files: ['reaction-time/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ['StartReactionAttempt(', 'HandleReactionTap(', 'SaveTrainingSessionRecord('],
+    forbiddenTokens: ['initJsPsych(', "from 'pixi.js'"],
+  },
   ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
     status: 'native-timeline',
     ids: [id],
@@ -522,7 +534,7 @@ assert.deepEqual(
   'Every catalog module must have exactly one explicit jsPsych lifecycle classification.',
 );
 
-const manifestLifecycleValues = new Set(['native-timeline', 'external-runtime-adapter']);
+const manifestLifecycleValues = new Set(['native-timeline', 'external-runtime-adapter', 'browser-native']);
 for (const catalogId of catalogIds) {
   const lifecycle = trainingModuleFlowManifest[catalogId].jsPsychLifecycle;
   assert.ok(
@@ -668,12 +680,11 @@ console.log(
 console.log(
   pendingJsPsychIds.length > 0
     ? `jsPsych lifecycle: ${catalogIds.length - pendingJsPsychIds.length} managed by native timelines/adapters; ${pendingJsPsychIds.length} still utility-only (${pendingJsPsychIds.join(', ')}).`
-    : `jsPsych lifecycle: all ${catalogIds.length} modules are managed by native timelines or external-runtime adapters; none remain utility-only.`,
+    : `Runtime lifecycle: all ${catalogIds.length} modules are classified; none remain utility-only.`,
 );
 
 function ReferenceCognitiveCatalogIds() {
   return [
-    'brain:reaction-time',
     'brain:whack-a-mole',
     'brain:memory-match',
     'brain:simon-says',

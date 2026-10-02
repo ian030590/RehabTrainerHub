@@ -60,6 +60,8 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const [configuredSettings, setConfiguredSettings] = useState<GameSettingsValues | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [frameError, setFrameError] = useState(false);
+  const [frameRetryKey, setFrameRetryKey] = useState(0);
   const [isTrainingActive, setIsTrainingActive] = useState(false);
   const [isTrainingComplete, setIsTrainingComplete] = useState(false);
   const { language, locale, t } = useHubLanguage();
@@ -150,6 +152,7 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
     setIsTrainingComplete(false);
     setIsLoaded(false);
     setIsReady(false);
+    setFrameError(false);
   }, [sourceUrl]);
 
   useEffect(() => {
@@ -180,12 +183,14 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
         setIsTrainingComplete(true);
       } else if (IsHubTrainingReadyMessage(event.data)) {
         setIsReady(true);
+        setFrameError(false);
         sendSettingsToFrame();
       } else if (IsHubTrainingConfigureMessage(event.data)) {
         setIsTrainingActive(false);
         setIsTrainingComplete(false);
         setIsLoaded(false);
         setIsReady(false);
+        setFrameError(false);
         setConfiguredSettings(null);
       } else if (IsHubTrainingExitMessage(event.data)) {
         closeOverlay();
@@ -196,10 +201,10 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   }, [closeOverlay, configuredSettings, sendSettingsToFrame, sourceOrigin, scoreDefinition, sessionNonce, saveScore]);
 
   useEffect(() => {
-    if (!isLoaded || isReady || !configuredSettings) return;
-    const timeoutId = window.setTimeout(() => setIsReady(true), 8_000);
+    if (isReady || !configuredSettings) return;
+    const timeoutId = window.setTimeout(() => setFrameError(true), 8_000);
     return () => window.clearTimeout(timeoutId);
-  }, [configuredSettings, isLoaded, isReady]);
+  }, [configuredSettings, frameRetryKey, isReady]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -300,16 +305,38 @@ export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
           <div
             aria-label={copy.loading}
             aria-hidden={isReady || undefined}
-            aria-live={isReady ? undefined : 'polite'}
+            aria-live={isReady || frameError ? undefined : 'polite'}
             className="training-loading-stage"
-            role={isReady ? undefined : 'status'}
+            role={isReady || frameError ? undefined : 'status'}
           >
-            <span className="training-loading-spinner" aria-hidden="true" />
+            {frameError ? (
+              <div className="grid max-w-sm justify-items-center gap-4 text-center" role="alert">
+                <h2 className="m-0 text-xl font-black text-[var(--heading)]">
+                  {language === 'en' ? 'Game could not be loaded' : '遊戲無法載入'}
+                </h2>
+                <p className="m-0 text-[var(--text-muted)]">
+                  {language === 'en' ? 'Check your connection and try again.' : '請檢查網路連線後重試。'}
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Button data-training-retry onClick={() => {
+                    setFrameError(false);
+                    setIsLoaded(false);
+                    setFrameRetryKey((key) => key + 1);
+                  }} type="button">
+                    {language === 'en' ? 'Try again' : '重新載入'}
+                  </Button>
+                  <Button onClick={closeOverlay} type="button" variant="outline">
+                    {language === 'en' ? 'Back to lobby' : '返回大廳'}
+                  </Button>
+                </div>
+              </div>
+            ) : <span className="training-loading-spinner" aria-hidden="true" />}
           </div>
           <iframe
             allow={delegatedFeatures}
             allowFullScreen
             className={isLoaded ? 'is-loaded' : undefined}
+            key={frameRetryKey}
             onLoad={() => {
               setIsLoaded(true);
               sendSettingsToFrame();
