@@ -406,6 +406,11 @@ const implementationGroups = [
     tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-simon-button'],
   },
   {
+    ids: ['brain:lights-out'],
+    files: ['lights-out/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-lights-cell'],
+  },
+  {
     ids: ['mouth:tongue-catch'],
     files: ['tongue-catch/TongueCatchGame.tsx'],
     tokens: [
@@ -535,6 +540,13 @@ const jsPsychLifecycleGroups = [
     ids: ['brain:simon-says'],
     files: ['simon-says/runtime/cognitive/ReferenceCognitiveGame.tsx'],
     tokens: ['PlaySequence(', 'HandleSimonTap(', 'SaveTrainingSessionRecord('],
+    forbiddenTokens: ['initJsPsych(', "from 'pixi.js'"],
+  },
+  {
+    status: 'browser-native',
+    ids: ['brain:lights-out'],
+    files: ['lights-out/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ['HandleLightsTap(', 'GetLightsTimedOutcome(', 'SaveTrainingSessionRecord('],
     forbiddenTokens: ['initJsPsych(', "from 'pixi.js'"],
   },
   ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
@@ -721,7 +733,6 @@ console.log(
 
 function ReferenceCognitiveCatalogIds() {
   return [
-    'brain:lights-out',
     'brain:sliding-puzzle',
     'brain:sudoku',
     'brain:tic-tac-toe',
