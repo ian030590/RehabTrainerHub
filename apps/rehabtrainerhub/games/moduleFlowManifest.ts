@@ -72,7 +72,7 @@ const manifestEntries: ReadonlyArray<readonly [
   ['brain:keep-track', 'keep-track/KeepTrackGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
   ['brain:plus-minus', 'plus-minus/PlusMinusGame.tsx', 'none', 'native-timeline', nativeInstructionTrainingFlow],
   ['brain:reaction-time', 'reaction-time/ReactionTimeGame.ts', 'none', 'browser-native'],
-  ['brain:whack-a-mole', 'whack-a-mole/TargetClickGame.ts', 'none', 'external-runtime-adapter'],
+  ['brain:whack-a-mole', 'whack-a-mole/TargetClickGame.ts', 'none', 'browser-native'],
   ['brain:memory-match', 'memory-match/MemoryMatchGame.ts', 'none', 'external-runtime-adapter'],
   ['brain:simon-says', 'simon-says/SimonSaysGame.ts', 'none', 'external-runtime-adapter'],
   ['brain:lights-out', 'lights-out/LightsOutGame.ts', 'none', 'external-runtime-adapter'],

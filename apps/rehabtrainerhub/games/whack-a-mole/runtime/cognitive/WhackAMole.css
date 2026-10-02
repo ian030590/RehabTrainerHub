@@ -1,0 +1,86 @@
+.whack-game {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  min-height: 100dvh;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.whack-play {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  text-align: center;
+}
+
+.whack-play h1,
+.whack-play p {
+  margin: 0;
+}
+
+.whack-status {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.whack-board {
+  box-sizing: border-box;
+  display: grid;
+  width: min(100%, max(200px, 70dvh), 38rem);
+  grid-template-columns: repeat(var(--whack-grid-size), minmax(0, 1fr));
+  gap: clamp(6px, 1vmin, 12px);
+}
+
+.whack-cell {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  aspect-ratio: 1;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: clamp(1.5rem, 6vmin, 3rem);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.whack-cell[data-whack-active='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.whack-cell:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.whack-feedback {
+  min-height: 1.5em;
+  font-weight: 700;
+}
+
+.cognitive-trial-results {
+  width: min(100%, 720px);
+  margin: 24px auto;
+}
+
+.cognitive-trial-table-scroll {
+  max-height: min(42vh, 420px);
+  overflow: auto;
+}
+
+.cognitive-trial-results-table {
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}

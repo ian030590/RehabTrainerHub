@@ -213,7 +213,9 @@ try {
   if (args.keyPress) {
     if (keyPressReadySelector) await WaitForSelector(cdp, sessionId, keyPressReadySelector, keyPressReadyTimeoutMs);
     if (args.keyPress !== 'Enter') throw new Error('The keyPress option currently supports Enter.');
-    await cdp.Send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, sessionId);
+    await cdp.Send('Page.bringToFront', {}, sessionId);
+    await cdp.Send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, sessionId);
+    await cdp.Send('Input.dispatchKeyEvent', { type: 'char', text: '\r', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, sessionId);
     await cdp.Send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, sessionId);
     await Wait(500);
   }

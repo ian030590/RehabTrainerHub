@@ -391,6 +391,11 @@ const implementationGroups = [
     tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-reaction-target'],
   },
   {
+    ids: ['brain:whack-a-mole'],
+    files: ['whack-a-mole/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-whack-cell'],
+  },
+  {
     ids: ['mouth:tongue-catch'],
     files: ['tongue-catch/TongueCatchGame.tsx'],
     tokens: [
@@ -499,6 +504,13 @@ const jsPsychLifecycleGroups = [
     ids: ['brain:reaction-time'],
     files: ['reaction-time/runtime/cognitive/ReferenceCognitiveGame.tsx'],
     tokens: ['StartReactionAttempt(', 'HandleReactionTap(', 'SaveTrainingSessionRecord('],
+    forbiddenTokens: ['initJsPsych(', "from 'pixi.js'"],
+  },
+  {
+    status: 'browser-native',
+    ids: ['brain:whack-a-mole'],
+    files: ['whack-a-mole/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ['ShowWhackTarget(', 'HandleWhackTap(', 'SaveTrainingSessionRecord('],
     forbiddenTokens: ['initJsPsych(', "from 'pixi.js'"],
   },
   ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
@@ -685,7 +697,6 @@ console.log(
 
 function ReferenceCognitiveCatalogIds() {
   return [
-    'brain:whack-a-mole',
     'brain:memory-match',
     'brain:simon-says',
     'brain:lights-out',

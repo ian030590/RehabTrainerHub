@@ -174,6 +174,92 @@ test('Brave keeps reaction-time playable on phone and tablet without canvas supp
   }
 });
 
+const startWhackWithoutCanvas = `
+  const waitFor = async (selector, timeoutMs = 5000) => {
+    const deadline = Date.now() + timeoutMs;
+    while (!document.querySelector(selector) && Date.now() < deadline) {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    return document.querySelector(selector);
+  };
+  const slider = await waitFor('.game-settings-form input[type="range"]');
+  if (!slider) return 'duration slider missing';
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(slider, '30');
+  slider.dispatchEvent(new Event('input', { bubbles: true }));
+  slider.dispatchEvent(new Event('change', { bubbles: true }));
+  await new Promise(resolve => setTimeout(resolve, 50));
+  document.querySelector('.game-settings-form button[type="submit"]').click();
+  const start = await waitFor('.training-rules .config-start-btn');
+  if (!start) return 'rules start missing';
+  start.click();
+  const cell = await waitFor('[data-whack-cell]');
+  if (!cell) return 'native board missing';
+  if (!await waitFor('[data-whack-active="true"]')) return 'active target missing';
+`;
+
+test('Brave keeps whack-a-mole playable at 390px and 768px without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the whack-a-mole browser check.');
+  assert.equal((await stat(resolve(outputRoot, 'games/whack-a-mole/index.html'))).isFile(), true);
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  for (const width of [390, 768]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/games/whack-a-mole/`,
+      '--viewportWidth', String(width), '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+      '--startupScript', 'HTMLCanvasElement.prototype.getContext = () => null; Math.random = () => 0;',
+      '--browserScenario', `(async () => {
+        ${startWhackWithoutCanvas}
+        const cells = [...document.querySelectorAll('[data-whack-cell]')];
+        const active = cells.filter(cell => cell.dataset.whackActive === 'true');
+        if (cells.length !== 9 || active.length !== 1 || cells.some(cell => {
+          const rect = cell.getBoundingClientRect();
+          return !(cell instanceof HTMLButtonElement) || rect.width < 44 || rect.height < 44;
+        }) || document.documentElement.scrollWidth > innerWidth + 1) return JSON.stringify({
+          cells: cells.length, active: active.length,
+          rect: cells[0]?.getBoundingClientRect().toJSON(),
+          scrollWidth: document.documentElement.scrollWidth, viewport: innerWidth,
+        });
+        active[0].focus();
+        if (document.activeElement !== active[0]) return 'cell focus failed';
+        active[0].addEventListener('click', () => { window.__whackKeyboardClicks = (window.__whackKeyboardClicks ?? 0) + 1; }, { once: true });
+        return true;
+      })()`,
+      '--keyPress', 'Enter', '--keyPressReadySelector', '[data-whack-active="true"]',
+      '--allSelectors', '.cognitive-reference-game,[data-whack-cell]',
+      '--browserAssertion', 'window.__whackKeyboardClicks === 1 && document.documentElement.scrollWidth <= innerWidth + 1',
+      '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px whack-a-mole canvas fallback: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
+test('Brave ends a canvas-free whack-a-mole session at its 30 second setting', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the whack-a-mole duration check.');
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/games/whack-a-mole/`,
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--startupScript', 'HTMLCanvasElement.prototype.getContext = () => null; Math.random = () => 0;',
+    '--browserScenario', `(async () => {
+      ${startWhackWithoutCanvas}
+      const startedAt = performance.now();
+      const results = await waitFor('.experiment-results', 32000);
+      const elapsed = performance.now() - startedAt;
+      const actions = [...(results?.querySelectorAll('button') ?? [])].filter(button => button.offsetParent !== null);
+      return Boolean(results) && elapsed >= 28000 && elapsed <= 32000
+        && actions.length === 1
+        && document.documentElement.scrollWidth <= innerWidth + 1;
+    })()`,
+    '--allSelectors', '.experiment-results,.cognitive-trial-results-table',
+    '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 0, `30 second whack-a-mole session: ${result.stdout}\n${result.stderr}`);
+});
+
 test('Brave shows a retry when an embedded game never reports ready', async (context) => {
   assert.ok(bravePath, 'Brave is required for the embedded loading check.');
   const server = createServer((request, response) => {
