@@ -498,6 +498,93 @@ test('Brave completes Memory Match on phone and tablet without canvas', async (c
   }
 });
 
+test('Brave plays Sliding Puzzle on phone and tablet without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Sliding Puzzle browser check.');
+  assert.equal((await stat(resolve(outputRoot, 'games/sliding-puzzle/index.html'))).isFile(), true);
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  for (const width of [390, 768, 320]) {
+    const compact = width === 320;
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/games/sliding-puzzle/`,
+      '--viewportWidth', String(width), '--viewportHeight', compact ? '568' : '844', '--viewportBeforeClick', 'true',
+      '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+        Math.random = () => 0;
+        HTMLElement.prototype.requestFullscreen = () => {
+          window.__slidingFullscreenRequested = true;
+          return Promise.reject(new DOMException('Denied', 'NotAllowedError'));
+        };`,
+      '--browserScenario', `(async () => {
+        const waitFor = async (selector, timeoutMs = 10000) => {
+          const deadline = Date.now() + timeoutMs;
+          while (!document.querySelector(selector) && Date.now() < deadline) {
+            await new Promise(resolve => setTimeout(resolve, 20));
+          }
+          return document.querySelector(selector);
+        };
+        const settings = await waitFor('.game-settings-form');
+        const selects = [...(settings?.querySelectorAll('select') ?? [])];
+        if (selects.length < 2) return 'difficulty or time limit missing';
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(selects[0], '${compact ? '2' : '0'}');
+        selects[0].dispatchEvent(new Event('change', { bubbles: true }));
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(selects[1], '1');
+        selects[1].dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 50));
+        settings.querySelector('button[type="submit"]').click();
+        const start = await waitFor('.training-rules .config-start-btn');
+        if (!start) return 'rules missing';
+        start.click();
+        if (!await waitFor('[data-sliding-cell]')) return 'native board missing';
+        const cells = [...document.querySelectorAll('[data-sliding-cell]')];
+        if (cells.length !== ${compact ? 25 : 9} || cells.some(cell => {
+          const rect = cell.getBoundingClientRect();
+          return rect.width < 44 || rect.height < 44
+            || (cell.dataset.slidingValue !== '0' && (!(cell instanceof HTMLButtonElement) || cell.disabled));
+        }) || document.documentElement.scrollWidth > innerWidth + 1) return 'board layout';
+        if (getComputedStyle(cells[0]).backgroundColor === 'rgba(0, 0, 0, 0)') return 'board theme missing';
+        if (!document.querySelector('.sliding-progress')?.textContent.includes('60')) return 'timed setting missing';
+        const nativeNow = Date.now;
+        Date.now = () => nativeNow() + 120000;
+        await new Promise(resolve => setTimeout(resolve, 350));
+        Date.now = nativeNow;
+        if (!document.querySelector('[data-sliding-cell]')) return 'clock adjustment ended session';
+        if (!window.__slidingFullscreenRequested) return 'fullscreen denial was not exercised';
+        if (${compact}) return true;
+        if (cells[6].dataset.slidingValue !== '0') return 'deterministic puzzle changed';
+        if (${width} === 768) {
+          cells[7].focus();
+          if (document.activeElement !== cells[7]) return 'tile focus failed';
+          window.__slidingKeyboardBefore = cells[7].dataset.slidingValue;
+          cells[7].addEventListener('click', () => {
+            window.__slidingKeyboardClicks = (window.__slidingKeyboardClicks ?? 0) + 1;
+            setTimeout(() => {
+              window.__slidingKeyboardChanged = cells[7].dataset.slidingValue !== window.__slidingKeyboardBefore;
+              for (const index of [4, 1, 2, 5, 8]) cells[index].click();
+            }, 40);
+          }, { once: true });
+          return true;
+        }
+        for (const index of [7, 4, 1, 2, 5, 8]) cells[index].click();
+        const results = await waitFor('.experiment-results');
+        const actions = [...(results?.querySelectorAll('button') ?? [])].filter(button => button.offsetParent !== null);
+        return Boolean(results) && actions.length === 1 && document.documentElement.scrollWidth <= innerWidth + 1;
+      })()`,
+      ...(width === 768 ? [
+        '--keyPress', 'Enter', '--keyPressReadySelector', '[data-sliding-cell]',
+        '--browserAssertion', `window.__slidingKeyboardClicks === 1
+          && window.__slidingKeyboardChanged === true
+          && document.querySelectorAll('.experiment-results button').length === 1
+          && document.documentElement.scrollWidth <= innerWidth + 1`,
+      ] : []),
+      '--allSelectors', compact ? '[data-sliding-cell]' : '.experiment-results',
+      '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px Sliding Puzzle canvas fallback: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
 test('Brave shows a retry when an embedded game never reports ready', async (context) => {
   assert.ok(bravePath, 'Brave is required for the embedded loading check.');
   const server = createServer((request, response) => {
@@ -612,6 +699,81 @@ test('Brave records one real Lights Out victory inside Hub without canvas', asyn
   assert.equal(score.summary.completed, 1);
   assert.equal(score.summary.moves, 1);
   assert.equal(score.summary.boardSize, 3);
+});
+
+test('Brave records one Sliding Puzzle victory inside Hub without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Hub Sliding Puzzle check.');
+  const uploads = [];
+  const server = createServer((request, response) => {
+    if (request.url === '/api/records' && request.method === 'POST') {
+      let body = '';
+      request.on('data', chunk => { body += chunk; });
+      request.on('end', () => {
+        uploads.push(JSON.parse(body));
+        response.writeHead(201, { 'Content-Type': 'application/json' }).end('{"ok":true}');
+      });
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`,
+    '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=en',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+      Math.random = () => 0;
+      HTMLElement.prototype.requestFullscreen = () => Promise.reject(new DOMException('Denied', 'NotAllowedError'));`,
+    '--browserScenario', `(async () => {
+      const waitFor = async (find, timeoutMs = 10000) => {
+        const deadline = Date.now() + timeoutMs;
+        while (!find() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+        return find();
+      };
+      const launch = await waitFor(() => document.querySelector('.official-game-card[data-runtime-id="sliding-puzzle"] button'));
+      if (!launch) return 'lobby card missing';
+      launch.click();
+      const settings = await waitFor(() => document.querySelector('dialog.training-overlay-config form'));
+      if (!settings) return 'Hub settings missing';
+      const difficulty = settings.querySelector('select');
+      if (!difficulty) return 'difficulty missing';
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
+      difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 50));
+      settings.querySelector('button[type="submit"]').click();
+      const start = await waitFor(() => document.querySelector('dialog.training-overlay-runtime iframe')?.contentDocument
+        ?.querySelector('.training-rules .config-start-btn'));
+      if (!start) return 'rules missing';
+      const game = start.ownerDocument;
+      start.click();
+      const cells = await waitFor(() => {
+        const found = [...game.querySelectorAll('[data-sliding-cell]')];
+        return found.length ? found : null;
+      });
+      if (!cells || cells.length !== 9 || cells[6].dataset.slidingValue !== '0') return 'board missing';
+      cells[0].click();
+      if (cells[0].dataset.slidingValue === '0') return 'nonadjacent tile moved';
+      for (const index of [7, 4, 1, 2, 5, 8]) cells[index].click();
+      const score = await waitFor(() => document.querySelector('.training-overlay-score table'));
+      if (!score) return 'Hub score missing';
+      if (!await waitFor(() => document.querySelector('.training-score-toolbar [role="status"]')
+        ?.textContent.includes('Session record saved.'))) return 'Hub save incomplete';
+      return score.querySelectorAll('thead th').length === 6
+        && !document.querySelector('.training-overlay-score iframe')
+        && document.documentElement.scrollWidth <= innerWidth + 1;
+    })()`,
+    '--allSelectors', '.training-overlay-score table',
+    '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 0, `Hub Sliding Puzzle: ${result.stdout}\n${result.stderr}`);
+  assert.equal(uploads.length, 1, 'a Hub game saves exactly once');
+  const score = uploads[0]?.record?.score;
+  assert.deepEqual(Object.keys(score?.summary ?? {}), ['duration', 'moves', 'completed', 'errors', 'boardSize']);
+  assert.ok(Object.values(score.summary).every(value => typeof value === 'number' && Number.isFinite(value)));
+  assert.deepEqual([score.summary.moves, score.summary.completed, score.summary.errors, score.summary.boardSize],
+    [6, 1, 1, 3]);
 });
 
 test('Brave completes the real reaction-time game inside Hub without canvas', async (context) => {
