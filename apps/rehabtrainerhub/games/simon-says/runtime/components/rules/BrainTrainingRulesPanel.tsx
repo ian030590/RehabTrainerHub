@@ -30,11 +30,11 @@ function GetRuleSections(gameId: string, lang: 'zh' | 'en') {
                 ? [
                     {
                         title: '遊玩方式',
-                        description: '記住每次單次跳動並亮起霓虹的顏色順序，輪到你時依序點擊。',
+                        description: '觀看四個色塊依序亮起，輪到你時照相同順序點擊。',
                         items: [
-                            '觀看階段請不要點擊；滑入與點擊有不同的動畫，點擊時會播放聲音。',
-                            '答錯會扣一顆心、左右晃動提示，並重播同一組順序讓你再試。',
-                            '只有生命降到 0 才會結束；完成目標記憶長度即成功。',
+                            '觀看階段不能點擊；輪到你時可用觸控或鍵盤按鈕，啟用音效後點擊會有聲音。',
+                            '答錯會用掉一次容許錯誤，並重播同一組順序讓你再試。',
+                            '容許錯誤次數用完即結束；完成目標序列長度即成功。',
                         ],
                     },
                     {
@@ -45,11 +45,11 @@ function GetRuleSections(gameId: string, lang: 'zh' | 'en') {
                 : [
                     {
                         title: 'How to Play',
-                        description: 'Remember each color after its single neon bounce, then tap the sequence in order.',
+                        description: 'Watch four colored buttons light up in order, then tap them in the same order.',
                         items: [
-                            'Do not tap during the watch phase. Hover and click use distinct animations, and each click plays a sound.',
-                            'A wrong answer costs one heart, shakes the board, and replays the same sequence for another attempt.',
-                            'The session ends only at zero lives; completing the target memory length succeeds.',
+                            'Wait until playback ends. Tap a button or use the keyboard; taps play sound if enabled.',
+                            'A wrong sequence uses one allowed failure and replays the same sequence for another attempt.',
+                            'Run out of allowed failures to end the session; complete the target sequence length to succeed.',
                         ],
                     },
                     {

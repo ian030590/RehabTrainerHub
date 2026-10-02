@@ -1,0 +1,98 @@
+.simon-game {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  min-height: 100dvh;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.simon-play {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  text-align: center;
+}
+
+.simon-play h1,
+.simon-play p {
+  margin: 0;
+}
+
+.simon-progress {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.simon-board {
+  display: grid;
+  width: min(100%, max(200px, 60dvh), 26rem);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(8px, 1.5vmin, 14px);
+}
+
+.simon-pad {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  aspect-ratio: 1;
+  border: 3px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--simon-pad-color) 45%, var(--bg-card));
+  color: var(--text-primary);
+  font: inherit;
+  font-size: clamp(2rem, 6vmin, 3rem);
+  font-weight: 800;
+  touch-action: manipulation;
+}
+
+.simon-pad:nth-child(1) { --simon-pad-color: var(--success); }
+.simon-pad:nth-child(2) { --simon-pad-color: var(--error); }
+.simon-pad:nth-child(3) { --simon-pad-color: var(--warning); }
+.simon-pad:nth-child(4) { --simon-pad-color: var(--accent); }
+
+.simon-pad:not(:disabled) { cursor: pointer; }
+
+.simon-pad[data-simon-lit='true'],
+.simon-pad[data-simon-pressed='true'] {
+  border-color: var(--text-primary);
+  background: var(--simon-pad-color);
+  box-shadow: 0 0 0 4px var(--bg-card);
+  transform: scale(1.04);
+}
+
+.simon-pad:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.simon-feedback {
+  min-height: 1.5em;
+  font-weight: 700;
+}
+
+.cognitive-trial-results {
+  width: min(100%, 720px);
+  margin: 24px auto;
+}
+
+.cognitive-trial-table-scroll {
+  max-height: min(42vh, 420px);
+  overflow: auto;
+}
+
+.cognitive-trial-results-table {
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .simon-pad { transition: none; }
+}

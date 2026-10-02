@@ -9,7 +9,6 @@ const trialRecordsPath = `${cognitiveRoot}/trialRecords.ts`;
 const referenceGamePath = `${cognitiveRoot}/ReferenceCognitiveGame.tsx`;
 const reactionPath = `${gamesRoot}/reaction-time/ReactionTimeGame.ts`;
 const targetPath = `${gamesRoot}/whack-a-mole/TargetClickGame.ts`;
-const languageNeutralPath = `${cognitiveRoot}/languageNeutralGames.ts`;
 
 async function ImportStandaloneTypeScriptModule(path) {
   const source = await readFile(path, 'utf8');
@@ -109,11 +108,10 @@ test('Simon life resolution only ends at zero and otherwise replays', async () =
 });
 
 test('reference cognitive games persist and render complete per-trial contracts', async () => {
-  const [reference, reaction, target, languageNeutral, trialLogic] = await Promise.all([
-    Promise.all(['simon-says', 'maze'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/ReferenceCognitiveGame.tsx`, 'utf8'))).then(parts => parts.join('\n')),
+  const [reference, reaction, target, trialLogic] = await Promise.all([
+    readFile(`${gamesRoot}/maze/runtime/cognitive/ReferenceCognitiveGame.tsx`, 'utf8'),
     readFile(reactionPath, 'utf8'),
     readFile(targetPath, 'utf8'),
-    readFile(languageNeutralPath, 'utf8'),
     readFile(trialRecordsPath, 'utf8'),
   ]);
 
@@ -122,10 +120,6 @@ test('reference cognitive games persist and render complete per-trial contracts'
   assert.match(reference, /lifecycle\.start\(\{/);
   assert.match(reference, /lifecycle\.finish\(data\)/);
   assert.doesNotMatch(reference, /\.data\.write/);
-  for (const kind of ['simon']) {
-    assert.match(reference, new RegExp(`StartCognitiveTrial\\('${kind}'\\)`));
-    assert.match(reference, new RegExp(`FinishCognitiveTrial\\('${kind}'`));
-  }
   assert.match(reference, /memoryLength:\s*trial\.memoryLength/);
   assert.match(reference, /correct:\s*trial\.correct/);
   assert.match(reference, /durationMs:\s*trial\.durationMs/);
@@ -142,11 +136,11 @@ test('reference cognitive games persist and render complete per-trial contracts'
 
   const settings = JSON.parse(await readFile(`${gamesRoot}/reaction-time/settings.json`, 'utf8'));
   assert.ok(settings.sections.some(section => section.fields.some(field => field.type === 'slider')));
-  assert.match(languageNeutral, /CreateSimonState/);
-  assert.match(languageNeutral, /HandleSimonTap/);
+  assert.match(trialLogic, /CreateSimonState/);
+  assert.match(trialLogic, /HandleSimonTap/);
   assert.match(trialLogic, /ResolveSimonAttempt\(state\.lives, false\)/);
   assert.match(trialLogic, /replaySequence:\s*true/);
-  assert.doesNotMatch(languageNeutral, /Math\.sin\(elapsed\s*\*\s*24\)/);
+  assert.doesNotMatch(trialLogic, /Math\.sin\(elapsed\s*\*\s*24\)/);
   assert.doesNotMatch(trialLogic, /state\.errors \+= 1;\s*finishGame\('Defeat'\)/);
 });
 

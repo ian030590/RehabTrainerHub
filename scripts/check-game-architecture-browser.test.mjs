@@ -260,6 +260,62 @@ test('Brave ends a canvas-free whack-a-mole session at its 30 second setting', a
   assert.equal(result.exitCode, 0, `30 second whack-a-mole session: ${result.stdout}\n${result.stderr}`);
 });
 
+test('Brave plays Simon Says on phone and tablet without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Simon Says browser check.');
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  for (const width of [390, 768]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/games/simon-says/`,
+      '--viewportWidth', String(width), '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+      '--startupScript', 'HTMLCanvasElement.prototype.getContext = () => null; Math.random = () => 0;',
+      '--browserScenario', `(async () => {
+        const waitFor = async (selector, timeoutMs = 10000) => {
+          const deadline = Date.now() + timeoutMs;
+          while (!document.querySelector(selector) && Date.now() < deadline) {
+            await new Promise(resolve => setTimeout(resolve, 20));
+          }
+          return document.querySelector(selector);
+        };
+        const difficulty = await waitFor('.game-settings-form select');
+        if (!difficulty) return 'settings missing';
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, 'easy');
+        difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 50));
+        document.querySelector('.game-settings-form button[type="submit"]').click();
+        const start = await waitFor('.training-rules .config-start-btn');
+        if (!start) return 'rules missing';
+        const ruleCopy = document.querySelector('.training-rules')?.innerText || '';
+        if (/neon bounce|hover and click|shakes the board/i.test(ruleCopy)) return 'rules promise missing effects';
+        start.click();
+        if (!await waitFor('[data-simon-button]')) return 'native buttons missing';
+        const buttons = [...document.querySelectorAll('[data-simon-button]')];
+        if (buttons.length !== 4 || buttons.some(button => {
+          const rect = button.getBoundingClientRect();
+          return !(button instanceof HTMLButtonElement) || rect.width < 44 || rect.height < 44;
+        }) || document.documentElement.scrollWidth > innerWidth + 1) return 'board layout';
+        if (${width} === 768) return true;
+        for (let length = 1; length <= 5; length += 1) {
+          if (!await waitFor('[data-simon-phase="input"]')) return 'input missing at length ' + length;
+          for (let index = 0; index < length; index += 1) {
+            buttons[0].click();
+            await new Promise(resolve => setTimeout(resolve, 30));
+          }
+          if (length < 5 && !await waitFor('[data-simon-phase="showing"]')) return 'next sequence missing';
+        }
+        const results = await waitFor('.experiment-results');
+        return Boolean(results) && results.querySelectorAll('.cognitive-trial-results-table tbody tr').length === 5
+          && [...results.querySelectorAll('button')].filter(button => button.offsetParent !== null).length === 1;
+      })()`,
+      '--allSelectors', width === 390 ? '.experiment-results,.cognitive-trial-results-table' : '[data-simon-button]',
+      '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px Simon Says canvas fallback: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
 test('Brave shows a retry when an embedded game never reports ready', async (context) => {
   assert.ok(bravePath, 'Brave is required for the embedded loading check.');
   const server = createServer((request, response) => {

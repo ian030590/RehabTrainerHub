@@ -1,17 +1,8 @@
-import type { Difficulty,SimonState,SimonTapResult,SimonTrialRecord,TargetTrialOutcome,TargetTrialRecord } from './types';
+import type { Difficulty,SimonState,SimonTapResult,SimonTrialRecord } from './types';
 export function GetElapsedMilliseconds(startMs: number | null, endMs: number) {
     if (startMs === null || !Number.isFinite(startMs) || !Number.isFinite(endMs))
         return 0;
     return Math.max(0, Math.round(endMs - startMs));
-}
-export function CreateTargetTrialRecord(trialNumber: number, outcome: TargetTrialOutcome, startMs: number | null, endMs: number, targetIndex: number | null, tappedIndex: number | null): TargetTrialRecord {
-    return {
-        trialNumber,
-        outcome,
-        reactionTimeMs: GetElapsedMilliseconds(startMs, endMs),
-        targetIndex,
-        tappedIndex,
-    };
 }
 export function CreateSimonTrialRecord(trialNumber: number, memoryLength: number, correct: boolean, attemptStartedAtSeconds: number | null, endedAtSeconds: number): SimonTrialRecord {
     return {
@@ -110,6 +101,24 @@ export function CompleteTimedOutSimonAttempt(state: SimonState, elapsed: number)
     state.inputIndex = 0;
     state.attemptStartedAt = null;
     return trial;
+}
+export function BuildSimonResultData(state: SimonState, durationSec: number, gameResult: 'Victory' | 'Defeat') {
+    return {
+        details: {
+            Game_Result: gameResult,
+            Total_Duration_Seconds: durationSec,
+            Simon_Max_Lives: state.maxLives,
+            Simon_Lives_Remaining: state.lives,
+            Simon_Trials: state.trials.length,
+            Simon_Correct_Trials: state.trials.filter((trial) => trial.correct).length,
+        },
+        detailRows: state.trials.map((trial) => ({
+            trialNumber: trial.trialNumber,
+            correct: trial.correct ? 1 : 0,
+            memoryLength: trial.memoryLength,
+            durationMs: trial.durationMs,
+        })),
+    };
 }
 function GetDifficultyIndex(difficulty: Difficulty) {
     if (difficulty === 'Beginner')
