@@ -1,0 +1,142 @@
+.dots-game {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  min-height: 100dvh;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.dots-play {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  text-align: center;
+}
+
+.dots-play h1,
+.dots-play p {
+  margin: 0;
+}
+
+.dots-status,
+.dots-progress {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dots-scroll {
+  box-sizing: border-box;
+  width: min(100%, 36rem);
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.dots-board {
+  display: grid;
+  width: max-content;
+  gap: 2px;
+  margin-inline: auto;
+  padding: 2px;
+}
+
+.dots-dot,
+.dots-box,
+.dots-line {
+  box-sizing: border-box;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+}
+
+.dots-dot span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-primary);
+}
+
+.dots-line {
+  position: relative;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.dots-line::before {
+  position: absolute;
+  content: '';
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border-color: var(--border);
+  border-style: solid;
+}
+
+.dots-horizontal::before {
+  width: 80px;
+  border-width: 4px 0 0;
+}
+
+.dots-vertical::before {
+  height: 80px;
+  border-width: 0 0 0 4px;
+}
+
+.dots-line[data-dots-owner='P']::before {
+  border-color: var(--accent);
+}
+
+.dots-line[data-dots-owner='A']::before {
+  border-color: var(--error);
+  border-style: dashed;
+}
+
+.dots-line:hover:not(:disabled)[data-dots-owner='']::before {
+  border-color: var(--accent);
+}
+
+.dots-line:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.dots-line:disabled {
+  cursor: wait;
+}
+
+.dots-box {
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  font-weight: 900;
+}
+
+.dots-box[data-dots-owner='P'] {
+  background: var(--bg-warning-soft);
+  color: var(--accent);
+}
+
+.dots-box[data-dots-owner='A'] {
+  background: var(--bg-error-soft);
+  color: var(--error);
+}
+
+.dots-results .training-result-summary {
+  max-width: 720px;
+}

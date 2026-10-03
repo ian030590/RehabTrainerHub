@@ -80,7 +80,7 @@ const manifestEntries: ReadonlyArray<readonly [
   ['brain:sudoku', 'sudoku/SudokuGame.ts', 'none', 'browser-native'],
   ['brain:tic-tac-toe', 'tic-tac-toe/TicTacToeGame.ts', 'none', 'browser-native'],
   ['brain:connect4', 'connect4/Connect4Game.ts', 'none', 'browser-native'],
-  ['brain:dots-and-boxes', 'dots-and-boxes/DotsAndBoxesGame.ts', 'none', 'external-runtime-adapter'],
+  ['brain:dots-and-boxes', 'dots-and-boxes/DotsAndBoxesGame.ts', 'none', 'browser-native'],
   ['brain:hex', 'hex/HexGame.ts', 'none', 'external-runtime-adapter'],
   ['brain:maze', 'maze/MazeGame.ts', 'none', 'external-runtime-adapter'],
   ['mouth:tongue-catch', 'tongue-catch/TongueCatchGame.tsx', 'camera', 'external-runtime-adapter'],

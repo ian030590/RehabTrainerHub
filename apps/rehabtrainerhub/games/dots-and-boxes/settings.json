@@ -9,8 +9,8 @@
         "en": "Session settings"
       },
       "description": {
-        "zh-TW": "記錄當次操作表現。隨機題目、對手與時間上限均可能影響結果；打亂步數不等於最短解。",
-        "en": "Records task performance. Random puzzles, opponents and time limits affect results; scramble steps are not optimal solution lengths."
+        "zh-TW": "在點與點之間畫線；完成方格可得分並繼續操作。記錄當次步數、雙方方格數與結果。",
+        "en": "Draw lines between dots. Closing a box scores a point and grants another turn; the session records moves, boxes and result."
       },
       "fields": [
         {
@@ -21,8 +21,8 @@
             "en": "Dot grid size"
           },
           "description": {
-            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
-            "en": "These conditions alter the demands listed below; analyze conditions separately."
+            "zh-TW": "選擇每邊的點數：4、5 或 6 個點，分別形成 9、16 或 25 個方格。",
+            "en": "Choose a grid of four, five or six dots per side, giving nine, sixteen or twenty-five boxes."
           },
           "default": "medium",
           "options": [
@@ -57,8 +57,8 @@
             "en": "Sound feedback"
           },
           "description": {
-            "zh-TW": "在操作與結果時播放提示音。",
-            "en": "Play audio cues during interactions and results."
+            "zh-TW": "完成方格、選到已畫線及遊戲結束時播放提示音。",
+            "en": "Play cues when you close a box, choose an occupied line, and when the game ends."
           },
           "default": true
         }

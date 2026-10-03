@@ -1002,6 +1002,166 @@ test('Brave records one Connect4 victory inside Hub without canvas', async (cont
     score.summary.opponentMoves], [4, 1, 0, 3]);
 });
 
+test('Brave plays Dots and Boxes on phone and tablet without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Dots and Boxes browser check.');
+  assert.equal((await stat(resolve(outputRoot, 'games/dots-and-boxes/index.html'))).isFile(), true);
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  for (const width of [320, 390, 768]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/games/dots-and-boxes/`,
+      '--viewportWidth', String(width), '--viewportHeight', width === 320 ? '568' : '844', '--viewportBeforeClick', 'true',
+      '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+        Math.random = () => 0;
+        window.AudioContext = class { constructor() { throw new Error('Audio denied'); } };
+        HTMLElement.prototype.requestFullscreen = () => {
+          window.__dotsFullscreenRequested = true;
+          return Promise.reject(new DOMException('Denied', 'NotAllowedError'));
+        };`,
+      '--browserScenario', `(async () => {
+        const waitFor = async (find, timeoutMs = 10000) => {
+          const deadline = Date.now() + timeoutMs;
+          while (!find() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+          return find();
+        };
+        const settings = await waitFor(() => document.querySelector('.game-settings-form'));
+        const difficulty = settings?.querySelector('select');
+        if (!difficulty) return 'difficulty setting missing';
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
+        difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 50));
+        settings.querySelector('button[type="submit"]').click();
+        const start = await waitFor(() => document.querySelector('.training-rules .config-start-btn'));
+        if (!start) return 'rules missing';
+        start.click();
+        const lines = await waitFor(() => {
+          const found = [...document.querySelectorAll('[data-dots-line]')];
+          return found.length ? found : null;
+        });
+        const boxes = [...document.querySelectorAll('[data-dots-box]')];
+        const scroller = document.querySelector('[data-dots-board-scroll]');
+        const status = document.querySelector('.dots-status');
+        if (!lines || lines.length !== 24 || boxes.length !== 9 || !scroller || !status?.textContent?.trim()
+          || lines.some(line => !(line instanceof HTMLButtonElement)
+            || !scroller.contains(line) || !line.hasAttribute('data-dots-owner')
+            || line.getBoundingClientRect().width < 44 || line.getBoundingClientRect().height < 44)
+          || boxes.some(box => !scroller.contains(box) || box instanceof HTMLButtonElement)
+          || !['auto', 'scroll'].includes(getComputedStyle(scroller).overflowX)
+          || document.documentElement.scrollWidth > innerWidth + 1) return 'board layout';
+        if (!window.__dotsFullscreenRequested) return 'fullscreen denial was not exercised';
+        const first = lines[0];
+        if (innerWidth >= 768) {
+          first.focus();
+          if (document.activeElement !== first) return 'line focus failed';
+          first.addEventListener('click', () => { window.__dotsKeyboardClicked = true; }, { once: true });
+          return true;
+        }
+        first.click();
+        if (!await waitFor(() => first.getAttribute('data-dots-owner') === 'P', 1500)) return 'player line missing';
+        if (!await waitFor(() => document.querySelectorAll('[data-dots-owner="A"]').length >= 1, 2500))
+          return 'computer did not move after one second';
+        return document.documentElement.scrollWidth <= innerWidth + 1;
+      })()`,
+      ...(width === 768 ? [
+        '--keyPress', 'Enter', '--keyPressReadySelector', '[data-dots-line]',
+        '--browserAssertion', 'window.__dotsKeyboardClicked === true && document.querySelectorAll(\'[data-dots-owner="P"]\').length === 1',
+      ] : []),
+      '--allSelectors', '[data-dots-line],[data-dots-box],.dots-status',
+      '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px Dots and Boxes: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
+test('Brave records one complete Dots and Boxes game inside Hub', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Hub Dots and Boxes check.');
+  const uploads = [];
+  const server = createServer((request, response) => {
+    if (request.url === '/api/records' && request.method === 'POST') {
+      let body = '';
+      request.on('data', chunk => { body += chunk; });
+      request.on('end', () => {
+        uploads.push(JSON.parse(body));
+        response.writeHead(201, { 'Content-Type': 'application/json' }).end('{"ok":true}');
+      });
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`,
+    '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=en',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+      Math.random = () => 0;
+      window.AudioContext = class { constructor() { throw new Error('Audio denied'); } };
+      HTMLElement.prototype.requestFullscreen = () => Promise.reject(new DOMException('Denied', 'NotAllowedError'));`,
+    '--browserScenario', `(async () => {
+      const waitFor = async (find, timeoutMs = 10000) => {
+        const deadline = Date.now() + timeoutMs;
+        while (!find() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+        return find();
+      };
+      const launch = await waitFor(() => document.querySelector('.official-game-card[data-runtime-id="dots-and-boxes"] button'));
+      if (!launch) return 'lobby card missing';
+      launch.click();
+      const settings = await waitFor(() => document.querySelector('dialog.training-overlay-config form'));
+      const difficulty = settings?.querySelector('select');
+      if (!difficulty) return 'Hub difficulty missing';
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
+      difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 50));
+      settings.querySelector('button[type="submit"]').click();
+      const start = await waitFor(() => document.querySelector('dialog.training-overlay-runtime iframe')?.contentDocument
+        ?.querySelector('.training-rules .config-start-btn'));
+      if (!start) return 'rules missing';
+      const game = start.ownerDocument;
+      start.click();
+      const lines = await waitFor(() => game.querySelectorAll('[data-dots-line]').length === 24);
+      if (!lines) return 'native edges missing';
+      for (let turn = 0; turn < 25; turn += 1) {
+        if (document.querySelector('.training-overlay-score table')) break;
+        const available = await waitFor(() => {
+          if (document.querySelector('.training-overlay-score table')) return 'done';
+          return [...game.querySelectorAll('[data-dots-line]')]
+            .find(line => line.getAttribute('data-dots-owner') === '' && !line.disabled) ?? null;
+        }, 20000);
+        if (available === 'done') break;
+        if (!available) return 'no playable edge at turn ' + turn;
+        available.click();
+        if (!await waitFor(() => available.getAttribute('data-dots-owner') === 'P'
+          || document.querySelector('.training-overlay-score table'), 1500)) return 'edge did not fill';
+      }
+      const score = await waitFor(() => document.querySelector('.training-overlay-score table'), 20000);
+      if (!score) return 'Hub score missing';
+      if (!await waitFor(() => document.querySelector('.training-score-toolbar [role="status"]')
+        ?.textContent.includes('Session record saved.'))) return 'Hub save incomplete';
+      return score.querySelectorAll('thead th').length === 9
+        && !document.querySelector('.training-overlay-score iframe')
+        && document.documentElement.scrollWidth <= innerWidth + 1;
+    })()`,
+    '--allSelectors', '.training-overlay-score table',
+    '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 0, `Hub Dots and Boxes: ${result.stdout}\n${result.stderr}`);
+  assert.equal(uploads.length, 1, 'a Hub game saves exactly once');
+  const score = uploads[0]?.record?.score?.summary;
+  assert.deepEqual(Object.keys(score ?? {}), [
+    'duration', 'moves', 'completed', 'errors', 'opponentMoves', 'playerBoxes', 'opponentBoxes', 'boardSize',
+  ]);
+  assert.ok(Object.values(score).every(value => typeof value === 'number' && Number.isFinite(value)));
+  assert.equal(score.boardSize, 4);
+  assert.equal(score.moves + score.opponentMoves, 24);
+  assert.equal(score.playerBoxes + score.opponentBoxes, 9);
+  assert.equal(score.completed, Number(score.playerBoxes > score.opponentBoxes));
+  assert.equal(score.errors, 0);
+});
+
 test('Brave records one Sudoku entry victory inside Hub without canvas', async (context) => {
   assert.ok(bravePath, 'Brave is required for the Hub number-grid check.');
   const uploads = [];

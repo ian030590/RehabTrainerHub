@@ -172,13 +172,25 @@ test('number grids stay silent until completion and board games preserve draws',
   UpdateConnect4TimedState(aiDraw, 2, 'easy', result => aiEndings.push(result), () => 0);
   assert.deepEqual([aiDraw.board[0], aiDraw.aiMoves, aiEndings], ['A', 1, ['Draw']]);
 
-  const source = (await Promise.all(['hex', 'dots-and-boxes'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/languageNeutralGames.ts`, 'utf8')))).join('\n');
+  const source = await readFile(`${gamesRoot}/hex/runtime/cognitive/languageNeutralGames.ts`, 'utf8');
 
   const hexPlayer = SourceBetween(source, 'function HandleHexTap', 'function TakeHexAiTurn');
   const hexAi = SourceBetween(source, 'function TakeHexAiTurn', 'function DrawHex');
   assert.match(hexPlayer, /state\.board\.every\(Boolean\)[\s\S]*?finishGame\('Draw'\)/);
   assert.match(hexAi, /state\.board\.every\(Boolean\)[\s\S]*?finishGame\?\.\('Draw'\)/);
 
-  const dotsFinish = SourceBetween(source, 'function FinishDotsIfFull', 'function DrawDotsLine');
-  assert.match(dotsFinish, /state\.playerScore === state\.aiScore[\s\S]*?\? 'Draw'/);
+  const { CreateDotsAndBoxesState, HandleDotsAndBoxesTap } =
+    await ImportStandaloneTypeScriptModule(`${gamesRoot}/dots-and-boxes/runtime/cognitive/dotsAndBoxesLogic.ts`);
+  const dots = CreateDotsAndBoxesState('medium');
+  dots.hLines.fill('P');
+  dots.vLines.fill('A');
+  dots.hLines[0] = null;
+  dots.boxes.fill('A');
+  dots.boxes[0] = null;
+  for (let index = 1; index <= 7; index += 1) dots.boxes[index] = 'P';
+  dots.playerScore = 7;
+  dots.aiScore = 8;
+  const dotsEndings = [];
+  HandleDotsAndBoxesTap(dots, 0, 1, result => dotsEndings.push(result));
+  assert.deepEqual([dots.playerScore, dots.aiScore, dotsEndings], [8, 8, ['Draw']]);
 });

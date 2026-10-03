@@ -1,44 +1,48 @@
-// Canonical Hub-owned brain module rules.
 import type { TrainingConfigSummaryItem } from '@rehab-trainer/ui';
 import { TrainingRulesPanel } from '@rehab-trainer/ui';
 import { useT } from '@rehab-trainer/ui/components/i18n';
 import type { ReactNode } from 'react';
+
 interface BrainTrainingRulesPanelProps {
-    gameId: string;
-    title: ReactNode;
-    summaryTitle?: ReactNode;
-    summaryItems?: readonly TrainingConfigSummaryItem[];
-    className?: string;
-    onStart: () => void;
-    onBack: () => void;
+  gameId: string;
+  title: ReactNode;
+  summaryTitle?: ReactNode;
+  summaryItems?: readonly TrainingConfigSummaryItem[];
+  className?: string;
+  onStart: () => void;
+  onBack: () => void;
 }
-export function BrainTrainingRulesPanel({ gameId, title, summaryTitle, summaryItems, className, onStart, onBack, }: BrainTrainingRulesPanelProps) {
-    const { lang } = useT();
-    const labels = GetRuleLabels(lang);
-    return (<TrainingRulesPanel className={className} label={labels.label} title={title} summaryTitle={summaryTitle} summaryItems={summaryItems} sections={GetRuleSections(gameId, lang)} startLabel={labels.start} backLabel={labels.back} onStart={onStart} onBack={onBack}/>);
-}
-function GetRuleLabels(lang: 'zh' | 'en') {
-    return lang === 'en'
-        ? { label: 'Game Rules', start: 'Start Training', back: 'Back to Settings' }
-        : { label: '遊戲規則說明', start: '開始訓練', back: '回設定' };
-}
-function GetRuleSections(gameId: string, lang: 'zh' | 'en') {
-    const isZh = lang !== 'en';
-    switch (gameId) {
-        case 'dots-and-boxes':
-            return BuildRules(isZh, '連接兩點成線，完成方盒即可得分。', 'Draw lines between dots; completing a box scores a point.', ['點擊點與點之間的線段。', '我方牆壁為藍色，電腦牆壁為紅色。', '完成盒子可繼續回合，最後分數較高者成功。'], ['Tap a line between dots.', 'Your walls are blue and the computer walls are red.', 'Completing a box gives another turn; higher final score succeeds.']);
-        default:
-            return BuildRules(isZh, '依畫面提示完成任務，訓練注意力、控制與反應。', 'Follow the on-screen task to train attention, control, and response.', ['完成設定目標後進入結算。'], ['The session moves to results when the configured goal is complete.']);
-    }
-}
-function BuildRules(isZh: boolean, zhDescription: string, enDescription: string, zhItems: string[], enItems: string[]) {
-    return isZh
-        ? [
-            { title: '遊玩方式', description: zhDescription, items: zhItems },
-            { title: '成績計算', description: '結算會記錄完成狀態、用時、成功次數與錯誤次數。' },
-        ]
-        : [
-            { title: 'How to Play', description: enDescription, items: enItems },
-            { title: 'Results', description: 'The result records completion status, elapsed time, successes, and errors.' },
-        ];
+
+export function BrainTrainingRulesPanel({ title, summaryTitle, summaryItems, className, onStart, onBack }: BrainTrainingRulesPanelProps) {
+  const { lang } = useT();
+  const isZh = lang !== 'en';
+  const sections = isZh
+    ? [
+        {
+          title: '遊玩方式',
+          description: '你和電腦輪流在相鄰兩點之間畫線；你的線為藍色，電腦的線為紅色。',
+          items: [
+            '選擇一條尚未畫出的橫線或直線；畫好已佔用的線會記為一次錯誤。',
+            '畫出方格最後一條邊可取得該格並再走一回合；一條邊可能同時完成兩格。',
+            '未完成方格時，電腦約一秒後畫線。所有線畫完後，方格較多的一方獲勝。',
+          ],
+        },
+        { title: '當次紀錄', description: '記錄勝負或平手、用時、雙方畫線次數、雙方方格數、無效操作與棋盤大小。' },
+      ]
+    : [
+        {
+          title: 'How to Play',
+          description: 'Take turns drawing a line between neighboring dots. Your lines are blue and the computer lines are red.',
+          items: [
+            'Choose an undrawn horizontal or vertical edge. Choosing an occupied edge counts as an error.',
+            'Closing a box scores a point and gives another turn; one edge can complete two boxes.',
+            'If no box closes, the computer draws after about one second. When all edges are drawn, the player with more boxes wins.',
+          ],
+        },
+        { title: 'Session record', description: 'Records win, loss or draw, time, both line counts, both box scores, invalid edges and grid size.' },
+      ];
+  return <TrainingRulesPanel className={className} label={isZh ? '遊戲規則' : 'Game Rules'}
+    title={title} summaryTitle={summaryTitle} summaryItems={summaryItems} sections={sections}
+    startLabel={isZh ? '開始練習' : 'Start Training'} backLabel={isZh ? '返回設定' : 'Back to Settings'}
+    onStart={onStart} onBack={onBack} />;
 }
