@@ -217,14 +217,6 @@ const cognitiveUtilsSource = readFileSync(
 assert.ok(cognitiveUtilsSource.includes('cognitiveBoardWidthRatio = 0.75'), 'Cognitive boards must use at most 75% of viewport width.');
 assert.ok(cognitiveUtilsSource.includes('cognitiveBoardHeightRatio = 1'), 'Cognitive boards must use at most 100% of viewport height.');
 
-const languageNeutralSource = ['hex'].map((id) => readFileSync(
-  resolve(moduleRoot, `${id}/runtime/cognitive/languageNeutralGames.ts`), 'utf8',
-)).join('\n');
-assert.ok(languageNeutralSource.includes('const aiTurnDelaySeconds = 1'), 'Board-game opponents must wait one second.');
-for (const game of ['Hex']) {
-  assert.ok(languageNeutralSource.includes(`Take${game}AiTurn`), `${game} must defer its computer move through the timed update loop.`);
-}
-
 const referenceCognitiveSource = readFileSync(
   resolve(moduleRoot, 'maze/runtime/cognitive/ReferenceCognitiveGame.tsx'),
   'utf8',
@@ -386,6 +378,11 @@ const implementationGroups = [
     ],
   })),
   {
+    ids: ['brain:hex'],
+    files: ['hex/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-hex-cell'],
+  },
+  {
     ids: ['brain:dots-and-boxes'],
     files: ['dots-and-boxes/runtime/cognitive/ReferenceCognitiveGame.tsx'],
     tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-dots-line'],
@@ -538,6 +535,13 @@ const jsPsychLifecycleGroups = [
       'lifecycle.dispose()',
     ],
     forbiddenTokens: ['WriteJsPsychData'],
+  },
+  {
+    status: 'browser-native',
+    ids: ['brain:hex'],
+    files: ['hex/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ['HandleHexTap(', 'UpdateHexTimedState(', 'SaveTrainingSessionRecord('],
+    forbiddenTokens: ['initJsPsych(', "from 'pixi.js'"],
   },
   {
     status: 'browser-native',
@@ -793,7 +797,6 @@ console.log(
 
 function ReferenceCognitiveCatalogIds() {
   return [
-    'brain:hex',
     'brain:maze',
   ];
 }

@@ -62,8 +62,8 @@
     {
       "key": "boardSize",
       "label": {
-        "zh": "棋盤每邊格／點數",
-        "en": "Board side cells or dots"
+        "zh": "棋盤每邊格數",
+        "en": "Board side cells"
       },
       "sources": [
         "Board_Size"
@@ -125,8 +125,8 @@
     {
       "key": "boardSize",
       "label": {
-        "zh": "棋盤每邊格／點數",
-        "en": "Board side cells or dots"
+        "zh": "棋盤每邊格數",
+        "en": "Board side cells"
       },
       "sources": [
         "Board_Size"

@@ -172,13 +172,6 @@ test('number grids stay silent until completion and board games preserve draws',
   UpdateConnect4TimedState(aiDraw, 2, 'easy', result => aiEndings.push(result), () => 0);
   assert.deepEqual([aiDraw.board[0], aiDraw.aiMoves, aiEndings], ['A', 1, ['Draw']]);
 
-  const source = await readFile(`${gamesRoot}/hex/runtime/cognitive/languageNeutralGames.ts`, 'utf8');
-
-  const hexPlayer = SourceBetween(source, 'function HandleHexTap', 'function TakeHexAiTurn');
-  const hexAi = SourceBetween(source, 'function TakeHexAiTurn', 'function DrawHex');
-  assert.match(hexPlayer, /state\.board\.every\(Boolean\)[\s\S]*?finishGame\('Draw'\)/);
-  assert.match(hexAi, /state\.board\.every\(Boolean\)[\s\S]*?finishGame\?\.\('Draw'\)/);
-
   const { CreateDotsAndBoxesState, HandleDotsAndBoxesTap } =
     await ImportStandaloneTypeScriptModule(`${gamesRoot}/dots-and-boxes/runtime/cognitive/dotsAndBoxesLogic.ts`);
   const dots = CreateDotsAndBoxesState('medium');

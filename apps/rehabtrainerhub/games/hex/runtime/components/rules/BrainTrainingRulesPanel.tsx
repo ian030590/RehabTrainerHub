@@ -1,44 +1,37 @@
-// Canonical Hub-owned brain module rules.
 import type { TrainingConfigSummaryItem } from '@rehab-trainer/ui';
 import { TrainingRulesPanel } from '@rehab-trainer/ui';
 import { useT } from '@rehab-trainer/ui/components/i18n';
 import type { ReactNode } from 'react';
-interface BrainTrainingRulesPanelProps {
-    gameId: string;
-    title: ReactNode;
-    summaryTitle?: ReactNode;
-    summaryItems?: readonly TrainingConfigSummaryItem[];
-    className?: string;
-    onStart: () => void;
-    onBack: () => void;
-}
-export function BrainTrainingRulesPanel({ gameId, title, summaryTitle, summaryItems, className, onStart, onBack, }: BrainTrainingRulesPanelProps) {
-    const { lang } = useT();
-    const labels = GetRuleLabels(lang);
-    return (<TrainingRulesPanel className={className} label={labels.label} title={title} summaryTitle={summaryTitle} summaryItems={summaryItems} sections={GetRuleSections(gameId, lang)} startLabel={labels.start} backLabel={labels.back} onStart={onStart} onBack={onBack}/>);
-}
-function GetRuleLabels(lang: 'zh' | 'en') {
-    return lang === 'en'
-        ? { label: 'Game Rules', start: 'Start Training', back: 'Back to Settings' }
-        : { label: '遊戲規則說明', start: '開始訓練', back: '回設定' };
-}
-function GetRuleSections(gameId: string, lang: 'zh' | 'en') {
-    const isZh = lang !== 'en';
-    switch (gameId) {
-        case 'hex':
-            return BuildRules(isZh, '搶先連接自己兩側邊界。', 'Connect your two sides before the computer connects its sides.', ['你是藍色，目標是連接上方與下方。', '電腦是紅色，會嘗試連接左右兩側。'], ['You are blue and connect top to bottom.', 'The computer is red and connects left to right.']);
-        default:
-            return BuildRules(isZh, '依畫面提示完成任務，訓練注意力、控制與反應。', 'Follow the on-screen task to train attention, control, and response.', ['完成設定目標後進入結算。'], ['The session moves to results when the configured goal is complete.']);
-    }
-}
-function BuildRules(isZh: boolean, zhDescription: string, enDescription: string, zhItems: string[], enItems: string[]) {
-    return isZh
-        ? [
-            { title: '遊玩方式', description: zhDescription, items: zhItems },
-            { title: '成績計算', description: '結算會記錄完成狀態、用時、成功次數與錯誤次數。' },
-        ]
-        : [
-            { title: 'How to Play', description: enDescription, items: enItems },
-            { title: 'Results', description: 'The result records completion status, elapsed time, successes, and errors.' },
-        ];
+
+export function BrainTrainingRulesPanel({ title, summaryTitle, summaryItems, onStart, onBack }: {
+  gameId: 'hex';
+  title: ReactNode;
+  summaryTitle?: ReactNode;
+  summaryItems?: readonly TrainingConfigSummaryItem[];
+  onStart: () => void;
+  onBack: () => void;
+}) {
+  const { lang } = useT();
+  const en = lang === 'en';
+  return <TrainingRulesPanel
+    label={en ? 'Game Rules' : '遊戲規則'} title={title} summaryTitle={summaryTitle}
+    summaryItems={summaryItems}
+    sections={en ? [
+      { title: 'How to Play', description: 'Claim one empty hexagonal cell per turn.', items: [
+        'You are blue and connect top to bottom.',
+        'The computer is red and connects left to right.',
+        'Six touching sides form a path; the computer moves after one second.',
+      ] },
+      { title: 'Results', description: 'The result records the winner, elapsed time, moves, and invalid taps.' },
+    ] : [
+      { title: '遊玩方式', description: '每回合選擇一個空白六角格。', items: [
+        '你是藍方，目標是連接棋盤上緣與下緣。',
+        '電腦是紅方，目標是連接棋盤左緣與右緣。',
+        '相鄰六邊接成路徑；電腦約一秒後落子。',
+      ] },
+      { title: '結果', description: '記錄勝負、經過時間、落子次數與無效點擊。' },
+    ]}
+    startLabel={en ? 'Start Training' : '開始練習'}
+    backLabel={en ? 'Back to Settings' : '返回設定'} onStart={onStart} onBack={onBack}
+  />;
 }

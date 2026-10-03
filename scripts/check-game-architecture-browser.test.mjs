@@ -1075,6 +1075,157 @@ test('Brave plays Dots and Boxes on phone and tablet without canvas', async (con
   }
 });
 
+test('Brave plays Hex on phone and tablet with canvas, audio, and fullscreen denied', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Hex browser check.');
+  assert.equal((await stat(resolve(outputRoot, 'games/hex/index.html'))).isFile(), true);
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  for (const width of [320, 390, 768]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/games/hex/`,
+      '--viewportWidth', String(width), '--viewportHeight', width === 320 ? '568' : '844',
+      '--viewportBeforeClick', 'true',
+      '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+        window.AudioContext = class { constructor() { throw new Error('Audio denied'); } };
+        HTMLElement.prototype.requestFullscreen = () => {
+          window.__hexFullscreenRequested = true;
+          return Promise.reject(new DOMException('Denied', 'NotAllowedError'));
+        };`,
+      '--browserScenario', `(async () => {
+        const waitFor = async (find, timeoutMs = 10000) => {
+          const deadline = Date.now() + timeoutMs;
+          while (!find() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+          return find();
+        };
+        const settings = await waitFor(() => document.querySelector('.game-settings-form'));
+        const difficulty = settings?.querySelector('select');
+        if (!difficulty) return 'difficulty setting missing';
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
+        difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 50));
+        settings.querySelector('button[type="submit"]').click();
+        const start = await waitFor(() => document.querySelector('.training-rules .config-start-btn'));
+        if (!start) return 'rules missing';
+        start.click();
+        const cells = await waitFor(() => {
+          const found = [...document.querySelectorAll('[data-hex-cell]')];
+          return found.length ? found : null;
+        });
+        const scroller = document.querySelector('[data-hex-board-scroll]');
+        if (!cells || cells.length !== 25 || !scroller
+          || cells.some(cell => !(cell instanceof HTMLButtonElement)
+            || !scroller.contains(cell) || !cell.getAttribute('aria-label')
+            || cell.getBoundingClientRect().width < 44 || cell.getBoundingClientRect().height < 44)
+          || !['auto', 'scroll'].includes(getComputedStyle(scroller).overflowX)
+          || document.documentElement.scrollWidth > innerWidth + 1) return 'board layout';
+        if (!window.__hexFullscreenRequested) return 'fullscreen denial was not exercised';
+        const first = cells[0];
+        if (innerWidth >= 768) {
+          first.focus();
+          if (document.activeElement !== first) return 'cell focus failed';
+          first.addEventListener('click', () => { window.__hexKeyboardClicked = true; }, { once: true });
+          return true;
+        }
+        first.click();
+        if (!await waitFor(() => first.getAttribute('data-hex-owner') === '1', 1500)) return 'player cell missing';
+        if (!await waitFor(() => document.querySelectorAll('[data-hex-owner="2"]').length >= 1, 2500))
+          return 'computer did not move after one second';
+        return document.documentElement.scrollWidth <= innerWidth + 1;
+      })()`,
+      ...(width === 768 ? [
+        '--keyPress', 'Enter', '--keyPressReadySelector', '[data-hex-cell]',
+        '--browserAssertion', 'window.__hexKeyboardClicked === true && document.querySelectorAll(\'[data-hex-owner="1"]\').length === 1',
+      ] : []),
+      '--allSelectors', '[data-hex-cell],.hex-status', '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px Hex: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
+test('Brave records one complete Hex game inside Hub', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Hub Hex check.');
+  const uploads = [];
+  const server = createServer((request, response) => {
+    if (request.url === '/api/records' && request.method === 'POST') {
+      let body = '';
+      request.on('data', chunk => { body += chunk; });
+      request.on('end', () => {
+        uploads.push(JSON.parse(body));
+        response.writeHead(201, { 'Content-Type': 'application/json' }).end('{"ok":true}');
+      });
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`,
+    '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=en',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+      window.AudioContext = class { constructor() { throw new Error('Audio denied'); } };
+      HTMLElement.prototype.requestFullscreen = () => Promise.reject(new DOMException('Denied', 'NotAllowedError'));`,
+    '--browserScenario', `(async () => {
+      const waitFor = async (find, timeoutMs = 10000) => {
+        const deadline = Date.now() + timeoutMs;
+        while (!find() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+        return find();
+      };
+      const launch = await waitFor(() => document.querySelector('.official-game-card[data-runtime-id="hex"] button'));
+      if (!launch) return 'lobby card missing';
+      launch.click();
+      const settings = await waitFor(() => document.querySelector('dialog.training-overlay-config form'));
+      const difficulty = settings?.querySelector('select');
+      if (!difficulty) return 'Hub difficulty missing';
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
+      difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 50));
+      settings.querySelector('button[type="submit"]').click();
+      const start = await waitFor(() => document.querySelector('dialog.training-overlay-runtime iframe')?.contentDocument
+        ?.querySelector('.training-rules .config-start-btn'));
+      if (!start) return 'rules missing';
+      const game = start.ownerDocument;
+      start.click();
+      if (!await waitFor(() => game.querySelectorAll('[data-hex-cell]').length === 25)) return 'Hex cells missing';
+      for (let turn = 0; turn < 25; turn += 1) {
+        if (document.querySelector('.training-overlay-score table')) break;
+        const available = await waitFor(() => {
+          if (document.querySelector('.training-overlay-score table')) return 'done';
+          return [...game.querySelectorAll('[data-hex-cell]')]
+            .find(cell => cell.getAttribute('data-hex-owner') === '0' && !cell.disabled) ?? null;
+        }, 20000);
+        if (available === 'done') break;
+        if (!available) return 'no playable cell at turn ' + turn;
+        available.click();
+        if (!await waitFor(() => available.getAttribute('data-hex-owner') === '1'
+          || document.querySelector('.training-overlay-score table'), 1500)) return 'cell did not fill';
+      }
+      const score = await waitFor(() => document.querySelector('.training-overlay-score table'), 20000);
+      if (!score) return 'Hub score missing';
+      if (!await waitFor(() => document.querySelector('.training-score-toolbar [role="status"]')
+        ?.textContent.includes('Session record saved.'))) return 'Hub save incomplete';
+      return score.querySelectorAll('thead th').length === 7
+        && !document.querySelector('.training-overlay-score iframe')
+        && document.documentElement.scrollWidth <= innerWidth + 1;
+    })()`,
+    '--allSelectors', '.training-overlay-score table', '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 0, `Hub Hex: ${result.stdout}\n${result.stderr}`);
+  assert.equal(uploads.length, 1, 'a Hub game saves exactly once');
+  const score = uploads[0]?.record?.score?.summary;
+  assert.deepEqual(Object.keys(score ?? {}), [
+    'duration', 'moves', 'completed', 'errors', 'opponentMoves', 'boardSize',
+  ]);
+  assert.ok(Object.values(score).every(value => typeof value === 'number' && Number.isFinite(value)));
+  assert.equal(score.boardSize, 5);
+  assert.ok(score.moves > 0 && score.moves + score.opponentMoves <= 25);
+  assert.equal(score.errors, 0);
+});
+
 test('Brave records one complete Dots and Boxes game inside Hub', async (context) => {
   assert.ok(bravePath, 'Brave is required for the Hub Dots and Boxes check.');
   const uploads = [];
