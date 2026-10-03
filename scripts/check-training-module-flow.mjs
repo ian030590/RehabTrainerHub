@@ -217,11 +217,11 @@ const cognitiveUtilsSource = readFileSync(
 assert.ok(cognitiveUtilsSource.includes('cognitiveBoardWidthRatio = 0.75'), 'Cognitive boards must use at most 75% of viewport width.');
 assert.ok(cognitiveUtilsSource.includes('cognitiveBoardHeightRatio = 1'), 'Cognitive boards must use at most 100% of viewport height.');
 
-const languageNeutralSource = ['tic-tac-toe', 'connect4', 'dots-and-boxes', 'hex'].map((id) => readFileSync(
+const languageNeutralSource = ['connect4', 'dots-and-boxes', 'hex'].map((id) => readFileSync(
   resolve(moduleRoot, `${id}/runtime/cognitive/languageNeutralGames.ts`), 'utf8',
 )).join('\n');
 assert.ok(languageNeutralSource.includes('const aiTurnDelaySeconds = 1'), 'Board-game opponents must wait one second.');
-for (const game of ['TicTacToe', 'Connect4', 'DotsAndBoxes', 'Hex']) {
+for (const game of ['Connect4', 'DotsAndBoxes', 'Hex']) {
   assert.ok(languageNeutralSource.includes(`Take${game}AiTurn`), `${game} must defer its computer move through the timed update loop.`);
 }
 
@@ -421,6 +421,11 @@ const implementationGroups = [
     tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-number-cell'],
   },
   {
+    ids: ['brain:tic-tac-toe'],
+    files: ['tic-tac-toe/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-tic-cell'],
+  },
+  {
     ids: ['mouth:tongue-catch'],
     files: ['tongue-catch/TongueCatchGame.tsx'],
     tokens: [
@@ -571,6 +576,13 @@ const jsPsychLifecycleGroups = [
     ids: ['brain:sudoku'],
     files: ['sudoku/runtime/cognitive/ReferenceCognitiveGame.tsx'],
     tokens: ['HandleNumberGridTap(', 'GetNumberGridTimedOutcome(', 'SaveTrainingSessionRecord('],
+    forbiddenTokens: ['initJsPsych(', "from 'pixi.js'"],
+  },
+  {
+    status: 'browser-native',
+    ids: ['brain:tic-tac-toe'],
+    files: ['tic-tac-toe/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ['HandleTicTacToeTap(', 'UpdateTicTacToeTimedState(', 'SaveTrainingSessionRecord('],
     forbiddenTokens: ['initJsPsych(', "from 'pixi.js'"],
   },
   ...Object.entries(expFactoryGameFiles).map(([id, file]) => ({
@@ -757,7 +769,6 @@ console.log(
 
 function ReferenceCognitiveCatalogIds() {
   return [
-    'brain:tic-tac-toe',
     'brain:connect4',
     'brain:dots-and-boxes',
     'brain:hex',

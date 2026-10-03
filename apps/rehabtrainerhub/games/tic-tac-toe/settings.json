@@ -9,8 +9,8 @@
         "en": "Session settings"
       },
       "description": {
-        "zh-TW": "記錄當次操作表現。隨機題目、對手與時間上限均可能影響結果；打亂步數不等於最短解。",
-        "en": "Records task performance. Random puzzles, opponents and time limits affect results; scramble steps are not optimal solution lengths."
+        "zh-TW": "與電腦輪流下棋，依選擇的棋盤大小與連線長度記錄當次步數、結果與時間。",
+        "en": "Take turns against the computer. Board size and winning-line length affect the session record."
       },
       "fields": [
         {
@@ -57,8 +57,8 @@
             "en": "Sound feedback"
           },
           "description": {
-            "zh-TW": "在操作與結果時播放提示音。",
-            "en": "Play audio cues during interactions and results."
+            "zh-TW": "遊戲結束時播放聲音提示。",
+            "en": "Play an audio cue when the game ends."
           },
           "default": true
         }

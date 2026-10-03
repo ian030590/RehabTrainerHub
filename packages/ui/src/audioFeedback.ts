@@ -81,7 +81,11 @@ export function CreateAudioFeedbackController(
     }
 
     if (typeof window === 'undefined' || typeof window.AudioContext === 'undefined') return null;
-    fallbackAudioContext ??= new AudioContext();
+    try {
+      fallbackAudioContext ??= new AudioContext();
+    } catch {
+      return null;
+    }
     return fallbackAudioContext;
   };
 
@@ -91,10 +95,14 @@ export function CreateAudioFeedbackController(
     const audioContext = getAudioContext(source);
     if (!audioContext) return;
 
-    ResumeAudioContext(audioContext);
-    const volume = (settings.volumePercent / 100) * 0.18;
-    const startAt = audioContext.currentTime + 0.01;
-    soundSequences[kind].forEach((step) => PlayTone(audioContext, step, startAt, volume));
+    try {
+      ResumeAudioContext(audioContext);
+      const volume = (settings.volumePercent / 100) * 0.18;
+      const startAt = audioContext.currentTime + 0.01;
+      soundSequences[kind].forEach((step) => PlayTone(audioContext, step, startAt, volume));
+    } catch {
+      // Audio is optional; a device failure must not interrupt the game.
+    }
   };
 
   return {
@@ -125,7 +133,11 @@ function UnwrapJsPsych(source: unknown): JsPsychAudioProvider | null {
 
 function ResumeAudioContext(audioContext: AudioContext | null): void {
   if (!audioContext || audioContext.state === 'running') return;
-  void audioContext.resume().catch(() => undefined);
+  try {
+    void audioContext.resume().catch(() => undefined);
+  } catch {
+    // Keep training playable when a browser rejects audio synchronously.
+  }
 }
 
 function PlayTone(audioContext: AudioContext, step: ToneStep, startAt: number, volume: number): void {

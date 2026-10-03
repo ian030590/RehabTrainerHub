@@ -1,0 +1,71 @@
+.tic-game {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  min-height: 100dvh;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+}
+
+.tic-play {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  text-align: center;
+}
+
+.tic-play h1,
+.tic-play p {
+  margin: 0;
+}
+
+.tic-status,
+.tic-progress {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tic-board {
+  box-sizing: border-box;
+  display: grid;
+  width: min(100%, 28rem, 60dvh);
+  max-width: 100%;
+  grid-template-columns: repeat(var(--tic-size), minmax(44px, 1fr));
+  gap: clamp(4px, 1vmin, 8px);
+}
+
+.tic-cell {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  aspect-ratio: 1;
+  border: 2px solid var(--text-primary);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--accent);
+  font: inherit;
+  font-size: clamp(1.5rem, 7vmin, 3rem);
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tic-cell:disabled {
+  cursor: wait;
+}
+
+.tic-cell:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tic-results .training-result-summary {
+  max-width: 720px;
+}

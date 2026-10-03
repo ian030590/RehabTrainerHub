@@ -675,6 +675,164 @@ test('Brave plays number grids on phone and tablet without canvas', async (conte
   }
 });
 
+test('Brave plays Tic Tac Toe on phone and tablet without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Tic Tac Toe browser check.');
+  assert.equal((await stat(resolve(outputRoot, 'games/tic-tac-toe/index.html'))).isFile(), true);
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  for (const [width, difficulty, size] of [[390, '0', 3], [768, '1', 4], [320, '2', 5]]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/games/tic-tac-toe/`,
+      '--viewportWidth', String(width), '--viewportHeight', width === 320 ? '568' : '844', '--viewportBeforeClick', 'true',
+      '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+        Math.random = () => 0;
+        window.AudioContext = class { constructor() { throw new Error('Audio denied'); } };
+        HTMLElement.prototype.requestFullscreen = () => {
+          window.__ticFullscreenRequested = true;
+          return Promise.reject(new DOMException('Denied', 'NotAllowedError'));
+        };`,
+      '--browserScenario', `(async () => {
+        const waitFor = async (find, timeoutMs = 10000) => {
+          const deadline = Date.now() + timeoutMs;
+          while (!find() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+          return find();
+        };
+        const settings = await waitFor(() => document.querySelector('.game-settings-form'));
+        const select = settings?.querySelector('select');
+        if (!select) return 'difficulty setting missing';
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(select, '${difficulty}');
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 50));
+        settings.querySelector('button[type="submit"]').click();
+        const start = await waitFor(() => document.querySelector('.training-rules .config-start-btn'));
+        if (!start) return 'rules missing';
+        start.click();
+        const cells = await waitFor(() => {
+          const found = [...document.querySelectorAll('[data-tic-cell]')];
+          return found.length ? found : null;
+        });
+        if (!cells) return 'native board missing';
+        const board = document.querySelector('.tic-board');
+        const status = document.querySelector('.tic-status');
+        if (cells.length !== ${size * size} || !board || !status?.textContent?.trim()
+          || getComputedStyle(board).display !== 'grid'
+          || cells.some(cell => !(cell instanceof HTMLButtonElement)
+            || cell.getBoundingClientRect().width < 44 || cell.getBoundingClientRect().height < 44)
+          || document.documentElement.scrollWidth > innerWidth + 1) return 'board layout';
+        if (getComputedStyle(cells[0]).backgroundColor === 'rgba(0, 0, 0, 0)') return 'board theme missing';
+        if (!window.__ticFullscreenRequested) return 'fullscreen denial was not exercised';
+        const first = cells[0];
+        if (${width} === 768) {
+          first.focus();
+          if (document.activeElement !== first) return 'cell focus failed';
+          first.addEventListener('click', () => {
+            setTimeout(() => { window.__ticKeyboardChanged = first.dataset.ticMark === 'X'; }, 50);
+          }, { once: true });
+          return true;
+        }
+        first.click();
+        if (!await waitFor(() => first.dataset.ticMark === 'X', 2000)) return 'X did not move';
+        if (!await waitFor(() => cells[Math.floor(cells.length / 2)].dataset.ticMark === 'O', 2500))
+          return 'O did not move after one second';
+        return document.querySelectorAll('[data-tic-mark="X"]').length === 1
+          && document.querySelectorAll('[data-tic-mark="O"]').length === 1
+          && document.documentElement.scrollWidth <= innerWidth + 1;
+      })()`,
+      ...(width === 768 ? [
+        '--keyPress', 'Enter', '--keyPressReadySelector', '[data-tic-cell]',
+        '--browserAssertion', 'window.__ticKeyboardChanged === true && document.documentElement.scrollWidth <= innerWidth + 1',
+      ] : []),
+      '--allSelectors', '[data-tic-cell],.tic-status',
+      '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px Tic Tac Toe: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
+test('Brave records one Tic Tac Toe victory inside Hub without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Hub Tic Tac Toe check.');
+  const uploads = [];
+  const server = createServer((request, response) => {
+    if (request.url === '/api/records' && request.method === 'POST') {
+      let body = '';
+      request.on('data', chunk => { body += chunk; });
+      request.on('end', () => {
+        uploads.push(JSON.parse(body));
+        response.writeHead(201, { 'Content-Type': 'application/json' }).end('{"ok":true}');
+      });
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`,
+    '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=en',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+      Math.random = () => 0;
+      window.AudioContext = class { constructor() { throw new Error('Audio denied'); } };
+      HTMLElement.prototype.requestFullscreen = () => Promise.reject(new DOMException('Denied', 'NotAllowedError'));`,
+    '--browserScenario', `(async () => {
+      const waitFor = async (find, timeoutMs = 10000) => {
+        const deadline = Date.now() + timeoutMs;
+        while (!find() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+        return find();
+      };
+      const launch = await waitFor(() => document.querySelector('.official-game-card[data-runtime-id="tic-tac-toe"] button'));
+      if (!launch) return 'lobby card missing';
+      launch.click();
+      const settings = await waitFor(() => document.querySelector('dialog.training-overlay-config form'));
+      const difficulty = settings?.querySelector('select');
+      if (!difficulty) return 'Hub difficulty missing';
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
+      difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 50));
+      settings.querySelector('button[type="submit"]').click();
+      const start = await waitFor(() => document.querySelector('dialog.training-overlay-runtime iframe')?.contentDocument
+        ?.querySelector('.training-rules .config-start-btn'));
+      if (!start) return 'rules missing';
+      const game = start.ownerDocument;
+      start.click();
+      const cells = await waitFor(() => {
+        const found = [...game.querySelectorAll('[data-tic-cell]')];
+        return found.length ? found : null;
+      });
+      if (!cells || cells.length !== 9) return 'native board missing';
+      for (const [turn, index] of [0, 7, 6, 8].entries()) {
+        cells[index].click();
+        if (turn === 3) break; // Winning tap unmounts the board before its DOM attributes update.
+        if (!await waitFor(() => cells[index].dataset.ticMark === 'X', 2000))
+          return 'X move failed at ' + index;
+        if (!await waitFor(() => [...cells].filter(cell => cell.dataset.ticMark === 'O').length === turn + 1, 2500))
+          return 'O turn failed at ' + index;
+      }
+      const score = await waitFor(() => document.querySelector('.training-overlay-score table'));
+      if (!score) return 'Hub score missing';
+      if (!await waitFor(() => document.querySelector('.training-score-toolbar [role="status"]')
+        ?.textContent.includes('Session record saved.'))) return 'Hub save incomplete';
+      return score.querySelectorAll('thead th').length === 7
+        && !document.querySelector('.training-overlay-score iframe')
+        && document.documentElement.scrollWidth <= innerWidth + 1;
+    })()`,
+    '--allSelectors', '.training-overlay-score table',
+    '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 0, `Hub Tic Tac Toe: ${result.stdout}\n${result.stderr}`);
+  assert.equal(uploads.length, 1, 'a Hub game saves exactly once');
+  const score = uploads[0]?.record?.score;
+  assert.deepEqual(Object.keys(score?.summary ?? {}), [
+    'duration', 'moves', 'completed', 'errors', 'opponentMoves', 'boardSize',
+  ]);
+  assert.ok(Object.values(score.summary).every(value => typeof value === 'number' && Number.isFinite(value)));
+  assert.deepEqual([score.summary.moves, score.summary.completed, score.summary.errors,
+    score.summary.opponentMoves, score.summary.boardSize], [4, 1, 0, 3, 3]);
+});
+
 test('Brave records one Sudoku entry victory inside Hub without canvas', async (context) => {
   assert.ok(bravePath, 'Brave is required for the Hub number-grid check.');
   const uploads = [];
