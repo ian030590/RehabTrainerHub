@@ -11,11 +11,11 @@ async function LoadAudioFeedback() {
   return import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 }
 
-function WithAudioContext(AudioContext, run) {
+function WithAudioContext(audioContextConstructor, run) {
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
   const previousAudioContext = Object.getOwnPropertyDescriptor(globalThis, 'AudioContext');
-  globalThis.window = { AudioContext };
-  globalThis.AudioContext = AudioContext;
+  globalThis.window = { AudioContext: audioContextConstructor };
+  globalThis.AudioContext = audioContextConstructor;
   try {
     run();
   } finally {
