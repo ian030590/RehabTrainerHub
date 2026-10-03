@@ -77,7 +77,7 @@ const manifestEntries: ReadonlyArray<readonly [
   ['brain:simon-says', 'simon-says/SimonSaysGame.ts', 'none', 'browser-native'],
   ['brain:lights-out', 'lights-out/LightsOutGame.ts', 'none', 'browser-native'],
   ['brain:sliding-puzzle', 'sliding-puzzle/SlidingPuzzleGame.ts', 'none', 'browser-native'],
-  ['brain:sudoku', 'sudoku/SudokuGame.ts', 'none', 'external-runtime-adapter'],
+  ['brain:sudoku', 'sudoku/SudokuGame.ts', 'none', 'browser-native'],
   ['brain:tic-tac-toe', 'tic-tac-toe/TicTacToeGame.ts', 'none', 'external-runtime-adapter'],
   ['brain:connect4', 'connect4/Connect4Game.ts', 'none', 'external-runtime-adapter'],
   ['brain:dots-and-boxes', 'dots-and-boxes/DotsAndBoxesGame.ts', 'none', 'external-runtime-adapter'],

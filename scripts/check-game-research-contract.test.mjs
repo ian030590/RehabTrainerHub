@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { Script } from 'node:vm';
 import test from 'node:test';
 import ts from 'typescript';
@@ -260,16 +260,18 @@ test('reading timeline preserves material identity and scores question responses
 });
 
 test('number-grid grading matches the actual rule, board and blank count', () => {
-  const compiled = ts.transpileModule(read('sudoku', 'runtime/cognitive/languageNeutralGames.ts'), {
+  const compiled = ts.transpileModule(read('sudoku', 'runtime/cognitive/numberGridLogic.ts'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
   }).outputText;
   const exports = {};
-  new Script(compiled).runInNewContext({ exports, require: () => ({ Shuffle: values => values }) });
+  new Script(compiled).runInNewContext({ exports });
   const cases = [['Beginner', 'latin-square', 4, 6], ['Intermediate', 'magic-square', 3, 6], ['Advanced', 'sudoku', 9, 50]];
   for (const [difficulty, kind, size, blanks] of cases) {
-    const state = exports.CreateLanguageNeutralGameState('sudoku', difficulty);
+    const state = exports.CreateNumberGridState(difficulty, () => 0);
     assert.equal(state.kind, kind);
     assert.equal(state.size, size);
     assert.equal(state.givens.filter(given => !given).length, blanks);
   }
+  assert.equal(existsSync(new URL('sudoku/runtime/cognitive/languageNeutralGames.ts', root)), false,
+    'the retired Pixi number-grid runtime must not remain as a second implementation');
 });

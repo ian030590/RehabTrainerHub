@@ -145,17 +145,14 @@ test('reference cognitive games persist and render complete per-trial contracts'
 });
 
 test('number grids stay silent until completion and board games preserve draws', async () => {
-  const source = (await Promise.all(['sudoku', 'connect4', 'hex', 'dots-and-boxes'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/languageNeutralGames.ts`, 'utf8')))).join('\n');
-  const feedback = SourceBetween(
-    source,
-    'export function GetLanguageNeutralFeedbackCounts',
-    'export function DrawLanguageNeutralGame',
-  );
-  assert.match(
-    feedback,
-    /case 'sudoku':[\s\S]*?return \{ success: 0, errors: state\.errors \}/,
-    'number-grid edits must not trigger per-cell success audio',
-  );
+  const numberRuntime = await readFile(`${gamesRoot}/sudoku/runtime/cognitive/ReferenceCognitiveGame.tsx`, 'utf8');
+  const numberTap = SourceBetween(numberRuntime, 'function HandleCellClick', 'useEffect(');
+  assert.match(numberTap, /HandleNumberGridTap\(current, index, FinishGame\)/);
+  assert.match(numberTap, /current\.errors > errorsBefore\) PlayFailureSound\(\)/);
+  assert.doesNotMatch(numberTap, /PlaySuccessSound/,
+    'number-grid edits must not trigger per-cell success audio');
+
+  const source = (await Promise.all(['connect4', 'hex', 'dots-and-boxes'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/languageNeutralGames.ts`, 'utf8')))).join('\n');
 
   const connect4Player = SourceBetween(source, 'function HandleConnect4Tap', 'function TakeConnect4AiTurn');
   const connect4Ai = SourceBetween(source, 'function TakeConnect4AiTurn', 'function DrawConnect4');

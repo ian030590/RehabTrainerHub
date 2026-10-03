@@ -585,6 +585,181 @@ test('Brave plays Sliding Puzzle on phone and tablet without canvas', async (con
   }
 });
 
+test('Brave plays number grids on phone and tablet without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the number-grid browser check.');
+  assert.equal((await stat(resolve(outputRoot, 'games/sudoku/index.html'))).isFile(), true);
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  for (const width of [390, 768, 320]) {
+    const compact = width === 320;
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/games/sudoku/`,
+      '--viewportWidth', String(width), '--viewportHeight', compact ? '568' : '844', '--viewportBeforeClick', 'true',
+      '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+        Math.random = () => 0;
+        HTMLElement.prototype.requestFullscreen = () => {
+          window.__numberFullscreenRequested = true;
+          return Promise.reject(new DOMException('Denied', 'NotAllowedError'));
+        };`,
+      '--browserScenario', `(async () => {
+        const waitFor = async (selector, timeoutMs = 10000) => {
+          const deadline = Date.now() + timeoutMs;
+          while (!document.querySelector(selector) && Date.now() < deadline) {
+            await new Promise(resolve => setTimeout(resolve, 20));
+          }
+          return document.querySelector(selector);
+        };
+        const settings = await waitFor('.game-settings-form');
+        const selects = [...(settings?.querySelectorAll('select') ?? [])];
+        if (selects.length < 2) return 'difficulty or time limit missing';
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(selects[0], '${compact ? '2' : '0'}');
+        selects[0].dispatchEvent(new Event('change', { bubbles: true }));
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(selects[1], '1');
+        selects[1].dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 50));
+        settings.querySelector('button[type="submit"]').click();
+        const start = await waitFor('.training-rules .config-start-btn');
+        if (!start) return 'rules missing';
+        start.click();
+        if (!await waitFor('[data-number-cell]')) return 'native board missing';
+        const cells = [...document.querySelectorAll('[data-number-cell]')];
+        const editable = cells.filter(cell => cell.dataset.numberGiven === 'false');
+        const given = cells.find(cell => cell.dataset.numberGiven === 'true');
+        if (cells.length !== ${compact ? 81 : 16} || editable.length !== ${compact ? 50 : 6}
+          || !given || editable.some(cell => !(cell instanceof HTMLButtonElement)
+            || cell.getBoundingClientRect().width < 44 || cell.getBoundingClientRect().height < 44)
+          || document.documentElement.scrollWidth > innerWidth + 1) return 'board layout';
+        if (getComputedStyle(editable[0]).backgroundColor === 'rgba(0, 0, 0, 0)') return 'board theme missing';
+        if (!document.querySelector('.number-grid-progress')?.textContent.includes('60')) return 'timed setting missing';
+        if (${compact}) {
+          const scroller = document.querySelector('[data-number-board-scroll]');
+          if (!scroller || scroller.scrollWidth <= scroller.clientWidth) return 'hard board internal scroll missing';
+        }
+        const givenBefore = given.dataset.numberValue;
+        given.click();
+        if (given.dataset.numberValue !== givenBefore) return 'given changed';
+        const nativeNow = Date.now;
+        Date.now = () => nativeNow() + 120000;
+        await new Promise(resolve => setTimeout(resolve, 350));
+        Date.now = nativeNow;
+        if (!document.querySelector('[data-number-cell]')) return 'clock adjustment ended session';
+        if (!window.__numberFullscreenRequested) return 'fullscreen denial was not exercised';
+        const first = document.querySelector('[data-number-cell][data-number-given="false"]');
+        if (${width} === 768) {
+          first.focus();
+          if (document.activeElement !== first) return 'cell focus failed';
+          window.__numberValueBefore = first.dataset.numberValue;
+          first.addEventListener('click', () => {
+            window.__numberKeyboardClicks = (window.__numberKeyboardClicks ?? 0) + 1;
+            setTimeout(() => { window.__numberKeyboardChanged = first.dataset.numberValue !== window.__numberValueBefore; }, 50);
+          }, { once: true });
+          return true;
+        }
+        first.click();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        if (first.dataset.numberValue !== '1') return 'editable cell did not cycle: ' + first.dataset.numberValue;
+        if (document.documentElement.scrollWidth > innerWidth + 1) return 'page overflow after tap';
+        return true;
+      })()`,
+      ...(width === 768 ? [
+        '--keyPress', 'Enter', '--keyPressReadySelector', '[data-number-cell][data-number-given="false"]',
+        '--browserAssertion', `window.__numberKeyboardClicks === 1 && window.__numberKeyboardChanged === true
+          && document.documentElement.scrollWidth <= innerWidth + 1`,
+      ] : []),
+      '--allSelectors', '[data-number-cell]',
+      '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px number grid: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
+test('Brave records one Sudoku entry victory inside Hub without canvas', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Hub number-grid check.');
+  const uploads = [];
+  const server = createServer((request, response) => {
+    if (request.url === '/api/records' && request.method === 'POST') {
+      let body = '';
+      request.on('data', chunk => { body += chunk; });
+      request.on('end', () => {
+        uploads.push(JSON.parse(body));
+        response.writeHead(201, { 'Content-Type': 'application/json' }).end('{"ok":true}');
+      });
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`,
+    '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=en',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+      Math.random = () => 0;
+      HTMLElement.prototype.requestFullscreen = () => Promise.reject(new DOMException('Denied', 'NotAllowedError'));`,
+    '--browserScenario', `(async () => {
+      const waitFor = async (find, timeoutMs = 10000) => {
+        const deadline = Date.now() + timeoutMs;
+        while (!find() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+        return find();
+      };
+      const launch = await waitFor(() => document.querySelector('.official-game-card[data-runtime-id="sudoku"] button'));
+      if (!launch) return 'lobby card missing';
+      launch.click();
+      const settings = await waitFor(() => document.querySelector('dialog.training-overlay-config form'));
+      if (!settings) return 'Hub settings missing';
+      const difficulty = settings.querySelector('select');
+      if (!difficulty) return 'difficulty missing';
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
+      difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 50));
+      settings.querySelector('button[type="submit"]').click();
+      const start = await waitFor(() => document.querySelector('dialog.training-overlay-runtime iframe')?.contentDocument
+        ?.querySelector('.training-rules .config-start-btn'));
+      if (!start) return 'rules missing';
+      const game = start.ownerDocument;
+      start.click();
+      const cells = await waitFor(() => {
+        const found = [...game.querySelectorAll('[data-number-cell]')];
+        return found.length ? found : null;
+      });
+      if (!cells || cells.length !== 16 || cells.filter(cell => cell.dataset.numberGiven === 'false').length !== 6)
+        return 'Latin board missing';
+      for (const index of [1, 2, 3, 4, 5, 6]) {
+        const expected = String((Math.floor(index / 4) + index % 4) % 4 + 1);
+        for (let tap = 0; tap < 5 && cells[index].dataset.numberValue !== expected; tap += 1) {
+          cells[index].click();
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+        if (cells[index].dataset.numberValue !== expected && index !== 6)
+          return 'number cycling failed at ' + index + ': ' + cells[index].dataset.numberValue + ' != ' + expected;
+      }
+      const score = await waitFor(() => document.querySelector('.training-overlay-score table'));
+      if (!score) return 'Hub score missing';
+      if (!await waitFor(() => document.querySelector('.training-score-toolbar [role="status"]')
+        ?.textContent.includes('Session record saved.'))) return 'Hub save incomplete';
+      return score.querySelectorAll('thead th').length === 8
+        && !document.querySelector('.training-overlay-score iframe')
+        && document.documentElement.scrollWidth <= innerWidth + 1;
+    })()`,
+    '--allSelectors', '.training-overlay-score table',
+    '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 0, `Hub Sudoku entry: ${result.stdout}\n${result.stderr}`);
+  assert.equal(uploads.length, 1, 'a Hub game saves exactly once');
+  const score = uploads[0]?.record?.score;
+  assert.deepEqual(Object.keys(score?.summary ?? {}), [
+    'duration', 'moves', 'completed', 'errors', 'boardSize', 'puzzleKind', 'initialBlanks',
+  ]);
+  assert.ok(Object.values(score.summary).every(value => typeof value === 'number' && Number.isFinite(value)));
+  assert.deepEqual([score.summary.moves, score.summary.completed, score.summary.errors,
+    score.summary.boardSize, score.summary.puzzleKind, score.summary.initialBlanks],
+  [18, 1, 3, 4, 0, 6]);
+});
+
 test('Brave shows a retry when an embedded game never reports ready', async (context) => {
   assert.ok(bravePath, 'Brave is required for the embedded loading check.');
   const server = createServer((request, response) => {

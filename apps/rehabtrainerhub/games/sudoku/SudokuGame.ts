@@ -1,1 +1,1 @@
-export * from './runtime/cognitive/languageNeutralGames';
+export * from './runtime/cognitive/numberGridLogic';
