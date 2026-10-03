@@ -9,8 +9,8 @@
         "en": "Session settings"
       },
       "description": {
-        "zh-TW": "記錄當次操作表現。隨機題目、對手與時間上限均可能影響結果；打亂步數不等於最短解。",
-        "en": "Records task performance. Random puzzles, opponents and time limits affect results; scramble steps are not optimal solution lengths."
+        "zh-TW": "沿著迷宮通道，從起點移動到最遠的終點。每局會產生不同路線，可選擇是否設定時間限制。",
+        "en": "Navigate the maze from its start to the farthest goal through open passages. Each session generates a new route; a time limit is optional."
       },
       "fields": [
         {
@@ -21,8 +21,8 @@
             "en": "Maze size"
           },
           "description": {
-            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
-            "en": "These conditions alter the demands listed below; analyze conditions separately."
+            "zh-TW": "選擇 8、10 或 12 格邊長的迷宮。",
+            "en": "Choose a maze with 8, 10, or 12 cells per side."
           },
           "default": "medium",
           "options": [

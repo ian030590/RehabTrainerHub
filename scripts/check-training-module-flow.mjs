@@ -210,13 +210,6 @@ for (const zoomToken of ['handleCanvasWheel', 'pinchStartRef', 'minBoardZoom', '
   assert.ok(minesweeperSource.includes(zoomToken), `Minesweeper responsive zoom is missing "${zoomToken}".`);
 }
 
-const cognitiveUtilsSource = readFileSync(
-  resolve(moduleRoot, 'maze/runtime/cognitive/utils.ts'),
-  'utf8',
-);
-assert.ok(cognitiveUtilsSource.includes('cognitiveBoardWidthRatio = 0.75'), 'Cognitive boards must use at most 75% of viewport width.');
-assert.ok(cognitiveUtilsSource.includes('cognitiveBoardHeightRatio = 1'), 'Cognitive boards must use at most 100% of viewport height.');
-
 const referenceCognitiveSource = readFileSync(
   resolve(moduleRoot, 'maze/runtime/cognitive/ReferenceCognitiveGame.tsx'),
   'utf8',
@@ -225,8 +218,7 @@ const mobileControlsSource = readFileSync(
   resolve(repoRoot, 'packages/ui/src/components/MobileTouchControls.tsx'),
   'utf8',
 );
-assert.ok(referenceCognitiveSource.includes('MobileTouchControls'), 'Maze must expose touch direction controls while playing.');
-assert.ok(!referenceCognitiveSource.includes("stateRef.current?.kind === 'sokoban'"), 'Retired Sokoban controls must not remain.');
+assert.ok(referenceCognitiveSource.includes('MobileDirectionPad'), 'Maze must expose touch direction controls while playing.');
 assert.ok(mobileControlsSource.includes('<svg'), 'Mobile direction controls must use SVG icons.');
 assert.ok(!mobileControlsSource.includes("up: '↑'"), 'Mobile direction controls must not use arrow glyphs or emoji.');
 
@@ -367,16 +359,11 @@ const implementationGroups = [
     files: [file],
     tokens: ['ExpFactoryGame', 'sourceCommit:'],
   })),
-  ...ReferenceCognitiveCatalogIds().map(id => ({
-    ids: [id],
-    files: [resolve(moduleRoot, id.split(':')[1], 'runtime/cognitive/ReferenceCognitiveGame.tsx')],
-    tokens: [
-      "('rules')",
-      "setPhase('playing')",
-      "phase === 'results'",
-      'TrainingResultActions',
-    ],
-  })),
+  {
+    ids: ['brain:maze'],
+    files: ['maze/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-maze-cell'],
+  },
   {
     ids: ['brain:hex'],
     files: ['hex/runtime/cognitive/ReferenceCognitiveGame.tsx'],
@@ -523,18 +510,11 @@ const jsPsychLifecycleGroups = [
     forbiddenTokens: ['WriteJsPsychData'],
   },
   {
-    status: 'external-runtime-adapter',
-    ids: ReferenceCognitiveCatalogIds(),
-    files: [resolve(moduleRoot, 'maze/runtime/cognitive/ReferenceCognitiveGame.tsx')],
-    tokens: [
-      'initJsPsych(',
-      'new JsPsychExternalLifecycle(',
-      'jsPsychLifecycleRef.current?.start({',
-      'jsPsychLifecycleRef.current?.finish(',
-      'jsPsychLifecycleRef.current?.abort({',
-      'lifecycle.dispose()',
-    ],
-    forbiddenTokens: ['WriteJsPsychData'],
+    status: 'browser-native',
+    ids: ['brain:maze'],
+    files: ['maze/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ['HandleMazeTap(', 'UpdateMazeTimedState(', 'SaveTrainingSessionRecord('],
+    forbiddenTokens: ['initJsPsych(', "from 'pixi.js'"],
   },
   {
     status: 'browser-native',
@@ -679,23 +659,6 @@ for (const { files, forbiddenTokens = [], ids, status, tokens } of jsPsychLifecy
   }
 }
 
-const externalLifecycleAdapterSource = readFileSync(
-  resolve(moduleRoot, 'maze/runtime/jsPsychLifecycle.ts'),
-  'utf8',
-);
-for (const token of [
-  'implements JsPsychPlugin',
-  'this.jsPsych.run([',
-  'this.jsPsych.finishTrial(',
-  'this.jsPsych.abortExperiment(',
-  'this.jsPsych.pluginAPI.clearAllTimeouts()',
-]) {
-  assert.ok(
-    externalLifecycleAdapterSource.includes(token),
-    `The renderer-independent jsPsych lifecycle adapter is missing "${token}".`,
-  );
-}
-
 const pendingJsPsychIds = jsPsychLifecycleGroups
   .filter(({ status }) => status === 'utility-only-pending')
   .flatMap(({ ids }) => ids);
@@ -794,12 +757,6 @@ console.log(
     ? `jsPsych lifecycle: ${catalogIds.length - pendingJsPsychIds.length} managed by native timelines/adapters; ${pendingJsPsychIds.length} still utility-only (${pendingJsPsychIds.join(', ')}).`
     : `Runtime lifecycle: all ${catalogIds.length} modules are classified; none remain utility-only.`,
 );
-
-function ReferenceCognitiveCatalogIds() {
-  return [
-    'brain:maze',
-  ];
-}
 
 function ListTypeScriptFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {

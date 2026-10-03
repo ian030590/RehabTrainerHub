@@ -82,7 +82,7 @@ const manifestEntries: ReadonlyArray<readonly [
   ['brain:connect4', 'connect4/Connect4Game.ts', 'none', 'browser-native'],
   ['brain:dots-and-boxes', 'dots-and-boxes/DotsAndBoxesGame.ts', 'none', 'browser-native'],
   ['brain:hex', 'hex/HexGame.ts', 'none', 'browser-native'],
-  ['brain:maze', 'maze/MazeGame.ts', 'none', 'external-runtime-adapter'],
+  ['brain:maze', 'maze/MazeGame.ts', 'none', 'browser-native'],
   ['mouth:tongue-catch', 'tongue-catch/TongueCatchGame.tsx', 'camera', 'external-runtime-adapter'],
 ];
 

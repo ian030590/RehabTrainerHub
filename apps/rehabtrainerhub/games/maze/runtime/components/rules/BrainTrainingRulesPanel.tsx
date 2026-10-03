@@ -1,44 +1,37 @@
-// Canonical Hub-owned brain module rules.
 import type { TrainingConfigSummaryItem } from '@rehab-trainer/ui';
 import { TrainingRulesPanel } from '@rehab-trainer/ui';
 import { useT } from '@rehab-trainer/ui/components/i18n';
 import type { ReactNode } from 'react';
-interface BrainTrainingRulesPanelProps {
-    gameId: string;
-    title: ReactNode;
-    summaryTitle?: ReactNode;
-    summaryItems?: readonly TrainingConfigSummaryItem[];
-    className?: string;
-    onStart: () => void;
-    onBack: () => void;
-}
-export function BrainTrainingRulesPanel({ gameId, title, summaryTitle, summaryItems, className, onStart, onBack, }: BrainTrainingRulesPanelProps) {
-    const { lang } = useT();
-    const labels = GetRuleLabels(lang);
-    return (<TrainingRulesPanel className={className} label={labels.label} title={title} summaryTitle={summaryTitle} summaryItems={summaryItems} sections={GetRuleSections(gameId, lang)} startLabel={labels.start} backLabel={labels.back} onStart={onStart} onBack={onBack}/>);
-}
-function GetRuleLabels(lang: 'zh' | 'en') {
-    return lang === 'en'
-        ? { label: 'Game Rules', start: 'Start Training', back: 'Back to Settings' }
-        : { label: '遊戲規則說明', start: '開始訓練', back: '回設定' };
-}
-function GetRuleSections(gameId: string, lang: 'zh' | 'en') {
-    const isZh = lang !== 'en';
-    switch (gameId) {
-        case 'maze':
-            return BuildRules(isZh, '在迷宮中從起點走到終點。', 'Navigate from the start to the goal.', ['可用方向鍵移動，也可點擊相鄰可通行格移動。', '碰到牆或點非相鄰格會記為錯誤。', '每次訓練會生成不同迷宮、起點與終點。'], ['Use arrow keys or tap an adjacent open cell to move.', 'Walls or non-adjacent taps count as errors.', 'Each session generates a new maze with varied start and goal cells.']);
-        default:
-            return BuildRules(isZh, '依畫面提示完成任務，訓練注意力、控制與反應。', 'Follow the on-screen task to train attention, control, and response.', ['完成設定目標後進入結算。'], ['The session moves to results when the configured goal is complete.']);
-    }
-}
-function BuildRules(isZh: boolean, zhDescription: string, enDescription: string, zhItems: string[], enItems: string[]) {
-    return isZh
-        ? [
-            { title: '遊玩方式', description: zhDescription, items: zhItems },
-            { title: '成績計算', description: '結算會記錄完成狀態、用時、成功次數與錯誤次數。' },
-        ]
-        : [
-            { title: 'How to Play', description: enDescription, items: enItems },
-            { title: 'Results', description: 'The result records completion status, elapsed time, successes, and errors.' },
-        ];
+
+export function BrainTrainingRulesPanel({ title, summaryTitle, summaryItems, onStart, onBack }: {
+  gameId: 'maze';
+  title: ReactNode;
+  summaryTitle?: ReactNode;
+  summaryItems?: readonly TrainingConfigSummaryItem[];
+  onStart: () => void;
+  onBack: () => void;
+}) {
+  const { lang } = useT();
+  const en = lang === 'en';
+  return <TrainingRulesPanel
+    label={en ? 'Game Rules' : '遊戲規則'} title={title} summaryTitle={summaryTitle}
+    summaryItems={summaryItems}
+    sections={en ? [
+      { title: 'How to Play', description: 'Navigate from the start to the farthest goal.', items: [
+        'Use arrow keys, the touch direction pad, or tap an adjacent open cell to move.',
+        'Walls and non-adjacent taps count as errors.',
+        'Each session generates a new maze. An optional time limit ends an incomplete run.',
+      ] },
+      { title: 'Results', description: 'The result records completion, elapsed time, moves, and errors.' },
+    ] : [
+      { title: '遊玩方式', description: '沿通道從起點走到最遠的終點。', items: [
+        '使用方向鍵、觸控方向盤或點選相鄰可通行格移動。',
+        '撞牆或點選非相鄰格會記為錯誤。',
+        '每局會產生新迷宮；設定時間限制時，逾時便結束本局。',
+      ] },
+      { title: '結果', description: '記錄完成狀態、經過時間、移動次數與錯誤次數。' },
+    ]}
+    startLabel={en ? 'Start Training' : '開始練習'}
+    backLabel={en ? 'Back to Settings' : '返回設定'} onStart={onStart} onBack={onBack}
+  />;
 }

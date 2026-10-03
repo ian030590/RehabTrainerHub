@@ -14,9 +14,8 @@ test('Dots and Boxes is classified as a browser-native game', async () => {
   const flow = await readFile('scripts/check-training-module-flow.mjs', 'utf8');
   assert.equal((flow.match(/ids: \['brain:dots-and-boxes'\]/g) ?? []).length, 2,
     'Dots and Boxes must have one implementation check and one browser-native lifecycle check');
-  const catalog = flow.slice(flow.indexOf('function ReferenceCognitiveCatalogIds()'));
-  assert.doesNotMatch(catalog, /'brain:dots-and-boxes'/,
-    'Dots and Boxes no longer belongs to the Pixi reference runtime group');
+  assert.doesNotMatch(flow, /ReferenceCognitiveCatalogIds/,
+    'the retired Pixi reference runtime group must be removed');
 });
 
 test('Dots and Boxes entry and runtime use native logic without Pixi or jsPsych', async () => {

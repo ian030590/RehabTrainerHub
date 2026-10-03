@@ -107,23 +107,12 @@ test('Simon life resolution only ends at zero and otherwise replays', async () =
   assert.equal(finalLifeState.status, 'ended');
 });
 
-test('reference cognitive games persist and render complete per-trial contracts', async () => {
-  const [reference, reaction, target, trialLogic] = await Promise.all([
-    readFile(`${gamesRoot}/maze/runtime/cognitive/ReferenceCognitiveGame.tsx`, 'utf8'),
+test('native cognitive games retain complete per-trial contracts', async () => {
+  const [reaction, target, trialLogic] = await Promise.all([
     readFile(reactionPath, 'utf8'),
     readFile(targetPath, 'utf8'),
     readFile(trialRecordsPath, 'utf8'),
   ]);
-
-  assert.match(reference, /trialJsPsychHostRef/);
-  assert.match(reference, /cognitiveTrialLifecycleRef/);
-  assert.match(reference, /lifecycle\.start\(\{/);
-  assert.match(reference, /lifecycle\.finish\(data\)/);
-  assert.doesNotMatch(reference, /\.data\.write/);
-  assert.match(reference, /memoryLength:\s*trial\.memoryLength/);
-  assert.match(reference, /correct:\s*trial\.correct/);
-  assert.match(reference, /durationMs:\s*trial\.durationMs/);
-  assert.match(reference, /CognitiveTrialResultsTable/);
 
   assert.match(reaction, /'false-start'/);
   assert.match(reaction, /'success'/);

@@ -1144,6 +1144,83 @@ test('Brave plays Hex on phone and tablet with canvas, audio, and fullscreen den
   }
 });
 
+test('Brave plays Maze on phone and tablet without canvas or fullscreen', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Maze browser check.');
+  assert.equal((await stat(resolve(outputRoot, 'games/maze/index.html'))).isFile(), true);
+  const server = createServer((request, response) => { void ServeStaticOutput(request, response); });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  for (const width of [320, 390, 768]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/games/maze/`,
+      '--viewportWidth', String(width), '--viewportHeight', width === 320 ? '568' : '844',
+      '--viewportBeforeClick', 'true',
+      '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+        window.AudioContext = class { constructor() { throw new Error('Audio denied'); } };
+        HTMLElement.prototype.requestFullscreen = () => {
+          window.__mazeFullscreenRequested = true;
+          return Promise.reject(new DOMException('Denied', 'NotAllowedError'));
+        };`,
+      '--browserScenario', `(async () => {
+        const waitFor = async (find, timeoutMs = 10000) => {
+          const deadline = Date.now() + timeoutMs;
+          while (!find() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+          return find();
+        };
+        const settings = await waitFor(() => document.querySelector('.game-settings-form'));
+        const difficulty = settings?.querySelector('select');
+        if (!difficulty) return 'difficulty setting missing';
+        Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
+        difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 50));
+        settings.querySelector('button[type="submit"]').click();
+        const start = await waitFor(() => document.querySelector('.training-rules .config-start-btn'));
+        if (!start) return 'rules missing';
+        start.click();
+        const cells = await waitFor(() => {
+          const found = [...document.querySelectorAll('[data-maze-cell]')];
+          return found.length ? found : null;
+        });
+        const current = document.querySelector('[data-maze-current="true"]');
+        const goal = document.querySelector('[data-maze-goal="true"]');
+        const scroller = document.querySelector('[data-maze-board-scroll]');
+        const pad = [...document.querySelectorAll('.maze-dpad .mobile-touch-button')];
+        if (!cells || cells.length !== 64 || !current || !goal || !scroller || pad.length !== 4
+          || cells.some(cell => !(cell instanceof HTMLButtonElement)
+            || !scroller.contains(cell) || !cell.getAttribute('aria-label')
+            || cell.getBoundingClientRect().width < 44 || cell.getBoundingClientRect().height < 44)
+          || pad.some(button => button.getBoundingClientRect().width < 44)
+          || !['auto', 'scroll'].includes(getComputedStyle(scroller).overflowX)
+          || document.documentElement.scrollWidth > innerWidth + 1) return 'board layout';
+        if (!window.__mazeFullscreenRequested) return 'fullscreen denial was not exercised';
+        const index = Number(current.getAttribute('data-maze-cell'));
+        const row = Math.floor(index / 8), col = index % 8;
+        const directions = [
+          ['ArrowUp', index - 8, row > 0, current.style.borderTopColor],
+          ['ArrowRight', index + 1, col < 7, current.style.borderRightColor],
+          ['ArrowDown', index + 8, row < 7, current.style.borderBottomColor],
+          ['ArrowLeft', index - 1, col > 0, current.style.borderLeftColor],
+        ];
+        const open = directions.find(([, , inside, wall]) => inside && wall === 'transparent');
+        if (!open) return 'start has no open passage';
+        const next = cells[open[1]];
+        next.click();
+        if (!await waitFor(() => next.getAttribute('data-maze-current') === 'true', 1500))
+          return 'tap did not move through open passage';
+        const reverse = { ArrowUp: 'ArrowDown', ArrowRight: 'ArrowLeft',
+          ArrowDown: 'ArrowUp', ArrowLeft: 'ArrowRight' }[open[0]];
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: reverse, bubbles: true }));
+        if (!await waitFor(() => current.getAttribute('data-maze-current') === 'true', 1500))
+          return 'keyboard direction did not move';
+        return document.documentElement.scrollWidth <= innerWidth + 1;
+      })()`,
+      '--allSelectors', '[data-maze-cell],.maze-status,.maze-dpad', '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px Maze: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
 test('Brave records one complete Hex game inside Hub', async (context) => {
   assert.ok(bravePath, 'Brave is required for the Hub Hex check.');
   const uploads = [];
@@ -1223,6 +1300,104 @@ test('Brave records one complete Hex game inside Hub', async (context) => {
   assert.ok(Object.values(score).every(value => typeof value === 'number' && Number.isFinite(value)));
   assert.equal(score.boardSize, 5);
   assert.ok(score.moves > 0 && score.moves + score.opponentMoves <= 25);
+  assert.equal(score.errors, 0);
+});
+
+test('Brave records one complete Maze route inside Hub', async (context) => {
+  assert.ok(bravePath, 'Brave is required for the Hub Maze check.');
+  const uploads = [];
+  const server = createServer((request, response) => {
+    if (request.url === '/api/records' && request.method === 'POST') {
+      let body = '';
+      request.on('data', chunk => { body += chunk; });
+      request.on('end', () => {
+        uploads.push(JSON.parse(body));
+        response.writeHead(201, { 'Content-Type': 'application/json' }).end('{"ok":true}');
+      });
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`,
+    '--storage', 'rehab_hub_tour_seen=1,rehab-trainer-hub-language=en',
+    '--viewportWidth', '390', '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+    '--startupScript', `HTMLCanvasElement.prototype.getContext = () => null;
+      window.AudioContext = class { constructor() { throw new Error('Audio denied'); } };
+      HTMLElement.prototype.requestFullscreen = () => Promise.reject(new DOMException('Denied', 'NotAllowedError'));`,
+    '--browserScenario', `(async () => {
+      const waitFor = async (find, timeoutMs = 10000) => {
+        const deadline = Date.now() + timeoutMs;
+        while (!find() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+        return find();
+      };
+      const launch = await waitFor(() => document.querySelector('.official-game-card[data-runtime-id="maze"] button'));
+      if (!launch) return 'lobby card missing';
+      launch.click();
+      const settings = await waitFor(() => document.querySelector('dialog.training-overlay-config form'));
+      const difficulty = settings?.querySelector('select');
+      if (!difficulty) return 'Hub difficulty missing';
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(difficulty, '0');
+      difficulty.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 50));
+      settings.querySelector('button[type="submit"]').click();
+      const start = await waitFor(() => document.querySelector('dialog.training-overlay-runtime iframe')?.contentDocument
+        ?.querySelector('.training-rules .config-start-btn'));
+      if (!start) return 'rules missing';
+      const game = start.ownerDocument;
+      start.click();
+      if (!await waitFor(() => game.querySelectorAll('[data-maze-cell]').length === 64)) return 'maze missing';
+      const cells = [...game.querySelectorAll('[data-maze-cell]')];
+      const source = cells.findIndex(cell => cell.getAttribute('data-maze-current') === 'true');
+      const goal = cells.findIndex(cell => cell.getAttribute('data-maze-goal') === 'true');
+      if (source < 0 || goal < 0) return 'start or goal missing';
+      const queue = [source];
+      const previous = new Map([[source, null]]);
+      for (const index of queue) {
+        if (index === goal) break;
+        const row = Math.floor(index / 8), col = index % 8;
+        const cell = cells[index];
+        const neighbors = [
+          [index - 8, row > 0, cell.style.borderTopColor],
+          [index + 1, col < 7, cell.style.borderRightColor],
+          [index + 8, row < 7, cell.style.borderBottomColor],
+          [index - 1, col > 0, cell.style.borderLeftColor],
+        ];
+        for (const [next, inside, wall] of neighbors) {
+          if (!inside || wall !== 'transparent' || previous.has(next)) continue;
+          previous.set(next, index);
+          queue.push(next);
+        }
+      }
+      if (!previous.has(goal)) return 'goal unreachable';
+      const route = [];
+      for (let current = goal; current !== source; current = previous.get(current)) route.unshift(current);
+      for (const index of route) {
+        cells[index].click();
+        if (index !== goal && !await waitFor(() => cells[index].getAttribute('data-maze-current') === 'true', 1500))
+          return 'route stopped at ' + index;
+      }
+      const score = await waitFor(() => document.querySelector('.training-overlay-score table'), 10000);
+      if (!score) return 'Hub score missing';
+      if (!await waitFor(() => document.querySelector('.training-score-toolbar [role="status"]')
+        ?.textContent.includes('Session record saved.'))) return 'Hub save incomplete';
+      return score.querySelectorAll('thead th').length === 6
+        && !document.querySelector('.training-overlay-score iframe')
+        && document.documentElement.scrollWidth <= innerWidth + 1;
+    })()`,
+    '--allSelectors', '.training-overlay-score table', '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 0, `Hub Maze: ${result.stdout}\n${result.stderr}`);
+  assert.equal(uploads.length, 1, 'a Hub game saves exactly once');
+  const score = uploads[0]?.record?.score?.summary;
+  assert.deepEqual(Object.keys(score ?? {}), ['duration', 'moves', 'completed', 'errors', 'boardSize']);
+  assert.ok(Object.values(score).every(value => typeof value === 'number' && Number.isFinite(value)));
+  assert.equal(score.completed, 1);
+  assert.equal(score.boardSize, 8);
+  assert.ok(score.moves > 0);
   assert.equal(score.errors, 0);
 });
 

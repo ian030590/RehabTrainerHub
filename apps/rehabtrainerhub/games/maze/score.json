@@ -52,8 +52,8 @@
     {
       "key": "boardSize",
       "label": {
-        "zh": "棋盤每邊格／點數",
-        "en": "Board side cells or dots"
+        "zh": "迷宮每邊格數",
+        "en": "Maze side cells"
       },
       "sources": [
         "Board_Size"
@@ -105,8 +105,8 @@
     {
       "key": "boardSize",
       "label": {
-        "zh": "棋盤每邊格／點數",
-        "en": "Board side cells or dots"
+        "zh": "迷宮每邊格數",
+        "en": "Maze side cells"
       },
       "sources": [
         "Board_Size"

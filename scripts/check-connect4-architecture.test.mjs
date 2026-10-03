@@ -14,8 +14,8 @@ test('Connect4 is classified as a browser-native game', async () => {
   const flow = await readFile('scripts/check-training-module-flow.mjs', 'utf8');
   assert.equal((flow.match(/ids: \['brain:connect4'\]/g) ?? []).length, 2,
     'Connect4 must have one implementation check and one browser-native lifecycle check');
-  const catalog = flow.slice(flow.indexOf('function ReferenceCognitiveCatalogIds()'));
-  assert.doesNotMatch(catalog, /'brain:connect4'/, 'Connect4 no longer belongs to the Pixi reference runtime group');
+  assert.doesNotMatch(flow, /ReferenceCognitiveCatalogIds/,
+    'the retired Pixi reference runtime group must be removed');
 });
 
 test('Connect4 entry and runtime use its native logic without Pixi or jsPsych', async () => {
