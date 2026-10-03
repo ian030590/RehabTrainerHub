@@ -217,11 +217,11 @@ const cognitiveUtilsSource = readFileSync(
 assert.ok(cognitiveUtilsSource.includes('cognitiveBoardWidthRatio = 0.75'), 'Cognitive boards must use at most 75% of viewport width.');
 assert.ok(cognitiveUtilsSource.includes('cognitiveBoardHeightRatio = 1'), 'Cognitive boards must use at most 100% of viewport height.');
 
-const languageNeutralSource = ['connect4', 'dots-and-boxes', 'hex'].map((id) => readFileSync(
+const languageNeutralSource = ['dots-and-boxes', 'hex'].map((id) => readFileSync(
   resolve(moduleRoot, `${id}/runtime/cognitive/languageNeutralGames.ts`), 'utf8',
 )).join('\n');
 assert.ok(languageNeutralSource.includes('const aiTurnDelaySeconds = 1'), 'Board-game opponents must wait one second.');
-for (const game of ['Connect4', 'DotsAndBoxes', 'Hex']) {
+for (const game of ['DotsAndBoxes', 'Hex']) {
   assert.ok(languageNeutralSource.includes(`Take${game}AiTurn`), `${game} must defer its computer move through the timed update loop.`);
 }
 
@@ -386,6 +386,11 @@ const implementationGroups = [
     ],
   })),
   {
+    ids: ['brain:connect4'],
+    files: ['connect4/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-connect-column'],
+  },
+  {
     ids: ['brain:reaction-time'],
     files: ['reaction-time/runtime/cognitive/ReferenceCognitiveGame.tsx'],
     tokens: ["('rules')", "ChangePhase('playing')", "phase === 'results'", 'TrainingResultActions', 'data-reaction-target'],
@@ -528,6 +533,13 @@ const jsPsychLifecycleGroups = [
       'lifecycle.dispose()',
     ],
     forbiddenTokens: ['WriteJsPsychData'],
+  },
+  {
+    status: 'browser-native',
+    ids: ['brain:connect4'],
+    files: ['connect4/runtime/cognitive/ReferenceCognitiveGame.tsx'],
+    tokens: ['HandleConnect4Tap(', 'UpdateConnect4TimedState(', 'SaveTrainingSessionRecord('],
+    forbiddenTokens: ['initJsPsych(', "from 'pixi.js'"],
   },
   {
     status: 'browser-native',
@@ -769,7 +781,6 @@ console.log(
 
 function ReferenceCognitiveCatalogIds() {
   return [
-    'brain:connect4',
     'brain:dots-and-boxes',
     'brain:hex',
     'brain:maze',

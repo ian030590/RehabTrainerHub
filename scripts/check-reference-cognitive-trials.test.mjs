@@ -152,12 +152,27 @@ test('number grids stay silent until completion and board games preserve draws',
   assert.doesNotMatch(numberTap, /PlaySuccessSound/,
     'number-grid edits must not trigger per-cell success audio');
 
-  const source = (await Promise.all(['connect4', 'hex', 'dots-and-boxes'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/languageNeutralGames.ts`, 'utf8')))).join('\n');
+  const { CreateConnect4State, FindConnect4Line, HandleConnect4Tap, UpdateConnect4TimedState } =
+    await ImportStandaloneTypeScriptModule(`${gamesRoot}/connect4/runtime/cognitive/connect4Logic.ts`);
+  const fullBoard = ['PAPAPAP', 'APAPAPA', 'PAPAPAP', 'PAPAPAP', 'PAPAPAP', 'APAPAPA'].join('').split('');
+  assert.equal(FindConnect4Line(fullBoard, 'P'), null);
+  assert.equal(FindConnect4Line(fullBoard, 'A'), null);
+  const playerDraw = CreateConnect4State();
+  playerDraw.board = [...fullBoard];
+  playerDraw.board[0] = null;
+  const playerEndings = [];
+  HandleConnect4Tap(playerDraw, 0, 1, result => playerEndings.push(result));
+  assert.deepEqual([playerDraw.board[0], playerDraw.moves, playerEndings], ['P', 1, ['Draw']]);
 
-  const connect4Player = SourceBetween(source, 'function HandleConnect4Tap', 'function TakeConnect4AiTurn');
-  const connect4Ai = SourceBetween(source, 'function TakeConnect4AiTurn', 'function DrawConnect4');
-  assert.match(connect4Player, /state\.board\.every\(Boolean\)[\s\S]*?finishGame\('Draw'\)/);
-  assert.match(connect4Ai, /state\.board\.every\(Boolean\)[\s\S]*?finishGame\?\.\('Draw'\)/);
+  const aiDraw = CreateConnect4State();
+  aiDraw.board = fullBoard.map(mark => mark === 'P' ? 'A' : 'P');
+  aiDraw.board[0] = null;
+  aiDraw.aiMoveAt = 2;
+  const aiEndings = [];
+  UpdateConnect4TimedState(aiDraw, 2, 'easy', result => aiEndings.push(result), () => 0);
+  assert.deepEqual([aiDraw.board[0], aiDraw.aiMoves, aiEndings], ['A', 1, ['Draw']]);
+
+  const source = (await Promise.all(['hex', 'dots-and-boxes'].map(id => readFile(`${gamesRoot}/${id}/runtime/cognitive/languageNeutralGames.ts`, 'utf8')))).join('\n');
 
   const hexPlayer = SourceBetween(source, 'function HandleHexTap', 'function TakeHexAiTurn');
   const hexAi = SourceBetween(source, 'function TakeHexAiTurn', 'function DrawHex');

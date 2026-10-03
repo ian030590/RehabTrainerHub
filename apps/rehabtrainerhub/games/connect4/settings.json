@@ -9,8 +9,8 @@
         "en": "Session settings"
       },
       "description": {
-        "zh-TW": "記錄當次操作表現。隨機題目、對手與時間上限均可能影響結果；打亂步數不等於最短解。",
-        "en": "Records task performance. Random puzzles, opponents and time limits affect results; scramble steps are not optimal solution lengths."
+        "zh-TW": "選擇一欄投入黃棋，與電腦輪流下棋；先連成四子者獲勝。記錄當次步數、結果與時間。",
+        "en": "Choose a column to drop a yellow disc against the computer. Connect four first to win; the session records moves, result and time."
       },
       "fields": [
         {
@@ -21,8 +21,8 @@
             "en": "Opponent policy"
           },
           "description": {
-            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
-            "en": "These conditions alter the demands listed below; analyze conditions separately."
+            "zh-TW": "選擇電腦如何決定落子的欄位；棋盤固定為 7 欄、6 列。",
+            "en": "Choose how the computer selects a column; the board stays seven columns by six rows."
           },
           "default": "medium",
           "options": [
@@ -57,8 +57,8 @@
             "en": "Sound feedback"
           },
           "description": {
-            "zh-TW": "在操作與結果時播放提示音。",
-            "en": "Play audio cues during interactions and results."
+            "zh-TW": "遊戲結束時播放聲音提示。",
+            "en": "Play an audio cue when the game ends."
           },
           "default": true
         }
