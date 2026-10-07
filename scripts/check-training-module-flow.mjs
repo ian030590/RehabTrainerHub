@@ -657,11 +657,6 @@ for (const [catalogId, file] of Object.entries(nativeTimelinePermissionImplement
 }
 
 const turboConfig = JSON.parse(readFileSync(resolve(repoRoot, 'turbo.json'), 'utf8'));
-assert.ok(
-  turboConfig.globalDependencies?.includes('apps/rehabtrainerhub/games/**'),
-  'Turbo must invalidate Trainer builds when canonical Hub module sources change.',
-);
-
 console.log(
   `Training flow contract passed for ${catalogIds.length} Hub-owned games and ${implementationGroups.length} game flows.`,
 );

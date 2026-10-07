@@ -13,9 +13,10 @@ npm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
 
 - `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、內建訓練 runtime、API、審核後台、開發者入口）。
 - `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），負責以 sandboxed iframe 載入第三方 HTML/ZIP 遊戲並提供 PWA。
-- `apps/rehabtrainerhub/games/{gameId}/`：各遊戲獨立擁有 Vite entry、runtime、規則、i18n 與 `settings.json`；不是 workspace app。共用 React shell 依 JSON 產生 Hub 與單一遊戲 PWA 的設定表單。
+- `apps/rehabtrainerhub/games/{gameId}/`：各遊戲為獨立的 Turborepo Workspace，擁有自己的 Vite entry、runtime、規則與 i18n。遊戲**嚴禁使用或引入共用元件**（如 `packages/ui`），只能透過 `settings.json` 與 `score.json` 與 Hub 溝通。Hub 負責依據這些 JSON 產生設定表單與結果頁面。
+  **新增遊戲與 Workspace 同步：** 由於遊戲被抽離為獨立 Workspace 以達成 O(1) 快取建置，當新增遊戲資料夾並加入 `catalog.ts` 後，請務必執行 `npm run sync:games`。此腳本會自動為新遊戲產生 `package.json`、`vite.config.ts`，並將其註冊到 Hub 的依賴樹中，開發者完全不需要手動修改任何 `package.json`。
 
-共用 UI、auth、layout、settings、storage、gamePlatform 規範：`packages/ui/src`。
+主應用程式 (Hub) 的共用 UI、auth、layout、settings、storage、gamePlatform 規範：`packages/ui/src`。遊戲不得依賴此目錄。
 第三方遊戲通訊橋樑由 `apps/usergamerunner/runtime/` 維護；RehabBuilder 規劃負責視覺化遊戲製作與 Hub 套件匯出，本倉庫不提供開發者 SDK 套件。
 靜態資產：各 app `public/`，通常 `public/assets/`。
 D1 migrations：`apps/rehabtrainerhub/migrations/`。
@@ -68,9 +69,9 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 
 ## 共享邏輯優先
 
-可共享的邏輯、UI、樣式、auth、settings、routing helper、footer/navbar 放 `packages/ui/src` 或共用 helper；app 只傳 label、顏色、URL、模組清單等專屬資料。編輯 app-specific 檔案前，先檢查 `TrainerNavbar`、`TrainerAppLayout`、`AuthPanel`、共用 settings utilities/CSS/storage/auth helpers。app 組合共用元件，不分叉版本。
+Hub 的共用邏輯、UI、樣式、auth、settings、routing helper、footer/navbar 放 `packages/ui/src` 或共用 helper；Hub app 組合共用元件，不分叉版本。
 
-玩家訓練 runtime 例外：每個訓練體驗自行擁有 runtime、game loop、renderer/canvas lifecycle、input、jsPsych/Pixi/Three timeline/plugin、刺激與遊戲內 UI。禁止跨模組集中長生命週期引擎狀態、依賴其他模組 runtime helper/視覺規則。只共享 React shell：routing、auth、settings form、layout、navigation、結果組合、renderer-independent utilities。
+但**所有遊戲 (games) 完全獨立，嚴禁引入 `packages/ui` 或任何跨遊戲共用元件**。遊戲僅透過 `settings.json` 定義介面，由 Hub 負責渲染設定表單與路由；訓練結束後，遊戲透過 `score.json` 與訊息橋樑傳遞成績，由 Hub 負責顯示結果。遊戲內部僅保留自身的 game loop、renderer 及專屬邏輯，不得依賴 Hub 或 UI 模組的任何檔案。
 
 Hub 禁止複製/分叉 trainer 設定表單、defaults、validation、rules、runtime。Hub 僅依 training catalog 裝載 trainer-owned config entry；trainer config 變更須自動反映，無需改 Hub。Hub 只負責選擇、container、history、exit、瀏覽器權限委派。Pixi、jsPsych、Three、MediaPipe、TensorFlow runtime/lifecycle 仍屬各模組。
 
@@ -90,7 +91,7 @@ Hub 大廳與 Hub 內建 runtime 使用同一份 module-owned config/runtime：
 只有 Hub 是平台 PWA；每個正式遊戲仍可保留 `/games/{gameId}/` 的獨立 scope。四個內建 runtime 不得有自己的 manifest、canonical、sitemap、下載頁或外部 trainer domain。
 
 共用 shell CSS 放 `packages/ui/src/components/TrainerApp.css` 或 package stylesheet：cards、dialogs、trainer setup、results、tables、routed selection、buttons、forms、layout primitives。App `index.css` 只留產品視覺、遊戲/刺激 renderer、app overrides。搬共用 component 時同步搬 CSS，盡量刪本地重複。
-
+共用 shell CSS 放 `packages/ui/src/components/TrainerApp.css` 或 package stylesheet，僅供 Hub 使用。遊戲只保留自身產品視覺與 renderer 所需的樣式，不得引入共用 CSS。
 Trainers 維持一致檔名/資料夾，例如 `pages/settings/SettingsPage.tsx`、`pages/links/LinksPage.tsx`。相同概念勿用不同本地命名；行為不同時用明確 app-specific 名稱。
 
 ### 遊戲平台與沙盒執行規範

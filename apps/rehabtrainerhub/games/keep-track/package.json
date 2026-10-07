@@ -1,0 +1,12 @@
+{
+  "name": "@rehab-trainer/game-keep-track",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@rehab-trainer/ui": "*"
+  }
+}

@@ -18,7 +18,7 @@ import { initJsPsych } from 'jspsych';
 import { Application,Assets,Container,Sprite,Texture,TilingSprite,type Ticker,} from 'pixi.js';
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
 import { Clamp,FormatTestDate } from './gameUtils';
-import { MotorTrainingRulesPanel } from './runtime/components/rules/MotorTrainingRulesPanel';
+import { AsteroidShieldTutorial } from './rules/AsteroidShieldTutorial';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 type DifficultyId = 'beginner' | 'intermediate' | 'advanced';
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
@@ -803,8 +803,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
 
       {null}
 
-      {phase === 'rules' && (<div className="training-panel">
-          <MotorTrainingRulesPanel gameId="asteroid-shield" title={labels.title} summaryTitle={labels.title} summaryItems={summaryItems} onStart={() => void startGame()} onBack={showConfiguration}/>
+      {phase === 'rules' && (<div className="training-panel" style={{ padding: 0 }}>
+          <AsteroidShieldTutorial title={labels.title} summaryItems={summaryItems} onStart={() => void startGame()} onBack={showConfiguration}/>
         </div>)}
 
       {phase === 'initializing' && (<div className="asteroid-shield-loading-overlay">

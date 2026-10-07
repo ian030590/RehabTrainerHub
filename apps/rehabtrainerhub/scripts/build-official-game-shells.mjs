@@ -1,8 +1,6 @@
-import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm } from 'node:fs/promises';
+﻿import { existsSync } from 'node:fs';
+import { mkdir, readFile, rm, cp } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { build } from 'vite';
-import react from '@vitejs/plugin-react';
 
 const appRoot = resolve(import.meta.dirname, '..');
 const repoRoot = resolve(appRoot, '../..');
@@ -22,33 +20,15 @@ const gameIds = [...catalogSource.matchAll(
   /\{\s*id:\s*'([^']+)',\s*trainer:\s*'([^']+)'/g,
 )].map((m) => m[1]);
 
-console.log(`Building ${gameIds.length} official game shells from games/...`);
+console.log(`Copying ${gameIds.length} built official game shells to Hub output...`);
 
-const reactPlugin = react();
-const concurrency = 4;
+await Promise.all(gameIds.map(async (gameId) => {
+  const gameDistDir = resolve(gamesRoot, gameId, 'dist');
+  const outDir = resolve(shellOutputRoot, gameId);
+  if (!existsSync(gameDistDir)) {
+    throw new Error(`Missing built output for ${gameId}. Expected ${gameDistDir} to exist. Did you run 'turbo build'?`);
+  }
+  await cp(gameDistDir, outDir, { recursive: true });
+}));
 
-for (let i = 0; i < gameIds.length; i += concurrency) {
-  const batch = gameIds.slice(i, i + concurrency);
-  await Promise.all(batch.map(async (gameId) => {
-    const gameSourceDir = resolve(gamesRoot, gameId);
-    await build({
-      root: gameSourceDir,
-      base: './',
-      plugins: [reactPlugin],
-      resolve: {
-        alias: {
-          '@rehab-trainer/ui': resolve(repoRoot, 'packages/ui/src'),
-          '@rehab-trainer/games': gamesRoot,
-          '@rehab-trainer/hub-modules': gamesRoot,
-        },
-      },
-      build: {
-        assetsDir: 'assets',
-        emptyOutDir: true,
-        outDir: resolve(shellOutputRoot, gameId),
-      },
-      logLevel: 'error',
-    });
-  }));
-  console.log(`Built ${Math.min(i + concurrency, gameIds.length)}/${gameIds.length} official game shells.`);
-}
+console.log(`Successfully copied ${gameIds.length} official game shells.`);

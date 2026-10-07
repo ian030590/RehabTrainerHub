@@ -8,13 +8,14 @@
   "description": "Turborepo monorepo for Rehab Trainer Hub and its isolated user-game runner.",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "apps/rehabtrainerhub/games/*"
   ],
   "scripts": {
     "build": "npm run test:naming && npm run test:pwa && npm run test:game-architecture && npm run test:hub-functions && npm run test:gamerunner && npm run test:entrypoints && node scripts/build-apps.mjs",
     "build:cloudflare": "npm run test:naming && npm run test:pwa && npm run test:game-architecture && npm run test:hub-functions && npm run test:gamerunner && npm run test:entrypoints && npm run test:cloudflare-deploy && node scripts/build-apps.mjs --cloudflare-pages",
     "build:cloudflare:only": "node scripts/build-apps.mjs --cloudflare-pages",
-    "build:hub": "npm --prefix apps/rehabtrainerhub run build",
+    "build:hub": "turbo run build --filter=@rehab-trainer/rehabtrainerhub",
     "build:gamerunner": "npm --prefix apps/usergamerunner run build",
     "build:turbo": "npm run test:entrypoints && turbo run build",
     "dev": "turbo run dev",
@@ -43,7 +44,8 @@
     "test:training-config-styles": "node scripts/check-training-config-styles.mjs",
     "test:pwa": "node scripts/check-pwa-assets.mjs && npm run test:pwa-navigation",
     "test:pwa-navigation": "node --test scripts/check-official-game-navigation.test.mjs",
-    "test:seo": "node --test scripts/check-article-prerender.test.mjs && node scripts/check-seo-output.mjs --all"
+    "test:seo": "node --test scripts/check-article-prerender.test.mjs && node scripts/check-seo-output.mjs --all",
+    "sync:games": "node scripts/sync-games.mjs"
   },
   "dependencies": {
     "@jspsych/extension-webgazer": "^1.2.0",
