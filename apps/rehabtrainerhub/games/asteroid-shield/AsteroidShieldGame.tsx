@@ -983,17 +983,22 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
     for (const threat of [...scene.threats]) {
         threat.x += threat.vx * dt;
         threat.y += threat.vy * dt;
-        if (threat.x < threat.radius || threat.x > app.screen.width - threat.radius) {
-            threat.vx *= -1;
-            threat.x = Clamp(threat.x, threat.radius, app.screen.width - threat.radius);
+        if (threat.x < threat.radius) {
+            threat.vx = Math.abs(threat.vx);
+            threat.x = threat.radius;
         }
-        if (threat.y < threat.radius) {
-            threat.vy *= -1;
-            threat.y = threat.radius;
+        else if (threat.x > app.screen.width - threat.radius) {
+            threat.vx = -Math.abs(threat.vx);
+            threat.x = app.screen.width - threat.radius;
         }
         threat.sprite.x = threat.x;
         threat.sprite.y = threat.y;
-        threat.sprite.rotation += threat.rotationSpeed * dt;
+        if (threat.kind === 'normal') {
+            threat.sprite.rotation = Math.atan2(threat.vx, threat.vy);
+        }
+        else {
+            threat.sprite.rotation += threat.rotationSpeed * dt;
+        }
         const shieldDistance = Math.hypot(threat.x - layout.shieldX, threat.y - layout.shieldY);
         const shipDistance = Math.hypot(threat.x - layout.shipX, threat.y - layout.shipY);
         if (threat.kind === 'energy' && shieldDistance <= layout.shieldRadius + threat.radius) {
@@ -1051,19 +1056,19 @@ function UpdateSceneLayout(app: Application, scene: AsteroidScene, shieldSizePer
     scene.background.width = width;
     scene.background.height = height;
     const minSide = Math.min(width, height);
-    const shipWidth = Clamp(minSide * 0.14, 82, 148);
+    const shipWidth = Clamp(minSide * 0.28, 160, 320);
     scene.ship.width = shipWidth;
     scene.ship.height = shipWidth * (scene.ship.texture.height / scene.ship.texture.width);
     scene.ship.x = width * 0.5;
-    scene.ship.y = Clamp(height * 0.68, height * 0.56, height - scene.ship.height * 0.7);
+    scene.ship.y = Clamp(height * 0.8, height * 0.65, height - scene.ship.height * 0.55);
     scene.ship.rotation = 0;
-    const shieldDiameter = Clamp(minSide * 0.23 * (shieldSizePercent / 100), 170, 330);
+    const shieldDiameter = Clamp(minSide * 0.24 * (shieldSizePercent / 100), 180, 340);
     scene.shield.width = shieldDiameter;
     scene.shield.height = shieldDiameter * (scene.shield.texture.height / scene.shield.texture.width);
-    scene.shield.alpha = 0.46;
-    const shipRadius = Math.max(scene.ship.width, scene.ship.height) * 0.38;
-    const shieldRadius = Math.max(scene.shield.width, scene.shield.height) * 0.38;
-    const shieldOffset = shipRadius + shieldRadius * 0.44;
+    scene.shield.alpha = 0.82;
+    const shipRadius = Math.max(scene.ship.width * 0.32, scene.ship.height * 0.55);
+    const shieldRadius = Math.max(scene.shield.width, scene.shield.height) * 0.42;
+    const shieldOffset = shipRadius + shieldRadius * 0.36;
     scene.shield.x = scene.ship.x + Math.cos(shieldAngle) * shieldOffset;
     scene.shield.y = scene.ship.y + Math.sin(shieldAngle) * shieldOffset;
     scene.shield.rotation = shieldAngle + Math.PI / 2;
@@ -1078,14 +1083,14 @@ function UpdateSceneLayout(app: Application, scene: AsteroidScene, shieldSizePer
 }
 function GetShieldLayout(width: number, height: number, shieldSizePercent: number, shieldAngle: number): ShieldLayout {
     const minSide = Math.min(width, height);
-    const shipWidth = Clamp(minSide * 0.14, 82, 148);
-    const shipHeight = shipWidth * (75 / 99);
+    const shipWidth = Clamp(minSide * 0.28, 160, 320);
+    const shipHeight = shipWidth * (164 / 512);
     const shipX = width * 0.5;
-    const shipY = Clamp(height * 0.68, height * 0.56, height - shipHeight * 0.7);
-    const shieldDiameter = Clamp(minSide * 0.23 * (shieldSizePercent / 100), 170, 330);
-    const shieldRadius = shieldDiameter * 0.38;
-    const shipRadius = Math.max(shipWidth, shipHeight) * 0.38;
-    const shieldOffset = shipRadius + shieldRadius * 0.44;
+    const shipY = Clamp(height * 0.8, height * 0.65, height - shipHeight * 0.55);
+    const shieldDiameter = Clamp(minSide * 0.24 * (shieldSizePercent / 100), 180, 340);
+    const shieldRadius = shieldDiameter * 0.42;
+    const shipRadius = Math.max(shipWidth * 0.32, shipHeight * 0.55);
+    const shieldOffset = shipRadius + shieldRadius * 0.36;
     return {
         shipX,
         shipY,
@@ -1101,13 +1106,13 @@ function SpawnThreat(scene: AsteroidScene, layout: ShieldLayout, width: number, 
     const size = GetThreatSize(kind, width, height);
     const sprite = new Sprite({ texture, anchor: 0.5, width: size, height: size });
     sprite.tint = GetThreatTint(kind);
-    sprite.alpha = kind === 'lethal' ? 0.96 : 1;
-    const spawnPoint = RandomSpawnPoint(width, height);
-    const aimX = layout.shipX + RandomBetween(-layout.shipRadius * 0.55, layout.shipRadius * 0.55);
-    const aimY = layout.shipY + RandomBetween(-layout.shipRadius * 0.4, layout.shipRadius * 0.4);
+    sprite.alpha = 1;
+    const spawnPoint = RandomSpawnPoint(width, height, size * 0.5);
+    const aimX = layout.shipX + RandomBetween(-width * 0.28, width * 0.28);
+    const aimY = layout.shipY + RandomBetween(-layout.shipRadius * 0.2, layout.shipRadius * 0.2);
     const direction = NormalizeVector(aimX - spawnPoint.x, aimY - spawnPoint.y);
     const speed = difficulty.baseSpeed + (metrics.speedLevel - 1) * 18 + RandomBetween(-12, 18);
-    const tangent = RandomBetween(-0.18, 0.18);
+    const tangent = RandomBetween(-0.15, 0.15);
     const threat: Threat = {
         id: metrics.nextId++,
         kind,
@@ -1115,16 +1120,19 @@ function SpawnThreat(scene: AsteroidScene, layout: ShieldLayout, width: number, 
         x: spawnPoint.x,
         y: spawnPoint.y,
         vx: (direction.x - direction.y * tangent) * speed,
-        vy: (direction.y + direction.x * tangent) * speed,
+        vy: Math.max(speed * 0.6, (direction.y + direction.x * tangent) * speed),
         radius: size * 0.42,
         damage: kind === 'normal' ? 1 : kind === 'heavy' ? 3 : kind === 'lethal' ? metrics.maxHp : 0,
         score: kind === 'normal' ? 10 : kind === 'heavy' ? 25 : kind === 'lethal' ? 55 : 8,
         spawnedAtMs: metrics.elapsedMs,
-        rotationSpeed: RandomBetween(-2.2, 2.2),
+        rotationSpeed: kind === 'normal' ? 0 : RandomBetween(-1.5, 1.5),
         resultIndex: metrics.spawned,
     };
     sprite.x = threat.x;
     sprite.y = threat.y;
+    if (kind === 'normal') {
+        sprite.rotation = Math.atan2(threat.vx, threat.vy);
+    }
     scene.objectsLayer.addChild(sprite);
     scene.threats.push(threat);
     metrics.spawned += 1;
@@ -1159,26 +1167,16 @@ function GetThreatSize(kind: ThreatKind, width: number, height: number): number 
     return base;
 }
 function GetThreatTint(kind: ThreatKind): number {
-    if (kind === 'normal')
-        return 0x76b7ff;
-    if (kind === 'heavy')
-        return 0x63e27a;
-    if (kind === 'lethal')
-        return 0x2f3446;
     return 0xffffff;
 }
-function RandomSpawnPoint(width: number, height: number): {
+function RandomSpawnPoint(width: number, height: number, radius = 30): {
     x: number;
     y: number;
 } {
-    const edge = Math.random();
-    if (edge < 0.72) {
-        return { x: RandomBetween(30, width - 30), y: -44 };
-    }
-    if (edge < 0.86) {
-        return { x: -44, y: RandomBetween(40, height * 0.52) };
-    }
-    return { x: width + 44, y: RandomBetween(40, height * 0.52) };
+    return {
+        x: RandomBetween(radius + 20, width - radius - 20),
+        y: -radius - 15,
+    };
 }
 function RecordThreatOutcome(threat: Threat, outcome: ThreatOutcome, metrics: SessionMetrics, records: ThreatRecord[], damage: number): void {
     if (records.some((record) => record.Object_Number === threat.resultIndex + 1))

@@ -1,14 +1,14 @@
 
 ###############################################################################
 
-	Space Shooter (Redux, plus fonts and sounds) by Kenney Vleugels (www.kenney.nl)
+	Asteroid Shield Defense Assets
 
-			------------------------------
+	CC0 1.0 Universal (CC0 1.0) Public Domain Dedication
+	http://creativecommons.org/publicdomain/zero/1.0/
 
-			        License (CC0)
-	       http://creativecommons.org/publicdomain/zero/1.0/
-
-	You may use these graphics in personal and commercial projects.
-	Credit (Kenney or www.kenney.nl) would be nice but is not mandatory.
+	Visual assets (spaceship platform, blue comet asteroid, green plasma orb,
+	dark void vortex, dome forcefield shield, energy diamond, and cosmic nebula background)
+	are dedicated to the public domain under CC0 1.0 Universal, matching the arcade
+	style of eduardosamman/asteroid-attack and Kenney CC0 assets.
 
 ###############################################################################
