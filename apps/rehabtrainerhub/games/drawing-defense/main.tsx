@@ -1,5 +1,6 @@
 import { OfficialGameShell } from '@rehab-trainer/ui/components/OfficialGameShell';
 import '@rehab-trainer/ui/components/TrainerApp.css';
+import '@rehab-trainer/ui/tour/toutour.css';
 import './rules.css';
 import { InstallHostedGameSettingsReceiver, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
 import { LanguageProvider } from '@rehab-trainer/ui/i18n/games';

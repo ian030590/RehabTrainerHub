@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useT } from '@rehab-trainer/ui/i18n/games';
 import { StartTour, type TourStep } from '@rehab-trainer/ui/tour';
+import '@rehab-trainer/ui/tour/toutour.css';
 import type { TrainingConfigSummaryItem } from '@rehab-trainer/ui';
 
 interface DrawingDefenseTutorialProps {
@@ -63,6 +64,7 @@ export function DrawingDefenseTutorial({ onStart, onBack, summaryItems }: Drawin
         zIndex: 9999,
         mask: true,
         ring: true,
+        block: true,
         onEvent: (name) => {
           if (name === 'tour_done' || name === 'tour_skip') {
             setTourFinished(true);
