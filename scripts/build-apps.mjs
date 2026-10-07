@@ -80,11 +80,37 @@ function GetCommand(file, args) {
   };
 }
 
+function BuildOfficialGames() {
+  console.log('\n=== Building official games with Turborepo ===');
+
+  if (dryRun) {
+    console.log('$ npx turbo run build --filter=./apps/rehabtrainerhub/games/*');
+    return;
+  }
+
+  const command = GetCommand('npx', ['turbo', 'run', 'build', '--filter=./apps/rehabtrainerhub/games/*']);
+  const result = spawnSync(command.file, command.args, {
+    cwd: repoRoot,
+    env: process.env,
+    stdio: 'inherit',
+  });
+
+  if (result.status !== 0) {
+    if (result.error) {
+      throw result.error;
+    }
+
+    throw new Error(`Official games build failed with exit code ${result.status}`);
+  }
+}
+
 const apps = DiscoverBuildableApps();
 
 if (apps.length === 0) {
   throw new Error('No buildable apps found under apps/*/package.json.');
 }
+
+BuildOfficialGames();
 
 for (const app of apps) {
   RunBuild(app);
