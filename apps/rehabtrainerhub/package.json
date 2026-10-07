@@ -30,7 +30,6 @@
     "@rehab-trainer/game-asteroid-shield": "*",
     "@rehab-trainer/game-attention-network-task": "*",
     "@rehab-trainer/game-connect4": "*",
-    "@rehab-trainer/game-default": "*",
     "@rehab-trainer/game-digit-span": "*",
     "@rehab-trainer/game-dots-and-boxes": "*",
     "@rehab-trainer/game-drawing-defense": "*",

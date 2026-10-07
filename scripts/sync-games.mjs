@@ -11,7 +11,7 @@ if (!existsSync(catalogPath)) {
 }
 
 const catalogSource = readFileSync(catalogPath, 'utf8');
-const gameIds = [...catalogSource.matchAll(/\{\s*id:\s*'([^']+)'/g)].map(m => m[1]);
+const gameIds = [...catalogSource.matchAll(/\{\s*id:\s*'([^']+)',\s*trainer:/g)].map(m => m[1]);
 
 console.log(`Found ${gameIds.length} games in catalog.ts...`);
 
