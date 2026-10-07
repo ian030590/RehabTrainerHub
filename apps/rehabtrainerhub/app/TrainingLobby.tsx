@@ -102,6 +102,7 @@ function TrainingThemeBadge({
 export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [activeModule, setActiveModule] = useState<TrainingCatalogModule | null>(null);
   const [activePackageGame, setActivePackageGame] = useState<PublishedGame | null>(null);
   const [publishedGames, setPublishedGames] = useState<PublishedGame[]>([]);
@@ -232,6 +233,27 @@ export function TrainingLobby() {
     setSelectedPurposes([]);
   };
 
+  const totalVisibleCount = visibleModules.length + visiblePublishedGames.length;
+
+  useEffect(() => {
+    if (!isMobileFilterOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileFilterOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileFilterOpen]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.body.style.overflow = isMobileFilterOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileFilterOpen]);
+
   return (
     <>
     {activeModule && (
@@ -264,12 +286,59 @@ export function TrainingLobby() {
       </section>
 
       <div className="lobby-layout">
-        <aside className="filter-panel" aria-labelledby="filter-title">
+        <div className="mobile-filter-bar">
+          <button
+            aria-controls="filter-panel"
+            aria-expanded={isMobileFilterOpen}
+            className="filter-mobile-trigger"
+            onClick={() => setIsMobileFilterOpen(true)}
+            type="button"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">tune</span>
+            <span>{copy.filters}</span>
+            {selectedPurposes.length > 0 && (
+              <span className="filter-active-badge">{selectedPurposes.length}</span>
+            )}
+          </button>
+          {(selectedPurposes.length > 0 || query) && (
+            <button
+              className="filter-mobile-clear-btn"
+              onClick={clearFilters}
+              type="button"
+            >
+              {copy.clear}
+            </button>
+          )}
+        </div>
+
+        <div
+          aria-hidden="true"
+          className={`filter-sheet-backdrop${isMobileFilterOpen ? ' is-open' : ''}`}
+          onClick={() => setIsMobileFilterOpen(false)}
+        />
+
+        <aside
+          aria-labelledby="filter-title"
+          className={`filter-panel${isMobileFilterOpen ? ' is-open' : ''}`}
+          id="filter-panel"
+        >
+          <div aria-hidden="true" className="filter-sheet-handle" />
+
           <div className="filter-header">
             <h2 id="filter-title">{copy.filters}</h2>
-            {(selectedPurposes.length > 0 || query) && (
-              <button onClick={clearFilters} type="button">{copy.clear}</button>
-            )}
+            <div className="filter-header-actions">
+              {(selectedPurposes.length > 0 || query) && (
+                <button onClick={clearFilters} type="button">{copy.clear}</button>
+              )}
+              <button
+                aria-label={copy.closeFilters}
+                className="filter-sheet-close"
+                onClick={() => setIsMobileFilterOpen(false)}
+                type="button"
+              >
+                <span className="material-symbols-outlined" aria-hidden="true">close</span>
+              </button>
+            </div>
           </div>
 
           <div className="filter-category-groups">
@@ -328,6 +397,16 @@ export function TrainingLobby() {
                 </fieldset>
               );
             })}
+          </div>
+
+          <div className="filter-sheet-footer">
+            <button
+              className="filter-sheet-apply-btn"
+              onClick={() => setIsMobileFilterOpen(false)}
+              type="button"
+            >
+              {copy.viewResults.replace('{count}', String(totalVisibleCount))}
+            </button>
           </div>
         </aside>
 

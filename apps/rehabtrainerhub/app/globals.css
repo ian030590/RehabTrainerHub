@@ -1044,6 +1044,20 @@ summary:focus-visible {
   box-shadow: var(--shadow-md);
 }
 
+.mobile-filter-bar,
+.filter-sheet-backdrop,
+.filter-sheet-handle,
+.filter-sheet-close,
+.filter-sheet-footer {
+  display: none;
+}
+
+.filter-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .filter-heading,
 .filter-header,
 .result-heading,
@@ -2974,59 +2988,267 @@ summary:focus-visible {
     display: block;
   }
 
-  .filter-panel {
-    position: static;
-    max-height: none;
-    padding: 16px 0 8px;
-    margin: 22px 18px 0;
-    overflow: hidden;
-    border-width: 1px 0 0;
-    border-radius: 0;
+  .mobile-filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 18px 16px;
+  }
+
+  .filter-mobile-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 10px 18px;
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    background: var(--surface);
+    color: var(--heading);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease;
+  }
+
+  .filter-mobile-trigger:active {
+    transform: scale(0.98);
+  }
+
+  .filter-mobile-trigger .material-symbols-outlined {
+    font-size: 20px;
+    color: var(--primary);
+  }
+
+  .filter-active-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 750;
+    line-height: 1;
+  }
+
+  .filter-mobile-clear-btn {
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 0;
     background: transparent;
-    box-shadow: none;
+    color: var(--primary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+
+  .filter-mobile-clear-btn:active {
+    transform: scale(0.96);
+  }
+
+  .filter-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .filter-sheet-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .filter-panel {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    max-height: 85dvh;
+    padding: 12px 20px 0;
+    margin: 0;
+    overflow: hidden;
+    border-width: 1px 1px 0;
+    border-style: solid;
+    border-color: var(--border);
+    border-radius: 20px 20px 0 0;
+    background: var(--surface);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), visibility 300ms ease;
+  }
+
+  .filter-panel.is-open {
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  .filter-sheet-handle {
+    display: block;
+    width: 40px;
+    height: 5px;
+    margin: 0 auto 12px;
+    border-radius: 9999px;
+    background: var(--border);
+    flex-shrink: 0;
   }
 
   .filter-heading,
   .filter-header {
-    padding-bottom: 0;
-    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
 
-  .filter-panel fieldset {
+  .filter-heading h2,
+  .filter-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 750;
+  }
+
+  .filter-header-actions {
     display: flex;
-    gap: 8px;
-    padding: 0 0 8px;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    scrollbar-width: thin;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .filter-sheet-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+    color: var(--heading);
+    cursor: pointer;
+    transition: background-color 180ms ease, transform 180ms ease;
+  }
+
+  .filter-sheet-close:active {
+    transform: scale(0.92);
+  }
+
+  .filter-sheet-close .material-symbols-outlined {
+    font-size: 22px;
   }
 
   .filter-category-groups {
     display: flex;
-    gap: 10px;
-    padding-bottom: 8px;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: 16px;
     scrollbar-width: thin;
   }
 
   .filter-category-group {
     flex: 0 0 auto;
-    min-width: 190px;
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+    border-radius: var(--radius);
+  }
+
+  .filter-category-header {
+    min-height: 44px;
+  }
+
+  .filter-panel fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+    overflow-x: visible;
+  }
+
+  .filter-subcategory-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-left: 0;
+    margin-top: 8px;
+    border-left: 0;
+    overflow-x: visible;
   }
 
   .filter-option {
-    flex: 0 0 auto;
-    grid-template-columns: 22px auto auto;
-    min-height: 48px;
-    padding: 8px 12px;
-    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 1px solid color-mix(in srgb, var(--trainer-color) 25%, var(--border));
+    border-radius: 9999px;
     background: var(--surface);
-    scroll-snap-align: start;
+    cursor: pointer;
+    transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
   }
 
   .filter-option:hover {
     transform: none;
+  }
+
+  .filter-option:active {
+    transform: scale(0.97);
+  }
+
+  .filter-sheet-footer {
+    display: flex;
+    align-items: center;
+    justify-content: stretch;
+    padding: 14px 0 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .filter-sheet-apply-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 20px;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 750;
+    cursor: pointer;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 30%, transparent);
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+
+  .filter-sheet-apply-btn:active {
+    transform: scale(0.98);
+    opacity: 0.92;
   }
 
   .filter-option:has(input:checked) {
