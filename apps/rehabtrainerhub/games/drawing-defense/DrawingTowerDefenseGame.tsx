@@ -16,7 +16,7 @@ import { Application,Container,Graphics,Text,type Ticker } from 'pixi.js';
 import { useCallback,useEffect,useMemo,useRef,useState,type CSSProperties } from 'react';
 import { Clamp,FormatTestDate } from './gameUtils';
 import type { TFunction } from './runtime/cognitive/types';
-import { MotorTrainingRulesPanel } from './runtime/components/rules/MotorTrainingRulesPanel';
+import { DrawingDefenseTutorial } from './rules/DrawingDefenseTutorial';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 type ShapeId = 'circle' | 'cross' | 'square' | 'triangle' | 'vertical-line' | 'horizontal-line';
@@ -678,20 +678,24 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
 
       {null}
 
-      {phase === 'rules' && (<div className="training-panel">
-          <MotorTrainingRulesPanel gameId="drawing-defense" title={t('training.drawing.title')} summaryTitle={t('training.drawing.title')} summaryItems={[
-                { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
-                { label: t('drawing.config.gameDuration'), value: gameDurationLabel },
-                { label: t('drawing.config.hp'), value: maxHp },
-                { label: t('drawing.config.enemySpeed'), value: t('drawing.config.speedValue', { value: speed }) },
-                { label: t('drawing.config.strictness'), value: `${strictness}%` },
-                { label: t('drawing.config.strokeWait'), value: t('drawing.config.waitValue', { value: strokeWaitMs }) },
-                { label: t('drawing.config.background'), value: backgroundSummary },
-            ]} onStart={() => void startGame()} onBack={() => {
-                if (!RequestHubTrainingConfiguration())
-                    RequestHubTrainingConfiguration();
-            }}/>
-        </div>)}
+      {phase === 'rules' && (
+        <DrawingDefenseTutorial
+          onStart={() => void startGame()}
+          onBack={() => {
+            if (!RequestHubTrainingConfiguration())
+              RequestHubTrainingConfiguration();
+          }}
+          summaryItems={[
+            { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
+            { label: t('drawing.config.gameDuration'), value: gameDurationLabel },
+            { label: t('drawing.config.hp'), value: maxHp },
+            { label: t('drawing.config.enemySpeed'), value: t('drawing.config.speedValue', { value: speed }) },
+            { label: t('drawing.config.strictness'), value: `${strictness}%` },
+            { label: t('drawing.config.strokeWait'), value: t('drawing.config.waitValue', { value: strokeWaitMs }) },
+            { label: t('drawing.config.background'), value: backgroundSummary },
+          ]}
+        />
+      )}
 
       {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable drawing-defense-results-container">
           <div className="experiment-results">
