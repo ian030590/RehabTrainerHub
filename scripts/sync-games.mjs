@@ -1,4 +1,4 @@
-﻿import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const repoRoot = resolve(import.meta.dirname, '..');
@@ -45,20 +45,16 @@ for (const gameId of gameIds) {
   if (!existsSync(viteConfigPath)) {
     const viteConfig = `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   base: './',
   plugins: [react()],
   resolve: {
     alias: {
-      '@rehab-trainer/ui': resolve(__dirname, '../../../../packages/ui/src'),
-      '@rehab-trainer/games': resolve(__dirname, '..'),
-      '@rehab-trainer/hub-modules': resolve(__dirname, '..'),
+      '@rehab-trainer/ui': fileURLToPath(new URL('../../../../packages/ui/src', import.meta.url)),
+      '@rehab-trainer/games': fileURLToPath(new URL('..', import.meta.url)),
+      '@rehab-trainer/hub-modules': fileURLToPath(new URL('..', import.meta.url)),
     },
   },
   build: {
