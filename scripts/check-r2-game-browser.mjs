@@ -49,7 +49,7 @@ let hub;
 let runner;
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(`http://127.0.0.1:${server.address().port}`)));
-async function respond(response, result) {
+async function Respond(response, result) {
   response.writeHead(result.status, Object.fromEntries(result.headers));
   response.end(result.body ? Buffer.from(await result.arrayBuffer()) : undefined);
 }
@@ -57,7 +57,7 @@ async function respond(response, result) {
 try {
   runner = createServer((request, response) => {
     void HandleRequest({ request: new Request(runnerOrigin + request.url, { method: request.method }), env: { GAME_RELEASE_BUCKET: bucket }, next: () => new Response('Missing', { status: 404 }) })
-      .then(result => respond(response, result)).catch(error => { errors.push(String(error)); response.writeHead(500).end(); });
+      .then(result => Respond(response, result)).catch(error => { errors.push(String(error)); response.writeHead(500).end(); });
   });
   runnerOrigin = remote ? 'https://trainerhub-user-games.pages.dev' : await listen(runner);
   hub = createServer(async (request, response) => {
@@ -73,7 +73,7 @@ try {
         }
         const headers = { ...request.headers, origin: 'https://trainerhub.cc', 'cf-connecting-ip': '127.0.0.88' };
         const apiRequest = new Request('https://trainerhub.cc' + url.pathname, { method: 'POST', headers, body });
-        await respond(response, await (url.pathname.endsWith('sessions') ? createSession : saveRecord)({ request: apiRequest, env: environment }));
+        await Respond(response, await (url.pathname.endsWith('sessions') ? createSession : saveRecord)({ request: apiRequest, env: environment }));
         return;
       }
       if (url.pathname.startsWith('/api/')) {

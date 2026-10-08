@@ -6,7 +6,7 @@ export function PrepareAudioFeedback(_ref?: unknown) {
   audio ??= new AudioContext();
   void audio.resume().catch(() => undefined);
 }
-function tone(frequency: number) {
+function PlayTone(frequency: number) {
   if (!enabled || !audio || audio.state !== 'running') return;
   const oscillator = audio.createOscillator();
   const gain = audio.createGain();
@@ -18,6 +18,6 @@ function tone(frequency: number) {
   oscillator.stop(audio.currentTime + 0.2);
   oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
 }
-export const PlaySuccessSound = (_ref?: unknown) => tone(660);
-export const PlayFailureSound = (_ref?: unknown) => tone(220);
-export const PlayGameEndSound = (result: string, _ref?: unknown) => tone(result === 'Victory' ? 880 : 165);
+export const PlaySuccessSound = (_ref?: unknown) => PlayTone(660);
+export const PlayFailureSound = (_ref?: unknown) => PlayTone(220);
+export const PlayGameEndSound = (result: string, _ref?: unknown) => PlayTone(result === 'Victory' ? 880 : 165);

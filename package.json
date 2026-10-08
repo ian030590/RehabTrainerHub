@@ -41,7 +41,7 @@
     "test:webgazer-browser": "node scripts/check-oculomotor-webgazer-browser.mjs && node scripts/check-oculomotor-webgazer-browser.mjs --camera-only && node scripts/check-oculomotor-webgazer-browser.mjs --upload-only",
     "test:hub-functions": "node --test \"apps/rehabtrainerhub/functions/**/*.test.mjs\"",
     "test:gamerunner": "node --test apps/usergamerunner/tests/gamehost.test.mjs",
-    "test:naming": "node scripts/check-identifier-names.mjs",
+    "test:naming": "node --test scripts/check-identifier-names.test.mjs && node scripts/check-identifier-names.mjs",
     "test:training-config-styles": "node scripts/check-training-config-styles.mjs",
     "test:pwa": "node scripts/check-pwa-assets.mjs && npm run test:pwa-navigation",
     "test:pwa-navigation": "node --test scripts/check-official-game-navigation.test.mjs",

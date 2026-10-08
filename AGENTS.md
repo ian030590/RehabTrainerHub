@@ -43,6 +43,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 
 ## CI/CD 維護
 
+- `npm run test:naming` 先執行命名檢查器回歸測試，再掃描原始碼；明確排除 `.dist-releases` 等建置產物，仍檢查原始碼的函式、參數與變數命名。兩份 workflow 的 `naming` matrix 均使用此命令。
 - `npm run test:pwa` 包含 `test:pwa-navigation`，以本機 HTTP 308 轉址及實際產生的 Service Worker 驗證內嵌頁面預快取、離線導航與舊快取清理；兩份 workflow 的 `pwa` matrix 均執行此命令，不依賴 Brave。
 
 - `.github/workflows/ci.yml` 在 PR 與非 `main` push 的應用程式、package、script、lockfile、Turbo 或 workflow 變更時執行；純文件變更不得啟動 CI。

@@ -4,7 +4,7 @@ import { extname, relative, resolve } from 'node:path';
 import ts from 'typescript';
 
 const repoRoot = resolve(import.meta.dirname, '..');
-const ignoredDirectories = new Set(['.git', '.next', '.tmp', 'coverage', 'dist', 'node_modules', 'out', 'public']);
+const ignoredDirectories = new Set(['.dist-releases', '.git', '.next', '.tmp', 'coverage', 'dist', 'node_modules', 'out', 'public']);
 const sourceExtensions = new Set(['.js', '.mjs', '.ts', '.tsx']);
 const frameworkFunctionNames = new Set([
   'generateMetadata',
