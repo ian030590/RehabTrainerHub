@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { readFile, readdir, access } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
@@ -6,6 +8,21 @@ import { createHash } from 'node:crypto';
 
 const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/drawing-defense');
+
+test('obsolete local release staging is removed and ignored without ignoring publication receipts', () => {
+  const stagingPath = '.dist-releases/generated.js';
+  const result = spawnSync('git', ['check-ignore', '--no-index', '--stdin'], {
+    cwd: root,
+    encoding: 'utf8',
+    input: `${stagingPath}\ndocs/releases/drawing-defense-2.0.1.json\n`,
+  });
+  assert.ifError(result.error);
+  assert.deepEqual({
+    stagingExists: existsSync(resolve(root, '.dist-releases')),
+    ignoredPaths: result.stdout.trim(),
+    status: result.status,
+  }, { stagingExists: false, ignoredPaths: stagingPath, status: 0 });
+});
 
 test('drawing defense owns its configuration and results without Hub dependencies', async () => {
   const files = await readdir(gameRoot, { recursive: true });

@@ -2,6 +2,7 @@
 node_modules/
 
 # Build output
+/.dist-releases/
 dist/
 dist-ssr/
 packages/*/dist/

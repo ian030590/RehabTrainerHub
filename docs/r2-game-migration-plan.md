@@ -19,6 +19,8 @@
 
 原本遊戲雖然各有 Vite workspace，Hub 仍依賴所有遊戲 workspace；Hub build 會複製其 `dist` 到 `/games/{id}/`。獨立 workspace 提供快取隔離，尚未提供部署隔離。R2 已有舊版遊戲封存，但它們仍帶設定／成績 JSON 與原 Hub shell，不能直接視為這次的新格式。
 
+舊遷移方案留下的本機 `.dist-releases/` 已從倉庫移除並加入 `.gitignore`。現行發布直接讀取各遊戲 workspace 的 `dist/`，暫存收據寫入 `.tmp/official-game-releases/`，正式發布收據保留於 `docs/releases/`。清理本機產物不會刪除 R2 上的已發布版本；後續遷移不再建立或提交此舊目錄。
+
 | 責任 | 未遷移遊戲 | R2 試點 |
 | --- | --- | --- |
 | 設定與教學 | Hub／遊戲既有 JSON shell | 遊戲自己的 React UI |
