@@ -106,12 +106,16 @@ GitHub 故障、回覆遺失、並行領取、偽造 Issue、每版重新送審�
 - `MergeHubGames` 保留既有啟動契約；`/api/games` 以可信 R2 current 取代同 slug 的歷史資料列。核准的新目錄資訊可更新卡片、篩選與安裝連結，啟動仍由官方工作階段 API 固定版本。
 - 畫畫塔防以自己的 `public/game.json` 宣告 `motor`／`upper-limb`、雙語文案、作者及 `preview.webp`。原預覽圖移入同一 workspace，bytes 未變；Hub 不另維護一份分類或圖片原始檔。
 - Publisher 將宣告與圖片一起納入不可變版本的逐檔雜湊。公開目錄必須先驗證 current／approved manifest，再回讀宣告 bytes 核對 SHA-256、分類配對及圖片是否在發布清單；撤回、錯誤雜湊、缺圖或分類不相容時不公開該筆 R2 目錄。前端只接受指定 runner 與同遊戲／同版本的圖片 URL。
-- 已發布 `2.0.2` 沒有此宣告，採遊戲 source 宣告與由原圖產生的 Hub 相容資產；39 個未遷移遊戲仍使用既有來源。`2.0.3` 為本機待核准套件，沒有上傳、修改正式 current 或覆寫任何已發布內容。
+- 已發布 `2.0.2` 沒有此宣告，採遊戲 source 宣告與由原圖產生的 Hub 相容資產；39 個未遷移遊戲仍使用既有來源。本機修復驗證時 `2.0.3` 為待核准套件，當時尚未上傳或修改正式 current。
 
 TDD：啟動測試先出現 `package-v1` 取代 `catalog-v1`，Brave 從大廳啟動未建立官方 session 而失敗；分類測試先讀到 `higher-cognition`，自有圖片／宣告不存在，新格式又因缺少 `settingsUrl` 被濾掉。修正後 8 項目錄測試、3 項 API 測試及 2 項宣告驗證全部通過。
 
 Brave 的 `--lobby`／`--lobby --mobile` 現在使用實際本機 `/api/games`、R2 bytes 與 SQLite，另加入舊版 slug 碰撞。兩種尺寸均確認原圖載入、標籤為「上肢動作」，並通過設定→教學→繪圖→結果→保存失敗→重試→單筆成果→返回大廳。`--revoke`／`--session-failure`、5 項既有瀏覽器回歸，以及上表 build／後端／架構／entrypoints／PWA／runner／命名／部署範圍／SEO gate 均通過。
 
-發布 dry-run 驗證 `2.0.3` 共 6 個檔案，內容摘要為 `0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24`。本機生成的 `dist/index.html` 曾出現改名為 `index [conflicted].html` 的情況；還原生成檔後完成 dry-run，瀏覽器使用固定 Hub 輸出副本。此收據僅在 `.tmp/official-game-releases/`，不當作已發布的正式收據。Hub 尚未部署，`2.0.3` 仍須擁有者審查及確認公開後才能發布。
+發布 dry-run 驗證 `2.0.3` 共 6 個檔案，內容摘要為 `0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24`。本機生成的 `dist/index.html` 曾出現改名為 `index [conflicted].html` 的情況；還原生成檔後完成 dry-run，瀏覽器使用固定 Hub 輸出副本。該次 dry-run 收據僅在 `.tmp/official-game-releases/`，不當作已發布證據；當時 Hub 尚未部署，須擁有者確認公開後才可發布。
 
-使用者在後續明確指示「部屬、公開」，已核准上述 `2.0.3` 摘要及 Hub 修正的正式發布。發布時再次核對相同摘要；正式收據與部署結果另行記錄。
+使用者在後續明確指示「部屬、公開」，核准上述 `2.0.3` 摘要及 Hub 修正。2026-10-08 已完成 R2 發布、逐檔回讀、current／四個新格式歷史版本的 bytes／雜湊核對，以及 [Hub／runner CI/CD 部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37774613740)；七項驗證與部署全部成功。正式 `/api/games` 僅有一筆 `2.0.3`，分類為上肢動作，preview URL 指向同版本 R2，原圖與 Hub 相容圖均核對原始 SHA-256。
+
+正式 Hub 桌機／390×844 手機、真實 R2 大廳流程與獨立 PWA 的 Brave 驗收全部通過。直接讀正式 API 確認 current／分類／圖片，並核對不指定版本的 session 選到 `2.0.3`；瀏覽器的保存 API 僅導向本機 SQLite，沒有建立正式成果。完整公開收據見 [drawing-defense-2.0.3.json](releases/drawing-defense-2.0.3.json)，39 個舊遊戲未搬遷。
+
+後續遷移門檻已更新於 [R2 遷移計畫](r2-game-migration-plan.md)第 7／11 節：逐遊戲鎖定舊功能、自有目錄與原圖、歷史 slug 碰撞、真實大廳啟動、正式 sandbox／CSP、每版精確摘要核准、發布順序及正式站驗收；不得用畫畫塔防專用測試宣稱其他遊戲已完成。

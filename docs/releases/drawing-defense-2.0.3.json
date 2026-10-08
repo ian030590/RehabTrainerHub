@@ -1,0 +1,112 @@
+{
+  "gameId": "drawing-defense",
+  "version": "2.0.3",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.3/package/index.html",
+  "contentSha256": "0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24",
+  "verifiedAt": "2026-10-08T12:07:37.379Z",
+  "prefix": "releases/drawing-defense/2.0.3/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.3/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/",
+  "fileCount": 6,
+  "totalBytes": 5602372,
+  "files": [
+    {
+      "path": "assets/StarSky-COfhhfcH.png",
+      "size": 4650499,
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-xaM1jER6.js",
+      "size": 905055,
+      "sha256": "8f5b06e6d7e7b9d58e89649049800a812823ce4ec62750deab37405bf873172a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DMY_l4Xs.css",
+      "size": 10683,
+      "sha256": "eec729f55c0aca914cc58d03cdf9ed49fc76618f7b6996df45bbc4aa8414e2be",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 489,
+      "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "6d8d36be49c8318273bc93278fc5c215355e85f02f023e0580d544c77ba8725e",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 35244,
+      "sha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "instruction": "部屬、公開",
+    "date": "2026-10-08",
+    "reviewedContentSha256": "0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24"
+  },
+  "catalogKey": "official-games/drawing-defense/current.json",
+  "currentVersion": "2.0.3",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "1a072412d9220b7d285086d999829961f5b76e7ad88220382d3121295a312d97"
+    },
+    "2.0.1": {
+      "contentSha256": "95e1184b39ad916abd50789837495490f0580a5526fd4237d5be067ddbcb0db9"
+    },
+    "2.0.2": {
+      "contentSha256": "2490614c840e2bd69811c01d52e98c12c9f7d63b2dd03e5c26e2089a69fab9f3"
+    },
+    "2.0.3": {
+      "contentSha256": "0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24"
+    }
+  },
+  "gameOwnedCatalog": {
+    "path": "game.json",
+    "trainer": "motor",
+    "category": "upper-limb",
+    "previewUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.3/package/preview.webp",
+    "previewSha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1"
+  },
+  "hubProductionDeployed": true,
+  "hubDeploymentCommit": "e22e2d363b1f895567eafa382852f34cb1c31463",
+  "hubDeploymentRunUrl": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37774613740",
+  "hubDeploymentUrl": "https://8e957462.rehabtrainerhub.pages.dev",
+  "runnerDeploymentUrl": "https://e2459d3c.trainerhub-user-games.pages.dev",
+  "hubProductionVerifiedAt": "2026-10-08T12:20:18.620Z",
+  "verification": {
+    "allR2FilesReadBackSha256": true,
+    "allOfficialHistoryManifestAndFileHashesVerified": true,
+    "trackedHistoryReceiptDigestsMatched": true,
+    "allRunnerFilesReadBackSha256AndCsp": true,
+    "stableRedirectAndNoStore": true,
+    "actualProductionApiCatalog": true,
+    "legacyPublicationCannotReplaceR2Launch": true,
+    "originalPreviewAndUpperLimbTag": true,
+    "productionCompatibilityPreviewAndPwaLink": true,
+    "versionlessProductionSession": true,
+    "remoteLobby": true,
+    "standalonePwa": true,
+    "productionHubDesktop": true,
+    "productionHubMobile": true,
+    "browserApiAndRecordWritesOnlyInLocalSqlite": true,
+    "turnstileMockedOnlyForLocalApiBrowser": true,
+    "productionTrainingRecordsCreated": false,
+    "remaining39GamesNotMigrated": true
+  },
+  "retainedVersionsVerified": [
+    "1.0.0",
+    "2.0.0",
+    "2.0.1",
+    "2.0.2",
+    "2.0.3"
+  ]
+}
