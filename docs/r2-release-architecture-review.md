@@ -37,4 +37,4 @@ CI 保留兩份 workflow 的七個驗證 gate。main 的 deployment_scope 判斷
 
 限制：官方 CLI 每遊戲只能有一位發布者，發布與回退不可並行；未加入分散式 Lease／CAS。已安裝的版本化 PWA 維持原版本，穩定入口只影響下一次從入口開啟；舊格式 1.0.0 保留在 R2，但不能作為新格式 current。新增遊戲資格與平台格式更新仍需部署。
 
-已完成 [CI/CD 平台部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37741967141)與正式入口、無 version 的 session API、四版資產及 Brave 流程驗證。正式 Hub 開始前固定版本的測試已由 0 次 session 失敗改為 1 次成功；途中切換 current、保存重試仍只產生一筆本機紀錄。正式 Hub 啟用了 Turnstile，因此僅在 API 導向本機的測試瀏覽器模擬其完成回呼，未測試真人驗證碼，也沒有放寬正式設定。完整結果見[發布收據](releases/drawing-defense-catalog-2026-10-08.json)。
+已完成 [CI/CD 平台部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37742886614)與正式入口、無 version 的 session API、四版資產及 Brave 流程驗證。正式 Hub 開始前固定版本的測試已由 0 次 session 失敗改為 1 次成功；途中切換 current、保存重試仍只產生一筆本機紀錄。正式 Hub 啟用了 Turnstile，因此僅在 API 導向本機的測試瀏覽器模擬其完成回呼，未測試真人驗證碼，也沒有放寬正式設定。完整結果見[發布收據](releases/drawing-defense-catalog-2026-10-08.json)。

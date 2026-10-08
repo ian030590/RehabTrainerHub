@@ -27,8 +27,8 @@
     "standalonePwaBrowser": true,
     "turnstileMockedOnlyForLocalApiBrowser": true
   },
-  "platformDeploymentRunUrl": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37741967141",
-  "productionVerifiedAt": "2026-10-08T07:19:17.815Z",
-  "hubDeploymentUrl": "https://1b9362a3.rehabtrainerhub.pages.dev",
-  "runnerDeploymentUrl": "https://13ff21e2.trainerhub-user-games.pages.dev"
+  "platformDeploymentRunUrl": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37742886614",
+  "productionVerifiedAt": "2026-10-08T07:28:00.233Z",
+  "hubDeploymentUrl": "https://2737d9bb.rehabtrainerhub.pages.dev",
+  "runnerDeploymentUrl": "https://04d827c1.trainerhub-user-games.pages.dev"
 }
