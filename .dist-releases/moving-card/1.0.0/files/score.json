@@ -1,0 +1,75 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "moving-card",
+  "presentation": {
+    "primarySummaryKeys": ["completed","trials"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "searchMs",
+    "chartType": "line"
+  },
+  "columns": [
+    {
+      "key": "completed",
+      "label": {
+        "zh": "找到目標（1／0）",
+        "en": "Target found (1/0)"
+      },
+      "sources": [
+        "correct"
+      ]
+    },
+    {
+      "key": "searchMs",
+      "label": {
+        "zh": "搜尋完成時間（含重試）",
+        "en": "Search completion time (includes retries)"
+      },
+      "sources": [
+        "rt"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "attempts",
+      "label": {
+        "zh": "選擇次數",
+        "en": "Selection attempts"
+      },
+      "sources": [
+        "attempts"
+      ]
+    },
+    {
+      "key": "errors",
+      "label": {
+        "zh": "錯誤選擇次數",
+        "en": "Incorrect selections"
+      },
+      "sources": [
+        "wrong_attempts"
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "key": "trials",
+      "label": {
+        "zh": "完成試次",
+        "en": "Completed trials"
+      },
+      "sources": [
+        "trialCount"
+      ]
+    },
+    {
+      "key": "completed",
+      "label": {
+        "zh": "找到目標試次",
+        "en": "Trials with target found"
+      },
+      "sources": [
+        "correctCount"
+      ]
+    }
+  ]
+}

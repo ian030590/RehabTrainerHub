@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "gameId": "minesweeper",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "盤面設定",
+        "en": "Board settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "地雷密度",
+            "en": "Mine density"
+          },
+          "description": {
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "10%",
+                "en": "10%"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "16%",
+                "en": "16%"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "24%",
+                "en": "24%"
+              }
+            }
+          ]
+        },
+        {
+          "key": "boardSize",
+          "type": "list",
+          "label": {
+            "zh-TW": "盤面大小",
+            "en": "Board size"
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "small",
+              "label": {
+                "zh-TW": "6 × 6",
+                "en": "6 × 6"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "16 × 16",
+                "en": "16 × 16"
+              }
+            },
+            {
+              "value": "large",
+              "label": {
+                "zh-TW": "20 × 20",
+                "en": "20 × 20"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

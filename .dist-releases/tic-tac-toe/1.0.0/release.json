@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "tic-tac-toe",
+  "version": "1.0.0",
+  "name": "圈圈叉叉",
+  "shortName": "圈圈叉叉",
+  "description": "圈圈叉叉居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "64f0e63f90a82cfa5fce8dcd326e0d2feb73b67c936d7297b02188cdc4dc9b92",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-B8OSqezs.js",
+      "sha256": "7e1e987442963807f09feffaaa2cfefad46eb9cf117fa652f4b787c12dc21c20",
+      "size": 43300,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-CDiWBD-v.js",
+      "sha256": "e93007ccc8cda288c3825572f63a3d74e3bf6957ea5d8b7fa7adff712e7a9fce",
+      "size": 11142,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-DBN11I5g.js",
+      "sha256": "ae4f1e0ed9a46ad41473f388286e84dd34ff9f6d08918085c03193f2c4a3adfc",
+      "size": 18382,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-BAHXG5aU.js",
+      "sha256": "ab808f13787d8c23ea5f987d0da7903d1951118a8c6b2b891d145bb0630d2a9c",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BrUXGa19.css",
+      "sha256": "16fe3b0148dcca21513c2006f048b82a048f1cf73cb1205660a3c52ef7b2bccd",
+      "size": 85369,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-uKTJU8t8.js",
+      "sha256": "3fb6308a01dbbb6dd38abad1272b62d64e599013939682f8aafa3df83307810f",
+      "size": 692273,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-BG4S5Jwa.js",
+      "sha256": "83b5a61af6304c6236ced3a7d9073df1108a53df93cb3e54b4eeaed52514baa2",
+      "size": 52577,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-WrUDl06i.js",
+      "sha256": "5ca3570fcb12f9241b00066a59292ba8a1b61a1f5ed24b4ea7b1e94aba1a0011",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer--Z_XQBf6.js",
+      "sha256": "5fd1cde215998860e79fb444c63c6ab56f395064af47782c29eb08e910ebface",
+      "size": 46289,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-SY9cUtsT.js",
+      "sha256": "a330e17078ca47a4f6d05b052646cb34af8e549791cdd21f95b74faedd04113a",
+      "size": 15578,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "ce2b3cb6337dc8157a4ac2d1253fa24d41b0185db433e8a5aa8cc7dffd60b420",
+      "size": 422,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "e2913637abd2138aa00ef179d2e5756a7868c2c5ecbf568ba02eb2866b52dd80",
+      "size": 2647,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "c34aed28cadf09d90be527374083f0afafe71dfa4bc022daf71bc3ce546b4c2a",
+      "size": 2065,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

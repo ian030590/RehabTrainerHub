@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "gameId": "sudoku",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "記錄當次操作表現。隨機題目、對手與時間上限均可能影響結果；打亂步數不等於最短解。",
+        "en": "Records task performance. Random puzzles, opponents and time limits affect results; scramble steps are not optimal solution lengths."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "數字規則與棋盤條件",
+            "en": "Number rule and board condition"
+          },
+          "description": {
+            "zh-TW": "三種選項改變解題規則，不是同一數獨任務的等距難度。分開分析，避免將條件差異解讀為能力進步。",
+            "en": "Options change puzzle rules, not equal steps on one Sudoku task. Analyze separately; condition differences are not ability changes."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "拉丁方陣 4×4／6 空格",
+                "en": "Latin square 4×4 / 6 blanks"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "魔方陣 3×3／6 空格",
+                "en": "Magic square 3×3 / 6 blanks"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "數獨 9×9／50 空格",
+                "en": "Sudoku 9×9 / 50 blanks"
+              }
+            }
+          ]
+        },
+        {
+          "key": "timeLimitSec",
+          "type": "list",
+          "label": {
+            "zh-TW": "時間限制",
+            "en": "Time limit"
+          },
+          "description": {
+            "zh-TW": "選擇是否限制單次活動時間。",
+            "en": "Choose a time limit for this session."
+          },
+          "default": 0,
+          "options": [
+            {
+              "value": 0,
+              "label": {
+                "zh-TW": "不限時",
+                "en": "No limit"
+              }
+            },
+            {
+              "value": 60,
+              "label": {
+                "zh-TW": "1 分鐘",
+                "en": "1 minute"
+              }
+            },
+            {
+              "value": 180,
+              "label": {
+                "zh-TW": "3 分鐘",
+                "en": "3 minutes"
+              }
+            },
+            {
+              "value": 300,
+              "label": {
+                "zh-TW": "5 分鐘",
+                "en": "5 minutes"
+              }
+            }
+          ]
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在操作與結果時播放提示音。",
+            "en": "Play audio cues during interactions and results."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

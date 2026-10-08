@@ -3,6 +3,8 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import './check-game-research-contract.test.mjs';
 import ts from 'typescript';
+import migratedGames from '../packages/ui/src/officialGameReleases.json' with { type: 'json' };
+import { IsGameResult } from '../packages/ui/src/selfContainedGame.js';
 
 const compilerOptions = { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 };
 const embeddedSource = await readFile(new URL('../packages/ui/src/embeddedTraining.ts', import.meta.url), 'utf8');
@@ -23,6 +25,12 @@ test('all 40 score contracts accept bounded numeric rounds and reject unsafe dat
   const games = (await readdir(root, { withFileTypes: true })).filter(entry => entry.isDirectory());
   assert.equal(games.length, 40);
   for (const game of games) {
+    if (Object.hasOwn(migratedGames, game.name)) {
+      assert.equal(IsGameResult({ config: { difficulty: 'Beginner' }, score: {
+        schema: 'rehab-trainer.game-score/v1', gameId: game.name, summary: { defeated: 1 }, rounds: [{ defeated: 1 }],
+      } }, game.name), true);
+      continue;
+    }
     const definition = gameScore.ParseGameScoreDefinition(JSON.parse(await readFile(new URL(`${game.name}/score.json`, root), 'utf8')), game.name);
     assert.ok(definition.presentation.primarySummaryKeys.length >= 1, game.name);
     assert.ok(definition.presentation.primarySummaryKeys.length <= 4, game.name);

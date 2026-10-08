@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "sliding-puzzle",
+  "version": "1.0.0",
+  "name": "滑塊拼圖",
+  "shortName": "滑塊拼圖",
+  "description": "滑塊拼圖居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "496b84e080a2eb58e41ea4026d05ac1202005064aef8540ed14fffa936cb711c",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-DmlBADGp.js",
+      "sha256": "c6731e331f1a46e6416b7fd98168e5a1c09604d703baf4cec37af5e7db6e3684",
+      "size": 43300,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-AJZuksk6.js",
+      "sha256": "ed947873fff33c5f5f64abdec72f70be9d4ce0ad925f83d0a20418542cd31e89",
+      "size": 11142,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-uZNB-_0c.js",
+      "sha256": "25e74e6d59474d5de9bea96b4f911733dbda78af04581ecb05ade14368fd8108",
+      "size": 18382,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-BKRVTxh3.js",
+      "sha256": "d19671bd96f739b6f8f44b74254f318a23ab5c42859b23db87002ecac5bda693",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BrUXGa19.css",
+      "sha256": "16fe3b0148dcca21513c2006f048b82a048f1cf73cb1205660a3c52ef7b2bccd",
+      "size": 85369,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-CTwmACmf.js",
+      "sha256": "24a7c948e716f9f9cc8d6445f519de70546a28f51269d549121dbe1b49772498",
+      "size": 691096,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-Cw79eL2G.js",
+      "sha256": "da4d39306ac7ea57ae99405d2a1b22f69f1ae768165a7393c54185a434dbb8b5",
+      "size": 52577,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-DLNu5HUY.js",
+      "sha256": "8847d8ab9a4bcd75758c8d9c8c44cc9bda17bb66fb7f7f0faf5cb0f8431f4f49",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-BuuFZYsH.js",
+      "sha256": "9672fedc9d37718ca9f00d8ec0c5c550061e24194f7f901a5de596e9fcadde1f",
+      "size": 46289,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-CUnaCDJw.js",
+      "sha256": "97c38749f2f952b70ed2b51194ce2e4a5af7a7915fbff0d173257a1eecc08e72",
+      "size": 15578,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "affd832c3d1a70b1addd50be202ed1bc1516bfc97909618b9289e19e8303bbb2",
+      "size": 422,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "18f88b5babe8d3e89e7b9b3e9310b9335d695c3518efe9aa3dfb1c3b84f4ec9e",
+      "size": 2269,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "16d44ac247bba8d2b92884afe74a1ebcb1c60b612cd2925cffc768d4e3f4ae00",
+      "size": 3078,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "moving-card",
+  "version": "1.0.0",
+  "name": "移動卡片訓練",
+  "shortName": "移動卡片訓練",
+  "description": "移動卡片訓練居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "35083a8dfe0b9297cf642cd8066e9123237d48e2cf1eae3f68b763e2f27bf246",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-BpMxmhEM.js",
+      "sha256": "ea742fbf9e95b5923744e8f1febc6c37f3d432988dac9401cd644e7e60db74be",
+      "size": 43300,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-BtFGpPyy.js",
+      "sha256": "4005319dda8fcdec19af77d90227a115a9f3ea530c5485794d1ae23870fa4ca7",
+      "size": 11142,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-rX7wxt8g.js",
+      "sha256": "e2ccf14a49d28587665fa414219428d7aa3b66ea7402e147cf9a37f2d11f3b31",
+      "size": 18382,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-ByC3EDVt.js",
+      "sha256": "57e7aa772d87da3922b5fba99826f5e3ff035057c2ddbcd9135f511b15d6ed06",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-B4ujILzw.js",
+      "sha256": "53e8df92aeb063b25a23fd3ff1a4d129d65eb1c2b5f3e61a22a7d6131dc38d27",
+      "size": 694702,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-DAp5vlx2.css",
+      "sha256": "17a121b5b12a275ba67647c772d63a515c0d59e7c40af15331540e62c49b1ee2",
+      "size": 80330,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-DHhtcpYc.js",
+      "sha256": "24e4b69831630ca16a6460f0fd6cec8b270966c386b93c42826081de4810048e",
+      "size": 52577,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-BJGQHyXi.js",
+      "sha256": "28288ce50a76d16e0874c67afc363a5ac981bb7d6cf12e72ae4af603dcefd7a1",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-DUMyFy3P.js",
+      "sha256": "e54c236f7d9f65738189251cbed02b1b4b463b17a1e15f2de9bbee470a16fe5b",
+      "size": 46289,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-nv8yEAJU.js",
+      "sha256": "5418e48e98c5202503f0dd9b9443421c2e841e0ad090b491a2e1ca9ee7d22533",
+      "size": 15578,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "cb5cafd97fdc44e7350aacdcd7352950cf87e035fc1abac730918a5ef820774f",
+      "size": 428,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "71af44b7ec80675ff743437d12ae0f3df0b2a66e5b6b95273542f548f630b656",
+      "size": 1427,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "8b99bf56898859d5e0741b9d2ba8dbcb175718b01302c7facf09f1d1763875d4",
+      "size": 3528,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

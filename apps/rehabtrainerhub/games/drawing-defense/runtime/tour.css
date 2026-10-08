@@ -1,0 +1,7 @@
+.game-tour {
+  position: fixed; z-index: 9999; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(90vw, 30rem); padding: 24px; border-radius: var(--radius); color: var(--text);
+  background: var(--surface); box-shadow: 0 0 0 100vmax var(--bg-overlay); font-weight: 700;
+}
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px; }

@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "gameId": "maze",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "記錄當次操作表現。隨機題目、對手與時間上限均可能影響結果；打亂步數不等於最短解。",
+        "en": "Records task performance. Random puzzles, opponents and time limits affect results; scramble steps are not optimal solution lengths."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "迷宮大小",
+            "en": "Maze size"
+          },
+          "description": {
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "8 × 8",
+                "en": "8 × 8"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "10 × 10",
+                "en": "10 × 10"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "12 × 12",
+                "en": "12 × 12"
+              }
+            }
+          ]
+        },
+        {
+          "key": "timeLimitSec",
+          "type": "list",
+          "label": {
+            "zh-TW": "時間限制",
+            "en": "Time limit"
+          },
+          "description": {
+            "zh-TW": "選擇是否限制單次活動時間。",
+            "en": "Choose a time limit for this session."
+          },
+          "default": 0,
+          "options": [
+            {
+              "value": 0,
+              "label": {
+                "zh-TW": "不限時",
+                "en": "No limit"
+              }
+            },
+            {
+              "value": 60,
+              "label": {
+                "zh-TW": "1 分鐘",
+                "en": "1 minute"
+              }
+            },
+            {
+              "value": 180,
+              "label": {
+                "zh-TW": "3 分鐘",
+                "en": "3 minutes"
+              }
+            },
+            {
+              "value": 300,
+              "label": {
+                "zh-TW": "5 分鐘",
+                "en": "5 minutes"
+              }
+            }
+          ]
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在操作與結果時播放提示音。",
+            "en": "Play audio cues during interactions and results."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

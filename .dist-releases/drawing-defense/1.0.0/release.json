@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "drawing-defense",
+  "version": "1.0.0",
+  "name": "畫畫塔防",
+  "shortName": "畫畫塔防",
+  "description": "畫畫塔防居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "19d5a20b3bf43b47aa6e526b10749478132b83e66e891d73963d2fb1343420c1",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-BM2p-vZs.js",
+      "sha256": "7e1d54a1abedca6bac230c2e6298c100c8df2219e054b2946e5227da7505df86",
+      "size": 43300,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-DYp8DDNV.js",
+      "sha256": "15a0f7c53e001bbf14aff6de7fb96cede87bea0f3f8bd8f6cf4d061c79727de4",
+      "size": 11142,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-IHS1bt5A.js",
+      "sha256": "14c9e6e9fee4e8149af26b434abbb358fb9b9e7043e107f274199449a557af58",
+      "size": 18382,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-CEUSZbzr.js",
+      "sha256": "d9cb34835dbf6447b15405664159bb5c908e4ce490bb55e14e2d37884c404a4e",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-0ZFbNh2V.js",
+      "sha256": "01b98a8d3aab9a92d9bb5865aa6f47fe2489a58186f9ede1f6d593e36368443e",
+      "size": 713232,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-B2lxPCR-.css",
+      "sha256": "93b4f04b9e071f75e4980e5d8114194b6cac63604d3076136340e50c87689942",
+      "size": 84722,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-Y0ceG4sa.js",
+      "sha256": "af72fa58d6934c2fd831e32954148e3f8f8c6a102e8e133419d03bba6f43cbc8",
+      "size": 52577,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/StarSky-COfhhfcH.png",
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+      "size": 4650499,
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/WebGLRenderer-DGw3_5U3.js",
+      "sha256": "51ecfeee9aa9029dee4b57e4089bc126cccd68f3af7a8085adc1e906b55c0c23",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-CV72pEl_.js",
+      "sha256": "aab23e485fe935c056a06a29b538aaf60abf05f97dfcfe3f7a76ba06a5ca3c26",
+      "size": 46289,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-KN21Faps.js",
+      "sha256": "99b1c1d33172299d0d4e3328aea2e46008011ec99b348fca4487e5080a06247c",
+      "size": 15578,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "5e132f4a2ad465ceaa8d4f1fb0ea38acacfb31e4efb42f36124e235472f843ff",
+      "size": 422,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "879f961ea0c4d0d1c0e65067759a93da25329b29edec99f8ef24df3a73528d71",
+      "size": 1996,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "67db8a669f045791b6f05e2cf35bfd03039775b3e2e9d4ee2075732ba01b4e0a",
+      "size": 2384,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

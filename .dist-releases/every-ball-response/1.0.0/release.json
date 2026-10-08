@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "every-ball-response",
+  "version": "1.0.0",
+  "name": "有球必應",
+  "shortName": "有球必應",
+  "description": "有球必應居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "44602533ca1b3e3c6f7eb75ebfd2f9b90651760446d38e6ef5245cb1b9e244c6",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-CiGnYuZN.js",
+      "sha256": "e0af545a2aa0e51a5d50543527be61c3f067241f6370243714b3f359c1faee66",
+      "size": 43300,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-CgvMEDqT.js",
+      "sha256": "970484870674d78a23861f1c341bed1ebf43e23e1ec1514f145cf4d9f3d633bc",
+      "size": 11142,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-B-heeWnH.js",
+      "sha256": "60ec126f78d0365096db23c106cce408383351e8605d63041e34420ae2a543d2",
+      "size": 18382,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-CpyzHc3n.js",
+      "sha256": "c4784e905b050b45a250ecd5c969dc0d13a349a287c8939badd29318da89ec97",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-CXI22NwK.css",
+      "sha256": "7d7d33aef88d5229da41c41b94a371e257e7e1fdff58572d9fcd9a558b219868",
+      "size": 84945,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-EN5kKg5s.js",
+      "sha256": "17b67046ec512ad3cd2849ff48e45e51134d1d7356f8650304d2d139d44398c5",
+      "size": 830840,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-BKwT5tQp.js",
+      "sha256": "961967452fc3eb551c86406f25a152c133e15ce20c80387770a4e43c92cb8518",
+      "size": 52577,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-B9f41XnR.js",
+      "sha256": "8f1412d2b41ea0a55aec6fcf0f089af50a6f295697e978910b17b8a62598fd08",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-Bblx4zfB.js",
+      "sha256": "297cddb96cbe6118e01cec69ab5c5b901f8f659fb2c9cef058442a8c32e1da05",
+      "size": 46289,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-DS7R-63t.js",
+      "sha256": "1f4f4a77da99076ee017639decb084f96d7deb19d382d4dce916e962f8d5f75d",
+      "size": 15578,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "f9fc8e8715c4e6625568b3600192ec045dcc232d7cfeb2e87ff17272f049952f",
+      "size": 422,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "bc76c8a41e3754d6eaf451be8762860180b2232d7e2a53c61a4217894298d8e5",
+      "size": 2543,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "82cd1d5a3aaf9dc43b09966ec7d002abe409789174b9efcd1555660fa1e68cca",
+      "size": 2051,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

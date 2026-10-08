@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "oculomotor-training",
+  "version": "1.0.0",
+  "name": "眼動訓練",
+  "shortName": "眼動訓練",
+  "description": "眼動訓練居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "fe29ff56624277b7e4dabb7b6b2eecd51536dd13acfd6339798c7e6b94be65a8",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/index-Cqt0KRWR.css",
+      "sha256": "23cf9a556145508c3154ceb1b0aa103919aa78bef986f6ad691331ce7fc4fabf",
+      "size": 75993,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-DUhSiF3N.js",
+      "sha256": "8cf67e7ce98b3e1a8472dd06086a7e4fdca10737c1169a44f1ede105b377f965",
+      "size": 318222,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "1337d9d5e2951c1d728e610248da2ceec9a7b994d198c4877888271fa8f1318b",
+      "size": 422,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "reference/experiment.js",
+      "sha256": "b91d620187eb6b1838db4ee00adb4cf5425e542bc864ca88d8fc5445c72310b1",
+      "size": 85285,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/index.html",
+      "sha256": "32dc780e7de6d7bf1699796a8bf79369c2d96450562519f5299338d748623e19",
+      "size": 567,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "reference/jspsych.js",
+      "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+      "size": 80994,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/style.css",
+      "sha256": "6a4d83acfcea7a91b68e64dfd1bb5d5a123d66cfdad6263fe3a914ff81ef93b4",
+      "size": 32577,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "reference/webgazer.js",
+      "sha256": "6210f977f5d146b40cfe82f0b845113171441ffbcb7aabdb2d65717507957081",
+      "size": 3571802,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "d240fdb0d0b1d967c5953153e4a84efa7bfb5f574a3a49bbceff3b5d11707c15",
+      "size": 4862,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "501863fd98d172a1837c3a09effb73e7f3cf50db595f78b5dca85c762da33bc4",
+      "size": 12079,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

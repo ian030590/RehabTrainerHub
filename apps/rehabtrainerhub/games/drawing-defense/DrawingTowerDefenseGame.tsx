@@ -1,16 +1,8 @@
-import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
-// Canonical Hub-owned motor module; bundled by the motor runtime.
-import { CreateRuntimeAssetUrlCandidates } from '@rehab-trainer/ui/aiAssets';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
-import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
-import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { useT,type TranslationKey } from '@rehab-trainer/ui/i18n/games';
-import { VerifySelectedTrainingUser } from '@rehab-trainer/ui/selectedUserGuard';
-import { getActiveUser } from '@rehab-trainer/ui/settings';
-import { PlayFailureSound,PlayGameEndSound,PlaySuccessSound,PrepareAudioFeedback } from './runtime/soundManager';
-import { SaveTrainingSessionRecord } from '@rehab-trainer/ui/storage/trainingRecords';
+import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled } from './runtime/soundManager';
+import { useT, type TranslationKey } from './i18n/useT';
+import { useFullscreenTrainingRoot, useTrainingAbort } from './runtime/trainingLifecycle';
+import { SendGameResult, UploadSample, RetryGameSave, IsHubGame } from './runtime/hubBridge';
+import starSkyUrl from './textures/StarSky.png';
 import { initJsPsych } from 'jspsych';
 import { Application,Container,Graphics,Text,type Ticker } from 'pixi.js';
 import { useCallback,useEffect,useMemo,useRef,useState,type CSSProperties } from 'react';
@@ -114,11 +106,7 @@ const minRdpEpsilonRatio = 0.05;
 const maxRdpEpsilonRatio = 0.1;
 const rdpClosedEndpointDistancePx = 30;
 const rdpStraightAngleDegrees = 160;
-const starSkyBackgroundImage = CreateRuntimeAssetUrlCandidates(import.meta.env.VITE_AI_ASSET_BASE_URL, 'game-assets/rehabtrainerhub/motor/star-sky/v1/StarSky.png', new URL('./textures/StarSky.png', import.meta.url).href)
-    .map((url) => `url("${url}")`)
-    .join(', ');
-const drawingSampleUploadEndpoint = import.meta.env.VITE_DRAWING_SAMPLE_UPLOAD_URL?.trim() || '/api/drawing-samples';
-const drawingSampleUploadToken = import.meta.env.VITE_DRAWING_SAMPLE_UPLOAD_TOKEN?.trim() || '';
+const starSkyBackgroundImage = `url("${starSkyUrl}")`;
 const drawingSampleImageSize = 256;
 const drawingSampleImagePadding = 24;
 const drawingSampleStrokeWidth = 14;
@@ -136,7 +124,7 @@ const shapeLabelKeys: Record<ShapeId, TranslationKey> = {
     'horizontal-line': 'drawing.shape.horizontalLine',
 };
 export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps) {
-    const { t } = useT();
+    const { t, lang } = useT();
     const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
     const pixiHostRef = useRef<HTMLDivElement | null>(null);
     const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -164,11 +152,9 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
     const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
     const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
-    const [phase, setPhaseState] = useState<GamePhase>('rules');
-    const hostedSettings = useHostedGameSettings();
-    const hostedSettingsAppliedRef = useRef(false);
+    const [phase, setPhaseState] = useState<GamePhase>('menu');
 
-    const [difficulty, setDifficulty] = useState<Difficulty>(({ easy: 'Beginner', medium: 'Intermediate', hard: 'Advanced' } as const)[GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty')]);
+    const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
     const [gameDurationSec, setGameDurationSec] = useState<GameDurationSeconds>(defaultGameDurationSeconds);
     const [customGameDurationSec, setCustomGameDurationSec] = useState(defaultCustomGameDurationSeconds);
     const [maxHp, setMaxHp] = useState(defaultHp);
@@ -176,7 +162,17 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     const [strictness, setStrictness] = useState(defaultRecognitionStrictness);
     const [strokeWaitMs, setStrokeWaitMs] = useState(defaultJudgeDelayMs);
     const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('stars');
-    const backgroundColor = defaultBackgroundColor;
+    const [backgroundColor, setBackgroundColor] = useState(defaultBackgroundColor);
+    const [soundEnabled, setSoundEnabled] = useState(true);
+    const [saveState, setSaveState] = useState('idle');
+    useEffect(() => { SetSoundEnabled(soundEnabled); }, [soundEnabled]);
+    useEffect(() => {
+      const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
+      const configure = () => setPhase('menu');
+      window.addEventListener('game:saved', saved);
+      window.addEventListener('game:configure', configure);
+      return () => { window.removeEventListener('game:saved', saved); window.removeEventListener('game:configure', configure); };
+    }, []);
     const [uploadedBackgroundUrl, setUploadedBackgroundUrl] = useState<string | null>(null);
     const [uploadedBackgroundName, setUploadedBackgroundName] = useState(() => t('drawing.upload.noImage'));
     const [result, setResult] = useState<SessionRecord | null>(null);
@@ -261,7 +257,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         const metrics = metricsRef.current;
         const record: SessionRecord = {
             Test_Date: FormatTestDate(new Date()),
-            Participant_ID: getActiveUser() || 'Unknown',
+            Participant_ID: 'Guest',
             Difficulty: configRef.current.difficulty,
             Game_Time_Seconds: configRef.current.gameDurationSec,
             Starting_HP: configRef.current.maxHp,
@@ -278,33 +274,16 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
         setResult(record);
         setPhase('results');
-        void SaveTrainingSessionRecord({
-            userName: record.Participant_ID,
-            moduleId: 'upper-limb-training',
-            gameId: 'drawing-defense',
-            gameTitle: t('training.drawing.title'),
-            difficulty: record.Difficulty,
-            trainingDate: record.Test_Date,
-            details: {
-                Game_Time_Seconds: record.Game_Time_Seconds ?? t('training.infinite'),
-                Starting_HP: record.Starting_HP,
-                Enemy_Speed: record.Enemy_Speed,
-                Recognition_Strictness: record.Recognition_Strictness,
-                Stroke_Wait_Milliseconds: record.Stroke_Wait_Milliseconds,
-                Total_Duration_Seconds: record.Total_Duration_Seconds,
-                Enemies_Spawned: record.Enemies_Spawned,
-                Enemies_Defeated: record.Enemies_Defeated,
-                HP_Remaining: record.HP_Remaining,
-                Game_Result: record.Game_Result,
-            },
-            detailRows: record.Enemy_Results.map((enemyResult) => ({
-                Enemy_Number: enemyResult.Enemy_Number,
-                Enemy_Shape: GetShapeLabel(enemyResult.Shape, t),
-                Enemy_Reaction_Time_Seconds: enemyResult.Reaction_Time_Seconds,
-                Enemy_Defeated: enemyResult.Defeated,
-            })),
-        });
-    }, [clearDrawingInput, recordEnemyOutcome, setPhase, t]);
+        SendGameResult({ difficulty: record.Difficulty, durationSec: record.Game_Time_Seconds ?? 0,
+            maxHp: record.Starting_HP, speed: record.Enemy_Speed, strictness: record.Recognition_Strictness,
+            strokeWaitMs: record.Stroke_Wait_Milliseconds, backgroundMode, soundEnabled }, {
+            durationSeconds: record.Total_Duration_Seconds, spawned: record.Enemies_Spawned,
+            defeated: record.Enemies_Defeated, hpRemaining: record.HP_Remaining,
+            victory: record.Game_Result === 'Victory' ? 1 : 0,
+        }, record.Enemy_Results.map(enemy => ({ enemyNumber: enemy.Enemy_Number,
+            shape: shapes.indexOf(enemy.Shape), reactionSeconds: enemy.Reaction_Time_Seconds,
+            defeated: enemy.Defeated ? 1 : 0 })));
+    }, [clearDrawingInput, recordEnemyOutcome, setPhase, t, backgroundMode, soundEnabled]);
     const drawLayout = useCallback((app: Application) => {
         const width = app.screen.width;
         const height = app.screen.height;
@@ -403,7 +382,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         const points = FlattenStrokes(sampleStrokes);
         if (points.length < 2 || StrokesPathLength(sampleStrokes) < 8)
             return;
-        const participantId = getActiveUser() || 'Unknown';
+        const participantId = 'Guest';
         const createdAt = new Date();
         const sampleId = CreateDrawingSampleId(createdAt, participantId, target.shape);
         const stageRect = overlayRef.current?.getBoundingClientRect();
@@ -435,9 +414,9 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             imageSize: drawingSampleImageSize,
         };
         void CreateDrawingSampleBlob(sampleStrokes)
-            .then((blob) => UploadDrawingSample(blob, metadata))
+            .then((blob) => UploadSample(blob, { ...metadata }))
             .catch((error) => {
-            console.warn('Unable to upload drawing sample to Discord.', error);
+            console.warn('Unable to prepare drawing sample.', error);
         });
     }, [t]);
     const handlePointerEnd = useCallback(() => {
@@ -476,8 +455,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         }, configRef.current.strokeWaitMs);
     }, [queueDrawingSampleUpload, recordEnemyOutcome, t]);
     const startGame = useCallback(async () => {
-        if (!VerifySelectedTrainingUser())
-            return;
         PrepareAudioFeedback(jsPsychRef);
         await enterTrainingFullscreen();
         const app = appRef.current;
@@ -503,7 +480,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             app.stage.removeChildren();
             drawLayout(app);
         }
-        RequestHubTrainingConfiguration();
+        setPhase('menu');
     }, [clearPixiState, drawLayout, setPhase]);
     const handleBackgroundImageUpload = useCallback((file: File | undefined) => {
         if (!file || !file.type.startsWith('image/'))
@@ -516,17 +493,6 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         setUploadedBackgroundName(file.name);
         setBackgroundMode('image');
     }, []);
-    useEffect(() => {
-        if (!hostedSettings || hostedSettingsAppliedRef.current)
-            return;
-        hostedSettingsAppliedRef.current = true;
-        setDifficulty(ToTitleDifficulty(hostedSettings.difficulty));
-        if (typeof hostedSettings.durationSec === 'number') {
-            setGameDurationSec(hostedSettings.durationSec);
-            setCustomGameDurationSec(hostedSettings.durationSec);
-        }
-        setPhase('rules');
-    }, [hostedSettings, setPhase]);
     useEffect(() => {
         let cancelled = false;
         let initialized = false;
@@ -676,15 +642,41 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       <div ref={pixiHostRef} className="drawing-defense-stage"/>
       <div ref={overlayRef} className="drawing-defense-input"/>
 
-      {null}
+      {phase === 'menu' && <section className="training-panel">
+        <form className="training-config" onSubmit={(event) => { event.preventDefault(); setPhase('rules'); }} onKeyDown={event => {
+          if (event.key === 'Enter' && event.target instanceof HTMLInputElement && ['number', 'text'].includes(event.target.type)) {
+            event.preventDefault();
+            if (event.currentTarget.reportValidity()) setPhase('rules');
+          }
+        }}>
+          <header className="training-config-header"><h2>{t('training.drawing.title')}</h2></header>
+          <div className="training-config-body">
+            <section className="training-setting"><h3>{lang === 'en' ? 'Session settings' : '活動設定'}</h3>
+              <label>{t('cognitive.config.difficulty')}<select value={difficulty} onChange={event => setDifficulty(event.target.value as Difficulty)}>{Object.entries(difficulties).map(([value, config]) => <option key={value} value={value}>{t(config.labelKey)}</option>)}</select></label>
+              <p>{activeDifficultyDescription}</p>
+              <label>{t('drawing.config.gameDuration')}<select value={gameDurationSec ?? 0} onChange={event => setGameDurationSec(Number(event.target.value) || null)}>{!isPresetGameDuration && <option value={gameDurationSec ?? 0}>{gameDurationLabel}</option>}{gameDurationOptions.map(value => <option key={value ?? 0} value={value ?? 0}>{FormatGameDuration(value, t)}</option>)}</select></label>
+              <label>{lang === 'en' ? 'Custom duration (seconds)' : '自訂活動時間（秒）'}<input type="number" min="1" max="3600" value={customGameDurationSec} onChange={event => { const value = Clamp(Number(event.target.value), 1, 3600); setCustomGameDurationSec(value); setGameDurationSec(value); }} /></label>
+              <label>{t('drawing.config.hp')}<input type="number" min="1" max="20" value={maxHp} onChange={event => setMaxHp(Clamp(Number(event.target.value), 1, 20))} /></label>
+              <label>{t('drawing.config.enemySpeed')}<input type="range" min="1" max="20" value={speed} onChange={event => setSpeed(Number(event.target.value))} /><output>{speed}</output></label>
+              <label>{t('drawing.config.strictness')}<input type="range" min={minRecognitionStrictness} max={maxRecognitionStrictness} value={strictness} onChange={event => setStrictness(Number(event.target.value))} /><output>{strictness}%</output></label>
+              <label>{t('drawing.config.strokeWait')}<input type="range" min="100" max="2000" step="50" value={strokeWaitMs} onChange={event => setStrokeWaitMs(Number(event.target.value))} /><output>{strokeWaitMs} ms</output></label>
+            </section>
+            <section className="training-setting"><h3>{t('drawing.config.background')}</h3>
+              <label>{t('drawing.config.background')}<select value={backgroundMode} onChange={event => setBackgroundMode(event.target.value as BackgroundMode)}><option value="stars">{t('drawing.background.stars')}</option><option value="color">{t('drawing.background.color')}</option><option value="image">{t('drawing.background.customImage')}</option></select></label>
+              <label>{t('drawing.background.color')}<input type="color" value={backgroundColor} onChange={event => setBackgroundColor(event.target.value)} /></label>
+              <label>{t('drawing.background.customImage')}<input type="file" accept="image/*" onChange={event => handleBackgroundImageUpload(event.target.files?.[0])} /></label><p>{uploadedBackgroundName}</p>
+              <label><input type="checkbox" checked={soundEnabled} onChange={event => setSoundEnabled(event.target.checked)} />{lang === 'en' ? 'Sound feedback' : '音效回饋'}</label>
+            </section>
+          </div>
+          <footer className="config-actions"><div className="training-config-navigation-buttons"><button className="btn btn-primary" type="button" onClick={event => { if (event.currentTarget.form?.reportValidity()) setPhase('rules'); }}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button><button className="btn btn-ghost" type="button" onClick={onExit}>{lang === 'en' ? 'Back' : '返回'}</button></div></footer>
+        </form>
+      </section>}
+
 
       {phase === 'rules' && (
         <DrawingDefenseTutorial
           onStart={() => void startGame()}
-          onBack={() => {
-            if (!RequestHubTrainingConfiguration())
-              RequestHubTrainingConfiguration();
-          }}
+          onBack={() => setPhase('menu')}
           summaryItems={[
             { label: t('cognitive.config.difficulty'), value: activeDifficultyLabel },
             { label: t('drawing.config.gameDuration'), value: gameDurationLabel },
@@ -738,7 +730,9 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
               </tbody>
             </table>
 
-            <TrainingResultActions backLabel={t('training.returnHome')} onBackHome={onExit} hubLabel={t('training.returnLobby')}/>
+            <p role="status">{!IsHubGame() ? (lang === 'en' ? 'Local session; open from the Hub to save a record.' : '本機練習；從 Hub 開啟才能保存紀錄。') : saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (lang === 'en' ? 'Save failed' : '保存失敗') : (lang === 'en' ? 'Saving record…' : '正在保存紀錄…')}</p>
+            {saveState === 'error' && <button onClick={RetryGameSave}>{lang === 'en' ? 'Retry saving' : '重試保存'}</button>}
+            <button className="btn btn-primary" onClick={onExit}>{!IsHubGame() ? (lang === 'en' ? 'Back to settings' : '返回設定') : t('training.returnLobby')}</button>
           </div>
         </div>)}
     </div>);
@@ -798,21 +792,6 @@ function CreateDrawingSampleBlob(strokes: Point[][]): Promise<Blob> {
                 reject(new Error('Unable to encode drawing sample PNG.'));
         }, 'image/png');
     });
-}
-async function UploadDrawingSample(blob: Blob, metadata: DrawingSampleMetadata): Promise<void> {
-    const filename = `drawing_${metadata.targetShape ?? 'unknown'}_${metadata.matched ? 'hit' : 'miss'}_${metadata.sampleId}.png`;
-    const body = new FormData();
-    body.append('image', blob, filename);
-    body.append('metadata', JSON.stringify(metadata));
-    const response = await fetch(drawingSampleUploadEndpoint, {
-        method: 'POST',
-        headers: drawingSampleUploadToken ? { 'x-drawing-upload-token': drawingSampleUploadToken } : undefined,
-        body,
-    });
-    if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        throw new Error(`Upload failed with ${response.status}${text ? `: ${text}` : ''}`);
-    }
 }
 function CreateDrawingSampleId(date: Date, participantId: string, targetShape: ShapeId | null): string {
     const timestamp = date.toISOString().replace(/\D/g, '').slice(0, 17);

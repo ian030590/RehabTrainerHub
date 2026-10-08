@@ -9,6 +9,7 @@ const repositoryRoot = resolve(import.meta.dirname, '..');
 const hubRoot = resolve(repositoryRoot, 'apps/rehabtrainerhub');
 const gamesRoot = resolve(hubRoot, 'games');
 const catalogPath = resolve(hubRoot, 'games/catalog.ts');
+const migratedGames = JSON.parse(await readFile(resolve(repositoryRoot, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
 const expectedOfficialGameIds = Object.freeze([
   'antisaccade',
   'asteroid-shield',
@@ -69,6 +70,11 @@ test('catalog and game roots retain one exact settings definition per official g
 
   const fieldTypes = new Set();
   for (const gameId of gameDirectories) {
+    if (Object.hasOwn(migratedGames, gameId)) {
+      await assert.rejects(access(resolve(gamesRoot, gameId, 'settings.json')));
+      await assert.rejects(access(resolve(gamesRoot, gameId, 'score.json')));
+      continue;
+    }
     const settingsPath = resolve(gamesRoot, gameId, 'settings.json');
     const definition = ParseGameSettingsDefinition(
       JSON.parse(await readFile(settingsPath, 'utf8')),
@@ -113,7 +119,7 @@ test('root builds and both Cloudflare workflows retain the architecture gate', a
   assert.match(rootPackage.scripts['build:cloudflare'], /npm run test:game-architecture/);
   assert.equal(
     rootPackage.scripts['test:game-architecture'],
-    'tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs',
+    'tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs scripts/check-self-contained-game.test.mjs',
   );
   assert.equal(
     rootPackage.scripts['test:game-architecture:built'],
@@ -216,6 +222,11 @@ test('both official and developer overlays configure before mounting their ifram
 test('all official games install the verified settings receiver', async () => {
   for (const gameId of expectedOfficialGameIds) {
     const main = await readFile(resolve(gamesRoot, gameId, 'main.tsx'), 'utf8');
+    if (Object.hasOwn(migratedGames, gameId)) {
+      assert.match(main, /InstallHubBridge\(\)/);
+      assert.doesNotMatch(main, /@rehab-trainer\/|settings\.json|score\.json/);
+      continue;
+    }
     assert.match(main, /InstallHostedGameSettingsReceiver\(\)/);
     assert.match(main, /<OfficialGameShell settings=\{settings\} score=\{score\}/);
     assert.match(main, /from ['"]\.\/score\.json['"]/);
@@ -309,7 +320,7 @@ test('settings getters declare the JSON value type before runtime conversion', a
   const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, hubRoot);
   const program = ts.createProgram(parsed.fileNames, parsed.options);
   const checker = program.getTypeChecker();
-  const definitions = new Map(await Promise.all(expectedOfficialGameIds.map(async id => [id, JSON.parse(await readFile(resolve(gamesRoot, id, 'settings.json'), 'utf8')).sections.flatMap(section => section.fields)])));
+  const definitions = new Map(await Promise.all(expectedOfficialGameIds.filter(id => !Object.hasOwn(migratedGames, id)).map(async id => [id, JSON.parse(await readFile(resolve(gamesRoot, id, 'settings.json'), 'utf8')).sections.flatMap(section => section.fields)])));
   for (const source of program.getSourceFiles()) {
     const gameId = relative(gamesRoot, source.fileName).replaceAll('\\', '/').split('/')[0];
     const fields = definitions.get(gameId);

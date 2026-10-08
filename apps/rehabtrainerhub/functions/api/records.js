@@ -17,6 +17,7 @@ import {
   VerifyTurnstileToken,
 } from '../_lib/turnstile.js';
 import { IsSubjectId } from '../_lib/gameRuns.js';
+import { officialGameReleases, VerifyOfficialGameSession } from '../_lib/officialGames.js';
 
 const appIds = new Set(['rehabtrainerhub']);
 const runtimeIds = new Set(['hub', 'motor', 'vision', 'brain', 'mouth']);
@@ -197,6 +198,11 @@ export async function onRequestPost({ request, env }) {
   if (subjectId !== null && !IsSubjectId(subjectId)) {
     return ErrorResponse(request, env, 'Invalid subject identifier.', 400);
   }
+  const officialGame = Object.hasOwn(officialGameReleases, input?.record?.gameId ?? '');
+  if (officialGame && (!IsBoundedGameScoreRecord(input)
+    || !await VerifyOfficialGameSession(input, env, session?.sub, subjectId))) {
+    return ErrorResponse(request, env, 'Invalid official game session or result.', 400);
+  }
   if (
     GetJsonByteLength(input) > maximumDefaultRecordRequestBytes
     && !IsBoundedOculomotorEyeTrackingRecord(input)
@@ -231,6 +237,25 @@ export async function onRequestPost({ request, env }) {
   if (!payload) return ErrorResponse(request, env, 'Invalid training record payload.', 400);
 
   const db = RequireDatabase(env);
+  const existingOfficialResult = async () => {
+    const existing = await db.prepare('SELECT payload_json, user_id, subject_id FROM training_records WHERE id = ?')
+      .bind(payload.record.id).first();
+    if (existing) {
+      const stored = SafeJsonParse(existing.payload_json);
+      if (existing.user_id !== (session?.sub || null) || existing.subject_id !== subjectId
+        || stored?.gameId !== payload.record.gameId
+        || JSON.stringify(stored.score) !== JSON.stringify(payload.record.score)
+        || JSON.stringify(stored.config) !== JSON.stringify(payload.record.config)) {
+        return ErrorResponse(request, env, 'Official game session already consumed.', 409);
+      }
+      return JsonResponse(request, env, { ok: true, recordId: payload.record.id, duplicate: true });
+    }
+    return null;
+  };
+  if (officialGame) {
+    const duplicate = await existingOfficialResult();
+    if (duplicate) return duplicate;
+  }
   const payloadJson = JSON.stringify(payload.record);
   const summaryJson = payload.record.score
     ? JSON.stringify({ ...payload.record, score: { ...payload.record.score, rounds: [] }, scoreRoundCount: payload.record.score.rounds.length })
@@ -244,7 +269,7 @@ export async function onRequestPost({ request, env }) {
         id, subject_id, user_id, app_id, runtime_id, module_id, game_id, saved_at, training_date, verified_training_date,
         difficulty, user_name, payload_json, summary_json, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
+      ${officialGame ? 'ON CONFLICT(id) DO NOTHING' : `ON CONFLICT(id) DO UPDATE SET
         runtime_id = excluded.runtime_id,
         module_id = excluded.module_id,
         game_id = excluded.game_id,
@@ -257,7 +282,7 @@ export async function onRequestPost({ request, env }) {
         AND training_records.subject_id IS excluded.subject_id
         AND training_records.app_id = excluded.app_id
         AND training_records.runtime_id = excluded.runtime_id
-        AND training_records.module_id = excluded.module_id
+        AND training_records.module_id = excluded.module_id`}
     `)
     .bind(
       payload.record.id,
@@ -280,6 +305,10 @@ export async function onRequestPost({ request, env }) {
     .run();
 
   if (result?.meta?.changes === 0) {
+    if (officialGame) {
+      const duplicate = await existingOfficialResult();
+      if (duplicate) return duplicate;
+    }
     return ErrorResponse(request, env, 'Training record id belongs to a different record scope.', 409);
   }
 

@@ -13,8 +13,8 @@ npm workspace / Turborepo monorepo；App 程式碼位於 `apps/`：
 
 - `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、內建訓練 runtime、API、審核後台、開發者入口）。
 - `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），負責以 sandboxed iframe 載入第三方 HTML/ZIP 遊戲並提供 PWA。
-- `apps/rehabtrainerhub/games/{gameId}/`：各遊戲為獨立的 Turborepo Workspace，擁有自己的 Vite entry、runtime、規則與 i18n。遊戲**嚴禁使用或引入共用元件**（如 `packages/ui`），只能透過 `settings.json` 與 `score.json` 與 Hub 溝通。Hub 負責依據這些 JSON 產生設定表單與結果頁面。
-  **新增遊戲與 Workspace 同步：** 由於遊戲被抽離為獨立 Workspace 以達成 O(1) 快取建置，當新增遊戲資料夾並加入 `catalog.ts` 後，請務必執行 `npm run sync:games`。此腳本會自動為新遊戲產生 `package.json`、`vite.config.ts`，並將其註冊到 Hub 的依賴樹中，開發者完全不需要手動修改任何 `package.json`。
+- `apps/rehabtrainerhub/games/{gameId}/`：各遊戲為獨立的 Turborepo Workspace，擁有自己的 Vite entry、runtime、規則與 i18n。遊戲**嚴禁使用或引入共用元件**（如 `packages/ui`）。未遷移遊戲維持 `settings.json`／`score.json` 流程；登記於 `packages/ui/src/officialGameReleases.json` 的 R2 遊戲自行呈現設定、教學與成績，僅透過私有 MessageChannel 傳送成果，由 Hub 驗證後入庫。首個試點為畫畫塔防 `2.0.1`，詳見 `docs/r2-game-migration-plan.md`。
+  **新增遊戲與 Workspace 同步：** 當新增遊戲資料夾並加入 `catalog.ts` 後，請務必執行 `npm run sync:games`。未遷移遊戲自動產生 workspace 並註冊到 Hub 依賴樹；已遷移 R2 遊戲須先提供自有依賴及 Vite entry，sync 會將其排除於 Hub 依賴樹，不能恢復共用 UI 或 JSON shell。
 
 主應用程式 (Hub) 的共用 UI、auth、layout、settings、storage、gamePlatform 規範：`packages/ui/src`。遊戲不得依賴此目錄。
 第三方遊戲通訊橋樑由 `apps/usergamerunner/runtime/` 維護；RehabBuilder 規劃負責視覺化遊戲製作與 Hub 套件匯出，本倉庫不提供開發者 SDK 套件。
@@ -28,7 +28,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `npm run dev:hub`：啟動 Hub。
 - `npm run build`：執行測試 gate 並透過 `scripts/build-apps.mjs` 建置全部 app。
 - `npm run build:cloudflare`：建置 Cloudflare Pages 輸出。
-- `npm run build:hub|gamerunner`：建置單一 app；Hub build 會一併建置 40 個內建遊戲。
+- `npm run build:hub|gamerunner`：建置單一 app；Hub build 會一併建置 39 個未遷移遊戲，畫畫塔防只留下 R2 PWA 入口連結。R2 遊戲以自己的 workspace 獨立建置。
+- `npm run publish:game -- drawing-defense`：檢查並發布已遷移遊戲至 R2；可加 `--dry-run`。同版本不同內容禁止覆寫，先核對所有 files，再發布 release manifest。
 - `npm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
 - `npm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
 - `npm run test:game-platform`：驗證遊戲套件掃描器與平台通訊橋樑。
@@ -49,7 +50,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - CI/CD 乾淨安裝使用 `npm ci --workspaces --include-workspace-root`；Hub 的內建遊戲相容 build 需要 root 的 Vite 與訓練 runtime dependencies，不得省略 workspace root。
 - `test:game-platform` 由兩份 workflow 的 `test:entrypoints` matrix 間接執行，涵蓋遊戲通訊橋樑、訊息協定與設定 schema；SDK workspace 已移除。兩份 workflow 維持相同的 `test:entrypoints` 命令。
 - Hub 單一四路由導覽與 `aria-current` 契約由 `scripts/check-hub-navigation.test.mjs` 驗證，包含於兩份 workflow 共用的 `test:entrypoints` 命令；手機導覽與平板無水平溢出另以本機 Brave browser smoke 驗證。
-- `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、`settings.json`、統一 config UI、iframe 與訊息協定；CI 與部署 workflow 必須維持同名 matrix 項目。Hub build 另以 `check-built-game-architecture.mjs` 驗證實際輸出不得恢復 `/runtimes/*`。
+- `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、未遷移遊戲的 JSON／統一 config UI，以及 R2 遊戲的自有設定／成績、無共用依賴、私有通訊和實際 bytes 雜湊驗證（`scripts/check-self-contained-game.test.mjs`）；CI 與部署 workflow 維持同名 matrix 與相同命令。Hub build 另驗證已遷移遊戲不得攜帶 bundle／JSON，且不得恢復 `/runtimes/*`。
+- 畫畫塔防 R2 本機 Brave 測試為 `node scripts/check-r2-game-browser.mjs`，另執行 `--mobile`、`--revoke`；發布後執行 `--remote` 與 `--remote --standalone`。不加入沒有 Brave 的 Linux CI matrix。remote 讀真實 R2 資產，Hub／database 請求只在測試瀏覽器內導向本機，不建立正式紀錄。
 - `npm run test:webgazer` 驗證眼動練習參考實驗的 WebGazer/jsPsych bundle 完整性、校正與驗證程序、`settings.json` 與 `score.json` 欄位；包含於 `test:entrypoints`。網頁版沒有原生 Tobii 橋接。
 - `npm run test:webgazer-browser` 以本機 Brave 驗證眼動練習設定、無眼動刺激與成績流程、雙層同源 iframe 的相機權限，以及 R2 CSV 上傳失敗重試；此項為本機測試，不加入 Linux CI matrix。
 - `npm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `npm run build:cloudflare:only`，不可再序列重跑同一批測試。
@@ -72,6 +74,10 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 Hub 的共用邏輯、UI、樣式、auth、settings、routing helper、footer/navbar 放 `packages/ui/src` 或共用 helper；Hub app 組合共用元件，不分叉版本。
 
 但**所有遊戲 (games) 完全獨立，嚴禁引入 `packages/ui` 或任何跨遊戲共用元件**。遊戲僅透過 `settings.json` 定義介面，由 Hub 負責渲染設定表單與路由；訓練結束後，遊戲透過 `score.json` 與訊息橋樑傳遞成績，由 Hub 負責顯示結果。遊戲內部僅保留自身的 game loop、renderer 及專屬邏輯，不得依賴 Hub 或 UI 模組的任何檔案。
+
+以上 JSON／Hub 成績 UI 規則適用未遷移遊戲。已登記 R2 的遊戲自行擁有設定、教學與結果 UI，不建立這兩份 JSON；Hub 僅提供 container、身份隔離、私有通訊、保存與 exit。其 `rehab-trainer.game-score/v1` 為數值傳輸／入庫格式，並非 UI 描述檔；以 `docs/r2-game-migration-plan.md` 為準。禁止將遊戲 bundle 重新加入 Hub 依賴或 output。
+
+R2 遊戲與 Hub 分屬不同 origin。成果僅走交給指定 iframe window 的私有 MessageChannel；遊戲核對 init 的 parent source／origin，Hub 核對 nonce、game/version、sequence 與成果 schema，不接受一般 window message 的成果。獨立 PWA 只在新格式 release 明確宣告 fullscreen capability 時委派全螢幕，仍保持 `sandbox="allow-scripts"`。
 
 Hub 禁止複製/分叉 trainer 設定表單、defaults、validation、rules、runtime。Hub 僅依 training catalog 裝載 trainer-owned config entry；trainer config 變更須自動反映，無需改 Hub。Hub 只負責選擇、container、history、exit、瀏覽器權限委派。Pixi、jsPsych、Three、MediaPipe、TensorFlow runtime/lifecycle 仍屬各模組。
 

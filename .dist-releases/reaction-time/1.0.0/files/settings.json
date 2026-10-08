@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "gameId": "reaction-time",
+  "sections": [
+    {
+      "id": "training",
+      "title": {
+        "zh-TW": "活動設定",
+        "en": "Session settings"
+      },
+      "description": {
+        "zh-TW": "設定值只用於這次活動。",
+        "en": "These values apply only to this session."
+      },
+      "fields": [
+        {
+          "key": "difficulty",
+          "type": "list",
+          "label": {
+            "zh-TW": "隨機等待區間",
+            "en": "Random foreperiod"
+          },
+          "description": {
+            "zh-TW": "各條件改變下列活動需求；不同條件應分開分析。",
+            "en": "These conditions alter the demands listed below; analyze conditions separately."
+          },
+          "default": "medium",
+          "options": [
+            {
+              "value": "easy",
+              "label": {
+                "zh-TW": "1.4–3.2 秒",
+                "en": "1.4–3.2 s"
+              }
+            },
+            {
+              "value": "medium",
+              "label": {
+                "zh-TW": "1.8–4.4 秒",
+                "en": "1.8–4.4 s"
+              }
+            },
+            {
+              "value": "hard",
+              "label": {
+                "zh-TW": "2.2–5.2 秒",
+                "en": "2.2–5.2 s"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": {
+            "zh-TW": "成功反應目標次數",
+            "en": "Target successful responses"
+          },
+          "description": {
+            "zh-TW": "提前按下會另記錯誤，不計入成功目標；時間上限可能提早終止。",
+            "en": "False starts are recorded separately and do not count toward the target; a time limit may end the task early."
+          },
+          "default": 10,
+          "min": 5,
+          "max": 50,
+          "step": 5,
+          "unit": {
+            "zh-TW": "回合",
+            "en": "rounds"
+          }
+        },
+        {
+          "key": "timeLimitSec",
+          "type": "list",
+          "label": {
+            "zh-TW": "時間限制",
+            "en": "Time limit"
+          },
+          "description": {
+            "zh-TW": "選擇是否限制單次活動時間。",
+            "en": "Choose a time limit for this session."
+          },
+          "default": 0,
+          "options": [
+            {
+              "value": 0,
+              "label": {
+                "zh-TW": "不限時",
+                "en": "No limit"
+              }
+            },
+            {
+              "value": 60,
+              "label": {
+                "zh-TW": "1 分鐘",
+                "en": "1 minute"
+              }
+            },
+            {
+              "value": 180,
+              "label": {
+                "zh-TW": "3 分鐘",
+                "en": "3 minutes"
+              }
+            },
+            {
+              "value": 300,
+              "label": {
+                "zh-TW": "5 分鐘",
+                "en": "5 minutes"
+              }
+            }
+          ]
+        },
+        {
+          "key": "soundEnabled",
+          "type": "checkbox",
+          "label": {
+            "zh-TW": "聲音回饋",
+            "en": "Sound feedback"
+          },
+          "description": {
+            "zh-TW": "在操作與結果時播放提示音。",
+            "en": "Play audio cues during interactions and results."
+          },
+          "default": true
+        }
+      ]
+    }
+  ]
+}

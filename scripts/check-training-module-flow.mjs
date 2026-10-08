@@ -268,10 +268,10 @@ const implementationGroups = [
     ids: ['motor:drawing-defense'],
     files: ['drawing-defense/DrawingTowerDefenseGame.tsx'],
     tokens: [
-      "('rules')",
+      "setPhase('rules')",
       "setPhase('playing')",
       "phase === 'results'",
-      'TrainingResultActions',
+      'SendGameResult',
     ],
   },
   {

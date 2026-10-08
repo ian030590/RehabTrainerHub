@@ -10,7 +10,7 @@ const maximumAggregateResultPayloadBytes = 16_000;
 const maximumResultPayloadBytes = 64 * 1024;
 const maximumResultTrialCount = 100_000;
 const releaseHealthCheckIntervalMs = 60 * 1000;
-const runnerCacheRevision = '2026-08-17-platform-runtime-v3';
+const runnerCacheRevision = '2026-10-08-self-contained-games-v4';
 
 export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {}) {
   const cspNonce = RandomToken(18);
@@ -429,7 +429,7 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
         <span id="runner-status" role="status">隔離執行</span>
         <button id="install-button" type="button">安裝遊戲</button>
       </header>
-      <iframe credentialless id="game-frame" title="${EscapeHtml(release.name)}" referrerpolicy="no-referrer" sandbox="allow-scripts"></iframe>
+      <iframe credentialless id="game-frame" title="${EscapeHtml(release.name)}" referrerpolicy="no-referrer" sandbox="allow-scripts" ${release.presentation === 'game' && release.capabilities.includes('fullscreen') ? 'allow="fullscreen" allowfullscreen' : ''}></iframe>
     </main>
   </body>
 </html>`;

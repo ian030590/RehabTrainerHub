@@ -191,6 +191,17 @@ test('launcher is a noindex PWA shell with an opaque-origin iframe and strict re
   assert.doesNotMatch(html, /apiToken|accessToken|authToken/);
 });
 
+test('self-contained standalone games receive fullscreen only when declared', async () => {
+  for (const allowed of [false, true]) {
+    const release = BuildRelease({ runtime: { name: 'native', major: 1 }, presentation: 'game', capabilities: allowed ? ['fullscreen'] : [] });
+    const response = await HandleRequest(CreateContext('/games/reaction-time/1.0.0/', release));
+    const html = await response.text();
+    assert.equal(/allow="fullscreen" allowfullscreen/.test(html), allowed);
+    assert.match(html, /sandbox="allow-scripts"/);
+    assert.doesNotMatch(html, /allow-same-origin|allow-top-navigation/);
+  }
+});
+
 test('standalone launcher loads settings.json defaults while Hub embed waits for platform settings', async () => {
   const baseRelease = BuildRelease();
   const release = BuildRelease({

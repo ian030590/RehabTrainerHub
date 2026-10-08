@@ -1,0 +1,20 @@
+{
+  "gameId": "drawing-defense",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "prefix": "releases/drawing-defense/2.0.0/",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.0/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.0/",
+  "contentSha256": "1a072412d9220b7d285086d999829961f5b76e7ad88220382d3121295a312d97",
+  "fileCount": 4,
+  "totalBytes": 5565247,
+  "verifiedAt": "2026-10-08T02:23:59.876Z",
+  "runnerDeploymentUrl": "https://3333f1f2.trainerhub-user-games.pages.dev",
+  "hubProductionDeployed": false,
+  "verification": {
+    "allR2FilesReadBackSha256": true,
+    "braveRealR2GameAndLocalHubDatabase": true,
+    "braveStandalonePwa": true,
+    "productionUserRecordsCreated": false
+  }
+}

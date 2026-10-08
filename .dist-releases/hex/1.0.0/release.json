@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "hex",
+  "version": "1.0.0",
+  "name": "Hex 連線棋",
+  "shortName": "Hex 連線棋",
+  "description": "Hex 連線棋居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "6694c52411fd2f7595466a2c6e3e15e11387a0ddba2443df8d04de33d4da522e",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-DeE5jwfL.js",
+      "sha256": "ed92aa3a21661c363f36792694a1f17888eb50285c8a00a24f73f8610dc81b58",
+      "size": 43367,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-D9S5th4Y.js",
+      "sha256": "20f079c15543dcadc64e04eb7c672b0d34266bef2be1814907fd4610c26aaa1e",
+      "size": 11152,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasPool-DMb--Ewi.js",
+      "sha256": "178f753caad0ceddc960c202ebc6ba3645c248d5395fea18c6036744373dacd0",
+      "size": 782,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-CWqnyirz.js",
+      "sha256": "b0a72535c0c71c72e364b9d263c8d108931464571836dcb085a52073b22679cb",
+      "size": 18421,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/canvasUtils-CPRlWTT5.js",
+      "sha256": "0fea5131f17d20d6d1d0516802e8bd5ae840cb1990bbe0d1cd7046509328973d",
+      "size": 5770,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-Ds0GN7ZV.js",
+      "sha256": "a3b56b3b7b3b7460aff103931cdf67d164c1e7c21db7fea44bc47978b28d35c7",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BayVERKn.js",
+      "sha256": "ce176e72da9745a460994a167dd25f9e725a7c37d315a102f4d7a90ae6a2a711",
+      "size": 648907,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BrUXGa19.css",
+      "sha256": "16fe3b0148dcca21513c2006f048b82a048f1cf73cb1205660a3c52ef7b2bccd",
+      "size": 85369,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-Bu2UUQXT.js",
+      "sha256": "2f9af2caae59dadb3eeeb2bf4066a60184c1e2937e896ab162881a4d8459775a",
+      "size": 53010,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-zKme84jm.js",
+      "sha256": "2b0eb9451517fbc83a4aeb1fbda33a6c24f4d6e530b83568fb980dd3a03122a2",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-DYHng9r4.js",
+      "sha256": "8b8915155910f9b84dc581cd5c950aee61a4c8bc014a581c0321890a1efcfae4",
+      "size": 46327,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-h4ws6MvO.js",
+      "sha256": "8dcc502491b2a2591829c6856ee747084785d893c7f719bc1a9915a341811ed3",
+      "size": 16000,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "a1b16f1f0e8eeae14eac561a1d98bf96787f5e4595c8c721554fadbcc5bc4a14",
+      "size": 423,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "e8f68e6a164cf441f2b1a18b60e092eab8d1b345bda348daee075dbe32618edd",
+      "size": 2775,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "20ce7db8e22cf9c5b960961ff92c7492ffe53888af4b78fb244acbde159cac57",
+      "size": 1976,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

@@ -1,5 +1,5 @@
 // Types local to the Hub-owned cognitive modules.
-import type { TranslationKey } from '@rehab-trainer/ui/i18n';
+import type { TranslationKey } from '../../i18n/useT';
 
 export type ReferenceGameId =
   | 'memory-match'
@@ -261,4 +261,4 @@ export type CognitiveGameState =
   | HexState
   | MazeState;
 
-export type TFunction = (key: string, params?: Record<string, string | number>) => string;
+export type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;

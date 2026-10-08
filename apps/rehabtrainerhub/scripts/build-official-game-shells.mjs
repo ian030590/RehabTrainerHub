@@ -17,9 +17,10 @@ await rm(shellOutputRoot, { recursive: true, force: true });
 await mkdir(shellOutputRoot, { recursive: true });
 
 const catalogSource = await readFile(resolve(gamesRoot, 'catalog.ts'), 'utf8');
+const r2Releases = JSON.parse(await readFile(resolve(repoRoot, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
 const gameIds = [...catalogSource.matchAll(
   /\{\s*id:\s*'([^']+)',\s*trainer:\s*'([^']+)'/g,
-)].map((m) => m[1]);
+)].map((m) => m[1]).filter(id => !Object.hasOwn(r2Releases, id));
 
 const missingGameIds = gameIds.filter((gameId) => !existsSync(resolve(gamesRoot, gameId, 'dist')));
 if (missingGameIds.length > 0) {
@@ -27,8 +28,8 @@ if (missingGameIds.length > 0) {
   const isWindows = process.platform === 'win32';
   const command = isWindows ? (process.env.ComSpec ?? 'cmd.exe') : 'npx';
   const args = isWindows
-    ? ['/d', '/s', '/c', 'npx', 'turbo', 'run', 'build', '--filter=./apps/rehabtrainerhub/games/*']
-    : ['turbo', 'run', 'build', '--filter=./apps/rehabtrainerhub/games/*'];
+    ? ['/d', '/s', '/c', 'npx', 'turbo', 'run', 'build', ...missingGameIds.map(id => `--filter=@rehab-trainer/game-${id}`)]
+    : ['turbo', 'run', 'build', ...missingGameIds.map(id => `--filter=@rehab-trainer/game-${id}`)];
   const result = spawnSync(command, args, {
     cwd: repoRoot,
     env: process.env,

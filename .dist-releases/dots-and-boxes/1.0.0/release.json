@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "dots-and-boxes",
+  "version": "1.0.0",
+  "name": "點格成盒",
+  "shortName": "點格成盒",
+  "description": "點格成盒居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "6185d48cd813070c0df896bb7fee819b8cb191ef4ed1ea1d964e402a94f62a98",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-BPqzCcZ_.js",
+      "sha256": "3cfcad85b788b07ca41d6c1b40baec6468da82a67a8dfe46dfea0a930f246224",
+      "size": 43367,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-BVf11gM8.js",
+      "sha256": "c8a7aabb15775d38a5370a216c489ad95034828d2d744f02188327f807e69c5c",
+      "size": 11152,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasPool-BLN4W0Yo.js",
+      "sha256": "8d4cd9b47682d53ac0d00fb5455e51ca73f00b4c8b5e9dab2bce123a52f43256",
+      "size": 782,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-CDwjqeiz.js",
+      "sha256": "710ff4b2efcc4457ed0a4a2b37dd81161a54a01a00f3925769cbae508c252e21",
+      "size": 18421,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/canvasUtils-da8SN37E.js",
+      "sha256": "4b07968c2391d9ecd90978c9925c82121cdeec8787eecfec1cd8b72dc14ff97a",
+      "size": 5770,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-Dz44eoYr.js",
+      "sha256": "dfd5e7815f4a9a36019057119f0beb77b0f9d9040e4eb8a76e788f11f33d5ef6",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BrUXGa19.css",
+      "sha256": "16fe3b0148dcca21513c2006f048b82a048f1cf73cb1205660a3c52ef7b2bccd",
+      "size": 85369,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-DP4dtaWU.js",
+      "sha256": "26e9dbefddcab59c866e2c7380181a48e492c2772d4c3540ada99aecd2114ee1",
+      "size": 651359,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-DFxvL1WL.js",
+      "sha256": "b3531de4fd7050cda5a672ae63d14f4dad0b6b77069adc09ae34b9112794acad",
+      "size": 53010,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-DDgycCxg.js",
+      "sha256": "561c54e9ac328f7e47a8cad045d6858b52d55ab2214ffa92790e55c80cbb68c0",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-DusVG4mJ.js",
+      "sha256": "7fffa0e6443b87c97f03a81fc3f06a5ce9a5621ced93b62bed95264a64bbfaf6",
+      "size": 46327,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-NO2g6IN8.js",
+      "sha256": "b3262d4e80d384e20a82ee8c5210ad119bbfaa4bc5794e8ab07183b5c3e48031",
+      "size": 16000,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "96cb424d042b86b41ca6491454bccd7f99cf1a97f2c7832b3d032471bfe81284",
+      "size": 422,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "7e839404b8dafd7f805568c69d454f7614a1d4ed59fb58e04139e08b2e1322c6",
+      "size": 3386,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "3386a41304ec0592dc61ecd4542b738aca21150e7d02bcc08d14cc2fe4a11af9",
+      "size": 2075,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

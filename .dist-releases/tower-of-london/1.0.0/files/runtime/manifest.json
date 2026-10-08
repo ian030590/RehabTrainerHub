@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "gameId": "tower-of-london",
+  "timelineName": "tower_of_london_experiment",
+  "styles": [
+    "jspsych.css",
+    "default_style.css",
+    "style.css",
+    "shell.css"
+  ],
+  "scripts": [
+    "js/jquery.min.js",
+    "js/math.min.js",
+    "jspsych/jspsych.js",
+    "jspsych/plugins/jspsych-text.js",
+    "jspsych/poldrack_plugins/jspsych-poldrack-text.js",
+    "jspsych/poldrack_plugins/jspsych-poldrack-instructions.js",
+    "jspsych/poldrack_plugins/jspsych-attention-check.js",
+    "jspsych/poldrack_plugins/jspsych-single-stim-button.js",
+    "jspsych/poldrack_plugins/jspsych-poldrack-single-stim.js",
+    "jspsych/plugins/jspsych-survey-text.js",
+    "jspsych/poldrack_plugins/poldrack_utils.js",
+    "experiment.js",
+    "localization.js",
+    "research.js"
+  ]
+}

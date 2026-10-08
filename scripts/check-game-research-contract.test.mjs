@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { Script } from 'node:vm';
 import test from 'node:test';
+import migratedGames from '../packages/ui/src/officialGameReleases.json' with { type: 'json' };
 import ts from 'typescript';
 import { GetGameSettingsDefaults, NormalizeGameSettingsValues, ParseGameSettingsDefinition } from '../packages/game-settings/src/index.js';
 
@@ -28,6 +29,13 @@ test('every game exposes bounded grading settings and exact numeric score source
   const ids = readdirSync(root, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name);
   assert.equal(ids.length, 40);
   for (const id of ids) {
+    if (Object.hasOwn(migratedGames, id)) {
+      const source = read(id, 'DrawingTowerDefenseGame.tsx');
+      assert.match(source, /minRecognitionStrictness = 10/);
+      assert.match(source, /maxRecognitionStrictness = 90/);
+      assert.match(source, /SendGameResult/);
+      continue;
+    }
     const settings = ParseGameSettingsDefinition(JSON.parse(read(id, 'settings.json')), id);
     const fields = settings.sections.flatMap(section => section.fields);
     assert.ok(fields.length, id);

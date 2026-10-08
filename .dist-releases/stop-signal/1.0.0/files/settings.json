@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "gameId": "stop-signal",
+  "sections": [
+    {
+      "id": "activity",
+      "title": {
+        "zh-TW": "活動分級條件",
+        "en": "Activity grading"
+      },
+      "description": {
+        "zh-TW": "預設值對應原始作業。調整後須以修改版流程記錄與分析，不可套用原作業常模。",
+        "en": "Defaults follow the original task. Analyze changed settings as a modified protocol; original norms do not apply."
+      },
+      "fields": [
+        {
+          "key": "responseWindowMs",
+          "type": "slider",
+          "label": {
+            "zh-TW": "Go 作答時限",
+            "en": "Go response deadline"
+          },
+          "description": {
+            "zh-TW": "改變該項活動需求；研究中請固定條件或預先規劃比較。",
+            "en": "Changes this task demand; keep it fixed or predefine comparisons in the study."
+          },
+          "default": 1850,
+          "min": 1000,
+          "max": 3000,
+          "step": 50,
+          "unit": {
+            "zh-TW": "ms",
+            "en": "ms"
+          }
+        },
+        {
+          "key": "rounds",
+          "type": "slider",
+          "label": { "zh-TW": "正式作答數", "en": "Test responses" },
+          "description": {
+            "zh-TW": "完成設定數量後自動結束並進入結果；較短流程會依原始順序提前結束，須視為修改版流程。",
+            "en": "Ends at the configured response count. Shorter runs stop in the original order and are a modified protocol."
+          },
+          "default": 600,
+          "min": 100,
+          "max": 600,
+          "step": 100,
+          "unit": { "zh-TW": "題", "en": "responses" }
+        }
+      ]
+    }
+  ]
+}

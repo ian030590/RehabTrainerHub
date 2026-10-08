@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "sudoku",
+  "version": "1.0.0",
+  "name": "數獨",
+  "shortName": "數獨",
+  "description": "數獨居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "06f1dd9b6f2a5362852b88ed476e8719c49bdc1c66f7bcc9b7ccdc1baae2b29a",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-CqFqpWde.js",
+      "sha256": "55a866b6568d73ef47c837ce4ec3050245a01e7af63a46c6392c8dcc77a773fa",
+      "size": 43300,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-x3UqTRuj.js",
+      "sha256": "a8f9166586c6bfad80f180c5aaf59042ce66ef0400141bd566d6c5d69b834c0c",
+      "size": 11142,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-D92BQMth.js",
+      "sha256": "35be264d109122536b902bd2cb682b29276525e4a0c7dfe63a295d6e9e7c869c",
+      "size": 18382,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-BhyCtews.js",
+      "sha256": "961ade486ae3dd1f36ca4a35d644618870382dcfb49493bf4937b841cbc1bd07",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BrUXGa19.css",
+      "sha256": "16fe3b0148dcca21513c2006f048b82a048f1cf73cb1205660a3c52ef7b2bccd",
+      "size": 85369,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-HdoqRQSm.js",
+      "sha256": "67d9cd8a43541a52741c34f2f4929bd85bb8da4e231b8f2cb265420d9b4c3742",
+      "size": 694038,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-D9QfIIS5.js",
+      "sha256": "801b3c966a4efda87f18584d8181f37908afb27252c32bc68abc679180fbe857",
+      "size": 52577,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-C54NKAON.js",
+      "sha256": "20d7b98923e5480fa41ac566c3771133570ab9b9e386b3e353da432760263bf0",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-B3NO2BD0.js",
+      "sha256": "f8663d4bae86cd40283360071d7961b3f4ff4494dfb05330910dc763c7d42db3",
+      "size": 46289,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-DnJqvS69.js",
+      "sha256": "f4eb53ac18e1cebd9ea46f24e0b139c21976292ea9ce7a16f900f729f19f3f22",
+      "size": 15578,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "76831812558546158d183761c9b99585c733ea0dfbd336e0eda3c148f9047812",
+      "size": 416,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "77a5175b9ae443fac2a8a4c77b3e569daa9068329ad64ed931cde3c90d044b3a",
+      "size": 3173,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "12bb3fd6d8a33bdf428be7426f450a58e2a0c614db999f707ab94edbf14d3550",
+      "size": 3261,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

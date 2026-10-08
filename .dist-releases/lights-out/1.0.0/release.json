@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "lights-out",
+  "version": "1.0.0",
+  "name": "熄燈解題",
+  "shortName": "熄燈解題",
+  "description": "熄燈解題居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "ba3256732f1e82e552b28ef7e5fa670dc04ef1a489e59ba1a08122757a6f565c",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-0_60_Do7.js",
+      "sha256": "75e8326589febdd1a746a082cfa2e6c7113796cd3c64a5308bf783e3e2512e9e",
+      "size": 43367,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-DO0bsC_b.js",
+      "sha256": "4881d1d335f21ca976b25fa7e796f18c364f276acbeaf971dfe9aeae24318d81",
+      "size": 11152,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasPool-CN5qL39B.js",
+      "sha256": "e0da67f1a7bd79b9a5d35e2f69b95507e6072071481d29bfadd6bd5de6e6af52",
+      "size": 782,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-CsPcKcu2.js",
+      "sha256": "f7fffa6395897902c6fbc2c10e7967c345d3f2393dfb5807714ea495f20bcf14",
+      "size": 18421,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/canvasUtils-WndmMBHs.js",
+      "sha256": "7c214d4aac55f650fcbfdff21c226811900ada8b658f22da9aa9ab722ef172bf",
+      "size": 5770,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-CipCa7Rr.js",
+      "sha256": "173d0f607197862741245ffdaef8a5a40276fee52f952bcc7f2c7d0056228079",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BrUXGa19.css",
+      "sha256": "16fe3b0148dcca21513c2006f048b82a048f1cf73cb1205660a3c52ef7b2bccd",
+      "size": 85369,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-zvu0ZoHN.js",
+      "sha256": "f5ca1c225c4a96fec0c9bee3fdbc1786a58463bbcb5a6474161f5b8645c66612",
+      "size": 647544,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-B_Qjeogu.js",
+      "sha256": "8495414e754b74705b3773bb29d33b5448d1ca98eb6b0d979a9a6424695dc2ec",
+      "size": 53010,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-DzeWQ31j.js",
+      "sha256": "a1b30fece44fe62aaf366c12b7bba0d724a1eabc08b555dae9be5707151466d3",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-B2FN6I8K.js",
+      "sha256": "831fddd9087baa768eb058c187f816d90872b12589f701371bd4b5e79355be04",
+      "size": 46327,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-wrVl9Wjm.js",
+      "sha256": "f21cb7295a62a4c28b89578ef814cbe47edf3cccf2daf1a913e1aaf2def1556f",
+      "size": 16000,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "2fed3bff26fea8a326830c852f30a3ad246a4a0548c48a587b90d5f7b0104a67",
+      "size": 422,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "f08a83c18b859f18f13b2e9c336a197830f04a4ae7dd5d12a514a48383678f16",
+      "size": 1868,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "e1d119efcfae94745a98ca9ab70a419aaf1ec89643cb1b3cab54f98d11d4d856",
+      "size": 3070,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

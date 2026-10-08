@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "simon-says",
+  "version": "1.0.0",
+  "name": "順序記憶",
+  "shortName": "順序記憶",
+  "description": "順序記憶居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "1bb86eee5354e4588a0b66ec57a99ab6a08764f88e237b0468015a2bf76902d3",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-_Tts3vvr.js",
+      "sha256": "19e96215b26b225abe58d68c5b6c0eea58a3d4349113d151087bbdab82c23160",
+      "size": 43367,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-DkLDoxYJ.js",
+      "sha256": "4b38265b03d607856a7bab686752ce23a82919846059c11d7cb1ee9545e480de",
+      "size": 11152,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasPool-DEZuxQ7M.js",
+      "sha256": "680b9df1fcf1bc84a304819e18a53f6d4d0481af2b80a9e37d40a0095e46f019",
+      "size": 782,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-Ajfs942F.js",
+      "sha256": "7ccb61c09f84a9a1039e42f3c768f445ddf6bf6f58a4b89b1461dd932cf0bac0",
+      "size": 18421,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/canvasUtils-Cr_b5Oi7.js",
+      "sha256": "abaaa617fce7d8b61c11a591abdd67eb054ac265d8b42c130e9e0e0f659bc3af",
+      "size": 5770,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-j79tKlUv.js",
+      "sha256": "0ca22e8d5f3687f571f97ebdc71c623c09234f812b4ff895e5afc30fdd4a6ed7",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BrUXGa19.css",
+      "sha256": "16fe3b0148dcca21513c2006f048b82a048f1cf73cb1205660a3c52ef7b2bccd",
+      "size": 85369,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BTrMYmi1.js",
+      "sha256": "a362043e191180073859c625f42c6fb029303ea5b42238236f8d14fed24d080b",
+      "size": 655374,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-lDsVSoYR.js",
+      "sha256": "fce1f21c453c5ebbb7bafba109c2d977b272e3b3cdc7de289b02b3b4c95684e8",
+      "size": 53010,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-DzmurSg-.js",
+      "sha256": "c663edec9129bcfe5a93bb709c70dc7ae927c1c783923d1a001389cee339b6a3",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-B1K7OpJ0.js",
+      "sha256": "8f4987f98487099495c6a68e79b4247bd4be3e1c5729aa5986bf6062c759ffd2",
+      "size": 46327,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-Cbp0yrgF.js",
+      "sha256": "aae43d812b38931cbae7734fc8f421ca63f00afb3434eeca87d71ea823808d1b",
+      "size": 16000,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "69dd3cb10ea3e79c6369b75ca6af155343742e3ebeb65c0879132ddf6d11e25c",
+      "size": 422,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "b40cb181a9ecdcaf051daaab19b2377d139bead20d9234cbfbc5752b3ec9aca7",
+      "size": 1842,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "30d449a630a003583aeeb9cfa5b6799dbfd3030521c070a795ebb0d937447329",
+      "size": 2321,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

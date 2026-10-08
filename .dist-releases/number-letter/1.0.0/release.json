@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "number-letter",
+  "version": "1.0.0",
+  "name": "數字字母切換（Number-Letter）",
+  "shortName": "數字字母切換（Number-Letter）",
+  "description": "數字字母切換（Number-Letter）居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "87cab395cc96be77242d25a5ca353f2fe7c1520471d8188e1de632519ea7b3b5",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/index-BJATUSWX.css",
+      "sha256": "5d3959591eebfdb4fb68d1bd67c088ea98990630ae909950fa304a5c6aaf098e",
+      "size": 74322,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BycXyTGv.js",
+      "sha256": "aac54239bd218dea0735f70307f0a97a3cf77553f5edd4933806a507d76891c2",
+      "size": 321524,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "6042f8b3259baf04d64bd69115897524dc35669101a68afd5f174d637269b0d9",
+      "size": 447,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "runtime/default_style.css",
+      "sha256": "bf96055362833fa13f18b1bd19805d28ee23d8f72a4b841f2d5eaf3a27214817",
+      "size": 7373,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/experiment.js",
+      "sha256": "ff9ffd69c537317253bcdc9cc6f23b8c6624bb55110ea036bb8e770fc5f302ee",
+      "size": 7319,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jquery.min.js",
+      "sha256": "2051d61446d4dbffb03727031022a08c84528ab44d203a7669c101e5fbdd5515",
+      "size": 84355,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/jspsych.js",
+      "sha256": "85bded0d80b8a5abbb113c14643d9dfc0a927c2dc7cb478edc526286ef69c97c",
+      "size": 42744,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/plugins/jspsych-call-function.js",
+      "sha256": "35e24fcc6de62330b87121dfc9230687168a42a19946f59b372f2b46339c8de3",
+      "size": 662,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/plugins/jspsych-survey-text.js",
+      "sha256": "a14319c649c2eac4dcfe32f762c78ac5bc8416737aa07c461d5c2dface96ca77",
+      "size": 2734,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/plugins/jspsych-text.js",
+      "sha256": "d6e23ceb94058f6554182ac6fc51e61eea07e842ffa262d4f711f92913b3fdec",
+      "size": 1586,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-attention-check.js",
+      "sha256": "d9b718e589fb6dc604e6b422bd28f663c03f838672965e2d2d62dc57d4d89b38",
+      "size": 8016,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-poldrack-instructions.js",
+      "sha256": "26ec2f1b90e30cff13cf493f97b0f87c345d979a5cc1256d76db1177cc695424",
+      "size": 5490,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-poldrack-single-stim.js",
+      "sha256": "5745c39256b019fbd0d4103d25158b0a80ec31eefac4c45a61318ad5d9cb604b",
+      "size": 4590,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-poldrack-text.js",
+      "sha256": "6e21c14be3478475f6a3f00d0ca02709be4dbcf6e78f030213e7817f8cbd6dfb",
+      "size": 2500,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-single-stim-button.js",
+      "sha256": "3bf498d0fee3633e5f40f8395cc4f7cfd82f0f7eea99e7a7625e1d8afdb4ba82",
+      "size": 4241,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/poldrack_utils.js",
+      "sha256": "ccd8b8e338bfe09b6ee0aafa177efc60391e059e165c71f9de6fb48efc3b0d57",
+      "size": 1144,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/math.min.js",
+      "sha256": "6f8f3abe87aa63ce39fcfacab6d2fae3b54bab07fad615d893e3f348f57e8db7",
+      "size": 444625,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych.css",
+      "sha256": "76abd1c0bba68e4cf6be117b453ddb478186684a4c2ae6f6e677f8b3cfc61c70",
+      "size": 5495,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/LICENSE",
+      "sha256": "f841287245cf39077d5aa709425d953581bcb9327b67941212fed18fdcbdb796",
+      "size": 1107,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "runtime/localization.js",
+      "sha256": "5c814e2e817329cd1a5a38d67641ecf9c96185620102f55a2b0b89bd91ac0467",
+      "size": 2336,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/manifest.json",
+      "sha256": "bf15708dc4532360348c7552f8d31fc684b674fe7da1c9839a92b1018dfa6ff2",
+      "size": 870,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "runtime/research.js",
+      "sha256": "6a3a247ca4ed2ace8826b40fe7cdce578260cd91809b70db50aa097f5d18ce72",
+      "size": 2550,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/shell.css",
+      "sha256": "18dec2a2c91d29a467c5e1822533ee78371fa9f8ef8e98cc3b7ea0486e06d875",
+      "size": 1463,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/style.css",
+      "sha256": "d4dbe37c5d8d1b5eb61bea779acd279873a4b85c82ce0c7f15b99233c87dc37b",
+      "size": 1005,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "2a0e03bcb9393327b62785c759dfeaf1a5b2a13bad0d44c4b78c1465f08649ce",
+      "size": 2707,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "39e5929829925a9e68ec2dd16a4a568acbb97eb2c2019892e8dfd31e3b2dcf56",
+      "size": 1824,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

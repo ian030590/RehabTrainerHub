@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { IsBoundedGameScoreRecord } from './records.js';
+import { officialGameReleases } from '../_lib/officialGames.js';
 
 test('D1 score payload is bounded, numeric, and tied to its game', () => {
   const input = { appId: 'rehabtrainerhub', runtimeId: 'hub', record: {
@@ -13,6 +14,7 @@ test('D1 score payload is bounded, numeric, and tied to its game', () => {
   assert.equal(IsBoundedGameScoreRecord(input), true);
   const games = new URL('../../games/', import.meta.url);
   for (const entry of readdirSync(games, { withFileTypes: true }).filter(entry => entry.isDirectory())) {
+    if (Object.hasOwn(officialGameReleases, entry.name)) continue;
     const settings = JSON.parse(readFileSync(new URL(`${entry.name}/settings.json`, games), 'utf8'));
     const config = Object.fromEntries(settings.sections.flatMap(section => section.fields.map(field => [field.key, field.default])));
     assert.equal(IsBoundedGameScoreRecord({ ...input, record: { ...input.record, config } }), true, entry.name);

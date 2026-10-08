@@ -1,4 +1,5 @@
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
+import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import type { MajorCategoryId,TrainerCategoryId } from './gameTags.js';
 import {
 GetTrainerCategoryTag,
@@ -690,6 +691,8 @@ export function GetTrainingModuleCopy(
 export function BuildTrainingModuleHref(
   module: TrainingCatalogModule,
 ): string {
+  const release = officialGameReleases[module.runtimeId as keyof typeof officialGameReleases];
+  if (release) return `${release.origin}/games/${encodeURIComponent(module.runtimeId)}/${release.version}/package/index.html`;
   return `/games/${encodeURIComponent(module.runtimeId)}/`;
 }
 

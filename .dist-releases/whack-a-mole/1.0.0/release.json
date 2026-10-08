@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "whack-a-mole",
+  "version": "1.0.0",
+  "name": "目標點擊",
+  "shortName": "目標點擊",
+  "description": "目標點擊居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "faf147ebdd4fa13caf9025cb4cdb6a36c42130068761e69cd392696e43baff92",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-CNIg4Vnf.js",
+      "sha256": "5ecdc08c1b6850cdbab229ebfd6d5062dd64e6fb1b2b5394293e558bd1cee196",
+      "size": 43367,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-CmgCRJyl.js",
+      "sha256": "37ee07491be13017a26e416ee44ce3f1ecfb888c633eaf0b1f291c16effa15fa",
+      "size": 11152,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasPool-BwT7ntMJ.js",
+      "sha256": "9d99b989b1bcc09296f56dcebfb97b029bd4a3ad2055df4763704cb99616bc72",
+      "size": 782,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-GFr_lLas.js",
+      "sha256": "00d46d6372f261323187c9586c9a4d099112dd5ea31667629fbc38387d752c49",
+      "size": 18421,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/canvasUtils-BLYCXI34.js",
+      "sha256": "15080c761a9205732da6356582620d61fe45d4833cd1387aad0ab788af9d3be2",
+      "size": 5770,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-DG1jmt_X.js",
+      "sha256": "142dce31e1337c95d9649a73f6c4ee88b3cd914c63ad850b1032ccc859f18f68",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BrUXGa19.css",
+      "sha256": "16fe3b0148dcca21513c2006f048b82a048f1cf73cb1205660a3c52ef7b2bccd",
+      "size": 85369,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-DbMlF03Z.js",
+      "sha256": "10f2a106bca7000f867888f5317772bb14d392f830edf04a57e3313a4bc11aa4",
+      "size": 653411,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-CfYEDGdR.js",
+      "sha256": "94a503fc44c06cad323b749d6d10c298d54ed4aff332908213ed1b0a6f57f502",
+      "size": 53010,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer--8RVL1Lh.js",
+      "sha256": "770e0687f04b243edf61469599062001ae0540e10cc569d15dac0014cdc585fb",
+      "size": 72272,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-_cUhVqFm.js",
+      "sha256": "7f7e8b1973573a298b58ccf42fe0940cac9c140b5e2783e8cc3e60385f4952f9",
+      "size": 46327,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-DNJ8nr8N.js",
+      "sha256": "83d6bad77bb538d8cd340bdbabeb111ec72e879f65a59dd422f35f8d8acf1cc4",
+      "size": 16000,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "0b5773e381586843b71e4cd43861127f80e81840839d393194245e8904e5e93d",
+      "size": 422,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "b453554307e824ddd8afe1dd05a835848bfd9ded17099c0ce7df89f55c1a0668",
+      "size": 2306,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "5c3d0a84d89142b2bd670805693ce09d0d96ef048d0611104dd3199682366316",
+      "size": 2351,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

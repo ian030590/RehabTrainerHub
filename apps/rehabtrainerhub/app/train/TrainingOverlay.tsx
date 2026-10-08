@@ -36,6 +36,8 @@ import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { BuildTrainingThemeStyle } from '../trainingThemeStyle';
 import { GameSettingsForm } from '@rehab-trainer/ui/components/GameSettingsForm';
+import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
+import { R2GameOverlay } from './R2GameOverlay';
 
 const TrainingScore = dynamic(() => import('@rehab-trainer/ui/components/TrainingScore').then(module => module.TrainingScore));
 
@@ -45,6 +47,12 @@ interface TrainingOverlayProps {
 }
 
 export function TrainingOverlay({ module, onClose }: TrainingOverlayProps) {
+  return Object.hasOwn(officialGameReleases, module.runtimeId)
+    ? <R2GameOverlay module={module} onClose={onClose} />
+    : <JsonTrainingOverlay module={module} onClose={onClose} />;
+}
+
+function JsonTrainingOverlay({ module, onClose }: TrainingOverlayProps) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [definition, setDefinition] = useState<GameSettingsDefinition | null>(null);

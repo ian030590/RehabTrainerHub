@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "tower-of-london",
+  "version": "1.0.0",
+  "name": "倫敦塔規劃（Tower of London）",
+  "shortName": "倫敦塔規劃（Tower of London）",
+  "description": "倫敦塔規劃（Tower of London）居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "e03bb45c03ad84025a37a8bf2c3a02a00bd6b2cd958bf5fddb713837c397b2cb",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/index-BJATUSWX.css",
+      "sha256": "5d3959591eebfdb4fb68d1bd67c088ea98990630ae909950fa304a5c6aaf098e",
+      "size": 74322,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-C-3fW1Nb.js",
+      "sha256": "c953e2e7c61a2b6aa8c778905b9c236f352067adaa8159c557d38f39a227aa88",
+      "size": 320895,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "5c5986f21b4334c63fb0b60f1113ba4866470b975d3df3b60b5e586efee1c92e",
+      "size": 446,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "runtime/default_style.css",
+      "sha256": "bf96055362833fa13f18b1bd19805d28ee23d8f72a4b841f2d5eaf3a27214817",
+      "size": 7373,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/experiment.js",
+      "sha256": "6921ac1b3e4371f91647dd24fed638fc1e3cd64c9c3db10e91d98f4b92f57603",
+      "size": 17686,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jquery.min.js",
+      "sha256": "2051d61446d4dbffb03727031022a08c84528ab44d203a7669c101e5fbdd5515",
+      "size": 84355,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/math.min.js",
+      "sha256": "6f8f3abe87aa63ce39fcfacab6d2fae3b54bab07fad615d893e3f348f57e8db7",
+      "size": 444625,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych.css",
+      "sha256": "76abd1c0bba68e4cf6be117b453ddb478186684a4c2ae6f6e677f8b3cfc61c70",
+      "size": 5495,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych/jspsych.js",
+      "sha256": "85bded0d80b8a5abbb113c14643d9dfc0a927c2dc7cb478edc526286ef69c97c",
+      "size": 42744,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych/plugins/jspsych-survey-text.js",
+      "sha256": "a14319c649c2eac4dcfe32f762c78ac5bc8416737aa07c461d5c2dface96ca77",
+      "size": 2734,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych/plugins/jspsych-text.js",
+      "sha256": "d6e23ceb94058f6554182ac6fc51e61eea07e842ffa262d4f711f92913b3fdec",
+      "size": 1586,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych/poldrack_plugins/jspsych-attention-check.js",
+      "sha256": "d9b718e589fb6dc604e6b422bd28f663c03f838672965e2d2d62dc57d4d89b38",
+      "size": 8016,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych/poldrack_plugins/jspsych-poldrack-instructions.js",
+      "sha256": "26ec2f1b90e30cff13cf493f97b0f87c345d979a5cc1256d76db1177cc695424",
+      "size": 5490,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych/poldrack_plugins/jspsych-poldrack-single-stim.js",
+      "sha256": "5745c39256b019fbd0d4103d25158b0a80ec31eefac4c45a61318ad5d9cb604b",
+      "size": 4590,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych/poldrack_plugins/jspsych-poldrack-text.js",
+      "sha256": "6e21c14be3478475f6a3f00d0ca02709be4dbcf6e78f030213e7817f8cbd6dfb",
+      "size": 2500,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych/poldrack_plugins/jspsych-single-stim-button.js",
+      "sha256": "3bf498d0fee3633e5f40f8395cc4f7cfd82f0f7eea99e7a7625e1d8afdb4ba82",
+      "size": 4241,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych/poldrack_plugins/poldrack_utils.js",
+      "sha256": "ccd8b8e338bfe09b6ee0aafa177efc60391e059e165c71f9de6fb48efc3b0d57",
+      "size": 1144,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/LICENSE",
+      "sha256": "f841287245cf39077d5aa709425d953581bcb9327b67941212fed18fdcbdb796",
+      "size": 1107,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "runtime/localization.js",
+      "sha256": "83dfff9f4282b04f45e9f74537340e27b70c468a1d64b5739c89553fb61f2723",
+      "size": 3019,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/manifest.json",
+      "sha256": "c6932668816c2c83a6a6a3053bf9cce8564300703881fc152489b02b92cf359c",
+      "size": 796,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "runtime/research.js",
+      "sha256": "208a6c1fae909e5e60d33eec0d35d22f90f27b4c8e5b0f55ff8772babaaaafeb",
+      "size": 2192,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/shell.css",
+      "sha256": "b8803d4081a56c16202ae8f66428d27a1159f13ca39823f5c34d12893b428de2",
+      "size": 1650,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/style.css",
+      "sha256": "a11a9009599d19c1aa0557e3763f7bf308bcf1fc6782054cd75234709cf92b66",
+      "size": 3514,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "df9a78c501c65eb8d92905e8fb6f08101b59401fd473472e788e6dbd7c3ace59",
+      "size": 2542,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "55f7a0c1c4b65789e2fc7bd94313008c644c7910471179973a288e9ac86192df",
+      "size": 1160,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

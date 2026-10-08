@@ -45,6 +45,7 @@ if (appName !== 'rehabtrainerhub'
 const catalogPath = resolve(repositoryRoot, 'apps/rehabtrainerhub/games/catalog.ts');
 const catalogSource = await readFile(catalogPath, 'utf8');
 const catalogGames = ReadCatalogSeeds(catalogSource);
+const r2Releases = JSON.parse(await readFile(resolve(repositoryRoot, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
 ValidateCatalogGames(catalogGames);
 const gamesDirectory = resolve(outputDirectory, 'games');
 const shellsDirectory = resolve(outputDirectory, '.official-game-shells');
@@ -58,6 +59,14 @@ const rootManifest = JSON.parse(await readFile(resolve(outputDirectory, 'manifes
 const packageJson = JSON.parse(await readFile(resolve(appDirectory, 'package.json'), 'utf8'));
 let emittedGameCount = 0;
 for (const game of catalogGames) {
+  if (Object.hasOwn(r2Releases, game.id)) {
+    const release = r2Releases[game.id];
+    const directory = resolve(gamesDirectory, game.id);
+    await mkdir(directory, { recursive: true });
+    const target = `${release.origin}/games/${game.id}/${release.version}/`;
+    await writeFile(resolve(directory, 'index.html'), `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>${game.title}</title></head><body><a href="${target}">開啟${game.title}</a><script>location.replace(${JSON.stringify(target)})</script></body></html>`);
+    continue;
+  }
   const shellDirectory = resolve(shellsDirectory, game.id);
   const rootHtml = await readFile(resolve(shellDirectory, 'index.html'), 'utf8');
   const shellFiles = await ListFiles(shellDirectory);

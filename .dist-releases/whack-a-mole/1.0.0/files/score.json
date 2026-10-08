@@ -1,0 +1,117 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "whack-a-mole",
+  "presentation": {
+    "primarySummaryKeys": ["hits","misses","meanMs","taps"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "responseMs",
+    "chartType": "line"
+  },
+  "columns": [
+    {
+      "key": "trial",
+      "label": {
+        "zh": "試次序號",
+        "en": "Trial index"
+      },
+      "sources": [
+        "trialNumber"
+      ]
+    },
+    {
+      "key": "outcome",
+      "label": {
+        "zh": "結果：命中1／逾時2／誤按3",
+        "en": "Outcome: hit 1 / expired 2 / wrong tap 3"
+      },
+      "sources": [
+        "outcomeCode"
+      ]
+    },
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "命中反應延遲",
+        "en": "Hit response latency"
+      },
+      "sources": [
+        "responseMs"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "targetIndex",
+      "label": {
+        "zh": "目標格索引（0 起）",
+        "en": "Target cell index (zero based)"
+      },
+      "sources": [
+        "targetIndex"
+      ]
+    },
+    {
+      "key": "tappedIndex",
+      "label": {
+        "zh": "點擊格索引（0 起）",
+        "en": "Tapped cell index (zero based)"
+      },
+      "sources": [
+        "tappedIndex"
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "key": "duration",
+      "label": {
+        "zh": "活動經過時間",
+        "en": "Elapsed activity time"
+      },
+      "sources": [
+        "Total_Duration_Seconds"
+      ],
+      "unit": "s"
+    },
+    {
+      "key": "hits",
+      "label": {
+        "zh": "命中數",
+        "en": "Hits"
+      },
+      "sources": [
+        "Target_Click_Hits"
+      ]
+    },
+    {
+      "key": "misses",
+      "label": {
+        "zh": "未命中計數（逾時及誤按）",
+        "en": "Miss count (expiry and wrong taps)"
+      },
+      "sources": [
+        "Target_Click_Misses"
+      ]
+    },
+    {
+      "key": "taps",
+      "label": {
+        "zh": "點擊數",
+        "en": "Taps"
+      },
+      "sources": [
+        "Target_Click_Taps"
+      ]
+    },
+    {
+      "key": "meanMs",
+      "label": {
+        "zh": "命中平均反應延遲",
+        "en": "Mean hit latency"
+      },
+      "sources": [
+        "Average_Target_Click_Reaction_Time_ms"
+      ],
+      "unit": "ms"
+    }
+  ]
+}

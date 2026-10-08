@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useT } from '@rehab-trainer/ui/i18n/games';
-import { StartTour, type TourStep } from '@rehab-trainer/ui/tour';
-import '@rehab-trainer/ui/tour/toutour.css';
-import type { TrainingConfigSummaryItem } from '@rehab-trainer/ui';
+import { useT } from '../i18n/useT';
+import { StartTour, type TourStep } from '../runtime/tour';
+import '../runtime/tour.css';
+import type { ReactNode } from 'react';
+type TrainingConfigSummaryItem = { label: ReactNode; value: ReactNode };
 
 interface DrawingDefenseTutorialProps {
   onStart: () => void;
@@ -15,6 +16,7 @@ export function DrawingDefenseTutorial({ onStart, onBack, summaryItems }: Drawin
   const [tourFinished, setTourFinished] = useState(false);
 
   useEffect(() => {
+    let disposeTour: (() => void) | undefined;
     const timer = window.setTimeout(() => {
       const isZh = lang !== 'en';
       const steps: TourStep[] = isZh
@@ -59,7 +61,7 @@ export function DrawingDefenseTutorial({ onStart, onBack, summaryItems }: Drawin
             },
           ];
 
-      StartTour(steps, {
+      disposeTour = StartTour(steps, {
         lang: lang === 'en' ? 'en' : 'zh-TW',
         zIndex: 9999,
         mask: true,
@@ -75,6 +77,7 @@ export function DrawingDefenseTutorial({ onStart, onBack, summaryItems }: Drawin
 
     return () => {
       window.clearTimeout(timer);
+      disposeTour?.();
     };
   }, [lang]);
 

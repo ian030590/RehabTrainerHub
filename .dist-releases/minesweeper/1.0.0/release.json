@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "minesweeper",
+  "version": "1.0.0",
+  "name": "踩地雷",
+  "shortName": "踩地雷",
+  "description": "踩地雷居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "b4c8bc41af873caee5704f689f78e971818fefdcac1170a77c38a33445690706",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/index-S6HLW-u_.css",
+      "sha256": "eaa62c9a205f0b5bdc3135b4f545b77a0a69c4b576f80c5fd73c07c5bbfdda06",
+      "size": 81607,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-Utny5kQw.js",
+      "sha256": "a56c0393b39973074e816b054402f63e937c4496887cb7f2629a6f0e5876cea1",
+      "size": 414388,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "d0910e88020859dbe1cedd726f8ab65b9c1324ca4acfda7593ed2713cc56802d",
+      "size": 419,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "def4352f48005809a2243f6bdbce57605c1b59b9055c4cb0f5ba64233de5e21c",
+      "size": 3650,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "8d7535d79f856d1abc8fc9aad2dc4e85d3b1e8d1145ea0b00e6cd76e99a49b8b",
+      "size": 2087,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

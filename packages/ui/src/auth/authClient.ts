@@ -113,6 +113,7 @@ export interface PasswordAccountLoginPayload {
 }
 
 export interface RemoteTrainingRecord {
+  metadata?: Record<string, string | number>;
   score?: import('../gameScore').GameScore;
   config?: Record<string, unknown>;
   id: string;
@@ -130,6 +131,8 @@ export interface RemoteTrainingRecordPayload {
   appId: string;
   runtimeId: RemoteTrainingRuntimeId;
   record: RemoteTrainingRecord;
+  officialGameVersion?: string;
+  runSessionToken?: string;
 }
 
 export function ConfigureRemoteTrainingRecordVerification(options: {

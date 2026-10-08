@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "stroop",
+  "version": "1.0.0",
+  "name": "色彩干擾抑制（Stroop）",
+  "shortName": "色彩干擾抑制（Stroop）",
+  "description": "色彩干擾抑制（Stroop）居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "f54386d5a668d9735974d91635acc9b818e79ccc9f7bef0f433cdf7a7573e516",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/index-BJATUSWX.css",
+      "sha256": "5d3959591eebfdb4fb68d1bd67c088ea98990630ae909950fa304a5c6aaf098e",
+      "size": 74322,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-DbW3vpT3.js",
+      "sha256": "9f47828a8d68cd01ec1426537f1b41e010aae9ed95d374c7aeea5c62d382d6ff",
+      "size": 321258,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "9b8c4a975a916b0e0cac29dae0974474e38d513eba704e1827b272b64e4aea9d",
+      "size": 440,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "runtime/default_style.css",
+      "sha256": "bf96055362833fa13f18b1bd19805d28ee23d8f72a4b841f2d5eaf3a27214817",
+      "size": 7373,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/experiment.js",
+      "sha256": "7b3ccb070fedfa0dd178e1495a56ec84e02143ca022a8d62cc2f0c88676629f7",
+      "size": 11948,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jquery.min.js",
+      "sha256": "2051d61446d4dbffb03727031022a08c84528ab44d203a7669c101e5fbdd5515",
+      "size": 84355,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/jspsych.js",
+      "sha256": "85bded0d80b8a5abbb113c14643d9dfc0a927c2dc7cb478edc526286ef69c97c",
+      "size": 42744,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/plugins/jspsych-call-function.js",
+      "sha256": "35e24fcc6de62330b87121dfc9230687168a42a19946f59b372f2b46339c8de3",
+      "size": 662,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/plugins/jspsych-survey-text.js",
+      "sha256": "a14319c649c2eac4dcfe32f762c78ac5bc8416737aa07c461d5c2dface96ca77",
+      "size": 2734,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/plugins/jspsych-text.js",
+      "sha256": "d6e23ceb94058f6554182ac6fc51e61eea07e842ffa262d4f711f92913b3fdec",
+      "size": 1586,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-attention-check.js",
+      "sha256": "d9b718e589fb6dc604e6b422bd28f663c03f838672965e2d2d62dc57d4d89b38",
+      "size": 8016,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-poldrack-categorize.js",
+      "sha256": "a58969d3ad8a3e12930079383d29eedcd851d7ac6297d1fba3d828855813f263",
+      "size": 7871,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-poldrack-instructions.js",
+      "sha256": "26ec2f1b90e30cff13cf493f97b0f87c345d979a5cc1256d76db1177cc695424",
+      "size": 5490,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-poldrack-single-stim.js",
+      "sha256": "5745c39256b019fbd0d4103d25158b0a80ec31eefac4c45a61318ad5d9cb604b",
+      "size": 4590,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-poldrack-text.js",
+      "sha256": "6e21c14be3478475f6a3f00d0ca02709be4dbcf6e78f030213e7817f8cbd6dfb",
+      "size": 2500,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-single-stim-button.js",
+      "sha256": "3bf498d0fee3633e5f40f8395cc4f7cfd82f0f7eea99e7a7625e1d8afdb4ba82",
+      "size": 4241,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/poldrack_utils.js",
+      "sha256": "ccd8b8e338bfe09b6ee0aafa177efc60391e059e165c71f9de6fb48efc3b0d57",
+      "size": 1144,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/math.min.js",
+      "sha256": "6f8f3abe87aa63ce39fcfacab6d2fae3b54bab07fad615d893e3f348f57e8db7",
+      "size": 444625,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych.css",
+      "sha256": "76abd1c0bba68e4cf6be117b453ddb478186684a4c2ae6f6e677f8b3cfc61c70",
+      "size": 5495,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/LICENSE",
+      "sha256": "f841287245cf39077d5aa709425d953581bcb9327b67941212fed18fdcbdb796",
+      "size": 1107,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "runtime/localization.js",
+      "sha256": "0de18232947222bf5274c894a1c31ced619867ad3d3216822675273257af42b3",
+      "size": 2561,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/manifest.json",
+      "sha256": "eb09d3ba879a1cf5df81dbe94daaa02896793c92d717128ac9b7af46c7ecc928",
+      "size": 922,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "runtime/research.js",
+      "sha256": "9fa665f0ab0d930f6711b8e5c0a7c02b5031ffd489d40d1d678c6847b910356d",
+      "size": 2155,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/shell.css",
+      "sha256": "18dec2a2c91d29a467c5e1822533ee78371fa9f8ef8e98cc3b7ea0486e06d875",
+      "size": 1463,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/style.css",
+      "sha256": "e17a44548d769be900a697af9a38202303d5ea04206704525003168266a75079",
+      "size": 310,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "660e6e8de04218e26b42aeb621f1c8121930cdd65054a13aa588220d3c35cf89",
+      "size": 2449,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "173242e3c79b10adf47b0862dff3b47b2dbff0d08cfaf286137ebcb3b20817b3",
+      "size": 1756,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

@@ -1,0 +1,118 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "hart-chart",
+  "presentation": {
+    "primarySummaryKeys": ["accuracy","hints","attempts","targets"],
+    "qualitySummaryKeys": [],
+    "defaultRoundMetricKey": "accuracy",
+    "chartType": "line"
+  },
+  "columns": [
+    {
+      "key": "durationMs",
+      "label": {
+        "zh": "完成解碼時間",
+        "en": "Decoder completion time"
+      },
+      "sources": [
+        "duration_ms"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "targets",
+      "label": {
+        "zh": "待解碼字母數",
+        "en": "Target letters"
+      },
+      "sources": [
+        "target_count"
+      ]
+    },
+    {
+      "key": "attempts",
+      "label": {
+        "zh": "輸入字母次數",
+        "en": "Letter entries"
+      },
+      "sources": [
+        "attempts"
+      ]
+    },
+    {
+      "key": "accuracy",
+      "label": {
+        "zh": "目標數／輸入次數",
+        "en": "Target count / entry count"
+      },
+      "sources": [
+        "accuracy_percent"
+      ],
+      "unit": "%"
+    },
+    {
+      "key": "hints",
+      "label": {
+        "zh": "結束時提示開啟（1／0）",
+        "en": "Hints enabled at finish (1/0)"
+      },
+      "sources": [
+        "hints_used"
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "key": "durationMs",
+      "label": {
+        "zh": "完成解碼時間",
+        "en": "Decoder completion time"
+      },
+      "sources": [
+        "duration_ms"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "targets",
+      "label": {
+        "zh": "待解碼字母數",
+        "en": "Target letters"
+      },
+      "sources": [
+        "target_count"
+      ]
+    },
+    {
+      "key": "attempts",
+      "label": {
+        "zh": "輸入字母次數",
+        "en": "Letter entries"
+      },
+      "sources": [
+        "attempts"
+      ]
+    },
+    {
+      "key": "accuracy",
+      "label": {
+        "zh": "目標數／輸入次數",
+        "en": "Target count / entry count"
+      },
+      "sources": [
+        "accuracy_percent"
+      ],
+      "unit": "%"
+    },
+    {
+      "key": "hints",
+      "label": {
+        "zh": "結束時提示開啟（1／0）",
+        "en": "Hints enabled at finish (1/0)"
+      },
+      "sources": [
+        "hints_used"
+      ]
+    }
+  ]
+}

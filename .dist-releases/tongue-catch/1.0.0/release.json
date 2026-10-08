@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "tongue-catch",
+  "version": "1.0.0",
+  "name": "舌頭動作訓練",
+  "shortName": "舌頭動作訓練",
+  "description": "舌頭動作訓練居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "1d8bc31b0a00ba0eb9849d4ee27645863e5df088b2de3b9b9131d8a1ea200734",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/BitmapFont-DSVOTyiv.js",
+      "sha256": "bc2e7d7b99bbb437cce1935966178ed517ec02e432d5878ad78d8c53fab31f86",
+      "size": 34518,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/browserAll-CkXl6isO.js",
+      "sha256": "22bbc49d36d983ba9d7ae0e7eecf2c68c98a5aa57ac32ef7b7b6acc412b02c79",
+      "size": 43367,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-v-ftWIM2.js",
+      "sha256": "052be87cd1c734696c92c6cab60916f8aee78fe773b3f1d4c9a4983d9ad32c27",
+      "size": 11152,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasPool-DJmrc2r9.js",
+      "sha256": "181038e9a9e72c9302446ff0b13fb4b0f1fd08460e60146658bf7319adcb949c",
+      "size": 782,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-CHYTQ2re.js",
+      "sha256": "17d69049fc5601a0aff15cd5fada453d67bec17ea2797889fe1318406a5581c8",
+      "size": 28036,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/canvasUtils-Cs-SmI82.js",
+      "sha256": "2e9974175d07669b7b606f1831ae4dfe07e1c11ae7e9442a817bdeab154997d7",
+      "size": 5770,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-CgKBrcqe.js",
+      "sha256": "7c771d99a5b7e6971f48dc01d261f4fe4a03714e33e2c3fe3dfafab5033f2361",
+      "size": 904,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-B9b-1N-T.css",
+      "sha256": "7b7c677b879ec490f13075972bf0fb639084b327bc6e9724e434f9896a15b3e4",
+      "size": 80055,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-BAP5_MZy.js",
+      "sha256": "5c47e6b55507e326d412c293f901710e6e628f0bd0d62ee162d7d7e61dd245cc",
+      "size": 2416743,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-CD16xIph.js",
+      "sha256": "4d45742675b5fc0c206cc17fb1d816afb0f790873541d0512cf0203ac99295c5",
+      "size": 53012,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-CJE62UmB.js",
+      "sha256": "e64d73f3f5bbb04ce167c7014e6c90b2573e2e07e2800217e4461a3bc46ae927",
+      "size": 72274,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-Bef8TV_f.js",
+      "sha256": "69fdb82fca696705397607771d65fe33ba9e4d8a4e581ea71ea236922d5dccb0",
+      "size": 46337,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-qXKzWSoq.js",
+      "sha256": "267d47f4d6267e63661715b922415d76e1dc36b885dfbd23a3d845e2970a3c19",
+      "size": 16002,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "4a28d9287d7a4abaf7d817da837c4f69572ab7d0be6ed5ab7dc37dfd60328282",
+      "size": 428,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "ea7c1819f65be1e51fcaaee7f43556c239ed01304df3231293b2730038ab1cbc",
+      "size": 1826,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "0711af1809b9c7471898c224226feaa914def24621d7ed8354cebf378f984b3e",
+      "size": 1969,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

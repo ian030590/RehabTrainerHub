@@ -1,0 +1,148 @@
+{
+  "schema": "rehab-trainer.game-score/v1",
+  "gameId": "keep-track",
+  "presentation": {
+    "primarySummaryKeys": ["accuracy","meanResponseMs","correct"],
+    "qualitySummaryKeys": ["trials","scored"],
+    "defaultRoundMetricKey": "responseMs",
+    "chartType": "line"
+  },
+  "columns": [
+    {
+      "key": "trial",
+      "label": {
+        "zh": "原始時間序列索引",
+        "en": "Original timeline index"
+      },
+      "sources": [
+        "trial"
+      ]
+    },
+    {
+      "key": "practice",
+      "label": {
+        "zh": "練習題（1／0）",
+        "en": "Practice item (1/0)"
+      },
+      "sources": [
+        "practice"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "正確（1／0）",
+        "en": "Correct (1/0)"
+      },
+      "sources": [
+        "correct"
+      ]
+    },
+    {
+      "key": "responseMs",
+      "label": {
+        "zh": "整段作答時間",
+        "en": "Whole response duration"
+      },
+      "sources": [
+        "rt"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "setting",
+      "label": {
+        "zh": "每個單詞曝光時間",
+        "en": "Exposure per word"
+      },
+      "sources": [
+        "setting"
+      ],
+      "unit": "ms"
+    },
+    {
+      "key": "load",
+      "label": {
+        "zh": "需追蹤類別數",
+        "en": "Tracked categories"
+      },
+      "sources": [
+        "load"
+      ]
+    },
+    {
+      "key": "correctItems",
+      "label": {
+        "zh": "正確回憶單詞數",
+        "en": "Correct recalled words"
+      },
+      "sources": [
+        "correctItems"
+      ]
+    },
+    {
+      "key": "requiredItems",
+      "label": {
+        "zh": "要求回憶項數",
+        "en": "Required recall items"
+      },
+      "sources": [
+        "requiredItems"
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "key": "trials",
+      "label": {
+        "zh": "總題數",
+        "en": "Total items"
+      },
+      "sources": [
+        "Total_Trials"
+      ]
+    },
+    {
+      "key": "scored",
+      "label": {
+        "zh": "可判定正確的題目數",
+        "en": "Scored items"
+      },
+      "sources": [
+        "Scored_Trials"
+      ]
+    },
+    {
+      "key": "correct",
+      "label": {
+        "zh": "答對題數",
+        "en": "Correct items"
+      },
+      "sources": [
+        "Correct_Trials"
+      ]
+    },
+    {
+      "key": "accuracy",
+      "label": {
+        "zh": "整體正確率",
+        "en": "Overall item accuracy"
+      },
+      "sources": [
+        "Accuracy_Percent"
+      ],
+      "unit": "%"
+    },
+    {
+      "key": "meanResponseMs",
+      "label": {
+        "zh": "平均每題作答時間（含錯誤）",
+        "en": "Mean item response time (includes errors)"
+      },
+      "sources": [
+        "Mean_RT_Ms"
+      ],
+      "unit": "ms"
+    }
+  ]
+}

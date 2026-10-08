@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "gabor-patching",
+  "version": "1.0.0",
+  "name": "蓋伯斑塊練習",
+  "shortName": "蓋伯斑塊練習",
+  "description": "蓋伯斑塊練習居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "dbadf16ad47eeb464023ff38ca51562e695035d87fb5bd47cf6275cef9d21674",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/browserAll-CcMziDHx.js",
+      "sha256": "c880ddab113771e31269266d6386e3fe3b93df63efc33321380e140600ad023c",
+      "size": 43300,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/BufferResource-2p0AXjpx.js",
+      "sha256": "9a30c4e444e9671d7f08708d0d042a919729cd70482699ae5ef4ea15c4a460eb",
+      "size": 11147,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/CanvasRenderer-Dqk-usOQ.js",
+      "sha256": "eddd14db04f6dcadcb64da0fb9f0feaaa2d0043504bb6fe9ec03d3aab8c82a69",
+      "size": 28002,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/Filter-BAH5qozm.js",
+      "sha256": "295a83f3eb79cd080bce902a0c0775baa34adb5136c052e4f1d9e76a2e5c8d15",
+      "size": 2602,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-CfMrwrcE.css",
+      "sha256": "6a49cf408bf3bd979b17ace5fe5f07d2e5d7786ef6ea2ea28f0880cc061214dc",
+      "size": 81581,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-D0LSaSUU.js",
+      "sha256": "37e9d737022814a7ecc88d82b6db089d96310c9c74a971a4fe79350f6e0cbd51",
+      "size": 678998,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/RenderTargetSystem-B_kZzJOe.js",
+      "sha256": "166e0a8b0884312439954af09ab218ac62b2cba17d6a176d6d3506a948f2b055",
+      "size": 52693,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGLRenderer-CqhJLQW4.js",
+      "sha256": "42d474794662e605fb86327d9b83ebe5ee248bfb2cde20fca3b05392335cb6a6",
+      "size": 72276,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/WebGPURenderer-DnqKjSfI.js",
+      "sha256": "3af761097b01b2b782ba0798f6da92f2ed7ad77c6884d20730747fc10934df96",
+      "size": 46292,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/webworkerAll-DGNahmVW.js",
+      "sha256": "c53be6e63b2248a513828fc53590382dcc45c6f086b3a0e100997f204e560d88",
+      "size": 15578,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "2d4550639d1614899174b1f5204ff27d05d969ab9c80a839521fe199c75653ce",
+      "size": 428,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "37bdb0ce795bf397a97983a644088b490888c0b5ffd9bfacfcea965e64aa84ee",
+      "size": 1431,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "6777154ec28e1f41deb6efa15cc298523462e84c3b90a14630d5f70b335f36f6",
+      "size": 2100,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

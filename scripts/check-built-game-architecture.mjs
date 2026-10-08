@@ -14,6 +14,7 @@ if (!outputArgument) {
 const repositoryRoot = resolve(import.meta.dirname, '..');
 const expectedOutputDirectory = resolve(repositoryRoot, 'apps/rehabtrainerhub/out');
 const outputDirectory = resolve(process.cwd(), outputArgument);
+const r2Releases = JSON.parse(await readFile(resolve(repositoryRoot, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
 assert.equal(
   outputDirectory,
   expectedOutputDirectory,
@@ -51,6 +52,12 @@ test('built Hub retains 40 independent game directories and no public trainer ru
     const outputMetadata = await lstat(outputGameDirectory);
     assert.equal(outputMetadata.isDirectory(), true, `${gameId} output must be a directory.`);
     assert.equal(outputMetadata.isSymbolicLink(), false, `${gameId} output cannot be a symbolic link.`);
+    if (Object.hasOwn(r2Releases, gameId)) {
+      assert.deepEqual(await readdir(outputGameDirectory), ['index.html'], `${gameId}: R2 game must only have a redirect in Hub output.`);
+      const redirect = await readFile(resolve(outputGameDirectory, 'index.html'), 'utf8');
+      assert.ok(redirect.includes(`${r2Releases[gameId].origin}/games/${gameId}/${r2Releases[gameId].version}/`));
+      continue;
+    }
 
     const sourceSettings = await readFile(resolve(sourceDirectory, 'settings.json'));
     const builtSettings = await readFile(resolve(outputGameDirectory, 'settings.json'));

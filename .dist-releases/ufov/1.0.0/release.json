@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "ufov",
+  "version": "1.0.0",
+  "name": "周邊視野訓練",
+  "shortName": "周邊視野訓練",
+  "description": "周邊視野訓練居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "c51104352d945d18971d6e4a2fe9e409d6bd3589177f8ccf52b140c14d5a3059",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/index-CkgcKFNw.js",
+      "sha256": "b9b06abedff97976bec1cc930cddac46412dbc44207c5d50bf23b68cace2db9d",
+      "size": 450434,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/index-DN3nti_G.css",
+      "sha256": "a50d898e136d9869dcc8b1aafde103253bb358fa858a38f69e74245ef8842a1f",
+      "size": 87968,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "69537a5242d4ae24bd368655c9eca4327173a4b9eb1257751ec3d203f95fc88d",
+      "size": 428,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "70a68eedaa96e1209dd0bd1e9bf849d9e2849f6271dc2551246239801f2ad0d5",
+      "size": 3986,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "5482de710f257982ad71bb0dcd4ad4acfcf2eae491a26fd5082b8154715453a8",
+      "size": 10436,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}

@@ -32,7 +32,6 @@
     "@rehab-trainer/game-connect4": "*",
     "@rehab-trainer/game-digit-span": "*",
     "@rehab-trainer/game-dots-and-boxes": "*",
-    "@rehab-trainer/game-drawing-defense": "*",
     "@rehab-trainer/game-driving-rehab": "*",
     "@rehab-trainer/game-every-ball-response": "*",
     "@rehab-trainer/game-flanker": "*",

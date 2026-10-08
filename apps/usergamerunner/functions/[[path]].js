@@ -153,7 +153,7 @@ export async function HandleRequest(context) {
     if (!file) {
       return ErrorResponse(404, '找不到遊戲檔案。');
     }
-    return ServePackageFile(context.env.GAME_RELEASE_BUCKET, request, route, file);
+    return ServePackageFile(context.env.GAME_RELEASE_BUCKET, request, route, file, release.presentation === 'game');
   }
 
   return ErrorResponse(404, '找不到遊戲。');
@@ -200,15 +200,23 @@ async function LoadApprovedRelease(bucket, gameId, version) {
   }
 }
 
-async function ServePackageFile(bucket, request, route, file) {
+async function ServePackageFile(bucket, request, route, file, verifyBody = false) {
   const key = PackageKey(route.gameId, route.version, route.path);
-  const object = request.method === 'HEAD' && typeof bucket.head === 'function'
+  const object = !verifyBody && request.method === 'HEAD' && typeof bucket.head === 'function'
     ? await bucket.head(key)
     : await bucket.get(key);
   if (!object
     || object.size !== file.size
-    || object.customMetadata?.sha256 !== file.sha256) {
+    || (!verifyBody && object.customMetadata?.sha256 !== file.sha256)) {
     return ErrorResponse(404, '找不到遊戲檔案。');
+  }
+  let body = object.body;
+  if (verifyBody) {
+    const bytes = await object.arrayBuffer();
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    const sha256 = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+    if (sha256 !== file.sha256) return ErrorResponse(404, '找不到遊戲檔案。');
+    body = bytes;
   }
 
   const etag = `"sha256-${file.sha256}"`;
@@ -217,7 +225,7 @@ async function ServePackageFile(bucket, request, route, file) {
     return new Response(null, { status: 304, headers });
   }
 
-  return new Response(request.method === 'HEAD' ? null : object.body, {
+  return new Response(request.method === 'HEAD' ? null : body, {
     status: 200,
     headers,
   });

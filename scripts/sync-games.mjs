@@ -11,6 +11,7 @@ if (!existsSync(catalogPath)) {
 }
 
 const catalogSource = readFileSync(catalogPath, 'utf8');
+const r2Releases = JSON.parse(readFileSync(resolve(repoRoot, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
 const gameIds = [...catalogSource.matchAll(/\{\s*id:\s*'([^']+)',\s*trainer:/g)].map(m => m[1]);
 
 console.log(`Found ${gameIds.length} games in catalog.ts...`);
@@ -78,6 +79,7 @@ let hubPkgChanged = false;
 // Add missing dependencies
 for (const gameId of gameIds) {
   const depName = `@rehab-trainer/game-${gameId}`;
+  if (Object.hasOwn(r2Releases, gameId)) continue;
   if (!hubPkg.dependencies[depName]) {
     hubPkg.dependencies[depName] = '*';
     hubPkgChanged = true;
@@ -89,7 +91,7 @@ const currentDeps = Object.keys(hubPkg.dependencies);
 for (const dep of currentDeps) {
   if (dep.startsWith('@rehab-trainer/game-')) {
     const gameId = dep.replace('@rehab-trainer/game-', '');
-    if (!gameIds.includes(gameId)) {
+    if (!gameIds.includes(gameId) || Object.hasOwn(r2Releases, gameId)) {
       delete hubPkg.dependencies[dep];
       hubPkgChanged = true;
     }

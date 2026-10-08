@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "letter-memory",
+  "version": "1.0.0",
+  "name": "字母記憶更新（Letter Memory）",
+  "shortName": "字母記憶更新（Letter Memory）",
+  "description": "字母記憶更新（Letter Memory）居家訓練網官方練習",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer"
+  ],
+  "contentSha256": "81e01e675a634af7efddc8be01bb0d2ada8cc7ca55f3ad2ad7da2647c8f94fd4",
+  "approvedAt": "2026-10-07T00:00:00.000Z",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "assets/index-BJATUSWX.css",
+      "sha256": "5d3959591eebfdb4fb68d1bd67c088ea98990630ae909950fa304a5c6aaf098e",
+      "size": 74322,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-Bw5-aKHJ.js",
+      "sha256": "0378cb7e51ee69f0fdbdc327cc357bbb708c30bea6746bdb554be3698691a671",
+      "size": 321445,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "sha256": "a0a946de9d69d7c8d5a52ac20420f89c94a5157935e67f9a0b0843bb68849963",
+      "size": 447,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "runtime/default_style.css",
+      "sha256": "bf96055362833fa13f18b1bd19805d28ee23d8f72a4b841f2d5eaf3a27214817",
+      "size": 7373,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/experiment.js",
+      "sha256": "58d56eacc9a868cc06b80817cd1c60caa2b58aff8e99e7ac1d3561cb29ab4063",
+      "size": 8095,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jquery.min.js",
+      "sha256": "2051d61446d4dbffb03727031022a08c84528ab44d203a7669c101e5fbdd5515",
+      "size": 84355,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/jspsych.js",
+      "sha256": "85bded0d80b8a5abbb113c14643d9dfc0a927c2dc7cb478edc526286ef69c97c",
+      "size": 42744,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/plugins/jspsych-call-function.js",
+      "sha256": "35e24fcc6de62330b87121dfc9230687168a42a19946f59b372f2b46339c8de3",
+      "size": 662,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/plugins/jspsych-survey-text.js",
+      "sha256": "a14319c649c2eac4dcfe32f762c78ac5bc8416737aa07c461d5c2dface96ca77",
+      "size": 2734,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/plugins/jspsych-text.js",
+      "sha256": "d6e23ceb94058f6554182ac6fc51e61eea07e842ffa262d4f711f92913b3fdec",
+      "size": 1586,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-attention-check.js",
+      "sha256": "d9b718e589fb6dc604e6b422bd28f663c03f838672965e2d2d62dc57d4d89b38",
+      "size": 8016,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-poldrack-instructions.js",
+      "sha256": "26ec2f1b90e30cff13cf493f97b0f87c345d979a5cc1256d76db1177cc695424",
+      "size": 5490,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-poldrack-single-stim.js",
+      "sha256": "5745c39256b019fbd0d4103d25158b0a80ec31eefac4c45a61318ad5d9cb604b",
+      "size": 4590,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-poldrack-text.js",
+      "sha256": "6e21c14be3478475f6a3f00d0ca02709be4dbcf6e78f030213e7817f8cbd6dfb",
+      "size": 2500,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/jspsych-single-stim-button.js",
+      "sha256": "3bf498d0fee3633e5f40f8395cc4f7cfd82f0f7eea99e7a7625e1d8afdb4ba82",
+      "size": 4241,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/jspsych/poldrack_plugins/poldrack_utils.js",
+      "sha256": "ccd8b8e338bfe09b6ee0aafa177efc60391e059e165c71f9de6fb48efc3b0d57",
+      "size": 1144,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/js/math.min.js",
+      "sha256": "6f8f3abe87aa63ce39fcfacab6d2fae3b54bab07fad615d893e3f348f57e8db7",
+      "size": 444625,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/jspsych.css",
+      "sha256": "76abd1c0bba68e4cf6be117b453ddb478186684a4c2ae6f6e677f8b3cfc61c70",
+      "size": 5495,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "runtime/LICENSE",
+      "sha256": "f841287245cf39077d5aa709425d953581bcb9327b67941212fed18fdcbdb796",
+      "size": 1107,
+      "contentType": "application/octet-stream"
+    },
+    {
+      "path": "runtime/localization.js",
+      "sha256": "657fa17fede9d598f17a18c1ab84e1099e5903efdf4c3de58e9741cbbb6e9106",
+      "size": 2606,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/manifest.json",
+      "sha256": "6e1f8d3c9582bf09c1df89c350abbd4eaef4952fddf3c4a473476d58ed8336dd",
+      "size": 853,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "runtime/research.js",
+      "sha256": "cd6915d0e4d7791a2a1529dbfd39e0bee9c8fd1da34d84538e7036ee8a150364",
+      "size": 2654,
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "runtime/shell.css",
+      "sha256": "18dec2a2c91d29a467c5e1822533ee78371fa9f8ef8e98cc3b7ea0486e06d875",
+      "size": 1463,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "score.json",
+      "sha256": "2fc62d2da5e4859101c38ad6b970a536a24115a949f1f815985ba5bcc8d81b58",
+      "size": 2853,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "settings.json",
+      "sha256": "28ab4a7c88666569f3eab18cb256235623ba20f8f84198471b55b2d56deb4dad",
+      "size": 1687,
+      "contentType": "application/json; charset=utf-8"
+    }
+  ],
+  "fileByPath": {}
+}
