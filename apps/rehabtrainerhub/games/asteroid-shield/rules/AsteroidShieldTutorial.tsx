@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useT } from '@rehab-trainer/ui/i18n/games';
-import { StartTour, type TourStep } from '@rehab-trainer/ui/tour';
-import '@rehab-trainer/ui/tour/toutour.css';
-import type { TrainingConfigSummaryItem } from '@rehab-trainer/ui';
+import { useT } from '../i18n/useT';
+import { StartTour, type TourStep } from '../runtime/tour';
+import '../runtime/tour.css';
+type TrainingConfigSummaryItem = { label: ReactNode; value: ReactNode };
 import type { ReactNode } from 'react';
 
 const assetUrls = {
@@ -18,15 +18,17 @@ const assetUrls = {
 interface AsteroidShieldTutorialProps {
   title?: ReactNode;
   summaryItems?: readonly TrainingConfigSummaryItem[];
+  ready: boolean;
   onStart: () => void;
   onBack: () => void;
 }
 
-export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack }: AsteroidShieldTutorialProps) {
+export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, ready }: AsteroidShieldTutorialProps) {
   const { t, lang } = useT();
   const [tourFinished, setTourFinished] = useState(false);
 
   useEffect(() => {
+    let disposeTour: (() => void) | undefined;
     const timer = window.setTimeout(() => {
       const isZh = lang !== 'en';
       const steps: TourStep[] = isZh
@@ -46,7 +48,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack }:
             {
               target: '.mock-shield',
               title: '護盾防禦',
-              text: '使用滑鼠或體感操作移動護盾，攔截飛向飛船的小行星。',
+              text: '使用滑鼠或觸控移動護盾，攔截飛向飛船的小行星。',
               place: 'top',
             },
           ]
@@ -66,12 +68,12 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack }:
             {
               target: '.mock-shield',
               title: 'Shield Defense',
-              text: 'Move the shield using your mouse or motion control to intercept incoming asteroids.',
+              text: 'Move the shield using your mouse or touch to intercept incoming asteroids.',
               place: 'top',
             },
           ];
 
-      StartTour(steps, {
+      disposeTour = StartTour(steps, {
         lang: lang === 'en' ? 'en' : 'zh-TW',
         zIndex: 9999,
         mask: true,
@@ -87,6 +89,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack }:
 
     return () => {
       window.clearTimeout(timer);
+      disposeTour?.();
     };
   }, [lang]);
 
@@ -117,13 +120,13 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack }:
           className="ui-button"
           onClick={onBack}
           style={{ 
-            backgroundColor: 'rgba(255,255,255,0.9)', 
+            backgroundColor: 'var(--surface)',
             border: 'none', 
             padding: '8px 16px', 
             borderRadius: '4px',
             cursor: 'pointer',
             fontWeight: 'bold',
-            color: '#333'
+            color: 'var(--text)'
           }}
         >
           {lang === 'en' ? 'Back to Settings' : '回設定'}
@@ -137,10 +140,10 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack }:
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: '24px',
+          gap: 'clamp(4px, 3vw, 24px)',
           marginTop: '5%',
           padding: '16px',
-          backgroundColor: 'rgba(0,0,0,0.3)',
+          backgroundColor: 'var(--bg-overlay)',
           borderRadius: '12px',
         }}
       >
@@ -154,31 +157,34 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack }:
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', zIndex: 20 }}>
         {tourFinished && (
           <div style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+            backgroundColor: 'var(--surface)',
             padding: '24px', 
             borderRadius: '12px', 
             display: 'flex', 
             flexDirection: 'column', 
             alignItems: 'center',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            boxShadow: '0 4px 12px var(--bg-overlay)',
             maxWidth: '90%',
+            maxHeight: 'calc(100dvh - 100px)',
+            overflowY: 'auto',
           }}>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '1.5rem', color: '#333', textAlign: 'center' }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '1.5rem', color: 'var(--text)', textAlign: 'center' }}>
               {title}
             </h2>
             {summaryItems && summaryItems.length > 0 && (
-              <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.9rem', color: '#555' }}>
+              <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '1.15rem', color: 'var(--text-muted)' }}>
                 {summaryItems.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
-                    <span style={{ fontWeight: 'bold' }}>{item.label}:</span>
-                    <span>{item.value}</span>
-                  </div>
+                  <p key={idx} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
+                    <strong>{item.label}:</strong>
+                    {item.value}
+                  </p>
                 ))}
               </div>
             )}
             <button
               className="ui-button ui-button-primary"
-              style={{ fontSize: '1.2rem', padding: '12px 32px', backgroundColor: '#005EB8', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              style={{ fontSize: '1.2rem', padding: '12px 32px', backgroundColor: 'var(--primary)', color: 'var(--text-on-accent)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              disabled={!ready}
               onClick={onStart}
             >
               {lang === 'en' ? 'Start Training' : '開始訓練'}
@@ -188,7 +194,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack }:
       </div>
 
       {/* Mock Shield and Ship */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'absolute', bottom: '16px' }}>
         <div className="mock-shield" style={{
             width: 200,
             height: 50,

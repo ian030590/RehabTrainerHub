@@ -92,7 +92,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     browserSmokeScript,
     '--url', `http://127.0.0.1:${address.port}/`,
     '--storage', 'rehab_hub_tour_seen=1',
-    '--clickSelectors', '.official-game-card[data-runtime-id="asteroid-shield"] button',
+    '--clickSelectors', '.official-game-card[data-runtime-id="moving-card"] button',
     '--allSelectors', [
       'dialog.training-overlay-config form',
       'input[type="range"]',
@@ -113,7 +113,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     browserSmokeScript,
     '--url', `http://127.0.0.1:${address.port}/`,
     '--storage', 'rehab_hub_tour_seen=1',
-    '--clickSelectors', '.official-game-card[data-runtime-id="asteroid-shield"] button,dialog.training-overlay-config button[type="submit"]',
+    '--clickSelectors', '.official-game-card[data-runtime-id="moving-card"] button,dialog.training-overlay-config button[type="submit"]',
     '--fullscreenSelector', 'html',
     '--allSelectors', 'dialog.training-overlay-runtime iframe',
     '--timeoutMs', '10000',
@@ -147,15 +147,13 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     assert.equal(guidedGame.exitCode, 0, `${gameId}: ${guidedGame.stdout}\n${guidedGame.stderr}`);
   }
 
-  for (const gameId of ['reaction-time', 'asteroid-shield']) {
-    const rulesSelector = gameId === 'asteroid-shield' ? '.asteroid-shield-tutorial' : '.training-rules';
-    const backSelectors = gameId === 'asteroid-shield'
-      ? '#ttSkip,.asteroid-shield-tutorial .ui-button'
-      : '.training-rules .btn-ghost';
+  for (const gameId of ['reaction-time', 'lights-out']) {
+    const rulesSelector = '.training-rules';
+    const backSelectors = '.training-rules .btn-ghost';
     const standalone = await Run(process.execPath, [
       browserSmokeScript,
       '--url', `http://127.0.0.1:${address.port}/games/${gameId}/`,
-      '--clickSelectors', `.game-settings-form button[type="submit"],${backSelectors},.game-settings-form button[type="submit"]${gameId === 'asteroid-shield' ? ',#ttSkip' : ''}`,
+      '--clickSelectors', `.game-settings-form button[type="submit"],${backSelectors},.game-settings-form button[type="submit"]`,
       '--allSelectors', `${rulesSelector},${rulesSelector} button`,
       '--timeoutMs', '10000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
@@ -224,7 +222,7 @@ test('Brave shows shared score charts and uploads guest and signed-in sessions',
     const result = await Run(process.execPath, [browserSmokeScript,
       '--url', `http://127.0.0.1:${server.address().port}/`,
       '--storage', `rehab_hub_tour_seen=1,rehab-trainer-hub-language=zh,rehabtrainerhub.subject-id.v1=${guestSubjectId}`, '--mockAuthUser', String(signedIn),
-      '--clickSelectors', '.official-game-card[data-runtime-id="asteroid-shield"] button,.game-settings-form button[type="submit"]',
+      '--clickSelectors', '.official-game-card[data-runtime-id="moving-card"] button,.game-settings-form button[type="submit"]',
       '--allSelectors', '.training-overlay-score table,.training-overlay-score [data-slot="chart"] svg,dialog.training-overlay-score:not(:has(iframe)),.training-score-priority,.training-score-quality,.training-score-stat-strip',
       ...(!signedIn ? [
         '--viewportWidth', '390', '--viewportHeight', '844',

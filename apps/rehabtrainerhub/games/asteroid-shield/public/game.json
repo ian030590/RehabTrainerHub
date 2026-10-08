@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "asteroid-shield",
+  "trainer": "motor",
+  "category": "upper-limb",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "小行星護盾防衛", "description": "移動護盾保護飛船，練習手部定位與上肢控制。" },
+    "en": { "title": "Asteroid Shield Defense", "description": "Move a shield to protect the ship and practise hand positioning and upper-limb control." }
+  }
+}

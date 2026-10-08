@@ -1,0 +1,163 @@
+{
+  "gameId": "asteroid-shield",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/package/index.html",
+  "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e",
+  "verifiedAt": "2026-10-08T22:10:38.583Z",
+  "status": "published-awaiting-hub-deployment",
+  "prefix": "releases/asteroid-shield/2.0.0/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/",
+  "fileCount": 12,
+  "totalBytes": 1214678,
+  "files": [
+    {
+      "path": "assets/asteroid-blue-CY-_A_BJ.png",
+      "size": 14034,
+      "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-dark-CW7iRJ5o.png",
+      "size": 11856,
+      "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-green-1XKYeWRA.png",
+      "size": 9693,
+      "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/background-NBhu4YAc.png",
+      "size": 83041,
+      "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/energy-rock-CT8hMT01.png",
+      "size": 1792,
+      "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-DiHZA-sh.js",
+      "size": 947010,
+      "sha256": "90714d03aaed7ea25249a8a12180fa91db668a0884943e021aaf647ac4dab98d",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/shield-CxquxbMC.png",
+      "size": 35318,
+      "sha256": "ded93bcfb8e383d478e1297ba87235738f55b9b9e631f846506791c26ebab40b",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/ship-CrsWCvcK.png",
+      "size": 78990,
+      "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/style-CNlFwbI3.css",
+      "size": 11226,
+      "sha256": "5b9624d88c21e360340bf7827bd6a4eb97cd98ced5675778deeaac1d1af078a8",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 471,
+      "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "19acb6438d5468c5284fd5ff958f2d2a0e49b1e06f59a914415bca85e294c4e9",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 20836,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "instruction": "推送",
+    "date": "2026-10-09",
+    "reviewedVersion": "2.0.0",
+    "reviewedContentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e",
+    "context": "Response to the exact candidate version/digest and request to publish R2 and switch the production Hub."
+  },
+  "catalogKey": "official-games/asteroid-shield/current.json",
+  "currentVersion": "2.0.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e"
+    }
+  },
+  "runnerFilesCheckedAt": "2026-10-08T22:12:07.156Z",
+  "hubProductionDeployed": false,
+  "verification": {
+    "allR2FilesReadBackSha256": true,
+    "currentAndApprovedManifestReadBack": true,
+    "allRunnerFilesReadBackSha256AndCsp": true,
+    "stableRedirectAndNoStore": true,
+    "versionedPwaResponse": true,
+    "legacy1_0_0StillAvailable": true,
+    "remoteLobbyBrowser": true,
+    "remoteStandaloneBrowser": true,
+    "productionTrainingRecordsCreated": false
+  },
+  "rollback": {
+    "checkedAt": "2026-10-08T14:46:00.023Z",
+    "publicCatalog": {
+      "url": "https://trainerhub.cc/api/games",
+      "status": 200,
+      "location": null,
+      "matchingGames": [
+        {
+          "slug": "asteroid-shield",
+          "title": "小行星護盾防衛",
+          "trainer": "motor",
+          "category": "general",
+          "version": "1.0.0",
+          "presentation": "legacy-package",
+          "settingsUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/1.0.0/package/settings.json"
+        }
+      ]
+    },
+    "hubEntry": {
+      "url": "https://trainerhub.cc/games/asteroid-shield/",
+      "status": 200,
+      "location": null
+    },
+    "runnerEntry": {
+      "url": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/",
+      "status": 404,
+      "location": null
+    },
+    "d1History": [
+      {
+        "slug": "asteroid-shield",
+        "version": "1.0.0",
+        "status": "approved",
+        "entry_path": "index.html"
+      }
+    ],
+    "databaseWrites": 0,
+    "hubRollback": {
+      "id": "8e957462-7639-4fe6-a3db-acfa278735bd",
+      "url": "https://8e957462.rehabtrainerhub.pages.dev",
+      "commit": "e22e2d363b1f895567eafa382852f34cb1c31463"
+    },
+    "runnerRollback": {
+      "id": "e2459d3c-d5a5-4257-aadf-e9872894510b",
+      "url": "https://e2459d3c.trainerhub-user-games.pages.dev",
+      "commit": "e22e2d363b1f895567eafa382852f34cb1c31463"
+    }
+  }
+}

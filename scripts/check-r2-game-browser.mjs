@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
-import { resolve } from 'node:path';
+import { resolve, sep } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { BuildOfficialGameRelease } from './publish-official-game.mjs';
 import { HandleRequest } from '../apps/usergamerunner/functions/[[path]].js';
@@ -11,17 +11,27 @@ import { ContentTypeForPath } from '../apps/usergamerunner/functions/_lib/releas
 import { onRequestPost as createSession } from '../apps/rehabtrainerhub/functions/api/official-game-sessions.js';
 import { onRequestPost as saveRecord } from '../apps/rehabtrainerhub/functions/api/records.js';
 import { onRequestGet as listGames } from '../apps/rehabtrainerhub/functions/api/games.js';
+import { onRequestGet as readAccount } from '../apps/rehabtrainerhub/functions/api/auth/me.js';
+import { CreateSessionForUser } from '../apps/rehabtrainerhub/functions/_lib/auth.js';
 
+import { CheckAsteroidShield } from './asteroid-shield-browser.mjs';
+const gameIndex = process.argv.indexOf('--game');
+const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
+assert.ok(['drawing-defense', 'asteroid-shield'].includes(gameId), 'Unknown browser game fixture');
+const phasePrefix = gameId === 'asteroid-shield' ? 'asteroid-shield' : 'drawing-defense';
 const root = resolve(import.meta.dirname, '..');
 const productionHub = process.argv.includes('--production-hub');
 const remote = process.argv.includes('--remote') || productionHub;
 const standalone = process.argv.includes('--standalone');
 const lobby = process.argv.includes('--lobby');
 const sessionFailure = process.argv.includes('--session-failure');
+const signedIn = process.argv.includes('--signed-in');
+const english = process.argv.includes('--english');
 const output = resolve(process.env.HUB_OUTPUT_ROOT || resolve(root, 'apps/rehabtrainerhub/out'));
+const runnerOutput = resolve(root, 'apps/usergamerunner/dist');
 const browserPath = process.env.BRAVE_BIN || 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
 assert.ok(existsSync(browserPath), 'Brave is required.');
-const { manifest, files } = await BuildOfficialGameRelease('drawing-defense');
+const { manifest, files } = await BuildOfficialGameRelease(gameId);
 const sqlite = new DatabaseSync(':memory:');
 const migrations = resolve(root, 'apps/rehabtrainerhub/migrations');
 for (const file of (await readdir(migrations)).filter(file => file.endsWith('.sql')).sort()) sqlite.exec(await readFile(resolve(migrations, file), 'utf8'));
@@ -37,13 +47,18 @@ let revoked = false;
 const catalog = { schemaVersion: 1, gameId: manifest.gameId, currentVersion: manifest.version,
   releases: { [manifest.version]: { contentSha256: manifest.contentSha256 } } };
 const bucket = { get: async key => {
-  const bytes = key === 'official-games/drawing-defense/current.json' ? Buffer.from(JSON.stringify(catalog))
+  const bytes = key === `official-games/${gameId}/current.json` ? Buffer.from(JSON.stringify(catalog))
     : key.endsWith('/release.json') ? Buffer.from(JSON.stringify({ ...manifest, status: revoked ? 'revoked' : 'approved' })) : files.get(key.split('/files/')[1]);
   if (!bytes) return null;
   return { size: bytes.length, body: bytes, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
     text: async () => bytes.toString('utf8'), json: async () => JSON.parse(bytes.toString('utf8')) };
 } };
 const environment = { REHAB_DB: database, GAME_RELEASE_BUCKET: bucket, ANONYMOUS_RECORDS_ENABLED: '1', AUTH_SESSION_SECRET: 'r2-browser-local-secret-abcdefghijklmnopqrstuvwxyz' };
+const accountId = signedIn ? crypto.randomUUID() : null;
+const guestSubjectId = '550e8400-e29b-41d4-a716-446655440000';
+if (signedIn) sqlite.prepare('INSERT INTO app_users (id,display_name,created_at,updated_at) VALUES (?,?,?,?)')
+  .run(accountId, 'Local browser account', new Date().toISOString(), new Date().toISOString());
+const accountToken = signedIn ? await CreateSessionForUser(environment, { id: accountId }) : null;
 const errors = [];
 const requests = [];
 let failFirstSave = true;
@@ -64,7 +79,12 @@ async function Respond(response, result) {
 
 try {
   runner = createServer((request, response) => {
-    void HandleRequest({ request: new Request(runnerOrigin + request.url, { method: request.method }), env: { GAME_RELEASE_BUCKET: bucket }, next: () => new Response('Missing', { status: 404 }) })
+    void HandleRequest({ request: new Request(runnerOrigin + request.url, { method: request.method }), env: { GAME_RELEASE_BUCKET: bucket }, next: async () => {
+      const path = resolve(runnerOutput, '.' + new URL(request.url, runnerOrigin).pathname);
+      assert.ok(path.startsWith(runnerOutput + sep));
+      const bytes = await readFile(path).catch(() => null);
+      return bytes ? new Response(bytes, { headers: { 'Content-Type': ContentTypeForPath(path) } }) : new Response('Missing', { status: 404 });
+    } })
       .then(result => Respond(response, result)).catch(error => { errors.push(String(error)); response.writeHead(500).end(); });
   });
   runnerOrigin = remote ? 'https://trainerhub-user-games.pages.dev' : await listen(runner);
@@ -72,6 +92,10 @@ try {
   hub = createServer(async (request, response) => {
     try {
       const url = new URL(request.url, hubOrigin);
+      if (url.pathname === '/api/auth/me' && signedIn) {
+        await Respond(response, await readAccount({ request: new Request('https://trainerhub.cc/api/auth/me', { headers: request.headers }), env: environment }));
+        return;
+      }
       if (url.pathname === '/api/official-game-sessions' || (url.pathname === '/api/records' && request.method === 'POST')) {
         const chunks = [];
         for await (const chunk of request) chunks.push(chunk);
@@ -90,12 +114,12 @@ try {
         return;
       }
       if (url.pathname.startsWith('/api/')) {
-        const oldGame = { id: 'old-drawing-defense', slug: 'drawing-defense', title: 'Obsolete settings shell',
+        const oldGame = { id: 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
           summary: 'Legacy publication', trainer: 'motor', category: 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
           release: { id: 'old-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['pointer'],
-            approvedAt: '2026-10-08', launchUrl: `${runnerOrigin}/games/drawing-defense/1.0.0/`,
-            installUrl: `${runnerOrigin}/games/drawing-defense/1.0.0/`,
-            settingsUrl: `${runnerOrigin}/games/drawing-defense/1.0.0/package/settings.json` } };
+            approvedAt: '2026-10-08', launchUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
+            installUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
+            settingsUrl: `${runnerOrigin}/games/${gameId}/1.0.0/package/settings.json` } };
         const currentGames = url.pathname === '/api/games' && lobby
           ? (await (await listGames({ request: new Request('https://trainerhub.cc/api/games'), env: environment })).json()).games : [];
         const body = url.pathname === '/api/games' ? { games: lobby ? [oldGame,
@@ -122,7 +146,7 @@ try {
   const debugUrl = await listen(debugProbe);
   const debugPort = new URL(debugUrl).port;
   await new Promise(resolve => debugProbe.close(resolve));
-  const profile = resolve(root, '.tmp', `r2-browser-${process.pid}`);
+  const profile = resolve(root, '.tmp', `r2-browser-${process.pid}-${crypto.randomUUID()}`);
   await mkdir(profile, { recursive: true });
   browser = spawn(browserPath, ['--headless=new', '--no-first-run', '--no-default-browser-check', '--remote-allow-origins=*',
     '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows',
@@ -191,8 +215,13 @@ try {
     }
   ` }, session);
   if (process.argv.includes('--mobile')) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
-  await send('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('rehab_hub_tour_seen','1'); } catch {}" }, session);
-  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/drawing-defense/${manifest.version}/` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : '/train/?module=motor%3Adrawing-defense') }, session);
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: `try {
+    localStorage.setItem('rehab_hub_tour_seen','1');
+    localStorage.setItem('rehab-trainer-hub-language', ${JSON.stringify(english ? 'en' : 'zh')});
+    localStorage.setItem('rehabtrainerhub.subject-id.v1', ${JSON.stringify(guestSubjectId)});
+    ${signedIn ? `localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(accountToken)});` : ''}
+  } catch {}` }, session);
+  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=motor%3A${gameId}`) }, session);
   await send('Target.activateTarget', { targetId: target.targetId });
   const evaluate = async (expression, context) => {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture: true, ...(context ? { contextId: context.id } : {}) }, context?.session || session);
@@ -209,19 +238,19 @@ try {
     }
     const bodies = [];
     for (const context of contexts.filter(context => context.auxData?.isDefault)) {
-      try { bodies.push(await evaluate('document.body.textContent.slice(0,2000)', context)); } catch {}
+      try { bodies.push(await evaluate('document.body.innerText.slice(0,6000)', context)); } catch {}
     }
     throw new Error(`Timed out: ${label}\n${errors.join('\n')}\n${bodies.join('\n')}`);
   };
   if (lobby && !standalone) {
     await until(() => evaluate('Boolean(document.querySelector(".module-card[data-runtime-id=reviewed-browser-game]"))'), 'reviewed catalog loaded');
-    assert.equal(await evaluate('document.querySelectorAll(".module-card[data-runtime-id=drawing-defense]").length'), 1);
-    assert.equal(await evaluate('document.querySelector(".module-card[data-runtime-id=drawing-defense] .module-subcategory-tag").textContent'), '上肢動作');
-    await evaluate('document.querySelector(".module-card[data-runtime-id=drawing-defense]").scrollIntoView()');
-    await until(() => evaluate('(() => { const image = document.querySelector(".module-card[data-runtime-id=drawing-defense] img"); return image?.complete && image.naturalWidth > 0; })()'), 'game-owned preview loaded');
-    assert.equal(new URL(await evaluate('document.querySelector(".module-card[data-runtime-id=drawing-defense] img").src')).pathname,
-      `/games/drawing-defense/${manifest.version}/package/preview.webp`);
-    await evaluate('document.querySelector(".module-card[data-runtime-id=drawing-defense] button").click()');
+    assert.equal(await evaluate(`document.querySelectorAll(".module-card[data-runtime-id=${gameId}]").length`), 1);
+    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), english ? /upper/i : /上肢動作/);
+    await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}]").scrollIntoView()`);
+    await until(() => evaluate(`(() => { const image = document.querySelector(".module-card[data-runtime-id=${gameId}] img"); return image?.complete && image.naturalWidth > 0; })()`), 'game-owned preview loaded');
+    assert.equal(new URL(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] img").src`)).pathname,
+      `/games/${gameId}/${manifest.version}/package/preview.webp`);
+    await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] button").click()`);
     await until(() => sessionAttempts > 0, 'lobby selects an approved R2 session before loading settings');
   }
   if (sessionFailure && !standalone) {
@@ -233,11 +262,11 @@ try {
   console.log('Hub iframe ready.');
   assert.equal(await evaluate('document.querySelector("iframe").getAttribute("sandbox")'), 'allow-scripts');
   if (!standalone) assert.equal(new URL(await evaluate('document.querySelector("iframe").src')).pathname,
-    `/games/drawing-defense/${manifest.version}/package/index.html`, 'Load the session-selected game directly without the legacy launcher.');
+    `/games/${gameId}/${manifest.version}/package/index.html`, 'Load the session-selected game directly without the legacy launcher.');
   let gameContext;
   await until(async () => {
     for (const context of contexts.filter(context => context.auxData?.isDefault)) {
-      try { if (await evaluate('Boolean(document.querySelector(".drawing-defense-phase-menu"))', context)) { gameContext = context; return true; } } catch {}
+      try { if (await evaluate(`Boolean(document.querySelector(".${phasePrefix}-phase-menu"))`, context)) { gameContext = context; return true; } } catch {}
     }
     return false;
   }, 'game-owned settings');
@@ -273,6 +302,15 @@ try {
     await until(() => evaluate('!document.querySelector("dialog iframe") && Boolean(document.querySelector("dialog [role=alert]"))'), 'revoked game removed');
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     console.log('Revoked R2 release removed; no result saved.');
+  } else if (gameId === 'asteroid-shield') {
+    const screenshots = resolve(root, '.tmp/asteroid-validation', `${standalone ? 'standalone' : 'lobby'}-${process.argv.includes('--mobile') ? 'mobile' : 'desktop'}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
+    await mkdir(screenshots, { recursive: true });
+    const capture = async name => {
+      const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
+      await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64'));
+    };
+    await CheckAsteroidShield({game, evaluate, send, until, gameContext, session, standalone,
+      sqlite, requests, errors, saveAttempts: () => saveAttempts, sessionAttempts: () => sessionAttempts, sessionFailure, capture, accountId, guestSubjectId});
   } else {
   assert.equal(await game('document.querySelectorAll("form input[type=range]").length'), 3);
   assert.ok(await game('document.documentElement.scrollWidth <= innerWidth'), 'Settings must not overflow horizontally.');

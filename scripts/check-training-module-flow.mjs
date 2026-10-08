@@ -8,7 +8,6 @@ import ts from 'typescript';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const moduleRoot = resolve(repoRoot, 'apps/rehabtrainerhub/games');
 const catalogSource = readFileSync(resolve(moduleRoot, 'catalog.ts'), 'utf8');
-const drawingDefenseCatalog = JSON.parse(readFileSync(resolve(moduleRoot, 'drawing-defense/public/game.json'), 'utf8'));
 const gameTagsSource = readFileSync(resolve(moduleRoot, 'gameTags.js'), 'utf8');
 const manifestSource = readFileSync(resolve(moduleRoot, 'moduleFlowManifest.ts'), 'utf8');
 const manifestCode = ts.transpileModule(manifestSource, {
@@ -43,8 +42,8 @@ const expFactoryGameFiles = Object.freeze({
 const expFactoryCatalogIds = Object.keys(expFactoryGameFiles);
 
 const catalogIds = [...catalogSource.matchAll(
-  /\{\s*id:\s*'([^']+)',\s*trainer:\s*(?:'([^']+)'|drawingDefenseCatalog\.trainer)/g,
-)].map((match) => `${match[2] ?? drawingDefenseCatalog.trainer}:${match[1]}`);
+  /\{\s*id:\s*'([^']+)',\s*trainer:\s*(?:'([^']+)'|[A-Za-z]+Catalog\.trainer)/g,
+)].map((match) => `${match[2] ?? JSON.parse(readFileSync(resolve(moduleRoot, match[1], 'public/game.json'), 'utf8')).trainer}:${match[1]}`);
 const manifestIds = Object.keys(trainingModuleFlowManifest);
 
 assert.equal(
@@ -282,10 +281,10 @@ const implementationGroups = [
     ids: ['motor:asteroid-shield'],
     files: ['asteroid-shield/AsteroidShieldGame.tsx'],
     tokens: [
-      "('rules')",
+      "setPhase('rules')",
       "setPhase('playing')",
       "phase === 'results'",
-      'TrainingResultActions',
+      'SendGameResult',
     ],
   },
   {
@@ -581,7 +580,6 @@ const pendingJsPsychIds = jsPsychLifecycleGroups
   .flatMap(({ ids }) => ids);
 
 const configPermissionImplementations = {
-  'motor:asteroid-shield': 'asteroid-shield/AsteroidShieldGame.tsx',
   'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
   'motor:motor-cortex-rehab': 'motor-cortex-rehab/MotorCortexRehabGame.tsx',
   'vision:oculomotor-training': 'oculomotor-training/OculomotorTrainingGame.tsx',

@@ -30,9 +30,18 @@ test('every game exposes bounded grading settings and exact numeric score source
   assert.equal(ids.length, 40);
   for (const id of ids) {
     if (Object.hasOwn(migratedGames, id)) {
-      const source = read(id, 'DrawingTowerDefenseGame.tsx');
-      assert.match(source, /minRecognitionStrictness = 10/);
-      assert.match(source, /maxRecognitionStrictness = 90/);
+      const entry = id === 'asteroid-shield' ? 'AsteroidShieldGame.tsx' : 'DrawingTowerDefenseGame.tsx';
+      const source = read(id, entry);
+      if (id === 'asteroid-shield') {
+        const settings = read(id, 'settings.ts');
+        assert.match(settings, /settings\.durationSec < 30/);
+        assert.match(settings, /settings\.durationSec > 300/);
+        assert.match(settings, /settings\.sensitivity < 1/);
+        assert.match(settings, /settings\.sensitivity > 10/);
+      } else {
+        assert.match(source, /minRecognitionStrictness = 10/);
+        assert.match(source, /maxRecognitionStrictness = 90/);
+      }
       assert.match(source, /SendGameResult/);
       continue;
     }

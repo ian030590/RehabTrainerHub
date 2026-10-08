@@ -13,6 +13,7 @@ npm workspace / Turborepo monorepo；目前只有兩個 app，App 程式碼位�
 
 - `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、內建訓練 runtime、API、審核後台、開發者入口）。
 - `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），從 R2 讀取核准版本，提供套件資產、安全標頭、版本化 runtime 與 PWA launcher；支援官方原生遊戲與第三方 HTML/ZIP 遊戲。
+- 小行星護盾防衛 `2.0.0` 已經擁有者精確摘要核准並公開至 R2，見 `docs/asteroid-shield-r2-migration.md` 與 `docs/releases/asteroid-shield-2.0.0.json`。本次 registry 有 2 款自包含遊戲，Hub build 排除它們、保留 38 款舊遊戲；正式 Hub 切換必須待 CI／部署與正式站驗收完成，不可將 R2 公開或本機登記當成整項遷移完成。
 - `apps/rehabtrainerhub/games/{gameId}/`：目前有 40 個正式遊戲 workspace，擁有各自的 Vite entry、runtime、規則與 i18n。39 個未遷移遊戲仍依賴 `@rehab-trainer/ui` 的既有 `OfficialGameShell`、樣式、語言 provider 與設定橋樑，維持 `settings.json`／`score.json` 流程；這是尚待移除的遷移負債，不能宣稱所有遊戲已完全獨立。**新遊戲與 R2 遷移完成的遊戲嚴禁引入共用 UI 或跨遊戲程式碼；既有共用依賴不得擴張。** 登記於 `packages/ui/src/officialGameReleases.json` 的 R2 遊戲自行呈現設定、教學與成績，僅透過私有 MessageChannel 傳送成果，由 Hub 驗證後入庫。首個試點為畫畫塔防 `2.0.3`，詳見 `docs/r2-game-migration-plan.md`。
   **新增遊戲與 Workspace 同步：** 加入 `apps/rehabtrainerhub/games/catalog.ts` 後執行 `npm run sync:games`；有 workspace／依賴異動時更新 lockfile。sync 依 registry 將未遷移遊戲加入 Hub 依賴樹，將 R2 遊戲排除。其舊模板仍會為缺少設定檔的遊戲產生共用 UI 依賴及 alias，並不驗證遊戲是否獨立；新遊戲與 R2 遊戲須先提供自有 `package.json`、Vite entry 及依賴，不能靠 sync 取得符合新架構的套件。
 
@@ -61,8 +62,10 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - Hub 單一四路由導覽與 `aria-current` 契約由 `scripts/check-hub-navigation.test.mjs` 驗證，包含於兩份 workflow 共用的 `test:entrypoints` 命令；手機導覽與平板無水平溢出另以本機 Brave browser smoke 驗證。
 - Hub 統一遊戲目錄與單一啟動入口由 `apps/rehabtrainerhub/app/hubGames.test.mjs` 納入 `test:entrypoints`；Issue 工作、版本雜湊、指定擁有者核准及實際 SQL 投稿／保存由 `test:hub-functions` 覆蓋。`test:cloudflare-deploy` 驗證 owner 設定只同步到 Hub，不傳到 runner build 或部署 subprocess。
 - `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、未遷移遊戲的 JSON／統一 config UI，以及 R2 遊戲的自有設定／成績、無共用依賴、私有通訊和實際 bytes 雜湊驗證（`scripts/check-self-contained-game.test.mjs`）；`scripts/check-game-catalog-metadata.test.mjs` 另檢查遊戲自有預覽圖與分類宣告。發布工具測試另驗證上傳失敗不切換 current、不可變檔案與歷史回退。確認舊 `.dist-releases/` 已移除且由 Git 忽略，正式發布收據仍可追蹤。CI 與部署 workflow 維持同名 matrix 與相同命令。Hub build 另驗證已遷移遊戲不得攜帶 bundle／JSON，且不得恢復 `/runtimes/*`。
+- 同一 `test:game-architecture` gate 新增 `scripts/check-asteroid-shield-migration.test.mjs`，驗證小行星護盾原設定／邊界、完整數值成果、原預覽圖、統計與私有 port。兩份 workflow 維持既有 `game-architecture` matrix／相同 root 命令，沒有新增需 Brave 的 CI 項目；workflow 自身路徑仍觸發驗證。
 - 畫畫塔防 R2 本機 Brave 測試為 `node scripts/check-r2-game-browser.mjs`，另執行 `--mobile`、`--revoke`、`--session-failure`；發布後執行 `--remote` 與 `--remote --standalone`。平台部署後另以 `--production-hub` 讀正式 Hub 與 R2，僅攔截 Hub `/api/*` 至本機，驗證真正部署的開始前固定版本流程。不加入沒有 Brave 的 Linux CI matrix。所有模式的資料庫寫入只在本機測試 SQLite，不建立正式紀錄。
   `--lobby` 與 `--lobby --mobile` 另驗證實際公開目錄 API、同名舊版碰撞、上肢分類、R2 預覽圖及從大廳開始的完整流程；可用 `HUB_OUTPUT_ROOT` 指向固定的 Hub 輸出副本。
+- 小行星護盾專用 Brave 流程使用 `node scripts/check-r2-game-browser.mjs --game asteroid-shield --lobby`；另跑 `--lobby --mobile`、`--lobby --signed-in`、`--lobby --session-failure`、`--lobby --revoke`、`--standalone` 與 `--standalone --mobile`。它執行真實 30 秒滑鼠／觸控 gameplay、三目標教學、設定往返／Enter、全螢幕、成果指標切換、保存重試／身份隔離及版本 scope 快取；`--signed-in` 只建立本機 SQLite 測試帳號。核准發布後再跑 `--remote --lobby`、`--remote --standalone`、`--production-hub --lobby` 與手機正式站模式，並直接讀正式 API／圖片；本機 fixture 不代表正式 API 已驗收。
 - `npm run test:webgazer` 驗證眼動練習參考實驗的 WebGazer/jsPsych bundle 完整性、校正與驗證程序、`settings.json` 與 `score.json` 欄位；包含於 `test:entrypoints`。網頁版沒有原生 Tobii 橋接。
 - `npm run test:webgazer-browser` 以本機 Brave 驗證眼動練習設定、無眼動刺激與成績流程、雙層同源 iframe 的相機權限，以及 R2 CSV 上傳失敗重試；此項為本機測試，不加入 Linux CI matrix。
 - `npm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `npm run build:cloudflare:only`，不可再序列重跑同一批測試。
@@ -160,6 +163,8 @@ Hub 使用 Next.js App Router（`apps/rehabtrainerhub/app/`）、`app/globals.cs
 
 
 ## 測試指引
+
+小行星護盾 R2 候選另以 `--lobby --english` 驗證私有 init 的英文設定／教學／成果／保存，`--lobby --signed-in --sound-on` 驗證原生 WebAudio 開關與帳號保存。browser 讀 Hub output 時如需並行 build，先用固定輸出副本及 `HUB_OUTPUT_ROOT`；不得一邊重建同一 output 一邊把檔案消失誤判為產品失敗。
 
 UI、auth、routing、共用 package 變更：build Hub、執行 `npm run test:entrypoints`，並以 `npm run test:game-architecture` 檢查全部遊戲 TypeScript；不再對不存在的四個 trainer runtime 執行檢查。Cloudflare Function 變更：對修改檔執行 `node --check`，並執行對應 `test:hub-functions`／`test:gamerunner`。
 

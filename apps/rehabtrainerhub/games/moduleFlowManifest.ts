@@ -44,7 +44,7 @@ const manifestEntries: ReadonlyArray<readonly [
   flow?: readonly TrainingFlowStep[],
 ]> = [
   ['motor:drawing-defense', 'drawing-defense/DrawingTowerDefenseGame.tsx', 'none', 'external-runtime-adapter'],
-  ['motor:asteroid-shield', 'asteroid-shield/AsteroidShieldGame.tsx', 'camera-optional', 'external-runtime-adapter'],
+  ['motor:asteroid-shield', 'asteroid-shield/AsteroidShieldGame.tsx', 'none', 'external-runtime-adapter'],
   ['motor:gesture-battler', 'gesture-battler/GestureBattlerGame.tsx', 'camera', 'external-runtime-adapter'],
   ['motor:motor-cortex-rehab', 'motor-cortex-rehab/MotorCortexRehabGame.tsx', 'camera', 'external-runtime-adapter'],
   ['vision:moving-card', 'moving-card/pixi-moving-card.ts', 'none', 'native-timeline'],

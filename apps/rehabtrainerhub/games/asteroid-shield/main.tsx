@@ -1,29 +1,14 @@
-import { OfficialGameShell } from '@rehab-trainer/ui/components/OfficialGameShell';
-import '@rehab-trainer/ui/components/TrainerApp.css';
+import './game.css';
 import './rules.css';
-import { InstallHostedGameSettingsReceiver, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { LanguageProvider } from '@rehab-trainer/ui/i18n/games';
-import React from 'react';
+// Pixi's installed static polyfills replace generated functions; runner CSP stays unchanged.
+// Verified in node_modules/pixi.js/lib/unsafe-eval/init.mjs and migration plan section 6.
+import 'pixi.js/unsafe-eval';
+import { ExitGame, InstallHubBridge } from './runtime/hubBridge';
+import { LanguageProvider } from './i18n/useT';
 import ReactDOM from 'react-dom/client';
-import { HashRouter } from 'react-router-dom';
 import { AsteroidShieldGame } from './AsteroidShieldGame';
-import { dictionaries } from './i18n';
-import settings from './settings.json';
-import score from './score.json';
-
-InstallHostedGameSettingsReceiver();
-
+InstallHubBridge();
 const rootElement = document.getElementById('root');
-if (rootElement) {
-  ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-      <HashRouter>
-        <LanguageProvider dictionaries={dictionaries}>
-          <OfficialGameShell settings={settings} score={score} title={document.title}>
-            <AsteroidShieldGame onExit={() => RequestHubTrainingConfiguration()} />
-          </OfficialGameShell>
-        </LanguageProvider>
-      </HashRouter>
-    </React.StrictMode>,
-  );
-}
+if (rootElement) ReactDOM.createRoot(rootElement).render(
+  <LanguageProvider><AsteroidShieldGame onExit={ExitGame}/></LanguageProvider>,
+);

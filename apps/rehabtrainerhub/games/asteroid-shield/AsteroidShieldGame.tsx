@@ -1,32 +1,22 @@
-import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
-// Canonical Hub-owned motor module; bundled by the motor runtime.
-import { FilesetResolver,HandLandmarker,type Category,type NormalizedLandmark,} from '@mediapipe/tasks-vision';
-import { CreateMediaPipeAssetUrlCandidates,LoadMediaPipeWithFallback,} from '@rehab-trainer/ui/aiAssets';
-import { MediaDeviceErrorDialog } from '@rehab-trainer/ui/components/MediaDeviceErrorDialog';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { IsEmbeddedHubTraining,RequestHubTrainingConfiguration,} from '@rehab-trainer/ui/embeddedTraining';
-import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
-import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
-import { CanRetryMediaPermission,GetMediaPermissionRetryLabel,useMediaPermissionPreflight,} from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
-import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { useT } from '@rehab-trainer/ui/i18n/games';
-import { VerifySelectedTrainingUser } from '@rehab-trainer/ui/selectedUserGuard';
-import { getActiveUser } from '@rehab-trainer/ui/settings';
-import { PlayFailureSound,PlayGameEndSound,PlaySuccessSound,PrepareAudioFeedback,} from './runtime/soundManager';
-import { SaveTrainingSessionRecord } from '@rehab-trainer/ui/storage/trainingRecords';
+import { useFullscreenTrainingRoot, useTrainingAbort } from './runtime/trainingLifecycle';
+import { useT } from './i18n/useT';
+import { SendGameResult, RetryGameSave, IsHubGame } from './runtime/hubBridge';
+import { defaultSettings, BuildRuntimeConfig, BuildGameScore, type AsteroidSettings } from './settings';
+import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled } from './runtime/soundManager';
 import { initJsPsych } from 'jspsych';
-import { Application,Assets,Container,Sprite,Texture,TilingSprite,type Ticker,} from 'pixi.js';
-import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
-import { Clamp,FormatTestDate } from './gameUtils';
+import { Application, Assets, Container, Sprite, Texture, TilingSprite, type Ticker } from 'pixi.js';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Clamp, FormatTestDate } from './gameUtils';
 import { AsteroidShieldTutorial } from './rules/AsteroidShieldTutorial';
+import { ScoreAnalysis } from './ScoreAnalysis';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 type DifficultyId = 'beginner' | 'intermediate' | 'advanced';
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
 type GameResult = 'Victory' | 'Defeat';
-type HandChoice = 'any' | 'left' | 'right';
+
 type ThreatKind = 'normal' | 'heavy' | 'lethal' | 'energy';
 type ThreatOutcome = 'shielded' | 'hit' | 'collected' | 'missed';
-type ControlMode = 'mouse' | 'mediapipe';
+type ControlMode = 'mouse';
 type ControlSource = ControlMode;
 interface AsteroidShieldGameProps {
     onExit: () => void;
@@ -116,7 +106,7 @@ interface SessionRecord {
     Starting_HP: number;
     Shield_Size_Percent: number;
     Control_Mode: ControlMode;
-    Tracking_Hand: HandChoice | null;
+    Tracking_Hand: null;
     Total_Duration_Seconds: number;
     Final_HP: number;
     Score: number;
@@ -128,13 +118,6 @@ interface SessionRecord {
     Game_Result: GameResult;
     Object_Records: ThreatRecord[];
 }
-interface HandState {
-    x: number;
-    y: number;
-    visible: boolean;
-    lastSeenAt: number;
-}
-const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates(import.meta.env.VITE_AI_ASSET_BASE_URL);
 const assetUrls = {
     background: new URL('./textures/background.png', import.meta.url).href,
     ship: new URL('./textures/ship.png', import.meta.url).href,
@@ -144,8 +127,6 @@ const assetUrls = {
     lethal: new URL('./textures/asteroid-dark.png', import.meta.url).href,
     energy: new URL('./textures/energy-rock.png', import.meta.url).href,
 } as const;
-const detectionIntervalMs = 66;
-const trackingGraceMs = 260;
 const speedLevelStep = 15;
 const defaultDurationSeconds = 60;
 const defaultHp = 10;
@@ -182,10 +163,10 @@ const difficulties: readonly DifficultyDefinition[] = [
 const copy = {
     zh: {
         title: '小行星護盾防衛',
-        configLabel: '護盾動作訓練設定',
+        configLabel: '護盾設定',
         difficulty: '難度',
         difficultyDesc: '調整小行星出現頻率、速度與危險物比例。',
-        duration: '訓練時間',
+        duration: '活動時間',
         durationDesc: '設定這次護盾防衛的總秒數。',
         hp: '飛船耐久',
         hpDesc: '飛船可承受的總傷害。暗色小行星若命中會直接結束。',
@@ -218,7 +199,7 @@ const copy = {
         errorTitle: '體感操作無法啟動',
         openDetails: '開啟錯誤詳情',
         statusScore: '分數',
-        resultTitle: '護盾防衛訓練完成',
+        resultTitle: '護盾防衛活動完成',
         user: '使用者',
         finalHp: '剩餘耐久',
         objectsBlocked: '攔截物件',
@@ -239,10 +220,10 @@ const copy = {
     },
     en: {
         title: 'Asteroid Shield Defense',
-        configLabel: 'Shield Motor Training Settings',
+        configLabel: 'Shield Settings',
         difficulty: 'Difficulty',
         difficultyDesc: 'Adjust asteroid spawn rate, speed, and high-risk object mix.',
-        duration: 'Training Duration',
+        duration: 'Session Duration',
         durationDesc: 'Set the total seconds for this shield defense session.',
         hp: 'Ship Durability',
         hpDesc: 'Total damage the ship can take. A dark asteroid hit ends the session.',
@@ -312,84 +293,49 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const labels = copy[lang];
     const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
     const pixiHostRef = useRef<HTMLDivElement | null>(null);
-    const videoRef = useRef<HTMLVideoElement | null>(null);
-    const handCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const appRef = useRef<Application | null>(null);
     const texturesRef = useRef<AssetTextures | null>(null);
     const sceneRef = useRef<AsteroidScene | null>(null);
-    const handLandmarkerRef = useRef<HandLandmarker | null>(null);
-    const cameraStreamRef = useRef<MediaStream | null>(null);
-    const animationFrameRef = useRef<number | null>(null);
-    const lastDetectionAtRef = useRef(0);
-    const lastVideoTimeRef = useRef(-1);
     const shieldAngleRef = useRef(-Math.PI / 2);
     const activeControlModeRef = useRef<ControlMode>('mouse');
-    const handRef = useRef<HandState>({ x: 0, y: 0, visible: false, lastSeenAt: 0 });
     const phaseRef = useRef<GamePhase>('menu');
     const mountedRef = useRef(true);
     const resultRecordsRef = useRef<ThreatRecord[]>([]);
     const metricsRef = useRef<SessionMetrics>(CreateEmptyMetrics(defaultHp));
-    const configRef = useRef({
-        difficulty: 'beginner' as DifficultyId,
-        durationSec: defaultDurationSeconds,
-        maxHp: defaultHp,
-        shieldSizePercent: defaultShieldSizePercent,
-        controlMode: 'mouse' as ControlMode,
-        handChoice: 'any' as HandChoice,
-    });
+    const [settings, setSettings] = useState<AsteroidSettings>({ ...defaultSettings });
+    const settingsRef = useRef(settings);
+    settingsRef.current = settings;
+    const { difficulty, durationSec, maxHp, shieldSizePercent, controlMode } = BuildRuntimeConfig(settings);
+    const configRef = useRef(BuildRuntimeConfig(settings));
+    configRef.current = BuildRuntimeConfig(settings);
     const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
     const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
     const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
-    const [phase, setPhaseState] = useState<GamePhase>('rules');
-    const isEmbeddedHubTraining = IsEmbeddedHubTraining();
-    const hostedSettings = useHostedGameSettings();
-    const hostedSettingsAppliedRef = useRef(false);
-
-    const [difficulty, setDifficulty] = useState<DifficultyId>(({ easy: 'beginner', medium: 'intermediate', hard: 'advanced' } as const)[GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty')]);
-    const [durationSec, setDurationSec] = useState(GetHostedGameSetting<number>('durationSec'));
-    const [maxHp, setMaxHp] = useState(defaultHp);
-    const [shieldSizePercent, setShieldSizePercent] = useState(defaultShieldSizePercent);
-    const [controlMode, setControlMode] = useState<ControlMode>('mouse');
-    const [handChoice, setHandChoice] = useState<HandChoice>('any');
-    const [statusMessage, setStatusMessage] = useState('');
-    const [visionError, setVisionError] = useState('');
-    const [showVisionError, setShowVisionError] = useState(false);
-    const [isHandTrackingActive, setIsHandTrackingActive] = useState(false);
+    const [phase, setPhaseState] = useState<GamePhase>('menu');
     const [result, setResult] = useState<SessionRecord | null>(null);
-    const cameraPermission = useMediaPermissionPreflight({
-        active: phase === 'rules' && controlMode === 'mediapipe',
-        video: true,
-    });
-    const canRetryCameraPermission = CanRetryMediaPermission(cameraPermission.status);
-    const retryPermissionLabel = GetMediaPermissionRetryLabel(lang);
+    const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error'>('saving');
+    const [rendererReady, setRendererReady] = useState(false);
+    const [rendererError, setRendererError] = useState(false);
+    useEffect(() => { SetSoundEnabled(settings.soundEnabled); }, [settings.soundEnabled]);
+    useEffect(() => {
+      const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
+      const configure = () => setPhase('menu');
+      window.addEventListener('game:saved', saved);
+      window.addEventListener('game:configure', configure);
+      return () => { window.removeEventListener('game:saved', saved); window.removeEventListener('game:configure', configure); };
+    }, []);
     const summaryItems = useMemo(() => [
         { label: labels.difficulty, value: labels[difficulty] },
         { label: labels.duration, value: `${durationSec}s` },
         { label: labels.hp, value: maxHp },
         { label: labels.shieldSize, value: `${shieldSizePercent}%` },
-        { label: labels.controlMode, value: FormatControlMode(controlMode, labels) },
-        ...(controlMode === 'mediapipe'
-            ? [{ label: labels.hand, value: FormatHandChoice(handChoice, labels) }]
-            : []),
-    ], [controlMode, difficulty, durationSec, handChoice, labels, maxHp, shieldSizePercent]);
+        { label: labels.controlMode, value: labels.mouseControl },
+    ], [controlMode, difficulty, durationSec, labels, maxHp, shieldSizePercent]);
     const setPhase = useCallback((nextPhase: GamePhase) => {
         phaseRef.current = nextPhase;
         setPhaseState(nextPhase);
     }, []);
-    const showConfiguration = useCallback(() => {
-        if (!RequestHubTrainingConfiguration())
-            RequestHubTrainingConfiguration();
-    }, [setPhase]);
-    useEffect(() => {
-        configRef.current = {
-            difficulty,
-            durationSec,
-            maxHp,
-            shieldSizePercent,
-            controlMode,
-            handChoice,
-        };
-    }, [controlMode, difficulty, durationSec, handChoice, maxHp, shieldSizePercent]);
+    const showConfiguration = useCallback(() => setPhase('menu'), [setPhase]);
     useEffect(() => {
         const host = jsPsychHostRef.current;
         if (!host)
@@ -406,46 +352,13 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                 jsPsychLifecycleRef.current = null;
         };
     }, []);
-    useEffect(() => {
-        if (controlMode !== 'mediapipe') {
-            setVisionError('');
-            setShowVisionError(false);
-        }
-        else if (cameraPermission.status === 'unsupported') {
-            setVisionError(labels.unsupported);
-        }
-        else if (cameraPermission.status === 'denied' || cameraPermission.status === 'error') {
-            setVisionError(labels.permission);
-        }
-    }, [cameraPermission.status, controlMode, labels.permission, labels.unsupported]);
-    const stopVision = useCallback(() => {
-        if (animationFrameRef.current !== null) {
-            window.cancelAnimationFrame(animationFrameRef.current);
-            animationFrameRef.current = null;
-        }
-        cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
-        cameraStreamRef.current = null;
-        const video = videoRef.current;
-        if (video)
-            video.srcObject = null;
-        handLandmarkerRef.current?.close();
-        handLandmarkerRef.current = null;
-        if (mountedRef.current)
-            setIsHandTrackingActive(false);
-        const canvas = handCanvasRef.current;
-        canvas?.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
-        handRef.current = { x: 0, y: 0, visible: false, lastSeenAt: 0 };
-    }, []);
-    useEffect(() => () => {
-        mountedRef.current = false;
-        stopVision();
-    }, [stopVision]);
+    useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
     const finishGame = useCallback((gameResult: GameResult) => {
         if (!mountedRef.current || phaseRef.current === 'results' || phaseRef.current === 'menu')
             return;
         const metrics = metricsRef.current;
         const config = configRef.current;
-        const participantId = getActiveUser() || 'Unknown';
+        const participantId = 'Guest';
         const totalDuration = Number((metrics.elapsedMs / 1000).toFixed(1));
         const record: SessionRecord = {
             Test_Date: FormatTestDate(new Date()),
@@ -455,7 +368,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             Starting_HP: config.maxHp,
             Shield_Size_Percent: config.shieldSizePercent,
             Control_Mode: config.controlMode,
-            Tracking_Hand: config.controlMode === 'mediapipe' ? config.handChoice : null,
+            Tracking_Hand: null,
             Total_Duration_Seconds: totalDuration,
             Final_HP: metrics.hp,
             Score: metrics.score,
@@ -474,33 +387,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
         setResult(record);
         setPhase('results');
-        stopVision();
-        void SaveTrainingSessionRecord({
-            userName: participantId,
-            moduleId: 'upper-limb-training',
-            gameId: 'asteroid-shield',
-            gameTitle: labels.title,
-            difficulty: config.difficulty,
-            trainingDate: record.Test_Date,
-            details: {
-                Duration_Seconds: record.Duration_Seconds,
-                Starting_HP: record.Starting_HP,
-                Shield_Size_Percent: record.Shield_Size_Percent,
-                Control_Mode: record.Control_Mode,
-                Tracking_Hand: record.Tracking_Hand,
-                Total_Duration_Seconds: record.Total_Duration_Seconds,
-                Final_HP: record.Final_HP,
-                Score: record.Score,
-                Objects_Spawned: record.Objects_Spawned,
-                Objects_Blocked: record.Objects_Blocked,
-                Ship_Hits: record.Ship_Hits,
-                Energy_Collected: record.Energy_Collected,
-                Final_Speed_Level: record.Final_Speed_Level,
-                Game_Result: record.Game_Result,
-            },
-            detailRows: record.Object_Records.map((item) => ({ ...item })),
-        });
-    }, [labels.title, setPhase, stopVision]);
+        setSaveState('saving');
+        const score = BuildGameScore(record);
+        SendGameResult({ ...settingsRef.current }, score.summary, score.rounds);
+    }, [setPhase]);
     const beginPlaying = useCallback(() => {
         const app = appRef.current;
         const textures = texturesRef.current;
@@ -520,170 +410,26 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         setResult(null);
         setPhase('playing');
     }, [setPhase]);
-    const handleHandFrame = useCallback((now: number) => {
-        animationFrameRef.current = window.requestAnimationFrame(handleHandFrame);
-        if (phaseRef.current !== 'playing')
-            return;
-        const video = videoRef.current;
-        const landmarker = handLandmarkerRef.current;
-        const host = pixiHostRef.current;
-        const rect = host?.getBoundingClientRect();
-        if (!video || !landmarker || !rect || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA)
-            return;
-        if (now - lastDetectionAtRef.current < detectionIntervalMs)
-            return;
-        if (video.currentTime === lastVideoTimeRef.current)
-            return;
-        lastVideoTimeRef.current = video.currentTime;
-        lastDetectionAtRef.current = now;
-        try {
-            const detection = landmarker.detectForVideo(video, now);
-            const selection = SelectHand(detection.landmarks, detection.handedness ?? detection.handednesses, configRef.current.handChoice);
-            DrawHandLandmarks(handCanvasRef.current, video, selection?.landmarks);
-            if (selection) {
-                const point = GetHandCursorPoint(selection.landmarks, rect.width, rect.height);
-                handRef.current = { x: point.x, y: point.y, visible: true, lastSeenAt: now };
-                const layout = GetShieldLayout(rect.width, rect.height, configRef.current.shieldSizePercent, shieldAngleRef.current);
-                shieldAngleRef.current = Math.atan2(point.y - layout.shipY, point.x - layout.shipX);
-                metricsRef.current.lastControlSource = 'mediapipe';
-            }
-            else if (now - handRef.current.lastSeenAt > trackingGraceMs) {
-                handRef.current = { ...handRef.current, visible: false };
-            }
-        }
-        catch (error) {
-            console.warn('Hand detection failed for asteroid shield.', error);
-            setVisionError(labels.initialization);
-            setShowVisionError(true);
-            activeControlModeRef.current = 'mouse';
-            metricsRef.current.lastControlSource = 'mouse';
-            stopVision();
-        }
-    }, [labels.initialization, stopVision]);
     const startGame = useCallback(async () => {
-        if (!VerifySelectedTrainingUser())
-            return;
+        if (!rendererReady) return;
+        SetSoundEnabled(settingsRef.current.soundEnabled);
         const fullscreenPromise = enterTrainingFullscreen();
         PrepareAudioFeedback(jsPsychRef);
         await fullscreenPromise;
-        await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:asteroid-shield', onStart: async () => {
-                stopVision();
-                setVisionError('');
-                setShowVisionError(false);
-                if (!texturesRef.current) {
-                    const app = appRef.current;
-                    if (!app) {
-                        jsPsychLifecycleRef.current?.abort({ abort_reason: 'renderer-unavailable' });
-                        return;
-                    }
-                    setStatusMessage(labels.initialization);
-                    setPhase('initializing');
-                    try {
-                        const textures = await LoadAssetTextures();
-                        if (!mountedRef.current)
-                            return;
-                        texturesRef.current = textures;
-                        ResetAsteroidScene(app, sceneRef, textures);
-                    }
-                    catch (error) {
-                        console.warn('Unable to load asteroid shield assets.', error);
-                        setVisionError(labels.initialization);
-                        setShowVisionError(true);
-                        showConfiguration();
-                        jsPsychLifecycleRef.current?.abort({ abort_reason: 'asset-load-error' });
-                        return;
-                    }
-                }
-                if (configRef.current.controlMode === 'mouse') {
-                    activeControlModeRef.current = 'mouse';
-                    beginPlaying();
-                    return;
-                }
-                if (!navigator.mediaDevices?.getUserMedia) {
-                    setVisionError(labels.unsupported);
-                    setShowVisionError(true);
-                    showConfiguration();
-                    return;
-                }
-                setStatusMessage(labels.loadingCamera);
-                setPhase('initializing');
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        audio: false,
-                        video: {
-                            facingMode: 'user',
-                            width: { ideal: 960 },
-                            height: { ideal: 720 },
-                        },
-                    });
-                    cameraStreamRef.current = stream;
-                    const cameraTrack = stream.getVideoTracks()[0];
-                    if (!cameraTrack)
-                        throw new Error('Camera track is unavailable.');
-                    cameraTrack.addEventListener('ended', () => {
-                        if (!mountedRef.current || cameraStreamRef.current !== stream)
-                            return;
-                        setVisionError(labels.disconnected);
-                        setShowVisionError(true);
-                        activeControlModeRef.current = 'mouse';
-                        metricsRef.current.lastControlSource = 'mouse';
-                        stopVision();
-                        showConfiguration();
-                    }, { once: true });
-                    const video = videoRef.current;
-                    if (!video)
-                        throw new Error('Camera preview is unavailable.');
-                    video.srcObject = stream;
-                    await video.play();
-                    setStatusMessage(labels.loadingModel);
-                    const landmarker = await LoadMediaPipeWithFallback(mediaPipeAssetCandidates, async ({ wasmUrl, handLandmarkerModelUrl }) => {
-                        const vision = await FilesetResolver.forVisionTasks(wasmUrl);
-                        return HandLandmarker.createFromOptions(vision, {
-                            baseOptions: { modelAssetPath: handLandmarkerModelUrl },
-                            runningMode: 'VIDEO',
-                            numHands: configRef.current.handChoice === 'any' ? 1 : 2,
-                            minHandDetectionConfidence: 0.5,
-                            minHandPresenceConfidence: 0.5,
-                            minTrackingConfidence: 0.5,
-                        });
-                    });
-                    if (!mountedRef.current) {
-                        landmarker.close();
-                        return;
-                    }
-                    handLandmarkerRef.current = landmarker;
-                    activeControlModeRef.current = 'mediapipe';
-                    setIsHandTrackingActive(true);
-                    beginPlaying();
-                    animationFrameRef.current = window.requestAnimationFrame(handleHandFrame);
-                }
-                catch (error) {
-                    console.warn('Unable to initialize asteroid shield hand control.', error);
-                    setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
-                        ? labels.permission
-                        : labels.initialization);
-                    setShowVisionError(true);
-                    activeControlModeRef.current = 'mouse';
-                    stopVision();
-                    jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-initialization-error' });
-                    showConfiguration();
-                }
-            } });
-    }, [beginPlaying, enterTrainingFullscreen, handleHandFrame, labels, setPhase, showConfiguration, stopVision]);
+        await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:asteroid-shield', onStart: beginPlaying });
+    }, [beginPlaying, enterTrainingFullscreen, rendererReady]);
     const returnToMenu = useCallback(() => {
         jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
-        stopVision();
         ClearAsteroidScene(sceneRef.current);
         metricsRef.current = CreateEmptyMetrics(configRef.current.maxHp);
         resultRecordsRef.current = [];
         setResult(null);
         showConfiguration();
-    }, [showConfiguration, stopVision]);
+    }, [showConfiguration]);
     const exitGame = useCallback(() => {
         jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
-        stopVision();
         onExit();
-    }, [onExit, stopVision]);
+    }, [onExit]);
     useTrainingAbort({
         active: phase === 'initializing' || phase === 'playing',
         onAbort: returnToMenu,
@@ -713,6 +459,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             app.canvas.className = 'asteroid-shield-canvas';
             ResetAsteroidScene(app, sceneRef, textures);
             onResize();
+            setRendererReady(true);
             app.ticker.add((ticker: Ticker) => {
                 if (phaseRef.current !== 'playing')
                     return;
@@ -730,7 +477,11 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                 });
             });
         };
-        void initialize();
+        void initialize().catch(error => {
+            if (cancelled) return;
+            console.warn('Unable to initialize asteroid shield renderer.', error);
+            setRendererError(true);
+        });
         const onResize = () => {
             const currentApp = appRef.current;
             const scene = sceneRef.current;
@@ -778,41 +529,41 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             host.removeEventListener('pointermove', updateFromPointer);
         };
     }, []);
-    useEffect(() => {
-        if (!hostedSettings || hostedSettingsAppliedRef.current)
-            return;
-        hostedSettingsAppliedRef.current = true;
-        setDifficulty(NormalizeAsteroidDifficulty(hostedSettings.difficulty));
-        if (typeof hostedSettings.durationSec === 'number')
-            setDurationSec(hostedSettings.durationSec);
-        if (typeof hostedSettings.sensitivity === 'number') {
-            setShieldSizePercent(Math.round(70 + hostedSettings.sensitivity * 5));
-        }
-        setPhase('rules');
-    }, [hostedSettings, setPhase]);
-    const latestRows = result?.Object_Records.slice(-10) ?? [];
+    const latestRows = result?.Object_Records ?? [];
     return (<div ref={fullscreenRootRef} className={`asteroid-shield-game asteroid-shield-phase-${phase}`}>
       <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true"/>
       <div ref={pixiHostRef} className="asteroid-shield-stage"/>
 
-      <div className={`asteroid-shield-camera ${phase === 'playing' && isHandTrackingActive ? '' : 'asteroid-shield-camera-hidden'}`}>
-        <video ref={videoRef} muted playsInline aria-label={labels.cameraPreview}/>
-        <canvas ref={handCanvasRef} aria-hidden="true"/>
-        <span>{handRef.current.visible ? labels.tracking : labels.finding}</span>
-      </div>
-
-      {null}
+      {phase === 'menu' && <div className="experiment-container">
+        <form className="game-settings-form" onKeyDown={event => {
+          if (event.key === 'Enter') { event.preventDefault(); if (event.currentTarget.reportValidity()) setPhase('rules'); }
+        }} onSubmit={event => event.preventDefault()}>
+          <h2>{labels.title}</h2>
+          <p>{lang === 'en' ? 'These values apply only to this session.' : '設定值只用於這次活動。'}</p>
+          <label>{lang === 'en' ? 'Spawn interval / base speed' : '生成間隔／基礎速度'}
+            <select value={settings.difficulty} onChange={event => setSettings({ ...settings, difficulty: event.target.value as AsteroidSettings['difficulty'] })}>
+              <option value="easy">1.35 s / 120 px/s</option><option value="medium">1.08 s / 165 px/s</option><option value="hard">0.82 s / 215 px/s</option>
+            </select>
+          </label>
+          <p>{lang === 'en' ? 'Analyze different conditions separately.' : '不同條件應分開分析。'}</p>
+          <label>{labels.duration}: <output>{settings.durationSec} s</output>
+            <input type="range" min="30" max="300" step="15" value={settings.durationSec} onChange={event => setSettings({ ...settings, durationSec: Number(event.target.value) })}/>
+          </label>
+          <label>{lang === 'en' ? 'Shield size level' : '護盾大小級距'}: <output>{settings.sensitivity} ({shieldSizePercent}%)</output>
+            <input type="range" min="1" max="10" step="1" value={settings.sensitivity} onChange={event => setSettings({ ...settings, sensitivity: Number(event.target.value) })}/>
+          </label>
+          <p>{lang === 'en' ? 'Shield scale = 70 + level × 5 (75–120%); larger shields ease interception.' : '護盾比例 = 70 + 級距 × 5（75–120%）；較大較容易攔截。此設定不是追蹤靈敏度。'}</p>
+          <label><input type="checkbox" checked={settings.soundEnabled} onChange={event => setSettings({ ...settings, soundEnabled: event.target.checked })}/> {lang === 'en' ? 'Sound feedback' : '聲音回饋'}</label>
+          <button type="button" className="btn-primary" onClick={event => { if (event.currentTarget.form?.reportValidity()) setPhase('rules'); }}>{lang === 'en' ? 'Continue to tutorial' : '進入教學'}</button>
+          <button type="button" onClick={onExit}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
+        </form>
+      </div>}
 
       {phase === 'rules' && (<div className="training-panel" style={{ padding: 0 }}>
-          <AsteroidShieldTutorial title={labels.title} summaryItems={summaryItems} onStart={() => void startGame()} onBack={showConfiguration}/>
+          <AsteroidShieldTutorial title={labels.title} summaryItems={summaryItems} onStart={() => void startGame()} onBack={showConfiguration} ready={rendererReady}/>
         </div>)}
 
-      {phase === 'initializing' && (<div className="asteroid-shield-loading-overlay">
-          <div aria-label={statusMessage || labels.loadingTitle} aria-live="polite" className="gesture-loading-card" role="status">
-            <div className="gesture-loader" aria-hidden="true"/>
-          </div>
-        </div>)}
-
+      {rendererError && <p className="renderer-error" role="alert">{lang === 'en' ? 'The game could not load. Return and try again.' : '遊戲無法載入，請返回後重試。'}</p>}
       {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable asteroid-shield-results-container">
           <div className="experiment-results">
             <h1>{labels.resultTitle}</h1>
@@ -843,7 +594,10 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
               </span>
             </div>
 
-            <table className="results-table">
+            <p>{labels.duration}: {result.Total_Duration_Seconds} s · {lang === 'en' ? 'Spawned objects' : '生成物件數'}: {result.Objects_Spawned} · {lang === 'en' ? 'Final speed level' : '最終速度級別'}: {result.Final_Speed_Level}</p>
+            <p>{result.Game_Result === 'Victory' ? (lang === 'en' ? 'Completed the selected duration' : '完成設定時長') : (lang === 'en' ? 'Ship durability reached zero' : '飛船耐久歸零')}</p>
+            <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang}/>
+            <div className="results-scroll"><table className="results-table">
               <thead>
                 <tr>
                   <th>#</th>
@@ -851,6 +605,11 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                   <th>{labels.outcome}</th>
                   <th>{labels.responseTime}</th>
                   <th>{labels.damage}</th>
+                  <th>{labels.finalHp}</th>
+                  <th>{lang === 'en' ? 'Speed level' : '速度級別'}</th>
+                  <th>{lang === 'en' ? 'Spawn time (s)' : '生成時間（秒）'}</th>
+                  <th>{labels.statusScore}</th>
+                  <th>{labels.controlMode}</th>
                 </tr>
               </thead>
               <tbody>
@@ -860,15 +619,21 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     <td>{labels[outcomeCopyKeys[item.Outcome]]}</td>
                     <td>{item.Response_Time_Seconds === null ? '-' : `${item.Response_Time_Seconds}s`}</td>
                     <td>{item.Damage}</td>
+                    <td>{item.HP_After}</td>
+                    <td>{item.Speed_Level}</td>
+                    <td>{item.Spawn_Time_Seconds}</td>
+                    <td>{item.Score_After}</td>
+                    <td>{labels.mouseControl}</td>
                   </tr>))}
               </tbody>
-            </table>
+            </table></div>
 
-            <TrainingResultActions backLabel={t('training.returnHome')} onBackHome={exitGame} hubLabel={t('training.returnLobby')}/>
+            <p role="status">{!IsHubGame() ? (lang === 'en' ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄') : saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (lang === 'en' ? 'Save failed' : '保存失敗') : (lang === 'en' ? 'Saving…' : '保存中…')}</p>
+            {IsHubGame() && saveState === 'error' && <button onClick={RetryGameSave}>{lang === 'en' ? 'Retry save' : '重試保存'}</button>}
+            <button onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
           </div>
         </div>)}
 
-      {showVisionError && visionError && (<MediaDeviceErrorDialog title={labels.errorTitle} titleId="asteroid-shield-error-modal-title" message={visionError} onClose={() => setShowVisionError(false)}/>)}
     </div>);
 }
 function CreateEmptyMetrics(maxHp: number): SessionMetrics {
@@ -890,6 +655,8 @@ function CreateEmptyMetrics(maxHp: number): SessionMetrics {
     };
 }
 async function LoadAssetTextures(): Promise<AssetTextures> {
+    // Image elements work under connect-src/worker-src 'none'; fetch and bitmap workers do not.
+    Assets.setPreferences({ preferCreateImageBitmap: false, preferWorkers: false });
     const [background, ship, shield, normal, heavy, lethal, energy] = await Promise.all([
         Assets.load<Texture>(assetUrls.background),
         Assets.load<Texture>(assetUrls.ship),
@@ -951,7 +718,6 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
             maxHp: number;
             shieldSizePercent: number;
             controlMode: ControlMode;
-            handChoice: HandChoice;
         };
     };
     shieldAngleRef: {
@@ -1202,73 +968,6 @@ function RemoveThreat(scene: AsteroidScene, threat: Threat): void {
     threat.sprite.removeFromParent();
     threat.sprite.destroy();
 }
-function SelectHand(landmarks: NormalizedLandmark[][], handedness: Category[][], handChoice: HandChoice): {
-    landmarks: NormalizedLandmark[];
-    handedness: HandChoice | null;
-} | null {
-    if (!landmarks.length)
-        return null;
-    if (handChoice === 'any') {
-        return { landmarks: landmarks[0], handedness: ToHandChoice(handedness[0]?.[0]?.categoryName) };
-    }
-    const index = handedness.findIndex((categories) => ToHandChoice(categories[0]?.categoryName) === handChoice);
-    if (index >= 0 && landmarks[index]) {
-        return { landmarks: landmarks[index], handedness: handChoice };
-    }
-    return null;
-}
-function ToHandChoice(label: string | undefined): HandChoice | null {
-    if (label === 'Left')
-        return 'left';
-    if (label === 'Right')
-        return 'right';
-    return null;
-}
-function GetHandCursorPoint(landmarks: NormalizedLandmark[], width: number, height: number): {
-    x: number;
-    y: number;
-} {
-    const points = [landmarks[0], landmarks[5], landmarks[9], landmarks[13], landmarks[17]].filter(Boolean);
-    const average = points.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
-    return {
-        x: (1 - average.x / points.length) * width,
-        y: (average.y / points.length) * height,
-    };
-}
-function DrawHandLandmarks(canvas: HTMLCanvasElement | null, video: HTMLVideoElement, landmarks: NormalizedLandmark[] | undefined) {
-    if (!canvas)
-        return;
-    if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-    }
-    const context = canvas.getContext('2d');
-    if (!context)
-        return;
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    if (!landmarks)
-        return;
-    context.save();
-    context.translate(canvas.width, 0);
-    context.scale(-1, 1);
-    context.strokeStyle = '#7dd3fc';
-    context.fillStyle = '#fef08a';
-    context.lineWidth = Math.max(2, canvas.width / 320);
-    HandLandmarker.HAND_CONNECTIONS.forEach(({ start, end }) => {
-        const from = landmarks[start];
-        const to = landmarks[end];
-        context.beginPath();
-        context.moveTo(from.x * canvas.width, from.y * canvas.height);
-        context.lineTo(to.x * canvas.width, to.y * canvas.height);
-        context.stroke();
-    });
-    landmarks.forEach((point) => {
-        context.beginPath();
-        context.arc(point.x * canvas.width, point.y * canvas.height, Math.max(3, canvas.width / 180), 0, Math.PI * 2);
-        context.fill();
-    });
-    context.restore();
-}
 function NormalizeVector(x: number, y: number): {
     x: number;
     y: number;
@@ -1278,23 +977,6 @@ function NormalizeVector(x: number, y: number): {
 }
 function RandomBetween(min: number, max: number): number {
     return min + Math.random() * (max - min);
-}
-function FormatHandChoice(handChoice: HandChoice, labels: (typeof copy)['zh'] | (typeof copy)['en']): string {
-    if (handChoice === 'left')
-        return labels.handLeft;
-    if (handChoice === 'right')
-        return labels.handRight;
-    return labels.handAny;
-}
-function NormalizeAsteroidDifficulty(value: unknown): DifficultyId {
-    if (value === 'hard' || value === 'advanced')
-        return 'advanced';
-    if (value === 'medium' || value === 'intermediate')
-        return 'intermediate';
-    return 'beginner';
-}
-function FormatControlMode(controlMode: ControlMode, labels: (typeof copy)['zh'] | (typeof copy)['en']): string {
-    return controlMode === 'mediapipe' ? labels.mediaPipeControl : labels.mouseControl;
 }
 function ResizePixiAppToElement(app: Application, element: HTMLElement | null): void {
     const fullscreenElement = document.fullscreenElement as HTMLElement | null;

@@ -1,6 +1,7 @@
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
+import asteroidShieldCatalog from './asteroid-shield/public/game.json';
 import type { MajorCategoryId,TrainerCategoryId } from './gameTags.js';
 import {
 GetTrainerCategoryTag,
@@ -193,12 +194,13 @@ const seeds: readonly TrainingCatalogSeed[] = [
   },
   {
     id: 'asteroid-shield',
-    trainer: 'motor',
-    purpose: 'upper-limb',
+    trainer: asteroidShieldCatalog.trainer as TrainerCategoryId,
+    purpose: asteroidShieldCatalog.category as TrainingPurposeId,
+    imagePath: `/assets/game-previews/asteroid-shield/${asteroidShieldCatalog.preview}`,
     kind: 'motor-upper',
     path: '/upper-limb-training?game=asteroid-shield',
-    zh: ['小行星護盾防衛', '移動護盾保護飛船，練習手部定位與上肢控制。'],
-    en: ['Asteroid Shield Defense', 'Move a shield to protect the ship and practise hand positioning and upper-limb control.'],
+    zh: [asteroidShieldCatalog.copy['zh-TW'].title, asteroidShieldCatalog.copy['zh-TW'].description],
+    en: [asteroidShieldCatalog.copy.en.title, asteroidShieldCatalog.copy.en.description],
     titleKey: 'training.asteroidShield.title',
     descriptionKey: 'training.asteroidShield.desc',
   },

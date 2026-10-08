@@ -4,25 +4,25 @@ import test from 'node:test';
 import { onRequestGet } from './games.js';
 
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
-function Fixture() {
-  const metadata = { schemaVersion: 1, gameId: 'drawing-defense', trainer: 'motor', category: 'upper-limb',
+function Fixture(gameId = 'drawing-defense', version = '2.0.3') {
+  const metadata = { schemaVersion: 1, gameId, trainer: 'motor', category: 'upper-limb',
     author: 'Game author', preview: 'preview.webp', copy: {
       'zh-TW': { title: '畫畫塔防', description: '上肢動作練習。' },
       en: { title: 'Drawing defense', description: 'Upper-limb practice.' },
     } };
   const bytes = Buffer.from(JSON.stringify(metadata));
-  const manifest = { schemaVersion: 1, status: 'approved', gameId: 'drawing-defense', version: '2.0.3',
+  const manifest = { schemaVersion: 1, status: 'approved', gameId, version,
     name: 'Drawing defense', runtime: { name: 'native', major: 1 }, presentation: 'game', entry: 'index.html',
     contentSha256: 'a'.repeat(64), capabilities: ['pointer'], approvedAt: '2026-10-08T00:00:00Z',
     files: ['index.html', 'game.json', 'preview.webp'].map(path => ({ path, size: path === 'game.json' ? bytes.length : 1,
       sha256: path === 'game.json' ? sha256(bytes) : 'b'.repeat(64) })) };
   const objects = new Map([
-    ['official-games/drawing-defense/current.json', Buffer.from(JSON.stringify({ schemaVersion: 1,
-      gameId: 'drawing-defense', currentVersion: '2.0.3', releases: { '2.0.3': { contentSha256: manifest.contentSha256 } } }))],
-    ['releases/drawing-defense/2.0.3/release.json', Buffer.from(JSON.stringify(manifest))],
-    ['releases/drawing-defense/2.0.3/files/game.json', bytes],
+    [`official-games/${gameId}/current.json`, Buffer.from(JSON.stringify({ schemaVersion: 1,
+      gameId, currentVersion: version, releases: { [version]: { contentSha256: manifest.contentSha256 } } }))],
+    [`releases/${gameId}/${version}/release.json`, Buffer.from(JSON.stringify(manifest))],
+    [`releases/${gameId}/${version}/files/game.json`, bytes],
   ]);
-  const old = { id: 'old-game', slug: 'drawing-defense', title: 'Obsolete title', summary: 'Old shell',
+  const old = { id: 'old-game', slug: gameId, title: 'Obsolete title', summary: 'Old shell',
     trainer: 'brain', category: 'higher-cognition', developer_display_name: 'Old author',
     release_id: 'old-release', version: '1.0.0', capabilities_json: '[]' };
   const env = { REHAB_DB: { prepare: () => ({ all: async () => ({ results: [old,
@@ -54,6 +54,24 @@ test('public catalog reads preview and tags from the approved game bytes instead
   assert.equal(game.previewUrl, 'https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.3/package/preview.webp');
   assert.equal(games.filter(value => value.slug === 'drawing-defense').length, 1);
   assert.ok(games.some(value => value.slug === 'another-game'));
+});
+
+test('asteroid current metadata replaces its historical shell and rejects absent or corrupted declarations', async () => {
+  const fixture = Fixture('asteroid-shield', '2.0.0');
+  const game = (await List(fixture)).find(value => value.slug === 'asteroid-shield');
+  assert.equal(game.release.presentation, 'game');
+  assert.equal(game.release.version, '2.0.0');
+  assert.equal(game.category, 'upper-limb');
+  assert.equal(game.previewUrl, 'https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/package/preview.webp');
+  assert.equal(game.release.settingsUrl, undefined);
+  assert.equal((await List(fixture)).filter(value => value.slug === 'asteroid-shield').length, 1);
+  for (const missing of [false, true]) {
+    if (missing) {
+      fixture.manifest.files = fixture.manifest.files.filter(file => file.path !== 'game.json');
+      fixture.objects.set('releases/asteroid-shield/2.0.0/release.json', Buffer.from(JSON.stringify(fixture.manifest)));
+    } else fixture.objects.set('releases/asteroid-shield/2.0.0/files/game.json', Buffer.from('{}'));
+    assert.equal((await List(fixture)).some(value => value.slug === 'asteroid-shield'), false);
+  }
 });
 
 test('a revoked release, forged metadata or missing preview never enters the public game catalog', async () => {

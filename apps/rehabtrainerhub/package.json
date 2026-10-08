@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "@rehab-trainer/game-antisaccade": "*",
-    "@rehab-trainer/game-asteroid-shield": "*",
     "@rehab-trainer/game-attention-network-task": "*",
     "@rehab-trainer/game-connect4": "*",
     "@rehab-trainer/game-digit-span": "*",
