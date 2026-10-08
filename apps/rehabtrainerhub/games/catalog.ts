@@ -1,5 +1,6 @@
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
+import drawingDefenseCatalog from './drawing-defense/public/game.json';
 import type { MajorCategoryId,TrainerCategoryId } from './gameTags.js';
 import {
 GetTrainerCategoryTag,
@@ -168,6 +169,7 @@ interface TrainingCatalogSeed {
   purpose: TrainingPurposeId;
   kind: TrainingModuleKind;
   path: string;
+  imagePath?: string;
   zh: readonly [title: string, description: string];
   en: readonly [title: string, description: string];
   titleKey?: string;
@@ -179,12 +181,13 @@ interface TrainingCatalogSeed {
 const seeds: readonly TrainingCatalogSeed[] = [
   {
     id: 'drawing-defense',
-    trainer: 'motor',
-    purpose: 'upper-limb',
+    trainer: drawingDefenseCatalog.trainer as TrainerCatalogId,
+    purpose: drawingDefenseCatalog.category as TrainingPurposeId,
     kind: 'motor-upper',
     path: '/upper-limb-training?game=drawing-defense',
-    zh: ['畫畫塔防', '繪製指定圖形，練習上肢精細動作與手眼協調。'],
-    en: ['Drawing Tower Defense', 'Draw prompted shapes to practise fine upper-limb movement and hand-eye coordination.'],
+    imagePath: `/assets/game-previews/drawing-defense/${drawingDefenseCatalog.preview}`,
+    zh: [drawingDefenseCatalog.copy['zh-TW'].title, drawingDefenseCatalog.copy['zh-TW'].description],
+    en: [drawingDefenseCatalog.copy.en.title, drawingDefenseCatalog.copy.en.description],
     titleKey: 'training.drawing.title',
     descriptionKey: 'training.drawing.desc',
   },
@@ -654,7 +657,7 @@ export const trainingCatalog: readonly TrainingCatalogModule[] = seeds.map((seed
     kind: seed.kind,
     entryPath: seed.path,
     settingsPath: `/games/${seed.id}/settings.json`,
-    imagePath: `/assets/training-modules/${seed.id}.webp`,
+    imagePath: seed.imagePath ?? `/assets/training-modules/${seed.id}.webp`,
     flow: flowManifest.flow,
     mediaPermission: flowManifest.mediaPermission,
     sourcePath: flowManifest.sourcePath,

@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, rm, cp } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { ParseGameCatalogMetadata } from '../games/gameCatalogMetadata.js';
 
 const appRoot = resolve(import.meta.dirname, '..');
 const repoRoot = resolve(appRoot, '../..');
@@ -18,6 +19,14 @@ await mkdir(shellOutputRoot, { recursive: true });
 
 const catalogSource = await readFile(resolve(gamesRoot, 'catalog.ts'), 'utf8');
 const r2Releases = JSON.parse(await readFile(resolve(repoRoot, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
+for (const gameId of Object.keys(r2Releases)) {
+  const publicRoot = resolve(gamesRoot, gameId, 'public');
+  const value = JSON.parse(await readFile(resolve(publicRoot, 'game.json'), 'utf8'));
+  const metadata = ParseGameCatalogMetadata(value, gameId, new Set([value.preview]));
+  const target = resolve(outputRoot, 'assets/game-previews', gameId, metadata.preview);
+  await mkdir(resolve(target, '..'), { recursive: true });
+  await cp(resolve(publicRoot, metadata.preview), target);
+}
 const gameIds = [...catalogSource.matchAll(
   /\{\s*id:\s*'([^']+)',\s*trainer:\s*'([^']+)'/g,
 )].map((m) => m[1]).filter(id => !Object.hasOwn(r2Releases, id));

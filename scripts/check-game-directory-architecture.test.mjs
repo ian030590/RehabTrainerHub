@@ -119,7 +119,7 @@ test('root builds and both Cloudflare workflows retain the architecture gate', a
   assert.match(rootPackage.scripts['build:cloudflare'], /npm run test:game-architecture/);
   assert.equal(
     rootPackage.scripts['test:game-architecture'],
-    'tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs scripts/check-self-contained-game.test.mjs scripts/publish-official-game.test.mjs',
+    'tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs scripts/check-self-contained-game.test.mjs scripts/check-game-catalog-metadata.test.mjs scripts/publish-official-game.test.mjs',
   );
   assert.equal(
     rootPackage.scripts['test:game-architecture:built'],
@@ -210,7 +210,9 @@ test('both official and developer overlays configure before mounting their ifram
   assert.match(officialOverlay, /new URL\(BuildTrainingModuleHref\(module\), window\.location\.origin\)/);
 
   assert.equal((packageOverlay.match(/<iframe\b/g) ?? []).length, 1);
-  assert.match(packageOverlay, /fetch\(game\.release\.settingsUrl/);
+  assert.match(packageOverlay, /const settingsUrl = game\.release\.settingsUrl/);
+  assert.match(packageOverlay, /if \(!settingsUrl\)[\s\S]*?setSettingsError\(true\)/);
+  assert.match(packageOverlay, /fetch\(settingsUrl/);
   assert.match(packageOverlay, /ParseGameSettingsDefinition\(await response\.json\(\), game\.slug\)/);
   assert.match(packageOverlay, /\{!configuredSettings && definition && \([\s\S]*?<GameSettingsForm/);
   assert.match(packageOverlay, /\{configuredSettings && <>[\s\S]*?<iframe/);

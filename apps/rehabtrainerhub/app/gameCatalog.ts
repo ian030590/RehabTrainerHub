@@ -1,5 +1,5 @@
 import {
-  BuildTrainingGameInstallHref, BuildTrainingModuleImageSrc,
+  BuildTrainingGameInstallHref,
   GetPublishedGameCategoryLabel, GetPublishedGameSubcategoryLabel,
   GetTrainingModuleCategoryLabel, GetTrainingModuleCopy, GetTrainingModuleSubcategoryLabel,
   GetTrainingModuleTheme, GetTrainingThemeId,
@@ -28,14 +28,22 @@ export interface HubGame {
 
 export function BuildHubGameCatalog(modules: readonly TrainingCatalogModule[], releases: readonly PublishedGame[], locale: HubLocale): HubGame[] {
   const catalogGames: HubGame[] = modules.map(module => {
-    const copy = GetTrainingModuleCopy(module, locale);
+    const approved = Object.hasOwn(officialGameReleases, module.runtimeId)
+      ? releases.find(game => game.slug === module.runtimeId && game.release.presentation === 'game') : undefined;
+    const purpose = GetTrainingThemeId(approved?.category);
+    const launchModule = approved && purpose && approved.copy ? {
+      ...module, trainer: approved.trainer, category: approved.trainer, purpose, subcategory: purpose, copy: approved.copy,
+    } : module;
+    const copy = GetTrainingModuleCopy(launchModule, locale);
     return {
       id: module.runtimeId, title: copy.title, summary: copy.description,
-      author: locale === 'en' ? hubName : hubLocalName, purpose: module.purpose,
-      categoryLabel: GetTrainingModuleCategoryLabel(module, locale),
-      subcategoryLabel: GetTrainingModuleSubcategoryLabel(module, locale),
-      theme: GetTrainingModuleTheme(module), imageSrc: BuildTrainingModuleImageSrc(module),
-      installUrl: BuildTrainingGameInstallHref(module), launch: { contract: 'catalog-v1', module },
+      author: approved?.developerName ?? (locale === 'en' ? hubName : hubLocalName),
+      version: approved?.release.version, purpose: launchModule.purpose,
+      categoryLabel: GetTrainingModuleCategoryLabel(launchModule, locale),
+      subcategoryLabel: GetTrainingModuleSubcategoryLabel(launchModule, locale),
+      theme: GetTrainingModuleTheme(launchModule), imageSrc: approved?.previewUrl ?? module.imagePath,
+      installUrl: approved?.release.installUrl ?? BuildTrainingGameInstallHref(module),
+      launch: { contract: 'catalog-v1', module: launchModule },
     };
   });
   const publishedGames: HubGame[] = releases.map(game => ({
@@ -46,7 +54,5 @@ export function BuildHubGameCatalog(modules: readonly TrainingCatalogModule[], r
     theme: GetTrainingModuleTheme(game.category), installUrl: game.release.installUrl,
     launch: { contract: 'package-v1', game },
   }));
-  const retainedCatalogIds = new Set(modules.filter(module => !Object.hasOwn(officialGameReleases, module.runtimeId))
-    .map(module => module.runtimeId));
-  return MergeHubGames(catalogGames, publishedGames, retainedCatalogIds);
+  return MergeHubGames(catalogGames, publishedGames);
 }

@@ -40,6 +40,7 @@ test('Brave presents reviewed releases and all existing games in one grid on des
     if (request.url === '/api/games') {
       response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ games: [game,
         { ...game, id: 'legacy-slug-collision', slug: 'moving-card', title: 'Collision sample' },
+        { ...game, id: 'migrated-slug-collision', slug: 'drawing-defense', title: 'Obsolete settings shell', category: 'higher-cognition' },
       ] }));
       return;
     }
@@ -52,11 +53,20 @@ test('Brave presents reviewed releases and all existing games in one grid on des
       '--url', `http://127.0.0.1:${server.address().port}/`, '--storage', 'rehab_hub_tour_seen=1',
       '--viewportWidth', String(width), '--viewportHeight', '844', '--viewportBeforeClick', 'true',
       '--allSelectors', '.module-grid,.module-card[data-runtime-id="reviewed-game"]',
-      '--browserAssertion', `document.querySelectorAll('.module-grid').length === 1
+      '--browserAssertion', `(() => {
+        const drawing = document.querySelector('.module-card[data-runtime-id="drawing-defense"]');
+        drawing?.scrollIntoView();
+        const preview = drawing?.querySelector('img');
+        return document.querySelectorAll('.module-grid').length === 1
         && document.querySelectorAll('.module-grid .module-card').length === 41
         && !!document.querySelector('.module-card[data-runtime-id="asteroid-shield"]')
         && !document.querySelector('.module-card[data-runtime-id="moving-card"]').textContent.includes('Collision sample')
-        && document.documentElement.scrollWidth <= innerWidth + 1`,
+        && !document.querySelector('.module-card[data-runtime-id="drawing-defense"]').textContent.includes('Obsolete settings shell')
+        && drawing.querySelector('.module-subcategory-tag').textContent === '上肢動作'
+        && preview?.complete && preview.naturalWidth > 0
+        && new URL(preview.src).pathname === '/assets/game-previews/drawing-defense/preview.webp'
+        && document.documentElement.scrollWidth <= innerWidth + 1;
+      })()`,
       '--timeoutMs', '5000',
     ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
     assert.equal(result.exitCode, 0, `${width}px: ${result.stdout}\n${result.stderr}`);

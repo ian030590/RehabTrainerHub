@@ -60,8 +60,9 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `test:game-platform` 由兩份 workflow 的 `test:entrypoints` matrix 間接執行，涵蓋遊戲通訊橋樑、訊息協定與設定 schema；SDK workspace 已移除。兩份 workflow 維持相同的 `test:entrypoints` 命令。
 - Hub 單一四路由導覽與 `aria-current` 契約由 `scripts/check-hub-navigation.test.mjs` 驗證，包含於兩份 workflow 共用的 `test:entrypoints` 命令；手機導覽與平板無水平溢出另以本機 Brave browser smoke 驗證。
 - Hub 統一遊戲目錄與單一啟動入口由 `apps/rehabtrainerhub/app/hubGames.test.mjs` 納入 `test:entrypoints`；Issue 工作、版本雜湊、指定擁有者核准及實際 SQL 投稿／保存由 `test:hub-functions` 覆蓋。`test:cloudflare-deploy` 驗證 owner 設定只同步到 Hub，不傳到 runner build 或部署 subprocess。
-- `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、未遷移遊戲的 JSON／統一 config UI，以及 R2 遊戲的自有設定／成績、無共用依賴、私有通訊和實際 bytes 雜湊驗證（`scripts/check-self-contained-game.test.mjs`）；發布工具測試另驗證上傳失敗不切換 current、不可變檔案與歷史回退。確認舊 `.dist-releases/` 已移除且由 Git 忽略，正式發布收據仍可追蹤。CI 與部署 workflow 維持同名 matrix 與相同命令。Hub build 另驗證已遷移遊戲不得攜帶 bundle／JSON，且不得恢復 `/runtimes/*`。
+- `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、未遷移遊戲的 JSON／統一 config UI，以及 R2 遊戲的自有設定／成績、無共用依賴、私有通訊和實際 bytes 雜湊驗證（`scripts/check-self-contained-game.test.mjs`）；`scripts/check-game-catalog-metadata.test.mjs` 另檢查遊戲自有預覽圖與分類宣告。發布工具測試另驗證上傳失敗不切換 current、不可變檔案與歷史回退。確認舊 `.dist-releases/` 已移除且由 Git 忽略，正式發布收據仍可追蹤。CI 與部署 workflow 維持同名 matrix 與相同命令。Hub build 另驗證已遷移遊戲不得攜帶 bundle／JSON，且不得恢復 `/runtimes/*`。
 - 畫畫塔防 R2 本機 Brave 測試為 `node scripts/check-r2-game-browser.mjs`，另執行 `--mobile`、`--revoke`、`--session-failure`；發布後執行 `--remote` 與 `--remote --standalone`。平台部署後另以 `--production-hub` 讀正式 Hub 與 R2，僅攔截 Hub `/api/*` 至本機，驗證真正部署的開始前固定版本流程。不加入沒有 Brave 的 Linux CI matrix。所有模式的資料庫寫入只在本機測試 SQLite，不建立正式紀錄。
+  `--lobby` 與 `--lobby --mobile` 另驗證實際公開目錄 API、同名舊版碰撞、上肢分類、R2 預覽圖及從大廳開始的完整流程；可用 `HUB_OUTPUT_ROOT` 指向固定的 Hub 輸出副本。
 - `npm run test:webgazer` 驗證眼動練習參考實驗的 WebGazer/jsPsych bundle 完整性、校正與驗證程序、`settings.json` 與 `score.json` 欄位；包含於 `test:entrypoints`。網頁版沒有原生 Tobii 橋接。
 - `npm run test:webgazer-browser` 以本機 Brave 驗證眼動練習設定、無眼動刺激與成績流程、雙層同源 iframe 的相機權限，以及 R2 CSV 上傳失敗重試；此項為本機測試，不加入 Linux CI matrix。
 - `npm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `npm run build:cloudflare:only`，不可再序列重跑同一批測試。
@@ -106,7 +107,11 @@ Hub 禁止複製／分叉遊戲的 defaults、validation、rules 或 runtime。�
 
 官方遊戲成果經 Hub `/api/records` 寫入 D1；訪客使用 guest Subject ID，登入紀錄使用另一套帳號範圍 Subject ID 並附帳號。訪客紀錄不顯示於登入帳號的進度追蹤，遊戲嵌入 Hub 時不得自行重複寫入紀錄。`docs/game-score-contract.md` 的 JSON／Hub 結果 UI 契約適用未遷移遊戲；R2 新增／遷移遊戲不建立這兩份 JSON。舊格式契約由 `test:embedded-training` 驗證，R2 自包含契約由 `test:game-architecture` 驗證，後端沿用 `test:hub-functions`。
 
-Hub 大廳透過 `app/gameCatalog.ts` 合併 `games/catalog.ts` 與已核准發布版本；統一卡片、分類、搜尋與 `GameOverlay` 啟動入口。39 個未遷移遊戲保持既有 runtime 與產物；內部依版本契約轉接既有 overlay，尚未完成儲存／成果契約整併。設定與 runtime 的來源維持由遊戲擁有：
+Hub 大廳透過 `app/gameCatalog.ts` 合併 `games/catalog.ts` 與已核准發布版本；統一卡片、分類、搜尋與 `GameOverlay` 啟動入口。既有 catalog slug 保留自己的啟動契約，歷史投稿不能覆蓋已遷移的 R2 入口；畫畫塔防由工作階段 API 選擇核准 current。39 個未遷移遊戲保持既有 runtime 與產物；內部依版本契約轉接既有 overlay，尚未完成儲存／成果契約整併。設定與 runtime 的來源維持由遊戲擁有。
+
+R2 自包含遊戲以 `public/game.json` 宣告版本化目錄文案、作者、分類與套件內的預覽圖；Vite 複製到 dist，Publisher 驗證後與預覽圖一起納入逐檔 SHA-256 清單。公開 `/api/games` 只讀可信官方 current 的核准 manifest 與雜湊相符的宣告，回傳該版本的 R2 圖片 URL；Hub 的卡片與篩選採用它，啟動仍走固定版本 session。舊 `2.0.2` 尚無此宣告時，使用同一遊戲 source 宣告與由其預覽圖產生的 Hub 相容資產；不使用歷史 `1.0.0` 的標籤或 shell。新增宣告／圖片須使用新版本，不覆寫已發布檔案。
+
+啟動流程：
 
 - Hub 點「開始訓練」：未遷移遊戲先顯示 JSON 設定 overlay；R2 遊戲開啟包含其自有設定的 iframe overlay。背景不切換、不導向 trainer 網站。
 - 遊戲 runtime 由 Hub overlay 或單一遊戲 PWA 載入，不建立獨立 trainer 網站。

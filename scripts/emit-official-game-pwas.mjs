@@ -21,6 +21,7 @@ import { Script } from 'node:vm';
 import ts from 'typescript';
 import { ParseGameSettingsDefinition } from '../packages/game-settings/src/index.js';
 import { BuildGameServiceWorker } from './official-game-service-worker.mjs';
+import { ParseGameCatalogMetadata } from '../apps/rehabtrainerhub/games/gameCatalogMetadata.js';
 
 const generatorRevision = '2026-09-14-navigation-cache-v4';
 const maximumShellPrecacheBytes = 12 * 1024 * 1024;
@@ -44,8 +45,12 @@ if (appName !== 'rehabtrainerhub'
 
 const catalogPath = resolve(repositoryRoot, 'apps/rehabtrainerhub/games/catalog.ts');
 const catalogSource = await readFile(catalogPath, 'utf8');
-const catalogGames = ReadCatalogSeeds(catalogSource);
 const r2Releases = JSON.parse(await readFile(resolve(repositoryRoot, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
+const r2Catalogs = Object.fromEntries(await Promise.all(Object.keys(r2Releases).map(async gameId => {
+  const metadata = JSON.parse(await readFile(resolve(appDirectory, 'games', gameId, 'public/game.json'), 'utf8'));
+  return [gameId, ParseGameCatalogMetadata(metadata, gameId, new Set([metadata.preview]))];
+})));
+const catalogGames = ReadCatalogSeeds(catalogSource, r2Catalogs);
 ValidateCatalogGames(catalogGames);
 const gamesDirectory = resolve(outputDirectory, 'games');
 const shellsDirectory = resolve(outputDirectory, '.official-game-shells');
@@ -64,7 +69,7 @@ for (const game of catalogGames) {
     const directory = resolve(gamesDirectory, game.id);
     await mkdir(directory, { recursive: true });
     const target = `${release.origin}/games/${game.id}/`;
-    await writeFile(resolve(directory, 'index.html'), `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>${game.title}</title></head><body><a href="${target}">開啟${game.title}</a><script>location.replace(${JSON.stringify(target)})</script></body></html>`);
+    await writeFile(resolve(directory, 'index.html'), `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>${EscapeHtml(game.title)}</title></head><body><a href="${target}">開啟${EscapeHtml(game.title)}</a><script>location.replace(${JSON.stringify(target)})</script></body></html>`);
     continue;
   }
   const shellDirectory = resolve(shellsDirectory, game.id);
@@ -233,7 +238,7 @@ function BuildGameHtml(source, game, basePath, description) {
   return html;
 }
 
-function ReadCatalogSeeds(source) {
+function ReadCatalogSeeds(source, gameMetadata) {
   const sourceFile = ts.createSourceFile('catalog.ts', source, ts.ScriptTarget.Latest, true);
   let seeds = null;
   sourceFile.forEachChild((node) => {
@@ -249,6 +254,10 @@ function ReadCatalogSeeds(source) {
     const object = UnwrapExpression(element);
     if (!ts.isObjectLiteralExpression(object)) throw new Error('Catalog seed must be an object literal.');
     const id = ReadStringProperty(object, 'id');
+    if (Object.hasOwn(gameMetadata, id)) {
+      const metadata = gameMetadata[id];
+      return { id, trainer: metadata.trainer, path: ReadStringProperty(object, 'path'), title: metadata.copy['zh-TW'].title };
+    }
     const trainerId = ReadStringProperty(object, 'trainer');
     const path = ReadStringProperty(object, 'path');
     const localized = UnwrapExpression(ReadProperty(object, 'zh'));

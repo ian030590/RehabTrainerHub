@@ -10,13 +10,15 @@ import { HandleRequest } from '../apps/usergamerunner/functions/[[path]].js';
 import { ContentTypeForPath } from '../apps/usergamerunner/functions/_lib/release.js';
 import { onRequestPost as createSession } from '../apps/rehabtrainerhub/functions/api/official-game-sessions.js';
 import { onRequestPost as saveRecord } from '../apps/rehabtrainerhub/functions/api/records.js';
+import { onRequestGet as listGames } from '../apps/rehabtrainerhub/functions/api/games.js';
 
 const root = resolve(import.meta.dirname, '..');
 const productionHub = process.argv.includes('--production-hub');
 const remote = process.argv.includes('--remote') || productionHub;
 const standalone = process.argv.includes('--standalone');
+const lobby = process.argv.includes('--lobby');
 const sessionFailure = process.argv.includes('--session-failure');
-const output = resolve(root, 'apps/rehabtrainerhub/out');
+const output = resolve(process.env.HUB_OUTPUT_ROOT || resolve(root, 'apps/rehabtrainerhub/out'));
 const browserPath = process.env.BRAVE_BIN || 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
 assert.ok(existsSync(browserPath), 'Brave is required.');
 const { manifest, files } = await BuildOfficialGameRelease('drawing-defense');
@@ -66,6 +68,7 @@ try {
       .then(result => Respond(response, result)).catch(error => { errors.push(String(error)); response.writeHead(500).end(); });
   });
   runnerOrigin = remote ? 'https://trainerhub-user-games.pages.dev' : await listen(runner);
+  environment.GAME_RUNNER_ORIGIN = runnerOrigin;
   hub = createServer(async (request, response) => {
     try {
       const url = new URL(request.url, hubOrigin);
@@ -87,7 +90,18 @@ try {
         return;
       }
       if (url.pathname.startsWith('/api/')) {
-        const body = url.pathname === '/api/games' ? { games: [] } : { records: [], error: 'Unauthorized' };
+        const oldGame = { id: 'old-drawing-defense', slug: 'drawing-defense', title: 'Obsolete settings shell',
+          summary: 'Legacy publication', trainer: 'motor', category: 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
+          release: { id: 'old-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['pointer'],
+            approvedAt: '2026-10-08', launchUrl: `${runnerOrigin}/games/drawing-defense/1.0.0/`,
+            installUrl: `${runnerOrigin}/games/drawing-defense/1.0.0/`,
+            settingsUrl: `${runnerOrigin}/games/drawing-defense/1.0.0/package/settings.json` } };
+        const currentGames = url.pathname === '/api/games' && lobby
+          ? (await (await listGames({ request: new Request('https://trainerhub.cc/api/games'), env: environment })).json()).games : [];
+        const body = url.pathname === '/api/games' ? { games: lobby ? [oldGame,
+          { ...oldGame, id: 'reviewed-browser-game', slug: 'reviewed-browser-game', title: 'Reviewed game' },
+          ...currentGames,
+        ] : [] } : { records: [], error: 'Unauthorized' };
         response.writeHead(url.pathname === '/api/games' ? 200 : 401, { 'Content-Type': 'application/json' }).end(JSON.stringify(body));
         return;
       }
@@ -178,7 +192,7 @@ try {
   ` }, session);
   if (process.argv.includes('--mobile')) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
   await send('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('rehab_hub_tour_seen','1'); } catch {}" }, session);
-  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/drawing-defense/${manifest.version}/` : (remote ? 'https://trainerhub.cc' : hubOrigin) + '/train/?module=motor%3Adrawing-defense' }, session);
+  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/drawing-defense/${manifest.version}/` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : '/train/?module=motor%3Adrawing-defense') }, session);
   await send('Target.activateTarget', { targetId: target.targetId });
   const evaluate = async (expression, context) => {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture: true, ...(context ? { contextId: context.id } : {}) }, context?.session || session);
@@ -199,6 +213,17 @@ try {
     }
     throw new Error(`Timed out: ${label}\n${errors.join('\n')}\n${bodies.join('\n')}`);
   };
+  if (lobby && !standalone) {
+    await until(() => evaluate('Boolean(document.querySelector(".module-card[data-runtime-id=reviewed-browser-game]"))'), 'reviewed catalog loaded');
+    assert.equal(await evaluate('document.querySelectorAll(".module-card[data-runtime-id=drawing-defense]").length'), 1);
+    assert.equal(await evaluate('document.querySelector(".module-card[data-runtime-id=drawing-defense] .module-subcategory-tag").textContent'), '上肢動作');
+    await evaluate('document.querySelector(".module-card[data-runtime-id=drawing-defense]").scrollIntoView()');
+    await until(() => evaluate('(() => { const image = document.querySelector(".module-card[data-runtime-id=drawing-defense] img"); return image?.complete && image.naturalWidth > 0; })()'), 'game-owned preview loaded');
+    assert.equal(new URL(await evaluate('document.querySelector(".module-card[data-runtime-id=drawing-defense] img").src')).pathname,
+      `/games/drawing-defense/${manifest.version}/package/preview.webp`);
+    await evaluate('document.querySelector(".module-card[data-runtime-id=drawing-defense] button").click()');
+    await until(() => sessionAttempts > 0, 'lobby selects an approved R2 session before loading settings');
+  }
   if (sessionFailure && !standalone) {
     await until(() => evaluate('Boolean(document.querySelector("dialog [role=alert]"))'), 'session failure feedback');
     assert.equal(await evaluate('document.querySelectorAll("dialog iframe").length'), 0, 'Unavailable sessions must not mount an unbound game.');
@@ -207,6 +232,8 @@ try {
   await until(() => evaluate('Boolean(document.querySelector("iframe"))'), 'Hub game iframe');
   console.log('Hub iframe ready.');
   assert.equal(await evaluate('document.querySelector("iframe").getAttribute("sandbox")'), 'allow-scripts');
+  if (!standalone) assert.equal(new URL(await evaluate('document.querySelector("iframe").src')).pathname,
+    `/games/drawing-defense/${manifest.version}/package/index.html`, 'Load the session-selected game directly without the legacy launcher.');
   let gameContext;
   await until(async () => {
     for (const context of contexts.filter(context => context.auxData?.isDefault)) {

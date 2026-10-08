@@ -8,6 +8,7 @@ import ts from 'typescript';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const moduleRoot = resolve(repoRoot, 'apps/rehabtrainerhub/games');
 const catalogSource = readFileSync(resolve(moduleRoot, 'catalog.ts'), 'utf8');
+const drawingDefenseCatalog = JSON.parse(readFileSync(resolve(moduleRoot, 'drawing-defense/public/game.json'), 'utf8'));
 const gameTagsSource = readFileSync(resolve(moduleRoot, 'gameTags.js'), 'utf8');
 const manifestSource = readFileSync(resolve(moduleRoot, 'moduleFlowManifest.ts'), 'utf8');
 const manifestCode = ts.transpileModule(manifestSource, {
@@ -42,8 +43,8 @@ const expFactoryGameFiles = Object.freeze({
 const expFactoryCatalogIds = Object.keys(expFactoryGameFiles);
 
 const catalogIds = [...catalogSource.matchAll(
-  /\{\s*id:\s*'([^']+)',\s*trainer:\s*'([^']+)'/g,
-)].map((match) => `${match[2]}:${match[1]}`);
+  /\{\s*id:\s*'([^']+)',\s*trainer:\s*(?:'([^']+)'|drawingDefenseCatalog\.trainer)/g,
+)].map((match) => `${match[2] ?? drawingDefenseCatalog.trainer}:${match[1]}`);
 const manifestIds = Object.keys(trainingModuleFlowManifest);
 
 assert.equal(

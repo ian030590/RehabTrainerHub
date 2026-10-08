@@ -5,6 +5,10 @@ import {
   RejectDisallowedOrigin,
   RequireDatabase,
 } from '../_lib/auth.js';
+import { officialGameReleases } from '../_lib/officialGames.js';
+import { ReadReleasedGameCatalog } from '../_lib/gameCatalog.js';
+import { ReadOfficialGameRelease } from '../../../usergamerunner/functions/_lib/officialCatalog.js';
+import { EncodePackagePath } from '../../../usergamerunner/functions/_lib/release.js';
 
 const defaultGameRunnerOrigin = 'https://trainerhub-user-games.pages.dev';
 
@@ -47,7 +51,7 @@ export async function onRequestGet({ request, env }) {
         LIMIT 500
       `)
       .all();
-    const games = (result.results || []).map((row) => {
+    const games = (result.results || []).filter(row => !Object.hasOwn(officialGameReleases, row.slug)).map((row) => {
       const releasePath = `/games/${encodeURIComponent(row.slug)}/${encodeURIComponent(row.version)}/`;
       return {
         id: row.id,
@@ -70,6 +74,26 @@ export async function onRequestGet({ request, env }) {
         },
       };
     });
+    const currentGames = await Promise.allSettled(Object.keys(officialGameReleases).map(async gameId => {
+      const release = await ReadOfficialGameRelease(env.GAME_RELEASE_BUCKET, gameId);
+      if (!release) return null;
+      const catalog = await ReadReleasedGameCatalog(env.GAME_RELEASE_BUCKET, release);
+      if (!catalog) return null;
+      const { metadata, preview } = catalog;
+      const releasePath = `/games/${encodeURIComponent(gameId)}/${encodeURIComponent(release.version)}/`;
+      return { id: gameId, slug: gameId, title: metadata.copy['zh-TW'].title,
+        summary: metadata.copy['zh-TW'].description, trainer: metadata.trainer, category: metadata.category,
+        developerName: metadata.author, updatedAt: release.approvedAt, copy: metadata.copy,
+        ...(preview ? { previewUrl: `${runnerOrigin}${releasePath}package/${EncodePackagePath(preview)}` } : {}),
+        release: { id: `${gameId}@${release.version}`, version: release.version, contentSha256: release.contentSha256,
+          capabilities: release.capabilities, approvedAt: release.approvedAt, presentation: release.presentation,
+          launchUrl: `${runnerOrigin}${releasePath}`, installUrl: `${runnerOrigin}/games/${encodeURIComponent(gameId)}/` },
+      };
+    }));
+    for (const current of currentGames) {
+      if (current.status === 'fulfilled' && current.value) games.push(current.value);
+      if (current.status === 'rejected') console.error('Unable to load an approved game catalog.', current.reason);
+    }
     return JsonResponse(request, env, { games }, {
       headers: {
         'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',

@@ -4,7 +4,7 @@
 
 ## 完成範圍
 
-- 大廳以 `gameCatalog.ts` 合併原有 40 項遊戲與已核准的 R2 投稿。一套卡片、分類、搜尋、數量與 `GameOverlay` 啟動入口；同一 slug 不重複顯示。39 個未遷移遊戲優先保留原入口，投稿 slug 即使碰撞也不會取代舊 runtime；完成 R2 遷移資格登記後才能改用發布版本。
+- 大廳以 `gameCatalog.ts` 合併原有 40 項遊戲與已核准的 R2 投稿。一套卡片、分類、搜尋、數量與 `GameOverlay` 啟動入口；同一 slug 不重複顯示。既有 catalog 項目保留自己的啟動與安裝契約，包含 39 個未遷移遊戲及畫畫塔防；歷史投稿不覆蓋這些入口。畫畫塔防在啟動前由 R2 工作階段 API 選擇核准的 current 版本。
 - 39 個舊遊戲保留 workspace、設定、runtime、PWA、成績與建置依賴。畫畫塔防仍使用既有官方 R2 工作階段與入口。
 - `/api/game-submissions` 提供中性的投稿入口；舊 `/api/developer/games` 保留相容。投稿套件存私有 quarantine R2，與版本摘要、檔案清單、掃描結果一起建立不可變的審核雜湊。
 - 投稿的 D1 transaction 同時建立 Issue 工作。Cron Worker 每分鐘取工作，以 GitHub App 為每個版本建立本 repo 的 Issue；新版本不切換現有公開版本。
@@ -89,12 +89,29 @@ flowchart LR
 | 驗證 | 結果 |
 | --- | --- |
 | `npm run build:hub` | 40 個 workspace 成功，39 個舊遊戲保留，畫畫塔防未加入 Hub bundle；包含 TypeScript、產物架構與 SEO 檢查 |
-| `npm run test:hub-functions` | 91 項通過，包含 SQLite 實際投稿／核准／成果流程與 Worker entry |
-| `npm run test:entrypoints` | 通過，包含 4 項統一目錄測試、導航、設定、訓練、成果、i18n 與既有安全契約 |
-| `npm run test:game-architecture` | 全部遊戲 TypeScript 與 21 項架構／發布測試通過 |
+| `npm run test:hub-functions` | 94 項通過，包含 SQLite 實際投稿／核准／成果流程、Worker entry 與核准遊戲自有目錄 |
+| `npm run test:entrypoints` | 通過，包含 8 項統一目錄測試、導航、設定、訓練、成果、i18n 與既有安全契約 |
+| `npm run test:game-architecture` | 全部遊戲 TypeScript 與 23 項架構／發布／遊戲自有目錄測試通過 |
 | `npm run test:game-architecture:browser` | Brave 5 項通過；桌機／手機統一清單、slug 碰撞、舊遊戲設定／開始／完成、guest／登入保存，以及 320／390／768／1024 px 導覽 |
 | `test:gamerunner`／`test:pwa` | 24／18 項通過，隔離與既有 PWA 契約保留 |
 | `test:naming`／`test:cloudflare-deploy`／`test:seo` | 通過；直接檢查首頁 title、H1、description、canonical、robots、JSON-LD、繁體中文及 104 排除 |
 | Functions／Worker syntax、Worker Wrangler dry-run | 8 個模組語法通過，Worker 打包成功且僅有 D1 binding；client bundles 沒有 server-only 審核設定 |
 
 GitHub 故障、回覆遺失、並行領取、偽造 Issue、每版重新送審、owner 核准→R2→D1→Issue 同步皆以可執行測試覆蓋，未對正式服務寫入。瀏覽器重跑時曾遇到本機 `out/index.html` 缺失；重新 build 後，以 `HUB_OUTPUT_ROOT` 指向 `.tmp/` 的完整輸出副本，最終 5／5 通過。重現一般流程：先 build，再跑 browser gate；需要固定輸出時先複製 `out/` 並設定 `HUB_OUTPUT_ROOT`。
+
+## 畫畫塔防啟動、分類與預覽圖修復
+
+2026-10-08 的正式站只讀確認：`/api/games` 仍列出歷史 `drawing-defense@1.0.0`，而 runner 的穩定入口已導向 `2.0.2`。大廳合併原先只保護未遷移 ID，造成舊投稿蓋掉 R2 入口、上肢分類與原預覽圖，並改走不相容的通用設定 shell。
+
+- `MergeHubGames` 保留既有啟動契約；`/api/games` 以可信 R2 current 取代同 slug 的歷史資料列。核准的新目錄資訊可更新卡片、篩選與安裝連結，啟動仍由官方工作階段 API 固定版本。
+- 畫畫塔防以自己的 `public/game.json` 宣告 `motor`／`upper-limb`、雙語文案、作者及 `preview.webp`。原預覽圖移入同一 workspace，bytes 未變；Hub 不另維護一份分類或圖片原始檔。
+- Publisher 將宣告與圖片一起納入不可變版本的逐檔雜湊。公開目錄必須先驗證 current／approved manifest，再回讀宣告 bytes 核對 SHA-256、分類配對及圖片是否在發布清單；撤回、錯誤雜湊、缺圖或分類不相容時不公開該筆 R2 目錄。前端只接受指定 runner 與同遊戲／同版本的圖片 URL。
+- 已發布 `2.0.2` 沒有此宣告，採遊戲 source 宣告與由原圖產生的 Hub 相容資產；39 個未遷移遊戲仍使用既有來源。`2.0.3` 為本機待核准套件，沒有上傳、修改正式 current 或覆寫任何已發布內容。
+
+TDD：啟動測試先出現 `package-v1` 取代 `catalog-v1`，Brave 從大廳啟動未建立官方 session 而失敗；分類測試先讀到 `higher-cognition`，自有圖片／宣告不存在，新格式又因缺少 `settingsUrl` 被濾掉。修正後 8 項目錄測試、3 項 API 測試及 2 項宣告驗證全部通過。
+
+Brave 的 `--lobby`／`--lobby --mobile` 現在使用實際本機 `/api/games`、R2 bytes 與 SQLite，另加入舊版 slug 碰撞。兩種尺寸均確認原圖載入、標籤為「上肢動作」，並通過設定→教學→繪圖→結果→保存失敗→重試→單筆成果→返回大廳。`--revoke`／`--session-failure`、5 項既有瀏覽器回歸，以及上表 build／後端／架構／entrypoints／PWA／runner／命名／部署範圍／SEO gate 均通過。
+
+發布 dry-run 驗證 `2.0.3` 共 6 個檔案，內容摘要為 `0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24`。本機生成的 `dist/index.html` 曾出現改名為 `index [conflicted].html` 的情況；還原生成檔後完成 dry-run，瀏覽器使用固定 Hub 輸出副本。此收據僅在 `.tmp/official-game-releases/`，不當作已發布的正式收據。Hub 尚未部署，`2.0.3` 仍須擁有者審查及確認公開後才能發布。
+
+使用者在後續明確指示「部屬、公開」，已核准上述 `2.0.3` 摘要及 Hub 修正的正式發布。發布時再次核對相同摘要；正式收據與部署結果另行記錄。

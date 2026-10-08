@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import { ContentTypeForPath, IsValidVersion, NormalizePackagePath, PackageKey, ReleaseKey, ValidateRelease } from '../apps/usergamerunner/functions/_lib/release.js';
 import { OfficialGameCatalogKey, ValidateOfficialGameCatalog } from '../apps/usergamerunner/functions/_lib/officialCatalog.js';
+import { maxGameCatalogBytes, ParseGameCatalogMetadata } from '../apps/rehabtrainerhub/games/gameCatalogMetadata.js';
 
 const root = resolve(import.meta.dirname, '..');
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -43,9 +44,13 @@ export async function BuildOfficialGameRelease(gameId) {
     if (stat.isFile()) files.set(path.replaceAll('\\', '/'), await readFile(absolute));
   }
   ValidatePackageResources(files);
+  const catalogBytes = files.get('game.json');
+  if (!catalogBytes || catalogBytes.length > maxGameCatalogBytes) throw new Error('Expected game-owned game.json in the built package.');
+  const catalog = ParseGameCatalogMetadata(JSON.parse(catalogBytes.toString('utf8')), gameId, new Set(files.keys()));
   const entries = [...files].map(([path, bytes]) => ({ path, size: bytes.length, sha256: sha256(bytes), contentType: ContentTypeForPath(path) }));
   const manifest = { schemaVersion: 1, status: 'approved', gameId, version,
-    name: registered.name, entry: 'index.html', runtime: { name: 'native', major: 1 }, presentation: 'game',
+    name: catalog.copy['zh-TW'].title, description: catalog.copy['zh-TW'].description,
+    entry: 'index.html', runtime: { name: 'native', major: 1 }, presentation: 'game',
     capabilities: ['audio', 'fullscreen', 'pointer', 'touch'], files: entries,
     contentSha256: sha256(JSON.stringify(entries)), approvedAt: new Date().toISOString() };
   ValidateRelease(manifest, gameId, version);

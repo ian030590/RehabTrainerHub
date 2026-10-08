@@ -165,7 +165,12 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
     const controller = new AbortController();
     setDefinition(null);
     setSettingsError(false);
-    void fetch(game.release.settingsUrl, {
+    const settingsUrl = game.release.settingsUrl;
+    if (!settingsUrl) {
+      setSettingsError(true);
+      return () => controller.abort();
+    }
+    void fetch(settingsUrl, {
       cache: 'no-store',
       credentials: 'omit',
       mode: 'cors',
