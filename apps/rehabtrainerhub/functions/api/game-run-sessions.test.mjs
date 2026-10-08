@@ -240,7 +240,7 @@ test('requires a valid subject for unsigned game sessions and keeps the feature 
   assert.equal(verificationMisconfigured.status, 503);
 });
 
-test('rejects forged, expired, mismatched, and no-longer-active run sessions', async () => {
+test('rejects forged, expired, mismatched, and revoked run sessions', async () => {
   const db = CreateGameRunDb();
   const env = { AUTH_SESSION_SECRET: secret, REHAB_DB: db };
   const sessionResponse = await IssueSession(env);
@@ -284,13 +284,27 @@ test('rejects forged, expired, mismatched, and no-longer-active run sessions', a
   assert.equal(expiredResponse.status, 409);
 
   db.sessions[0].expiresAt = Math.floor(Date.now() / 1000) + 3600;
-  db.activeReleaseId = secondReleaseId;
-  const inactiveResponse = await saveGameRun({
+  db.releases.get(releaseId).status = 'revoked';
+  const revokedResponse = await saveGameRun({
     request: AuthorizedJsonRequest('/api/game-runs', validInput),
     env,
   });
-  assert.equal(inactiveResponse.status, 409);
+  assert.equal(revokedResponse.status, 409);
   assert.equal(db.runs.length, 0);
+});
+
+test('a player can save a pinned approved release after a new version becomes current', async () => {
+  const db = CreateGameRunDb();
+  const env = { AUTH_SESSION_SECRET: secret, REHAB_DB: db };
+  const { runSession } = await (await IssueSession(env)).json();
+  db.activeReleaseId = secondReleaseId;
+  const input = { releaseId, clientRunId, runSessionToken: runSession.token, result: { status: 'completed', score: 7 } };
+  const response = await saveGameRun({ request: AuthorizedJsonRequest('/api/game-runs', input), env });
+  assert.equal(response.status, 201);
+  assert.equal(db.runs.length, 1);
+  const retry = await saveGameRun({ request: AuthorizedJsonRequest('/api/game-runs', input), env });
+  assert.equal(retry.status, 200);
+  assert.equal(db.runs.length, 1);
 });
 
 test('enforces the 16000-byte aggregate limit even with a short request envelope', async () => {
@@ -441,7 +455,7 @@ function CreateStatement(db, sql, args = []) {
           && candidate.clientRunId === requestedClientRunId
           && candidate.expiresAt > nowSeconds
           && (candidate.userId !== null || anonymousRecordsEnabled === '1')
-          && candidate.releaseId === db.activeReleaseId
+          && (!sql.includes('developer_games.active_release_id = game_run_sessions.release_id') || candidate.releaseId === db.activeReleaseId)
           && db.releases.get(candidate.releaseId)?.status === 'approved'
           && (db.releases.get(candidate.releaseId)?.jspsych_version !== 'none' || nativeDetailsFlag === '1')
           && !db.runs.some((run) => run.runSessionId === candidate.id)

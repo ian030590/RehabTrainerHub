@@ -11,6 +11,7 @@ const restrictedPrefixes = [
 
 const restrictedNames = new Set([
   'ASSET_PUBLIC_BASE_URL',
+  'GAME_RELEASE_OWNER_USER_ID',
   'NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN',
   'VITE_AI_ASSET_BASE_URL',
   'VITE_CF_WEB_ANALYTICS_TOKEN',

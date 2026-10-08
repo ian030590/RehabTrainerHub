@@ -21,6 +21,8 @@ import {
 } from '../../_lib/gamePackages.js';
 import { IsGameTagPair } from '../../../games/gameTags.js';
 import { officialGameReleases } from '../../_lib/officialGames.js';
+import { CreateGameReviewDigest } from '../../_lib/gameReview.js';
+import { CreateGameReviewIssueStatements } from '../../_lib/gameReviewIssues.js';
 
 const maximumMultipartBytes = gamePackageLimits.maximumCompressedBytes + 128 * 1024;
 
@@ -64,9 +66,13 @@ export async function onRequestGet({ request, env }) {
           game_releases.scan_summary_json,
           game_releases.review_note,
           game_releases.submitted_at,
-          game_releases.reviewed_at
+          game_releases.reviewed_at,
+          game_releases.review_digest, game_releases.change_notes,
+          game_review_issues.status AS review_issue_status, game_review_issues.issue_number,
+          game_review_issues.issue_url
         FROM developer_games
         LEFT JOIN game_releases ON game_releases.game_id = developer_games.id
+        LEFT JOIN game_review_issues ON game_review_issues.release_id = game_releases.id
         WHERE developer_games.owner_user_id = ?
         ORDER BY COALESCE(game_releases.created_at, developer_games.created_at) DESC
         LIMIT 200
@@ -176,6 +182,14 @@ export async function onRequestPost({ request, env }) {
       reviewCount: inspection.reviewCount,
       findingCodes: [...new Set(inspection.findings.map((finding) => finding.code))],
     };
+    const reviewDigest = await CreateGameReviewDigest({
+      id: releaseId, game_id: gameId, slug: input.slug, version: input.version,
+      submitted_developer_name: input.developerName, submitted_title: input.title,
+      submitted_summary: input.summary, submitted_trainer: input.trainer, submitted_category: input.category,
+      change_notes: input.changeNotes, artifact_type: inspection.artifactType, entry_path: inspection.entryPath,
+      content_sha256: inspection.contentSha256, jspsych_version: input.jsPsychVersion,
+      capabilities_json: JSON.stringify(input.capabilities), files_json: JSON.stringify(publicFiles),
+    });
     const statements = [];
     if (!existingGame) {
       statements.push(db
@@ -207,8 +221,8 @@ export async function onRequestPost({ request, env }) {
           artifact_type, entry_path, status,
           content_sha256, package_bytes, uncompressed_bytes, file_count,
           jspsych_version, capabilities_json, files_json, scan_summary_json,
-          submitted_at, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          submitted_at, created_at, updated_at, review_digest, change_notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .bind(
         releaseId,
@@ -233,6 +247,8 @@ export async function onRequestPost({ request, env }) {
         now,
         now,
         now,
+        reviewDigest,
+        input.changeNotes,
       ));
     inspection.files.forEach((file) => {
       statements.push(db
@@ -282,6 +298,7 @@ export async function onRequestPost({ request, env }) {
         version: input.version,
       },
     }));
+    statements.push(...CreateGameReviewIssueStatements(db, releaseId));
     await db.batch(statements);
     quarantineCleanup = null;
 
@@ -301,6 +318,9 @@ export async function onRequestPost({ request, env }) {
         uncompressedBytes: inspection.totalBytes,
         scan: scanSummary,
         findings: inspection.findings,
+        reviewDigest,
+        changeNotes: input.changeNotes,
+        reviewIssue: { status: 'pending', number: null, url: null },
       },
     }, { status: 201 });
   } catch (error) {
@@ -333,6 +353,7 @@ function NormalizeSubmissionInput(formData) {
   const title = NormalizeText(formData.get('title'), 2, 120);
   const developerName = NormalizeText(formData.get('developerName'), 2, 80);
   const summary = NormalizeText(formData.get('summary'), 0, 500);
+  const changeNotes = NormalizeText(formData.get('changeNotes'), 0, 2000);
   const trainer = String(formData.get('trainer') || '').trim();
   const category = String(formData.get('category') || '').trim();
   const capabilities = NormalizeGameCapabilities(formData.get('capabilities') || '[]');
@@ -343,6 +364,7 @@ function NormalizeSubmissionInput(formData) {
     || !title
     || !developerName
     || summary === null
+    || changeNotes === null
     || !IsGameTagPair(trainer, category)
     || !capabilities
     || !['none', gamePackageRuntimeContract.jsPsychVersion].includes(jsPsychVersion)
@@ -356,6 +378,7 @@ function NormalizeSubmissionInput(formData) {
     jsPsychVersion,
     slug,
     summary,
+    changeNotes,
     title,
     trainer,
     version,
@@ -422,6 +445,13 @@ function GroupDeveloperGames(rows) {
         reviewNote: row.review_note,
         submittedAt: row.submitted_at,
         reviewedAt: row.reviewed_at,
+        reviewDigest: row.review_digest,
+        changeNotes: row.change_notes,
+        reviewIssue: {
+          status: row.review_issue_status || 'legacy',
+          number: row.issue_number || null,
+          url: row.issue_url || null,
+        },
       });
     }
   });

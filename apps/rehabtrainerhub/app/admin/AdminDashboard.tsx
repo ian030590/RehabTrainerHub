@@ -128,6 +128,9 @@ export function AdminDashboard() {
   const isStaff = IsStaffRole(role);
   const availableTabItems = role === 'admin' ? [...tabItems, gameReviewTab] : tabItems;
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  useEffect(() => {
+    if (role === 'admin' && new URLSearchParams(window.location.search).has('release')) setActiveTab('games');
+  }, [role]);
   const [overview, setOverview] = useState<AdminOverviewResponse | null>(null);
   const [overviewStatus, setOverviewStatus] = useState<LoadStatus>('idle');
   const [overviewError, setOverviewError] = useState('');

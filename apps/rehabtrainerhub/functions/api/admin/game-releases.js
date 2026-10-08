@@ -6,6 +6,7 @@ import {
   RequireDatabase,
 } from '../../_lib/auth.js';
 import { GetAuthenticatedUser } from '../../_lib/authorization.js';
+import { CheckGameReleaseOwner } from '../../_lib/gameReview.js';
 
 export function onRequestOptions({ request, env }) {
   return OptionsResponse(request, env);
@@ -22,10 +23,14 @@ export async function onRequestGet({ request, env }) {
     const status = new URL(request.url).searchParams.get('status');
     const allowedStatuses = new Set(['blocked', 'pending_review', 'publishing', 'approved', 'rejected', 'revoked']);
     const selectedStatus = status && allowedStatuses.has(status) ? status : null;
+    const releaseId = new URL(request.url).searchParams.get('release');
+    if (releaseId && !/^[A-Za-z0-9_-]{1,80}$/.test(releaseId)) return ErrorResponse(request, env, 'Invalid release identifier.', 400);
     const result = await RequireDatabase(env)
       .prepare(`
         SELECT
           game_releases.*,
+          game_review_issues.status AS review_issue_status, game_review_issues.issue_number,
+          game_review_issues.issue_url,
           developer_games.slug,
           game_releases.submitted_title AS title,
           game_releases.submitted_summary AS summary,
@@ -47,7 +52,9 @@ export async function onRequestGet({ request, env }) {
         FROM game_releases
         INNER JOIN developer_games ON developer_games.id = game_releases.game_id
         INNER JOIN app_users ON app_users.id = developer_games.owner_user_id
+        LEFT JOIN game_review_issues ON game_review_issues.release_id = game_releases.id
         WHERE (? IS NULL OR game_releases.status = ?)
+          AND (? IS NULL OR game_releases.id = ?)
         ORDER BY
           CASE game_releases.status
             WHEN 'pending_review' THEN 0
@@ -60,9 +67,10 @@ export async function onRequestGet({ request, env }) {
           game_releases.submitted_at DESC
         LIMIT 200
       `)
-      .bind(selectedStatus, selectedStatus)
+      .bind(selectedStatus, selectedStatus, releaseId, releaseId)
       .all();
-    const releases = (result.results || []).map(MapRelease);
+    const canReview = CheckGameReleaseOwner(request, env, user) === null;
+    const releases = (result.results || []).map(row => ({ ...MapRelease(row), canReview }));
     return JsonResponse(request, env, { releases });
   } catch (error) {
     console.error('Unable to list game releases for review.', error);
@@ -89,6 +97,9 @@ function MapRelease(row) {
     entryPath: row.entry_path,
     status: row.status,
     contentSha256: row.content_sha256,
+    reviewDigest: row.review_digest,
+    changeNotes: row.change_notes,
+    reviewIssue: { status: row.review_issue_status || 'legacy', number: row.issue_number || null, url: row.issue_url || null },
     packageBytes: row.package_bytes,
     uncompressedBytes: row.uncompressed_bytes,
     fileCount: row.file_count,

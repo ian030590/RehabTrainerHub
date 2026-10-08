@@ -7,20 +7,11 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { TrainingOverlay } from './train/TrainingOverlay';
-import { PackageGameOverlay } from './train/PackageGameOverlay';
+import { GameOverlay } from './train/GameOverlay';
+import { BuildHubGameCatalog, type HubGame } from './gameCatalog';
 import {
-  BuildTrainingGameInstallHref,
   BuildTrainingModuleHref,
-  BuildTrainingModuleImageSrc,
-  GetPublishedGameCategoryLabel,
-  GetPublishedGameSubcategoryLabel,
   GetTrainerCategoryTheme,
-  GetTrainingModuleCategoryLabel,
-  GetTrainingModuleCopy,
-  GetTrainingModuleSubcategoryLabel,
-  GetTrainingModuleTheme,
-  GetTrainingThemeId,
   categorySubcategories,
   trainerCategoryTags,
   trainingCatalog,
@@ -103,46 +94,36 @@ export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [activeModule, setActiveModule] = useState<TrainingCatalogModule | null>(null);
-  const [activePackageGame, setActivePackageGame] = useState<PublishedGame | null>(null);
+  const [activeGame, setActiveGame] = useState<HubGame | null>(null);
   const [publishedGames, setPublishedGames] = useState<PublishedGame[]>([]);
   const [publishedGamesError, setPublishedGamesError] = useState(false);
-  const handleCloseOverlay = useCallback(() => setActiveModule(null), []);
-  const handleClosePackageOverlay = useCallback(() => setActivePackageGame(null), []);
+  const handleCloseOverlay = useCallback(() => setActiveGame(null), []);
   const { language, locale, t } = useHubLanguage();
   const copy = GetHubUiCopy(language).lobby;
   const platformCopy = language === 'en'
     ? {
-        catalogUnavailable: 'Developer games are temporarily unavailable. Built-in games are still available.',
-        developer: 'Developer',
-        developerLibrary: 'Developer games',
+        catalogUnavailable: 'Some games could not be loaded. Available games can still be played.',
+        author: 'Author',
         install: 'Install game',
-        officialLibrary: 'Rehab Trainer Hub built-in games',
-        play: 'Play on platform',
-        reviewed: 'Reviewed release',
-        summaryFallback: 'A home-practice activity provided by its developer.',
+        summaryFallback: 'A home-practice activity.',
         version: 'Version',
       }
     : {
-        catalogUnavailable: '開發者遊戲目前無法載入；內建遊戲仍可正常使用。',
-        developer: '開發者',
-        developerLibrary: '開發者遊戲',
+        catalogUnavailable: '部分遊戲目前無法載入，已顯示的遊戲仍可開始。',
+        author: '作者',
         install: '安裝遊戲',
-        officialLibrary: '居家訓練網內建遊戲',
-        play: '在平台遊玩',
-        reviewed: '已審核版本',
-        summaryFallback: '開發者提供的居家練習活動。',
+        summaryFallback: '居家練習活動。',
         version: '版本',
       };
   const normalizedQuery = query.trim().toLocaleLowerCase(locale);
+  const games = useMemo(() => BuildHubGameCatalog(trainingCatalog, publishedGames, locale), [publishedGames, locale]);
 
   const purposeCounts = useMemo(() => new Map(
     trainingPurposes.map((purpose) => [
       purpose.id,
-      trainingCatalog.filter((module) => module.purpose === purpose.id).length
-        + publishedGames.filter((game) => GetTrainingThemeId(game.category) === purpose.id).length,
+      games.filter((game) => game.purpose === purpose.id).length,
     ]),
-  ), [publishedGames]);
+  ), [games]);
 
   const categoryCounts = useMemo(() => new Map(
     trainerCategoryTags.map((category) => {
@@ -162,20 +143,11 @@ export function TrainingLobby() {
     }
   };
 
-  const visibleModules = useMemo(() => trainingCatalog.filter((module) => {
-    const title = GetTrainingModuleCopy(module, locale).title.toLocaleLowerCase(locale);
-    const matchesSearch = !normalizedQuery || title.includes(normalizedQuery);
-    const matchesPurpose = selectedPurposes.length === 0
-      || selectedPurposes.includes(module.purpose);
-    return matchesSearch && matchesPurpose;
-  }), [locale, normalizedQuery, selectedPurposes]);
-
-  const visiblePublishedGames = useMemo(() => publishedGames.filter((game) => {
-    const searchable = `${game.title} ${game.summary} ${game.developerName}`.toLocaleLowerCase(locale);
-    const purpose = GetTrainingThemeId(game.category);
+  const visibleGames = useMemo(() => games.filter((game) => {
+    const searchable = (game.title + ' ' + game.summary + ' ' + game.author).toLocaleLowerCase(locale);
     return (!normalizedQuery || searchable.includes(normalizedQuery))
-      && (selectedPurposes.length === 0 || (purpose !== null && selectedPurposes.includes(purpose)));
-  }), [locale, normalizedQuery, publishedGames, selectedPurposes]);
+      && (selectedPurposes.length === 0 || (game.purpose !== null && selectedPurposes.includes(game.purpose)));
+  }), [games, locale, normalizedQuery, selectedPurposes]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -233,7 +205,7 @@ export function TrainingLobby() {
     setSelectedPurposes([]);
   };
 
-  const totalVisibleCount = visibleModules.length + visiblePublishedGames.length;
+  const totalVisibleCount = visibleGames.length;
 
   useEffect(() => {
     if (!isMobileFilterOpen) return;
@@ -256,11 +228,8 @@ export function TrainingLobby() {
 
   return (
     <>
-    {activeModule && (
-      <TrainingOverlay module={activeModule} onClose={handleCloseOverlay} />
-    )}
-    {activePackageGame && (
-      <PackageGameOverlay game={activePackageGame} onClose={handleClosePackageOverlay} />
+    {activeGame && (
+      <GameOverlay game={activeGame} onClose={handleCloseOverlay} />
     )}
     <main className="lobby-page" id="main-content">
       <section className="lobby-heading" aria-labelledby="lobby-title">
@@ -413,7 +382,7 @@ export function TrainingLobby() {
         <section className="module-results" aria-labelledby="result-title">
           <div className="result-header">
             <h2 id="result-title">{copy.allModules}</h2>
-            <p aria-live="polite">{t('lobby.moduleCount', { count: visibleModules.length + visiblePublishedGames.length })}</p>
+            <p aria-live="polite">{t('lobby.moduleCount', { count: visibleGames.length })}</p>
           </div>
 
           {publishedGamesError && (
@@ -422,145 +391,71 @@ export function TrainingLobby() {
             </p>
           )}
 
-          {visibleModules.length > 0 && (
-            <header className="library-section-heading">
-              <div>
-                <p className="page-kicker" lang="en">Official library</p>
-                <h3>{platformCopy.officialLibrary}</h3>
-              </div>
-            </header>
-          )}
-
-          {visibleModules.length > 0 && (
-            <div className="module-grid">
-              {visibleModules.map((module) => {
-                const moduleCopy = GetTrainingModuleCopy(module, locale);
-                const theme = GetTrainingModuleTheme(module);
-                const categoryLabel = GetTrainingModuleCategoryLabel(module, locale);
-                const subcategoryLabel = GetTrainingModuleSubcategoryLabel(module, locale);
-
-                return (
-                  <article
-                    aria-label={`${copy.start}: ${moduleCopy.title}`}
-                    className="module-card official-game-card"
-                    data-runtime-id={module.runtimeId}
-                    key={module.catalogId}
-                    onPointerEnter={() => PreloadTrainingModule(module)}
-                    style={BuildTrainingThemeStyle(theme)}
-                  >
-                    <div className="module-card-visual">
+          <div className="module-grid">
+            {visibleGames.map((game) => {
+              const preload = () => {
+                if (game.launch.contract === 'catalog-v1') PreloadTrainingModule(game.launch.module);
+              };
+              return (
+                <article
+                  aria-label={copy.start + ': ' + game.title}
+                  className="module-card official-game-card"
+                  data-runtime-id={game.id}
+                  key={game.id}
+                  onPointerEnter={preload}
+                  style={BuildTrainingThemeStyle(game.theme)}
+                >
+                  <div className="module-card-visual">
+                    {game.imageSrc ? (
                       <CardImagePlaceholder
-                        alt={language === 'en'
-                          ? `${moduleCopy.title} activity preview: ${moduleCopy.description}`
-                          : `${moduleCopy.title}活動畫面：${moduleCopy.description}`}
-                        height={360}
-                        loading="lazy"
-                        src={BuildTrainingModuleImageSrc(module)}
-                        width={640}
+                        alt={game.title + (language === 'en' ? ' activity preview: ' : '活動畫面：') + game.summary}
+                        height={360} loading="lazy" src={game.imageSrc} width={640}
                       />
-                    </div>
-                    <div className="module-card-content">
-                      <div className="module-card-meta">
-                        <div className="module-card-labels">
-                          <span className="module-category-tag">{categoryLabel}</span>
-                          <span className="module-subcategory-tag">{subcategoryLabel}</span>
-                        </div>
-                        <span className="module-card-theme-adornments">
-                          <TrainingThemeBadge language={language} theme={theme} />
-                          <TrainingThemeIcon label={subcategoryLabel} theme={theme} />
-                        </span>
+                    ) : (
+                      <div className="community-game-visual" aria-hidden="true">
+                        <TrainingThemeIcon decorative label={game.subcategoryLabel} theme={game.theme} />
                       </div>
-                      <h3>{moduleCopy.title}</h3>
-                      <p>{moduleCopy.description}</p>
-                      <div className="module-card-footer official-game-actions">
-                        <button
-                          onClick={() => setActiveModule(module)}
-                          onFocus={() => PreloadTrainingModule(module)}
-                          onPointerDown={() => PreloadTrainingModule(module)}
-                          type="button"
-                        >
-                          {copy.start}
-                          <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                        </button>
-                        <a
-                          href={BuildTrainingGameInstallHref(module)}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        >
-                          {platformCopy.install}
-                          <span className="material-symbols-outlined" aria-hidden="true">download</span>
-                        </a>
+                    )}
+                  </div>
+                  <div className="module-card-content">
+                    <div className="module-card-meta">
+                      <div className="module-card-labels">
+                        {game.categoryLabel && <span className="module-category-tag">{game.categoryLabel}</span>}
+                        <span className="module-subcategory-tag">{game.subcategoryLabel}</span>
                       </div>
+                      <span className="module-card-theme-adornments">
+                        <TrainingThemeBadge language={language} theme={game.theme} />
+                        <TrainingThemeIcon label={game.subcategoryLabel} theme={game.theme} />
+                      </span>
                     </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
+                    <h3>{game.title}</h3>
+                    <p>{game.summary || platformCopy.summaryFallback}</p>
+                    <dl className="community-game-details">
+                      <div><dt>{platformCopy.author}</dt><dd>{game.author}</dd></div>
+                      {game.version && <div><dt>{platformCopy.version}</dt><dd>{game.version}</dd></div>}
+                    </dl>
+                    <div className="module-card-footer official-game-actions">
+                      <button
+                        onClick={() => setActiveGame(game)}
+                        onFocus={preload}
+                        onPointerDown={preload}
+                        type="button"
+                      >
+                        {copy.start}
+                        <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                      </button>
+                      <a href={game.installUrl} rel="noopener noreferrer" target="_blank">
+                        {platformCopy.install}
+                        <span className="material-symbols-outlined" aria-hidden="true">download</span>
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
 
-          {visiblePublishedGames.length > 0 && (
-            <header className="library-section-heading community-library-heading">
-              <div>
-                <p className="page-kicker">Developer library</p>
-                <h3>{platformCopy.developerLibrary}</h3>
-              </div>
-            </header>
-          )}
-
-          {visiblePublishedGames.length > 0 && (
-            <div className="module-grid community-game-grid">
-              {visiblePublishedGames.map((game) => {
-                const theme = GetTrainingModuleTheme(game.category);
-                const categoryLabel = GetPublishedGameCategoryLabel(game.category, locale);
-                const subcategoryLabel = GetPublishedGameSubcategoryLabel(game.category, locale);
-                return (
-                  <article
-                    className="module-card community-game-card"
-                    key={game.release.id}
-                    style={BuildTrainingThemeStyle(theme)}
-                  >
-                    <div className="community-game-visual" aria-hidden="true">
-                      <TrainingThemeIcon decorative label={subcategoryLabel} theme={theme} />
-                      <small>jsPsych 8</small>
-                    </div>
-                    <div className="module-card-content">
-                      <div className="module-card-meta">
-                        <div className="module-card-labels">
-                          {categoryLabel && <span className="module-category-tag">{categoryLabel}</span>}
-                          <span className="module-subcategory-tag">{subcategoryLabel}</span>
-                        </div>
-                        <span className="module-card-theme-adornments">
-                          <TrainingThemeBadge language={language} theme={theme} />
-                          <span className="verified-release-badge">
-                            <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
-                            {platformCopy.reviewed}
-                          </span>
-                        </span>
-                      </div>
-                      <h3>{game.title}</h3>
-                      <p>{game.summary || platformCopy.summaryFallback}</p>
-                      <dl className="community-game-details">
-                        <div><dt>{platformCopy.developer}</dt><dd>{game.developerName}</dd></div>
-                        <div><dt>{platformCopy.version}</dt><dd>{game.release.version}</dd></div>
-                      </dl>
-                      <div className="community-game-actions">
-                        <button onClick={() => setActivePackageGame(game)} type="button">
-                          <span className="material-symbols-outlined" aria-hidden="true">play_arrow</span>
-                          {platformCopy.play}
-                        </button>
-                        <a href={game.release.installUrl} rel="noopener noreferrer" target="_blank">
-                          <span className="material-symbols-outlined" aria-hidden="true">download</span>
-                          {platformCopy.install}
-                        </a>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-
-          {visibleModules.length === 0 && visiblePublishedGames.length === 0 && (
+          {visibleGames.length === 0 && (
             <div className="empty-results">
               <span className="material-symbols-outlined" aria-hidden="true">search_off</span>
               <h3>{copy.noResultsTitle}</h3>

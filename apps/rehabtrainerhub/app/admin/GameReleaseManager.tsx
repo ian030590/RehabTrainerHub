@@ -36,12 +36,18 @@ export function GameReleaseManager() {
     metadataReviewed: boolean;
   }>>({});
   const [reloadKey, setReloadKey] = useState(0);
+  const [requestedRelease, setRequestedRelease] = useState<string>();
+
+  useEffect(() => {
+    const releaseId = new URLSearchParams(window.location.search).get('release');
+    if (releaseId) { setRequestedRelease(releaseId); setFilter(''); }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
     setStatus('loading');
     setError('');
-    void FetchAdminGameReleases(filter || undefined, controller.signal)
+    void FetchAdminGameReleases(filter || undefined, controller.signal, requestedRelease)
       .then((nextReleases) => {
         setReleases(nextReleases);
         setStatus('ready');
@@ -53,7 +59,7 @@ export function GameReleaseManager() {
         setStatus('error');
       });
     return () => controller.abort();
-  }, [filter, reloadKey]);
+  }, [filter, reloadKey, requestedRelease]);
 
   const review = async (release: AdminGameRelease, decision: 'approve' | 'reject' | 'revoke') => {
     const verb = decision === 'approve' ? '核准並發布' : decision === 'revoke' ? '緊急下架' : '退回';
@@ -66,11 +72,11 @@ export function GameReleaseManager() {
         playTested: false,
         metadataReviewed: false,
       };
-      await ReviewAdminGameRelease(release.id, decision, notes[release.id] ?? '', reviewEvidence);
+      await ReviewAdminGameRelease(release.id, decision, notes[release.id] ?? '', reviewEvidence, release.reviewDigest);
       setReloadKey((current) => current + 1);
     } catch (reviewError) {
       console.warn('Unable to review game release.', reviewError);
-      setError('審核操作失敗；檔案未發布，請確認儲存空間與版本狀態後再試。');
+      setError(reviewError instanceof Error ? reviewError.message : '審核操作失敗，請重新載入版本狀態後再試。');
     } finally {
       setBusyId('');
     }
@@ -95,13 +101,13 @@ export function GameReleaseManager() {
       <div className="admin-section-toolbar">
         <div>
           <p className="page-kicker">Game review</p>
-          <h2>開發者遊戲審核</h2>
-          <p>核對未混淆原始碼、自動掃描結果與試玩內容；只有核准的相同雜湊版本會發布。</p>
+          <h2>遊戲版本審核</h2>
+          <p>每個版本使用一張 repo Issue，原始套件保存在私有 R2。只有平台擁有者核准的相同審核雜湊版本會公開。</p>
         </div>
         <label className="admin-field admin-game-status-filter">
           <span>版本狀態</span>
           <select
-            onChange={(event) => setFilter(event.target.value as GameReleaseReviewStatus | '')}
+            onChange={(event) => { setRequestedRelease(undefined); setFilter(event.target.value as GameReleaseReviewStatus | ''); }}
             value={filter}
           >
             <option value="">全部</option>
@@ -132,7 +138,7 @@ export function GameReleaseManager() {
 
       <div className="admin-game-release-list">
         {releases.map((release) => (
-          <article className="admin-game-release" key={release.id}>
+          <article className="admin-game-release" id={'release-' + release.id} key={release.id}>
             <header>
               <div>
                 <span className={`release-status release-status-${release.status}`}>{statusLabels[release.status]}</span>
@@ -145,6 +151,17 @@ export function GameReleaseManager() {
                 <div><dt>能力</dt><dd>{release.capabilities.join('、') || '無'}</dd></div>
               </dl>
             </header>
+
+            <section className="admin-game-public-metadata" aria-label="版本審核單">
+              <h4>版本 Issue</h4>
+              {release.reviewIssue.url ? (
+                <a href={release.reviewIssue.url} rel="noopener noreferrer" target="_blank">查看版本審核單 #{release.reviewIssue.number}</a>
+              ) : (
+                <p>{release.reviewIssue.status === 'legacy' ? '歷史發布版本尚未建立 Issue。' : '審核單建立中；套件仍保存在私有 R2，建立成功前不能公開。'}</p>
+              )}
+              {release.changeNotes && <p>{release.changeNotes}</p>}
+              {!release.canReview && <p>此帳號可以查核資料；公開、退回與撤回由平台擁有者操作。</p>}
+            </section>
 
             <section className="admin-game-public-metadata" aria-label="預計公開的遊戲資料">
               <h4>預計公開內容</h4>
@@ -185,6 +202,7 @@ export function GameReleaseManager() {
               <dl className="admin-game-identifiers">
                 <div><dt>入口</dt><dd><code>{release.entryPath}</code></dd></div>
                 <div><dt>SHA-256</dt><dd><code>{release.contentSha256}</code></dd></div>
+                <div><dt>審核雜湊</dt><dd><code>{release.reviewDigest || '等待建立審核摘要'}</code></dd></div>
                 <div><dt>送審時間</dt><dd><time dateTime={release.submittedAt}>{FormatDateTime(release.submittedAt)}</time></dd></div>
               </dl>
             </details>
@@ -201,7 +219,7 @@ export function GameReleaseManager() {
               <p>請在不含登入資料的隔離測試環境閱讀原始碼並試玩；不要直接在日常瀏覽器開啟。</p>
             </div>
 
-            {(release.status === 'pending_review' || release.status === 'publishing' || release.status === 'blocked') && (
+            {release.canReview && (release.status === 'pending_review' || release.status === 'publishing' || release.status === 'blocked') && (
               <div className="admin-game-review-actions">
                 <label className="admin-field">
                   <span>審核備註</span>
@@ -266,6 +284,8 @@ export function GameReleaseManager() {
                     className="admin-button admin-button-primary"
                     disabled={busyId === release.id
                       || release.status === 'blocked'
+                      || release.reviewIssue.status !== 'ready'
+                      || !release.reviewDigest
                       || !evidence[release.id]?.sourceReviewed
                       || !evidence[release.id]?.playTested
                       || !evidence[release.id]?.metadataReviewed}
@@ -287,7 +307,7 @@ export function GameReleaseManager() {
                 </div>
               </div>
             )}
-            {release.status === 'approved' && (
+            {release.canReview && release.status === 'approved' && (
               <div className="admin-game-review-actions admin-game-revoke-actions">
                 <label className="admin-field">
                   <span>緊急下架原因</span>

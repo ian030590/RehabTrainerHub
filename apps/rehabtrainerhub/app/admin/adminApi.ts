@@ -94,6 +94,10 @@ export interface AdminGameRelease {
   entryPath: string;
   status: GameReleaseReviewStatus;
   contentSha256: string;
+  reviewDigest: string | null;
+  changeNotes: string;
+  reviewIssue: { status: 'pending' | 'ready' | 'legacy'; number: number | null; url: string | null };
+  canReview: boolean;
   packageBytes: number;
   uncompressedBytes: number;
   fileCount: number;
@@ -279,9 +283,10 @@ export async function UploadAdminAsset(file: File): Promise<AdminAssetResponse> 
 export async function FetchAdminGameReleases(
   status?: GameReleaseReviewStatus,
   signal?: AbortSignal,
+  releaseId?: string,
 ): Promise<AdminGameRelease[]> {
   const payload = await ReadJson<{ releases: AdminGameRelease[] }>(
-    await AdminFetch('/api/admin/game-releases', { signal }, { status }),
+    await AdminFetch('/api/admin/game-releases', { signal }, { status, release: releaseId }),
   );
   return payload.releases;
 }
@@ -291,11 +296,12 @@ export async function ReviewAdminGameRelease(
   decision: 'approve' | 'reject' | 'revoke',
   note: string,
   evidence: { sourceReviewed: boolean; playTested: boolean; metadataReviewed: boolean },
+  expectedReviewDigest: string | null,
 ): Promise<void> {
   await AdminFetch(`/api/admin/game-releases/${encodeURIComponent(releaseId)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ decision, note, ...evidence }),
+    body: JSON.stringify({ decision, note, expectedReviewDigest, ...evidence }),
   });
 }
 

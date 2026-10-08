@@ -275,7 +275,7 @@ const copy = {
       slugHelp: '只能使用小寫英文字母、數字與連字號；後續版本沿用同一識別碼。',
       displayName: '顯示名稱',
       developerName: '公開開發者名稱',
-      developerHelp: '此名稱會顯示在公開遊戲大廳；不會自動公開帳戶姓名或電子郵件。',
+      developerHelp: '此名稱會顯示在公開審核 Issue 與核准後的遊戲大廳；不會自動公開帳戶姓名或電子郵件。',
       summary: '內容摘要',
       trainer: '遊戲大分類',
       trainerPlaceholder: '請選擇 motor、mouth、brain 或 vision',
@@ -311,7 +311,7 @@ const copy = {
       },
       messages: {
         blocked: (count: number) => `已完成掃描，但偵測到 ${count} 個阻擋項目。`,
-        pending: '已安全存入隔離區並送交人工審核。',
+        pending: '套件已存入私有隔離區，正在建立此版本的 GitHub 審核 Issue。平台擁有者確認公開後才可遊玩。',
       },
       status: {
         blocked: '自動掃描阻擋', pending_review: '等待人工審核', publishing: '正在發布', approved: '已核准上架', rejected: '未通過審核', revoked: '已緊急下架',
@@ -592,7 +592,7 @@ const copy = {
       slugHelp: 'Lowercase letters, numbers, and hyphens only. Later versions reuse the same identifier.',
       displayName: 'Display name',
       developerName: 'Public developer name',
-      developerHelp: 'Shown in the public game lobby. Your account name and email are not published automatically.',
+      developerHelp: 'Shown in the public review Issue and, after approval, the game lobby. Your account name and email are not published automatically.',
       summary: 'Content summary',
       trainer: 'Game category',
       trainerPlaceholder: 'Select motor, mouth, brain, or vision',
@@ -628,7 +628,7 @@ const copy = {
       },
       messages: {
         blocked: (count: number) => `Scanning finished with ${count} blocking findings.`,
-        pending: 'The package is quarantined safely and queued for human review.',
+        pending: 'The package is private. A GitHub review Issue is being created for this version; it becomes playable after the platform owner approves publication.',
       },
       status: {
         blocked: 'Blocked by scan', pending_review: 'Awaiting human review', publishing: 'Publishing', approved: 'Approved', rejected: 'Review failed', revoked: 'Revoked',

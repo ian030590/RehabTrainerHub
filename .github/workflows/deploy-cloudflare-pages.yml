@@ -7,6 +7,7 @@ on:
       - "apps/**"
       - "packages/**"
       - "scripts/**"
+      - "workers/**"
       - "package.json"
       - "package-lock.json"
       - "turbo.json"
@@ -168,3 +169,4 @@ jobs:
           ASSET_PUBLIC_BASE_URL: ${{ vars.ASSET_PUBLIC_BASE_URL }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GAME_RELEASE_OWNER_USER_ID: ${{ vars.GAME_RELEASE_OWNER_USER_ID }}

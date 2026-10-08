@@ -14,6 +14,23 @@ only numeric, Boolean, or null values with safe field names. The Hub validates
 and projects them through the reviewed `score.json` before D1 storage. No
 identifying patient information belongs in the package, settings, or results.
 
+## Per-version review tickets
+
+Submit through `/developer/` or `/api/game-submissions`. The old
+`/api/developer/games` route remains compatible. The Hub stores readable source
+and the package in private R2 and queues a GitHub Issue for each submitted
+version. The Issue contains the public author name, description, change notes,
+capabilities, review digest, and a protected Hub review link. It contains no
+package attachments, private download URLs, account identity, or scanner excerpts.
+
+Only the configured platform owner can publish the exact reviewed version.
+Editing or closing an Issue never publishes a game. Every update uses a new
+semantic version and a new review ticket; the previous approved version stays
+available while the update awaits review. Approved browser assets become
+downloadable when the existing isolated runner serves the published release.
+See [Hub review rollout](hub-game-review-rollout.md) for deployment requirements
+and the boundary between this Hub stage and the later full R2 migration.
+
 Native games may use plain JavaScript or another self-contained implementation.
 They do not need jsPsych or the legacy bridge script. The platform still scans,
 isolates, reviews, and approves every submission before it can record results.

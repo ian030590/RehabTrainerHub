@@ -1,0 +1,17 @@
+name = "rehab-game-review-issues"
+main = "index.js"
+compatibility_date = "2026-10-08"
+workers_dev = false
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "REHAB_DB"
+database_name = "rehab_db"
+database_id = "0f4e6bb2-cf41-4051-ad74-19bb501fe9dd"
+migrations_dir = "../../apps/rehabtrainerhub/migrations"
+
+# Server-only secrets: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID,
+# GITHUB_REVIEW_REPOSITORY_ID, GITHUB_APP_PRIVATE_KEY (PKCS#8 PEM).
+# This worker never receives R2, Hub auth, or uploaded executable code.

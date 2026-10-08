@@ -35,6 +35,7 @@ const result = spawnSync(
       ...process.env,
       AUTH_ALLOWED_ORIGINS: '',
       VITE_SMOKE_PUBLIC_VALUE: 'deployment-test-value',
+      GAME_RELEASE_OWNER_USER_ID: 'private-owner-id',
     },
   },
 );
@@ -144,12 +145,14 @@ for (const requiredSetting of [
   'ADMIN_ALLOW_BEARER',
   'AUTH_ALLOW_LOCAL_ORIGINS',
   'TURNSTILE_SKIP_HOSTNAME_CHECK',
+  'GAME_RELEASE_OWNER_USER_ID',
 ]) {
   assert.ok(
     hubEnvironmentLine?.includes(requiredSetting),
     `Hub production environment must explicitly configure ${requiredSetting}.`,
   );
 }
+assert.doesNotMatch(output, /NEXT_PUBLIC_GAME_RELEASE_OWNER|VITE_GAME_RELEASE_OWNER|private-owner-id/);
 const migrationIndex = output.indexOf('d1 migrations apply');
 const authEnvironmentIndex = output.indexOf('sync-cloudflare-auth-env.mjs');
 assert.ok(migrationIndex >= 0, 'Hub deployment must apply D1 migrations.');
@@ -210,6 +213,7 @@ const sanitizedGamehostEnvironment = CreateGamehostBuildEnvironment({
   TURNSTILE_SECRET_KEY: 'secret',
   CLOUDFLARE_API_TOKEN: 'secret',
   SOME_PRIVATE_TOKEN: 'secret',
+  GAME_RELEASE_OWNER_USER_ID: 'private-owner-id',
 });
 assert.deepEqual(sanitizedGamehostEnvironment, { PATH: 'safe-path', CF_PAGES: '1' });
 
@@ -220,6 +224,7 @@ const sanitizedDeploymentEnvironment = CreateCloudflareDeploymentEnvironment({
   AUTH_SESSION_SECRET: 'auth-secret',
   GOOGLE_CLIENT_SECRET: 'oauth-secret',
   SOME_PRIVATE_TOKEN: 'unrelated-secret',
+  GAME_RELEASE_OWNER_USER_ID: 'private-owner-id',
 });
 assert.deepEqual(sanitizedDeploymentEnvironment, {
   PATH: 'safe-path',

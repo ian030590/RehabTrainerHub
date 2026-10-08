@@ -7,6 +7,7 @@ import { onRequestPut as reviewRelease } from './admin/game-releases/[id].js';
 import { onRequestGet as downloadArtifact } from './admin/game-releases/[id]/artifact.js';
 import { onRequestPost as saveGameRun } from './game-runs.js';
 import { onRequestGet as listGames } from './games.js';
+import { CreateGameReviewDigest } from '../_lib/gameReview.js';
 
 const secret = '0123456789abcdef0123456789abcdef';
 const users = new Map([
@@ -16,6 +17,7 @@ const users = new Map([
 ]);
 const env = {
   AUTH_SESSION_SECRET: secret,
+    GAME_RELEASE_OWNER_USER_ID: 'admin-1',
   REHAB_DB: CreateSecurityDb(),
 };
 const tokens = Object.fromEntries(await Promise.all(
@@ -68,7 +70,7 @@ test('third-party reviews cannot publish or revoke a reserved official slug subm
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ decision, note: 'Checked', sourceReviewed: true, playTested: true, metadataReviewed: true }),
       }), params: { id: 'release-1' }, env: { ...env,
-      REHAB_DB: CreateApprovalDb({ slug: 'drawing-defense', fileBytes: new Uint8Array(1), fileSha256: 'a'.repeat(64) }),
+      REHAB_DB: await CreateApprovalDb({ slug: 'drawing-defense', fileBytes: new Uint8Array(1), fileSha256: 'a'.repeat(64) }),
       GAME_QUARANTINE_BUCKET: { get: async () => { storageAccesses++; return null; } },
       GAME_RELEASE_BUCKET: { get: async () => { storageAccesses++; return null; }, put: async () => { storageAccesses++; } },
     } });
@@ -140,11 +142,12 @@ test('submission metadata and game tags remain release-scoped until an administr
 test('approval fences the public release pointer with conditional R2 writes', async () => {
   const fileBytes = new TextEncoder().encode('<!doctype html><title>Reviewed</title>');
   const fileSha256 = await Sha256Hex(fileBytes);
-  const approvalDb = CreateApprovalDb({ fileBytes, fileSha256 });
+  const approvalDb = await CreateApprovalDb({ fileBytes, fileSha256 });
   const fileWrites = [];
   const manifestWrites = [];
   const approvalEnv = {
     AUTH_SESSION_SECRET: secret,
+    GAME_RELEASE_OWNER_USER_ID: 'admin-1',
     GAME_QUARANTINE_BUCKET: {
       async get() {
         return { async arrayBuffer() { return fileBytes.slice().buffer; } };
@@ -175,6 +178,7 @@ test('approval fences the public release pointer with conditional R2 writes', as
         body: JSON.stringify({
           decision: 'approve',
           note: 'Reviewed in the isolated profile.',
+          expectedReviewDigest: approvalDb.reviewDigest,
           sourceReviewed: true,
           playTested: true,
           metadataReviewed: true,
@@ -209,7 +213,7 @@ test('approval fences the public release pointer with conditional R2 writes', as
 test('a stale publisher cannot overwrite a release pointer changed by revoke or retry', async () => {
   const fileBytes = new TextEncoder().encode('<!doctype html><title>Reviewed</title>');
   const fileSha256 = await Sha256Hex(fileBytes);
-  const approvalDb = CreateApprovalDb({ fileBytes, fileSha256 });
+  const approvalDb = await CreateApprovalDb({ fileBytes, fileSha256 });
   let manifestWriteCount = 0;
   const response = await reviewRelease({
     request: AuthorizedRequest(
@@ -221,6 +225,7 @@ test('a stale publisher cannot overwrite a release pointer changed by revoke or 
         body: JSON.stringify({
           decision: 'approve',
           note: 'Reviewed in the isolated profile.',
+          expectedReviewDigest: approvalDb.reviewDigest,
           sourceReviewed: true,
           playTested: true,
           metadataReviewed: true,
@@ -229,6 +234,7 @@ test('a stale publisher cannot overwrite a release pointer changed by revoke or 
     ),
     env: {
       AUTH_SESSION_SECRET: secret,
+    GAME_RELEASE_OWNER_USER_ID: 'admin-1',
       GAME_QUARANTINE_BUCKET: {
         async get() {
           return { async arrayBuffer() { return fileBytes.slice().buffer; } };
@@ -257,7 +263,7 @@ test('a stale publisher cannot overwrite a release pointer changed by revoke or 
 test('an expired publication lease cannot claim another reviewer\'s database approval', async () => {
   const fileBytes = new TextEncoder().encode('<!doctype html><title>Reviewed</title>');
   const fileSha256 = await Sha256Hex(fileBytes);
-  const approvalDb = CreateApprovalDb({
+  const approvalDb = await CreateApprovalDb({
     batchChanges: [0, 0, 0],
     fileBytes,
     fileSha256,
@@ -279,6 +285,7 @@ test('an expired publication lease cannot claim another reviewer\'s database app
         body: JSON.stringify({
           decision: 'approve',
           note: 'Reviewed in the isolated profile.',
+          expectedReviewDigest: approvalDb.reviewDigest,
           sourceReviewed: true,
           playTested: true,
           metadataReviewed: true,
@@ -287,6 +294,7 @@ test('an expired publication lease cannot claim another reviewer\'s database app
     ),
     env: {
       AUTH_SESSION_SECRET: secret,
+    GAME_RELEASE_OWNER_USER_ID: 'admin-1',
       GAME_QUARANTINE_BUCKET: {
         async get() {
           return { async arrayBuffer() { return fileBytes.slice().buffer; } };
@@ -322,6 +330,7 @@ test('revocation disables the runner manifest before clearing the catalog releas
   let revokedManifest;
   const revokeEnv = {
     AUTH_SESSION_SECRET: secret,
+    GAME_RELEASE_OWNER_USER_ID: 'admin-1',
     GAME_RELEASE_BUCKET: {
       async get() {
         const manifest = JSON.stringify({
@@ -376,7 +385,7 @@ function AuthorizedRequest(url, token, init = {}) {
   return new Request(url, { ...init, headers });
 }
 
-function CreateApprovalDb({ batchChanges = [1, 1, 1], fileBytes, fileSha256, slug = 'reviewed-game' }) {
+async function CreateApprovalDb({ batchChanges = [1, 1, 1], fileBytes, fileSha256, slug = 'reviewed-game' }) {
   const release = {
     id: 'release-1',
     game_id: 'game-1',
@@ -397,7 +406,16 @@ function CreateApprovalDb({ batchChanges = [1, 1, 1], fileBytes, fileSha256, slu
     entry_path: 'index.html',
     capabilities_json: '[]',
   };
+  release.artifact_type = 'html';
+  release.jspsych_version = 'none';
+  release.files_json = JSON.stringify([{ path: 'index.html', contentType: 'text/html; charset=utf-8', byteSize: fileBytes.length, sha256: fileSha256 }]);
+  release.review_digest = await CreateGameReviewDigest(release);
+  release.issue_review_digest = release.review_digest;
+  release.review_issue_status = 'ready';
+  release.issue_number = 1;
+  release.issue_url = 'https://github.com/ian030590/RehabTrainerHub/issues/1';
   const db = {
+    reviewDigest: release.review_digest,
     lastBatch: [],
     prepare(sql) {
       return {

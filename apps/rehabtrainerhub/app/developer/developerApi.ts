@@ -10,6 +10,9 @@ export interface DeveloperRelease {
   version: string;
   status: DeveloperReleaseStatus;
   contentSha256: string;
+  reviewDigest: string | null;
+  changeNotes: string;
+  reviewIssue: { status: 'pending' | 'ready' | 'legacy'; number: number | null; url: string | null };
   packageBytes: number;
   uncompressedBytes: number;
   fileCount: number;
@@ -49,6 +52,7 @@ export interface GameSubmissionInput {
   version: string;
   jsPsychVersion: string;
   capabilities: string[];
+  changeNotes: string;
 }
 
 export interface GameSubmissionResponse {
@@ -64,7 +68,7 @@ export interface GameSubmissionResponse {
 }
 
 export async function FetchDeveloperGames(signal?: AbortSignal): Promise<DeveloperGame[]> {
-  const response = await DeveloperFetch('/api/developer/games', { signal });
+  const response = await DeveloperFetch('/api/game-submissions', { signal });
   const payload = await response.json() as { games?: DeveloperGame[] };
   return payload.games ?? [];
 }
@@ -81,7 +85,8 @@ export async function SubmitDeveloperGame(input: GameSubmissionInput): Promise<G
   formData.set('version', input.version);
   formData.set('jsPsychVersion', input.jsPsychVersion);
   formData.set('capabilities', JSON.stringify(input.capabilities));
-  const response = await DeveloperFetch('/api/developer/games', {
+  formData.set('changeNotes', input.changeNotes);
+  const response = await DeveloperFetch('/api/game-submissions', {
     method: 'POST',
     body: formData,
   });

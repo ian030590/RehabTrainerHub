@@ -107,7 +107,6 @@ export async function onRequestPost({ request, env }) {
          AND game_releases.game_id = game_run_sessions.game_id
         INNER JOIN developer_games
           ON developer_games.id = game_run_sessions.game_id
-         AND developer_games.active_release_id = game_run_sessions.release_id
         WHERE game_run_sessions.token_sha256 = ?
           AND (game_run_sessions.user_id IS NULL OR game_run_sessions.user_id = ?)
           AND game_run_sessions.release_id = ?

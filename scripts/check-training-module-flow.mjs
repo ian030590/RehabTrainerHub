@@ -117,19 +117,22 @@ for (const aliasToken of ["aliases: ['movement']", "aliases: ['general']"]) {
 }
 
 const lobbySource = readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/app/TrainingLobby.tsx'), 'utf8');
+const hubGameCatalogSource = readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/app/gameCatalog.ts'), 'utf8');
 const progressSource = readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/app/progress/ProgressDashboard.tsx'), 'utf8');
 const themeStyleSource = readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/app/trainingThemeStyle.ts'), 'utf8');
 const lobbyCssSource = readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/app/globals.css'), 'utf8');
 const developerPortalSource = readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/app/developer/DeveloperPortal.tsx'), 'utf8');
 const developerGamesApiSource = readFileSync(resolve(repoRoot, 'apps/rehabtrainerhub/functions/api/developer/games.js'), 'utf8');
 for (const [label, source] of [['lobby', lobbySource], ['progress', progressSource]]) {
-  assert.ok(source.includes('GetTrainingModuleTheme'), `${label} cards must resolve their appearance from the theme registry.`);
+  const themeSource = label === 'lobby' ? hubGameCatalogSource : source;
+  assert.ok(themeSource.includes('GetTrainingModuleTheme'), `${label} cards must resolve their appearance from the theme registry.`);
   assert.ok(source.includes('BuildTrainingThemeStyle'), `${label} cards must inject the resolved theme as CSS variables.`);
   assert.ok(!source.includes('trainerVisuals'), `${label} must not keep a parallel trainer-specific visual registry.`);
 }
 assert.ok(themeStyleSource.includes("'--trainer-color'"), 'The shared theme style builder must inject theme CSS variables.');
 assert.ok(!lobbySource.includes('publishedCategoryPurposes'), 'Published-game aliases must resolve from the single theme registry.');
-assert.ok(lobbySource.includes('GetTrainingThemeId(game.category)'), 'Published-game filters and counts must resolve registry aliases.');
+assert.ok(lobbySource.includes('BuildHubGameCatalog'), 'Lobby cards must consume the unified theme-resolved game catalog.');
+assert.ok(hubGameCatalogSource.includes('GetTrainingThemeId(game.category)'), 'Published-game filters and counts must resolve registry aliases.');
 assert.ok(lobbySource.includes('TrainingThemeIcon decorative'), 'Published-game cards must render their registry-owned theme icon.');
 assert.ok(lobbySource.includes('<TrainingThemeBadge'), 'Theme badges must have a shared lobby consumer.');
 assert.ok(developerPortalSource.includes('categoryOptions = trainingPurposes.map'), 'Developer category options must derive from the theme registry.');

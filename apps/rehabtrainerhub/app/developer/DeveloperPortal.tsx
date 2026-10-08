@@ -43,6 +43,7 @@ export function DeveloperPortal() {
   const [title, setTitle] = useState('');
   const [developerName, setDeveloperName] = useState('');
   const [summary, setSummary] = useState('');
+  const [changeNotes, setChangeNotes] = useState('');
   const [trainer, setTrainer] = useState<TrainerCatalogId | ''>('');
   const [category, setCategory] = useState<TrainingPurposeId | ''>('');
   const [version, setVersion] = useState('1.0.0');
@@ -153,12 +154,14 @@ export function DeveloperPortal() {
         version: version.trim(),
         jsPsychVersion: builderPackage ? 'none' : platformJsPsychVersion,
         capabilities,
+        changeNotes: changeNotes.trim(),
       });
       setMessage(response.release.status === 'blocked'
         ? copy.submission.messages.blocked(response.release.scan.blockCount ?? response.release.findings.length)
         : copy.submission.messages.pending);
       setPackageFile(null);
       setSourceConfirmed(false);
+      setChangeNotes('');
       setLoadKey((current) => current + 1);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : copy.submission.errors.submit);
@@ -299,6 +302,14 @@ export function DeveloperPortal() {
                     <small>{packageFile ? `${packageFile.name} (${FormatBytes(packageFile.size)})` : copy.submission.packageLimit}</small>
                   </label>
 
+                  <label className="admin-field">
+                    <span>{language === 'en' ? 'Changes in this version' : '這個版本的變更說明'}</span>
+                    <textarea maxLength={2000} onChange={(event) => setChangeNotes(event.target.value)} required rows={3} value={changeNotes} />
+                  </label>
+                  <p>{language === 'en'
+                    ? 'Each version gets a repository Issue. Source and packages stay in private R2 until the platform owner approves this exact version. Keep private information out of public submission details.'
+                    : '每個版本都會建立 repo Issue。原始碼與套件先保存在私有 R2，平台擁有者核准這個版本後才會公開。投稿說明將用於公開審核單，請勿填入私人資訊。'}</p>
+
                   <label className="developer-confirmation">
                     <input checked={sourceConfirmed} onChange={(event) => setSourceConfirmed(event.target.checked)} required type="checkbox" />
                     <span>{copy.submission.confirmation}</span>
@@ -348,6 +359,13 @@ export function DeveloperPortal() {
                               {release.fileCount} {copy.submission.fileCount} · {FormatBytes(release.uncompressedBytes)} · SHA-256 {release.contentSha256.slice(0, 12)}…
                             </small>
                             {release.reviewNote && <p>{copy.submission.reviewNote}: {release.reviewNote}</p>}
+                            {release.reviewIssue?.url ? (
+                              <a href={release.reviewIssue.url} rel="noopener noreferrer" target="_blank">
+                                {language === 'en' ? 'Version review Issue' : '版本審核單'} #{release.reviewIssue.number}
+                              </a>
+                            ) : release.reviewIssue?.status === 'pending' && (
+                              <p>{language === 'en' ? 'Creating the review Issue; the package remains private.' : '正在建立審核單，套件仍保持私有。'}</p>
+                            )}
                           </li>
                         ))}
                       </ul>

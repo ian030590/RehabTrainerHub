@@ -11,6 +11,8 @@ import {
 } from '../../../_lib/authorization.js';
 import { ReadJsonBody } from '../../../_lib/request.js';
 import { officialGameReleases } from '../../../_lib/officialGames.js';
+import { CheckGameReleaseOwner, CreateGameReviewDigest, IsGameReviewIssueUrl } from '../../../_lib/gameReview.js';
+import { CreateGameReviewIssueSyncStatement } from '../../../_lib/gameReviewIssues.js';
 
 const maximumReviewBodyBytes = 8 * 1024;
 const maximumReleaseManifestBytes = 512 * 1024;
@@ -28,6 +30,8 @@ export async function onRequestPut({ request, env, params }) {
     const user = await GetAuthenticatedUser(request, env);
     if (!user) return ErrorResponse(request, env, 'Unauthorized.', 401);
     if (user.role !== 'admin') return ErrorResponse(request, env, 'Forbidden.', 403);
+    const ownerError = CheckGameReleaseOwner(request, env, user);
+    if (ownerError) return ownerError;
     const body = await ReadJsonBody(request, maximumReviewBodyBytes);
     if (!body.ok) return ErrorResponse(request, env, 'Invalid review payload.', 400);
     const decision = body.value?.decision;
@@ -54,9 +58,13 @@ export async function onRequestPut({ request, env, params }) {
           game_releases.submitted_title AS title,
           game_releases.submitted_summary AS summary,
           game_releases.submitted_trainer AS trainer,
-          game_releases.submitted_category AS category
+          game_releases.submitted_category AS category,
+          game_review_issues.status AS review_issue_status,
+          game_review_issues.review_digest AS issue_review_digest,
+          game_review_issues.issue_number, game_review_issues.issue_url
         FROM game_releases
         INNER JOIN developer_games ON developer_games.id = game_releases.game_id
+        LEFT JOIN game_review_issues ON game_review_issues.release_id = game_releases.id
         WHERE game_releases.id = ?
         LIMIT 1
       `)
@@ -95,6 +103,15 @@ export async function onRequestPut({ request, env, params }) {
     if (!['pending_review', 'publishing'].includes(release.status)) {
       return ErrorResponse(request, env, 'This release is not awaiting approval.', 409);
     }
+    if (!/^[a-f0-9]{64}$/.test(body.value.expectedReviewDigest || '')
+      || body.value.expectedReviewDigest !== release.review_digest
+      || await CreateGameReviewDigest(release) !== release.review_digest) {
+      return ErrorResponse(request, env, 'The reviewed version changed. Reload and review its exact digest.', 409);
+    }
+    if (release.review_issue_status !== 'ready' || release.issue_review_digest !== release.review_digest
+      || !IsGameReviewIssueUrl(release.issue_url, release.issue_number)) {
+      return ErrorResponse(request, env, 'The version review Issue must be bound before publication.', 409);
+    }
     if (
       !env.GAME_QUARANTINE_BUCKET?.get
       || !env.GAME_RELEASE_BUCKET?.get
@@ -121,6 +138,13 @@ export async function onRequestPut({ request, env, params }) {
     const files = fileRows.results || [];
     if (files.length !== release.file_count || files.length === 0) {
       return ErrorResponse(request, env, 'Release file inventory does not match the reviewed package.', 409);
+    }
+    const reviewedFiles = JSON.parse(release.files_json);
+    if (reviewedFiles.length !== files.length || files.some(file => !reviewedFiles.some(reviewed => (
+      reviewed.path === file.path && reviewed.byteSize === file.byte_size
+      && reviewed.contentType === file.content_type && reviewed.sha256 === file.sha256
+    )))) {
+      return ErrorResponse(request, env, 'Release file inventory changed after review.', 409);
     }
     const releasePrefix = `releases/${release.slug}/${release.version}`;
     for (const file of files) {
@@ -219,6 +243,8 @@ export async function onRequestPut({ request, env, params }) {
         targetId: release.id,
         metadata: {
           contentSha256: release.content_sha256,
+          reviewDigest: release.review_digest,
+          reviewIssueUrl: release.issue_url,
           gameId: release.game_id,
           slug: release.slug,
           version: release.version,
@@ -227,6 +253,7 @@ export async function onRequestPut({ request, env, params }) {
           metadataReviewed,
         },
       }, release.id, publicationLeaseId),
+      CreateGameReviewIssueSyncStatement(db, release.id, 'approved'),
     ]);
     if (ReadChangedRows(publicationResults[0]) !== 1
       || ReadChangedRows(publicationResults[1]) !== 1
@@ -295,6 +322,7 @@ async function RevokeApprovedRelease(db, bucket, release, user, note) {
         version: release.version,
       },
     }),
+    CreateGameReviewIssueSyncStatement(db, release.id, 'revoked'),
   ]);
   return ReadChangedRows(results[0]) === 1;
 }
@@ -322,6 +350,7 @@ async function UpdateRejectedRelease(db, release, user, note) {
         version: release.version,
       },
     }),
+    CreateGameReviewIssueSyncStatement(db, release.id, 'rejected'),
   ]);
   return ReadChangedRows(results[0]) === 1;
 }

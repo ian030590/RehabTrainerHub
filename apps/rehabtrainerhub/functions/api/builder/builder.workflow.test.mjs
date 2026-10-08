@@ -8,7 +8,7 @@ import { Sha256Hex } from '../../_lib/builderAuth.js';
 import { onRequestGet as authorize } from './authorize.js';
 import { onRequestPost as exchange } from './exchange.js';
 import { onRequestPost as receivePackage } from './package.js';
-import { onRequestPost as submitGame } from '../developer/games.js';
+import { onRequestPost as submitGame } from '../game-submissions.js';
 import { onRequestPost as createRunSession } from '../game-run-sessions.js';
 import { onRequestPost as saveRun } from '../game-runs.js';
 
@@ -118,6 +118,7 @@ test('Hub authorizes Builder, receives a package, accepts submission, and stores
     form.set('slug', gameId); form.set('version', '1.0.0'); form.set('title', 'Builder Activity');
     form.set('developerName', owner.displayName); form.set('summary', 'A Builder activity.');
     form.set('trainer', 'brain'); form.set('category', 'attention');
+    form.set('changeNotes', 'Initial release for review.');
     form.set('capabilities', JSON.stringify(['keyboard', 'pointer'])); form.set('jsPsychVersion', 'none');
     form.set('package', new File([packageBytes], `${gameId}.zip`, { type: 'application/zip' }));
     form.set('slug', 'drawing-defense');
@@ -129,7 +130,7 @@ test('Hub authorizes Builder, receives a package, accepts submission, and stores
     assert.equal(quarantineObjects.size, 0);
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM developer_games').get().count, 0);
     form.set('slug', gameId);
-    const upload = new Request(`${hubOrigin}/api/developer/games`, {
+    const upload = new Request(`${hubOrigin}/api/game-submissions`, {
       method: 'POST', headers: { Origin: hubOrigin, Cookie: ownerCookie }, body: form,
     });
     upload.headers.set('Content-Length', String((await upload.clone().arrayBuffer()).byteLength));
@@ -138,6 +139,12 @@ test('Hub authorizes Builder, receives a package, accepts submission, and stores
     const { game, release } = await submitted.json();
     assert.equal(release.status, 'pending_review');
     assert.equal(release.fileCount, 3);
+    assert.match(release.reviewDigest, /^[a-f0-9]{64}$/);
+    assert.equal(release.changeNotes, 'Initial release for review.');
+    assert.deepEqual(release.reviewIssue, { status: 'pending', number: null, url: null });
+    assert.equal(sqlite.prepare('SELECT review_digest FROM game_review_issues WHERE release_id=?').get(release.id).review_digest, release.reviewDigest);
+    assert.equal(sqlite.prepare('SELECT status FROM game_review_issue_jobs WHERE release_id=?').get(release.id).status, 'pending');
+    assert.equal(sqlite.prepare('SELECT active_release_id FROM developer_games WHERE id=?').get(game.id).active_release_id, null);
     assert.equal(sqlite.prepare('SELECT owner_user_id FROM developer_games WHERE id=?').get(game.id).owner_user_id, owner.id);
     assert.equal(sqlite.prepare('SELECT status FROM game_releases WHERE id=?').get(release.id).status, 'pending_review');
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM game_release_files WHERE release_id=?').get(release.id).count, 3);
@@ -151,6 +158,15 @@ test('Hub authorizes Builder, receives a package, accepts submission, and stores
     const issued = await createRunSession({ request: post('/api/game-run-sessions', sessionInput, ownerCookie), env });
     assert.equal(issued.status, 201, await issued.clone().text());
     const { runSession } = await issued.json();
+    const nextRelease = { ...sqlite.prepare('SELECT * FROM game_releases WHERE id=?').get(release.id),
+      id: 'builder-next-version', version: '1.0.1' };
+    const columns = Object.keys(nextRelease);
+    sqlite.prepare(`INSERT INTO game_releases (${columns.join(',')}) VALUES (${columns.map(() => '?').join(',')})`)
+      .run(...Object.values(nextRelease));
+    sqlite.prepare('UPDATE developer_games SET active_release_id=? WHERE id=?').run(nextRelease.id, game.id);
+    assert.equal((await createRunSession({ request: post('/api/game-run-sessions', {
+      releaseId: release.id, clientRunId: 'client_run_old_version',
+    }, ownerCookie), env })).status, 404);
     const resultInput = { ...sessionInput, runSessionToken: runSession.token,
       result: { status: 'completed', score: 1, durationMs: 200, trialCount: 1,
         details: { accuracy: 100 }, detailRows: [{ correct: true }] },

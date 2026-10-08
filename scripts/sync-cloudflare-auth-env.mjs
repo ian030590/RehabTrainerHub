@@ -135,6 +135,7 @@ function GetProjectSecrets(
     secrets.TURNSTILE_RECORDS_REQUIRED = turnstile.recordsRequired;
     secrets.ANONYMOUS_RECORDS_ENABLED = anonymousRecordsEnabled;
     secrets.ASSET_PUBLIC_BASE_URL = assetPublicBaseUrl;
+    secrets.GAME_RELEASE_OWNER_USER_ID = GetOptionalEnv('GAME_RELEASE_OWNER_USER_ID');
     if (gameRunnerOrigin) secrets.GAME_RUNNER_ORIGIN = gameRunnerOrigin;
   }
 

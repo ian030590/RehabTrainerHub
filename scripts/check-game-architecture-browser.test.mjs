@@ -28,6 +28,41 @@ const expFactoryGameIds = [
   'plus-minus',
 ];
 
+test('Brave presents reviewed releases and all existing games in one grid on desktop and mobile', async context => {
+  assert.ok(bravePath, 'Brave is required for local Hub UI browser checks.');
+  const game = { id: 'reviewed-game', slug: 'reviewed-game', title: 'Reviewed game', summary: 'A practice activity.',
+    trainer: 'brain', category: 'attention', developerName: 'Sample studio', updatedAt: '2026-10-08',
+    release: { id: 'reviewed-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['keyboard'],
+      approvedAt: '2026-10-08', launchUrl: 'https://trainerhub-user-games.pages.dev/games/reviewed-game/1.0.0/',
+      installUrl: 'https://trainerhub-user-games.pages.dev/games/reviewed-game/1.0.0/',
+      settingsUrl: 'https://trainerhub-user-games.pages.dev/games/reviewed-game/1.0.0/package/settings.json' } };
+  const server = createServer((request, response) => {
+    if (request.url === '/api/games') {
+      response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ games: [game,
+        { ...game, id: 'legacy-slug-collision', slug: 'moving-card', title: 'Collision sample' },
+      ] }));
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise((resolveListen, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolveListen); });
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+  for (const width of [1024, 390]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/`, '--storage', 'rehab_hub_tour_seen=1',
+      '--viewportWidth', String(width), '--viewportHeight', '844', '--viewportBeforeClick', 'true',
+      '--allSelectors', '.module-grid,.module-card[data-runtime-id="reviewed-game"]',
+      '--browserAssertion', `document.querySelectorAll('.module-grid').length === 1
+        && document.querySelectorAll('.module-grid .module-card').length === 41
+        && !!document.querySelector('.module-card[data-runtime-id="asteroid-shield"]')
+        && !document.querySelector('.module-card[data-runtime-id="moving-card"]').textContent.includes('Collision sample')
+        && document.documentElement.scrollWidth <= innerWidth + 1`,
+      '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}px: ${result.stdout}\n${result.stderr}`);
+  }
+});
+
 test('Brave renders the settings-driven config UI before mounting an official game', async (context) => {
   assert.ok(bravePath, 'Brave is required. Install it in the standard Windows/macOS location or set BRAVE_BIN.');
   assert.equal((await stat(resolve(outputRoot, 'index.html'))).isFile(), true);

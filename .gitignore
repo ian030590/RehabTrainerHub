@@ -25,6 +25,8 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
 
 # Editors and OS files
 .vscode/*
