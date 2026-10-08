@@ -128,6 +128,14 @@ init 驗證 parent source／origin、game／package version、nonce 與唯一私
 
 ## 回退目標與限制
 
+### 正式部署發現的舊資產快取
+
+首次 Hub 切換 commit `ef19dbc13964b32fe69d4186572ea694dbefecd1` 的 [CI／部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37852468197) 七項 gate 全通過。正式 Hub 桌機／觸控 390×844 的大廳完整流程也通過。直接驗收另發現不帶 query 的舊 `settings.json`／`score.json` 回 200、Age 已超過一天；同一正式網域加新 query 及當版 Pages deployment 均回 404，證明新 output 已排除舊 JSON，殘留來自資產快取。
+
+[Cloudflare Pages 文件](https://developers.cloudflare.com/pages/configuration/serving-pages/) 說明刪除的資產可能在資料中心保留一週。兩個 URL 的精準 purge API 回 401，現有 Wrangler OAuth 沒有清除該網域快取的能力；未擴大清除範圍或更改 DNS／CSP。
+
+以 `_middleware.test.mjs` 先重現 `200 !== 410`，再由 Hub 既有 middleware 在讀取 Pages assets 前拒絕 registry 已遷移遊戲的子資產，回覆 `410`／`Cache-Control: no-store`；相容根入口與 `index.html` 繼續供應 R2 連結，未遷移遊戲、預覽圖、API、退役網域 redirect 均有回歸測試。四項測試納入既有 `test:hub-functions` glob，Hub Functions 102 項、entrypoints、架構 29 項、命名及 Hub build 通過。本機首次 build 的 `.next/build-manifest.json` 遭改名為 `[conflicted 2]` 而失敗，乾淨重試 39 tasks 通過；正式輸出由 CI 乾淨建置。此修正只影響 Hub，不更動已核准 `2.0.0` 的任何 bytes；正式完成狀態仍等待修正後 CI／部署及 410 回讀。
+
 發布前已核對的正式舊流程：Hub [8e957462.rehabtrainerhub.pages.dev](https://8e957462.rehabtrainerhub.pages.dev)，deployment ID `8e957462-7639-4fe6-a3db-acfa278735bd`；相容 runner [e2459d3c.trainerhub-user-games.pages.dev](https://e2459d3c.trainerhub-user-games.pages.dev)，deployment ID `e2459d3c-d5a5-4257-aadf-e9872894510b`。兩者來源 commit 均為 `e22e2d363b1f895567eafa382852f34cb1c31463`。原分類／原圖／設定與教學已唯讀重現；另以正式舊 standalone 資產完成設定→教學→真實全螢幕 Pixi→物件結局與成果，所有正式 API 由 CDP 阻擋，沒有建立正式紀錄（`.tmp/asteroid-rollback-baseline.log`）。
 
 這是 asteroid 首個新格式候選，沒有可供 `--activate-version` 的已核准新格式回退版。首次切換失敗時先恢復上述已驗證 Hub 部署／原遊戲 registry、workspace 依賴、source 與兩份 JSON，重新驗證舊入口；不以舊 `1.0.0` JSON 套件冒充新格式，也不刪除成果或 R2 歷史。runner 此次沒有產品修改，維持已相容的正式版本。
