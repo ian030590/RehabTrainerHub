@@ -9,13 +9,15 @@
 ## 1. 本次完成範圍與發布狀態
 
 - 畫畫塔防的設定、教學、Pixi 玩法、音效與完整成績表均由遊戲本身呈現；已移除它的 `settings.json`、`score.json` 與 `packages/ui` 依賴。
-- 遊戲已發布至 `rehab-game-releases` R2，經隔離執行器提供服務。執行器的現行 production deployment URL 為 <https://3cdd62b7.trainerhub-user-games.pages.dev>。
+- 遊戲已發布至 `rehab-game-releases` R2，經隔離執行器提供服務。版本解耦部署的 runner URL 為 <https://13ff21e2.trainerhub-user-games.pages.dev>。
 - 遊戲入口：<https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.2/package/index.html>。獨立 PWA 入口：<https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.2/>。
-- Hub 已透過 [GitHub CI/CD](https://github.com/ian030590/RehabTrainerHub/actions/runs/37730958922) 完成 `2.0.2` production 部署；deployment URL 為 <https://4229c47d.rehabtrainerhub.pages.dev>。已直接以 Brave 確認正式大廳載入 `2.0.2` 的 `allow-scripts` iframe，獨立 PWA 亦可使用。遊戲發布與這次後續平台架構更新分別保留驗證紀錄。
+- Hub／runner 已透過 [GitHub CI/CD](https://github.com/ian030590/RehabTrainerHub/actions/runs/37741967141) 完成版本解耦的平台部署；Hub URL 為 <https://1b9362a3.rehabtrainerhub.pages.dev>。正式版本 API、穩定 PWA 入口及 Brave 的開始前固定版本、遊戲、保存失敗重試流程均已確認。遊戲 `2.0.2` 的[原發布紀錄](https://github.com/ian030590/RehabTrainerHub/actions/runs/37730958922)另行保留；平台架構更新沒有重新發布遊戲內容。
 - 資料庫沿用 `training_records`，沒有新增 migration。資料庫寫入整合測試使用現有全部 migrations 建立的本機 SQLite，沒有製造正式使用者紀錄。
 - 其餘 39 個遊戲維持原流程，逐個遷移；不一次改動全部遊戲。
 
 本次 R2 發布收據見 [drawing-defense-2.0.2.json](releases/drawing-defense-2.0.2.json)。四個檔案合計 5,566,639 bytes，發布後逐檔回讀核對 SHA-256，並從正式 runner 核對 bytes、Content-Type 與 CSP。真實 R2 的 Hub 流程、獨立 PWA 與本機手機流程均通過 Brave 驗證，沒有建立正式使用者紀錄。
+
+版本解耦的架構檢視見 [r2-release-architecture-review.md](r2-release-architecture-review.md)，R2 current／歷史及正式站驗證收據見 [drawing-defense-catalog-2026-10-08.json](releases/drawing-defense-catalog-2026-10-08.json)。仍保留 `1.0.0`、`2.0.0`、`2.0.1` 與 `2.0.2`；只有後三個新格式版本進入官方 current 歷史。
 
 ## 2. 架構檢視與責任劃分
 

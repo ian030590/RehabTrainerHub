@@ -165,6 +165,17 @@ try {
   await send('Network.enable', {}, session);
   await send('Page.enable', {}, session);
   if (remote) await send('Fetch.enable', { patterns: [{ urlPattern: productionHub ? 'https://trainerhub.cc/api/*' : 'https://trainerhub.cc/*', requestStage: 'Request' }] }, session);
+  // Production keeps Turnstile enabled; this fixture only submits to intercepted local APIs.
+  if (productionHub) await send('Page.addScriptToEvaluateOnNewDocument', { source: `
+    if (window === window.top) {
+      const widgets = new Map(); let nextWidget = 0;
+      window.turnstile = {
+        render: (_container, options) => { const id = String(++nextWidget); widgets.set(id, options); return id; },
+        execute: id => queueMicrotask(() => widgets.get(id)?.callback('local-record-test-token')),
+        remove: id => widgets.delete(id), reset: () => {},
+      };
+    }
+  ` }, session);
   if (process.argv.includes('--mobile')) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
   await send('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('rehab_hub_tour_seen','1'); } catch {}" }, session);
   await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/drawing-defense/${manifest.version}/` : (remote ? 'https://trainerhub.cc' : hubOrigin) + '/train/?module=motor%3Adrawing-defense' }, session);

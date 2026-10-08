@@ -3,15 +3,32 @@
   "catalogKey": "official-games/drawing-defense/current.json",
   "currentVersion": "2.0.2",
   "releases": {
-    "2.0.0": { "contentSha256": "1a072412d9220b7d285086d999829961f5b76e7ad88220382d3121295a312d97" },
-    "2.0.1": { "contentSha256": "95e1184b39ad916abd50789837495490f0580a5526fd4237d5be067ddbcb0db9" },
-    "2.0.2": { "contentSha256": "2490614c840e2bd69811c01d52e98c12c9f7d63b2dd03e5c26e2089a69fab9f3" }
+    "2.0.0": {
+      "contentSha256": "1a072412d9220b7d285086d999829961f5b76e7ad88220382d3121295a312d97"
+    },
+    "2.0.1": {
+      "contentSha256": "95e1184b39ad916abd50789837495490f0580a5526fd4237d5be067ddbcb0db9"
+    },
+    "2.0.2": {
+      "contentSha256": "2490614c840e2bd69811c01d52e98c12c9f7d63b2dd03e5c26e2089a69fab9f3"
+    }
   },
   "verification": {
     "trackedReceiptDigestsMatched": true,
     "allHistoricalManifestAndFileHashesVerified": true,
     "catalogReadBackMatched": true,
     "productionTrainingRecordsCreated": false,
-    "platformDeploymentComplete": false
-  }
+    "platformDeploymentComplete": true,
+    "stableRedirectAndNoStore": true,
+    "versionlessProductionSession": true,
+    "stableHubCompatibilityEntry": true,
+    "retainedFourVersions": true,
+    "productionHubBrowserAndLocalDatabase": true,
+    "standalonePwaBrowser": true,
+    "turnstileMockedOnlyForLocalApiBrowser": true
+  },
+  "platformDeploymentRunUrl": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37741967141",
+  "productionVerifiedAt": "2026-10-08T07:19:17.815Z",
+  "hubDeploymentUrl": "https://1b9362a3.rehabtrainerhub.pages.dev",
+  "runnerDeploymentUrl": "https://13ff21e2.trainerhub-user-games.pages.dev"
 }
