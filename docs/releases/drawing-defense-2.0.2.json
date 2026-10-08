@@ -1,0 +1,50 @@
+{
+  "gameId": "drawing-defense",
+  "version": "2.0.2",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.2/package/index.html",
+  "contentSha256": "2490614c840e2bd69811c01d52e98c12c9f7d63b2dd03e5c26e2089a69fab9f3",
+  "verifiedAt": "2026-10-08T05:05:59.597Z",
+  "prefix": "releases/drawing-defense/2.0.2/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.2/",
+  "fileCount": 4,
+  "totalBytes": 5566639,
+  "files": [
+    {
+      "path": "assets/StarSky-COfhhfcH.png",
+      "size": 4650499,
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-BYt4-x-R.js",
+      "size": 905055,
+      "sha256": "684db7c736543bc2ef12b868b73a58795489203f9c6acc7fe7fc752b96e45349",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DMY_l4Xs.css",
+      "size": 10683,
+      "sha256": "eec729f55c0aca914cc58d03cdf9ed49fc76618f7b6996df45bbc4aa8414e2be",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "38ad66a04b188fa6aae6180e1bf80ba4c67f55bf262d5d9196778f0d49a2eef9",
+      "contentType": "text/html; charset=utf-8"
+    }
+  ],
+  "hubProductionDeployed": false,
+  "browserVerifiedAt": "2026-10-08T05:08:01.729Z",
+  "verification": {
+    "allR2FilesReadBackSha256": true,
+    "allRunnerFilesReadBackSha256AndCsp": true,
+    "braveRealR2GameAndLocalHubDatabase": true,
+    "braveStandalonePwa": true,
+    "braveMobile": true,
+    "spotlightStepsResizeAndCleanup": true,
+    "nativeFullscreenGameRoot": true,
+    "productionUserRecordsCreated": false
+  }
+}

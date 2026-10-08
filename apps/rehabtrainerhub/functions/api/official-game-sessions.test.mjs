@@ -1,15 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CreateSignedValue, GetSessionSecret, CreateSessionForUser } from '../_lib/auth.js';
+import { officialGameReleases } from '../_lib/officialGames.js';
 import { DatabaseSync } from 'node:sqlite';
 import { readdir, readFile } from 'node:fs/promises';
 import { onRequestPost as createSession } from './official-game-sessions.js';
 import { onRequestPost as saveRecord } from './records.js';
 
 const env = { AUTH_SESSION_SECRET: 'official-game-test-secret-abcdefghijklmnopqrstuvwxyz' };
+const { version } = officialGameReleases['drawing-defense'];
 test('official sessions bind the result to a game version, record, account and subject', async () => {
   const { VerifyOfficialGameSession } = await import('../_lib/officialGames.js');
-  const claims = { purpose: 'official-game-result', gameId: 'drawing-defense', version: '2.0.1',
+  const claims = { purpose: 'official-game-result', gameId: 'drawing-defense', version,
     recordId: crypto.randomUUID(), subjectId: crypto.randomUUID(), userId: 'account-1' };
   const token = await CreateSignedValue(claims, GetSessionSecret(env), 3600);
   const input = { officialGameVersion: claims.version, runSessionToken: token, record: {
@@ -54,16 +56,16 @@ test('a real SQL database saves official game results once, permits retry, and r
       return wrapper;
     } };
     const environment = { ...env, REHAB_DB: database, ANONYMOUS_RECORDS_ENABLED: '1', GAME_RELEASE_BUCKET: {
-      get: async () => ({ size: 100, json: async () => ({ status: 'approved', gameId: 'drawing-defense', version: '2.0.1' }) }),
+      get: async () => ({ size: 100, json: async () => ({ status: 'approved', gameId: 'drawing-defense', version }) }),
     } };
     const subjectId = crypto.randomUUID();
     const request = (path, body, authToken) => new Request(`https://trainerhub.cc/api/${path}`, {
       method: 'POST', headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json', 'CF-Connecting-IP': '127.0.0.9', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) }, body: JSON.stringify(body),
     });
-    const sessionResponse = await createSession({ request: request('official-game-sessions', { gameId: 'drawing-defense', version: '2.0.1', subjectId }), env: environment });
+    const sessionResponse = await createSession({ request: request('official-game-sessions', { gameId: 'drawing-defense', version, subjectId }), env: environment });
     assert.equal(sessionResponse.status, 201);
     const session = await sessionResponse.json();
-    const payload = { appId: 'rehabtrainerhub', runtimeId: 'hub', subjectId, officialGameVersion: '2.0.1', runSessionToken: session.token,
+    const payload = { appId: 'rehabtrainerhub', runtimeId: 'hub', subjectId, officialGameVersion: version, runSessionToken: session.token,
       record: { id: session.recordId, userName: '', moduleId: 'drawing-defense', gameId: 'drawing-defense', config: { difficulty: 'Beginner' },
         score: { schema: 'rehab-trainer.game-score/v1', gameId: 'drawing-defense', summary: { defeated: 1 }, rounds: [{ reactionSeconds: 0.2 }] } } };
     assert.equal((await saveRecord({ request: request('records', { ...payload, runSessionToken: undefined }), env: environment })).status, 400);
@@ -82,7 +84,7 @@ test('a real SQL database saves official game results once, permits retry, and r
     sqlite.prepare('INSERT INTO app_users (id,display_name,created_at,updated_at) VALUES (?,?,?,?)').run(userId, 'Test account', new Date().toISOString(), new Date().toISOString());
     const accountToken = await CreateSessionForUser(environment, { id: userId });
     const accountSubject = crypto.randomUUID();
-    const accountSessionResponse = await createSession({ request: request('official-game-sessions', { gameId: 'drawing-defense', version: '2.0.1', subjectId: accountSubject }, accountToken), env: environment });
+    const accountSessionResponse = await createSession({ request: request('official-game-sessions', { gameId: 'drawing-defense', version, subjectId: accountSubject }, accountToken), env: environment });
     assert.equal(accountSessionResponse.status, 201);
     const accountSession = await accountSessionResponse.json();
     const accountPayload = { ...payload, subjectId: accountSubject, runSessionToken: accountSession.token, record: { ...payload.record, id: accountSession.recordId } };

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { readFile, readdir, mkdir } from 'node:fs/promises';
+import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -141,8 +141,10 @@ try {
       })().catch(error => errors.push(String(error)));
     }
     if (message.method === 'Target.attachedToTarget') {
-      void send('Runtime.enable', {}, message.params.sessionId);
-      void send('Network.enable', {}, message.params.sessionId);
+      void Promise.all([
+        send('Runtime.enable', {}, message.params.sessionId),
+        send('Network.enable', {}, message.params.sessionId),
+      ]).catch(error => { if (!/Inspected target navigated or closed/.test(error.message)) errors.push(String(error)); });
     }
   });
   const target = await send('Target.createTarget', { url: 'about:blank' });
@@ -164,7 +166,12 @@ try {
   };
   const until = async (action, label) => {
     const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) { if (await action()) return; await wait(100); }
+    while (Date.now() < deadline) {
+      try { if (await action()) return; } catch (error) {
+        if (!/Inspected target navigated or closed|Cannot find context/.test(error.message)) throw error;
+      }
+      await wait(100);
+    }
     const bodies = [];
     for (const context of contexts.filter(context => context.auxData?.isDefault)) {
       try { bodies.push(await evaluate('document.body.textContent.slice(0,2000)', context)); } catch {}
@@ -183,6 +190,25 @@ try {
   }, 'game-owned settings');
   console.log('Game settings ready.');
   const game = expression => evaluate(expression, gameContext);
+  const checkSpotlight = async selector => {
+    const state = await game(`(() => {
+      const spotlight = document.querySelector('.game-tour-spotlight');
+      if (!spotlight) return null;
+      const rect = element => { const { left, top, right, bottom } = element.getBoundingClientRect(); return { left, top, right, bottom }; };
+      const style = getComputedStyle(spotlight);
+      return { target: rect(document.querySelector(${JSON.stringify(selector)})), spotlight: rect(spotlight),
+        panel: rect(document.querySelector('.game-tour')), width: innerWidth, height: innerHeight,
+        shadow: style.boxShadow, outline: style.outlineStyle, pointerEvents: style.pointerEvents };
+    })()`);
+    assert.ok(state, 'Tutorial must leave a spotlight over the current target.');
+    for (const edge of ['left', 'top']) assert.ok(state.spotlight[edge] <= state.target[edge] + 1, `${selector}: spotlight ${edge}`);
+    for (const edge of ['right', 'bottom']) assert.ok(state.spotlight[edge] >= state.target[edge] - 1, `${selector}: spotlight ${edge}`);
+    assert.notEqual(state.shadow, 'none', 'The area outside the target must be dimmed.');
+    assert.equal(state.outline, 'solid', 'The current target must have a visible ring.');
+    assert.equal(state.pointerEvents, 'none', 'The spotlight must preserve tutorial navigation.');
+    assert.ok(state.panel.left >= 0 && state.panel.top >= 0 && state.panel.right <= state.width + 1 && state.panel.bottom <= state.height + 1, 'Tutorial controls must stay within the viewport.');
+    return state;
+  };
   if (process.argv.includes('--revoke')) {
     revoked = true;
     await evaluate("window.dispatchEvent(new Event('online'))");
@@ -202,12 +228,44 @@ try {
   assert.equal(await game('document.querySelectorAll("form select")[1].value'), '5', 'Duration selection must display the custom duration actually used.');
   await game('document.querySelector("form .btn-primary").click()');
   await until(() => game('Boolean(document.querySelector(".game-tour"))'), 'tutorial');
+  const firstStep = await checkSpotlight('.mock-enemy');
+  assert.ok(firstStep.spotlight.right - firstStep.spotlight.left < firstStep.width / 2, 'Enemy spotlight must not illuminate the entire screen.');
+  if (firstStep.spotlight.bottom + 12 + firstStep.panel.bottom - firstStep.panel.top <= firstStep.height - 8) {
+    assert.ok(firstStep.panel.top >= firstStep.spotlight.bottom, 'Enemy explanation must appear below its spotlight when space permits.');
+  }
+  const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
+  await writeFile(resolve(profile, 'tutorial-spotlight.png'), Buffer.from(screenshot.data, 'base64'));
+  const originalViewport = await evaluate('[innerWidth, innerHeight]');
+  await send('Emulation.setDeviceMetricsOverride', { width: originalViewport[0] - 40, height: originalViewport[1] - 40, deviceScaleFactor: 1, mobile: process.argv.includes('--mobile') }, session);
+  await until(() => game(`innerWidth !== ${firstStep.width}`), 'resized tutorial viewport');
+  await game('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  await checkSpotlight('.mock-enemy');
+  await send('Emulation.setDeviceMetricsOverride', { width: originalViewport[0], height: originalViewport[1], deviceScaleFactor: 1, mobile: process.argv.includes('--mobile') }, session);
+  await until(() => game(`innerWidth === ${firstStep.width}`), 'restored tutorial viewport');
+  await game('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  await checkSpotlight('.mock-enemy');
   await game('document.querySelector(".drawing-defense-tutorial .ui-button").click()');
   await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-menu"))'), 'back to settings');
   assert.equal(await game('Boolean(document.querySelector(".game-tour"))'), false, 'Tutorial must be removed when returning to settings.');
+  assert.equal(await game('Boolean(document.querySelector(".game-tour-spotlight"))'), false, 'Spotlight must be removed when returning to settings.');
   await game('document.querySelector("form .btn-primary").click()');
   await until(() => game('Boolean(document.querySelector(".game-tour"))'), 'reopened tutorial');
+  await checkSpotlight('.mock-enemy');
+  await game('document.querySelector(".game-tour button").click()');
+  await checkSpotlight('.mock-canvas-area');
+  await game('document.querySelector(".game-tour button").click()');
+  const defenseStep = await checkSpotlight('.mock-defense-line');
+  if (defenseStep.spotlight.top - 12 - (defenseStep.panel.bottom - defenseStep.panel.top) >= 8) {
+    assert.ok(defenseStep.panel.bottom <= defenseStep.spotlight.top, 'Defense explanation must appear above its spotlight when space permits.');
+  }
+  await game('document.querySelector(".game-tour button").click()');
+  assert.equal(await game('Boolean(document.querySelector(".game-tour-spotlight"))'), false, 'Finishing the tutorial must remove its spotlight.');
+  await game('document.querySelector(".drawing-defense-tutorial .ui-button").click()');
+  await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-menu"))'), 'settings after completing tutorial');
+  await game('document.querySelector("form .btn-primary").click()');
+  await until(() => game('Boolean(document.querySelector(".game-tour"))'), 'tutorial before skipping');
   await game('document.querySelector(".game-tour button:last-child").click()');
+  assert.equal(await game('Boolean(document.querySelector(".game-tour-spotlight"))'), false, 'Skipping the tutorial must remove its spotlight.');
   await until(() => game('Boolean(document.querySelector(".drawing-defense-tutorial .ui-button-primary"))'), 'start button');
   assert.ok(await game('document.querySelector(".drawing-defense-tutorial").textContent.includes("5s")'));
   await game('document.querySelector(".drawing-defense-tutorial .ui-button-primary").click()');

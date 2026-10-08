@@ -1,19 +1,21 @@
 # 內建遊戲逐步遷移至 R2：畫畫塔防試點
 
-更新日期：2026-10-08。首個試點目前採用 `drawing-defense@2.0.1`。
+更新日期：2026-10-08。首個試點目前採用 `drawing-defense@2.0.2`。
 
 本次先發布新格式 `2.0.0`，最後的設定驗收發現自訂秒數與下拉選單顯示不同，補上失敗測試後修正並另發 `2.0.1`；沒有覆寫已發布內容。舊版 `1.0.0` 與初次試點 `2.0.0` 均保留。
+
+`2.0.2` 修正遊戲教學忽略目標與聚光燈選項的問題。亮區與框線依敵人、繪圖區、防線步驟移動，說明框依可用空間定位；視窗縮放會重新對齊，返回設定、完成或略過教學皆會清除聚光燈。`2.0.1` 保留作為新格式回退版本。
 
 ## 1. 本次完成範圍與發布狀態
 
 - 畫畫塔防的設定、教學、Pixi 玩法、音效與完整成績表均由遊戲本身呈現；已移除它的 `settings.json`、`score.json` 與 `packages/ui` 依賴。
 - 遊戲已發布至 `rehab-game-releases` R2，經隔離執行器提供服務。執行器的必要更新已部署至 production；deployment URL 為 <https://ddb92581.trainerhub-user-games.pages.dev>。
-- 遊戲入口：<https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.1/package/index.html>。獨立 PWA 入口：<https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.1/>。
-- Hub 已實作載入、私有通訊、帳號／訪客成果保存及撤回檢查，並通過 build 與瀏覽器驗證。**本次未部署 Hub production；正式大廳須在這批 Hub 程式碼完成既有部署流程後才會切換。**
+- 遊戲入口：<https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.2/package/index.html>。獨立 PWA 入口：<https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.2/>。
+- Hub 已實作載入、私有通訊、帳號／訪客成果保存及撤回檢查，並通過 build 與瀏覽器驗證。`2.0.2` 的正式大廳切換由既有 GitHub CI/CD 執行；部署與正式入口驗證結果記錄於發布收據。
 - 資料庫沿用 `training_records`，沒有新增 migration。資料庫寫入整合測試使用現有全部 migrations 建立的本機 SQLite，沒有製造正式使用者紀錄。
 - 其餘 39 個遊戲維持原流程，逐個遷移；不一次改動全部遊戲。
 
-本次 R2 發布收據見 [drawing-defense-2.0.1.json](releases/drawing-defense-2.0.1.json)。四個檔案合計 5,565,303 bytes，發布後逐檔回讀核對 SHA-256。
+本次 R2 發布收據見 [drawing-defense-2.0.2.json](releases/drawing-defense-2.0.2.json)。四個檔案合計 5,566,639 bytes，發布後逐檔回讀核對 SHA-256，並從正式 runner 核對 bytes、Content-Type 與 CSP。真實 R2 的 Hub 流程、獨立 PWA 與本機手機流程均通過 Brave 驗證，沒有建立正式使用者紀錄。
 
 ## 2. 架構檢視與責任劃分
 
@@ -92,7 +94,7 @@ sequenceDiagram
 {
   "schema": "trainerhub.game/v1",
   "gameId": "drawing-defense",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "sessionNonce": "由 Hub 產生的 64 位十六進位字串",
   "sequence": 1,
   "type": "result",
@@ -121,7 +123,7 @@ sequenceDiagram
 
 ```text
 rehab-game-releases/
-  releases/drawing-defense/2.0.1/
+  releases/drawing-defense/2.0.2/
     release.json
     files/
       index.html
