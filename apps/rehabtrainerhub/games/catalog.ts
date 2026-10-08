@@ -692,7 +692,7 @@ export function BuildTrainingModuleHref(
   module: TrainingCatalogModule,
 ): string {
   const release = officialGameReleases[module.runtimeId as keyof typeof officialGameReleases];
-  if (release) return `${release.origin}/games/${encodeURIComponent(module.runtimeId)}/${release.version}/package/index.html`;
+  if (release) return `${release.origin}/games/${encodeURIComponent(module.runtimeId)}/`;
   return `/games/${encodeURIComponent(module.runtimeId)}/`;
 }
 

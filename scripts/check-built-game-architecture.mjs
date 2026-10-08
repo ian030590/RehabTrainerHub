@@ -55,7 +55,7 @@ test('built Hub retains 40 independent game directories and no public trainer ru
     if (Object.hasOwn(r2Releases, gameId)) {
       assert.deepEqual(await readdir(outputGameDirectory), ['index.html'], `${gameId}: R2 game must only have a redirect in Hub output.`);
       const redirect = await readFile(resolve(outputGameDirectory, 'index.html'), 'utf8');
-      assert.ok(redirect.includes(`${r2Releases[gameId].origin}/games/${gameId}/${r2Releases[gameId].version}/`));
+      assert.ok(redirect.includes(`${r2Releases[gameId].origin}/games/${gameId}/`));
       continue;
     }
 

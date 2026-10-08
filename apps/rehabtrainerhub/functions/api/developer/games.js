@@ -20,6 +20,7 @@ import {
   gamePackageRuntimeContract,
 } from '../../_lib/gamePackages.js';
 import { IsGameTagPair } from '../../../games/gameTags.js';
+import { officialGameReleases } from '../../_lib/officialGames.js';
 
 const maximumMultipartBytes = gamePackageLimits.maximumCompressedBytes + 128 * 1024;
 
@@ -109,6 +110,9 @@ export async function onRequestPost({ request, env }) {
     const formData = await request.formData();
     const input = NormalizeSubmissionInput(formData);
     if (!input) return ErrorResponse(request, env, 'Invalid game submission metadata.', 400);
+    if (Object.hasOwn(officialGameReleases, input.slug)) {
+      return ErrorResponse(request, env, 'This game slug is reserved for an official game.', 409);
+    }
     const inspection = await InspectGamePackage(formData.get('package'), input.slug, input.jsPsychVersion === 'none');
     if (Boolean(inspection.score) !== (input.jsPsychVersion === 'none')) {
       return ErrorResponse(request, env, 'Runtime metadata does not match score.json.', 400);

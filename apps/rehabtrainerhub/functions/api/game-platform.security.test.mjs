@@ -60,6 +60,24 @@ test('approval requires source, public metadata, and isolated play-test evidence
   assert.equal(response.status, 400);
 });
 
+test('third-party reviews cannot publish or revoke a reserved official slug submitted before migration', async () => {
+  for (const decision of ['approve', 'revoke']) {
+    let storageAccesses = 0;
+    const response = await reviewRelease({ request: AuthorizedRequest(
+      'https://trainerhub.cc/api/admin/game-releases/release-1', tokens['admin-1'], {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, note: 'Checked', sourceReviewed: true, playTested: true, metadataReviewed: true }),
+      }), params: { id: 'release-1' }, env: { ...env,
+      REHAB_DB: CreateApprovalDb({ slug: 'drawing-defense', fileBytes: new Uint8Array(1), fileSha256: 'a'.repeat(64) }),
+      GAME_QUARANTINE_BUCKET: { get: async () => { storageAccesses++; return null; } },
+      GAME_RELEASE_BUCKET: { get: async () => { storageAccesses++; return null; }, put: async () => { storageAccesses++; } },
+    } });
+    assert.equal(storageAccesses, 0);
+    assert.equal(response.status, 409);
+    assert.match((await response.json()).error, /reserved/i);
+  }
+});
+
 test('game results reject identifying metric keys before persistence', async () => {
   const response = await saveGameRun({
     request: AuthorizedRequest(
@@ -358,13 +376,13 @@ function AuthorizedRequest(url, token, init = {}) {
   return new Request(url, { ...init, headers });
 }
 
-function CreateApprovalDb({ batchChanges = [1, 1, 1], fileBytes, fileSha256 }) {
+function CreateApprovalDb({ batchChanges = [1, 1, 1], fileBytes, fileSha256, slug = 'reviewed-game' }) {
   const release = {
     id: 'release-1',
     game_id: 'game-1',
     version: '1.0.0',
     status: 'pending_review',
-    slug: 'reviewed-game',
+    slug,
     submitted_developer_name: 'Reviewed Studio',
     submitted_title: 'Reviewed Game',
     submitted_summary: 'A reviewed summary.',

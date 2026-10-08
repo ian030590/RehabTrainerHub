@@ -63,7 +63,7 @@ for (const game of catalogGames) {
     const release = r2Releases[game.id];
     const directory = resolve(gamesDirectory, game.id);
     await mkdir(directory, { recursive: true });
-    const target = `${release.origin}/games/${game.id}/${release.version}/`;
+    const target = `${release.origin}/games/${game.id}/`;
     await writeFile(resolve(directory, 'index.html'), `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>${game.title}</title></head><body><a href="${target}">開啟${game.title}</a><script>location.replace(${JSON.stringify(target)})</script></body></html>`);
     continue;
   }

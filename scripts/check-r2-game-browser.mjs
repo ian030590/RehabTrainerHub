@@ -12,8 +12,10 @@ import { onRequestPost as createSession } from '../apps/rehabtrainerhub/function
 import { onRequestPost as saveRecord } from '../apps/rehabtrainerhub/functions/api/records.js';
 
 const root = resolve(import.meta.dirname, '..');
-const remote = process.argv.includes('--remote');
+const productionHub = process.argv.includes('--production-hub');
+const remote = process.argv.includes('--remote') || productionHub;
 const standalone = process.argv.includes('--standalone');
+const sessionFailure = process.argv.includes('--session-failure');
 const output = resolve(root, 'apps/rehabtrainerhub/out');
 const browserPath = process.env.BRAVE_BIN || 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
 assert.ok(existsSync(browserPath), 'Brave is required.');
@@ -30,8 +32,11 @@ const database = { prepare: sql => {
   return result;
 } };
 let revoked = false;
+const catalog = { schemaVersion: 1, gameId: manifest.gameId, currentVersion: manifest.version,
+  releases: { [manifest.version]: { contentSha256: manifest.contentSha256 } } };
 const bucket = { get: async key => {
-  const bytes = key.endsWith('/release.json') ? Buffer.from(JSON.stringify({ ...manifest, status: revoked ? 'revoked' : 'approved' })) : files.get(key.split('/files/')[1]);
+  const bytes = key === 'official-games/drawing-defense/current.json' ? Buffer.from(JSON.stringify(catalog))
+    : key.endsWith('/release.json') ? Buffer.from(JSON.stringify({ ...manifest, status: revoked ? 'revoked' : 'approved' })) : files.get(key.split('/files/')[1]);
   if (!bytes) return null;
   return { size: bytes.length, body: bytes, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
     text: async () => bytes.toString('utf8'), json: async () => JSON.parse(bytes.toString('utf8')) };
@@ -41,6 +46,7 @@ const errors = [];
 const requests = [];
 let failFirstSave = true;
 let saveAttempts = 0;
+let sessionAttempts = 0;
 let runnerOrigin;
 let hubOrigin;
 let browser;
@@ -67,6 +73,10 @@ try {
         const chunks = [];
         for await (const chunk of request) chunks.push(chunk);
         const body = Buffer.concat(chunks);
+        if (url.pathname.endsWith('sessions')) {
+          sessionAttempts++;
+          if (sessionFailure && sessionAttempts === 1) { response.writeHead(503).end('Retry'); return; }
+        }
         if (url.pathname === '/api/records') {
           saveAttempts++;
           if (failFirstSave) { failFirstSave = false; response.writeHead(503).end('Retry'); return; }
@@ -154,7 +164,7 @@ try {
   await send('Runtime.enable', {}, session);
   await send('Network.enable', {}, session);
   await send('Page.enable', {}, session);
-  if (remote) await send('Fetch.enable', { patterns: [{ urlPattern: 'https://trainerhub.cc/*', requestStage: 'Request' }] }, session);
+  if (remote) await send('Fetch.enable', { patterns: [{ urlPattern: productionHub ? 'https://trainerhub.cc/api/*' : 'https://trainerhub.cc/*', requestStage: 'Request' }] }, session);
   if (process.argv.includes('--mobile')) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
   await send('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('rehab_hub_tour_seen','1'); } catch {}" }, session);
   await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/drawing-defense/${manifest.version}/` : (remote ? 'https://trainerhub.cc' : hubOrigin) + '/train/?module=motor%3Adrawing-defense' }, session);
@@ -178,6 +188,11 @@ try {
     }
     throw new Error(`Timed out: ${label}\n${errors.join('\n')}\n${bodies.join('\n')}`);
   };
+  if (sessionFailure && !standalone) {
+    await until(() => evaluate('Boolean(document.querySelector("dialog [role=alert]"))'), 'session failure feedback');
+    assert.equal(await evaluate('document.querySelectorAll("dialog iframe").length'), 0, 'Unavailable sessions must not mount an unbound game.');
+    await evaluate('document.querySelector("dialog [role=alert] button").click()');
+  }
   await until(() => evaluate('Boolean(document.querySelector("iframe"))'), 'Hub game iframe');
   console.log('Hub iframe ready.');
   assert.equal(await evaluate('document.querySelector("iframe").getAttribute("sandbox")'), 'allow-scripts');
@@ -189,6 +204,11 @@ try {
     return false;
   }, 'game-owned settings');
   console.log('Game settings ready.');
+  if (!standalone) {
+    assert.equal(sessionAttempts, sessionFailure ? 2 : 1, 'Select and bind the approved version before presenting settings.');
+    catalog.releases['9.0.0'] = { contentSha256: manifest.contentSha256 };
+    catalog.currentVersion = '9.0.0';
+  }
   const game = expression => evaluate(expression, gameContext);
   const checkSpotlight = async selector => {
     const state = await game(`(() => {
@@ -302,6 +322,7 @@ try {
   assert.equal(record.config.durationSec, 5);
   assert.ok(record.score.rounds.length >= 1);
   assert.ok(saveAttempts >= 2);
+  assert.equal(sessionAttempts, sessionFailure ? 2 : 1, 'Saving and retry must keep the session selected before current changed.');
   assert.equal(requests.some(url => /drawing-defense.*(?:settings|score)\.json/.test(url)), false);
   assert.equal(errors.length, 0, errors.join('\n'));
   await game('document.querySelector(".experiment-results > button:last-child").click()');

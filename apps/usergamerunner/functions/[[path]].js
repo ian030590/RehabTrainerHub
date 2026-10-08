@@ -18,6 +18,7 @@ import {
   GetGameSettingsDefaults,
   ParseGameSettingsDefinition,
 } from '@rehab-trainer/game-settings';
+import { ReadOfficialGameRelease } from './_lib/officialCatalog.js';
 
 const commonPermissionsPolicy = [
   'accelerometer=()',
@@ -74,6 +75,13 @@ export async function HandleRequest(context) {
   }
   if (route.kind === 'invalid') {
     return ErrorResponse(404, '找不到遊戲。');
+  }
+  if (route.kind === 'current') {
+    const release = await ReadOfficialGameRelease(context.env?.GAME_RELEASE_BUCKET, route.gameId);
+    if (!release) return ErrorResponse(404, '找不到已核准的遊戲版本。');
+    return new Response(null, { status: 302, headers: BaseHeaders({
+      Location: `/games/${route.gameId}/${release.version}/`, 'Cache-Control': 'no-store',
+    }) });
   }
   if (route.kind === 'redirect') {
     const location = new URL(route.basePath, url.origin);

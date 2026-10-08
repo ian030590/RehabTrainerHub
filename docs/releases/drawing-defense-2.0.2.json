@@ -35,7 +35,7 @@
       "contentType": "text/html; charset=utf-8"
     }
   ],
-  "hubProductionDeployed": false,
+  "hubProductionDeployed": true,
   "browserVerifiedAt": "2026-10-08T05:08:01.729Z",
   "verification": {
     "allR2FilesReadBackSha256": true,
@@ -45,6 +45,18 @@
     "braveMobile": true,
     "spotlightStepsResizeAndCleanup": true,
     "nativeFullscreenGameRoot": true,
-    "productionUserRecordsCreated": false
-  }
+    "productionUserRecordsCreated": false,
+    "productionHubVersionAndSandbox": true,
+    "productionPwaLink": true
+  },
+  "hubDeploymentRunUrl": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37730958922",
+  "hubProductionVerifiedAt": "2026-10-08T05:16:12.359Z",
+  "hubDeploymentUrl": "https://4229c47d.rehabtrainerhub.pages.dev",
+  "runnerDeploymentUrl": "https://3cdd62b7.trainerhub-user-games.pages.dev",
+  "retainedVersionsVerified": [
+    "1.0.0",
+    "2.0.0",
+    "2.0.1",
+    "2.0.2"
+  ]
 }

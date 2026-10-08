@@ -10,6 +10,7 @@ import {
   GetAuthenticatedUser,
 } from '../../../_lib/authorization.js';
 import { ReadJsonBody } from '../../../_lib/request.js';
+import { officialGameReleases } from '../../../_lib/officialGames.js';
 
 const maximumReviewBodyBytes = 8 * 1024;
 const maximumReleaseManifestBytes = 512 * 1024;
@@ -62,6 +63,9 @@ export async function onRequestPut({ request, env, params }) {
       .bind(String(params.id || ''))
       .first();
     if (!release) return ErrorResponse(request, env, 'Game release not found.', 404);
+    if (decision !== 'reject' && Object.hasOwn(officialGameReleases, release.slug)) {
+      return ErrorResponse(request, env, 'This game slug is reserved for an official game.', 409);
+    }
     if (decision === 'revoke') {
       if (release.status !== 'approved') {
         return ErrorResponse(request, env, 'Only an approved release can be revoked.', 409);

@@ -68,7 +68,7 @@ export function ParseGameRoute(pathname) {
   }
 
   const rawSegments = pathname.split('/');
-  if (rawSegments[0] !== '' || rawSegments[1] !== 'games' || rawSegments.length < 4) {
+  if (rawSegments[0] !== '' || rawSegments[1] !== 'games' || rawSegments.length < 3) {
     return { kind: 'invalid' };
   }
 
@@ -76,6 +76,9 @@ export function ParseGameRoute(pathname) {
   let version;
   try {
     gameId = decodeURIComponent(rawSegments[2]);
+    if (IsValidGameId(gameId) && (rawSegments.length === 3 || (rawSegments.length === 4 && rawSegments[3] === ''))) {
+      return { kind: 'current', gameId };
+    }
     version = decodeURIComponent(rawSegments[3]);
   } catch {
     return { kind: 'invalid' };

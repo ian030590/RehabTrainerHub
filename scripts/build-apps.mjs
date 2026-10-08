@@ -82,13 +82,21 @@ function GetCommand(file, args) {
 
 function BuildOfficialGames() {
   console.log('\n=== Building official games with Turborepo ===');
+  const filters = ['--filter=./apps/rehabtrainerhub/games/*'];
+  if (cloudflarePages) {
+    const migrated = JSON.parse(readFileSync(join(repoRoot, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
+    for (const gameId of Object.keys(migrated)) {
+      const pkg = JSON.parse(readFileSync(join(repoRoot, 'apps/rehabtrainerhub/games', gameId, 'package.json'), 'utf8'));
+      filters.push(`--filter=!${pkg.name}`);
+    }
+  }
 
   if (dryRun) {
-    console.log('$ npx turbo run build --filter=./apps/rehabtrainerhub/games/*');
+    console.log(`$ npx turbo run build ${filters.join(' ')}`);
     return;
   }
 
-  const command = GetCommand('npx', ['turbo', 'run', 'build', '--filter=./apps/rehabtrainerhub/games/*']);
+  const command = GetCommand('npx', ['turbo', 'run', 'build', ...filters]);
   const result = spawnSync(command.file, command.args, {
     cwd: repoRoot,
     env: process.env,

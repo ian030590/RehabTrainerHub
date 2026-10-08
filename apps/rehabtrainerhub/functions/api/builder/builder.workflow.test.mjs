@@ -120,6 +120,15 @@ test('Hub authorizes Builder, receives a package, accepts submission, and stores
     form.set('trainer', 'brain'); form.set('category', 'attention');
     form.set('capabilities', JSON.stringify(['keyboard', 'pointer'])); form.set('jsPsychVersion', 'none');
     form.set('package', new File([packageBytes], `${gameId}.zip`, { type: 'application/zip' }));
+    form.set('slug', 'drawing-defense');
+    const reservedUpload = new Request(`${hubOrigin}/api/developer/games`, {
+      method: 'POST', headers: { Origin: hubOrigin, Cookie: ownerCookie }, body: form,
+    });
+    reservedUpload.headers.set('Content-Length', String((await reservedUpload.clone().arrayBuffer()).byteLength));
+    assert.equal((await submitGame({ request: reservedUpload, env })).status, 409);
+    assert.equal(quarantineObjects.size, 0);
+    assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM developer_games').get().count, 0);
+    form.set('slug', gameId);
     const upload = new Request(`${hubOrigin}/api/developer/games`, {
       method: 'POST', headers: { Origin: hubOrigin, Cookie: ownerCookie }, body: form,
     });

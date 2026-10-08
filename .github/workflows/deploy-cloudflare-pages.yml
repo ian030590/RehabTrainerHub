@@ -21,6 +21,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  deployment_scope:
+    runs-on: ubuntu-latest
+    outputs:
+      pages_required: ${{ steps.scope.outputs.pages_required }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - id: scope
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: node scripts/pages-deployment-scope.mjs
+
   verify:
     name: Verify (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -62,7 +78,8 @@ jobs:
         run: ${{ matrix.command }}
 
   deploy:
-    needs: verify
+    needs: [verify, deployment_scope]
+    if: ${{ needs.deployment_scope.outputs.pages_required == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: cloudflare-pages

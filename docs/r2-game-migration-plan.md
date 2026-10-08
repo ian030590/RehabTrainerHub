@@ -9,9 +9,9 @@
 ## 1. 本次完成範圍與發布狀態
 
 - 畫畫塔防的設定、教學、Pixi 玩法、音效與完整成績表均由遊戲本身呈現；已移除它的 `settings.json`、`score.json` 與 `packages/ui` 依賴。
-- 遊戲已發布至 `rehab-game-releases` R2，經隔離執行器提供服務。執行器的必要更新已部署至 production；deployment URL 為 <https://ddb92581.trainerhub-user-games.pages.dev>。
+- 遊戲已發布至 `rehab-game-releases` R2，經隔離執行器提供服務。執行器的現行 production deployment URL 為 <https://3cdd62b7.trainerhub-user-games.pages.dev>。
 - 遊戲入口：<https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.2/package/index.html>。獨立 PWA 入口：<https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.2/>。
-- Hub 已實作載入、私有通訊、帳號／訪客成果保存及撤回檢查，並通過 build 與瀏覽器驗證。`2.0.2` 的正式大廳切換由既有 GitHub CI/CD 執行；部署與正式入口驗證結果記錄於發布收據。
+- Hub 已透過 [GitHub CI/CD](https://github.com/ian030590/RehabTrainerHub/actions/runs/37730958922) 完成 `2.0.2` production 部署；deployment URL 為 <https://4229c47d.rehabtrainerhub.pages.dev>。已直接以 Brave 確認正式大廳載入 `2.0.2` 的 `allow-scripts` iframe，獨立 PWA 亦可使用。遊戲發布與這次後續平台架構更新分別保留驗證紀錄。
 - 資料庫沿用 `training_records`，沒有新增 migration。資料庫寫入整合測試使用現有全部 migrations 建立的本機 SQLite，沒有製造正式使用者紀錄。
 - 其餘 39 個遊戲維持原流程，逐個遷移；不一次改動全部遊戲。
 
@@ -39,15 +39,16 @@ sequenceDiagram
   participant A as Hub API
   participant R as R2 releases
   participant D as D1
-  H->>G: allow-scripts iframe 載入已發布版本
+  H->>A: 啟動前取得官方遊戲 session
+  A->>R: 讀 current、官方雜湊歷史與 approved manifest
+  A->>H: 固定 version + digest + token + recordId
+  H->>G: allow-scripts iframe 載入固定版本
   H->>G: init：私有 port、nonce、語言、版本
   G->>H: ready / active
   G->>G: 設定、教學、遊玩、顯示成績
   G->>H: result：config + numeric score
-  H->>A: 建立成果保存 session（帳號或訪客）
-  A->>R: 確認指定版本 approved
-  A->>H: 簽署 token + recordId
   H->>A: POST /api/records
+  A->>R: 重查固定版本仍在官方歷史、approved、digest 相符
   A->>A: 驗證身份、版本、Subject ID、recordId、資料大小
   A->>D: 一次寫入；相同重送回覆成功
   A->>H: 保存結果
@@ -62,12 +63,14 @@ sequenceDiagram
 | `games/drawing-defense/main.tsx`、`DrawingTowerDefenseGame.tsx` | 遊戲自己的入口、設定、玩法、結果 |
 | `games/drawing-defense/runtime/hubBridge.ts` | 遊戲端 port、序號、成果與保存回覆 |
 | `games/drawing-defense/vite.config.ts`、`package.json` | 自有依賴、相對資產路徑、IIFE bundle |
-| `packages/ui/src/officialGameReleases.json` | Hub 採用的新格式版本與隔離 origin |
+| `packages/ui/src/officialGameReleases.json` | 遷移資格、名稱與可信隔離 origin；不含版本 |
+| `apps/usergamerunner/functions/_lib/officialCatalog.js` | 官方 current／雜湊歷史與核准版本驗證；Hub API 與 runner 共用 |
 | `packages/ui/src/selfContainedGame.js` | Hub 訊息及成果邊界驗證 |
 | `app/train/R2GameOverlay.tsx` | iframe container、session、保存、重試、撤回 |
 | `functions/api/official-game-sessions.js` | 簽署與身份／版本綁定的成果保存 token |
 | `functions/api/records.js` | 驗證 token、沿用紀錄表、不可變且冪等保存 |
-| `scripts/publish-official-game.mjs` | 套件檢查、不可覆寫上傳、回讀雜湊、最後發布 manifest |
+| `scripts/publish-official-game.mjs` | 遊戲 package.json 版本、不可變發布、回讀雜湊、最後切換 current 與回退 |
+| `scripts/pages-deployment-scope.mjs` | R2 遊戲內容變更只驗證，平台／未遷移遊戲變更才部署 Pages |
 | `scripts/sync-games.mjs`、Hub game shell/PWA scripts | 從 Hub 依賴與 output 排除已遷移遊戲 |
 | `apps/usergamerunner/functions/[[path]].js` | 依 release allowlist 核對實際 R2 檔案雜湊 |
 
@@ -115,7 +118,7 @@ sequenceDiagram
 - 遊戲核對 init 的 `event.source === parent`、由 referrer 推導的 parent origin，以及唯一 port。
 - config 最多 64 個短的 primitive 欄位；summary／每回合最多 12 個有限數值或 null，最多 4000 回合，整體最多 450 KiB。敏感欄位名稱會被拒絕。
 - 形狀數值依序為 circle=0、cross=1、square=2、triangle=3、vertical-line=4、horizontal-line=5。Boolean 成績用 0／1；無限時間的 `durationSec` 用 0。
-- 保存 session token 留在 Hub。它綁定 game/version/recordId/userId/Subject ID，24 小時有效。`/api/records` 保留既有 origin、驗證碼、rate limit 與身份隔離檢查。
+- 保存 session token 在載入 iframe 前建立並留在 Hub，綁定 game/version/contentSha256/recordId/userId/Subject ID，24 小時有效。保存與重試沿用原 session；current 切換不改變它。`/api/records` 重查原版本的官方歷史、核准狀態與 digest，並保留既有 origin、驗證碼、rate limit 與身份隔離檢查。仍有效的舊 token 可相容，撤回後不得使用。
 - 相同 recordId 與相同成果重送回覆成功；修改成果或跨身份重用回覆 409／400。SQL `ON CONFLICT DO NOTHING` 防止同時提交覆寫。
 - 這是使用者端回報的活動紀錄，並非伺服器權威計分或防作弊證明；不可將簽章解讀為玩法或分數已由伺服器重算。
 
@@ -123,18 +126,21 @@ sequenceDiagram
 
 ```text
 rehab-game-releases/
+  official-games/drawing-defense/current.json
   releases/drawing-defense/2.0.2/
     release.json
     files/
       index.html
-      assets/index-6KrlLRZ1.js
-      assets/style-DhBpIQPL.css
+      assets/index-BYt4-x-R.js
+      assets/style-DMY_l4Xs.css
       assets/StarSky-COfhhfcH.png
 ```
 
-`release.json` 是發布清單，列出 entry、版本、大小、SHA-256 與 `presentation: "game"`，不是設定表單或成績顯示定義。先上傳並核對 files，最後才寫 approved manifest，避免部分上傳被玩家載入。
+`release.json` 是發布清單，列出 entry、版本、大小、SHA-256 與 `presentation: "game"`。先上傳並核對 files，再寫 approved manifest 並回讀驗證，最後更新官方 current。上傳或核對失敗不切換入口。
 
-- 同版檔案或 release digest 不同時，publisher 拒絕覆寫。中斷後可用相同內容重跑；更動內容要升版本。本腳本假設同一版本只有一位發布者，尚未加入跨發布者 lease。
+官方 `current.json` 包含 `schemaVersion: 1`、`gameId`、`currentVersion` 與 `releases`；歷史項目以版本為 key，保存 `contentSha256`。第三方審核 API 不寫入此 prefix，Hub／runner 不能只憑共用 releases prefix 的 approved 檔案認定它是官方遊戲。首次建立歷史使用倉庫已追蹤的發布收據，逐版核對 manifest 與實際檔案。
+
+- 同版檔案或 release digest 不同時，publisher 拒絕覆寫。中斷後可用相同內容重跑；更動內容要升版本。本腳本假設每個遊戲只有一位發布者，發布與回退不得並行；尚未加入跨發布者 lease／CAS。
 - 使用者看到的是執行器 URL，沒有開 R2 公開 bucket 網域。Hub 與執行器分開，執行器仍無 D1／auth binding。
 - iframe 維持 `sandbox="allow-scripts"`；CSP 維持 `connect-src 'none'`、`worker-src 'none'`、`form-action 'none'` 等原限制。
 - 新格式檔案驗證實際 bytes 的 SHA-256；舊投稿格式仍沿用 customMetadata sha256 驗證。上傳 API 不必依賴自訂 metadata 是否可設定。
@@ -163,7 +169,7 @@ rehab-game-releases/
 
 ### 步驟 C：註冊版本並排除 Hub bundle
 
-1. 在 `officialGameReleases.json` 增加 gameId、隔離 origin、版本與名稱；遊戲 package.json 版本必須相同，bridge 從自己的 package.json 讀版本。
+1. 在 `officialGameReleases.json` 增加 gameId、隔離 origin 與名稱。版本只由遊戲 package.json 擁有，bridge 與 publisher 都讀取它；不要恢復 Hub 的靜態版本指標。
 2. 執行 `npm run sync:games`，確認 Hub package.json 不再依賴已遷移的遊戲；執行 `npm install --package-lock-only --ignore-scripts` 更新 lockfile。
 3. 確認 Hub build、PWA emitter、輸出檢查只為該遊戲留下相容入口連結，沒有恢復 bundle、設定／成績 JSON 或 `/runtimes/*`。
 4. 為新遊戲加入 registry 驅動的分支測試；其他遊戲的 JSON 規則仍必須通過。
@@ -200,7 +206,7 @@ npm run publish:game -- drawing-defense
 
 1. 先確認目標版本未存在；存在不同內容時升版，不能覆寫。
 2. dry-run 確認所有本地資源存在、檔案數／單檔／總容量符合 runner 限制。
-3. 上傳、回讀並核對所有檔案；最後發布 release.json。
+3. 上傳、回讀並核對所有檔案；發布 release.json 後再次驗證，再更新官方 current／歷史並回讀確認。回退也必須驗證原版本的實際檔案。
 4. 收據放 `.tmp/official-game-releases/{id}/{version}/`；將不含憑證的發布摘要保存到 `docs/releases/`。
 
 ### 步驟 F：切換前驗收與部署
@@ -208,23 +214,23 @@ npm run publish:game -- drawing-defense
 1. 若 runner 新增格式支援，先執行其測試與 build，再部署隔離 runner。只更新遊戲內容且格式已支援時不必部署 runner。
 2. 從正式 runner 下載每個 R2 檔案，核對 status、Content-Type、CSP、sandbox、hash，再跑實際瀏覽器流程。
 3. 本次可使用 `node scripts/check-r2-game-browser.mjs --remote` 及 `--remote --standalone`。remote 模式讀實際 R2／runner 資產；Brave 的 CDP 僅將 `https://trainerhub.cc/*` 導向本機 Hub 與測試 API，保留正式 CSP，不寫入正式 D1。
-4. 最後走原有 Hub CI/CD 切換正式大廳，確認 guest 與登入紀錄、進度列表、重試與返回流程。不要在 production 建立虛構帳號／成績作為測試。
+4. 新格式／平台架構需一次 Hub／runner CI/CD 部署；完成後，同一 R2 遊戲的內容更新與 current 回退由 publisher 完成。純 R2 遊戲變更仍跑 CI gate，但跳過 Pages；未遷移遊戲與平台變更仍部署。不要在 production 建立虛構帳號／成績作為測試。
 5. 記錄 Hub／runner deployment、R2 digest、驗證結果與回退目標。
 
-### 步驟 G：下一階段消除版本指標的 Hub 部署需求
+### 步驟 G：版本指標已移到 R2
 
-本次達成 bundle／資產隔離；版本指標仍是 Hub registry，因此切換遊戲版本仍需部署少量 Hub metadata。當更多遊戲遷移後，再將「目前 approved 版本」放到 Hub API／資料庫 catalog，前端按啟動 session 取得版本。保留伺服器版本 allowlist、不可變 R2 檔案、完成中的 session 版本與撤回狀態；不要直接讓任意 URL／版本進入 iframe。
+版本指標改為每遊戲一份 R2 官方目錄，不新增 D1 migration、binding 或 secret。Hub API 選擇已登記官方遊戲的 current；舊 Hub 可明確要求仍核准的官方歷史版本。遊戲資產仍是不可變版本，開始中的 session 固定版本，撤回與 digest 不符時拒絕保存，R2 故障回覆 503 以便重試。
 
-先處理已實際需要的動態 catalog，再增加管理者的 release 切換畫面。這個試點尚未實作 Steam 商店、下載管理器或自動推薦。
+Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 選擇 current；版本化 PWA 的 manifest、scope 與快取維持原版本。新增遊戲資格或平台功能仍需部署。未加入管理者切換畫面、並行發布鎖或已安裝 PWA 自動升版。
 
 ## 8. 回退與版本相容
 
-- 新格式的修正版須同步升 game package／registry 版本，重新建置、測試、發布與切換。
-- 回退到另一個已驗證的**新格式**版本，需要切換 registry 與 Hub deployment；已發布 files 不可修改。
-- 舊 `1.0.0` 使用原 JSON shell／嵌入協定。**不能只把新 registry 版本改成 1.0.0**；若回退到舊流程，必須回退 Hub 的 overlay 分派、workspace 依賴與遊戲原始程式／JSON，重新跑 gates。
+- 新格式修正版只升 game package 版本並更新 lockfile 的對應版本資料，重新建置、測試與發布；publisher 切換 current，不修改 Hub registry。
+- 回退命令：`node scripts/publish-official-game.mjs drawing-defense --activate-version 2.0.1`。僅可選擇官方歷史中仍核准且 bytes 驗證通過的新格式版本，不部署 Hub、不刪除新版。
+- 舊 `1.0.0` 使用原 JSON shell／嵌入協定，保留在 R2 但不加入新格式官方 current 歷史。若回退到舊流程，必須回退 Hub 的 overlay 分派、workspace 依賴與遊戲原始程式／JSON，重新跑 gates。
 - 本次 runner 部署之前的 production deployment 為 `6dd705d9-8ac2-4145-9b9b-cb20eac9a025`。runner 回退會失去新格式的實際 bytes hash 支援；先撤回新入口或回退 Hub，再回退 runner。
 - 無須 database migration／降版。歷史紀錄仍在原表；切換版本不應刪除它們。
-- 目前 session 綁定 registry 當前版本且 24 小時到期。版本切換後舊版待重試成果可能被拒絕；擴大遷移前應加入有限的「已開始且仍有效版本」清單，再測試過渡期間。不要直接接受任意過期版本。
+- session 固定版本並於 24 小時到期；current 切換後仍可保存與重試該版，只要版本仍在可信官方歷史中、approved 且 digest 相符。撤回與逾期 token 不接受；舊版 PWA 保留版本，無須刪除 R2 資產。
 
 ## 9. 後續 39 個遊戲的順序與驗收門檻
 

@@ -199,9 +199,15 @@ export async function onRequestPost({ request, env }) {
     return ErrorResponse(request, env, 'Invalid subject identifier.', 400);
   }
   const officialGame = Object.hasOwn(officialGameReleases, input?.record?.gameId ?? '');
-  if (officialGame && (!IsBoundedGameScoreRecord(input)
-    || !await VerifyOfficialGameSession(input, env, session?.sub, subjectId))) {
-    return ErrorResponse(request, env, 'Invalid official game session or result.', 400);
+  if (officialGame) {
+    if (!IsBoundedGameScoreRecord(input)) return ErrorResponse(request, env, 'Invalid official game result.', 400);
+    try {
+      if (!await VerifyOfficialGameSession(input, env, session?.sub, subjectId)) {
+        return ErrorResponse(request, env, 'Invalid official game session or result.', 400);
+      }
+    } catch {
+      return ErrorResponse(request, env, 'Game release verification is temporarily unavailable.', 503);
+    }
   }
   if (
     GetJsonByteLength(input) > maximumDefaultRecordRequestBytes

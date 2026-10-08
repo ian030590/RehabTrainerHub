@@ -30,10 +30,12 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `npm run dev:hub`：啟動 Hub。
 - `npm run build`：執行測試 gate，再由 `scripts/build-apps.mjs` 先建置全部遊戲 workspace、後建置兩個 app；不會自動發布 R2。
 - `npm run build:cloudflare`：執行本機完整 gate，並建置 Cloudflare Pages 輸出；已在 CI 驗證時使用 `build:cloudflare:only`。
+  Pages build 僅建置 39 個未遷移遊戲與兩個 app，排除 registry 登記的 R2 遊戲；R2 遊戲另行建置與發布。
 - `npm run build:hub`：Turbo 建置 Hub 及其 39 個未遷移遊戲依賴，產生 `apps/rehabtrainerhub/out/`；畫畫塔防只留下導向 R2 PWA 的入口，不攜帶遊戲 bundle／JSON。
 - `npm run build:gamerunner`：建置隔離站的靜態 runtime 到 `apps/usergamerunner/dist/`；遊戲版本仍由 Functions 從 R2 讀取。
 - `npm --prefix apps/rehabtrainerhub/games/drawing-defense run build`：單獨建置 R2 遊戲到其 `dist/`。發布腳本讀取既有輸出，不會先建置。
-- `npm run publish:game -- drawing-defense`：檢查並發布已遷移遊戲至 R2。同版本不同內容禁止覆寫；逐檔比對、上傳並回讀 SHA-256，最後發布 release manifest。此官方 CLI 採單一發布者，沒有第三方審核 API 的 Lease 鎖；同版本不可平行發布。
+- `npm run publish:game -- drawing-defense`：版本取自遊戲 package.json；檢查並發布至 R2。同版本不同內容禁止覆寫；逐檔比對、上傳並回讀 SHA-256，最後發布 release manifest，再更新 `official-games/{gameId}/current.json`。此官方 CLI 採每遊戲單一發布者，沒有第三方審核 API 的 Lease 鎖；同遊戲的發布與回退不可平行執行。
+- `node scripts/publish-official-game.mjs drawing-defense --activate-version 2.0.1`：核對官方歷史、approved manifest 與實際檔案後回退 current；保留所有發布版本，不部署 Hub。首次建立官方歷史只使用 `docs/releases/` 已追蹤收據的雜湊，不能掃描共用 releases prefix 當作官方來源。
 - `node scripts/publish-official-game.mjs drawing-defense --dry-run`：只做本機套件驗證與暫存收據，不連線 R2。直接呼叫腳本可避免本機 npm 未轉交 `--dry-run` 參數而意外執行發布流程。
 - `npm run test:hub-functions`：驗證 Hub 後端 API 與安全防護測試。
 - `npm run test:gamerunner`：驗證 usergamerunner 路由、沙盒、SW 與安全標頭測試。
@@ -52,16 +54,16 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `npm run test:pwa` 包含 `test:pwa-navigation`，以本機 HTTP 308 轉址及實際產生的 Service Worker 驗證內嵌頁面預快取、離線導航與舊快取清理；兩份 workflow 的 `pwa` matrix 均執行此命令，不依賴 Brave。
 
 - `.github/workflows/ci.yml` 在 PR 與非 `main` push 的應用程式、package、script、lockfile、Turbo 或 workflow 變更時執行；純文件變更不得啟動 CI。
-- `.github/workflows/deploy-cloudflare-pages.yml` 只在 `main` 上的可部署變更時執行。部署前的驗證以 matrix 平行執行；新增 gate 時加入兩份 workflow 的 matrix，並維持相同命令。
+- `.github/workflows/deploy-cloudflare-pages.yml` 在 `main` 的既有應用程式／package／script／workflow 觸發範圍執行 matrix 驗證。`deployment_scope` 另判斷 Pages 是否需部署：只有已遷移 R2 遊戲內容、遊戲 package.json 版本號及對應 lockfile 版本中繼資料變更時跳過部署；平台、依賴與未遷移遊戲變更仍部署。手動執行或無法確認差異時保守部署；workflow 自身仍在觸發範圍。新增 gate 時加入兩份 workflow 的 matrix，並維持相同命令。
 - CI/CD 乾淨安裝使用 `npm ci --workspaces --include-workspace-root`；Hub 的內建遊戲相容 build 需要 root 的 Vite 與訓練 runtime dependencies，不得省略 workspace root。
 - `test:game-platform` 由兩份 workflow 的 `test:entrypoints` matrix 間接執行，涵蓋遊戲通訊橋樑、訊息協定與設定 schema；SDK workspace 已移除。兩份 workflow 維持相同的 `test:entrypoints` 命令。
 - Hub 單一四路由導覽與 `aria-current` 契約由 `scripts/check-hub-navigation.test.mjs` 驗證，包含於兩份 workflow 共用的 `test:entrypoints` 命令；手機導覽與平板無水平溢出另以本機 Brave browser smoke 驗證。
-- `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、未遷移遊戲的 JSON／統一 config UI，以及 R2 遊戲的自有設定／成績、無共用依賴、私有通訊和實際 bytes 雜湊驗證（`scripts/check-self-contained-game.test.mjs`）；另確認舊 `.dist-releases/` 已移除且由 Git 忽略，正式發布收據仍可追蹤。CI 與部署 workflow 維持同名 matrix 與相同命令。Hub build 另驗證已遷移遊戲不得攜帶 bundle／JSON，且不得恢復 `/runtimes/*`。
-- 畫畫塔防 R2 本機 Brave 測試為 `node scripts/check-r2-game-browser.mjs`，另執行 `--mobile`、`--revoke`；發布後執行 `--remote` 與 `--remote --standalone`。不加入沒有 Brave 的 Linux CI matrix。remote 讀真實 R2 資產，Hub／database 請求只在測試瀏覽器內導向本機，不建立正式紀錄。
+- `npm run test:game-architecture` 檢查全部遊戲 TypeScript、逐遊戲依賴與 i18n、未遷移遊戲的 JSON／統一 config UI，以及 R2 遊戲的自有設定／成績、無共用依賴、私有通訊和實際 bytes 雜湊驗證（`scripts/check-self-contained-game.test.mjs`）；發布工具測試另驗證上傳失敗不切換 current、不可變檔案與歷史回退。確認舊 `.dist-releases/` 已移除且由 Git 忽略，正式發布收據仍可追蹤。CI 與部署 workflow 維持同名 matrix 與相同命令。Hub build 另驗證已遷移遊戲不得攜帶 bundle／JSON，且不得恢復 `/runtimes/*`。
+- 畫畫塔防 R2 本機 Brave 測試為 `node scripts/check-r2-game-browser.mjs`，另執行 `--mobile`、`--revoke`、`--session-failure`；發布後執行 `--remote` 與 `--remote --standalone`。平台部署後另以 `--production-hub` 讀正式 Hub 與 R2，僅攔截 Hub `/api/*` 至本機，驗證真正部署的開始前固定版本流程。不加入沒有 Brave 的 Linux CI matrix。所有模式的資料庫寫入只在本機測試 SQLite，不建立正式紀錄。
 - `npm run test:webgazer` 驗證眼動練習參考實驗的 WebGazer/jsPsych bundle 完整性、校正與驗證程序、`settings.json` 與 `score.json` 欄位；包含於 `test:entrypoints`。網頁版沒有原生 Tobii 橋接。
 - `npm run test:webgazer-browser` 以本機 Brave 驗證眼動練習設定、無眼動刺激與成績流程、雙層同源 iframe 的相機權限，以及 R2 CSV 上傳失敗重試；此項為本機測試，不加入 Linux CI matrix。
 - `npm run build:cloudflare` 保留給本機完整 gate + build。CI/CD 已完成驗證時，部署 job 使用 `npm run build:cloudflare:only`，不可再序列重跑同一批測試。
-- `npm run test:cloudflare-deploy` 包含私人眼動 R2 bucket 建立流程的冪等性與失敗情境測試；兩份 workflow 維持相同的 `cloudflare-deploy` matrix 命令。
+- `npm run test:cloudflare-deploy` 包含私人眼動 R2 bucket 建立流程的冪等性與失敗情境，以及 R2 遊戲變更／版本 metadata 的 Pages 部署判斷測試；兩份 workflow 維持相同的 `cloudflare-deploy` matrix 命令。`test:gamerunner` 包含官方 current 入口、歷史雜湊與撤回驗證，並保留第三方 bridge 測試。
 - 部署 job 先以 Cloudflare API 確認或建立私人 `oculomotor-data` R2 bucket，再部署含 `OCULOMOTOR_DATA` binding 的 Hub；bucket 不設定公開網域，也不綁定 usergamerunner。
 - 兩份 workflow 的驗證 matrix 均為 `naming`、`pwa`、`game-architecture`、`hub-functions`、`gamerunner`、`trainer-entrypoints`、`cloudflare-deploy`；`test:entrypoints` 的內含 gate 以 root `package.json` 為準。
 - `npm run test:seo` 同時驗證文章正文的伺服器渲染與實際 HTML SEO 輸出，目前沒有獨立 CI matrix，也未列入 root build gate。Hub build 末尾會執行 `check-seo-output.mjs`，因此部署 build 有 HTML SEO 輸出檢查，PR 驗證 matrix 不會執行完整 `test:seo`；SEO 變更仍須本機另行驗證。
@@ -89,6 +91,8 @@ Hub 的共用邏輯、UI、樣式、auth、settings、routing helper、footer/na
 | 開發者上傳遊戲 | `PackageGameOverlay`／runner launcher 使用上傳契約與版本化 bridge，維持第三方既有設定／成績格式 | `/api/game-run-sessions` 建立一次性 token，再經 `/api/game-runs` → `game_runs` |
 
 R2 官方遊戲的 `rehab-trainer.game-score/v1` 為數值傳輸／入庫格式，並非 UI 描述檔；以 `docs/r2-game-migration-plan.md` 為準。Hub 僅提供 container、身份隔離、私有通訊、保存與 exit。禁止將已遷移遊戲 bundle 或共用 UI 依賴重新加入 Hub 依賴樹／output。
+
+`officialGameReleases.json` 只登記遊戲名稱、可信 origin 與遷移資格，不包含 current version。Hub 在 iframe 載入前請求 `/api/official-game-sessions`，由後端讀取 R2 官方 current／雜湊歷史與 approved manifest，回傳固定的 version、contentSha256、recordId 與 token。保存重試沿用該工作階段；current 切換不影響仍核准的舊版，撤回或雜湊不符時拒絕保存，R2 故障回覆 503。相容舊 Hub 可指定官方歷史版本；第三方上傳不得使用已登記的官方 slug，已提交的歷史投稿亦不得透過第三方審核 API 發布或撤回官方 slug。穩定 PWA 入口 `/games/{gameId}/` 以不可快取 302 選擇 current，已安裝的版本化 PWA 仍固定原版本。
 
 R2 遊戲與 Hub 分屬不同 origin。成果僅走交給指定 iframe window 的私有 MessageChannel；遊戲核對 init 的 parent source／origin，Hub 核對 nonce、game/version、sequence 與成果 schema，不接受一般 window message 的成果。獨立 PWA 只在新格式 release 明確宣告 fullscreen capability 時委派全螢幕，仍保持 `sandbox="allow-scripts"`。
 
