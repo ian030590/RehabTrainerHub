@@ -1,6 +1,6 @@
 # 小行星護盾防衛 R2 遷移審查單
 
-日期：2026-10-09。狀態：**擁有者已核准精確候選，R2 已發布並回讀驗證；Hub 切換待推送／部署與正式驗收。** 本紀錄依 [搬遷計畫第 7、11 節](r2-game-migration-plan.md) 填寫，未完成正式驗收前不標記遷移完成。
+日期：2026-10-09。狀態：**已遷移；擁有者核准、R2 發布、CI／正式部署、API 與桌機／觸控／獨立 PWA 驗收均完成。** 本紀錄依 [搬遷計畫第 7、11 節](r2-game-migration-plan.md) 填寫，當版證據保留在 [正式發布收據](releases/asteroid-shield-2.0.0.json)。
 
 ## 當版候選與核准邊界
 
@@ -19,7 +19,7 @@ dry-run manifest 的 `status: approved`／`approvedAt` 是 publisher 的擬發�
 
 `docs/migrations/asteroid-shield-2.0.0-candidate.json` 保留 2026-10-08 送審時的待核准快照；發布後狀態以正式收據為準。正式發布於 `2026-10-08T22:10:38.583Z` 完成（台灣 2026-10-09），runner 全部 12 檔 SHA-256／Content-Type／CSP、穩定 302／no-store、版本化 PWA 200 與舊 `1.0.0` 200 已驗證。官方歷史只包含新格式 `2.0.0`，沒有把舊 JSON 版本冒充新格式。
 
-R2 唯讀發布前檢查於 `2026-10-08T15:31:33.859Z` 通過：同 bucket 的畫畫塔防官方 current 回 200，確認憑證與讀取有效；asteroid 官方 current、`2.0.0/release.json` 及全部 12 個候選檔案目標均回 404。只執行 GET，沒有上傳或切換；核准後發布前仍須重新確認。結果保留在候選 JSON 的 `r2ReadOnlyPreflight`。
+R2 唯讀發布前檢查於 `2026-10-08T15:31:33.859Z` 通過：同 bucket 的畫畫塔防官方 current 回 200，確認憑證與讀取有效；asteroid 官方 current、`2.0.0/release.json` 及全部 12 個候選檔案目標均回 404。只執行 GET，沒有上傳或切換；結果保留在候選 JSON 的 `r2ReadOnlyPreflight`。核准後於 `2026-10-08T22:09:33.613Z` 再次唯讀確認相同結果，才開始公開發布。
 
 ## 舊流程、分類與歷史碰撞
 
@@ -69,7 +69,7 @@ R2 唯讀發布前檢查於 `2026-10-08T15:31:33.859Z` 通過：同 bucket 的�
 
 init 驗證 parent source／origin、game／package version、nonce 與唯一私有 port；Hub 照原契約驗證 sequence、成果 schema／大小與敏感欄位。一般 window 成果不會入庫。`officialGameReleases.json` 只新增資格／名稱／origin，不含 current version。
 
-`sync:games` 排除 asteroid workspace，lockfile 已同步。最後 Hub build 為 38 款舊遊戲＋Hub、39 個成功 tasks；小行星只留導向 runner 的相容入口及原圖相容資產，不包含它的遊戲 bundle／settings.json／score.json。其他 38 款舊遊戲仍維持共用 shell 流程。這是候選分支的輸出，正式站尚未切換。
+`sync:games` 排除 asteroid workspace，lockfile 已同步。最後 Hub build 為 38 款舊遊戲＋Hub、39 個成功 tasks；小行星只留導向 runner 的相容入口及原圖相容資產，不包含它的遊戲 bundle／settings.json／score.json。正式 Hub 已切換同一架構，middleware 另阻擋已遷移遊戲的舊子資產快取；其他 38 款舊遊戲仍維持共用 shell 流程。
 
 ## TDD 與回歸證據
 
@@ -83,13 +83,14 @@ init 驗證 parent source／origin、game／package version、nonce 與唯一私
 | 保留原成果指標分析 | 候選缺少 selectable metrics／統計 | Node 缺模組及 Brave 空選項先失敗；補自有 SVG／統計後通過 |
 | 原音效序列／靜音 | 候選曾以單音取代原多音序列 | 先失敗的頻率／jsPsych context 重用測試；恢復原四種序列與固定 50% 音量，原生 WebAudio 開關也通過 |
 | 英文 Hub 初始化 | 私有 init 在語言 effect 監聽前到達，英文 Hub 遊戲仍顯示中文 | 真實 English Hub 20 秒等待仍失敗；快取已驗證 init 語言並在 provider 掛載後套用，完整英文流程通過 |
+| 正式 Hub 的舊 JSON 仍回 200 | Pages 保留刪除資產快取；middleware 在讀 assets 前阻擋已遷移子路徑 | `200 !== 410` 先失敗；四項 middleware 回歸與正式 JSON／JS／SW／manifest 410／no-store 通過 |
 
 本機完整驗證命令及結果：
 
 | 命令 | 結果 |
 | --- | --- |
 | `npm run test:game-architecture` | 全遊戲 TypeScript、自包含／發布測試 29 項通過 |
-| `npm run test:hub-functions` | 98 項通過；drawing／asteroid 各自驗證 session 綁定、current 固定、撤回／digest／身份、SQLite 並行冪等 |
+| `npm run test:hub-functions` | 初版 98 項、補舊快取阻擋後 102 項通過；drawing／asteroid 各自驗證 session 綁定、current 固定、撤回／digest／身份、SQLite 並行冪等 |
 | `npm run test:gamerunner` | 24 項通過，包含第三方既有 bridge／沙盒／SW |
 | `npm run test:entrypoints` | 全部通過，含既有設定／教學／training／assessment／i18n／平台 gate |
 | `npm run test:naming`、`test:pwa`、`test:seo`、`test:cloudflare-deploy` | 全部通過；PWA 18 項，SEO 實際輸出通過 |
@@ -124,7 +125,21 @@ init 驗證 parent source／origin、game／package version、nonce 與唯一私
 3. 直接確認正式 `/api/games` 同 slug 一筆 `2.0.0`、`presentation: game`、motor／upper-limb、原文案、版本化原圖 URL，沒有通用 settingsUrl；核對圖片 SHA-256、穩定入口 302／no-store、版本 PWA 及 session 選定相同版本／摘要。不得輸出 session token。
 4. 從正式 runner 回讀全部 12 檔，核對 status／Content-Type／CSP／實際 SHA-256、current／歷史。保留舊 `1.0.0` 檔案與 D1 投稿，不把它加入新格式官方歷史。
 5. 執行同一腳本的 `--game asteroid-shield --remote --lobby`、`--remote --standalone`，部署成功後執行 `--production-hub --lobby`、`--production-hub --lobby --mobile`。它們讀真實 R2／正式 Hub，但所有 `/api/*` 測試寫入仍攔到本機 SQLite；另直接讀正式 API 補足 fixture 邊界。
-6. 記錄 CI／部署 URL／commit、擁有者核准、current／歷史、正式 API／圖片／browser 結果到 `docs/releases/asteroid-shield-2.0.0.json`，完成後才更新本審查單為「已遷移」。目前第 1、2 項的核准／R2 發布及第 4 項的回讀已完成；第 5 項真實 R2 的 `--remote --lobby` 與 `--remote --standalone` 均通過。Hub 推送／部署與正式 API／正式 Hub 瀏覽器驗收仍待完成。
+6. 記錄 CI／部署 URL／commit、擁有者核准、current／歷史、正式 API／圖片／browser 結果到 `docs/releases/asteroid-shield-2.0.0.json`，完成後才更新本審查單為「已遷移」。以上六項已全部完成，正式結果如下。
+
+| 正式驗收 | 結果 |
+| --- | --- |
+| [最終 CI／部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583) | 七項 matrix、部署範圍及 Pages 部署全成功；commit `2f3d9903467c44f5f93abcbca8a74a2b6f5d2038` |
+| Hub／runner deployment | [1657ebab.rehabtrainerhub.pages.dev](https://1657ebab.rehabtrainerhub.pages.dev)／[5c27ea55.trainerhub-user-games.pages.dev](https://5c27ea55.trainerhub-user-games.pages.dev)，兩者 commit 與 CI 相符 |
+| 真實 `/api/games` | 同 slug 只有一筆 `2.0.0`；`presentation: game`、motor／upper-limb、原雙語文案／作者／版本化預覽圖，沒有 `settingsUrl` |
+| 原圖與相容入口 | R2 與 Hub 相容圖均 200、SHA-256 與原圖相同；Hub 根入口只供應穩定 R2 PWA 連結 |
+| 舊 Hub 子資產 | `settings.json`、`score.json`、遊戲 JS、SW、manifest 均 410／no-store，阻擋 Pages 的刪除資產快取 |
+| 真實 versionless session | 201／no-store，固定 `2.0.0` 與同一 contentSha256；收據不含 token，未送出成果 |
+| R2 current／12 檔與歷史 | 實際 SHA-256／Content-Type／CSP 全通過，仍為擁有者核准的摘要；保留 `1.0.0` 與 `2.0.0`，新格式官方歷史只有 `2.0.0` |
+| 真實 runner browser | `--remote --lobby`、`--remote --standalone`、`--remote --standalone --mobile` 均通過 |
+| 真實正式 Hub browser | 最終部署後 `--production-hub --lobby`、`--production-hub --lobby --mobile` 均通過；752×485／390×844 真實 gameplay、設定／三步教學／全螢幕／完整成果／失敗重試／單筆 SQLite／返回 |
+
+正式 Hub browser 只攔截 `trainerhub.cc/api/*` 至本機 handler／SQLite，static Hub 與遊戲 bytes 都來自真實部署；Turnstile 僅在此本機 API 測試瀏覽器模擬。另直接讀正式 API／圖與 session 補足 fixture 邊界。沒有建立正式帳號或成果紀錄。
 
 ## 回退目標與限制
 
@@ -134,7 +149,7 @@ init 驗證 parent source／origin、game／package version、nonce 與唯一私
 
 [Cloudflare Pages 文件](https://developers.cloudflare.com/pages/configuration/serving-pages/) 說明刪除的資產可能在資料中心保留一週。兩個 URL 的精準 purge API 回 401，現有 Wrangler OAuth 沒有清除該網域快取的能力；未擴大清除範圍或更改 DNS／CSP。
 
-以 `_middleware.test.mjs` 先重現 `200 !== 410`，再由 Hub 既有 middleware 在讀取 Pages assets 前拒絕 registry 已遷移遊戲的子資產，回覆 `410`／`Cache-Control: no-store`；相容根入口與 `index.html` 繼續供應 R2 連結，未遷移遊戲、預覽圖、API、退役網域 redirect 均有回歸測試。四項測試納入既有 `test:hub-functions` glob，Hub Functions 102 項、entrypoints、架構 29 項、命名及 Hub build 通過。本機首次 build 的 `.next/build-manifest.json` 遭改名為 `[conflicted 2]` 而失敗，乾淨重試 39 tasks 通過；正式輸出由 CI 乾淨建置。此修正只影響 Hub，不更動已核准 `2.0.0` 的任何 bytes；正式完成狀態仍等待修正後 CI／部署及 410 回讀。
+以 `_middleware.test.mjs` 先重現 `200 !== 410`，再由 Hub 既有 middleware 在讀取 Pages assets 前拒絕 registry 已遷移遊戲的子資產，回覆 `410`／`Cache-Control: no-store`；相容根入口與 `index.html` 繼續供應 R2 連結，未遷移遊戲、預覽圖、API、退役網域 redirect 均有回歸測試。四項測試納入既有 `test:hub-functions` glob，Hub Functions 102 項、entrypoints、架構 29 項、命名及 Hub build 通過。本機首次 build 的 `.next/build-manifest.json` 遭改名為 `[conflicted 2]` 而失敗，乾淨重試 39 tasks 通過；正式輸出由 CI 乾淨建置。此修正只影響 Hub，不更動已核准 `2.0.0` 的任何 bytes；修正後 CI／部署及不帶 query 的正式 410／no-store 回讀已通過。
 
 發布前已核對的正式舊流程：Hub [8e957462.rehabtrainerhub.pages.dev](https://8e957462.rehabtrainerhub.pages.dev)，deployment ID `8e957462-7639-4fe6-a3db-acfa278735bd`；相容 runner [e2459d3c.trainerhub-user-games.pages.dev](https://e2459d3c.trainerhub-user-games.pages.dev)，deployment ID `e2459d3c-d5a5-4257-aadf-e9872894510b`。兩者來源 commit 均為 `e22e2d363b1f895567eafa382852f34cb1c31463`。原分類／原圖／設定與教學已唯讀重現；另以正式舊 standalone 資產完成設定→教學→真實全螢幕 Pixi→物件結局與成果，所有正式 API 由 CDP 阻擋，沒有建立正式紀錄（`.tmp/asteroid-rollback-baseline.log`）。
 
@@ -142,4 +157,4 @@ init 驗證 parent source／origin、game／package version、nonce 與唯一私
 
 切回舊 Hub 不等同撤回 `2.0.0`。官方 CLI 目前沒有撤回命令；如需撤回，仍須按計畫第 8 節另行制定、驗證 owner 的 R2 status 更新／回讀程序。本機撤回 fixture 通過不代表正式撤回已執行。
 
-已驗證 Brave 桌機與觸控裝置模擬，不代表所有實體手機／Safari／iOS 原生 fullscreen；沒有真人 Turnstile、實際安裝圖示操作或長時間完全離線驗證。MediaPipe 體感／相機不在本次授權範圍，將來啟用需獨立受控能力設計。CI 尚待推送執行，正式 API／Hub 部署驗收仍待完成；R2 當版已核准、發布與回讀驗證。
+已驗證 Brave 桌機與觸控裝置模擬，不代表所有實體手機／Safari／iOS 原生 fullscreen；沒有真人 Turnstile、實際安裝圖示操作或長時間完全離線驗證。MediaPipe 體感／相機不在本次授權範圍，將來啟用需獨立受控能力設計。當版已完成核准、發布、CI／部署與正式驗收；其餘 38 款未遷移遊戲保留原流程。

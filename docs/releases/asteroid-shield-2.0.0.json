@@ -5,7 +5,7 @@
   "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/package/index.html",
   "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e",
   "verifiedAt": "2026-10-08T22:10:38.583Z",
-  "status": "published-awaiting-hub-deployment",
+  "status": "published-and-verified",
   "prefix": "releases/asteroid-shield/2.0.0/",
   "pwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/",
   "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/",
@@ -99,8 +99,8 @@
       "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e"
     }
   },
-  "runnerFilesCheckedAt": "2026-10-08T22:12:07.156Z",
-  "hubProductionDeployed": false,
+  "runnerFilesCheckedAt": "2026-10-08T22:27:39.075Z",
+  "hubProductionDeployed": true,
   "verification": {
     "allR2FilesReadBackSha256": true,
     "currentAndApprovedManifestReadBack": true,
@@ -110,7 +110,20 @@
     "legacy1_0_0StillAvailable": true,
     "remoteLobbyBrowser": true,
     "remoteStandaloneBrowser": true,
-    "productionTrainingRecordsCreated": false
+    "productionTrainingRecordsCreated": false,
+    "allOfficialHistoryManifestAndFileHashesVerified": true,
+    "actualProductionApiCatalog": true,
+    "legacyPublicationCannotReplaceR2Launch": true,
+    "originalPreviewAndUpperLimbTag": true,
+    "productionCompatibilityPreviewAndPwaLink": true,
+    "productionMigratedSubAssetsGoneNoStore": true,
+    "versionlessProductionSession": true,
+    "remoteStandaloneMobileBrowser": true,
+    "productionHubDesktop": true,
+    "productionHubMobile": true,
+    "browserApiAndRecordWritesOnlyInLocalSqlite": true,
+    "turnstileMockedOnlyForLocalApiBrowser": true,
+    "remaining38GamesNotMigrated": true
   },
   "rollback": {
     "checkedAt": "2026-10-08T14:46:00.023Z",
@@ -159,5 +172,192 @@
       "url": "https://e2459d3c.trainerhub-user-games.pages.dev",
       "commit": "e22e2d363b1f895567eafa382852f34cb1c31463"
     }
-  }
+  },
+  "hubDeploymentCommit": "2f3d9903467c44f5f93abcbca8a74a2b6f5d2038",
+  "hubDeploymentRunUrl": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583",
+  "hubDeploymentUrl": "https://1657ebab.rehabtrainerhub.pages.dev",
+  "hubDeploymentId": "1657ebab-6fb6-4d4d-9656-02a1966df3f5",
+  "runnerDeploymentUrl": "https://5c27ea55.trainerhub-user-games.pages.dev",
+  "runnerDeploymentId": "5c27ea55-235c-4c55-a1ed-359eee36deea",
+  "hubProductionVerifiedAt": "2026-10-08T22:32:55.755Z",
+  "remainingUnmigratedGameCount": 38,
+  "actualProductionApi": {
+    "checkedAt": "2026-10-08T22:31:32.798Z",
+    "gameId": "asteroid-shield",
+    "productionTrainingRecordsCreated": false,
+    "publicCatalog": {
+      "url": "https://trainerhub.cc/api/games",
+      "status": 200,
+      "matchingGames": [
+        {
+          "id": "asteroid-shield",
+          "slug": "asteroid-shield",
+          "title": "小行星護盾防衛",
+          "summary": "移動護盾保護飛船，練習手部定位與上肢控制。",
+          "trainer": "motor",
+          "category": "upper-limb",
+          "developerName": "居家訓練網",
+          "updatedAt": "2026-10-08T22:09:33.734Z",
+          "copy": {
+            "zh-TW": {
+              "title": "小行星護盾防衛",
+              "description": "移動護盾保護飛船，練習手部定位與上肢控制。"
+            },
+            "en": {
+              "title": "Asteroid Shield Defense",
+              "description": "Move a shield to protect the ship and practise hand positioning and upper-limb control."
+            }
+          },
+          "previewUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/package/preview.webp",
+          "release": {
+            "id": "asteroid-shield@2.0.0",
+            "version": "2.0.0",
+            "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e",
+            "capabilities": [
+              "audio",
+              "fullscreen",
+              "pointer",
+              "touch"
+            ],
+            "approvedAt": "2026-10-08T22:09:33.734Z",
+            "presentation": "game",
+            "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/",
+            "installUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/"
+          }
+        }
+      ]
+    },
+    "preview": {
+      "url": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/package/preview.webp",
+      "status": 200,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98"
+    },
+    "hubCompatibilityEntry": {
+      "url": "https://trainerhub.cc/games/asteroid-shield/",
+      "status": 200,
+      "stablePwaLink": true
+    },
+    "hubCompatibilityPreview": {
+      "url": "https://trainerhub.cc/assets/game-previews/asteroid-shield/preview.webp",
+      "status": 200,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98"
+    },
+    "migratedSubAssets": [
+      {
+        "url": "https://trainerhub.cc/games/asteroid-shield/settings.json",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/asteroid-shield/score.json",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/asteroid-shield/assets/index-DiHZA-sh.js",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/asteroid-shield/sw.js",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/asteroid-shield/manifest.webmanifest",
+        "status": 410,
+        "cacheControl": "no-store"
+      }
+    ],
+    "versionlessSession": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e",
+      "noStore": true,
+      "tokenOmitted": true,
+      "recordNotSubmitted": true
+    },
+    "rehabtrainerhub": {
+      "id": "1657ebab-6fb6-4d4d-9656-02a1966df3f5",
+      "url": "https://1657ebab.rehabtrainerhub.pages.dev",
+      "commit": "2f3d9903467c44f5f93abcbca8a74a2b6f5d2038"
+    },
+    "trainerhub-user-games": {
+      "id": "5c27ea55-235c-4c55-a1ed-359eee36deea",
+      "url": "https://5c27ea55.trainerhub-user-games.pages.dev",
+      "commit": "2f3d9903467c44f5f93abcbca8a74a2b6f5d2038"
+    }
+  },
+  "ciChecks": [
+    {
+      "name": "deployment_scope",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583/job/113572270447"
+    },
+    {
+      "name": "Verify (naming)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583/job/113572270627"
+    },
+    {
+      "name": "Verify (game-architecture)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583/job/113572270666"
+    },
+    {
+      "name": "Verify (hub-functions)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583/job/113572270721"
+    },
+    {
+      "name": "Verify (gamerunner)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583/job/113572270786"
+    },
+    {
+      "name": "Verify (cloudflare-deploy)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583/job/113572270846"
+    },
+    {
+      "name": "Verify (trainer-entrypoints)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583/job/113572270852"
+    },
+    {
+      "name": "Verify (pwa)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583/job/113572270978"
+    },
+    {
+      "name": "deploy",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583/job/113572536970"
+    }
+  ],
+  "retainedVersionsVerified": [
+    "1.0.0",
+    "2.0.0"
+  ],
+  "gameOwnedCatalog": {
+    "path": "game.json",
+    "trainer": "motor",
+    "category": "upper-limb",
+    "previewUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/package/preview.webp",
+    "previewSha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98"
+  },
+  "retainedHubAssetCache": {
+    "initiallyObserved": true,
+    "initialHubCommit": "ef19dbc13964b32fe69d4186572ea694dbefecd1",
+    "initialRunUrl": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37852468197",
+    "exactTwoUrlPurgeStatus": 401,
+    "resolvedBy": "Hub middleware returns 410/no-store before Pages assets for migrated game subpaths",
+    "resolvedCommit": "2f3d9903467c44f5f93abcbca8a74a2b6f5d2038"
+  },
+  "limitations": [
+    "Brave desktop and touch emulation; physical Safari/iOS not tested",
+    "Real Turnstile, OS install icon and prolonged fully offline operation not tested",
+    "Mouse/touch only; dormant MediaPipe camera control was not enabled",
+    "Official revoke CLI unavailable; production revocation not performed"
+  ]
 }
