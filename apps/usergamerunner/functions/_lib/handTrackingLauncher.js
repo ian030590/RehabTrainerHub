@@ -1,4 +1,3 @@
-import { CreateHandTrackingBroker } from '../../../../packages/ui/src/handTrackingBroker.js';
 import { AcceptGameMessage, IsGameResult } from '../../../../packages/ui/src/selfContainedGame.js';
 
 export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
@@ -31,9 +30,8 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
       const metrics = value => plain(value) && Object.keys(value).length <= 12 && Object.entries(value).every(([key,item]) => /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(key) && !sensitiveKey.test(key) && (item === null || (typeof item === 'number' && Number.isFinite(item) && Math.abs(item) <= 1e12)));
       const IsGameResult = ${IsGameResult.toString()};
       const accept = ${AcceptGameMessage.toString()};
-      const createBroker = ${CreateHandTrackingBroker.toString()};
       let port = null; let initialized = false; let consentReply = null; let previousFocus = null;
-      const broker = createBroker({ createController: () => TrainerHubHandTracking.CreateController(),
+      const broker = TrainerHubHandTracking.CreateBroker({
         send: message => port?.postMessage({ ...message, sessionNonce:nonce }),
         requestConsent: () => new Promise(resolve => { consentReply = resolve; previousFocus = document.activeElement; consent.hidden=false; document.getElementById('camera-enable').focus(); }),
         cancelConsent: () => { consent.hidden=true; consentReply?.(false); consentReply=null; previousFocus?.focus(); },

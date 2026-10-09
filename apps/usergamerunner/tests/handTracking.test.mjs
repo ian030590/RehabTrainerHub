@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { build } from 'esbuild';
+import { runInNewContext } from 'node:vm';
+import { resolve } from 'node:path';
 import test from 'node:test';
 import { AcceptGameMessage } from '../../../packages/ui/src/selfContainedGame.js';
 import { createHash } from 'node:crypto';
@@ -184,4 +187,29 @@ test('only trusted official hand launchers receive camera permission; game packa
   assert.doesNotMatch(game.headers.get('content-security-policy'), /wasm-unsafe-eval/);
   official = false;
   assert.equal((await Read('')).status, 404);
+});
+
+test('production-bundled hand launcher starts its opaque game without acquiring camera input', async () => {
+  const output = await build({ entryPoints: [resolve(import.meta.dirname, '../functions/_lib/handTrackingLauncher.js')],
+    bundle: true, keepNames: true, format: 'esm', platform: 'neutral', write: false });
+  const { RenderHandTrackingLauncher } = await import('data:text/javascript;base64,' + Buffer.from(output.outputFiles[0].text).toString('base64'));
+  const html = RenderHandTrackingLauncher({ gameId: 'gesture-battler', version: '2.0.0', capabilities: ['hand-tracking'] }, '/games/gesture-battler/2.0.0/', 'test-nonce');
+  const inline = html.match(/<script nonce="test-nonce">([\s\S]*?)<\/script>/)[1];
+  const events = new Map();
+  const frame = { addEventListener: (type, listener) => events.set(type, listener) };
+  const elements = new Map([['game-frame', frame], ['camera-consent', {}], ['camera-enable', {}], ['camera-cancel', {}], ['install-button', {}]]);
+  let ready;
+  let brokerCount = 0;
+  let cameraCount = 0;
+  runInNewContext(inline, {
+    document: { addEventListener: (type, listener) => { assert.equal(type, 'DOMContentLoaded'); ready = listener; }, getElementById: id => elements.get(id) },
+    TrainerHubHandTracking: { CreateBroker: () => { brokerCount++; return { Start() {}, Stop() {} }; }, CreateController: () => { cameraCount++; } },
+    crypto, Uint8Array, URLSearchParams, location: { search: '?lang=en' },
+    navigator: {}, window: { addEventListener() {} }, setInterval: () => 0,
+  });
+  ready();
+  assert.equal(brokerCount, 1, 'The published browser runtime supplies the broker');
+  assert.equal(cameraCount, 0, 'Loading settings does not start the camera');
+  assert.equal(frame.src, '/games/gesture-battler/2.0.0/package/index.html');
+  assert.ok(events.has('load'), 'The strict game receives its private channel on load');
 });

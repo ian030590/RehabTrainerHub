@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "status": "owner-approved-awaiting-publication",
-  "published": false,
+  "status": "published-production-verification-in-progress",
+  "published": true,
   "ownerApproval": {
     "instruction": "核准並推送",
     "date": "2026-10-09",
@@ -67,7 +67,7 @@
       }
     ],
     "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1",
-    "approvedAt": "2026-10-09T03:46:54.287Z"
+    "approvedAt": "2026-10-09T05:56:49.563Z"
   },
   "input": {
     "version": "hand-tracking-1.0.0",
@@ -241,5 +241,9 @@
     "previewSha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b"
   },
   "productionVerification": "pending-publication-and-deployment",
-  "ci": "not-run"
+  "ci": {
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37891101687",
+    "commit": "e8cedc4002c4c4beaf24dd7c8d04a300d0342d36",
+    "status": "initial-seven-gates-and-deploy-passed-final-platform-fix-pending"
+  }
 }

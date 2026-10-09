@@ -219,16 +219,17 @@ try {
   await send('Page.enable', {}, session);
   if (gameId === 'gesture-battler') await send('Page.addScriptToEvaluateOnNewDocument', { source: `
     if (window === window.top) {
+      const fixtureImages = ${JSON.stringify(Object.fromEntries([...handFixtures].map(([path, bytes]) => [path.split('/').at(-1).replace('.jpg', ''), 'data:image/jpeg;base64,' + bytes.toString('base64')])))};
       const nativeGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
       navigator.mediaDevices.getUserMedia = async () => {
         const nativeStream = await nativeGetUserMedia({video:true,audio:false});
         nativeStream.getTracks().forEach(track=>track.stop());
         window.nativeCameraPermissionVerified=true;
-        let image = new Image(); image.src = '/__hand-test/pointing_up.jpg'; await image.decode();
+        let image = new Image(); image.src = fixtureImages.pointing_up; image.fixtureName='pointing_up'; await image.decode();
         const canvas = document.createElement('canvas'); canvas.width=720;canvas.height=720;
         const context=canvas.getContext('2d');
-        const draw = () => {const sx=image.src.endsWith('/right_hands.jpg')?360:0;const width=image.width-sx;const scale=Math.min(canvas.width/width,canvas.height/image.height);context.fillStyle='white';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,sx,0,width,image.height,(canvas.width-width*scale)/2,(canvas.height-image.height*scale)/2,width*scale,image.height*scale);};draw();
-        window.setHandFixture = async name => {const next=new Image();next.src='/__hand-test/'+name+'.jpg';await next.decode();image=next;};
+        const draw = () => {const sx=image.fixtureName==='right_hands'?360:0;const width=image.width-sx;const scale=Math.min(canvas.width/width,canvas.height/image.height);context.fillStyle='white';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,sx,0,width,image.height,(canvas.width-width*scale)/2,(canvas.height-image.height*scale)/2,width*scale,image.height*scale);};draw();
+        window.setHandFixture = async name => {const next=new Image();next.src=fixtureImages[name];next.fixtureName=name;await next.decode();image=next;};
         const stream=canvas.captureStream(15);window.handFixtureStream=stream;
         const timer=setInterval(()=>{if(stream.getTracks().every(track=>track.readyState==='ended'))clearInterval(timer);else draw();},66);
         return stream;

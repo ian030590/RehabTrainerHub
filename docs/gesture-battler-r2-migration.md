@@ -1,6 +1,6 @@
 # 手勢指令對戰 R2 候選審查
 
-更新日期：2026-10-09。狀態：本機實作與驗證完成，擁有者以「核准並推送」核准以下精確版本及摘要；尚未發布 R2、切換正式 Hub 或完成正式驗收。正式站仍維持兩款已遷移遊戲與 38 款舊流程。本機 registry 的第三款登記只供候選測試。
+更新日期：2026-10-09。狀態：擁有者以「核准並推送」核准以下精確版本及摘要；R2 已發布，Hub／runner 已部署，正式驗收進行中。尚未建立完整正式收據或標記遷移完成。
 
 ## 精確候選
 
@@ -8,7 +8,7 @@
 - `contentSha256`：`07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1`。
 - 遊戲包：5 個檔案、893,134 bytes。包含自有設定／教學／引擎／雙語結果、`game.json` 與原始預覽圖；沒有設定／成績 JSON、MediaPipe 模型或平台 UI。
 - 第一方輸入：`hand-tracking-1.0.0`，MediaPipe `0.10.35`。10 個檔案合計 41,723,126 bytes；實際輸入檔案清單摘要為 `0f141b5a013b6a14a6ce71f58c8e7ab32a1ac15f1ce547fdd1a28d6be3bd94c4`。包含 SIMD／非 SIMD／module WASM、固定模型、第一方輸入程式與授權文件；PWA 預快取實際使用的 SIMD／非 SIMD 路徑。
-- 完整清單：[候選資料](migrations/gesture-battler-2.0.0-candidate.json)。`published: false`；`ownerApproval` 記錄使用者的精確候選核准，其中 release 格式的 `status: approved`／`approvedAt` 是 Publisher dry-run 產物，不能作為已公開的證據。
+- 完整清單：[候選資料](migrations/gesture-battler-2.0.0-candidate.json)。`ownerApproval` 記錄使用者的精確候選核准；發布前的 dry-run 不作為公開證據，發布後以 R2 實際回讀與正式部署／瀏覽器驗收為準。
 
 發布前重新執行 `node scripts/publish-official-game.mjs gesture-battler --dry-run` 核對上述摘要。任何遊戲 bytes 改動都須重新審查；已公開的遊戲與輸入版本不得覆寫。未建立 `docs/releases/gesture-battler-2.0.0.json`，正式收據須等發布與正式驗收完成後才建立。
 
@@ -73,7 +73,7 @@ Hub 結果保留 iframe，由遊戲顯示成功／失敗與重試；只有返回
 | 英文私有 init | init 先於 React effect，語言事件遺失 | 訂閱後讀目前已驗證語言；英文設定／教學／校正／成果通過 |
 | 英文 PWA／離線入口 | lang 被舊 query 安全檢查拒絕；SW 忽略 query | 僅官方手部入口允許單一 zh／en；canonical cache 離線回歸 |
 
-本機 gate 通過：`test:naming`、`test:pwa`（18 項）、`test:game-architecture`（42 項）、`test:hub-functions`（105 項）、`test:gamerunner`（30 項）、`test:entrypoints`、`test:cloudflare-deploy`（4 項）。遊戲、Hub、runner build 與 Functions `node --check` 通過。既有 `test:game-architecture:browser` 5 項及畫畫塔防 R2 大廳完整流程通過。CI 尚未執行；兩份 workflow 保持既有七項 matrix／相同命令，沒有加入需要 Brave 的 Linux gate。
+本機 gate 通過：`test:naming`、`test:pwa`（18 項）、`test:game-architecture`（42 項）、`test:hub-functions`（105 項）、`test:gamerunner`（初始 30 項）、`test:entrypoints`、`test:cloudflare-deploy`（4 項）。遊戲、Hub、runner build 與 Functions `node --check` 通過。既有 `test:game-architecture:browser` 5 項及畫畫塔防 R2 大廳完整流程通過。[初次 CI／部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37891101687)七項 matrix 與兩站部署成功；兩份 workflow 保持既有七項 matrix／相同命令，沒有加入需要 Brave 的 Linux gate。
 
 手勢專用 Brave 命令（全部成果只寫本機 SQLite）：
 
@@ -106,5 +106,9 @@ Hub output 曾被同步工具改名為 conflicted 檔，重建後測試採 `.tmp
 此遊戲首次新格式沒有可供 `--activate-version` 的舊新格式回退版。切換失敗先恢復已核對 Hub 舊部署及 gesture registry／workspace 依賴／原遊戲 source 與兩份 JSON；不把 R2 舊 `1.0.0` JSON 版本加入新格式歷史。恢復舊入口不等於撤回新 R2 版本；官方 CLI 尚無撤回命令，需按計畫第 8 節制定並驗證擁有者操作，不刪歷史物件或紀錄。
 
 核准後順序依[計畫第 7 節步驟 E–F](r2-game-migration-plan.md)：先部署相容 runner 支援，核對候選摘要後發布 R2／current，再部署 Hub registry／bundle 排除，等待 CI／部署成功，最後直接驗證真實 API 分類／同版圖片／摘要、穩定入口、固定版本 session、逐檔 CSP／bytes，以及 `--remote --lobby`、`--remote --standalone`、`--production-hub --lobby` 與手機正式站流程。正式驗收與收據完成後才標記遷移完成。
+
+2026-10-09 rollout：先部署 runner `78ba8f66`、回讀全部十個輸入資產，再發布 R2／current（遊戲摘要一致），推送 `e8cedc4` 後 CI／兩站部署成功。正式 `/api/games` 的唯一官方手勢入口、上肢分類、原圖、穩定 302／no-store、嚴格 iframe／相機 launcher、版本化 PWA、舊 Hub 子資產 410 與無指定版本的 session 回傳皆通過。Session API 只簽發記憶體 HMAC／UUID，僅更新一般 rate_limits 計數，不建立 session／訓練紀錄，不儲存或輸出 token；所有 browser 保存仍只寫本機 SQLite。
+
+正式 browser 發現兩項並先重現失敗：錄製手部圖片被 Hub SW 導航 fallback 攔截，改由已核對的圖片 bytes 形成 data URL；Wrangler 保留函式名稱時，序列化的 broker 遺漏 `__name` 輔助碼，獨立 PWA 無法啟動。新增真實 esbuild `keepNames` 編譯後的 launcher 開頁測試，先因 `__name` 失敗，再改用已發布輸入 IIFE 的 `CreateBroker` 讓測試通過；設定載入仍不開相機。R2 遊戲與十個輸入資產 bytes 均不變。修正後重跑 runner／命名 gate、部署與完整正式瀏覽器流程，再補正式收據。
 
 擁有者已核准上述精確版本／摘要。感測器驗收限制：未使用實體相機、真人 1–5 手勢、Safari／iOS、原生安裝操作或長時間離線。人工驗收依序開啟遊戲、略過／完成教學、確認相機、握拳／張手／1–5 各自校正、分別完成自由／指定模式、遮住手確認中斷、退出確認攝影機指示燈熄滅；再檢查拒絕權限重試、斷線與手機旋轉。這些項目不能以錄製影像測試冒充完成。
