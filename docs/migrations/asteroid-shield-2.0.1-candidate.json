@@ -81,7 +81,7 @@
       "contentType": "image/webp"
     }
   ],
-  "currentProductionVersion": "2.0.0",
+  "currentProductionVersion": "2.0.1",
   "changes": [
     "Native foreground settings dialog over the pre-rendered tutorial scene",
     "Tour begins only after confirmation; settings and scene retained on return",
@@ -109,5 +109,6 @@
     "reviewedContentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3",
     "context": "Explicit response approving the exact 2.0.1 candidate shown with screenshots and full contentSha256."
   },
-  "formalReceipt": "docs/releases/asteroid-shield-2.0.1.json"
+  "formalReceipt": "docs/releases/asteroid-shield-2.0.1.json",
+  "previousProductionVersion": "2.0.0"
 }

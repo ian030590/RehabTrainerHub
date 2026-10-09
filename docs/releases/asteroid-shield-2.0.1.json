@@ -127,7 +127,9 @@
         752,
         485
       ],
-      "recordWrites": "local SQLite only"
+      "recordWrites": "local SQLite only",
+      "postDeploymentPassed": true,
+      "deploymentCommit": "f49ff709e9bbe2156be5b30591d336fec90de4c4"
     },
     {
       "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --production-hub --lobby --mobile",
@@ -136,7 +138,9 @@
         390,
         844
       ],
-      "recordWrites": "local SQLite only"
+      "recordWrites": "local SQLite only",
+      "postDeploymentPassed": true,
+      "deploymentCommit": "f49ff709e9bbe2156be5b30591d336fec90de4c4"
     },
     {
       "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --remote --lobby --english",
@@ -171,12 +175,18 @@
     "remoteEnglishLobby": true,
     "remoteStandaloneMobile": true,
     "browserApiAndRecordWritesOnlyInLocalSqlite": true,
-    "productionTrainingRecordsCreated": false
+    "productionTrainingRecordsCreated": false,
+    "postDeploymentDesktopAndMobile": true,
+    "productionMigratedSubAssetsGoneNoStore": true,
+    "ciAndPagesDeploymentSucceeded": true
   },
-  "productionVerifiedAt": "2026-10-09T00:50:37.381Z",
+  "productionVerifiedAt": "2026-10-09T00:57:28.849Z",
   "actualProductionApi": {
-    "checkedAt": "2026-10-09T00:50:37.381Z",
+    "checkedAt": "2026-10-09T00:57:28.849Z",
+    "gameId": "asteroid-shield",
+    "productionTrainingRecordsCreated": false,
     "publicCatalog": {
+      "url": "https://trainerhub.cc/api/games",
       "status": 200,
       "matchingGames": [
         {
@@ -218,10 +228,47 @@
       ]
     },
     "preview": {
+      "url": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.1/package/preview.webp",
       "status": 200,
-      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
-      "url": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.1/package/preview.webp"
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98"
     },
+    "hubCompatibilityEntry": {
+      "url": "https://trainerhub.cc/games/asteroid-shield/",
+      "status": 200,
+      "stablePwaLink": true
+    },
+    "hubCompatibilityPreview": {
+      "url": "https://trainerhub.cc/assets/game-previews/asteroid-shield/preview.webp",
+      "status": 200,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98"
+    },
+    "migratedSubAssets": [
+      {
+        "url": "https://trainerhub.cc/games/asteroid-shield/settings.json",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/asteroid-shield/score.json",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/asteroid-shield/assets/index-DiHZA-sh.js",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/asteroid-shield/sw.js",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/asteroid-shield/manifest.webmanifest",
+        "status": 410,
+        "cacheControl": "no-store"
+      }
+    ],
     "versionlessSession": {
       "status": 201,
       "version": "2.0.1",
@@ -230,11 +277,16 @@
       "tokenOmitted": true,
       "recordNotSubmitted": true
     },
-    "hubCompatibilityEntry": {
-      "status": 200,
-      "stablePwaLink": true
+    "rehabtrainerhub": {
+      "id": "65a47245-0c33-4afc-a8eb-5c7407daaa10",
+      "url": "https://65a47245.rehabtrainerhub.pages.dev",
+      "commit": "f49ff709e9bbe2156be5b30591d336fec90de4c4"
     },
-    "productionTrainingRecordsCreated": false
+    "trainerhub-user-games": {
+      "id": "64f9a248-3932-4310-b041-d3936c541c62",
+      "url": "https://64f9a248.trainerhub-user-games.pages.dev",
+      "commit": "f49ff709e9bbe2156be5b30591d336fec90de4c4"
+    }
   },
   "retainedVersionsVerified": [
     "1.0.0",
@@ -243,14 +295,14 @@
   ],
   "pagesDeployments": {
     "rehabtrainerhub": {
-      "id": "1657ebab-6fb6-4d4d-9656-02a1966df3f5",
-      "url": "https://1657ebab.rehabtrainerhub.pages.dev",
-      "commit": "2f3d9903467c44f5f93abcbca8a74a2b6f5d2038"
+      "id": "65a47245-0c33-4afc-a8eb-5c7407daaa10",
+      "url": "https://65a47245.rehabtrainerhub.pages.dev",
+      "commit": "f49ff709e9bbe2156be5b30591d336fec90de4c4"
     },
     "trainerhub-user-games": {
-      "id": "5c27ea55-235c-4c55-a1ed-359eee36deea",
-      "url": "https://5c27ea55.trainerhub-user-games.pages.dev",
-      "commit": "2f3d9903467c44f5f93abcbca8a74a2b6f5d2038"
+      "id": "64f9a248-3932-4310-b041-d3936c541c62",
+      "url": "https://64f9a248.trainerhub-user-games.pages.dev",
+      "commit": "f49ff709e9bbe2156be5b30591d336fec90de4c4"
     }
   },
   "pagesRequiredForGameActivation": false,
@@ -266,5 +318,55 @@
     "Brave desktop and touch emulation; physical Safari/iOS not tested",
     "Real Turnstile, OS install icon and prolonged fully offline operation not tested",
     "Mouse/touch only; dormant MediaPipe camera control was not enabled"
+  ],
+  "sourceCommit": "f49ff709e9bbe2156be5b30591d336fec90de4c4",
+  "ciRunUrl": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465",
+  "ciConclusion": "success",
+  "ciChecks": [
+    {
+      "name": "deployment_scope",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465/job/113616105791"
+    },
+    {
+      "name": "Verify (cloudflare-deploy)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465/job/113616105985"
+    },
+    {
+      "name": "Verify (pwa)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465/job/113616106009"
+    },
+    {
+      "name": "Verify (gamerunner)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465/job/113616106019"
+    },
+    {
+      "name": "Verify (trainer-entrypoints)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465/job/113616106064"
+    },
+    {
+      "name": "Verify (hub-functions)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465/job/113616106066"
+    },
+    {
+      "name": "Verify (naming)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465/job/113616106104"
+    },
+    {
+      "name": "Verify (game-architecture)",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465/job/113616106116"
+    },
+    {
+      "name": "deploy",
+      "conclusion": "success",
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465/job/113616298462"
+    }
   ]
 }

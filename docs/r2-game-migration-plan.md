@@ -4,7 +4,7 @@
 
 小行星護盾防衛的滑鼠／觸控 `asteroid-shield@2.0.0` 已完成擁有者精確版本核准、R2 發布與逐檔回讀、[CI／Hub／runner 部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583)、正式 API／圖片／固定版本 session，以及真實 Hub 桌機／觸控與獨立 PWA 驗收。逐遊戲證據見 [審查單](asteroid-shield-r2-migration.md)與[正式收據](releases/asteroid-shield-2.0.0.json)。目前 2 款完成、38 款維持舊流程；第 1 節保留畫畫塔防首個試點的發布歷史與當時數量。
 
-小行星護盾防衛 `2.0.1` 將設定改為前景視窗，遊戲說明場景先在背景呈現，確認後才啟動教學；擁有者已核准精確摘要，R2／正式 API／Hub 桌機與手機／獨立 PWA 驗收通過。見 [設定視窗審查](asteroid-shield-settings-dialog-2.0.1.md)與[正式收據](releases/asteroid-shield-2.0.1.json)。`2.0.0` 保留作為已驗證回退版本；第 7 節步驟 B 將相同呈現方式列為後續遷移要求。
+小行星護盾防衛 `2.0.1` 將設定改為前景視窗，遊戲說明場景先在背景呈現，確認後才啟動教學；擁有者已核准精確摘要，R2／正式 API／Hub 桌機與手機／獨立 PWA 驗收通過，[CI／部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465)成功且部署後已重新驗收。見 [設定視窗審查](asteroid-shield-settings-dialog-2.0.1.md)與[正式收據](releases/asteroid-shield-2.0.1.json)。`2.0.0` 保留作為已驗證回退版本；第 7 節步驟 B 將相同呈現方式列為後續遷移要求。
 
 本次先發布新格式 `2.0.0`，最後的設定驗收發現自訂秒數與下拉選單顯示不同，補上失敗測試後修正並另發 `2.0.1`；沒有覆寫已發布內容。舊版 `1.0.0` 與初次試點 `2.0.0` 均保留。
 

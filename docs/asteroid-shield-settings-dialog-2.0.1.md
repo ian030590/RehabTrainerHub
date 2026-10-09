@@ -60,4 +60,6 @@ node scripts/check-r2-game-browser.mjs --game asteroid-shield --remote --standal
 
 正式 Hub 靜態頁與遊戲 bytes 直接讀真實部署，只有 `/api/*` 攔至本機 handler／SQLite；每個 Hub 流程保存失敗重試後一筆，沒有建立正式成果。真實正式 session 僅確認選定 `2.0.1` 與核准摘要，未送出成果，收據不包含 token。既有 Pages 已支援此格式；本次公開遊戲不需等待新版 Hub 才能生效。
 
+同次提交 `f49ff709e9bbe2156be5b30591d336fec90de4c4` 的 [CI／部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465)七項 matrix 全通過。browser 測試腳本亦有變更，既有部署判斷因此建置並部署 Pages；Hub 為 [65a47245](https://65a47245.rehabtrainerhub.pages.dev)，runner 為 [64f9a248](https://64f9a248.trainerhub-user-games.pages.dev)。部署完成後已重新通過正式 API／原圖／versionless session、舊 Hub 遊戲子資產 410／no-store，以及真實 Hub 桌機與手機完整流程。兩個部署的 commit 均與 CI 相符；R2 內容摘要維持上述核准值。
+
 尚未驗證實體 Safari／iOS、實際安裝圖示操作與長時間完全離線使用。MediaPipe／相機不在此次範圍。
