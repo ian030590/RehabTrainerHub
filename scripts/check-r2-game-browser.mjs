@@ -18,6 +18,7 @@ import { CheckAsteroidShield } from './asteroid-shield-browser.mjs';
 import { CheckGestureBattler } from './gesture-battler-browser.mjs';
 import { LoadGestureCameraFixtures } from './gesture-camera-fixtures.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
+import { CheckSettingsPresentation, CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
 assert.ok(['drawing-defense', 'asteroid-shield', 'gesture-battler'].includes(gameId), 'Unknown browser game fixture');
@@ -30,6 +31,7 @@ const lobby = process.argv.includes('--lobby');
 const sessionFailure = process.argv.includes('--session-failure');
 const signedIn = process.argv.includes('--signed-in');
 const english = process.argv.includes('--english');
+const viewportMode = process.argv.includes('--mobile') ? 'mobile' : process.argv.includes('--tablet') ? 'tablet' : 'desktop';
 const rendererFailure = process.argv.includes('--renderer-failure');
 const output = resolve(process.env.HUB_OUTPUT_ROOT || resolve(root, 'apps/rehabtrainerhub/out'));
 const runnerOutput = resolve(root, 'apps/usergamerunner/dist');
@@ -265,6 +267,7 @@ try {
     }
   ` }, session);
   if (process.argv.includes('--mobile')) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
+  if (process.argv.includes('--tablet')) await send('Emulation.setDeviceMetricsOverride', { width: 820, height: 1180, deviceScaleFactor: 1, mobile: false }, session);
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `try {
     localStorage.setItem('rehab_hub_tour_seen','1');
     localStorage.setItem('rehab-trainer-hub-language', ${JSON.stringify(english ? 'en' : 'zh')});
@@ -327,6 +330,9 @@ try {
     catalog.currentVersion = '9.0.0';
   }
   const game = expression => evaluate(expression, gameContext);
+  await CheckSettingsPresentation(game);
+  const settingsScreenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
+  await writeFile(resolve(profile, 'settings.png'), Buffer.from(settingsScreenshot.data, 'base64'));
   const checkSpotlight = async selector => {
     const state = await game(`(() => {
       const spotlight = document.querySelector('.game-tour-spotlight');
@@ -353,14 +359,14 @@ try {
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     console.log('Revoked R2 release removed; no result saved.');
   } else if (gameId === 'gesture-battler') {
-    const screenshots = resolve(root, '.tmp/gesture-validation', `${standalone ? 'standalone' : 'lobby'}-${process.argv.includes('--mobile') ? 'mobile' : 'desktop'}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
+    const screenshots = resolve(root, '.tmp/gesture-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });
     const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
     await CheckGestureBattler({ game, evaluate, send, until, gameContext, session, standalone, english,
       mobile: process.argv.includes('--mobile'), capture, sqlite, getSaveAttempts: () => saveAttempts,
       getSessionAttempts: () => sessionAttempts, sessionFailure, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (gameId === 'asteroid-shield') {
-    const screenshots = resolve(root, '.tmp/asteroid-validation', `${standalone ? 'standalone' : 'lobby'}-${process.argv.includes('--mobile') ? 'mobile' : 'desktop'}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
+    const screenshots = resolve(root, '.tmp/asteroid-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });
     const capture = async name => {
       const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
@@ -421,6 +427,9 @@ try {
   assert.equal(await game('Boolean(document.querySelector(".game-tour-spotlight"))'), false, 'Skipping the tutorial must remove its spotlight.');
   await until(() => game('Boolean(document.querySelector(".drawing-defense-tutorial .ui-button-primary"))'), 'start button');
   assert.ok(await game('document.querySelector(".drawing-defense-tutorial").textContent.includes("5s")'));
+  await CheckConfirmationPresentation(game);
+  const confirmationScreenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
+  await writeFile(resolve(profile, 'confirmation.png'), Buffer.from(confirmationScreenshot.data, 'base64'));
   await game('document.querySelector(".drawing-defense-tutorial .ui-button-primary").click()');
   await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-playing canvas"))'), 'Pixi gameplay');
   console.log('Playing.');
@@ -438,7 +447,7 @@ try {
     await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }, pointerSession);
   }
   await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-results"))'), 'game-owned results');
-  const resultScreenshots = resolve(root, '.tmp/drawing-validation', `${standalone ? 'standalone' : 'lobby'}-${process.argv.includes('--mobile') ? 'mobile' : 'desktop'}`);
+  const resultScreenshots = resolve(root, '.tmp/drawing-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}`);
   await mkdir(resultScreenshots, { recursive: true });
   const captureResults = async name => {
     const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);

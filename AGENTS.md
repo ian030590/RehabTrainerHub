@@ -82,6 +82,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 
 - 所有遊戲的 `training-panel` 必須使用明確語意標籤：主標題使用 `<h2>`、分段標題使用 `<h3>`、標籤與說明使用 `<p>`，有順序的規則使用 `<ol><li>`；不得以無語意的 `<div>` 或 `<span>` 取代。
 - `training-panel` 內的文字字重至少為 `700`，字體大小以對應設定表單的基準放大 `1.15` 倍，並維持可讀的行高與鍵盤操作。
+- R2 遊戲的參數設定 form、最終參數確認 div（含 `training-panel gesture-tutorial-ready`）與成績結算須維持一致 UI，div class 描述內容或用途；依 `docs/r2-game-migration-plan.md` 第 7 節「設定、最終參數確認與結算 UI 一致性」實作。`check-r2-game-ui.test.mjs` 由既有 self-contained 測試引入，沿用 `test:game-architecture` 與七項 CI matrix；三款的本機 Brave 流程驗證 computed style、值保留、開始／返回及保存，`--tablet` 另驗 820×1180。UI／CSS 仍由每個遊戲各自擁有。
 
 使用 TypeScript、React functional components、既有模式。Hub 共用行為放 `packages/ui`；遊戲專屬 runtime、規則、i18n 與樣式留在各遊戲。優先 CSS variables/theme tokens，禁止硬編碼顏色。2 spaces；components／classes／types 使用 PascalCase，變數與參數使用 camelCase。命名 gate 要求具名 `function` 宣告使用 PascalCase；`use*`、`onRequest*` 與 Next.js framework functions 依 `scripts/check-identifier-names.mjs` 例外處理，函式值可使用 camelCase 或 PascalCase；檔名明確對應功能。
 

@@ -1,4 +1,5 @@
 /* Local result presentation: game packages remain independent of platform UI. */
+.experiment-container { padding: 24px; }
 .experiment-results { max-width: 78rem; font-size: 1rem; font-weight: 700; line-height: 1.5; }
 .experiment-results h1 { margin: 0; color: var(--heading); font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.15; letter-spacing: -.035em; }
 .experiment-results h2, .experiment-results h3 { margin: 0 0 12px; color: var(--heading); font-size: 1.2rem; }
@@ -55,4 +56,14 @@
   .score-analysis .score-statistics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .score-pagination { justify-content: space-between; gap: 8px; }
   .score-context { padding: 20px; }
+}
+
+.experiment-results .score-save-status { margin: 24px 0 8px; color: var(--text-muted); }
+.experiment-results .score-return-button, .experiment-results .score-retry-button { min-height: 48px; font-size: 1rem; font-weight: 800; }
+.experiment-results .score-return-button { color: var(--text-on-accent); background: var(--primary); border-color: var(--primary); }
+.experiment-results .score-return-button:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+.experiment-results .score-retry-button { color: var(--heading); background: var(--surface); border-color: var(--border); }
+@media (max-width: 600px) {
+  .experiment-container { padding: 16px; }
+  .experiment-results > .score-return-button, .experiment-results > .score-retry-button { display: block; width: 100%; margin: 12px 0; }
 }

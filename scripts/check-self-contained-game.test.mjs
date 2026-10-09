@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
 import './check-r2-game-results.test.mjs';
+import './check-r2-game-ui.test.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/drawing-defense');

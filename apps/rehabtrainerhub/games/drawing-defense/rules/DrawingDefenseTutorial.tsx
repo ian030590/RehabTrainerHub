@@ -100,7 +100,7 @@ export function DrawingDefenseTutorial({ onStart, onBack, summaryItems }: Drawin
       }}
     >
       {/* Top Bar with Back Button */}
-      <div style={{ width: '100%', padding: '16px 24px', display: 'flex', justifyContent: 'flex-start', pointerEvents: 'auto' }}>
+      <div className="drawing-tutorial-navigation" style={{ width: '100%', padding: '16px 24px', display: 'flex', justifyContent: 'flex-start', pointerEvents: 'auto' }}>
         <button
           className="ui-button"
           onClick={onBack}
@@ -126,8 +126,9 @@ export function DrawingDefenseTutorial({ onStart, onBack, summaryItems }: Drawin
           marginTop: '5%',
         }}
       >
-        <div style={{ fontSize: 42 }}>👾</div>
+        <div className="drawing-tutorial-enemy-icon" style={{ fontSize: 42 }}>👾</div>
         <div
+          className="drawing-tutorial-target-shape"
           style={{
             width: 68,
             height: 50,
@@ -146,41 +147,22 @@ export function DrawingDefenseTutorial({ onStart, onBack, summaryItems }: Drawin
         </div>
       </div>
 
-      {/* Center content / Start Button */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto' }}>
-        {tourFinished && (
-          <div style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-            padding: '24px', 
-            borderRadius: '12px', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-          }}>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '1.5rem', color: '#333' }}>
-              {t('training.drawing.title')}
-            </h2>
-            {summaryItems && summaryItems.length > 0 && (
-              <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.9rem', color: '#555' }}>
-                {summaryItems.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
-                    <span style={{ fontWeight: 'bold' }}>{item.label}:</span>
-                    <span>{item.value}</span>
-                  </div>
-                ))}
+      {tourFinished && <section className="training-panel drawing-tutorial-ready">
+        <div className="training-config training-confirmation">
+          <header className="training-config-header"><h2>{t('training.drawing.title')}</h2></header>
+          <div className="training-config-body">
+            <section className="training-setting"><h3>{lang === 'en' ? 'Confirm settings' : '確認設定'}</h3>
+              <div className="training-config-summary">
+                {summaryItems?.map((item, index) => <p className="training-config-summary-item" key={index}><strong>{item.label}：</strong>{item.value}</p>)}
               </div>
-            )}
-            <button
-              className="ui-button ui-button-primary"
-              style={{ fontSize: '1.2rem', padding: '12px 32px', backgroundColor: '#005EB8', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-              onClick={onStart}
-            >
-              {t('training.start')}
-            </button>
+            </section>
           </div>
-        )}
-      </div>
+          <footer className="config-actions"><div className="training-config-navigation-buttons">
+            <button type="button" className="btn btn-primary ui-button-primary" onClick={onStart}>{t('training.start')}</button>
+            <button type="button" className="btn btn-ghost ui-button" onClick={onBack}>{lang === 'en' ? 'Back to settings' : '返回設定'}</button>
+          </div></footer>
+        </div>
+      </section>}
 
       {/* Mock Defense Line */}
       <div

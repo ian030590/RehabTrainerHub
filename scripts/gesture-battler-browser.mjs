@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
+import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 
 export async function CheckGestureBattler({ game, evaluate, send, until, session, gameContext, standalone,
   english, mobile, capture, sqlite, getSaveAttempts, getSessionAttempts, sessionFailure, requests, errors, version, accountId, guestSubjectId }) {
@@ -65,6 +66,8 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
     await game('window.dispatchEvent(new Event("resize"));document.querySelector(".game-tour button").click()');
   }
   assert.equal(await game('Boolean(document.querySelector(".game-tour-spotlight"))'), false);
+  await CheckConfirmationPresentation(game);
+  await capture('confirmation');
   await game('document.querySelector(".gesture-tutorial-ready .btn-ghost").click()');
   await until(() => game(`Boolean(document.querySelector('${settings}'))`), 'back to gesture settings');
   assert.equal(await game('document.querySelector("[name=holdDurationSec]").value'), '0.5');

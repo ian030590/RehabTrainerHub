@@ -19,10 +19,14 @@ export function GestureBattlerTutorial({ onStart, onBack, summaryItems, active }
   }, [lang, onBack, active]);
 
   return active && finished ? <section className="training-panel gesture-tutorial-ready">
-      <div className="training-config">
+      <div className="training-config training-confirmation">
         <header className="training-config-header"><h2>{t('training.gesture.title')}</h2></header>
         <div className="training-config-body">
-          {summaryItems.map((item, index) => <p key={index}>{item.label}：<strong>{item.value}</strong></p>)}
+          <section className="training-setting"><h3>{lang === 'en' ? 'Confirm settings' : '確認設定'}</h3>
+            <div className="training-config-summary">
+              {summaryItems.map((item, index) => <p className="training-config-summary-item" key={index}><strong>{item.label}：</strong>{item.value}</p>)}
+            </div>
+          </section>
           <p>{lang === 'en' ? 'Allow camera access, then calibrate your hand before the battle.' : '接下來請允許相機權限，完成手勢校正後才進入對戰。'}</p>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">

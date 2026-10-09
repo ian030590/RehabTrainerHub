@@ -118,7 +118,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, shieldSizePercent,
       }}
     >
       {/* Top Bar with Back Button */}
-      <div style={{ width: '100%', padding: '16px 24px', display: 'flex', justifyContent: 'flex-start', pointerEvents: 'auto' }}>
+      <div className="asteroid-tutorial-navigation" style={{ width: '100%', padding: '16px 24px', display: 'flex', justifyContent: 'flex-start', pointerEvents: 'auto' }}>
         {active && <button
           className="ui-button"
           onClick={onBack}
@@ -156,48 +156,25 @@ export function AsteroidShieldTutorial({ title, summaryItems, shieldSizePercent,
         <img src={assetUrls.energy} alt="Energy Rock" style={{ width: 50, height: 50, filter: 'drop-shadow(0 0 12px #ffffff)' }} />
       </div>
 
-      {/* Center content / Start Button */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', zIndex: 20 }}>
-        {active && tourFinished && (
-          <div style={{ 
-            backgroundColor: 'var(--surface)',
-            padding: '24px', 
-            borderRadius: '12px', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center',
-            boxShadow: '0 4px 12px var(--bg-overlay)',
-            maxWidth: '90%',
-            maxHeight: 'calc(100dvh - 100px)',
-            overflowY: 'auto',
-          }}>
-            <h2 style={{ margin: '0 0 16px 0', fontSize: '1.5rem', color: 'var(--text)', textAlign: 'center' }}>
-              {title}
-            </h2>
-            {summaryItems && summaryItems.length > 0 && (
-              <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '1.15rem', color: 'var(--text-muted)' }}>
-                {summaryItems.map((item, idx) => (
-                  <p key={idx} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
-                    <strong>{item.label}:</strong>
-                    {item.value}
-                  </p>
-                ))}
+      {active && tourFinished && <section className="training-panel asteroid-tutorial-ready">
+        <div className="training-config training-confirmation">
+          <header className="training-config-header"><h2>{title}</h2></header>
+          <div className="training-config-body">
+            <section className="training-setting"><h3>{lang === 'en' ? 'Confirm settings' : '確認設定'}</h3>
+              <div className="training-config-summary">
+                {summaryItems?.map((item, index) => <p className="training-config-summary-item" key={index}><strong>{item.label}：</strong>{item.value}</p>)}
               </div>
-            )}
-            <button
-              className="ui-button ui-button-primary"
-              style={{ fontSize: '1.2rem', padding: '12px 32px', backgroundColor: 'var(--primary)', color: 'var(--text-on-accent)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-              disabled={!ready}
-              onClick={onStart}
-            >
-              {lang === 'en' ? 'Start Training' : '開始訓練'}
-            </button>
+            </section>
           </div>
-        )}
-      </div>
+          <footer className="config-actions"><div className="training-config-navigation-buttons">
+            <button type="button" className="btn btn-primary ui-button-primary" disabled={!ready} onClick={onStart}>{lang === 'en' ? 'Start Training' : '開始訓練'}</button>
+            <button type="button" className="btn btn-ghost ui-button" onClick={onBack}>{lang === 'en' ? 'Back to settings' : '返回設定'}</button>
+          </div></footer>
+        </div>
+      </section>}
 
       {/* Mock Shield and Ship */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <div className="asteroid-tutorial-defense" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         <div className="mock-shield" style={{
             position: 'absolute',
             left: '50%',

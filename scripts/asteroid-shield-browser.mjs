@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
+import { CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 
 // Uses the shared real runner/CSP, private channel and local SQLite harness.
 export async function CheckAsteroidShield({ game, evaluate, send, until, gameContext, session, version,
@@ -142,6 +143,8 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   assert.equal(await game('Boolean(document.querySelector(".game-tour-spotlight"))'), false);
   assert.ok(await game('document.querySelector(".asteroid-shield-tutorial").textContent.includes("75%")'));
   assert.ok(await game('document.querySelector(".asteroid-shield-tutorial").textContent.includes("30s")'));
+  await CheckConfirmationPresentation(game);
+  await capture('confirmation');
   await until(() => game('!document.querySelector(".asteroid-shield-tutorial .ui-button-primary").disabled'), 'Pixi textures ready');
   await game('document.querySelector(".asteroid-shield-tutorial .ui-button-primary").click()');
   await until(() => game('Boolean(document.querySelector(".asteroid-shield-phase-playing canvas"))'), 'real asteroid gameplay');

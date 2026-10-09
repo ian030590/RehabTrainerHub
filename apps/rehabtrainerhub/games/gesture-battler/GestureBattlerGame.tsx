@@ -682,7 +682,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const combatEnemyHpPercent = Clamp((displayedEnemyHp / enemyMaxHp) * 100, 0, 100);
     const resultRows = useMemo(() => result?.Gesture_Stats ?? [], [result]);
     return (<div ref={fullscreenRootRef} className={`gesture-battler gesture-battler-phase-${phase}`}>
-      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true"/>
+      <div ref={jsPsychHostRef} className="gesture-battler-jspsych-host" style={{ display: 'none' }} aria-hidden="true"/>
       <div ref={pixiHostRef} className="gesture-battler-stage"/>
 
       <button className="gesture-mobile-back" type="button" onClick={exitGame} aria-label={t('gesture.mobile.backLobby')} title={t('gesture.mobile.backLobby')}>
@@ -706,13 +706,13 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
       {(previewingBattle || phase === 'combat') && (<div className="gesture-combat-hud">
           <section className={`gesture-enemy-status ${previewingBattle ? 'gesture-enemy-tutorial' : ''}`} aria-label={t('gesture.combat.enemyHp')}>
-            <div>
+            <div className="gesture-enemy-summary">
               <strong>{t('gesture.enemy.name')}</strong>
               <span>Lv. 12</span>
             </div>
             <div className="gesture-hp-row" role="progressbar" aria-label={t('gesture.combat.enemyHp')} aria-valuemin={0} aria-valuemax={enemyMaxHp} aria-valuenow={displayedEnemyHp}>
               <span>HP</span>
-              <div aria-hidden="true">
+              <div className="gesture-hp-track" aria-hidden="true">
                 <i style={{ width: `${combatEnemyHpPercent}%` }}/>
               </div>
               <strong>{displayedEnemyHp}/{enemyMaxHp}</strong>
@@ -818,17 +818,17 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             <section className="score-priority" aria-labelledby="score-priority-title">
               <h2 id="score-priority-title">{lang === 'en' ? 'Key outcomes' : '重點指標'}</h2>
               <dl className="score-key-grid">
-                <div><dt>{t('gesture.results.casts')}</dt><dd>{result.Successful_Casts}</dd></div>
-                <div><dt>{t('gesture.results.interruptions')}</dt><dd>{result.Interrupted_Holds}</dd></div>
-                <div><dt>{t('gesture.results.duration')}</dt><dd>{result.Total_Duration_Seconds}<small> s</small></dd></div>
+                <div className="score-key-metric"><dt>{t('gesture.results.casts')}</dt><dd>{result.Successful_Casts}</dd></div>
+                <div className="score-key-metric"><dt>{t('gesture.results.interruptions')}</dt><dd>{result.Interrupted_Holds}</dd></div>
+                <div className="score-key-metric"><dt>{t('gesture.results.duration')}</dt><dd>{result.Total_Duration_Seconds}<small> s</small></dd></div>
               </dl>
             </section>
             <section className="score-context" aria-labelledby="score-context-title">
               <h2 id="score-context-title">{lang === 'en' ? 'Record context' : '紀錄概況'}</h2>
-              <dl>
-                <div><dt>{t('gesture.results.user')}</dt><dd>{lang === 'en' ? 'This session' : '當次活動'}</dd></div>
-                <div><dt>{lang === 'en' ? 'Target mode' : '手勢模式'}</dt><dd>{result.Target_Mode === 'directed' ? (lang === 'en' ? 'Directed' : '指定手勢') : (lang === 'en' ? 'Free' : '自由手勢')}</dd></div>
-                <div><dt>{lang === 'en' ? 'Hold duration' : '維持時間'}</dt><dd>{result.Hold_Duration_Seconds} s</dd></div>
+              <dl className="score-context-list">
+                <div className="score-context-item"><dt>{t('gesture.results.user')}</dt><dd>{lang === 'en' ? 'This session' : '當次活動'}</dd></div>
+                <div className="score-context-item"><dt>{lang === 'en' ? 'Target mode' : '手勢模式'}</dt><dd>{result.Target_Mode === 'directed' ? (lang === 'en' ? 'Directed' : '指定手勢') : (lang === 'en' ? 'Free' : '自由手勢')}</dd></div>
+                <div className="score-context-item"><dt>{lang === 'en' ? 'Hold duration' : '維持時間'}</dt><dd>{result.Hold_Duration_Seconds} s</dd></div>
               </dl>
             </section>
             <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang}/>
@@ -857,9 +857,9 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
               </tbody>
             </table></div>
             </section>
-            <p role="status">{saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'saving' ? (lang === 'en' ? 'Saving…' : '保存中…') : saveState === 'error' ? (lang === 'en' ? 'Save failed. Try again.' : '保存失敗，請重試。') : (lang === 'en' ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄')}</p>
-            {saveState === 'error' && <button type="button" onClick={RetryGameSave}>{lang === 'en' ? 'Retry save' : '重試保存'}</button>}
-            <button type="button" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.back')}</button>
+            <p className="score-save-status" role="status">{saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'saving' ? (lang === 'en' ? 'Saving…' : '保存中…') : saveState === 'error' ? (lang === 'en' ? 'Save failed. Try again.' : '保存失敗，請重試。') : (lang === 'en' ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄')}</p>
+            {saveState === 'error' && <button type="button" className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{lang === 'en' ? 'Retry save' : '重試保存'}</button>}
+            <button type="button" className="btn btn-primary score-return-button" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.back')}</button>
           </div>
         </div>)}
 

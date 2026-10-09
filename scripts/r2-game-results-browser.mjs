@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 
 export async function CheckResultsPresentation(game, { defaultMetric, alternateMetric, english = false, capture }) {
+  assert.equal(await game('document.querySelectorAll(".experiment-results div:not([class])").length'), 0, 'Result containers have meaningful classes.');
+  assert.equal(await game('document.querySelectorAll(".score-return-button").length'), 1);
+  assert.equal(await game('Boolean(document.querySelector(".score-save-status[role=status]"))'), true);
+  assert.equal(await game('getComputedStyle(document.querySelector(".experiment-results")).fontSize'), '16px');
+  assert.equal(await game('getComputedStyle(document.querySelector(".experiment-results")).maxWidth'), '1248px');
+  assert.equal(await game('getComputedStyle(document.querySelector(".experiment-container")).padding'),
+    await game('innerWidth <= 600') ? '16px' : '24px');
+  assert.equal(await game('getComputedStyle(document.querySelector(".score-return-button")).backgroundColor === getComputedStyle(document.querySelector(".score-key-metric")).backgroundColor'), true, 'The main result action uses the same primary color.');
   assert.equal(await game('document.querySelectorAll(".score-key-grid > div").length'), 3);
   assert.equal(await game('Boolean(document.querySelector(".score-context dl"))'), true);
   assert.equal(await game('document.querySelector(".score-analysis select").value'), defaultMetric);

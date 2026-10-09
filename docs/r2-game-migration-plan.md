@@ -227,6 +227,17 @@ rehab-game-releases/
 - 資源載入失敗、設定驗證及其他需要使用者處理的提示必須顯示在前景視窗可見區域，不被 modal 或背景遮住；載入失敗不產生成果紀錄。
 - 每款遊戲先加入行為測試，確認設定開啟時背景已呈現且導覽未啟動、鍵盤焦點與手機尺寸、確認／返回後場景及設定值保留，以及載入失敗提示；再修改產品程式碼。驗收需檢查實際圖片／canvas 與 DOM，不能只檢查 class 名稱。
 
+#### 設定、最終參數確認與結算 UI 一致性
+
+2026-10-10 起，畫畫塔防、小行星護盾防衛與手勢指令對戰，以及後續新增／搬遷的 R2 官方遊戲，必須遵守同一套呈現規範。參數設定 `form`、教學結束後顯示最終參數的 `div`（包含 `training-panel gesture-tutorial-ready`）與成績結算畫面均須維持一致的資訊層次、字體、間距、色彩 token、邊框、捲動方式與按鈕樣式；遊戲專屬欄位、教學、主要指標與逐回合資料仍依原玩法完整保留。
+
+- **設定與確認視窗：** 設定表單使用 `training-config`；顯示最終參數的容器使用 `training-config training-confirmation`。兩者均採 `training-config-header`（`h2`）、`training-config-body`（內含 `training-setting` 與 `h3`）、`config-actions`／`training-config-navigation-buttons` 的結構。置中、最大寬度 42rem、四周至少 16px；內容超高只捲動 body，header 與 footer 保持可見。確認參數以 `training-config-summary`／`training-config-summary-item` 呈現，標籤和說明使用 `p`，字重至少 700、基準字級 1.15rem；開始與返回設定按鈕均可操作，尚未準備完成的引擎不得啟動。
+- **操作樣式：** 主要動作使用 `btn btn-primary`，返回／取消與保存重試使用 `btn btn-ghost`。設定與確認 footer 的桌機按鈕列、手機按鈕堆疊及焦點樣式一致；結算唯一返回按鈕使用 `score-return-button`，重試使用 `score-retry-button`，保存狀態使用 `score-save-status`／`role="status"`。維持來源對應的退出契約、Enter／欄位驗證與保存重試行為。
+- **結算資訊層次：** 三款均依序呈現結算標題／說明、`score-priority` 重點指標、`score-context` 當次概況、`score-analysis` 統計／圖表／明細，以及保存狀態與返回入口。指標容器使用 `score-key-metric`，概況使用 `score-context-list`／`score-context-item`，描述統計使用 `score-statistic`，完整率資料使用 `score-quality-item`，區段標題使用 `score-section-title`；保留手勢等遊戲專屬彙總。桌機、平板、手機採相同響應式規則，長表格只在區域內捲動。
+- **有意義的 class：** 上述畫面的每個 `div` 均須具備描述內容或用途的 class。禁止無 class 的排版容器、流水號名稱或只描述外觀的 `box1`／`left`／`white-box`；優先採用上述一致名稱，遊戲專屬容器加具體語意前綴。class 不能取代標題、段落、表單標籤、表格與無障礙語意；不可再以行內樣式各自拼出不同的最終參數確認卡片。
+- **各遊戲自行擁有：** 一致的是視覺與 DOM 契約，不建立跨遊戲共用 UI、CSS、runtime 或平台依賴。每個 workspace 內保留自己的 JSX、CSS、雙語文案與成果計算；不得恢復 Hub 設定／成績 JSON。
+- **驗證：** 先鎖定原設定／教學／開始／完成／保存／返回流程，再加入上述三階段的失敗測試；以實際沙盒內的 DOM、computed style、值保留及桌機／平板／手機尺寸驗證一致性，不僅比對 class。當版仍須依步驟 E／F 核准新版本與精確摘要、發布並完成正式站驗收後，才能宣稱公開版本已更新。
+
 #### 成績結算頁面的呈現方式
 
 後續每款 R2 遊戲的結算頁，須參考移動卡片訓練的資訊層次，同時提供主要統計數值、資料圖示化與個別回合成績。此要求於 2026-10-09 經擁有者核准，適用新遊戲與後續遷移；三款已遷移遊戲的實作與驗收見 [R2 成績頁紀錄](r2-game-results-ui.md)。
@@ -276,6 +287,7 @@ node scripts/check-r2-game-browser.mjs --lobby --mobile
 | 大廳與歷史碰撞 | 只有一張同 gameId 卡片；原圖確實完成載入；分類／搜尋正確；同 slug 舊投稿不能替換 R2 啟動；點開始後 session 先成功再載入 iframe |
 | 工作階段失敗 | 503 時不提前載入遊戲；可重試；不能回退到 JSON shell 或公開其他版本 |
 | 設定／教學／引擎 | 前景設定視窗與預先呈現的教學背景；確認前導覽／計時不啟動；焦點與失敗提示可見；自訂值與實際活動相符；設定往返保留；每個教學目標定位正確；縮放／結束後遮罩清除；Pixi／jsPsych 等真正啟動，無 CSP／module／runtime 錯誤 |
+| UI 一致性／class 語意 | 設定 form、最終參數 div（含 gesture-tutorial-ready）採一致 header／body／footer、字級／字重／間距／捲動／按鈕；確認值與設定相符；結算區塊與返回／重試樣式一致；每個 div 有內容或用途 class；實際 DOM／computed style、桌機／平板／手機、開始與返回行為驗證 |
 | 桌機／手機／全螢幕 | 指標與觸控可操作、無橫向溢出；真實 fullscreen element 及 canvas 尺寸正確；離開與返回無重複 listener／計時器 |
 | 成績統計／圖表／明細 | 主要數值與當次設定、可切換的逐回合圖表／平均線／描述統計／完整率、完整個別回合表格；零值／缺漏／空資料正確、彙總不混作回合、分頁同步與鍵盤可操作；雙語及桌機／平板／手機可讀，表格不使整頁溢出 |
 | 結果／身份／保存 | 完整分數與逐回合資訊保留；guest／登入隔離；首次保存失敗可重試；並行相同成果只一筆，修改／偽造仍拒絕；遊戲不自行另存 |
@@ -374,6 +386,22 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 
 原畫畫塔防有未命中筆畫 PNG 回報；倉庫沒有 `/api/drawing-samples` 的後端實作。本次保留去除身份資訊後的 port→Hub 轉送，移除遊戲直連與 frontend upload token，但不宣稱 PNG 已成功存放。此選配資料收集需另行配置 Hub 後端及儲存政策，不影響玩法或成果入庫。
 
+### 2026-10-10 UI 一致性本機驗證
+
+`node --test scripts/check-r2-game-ui.test.mjs` 在產品修改前為 0／6 通過：三款均缺少一致的最終參數確認容器，結算含未命名 div，小行星表單另缺少統一分段。修改後為 6／6 通過，涵蓋繁中／英文確認值、開始／返回回呼、引擎未就緒禁止啟動，以及設定／結算的語意結構；與既有成績測試合跑為 17／17 通過。
+
+`npm run test:game-architecture`（59／59）、`npm run test:entrypoints`、`npm run test:naming`、三款各自的 Vite build 與 `npm run build:hub` 均通過。新增 UI 測試由原 self-contained suite 引入；兩份 workflow 保持七項 matrix／相同 root 命令，沒有增加 Brave CI 依賴。
+
+本機 Brave 使用 `node scripts/check-r2-game-browser.mjs` 搭配逐遊戲 fixture，驗證設定與確認視窗的實際字級、字重、標題、間距、圓角、內部捲動、footer 與可視邊界；結算另驗有語意 class、主要按鈕、圖表／表格及保存重試。桌機／手機／平板模式分別使用預設 viewport、`--mobile` 與 `--tablet`（820×1180）；每款的命令與結果如下。
+
+| 遊戲 | 模式（附加於上述命令） | 本機結果 |
+| --- | --- | --- |
+| 畫畫塔防 | `--lobby`、`--lobby --mobile`、`--standalone --tablet` | 大廳流程、觸控／Pixi／全螢幕、參數確認與完整結算；保存重試／單筆本機紀錄；平板 PWA 返回設定 |
+| 小行星護盾防衛 | `--game asteroid-shield --lobby`、`--lobby --mobile`、`--lobby --tablet`、`--standalone --mobile`（後三者同樣指定 game） | 設定／Enter／往返、三目標教學、滑鼠／觸控／全螢幕、確認與完整結算；保存重試；手機 PWA 返回入口 |
+| 手勢指令對戰 | `--game gesture-battler --lobby`、`--lobby --mobile --english --directed`、`--standalone --tablet`（後兩者同樣指定 game） | 設定邊界／值保留、四目標教學／確認、校正／對戰、英文指定模式／成果／重試與相機停止；平板 PWA 返回入口 |
+
+此節記錄的是本機 source／dist 驗證，不是新的 R2 正式發布收據；既有公開版本與 current 未切換。資料庫寫入只在本機 SQLite；手勢相機仍採圖片串流，未驗真人、實體相機、Safari／iOS 或長時間離線。截圖保留於 `.tmp/{drawing,asteroid,gesture}-validation/` 及對應本機 browser profile。
+
 ## 11. 逐遊戲審查單與完成定義
 
 將下列欄位複製到該遊戲的遷移紀錄；每次內容、分類或圖片改版都重新填寫。測試腳本／fixture 路徑與失敗、修正後結果必須能回查；無法自動化的項目提供可重現人工步驟與限制。
@@ -384,6 +412,7 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 | 分類與預覽 | 舊／新分類對照、自有 game.json、雙語文案、原圖 SHA-256、dist 清單與卡片／篩選截圖；刻意變更須說明並核准 |
 | 獨立性與安全 | 自有依賴／i18n／樣式／資產、無 shared UI／外連、正式 sandbox／CSP／私有 port 證據 |
 | 使用者行為 | 桌機／手機大廳點擊、前景設定視窗／預先呈現教學背景／焦點／載入失敗提示、設定 preset／自訂／邊界／往返、教學目標／縮放／清理、引擎／全螢幕、完整結果與返回 |
+| UI 一致性與命名 | 設定 form／最終參數 div／training-panel gesture-tutorial-ready／結算的統一結構與樣式；有意義的 div class；DOM／computed style 對照、桌機／平板／手機無溢出、按鈕／Enter／返回／重試測試與截圖；確認 UI／CSS 均由遊戲自己擁有 |
 | 成績結算呈現 | 自有主要統計／當次設定、指標圖表／平均線／描述統計／完整率及完整逐回合明細；數值與保存一致、零值／缺漏／單筆正確、彙總隔離、分頁／鍵盤／雙語測試；正式桌機與手機主要統計／圖表／明細截圖、平板尺寸驗證與獨立 PWA 結果 |
 | 保存與失敗 | guest／登入隔離、session 失敗不載入、保存失敗重試、並行冪等、current 切換固定版本、撤回與無效 digest 拒絕 |
 | 平台回歸 | 該 gameId 的新增測試、其他未遷移／第三方遊戲回歸、Hub output 隔離、PWA 與 CI 結果 |

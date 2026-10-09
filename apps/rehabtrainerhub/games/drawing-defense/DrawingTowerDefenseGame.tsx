@@ -635,7 +635,7 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         };
     }, [handlePointerEnd, redrawPath]);
     return (<div ref={fullscreenRootRef} className={`drawing-defense drawing-defense-phase-${phase}`} style={backgroundStyle}>
-      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true"/>
+      <div ref={jsPsychHostRef} className="drawing-defense-jspsych-host" style={{ display: 'none' }} aria-hidden="true"/>
       <div ref={pixiHostRef} className="drawing-defense-stage"/>
       <div ref={overlayRef} className="drawing-defense-input"/>
 
@@ -693,23 +693,23 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             <section className="score-priority" aria-labelledby="score-priority-title">
               <h2 id="score-priority-title">{lang === 'en' ? 'Key outcomes' : '重點指標'}</h2>
               <dl className="score-key-grid">
-                <div><dt>{t('drawing.results.defeatedEnemies')}</dt><dd>{result.Enemies_Defeated}<small> / {result.Enemies_Spawned}</small></dd></div>
-                <div><dt>{lang === 'en' ? 'HP remaining' : '剩餘耐久'}</dt><dd>{result.HP_Remaining}<small> / {result.Starting_HP}</small></dd></div>
-                <div><dt>{t('drawing.results.duration')}</dt><dd>{result.Total_Duration_Seconds}<small> s</small></dd></div>
+                <div className="score-key-metric"><dt>{t('drawing.results.defeatedEnemies')}</dt><dd>{result.Enemies_Defeated}<small> / {result.Enemies_Spawned}</small></dd></div>
+                <div className="score-key-metric"><dt>{lang === 'en' ? 'HP remaining' : '剩餘耐久'}</dt><dd>{result.HP_Remaining}<small> / {result.Starting_HP}</small></dd></div>
+                <div className="score-key-metric"><dt>{t('drawing.results.duration')}</dt><dd>{result.Total_Duration_Seconds}<small> s</small></dd></div>
               </dl>
             </section>
             <section className="score-context" aria-labelledby="score-context-title">
               <h2 id="score-context-title">{lang === 'en' ? 'Record context' : '紀錄概況'}</h2>
-              <dl>
-                <div><dt>{t('drawing.results.user')}</dt><dd>{result.Participant_ID}</dd></div>
-                <div><dt>{lang === 'en' ? 'Session outcome' : '活動結局'}</dt><dd>{result.Game_Result === 'Victory' ? (lang === 'en' ? 'Completed selected duration' : '完成設定時長') : (lang === 'en' ? 'HP reached zero' : '耐久歸零')}</dd></div>
+              <dl className="score-context-list">
+                <div className="score-context-item"><dt>{t('drawing.results.user')}</dt><dd>{result.Participant_ID}</dd></div>
+                <div className="score-context-item"><dt>{lang === 'en' ? 'Session outcome' : '活動結局'}</dt><dd>{result.Game_Result === 'Victory' ? (lang === 'en' ? 'Completed selected duration' : '完成設定時長') : (lang === 'en' ? 'HP reached zero' : '耐久歸零')}</dd></div>
               </dl>
             </section>
             <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang}/>
 
-            <p role="status">{!IsHubGame() ? (lang === 'en' ? 'Local session; open from the Hub to save a record.' : '本機練習；從 Hub 開啟才能保存紀錄。') : saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (lang === 'en' ? 'Save failed' : '保存失敗') : (lang === 'en' ? 'Saving record…' : '正在保存紀錄…')}</p>
-            {saveState === 'error' && <button onClick={RetryGameSave}>{lang === 'en' ? 'Retry saving' : '重試保存'}</button>}
-            <button className="btn btn-primary" onClick={onExit}>{!IsHubGame() ? (lang === 'en' ? 'Back to settings' : '返回設定') : t('training.returnLobby')}</button>
+            <p className="score-save-status" role="status">{!IsHubGame() ? (lang === 'en' ? 'Local session; open from the Hub to save a record.' : '本機練習；從 Hub 開啟才能保存紀錄。') : saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (lang === 'en' ? 'Save failed' : '保存失敗') : (lang === 'en' ? 'Saving record…' : '正在保存紀錄…')}</p>
+            {saveState === 'error' && <button type="button" className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{lang === 'en' ? 'Retry saving' : '重試保存'}</button>}
+            <button type="button" className="btn btn-primary score-return-button" onClick={onExit}>{!IsHubGame() ? (lang === 'en' ? 'Back to settings' : '返回設定') : t('training.returnLobby')}</button>
           </div>
         </div>)}
     </div>);

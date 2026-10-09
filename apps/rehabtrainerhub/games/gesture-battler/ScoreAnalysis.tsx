@@ -48,7 +48,7 @@ export function ScoreAnalysis({ rounds, language }: {
   const detailsTitle = en ? 'Round details' : '逐回合細節';
   return <section className="score-analysis" aria-labelledby="score-analysis-title">
     <header className="score-section-header">
-      <div><h3 id="score-analysis-title">{en ? 'Selected metric analysis' : '選定指標分析'}</h3>
+      <div className="score-section-title"><h3 id="score-analysis-title">{en ? 'Selected metric analysis' : '選定指標分析'}</h3>
         <p>{metric[language]}{metric.unit ? ` · ${metric.unit}` : ''}</p></div>
       <label>{en ? 'Metric' : '分析指標'}
         <select value={metricKey} onChange={event => { setMetricKey(event.target.value); setPage(0); }}>
@@ -57,16 +57,16 @@ export function ScoreAnalysis({ rounds, language }: {
       </label>
     </header>
     <dl className="score-statistics">
-      <div><dt>{en ? 'Observations' : '有效筆數'}</dt><dd>{statistics.observations}</dd></div>
-      <div><dt>{en ? 'Mean' : '平均數'}</dt><dd>{format(statistics.mean)} {metric.unit}</dd></div>
-      <div><dt>{en ? 'Median' : '中位數'}</dt><dd>{format(statistics.median)} {metric.unit}</dd></div>
-      <div><dt>{en ? 'Sample standard deviation' : '樣本標準差'}</dt><dd>{format(statistics.sampleSd)} {metric.unit}</dd></div>
-      <div><dt>{en ? 'Range' : '範圍'}</dt><dd>{format(statistics.minimum)}–{format(statistics.maximum)} {metric.unit}</dd></div>
+      <div className="score-statistic"><dt>{en ? 'Observations' : '有效筆數'}</dt><dd>{statistics.observations}</dd></div>
+      <div className="score-statistic"><dt>{en ? 'Mean' : '平均數'}</dt><dd>{format(statistics.mean)} {metric.unit}</dd></div>
+      <div className="score-statistic"><dt>{en ? 'Median' : '中位數'}</dt><dd>{format(statistics.median)} {metric.unit}</dd></div>
+      <div className="score-statistic"><dt>{en ? 'Sample standard deviation' : '樣本標準差'}</dt><dd>{format(statistics.sampleSd)} {metric.unit}</dd></div>
+      <div className="score-statistic"><dt>{en ? 'Range' : '範圍'}</dt><dd>{format(statistics.minimum)}–{format(statistics.maximum)} {metric.unit}</dd></div>
     </dl>
     <dl className="score-quality">
-      <div><dt>{en ? 'Recorded rounds' : '紀錄回合'}</dt><dd>{rows.length}</dd></div>
-      <div><dt>{en ? 'Missing values' : '缺漏值'}</dt><dd>{rows.length - statistics.observations}</dd></div>
-      <div><dt>{en ? 'Completeness' : '完整率'}</dt><dd>{format(rows.length ? statistics.observations / rows.length * 100 : null)}%</dd></div>
+      <div className="score-quality-item"><dt>{en ? 'Recorded rounds' : '紀錄回合'}</dt><dd>{rows.length}</dd></div>
+      <div className="score-quality-item"><dt>{en ? 'Missing values' : '缺漏值'}</dt><dd>{rows.length - statistics.observations}</dd></div>
+      <div className="score-quality-item"><dt>{en ? 'Completeness' : '完整率'}</dt><dd>{format(rows.length ? statistics.observations / rows.length * 100 : null)}%</dd></div>
     </dl>
     <div className="score-chart">
       <p>{en ? 'Round-by-round trend' : '逐回合趨勢'} · {en ? 'Page' : '頁次'} {page + 1} / {pageCount}</p>
@@ -87,7 +87,7 @@ export function ScoreAnalysis({ rounds, language }: {
       <p className="score-chart-legend">{en ? 'Dashed line: session mean. Focus a point to read its value.' : '虛線：當次平均值。可聚焦資料點讀取數值。'}</p>
     </div>
     <header className="score-section-header">
-      <div><h3 id="score-details-title">{detailsTitle}</h3><p>{en ? 'Each successful cast is one round. Interrupted holds remain in the gesture summary. Cast time is elapsed time since session start.' : '每次成功施放記為一回合；中斷的維持次數另列於手勢彙總。施放時間為活動開始後的累計時間。'}</p></div>
+      <div className="score-section-title"><h3 id="score-details-title">{detailsTitle}</h3><p>{en ? 'Each successful cast is one round. Interrupted holds remain in the gesture summary. Cast time is elapsed time since session start.' : '每次成功施放記為一回合；中斷的維持次數另列於手勢彙總。施放時間為活動開始後的累計時間。'}</p></div>
       <span className="score-row-range">{pageRows.length ? page * 50 + 1 : 0}–{page * 50 + pageRows.length} / {rows.length}</span>
     </header>
     <div className="results-scroll" role="region" aria-label={detailsTitle} tabIndex={0}>

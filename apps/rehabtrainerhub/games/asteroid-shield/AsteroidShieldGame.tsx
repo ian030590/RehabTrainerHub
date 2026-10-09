@@ -524,15 +524,15 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     }, []);
     const rendererErrorNotice = rendererError && <p className="renderer-error" role="alert">{lang === 'en' ? 'The game could not load. Return and try again.' : '遊戲無法載入，請返回後重試。'}</p>;
     return (<div ref={fullscreenRootRef} className={`asteroid-shield-game asteroid-shield-phase-${phase}`}>
-      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true"/>
+      <div ref={jsPsychHostRef} className="asteroid-shield-jspsych-host" style={{ display: 'none' }} aria-hidden="true"/>
       <div ref={pixiHostRef} className="asteroid-shield-stage"/>
 
-      {(phase === 'menu' || phase === 'rules') && <div className="training-panel" style={{ padding: 0 }} inert={phase === 'menu'} aria-hidden={phase === 'menu'}>
+      {(phase === 'menu' || phase === 'rules') && <div className="asteroid-tutorial-panel" inert={phase === 'menu'} aria-hidden={phase === 'menu'}>
         <AsteroidShieldTutorial title={labels.title} summaryItems={summaryItems} shieldSizePercent={shieldSizePercent} onStart={() => void startGame()} onBack={showConfiguration} ready={rendererReady} active={phase === 'rules'}/>
       </div>}
 
       {phase === 'menu' && <dialog ref={settingsDialogRef} className="game-settings-dialog" aria-labelledby="asteroid-settings-title" onCancel={event => { event.preventDefault(); onExit(); }}>
-        <form className="game-settings-form" onKeyDown={event => {
+        <form className="training-config game-settings-form" onKeyDown={event => {
           if (event.key === 'Tab') {
             const controls = event.currentTarget.querySelectorAll<HTMLElement>('button, input, select');
             if (document.activeElement === controls[event.shiftKey ? 0 : controls.length - 1]) {
@@ -541,25 +541,31 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
           }
           if (event.key === 'Enter') { event.preventDefault(); if (event.currentTarget.reportValidity()) setPhase('rules'); }
         }} onSubmit={event => event.preventDefault()}>
-          <h2 id="asteroid-settings-title">{labels.title}</h2>
-          <p>{lang === 'en' ? 'These values apply only to this session.' : '設定值只用於這次活動。'}</p>
-          {rendererErrorNotice}
-          <label>{lang === 'en' ? 'Spawn interval / base speed' : '生成間隔／基礎速度'}
-            <select value={settings.difficulty} onChange={event => setSettings({ ...settings, difficulty: event.target.value as AsteroidSettings['difficulty'] })}>
-              <option value="easy">1.35 s / 120 px/s</option><option value="medium">1.08 s / 165 px/s</option><option value="hard">0.82 s / 215 px/s</option>
-            </select>
-          </label>
-          <p>{lang === 'en' ? 'Analyze different conditions separately.' : '不同條件應分開分析。'}</p>
-          <label>{labels.duration}: <output>{settings.durationSec} s</output>
-            <input type="range" min="30" max="300" step="15" value={settings.durationSec} onChange={event => setSettings({ ...settings, durationSec: Number(event.target.value) })}/>
-          </label>
-          <label>{lang === 'en' ? 'Shield size level' : '護盾大小級距'}: <output>{settings.sensitivity} ({shieldSizePercent}%)</output>
-            <input type="range" min="1" max="10" step="1" value={settings.sensitivity} onChange={event => setSettings({ ...settings, sensitivity: Number(event.target.value) })}/>
-          </label>
-          <p>{lang === 'en' ? 'Shield scale = 70 + level × 5 (75–120%); larger shields ease interception.' : '護盾比例 = 70 + 級距 × 5（75–120%）；較大較容易攔截。此設定不是追蹤靈敏度。'}</p>
-          <label><input type="checkbox" checked={settings.soundEnabled} onChange={event => setSettings({ ...settings, soundEnabled: event.target.checked })}/> {lang === 'en' ? 'Sound feedback' : '聲音回饋'}</label>
-          <button type="button" className="btn-primary" onClick={event => { if (event.currentTarget.form?.reportValidity()) setPhase('rules'); }}>{lang === 'en' ? 'Continue to tutorial' : '進入教學'}</button>
-          <button type="button" onClick={onExit}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
+          <header className="training-config-header"><h2 id="asteroid-settings-title">{labels.title}</h2></header>
+          <div className="training-config-body">
+            {rendererErrorNotice}
+            <section className="training-setting"><h3>{lang === 'en' ? 'Session settings' : '活動設定'}</h3>
+              <p>{lang === 'en' ? 'These values apply only to this session.' : '設定值只用於這次活動。'}</p>
+              <label>{lang === 'en' ? 'Spawn interval / base speed' : '生成間隔／基礎速度'}
+                <select value={settings.difficulty} onChange={event => setSettings({ ...settings, difficulty: event.target.value as AsteroidSettings['difficulty'] })}>
+                  <option value="easy">1.35 s / 120 px/s</option><option value="medium">1.08 s / 165 px/s</option><option value="hard">0.82 s / 215 px/s</option>
+                </select>
+              </label>
+              <p>{lang === 'en' ? 'Analyze different conditions separately.' : '不同條件應分開分析。'}</p>
+              <label>{labels.duration}: <output>{settings.durationSec} s</output>
+                <input type="range" min="30" max="300" step="15" value={settings.durationSec} onChange={event => setSettings({ ...settings, durationSec: Number(event.target.value) })}/>
+              </label>
+              <label>{lang === 'en' ? 'Shield size level' : '護盾大小級距'}: <output>{settings.sensitivity} ({shieldSizePercent}%)</output>
+                <input type="range" min="1" max="10" step="1" value={settings.sensitivity} onChange={event => setSettings({ ...settings, sensitivity: Number(event.target.value) })}/>
+              </label>
+              <p>{lang === 'en' ? 'Shield scale = 70 + level × 5 (75–120%); larger shields ease interception.' : '護盾比例 = 70 + 級距 × 5（75–120%）；較大較容易攔截。此設定不是追蹤靈敏度。'}</p>
+              <label><input type="checkbox" checked={settings.soundEnabled} onChange={event => setSettings({ ...settings, soundEnabled: event.target.checked })}/> {lang === 'en' ? 'Sound feedback' : '聲音回饋'}</label>
+            </section>
+          </div>
+          <footer className="config-actions"><div className="training-config-navigation-buttons">
+            <button type="button" className="btn btn-primary" onClick={event => { if (event.currentTarget.form?.reportValidity()) setPhase('rules'); }}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button>
+            <button type="button" className="btn btn-ghost" onClick={onExit}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
+          </div></footer>
         </form>
       </dialog>}
 
@@ -571,28 +577,28 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             <section className="score-priority" aria-labelledby="score-priority-title">
               <h2 id="score-priority-title">{lang === 'en' ? 'Key outcomes' : '重點指標'}</h2>
               <dl className="score-key-grid">
-                <div><dt>{labels.statusScore}</dt><dd>{result.Score}</dd></div>
-                <div><dt>{labels.finalHp}</dt><dd>{result.Final_HP}<small> / {result.Starting_HP}</small></dd></div>
-                <div><dt>{labels.objectsBlocked}</dt><dd>{result.Objects_Blocked}<small> / {result.Objects_Spawned}</small></dd></div>
+                <div className="score-key-metric"><dt>{labels.statusScore}</dt><dd>{result.Score}</dd></div>
+                <div className="score-key-metric"><dt>{labels.finalHp}</dt><dd>{result.Final_HP}<small> / {result.Starting_HP}</small></dd></div>
+                <div className="score-key-metric"><dt>{labels.objectsBlocked}</dt><dd>{result.Objects_Blocked}<small> / {result.Objects_Spawned}</small></dd></div>
               </dl>
             </section>
             <section className="score-context" aria-labelledby="score-context-title">
               <h2 id="score-context-title">{lang === 'en' ? 'Record context' : '紀錄概況'}</h2>
-              <dl>
-                <div><dt>{labels.user}</dt><dd>{result.Participant_ID}</dd></div>
-                <div><dt>{labels.duration}</dt><dd>{result.Total_Duration_Seconds} s</dd></div>
-                <div><dt>{labels.shipHits}</dt><dd>{result.Ship_Hits}</dd></div>
-                <div><dt>{labels.energyCollected}</dt><dd>{result.Energy_Collected}</dd></div>
-                <div><dt>{lang === 'en' ? 'Spawned objects' : '生成物件數'}</dt><dd>{result.Objects_Spawned}</dd></div>
-                <div><dt>{lang === 'en' ? 'Final speed level' : '最終速度級別'}</dt><dd>{result.Final_Speed_Level}</dd></div>
-                <div><dt>{lang === 'en' ? 'Session outcome' : '活動結局'}</dt><dd>{result.Game_Result === 'Victory' ? (lang === 'en' ? 'Completed the selected duration' : '完成設定時長') : (lang === 'en' ? 'Ship durability reached zero' : '飛船耐久歸零')}</dd></div>
+              <dl className="score-context-list">
+                <div className="score-context-item"><dt>{labels.user}</dt><dd>{result.Participant_ID}</dd></div>
+                <div className="score-context-item"><dt>{labels.duration}</dt><dd>{result.Total_Duration_Seconds} s</dd></div>
+                <div className="score-context-item"><dt>{labels.shipHits}</dt><dd>{result.Ship_Hits}</dd></div>
+                <div className="score-context-item"><dt>{labels.energyCollected}</dt><dd>{result.Energy_Collected}</dd></div>
+                <div className="score-context-item"><dt>{lang === 'en' ? 'Spawned objects' : '生成物件數'}</dt><dd>{result.Objects_Spawned}</dd></div>
+                <div className="score-context-item"><dt>{lang === 'en' ? 'Final speed level' : '最終速度級別'}</dt><dd>{result.Final_Speed_Level}</dd></div>
+                <div className="score-context-item"><dt>{lang === 'en' ? 'Session outcome' : '活動結局'}</dt><dd>{result.Game_Result === 'Victory' ? (lang === 'en' ? 'Completed the selected duration' : '完成設定時長') : (lang === 'en' ? 'Ship durability reached zero' : '飛船耐久歸零')}</dd></div>
               </dl>
             </section>
             <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang}/>
 
-            <p role="status">{!IsHubGame() ? (lang === 'en' ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄') : saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (lang === 'en' ? 'Save failed' : '保存失敗') : (lang === 'en' ? 'Saving…' : '保存中…')}</p>
-            {IsHubGame() && saveState === 'error' && <button onClick={RetryGameSave}>{lang === 'en' ? 'Retry save' : '重試保存'}</button>}
-            <button onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
+            <p className="score-save-status" role="status">{!IsHubGame() ? (lang === 'en' ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄') : saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (lang === 'en' ? 'Save failed' : '保存失敗') : (lang === 'en' ? 'Saving…' : '保存中…')}</p>
+            {IsHubGame() && saveState === 'error' && <button type="button" className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{lang === 'en' ? 'Retry save' : '重試保存'}</button>}
+            <button type="button" className="btn btn-primary score-return-button" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
           </div>
         </div>)}
 
