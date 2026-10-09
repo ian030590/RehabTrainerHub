@@ -677,7 +677,9 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     }, [phase]);
     const activeCalibrationStep = calibrationSteps[calibrationIndex];
     const targetModeLabel = targetMode === 'free' ? t('gesture.config.free') : t('gesture.config.directed');
-    const combatEnemyHpPercent = Clamp((combatEnemyHp / enemyMaxHp) * 100, 0, 100);
+    const previewingBattle = phase === 'menu' || phase === 'rules';
+    const displayedEnemyHp = previewingBattle ? enemyMaxHp : combatEnemyHp;
+    const combatEnemyHpPercent = Clamp((displayedEnemyHp / enemyMaxHp) * 100, 0, 100);
     const resultRows = useMemo(() => result?.Gesture_Stats ?? [], [result]);
     return (<div ref={fullscreenRootRef} className={`gesture-battler gesture-battler-phase-${phase}`}>
       <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true"/>
@@ -689,10 +691,11 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         </svg>
       </button>
 
-      <div className={`gesture-camera ${phase === 'menu' || phase === 'rules' || phase === 'initializing' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>
+      <div className={`gesture-camera ${previewingBattle ? 'gesture-camera-tutorial' : ''} ${phase === 'initializing' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>
         <p className="gesture-camera-label">{t('gesture.camera.preview')}</p>
         <canvas ref={handCanvasRef} aria-hidden="true"/>
-        <span>{handVisible ? t('gesture.camera.tracking') : t('gesture.camera.finding')}</span>
+        {previewingBattle && <svg className="gesture-camera-placeholder" viewBox="0 0 80 80" aria-hidden="true"><path d="M25 66V39c0-7 8-7 8 0V18c0-6 8-6 8 0v19-24c0-6 8-6 8 0v24-17c0-6 8-6 8 0v28l5-9c4-6 11-1 8 5L58 68Z" /></svg>}
+        <span className={previewingBattle ? 'gesture-calibration-tutorial' : undefined}>{previewingBattle ? (lang === 'en' ? 'Fist → Open hand → 1–5' : '握拳 → 張手 → 1–5') : handVisible ? t('gesture.camera.tracking') : t('gesture.camera.finding')}</span>
       </div>
 
       {['initializing', 'calibration', 'combat'].includes(phase) && (<div className="gesture-orientation-gate" role="status" aria-live="polite">
@@ -701,30 +704,30 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
           <span>{t('gesture.orientation.description')}</span>
         </div>)}
 
-      {phase === 'combat' && (<div className="gesture-combat-hud">
-          <section className="gesture-enemy-status" aria-label={t('gesture.combat.enemyHp')}>
+      {(previewingBattle || phase === 'combat') && (<div className="gesture-combat-hud">
+          <section className={`gesture-enemy-status ${previewingBattle ? 'gesture-enemy-tutorial' : ''}`} aria-label={t('gesture.combat.enemyHp')}>
             <div>
               <strong>{t('gesture.enemy.name')}</strong>
               <span>Lv. 12</span>
             </div>
-            <div className="gesture-hp-row" role="progressbar" aria-label={t('gesture.combat.enemyHp')} aria-valuemin={0} aria-valuemax={enemyMaxHp} aria-valuenow={combatEnemyHp}>
+            <div className="gesture-hp-row" role="progressbar" aria-label={t('gesture.combat.enemyHp')} aria-valuemin={0} aria-valuemax={enemyMaxHp} aria-valuenow={displayedEnemyHp}>
               <span>HP</span>
               <div aria-hidden="true">
                 <i style={{ width: `${combatEnemyHpPercent}%` }}/>
               </div>
-              <strong>{combatEnemyHp}/{enemyMaxHp}</strong>
+              <strong>{displayedEnemyHp}/{enemyMaxHp}</strong>
             </div>
           </section>
 
-          <section className="gesture-move-menu" aria-label={t('gesture.combat.moves')}>
+          <section className={`gesture-move-menu ${previewingBattle ? 'gesture-moves-tutorial' : ''}`} aria-label={t('gesture.combat.moves')}>
             <header>
               <span>{t('gesture.combat.moves')}</span>
-              {targetMode === 'directed' && (<strong>{t('gesture.combat.target', { gesture: combatTargetGesture })}</strong>)}
+              {targetMode === 'directed' && (<strong>{t('gesture.combat.target', { gesture: previewingBattle ? 1 : combatTargetGesture })}</strong>)}
             </header>
             <div className="gesture-move-list">
               {gestures.map((gesture) => {
-                const selected = gesture === combatGesture;
-                const eligible = targetMode === 'free' || gesture === combatTargetGesture;
+                const selected = !previewingBattle && gesture === combatGesture;
+                const eligible = targetMode === 'free' || gesture === (previewingBattle ? 1 : combatTargetGesture);
                 return (<div key={gesture} className={`gesture-move ${selected ? 'selected' : ''} ${eligible ? '' : 'disabled'}`.trim()}>
                     <span className="gesture-pointer" aria-hidden="true">{selected ? '▶' : ''}</span>
                     <b>{gesture}</b>
@@ -736,26 +739,28 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
           </section>
         </div>)}
 
-      {phase === 'menu' && <div className="training-panel gesture-menu-panel">
+      {phase === 'menu' && <section className="training-panel gesture-menu-panel">
         <form ref={formRef} className="training-config" onSubmit={event => event.preventDefault()}
           onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (formRef.current?.reportValidity() && IsGestureConfig({ enemyMaxHp, holdDurationSec: holdDuration, strictnessPercent: Math.round(strictnessThreshold * 100), targetMode })) setPhase('rules'); } }}>
           <header className="training-config-header"><h2>{t('training.gesture.title')}</h2></header>
           <div className="training-config-body">
+            <section className="training-setting"><h3>{lang === 'en' ? 'Session settings' : '活動設定'}</h3>
             <label>{t('gesture.config.enemyHp')}<input name="enemyMaxHp" type="number" required min="1" max="100" step="1" value={enemyMaxHp} onChange={event => setEnemyMaxHp(event.target.valueAsNumber)} /></label>
             <label>{t('gesture.config.holdDuration')}<input name="holdDurationSec" type="number" required min="0.5" max="10" step="0.5" value={holdDuration} onChange={event => setHoldDuration(event.target.valueAsNumber)} /></label>
             <label>{t('gesture.config.strictness')}<input name="strictnessPercent" type="number" required min="50" max="90" step="5" value={Math.round(strictnessThreshold * 100)} onChange={event => setStrictnessThreshold(event.target.valueAsNumber / 100)} /></label>
             <p>{lang === 'en' ? 'Similarity relative to your local calibration; this is not a joint angle.' : '相對於本機手勢校正的相似度門檻，不能換算成關節角度。'}</p>
             <label>{t('gesture.config.targetMode')}<select name="targetMode" value={targetMode} onChange={event => setTargetMode(event.target.value as TargetMode)}><option value="free">{t('gesture.config.free')}</option><option value="directed">{t('gesture.config.directed')}</option></select></label>
+            </section>
           </div>
-          <div className="config-actions training-config-navigation-buttons">
-            <button type="button" className="btn btn-primary" onClick={() => { if (formRef.current?.reportValidity() && IsGestureConfig({ enemyMaxHp, holdDurationSec: holdDuration, strictnessPercent: Math.round(strictnessThreshold * 100), targetMode })) setPhase('rules'); }}>{t('btn.confirm')}</button>
+          <footer className="config-actions"><div className="training-config-navigation-buttons">
+            <button type="button" className="btn btn-primary" onClick={() => { if (formRef.current?.reportValidity() && IsGestureConfig({ enemyMaxHp, holdDurationSec: holdDuration, strictnessPercent: Math.round(strictnessThreshold * 100), targetMode })) setPhase('rules'); }}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button>
             <button type="button" className="btn btn-ghost" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.back')}</button>
-          </div>
+          </div></footer>
         </form>
-      </div>}
+      </section>}
 
       {(phase === 'menu' || phase === 'rules') && (
-          <GestureBattlerTutorial active={phase === 'rules'} enemyMaxHp={enemyMaxHp} summaryItems={[
+          <GestureBattlerTutorial active={phase === 'rules'} summaryItems={[
                 { label: t('gesture.config.enemyHp'), value: enemyMaxHp },
                 { label: t('gesture.config.holdDuration'), value: `${holdDuration}s` },
                 { label: t('gesture.config.strictness'), value: `${Math.round(strictnessThreshold * 100)}%` },

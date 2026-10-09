@@ -16,6 +16,25 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   assert.equal(await game('document.querySelector(".game-tour")!==null'), false, 'Settings do not start a tour.');
   assert.equal(await evaluate('Boolean(window.handFixtureStream)'), false, 'Settings do not acquire camera input.');
   await capture('settings');
+  const settingsLayout = await game(`(() => {
+    const section = document.querySelector('form .training-setting');
+    const actions = document.querySelector('form footer.config-actions .training-config-navigation-buttons');
+    const primary = document.querySelector('form .btn-primary');
+    const secondary = document.querySelector('form .btn-ghost');
+    return { heading: section?.querySelector('h3')?.textContent,
+      fields: section?.querySelectorAll('input, select').length,
+      actionsDisplay: actions && getComputedStyle(actions).display,
+      actionsGap: actions && getComputedStyle(actions).gap,
+      primaryBackground: getComputedStyle(primary).backgroundColor,
+      secondaryBackground: getComputedStyle(secondary).backgroundColor,
+      bodyScroll: getComputedStyle(document.querySelector('form .training-config-body')).overflowY };
+  })()`);
+  assert.equal(settingsLayout.heading, english ? 'Session settings' : '活動設定', 'Settings use the drawing defense section layout.');
+  assert.equal(settingsLayout.fields, 4, 'All existing gesture settings remain in the section.');
+  assert.equal(settingsLayout.actionsDisplay, 'flex', 'Settings actions use a separate footer row.');
+  assert.equal(settingsLayout.actionsGap, '12px');
+  assert.notEqual(settingsLayout.primaryBackground, settingsLayout.secondaryBackground);
+  assert.equal(settingsLayout.bodyScroll, 'auto', 'Settings scroll without moving the footer.');
   await set('enemyMaxHp', 0);
   await confirm();
   assert.ok(await game(`Boolean(document.querySelector('${settings}'))`), 'Invalid durability must not start.');
@@ -25,10 +44,22 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   if (directed) await game('(() => {const select=document.querySelector("[name=targetMode]");select.value="directed";select.dispatchEvent(new Event("change",{bubbles:true}));})()');
   await confirm();
   await until(() => game(`Boolean(document.querySelector('${tutorial}'))`), 'gesture spotlight');
+  await CheckBattleLayout(game, true);
+  assert.equal(await evaluate('Boolean(window.handFixtureStream)'), false, 'Tutorial previews do not acquire camera input.');
+  // The tutorial uses the same viewport layout on a landscape phone as during combat.
+  if (mobile) {
+    await send('Emulation.setDeviceMetricsOverride', { width: 844, height: 390, deviceScaleFactor: 1, mobile: true }, session);
+    await until(() => game('innerWidth === 844 && innerHeight === 390'), 'landscape tutorial viewport');
+    await CheckBattleLayout(game, true);
+    await capture('tutorial-landscape');
+    await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
+    await until(() => game('innerWidth === 390 && innerHeight === 844'), 'portrait tutorial viewport');
+    await game('window.dispatchEvent(new Event("resize"))');
+  }
   for (const target of ['camera', 'calibration', 'moves', 'enemy']) {
     const geometry = await game(`(() => {const target=document.querySelector('.gesture-${target}-tutorial').getBoundingClientRect();const spot=document.querySelector('.game-tour-spotlight').getBoundingClientRect();const panel=document.querySelector('.game-tour').getBoundingClientRect();return {target:{left:target.left,top:target.top,right:target.right,bottom:target.bottom},spot:{left:spot.left,top:spot.top,right:spot.right,bottom:spot.bottom},panel:{left:panel.left,top:panel.top,right:panel.right,bottom:panel.bottom},width:innerWidth,height:innerHeight};})()`);
-    for (const edge of ['left', 'top']) assert.ok(geometry.spot[edge] <= geometry.target[edge] + 1);
-    for (const edge of ['right', 'bottom']) assert.ok(geometry.spot[edge] >= geometry.target[edge] - 1);
+    for (const edge of ['left', 'top']) assert.ok(geometry.spot[edge] <= geometry.target[edge] + 1, `${target}: ${edge} ${JSON.stringify(geometry)}`);
+    for (const edge of ['right', 'bottom']) assert.ok(geometry.spot[edge] >= geometry.target[edge] - 1, `${target}: ${edge} ${JSON.stringify(geometry)}`);
     assert.ok(geometry.panel.left >= 0 && geometry.panel.top >= 0 && geometry.panel.right <= geometry.width + 1 && geometry.panel.bottom <= geometry.height + 1);
     await capture(`tutorial-${target}`);
     await game('window.dispatchEvent(new Event("resize"));document.querySelector(".game-tour button").click()');
@@ -95,6 +126,7 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   }
   await evaluate('window.setHandFixture("pointing_up")');
   if (!mobile) assert.equal(await game('document.fullscreenElement===document.querySelector(".gesture-battler")'), true);
+  await CheckBattleLayout(game, false);
   await capture('combat');
   if (directed) {
     const poses = ['pointing_up', 'victory', 'thumb_up', 'fist', 'right_hands'];
@@ -149,4 +181,31 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   if (standalone) assert.equal(await game('document.fullscreenElement===null'), true, 'Return restores the standalone entry viewport.');
   assert.equal(await evaluate('window.handFixtureStream.getTracks().every(track=>track.readyState==="ended")'), true);
   console.log('Gesture Brave passed: spotlight, settings, trusted consent, real MediaPipe hand inference, seven calibrations, combat, full numeric results, retry and camera cleanup.');
+}
+
+async function CheckBattleLayout(game, tutorial) {
+  const layout = await game(`(() => {
+    const rect = selector => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const { left, top, right, bottom, width, height } = element.getBoundingClientRect();
+      return { left, top, right, bottom, width, height };
+    };
+    return { camera: rect('.gesture-camera:not(.gesture-camera-hidden)'),
+      enemy: rect('.gesture-enemy-status'), moves: rect('.gesture-move-menu'),
+      width: innerWidth, height: innerHeight, scrollWidth: document.documentElement.scrollWidth,
+      tutorialCamera: document.querySelector('.gesture-camera-tutorial') === document.querySelector('.gesture-camera'),
+      tutorialEnemy: document.querySelector('.gesture-enemy-tutorial') === document.querySelector('.gesture-enemy-status'),
+      tutorialMoves: document.querySelector('.gesture-moves-tutorial') === document.querySelector('.gesture-move-menu') };
+  })()`);
+  assert.ok(layout.camera && layout.enemy && layout.moves, 'Tutorial and combat display the complete battle HUD.');
+  assert.ok(layout.camera.left <= 16 && layout.height - layout.camera.bottom <= 16, 'Hand camera stays in the lower left.');
+  assert.ok(layout.enemy.top <= 16 && layout.width - layout.enemy.right <= 16, 'Enemy status stays in the upper right.');
+  assert.ok(layout.height - layout.moves.bottom <= 16 && layout.width - layout.moves.right <= 16, 'Moves stay in the lower right.');
+  assert.ok(layout.camera.right <= layout.moves.left, 'Camera and moves do not overlap.');
+  assert.ok(layout.enemy.bottom <= layout.moves.top, 'Enemy status and moves do not overlap.');
+  assert.ok(layout.scrollWidth <= layout.width, 'Battle UI stays within the viewport.');
+  if (tutorial) {
+    assert.ok(layout.tutorialCamera && layout.tutorialEnemy && layout.tutorialMoves, 'Spotlights target the actual battle HUD.');
+  }
 }

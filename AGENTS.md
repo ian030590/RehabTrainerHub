@@ -13,7 +13,7 @@ npm workspace / Turborepo monorepo；目前只有兩個 app，App 程式碼位�
 
 - `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、內建訓練 runtime、API、審核後台、開發者入口）。
 - `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），從 R2 讀取核准版本，提供套件資產、安全標頭、版本化 runtime 與 PWA launcher；支援官方原生遊戲與第三方 HTML/ZIP 遊戲。
-- 小行星護盾防衛 `2.0.0` 已完成首次遷移；設定視窗版 `2.0.1` 已核准、發布並驗收。玩法版 `2.0.2` 重現底部寬幅飛船、水平護盾、差異落速與動畫，已核准精確摘要、發布 R2 並通過正式 API／桌機／觸控／獨立 PWA 驗收，見 `docs/asteroid-shield-gameplay-2.0.2.md` 與 `docs/releases/asteroid-shield-2.0.2.json`；`2.0.1` 保留為當版已核對回退版。後續設定 UI 採遊戲自有前景視窗與預先呈現的教學背景，遵循搬遷計畫第 7 節步驟 B。registry 有 3 款自包含遊戲，Hub build 排除它們、保留 37 款舊遊戲；後續遷移同樣必須等正式驗收與收據完成，不能只以 R2 公開或本機登記作為完成證據。成績頁新版 current 為畫畫塔防 `2.0.4`、小行星護盾 `2.0.3` 與手勢對戰 `2.0.1`；精確核准、正式 API／桌機／手機／獨立 PWA 驗收與回退見 `docs/r2-game-results-ui.md` 及 `docs/releases/` 對應正式收據。
+- 小行星護盾防衛 `2.0.0` 已完成首次遷移；設定視窗版 `2.0.1` 已核准、發布並驗收。玩法版 `2.0.2` 重現底部寬幅飛船、水平護盾、差異落速與動畫，已核准精確摘要、發布 R2 並通過正式 API／桌機／觸控／獨立 PWA 驗收，見 `docs/asteroid-shield-gameplay-2.0.2.md` 與 `docs/releases/asteroid-shield-2.0.2.json`；`2.0.1` 保留為當版已核對回退版。後續設定 UI 採遊戲自有前景視窗與預先呈現的教學背景，遵循搬遷計畫第 7 節步驟 B。registry 有 3 款自包含遊戲，Hub build 排除它們、保留 37 款舊遊戲；後續遷移同樣必須等正式驗收與收據完成，不能只以 R2 公開或本機登記作為完成證據。成績頁新版 current 為畫畫塔防 `2.0.4`、小行星護盾 `2.0.3` 與手勢對戰 `2.0.2`（含設定／教學版面更新）；精確核准、正式 API／桌機／手機／獨立 PWA 驗收與回退見 `docs/r2-game-results-ui.md` 及 `docs/releases/` 對應正式收據。
 - `apps/rehabtrainerhub/games/{gameId}/`：目前有 40 個正式遊戲 workspace，擁有各自的 Vite entry、runtime、規則與 i18n。37 個未遷移遊戲仍依賴 `@rehab-trainer/ui` 的既有 `OfficialGameShell`、樣式、語言 provider 與設定橋樑，維持 `settings.json`／`score.json` 流程；這是尚待移除的遷移負債，不能宣稱所有遊戲已完全獨立。**新遊戲與 R2 遷移完成的遊戲嚴禁引入共用 UI 或跨遊戲程式碼；既有共用依賴不得擴張。** 登記於 `packages/ui/src/officialGameReleases.json` 的 R2 遊戲自行呈現設定、教學與成績，僅透過私有 MessageChannel 傳送成果，由 Hub 驗證後入庫。已遷移畫畫塔防 `2.0.3`、小行星護盾防衛 `2.0.0` 與手勢指令對戰 `2.0.0`，詳見 `docs/r2-game-migration-plan.md`。
   **新增遊戲與 Workspace 同步：** 加入 `apps/rehabtrainerhub/games/catalog.ts` 後執行 `npm run sync:games`；有 workspace／依賴異動時更新 lockfile。sync 依 registry 將未遷移遊戲加入 Hub 依賴樹，將 R2 遊戲排除。其舊模板仍會為缺少設定檔的遊戲產生共用 UI 依賴及 alias，並不驗證遊戲是否獨立；新遊戲與 R2 遊戲須先提供自有 `package.json`、Vite entry 及依賴，不能靠 sync 取得符合新架構的套件。
 
@@ -168,6 +168,8 @@ Hub 使用 Next.js App Router（`apps/rehabtrainerhub/app/`）、`app/globals.cs
 
 
 ## 測試指引
+
+手勢指令對戰 `2.0.2` 已依擁有者發布指示切換 R2 current：設定採畫畫塔防的遊戲自有前景視窗與分段卡片，教學直接使用實際對戰 HUD，手部預覽在左下。正式 API／桌機／手機／英文登入指定模式／獨立 PWA 與 2.0.1 回退檔案均驗證通過；見 `docs/gesture-battler-settings-ui.md` 與 `docs/releases/gesture-battler-2.0.2.json`。沿用既有 gate 與七項 CI matrix；相機仍使用圖片串流，不宣稱實體相機、真人手勢或 Safari／iOS 已驗收。
 
 後續每款 R2 遊戲的成績頁須以移動卡片訓練的資訊層次為參考，提供主要統計、資料圖表與個別回合明細；統計、SVG 圖表、表格及樣式各自由遊戲擁有，不引入共用 UI，依 `docs/r2-game-migration-plan.md` 第 7 節步驟 B／D 與第 11 節驗收。`scripts/check-r2-game-results.test.mjs` 由既有 `check-self-contained-game.test.mjs` 引入，納入原 `test:game-architecture`，驗證雙語、缺漏／零值、樣本標準差、圖表／明細共同分頁與切換指標重設頁次；兩份 workflow 保持既有七項 matrix／相同命令。三款的 `check-r2-game-browser.mjs` 流程另驗證真正沙盒中的主要統計、圖表切換、手機表格與保存重試；正式截圖保留在 `docs/migrations/r2-game-results-ui/production/`。新版已核准、發布並完成正式 API／Hub／獨立 PWA 驗收，精確摘要、測試先失敗原因及通過結果見 `docs/r2-game-results-ui.md` 與三份正式收據；手勢使用圖片串流，不宣稱真人／實體相機／Safari 或 iOS 已驗收。
 

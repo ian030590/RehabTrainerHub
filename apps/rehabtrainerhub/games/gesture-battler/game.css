@@ -18,7 +18,9 @@
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 * { box-sizing: border-box; }
-html, body, #root { margin: 0; width: 100%; height: 100%; font: 700 18px/1.5 var(--font-body); color: var(--text); }
+html, body, #root { margin: 0; width: 100%; height: 100%; color: var(--text); }
+html { font-size: 16px; }
+body { font: 700 18px/1.5 var(--font-body); }
 button, input, select { font: inherit; }
 button { min-height: 44px; padding: 8px 16px; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; }
 button:disabled { cursor: wait; opacity: .6; }
@@ -28,27 +30,18 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .gesture-battler-canvas { display: block; width: 100%; height: 100%; }
 .gesture-mobile-back { position: absolute; left: max(12px, env(safe-area-inset-left)); top: max(12px, env(safe-area-inset-top)); z-index: 20; padding: 8px; }
 .gesture-mobile-back svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
-.gesture-tutorial { position: absolute; inset: 0; }
-.gesture-tutorial > section:not(.training-panel) { position: absolute; padding: 12px 16px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); }
-.gesture-tutorial h3, .gesture-tutorial p { margin: 0 0 8px; }
-.gesture-camera-tutorial { top: 9%; left: 5%; width: 220px; text-align: center; }
-.gesture-camera-tutorial svg { width: 90px; height: 90px; fill: var(--primary); }
-.gesture-calibration-tutorial { bottom: 9%; left: 5%; }
-.gesture-enemy-tutorial { top: 9%; right: 5%; width: 240px; }
-.gesture-tutorial-hp { height: 16px; background: var(--hp); }
-.gesture-moves-tutorial { bottom: 9%; right: 5%; width: 250px; }
-.gesture-moves-tutorial ol { margin: 0; padding-left: 1.5em; }
 .game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
 .game-tour-spotlight { position: fixed; border-radius: var(--radius); pointer-events: none; outline: 3px solid var(--surface); box-shadow: 0 0 0 100vmax var(--bg-overlay); z-index: 9998; }
 .game-tour { position: fixed; width: min(calc(100vw - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; z-index: 9999; }
 .game-tour h2 { margin: 0; font-size: 1.45em; }
 .game-tour p { line-height: 1.6; }
 .game-tour button { margin: 4px; }
-.training-config-body label { display: grid; gap: 8px; }
+.training-config-body label { display: grid; gap: 8px; margin-top: 16px; line-height: 1.6; }
 .training-config-body input, .training-config-body select { min-height: 44px; width: 100%; padding: 8px; border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--text); background: var(--surface); }
 .gesture-camera { position: absolute; bottom: 16px; left: 16px; width: 240px; background: var(--heading); color: var(--surface); border-radius: var(--radius); overflow: hidden; text-align: center; }
 .gesture-camera-hidden { display: none; }
 .gesture-camera canvas { display: block; width: 100%; aspect-ratio: 4 / 3; transform: scaleX(-1); }
+.gesture-camera-placeholder { position: absolute; left: 25%; top: 20%; width: 50%; height: 60%; fill: var(--hand-line); }
 .gesture-camera-label, .gesture-camera > span { margin: 0; padding: 4px; display: block; font-size: .8rem; }
 .gesture-combat-hud { position: absolute; inset: 0; pointer-events: none; }
 .gesture-enemy-status, .gesture-move-menu { position: absolute; background: var(--surface); border: 2px solid var(--border-strong); padding: 16px; border-radius: var(--radius); }
@@ -84,8 +77,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .results-table { width: 100%; margin: 24px 0; border-collapse: collapse; font-size: .9rem; }
 .results-table td, .results-table th { border: 1px solid var(--border); padding: 8px; text-align: center; background: var(--surface); }
 @media (max-width: 600px) {
-  .gesture-tutorial > section:not(.training-panel) { font-size: .8rem; padding: 8px; width: 43%; }
-  .gesture-camera-tutorial svg { width: 60px; height: 60px; }
   .gesture-calibration-card { grid-template-columns: 1fr 100px; padding: 16px; }
   .gesture-camera { width: 160px; left: 8px; bottom: 8px; }
   .results-table td, .results-table th { padding: 4px; }
