@@ -1,0 +1,317 @@
+{
+  "gameId": "gesture-battler",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.0/package/index.html",
+  "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1",
+  "verifiedAt": "2026-10-09T05:57:19.603Z",
+  "status": "published-and-verified",
+  "prefix": "releases/gesture-battler/2.0.0/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.0/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/",
+  "fileCount": 5,
+  "totalBytes": 893134,
+  "files": [
+    {
+      "path": "assets/index-Dgn6AxMb.js",
+      "size": 874799,
+      "sha256": "b22ce0aab09971f8a2e3c4e0427755cf470ac0307e0a927e86b99135652bcd41",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DVMbmWw-.css",
+      "size": 14788,
+      "sha256": "47db0b2f0b720d8a320350ed7a0edaed113af51d3f6b3eb5e6a135054f080346",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 477,
+      "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "58afa6d0d12b291fc7acb21f2b60c27ba096f2566a49a7c932f60640ccf6ff2b",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2662,
+      "sha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "instruction": "核准並推送",
+    "date": "2026-10-09",
+    "reviewedVersion": "2.0.0",
+    "reviewedContentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1",
+    "reviewedInputVersion": "hand-tracking-1.0.0",
+    "reviewedInputContentSha256": "3f334a5da81ca05fd712325f6b14b755fa4af19c5084fc3f882b0c3e05dc2f37",
+    "context": "Explicit approval of the exact reviewed candidate and request to push; previously accepted trusted input proxy with strict sandbox."
+  },
+  "catalogKey": "official-games/gesture-battler/current.json",
+  "input": {
+    "version": "hand-tracking-1.0.0",
+    "mediapipeVersion": "0.10.35",
+    "fileCount": 10,
+    "totalBytes": 41723126,
+    "contentSha256": "0f141b5a013b6a14a6ce71f58c8e7ab32a1ac15f1ce547fdd1a28d6be3bd94c4",
+    "files": [
+      {
+        "path": "MEDIAPIPE-LICENSE.txt",
+        "size": 12331,
+        "sha256": "8707eef0533987efc5b155d64761eeb6e20793f50b9bd1a68dad1cf4719d0ed8"
+      },
+      {
+        "path": "MEDIAPIPE-NOTICE.txt",
+        "size": 8403,
+        "sha256": "aadce68d35bfc0dc75fd191bbf9e6285816e907eb43a6301b43bd9a29768f7c5"
+      },
+      {
+        "path": "hand_landmarker.task",
+        "size": 7819105,
+        "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1"
+      },
+      {
+        "path": "index.js",
+        "size": 128658,
+        "sha256": "d5d5028534ec45a02ba9dedd03793c01ded82b5bac0cc1f800459c7668496d3b"
+      },
+      {
+        "path": "wasm/vision_wasm_internal.js",
+        "size": 322044,
+        "sha256": "e7fd9858e8e8f221d9b96eddc11f8e077f263e0b7bbd79d3cbe882b134274f8c"
+      },
+      {
+        "path": "wasm/vision_wasm_internal.wasm",
+        "size": 11153617,
+        "sha256": "6a5c64584c2ab61c763b6e204afbdbc7ce1caf7f5216187322bca8df94f646bc"
+      },
+      {
+        "path": "wasm/vision_wasm_module_internal.js",
+        "size": 322082,
+        "sha256": "1f1d6215324a1fe62f6742d49a3db911170987ca18ad8c1b75f1a1c82acf2b44"
+      },
+      {
+        "path": "wasm/vision_wasm_module_internal.wasm",
+        "size": 11153641,
+        "sha256": "617b8e0248dbd27e9d7ece4218004eae4cefb499196d1bb4fa0e3fef21708756"
+      },
+      {
+        "path": "wasm/vision_wasm_nosimd_internal.js",
+        "size": 321847,
+        "sha256": "438d1fe8ff7f4d946025bc211c291543c037d8a3785ed4eee60f1f521b236296"
+      },
+      {
+        "path": "wasm/vision_wasm_nosimd_internal.wasm",
+        "size": 10481398,
+        "sha256": "8a3092d34c79d3f57e6ba8592105e8a90f6b07c27891ffecd14cca428bfd3e31"
+      }
+    ],
+    "approvedInputBytesUnchanged": true,
+    "packagingCorrection": "Disable Vite publicDir copies in input namespace; remove only duplicate runner _headers, _routes.json, index.html and robots.txt. All ten approved input runtime/model/WASM/license bytes are identical.",
+    "approvedBuildSnapshot": "docs/migrations/gesture-battler-2.0.0-candidate.json#input.approvedBuildSnapshot"
+  },
+  "baseline": {
+    "source": "https://trainerhub.cc/api/games",
+    "legacyPublicReleases": [
+      {
+        "id": "official-gesture-battler",
+        "slug": "gesture-battler",
+        "title": "手勢指令對戰",
+        "summary": "手勢指令對戰居家訓練網官方練習",
+        "trainer": "motor",
+        "category": "general",
+        "developerName": "居家訓練網官方",
+        "updatedAt": "2026-10-07T00:00:00.000Z",
+        "release": {
+          "id": "rel-gesture-battler-1.0.0",
+          "version": "1.0.0",
+          "contentSha256": "e1df952cc2fd88ea8c75d71db9373bd25d0b81430ef0810c8ec1d1a0be816c0a",
+          "capabilities": [
+            "audio",
+            "fullscreen",
+            "keyboard",
+            "pointer"
+          ],
+          "approvedAt": "2026-10-07T00:00:00.000Z",
+          "launchUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/1.0.0/",
+          "installUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/1.0.0/",
+          "settingsUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/1.0.0/package/settings.json"
+        }
+      }
+    ],
+    "workspaceVersion": "1.0.0",
+    "trainer": "motor",
+    "category": "upper-limb",
+    "previewSha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b"
+  },
+  "changes": [
+    "Four-target game-owned spotlight instructions",
+    "Self-contained settings, calibration, combat and full numeric results",
+    "Trusted camera/MediaPipe input proxy; strict opaque game iframe and private numeric landmarks",
+    "Version-pinned R2 launch, save acknowledgement/retry and standalone PWA input cache"
+  ],
+  "ci": {
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37892011679",
+    "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74",
+    "status": "success",
+    "jobs": [
+      {
+        "name": "deployment_scope",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (hub-functions)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (gamerunner)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (naming)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (trainer-entrypoints)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (pwa)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (cloudflare-deploy)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (game-architecture)",
+        "conclusion": "success"
+      },
+      {
+        "name": "deploy",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "deployments": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "34248648-4000-424a-9a5e-1952624bc74f",
+      "url": "https://34248648.rehabtrainerhub.pages.dev",
+      "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-09T06:12:08.860528Z",
+        "status": "success"
+      }
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "cd01ab30-ef10-406f-98a8-0a8d01f31dc8",
+      "url": "https://cd01ab30.trainerhub-user-games.pages.dev",
+      "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-09T06:12:17.478012Z",
+        "status": "success"
+      }
+    }
+  ],
+  "browserVerification": [
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --remote --lobby",
+      "passed": true,
+      "completedAt": "2026-10-09T06:01:06.209Z",
+      "postFinalDeployment": false,
+      "productionAssets": true,
+      "realMediaPipeInference": true,
+      "cameraSource": "Browser native fake-device permission followed by verified Google hand photos in a canvas video stream",
+      "recordWrites": "local SQLite only"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --remote --standalone --mobile --english",
+      "passed": true,
+      "completedAt": "2026-10-09T06:16:55.978Z",
+      "postFinalDeployment": true,
+      "productionAssets": true,
+      "realMediaPipeInference": true,
+      "cameraSource": "Browser native fake-device permission followed by verified Google hand photos in a canvas video stream",
+      "recordWrites": "none"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --production-hub --lobby",
+      "passed": true,
+      "completedAt": "2026-10-09T06:15:42.637Z",
+      "postFinalDeployment": true,
+      "productionAssets": true,
+      "realMediaPipeInference": true,
+      "cameraSource": "Browser native fake-device permission followed by verified Google hand photos in a canvas video stream",
+      "recordWrites": "local SQLite only"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --production-hub --lobby --mobile --english --signed-in --session-failure --directed",
+      "passed": true,
+      "completedAt": "2026-10-09T06:13:19.702Z",
+      "postFinalDeployment": true,
+      "productionAssets": true,
+      "realMediaPipeInference": true,
+      "cameraSource": "Browser native fake-device permission followed by verified Google hand photos in a canvas video stream",
+      "recordWrites": "local SQLite only"
+    }
+  ],
+  "verification": {
+    "exactOwnerApprovedGameDigest": true,
+    "allR2FilesReadBackSha256": true,
+    "allRunnerGameFilesSha256AndStrictCsp": true,
+    "allTenInputAssetsSha256": true,
+    "productionCatalogAndHistoricalSlugCollision": true,
+    "upperLimbCategoryAndOriginalPreview": true,
+    "stable302NoStore": true,
+    "versionedPwaScopeAndModelWasmCache": true,
+    "productionVersionlessSession": true,
+    "productionHubDesktopAndMobile": true,
+    "englishSignedInSessionRetryAndDirectedCombat": true,
+    "realMediaPipeSevenCalibrationsAndCombat": true,
+    "opaqueGameCameraDenied": true,
+    "cameraStopsOnResultsAndReturn": true,
+    "saveRetrySingleRowAndAccountGuestIsolationLocalSqlite": true,
+    "productionTrainingRecordsCreated": false,
+    "physicalCameraTested": false,
+    "ciAndPagesDeploymentSucceeded": true
+  },
+  "localRegression": {
+    "naming": true,
+    "pwa18": true,
+    "gameArchitecture42": true,
+    "hubFunctions105": true,
+    "gamerunner31": true,
+    "entrypoints": true,
+    "cloudflareDeploy4": true,
+    "gameHubRunnerBuilds": true,
+    "architectureBrowser5": true,
+    "drawingDefenseR2Lobby": true,
+    "handInputCancellationRevokeDisconnect": true,
+    "productionBundleNameHelperRedGreen": true
+  },
+  "evidence": "docs/migrations/gesture-battler-2.0.0/production-verification.json",
+  "productionVerifiedAt": "2026-10-09T06:18:33.823Z",
+  "rollback": {
+    "firstMigrationHasNoNewFormatPreviousVersion": true,
+    "previousHub": "https://65a47245.rehabtrainerhub.pages.dev",
+    "previousRunner": "https://64f9a248.trainerhub-user-games.pages.dev",
+    "instructions": "Restore verified old Hub deployment, gesture registry/dependency and original source/JSON before restoring a runner without hand input. Retain release objects and records; do not activate legacy JSON 1.0.0 as new-format official history."
+  },
+  "limitations": [
+    "No physical camera or real-person numeric 1–5 gesture acceptance",
+    "No Safari/iOS or native install interaction",
+    "No long-duration offline sensor session",
+    "Verified hand photos are calibrated reference poses, not a claim of real numeric gesture correctness"
+  ]
+}

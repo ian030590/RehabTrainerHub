@@ -2,7 +2,7 @@
 
 更新日期：2026-10-09。首個試點目前採用 `drawing-defense@2.0.3`，第二款目前採用 `asteroid-shield@2.0.1`。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
 
-小行星護盾防衛的滑鼠／觸控 `asteroid-shield@2.0.0` 已完成擁有者精確版本核准、R2 發布與逐檔回讀、[CI／Hub／runner 部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583)、正式 API／圖片／固定版本 session，以及真實 Hub 桌機／觸控與獨立 PWA 驗收。逐遊戲證據見 [審查單](asteroid-shield-r2-migration.md)與[正式收據](releases/asteroid-shield-2.0.0.json)。目前 2 款完成、38 款維持舊流程；第 1 節保留畫畫塔防首個試點的發布歷史與當時數量。
+小行星護盾防衛的滑鼠／觸控 `asteroid-shield@2.0.0` 已完成擁有者精確版本核准、R2 發布與逐檔回讀、[CI／Hub／runner 部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583)、正式 API／圖片／固定版本 session，以及真實 Hub 桌機／觸控與獨立 PWA 驗收。逐遊戲證據見 [審查單](asteroid-shield-r2-migration.md)與[正式收據](releases/asteroid-shield-2.0.0.json)。目前 3 款完成、37 款維持舊流程；第 1 節保留畫畫塔防首個試點的發布歷史與當時數量。
 
 小行星護盾防衛 `2.0.1` 將設定改為前景視窗，遊戲說明場景先在背景呈現，確認後才啟動教學；擁有者已核准精確摘要，R2／正式 API／Hub 桌機與手機／獨立 PWA 驗收通過，[CI／部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465)成功且部署後已重新驗收。見 [設定視窗審查](asteroid-shield-settings-dialog-2.0.1.md)與[正式收據](releases/asteroid-shield-2.0.1.json)。`2.0.0` 保留作為已驗證回退版本；第 7 節步驟 B 將相同呈現方式列為後續遷移要求。
 
@@ -314,11 +314,11 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 - 官方 CLI 尚無撤回命令，第三方審核 API 也禁止操作官方 slug。需要撤回官方 release 時，須先制定並驗證擁有者的 R2 status 更新／回讀程序，確認 runner 拒絕資產、已載入遊戲卸載、成果保存拒絕及 PWA 清除快取；不得把本機 `--revoke` fixture 通過宣稱為正式撤回已完成。缺少可用程序時列為審查單限制，先恢復已驗證的入口，不刪除歷史檔案來替代撤回。
 - 回退目標須在發布前選定並驗證分類、原圖、啟動契約與玩法；平台與遊戲的回退分開記錄。畫畫塔防 `2.0.2` 的 metadata 相容處理不得自動推廣到沒有 `game.json` 的其他遊戲。
 
-## 9. 後續 38 個遊戲的順序與驗收門檻
+## 9. 後續 37 個遊戲的順序與驗收門檻
 
 ### 手勢指令對戰的相機輸入例外
 
-2026-10-09 使用者明確接受「輸入代理，維持嚴格沙盒」。`gesture-battler@2.0.0` 為待核准／待發布候選，正式完成數量仍為 2 款。審查單與證據見 [手勢指令對戰遷移紀錄](gesture-battler-r2-migration.md)。
+2026-10-09 使用者明確接受「輸入代理，維持嚴格沙盒」。`gesture-battler@2.0.0` 已完成精確候選核准、runner 支援先部署、R2 發布、Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37892011679)及正式 API／桌機／手機／英文指定模式／獨立 PWA 驗收，目前三款完成、37 款舊流程。審查單、感測器驗收限制與證據見 [手勢指令對戰遷移紀錄](gesture-battler-r2-migration.md)及[正式收據](releases/gesture-battler-2.0.0.json)。
 
 可信官方 release 宣告 `hand-tracking` 才能由 Hub／獨立 PWA 容器在使用者確認後取得相機。MediaPipe 0.10.35、固定摘要的模型與 WASM 經 runner 版本化 `/input/hand-tracking-1.0.0/` 供應；這是平台輸入責任，例外於原先「MediaPipe 全在遊戲」要求。容器只經私有 port 傳數值 xyz／空手部狀態，核對 nonce、遞增 sequence 和欄位範圍，不傳或保存影像／身份資訊。遊戲自行校正、判定、呈現與產生成果，不引入平台或跨遊戲程式碼。
 

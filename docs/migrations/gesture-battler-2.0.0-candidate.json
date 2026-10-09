@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "published-production-verification-in-progress",
+  "status": "published-and-verified",
   "published": true,
   "ownerApproval": {
     "instruction": "核准並推送",
@@ -240,10 +240,48 @@
     "category": "upper-limb",
     "previewSha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b"
   },
-  "productionVerification": "pending-publication-and-deployment",
+  "productionVerification": "docs/releases/gesture-battler-2.0.0.json",
   "ci": {
-    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37891101687",
-    "commit": "e8cedc4002c4c4beaf24dd7c8d04a300d0342d36",
-    "status": "initial-seven-gates-and-deploy-passed-final-platform-fix-pending"
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37892011679",
+    "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74",
+    "status": "success",
+    "jobs": [
+      {
+        "name": "deployment_scope",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (hub-functions)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (gamerunner)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (naming)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (trainer-entrypoints)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (pwa)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (cloudflare-deploy)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (game-architecture)",
+        "conclusion": "success"
+      },
+      {
+        "name": "deploy",
+        "conclusion": "success"
+      }
+    ]
   }
 }

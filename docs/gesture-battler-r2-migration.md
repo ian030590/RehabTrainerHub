@@ -1,6 +1,6 @@
-# 手勢指令對戰 R2 候選審查
+# 手勢指令對戰 R2 遷移驗收
 
-更新日期：2026-10-09。狀態：擁有者以「核准並推送」核准以下精確版本及摘要；R2 已發布，Hub／runner 已部署，正式驗收進行中。尚未建立完整正式收據或標記遷移完成。
+更新日期：2026-10-09。狀態：擁有者以「核准並推送」核准以下精確版本及摘要；R2 發布、Hub／runner 部署與正式驗收完成。[正式收據](releases/gesture-battler-2.0.0.json)及[逐項正式證據](migrations/gesture-battler-2.0.0/production-verification.json)已保存，目前三款 R2 自包含遊戲、37 款舊流程。硬體與瀏覽器驗收限制列於末段。
 
 ## 精確候選
 
@@ -10,9 +10,9 @@
 - 第一方輸入：`hand-tracking-1.0.0`，MediaPipe `0.10.35`。10 個檔案合計 41,723,126 bytes；實際輸入檔案清單摘要為 `0f141b5a013b6a14a6ce71f58c8e7ab32a1ac15f1ce547fdd1a28d6be3bd94c4`。包含 SIMD／非 SIMD／module WASM、固定模型、第一方輸入程式與授權文件；PWA 預快取實際使用的 SIMD／非 SIMD 路徑。
 - 完整清單：[候選資料](migrations/gesture-battler-2.0.0-candidate.json)。`ownerApproval` 記錄使用者的精確候選核准；發布前的 dry-run 不作為公開證據，發布後以 R2 實際回讀與正式部署／瀏覽器驗收為準。
 
-發布前重新執行 `node scripts/publish-official-game.mjs gesture-battler --dry-run` 核對上述摘要。任何遊戲 bytes 改動都須重新審查；已公開的遊戲與輸入版本不得覆寫。未建立 `docs/releases/gesture-battler-2.0.0.json`，正式收據須等發布與正式驗收完成後才建立。
+發布前重新執行 `node scripts/publish-official-game.mjs gesture-battler --dry-run` 核對上述摘要。任何遊戲 bytes 改動都須重新審查；已公開的遊戲與輸入版本不得覆寫。正式收據於發布、CI／部署與正式驗收完成後建立，見 `docs/releases/gesture-battler-2.0.0.json`。
 
-發布前輸入目錄檢查失敗：Vite 預設另複製 runner 的 `_headers`、`_routes.json`、`index.html`、`robots.txt`，因此核准時的完整建置快照實際為 14 個檔案、41,726,607 bytes，摘要 `3f334a5da81ca05fd712325f6b14b755fa4af19c5084fc3f882b0c3e05dc2f37`。`buildHandTracking.mjs` 設定 `publicDir: false` 後，重新 build 與輸入目錄檢查通過。候選 `input.approvedBuildSnapshot` 保留完整核准快照；交付的 10 個輸入檔案逐一核對，與已核准 bytes 相同，遊戲摘要也未變更。此修正只移除重複容器檔，不變動 MediaPipe／模型／WASM／输入程式。
+發布前輸入目錄檢查失敗：Vite 預設另複製 runner 的 `_headers`、`_routes.json`、`index.html`、`robots.txt`，因此核准時的完整建置快照實際為 14 個檔案、41,726,607 bytes，摘要 `3f334a5da81ca05fd712325f6b14b755fa4af19c5084fc3f882b0c3e05dc2f37`。`buildHandTracking.mjs` 設定 `publicDir: false` 後，重新 build 與輸入目錄檢查通過。候選 `input.approvedBuildSnapshot` 保留完整核准快照；交付的 10 個輸入檔案逐一核對，與已核准 bytes 相同，遊戲摘要也未變更。此修正只移除重複容器檔，不變動 MediaPipe／模型／WASM／輸入程式。
 
 ## 原功能與分類
 
@@ -112,3 +112,11 @@ Hub output 曾被同步工具改名為 conflicted 檔，重建後測試採 `.tmp
 正式 browser 發現兩項並先重現失敗：錄製手部圖片被 Hub SW 導航 fallback 攔截，改由已核對的圖片 bytes 形成 data URL；Wrangler 保留函式名稱時，序列化的 broker 遺漏 `__name` 輔助碼，獨立 PWA 無法啟動。新增真實 esbuild `keepNames` 編譯後的 launcher 開頁測試，先因 `__name` 失敗，再改用已發布輸入 IIFE 的 `CreateBroker` 讓測試通過；設定載入仍不開相機。R2 遊戲與十個輸入資產 bytes 均不變。修正後重跑 runner／命名 gate、部署與完整正式瀏覽器流程，再補正式收據。
 
 擁有者已核准上述精確版本／摘要。感測器驗收限制：未使用實體相機、真人 1–5 手勢、Safari／iOS、原生安裝操作或長時間離線。人工驗收依序開啟遊戲、略過／完成教學、確認相機、握拳／張手／1–5 各自校正、分別完成自由／指定模式、遮住手確認中斷、退出確認攝影機指示燈熄滅；再檢查拒絕權限重試、斷線與手機旋轉。這些項目不能以錄製影像測試冒充完成。
+
+## 正式驗收結果
+
+[最後 CI／部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37892011679)成功，commit `65220eac10f726e7934e6ad1193c7324a23a8d74`。Hub deployment `34248648-4000-424a-9a5e-1952624bc74f`、runner deployment `cd01ab30-ef10-406f-98a8-0a8d01f31dc8` 都成功；部署後再次回讀 5 個遊戲檔與 10 個輸入資產，與核准 bytes 一致。正式 API／原圖／分類／唯一官方 slug／版本 session／穩定入口／PWA scope／舊子資產 410 均通過。
+
+部署後 Brave 通過真正 Hub 桌機、手機英文登入指定模式（session／保存重試、單筆本機 SQL）、獨立手機英文 PWA（實際模型／WASM 快取）。正式 runner 大廳模式也通過。聚光燈、設定往返、可信同意取消／重試、沙盒相機拒絕、七步校正、五種校正姿勢、實際對戰／數值成果、全螢幕與相機清理皆執行。所有 browser API 寫入只在本機 SQLite；正式 session API 只簽發 token 並更新一般流量計數，不建立正式訓練紀錄。
+
+正式截圖：[桌機成果](migrations/gesture-battler-2.0.0/production-desktop-results.png)、[手機英文指定模式成果](migrations/gesture-battler-2.0.0/production-mobile-english-directed-results.png)、[獨立手機 PWA 英文成果](migrations/gesture-battler-2.0.0/production-pwa-mobile-english-results.png)。命令、完成時間、公開 API／manifest、逐檔 SHA-256／CSP 與部署 metadata 均列於[正式證據](migrations/gesture-battler-2.0.0/production-verification.json)。實體相機／真人數字 1–5／Safari／iOS／原生安裝與長時間離線仍依前述人工步驟驗收，未宣稱完成。

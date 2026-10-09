@@ -1,0 +1,543 @@
+{
+  "checkedAt": "2026-10-09T06:18:33.823Z",
+  "deployments": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "34248648-4000-424a-9a5e-1952624bc74f",
+      "url": "https://34248648.rehabtrainerhub.pages.dev",
+      "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-09T06:12:08.860528Z",
+        "status": "success"
+      }
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "cd01ab30-ef10-406f-98a8-0a8d01f31dc8",
+      "url": "https://cd01ab30.trainerhub-user-games.pages.dev",
+      "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-09T06:12:17.478012Z",
+        "status": "success"
+      }
+    }
+  ],
+  "officialCurrent": {
+    "schemaVersion": 1,
+    "gameId": "gesture-battler",
+    "currentVersion": "2.0.0",
+    "releases": {
+      "2.0.0": {
+        "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1"
+      }
+    }
+  },
+  "release": {
+    "schemaVersion": 1,
+    "status": "approved",
+    "gameId": "gesture-battler",
+    "version": "2.0.0",
+    "name": "手勢指令對戰",
+    "description": "辨識數字手勢完成指令，練習手部活動範圍與動作維持。",
+    "entry": "index.html",
+    "runtime": {
+      "name": "native",
+      "major": 1
+    },
+    "presentation": "game",
+    "capabilities": [
+      "audio",
+      "fullscreen",
+      "hand-tracking"
+    ],
+    "files": [
+      {
+        "path": "assets/index-Dgn6AxMb.js",
+        "size": 874799,
+        "sha256": "b22ce0aab09971f8a2e3c4e0427755cf470ac0307e0a927e86b99135652bcd41",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DVMbmWw-.css",
+        "size": 14788,
+        "sha256": "47db0b2f0b720d8a320350ed7a0edaed113af51d3f6b3eb5e6a135054f080346",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "size": 477,
+        "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "size": 408,
+        "sha256": "58afa6d0d12b291fc7acb21f2b60c27ba096f2566a49a7c932f60640ccf6ff2b",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "size": 2662,
+        "sha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b",
+        "contentType": "image/webp"
+      }
+    ],
+    "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1",
+    "approvedAt": "2026-10-09T05:56:49.563Z"
+  },
+  "publicApi": {
+    "checkedAt": "2026-10-09T06:15:07.731Z",
+    "productionTrainingRecordsCreated": false,
+    "endpoints": [
+      {
+        "url": "https://trainerhub-user-games.pages.dev/games/gesture-battler/",
+        "status": 302,
+        "location": "/games/gesture-battler/2.0.0/",
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.0/?lang=en",
+        "status": 200,
+        "permissionsPolicy": "accelerometer=(), ambient-light-sensor=(), camera=(self), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src https://trainerhub-user-games.pages.dev; form-action 'none'; frame-ancestors 'self' https://trainerhub.cc; frame-src 'self'; child-src 'self'; img-src 'self' data:; manifest-src 'self'; object-src 'none'; script-src 'nonce-bf36110b942517775a31cef147abf6772d54' 'self' 'wasm-unsafe-eval'; style-src 'nonce-bf36110b942517775a31cef147abf6772d54'; worker-src 'self'"
+      },
+      {
+        "url": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.0/manifest.webmanifest",
+        "status": 200,
+        "manifest": {
+          "id": "/games/gesture-battler/2.0.0/",
+          "name": "手勢指令對戰｜居家訓練網",
+          "short_name": "手勢指令對戰",
+          "description": "辨識數字手勢完成指令，練習手部活動範圍與動作維持。",
+          "lang": "zh-Hant",
+          "dir": "ltr",
+          "start_url": "/games/gesture-battler/2.0.0/",
+          "scope": "/games/gesture-battler/2.0.0/",
+          "display": "standalone",
+          "orientation": "any",
+          "background_color": "#0b1020",
+          "theme_color": "#172033",
+          "icons": [
+            {
+              "src": "/runtime/icons/trainerhub-192-v1.png",
+              "sizes": "192x192",
+              "type": "image/png",
+              "purpose": "any"
+            },
+            {
+              "src": "/runtime/icons/trainerhub-512-v1.png",
+              "sizes": "512x512",
+              "type": "image/png",
+              "purpose": "any"
+            },
+            {
+              "src": "/games/gesture-battler/2.0.0/icon.svg",
+              "sizes": "any",
+              "type": "image/svg+xml",
+              "purpose": "any maskable"
+            }
+          ]
+        }
+      },
+      {
+        "url": "https://trainerhub.cc/games/gesture-battler/settings.json",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/gesture-battler/score.json",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/gesture-battler/assets/index.js",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/gesture-battler/sw.js",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/gesture-battler/manifest.webmanifest",
+        "status": 410,
+        "cacheControl": "no-store"
+      },
+      {
+        "url": "https://trainerhub.cc/games/gesture-battler/",
+        "status": 200,
+        "stablePwaLink": true
+      }
+    ],
+    "publicCatalog": {
+      "url": "https://trainerhub.cc/api/games",
+      "status": 200,
+      "matchingGames": [
+        {
+          "id": "gesture-battler",
+          "slug": "gesture-battler",
+          "title": "手勢指令對戰",
+          "summary": "辨識數字手勢完成指令，練習手部活動範圍與動作維持。",
+          "trainer": "motor",
+          "category": "upper-limb",
+          "developerName": "居家訓練網",
+          "updatedAt": "2026-10-09T05:56:49.563Z",
+          "copy": {
+            "zh-TW": {
+              "title": "手勢指令對戰",
+              "description": "辨識數字手勢完成指令，練習手部活動範圍與動作維持。"
+            },
+            "en": {
+              "title": "Gesture Command Battle",
+              "description": "Use number gestures to issue commands and practise hand range and sustained movement."
+            }
+          },
+          "previewUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.0/package/preview.webp",
+          "release": {
+            "id": "gesture-battler@2.0.0",
+            "version": "2.0.0",
+            "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1",
+            "capabilities": [
+              "audio",
+              "fullscreen",
+              "hand-tracking"
+            ],
+            "approvedAt": "2026-10-09T05:56:49.563Z",
+            "presentation": "game",
+            "launchUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.0/",
+            "installUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/"
+          }
+        }
+      ]
+    },
+    "preview": {
+      "url": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.0/package/preview.webp",
+      "status": 200,
+      "sha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b"
+    }
+  },
+  "session": {
+    "checkedAt": "2026-10-09T06:03:53.049Z",
+    "status": 201,
+    "version": "2.0.0",
+    "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1",
+    "capabilities": [
+      "audio",
+      "fullscreen",
+      "hand-tracking"
+    ],
+    "signedTokenReturned": true,
+    "tokenStoredOrPrinted": false,
+    "sessionPersisted": false,
+    "productionTrainingRecordsCreated": false,
+    "operationalRateLimitCounterUpdated": true,
+    "cacheControl": "no-store"
+  },
+  "ci": {
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37892011679",
+    "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74",
+    "status": "success",
+    "jobs": [
+      {
+        "name": "deployment_scope",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (hub-functions)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (gamerunner)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (naming)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (trainer-entrypoints)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (pwa)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (cloudflare-deploy)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (game-architecture)",
+        "conclusion": "success"
+      },
+      {
+        "name": "deploy",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "files": [
+    {
+      "kind": "input",
+      "path": "MEDIAPIPE-LICENSE.txt",
+      "size": 12331,
+      "sha256": "8707eef0533987efc5b155d64761eeb6e20793f50b9bd1a68dad1cf4719d0ed8",
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "input",
+      "path": "MEDIAPIPE-NOTICE.txt",
+      "size": 8403,
+      "sha256": "aadce68d35bfc0dc75fd191bbf9e6285816e907eb43a6301b43bd9a29768f7c5",
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "input",
+      "path": "hand_landmarker.task",
+      "size": 7819105,
+      "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1",
+      "headers": {
+        "content-type": "application/octet-stream",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "input",
+      "path": "index.js",
+      "size": 128658,
+      "sha256": "d5d5028534ec45a02ba9dedd03793c01ded82b5bac0cc1f800459c7668496d3b",
+      "headers": {
+        "content-type": "application/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "input",
+      "path": "wasm/vision_wasm_internal.js",
+      "size": 322044,
+      "sha256": "e7fd9858e8e8f221d9b96eddc11f8e077f263e0b7bbd79d3cbe882b134274f8c",
+      "headers": {
+        "content-type": "application/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "input",
+      "path": "wasm/vision_wasm_internal.wasm",
+      "size": 11153617,
+      "sha256": "6a5c64584c2ab61c763b6e204afbdbc7ce1caf7f5216187322bca8df94f646bc",
+      "headers": {
+        "content-type": "application/wasm",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "input",
+      "path": "wasm/vision_wasm_module_internal.js",
+      "size": 322082,
+      "sha256": "1f1d6215324a1fe62f6742d49a3db911170987ca18ad8c1b75f1a1c82acf2b44",
+      "headers": {
+        "content-type": "application/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "input",
+      "path": "wasm/vision_wasm_module_internal.wasm",
+      "size": 11153641,
+      "sha256": "617b8e0248dbd27e9d7ece4218004eae4cefb499196d1bb4fa0e3fef21708756",
+      "headers": {
+        "content-type": "application/wasm",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "input",
+      "path": "wasm/vision_wasm_nosimd_internal.js",
+      "size": 321847,
+      "sha256": "438d1fe8ff7f4d946025bc211c291543c037d8a3785ed4eee60f1f521b236296",
+      "headers": {
+        "content-type": "application/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "input",
+      "path": "wasm/vision_wasm_nosimd_internal.wasm",
+      "size": 10481398,
+      "sha256": "8a3092d34c79d3f57e6ba8592105e8a90f6b07c27891ffecd14cca428bfd3e31",
+      "headers": {
+        "content-type": "application/wasm",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "game",
+      "path": "assets/index-Dgn6AxMb.js",
+      "size": 874799,
+      "sha256": "b22ce0aab09971f8a2e3c4e0427755cf470ac0307e0a927e86b99135652bcd41",
+      "contentType": "text/javascript; charset=utf-8",
+      "headers": {
+        "content-type": "text/javascript; charset=utf-8",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "game",
+      "path": "assets/style-DVMbmWw-.css",
+      "size": 14788,
+      "sha256": "47db0b2f0b720d8a320350ed7a0edaed113af51d3f6b3eb5e6a135054f080346",
+      "contentType": "text/css; charset=utf-8",
+      "headers": {
+        "content-type": "text/css; charset=utf-8",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "game",
+      "path": "game.json",
+      "size": 477,
+      "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+      "contentType": "application/json; charset=utf-8",
+      "headers": {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "game",
+      "path": "index.html",
+      "size": 408,
+      "sha256": "58afa6d0d12b291fc7acb21f2b60c27ba096f2566a49a7c932f60640ccf6ff2b",
+      "contentType": "text/html; charset=utf-8",
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    },
+    {
+      "kind": "game",
+      "path": "preview.webp",
+      "size": 2662,
+      "sha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b",
+      "contentType": "image/webp",
+      "headers": {
+        "content-type": "image/webp",
+        "cache-control": "public, max-age=31536000, immutable",
+        "content-security-policy": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts",
+        "permissions-policy": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+        "access-control-allow-origin": "*",
+        "cross-origin-resource-policy": "cross-origin"
+      }
+    }
+  ],
+  "browser": [
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --remote --lobby",
+      "passed": true,
+      "completedAt": "2026-10-09T06:01:06.209Z",
+      "postFinalDeployment": false,
+      "productionAssets": true,
+      "realMediaPipeInference": true,
+      "cameraSource": "Browser native fake-device permission followed by verified Google hand photos in a canvas video stream",
+      "recordWrites": "local SQLite only"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --remote --standalone --mobile --english",
+      "passed": true,
+      "completedAt": "2026-10-09T06:16:55.978Z",
+      "postFinalDeployment": true,
+      "productionAssets": true,
+      "realMediaPipeInference": true,
+      "cameraSource": "Browser native fake-device permission followed by verified Google hand photos in a canvas video stream",
+      "recordWrites": "none"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --production-hub --lobby",
+      "passed": true,
+      "completedAt": "2026-10-09T06:15:42.637Z",
+      "postFinalDeployment": true,
+      "productionAssets": true,
+      "realMediaPipeInference": true,
+      "cameraSource": "Browser native fake-device permission followed by verified Google hand photos in a canvas video stream",
+      "recordWrites": "local SQLite only"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --production-hub --lobby --mobile --english --signed-in --session-failure --directed",
+      "passed": true,
+      "completedAt": "2026-10-09T06:13:19.702Z",
+      "postFinalDeployment": true,
+      "productionAssets": true,
+      "realMediaPipeInference": true,
+      "cameraSource": "Browser native fake-device permission followed by verified Google hand photos in a canvas video stream",
+      "recordWrites": "local SQLite only"
+    }
+  ]
+}
