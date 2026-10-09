@@ -2,6 +2,8 @@
 
 日期：2026-10-09。狀態：**已遷移；擁有者核准、R2 發布、CI／正式部署、API 與桌機／觸控／獨立 PWA 驗收均完成。** 本紀錄依 [搬遷計畫第 7、11 節](r2-game-migration-plan.md) 填寫，當版證據保留在 [正式發布收據](releases/asteroid-shield-2.0.0.json)。
 
+本頁保留首次遷移 `2.0.0` 的完整歷史。設定視窗修正版 `2.0.1` 已核准、發布及正式驗收，current 已切換；見 [設定視窗審查](asteroid-shield-settings-dialog-2.0.1.md)與[當版正式收據](releases/asteroid-shield-2.0.1.json)。`2.0.0` 仍核准且實際 bytes 已重新核對，可用官方 CLI 回退。
+
 ## 當版候選與核准邊界
 
 | 項目 | 候選內容 |

@@ -20,6 +20,10 @@ label > input:not([type=checkbox]), label > select { display: block; width: 100%
 .asteroid-shield-canvas { display: block; }
 .experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; }
 .game-settings-form { max-width: 42rem; margin: 0 auto; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 24px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-form h2 { margin-top: 0; }
+.game-settings-dialog .renderer-error { position: static; }
 .game-settings-form > button { margin: 24px 8px 0 0; }
 .experiment-results { max-width: 60rem; margin: 0 auto; }
 .training-result-summary { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; }

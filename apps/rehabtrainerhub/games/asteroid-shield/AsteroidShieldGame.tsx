@@ -293,6 +293,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const labels = copy[lang];
     const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
     const pixiHostRef = useRef<HTMLDivElement | null>(null);
+    const settingsDialogRef = useRef<HTMLDialogElement | null>(null);
     const appRef = useRef<Application | null>(null);
     const texturesRef = useRef<AssetTextures | null>(null);
     const sceneRef = useRef<AsteroidScene | null>(null);
@@ -316,6 +317,9 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error'>('saving');
     const [rendererReady, setRendererReady] = useState(false);
     const [rendererError, setRendererError] = useState(false);
+    useEffect(() => {
+      if (phase === 'menu') settingsDialogRef.current?.showModal();
+    }, [phase]);
     useEffect(() => { SetSoundEnabled(settings.soundEnabled); }, [settings.soundEnabled]);
     useEffect(() => {
       const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
@@ -530,16 +534,28 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         };
     }, []);
     const latestRows = result?.Object_Records ?? [];
+    const rendererErrorNotice = rendererError && <p className="renderer-error" role="alert">{lang === 'en' ? 'The game could not load. Return and try again.' : '遊戲無法載入，請返回後重試。'}</p>;
     return (<div ref={fullscreenRootRef} className={`asteroid-shield-game asteroid-shield-phase-${phase}`}>
       <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true"/>
       <div ref={pixiHostRef} className="asteroid-shield-stage"/>
 
-      {phase === 'menu' && <div className="experiment-container">
+      {(phase === 'menu' || phase === 'rules') && <div className="training-panel" style={{ padding: 0 }} inert={phase === 'menu'} aria-hidden={phase === 'menu'}>
+        <AsteroidShieldTutorial title={labels.title} summaryItems={summaryItems} onStart={() => void startGame()} onBack={showConfiguration} ready={rendererReady} active={phase === 'rules'}/>
+      </div>}
+
+      {phase === 'menu' && <dialog ref={settingsDialogRef} className="game-settings-dialog" aria-labelledby="asteroid-settings-title" onCancel={event => { event.preventDefault(); onExit(); }}>
         <form className="game-settings-form" onKeyDown={event => {
+          if (event.key === 'Tab') {
+            const controls = event.currentTarget.querySelectorAll<HTMLElement>('button, input, select');
+            if (document.activeElement === controls[event.shiftKey ? 0 : controls.length - 1]) {
+              event.preventDefault(); controls[event.shiftKey ? controls.length - 1 : 0]?.focus();
+            }
+          }
           if (event.key === 'Enter') { event.preventDefault(); if (event.currentTarget.reportValidity()) setPhase('rules'); }
         }} onSubmit={event => event.preventDefault()}>
-          <h2>{labels.title}</h2>
+          <h2 id="asteroid-settings-title">{labels.title}</h2>
           <p>{lang === 'en' ? 'These values apply only to this session.' : '設定值只用於這次活動。'}</p>
+          {rendererErrorNotice}
           <label>{lang === 'en' ? 'Spawn interval / base speed' : '生成間隔／基礎速度'}
             <select value={settings.difficulty} onChange={event => setSettings({ ...settings, difficulty: event.target.value as AsteroidSettings['difficulty'] })}>
               <option value="easy">1.35 s / 120 px/s</option><option value="medium">1.08 s / 165 px/s</option><option value="hard">0.82 s / 215 px/s</option>
@@ -557,13 +573,9 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
           <button type="button" className="btn-primary" onClick={event => { if (event.currentTarget.form?.reportValidity()) setPhase('rules'); }}>{lang === 'en' ? 'Continue to tutorial' : '進入教學'}</button>
           <button type="button" onClick={onExit}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
         </form>
-      </div>}
+      </dialog>}
 
-      {phase === 'rules' && (<div className="training-panel" style={{ padding: 0 }}>
-          <AsteroidShieldTutorial title={labels.title} summaryItems={summaryItems} onStart={() => void startGame()} onBack={showConfiguration} ready={rendererReady}/>
-        </div>)}
-
-      {rendererError && <p className="renderer-error" role="alert">{lang === 'en' ? 'The game could not load. Return and try again.' : '遊戲無法載入，請返回後重試。'}</p>}
+      {phase !== 'menu' && rendererErrorNotice}
       {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable asteroid-shield-results-container">
           <div className="experiment-results">
             <h1>{labels.resultTitle}</h1>

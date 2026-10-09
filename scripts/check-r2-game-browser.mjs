@@ -27,11 +27,14 @@ const lobby = process.argv.includes('--lobby');
 const sessionFailure = process.argv.includes('--session-failure');
 const signedIn = process.argv.includes('--signed-in');
 const english = process.argv.includes('--english');
+const rendererFailure = process.argv.includes('--renderer-failure');
 const output = resolve(process.env.HUB_OUTPUT_ROOT || resolve(root, 'apps/rehabtrainerhub/out'));
 const runnerOutput = resolve(root, 'apps/usergamerunner/dist');
 const browserPath = process.env.BRAVE_BIN || 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
 assert.ok(existsSync(browserPath), 'Brave is required.');
 const { manifest, files } = await BuildOfficialGameRelease(gameId);
+const unavailableTexture = rendererFailure ? manifest.files.find(file => file.path.startsWith('assets/ship-'))?.path : null;
+assert.ok(!rendererFailure || unavailableTexture, 'Renderer failure fixture requires the asteroid ship texture.');
 const sqlite = new DatabaseSync(':memory:');
 const migrations = resolve(root, 'apps/rehabtrainerhub/migrations');
 for (const file of (await readdir(migrations)).filter(file => file.endsWith('.sql')).sort()) sqlite.exec(await readFile(resolve(migrations, file), 'utf8'));
@@ -49,7 +52,7 @@ const catalog = { schemaVersion: 1, gameId: manifest.gameId, currentVersion: man
 const bucket = { get: async key => {
   const bytes = key === `official-games/${gameId}/current.json` ? Buffer.from(JSON.stringify(catalog))
     : key.endsWith('/release.json') ? Buffer.from(JSON.stringify({ ...manifest, status: revoked ? 'revoked' : 'approved' })) : files.get(key.split('/files/')[1]);
-  if (!bytes) return null;
+  if (!bytes || (unavailableTexture && key.endsWith('/files/' + unavailableTexture))) return null;
   return { size: bytes.length, body: bytes, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
     text: async () => bytes.toString('utf8'), json: async () => JSON.parse(bytes.toString('utf8')) };
 } };
@@ -309,7 +312,7 @@ try {
       const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
       await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64'));
     };
-    await CheckAsteroidShield({game, evaluate, send, until, gameContext, session, standalone,
+    await CheckAsteroidShield({game, evaluate, send, until, gameContext, session, version: manifest.version, standalone,
       sqlite, requests, errors, saveAttempts: () => saveAttempts, sessionAttempts: () => sessionAttempts, sessionFailure, capture, accountId, guestSubjectId});
   } else {
   assert.equal(await game('document.querySelectorAll("form input[type=range]").length'), 3);

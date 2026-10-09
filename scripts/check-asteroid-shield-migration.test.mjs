@@ -40,7 +40,7 @@ test('asteroid release owns UI, dependencies, metadata and the exact original pr
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.0');
+  assert.equal(pkg.version, '2.0.1');
   for (const dependency of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[dependency]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
@@ -137,13 +137,13 @@ test('asteroid bridge binds once to the parent private port and ignores forged i
   const module = { exports: {} };
   new Function('require', 'module', 'exports', 'window', 'document', ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText)(() => ({ version: '2.0.0' }), module, module.exports, window, { referrer: 'https://trainerhub.cc/' });
+  }).outputText)(() => ({ version: '2.0.1' }), module, module.exports, window, { referrer: 'https://trainerhub.cc/' });
   module.exports.InstallHubBridge();
   assert.equal(module.exports.GetGameLanguage(), null);
   const sent = [];
   const port = { postMessage: message => sent.push(message), start: () => {}, onmessage: null };
   const event = { source: parent, origin: 'https://trainerhub.cc', ports: [port], data: {
-    schema: 'trainerhub.game/v1', type: 'init', gameId: 'asteroid-shield', version: '2.0.0', sessionNonce: 'a'.repeat(64), language: 'en' } };
+    schema: 'trainerhub.game/v1', type: 'init', gameId: 'asteroid-shield', version: '2.0.1', sessionNonce: 'a'.repeat(64), language: 'en' } };
   for (const changes of [{ source: {} }, { origin: 'https://evil.example' }, { ports: [] },
     { data: { ...event.data, version: '1.0.0' } }, { data: { ...event.data, sessionNonce: 'invalid' } }]) {
     listeners.get('message')({ ...event, ...changes });

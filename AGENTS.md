@@ -13,7 +13,7 @@ npm workspace / Turborepo monorepo；目前只有兩個 app，App 程式碼位�
 
 - `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、內建訓練 runtime、API、審核後台、開發者入口）。
 - `apps/usergamerunner`：獨立遊戲隔離執行環境（Cloudflare Pages + Functions），從 R2 讀取核准版本，提供套件資產、安全標頭、版本化 runtime 與 PWA launcher；支援官方原生遊戲與第三方 HTML/ZIP 遊戲。
-- 小行星護盾防衛 `2.0.0` 已完成擁有者精確摘要核准、R2 發布、CI／Hub 部署及正式 API／桌機／觸控／獨立 PWA 驗收，見 `docs/asteroid-shield-r2-migration.md` 與 `docs/releases/asteroid-shield-2.0.0.json`。registry 有 2 款自包含遊戲，Hub build 排除它們、保留 38 款舊遊戲；後續遷移同樣必須等正式驗收與收據完成，不能只以 R2 公開或本機登記作為完成證據。
+- 小行星護盾防衛 `2.0.0` 已完成首次遷移；目前 `2.0.1` 已核准精確摘要、發布 R2 並通過正式 API／桌機／觸控／獨立 PWA 驗收，見 `docs/asteroid-shield-r2-migration.md`、`docs/asteroid-shield-settings-dialog-2.0.1.md` 與 `docs/releases/asteroid-shield-2.0.1.json`。後續設定 UI 採遊戲自有前景視窗與預先呈現的教學背景，遵循搬遷計畫第 7 節步驟 B。registry 有 2 款自包含遊戲，Hub build 排除它們、保留 38 款舊遊戲；後續遷移同樣必須等正式驗收與收據完成，不能只以 R2 公開或本機登記作為完成證據。
 - `apps/rehabtrainerhub/games/{gameId}/`：目前有 40 個正式遊戲 workspace，擁有各自的 Vite entry、runtime、規則與 i18n。38 個未遷移遊戲仍依賴 `@rehab-trainer/ui` 的既有 `OfficialGameShell`、樣式、語言 provider 與設定橋樑，維持 `settings.json`／`score.json` 流程；這是尚待移除的遷移負債，不能宣稱所有遊戲已完全獨立。**新遊戲與 R2 遷移完成的遊戲嚴禁引入共用 UI 或跨遊戲程式碼；既有共用依賴不得擴張。** 登記於 `packages/ui/src/officialGameReleases.json` 的 R2 遊戲自行呈現設定、教學與成績，僅透過私有 MessageChannel 傳送成果，由 Hub 驗證後入庫。已遷移畫畫塔防 `2.0.3` 與小行星護盾防衛 `2.0.0`，詳見 `docs/r2-game-migration-plan.md`。
   **新增遊戲與 Workspace 同步：** 加入 `apps/rehabtrainerhub/games/catalog.ts` 後執行 `npm run sync:games`；有 workspace／依賴異動時更新 lockfile。sync 依 registry 將未遷移遊戲加入 Hub 依賴樹，將 R2 遊戲排除。其舊模板仍會為缺少設定檔的遊戲產生共用 UI 依賴及 alias，並不驗證遊戲是否獨立；新遊戲與 R2 遊戲須先提供自有 `package.json`、Vite entry 及依賴，不能靠 sync 取得符合新架構的套件。
 

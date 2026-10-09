@@ -19,15 +19,17 @@ interface AsteroidShieldTutorialProps {
   title?: ReactNode;
   summaryItems?: readonly TrainingConfigSummaryItem[];
   ready: boolean;
+  active: boolean;
   onStart: () => void;
   onBack: () => void;
 }
 
-export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, ready }: AsteroidShieldTutorialProps) {
+export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, ready, active }: AsteroidShieldTutorialProps) {
   const { t, lang } = useT();
   const [tourFinished, setTourFinished] = useState(false);
 
   useEffect(() => {
+    if (!active) { setTourFinished(false); return; }
     let disposeTour: (() => void) | undefined;
     const timer = window.setTimeout(() => {
       const isZh = lang !== 'en';
@@ -91,7 +93,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, r
       window.clearTimeout(timer);
       disposeTour?.();
     };
-  }, [lang]);
+  }, [lang, active]);
 
   return (
     <div
@@ -108,7 +110,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, r
         alignItems: 'center',
         overflow: 'hidden',
         zIndex: 10,
-        pointerEvents: tourFinished ? 'auto' : 'none',
+        pointerEvents: active && tourFinished ? 'auto' : 'none',
         backgroundImage: `url(${assetUrls.background})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -116,7 +118,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, r
     >
       {/* Top Bar with Back Button */}
       <div style={{ width: '100%', padding: '16px 24px', display: 'flex', justifyContent: 'flex-start', pointerEvents: 'auto' }}>
-        <button
+        {active && <button
           className="ui-button"
           onClick={onBack}
           style={{ 
@@ -130,7 +132,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, r
           }}
         >
           {lang === 'en' ? 'Back to Settings' : '回設定'}
-        </button>
+        </button>}
       </div>
 
       {/* Mock Asteroids */}
@@ -155,7 +157,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, r
 
       {/* Center content / Start Button */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', zIndex: 20 }}>
-        {tourFinished && (
+        {active && tourFinished && (
           <div style={{ 
             backgroundColor: 'var(--surface)',
             padding: '24px', 

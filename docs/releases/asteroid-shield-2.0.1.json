@@ -1,0 +1,270 @@
+{
+  "gameId": "asteroid-shield",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.1/package/index.html",
+  "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3",
+  "verifiedAt": "2026-10-09T00:49:15.415Z",
+  "status": "published-and-verified",
+  "prefix": "releases/asteroid-shield/2.0.1/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.1/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/",
+  "fileCount": 12,
+  "totalBytes": 1215791,
+  "files": [
+    {
+      "path": "assets/asteroid-blue-CY-_A_BJ.png",
+      "size": 14034,
+      "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-dark-CW7iRJ5o.png",
+      "size": 11856,
+      "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-green-1XKYeWRA.png",
+      "size": 9693,
+      "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/background-NBhu4YAc.png",
+      "size": 83041,
+      "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/energy-rock-CT8hMT01.png",
+      "size": 1792,
+      "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-BBwSGumL.js",
+      "size": 947625,
+      "sha256": "0e5900741f8e942888e11f53bb230b320db1dc4c741221f8de4f2bf580d3ad1f",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/shield-CxquxbMC.png",
+      "size": 35318,
+      "sha256": "ded93bcfb8e383d478e1297ba87235738f55b9b9e631f846506791c26ebab40b",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/ship-CrsWCvcK.png",
+      "size": 78990,
+      "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/style-BT6Fp6AN.css",
+      "size": 11724,
+      "sha256": "720d039ffe24626b48b808a40d8f37c8ccd7909eaa369f36037ac3551cb2f209",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 471,
+      "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "8ea73a88c835cda457f967522318354cabae0f3f7ed89095e46982d7f26d7ab7",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 20836,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+      "contentType": "image/webp"
+    }
+  ],
+  "changes": [
+    "Native foreground settings dialog over the pre-rendered tutorial scene",
+    "Tour begins only after confirmation; settings and scene retained on return",
+    "Keyboard focus stays in dialog; load failures remain visible"
+  ],
+  "ownerApproval": {
+    "instruction": "?????????????UI??????????",
+    "date": "2026-10-09",
+    "reviewedVersion": "2.0.1",
+    "reviewedContentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3",
+    "context": "Explicit response approving the exact 2.0.1 candidate shown with screenshots and full contentSha256."
+  },
+  "catalogKey": "official-games/asteroid-shield/current.json",
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e"
+    },
+    "2.0.1": {
+      "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3"
+    }
+  },
+  "localVerification": {
+    "braveDesktop": true,
+    "braveMobileTouch": true,
+    "braveEnglish": true,
+    "braveStandaloneMobile": true,
+    "rendererFailureVisibleNoRecord": true,
+    "gameArchitecture29": true,
+    "entrypoints": true,
+    "hubBuild39Tasks": true,
+    "naming": true,
+    "publisherDryRun": true
+  },
+  "browserVerification": [
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --production-hub --lobby",
+      "passed": true,
+      "viewport": [
+        752,
+        485
+      ],
+      "recordWrites": "local SQLite only"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --production-hub --lobby --mobile",
+      "passed": true,
+      "viewport": [
+        390,
+        844
+      ],
+      "recordWrites": "local SQLite only"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --remote --lobby --english",
+      "passed": true,
+      "viewport": [
+        752,
+        485
+      ],
+      "recordWrites": "local SQLite only"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --remote --standalone --mobile",
+      "passed": true,
+      "viewport": [
+        390,
+        786
+      ],
+      "recordWrites": "none"
+    }
+  ],
+  "verification": {
+    "allR2FilesReadBackSha256": true,
+    "allOfficialHistoryManifestAndFileHashesVerified": true,
+    "allRunnerFilesReadBackSha256AndCsp": true,
+    "stableRedirectAndNoStore": true,
+    "versionedPwaAndScope": true,
+    "actualProductionApiCatalog": true,
+    "originalPreviewAndUpperLimbTag": true,
+    "versionlessProductionSession": true,
+    "productionHubDesktop": true,
+    "productionHubMobile": true,
+    "remoteEnglishLobby": true,
+    "remoteStandaloneMobile": true,
+    "browserApiAndRecordWritesOnlyInLocalSqlite": true,
+    "productionTrainingRecordsCreated": false
+  },
+  "productionVerifiedAt": "2026-10-09T00:50:37.381Z",
+  "actualProductionApi": {
+    "checkedAt": "2026-10-09T00:50:37.381Z",
+    "publicCatalog": {
+      "status": 200,
+      "matchingGames": [
+        {
+          "id": "asteroid-shield",
+          "slug": "asteroid-shield",
+          "title": "小行星護盾防衛",
+          "summary": "移動護盾保護飛船，練習手部定位與上肢控制。",
+          "trainer": "motor",
+          "category": "upper-limb",
+          "developerName": "居家訓練網",
+          "updatedAt": "2026-10-09T00:48:12.144Z",
+          "copy": {
+            "zh-TW": {
+              "title": "小行星護盾防衛",
+              "description": "移動護盾保護飛船，練習手部定位與上肢控制。"
+            },
+            "en": {
+              "title": "Asteroid Shield Defense",
+              "description": "Move a shield to protect the ship and practise hand positioning and upper-limb control."
+            }
+          },
+          "previewUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.1/package/preview.webp",
+          "release": {
+            "id": "asteroid-shield@2.0.1",
+            "version": "2.0.1",
+            "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3",
+            "capabilities": [
+              "audio",
+              "fullscreen",
+              "pointer",
+              "touch"
+            ],
+            "approvedAt": "2026-10-09T00:48:12.144Z",
+            "presentation": "game",
+            "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.1/",
+            "installUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/"
+          }
+        }
+      ]
+    },
+    "preview": {
+      "status": 200,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+      "url": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.1/package/preview.webp"
+    },
+    "versionlessSession": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3",
+      "noStore": true,
+      "tokenOmitted": true,
+      "recordNotSubmitted": true
+    },
+    "hubCompatibilityEntry": {
+      "status": 200,
+      "stablePwaLink": true
+    },
+    "productionTrainingRecordsCreated": false
+  },
+  "retainedVersionsVerified": [
+    "1.0.0",
+    "2.0.0",
+    "2.0.1"
+  ],
+  "pagesDeployments": {
+    "rehabtrainerhub": {
+      "id": "1657ebab-6fb6-4d4d-9656-02a1966df3f5",
+      "url": "https://1657ebab.rehabtrainerhub.pages.dev",
+      "commit": "2f3d9903467c44f5f93abcbca8a74a2b6f5d2038"
+    },
+    "trainerhub-user-games": {
+      "id": "5c27ea55-235c-4c55-a1ed-359eee36deea",
+      "url": "https://5c27ea55.trainerhub-user-games.pages.dev",
+      "commit": "2f3d9903467c44f5f93abcbca8a74a2b6f5d2038"
+    }
+  },
+  "pagesRequiredForGameActivation": false,
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e",
+    "allManifestAndFileHashesVerified": true,
+    "checkedAt": "2026-10-09T00:50:37.381Z",
+    "command": "node scripts/publish-official-game.mjs asteroid-shield --activate-version 2.0.0",
+    "activationPerformed": false
+  },
+  "limitations": [
+    "Brave desktop and touch emulation; physical Safari/iOS not tested",
+    "Real Turnstile, OS install icon and prolonged fully offline operation not tested",
+    "Mouse/touch only; dormant MediaPipe camera control was not enabled"
+  ]
+}

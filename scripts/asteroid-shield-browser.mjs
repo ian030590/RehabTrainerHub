@@ -1,12 +1,63 @@
 import assert from 'node:assert/strict';
 
 // Uses the shared real runner/CSP, private channel and local SQLite harness.
-export async function CheckAsteroidShield({ game, evaluate, send, until, gameContext, session,
+export async function CheckAsteroidShield({ game, evaluate, send, until, gameContext, session, version,
   standalone, sqlite, requests, errors, saveAttempts, sessionAttempts, sessionFailure, capture, accountId, guestSubjectId }) {
   const soundOn = process.argv.includes('--sound-on');
   const english = process.argv.includes('--english');
   await until(() => game(`document.querySelector("form h2").textContent === ${JSON.stringify(english ? 'Asteroid Shield Defense' : '小行星護盾防衛')}`), 'private init applies the selected language');
   assert.equal(await game('document.querySelector("form h2").textContent'), english ? 'Asteroid Shield Defense' : '小行星護盾防衛');
+  if (process.argv.includes('--renderer-failure')) {
+    await until(() => game('Boolean(document.querySelector("dialog.game-settings-dialog .renderer-error"))'), 'renderer failure visible inside foreground settings');
+    const notice = await game(`(() => {
+      const element = document.querySelector('dialog .renderer-error'); const rect = element.getBoundingClientRect();
+      return {message:element.textContent,top:rect.top,bottom:rect.bottom,height:rect.height,viewport:innerHeight,
+        modal:document.querySelector('dialog').matches(':modal')};
+    })()`);
+    assert.equal(notice.modal, true);
+    assert.ok(notice.height > 0 && notice.top >= 0 && notice.bottom <= notice.viewport);
+    assert.ok(notice.message.includes(english ? 'The game could not load' : '遊戲無法載入'));
+    assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
+    assert.deepEqual(errors, []);
+    await capture('renderer-error');
+    console.log('Asteroid R2 renderer failure passed: visible modal notice; no record created.');
+    return;
+  }
+  const checkSettingsPreview = async () => {
+    assert.equal(await game('Boolean(document.querySelector(".asteroid-shield-tutorial"))'), true, 'Render the tutorial scene before configuring the game.');
+    await until(() => game('Array.from(document.querySelectorAll(".mock-asteroid-group img")).every(image => image.complete && image.naturalWidth > 0)'), 'preview asteroid textures loaded');
+    await until(() => game('Boolean(document.querySelector(".asteroid-shield-stage canvas"))'), 'background renderer and textures ready');
+    const state = await game(`(() => {
+      const dialog = document.querySelector('dialog.game-settings-dialog');
+      const scene = document.querySelector('.asteroid-shield-tutorial');
+      if (!dialog) return null;
+      const rect = dialog.getBoundingClientRect();
+      return {modal: dialog.matches(':modal'), labelled: dialog.getAttribute('aria-labelledby') === document.querySelector('form h2').id,
+        sceneBackground: getComputedStyle(scene).backgroundImage,
+        shipBackground: getComputedStyle(document.querySelector('.mock-spaceship')).backgroundImage,
+        shieldBackground: getComputedStyle(document.querySelector('.mock-shield')).backgroundImage,
+        left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom,width:rect.width,viewport:innerWidth,height:innerHeight,
+        formScrollWidth:document.querySelector('form').scrollWidth,dialogWidth:dialog.clientWidth};
+    })()`);
+    assert.ok(state?.modal, 'Settings must be a foreground modal dialog.');
+    assert.equal(state.labelled, true);
+    for (const key of ['sceneBackground', 'shipBackground', 'shieldBackground']) assert.notEqual(state[key], 'none');
+    assert.ok(state.left >= 15 && state.right <= state.viewport - 15 && state.top >= 15 && state.bottom <= state.height - 15, JSON.stringify(state));
+    assert.ok(state.formScrollWidth <= state.dialogWidth, 'The dialog must not overflow horizontally.');
+    await game('new Promise(resolve => setTimeout(resolve, 500))');
+    assert.equal(await game('Boolean(document.querySelector(".game-tour, .game-tour-spotlight"))'), false, 'Preview must wait for confirmation before starting the tour.');
+    await game('void (window.asteroidPreviewScene = document.querySelector(".asteroid-shield-tutorial"))');
+    await game('Array.from(document.querySelectorAll("form button")).at(-1).focus()');
+    const pointerSession = gameContext.session || session;
+    await send('Input.dispatchKeyEvent', {type:'keyDown', key:'Tab', code:'Tab', windowsVirtualKeyCode:9}, pointerSession);
+    await send('Input.dispatchKeyEvent', {type:'keyUp', key:'Tab', code:'Tab', windowsVirtualKeyCode:9}, pointerSession);
+    assert.equal(await game('document.activeElement === document.querySelector("form select")'), true, 'Tab stays within the settings dialog.');
+    await send('Input.dispatchKeyEvent', {type:'keyDown', key:'Tab', code:'Tab', windowsVirtualKeyCode:9, modifiers:8}, pointerSession);
+    await send('Input.dispatchKeyEvent', {type:'keyUp', key:'Tab', code:'Tab', windowsVirtualKeyCode:9, modifiers:8}, pointerSession);
+    assert.equal(await game('document.activeElement === Array.from(document.querySelectorAll("form button")).at(-1)'), true, 'Shift-Tab wraps back to the last dialog control.');
+    await game('document.querySelector("form select").focus(); document.querySelector("dialog.game-settings-dialog").scrollTop = 0');
+  };
+  await checkSettingsPreview();
   await game(`(() => {
     window.asteroidSoundCount = 0;
     const create = AudioContext.prototype.createOscillator;
@@ -37,6 +88,8 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   assert.equal(await game('document.querySelectorAll("form input[type=range]")[1].value'), '10');
   await game('document.querySelector("form .btn-primary").click()');
   await until(() => game('Boolean(document.querySelector(".game-tour"))'), 'asteroid three-step tutorial');
+  assert.equal(await game('document.querySelector("dialog.game-settings-dialog")'), null);
+  assert.equal(await game('window.asteroidPreviewScene === document.querySelector(".asteroid-shield-tutorial")'), true, 'Continue with the already rendered tutorial scene.');
   const checkSpotlight = async selector => {
     const state = await game(`(() => {
       const target = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();
@@ -54,6 +107,7 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   await capture('tutorial');
   await game('document.querySelector(".asteroid-shield-tutorial .ui-button").click()');
   await until(() => game('Boolean(document.querySelector("form"))'), 'settings round trip');
+  await checkSettingsPreview();
   assert.equal(await game('document.querySelector(".game-tour-spotlight")'), null);
   assert.deepEqual(await game('Array.from(document.querySelectorAll("form input[type=range]")).map(input => input.value)'), ['300', '10']);
   assert.equal(await game('document.querySelector("form select").value'), 'hard');
@@ -88,6 +142,7 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   await until(() => game('!document.querySelector(".asteroid-shield-tutorial .ui-button-primary").disabled'), 'Pixi textures ready');
   await game('document.querySelector(".asteroid-shield-tutorial .ui-button-primary").click()');
   await until(() => game('Boolean(document.querySelector(".asteroid-shield-phase-playing canvas"))'), 'real asteroid gameplay');
+  assert.equal(await game('document.querySelector(".asteroid-shield-tutorial, dialog.game-settings-dialog")'), null);
   assert.equal(await game('document.fullscreenElement === document.querySelector(".asteroid-shield-game")'), true);
   const canvas = await game('(() => { const canvas=document.querySelector("canvas").getBoundingClientRect();return [Math.round(canvas.width),Math.round(canvas.height),innerWidth,innerHeight]; })()');
   assert.equal(canvas[0], canvas[2]); assert.equal(canvas[1], canvas[3]);
@@ -120,7 +175,7 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   assert.equal(requests.some(url => /asteroid-shield.*(?:settings|score)\.json/.test(url)), false);
   if (standalone) {
     const scope = await evaluate('navigator.serviceWorker.ready.then(registration => new URL(registration.scope).pathname)');
-    assert.match(scope, /^\/games\/asteroid-shield\/2\.0\.0\/$/);
+    assert.equal(scope, `/games/asteroid-shield/${version}/`);
     const cachedPaths = await evaluate(`(async () => {
       const paths = [];
       for (const name of await caches.keys()) for (const request of await (await caches.open(name)).keys()) paths.push(new URL(request.url).pathname);
@@ -155,5 +210,6 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   assert.deepEqual(errors, []);
   await game('document.querySelector(".experiment-results > button:last-child").click()');
   await until(() => standalone ? game('Boolean(document.querySelector("form"))') : evaluate('!document.querySelector("dialog.training-overlay")'), 'return to original entry');
+  if (standalone) await checkSettingsPreview();
   console.log(`Asteroid R2 passed: settings/presets/bounds/Enter → three target tutorial/resize/cleanup → fullscreen Pixi ${canvas[0]}×${canvas[1]} → complete outcomes → ${standalone ? 'local PWA return' : 'failed save/retry/single SQL row/lobby'}.`);
 }
