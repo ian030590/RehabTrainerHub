@@ -12,6 +12,7 @@ const allowedCapabilities = new Set([
   'audio',
   'fullscreen',
   'gamepad',
+  'hand-tracking',
   'keyboard',
   'pointer',
   'touch',

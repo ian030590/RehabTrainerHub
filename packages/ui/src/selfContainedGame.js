@@ -32,6 +32,8 @@ export function AcceptGameMessage(message, state) {
   } else if (['ready', 'active', 'exit', 'retry'].includes(message.type)) {
     if (!exact(message.payload, []) || (state.complete && !['exit', 'retry'].includes(message.type))
       || (message.type === 'retry' && !state.complete)) return false;
+  } else if (['input-start', 'input-stop'].includes(message.type)) {
+    if (!state.capabilities?.includes('hand-tracking') || state.complete || !exact(message.payload, [])) return false;
   } else if (message.type === 'sample') {
     if (state.complete || !exact(message.payload, ['image', 'metadata'])
       || !(message.payload.image instanceof Blob) || message.payload.image.type !== 'image/png'

@@ -1,0 +1,96 @@
+:root {
+  --surface: #ffffff;
+  --background: #f6f7f9;
+  --text: #202428;
+  --heading: #14212b;
+  --text-muted: #606970;
+  --primary: #005eb8;
+  --primary-hover: #00478d;
+  --border: #d4d9de;
+  --border-strong: #aeb6bd;
+  --bg-overlay: #14212b99;
+  --arena: #dce9c8;
+  --hp: #538446;
+  --hand-line: #67e8f9;
+  --hand-point: #fef08a;
+  --text-on-accent: #ffffff;
+  --radius: 8px;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; font: 700 18px/1.5 var(--font-body); color: var(--text); }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; }
+button:disabled { cursor: wait; opacity: .6; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.gesture-battler { position: fixed; inset: 0; width: 100vw; height: 100dvh; overflow: hidden; background: var(--arena); }
+.gesture-battler-stage { position: absolute; inset: 0; width: 100%; height: 100%; }
+.gesture-battler-canvas { display: block; width: 100%; height: 100%; }
+.gesture-mobile-back { position: absolute; left: max(12px, env(safe-area-inset-left)); top: max(12px, env(safe-area-inset-top)); z-index: 20; padding: 8px; }
+.gesture-mobile-back svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
+.gesture-tutorial { position: absolute; inset: 0; }
+.gesture-tutorial > section:not(.training-panel) { position: absolute; padding: 12px 16px; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); }
+.gesture-tutorial h3, .gesture-tutorial p { margin: 0 0 8px; }
+.gesture-camera-tutorial { top: 9%; left: 5%; width: 220px; text-align: center; }
+.gesture-camera-tutorial svg { width: 90px; height: 90px; fill: var(--primary); }
+.gesture-calibration-tutorial { bottom: 9%; left: 5%; }
+.gesture-enemy-tutorial { top: 9%; right: 5%; width: 240px; }
+.gesture-tutorial-hp { height: 16px; background: var(--hp); }
+.gesture-moves-tutorial { bottom: 9%; right: 5%; width: 250px; }
+.gesture-moves-tutorial ol { margin: 0; padding-left: 1.5em; }
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; border-radius: var(--radius); pointer-events: none; outline: 3px solid var(--surface); box-shadow: 0 0 0 100vmax var(--bg-overlay); z-index: 9998; }
+.game-tour { position: fixed; width: min(calc(100vw - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; z-index: 9999; }
+.game-tour h2 { margin: 0; font-size: 1.45em; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 4px; }
+.training-config-body label { display: grid; gap: 8px; }
+.training-config-body input, .training-config-body select { min-height: 44px; width: 100%; padding: 8px; border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--text); background: var(--surface); }
+.gesture-camera { position: absolute; bottom: 16px; left: 16px; width: 240px; background: var(--heading); color: var(--surface); border-radius: var(--radius); overflow: hidden; text-align: center; }
+.gesture-camera-hidden { display: none; }
+.gesture-camera canvas { display: block; width: 100%; aspect-ratio: 4 / 3; transform: scaleX(-1); }
+.gesture-camera-label, .gesture-camera > span { margin: 0; padding: 4px; display: block; font-size: .8rem; }
+.gesture-combat-hud { position: absolute; inset: 0; pointer-events: none; }
+.gesture-enemy-status, .gesture-move-menu { position: absolute; background: var(--surface); border: 2px solid var(--border-strong); padding: 16px; border-radius: var(--radius); }
+.gesture-enemy-status { top: 16px; right: 16px; width: min(300px, 45vw); }
+.gesture-enemy-status > div:first-child { display: flex; justify-content: space-between; }
+.gesture-hp-row { display: flex; gap: 8px; align-items: center; }
+.gesture-hp-row > div { flex: 1; height: 14px; background: var(--border); }
+.gesture-hp-row i { display: block; height: 100%; background: var(--hp); }
+.gesture-move-menu { right: 16px; bottom: 16px; width: min(300px, 45vw); }
+.gesture-move-menu header { display: grid; }
+.gesture-move { position: relative; display: grid; grid-template-columns: 16px 24px 1fr; gap: 8px; padding: 4px; }
+.gesture-move.selected { background: var(--background); color: var(--primary); }
+.gesture-move.disabled { opacity: .5; }
+.gesture-cast-ring { width: 20px; height: 20px; position: absolute; right: 0; border-radius: 50%; background: conic-gradient(var(--primary) var(--gesture-progress), var(--border) 0); }
+.gesture-calibration-overlay, .gesture-error-overlay { position: absolute; inset: 0; display: grid; place-items: center; background: var(--bg-overlay); padding: 16px; z-index: 50; }
+.gesture-error-overlay { z-index: 1000; }
+.gesture-calibration-card, .gesture-error-overlay section, .gesture-loading-card { max-width: 680px; max-height: calc(100dvh - 32px); overflow: auto; background: var(--surface); border-radius: var(--radius); padding: 24px; }
+.gesture-calibration-card { display: grid; grid-template-columns: 1fr 140px; gap: 16px; }
+.gesture-calibration-copy h1 { font-size: 1.4rem; margin: 8px 0; }
+.gesture-calibration-copy p { margin: 8px 0; }
+.gesture-calibration-actions { grid-column: 1 / -1; display: flex; gap: 12px; }
+.gesture-calibration-progress { height: 16px; background: var(--border); margin: 12px 0; }
+.gesture-calibration-progress span { display: block; height: 100%; background: var(--primary); }
+.gesture-cue { text-align: center; }
+.gesture-cue svg { width: 100%; max-height: 150px; fill: var(--border-strong); }
+.gesture-cue .extended { fill: var(--primary); }
+.gesture-cue strong, .gesture-calibration-notice { display: block; }
+.gesture-orientation-gate { display: none; }
+.gesture-results-container { position: absolute; inset: 0; overflow: auto; background: var(--background); padding: 24px 16px 60px; z-index: 30; }
+.experiment-results { max-width: 960px; margin: auto; }
+.gesture-result-summary { display: flex; flex-wrap: wrap; gap: 20px; }
+.gesture-result-summary small, .gesture-result-summary strong { display: block; }
+.results-table { width: 100%; margin: 24px 0; border-collapse: collapse; font-size: .9rem; }
+.results-table td, .results-table th { border: 1px solid var(--border); padding: 8px; text-align: center; background: var(--surface); }
+@media (max-width: 600px) {
+  .gesture-tutorial > section:not(.training-panel) { font-size: .8rem; padding: 8px; width: 43%; }
+  .gesture-camera-tutorial svg { width: 60px; height: 60px; }
+  .gesture-calibration-card { grid-template-columns: 1fr 100px; padding: 16px; }
+  .gesture-camera { width: 160px; left: 8px; bottom: 8px; }
+  .results-table td, .results-table th { padding: 4px; }
+  .gesture-enemy-status, .gesture-move-menu { font-size: .85rem; padding: 8px; right: 8px; }
+}
+@media (orientation: portrait) and (pointer: coarse) {
+  .gesture-orientation-gate { position: absolute; inset: 0; z-index: 100; background: var(--surface); display: grid; align-content: center; text-align: center; padding: 24px; gap: 16px; }
+}

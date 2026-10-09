@@ -105,6 +105,10 @@ R2 遊戲與 Hub 分屬不同 origin。成果僅走交給指定 iframe window �
 
 Hub 禁止複製／分叉遊戲的 defaults、validation、rules 或 runtime。現行未遷移流程依 catalog 的 `settingsPath` 讀取遊戲擁有的 JSON，交由統一 `GameSettingsForm` 呈現；沒有另載入 trainer-owned config entry。R2 遊戲的設定／結果都留在 iframe，Hub 不解讀 UI 描述檔。Pixi、jsPsych、Three、MediaPipe、TensorFlow runtime／lifecycle 均屬各遊戲。
 
+**已核准的手部輸入例外（2026-10-09）：** 使用者接受「輸入代理，維持嚴格沙盒」。宣告 `hand-tracking` 的可信官方版本，由 Hub 或 runner 的獨立 PWA 容器經明確同意取得相機、執行固定版本 MediaPipe；模型／WASM 由 runner 的 `/input/hand-tracking-1.0.0/` 提供，瀏覽器不讀 CDN。遊戲保持 `sandbox="allow-scripts"`、相機禁止與原 package CSP，只經私有 MessageChannel 收到經 nonce／sequence 驗證的 21 點 xyz 或空手部訊息，不傳影像／身份資料，不上傳影像。校正、手勢判定、玩法與成績仍由遊戲擁有。此例外不開放第三方任意模型、相機權限或沙盒放寬；結算、退出、撤回與取消啟動皆停止相機、模型及排程。
+
+手勢指令對戰 `2.0.0` 目前是本機 R2 候選，正式站仍是兩款完成／38 款舊流程；本機 registry 登記不代表已公開。候選 build 排除第三款 bundle，留下 37 款舊遊戲，須先完成精確版本核准、runner 支援部署、R2 發布，再部署 Hub 切換並正式驗收，見 `docs/gesture-battler-r2-migration.md`。`test:game-architecture` 增加手勢聚光燈與自包含遷移測試；`test:gamerunner` 覆蓋代理取消、初始化競態、拒絕／斷線、私有輸入與官方 launcher 安全邊界。兩份 workflow 沿用既有七項 matrix 與相同命令；手勢 Brave 完整流程採 `node scripts/check-r2-game-browser.mjs --game gesture-battler --lobby`，另驗證手機、英文、登入、session 失敗、撤回與獨立 PWA，不加入 Linux CI。
+
 ### 訓練 Overlay 流程
 
 未遷移官方遊戲的 `score.json`（`rehab-trainer.game-score/v1`）宣告逐回合數值欄位與總計欄位。`JsonTrainingOverlay` 驗證同源 origin／source、sessionNonce、完成 sequence 及分數 schema 後，卸載 iframe 並以共用 `training-overlay-score` 顯示結果。R2 官方遊戲則由 `R2GameOverlay` 保留 iframe，透過私有 port 接收成果、回覆保存成功或失敗；完整結果與重試 UI 由遊戲呈現。

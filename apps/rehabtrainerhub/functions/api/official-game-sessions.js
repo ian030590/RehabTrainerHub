@@ -30,7 +30,7 @@ export async function onRequestPost({ request, env }) {
     const recordId = crypto.randomUUID();
     const token = await CreateSignedValue({ purpose: 'official-game-result', gameId: input.gameId,
       version: release.version, contentSha256: release.contentSha256, recordId, subjectId: input.subjectId, userId: session?.sub || null }, GetSessionSecret(env), 86400);
-    return JsonResponse(request, env, { recordId, token, version: release.version, contentSha256: release.contentSha256 },
+    return JsonResponse(request, env, { recordId, token, version: release.version, contentSha256: release.contentSha256, capabilities: release.capabilities },
       { status: 201, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('Unable to create official game session.', error);

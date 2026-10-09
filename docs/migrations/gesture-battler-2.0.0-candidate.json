@@ -1,0 +1,245 @@
+{
+  "schemaVersion": 1,
+  "status": "owner-approved-awaiting-publication",
+  "published": false,
+  "ownerApproval": {
+    "instruction": "核准並推送",
+    "date": "2026-10-09",
+    "reviewedVersion": "2.0.0",
+    "reviewedContentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1",
+    "reviewedInputVersion": "hand-tracking-1.0.0",
+    "reviewedInputContentSha256": "3f334a5da81ca05fd712325f6b14b755fa4af19c5084fc3f882b0c3e05dc2f37",
+    "context": "Explicit approval of the exact reviewed candidate and request to push; previously accepted trusted input proxy with strict sandbox."
+  },
+  "createdAt": "2026-10-09T03:46:54.349Z",
+  "gameId": "gesture-battler",
+  "version": "2.0.0",
+  "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1",
+  "totalBytes": 893134,
+  "release": {
+    "schemaVersion": 1,
+    "status": "approved",
+    "gameId": "gesture-battler",
+    "version": "2.0.0",
+    "name": "手勢指令對戰",
+    "description": "辨識數字手勢完成指令，練習手部活動範圍與動作維持。",
+    "entry": "index.html",
+    "runtime": {
+      "name": "native",
+      "major": 1
+    },
+    "presentation": "game",
+    "capabilities": [
+      "audio",
+      "fullscreen",
+      "hand-tracking"
+    ],
+    "files": [
+      {
+        "path": "assets/index-Dgn6AxMb.js",
+        "size": 874799,
+        "sha256": "b22ce0aab09971f8a2e3c4e0427755cf470ac0307e0a927e86b99135652bcd41",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DVMbmWw-.css",
+        "size": 14788,
+        "sha256": "47db0b2f0b720d8a320350ed7a0edaed113af51d3f6b3eb5e6a135054f080346",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "size": 477,
+        "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "size": 408,
+        "sha256": "58afa6d0d12b291fc7acb21f2b60c27ba096f2566a49a7c932f60640ccf6ff2b",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "size": 2662,
+        "sha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b",
+        "contentType": "image/webp"
+      }
+    ],
+    "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1",
+    "approvedAt": "2026-10-09T03:46:54.287Z"
+  },
+  "input": {
+    "version": "hand-tracking-1.0.0",
+    "mediapipeVersion": "0.10.35",
+    "contentSha256": "0f141b5a013b6a14a6ce71f58c8e7ab32a1ac15f1ce547fdd1a28d6be3bd94c4",
+    "totalBytes": 41723126,
+    "files": [
+      {
+        "path": "MEDIAPIPE-LICENSE.txt",
+        "size": 12331,
+        "sha256": "8707eef0533987efc5b155d64761eeb6e20793f50b9bd1a68dad1cf4719d0ed8"
+      },
+      {
+        "path": "MEDIAPIPE-NOTICE.txt",
+        "size": 8403,
+        "sha256": "aadce68d35bfc0dc75fd191bbf9e6285816e907eb43a6301b43bd9a29768f7c5"
+      },
+      {
+        "path": "hand_landmarker.task",
+        "size": 7819105,
+        "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1"
+      },
+      {
+        "path": "index.js",
+        "size": 128658,
+        "sha256": "d5d5028534ec45a02ba9dedd03793c01ded82b5bac0cc1f800459c7668496d3b"
+      },
+      {
+        "path": "wasm/vision_wasm_internal.js",
+        "size": 322044,
+        "sha256": "e7fd9858e8e8f221d9b96eddc11f8e077f263e0b7bbd79d3cbe882b134274f8c"
+      },
+      {
+        "path": "wasm/vision_wasm_internal.wasm",
+        "size": 11153617,
+        "sha256": "6a5c64584c2ab61c763b6e204afbdbc7ce1caf7f5216187322bca8df94f646bc"
+      },
+      {
+        "path": "wasm/vision_wasm_module_internal.js",
+        "size": 322082,
+        "sha256": "1f1d6215324a1fe62f6742d49a3db911170987ca18ad8c1b75f1a1c82acf2b44"
+      },
+      {
+        "path": "wasm/vision_wasm_module_internal.wasm",
+        "size": 11153641,
+        "sha256": "617b8e0248dbd27e9d7ece4218004eae4cefb499196d1bb4fa0e3fef21708756"
+      },
+      {
+        "path": "wasm/vision_wasm_nosimd_internal.js",
+        "size": 321847,
+        "sha256": "438d1fe8ff7f4d946025bc211c291543c037d8a3785ed4eee60f1f521b236296"
+      },
+      {
+        "path": "wasm/vision_wasm_nosimd_internal.wasm",
+        "size": 10481398,
+        "sha256": "8a3092d34c79d3f57e6ba8592105e8a90f6b07c27891ffecd14cca428bfd3e31"
+      }
+    ],
+    "approvedBuildSnapshot": {
+      "version": "hand-tracking-1.0.0",
+      "mediapipeVersion": "0.10.35",
+      "contentSha256": "3f334a5da81ca05fd712325f6b14b755fa4af19c5084fc3f882b0c3e05dc2f37",
+      "totalBytes": 41726607,
+      "files": [
+        {
+          "path": "MEDIAPIPE-LICENSE.txt",
+          "size": 12331,
+          "sha256": "8707eef0533987efc5b155d64761eeb6e20793f50b9bd1a68dad1cf4719d0ed8"
+        },
+        {
+          "path": "MEDIAPIPE-NOTICE.txt",
+          "size": 8403,
+          "sha256": "aadce68d35bfc0dc75fd191bbf9e6285816e907eb43a6301b43bd9a29768f7c5"
+        },
+        {
+          "path": "_headers",
+          "size": 2093,
+          "sha256": "eac384b99d4c497356e0de2f47612f5904de80e06b5f1d0c4dd9541d874e2be2"
+        },
+        {
+          "path": "_routes.json",
+          "size": 80,
+          "sha256": "bcbe42d6cb3277b168cded71423990d9c112a3a23328523dcddcf7bb08f190c8"
+        },
+        {
+          "path": "hand_landmarker.task",
+          "size": 7819105,
+          "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1"
+        },
+        {
+          "path": "index.html",
+          "size": 1280,
+          "sha256": "47de1d6cf11ed1e4ff2217a5ac9498e3bb94ba61be57cdb38f7cab903335face"
+        },
+        {
+          "path": "index.js",
+          "size": 128658,
+          "sha256": "d5d5028534ec45a02ba9dedd03793c01ded82b5bac0cc1f800459c7668496d3b"
+        },
+        {
+          "path": "robots.txt",
+          "size": 28,
+          "sha256": "a8f31103361fca68bef71fc69cff844b7c23bd3d64d2b872d74690cbda656bfc"
+        },
+        {
+          "path": "wasm/vision_wasm_internal.js",
+          "size": 322044,
+          "sha256": "e7fd9858e8e8f221d9b96eddc11f8e077f263e0b7bbd79d3cbe882b134274f8c"
+        },
+        {
+          "path": "wasm/vision_wasm_internal.wasm",
+          "size": 11153617,
+          "sha256": "6a5c64584c2ab61c763b6e204afbdbc7ce1caf7f5216187322bca8df94f646bc"
+        },
+        {
+          "path": "wasm/vision_wasm_module_internal.js",
+          "size": 322082,
+          "sha256": "1f1d6215324a1fe62f6742d49a3db911170987ca18ad8c1b75f1a1c82acf2b44"
+        },
+        {
+          "path": "wasm/vision_wasm_module_internal.wasm",
+          "size": 11153641,
+          "sha256": "617b8e0248dbd27e9d7ece4218004eae4cefb499196d1bb4fa0e3fef21708756"
+        },
+        {
+          "path": "wasm/vision_wasm_nosimd_internal.js",
+          "size": 321847,
+          "sha256": "438d1fe8ff7f4d946025bc211c291543c037d8a3785ed4eee60f1f521b236296"
+        },
+        {
+          "path": "wasm/vision_wasm_nosimd_internal.wasm",
+          "size": 10481398,
+          "sha256": "8a3092d34c79d3f57e6ba8592105e8a90f6b07c27891ffecd14cca428bfd3e31"
+        }
+      ]
+    },
+    "packagingCorrection": "Disable Vite publicDir copies in input namespace; remove only duplicate runner _headers, _routes.json, index.html and robots.txt. All ten approved input runtime/model/WASM/license bytes are identical."
+  },
+  "baseline": {
+    "source": "https://trainerhub.cc/api/games",
+    "legacyPublicReleases": [
+      {
+        "id": "official-gesture-battler",
+        "slug": "gesture-battler",
+        "title": "手勢指令對戰",
+        "summary": "手勢指令對戰居家訓練網官方練習",
+        "trainer": "motor",
+        "category": "general",
+        "developerName": "居家訓練網官方",
+        "updatedAt": "2026-10-07T00:00:00.000Z",
+        "release": {
+          "id": "rel-gesture-battler-1.0.0",
+          "version": "1.0.0",
+          "contentSha256": "e1df952cc2fd88ea8c75d71db9373bd25d0b81430ef0810c8ec1d1a0be816c0a",
+          "capabilities": [
+            "audio",
+            "fullscreen",
+            "keyboard",
+            "pointer"
+          ],
+          "approvedAt": "2026-10-07T00:00:00.000Z",
+          "launchUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/1.0.0/",
+          "installUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/1.0.0/",
+          "settingsUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/1.0.0/package/settings.json"
+        }
+      }
+    ],
+    "workspaceVersion": "1.0.0",
+    "trainer": "motor",
+    "category": "upper-limb",
+    "previewSha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b"
+  },
+  "productionVerification": "pending-publication-and-deployment",
+  "ci": "not-run"
+}

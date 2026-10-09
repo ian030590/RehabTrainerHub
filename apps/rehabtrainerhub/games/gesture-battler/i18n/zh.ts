@@ -42,7 +42,7 @@ export const zh = {
   "gesture.calibration.step": "校正 {current} / {total}",
   "gesture.calibration.waitingForHand": "正在等待手部進入攝影機畫面",
   "gesture.camera.finding": "請將手放入框內",
-  "gesture.camera.preview": "即時手部攝影機預覽",
+  "gesture.camera.preview": "即時手部追蹤預覽",
   "gesture.camera.tracking": "已追蹤手部",
   "gesture.combat.enemyHp": "敵人生命值",
   "gesture.combat.moves": "招式列表",

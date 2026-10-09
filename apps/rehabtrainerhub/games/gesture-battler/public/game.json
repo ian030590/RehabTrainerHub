@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "gesture-battler",
+  "trainer": "motor",
+  "category": "upper-limb",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "手勢指令對戰", "description": "辨識數字手勢完成指令，練習手部活動範圍與動作維持。" },
+    "en": { "title": "Gesture Command Battle", "description": "Use number gestures to issue commands and practise hand range and sustained movement." }
+  }
+}

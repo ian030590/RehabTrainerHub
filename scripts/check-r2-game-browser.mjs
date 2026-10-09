@@ -15,10 +15,12 @@ import { onRequestGet as readAccount } from '../apps/rehabtrainerhub/functions/a
 import { CreateSessionForUser } from '../apps/rehabtrainerhub/functions/_lib/auth.js';
 
 import { CheckAsteroidShield } from './asteroid-shield-browser.mjs';
+import { CheckGestureBattler } from './gesture-battler-browser.mjs';
+import { LoadGestureCameraFixtures } from './gesture-camera-fixtures.mjs';
 const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
-assert.ok(['drawing-defense', 'asteroid-shield'].includes(gameId), 'Unknown browser game fixture');
-const phasePrefix = gameId === 'asteroid-shield' ? 'asteroid-shield' : 'drawing-defense';
+assert.ok(['drawing-defense', 'asteroid-shield', 'gesture-battler'].includes(gameId), 'Unknown browser game fixture');
+const phasePrefix = gameId;
 const root = resolve(import.meta.dirname, '..');
 const productionHub = process.argv.includes('--production-hub');
 const remote = process.argv.includes('--remote') || productionHub;
@@ -33,6 +35,7 @@ const runnerOutput = resolve(root, 'apps/usergamerunner/dist');
 const browserPath = process.env.BRAVE_BIN || 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
 assert.ok(existsSync(browserPath), 'Brave is required.');
 const { manifest, files } = await BuildOfficialGameRelease(gameId);
+const handFixtures = gameId === 'gesture-battler' ? await LoadGestureCameraFixtures(root) : new Map();
 const unavailableTexture = rendererFailure ? manifest.files.find(file => file.path.startsWith('assets/ship-'))?.path : null;
 assert.ok(!rendererFailure || unavailableTexture, 'Renderer failure fixture requires the asteroid ship texture.');
 const sqlite = new DatabaseSync(':memory:');
@@ -83,10 +86,11 @@ async function Respond(response, result) {
 try {
   runner = createServer((request, response) => {
     void HandleRequest({ request: new Request(runnerOrigin + request.url, { method: request.method }), env: { GAME_RELEASE_BUCKET: bucket }, next: async () => {
+      if (handFixtures.has(request.url)) return new Response(handFixtures.get(request.url), { headers: { 'Content-Type': 'image/jpeg' } });
       const path = resolve(runnerOutput, '.' + new URL(request.url, runnerOrigin).pathname);
       assert.ok(path.startsWith(runnerOutput + sep));
       const bytes = await readFile(path).catch(() => null);
-      return bytes ? new Response(bytes, { headers: { 'Content-Type': ContentTypeForPath(path) } }) : new Response('Missing', { status: 404 });
+      return bytes ? new Response(bytes, { headers: { 'Content-Type': path.endsWith('.wasm') ? 'application/wasm' : ContentTypeForPath(path), 'Access-Control-Allow-Origin': '*' } }) : new Response('Missing', { status: 404 });
     } })
       .then(result => Respond(response, result)).catch(error => { errors.push(String(error)); response.writeHead(500).end(); });
   });
@@ -95,6 +99,7 @@ try {
   hub = createServer(async (request, response) => {
     try {
       const url = new URL(request.url, hubOrigin);
+      if (handFixtures.has(url.pathname)) { response.writeHead(200, { 'Content-Type': 'image/jpeg' }); response.end(handFixtures.get(url.pathname)); return; }
       if (url.pathname === '/api/auth/me' && signedIn) {
         await Respond(response, await readAccount({ request: new Request('https://trainerhub.cc/api/auth/me', { headers: request.headers }), env: environment }));
         return;
@@ -154,6 +159,7 @@ try {
   browser = spawn(browserPath, ['--headless=new', '--no-first-run', '--no-default-browser-check', '--remote-allow-origins=*',
     '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows',
     '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
+    ...(gameId === 'gesture-battler' ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] : []),
     `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
   let connection;
   for (let attempt = 0; attempt < 100; attempt++) {
@@ -184,6 +190,12 @@ try {
       void (async () => {
         const request = message.params.request;
         const path = new URL(request.url);
+        const fixture = handFixtures.get(path.pathname);
+        if (fixture) {
+          await send('Fetch.fulfillRequest', { requestId: message.params.requestId, responseCode: 200,
+            responseHeaders: [{ name: 'Content-Type', value: 'image/jpeg' }], body: fixture.toString('base64') }, message.sessionId);
+          return;
+        }
         const response = await fetch(hubOrigin + path.pathname + path.search, { method: request.method,
           headers: request.headers, ...(request.postData ? { body: request.postData } : {}) });
         await send('Fetch.fulfillRequest', { requestId: message.params.requestId, responseCode: response.status,
@@ -205,7 +217,29 @@ try {
   await send('Runtime.enable', {}, session);
   await send('Network.enable', {}, session);
   await send('Page.enable', {}, session);
-  if (remote) await send('Fetch.enable', { patterns: [{ urlPattern: productionHub ? 'https://trainerhub.cc/api/*' : 'https://trainerhub.cc/*', requestStage: 'Request' }] }, session);
+  if (gameId === 'gesture-battler') await send('Page.addScriptToEvaluateOnNewDocument', { source: `
+    if (window === window.top) {
+      const nativeGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+      navigator.mediaDevices.getUserMedia = async () => {
+        const nativeStream = await nativeGetUserMedia({video:true,audio:false});
+        nativeStream.getTracks().forEach(track=>track.stop());
+        window.nativeCameraPermissionVerified=true;
+        let image = new Image(); image.src = '/__hand-test/pointing_up.jpg'; await image.decode();
+        const canvas = document.createElement('canvas'); canvas.width=720;canvas.height=720;
+        const context=canvas.getContext('2d');
+        const draw = () => {const sx=image.src.endsWith('/right_hands.jpg')?360:0;const width=image.width-sx;const scale=Math.min(canvas.width/width,canvas.height/image.height);context.fillStyle='white';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,sx,0,width,image.height,(canvas.width-width*scale)/2,(canvas.height-image.height*scale)/2,width*scale,image.height*scale);};draw();
+        window.setHandFixture = async name => {const next=new Image();next.src='/__hand-test/'+name+'.jpg';await next.decode();image=next;};
+        const stream=canvas.captureStream(15);window.handFixtureStream=stream;
+        const timer=setInterval(()=>{if(stream.getTracks().every(track=>track.readyState==='ended'))clearInterval(timer);else draw();},66);
+        return stream;
+      };
+    }
+  ` }, session);
+
+  if (remote || gameId === 'gesture-battler') await send('Fetch.enable', { patterns: [
+    ...(remote ? [{ urlPattern: productionHub ? 'https://trainerhub.cc/api/*' : 'https://trainerhub.cc/*', requestStage: 'Request' }] : []),
+    ...(gameId === 'gesture-battler' ? [{ urlPattern: '*/__hand-test/*', requestStage: 'Request' }] : []),
+  ] }, session);
   // Production keeps Turnstile enabled; this fixture only submits to intercepted local APIs.
   if (productionHub) await send('Page.addScriptToEvaluateOnNewDocument', { source: `
     if (window === window.top) {
@@ -224,15 +258,15 @@ try {
     localStorage.setItem('rehabtrainerhub.subject-id.v1', ${JSON.stringify(guestSubjectId)});
     ${signedIn ? `localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(accountToken)});` : ''}
   } catch {}` }, session);
-  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=motor%3A${gameId}`) }, session);
+  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=motor%3A${gameId}`) }, session);
   await send('Target.activateTarget', { targetId: target.targetId });
   const evaluate = async (expression, context) => {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture: true, ...(context ? { contextId: context.id } : {}) }, context?.session || session);
     if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
     return result.result.value;
   };
-  const until = async (action, label) => {
-    const deadline = Date.now() + 20000;
+  const until = async (action, label, timeout = 20000) => {
+    const deadline = Date.now() + timeout;
     while (Date.now() < deadline) {
       try { if (await action()) return; } catch (error) {
         if (!/Inspected target navigated or closed|Cannot find context/.test(error.message)) throw error;
@@ -305,6 +339,13 @@ try {
     await until(() => evaluate('!document.querySelector("dialog iframe") && Boolean(document.querySelector("dialog [role=alert]"))'), 'revoked game removed');
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     console.log('Revoked R2 release removed; no result saved.');
+  } else if (gameId === 'gesture-battler') {
+    const screenshots = resolve(root, '.tmp/gesture-validation', `${standalone ? 'standalone' : 'lobby'}-${process.argv.includes('--mobile') ? 'mobile' : 'desktop'}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
+    await mkdir(screenshots, { recursive: true });
+    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    await CheckGestureBattler({ game, evaluate, send, until, gameContext, session, standalone, english,
+      mobile: process.argv.includes('--mobile'), capture, sqlite, getSaveAttempts: () => saveAttempts,
+      getSessionAttempts: () => sessionAttempts, sessionFailure, requests, errors, version: manifest.version, accountId, guestSubjectId });
   } else if (gameId === 'asteroid-shield') {
     const screenshots = resolve(root, '.tmp/asteroid-validation', `${standalone ? 'standalone' : 'lobby'}-${process.argv.includes('--mobile') ? 'mobile' : 'desktop'}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });

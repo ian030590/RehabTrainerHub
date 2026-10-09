@@ -30,7 +30,9 @@ test('every game exposes bounded grading settings and exact numeric score source
   assert.equal(ids.length, 40);
   for (const id of ids) {
     if (Object.hasOwn(migratedGames, id)) {
-      const entry = id === 'asteroid-shield' ? 'AsteroidShieldGame.tsx' : 'DrawingTowerDefenseGame.tsx';
+      const entry = { 'asteroid-shield': 'AsteroidShieldGame.tsx', 'drawing-defense': 'DrawingTowerDefenseGame.tsx',
+        'gesture-battler': 'GestureBattlerGame.tsx' }[id];
+      assert.ok(entry, `${id}: add game-owned bounds validation before migration`);
       const source = read(id, entry);
       if (id === 'asteroid-shield') {
         const settings = read(id, 'settings.ts');
@@ -38,6 +40,14 @@ test('every game exposes bounded grading settings and exact numeric score source
         assert.match(settings, /settings\.durationSec > 300/);
         assert.match(settings, /settings\.sensitivity < 1/);
         assert.match(settings, /settings\.sensitivity > 10/);
+      } else if (id === 'gesture-battler') {
+        const settings = read(id, 'config.ts');
+        assert.match(settings, /enemyMaxHp >= 1/);
+        assert.match(settings, /enemyMaxHp <= 100/);
+        assert.match(settings, /holdDurationSec >= 0\.5/);
+        assert.match(settings, /holdDurationSec <= 10/);
+        assert.match(settings, /strictnessPercent >= 50/);
+        assert.match(settings, /strictnessPercent <= 90/);
       } else {
         assert.match(source, /minRecognitionStrictness = 10/);
         assert.match(source, /maxRecognitionStrictness = 90/);

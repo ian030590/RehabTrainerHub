@@ -291,10 +291,10 @@ const implementationGroups = [
     ids: ['motor:gesture-battler'],
     files: ['gesture-battler/GestureBattlerGame.tsx'],
     tokens: [
-      "('rules')",
+      "setPhase('rules')",
       "setPhase('combat')",
       "phase === 'results'",
-      'TrainingResultActions',
+      'SendGameResult',
     ],
   },
   {
@@ -580,12 +580,21 @@ const pendingJsPsychIds = jsPsychLifecycleGroups
   .flatMap(({ ids }) => ids);
 
 const configPermissionImplementations = {
-  'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
   'motor:motor-cortex-rehab': 'motor-cortex-rehab/MotorCortexRehabGame.tsx',
   'vision:oculomotor-training': 'oculomotor-training/OculomotorTrainingGame.tsx',
   'brain:every-ball-response': 'every-ball-response/EveryBallResponsePage.tsx',
   'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
 };
+const proxyPermissionImplementations = {
+  'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
+};
+for (const [catalogId, file] of Object.entries(proxyPermissionImplementations)) {
+  const source = readFileSync(resolve(moduleRoot, file), 'utf8');
+  assert.ok(source.includes('StartHandInput'), `${catalogId} must request reviewed private input.`);
+  assert.ok(source.includes('StopHandInput'), `${catalogId} must release private input.`);
+  assert.ok(source.includes('gesture.error.permission'), `${catalogId} must report camera denial.`);
+  assert.ok(!/mediaDevices|getUserMedia/.test(source), `${catalogId} cannot request a camera inside the opaque package.`);
+}
 const nativeTimelinePermissionImplementations = {
   'vision:oculomotor-training': resolve(
     repoRoot,
@@ -621,7 +630,7 @@ const permissionModuleIds = catalogIds.filter((catalogId) => (
 ));
 assert.deepEqual(
   permissionModuleIds.sort(),
-  Object.keys(configPermissionImplementations).sort(),
+  [...Object.keys(configPermissionImplementations), ...Object.keys(proxyPermissionImplementations)].sort(),
   'The media-permission manifest must match the modules that request camera or microphone access.',
 );
 for (const [catalogId, file] of Object.entries(configPermissionImplementations)) {

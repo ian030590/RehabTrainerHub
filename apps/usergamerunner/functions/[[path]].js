@@ -105,7 +105,20 @@ export async function HandleRequest(context) {
   const { release } = loadedRelease;
 
   if (route.kind === 'launcher') {
-    const embedOptions = ParseEmbedOptions(url.searchParams);
+    const handTracking = release.presentation === 'game' && release.capabilities.includes('hand-tracking');
+    if (handTracking) {
+      const official = await ReadOfficialGameRelease(context.env?.GAME_RELEASE_BUCKET, route.gameId, route.version);
+      if (!official || official.contentSha256 !== release.contentSha256) return ErrorResponse(404, '找不到已核准的官方輸入版本。');
+    }
+    const launcherParameters = new URLSearchParams(url.searchParams);
+    if (handTracking && launcherParameters.has('lang')) {
+      if (launcherParameters.getAll('lang').length !== 1
+        || !['zh', 'en'].includes(launcherParameters.get('lang')) || launcherParameters.has('embed')) {
+        return ErrorResponse(400, '語言參數無效。');
+      }
+      launcherParameters.delete('lang');
+    }
+    const embedOptions = ParseEmbedOptions(launcherParameters);
     if (embedOptions === false) {
       return ErrorResponse(400, '嵌入工作階段參數無效。');
     }
@@ -127,13 +140,13 @@ export async function HandleRequest(context) {
       "img-src 'self' data:",
       "manifest-src 'self'",
       "object-src 'none'",
-      `script-src 'nonce-${rendered.cspNonce}'`,
+      `script-src 'nonce-${rendered.cspNonce}'${handTracking ? " 'self' 'wasm-unsafe-eval'" : ''}`,
       `style-src 'nonce-${rendered.cspNonce}'`,
       "worker-src 'self'",
     ].join('; ');
-    return BodyResponse(request, rendered.body, {
-      headers: DocumentHeaders(launcherCsp, 'text/html; charset=utf-8', 'no-cache'),
-    });
+    const headers = DocumentHeaders(launcherCsp, 'text/html; charset=utf-8', 'no-cache');
+    if (handTracking) headers.set('Permissions-Policy', commonPermissionsPolicy.replace('camera=()', 'camera=(self)'));
+    return BodyResponse(request, rendered.body, { headers });
   }
 
   if (route.kind === 'manifest') {

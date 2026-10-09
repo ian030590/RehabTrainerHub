@@ -4,6 +4,7 @@ import { cp, mkdir, readFile, rm, stat } from 'node:fs/promises';
 import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { platformRuntimeContract } from '../functions/_lib/runtime.js';
+import { BuildHandTracking } from './buildHandTracking.mjs';
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const workspaceRoot = resolve(appRoot, '../..');
@@ -140,6 +141,7 @@ for (const asset of runtimeAssets) {
   });
 }
 
+await BuildHandTracking(appRoot, outputDirectory);
 console.log(`Built user game runner static shell at ${outputDirectory}`);
 for (const asset of builtAssets) {
   console.log(`- runtime/${asset.file}: ${asset.bytes} bytes, sha256-${asset.sha256}`);

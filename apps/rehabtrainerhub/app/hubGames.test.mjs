@@ -113,21 +113,23 @@ test('an old drawing-defense publication cannot replace the R2 current session e
   assert.equal(game.installUrl, '/games/drawing-defense/');
 });
 
-test('asteroid current metadata preserves its session entry despite a same-slug old settings shell', async () => {
+for (const runtimeId of ['asteroid-shield', 'gesture-battler']) {
+test(`${runtimeId} current metadata preserves its session entry despite a same-slug old settings shell`, async () => {
   const { BuildHubGameCatalog } = await ImportHubModule('./gameCatalog.ts');
-  const module = { runtimeId: 'asteroid-shield', trainer: 'motor', category: 'motor', purpose: 'upper-limb',
-    imagePath: '/assets/game-previews/asteroid-shield/preview.webp',
-    copy: { en: { title: 'Asteroid Shield Defense', description: 'Move a shield to protect the ship.' } } };
-  const published = { ...CurrentGame(), id: 'asteroid-shield', slug: 'asteroid-shield', title: 'Asteroid Shield Defense',
-    previewUrl: 'https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.0/package/preview.webp',
+  const module = { runtimeId, trainer: 'motor', category: 'motor', purpose: 'upper-limb',
+    imagePath: `/assets/game-previews/${runtimeId}/preview.webp`,
+    copy: { en: { title: runtimeId, description: 'Upper-limb practice.' } } };
+  const published = { ...CurrentGame(), id: runtimeId, slug: runtimeId, title: runtimeId,
+    previewUrl: `https://trainerhub-user-games.pages.dev/games/${runtimeId}/2.0.0/package/preview.webp`,
     release: { ...CurrentGame().release, version: '2.0.0' } };
   const [game] = BuildHubGameCatalog([module], [published], 'en');
   assert.equal(game.launch.contract, 'catalog-v1');
-  assert.equal(game.launch.module.runtimeId, 'asteroid-shield');
+  assert.equal(game.launch.module.runtimeId, runtimeId);
   assert.equal(game.imageSrc, published.previewUrl);
   assert.equal(game.purpose, 'upper-limb');
-  assert.deepEqual(MergeHubGames([game], [{ id: 'asteroid-shield', launch: { contract: 'package-v1' } }]), [game]);
+  assert.deepEqual(MergeHubGames([game], [{ id: runtimeId, launch: { contract: 'package-v1' } }]), [game]);
 });
+}
 
 test('the lobby presents one result grid and one launch entry while retaining its mobile controls', async () => {
   const source = await readFile(new URL('./TrainingLobby.tsx', import.meta.url), 'utf8');

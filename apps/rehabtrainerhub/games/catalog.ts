@@ -2,6 +2,7 @@ import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
 import asteroidShieldCatalog from './asteroid-shield/public/game.json';
+import gestureBattlerCatalog from './gesture-battler/public/game.json';
 import type { MajorCategoryId,TrainerCategoryId } from './gameTags.js';
 import {
 GetTrainerCategoryTag,
@@ -206,12 +207,13 @@ const seeds: readonly TrainingCatalogSeed[] = [
   },
   {
     id: 'gesture-battler',
-    trainer: 'motor',
-    purpose: 'upper-limb',
+    trainer: gestureBattlerCatalog.trainer as TrainerCategoryId,
+    purpose: gestureBattlerCatalog.category as TrainingPurposeId,
+    imagePath: `/assets/game-previews/gesture-battler/${gestureBattlerCatalog.preview}`,
     kind: 'motor-upper',
     path: '/upper-limb-training?game=gesture-battler',
-    zh: ['手勢指令對戰', '辨識數字手勢完成指令，練習手部活動範圍與動作維持。'],
-    en: ['Gesture Command Battle', 'Use number gestures to issue commands and practise hand range and sustained movement.'],
+    zh: [gestureBattlerCatalog.copy['zh-TW'].title, gestureBattlerCatalog.copy['zh-TW'].description],
+    en: [gestureBattlerCatalog.copy.en.title, gestureBattlerCatalog.copy.en.description],
     titleKey: 'training.gesture.title',
     descriptionKey: 'training.gesture.desc',
   },

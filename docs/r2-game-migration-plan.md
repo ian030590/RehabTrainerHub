@@ -316,6 +316,14 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 
 ## 9. 後續 38 個遊戲的順序與驗收門檻
 
+### 手勢指令對戰的相機輸入例外
+
+2026-10-09 使用者明確接受「輸入代理，維持嚴格沙盒」。`gesture-battler@2.0.0` 為待核准／待發布候選，正式完成數量仍為 2 款。審查單與證據見 [手勢指令對戰遷移紀錄](gesture-battler-r2-migration.md)。
+
+可信官方 release 宣告 `hand-tracking` 才能由 Hub／獨立 PWA 容器在使用者確認後取得相機。MediaPipe 0.10.35、固定摘要的模型與 WASM 經 runner 版本化 `/input/hand-tracking-1.0.0/` 供應；這是平台輸入責任，例外於原先「MediaPipe 全在遊戲」要求。容器只經私有 port 傳數值 xyz／空手部狀態，核對 nonce、遞增 sequence 和欄位範圍，不傳或保存影像／身份資訊。遊戲自行校正、判定、呈現與產生成果，不引入平台或跨遊戲程式碼。
+
+遊戲 iframe 與 package CSP 不變：`sandbox="allow-scripts"`、相機禁止、`connect-src 'none'`，不增加 `allow-same-origin`、外連或 `unsafe-eval`。只有經官方歷史及實際摘要核對的手部 launcher 才取得 `camera=(self)` 和 WASM 編譯能力；第三方 launcher 不取得這些權限。退出、結算、撤回、重新載入、取消或晚到的初始化都須關閉相機／模型／排程。先部署相容 runner，再發布核准遊戲，最後才正式切換 Hub registry；不以本機候選登記作完成證據。
+
 1. 先選純點擊、無感測器、依賴較少的棋盤／益智遊戲，例如井字棋、四子棋、點格棋。
 2. 接著遷移 Pixi 類遊戲，逐個驗證實際 canvas、音效與全螢幕；禁止假設畫畫塔防設定能套用到所有遊戲。
 3. 再遷移 jsPsych 實驗，保留 lifecycle、雙語指導、刺激時序、逐 trial 資料與科學參考說明。

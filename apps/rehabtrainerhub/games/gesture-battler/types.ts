@@ -1,5 +1,5 @@
 // Types local to the Hub-owned motor modules.
-import type { TranslationKey } from '@rehab-trainer/ui/i18n/games';
+import type { TranslationKey } from './i18n/useT';
 
 export type TFunction = (key: TranslationKey, params?: Record<string, string | number>) => string;
 

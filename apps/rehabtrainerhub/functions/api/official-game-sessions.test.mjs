@@ -35,7 +35,7 @@ function CreateOfficialBucket(gameId = 'drawing-defense') {
   return { bucket, catalog, releases };
 }
 
-for (const gameId of ['drawing-defense', 'asteroid-shield']) {
+for (const gameId of ['drawing-defense', 'asteroid-shield', 'gesture-battler']) {
 test(`${gameId}: official sessions bind the result to a game version, record, account and subject`, async () => {
   const { VerifyOfficialGameSession } = await import('../_lib/officialGames.js');
   const environment = { ...env, GAME_RELEASE_BUCKET: CreateOfficialBucket(gameId).bucket };
@@ -113,7 +113,7 @@ test(`${gameId}: a real SQL database saves official game results once, permits r
     const environment = { ...env, REHAB_DB: database, ANONYMOUS_RECORDS_ENABLED: '1', GAME_RELEASE_BUCKET: fixture.bucket };
     const subjectId = crypto.randomUUID();
     const request = (path, body, authToken) => new Request(`https://trainerhub.cc/api/${path}`, {
-      method: 'POST', headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json', 'CF-Connecting-IP': '127.0.0.9', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) }, body: JSON.stringify(body),
+      method: 'POST', headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json', 'CF-Connecting-IP': `127.0.0.${['drawing-defense', 'asteroid-shield', 'gesture-battler'].indexOf(gameId) + 9}`, ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) }, body: JSON.stringify(body),
     });
     const sessionResponse = await createSession({ request: request('official-game-sessions', { gameId, subjectId }), env: environment });
     assert.equal(sessionResponse.status, 201);

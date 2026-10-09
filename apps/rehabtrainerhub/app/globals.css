@@ -541,6 +541,24 @@ summary:focus-visible {
   text-decoration: none;
 }
 
+.training-overlay-camera-consent {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--bg-overlay);
+}
+.training-overlay-camera-consent section {
+  max-width: 30rem;
+  padding: 24px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+.training-overlay-camera-consent button { min-height: 44px; padding: 10px; margin: 4px; font: inherit; }
+
 .hub-brand img {
   width: 42px;
   height: 42px;

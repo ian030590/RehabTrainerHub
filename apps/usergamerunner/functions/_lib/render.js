@@ -1,4 +1,5 @@
 import { EncodePackagePath } from './release.js';
+import { RenderHandTrackingLauncher } from './handTrackingLauncher.js';
 import {
   platformRuntimeContract,
   platformRuntimePrecacheUrls,
@@ -14,6 +15,9 @@ const runnerCacheRevision = '2026-10-08-self-contained-games-v4';
 
 export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {}) {
   const cspNonce = RandomToken(18);
+  if (release.presentation === 'game' && release.capabilities.includes('hand-tracking')) {
+    return { body: RenderHandTrackingLauncher(release, basePath, cspNonce), cspNonce };
+  }
   const entryUrl = `${basePath}package/${EncodePackagePath(release.entry)}`;
   const manifestUrl = `${basePath}manifest.webmanifest`;
   const serviceWorkerUrl = `${basePath}sw.js`;
@@ -486,6 +490,11 @@ export async function RenderServiceWorker(release, basePath) {
     `${basePath}manifest.webmanifest`,
     `${basePath}icon.svg`,
     ...platformRuntimePrecacheUrls,
+    ...(release.capabilities.includes('hand-tracking') ? [
+      '/input/hand-tracking-1.0.0/index.js', '/input/hand-tracking-1.0.0/hand_landmarker.task',
+      '/input/hand-tracking-1.0.0/wasm/vision_wasm_internal.js', '/input/hand-tracking-1.0.0/wasm/vision_wasm_internal.wasm',
+      '/input/hand-tracking-1.0.0/wasm/vision_wasm_nosimd_internal.js', '/input/hand-tracking-1.0.0/wasm/vision_wasm_nosimd_internal.wasm',
+    ] : []),
     ...releaseUrls,
   ];
 
@@ -506,7 +515,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const requestUrl = new URL(event.request.url);
-  if (requestUrl.origin !== self.location.origin || requestUrl.search) return;
+  if (requestUrl.origin !== self.location.origin) return;
+  const languageEntry = ${JSON.stringify(release.capabilities.includes('hand-tracking'))}
+    && requestUrl.pathname === ${JSON.stringify(basePath)}
+    && requestUrl.searchParams.getAll('lang').length === 1
+    && ['zh', 'en'].includes(requestUrl.searchParams.get('lang'))
+    && [...requestUrl.searchParams.keys()].every(key => key === 'lang');
+  if (requestUrl.search && !languageEntry) return;
   if (!precachePaths.has(requestUrl.pathname)) return;
   const canonicalUrl = new URL(requestUrl.pathname, self.location.origin).href;
   event.respondWith(caches.open(cacheName).then(async (cache) => {

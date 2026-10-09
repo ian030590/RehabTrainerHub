@@ -42,7 +42,7 @@ export const en = {
   "gesture.calibration.step": "Calibration {current} / {total}",
   "gesture.calibration.waitingForHand": "Waiting for the hand to enter the camera frame",
   "gesture.camera.finding": "Place your hand in the frame",
-  "gesture.camera.preview": "Live hand camera preview",
+  "gesture.camera.preview": "Live hand tracking preview",
   "gesture.camera.tracking": "Hand tracked",
   "gesture.combat.enemyHp": "Enemy HP",
   "gesture.combat.moves": "Move list",

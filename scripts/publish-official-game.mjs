@@ -34,7 +34,7 @@ export async function BuildOfficialGameRelease(gameId) {
   const registry = JSON.parse(await readFile(resolve(root, 'packages/ui/src/officialGameReleases.json'), 'utf8'));
   if (!Object.hasOwn(registry, gameId)) throw new Error('Unknown migrated official game.');
   const registered = registry[gameId];
-  const { version } = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/games', gameId, 'package.json'), 'utf8'));
+  const { version, rehabTrainer } = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/games', gameId, 'package.json'), 'utf8'));
   const directory = resolve(root, 'apps/rehabtrainerhub/games', gameId, 'dist');
   const files = new Map();
   for (const path of (await readdir(directory, { recursive: true })).sort()) {
@@ -51,7 +51,7 @@ export async function BuildOfficialGameRelease(gameId) {
   const manifest = { schemaVersion: 1, status: 'approved', gameId, version,
     name: catalog.copy['zh-TW'].title, description: catalog.copy['zh-TW'].description,
     entry: 'index.html', runtime: { name: 'native', major: 1 }, presentation: 'game',
-    capabilities: ['audio', 'fullscreen', 'pointer', 'touch'], files: entries,
+    capabilities: rehabTrainer?.capabilities ?? ['audio', 'fullscreen', 'pointer', 'touch'], files: entries,
     contentSha256: sha256(JSON.stringify(entries)), approvedAt: new Date().toISOString() };
   ValidateRelease(manifest, gameId, version);
   return { manifest, files, registered };

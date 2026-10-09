@@ -1,24 +1,13 @@
-import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
-// Canonical Hub-owned motor module; bundled by the motor runtime.
-import { FilesetResolver,HandLandmarker,type NormalizedLandmark,} from '@mediapipe/tasks-vision';
-import { CreateMediaPipeAssetUrlCandidates,LoadMediaPipeWithFallback,} from '@rehab-trainer/ui/aiAssets';
-import { MediaDeviceErrorDialog } from '@rehab-trainer/ui/components/MediaDeviceErrorDialog';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { IsEmbeddedHubTraining,RequestHubTrainingConfiguration,} from '@rehab-trainer/ui/embeddedTraining';
-import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
-import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
-import { CanRetryMediaPermission,GetMediaPermissionRetryLabel,useMediaPermissionPreflight,} from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
-import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { useT,type TranslationKey } from '@rehab-trainer/ui/i18n/games';
-import { VerifySelectedTrainingUser } from '@rehab-trainer/ui/selectedUserGuard';
-import { getActiveUser } from '@rehab-trainer/ui/settings';
-import { PlayGameEndSound,PlaySuccessSound,PrepareAudioFeedback } from './runtime/soundManager';
-import { SaveTrainingSessionRecord } from '@rehab-trainer/ui/storage/trainingRecords';
+import { useT, type TranslationKey } from './i18n/useT';
+import { PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from './runtime/soundManager';
+import { StartHandInput, StopHandInput, SendGameEvent, SendGameResult, RetryGameSave, IsHubGame } from './runtime/hubBridge';
+import type { NormalizedLandmark, HandInputFrame } from './runtime/handInput';
+import { IsGestureConfig, defaultGestureConfig } from './config';
 import { initJsPsych } from 'jspsych';
 import { Application,Container,Graphics,type Ticker } from 'pixi.js';
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
 import { Clamp,FormatTestDate } from './gameUtils';
-import { MotorTrainingRulesPanel } from './runtime/components/rules/MotorTrainingRulesPanel';
+import { GestureBattlerTutorial } from './rules/GestureBattlerTutorial';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 type GestureId = 1 | 2 | 3 | 4 | 5;
 type TargetMode = 'free' | 'directed';
@@ -60,7 +49,6 @@ interface GestureStat {
 }
 interface SessionRecord {
     Test_Date: string;
-    Participant_ID: string;
     Enemy_Max_HP: number;
     Hold_Duration_Seconds: number;
     Strictness_Threshold: number;
@@ -94,12 +82,10 @@ interface HoldState {
     lastValidAt: number;
     attemptRecorded: boolean;
 }
-const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates(import.meta.env.VITE_AI_ASSET_BASE_URL);
 const calibrationHoldMs = 2200;
 const calibrationChangeThreshold = 0.22;
 const calibrationMinStableSamples = 5;
 const trackingGraceMs = 180;
-const detectionIntervalMs = 66;
 const defaultEnemyHp = 10;
 const defaultHoldDuration = 2;
 const defaultStrictness = 0.7;
@@ -149,18 +135,16 @@ function CreateEmptyGestureStats(): Record<GestureId, GestureStat> {
 }
 export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const { lang, t } = useT();
-    const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
+    const fullscreenRootRef = useRef<HTMLDivElement | null>(null);
+    const enterTrainingFullscreen = useCallback(async () => {
+        try { await fullscreenRootRef.current?.requestFullscreen?.(); } catch { /* Windowed input remains available. */ }
+    }, []);
     const pixiHostRef = useRef<HTMLDivElement | null>(null);
-    const videoRef = useRef<HTMLVideoElement | null>(null);
     const handCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const appRef = useRef<Application | null>(null);
     const sceneRef = useRef<BattleScene | null>(null);
-    const handLandmarkerRef = useRef<HandLandmarker | null>(null);
-    const cameraStreamRef = useRef<MediaStream | null>(null);
-    const animationFrameRef = useRef<number | null>(null);
-    const lastDetectionAtRef = useRef(0);
-    const lastVideoTimeRef = useRef(-1);
     const phaseRef = useRef<GamePhase>('menu');
+    const inputGenerationRef = useRef(0);
     const calibrationIndexRef = useRef(0);
     const calibrationCapturingRef = useRef(false);
     const calibrationHoldStartRef = useRef<number | null>(null);
@@ -195,15 +179,13 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         stats: CreateEmptyGestureStats(),
         casts: [] as CastRecord[],
     });
-    const [phase, setPhaseState] = useState<GamePhase>('rules');
-    const isEmbeddedHubTraining = IsEmbeddedHubTraining();
-    const hostedSettings = useHostedGameSettings();
-    const hostedSettingsAppliedRef = useRef(false);
-
-    const [enemyMaxHp, setEnemyMaxHp] = useState(GetHostedGameSetting<number>('enemyMaxHp'));
-    const [holdDuration, setHoldDuration] = useState(defaultHoldDuration);
-    const [strictnessThreshold, setStrictnessThreshold] = useState(defaultStrictness);
-    const [targetMode, setTargetMode] = useState<TargetMode>(GetHostedGameSetting<TargetMode>('targetMode'));
+    const [phase, setPhaseState] = useState<GamePhase>('menu');
+    const [enemyMaxHp, setEnemyMaxHp] = useState(defaultGestureConfig.enemyMaxHp);
+    const [holdDuration, setHoldDuration] = useState(defaultGestureConfig.holdDurationSec);
+    const [strictnessThreshold, setStrictnessThreshold] = useState(defaultGestureConfig.strictnessPercent / 100);
+    const [targetMode, setTargetMode] = useState<TargetMode>(defaultGestureConfig.targetMode);
+    const [saveState, setSaveState] = useState('standalone');
+    const formRef = useRef<HTMLFormElement | null>(null);
     const [calibrationIndex, setCalibrationIndex] = useState(0);
     const [isCalibrationCapturing, setIsCalibrationCapturing] = useState(false);
     const [calibrationProgress, setCalibrationProgress] = useState(0);
@@ -217,47 +199,21 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
     const [combatTargetGesture, setCombatTargetGesture] = useState<GestureId>(1);
     const [combatGesture, setCombatGesture] = useState<GestureId | null>(null);
     const [combatHoldProgress, setCombatHoldProgress] = useState(0);
-    const cameraPermission = useMediaPermissionPreflight({
-        active: phase === 'rules',
-        video: true,
-    });
-    const canRetryCameraPermission = CanRetryMediaPermission(cameraPermission.status);
-    const retryPermissionLabel = GetMediaPermissionRetryLabel(lang);
     const setPhase = useCallback((nextPhase: GamePhase) => {
         phaseRef.current = nextPhase;
         setPhaseState(nextPhase);
     }, []);
-    const showConfiguration = useCallback(() => {
-        if (!RequestHubTrainingConfiguration())
-            RequestHubTrainingConfiguration();
-    }, [setPhase]);
-    useEffect(() => {
-        if (!hostedSettings || hostedSettingsAppliedRef.current)
-            return;
-        hostedSettingsAppliedRef.current = true;
-        if (typeof hostedSettings.enemyMaxHp === 'number')
-            setEnemyMaxHp(hostedSettings.enemyMaxHp);
-        if (typeof hostedSettings.holdDurationSec === 'number')
-            setHoldDuration(hostedSettings.holdDurationSec);
-        if (typeof hostedSettings.strictnessPercent === 'number') {
-            setStrictnessThreshold(hostedSettings.strictnessPercent / 100);
-        }
-        if (hostedSettings.targetMode === 'free' || hostedSettings.targetMode === 'directed') {
-            setTargetMode(hostedSettings.targetMode);
-        }
-        setPhase('rules');
-    }, [hostedSettings, setPhase]);
+    const showConfiguration = useCallback(() => { setPhase('menu'); }, [setPhase]);
     useEffect(() => {
         configRef.current = { enemyMaxHp, holdDuration, strictnessThreshold, targetMode };
     }, [enemyMaxHp, holdDuration, strictnessThreshold, targetMode]);
     useEffect(() => {
-        if (cameraPermission.status === 'unsupported') {
-            setVisionError(t('gesture.error.unsupported'));
-        }
-        else if (cameraPermission.status === 'denied' || cameraPermission.status === 'error') {
-            setVisionError(t('gesture.error.permission'));
-        }
-    }, [cameraPermission.status, t]);
+        const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
+        const configure = () => showConfiguration();
+        window.addEventListener('game:saved', saved);
+        window.addEventListener('game:configure', configure);
+        return () => { window.removeEventListener('game:saved', saved); window.removeEventListener('game:configure', configure); };
+    }, [showConfiguration]);
     useEffect(() => {
         const host = jsPsychHostRef.current;
         if (!host)
@@ -279,17 +235,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         canvas?.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
     }, []);
     const stopVision = useCallback(() => {
-        if (animationFrameRef.current !== null) {
-            window.cancelAnimationFrame(animationFrameRef.current);
-            animationFrameRef.current = null;
-        }
-        cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
-        cameraStreamRef.current = null;
-        const video = videoRef.current;
-        if (video)
-            video.srcObject = null;
-        handLandmarkerRef.current?.close();
-        handLandmarkerRef.current = null;
+        inputGenerationRef.current++;
+        StopHandInput();
         clearHandCanvas();
     }, [clearHandCanvas]);
     useEffect(() => () => {
@@ -317,7 +264,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             return;
         const config = configRef.current;
         const metrics = metricsRef.current;
-        const participantId = getActiveUser() || 'Unknown';
         const gestureStats = gestures.map((gesture) => {
             const stat = metrics.stats[gesture];
             return {
@@ -333,7 +279,6 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         });
         const session: SessionRecord = {
             Test_Date: FormatTestDate(new Date()),
-            Participant_ID: participantId,
             Enemy_Max_HP: config.enemyMaxHp,
             Hold_Duration_Seconds: config.holdDuration,
             Strictness_Threshold: config.strictnessThreshold,
@@ -349,24 +294,18 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         setResult(session);
         setPhase('results');
         stopVision();
-        void SaveTrainingSessionRecord({
-            userName: participantId,
-            moduleId: 'upper-limb-training',
-            gameId: 'gesture-battler',
-            gameTitle: t('training.gesture.title'),
-            difficulty: config.targetMode,
-            trainingDate: session.Test_Date,
-            details: {
-                Enemy_Max_HP: session.Enemy_Max_HP,
-                Hold_Duration_Seconds: session.Hold_Duration_Seconds,
-                Strictness_Threshold: session.Strictness_Threshold,
-                Target_Mode: session.Target_Mode,
-                Total_Duration_Seconds: session.Total_Duration_Seconds,
-                Successful_Casts: session.Successful_Casts,
-                Interrupted_Holds: session.Interrupted_Holds,
-            },
-            detailRows: metrics.casts.map((cast) => ({ ...cast, Score: 1 })),
-        });
+        setSaveState(IsHubGame() ? 'saving' : 'standalone');
+        SendGameResult({ enemyMaxHp: config.enemyMaxHp, holdDurationSec: config.holdDuration,
+            strictnessPercent: Math.round(config.strictnessThreshold * 100), targetMode: config.targetMode },
+            { durationSeconds: session.Total_Duration_Seconds, successfulCasts: session.Successful_Casts,
+                interruptedHolds: session.Interrupted_Holds, enemyMaxHp: session.Enemy_Max_HP,
+                holdDurationSeconds: session.Hold_Duration_Seconds, strictnessThreshold: session.Strictness_Threshold },
+            [ ...session.Gesture_Stats.map(stat => ({ kind: 0, gesture: stat.Gesture, attempts: stat.Attempts,
+                successfulCasts: stat.Successful_Casts, interruptedHolds: stat.Interrupted_Holds,
+                successRatePercent: stat.Success_Rate_Percent, averageSimilarityPercent: stat.Average_Similarity_Percent })),
+              ...session.Cast_Records.map(cast => ({ kind: 1, castNumber: cast.Cast_Number, gesture: cast.Gesture,
+                targetGesture: cast.Target_Gesture, similarityPercent: cast.Similarity_Percent,
+                castTimeSeconds: cast.Cast_Time_Seconds, enemyHpAfter: cast.Enemy_HP_After })) ]);
     }, [setPhase, stopVision, t]);
     const triggerAttack = useCallback(async (gesture: GestureId, similarity: number) => {
         if (attackActiveRef.current || phaseRef.current !== 'combat')
@@ -552,15 +491,16 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         }
     }, [advanceCalibration, resetHold, t]);
     const startCurrentCalibration = useCallback(() => {
+        if (!IsMobileGameViewport() && !document.fullscreenElement) void enterTrainingFullscreen();
         calibrationCapturingRef.current = true;
         calibrationHoldStartRef.current = null;
         calibrationSamplesRef.current = [];
         setIsCalibrationCapturing(true);
         setCalibrationProgress(0);
         setCalibrationNotice('');
-    }, []);
-    const processFrame = useCallback((now: number) => {
-        animationFrameRef.current = window.requestAnimationFrame(processFrame);
+    }, [enterTrainingFullscreen]);
+    const processFrame = useCallback((input: HandInputFrame) => {
+        const now = performance.now();
         const currentPhase = phaseRef.current;
         if (currentPhase !== 'calibration' && currentPhase !== 'combat')
             return;
@@ -577,29 +517,16 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             }
             return;
         }
-        if (now - lastDetectionAtRef.current < detectionIntervalMs)
-            return;
-        const video = videoRef.current;
-        const landmarker = handLandmarkerRef.current;
-        if (!video || !landmarker || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA)
-            return;
-        if (video.currentTime === lastVideoTimeRef.current)
-            return;
-        lastVideoTimeRef.current = video.currentTime;
-        lastDetectionAtRef.current = now;
         try {
-            const detection = landmarker.detectForVideo(video, now);
-            const landmarks = detection.landmarks[0];
-            DrawHandLandmarks(handCanvasRef.current, video, landmarks);
+            const landmarks = input.landmarks.length === 21 ? input.landmarks : undefined;
+            DrawHandLandmarks(handCanvasRef.current, landmarks);
             if (!landmarks) {
                 handleNoHand(now);
                 return;
             }
             lastHandSeenAtRef.current = now;
-            if (currentPhase === 'calibration')
-                handleCalibrationHand(landmarks, now);
-            else
-                handleCombatHand(landmarks, now);
+            if (currentPhase === 'calibration') handleCalibrationHand(landmarks, now);
+            else handleCombatHand(landmarks, now);
         }
         catch (error) {
             console.warn('Hand landmark detection failed.', error);
@@ -609,21 +536,23 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             showConfiguration();
         }
     }, [handleCalibrationHand, handleCombatHand, handleNoHand, resetHold, showConfiguration, stopVision, t]);
+    useEffect(() => {
+        const receive = (event: Event) => {
+            const message = (event as CustomEvent).detail;
+            if (message.type === 'frame') processFrame(message.payload);
+            if (message.type === 'error' && ['calibration', 'combat'].includes(phaseRef.current)) {
+                stopVision();
+                jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-input-failed' });
+                setVisionError(t(message.payload.reason === 'disconnected' ? 'gesture.error.disconnected' : 'gesture.error.initialization'));
+                setShowVisionError(true);
+                showConfiguration();
+            }
+        };
+        window.addEventListener('game:input', receive);
+        return () => window.removeEventListener('game:input', receive);
+    }, [processFrame, showConfiguration, stopVision, t]);
     const startCalibration = useCallback(async () => {
-        if (!VerifySelectedTrainingUser())
-            return;
-        if (!navigator.mediaDevices?.getUserMedia) {
-            setVisionError(t('gesture.error.unsupported'));
-            setShowVisionError(true);
-            showConfiguration();
-            return;
-        }
         PrepareAudioFeedback(jsPsychRef);
-        // Mobile browser fullscreen suppresses native page zoom on several browsers.
-        // Keep the fixed game surface in the normal document so two-finger pinch zoom
-        // remains available, while desktop retains the immersive fullscreen flow.
-        if (!IsMobileGameViewport())
-            await enterTrainingFullscreen();
         await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:gesture-battler', onStart: async () => {
                 if (appRef.current)
                     ResizePixiAppToElement(appRef.current, pixiHostRef.current);
@@ -633,49 +562,9 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                 setStatusMessage(t('gesture.loading.camera'));
                 setPhase('initializing');
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        audio: false,
-                        video: {
-                            facingMode: 'user',
-                            width: { ideal: 960 },
-                            height: { ideal: 720 },
-                        },
-                    });
-                    cameraStreamRef.current = stream;
-                    const cameraTrack = stream.getVideoTracks()[0];
-                    if (!cameraTrack)
-                        throw new Error('Camera track is unavailable.');
-                    cameraTrack.addEventListener('ended', () => {
-                        if (!mountedRef.current || cameraStreamRef.current !== stream)
-                            return;
-                        setVisionError(t('gesture.error.disconnected'));
-                        setShowVisionError(true);
-                        stopVision();
-                        jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
-                        showConfiguration();
-                    }, { once: true });
-                    const video = videoRef.current;
-                    if (!video)
-                        throw new Error('Camera preview is unavailable.');
-                    video.srcObject = stream;
-                    await video.play();
-                    setStatusMessage(t('gesture.loading.model'));
-                    const landmarker = await LoadMediaPipeWithFallback(mediaPipeAssetCandidates, async ({ wasmUrl, handLandmarkerModelUrl }) => {
-                        const vision = await FilesetResolver.forVisionTasks(wasmUrl);
-                        return HandLandmarker.createFromOptions(vision, {
-                            baseOptions: { modelAssetPath: handLandmarkerModelUrl },
-                            runningMode: 'VIDEO',
-                            numHands: 1,
-                            minHandDetectionConfidence: 0.5,
-                            minHandPresenceConfidence: 0.5,
-                            minTrackingConfidence: 0.5,
-                        });
-                    });
-                    if (!mountedRef.current) {
-                        landmarker.close();
-                        return;
-                    }
-                    handLandmarkerRef.current = landmarker;
+                    const selectedInput = inputGenerationRef.current;
+                    await StartHandInput();
+                    if (!mountedRef.current || selectedInput !== inputGenerationRef.current) return;
                     romRef.current = { closed: null, open: null };
                     gestureProfilesRef.current = {};
                     calibrationIndexRef.current = 0;
@@ -683,28 +572,25 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                     calibrationHoldStartRef.current = null;
                     calibrationSamplesRef.current = [];
                     lastHandSeenAtRef.current = 0;
-                    lastDetectionAtRef.current = 0;
-                    lastVideoTimeRef.current = -1;
                     setCalibrationIndex(0);
                     setIsCalibrationCapturing(false);
                     setCalibrationProgress(0);
                     setCalibrationNotice('');
                     setResult(null);
                     setPhase('calibration');
-                    animationFrameRef.current = window.requestAnimationFrame(processFrame);
+                    SendGameEvent('active');
                 }
                 catch (error) {
-                    console.error('Unable to initialize gesture recognition.', error);
+                    if (!mountedRef.current || (error instanceof Error && error.message === 'cancelled')) return;
                     stopVision();
-                    setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
-                        ? t('gesture.error.permission')
-                        : t('gesture.error.initialization'));
+                    const reason = error instanceof Error ? error.message : 'initialization';
+                    setVisionError(t(reason === 'permission' ? 'gesture.error.permission' : reason === 'unsupported' ? 'gesture.error.unsupported' : 'gesture.error.initialization'));
                     setShowVisionError(true);
                     jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
                     showConfiguration();
                 }
             } });
-    }, [enterTrainingFullscreen, processFrame, setPhase, showConfiguration, stopVision, t]);
+    }, [setPhase, showConfiguration, stopVision, t]);
     const returnToMenu = useCallback(() => {
         jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
         stopVision();
@@ -714,16 +600,22 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         setResult(null);
         setVisionError('');
         showConfiguration();
+        if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
     }, [resetHold, showConfiguration, stopVision]);
     const exitGame = useCallback(() => {
         jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
         stopVision();
-        onExit();
+        if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined).finally(onExit);
+        else onExit();
     }, [onExit, stopVision]);
-    useTrainingAbort({
-        active: ['initializing', 'calibration', 'combat'].includes(phase),
-        onAbort: returnToMenu,
-    });
+    useEffect(() => {
+        if (!['initializing', 'calibration', 'combat'].includes(phase)) return;
+        const abort = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); returnToMenu(); } };
+        const fullscreen = () => { if (!document.fullscreenElement) returnToMenu(); };
+        window.addEventListener('keydown', abort);
+        document.addEventListener('fullscreenchange', fullscreen);
+        return () => { window.removeEventListener('keydown', abort); document.removeEventListener('fullscreenchange', fullscreen); };
+    }, [phase, returnToMenu]);
     useEffect(() => {
         let cancelled = false;
         let initialized = false;
@@ -753,9 +645,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                 scene.enemy.y = scene.enemyBaseY + Math.sin(time) * 3;
                 scene.player.y = scene.playerBaseY + Math.sin(time * 0.8) * 2;
             });
-            if (phaseRef.current === 'combat') {
-                sceneRef.current = DrawBattleScene(app);
-            }
+            sceneRef.current = DrawBattleScene(app);
         };
         void initialize();
         const onResize = () => {
@@ -763,8 +653,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             if (!initialized || !currentApp || !host)
                 return;
             ResizePixiAppToElement(currentApp, host);
-            if (phaseRef.current === 'combat')
-                sceneRef.current = DrawBattleScene(currentApp);
+            sceneRef.current = DrawBattleScene(currentApp);
         };
         const resizeObserver = host && typeof ResizeObserver !== 'undefined'
             ? new ResizeObserver(onResize)
@@ -806,12 +695,12 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       </button>
 
       <div className={`gesture-camera ${phase === 'menu' || phase === 'rules' || phase === 'initializing' || phase === 'results' ? 'gesture-camera-hidden' : ''}`}>
-        <video ref={videoRef} muted playsInline aria-label={t('gesture.camera.preview')}/>
+        <p className="gesture-camera-label">{t('gesture.camera.preview')}</p>
         <canvas ref={handCanvasRef} aria-hidden="true"/>
         <span>{handVisible ? t('gesture.camera.tracking') : t('gesture.camera.finding')}</span>
       </div>
 
-      {['rules', 'initializing', 'calibration', 'combat'].includes(phase) && (<div className="gesture-orientation-gate" role="status" aria-live="polite">
+      {['initializing', 'calibration', 'combat'].includes(phase) && (<div className="gesture-orientation-gate" role="status" aria-live="polite">
           <span className="gesture-orientation-phone" aria-hidden="true"/>
           <strong>{t('gesture.orientation.title')}</strong>
           <span>{t('gesture.orientation.description')}</span>
@@ -852,20 +741,37 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
           </section>
         </div>)}
 
-      {null}
+      {phase === 'menu' && <div className="training-panel gesture-menu-panel">
+        <form ref={formRef} className="training-config" onSubmit={event => event.preventDefault()}
+          onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (formRef.current?.reportValidity() && IsGestureConfig({ enemyMaxHp, holdDurationSec: holdDuration, strictnessPercent: Math.round(strictnessThreshold * 100), targetMode })) setPhase('rules'); } }}>
+          <header className="training-config-header"><h2>{t('training.gesture.title')}</h2></header>
+          <div className="training-config-body">
+            <label>{t('gesture.config.enemyHp')}<input name="enemyMaxHp" type="number" required min="1" max="100" step="1" value={enemyMaxHp} onChange={event => setEnemyMaxHp(event.target.valueAsNumber)} /></label>
+            <label>{t('gesture.config.holdDuration')}<input name="holdDurationSec" type="number" required min="0.5" max="10" step="0.5" value={holdDuration} onChange={event => setHoldDuration(event.target.valueAsNumber)} /></label>
+            <label>{t('gesture.config.strictness')}<input name="strictnessPercent" type="number" required min="50" max="90" step="5" value={Math.round(strictnessThreshold * 100)} onChange={event => setStrictnessThreshold(event.target.valueAsNumber / 100)} /></label>
+            <p>{lang === 'en' ? 'Similarity relative to your local calibration; this is not a joint angle.' : '相對於本機手勢校正的相似度門檻，不能換算成關節角度。'}</p>
+            <label>{t('gesture.config.targetMode')}<select name="targetMode" value={targetMode} onChange={event => setTargetMode(event.target.value as TargetMode)}><option value="free">{t('gesture.config.free')}</option><option value="directed">{t('gesture.config.directed')}</option></select></label>
+          </div>
+          <div className="config-actions training-config-navigation-buttons">
+            <button type="button" className="btn btn-primary" onClick={() => { if (formRef.current?.reportValidity() && IsGestureConfig({ enemyMaxHp, holdDurationSec: holdDuration, strictnessPercent: Math.round(strictnessThreshold * 100), targetMode })) setPhase('rules'); }}>{t('btn.confirm')}</button>
+            <button type="button" className="btn btn-ghost" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.back')}</button>
+          </div>
+        </form>
+      </div>}
 
-      {phase === 'rules' && (<div className="training-panel gesture-menu-panel">
-          <MotorTrainingRulesPanel gameId="gesture-battler" title={t('training.gesture.title')} summaryTitle={t('training.gesture.title')} summaryItems={[
+      {(phase === 'menu' || phase === 'rules') && (
+          <GestureBattlerTutorial active={phase === 'rules'} enemyMaxHp={enemyMaxHp} summaryItems={[
                 { label: t('gesture.config.enemyHp'), value: enemyMaxHp },
                 { label: t('gesture.config.holdDuration'), value: `${holdDuration}s` },
                 { label: t('gesture.config.strictness'), value: `${Math.round(strictnessThreshold * 100)}%` },
                 { label: t('gesture.config.targetMode'), value: targetModeLabel },
             ]} onStart={() => void startCalibration()} onBack={showConfiguration}/>
-        </div>)}
+        )}
 
       {phase === 'initializing' && (<div className="gesture-calibration-overlay">
           <div aria-label={statusMessage || t('gesture.loading.title')} aria-live="polite" className="gesture-loading-card" role="status">
             <div className="gesture-loader" aria-hidden="true"/>
+            <p>{statusMessage || t('gesture.loading.title')}</p>
           </div>
         </div>)}
 
@@ -911,7 +817,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             <div className="training-result-summary gesture-result-summary">
               <span>
                 <small>{t('gesture.results.user')}</small>
-                <strong>{result.Participant_ID}</strong>
+                <strong>{lang === 'en' ? 'This session' : '當次活動'}</strong>
               </span>
               <span>
                 <small>{t('gesture.results.casts')}</small>
@@ -933,6 +839,7 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                   <th>{t('gesture.results.gesture')}</th>
                   <th>{t('gesture.results.attempts')}</th>
                   <th>{t('gesture.results.successes')}</th>
+                  <th>{t('gesture.results.interruptions')}</th>
                   <th>{t('gesture.results.successRate')}</th>
                   <th>{t('gesture.results.similarity')}</th>
                 </tr>
@@ -942,17 +849,23 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                     <td>{stat.Gesture}</td>
                     <td>{stat.Attempts}</td>
                     <td>{stat.Successful_Casts}</td>
+                    <td>{stat.Interrupted_Holds}</td>
                     <td>{stat.Success_Rate_Percent}%</td>
                     <td>{stat.Average_Similarity_Percent}%</td>
                   </tr>))}
               </tbody>
             </table>
 
-            <TrainingResultActions backLabel={t('training.returnHome')} onBackHome={exitGame} hubLabel={t('training.returnLobby')}/>
+            <h2>{lang === 'en' ? 'Cast records' : '逐次施放紀錄'}</h2>
+            <table className="results-table gesture-cast-results"><thead><tr><th>#</th><th>{t('gesture.results.gesture')}</th><th>{lang === 'en' ? 'Target' : '指定手勢'}</th><th>{t('gesture.results.similarity')}</th><th>{lang === 'en' ? 'Time (s)' : '時間（秒）'}</th><th>HP</th></tr></thead>
+            <tbody>{result.Cast_Records.map(cast => <tr key={cast.Cast_Number}><td>{cast.Cast_Number}</td><td>{cast.Gesture}</td><td>{cast.Target_Gesture ?? '—'}</td><td>{cast.Similarity_Percent}%</td><td>{cast.Cast_Time_Seconds}</td><td>{cast.Enemy_HP_After}</td></tr>)}</tbody></table>
+            <p role="status">{saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'saving' ? (lang === 'en' ? 'Saving…' : '保存中…') : saveState === 'error' ? (lang === 'en' ? 'Save failed. Try again.' : '保存失敗，請重試。') : (lang === 'en' ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄')}</p>
+            {saveState === 'error' && <button type="button" onClick={RetryGameSave}>{lang === 'en' ? 'Retry save' : '重試保存'}</button>}
+            <button type="button" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.back')}</button>
           </div>
         </div>)}
 
-      {showVisionError && visionError && (<MediaDeviceErrorDialog title={t('gesture.error.title')} titleId="gesture-error-modal-title" message={visionError} onClose={() => setShowVisionError(false)}/>)}
+      {showVisionError && visionError && <div className="gesture-error-overlay" role="alertdialog" aria-modal="true" aria-labelledby="gesture-error-modal-title"><section><h2 id="gesture-error-modal-title">{t('gesture.error.title')}</h2><p>{visionError}</p><button type="button" autoFocus onClick={() => setShowVisionError(false)}>{t('btn.confirm')}</button></section></div>}
     </div>);
 }
 function GestureCue({ gesture }: {
@@ -1069,13 +982,11 @@ function JointAngle(first: NormalizedLandmark, middle: NormalizedLandmark, last:
     const cosine = Clamp((left.x * right.x + left.y * right.y + left.z * right.z) / denominator, -1, 1);
     return Math.acos(cosine) * (180 / Math.PI);
 }
-function DrawHandLandmarks(canvas: HTMLCanvasElement | null, video: HTMLVideoElement, landmarks: NormalizedLandmark[] | undefined) {
+function DrawHandLandmarks(canvas: HTMLCanvasElement | null, landmarks: NormalizedLandmark[] | undefined) {
     if (!canvas)
         return;
-    if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-    }
+    canvas.width = 640;
+    canvas.height = 480;
     const context = canvas.getContext('2d');
     if (!context)
         return;
@@ -1085,7 +996,7 @@ function DrawHandLandmarks(canvas: HTMLCanvasElement | null, video: HTMLVideoEle
     context.strokeStyle = '#67e8f9';
     context.fillStyle = '#fef08a';
     context.lineWidth = Math.max(2, canvas.width / 300);
-    const connections = HandLandmarker.HAND_CONNECTIONS;
+    const connections = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[0,17],[17,18],[18,19],[19,20]].map(([start,end]) => ({ start, end }));
     connections.forEach(({ start, end }) => {
         const from = landmarks[start];
         const to = landmarks[end];
