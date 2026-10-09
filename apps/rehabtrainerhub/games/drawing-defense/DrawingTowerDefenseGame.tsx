@@ -10,6 +10,8 @@ import { Clamp,FormatTestDate } from './gameUtils';
 import type { TFunction } from './runtime/cognitive/types';
 import { DrawingDefenseTutorial } from './rules/DrawingDefenseTutorial';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
+import { BuildGameScore } from './score';
+import { ScoreAnalysis } from './ScoreAnalysis';
 type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 type ShapeId = 'circle' | 'cross' | 'square' | 'triangle' | 'vertical-line' | 'horizontal-line';
 type GamePhase = 'menu' | 'rules' | 'playing' | 'results';
@@ -274,15 +276,10 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
         setResult(record);
         setPhase('results');
+        const score = BuildGameScore(record);
         SendGameResult({ difficulty: record.Difficulty, durationSec: record.Game_Time_Seconds ?? 0,
             maxHp: record.Starting_HP, speed: record.Enemy_Speed, strictness: record.Recognition_Strictness,
-            strokeWaitMs: record.Stroke_Wait_Milliseconds, backgroundMode, soundEnabled }, {
-            durationSeconds: record.Total_Duration_Seconds, spawned: record.Enemies_Spawned,
-            defeated: record.Enemies_Defeated, hpRemaining: record.HP_Remaining,
-            victory: record.Game_Result === 'Victory' ? 1 : 0,
-        }, record.Enemy_Results.map(enemy => ({ enemyNumber: enemy.Enemy_Number,
-            shape: shapes.indexOf(enemy.Shape), reactionSeconds: enemy.Reaction_Time_Seconds,
-            defeated: enemy.Defeated ? 1 : 0 })));
+            strokeWaitMs: record.Stroke_Wait_Milliseconds, backgroundMode, soundEnabled }, score.summary, score.rounds);
     }, [clearDrawingInput, recordEnemyOutcome, setPhase, t, backgroundMode, soundEnabled]);
     const drawLayout = useCallback((app: Application) => {
         const width = app.screen.width;
@@ -692,43 +689,23 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable drawing-defense-results-container">
           <div className="experiment-results">
             <h1>{t('drawing.results.complete')}</h1>
-            <div className="training-result-summary">
-              <span>
-                <small>{t('drawing.results.user')}</small>
-                <strong>{result.Participant_ID}</strong>
-              </span>
-              <span>
-                <small>{t('drawing.results.defeatedEnemies')}</small>
-                <strong>{result.Enemies_Defeated}/{result.Enemies_Spawned}</strong>
-              </span>
-              <span>
-                <small>{t('drawing.results.duration')}</small>
-                <strong>{FormatSeconds(result.Total_Duration_Seconds, t)}</strong>
-              </span>
-            </div>
-
-            <table className="results-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>{t('drawing.results.shape')}</th>
-                  <th>{t('drawing.results.reactionTime')}</th>
-                  <th>{t('drawing.results.defeated')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.Enemy_Results.map((enemyResult) => (<tr key={enemyResult.Enemy_Number}>
-                    <td>{enemyResult.Enemy_Number}</td>
-                    <td>{GetShapeLabel(enemyResult.Shape, t)}</td>
-                    <td>
-                      {enemyResult.Reaction_Time_Seconds === null ? '-' : FormatSeconds(enemyResult.Reaction_Time_Seconds, t)}
-                    </td>
-                    <td className={enemyResult.Defeated ? 'result-success' : 'result-fail'}>
-                      {enemyResult.Defeated ? t('drawing.results.success') : t('drawing.results.notDefeated')}
-                    </td>
-                  </tr>))}
-              </tbody>
-            </table>
+            <p className="score-note">{lang === 'en' ? 'Descriptive statistics for this practice session.' : '呈現當次練習紀錄與描述統計。'}</p>
+            <section className="score-priority" aria-labelledby="score-priority-title">
+              <h2 id="score-priority-title">{lang === 'en' ? 'Key outcomes' : '重點指標'}</h2>
+              <dl className="score-key-grid">
+                <div><dt>{t('drawing.results.defeatedEnemies')}</dt><dd>{result.Enemies_Defeated}<small> / {result.Enemies_Spawned}</small></dd></div>
+                <div><dt>{lang === 'en' ? 'HP remaining' : '剩餘耐久'}</dt><dd>{result.HP_Remaining}<small> / {result.Starting_HP}</small></dd></div>
+                <div><dt>{t('drawing.results.duration')}</dt><dd>{result.Total_Duration_Seconds}<small> s</small></dd></div>
+              </dl>
+            </section>
+            <section className="score-context" aria-labelledby="score-context-title">
+              <h2 id="score-context-title">{lang === 'en' ? 'Record context' : '紀錄概況'}</h2>
+              <dl>
+                <div><dt>{t('drawing.results.user')}</dt><dd>{result.Participant_ID}</dd></div>
+                <div><dt>{lang === 'en' ? 'Session outcome' : '活動結局'}</dt><dd>{result.Game_Result === 'Victory' ? (lang === 'en' ? 'Completed selected duration' : '完成設定時長') : (lang === 'en' ? 'HP reached zero' : '耐久歸零')}</dd></div>
+              </dl>
+            </section>
+            <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang}/>
 
             <p role="status">{!IsHubGame() ? (lang === 'en' ? 'Local session; open from the Hub to save a record.' : '本機練習；從 Hub 開啟才能保存紀錄。') : saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (lang === 'en' ? 'Save failed' : '保存失敗') : (lang === 'en' ? 'Saving record…' : '正在保存紀錄…')}</p>
             {saveState === 'error' && <button onClick={RetryGameSave}>{lang === 'en' ? 'Retry saving' : '重試保存'}</button>}

@@ -1,0 +1,281 @@
+{
+  "gameId": "gesture-battler",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.1/package/index.html",
+  "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4",
+  "verifiedAt": "2026-10-09T07:17:45.435Z",
+  "status": "published-and-verified",
+  "prefix": "releases/gesture-battler/2.0.1/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.1/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/",
+  "fileCount": 5,
+  "totalBytes": 904046,
+  "files": [
+    {
+      "path": "assets/index-DwzecvWz.js",
+      "size": 881498,
+      "sha256": "d5cb58583fcb7719ef2d069b2993d4973dbdbc9376b2de9fd733daa5fbe3f647",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-UMjlHBFY.css",
+      "size": 19001,
+      "sha256": "859fad1d603c18179fdb7a61c09350ec3aaf64085f0b0450e128cd0b6b58ebda",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 477,
+      "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "86767625b7e2ac26d7daf8c4c4fce516ac2660e17eabc104e87ae3ca4b345029",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2662,
+      "sha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "approvedOn": "2026-10-09",
+    "source": "Repository owner approval in this Codex conversation",
+    "message": "核准並且將這個成績結算頁面的要求寫在遷移計畫中",
+    "scope": "Exact versions and contentSha256 values presented before approval",
+    "releases": [
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.4",
+        "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.3",
+        "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.1",
+        "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4"
+      }
+    ],
+    "version": "2.0.1",
+    "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4"
+  },
+  "changes": [
+    "Game-owned primary statistics and record context",
+    "Selectable round charts, mean reference, descriptive statistics and completeness",
+    "Complete round details, synchronized 50-row chart/table pages and distinct aggregates",
+    "Local responsive results styles, Traditional Chinese and English"
+  ],
+  "localValidation": {
+    "testFirst": {
+      "failed": 11,
+      "reason": "Missing drawing/gesture result analysis and score projection; missing asteroid synchronized pages, details and score metric",
+      "passedAfterImplementation": 11
+    },
+    "gates": [
+      "npm run test:game-architecture (53 tests and all game TypeScript checks)",
+      "npm run test:entrypoints",
+      "npm run test:naming",
+      "npm run build:hub",
+      "npm --prefix apps/rehabtrainerhub/games/gesture-battler run build",
+      "node scripts/publish-official-game.mjs gesture-battler --dry-run"
+    ],
+    "documentation": "docs/r2-game-results-ui.md"
+  },
+  "productionVerification": {
+    "gameId": "gesture-battler",
+    "version": "2.0.1",
+    "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4",
+    "pwaUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.1/",
+    "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/",
+    "publicCatalog": {
+      "url": "https://trainerhub.cc/api/games",
+      "status": 200,
+      "matchingGames": [
+        {
+          "id": "gesture-battler",
+          "slug": "gesture-battler",
+          "title": "手勢指令對戰",
+          "summary": "辨識數字手勢完成指令，練習手部活動範圍與動作維持。",
+          "trainer": "motor",
+          "category": "upper-limb",
+          "developerName": "居家訓練網",
+          "updatedAt": "2026-10-09T07:17:13.096Z",
+          "copy": {
+            "zh-TW": {
+              "title": "手勢指令對戰",
+              "description": "辨識數字手勢完成指令，練習手部活動範圍與動作維持。"
+            },
+            "en": {
+              "title": "Gesture Command Battle",
+              "description": "Use number gestures to issue commands and practise hand range and sustained movement."
+            }
+          },
+          "previewUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.1/package/preview.webp",
+          "release": {
+            "id": "gesture-battler@2.0.1",
+            "version": "2.0.1",
+            "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4",
+            "capabilities": [
+              "audio",
+              "fullscreen",
+              "hand-tracking"
+            ],
+            "approvedAt": "2026-10-09T07:17:13.096Z",
+            "presentation": "game",
+            "launchUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.1/",
+            "installUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/"
+          }
+        }
+      ]
+    },
+    "stableEntry": {
+      "status": 302,
+      "noStore": true,
+      "location": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.1/"
+    },
+    "pwa": {
+      "launcherStatus": 200,
+      "sandbox": "allow-scripts",
+      "manifestStatus": 200,
+      "scope": "/games/gesture-battler/2.0.1/",
+      "serviceWorkerStatus": 200
+    },
+    "hubEntry": {
+      "status": 200,
+      "stablePwaLink": true,
+      "noGameBundle": true
+    },
+    "hubSubAssets": [
+      {
+        "path": "settings.json",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "score.json",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "sw.js",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "manifest.webmanifest",
+        "status": 410,
+        "noStore": true
+      }
+    ],
+    "versionlessSession": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4",
+      "noStore": true,
+      "tokenOmitted": true,
+      "recordNotSubmitted": true
+    },
+    "officialCatalog": {
+      "schemaVersion": 1,
+      "gameId": "gesture-battler",
+      "currentVersion": "2.0.1",
+      "releases": {
+        "2.0.0": {
+          "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1"
+        },
+        "2.0.1": {
+          "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4"
+        }
+      }
+    },
+    "checkedAt": "2026-10-09T07:18:35.063Z",
+    "allPublishedFileHashesAndContentTypesVerified": true,
+    "allPublishedFilesStrictCspVerified": true,
+    "productionTrainingRecordsCreated": false
+  },
+  "productionBrowser": [
+    {
+      "mode": "remote-lobby",
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --remote --lobby",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:19:27.822Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "hub-desktop",
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --production-hub --lobby",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:20:36.911Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "hub-mobile",
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --production-hub --lobby --mobile",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:21:32.225Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "standalone",
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --remote --standalone",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:22:14.179Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "hub-english",
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --production-hub --lobby --english --directed",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:23:02.345Z",
+      "productionTrainingRecordsCreated": false
+    }
+  ],
+  "screenshots": [
+    "docs/migrations/r2-game-results-ui/production/gesture-battler/desktop-results.png",
+    "docs/migrations/r2-game-results-ui/production/gesture-battler/desktop-results-analysis.png",
+    "docs/migrations/r2-game-results-ui/production/gesture-battler/desktop-results-details.png",
+    "docs/migrations/r2-game-results-ui/production/gesture-battler/mobile-results.png",
+    "docs/migrations/r2-game-results-ui/production/gesture-battler/mobile-results-analysis.png",
+    "docs/migrations/r2-game-results-ui/production/gesture-battler/mobile-results-details.png"
+  ],
+  "retainedVersionsVerified": [
+    "2.0.0",
+    "2.0.1"
+  ],
+  "existingPagesDeployments": {
+    "rehabtrainerhub": {
+      "id": "34248648-4000-424a-9a5e-1952624bc74f",
+      "url": "https://34248648.rehabtrainerhub.pages.dev",
+      "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74"
+    },
+    "trainerhub-user-games": {
+      "id": "cd01ab30-ef10-406f-98a8-0a8d01f31dc8",
+      "url": "https://cd01ab30.trainerhub-user-games.pages.dev",
+      "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74"
+    }
+  },
+  "pagesRequiredForGameActivation": false,
+  "pagesRedeployedForThisRelease": false,
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1",
+    "allManifestAndFileHashesVerified": true,
+    "checkedAt": "2026-10-09T07:19:05.728Z",
+    "command": "node scripts/publish-official-game.mjs gesture-battler --activate-version 2.0.0",
+    "activationPerformed": false
+  },
+  "limitations": [
+    "Brave desktop and mobile touch emulation; physical devices, Safari/iOS and long offline use were not validated",
+    "Tablet viewport was not separately validated for this release; later migrations must provide that evidence",
+    "Real MediaPipe inference used the existing reviewed image-stream fixtures; live human gestures and physical camera hardware were not validated"
+  ]
+}

@@ -1,6 +1,7 @@
 import './game.css';
 import 'pixi.js/unsafe-eval';
 import './rules.css';
+import './results.css';
 import { ExitGame, InstallHubBridge } from './runtime/hubBridge';
 import { LanguageProvider } from './i18n/useT';
 import React from 'react';

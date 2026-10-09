@@ -17,6 +17,7 @@ import { CreateSessionForUser } from '../apps/rehabtrainerhub/functions/_lib/aut
 import { CheckAsteroidShield } from './asteroid-shield-browser.mjs';
 import { CheckGestureBattler } from './gesture-battler-browser.mjs';
 import { LoadGestureCameraFixtures } from './gesture-camera-fixtures.mjs';
+import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
 assert.ok(['drawing-defense', 'asteroid-shield', 'gesture-battler'].includes(gameId), 'Unknown browser game fixture');
@@ -204,16 +205,25 @@ try {
       })().catch(error => errors.push(String(error)));
     }
     if (message.method === 'Target.attachedToTarget') {
-      void Promise.all([
-        send('Runtime.enable', {}, message.params.sessionId),
-        send('Network.enable', {}, message.params.sessionId),
-      ]).catch(error => { if (!/Inspected target navigated or closed/.test(error.message)) errors.push(String(error)); });
+      void (async () => {
+        const childSession = message.params.sessionId;
+        await Promise.all([send('Runtime.enable', {}, childSession), send('Network.enable', {}, childSession)]);
+        if (gameId === 'asteroid-shield' && message.params.targetInfo.type === 'iframe') {
+          await send('Page.enable', {}, childSession);
+          await send('Page.addScriptToEvaluateOnNewDocument', {
+            source: 'window.__PIXI_APP_INIT__ = app => { window.asteroidPixiApp = app; };', runImmediately: true,
+          }, childSession);
+        }
+        if (message.params.waitingForDebugger) await send('Runtime.runIfWaitingForDebugger', {}, childSession);
+      })().catch(error => { if (!/Inspected target navigated or closed/.test(error.message)) errors.push(String(error)); });
     }
   });
   const target = await send('Target.createTarget', { url: 'about:blank' });
   const attached = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
   const session = attached.sessionId;
-  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: false, flatten: true }, session);
+  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: gameId === 'asteroid-shield', flatten: true,
+    ...(gameId === 'asteroid-shield' ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
+  }, session);
   await send('Runtime.enable', {}, session);
   await send('Network.enable', {}, session);
   await send('Page.enable', {}, session);
@@ -236,7 +246,9 @@ try {
       };
     }
   ` }, session);
-
+  if (gameId === 'asteroid-shield') await send('Page.addScriptToEvaluateOnNewDocument', {
+    source: 'window.__PIXI_APP_INIT__ = app => { window.asteroidPixiApp = app; };',
+  }, session);
   if (remote || gameId === 'gesture-battler') await send('Fetch.enable', { patterns: [
     ...(remote ? [{ urlPattern: productionHub ? 'https://trainerhub.cc/api/*' : 'https://trainerhub.cc/*', requestStage: 'Request' }] : []),
     ...(gameId === 'gesture-battler' ? [{ urlPattern: '*/__hand-test/*', requestStage: 'Request' }] : []),
@@ -426,6 +438,13 @@ try {
     await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }, pointerSession);
   }
   await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-results"))'), 'game-owned results');
+  const resultScreenshots = resolve(root, '.tmp/drawing-validation', `${standalone ? 'standalone' : 'lobby'}-${process.argv.includes('--mobile') ? 'mobile' : 'desktop'}`);
+  await mkdir(resultScreenshots, { recursive: true });
+  const captureResults = async name => {
+    const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
+    await writeFile(resolve(resultScreenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64'));
+  };
+  await CheckResultsPresentation(game, { defaultMetric: 'reactionSeconds', alternateMetric: 'defeated', capture: captureResults });
   if (standalone) {
     assert.ok(await game('document.body.textContent.includes("從 Hub 開啟才能保存紀錄")'));
     await game('document.querySelector(".experiment-results > button:last-child").click()');

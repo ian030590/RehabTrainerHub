@@ -42,15 +42,19 @@ interface AssetTextures {
 interface ShieldLayout {
     shipX: number;
     shipY: number;
-    shipRadius: number;
+    shipWidth: number;
+    shipHeight: number;
     shieldX: number;
     shieldY: number;
-    shieldRadius: number;
+    shieldWidth: number;
+    shieldHeight: number;
 }
 interface Threat {
     id: number;
     kind: ThreatKind;
     sprite: Sprite;
+    trail: Sprite[];
+    size: number;
     x: number;
     y: number;
     vx: number;
@@ -276,18 +280,6 @@ const copy = {
         missed: 'Missed',
     },
 } as const;
-const threatCopyKeys: Record<ThreatKind, 'normal' | 'heavy' | 'lethal' | 'energy'> = {
-    normal: 'normal',
-    heavy: 'heavy',
-    lethal: 'lethal',
-    energy: 'energy',
-};
-const outcomeCopyKeys: Record<ThreatOutcome, 'shielded' | 'hit' | 'collected' | 'missed'> = {
-    shielded: 'shielded',
-    hit: 'hit',
-    collected: 'collected',
-    missed: 'missed',
-};
 export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const { lang, t } = useT();
     const labels = copy[lang];
@@ -297,7 +289,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const appRef = useRef<Application | null>(null);
     const texturesRef = useRef<AssetTextures | null>(null);
     const sceneRef = useRef<AsteroidScene | null>(null);
-    const shieldAngleRef = useRef(-Math.PI / 2);
+    const shieldPositionRef = useRef(0.5);
     const activeControlModeRef = useRef<ControlMode>('mouse');
     const phaseRef = useRef<GamePhase>('menu');
     const mountedRef = useRef(true);
@@ -384,9 +376,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             Game_Result: gameResult,
             Object_Records: resultRecordsRef.current.map((item) => ({ ...item })),
         };
-        sceneRef.current?.threats.forEach((threat) => threat.sprite.destroy());
-        if (sceneRef.current)
-            sceneRef.current.threats = [];
+        ClearAsteroidScene(sceneRef.current);
         PlayGameEndSound(gameResult, jsPsychRef);
         jsPsychLifecycleRef.current?.finish(record as unknown as Record<string, unknown>);
         setResult(record);
@@ -410,7 +400,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             lastControlSource: activeControlModeRef.current,
         };
         resultRecordsRef.current = [];
-        shieldAngleRef.current = -Math.PI / 2;
+        shieldPositionRef.current = 0.5;
         setResult(null);
         setPhase('playing');
     }, [setPhase]);
@@ -473,7 +463,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     sceneRef,
                     metricsRef,
                     configRef,
-                    shieldAngleRef,
+                    shieldPositionRef,
                     resultRecordsRef,
                     onSuccess: () => PlaySuccessSound(jsPsychRef),
                     onFailure: () => PlayFailureSound(jsPsychRef),
@@ -492,7 +482,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             if (!currentApp || !scene)
                 return;
             ResizePixiAppToElement(currentApp, host);
-            UpdateSceneLayout(currentApp, scene, configRef.current.shieldSizePercent, shieldAngleRef.current);
+            UpdateSceneLayout(currentApp, scene, configRef.current.shieldSizePercent, shieldPositionRef.current);
         };
         const resizeObserver = host && typeof ResizeObserver !== 'undefined'
             ? new ResizeObserver(onResize)
@@ -522,8 +512,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             if (phaseRef.current !== 'playing' || activeControlModeRef.current !== 'mouse')
                 return;
             const rect = host.getBoundingClientRect();
-            const layout = GetShieldLayout(rect.width, rect.height, configRef.current.shieldSizePercent, shieldAngleRef.current);
-            shieldAngleRef.current = Math.atan2(event.clientY - rect.top - layout.shipY, event.clientX - rect.left - layout.shipX);
+            shieldPositionRef.current = Clamp((event.clientX - rect.left) / rect.width, 0, 1);
             metricsRef.current.lastControlSource = 'mouse';
         };
         host.addEventListener('pointerdown', updateFromPointer);
@@ -533,14 +522,13 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             host.removeEventListener('pointermove', updateFromPointer);
         };
     }, []);
-    const latestRows = result?.Object_Records ?? [];
     const rendererErrorNotice = rendererError && <p className="renderer-error" role="alert">{lang === 'en' ? 'The game could not load. Return and try again.' : '遊戲無法載入，請返回後重試。'}</p>;
     return (<div ref={fullscreenRootRef} className={`asteroid-shield-game asteroid-shield-phase-${phase}`}>
       <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true"/>
       <div ref={pixiHostRef} className="asteroid-shield-stage"/>
 
       {(phase === 'menu' || phase === 'rules') && <div className="training-panel" style={{ padding: 0 }} inert={phase === 'menu'} aria-hidden={phase === 'menu'}>
-        <AsteroidShieldTutorial title={labels.title} summaryItems={summaryItems} onStart={() => void startGame()} onBack={showConfiguration} ready={rendererReady} active={phase === 'rules'}/>
+        <AsteroidShieldTutorial title={labels.title} summaryItems={summaryItems} shieldSizePercent={shieldSizePercent} onStart={() => void startGame()} onBack={showConfiguration} ready={rendererReady} active={phase === 'rules'}/>
       </div>}
 
       {phase === 'menu' && <dialog ref={settingsDialogRef} className="game-settings-dialog" aria-labelledby="asteroid-settings-title" onCancel={event => { event.preventDefault(); onExit(); }}>
@@ -579,66 +567,28 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable asteroid-shield-results-container">
           <div className="experiment-results">
             <h1>{labels.resultTitle}</h1>
-            <div className="training-result-summary asteroid-shield-result-summary">
-              <span>
-                <small>{labels.user}</small>
-                <strong>{result.Participant_ID}</strong>
-              </span>
-              <span>
-                <small>{labels.statusScore}</small>
-                <strong>{result.Score}</strong>
-              </span>
-              <span>
-                <small>{labels.finalHp}</small>
-                <strong>{result.Final_HP}/{result.Starting_HP}</strong>
-              </span>
-              <span>
-                <small>{labels.objectsBlocked}</small>
-                <strong>{result.Objects_Blocked}/{result.Objects_Spawned}</strong>
-              </span>
-              <span>
-                <small>{labels.shipHits}</small>
-                <strong>{result.Ship_Hits}</strong>
-              </span>
-              <span>
-                <small>{labels.energyCollected}</small>
-                <strong>{result.Energy_Collected}</strong>
-              </span>
-            </div>
-
-            <p>{labels.duration}: {result.Total_Duration_Seconds} s · {lang === 'en' ? 'Spawned objects' : '生成物件數'}: {result.Objects_Spawned} · {lang === 'en' ? 'Final speed level' : '最終速度級別'}: {result.Final_Speed_Level}</p>
-            <p>{result.Game_Result === 'Victory' ? (lang === 'en' ? 'Completed the selected duration' : '完成設定時長') : (lang === 'en' ? 'Ship durability reached zero' : '飛船耐久歸零')}</p>
+            <p className="score-note">{lang === 'en' ? 'Descriptive statistics for this practice session.' : '呈現當次練習紀錄與描述統計。'}</p>
+            <section className="score-priority" aria-labelledby="score-priority-title">
+              <h2 id="score-priority-title">{lang === 'en' ? 'Key outcomes' : '重點指標'}</h2>
+              <dl className="score-key-grid">
+                <div><dt>{labels.statusScore}</dt><dd>{result.Score}</dd></div>
+                <div><dt>{labels.finalHp}</dt><dd>{result.Final_HP}<small> / {result.Starting_HP}</small></dd></div>
+                <div><dt>{labels.objectsBlocked}</dt><dd>{result.Objects_Blocked}<small> / {result.Objects_Spawned}</small></dd></div>
+              </dl>
+            </section>
+            <section className="score-context" aria-labelledby="score-context-title">
+              <h2 id="score-context-title">{lang === 'en' ? 'Record context' : '紀錄概況'}</h2>
+              <dl>
+                <div><dt>{labels.user}</dt><dd>{result.Participant_ID}</dd></div>
+                <div><dt>{labels.duration}</dt><dd>{result.Total_Duration_Seconds} s</dd></div>
+                <div><dt>{labels.shipHits}</dt><dd>{result.Ship_Hits}</dd></div>
+                <div><dt>{labels.energyCollected}</dt><dd>{result.Energy_Collected}</dd></div>
+                <div><dt>{lang === 'en' ? 'Spawned objects' : '生成物件數'}</dt><dd>{result.Objects_Spawned}</dd></div>
+                <div><dt>{lang === 'en' ? 'Final speed level' : '最終速度級別'}</dt><dd>{result.Final_Speed_Level}</dd></div>
+                <div><dt>{lang === 'en' ? 'Session outcome' : '活動結局'}</dt><dd>{result.Game_Result === 'Victory' ? (lang === 'en' ? 'Completed the selected duration' : '完成設定時長') : (lang === 'en' ? 'Ship durability reached zero' : '飛船耐久歸零')}</dd></div>
+              </dl>
+            </section>
             <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang}/>
-            <div className="results-scroll"><table className="results-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>{labels.objectType}</th>
-                  <th>{labels.outcome}</th>
-                  <th>{labels.responseTime}</th>
-                  <th>{labels.damage}</th>
-                  <th>{labels.finalHp}</th>
-                  <th>{lang === 'en' ? 'Speed level' : '速度級別'}</th>
-                  <th>{lang === 'en' ? 'Spawn time (s)' : '生成時間（秒）'}</th>
-                  <th>{labels.statusScore}</th>
-                  <th>{labels.controlMode}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {latestRows.map((item) => (<tr key={`${item.Object_Number}-${item.Outcome}`}>
-                    <td>{item.Object_Number}</td>
-                    <td>{labels[threatCopyKeys[item.Type]]}</td>
-                    <td>{labels[outcomeCopyKeys[item.Outcome]]}</td>
-                    <td>{item.Response_Time_Seconds === null ? '-' : `${item.Response_Time_Seconds}s`}</td>
-                    <td>{item.Damage}</td>
-                    <td>{item.HP_After}</td>
-                    <td>{item.Speed_Level}</td>
-                    <td>{item.Spawn_Time_Seconds}</td>
-                    <td>{item.Score_After}</td>
-                    <td>{labels.mouseControl}</td>
-                  </tr>))}
-              </tbody>
-            </table></div>
 
             <p role="status">{!IsHubGame() ? (lang === 'en' ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄') : saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'error' ? (lang === 'en' ? 'Save failed' : '保存失敗') : (lang === 'en' ? 'Saving…' : '保存中…')}</p>
             {IsHubGame() && saveState === 'error' && <button onClick={RetryGameSave}>{lang === 'en' ? 'Retry save' : '重試保存'}</button>}
@@ -703,18 +653,20 @@ function ResetAsteroidScene(app: Application, sceneRef: {
         textures,
         threats: [],
     };
-    UpdateSceneLayout(app, sceneRef.current, defaultShieldSizePercent, -Math.PI / 2);
+    UpdateSceneLayout(app, sceneRef.current, defaultShieldSizePercent, 0.5);
 }
 function ClearAsteroidScene(scene: AsteroidScene | null): void {
     if (!scene)
         return;
     scene.threats.forEach((threat) => {
-        threat.sprite.removeFromParent();
-        threat.sprite.destroy();
+        for (const sprite of [threat.sprite, ...threat.trail]) {
+            sprite.removeFromParent();
+            sprite.destroy();
+        }
     });
     scene.threats = [];
 }
-function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shieldAngleRef, resultRecordsRef, onSuccess, onFailure, onComplete, }: {
+function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shieldPositionRef, resultRecordsRef, onSuccess, onFailure, onComplete, }: {
     app: Application;
     ticker: Ticker;
     sceneRef: {
@@ -732,7 +684,7 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
             controlMode: ControlMode;
         };
     };
-    shieldAngleRef: {
+    shieldPositionRef: {
         current: number;
     };
     resultRecordsRef: {
@@ -750,36 +702,37 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
     const dt = Math.min(ticker.deltaMS / 1000, 0.05);
     metrics.elapsedMs += dt * 1000;
     metrics.spawnTimerSec += dt;
-    const layout = UpdateSceneLayout(app, scene, config.shieldSizePercent, shieldAngleRef.current);
+    const layout = UpdateSceneLayout(app, scene, config.shieldSizePercent, shieldPositionRef.current);
     scene.background.tilePosition.y += dt * (10 + metrics.speedLevel * 3);
     const difficulty = difficulties.find((item) => item.id === config.difficulty) ?? difficulties[0];
     const activeInterval = Math.max(0.46, difficulty.spawnIntervalSec - (metrics.speedLevel - 1) * 0.045);
     if (metrics.spawnTimerSec >= activeInterval && scene.threats.length < difficulty.maxThreats) {
         metrics.spawnTimerSec = 0;
-        SpawnThreat(scene, layout, app.screen.width, app.screen.height, difficulty, metrics);
+        SpawnThreat(scene, app.screen.width, app.screen.height, difficulty, metrics);
     }
     for (const threat of [...scene.threats]) {
+        const previousY = threat.y;
         threat.x += threat.vx * dt;
         threat.y += threat.vy * dt;
-        if (threat.x < threat.radius) {
-            threat.vx = Math.abs(threat.vx);
-            threat.x = threat.radius;
-        }
-        else if (threat.x > app.screen.width - threat.radius) {
-            threat.vx = -Math.abs(threat.vx);
-            threat.x = app.screen.width - threat.radius;
-        }
         threat.sprite.x = threat.x;
         threat.sprite.y = threat.y;
-        if (threat.kind === 'normal') {
-            threat.sprite.rotation = Math.atan2(threat.vx, threat.vy);
+        const animationPhase = (metrics.elapsedMs - threat.spawnedAtMs) / 1000 * 8 + threat.id;
+        const pulse = Math.sin(animationPhase);
+        threat.sprite.width = threat.size * (1 + pulse * 0.08);
+        threat.sprite.height = threat.size * (1 - pulse * 0.04);
+        threat.sprite.alpha = 0.9 + pulse * 0.1;
+        threat.sprite.rotation += threat.rotationSpeed * dt;
+        for (const [index, sprite] of threat.trail.entries()) {
+            sprite.x = threat.x;
+            sprite.y = threat.y - threat.vy * (index + 1) * 0.045;
+            sprite.width = threat.sprite.width * (1 - (index + 1) * 0.12);
+            sprite.height = threat.sprite.height;
+            sprite.rotation = threat.sprite.rotation;
+            sprite.alpha = (0.22 - index * 0.06) * (0.8 + pulse * 0.2);
         }
-        else {
-            threat.sprite.rotation += threat.rotationSpeed * dt;
-        }
-        const shieldDistance = Math.hypot(threat.x - layout.shieldX, threat.y - layout.shieldY);
-        const shipDistance = Math.hypot(threat.x - layout.shipX, threat.y - layout.shipY);
-        if (threat.kind === 'energy' && shieldDistance <= layout.shieldRadius + threat.radius) {
+        const touchesShield = IntersectsFallingThreat(threat, previousY, layout.shieldX, layout.shieldY, layout.shieldWidth, layout.shieldHeight);
+        const touchesShip = IntersectsFallingThreat(threat, previousY, layout.shipX, layout.shipY, layout.shipWidth, layout.shipHeight);
+        if (threat.kind === 'energy' && touchesShield) {
             metrics.collected += 1;
             metrics.score += threat.score;
             metrics.hp = Math.min(metrics.maxHp, metrics.hp + 2);
@@ -788,7 +741,7 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
             onSuccess();
             continue;
         }
-        if (threat.kind !== 'energy' && shieldDistance <= layout.shieldRadius + threat.radius * 0.82) {
+        if (threat.kind !== 'energy' && touchesShield) {
             metrics.blocked += 1;
             metrics.score += threat.score;
             metrics.speedLevel = 1 + Math.floor(metrics.blocked / speedLevelStep);
@@ -797,7 +750,7 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
             onSuccess();
             continue;
         }
-        if (shipDistance <= layout.shipRadius + threat.radius * 0.7) {
+        if (touchesShip) {
             const damage = threat.kind === 'energy' ? 0 : threat.damage;
             if (threat.kind === 'energy') {
                 metrics.collected += 1;
@@ -828,57 +781,49 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
         onComplete('Victory');
     }
 }
-function UpdateSceneLayout(app: Application, scene: AsteroidScene, shieldSizePercent: number, shieldAngle: number): ShieldLayout {
-    const width = app.screen.width;
-    const height = app.screen.height;
-    scene.background.width = width;
-    scene.background.height = height;
-    const minSide = Math.min(width, height);
-    const shipWidth = Clamp(minSide * 0.28, 160, 320);
-    scene.ship.width = shipWidth;
-    scene.ship.height = shipWidth * (scene.ship.texture.height / scene.ship.texture.width);
-    scene.ship.x = width * 0.5;
-    scene.ship.y = Clamp(height * 0.8, height * 0.65, height - scene.ship.height * 0.55);
+function UpdateSceneLayout(app: Application, scene: AsteroidScene, shieldSizePercent: number, shieldPosition: number): ShieldLayout {
+    const layout = GetShieldLayout(app.screen.width, app.screen.height, shieldSizePercent, shieldPosition);
+    scene.background.width = app.screen.width;
+    scene.background.height = app.screen.height;
+    scene.ship.width = layout.shipWidth;
+    scene.ship.height = layout.shipHeight;
+    scene.ship.x = layout.shipX;
+    scene.ship.y = layout.shipY;
     scene.ship.rotation = 0;
-    const shieldDiameter = Clamp(minSide * 0.24 * (shieldSizePercent / 100), 180, 340);
-    scene.shield.width = shieldDiameter;
-    scene.shield.height = shieldDiameter * (scene.shield.texture.height / scene.shield.texture.width);
+    scene.shield.width = layout.shieldWidth;
+    scene.shield.height = layout.shieldHeight;
     scene.shield.alpha = 0.82;
-    const shipRadius = Math.max(scene.ship.width * 0.32, scene.ship.height * 0.55);
-    const shieldRadius = Math.max(scene.shield.width, scene.shield.height) * 0.42;
-    const shieldOffset = shipRadius + shieldRadius * 0.36;
-    scene.shield.x = scene.ship.x + Math.cos(shieldAngle) * shieldOffset;
-    scene.shield.y = scene.ship.y + Math.sin(shieldAngle) * shieldOffset;
-    scene.shield.rotation = shieldAngle + Math.PI / 2;
-    return {
-        shipX: scene.ship.x,
-        shipY: scene.ship.y,
-        shipRadius,
-        shieldX: scene.shield.x,
-        shieldY: scene.shield.y,
-        shieldRadius,
-    };
+    scene.shield.x = layout.shieldX;
+    scene.shield.y = layout.shieldY;
+    scene.shield.rotation = 0;
+    return layout;
 }
-function GetShieldLayout(width: number, height: number, shieldSizePercent: number, shieldAngle: number): ShieldLayout {
+function GetShieldLayout(width: number, height: number, shieldSizePercent: number, shieldPosition: number): ShieldLayout {
     const minSide = Math.min(width, height);
-    const shipWidth = Clamp(minSide * 0.28, 160, 320);
-    const shipHeight = shipWidth * (164 / 512);
+    const shipWidth = width * 0.82;
+    const shipHeight = Math.min(shipWidth * (164 / 512), height * 0.22);
     const shipX = width * 0.5;
-    const shipY = Clamp(height * 0.8, height * 0.65, height - shipHeight * 0.55);
-    const shieldDiameter = Clamp(minSide * 0.24 * (shieldSizePercent / 100), 180, 340);
-    const shieldRadius = shieldDiameter * 0.42;
-    const shipRadius = Math.max(shipWidth * 0.32, shipHeight * 0.55);
-    const shieldOffset = shipRadius + shieldRadius * 0.36;
+    const shipY = height - Math.min(20, height * 0.03) - shipHeight / 2;
+    const shieldWidth = Math.min(width * 0.6, Math.max(100, minSide * 0.4 * (shieldSizePercent / 100)));
+    const shieldHeight = shieldWidth * 0.28;
     return {
         shipX,
         shipY,
-        shipRadius,
-        shieldX: shipX + Math.cos(shieldAngle) * shieldOffset,
-        shieldY: shipY + Math.sin(shieldAngle) * shieldOffset,
-        shieldRadius,
+        shipWidth,
+        shipHeight,
+        shieldX: Clamp(width * shieldPosition, shieldWidth / 2, width - shieldWidth / 2),
+        shieldY: shipY - shipHeight / 2 - shieldHeight / 2 - Math.max(12, minSide * 0.025),
+        shieldWidth,
+        shieldHeight,
     };
 }
-function SpawnThreat(scene: AsteroidScene, layout: ShieldLayout, width: number, height: number, difficulty: DifficultyDefinition, metrics: SessionMetrics): void {
+function IntersectsFallingThreat(threat: Threat, previousY: number, x: number, y: number, width: number, height: number): boolean {
+    // Test the swept vertical path so fast objects cannot pass through the defense between frames.
+    return Math.abs(threat.x - x) <= width / 2 + threat.radius
+        && previousY - threat.radius <= y + height / 2
+        && threat.y + threat.radius >= y - height / 2;
+}
+function SpawnThreat(scene: AsteroidScene, width: number, height: number, difficulty: DifficultyDefinition, metrics: SessionMetrics): void {
     const kind = ChooseThreatKind(difficulty);
     const texture = GetThreatTexture(scene, kind);
     const size = GetThreatSize(kind, width, height);
@@ -886,32 +831,28 @@ function SpawnThreat(scene: AsteroidScene, layout: ShieldLayout, width: number, 
     sprite.tint = GetThreatTint(kind);
     sprite.alpha = 1;
     const spawnPoint = RandomSpawnPoint(width, height, size * 0.5);
-    const aimX = layout.shipX + RandomBetween(-width * 0.28, width * 0.28);
-    const aimY = layout.shipY + RandomBetween(-layout.shipRadius * 0.2, layout.shipRadius * 0.2);
-    const direction = NormalizeVector(aimX - spawnPoint.x, aimY - spawnPoint.y);
-    const speed = difficulty.baseSpeed + (metrics.speedLevel - 1) * 18 + RandomBetween(-12, 18);
-    const tangent = RandomBetween(-0.15, 0.15);
+    const speed = difficulty.baseSpeed * RandomBetween(0.55, 1.8) + (metrics.speedLevel - 1) * 18;
+    const trail = Array.from({ length: 3 }, () => new Sprite({ texture, anchor: 0.5, alpha: 0 }));
     const threat: Threat = {
         id: metrics.nextId++,
         kind,
         sprite,
+        trail,
+        size,
         x: spawnPoint.x,
         y: spawnPoint.y,
-        vx: (direction.x - direction.y * tangent) * speed,
-        vy: Math.max(speed * 0.6, (direction.y + direction.x * tangent) * speed),
+        vx: 0,
+        vy: speed,
         radius: size * 0.42,
         damage: kind === 'normal' ? 1 : kind === 'heavy' ? 3 : kind === 'lethal' ? metrics.maxHp : 0,
         score: kind === 'normal' ? 10 : kind === 'heavy' ? 25 : kind === 'lethal' ? 55 : 8,
         spawnedAtMs: metrics.elapsedMs,
-        rotationSpeed: kind === 'normal' ? 0 : RandomBetween(-1.5, 1.5),
+        rotationSpeed: kind === 'normal' ? 0 : RandomBetween(0.7, 1.8),
         resultIndex: metrics.spawned,
     };
     sprite.x = threat.x;
     sprite.y = threat.y;
-    if (kind === 'normal') {
-        sprite.rotation = Math.atan2(threat.vx, threat.vy);
-    }
-    scene.objectsLayer.addChild(sprite);
+    scene.objectsLayer.addChild(...trail, sprite);
     scene.threats.push(threat);
     metrics.spawned += 1;
 }
@@ -977,15 +918,10 @@ function RecordThreatOutcome(threat: Threat, outcome: ThreatOutcome, metrics: Se
 }
 function RemoveThreat(scene: AsteroidScene, threat: Threat): void {
     scene.threats = scene.threats.filter((item) => item.id !== threat.id);
-    threat.sprite.removeFromParent();
-    threat.sprite.destroy();
-}
-function NormalizeVector(x: number, y: number): {
-    x: number;
-    y: number;
-} {
-    const length = Math.max(1e-6, Math.hypot(x, y));
-    return { x: x / length, y: y / length };
+    for (const sprite of [threat.sprite, ...threat.trail]) {
+        sprite.removeFromParent();
+        sprite.destroy();
+    }
 }
 function RandomBetween(min: number, max: number): number {
     return min + Math.random() * (max - min);

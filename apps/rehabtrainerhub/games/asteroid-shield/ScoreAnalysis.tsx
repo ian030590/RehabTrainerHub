@@ -1,13 +1,27 @@
 import { useState } from 'react';
 import { CalculateScoreStatistics } from './scoreStatistics';
 
-const metrics = [
+interface ScoreColumn {
+  key: string;
+  zh: string;
+  en: string;
+  unit?: string;
+  labels?: { zh: string[]; en: string[] };
+}
+
+const columns: ScoreColumn[] = [
   { key: 'object', zh: '物件序號', en: 'Object number' },
-  { key: 'elapsed', zh: '生成至物件結局時間（秒）', en: 'Spawn to outcome time (s)' },
+  { key: 'type', zh: '物件類型', en: 'Object type', labels: { zh: ['一般隕石', '重型隕石', '致命隕石', '能量石'], en: ['Normal asteroid', 'Heavy asteroid', 'Lethal asteroid', 'Energy rock'] } },
+  { key: 'outcome', zh: '物件結局', en: 'Outcome', labels: { zh: ['已攔截', '撞擊飛船', '收集能量', '未接觸'], en: ['Shielded', 'Ship hit', 'Collected', 'Missed'] } },
+  { key: 'elapsed', zh: '生成至物件結局時間', en: 'Spawn to outcome time', unit: 's' },
   { key: 'damage', zh: '造成傷害', en: 'Damage' },
   { key: 'hp', zh: '結局後耐久', en: 'HP after outcome' },
   { key: 'speedLevel', zh: '物件速度級別', en: 'Speed level' },
-] as const;
+  { key: 'spawnedAt', zh: '生成時間', en: 'Spawn time', unit: 's' },
+  { key: 'score', zh: '累積分數', en: 'Cumulative score' },
+  { key: 'controlSource', zh: '操作方式', en: 'Control mode', labels: { zh: ['滑鼠／觸控'], en: ['Mouse / touch'] } },
+];
+const metrics = columns.filter(column => !column.labels && column.key !== 'spawnedAt');
 
 export function ScoreAnalysis({ rounds, language }: {
   rounds: Record<string, number | null>[];
@@ -15,11 +29,14 @@ export function ScoreAnalysis({ rounds, language }: {
 }) {
   const [metricKey, setMetricKey] = useState('elapsed');
   const [page, setPage] = useState(0);
+  const rows = rounds;
   const metric = metrics.find(item => item.key === metricKey)!;
-  const statistics = CalculateScoreStatistics(rounds.map(row => row[metric.key]));
-  const format = (value: number | null) => value === null ? '—' : new Intl.NumberFormat(language === 'en' ? 'en' : 'zh-TW', { maximumFractionDigits: 2 }).format(value);
-  const pageCount = Math.max(1, Math.ceil(rounds.length / 50));
-  const pageRows = rounds.slice(page * 50, (page + 1) * 50);
+  const statistics = CalculateScoreStatistics(rows.map(row => row[metric.key]));
+  const en = language === 'en';
+  const numberFormat = new Intl.NumberFormat(en ? 'en' : 'zh-TW', { maximumFractionDigits: 2 });
+  const format = (value: number | null) => value === null ? '—' : numberFormat.format(value);
+  const pageCount = Math.max(1, Math.ceil(rows.length / 50));
+  const pageRows = rows.slice(page * 50, (page + 1) * 50);
   const minimum = Math.min(0, statistics.minimum ?? 0);
   const maximum = Math.max(minimum + 1, statistics.maximum ?? 1);
   const y = (value: number) => 184 - (value - minimum) / (maximum - minimum) * 154;
@@ -32,39 +49,64 @@ export function ScoreAnalysis({ rounds, language }: {
     continueLine = true;
     return command;
   }).join(' ');
-  const en = language === 'en';
+  const detailsTitle = en ? 'Round details' : '逐回合細節';
   return <section className="score-analysis" aria-labelledby="score-analysis-title">
-    <h2 id="score-analysis-title">{en ? 'Selected metric analysis' : '當次指標分析'}</h2>
-    <p>{en ? 'These observations describe this session, not a diagnosis or a comparison between people.' : '這些數值描述當次活動，不代表診斷或不同人之間的比較。'}</p>
-    <label>{en ? 'Metric' : '分析指標'}
-      <select value={metricKey} onChange={event => { setMetricKey(event.target.value); setPage(0); }}>
-        {metrics.map(item => <option key={item.key} value={item.key}>{item[language]}</option>)}
-      </select>
-    </label>
+    <header className="score-section-header">
+      <div><h3 id="score-analysis-title">{en ? 'Selected metric analysis' : '選定指標分析'}</h3>
+        <p>{metric[language]}{metric.unit ? ` · ${metric.unit}` : ''}</p></div>
+      <label>{en ? 'Metric' : '分析指標'}
+        <select value={metricKey} onChange={event => { setMetricKey(event.target.value); setPage(0); }}>
+          {metrics.map(item => <option key={item.key} value={item.key}>{item[language]} {item.unit}</option>)}
+        </select>
+      </label>
+    </header>
     <dl className="score-statistics">
       <div><dt>{en ? 'Observations' : '有效筆數'}</dt><dd>{statistics.observations}</dd></div>
-      <div><dt>{en ? 'Mean' : '平均'}</dt><dd>{format(statistics.mean)}</dd></div>
-      <div><dt>{en ? 'Median' : '中位數'}</dt><dd>{format(statistics.median)}</dd></div>
-      <div><dt>{en ? 'Sample standard deviation' : '樣本標準差'}</dt><dd>{format(statistics.sampleSd)}</dd></div>
-      <div><dt>{en ? 'Range' : '範圍'}</dt><dd>{format(statistics.minimum)}–{format(statistics.maximum)}</dd></div>
+      <div><dt>{en ? 'Mean' : '平均數'}</dt><dd>{format(statistics.mean)} {metric.unit}</dd></div>
+      <div><dt>{en ? 'Median' : '中位數'}</dt><dd>{format(statistics.median)} {metric.unit}</dd></div>
+      <div><dt>{en ? 'Sample standard deviation' : '樣本標準差'}</dt><dd>{format(statistics.sampleSd)} {metric.unit}</dd></div>
+      <div><dt>{en ? 'Range' : '範圍'}</dt><dd>{format(statistics.minimum)}–{format(statistics.maximum)} {metric.unit}</dd></div>
     </dl>
-    {statistics.observations ? <svg viewBox="0 0 580 220" role="img" aria-label={`${en ? 'Trend' : '趨勢'} · ${metric[language]}`}>
-      <path className="chart-axis" d="M56 30V184H536" />
-      <text x="48" y="35" textAnchor="end">{format(maximum)}</text>
-      <text x="48" y="184" textAnchor="end">{format(minimum)}</text>
-      <text x="56" y="210">{page * 50 + 1}</text>
-      <text x="536" y="210" textAnchor="end">{page * 50 + pageRows.length}</text>
-      {statistics.mean !== null && <line className="chart-mean" x1="56" x2="536" y1={y(statistics.mean)} y2={y(statistics.mean)}><title>{en ? 'Mean' : '平均'}: {format(statistics.mean)}</title></line>}
-      <path className="chart-trend" d={line} />
-      {pageRows.map((row, index) => row[metric.key] === null ? null : <circle key={index} tabIndex={0} cx={x(index)} cy={y(row[metric.key]!)} r="3.5">
-        <title>{en ? 'Object' : '物件'} {page * 50 + index + 1} · {metric[language]}: {format(row[metric.key])}</title>
-      </circle>)}
-    </svg> : <p>{en ? 'No numeric values are available for this metric.' : '此指標沒有可用數值。'}</p>}
-    {pageCount > 1 && <nav aria-label={en ? 'Result chart pages' : '成果趨勢分頁'}>
+    <dl className="score-quality">
+      <div><dt>{en ? 'Recorded rounds' : '紀錄回合'}</dt><dd>{rows.length}</dd></div>
+      <div><dt>{en ? 'Missing values' : '缺漏值'}</dt><dd>{rows.length - statistics.observations}</dd></div>
+      <div><dt>{en ? 'Completeness' : '完整率'}</dt><dd>{format(rows.length ? statistics.observations / rows.length * 100 : null)}%</dd></div>
+    </dl>
+    <div className="score-chart">
+      <p>{en ? 'Round-by-round trend' : '逐回合趨勢'} · {en ? 'Page' : '頁次'} {page + 1} / {pageCount}</p>
+      {statistics.observations ? <svg viewBox="0 0 580 220" role="img" aria-label={`${en ? 'Trend' : '趨勢'} · ${metric[language]}`}>
+        <path className="chart-axis" d="M56 30V184H536" />
+        <text x="48" y="35" textAnchor="end">{format(maximum)}</text>
+        <text x="48" y="184" textAnchor="end">{format(minimum)}</text>
+        <text x="56" y="210">{page * 50 + 1}</text>
+        <text x="536" y="210" textAnchor="end">{page * 50 + pageRows.length}</text>
+        {statistics.mean !== null && <line className="chart-mean" x1="56" x2="536" y1={y(statistics.mean)} y2={y(statistics.mean)}>
+          <title>{`${en ? 'Mean reference' : '平均值參考線'}: ${format(statistics.mean)}`}</title>
+        </line>}
+        <path className="chart-trend" d={line} />
+        {pageRows.map((row, index) => row[metric.key] === null ? null : <circle key={index} tabIndex={0} cx={x(index)} cy={y(row[metric.key]!)} r="3.5">
+          <title>{`${en ? 'Round' : '回合'} ${page * 50 + index + 1} · ${metric[language]}: ${format(row[metric.key])} ${metric.unit ?? ''}`}</title>
+        </circle>)}
+      </svg> : <p>{en ? 'No numeric values are available for this metric.' : '此指標沒有可用數值。'}</p>}
+      <p className="score-chart-legend">{en ? 'Dashed line: session mean. Focus a point to read its value.' : '虛線：當次平均值。可聚焦資料點讀取數值。'}</p>
+    </div>
+    <header className="score-section-header">
+      <div><h3 id="score-details-title">{detailsTitle}</h3><p>{en ? 'Each object outcome is one round, ordered by outcome time. Score is cumulative at that outcome.' : '每個物件結局記為一回合，依結局發生順序排列；分數為當時累積分數。'}</p></div>
+      <span className="score-row-range">{pageRows.length ? page * 50 + 1 : 0}–{page * 50 + pageRows.length} / {rows.length}</span>
+    </header>
+    <div className="results-scroll" role="region" aria-label={detailsTitle} tabIndex={0}>
+      <table className="results-table" aria-label={detailsTitle}>
+        <thead><tr><th scope="col">{en ? 'Round' : '回合'}</th>{columns.map(column => <th scope="col" key={column.key}>{column[language]} {column.unit}</th>)}</tr></thead>
+        <tbody>{pageRows.length ? pageRows.map((row, index) => <tr key={page * 50 + index}>
+          <td>{page * 50 + index + 1}</td>
+          {columns.map(column => <td key={column.key}>{row[column.key] === null ? '—' : column.labels?.[language][row[column.key]!] ?? format(row[column.key])}</td>)}
+        </tr>) : <tr><td colSpan={columns.length + 1}>{en ? 'No round records were provided.' : '此遊戲未提供逐回合紀錄。'}</td></tr>}</tbody>
+      </table>
+    </div>
+    {pageCount > 1 && <nav className="score-pagination" aria-label={en ? 'Result pages' : '成績分頁'}>
       <button type="button" disabled={page === 0} onClick={() => setPage(page - 1)}>{en ? 'Previous' : '上一頁'}</button>
-      <span>{page + 1} / {pageCount}</span>
+      <span>{en ? 'Page' : '頁次'} {page + 1} / {pageCount}</span>
       <button type="button" disabled={page + 1 === pageCount} onClick={() => setPage(page + 1)}>{en ? 'Next' : '下一頁'}</button>
     </nav>}
-    <p>{en ? 'Missing values' : '缺失筆數'}: {rounds.length - statistics.observations} · {en ? 'Completeness' : '完整率'}: {format(rounds.length ? statistics.observations / rounds.length * 100 : null)}%</p>
   </section>;
 }

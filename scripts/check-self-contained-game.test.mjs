@@ -5,6 +5,7 @@ import { readFile, readdir, access } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
+import './check-r2-game-results.test.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const gameRoot = resolve(root, 'apps/rehabtrainerhub/games/drawing-defense');
@@ -36,7 +37,8 @@ test('drawing defense owns its configuration and results without Hub dependencie
     assert.match(source, new RegExp(`value=\\{${label}(?: \\?\\? 0)?\\}`));
   }
   assert.match(source, /SendGameResult/);
-  assert.match(source, /results-table/);
+  assert.match(source, /<ScoreAnalysis rounds=\{BuildGameScore\(result\)\.rounds\}/);
+  assert.match(await readFile(resolve(gameRoot, 'ScoreAnalysis.tsx'), 'utf8'), /results-table/);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies['@rehab-trainer/game-drawing-defense'], undefined);
 });

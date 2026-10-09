@@ -1,0 +1,329 @@
+{
+  "gameId": "asteroid-shield",
+  "version": "2.0.3",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.3/package/index.html",
+  "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55",
+  "verifiedAt": "2026-10-09T07:17:13.083Z",
+  "status": "published-and-verified",
+  "prefix": "releases/asteroid-shield/2.0.3/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.3/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/",
+  "fileCount": 12,
+  "totalBytes": 1221804,
+  "files": [
+    {
+      "path": "assets/asteroid-blue-CY-_A_BJ.png",
+      "size": 14034,
+      "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-dark-CW7iRJ5o.png",
+      "size": 11856,
+      "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-green-1XKYeWRA.png",
+      "size": 9693,
+      "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/background-NBhu4YAc.png",
+      "size": 83041,
+      "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/energy-rock-CT8hMT01.png",
+      "size": 1792,
+      "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-C4kfz7z5.js",
+      "size": 949588,
+      "sha256": "b1087a7f0bfcd257ebe16d9e9e25db8ecda8e6a77272750cce21559797c1c949",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/shield-CxquxbMC.png",
+      "size": 35318,
+      "sha256": "ded93bcfb8e383d478e1297ba87235738f55b9b9e631f846506791c26ebab40b",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/ship-CrsWCvcK.png",
+      "size": 78990,
+      "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/style-DE0LB9xC.css",
+      "size": 15774,
+      "sha256": "dff76d92a79e7eeb9e1f7e2934f1124543e44140301f5975d84093a316578342",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 471,
+      "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "abd788f43c65b17971e3937a7d996075f812ad0fa2472b8690e83cf747c87646",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 20836,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "approvedOn": "2026-10-09",
+    "source": "Repository owner approval in this Codex conversation",
+    "message": "核准並且將這個成績結算頁面的要求寫在遷移計畫中",
+    "scope": "Exact versions and contentSha256 values presented before approval",
+    "releases": [
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.4",
+        "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.3",
+        "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.1",
+        "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4"
+      }
+    ],
+    "version": "2.0.3",
+    "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55"
+  },
+  "changes": [
+    "Game-owned primary statistics and record context",
+    "Selectable round charts, mean reference, descriptive statistics and completeness",
+    "Complete round details, synchronized 50-row chart/table pages and distinct aggregates",
+    "Local responsive results styles, Traditional Chinese and English"
+  ],
+  "localValidation": {
+    "testFirst": {
+      "failed": 11,
+      "reason": "Missing drawing/gesture result analysis and score projection; missing asteroid synchronized pages, details and score metric",
+      "passedAfterImplementation": 11
+    },
+    "gates": [
+      "npm run test:game-architecture (53 tests and all game TypeScript checks)",
+      "npm run test:entrypoints",
+      "npm run test:naming",
+      "npm run build:hub",
+      "npm --prefix apps/rehabtrainerhub/games/asteroid-shield run build",
+      "node scripts/publish-official-game.mjs asteroid-shield --dry-run"
+    ],
+    "documentation": "docs/r2-game-results-ui.md"
+  },
+  "productionVerification": {
+    "gameId": "asteroid-shield",
+    "version": "2.0.3",
+    "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55",
+    "pwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.3/",
+    "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/",
+    "publicCatalog": {
+      "url": "https://trainerhub.cc/api/games",
+      "status": 200,
+      "matchingGames": [
+        {
+          "id": "asteroid-shield",
+          "slug": "asteroid-shield",
+          "title": "小行星護盾防衛",
+          "summary": "移動護盾保護飛船，練習手部定位與上肢控制。",
+          "trainer": "motor",
+          "category": "upper-limb",
+          "developerName": "居家訓練網",
+          "updatedAt": "2026-10-09T07:16:10.198Z",
+          "copy": {
+            "zh-TW": {
+              "title": "小行星護盾防衛",
+              "description": "移動護盾保護飛船，練習手部定位與上肢控制。"
+            },
+            "en": {
+              "title": "Asteroid Shield Defense",
+              "description": "Move a shield to protect the ship and practise hand positioning and upper-limb control."
+            }
+          },
+          "previewUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.3/package/preview.webp",
+          "release": {
+            "id": "asteroid-shield@2.0.3",
+            "version": "2.0.3",
+            "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55",
+            "capabilities": [
+              "audio",
+              "fullscreen",
+              "pointer",
+              "touch"
+            ],
+            "approvedAt": "2026-10-09T07:16:10.198Z",
+            "presentation": "game",
+            "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.3/",
+            "installUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/"
+          }
+        }
+      ]
+    },
+    "stableEntry": {
+      "status": 302,
+      "noStore": true,
+      "location": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.3/"
+    },
+    "pwa": {
+      "launcherStatus": 200,
+      "sandbox": "allow-scripts",
+      "manifestStatus": 200,
+      "scope": "/games/asteroid-shield/2.0.3/",
+      "serviceWorkerStatus": 200
+    },
+    "hubEntry": {
+      "status": 200,
+      "stablePwaLink": true,
+      "noGameBundle": true
+    },
+    "hubSubAssets": [
+      {
+        "path": "settings.json",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "score.json",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "sw.js",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "manifest.webmanifest",
+        "status": 410,
+        "noStore": true
+      }
+    ],
+    "versionlessSession": {
+      "status": 201,
+      "version": "2.0.3",
+      "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55",
+      "noStore": true,
+      "tokenOmitted": true,
+      "recordNotSubmitted": true
+    },
+    "officialCatalog": {
+      "schemaVersion": 1,
+      "gameId": "asteroid-shield",
+      "currentVersion": "2.0.3",
+      "releases": {
+        "2.0.0": {
+          "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e"
+        },
+        "2.0.1": {
+          "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3"
+        },
+        "2.0.2": {
+          "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3"
+        },
+        "2.0.3": {
+          "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55"
+        }
+      }
+    },
+    "checkedAt": "2026-10-09T07:18:35.063Z",
+    "allPublishedFileHashesAndContentTypesVerified": true,
+    "allPublishedFilesStrictCspVerified": true,
+    "productionTrainingRecordsCreated": false
+  },
+  "productionBrowser": [
+    {
+      "mode": "remote-lobby",
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --remote --lobby",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:18:58.225Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "hub-desktop",
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --production-hub --lobby",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:19:33.817Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "hub-mobile",
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --production-hub --lobby --mobile",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:20:05.685Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "standalone",
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --remote --standalone",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:20:37.736Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "hub-english",
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --production-hub --lobby --english",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:21:22.496Z",
+      "productionTrainingRecordsCreated": false
+    }
+  ],
+  "screenshots": [
+    "docs/migrations/r2-game-results-ui/production/asteroid-shield/desktop-results.png",
+    "docs/migrations/r2-game-results-ui/production/asteroid-shield/desktop-results-analysis.png",
+    "docs/migrations/r2-game-results-ui/production/asteroid-shield/desktop-results-details.png",
+    "docs/migrations/r2-game-results-ui/production/asteroid-shield/mobile-results.png",
+    "docs/migrations/r2-game-results-ui/production/asteroid-shield/mobile-results-analysis.png",
+    "docs/migrations/r2-game-results-ui/production/asteroid-shield/mobile-results-details.png"
+  ],
+  "retainedVersionsVerified": [
+    "2.0.2",
+    "2.0.3"
+  ],
+  "existingPagesDeployments": {
+    "rehabtrainerhub": {
+      "id": "34248648-4000-424a-9a5e-1952624bc74f",
+      "url": "https://34248648.rehabtrainerhub.pages.dev",
+      "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74"
+    },
+    "trainerhub-user-games": {
+      "id": "cd01ab30-ef10-406f-98a8-0a8d01f31dc8",
+      "url": "https://cd01ab30.trainerhub-user-games.pages.dev",
+      "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74"
+    }
+  },
+  "pagesRequiredForGameActivation": false,
+  "pagesRedeployedForThisRelease": false,
+  "rollback": {
+    "version": "2.0.2",
+    "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3",
+    "allManifestAndFileHashesVerified": true,
+    "checkedAt": "2026-10-09T07:18:58.081Z",
+    "command": "node scripts/publish-official-game.mjs asteroid-shield --activate-version 2.0.2",
+    "activationPerformed": false
+  },
+  "limitations": [
+    "Brave desktop and mobile touch emulation; physical devices, Safari/iOS and long offline use were not validated",
+    "Tablet viewport was not separately validated for this release; later migrations must provide that evidence"
+  ]
+}

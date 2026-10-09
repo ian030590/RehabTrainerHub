@@ -9,6 +9,8 @@ import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
 import { Clamp,FormatTestDate } from './gameUtils';
 import { GestureBattlerTutorial } from './rules/GestureBattlerTutorial';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
+import { BuildGameScore } from './score';
+import { ScoreAnalysis } from './ScoreAnalysis';
 type GestureId = 1 | 2 | 3 | 4 | 5;
 type TargetMode = 'free' | 'directed';
 type GamePhase = 'menu' | 'rules' | 'initializing' | 'calibration' | 'combat' | 'results';
@@ -295,17 +297,10 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         setPhase('results');
         stopVision();
         setSaveState(IsHubGame() ? 'saving' : 'standalone');
+        const score = BuildGameScore(session);
         SendGameResult({ enemyMaxHp: config.enemyMaxHp, holdDurationSec: config.holdDuration,
             strictnessPercent: Math.round(config.strictnessThreshold * 100), targetMode: config.targetMode },
-            { durationSeconds: session.Total_Duration_Seconds, successfulCasts: session.Successful_Casts,
-                interruptedHolds: session.Interrupted_Holds, enemyMaxHp: session.Enemy_Max_HP,
-                holdDurationSeconds: session.Hold_Duration_Seconds, strictnessThreshold: session.Strictness_Threshold },
-            [ ...session.Gesture_Stats.map(stat => ({ kind: 0, gesture: stat.Gesture, attempts: stat.Attempts,
-                successfulCasts: stat.Successful_Casts, interruptedHolds: stat.Interrupted_Holds,
-                successRatePercent: stat.Success_Rate_Percent, averageSimilarityPercent: stat.Average_Similarity_Percent })),
-              ...session.Cast_Records.map(cast => ({ kind: 1, castNumber: cast.Cast_Number, gesture: cast.Gesture,
-                targetGesture: cast.Target_Gesture, similarityPercent: cast.Similarity_Percent,
-                castTimeSeconds: cast.Cast_Time_Seconds, enemyHpAfter: cast.Enemy_HP_After })) ]);
+            score.summary, score.rounds);
     }, [setPhase, stopVision, t]);
     const triggerAttack = useCallback(async (gesture: GestureId, similarity: number) => {
         if (attackActiveRef.current || phaseRef.current !== 'combat')
@@ -814,26 +809,27 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
       {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable gesture-results-container">
           <div className="experiment-results">
             <h1>{t('gesture.results.title')}</h1>
-            <div className="training-result-summary gesture-result-summary">
-              <span>
-                <small>{t('gesture.results.user')}</small>
-                <strong>{lang === 'en' ? 'This session' : '當次活動'}</strong>
-              </span>
-              <span>
-                <small>{t('gesture.results.casts')}</small>
-                <strong>{result.Successful_Casts}</strong>
-              </span>
-              <span>
-                <small>{t('gesture.results.interruptions')}</small>
-                <strong>{result.Interrupted_Holds}</strong>
-              </span>
-              <span>
-                <small>{t('gesture.results.duration')}</small>
-                <strong>{result.Total_Duration_Seconds}s</strong>
-              </span>
-            </div>
-
-            <table className="results-table">
+            <p className="score-note">{lang === 'en' ? 'Descriptive statistics for this practice session.' : '呈現當次練習紀錄與描述統計。'}</p>
+            <section className="score-priority" aria-labelledby="score-priority-title">
+              <h2 id="score-priority-title">{lang === 'en' ? 'Key outcomes' : '重點指標'}</h2>
+              <dl className="score-key-grid">
+                <div><dt>{t('gesture.results.casts')}</dt><dd>{result.Successful_Casts}</dd></div>
+                <div><dt>{t('gesture.results.interruptions')}</dt><dd>{result.Interrupted_Holds}</dd></div>
+                <div><dt>{t('gesture.results.duration')}</dt><dd>{result.Total_Duration_Seconds}<small> s</small></dd></div>
+              </dl>
+            </section>
+            <section className="score-context" aria-labelledby="score-context-title">
+              <h2 id="score-context-title">{lang === 'en' ? 'Record context' : '紀錄概況'}</h2>
+              <dl>
+                <div><dt>{t('gesture.results.user')}</dt><dd>{lang === 'en' ? 'This session' : '當次活動'}</dd></div>
+                <div><dt>{lang === 'en' ? 'Target mode' : '手勢模式'}</dt><dd>{result.Target_Mode === 'directed' ? (lang === 'en' ? 'Directed' : '指定手勢') : (lang === 'en' ? 'Free' : '自由手勢')}</dd></div>
+                <div><dt>{lang === 'en' ? 'Hold duration' : '維持時間'}</dt><dd>{result.Hold_Duration_Seconds} s</dd></div>
+              </dl>
+            </section>
+            <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang}/>
+            <section className="score-gesture-summary" aria-labelledby="score-gesture-title">
+            <h2 id="score-gesture-title">{lang === 'en' ? 'Gesture summary' : '各手勢彙總'}</h2>
+            <div className="results-scroll" role="region" aria-label={lang === 'en' ? 'Gesture summary' : '各手勢彙總'} tabIndex={0}><table className="results-table">
               <thead>
                 <tr>
                   <th>{t('gesture.results.gesture')}</th>
@@ -854,11 +850,8 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
                     <td>{stat.Average_Similarity_Percent}%</td>
                   </tr>))}
               </tbody>
-            </table>
-
-            <h2>{lang === 'en' ? 'Cast records' : '逐次施放紀錄'}</h2>
-            <table className="results-table gesture-cast-results"><thead><tr><th>#</th><th>{t('gesture.results.gesture')}</th><th>{lang === 'en' ? 'Target' : '指定手勢'}</th><th>{t('gesture.results.similarity')}</th><th>{lang === 'en' ? 'Time (s)' : '時間（秒）'}</th><th>HP</th></tr></thead>
-            <tbody>{result.Cast_Records.map(cast => <tr key={cast.Cast_Number}><td>{cast.Cast_Number}</td><td>{cast.Gesture}</td><td>{cast.Target_Gesture ?? '—'}</td><td>{cast.Similarity_Percent}%</td><td>{cast.Cast_Time_Seconds}</td><td>{cast.Enemy_HP_After}</td></tr>)}</tbody></table>
+            </table></div>
+            </section>
             <p role="status">{saveState === 'saved' ? (lang === 'en' ? 'Record saved' : '紀錄已保存') : saveState === 'saving' ? (lang === 'en' ? 'Saving…' : '保存中…') : saveState === 'error' ? (lang === 'en' ? 'Save failed. Try again.' : '保存失敗，請重試。') : (lang === 'en' ? 'Open from Hub to save records' : '從 Hub 開啟才能保存紀錄')}</p>
             {saveState === 'error' && <button type="button" onClick={RetryGameSave}>{lang === 'en' ? 'Retry save' : '重試保存'}</button>}
             <button type="button" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.back')}</button>

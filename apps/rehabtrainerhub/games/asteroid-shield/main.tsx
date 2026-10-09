@@ -1,5 +1,6 @@
 import './game.css';
 import './rules.css';
+import './results.css';
 // Pixi's installed static polyfills replace generated functions; runner CSP stays unchanged.
 // Verified in node_modules/pixi.js/lib/unsafe-eval/init.mjs and migration plan section 6.
 import 'pixi.js/unsafe-eval';

@@ -1,0 +1,289 @@
+{
+  "gameId": "drawing-defense",
+  "version": "2.0.4",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.4/package/index.html",
+  "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c",
+  "verifiedAt": "2026-10-09T07:16:10.186Z",
+  "status": "published-and-verified",
+  "prefix": "releases/drawing-defense/2.0.4/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.4/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/",
+  "fileCount": 6,
+  "totalBytes": 5613093,
+  "files": [
+    {
+      "path": "assets/StarSky-COfhhfcH.png",
+      "size": 4650499,
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-bm3aq373.js",
+      "size": 911563,
+      "sha256": "5318b1fc9d1a0adf430fbab19e08ea859748bf0b223de5bd3fa2c58dc0e4cc21",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Dz4Ah_6S.css",
+      "size": 14896,
+      "sha256": "9d7aaa88c0caea83561e7463ab6e906aa14c85d272509602aad302cd45cf7d41",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 489,
+      "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "4147768c9efc22f5e898a81177562cc7926dc6dbee168ef2bc40378d0a191b9c",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 35244,
+      "sha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "approvedOn": "2026-10-09",
+    "source": "Repository owner approval in this Codex conversation",
+    "message": "核准並且將這個成績結算頁面的要求寫在遷移計畫中",
+    "scope": "Exact versions and contentSha256 values presented before approval",
+    "releases": [
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.4",
+        "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.3",
+        "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.1",
+        "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4"
+      }
+    ],
+    "version": "2.0.4",
+    "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c"
+  },
+  "changes": [
+    "Game-owned primary statistics and record context",
+    "Selectable round charts, mean reference, descriptive statistics and completeness",
+    "Complete round details, synchronized 50-row chart/table pages and distinct aggregates",
+    "Local responsive results styles, Traditional Chinese and English"
+  ],
+  "localValidation": {
+    "testFirst": {
+      "failed": 11,
+      "reason": "Missing drawing/gesture result analysis and score projection; missing asteroid synchronized pages, details and score metric",
+      "passedAfterImplementation": 11
+    },
+    "gates": [
+      "npm run test:game-architecture (53 tests and all game TypeScript checks)",
+      "npm run test:entrypoints",
+      "npm run test:naming",
+      "npm run build:hub",
+      "npm --prefix apps/rehabtrainerhub/games/drawing-defense run build",
+      "node scripts/publish-official-game.mjs drawing-defense --dry-run"
+    ],
+    "documentation": "docs/r2-game-results-ui.md"
+  },
+  "productionVerification": {
+    "gameId": "drawing-defense",
+    "version": "2.0.4",
+    "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c",
+    "pwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.4/",
+    "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/",
+    "publicCatalog": {
+      "url": "https://trainerhub.cc/api/games",
+      "status": 200,
+      "matchingGames": [
+        {
+          "id": "drawing-defense",
+          "slug": "drawing-defense",
+          "title": "畫畫塔防",
+          "summary": "繪製指定圖形，練習上肢精細動作與手眼協調。",
+          "trainer": "motor",
+          "category": "upper-limb",
+          "developerName": "居家訓練網",
+          "updatedAt": "2026-10-09T07:15:30.907Z",
+          "copy": {
+            "zh-TW": {
+              "title": "畫畫塔防",
+              "description": "繪製指定圖形，練習上肢精細動作與手眼協調。"
+            },
+            "en": {
+              "title": "Drawing Tower Defense",
+              "description": "Draw prompted shapes to practise fine upper-limb movement and hand-eye coordination."
+            }
+          },
+          "previewUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.4/package/preview.webp",
+          "release": {
+            "id": "drawing-defense@2.0.4",
+            "version": "2.0.4",
+            "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c",
+            "capabilities": [
+              "audio",
+              "fullscreen",
+              "pointer",
+              "touch"
+            ],
+            "approvedAt": "2026-10-09T07:15:30.907Z",
+            "presentation": "game",
+            "launchUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.4/",
+            "installUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/"
+          }
+        }
+      ]
+    },
+    "stableEntry": {
+      "status": 302,
+      "noStore": true,
+      "location": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.4/"
+    },
+    "pwa": {
+      "launcherStatus": 200,
+      "sandbox": "allow-scripts",
+      "manifestStatus": 200,
+      "scope": "/games/drawing-defense/2.0.4/",
+      "serviceWorkerStatus": 200
+    },
+    "hubEntry": {
+      "status": 200,
+      "stablePwaLink": true,
+      "noGameBundle": true
+    },
+    "hubSubAssets": [
+      {
+        "path": "settings.json",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "score.json",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "sw.js",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "manifest.webmanifest",
+        "status": 410,
+        "noStore": true
+      }
+    ],
+    "versionlessSession": {
+      "status": 201,
+      "version": "2.0.4",
+      "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c",
+      "noStore": true,
+      "tokenOmitted": true,
+      "recordNotSubmitted": true
+    },
+    "officialCatalog": {
+      "schemaVersion": 1,
+      "gameId": "drawing-defense",
+      "currentVersion": "2.0.4",
+      "releases": {
+        "2.0.0": {
+          "contentSha256": "1a072412d9220b7d285086d999829961f5b76e7ad88220382d3121295a312d97"
+        },
+        "2.0.1": {
+          "contentSha256": "95e1184b39ad916abd50789837495490f0580a5526fd4237d5be067ddbcb0db9"
+        },
+        "2.0.2": {
+          "contentSha256": "2490614c840e2bd69811c01d52e98c12c9f7d63b2dd03e5c26e2089a69fab9f3"
+        },
+        "2.0.3": {
+          "contentSha256": "0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24"
+        },
+        "2.0.4": {
+          "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c"
+        }
+      }
+    },
+    "checkedAt": "2026-10-09T07:18:35.063Z",
+    "allPublishedFileHashesAndContentTypesVerified": true,
+    "allPublishedFilesStrictCspVerified": true,
+    "productionTrainingRecordsCreated": false
+  },
+  "productionBrowser": [
+    {
+      "mode": "remote-lobby",
+      "command": "node scripts/check-r2-game-browser.mjs --game drawing-defense --remote --lobby",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:19:32.713Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "hub-desktop",
+      "command": "node scripts/check-r2-game-browser.mjs --game drawing-defense --production-hub --lobby",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:19:58.288Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "hub-mobile",
+      "command": "node scripts/check-r2-game-browser.mjs --game drawing-defense --production-hub --lobby --mobile",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:20:29.930Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "standalone",
+      "command": "node scripts/check-r2-game-browser.mjs --game drawing-defense --remote --standalone",
+      "passed": true,
+      "checkedAt": "2026-10-09T07:20:47.968Z",
+      "productionTrainingRecordsCreated": false
+    }
+  ],
+  "screenshots": [
+    "docs/migrations/r2-game-results-ui/production/drawing-defense/desktop-results.png",
+    "docs/migrations/r2-game-results-ui/production/drawing-defense/desktop-results-analysis.png",
+    "docs/migrations/r2-game-results-ui/production/drawing-defense/desktop-results-details.png",
+    "docs/migrations/r2-game-results-ui/production/drawing-defense/mobile-results.png",
+    "docs/migrations/r2-game-results-ui/production/drawing-defense/mobile-results-analysis.png",
+    "docs/migrations/r2-game-results-ui/production/drawing-defense/mobile-results-details.png"
+  ],
+  "retainedVersionsVerified": [
+    "2.0.3",
+    "2.0.4"
+  ],
+  "existingPagesDeployments": {
+    "rehabtrainerhub": {
+      "id": "34248648-4000-424a-9a5e-1952624bc74f",
+      "url": "https://34248648.rehabtrainerhub.pages.dev",
+      "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74"
+    },
+    "trainerhub-user-games": {
+      "id": "cd01ab30-ef10-406f-98a8-0a8d01f31dc8",
+      "url": "https://cd01ab30.trainerhub-user-games.pages.dev",
+      "commit": "65220eac10f726e7934e6ad1193c7324a23a8d74"
+    }
+  },
+  "pagesRequiredForGameActivation": false,
+  "pagesRedeployedForThisRelease": false,
+  "rollback": {
+    "version": "2.0.3",
+    "contentSha256": "0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24",
+    "allManifestAndFileHashesVerified": true,
+    "checkedAt": "2026-10-09T07:18:45.869Z",
+    "command": "node scripts/publish-official-game.mjs drawing-defense --activate-version 2.0.3",
+    "activationPerformed": false
+  },
+  "limitations": [
+    "Brave desktop and mobile touch emulation; physical devices, Safari/iOS and long offline use were not validated",
+    "Tablet viewport was not separately validated for this release; later migrations must provide that evidence"
+  ]
+}

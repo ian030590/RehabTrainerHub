@@ -1,0 +1,61 @@
+{
+  "status": "published-and-verified",
+  "scope": "Game-owned results UI; exact R2 releases approved by the owner",
+  "changes": [
+    "key outcomes",
+    "selectable round charts",
+    "descriptive statistics",
+    "paginated round details"
+  ],
+  "releases": [
+    {
+      "gameId": "drawing-defense",
+      "version": "2.0.4",
+      "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c",
+      "rollbackVersion": "2.0.3"
+    },
+    {
+      "gameId": "asteroid-shield",
+      "version": "2.0.3",
+      "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55",
+      "rollbackVersion": "2.0.2"
+    },
+    {
+      "gameId": "gesture-battler",
+      "version": "2.0.1",
+      "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4",
+      "rollbackVersion": "2.0.0"
+    }
+  ],
+  "productionPublished": true,
+  "productionVerified": true,
+  "ownerApproval": {
+    "approvedOn": "2026-10-09",
+    "source": "Repository owner approval in this Codex conversation",
+    "message": "核准並且將這個成績結算頁面的要求寫在遷移計畫中",
+    "scope": "Exact versions and contentSha256 values presented before approval",
+    "releases": [
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.4",
+        "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.3",
+        "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.1",
+        "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4"
+      }
+    ]
+  },
+  "productionVerifiedAt": "2026-10-09T07:24:01.138Z",
+  "formalReceipts": [
+    "docs/releases/drawing-defense-2.0.4.json",
+    "docs/releases/asteroid-shield-2.0.3.json",
+    "docs/releases/gesture-battler-2.0.1.json"
+  ]
+}

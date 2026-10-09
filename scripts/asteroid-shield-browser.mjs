@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 
 // Uses the shared real runner/CSP, private channel and local SQLite harness.
 export async function CheckAsteroidShield({ game, evaluate, send, until, gameContext, session, version,
@@ -36,11 +37,13 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
         sceneBackground: getComputedStyle(scene).backgroundImage,
         shipBackground: getComputedStyle(document.querySelector('.mock-spaceship')).backgroundImage,
         shieldBackground: getComputedStyle(document.querySelector('.mock-shield')).backgroundImage,
+        shipWidth:document.querySelector('.mock-spaceship').getBoundingClientRect().width,
         left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom,width:rect.width,viewport:innerWidth,height:innerHeight,
         formScrollWidth:document.querySelector('form').scrollWidth,dialogWidth:dialog.clientWidth};
     })()`);
     assert.ok(state?.modal, 'Settings must be a foreground modal dialog.');
     assert.equal(state.labelled, true);
+    assert.ok(state.shipWidth > state.viewport * 0.5, 'Tutorial must preview the wide bottom ship.');
     for (const key of ['sceneBackground', 'shipBackground', 'shieldBackground']) assert.notEqual(state[key], 'none');
     assert.ok(state.left >= 15 && state.right <= state.viewport - 15 && state.top >= 15 && state.bottom <= state.height - 15, JSON.stringify(state));
     assert.ok(state.formScrollWidth <= state.dialogWidth, 'The dialog must not overflow horizontally.');
@@ -144,16 +147,57 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   await until(() => game('Boolean(document.querySelector(".asteroid-shield-phase-playing canvas"))'), 'real asteroid gameplay');
   assert.equal(await game('document.querySelector(".asteroid-shield-tutorial, dialog.game-settings-dialog")'), null);
   assert.equal(await game('document.fullscreenElement === document.querySelector(".asteroid-shield-game")'), true);
+  await until(() => game(`(() => {
+    const app = window.asteroidPixiApp;
+    const key = [innerWidth,innerHeight,app.screen.width,app.screen.height].join(',');
+    if (window.asteroidViewportState?.key !== key) {
+      window.asteroidViewportState = {key,since:performance.now()}; return false;
+    }
+    return performance.now()-window.asteroidViewportState.since >= 500
+      && app.screen.width === innerWidth && app.screen.height === innerHeight;
+  })()`), 'fullscreen viewport and renderer stabilize');
   const canvas = await game('(() => { const canvas=document.querySelector("canvas").getBoundingClientRect();return [Math.round(canvas.width),Math.round(canvas.height),innerWidth,innerHeight]; })()');
   assert.equal(canvas[0], canvas[2]); assert.equal(canvas[1], canvas[3]);
+  const readDefense = () => game(`(() => {
+    const [,,ship,shield] = window.asteroidPixiApp.stage.children;
+    return {width:innerWidth,height:innerHeight,shipWidth:ship.width,shipBottom:ship.y+ship.height/2,
+      shieldX:shield.x,shieldY:shield.y,shieldRotation:shield.rotation};
+  })()`);
+  const initialDefense = await readDefense();
+  assert.ok(initialDefense.shipWidth > initialDefense.width * 0.5);
+  assert.ok(initialDefense.shipBottom >= initialDefense.height * 0.95 && initialDefense.shipBottom <= initialDefense.height);
+  assert.equal(initialDefense.shieldRotation, 0);
   await capture('gameplay');
   const pointerSession = gameContext.session || session;
   await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 100, y: 300 }, pointerSession);
+  await until(async () => (await readDefense()).shieldX < initialDefense.shieldX, 'mouse moves shield left');
+  const movedDefense = await readDefense();
+  assert.equal(movedDefense.shieldY, initialDefense.shieldY);
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 100, y: 400 }, pointerSession);
+  assert.equal((await readDefense()).shieldY, initialDefense.shieldY, 'Vertical input must not rotate or lift the shield.');
   if (process.argv.includes('--mobile')) {
     await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 120, y: 300 }] }, pointerSession);
     await send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 260, y: 350 }] }, pointerSession);
     await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }, pointerSession);
+    await until(async () => (await readDefense()).shieldX > movedDefense.shieldX, 'touch moves shield right');
+    assert.equal((await readDefense()).shieldY, initialDefense.shieldY);
   }
+  await until(() => game('window.asteroidPixiApp.stage.children[1].children.length > 0'), 'animated falling objects');
+  await game(`(() => {
+    const sprites = window.asteroidPixiApp.stage.children[1].children;
+    window.asteroidAnimationSample = {sprite:sprites.at(-1),x:sprites.at(-1).x,y:sprites.at(-1).y,
+      width:sprites.at(-1).width,alpha:sprites.at(-1).alpha};
+  })()`);
+  await until(() => game('window.asteroidAnimationSample.sprite.y > window.asteroidAnimationSample.y + 5'), 'asteroid falls');
+  const animation = await game(`(() => {
+    const before = window.asteroidAnimationSample, sprite = before.sprite;
+    return {sameX:sprite.x===before.x,changedWidth:sprite.width!==before.width,changedAlpha:sprite.alpha!==before.alpha,
+      trailCount:window.asteroidPixiApp.stage.children[1].children.length};
+  })()`);
+  assert.equal(animation.sameX, true); assert.equal(animation.changedWidth, true); assert.equal(animation.changedAlpha, true);
+  assert.ok(animation.trailCount >= 4, 'Falling objects must have animated trails.');
+  await until(() => game('window.asteroidAnimationSample.sprite.y >= innerHeight * 0.25'), 'falling animation visible on screen');
+  await capture('falling-animation');
   // Real-time gameplay can finish after 30 seconds, or earlier if durability reaches zero.
   const deadline = Date.now() + 45000;
   while (Date.now() < deadline && !await game('Boolean(document.querySelector(".asteroid-shield-phase-results"))')) {
@@ -163,7 +207,8 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   assert.equal(await game('window.asteroidSoundCount > 0'), soundOn, 'The sound checkbox must control real WebAudio output.');
   assert.ok(await game('document.querySelectorAll(".results-table tbody tr").length > 0'));
   assert.deepEqual(await game('Array.from(document.querySelectorAll(".score-analysis select option")).map(option => option.value)'),
-    ['object', 'elapsed', 'damage', 'hp', 'speedLevel']);
+    ['object', 'elapsed', 'damage', 'hp', 'speedLevel', 'score']);
+  await CheckResultsPresentation(game, { defaultMetric: 'elapsed', alternateMetric: 'score', english, capture });
   assert.equal(await game('document.querySelector(".score-analysis select").value'), 'elapsed');
   assert.ok(await game('Boolean(document.querySelector(".score-analysis svg[role=img]"))'));
   await set('.score-analysis select', 'damage');

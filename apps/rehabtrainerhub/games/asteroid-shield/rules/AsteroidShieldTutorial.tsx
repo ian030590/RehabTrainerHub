@@ -18,13 +18,14 @@ const assetUrls = {
 interface AsteroidShieldTutorialProps {
   title?: ReactNode;
   summaryItems?: readonly TrainingConfigSummaryItem[];
+  shieldSizePercent: number;
   ready: boolean;
   active: boolean;
   onStart: () => void;
   onBack: () => void;
 }
 
-export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, ready, active }: AsteroidShieldTutorialProps) {
+export function AsteroidShieldTutorial({ title, summaryItems, shieldSizePercent, onStart, onBack, ready, active }: AsteroidShieldTutorialProps) {
   const { t, lang } = useT();
   const [tourFinished, setTourFinished] = useState(false);
 
@@ -50,7 +51,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, r
             {
               target: '.mock-shield',
               title: '護盾防禦',
-              text: '使用滑鼠或觸控移動護盾，攔截飛向飛船的小行星。',
+              text: '使用滑鼠或觸控左右移動護盾，攔截從上方以不同速度落下的小行星。護盾維持固定高度。',
               place: 'top',
             },
           ]
@@ -70,7 +71,7 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, r
             {
               target: '.mock-shield',
               title: 'Shield Defense',
-              text: 'Move the shield using your mouse or touch to intercept incoming asteroids.',
+              text: 'Move the shield left and right using your mouse or touch. Intercept asteroids falling at different speeds; the shield stays at a fixed height.',
               place: 'top',
             },
           ];
@@ -196,21 +197,27 @@ export function AsteroidShieldTutorial({ title, summaryItems, onStart, onBack, r
       </div>
 
       {/* Mock Shield and Ship */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'absolute', bottom: '16px' }}>
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         <div className="mock-shield" style={{
-            width: 200,
-            height: 50,
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            bottom: 'calc(min(20px, 3dvh) + min(26.265625vw, 22dvh) + max(12px, 2.5vmin))',
+            width: `min(60vw, max(100px, ${shieldSizePercent * 0.4}vmin))`,
+            aspectRatio: '1 / 0.28',
             backgroundImage: `url(${assetUrls.shield})`,
             backgroundSize: '100% 100%',
-            marginBottom: '20px',
             opacity: 0.6,
             mixBlendMode: 'screen'
         }} />
         <div className="mock-spaceship" style={{
-            width: 100,
-            height: 100,
+            position: 'absolute',
+            left: '9%',
+            bottom: 'min(20px, 3dvh)',
+            width: '82%',
+            height: 'min(26.265625vw, 22dvh)',
             backgroundImage: `url(${assetUrls.ship})`,
-            backgroundSize: 'contain',
+            backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
         }} />

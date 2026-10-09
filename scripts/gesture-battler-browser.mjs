@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 
 export async function CheckGestureBattler({ game, evaluate, send, until, session, gameContext, standalone,
   english, mobile, capture, sqlite, getSaveAttempts, getSessionAttempts, sessionFailure, requests, errors, version, accountId, guestSubjectId }) {
@@ -110,6 +111,7 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   assert.equal(await evaluate('window.handFixtureStream.getTracks().every(track=>track.readyState==="ended")'), true, 'Results stop the camera.');
   assert.equal(await game('document.querySelectorAll(".results-table:not(.gesture-cast-results) tbody tr").length'), 5);
   assert.equal(await game('document.querySelectorAll(".gesture-cast-results tbody tr").length'), hp);
+  await CheckResultsPresentation(game, { defaultMetric: 'similarityPercent', alternateMetric: 'enemyHpAfter', english, capture });
   const viewport = await game('(() => {const rect=document.querySelector(".gesture-battler-stage canvas").getBoundingClientRect();return [Math.round(rect.width),Math.round(rect.height),innerWidth,innerHeight,document.documentElement.scrollWidth];})()');
   assert.equal(viewport[0], viewport[2]); assert.equal(viewport[1], viewport[3]); assert.ok(viewport[4] <= viewport[2]);
   if (standalone) {

@@ -1,0 +1,416 @@
+{
+  "gameId": "asteroid-shield",
+  "version": "2.0.2",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.2/package/index.html",
+  "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3",
+  "verifiedAt": "2026-10-09T01:31:46.853Z",
+  "status": "published-and-verified",
+  "prefix": "releases/asteroid-shield/2.0.2/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.2/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/",
+  "fileCount": 12,
+  "totalBytes": 1215705,
+  "files": [
+    {
+      "path": "assets/asteroid-blue-CY-_A_BJ.png",
+      "size": 14034,
+      "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-dark-CW7iRJ5o.png",
+      "size": 11856,
+      "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-green-1XKYeWRA.png",
+      "size": 9693,
+      "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/background-NBhu4YAc.png",
+      "size": 83041,
+      "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/energy-rock-CT8hMT01.png",
+      "size": 1792,
+      "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-CJej7w_x.js",
+      "size": 947539,
+      "sha256": "749f92d6fb0d05b454b04c0446e94869663458f1f477c6990feac399ef38530e",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/shield-CxquxbMC.png",
+      "size": 35318,
+      "sha256": "ded93bcfb8e383d478e1297ba87235738f55b9b9e631f846506791c26ebab40b",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/ship-CrsWCvcK.png",
+      "size": 78990,
+      "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/style-BT6Fp6AN.css",
+      "size": 11724,
+      "sha256": "720d039ffe24626b48b808a40d8f37c8ccd7909eaa369f36037ac3551cb2f209",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 471,
+      "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "f28c5d4f867b48daf69c02f5856a2651dfcbcff124acc8382129af9265ece09e",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 20836,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "userInstruction": "發佈",
+    "candidateDocument": "docs/asteroid-shield-gameplay-2.0.2.md",
+    "version": "2.0.2",
+    "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3",
+    "context": "User requested publication after the exact candidate, test results and screenshots were provided in the preceding turn."
+  },
+  "currentVersion": "2.0.2",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e"
+    },
+    "2.0.1": {
+      "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3"
+    },
+    "2.0.2": {
+      "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3"
+    }
+  },
+  "localVerification": {
+    "gameArchitecture34": true,
+    "entrypoints": true,
+    "naming": true,
+    "hubBuild39Tasks": true,
+    "hubFunctions102": true,
+    "gamerunner24": true,
+    "publisherDryRun": true,
+    "braveDesktop": true,
+    "braveMobileTouch": true,
+    "braveEnglishAccountSound": true,
+    "braveStandaloneMobile": true,
+    "braveSessionFailure": true,
+    "braveRevocation": true,
+    "drawingDefenseRegression": true
+  },
+  "browserVerification": [
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --production-hub --lobby",
+      "viewport": [
+        752,
+        485
+      ],
+      "recordWrites": "local SQLite only",
+      "passed": true
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --production-hub --lobby --mobile",
+      "viewport": [
+        390,
+        844
+      ],
+      "recordWrites": "local SQLite only",
+      "passed": true
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --remote --standalone --mobile",
+      "viewport": [
+        390,
+        786
+      ],
+      "recordWrites": "none",
+      "passed": true
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --remote --lobby --english --signed-in --sound-on",
+      "viewport": [
+        752,
+        485
+      ],
+      "recordWrites": "local SQLite only",
+      "hubOutputRoot": ".tmp/asteroid-hub-ea21aa905a95",
+      "passed": true
+    }
+  ],
+  "verification": {
+    "allR2FilesReadBackSha256": true,
+    "allOfficialHistoryManifestAndFileHashesVerified": true,
+    "allRunnerFilesReadBackSha256AndCsp": true,
+    "stableRedirectAndNoStore": true,
+    "versionedPwaAndScope": true,
+    "actualProductionApiCatalog": true,
+    "originalPreviewAndUpperLimbTag": true,
+    "versionlessProductionSession": true,
+    "productionHubDesktop": true,
+    "productionHubMobile": true,
+    "remoteEnglishAccountSound": true,
+    "remoteStandaloneMobile": true,
+    "productionMigratedSubAssetsGoneNoStore": true,
+    "browserApiAndRecordWritesOnlyInLocalSqlite": true,
+    "productionTrainingRecordsCreated": false
+  },
+  "productionVerifiedAt": "2026-10-09T01:32:53.664Z",
+  "actualProductionApi": {
+    "checkedAt": "2026-10-09T01:32:53.664Z",
+    "version": "2.0.2",
+    "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3",
+    "current": {
+      "schemaVersion": 1,
+      "gameId": "asteroid-shield",
+      "currentVersion": "2.0.2",
+      "releases": {
+        "2.0.0": {
+          "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e"
+        },
+        "2.0.1": {
+          "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3"
+        },
+        "2.0.2": {
+          "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3"
+        }
+      }
+    },
+    "officialHistoryManifestAndBytesVerified": true,
+    "retainedVersions": [
+      "1.0.0",
+      "2.0.0",
+      "2.0.1",
+      "2.0.2"
+    ],
+    "runnerFiles": [
+      {
+        "path": "assets/asteroid-blue-CY-_A_BJ.png",
+        "status": 200,
+        "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+        "contentType": "image/png",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "assets/asteroid-dark-CW7iRJ5o.png",
+        "status": 200,
+        "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+        "contentType": "image/png",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "assets/asteroid-green-1XKYeWRA.png",
+        "status": 200,
+        "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+        "contentType": "image/png",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "assets/background-NBhu4YAc.png",
+        "status": 200,
+        "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+        "contentType": "image/png",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "assets/energy-rock-CT8hMT01.png",
+        "status": 200,
+        "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+        "contentType": "image/png",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "assets/index-CJej7w_x.js",
+        "status": 200,
+        "sha256": "749f92d6fb0d05b454b04c0446e94869663458f1f477c6990feac399ef38530e",
+        "contentType": "text/javascript; charset=utf-8",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "assets/shield-CxquxbMC.png",
+        "status": 200,
+        "sha256": "ded93bcfb8e383d478e1297ba87235738f55b9b9e631f846506791c26ebab40b",
+        "contentType": "image/png",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "assets/ship-CrsWCvcK.png",
+        "status": 200,
+        "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+        "contentType": "image/png",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "assets/style-BT6Fp6AN.css",
+        "status": 200,
+        "sha256": "720d039ffe24626b48b808a40d8f37c8ccd7909eaa369f36037ac3551cb2f209",
+        "contentType": "text/css; charset=utf-8",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+        "contentType": "application/json; charset=utf-8",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "sha256": "f28c5d4f867b48daf69c02f5856a2651dfcbcff124acc8382129af9265ece09e",
+        "contentType": "text/html; charset=utf-8",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+        "contentType": "image/webp",
+        "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+      }
+    ],
+    "stableRedirect": {
+      "status": 302,
+      "location": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.2/",
+      "noStore": true
+    },
+    "versionedPwa": {
+      "status": 200,
+      "scope": "/games/asteroid-shield/2.0.2/",
+      "manifest": true,
+      "serviceWorker": true,
+      "sandbox": "allow-scripts"
+    },
+    "publicCatalog": {
+      "url": "https://trainerhub.cc/api/games",
+      "status": 200,
+      "matchingGames": [
+        {
+          "id": "asteroid-shield",
+          "slug": "asteroid-shield",
+          "title": "小行星護盾防衛",
+          "summary": "移動護盾保護飛船，練習手部定位與上肢控制。",
+          "trainer": "motor",
+          "category": "upper-limb",
+          "developerName": "居家訓練網",
+          "updatedAt": "2026-10-09T01:30:41.827Z",
+          "copy": {
+            "zh-TW": {
+              "title": "小行星護盾防衛",
+              "description": "移動護盾保護飛船，練習手部定位與上肢控制。"
+            },
+            "en": {
+              "title": "Asteroid Shield Defense",
+              "description": "Move a shield to protect the ship and practise hand positioning and upper-limb control."
+            }
+          },
+          "previewUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.2/package/preview.webp",
+          "release": {
+            "id": "asteroid-shield@2.0.2",
+            "version": "2.0.2",
+            "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3",
+            "capabilities": [
+              "audio",
+              "fullscreen",
+              "pointer",
+              "touch"
+            ],
+            "approvedAt": "2026-10-09T01:30:41.827Z",
+            "presentation": "game",
+            "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.2/",
+            "installUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/"
+          }
+        }
+      ]
+    },
+    "preview": {
+      "status": 200,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+      "url": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.2/package/preview.webp"
+    },
+    "hubCompatibilityEntry": {
+      "status": 200,
+      "stablePwaLink": true
+    },
+    "migratedSubAssets": [
+      {
+        "path": "settings.json",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "score.json",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "sw.js",
+        "status": 410,
+        "noStore": true
+      },
+      {
+        "path": "manifest.webmanifest",
+        "status": 410,
+        "noStore": true
+      }
+    ],
+    "versionlessSession": {
+      "status": 201,
+      "version": "2.0.2",
+      "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3",
+      "noStore": true,
+      "tokenOmitted": true,
+      "recordNotSubmitted": true
+    },
+    "productionTrainingRecordsCreated": false
+  },
+  "retainedVersionsVerified": [
+    "1.0.0",
+    "2.0.0",
+    "2.0.1",
+    "2.0.2"
+  ],
+  "pagesRequiredForGameActivation": false,
+  "pagesRedeployedForThisRelease": false,
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3",
+    "allManifestAndFileHashesVerified": true,
+    "checkedAt": "2026-10-09T01:32:53.664Z",
+    "command": "node scripts/publish-official-game.mjs asteroid-shield --activate-version 2.0.1",
+    "activationPerformed": false
+  },
+  "packagingRecovery": {
+    "originalFile": "index.html",
+    "conflictedFile": "index [conflicted 3].html",
+    "originalSha256": "f28c5d4f867b48daf69c02f5856a2651dfcbcff124acc8382129af9265ece09e",
+    "exactBytesVerifiedBeforeRename": true,
+    "candidateDigestUnchanged": true
+  },
+  "limitations": [
+    "Brave desktop and touch emulation; physical Safari/iOS not tested",
+    "Real Turnstile, OS install icon and prolonged fully offline operation not tested",
+    "Mouse/touch only; MediaPipe camera control was not enabled"
+  ]
+}
