@@ -49,3 +49,11 @@ node scripts/check-r2-game-browser.mjs --game gesture-battler --standalone --mob
 - [正式截圖](migrations/gesture-battler-2.0.2/production/)保留設定、左下手部教學與對戰。
 - `2.0.1` 的核准 manifest 與實際檔案雜湊已核對，回退命令：`node scripts/publish-official-game.mjs gesture-battler --activate-version 2.0.1`；本次未實際回退。
 - 現有正式 Hub／runner 已支援此版本，R2 activation 不需重新部署兩站；Git push 後仍按現有 workflow 驗證並處理 Pages 部署。
+
+## Git push、CI 與部署後驗證
+
+提交 `712321d799a08e0f07462fb3a3ae639d341c47c9` 已推送至 `origin/main`；[七項驗證與 Pages 部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37958379827)全部成功，包含 Linux 預設 Hub 建置。
+
+- Hub deployment：`57abb260-b51b-4d12-943a-f809719bb2d1`。
+- Runner deployment：`6bde5a12-eb29-4448-b2a0-83aaa40047fd`。
+- 兩站部署都對應此提交；部署後再次回讀正式 API、固定版本 session、逐檔 SHA-256／CSP、PWA 與 2.0.1 回退版本，並重跑實際正式 Hub 桌機／手機完整流程，全部通過。成果仍只寫本機 SQLite。

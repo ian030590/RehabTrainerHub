@@ -232,7 +232,7 @@
       "version": "2.0.1",
       "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4",
       "allManifestAndFileHashesVerified": true,
-      "checkedAt": "2026-10-09T16:13:11.860Z",
+      "checkedAt": "2026-10-09T16:23:52.866Z",
       "command": "node scripts/publish-official-game.mjs gesture-battler --activate-version 2.0.1",
       "activationPerformed": false
     }
@@ -317,5 +317,71 @@
   "limitations": [
     "Real MediaPipe used reviewed image-stream fixtures; physical cameras and live human gestures were not validated",
     "Brave desktop and touch emulation; physical devices, Safari/iOS and long offline use were not validated"
-  ]
+  ],
+  "ci": {
+    "commit": "712321d799a08e0f07462fb3a3ae639d341c47c9",
+    "runId": 37958379827,
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/37958379827",
+    "conclusion": "success",
+    "checks": [
+      {
+        "name": "Verify (pwa)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (gamerunner)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (trainer-entrypoints)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (game-architecture)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (naming)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (cloudflare-deploy)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (hub-functions)",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "pagesRedeployedAfterPush": true,
+  "postPushPagesDeployments": {
+    "rehabtrainerhub": {
+      "id": "57abb260-b51b-4d12-943a-f809719bb2d1",
+      "url": "https://57abb260.rehabtrainerhub.pages.dev",
+      "commit": "712321d799a08e0f07462fb3a3ae639d341c47c9"
+    },
+    "trainerhub-user-games": {
+      "id": "6bde5a12-eb29-4448-b2a0-83aaa40047fd",
+      "url": "https://6bde5a12.trainerhub-user-games.pages.dev",
+      "commit": "712321d799a08e0f07462fb3a3ae639d341c47c9"
+    }
+  },
+  "postPushProductionBrowser": [
+    {
+      "mode": "desktop",
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --production-hub --lobby",
+      "passed": true,
+      "checkedAt": "2026-10-09T16:26:01.636Z",
+      "productionTrainingRecordsCreated": false
+    },
+    {
+      "mode": "mobile",
+      "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --production-hub --lobby --mobile",
+      "passed": true,
+      "checkedAt": "2026-10-09T16:26:01.638Z",
+      "productionTrainingRecordsCreated": false
+    }
+  ],
+  "postPushProductionVerifiedAt": "2026-10-09T16:23:44.362Z"
 }
