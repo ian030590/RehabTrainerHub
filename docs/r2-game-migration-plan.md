@@ -2,7 +2,7 @@
 
 更新日期：2026-10-11。目前 R2 current 為 `drawing-defense@2.0.4`、`asteroid-shield@2.0.3`、`gesture-battler@2.0.2` 、`motor-cortex-rehab@2.0.0` 與 `moving-card@2.0.0`，5 款完成、35 款保留舊流程。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
 
-2026-10-11 眼動練習 `oculomotor-training@2.0.0` 已建立本機自包含候選，採原 25 項設定、四模式／原刺激引擎、四目標聚光燈、完整十項成果與私人 CSV。擁有者已核准眼動輸入代理架構，精確候選發布仍待核准；本機 registry／Hub build 暫為六款／34 款，正式仍五款／35 款。不得將候選登記或本機測試作為正式完成證據。候選、測試、輸入安全及回退見 [眼動遷移審查](oculomotor-r2-migration.md)。
+2026-10-11 眼動練習 `oculomotor-training@2.0.0` 已建立本機自包含候選，採原 25 項設定、四模式／原刺激引擎、四目標聚光燈、完整十項成果與私人 CSV。擁有者已核准眼動輸入代理架構，精確版本／摘要已以「核准並git push」核准並發布 R2，相容 runner 已驗證，正式 Hub 尚待 CI 部署與驗收；本機 registry／Hub build 暫為六款／34 款，正式仍五款／35 款。不得將候選登記或本機測試作為正式完成證據。候選、測試、輸入安全及回退見 [眼動遷移審查](oculomotor-r2-migration.md)。
 
 移動卡片訓練 `moving-card@2.0.0` 已精確摘要核准、相容 runner 先部署／R2 回讀後 Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38055113478)及正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收完成。保留原引擎／設定／原圖，採自有設定、三目標聚光燈與完整成績；見 [移動卡片遷移驗收](moving-card-r2-migration.md)與[正式收據](releases/moving-card-2.0.0.json)。正式五款完成、35 款舊流程；首次 native 遷移仍無另一個核准回退版，保留原 Hub deployment／commit。
 

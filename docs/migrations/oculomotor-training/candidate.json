@@ -1,5 +1,5 @@
 {
-  "status": "owner-approved-awaiting-publication",
+  "status": "published-awaiting-production-verification",
   "verifiedAt": "2026-10-10T21:00:36.564Z",
   "gameId": "oculomotor-training",
   "version": "2.0.0",
@@ -102,11 +102,12 @@
     }
   },
   "production": {
-    "published": false,
+    "published": true,
     "deployed": false,
     "migrationComplete": false,
     "completedGames": 5,
-    "legacyGames": 35
+    "legacyGames": 35,
+    "compatibleRunnerDeployed": true
   },
   "localCandidate": {
     "registryGames": 6,

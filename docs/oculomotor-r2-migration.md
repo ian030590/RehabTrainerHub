@@ -1,6 +1,6 @@
-# 眼動練習 R2 遷移候選
+# 眼動練習 R2 遷移與發布驗收
 
-更新：2026-10-11。**本機實作與驗證完成，尚未發布 R2、部署或切換正式 Hub。** 正式仍五款 R2／35 款舊流程；本機候選 registry／Hub build 暫為六款／34 款。這份文件與候選 manifest 不是正式發布收據。
+更新：2026-10-11。**精確版本已核准並發布 R2，相容 runner 已部署及驗證；正式 Hub 尚待 CI 部署與驗收。** 正式仍五款 R2／35 款舊流程；本機候選 registry／Hub build 暫為六款／34 款。這份文件與候選 manifest 不是正式發布收據。
 
 候選為 `oculomotor-training@2.0.0`，10 個發布檔案，`contentSha256`：
 
@@ -65,9 +65,10 @@
 | 新推論可能留下前一張臉部就緒狀態 | 每次推論重置，實際 FaceMesh 新鮮私有影格與無臉測試通過；瀏覽器查驗私有影格而非推論期間的暫態旗標 |
 | 結果繼承參考 CSS 白字、無眼動沿用前次驗證誤差 | 參考樣式限定實驗區、無眼動驗證數值為null；實際 computed style 與原引擎回歸通過 |
 | 公開中文資料變成問號、PWA 安裝按鈕遮住聚光燈校正目標 | 精確文案與實際遮擋失敗測試先重現，再修正 metadata／教學排版並重建摘要 |
+| Pages 輸入路徑未經 Functions，HTML 轉址後遺失相機政策 | 新增精確路由及轉址行為 RED，限制兩個精確 preview 網址；runner47／build與正式10資產標頭驗證通過 |
 | 舊設定瀏覽器 fixture 仍啟動已遷移眼動、舊 smoke 工具引用失效 | 改用未遷移 UFOV 保留原檢查，眼動改走 R2 工具；Brave Windows／macOS 尋址契約維持 |
 
-七項現有 gate 全數通過：`test:naming`、`test:pwa`、`test:game-architecture`（107）、`test:hub-functions`（117）、`test:gamerunner`（45）、`test:entrypoints`、`test:cloudflare-deploy`。兩份 workflow 維持相同七 matrix／root 命令，不新增 Linux 無法執行的 Brave gate。Hub build／TypeScript／建置產物檢查通過，六款 R2 只保留導向入口、34 舊遊戲維持 bundle／JSON；runner build 與官方 dry-run 通過。
+七項現有 gate 全數通過：`test:naming`、`test:pwa`、`test:game-architecture`（107）、`test:hub-functions`（117）、`test:gamerunner`（47）、`test:entrypoints`、`test:cloudflare-deploy`。兩份 workflow 維持相同七 matrix／root 命令，不新增 Linux 無法執行的 Brave gate。Hub build／TypeScript／建置產物檢查通過，六款 R2 只保留導向入口、34 舊遊戲維持 bundle／JSON；runner build 與官方 dry-run 通過。
 
 本機 Brave 使用 `node scripts/check-r2-game-browser.mjs --game oculomotor-training`，嚴格 sandbox／實際 CSP、原版模型與引擎。需要 Hub output 時可用 `HUB_OUTPUT_ROOT` 指向驗證過的固定輸出副本；本次工作區同步曾重命名建置入口，還原檔名後重新核對 bytes／built gate，未放寬檢查。模型使用固定摘要的 TensorFlow 官方測試人像形成 canvas stream，並另驗可信文件原生 camera permission 成功、遊戲 camera 禁止。
 
@@ -102,3 +103,7 @@
 | 回退／硬體限制 | 只讀舊部署驗證完成；首次新格式無另一回退版 |
 
 尚未驗真人／實體相機的眼動精度、實體觸控／尺量校正、Safari／iOS、長時間完整斷網、真人 Turnstile 或正式保存。人工驗收：量測可視螢幕與觀看距離，真人同意相機後依九點校正、五點驗證重校與四活動完整秒數操作，刻意遮臉／拔相機／切帳號／離線再恢復，確認缺測、CSV／摘要數量、身份、重試及停止清理。這些未測項目不能宣稱已完成或具有臨床效度。
+
+## 發布進度與順序修正
+
+核准的 `2.0.0`／上述摘要已於 2026-10-10T23:13:06.530Z 完成 R2 上傳／回讀與 current 切換，遊戲 bytes 不變。初次 runner 的正式標頭檢查失敗後仍執行了發布，順序有誤；正式 Hub 保持原部署。已先以 RED 測試修正 `_routes.json` 和 Pages `preview.html` → `preview` 轉址政策，部署 [6d3ddbde](https://6d3ddbde.trainerhub-user-games.pages.dev)，正式十份固定輸入 bytes／相機／CSP 核對通過。跨站瀏覽器另重現轉址清除 referrer，已將兩個精確 preview 網址的來源政策限定為 `strict-origin-when-cross-origin`，保留原 parent source／origin 驗證；單一 PWA 手機正式流程已通過。之後才切換 Hub。逐檔及順序紀錄見 [正式收據](releases/oculomotor-training-2.0.0.json)與[相容 runner 核對](migrations/oculomotor-training/compatible-runner-verification.json)；Hub／正式 API／瀏覽器未驗收前仍不標記完成。
