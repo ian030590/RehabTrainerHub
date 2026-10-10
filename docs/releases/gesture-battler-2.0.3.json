@@ -1,0 +1,141 @@
+{
+  "gameId": "gesture-battler",
+  "version": "2.0.3",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.3/package/index.html",
+  "contentSha256": "35367a1833b3e8ff31ca3c6e13cc2767945525344b9ad0551a1d4188582259dc",
+  "verifiedAt": "2026-10-10T09:09:05.368Z",
+  "status": "published-and-verified",
+  "prefix": "releases/gesture-battler/2.0.3/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.3/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/",
+  "fileCount": 5,
+  "totalBytes": 904641,
+  "files": [
+    {
+      "path": "assets/index-DKZlWFwP.js",
+      "size": 881927,
+      "sha256": "dde9de735021dd2a93c3ba56615d4950b60a8662ad631dd54d9956d796cd191f",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BCYfgy-4.css",
+      "size": 19167,
+      "sha256": "4283ae0cb2fbe1db4570564f935dbcd63fcf83775821ecb4fc1902a38a1da5cb",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 477,
+      "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "dc2fb616d5c2fda98684a3a2448bf2198199c174d08b2b0e127d7aeb75c0800b",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2662,
+      "sha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "approvedOn": "2026-10-10",
+    "source": "Repository owner instruction in this Codex conversation",
+    "message": "Approved four exact release tuples.",
+    "scope": "Exact version and contentSha256 shown before publication",
+    "version": "2.0.3",
+    "contentSha256": "35367a1833b3e8ff31ca3c6e13cc2767945525344b9ad0551a1d4188582259dc"
+  },
+  "changes": [
+    "Sequence camera consent and initialization before fullscreen activation for hand-input runtime.",
+    "Exit fullscreen and stop hand input before returning to Hub or standalone entry.",
+    "Clean up late fullscreen transitions after startup cancellation."
+  ],
+  "localValidation": {
+    "build": "npm --prefix apps/rehabtrainerhub/games/gesture-battler run build",
+    "publisherDryRun": "node scripts/publish-official-game.mjs gesture-battler --dry-run",
+    "architecture": "npm run test:game-architecture (81 passed)",
+    "entrypoints": "npm run test:entrypoints (passed)",
+    "hubBuild": "npm run build:hub (37 tasks passed)"
+  },
+  "productionVerification": {
+    "publishedAt": "2026-10-10T09:09:05.368Z",
+    "publisherReadback": "Every release file SHA-256 and the approved manifest were read back before current activation.",
+    "currentVersion": "2.0.3",
+    "currentContentSha256": "35367a1833b3e8ff31ca3c6e13cc2767945525344b9ad0551a1d4188582259dc",
+    "stablePwaRedirect": "302 to /games/gesture-battler/2.0.3/",
+    "hubPublicApi": {
+      "path": "/api/games",
+      "listingCount": 1,
+      "version": "2.0.3",
+      "contentSha256": "35367a1833b3e8ff31ca3c6e13cc2767945525344b9ad0551a1d4188582259dc",
+      "presentation": "game"
+    },
+    "checkedAt": "2026-10-10T09:22:47.483Z"
+  },
+  "productionBrowser": {
+    "environment": "Brave against the production R2 runner and versioned standalone PWA",
+    "viewport": "mobile",
+    "command": "node scripts/check-r2-game-browser.mjs --game gesture-battler --remote --standalone --mobile",
+    "result": "passed",
+    "exercised": "camera consent, MediaPipe inference, seven calibrations, combat, numeric results and camera cleanup"
+  },
+  "screenshots": [
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/calibration.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/combat.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/confirmation.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/results-analysis.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/results-details.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/results.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/settings.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/tutorial-calibration.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/tutorial-camera.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/tutorial-enemy.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/tutorial-landscape.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/tutorial-moves.png"
+  ],
+  "retainedVersionsVerified": [
+    "2.0.2"
+  ],
+  "pagesRequiredForGameActivation": false,
+  "pagesRedeployedForThisRelease": true,
+  "rollback": {
+    "previousCurrentVersion": "2.0.2",
+    "command": "node scripts/publish-official-game.mjs gesture-battler --activate-version 2.0.2"
+  },
+  "limitations": [
+    "Hand tracking used MediaPipe with checked image-stream fixtures; physical camera/person and Safari/iOS were not tested.",
+    "Browser save/retry checks used local in-memory SQLite and did not create production training records."
+  ],
+  "productionHubBrowser": {
+    "environment": "Deployed production Hub with production R2 runner; API and record writes intercepted to local test fixtures",
+    "viewport": "mobile",
+    "command": "node scripts/check-r2-game-browser.mjs --production-hub --game gesture-battler --lobby --mobile",
+    "result": "passed",
+    "screenshots": [
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/calibration.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/combat.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/confirmation.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/results-analysis.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/results-details.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/results.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/settings.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/tutorial-calibration.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/tutorial-camera.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/tutorial-enemy.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/tutorial-landscape.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/gesture-battler/tutorial-moves.png"
+    ]
+  },
+  "pagesDeployment": {
+    "commit": "cd490d0397c201a8564a4a17781538949ebee334",
+    "workflow": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38038973527",
+    "conclusion": "success",
+    "completedAt": "2026-10-10T08:48:26Z"
+  }
+}

@@ -456,3 +456,16 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 - 任一遊戲返回 Hub 或獨立入口前，先停止相機／輸入代理並等待退出全螢幕，再送出退出或設定訊息。取消啟動時，若先前待處理的全螢幕請求晚到，也必須立即退出。Hub 關閉、卸載、重載及撤回流程同樣清理全螢幕與相機，並還原大廳捲動位置。
 
 上述時序由遊戲 runtime 與 Hub overlay 各自負責；不變更 iframe sandbox、CSP 或手部輸入代理安全邊界。自包含回歸測試納入既有 `test:game-architecture` gate，不新增 CI matrix。詳細 TDD 紀錄、驗證範圍與硬體限制見[全螢幕與相機 lifecycle 紀錄](r2-game-fullscreen-lifecycle.md)。
+
+### 2026-10-10 R2 全螢幕修正版本正式發布
+
+四款修正版均經精確版本與 `contentSha256` 核准後發布至 `rehab-game-releases`。Publisher 回讀核對每個檔案與 approved manifest 後切換 current。正式 Hub `/api/games` 回傳新版本與摘要；穩定 PWA 入口回覆 302 並導向對應版本。Brave 直接對正式 runner 的獨立 PWA 驗收通過：drawing-defense 與 asteroid-shield 使用桌機 viewport；gesture-battler 與 motor-cortex-rehab 使用手機 viewport。發布檔案摘要、回退版本、驗證命令與畫面證據見各正式收據。
+
+| 遊戲 | 新 current | contentSha256 | 原 current（回退） | 收據 |
+| --- | --- | --- | --- | --- |
+| drawing-defense | `2.0.5` | `dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86` | `2.0.4` | [正式收據](releases/drawing-defense-2.0.5.json) |
+| asteroid-shield | `2.0.4` | `21e063f1ce4d22a456f2147c6e77b49b16aff6e50b2c63af8d75c13430eeb393` | `2.0.3` | [正式收據](releases/asteroid-shield-2.0.4.json) |
+| gesture-battler | `2.0.3` | `35367a1833b3e8ff31ca3c6e13cc2767945525344b9ad0551a1d4188582259dc` | `2.0.2` | [正式收據](releases/gesture-battler-2.0.3.json) |
+| motor-cortex-rehab | `2.0.1` | `fc24505f72d10baa68db2cb20d833e5e2ca6a77c1eac51ad44831193fa58dc5a` | `2.0.0` | [正式收據](releases/motor-cortex-rehab-2.0.1.json) |
+
+此次沒有建立正式訓練紀錄；瀏覽器保存流程使用本機測試 SQLite。相機測試採 MediaPipe 圖片串流 fixture，未驗真人實體相機或 Safari／iOS。Hub source 隨 `cd490d0` 推送後，Cloudflare Pages workflow `38038973527` 以成功結果部署；四款正式 Hub 大廳流程均使用已部署 Hub 搭配正式 R2 runner 驗收通過。

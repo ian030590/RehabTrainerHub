@@ -1,0 +1,139 @@
+{
+  "gameId": "motor-cortex-rehab",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.1/package/index.html",
+  "contentSha256": "fc24505f72d10baa68db2cb20d833e5e2ca6a77c1eac51ad44831193fa58dc5a",
+  "verifiedAt": "2026-10-10T09:09:47.698Z",
+  "status": "published-and-verified",
+  "prefix": "releases/motor-cortex-rehab/2.0.1/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.1/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/",
+  "fileCount": 5,
+  "totalBytes": 380427,
+  "files": [
+    {
+      "path": "assets/index-B1Zu8aiu.js",
+      "size": 355237,
+      "sha256": "6c2d2c009e4ba9552e729a41932763183c48c3b20868998bdfc61ffe7e14d088",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Wf6jxFK0.css",
+      "size": 18832,
+      "sha256": "18f6a60b783c9bd0cdaeb0e0c7ecbe9b15a0060c33066965c961a06bcdaa165c",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 522,
+      "sha256": "ca2322d252c30355ac320367cb8c8eead92c88f06aae6d31bb43bfc2a09135a6",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "a385e5532d819d84a2949bc6bce31e36e534b0b79e38caa557bf5ca4451a9ccc",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5422,
+      "sha256": "6a6085136389ad1250b036fb13ad6505032d9033cf115b336e9c7ae8721e1455",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "approvedOn": "2026-10-10",
+    "source": "Repository owner instruction in this Codex conversation",
+    "message": "Approved four exact release tuples.",
+    "scope": "Exact version and contentSha256 shown before publication",
+    "version": "2.0.1",
+    "contentSha256": "fc24505f72d10baa68db2cb20d833e5e2ca6a77c1eac51ad44831193fa58dc5a"
+  },
+  "changes": [
+    "Sequence camera consent and initialization before fullscreen activation for hand-input runtime.",
+    "Exit fullscreen and stop hand input before returning to Hub or standalone entry.",
+    "Clean up late fullscreen transitions after startup cancellation."
+  ],
+  "localValidation": {
+    "build": "npm --prefix apps/rehabtrainerhub/games/motor-cortex-rehab run build",
+    "publisherDryRun": "node scripts/publish-official-game.mjs motor-cortex-rehab --dry-run",
+    "architecture": "npm run test:game-architecture (81 passed)",
+    "entrypoints": "npm run test:entrypoints (passed)",
+    "hubBuild": "npm run build:hub (37 tasks passed)"
+  },
+  "productionVerification": {
+    "publishedAt": "2026-10-10T09:09:47.698Z",
+    "publisherReadback": "Every release file SHA-256 and the approved manifest were read back before current activation.",
+    "currentVersion": "2.0.1",
+    "currentContentSha256": "fc24505f72d10baa68db2cb20d833e5e2ca6a77c1eac51ad44831193fa58dc5a",
+    "stablePwaRedirect": "302 to /games/motor-cortex-rehab/2.0.1/",
+    "hubPublicApi": {
+      "path": "/api/games",
+      "listingCount": 1,
+      "version": "2.0.1",
+      "contentSha256": "fc24505f72d10baa68db2cb20d833e5e2ca6a77c1eac51ad44831193fa58dc5a",
+      "presentation": "game"
+    },
+    "checkedAt": "2026-10-10T09:22:47.484Z"
+  },
+  "productionBrowser": {
+    "environment": "Brave against the production R2 runner and versioned standalone PWA",
+    "viewport": "mobile",
+    "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --remote --standalone --mobile",
+    "result": "passed",
+    "exercised": "windowed camera consent, final Start fullscreen activation, 45-second training, numeric results and camera cleanup"
+  },
+  "screenshots": [
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/confirmation.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/playing.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/results-analysis.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/results-details.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/results.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/settings.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/tutorial-camera.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/tutorial-hand-cursor.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/tutorial-hold-meter.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/tutorial-hud.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/tutorial-target.png"
+  ],
+  "retainedVersionsVerified": [
+    "2.0.0"
+  ],
+  "pagesRequiredForGameActivation": false,
+  "pagesRedeployedForThisRelease": true,
+  "rollback": {
+    "previousCurrentVersion": "2.0.0",
+    "command": "node scripts/publish-official-game.mjs motor-cortex-rehab --activate-version 2.0.0"
+  },
+  "limitations": [
+    "Hand tracking used MediaPipe with checked image-stream fixtures; physical camera/person and Safari/iOS were not tested.",
+    "Browser save/retry checks used local in-memory SQLite and did not create production training records."
+  ],
+  "productionHubBrowser": {
+    "environment": "Deployed production Hub with production R2 runner; API and record writes intercepted to local test fixtures",
+    "viewport": "mobile",
+    "command": "node scripts/check-r2-game-browser.mjs --production-hub --game motor-cortex-rehab --lobby --mobile",
+    "result": "passed",
+    "screenshots": [
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/confirmation.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/playing.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/results-analysis.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/results-details.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/results.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/settings.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/tutorial-camera.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/tutorial-hand-cursor.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/tutorial-hold-meter.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/tutorial-hud.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/motor-cortex-rehab/tutorial-target.png"
+    ]
+  },
+  "pagesDeployment": {
+    "commit": "cd490d0397c201a8564a4a17781538949ebee334",
+    "workflow": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38038973527",
+    "conclusion": "success",
+    "completedAt": "2026-10-10T08:48:26Z"
+  }
+}

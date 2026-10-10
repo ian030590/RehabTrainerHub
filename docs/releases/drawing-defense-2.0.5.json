@@ -1,0 +1,129 @@
+{
+  "gameId": "drawing-defense",
+  "version": "2.0.5",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.5/package/index.html",
+  "contentSha256": "dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86",
+  "verifiedAt": "2026-10-10T09:07:06.664Z",
+  "status": "published-and-verified",
+  "prefix": "releases/drawing-defense/2.0.5/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.5/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/",
+  "fileCount": 6,
+  "totalBytes": 5614757,
+  "files": [
+    {
+      "path": "assets/StarSky-COfhhfcH.png",
+      "size": 4650499,
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-CUlrh-fq.js",
+      "size": 912384,
+      "sha256": "91568974cb833553941495a6946056cb9f0fccb9ca058ee36a3422c06d77006e",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DCB82DCn.css",
+      "size": 15739,
+      "sha256": "53a151ef952a8276e9690a9d68d472139ed386698d8fcc3f01b7633184b3152a",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 489,
+      "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "09fb6aaa0d858778b31b2e3a7b821b436a878c29661829fc9d00b092eb66ec0f",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 35244,
+      "sha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "approvedOn": "2026-10-10",
+    "source": "Repository owner instruction in this Codex conversation",
+    "message": "Approved four exact release tuples.",
+    "scope": "Exact version and contentSha256 shown before publication",
+    "version": "2.0.5",
+    "contentSha256": "dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86"
+  },
+  "changes": [
+    "Sequence camera consent and initialization before fullscreen activation for hand-input runtime.",
+    "Exit fullscreen and stop hand input before returning to Hub or standalone entry.",
+    "Clean up late fullscreen transitions after startup cancellation."
+  ],
+  "localValidation": {
+    "build": "npm --prefix apps/rehabtrainerhub/games/drawing-defense run build",
+    "publisherDryRun": "node scripts/publish-official-game.mjs drawing-defense --dry-run",
+    "architecture": "npm run test:game-architecture (81 passed)",
+    "entrypoints": "npm run test:entrypoints (passed)",
+    "hubBuild": "npm run build:hub (37 tasks passed)"
+  },
+  "productionVerification": {
+    "publishedAt": "2026-10-10T09:07:06.664Z",
+    "publisherReadback": "Every release file SHA-256 and the approved manifest were read back before current activation.",
+    "currentVersion": "2.0.5",
+    "currentContentSha256": "dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86",
+    "stablePwaRedirect": "302 to /games/drawing-defense/2.0.5/",
+    "hubPublicApi": {
+      "path": "/api/games",
+      "listingCount": 1,
+      "version": "2.0.5",
+      "contentSha256": "dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86",
+      "presentation": "game"
+    },
+    "checkedAt": "2026-10-10T09:22:47.478Z"
+  },
+  "productionBrowser": {
+    "environment": "Brave against the production R2 runner and versioned standalone PWA",
+    "viewport": "desktop",
+    "command": "node scripts/check-r2-game-browser.mjs --remote --standalone",
+    "result": "passed",
+    "exercised": "settings, tutorial, gameplay, results and return to settings"
+  },
+  "screenshots": [
+    "docs/migrations/r2-game-fullscreen-2026-10-10/drawing-defense/results-analysis.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/drawing-defense/results-details.png",
+    "docs/migrations/r2-game-fullscreen-2026-10-10/drawing-defense/results.png"
+  ],
+  "retainedVersionsVerified": [
+    "2.0.4"
+  ],
+  "pagesRequiredForGameActivation": false,
+  "pagesRedeployedForThisRelease": true,
+  "rollback": {
+    "previousCurrentVersion": "2.0.4",
+    "command": "node scripts/publish-official-game.mjs drawing-defense --activate-version 2.0.4"
+  },
+  "limitations": [
+    "Hand tracking used MediaPipe with checked image-stream fixtures; physical camera/person and Safari/iOS were not tested.",
+    "Browser save/retry checks used local in-memory SQLite and did not create production training records."
+  ],
+  "productionHubBrowser": {
+    "environment": "Deployed production Hub with production R2 runner; API and record writes intercepted to local test fixtures",
+    "viewport": "desktop",
+    "command": "node scripts/check-r2-game-browser.mjs --production-hub --lobby",
+    "result": "passed",
+    "screenshots": [
+      "docs/migrations/r2-game-fullscreen-2026-10-10/drawing-defense/results-analysis.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/drawing-defense/results-details.png",
+      "docs/migrations/r2-game-fullscreen-2026-10-10/drawing-defense/results.png"
+    ]
+  },
+  "pagesDeployment": {
+    "commit": "cd490d0397c201a8564a4a17781538949ebee334",
+    "workflow": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38038973527",
+    "conclusion": "success",
+    "completedAt": "2026-10-10T08:48:26Z"
+  }
+}

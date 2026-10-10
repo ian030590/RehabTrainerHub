@@ -1,0 +1,177 @@
+{
+    "gameId":  "asteroid-shield",
+    "version":  "2.0.4",
+    "bucket":  "rehab-game-releases",
+    "launchUrl":  "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.4/package/index.html",
+    "contentSha256":  "21e063f1ce4d22a456f2147c6e77b49b16aff6e50b2c63af8d75c13430eeb393",
+    "verifiedAt":  "2026-10-10T09:08:24.077Z",
+    "status":  "published-and-verified",
+    "prefix":  "releases/asteroid-shield/2.0.4/",
+    "pwaUrl":  "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.4/",
+    "stablePwaUrl":  "https://trainerhub-user-games.pages.dev/games/asteroid-shield/",
+    "fileCount":  12,
+    "totalBytes":  1223784,
+    "files":  [
+                  {
+                      "path":  "assets/asteroid-blue-CY-_A_BJ.png",
+                      "size":  14034,
+                      "sha256":  "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+                      "contentType":  "image/png"
+                  },
+                  {
+                      "path":  "assets/asteroid-dark-CW7iRJ5o.png",
+                      "size":  11856,
+                      "sha256":  "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+                      "contentType":  "image/png"
+                  },
+                  {
+                      "path":  "assets/asteroid-green-1XKYeWRA.png",
+                      "size":  9693,
+                      "sha256":  "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+                      "contentType":  "image/png"
+                  },
+                  {
+                      "path":  "assets/background-NBhu4YAc.png",
+                      "size":  83041,
+                      "sha256":  "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+                      "contentType":  "image/png"
+                  },
+                  {
+                      "path":  "assets/energy-rock-CT8hMT01.png",
+                      "size":  1792,
+                      "sha256":  "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+                      "contentType":  "image/png"
+                  },
+                  {
+                      "path":  "assets/index-hDG_HMf7.js",
+                      "size":  950861,
+                      "sha256":  "80e09d734a10f00b5de1877f274876d7fa8ec496e48ae15bcb653ab08fcdf79f",
+                      "contentType":  "text/javascript; charset=utf-8"
+                  },
+                  {
+                      "path":  "assets/shield-CxquxbMC.png",
+                      "size":  35318,
+                      "sha256":  "ded93bcfb8e383d478e1297ba87235738f55b9b9e631f846506791c26ebab40b",
+                      "contentType":  "image/png"
+                  },
+                  {
+                      "path":  "assets/ship-CrsWCvcK.png",
+                      "size":  78990,
+                      "sha256":  "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+                      "contentType":  "image/png"
+                  },
+                  {
+                      "path":  "assets/style-AItIoLPr.css",
+                      "size":  16481,
+                      "sha256":  "f1d608354b25da207ce80736a6ec413535a0d2115e9fd3cadfab1954798f792a",
+                      "contentType":  "text/css; charset=utf-8"
+                  },
+                  {
+                      "path":  "game.json",
+                      "size":  471,
+                      "sha256":  "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+                      "contentType":  "application/json; charset=utf-8"
+                  },
+                  {
+                      "path":  "index.html",
+                      "size":  411,
+                      "sha256":  "70994a7825520f5d2b2b00dac72c4cacd21d5d3f593e5d8abfca61c13d33ebc7",
+                      "contentType":  "text/html; charset=utf-8"
+                  },
+                  {
+                      "path":  "preview.webp",
+                      "size":  20836,
+                      "sha256":  "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+                      "contentType":  "image/webp"
+                  }
+              ],
+    "ownerApproval":  {
+                          "approvedOn":  "2026-10-10",
+                          "source":  "Repository owner instruction in this Codex conversation",
+                          "message":  "Approved four exact release tuples.",
+                          "scope":  "Exact version and contentSha256 shown before publication",
+                          "version":  "2.0.4",
+                          "contentSha256":  "21e063f1ce4d22a456f2147c6e77b49b16aff6e50b2c63af8d75c13430eeb393"
+                      },
+    "changes":  [
+                    "Sequence camera consent and initialization before fullscreen activation for hand-input runtime.",
+                    "Exit fullscreen and stop hand input before returning to Hub or standalone entry.",
+                    "Clean up late fullscreen transitions after startup cancellation."
+                ],
+    "localValidation":  {
+                            "build":  "npm --prefix apps/rehabtrainerhub/games/asteroid-shield run build",
+                            "publisherDryRun":  "node scripts/publish-official-game.mjs asteroid-shield --dry-run",
+                            "architecture":  "npm run test:game-architecture (81 passed)",
+                            "entrypoints":  "npm run test:entrypoints (passed)",
+                            "hubBuild":  "npm run build:hub (37 tasks passed)"
+                        },
+    "productionVerification":  {
+                                   "publishedAt":  "2026-10-10T09:08:24.077Z",
+                                   "publisherReadback":  "Every release file SHA-256 and the approved manifest were read back before current activation.",
+                                   "currentVersion":  "2.0.4",
+                                   "currentContentSha256":  "21e063f1ce4d22a456f2147c6e77b49b16aff6e50b2c63af8d75c13430eeb393",
+                                   "stablePwaRedirect":  "302 to /games/asteroid-shield/2.0.4/",
+                                   "hubPublicApi":  {
+                                                        "path":  "/api/games",
+                                                        "listingCount":  1,
+                                                        "version":  "2.0.4",
+                                                        "contentSha256":  "21e063f1ce4d22a456f2147c6e77b49b16aff6e50b2c63af8d75c13430eeb393",
+                                                        "presentation":  "game"
+                                                    },
+                                   "checkedAt":  "2026-10-10T09:22:47.482Z"
+                               },
+    "productionBrowser":  {
+                              "environment":  "Brave against the production R2 runner and versioned standalone PWA",
+                              "viewport":  "desktop",
+                              "command":  "node scripts/check-r2-game-browser.mjs --game asteroid-shield --remote --standalone",
+                              "result":  "passed",
+                              "exercised":  "settings, presets, tutorial, fullscreen Pixi gameplay, completion and return to settings"
+                          },
+    "screenshots":  [
+                        "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/confirmation.png",
+                        "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/falling-animation.png",
+                        "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/gameplay.png",
+                        "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/results-analysis.png",
+                        "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/results-details-end.png",
+                        "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/results-details.png",
+                        "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/results.png",
+                        "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/settings.png",
+                        "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/tutorial.png"
+                    ],
+    "retainedVersionsVerified":  [
+                                     "2.0.3"
+                                 ],
+    "pagesRequiredForGameActivation":  false,
+    "pagesRedeployedForThisRelease":  true,
+    "rollback":  {
+                     "previousCurrentVersion":  "2.0.3",
+                     "command":  "node scripts/publish-official-game.mjs asteroid-shield --activate-version 2.0.3"
+                 },
+    "limitations":  [
+                        "Hand tracking used MediaPipe with checked image-stream fixtures; physical camera/person and Safari/iOS were not tested.",
+                        "Browser save/retry checks used local in-memory SQLite and did not create production training records."
+                    ],
+    "productionHubBrowser":  {
+                                 "environment":  "Deployed production Hub with production R2 runner; API and record writes intercepted to local test fixtures",
+                                 "viewport":  "desktop",
+                                 "command":  "node scripts/check-r2-game-browser.mjs --production-hub --game asteroid-shield --lobby",
+                                 "result":  "passed",
+                                 "screenshots":  [
+                                                     "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/confirmation.png",
+                                                     "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/falling-animation.png",
+                                                     "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/gameplay.png",
+                                                     "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/results-analysis.png",
+                                                     "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/results-details-end.png",
+                                                     "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/results-details.png",
+                                                     "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/results.png",
+                                                     "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/settings.png",
+                                                     "docs/migrations/r2-game-fullscreen-2026-10-10/asteroid-shield/tutorial.png"
+                                                 ]
+                             },
+    "pagesDeployment":  {
+                            "commit":  "cd490d0397c201a8564a4a17781538949ebee334",
+                            "workflow":  "https://github.com/ian030590/RehabTrainerHub/actions/runs/38038973527",
+                            "conclusion":  "success",
+                            "completedAt":  "2026-10-10T08:48:26Z"
+                        }
+}
