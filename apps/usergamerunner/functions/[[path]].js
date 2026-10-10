@@ -76,6 +76,7 @@ export async function HandleRequest(context) {
     headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
     headers.set('Cache-Control', 'public, max-age=31536000, immutable');
     if (['/input/eye-tracking-1.0.0/preview.html', '/input/eye-tracking-1.0.0/preview'].includes(url.pathname)) {
+      headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
       headers.set('Content-Security-Policy', `default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; media-src 'self' blob:; base-uri 'none'; form-action 'none'; frame-ancestors 'self' ${trustedPlatformOrigin}${['127.0.0.1', 'localhost'].includes(url.hostname) ? ' http://127.0.0.1:* http://localhost:*' : ''}; worker-src 'none'`);
       headers.set('Permissions-Policy', commonPermissionsPolicy.replace('camera=()', 'camera=(self)'));
     }
