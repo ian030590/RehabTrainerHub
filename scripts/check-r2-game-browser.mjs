@@ -17,12 +17,13 @@ import { CreateSessionForUser } from '../apps/rehabtrainerhub/functions/_lib/aut
 import { CheckAsteroidShield } from './asteroid-shield-browser.mjs';
 import { CheckGestureBattler } from './gesture-battler-browser.mjs';
 import { CheckMotorCortex } from './motor-cortex-browser.mjs';
+import { CheckMovingCard } from './moving-card-browser.mjs';
 import { LoadGestureCameraFixtures } from './gesture-camera-fixtures.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 import { CheckSettingsPresentation, CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
-assert.ok(['drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab'].includes(gameId), 'Unknown browser game fixture');
+assert.ok(['drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card'].includes(gameId), 'Unknown browser game fixture');
 const handGame = ['gesture-battler', 'motor-cortex-rehab'].includes(gameId);
 const phasePrefix = gameId;
 const root = resolve(import.meta.dirname, '..');
@@ -34,6 +35,7 @@ const sessionFailure = process.argv.includes('--session-failure');
 const signedIn = process.argv.includes('--signed-in');
 const english = process.argv.includes('--english');
 const viewportMode = process.argv.includes('--mobile') ? 'mobile' : process.argv.includes('--tablet') ? 'tablet' : 'desktop';
+const movingCardScreenshots = resolve(root, '.tmp/moving-card-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--wide') ? '-wide' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
 const rendererFailure = process.argv.includes('--renderer-failure');
 const output = resolve(process.env.HUB_OUTPUT_ROOT || resolve(root, 'apps/rehabtrainerhub/out'));
 const runnerOutput = resolve(process.env.RUNNER_OUTPUT_ROOT || resolve(root, 'apps/usergamerunner/dist'));
@@ -44,7 +46,7 @@ assert.ok(existsSync(browserPath), 'Brave is required.');
 const { manifest, files } = await BuildOfficialGameRelease(gameId);
 const handFixtures = handGame ? await LoadGestureCameraFixtures(root) : new Map();
 const unavailableTexture = rendererFailure ? manifest.files.find(file => file.path.startsWith('assets/ship-'))?.path : null;
-assert.ok(!rendererFailure || unavailableTexture, 'Renderer failure fixture requires the asteroid ship texture.');
+assert.ok(!rendererFailure || unavailableTexture || gameId === 'moving-card', 'Renderer failure fixture requires a supported game.');
 const sqlite = new DatabaseSync(':memory:');
 const migrations = resolve(root, 'apps/rehabtrainerhub/migrations');
 for (const file of (await readdir(migrations)).filter(file => file.endsWith('.sql')).sort()) sqlite.exec(await readFile(resolve(migrations, file), 'utf8'));
@@ -129,8 +131,8 @@ try {
         return;
       }
       if (url.pathname.startsWith('/api/')) {
-        const oldGame = { id: gameId === 'motor-cortex-rehab' ? 'official-motor-cortex-rehab' : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
-          summary: 'Legacy publication', trainer: 'motor', category: gameId === 'motor-cortex-rehab' ? 'general' : 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
+        const oldGame = { id: ['motor-cortex-rehab', 'moving-card'].includes(gameId) ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
+          summary: 'Legacy publication', trainer: gameId === 'moving-card' ? 'vision' : 'motor', category: ['motor-cortex-rehab', 'moving-card'].includes(gameId) ? 'general' : 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
           release: { id: 'old-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['pointer'],
             approvedAt: '2026-10-08', launchUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
             installUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
@@ -163,6 +165,7 @@ try {
   await new Promise(resolve => debugProbe.close(resolve));
   const profile = resolve(root, '.tmp', `r2-browser-${process.pid}-${crypto.randomUUID()}`);
   await mkdir(profile, { recursive: true });
+  if (gameId === 'moving-card') await mkdir(movingCardScreenshots, { recursive: true });
   browser = spawn(browserPath, ['--headless=new', '--no-first-run', '--no-default-browser-check', '--remote-allow-origins=*',
     '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows',
     '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
@@ -183,6 +186,10 @@ try {
     pending.set(commandId, { resolve, reject });
     ws.send(JSON.stringify({ id: commandId, method, params, ...(sessionId ? { sessionId } : {}) }));
   });
+  const pixiProbe = `window.__PIXI_APP_INIT__ = app => {
+    window.${gameId === 'moving-card' ? 'movingCard' : 'asteroid'}PixiApp = app;
+    ${rendererFailure && gameId === 'moving-card' ? "if (!window.allowRendererRetry) throw new Error('Simulated Pixi initialization failure');" : ''}
+  };`;
   ws.addEventListener('message', event => {
     const message = JSON.parse(event.data);
     if (message.id) {
@@ -214,10 +221,10 @@ try {
       void (async () => {
         const childSession = message.params.sessionId;
         await Promise.all([send('Runtime.enable', {}, childSession), send('Network.enable', {}, childSession)]);
-        if (gameId === 'asteroid-shield' && message.params.targetInfo.type === 'iframe') {
+        if (['asteroid-shield', 'moving-card'].includes(gameId) && message.params.targetInfo.type === 'iframe') {
           await send('Page.enable', {}, childSession);
           await send('Page.addScriptToEvaluateOnNewDocument', {
-            source: 'window.__PIXI_APP_INIT__ = app => { window.asteroidPixiApp = app; };', runImmediately: true,
+            source: pixiProbe, runImmediately: true,
           }, childSession);
         }
         if (message.params.waitingForDebugger) await send('Runtime.runIfWaitingForDebugger', {}, childSession);
@@ -227,8 +234,8 @@ try {
   const target = await send('Target.createTarget', { url: 'about:blank' });
   const attached = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
   const session = attached.sessionId;
-  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: gameId === 'asteroid-shield', flatten: true,
-    ...(gameId === 'asteroid-shield' ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
+  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: ['asteroid-shield', 'moving-card'].includes(gameId), flatten: true,
+    ...(['asteroid-shield', 'moving-card'].includes(gameId) ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
   }, session);
   await send('Runtime.enable', {}, session);
   await send('Network.enable', {}, session);
@@ -253,8 +260,8 @@ try {
       };
     }
   ` }, session);
-  if (gameId === 'asteroid-shield') await send('Page.addScriptToEvaluateOnNewDocument', {
-    source: 'window.__PIXI_APP_INIT__ = app => { window.asteroidPixiApp = app; };',
+  if (['asteroid-shield', 'moving-card'].includes(gameId)) await send('Page.addScriptToEvaluateOnNewDocument', {
+    source: pixiProbe,
   }, session);
   if (remote || handGame) await send('Fetch.enable', { patterns: [
     ...(remote ? [{ urlPattern: productionHub ? 'https://trainerhub.cc/api/*' : 'https://trainerhub.cc/*', requestStage: 'Request' }] : []),
@@ -280,7 +287,7 @@ try {
     localStorage.setItem('rehabtrainerhub.subject-id.v1', ${JSON.stringify(guestSubjectId)});
     ${signedIn ? `localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(accountToken)});` : ''}
   } catch {}` }, session);
-  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=motor%3A${gameId}`) }, session);
+  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${gameId === 'moving-card' ? 'vision' : 'motor'}%3A${gameId}`) }, session);
   await send('Target.activateTarget', { targetId: target.targetId });
   const evaluate = async (expression, context) => {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture: true, ...(context ? { contextId: context.id } : {}) }, context?.session || session);
@@ -305,11 +312,15 @@ try {
   if (lobby && !standalone) {
     await until(() => evaluate('Boolean(document.querySelector(".module-card[data-runtime-id=reviewed-browser-game]"))'), 'reviewed catalog loaded');
     assert.equal(await evaluate(`document.querySelectorAll(".module-card[data-runtime-id=${gameId}]").length`), 1);
-    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), english ? /upper/i : /上肢動作/);
+    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), gameId === 'moving-card' ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
     await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}]").scrollIntoView()`);
     await until(() => evaluate(`(() => { const image = document.querySelector(".module-card[data-runtime-id=${gameId}] img"); return image?.complete && image.naturalWidth > 0; })()`), 'game-owned preview loaded');
     assert.equal(new URL(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] img").src`)).pathname,
       `/games/${gameId}/${manifest.version}/package/preview.webp`);
+    if (gameId === 'moving-card') {
+      const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
+      await writeFile(resolve(movingCardScreenshots, 'lobby.png'), Buffer.from(screenshot.data, 'base64'));
+    }
     lobbyScrollState = await evaluate('({top:scrollY,overflow:getComputedStyle(document.documentElement).overflowY})');
     await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] button").click()`);
     await until(() => sessionAttempts > 0, 'lobby selects an approved R2 session before loading settings');
@@ -380,6 +391,12 @@ try {
     await until(() => evaluate('!document.querySelector("dialog iframe") && Boolean(document.querySelector("dialog [role=alert]"))'), 'revoked game removed');
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     console.log('Revoked R2 release removed; no result saved.');
+  } else if (gameId === 'moving-card') {
+    const screenshots = movingCardScreenshots;
+    await mkdir(screenshots, { recursive: true });
+    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    await CheckMovingCard({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
   } else if (gameId === 'motor-cortex-rehab') {
     const screenshots = resolve(root, '.tmp/motor-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}`);
     await mkdir(screenshots, { recursive: true });

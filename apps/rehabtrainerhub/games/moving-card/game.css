@@ -1,0 +1,47 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --success: #005eb8; --error: #ba1a1a;
+  --game-background: #f2f4f3;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.moving-card-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; }
+.moving-card-experiment { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+.moving-card-stop { position: absolute; bottom: max(8px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 50; }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.renderer-error { color: var(--error); }
+.moving-card-calibration-bar { width: 280px; max-width: 100%; height: 12px; border: solid var(--primary); border-width: 0 2px 2px; }
+.moving-card-tutorial { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--game-background); overflow: hidden; }
+.moving-card-preview-hud { display: flex; justify-content: space-between; gap: 16px; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); font-weight: 700; }
+.moving-card-preview-hud p { margin: 0; }
+.moving-card-target { position: absolute; top: 9%; left: 50%; transform: translateX(-50%); color: var(--primary); font-weight: 700; letter-spacing: 4px; margin: 0; padding: 8px; }
+.moving-card-options { position: absolute; inset: 22% 3% 9%; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(6px, 2vmin, 20px); pointer-events: none; }
+.moving-card-preview-option { display: grid; place-items: center; min-height: 0; margin: 0; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-weight: 700; overflow: hidden; }
+.moving-card-options-medium .moving-card-preview-option, .moving-card-options-hard .moving-card-preview-option { border-radius: 50%; }
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-weight: 700; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; }
+.results-table { width: 100%; min-width: 48rem; border-collapse: collapse; }
+.results-table th, .results-table td { min-width: 3rem; padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.results-scroll { overflow-x: auto; }
+.score-analysis svg { display: block; width: 100%; max-height: 280px; margin: 20px 0; overflow: visible; }
+.score-analysis svg text { fill: var(--text); font-size: 16px; }
+.score-analysis svg circle { fill: var(--primary); }
+.chart-axis { fill: none; stroke: var(--border); }
+.chart-mean { stroke: var(--text-muted); stroke-dasharray: 5 5; }
+.chart-trend { fill: none; stroke: var(--primary); stroke-width: 2.5; }

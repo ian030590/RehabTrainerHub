@@ -1,4 +1,4 @@
-// Canonical Hub-owned moving-card runtime.
+// Game-owned moving-card runtime.
 /**
  * jsPsych Custom Plugin: pixi-moving-card
  *
@@ -17,9 +17,9 @@
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Container, Graphics, Text } from 'pixi.js';
-import { pixiColors, typography } from '@rehab-trainer/ui/trainerTheme';
-import { ShuffleArray, GenerateRandomLetters, GenerateScatteredPositions } from '@rehab-trainer/ui/mathUtils';
-import { PixelFromMillimeter } from '@rehab-trainer/ui/spatialUtils';
+import { pixiColors, typography } from './runtime/theme';
+import { ShuffleArray, GenerateRandomLetters, GenerateScatteredPositions } from './gameUtils';
+import { PixelFromMillimeter } from './settings';
 import { soundManager } from './runtime/soundManager';
 import {
   AttachPixiTrialCanvas,
@@ -34,6 +34,8 @@ const info = {
   name: 'pixi-moving-card',
   version: '1.0.0',
   parameters: {
+    language: { type: ParameterType.STRING, default: 'zh' },
+    calibration_length_mm: { type: ParameterType.FLOAT, default: 149 },
     target_letters: {
       type: ParameterType.STRING,
       default: '',
@@ -99,10 +101,9 @@ const marginX = 0.03;
 const marginTop = 0.18;
 const marginBottom = 0.05;
 const gridCols = 5;
-const gridRows = 4;
 const moveDurationMs = 300;
 const movingCardPixiScope = pixiRuntimeScopes.movingCard;
-const movingCardContainerStyle = 'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;background:#0D1117;';
+const movingCardContainerStyle = 'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;background:var(--game-background);';
 
 function CreateSafeAreaProbe(container: HTMLElement): HTMLDivElement {
   const probe = document.createElement('div');
@@ -146,6 +147,10 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
     const target = (trial.target_letters as string) || GenerateRandomLetters(2);
     const diff = trial.difficulty as string;
     const optionCount = trial.option_count as number;
+    const gridRows = Math.max(4, Math.ceil((optionCount + 1) / gridCols));
+    const english = trial.language === 'en';
+    let feedbackTimerId: ReturnType<typeof setTimeout> | null = null;
+    const animationFrames = new Set<number>();
     let feedbackActive = false;
     let moveTimerId: ReturnType<typeof setInterval> | null = null;
     let trialEnded = false;
@@ -166,7 +171,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
       const gameX = () => safeInsets.left + getWidth() * marginX;
       const gameY = () => Math.max(getHeight() * marginTop, safeInsets.top + 72);
       const gameW = () => Math.max(1, getWidth() - safeInsets.left - safeInsets.right - getWidth() * marginX * 2);
-      const gameH = () => Math.max(1, getHeight() - safeInsets.bottom - getHeight() * marginBottom - gameY());
+      const gameH = () => Math.max(1, getHeight() - safeInsets.bottom - Math.max(getHeight() * marginBottom, 64) - gameY());
 
       // ── Build Scene ──
       const bgGfx = new Graphics();
@@ -220,10 +225,10 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
           .rect(0, 0, width, headerHeight).fill({ color: pixiColors.bgPanel })
           .rect(0, headerHeight - 1, width, 1).fill({ color: pixiColors.border });
 
-        scoreText.text = compact ? `目標: ${target}` : `找到目標: ${target}`;
+        scoreText.text = english ? `Target: ${target}` : compact ? `目標: ${target}` : `找到目標: ${target}`;
         roundText.text = compact
           ? `${trial.round_number} / ${trial.total_rounds}`
-          : `回合: ${trial.round_number} / ${trial.total_rounds}`;
+          : `${english ? 'Round' : '回合'}: ${trial.round_number} / ${trial.total_rounds}`;
         scoreText.style.fontSize = headerFontSize;
         roundText.style.fontSize = headerFontSize;
         scoreText.x = safeInsets.left + 14;
@@ -231,7 +236,7 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
         roundText.x = width - safeInsets.right - 14;
         roundText.y = scoreText.y;
 
-        const targetPxSize = PixelFromMillimeter(trial.target_size_mm as number);
+        const targetPxSize = PixelFromMillimeter(trial.target_size_mm as number, trial.calibration_length_mm);
         const safeSize = Math.min(targetPxSize, height * 0.08, width * 0.1);
         targetText.style.fontSize = Math.max(16, safeSize);
         targetText.x = cx();
@@ -316,11 +321,11 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
 
       // ── Create Option Containers ──
       const options: GameOption[] = [];
-      const optionFontPx = Math.max(12, PixelFromMillimeter(trial.option_size_mm as number));
+      const optionFontPx = Math.max(12, PixelFromMillimeter(trial.option_size_mm as number, trial.calibration_length_mm));
 
-      const correctBg = 0x1A3D2B;
+      const correctBg = pixiColors.correctBackground;
       const correctBorder = pixiColors.success;
-      const wrongBg = 0x3D1A1A;
+      const wrongBg = pixiColors.wrongBackground;
       const wrongBorder = pixiColors.error;
 
       for (let i = 0; i < rawOptions.length; i++) {
@@ -450,12 +455,12 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
           if (gameOpt.isCorrect) {
             drawState('correct');
             soundManager.playSuccess();
-            setTimeout(() => EndTrial(rt, true, gameOpt.letters), 350);
+            feedbackTimerId = setTimeout(() => EndTrial(rt, true, gameOpt.letters), 350);
           } else {
             wrongAttempts += 1;
             drawState('wrong');
             soundManager.playFailure();
-            setTimeout(() => {
+            feedbackTimerId = setTimeout(() => {
               drawState('normal');
               feedbackActive = false;
             }, 350);
@@ -484,6 +489,11 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
           option.label.y = oH / 2;
           option.redraw();
         }
+      }
+
+      function ScheduleAnimation(callback: () => void) {
+        const id = requestAnimationFrame(() => { animationFrames.delete(id); callback(); });
+        animationFrames.add(id);
       }
 
       // ── Move Timer ──
@@ -563,9 +573,9 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
             const ease = 1 - Math.pow(1 - t, 3);
             opt.container.x = sx + (targetPos.x - sx) * ease;
             opt.container.y = sy + (targetPos.y - sy) * ease;
-            if (t < 1) requestAnimationFrame(animate);
+            if (t < 1) ScheduleAnimation(animate);
           };
-          requestAnimationFrame(animate);
+          ScheduleAnimation(animate);
         }
       }
 
@@ -585,19 +595,30 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
         }
       };
       window.addEventListener('keydown', handleKeydown);
+      const abortTrial = () => CleanupTrial();
+      window.addEventListener('game:abort', abortTrial);
 
       // ── End Trial ──
-      function EndTrial(rt: number, correct: boolean, response: string) {
+      function CleanupTrial() {
         if (trialEnded) return;
         trialEnded = true;
 
         if (moveTimerId) clearInterval(moveTimerId);
+        if (feedbackTimerId) clearTimeout(feedbackTimerId);
+        animationFrames.forEach(id => cancelAnimationFrame(id));
+        animationFrames.clear();
         app.renderer.off('resize', handleResize);
         window.removeEventListener('keydown', handleKeydown);
+        window.removeEventListener('game:abort', abortTrial);
 
         // Clear & detach (reuse app for next round)
         CleanupPixiTrial(movingCardPixiScope, displayElement);
 
+      }
+
+      function EndTrial(rt: number, correct: boolean, response: string) {
+        if (trialEnded) return;
+        CleanupTrial();
         // Tell jsPsych this trial is done
         self.jsPsych.finishTrial({
           rt,

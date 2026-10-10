@@ -44,7 +44,6 @@
     "@rehab-trainer/game-maze": "*",
     "@rehab-trainer/game-memory-match": "*",
     "@rehab-trainer/game-minesweeper": "*",
-    "@rehab-trainer/game-moving-card": "*",
     "@rehab-trainer/game-n-back": "*",
     "@rehab-trainer/game-number-letter": "*",
     "@rehab-trainer/game-oculomotor-training": "*",

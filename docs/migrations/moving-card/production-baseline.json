@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-10-10T12:16:43.849Z",
+  "url": "https://trainerhub.cc/api/games",
+  "status": 200,
+  "entries": [
+    {
+      "id": "official-moving-card",
+      "slug": "moving-card",
+      "title": "移動卡片訓練",
+      "summary": "移動卡片訓練居家訓練網官方練習",
+      "trainer": "vision",
+      "category": "general",
+      "developerName": "居家訓練網官方",
+      "updatedAt": "2026-10-07T00:00:00.000Z",
+      "release": {
+        "id": "rel-moving-card-1.0.0",
+        "version": "1.0.0",
+        "contentSha256": "35083a8dfe0b9297cf642cd8066e9123237d48e2cf1eae3f68b763e2f27bf246",
+        "capabilities": [
+          "audio",
+          "fullscreen",
+          "keyboard",
+          "pointer"
+        ],
+        "approvedAt": "2026-10-07T00:00:00.000Z",
+        "launchUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/1.0.0/",
+        "installUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/1.0.0/",
+        "settingsUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/1.0.0/package/settings.json"
+      }
+    }
+  ]
+}

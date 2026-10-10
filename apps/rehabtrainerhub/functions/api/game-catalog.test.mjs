@@ -10,6 +10,10 @@ function Fixture(gameId = 'drawing-defense', version = '2.0.3') {
       'zh-TW': { title: '畫畫塔防', description: '上肢動作練習。' },
       en: { title: 'Drawing defense', description: 'Upper-limb practice.' },
     } };
+  if (gameId === 'moving-card') Object.assign(metadata, { trainer: 'vision', category: 'vision', copy: {
+    'zh-TW': { title: '移動卡片訓練', description: '在移動卡片中尋找目標，練習視覺搜尋與動態專注。' },
+    en: { title: 'Moving Card Training', description: 'Find targets among moving cards to practise visual search and dynamic attention.' },
+  } });
   const bytes = Buffer.from(JSON.stringify(metadata));
   const manifest = { schemaVersion: 1, status: 'approved', gameId, version,
     name: 'Drawing defense', runtime: { name: 'native', major: 1 }, presentation: 'game', entry: 'index.html',
@@ -25,6 +29,9 @@ function Fixture(gameId = 'drawing-defense', version = '2.0.3') {
   const old = { id: 'old-game', slug: gameId, title: 'Obsolete title', summary: 'Old shell',
     trainer: 'brain', category: 'higher-cognition', developer_display_name: 'Old author',
     release_id: 'old-release', version: '1.0.0', capabilities_json: '[]' };
+  if (gameId === 'moving-card') Object.assign(old, { id: 'official-moving-card', title: '移動卡片訓練',
+    trainer: 'vision', category: 'general', release_id: 'rel-moving-card-1.0.0',
+    content_sha256: '35083a8dfe0b9297cf642cd8066e9123237d48e2cf1eae3f68b763e2f27bf246' });
   if (gameId === 'motor-cortex-rehab') Object.assign(old, { id: 'official-motor-cortex-rehab',
     title: '手部目標追蹤練習', trainer: 'motor', category: 'general',
     release_id: 'rel-motor-cortex-rehab-1.0.0',
@@ -44,6 +51,21 @@ async function List(fixture) {
   assert.equal(response.status, 200);
   return (await response.json()).games;
 }
+
+test('moving-card current replaces the historical shell with the original vision category and versioned preview', async () => {
+  const fixture = Fixture('moving-card', '2.0.0');
+  const games = await List(fixture);
+  const matches = games.filter(game => game.slug === 'moving-card');
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].title, '移動卡片訓練');
+  assert.equal(matches[0].trainer, 'vision'); assert.equal(matches[0].category, 'vision');
+  assert.equal(matches[0].release.presentation, 'game');
+  assert.equal(matches[0].release.version, '2.0.0');
+  assert.equal(matches[0].release.settingsUrl, undefined);
+  assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/moving-card/2.0.0/package/preview.webp');
+  fixture.objects.set('releases/moving-card/2.0.0/files/game.json', Buffer.from('{}'));
+  assert.equal((await List(fixture)).some(game => game.slug === 'moving-card'), false);
+});
 
 test('public catalog reads preview and tags from the approved game bytes instead of the old publication', async () => {
   const fixture = Fixture();

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "gameId": "moving-card",
+  "trainer": "vision",
+  "category": "vision",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": {
+      "title": "移動卡片訓練",
+      "description": "在移動卡片中尋找目標，練習視覺搜尋與動態專注。"
+    },
+    "en": {
+      "title": "Moving Card Training",
+      "description": "Find targets among moving cards to practise visual search and dynamic attention."
+    }
+  }
+}

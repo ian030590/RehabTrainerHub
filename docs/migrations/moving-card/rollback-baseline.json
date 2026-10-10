@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-10-10T12:22:32.596Z",
+  "deployments": {
+    "rehabtrainerhub": {
+      "id": "8dec36b4-262d-4a6d-9834-6b348a94f215",
+      "url": "https://8dec36b4.rehabtrainerhub.pages.dev",
+      "environment": "production",
+      "commit": "cd490d0397c201a8564a4a17781538949ebee334",
+      "createdAt": "2026-10-10T08:48:06.422486Z"
+    },
+    "trainerhub-user-games": {
+      "id": "526d787b-4666-4d18-93c4-820a32d8ffe4",
+      "url": "https://526d787b.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "cd490d0397c201a8564a4a17781538949ebee334",
+      "createdAt": "2026-10-10T08:48:14.272433Z"
+    }
+  },
+  "checks": [
+    {
+      "path": "/games/moving-card/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "size": 4809
+    },
+    {
+      "path": "/games/moving-card/settings.json",
+      "status": 200,
+      "contentType": "application/json",
+      "size": 3528
+    },
+    {
+      "path": "/assets/training-modules/moving-card.webp",
+      "status": 200,
+      "contentType": "image/webp",
+      "size": 8562
+    }
+  ]
+}

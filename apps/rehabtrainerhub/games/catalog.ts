@@ -3,6 +3,7 @@ import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
 import asteroidShieldCatalog from './asteroid-shield/public/game.json';
 import motorCortexCatalog from './motor-cortex-rehab/public/game.json';
+import movingCardCatalog from './moving-card/public/game.json';
 import gestureBattlerCatalog from './gesture-battler/public/game.json';
 import type { MajorCategoryId,TrainerCategoryId } from './gameTags.js';
 import {
@@ -230,14 +231,13 @@ const seeds: readonly TrainingCatalogSeed[] = [
   },
   {
     id: 'moving-card',
-    trainer: 'vision',
-    purpose: 'vision',
+    trainer: movingCardCatalog.trainer as TrainerCategoryId,
+    purpose: movingCardCatalog.category as TrainingPurposeId,
+    imagePath: `/assets/game-previews/moving-card/${movingCardCatalog.preview}`,
     kind: 'vision',
     path: '/?module=moving-card',
-    zh: ['移動卡片訓練', '在移動卡片中尋找目標，練習視覺搜尋與動態專注。'],
-    en: ['Moving Card Training', 'Find targets among moving cards to practise visual search and dynamic attention.'],
-    titleKey: 'home.module.movingCard.title',
-    descriptionKey: 'home.module.movingCard.desc',
+    zh: [movingCardCatalog.copy['zh-TW'].title, movingCardCatalog.copy['zh-TW'].description],
+    en: [movingCardCatalog.copy.en.title, movingCardCatalog.copy.en.description],
   },
   {
     id: 'oculomotor-training',

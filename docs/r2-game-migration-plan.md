@@ -2,9 +2,11 @@
 
 更新日期：2026-10-10。目前 R2 current 為 `drawing-defense@2.0.4`、`asteroid-shield@2.0.3`、`gesture-battler@2.0.2` 與 `motor-cortex-rehab@2.0.0`，4 款完成、36 款保留舊流程。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
 
+移動卡片訓練 `moving-card@2.0.0` 已建立本機自包含候選與三目標聚光燈，尚待精確 version／contentSha256 擁有者核准、R2 發布與正式 Hub／runner 驗收；本機 registry 的五款不代表正式完成五款。候選盤點、測試先失敗紀錄、逐遊戲審查單與回退見 [移動卡片訓練遷移紀錄](moving-card-r2-migration.md)。
+
 2026-10-10 手部目標追蹤發現 Hub 背景捲軸占用 15px，造成 `100vw` 遊戲畫面超過可視文件寬度、左右留白不一致且右側緊貼視窗。後續搬遷不得再出現左右過寬／偏移或不必要的頁面捲軸；第 7 節步驟 B／D／F 與第 11 節加入必查項目。本次 Hub 修正已通過七項 CI／兩站部署及正式桌機視窗／手機／平板完整流程，R2 遊戲 bytes 維持原核准版本。重現、修正與本機／正式驗收見 [遊戲置中與背景捲軸紀錄](motor-cortex-hub-scrollbar-fix.md)。
 
-2026-10-10 手部目標追蹤練習 `motor-cortex-rehab@2.0.0` 已依精確摘要核准完成相容 runner 先部署、R2 發布／回讀、Hub 切換及[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38016391577)。採遊戲自有前景設定視窗、實際場景的五步聚光燈與自有完整成績，保留原引擎／參數／原圖。正式 API 分類／圖片／不指定版本 session、正式 Hub 桌機／手機／英文登入右手與獨立 PWA 手機／平板左手均通過；見 [手部目標追蹤遷移驗收](motor-cortex-rehab-r2-migration.md)與[正式收據](releases/motor-cortex-rehab-2.0.0.json)。本機與正式 registry／Hub build 均為 4 款／36 款；感測器仍用實際 MediaPipe 圖片串流，不宣稱真人、實體相機或 Safari／iOS 已驗收。
+2026-10-10 手部目標追蹤練習 `motor-cortex-rehab@2.0.0` 已依精確摘要核准完成相容 runner 先部署、R2 發布／回讀、Hub 切換及[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38016391577)。採遊戲自有前景設定視窗、實際場景的五步聚光燈與自有完整成績，保留原引擎／參數／原圖。正式 API 分類／圖片／不指定版本 session、正式 Hub 桌機／手機／英文登入右手與獨立 PWA 手機／平板左手均通過；見 [手部目標追蹤遷移驗收](motor-cortex-rehab-r2-migration.md)與[正式收據](releases/motor-cortex-rehab-2.0.0.json)。當次本機與正式 registry／Hub build 均為 4 款／36 款；感測器仍用實際 MediaPipe 圖片串流，不宣稱真人、實體相機或 Safari／iOS 已驗收。
 
 三款成績頁新版經擁有者核准精確 version／contentSha256，已發布 R2，加入主要統計、可切換指標的圖表／描述統計與個別回合明細。成績 UI、計算與樣式仍各自由遊戲擁有，Hub 不增加結果頁或遊戲 bundle。後續遷移同樣必須符合第 7 節步驟 B 的成績呈現規範、第 D 步驟的驗證關卡與第 11 節的審查欄位；實作、正式驗收與回退證據見 [成績頁發布紀錄](r2-game-results-ui.md)及三份正式收據：[畫畫塔防](releases/drawing-defense-2.0.4.json)、[小行星護盾防衛](releases/asteroid-shield-2.0.3.json)、[手勢指令對戰](releases/gesture-battler-2.0.1.json)。
 

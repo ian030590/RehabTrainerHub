@@ -8,6 +8,8 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'moving-card', defaultMetric: 'searchMs', alternate: 'errors',
+    row: { completed: 1, searchMs: 2, attempts: 1, errors: 0 } },
   { id: 'motor-cortex-rehab', defaultMetric: 'accuracy', alternate: 'holdSeconds',
     row: { event: 1, outcome: 1, atSeconds: 1, holdSeconds: .8, targetSize: 132, level: 1, accuracy: 2 } },
   { id: 'drawing-defense', defaultMetric: 'reactionSeconds', alternate: 'defeated',

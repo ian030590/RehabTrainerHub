@@ -1,0 +1,267 @@
+{
+  "status": "owner-approved-published-awaiting-production-acceptance",
+  "gameId": "moving-card",
+  "version": "2.0.0",
+  "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037",
+  "files": [
+    {
+      "path": "assets/index-DIhjsKvf.js",
+      "size": 901535,
+      "sha256": "8ace58df6bdc58fb6ed2c8e762c30cac4d51dd9b8aba120bc1af9806243ae13a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style--2M-Q6qW.css",
+      "size": 17329,
+      "sha256": "4ddd6c3e03307096e37c4cd88f2c985d2d09a0dc64f4db69ce03df8cb8490d30",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 507,
+      "sha256": "f82ee8b03ffd539b0a84fa93c34f720a7b022d48217e223d7ab835ef91c71c84",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "628678311df8f0e0a1ff6cb6a3e8bf5533da018265db87b6778292690e50dcb8",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8562,
+      "sha256": "e14346b7bef3fba14f82f9c377fde9d0709c529d75f5cc23ef5e81652180e2b6",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "touch"
+  ],
+  "presentation": "game",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "sourceBaselineCommit": "dfb507b0914048e5111853a4fdb3fe9ccbb37fb0",
+  "checkedAt": "2026-10-10T12:56:44.974Z",
+  "approval": {
+    "approvedAt": "2026-10-10T13:01:55.950Z",
+    "authority": "repository owner in this conversation",
+    "instruction": "核准並git push",
+    "version": "2.0.0",
+    "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037"
+  },
+  "publication": {
+    "gameId": "moving-card",
+    "version": "2.0.0",
+    "bucket": "rehab-game-releases",
+    "launchUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.0/package/index.html",
+    "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037",
+    "verifiedAt": "2026-10-10T13:07:28.173Z"
+  },
+  "originalPreviewSha256": "e14346b7bef3fba14f82f9c377fde9d0709c529d75f5cc23ef5e81652180e2b6",
+  "validation": {
+    "gates": [
+      {
+        "command": "npm run test:naming",
+        "status": "passed"
+      },
+      {
+        "command": "npm run test:pwa",
+        "status": "passed"
+      },
+      {
+        "command": "npm run test:game-architecture",
+        "status": "passed"
+      },
+      {
+        "command": "npm run test:hub-functions",
+        "status": "passed"
+      },
+      {
+        "command": "npm run test:gamerunner",
+        "status": "passed"
+      },
+      {
+        "command": "npm run test:entrypoints",
+        "status": "passed"
+      },
+      {
+        "command": "npm run test:cloudflare-deploy",
+        "status": "passed"
+      }
+    ],
+    "additional": [
+      {
+        "command": "npm run test:seo",
+        "status": "passed"
+      },
+      {
+        "command": "npm run test:game-architecture:browser",
+        "status": "passed"
+      },
+      {
+        "command": "npm run build:hub -- --force",
+        "status": "passed"
+      },
+      {
+        "command": "node scripts/check-built-game-architecture.mjs apps/rehabtrainerhub/out",
+        "status": "passed"
+      },
+      {
+        "command": "npm run build:gamerunner",
+        "status": "passed"
+      },
+      {
+        "command": "npm --prefix apps/rehabtrainerhub/games/moving-card run build",
+        "status": "passed"
+      },
+      {
+        "command": "node scripts/publish-official-game.mjs moving-card --dry-run",
+        "status": "passed"
+      }
+    ],
+    "browser": [
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game moving-card --lobby --wide --windowed",
+        "status": "passed",
+        "writeScope": "local SQLite only"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game moving-card --lobby --mobile --session-failure",
+        "status": "passed",
+        "writeScope": "local SQLite only"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game moving-card --lobby --tablet --medium",
+        "status": "passed",
+        "writeScope": "local SQLite only"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game moving-card --lobby --english --signed-in --hard --renderer-failure --sound-on",
+        "status": "passed",
+        "writeScope": "local SQLite only"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game moving-card --lobby --mobile --stop",
+        "status": "passed",
+        "writeScope": "local SQLite only"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game moving-card --lobby --revoke",
+        "status": "passed",
+        "writeScope": "local SQLite only"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game moving-card --standalone --mobile",
+        "status": "passed",
+        "writeScope": "local SQLite only"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game moving-card --standalone --tablet --english --hard",
+        "status": "passed",
+        "writeScope": "local SQLite only"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game moving-card --standalone --wide --medium",
+        "status": "passed",
+        "writeScope": "local SQLite only"
+      }
+    ],
+    "existingGameRegression": {
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --standalone --mobile",
+      "status": "passed"
+    },
+    "screenshots": [
+      "local/lobby-desktop-guest-wide-windowed/lobby.png",
+      "local/lobby-desktop-guest-wide-windowed/settings.png",
+      "local/lobby-desktop-guest-wide-windowed/tutorial-target.png",
+      "local/lobby-desktop-guest-wide-windowed/tutorial-options.png",
+      "local/lobby-desktop-guest-wide-windowed/tutorial-round.png",
+      "local/lobby-desktop-guest-wide-windowed/confirmation.png",
+      "local/lobby-desktop-guest-wide-windowed/gameplay.png",
+      "local/lobby-desktop-guest-wide-windowed/results.png",
+      "local/lobby-desktop-guest-wide-windowed/results-analysis.png",
+      "local/lobby-desktop-guest-wide-windowed/results-details.png",
+      "local/lobby-mobile-guest/lobby.png",
+      "local/lobby-mobile-guest/settings.png",
+      "local/lobby-mobile-guest/tutorial-target.png",
+      "local/lobby-mobile-guest/confirmation.png",
+      "local/lobby-mobile-guest/gameplay.png",
+      "local/lobby-mobile-guest/results.png",
+      "local/lobby-mobile-guest/results-analysis.png",
+      "local/lobby-mobile-guest/results-details.png",
+      "local/lobby-tablet-guest/settings.png",
+      "local/lobby-tablet-guest/confirmation.png",
+      "local/lobby-tablet-guest/gameplay.png",
+      "local/lobby-tablet-guest/results-analysis.png",
+      "local/lobby-desktop-account-en/renderer-failure.png",
+      "local/lobby-desktop-account-en/confirmation.png",
+      "local/lobby-desktop-account-en/gameplay.png",
+      "local/lobby-desktop-account-en/results-details.png",
+      "local/standalone-mobile-guest/settings.png",
+      "local/standalone-mobile-guest/gameplay.png",
+      "local/standalone-mobile-guest/results-details.png",
+      "local/standalone-tablet-guest-en/confirmation.png",
+      "local/standalone-tablet-guest-en/gameplay.png",
+      "local/standalone-tablet-guest-en/results-analysis.png",
+      "local/standalone-desktop-guest-wide/gameplay.png",
+      "local/standalone-desktop-guest-wide/results.png"
+    ]
+  },
+  "rollback": {
+    "checkedAt": "2026-10-10T12:22:32.596Z",
+    "deployments": {
+      "rehabtrainerhub": {
+        "id": "8dec36b4-262d-4a6d-9834-6b348a94f215",
+        "url": "https://8dec36b4.rehabtrainerhub.pages.dev",
+        "environment": "production",
+        "commit": "cd490d0397c201a8564a4a17781538949ebee334",
+        "createdAt": "2026-10-10T08:48:06.422486Z"
+      },
+      "trainerhub-user-games": {
+        "id": "526d787b-4666-4d18-93c4-820a32d8ffe4",
+        "url": "https://526d787b.trainerhub-user-games.pages.dev",
+        "environment": "production",
+        "commit": "cd490d0397c201a8564a4a17781538949ebee334",
+        "createdAt": "2026-10-10T08:48:14.272433Z"
+      }
+    },
+    "checks": [
+      {
+        "path": "/games/moving-card/",
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "size": 4809
+      },
+      {
+        "path": "/games/moving-card/settings.json",
+        "status": 200,
+        "contentType": "application/json",
+        "size": 3528
+      },
+      {
+        "path": "/assets/training-modules/moving-card.webp",
+        "status": 200,
+        "contentType": "image/webp",
+        "size": 8562
+      }
+    ]
+  },
+  "requiredBeforeCompletion": [
+    "Deploy Hub registration; verify all seven CI gates and both deployment results.",
+    "Read actual production catalog/session/preview/current/PWA APIs without exposing session tokens.",
+    "Complete actual production Hub and runner desktop/mobile/tablet browser checks using local API writes only.",
+    "Save formal receipt under docs/releases, then update migration completion counts."
+  ],
+  "limitations": [
+    "No other approved native-format release exists for first-migration rollback; restore verified legacy Hub flow if needed.",
+    "Production rollback and owner R2 status revocation were not executed.",
+    "Safari/iOS, physical touchscreen devices, ruler calibration, long-duration full offline play and real Turnstile were not tested."
+  ]
+}

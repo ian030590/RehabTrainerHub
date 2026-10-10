@@ -308,15 +308,14 @@ const implementationGroups = [
       'MotorTutorial',
     ],
   },
+  { ids: ['vision:moving-card'], files: ['moving-card/MovingCardGame.tsx'], tokens: ["setPhase('rules')", "setPhase('running')", "setPhase('results')", 'SendGameResult', 'MovingCardTutorial'] },
   {
     ids: [
-      'vision:moving-card',
       'vision:gabor-patching',
       'vision:reading-training',
       'vision:driving-rehab',
     ],
     files: [
-      'moving-card/MovingCardGame.tsx',
       'gabor-patching/GaborPatchingGame.tsx',
       'reading-training/ReadingTrainingGame.tsx',
       'driving-rehab/DrivingRehabGame.tsx',

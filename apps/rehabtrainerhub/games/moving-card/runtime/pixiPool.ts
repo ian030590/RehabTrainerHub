@@ -6,25 +6,20 @@
  * may reuse it only within that module's own jsPsych trials.
  */
 import { Application } from 'pixi.js';
-import { pixiColors } from '@rehab-trainer/ui/trainerTheme';
+import 'pixi.js/unsafe-eval';
+import { pixiColors } from './theme';
 
 const defaultTrialContainerStyle = 'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;';
 const maxPixiDevicePixelRatio = 2;
 
 export const pixiRuntimeScopes = {
   movingCard: 'training:moving-card',
-  oculomotor: 'training:oculomotor-training',
-  gaborPatching: 'training:gabor-patching',
-  reading: 'training:reading-training',
 } as const;
 
 export type PixiRuntimeScope = typeof pixiRuntimeScopes[keyof typeof pixiRuntimeScopes];
 
 const pixiTrainingRuntimeScopes: Record<string, PixiRuntimeScope> = {
   'moving-card': pixiRuntimeScopes.movingCard,
-  'oculomotor-training': pixiRuntimeScopes.oculomotor,
-  'gabor-patching': pixiRuntimeScopes.gaborPatching,
-  'reading-training': pixiRuntimeScopes.reading,
 };
 
 function GetPixiResolution(): number {
@@ -143,7 +138,7 @@ class PixiAppManager {
       await this.app.init({
         backgroundColor: pixiColors.bg,
         antialias: true,
-        preference: ['webgl', 'canvas'],
+        preference: 'webgl',
         powerPreference: 'high-performance',
         resolution: GetPixiResolution(),
         autoDensity: true,
@@ -160,6 +155,10 @@ class PixiAppManager {
       }
       this._ready = true;
     } catch (error) {
+      try {
+        if (this.app?.renderer) this.app.destroy(true, { children: true, texture: true });
+        else this.app?.stage?.destroy({ children: true });
+      } catch { /* Preserve the initialization error for the retry UI. */ }
       this.app = null;
       this._ready = false;
       this.initPromise = null;
@@ -236,12 +235,7 @@ export function RunPixiTrial(
   }
 
   manager.ensureReady().then(runWithApp).catch((error) => {
-    const message = error instanceof Error ? error.message : String(error);
     console.error('PixiJS init failed:', error);
-    displayElement.replaceChildren();
-    const errorElement = document.createElement('div');
-    errorElement.style.cssText = 'color:red;padding:20px;';
-    errorElement.textContent = `PixiJS initialization failed: ${message}`;
-    displayElement.appendChild(errorElement);
+    window.dispatchEvent(new Event('game:renderer-error'));
   });
 }

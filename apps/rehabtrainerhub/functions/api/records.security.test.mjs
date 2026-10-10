@@ -604,8 +604,8 @@ const victimVisionCount = await onRequestGet({
 });
 assert.deepEqual(await victimVisionCount.json(), { count: 1 });
 
-const scoreRecord = { id: 'hub-score-record', savedAt: new Date().toISOString(), userName: '', moduleId: 'moving-card', gameId: 'moving-card', score: {
-  schema: 'rehab-trainer.game-score/v1', gameId: 'moving-card',
+const scoreRecord = { id: 'hub-score-record', savedAt: new Date().toISOString(), userName: '', moduleId: 'reading-training', gameId: 'reading-training', score: {
+  schema: 'rehab-trainer.game-score/v1', gameId: 'reading-training',
   rounds: Array.from({ length: 1500 }, (_, index) => ({ score: index % 2, responseMs: 300 })), summary: { total: 750 },
 } };
 const scoreWrite = await onRequestPost({ request: new Request('https://trainerhub.cc/api/records', {

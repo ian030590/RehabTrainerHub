@@ -79,6 +79,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `npm run test:seo` 同時驗證文章正文的伺服器渲染與實際 HTML SEO 輸出，目前沒有獨立 CI matrix，也未列入 root build gate。Hub build 末尾會執行 `check-seo-output.mjs`，因此部署 build 有 HTML SEO 輸出檢查，PR 驗證 matrix 不會執行完整 `test:seo`；SEO 變更仍須本機另行驗證。
 - 變更 workflow 觸發範圍、測試命令或 build gate 時，必須同步更新本節，並確認 workflow 自身路徑仍會觸發驗證。
 - 手部目標追蹤遷移將 `check-motor-cortex-migration.test.mjs`、`check-motor-cortex-tutorial.test.mjs` 與 `check-motor-cortex-bridge.test.mjs` 納入既有 `test:game-architecture`；保留原引擎／參數邊界、五目標聚光燈、私有輸入、數值成果與原預覽圖驗證。兩份 workflow 維持上述七項 matrix、同一 root 命令及 workflow 自身觸發範圍；不新增 Brave CI 項目。`test:gamerunner` 驗證相容的空 input-start 與可選 `{hand: any|left|right}`、明確同意、只輸出 21 點 xyz 及取消／斷線清理。
+- 移動卡片訓練 `2.0.0` 為待核准／待發布的本機 R2 候選，正式完成數仍為四款。`check-moving-card-migration.test.mjs` 與 `check-moving-card-tutorial.test.mjs` 納入既有 `test:game-architecture`，驗證原設定／校正、三難度完整 40 選項、錯選重試／計時、取消／renderer 清理、三目標聚光燈及私有成果；既有結果／UI／全螢幕測試亦加入此遊戲。兩份 workflow 維持七項 matrix、相同 root 命令及 workflow 自身觸發範圍。本機 Brave 使用 `node scripts/check-r2-game-browser.mjs --game moving-card --lobby`，另驗桌機 `--wide --windowed`、`--tablet`、`--mobile --session-failure`、`--signed-in --english --hard --renderer-failure`、`--revoke` 及三尺寸 `--standalone`；只寫本機 SQLite。`test:gamerunner` 新增原生自包含 PWA 的單一 `lang=zh|en`、package 語言與離線快取回歸，持續拒絕重複／未知／混合 embed 參數。核准後須先部署相容 runner，再發布精確候選，最後切換 Hub 並完成正式驗收；詳見 `docs/moving-card-r2-migration.md`。
 
 ## 程式風格與命名規範
 

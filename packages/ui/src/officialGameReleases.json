@@ -14,5 +14,9 @@
   "motor-cortex-rehab": {
     "origin": "https://trainerhub-user-games.pages.dev",
     "name": "手部目標追蹤練習"
+  },
+  "moving-card": {
+    "origin": "https://trainerhub-user-games.pages.dev",
+    "name": "移動卡片訓練"
   }
 }
