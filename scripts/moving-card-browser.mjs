@@ -79,6 +79,11 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
     await game(`document.exitFullscreen()`);
     await until(() => game(`!document.fullscreenElement`), 'exit fullscreen without losing gameplay');
   }
+  await until(() => game(`(() => {
+    const canvas = document.querySelector('canvas').getBoundingClientRect(), root = document.documentElement;
+    return canvas.left === 0 && canvas.top === 0 && canvas.right === innerWidth && canvas.bottom === innerHeight
+      && root.scrollWidth === root.clientWidth && root.scrollHeight === root.clientHeight;
+  })()`), 'canvas fills the viewport after fullscreen resize');
   const layout = await game(`(() => {
     const canvas=document.querySelector('canvas').getBoundingClientRect(), root=document.documentElement;
     return {width:innerWidth,height:innerHeight,left:canvas.left,right:canvas.right,top:canvas.top,bottom:canvas.bottom,
