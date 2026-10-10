@@ -1,0 +1,74 @@
+:root {
+  --surface: #ffffff; --background: #f6f7f9; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e3eef8;
+  --border: #d4d9de; --border-strong: #aeb6bd; --bg-overlay: #14212b99;
+  --arena: #e5eee8; --target: #277956; --target-soft: #27795625; --success: #35ae70;
+  --hand-line: #67e8f9; --hand-point: #fef08a; --text-on-accent: #ffffff; --radius: 8px;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; color: var(--text); }
+html { font-size: 16px; }
+body { font: 700 18px/1.5 var(--font-body); }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+button:disabled { opacity: .6; cursor: default; }
+.motor-cortex-rehab-game { position: fixed; inset: 0; width: 100%; height: 100dvh; overflow: hidden; background: var(--arena); }
+.motor-jspsych-host { display: none; }
+.motor-cortex-play { display: grid; grid-template-rows: auto minmax(0,1fr) auto; width: 100%; height: 100%; padding: 16px; gap: 12px; }
+.motor-cortex-hud { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; border-radius: var(--radius); background: var(--surface); padding: 12px; }
+.motor-cortex-hud p { margin: 0; text-align: center; }
+.motor-cortex-hud span, .motor-cortex-hud strong { display: block; }
+.motor-cortex-hud span { font-size: .85rem; }
+.motor-cortex-stage { position: relative; min-height: 0; width: 100%; height: 100%; overflow: hidden; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--background); }
+.motor-cortex-path { position: absolute; background: var(--border); display: none; }
+.motor-cortex-path-vertical { width: 2px; height: 100%; left: 50%; }
+.motor-cortex-path-horizontal { height: 2px; width: 100%; top: 50%; }
+.motor-cortex-drill-vertical .motor-cortex-path-vertical, .motor-cortex-drill-horizontal .motor-cortex-path-horizontal { display: block; }
+.motor-cortex-target { position: absolute; left: var(--motor-target-x); top: var(--motor-target-y); width: var(--motor-target-size); height: var(--motor-target-size); transform: translate(-50%,-50%); border: 4px solid var(--target); border-radius: 50%; background: var(--target-soft); display: grid; place-items: center; }
+.motor-cortex-target p { margin: 0; color: var(--target); }
+.motor-cortex-target.is-hit { border-color: var(--success); }
+.motor-cortex-hand-cursor { position: absolute; left: var(--motor-hand-x); top: var(--motor-hand-y); width: 36px; height: 36px; transform: translate(-50%,-50%); border-radius: 50%; background: var(--primary); opacity: 0; }
+.motor-cortex-hand-cursor.is-visible { opacity: 1; }
+.motor-cortex-hand-cursor p { position: absolute; left: 50%; top: 36px; transform: translateX(-50%); white-space: nowrap; margin: 0; font-size: .85rem; }
+.motor-cortex-instruction { text-align: center; padding: 4px max(190px,18vw); }
+.motor-cortex-instruction h2 { margin: 0; font-size: 1.2rem; }
+.motor-cortex-instruction p { margin: 4px 0; }
+.motor-cortex-hold-meter { height: 16px; background: var(--border); border-radius: var(--radius); overflow: hidden; width: min(300px,100%); margin: 8px auto; }
+.motor-cortex-hold-meter i { display: block; height: 100%; width: var(--motor-hold-progress); background: var(--primary); }
+.motor-cortex-camera { position: absolute; bottom: 16px; left: 16px; width: 168px; background: var(--heading); color: var(--surface); border-radius: var(--radius); overflow: hidden; }
+.motor-cortex-camera canvas { display: block; width: 100%; aspect-ratio: 4/3; }
+.motor-cortex-camera p { margin: 0; padding: 4px; font-size: .8rem; text-align: center; }
+.motor-hand-placeholder { position: absolute; width: 65%; height: 65%; top: 6%; left: 17%; fill: var(--hand-line); }
+.motor-exit-button { position: absolute; bottom: 16px; right: 16px; }
+.motor-loading { padding: 24px; }
+.motor-input-error { color: var(--text); border-left: 4px solid var(--primary); padding: 12px; }
+.training-config-body label { display: grid; gap: 8px; margin-top: 16px; }
+.training-config-body input, .training-config-body select { width: 100%; min-width: 0; min-height: 44px; padding: 8px; border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--text); background: var(--surface); }
+.training-setting h3 { margin: 0 0 12px; font-size: 1.3rem; }
+.training-setting p { line-height: 1.6; }
+.training-config-summary-item { margin: 0; padding: 8px 0; }
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; border-radius: var(--radius); pointer-events: none; outline: 3px solid var(--surface); box-shadow: 0 0 0 100vmax var(--bg-overlay); z-index: 9998; }
+.game-tour { position: fixed; width: min(calc(100vw - 16px),30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 20px; background: var(--surface); border-radius: var(--radius); color: var(--text); font-size: 1.15rem; font-weight: 700; z-index: 9999; }
+.game-tour h2 { font-size: 1.4em; margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 4px; }
+.motor-results-container { position: absolute; inset: 0; overflow: auto; background: var(--background); padding: 24px 16px 60px; }
+.experiment-results { max-width: 960px; margin: auto; }
+@media(max-width:639px) {
+  .motor-cortex-play { padding: 8px; gap: 8px; }
+  .motor-cortex-hud { gap: 4px; padding: 8px 4px; }
+  .motor-cortex-hud span { font-size: .75rem; }
+  .motor-cortex-instruction { padding: 4px 0 140px; }
+  .motor-cortex-camera { width: 130px; left: 8px; bottom: 8px; }
+  .motor-exit-button { right: 8px; bottom: 8px; }
+}
+@media(max-height:500px) {
+  .motor-cortex-play { grid-template-columns: minmax(0,1fr) 180px; grid-template-rows: auto minmax(0,1fr); }
+  .motor-cortex-hud { grid-column: 1; grid-row: 1; padding: 4px; }
+  .motor-cortex-stage { grid-column: 1; grid-row: 2; }
+  .motor-cortex-instruction { grid-column: 2; grid-row: 1; padding: 0; font-size: .85rem; }
+  .motor-cortex-camera { left: auto; right: 16px; bottom: 72px; width: 130px; }
+}

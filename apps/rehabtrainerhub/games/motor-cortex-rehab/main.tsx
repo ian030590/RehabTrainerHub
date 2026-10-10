@@ -1,29 +1,11 @@
-import { OfficialGameShell } from '@rehab-trainer/ui/components/OfficialGameShell';
-import '@rehab-trainer/ui/components/TrainerApp.css';
+import './game.css';
 import './rules.css';
-import { InstallHostedGameSettingsReceiver, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { LanguageProvider } from '@rehab-trainer/ui/i18n/games';
-import React from 'react';
+import './results.css';
+import { ExitGame, InstallHubBridge } from './runtime/hubBridge';
+import { LanguageProvider } from './i18n/useT';
 import ReactDOM from 'react-dom/client';
-import { HashRouter } from 'react-router-dom';
-import { dictionaries } from './i18n';
 import { MotorCortexRehabGame } from './MotorCortexRehabGame';
-import settings from './settings.json';
-import score from './score.json';
 
-InstallHostedGameSettingsReceiver();
-
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-      <HashRouter>
-        <LanguageProvider dictionaries={dictionaries}>
-          <OfficialGameShell settings={settings} score={score} title={document.title}>
-            <MotorCortexRehabGame onExit={() => RequestHubTrainingConfiguration()} />
-          </OfficialGameShell>
-        </LanguageProvider>
-      </HashRouter>
-    </React.StrictMode>,
-  );
-}
+InstallHubBridge();
+const root = document.getElementById('root');
+if (root) ReactDOM.createRoot(root).render(<LanguageProvider><MotorCortexRehabGame onExit={ExitGame} /></LanguageProvider>);

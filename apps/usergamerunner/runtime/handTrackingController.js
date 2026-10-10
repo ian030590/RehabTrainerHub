@@ -15,7 +15,7 @@ export function CreateHandTrackingController(environment) {
     landmarker?.close();
     landmarker = null;
   };
-  const Start = async (onFrame, onError) => {
+  const Start = async (onFrame, onError, hand = 'any') => {
     Stop();
     const selected = generation;
     const fail = reason => {
@@ -36,7 +36,7 @@ export function CreateHandTrackingController(environment) {
       video.srcObject = stream;
       await video.play();
       if (generation !== selected) return false;
-      const detector = await environment.createLandmarker();
+      const detector = await environment.createLandmarker(hand);
       if (generation !== selected) { detector.close(); return false; }
       landmarker = detector;
       let previousTime = -1;
@@ -48,7 +48,10 @@ export function CreateHandTrackingController(environment) {
         previousTime = video.currentTime;
         previousDetection = timestamp;
         try {
-          const points = landmarker.detectForVideo(video, timestamp).landmarks[0] ?? [];
+          const detection = landmarker.detectForVideo(video, timestamp);
+          const index = hand === 'any' ? 0 : (detection.handedness ?? detection.handednesses ?? [])
+            .findIndex(categories => categories[0]?.categoryName?.toLowerCase() === hand);
+          const points = detection.landmarks[index] ?? [];
           if (points.length !== 0 && (points.length !== 21 || points.some(point =>
             ![point.x, point.y, point.z].every(value => Number.isFinite(value) && Math.abs(value) <= 10)))) {
             throw new Error('Invalid hand landmarks');

@@ -10,5 +10,9 @@
   "drawing-defense": {
     "origin": "https://trainerhub-user-games.pages.dev",
     "name": "畫畫塔防"
+  },
+  "motor-cortex-rehab": {
+    "origin": "https://trainerhub-user-games.pages.dev",
+    "name": "手部目標追蹤練習"
   }
 }

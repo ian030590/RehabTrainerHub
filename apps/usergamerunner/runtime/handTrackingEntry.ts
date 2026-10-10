@@ -19,11 +19,11 @@ export function CreateController() {
       document.body.append(video);
       return video;
     },
-    createLandmarker: async () => {
+    createLandmarker: async (hand: string) => {
       const vision = await FilesetResolver.forVisionTasks(assetBase + 'wasm');
       return HandLandmarker.createFromOptions(vision, {
         baseOptions: { modelAssetPath: assetBase + 'hand_landmarker.task' },
-        runningMode: 'VIDEO', numHands: 1,
+        runningMode: 'VIDEO', numHands: hand === 'any' ? 1 : 2,
         minHandDetectionConfidence: 0.5, minHandPresenceConfidence: 0.5, minTrackingConfidence: 0.5,
       });
     },

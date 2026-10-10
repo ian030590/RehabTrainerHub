@@ -144,7 +144,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
       if (message.type === 'result') { inputRef.current?.Stop(); resultRef.current = message.payload; void save(); }
       if (message.type === 'retry') void save();
       if (message.type === 'exit') { inputRef.current?.Stop(); onClose(); }
-      if (message.type === 'input-start') void inputRef.current?.Start();
+      if (message.type === 'input-start') void inputRef.current?.Start(message.payload.hand);
       if (message.type === 'input-stop') inputRef.current?.Stop();
       if (message.type === 'sample' && sampleCount++ < 100) {
         const body = new FormData();

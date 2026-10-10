@@ -113,7 +113,7 @@ test('an old drawing-defense publication cannot replace the R2 current session e
   assert.equal(game.installUrl, '/games/drawing-defense/');
 });
 
-for (const runtimeId of ['asteroid-shield', 'gesture-battler']) {
+for (const runtimeId of ['asteroid-shield', 'gesture-battler', 'motor-cortex-rehab']) {
 test(`${runtimeId} current metadata preserves its session entry despite a same-slug old settings shell`, async () => {
   const { BuildHubGameCatalog } = await ImportHubModule('./gameCatalog.ts');
   const module = { runtimeId, trainer: 'motor', category: 'motor', purpose: 'upper-limb',

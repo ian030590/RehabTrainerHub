@@ -1,6 +1,6 @@
 export type HandInputMessage = { schema: string; sequence: number; type: string; payload: unknown };
-type InputController = { Start: (onFrame: (payload: unknown) => void, onError: (reason: string) => void) => Promise<boolean>; Stop: () => void };
-export type HandInputBroker = { Start: () => Promise<void>; Stop: () => void };
+type InputController = { Start: (onFrame: (payload: unknown) => void, onError: (reason: string) => void, hand?: 'any' | 'left' | 'right') => Promise<boolean>; Stop: () => void };
+export type HandInputBroker = { Start: (hand?: 'any' | 'left' | 'right') => Promise<void>; Stop: () => void };
 type HandInputApi = { CreateController: () => InputController };
 const loaded = new Map<string, Promise<HandInputApi>>();
 

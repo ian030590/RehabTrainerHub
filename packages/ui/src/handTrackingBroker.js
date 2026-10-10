@@ -12,7 +12,7 @@ export function CreateHandTrackingBroker({ createController, send, requestConsen
     controller?.Stop();
     controller = null;
   };
-  const Start = async () => {
+  const Start = async (hand = 'any') => {
     if (active) return;
     active = true;
     const selected = generation;
@@ -26,6 +26,7 @@ export function CreateHandTrackingBroker({ createController, send, requestConsen
       const started = await input.Start(
         payload => { if (selected === generation) reply('frame', payload); },
         reason => { if (selected === generation) { Stop(); reply('error', { reason }); } },
+        hand,
       );
       if (selected === generation && started) reply('ready', {});
     } catch {

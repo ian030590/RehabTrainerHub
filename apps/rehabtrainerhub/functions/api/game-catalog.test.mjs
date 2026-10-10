@@ -25,6 +25,11 @@ function Fixture(gameId = 'drawing-defense', version = '2.0.3') {
   const old = { id: 'old-game', slug: gameId, title: 'Obsolete title', summary: 'Old shell',
     trainer: 'brain', category: 'higher-cognition', developer_display_name: 'Old author',
     release_id: 'old-release', version: '1.0.0', capabilities_json: '[]' };
+  if (gameId === 'motor-cortex-rehab') Object.assign(old, { id: 'official-motor-cortex-rehab',
+    title: '手部目標追蹤練習', trainer: 'motor', category: 'general',
+    release_id: 'rel-motor-cortex-rehab-1.0.0',
+    content_sha256: '636a44cd63c03476890ee127096dbfb38ed084af9985d97544ba1170b22f315d',
+    capabilities_json: '["audio","fullscreen","keyboard","pointer"]' });
   const env = { REHAB_DB: { prepare: () => ({ all: async () => ({ results: [old,
     { ...old, id: 'another-game', slug: 'another-game', title: 'Another game' },
   ] }) }) }, GAME_RELEASE_BUCKET: { get: async key => {
@@ -72,6 +77,19 @@ test('asteroid current metadata replaces its historical shell and rejects absent
     } else fixture.objects.set('releases/asteroid-shield/2.0.0/files/game.json', Buffer.from('{}'));
     assert.equal((await List(fixture)).some(value => value.slug === 'asteroid-shield'), false);
   }
+});
+
+test('hand tracking current replaces the same-slug historical settings shell with its own metadata', async () => {
+  const fixture = Fixture('motor-cortex-rehab', '2.0.0');
+  const games = await List(fixture);
+  const [game] = games.filter(value => value.slug === 'motor-cortex-rehab');
+  assert.equal(games.filter(value => value.slug === 'motor-cortex-rehab').length, 1);
+  assert.equal(game.release.presentation, 'game');
+  assert.equal(game.release.settingsUrl, undefined);
+  assert.equal(game.category, 'upper-limb');
+  assert.equal(game.previewUrl, 'https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.0/package/preview.webp');
+  fixture.objects.set('releases/motor-cortex-rehab/2.0.0/files/game.json', Buffer.from('{}'));
+  assert.equal((await List(fixture)).some(value => value.slug === 'motor-cortex-rehab'), false);
 });
 
 test('a revoked release, forged metadata or missing preview never enters the public game catalog', async () => {

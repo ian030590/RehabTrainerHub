@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "gameId": "motor-cortex-rehab",
+  "trainer": "motor",
+  "category": "upper-limb",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": {
+      "title": "手部目標追蹤練習",
+      "description": "追蹤手部位置，練習活動範圍、目標追蹤與隨機觸達。"
+    },
+    "en": {
+      "title": "Hand Target Tracking Practice",
+      "description": "Track hand position to practise range of motion, target tracking, and random reaches."
+    }
+  }
+}

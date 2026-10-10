@@ -139,6 +139,46 @@ function CreateFixture() {
   return fixture;
 }
 
+test('trusted proxy selects the requested hand locally and emits only the existing xyz frame contract', async () => {
+  const { CreateHandTrackingController } = await import('../runtime/handTrackingController.js');
+  for (const hand of ['left', 'right']) {
+    const fixture = CreateFixture();
+    const left = Array.from({ length: 21 }, () => ({ x: .2, y: .3, z: 0 }));
+    const right = Array.from({ length: 21 }, () => ({ x: .7, y: .4, z: 0 }));
+    fixture.detection.landmarks = [left, right];
+    fixture.detection.handedness = [[{ categoryName: 'Left' }], [{ categoryName: 'Right' }]];
+    const frames = [];
+    const proxy = CreateHandTrackingController(fixture.environment);
+    await proxy.Start(frame => frames.push(frame), assert.fail, hand);
+    fixture.Tick(100);
+    assert.deepEqual(frames[0], { timestamp: 100, landmarks: hand === 'left' ? left : right });
+    fixture.video.currentTime++;
+    fixture.detection.handedness = [[{ categoryName: hand === 'left' ? 'Right' : 'Left' }]];
+    fixture.detection.landmarks = [left];
+    fixture.Tick(200);
+    assert.deepEqual(frames[1], { timestamp: 200, landmarks: [] });
+    proxy.Stop();
+  }
+});
+
+test('private hand selection rejects arbitrary input options and survives consent forwarding', async () => {
+  const state = { gameId: 'motor-cortex-rehab', version: '2.0.0', sessionNonce: 'a'.repeat(64),
+    sequence: -1, complete: false, capabilities: ['hand-tracking'] };
+  const message = { schema: 'trainerhub.game/v1', gameId: state.gameId, version: state.version,
+    sessionNonce: state.sessionNonce, sequence: 0, type: 'input-start', payload: { hand: 'left' } };
+  assert.equal(AcceptGameMessage(message, { ...state }), true);
+  for (const payload of [{ hand: 'other' }, { hand: 'left', model: 'remote' }, { camera: true }]) {
+    assert.equal(AcceptGameMessage({ ...message, payload }, { ...state }), false);
+  }
+  assert.equal(AcceptGameMessage({ ...message, type: 'input-stop' }, { ...state }), false);
+  let selected;
+  const broker = CreateHandTrackingBroker({ requestConsent: async () => true, cancelConsent() {}, send() {},
+    createController: async () => ({ Start: async (_frame, _error, hand) => { selected = hand; return true; }, Stop() {} }) });
+  await broker.Start('left');
+  assert.equal(selected, 'left');
+  broker.Stop();
+});
+
 test('only trusted official hand launchers receive camera permission; game packages stay opaque and offline', async () => {
   const bytes = Buffer.from('<!doctype html><title>Gesture</title>');
   const files = [{ path: 'index.html', size: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') }];
@@ -212,4 +252,12 @@ test('production-bundled hand launcher starts its opaque game without acquiring 
   assert.equal(cameraCount, 0, 'Loading settings does not start the camera');
   assert.equal(frame.src, '/games/gesture-battler/2.0.0/package/index.html');
   assert.ok(events.has('load'), 'The strict game receives its private channel on load');
+});
+
+test('hand launcher names the selected official game and escapes its title', async () => {
+  const { RenderHandTrackingLauncher } = await import('../functions/_lib/handTrackingLauncher.js');
+  const html = RenderHandTrackingLauncher({ gameId: 'motor-cortex-rehab', version: '2.0.0', name: 'Hand <target>', capabilities: ['hand-tracking'] }, '/games/motor-cortex-rehab/2.0.0/', 'test-nonce');
+  assert.match(html, /<title>Hand &lt;target&gt;｜居家訓練網<\/title>/);
+  assert.match(html, /title="Hand &lt;target&gt;"/);
+  assert.doesNotMatch(html, /<title>手勢指令對戰/);
 });

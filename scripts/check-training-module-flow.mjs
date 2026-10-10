@@ -304,7 +304,8 @@ const implementationGroups = [
       "('rules')",
       "setPhase('playing')",
       "phase === 'results'",
-      'TrainingResultActions',
+      'SendGameResult',
+      'MotorTutorial',
     ],
   },
   {
@@ -580,19 +581,19 @@ const pendingJsPsychIds = jsPsychLifecycleGroups
   .flatMap(({ ids }) => ids);
 
 const configPermissionImplementations = {
-  'motor:motor-cortex-rehab': 'motor-cortex-rehab/MotorCortexRehabGame.tsx',
   'vision:oculomotor-training': 'oculomotor-training/OculomotorTrainingGame.tsx',
   'brain:every-ball-response': 'every-ball-response/EveryBallResponsePage.tsx',
   'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
 };
 const proxyPermissionImplementations = {
-  'motor:gesture-battler': 'gesture-battler/GestureBattlerGame.tsx',
+  'motor:gesture-battler': { file: 'gesture-battler/GestureBattlerGame.tsx', denialToken: 'gesture.error.permission' },
+  'motor:motor-cortex-rehab': { file: 'motor-cortex-rehab/MotorCortexRehabGame.tsx', denialToken: 'labels.permission' },
 };
-for (const [catalogId, file] of Object.entries(proxyPermissionImplementations)) {
+for (const [catalogId, { file, denialToken }] of Object.entries(proxyPermissionImplementations)) {
   const source = readFileSync(resolve(moduleRoot, file), 'utf8');
   assert.ok(source.includes('StartHandInput'), `${catalogId} must request reviewed private input.`);
   assert.ok(source.includes('StopHandInput'), `${catalogId} must release private input.`);
-  assert.ok(source.includes('gesture.error.permission'), `${catalogId} must report camera denial.`);
+  assert.ok(source.includes(denialToken), `${catalogId} must report camera denial.`);
   assert.ok(!/mediaDevices|getUserMedia/.test(source), `${catalogId} cannot request a camera inside the opaque package.`);
 }
 const nativeTimelinePermissionImplementations = {

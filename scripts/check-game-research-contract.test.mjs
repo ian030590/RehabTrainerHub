@@ -31,7 +31,7 @@ test('every game exposes bounded grading settings and exact numeric score source
   for (const id of ids) {
     if (Object.hasOwn(migratedGames, id)) {
       const entry = { 'asteroid-shield': 'AsteroidShieldGame.tsx', 'drawing-defense': 'DrawingTowerDefenseGame.tsx',
-        'gesture-battler': 'GestureBattlerGame.tsx' }[id];
+        'gesture-battler': 'GestureBattlerGame.tsx', 'motor-cortex-rehab': 'MotorCortexRehabGame.tsx' }[id];
       assert.ok(entry, `${id}: add game-owned bounds validation before migration`);
       const source = read(id, entry);
       if (id === 'asteroid-shield') {
@@ -48,6 +48,14 @@ test('every game exposes bounded grading settings and exact numeric score source
         assert.match(settings, /holdDurationSec <= 10/);
         assert.match(settings, /strictnessPercent >= 50/);
         assert.match(settings, /strictnessPercent <= 90/);
+      } else if (id === 'motor-cortex-rehab') {
+        const settings = read(id, 'config.ts');
+        assert.match(settings, /targetSizePercent >= 75/);
+        assert.match(settings, /targetSizePercent <= 130/);
+        assert.match(settings, /speedPercent >= 70/);
+        assert.match(settings, /speedPercent <= 140/);
+        assert.match(settings, /\[45, 60, 90\]\.includes\(config.durationSec\)/);
+        assert.match(source, /IsMotorConfig\(config\)/);
       } else {
         assert.match(source, /minRecognitionStrictness = 10/);
         assert.match(source, /maxRecognitionStrictness = 90/);

@@ -2,6 +2,8 @@
 
 更新日期：2026-10-09。目前 R2 current 為 `drawing-defense@2.0.4`、`asteroid-shield@2.0.3` 與 `gesture-battler@2.0.1`。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
 
+2026-10-10 手部目標追蹤練習 `motor-cortex-rehab@2.0.0` 已準備本機候選，採遊戲自有前景設定視窗、實際場景的五步聚光燈與自有完整成績。審查資料見 [手部目標追蹤候選](motor-cortex-rehab-r2-migration.md)。本機 registry／Hub build 為 4 款／36 款舊流程，正式完成仍為 3 款／37 款；候選尚待步驟 E 的精確摘要核准、發布及步驟 F 正式驗收，不把本機登記或 dry-run 算作遷移完成。
+
 三款成績頁新版經擁有者核准精確 version／contentSha256，已發布 R2，加入主要統計、可切換指標的圖表／描述統計與個別回合明細。成績 UI、計算與樣式仍各自由遊戲擁有，Hub 不增加結果頁或遊戲 bundle。後續遷移同樣必須符合第 7 節步驟 B 的成績呈現規範、第 D 步驟的驗證關卡與第 11 節的審查欄位；實作、正式驗收與回退證據見 [成績頁發布紀錄](r2-game-results-ui.md)及三份正式收據：[畫畫塔防](releases/drawing-defense-2.0.4.json)、[小行星護盾防衛](releases/asteroid-shield-2.0.3.json)、[手勢指令對戰](releases/gesture-battler-2.0.1.json)。
 
 小行星護盾防衛的滑鼠／觸控 `asteroid-shield@2.0.0` 已完成擁有者精確版本核准、R2 發布與逐檔回讀、[CI／Hub／runner 部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583)、正式 API／圖片／固定版本 session，以及真實 Hub 桌機／觸控與獨立 PWA 驗收。逐遊戲證據見 [審查單](asteroid-shield-r2-migration.md)與[正式收據](releases/asteroid-shield-2.0.0.json)。目前 3 款完成、37 款維持舊流程；第 1 節保留畫畫塔防首個試點的發布歷史與當時數量。

@@ -1,0 +1,52 @@
+{
+  "publicationStatus": "not-published",
+  "ownerApproval": {
+    "instruction": "核准並git push",
+    "date": "2026-10-10",
+    "reviewedVersion": "2.0.0",
+    "reviewedContentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09"
+  },
+  "baseCommit": "545ba80b7f2deed6f8a06e276e913754cb560a7e",
+  "gameId": "motor-cortex-rehab",
+  "version": "2.0.0",
+  "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09",
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "hand-tracking"
+  ],
+  "totalBytes": 380014,
+  "files": [
+    {
+      "path": "assets/index-J3ovcrOl.js",
+      "size": 354824,
+      "sha256": "105708db66639f292b634d18ed4d6d7f111342890aaf9e4efa046c7ae587efa6",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Wf6jxFK0.css",
+      "size": 18832,
+      "sha256": "18f6a60b783c9bd0cdaeb0e0c7ecbe9b15a0060c33066965c961a06bcdaa165c",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 522,
+      "sha256": "ca2322d252c30355ac320367cb8c8eead92c88f06aae6d31bb43bfc2a09135a6",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "6b05b91f43d05785dc3616fc1c60fadc1787c32bd5c51f79049926f446f36910",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5422,
+      "sha256": "6a6085136389ad1250b036fb13ad6505032d9033cf115b336e9c7ae8721e1455",
+      "contentType": "image/webp"
+    }
+  ]
+}

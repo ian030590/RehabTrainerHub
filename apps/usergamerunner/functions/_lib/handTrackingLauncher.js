@@ -1,11 +1,12 @@
 import { AcceptGameMessage, IsGameResult } from '../../../../packages/ui/src/selfContainedGame.js';
+import { EscapeHtml } from './render.js';
 
 export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
   const configuration = JSON.stringify({ gameId: release.gameId, version: release.version,
     capabilities: release.capabilities, basePath }).replaceAll('<', '\\u003c');
   return `<!doctype html><html lang="zh-TW"><head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-    <meta name="robots" content="noindex,nofollow,noarchive"><title>手勢指令對戰｜居家訓練網</title>
+    <meta name="robots" content="noindex,nofollow,noarchive"><title>${EscapeHtml(release.name ?? release.gameId)}｜居家訓練網</title>
     <link rel="manifest" href="${basePath}manifest.webmanifest">
     <style nonce="${cspNonce}">
       :root { --surface: #fff; --text: #202428; --overlay: #14212b99; --primary: #005eb8; }
@@ -48,7 +49,7 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
         port.onmessage=({data}) => {
           if(!accept(data,state))return;
           if(data.type==='result')broker.Stop();
-          if(data.type==='input-start')void broker.Start();
+          if(data.type==='input-start')void broker.Start(data.payload.hand);
           if(data.type==='input-stop')broker.Stop();
           if(data.type==='exit') { broker.Stop(); state.complete=false;port.postMessage({schema:'trainerhub.game/v1',type:'configure',sessionNonce:nonce}); }
         };
@@ -64,7 +65,7 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
       frame.src=config.basePath+'package/index.html';
     });</script>
     </head><body>
-      <iframe id="game-frame" title="手勢指令對戰" sandbox="allow-scripts" allow="fullscreen; autoplay" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <iframe id="game-frame" title="${EscapeHtml(release.name ?? release.gameId)}" sandbox="allow-scripts" allow="fullscreen; autoplay" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
       <div id="camera-consent" hidden role="dialog" aria-modal="true" aria-labelledby="camera-consent-title"><section><h2 id="camera-consent-title">啟用相機 / Enable camera</h2><p>影像只在此裝置由 MediaPipe 處理；遊戲只收到手部座標，不會上傳影像。<br>MediaPipe runs on this device. Only hand coordinates reach the game.</p><button id="camera-enable" type="button">允許相機 / Enable camera</button><button id="camera-cancel" type="button">取消 / Cancel</button></section></div>
       <button id="install-button" hidden type="button">安裝 / Install</button><p id="runner-error" hidden role="alert">此版本無法繼續使用，請返回遊戲入口。</p>
     </body></html>`;

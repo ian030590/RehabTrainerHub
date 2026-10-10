@@ -1,1084 +1,226 @@
-import { GetHostedGameSetting } from '@rehab-trainer/ui/embeddedTraining';
-// Canonical Hub-owned motor module; bundled by the motor runtime.
-import { FilesetResolver,HandLandmarker,type Category,type NormalizedLandmark,} from '@mediapipe/tasks-vision';
-import { CreateMediaPipeAssetUrlCandidates,LoadMediaPipeWithFallback,} from '@rehab-trainer/ui/aiAssets';
-import { MediaDeviceErrorDialog } from '@rehab-trainer/ui/components/MediaDeviceErrorDialog';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { IsEmbeddedHubTraining,RequestHubTrainingConfiguration,} from '@rehab-trainer/ui/embeddedTraining';
-import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
-import { useHostedGameSettings } from '@rehab-trainer/ui/hooks/useHostedGameSettings';
-import { CanRetryMediaPermission,GetMediaPermissionRetryLabel,useMediaPermissionPreflight,} from '@rehab-trainer/ui/hooks/useMediaPermissionPreflight';
-import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { useT } from '@rehab-trainer/ui/i18n/games';
-import { VerifySelectedTrainingUser } from '@rehab-trainer/ui/selectedUserGuard';
-import { getActiveUser } from '@rehab-trainer/ui/settings';
-import { PlayGameEndSound,PlaySuccessSound,PrepareAudioFeedback } from './runtime/soundManager';
-import { SaveTrainingSessionRecord } from '@rehab-trainer/ui/storage/trainingRecords';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { initJsPsych } from 'jspsych';
-import { useCallback,useEffect,useMemo,useRef,useState,type CSSProperties } from 'react';
-import { Clamp,FormatTestDate } from './gameUtils';
-import { MotorTrainingRulesPanel } from './runtime/components/rules/MotorTrainingRulesPanel';
+import { defaultConfig, difficulties, IsMotorConfig, type MotorConfig } from './config';
+import { copy } from './labels';
+import { CreateEmptyMetrics, CreateInitialTarget, UpdateTrainingLoop, GetHandCursorPoint, BuildLiveState, ToPercent, FormatHandChoice } from './engine';
+import type { GamePhase, HandState, TargetState, SessionRecord, LiveState } from './types';
+import { useT } from './i18n/useT';
+import { MotorTutorial } from './rules/MotorTutorial';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
-type DrillId = 'bounce' | 'vertical' | 'horizontal' | 'random';
-type DifficultyId = 'beginner' | 'intermediate' | 'advanced';
-type HandChoice = 'any' | 'left' | 'right';
-type GamePhase = 'menu' | 'rules' | 'initializing' | 'playing' | 'results';
-interface MotorCortexRehabGameProps {
-    onExit: () => void;
-}
-interface DrillDefinition {
-    id: DrillId;
-    referenceName: string;
-    accent: string;
-}
-interface DifficultyDefinition {
-    id: DifficultyId;
-    radius: number;
-    speed: number;
-    holdMs: number;
-}
-interface TargetState {
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    radius: number;
-    level: number;
-    holdTargetMs: number;
-}
-interface HandState {
-    x: number;
-    y: number;
-    visible: boolean;
-    handedness: HandChoice | null;
-    lastSeenAt: number;
-}
-interface SessionMetrics {
-    startedAt: number;
-    lastTickAt: number;
-    handVisibleMs: number;
-    inTargetMs: number;
-    successes: number;
-    misses: number;
-    currentHoldMs: number;
-    bestHoldMs: number;
-    streak: number;
-    events: DrillEventRecord[];
-}
-interface DrillEventRecord {
-    Event_Number: number;
-    Drill: string;
-    Result: 'success' | 'interrupted';
-    Time_Seconds: number;
-    Hold_Seconds: number;
-    Accuracy_Percent: number;
-    Target_Size_Px: number;
-    Adaptive_Level: number;
-}
-interface SessionRecord {
-    Test_Date: string;
-    Participant_ID: string;
-    Drill: string;
-    Reference_Module: string;
-    Difficulty: DifficultyId;
-    Duration_Seconds: number;
-    Tracking_Hand: HandChoice;
-    Target_Size_Scale: number;
-    Speed_Scale: number;
-    Adaptive_Level: number;
-    Accuracy_Percent: number;
-    Hand_Visible_Percent: number;
-    Successful_Reps: number;
-    Interrupted_Holds: number;
-    Best_Hold_Seconds: number;
-    Event_Records: DrillEventRecord[];
-}
-interface LiveState {
-    timeRemaining: number;
-    accuracy: number;
-    visibility: number;
-    successes: number;
-    misses: number;
-    currentHoldPercent: number;
-    level: number;
-    targetX: number;
-    targetY: number;
-    targetRadius: number;
-    handX: number;
-    handY: number;
-    handVisible: boolean;
-    insideTarget: boolean;
-}
-const mediaPipeAssetCandidates = CreateMediaPipeAssetUrlCandidates(import.meta.env.VITE_AI_ASSET_BASE_URL);
-const detectionIntervalMs = 66;
-const trackingGraceMs = 240;
-const liveStateIntervalMs = 45;
-const handCursorRadius = 18;
-const drills: readonly DrillDefinition[] = [
-    { id: 'bounce', referenceName: 'Tracking Mode 1', accent: '#2f855a' },
-    { id: 'vertical', referenceName: 'Tracking Mode 2', accent: '#0f766e' },
-    { id: 'horizontal', referenceName: 'Tracking Mode 3', accent: '#b45309' },
-    { id: 'random', referenceName: 'Tracking Mode 4', accent: '#be123c' },
-];
-const difficulties: readonly DifficultyDefinition[] = [
-    { id: 'beginner', radius: 82, speed: 120, holdMs: 560 },
-    { id: 'intermediate', radius: 66, speed: 165, holdMs: 760 },
-    { id: 'advanced', radius: 54, speed: 220, holdMs: 980 },
-];
-const durationOptions = [45, 60, 90] as const;
-const copy = {
-    zh: {
-        title: '手部目標追蹤練習',
-        configLabel: '手部目標追蹤設定',
-        drill: '追蹤模式',
-        drillDesc: '選擇這次要練習的手部追蹤任務。',
-        difficulty: '自適應起始難度',
-        difficultyDesc: '系統會依命中表現逐步調整速度與目標大小。',
-        duration: '訓練時間',
-        durationDesc: '設定本次訓練總秒數。',
-        hand: '追蹤手',
-        handDesc: '可指定左手、右手，或接受畫面中第一隻手。',
-        targetSize: '目標大小',
-        targetSizeDesc: '放大目標可降低初期負荷。',
-        speed: '移動速度',
-        speedDesc: '提高速度可增加追蹤與反應需求。',
-        privacyTitle: '攝影機畫面只在此裝置分析',
-        privacyDesc: '系統不錄影、不上傳畫面；只保存訓練設定與統計結果。',
-        loadingTitle: '正在準備手部追蹤',
-        loadingCamera: '正在啟動攝影機，請允許瀏覽器使用鏡頭。',
-        loadingModel: '正在載入 MediaPipe 手部模型。',
-        unsupported: '此瀏覽器不支援攝影機存取，請使用新版 Chrome、Edge 或 Safari。',
-        permission: '無法使用攝影機。請允許攝影機權限後再試一次。',
-        disconnected: '攝影機已中斷，請確認鏡頭連線後重新開始訓練。',
-        initialization: '手部追蹤無法啟動，請確認網路連線後再試一次。',
-        errorTitle: '無法開始手部目標追蹤練習',
-        openDetails: '開啟錯誤細節',
-        cameraPreview: '即時手部攝影機預覽',
-        tracking: '已追蹤手部',
-        finding: '請把手放入畫面',
-        followTarget: '讓手部游標停在目標內',
-        target: '目標',
-        handCursor: '手部位置',
-        timeLeft: '剩餘時間',
-        accuracy: '命中率',
-        visible: '可追蹤率',
-        reps: '完成次數',
-        level: '自適應等級',
-        hold: '維持',
-        resultsTitle: '手部目標追蹤練習完成',
-        participant: '訓練使用者',
-        interrupted: '中斷維持',
-        bestHold: '最佳維持',
-        event: '事件',
-        result: '結果',
-        time: '時間',
-        size: '目標大小',
-        handAny: '任一手',
-        handLeft: '左手',
-        handRight: '右手',
-        drillNames: {
-            bounce: '彈跳球追蹤',
-            vertical: '垂直活動範圍',
-            horizontal: '水平活動範圍',
-            random: '隨機觸達',
-        },
-        drillDescriptions: {
-            bounce: '追蹤在畫面中反彈的球，進行連續手眼協調練習。',
-            vertical: '沿垂直路徑上下追蹤目標，練習肩肘控制與垂直活動範圍。',
-            horizontal: '沿水平路徑左右追蹤目標，練習跨中線與側向控制。',
-            random: '快速移到隨機位置並維持，進行觸達、停止與穩定控制練習。',
-        },
-        difficultyNames: {
-            beginner: '初階',
-            intermediate: '中階',
-            advanced: '進階',
-        },
-        success: '成功',
-        interruptedLabel: '中斷',
-    },
-    en: {
-        title: 'Hand Target Tracking Practice',
-        configLabel: 'Hand Target Tracking Settings',
-        drill: 'Tracking Mode',
-        drillDesc: 'Choose the hand-tracking task for this session.',
-        difficulty: 'Adaptive Start Level',
-        difficultyDesc: 'The system adjusts speed and target size based on hit quality.',
-        duration: 'Training Duration',
-        durationDesc: 'Set the total seconds for this session.',
-        hand: 'Tracking Hand',
-        handDesc: 'Use the left hand, right hand, or the first visible hand.',
-        targetSize: 'Target Size',
-        targetSizeDesc: 'Larger targets reduce the initial load.',
-        speed: 'Movement Speed',
-        speedDesc: 'Higher speed increases tracking and reaction demand.',
-        privacyTitle: 'Camera video is analyzed on this device',
-        privacyDesc: 'Video is not recorded or uploaded. Only training settings and statistics are saved.',
-        loadingTitle: 'Preparing Hand Tracking',
-        loadingCamera: 'Starting the camera. Allow browser camera access when prompted.',
-        loadingModel: 'Loading the MediaPipe hand model.',
-        unsupported: 'This browser does not support camera access. Use a current version of Chrome, Edge, or Safari.',
-        permission: 'The camera is unavailable. Allow camera permission and try again.',
-        disconnected: 'The camera was disconnected. Check the camera connection and start the training again.',
-        initialization: 'Hand tracking could not start. Check the network connection and try again.',
-        errorTitle: 'Unable to Start Hand Target Tracking Practice',
-        openDetails: 'Open error details',
-        cameraPreview: 'Live hand camera preview',
-        tracking: 'Hand tracked',
-        finding: 'Place your hand in the frame',
-        followTarget: 'Keep the hand cursor inside the target',
-        target: 'Target',
-        handCursor: 'Hand position',
-        timeLeft: 'Time Left',
-        accuracy: 'Accuracy',
-        visible: 'Tracking',
-        reps: 'Reps',
-        level: 'Adaptive Level',
-        hold: 'Hold',
-        resultsTitle: 'Hand Target Tracking Practice Complete',
-        participant: 'Participant',
-        interrupted: 'Interrupted Holds',
-        bestHold: 'Best Hold',
-        event: 'Event',
-        result: 'Result',
-        time: 'Time',
-        size: 'Target Size',
-        handAny: 'Any Hand',
-        handLeft: 'Left Hand',
-        handRight: 'Right Hand',
-        drillNames: {
-            bounce: 'Bouncing Ball Tracking',
-            vertical: 'Vertical Range',
-            horizontal: 'Horizontal Range',
-            random: 'Random Reach',
-        },
-        drillDescriptions: {
-            bounce: 'Track a ball as it rebounds around the play field for continuous hand-eye coordination.',
-            vertical: 'Follow a target up and down to practice shoulder, elbow, and vertical range control.',
-            horizontal: 'Follow a target left and right to practice crossing midline and lateral control.',
-            random: 'Move quickly to random target locations and hold steady for reach, stop, and stabilization practice.',
-        },
-        difficultyNames: {
-            beginner: 'Beginner',
-            intermediate: 'Intermediate',
-            advanced: 'Advanced',
-        },
-        success: 'Success',
-        interruptedLabel: 'Interrupted',
-    },
-} as const;
-export function MotorCortexRehabGame({ onExit }: MotorCortexRehabGameProps) {
-    const { lang, t } = useT();
-    const labels = copy[lang];
-    const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
-    const stageRef = useRef<HTMLDivElement | null>(null);
-    const videoRef = useRef<HTMLVideoElement | null>(null);
-    const handCanvasRef = useRef<HTMLCanvasElement | null>(null);
-    const handLandmarkerRef = useRef<HandLandmarker | null>(null);
-    const cameraStreamRef = useRef<MediaStream | null>(null);
-    const animationFrameRef = useRef<number | null>(null);
-    const lastDetectionAtRef = useRef(0);
-    const lastVideoTimeRef = useRef(-1);
-    const lastLiveStateAtRef = useRef(0);
-    const phaseRef = useRef<GamePhase>('menu');
-    const mountedRef = useRef(true);
-    const targetRef = useRef<TargetState | null>(null);
-    const handRef = useRef<HandState>({ x: 0, y: 0, visible: false, handedness: null, lastSeenAt: 0 });
-    const metricsRef = useRef<SessionMetrics>(CreateEmptyMetrics());
-    const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
-    const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
-    const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
-    const [phase, setPhaseState] = useState<GamePhase>('rules');
-    const isEmbeddedHubTraining = IsEmbeddedHubTraining();
-    const hostedSettings = useHostedGameSettings();
-    const hostedSettingsAppliedRef = useRef(false);
+import { IsHubGame, StartHandInput, StopHandInput, SendGameEvent, SendGameResult, RetryGameSave } from './runtime/hubBridge';
+import { PrepareAudioFeedback, PlaySuccessSound, PlayGameEndSound } from './runtime/soundManager';
+import { BuildGameScore } from './score';
+import { ScoreAnalysis } from './ScoreAnalysis';
 
-    const [drill, setDrill] = useState<DrillId>(GetHostedGameSetting<DrillId>('drill'));
-    const [difficulty, setDifficulty] = useState<DifficultyId>(({ easy: 'beginner', medium: 'intermediate', hard: 'advanced' } as const)[GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty')]);
-    const [durationSec, setDurationSec] = useState<(typeof durationOptions)[number]>(GetHostedGameSetting<(typeof durationOptions)[number]>('durationSec'));
-    const [handChoice, setHandChoice] = useState<HandChoice>('any');
-    const [targetSizeScale, setTargetSizeScale] = useState(1);
-    const [speedScale, setSpeedScale] = useState(1);
-    const [statusMessage, setStatusMessage] = useState('');
-    const [visionError, setVisionError] = useState('');
-    const [showVisionError, setShowVisionError] = useState(false);
-    const [result, setResult] = useState<SessionRecord | null>(null);
-    const [liveState, setLiveState] = useState<LiveState>({
-        timeRemaining: durationSec,
-        accuracy: 0,
-        visibility: 0,
-        successes: 0,
-        misses: 0,
-        currentHoldPercent: 0,
-        level: 1,
-        targetX: 50,
-        targetY: 50,
-        targetRadius: 70,
-        handX: 50,
-        handY: 50,
-        handVisible: false,
-        insideTarget: false,
-    });
-    const cameraPermission = useMediaPermissionPreflight({
-        active: phase === 'rules',
-        video: true,
-    });
-    const canRetryCameraPermission = CanRetryMediaPermission(cameraPermission.status);
-    const retryPermissionLabel = GetMediaPermissionRetryLabel(lang);
-    const setPhase = useCallback((nextPhase: GamePhase) => {
-        phaseRef.current = nextPhase;
-        setPhaseState(nextPhase);
-    }, []);
-    const showConfiguration = useCallback(() => {
-        if (!RequestHubTrainingConfiguration())
-            RequestHubTrainingConfiguration();
-    }, [setPhase]);
-    useEffect(() => {
-        if (!hostedSettings || hostedSettingsAppliedRef.current)
-            return;
-        hostedSettingsAppliedRef.current = true;
-        if (hostedSettings.difficulty === 'hard' || hostedSettings.difficulty === 'advanced') {
-            setDifficulty('advanced');
-        }
-        else if (hostedSettings.difficulty === 'medium' || hostedSettings.difficulty === 'intermediate') {
-            setDifficulty('intermediate');
-        }
-        else {
-            setDifficulty('beginner');
-        }
-        if (hostedSettings.drill === 'bounce'
-            || hostedSettings.drill === 'vertical'
-            || hostedSettings.drill === 'horizontal'
-            || hostedSettings.drill === 'random')
-            setDrill(hostedSettings.drill);
-        if (hostedSettings.durationSec === 45
-            || hostedSettings.durationSec === 60
-            || hostedSettings.durationSec === 90)
-            setDurationSec(hostedSettings.durationSec);
-        if (typeof hostedSettings.targetSizePercent === 'number') {
-            setTargetSizeScale(hostedSettings.targetSizePercent / 100);
-        }
-        if (typeof hostedSettings.speedPercent === 'number') {
-            setSpeedScale(hostedSettings.speedPercent / 100);
-        }
-        setPhase('rules');
-    }, [hostedSettings, setPhase]);
-    const stopVision = useCallback(() => {
-        if (animationFrameRef.current !== null) {
-            window.cancelAnimationFrame(animationFrameRef.current);
-            animationFrameRef.current = null;
-        }
-        cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
-        cameraStreamRef.current = null;
-        const video = videoRef.current;
-        if (video)
-            video.srcObject = null;
-        handLandmarkerRef.current?.close();
-        handLandmarkerRef.current = null;
-        const canvas = handCanvasRef.current;
-        canvas?.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
-    }, []);
-    useEffect(() => {
-        const host = jsPsychHostRef.current;
-        if (!host)
-            return;
-        const jsPsych = initJsPsych({ display_element: host });
-        const lifecycle = new JsPsychExternalLifecycle(jsPsych);
-        jsPsychRef.current = jsPsych;
-        jsPsychLifecycleRef.current = lifecycle;
-        return () => {
-            lifecycle.dispose();
-            if (jsPsychRef.current === jsPsych)
-                jsPsychRef.current = null;
-            if (jsPsychLifecycleRef.current === lifecycle)
-                jsPsychLifecycleRef.current = null;
-        };
-    }, []);
-    useEffect(() => {
-        if (cameraPermission.status === 'unsupported') {
-            setVisionError(labels.unsupported);
-        }
-        else if (cameraPermission.status === 'denied' || cameraPermission.status === 'error') {
-            setVisionError(labels.permission);
-        }
-    }, [cameraPermission.status, labels.permission, labels.unsupported]);
-    useEffect(() => () => {
-        mountedRef.current = false;
-        stopVision();
-    }, [stopVision]);
-    const activeDrill = useMemo(() => drills.find((item) => item.id === drill) ?? drills[0], [drill]);
-    const activeDifficulty = useMemo(() => difficulties.find((item) => item.id === difficulty) ?? difficulties[0], [difficulty]);
-    const summaryItems = useMemo(() => [
-        { label: labels.drill, value: labels.drillNames[drill] },
-        { label: labels.difficulty, value: labels.difficultyNames[difficulty] },
-        { label: labels.duration, value: `${durationSec}s` },
-        { label: labels.hand, value: FormatHandChoice(handChoice, labels) },
-    ], [difficulty, drill, durationSec, handChoice, labels]);
-    const resetGameState = useCallback(() => {
-        targetRef.current = null;
-        handRef.current = { x: 0, y: 0, visible: false, handedness: null, lastSeenAt: 0 };
-        metricsRef.current = CreateEmptyMetrics();
-        lastDetectionAtRef.current = 0;
-        lastVideoTimeRef.current = -1;
-        lastLiveStateAtRef.current = 0;
-        setLiveState((current) => ({
-            ...current,
-            timeRemaining: durationSec,
-            accuracy: 0,
-            visibility: 0,
-            successes: 0,
-            misses: 0,
-            currentHoldPercent: 0,
-            level: 1,
-            targetX: 50,
-            targetY: 50,
-            targetRadius: activeDifficulty.radius * targetSizeScale,
-            handVisible: false,
-            insideTarget: false,
-        }));
-    }, [activeDifficulty.radius, durationSec, targetSizeScale]);
-    const completeSession = useCallback((completedAt: number) => {
-        if (!mountedRef.current || phaseRef.current === 'results' || phaseRef.current === 'menu')
-            return;
-        const metrics = metricsRef.current;
-        const target = targetRef.current;
-        const participantId = getActiveUser() || 'Unknown';
-        const elapsedMs = Math.max(1, completedAt - metrics.startedAt);
-        const accuracy = metrics.handVisibleMs > 0 ? metrics.inTargetMs / metrics.handVisibleMs : 0;
-        const visibility = metrics.handVisibleMs / elapsedMs;
-        const session: SessionRecord = {
-            Test_Date: FormatTestDate(new Date()),
-            Participant_ID: participantId,
-            Drill: labels.drillNames[drill],
-            Reference_Module: activeDrill.referenceName,
-            Difficulty: difficulty,
-            Duration_Seconds: Number((elapsedMs / 1000).toFixed(1)),
-            Tracking_Hand: handChoice,
-            Target_Size_Scale: Number(targetSizeScale.toFixed(2)),
-            Speed_Scale: Number(speedScale.toFixed(2)),
-            Adaptive_Level: target?.level ?? 1,
-            Accuracy_Percent: ToPercent(accuracy),
-            Hand_Visible_Percent: ToPercent(visibility),
-            Successful_Reps: metrics.successes,
-            Interrupted_Holds: metrics.misses,
-            Best_Hold_Seconds: Number((metrics.bestHoldMs / 1000).toFixed(2)),
-            Event_Records: metrics.events.map((event) => ({ ...event })),
-        };
-        PlayGameEndSound('Victory', jsPsychRef);
-        jsPsychLifecycleRef.current?.finish(session as unknown as Record<string, unknown>);
-        setResult(session);
-        setPhase('results');
-        stopVision();
-        void SaveTrainingSessionRecord({
-            userName: participantId,
-            moduleId: 'upper-limb-training',
-            gameId: 'motor-cortex-rehab',
-            gameTitle: labels.title,
-            difficulty,
-            trainingDate: session.Test_Date,
-            details: {
-                Drill: session.Drill,
-                Reference_Module: session.Reference_Module,
-                Duration_Seconds: session.Duration_Seconds,
-                Tracking_Hand: session.Tracking_Hand,
-                Target_Size_Scale: session.Target_Size_Scale,
-                Speed_Scale: session.Speed_Scale,
-                Adaptive_Level: session.Adaptive_Level,
-                Accuracy_Percent: session.Accuracy_Percent,
-                Hand_Visible_Percent: session.Hand_Visible_Percent,
-                Successful_Reps: session.Successful_Reps,
-                Interrupted_Holds: session.Interrupted_Holds,
-                Best_Hold_Seconds: session.Best_Hold_Seconds,
-            },
-            detailRows: session.Event_Records.map((event) => ({ ...event }) as Record<string, unknown>),
-        });
-    }, [activeDrill.referenceName, difficulty, drill, handChoice, labels, setPhase, speedScale, stopVision, targetSizeScale]);
-    const processFrame = useCallback((now: number) => {
-        animationFrameRef.current = window.requestAnimationFrame(processFrame);
-        if (phaseRef.current !== 'playing')
-            return;
-        const stage = stageRef.current;
-        const video = videoRef.current;
-        const landmarker = handLandmarkerRef.current;
-        const rect = stage?.getBoundingClientRect();
-        if (!stage || !rect || rect.width <= 0 || rect.height <= 0)
-            return;
-        if (!targetRef.current) {
-            targetRef.current = CreateInitialTarget(drill, activeDifficulty, targetSizeScale, speedScale, rect.width, rect.height);
-        }
-        if (now - lastDetectionAtRef.current >= detectionIntervalMs && video && landmarker && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-            if (video.currentTime !== lastVideoTimeRef.current) {
-                lastVideoTimeRef.current = video.currentTime;
-                lastDetectionAtRef.current = now;
-                try {
-                    const detection = landmarker.detectForVideo(video, now);
-                    const selection = SelectHand(detection.landmarks, detection.handedness ?? detection.handednesses, handChoice);
-                    DrawHandLandmarks(handCanvasRef.current, video, selection?.landmarks);
-                    if (selection) {
-                        const point = GetHandCursorPoint(selection.landmarks, rect.width, rect.height);
-                        handRef.current = {
-                            x: point.x,
-                            y: point.y,
-                            visible: true,
-                            handedness: selection.handedness,
-                            lastSeenAt: now,
-                        };
-                    }
-                    else if (now - handRef.current.lastSeenAt > trackingGraceMs) {
-                        handRef.current = { ...handRef.current, visible: false };
-                    }
-                }
-                catch (error) {
-                    console.warn('Hand landmark detection failed.', error);
-                    setVisionError(labels.initialization);
-                    setShowVisionError(true);
-                    stopVision();
-                    showConfiguration();
-                    return;
-                }
-            }
-        }
-        UpdateTrainingLoop({
-            now,
-            rect,
-            drill,
-            activeDifficulty,
-            durationSec,
-            targetSizeScale,
-            speedScale,
-            target: targetRef.current,
-            hand: handRef.current,
-            metrics: metricsRef.current,
-            labels,
-            onSuccess: () => PlaySuccessSound(jsPsychRef),
-            onComplete: completeSession,
-        });
-        if (now - lastLiveStateAtRef.current >= liveStateIntervalMs && targetRef.current) {
-            lastLiveStateAtRef.current = now;
-            setLiveState(BuildLiveState(now, durationSec, rect, targetRef.current, handRef.current, metricsRef.current));
-        }
-    }, [
-        activeDifficulty,
-        completeSession,
-        drill,
-        durationSec,
-        handChoice,
-        labels,
-        setPhase,
-        showConfiguration,
-        speedScale,
-        stopVision,
-        targetSizeScale,
-    ]);
-    const startTraining = useCallback(async () => {
-        if (!VerifySelectedTrainingUser())
-            return;
-        if (!navigator.mediaDevices?.getUserMedia) {
-            setVisionError(labels.unsupported);
-            setShowVisionError(true);
-            showConfiguration();
-            return;
-        }
-        PrepareAudioFeedback(jsPsychRef);
-        await enterTrainingFullscreen();
-        await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:motor-cortex-rehab', onStart: async () => {
-                stopVision();
-                resetGameState();
-                setResult(null);
-                setVisionError('');
-                setShowVisionError(false);
-                setStatusMessage(labels.loadingCamera);
-                setPhase('initializing');
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        audio: false,
-                        video: {
-                            facingMode: 'user',
-                            width: { ideal: 960 },
-                            height: { ideal: 720 },
-                        },
-                    });
-                    cameraStreamRef.current = stream;
-                    const cameraTrack = stream.getVideoTracks()[0];
-                    if (!cameraTrack)
-                        throw new Error('Camera track is unavailable.');
-                    cameraTrack.addEventListener('ended', () => {
-                        if (!mountedRef.current || cameraStreamRef.current !== stream)
-                            return;
-                        setVisionError(labels.disconnected);
-                        setShowVisionError(true);
-                        stopVision();
-                        jsPsychLifecycleRef.current?.abort({ abort_reason: 'camera-disconnected' });
-                        showConfiguration();
-                    }, { once: true });
-                    const video = videoRef.current;
-                    if (!video)
-                        throw new Error('Camera preview is unavailable.');
-                    video.srcObject = stream;
-                    await video.play();
-                    setStatusMessage(labels.loadingModel);
-                    const landmarker = await LoadMediaPipeWithFallback(mediaPipeAssetCandidates, async ({ wasmUrl, handLandmarkerModelUrl }) => {
-                        const vision = await FilesetResolver.forVisionTasks(wasmUrl);
-                        return HandLandmarker.createFromOptions(vision, {
-                            baseOptions: { modelAssetPath: handLandmarkerModelUrl },
-                            runningMode: 'VIDEO',
-                            numHands: handChoice === 'any' ? 1 : 2,
-                            minHandDetectionConfidence: 0.5,
-                            minHandPresenceConfidence: 0.5,
-                            minTrackingConfidence: 0.5,
-                        });
-                    });
-                    if (!mountedRef.current) {
-                        landmarker.close();
-                        return;
-                    }
-                    handLandmarkerRef.current = landmarker;
-                    metricsRef.current = {
-                        ...CreateEmptyMetrics(),
-                        startedAt: performance.now(),
-                        lastTickAt: performance.now(),
-                    };
-                    setPhase('playing');
-                    animationFrameRef.current = window.requestAnimationFrame(processFrame);
-                }
-                catch (error) {
-                    console.warn('Unable to initialize motor cortex rehab.', error);
-                    setVisionError(error instanceof DOMException && error.name === 'NotAllowedError'
-                        ? labels.permission
-                        : labels.initialization);
-                    setShowVisionError(true);
-                    jsPsychLifecycleRef.current?.abort({ abort_reason: 'initialization-error' });
-                    showConfiguration();
-                    stopVision();
-                }
-            } });
-    }, [enterTrainingFullscreen, handChoice, labels, processFrame, resetGameState, setPhase, showConfiguration, stopVision]);
-    const returnToMenu = useCallback(() => {
-        jsPsychLifecycleRef.current?.abort({ abort_reason: 'return-to-menu' });
-        stopVision();
-        resetGameState();
-        setResult(null);
-        setVisionError('');
-        setShowVisionError(false);
+export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
+  const { lang } = useT();
+  const labels = copy[lang];
+  const en = lang === 'en';
+  const rootRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const handCanvasRef = useRef<HTMLCanvasElement>(null);
+  const jsPsychHostRef = useRef<HTMLDivElement>(null);
+  const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
+  const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const generationRef = useRef(0);
+  const phaseRef = useRef<GamePhase>('menu');
+  const targetRef = useRef<TargetState | null>(null);
+  const handRef = useRef<HandState>({ x: 0, y: 0, visible: false, handedness: null, lastSeenAt: 0 });
+  const metricsRef = useRef(CreateEmptyMetrics());
+  const [phase, setPhaseState] = useState<GamePhase>('menu');
+  const [config, setConfig] = useState<MotorConfig>({ ...defaultConfig });
+  const [error, setError] = useState('');
+  const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error' | 'local'>('local');
+  const [result, setResult] = useState<SessionRecord | null>(null);
+  const [live, setLive] = useState<LiveState>({ timeRemaining: 60, accuracy: 0, visibility: 0, successes: 0, misses: 0,
+    currentHoldPercent: 0, level: 1, targetX: 50, targetY: 42, targetRadius: 66, handX: 64, handY: 62, handVisible: false, insideTarget: false });
+  const difficulty = difficulties.find(item => item.id === config.difficulty)!;
+  const setPhase = useCallback((next: GamePhase) => { phaseRef.current = next; setPhaseState(next); }, []);
+  const stopInput = useCallback(() => {
+    generationRef.current++;
+    StopHandInput();
+    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+    animationRef.current = null;
+    handRef.current.visible = false;
+    handCanvasRef.current?.getContext('2d')?.clearRect(0, 0, 320, 240);
+  }, []);
+  const showConfiguration = useCallback(() => {
+    stopInput(); jsPsychLifecycleRef.current?.abort({ abort_reason: 'configure' });
+    setLive(current => ({ ...current, accuracy: 0, visibility: 0, successes: 0, misses: 0,
+      currentHoldPercent: 0, level: 1, handVisible: false, insideTarget: false }));
+    setResult(null); setPhase('menu');
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+  }, [stopInput, setPhase]);
+  const exitGame = useCallback(() => { stopInput(); jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit' }); onExit(); }, [stopInput, onExit]);
+  useEffect(() => {
+    const jsPsych = initJsPsych({ display_element: jsPsychHostRef.current! });
+    const lifecycle = new JsPsychExternalLifecycle(jsPsych);
+    jsPsychRef.current = jsPsych; jsPsychLifecycleRef.current = lifecycle;
+    const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
+    window.addEventListener('game:saved', saved);
+    window.addEventListener('game:configure', showConfiguration);
+    return () => { stopInput(); lifecycle.dispose(); window.removeEventListener('game:saved', saved); window.removeEventListener('game:configure', showConfiguration); };
+  }, [showConfiguration, stopInput]);
+  useEffect(() => {
+    if (phase === 'menu') formRef.current?.querySelector<HTMLSelectElement>('select')?.focus();
+    if (phase === 'ready') rootRef.current?.querySelector<HTMLButtonElement>('.motor-tutorial-ready .btn-primary')?.focus();
+  }, [phase]);
+  useEffect(() => {
+    const receive = (event: Event) => {
+      const message = (event as CustomEvent).detail;
+      if (!['initializing', 'playing'].includes(phaseRef.current)) return;
+      if (message.type === 'error') {
         showConfiguration();
-    }, [resetGameState, showConfiguration, stopVision]);
-    const exitGame = useCallback(() => {
-        jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
-        stopVision();
-        onExit();
-    }, [onExit, stopVision]);
-    useTrainingAbort({
-        active: phase === 'initializing' || phase === 'playing',
-        onAbort: returnToMenu,
-    });
-    const stageStyle = {
-        '--motor-cortex-accent': activeDrill.accent,
-        '--motor-cortex-target-x': `${liveState.targetX}%`,
-        '--motor-cortex-target-y': `${liveState.targetY}%`,
-        '--motor-cortex-target-size': `${liveState.targetRadius * 2}px`,
-        '--motor-cortex-hand-x': `${liveState.handX}%`,
-        '--motor-cortex-hand-y': `${liveState.handY}%`,
-        '--motor-cortex-hold-progress': `${liveState.currentHoldPercent * 100}%`,
-    } as CSSProperties;
-    const resultRows = result?.Event_Records.slice(-8) ?? [];
-    return (<div ref={fullscreenRootRef} className={`motor-cortex-game motor-cortex-phase-${phase} motor-cortex-drill-${drill}`} style={stageStyle}>
-      <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true"/>
-      <div className={`motor-cortex-camera ${phase === 'playing' || phase === 'initializing' ? '' : 'motor-cortex-camera-hidden'}`}>
-        <video ref={videoRef} muted playsInline aria-label={labels.cameraPreview}/>
-        <canvas ref={handCanvasRef} aria-hidden="true"/>
-        <span>{liveState.handVisible ? labels.tracking : labels.finding}</span>
-      </div>
-
-      {null}
-
-      {phase === 'rules' && (<div className="training-panel">
-          <MotorTrainingRulesPanel gameId="motor-cortex-rehab" title={labels.title} summaryTitle={labels.title} summaryItems={summaryItems} onStart={() => void startTraining()} onBack={showConfiguration}/>
-        </div>)}
-
-      {phase === 'initializing' && (<div className="motor-cortex-loading-overlay">
-          <div aria-label={statusMessage || labels.loadingTitle} aria-live="polite" className="gesture-loading-card" role="status">
-            <div className="gesture-loader" aria-hidden="true"/>
-          </div>
-        </div>)}
-
-      {phase === 'playing' && (<div className="motor-cortex-play">
-          <div className="motor-cortex-hud">
-            <span>
-              <small>{labels.timeLeft}</small>
-              <strong>{Math.max(0, Math.ceil(liveState.timeRemaining))}s</strong>
-            </span>
-            <span>
-              <small>{labels.accuracy}</small>
-              <strong>{ToPercent(liveState.accuracy)}%</strong>
-            </span>
-            <span>
-              <small>{labels.visible}</small>
-              <strong>{ToPercent(liveState.visibility)}%</strong>
-            </span>
-            <span>
-              <small>{labels.reps}</small>
-              <strong>{liveState.successes}</strong>
-            </span>
-            <span>
-              <small>{labels.level}</small>
-              <strong>{liveState.level}</strong>
-            </span>
-          </div>
-
-          <div ref={stageRef} className="motor-cortex-stage" aria-label={labels.followTarget}>
-            <div className="motor-cortex-path motor-cortex-path-vertical"/>
-            <div className="motor-cortex-path motor-cortex-path-horizontal"/>
-            <div className={`motor-cortex-target ${liveState.insideTarget ? 'is-hit' : ''}`}>
-              <span>{labels.target}</span>
-              <i />
-            </div>
-            <div className={`motor-cortex-hand-cursor ${liveState.handVisible ? 'is-visible' : ''} ${liveState.insideTarget ? 'is-hit' : ''}`}>
-              <span>{labels.handCursor}</span>
-            </div>
-          </div>
-
-          <div className="motor-cortex-instruction">
-            <strong>{labels.drillNames[drill]}</strong>
-            <span>{labels.followTarget}</span>
-            <div className="motor-cortex-hold-meter">
-              <i />
-            </div>
-            <small>{labels.hold}</small>
-          </div>
-        </div>)}
-
-      {phase === 'results' && result && (<div className="experiment-container experiment-container-scrollable motor-cortex-results-container">
-          <div className="experiment-results">
-            <h1>{labels.resultsTitle}</h1>
-            <div className="training-result-summary motor-cortex-result-summary">
-              <span>
-                <small>{labels.participant}</small>
-                <strong>{result.Participant_ID}</strong>
-              </span>
-              <span>
-                <small>{labels.accuracy}</small>
-                <strong>{result.Accuracy_Percent}%</strong>
-              </span>
-              <span>
-                <small>{labels.reps}</small>
-                <strong>{result.Successful_Reps}</strong>
-              </span>
-              <span>
-                <small>{labels.interrupted}</small>
-                <strong>{result.Interrupted_Holds}</strong>
-              </span>
-              <span>
-                <small>{labels.bestHold}</small>
-                <strong>{result.Best_Hold_Seconds}s</strong>
-              </span>
-              <span>
-                <small>{labels.level}</small>
-                <strong>{result.Adaptive_Level}</strong>
-              </span>
-            </div>
-
-            {resultRows.length > 0 && (<table className="results-table">
-                <thead>
-                  <tr>
-                    <th>{labels.event}</th>
-                    <th>{labels.result}</th>
-                    <th>{labels.time}</th>
-                    <th>{labels.hold}</th>
-                    <th>{labels.accuracy}</th>
-                    <th>{labels.size}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {resultRows.map((event) => (<tr key={event.Event_Number}>
-                      <td>{event.Event_Number}</td>
-                      <td>{event.Result === 'success' ? labels.success : labels.interruptedLabel}</td>
-                      <td>{event.Time_Seconds}s</td>
-                      <td>{event.Hold_Seconds}s</td>
-                      <td>{event.Accuracy_Percent}%</td>
-                      <td>{Math.round(event.Target_Size_Px)}px</td>
-                    </tr>))}
-                </tbody>
-              </table>)}
-
-            <TrainingResultActions backLabel={t('training.returnHome')} onBackHome={exitGame} hubLabel={t('training.returnLobby')}/>
-          </div>
-        </div>)}
-
-      {showVisionError && visionError && (<MediaDeviceErrorDialog title={labels.errorTitle} titleId="motor-cortex-error-modal-title" message={visionError} onClose={() => setShowVisionError(false)}/>)}
-    </div>);
-}
-function CreateEmptyMetrics(): SessionMetrics {
-    return {
-        startedAt: 0,
-        lastTickAt: 0,
-        handVisibleMs: 0,
-        inTargetMs: 0,
-        successes: 0,
-        misses: 0,
-        currentHoldMs: 0,
-        bestHoldMs: 0,
-        streak: 0,
-        events: [],
+        setError(message.payload.reason === 'permission' ? labels.permission : message.payload.reason === 'disconnected' ? labels.disconnected : labels.initialization);
+      }
+      if (message.type !== 'frame' || phaseRef.current !== 'playing') return;
+      const rect = stageRef.current?.getBoundingClientRect();
+      const points = message.payload.landmarks as { x: number; y: number; z: number }[];
+      DrawHand(handCanvasRef.current, points);
+      if (points.length && rect) {
+        handRef.current = { ...GetHandCursorPoint(points, rect.width, rect.height), visible: true, handedness: null, lastSeenAt: performance.now() };
+      } else if (performance.now() - handRef.current.lastSeenAt > 240) handRef.current.visible = false;
     };
-}
-function CreateInitialTarget(drill: DrillId, difficulty: DifficultyDefinition, targetSizeScale: number, speedScale: number, width: number, height: number): TargetState {
-    const radius = difficulty.radius * targetSizeScale;
-    const speed = difficulty.speed * speedScale;
-    const center = { x: width / 2, y: height / 2 };
-    if (drill === 'vertical') {
-        return { x: center.x, y: radius + 24, vx: 0, vy: speed, radius, level: 1, holdTargetMs: difficulty.holdMs };
-    }
-    if (drill === 'horizontal') {
-        return { x: radius + 24, y: center.y, vx: speed, vy: 0, radius, level: 1, holdTargetMs: difficulty.holdMs };
-    }
-    if (drill === 'random') {
-        return {
-            ...PlaceRandomTarget({ x: center.x, y: center.y, vx: 0, vy: 0, radius, level: 1, holdTargetMs: difficulty.holdMs }, width, height),
-            holdTargetMs: difficulty.holdMs + 240,
+    window.addEventListener('game:input', receive);
+    return () => window.removeEventListener('game:input', receive);
+  }, [labels, showConfiguration]);
+  useEffect(() => {
+    const abort = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape' && ['playing', 'initializing'].includes(phaseRef.current)) { event.preventDefault(); showConfiguration(); }
+    };
+    window.addEventListener('keydown', abort);
+    return () => window.removeEventListener('keydown', abort);
+  }, [showConfiguration]);
+  const summaryItems = [
+    { label: labels.drill, value: labels.drillNames[config.drill] }, { label: labels.difficulty, value: labels.difficultyNames[config.difficulty] },
+    { label: labels.duration, value: `${config.durationSec}s` }, { label: labels.hand, value: FormatHandChoice(config.handChoice, labels) },
+    { label: labels.targetSize, value: `${config.targetSizePercent}%` }, { label: labels.speed, value: `${config.speedPercent}%` },
+  ];
+  const confirm = () => {
+    if (!formRef.current?.reportValidity() || !IsMotorConfig(config)) return;
+    setError(''); setLive(current => ({ ...current, timeRemaining: config.durationSec, targetRadius: difficulty.radius * config.targetSizePercent / 100 })); setPhase('rules');
+  };
+  const handleModalKey = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'Escape') { event.preventDefault(); exitGame(); }
+    if (event.key === 'Enter' && event.target instanceof HTMLInputElement) { event.preventDefault(); confirm(); }
+    if (event.key !== 'Tab') return;
+    const elements = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('input,select,button:not(:disabled)'));
+    if (event.shiftKey && document.activeElement === elements[0]) { event.preventDefault(); elements.at(-1)?.focus(); }
+    else if (!event.shiftKey && document.activeElement === elements.at(-1)) { event.preventDefault(); elements[0]?.focus(); }
+  };
+  const completeSession = (now: number) => {
+    if (phaseRef.current !== 'playing') return;
+    const metrics = metricsRef.current;
+    const duration = Math.max(1, now - metrics.startedAt);
+    const session: SessionRecord = {
+      Test_Date: new Date().toISOString(), Participant_ID: 'Guest', Drill: labels.drillNames[config.drill],
+      Reference_Module: `Tracking Mode ${['bounce', 'vertical', 'horizontal', 'random'].indexOf(config.drill) + 1}`,
+      Difficulty: config.difficulty, Duration_Seconds: Number((duration / 1000).toFixed(1)), Tracking_Hand: config.handChoice,
+      Target_Size_Scale: config.targetSizePercent / 100, Speed_Scale: config.speedPercent / 100,
+      Adaptive_Level: targetRef.current?.level ?? 1, Accuracy_Percent: ToPercent(metrics.handVisibleMs ? metrics.inTargetMs / metrics.handVisibleMs : 0),
+      Hand_Visible_Percent: ToPercent(metrics.handVisibleMs / duration), Successful_Reps: metrics.successes, Interrupted_Holds: metrics.misses,
+      Best_Hold_Seconds: Number((metrics.bestHoldMs / 1000).toFixed(2)), Event_Records: metrics.events.map(item => ({ ...item })),
+    };
+    stopInput(); PlayGameEndSound('Victory', jsPsychRef); jsPsychLifecycleRef.current?.finish(session as unknown as Record<string, unknown>);
+    setResult(session); setPhase('results'); setSaveState(IsHubGame() ? 'saving' : 'local');
+    const score = BuildGameScore(session); SendGameResult({ ...config }, score.summary, score.rounds);
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+  };
+  const startTraining = async () => {
+    if (phaseRef.current !== 'ready' || !IsMotorConfig(config)) return;
+    stopInput(); const generation = generationRef.current;
+    setPhase('initializing'); setError(''); PrepareAudioFeedback(jsPsychRef);
+    await rootRef.current?.requestFullscreen?.().catch(() => undefined);
+    if (generationRef.current !== generation) return;
+    try {
+      await StartHandInput(config.handChoice);
+      if (generationRef.current !== generation) return;
+      metricsRef.current = { ...CreateEmptyMetrics(), startedAt: performance.now(), lastTickAt: performance.now() }; targetRef.current = null;
+      await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:motor-cortex-rehab', onStart: () => {
+        setPhase('playing'); SendGameEvent('active'); let lastLive = 0;
+        const tick = (now: number) => {
+          if (phaseRef.current !== 'playing') return;
+          const rect = stageRef.current!.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            targetRef.current ??= CreateInitialTarget(config.drill, difficulty, config.targetSizePercent / 100, config.speedPercent / 100, rect.width, rect.height);
+            UpdateTrainingLoop({ now, rect, drill: config.drill, activeDifficulty: difficulty, durationSec: config.durationSec,
+              targetSizeScale: config.targetSizePercent / 100, speedScale: config.speedPercent / 100, target: targetRef.current, hand: handRef.current,
+              metrics: metricsRef.current, labels, onSuccess: () => PlaySuccessSound(jsPsychRef), onComplete: completeSession });
+            if (phaseRef.current === 'playing' && now - lastLive >= 45) { lastLive = now; setLive(BuildLiveState(now, config.durationSec, rect, targetRef.current, handRef.current, metricsRef.current)); }
+          }
+          if (phaseRef.current === 'playing') animationRef.current = requestAnimationFrame(tick);
         };
+        animationRef.current = requestAnimationFrame(tick);
+      } });
+    } catch (reason) {
+      if (generationRef.current !== generation) return;
+      showConfiguration(); setError(reason instanceof Error && reason.message === 'permission' ? labels.permission : labels.initialization);
     }
-    return {
-        x: width * 0.28,
-        y: height * 0.34,
-        vx: speed,
-        vy: speed * 0.78,
-        radius,
-        level: 1,
-        holdTargetMs: difficulty.holdMs,
-    };
+  };
+  const preview = phase !== 'playing';
+  const style = { '--motor-target-x': `${preview ? 50 : live.targetX}%`, '--motor-target-y': `${preview ? 42 : live.targetY}%`,
+    '--motor-target-size': `${preview ? difficulty.radius * config.targetSizePercent / 50 : live.targetRadius * 2}px`,
+    '--motor-hand-x': `${preview ? 67 : live.handX}%`, '--motor-hand-y': `${preview ? 66 : live.handY}%`,
+    '--motor-hold-progress': `${preview ? 55 : live.currentHoldPercent * 100}%` } as CSSProperties;
+  return <div ref={rootRef} className={`motor-cortex-rehab-game motor-cortex-rehab-phase-${phase} motor-cortex-drill-${config.drill}`} style={style}>
+    <div ref={jsPsychHostRef} className="motor-jspsych-host" aria-hidden="true" />
+    {phase !== 'results' && <div className="motor-cortex-play" aria-hidden={phase === 'menu' || phase === 'ready'}>
+      <div className="motor-cortex-hud">{[[labels.timeLeft, `${preview ? config.durationSec : Math.ceil(live.timeRemaining)}s`], [labels.accuracy, `${ToPercent(live.accuracy)}%`], [labels.visible, `${ToPercent(live.visibility)}%`], [labels.reps, live.successes], [labels.level, live.level]].map(([label, value]) => <p key={label}><span>{label}</span><strong>{value}</strong></p>)}</div>
+      <div ref={stageRef} className="motor-cortex-stage" aria-label={labels.followTarget}>
+        <div className="motor-cortex-path motor-cortex-path-vertical" /><div className="motor-cortex-path motor-cortex-path-horizontal" />
+        <div className={`motor-cortex-target ${live.insideTarget && !preview ? 'is-hit' : ''}`}><p>{labels.target}</p></div>
+        <div className={`motor-cortex-hand-cursor ${live.handVisible || preview ? 'is-visible' : ''}`}><p>{labels.handCursor}</p></div>
+      </div>
+      <div className="motor-cortex-instruction"><h2>{labels.drillNames[config.drill]}</h2><p>{labels.followTarget}</p><div className="motor-cortex-hold-meter" role="progressbar" aria-label={labels.hold} aria-valuenow={Math.round(preview ? 55 : live.currentHoldPercent * 100)} aria-valuemin={0} aria-valuemax={100}><i /></div></div>
+      <div className="motor-cortex-camera"><canvas ref={handCanvasRef} width={320} height={240} aria-label={en ? 'Hand landmark preview' : '手部座標預覽'} />
+        {preview && <svg className="motor-hand-placeholder" viewBox="0 0 100 100" aria-hidden="true"><path d="M35 80L15 50Q10 40 20 42L30 52V22Q30 12 38 22V44V12Q44 2 48 12V44V18Q56 8 58 18V48V30Q66 20 68 30V66Q64 88 35 80Z" /></svg>}
+        <p>{preview ? (en ? 'Hand landmark preview' : '手部座標預覽') : live.handVisible ? labels.tracking : labels.finding}</p>
+      </div>
+      {phase === 'playing' && <button className="motor-exit-button btn btn-ghost" onClick={showConfiguration}>{en ? 'Stop' : '停止活動'}</button>}
+    </div>}
+    {phase === 'menu' && <section className="training-panel" role="dialog" aria-modal="true" aria-labelledby="motor-config-title" onKeyDown={handleModalKey}>
+      <form ref={formRef} className="training-config" onSubmit={event => event.preventDefault()}>
+        <header className="training-config-header"><div className="training-config-title"><p className="training-config-label">{labels.configLabel}</p><h2 id="motor-config-title">{labels.title}</h2></div></header>
+        <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Session settings' : '活動設定'}</h3>
+          <label>{labels.drill}<select name="drill" value={config.drill} onChange={event => setConfig({ ...config, drill: event.target.value as MotorConfig['drill'] })}>{(['bounce', 'vertical', 'horizontal', 'random'] as const).map(value => <option key={value} value={value}>{labels.drillNames[value]}</option>)}</select></label><p>{labels.drillDescriptions[config.drill]}</p>
+          <label>{labels.difficulty}<select name="difficulty" value={config.difficulty} onChange={event => setConfig({ ...config, difficulty: event.target.value as MotorConfig['difficulty'] })}>{difficulties.map(item => <option key={item.id} value={item.id}>{labels.difficultyNames[item.id]} · {item.radius}px / {item.speed}px/s / {item.holdMs}ms</option>)}</select></label>
+          <label>{labels.duration}<select name="durationSec" value={config.durationSec} onChange={event => setConfig({ ...config, durationSec: Number(event.target.value) })}>{[45, 60, 90].map(value => <option key={value} value={value}>{value}s</option>)}</select></label>
+          <label>{labels.hand}<select name="handChoice" value={config.handChoice} onChange={event => setConfig({ ...config, handChoice: event.target.value as MotorConfig['handChoice'] })}>{(['any', 'left', 'right'] as const).map(value => <option key={value} value={value}>{FormatHandChoice(value, labels)}</option>)}</select></label>
+          <label>{labels.targetSize} · {config.targetSizePercent}%<input name="targetSizePercent" type="number" required min={75} max={130} step={5} value={config.targetSizePercent} onChange={event => setConfig({ ...config, targetSizePercent: event.target.valueAsNumber })} /></label>
+          <label>{labels.speed} · {config.speedPercent}%<input name="speedPercent" type="number" required min={70} max={140} step={5} value={config.speedPercent} onChange={event => setConfig({ ...config, speedPercent: event.target.valueAsNumber })} /></label>
+        </section><section className="training-setting"><h3>{labels.privacyTitle}</h3><p>{labels.privacyDesc}</p></section>{error && <p role="alert" className="motor-input-error">{error}</p>}</div>
+        <footer className="config-actions"><div className="training-config-navigation-buttons"><button type="button" className="btn btn-primary" onClick={confirm}>{en ? 'Confirm settings' : '確認設定'}</button><button type="button" className="btn btn-ghost" onClick={exitGame}>{en ? 'Back' : '返回'}</button></div></footer>
+      </form>
+    </section>}
+    <MotorTutorial active={phase === 'rules'} onBack={showConfiguration} onFinish={() => setPhase('ready')} />
+    {phase === 'ready' && <section className="training-panel motor-tutorial-ready" role="dialog" aria-modal="true" aria-labelledby="motor-ready-title" onKeyDown={handleModalKey}>
+      <div className="training-config training-confirmation"><header className="training-config-header"><h2 id="motor-ready-title">{labels.title}</h2></header>
+        <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Confirm settings' : '確認設定'}</h3><div className="training-config-summary">{summaryItems.map(item => <p className="training-config-summary-item" key={item.label}><strong>{item.label}：</strong>{item.value}</p>)}</div></section><p>{en ? 'Enable the camera in the next dialog. The timer starts after hand tracking is ready.' : '接著在相機視窗確認啟用；手部追蹤準備完成後才開始計時。'}</p></div>
+        <footer className="config-actions"><div className="training-config-navigation-buttons"><button type="button" className="btn btn-primary" onClick={() => void startTraining()}>{en ? 'Start training' : '開始訓練'}</button><button type="button" className="btn btn-ghost" onClick={showConfiguration}>{en ? 'Back to settings' : '返回設定'}</button></div></footer>
+      </div></section>}
+    {phase === 'initializing' && <section className="training-panel" role="status"><div className="training-config motor-loading"><h2>{labels.loadingTitle}</h2><p>{en ? 'Confirm camera access in the camera dialog.' : '請在相機視窗確認啟用。'}</p><button className="btn btn-ghost" onClick={showConfiguration}>{en ? 'Cancel' : '取消'}</button></div></section>}
+    {phase === 'results' && result && <div className="experiment-container motor-results-container"><section className="experiment-results">
+      <h1>{labels.resultsTitle}</h1><p>{en ? 'Records from this session' : '本次活動紀錄'}</p>
+      <section className="score-priority"><h2 className="score-priority-title">{en ? 'Key results' : '主要統計'}</h2><dl className="score-key-grid">{[[labels.accuracy, `${result.Accuracy_Percent}%`], [labels.visible, `${result.Hand_Visible_Percent}%`], [labels.reps, result.Successful_Reps]].map(([label, value]) => <div className="score-key-metric" key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>
+      <section className="score-context"><h2>{en ? 'Session overview' : '當次概況'}</h2><dl className="score-context-list">{[...summaryItems, { label: labels.bestHold, value: `${result.Best_Hold_Seconds}s` }, { label: labels.interrupted, value: result.Interrupted_Holds }, { label: labels.level, value: result.Adaptive_Level }, { label: en ? 'Actual activity duration' : '實際活動時間', value: `${result.Duration_Seconds}s` }].map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl></section>
+      <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang} />
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Results stay on this device.' : '獨立遊玩，成果保留於本機畫面。') : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{en ? 'Retry save' : '重試保存'}</button>}
+      <button className="btn btn-primary score-return-button" onClick={exitGame}>{IsHubGame() ? (en ? 'Return to lobby' : '返回大廳') : (en ? 'Return to entry' : '返回入口')}</button>
+    </section></div>}
+  </div>;
 }
-function UpdateTrainingLoop({ now, rect, drill, activeDifficulty, durationSec, targetSizeScale, speedScale, target, hand, metrics, labels, onSuccess, onComplete, }: {
-    now: number;
-    rect: DOMRect;
-    drill: DrillId;
-    activeDifficulty: DifficultyDefinition;
-    durationSec: number;
-    targetSizeScale: number;
-    speedScale: number;
-    target: TargetState;
-    hand: HandState;
-    metrics: SessionMetrics;
-    labels: (typeof copy)['zh'] | (typeof copy)['en'];
-    onSuccess: () => void;
-    onComplete: (completedAt: number) => void;
-}) {
-    if (!metrics.startedAt) {
-        metrics.startedAt = now;
-        metrics.lastTickAt = now;
-    }
-    const elapsedMs = now - metrics.startedAt;
-    if (elapsedMs >= durationSec * 1000) {
-        onComplete(now);
-        return;
-    }
-    const deltaMs = Math.min(90, Math.max(0, now - metrics.lastTickAt));
-    metrics.lastTickAt = now;
-    MoveTarget(drill, target, rect.width, rect.height, deltaMs);
-    const handVisible = hand.visible && now - hand.lastSeenAt <= trackingGraceMs;
-    if (handVisible)
-        metrics.handVisibleMs += deltaMs;
-    const insideTarget = handVisible && Distance2d(hand, target) <= target.radius + handCursorRadius;
-    if (insideTarget) {
-        metrics.inTargetMs += deltaMs;
-        metrics.currentHoldMs += deltaMs;
-        metrics.bestHoldMs = Math.max(metrics.bestHoldMs, metrics.currentHoldMs);
-    }
-    else if (metrics.currentHoldMs > 180) {
-        metrics.misses += 1;
-        metrics.streak = 0;
-        metrics.events.push(ToEventRecord({
-            metrics,
-            drillName: labels.drillNames[drill],
-            result: 'interrupted',
-            target,
-            elapsedMs,
-        }));
-        metrics.currentHoldMs = 0;
-    }
-    else {
-        metrics.currentHoldMs = 0;
-    }
-    if (metrics.currentHoldMs >= target.holdTargetMs) {
-        metrics.successes += 1;
-        metrics.streak += 1;
-        metrics.events.push(ToEventRecord({
-            metrics,
-            drillName: labels.drillNames[drill],
-            result: 'success',
-            target,
-            elapsedMs,
-        }));
-        metrics.currentHoldMs = 0;
-        onSuccess();
-        AdaptTarget(target, activeDifficulty, targetSizeScale, speedScale, metrics);
-        if (drill === 'random') {
-            PlaceRandomTarget(target, rect.width, rect.height);
-        }
-    }
-}
-function MoveTarget(drill: DrillId, target: TargetState, width: number, height: number, deltaMs: number) {
-    const deltaSec = deltaMs / 1000;
-    const padding = target.radius + 24;
-    if (drill === 'random')
-        return;
-    target.x += target.vx * deltaSec;
-    target.y += target.vy * deltaSec;
-    if (drill === 'vertical') {
-        target.x = width / 2 + Math.sin(performance.now() * 0.0012) * width * 0.08;
-    }
-    else if (drill === 'horizontal') {
-        target.y = height / 2 + Math.sin(performance.now() * 0.0012) * height * 0.08;
-    }
-    if (target.x < padding || target.x > width - padding) {
-        target.x = Clamp(target.x, padding, width - padding);
-        target.vx *= -1;
-    }
-    if (target.y < padding || target.y > height - padding) {
-        target.y = Clamp(target.y, padding, height - padding);
-        target.vy *= -1;
-    }
-}
-function AdaptTarget(target: TargetState, difficulty: DifficultyDefinition, targetSizeScale: number, speedScale: number, metrics: SessionMetrics) {
-    const accuracy = metrics.handVisibleMs > 0 ? metrics.inTargetMs / metrics.handVisibleMs : 0;
-    if (metrics.streak > 0 && metrics.streak % 4 === 0 && accuracy >= 0.58) {
-        target.level += 1;
-    }
-    else if (metrics.misses > 0 && metrics.misses % 5 === 0 && accuracy < 0.28) {
-        target.level = Math.max(1, target.level - 1);
-    }
-    const levelScale = 1 + (target.level - 1) * 0.08;
-    const speed = difficulty.speed * speedScale * levelScale;
-    const directionX = Math.sign(target.vx || 1);
-    const directionY = Math.sign(target.vy || 1);
-    target.vx = directionX * speed;
-    target.vy = directionY * speed * 0.78;
-    target.radius = Clamp(difficulty.radius * targetSizeScale * (1 - (target.level - 1) * 0.035), 38, 110);
-    target.holdTargetMs = Clamp(difficulty.holdMs + (target.level - 1) * 40, 420, 1400);
-}
-function PlaceRandomTarget(target: TargetState, width: number, height: number): TargetState {
-    const padding = target.radius + 28;
-    target.x = padding + Math.random() * Math.max(1, width - padding * 2);
-    target.y = padding + Math.random() * Math.max(1, height - padding * 2);
-    return target;
-}
-function ToEventRecord({ metrics, drillName, result, target, elapsedMs, }: {
-    metrics: SessionMetrics;
-    drillName: string;
-    result: 'success' | 'interrupted';
-    target: TargetState;
-    elapsedMs: number;
-}): DrillEventRecord {
-    const accuracy = metrics.handVisibleMs > 0 ? metrics.inTargetMs / metrics.handVisibleMs : 0;
-    return {
-        Event_Number: metrics.events.length + 1,
-        Drill: drillName,
-        Result: result,
-        Time_Seconds: Number((elapsedMs / 1000).toFixed(2)),
-        Hold_Seconds: Number((metrics.currentHoldMs / 1000).toFixed(2)),
-        Accuracy_Percent: ToPercent(accuracy),
-        Target_Size_Px: Number((target.radius * 2).toFixed(1)),
-        Adaptive_Level: target.level,
-    };
-}
-function BuildLiveState(now: number, durationSec: number, rect: DOMRect, target: TargetState, hand: HandState, metrics: SessionMetrics) {
-    const elapsedMs = metrics.startedAt ? now - metrics.startedAt : 0;
-    const accuracy = metrics.handVisibleMs > 0 ? metrics.inTargetMs / metrics.handVisibleMs : 0;
-    const visibility = elapsedMs > 0 ? metrics.handVisibleMs / elapsedMs : 0;
-    const handVisible = hand.visible && now - hand.lastSeenAt <= trackingGraceMs;
-    const insideTarget = handVisible && Distance2d(hand, target) <= target.radius + handCursorRadius;
-    return {
-        timeRemaining: Math.max(0, durationSec - elapsedMs / 1000),
-        accuracy,
-        visibility,
-        successes: metrics.successes,
-        misses: metrics.misses,
-        currentHoldPercent: Clamp(metrics.currentHoldMs / target.holdTargetMs, 0, 1),
-        level: target.level,
-        targetX: (target.x / rect.width) * 100,
-        targetY: (target.y / rect.height) * 100,
-        targetRadius: target.radius,
-        handX: (hand.x / rect.width) * 100,
-        handY: (hand.y / rect.height) * 100,
-        handVisible,
-        insideTarget,
-    };
-}
-function SelectHand(landmarks: NormalizedLandmark[][], handedness: Category[][], handChoice: HandChoice): {
-    landmarks: NormalizedLandmark[];
-    handedness: HandChoice | null;
-} | null {
-    if (!landmarks.length)
-        return null;
-    if (handChoice === 'any') {
-        return { landmarks: landmarks[0], handedness: ToHandChoice(handedness[0]?.[0]?.categoryName) };
-    }
-    const index = handedness.findIndex((categories) => ToHandChoice(categories[0]?.categoryName) === handChoice);
-    if (index >= 0 && landmarks[index]) {
-        return { landmarks: landmarks[index], handedness: handChoice };
-    }
-    return null;
-}
-function ToHandChoice(label: string | undefined): HandChoice | null {
-    if (label === 'Left')
-        return 'left';
-    if (label === 'Right')
-        return 'right';
-    return null;
-}
-function GetHandCursorPoint(landmarks: NormalizedLandmark[], width: number, height: number): {
-    x: number;
-    y: number;
-} {
-    const points = [landmarks[0], landmarks[5], landmarks[9], landmarks[13], landmarks[17]].filter(Boolean);
-    const average = points.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
-    return {
-        x: (1 - average.x / points.length) * width,
-        y: (average.y / points.length) * height,
-    };
-}
-function DrawHandLandmarks(canvas: HTMLCanvasElement | null, video: HTMLVideoElement, landmarks: NormalizedLandmark[] | undefined) {
-    if (!canvas)
-        return;
-    if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-    }
-    const context = canvas.getContext('2d');
-    if (!context)
-        return;
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    if (!landmarks)
-        return;
-    context.save();
-    context.translate(canvas.width, 0);
-    context.scale(-1, 1);
-    context.strokeStyle = '#5eead4';
-    context.fillStyle = '#fde68a';
-    context.lineWidth = Math.max(2, canvas.width / 320);
-    HandLandmarker.HAND_CONNECTIONS.forEach(({ start, end }) => {
-        const from = landmarks[start];
-        const to = landmarks[end];
-        context.beginPath();
-        context.moveTo(from.x * canvas.width, from.y * canvas.height);
-        context.lineTo(to.x * canvas.width, to.y * canvas.height);
-        context.stroke();
-    });
-    landmarks.forEach((point) => {
-        context.beginPath();
-        context.arc(point.x * canvas.width, point.y * canvas.height, Math.max(3, canvas.width / 180), 0, Math.PI * 2);
-        context.fill();
-    });
-    context.restore();
-}
-function Distance2d(left: Pick<HandState, 'x' | 'y'>, right: Pick<TargetState, 'x' | 'y'>): number {
-    return Math.hypot(left.x - right.x, left.y - right.y);
-}
-function ToPercent(value: number): number {
-    return Number((Clamp(value, 0, 1) * 100).toFixed(1));
-}
-function FormatHandChoice(handChoice: HandChoice, labels: (typeof copy)['zh'] | (typeof copy)['en']): string {
-    if (handChoice === 'left')
-        return labels.handLeft;
-    if (handChoice === 'right')
-        return labels.handRight;
-    return labels.handAny;
+
+function DrawHand(canvas: HTMLCanvasElement | null, points: { x: number; y: number }[]) {
+  const context = canvas?.getContext('2d');
+  if (!context || !canvas) return;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  const styles = getComputedStyle(canvas);
+  context.strokeStyle = styles.getPropertyValue('--hand-line').trim(); context.fillStyle = styles.getPropertyValue('--hand-point').trim(); context.lineWidth = 2;
+  for (const indices of [[0, 1, 2, 3, 4], [0, 5, 6, 7, 8], [5, 9, 10, 11, 12], [9, 13, 14, 15, 16], [13, 17, 18, 19, 20], [0, 17]]) {
+    context.beginPath(); indices.forEach((index, order) => { const point = points[index]; if (!point) return; if (!order) context.moveTo((1 - point.x) * canvas.width, point.y * canvas.height); else context.lineTo((1 - point.x) * canvas.width, point.y * canvas.height); }); context.stroke();
+  }
+  for (const point of points) { context.beginPath(); context.arc((1 - point.x) * canvas.width, point.y * canvas.height, 3, 0, 2 * Math.PI); context.fill(); }
 }

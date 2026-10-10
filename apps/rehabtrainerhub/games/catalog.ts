@@ -2,6 +2,7 @@ import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
 import asteroidShieldCatalog from './asteroid-shield/public/game.json';
+import motorCortexCatalog from './motor-cortex-rehab/public/game.json';
 import gestureBattlerCatalog from './gesture-battler/public/game.json';
 import type { MajorCategoryId,TrainerCategoryId } from './gameTags.js';
 import {
@@ -219,12 +220,13 @@ const seeds: readonly TrainingCatalogSeed[] = [
   },
   {
     id: 'motor-cortex-rehab',
-    trainer: 'motor',
-    purpose: 'upper-limb',
+    trainer: motorCortexCatalog.trainer as TrainerCategoryId,
+    purpose: motorCortexCatalog.category as TrainingPurposeId,
+    imagePath: `/assets/game-previews/motor-cortex-rehab/${motorCortexCatalog.preview}`,
     kind: 'motor-upper',
     path: '/upper-limb-training?game=motor-cortex-rehab',
-    zh: ['手部目標追蹤練習', '追蹤手部位置，練習活動範圍、目標追蹤與隨機觸達。'],
-    en: ['Hand Target Tracking Practice', 'Track hand position to practise range of motion, target tracking, and random reaches.'],
+    zh: [motorCortexCatalog.copy['zh-TW'].title, motorCortexCatalog.copy['zh-TW'].description],
+    en: [motorCortexCatalog.copy.en.title, motorCortexCatalog.copy.en.description],
   },
   {
     id: 'moving-card',

@@ -33,7 +33,9 @@ export function AcceptGameMessage(message, state) {
     if (!exact(message.payload, []) || (state.complete && !['exit', 'retry'].includes(message.type))
       || (message.type === 'retry' && !state.complete)) return false;
   } else if (['input-start', 'input-stop'].includes(message.type)) {
-    if (!state.capabilities?.includes('hand-tracking') || state.complete || !exact(message.payload, [])) return false;
+    const validPayload = exact(message.payload, []) || (message.type === 'input-start'
+      && exact(message.payload, ['hand']) && ['any', 'left', 'right'].includes(message.payload.hand));
+    if (!state.capabilities?.includes('hand-tracking') || state.complete || !validPayload) return false;
   } else if (message.type === 'sample') {
     if (state.complete || !exact(message.payload, ['image', 'metadata'])
       || !(message.payload.image instanceof Blob) || message.payload.image.type !== 'image/png'

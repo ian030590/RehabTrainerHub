@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-10-09T21:15:02.296Z",
+  "status": 200,
+  "games": [
+    {
+      "id": "official-motor-cortex-rehab",
+      "slug": "motor-cortex-rehab",
+      "title": "手部目標追蹤練習",
+      "trainer": "motor",
+      "category": "general",
+      "release": {
+        "id": "rel-motor-cortex-rehab-1.0.0",
+        "version": "1.0.0",
+        "contentSha256": "636a44cd63c03476890ee127096dbfb38ed084af9985d97544ba1170b22f315d",
+        "capabilities": [
+          "audio",
+          "fullscreen",
+          "keyboard",
+          "pointer"
+        ],
+        "approvedAt": "2026-10-07T00:00:00.000Z",
+        "launchUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/1.0.0/",
+        "installUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/1.0.0/",
+        "settingsUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/1.0.0/package/settings.json"
+      }
+    }
+  ]
+}
