@@ -1,14 +1,14 @@
 # 眼動練習 R2 遷移與發布驗收
 
-更新：2026-10-11。**精確版本已核准並發布 R2，相容 runner 已部署及驗證；正式 Hub 尚待 CI 部署與驗收。** 正式仍五款 R2／35 款舊流程；本機候選 registry／Hub build 暫為六款／34 款。這份文件與候選 manifest 不是正式發布收據。
+更新：2026-10-11。**`oculomotor-training@2.0.0` 已精確核准、發布 R2、完成七項 CI／兩站部署及正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收。** 正式六款 R2／34 款舊流程；[正式收據](releases/oculomotor-training-2.0.0.json)保留逐檔摘要、核准、順序修正、部署及驗收證據。
 
-候選為 `oculomotor-training@2.0.0`，10 個發布檔案，`contentSha256`：
+已核准版本為 `oculomotor-training@2.0.0`，10 個發布檔案，`contentSha256`：
 
 ```text
 5148ebabb7a60d2f2f56094e97d3c45b4402d7968588dccecd3b42ed043374af
 ```
 
-逐檔 sizes／SHA-256、原公開資料、固定輸入資產與驗證指令見 [candidate.json](migrations/oculomotor-training/candidate.json)。擁有者已在本對話回答「核准眼動輸入代理方案」；**當版精確版本／摘要與正式發布已以「核准並git push」核准，發布及正式驗收進行中**。Publisher dry-run manifest 的 `status=approved` 是擬發布格式，不代表已有擁有者批准。
+逐檔 sizes／SHA-256、原公開資料、固定輸入資產與驗證指令見 [candidate.json](migrations/oculomotor-training/candidate.json)。擁有者已在本對話回答「核准眼動輸入代理方案」；**當版精確版本／摘要與正式發布已以「核准並git push」核准，發布及正式驗收已完成**。Publisher dry-run manifest 的 `status=approved` 是擬發布格式，不代表已有擁有者批准。
 
 ## 原流程與保留範圍
 
@@ -97,13 +97,19 @@
 | --- | --- |
 | 原分類／原圖／原功能 | 已盤點並逐項測試，原部署／歷史slug已只讀核對 |
 | 獨立性／安全／自有UI／聚光燈／結果／保存 | 本機實作與嚴格sandbox／CSP／行為測試通過 |
-| 大廳完整流程／手機平板／PWA／平台回歸 | 本機通過；正式尚待發布後驗收 |
+| 大廳完整流程／手機平板／PWA／平台回歸 | 本機及正式站通過，保存 API 僅導向本機 SQLite |
 | 輸入例外 | 擁有者已明確核准 |
-| 當版精確核准／R2公開／部署／正式收據 | 擁有者已回答「核准並git push」核准精確候選；發布／部署／正式驗收進行中 |
+| 當版精確核准／R2公開／部署／正式收據 | 擁有者已回答「核准並git push」核准精確候選；R2發布／七項CI／兩站部署／正式API及瀏覽器／收據完成 |
 | 回退／硬體限制 | 只讀舊部署驗證完成；首次新格式無另一回退版 |
 
 尚未驗真人／實體相機的眼動精度、實體觸控／尺量校正、Safari／iOS、長時間完整斷網、真人 Turnstile 或正式保存。人工驗收：量測可視螢幕與觀看距離，真人同意相機後依九點校正、五點驗證重校與四活動完整秒數操作，刻意遮臉／拔相機／切帳號／離線再恢復，確認缺測、CSV／摘要數量、身份、重試及停止清理。這些未測項目不能宣稱已完成或具有臨床效度。
 
 ## 發布進度與順序修正
 
-核准的 `2.0.0`／上述摘要已於 2026-10-10T23:13:06.530Z 完成 R2 上傳／回讀與 current 切換，遊戲 bytes 不變。初次 runner 的正式標頭檢查失敗後仍執行了發布，順序有誤；正式 Hub 保持原部署。已先以 RED 測試修正 `_routes.json` 和 Pages `preview.html` → `preview` 轉址政策，部署 [6d3ddbde](https://6d3ddbde.trainerhub-user-games.pages.dev)，正式十份固定輸入 bytes／相機／CSP 核對通過。跨站瀏覽器另重現轉址清除 referrer，已將兩個精確 preview 網址的來源政策限定為 `strict-origin-when-cross-origin`，保留原 parent source／origin 驗證；單一 PWA 手機正式流程已通過。之後才切換 Hub。逐檔及順序紀錄見 [正式收據](releases/oculomotor-training-2.0.0.json)與[相容 runner 核對](migrations/oculomotor-training/compatible-runner-verification.json)；Hub／正式 API／瀏覽器未驗收前仍不標記完成。
+核准的 `2.0.0`／上述摘要已於 2026-10-10T23:13:06.530Z 完成 R2 上傳／回讀與 current 切換，遊戲 bytes 不變。初次 runner 的正式標頭檢查失敗後仍執行了發布，順序有誤；正式 Hub 保持原部署。已先以 RED 測試修正 `_routes.json` 和 Pages `preview.html` → `preview` 轉址政策，部署 [6d3ddbde](https://6d3ddbde.trainerhub-user-games.pages.dev)，正式十份固定輸入 bytes／相機／CSP 核對通過。跨站瀏覽器另重現轉址清除 referrer，已將兩個精確 preview 網址的來源政策限定為 `strict-origin-when-cross-origin`，保留原 parent source／origin 驗證；單一 PWA 手機正式流程已通過。之後才切換 Hub。逐檔及順序紀錄見 [正式收據](releases/oculomotor-training-2.0.0.json)與[相容 runner 核對](migrations/oculomotor-training/compatible-runner-verification.json)；已完成正式 Hub／API／瀏覽器驗收並登記第六款完成。
+
+## 正式部署與驗收結果
+
+[CI 38094804766](https://github.com/ian030590/RehabTrainerHub/actions/runs/38094804766) 的七項驗證與部署全部成功，來源 `8bb3a1e9b89fa79d86ffeeee2e59635f96f43842`。Hub deployment `8778d598-914c-4ba2-822c-0c08f89fa01b`，runner deployment `31556b2e-9b61-41f3-9de7-ceddaa0e06f5`。正式公開目錄只有一個眼動 slug，`vision` 分類／原圖摘要正確；不指定版本 session 固定核准 `2.0.0`／上述摘要；十個 R2 檔案、嚴格 sandbox／CSP、穩定 PWA current302／no-store與 Hub 舊 JSON／JS／SW／manifest410／no-store均通過，[直接正式 API 核對](migrations/oculomotor-training/production-api-verification.json)。
+
+真正部署的 Hub 完成桌機追視、手機跳視與拒絕／重新同意及 session 重試、平板無眼動凝視、英文登入中央辨識；獨立 PWA 桌機英文／手機／平板均完成實際固定模型、聚光燈、校正／驗證、原活動、數值成果、來源對應返回及原CSV下載／離線固定資產核對。CSV與摘要重試／身份隔離只寫本機SQLite，沒有建立正式測試帳號或訓練紀錄。代表畫面見 [production/](migrations/oculomotor-training/production/)。真人／實體硬體、Safari／iOS 與正式保存限制仍依上節，未宣稱臨床效度。

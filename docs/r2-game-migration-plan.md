@@ -1,10 +1,10 @@
 # 內建遊戲逐步遷移至 R2：畫畫塔防試點
 
-更新日期：2026-10-11。目前 R2 current 為 `drawing-defense@2.0.4`、`asteroid-shield@2.0.3`、`gesture-battler@2.0.2` 、`motor-cortex-rehab@2.0.0` 與 `moving-card@2.0.0`，5 款完成、35 款保留舊流程。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
+更新日期：2026-10-11。目前 R2 current 為 `asteroid-shield@2.0.4`、`gesture-battler@2.0.3`、`drawing-defense@2.0.5`、`motor-cortex-rehab@2.0.1`、`oculomotor-training@2.0.0`、`moving-card@2.0.0`，6 款完成、34 款保留舊流程。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
 
-2026-10-11 眼動練習 `oculomotor-training@2.0.0` 已建立本機自包含候選，採原 25 項設定、四模式／原刺激引擎、四目標聚光燈、完整十項成果與私人 CSV。擁有者已核准眼動輸入代理架構，精確版本／摘要已以「核准並git push」核准並發布 R2，相容 runner 已驗證，正式 Hub 尚待 CI 部署與驗收；本機 registry／Hub build 暫為六款／34 款，正式仍五款／35 款。不得將候選登記或本機測試作為正式完成證據。候選、測試、輸入安全及回退見 [眼動遷移審查](oculomotor-r2-migration.md)。
+2026-10-11 眼動練習 `oculomotor-training@2.0.0` 已按精確摘要核准、發布 R2、完成相容 runner／Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38094804766)與正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收。採原25項設定、四種原引擎／校正驗證、四目標聚光燈、十項成果與私人CSV；正式六款／34款舊流程。Pages轉址政策及發布順序修正、批准、原圖／分類與回退見 [眼動遷移驗收](oculomotor-r2-migration.md)及[正式收據](releases/oculomotor-training-2.0.0.json)。原模型在人像串流執行，真人／實體相機精度與Safari／iOS仍未驗收。
 
-移動卡片訓練 `moving-card@2.0.0` 已精確摘要核准、相容 runner 先部署／R2 回讀後 Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38055113478)及正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收完成。保留原引擎／設定／原圖，採自有設定、三目標聚光燈與完整成績；見 [移動卡片遷移驗收](moving-card-r2-migration.md)與[正式收據](releases/moving-card-2.0.0.json)。正式五款完成、35 款舊流程；首次 native 遷移仍無另一個核准回退版，保留原 Hub deployment／commit。
+移動卡片訓練 `moving-card@2.0.0` 已精確摘要核准、相容 runner 先部署／R2 回讀後 Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38055113478)及正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收完成。保留原引擎／設定／原圖，採自有設定、三目標聚光燈與完整成績；見 [移動卡片遷移驗收](moving-card-r2-migration.md)與[正式收據](releases/moving-card-2.0.0.json)。正式六款完成、34 款舊流程；首次 native 遷移仍無另一個核准回退版，保留原 Hub deployment／commit。
 
 2026-10-10 手部目標追蹤發現 Hub 背景捲軸占用 15px，造成 `100vw` 遊戲畫面超過可視文件寬度、左右留白不一致且右側緊貼視窗。後續搬遷不得再出現左右過寬／偏移或不必要的頁面捲軸；第 7 節步驟 B／D／F 與第 11 節加入必查項目。本次 Hub 修正已通過七項 CI／兩站部署及正式桌機視窗／手機／平板完整流程，R2 遊戲 bytes 維持原核准版本。重現、修正與本機／正式驗收見 [遊戲置中與背景捲軸紀錄](motor-cortex-hub-scrollbar-fix.md)。
 
@@ -12,7 +12,7 @@
 
 三款成績頁新版經擁有者核准精確 version／contentSha256，已發布 R2，加入主要統計、可切換指標的圖表／描述統計與個別回合明細。成績 UI、計算與樣式仍各自由遊戲擁有，Hub 不增加結果頁或遊戲 bundle。後續遷移同樣必須符合第 7 節步驟 B 的成績呈現規範、第 D 步驟的驗證關卡與第 11 節的審查欄位；實作、正式驗收與回退證據見 [成績頁發布紀錄](r2-game-results-ui.md)及三份正式收據：[畫畫塔防](releases/drawing-defense-2.0.4.json)、[小行星護盾防衛](releases/asteroid-shield-2.0.3.json)、[手勢指令對戰](releases/gesture-battler-2.0.1.json)。
 
-小行星護盾防衛的滑鼠／觸控 `asteroid-shield@2.0.0` 已完成擁有者精確版本核准、R2 發布與逐檔回讀、[CI／Hub／runner 部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583)、正式 API／圖片／固定版本 session，以及真實 Hub 桌機／觸控與獨立 PWA 驗收。逐遊戲證據見 [審查單](asteroid-shield-r2-migration.md)與[正式收據](releases/asteroid-shield-2.0.0.json)。目前 5 款完成、35 款維持舊流程；第 1 節保留畫畫塔防首個試點的發布歷史與當時數量。
+小行星護盾防衛的滑鼠／觸控 `asteroid-shield@2.0.0` 已完成擁有者精確版本核准、R2 發布與逐檔回讀、[CI／Hub／runner 部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37853571583)、正式 API／圖片／固定版本 session，以及真實 Hub 桌機／觸控與獨立 PWA 驗收。逐遊戲證據見 [審查單](asteroid-shield-r2-migration.md)與[正式收據](releases/asteroid-shield-2.0.0.json)。目前 6 款完成、34 款維持舊流程；第 1 節保留畫畫塔防首個試點的發布歷史與當時數量。
 
 小行星護盾防衛 `2.0.1` 將設定改為前景視窗，遊戲說明場景先在背景呈現，確認後才啟動教學；擁有者已核准精確摘要，R2／正式 API／Hub 桌機與手機／獨立 PWA 驗收通過，[CI／部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37867035465)成功且部署後已重新驗收。見 [設定視窗審查](asteroid-shield-settings-dialog-2.0.1.md)與[正式收據](releases/asteroid-shield-2.0.1.json)。`2.0.0` 保留作為已驗證回退版本；第 7 節步驟 B 將相同呈現方式列為後續遷移要求。
 
@@ -369,7 +369,7 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 
 ### 手勢指令對戰的相機輸入例外
 
-2026-10-09 使用者明確接受「輸入代理，維持嚴格沙盒」。`gesture-battler@2.0.0` 已完成精確候選核准、runner 支援先部署、R2 發布、Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37892011679)及正式 API／桌機／手機／英文指定模式／獨立 PWA 驗收；當時三款完成、37 款舊流程。審查單、感測器驗收限制與證據見 [手勢指令對戰遷移紀錄](gesture-battler-r2-migration.md)及[正式收據](releases/gesture-battler-2.0.0.json)。手部目標追蹤 `2.0.0` 沿用相同代理，增加相容的可選 hand input-start，正式完成數已更新為本文開頭的五款。
+2026-10-09 使用者明確接受「輸入代理，維持嚴格沙盒」。`gesture-battler@2.0.0` 已完成精確候選核准、runner 支援先部署、R2 發布、Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/37892011679)及正式 API／桌機／手機／英文指定模式／獨立 PWA 驗收；當時三款完成、37 款舊流程。審查單、感測器驗收限制與證據見 [手勢指令對戰遷移紀錄](gesture-battler-r2-migration.md)及[正式收據](releases/gesture-battler-2.0.0.json)。手部目標追蹤 `2.0.0` 沿用相同代理，增加相容的可選 hand input-start，正式完成數已更新為本文開頭的六款。
 
 可信官方 release 宣告 `hand-tracking` 才能由 Hub／獨立 PWA 容器在使用者確認後取得相機。MediaPipe 0.10.35、固定摘要的模型與 WASM 經 runner 版本化 `/input/hand-tracking-1.0.0/` 供應；這是平台輸入責任，例外於原先「MediaPipe 全在遊戲」要求。容器只經私有 port 傳數值 xyz／空手部狀態，核對 nonce、遞增 sequence 和欄位範圍，不傳或保存影像／身份資訊。遊戲自行校正、判定、呈現與產生成果，不引入平台或跨遊戲程式碼。
 

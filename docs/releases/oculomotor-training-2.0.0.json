@@ -5,7 +5,7 @@
   "launchUrl": "https://trainerhub-user-games.pages.dev/games/oculomotor-training/2.0.0/package/index.html",
   "contentSha256": "5148ebabb7a60d2f2f56094e97d3c45b4402d7968588dccecd3b42ed043374af",
   "verifiedAt": "2026-10-10T23:13:06.530Z",
-  "status": "published-awaiting-production-verification",
+  "status": "published-and-verified",
   "prefix": "releases/oculomotor-training/2.0.0/",
   "pwaUrl": "https://trainerhub-user-games.pages.dev/games/oculomotor-training/2.0.0/",
   "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/oculomotor-training/",
@@ -152,22 +152,72 @@
     "evidence": "../oculomotor-r2-migration.md"
   },
   "productionValidation": {
-    "status": "pending-Hub-deployment",
+    "status": "passed",
+    "checkedAt": "2026-10-10T23:29:05.575Z",
+    "apiVerification": "../migrations/oculomotor-training/production-api-verification.json",
+    "inputVerification": "../migrations/oculomotor-training/compatible-runner-verification.json",
     "writeScope": "Browser saves use local API/SQLite only; no production test records or accounts",
-    "preHubSwitch": [
+    "browser": [
       {
-        "command": "--remote --standalone --gaze --mobile --activity saccade",
+        "command": "node scripts/check-r2-game-browser.mjs --game oculomotor-training --production-hub --lobby --gaze --activity pursuit",
         "status": "passed",
-        "models": "Real pinned model on portrait stream",
-        "writeScope": "No production records"
+        "writeScope": "Local API/SQLite only",
+        "camera": "Real pinned models; approved portrait stream; browser fake native permission check"
       },
       {
-        "command": "--remote --lobby --gaze --activity pursuit",
+        "command": "node scripts/check-r2-game-browser.mjs --game oculomotor-training --production-hub --lobby --gaze --mobile --camera-denied --session-failure --activity saccade",
         "status": "passed",
-        "models": "Real pinned model on portrait stream",
-        "writeScope": "Candidate Hub; real deployed runner; local API/SQLite only"
+        "writeScope": "Local API/SQLite only",
+        "camera": "Real pinned models; approved portrait stream; browser fake native permission check"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game oculomotor-training --production-hub --lobby --tablet --activity fixation",
+        "status": "passed",
+        "writeScope": "Local API/SQLite only",
+        "camera": "No camera"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game oculomotor-training --production-hub --lobby --gaze --signed-in --english --wide --activity vor",
+        "status": "passed",
+        "writeScope": "Local API/SQLite only",
+        "camera": "Real pinned models; approved portrait stream; browser fake native permission check"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game oculomotor-training --remote --standalone --gaze --mobile --activity saccade",
+        "status": "passed",
+        "writeScope": "Local API/SQLite only",
+        "camera": "Real pinned models; approved portrait stream; browser fake native permission check"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game oculomotor-training --remote --standalone --gaze --tablet --activity fixation",
+        "status": "passed",
+        "writeScope": "Local API/SQLite only",
+        "camera": "Real pinned models; approved portrait stream; browser fake native permission check"
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game oculomotor-training --remote --standalone --gaze --english --activity vor",
+        "status": "passed",
+        "writeScope": "Local API/SQLite only",
+        "camera": "Real pinned models; approved portrait stream; browser fake native permission check"
       }
-    ]
+    ],
+    "screenshots": [
+      "../migrations/oculomotor-training/production/hub-desktop-tutorial-target.png",
+      "../migrations/oculomotor-training/production/hub-desktop-camera-ready.png",
+      "../migrations/oculomotor-training/production/hub-desktop-results.png",
+      "../migrations/oculomotor-training/production/hub-mobile-tutorial-calibration.png",
+      "../migrations/oculomotor-training/production/hub-mobile-results.png",
+      "../migrations/oculomotor-training/production/hub-tablet-confirmation.png",
+      "../migrations/oculomotor-training/production/hub-tablet-results.png",
+      "../migrations/oculomotor-training/production/hub-english-account-validation.png",
+      "../migrations/oculomotor-training/production/hub-english-account-results.png",
+      "../migrations/oculomotor-training/production/pwa-mobile-tutorial-calibration.png",
+      "../migrations/oculomotor-training/production/pwa-mobile-results.png",
+      "../migrations/oculomotor-training/production/pwa-tablet-validation.png",
+      "../migrations/oculomotor-training/production/pwa-tablet-results.png",
+      "../migrations/oculomotor-training/production/pwa-desktop-english-results.png"
+    ],
+    "finalInputVerification": "../migrations/oculomotor-training/production-runner-verification.json"
   },
   "rollback": {
     "baseline": "../migrations/oculomotor-training/rollback-baseline.json",
@@ -182,5 +232,77 @@
     "Pinned real models were run on an approved portrait image stream; no live person or physical camera eye accuracy accepted",
     "No Safari/iOS, physical touch, measured screen calibration, real Turnstile or production record save accepted",
     "Offline model and engine fetch checked; no long-duration total disconnection accepted"
-  ]
+  ],
+  "ci": {
+    "id": 38094804766,
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38094804766",
+    "headSha": "8bb3a1e9b89fa79d86ffeeee2e59635f96f43842",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "deployment_scope",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (hub-functions)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (trainer-entrypoints)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (pwa)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (gamerunner)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (naming)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (game-architecture)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (cloudflare-deploy)",
+        "conclusion": "success"
+      },
+      {
+        "name": "deploy",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "deployments": {
+    "hub": {
+      "id": "8778d598-914c-4ba2-822c-0c08f89fa01b",
+      "url": "https://8778d598.rehabtrainerhub.pages.dev",
+      "environment": "Production",
+      "source": "8bb3a1e9b89fa79d86ffeeee2e59635f96f43842"
+    },
+    "runner": {
+      "id": "31556b2e-9b61-41f3-9de7-ceddaa0e06f5",
+      "url": "https://31556b2e.trainerhub-user-games.pages.dev",
+      "environment": "Production",
+      "source": "8bb3a1e9b89fa79d86ffeeee2e59635f96f43842"
+    }
+  },
+  "completedAt": "2026-10-10T23:29:05.618Z",
+  "productionCount": {
+    "completedGames": 6,
+    "legacyGames": 34
+  },
+  "browserValidationAdjustment": {
+    "red": "Production desktop camera-position screenshot allowed fresh-face state to expire before a one-shot calibration click; timed out waiting for calibration point.",
+    "green": "Browser checks the enabled button and observes entry into calibration; original fresh-face checks and approved game bytes are unchanged.",
+    "checks": [
+      "test:naming passed",
+      "test:webgazer passed",
+      "Production desktop pursuit rerun passed"
+    ]
+  }
 }

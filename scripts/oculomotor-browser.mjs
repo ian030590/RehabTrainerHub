@@ -74,7 +74,12 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
   await game(`document.querySelector('.training-confirmation .btn-primary').click()`);
   if (tracking) {
     await until(() => game(`Boolean(document.querySelector('#webgazer-camera-continue')) && !document.querySelector('#webgazer-camera-continue').disabled`), 'face positioning ready',60000);
-    await capture('camera-position'); await game(`document.querySelector('#webgazer-camera-continue').click()`);
+    await capture('camera-position');
+    await until(() => game(`(() => {
+      const button=document.querySelector('#webgazer-camera-continue');
+      if(button && !button.disabled) button.click();
+      return Boolean(document.querySelector('.gaze-calibration-point'));
+    })()`), 'ready camera enters calibration',60000);
     for (let index=0;index<18;index++) {
       await until(() => game(`Boolean(document.querySelector('.gaze-calibration-point'))`), 'calibration point');
       await game(`document.querySelector('.gaze-calibration-point').click()`);
