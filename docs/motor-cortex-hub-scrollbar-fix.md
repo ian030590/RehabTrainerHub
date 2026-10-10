@@ -30,4 +30,12 @@ Hub 只在 `dialog.training-overlay[open]` 存在時將根文件 `overflow` 設�
 
 ## 正式部署驗收
 
-使用者於 2026-10-10 明確核准這次 `git push` 與正式部署，並要求將左右過寬與不必要捲軸列入 R2 搬遷計畫的必查項目。待 CI／部署成功後，核對正式 Hub 桌機視窗／手機／平板。Safari／iOS 尚未驗證。
+使用者於 2026-10-10 明確核准這次 `git push` 與正式部署，並要求將左右過寬與不必要捲軸列入 R2 搬遷計畫的必查項目。修正與計畫已推送；[七項 CI 與部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679)全部成功。
+
+正式部署 commit 為 `c029a3d580788197fba074c7df1420104c63c312`：Hub [0b80683d](https://0b80683d.rehabtrainerhub.pages.dev)、runner [df916af8](https://df916af8.trainerhub-user-games.pages.dev)。直接查詢兩站 production 部署均為該 commit／success；正式 `/api/games`、R2 五檔 SHA-256、嚴格 CSP 與穩定入口仍為原核准 `motor-cortex-rehab@2.0.0`，本次沒有重發 R2。
+
+部署後三項 `--production-hub --lobby` 完整流程均退出 0：桌機 `--wide --windowed`（1320×713）、手機 `--mobile`（390×844）、平板 `--tablet`（820×1180）。Hub 背景捲軸寬均為 0、iframe 置中，gameplay 左右 padding 相同且根頁面無溢出；設定、五目標教學、45 秒活動、成績內部捲動、保存失敗重試與感測器清理均通過。返回後 overflow 恢復 `visible`，原大廳位置分別為 781、1950、1818。正式靜態檔／R2 直接載入，僅 Hub `/api/*` 攔到本機測試 handler；成果只寫本機 SQLite，沒有建立正式紀錄。
+
+正式證據：[production-verification.json](migrations/motor-cortex-hub-scrollbar/production-verification.json)、[桌機視窗遊戲](migrations/motor-cortex-hub-scrollbar/production-desktop-playing.png)、[手機遊戲](migrations/motor-cortex-hub-scrollbar/production-mobile-playing.png)、[手機完整明細](migrations/motor-cortex-hub-scrollbar/production-mobile-results-details.png)、[平板遊戲](migrations/motor-cortex-hub-scrollbar/production-tablet-playing.png)。[搬遷計畫](r2-game-migration-plan.md)第 7 節步驟 B／D／F 與第 11 節均加入逐遊戲必查要求。
+
+Safari／iOS 尚未驗證；感測來源仍為核對過的圖片串流，不宣稱已驗收實體相機／真人手部。

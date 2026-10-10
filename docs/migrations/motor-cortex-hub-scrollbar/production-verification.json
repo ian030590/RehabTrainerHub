@@ -1,0 +1,275 @@
+{
+  "verifiedAt": "2026-10-10T07:18:06.037Z",
+  "fixCommit": "c36bc6296573731a9a99352d26f1063fa484de29",
+  "deployedCommit": "c029a3d580788197fba074c7df1420104c63c312",
+  "ownerApproval": {
+    "date": "2026-10-10",
+    "instruction": "核准，git push並將本次修正的左右過寬的錯誤、不必要的捲軸的錯誤放到R2搬遷計畫當中，下次搬遷不可有這個錯誤"
+  },
+  "ci": {
+    "databaseId": 38033594679,
+    "headSha": "c029a3d580788197fba074c7df1420104c63c312",
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "deployment_scope",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679/job/114159360704",
+        "startedAt": "2026-10-10T07:12:02Z",
+        "completedAt": "2026-10-10T07:12:13Z"
+      },
+      {
+        "name": "Verify (cloudflare-deploy)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679/job/114159360834",
+        "startedAt": "2026-10-10T07:12:02Z",
+        "completedAt": "2026-10-10T07:12:24Z"
+      },
+      {
+        "name": "Verify (game-architecture)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679/job/114159360849",
+        "startedAt": "2026-10-10T07:12:02Z",
+        "completedAt": "2026-10-10T07:12:46Z"
+      },
+      {
+        "name": "Verify (gamerunner)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679/job/114159360866",
+        "startedAt": "2026-10-10T07:12:02Z",
+        "completedAt": "2026-10-10T07:12:27Z"
+      },
+      {
+        "name": "Verify (pwa)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679/job/114159360893",
+        "startedAt": "2026-10-10T07:12:02Z",
+        "completedAt": "2026-10-10T07:12:29Z"
+      },
+      {
+        "name": "Verify (hub-functions)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679/job/114159360903",
+        "startedAt": "2026-10-10T07:12:02Z",
+        "completedAt": "2026-10-10T07:12:23Z"
+      },
+      {
+        "name": "Verify (naming)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679/job/114159360905",
+        "startedAt": "2026-10-10T07:12:02Z",
+        "completedAt": "2026-10-10T07:12:20Z"
+      },
+      {
+        "name": "Verify (trainer-entrypoints)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679/job/114159360938",
+        "startedAt": "2026-10-10T07:12:02Z",
+        "completedAt": "2026-10-10T07:12:32Z"
+      },
+      {
+        "name": "deploy",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38033594679/job/114159491193",
+        "startedAt": "2026-10-10T07:12:48Z",
+        "completedAt": "2026-10-10T07:15:46Z"
+      }
+    ]
+  },
+  "deployments": {
+    "checkedAt": "2026-10-10T07:17:15.379Z",
+    "deployments": [
+      {
+        "project": "rehabtrainerhub",
+        "id": "0b80683d-d518-4817-98be-e7dafe8cd48f",
+        "url": "https://0b80683d.rehabtrainerhub.pages.dev",
+        "environment": "production",
+        "commit": "c029a3d580788197fba074c7df1420104c63c312",
+        "createdOn": "2026-10-10T07:15:24.052569Z",
+        "stage": {
+          "name": "deploy",
+          "started_on": null,
+          "ended_on": "2026-10-10T07:15:26.53648Z",
+          "status": "success"
+        }
+      },
+      {
+        "project": "trainerhub-user-games",
+        "id": "df916af8-f1c7-42ba-96ad-9e47ace6face",
+        "url": "https://df916af8.trainerhub-user-games.pages.dev",
+        "environment": "production",
+        "commit": "c029a3d580788197fba074c7df1420104c63c312",
+        "createdOn": "2026-10-10T07:15:32.486406Z",
+        "stage": {
+          "name": "deploy",
+          "started_on": null,
+          "ended_on": "2026-10-10T07:15:34.972796Z",
+          "status": "success"
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --production-hub --lobby --wide --windowed",
+      "exitCode": 0,
+      "viewport": {
+        "width": 1320,
+        "documentWidth": 1320,
+        "overflow": "hidden",
+        "frameLeft": 0,
+        "frameRight": 1320,
+        "scrollbarWidth": 0
+      },
+      "gameplay": {
+        "horizontallyCentered": true,
+        "equalHorizontalPadding": true,
+        "rootPageOverflow": false
+      },
+      "results": {
+        "innerScrollingAndControlsPassed": true,
+        "failedSaveRetryPassed": true
+      },
+      "restored": {
+        "top": 781,
+        "overflow": "visible"
+      },
+      "screenshots": [
+        {
+          "path": "docs/migrations/motor-cortex-hub-scrollbar/production-desktop-playing.png",
+          "sha256": "57c36822a7642672d78143ad3e73e7603844db890de3de9d2a8e45d68f548733"
+        }
+      ]
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --production-hub --lobby --mobile",
+      "exitCode": 0,
+      "viewport": {
+        "width": 390,
+        "documentWidth": 390,
+        "overflow": "hidden",
+        "frameLeft": 0,
+        "frameRight": 390,
+        "scrollbarWidth": 0
+      },
+      "gameplay": {
+        "horizontallyCentered": true,
+        "equalHorizontalPadding": true,
+        "rootPageOverflow": false
+      },
+      "results": {
+        "innerScrollingAndControlsPassed": true,
+        "failedSaveRetryPassed": true
+      },
+      "restored": {
+        "top": 1950,
+        "overflow": "visible"
+      },
+      "screenshots": [
+        {
+          "path": "docs/migrations/motor-cortex-hub-scrollbar/production-mobile-playing.png",
+          "sha256": "af74b5e81f161af3cc1a7b32ef6829b6074a7be8fb9fc4dae9538127a55c592f"
+        },
+        {
+          "path": "docs/migrations/motor-cortex-hub-scrollbar/production-mobile-results-details.png",
+          "sha256": "98cb21ffd125da6713b2811a67d72bacedc51e6991347a6015c6c0a887043cf8"
+        }
+      ]
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --production-hub --lobby --tablet",
+      "exitCode": 0,
+      "viewport": {
+        "width": 820,
+        "documentWidth": 820,
+        "overflow": "hidden",
+        "frameLeft": 0,
+        "frameRight": 820,
+        "scrollbarWidth": 0
+      },
+      "gameplay": {
+        "horizontallyCentered": true,
+        "equalHorizontalPadding": true,
+        "rootPageOverflow": false
+      },
+      "results": {
+        "innerScrollingAndControlsPassed": true,
+        "failedSaveRetryPassed": true
+      },
+      "restored": {
+        "top": 1818,
+        "overflow": "visible"
+      },
+      "screenshots": [
+        {
+          "path": "docs/migrations/motor-cortex-hub-scrollbar/production-tablet-playing.png",
+          "sha256": "daab93bad1362b3912882d6dfc85a3a9a0dbcee965cddb5eedfea531a326d89e"
+        }
+      ]
+    }
+  ],
+  "publicGame": {
+    "checkedAt": "2026-10-10T07:17:14.211Z",
+    "version": "2.0.0",
+    "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09",
+    "assets": [
+      {
+        "path": "assets/index-J3ovcrOl.js",
+        "size": 354824,
+        "sha256": "105708db66639f292b634d18ed4d6d7f111342890aaf9e4efa046c7ae587efa6",
+        "status": 200
+      },
+      {
+        "path": "assets/style-Wf6jxFK0.css",
+        "size": 18832,
+        "sha256": "18f6a60b783c9bd0cdaeb0e0c7ecbe9b15a0060c33066965c961a06bcdaa165c",
+        "status": 200
+      },
+      {
+        "path": "game.json",
+        "size": 522,
+        "sha256": "ca2322d252c30355ac320367cb8c8eead92c88f06aae6d31bb43bfc2a09135a6",
+        "status": 200
+      },
+      {
+        "path": "index.html",
+        "size": 414,
+        "sha256": "6b05b91f43d05785dc3616fc1c60fadc1787c32bd5c51f79049926f446f36910",
+        "status": 200
+      },
+      {
+        "path": "preview.webp",
+        "size": 5422,
+        "sha256": "6a6085136389ad1250b036fb13ad6505032d9033cf115b336e9c7ae8721e1455",
+        "status": 200
+      }
+    ],
+    "stable": {
+      "status": 302,
+      "location": "/games/motor-cortex-rehab/2.0.0/"
+    },
+    "publicCatalog": {
+      "slug": "motor-cortex-rehab",
+      "category": "upper-limb",
+      "version": "2.0.0",
+      "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09"
+    }
+  },
+  "recordWrites": "Only local SQLite; formal Hub/R2 assets loaded with Hub /api/* intercepted to local test handlers.",
+  "unchanged": "R2 motor-cortex-rehab@2.0.0 bytes and current; no game publication performed.",
+  "limitations": [
+    "Brave desktop/mobile/tablet only; Safari/iOS not tested.",
+    "Actual MediaPipe inference on checked image stream; no physical camera acceptance."
+  ]
+}
