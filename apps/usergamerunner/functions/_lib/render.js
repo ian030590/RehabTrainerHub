@@ -11,7 +11,7 @@ const maximumAggregateResultPayloadBytes = 16_000;
 const maximumResultPayloadBytes = 64 * 1024;
 const maximumResultTrialCount = 100_000;
 const releaseHealthCheckIntervalMs = 60 * 1000;
-const runnerCacheRevision = '2026-10-08-self-contained-games-v4';
+const runnerCacheRevision = '2026-10-10-self-contained-games-v5';
 
 export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {}) {
   const cspNonce = RandomToken(18);
@@ -108,7 +108,8 @@ export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {
 
            if (!config.embedMode) pendingSettings = config.standaloneSettings;
            gameFrame.addEventListener('load', () => handleGameFrameLoad(gameFrame, status));
-          gameFrame.src = config.entryUrl;
+          const entryLanguage = ${JSON.stringify(release.presentation === 'game')} && !config.embedMode ? new URLSearchParams(location.search).get('lang') : null;
+          gameFrame.src = config.entryUrl + (entryLanguage === 'en' ? '?lang=en' : '');
 
           window.addEventListener('beforeinstallprompt', (event) => {
             event.preventDefault();
@@ -516,8 +517,8 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
-  const languageEntry = ${JSON.stringify(release.capabilities.includes('hand-tracking'))}
-    && requestUrl.pathname === ${JSON.stringify(basePath)}
+  const languageEntry = ${JSON.stringify(release.presentation === 'game')}
+    && [${JSON.stringify(basePath)}, ${JSON.stringify(`${basePath}package/${EncodePackagePath(release.entry)}`)}].includes(requestUrl.pathname)
     && requestUrl.searchParams.getAll('lang').length === 1
     && ['zh', 'en'].includes(requestUrl.searchParams.get('lang'))
     && [...requestUrl.searchParams.keys()].every(key => key === 'lang');

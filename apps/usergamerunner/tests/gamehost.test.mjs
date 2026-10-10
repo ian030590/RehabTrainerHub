@@ -202,6 +202,43 @@ test('self-contained standalone games receive fullscreen only when declared', as
   }
 });
 
+test('self-contained standalone language reaches the package without accepting invalid embed parameters', async () => {
+  const release = BuildRelease({ runtime: { name: 'native', major: 1 }, presentation: 'game', capabilities: ['fullscreen'] });
+  const response = await HandleRequest(CreateContext('/games/reaction-time/1.0.0/?lang=en', release));
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /new URLSearchParams\(location.search\).get\('lang'\)/);
+  assert.match(html, /gameFrame.src = config.entryUrl.*entryLanguage.*lang=en/);
+  assert.match(html, /sandbox="allow-scripts"/);
+  assert.doesNotMatch(html, /allow-same-origin|allow-top-navigation/);
+  for (const query of ['?lang=fr', '?lang=en&lang=zh', '?lang=en&embed=hub&session=' + 'a'.repeat(64), '?lang=en&unknown=1']) {
+    assert.equal((await HandleRequest(CreateContext('/games/reaction-time/1.0.0/' + query, release))).status, 400);
+  }
+  assert.equal((await HandleRequest(CreateContext('/games/reaction-time/1.0.0/?lang=en'))).status, 400, 'Third-party runtime query validation is unchanged.');
+});
+
+test('native standalone language entries and package documents retain offline caching while unknown queries bypass it', async () => {
+  const release = BuildRelease({ runtime: { name: 'native', major: 1 }, presentation: 'game', capabilities: ['fullscreen'] });
+  const response = await HandleRequest(CreateContext('/games/reaction-time/1.0.0/sw.js', release));
+  const listeners = new Map();
+  new Function('self', 'caches', 'fetch', await response.text())(
+    { location: { origin: 'https://runner.example' }, addEventListener: (type, handler) => listeners.set(type, handler) },
+    { open: async () => ({ match: async () => new Response('cached native entry') }) },
+    async () => { throw new Error('Offline'); },
+  );
+  for (const path of ['?lang=en', 'package/index.html?lang=en']) {
+    let result;
+    listeners.get('fetch')({ request: new Request('https://runner.example/games/reaction-time/1.0.0/' + path), respondWith: value => { result = value; } });
+    assert.ok(result, 'Known language entries remain available offline.');
+    assert.equal(await (await result).text(), 'cached native entry');
+  }
+  for (const path of ['?lang=en&unknown=1', '?embed=hub&session=' + 'a'.repeat(64), 'package/index.html?unknown=1']) {
+    let intercepted = false;
+    listeners.get('fetch')({ request: new Request('https://runner.example/games/reaction-time/1.0.0/' + path), respondWith: () => { intercepted = true; } });
+    assert.equal(intercepted, false);
+  }
+});
+
 test('standalone launcher loads settings.json defaults while Hub embed waits for platform settings', async () => {
   const baseRelease = BuildRelease();
   const release = BuildRelease({

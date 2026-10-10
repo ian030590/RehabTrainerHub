@@ -111,7 +111,7 @@ export async function HandleRequest(context) {
       if (!official || official.contentSha256 !== release.contentSha256) return ErrorResponse(404, '找不到已核准的官方輸入版本。');
     }
     const launcherParameters = new URLSearchParams(url.searchParams);
-    if (handTracking && launcherParameters.has('lang')) {
+    if (release.presentation === 'game' && launcherParameters.has('lang')) {
       if (launcherParameters.getAll('lang').length !== 1
         || !['zh', 'en'].includes(launcherParameters.get('lang')) || launcherParameters.has('embed')) {
         return ErrorResponse(400, '語言參數無效。');
