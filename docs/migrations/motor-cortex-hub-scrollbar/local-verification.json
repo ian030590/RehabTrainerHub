@@ -1,0 +1,148 @@
+{
+  "checkedAt": "2026-10-10T06:13:59.477Z",
+  "baseCommit": "f4b9859",
+  "fixCommit": "c36bc6296573731a9a99352d26f1063fa484de29",
+  "hubOutputRoot": ".tmp/motor-scrollbar-output",
+  "failure": {
+    "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --production-hub --lobby",
+    "viewportWidth": 752,
+    "documentWidth": 737,
+    "iframeWidth": 752,
+    "lobbyScrollbarWidth": 15,
+    "overflowY": "visible"
+  },
+  "cases": [
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --lobby --wide --windowed",
+      "exitCode": 0,
+      "viewport": {
+        "width": 1320,
+        "documentWidth": 1320,
+        "overflow": "hidden",
+        "frameLeft": 0,
+        "frameRight": 1320,
+        "scrollbarWidth": 0
+      },
+      "restored": {
+        "top": 781,
+        "overflow": "visible"
+      },
+      "screenshots": [
+        {
+          "path": "docs/migrations/motor-cortex-hub-scrollbar/local-desktop-playing.png",
+          "sha256": "dd756cff4a148d24b8f989780bdb1dd5a3949aa555c4644f50d60083c922c0fa"
+        }
+      ]
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --lobby --mobile",
+      "exitCode": 0,
+      "viewport": {
+        "width": 390,
+        "documentWidth": 390,
+        "overflow": "hidden",
+        "frameLeft": 0,
+        "frameRight": 390,
+        "scrollbarWidth": 0
+      },
+      "restored": {
+        "top": 1950,
+        "overflow": "visible"
+      },
+      "screenshots": [
+        {
+          "path": "docs/migrations/motor-cortex-hub-scrollbar/local-mobile-playing.png",
+          "sha256": "3212367b6f5696240d15615c133d12dd70e429816a6c4b9e2f28bb743e2ceed9"
+        },
+        {
+          "path": "docs/migrations/motor-cortex-hub-scrollbar/local-mobile-results-details.png",
+          "sha256": "600815988a3c93ce1ebc1237941a43df785d68db9aa3cbc5c60b1c49fc615007"
+        }
+      ]
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --lobby --tablet",
+      "exitCode": 0,
+      "viewport": {
+        "width": 820,
+        "documentWidth": 820,
+        "overflow": "hidden",
+        "frameLeft": 0,
+        "frameRight": 820,
+        "scrollbarWidth": 0
+      },
+      "restored": {
+        "top": 1818,
+        "overflow": "visible"
+      },
+      "screenshots": [
+        {
+          "path": "docs/migrations/motor-cortex-hub-scrollbar/local-tablet-playing.png",
+          "sha256": "4945fe22d0fcfcf5652237db68c36b50e5bcdca720dcf38ec11dfa80c798566c"
+        }
+      ]
+    }
+  ],
+  "legacyBrowser": {
+    "command": "npm run test:game-architecture:browser",
+    "passed": 5,
+    "failed": 0,
+    "previousAttempt": "Interrupted before final summary; shared-score case failed once and passed targeted rerun."
+  },
+  "entrypoints": "passed",
+  "naming": "passed",
+  "build": "36 legacy workspaces built/cached; webpack Hub build and all original post-build checks passed; default Turbopack failed with local .next/build-manifest.json ENOENT",
+  "r2Version": "2.0.0",
+  "r2ContentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09",
+  "publicGameVerification": {
+    "checkedAt": "2026-10-10T06:08:37.516Z",
+    "version": "2.0.0",
+    "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09",
+    "assets": [
+      {
+        "path": "assets/index-J3ovcrOl.js",
+        "size": 354824,
+        "sha256": "105708db66639f292b634d18ed4d6d7f111342890aaf9e4efa046c7ae587efa6",
+        "status": 200
+      },
+      {
+        "path": "assets/style-Wf6jxFK0.css",
+        "size": 18832,
+        "sha256": "18f6a60b783c9bd0cdaeb0e0c7ecbe9b15a0060c33066965c961a06bcdaa165c",
+        "status": 200
+      },
+      {
+        "path": "game.json",
+        "size": 522,
+        "sha256": "ca2322d252c30355ac320367cb8c8eead92c88f06aae6d31bb43bfc2a09135a6",
+        "status": 200
+      },
+      {
+        "path": "index.html",
+        "size": 414,
+        "sha256": "6b05b91f43d05785dc3616fc1c60fadc1787c32bd5c51f79049926f446f36910",
+        "status": 200
+      },
+      {
+        "path": "preview.webp",
+        "size": 5422,
+        "sha256": "6a6085136389ad1250b036fb13ad6505032d9033cf115b336e9c7ae8721e1455",
+        "status": 200
+      }
+    ],
+    "stable": {
+      "status": 302,
+      "location": "/games/motor-cortex-rehab/2.0.0/"
+    },
+    "publicCatalog": {
+      "slug": "motor-cortex-rehab",
+      "category": "upper-limb",
+      "version": "2.0.0",
+      "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09"
+    }
+  },
+  "limitations": [
+    "Brave desktop/mobile/tablet only; Safari/iOS not tested",
+    "Image stream with actual MediaPipe inference; no physical camera acceptance"
+  ]
+}
