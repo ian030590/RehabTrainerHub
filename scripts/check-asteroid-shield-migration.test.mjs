@@ -180,7 +180,7 @@ test('asteroid release owns UI, dependencies, metadata and the exact original pr
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.3');
+  assert.equal(pkg.version, '2.0.4');
   for (const dependency of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[dependency]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);

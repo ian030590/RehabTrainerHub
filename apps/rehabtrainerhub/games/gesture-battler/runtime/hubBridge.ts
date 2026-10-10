@@ -53,7 +53,11 @@ export function SendGameResult(config: Record<string, string | number | boolean>
 }
 export function RetryGameSave() { SendGameEvent('retry'); }
 export function IsHubGame() { return port !== null && !standalone; }
-export function ExitGame() { SendGameEvent('input-stop'); if (port) SendGameEvent('exit'); else window.dispatchEvent(new Event('game:configure')); }
+export async function ExitGame() {
+  SendGameEvent('input-stop');
+  if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+  if (port) SendGameEvent('exit'); else window.dispatchEvent(new Event('game:configure'));
+}
 export function StopHandInput() { cancelStart?.(); SendGameEvent('input-stop'); }
 export function StartHandInput(): Promise<void> {
   return new Promise((resolve, reject) => {

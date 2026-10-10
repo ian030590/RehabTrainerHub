@@ -109,6 +109,7 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   };
   await checkSpotlight('.mock-asteroid-group');
   await capture('tutorial');
+  assert.equal(await game('document.fullscreenElement'), null, 'Asteroid tutorial remains windowed.');
   await game('document.querySelector(".asteroid-shield-tutorial .ui-button").click()');
   await until(() => game('Boolean(document.querySelector("form"))'), 'settings round trip');
   await checkSettingsPreview();
@@ -258,6 +259,7 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   assert.deepEqual(errors, []);
   await game('document.querySelector(".experiment-results > button:last-child").click()');
   await until(() => standalone ? game('Boolean(document.querySelector("form"))') : evaluate('!document.querySelector("dialog.training-overlay")'), 'return to original entry');
+  assert.equal(await evaluate('document.fullscreenElement'), null, 'Returning to Hub or entry exits fullscreen.');
   if (standalone) await checkSettingsPreview();
   console.log(`Asteroid R2 passed: settings/presets/bounds/Enter → three target tutorial/resize/cleanup → fullscreen Pixi ${canvas[0]}×${canvas[1]} → complete outcomes → ${standalone ? 'local PWA return' : 'failed save/retry/single SQL row/lobby'}.`);
 }

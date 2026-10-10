@@ -32,6 +32,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const [phase, setPhaseState] = useState<GamePhase>('menu');
   const [config, setConfig] = useState<MotorConfig>({ ...defaultConfig });
   const [error, setError] = useState('');
+  const [handInputReady, setHandInputReady] = useState(false);
   const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error' | 'local'>('local');
   const [result, setResult] = useState<SessionRecord | null>(null);
   const [live, setLive] = useState<LiveState>({ timeRemaining: 60, accuracy: 0, visibility: 0, successes: 0, misses: 0,
@@ -40,6 +41,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const setPhase = useCallback((next: GamePhase) => { phaseRef.current = next; setPhaseState(next); }, []);
   const stopInput = useCallback(() => {
     generationRef.current++;
+    setHandInputReady(false);
     StopHandInput();
     if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
     animationRef.current = null;
@@ -70,7 +72,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   useEffect(() => {
     const receive = (event: Event) => {
       const message = (event as CustomEvent).detail;
-      if (!['initializing', 'playing'].includes(phaseRef.current)) return;
+      if (!['ready', 'initializing', 'playing'].includes(phaseRef.current)) return;
       if (message.type === 'error') {
         showConfiguration();
         setError(message.payload.reason === 'permission' ? labels.permission : message.payload.reason === 'disconnected' ? labels.disconnected : labels.initialization);
@@ -130,13 +132,22 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   };
   const startTraining = async () => {
     if (phaseRef.current !== 'ready' || !IsMotorConfig(config)) return;
-    stopInput(); const generation = generationRef.current;
-    setPhase('initializing'); setError(''); PrepareAudioFeedback(jsPsychRef);
-    await rootRef.current?.requestFullscreen?.().catch(() => undefined);
-    if (generationRef.current !== generation) return;
+    if (!handInputReady) stopInput();
+    const generation = generationRef.current;
+    setPhase('initializing'); setError('');
     try {
-      await StartHandInput(config.handChoice);
-      if (generationRef.current !== generation) return;
+      if (!handInputReady) {
+        await StartHandInput(config.handChoice);
+        if (generationRef.current !== generation) return;
+        setHandInputReady(true); setPhase('ready');
+        return;
+      }
+      PrepareAudioFeedback(jsPsychRef);
+      await rootRef.current?.requestFullscreen?.().catch(() => undefined);
+      if (generationRef.current !== generation) {
+        if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+        return;
+      }
       metricsRef.current = { ...CreateEmptyMetrics(), startedAt: performance.now(), lastTickAt: performance.now() }; targetRef.current = null;
       await jsPsychLifecycleRef.current?.start({ moduleId: 'motor:motor-cortex-rehab', onStart: () => {
         setPhase('playing'); SendGameEvent('active'); let lastLive = 0;
@@ -197,8 +208,8 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     <MotorTutorial active={phase === 'rules'} onBack={showConfiguration} onFinish={() => setPhase('ready')} />
     {phase === 'ready' && <section className="training-panel motor-tutorial-ready" role="dialog" aria-modal="true" aria-labelledby="motor-ready-title" onKeyDown={handleModalKey}>
       <div className="training-config training-confirmation"><header className="training-config-header"><h2 id="motor-ready-title">{labels.title}</h2></header>
-        <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Confirm settings' : '確認設定'}</h3><div className="training-config-summary">{summaryItems.map(item => <p className="training-config-summary-item" key={item.label}><strong>{item.label}：</strong>{item.value}</p>)}</div></section><p>{en ? 'Enable the camera in the next dialog. The timer starts after hand tracking is ready.' : '接著在相機視窗確認啟用；手部追蹤準備完成後才開始計時。'}</p></div>
-        <footer className="config-actions"><div className="training-config-navigation-buttons"><button type="button" className="btn btn-primary" onClick={() => void startTraining()}>{en ? 'Start training' : '開始訓練'}</button><button type="button" className="btn btn-ghost" onClick={showConfiguration}>{en ? 'Back to settings' : '返回設定'}</button></div></footer>
+        <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Confirm settings' : '確認設定'}</h3><div className="training-config-summary">{summaryItems.map(item => <p className="training-config-summary-item" key={item.label}><strong>{item.label}：</strong>{item.value}</p>)}</div></section><p>{handInputReady ? (en ? 'Camera ready. Start training to enter fullscreen and begin the timer.' : '相機已準備完成。按下開始訓練後進入全螢幕並開始計時。') : (en ? 'Enable the camera first. Start training after hand tracking is ready.' : '請先啟用相機，手部追蹤準備完成後再開始訓練。')}</p></div>
+        <footer className="config-actions"><div className="training-config-navigation-buttons"><button type="button" className="btn btn-primary" onClick={() => void startTraining()}>{handInputReady ? (en ? 'Start training' : '開始訓練') : (en ? 'Enable camera' : '啟用相機')}</button><button type="button" className="btn btn-ghost" onClick={showConfiguration}>{en ? 'Back to settings' : '返回設定'}</button></div></footer>
       </div></section>}
     {phase === 'initializing' && <section className="training-panel" role="status"><div className="training-config motor-loading"><h2>{labels.loadingTitle}</h2><p>{en ? 'Confirm camera access in the camera dialog.' : '請在相機視窗確認啟用。'}</p><button className="btn btn-ghost" onClick={showConfiguration}>{en ? 'Cancel' : '取消'}</button></div></section>}
     {phase === 'results' && result && <div className="experiment-container motor-results-container"><section className="experiment-results">

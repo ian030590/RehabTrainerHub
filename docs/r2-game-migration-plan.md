@@ -445,3 +445,14 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 - [Cloudflare R2 object upload API](https://developers.cloudflare.com/api/resources/r2/subresources/buckets/subresources/objects/methods/upload/)
 - [PixiJS v8 migration guide](https://pixijs.com/8.x/guides/migrations/v8)
 - 倉庫 [game-score-contract.md](game-score-contract.md)：保留其歷史格式；新格式 UI 與通訊差異以本文為準。
+
+### 2026-10-10 相機同意與全螢幕 runtime 時機
+
+四款 R2 遊戲的設定、教學及最終參數確認畫面維持視窗模式。全螢幕只在使用者按下即將開始遊戲的最後一步時請求，並等待請求結果後才啟動計時、校正擷取或 gameplay。瀏覽器全螢幕 API 依賴使用者手勢；不得把請求提前到初始化相機前，也不得在非同步相機等待完成後使用已失效的舊手勢。
+
+- 畫畫塔防、小行星護盾防衛：按下遊戲開始後，以該次使用者手勢請求全螢幕，再開始 runtime。
+- 手部目標追蹤練習：先在視窗中要求相機同意並等待代理／模型完成初始化；回到準備畫面後，使用者再次按「開始訓練」，該次點擊請求全螢幕並開始訓練計時。相機權限提示必須出現在全螢幕之前。
+- 手勢指令對戰：視窗中完成相機同意與輸入初始化；相機就緒後的首次校正點擊才請求全螢幕，並在擷取校正影格前等待全螢幕結果。手機同樣遵循此順序。
+- 任一遊戲返回 Hub 或獨立入口前，先停止相機／輸入代理並等待退出全螢幕，再送出退出或設定訊息。取消啟動時，若先前待處理的全螢幕請求晚到，也必須立即退出。Hub 關閉、卸載、重載及撤回流程同樣清理全螢幕與相機，並還原大廳捲動位置。
+
+上述時序由遊戲 runtime 與 Hub overlay 各自負責；不變更 iframe sandbox、CSP 或手部輸入代理安全邊界。自包含回歸測試納入既有 `test:game-architecture` gate，不新增 CI matrix。詳細 TDD 紀錄、驗證範圍與硬體限制見[全螢幕與相機 lifecycle 紀錄](r2-game-fullscreen-lifecycle.md)。

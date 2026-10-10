@@ -8,6 +8,7 @@ import type { TrainingCatalogModule } from '@rehab-trainer/hub-modules/catalog';
 import type { GameScore } from '@rehab-trainer/ui/gameScore';
 import { CreateHandTrackingBroker } from '@rehab-trainer/ui/handTrackingBroker.js';
 import { LoadHandTrackingInput, type HandInputBroker, type HandInputMessage } from '@rehab-trainer/ui/handTrackingInput';
+import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { useHubLanguage } from '../i18n/HubLanguage';
 
 type Result = { config: Record<string, string | number | boolean>; score: GameScore };
@@ -35,6 +36,11 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
   const [generation, setGeneration] = useState(0);
   const source = session ? `${release.origin}/games/${module.runtimeId}/${session.version}/package/index.html` : null;
   const [identity] = useState(() => ({ token: GetAuthToken(), subjectId: GetOrCreateSubjectIdForUser(GetAuthUserIdFromToken(GetAuthToken())) }));
+  const close = useCallback(async () => {
+    inputRef.current?.Stop();
+    await ExitFullscreenIfActive();
+    onClose();
+  }, [onClose]);
 
   const acknowledge = useCallback((state: string) => portRef.current?.postMessage({ schema: 'trainerhub.game/v1', sessionNonce: nonce, type: 'saved', state }), [nonce]);
   const save = useCallback(async () => {
@@ -88,8 +94,14 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
 
   useEffect(() => {
     const dialog = dialogRef.current;
+    const scrollLeft = window.scrollX;
+    const scrollTop = window.scrollY;
     dialog?.showModal();
-    return () => { inputRef.current?.Stop(); portRef.current?.close(); if (dialog?.open) dialog.close(); };
+    return () => {
+      inputRef.current?.Stop(); portRef.current?.close(); void ExitFullscreenIfActive();
+      if (dialog?.open) dialog.close();
+      window.scrollTo(scrollLeft, scrollTop);
+    };
   }, []);
   useEffect(() => {
     if (ready) return;
@@ -107,6 +119,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
         const response = await fetch(source, { method: 'HEAD', cache: 'no-store', credentials: 'omit', signal: controller.signal });
         if (response.status === 404 || response.status === 410) {
           inputRef.current?.Stop();
+          await ExitFullscreenIfActive();
           portRef.current?.close();
           setUnavailable(true); setReady(false); setError(true);
         }
@@ -120,7 +133,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
 
   const initialize = () => {
     if (!session) return;
-    if (portRef.current) { inputRef.current?.Stop(); setError(true); setReady(false); setUnavailable(true); portRef.current.close(); return; }
+    if (portRef.current) { inputRef.current?.Stop(); void ExitFullscreenIfActive(); setError(true); setReady(false); setUnavailable(true); portRef.current.close(); return; }
     const channel = new MessageChannel();
     portRef.current = channel.port1;
     const state = { gameId: module.runtimeId, version: session.version, sessionNonce: nonce, sequence: -1, complete: false,
@@ -131,7 +144,8 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
         send: (message: HandInputMessage) => channel.port1.postMessage({ ...message, sessionNonce: nonce }),
         requestConsent: () => new Promise<boolean>(resolve => {
           consentPreviousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-          consentReply.current = resolve; setCameraConsent(true);
+          consentReply.current = resolve;
+          void ExitFullscreenIfActive().then(() => { if (consentReply.current === resolve) setCameraConsent(true); });
         }),
         cancelConsent: () => { consentReply.current?.(false); consentReply.current = null; setCameraConsent(false); },
       });
@@ -143,7 +157,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
       if (message.type === 'ready') { setReady(true); setError(false); }
       if (message.type === 'result') { inputRef.current?.Stop(); resultRef.current = message.payload; void save(); }
       if (message.type === 'retry') void save();
-      if (message.type === 'exit') { inputRef.current?.Stop(); onClose(); }
+      if (message.type === 'exit') void close();
       if (message.type === 'input-start') void inputRef.current?.Start(message.payload.hand);
       if (message.type === 'input-stop') inputRef.current?.Stop();
       if (message.type === 'sample' && sampleCount++ < 100) {
@@ -167,11 +181,11 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
   };
   return <dialog className="training-overlay training-overlay-runtime" ref={dialogRef}
     aria-label={module.copy[language === 'en' ? 'en' : 'zh-TW'].title}
-    onCancel={event => { event.preventDefault(); onClose(); }}>
+    onCancel={event => { event.preventDefault(); void close(); }}>
     <div className={`embedded-training-frame ${ready ? 'is-ready' : ''}`}>
       {!ready && <div className="training-loading-stage" role={error ? 'alert' : 'status'}>
         <p>{error ? (language === 'en' ? 'Game could not be loaded' : '無法載入遊戲') : (language === 'en' ? 'Loading game…' : '正在載入遊戲…')}</p>
-        {error && <><button onClick={() => { inputRef.current?.Stop(); portRef.current?.close(); portRef.current = null; sessionRef.current = null; resultRef.current = null; saving.current = false; saved.current = false; setSession(null); setUnavailable(false); setReady(false); setError(false); setGeneration(value => value + 1); }}>{language === 'en' ? 'Try again' : '重新載入'}</button><button onClick={onClose}>{language === 'en' ? 'Back to lobby' : '返回大廳'}</button></>}
+        {error && <><button onClick={() => { inputRef.current?.Stop(); void ExitFullscreenIfActive(); portRef.current?.close(); portRef.current = null; sessionRef.current = null; resultRef.current = null; saving.current = false; saved.current = false; setSession(null); setUnavailable(false); setReady(false); setError(false); setGeneration(value => value + 1); }}>{language === 'en' ? 'Try again' : '重新載入'}</button><button onClick={() => void close()}>{language === 'en' ? 'Back to lobby' : '返回大廳'}</button></>}
       </div>}
       {!unavailable && source && <iframe key={generation} ref={frameRef} src={source} title={release.name} onLoad={initialize}
         sandbox="allow-scripts" allow="autoplay; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}

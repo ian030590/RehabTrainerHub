@@ -49,6 +49,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 
 修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後，至少執行 `npm run test:entrypoints` 與 `npm run build:hub`，驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
 
+四款 R2 遊戲的全螢幕啟動／退出回歸由 `scripts/check-r2-game-fullscreen.test.mjs` 經既有 self-contained 測試納入 `test:game-architecture`，不新增 CI matrix。設定與教學保持視窗；手部目標追蹤先啟用相機，準備後以最後一次「開始訓練」點擊進入全螢幕；手勢對戰在相機就緒後的第一次校正點擊進入全螢幕（含手機）。四款返回 Hub／獨立入口前退出全螢幕，Hub 關閉、卸載與撤回亦清理並還原大廳捲動。驗證與發布限制見 `docs/r2-game-fullscreen-lifecycle.md`。
+
 驗證使用 Node.js 內建 `node:test`、assert 檢查腳本、TypeScript、針對性 build 與本機 Brave smoke；依變更範圍選用對應 gate。Hub API、runner、遊戲流程、assessment lifecycle 與 i18n 分別有 `test:hub-functions`、`test:gamerunner`、`test:training-flow`、`test:assessment-lifecycle`、`test:i18n`。
 
 ## CI/CD 維護

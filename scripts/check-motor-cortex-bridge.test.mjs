@@ -40,14 +40,14 @@ test('motor tracking bridge accepts one parent port, rejects forged input and ca
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;
   new Function('module', 'exports', 'require', 'window', 'document', source)(module, module.exports,
-    path => path.endsWith('package.json') ? { version: '2.0.0' } : { AcceptHandInput }, window,
+    path => path.endsWith('package.json') ? { version: '2.0.1' } : { AcceptHandInput }, window,
     { referrer: 'https://trainerhub.cc/' });
   const bridge = module.exports;
   bridge.InstallHubBridge();
   const init = listeners.get('message');
   const port = { postMessage: message => sent.push(message), start() {} };
   const message = { schema: 'trainerhub.game/v1', type: 'init', gameId: 'motor-cortex-rehab',
-    version: '2.0.0', sessionNonce: 'a'.repeat(64), language: 'en' };
+    version: '2.0.1', sessionNonce: 'a'.repeat(64), language: 'en' };
   init({ data: message, source: {}, origin: 'https://trainerhub.cc', ports: [port] });
   init({ data: message, source: parent, origin: 'https://evil.example', ports: [port] });
   assert.deepEqual(sent, []);

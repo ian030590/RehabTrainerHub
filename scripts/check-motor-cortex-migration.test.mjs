@@ -74,7 +74,7 @@ test('tracking configuration retains presets, bounds and hand selection', async 
 
 test('tracking is self-contained with private input, own modal and real-scene spotlight, full results and original preview', async () => {
   const packageJson = JSON.parse(await readFile(resolve(gameRoot,'package.json'),'utf8'));
-  assert.equal(packageJson.version,'2.0.0');
+  assert.equal(packageJson.version,'2.0.1');
   assert.deepEqual(Object.keys(packageJson.dependencies).sort(),['jspsych','react','react-dom']);
   assert.ok(packageJson.rehabTrainer.capabilities.includes('hand-tracking'));
   for (const file of (await readdir(gameRoot,{recursive:true})).filter(file=>/\.(tsx?|css)$/.test(file)&&!file.startsWith('dist'))) {

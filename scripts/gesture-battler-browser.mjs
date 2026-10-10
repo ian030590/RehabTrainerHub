@@ -17,6 +17,7 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   assert.equal(await game('document.querySelector(".game-tour")!==null'), false, 'Settings do not start a tour.');
   assert.equal(await evaluate('Boolean(window.handFixtureStream)'), false, 'Settings do not acquire camera input.');
   await capture('settings');
+  assert.equal(await game('document.fullscreenElement'), null, 'Settings stay windowed.');
   const settingsLayout = await game(`(() => {
     const section = document.querySelector('form .training-setting');
     const actions = document.querySelector('form footer.config-actions .training-config-navigation-buttons');
@@ -67,6 +68,7 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   }
   assert.equal(await game('Boolean(document.querySelector(".game-tour-spotlight"))'), false);
   await CheckConfirmationPresentation(game);
+  assert.equal(await game('document.fullscreenElement'), null, 'Tutorial and confirmation stay windowed.');
   await capture('confirmation');
   await game('document.querySelector(".gesture-tutorial-ready .btn-ghost").click()');
   await until(() => game(`Boolean(document.querySelector('${settings}'))`), 'back to gesture settings');
@@ -83,6 +85,8 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   await game('document.querySelector(".gesture-tutorial-ready .btn-primary").click()');
   const consentSelector = standalone ? '#camera-consent:not([hidden])' : '.training-overlay-camera-consent';
   await until(() => evaluate(`Boolean(document.querySelector('${consentSelector}'))`), 'trusted camera consent');
+  assert.equal(await evaluate('document.fullscreenElement'), null, 'Camera consent appears outside fullscreen.');
+  assert.equal(await evaluate(`(() => {const button=document.querySelector('${consentSelector} button');const rect=button.getBoundingClientRect();return button===document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2);})()`), true, 'The consent button is visible to pointer input.');
   assert.ok((await game('document.querySelector(".gesture-loading-card").textContent')).trim(), 'Loading status must be visible while waiting for camera permission.');
   assert.equal(await evaluate('Boolean(window.handFixtureStream)'), false);
   // Declining input must return to settings and allow a fresh attempt.
@@ -128,7 +132,7 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
     assert.ok(await game(advanced), `Calibration ${step} must collect sufficient stable frames.`);
   }
   await evaluate('window.setHandFixture("pointing_up")');
-  if (!mobile) assert.equal(await game('document.fullscreenElement===document.querySelector(".gesture-battler")'), true);
+  assert.equal(await game('document.fullscreenElement===document.querySelector(".gesture-battler")'), true);
   await CheckBattleLayout(game, false);
   await capture('combat');
   if (directed) {
@@ -181,6 +185,7 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   assert.deepEqual(errors, []);
   await game('document.querySelector(".experiment-results > button:last-child").click()');
   await until(() => standalone ? game(`Boolean(document.querySelector('${settings}'))`) : evaluate('!document.querySelector("dialog.training-overlay")'), 'gesture returns to its entry');
+  assert.equal(await evaluate('document.fullscreenElement'), null, 'Returning to Hub or entry exits fullscreen.');
   if (standalone) assert.equal(await game('document.fullscreenElement===null'), true, 'Return restores the standalone entry viewport.');
   assert.equal(await evaluate('window.handFixtureStream.getTracks().every(track=>track.readyState==="ended")'), true);
   console.log('Gesture Brave passed: spotlight, settings, trusted consent, real MediaPipe hand inference, seven calibrations, combat, full numeric results, retry and camera cleanup.');

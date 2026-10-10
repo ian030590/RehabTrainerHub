@@ -351,6 +351,7 @@ try {
     catalog.currentVersion = '9.0.0';
   }
   const game = expression => evaluate(expression, gameContext);
+  assert.equal(await game('document.fullscreenElement'), null, 'Settings must remain outside fullscreen for every R2 game.');
   await CheckSettingsPresentation(game);
   const settingsScreenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
   await writeFile(resolve(profile, 'settings.png'), Buffer.from(settingsScreenshot.data, 'base64'));
@@ -456,6 +457,7 @@ try {
   await until(() => game('Boolean(document.querySelector(".drawing-defense-tutorial .ui-button-primary"))'), 'start button');
   assert.ok(await game('document.querySelector(".drawing-defense-tutorial").textContent.includes("5s")'));
   await CheckConfirmationPresentation(game);
+  assert.equal(await game('document.fullscreenElement'), null, 'Drawing tutorial and confirmation remain windowed.');
   const confirmationScreenshot = await send('Page.captureScreenshot', { format: 'png' }, session);
   await writeFile(resolve(profile, 'confirmation.png'), Buffer.from(confirmationScreenshot.data, 'base64'));
   await game('document.querySelector(".drawing-defense-tutorial .ui-button-primary").click()');
@@ -486,6 +488,7 @@ try {
     assert.ok(await game('document.body.textContent.includes("從 Hub 開啟才能保存紀錄")'));
     await game('document.querySelector(".experiment-results > button:last-child").click()');
     await until(() => game('Boolean(document.querySelector(".drawing-defense-phase-menu"))'), 'standalone return to settings');
+    assert.equal(await evaluate('document.fullscreenElement'), null, 'Returning to settings exits fullscreen.');
     assert.equal(saveAttempts, 0);
     assert.equal(errors.length, 0, errors.join('\n'));
     console.log('Standalone R2 PWA passed: settings, tutorial, game, results, return to settings; no account data writes.');
@@ -504,10 +507,12 @@ try {
   assert.equal(errors.length, 0, errors.join('\n'));
   await game('document.querySelector(".experiment-results > button:last-child").click()');
   await until(() => evaluate('!document.querySelector("dialog.training-overlay")'), 'return to lobby');
+  assert.equal(await evaluate('document.fullscreenElement'), null, 'Returning to Hub exits fullscreen.');
   console.log(`Brave R2 game passed: settings → tutorial → Pixi (${viewport[0]}×${viewport[1]}) → results → failed save → retry → one SQL row → lobby.`);
   }
   }
   if (lobbyScrollState && !await evaluate('Boolean(document.querySelector("dialog.training-overlay"))')) {
+    await until(() => evaluate('scrollY').then(top => Math.abs(top - lobbyScrollState.top) <= 1), 'lobby scroll position restored after fullscreen exit');
     const restored = await evaluate('({top:scrollY,overflow:getComputedStyle(document.documentElement).overflowY})');
     assert.equal(restored.overflow, lobbyScrollState.overflow, 'Returning to the lobby restores its scrollbar.');
     assert.ok(Math.abs(restored.top - lobbyScrollState.top) <= 1, 'Returning preserves the original lobby scroll position.');

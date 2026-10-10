@@ -16,6 +16,7 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   assert.ok(await game('document.querySelector(".motor-cortex-stage").getBoundingClientRect().height > 100'));
   assert.equal(await game('document.activeElement.name'), 'drill');
   await capture('settings');
+  assert.equal(await game('document.fullscreenElement'), null, 'Settings stay windowed.');
   await choose('targetSizePercent', 74); await confirm();
   assert.ok(await game('Boolean(document.querySelector("form"))'), 'Invalid settings cannot start the tour.');
   await game('document.querySelector("[name=targetSizePercent]").dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true}))');
@@ -34,6 +35,7 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
     await game('window.dispatchEvent(new Event("resize"));document.querySelector(".game-tour button").click()');
   }
   await CheckConfirmationPresentation(game); await capture('confirmation');
+  assert.equal(await game('document.fullscreenElement'), null, 'Tutorial and final confirmation stay windowed.');
   assert.equal(await game('document.activeElement.classList.contains("btn-primary")'), true, 'Final confirmation focuses Start training.');
   await game('document.activeElement.dispatchEvent(new KeyboardEvent("keydown",{key:"Tab",shiftKey:true,bubbles:true}))');
   assert.equal(await game('document.activeElement.classList.contains("btn-ghost")'), true, 'Shift-Tab stays within final confirmation.');
@@ -49,6 +51,8 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   await ready(); await game('document.querySelector(".motor-tutorial-ready .btn-primary").click()');
   const consent = standalone ? '#camera-consent:not([hidden])' : '.training-overlay-camera-consent';
   await until(() => evaluate(`Boolean(document.querySelector('${consent}'))`), 'trusted motor camera consent');
+  assert.equal(await evaluate('document.fullscreenElement'), null, 'Camera consent must be visible outside fullscreen.');
+  assert.equal(await evaluate(`(() => {const button=document.querySelector('${consent} button');const rect=button.getBoundingClientRect();return button===document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2);})()`), true, 'Consent accepts a real pointer click.');
   assert.equal(await evaluate('Boolean(window.handFixtureStream)'), false);
   await evaluate(`document.querySelector('${consent} button:last-child').click()`);
   await until(() => game('Boolean(document.querySelector("form [role=alert]"))'), 'declined camera restores editable settings');
@@ -56,6 +60,9 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   await ready(); await game('document.querySelector(".motor-tutorial-ready .btn-primary").click()');
   await until(() => evaluate(`Boolean(document.querySelector('${consent}'))`), 'camera consent retry');
   await evaluate(`document.querySelector('${consent} button').click()`);
+  await until(() => game('Boolean(document.querySelector(".motor-tutorial-ready .btn-primary"))'), 'camera-ready Start training', 90000);
+  assert.equal(await game('document.fullscreenElement'), null, 'Camera initialization cannot enter fullscreen or start the timer.');
+  await game('document.querySelector(".motor-tutorial-ready .btn-primary").click()');
   await until(() => game('Boolean(document.querySelector(".motor-cortex-rehab-phase-playing"))'), 'actual motor game started', 90000);
   await until(() => game('document.querySelector(".motor-cortex-hand-cursor").classList.contains("is-visible")'), 'real MediaPipe hand detected', 30000);
   assert.equal(await evaluate('window.nativeCameraPermissionVerified'), true);
@@ -96,7 +103,7 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   await until(async () => {
     if (await game('Boolean(document.querySelector(".experiment-results"))')) return true;
     // Move the recorded camera image towards the target; inference and gameplay stay real.
-    const offset = await game(`(() => {const hand=document.querySelector('.motor-cortex-hand-cursor');if(!hand.classList.contains('is-visible'))return null;const h=hand.getBoundingClientRect(),t=document.querySelector('.motor-cortex-target').getBoundingClientRect(),s=document.querySelector('.motor-cortex-stage').getBoundingClientRect();return {x:((h.left+h.right)-(t.left+t.right))/2/s.width,y:((t.top+t.bottom)-(h.top+h.bottom))/2/s.height};})()`);
+    const offset = await game(`(() => {const hand=document.querySelector('.motor-cortex-hand-cursor');if(!hand?.classList.contains('is-visible'))return null;const h=hand.getBoundingClientRect(),t=document.querySelector('.motor-cortex-target').getBoundingClientRect(),s=document.querySelector('.motor-cortex-stage').getBoundingClientRect();return {x:((h.left+h.right)-(t.left+t.right))/2/s.width,y:((t.top+t.bottom)-(h.top+h.bottom))/2/s.height};})()`);
     if (offset) await evaluate(`(() => {window.handFixtureOffset.x=Math.max(-.18,Math.min(.18,window.handFixtureOffset.x+${offset.x}*.3));window.handFixtureOffset.y=Math.max(-.18,Math.min(.18,window.handFixtureOffset.y+${offset.y}*.3));})()`);
     return false;
   }, 'real 45-second tracking session completes', 60000);
@@ -124,8 +131,11 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   }
   assert.equal(requests.some(url=>/motor-cortex-rehab.*(?:settings|score)\.json/.test(url)),false);
   assert.equal(errors.length,0,errors.join('\n'));
+  await game('document.querySelector(".motor-cortex-rehab-game").requestFullscreen()');
+  assert.equal(await evaluate('Boolean(document.fullscreenElement)'), true, 'Return also handles fullscreen on the results screen.');
   await game('document.querySelector(".score-return-button").click()');
   await until(() => standalone ? game('Boolean(document.querySelector("form"))') : evaluate('!document.querySelector("dialog.training-overlay")'), 'motor return to original entry');
+  assert.equal(await evaluate('document.fullscreenElement'), null, 'Returning to Hub or entry exits fullscreen.');
   if (standalone) assert.deepEqual(await game('Array.from(document.querySelectorAll(".motor-cortex-hud strong")).slice(1).map(item=>item.textContent)'), ['0%', '0%', '0', '1'], 'A fresh entry clears the previous session HUD.');
   console.log('Motor tracking Brave passed: own modal, five spotlights, actual MediaPipe, 45-second gameplay, numeric events, chart, retry, identity and camera cleanup.');
 }

@@ -100,9 +100,6 @@ const moveNameKeys: Record<GestureId, TranslationKey> = {
     4: 'gesture.move.spark',
     5: 'gesture.move.thunder',
 };
-const mobileGameMediaQuery = typeof window === 'undefined' || !window.matchMedia
-    ? null
-    : window.matchMedia('(any-pointer: coarse) and (max-width: 1024px)');
 const coarsePortraitMediaQuery = typeof window === 'undefined' || !window.matchMedia
     ? null
     : window.matchMedia('(orientation: portrait) and (pointer: coarse)');
@@ -485,8 +482,14 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
             resetHold(true);
         }
     }, [advanceCalibration, resetHold, t]);
-    const startCurrentCalibration = useCallback(() => {
-        if (!IsMobileGameViewport() && !document.fullscreenElement) void enterTrainingFullscreen();
+    const startCurrentCalibration = useCallback(async () => {
+        if (phaseRef.current !== 'calibration' || calibrationCapturingRef.current) return;
+        const generation = inputGenerationRef.current;
+        if (!document.fullscreenElement) await enterTrainingFullscreen();
+        if (!mountedRef.current || generation !== inputGenerationRef.current || phaseRef.current !== 'calibration') {
+            if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+            return;
+        }
         calibrationCapturingRef.current = true;
         calibrationHoldStartRef.current = null;
         calibrationSamplesRef.current = [];
@@ -1018,9 +1021,6 @@ function ChooseNextGesture(previous: GestureId): GestureId {
 }
 function IsCoarsePointerPortrait(): boolean {
     return coarsePortraitMediaQuery?.matches ?? false;
-}
-function IsMobileGameViewport(): boolean {
-    return mobileGameMediaQuery?.matches ?? false;
 }
 function ResizePixiAppToElement(app: Application, element: HTMLElement | null): void {
     const rect = element?.getBoundingClientRect();

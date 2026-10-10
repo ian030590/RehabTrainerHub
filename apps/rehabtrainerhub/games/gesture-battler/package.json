@@ -1,6 +1,6 @@
 {
   "name": "@rehab-trainer/game-gesture-battler",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,6 +12,16 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
-  "devDependencies": { "@vitejs/plugin-react": "^4.5.2", "vite": "^6.3.5", "typescript": "~5.8.3" },
-  "rehabTrainer": { "capabilities": ["audio", "fullscreen", "hand-tracking"] }
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.5.2",
+    "vite": "^6.3.5",
+    "typescript": "~5.8.3"
+  },
+  "rehabTrainer": {
+    "capabilities": [
+      "audio",
+      "fullscreen",
+      "hand-tracking"
+    ]
+  }
 }

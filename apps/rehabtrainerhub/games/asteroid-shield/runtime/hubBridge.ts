@@ -44,7 +44,8 @@ export function SendGameResult(config: Record<string, string | number | boolean>
 export function RetryGameSave() { SendGameEvent('retry'); }
 export function IsHubGame() { return port !== null; }
 export function GetGameLanguage() { return gameLanguage; }
-export function ExitGame() {
+export async function ExitGame() {
+  if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
   if (IsHubGame()) SendGameEvent('exit');
   else window.dispatchEvent(new Event('game:configure'));
 }
