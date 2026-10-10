@@ -62,6 +62,24 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   assert.ok(requests.some(url => url.includes('/input/hand-tracking-1.0.0/wasm/') && url.endsWith('.wasm')));
   assert.equal(requests.some(url => /cdn\.jsdelivr|storage\.googleapis/.test(url)), false);
   assert.ok(await game('document.fullscreenElement===document.querySelector(".motor-cortex-rehab-game")'));
+  if (process.argv.includes('--windowed')) {
+    await game('document.exitFullscreen()');
+    await until(() => game('document.fullscreenElement===null'), 'windowed gameplay');
+    assert.equal(await evaluate('innerWidth-document.documentElement.clientWidth'), 0, 'Windowed gameplay does not expose the lobby scrollbar.');
+  }
+  const layout = await game(`(() => {
+    const play = document.querySelector('.motor-cortex-play').getBoundingClientRect();
+    const styles = getComputedStyle(document.querySelector('.motor-cortex-play'));
+    const documentSize = document.documentElement;
+    return { left: play.left, right: play.right, width: innerWidth,
+      paddingLeft: styles.paddingLeft, paddingRight: styles.paddingRight,
+      clientWidth: documentSize.clientWidth, clientHeight: documentSize.clientHeight,
+      scrollWidth: documentSize.scrollWidth, scrollHeight: documentSize.scrollHeight };
+  })()`);
+  assert.ok(Math.abs(layout.left - (layout.width - layout.right)) <= 1, 'The gameplay area is horizontally centered.');
+  assert.equal(layout.paddingLeft, layout.paddingRight, 'Gameplay preserves equal horizontal margins.');
+  assert.ok(layout.scrollWidth <= layout.clientWidth && layout.scrollHeight <= layout.clientHeight,
+    `Gameplay fits without an internal page scrollbar: ${JSON.stringify(layout)}`);
   await capture('playing');
   if (process.argv.includes('--revoke-playing')) {
     revokeRelease(); await evaluate('window.dispatchEvent(new Event("online"))');

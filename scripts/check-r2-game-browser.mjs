@@ -271,6 +271,7 @@ try {
       };
     }
   ` }, session);
+  if (process.argv.includes('--wide')) await send('Emulation.setDeviceMetricsOverride', { width: 1320, height: 713, deviceScaleFactor: 1, mobile: false }, session);
   if (process.argv.includes('--mobile')) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
   if (process.argv.includes('--tablet')) await send('Emulation.setDeviceMetricsOverride', { width: 820, height: 1180, deviceScaleFactor: 1, mobile: false }, session);
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `try {
@@ -300,6 +301,7 @@ try {
     }
     throw new Error(`Timed out: ${label}\n${errors.join('\n')}\n${bodies.join('\n')}`);
   };
+  let lobbyScrollState;
   if (lobby && !standalone) {
     await until(() => evaluate('Boolean(document.querySelector(".module-card[data-runtime-id=reviewed-browser-game]"))'), 'reviewed catalog loaded');
     assert.equal(await evaluate(`document.querySelectorAll(".module-card[data-runtime-id=${gameId}]").length`), 1);
@@ -308,6 +310,7 @@ try {
     await until(() => evaluate(`(() => { const image = document.querySelector(".module-card[data-runtime-id=${gameId}] img"); return image?.complete && image.naturalWidth > 0; })()`), 'game-owned preview loaded');
     assert.equal(new URL(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] img").src`)).pathname,
       `/games/${gameId}/${manifest.version}/package/preview.webp`);
+    lobbyScrollState = await evaluate('({top:scrollY,overflow:getComputedStyle(document.documentElement).overflowY})');
     await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] button").click()`);
     await until(() => sessionAttempts > 0, 'lobby selects an approved R2 session before loading settings');
   }
@@ -318,6 +321,19 @@ try {
   }
   await until(() => evaluate('Boolean(document.querySelector("iframe"))'), 'Hub game iframe');
   console.log('Hub iframe ready.');
+  if (!standalone) {
+    const layout = await evaluate(`(() => {
+      const frame = document.querySelector('dialog iframe').getBoundingClientRect();
+      const documentWidth = document.documentElement.clientWidth;
+      return { width: innerWidth, documentWidth, overflow: getComputedStyle(document.documentElement).overflowY,
+        frameLeft: frame.left, frameRight: frame.right, scrollbarWidth: innerWidth - documentWidth };
+    })()`);
+    assert.equal(layout.scrollbarWidth, 0, `A game overlay must not retain the lobby scrollbar: ${JSON.stringify(layout)}`);
+    assert.ok(['hidden', 'clip'].includes(layout.overflow), 'The lobby must stop scrolling while the game overlay is open.');
+    assert.ok(Math.abs(layout.frameLeft - (layout.documentWidth - layout.frameRight)) <= 1,
+      `The game frame must be horizontally centered in the visible viewport: ${JSON.stringify(layout)}`);
+    console.log(`Hub overlay viewport passed: ${JSON.stringify(layout)}`);
+  }
   assert.equal(await evaluate('document.querySelector("iframe").getAttribute("sandbox")'), 'allow-scripts');
   if (!standalone) assert.equal(new URL(await evaluate('document.querySelector("iframe").src')).pathname,
     `/games/${gameId}/${manifest.version}/package/index.html`, 'Load the session-selected game directly without the legacy launcher.');
@@ -490,6 +506,12 @@ try {
   await until(() => evaluate('!document.querySelector("dialog.training-overlay")'), 'return to lobby');
   console.log(`Brave R2 game passed: settings → tutorial → Pixi (${viewport[0]}×${viewport[1]}) → results → failed save → retry → one SQL row → lobby.`);
   }
+  }
+  if (lobbyScrollState && !await evaluate('Boolean(document.querySelector("dialog.training-overlay"))')) {
+    const restored = await evaluate('({top:scrollY,overflow:getComputedStyle(document.documentElement).overflowY})');
+    assert.equal(restored.overflow, lobbyScrollState.overflow, 'Returning to the lobby restores its scrollbar.');
+    assert.ok(Math.abs(restored.top - lobbyScrollState.top) <= 1, 'Returning preserves the original lobby scroll position.');
+    console.log(`Lobby scrolling restored: ${JSON.stringify(restored)}`);
   }
 } finally {
   ws?.close();

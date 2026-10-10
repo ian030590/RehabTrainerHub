@@ -432,6 +432,10 @@ summary:focus-visible {
 }
 
 /* Training overlay — full-viewport native <dialog> rendered over the lobby */
+html:has(dialog.training-overlay[open]) {
+  overflow: hidden;
+}
+
 .training-overlay {
   position: fixed;
   inset: 0;
