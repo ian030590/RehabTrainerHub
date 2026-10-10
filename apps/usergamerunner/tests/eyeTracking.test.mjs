@@ -8,6 +8,12 @@ import ts from 'typescript';
 import { createHash } from 'node:crypto';
 import { ValidateRelease } from '../functions/_lib/release.js';
 
+test('Pages routes the exact eye input version through Functions while other input stays static', async () => {
+  const routes=JSON.parse(await readFile(new URL('../public/_routes.json',import.meta.url),'utf8'));
+  assert.deepEqual(routes.include,['/games/*','/input/eye-tracking-1.0.0/*']);
+  assert.deepEqual(routes.exclude,['/runtime/*']);
+});
+
 test('only the trusted official eye launcher can delegate camera; the game remains opaque and cannot connect', async () => {
   const bytes=Buffer.from('<!doctype html><title>Eye</title>');
   const files=[{path:'index.html',size:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')}];
