@@ -92,7 +92,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     browserSmokeScript,
     '--url', `http://127.0.0.1:${address.port}/`,
     '--storage', 'rehab_hub_tour_seen=1',
-    '--clickSelectors', '.official-game-card[data-runtime-id="oculomotor-training"] button',
+    '--clickSelectors', '.official-game-card[data-runtime-id="ufov"] button',
     '--allSelectors', [
       'dialog.training-overlay-config form',
       'input[type="range"]',
@@ -113,7 +113,7 @@ test('Brave renders the settings-driven config UI before mounting an official ga
     browserSmokeScript,
     '--url', `http://127.0.0.1:${address.port}/`,
     '--storage', 'rehab_hub_tour_seen=1',
-    '--clickSelectors', '.official-game-card[data-runtime-id="oculomotor-training"] button,dialog.training-overlay-config button[type="submit"]',
+    '--clickSelectors', '.official-game-card[data-runtime-id="ufov"] button,dialog.training-overlay-config button[type="submit"]',
     '--fullscreenSelector', 'html',
     '--allSelectors', 'dialog.training-overlay-runtime iframe',
     '--timeoutMs', '10000',

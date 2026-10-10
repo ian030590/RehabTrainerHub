@@ -1,0 +1,76 @@
+{
+  "checkedAt": "2026-10-10T20:53:22.541Z",
+  "localSourceCommit": "7238a7fcca3db849e8c8a24c736039b003e32fa2",
+  "hub": {
+    "Id": "0527277d-f663-4e92-8596-cc5ee981c919",
+    "Environment": "Production",
+    "Branch": "main",
+    "Source": "bf87f3c",
+    "Deployment": "https://0527277d.rehabtrainerhub.pages.dev",
+    "Status": "2 hours ago",
+    "Build": "https://dash.cloudflare.com/795c0233a37a8c69cb92a550fbdb419f/pages/view/rehabtrainerhub/0527277d-f663-4e92-8596-cc5ee981c919"
+  },
+  "runner": {
+    "Id": "f622830c-ab00-4277-a1e9-0733b2e60a0a",
+    "Environment": "Production",
+    "Branch": "main",
+    "Source": "bf87f3c",
+    "Deployment": "https://f622830c.trainerhub-user-games.pages.dev",
+    "Status": "2 hours ago",
+    "Build": "https://dash.cloudflare.com/795c0233a37a8c69cb92a550fbdb419f/pages/view/trainerhub-user-games/f622830c-ab00-4277-a1e9-0733b2e60a0a"
+  },
+  "assets": [
+    {
+      "path": "/games/oculomotor-training/",
+      "status": 200,
+      "size": 4815,
+      "sha256": "d38b598102ee5d602d600b4bc0710e6a9c83c87cdb403e58ce5010ccfc2c4330"
+    },
+    {
+      "path": "/games/oculomotor-training/settings.json",
+      "status": 200,
+      "size": 11613,
+      "sha256": "29afe9a59ac0db30d5033340a0d8ebdae19e9df9e7e62ef5b88ecf2f8a4ecb38"
+    },
+    {
+      "path": "/games/oculomotor-training/score.json",
+      "status": 200,
+      "size": 4628,
+      "sha256": "6da95cdc640f7e86c9c216ce0a16556c4ffc32a3489faf5055aa71c6c7f16f85"
+    },
+    {
+      "path": "/assets/training-modules/oculomotor-training.webp",
+      "status": 200,
+      "size": 830,
+      "sha256": "82ac52eda37b58ef50ac78629bc8e9f1184ccfcdfccb5915d40f726f6899f091"
+    }
+  ],
+  "productionCatalog": {
+    "status": 200,
+    "entry": {
+      "id": "official-oculomotor-training",
+      "slug": "oculomotor-training",
+      "title": "眼動訓練",
+      "summary": "眼動訓練居家訓練網官方練習",
+      "trainer": "vision",
+      "category": "general",
+      "developerName": "居家訓練網官方",
+      "updatedAt": "2026-10-07T00:00:00.000Z",
+      "release": {
+        "id": "rel-oculomotor-training-1.0.0",
+        "version": "1.0.0",
+        "contentSha256": "fe29ff56624277b7e4dabb7b6b2eecd51536dd13acfd6339798c7e6b94be65a8",
+        "capabilities": [
+          "audio",
+          "fullscreen",
+          "keyboard",
+          "pointer"
+        ],
+        "approvedAt": "2026-10-07T00:00:00.000Z",
+        "launchUrl": "https://trainerhub-user-games.pages.dev/games/oculomotor-training/1.0.0/",
+        "installUrl": "https://trainerhub-user-games.pages.dev/games/oculomotor-training/1.0.0/",
+        "settingsUrl": "https://trainerhub-user-games.pages.dev/games/oculomotor-training/1.0.0/package/settings.json"
+      }
+    }
+  }
+}

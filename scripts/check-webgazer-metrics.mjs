@@ -2,12 +2,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { BuildGameScore, IsGameScore, ParseGameScoreDefinition } from '../packages/ui/src/gameScore.ts';
 import { BuildOculomotorCsvRows } from '../apps/rehabtrainerhub/games/oculomotor-training/oculomotorCsvRows.ts';
+import { BuildGameScore as BuildEyeScore } from '../apps/rehabtrainerhub/games/oculomotor-training/score.ts';
 
 const base = 'apps/rehabtrainerhub/games/oculomotor-training/';
-const definition = ParseGameScoreDefinition(JSON.parse(readFileSync(`${base}score.json`, 'utf8')), 'oculomotor-training');
+const definition = ParseGameScoreDefinition(JSON.parse(readFileSync('scripts/fixtures/oculomotor-legacy.json', 'utf8')).score, 'oculomotor-training');
 const runtime = readFileSync(`${base}public/reference/experiment.js`, 'utf8');
 const wrapper = readFileSync(`${base}OculomotorTrainingGame.tsx`, 'utf8');
-const overlay = readFileSync('apps/rehabtrainerhub/app/train/TrainingOverlay.tsx', 'utf8');
+const overlay = readFileSync('apps/rehabtrainerhub/app/train/R2GameOverlay.tsx', 'utf8');
 
 for (const metric of definition.columns) {
   assert.match(runtime, new RegExp(`\\b${metric.sources[0]}\\b`), `${metric.key} needs a reference experiment value`);
@@ -17,12 +18,11 @@ assert.match(runtime, /gaze_sample_count: \(gazeCapture\.synchronousRecords \|\|
 assert.match(runtime, /gaze_records: gazeCapture\.synchronousRecords \|\| \[\]/);
 assert.match(runtime, /upload: data\.eye_tracking\.enabled && data\.gaze_records\.length > 0/);
 assert.ok(runtime.includes('config.eyeTrackingSource === EYE_SOURCE_WEBGAZER ? EYE_SOURCE_WEBGAZER : EYE_SOURCE_OFF'));
-assert.match(wrapper, /SendHostedGameScore\(record/);
-assert.match(wrapper, /UploadOculomotorCsv\(recordIdRef\.current, upload\)/);
-assert.match(wrapper, /recordIdRef\.current = GetHostedGameSessionNonce\(\) \?\? recordIdRef\.current/);
-assert.match(overlay, /module\.runtimeId === 'oculomotor-training' \? sessionNonce/);
-assert.match(wrapper, /event\.source !== frameRef\.current\?\.contentWindow/);
-assert.match(wrapper, /event\.origin !== window\.location\.origin/);
+assert.match(wrapper, /SendGameEvent\('gaze-csv'/);
+assert.match(wrapper, /SendGameEvent\('result'/);
+assert.match(overlay, /await SaveOculomotorCsv/);
+assert.match(overlay, /AcceptGameMessage\(event\.data, state\)/);
+assert.doesNotMatch(wrapper, /subjectId|GetAuthToken|window\.parent\.postMessage/);
 
 const tracked = {
   actual_duration_ms: 45000, completed_targets: 9, accuracy_rate: 67.5,
@@ -34,6 +34,7 @@ assert.equal(IsGameScore(score, definition), true);
 assert.equal(score.summary.accuracy, 67.5);
 assert.equal(score.summary.samples, 1350);
 assert.equal(score.rounds[0].onTargetSec, 27);
+assert.deepEqual(BuildEyeScore(tracked), score);
 
 const untracked = { actual_duration_ms: 30000, completed_targets: 7 };
 const untrackedScore = BuildGameScore(definition, { details: untracked, detailRows: [untracked] });

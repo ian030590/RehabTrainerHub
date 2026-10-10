@@ -634,8 +634,8 @@ const oculomotorScoreWrite = await onRequestPost({ request: new Request('https:/
   method: 'POST', headers: { Origin: 'https://trainerhub.cc', Authorization: `Bearer ${victimToken}`, 'Content-Type': 'application/json' },
   body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'hub', record: oculomotorScoreRecord }),
 }), env });
-assert.equal(oculomotorScoreWrite.status, 201);
-assert.deepEqual(JSON.parse(env.REHAB_DB.rows.get(oculomotorScoreRecord.id).payload_json).metadata, oculomotorScoreRecord.metadata);
+assert.equal(oculomotorScoreWrite.status, 400, 'Migrated eye scores require the fixed official session');
+assert.equal(env.REHAB_DB.rows.has(oculomotorScoreRecord.id), false);
 const standaloneOculomotorRecord = {
   ...attackerRecord,
   id: 'standalone-oculomotor-metadata',

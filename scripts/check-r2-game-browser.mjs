@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -17,13 +17,16 @@ import { CreateSessionForUser } from '../apps/rehabtrainerhub/functions/_lib/aut
 import { CheckAsteroidShield } from './asteroid-shield-browser.mjs';
 import { CheckGestureBattler } from './gesture-battler-browser.mjs';
 import { CheckMotorCortex } from './motor-cortex-browser.mjs';
+import { CheckOculomotor } from './oculomotor-browser.mjs';
+import { LoadEyeCameraFixture } from './eye-camera-fixtures.mjs';
+import { onRequestPost as saveCsv } from '../apps/rehabtrainerhub/functions/api/oculomotor-data.js';
 import { CheckMovingCard } from './moving-card-browser.mjs';
 import { LoadGestureCameraFixtures } from './gesture-camera-fixtures.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 import { CheckSettingsPresentation, CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
-assert.ok(['drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card'].includes(gameId), 'Unknown browser game fixture');
+assert.ok(['drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId), 'Unknown browser game fixture');
 const handGame = ['gesture-battler', 'motor-cortex-rehab'].includes(gameId);
 const phasePrefix = gameId;
 const root = resolve(import.meta.dirname, '..');
@@ -41,10 +44,16 @@ const output = resolve(process.env.HUB_OUTPUT_ROOT || resolve(root, 'apps/rehabt
 const runnerOutput = resolve(process.env.RUNNER_OUTPUT_ROOT || resolve(root, 'apps/usergamerunner/dist'));
 if (handGame && !remote) assert.ok(existsSync(resolve(runnerOutput, 'input/hand-tracking-1.0.0/index.js')),
   'Build the runner hand input first; use RUNNER_OUTPUT_ROOT for a fixed browser snapshot.');
-const browserPath = process.env.BRAVE_BIN || 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
+const browserPath = process.env.BRAVE_BIN || [
+  'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe',
+  '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+  ...['brave', 'msedge'],
+].find(candidate => candidate.includes('/') ? existsSync(candidate) : spawnSync(candidate, ['--version'], { stdio: 'ignore', windowsHide: true }).status === 0);
+assert.ok(browserPath, 'Install Brave or set BRAVE_BIN.');
 assert.ok(existsSync(browserPath), 'Brave is required.');
 const { manifest, files } = await BuildOfficialGameRelease(gameId);
 const handFixtures = handGame ? await LoadGestureCameraFixtures(root) : new Map();
+if (gameId === 'oculomotor-training' && process.argv.includes('--gaze')) handFixtures.set('/__eye-test/portrait.jpg', await LoadEyeCameraFixture(root));
 const unavailableTexture = rendererFailure ? manifest.files.find(file => file.path.startsWith('assets/ship-'))?.path : null;
 assert.ok(!rendererFailure || unavailableTexture || gameId === 'moving-card', 'Renderer failure fixture requires a supported game.');
 const sqlite = new DatabaseSync(':memory:');
@@ -77,7 +86,11 @@ const accountToken = signedIn ? await CreateSessionForUser(environment, { id: ac
 const errors = [];
 const requests = [];
 let failFirstSave = true;
-let saveAttempts = 0;
+let saveAttempts = 0; let csvAttempts = 0; const csvObjects = new Map();
+environment.OCULOMOTOR_DATA = {
+ put: async (key,csv,options) => { if (csvObjects.has(key)) return null; csvObjects.set(key,{csv,customMetadata:options.customMetadata});return {key}; },
+ get: async key => {const value=csvObjects.get(key);return value && {...value,text:async()=>value.csv};}
+};
 let sessionAttempts = 0;
 let runnerOrigin;
 let hubOrigin;
@@ -113,7 +126,7 @@ try {
         await Respond(response, await readAccount({ request: new Request('https://trainerhub.cc/api/auth/me', { headers: request.headers }), env: environment }));
         return;
       }
-      if (url.pathname === '/api/official-game-sessions' || (url.pathname === '/api/records' && request.method === 'POST')) {
+      if (url.pathname === '/api/official-game-sessions' || (['/api/records','/api/oculomotor-data'].includes(url.pathname) && request.method === 'POST')) {
         const chunks = [];
         for await (const chunk of request) chunks.push(chunk);
         const body = Buffer.concat(chunks);
@@ -121,18 +134,19 @@ try {
           sessionAttempts++;
           if (sessionFailure && sessionAttempts === 1) { response.writeHead(503).end('Retry'); return; }
         }
+        if (url.pathname === '/api/oculomotor-data') { csvAttempts++; if (csvAttempts === 1) {response.writeHead(503).end('CSV retry');return;} }
         if (url.pathname === '/api/records') {
           saveAttempts++;
           if (failFirstSave) { failFirstSave = false; response.writeHead(503).end('Retry'); return; }
         }
         const headers = { ...request.headers, origin: 'https://trainerhub.cc', 'cf-connecting-ip': '127.0.0.88' };
         const apiRequest = new Request('https://trainerhub.cc' + url.pathname, { method: 'POST', headers, body });
-        await Respond(response, await (url.pathname.endsWith('sessions') ? createSession : saveRecord)({ request: apiRequest, env: environment }));
+        await Respond(response, await (url.pathname.endsWith('sessions') ? createSession : url.pathname.endsWith('oculomotor-data') ? saveCsv : saveRecord)({ request: apiRequest, env: environment }));
         return;
       }
       if (url.pathname.startsWith('/api/')) {
-        const oldGame = { id: ['motor-cortex-rehab', 'moving-card'].includes(gameId) ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
-          summary: 'Legacy publication', trainer: gameId === 'moving-card' ? 'vision' : 'motor', category: ['motor-cortex-rehab', 'moving-card'].includes(gameId) ? 'general' : 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
+        const oldGame = { id: ['motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
+          summary: 'Legacy publication', trainer: ['moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor', category: ['motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'general' : 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
           release: { id: 'old-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['pointer'],
             approvedAt: '2026-10-08', launchUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
             installUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
@@ -169,7 +183,7 @@ try {
   browser = spawn(browserPath, ['--headless=new', '--no-first-run', '--no-default-browser-check', '--remote-allow-origins=*',
     '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows',
     '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
-    ...(handGame ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] : []),
+    ...((handGame || gameId === 'oculomotor-training') ? ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] : []),
     `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
   let connection;
   for (let attempt = 0; attempt < 100; attempt++) {
@@ -183,17 +197,34 @@ try {
   const contexts = [];
   const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
     const commandId = ++id;
-    pending.set(commandId, { resolve, reject });
+    const timer = setTimeout(() => { pending.delete(commandId); console.error('Browser diagnostics:', JSON.stringify({errors,requests:requests.slice(-18)})); reject(new Error(`Browser command timed out: ${method} ${params.expression?.slice(0, 120) ?? ''}`)); }, 20000);
+    timer.unref();
+    pending.set(commandId, { resolve, reject, timer });
     ws.send(JSON.stringify({ id: commandId, method, params, ...(sessionId ? { sessionId } : {}) }));
   });
+  const eyeProbe = `if (location.pathname.startsWith('/input/eye-tracking-1.0.0/')) {
+ const acquire=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+ navigator.mediaDevices.getUserMedia = async () => {
+ const permitted=await acquire({video:true,audio:false});permitted.getTracks().forEach(track=>track.stop());window.nativeCameraPermissionVerified=true;
+ const image=new Image(); image.src=location.origin+'/__eye-test/portrait.jpg';await image.decode();
+ const canvas=document.createElement('canvas'); canvas.width=640;canvas.height=480;const context=canvas.getContext('2d');
+ const draw=()=>{context.fillStyle='white';context.fillRect(0,0,640,480);context.drawImage(image,128,0,384,480);window.eyeFixtureRaf=requestAnimationFrame(draw);};draw();
+ const stream=canvas.captureStream(30);window.eyeFixtureStream=stream;return stream;
+ };
+}`;
   const pixiProbe = `window.__PIXI_APP_INIT__ = app => {
     window.${gameId === 'moving-card' ? 'movingCard' : 'asteroid'}PixiApp = app;
     ${rendererFailure && gameId === 'moving-card' ? "if (!window.allowRendererRetry) throw new Error('Simulated Pixi initialization failure');" : ''}
   };`;
   ws.addEventListener('message', event => {
     const message = JSON.parse(event.data);
+    if (message.method === 'Page.javascriptDialogOpening') {
+      errors.push(`Unexpected browser dialog: ${message.params.message}`);
+      void send('Page.handleJavaScriptDialog',{accept:true},message.sessionId);
+    }
     if (message.id) {
       const promise = pending.get(message.id);
+      clearTimeout(promise?.timer);
       pending.delete(message.id);
       if (message.error) promise?.reject(new Error(JSON.stringify(message.error))); else promise?.resolve(message.result);
     }
@@ -221,10 +252,11 @@ try {
       void (async () => {
         const childSession = message.params.sessionId;
         await Promise.all([send('Runtime.enable', {}, childSession), send('Network.enable', {}, childSession)]);
-        if (['asteroid-shield', 'moving-card'].includes(gameId) && message.params.targetInfo.type === 'iframe') {
+        if (gameId === 'oculomotor-training' && process.argv.includes('--gaze')) await send('Fetch.enable', { patterns: [{urlPattern:'*/__eye-test/*',requestStage:'Request'}] }, childSession);
+        if (['asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) && message.params.targetInfo.type === 'iframe') {
           await send('Page.enable', {}, childSession);
           await send('Page.addScriptToEvaluateOnNewDocument', {
-            source: pixiProbe, runImmediately: true,
+            source: gameId === 'oculomotor-training' && process.argv.includes('--gaze') ? eyeProbe : pixiProbe, runImmediately: true,
           }, childSession);
         }
         if (message.params.waitingForDebugger) await send('Runtime.runIfWaitingForDebugger', {}, childSession);
@@ -234,8 +266,8 @@ try {
   const target = await send('Target.createTarget', { url: 'about:blank' });
   const attached = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
   const session = attached.sessionId;
-  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: ['asteroid-shield', 'moving-card'].includes(gameId), flatten: true,
-    ...(['asteroid-shield', 'moving-card'].includes(gameId) ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
+  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: ['asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId), flatten: true,
+    ...(['asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
   }, session);
   await send('Runtime.enable', {}, session);
   await send('Network.enable', {}, session);
@@ -260,12 +292,13 @@ try {
       };
     }
   ` }, session);
-  if (['asteroid-shield', 'moving-card'].includes(gameId)) await send('Page.addScriptToEvaluateOnNewDocument', {
-    source: pixiProbe,
+  if (['asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId)) await send('Page.addScriptToEvaluateOnNewDocument', {
+    source: gameId === 'oculomotor-training' && process.argv.includes('--gaze') ? eyeProbe : pixiProbe,
   }, session);
-  if (remote || handGame) await send('Fetch.enable', { patterns: [
+  if (remote || handGame || (gameId === 'oculomotor-training' && process.argv.includes('--gaze'))) await send('Fetch.enable', { patterns: [
     ...(remote ? [{ urlPattern: productionHub ? 'https://trainerhub.cc/api/*' : 'https://trainerhub.cc/*', requestStage: 'Request' }] : []),
     ...(handGame ? [{ urlPattern: '*/__hand-test/*', requestStage: 'Request' }] : []),
+    ...(gameId === 'oculomotor-training' && process.argv.includes('--gaze') ? [{urlPattern:'*/__eye-test/*',requestStage:'Request'}] : []),
   ] }, session);
   // Production keeps Turnstile enabled; this fixture only submits to intercepted local APIs.
   if (productionHub) await send('Page.addScriptToEvaluateOnNewDocument', { source: `
@@ -287,7 +320,7 @@ try {
     localStorage.setItem('rehabtrainerhub.subject-id.v1', ${JSON.stringify(guestSubjectId)});
     ${signedIn ? `localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(accountToken)});` : ''}
   } catch {}` }, session);
-  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${gameId === 'moving-card' ? 'vision' : 'motor'}%3A${gameId}`) }, session);
+  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${['moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor'}%3A${gameId}`) }, session);
   await send('Target.activateTarget', { targetId: target.targetId });
   const evaluate = async (expression, context) => {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture: true, ...(context ? { contextId: context.id } : {}) }, context?.session || session);
@@ -312,7 +345,7 @@ try {
   if (lobby && !standalone) {
     await until(() => evaluate('Boolean(document.querySelector(".module-card[data-runtime-id=reviewed-browser-game]"))'), 'reviewed catalog loaded');
     assert.equal(await evaluate(`document.querySelectorAll(".module-card[data-runtime-id=${gameId}]").length`), 1);
-    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), gameId === 'moving-card' ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
+    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), ['moving-card', 'oculomotor-training'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
     await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}]").scrollIntoView()`);
     await until(() => evaluate(`(() => { const image = document.querySelector(".module-card[data-runtime-id=${gameId}] img"); return image?.complete && image.naturalWidth > 0; })()`), 'game-owned preview loaded');
     assert.equal(new URL(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] img").src`)).pathname,
@@ -391,6 +424,11 @@ try {
     await until(() => evaluate('!document.querySelector("dialog iframe") && Boolean(document.querySelector("dialog [role=alert]"))'), 'revoked game removed');
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     console.log('Revoked R2 release removed; no result saved.');
+  } else if (gameId === 'oculomotor-training') {
+    const screenshots = resolve(root, '.tmp/oculomotor-validation', `${standalone?'standalone':'lobby'}-${viewportMode}-${english?'en':'zh'}-${process.argv.includes('--gaze')?'gaze':'off'}-${process.argv.includes('--activity')?process.argv[process.argv.indexOf('--activity')+1]:'pursuit'}`);
+    await mkdir(screenshots,{recursive:true});
+    const capture=async name=>{const shot=await send('Page.captureScreenshot',{format:'png'},session);await writeFile(resolve(screenshots,name+'.png'),Buffer.from(shot.data,'base64'));};
+    await CheckOculomotor({game,evaluate,send,until,standalone,english,capture,checkSpotlight,sqlite,gameContext,session,getSaveAttempts:()=>saveAttempts,getCsvAttempts:()=>csvAttempts,csvObjects,accountId,guestSubjectId,version:manifest.version,revokeRelease:()=>{revoked=true;},findEyeContext:async()=>{for(const context of contexts.filter(c=>c.auxData?.isDefault)){try{if(await evaluate("document.title==='WebGazer camera'",context))return context;}catch{}}return null;}});
   } else if (gameId === 'moving-card') {
     const screenshots = movingCardScreenshots;
     await mkdir(screenshots, { recursive: true });

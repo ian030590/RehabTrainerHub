@@ -1,6 +1,8 @@
 # 內建遊戲逐步遷移至 R2：畫畫塔防試點
 
-更新日期：2026-10-10。目前 R2 current 為 `drawing-defense@2.0.4`、`asteroid-shield@2.0.3`、`gesture-battler@2.0.2` 、`motor-cortex-rehab@2.0.0` 與 `moving-card@2.0.0`，5 款完成、35 款保留舊流程。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
+更新日期：2026-10-11。目前 R2 current 為 `drawing-defense@2.0.4`、`asteroid-shield@2.0.3`、`gesture-battler@2.0.2` 、`motor-cortex-rehab@2.0.0` 與 `moving-card@2.0.0`，5 款完成、35 款保留舊流程。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
+
+2026-10-11 眼動練習 `oculomotor-training@2.0.0` 已建立本機自包含候選，採原 25 項設定、四模式／原刺激引擎、四目標聚光燈、完整十項成果與私人 CSV。擁有者已核准眼動輸入代理架構，精確候選發布仍待核准；本機 registry／Hub build 暫為六款／34 款，正式仍五款／35 款。不得將候選登記或本機測試作為正式完成證據。候選、測試、輸入安全及回退見 [眼動遷移審查](oculomotor-r2-migration.md)。
 
 移動卡片訓練 `moving-card@2.0.0` 已精確摘要核准、相容 runner 先部署／R2 回讀後 Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38055113478)及正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收完成。保留原引擎／設定／原圖，採自有設定、三目標聚光燈與完整成績；見 [移動卡片遷移驗收](moving-card-r2-migration.md)與[正式收據](releases/moving-card-2.0.0.json)。正式五款完成、35 款舊流程；首次 native 遷移仍無另一個核准回退版，保留原 Hub deployment／commit。
 
@@ -377,6 +379,10 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 2. 接著遷移 Pixi 類遊戲，逐個驗證實際 canvas、音效與全螢幕；禁止假設畫畫塔防設定能套用到所有遊戲。
 3. 再遷移 jsPsych 實驗，保留 lifecycle、雙語指導、刺激時序、逐 trial 資料與科學參考說明。
 4. 最後處理相機、麥克風、MediaPipe／TensorFlow／Vosk／WebGazer 等大型模型與權限需求。現有 restrictive sandbox／CSP 不保證能支援它們；先針對實際能力設計受控第一方執行環境，不放寬第三方遊戲保護。
+
+### 眼動練習的相機輸入例外
+
+2026-10-10 使用者明確回答「核准眼動輸入代理方案」。僅可信官方 `oculomotor-training` 的 `eye-tracking` release 能由 Hub／獨立 PWA 在同意後啟動固定第一方 WebGazer 文件；原 vendor 與四份模型／權重逐檔核對摘要，瀏覽器不讀 CDN，影像留在裝置。只有可信輸入文件的 CSP／Permissions Policy 允許模型所需的執行與相機，遊戲依然 `sandbox="allow-scripts"`、相機禁止、`connect-src 'none'`。私有通道只交換數值座標／時間／就緒與校正點，驗 nonce／sequence／範圍，不傳身份或影像。原校正、驗證、刺激、成果與 CSV 由遊戲擁有；Hub 以原固定 session／身份保存經驗證的私人 CSV，成功後才存摘要，PWA 提供本機成果及下載。完成、停止、取消、退出、斷線與撤回均清理。此為架構核准，當版精確發布及正式驗收另依步驟 E／F，詳見眼動審查紀錄。
 
 每一個遊戲都必須符合：自有依賴、設定／教學／結果完整，成績頁具備主要統計、資料圖表與個別回合明細；Hub output 無該遊戲 bundle；匿名／登入隔離與冪等保存；桌面／手機互動；獨立 PWA；不可變發布收據；回退步驟；未改變用途或引入新的醫療效能宣稱。
 

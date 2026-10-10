@@ -31,10 +31,17 @@ test('every game exposes bounded grading settings and exact numeric score source
   for (const id of ids) {
     if (Object.hasOwn(migratedGames, id)) {
       const entry = { 'asteroid-shield': 'AsteroidShieldGame.tsx', 'drawing-defense': 'DrawingTowerDefenseGame.tsx',
-        'gesture-battler': 'GestureBattlerGame.tsx', 'motor-cortex-rehab': 'MotorCortexRehabGame.tsx', 'moving-card': 'MovingCardGame.tsx' }[id];
+        'gesture-battler': 'GestureBattlerGame.tsx', 'motor-cortex-rehab': 'MotorCortexRehabGame.tsx', 'moving-card': 'MovingCardGame.tsx', 'oculomotor-training': 'OculomotorTrainingGame.tsx' }[id];
       assert.ok(entry, `${id}: add game-owned bounds validation before migration`);
       const source = read(id, entry);
-      if (id === 'moving-card') {
+      if (id === 'oculomotor-training') {
+        const settings = read(id, 'settings.ts');
+        assert.match(source, /ValidateSettings\(settings\)/);
+        assert.match(settings, /value >= field\.min!/);
+        assert.match(settings, /value <= field\.max!/);
+        assert.match(source, /BuildGameScore\(completed\)/);
+        assert.match(source, /SendGameEvent\('result'/);
+      } else if (id === 'moving-card') {
         const settings = read(id, 'settings.ts');
         assert.match(settings, /key: 'rounds', min: 5, max: 40, step: 5/);
         assert.match(settings, /key: 'optionCount', min: 4, max: 40/);
@@ -68,7 +75,7 @@ test('every game exposes bounded grading settings and exact numeric score source
         assert.match(source, /minRecognitionStrictness = 10/);
         assert.match(source, /maxRecognitionStrictness = 90/);
       }
-      assert.match(source, /SendGameResult/);
+      if (id !== 'oculomotor-training') assert.match(source, /SendGameResult/);
       continue;
     }
     const settings = ParseGameSettingsDefinition(JSON.parse(read(id, 'settings.json')), id);

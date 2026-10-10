@@ -1,0 +1,271 @@
+{
+  "status": "owner-approved-awaiting-publication",
+  "verifiedAt": "2026-10-10T21:00:36.564Z",
+  "gameId": "oculomotor-training",
+  "version": "2.0.0",
+  "contentSha256": "5148ebabb7a60d2f2f56094e97d3c45b4402d7968588dccecd3b42ed043374af",
+  "name": "眼動練習",
+  "description": "選擇中央目標辨識、平滑追蹤、跳視或凝視，依設定進行目標活動。",
+  "files": [
+    {
+      "path": "assets/index-DNDcsVEA.css",
+      "size": 17878,
+      "sha256": "b794691218fa1a9d030a9be1187d2fade53ee714313bf14cd3206c03d08bf4a8",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-oIbGrVke.js",
+      "size": 256561,
+      "sha256": "c867bd4e5ed7d737b79c5ac972fab78a484148a87d66aa29210cf868a3b8aa05",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 548,
+      "sha256": "c96e3fc01bb8d0b4ca689069199b6fec71855918e595107054bf1bf00a0bfe56",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 600,
+      "sha256": "981dbd8d5d90663934b3d8b08a39a331ed8a3ba29ac850271af5141e8127769d",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 830,
+      "sha256": "82ac52eda37b58ef50ac78629bc8e9f1184ccfcdfccb5915d40f726f6899f091",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "reference/experiment.js",
+      "size": 86855,
+      "sha256": "176dccd9d3b26a1ca35182124abc07da92e87cc8bfc158ee8285df8d038c215a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/gazeAdapter.js",
+      "size": 3638,
+      "sha256": "6ef784bcc4acf85910e65119d396e3bf8cda808916a5badfc715972206e8bfc3",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/index.html",
+      "size": 587,
+      "sha256": "42f09cd2b8191affbee3e7c5e7bfde79f3c709c95916eacfc36b30bdadfc3983",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "reference/jspsych.js",
+      "size": 80994,
+      "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/style.css",
+      "size": 32594,
+      "sha256": "53ed2f722070d7c04568c4753e0e9025fea32e47926c6266a464011817393600",
+      "contentType": "text/css; charset=utf-8"
+    }
+  ],
+  "catalog": {
+    "schemaVersion": 1,
+    "gameId": "oculomotor-training",
+    "trainer": "vision",
+    "category": "vision",
+    "author": "居家訓練網",
+    "preview": "preview.webp",
+    "copy": {
+      "zh-TW": {
+        "title": "眼動練習",
+        "description": "選擇中央目標辨識、平滑追蹤、跳視或凝視，依設定進行目標活動。"
+      },
+      "en": {
+        "title": "Oculomotor practice",
+        "description": "Choose central target recognition, pursuit, saccade or fixation for a configurable target activity."
+      }
+    }
+  },
+  "ownerApprovals": {
+    "eyeInputArchitecture": {
+      "approved": true,
+      "date": "2026-10-10",
+      "reply": "核准眼動輸入代理方案"
+    },
+    "exactReleaseAndDeployment": {
+      "approved": true,
+      "at": "2026-10-10T23:10:32.451Z",
+      "reply": "核准並git push",
+      "version": "2.0.0",
+      "contentSha256": "5148ebabb7a60d2f2f56094e97d3c45b4402d7968588dccecd3b42ed043374af",
+      "scope": "Deploy compatible runner, publish exact R2 bytes, commit and push Hub migration, verify production"
+    }
+  },
+  "production": {
+    "published": false,
+    "deployed": false,
+    "migrationComplete": false,
+    "completedGames": 5,
+    "legacyGames": 35
+  },
+  "localCandidate": {
+    "registryGames": 6,
+    "legacyGames": 34
+  },
+  "baseline": "rollback-baseline.json",
+  "input": {
+    "path": "/input/eye-tracking-1.0.0/",
+    "manifest": {
+      "version": "eye-tracking-1.0.0",
+      "vendorSha256": "6210f977f5d146b40cfe82f0b845113171441ffbcb7aabdb2d65717507957081",
+      "assets": [
+        {
+          "path": "facemesh/model.json",
+          "sourceUrl": "https://tfhub.dev/mediapipe/tfjs-model/facemesh/1/default/1/model.json?tfjs-format=file",
+          "size": 93029,
+          "sha256": "c922985d95e101e7fe56576a9a00366c72d3fab3604ce371cc9d85394abda99c"
+        },
+        {
+          "path": "facemesh/group1-shard1of1.bin",
+          "sourceUrl": "https://tfhub.dev/mediapipe/tfjs-model/facemesh/1/default/1/group1-shard1of1.bin?tfjs-format=file",
+          "size": 2955780,
+          "sha256": "f4a7075c1fff12ceafd2cd6fc000a464da90b1e0c35236971ed5bb3b343366cb"
+        },
+        {
+          "path": "blazeface/model.json",
+          "sourceUrl": "https://tfhub.dev/tensorflow/tfjs-model/blazeface/1/default/1/model.json?tfjs-format=file",
+          "size": 64036,
+          "sha256": "7b6bb6f35e5a7899232de51dda8bf514ef9664ca7ec58388c9fecc088c883b58"
+        },
+        {
+          "path": "blazeface/group1-shard1of1.bin",
+          "sourceUrl": "https://tfhub.dev/tensorflow/tfjs-model/blazeface/1/default/1/group1-shard1of1.bin?tfjs-format=file",
+          "size": 401768,
+          "sha256": "60b481ab6c19352673cdb21e02e639f90883db1393ac52d07c7ea4e1e11cb2cd"
+        }
+      ]
+    },
+    "files": [
+      {
+        "path": "eyeTrackingController.js",
+        "size": 2324,
+        "sha256": "aef4023dd0ebdd3f2e5cf54045fe76063cecf12d82daaa36e2b633b042e589e5"
+      },
+      {
+        "path": "eyeTrackingEntry.js",
+        "size": 3396,
+        "sha256": "79f341c4e0c2018c0477fdb211655a029a4fb4ec2360af247510e7a0f194ee9f"
+      },
+      {
+        "path": "index.js",
+        "size": 8605,
+        "sha256": "a79193619ef12102a0594fad6daf5415dbab7b5b955fc8e224450036e4a990e8"
+      },
+      {
+        "path": "models/blazeface/group1-shard1of1.bin",
+        "size": 401768,
+        "sha256": "60b481ab6c19352673cdb21e02e639f90883db1393ac52d07c7ea4e1e11cb2cd"
+      },
+      {
+        "path": "models/blazeface/model.json",
+        "size": 64036,
+        "sha256": "7b6bb6f35e5a7899232de51dda8bf514ef9664ca7ec58388c9fecc088c883b58"
+      },
+      {
+        "path": "models/facemesh/group1-shard1of1.bin",
+        "size": 2955780,
+        "sha256": "f4a7075c1fff12ceafd2cd6fc000a464da90b1e0c35236971ed5bb3b343366cb"
+      },
+      {
+        "path": "models/facemesh/model.json",
+        "size": 93029,
+        "sha256": "c922985d95e101e7fe56576a9a00366c72d3fab3604ce371cc9d85394abda99c"
+      },
+      {
+        "path": "preview.css",
+        "size": 128,
+        "sha256": "82eae24fbe52e1cd79d7318c997cea3900f550026dc4fbb9980512733d83847f"
+      },
+      {
+        "path": "preview.html",
+        "size": 313,
+        "sha256": "45336fe2702979d6c92c578c2f0d95a22a716f181538cd24b814aa5d313fbd4f"
+      },
+      {
+        "path": "webgazer.js",
+        "size": 3470808,
+        "sha256": "1b7d24fad2687a423b0f540b7b5fa77f7c627a85c4d3c084c11be5bd83859d85"
+      }
+    ]
+  },
+  "validation": {
+    "gates": [
+      "test:naming",
+      "test:pwa",
+      "test:game-architecture",
+      "test:hub-functions",
+      "test:gamerunner",
+      "test:entrypoints",
+      "test:cloudflare-deploy"
+    ],
+    "counts": {
+      "gameArchitecture": 107,
+      "hubFunctions": 117,
+      "gameRunner": 45
+    },
+    "builds": [
+      "build:hub",
+      "build:gamerunner",
+      "game:oculomotor-training",
+      "publish-official-game --dry-run"
+    ],
+    "browser": {
+      "tool": "node scripts/check-r2-game-browser.mjs --game oculomotor-training",
+      "modes": [
+        "vor",
+        "pursuit",
+        "saccade",
+        "fixation"
+      ],
+      "viewports": [
+        "1320x713",
+        "390x844",
+        "820x1180"
+      ],
+      "scenarios": [
+        "lobby",
+        "standalone",
+        "signed-in english",
+        "session failure",
+        "CSV then summary retry",
+        "camera refused then reconsent",
+        "camera disconnect",
+        "stop",
+        "revocation before start",
+        "revocation during activity",
+        "reference CSV download",
+        "offline model and experiment fetch"
+      ],
+      "regressions": [
+        "test:game-architecture:browser (5)",
+        "gesture-battler standalone mobile"
+      ]
+    },
+    "limitations": [
+      "Production verification pending publication/deployment",
+      "Fixed portrait stream with actual pinned FaceMesh; no real-person gaze accuracy or physical camera acceptance",
+      "Safari/iOS, physical touch and ruler calibration not tested",
+      "No production test accounts or records created"
+    ]
+  },
+  "screenshots": [
+    "candidate/desktop-en-settings.png",
+    "candidate/desktop-en-gameplay.png",
+    "candidate/desktop-en-results.png",
+    "candidate/mobile-target-spotlight.png",
+    "candidate/mobile-results.png",
+    "candidate/tablet-calibration-spotlight.png",
+    "candidate/tablet-confirmation.png",
+    "candidate/tablet-validation.png"
+  ]
+}

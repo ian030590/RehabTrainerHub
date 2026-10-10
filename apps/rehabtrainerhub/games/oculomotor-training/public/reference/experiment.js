@@ -1,9 +1,10 @@
 // Based on TobiiOculomotor/wwwroot/app.js. The jsPsych experiment, timing,
 // calibration, validation, stimulus geometry and WebGazer sampling are retained.
-// Browser-only adaptation: settings and scores cross the first-party iframe boundary.
+// Browser adaptation: the game owns the experiment; the private input adapter supplies coordinates.
 "use strict";
 (() => {
   const { ParameterType } = jsPsychModule;
+  const Text = (english, chinese) => window.oculomotorLanguage === "en" ? english : chinese;
   const EYE_SOURCE_OFF = "off";
   const EYE_SOURCE_WEBGAZER = "webgazer";
   const WEBGAZER_COMPONENTS_AVAILABLE = Boolean(window.webgazer && window.jsPsychExtensionWebgazer && window.jsPsychWebgazerInitCamera && window.jsPsychWebgazerCalibrate);
@@ -280,7 +281,7 @@
 
 
     function fullscreenElement() {
-      return document.fullscreenElement || window.parent.document.fullscreenElement || null;
+      return document.fullscreenElement || null;
     }
 
     function exitFullscreenSafely() {
@@ -405,12 +406,15 @@
         };
 
         const clean = () => {
+          finished = true;
+          window.removeEventListener("oculomotor:stop", clean);
           if (faceTimer !== null) window.clearInterval(faceTimer);
           try { extension.pause(); } catch (error) { /* Continue cleanup. */ }
           try { extension.hideVideo(); } catch (error) { /* Continue cleanup. */ }
           try { extension.hidePredictions(); } catch (error) { /* Continue cleanup. */ }
         };
 
+        window.addEventListener("oculomotor:stop", clean);
         const finish = (ready, error = null) => {
           if (finished) return;
           finished = true;
@@ -423,15 +427,16 @@
         };
 
         const showCamera = () => {
+          if (finished) return;
           displayElement.innerHTML = `
             <section class="app-page">
               <div class="app-shell" style="max-width:760px">
-                <p class="eyebrow">WebGazer setup</p>
-                <h1>Camera positioning</h1>
-                <p class="lede">Keep your head still and position your face until the camera guide indicates that tracking is ready. The next screen contains the calibration points.</p>
+                <p class="eyebrow">${Text("WebGazer setup","WebGazer 準備")}</p>
+                <h1>${Text("Camera positioning","相機位置確認")}</h1>
+                <p class="lede">${Text("Keep your head still and position your face until the camera guide indicates that tracking is ready. The next screen contains the calibration points.","請保持頭部穩定，調整臉部位置至追蹤就緒。下一步進行九點校正。")}</p>
                 <div class="webgazer-camera-actions">
-                  <button id="webgazer-camera-continue" class="primary-button" type="button" disabled>Continue to calibration</button>
-                  <button id="webgazer-camera-skip" class="secondary-button" type="button">Continue without eye tracking</button>
+                  <button id="webgazer-camera-continue" class="primary-button" type="button" disabled>${Text("Continue to calibration","開始校正")}</button>
+                  <button id="webgazer-camera-skip" class="secondary-button" type="button">${Text("Continue without eye tracking","不記錄眼動，繼續練習")}</button>
                 </div>
               </div>
             </section>`;
@@ -452,15 +457,16 @@
         };
 
         const showFailure = (error) => {
+          if (finished) return;
           const message = error && error.message ? error.message : String(error || "Camera access failed.");
           displayElement.innerHTML = `
             <section class="app-page">
               <div class="app-shell" style="max-width:760px">
-                <p class="eyebrow">WebGazer setup</p>
-                <h1>Eye tracking unavailable</h1>
-                <p class="lede">The camera could not be initialized. You can continue this training session without eye tracking.</p>
+                <p class="eyebrow">${Text("WebGazer setup","WebGazer 準備")}</p>
+                <h1>${Text("Eye tracking unavailable","無法使用眼動追蹤")}</h1>
+                <p class="lede">${Text("The camera could not be initialized. You can continue this training session without eye tracking.","相機無法啟用。你可以明確選擇不記錄眼動，繼續這次練習。")}</p>
                 <div class="webgazer-camera-actions">
-                  <button id="webgazer-camera-fallback" class="primary-button" type="button">Continue without eye tracking</button>
+                  <button id="webgazer-camera-fallback" class="primary-button" type="button">${Text("Continue without eye tracking","不記錄眼動，繼續練習")}</button>
                 </div>
               </div>
             </section>`;
@@ -556,6 +562,7 @@
         }
 
         const cleanUp = () => {
+          window.removeEventListener("oculomotor:stop", cleanUp);
           ended = true;
           if (pointTimer !== null) clearTimeout(pointTimer);
           if (countdownInterval !== null) clearInterval(countdownInterval);
@@ -567,6 +574,7 @@
           document.removeEventListener("keydown", onKeyDown);
         };
 
+        window.addEventListener("oculomotor:stop", cleanUp);
         const onKeyDown = (e) => {
           if (e.key === "Escape") {
             cleanUp();
@@ -574,7 +582,7 @@
             AppState.pending = null;
             AppState.eyeTracking.needsRecalibration = false;
             this.jsPsych.finishTrial({ action: "validation_aborted", aborted: true });
-            window.parent.postMessage({ type: "oculomotor:abort" }, window.location.origin);
+            post("oculomotor:abort");
           }
         };
         document.addEventListener("keydown", onKeyDown);
@@ -594,7 +602,7 @@
           displayElement.innerHTML = `
             <div id="webgazer-validate-container">
               <div class="webgazer-validate-instruction">
-                Gaze Accuracy Validation: Look directly at the target (${idx + 1} / 5)
+                ${Text("Gaze accuracy validation: look directly at the target", "眼動精度驗證：請注視目標")} (${idx + 1} / 5)
               </div>
               <div class="webgazer-validate-target" style="left: ${tx}px; top: ${ty}px;">
                 <div class="webgazer-validate-target-inner"></div>
@@ -663,59 +671,59 @@
             if (passed) {
               noticeHtml = `<p style="color:var(--lime, #63e6ff); font-size:14px; margin-bottom:18px;">Validation passed. Gaze tracking precision verified and ready.</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="done">Complete & Return to Menu</button>
-                <button class="secondary-button" type="button" data-val-action="recalib">Recalibrate</button>`;
+                <button class="primary-button" type="button" data-val-action="done">${Text("Complete & Return to Menu","完成並返回設定")}</button>
+                <button class="secondary-button" type="button" data-val-action="recalib">${Text("Recalibrate","重新校正")}</button>`;
             } else {
               noticeHtml = `<p style="color:#f87171; font-size:14px; margin-bottom:18px;">Average angular error (${meanErrorDeg}°) exceeds target threshold (${PASS_THRESHOLD_DEG}°). Recalibration is recommended.</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="recalib">Recalibrate</button>
-                <button class="secondary-button" type="button" data-val-action="done">Skip & Return to Menu</button>`;
+                <button class="primary-button" type="button" data-val-action="recalib">${Text("Recalibrate","重新校正")}</button>
+                <button class="secondary-button" type="button" data-val-action="done">${Text("Skip & Return to Menu","略過並返回設定")}</button>`;
             }
           } else {
             if (passed) {
-              noticeHtml = `<p style="color:var(--lime, #63e6ff); font-size:14px; margin-bottom:18px;">Validation passed. Dynamic hit threshold set to 2× angular error (${dynamicThresholdDeg}°). Starting training...</p>`;
+              noticeHtml = `<p style="color:var(--lime, #63e6ff); font-size:14px; margin-bottom:18px;">${Text(`Validation passed. Dynamic hit threshold is 2× angular error (${dynamicThresholdDeg}°).`, `驗證通過，動態在標門檻為角度誤差的兩倍（${dynamicThresholdDeg}°）。`)}</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="proceed">Start Training (<span id="val-cd-num">3</span>s)</button>
-                <button class="secondary-button" type="button" data-val-action="recalib">Recalibrate</button>`;
+                <button class="primary-button" type="button" data-val-action="proceed">${Text("Start practice", "開始練習")} (<span id="val-cd-num">3</span>s)</button>
+                <button class="secondary-button" type="button" data-val-action="recalib">${Text("Recalibrate","重新校正")}</button>`;
             } else {
-              noticeHtml = `<p style="color:#f87171; font-size:14px; margin-bottom:18px;">Validation error higher than recommended (${meanErrorDeg}° > ${PASS_THRESHOLD_DEG}°). You may re-validate or proceed with the measured threshold.</p>`;
+              noticeHtml = `<p style="color:#f87171; font-size:14px; margin-bottom:18px;">${Text(`Validation error higher than recommended (${meanErrorDeg}° > ${PASS_THRESHOLD_DEG}°). You may re-validate or proceed with the measured threshold.`, `驗證誤差高於參考值（${meanErrorDeg}° > ${PASS_THRESHOLD_DEG}°），可重新校正，或使用實測門檻繼續。`)}</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="recalib">Recalibrate</button>
-                <button class="secondary-button" type="button" data-val-action="proceed">Proceed Anyway</button>`;
+                <button class="primary-button" type="button" data-val-action="recalib">${Text("Recalibrate","重新校正")}</button>
+                <button class="secondary-button" type="button" data-val-action="proceed">${Text("Proceed Anyway","使用實測門檻繼續")}</button>`;
             }
           }
 
           displayElement.innerHTML = `
             <div id="webgazer-validate-container">
               <div class="webgazer-validate-card">
-                <p class="eyebrow" style="color:var(--cyan, #63e6ff); text-transform:uppercase; font-size:12px; font-weight:700; letter-spacing:0.08em; margin-bottom:6px;">${sourceName} Validation</p>
-                <h2>Gaze Tracking Accuracy</h2>
-                <p style="margin-bottom:16px;">5-point fixation accuracy assessment completed:</p>
+                <p class="eyebrow" style="color:var(--cyan, #63e6ff); text-transform:uppercase; font-size:12px; font-weight:700; letter-spacing:0.08em; margin-bottom:6px;">${sourceName} ${Text("Validation", "驗證")}</p>
+                <h2>${Text("Gaze Tracking Accuracy","眼動追蹤精度")}</h2>
+                <p style="margin-bottom:16px;">${Text("5-point fixation accuracy assessment completed:","五點凝視驗證已完成：")}</p>
                 ${noticeHtml}
                 <div class="webgazer-validate-stat-grid">
                   <div class="webgazer-validate-stat-item">
-                    <span class="webgazer-validate-stat-label">Mean Angular Error</span>
+                    <span class="webgazer-validate-stat-label">${Text("Mean Angular Error","平均角度誤差")}</span>
                     <span class="webgazer-validate-stat-value ${passed ? "pass" : "fail"}">${meanErrorDeg}°</span>
                   </div>
                   <div class="webgazer-validate-stat-item">
-                    <span class="webgazer-validate-stat-label">Dynamic Hit Threshold (2× Error)</span>
+                    <span class="webgazer-validate-stat-label">${Text("Dynamic Hit Threshold (2× Error)","動態在標門檻（誤差的兩倍）")}</span>
                     <span class="webgazer-validate-stat-value pass">${dynamicThresholdDeg}° (${dynamicThresholdArcmin}')</span>
                   </div>
                   <div class="webgazer-validate-stat-item">
-                    <span class="webgazer-validate-stat-label">Accuracy Status</span>
-                    <span class="webgazer-validate-stat-value ${passed ? "pass" : "fail"}">${passed ? "Passed" : "Needs Attention"}</span>
+                    <span class="webgazer-validate-stat-label">${Text("Accuracy Status","精度狀態")}</span>
+                    <span class="webgazer-validate-stat-value ${passed ? "pass" : "fail"}">${passed ? Text("Passed", "通過") : Text("Needs attention", "需要留意")}</span>
                   </div>
                 </div>
 
                 <div style="font-size:13px; color:var(--muted, #94a3b8); margin-bottom:24px; background:rgba(255,255,255,0.03); padding:10px 14px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
                   <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
-                    <span>Center: <strong>${pointResults[0] ? pointResults[0].distDeg + "°" : "-"}</strong></span>
-                    <span>Top-Left: <strong>${pointResults[1] ? pointResults[1].distDeg + "°" : "-"}</strong></span>
-                    <span>Top-Right: <strong>${pointResults[2] ? pointResults[2].distDeg + "°" : "-"}</strong></span>
+                    <span>${Text("Center","中央")}: <strong>${pointResults[0] ? pointResults[0].distDeg + "°" : "-"}</strong></span>
+                    <span>${Text("Top-Left","左上")}: <strong>${pointResults[1] ? pointResults[1].distDeg + "°" : "-"}</strong></span>
+                    <span>${Text("Top-Right","右上")}: <strong>${pointResults[2] ? pointResults[2].distDeg + "°" : "-"}</strong></span>
                   </div>
                   <div style="display:flex; justify-content:space-between; padding:4px 0;">
-                    <span>Bottom-Left: <strong>${pointResults[3] ? pointResults[3].distDeg + "°" : "-"}</strong></span>
-                    <span>Bottom-Right: <strong>${pointResults[4] ? pointResults[4].distDeg + "°" : "-"}</strong></span>
+                    <span>${Text("Bottom-Left","左下")}: <strong>${pointResults[3] ? pointResults[3].distDeg + "°" : "-"}</strong></span>
+                    <span>${Text("Bottom-Right","右下")}: <strong>${pointResults[4] ? pointResults[4].distDeg + "°" : "-"}</strong></span>
                     <span></span>
                   </div>
                 </div>
@@ -827,22 +835,7 @@
     }
 
     function triggerFileDownload(filename, textContent) {
-      try {
-        const blob = new Blob(["\uFEFF" + textContent], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        link.style.display = "none";
-        document.body.appendChild(link);
-        link.click();
-        setTimeout(() => {
-          if (link.parentNode) link.parentNode.removeChild(link);
-          URL.revokeObjectURL(url);
-        }, 1500);
-      } catch (error) {
-        console.error("Failed to download CSV:", error);
-      }
+      window.OculomotorDownload(filename, textContent);
     }
 
     function exportTrialCsvs(trialData) {
@@ -1309,9 +1302,12 @@
           void exitFullscreenSafely();
         };
 
+        const abort = () => endTrial("abort");
+        window.addEventListener("oculomotor:stop", abort);
         const endTrial = (reason) => {
           if (ended) return;
           ended = true;
+          window.removeEventListener("oculomotor:stop", abort);
           const endedAt = performance.now();
           if (rafId !== null) cancelAnimationFrame(rafId);
           this.jsPsych.pluginAPI.cancelKeyboardResponse(keyboardListener);
@@ -1329,6 +1325,7 @@
           if (usesWebGazer && window.webgazer) {
             try { window.webgazer.pause(); } catch (e) {}
           }
+          if (reason === "abort") { finishWebGazerTrial(sessionId); return; }
           const gazeCapture = usesWebGazer
             ? finishWebGazerTrial(sessionId)
             : { samples: [], downsampled: 0, overflow: 0, synchronousRecords: [], totalBlinkMs: 0, totalValidMs: 0, totalInThreshMs: 0, accuracyRate: 0 };
@@ -1707,7 +1704,7 @@
   window.jsPsychInstance = jsPsych;
 
   function post(type, value = {}) {
-    window.parent.postMessage({ type, ...value }, window.location.origin);
+    window.dispatchEvent(new CustomEvent("oculomotor:event", { detail: { type, ...value } }));
   }
 
   function run(config) {
@@ -1737,14 +1734,15 @@
       return;
     }
     const source = config.eyeTrackingSource === EYE_SOURCE_WEBGAZER ? EYE_SOURCE_WEBGAZER : EYE_SOURCE_OFF;
-    if (source === EYE_SOURCE_WEBGAZER && (!WEBGAZER_COMPONENTS_AVAILABLE || !navigator.mediaDevices?.getUserMedia)) {
+    if (source === EYE_SOURCE_WEBGAZER && (!WEBGAZER_COMPONENTS_AVAILABLE || !window.OculomotorInput)) {
       post("oculomotor:error", { message: "Camera eye tracking is unavailable in this browser." });
       return;
     }
     AppState.calibration = createCalibration(config);
     const fitError = targetFitError(moduleKey, settings, AppState.calibration);
     if (fitError) { post("oculomotor:error", { message: fitError }); return; }
-    subjectId = typeof config.subjectId === "string" ? config.subjectId : "";
+    subjectId = "";
+    window.oculomotorLanguage = config.language === "en" ? "en" : "zh";
     AppState.eyeTracking.source = source;
     AppState.eyeTracking.enabled = source === EYE_SOURCE_WEBGAZER;
     AppState.eyeTracking.calibrationRequested = source === EYE_SOURCE_WEBGAZER;
@@ -1783,7 +1781,7 @@
             blink_sec: data.eye_tracking.enabled ? data.blink_sec : null,
             gaze_sample_count: data.eye_tracking.enabled ? data.gaze_sample_count : null,
             threshold_deg: data.eye_tracking.enabled ? data.threshold_deg : null,
-            validation_error_deg: validation?.meanErrorDeg ?? null,
+            validation_error_deg: data.eye_tracking.enabled ? validation?.meanErrorDeg ?? null : null,
             estimated_refresh_hz: data.timing?.estimated_refresh_hz ?? null,
             end_reason: data.end_reason,
             module: data.module,
@@ -1888,9 +1886,15 @@
     return viewportSignaturesMatch(reference, current);
   }
 
-  window.addEventListener("message", (event) => {
-    if (event.origin !== window.location.origin || event.source !== window.parent || event.data?.type !== "oculomotor:start") return;
-    run(event.data.settings);
-  });
-  post("oculomotor:ready");
+  window.oculomotorExperiment = {
+    Start: run,
+    Stop() {
+      const active = Boolean(AppState.pending);
+      window.dispatchEvent(new Event("oculomotor:stop"));
+      AppState.pending = null;
+      if (active) jsPsych.abortExperiment();
+      void stopEyeTrackingRuntime();
+      void exitFullscreenSafely();
+    }
+  };
 })();

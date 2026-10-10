@@ -1,0 +1,30 @@
+{
+  "version": "eye-tracking-1.0.0",
+  "vendorSha256": "6210f977f5d146b40cfe82f0b845113171441ffbcb7aabdb2d65717507957081",
+  "assets": [
+    {
+      "path": "facemesh/model.json",
+      "sourceUrl": "https://tfhub.dev/mediapipe/tfjs-model/facemesh/1/default/1/model.json?tfjs-format=file",
+      "size": 93029,
+      "sha256": "c922985d95e101e7fe56576a9a00366c72d3fab3604ce371cc9d85394abda99c"
+    },
+    {
+      "path": "facemesh/group1-shard1of1.bin",
+      "sourceUrl": "https://tfhub.dev/mediapipe/tfjs-model/facemesh/1/default/1/group1-shard1of1.bin?tfjs-format=file",
+      "size": 2955780,
+      "sha256": "f4a7075c1fff12ceafd2cd6fc000a464da90b1e0c35236971ed5bb3b343366cb"
+    },
+    {
+      "path": "blazeface/model.json",
+      "sourceUrl": "https://tfhub.dev/tensorflow/tfjs-model/blazeface/1/default/1/model.json?tfjs-format=file",
+      "size": 64036,
+      "sha256": "7b6bb6f35e5a7899232de51dda8bf514ef9664ca7ec58388c9fecc088c883b58"
+    },
+    {
+      "path": "blazeface/group1-shard1of1.bin",
+      "sourceUrl": "https://tfhub.dev/tensorflow/tfjs-model/blazeface/1/default/1/group1-shard1of1.bin?tfjs-format=file",
+      "size": 401768,
+      "sha256": "60b481ab6c19352673cdb21e02e639f90883db1393ac52d07c7ea4e1e11cb2cd"
+    }
+  ]
+}

@@ -15,7 +15,7 @@ const runnerCacheRevision = '2026-10-10-self-contained-games-v5';
 
 export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {}) {
   const cspNonce = RandomToken(18);
-  if (release.presentation === 'game' && release.capabilities.includes('hand-tracking')) {
+  if (release.presentation === 'game' && (release.capabilities.includes('hand-tracking') || release.capabilities.includes('eye-tracking'))) {
     return { body: RenderHandTrackingLauncher(release, basePath, cspNonce), cspNonce };
   }
   const entryUrl = `${basePath}package/${EncodePackagePath(release.entry)}`;
@@ -496,6 +496,11 @@ export async function RenderServiceWorker(release, basePath) {
       '/input/hand-tracking-1.0.0/wasm/vision_wasm_internal.js', '/input/hand-tracking-1.0.0/wasm/vision_wasm_internal.wasm',
       '/input/hand-tracking-1.0.0/wasm/vision_wasm_nosimd_internal.js', '/input/hand-tracking-1.0.0/wasm/vision_wasm_nosimd_internal.wasm',
     ] : []),
+    ...(release.capabilities.includes('eye-tracking') ? [
+      'index.js', 'preview.html', 'preview.css', 'webgazer.js', 'eyeTrackingEntry.js', 'eyeTrackingController.js',
+      'models/facemesh/model.json', 'models/facemesh/group1-shard1of1.bin',
+      'models/blazeface/model.json', 'models/blazeface/group1-shard1of1.bin',
+    ].map(path => '/input/eye-tracking-1.0.0/' + path) : []),
     ...releaseUrls,
   ];
 

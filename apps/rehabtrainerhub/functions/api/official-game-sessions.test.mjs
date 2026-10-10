@@ -35,7 +35,7 @@ function CreateOfficialBucket(gameId = 'drawing-defense') {
   return { bucket, catalog, releases };
 }
 
-for (const gameId of ['drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card']) {
+for (const gameId of ['drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training']) {
 test(`${gameId}: official sessions bind the result to a game version, record, account and subject`, async () => {
   const { VerifyOfficialGameSession } = await import('../_lib/officialGames.js');
   const environment = { ...env, GAME_RELEASE_BUCKET: CreateOfficialBucket(gameId).bucket };
@@ -113,7 +113,7 @@ test(`${gameId}: a real SQL database saves official game results once, permits r
     const environment = { ...env, REHAB_DB: database, ANONYMOUS_RECORDS_ENABLED: '1', GAME_RELEASE_BUCKET: fixture.bucket };
     const subjectId = crypto.randomUUID();
     const request = (path, body, authToken) => new Request(`https://trainerhub.cc/api/${path}`, {
-      method: 'POST', headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json', 'CF-Connecting-IP': `127.0.0.${['drawing-defense', 'asteroid-shield', 'gesture-battler'].indexOf(gameId) + 9}`, ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) }, body: JSON.stringify(body),
+      method: 'POST', headers: { Origin: 'https://trainerhub.cc', 'Content-Type': 'application/json', 'CF-Connecting-IP': `127.0.0.${['drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].indexOf(gameId) + 9}`, ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) }, body: JSON.stringify(body),
     });
     const sessionResponse = await createSession({ request: request('official-game-sessions', { gameId, subjectId }), env: environment });
     assert.equal(sessionResponse.status, 201);
@@ -136,7 +136,19 @@ test(`${gameId}: a real SQL database saves official game results once, permits r
     assert.equal(unofficialResponse.status, 503);
     const payload = { appId: 'rehabtrainerhub', runtimeId: 'hub', subjectId, officialGameVersion: version, runSessionToken: session.token,
       record: { id: session.recordId, userName: '', moduleId: gameId, gameId, config: { difficulty: 'Beginner' },
-        score: { schema: 'rehab-trainer.game-score/v1', gameId, summary: { defeated: 1 }, rounds: [{ reactionSeconds: 0.2 }] } } };
+        score: { schema: 'rehab-trainer.game-score/v1', gameId, summary: { defeated: 1, ...(gameId === 'oculomotor-training' ? { samples: 1 } : {}) }, rounds: [{ reactionSeconds: 0.2 }] } } };
+    if (gameId === 'oculomotor-training') {
+      recordReads = 2;
+      environment.OCULOMOTOR_DATA = { get: async () => null };
+      assert.equal((await saveRecord({ request: request('records', payload), env: environment })).status, 409, 'A tracked result cannot save before its private CSV');
+      environment.OCULOMOTOR_DATA = { get: async () => { throw new Error('CSV outage'); } };
+      assert.equal((await saveRecord({ request: request('records', payload), env: environment })).status, 503);
+      environment.OCULOMOTOR_DATA = { get: async () => ({ customMetadata: { officialGameVersion: version, gazeSampleCount: '2' } }) };
+      assert.equal((await saveRecord({ request: request('records', payload), env: environment })).status, 409, 'The CSV count must match the result');
+      environment.OCULOMOTOR_DATA = { get: async key => key === `guests/${subjectId}/${session.recordId}.csv`
+        ? { customMetadata: { officialGameVersion: version, gazeSampleCount: '1' } } : null };
+      recordReads = 0;
+    }
     assert.equal((await saveRecord({ request: request('records', { ...payload, runSessionToken: undefined }), env: environment })).status, 400);
     assert.equal((await saveRecord({ request: request('records', { ...payload, record: { ...payload.record, config: { authToken: 'secret' } } }), env: environment })).status, 400);
     const concurrent = await Promise.all([1, 2].map(() => saveRecord({ request: request('records', payload), env: environment })));
@@ -160,6 +172,11 @@ test(`${gameId}: a real SQL database saves official game results once, permits r
     const accountSession = await accountSessionResponse.json();
     const accountPayload = { ...payload, subjectId: accountSubject, runSessionToken: accountSession.token, record: { ...payload.record, id: accountSession.recordId } };
     assert.equal((await saveRecord({ request: request('records', accountPayload), env: environment })).status, 400);
+    if (gameId === 'oculomotor-training') {
+      assert.equal((await saveRecord({ request: request('records', accountPayload, accountToken), env: environment })).status, 409, 'Guest CSV does not belong to the account');
+      environment.OCULOMOTOR_DATA = { get: async key => key === `users/${userId}/${accountSession.recordId}.csv`
+        ? { customMetadata: { officialGameVersion: version, gazeSampleCount: '1' } } : null };
+    }
     assert.equal((await saveRecord({ request: request('records', accountPayload, accountToken), env: environment })).status, 201);
     const accountRow = sqlite.prepare('SELECT subject_id,user_id FROM training_records WHERE id = ?').get(accountSession.recordId);
     assert.equal(accountRow.user_id, userId);

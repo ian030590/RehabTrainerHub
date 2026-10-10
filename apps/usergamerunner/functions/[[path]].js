@@ -69,6 +69,18 @@ export async function HandleRequest(context) {
   }
 
   const url = new URL(request.url);
+  if (url.pathname.startsWith('/input/eye-tracking-1.0.0/')) {
+    const response = await context.next();
+    const headers = new Headers(response.headers);
+    headers.set('Access-Control-Allow-Origin', '*');
+    headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    if (url.pathname.endsWith('/preview.html')) {
+      headers.set('Content-Security-Policy', `default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; media-src 'self' blob:; base-uri 'none'; form-action 'none'; frame-ancestors 'self' ${trustedPlatformOrigin}${['127.0.0.1', 'localhost'].includes(url.hostname) ? ' http://127.0.0.1:* http://localhost:*' : ''}; worker-src 'none'`);
+      headers.set('Permissions-Policy', commonPermissionsPolicy.replace('camera=()', 'camera=(self)'));
+    }
+    return new Response(request.method === 'HEAD' ? null : response.body, { status: response.status, headers });
+  }
   const route = ParseGameRoute(url.pathname);
   if (route === null) {
     return context.next();
@@ -105,7 +117,7 @@ export async function HandleRequest(context) {
   const { release } = loadedRelease;
 
   if (route.kind === 'launcher') {
-    const handTracking = release.presentation === 'game' && release.capabilities.includes('hand-tracking');
+    const handTracking = release.presentation === 'game' && (release.capabilities.includes('hand-tracking') || release.capabilities.includes('eye-tracking'));
     if (handTracking) {
       const official = await ReadOfficialGameRelease(context.env?.GAME_RELEASE_BUCKET, route.gameId, route.version);
       if (!official || official.contentSha256 !== release.contentSha256) return ErrorResponse(404, '找不到已核准的官方輸入版本。');
@@ -140,7 +152,7 @@ export async function HandleRequest(context) {
       "img-src 'self' data:",
       "manifest-src 'self'",
       "object-src 'none'",
-      `script-src 'nonce-${rendered.cspNonce}'${handTracking ? " 'self' 'wasm-unsafe-eval'" : ''}`,
+      `script-src 'nonce-${rendered.cspNonce}'${release.capabilities.includes('hand-tracking') ? " 'self' 'wasm-unsafe-eval'" : ''}`,
       `style-src 'nonce-${rendered.cspNonce}'`,
       "worker-src 'self'",
     ].join('; ');

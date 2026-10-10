@@ -10,6 +10,9 @@ import { CreateHandTrackingBroker } from '@rehab-trainer/ui/handTrackingBroker.j
 import { LoadHandTrackingInput, type HandInputBroker, type HandInputMessage } from '@rehab-trainer/ui/handTrackingInput';
 import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
 import { useHubLanguage } from '../i18n/HubLanguage';
+import { CreateEyeTrackingBroker } from '@rehab-trainer/ui/eyeTrackingBroker.js';
+import { LoadEyeTrackingInput, type EyeInputBroker } from '@rehab-trainer/ui/eyeTrackingInput';
+import { SaveOculomotorCsv, type OculomotorCsvPayload } from '@rehab-trainer/ui/saveOculomotorCsv';
 
 type Result = { config: Record<string, string | number | boolean>; score: GameScore };
 type Session = { recordId: string; token: string; version: string; contentSha256: string; capabilities?: string[] };
@@ -24,7 +27,10 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
   const [session, setSession] = useState<Session | null>(null);
   const saving = useRef(false);
   const saved = useRef(false);
-  const inputRef = useRef<HandInputBroker | null>(null);
+  const inputRef = useRef<(HandInputBroker & Partial<EyeInputBroker>) | null>(null);
+  const csvRef = useRef<OculomotorCsvPayload | null>(null);
+  const csvFileRef = useRef<{ text: string; fileName: string } | null>(null);
+  const csvSaved = useRef(false);
   const consentReply = useRef<((allowed: boolean) => void) | null>(null);
   const consentButtonRef = useRef<HTMLButtonElement>(null);
   const consentPreviousFocus = useRef<HTMLElement | null>(null);
@@ -53,6 +59,14 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
     acknowledge('saving');
     try {
       if (GetAuthToken() !== identity.token) throw new Error('Account changed during game');
+      if (module.runtimeId === 'oculomotor-training' && Number(result.score.summary.samples) > 0) {
+        if (!csvRef.current || csvRef.current.records.length !== result.score.summary.samples) throw new Error('Missing gaze samples');
+        if (!csvSaved.current) {
+          await SaveOculomotorCsv(csvRef.current, selected, identity);
+          if (sessionRef.current !== selected || portRef.current !== port) return;
+          csvSaved.current = true;
+        }
+      }
       await SaveRemoteTrainingRecord(window.location.origin, {
         appId: 'rehabtrainerhub', runtimeId: 'hub', officialGameVersion: selected.version, runSessionToken: selected.token,
         record: { id: selected.recordId, savedAt: new Date().toISOString(), userName: '',
@@ -150,6 +164,18 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
         cancelConsent: () => { consentReply.current?.(false); consentReply.current = null; setCameraConsent(false); },
       });
     }
+    if (module.runtimeId === 'oculomotor-training' && state.capabilities.includes('eye-tracking')) {
+      inputRef.current = CreateEyeTrackingBroker({
+        createController: async () => (await LoadEyeTrackingInput(release.origin)).CreateController(),
+        send: (message: HandInputMessage) => channel.port1.postMessage({ ...message, sessionNonce: nonce }),
+        requestConsent: () => new Promise<boolean>(resolve => {
+          consentPreviousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          consentReply.current = resolve;
+          void ExitFullscreenIfActive().then(() => { if (consentReply.current === resolve) setCameraConsent(true); });
+        }),
+        cancelConsent: () => { consentReply.current?.(false); consentReply.current = null; setCameraConsent(false); },
+      });
+    }
     let sampleCount = 0;
     channel.port1.onmessage = (event) => {
       if (!AcceptGameMessage(event.data, state)) return;
@@ -160,6 +186,16 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
       if (message.type === 'exit') void close();
       if (message.type === 'input-start') void inputRef.current?.Start(message.payload.hand);
       if (message.type === 'input-stop') inputRef.current?.Stop();
+      if (message.type === 'input-calibrate') inputRef.current?.Calibrate?.(message.payload.x, message.payload.y);
+      if (message.type === 'input-reset') inputRef.current?.Reset?.();
+      if (message.type === 'gaze-csv' && !csvRef.current) csvRef.current = message.payload;
+      if (message.type === 'csv-file') csvFileRef.current = message.payload;
+      if (message.type === 'csv-download' && csvFileRef.current) {
+        const file = csvFileRef.current;
+        const url = URL.createObjectURL(new Blob(['\uFEFF', file.text], { type: 'text/csv;charset=utf-8' }));
+        const link = document.createElement('a'); link.href = url; link.download = file.fileName; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+      }
       if (message.type === 'sample' && sampleCount++ < 100) {
         const body = new FormData();
         body.append('image', message.payload.image, 'drawing.png');
@@ -185,7 +221,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
     <div className={`embedded-training-frame ${ready ? 'is-ready' : ''}`}>
       {!ready && <div className="training-loading-stage" role={error ? 'alert' : 'status'}>
         <p>{error ? (language === 'en' ? 'Game could not be loaded' : '無法載入遊戲') : (language === 'en' ? 'Loading game…' : '正在載入遊戲…')}</p>
-        {error && <><button onClick={() => { inputRef.current?.Stop(); void ExitFullscreenIfActive(); portRef.current?.close(); portRef.current = null; sessionRef.current = null; resultRef.current = null; saving.current = false; saved.current = false; setSession(null); setUnavailable(false); setReady(false); setError(false); setGeneration(value => value + 1); }}>{language === 'en' ? 'Try again' : '重新載入'}</button><button onClick={() => void close()}>{language === 'en' ? 'Back to lobby' : '返回大廳'}</button></>}
+        {error && <><button onClick={() => { inputRef.current?.Stop(); void ExitFullscreenIfActive(); portRef.current?.close(); portRef.current = null; sessionRef.current = null; resultRef.current = null; csvRef.current = null; csvFileRef.current = null; csvSaved.current = false; saving.current = false; saved.current = false; setSession(null); setUnavailable(false); setReady(false); setError(false); setGeneration(value => value + 1); }}>{language === 'en' ? 'Try again' : '重新載入'}</button><button onClick={() => void close()}>{language === 'en' ? 'Back to lobby' : '返回大廳'}</button></>}
       </div>}
       {!unavailable && source && <iframe key={generation} ref={frameRef} src={source} title={release.name} onLoad={initialize}
         sandbox="allow-scripts" allow="autoplay; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
@@ -198,7 +234,9 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
           }
         }}>
         <section><h2 id="hand-input-consent-title">{language === 'en' ? 'Enable camera' : '啟用相機'}</h2>
-          <p>{language === 'en' ? 'MediaPipe runs on this device. Only hand coordinates reach the game; camera images are never uploaded.' : '影像只在此裝置由 MediaPipe 處理。遊戲只收到手部座標，不會上傳相機影像。'}</p>
+          <p>{module.runtimeId === 'oculomotor-training'
+            ? (language === 'en' ? 'WebGazer runs on this device. Only gaze coordinates reach the game; camera images are never uploaded.' : '影像只在此裝置由 WebGazer 處理。遊戲只收到眼動座標，不會上傳相機影像。')
+            : (language === 'en' ? 'MediaPipe runs on this device. Only hand coordinates reach the game; camera images are never uploaded.' : '影像只在此裝置由 MediaPipe 處理。遊戲只收到手部座標，不會上傳相機影像。')}</p>
           <button ref={consentButtonRef} type="button" onClick={() => answerConsent(true)}>{language === 'en' ? 'Enable camera' : '允許相機'}</button>
           <button type="button" onClick={() => answerConsent(false)}>{language === 'en' ? 'Cancel' : '取消'}</button>
         </section>

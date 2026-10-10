@@ -13,6 +13,7 @@ const allowedCapabilities = new Set([
   'fullscreen',
   'gamepad',
   'hand-tracking',
+  'eye-tracking',
   'keyboard',
   'pointer',
   'touch',
@@ -175,6 +176,7 @@ export function ValidateRelease(value, expectedGameId, expectedVersion) {
   }
 
   const entry = NormalizePackagePath(value.entry);
+  if (value.capabilities?.includes('eye-tracking') && value.gameId !== 'oculomotor-training') Fail('Eye tracking is restricted to the official eye game.');
   if (!entry || !/\.html?$/i.test(entry)) {
     Fail('entry must name an HTML file in the release.');
   }

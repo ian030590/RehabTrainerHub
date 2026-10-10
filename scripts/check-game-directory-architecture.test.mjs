@@ -119,7 +119,7 @@ test('root builds and both Cloudflare workflows retain the architecture gate', a
   assert.match(rootPackage.scripts['build:cloudflare'], /npm run test:game-architecture/);
   assert.equal(
     rootPackage.scripts['test:game-architecture'],
-    'tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs scripts/check-self-contained-game.test.mjs scripts/check-asteroid-shield-migration.test.mjs scripts/check-moving-card-migration.test.mjs scripts/check-moving-card-tutorial.test.mjs scripts/check-gesture-battler-tutorial.test.mjs scripts/check-gesture-battler-migration.test.mjs scripts/check-motor-cortex-migration.test.mjs scripts/check-motor-cortex-tutorial.test.mjs scripts/check-motor-cortex-bridge.test.mjs scripts/check-game-catalog-metadata.test.mjs scripts/publish-official-game.test.mjs',
+    'tsc -p apps/rehabtrainerhub/tsconfig.games.json && node --test scripts/check-game-directory-architecture.test.mjs scripts/check-drawing-defense-input.test.mjs scripts/check-game-input-layouts.test.mjs scripts/check-self-contained-game.test.mjs scripts/check-asteroid-shield-migration.test.mjs scripts/check-moving-card-migration.test.mjs scripts/check-moving-card-tutorial.test.mjs scripts/check-gesture-battler-tutorial.test.mjs scripts/check-gesture-battler-migration.test.mjs scripts/check-motor-cortex-migration.test.mjs scripts/check-motor-cortex-tutorial.test.mjs scripts/check-motor-cortex-bridge.test.mjs scripts/check-game-catalog-metadata.test.mjs scripts/publish-official-game.test.mjs scripts/check-oculomotor-migration.test.mjs scripts/check-oculomotor-tutorial.test.mjs',
   );
   assert.equal(
     rootPackage.scripts['test:game-architecture:built'],
@@ -154,7 +154,7 @@ test('browser smoke checks retain Brave support on Windows and macOS', async () 
   for (const scriptPath of [
     'scripts/check-browser-route-smoke.mjs',
     'scripts/check-driving-rehab-browser.mjs',
-    'scripts/check-oculomotor-webgazer-browser.mjs',
+    'scripts/check-r2-game-browser.mjs',
   ]) {
     const source = await readFile(resolve(repositoryRoot, scriptPath), 'utf8');
     assert.match(source, /process\.env\.BRAVE_BIN/);

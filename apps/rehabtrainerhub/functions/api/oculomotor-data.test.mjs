@@ -116,6 +116,15 @@ test('private R2 CSV stores canonical rows and only the owner can list or read i
   assert.equal((await Get('?subjectId=22222222-2222-4222-8222-222222222222', owner, env)).status, 400);
 });
 
+test('an R2 gaze upload cannot write without its fixed official session or under a different identity', async () => {
+  const env = CreateEnv();
+  const owner = await CreateSessionForUser(env, { id: 'owner' });
+  assert.equal((await Post({ ...valid, officialGameVersion: '2.0.0' }, owner, env)).status, 400);
+  assert.equal((await Post({ ...valid, officialGameVersion: '2.0.0', runSessionToken: 'forged' }, owner, env)).status, 400);
+  assert.equal((await Post({ ...valid, runSessionToken: 'forged' }, owner, env)).status, 400);
+  assert.equal(env.objects.size, 0);
+});
+
 test('reference WebGazer rows and metadata are stored in the private CSV', async () => {
   const env = CreateEnv();
   const owner = await CreateSessionForUser(env, { id: 'owner' });

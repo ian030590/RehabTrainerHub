@@ -1,3 +1,4 @@
+import { IsOculomotorCsvPayload, IsReferenceCsvPayload } from './oculomotorCsv.js';
 const sensitiveKey = /(auth|email|jwt|name|password|token|user|participant|secret|cookie|credential|phone)/i;
 const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value)
   && [Object.prototype, null].includes(Object.getPrototypeOf(value));
@@ -35,7 +36,19 @@ export function AcceptGameMessage(message, state) {
   } else if (['input-start', 'input-stop'].includes(message.type)) {
     const validPayload = exact(message.payload, []) || (message.type === 'input-start'
       && exact(message.payload, ['hand']) && ['any', 'left', 'right'].includes(message.payload.hand));
-    if (!state.capabilities?.includes('hand-tracking') || state.complete || !validPayload) return false;
+    const eyeInput = state.gameId === 'oculomotor-training' && state.capabilities?.includes('eye-tracking') && exact(message.payload, []);
+    if (state.complete || !(eyeInput || (state.capabilities?.includes('hand-tracking') && validPayload))) return false;
+  } else if (['input-calibrate', 'input-reset', 'gaze-csv', 'csv-file', 'csv-download'].includes(message.type)) {
+    if (state.gameId !== 'oculomotor-training' || !state.capabilities?.includes('eye-tracking')
+      || (state.complete && message.type !== 'csv-download')) return false;
+    if (message.type === 'input-calibrate') {
+      if (!exact(message.payload, ['x', 'y']) || !['x', 'y'].every(key => typeof message.payload[key] === 'number'
+        && Number.isFinite(message.payload[key]) && message.payload[key] >= 0 && message.payload[key] <= 1)) return false;
+    } else if (message.type === 'gaze-csv') {
+      if (!IsOculomotorCsvPayload(message.payload)) return false;
+    } else if (message.type === 'csv-file') {
+      if (!IsReferenceCsvPayload(message.payload)) return false;
+    } else if (!exact(message.payload, [])) return false;
   } else if (message.type === 'sample') {
     if (state.complete || !exact(message.payload, ['image', 'metadata'])
       || !(message.payload.image instanceof Blob) || message.payload.image.type !== 'image/png'

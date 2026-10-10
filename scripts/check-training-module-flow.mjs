@@ -329,7 +329,7 @@ const implementationGroups = [
   {
     ids: ['vision:oculomotor-training'],
     files: ['oculomotor-training/OculomotorTrainingGame.tsx'],
-    tokens: ['useMediaPermissionPreflight', "setPhase('running')", "setPhase('results')", 'SendHostedGameScore', 'TrainingResultActions'],
+    tokens: ["SendGameEvent('input-start')", "window.OculomotorInput.Stop()", "setPhase('running')", "setPhase('results')", "SendGameEvent('result'", 'OculomotorResults'],
   },
   {
     ids: ['vision:hart-chart'],
@@ -580,7 +580,6 @@ const pendingJsPsychIds = jsPsychLifecycleGroups
   .flatMap(({ ids }) => ids);
 
 const configPermissionImplementations = {
-  'vision:oculomotor-training': 'oculomotor-training/OculomotorTrainingGame.tsx',
   'brain:every-ball-response': 'every-ball-response/EveryBallResponsePage.tsx',
   'mouth:tongue-catch': 'tongue-catch/TongueCatchGame.tsx',
 };
@@ -630,7 +629,7 @@ const permissionModuleIds = catalogIds.filter((catalogId) => (
 ));
 assert.deepEqual(
   permissionModuleIds.sort(),
-  [...Object.keys(configPermissionImplementations), ...Object.keys(proxyPermissionImplementations)].sort(),
+  [...Object.keys(configPermissionImplementations), ...Object.keys(proxyPermissionImplementations), 'vision:oculomotor-training'].sort(),
   'The media-permission manifest must match the modules that request camera or microphone access.',
 );
 for (const [catalogId, file] of Object.entries(configPermissionImplementations)) {
@@ -665,6 +664,7 @@ for (const [catalogId, file] of Object.entries(nativeTimelinePermissionImplement
       && source.includes('type: GazeValidationPlugin'),
     `${catalogId} must run the reference camera, calibration, and validation trials.`,
   );
+  assert.ok(source.includes('window.OculomotorInput') && !source.includes('navigator.mediaDevices'), 'Eye timelines use only the reviewed numerical proxy');
 }
 
 const turboConfig = JSON.parse(readFileSync(resolve(repoRoot, 'turbo.json'), 'utf8'));

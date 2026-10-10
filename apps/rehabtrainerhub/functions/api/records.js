@@ -208,6 +208,16 @@ export async function onRequestPost({ request, env }) {
     } catch {
       return ErrorResponse(request, env, 'Game release verification is temporarily unavailable.', 503);
     }
+    if (input.record.gameId === 'oculomotor-training' && input.record.score.summary.samples > 0) {
+      if (!env.OCULOMOTOR_DATA) return ErrorResponse(request, env, 'Oculomotor storage is unavailable.', 503);
+      try {
+        const prefix = session?.sub ? `users/${encodeURIComponent(session.sub)}/` : `guests/${subjectId}/`;
+        const csv = await env.OCULOMOTOR_DATA.get(`${prefix}${input.record.id}.csv`);
+        if (csv?.customMetadata?.officialGameVersion !== input.officialGameVersion
+          || csv?.customMetadata?.gazeSampleCount !== String(input.record.score.summary.samples))
+          return ErrorResponse(request, env, 'Save the matching private gaze CSV before this result.', 409);
+      } catch { return ErrorResponse(request, env, 'Oculomotor storage is unavailable.', 503); }
+    }
   }
   if (
     GetJsonByteLength(input) > maximumDefaultRecordRequestBytes

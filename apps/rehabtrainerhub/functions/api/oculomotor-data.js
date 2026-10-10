@@ -12,6 +12,8 @@ import {
 import { IsSubjectId } from '../_lib/gameRuns.js';
 import { ReadJsonBody } from '../_lib/request.js';
 import { IsTurnstileConfigured, VerifyTurnstileToken } from '../_lib/turnstile.js';
+import { VerifyOfficialGameSession } from '../_lib/officialGames.js';
+import { IsOculomotorCsvPayload } from '../../../../packages/ui/src/oculomotorCsv.js';
 
 const columns = [
   'sample_index', 'trial_time_ms', 'device_timestamp_us', 'delta_t_ms', 'instant_hz',
@@ -27,13 +29,7 @@ const metadataKeys = [
   'gaze_threshold_deg', 'gaze_threshold_arcmin', 'gaze_sampling_interval_ms',
   'fixation_radius_px', 'fixation_duration_ms',
 ];
-const textMetadataKeys = new Set(['mode', 'pattern', 'run_mode', 'stimulus_type', 'eye_tracking_source']);
-const phases = new Set(['training', 'saccade_latency', 'idle', 'cross', 'movement', 'arrival_frame', 'dwell', 'hold', 'vor']);
-const directions = new Set([
-  'center', 'right', 'down_right', 'down', 'down_left', 'left', 'up_left', 'up', 'up_right',
-]);
 const recordIdPattern = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|[0-9a-f]{64})$/;
-const maximumSamples = 36000;
 const maximumRequestBytes = 8 * 1024 * 1024;
 
 export function onRequestOptions({ request, env }) {
@@ -59,6 +55,14 @@ export async function onRequestPost({ request, env }) {
     ? 'Oculomotor data is too large.' : 'Invalid JSON payload.', parsed.reason === 'too-large' ? 413 : 400);
   const input = parsed.value;
   if (!IsValidUpload(input)) return ErrorResponse(request, env, 'Invalid oculomotor data.', 400);
+  const official = input.officialGameVersion !== undefined || input.runSessionToken !== undefined;
+  if (official) {
+    try {
+      if (!await VerifyOfficialGameSession({ officialGameVersion: input.officialGameVersion, runSessionToken: input.runSessionToken,
+        record: { id: input.recordId, gameId: 'oculomotor-training', moduleId: 'oculomotor-training' } }, env, session?.sub, input.subjectId))
+        return ErrorResponse(request, env, 'Invalid official eye session.', 400);
+    } catch { return ErrorResponse(request, env, 'Game release verification is temporarily unavailable.', 503); }
+  }
 
   if (env.TURNSTILE_RECORDS_REQUIRED === '1') {
     if (!IsTurnstileConfigured(env)) return ErrorResponse(request, env, 'Human verification is not configured.', 503);
@@ -85,12 +89,14 @@ export async function onRequestPost({ request, env }) {
       httpMetadata: { contentType: 'text/csv; charset=utf-8' },
       customMetadata: {
         uploadedAt: new Date().toISOString(),
+        ...(official ? { officialGameVersion: input.officialGameVersion, gazeSampleCount: String(input.records.length) } : {}),
         ...Object.fromEntries(Object.entries(input.metadata).map(([key, value]) => [key, String(value)])),
       },
     });
     if (!written) {
       const existing = await env.OCULOMOTOR_DATA.get(key);
-      if (!existing || await existing.text() !== csv) {
+      if (!existing || await existing.text() !== csv || (official && (existing.customMetadata?.officialGameVersion !== input.officialGameVersion
+        || existing.customMetadata?.gazeSampleCount !== String(input.records.length)))) {
         return ErrorResponse(request, env, 'Oculomotor record id already exists.', 409);
       }
     }
@@ -156,36 +162,9 @@ function UserPrefix(userId) {
 }
 
 function IsValidUpload(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)
-    || !recordIdPattern.test(value.recordId)
-    || !IsSubjectId(value.subjectId)
-    || value.source !== 'webgazer'
-    || !Array.isArray(value.records) || value.records.length < 1
-    || value.records.length > maximumSamples
-    || !value.metadata || typeof value.metadata !== 'object' || Array.isArray(value.metadata)
-    || value.metadata.eye_tracking_source !== value.source
-    || Object.entries(value.metadata).some(([key, item]) => !metadataKeys.includes(key)
-      || (textMetadataKeys.has(key)
-        ? typeof item !== 'string' || !/^[A-Za-z0-9_-]{1,80}$/.test(item)
-        : typeof item !== 'number' || !Number.isFinite(item) || item < 0 || item > 1e9))) return false;
-  let previousTime = -1;
-  return value.records.every((row, index) => {
-    if (!Array.isArray(row) || row.length !== columns.length
-      || row[0] !== index + 1
-      || !Number.isInteger(row[1]) || row[1] < previousTime || row[1] > 1200000
-      || (row[2] !== null && (!Number.isSafeInteger(row[2]) || row[2] < 0))
-      || ![5, 12].every((at) => row[at] === 0 || row[at] === 1)
-      || ![3, 4, 6, 7, 8, 9, 10, 11].every((at) => row[at] === null
-        || (typeof row[at] === 'number' && Number.isFinite(row[at]) && row[at] >= -1e6 && row[at] <= 1e6))
-      || !phases.has(row[13])
-      || !directions.has(row[14])) return false;
-    if (row[8] === null || row[9] === null || row[3] === null) return false;
-    if ([3, 4, 10, 11].some((at) => row[at] !== null && row[at] < 0)) return false;
-    if (row[5] === 1 && [6, 7, 10, 11].some((at) => row[at] === null)) return false;
-    if (row[5] === 0 && (row[6] !== null || row[7] !== null || row[10] !== null || row[11] !== null || row[12] !== 0)) return false;
-    previousTime = row[1];
-    return true;
-  });
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    && recordIdPattern.test(value.recordId) && IsSubjectId(value.subjectId) && value.source === 'webgazer'
+    && IsOculomotorCsvPayload({ records: value.records, metadata: value.metadata });
 }
 
 function BuildCsv(input) {

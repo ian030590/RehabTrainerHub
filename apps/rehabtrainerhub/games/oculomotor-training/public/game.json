@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "gameId": "oculomotor-training",
+  "trainer": "vision",
+  "category": "vision",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": {
+      "title": "眼動練習",
+      "description": "選擇中央目標辨識、平滑追蹤、跳視或凝視，依設定進行目標活動。"
+    },
+    "en": {
+      "title": "Oculomotor practice",
+      "description": "Choose central target recognition, pursuit, saccade or fixation for a configurable target activity."
+    }
+  }
+}

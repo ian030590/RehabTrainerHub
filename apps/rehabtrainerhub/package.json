@@ -46,7 +46,6 @@
     "@rehab-trainer/game-minesweeper": "*",
     "@rehab-trainer/game-n-back": "*",
     "@rehab-trainer/game-number-letter": "*",
-    "@rehab-trainer/game-oculomotor-training": "*",
     "@rehab-trainer/game-plus-minus": "*",
     "@rehab-trainer/game-reaction-time": "*",
     "@rehab-trainer/game-reading-training": "*",
