@@ -1,0 +1,417 @@
+{
+  "gameId": "motor-cortex-rehab",
+  "version": "2.0.0",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.0/package/index.html",
+  "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09",
+  "verifiedAt": "2026-10-10T02:30:21.303Z",
+  "status": "published-and-verified",
+  "prefix": "releases/motor-cortex-rehab/2.0.0/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.0/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/",
+  "fileCount": 5,
+  "totalBytes": 380014,
+  "files": [
+    {
+      "path": "assets/index-J3ovcrOl.js",
+      "size": 354824,
+      "sha256": "105708db66639f292b634d18ed4d6d7f111342890aaf9e4efa046c7ae587efa6",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-Wf6jxFK0.css",
+      "size": 18832,
+      "sha256": "18f6a60b783c9bd0cdaeb0e0c7ecbe9b15a0060c33066965c961a06bcdaa165c",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 522,
+      "sha256": "ca2322d252c30355ac320367cb8c8eead92c88f06aae6d31bb43bfc2a09135a6",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "6b05b91f43d05785dc3616fc1c60fadc1787c32bd5c51f79049926f446f36910",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5422,
+      "sha256": "6a6085136389ad1250b036fb13ad6505032d9033cf115b336e9c7ae8721e1455",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "instruction": "核准並git push",
+    "date": "2026-10-10",
+    "reviewedVersion": "2.0.0",
+    "reviewedContentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09"
+  },
+  "changes": [
+    "Self-contained R2 migration with original engine, parameters, bilingual content and preview bytes",
+    "Foreground settings modal over actual scene, five spotlights and final parameter confirmation",
+    "Own numeric results, descriptive statistics, metric chart and complete paginated event details",
+    "Trusted private hand-input proxy with optional any/left/right choice and camera cleanup"
+  ],
+  "localValidation": {
+    "testFirst": [
+      {
+        "failure": "Three migration cases initially failed: own config/score missing and workspace still 1.0.0",
+        "result": "4/4 after implementation; original engine case preserved"
+      },
+      {
+        "failure": "Three new motor result cases failed before own statistics and event UI existed",
+        "result": "18/18 across all four game results"
+      },
+      {
+        "failure": "Input enum/forwarding and launcher title missing; short-screen target overlap, keyboard focus and PWA HUD reset failed",
+        "result": "Contract and actual browser checks pass after fixes"
+      }
+    ],
+    "gates": [
+      "test:naming",
+      "test:pwa (18)",
+      "test:game-architecture (71)",
+      "test:hub-functions (109)",
+      "test:gamerunner (34)",
+      "test:entrypoints",
+      "test:cloudflare-deploy",
+      "test:seo",
+      "test:game-architecture:browser (5/5)"
+    ],
+    "builds": [
+      "motor-cortex-rehab",
+      "usergamerunner",
+      "Hub plus 36 legacy game workspaces"
+    ],
+    "additionalBrowserCases": [
+      "English vertical mode",
+      "camera disconnect",
+      "revoked after load",
+      "revoked while playing"
+    ],
+    "documentation": "docs/motor-cortex-rehab-r2-migration.md"
+  },
+  "rollout": {
+    "sourceCommit": "00f72842fd0a7fd5701d3e972b2d2dd1e8d0be13",
+    "firstRunnerDeployment": {
+      "project": "trainerhub-user-games",
+      "id": "2a9f6d95-91f1-4118-9627-dbdda9dcec7a",
+      "url": "https://2a9f6d95.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "00f72842fd0a7fd5701d3e972b2d2dd1e8d0be13",
+      "createdOn": "2026-10-10T02:14:15.408643Z",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-10T02:14:17.41977Z",
+        "status": "success"
+      }
+    },
+    "r2PublishedAndReadBackAt": "2026-10-10T02:15:50.558Z",
+    "finalDeployments": [
+      {
+        "project": "rehabtrainerhub",
+        "id": "bff5ee86-9f48-458c-8958-6cc281033a30",
+        "url": "https://bff5ee86.rehabtrainerhub.pages.dev",
+        "environment": "production",
+        "commit": "00f72842fd0a7fd5701d3e972b2d2dd1e8d0be13",
+        "createdOn": "2026-10-10T02:19:50.413833Z",
+        "stage": {
+          "name": "deploy",
+          "started_on": null,
+          "ended_on": "2026-10-10T02:19:52.851839Z",
+          "status": "success"
+        }
+      },
+      {
+        "project": "trainerhub-user-games",
+        "id": "87a20e4f-131b-4019-a585-f52f550cb8a1",
+        "url": "https://87a20e4f.trainerhub-user-games.pages.dev",
+        "environment": "production",
+        "commit": "00f72842fd0a7fd5701d3e972b2d2dd1e8d0be13",
+        "createdOn": "2026-10-10T02:19:58.221051Z",
+        "stage": {
+          "name": "deploy",
+          "started_on": null,
+          "ended_on": "2026-10-10T02:20:00.383508Z",
+          "status": "success"
+        }
+      }
+    ],
+    "ciUrl": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38016391577",
+    "ciConclusion": "success",
+    "orderVerified": "Compatible runner -> exact approved R2 -> production Hub registry switch"
+  },
+  "productionVerification": {
+    "evidence": "docs/migrations/motor-cortex-rehab/production/verification.json",
+    "publicCatalog": {
+      "status": 200,
+      "sameSlugCount": 1,
+      "game": {
+        "id": "motor-cortex-rehab",
+        "slug": "motor-cortex-rehab",
+        "title": "手部目標追蹤練習",
+        "summary": "追蹤手部位置，練習活動範圍、目標追蹤與隨機觸達。",
+        "trainer": "motor",
+        "category": "upper-limb",
+        "developerName": "居家訓練網",
+        "updatedAt": "2026-10-10T02:15:19.504Z",
+        "copy": {
+          "zh-TW": {
+            "title": "手部目標追蹤練習",
+            "description": "追蹤手部位置，練習活動範圍、目標追蹤與隨機觸達。"
+          },
+          "en": {
+            "title": "Hand Target Tracking Practice",
+            "description": "Track hand position to practise range of motion, target tracking, and random reaches."
+          }
+        },
+        "previewUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.0/package/preview.webp",
+        "release": {
+          "id": "motor-cortex-rehab@2.0.0",
+          "version": "2.0.0",
+          "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09",
+          "capabilities": [
+            "audio",
+            "fullscreen",
+            "hand-tracking"
+          ],
+          "approvedAt": "2026-10-10T02:15:19.504Z",
+          "presentation": "game",
+          "launchUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.0/",
+          "installUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/"
+        }
+      }
+    },
+    "preview": {
+      "status": 200,
+      "sha256": "6a6085136389ad1250b036fb13ad6505032d9033cf115b336e9c7ae8721e1455"
+    },
+    "versionlessSession": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09",
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "hand-tracking"
+      ],
+      "tokenRedacted": true,
+      "noTrainingRecordCreated": true
+    },
+    "compatibilityEntry": {
+      "status": 200,
+      "runnerLink": true,
+      "noBundleOrJson": true,
+      "oldAssetStatus": 410
+    },
+    "officialCurrent": {
+      "schemaVersion": 1,
+      "gameId": "motor-cortex-rehab",
+      "currentVersion": "2.0.0",
+      "releases": {
+        "2.0.0": {
+          "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09"
+        }
+      }
+    },
+    "stableEntry": {
+      "status": 302,
+      "location": "/games/motor-cortex-rehab/2.0.0/",
+      "cacheControl": "no-store"
+    },
+    "strictSandbox": "allow-scripts",
+    "cameraInPackage": false,
+    "externalConnectionsInPackage": false,
+    "inputVersion": "hand-tracking-1.0.0",
+    "inputContentSha256": "f3ccbb5a8879e818dcdac2f79a80ed7ea60a371d5b1b90c2c41d5095ccc191da",
+    "browser": [
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --production-hub --lobby",
+        "exitCode": 0,
+        "completedAt": "2026-10-10T02:23:50.399Z",
+        "afterFinalDeployment": true,
+        "productionGameBytes": true,
+        "productionHubAssets": true,
+        "apiWrites": "Hub /api/* intercepted to local SQLite only",
+        "gameplaySeconds": 45,
+        "handInput": "Actual MediaPipe inference on checksum-verified image stream; left fixture horizontally mirrored",
+        "screenshots": [
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/lobby-desktop-guest/settings.png",
+            "sha256": "15eb1bdb4272f90d47e85e5e6908b7e44d3f8244d6c1cb75e7dfb3522b591ff3"
+          },
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/lobby-desktop-guest/tutorial-target.png",
+            "sha256": "4682642a02babf860a6cee720774d18f640140146f78d2c26e286edfcbaebc2c"
+          },
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/lobby-desktop-guest/results.png",
+            "sha256": "d21ecff733d4dad57b40f038937b240b7d1f7c7987a3f00a4275b04ba61b1a1a"
+          },
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/lobby-desktop-guest/results-analysis.png",
+            "sha256": "158af9eb00920084b5fb49a5e99e44156a2a9a9f33c9952d2735f10a03056a3d"
+          }
+        ]
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --production-hub --lobby --mobile --session-failure --random",
+        "exitCode": 0,
+        "completedAt": "2026-10-10T02:23:48.602Z",
+        "afterFinalDeployment": true,
+        "productionGameBytes": true,
+        "productionHubAssets": true,
+        "apiWrites": "Hub /api/* intercepted to local SQLite only",
+        "gameplaySeconds": 45,
+        "handInput": "Actual MediaPipe inference on checksum-verified image stream; left fixture horizontally mirrored",
+        "screenshots": [
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/lobby-mobile-guest/settings.png",
+            "sha256": "7a412d93c019b3ec653b4e624ffcf21e4db99b712b25e80a03f9f8daac184bc4"
+          },
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/lobby-mobile-guest/tutorial-hand-cursor.png",
+            "sha256": "9f49015a36d55d383e83a09cfbf6e16fa29936851c836f92667d8c9dd05c0e10"
+          },
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/lobby-mobile-guest/results.png",
+            "sha256": "76159b527d30e1148f76f8e2bd541279fbceb8e95035e2114671e312c83b5fa5"
+          },
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/lobby-mobile-guest/results-details.png",
+            "sha256": "180a5706a18a5ab5f7b33c9e7c7ad815a31bf22791cb710a44380c15c6efbd6d"
+          }
+        ]
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --production-hub --lobby --signed-in --english --right",
+        "exitCode": 0,
+        "completedAt": "2026-10-10T02:23:51.010Z",
+        "afterFinalDeployment": true,
+        "productionGameBytes": true,
+        "productionHubAssets": true,
+        "apiWrites": "Hub /api/* intercepted to local SQLite only",
+        "gameplaySeconds": 45,
+        "handInput": "Actual MediaPipe inference on checksum-verified image stream; left fixture horizontally mirrored",
+        "screenshots": [
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/lobby-desktop-account-en/confirmation.png",
+            "sha256": "b19f166b1fc1ba6c66fcff173ac3a1ddae8e52e68362be3ca17c86e23b3520e4"
+          },
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/lobby-desktop-account-en/results.png",
+            "sha256": "d4095dcca7d9d045c021dcb0b44e3df4defe727faff7c24f146869d1bfee0cb8"
+          }
+        ]
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --remote --standalone --mobile --horizontal",
+        "exitCode": 0,
+        "completedAt": "2026-10-10T02:25:08.177Z",
+        "afterFinalDeployment": true,
+        "productionGameBytes": true,
+        "productionHubAssets": false,
+        "apiWrites": "none",
+        "gameplaySeconds": 45,
+        "handInput": "Actual MediaPipe inference on checksum-verified image stream; left fixture horizontally mirrored",
+        "screenshots": [
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/standalone-mobile-guest/playing.png",
+            "sha256": "f72240395935bc5719d46339087198c36c8a33cd5924bdf3267e4420c7fd80de"
+          },
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/standalone-mobile-guest/results-details.png",
+            "sha256": "94be9b47bf33677b16f516a0b6813a953cbb2f5da475bc4734420a0d530b33f2"
+          }
+        ]
+      },
+      {
+        "command": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --remote --standalone --tablet --left",
+        "exitCode": 0,
+        "completedAt": "2026-10-10T02:25:09.918Z",
+        "afterFinalDeployment": true,
+        "productionGameBytes": true,
+        "productionHubAssets": false,
+        "apiWrites": "none",
+        "gameplaySeconds": 45,
+        "handInput": "Actual MediaPipe inference on checksum-verified image stream; left fixture horizontally mirrored",
+        "screenshots": [
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/standalone-tablet-guest/settings.png",
+            "sha256": "5b2860e1ca0ff42d867b715b856cf98a4a5970151f8a56aedf95256c464a4267"
+          },
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/standalone-tablet-guest/confirmation.png",
+            "sha256": "1dc8eb809bdcddedaaf99cb72fed725937f91a9db5d56c57e5ba48fe68d11df3"
+          },
+          {
+            "path": "docs/migrations/motor-cortex-rehab/production/standalone-tablet-guest/results-analysis.png",
+            "sha256": "e6eec60548672313a48866da4d7130a395932110a94dd8e53e9a5f218fd7aad5"
+          }
+        ]
+      }
+    ],
+    "gestureRegression": {
+      "command": "node .tmp/motor-gesture-release-browser.mjs --game gesture-battler --remote --standalone",
+      "exitCode": 0,
+      "completedAt": "2026-10-10T02:29:10.569Z",
+      "afterFinalDeployment": true,
+      "fixtureSourceCommit": "712321d",
+      "fixtureSourceFiles": [
+        "scripts/gesture-battler-browser.mjs",
+        "scripts/r2-game-results-browser.mjs"
+      ],
+      "driver": "Current check-r2-game-browser.mjs with only the imported gesture fixture redirected to the exact published-era files",
+      "approvedBundleSha256": "a177b0e94e16e2e21f3f51b8e3131ab5b6a9e6250a81875105612794e6bb4c79",
+      "passed": [
+        "trusted consent",
+        "private empty input-start compatibility",
+        "actual MediaPipe",
+        "seven calibrations",
+        "combat",
+        "numeric results",
+        "PWA cache",
+        "return",
+        "camera cleanup"
+      ],
+      "latestSourceFixtureLimit": "Current UI fixture expects unpublished confirmation/result class changes from 545ba80; public 2.0.2 keeps its exact approved bytes. The published-era fixture and its result helper were read from Git, with no product or repository test changes."
+    },
+    "noProductionTrainingRecordsCreated": true,
+    "migratedGames": 4,
+    "remainingLegacyGames": 36
+  },
+  "rollback": {
+    "approvedNativeFallbackVersion": null,
+    "platform": {
+      "deployment": {
+        "project": "rehabtrainerhub",
+        "id": "6bd2009d-f924-40f2-8bf5-e56c7561013a",
+        "url": "https://6bd2009d.rehabtrainerhub.pages.dev",
+        "environment": "production",
+        "commit": "545ba80b7f2deed6f8a06e276e913754cb560a7e",
+        "createdOn": "2026-10-09T20:55:17.482455Z",
+        "stage": {
+          "name": "deploy",
+          "started_on": null,
+          "ended_on": "2026-10-09T20:55:19.701025Z",
+          "status": "success"
+        }
+      },
+      "entryStatus": 200,
+      "settingsStatus": 200,
+      "gameId": "motor-cortex-rehab"
+    },
+    "procedure": "Restore pre-migration Hub deployment/545ba80 registry, dependencies and legacy game+JSON; keep compatible runner. Rebuild and test old flow. Do not delete releases or activate legacy 1.0.0."
+  },
+  "limitations": [
+    "No physical camera or human left/right hand acceptance; sensor stream is a verified image fixture with actual MediaPipe inference.",
+    "Safari/iOS, prolonged fully offline gameplay and real human Turnstile were not tested.",
+    "No alternate approved native-format rollback release exists for this first migration; legacy 1.0.0 must not be activated as an official native release.",
+    "Rollback Hub deployment and legacy settings were read successfully; no production rollback or production revocation was performed.",
+    "Other three games retain their current approved release UI; newer shared UI expectations in local source are not a new approval or publication."
+  ]
+}

@@ -1,14 +1,14 @@
-# 手部目標追蹤練習 R2 候選審查
+# 手部目標追蹤練習 R2 遷移與正式驗收
 
-2026-10-10。狀態：**擁有者已核准精確候選，待公開與正式站驗收**。擁有者回覆「核准並git push」，核准下列 `2.0.0`／精確 SHA-256 及 runner → R2 → Hub 的發布順序。尚未執行 R2 發布、Pages 部署或正式 registry 切換；本文件與 candidate JSON 均不是正式發布收據。
+2026-10-10。狀態：**已發布並完成正式驗收**。擁有者回覆「核准並git push」，核准下列 `2.0.0`／精確 SHA-256 及 runner → R2 → Hub 的發布順序。相容 runner 先部署、R2 逐檔回讀與 current 切換、七項 CI／兩站部署及正式 API／Hub／獨立 PWA 驗收均完成；正式收據見 [motor-cortex-rehab-2.0.0.json](releases/motor-cortex-rehab-2.0.0.json)。目前 4 款完成遷移，36 款保留舊流程。
 
-使用者已確認採畫畫塔防的「遊戲背景上的前景設定視窗＋聚光燈教學」，保留原參數。候選版本 `motor-cortex-rehab@2.0.0`，contentSha256：
+使用者已確認採畫畫塔防的「遊戲背景上的前景設定視窗＋聚光燈教學」，保留原參數。正式版本 `motor-cortex-rehab@2.0.0`，contentSha256：
 
 ```text
 e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09
 ```
 
-[候選逐檔清單](migrations/motor-cortex-rehab/candidate-2.0.0.json)包含五個檔案，共 380,014 bytes；來源為已驗證的遊戲 `dist/`。本機 dry-run 會產生 publisher 的 release 模板，模板中的 `approved`／時間不是擁有者核准或 R2 公開證據。審查後若變更發布 bytes，須升新版本、重新驗證及核准。
+[候選逐檔清單](migrations/motor-cortex-rehab/candidate-2.0.0.json)保留發布前的歷史快照，包含五個檔案，共 380,014 bytes；正式 R2 與同一份已驗證 `dist/` 的摘要一致。本機 dry-run 模板中的 `approved`／時間不是擁有者核准或 R2 公開證據；正式收據另外記錄核准、發布、部署及回讀。後續變更發布 bytes，須升新版本、重新驗證及核准。
 
 ## 原功能與碰撞盤點
 
@@ -32,7 +32,7 @@ e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09
 
 只讀正式 `https://trainerhub.cc/api/games` 得到 HTTP 200，當時同 slug 有 `official-motor-cortex-rehab`／`rel-motor-cortex-rehab-1.0.0`，摘要 `636a44cd63c03476890ee127096dbfb38ed084af9985d97544ba1170b22f315d`，仍含 `settingsUrl`。已將此 identity、分類與舊版能力加入 API fixture，並測大廳同名卡片不覆蓋固定版本 session。完整無身份基準保留於 [production-baseline.json](migrations/motor-cortex-rehab/production-baseline.json)；這只是舊正式目錄的讀取證據，不是新版驗收。
 
-## 候選架構與 UI
+## 自包含架構與 UI
 
 遊戲自己擁有設定、五步教學、引擎、雙語、音效、統計／SVG 圖表／完整事件明細與樣式；只依賴 React、React DOM、jsPsych，不引入平台或跨遊戲程式碼。classic IIFE 與相對資產在正式 package CSP 下執行。刪除遊戲的 `settings.json`／`score.json`、舊教學 panel 及共用 shell；沒有另一個設定頁面。
 
@@ -42,7 +42,7 @@ Hub 只經私有 MessageChannel 接收 config 與有限數值成果，核對 par
 
 手部輸入沿用已核准的可信容器代理；明確同意後由 Hub／runner 執行固定 MediaPipe `0.10.35`，模型／WASM 只讀 runner `/input/hand-tracking-1.0.0/`。新增相容的 `{hand: any|left|right}` input-start 選項；手勢遊戲原空 payload 仍可用。容器選擇要求的手，向遊戲仍只傳 timestamp＋21 點 xyz 或空陣列；沒有擴張影像／權限／模型選擇。package 相機仍禁止，`sandbox="allow-scripts"`、`connect-src 'none'` 等限制保持。停止、結算、取消、斷線、撤回及晚到初始化皆清理相機與排程。
 
-本機 registry 增加遷移資格，沒有 version 指標；sync 後 Hub 不依賴此 workspace。Hub build 排除四款候選／已遷移遊戲，保留 36 款舊流程；手部目標追蹤 output 只含導向 runner 的 `index.html`，原圖作為相容 preview，沒有遊戲 bundle／JSON／`runtimes`。正式完成仍為三款／37 款舊流程。
+正式 registry 增加遷移資格，沒有 version 指標；sync 後 Hub 不依賴此 workspace。Hub build 排除四款已遷移遊戲，保留 36 款舊流程；手部目標追蹤 output 只含導向 runner 的 `index.html`，原圖作為相容 preview，沒有遊戲 bundle／JSON／`runtimes`。正式舊子資產回覆 410／no-store，根入口保留 R2 連結。
 
 ## TDD 與本機驗證
 
@@ -74,18 +74,37 @@ Hub 只經私有 MessageChannel 接收 config 與有限數值成果，核對 par
 
 截圖：[桌機設定](migrations/motor-cortex-rehab/desktop-settings.png)、[桌機聚光燈](migrations/motor-cortex-rehab/desktop-tutorial.png)、[桌機分析](migrations/motor-cortex-rehab/desktop-results-analysis.png)、[手機聚光燈](migrations/motor-cortex-rehab/mobile-tutorial.png)、[手機明細](migrations/motor-cortex-rehab/mobile-results-details.png)、[平板確認](migrations/motor-cortex-rehab/tablet-confirmation.png)。這些皆為本機候選截圖。
 
-## 核准後發布順序與回退
+## 正式發布、驗收與回退
 
-依 [搬遷計畫第 7 節 E](r2-game-migration-plan.md#步驟-e每版核准後才公開-r2)，先由擁有者審查原始碼、隔離試玩、公開雙語資料／分類／原圖，核准上述精確 version／contentSha256。準備完成後再執行：
+依 [搬遷計畫第 7 節 E](r2-game-migration-plan.md#步驟-e每版核准後才公開-r2)完成精確核准後，依序執行：
 
-1. 部署相容 runner 支援（指定手輸入與正確 launcher title），驗證原手勢版本仍相容；此時正式 Hub 保持原 registry。
-2. 再次直接執行 `node scripts/publish-official-game.mjs motor-cortex-rehab --dry-run`，核對精確摘要與五檔案；核對 Cloudflare 帳號／憑證、單一發布者後執行正式 publisher。它會直接公開並切 current，不能當 staging 使用。
-3. 確認 approved manifest、每檔 R2 回讀、官方 current／歷史後，才部署本分支 Hub registry／bundle 排除與輸入選項支援。不可先合併觸發兩站同時部署而讓 Hub 搶先切換。
-4. 直接讀正式 `/api/games`／圖片 bytes／穩定入口 302，確認一筆上肢 current、同版 preview、沒有 settingsUrl；核對正式 session 選版，不公開 token。跑 `--remote --lobby`／`--remote --standalone`／`--production-hub --lobby` 及手機模式，僅攔 API 至本機 SQLite。完成正式收據 `docs/releases/motor-cortex-rehab-2.0.0.json` 才標記搬遷完成。
+1. 相容 runner 先部署至 [2a9f6d95](https://2a9f6d95.trainerhub-user-games.pages.dev)，02:14:17 UTC 成功；此時 Hub 仍為基準 `545ba80`。正式模型／WASM／代理共 10 檔案、41,723,334 bytes，全部與本機 bytes 相符；輸入清單摘要為 `f3ccbb5a8879e818dcdac2f79a80ed7ea60a371d5b1b90c2c41d5095ccc191da`。
+2. 再次 dry-run 核對上述版本／摘要後，執行 `node scripts/publish-official-game.mjs motor-cortex-rehab`；五檔上傳並回讀 SHA-256，02:15:50 UTC 完成。approved manifest 與官方 current 僅包含新格式 `2.0.0`，沒有把同名舊投稿加入官方歷史。
+3. 功能 commit `00f72842fd0a7fd5701d3e972b2d2dd1e8d0be13` 推送 `main` 後，[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38016391577)成功。最終 Hub 為 [bff5ee86](https://bff5ee86.rehabtrainerhub.pages.dev)，runner 為 [87a20e4f](https://87a20e4f.trainerhub-user-games.pages.dev)，兩者都對應該 commit；Hub 02:19:52 UTC 切換，晚於 R2 公開。
+4. 部署後直接讀正式 `/api/games` 得到 HTTP 200：同 slug 僅一筆、`motor`／`upper-limb`、`2.0.0`、同版 R2 原圖且無 settingsUrl。正式 session API 不指定版本時回覆 201 與同版本／摘要，token 未寫入證據；沒有建立正式訓練紀錄。穩定入口回覆 302／no-store 至版本化 PWA；五檔公開 bytes、CSP、package 相機禁止與嚴格沙盒再次核對通過。
 
-首次遷移沒有另一個已核准新格式回退版；舊 `1.0.0` JSON 投稿不能用 `--activate-version` 加入官方歷史。若切換失敗，先回復遷移前 Hub Pages 部署／上述基準 commit 的 registry、workspace 依賴與原遊戲／JSON，重跑 gate 並驗舊入口；runner 相容擴充可保留。不得刪除舊投稿、覆寫發布檔案或把 dry-run 放進正式收據目錄；必要的撤回由既有官方狀態／停止使用流程處理。後續新格式版本核准後才有可用的 `--activate-version` 回退目標。
+版本化 PWA：[手部目標追蹤練習 2.0.0](https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.0/)。穩定入口：[手部目標追蹤練習](https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/)。無身份資料的完整正式證據見 [production/verification.json](migrations/motor-cortex-rehab/production/verification.json)。
 
-## 待完成／限制
+以下五個流程均在最終兩站部署後通過，命令附加於上述 motor 專屬 Brave 基底：
 
-- runner／Hub 正式部署、R2 回讀、正式新 API／圖片／瀏覽器驗收與正式收據尚未完成。
+| 附加參數 | 正式驗收 |
+| --- | --- |
+| `--production-hub --lobby` | 正式大廳點卡片、設定／五聚光燈、45 秒反彈、結果／重試／單筆訪客 SQLite 紀錄 |
+| `--production-hub --lobby --mobile --session-failure --random` | 390×844、session 503 不載入後重試、隨機路徑、完整圖表／明細／保存 |
+| `--production-hub --lobby --signed-in --english --right` | 英文、指定右手、帳號 Subject ID 隔離、完整成果與保存 |
+| `--remote --standalone --mobile --horizontal` | 正式手機 PWA、水平路徑、版本快取／模型、結果與唯一返回入口 |
+| `--remote --standalone --tablet --left` | 正式 820×1180 PWA、指定左手、確認視窗／圖表／返回與 HUD 清理 |
+
+`--production-hub` 讀真正正式 Hub 靜態資產及 R2，只攔截 Hub `/api/*` 至本機 SQLite；上面直接 API 核對另行使用真正正式 API。所有瀏覽器成果只寫本機，沒有建立正式帳號或訓練紀錄。最終部署前的 `--remote --lobby`／兩種獨立 PWA 也通過，不把它們混稱為部署後證據。
+
+正式截圖：[桌機設定](migrations/motor-cortex-rehab/production/lobby-desktop-guest/settings.png)、[桌機聚光燈](migrations/motor-cortex-rehab/production/lobby-desktop-guest/tutorial-target.png)、[桌機分析](migrations/motor-cortex-rehab/production/lobby-desktop-guest/results-analysis.png)、[手機主要成績](migrations/motor-cortex-rehab/production/lobby-mobile-guest/results.png)、[手機明細](migrations/motor-cortex-rehab/production/lobby-mobile-guest/results-details.png)、[英文右手確認](migrations/motor-cortex-rehab/production/lobby-desktop-account-en/confirmation.png)、[平板左手確認](migrations/motor-cortex-rehab/production/standalone-tablet-guest/confirmation.png)。
+
+原手勢 `2.0.2` 公開 bundle 與其已核准摘要一致。最新共用 browser helper 要求的是 `545ba80` 尚未發布的確認／結果 class，對該正式舊版兩度在 UI 前提失敗；改以發布時 `712321d` 的原始手勢 fixture 及結果 helper，保留原安全／數值檢查，在最終正式 runner 通過同意、空 input-start、七步真實校正、對戰、PWA 快取與相機清理。沒有修改倉庫測試或重發其他遊戲；這項回歸驗證不代表舊版已具備新版 UI。
+
+首次遷移沒有另一個已核准新格式回退版；舊 `1.0.0` JSON 投稿不能用 `--activate-version` 加入官方歷史。保留原 Hub deployment [6bd2009d](https://6bd2009d.rehabtrainerhub.pages.dev)，已直接確認原遊戲入口與 settings.json 均為 200。若切換失敗，先回復此部署／上述基準 commit 的 registry、workspace 依賴與原遊戲／JSON，重跑 gate 並驗舊入口；runner 相容擴充可保留。未實際回退或撤回正式遊戲。不得刪除舊投稿、覆寫發布檔案或把 dry-run 放進正式收據目錄；正式撤回仍需搬遷計畫第 8 節的擁有者程序，不把本機撤回 fixture 算成正式撤回驗收。後續新格式版本核准後才有可用的 `--activate-version` 回退目標。
+
+## 審查單與限制
+
+搬遷計畫第 11 節的身份／舊流程、分類／原圖、獨立性／安全、使用者行為、UI／成績、保存／失敗與平台回歸證據，分別見以上盤點、架構、本機測試與正式驗收；核准、逐檔摘要、CI、部署、回退及限制完整記入正式收據。四路徑與左右手原引擎保留，其他 36 款遊戲維持既有流程。
+
 - 尚未驗實體相機、真人左／右手、Safari／iOS、完整斷網長時間遊玩或真人 Turnstile。人工驗收：桌機／手機同意相機後分別選左右手，以真人移動四路徑、遮住／移出手部、取消／完成／退出後觀察相機燈停止；拒絕與中斷必須回設定且無成果。所有相關瀏覽器仍需實機驗證。
