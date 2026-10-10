@@ -1,14 +1,14 @@
-# 移動卡片訓練 R2 遷移候選
+# 移動卡片訓練 R2 遷移驗收
 
-2026-10-10。狀態：**擁有者已核准，相容 runner 已先部署，R2 已發布；Hub 切換與正式驗收待完成**。正式 current 已為下列精確版本／摘要，正式收據待完整驗收後建立；完成數暫維持四款，遷移 Hub build 排除五款並保留 35 款舊遊戲。
+2026-10-10。狀態：**精確摘要已核准、R2 已發布、七項 CI／兩站部署與正式 API／Hub／PWA 驗收通過**。正式完成五款，Hub build 排除五款 R2 bundle／JSON，保留 35 款舊流程。正式收據見 [moving-card-2.0.0.json](releases/moving-card-2.0.0.json)。
 
-候選為 `moving-card@2.0.0`，`contentSha256`：
+正式 current 為 `moving-card@2.0.0`，`contentSha256`：
 
 ```text
 34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037
 ```
 
-精確五檔清單、逐檔 bytes／SHA-256、能力、驗證命令與待辦見 [candidate.json](migrations/moving-card/candidate.json)。Publisher dry-run 輸出的 manifest 具有 `approved` 欄位，但只代表工具生成的待發布內容，不是擁有者核准或 R2 公開證據；審查紀錄已附擁有者核准與工具發布證據；正式收據待部署及正式驗收完成才放入 `docs/releases/`。
+精確五檔清單、逐檔 bytes／SHA-256、能力、驗證命令與待辦見 [candidate.json](migrations/moving-card/candidate.json)。Publisher dry-run 輸出的 manifest 具有 `approved` 欄位，但只代表工具生成的待發布內容，不是擁有者核准或 R2 公開證據；審查紀錄已附擁有者核准；正式收據記錄 R2 回讀、CI、兩站部署、正式 API 與實際 browser 證據。
 
 ## 原始流程與設定盤點
 
@@ -58,6 +58,7 @@ Hub 接收私有 nonce／version／sequence 綁定成果並冪等保存。獨立
 | 主要成果值只有 16px | 820×1180 Brave 行為檢查先失敗，修正為至少 32px 的階層後通過；設定／確認／成果 computed style 檢查通過 |
 | 初始化失敗遺留已建立 renderer | 行為測試先因 `destroyed=false` 失敗；釋放失敗資源並重試成功，實際 Pixi init hook 失敗／恢復 browser 流程通過 |
 | native PWA `lang=en` HTTP 400／離線語言文件未被接管 | runner regression 先兩項失敗，修正後 `test:gamerunner` 全 36 項通過，包括既有 hand input／third-party bridge／沙盒與 CSP |
+| 正式英文 renderer 重試時，viewport 已全螢幕而 canvas 尚在前一尺寸 | 實際 browser 先因 800×600／752×485 尺寸差失敗；等待可觀察的 resize 完成，再執行原本嚴格尺寸／捲軸斷言，同一情境及正式回歸通過；核准遊戲 bytes 不變 |
 | 原 keyboard 能力未明確宣告 | package capability 測試先失敗，補上原 audio／fullscreen／keyboard／pointer 與 touch 後通過 |
 
 本機七項既有 gate 均通過：`test:naming`、`test:pwa`、`test:game-architecture`、`test:hub-functions`、`test:gamerunner`、`test:entrypoints`、`test:cloudflare-deploy`。architecture 100 項、Hub API 113 項、runner 36 項通過；UI／成果／全螢幕測試沿用 self-contained gate。兩份 workflow 保留相同七項 matrix 與命令、workflow 自身仍會觸發，新增移動卡片 migration／tutorial 測試納入原 architecture 命令，未新增 Brave CI 項目。`test:seo`、遊戲 build、Hub build 與 runner build 亦通過，Hub output 只有 R2 導向入口，不含此遊戲 bundle／JSON 或 `/runtimes/*`。
@@ -88,9 +89,21 @@ Hub 接收私有 nonce／version／sequence 綁定成果並冪等保存。獨立
 
 擁有者於 2026-10-10 在本對話以「核准並git push」核准本候選精確 `version=2.0.0`／上述 `contentSha256`，授權發布與推送。依搬遷計畫第 7 節步驟 C／E，先部署相容 runner，再發布 R2，最後切換 Hub；正式驗收與收據完成後才標記遷移完成。
 
-核准後先完成相容 runner 部署並核對英文 native launcher，保持正式 Hub 的舊 registry。再對同一五檔 candidate 執行 `node scripts/publish-official-game.mjs moving-card`，逐檔回讀及 SHA-256 通過後確認 current／官方歷史，最後才部署含本候選 registry 的 Hub。現行合併 Pages workflow 同時部署兩站，操作時必須用 runner-only 相容部署或拆開發布時序，不能先把尚未公開的遊戲登記到正式 Hub。
+已先推送／部署相容 runner，核對英文 native launcher／Service Worker 與 Hub 舊設定 HTTP 200，保持當時正式 Hub 的舊 registry。再對同一五檔 candidate 執行 `node scripts/publish-official-game.mjs moving-card`，逐檔回讀及 SHA-256 通過後確認 current／官方歷史，最後才推送／部署含本版 registry 的 Hub，未提前切換。現行合併 Pages workflow 同時部署兩站，操作時必須用 runner-only 相容部署或拆開發布時序，不能先把尚未公開的遊戲登記到正式 Hub。
 
-正式驗收須另直接讀真正 `/api/games`、session API 與 preview bytes，確認同 slug 唯一 current `2.0.0`、`presentation=game`、vision 分類、同版原圖與無 settingsUrl；session token 不寫入公開證據。核對穩定入口 302／no-store、版本 PWA 與五檔公開 bytes／CSP／Content-Type，再跑 `--remote --lobby`、`--remote --standalone` 及 `--production-hub --lobby --wide --windowed`／`--mobile`／`--tablet`，保存正式截圖、CI／兩站 deployment 與 `docs/releases/moving-card-2.0.0.json`。正式 browser 只攔 Hub API 至本機 SQLite，不建立虛構正式帳號／成果。全部正式證據完成後才把遊戲與倉庫完成數標記五款／35 款舊流程。
+正式驗收已另直接讀真正 `/api/games`、session API 與 preview bytes，確認同 slug 唯一 current `2.0.0`、`presentation=game`、vision 分類、同版原圖與無 settingsUrl；session token 不寫入公開證據。核對穩定入口 302／no-store、版本 PWA 與五檔公開 bytes／CSP／Content-Type，再跑 `--remote --lobby`、`--remote --standalone` 及 `--production-hub --lobby --wide --windowed`／`--mobile`／`--tablet`，保存正式截圖、CI／兩站 deployment 與 `docs/releases/moving-card-2.0.0.json`。正式 browser 只攔 Hub API 至本機 SQLite，不建立虛構正式帳號／成果。全部正式證據與收據已完成，倉庫完成數更新為五款／35 款舊流程。
+
+## 正式部署與瀏覽器證據
+
+相容提交 `5660c037629bd13e101d613510655ef7043c3dd2` 的[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38054168901)先成功；runner deployment 為 [ae8039a5](https://ae8039a5.trainerhub-user-games.pages.dev)，Hub 當時仍可讀移動卡片舊設定。R2 發布於 `2026-10-10T13:07:28.173Z` 完成回讀，唯一 native 官方歷史為 `2.0.0`，未將舊 `1.0.0` 投稿列入 native 回退歷史。
+
+遷移提交 `1339f196218a6a51992dae6bbfeaaf4efc4da3a3` 與測試時序修正 `bf87f3cbbb77a312c7c263576096e07e402a45f7` 的[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38055113478)全部成功。正式 Hub 為 [0527277d](https://0527277d.rehabtrainerhub.pages.dev)，runner 為 [f622830c](https://f622830c.trainerhub-user-games.pages.dev)，兩站均核對同一提交。真正 `/api/games` 的 moving-card 只有一筆，`2.0.0`／原圖摘要／vision 分類與 `presentation=game` 正確、無 settingsUrl；不指定版本 session HTTP 201 並固定核准摘要，token 不存入公開紀錄。五檔公開 bytes／Content-Type／CSP、穩定入口 302／no-store 與版本 PWA 通過，Hub 舊 JSON／JS／SW／manifest 皆 410／no-store。證據見 [production-verification.json](migrations/moving-card/production-verification.json)。
+
+正式 browser 全九項通過：發布後 `--remote --lobby` 與三尺寸獨立 PWA；部署後真正 `--production-hub --lobby` 桌機視窗、手機 session 失敗重試、平板 medium、英文登入 hard／renderer 失敗恢復／音效開啟、手機停止。桌機 1320×713、手機 390×844、平板 820×1180 均驗證完整 canvas、捲軸占用 0、設定／確認／成績字級、三聚光燈、實際移動卡片及錯選重試。完整指令、執行時間與各情境截圖列於正式收據。全部帳號／成果與保存失敗情境只用本機 API／SQLite；正式 API 另直接核對，不建立虛構正式帳號或訓練紀錄。
+
+正式截圖：[桌機聚光燈](migrations/moving-card/production/hub-desktop/tutorial-options.png)、[桌機視窗玩法](migrations/moving-card/production/hub-desktop/gameplay.png)、[手機成績](migrations/moving-card/production/hub-mobile/results.png)、[平板確認](migrations/moving-card/production/hub-tablet/confirmation.png)、[英文恢復](migrations/moving-card/production/hub-account-en/renderer-failure.png)、[英文 PWA 分析](migrations/moving-card/production/standalone-tablet-en/results-analysis.png)。
+
+正式 `--production-hub --revoke` 嘗試未列為通過：該工具只改本機 bucket，但正式 Hub HEAD 健康檢查仍讀真實 runner，因此在未撤回的正式版本上逾時。未修改正式 R2 狀態；另重跑本機 `--lobby --revoke` 通過，iframe 卸載且零紀錄，保留既有安全斷言。
 
 ## 回退與第 11 節審查單
 
@@ -101,10 +114,10 @@ Hub 接收私有 nonce／version／sequence 綁定成果並冪等保存。獨立
 | 第 11 節欄位 | 狀態與證據 |
 | --- | --- |
 | 身份／舊流程、分類／原圖、原功能 | 已盤點；原 JSON、正式舊 catalog、兩尺寸舊設定、原圖摘要見上 |
-| 獨立性／安全、使用者行為、UI 一致性、有效寬度／捲軸、成績 | 本機 unit／真實 runner sandbox／Brave／截圖通過；正式證據待發布後補 |
+| 獨立性／安全、使用者行為、UI 一致性、有效寬度／捲軸、成績 | 本機及正式 Hub／runner sandbox／Brave／截圖通過；正式證據與收據見下 |
 | 保存／失敗、平台回歸 | 本機固定版本、guest／帳號、保存重試／並行冪等、session 失敗、撤回／digest 拒絕與七 gate 通過 |
 | 當版核准 | 擁有者於本對話以「核准並git push」核准本候選精確版本／摘要，紀錄見 candidate.json |
-| 正式公開 | 待 R2 發布、runner 相容部署、Hub 切換、直接正式 API／bytes 與 browser 驗收；不以 dry-run 算完成 |
+| 正式公開 | R2 五檔 bytes／官方歷史／current、runner 先部署／Hub 後切換、七 CI／兩站部署、正式 API 與 browser 全數通過 |
 | 回退／限制 | 舊部署／資產已只讀核對；首次新格式無另一回退版，未實際正式回退／撤回 |
 
 尚未驗 Safari／iOS、實體手機／平板的觸控手感、尺量物理大小、長時間完整斷網、真人 Turnstile 與正式保存流程。人工驗收：用尺量自有校正線段，依三難度調整卡片／字母／移動間隔，桌機與實體手機各完整做 5 回合並刻意錯選；確認設定／聚光燈可用鍵盤與觸控操作，停止／返回退出全螢幕、不保存未完成活動；在離線與恢復網路後確認已安裝版本 scope、圖表與保存重試。這些未測項目不能宣稱已驗收。

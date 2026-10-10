@@ -1,0 +1,31 @@
+{
+  "mode": "compatibility",
+  "checkedAt": "2026-10-10T13:06:44.183Z",
+  "deployments": {
+    "rehabtrainerhub": {
+      "id": "9e5fbbcf-0bec-413a-9f86-5ac0cbf2ae44",
+      "url": "https://9e5fbbcf.rehabtrainerhub.pages.dev",
+      "environment": "production",
+      "commit": "5660c037629bd13e101d613510655ef7043c3dd2",
+      "createdAt": "2026-10-10T13:05:19.877477Z",
+      "latestStage": "success"
+    },
+    "trainerhub-user-games": {
+      "id": "ae8039a5-c463-4a60-a473-049bd473544b",
+      "url": "https://ae8039a5.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "5660c037629bd13e101d613510655ef7043c3dd2",
+      "createdAt": "2026-10-10T13:05:28.751348Z",
+      "latestStage": "success"
+    }
+  },
+  "checks": [
+    {
+      "nativeEnglishLauncher": 200,
+      "strictSandbox": true,
+      "cacheRevision": "2026-10-10-self-contained-games-v5",
+      "duplicateLanguage": 400,
+      "hubLegacySettings": 200
+    }
+  ]
+}

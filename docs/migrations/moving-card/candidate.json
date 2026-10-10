@@ -1,5 +1,5 @@
 {
-  "status": "owner-approved-published-awaiting-production-acceptance",
+  "status": "owner-approved-published-and-verified",
   "gameId": "moving-card",
   "version": "2.0.0",
   "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037",
@@ -253,15 +253,14 @@
       }
     ]
   },
-  "requiredBeforeCompletion": [
-    "Deploy Hub registration; verify all seven CI gates and both deployment results.",
-    "Read actual production catalog/session/preview/current/PWA APIs without exposing session tokens.",
-    "Complete actual production Hub and runner desktop/mobile/tablet browser checks using local API writes only.",
-    "Save formal receipt under docs/releases, then update migration completion counts."
-  ],
+  "requiredBeforeCompletion": [],
   "limitations": [
-    "No other approved native-format release exists for first-migration rollback; restore verified legacy Hub flow if needed.",
-    "Production rollback and owner R2 status revocation were not executed.",
+    "First native-format migration has no second approved R2 rollback version; verified legacy Hub deployment/source is the fallback.",
+    "Production rollback/revocation was not executed. Revocation, account, session/save failure and Turnstile behavior use local fixtures.",
+    "The attempted production-hub --revoke case timed out because its local bucket fixture does not intercept the real runner HEAD health check. It is not counted as a passed formal test; local --lobby --revoke passes with iframe removal and zero records.",
+    "Browser tests use real production Hub/runner assets with Hub API writes intercepted to local SQLite; no fake production account/training record was created.",
     "Safari/iOS, physical touchscreen devices, ruler calibration, long-duration full offline play and real Turnstile were not tested."
-  ]
+  ],
+  "formalReceipt": "../../releases/moving-card-2.0.0.json",
+  "productionVerifiedAt": "2026-10-10T13:24:31.561Z"
 }

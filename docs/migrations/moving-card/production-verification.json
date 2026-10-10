@@ -1,0 +1,260 @@
+{
+  "mode": "final",
+  "checkedAt": "2026-10-10T13:20:20.386Z",
+  "deployments": {
+    "rehabtrainerhub": {
+      "id": "0527277d-f663-4e92-8596-cc5ee981c919",
+      "url": "https://0527277d.rehabtrainerhub.pages.dev",
+      "environment": "production",
+      "commit": "bf87f3cbbb77a312c7c263576096e07e402a45f7",
+      "createdAt": "2026-10-10T13:19:33.106602Z",
+      "latestStage": "success"
+    },
+    "trainerhub-user-games": {
+      "id": "f622830c-ab00-4277-a1e9-0733b2e60a0a",
+      "url": "https://f622830c.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "bf87f3cbbb77a312c7c263576096e07e402a45f7",
+      "createdAt": "2026-10-10T13:19:40.850978Z",
+      "latestStage": "success"
+    }
+  },
+  "checks": [
+    {
+      "stableStatus": 302,
+      "stableLocation": "/games/moving-card/2.0.0/",
+      "stableCacheControl": "no-store",
+      "nativeEnglish": 200
+    },
+    {
+      "path": "/games/moving-card/settings.json",
+      "status": 410,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/games/moving-card/score.json",
+      "status": 410,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/games/moving-card/assets/old-game.js",
+      "status": 410,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/games/moving-card/sw.js",
+      "status": 410,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/games/moving-card/manifest.webmanifest",
+      "status": 410,
+      "cacheControl": "no-store"
+    },
+    {
+      "hubEntry": 200,
+      "oldAssetsBlocked": true,
+      "previewStatus": 200,
+      "previewSha256": "e14346b7bef3fba14f82f9c377fde9d0709c529d75f5cc23ef5e81652180e2b6"
+    }
+  ],
+  "officialCatalog": {
+    "schemaVersion": 1,
+    "gameId": "moving-card",
+    "currentVersion": "2.0.0",
+    "releases": {
+      "2.0.0": {
+        "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037"
+      }
+    }
+  },
+  "manifest": {
+    "schemaVersion": 1,
+    "status": "approved",
+    "gameId": "moving-card",
+    "version": "2.0.0",
+    "name": "移動卡片訓練",
+    "shortName": "移動卡片訓練",
+    "description": "在移動卡片中尋找目標，練習視覺搜尋與動態專注。",
+    "runtime": {
+      "name": "native",
+      "major": 1
+    },
+    "presentation": "game",
+    "capabilities": [
+      "audio",
+      "fullscreen",
+      "keyboard",
+      "pointer",
+      "touch"
+    ],
+    "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037",
+    "approvedAt": "2026-10-10T13:06:47.161Z",
+    "entry": "index.html",
+    "files": [
+      {
+        "path": "assets/index-DIhjsKvf.js",
+        "sha256": "8ace58df6bdc58fb6ed2c8e762c30cac4d51dd9b8aba120bc1af9806243ae13a",
+        "size": 901535,
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style--2M-Q6qW.css",
+        "sha256": "4ddd6c3e03307096e37c4cd88f2c985d2d09a0dc64f4db69ce03df8cb8490d30",
+        "size": 17329,
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "sha256": "f82ee8b03ffd539b0a84fa93c34f720a7b022d48217e223d7ab835ef91c71c84",
+        "size": 507,
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "sha256": "628678311df8f0e0a1ff6cb6a3e8bf5533da018265db87b6778292690e50dcb8",
+        "size": 408,
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "sha256": "e14346b7bef3fba14f82f9c377fde9d0709c529d75f5cc23ef5e81652180e2b6",
+        "size": 8562,
+        "contentType": "image/webp"
+      }
+    ],
+    "fileByPath": {}
+  },
+  "packageFiles": [
+    {
+      "path": "assets/index-DIhjsKvf.js",
+      "size": 901535,
+      "sha256": "8ace58df6bdc58fb6ed2c8e762c30cac4d51dd9b8aba120bc1af9806243ae13a",
+      "contentType": "text/javascript; charset=utf-8",
+      "url": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.0/package/assets/index-DIhjsKvf.js",
+      "status": 200,
+      "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+    },
+    {
+      "path": "assets/style--2M-Q6qW.css",
+      "size": 17329,
+      "sha256": "4ddd6c3e03307096e37c4cd88f2c985d2d09a0dc64f4db69ce03df8cb8490d30",
+      "contentType": "text/css; charset=utf-8",
+      "url": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.0/package/assets/style--2M-Q6qW.css",
+      "status": 200,
+      "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+    },
+    {
+      "path": "game.json",
+      "size": 507,
+      "sha256": "f82ee8b03ffd539b0a84fa93c34f720a7b022d48217e223d7ab835ef91c71c84",
+      "contentType": "application/json; charset=utf-8",
+      "url": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.0/package/game.json",
+      "status": 200,
+      "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "628678311df8f0e0a1ff6cb6a3e8bf5533da018265db87b6778292690e50dcb8",
+      "contentType": "text/html; charset=utf-8",
+      "url": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.0/package/index.html",
+      "status": 200,
+      "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8562,
+      "sha256": "e14346b7bef3fba14f82f9c377fde9d0709c529d75f5cc23ef5e81652180e2b6",
+      "contentType": "image/webp",
+      "url": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.0/package/preview.webp",
+      "status": 200,
+      "csp": "default-src 'none'; base-uri 'none'; connect-src 'none'; child-src 'none'; frame-src 'none'; font-src 'self' data:; form-action 'none'; img-src 'self' data: blob:; manifest-src 'none'; media-src 'self' data: blob:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; webrtc 'block'; worker-src 'none'; sandbox allow-scripts"
+    }
+  ],
+  "pwa": {
+    "id": "/games/moving-card/2.0.0/",
+    "name": "移動卡片訓練｜居家訓練網",
+    "short_name": "移動卡片訓練",
+    "description": "在移動卡片中尋找目標，練習視覺搜尋與動態專注。",
+    "lang": "zh-Hant",
+    "dir": "ltr",
+    "start_url": "/games/moving-card/2.0.0/",
+    "scope": "/games/moving-card/2.0.0/",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#0b1020",
+    "theme_color": "#172033",
+    "icons": [
+      {
+        "src": "/runtime/icons/trainerhub-192-v1.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/runtime/icons/trainerhub-512-v1.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any"
+      },
+      {
+        "src": "/games/moving-card/2.0.0/icon.svg",
+        "sizes": "any",
+        "type": "image/svg+xml",
+        "purpose": "any maskable"
+      }
+    ]
+  },
+  "publicGame": {
+    "id": "moving-card",
+    "slug": "moving-card",
+    "title": "移動卡片訓練",
+    "summary": "在移動卡片中尋找目標，練習視覺搜尋與動態專注。",
+    "trainer": "vision",
+    "category": "vision",
+    "developerName": "居家訓練網",
+    "updatedAt": "2026-10-10T13:06:47.161Z",
+    "copy": {
+      "zh-TW": {
+        "title": "移動卡片訓練",
+        "description": "在移動卡片中尋找目標，練習視覺搜尋與動態專注。"
+      },
+      "en": {
+        "title": "Moving Card Training",
+        "description": "Find targets among moving cards to practise visual search and dynamic attention."
+      }
+    },
+    "previewUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.0/package/preview.webp",
+    "release": {
+      "id": "moving-card@2.0.0",
+      "version": "2.0.0",
+      "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037",
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "touch"
+      ],
+      "approvedAt": "2026-10-10T13:06:47.161Z",
+      "presentation": "game",
+      "launchUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.0/",
+      "installUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/"
+    }
+  },
+  "session": {
+    "status": 201,
+    "version": "2.0.0",
+    "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037",
+    "capabilities": [
+      "audio",
+      "fullscreen",
+      "keyboard",
+      "pointer",
+      "touch"
+    ],
+    "tokenPresent": true,
+    "writeScope": "Signed session only; no production training record created"
+  }
+}
