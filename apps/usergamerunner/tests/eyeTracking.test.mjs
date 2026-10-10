@@ -14,6 +14,26 @@ test('Pages routes the exact eye input version through Functions while other inp
   assert.deepEqual(routes.exclude,['/runtime/*']);
 });
 
+test('the eye preview keeps its trusted policy after Pages redirects HTML to its extensionless URL', async () => {
+  const origin='https://trainerhub-user-games.pages.dev';
+  const staticHeaders={ 'Content-Security-Policy': "default-src 'none'; script-src 'none'; connect-src 'none'; frame-ancestors 'none'", 'Permissions-Policy': 'camera=()' };
+  const read=path=>HandleRequest({request:new Request(origin+path),env:{},next:async()=>path.endsWith('.html')
+    ? new Response(null,{status:308,headers:{...staticHeaders,Location:path.slice(0,-5)}})
+    : new Response('trusted input',{headers:staticHeaders})});
+  const redirect=await read('/input/eye-tracking-1.0.0/preview.html');
+  assert.equal(redirect.status,308);
+  const preview=await read(redirect.headers.get('Location'));
+  assert.equal(preview.status,200);
+  assert.match(preview.headers.get('Permissions-Policy'),/camera=\(self\)/);
+  assert.match(preview.headers.get('Content-Security-Policy'),/script-src 'self' 'unsafe-eval'/);
+  assert.match(preview.headers.get('Content-Security-Policy'),/connect-src 'self'/);
+  assert.doesNotMatch(preview.headers.get('Content-Security-Policy'),/localhost|127\.0\.0\.1/);
+  for(const path of ['index','nested/preview','models/facemesh/model.json']) {
+    const other=await read('/input/eye-tracking-1.0.0/'+path);
+    assert.equal(other.headers.get('Permissions-Policy'),'camera=()');
+  }
+});
+
 test('only the trusted official eye launcher can delegate camera; the game remains opaque and cannot connect', async () => {
   const bytes=Buffer.from('<!doctype html><title>Eye</title>');
   const files=[{path:'index.html',size:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')}];
