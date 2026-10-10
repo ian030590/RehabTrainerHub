@@ -7,15 +7,15 @@
     "build": "vite build"
   },
   "dependencies": {
-    "jspsych": "8.2.3",
-    "pixi.js": "^8.18.1",
+    "jspsych": "8.3.0",
+    "pixi.js": "^8.22.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.5.2",
-    "vite": "^6.3.5",
-    "typescript": "~5.8.3"
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.3",
+    "typescript": "~7.0.2"
   },
   "rehabTrainer": {
     "capabilities": [

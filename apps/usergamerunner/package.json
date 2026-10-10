@@ -9,9 +9,9 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "dependencies": {
-    "@mediapipe/tasks-vision": "0.10.35",
+    "@mediapipe/tasks-vision": "1.1.0",
     "@rehab-trainer/game-settings": "1.0.0",
-    "jspsych": "8.2.3"
+    "jspsych": "8.3.0"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
