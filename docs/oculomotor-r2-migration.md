@@ -113,3 +113,5 @@
 [CI 38094804766](https://github.com/ian030590/RehabTrainerHub/actions/runs/38094804766) 的七項驗證與部署全部成功，來源 `8bb3a1e9b89fa79d86ffeeee2e59635f96f43842`。Hub deployment `8778d598-914c-4ba2-822c-0c08f89fa01b`，runner deployment `31556b2e-9b61-41f3-9de7-ceddaa0e06f5`。正式公開目錄只有一個眼動 slug，`vision` 分類／原圖摘要正確；不指定版本 session 固定核准 `2.0.0`／上述摘要；十個 R2 檔案、嚴格 sandbox／CSP、穩定 PWA current302／no-store與 Hub 舊 JSON／JS／SW／manifest410／no-store均通過，[直接正式 API 核對](migrations/oculomotor-training/production-api-verification.json)。
 
 真正部署的 Hub 完成桌機追視、手機跳視與拒絕／重新同意及 session 重試、平板無眼動凝視、英文登入中央辨識；獨立 PWA 桌機英文／手機／平板均完成實際固定模型、聚光燈、校正／驗證、原活動、數值成果、來源對應返回及原CSV下載／離線固定資產核對。CSV與摘要重試／身份隔離只寫本機SQLite，沒有建立正式測試帳號或訓練紀錄。代表畫面見 [production/](migrations/oculomotor-training/production/)。真人／實體硬體、Safari／iOS 與正式保存限制仍依上節，未宣稱臨床效度。
+
+最後的瀏覽器就緒測試修正與收據已推送 `d3c999fe843cc3c7d9b99f97cd9857a4da206429`，[CI 38095208558](https://github.com/ian030590/RehabTrainerHub/actions/runs/38095208558) 七項驗證與兩站部署再次成功。最終 Hub deployment `90e8b0af-a2df-4482-885e-dfd0f7d5de43`、runner deployment `9c5ec398-03b8-44fc-b33a-60db379373d0`；重新直接核對正式 API／十個R2遊戲檔案／十份固定輸入資產與標頭，以及正式桌機眼動追視完整流程，全部通過。完整手機／平板／英文登入／PWA矩陣的原部署與最終部署分別保留於收據；遊戲摘要與產品原始碼保持核准內容。

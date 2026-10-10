@@ -217,7 +217,21 @@
       "../migrations/oculomotor-training/production/pwa-tablet-results.png",
       "../migrations/oculomotor-training/production/pwa-desktop-english-results.png"
     ],
-    "finalInputVerification": "../migrations/oculomotor-training/production-runner-verification.json"
+    "finalInputVerification": "../migrations/oculomotor-training/production-runner-verification.json",
+    "fullFlowDeploymentSource": "8bb3a1e9b89fa79d86ffeeee2e59635f96f43842",
+    "finalDeploymentRecheck": {
+      "source": "d3c999fe843cc3c7d9b99f97cd9857a4da206429",
+      "checkedAt": "2026-10-10T23:35:12.596Z",
+      "api": "passed",
+      "fixedInputBytesAndHeaders": "passed",
+      "inputVerification": "../migrations/oculomotor-training/final-runner-verification.json",
+      "browser": {
+        "command": "node scripts/check-r2-game-browser.mjs --game oculomotor-training --production-hub --lobby --gaze --activity pursuit",
+        "status": "passed",
+        "writeScope": "Local API/SQLite only"
+      },
+      "description": "Final change affects only the browser readiness check and documentation. Approved R2 game bytes and product source remain unchanged; seven CI gates and both fresh deployments passed."
+    }
   },
   "rollback": {
     "baseline": "../migrations/oculomotor-training/rollback-baseline.json",
@@ -234,6 +248,78 @@
     "Offline model and engine fetch checked; no long-duration total disconnection accepted"
   ],
   "ci": {
+    "id": 38095208558,
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38095208558",
+    "headSha": "d3c999fe843cc3c7d9b99f97cd9857a4da206429",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "deployment_scope",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (cloudflare-deploy)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (gamerunner)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (hub-functions)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (game-architecture)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (naming)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (pwa)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (trainer-entrypoints)",
+        "conclusion": "success"
+      },
+      {
+        "name": "deploy",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "deployments": {
+    "hub": {
+      "id": "90e8b0af-a2df-4482-885e-dfd0f7d5de43",
+      "url": "https://90e8b0af.rehabtrainerhub.pages.dev",
+      "environment": "Production",
+      "source": "d3c999fe843cc3c7d9b99f97cd9857a4da206429"
+    },
+    "runner": {
+      "id": "9c5ec398-03b8-44fc-b33a-60db379373d0",
+      "url": "https://9c5ec398.trainerhub-user-games.pages.dev",
+      "environment": "Production",
+      "source": "d3c999fe843cc3c7d9b99f97cd9857a4da206429"
+    }
+  },
+  "completedAt": "2026-10-10T23:35:12.597Z",
+  "productionCount": {
+    "completedGames": 6,
+    "legacyGames": 34
+  },
+  "browserValidationAdjustment": {
+    "red": "Production desktop camera-position screenshot allowed fresh-face state to expire before a one-shot calibration click; timed out waiting for calibration point.",
+    "green": "Browser checks the enabled button and observes entry into calibration; original fresh-face checks and approved game bytes are unchanged.",
+    "checks": [
+      "test:naming passed",
+      "test:webgazer passed",
+      "Production desktop pursuit rerun passed"
+    ]
+  },
+  "migrationCi": {
     "id": 38094804766,
     "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/38094804766",
     "headSha": "8bb3a1e9b89fa79d86ffeeee2e59635f96f43842",
@@ -277,7 +363,7 @@
       }
     ]
   },
-  "deployments": {
+  "initialVerifiedDeployments": {
     "hub": {
       "id": "8778d598-914c-4ba2-822c-0c08f89fa01b",
       "url": "https://8778d598.rehabtrainerhub.pages.dev",
@@ -290,19 +376,5 @@
       "environment": "Production",
       "source": "8bb3a1e9b89fa79d86ffeeee2e59635f96f43842"
     }
-  },
-  "completedAt": "2026-10-10T23:29:05.618Z",
-  "productionCount": {
-    "completedGames": 6,
-    "legacyGames": 34
-  },
-  "browserValidationAdjustment": {
-    "red": "Production desktop camera-position screenshot allowed fresh-face state to expire before a one-shot calibration click; timed out waiting for calibration point.",
-    "green": "Browser checks the enabled button and observes entry into calibration; original fresh-face checks and approved game bytes are unchanged.",
-    "checks": [
-      "test:naming passed",
-      "test:webgazer passed",
-      "Production desktop pursuit rerun passed"
-    ]
   }
 }

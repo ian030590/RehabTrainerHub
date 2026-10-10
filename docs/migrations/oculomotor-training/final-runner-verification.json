@@ -1,0 +1,114 @@
+{
+  "verifiedAt": "2026-10-10T23:33:58.973Z",
+  "origin": "https://trainerhub-user-games.pages.dev",
+  "compatibleDeployment": "https://9c5ec398.trainerhub-user-games.pages.dev",
+  "sourceCommit": "d3c999fe843cc3c7d9b99f97cd9857a4da206429",
+  "initialHeaderVerificationFailedDeployment": "https://71dada85.trainerhub-user-games.pages.dev",
+  "files": [
+    {
+      "path": "eyeTrackingController.js",
+      "size": 2324,
+      "sha256": "aef4023dd0ebdd3f2e5cf54045fe76063cecf12d82daaa36e2b633b042e589e5",
+      "finalUrl": "https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/eyeTrackingController.js",
+      "contentType": "application/javascript",
+      "csp": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+      "permissions": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+      "referrerPolicy": "no-referrer"
+    },
+    {
+      "path": "eyeTrackingEntry.js",
+      "size": 3396,
+      "sha256": "79f341c4e0c2018c0477fdb211655a029a4fb4ec2360af247510e7a0f194ee9f",
+      "finalUrl": "https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/eyeTrackingEntry.js",
+      "contentType": "application/javascript",
+      "csp": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+      "permissions": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+      "referrerPolicy": "no-referrer"
+    },
+    {
+      "path": "index.js",
+      "size": 8605,
+      "sha256": "a79193619ef12102a0594fad6daf5415dbab7b5b955fc8e224450036e4a990e8",
+      "finalUrl": "https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/index.js",
+      "contentType": "application/javascript",
+      "csp": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+      "permissions": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+      "referrerPolicy": "no-referrer"
+    },
+    {
+      "path": "models/blazeface/group1-shard1of1.bin",
+      "size": 401768,
+      "sha256": "60b481ab6c19352673cdb21e02e639f90883db1393ac52d07c7ea4e1e11cb2cd",
+      "finalUrl": "https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/models/blazeface/group1-shard1of1.bin",
+      "contentType": "application/octet-stream",
+      "csp": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+      "permissions": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+      "referrerPolicy": "no-referrer"
+    },
+    {
+      "path": "models/blazeface/model.json",
+      "size": 64036,
+      "sha256": "7b6bb6f35e5a7899232de51dda8bf514ef9664ca7ec58388c9fecc088c883b58",
+      "finalUrl": "https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/models/blazeface/model.json",
+      "contentType": "application/json",
+      "csp": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+      "permissions": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+      "referrerPolicy": "no-referrer"
+    },
+    {
+      "path": "models/facemesh/group1-shard1of1.bin",
+      "size": 2955780,
+      "sha256": "f4a7075c1fff12ceafd2cd6fc000a464da90b1e0c35236971ed5bb3b343366cb",
+      "finalUrl": "https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/models/facemesh/group1-shard1of1.bin",
+      "contentType": "application/octet-stream",
+      "csp": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+      "permissions": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+      "referrerPolicy": "no-referrer"
+    },
+    {
+      "path": "models/facemesh/model.json",
+      "size": 93029,
+      "sha256": "c922985d95e101e7fe56576a9a00366c72d3fab3604ce371cc9d85394abda99c",
+      "finalUrl": "https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/models/facemesh/model.json",
+      "contentType": "application/json",
+      "csp": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+      "permissions": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+      "referrerPolicy": "no-referrer"
+    },
+    {
+      "path": "preview.css",
+      "size": 128,
+      "sha256": "82eae24fbe52e1cd79d7318c997cea3900f550026dc4fbb9980512733d83847f",
+      "finalUrl": "https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/preview.css",
+      "contentType": "text/css; charset=utf-8",
+      "csp": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+      "permissions": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+      "referrerPolicy": "no-referrer"
+    },
+    {
+      "path": "preview.html",
+      "size": 313,
+      "sha256": "45336fe2702979d6c92c578c2f0d95a22a716f181538cd24b814aa5d313fbd4f",
+      "finalUrl": "https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/preview",
+      "contentType": "text/html; charset=utf-8",
+      "csp": "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; media-src 'self' blob:; base-uri 'none'; form-action 'none'; frame-ancestors 'self' https://trainerhub.cc; worker-src 'none'",
+      "permissions": "accelerometer=(), ambient-light-sensor=(), camera=(self), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+      "referrerPolicy": "strict-origin-when-cross-origin"
+    },
+    {
+      "path": "webgazer.js",
+      "size": 3470808,
+      "sha256": "1b7d24fad2687a423b0f540b7b5fa77f7c627a85c4d3c084c11be5bd83859d85",
+      "finalUrl": "https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/webgazer.js",
+      "contentType": "application/javascript",
+      "csp": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'",
+      "permissions": "accelerometer=(), ambient-light-sensor=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), usb=()",
+      "referrerPolicy": "no-referrer"
+    }
+  ],
+  "previewRedirect": {
+    "status": 308,
+    "location": "/input/eye-tracking-1.0.0/preview",
+    "referrerPolicy": "strict-origin-when-cross-origin"
+  }
+}
