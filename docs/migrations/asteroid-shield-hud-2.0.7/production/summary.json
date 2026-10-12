@@ -1,0 +1,12 @@
+{
+  "gameId": "asteroid-shield",
+  "version": "2.0.7",
+  "contentSha256": "63dee846c20307797421d9f5bae473c4c5b38de4c22e0e833d211d49fef0f011",
+  "status": "published-and-verified",
+  "checkedAt": "2026-10-12T17:19:04.517Z",
+  "publicFilesVerified": 12,
+  "browserFlows": 3,
+  "rollbackVersion": "2.0.6",
+  "platformDeploymentPerformedByThisPublication": false,
+  "productionRecordsCreated": false
+}

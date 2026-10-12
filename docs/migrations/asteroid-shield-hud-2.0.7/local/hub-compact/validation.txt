@@ -1,0 +1,5 @@
+Hub iframe ready.
+Hub overlay viewport passed: {"width":752,"documentWidth":752,"overflow":"hidden","frameLeft":0,"frameRight":752,"scrollbarWidth":0}
+Game settings ready.
+Asteroid R2 passed: settings/presets/bounds/Enter → three target tutorial/resize/cleanup → fullscreen Pixi 752×485 → complete outcomes → failed save/retry/single SQL row/lobby.
+Lobby scrolling restored: {"top":819,"overflow":"visible"}

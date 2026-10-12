@@ -126,7 +126,7 @@ interface SessionRecord {
 const assetUrls = {
     background: new URL('./textures/background.png', import.meta.url).href,
     ship: new URL('./textures/ship.png', import.meta.url).href,
-    shield: new URL('./textures/shield.png', import.meta.url).href,
+    shield: new URL('./textures/shield-complete.png', import.meta.url).href,
     normal: new URL('./textures/asteroid-blue.png', import.meta.url).href,
     heavy: new URL('./textures/asteroid-green.png', import.meta.url).href,
     lethal: new URL('./textures/asteroid-dark.png', import.meta.url).href,
@@ -174,6 +174,7 @@ const copy = {
         duration: '活動時間',
         durationDesc: '設定這次護盾防衛的總秒數。',
         hp: '飛船耐久',
+        timeLeft: '剩餘時間',
         hpDesc: '飛船可承受的總傷害。暗色小行星若命中會直接結束。',
         shieldSize: '護盾大小',
         shieldSizeDesc: '較大的透明護盾更接近保護飛船的視覺，也降低攔截難度。',
@@ -231,6 +232,7 @@ const copy = {
         duration: 'Session Duration',
         durationDesc: 'Set the total seconds for this shield defense session.',
         hp: 'Ship Durability',
+        timeLeft: 'Time left',
         hpDesc: 'Total damage the ship can take. A dark asteroid hit ends the session.',
         shieldSize: 'Shield Size',
         shieldSizeDesc: 'A larger transparent shield looks protective and lowers interception load.',
@@ -306,6 +308,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
     const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
     const [phase, setPhaseState] = useState<GamePhase>('menu');
+    const [hud, setHud] = useState({ hp: maxHp, remainingSec: durationSec });
     useEffect(() => {
       if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
       return StopMidiMusic;
@@ -408,6 +411,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         resultRecordsRef.current = [];
         shieldPositionRef.current = 0.5;
         setResult(null);
+        setHud({ hp: config.maxHp, remainingSec: config.durationSec });
         setPhase('playing');
     }, [setPhase]);
     const startGame = useCallback(async () => {
@@ -474,6 +478,8 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     onSuccess: () => PlaySuccessSound(jsPsychRef),
                     onFailure: () => PlayFailureSound(jsPsychRef),
                     onComplete: finishGame,
+                    onProgress: (hp, remainingSec) => setHud(previous => previous.hp === hp && previous.remainingSec === remainingSec
+                        ? previous : { hp, remainingSec }),
                 });
             });
         };
@@ -532,6 +538,13 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     return (<div ref={fullscreenRootRef} className={`asteroid-shield-game asteroid-shield-phase-${phase}`}>
       <div ref={jsPsychHostRef} className="asteroid-shield-jspsych-host" style={{ display: 'none' }} aria-hidden="true"/>
       <div ref={pixiHostRef} className="asteroid-shield-stage"/>
+      {phase === 'playing' && <section className="asteroid-hud" aria-label={lang === 'en' ? 'Training status' : '訓練狀態'}>
+        <p>{labels.hp} <output>{hud.hp} / {maxHp}</output></p>
+        <div className="asteroid-health-bar" role="progressbar" aria-label={labels.hp} aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={hud.hp}>
+          <div style={{ width: `${hud.hp / maxHp * 100}%` }}/>
+        </div>
+        <p>{labels.timeLeft} <time dateTime={`PT${hud.remainingSec}S`} data-remaining={hud.remainingSec}>{Math.floor(hud.remainingSec / 60)}:{String(hud.remainingSec % 60).padStart(2, '0')}</time></p>
+      </section>}
 
       {(phase === 'menu' || phase === 'rules') && <div className="asteroid-tutorial-panel" inert={phase === 'menu'} aria-hidden={phase === 'menu'}>
         <AsteroidShieldTutorial title={labels.title} summaryItems={summaryItems} shieldSizePercent={shieldSizePercent} onStart={() => void startGame()} onBack={showConfiguration} ready={rendererReady} active={phase === 'rules'}/>
@@ -678,7 +691,7 @@ function ClearAsteroidScene(scene: AsteroidScene | null): void {
     });
     scene.threats = [];
 }
-function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shieldPositionRef, resultRecordsRef, onSuccess, onFailure, onComplete, }: {
+function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shieldPositionRef, resultRecordsRef, onSuccess, onFailure, onComplete, onProgress, }: {
     app: Application;
     ticker: Ticker;
     sceneRef: {
@@ -705,6 +718,7 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
     onSuccess: () => void;
     onFailure: () => void;
     onComplete: (result: GameResult) => void;
+    onProgress: (hp: number, remainingSec: number) => void;
 }): void {
     const scene = sceneRef.current;
     if (!scene)
@@ -786,6 +800,7 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
         }
     }
     const elapsedSec = metrics.elapsedMs / 1000;
+    onProgress(metrics.hp, Math.max(0, Math.ceil(config.durationSec - elapsedSec)));
     if (metrics.hp <= 0) {
         onComplete('Defeat');
     }

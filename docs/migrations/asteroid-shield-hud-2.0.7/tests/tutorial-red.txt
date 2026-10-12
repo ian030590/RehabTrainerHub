@@ -1,0 +1,27 @@
+Hub iframe ready.
+Game settings ready.
+node : node:internal/modules/run_main:107
+位於 線路:6 字元:1
++ node (Join-Path $candidateRoot 'scripts/check-r2-game-browser.mjs') - ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (node:internal/modules/run_main:107:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Each threat must be visible above the ship, not hidden behind it.
+    at checkSpotlight (file:///C:/Users/ian/AppData/Local/Temp/rehab-asteroid-ui-plieD4/scripts/asteroid-shield-browser
+.mjs:120:16)
+    at async CheckAsteroidShield (file:///C:/Users/ian/AppData/Local/Temp/rehab-asteroid-ui-plieD4/scripts/asteroid-shi
+eld-browser.mjs:126:3)
+    at async file:///C:/Users/ian/AppData/Local/Temp/rehab-asteroid-ui-plieD4/scripts/check-r2-game-browser.mjs:459:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0

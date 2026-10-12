@@ -36,8 +36,10 @@ async function LoadAsteroidGameplay() {
   const shieldPositionRef = { current: 0.5 };
   const configRef = { current: { difficulty: 'beginner', durationSec: 30, maxHp: 10, shieldSizePercent: 95, controlMode: 'mouse' } };
   const records = [];
+  const progress = [];
   const options = { app, sceneRef: { current: scene }, metricsRef, configRef, shieldPositionRef,
-    resultRecordsRef: { current: records }, onSuccess: () => {}, onFailure: () => {}, onComplete: () => {} };
+    resultRecordsRef: { current: records }, onSuccess: () => {}, onFailure: () => {}, onComplete: () => {},
+    onProgress: (hp, remainingSec) => progress.push({ hp, remainingSec }) };
   let pointerDeclaration;
   const findPointer = node => {
     if (ts.isVariableDeclaration(node) && node.name.getText(syntax) === 'updateFromPointer') pointerDeclaration = node.getText(syntax);
@@ -59,7 +61,7 @@ async function LoadAsteroidGameplay() {
     } finally { Math.random = originalRandom; }
     return scene.threats.at(-1);
   };
-  return { ...runtime, app, scene, metricsRef, shieldPositionRef, configRef, records, pointer, layout, spawn,
+  return { ...runtime, app, scene, metricsRef, shieldPositionRef, configRef, records, progress, pointer, layout, spawn,
     tick: (deltaMS = 16) => runtime.UpdateAsteroidGame({ ...options, ticker: { deltaMS } }) };
 }
 
@@ -74,6 +76,29 @@ test('asteroid ship spans most of the bottom edge on desktop, tablet and phone',
     assert.equal(ship.rotation, 0);
     assert.ok(game.scene.shield.y + game.scene.shield.height / 2 < ship.y - ship.height / 2);
   }
+});
+
+test('live HUD reports damage, energy recovery and the same countdown used to finish training', async () => {
+  const game = await LoadAsteroidGameplay();
+  game.layout();
+  game.tick(16);
+  assert.deepEqual(game.progress.at(-1), { hp: 10, remainingSec: 30 });
+  const hit = game.spawn('heavy');
+  hit.x = game.scene.ship.x - game.scene.ship.width / 2 + 5;
+  hit.y = game.scene.ship.y - game.scene.ship.height / 2 - hit.radius - 1;
+  hit.vy = 20000;
+  game.tick(50);
+  assert.deepEqual(game.progress.at(-1), { hp: 7, remainingSec: 30 });
+  const energy = game.spawn('energy');
+  energy.x = game.scene.shield.x;
+  energy.y = game.scene.shield.y - game.scene.shield.height / 2 - energy.radius - 1;
+  energy.vy = 20000;
+  game.metricsRef.current.elapsedMs = 1050;
+  game.tick(50);
+  assert.deepEqual(game.progress.at(-1), { hp: 9, remainingSec: 29 });
+  game.metricsRef.current.elapsedMs = 29990;
+  game.tick(50);
+  assert.deepEqual(game.progress.at(-1), { hp: 9, remainingSec: 0 });
 });
 
 test('mouse and touch pointer X move the shield horizontally, ignoring Y and clamping both edges', async () => {
@@ -180,7 +205,7 @@ test('asteroid release owns UI, dependencies, metadata and the exact original pr
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.6');
+  assert.equal(pkg.version, '2.0.7');
   for (const dependency of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[dependency]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);

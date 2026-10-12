@@ -1,0 +1,44 @@
+✔ asteroid ship spans most of the bottom edge on desktop, tablet and phone (152.8322ms)
+✖ live HUD reports damage, energy recovery and the same countdown used to finish training (60.7805ms)
+✔ mouse and touch pointer X move the shield horizontally, ignoring Y and clamping both edges (43.5808ms)
+✔ asteroids fall vertically from the top with visibly different individual speeds (36.408ms)
+✔ falling asteroids animate their glow and trail, and dispose all visuals on exit (31.4927ms)
+✔ horizontal shield and wide ship collisions preserve interception, damage, energy and missed outcomes (202.0368ms)
+✔ asteroid settings preserve the old defaults, presets, boundaries and runtime conversion (41.536ms)
+✔ asteroid release owns UI, dependencies, metadata and the exact original preview (17.1925ms)
+✔ asteroid outcomes keep every old score column and all object rows using numeric codes (4.2105ms)
+✔ asteroid result analysis retains selectable metrics and excludes missing outcomes from statistics (2.3ms)
+✔ asteroid preserves its original success, failure and end sound sequences and mute setting (36.6834ms)
+✔ asteroid bridge binds once to the parent private port and ignores forged initialization and acknowledgements (13.3136ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1023.2779
+
+✖ failing tests:
+
+test at scripts\check-asteroid-shield-migration.test.mjs:81:1
+✖ live HUD reports damage, energy recovery and the same countdown used to finish training (60.7805ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+  + undefined
+  - {
+  -   hp: 10,
+  -   remainingSec: 30
+  - }
+
+      at TestContext.<anonymous> (file:///C:/Users/ian/Projects/RehabTrainerHub/scripts/check-asteroid-shield-migration.test.mjs:85:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { hp: 10, remainingSec: 30 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

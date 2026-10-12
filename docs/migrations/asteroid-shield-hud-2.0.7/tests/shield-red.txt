@@ -1,0 +1,25 @@
+{ width: 178, height: 114, rightEdgeClippedPixels: 72 }
+node : node:internal/modules/run_main:107
+位於 線路:12 字元:1
++ node .tmp/asteroid-ui-release/shield-edge-check.mjs > .tmp/asteroid-u ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (node:internal/modules/run_main:107:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: The visible right rim must end inside the transparent canvas.
+
+72 !== 0
+
+    at file:///C:/Users/ian/Projects/RehabTrainerHub/.tmp/asteroid-ui-release/shield-edge-check.mjs:8:8 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 72,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.21.0

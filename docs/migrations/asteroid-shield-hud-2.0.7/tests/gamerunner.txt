@@ -1,0 +1,63 @@
+node.exe : npm notice run rehab-workspace@1.0.0 test:gamerunner
+位於 C:\Users\ian\scoop\apps\nodejs-lts\current\bin\npm.ps1:24 字元:5
++     & "node$exe"  "$basedir/node_modules/npm/bin/npm-cli.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run ...test:gamerunner:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+npm notice run node --test apps/usergamerunner/tests/*.test.mjs
+✔ Pages routes the exact eye input version through Functions while other input stays static (12.8846ms)
+✔ the eye preview keeps its trusted policy after Pages redirects HTML to its extensionless URL (63.3019ms)
+✔ only the trusted official eye launcher can delegate camera; the game remains opaque and cannot connect (13.9157ms)
+✔ each eye inference clears the previous face state when the face disappears (208.7185ms)
+✔ CSV retry keeps the original session and identity, and never falls back to guest after authorization fails (37.0033ms)
+✔ eye broker requires consent and disposes an input controller arriving after cancellation (3.7739ms)
+✔ native eye PWA retains the entire pinned proxy offline and keeps camera permission out of game responses (2.86ms)
+✔ only the official eye game can request gaze calibration on its private channel (1.3436ms)
+✔ gaze CSV accepts canonical numeric samples, rejects identity, overflow and malformed rows (1.3277ms)
+✔ eye controller emits only normalized gaze and disposes camera and model on stop or disconnect (4.9156ms)
+✔ late camera and engine initialization cannot restart an exited eye session (2.3037ms)
+✔ normalizes bounded aggregate results (4.8926ms)
+✔ rejects identifying and free-text result fields (0.7128ms)
+✔ matches the game-runs API numeric and request-envelope byte limits (17.0067ms)
+✔ uses the one-time private message port for lifecycle and commands (84.5765ms)
+✔ route parser isolates one game/version and rejects traversal (4.9466ms)
+✔ release validator requires approval, jsPsych 8, hashes, and an allowlisted entry (2.7804ms)
+✔ launcher is a noindex PWA shell with an opaque-origin iframe and strict relay (42.3525ms)
+✔ self-contained standalone games receive fullscreen only when declared (4.1136ms)
+✔ self-contained standalone language reaches the package without accepting invalid embed parameters (5.9175ms)
+✔ native standalone language entries and package documents retain offline caching while unknown queries bypass it (14.5392ms)
+✔ standalone launcher loads settings.json defaults while Hub embed waits for platform settings (4.4844ms)
+✔ Hub embed mode uses only a valid caller-provided session nonce (2.0414ms)
+✔ sandboxed launchers announce ready without requiring service worker access (7.1804ms)
+✔ launcher health check retires an online revoked release (3.8136ms)
+✔ launcher transfers one private port and fails closed after a frame navigation (3.718ms)
+✔ result relay enforces aggregate and native score byte limits (49.0783ms)
+✔ manifest and service worker are unique and scoped to one release (3.5813ms)
+✔ service worker deletes only its release caches after an online revocation (6.2509ms)
+✔ package route only serves manifest files with restrictive immutable headers (2.5463ms)
+✔ platform runtime is static, CORS-readable from an opaque sandbox, and non-indexable (9.2672ms)
+✔ the pinned jsPsych browser artifact exposes the documented classic API (11.0408ms)
+✔ the checked-in third-party notice retains the jsPsych MIT attribution (3.1548ms)
+✔ draft releases and R2 file-size mismatches fail closed (2.0927ms)
+✔ MIME types are determined by the reviewed path rather than upload metadata (0.1576ms)
+✔ trusted consent is cancellable and late input loading cannot restart a closed game (8.6899ms)
+✔ only reviewed hand tracking sessions accept private input requests; rejects replay and results-phase starts (1.112ms)
+✔ input proxy sends only xyz landmarks and stops camera, detector and timers (3.8935ms)
+✔ late camera and model initialization are disposed after exit (2.7721ms)
+✔ denial, disconnect and inference failure stop tracking and provide retryable errors (1.0009ms)
+✔ trusted proxy selects the requested hand locally and emits only the existing xyz frame contract (1.0796ms)
+✔ private hand selection rejects arbitrary input options and survives consent forwarding (0.5429ms)
+✔ only trusted official hand launchers receive camera permission; game packages stay opaque and offline (62.2281ms)
+✔ production-bundled hand launcher starts its opaque game without acquiring camera input (56.5618ms)
+✔ hand launcher names the selected official game and escapes its title (1.3645ms)
+✔ official catalog permits approved history independently of current and rejects untrusted or revoked releases (6.5264ms)
+✔ stable official entry resolves current without caching and fails closed when approval is removed (49.3154ms)
+ℹ tests 47
+ℹ suites 0
+ℹ pass 47
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1062.4423

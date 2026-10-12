@@ -1,0 +1,20 @@
+✔ asteroid ship spans most of the bottom edge on desktop, tablet and phone (152.5655ms)
+✔ live HUD reports damage, energy recovery and the same countdown used to finish training (62.7361ms)
+✔ mouse and touch pointer X move the shield horizontally, ignoring Y and clamping both edges (44.0349ms)
+✔ asteroids fall vertically from the top with visibly different individual speeds (34.0894ms)
+✔ falling asteroids animate their glow and trail, and dispose all visuals on exit (38.096ms)
+✔ horizontal shield and wide ship collisions preserve interception, damage, energy and missed outcomes (188.3958ms)
+✔ asteroid settings preserve the old defaults, presets, boundaries and runtime conversion (40.1854ms)
+✔ asteroid release owns UI, dependencies, metadata and the exact original preview (16.3735ms)
+✔ asteroid outcomes keep every old score column and all object rows using numeric codes (4.1234ms)
+✔ asteroid result analysis retains selectable metrics and excludes missing outcomes from statistics (2.3165ms)
+✔ asteroid preserves its original success, failure and end sound sequences and mute setting (38.2435ms)
+✔ asteroid bridge binds once to the parent private port and ignores forged initialization and acknowledgements (14.9196ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1019.8674

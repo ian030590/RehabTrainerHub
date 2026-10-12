@@ -99,15 +99,43 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
       const target = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();
       const spotlight = document.querySelector('.game-tour-spotlight').getBoundingClientRect();
       const panel = document.querySelector('.game-tour').getBoundingClientRect();
+      const ship = document.querySelector('.mock-spaceship').getBoundingClientRect();
+      const images = Array.from(document.querySelectorAll('.mock-asteroid-group img')).map(image => {
+        const rect = image.getBoundingClientRect();
+        return {left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom,
+          loaded:image.complete && image.naturalWidth > 0};
+      });
       return {target: {left:target.left,top:target.top,right:target.right,bottom:target.bottom},
         spotlight: {left:spotlight.left,top:spotlight.top,right:spotlight.right,bottom:spotlight.bottom},
-        panel: {left:panel.left,top:panel.top,right:panel.right,bottom:panel.bottom}, width:innerWidth,height:innerHeight};
+        panel: {left:panel.left,top:panel.top,right:panel.right,bottom:panel.bottom},
+        shipTop:ship.top,images,width:innerWidth,height:innerHeight};
     })()`);
     for (const edge of ['left', 'top']) assert.ok(state.spotlight[edge] <= state.target[edge] + 1, `${selector}: ${JSON.stringify(state)}`);
     for (const edge of ['right', 'bottom']) assert.ok(state.spotlight[edge] >= state.target[edge] - 1, `${selector}: ${JSON.stringify(state)}`);
     assert.ok(state.panel.left >= 0 && state.panel.top >= 0 && state.panel.right <= state.width + 1 && state.panel.bottom <= state.height + 1);
+    if (selector === '.mock-asteroid-group') {
+      assert.equal(state.images.length, 4);
+      for (const image of state.images) {
+        assert.ok(image.loaded && image.left >= 0 && image.right <= state.width && image.top >= 0);
+        assert.ok(image.bottom <= state.shipTop, 'Each threat must be visible above the ship, not hidden behind it.');
+        assert.ok(image.right <= state.panel.left || image.left >= state.panel.right
+          || image.bottom <= state.panel.top || image.top >= state.panel.bottom, 'The tutorial panel must not cover its target images.');
+      }
+    }
   };
   await checkSpotlight('.mock-asteroid-group');
+  const shieldAsset = await game(`(async () => {
+    const image = new Image(); image.crossOrigin = 'anonymous';
+    image.src = getComputedStyle(document.querySelector('.mock-shield')).backgroundImage.slice(5,-2);
+    await image.decode();
+    const canvas = document.createElement('canvas'); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d'); context.drawImage(image,0,0);
+    const {data} = context.getImageData(0,0,canvas.width,canvas.height);
+    let clipped = false;
+    for (let y=0;y<canvas.height;y++) for (const x of [0,canvas.width-1]) if (data[(y*canvas.width+x)*4+3]>8) clipped=true;
+    return {clipped,width:canvas.width,height:canvas.height};
+  })()`);
+  assert.equal(shieldAsset.clipped, false, 'Both sides of the shield artwork must finish inside the transparent canvas.');
   await capture('tutorial');
   assert.equal(await game('document.fullscreenElement'), null, 'Asteroid tutorial remains windowed.');
   await game('document.querySelector(".asteroid-shield-tutorial .ui-button").click()');
@@ -150,6 +178,22 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   await game('document.querySelector(".asteroid-shield-tutorial .ui-button-primary").click()');
   await until(() => game('Boolean(document.querySelector(".asteroid-shield-phase-playing canvas"))'), 'real asteroid gameplay');
   assert.equal(await game('document.querySelector(".asteroid-shield-tutorial, dialog.game-settings-dialog")'), null);
+  await until(() => game('Boolean(document.querySelector(".asteroid-hud"))'), 'health bar and timer appear during training');
+  const readHud = () => game(`(() => {
+    const hud = document.querySelector('.asteroid-hud'), bar = hud.querySelector('[role=progressbar]');
+    const rect = hud.getBoundingClientRect();
+    return {hp:Number(bar.getAttribute('aria-valuenow')),max:Number(bar.getAttribute('aria-valuemax')),
+      time:hud.querySelector('time').textContent,remaining:Number(hud.querySelector('time').dataset.remaining),
+      left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom,width:innerWidth,height:innerHeight,
+      pointerEvents:getComputedStyle(hud).pointerEvents,text:hud.textContent};
+  })()`);
+  const initialHud = await readHud();
+  assert.equal(initialHud.hp, 10); assert.equal(initialHud.max, 10);
+  assert.equal(initialHud.time, '0:30'); assert.equal(initialHud.remaining, 30);
+  assert.ok(initialHud.left >= 0 && initialHud.top >= 0 && initialHud.right <= initialHud.width / 2 + 100
+    && initialHud.bottom < initialHud.height / 2, JSON.stringify(initialHud));
+  assert.equal(initialHud.pointerEvents, 'none', 'HUD must allow shield input through it.');
+  assert.ok(initialHud.text.includes(english ? 'Time left' : '剩餘時間'));
   assert.equal(await game('document.fullscreenElement === document.querySelector(".asteroid-shield-game")'), true);
   await until(() => game(`(() => {
     const app = window.asteroidPixiApp;
@@ -202,12 +246,14 @@ export async function CheckAsteroidShield({ game, evaluate, send, until, gameCon
   assert.ok(animation.trailCount >= 4, 'Falling objects must have animated trails.');
   await until(() => game('window.asteroidAnimationSample.sprite.y >= innerHeight * 0.25'), 'falling animation visible on screen');
   await capture('falling-animation');
+  assert.ok((await readHud()).remaining < initialHud.remaining, 'The visible countdown advances with gameplay.');
   // Real-time gameplay can finish after 30 seconds, or earlier if durability reaches zero.
   const deadline = Date.now() + 45000;
   while (Date.now() < deadline && !await game('Boolean(document.querySelector(".asteroid-shield-phase-results"))')) {
     await new Promise(resolve => setTimeout(resolve, 250));
   }
   assert.equal(await game('Boolean(document.querySelector(".asteroid-shield-phase-results"))'), true);
+  assert.equal(await game('document.querySelector(".asteroid-hud")'), null, 'Remove gameplay HUD at completion.');
   assert.equal(await game('window.asteroidSoundCount > 0'), soundOn, 'The sound checkbox must control real WebAudio output.');
   assert.ok(await game('document.querySelectorAll(".results-table tbody tr").length > 0'));
   assert.deepEqual(await game('Array.from(document.querySelectorAll(".score-analysis select option")).map(option => option.value)'),

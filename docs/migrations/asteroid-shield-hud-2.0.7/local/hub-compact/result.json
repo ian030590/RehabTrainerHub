@@ -1,0 +1,11 @@
+{
+  "mode": "hub-compact",
+  "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --lobby",
+  "status": "passed",
+  "exitCode": 0,
+  "startedAt": "2026-10-12T17:11:52.507Z",
+  "checkedAt": "2026-10-12T17:12:19.412Z",
+  "source": "Frozen candidate and real runner/CSP with local API",
+  "writeScope": "Local SQLite only; no production accounts or training records",
+  "viewport": "390x844 Brave mobile emulation"
+}

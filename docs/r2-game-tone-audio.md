@@ -108,3 +108,5 @@ Wrangler 已刷新既有 OAuth；正式 `/api/games` 六款均僅一筆 current�
 小行星護盾 current 已切換至精確核准的 `2.0.6`：主旋律／合聲使用 square，打擊 white-noise，bass triangle 並提高一個八度；四軌 1,049 個音符同步循環 48 秒。34 項音訊測試、142 項架構測試、七項本機 gate、正式 API／session／12 檔公開 bytes 與桌機 Hub／手機 Hub／手機獨立 PWA 三流程均通過，原 2.0.5 保留為已核對回退版。其餘五款歌曲仍為空，沒有建立正式訓練紀錄。
 
 精確摘要、TDD 與正式驗收見[發布紀錄](asteroid-shield-music-2.0.6.md)及[正式收據](releases/asteroid-shield-2.0.6.json)。本次 R2 發布沒有手動部署平台；commit／push 後由既有 workflow 執行驗證及依範圍部署。已安裝的版本化 PWA 保留原版，需從新版入口取得 2.0.6。
+
+目前小行星 current 已更新為 `2.0.7`，沿用上述四軌音樂，另修正教學物件／聚光燈、完整護盾素材及左上生命條／倒數。已依擁有者預先授權發布並驗證正式 API、12 檔 bytes 與三個正式 Hub／PWA 流程，2.0.6 保留為已核對回退版；見[2.0.7 發布紀錄](asteroid-shield-hud-2.0.7.md)。

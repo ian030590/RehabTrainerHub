@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 const assetUrls = {
     background: new URL('../textures/background.png', import.meta.url).href,
     ship: new URL('../textures/ship.png', import.meta.url).href,
-    shield: new URL('../textures/shield.png', import.meta.url).href,
+    shield: new URL('../textures/shield-complete.png', import.meta.url).href,
     normal: new URL('../textures/asteroid-blue.png', import.meta.url).href,
     heavy: new URL('../textures/asteroid-green.png', import.meta.url).href,
     lethal: new URL('../textures/asteroid-dark.png', import.meta.url).href,
@@ -141,19 +141,24 @@ export function AsteroidShieldTutorial({ title, summaryItems, shieldSizePercent,
         className="mock-asteroid-group"
         style={{
           display: 'flex',
+          position: 'absolute',
+          top: '80px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 'max-content',
+          maxWidth: 'calc(100% - 32px)',
           justifyContent: 'center',
           alignItems: 'center',
           gap: 'clamp(4px, 3vw, 24px)',
-          marginTop: '5%',
           padding: '16px',
           backgroundColor: 'var(--bg-overlay)',
           borderRadius: '12px',
         }}
       >
-        <img src={assetUrls.normal} alt="Normal Asteroid" style={{ width: 60, height: 60, filter: 'drop-shadow(0 0 8px #76b7ff)' }} />
-        <img src={assetUrls.heavy} alt="Heavy Asteroid" style={{ width: 70, height: 70, filter: 'drop-shadow(0 0 8px #63e27a)' }} />
-        <img src={assetUrls.lethal} alt="Lethal Asteroid" style={{ width: 80, height: 80, filter: 'drop-shadow(0 0 8px #2f3446)', opacity: 0.9 }} />
-        <img src={assetUrls.energy} alt="Energy Rock" style={{ width: 50, height: 50, filter: 'drop-shadow(0 0 12px #ffffff)' }} />
+        <img src={assetUrls.normal} alt="Normal Asteroid" style={{ width: 'min(60px, 14vw)', height: 'min(60px, 14vw)', objectFit: 'contain', filter: 'drop-shadow(0 0 8px #76b7ff)' }} />
+        <img src={assetUrls.heavy} alt="Heavy Asteroid" style={{ width: 'min(70px, 16vw)', height: 'min(70px, 16vw)', objectFit: 'contain', filter: 'drop-shadow(0 0 8px #63e27a)' }} />
+        <img src={assetUrls.lethal} alt="Lethal Asteroid" style={{ width: 'min(80px, 18vw)', height: 'min(80px, 18vw)', objectFit: 'contain', filter: 'drop-shadow(0 0 8px #2f3446)', opacity: 0.9 }} />
+        <img src={assetUrls.energy} alt="Energy Rock" style={{ width: 'min(50px, 12vw)', height: 'min(50px, 12vw)', objectFit: 'contain', filter: 'drop-shadow(0 0 12px #ffffff)' }} />
       </div>
 
       {active && tourFinished && <section className="training-panel asteroid-tutorial-ready">

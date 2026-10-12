@@ -58,6 +58,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 
 小行星護盾四軌音樂 `2.0.6` 已於 2026-10-13 精確核准、發布 R2 並切換 current：主旋律／合聲 square、打擊 white-noise、bass triangle 並提高一個八度，保留原 JSON、48 秒循環與聲音開關；同時處理過期／重複打擊節拍。34 項音訊／142 項架構測試、七項本機 gate、Hub build 與正式 API／session／12 檔公開 bytes、桌機 Hub／手機 Hub／手機獨立 PWA 三流程均通過，僅寫本機 SQLite；2.0.5 已核對為回退版。其餘五款背景歌曲仍為空。收據與驗收見 `docs/asteroid-shield-music-2.0.6.md`、`docs/releases/asteroid-shield-2.0.6.json`；實體音訊輸出與 Safari／iOS 尚未驗收。
 
+小行星護盾目前 current 為 `2.0.7`（2026-10-13）：依擁有者預先授權完成修正後直接發布 R2，教學四種物件移至上方、聚光燈與面板互不遮擋，教學／玩法使用完整透明護盾，左上綠色生命條及倒數直接來自 game loop。12 項小行星／143 項架構測試、七項本機 gate、Hub build、小視窗／手機／平板及正式 API／session／12 檔公開 bytes、桌機 Hub／手機 Hub／手機獨立 PWA 均通過；四軌音樂沿用 2.0.6，僅寫本機 SQLite，2.0.6 已核對為回退版。見 `docs/asteroid-shield-hud-2.0.7.md` 及正式收據；Brave 手機／平板為模擬，實體觸控／音訊輸出與 Safari／iOS 未驗收。
+
 驗證使用 Node.js 內建 `node:test`、assert 檢查腳本、TypeScript、針對性 build 與本機 Brave smoke；依變更範圍選用對應 gate。Hub API、runner、遊戲流程、assessment lifecycle 與 i18n 分別有 `test:hub-functions`、`test:gamerunner`、`test:training-flow`、`test:assessment-lifecycle`、`test:i18n`。
 
 ## CI/CD 維護

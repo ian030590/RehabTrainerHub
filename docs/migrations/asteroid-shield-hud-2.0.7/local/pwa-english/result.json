@@ -1,0 +1,11 @@
+{
+  "mode": "pwa-english",
+  "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --standalone --mobile --english",
+  "status": "passed",
+  "exitCode": 0,
+  "startedAt": "2026-10-12T17:10:25.281Z",
+  "checkedAt": "2026-10-12T17:10:45.379Z",
+  "source": "Frozen candidate and real runner/CSP with local API",
+  "writeScope": "Local SQLite only; no production accounts or training records",
+  "viewport": "390x844 Brave mobile emulation"
+}

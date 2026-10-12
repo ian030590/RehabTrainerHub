@@ -1,0 +1,711 @@
+node.exe : npm notice run rehab-workspace@1.0.0 build:hub
+位於 C:\Users\ian\scoop\apps\nodejs-lts\current\bin\npm.ps1:24 字元:5
++     & "node$exe"  "$basedir/node_modules/npm/bin/npm-cli.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run ...1.0.0 build:hub:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+npm notice run turbo run build --filter=@rehab-trainer/rehabtrainerhub
+• turbo 2.10.12
+
+   • Packages in scope: @rehab-trainer/rehabtrainerhub
+   • Running build in 1 packages
+   • Remote caching disabled
+
+@rehab-trainer/game-minesweeper:build: cache hit, replaying logs 1856977a46e06c36
+@rehab-trainer/game-dots-and-boxes:build: cache hit, replaying logs 22fdefcc5c889708
+@rehab-trainer/game-memory-match:build: cache hit, replaying logs c18902268bfca2de
+@rehab-trainer/game-dots-and-boxes:build: npm notice run @rehab-trainer/game-dots-and-boxes@1.0.0 build
+@rehab-trainer/game-dots-and-boxes:build: npm notice run vite build
+@rehab-trainer/game-dots-and-boxes:build: vite v6.4.3 building for production...
+@rehab-trainer/game-dots-and-boxes:build: transforming...
+@rehab-trainer/game-dots-and-boxes:build: ✓ 870 modules transformed.
+@rehab-trainer/game-dots-and-boxes:build: rendering chunks...
+@rehab-trainer/game-dots-and-boxes:build: computing gzip size...
+@rehab-trainer/game-dots-and-boxes:build: dist/index.html                               0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/CanvasPool-BLN4W0Yo.js            0.78 kB │ gzip:   0.43 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/Filter-Dz44eoYr.js                0.90 kB │ gzip:   0.47 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/canvasUtils-da8SN37E.js           5.77 kB │ gzip:   1.80 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/BufferResource-BVf11gM8.js       11.15 kB │ gzip:   2.87 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/webworkerAll-NO2g6IN8.js         16.00 kB │ gzip:   5.10 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/CanvasRenderer-CDwjqeiz.js       18.42 kB │ gzip:   6.17 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/browserAll-BPqzCcZ_.js           43.37 kB │ gzip:  11.40 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/WebGPURenderer-DusVG4mJ.js       46.33 kB │ gzip:  13.33 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/RenderTargetSystem-DFxvL1WL.js   53.01 kB │ gzip:  14.67 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/WebGLRenderer-DDgycCxg.js        72.27 kB │ gzip:  19.71 kB
+@rehab-trainer/game-dots-and-boxes:build: dist/assets/index-DP4dtaWU.js               651.36 kB │ gzip: 209.54 kB
+@rehab-trainer/game-dots-and-boxes:build:
+@rehab-trainer/game-dots-and-boxes:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-dots-and-boxes:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-dots-and-boxes:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-dots-and-boxes:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-memory-match:build: npm notice run @rehab-trainer/game-memory-match@1.0.0 build
+@rehab-trainer/game-dots-and-boxes:build: ✓ built in 20.10s
+@rehab-trainer/game-memory-match:build: npm notice run vite build
+@rehab-trainer/game-memory-match:build: vite v6.4.3 building for production...
+@rehab-trainer/game-memory-match:build: transforming...
+@rehab-trainer/game-memory-match:build: ✓ 870 modules transformed.
+@rehab-trainer/game-memory-match:build: rendering chunks...
+@rehab-trainer/game-memory-match:build: computing gzip size...
+@rehab-trainer/game-memory-match:build: dist/index.html                               0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-memory-match:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-memory-match:build: dist/assets/Filter-CDyoU4T7.js                0.90 kB │ gzip:   0.48 kB
+@rehab-trainer/game-memory-match:build: dist/assets/BufferResource-DFbdXFlO.js       11.14 kB │ gzip:   2.86 kB
+@rehab-trainer/game-minesweeper:build: npm notice run @rehab-trainer/game-minesweeper@1.0.0 build
+@rehab-trainer/game-minesweeper:build: npm notice run vite build
+@rehab-trainer/game-minesweeper:build: vite v6.4.3 building for production...
+@rehab-trainer/game-minesweeper:build: transforming...
+@rehab-trainer/game-minesweeper:build: ✓ 151 modules transformed.
+@rehab-trainer/game-minesweeper:build: rendering chunks...
+@rehab-trainer/game-minesweeper:build: computing gzip size...
+@rehab-trainer/game-minesweeper:build: dist/index.html                   0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-minesweeper:build: dist/assets/index-S6HLW-u_.css   81.61 kB │ gzip:  14.45 kB
+@rehab-trainer/game-minesweeper:build: dist/assets/index-Utny5kQw.js   414.39 kB │ gzip: 135.24 kB
+@rehab-trainer/game-minesweeper:build: ✓ built in 11.79s
+@rehab-trainer/game-memory-match:build: dist/assets/webworkerAll-CuHXKbS7.js         15.58 kB │ gzip:   4.92 kB
+@rehab-trainer/game-memory-match:build: dist/assets/CanvasRenderer-jWiwXBGs.js       18.38 kB │ gzip:   6.16 kB
+@rehab-trainer/game-memory-match:build: dist/assets/browserAll-BN5NG7bs.js           43.30 kB │ gzip:  11.37 kB
+@rehab-trainer/game-memory-match:build: dist/assets/WebGPURenderer-DyWMpUZ1.js       46.29 kB │ gzip:  13.32 kB
+@rehab-trainer/game-memory-match:build: dist/assets/RenderTargetSystem-Gx_Wy3Fj.js   52.58 kB │ gzip:  14.56 kB
+@rehab-trainer/game-hex:build: cache hit, replaying logs 9863dfdd83167df6
+@rehab-trainer/game-memory-match:build: dist/assets/WebGLRenderer-C2gvlJW1.js        72.27 kB │ gzip:  19.70 kB
+@rehab-trainer/game-memory-match:build: dist/assets/index-BAHRKw34.js               691.93 kB │ gzip: 222.33 kB
+@rehab-trainer/game-memory-match:build:
+@rehab-trainer/game-memory-match:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-memory-match:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-memory-match:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-memory-match:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-memory-match:build: ✓ built in 22.37s
+@rehab-trainer/game-hex:build: npm notice run @rehab-trainer/game-hex@1.0.0 build
+@rehab-trainer/game-hex:build: npm notice run vite build
+@rehab-trainer/game-hex:build: vite v6.4.3 building for production...
+@rehab-trainer/game-hex:build: transforming...
+@rehab-trainer/game-hex:build: ✓ 870 modules transformed.
+@rehab-trainer/game-hex:build: rendering chunks...
+@rehab-trainer/game-hex:build: computing gzip size...
+@rehab-trainer/game-hex:build: dist/index.html                               0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-hex:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-hex:build: dist/assets/CanvasPool-DMb--Ewi.js            0.78 kB │ gzip:   0.44 kB
+@rehab-trainer/game-hex:build: dist/assets/Filter-Ds0GN7ZV.js                0.90 kB │ gzip:   0.47 kB
+@rehab-trainer/game-hex:build: dist/assets/canvasUtils-CPRlWTT5.js           5.77 kB │ gzip:   1.80 kB
+@rehab-trainer/game-hex:build: dist/assets/BufferResource-D9S5th4Y.js       11.15 kB │ gzip:   2.87 kB
+@rehab-trainer/game-hex:build: dist/assets/webworkerAll-h4ws6MvO.js         16.00 kB │ gzip:   5.10 kB
+@rehab-trainer/game-hex:build: dist/assets/CanvasRenderer-CWqnyirz.js       18.42 kB │ gzip:   6.17 kB
+@rehab-trainer/game-hex:build: dist/assets/browserAll-DeE5jwfL.js           43.37 kB │ gzip:  11.40 kB
+@rehab-trainer/game-hex:build: dist/assets/WebGPURenderer-DYHng9r4.js       46.33 kB │ gzip:  13.33 kB
+@rehab-trainer/game-hex:build: dist/assets/RenderTargetSystem-Bu2UUQXT.js   53.01 kB │ gzip:  14.67 kB
+@rehab-trainer/game-hex:build: dist/assets/WebGLRenderer-zKme84jm.js        72.27 kB │ gzip:  19.71 kB
+@rehab-trainer/game-hex:build: dist/assets/index-BayVERKn.js               648.91 kB │ gzip: 208.90 kB
+@rehab-trainer/game-hex:build:
+@rehab-trainer/game-hex:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-hex:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-stroop:build: cache hit, replaying logs 0f9cfbd274841b06
+@rehab-trainer/game-hex:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-hex:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-hex:build: ✓ built in 30.22s
+@rehab-trainer/game-stroop:build: npm notice run @rehab-trainer/game-stroop@1.0.0 build
+@rehab-trainer/game-stroop:build: npm notice run vite build
+@rehab-trainer/game-stroop:build: vite v6.4.3 building for production...
+@rehab-trainer/game-stroop:build: transforming...
+@rehab-trainer/game-stroop:build: ✓ 73 modules transformed.
+@rehab-trainer/game-stroop:build: rendering chunks...
+@rehab-trainer/game-stroop:build: computing gzip size...
+@rehab-trainer/game-stroop:build: dist/index.html                   0.44 kB │ gzip:   0.33 kB
+@rehab-trainer/game-stroop:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-stroop:build: dist/assets/index-DbW3vpT3.js   321.26 kB │ gzip: 104.69 kB
+@rehab-trainer/game-stroop:build: ✓ built in 5.90s
+@rehab-trainer/game-n-back:build: cache hit, replaying logs d63491ce781b9349
+@rehab-trainer/game-n-back:build: npm notice run @rehab-trainer/game-n-back@1.0.0 build
+@rehab-trainer/game-n-back:build: npm notice run vite build
+@rehab-trainer/game-n-back:build: vite v6.4.3 building for production...
+@rehab-trainer/game-n-back:build: transforming...
+@rehab-trainer/game-n-back:build: ✓ 73 modules transformed.
+@rehab-trainer/game-n-back:build: rendering chunks...
+@rehab-trainer/game-n-back:build: computing gzip size...
+@rehab-trainer/game-n-back:build: dist/index.html                   0.44 kB │ gzip:   0.33 kB
+@rehab-trainer/game-n-back:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-n-back:build: dist/assets/index-Dr0sef9k.js   321.39 kB │ gzip: 104.71 kB
+@rehab-trainer/game-n-back:build: ✓ built in 6.50s
+@rehab-trainer/game-keep-track:build: cache hit, replaying logs 0de279899a4373fb
+@rehab-trainer/game-number-letter:build: cache hit, replaying logs 2f7ba00006c0a244
+@rehab-trainer/game-keep-track:build: npm notice run @rehab-trainer/game-keep-track@1.0.0 build
+@rehab-trainer/game-keep-track:build: npm notice run vite build
+@rehab-trainer/game-keep-track:build: vite v6.4.3 building for production...
+@rehab-trainer/game-keep-track:build: transforming...
+@rehab-trainer/game-keep-track:build: ✓ 73 modules transformed.
+@rehab-trainer/game-keep-track:build: rendering chunks...
+@rehab-trainer/game-keep-track:build: computing gzip size...
+@rehab-trainer/game-antisaccade:build: cache hit, replaying logs d916913b16539421
+@rehab-trainer/game-number-letter:build: npm notice run @rehab-trainer/game-number-letter@1.0.0 build
+@rehab-trainer/game-number-letter:build: npm notice run vite build
+@rehab-trainer/game-number-letter:build: vite v6.4.3 building for production...
+@rehab-trainer/game-number-letter:build: transforming...
+@rehab-trainer/game-number-letter:build: ✓ 73 modules transformed.
+@rehab-trainer/game-number-letter:build: rendering chunks...
+@rehab-trainer/game-number-letter:build: computing gzip size...
+@rehab-trainer/game-number-letter:build: dist/index.html                   0.45 kB │ gzip:   0.33 kB
+@rehab-trainer/game-number-letter:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-number-letter:build: dist/assets/index-BycXyTGv.js   321.52 kB │ gzip: 104.74 kB
+@rehab-trainer/game-number-letter:build: ✓ built in 7.04s
+@rehab-trainer/game-keep-track:build: dist/index.html                   0.44 kB │ gzip:   0.33 kB
+@rehab-trainer/game-keep-track:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-keep-track:build: dist/assets/index-B0lrzBGP.js   321.40 kB │ gzip: 104.67 kB
+@rehab-trainer/game-keep-track:build: ✓ built in 7.16s
+@rehab-trainer/game-stop-signal:build: cache hit, replaying logs 8662eb55a621f80f
+@rehab-trainer/game-antisaccade:build: npm notice run @rehab-trainer/game-antisaccade@1.0.0 build
+@rehab-trainer/game-antisaccade:build: npm notice run vite build
+@rehab-trainer/game-antisaccade:build: vite v6.4.3 building for production...
+@rehab-trainer/game-antisaccade:build: transforming...
+@rehab-trainer/game-antisaccade:build: ✓ 73 modules transformed.
+@rehab-trainer/game-antisaccade:build: rendering chunks...
+@rehab-trainer/game-antisaccade:build: computing gzip size...
+@rehab-trainer/game-antisaccade:build: dist/index.html                   0.45 kB │ gzip:   0.33 kB
+@rehab-trainer/game-antisaccade:build: dist/assets/index-evhJZBKp.css   73.83 kB │ gzip:  13.29 kB
+@rehab-trainer/game-antisaccade:build: dist/assets/index-B5Mo4TSb.js   321.49 kB │ gzip: 104.30 kB
+@rehab-trainer/game-antisaccade:build: ✓ built in 6.61s
+@rehab-trainer/game-stop-signal:build: npm notice run @rehab-trainer/game-stop-signal@1.0.0 build
+@rehab-trainer/game-stop-signal:build: npm notice run vite build
+@rehab-trainer/game-stop-signal:build: vite v6.4.3 building for production...
+@rehab-trainer/game-stop-signal:build: transforming...
+@rehab-trainer/game-stop-signal:build: ✓ 73 modules transformed.
+@rehab-trainer/game-stop-signal:build: rendering chunks...
+@rehab-trainer/game-stop-signal:build: computing gzip size...
+@rehab-trainer/game-stop-signal:build: dist/index.html                   0.45 kB │ gzip:   0.33 kB
+@rehab-trainer/game-stop-signal:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-stop-signal:build: dist/assets/index-qXrZY6gu.js   321.67 kB │ gzip: 104.83 kB
+@rehab-trainer/game-stop-signal:build: ✓ built in 6.06s
+@rehab-trainer/game-every-ball-response:build: cache hit, replaying logs 6f184b917b80d0bb
+@rehab-trainer/game-whack-a-mole:build: cache hit, replaying logs 65eaebd485e26ade
+@rehab-trainer/game-every-ball-response:build: npm notice run @rehab-trainer/game-every-ball-response@1.0.0 build
+@rehab-trainer/game-every-ball-response:build: npm notice run vite build
+@rehab-trainer/game-every-ball-response:build: vite v6.4.3 building for production...
+@rehab-trainer/game-every-ball-response:build: transforming...
+@rehab-trainer/game-every-ball-response:build: ✓ 863 modules transformed.
+@rehab-trainer/game-plus-minus:build: cache hit, replaying logs d739d4b815eb9579
+@rehab-trainer/game-every-ball-response:build: rendering chunks...
+@rehab-trainer/game-connect4:build: cache hit, replaying logs c3d42cce46a3c075
+@rehab-trainer/game-every-ball-response:build: computing gzip size...
+@rehab-trainer/game-every-ball-response:build: dist/index.html                               0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-every-ball-response:build: dist/assets/index-CXI22NwK.css               84.95 kB │ gzip:  15.10 kB
+@rehab-trainer/game-every-ball-response:build: dist/assets/Filter-CpyzHc3n.js                0.90 kB │ gzip:   0.48 kB
+@rehab-trainer/game-every-ball-response:build: dist/assets/BufferResource-CgvMEDqT.js       11.14 kB │ gzip:   2.86 kB
+@rehab-trainer/game-every-ball-response:build: dist/assets/webworkerAll-DS7R-63t.js         15.58 kB │ gzip:   4.92 kB
+@rehab-trainer/game-every-ball-response:build: dist/assets/CanvasRenderer-B-heeWnH.js       18.38 kB │ gzip:   6.16 kB
+@rehab-trainer/game-every-ball-response:build: dist/assets/browserAll-CiGnYuZN.js           43.30 kB │ gzip:  11.37 kB
+@rehab-trainer/game-every-ball-response:build: dist/assets/WebGPURenderer-Bblx4zfB.js       46.29 kB │ gzip:  13.32 kB
+@rehab-trainer/game-every-ball-response:build: dist/assets/RenderTargetSystem-BKwT5tQp.js   52.58 kB │ gzip:  14.56 kB
+@rehab-trainer/game-every-ball-response:build: dist/assets/WebGLRenderer-B9f41XnR.js        72.27 kB │ gzip:  19.70 kB
+@rehab-trainer/game-every-ball-response:build: dist/assets/index-EN5kKg5s.js               830.84 kB │ gzip: 265.13 kB
+@rehab-trainer/game-every-ball-response:build:
+@rehab-trainer/game-every-ball-response:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-every-ball-response:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-every-ball-response:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-every-ball-response:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-every-ball-response:build: ✓ built in 21.95s
+@rehab-trainer/game-whack-a-mole:build: npm notice run @rehab-trainer/game-whack-a-mole@1.0.0 build
+@rehab-trainer/game-whack-a-mole:build: npm notice run vite build
+@rehab-trainer/game-letter-memory:build: cache hit, replaying logs 7a864f70236f3fd7
+@rehab-trainer/game-connect4:build: npm notice run @rehab-trainer/game-connect4@1.0.0 build
+@rehab-trainer/game-connect4:build: npm notice run vite build
+@rehab-trainer/game-connect4:build: vite v6.4.3 building for production...
+@rehab-trainer/game-plus-minus:build: npm notice run @rehab-trainer/game-plus-minus@1.0.0 build
+@rehab-trainer/game-plus-minus:build: npm notice run vite build
+@rehab-trainer/game-plus-minus:build: vite v6.4.3 building for production...
+@rehab-trainer/game-plus-minus:build: transforming...
+@rehab-trainer/game-plus-minus:build: ✓ 73 modules transformed.
+@rehab-trainer/game-plus-minus:build: rendering chunks...
+@rehab-trainer/game-plus-minus:build: computing gzip size...
+@rehab-trainer/game-plus-minus:build: dist/index.html                   0.44 kB │ gzip:   0.33 kB
+@rehab-trainer/game-plus-minus:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-whack-a-mole:build: vite v6.4.3 building for production...
+@rehab-trainer/game-plus-minus:build: dist/assets/index-DgajFDSz.js   321.00 kB │ gzip: 104.53 kB
+@rehab-trainer/game-plus-minus:build: ✓ built in 11.97s
+@rehab-trainer/game-letter-memory:build: npm notice run @rehab-trainer/game-letter-memory@1.0.0 build
+@rehab-trainer/game-letter-memory:build: npm notice run vite build
+@rehab-trainer/game-letter-memory:build: vite v6.4.3 building for production...
+@rehab-trainer/game-connect4:build: transforming...
+@rehab-trainer/game-whack-a-mole:build: transforming...
+@rehab-trainer/game-whack-a-mole:build: ✓ 871 modules transformed.
+@rehab-trainer/game-letter-memory:build: transforming...
+@rehab-trainer/game-spatial-span:build: cache hit, replaying logs bf309ef4a36337fc
+@rehab-trainer/game-whack-a-mole:build: rendering chunks...
+@rehab-trainer/game-whack-a-mole:build: computing gzip size...
+@rehab-trainer/game-letter-memory:build: ✓ 73 modules transformed.
+@rehab-trainer/game-letter-memory:build: rendering chunks...
+@rehab-trainer/game-letter-memory:build: computing gzip size...
+@rehab-trainer/game-whack-a-mole:build: dist/index.html                               0.42 kB │ gzip:   0.31 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/CanvasPool-BwT7ntMJ.js            0.78 kB │ gzip:   0.43 kB
+@rehab-trainer/game-letter-memory:build: dist/index.html                   0.45 kB │ gzip:   0.33 kB
+@rehab-trainer/game-letter-memory:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-letter-memory:build: dist/assets/index-Bw5-aKHJ.js   321.45 kB │ gzip: 104.68 kB
+@rehab-trainer/game-letter-memory:build: ✓ built in 6.99s
+@rehab-trainer/game-connect4:build: ✓ 870 modules transformed.
+@rehab-trainer/game-connect4:build: rendering chunks...
+@rehab-trainer/game-connect4:build: computing gzip size...
+@rehab-trainer/game-connect4:build: dist/index.html                               0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-connect4:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/Filter-DG1jmt_X.js                0.90 kB │ gzip:   0.47 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/canvasUtils-BLYCXI34.js           5.77 kB │ gzip:   1.80 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/BufferResource-CmgCRJyl.js       11.15 kB │ gzip:   2.87 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/webworkerAll-DNJ8nr8N.js         16.00 kB │ gzip:   5.10 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/CanvasRenderer-GFr_lLas.js       18.42 kB │ gzip:   6.17 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/browserAll-CNIg4Vnf.js           43.37 kB │ gzip:  11.40 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/WebGPURenderer-_cUhVqFm.js       46.33 kB │ gzip:  13.33 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/RenderTargetSystem-CfYEDGdR.js   53.01 kB │ gzip:  14.67 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/WebGLRenderer--8RVL1Lh.js        72.27 kB │ gzip:  19.71 kB
+@rehab-trainer/game-whack-a-mole:build: dist/assets/index-DbMlF03Z.js               653.41 kB │ gzip: 210.02 kB
+@rehab-trainer/game-whack-a-mole:build:
+@rehab-trainer/game-whack-a-mole:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-connect4:build: dist/assets/CanvasPool-B5gH02qF.js            0.78 kB │ gzip:   0.44 kB
+@rehab-trainer/game-reaction-time:build: cache hit, replaying logs 6fb992568063f14f
+@rehab-trainer/game-spatial-span:build: npm notice run @rehab-trainer/game-spatial-span@1.0.0 build
+@rehab-trainer/game-spatial-span:build: npm notice run vite build
+@rehab-trainer/game-spatial-span:build: vite v6.4.3 building for production...
+@rehab-trainer/game-spatial-span:build: transforming...
+@rehab-trainer/game-spatial-span:build: ✓ 73 modules transformed.
+@rehab-trainer/game-spatial-span:build: rendering chunks...
+@rehab-trainer/game-spatial-span:build: computing gzip size...
+@rehab-trainer/game-spatial-span:build: dist/index.html                   0.45 kB │ gzip:   0.33 kB
+@rehab-trainer/game-spatial-span:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-spatial-span:build: dist/assets/index-BIGFkgVe.js   321.29 kB │ gzip: 104.69 kB
+@rehab-trainer/game-spatial-span:build: ✓ built in 5.21s
+@rehab-trainer/game-connect4:build: dist/assets/Filter-D2K87XQz.js                0.90 kB │ gzip:   0.47 kB
+@rehab-trainer/game-reaction-time:build: npm notice run @rehab-trainer/game-reaction-time@1.0.0 build
+@rehab-trainer/game-reaction-time:build: npm notice run vite build
+@rehab-trainer/game-connect4:build: dist/assets/canvasUtils-Bj9SDVdU.js           5.77 kB │ gzip:   1.80 kB
+@rehab-trainer/game-whack-a-mole:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-connect4:build: dist/assets/BufferResource-DtNRbflk.js       11.15 kB │ gzip:   2.87 kB
+@rehab-trainer/game-whack-a-mole:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-whack-a-mole:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-whack-a-mole:build: ✓ built in 23.91s
+@rehab-trainer/game-connect4:build: dist/assets/webworkerAll-DLAc7c5d.js         16.00 kB │ gzip:   5.11 kB
+@rehab-trainer/game-connect4:build: dist/assets/CanvasRenderer-BrB3R2ZX.js       18.42 kB │ gzip:   6.17 kB
+@rehab-trainer/game-connect4:build: dist/assets/browserAll-BeiqeNJp.js           43.37 kB │ gzip:  11.41 kB
+@rehab-trainer/game-connect4:build: dist/assets/WebGPURenderer-B01E23UE.js       46.33 kB │ gzip:  13.34 kB
+@rehab-trainer/game-connect4:build: dist/assets/RenderTargetSystem-C8LqZlaU.js   53.01 kB │ gzip:  14.68 kB
+@rehab-trainer/game-connect4:build: dist/assets/WebGLRenderer-B7Lxr1Zx.js        72.27 kB │ gzip:  19.71 kB
+@rehab-trainer/game-connect4:build: dist/assets/index-CfJDdfWw.js               649.94 kB │ gzip: 209.23 kB
+@rehab-trainer/game-connect4:build:
+@rehab-trainer/game-connect4:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-connect4:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-connect4:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-connect4:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-connect4:build: ✓ built in 22.79s
+@rehab-trainer/game-reaction-time:build: vite v6.4.3 building for production...
+@rehab-trainer/game-reaction-time:build: transforming...
+@rehab-trainer/game-reaction-time:build: ✓ 871 modules transformed.
+@rehab-trainer/game-reaction-time:build: rendering chunks...
+@rehab-trainer/game-reaction-time:build: computing gzip size...
+@rehab-trainer/game-reaction-time:build: dist/index.html                               0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-reaction-time:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-reaction-time:build: dist/assets/Filter-D8ZblRlZ.js                0.90 kB │ gzip:   0.47 kB
+@rehab-trainer/game-reaction-time:build: dist/assets/BufferResource-D_6qHYmy.js       11.14 kB │ gzip:   2.86 kB
+@rehab-trainer/game-reaction-time:build: dist/assets/webworkerAll-D00yXvda.js         15.58 kB │ gzip:   4.92 kB
+@rehab-trainer/game-reaction-time:build: dist/assets/CanvasRenderer-DfgqZw1o.js       18.38 kB │ gzip:   6.16 kB
+@rehab-trainer/game-reaction-time:build: dist/assets/browserAll-DNnPgD5g.js           43.30 kB │ gzip:  11.37 kB
+@rehab-trainer/game-reaction-time:build: dist/assets/WebGPURenderer-Bx6vXa_T.js       46.29 kB │ gzip:  13.32 kB
+@rehab-trainer/game-reaction-time:build: dist/assets/RenderTargetSystem-Bxi9ZC-j.js   52.58 kB │ gzip:  14.56 kB
+@rehab-trainer/game-reaction-time:build: dist/assets/WebGLRenderer-LKUVr8ZQ.js        72.27 kB │ gzip:  19.70 kB
+@rehab-trainer/game-reaction-time:build: dist/assets/index-D0aHmcj4.js               696.04 kB │ gzip: 223.28 kB
+@rehab-trainer/game-reaction-time:build:
+@rehab-trainer/game-reaction-time:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-reaction-time:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-reaction-time:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-reaction-time:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-reaction-time:build: ✓ built in 13.20s
+@rehab-trainer/game-driving-rehab:build: cache hit, replaying logs b874b8ab9bf9fbe7
+@rehab-trainer/game-sudoku:build: cache hit, replaying logs 70ebe4ba19d466c3
+@rehab-trainer/game-tic-tac-toe:build: cache hit, replaying logs 2091100e322768a1
+@rehab-trainer/game-digit-span:build: cache hit, replaying logs 8b42a2c485c5e98c
+@rehab-trainer/game-simon-says:build: cache hit, replaying logs 697e2d48662bfe16
+@rehab-trainer/game-sudoku:build: npm notice run @rehab-trainer/game-sudoku@1.0.0 build
+@rehab-trainer/game-sudoku:build: npm notice run vite build
+@rehab-trainer/game-sudoku:build: vite v6.4.3 building for production...
+@rehab-trainer/game-sudoku:build: transforming...
+@rehab-trainer/game-sudoku:build: ✓ 870 modules transformed.
+@rehab-trainer/game-tic-tac-toe:build: npm notice run @rehab-trainer/game-tic-tac-toe@1.0.0 build
+@rehab-trainer/game-tic-tac-toe:build: npm notice run vite build
+@rehab-trainer/game-tic-tac-toe:build: vite v6.4.3 building for production...
+@rehab-trainer/game-sudoku:build: rendering chunks...
+@rehab-trainer/game-digit-span:build: npm notice run @rehab-trainer/game-digit-span@1.0.0 build
+@rehab-trainer/game-driving-rehab:build: npm notice run @rehab-trainer/game-driving-rehab@1.0.0 build
+@rehab-trainer/game-driving-rehab:build: npm notice run vite build
+@rehab-trainer/game-sudoku:build: computing gzip size...
+@rehab-trainer/game-sudoku:build: dist/index.html                               0.42 kB │ gzip:   0.29 kB
+@rehab-trainer/game-digit-span:build: npm notice run vite build
+@rehab-trainer/game-digit-span:build: vite v6.4.3 building for production...
+@rehab-trainer/game-digit-span:build: transforming...
+@rehab-trainer/game-driving-rehab:build: vite v6.4.3 building for production...
+@rehab-trainer/game-driving-rehab:build: transforming...
+@rehab-trainer/game-tic-tac-toe:build: transforming...
+@rehab-trainer/game-tic-tac-toe:build: ✓ 870 modules transformed.
+@rehab-trainer/game-driving-rehab:build: ✓ 170 modules transformed.
+@rehab-trainer/game-sudoku:build:
+@rehab-trainer/game-tic-tac-toe:build: rendering chunks...
+@rehab-trainer/game-tic-tac-toe:build: computing gzip size...
+@rehab-trainer/game-digit-span:build: ✓ 73 modules transformed.
+@rehab-trainer/game-digit-span:build: rendering chunks...
+@rehab-trainer/game-driving-rehab:build: rendering chunks...
+@rehab-trainer/game-driving-rehab:build: computing gzip size...
+@rehab-trainer/game-simon-says:build: npm notice run @rehab-trainer/game-simon-says@1.0.0 build
+@rehab-trainer/game-simon-says:build: npm notice run vite build
+@rehab-trainer/game-simon-says:build: vite v6.4.3 building for production...
+@rehab-trainer/game-simon-says:build: transforming...
+@rehab-trainer/game-tic-tac-toe:build: dist/index.html                               0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-tic-tac-toe:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-tic-tac-toe:build: dist/assets/Filter-BAHXG5aU.js                0.90 kB │ gzip:   0.48 kB
+@rehab-trainer/game-driving-rehab:build: dist/index.html                                  0.44 kB │ gzip:   0.33 kB
+@rehab-trainer/game-driving-rehab:build: dist/assets/car-pedals-BXQENW7T.svg            198.91 kB │ gzip:  16.91 kB
+@rehab-trainer/game-driving-rehab:build: dist/assets/taipei-xinyi-osm-CpFD8qr_.json     522.91 kB │ gzip:  71.27 kB
+@rehab-trainer/game-driving-rehab:build: dist/assets/car-Bzns4QWc.glb                 6,062.43 kB
+@rehab-trainer/game-driving-rehab:build: dist/assets/index-Da8eBU7J.css                  82.70 kB │ gzip:  14.62 kB
+@rehab-trainer/game-driving-rehab:build: dist/assets/index-DGuYbwJ6.js                  416.51 kB │ gzip: 135.43 kB
+@rehab-trainer/game-maze:build: cache hit, replaying logs f8d6776c7dc0d85a
+@rehab-trainer/game-simon-says:build: ✓ 871 modules transformed.
+@rehab-trainer/game-simon-says:build: rendering chunks...
+@rehab-trainer/game-simon-says:build: computing gzip size...
+@rehab-trainer/game-simon-says:build: dist/index.html                               0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-simon-says:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-digit-span:build: computing gzip size...
+@rehab-trainer/game-gabor-patching:build: cache hit, replaying logs db00ac22bc298ef0
+@rehab-trainer/game-sliding-puzzle:build: cache hit, replaying logs a07311a1f3ff9249
+@rehab-trainer/game-tongue-catch:build: cache hit, replaying logs 8e1efeaa0491f4c8
+@rehab-trainer/game-simon-says:build: dist/assets/CanvasPool-DEZuxQ7M.js            0.78 kB │ gzip:   0.43 kB
+@rehab-trainer/game-simon-says:build: dist/assets/Filter-j79tKlUv.js                0.90 kB │ gzip:   0.47 kB
+@rehab-trainer/game-simon-says:build: dist/assets/canvasUtils-Cr_b5Oi7.js           5.77 kB │ gzip:   1.80 kB
+@rehab-trainer/game-simon-says:build: dist/assets/BufferResource-DkLDoxYJ.js       11.15 kB │ gzip:   2.87 kB
+@rehab-trainer/game-simon-says:build: dist/assets/webworkerAll-Cbp0yrgF.js         16.00 kB │ gzip:   5.10 kB
+@rehab-trainer/game-simon-says:build: dist/assets/CanvasRenderer-Ajfs942F.js       18.42 kB │ gzip:   6.17 kB
+@rehab-trainer/game-simon-says:build: dist/assets/browserAll-_Tts3vvr.js           43.37 kB │ gzip:  11.40 kB
+@rehab-trainer/game-simon-says:build: dist/assets/WebGPURenderer-B1K7OpJ0.js       46.33 kB │ gzip:  13.34 kB
+@rehab-trainer/game-simon-says:build:
+@rehab-trainer/game-simon-says:build: dist/assets/RenderTargetSystem-lDsVSoYR.js   53.01 kB │ gzip:  14.67 kB
+@rehab-trainer/game-simon-says:build: dist/assets/WebGLRenderer-DzmurSg-.js        72.27 kB │ gzip:  19.71 kB
+@rehab-trainer/game-simon-says:build: dist/assets/index-BTrMYmi1.js               655.37 kB │ gzip: 210.78 kB
+@rehab-trainer/game-simon-says:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-simon-says:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-simon-says:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-maze:build: npm notice run @rehab-trainer/game-maze@1.0.0 build
+@rehab-trainer/game-maze:build: npm notice run vite build
+@rehab-trainer/game-digit-span:build: dist/index.html                   0.44 kB │ gzip:   0.33 kB
+@rehab-trainer/game-digit-span:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-digit-span:build: dist/assets/index-rbnW1IBb.js   321.27 kB │ gzip: 104.22 kB
+@rehab-trainer/game-digit-span:build: ✓ built in 5.69s
+@rehab-trainer/game-tic-tac-toe:build: dist/assets/BufferResource-CDiWBD-v.js       11.14 kB │ gzip:   2.86 kB
+@rehab-trainer/game-tic-tac-toe:build: dist/assets/webworkerAll-SY9cUtsT.js         15.58 kB │ gzip:   4.92 kB
+@rehab-trainer/game-tic-tac-toe:build: dist/assets/CanvasRenderer-DBN11I5g.js       18.38 kB │ gzip:   6.16 kB
+@rehab-trainer/game-tic-tac-toe:build: dist/assets/browserAll-B8OSqezs.js           43.30 kB │ gzip:  11.37 kB
+@rehab-trainer/game-tic-tac-toe:build: dist/assets/WebGPURenderer--Z_XQBf6.js       46.29 kB │ gzip:  13.32 kB
+@rehab-trainer/game-tic-tac-toe:build: dist/assets/RenderTargetSystem-BG4S5Jwa.js   52.58 kB │ gzip:  14.56 kB
+@rehab-trainer/game-simon-says:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-simon-says:build: ✓ built in 18.59s
+@rehab-trainer/game-maze:build: vite v6.4.3 building for production...
+@rehab-trainer/game-maze:build: transforming...
+@rehab-trainer/game-maze:build: ✓ 870 modules transformed.
+@rehab-trainer/game-maze:build: rendering chunks...
+@rehab-trainer/game-maze:build: computing gzip size...
+@rehab-trainer/game-maze:build: dist/index.html                               0.42 kB │ gzip:   0.29 kB
+@rehab-trainer/game-maze:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-maze:build: dist/assets/CanvasPool-cCh1GsEs.js            0.78 kB │ gzip:   0.44 kB
+@rehab-trainer/game-maze:build: dist/assets/Filter-Bl2fakdR.js                0.90 kB │ gzip:   0.48 kB
+@rehab-trainer/game-sliding-puzzle:build: npm notice run @rehab-trainer/game-sliding-puzzle@1.0.0 build
+@rehab-trainer/game-sliding-puzzle:build: npm notice run vite build
+@rehab-trainer/game-sudoku:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-sudoku:build: dist/assets/Filter-BhyCtews.js                0.90 kB │ gzip:   0.48 kB
+@rehab-trainer/game-driving-rehab:build: dist/assets/three-driving-rehab-CibgMv0Z.js    737.97 kB │ gzip: 194.39 kB
+@rehab-trainer/game-driving-rehab:build:
+@rehab-trainer/game-tongue-catch:build: npm notice run @rehab-trainer/game-tongue-catch@1.0.0 build
+@rehab-trainer/game-tongue-catch:build: npm notice run vite build
+@rehab-trainer/game-tongue-catch:build: vite v6.4.3 building for production...
+@rehab-trainer/game-tongue-catch:build: transforming...
+@rehab-trainer/game-tongue-catch:build: ✓ 2118 modules transformed.
+@rehab-trainer/game-tongue-catch:build: rendering chunks...
+@rehab-trainer/game-tongue-catch:build: computing gzip size...
+@rehab-trainer/game-driving-rehab:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-attention-network-task:build: cache hit, replaying logs 5b75756c038a3b59
+@rehab-trainer/game-sudoku:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-driving-rehab:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-maze:build: dist/assets/canvasUtils-B0mVWo1T.js           5.77 kB │ gzip:   1.80 kB
+@rehab-trainer/game-gabor-patching:build: npm notice run @rehab-trainer/game-gabor-patching@1.0.0 build
+@rehab-trainer/game-gabor-patching:build: npm notice run vite build
+@rehab-trainer/game-gabor-patching:build: vite v6.4.3 building for production...
+@rehab-trainer/game-sliding-puzzle:build: vite v6.4.3 building for production...
+@rehab-trainer/game-sliding-puzzle:build: transforming...
+@rehab-trainer/game-sliding-puzzle:build: ✓ 870 modules transformed.
+@rehab-trainer/game-tic-tac-toe:build: dist/assets/WebGLRenderer-WrUDl06i.js        72.27 kB │ gzip:  19.70 kB
+@rehab-trainer/game-tic-tac-toe:build: dist/assets/index-uKTJU8t8.js               692.27 kB │ gzip: 222.47 kB
+@rehab-trainer/game-tic-tac-toe:build:
+@rehab-trainer/game-tic-tac-toe:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-tic-tac-toe:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-sudoku:build: dist/assets/BufferResource-x3UqTRuj.js       11.14 kB │ gzip:   2.86 kB
+@rehab-trainer/game-sudoku:build: dist/assets/webworkerAll-DnJqvS69.js         15.58 kB │ gzip:   4.92 kB
+@rehab-trainer/game-tongue-catch:build: dist/index.html                                 0.43 kB │ gzip:   0.32 kB
+@rehab-trainer/game-tongue-catch:build: dist/assets/index-B9b-1N-T.css                 80.06 kB │ gzip:  14.20 kB
+@rehab-trainer/game-tongue-catch:build:
+@rehab-trainer/game-tongue-catch:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-tongue-catch:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-tongue-catch:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-tongue-catch:build: dist/assets/CanvasPool-DJmrc2r9.js              0.78 kB │ gzip:   0.43 kB
+@rehab-trainer/game-tongue-catch:build: dist/assets/Filter-CgKBrcqe.js                  0.90 kB │ gzip:   0.48 kB
+@rehab-trainer/game-tongue-catch:build: dist/assets/canvasUtils-Cs-SmI82.js             5.77 kB │ gzip:   1.80 kB
+@rehab-trainer/game-tongue-catch:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-tongue-catch:build: dist/assets/BufferResource-v-ftWIM2.js         11.15 kB │ gzip:   2.87 kB
+@rehab-trainer/game-tongue-catch:build: dist/assets/webworkerAll-qXKzWSoq.js           16.00 kB │ gzip:   5.10 kB
+@rehab-trainer/game-tongue-catch:build: dist/assets/CanvasRenderer-CHYTQ2re.js         28.04 kB │ gzip:   8.33 kB
+@rehab-trainer/game-tongue-catch:build: dist/assets/BitmapFont-DSVOTyiv.js             34.52 kB │ gzip:  11.76 kB
+@rehab-trainer/game-maze:build: dist/assets/BufferResource-BCF1N63D.js       11.15 kB │ gzip:   2.87 kB
+@rehab-trainer/game-maze:build: dist/assets/webworkerAll-anK8bxH1.js         16.00 kB │ gzip:   5.10 kB
+@rehab-trainer/game-gabor-patching:build: transforming...
+@rehab-trainer/game-gabor-patching:build: ✓ 869 modules transformed.
+@rehab-trainer/game-gabor-patching:build: rendering chunks...
+@rehab-trainer/game-sliding-puzzle:build: rendering chunks...
+@rehab-trainer/game-sliding-puzzle:build: computing gzip size...
+@rehab-trainer/game-attention-network-task:build: npm notice run @rehab-trainer/game-attention-network-task@1.0.0 build
+@rehab-trainer/game-attention-network-task:build: npm notice run vite build
+@rehab-trainer/game-attention-network-task:build: vite v6.4.3 building for production...
+@rehab-trainer/game-attention-network-task:build: transforming...
+@rehab-trainer/game-tic-tac-toe:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-tic-tac-toe:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-tongue-catch:build: dist/assets/browserAll-CkXl6isO.js             43.37 kB │ gzip:  11.40 kB
+@rehab-trainer/game-attention-network-task:build: ✓ 73 modules transformed.
+@rehab-trainer/game-tongue-catch:build: dist/assets/WebGPURenderer-Bef8TV_f.js         46.34 kB │ gzip:  13.34 kB
+@rehab-trainer/game-attention-network-task:build: rendering chunks...
+@rehab-trainer/game-tic-tac-toe:build: ✓ built in 22.59s
+@rehab-trainer/game-sliding-puzzle:build: dist/index.html                               0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-sliding-puzzle:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-sliding-puzzle:build: dist/assets/Filter-BKRVTxh3.js                0.90 kB │ gzip:   0.47 kB
+@rehab-trainer/game-sliding-puzzle:build: dist/assets/BufferResource-AJZuksk6.js       11.14 kB │ gzip:   2.86 kB
+@rehab-trainer/game-gabor-patching:build: computing gzip size...
+@rehab-trainer/game-tongue-catch:build: dist/assets/RenderTargetSystem-CD16xIph.js     53.01 kB │ gzip:  14.67 kB
+@rehab-trainer/game-tongue-catch:build: dist/assets/WebGLRenderer-CJE62UmB.js          72.27 kB │ gzip:  19.71 kB
+@rehab-trainer/game-driving-rehab:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-driving-rehab:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-driving-rehab:build: ✓ built in 13.90s
+@rehab-trainer/game-sudoku:build: dist/assets/CanvasRenderer-D92BQMth.js       18.38 kB │ gzip:   6.16 kB
+@rehab-trainer/game-maze:build: dist/assets/CanvasRenderer-DRagVghg.js       18.42 kB │ gzip:   6.17 kB
+@rehab-trainer/game-maze:build: dist/assets/browserAll-D979TNbV.js           43.37 kB │ gzip:  11.40 kB
+@rehab-trainer/game-maze:build: dist/assets/WebGPURenderer-CZ4VEljc.js       46.33 kB │ gzip:  13.33 kB
+@rehab-trainer/game-sliding-puzzle:build: dist/assets/webworkerAll-CUnaCDJw.js         15.58 kB │ gzip:   4.92 kB
+@rehab-trainer/game-sliding-puzzle:build: dist/assets/CanvasRenderer-uZNB-_0c.js       18.38 kB │ gzip:   6.16 kB
+@rehab-trainer/game-sliding-puzzle:build: dist/assets/browserAll-DmlBADGp.js           43.30 kB │ gzip:  11.37 kB
+@rehab-trainer/game-attention-network-task:build: computing gzip size...
+@rehab-trainer/game-attention-network-task:build: dist/index.html                   0.44 kB │ gzip:   0.33 kB
+@rehab-trainer/game-attention-network-task:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-attention-network-task:build: dist/assets/index-BpqXQhe6.js   321.63 kB │ gzip: 104.37 kB
+@rehab-trainer/game-attention-network-task:build: ✓ built in 6.62s
+@rehab-trainer/game-sudoku:build: dist/assets/browserAll-CqFqpWde.js           43.30 kB │ gzip:  11.37 kB
+@rehab-trainer/game-sudoku:build: dist/assets/WebGPURenderer-B3NO2BD0.js       46.29 kB │ gzip:  13.32 kB
+@rehab-trainer/game-maze:build: dist/assets/RenderTargetSystem-BS0pyxyL.js   53.01 kB │ gzip:  14.67 kB
+@rehab-trainer/game-maze:build: dist/assets/WebGLRenderer-BMfS1iVy.js        72.27 kB │ gzip:  19.71 kB
+@rehab-trainer/game-maze:build: dist/assets/index-DhLSIQ1O.js               651.62 kB │ gzip: 209.92 kB
+@rehab-trainer/game-maze:build:
+@rehab-trainer/game-gabor-patching:build: dist/index.html                               0.43 kB │ gzip:   0.31 kB
+@rehab-trainer/game-gabor-patching:build: dist/assets/index-CfMrwrcE.css               81.58 kB │ gzip:  14.44 kB
+@rehab-trainer/game-gabor-patching:build: dist/assets/Filter-BAH5qozm.js                2.60 kB │ gzip:   1.02 kB
+@rehab-trainer/game-sliding-puzzle:build: dist/assets/WebGPURenderer-BuuFZYsH.js       46.29 kB │ gzip:  13.32 kB
+@rehab-trainer/game-reading-training:build: cache hit, replaying logs 5c49cab8bc107aa3
+@rehab-trainer/game-maze:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-sudoku:build: dist/assets/RenderTargetSystem-D9QfIIS5.js   52.58 kB │ gzip:  14.56 kB
+@rehab-trainer/game-sudoku:build: dist/assets/WebGLRenderer-C54NKAON.js        72.27 kB │ gzip:  19.70 kB
+@rehab-trainer/game-sudoku:build: dist/assets/index-HdoqRQSm.js               694.04 kB │ gzip: 223.23 kB
+@rehab-trainer/game-gabor-patching:build: dist/assets/BufferResource-2p0AXjpx.js       11.15 kB │ gzip:   2.86 kB
+@rehab-trainer/game-tongue-catch:build: dist/assets/index-BAP5_MZy.js               2,416.74 kB │ gzip: 513.46 kB
+@rehab-trainer/game-gabor-patching:build: dist/assets/webworkerAll-DGNahmVW.js         15.58 kB │ gzip:   4.92 kB
+@rehab-trainer/game-gabor-patching:build: dist/assets/CanvasRenderer-Dqk-usOQ.js       28.00 kB │ gzip:   8.31 kB
+@rehab-trainer/game-gabor-patching:build: dist/assets/browserAll-CcMziDHx.js           43.30 kB │ gzip:  11.37 kB
+@rehab-trainer/game-gabor-patching:build: dist/assets/WebGPURenderer-DnqKjSfI.js       46.29 kB │ gzip:  13.31 kB
+@rehab-trainer/game-maze:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-maze:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-sudoku:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-sudoku:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-sliding-puzzle:build: dist/assets/RenderTargetSystem-Cw79eL2G.js   52.58 kB │ gzip:  14.56 kB
+@rehab-trainer/game-sliding-puzzle:build: dist/assets/WebGLRenderer-DLNu5HUY.js        72.27 kB │ gzip:  19.70 kB
+@rehab-trainer/game-sliding-puzzle:build: dist/assets/index-CTwmACmf.js               691.10 kB │ gzip: 222.08 kB
+@rehab-trainer/game-sliding-puzzle:build:
+@rehab-trainer/game-flanker:build: cache hit, replaying logs f5cad062b753338c
+@rehab-trainer/game-gabor-patching:build: dist/assets/RenderTargetSystem-B_kZzJOe.js   52.69 kB │ gzip:  14.61 kB
+@rehab-trainer/game-gabor-patching:build: dist/assets/WebGLRenderer-CqhJLQW4.js        72.28 kB │ gzip:  19.70 kB
+@rehab-trainer/game-gabor-patching:build: dist/assets/index-D0LSaSUU.js               679.00 kB │ gzip: 218.51 kB
+@rehab-trainer/game-gabor-patching:build:
+@rehab-trainer/game-gabor-patching:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-gabor-patching:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-tongue-catch:build: ✓ built in 1m 5s
+@rehab-trainer/game-sliding-puzzle:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-sliding-puzzle:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-sliding-puzzle:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-maze:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-maze:build: ✓ built in 23.84s
+@rehab-trainer/game-reading-training:build: npm notice run @rehab-trainer/game-reading-training@1.0.0 build
+@rehab-trainer/game-reading-training:build: npm notice run vite build
+@rehab-trainer/game-reading-training:build: vite v6.4.3 building for production...
+@rehab-trainer/game-flanker:build: npm notice run @rehab-trainer/game-flanker@1.0.0 build
+@rehab-trainer/game-flanker:build: npm notice run vite build
+@rehab-trainer/game-flanker:build: vite v6.4.3 building for production...
+@rehab-trainer/game-ufov:build: cache hit, replaying logs 6c6334d12f8b8987
+@rehab-trainer/game-hart-chart:build: cache hit, replaying logs 2d81d19e28c8606c
+@rehab-trainer/game-sudoku:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-gabor-patching:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-gabor-patching:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-gabor-patching:build: ✓ built in 22.36s
+@rehab-trainer/game-sliding-puzzle:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-sliding-puzzle:build: ✓ built in 18.97s
+@rehab-trainer/game-reading-training:build: transforming...
+@rehab-trainer/game-reading-training:build: ✓ 875 modules transformed.
+@rehab-trainer/game-flanker:build: transforming...
+@rehab-trainer/game-flanker:build: ✓ 73 modules transformed.
+@rehab-trainer/game-sudoku:build: ✓ built in 20.45s
+@rehab-trainer/game-reading-training:build: rendering chunks...
+@rehab-trainer/game-reading-training:build: computing gzip size...
+@rehab-trainer/game-flanker:build: rendering chunks...
+@rehab-trainer/game-flanker:build: computing gzip size...
+@rehab-trainer/game-ufov:build: npm notice run @rehab-trainer/game-ufov@1.0.0 build
+@rehab-trainer/game-hart-chart:build: npm notice run @rehab-trainer/game-hart-chart@1.0.0 build
+@rehab-trainer/game-reading-training:build: dist/index.html                               0.43 kB │ gzip:   0.32 kB
+@rehab-trainer/game-reading-training:build: dist/assets/index-D9yh0MkJ.css               80.38 kB │ gzip:  14.26 kB
+@rehab-trainer/game-reading-training:build: dist/assets/Filter-B_CoXyNT.js                0.90 kB │ gzip:   0.47 kB
+@rehab-trainer/game-ufov:build: npm notice run vite build
+@rehab-trainer/game-ufov:build: vite v6.4.3 building for production...
+@rehab-trainer/game-ufov:build: transforming...
+@rehab-trainer/game-hart-chart:build: npm notice run vite build
+@rehab-trainer/game-hart-chart:build: vite v6.4.3 building for production...
+@rehab-trainer/game-hart-chart:build: transforming...
+@rehab-trainer/game-hart-chart:build: ✓ 199 modules transformed.
+@rehab-trainer/game-hart-chart:build: rendering chunks...
+@rehab-trainer/game-reading-training:build: dist/assets/BufferResource-DCMfh47U.js       11.14 kB │ gzip:   2.86 kB
+@rehab-trainer/game-reading-training:build: dist/assets/webworkerAll-BWjrEQ2l.js         15.58 kB │ gzip:   4.92 kB
+@rehab-trainer/game-reading-training:build: dist/assets/CanvasRenderer-DLXfJApj.js       18.38 kB │ gzip:   6.16 kB
+@rehab-trainer/game-reading-training:build: dist/assets/browserAll-Mz5V24sy.js           43.30 kB │ gzip:  11.37 kB
+@rehab-trainer/game-flanker:build: dist/index.html                   0.44 kB │ gzip:   0.33 kB
+@rehab-trainer/game-flanker:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-hart-chart:build: computing gzip size...
+@rehab-trainer/game-hart-chart:build: dist/index.html                   0.43 kB │ gzip:   0.31 kB
+@rehab-trainer/game-hart-chart:build: dist/assets/index-CM8rtaCA.css   93.84 kB │ gzip:  16.61 kB
+@rehab-trainer/game-hart-chart:build: dist/assets/index-DoZ_RwGt.js   439.54 kB │ gzip: 145.06 kB
+@rehab-trainer/game-ufov:build: ✓ 149 modules transformed.
+@rehab-trainer/game-ufov:build: rendering chunks...
+@rehab-trainer/game-ufov:build: computing gzip size...
+@rehab-trainer/game-ufov:build: dist/index.html                   0.43 kB │ gzip:   0.31 kB
+@rehab-trainer/game-ufov:build: dist/assets/index-DN3nti_G.css   87.97 kB │ gzip:  15.64 kB
+@rehab-trainer/game-flanker:build: dist/assets/index-CkfPFzYo.js   321.29 kB │ gzip: 104.21 kB
+@rehab-trainer/game-flanker:build: ✓ built in 5.63s
+@rehab-trainer/game-hart-chart:build: ✓ built in 11.74s
+@rehab-trainer/game-reading-training:build: dist/assets/WebGPURenderer-v3f2amG3.js       46.29 kB │ gzip:  13.31 kB
+@rehab-trainer/game-reading-training:build: dist/assets/RenderTargetSystem-DUmx3Glw.js   52.58 kB │ gzip:  14.56 kB
+@rehab-trainer/game-reading-training:build: dist/assets/WebGLRenderer-Bl9nTLJE.js        72.27 kB │ gzip:  19.70 kB
+@rehab-trainer/game-reading-training:build: dist/assets/index-bFmSWltO.js               761.20 kB │ gzip: 243.18 kB
+@rehab-trainer/game-reading-training:build:
+@rehab-trainer/game-reading-training:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-ufov:build: dist/assets/index-CkgcKFNw.js   450.43 kB │ gzip: 147.10 kB
+@rehab-trainer/game-ufov:build: ✓ built in 13.77s
+@rehab-trainer/game-lights-out:build: cache hit, replaying logs 2ba8606a1a4ffdff
+@rehab-trainer/game-reading-training:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-reading-training:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-reading-training:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-reading-training:build: ✓ built in 20.70s
+@rehab-trainer/game-lights-out:build: npm notice run @rehab-trainer/game-lights-out@1.0.0 build
+@rehab-trainer/game-lights-out:build: npm notice run vite build
+@rehab-trainer/game-lights-out:build: vite v6.4.3 building for production...
+@rehab-trainer/game-lights-out:build: transforming...
+@rehab-trainer/game-lights-out:build: ✓ 870 modules transformed.
+@rehab-trainer/game-lights-out:build: rendering chunks...
+@rehab-trainer/game-lights-out:build: computing gzip size...
+@rehab-trainer/game-lights-out:build: dist/index.html                               0.42 kB │ gzip:   0.30 kB
+@rehab-trainer/game-lights-out:build: dist/assets/index-BrUXGa19.css               85.37 kB │ gzip:  15.12 kB
+@rehab-trainer/game-lights-out:build: dist/assets/CanvasPool-CN5qL39B.js            0.78 kB │ gzip:   0.43 kB
+@rehab-trainer/game-lights-out:build: dist/assets/Filter-CipCa7Rr.js                0.90 kB │ gzip:   0.48 kB
+@rehab-trainer/game-lights-out:build:
+@rehab-trainer/game-lights-out:build: dist/assets/canvasUtils-WndmMBHs.js           5.77 kB │ gzip:   1.80 kB
+@rehab-trainer/game-lights-out:build: dist/assets/BufferResource-DO0bsC_b.js       11.15 kB │ gzip:   2.87 kB
+@rehab-trainer/game-lights-out:build: dist/assets/webworkerAll-wrVl9Wjm.js         16.00 kB │ gzip:   5.10 kB
+@rehab-trainer/game-lights-out:build: dist/assets/CanvasRenderer-CsPcKcu2.js       18.42 kB │ gzip:   6.17 kB
+@rehab-trainer/game-lights-out:build: dist/assets/browserAll-0_60_Do7.js           43.37 kB │ gzip:  11.40 kB
+@rehab-trainer/game-lights-out:build: dist/assets/WebGPURenderer-B2FN6I8K.js       46.33 kB │ gzip:  13.33 kB
+@rehab-trainer/game-lights-out:build: dist/assets/RenderTargetSystem-B_Qjeogu.js   53.01 kB │ gzip:  14.67 kB
+@rehab-trainer/game-lights-out:build: dist/assets/WebGLRenderer-DzeWQ31j.js        72.27 kB │ gzip:  19.71 kB
+@rehab-trainer/game-lights-out:build: dist/assets/index-zvu0ZoHN.js               647.54 kB │ gzip: 208.46 kB
+@rehab-trainer/game-go-nogo:build: cache hit, replaying logs 7161de82dfec7c67
+@rehab-trainer/game-tower-of-london:build: cache hit, replaying logs 43d2c636e61f700c
+@rehab-trainer/game-lights-out:build: (!) Some chunks are larger than 500 kB after minification. Consider:
+@rehab-trainer/game-lights-out:build: - Using dynamic import() to code-split the application
+@rehab-trainer/game-lights-out:build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+@rehab-trainer/game-lights-out:build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+@rehab-trainer/game-lights-out:build: ✓ built in 25.06s
+@rehab-trainer/game-go-nogo:build: npm notice run @rehab-trainer/game-go-nogo@1.0.0 build
+@rehab-trainer/game-go-nogo:build: npm notice run vite build
+@rehab-trainer/game-go-nogo:build: vite v6.4.3 building for production...
+@rehab-trainer/game-go-nogo:build: transforming...
+@rehab-trainer/game-go-nogo:build: ✓ 73 modules transformed.
+@rehab-trainer/game-go-nogo:build: rendering chunks...
+@rehab-trainer/game-go-nogo:build: computing gzip size...
+@rehab-trainer/game-go-nogo:build: dist/index.html                   0.45 kB │ gzip:   0.33 kB
+@rehab-trainer/game-go-nogo:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-go-nogo:build: dist/assets/index-BY7VS9z0.js   321.42 kB │ gzip: 104.24 kB
+@rehab-trainer/game-go-nogo:build: ✓ built in 11.96s
+@rehab-trainer/game-tower-of-london:build: npm notice run @rehab-trainer/game-tower-of-london@1.0.0 build
+@rehab-trainer/game-tower-of-london:build: npm notice run vite build
+@rehab-trainer/game-tower-of-london:build: vite v6.4.3 building for production...
+@rehab-trainer/game-tower-of-london:build: transforming...
+@rehab-trainer/game-tower-of-london:build: ✓ 73 modules transformed.
+@rehab-trainer/game-tower-of-london:build: rendering chunks...
+@rehab-trainer/game-tower-of-london:build: computing gzip size...
+@rehab-trainer/game-tower-of-london:build: dist/index.html                   0.45 kB │ gzip:   0.33 kB
+@rehab-trainer/game-tower-of-london:build: dist/assets/index-BJATUSWX.css   74.32 kB │ gzip:  13.37 kB
+@rehab-trainer/game-tower-of-london:build: dist/assets/index-C-3fW1Nb.js   320.90 kB │ gzip: 104.51 kB
+@rehab-trainer/game-tower-of-london:build: ✓ built in 11.57s
+@rehab-trainer/rehabtrainerhub:build: cache miss, executing 6bf985d9c54aaf7b
+@rehab-trainer/rehabtrainerhub:build: npm notice run @rehab-trainer/rehabtrainerhub@1.0.0 build
+@rehab-trainer/rehabtrainerhub:build: npm notice run node scripts/clean-next-output.mjs && next build && node scripts/prune-export-duplicates.mjs out && node scripts/build-official-game-shells.mjs && node ../../scripts/emit-pwa-assets.mjs out && node ../../scripts/emit-official-game-pwas.mjs out && node ../../scripts/check-built-game-architecture.mjs out && node ../../scripts/check-seo-output.mjs
+@rehab-trainer/rehabtrainerhub:build: ▲ Next.js 16.3.5 (Turbopack)
+@rehab-trainer/rehabtrainerhub:build: ✓ Running next.config.mjs took 22ms
+@rehab-trainer/rehabtrainerhub:build:
+@rehab-trainer/rehabtrainerhub:build:   Creating an optimized production build ...
+@rehab-trainer/rehabtrainerhub:build: ✓ Compiled successfully in 7.5s
+@rehab-trainer/rehabtrainerhub:build:   Running TypeScript ...
+@rehab-trainer/rehabtrainerhub:build:   Finished TypeScript in 7.0s ...
+@rehab-trainer/rehabtrainerhub:build:   Collecting page data using 15 workers ...
+@rehab-trainer/rehabtrainerhub:build:   Generating static pages using 15 workers (0/14) ...
+@rehab-trainer/rehabtrainerhub:build:   Generating static pages using 15 workers (3/14)
+@rehab-trainer/rehabtrainerhub:build:   Generating static pages using 15 workers (6/14)
+@rehab-trainer/rehabtrainerhub:build:   Generating static pages using 15 workers (10/14)
+@rehab-trainer/rehabtrainerhub:build: ✓ Generating static pages using 15 workers (14/14) in 2.5s
+@rehab-trainer/rehabtrainerhub:build:   Finalizing page optimization ...
+@rehab-trainer/rehabtrainerhub:build:
+@rehab-trainer/rehabtrainerhub:build: Route (app)
+@rehab-trainer/rehabtrainerhub:build: ┌ ○ /
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /_not-found
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /about
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /admin
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /developer
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /download
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /llms.txt
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /privacy
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /progress
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /qa
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /robots.txt
+@rehab-trainer/rehabtrainerhub:build: ├ ○ /sitemap.xml
+@rehab-trainer/rehabtrainerhub:build: └ ○ /train
+@rehab-trainer/rehabtrainerhub:build:
+@rehab-trainer/rehabtrainerhub:build:
+@rehab-trainer/rehabtrainerhub:build: ○  (Static)  prerendered as static content
+@rehab-trainer/rehabtrainerhub:build:
+@rehab-trainer/rehabtrainerhub:build: Pruned duplicate export artifacts (404/ and _not-found/).
+@rehab-trainer/rehabtrainerhub:build: Copying 34 built official game shells to Hub output...
+@rehab-trainer/rehabtrainerhub:build: Successfully copied 34 official game shells.
+@rehab-trainer/rehabtrainerhub:build: Emitted 34 Hub-hosted official game PWAs.
+@rehab-trainer/rehabtrainerhub:build: Built game architecture passed for 40 independent game directories.
+@rehab-trainer/rehabtrainerhub:build: ✔ built Hub retains 40 independent game directories and no public trainer runtimes (117.396ms)
+@rehab-trainer/rehabtrainerhub:build: ℹ tests 1
+@rehab-trainer/rehabtrainerhub:build: ℹ suites 0
+@rehab-trainer/rehabtrainerhub:build: ℹ pass 1
+@rehab-trainer/rehabtrainerhub:build: ℹ fail 0
+@rehab-trainer/rehabtrainerhub:build: ℹ cancelled 0
+@rehab-trainer/rehabtrainerhub:build: ℹ skipped 0
+@rehab-trainer/rehabtrainerhub:build: ℹ todo 0
+@rehab-trainer/rehabtrainerhub:build: ℹ duration_ms 122.8477
+@rehab-trainer/rehabtrainerhub:build: SEO output check passed for 1 app.
+
+ Tasks:    35 successful, 35 total
+Cached:    34 cached, 35 total
+  Time:    47.959s

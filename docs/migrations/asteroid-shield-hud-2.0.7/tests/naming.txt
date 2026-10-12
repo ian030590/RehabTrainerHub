@@ -1,0 +1,19 @@
+node.exe : npm notice run rehab-workspace@1.0.0 test:naming
+位於 C:\Users\ian\scoop\apps\nodejs-lts\current\bin\npm.ps1:24 字元:5
++     & "node$exe"  "$basedir/node_modules/npm/bin/npm-cli.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run ...0.0 test:naming:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+npm notice run node --test scripts/check-identifier-names.test.mjs && node scripts/check-identifier-names.mjs
+✔ naming check ignores generated R2 release bundles (491.3237ms)
+✔ naming check still rejects authored source violations (614.5489ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1251.6022
+Identifier naming check passed.

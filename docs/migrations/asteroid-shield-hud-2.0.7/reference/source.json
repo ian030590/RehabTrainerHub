@@ -1,0 +1,5 @@
+{
+  "source": "https://github.com/eduardosamman/asteroid-attack/blob/e3af0dc6f0494cdebf54ba0b8e4e10ae1916d524/healthbar.py",
+  "commit": "e3af0dc6f0494cdebf54ba0b8e4e10ae1916d524",
+  "purpose": "Reference for top-left green health bar, damage and healing cap"
+}
