@@ -1,0 +1,117 @@
+[
+  {
+    "gameId": "asteroid-shield",
+    "version": "2.0.9",
+    "contentSha256": "ed8c281dc4f599bffb25fdf609dfb6051c09e050cbc349499649a49ff3477abe",
+    "checkedAt": "2026-10-12T20:43:51.027Z",
+    "publicApi": {
+      "status": 200,
+      "singleCurrent": true,
+      "title": "小行星護盾防衛",
+      "trainer": "motor",
+      "category": "upper-limb",
+      "previewUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.9/package/preview.webp",
+      "noSettingsUrl": true
+    },
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/asteroid-shield/2.0.9/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "manifestScope": "/games/asteroid-shield/2.0.9/",
+    "files": [
+      {
+        "path": "assets/asteroid-blue-CY-_A_BJ.png",
+        "status": 200,
+        "size": 14034,
+        "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/asteroid-dark-CW7iRJ5o.png",
+        "status": 200,
+        "size": 11856,
+        "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/asteroid-green-1XKYeWRA.png",
+        "status": 200,
+        "size": 9693,
+        "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/background-NBhu4YAc.png",
+        "status": 200,
+        "size": 83041,
+        "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/energy-rock-CT8hMT01.png",
+        "status": 200,
+        "size": 1792,
+        "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/index-bL5C7Dsd.js",
+        "status": 200,
+        "size": 1336114,
+        "sha256": "1ecb26b78a6cf7c54dea1406a0456b6214e9e1cf2736550c710143cd8d922b23",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/shield-complete-B5wkC1qZ.png",
+        "status": 200,
+        "size": 198696,
+        "sha256": "616c50843eadbaaf1db4d7ba23878feb10fba10b0ce1698ce03fb5c2c15e06d7",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/ship-CrsWCvcK.png",
+        "status": 200,
+        "size": 78990,
+        "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/style-BaNVeBlr.css",
+        "status": 200,
+        "size": 17117,
+        "sha256": "29b38cb16f39a00ae447e869a93c7554d5cfef64703a5cc4daa36f56a8604128",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 471,
+        "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 411,
+        "sha256": "b7717524addfc8b2912fbe138f4516743efe3af24ab0d0419a229fda85dbb4f3",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 20836,
+        "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+        "contentType": "image/webp"
+      }
+    ],
+    "currentSessionApi": {
+      "status": 201,
+      "version": "2.0.9",
+      "contentSha256": "ed8c281dc4f599bffb25fdf609dfb6051c09e050cbc349499649a49ff3477abe",
+      "tokenRecorded": false
+    },
+    "productionRecordsCreated": false
+  }
+]

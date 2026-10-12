@@ -1,0 +1,198 @@
+node.exe : npm notice run rehab-workspace@1.0.0 test:entrypoints
+位於 C:\Users\ian\scoop\apps\nodejs-lts\current\bin\npm.ps1:24 字元:5
++     & "node$exe"  "$basedir/node_modules/npm/bin/npm-cli.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run ...est:entrypoints:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+npm notice run node scripts/check-trainer-entrypoints.mjs && node --test scripts/check-hub-navigation.test.mjs scripts/
+check-mobile-filter-sheet.test.mjs apps/rehabtrainerhub/app/hubGames.test.mjs && node scripts/check-runtime-storage-nam
+espaces.mjs && node --test packages/ui/src/storage/subjectId.test.mjs packages/ui/src/storage/remoteRecordOutbox.test.m
+js && npm run test:webgazer && npm run test:game-platform && npm run test:training-flow && npm run test:assessment-life
+cycle && npm run test:i18n && npm run test:embedded-training && npm run test:driving-rehab && npm run test:training-con
+fig-styles
+White-screen smoke test passed for 10 protected entrypoints and 40 independent games.
+✔ reviewed game metadata updates its card and filters while preserving the R2 session launch (119.5507ms)
+✔ published catalog accepts game-owned metadata and rejects previews outside that version (68.6032ms)
+✔ older releases load the game-owned compatibility preview on the current Hub origin (18.3833ms)
+✔ one catalog includes existing games and reviewed releases without replacing their launch contracts (1.1462ms)
+✔ catalog outages preserve existing game navigation and installation entries (0.1805ms)
+✔ a published slug collision cannot replace a retained legacy game during the Hub-only stage (0.151ms)
+✔ an old drawing-defense publication cannot replace the R2 current session entry (0.1781ms)
+✔ asteroid-shield current metadata preserves its session entry despite a same-slug old settings shell (17.2055ms)
+✔ gesture-battler current metadata preserves its session entry despite a same-slug old settings shell (8.9647ms)
+✔ motor-cortex-rehab current metadata preserves its session entry despite a same-slug old settings shell (9.5242ms)
+✔ moving-card current metadata preserves its session entry despite a same-slug old settings shell (10.5081ms)
+✔ oculomotor-training current metadata preserves its session entry despite a same-slug old settings shell (14.5666ms)
+✔ the lobby presents one result grid and one launch entry while retaining its mobile controls (4.9504ms)
+✔ Hub has one four-route navigation map with an accessible current page (6.3462ms)
+✔ TrainingLobby implements accessible mobile bottom sheet filter interaction (8.306ms)
+✔ short drags return to the current detent; intentional drags expand, collapse or dismiss (74.4651ms)
+✔ short landscape viewports keep the filter actions reachable (13.9282ms)
+✔ spring settles exactly at the selected height after opening, dismissal and a fling (11.6406ms)
+✔ spring motion has the same timing on 30, 60 and 120 Hz displays (10.7593ms)
+✔ globals.css provides high-taste bottom sheet layout and touch-ergonomic targets (2.6624ms)
+✔ Lobby i18n dictionaries provide bottom sheet keys with exact parity and no emojis (1.5621ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 769.1499
+Official game adapter storage namespace check passed.
+✔ outbox records expire after 30 days but remain fresh before the deadline (57.7953ms)
+✔ reuses a valid browser subject identifier without exposing it through UI state (53.2881ms)
+✔ replaces a malformed stored value with a cryptographically random UUID v4 (2.4978ms)
+✔ keeps a stable in-memory UUID when localStorage is unavailable (1.9136ms)
+✔ uses a separate stable UUID namespace for authenticated records (1.5874ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 222.4338
+npm notice run rehab-workspace@1.0.0 test:webgazer
+npm notice run node scripts/check-webgazer-calibration.mjs && node scripts/check-webgazer-metrics.mjs
+Reference WebGazer protocol and settings contract passed.
+Reference experiment score mapping passed.
+npm notice run rehab-workspace@1.0.0 test:game-platform
+npm notice run node --test scripts/check-game-platform.test.mjs apps/usergamerunner/tests/gameBridge.test.mjs packages/
+game-settings/src/index.test.mjs
+✔ normalizes bounded aggregate results (2.2138ms)
+✔ rejects identifying and free-text result fields (0.4254ms)
+✔ matches the game-runs API numeric and request-envelope byte limits (5.386ms)
+✔ uses the one-time private message port for lifecycle and commands (41.0634ms)
+✔ validates settings.json and creates complete defaults (4.6053ms)
+✔ accepts a start-only form with no configurable sections (0.4423ms)
+✔ normalizes selected values and rejects unknown or out-of-range values (1.0922ms)
+✔ rejects mismatched game IDs and free-text field types (0.3036ms)
+✔ validates a versioned jsPsych game manifest and rejects unsafe variants (2.044ms)
+✔ pins uploaded games to runner-owned, versioned runtime URLs (7.5486ms)
+✔ accepts valid lifecycle and aggregate result messages (1.6394ms)
+✔ rejects forged opaque-sandbox messages and replayed sequences (0.3493ms)
+✔ binds runner readiness and lifecycle commands to the opaque frame session (0.6887ms)
+✔ binds selected settings to the opaque runner session (0.4038ms)
+✔ matches the game-runs API numeric and UTF-8 byte limits (8.4213ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 621.8521
+npm notice run rehab-workspace@1.0.0 test:training-flow
+npm notice run node scripts/check-training-module-flow.mjs && node scripts/check-expfactory-originals.mjs && node --tes
+t scripts/check-reference-cognitive-trials.test.mjs scripts/check-training-theme.test.mjs
+Training flow contract passed for 40 Hub-owned games and 38 game flows.
+jsPsych lifecycle: all 40 modules are managed by native timelines or external-runtime adapters; none remain utility-only.
+ExpFactory React runtimes passed for 14 games.
+✔ Hart Chart honors the configured alternation count (107.4651ms)
+✔ trial record helpers produce deterministic millisecond records (45.3448ms)
+✔ Simon life resolution only ends at zero and otherwise replays (15.988ms)
+✔ reference cognitive games persist and render complete per-trial contracts (3.2871ms)
+✔ number grids stay silent until completion and board games preserve draws (1.4371ms)
+✔ theme resolver handles IDs, aliases, and absent metadata (109.7229ms)
+✔ developer game tags require compatible major and filter categories (2.452ms)
+✔ theme style builder applies color fallbacks and bounded surface ratios (17.1081ms)
+✔ nested Material Symbol theme icons retain lobby sizing and theme color (3.2204ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 707.7592
+npm notice run rehab-workspace@1.0.0 test:assessment-lifecycle
+npm notice run node scripts/check-assessment-lifecycle.mjs && node --test apps/rehabtrainerhub/games/ufov/timing/periph
+eralAttentionTiming.test.mjs
+Build adapters remain module-only and retired Vision visual-target routes stay absent.
+✔ accepts stable per-trial rAF timing across common display refresh rates (1.6626ms)
+✔ rejects a dropped presentation frame (0.2514ms)
+✔ rejects unstable calibration, frame jitter, refresh shifts, and visibility interruptions (0.3851ms)
+✔ formal policy excludes unsynchronized attempts and pauses after finite automatic retries (0.1897ms)
+✔ UFOV experiment integrates per-trial measurement before formal result and staircase updates (0.3169ms)
+✔ UFOV aborts startup, per-trial rAF, waits, and stale jsPsych completion (0.2791ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 545.1161
+npm notice run rehab-workspace@1.0.0 test:i18n
+npm notice run node scripts/check-i18n.mjs
+i18n dictionary parity passed for 43 dictionary pairs.
+npm notice run rehab-workspace@1.0.0 test:embedded-training
+npm notice run node --test scripts/check-embedded-training-message.test.mjs
+✔ every game exposes bounded grading settings and exact numeric score sources (31.4023ms)
+✔ ExpFactory grading applies its full allowed range and rejects malformed parameters (57.091ms)
+✔ each legacy brain game removes its own post-task questionnaire (19.426ms)
+✔ fixed-length brain games expose bounded end settings and stop at the selected round (15.7325ms)
+✔ ExpFactory projections retain analysis conditions and include real practice items (19.4044ms)
+✔ antisaccade joins target and mask without counting two trials or measuring eye latency (1.7992ms)
+✔ recall and arithmetic derive item results from actual responses (12.1324ms)
+✔ Tower of London emits one problem result, not accuracy per move (1.6271ms)
+✔ React runtime retains missing RT as null and full precision in summaries (0.7608ms)
+✔ reading timeline preserves material identity and scores question responses separately (29.8632ms)
+✔ number-grid grading matches the actual rule, board and blank count (35.7741ms)
+✔ all 40 score contracts accept bounded numeric rounds and reject unsafe data (40.9183ms)
+✔ only canonical Hub, previews, and local development are trusted Hub origins (0.4551ms)
+✔ embedded training reports active state to its verified Hub origin (1.929ms)
+✔ Hub accepts messages only from the expected same-origin runtime frame (0.1687ms)
+✔ official games accept settings only from their verified Hub parent (1.3246ms)
+✔ training results expose exactly one source-aware navigation button (0.3527ms)
+✔ standalone games reopen their own configuration without browser history (0.5022ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 962.3273
+npm notice run rehab-workspace@1.0.0 test:driving-rehab
+npm notice run node --test scripts/check-driving-rehab-core.test.mjs
+✔ driving rounds start at the first rendered lane crossing, not vehicle appearance (1.8538ms)
+✔ brake and either steering direction record only the first post-crossing response (0.4009ms)
+✔ wrong-way appearance randomization supports cars and scooters with different colors (0.369ms)
+✔ driving score keeps each event including unanswered rounds (29.0628ms)
+✔ avoidance records other vehicle collisions and grades them by difficulty independently of RT (1.2446ms)
+✔ secondary collisions count only during an event and passing requires full clearance (0.5143ms)
+✔ event scheduling contains only wrong-way drivers (0.467ms)
+✔ advanced secondary collision remains a failure even if the event is unfinished (0.2179ms)
+✔ steering captures input timestamps, ignores held inputs, and accepts a new press (0.5002ms)
+✔ 3:2 high-quality viewport separates logical CSS pixels from its DPR 1.5 buffer (0.558ms)
+✔ viewport calculation is stable across aspect ratios and render qualities (0.7085ms)
+✔ main render and pass restoration keep logical viewport dimensions at DPR 1.5 (1.8457ms)
+✔ camera pose and FOV do not depend on aspect ratio, DPR, or quality (0.6749ms)
+✔ camera always faces vehicle-forward with a fixed world-up vector (0.6613ms)
+✔ display refresh measurement resolves reliable 59.94-360 Hz rAF samples (2.6427ms)
+✔ display refresh measurement rejects insufficient and invalid rAF samples (0.6324ms)
+✔ display refresh measurement pauses across hidden visibility gaps (0.5068ms)
+✔ display refresh measurement cancels pending rAF work on abort (0.7955ms)
+✔ reaction times align to the measured 59.94-360 Hz display frame grid (1.0031ms)
+✔ reaction-time zero/fallback handling and summaries remain deterministic (0.2758ms)
+✔ presentation estimates account for the measured frame grid and missed deadlines (0.1848ms)
+✔ input timestamps reject zero, stale, and future gamepad clocks (0.1411ms)
+✔ fixed-step simulation remains refresh-independent from 24 to 360 Hz (3.2942ms)
+✔ control modes follow the keyboard, wheel, and touch capability matrix (0.4461ms)
+✔ wheel detection rejects ordinary gamepads and selects a recognized steering wheel (1.9824ms)
+✔ wheel calibration discovers per-device axes and normalizes their endpoints (1.4717ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 837.6792
+npm notice run rehab-workspace@1.0.0 test:training-config-styles
+npm notice run node scripts/check-training-config-styles.mjs
+Training config style consistency check passed.

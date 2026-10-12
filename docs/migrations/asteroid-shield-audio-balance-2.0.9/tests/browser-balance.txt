@@ -1,0 +1,13 @@
+asteroid-shield: opaque sandbox, real Tone synthesis, chord/noise, loop, mute and cleanup passed.
+baseline: peak 0.1035, RMS 0.02648, speaker-band RMS 0.00564
+fall: peak 0.0648, RMS 0.00649, speaker-band RMS 0.00707
+success: peak 0.2417, RMS 0.05022, speaker-band RMS 0.06289
+victory: peak 0.2408, RMS 0.06376, speaker-band RMS 0.07874
+damage: peak 0.1962, RMS 0.05685, speaker-band RMS 0.06862
+defeat: peak 0.2244, RMS 0.07291, speaker-band RMS 0.08079
+mix: peak 0.3932, RMS 0.08676, speaker-band RMS 0.10170
+damage/success: -1.87 dB in loudestRms
+damage/success: -2.19 dB in speakerBandLoudestRms
+defeat/victory: -1.40 dB in loudestRms
+defeat/victory: -1.70 dB in speakerBandLoudestRms
+Asteroid audio balance passed: positive/negative cues within 3 dB; no compressor/limiter; falling sound audible; direct output does not clip.

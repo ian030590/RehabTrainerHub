@@ -1,0 +1,30 @@
+node.exe : npm notice run @rehab-trainer/game-asteroid-shield@2.0.9 build
+位於 C:\Users\ian\scoop\apps\nodejs-lts\current\bin\npm.ps1:24 字元:5
++     & "node$exe"  "$basedir/node_modules/npm/bin/npm-cli.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run ...eld@2.0.9 build:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+npm notice run vite build
+vite v6.4.3 building for production...
+transforming...
+✓ 1758 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                               0.41 kB │ gzip:   0.31 kB
+dist/assets/energy-rock-CT8hMT01.png          1.79 kB
+dist/assets/asteroid-green-1XKYeWRA.png       9.69 kB
+dist/assets/asteroid-dark-CW7iRJ5o.png       11.86 kB
+dist/assets/asteroid-blue-CY-_A_BJ.png       14.03 kB
+dist/assets/ship-CrsWCvcK.png                78.99 kB
+dist/assets/background-NBhu4YAc.png          83.04 kB
+dist/assets/shield-complete-B5wkC1qZ.png    198.70 kB
+dist/assets/style-BaNVeBlr.css               17.12 kB │ gzip:   3.73 kB
+dist/assets/index-bL5C7Dsd.js             1,336.11 kB │ gzip: 360.26 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-m
+anualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 9.54s

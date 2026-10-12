@@ -1,0 +1,79 @@
+✔ asteroid-shield: supplied tracks and triangle bass one octave higher play together in a complete 48-second loop (155.9998ms)
+✔ asteroid-shield: a delayed browser clock skips expired notes and resumes on the shared timeline (31.4634ms)
+✔ asteroid-shield: repeated percussion ticks do not double-trigger noise or suppress pitched chords (21.2053ms)
+✔ asteroid-shield: falling meteors make a short descending midrange whoosh, with duplicate ticks coalesced (26.9294ms)
+✖ asteroid-shield: damage and defeat retain bright descending alerts without overlapping duplicate damage (29.5402ms)
+✖ asteroid-shield: positive feedback coalesces simultaneous catches and all audio bypasses a mixer or limiter (21.8658ms)
+✔ asteroid-shield: returning to settings clears warning effects but results can finish the ending cue (45.3837ms)
+✔ MIDI converter produces unmodified Tonejs/Midi JSON that every migrated game can play (168.7155ms)
+✔ asteroid-shield: MIDI JSON plays chords, tempo changes and white noise through Tone (15.8793ms)
+✔ asteroid-shield: muting, replacement, exit and pending startup cannot leak music (21.004ms)
+✔ asteroid-shield: malformed notes and unsupported waveforms are rejected before audio starts (17.75ms)
+✔ asteroid-shield: existing feedback and lifecycle remain usable with a local Tone dependency (14.901ms)
+✔ asteroid-shield: configured music starts in gameplay and stops on results, settings and unmount (14.3265ms)
+✔ gesture-battler: MIDI JSON plays chords, tempo changes and white noise through Tone (17.126ms)
+✔ gesture-battler: muting, replacement, exit and pending startup cannot leak music (12.6103ms)
+✔ gesture-battler: malformed notes and unsupported waveforms are rejected before audio starts (10.1192ms)
+✔ gesture-battler: existing feedback and lifecycle remain usable with a local Tone dependency (9.5548ms)
+✔ gesture-battler: configured music starts in gameplay and stops on results, settings and unmount (20.2099ms)
+✔ drawing-defense: MIDI JSON plays chords, tempo changes and white noise through Tone (9.5653ms)
+✔ drawing-defense: muting, replacement, exit and pending startup cannot leak music (9.6222ms)
+✔ drawing-defense: malformed notes and unsupported waveforms are rejected before audio starts (9.6767ms)
+✔ drawing-defense: existing feedback and lifecycle remain usable with a local Tone dependency (9.2555ms)
+✔ drawing-defense: configured music starts in gameplay and stops on results, settings and unmount (26.5663ms)
+✔ motor-cortex-rehab: MIDI JSON plays chords, tempo changes and white noise through Tone (10.7358ms)
+✔ motor-cortex-rehab: muting, replacement, exit and pending startup cannot leak music (10.1329ms)
+✔ motor-cortex-rehab: malformed notes and unsupported waveforms are rejected before audio starts (14.2664ms)
+✔ motor-cortex-rehab: existing feedback and lifecycle remain usable with a local Tone dependency (10.0432ms)
+✔ motor-cortex-rehab: configured music starts in gameplay and stops on results, settings and unmount (9.7827ms)
+✔ oculomotor-training: MIDI JSON plays chords, tempo changes and white noise through Tone (11.0764ms)
+✔ oculomotor-training: muting, replacement, exit and pending startup cannot leak music (8.7706ms)
+✔ oculomotor-training: malformed notes and unsupported waveforms are rejected before audio starts (8.2431ms)
+✔ oculomotor-training: existing feedback and lifecycle remain usable with a local Tone dependency (9.3399ms)
+✔ oculomotor-training: configured music starts in gameplay and stops on results, settings and unmount (4.2843ms)
+✔ moving-card: MIDI JSON plays chords, tempo changes and white noise through Tone (8.0807ms)
+✔ moving-card: muting, replacement, exit and pending startup cannot leak music (13.8611ms)
+✔ moving-card: malformed notes and unsupported waveforms are rejected before audio starts (7.8194ms)
+✔ moving-card: existing feedback and lifecycle remain usable with a local Tone dependency (9.8627ms)
+✔ moving-card: configured music starts in gameplay and stops on results, settings and unmount (3.665ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 36
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1264.0137
+
+✖ failing tests:
+
+test at scripts\check-r2-game-audio.test.mjs:124:1
+✖ asteroid-shield: damage and defeat retain bright descending alerts without overlapping duplicate damage (29.5402ms)
+  AssertionError [ERR_ASSERTION]: Compensate square-wave energy to match the positive sine cue.
+      at TestContext.<anonymous> (file:///C:/Users/ian/Projects/RehabTrainerHub/scripts/check-r2-game-audio.test.mjs:131:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts\check-r2-game-audio.test.mjs:154:1
+✖ asteroid-shield: positive feedback coalesces simultaneous catches and all audio bypasses a mixer or limiter (21.8658ms)
+  AssertionError [ERR_ASSERTION]: Simultaneous catches produce one ascending cue instead of a burst of voices.
+
+  60 !== 3
+
+      at TestContext.<anonymous> (file:///C:/Users/ian/Projects/RehabTrainerHub/scripts/check-r2-game-audio.test.mjs:158:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 60,
+    expected: 3,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

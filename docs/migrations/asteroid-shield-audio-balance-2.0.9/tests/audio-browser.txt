@@ -1,0 +1,18 @@
+asteroid-shield: opaque sandbox, real Tone synthesis, chord/noise, loop, mute and cleanup passed.
+baseline: peak 0.1273, RMS 0.02671, speaker-band RMS 0.00568
+fall: peak 0.0629, RMS 0.00642, speaker-band RMS 0.00705
+success: peak 0.2544, RMS 0.05096, speaker-band RMS 0.06381
+victory: peak 0.2409, RMS 0.06449, speaker-band RMS 0.07964
+damage: peak 0.1956, RMS 0.05796, speaker-band RMS 0.06983
+defeat: peak 0.2245, RMS 0.07334, speaker-band RMS 0.08131
+mix: peak 0.3787, RMS 0.08613, speaker-band RMS 0.10093
+damage/success: -1.86 dB in loudestRms
+damage/success: -2.21 dB in speakerBandLoudestRms
+defeat/victory: -1.40 dB in loudestRms
+defeat/victory: -1.69 dB in speakerBandLoudestRms
+Asteroid audio balance passed: positive/negative cues within 3 dB; no compressor/limiter; falling sound audible; direct output does not clip.
+gesture-battler: opaque sandbox, real Tone synthesis, chord/noise, loop, mute and cleanup passed.
+drawing-defense: opaque sandbox, real Tone synthesis, chord/noise, loop, mute and cleanup passed.
+motor-cortex-rehab: opaque sandbox, real Tone synthesis, chord/noise, loop, mute and cleanup passed.
+oculomotor-training: opaque sandbox, real Tone synthesis, chord/noise, loop, mute and cleanup passed.
+moving-card: opaque sandbox, real Tone synthesis, chord/noise, loop, mute and cleanup passed.

@@ -60,7 +60,9 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 
 小行星護盾教學／HUD 版 `2.0.7`（2026-10-13）已依擁有者預先授權完成修正後直接發布 R2，教學四種物件移至上方、聚光燈與面板互不遮擋，教學／玩法使用完整透明護盾，左上綠色生命條及倒數直接來自 game loop。12 項小行星／143 項架構測試、七項本機 gate、Hub build、小視窗／手機／平板及正式 API／session／12 檔公開 bytes、桌機 Hub／手機 Hub／手機獨立 PWA 均通過；四軌音樂沿用 2.0.6，僅寫本機 SQLite，2.0.6 已核對為回退版。見 `docs/asteroid-shield-hud-2.0.7.md` 及正式收據；Brave 手機／平板為模擬，實體觸控／音訊輸出與 Safari／iOS 未驗收。
 
-小行星護盾目前 current 為音效版 `2.0.8`（2026-10-13），依使用者完成後直接發布授權加入新隕石一次性的下降白噪音呼嘯，受擊／失敗改用 -9 dB 中頻方波警示；四軌／成功／勝利沿用，完整混音經 -3 dB Limiter，短時間重複受擊合併，靜音／設定／卸載清理。37 項音訊、13 項小行星、147 項架構測試、七項 gate、Hub build、真實 Tone PCM／48 秒循環及正式 API／12 檔 bytes／三個 Hub/PWA 流程通過，2.0.7 已核對回退。500–3000 Hz 模擬頻段警示比舊版約高 30 dB，樣本未削波；預聽與收據見 `docs/asteroid-shield-effects-2.0.8.md`。沒有正式紀錄；實體小喇叭試聽、觸控及 Safari/iOS 未驗收，不能把模擬量測當作硬體驗收。
+小行星護盾音效版 `2.0.8`（2026-10-13）已依使用者完成後直接發布授權加入新隕石一次性的下降白噪音呼嘯，受擊／失敗改用 -9 dB 中頻方波警示；四軌／成功／勝利沿用，完整混音經 -3 dB Limiter，短時間重複受擊合併，靜音／設定／卸載清理。37 項音訊、13 項小行星、147 項架構測試、七項 gate、Hub build、真實 Tone PCM／48 秒循環及正式 API／12 檔 bytes／三個 Hub/PWA 流程通過，2.0.7 已核對回退。500–3000 Hz 模擬頻段警示比舊版約高 30 dB，樣本未削波；預聽與收據見 `docs/asteroid-shield-effects-2.0.8.md`。沒有正式紀錄；實體小喇叭試聽、觸控及 Safari/iOS 未驗收，不能把模擬量測當作硬體驗收。
+
+小行星目前 current 為 `2.0.9` 音量平衡／直接輸出版，沿用同一音效任務的發布授權完成使用者修正：正向 sine -15 dB、負向 square -17 dB，移除額外 Limiter/output；四軌與呼嘯保留。重複成功合併、結束清理未完成提示，實際最響 100 ms 的正／負提示差距均在 3 dB 內，原生壓縮器 0、同時播放樣本未削波。38 項音訊／148 項架構、七項 gate、Hub build、六款真實音訊／48 秒循環及正式 API／12 檔 bytes／三個 Hub/PWA 流程均通過，2.0.8 已核對回退；預聽與收據見 `docs/asteroid-shield-audio-balance-2.0.9.md`。沒有正式紀錄，未做實體小喇叭試聽、CPU 百分比基準及 Safari/iOS 驗收。
 
 驗證使用 Node.js 內建 `node:test`、assert 檢查腳本、TypeScript、針對性 build 與本機 Brave smoke；依變更範圍選用對應 gate。Hub API、runner、遊戲流程、assessment lifecycle 與 i18n 分別有 `test:hub-functions`、`test:gamerunner`、`test:training-flow`、`test:assessment-lifecycle`、`test:i18n`。
 

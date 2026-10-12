@@ -1,0 +1,164 @@
+node.exe : npm notice run rehab-workspace@1.0.0 test:hub-functions
+位於 C:\Users\ian\scoop\apps\nodejs-lts\current\bin\npm.ps1:24 字元:5
++     & "node$exe"  "$basedir/node_modules/npm/bin/npm-cli.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run ...t:hub-functions:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+npm notice run node --test "apps/rehabtrainerhub/functions/**/*.test.mjs"
+article helper checks passed
+✔ apps\rehabtrainerhub\functions\_lib\articles.test.mjs (3976.6229ms)
+auth origin checks passed
+✔ apps\rehabtrainerhub\functions\_lib\auth.origin.test.mjs (4190.8011ms)
+auth security checks passed
+✔ apps\rehabtrainerhub\functions\_lib\auth.security.test.mjs (3773.927ms)
+authorization security checks passed
+✔ apps\rehabtrainerhub\functions\_lib\authorization.security.test.mjs (3918.3647ms)
+✔ accepts a readable jsPsych HTML package (469.1333ms)
+✔ scanner and runner publish one exact platform runtime contract (1.9169ms)
+✔ accepts the complete platform-runtime sample package (50.8644ms)
+✔ requires fixed runner runtime URLs and rejects bundled platform vendors (263.6761ms)
+✔ blocks outbound APIs and credential access (146.2924ms)
+✔ blocks obvious standard and WebKit WebRTC constructors as upload triage (4.8058ms)
+✔ rejects ZIP traversal before extraction (3.5204ms)
+✔ accepts safe ZIP assets and records their digests (4.7891ms)
+✔ requires and validates root settings.json for a submitted game slug (351.3553ms)
+✔ normalizes identifiers, paths, and baseline capabilities (1.1443ms)
+✔ requires full semantic versions and runner-safe ASCII paths (1.0812ms)
+✔ comments cannot spoof jsPsych/bridge use and computed globals are blocked (350.0068ms)
+✔ approval identifies the exact version, public metadata, capabilities, and runtime files (206.8671ms)
+✔ only the configured platform owner can publish, including another administrator (317.721ms)
+✔ the Issue is a review ticket with a protected link and no private files, identities, or scanner excerpts (15.5784ms)
+✔ the deployed Worker entry keeps the Issue job alive with only the configured database and App credentials (1791.3098ms)
+✔ the Issue deep link selects only its exact release and exposes owner permission without granting it to another admin (1694.3494ms)
+✔ the worker recovers pending uploads made between migration and Hub deployment without reopening approved history (684.0017ms)
+✔ a submission creates a durable version ticket while the code remains private (922.746ms)
+✔ GitHub outages retain the private ticket and retry the same release (3744.5152ms)
+✔ a lost create response is reconciled with the App-created Issue before retrying (856.8429ms)
+✔ concurrent workers claim one job and another user cannot forge its review ticket marker (506.3749ms)
+✔ a delayed worker cannot create a second Issue after another worker takes its expired lease (242.9279ms)
+✔ each new version gets its own Issue without changing the active release (163.146ms)
+✔ Issue updates for one release run in order so a late approval update cannot overwrite revocation (87.0919ms)
+✔ the review endpoint refuses another administrator, missing owner configuration, stale content, and an unbound Issue (168.096ms)
+✔ editing or closing the linked Issue does not authorize a release (164.912ms)
+✔ owner approval publishes the exact version and durably synchronizes its Issue (1184.1ms)
+✔ a file inventory changed after the review cannot publish a different manifest (597.1536ms)
+✔ native score projects declared numeric and Boolean results including partial runs (56.2091ms)
+✔ native score rejects undeclared result fields and mismatched game IDs (1.6116ms)
+Turnstile validation checks passed
+✔ apps\rehabtrainerhub\functions\_lib\turnstile.test.mjs (3156.2809ms)
+✔ migrated games reject legacy assets before Pages can serve retained cache (531.9323ms)
+✔ migrated compatibility entry still reaches the static R2 link (97.5211ms)
+✔ unmigrated games, previews and APIs keep their existing routing (1.559ms)
+✔ retired hosts keep canonical redirects before any asset routing (41.7641ms)
+admin security checks passed
+✔ apps\rehabtrainerhub\functions\api\admin\admin.security.test.mjs (3469.124ms)
+anonymous analysis security checks passed
+✔ apps\rehabtrainerhub\functions\api\admin\anonymous-analysis.security.test.mjs (4069.1987ms)
+admin article security checks passed
+✔ apps\rehabtrainerhub\functions\api\admin\articles.security.test.mjs (4381.4042ms)
+admin asset security checks passed
+✔ apps\rehabtrainerhub\functions\api\admin\assets.security.test.mjs (5901.26ms)
+✔ anonymous subject migration preserves signed records and permits write-only guest rows (184.6477ms)
+OAuth callback nonce checks passed
+✔ apps\rehabtrainerhub\functions\api\auth\callback.security.test.mjs (5725.6654ms)
+Auth route smoke checks passed.
+✔ apps\rehabtrainerhub\functions\api\auth\routes.test.mjs (4232.3774ms)
+✔ Builder authorization accepts only its exact callback (636.1651ms)
+✔ Builder code exchange requires the shared secret and consumes codes once (1097.6953ms)
+✔ Builder collaborator lookup is restricted to the shared secret (2.7962ms)
+✔ Hub authorizes Builder, receives a package, accepts submission, and stores an approved native result (3697.8359ms)
+✔ moving-card current replaces the historical shell with the original vision category and versioned preview (843.2593ms)
+✔ public catalog reads preview and tags from the approved game bytes instead of the old publication (49.5712ms)
+✔ asteroid current metadata replaces its historical shell and rejects absent or corrupted declarations (1062.2779ms)
+✔ hand tracking current replaces the same-slug historical settings shell with its own metadata (1155.2713ms)
+✔ a revoked release, forged metadata or missing preview never enters the public game catalog (22.2295ms)
+✔ an older approved self-contained version keeps game-owned fallback tags without using the old shell (157.123ms)
+✔ game review endpoints require an administrator (2309.58ms)
+✔ approval requires source, public metadata, and isolated play-test evidence (14.4389ms)
+✔ third-party reviews cannot publish or revoke a reserved official slug submitted before migration (22.1437ms)
+✔ game results reject identifying metric keys before persistence (301.7574ms)
+✔ catalog refuses a runner under trainerhub.cc (40.7051ms)
+✔ submission metadata and game tags remain release-scoped until an administrator publishes them (245.7679ms)
+✔ approval fences the public release pointer with conditional R2 writes (67.4171ms)
+✔ a stale publisher cannot overwrite a release pointer changed by revoke or retry (162.7516ms)
+✔ an expired publication lease cannot claim another reviewer's database approval (8.7872ms)
+✔ revocation disables the runner manifest before clearing the catalog release (4.7926ms)
+✔ issues an opaque session only for the current active release and stores only its hash (1688.0569ms)
+✔ atomically consumes one session and makes a network retry idempotent (623.3479ms)
+✔ stores an aborted native run with score.json projection and rejects undeclared fields (261.8231ms)
+✔ stores an unsigned game result under the session subject without exposing it (37.8984ms)
+✔ the kill switch rejects previously issued unsigned run sessions (396.1536ms)
+✔ requires a valid subject for unsigned game sessions and keeps the feature gated (3.8203ms)
+✔ rejects forged, expired, mismatched, and revoked run sessions (74.5875ms)
+✔ a player can save a pinned approved release after a new version becomes current (312.0897ms)
+✔ enforces the 16000-byte aggregate limit even with a short request envelope (7.4502ms)
+✔ schema makes the game run row the unique consumption record (6.5354ms)
+✔ D1 score payload is bounded, numeric, and tied to its game (158.1837ms)
+✔ private R2 CSV stores canonical rows and only the owner can list or read it (2036.7686ms)
+✔ an R2 gaze upload cannot write without its fixed official session or under a different identity (42.527ms)
+✔ reference WebGazer rows and metadata are stored in the private CSV (6.3064ms)
+✔ reference drills store physical geometry, validation metadata, and phase rows (4.3914ms)
+✔ rejects forged, malformed, oversized, and cross-origin uploads before R2 (851.3735ms)
+Unable to store oculomotor CSV. Error: R2 unavailable
+    at env.OCULOMOTOR_DATA.put (file:///C:/Users/ian/Projects/RehabTrainerHub/apps/rehabtrainerhub/functions/api/oculomotor-data.test.mjs:214:49)
+    at onRequestPost (file:///C:/Users/ian/Projects/RehabTrainerHub/apps/rehabtrainerhub/functions/api/oculomotor-data.js:87:47)
+    at async TestContext.<anonymous> (file:///C:/Users/ian/Projects/RehabTrainerHub/apps/rehabtrainerhub/functions/api/oculomotor-data.test.mjs:215:17)
+    at async Test.run (node:internal/test_runner/test:1409:7)
+    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+✔ guest CSV stays private and storage failures never report success (17.8368ms)
+Unable to read oculomotor CSV. Error: R2 read unavailable
+    at env.OCULOMOTOR_DATA.get (file:///C:/Users/ian/Projects/RehabTrainerHub/apps/rehabtrainerhub/functions/api/oculomotor-data.test.mjs:223:49)
+    at onRequestGet (file:///C:/Users/ian/Projects/RehabTrainerHub/apps/rehabtrainerhub/functions/api/oculomotor-data.js:126:42)
+    at async TestContext.<anonymous> (file:///C:/Users/ian/Projects/RehabTrainerHub/apps/rehabtrainerhub/functions/api/oculomotor-data.test.mjs:225:17)
+    at async Test.run (node:internal/test_runner/test:1409:7)
+    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+Unable to list oculomotor CSVs. Error: R2 list unavailable
+    at env.OCULOMOTOR_DATA.list (file:///C:/Users/ian/Projects/RehabTrainerHub/apps/rehabtrainerhub/functions/api/oculomotor-data.test.mjs:224:50)
+    at onRequestGet (file:///C:/Users/ian/Projects/RehabTrainerHub/apps/rehabtrainerhub/functions/api/oculomotor-data.js:147:40)
+    at async TestContext.<anonymous> (file:///C:/Users/ian/Projects/RehabTrainerHub/apps/rehabtrainerhub/functions/api/oculomotor-data.test.mjs:226:17)
+    at async Test.run (node:internal/test_runner/test:1409:7)
+    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+✔ R2 read failures return a retryable status without exposing CSV data (148.0315ms)
+✔ maximum five-minute run survives CSV generation without dropping samples (1490.4078ms)
+✔ drawing-defense: official sessions bind the result to a game version, record, account and subject (521.3048ms)
+✔ drawing-defense: current changes preserve official sessions while revocation and digest changes reject them (739.9356ms)
+✔ drawing-defense: a real SQL database saves official game results once, permits retry, and rejects mutation (1948.595ms)
+✔ asteroid-shield: official sessions bind the result to a game version, record, account and subject (35.7367ms)
+✔ asteroid-shield: current changes preserve official sessions while revocation and digest changes reject them (92.1418ms)
+✔ asteroid-shield: a real SQL database saves official game results once, permits retry, and rejects mutation (236.6994ms)
+✔ gesture-battler: official sessions bind the result to a game version, record, account and subject (34.1576ms)
+✔ gesture-battler: current changes preserve official sessions while revocation and digest changes reject them (9.569ms)
+✔ gesture-battler: a real SQL database saves official game results once, permits retry, and rejects mutation (157.9892ms)
+✔ motor-cortex-rehab: official sessions bind the result to a game version, record, account and subject (11.6154ms)
+✔ motor-cortex-rehab: current changes preserve official sessions while revocation and digest changes reject them (36.0672ms)
+✔ motor-cortex-rehab: a real SQL database saves official game results once, permits retry, and rejects mutation (901.4137ms)
+✔ moving-card: official sessions bind the result to a game version, record, account and subject (119.6552ms)
+✔ moving-card: current changes preserve official sessions while revocation and digest changes reject them (65.4404ms)
+✔ moving-card: a real SQL database saves official game results once, permits retry, and rejects mutation (639.0626ms)
+✔ oculomotor-training: official sessions bind the result to a game version, record, account and subject (103.165ms)
+✔ oculomotor-training: current changes preserve official sessions while revocation and digest changes reject them (96.7691ms)
+✔ oculomotor-training: a real SQL database saves official game results once, permits retry, and rejects mutation (179.9515ms)
+progress calculations passed
+✔ apps\rehabtrainerhub\functions\api\progress.test.mjs (4465.5562ms)
+✔ record summary migration canonicalizes existing and cutover-window writes (299.5021ms)
+records security checks passed
+✔ apps\rehabtrainerhub\functions\api\records.security.test.mjs (6128.3736ms)
+✔ rehabtrainerhub.pages.dev redirects every path to the Hub (390.2898ms)
+✔ motor.trainerhub.cc redirects every path to the Hub (0.7528ms)
+✔ vision.trainerhub.cc redirects every path to the Hub (0.981ms)
+✔ brain.trainerhub.cc redirects every path to the Hub (0.6177ms)
+✔ mouth.trainerhub.cc redirects every path to the Hub (315.5018ms)
+✔ motortrainer.pages.dev redirects every path to the Hub (0.4661ms)
+✔ visiontrainer.pages.dev redirects every path to the Hub (0.3113ms)
+✔ braintrainer.pages.dev redirects every path to the Hub (30.4124ms)
+✔ mouthtrainer.pages.dev redirects every path to the Hub (0.5672ms)
+✔ the canonical Hub request continues unchanged (4.5112ms)
+ℹ tests 117
+ℹ suites 0
+ℹ pass 117
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16476.5262

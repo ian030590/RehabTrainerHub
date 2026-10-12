@@ -1,0 +1,83 @@
+{
+  "checkedAt": "2026-10-12T20:38:41.606Z",
+  "method": "Actual Brave PCM output; loudest 100 ms RMS plus high-pass 500 Hz/low-pass 3000 Hz, not physical speaker acceptance",
+  "baseline": "Previous 2.0.7 sine warning at -21 dB, 246.94/185 Hz, reproduced with the same Tone envelope",
+  "measurements": {
+    "baseline": {
+      "sampleRate": 48000,
+      "peak": 0.12726537883281708,
+      "rms": 0.026711919273344688,
+      "speakerBandRms": 0.005677761766534709,
+      "loudestRms": 0.05345163241821591,
+      "speakerBandLoudestRms": 0.014586826663708734,
+      "compressorNodes": 0,
+      "sampleCount": 45056
+    },
+    "fall": {
+      "sampleRate": 48000,
+      "peak": 0.06293422728776932,
+      "rms": 0.0064160058136143745,
+      "speakerBandRms": 0.007054833434123159,
+      "loudestRms": 0.01510267034086687,
+      "speakerBandLoudestRms": 0.01628384870183122,
+      "compressorNodes": 0,
+      "sampleCount": 45056
+    },
+    "success": {
+      "sampleRate": 48000,
+      "peak": 0.25440171360969543,
+      "rms": 0.050957086508599876,
+      "speakerBandRms": 0.06380876402036134,
+      "loudestRms": 0.10783087240149515,
+      "speakerBandLoudestRms": 0.13797917499822834,
+      "compressorNodes": 0,
+      "sampleCount": 45056
+    },
+    "victory": {
+      "sampleRate": 48000,
+      "peak": 0.2408897876739502,
+      "rms": 0.06448965501058519,
+      "speakerBandRms": 0.07964468669207775,
+      "loudestRms": 0.10747098218081451,
+      "speakerBandLoudestRms": 0.13686078293133688,
+      "compressorNodes": 0,
+      "sampleCount": 45056
+    },
+    "damage": {
+      "sampleRate": 48000,
+      "peak": 0.19558699429035187,
+      "rms": 0.0579551987600144,
+      "speakerBandRms": 0.06982735578846976,
+      "loudestRms": 0.08700383675812715,
+      "speakerBandLoudestRms": 0.10702602670643108,
+      "compressorNodes": 0,
+      "sampleCount": 46080,
+      "loudestRmsDifferenceDb": -1.864094279865226,
+      "speakerBandLoudestRmsDifferenceDb": -2.206482823170797,
+      "speakerBandImprovementDb": 21.79696861131728
+    },
+    "defeat": {
+      "sampleRate": 48000,
+      "peak": 0.2244686633348465,
+      "rms": 0.07334090164410849,
+      "speakerBandRms": 0.08131401876270895,
+      "loudestRms": 0.09145228630785618,
+      "speakerBandLoudestRms": 0.11270285901451481,
+      "compressorNodes": 0,
+      "sampleCount": 45056,
+      "loudestRmsDifferenceDb": -1.4019330122612534,
+      "speakerBandLoudestRmsDifferenceDb": -1.6868817372710223,
+      "speakerBandImprovementDb": 23.119765192679083
+    },
+    "mix": {
+      "sampleRate": 48000,
+      "peak": 0.3787055015563965,
+      "rms": 0.08612976747154137,
+      "speakerBandRms": 0.10093303582785323,
+      "loudestRms": 0.14997373503825953,
+      "speakerBandLoudestRms": 0.18296405443458602,
+      "compressorNodes": 0,
+      "sampleCount": 47104
+    }
+  }
+}

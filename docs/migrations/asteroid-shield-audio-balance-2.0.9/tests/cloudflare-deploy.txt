@@ -1,0 +1,39 @@
+node.exe : npm notice run rehab-workspace@1.0.0 test:cloudflare-deploy
+位於 C:\Users\ian\scoop\apps\nodejs-lts\current\bin\npm.ps1:24 字元:5
++     & "node$exe"  "$basedir/node_modules/npm/bin/npm-cli.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run ...oudflare-deploy:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+npm notice run node scripts/check-cloudflare-pages-deploy.mjs && node --test scripts/ensure-oculomotor-bucket.test.mjs
+scripts/pages-deployment-scope.test.mjs
+Syncing canonical domains for 2 discovered Cloudflare Pages project(s).
+Removing 1 inactive deployment(s) from visiontrainer...
+Removing 1 inactive deployment(s) from visiontrainer...
+Removed 2 inactive deployment(s) from visiontrainer.
+Removing vision.trainerhub.cc from visiontrainer...
+Retiring Cloudflare Pages project visiontrainer...
+Pages domain exists: rehabtrainerhub -> trainerhub.cc (active)
+Pages domain active: rehabtrainerhub -> trainerhub.cc
+Pages domain exists: rehabtrainerhub -> motor.trainerhub.cc (active)
+Pages domain active: rehabtrainerhub -> motor.trainerhub.cc
+Pages domain exists: rehabtrainerhub -> vision.trainerhub.cc (active)
+Pages domain active: rehabtrainerhub -> vision.trainerhub.cc
+Pages domain exists: rehabtrainerhub -> brain.trainerhub.cc (active)
+Pages domain active: rehabtrainerhub -> brain.trainerhub.cc
+Pages domain exists: rehabtrainerhub -> mouth.trainerhub.cc (active)
+Pages domain active: rehabtrainerhub -> mouth.trainerhub.cc
+Skipping built-in Pages domain for trainerhub-user-games: trainerhub-user-games.pages.dev
+Cloudflare Pages provisioning check passed for 2 discovered project(s).
+✔ bucket provisioning is idempotent and uses a private R2 bucket name (2.9875ms)
+✔ bucket provisioning fails closed on permission or unexpected API responses (2.3172ms)
+✔ R2 content and version metadata skip Pages while platform and legacy games deploy (8.4082ms)
+✔ Cloudflare build excludes migrated R2 bundles and workflow gates deployment after verification (116.1741ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 275.3534

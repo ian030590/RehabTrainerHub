@@ -121,12 +121,14 @@ test('asteroid-shield: falling meteors make a short descending midrange whoosh, 
   assert.ok(state.nodes.every(node => node.disposed));
 });
 
-test('asteroid-shield: damage and defeat use louder bright descending alerts without overlapping duplicate damage', async () => {
+test('asteroid-shield: damage and defeat retain bright descending alerts without overlapping duplicate damage', async () => {
   const { api, state } = await LoadSound('asteroid-shield');
   api.PlayFailureSound();
   const alert = state.instruments.at(-1);
   assert.equal(alert.options.options.oscillator.type, 'square', 'A bright warning must cut through the music.');
-  assert.ok(alert.options.volume >= -10 && alert.options.volume <= -6);
+  api.PlaySuccessSound();
+  const success = state.instruments.at(-1);
+  assert.ok(alert.options.volume < success.options.volume, 'Compensate square-wave energy to match the positive sine cue.');
   assert.ok(alert.played.length >= 3);
   assert.ok(alert.played.every(([frequency]) => frequency >= 440 && frequency <= 1600));
   assert.ok(alert.played.at(-1)[0] < alert.played[0][0]);
@@ -141,13 +143,27 @@ test('asteroid-shield: damage and defeat use louder bright descending alerts wit
   const defeat = state.instruments.at(-1);
   assert.ok(defeat.played.every(([frequency]) => frequency >= 440));
   assert.ok(defeat.played.at(-1)[1] > alert.played.at(-1)[1]);
-  assert.equal(defeat.destination.kind, 'limiter');
-  assert.ok(defeat.destination.options.threshold <= -1);
+  assert.equal(defeat.destination, state.contexts[0].destination, 'Send feedback directly to the game destination.');
   api.SetSoundEnabled(false);
   assert.ok(state.instruments.every(instrument => instrument.disposed));
   assert.ok(state.nodes.every(node => node.disposed));
   api.PlayAsteroidFallSound(); api.PlayFailureSound();
   assert.equal(state.instruments.at(-1), defeat, 'Mute must not recreate effects.');
+});
+
+test('asteroid-shield: positive feedback coalesces simultaneous catches and all audio bypasses a mixer or limiter', async () => {
+  const { api, state } = await LoadSound('asteroid-shield');
+  for (let index = 0; index < 20; index++) api.PlaySuccessSound();
+  const success = state.instruments[0];
+  assert.equal(success.played.length, 3, 'Simultaneous catches produce one ascending cue instead of a burst of voices.');
+  state.contexts[0].currentTime = .3;
+  api.PlaySuccessSound();
+  assert.equal(success.played.length, 6, 'A later catch must still be audible.');
+  api.PlayFailureSound();
+  await api.PlayMidiMusic(song, { waveforms: ['square', 'white-noise'], loop: true });
+  assert.ok(state.instruments.every(instrument => instrument.destination === state.contexts[0].destination));
+  assert.equal(state.nodes.length, 0, 'No extra master mixer/compressor/limiter is created.');
+  api.DisposeAudioFeedback();
 });
 
 test('asteroid-shield: returning to settings clears warning effects but results can finish the ending cue', async () => {

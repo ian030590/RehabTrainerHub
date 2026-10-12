@@ -66,12 +66,15 @@ window.captureEffect = async kind => {
     baseline.triggerAttackRelease(246.94,.11,start,1);
     baseline.triggerAttackRelease(185,.16,start+.1,1);
   } else if (kind === 'fall') audio.PlayAsteroidFallSound();
+  else if (kind === 'success') audio.PlaySuccessSound();
+  else if (kind === 'victory') audio.PlayGameEndSound('Victory');
   else if (kind === 'damage') audio.PlayFailureSound();
   else if (kind === 'defeat') audio.PlayGameEndSound('Defeat');
   else if (kind === 'mix') {
     await audio.PlayMidiMusic(score,options);
     audio.PlayAsteroidFallSound();
     for (let index=0;index<20;index++) audio.PlayFailureSound();
+    for (let index=0;index<20;index++) audio.PlaySuccessSound();
   }
   await new Promise(resolve => setTimeout(resolve,950));
   recorder.onaudioprocess = null;
@@ -79,8 +82,18 @@ window.captureEffect = async kind => {
   highpass.disconnect(); lowpass.disconnect(); merger.disconnect(); recorder.disconnect(); silent.disconnect();
   baseline?.dispose(); audio.DisposeAudioFeedback();
   const rms = values => Math.sqrt(values.reduce((sum,value)=>sum+value*value,0)/values.length);
+  const loudestRms = values => {
+    const length = Math.round(context.sampleRate*.1); let sum = 0, maximum = 0;
+    for (let index=0;index<values.length;index++) {
+      sum += values[index]*values[index];
+      if (index>=length) sum -= values[index-length]*values[index-length];
+      if (index>=length-1) maximum = Math.max(maximum,sum/length);
+    }
+    return Math.sqrt(maximum);
+  };
   return {samples,sampleRate:context.sampleRate,peak:samples.reduce((peak,value)=>Math.max(peak,Math.abs(value)),0),
-    rms:rms(samples),speakerBandRms:rms(band)};
+    rms:rms(samples),speakerBandRms:rms(band),loudestRms:loudestRms(samples),speakerBandLoudestRms:loudestRms(band),
+    compressorNodes:window.compressorNodes};
 };
 document.getElementById('play').onclick = async () => {
   audio.PrepareAudioFeedback();
@@ -144,9 +157,11 @@ try {
   const pending = new Map();
   const contexts = new Map();
   const errors = [];
-  const probe = `(() => {if(window.audioProbeInstalled)return;window.audioProbeInstalled=true;window.audioContexts=[]; window.workerAttempts=0; window.oscillators=0; window.cspErrors=[];
+  const probe = `(() => {if(window.audioProbeInstalled)return;window.audioProbeInstalled=true;window.audioContexts=[]; window.compressorNodes=0; window.workerAttempts=0; window.oscillators=0; window.cspErrors=[];
 const NativeAudioContext=window.AudioContext;
 window.AudioContext=new Proxy(NativeAudioContext,{construct(target,args){const context=new target(...args);window.audioContexts.push(context);return context;}});
+const compressor=NativeAudioContext.prototype.createDynamicsCompressor;
+NativeAudioContext.prototype.createDynamicsCompressor=function(...args){window.compressorNodes++;return compressor.apply(this,args);};
 const create=NativeAudioContext.prototype.createOscillator;
 NativeAudioContext.prototype.createOscillator=function(...args){window.oscillators++;return create.apply(this,args);};
 window.Worker=function(){window.workerAttempts++;throw new Error('Worker prohibited');};
