@@ -26,3 +26,10 @@
 5. 開啟系統減少動態效果再重做開關與拖曳，確認停用動畫及背景縮退。
 
 Safari／實體 iOS、VoiceOver 與裝置觸覺尚待上述人工驗收；不宣稱與系統 sheet 手感完全相同。
+
+## 正式部署驗證（2026-10-12）
+
+- 程式提交：`f8a93b7df9b124e1410d288a181ec85118e261de`。既有 [CI／部署流程](https://github.com/ian030590/RehabTrainerHub/actions/runs/38187963929) 的七項驗證與部署均成功。
+- Hub：[0f753a83.rehabtrainerhub.pages.dev](https://0f753a83.rehabtrainerhub.pages.dev)；runner：[e5db427e.trainerhub-user-games.pages.dev](https://e5db427e.trainerhub-user-games.pages.dev)。正式 [trainerhub.cc](https://trainerhub.cc/) 回覆 200，HTML 已含新面板；runner 入口、robots.txt 與 sitemap.xml 均回覆 200，內容型別正確。
+- 直接對正式站使用 Brave 驗證 390×844、600×844、820×844 與減少動態模式，完整篩選、拖曳／吸附、關閉競態、背景縮退、選項保留、焦點與捲動還原均通過。另以 390×700 的實際 CDP 滑鼠／touch 輸入驗證把手展開與內容捲動通過。
+- 正式驗證只操作篩選，不啟動訓練或建立正式訓練紀錄；本機詳細結果保留在 `.tmp/filter-sheet-production-results.json`。Safari／實體 iOS 與 VoiceOver 仍待人工驗收。
