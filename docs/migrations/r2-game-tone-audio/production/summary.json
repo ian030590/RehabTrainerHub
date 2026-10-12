@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-10-12T13:55:24.218Z",
+  "status": "six-releases-published-and-verified",
+  "games": [
+    {
+      "gameId": "drawing-defense",
+      "version": "2.0.6",
+      "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f",
+      "rollbackVersion": "2.0.5"
+    },
+    {
+      "gameId": "asteroid-shield",
+      "version": "2.0.5",
+      "contentSha256": "efb1e5c3695108562f1a6810b0d29f9b295105d6c250edd068757e33cdf81d97",
+      "rollbackVersion": "2.0.4"
+    },
+    {
+      "gameId": "gesture-battler",
+      "version": "2.0.4",
+      "contentSha256": "a085169bab352192503c0050e7bdfe8780514bcedb5172b518cdcf13499b8e6e",
+      "rollbackVersion": "2.0.3"
+    },
+    {
+      "gameId": "motor-cortex-rehab",
+      "version": "2.0.2",
+      "contentSha256": "a3383733227715bc748ff49e9c034c31813e17c75e465823acf53f1e10b6af46",
+      "rollbackVersion": "2.0.1"
+    },
+    {
+      "gameId": "moving-card",
+      "version": "2.0.2",
+      "contentSha256": "8f683247f3abec9b7c39a68fbf98359d20250acf907db4b4c54c6cc1dda86fb2",
+      "rollbackVersion": "2.0.1"
+    },
+    {
+      "gameId": "oculomotor-training",
+      "version": "2.0.1",
+      "contentSha256": "95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616",
+      "rollbackVersion": "2.0.0"
+    }
+  ],
+  "productionBrowserFlows": 18,
+  "publicFilesVerified": 43,
+  "platformDeploymentPerformed": false,
+  "productionRecordsCreated": false
+}

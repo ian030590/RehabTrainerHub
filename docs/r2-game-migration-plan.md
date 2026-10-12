@@ -224,6 +224,19 @@ rehab-game-releases/
 7. 保留獨立啟動模式。未接收到 Hub port 時只能本機遊玩與查看結果；退出回設定，不永久顯示「保存中」。Hub 結果只顯示返回大廳，獨立 PWA 返回自己的入口。
 8. 在行為測試保護下，移除該遊戲的設定／成績 JSON 與不用的 shell 檔案。其他未遷移遊戲的共用依賴與產物保持原流程。
 
+#### 遊戲自有 Tone.js 音訊與 MIDI 譜面
+
+2026-10-12 起，已遷移六款與後續 R2 遷移遊戲的音訊採遊戲自有 Tone.js 介面。每款在自己的 `package.json` 明確宣告固定版本 `tone`，自己擁有 `runtime/soundManager.ts`、`music.ts`、譜面與音色設定；不得引用 Hub 音訊、其他遊戲程式碼或新增跨遊戲音訊 SDK。未遷移遊戲沿用原流程。
+
+- 作曲來源為 MIDI，使用 [Tonejs/Midi](https://github.com/Tonejs/Midi) 的 `Midi.toJSON()` 匯出。播放器直接接受 `tracks[].notes[]` 的 `midi`、`time`、`duration`、`velocity`；時間／音長使用秒、力度為 0–1，保留已換算的 tempo map，不再以固定 BPM 重算。支援多軌、和弦及循環，音軌可指定 sine／square／triangle／sawtooth／white-noise；打擊軌預設白噪音。
+- 本階段是音符合成播放，GM 樂器名稱不自動映射真實樂器；CC、延音踏板、pitch bend 不在本階段播放範圍。每個旋律軌的 Tone PolySynth 配額為 16 個同時發聲，超過配額的音符由 Tone 略過；16 軌、20,000 音符、曲長一小時的譜面限制與非有限數值在播放前驗證並拒絕。白噪音使用單軌 NoiseSynth，鼓組需要獨立軌道音色安排。
+- 譜面以 source JSON import 編入遊戲 bundle，Tone.js 一併打包，不使用 WAV／MP3／取樣音源、CDN 或 runtime fetch。`@tonejs/midi` 只作開發時轉檔，不加入遊戲 runtime 依賴。`music.ts` 的 `backgroundMusic` 預設 `null`；加入歌曲後只在實際 gameplay 階段播放，設定／教學／相機等待不播放。眼動練習原本沒有提示音，維持無預設歌曲。
+- 使用每個遊戲自己的 `Tone.Context({ clockSource: 'timeout' })`，從 class entry 匯入 Tone 並指定 context，避免預設入口提前建立 Worker／AudioContext。第一次 resume 在既有使用者開始點擊執行；不得放寬 `sandbox="allow-scripts"`、`worker-src 'none'` 或 `connect-src 'none'`。音訊不可用時仍可訓練，不產生未處理 Promise rejection。
+- 原有提示音的事件、音高／順序與開關保留。關閉聲音時立即停止正在發聲與未來排程；歌曲替換、完成／返回設定、取消啟動、退出、pagehide、卸載與撤回均清理相關排程／音源。晚到的 resume 不得重啟已取消的曲子。退出在等待全螢幕前先清理音訊，不關閉或借用 jsPsych 的 context。
+- 先加入真實 MIDI 轉檔、JSON 秒數／和弦／音色、開關／替換／循環／完成／取消／退出的失敗測試，再實作。回歸納入既有 `check-self-contained-game.test.mjs`／`test:game-architecture`，維持七項 CI matrix；另以本機 Brave 驗正式 sandbox／CSP 下的實際合成與清理。
+
+加入曲子的轉檔指令、設定範例與發布紀錄見 [R2 遊戲 Tone.js 音訊](r2-game-tone-audio.md)。六款 Tone.js 音訊版已於 2026-10-12 精確核准、發布 R2 並完成正式 API、43 檔 bytes 與 18 個 Hub／獨立 PWA 驗收，收據見該文件；該批尚未加入歌曲。小行星護盾 2.0.6 已於 2026-10-13 核准並發布四軌音樂，bass 三角波提高一個八度，完成正式 API、12 檔 bytes 與三個正式 Hub／PWA 流程，2.0.5 保留為回退版，見 [發布與驗收](asteroid-shield-music-2.0.6.md)。後續新版本與歌曲仍須建置、dry-run、精確版本／摘要核准及正式 R2 驗收，不得覆寫已發布版本或把本機修改記為已發布。
+
 #### 設定畫面的呈現方式
 
 後續遷移採畫畫塔防與小行星護盾防衛的方式：設定是遊戲內置中的前景視窗，背景在設定開啟時先 render 遊戲說明場景。設定、教學場景與樣式均由該遊戲擁有，不引入共用 UI 或跨遊戲程式碼。
@@ -440,6 +453,7 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 | UI 一致性與命名 | 設定 form／最終參數 div／training-panel gesture-tutorial-ready／結算的統一結構與樣式；有意義的 div class；DOM／computed style 對照、桌機／平板／手機無溢出、按鈕／Enter／返回／重試測試與截圖；確認 UI／CSS 均由遊戲自己擁有 |
 | 有效寬度、水平置中與捲軸 | 本機與正式站的桌機一般視窗／離開全螢幕、手機、平板：Hub／iframe 兩層可視尺寸與左右邊距（誤差 ≤1px）、Hub 背景捲軸寬 0、gameplay 根頁不溢出、設定／成績必要內部捲動可操作、返回後 overflow／原位置恢復；先失敗原因、修正後命令／數值／截圖。左右過寬或偏移、不必要頁面捲軸、內容裁切任一未解決即不通過 |
 | 成績結算呈現 | 自有主要統計／當次設定、指標圖表／平均線／描述統計／完整率及完整逐回合明細；數值與保存一致、零值／缺漏／單筆正確、彙總隔離、分頁／鍵盤／雙語測試；正式桌機與手機主要統計／圖表／明細截圖、平板尺寸驗證與獨立 PWA 結果 |
+| Tone.js 音訊與 MIDI | 遊戲自有依賴／context／譜面；真實 MIDI→JSON、秒數／變速／和弦／白噪音、循環／音效開關／換曲／完成／返回／取消／退出／卸載測試；正式 sandbox／CSP 無 Worker／外連／取樣音檔，Brave 實際合成驗證；無歌曲時不自動播放 |
 | 保存與失敗 | guest／登入隔離、session 失敗不載入、保存失敗重試、並行冪等、current 切換固定版本、撤回與無效 digest 拒絕 |
 | 平台回歸 | 該 gameId 的新增測試、其他未遷移／第三方遊戲回歸、Hub output 隔離、PWA 與 CI 結果 |
 | 當版核准 | 精確 version／contentSha256／檔案清單、原始碼／隔離試玩／公開資料檢查、擁有者明確核准；第三方另附每版 Issue／審核結果 |

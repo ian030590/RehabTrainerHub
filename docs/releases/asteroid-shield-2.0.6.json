@@ -1,0 +1,383 @@
+{
+  "gameId": "asteroid-shield",
+  "version": "2.0.6",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "226381bdf6a0537fc7fe7331f29ae6d8cd6291e8c7181215adfdb12580be0902",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.6/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.6/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/",
+  "verifiedAt": "2026-10-12T16:39:08.818Z",
+  "fileCount": 12,
+  "totalBytes": 1603115,
+  "files": [
+    {
+      "path": "assets/asteroid-blue-CY-_A_BJ.png",
+      "size": 14034,
+      "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-dark-CW7iRJ5o.png",
+      "size": 11856,
+      "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-green-1XKYeWRA.png",
+      "size": 9693,
+      "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/background-NBhu4YAc.png",
+      "size": 83041,
+      "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/energy-rock-CT8hMT01.png",
+      "size": 1792,
+      "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-C_oGDyHQ.js",
+      "size": 1330192,
+      "sha256": "186558f58d30ae96ff0afe67b5516244c56a43d64c5612844227636ca218a39e",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/shield-CxquxbMC.png",
+      "size": 35318,
+      "sha256": "ded93bcfb8e383d478e1297ba87235738f55b9b9e631f846506791c26ebab40b",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/ship-CrsWCvcK.png",
+      "size": 78990,
+      "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/style-AItIoLPr.css",
+      "size": 16481,
+      "sha256": "f1d608354b25da207ce80736a6ec413535a0d2115e9fd3cadfab1954798f792a",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 471,
+      "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "26808132b74f360dfc7195a899daaa97c88ea30d9ad17074ecc066d2c09d6450",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 20836,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+      "contentType": "image/webp"
+    }
+  ],
+  "currentVersion": "2.0.6",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e"
+    },
+    "2.0.1": {
+      "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3"
+    },
+    "2.0.2": {
+      "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3"
+    },
+    "2.0.3": {
+      "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55"
+    },
+    "2.0.4": {
+      "contentSha256": "21e063f1ce4d22a456f2147c6e77b49b16aff6e50b2c63af8d75c13430eeb393"
+    },
+    "2.0.5": {
+      "contentSha256": "efb1e5c3695108562f1a6810b0d29f9b295105d6c250edd068757e33cdf81d97"
+    },
+    "2.0.6": {
+      "contentSha256": "226381bdf6a0537fc7fe7331f29ae6d8cd6291e8c7181215adfdb12580be0902"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "approvedAt": "2026-10-12T16:37:57.789Z",
+    "source": "Repository owner in this Codex conversation",
+    "message": "核准發佈，並將至今的變更commit並push到遠端",
+    "scope": "Publish and activate the exact asteroid-shield@2.0.6 version/contentSha256 from the preceding reviewed candidate; commit and push all changes to date",
+    "games": [
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.6",
+        "contentSha256": "226381bdf6a0537fc7fe7331f29ae6d8cd6291e8c7181215adfdb12580be0902"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.5",
+    "contentSha256": "efb1e5c3695108562f1a6810b0d29f9b295105d6c250edd068757e33cdf81d97",
+    "verifiedBeforePublishing": true,
+    "previousCurrentRetained": true,
+    "executed": false,
+    "command": "node scripts/publish-official-game.mjs asteroid-shield --activate-version 2.0.5"
+  },
+  "sourceBaseCommit": "ae8f4f858b527244e286ae6bc80d0643472710f2",
+  "status": "published-and-verified",
+  "productionVerifiedAt": "2026-10-12T16:44:30.559Z",
+  "prefix": "releases/asteroid-shield/2.0.6/",
+  "changes": [
+    "Add complete 48-second square melody, square harmony, white-noise percussion and triangle bass; preserve the supplied JSON data",
+    "Raise bass MIDI pitch by 12 semitones during score composition without changing its source JSON, note timing or velocity",
+    "Skip expired and repeated percussion clock ticks while retaining pitched chords, subsequent loops, sound settings and lifecycle cleanup"
+  ],
+  "sourceState": "Owner-approved workspace and frozen candidate; source and receipts are committed and pushed after production verification",
+  "tdd": {
+    "firstFailure": "Missing configured composition/triangle bass, A2 instead of A3, and repeated percussion tick double-trigger",
+    "afterFix": "34 audio tests and 142 game-architecture tests passed; seven local gates, Hub build and Brave synthesis/game flows passed",
+    "evidence": "docs/asteroid-shield-music-2.0.6.md"
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local validation in the preceding implementation task"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local validation in the preceding implementation task"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local validation in the preceding implementation task"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local validation in the preceding implementation task"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local validation in the preceding implementation task"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local validation in the preceding implementation task"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local validation in the preceding implementation task"
+      }
+    ],
+    "builds": [
+      "Frozen game Vite build and exact digest dry-run passed",
+      "Hub build passed 35 tasks with migrated bundle exclusion"
+    ],
+    "audioBrowser": "Real Tone four-track synthesis, 48-second loop, raised bass, mute/replacement and cleanup under opaque sandbox/CSP passed"
+  },
+  "productionVerification": {
+    "gameId": "asteroid-shield",
+    "version": "2.0.6",
+    "contentSha256": "226381bdf6a0537fc7fe7331f29ae6d8cd6291e8c7181215adfdb12580be0902",
+    "checkedAt": "2026-10-12T16:41:00.178Z",
+    "publicApi": {
+      "status": 200,
+      "singleCurrent": true,
+      "title": "小行星護盾防衛",
+      "trainer": "motor",
+      "category": "upper-limb",
+      "previewUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.6/package/preview.webp",
+      "noSettingsUrl": true
+    },
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/asteroid-shield/2.0.6/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "manifestScope": "/games/asteroid-shield/2.0.6/",
+    "files": [
+      {
+        "path": "assets/asteroid-blue-CY-_A_BJ.png",
+        "status": 200,
+        "size": 14034,
+        "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/asteroid-dark-CW7iRJ5o.png",
+        "status": 200,
+        "size": 11856,
+        "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/asteroid-green-1XKYeWRA.png",
+        "status": 200,
+        "size": 9693,
+        "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/background-NBhu4YAc.png",
+        "status": 200,
+        "size": 83041,
+        "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/energy-rock-CT8hMT01.png",
+        "status": 200,
+        "size": 1792,
+        "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/index-C_oGDyHQ.js",
+        "status": 200,
+        "size": 1330192,
+        "sha256": "186558f58d30ae96ff0afe67b5516244c56a43d64c5612844227636ca218a39e",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/shield-CxquxbMC.png",
+        "status": 200,
+        "size": 35318,
+        "sha256": "ded93bcfb8e383d478e1297ba87235738f55b9b9e631f846506791c26ebab40b",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/ship-CrsWCvcK.png",
+        "status": 200,
+        "size": 78990,
+        "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/style-AItIoLPr.css",
+        "status": 200,
+        "size": 16481,
+        "sha256": "f1d608354b25da207ce80736a6ec413535a0d2115e9fd3cadfab1954798f792a",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 471,
+        "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 411,
+        "sha256": "26808132b74f360dfc7195a899daaa97c88ea30d9ad17074ecc066d2c09d6450",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 20836,
+        "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+        "contentType": "image/webp"
+      }
+    ],
+    "currentSessionApi": {
+      "status": 201,
+      "version": "2.0.6",
+      "contentSha256": "226381bdf6a0537fc7fe7331f29ae6d8cd6291e8c7181215adfdb12580be0902",
+      "tokenRecorded": false
+    },
+    "productionRecordsCreated": false
+  },
+  "productionBrowser": [
+    {
+      "mode": "hub-desktop",
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --production-hub --lobby --wide --windowed --sound-on",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-12T16:40:55.806Z",
+      "checkedAt": "2026-10-12T16:41:38.260Z",
+      "source": "Production Hub/runner and actual approved R2 package",
+      "writeScope": "Local SQLite only; no production accounts or training records",
+      "viewport": "1320x713 windowed",
+      "evidence": "docs/migrations/asteroid-shield-music-2.0.6/production/hub-desktop/validation.txt",
+      "screenshots": [
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-desktop/confirmation.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-desktop/falling-animation.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-desktop/gameplay.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-desktop/results-analysis.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-desktop/results-details-end.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-desktop/results-details.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-desktop/results.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-desktop/settings.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-desktop/tutorial.png"
+      ]
+    },
+    {
+      "mode": "hub-mobile",
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --production-hub --lobby --mobile --sound-on",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-12T16:40:56.826Z",
+      "checkedAt": "2026-10-12T16:41:43.935Z",
+      "source": "Production Hub/runner and actual approved R2 package",
+      "writeScope": "Local SQLite only; no production accounts or training records",
+      "viewport": "390x844 Brave mobile emulation",
+      "evidence": "docs/migrations/asteroid-shield-music-2.0.6/production/hub-mobile/validation.txt",
+      "screenshots": [
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-mobile/confirmation.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-mobile/falling-animation.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-mobile/gameplay.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-mobile/results-analysis.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-mobile/results-details-end.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-mobile/results-details.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-mobile/results.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-mobile/settings.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/hub-mobile/tutorial.png"
+      ]
+    },
+    {
+      "mode": "pwa-mobile",
+      "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --remote --standalone --mobile --sound-on",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-12T16:40:55.868Z",
+      "checkedAt": "2026-10-12T16:41:39.643Z",
+      "source": "Production Hub/runner and actual approved R2 package",
+      "writeScope": "Local SQLite only; no production accounts or training records",
+      "viewport": "390x844 Brave mobile emulation",
+      "evidence": "docs/migrations/asteroid-shield-music-2.0.6/production/pwa-mobile/validation.txt",
+      "screenshots": [
+        "docs/migrations/asteroid-shield-music-2.0.6/production/pwa-mobile/confirmation.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/pwa-mobile/falling-animation.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/pwa-mobile/gameplay.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/pwa-mobile/results-analysis.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/pwa-mobile/results-details-end.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/pwa-mobile/results-details.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/pwa-mobile/results.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/pwa-mobile/settings.png",
+        "docs/migrations/asteroid-shield-music-2.0.6/production/pwa-mobile/tutorial.png"
+      ]
+    }
+  ],
+  "platformDeploymentPerformedByThisPublication": false,
+  "productionRecordsCreated": false,
+  "limitations": [
+    "Brave mobile emulation, not physical touch/audio output",
+    "Safari/iOS and human listening/mix acceptance not performed"
+  ]
+}

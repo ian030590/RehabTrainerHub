@@ -1,4 +1,5 @@
 import { version } from '../package.json';
+import { DisposeAudioFeedback } from './soundManager';
 const gameId = 'oculomotor-training';
 const schema = 'trainerhub.game/v1';
 let port: MessagePort | null = null;
@@ -48,6 +49,7 @@ export function SendGameEvent(type: string, payload: unknown = {}) {
 export function IsHubGame() { return port !== null && !standalone; }
 export function GetGameLanguage() { return language; }
 export async function ExitGame() {
+  DisposeAudioFeedback();
   SendGameEvent('input-stop');
   if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
   if (port) SendGameEvent('exit'); else window.dispatchEvent(new Event('game:configure'));

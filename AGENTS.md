@@ -54,6 +54,10 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 
 六款 R2 遊戲的全螢幕啟動／退出回歸由 `scripts/check-r2-game-fullscreen.test.mjs` 經既有 self-contained 測試納入 `test:game-architecture`，不新增 CI matrix。設定與教學保持視窗；手部目標追蹤先啟用相機，準備後以最後一次「開始訓練」點擊進入全螢幕；手勢對戰在相機就緒後的第一次校正點擊進入全螢幕（含手機）。六款返回 Hub／獨立入口前退出全螢幕，Hub 關閉、卸載與撤回亦清理並還原大廳捲動。驗證與發布限制見 `docs/r2-game-fullscreen-lifecycle.md`。
 
+六款 R2 遊戲的音訊使用各遊戲自有 `tone@15.1.22`／soundManager 與 `music.ts`，直接接受 Tonejs/Midi 的秒數／力度 JSON，支援波形／白噪音、多軌和弦及循環；`@tonejs/midi` 僅作 root 開發時轉檔。譜面編入 bundle，不用外連、Worker 或錄音取樣；只在 gameplay 播放，取消／完成／退出／卸載清理。`scripts/check-r2-game-audio.test.mjs` 經 self-contained 測試納入既有 `test:game-architecture`，沿用七項 CI matrix／原命令，browser 音訊驗證留在本機 Brave。六款已於 2026-10-12 精確核准、發布及驗收：畫畫塔防 2.0.6、小行星 2.0.5、手勢 2.0.4、手部 2.0.2、移動卡片 2.0.2、眼動 2.0.1。七項本機 gate、正式 API／current session／43 檔 bytes 與桌機 Hub／手機 Hub／手機獨立 PWA 共 18 流程均通過，無平台部署、無正式訓練紀錄；回退／收據見 `docs/r2-game-tone-audio.md`、`docs/releases/` 與搬遷計畫第 7 節。歌曲預設仍為空；相機使用圖片串流，Safari／iOS 與實體相機／音訊輸出未驗收。
+
+小行星護盾四軌音樂 `2.0.6` 已於 2026-10-13 精確核准、發布 R2 並切換 current：主旋律／合聲 square、打擊 white-noise、bass triangle 並提高一個八度，保留原 JSON、48 秒循環與聲音開關；同時處理過期／重複打擊節拍。34 項音訊／142 項架構測試、七項本機 gate、Hub build 與正式 API／session／12 檔公開 bytes、桌機 Hub／手機 Hub／手機獨立 PWA 三流程均通過，僅寫本機 SQLite；2.0.5 已核對為回退版。其餘五款背景歌曲仍為空。收據與驗收見 `docs/asteroid-shield-music-2.0.6.md`、`docs/releases/asteroid-shield-2.0.6.json`；實體音訊輸出與 Safari／iOS 尚未驗收。
+
 驗證使用 Node.js 內建 `node:test`、assert 檢查腳本、TypeScript、針對性 build 與本機 Brave smoke；依變更範圍選用對應 gate。Hub API、runner、遊戲流程、assessment lifecycle 與 i18n 分別有 `test:hub-functions`、`test:gamerunner`、`test:training-flow`、`test:assessment-lifecycle`、`test:i18n`。
 
 ## CI/CD 維護

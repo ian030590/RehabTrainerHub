@@ -1,5 +1,6 @@
 import { useT, type TranslationKey } from './i18n/useT';
-import { PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback } from './runtime/soundManager';
+import { PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { backgroundMusic, backgroundMusicOptions } from './music';
 import { StartHandInput, StopHandInput, SendGameEvent, SendGameResult, RetryGameSave, IsHubGame } from './runtime/hubBridge';
 import type { NormalizedLandmark, HandInputFrame } from './runtime/handInput';
 import { IsGestureConfig, defaultGestureConfig } from './config';
@@ -179,6 +180,11 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         casts: [] as CastRecord[],
     });
     const [phase, setPhaseState] = useState<GamePhase>('menu');
+    useEffect(() => {
+      if (phase === 'combat' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+      return StopMidiMusic;
+    }, [phase]);
+    useEffect(() => DisposeAudioFeedback, []);
     const [enemyMaxHp, setEnemyMaxHp] = useState(defaultGestureConfig.enemyMaxHp);
     const [holdDuration, setHoldDuration] = useState(defaultGestureConfig.holdDurationSec);
     const [strictnessThreshold, setStrictnessThreshold] = useState(defaultGestureConfig.strictnessPercent / 100);

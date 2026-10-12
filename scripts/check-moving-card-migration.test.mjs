@@ -79,7 +79,7 @@ test('moving card owns dependencies, UI and exact original preview and is exclud
   }
   for (const file of ['settings.json', 'score.json', 'exportCsv.ts', 'results/DefaultTrainingResults.tsx']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.1');
+  assert.equal(pkg.version, '2.0.2');
   assert.deepEqual(pkg.rehabTrainer?.capabilities, ['audio', 'fullscreen', 'keyboard', 'pointer', 'touch']);
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[name]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
@@ -230,7 +230,7 @@ test('moving-card bridge binds once to the parent private port and ignores forge
   const module = { exports: {} };
   new Function('require', 'module', 'exports', 'window', 'document', ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText)(() => ({ version: '2.0.1' }), module, module.exports, window, { referrer: 'https://trainerhub.cc/' });
+  }).outputText)(name => name.endsWith('package.json') ? { version: '2.0.1' } : { DisposeAudioFeedback() {} }, module, module.exports, window, { referrer: 'https://trainerhub.cc/' });
   module.exports.InstallHubBridge();
   assert.equal(module.exports.GetGameLanguage(), null);
   const sent = [];

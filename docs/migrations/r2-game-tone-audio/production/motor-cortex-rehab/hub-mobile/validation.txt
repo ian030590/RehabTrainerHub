@@ -1,0 +1,5 @@
+Hub iframe ready.
+Hub overlay viewport passed: {"width":390,"documentWidth":390,"overflow":"hidden","frameLeft":0,"frameRight":390,"scrollbarWidth":0}
+Game settings ready.
+Motor tracking Brave passed: own modal, five spotlights, actual MediaPipe, 45-second gameplay, numeric events, chart, retry, identity and camera cleanup.
+Lobby scrolling restored: {"top":1950,"overflow":"visible"}

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { PrepareAudioFeedback, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { backgroundMusic, backgroundMusicOptions } from './music';
 import { useT } from './i18n/useT';
 import { defaultSettings, settingsSections, ValidateSettings, type OculomotorSettings } from './settings';
 import { BuildGameScore, IsExperimentResult, type ExperimentResult } from './score';
@@ -14,6 +16,11 @@ export function OculomotorTrainingGame() {
   const locale = en ? 'en' : 'zh-TW';
   const title = en ? 'Oculomotor practice' : '眼動練習';
   const [phase, setPhase] = useState<'menu' | 'rules' | 'running' | 'results'>('menu');
+  useEffect(() => {
+    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    return StopMidiMusic;
+  }, [phase]);
+  useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<OculomotorSettings>({ ...defaultSettings });
   const [result, setResult] = useState<ExperimentResult | null>(null);
   const [ready, setReady] = useState(false);
@@ -94,6 +101,7 @@ export function OculomotorTrainingGame() {
   };
   const start = async () => {
     if (!ready || phaseRef.current !== 'rules' || !ValidateSettings(settings) || (settings.eyeTrackingSource === 'webgazer' && cameraState !== 'ready')) return;
+    if (backgroundMusic) PrepareAudioFeedback();
     completedRef.current = false;
     try { await rootRef.current?.requestFullscreen?.(); } catch { /* Continue with the actual window geometry. */ }
     if (phaseRef.current !== 'rules') { if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined); return; }

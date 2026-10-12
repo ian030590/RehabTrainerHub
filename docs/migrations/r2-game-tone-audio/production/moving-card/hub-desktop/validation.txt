@@ -1,0 +1,6 @@
+Hub iframe ready.
+Hub overlay viewport passed: {"width":1320,"documentWidth":1320,"overflow":"hidden","frameLeft":0,"frameRight":1320,"scrollbarWidth":0}
+Game settings ready.
+Moving-card gameplay viewport: {"width":1320,"height":713,"left":0,"right":1320,"top":0,"bottom":713,"scrollWidth":1320,"clientWidth":1320,"scrollHeight":713,"clientHeight":713}
+Moving-card settings, three spotlights, real pointer trials, results and save lifecycle passed.
+Lobby scrolling restored: {"top":781,"overflow":"visible"}

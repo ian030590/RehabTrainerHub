@@ -1,0 +1,406 @@
+{
+  "status": "approved-published-and-verified",
+  "checkedAt": "2026-10-12T13:16:15.982Z",
+  "games": [
+    {
+      "gameId": "drawing-defense",
+      "version": "2.0.6",
+      "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f",
+      "fileCount": 6,
+      "totalBytes": 5849165,
+      "files": [
+        {
+          "path": "assets/StarSky-COfhhfcH.png",
+          "size": 4650499,
+          "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/index-BVAeTKyX.js",
+          "size": 1146792,
+          "sha256": "ed18f0d8a04055e7412338f9ed96c386e87291467abb604f4c346c23f8bfd9d0",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-DCB82DCn.css",
+          "size": 15739,
+          "sha256": "53a151ef952a8276e9690a9d68d472139ed386698d8fcc3f01b7633184b3152a",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 489,
+          "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 402,
+          "sha256": "ec9dfcd0643b4eed22203016b126e6f5b4e22054243670030fcbb2e2bc84e45f",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 35244,
+          "sha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1",
+          "contentType": "image/webp"
+        }
+      ],
+      "currentVersion": "2.0.6",
+      "rollbackVersion": "2.0.5",
+      "rollbackContentSha256": "dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86",
+      "rollbackFilesVerified": true,
+      "previousCurrentVersion": "2.0.5",
+      "formalReceipt": "docs/releases/drawing-defense-2.0.6.json",
+      "status": "published-and-verified",
+      "candidateAlreadyExistsBeforePublication": false
+    },
+    {
+      "gameId": "asteroid-shield",
+      "version": "2.0.5",
+      "contentSha256": "efb1e5c3695108562f1a6810b0d29f9b295105d6c250edd068757e33cdf81d97",
+      "fileCount": 12,
+      "totalBytes": 1457558,
+      "files": [
+        {
+          "path": "assets/asteroid-blue-CY-_A_BJ.png",
+          "size": 14034,
+          "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/asteroid-dark-CW7iRJ5o.png",
+          "size": 11856,
+          "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/asteroid-green-1XKYeWRA.png",
+          "size": 9693,
+          "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/background-NBhu4YAc.png",
+          "size": 83041,
+          "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/energy-rock-CT8hMT01.png",
+          "size": 1792,
+          "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/index-mWvgLLGD.js",
+          "size": 1184635,
+          "sha256": "1380ce57e94a338a612f7f8738a1efcd0584b567bc57041118c0260fb7bf51f6",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/shield-CxquxbMC.png",
+          "size": 35318,
+          "sha256": "ded93bcfb8e383d478e1297ba87235738f55b9b9e631f846506791c26ebab40b",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/ship-CrsWCvcK.png",
+          "size": 78990,
+          "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+          "contentType": "image/png"
+        },
+        {
+          "path": "assets/style-AItIoLPr.css",
+          "size": 16481,
+          "sha256": "f1d608354b25da207ce80736a6ec413535a0d2115e9fd3cadfab1954798f792a",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 471,
+          "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 411,
+          "sha256": "fd8d766f5f08e582bfa51c0acf382925680ae5286714271d6b6a588dc6ee2c58",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 20836,
+          "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+          "contentType": "image/webp"
+        }
+      ],
+      "currentVersion": "2.0.5",
+      "rollbackVersion": "2.0.4",
+      "rollbackContentSha256": "21e063f1ce4d22a456f2147c6e77b49b16aff6e50b2c63af8d75c13430eeb393",
+      "rollbackFilesVerified": true,
+      "previousCurrentVersion": "2.0.4",
+      "formalReceipt": "docs/releases/asteroid-shield-2.0.5.json",
+      "status": "published-and-verified",
+      "candidateAlreadyExistsBeforePublication": false
+    },
+    {
+      "gameId": "gesture-battler",
+      "version": "2.0.4",
+      "contentSha256": "a085169bab352192503c0050e7bdfe8780514bcedb5172b518cdcf13499b8e6e",
+      "fileCount": 5,
+      "totalBytes": 1138628,
+      "files": [
+        {
+          "path": "assets/index-Cbt08RVI.js",
+          "size": 1115914,
+          "sha256": "3cdc7b89055dbbe92ae2014b4f0040e957a64b3c2e95707e3996012fa924b21f",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-BCYfgy-4.css",
+          "size": 19167,
+          "sha256": "4283ae0cb2fbe1db4570564f935dbcd63fcf83775821ecb4fc1902a38a1da5cb",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 477,
+          "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 408,
+          "sha256": "70abc3ce918b2a383a8078f8fb5711152726cd7256d2d6864b956400d543144d",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 2662,
+          "sha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b",
+          "contentType": "image/webp"
+        }
+      ],
+      "currentVersion": "2.0.4",
+      "rollbackVersion": "2.0.3",
+      "rollbackContentSha256": "35367a1833b3e8ff31ca3c6e13cc2767945525344b9ad0551a1d4188582259dc",
+      "rollbackFilesVerified": true,
+      "previousCurrentVersion": "2.0.3",
+      "formalReceipt": "docs/releases/gesture-battler-2.0.4.json",
+      "status": "published-and-verified",
+      "candidateAlreadyExistsBeforePublication": false
+    },
+    {
+      "gameId": "motor-cortex-rehab",
+      "version": "2.0.2",
+      "contentSha256": "a3383733227715bc748ff49e9c034c31813e17c75e465823acf53f1e10b6af46",
+      "fileCount": 5,
+      "totalBytes": 614579,
+      "files": [
+        {
+          "path": "assets/index-RAi9JujZ.js",
+          "size": 589389,
+          "sha256": "65e1f505bd551e12b4be4b87fe57e8eda4f159bde0f4503ec61e255233a1a6ae",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-Wf6jxFK0.css",
+          "size": 18832,
+          "sha256": "18f6a60b783c9bd0cdaeb0e0c7ecbe9b15a0060c33066965c961a06bcdaa165c",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 522,
+          "sha256": "ca2322d252c30355ac320367cb8c8eead92c88f06aae6d31bb43bfc2a09135a6",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 414,
+          "sha256": "a885d42e8214bc1c0f2be1a95d57d2618662a342dee97da319c8a5a0c63dc235",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 5422,
+          "sha256": "6a6085136389ad1250b036fb13ad6505032d9033cf115b336e9c7ae8721e1455",
+          "contentType": "image/webp"
+        }
+      ],
+      "currentVersion": "2.0.2",
+      "rollbackVersion": "2.0.1",
+      "rollbackContentSha256": "fc24505f72d10baa68db2cb20d833e5e2ca6a77c1eac51ad44831193fa58dc5a",
+      "rollbackFilesVerified": true,
+      "previousCurrentVersion": "2.0.1",
+      "formalReceipt": "docs/releases/motor-cortex-rehab-2.0.2.json",
+      "status": "published-and-verified",
+      "candidateAlreadyExistsBeforePublication": false
+    },
+    {
+      "gameId": "moving-card",
+      "version": "2.0.2",
+      "contentSha256": "8f683247f3abec9b7c39a68fbf98359d20250acf907db4b4c54c6cc1dda86fb2",
+      "fileCount": 5,
+      "totalBytes": 1170323,
+      "files": [
+        {
+          "path": "assets/index-C1HWwwUP.js",
+          "size": 1142993,
+          "sha256": "650b239711422a391ee7412f6308959eac740078064f4066298973cc910a9180",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "assets/style-DWH2q_ey.css",
+          "size": 17853,
+          "sha256": "8d5604f63eeb8fcfc86b366e075fb541e7da6948fe812e13955823509aa8ae65",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 507,
+          "sha256": "f82ee8b03ffd539b0a84fa93c34f720a7b022d48217e223d7ab835ef91c71c84",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 408,
+          "sha256": "3cd108eea87e6e197754188793b0417205038b1d2d010d910fa2b16957aca8b7",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 8562,
+          "sha256": "e14346b7bef3fba14f82f9c377fde9d0709c529d75f5cc23ef5e81652180e2b6",
+          "contentType": "image/webp"
+        }
+      ],
+      "currentVersion": "2.0.2",
+      "rollbackVersion": "2.0.1",
+      "rollbackContentSha256": "85197c5f6a4e41f6e53d5b2d307a5d0703c682a3b978a1103b26064e664318e3",
+      "rollbackFilesVerified": true,
+      "previousCurrentVersion": "2.0.1",
+      "formalReceipt": "docs/releases/moving-card-2.0.2.json",
+      "status": "published-and-verified",
+      "candidateAlreadyExistsBeforePublication": false
+    },
+    {
+      "gameId": "oculomotor-training",
+      "version": "2.0.1",
+      "contentSha256": "95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616",
+      "fileCount": 10,
+      "totalBytes": 711102,
+      "files": [
+        {
+          "path": "assets/index-DNDcsVEA.css",
+          "size": 17878,
+          "sha256": "b794691218fa1a9d030a9be1187d2fade53ee714313bf14cd3206c03d08bf4a8",
+          "contentType": "text/css; charset=utf-8"
+        },
+        {
+          "path": "assets/index-DT9TQH_m.js",
+          "size": 486578,
+          "sha256": "c5a777b722cedaf093b2703805906629933318e8d77c038c18a13ebd311df093",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "game.json",
+          "size": 548,
+          "sha256": "c96e3fc01bb8d0b4ca689069199b6fec71855918e595107054bf1bf00a0bfe56",
+          "contentType": "application/json; charset=utf-8"
+        },
+        {
+          "path": "index.html",
+          "size": 600,
+          "sha256": "2e540d71f6babf820f59b0e837f7ec0780a45af4c1592adde43cf826c70efdd3",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "preview.webp",
+          "size": 830,
+          "sha256": "82ac52eda37b58ef50ac78629bc8e9f1184ccfcdfccb5915d40f726f6899f091",
+          "contentType": "image/webp"
+        },
+        {
+          "path": "reference/experiment.js",
+          "size": 86855,
+          "sha256": "176dccd9d3b26a1ca35182124abc07da92e87cc8bfc158ee8285df8d038c215a",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "reference/gazeAdapter.js",
+          "size": 3638,
+          "sha256": "6ef784bcc4acf85910e65119d396e3bf8cda808916a5badfc715972206e8bfc3",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "reference/index.html",
+          "size": 587,
+          "sha256": "42f09cd2b8191affbee3e7c5e7bfde79f3c709c95916eacfc36b30bdadfc3983",
+          "contentType": "text/html; charset=utf-8"
+        },
+        {
+          "path": "reference/jspsych.js",
+          "size": 80994,
+          "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+          "contentType": "text/javascript; charset=utf-8"
+        },
+        {
+          "path": "reference/style.css",
+          "size": 32594,
+          "sha256": "53ed2f722070d7c04568c4753e0e9025fea32e47926c6266a464011817393600",
+          "contentType": "text/css; charset=utf-8"
+        }
+      ],
+      "currentVersion": "2.0.1",
+      "rollbackVersion": "2.0.0",
+      "rollbackContentSha256": "5148ebabb7a60d2f2f56094e97d3c45b4402d7968588dccecd3b42ed043374af",
+      "rollbackFilesVerified": true,
+      "previousCurrentVersion": "2.0.0",
+      "formalReceipt": "docs/releases/oculomotor-training-2.0.1.json",
+      "status": "published-and-verified",
+      "candidateAlreadyExistsBeforePublication": false
+    }
+  ],
+  "ownerApproval": {
+    "status": "approved",
+    "approvedAt": "2026-10-12T13:32:47.759Z",
+    "source": "Repository owner in this Codex conversation",
+    "message": "核准六款",
+    "scope": "Publish and activate the six exact version/contentSha256 tuples presented in the preceding assistant message",
+    "games": [
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.6",
+        "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.5",
+        "contentSha256": "efb1e5c3695108562f1a6810b0d29f9b295105d6c250edd068757e33cdf81d97"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.4",
+        "contentSha256": "a085169bab352192503c0050e7bdfe8780514bcedb5172b518cdcf13499b8e6e"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.2",
+        "contentSha256": "a3383733227715bc748ff49e9c034c31813e17c75e465823acf53f1e10b6af46"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.2",
+        "contentSha256": "8f683247f3abec9b7c39a68fbf98359d20250acf907db4b4c54c6cc1dda86fb2"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.0.1",
+        "contentSha256": "95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616"
+      }
+    ]
+  },
+  "productionVerifiedAt": "2026-10-12T13:55:24.218Z"
+}

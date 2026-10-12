@@ -19,7 +19,7 @@ test('gesture game owns configuration, tutorial, calibration, combat and complet
   for (const feature of ['GestureBattlerTutorial', 'StartHandInput', 'handleCalibrationHand', 'handleCombatHand',
     'Gesture_Stats', 'Cast_Records', 'SendGameResult', 'RetryGameSave']) assert.ok(source.includes(feature), feature);
   const manifest = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.deepEqual(Object.keys(manifest.dependencies).sort(), ['jspsych', 'pixi.js', 'react', 'react-dom']);
+  assert.deepEqual(Object.keys(manifest.dependencies).sort(), ['jspsych', 'pixi.js', 'react', 'react-dom', 'tone']);
   assert.ok(manifest.rehabTrainer.capabilities.includes('hand-tracking'));
 });
 

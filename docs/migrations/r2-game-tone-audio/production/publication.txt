@@ -1,0 +1,55 @@
+Publishing exactly approved drawing-defense@2.0.6: 3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f
+Verified releases/drawing-defense/2.0.6/files/assets/StarSky-COfhhfcH.png (4650499 bytes)
+Verified releases/drawing-defense/2.0.6/files/assets/index-BVAeTKyX.js (1146792 bytes)
+Verified releases/drawing-defense/2.0.6/files/assets/style-DCB82DCn.css (15739 bytes)
+Verified releases/drawing-defense/2.0.6/files/game.json (489 bytes)
+Verified releases/drawing-defense/2.0.6/files/index.html (402 bytes)
+Verified releases/drawing-defense/2.0.6/files/preview.webp (35244 bytes)
+Published and R2 verified drawing-defense@2.0.6; current 2.0.6.
+Publishing exactly approved asteroid-shield@2.0.5: efb1e5c3695108562f1a6810b0d29f9b295105d6c250edd068757e33cdf81d97
+Verified releases/asteroid-shield/2.0.5/files/assets/asteroid-blue-CY-_A_BJ.png (14034 bytes)
+Verified releases/asteroid-shield/2.0.5/files/assets/asteroid-dark-CW7iRJ5o.png (11856 bytes)
+Verified releases/asteroid-shield/2.0.5/files/assets/asteroid-green-1XKYeWRA.png (9693 bytes)
+Verified releases/asteroid-shield/2.0.5/files/assets/background-NBhu4YAc.png (83041 bytes)
+Verified releases/asteroid-shield/2.0.5/files/assets/energy-rock-CT8hMT01.png (1792 bytes)
+Verified releases/asteroid-shield/2.0.5/files/assets/index-mWvgLLGD.js (1184635 bytes)
+Verified releases/asteroid-shield/2.0.5/files/assets/shield-CxquxbMC.png (35318 bytes)
+Verified releases/asteroid-shield/2.0.5/files/assets/ship-CrsWCvcK.png (78990 bytes)
+Verified releases/asteroid-shield/2.0.5/files/assets/style-AItIoLPr.css (16481 bytes)
+Verified releases/asteroid-shield/2.0.5/files/game.json (471 bytes)
+Verified releases/asteroid-shield/2.0.5/files/index.html (411 bytes)
+Verified releases/asteroid-shield/2.0.5/files/preview.webp (20836 bytes)
+Published and R2 verified asteroid-shield@2.0.5; current 2.0.5.
+Publishing exactly approved gesture-battler@2.0.4: a085169bab352192503c0050e7bdfe8780514bcedb5172b518cdcf13499b8e6e
+Verified releases/gesture-battler/2.0.4/files/assets/index-Cbt08RVI.js (1115914 bytes)
+Verified releases/gesture-battler/2.0.4/files/assets/style-BCYfgy-4.css (19167 bytes)
+Verified releases/gesture-battler/2.0.4/files/game.json (477 bytes)
+Verified releases/gesture-battler/2.0.4/files/index.html (408 bytes)
+Verified releases/gesture-battler/2.0.4/files/preview.webp (2662 bytes)
+Published and R2 verified gesture-battler@2.0.4; current 2.0.4.
+Publishing exactly approved motor-cortex-rehab@2.0.2: a3383733227715bc748ff49e9c034c31813e17c75e465823acf53f1e10b6af46
+Verified releases/motor-cortex-rehab/2.0.2/files/assets/index-RAi9JujZ.js (589389 bytes)
+Verified releases/motor-cortex-rehab/2.0.2/files/assets/style-Wf6jxFK0.css (18832 bytes)
+Verified releases/motor-cortex-rehab/2.0.2/files/game.json (522 bytes)
+Verified releases/motor-cortex-rehab/2.0.2/files/index.html (414 bytes)
+Verified releases/motor-cortex-rehab/2.0.2/files/preview.webp (5422 bytes)
+Published and R2 verified motor-cortex-rehab@2.0.2; current 2.0.2.
+Publishing exactly approved moving-card@2.0.2: 8f683247f3abec9b7c39a68fbf98359d20250acf907db4b4c54c6cc1dda86fb2
+Verified releases/moving-card/2.0.2/files/assets/index-C1HWwwUP.js (1142993 bytes)
+Verified releases/moving-card/2.0.2/files/assets/style-DWH2q_ey.css (17853 bytes)
+Verified releases/moving-card/2.0.2/files/game.json (507 bytes)
+Verified releases/moving-card/2.0.2/files/index.html (408 bytes)
+Verified releases/moving-card/2.0.2/files/preview.webp (8562 bytes)
+Published and R2 verified moving-card@2.0.2; current 2.0.2.
+Publishing exactly approved oculomotor-training@2.0.1: 95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616
+Verified releases/oculomotor-training/2.0.1/files/assets/index-DNDcsVEA.css (17878 bytes)
+Verified releases/oculomotor-training/2.0.1/files/assets/index-DT9TQH_m.js (486578 bytes)
+Verified releases/oculomotor-training/2.0.1/files/game.json (548 bytes)
+Verified releases/oculomotor-training/2.0.1/files/index.html (600 bytes)
+Verified releases/oculomotor-training/2.0.1/files/preview.webp (830 bytes)
+Verified releases/oculomotor-training/2.0.1/files/reference/experiment.js (86855 bytes)
+Verified releases/oculomotor-training/2.0.1/files/reference/gazeAdapter.js (3638 bytes)
+Verified releases/oculomotor-training/2.0.1/files/reference/index.html (587 bytes)
+Verified releases/oculomotor-training/2.0.1/files/reference/jspsych.js (80994 bytes)
+Verified releases/oculomotor-training/2.0.1/files/reference/style.css (32594 bytes)
+Published and R2 verified oculomotor-training@2.0.1; current 2.0.1.

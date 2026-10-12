@@ -180,7 +180,7 @@ test('asteroid release owns UI, dependencies, metadata and the exact original pr
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.4');
+  assert.equal(pkg.version, '2.0.6');
   for (const dependency of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[dependency]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
@@ -232,39 +232,38 @@ test('asteroid result analysis retains selectable metrics and excludes missing o
 });
 
 test('asteroid preserves its original success, failure and end sound sequences and mute setting', async () => {
-  const sound = await import('../apps/rehabtrainerhub/games/asteroid-shield/runtime/soundManager.ts');
-  const originalAudioContext = globalThis.AudioContext;
   const frequencies = [];
   let contexts = 0;
-  class FakeAudioContext {
+  class Context {
     constructor() { contexts++; }
-    state = 'running'; currentTime = 1; destination = {};
+    destination = {}; transport = { stop() {}, cancel() {} };
+    now = () => 1;
     resume = async () => {};
-    createOscillator = () => {
-      const frequency = { value: 0, setValueAtTime: value => { frequency.value = value; } };
-      return { frequency, connect: target => target, disconnect: () => {},
-        start: () => frequencies.push(frequency.value), stop: () => {} };
-    };
-    createGain = () => ({ gain: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
-      connect: () => {}, disconnect: () => {} });
+    close = async () => {}; dispose() {}
   }
-  globalThis.AudioContext = FakeAudioContext;
-  try {
-    const audio = new FakeAudioContext();
-    const source = { current: { pluginAPI: { audioContext: () => audio } } };
-    sound.SetSoundEnabled(false);
-    sound.PrepareAudioFeedback(source); sound.PlaySuccessSound(source);
-    assert.deepEqual(frequencies, []);
-    sound.SetSoundEnabled(true);
-    sound.PrepareAudioFeedback(source);
-    sound.PlaySuccessSound(source); sound.PlayFailureSound(source);
-    sound.PlayGameEndSound('Victory', source); sound.PlayGameEndSound('Defeat', source);
-    assert.deepEqual(frequencies, [523.25, 659.25, 783.99, 246.94, 185,
-      523.25, 659.25, 783.99, 1046.5, 220, 164.81, 130.81]);
-    assert.equal(contexts, 1, 'Reuse the existing jsPsych AudioContext.');
-    sound.SetSoundEnabled(false); sound.PlayFailureSound(source);
-    assert.equal(frequencies.length, 12);
-  } finally { globalThis.AudioContext = originalAudioContext; }
+  class PolySynth {
+    connect() { return this; }
+    triggerAttackRelease(frequency) { frequencies.push(frequency); }
+    dispose() {}
+  }
+  const module = { exports: {} };
+  new Function('require', 'module', 'exports', ts.transpileModule(await readFile(resolve(gameRoot, 'runtime/soundManager.ts'), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText)(name => name.endsWith('classes.js') ? { Context, PolySynth, Synth: class {} } : { setContext() {} }, module, module.exports);
+  const sound = module.exports;
+  const source = { current: { pluginAPI: { audioContext: () => { throw new Error('jsPsych owns its context'); } } } };
+  sound.SetSoundEnabled(false);
+  sound.PrepareAudioFeedback(source); sound.PlaySuccessSound(source);
+  assert.deepEqual(frequencies, []);
+  sound.SetSoundEnabled(true);
+  sound.PrepareAudioFeedback(source);
+  sound.PlaySuccessSound(source); sound.PlayFailureSound(source);
+  sound.PlayGameEndSound('Victory', source); sound.PlayGameEndSound('Defeat', source);
+  assert.deepEqual(frequencies, [523.25, 659.25, 783.99, 246.94, 185,
+    523.25, 659.25, 783.99, 1046.5, 220, 164.81, 130.81]);
+  assert.equal(contexts, 1, 'Reuse the game-owned Tone context without borrowing jsPsych audio.');
+  sound.SetSoundEnabled(false); sound.PlayFailureSound(source);
+  assert.equal(frequencies.length, 12);
 });
 
 test('asteroid bridge binds once to the parent private port and ignores forged initialization and acknowledgements', async () => {
@@ -277,7 +276,7 @@ test('asteroid bridge binds once to the parent private port and ignores forged i
   const module = { exports: {} };
   new Function('require', 'module', 'exports', 'window', 'document', ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText)(() => ({ version: '2.0.1' }), module, module.exports, window, { referrer: 'https://trainerhub.cc/' });
+  }).outputText)(name => name.endsWith('package.json') ? { version: '2.0.1' } : { DisposeAudioFeedback() {} }, module, module.exports, window, { referrer: 'https://trainerhub.cc/' });
   module.exports.InstallHubBridge();
   assert.equal(module.exports.GetGameLanguage(), null);
   const sent = [];

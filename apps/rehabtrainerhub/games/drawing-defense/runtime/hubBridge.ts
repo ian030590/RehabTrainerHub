@@ -1,4 +1,5 @@
 import { version } from '../package.json';
+import { DisposeAudioFeedback } from './soundManager';
 const gameId = 'drawing-defense';
 const schema = 'trainerhub.game/v1';
 let port: MessagePort | null = null;
@@ -42,6 +43,7 @@ export function SendGameResult(config: Record<string, string | number | boolean>
 export function RetryGameSave() { SendGameEvent('retry'); }
 export function IsHubGame() { return port !== null; }
 export async function ExitGame() {
+  DisposeAudioFeedback();
   if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
   if (IsHubGame()) SendGameEvent('exit');
   else window.dispatchEvent(new Event('game:configure'));

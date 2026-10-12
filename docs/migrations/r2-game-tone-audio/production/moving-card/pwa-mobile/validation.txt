@@ -1,0 +1,4 @@
+Hub iframe ready.
+Game settings ready.
+Moving-card gameplay viewport: {"width":390,"height":844,"left":0,"right":390,"top":0,"bottom":844,"scrollWidth":390,"clientWidth":390,"scrollHeight":844,"clientHeight":844}
+Moving-card settings, three spotlights, real pointer trials, results and save lifecycle passed.

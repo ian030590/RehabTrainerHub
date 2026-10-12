@@ -1,0 +1,6 @@
+Hub iframe ready.
+Game settings ready.
+Eye camera: requesting consent
+Eye camera: consent accepted
+Eye camera: input document loaded
+Oculomotor saccade: original activity, four spotlights, numerical results and private save passed.

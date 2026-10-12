@@ -8,7 +8,8 @@ import { useT } from './i18n/useT';
 import { MotorTutorial } from './rules/MotorTutorial';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 import { IsHubGame, StartHandInput, StopHandInput, SendGameEvent, SendGameResult, RetryGameSave } from './runtime/hubBridge';
-import { PrepareAudioFeedback, PlaySuccessSound, PlayGameEndSound } from './runtime/soundManager';
+import { PrepareAudioFeedback, PlaySuccessSound, PlayGameEndSound, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { backgroundMusic, backgroundMusicOptions } from './music';
 import { BuildGameScore } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
 
@@ -30,6 +31,11 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   const handRef = useRef<HandState>({ x: 0, y: 0, visible: false, handedness: null, lastSeenAt: 0 });
   const metricsRef = useRef(CreateEmptyMetrics());
   const [phase, setPhaseState] = useState<GamePhase>('menu');
+  useEffect(() => {
+    if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    return StopMidiMusic;
+  }, [phase]);
+  useEffect(() => DisposeAudioFeedback, []);
   const [config, setConfig] = useState<MotorConfig>({ ...defaultConfig });
   const [error, setError] = useState('');
   const [handInputReady, setHandInputReady] = useState(false);

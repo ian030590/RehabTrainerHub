@@ -1,4 +1,5 @@
-import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled } from './runtime/soundManager';
+import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { backgroundMusic, backgroundMusicOptions } from './music';
 import { useT, type TranslationKey } from './i18n/useT';
 import { useFullscreenTrainingRoot, useTrainingAbort } from './runtime/trainingLifecycle';
 import { SendGameResult, UploadSample, RetryGameSave, IsHubGame } from './runtime/hubBridge';
@@ -155,6 +156,11 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
     const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
     const [phase, setPhaseState] = useState<GamePhase>('menu');
+    useEffect(() => {
+      if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+      return StopMidiMusic;
+    }, [phase]);
+    useEffect(() => DisposeAudioFeedback, []);
 
     const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
     const [gameDurationSec, setGameDurationSec] = useState<GameDurationSeconds>(defaultGameDurationSeconds);

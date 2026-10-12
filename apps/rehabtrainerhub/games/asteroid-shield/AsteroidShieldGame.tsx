@@ -2,7 +2,8 @@ import { useFullscreenTrainingRoot, useTrainingAbort } from './runtime/trainingL
 import { useT } from './i18n/useT';
 import { SendGameResult, RetryGameSave, IsHubGame } from './runtime/hubBridge';
 import { defaultSettings, BuildRuntimeConfig, BuildGameScore, type AsteroidSettings } from './settings';
-import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled } from './runtime/soundManager';
+import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { backgroundMusic, backgroundMusicOptions } from './music';
 import { initJsPsych } from 'jspsych';
 import { Application, Assets, Container, Sprite, Texture, TilingSprite, type Ticker } from 'pixi.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -305,6 +306,11 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
     const jsPsychRef = useRef<ReturnType<typeof initJsPsych> | null>(null);
     const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
     const [phase, setPhaseState] = useState<GamePhase>('menu');
+    useEffect(() => {
+      if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+      return StopMidiMusic;
+    }, [phase]);
+    useEffect(() => DisposeAudioFeedback, []);
     const [result, setResult] = useState<SessionRecord | null>(null);
     const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error'>('saving');
     const [rendererReady, setRendererReady] = useState(false);

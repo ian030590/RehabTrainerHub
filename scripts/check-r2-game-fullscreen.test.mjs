@@ -181,9 +181,11 @@ for (const gameId of ['drawing-defense', 'asteroid-shield', 'gesture-battler', '
         document: { fullscreenElement: {}, exitFullscreen: () => { actions.push('exit-fullscreen'); return fullscreen.promise; } },
         IsHubGame: () => embedded, port: embedded ? {} : null,
         SendGameEvent: type => actions.push(type), window: { dispatchEvent: event => actions.push(event.type) }, Event,
+        DisposeAudioFeedback: () => actions.push('stop-audio'),
       };
       const exit = await LoadFunction(`${games}/${gameId}/runtime/hubBridge.ts`, 'ExitGame', context);
       const pending = exit();
+      assert.equal(actions[0], 'stop-audio', 'Stop audio before waiting for fullscreen exit.');
       assert.ok(actions.includes('exit-fullscreen'));
       assert.ok(!actions.includes('exit') && !actions.includes('game:configure'), 'Keep the container mounted until fullscreen exits.');
       fullscreen.resolve();

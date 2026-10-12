@@ -1,4 +1,5 @@
 import { version } from '../package.json';
+import { DisposeAudioFeedback } from './soundManager';
 const gameId = 'asteroid-shield';
 const schema = 'trainerhub.game/v1';
 let port: MessagePort | null = null;
@@ -45,6 +46,7 @@ export function RetryGameSave() { SendGameEvent('retry'); }
 export function IsHubGame() { return port !== null; }
 export function GetGameLanguage() { return gameLanguage; }
 export async function ExitGame() {
+  DisposeAudioFeedback();
   if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
   if (IsHubGame()) SendGameEvent('exit');
   else window.dispatchEvent(new Event('game:configure'));

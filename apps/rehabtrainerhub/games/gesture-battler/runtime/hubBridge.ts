@@ -1,4 +1,5 @@
 import { version } from '../package.json';
+import { DisposeAudioFeedback } from './soundManager';
 import { AcceptHandInput } from './handInput';
 const gameId = 'gesture-battler';
 const schema = 'trainerhub.game/v1';
@@ -54,6 +55,7 @@ export function SendGameResult(config: Record<string, string | number | boolean>
 export function RetryGameSave() { SendGameEvent('retry'); }
 export function IsHubGame() { return port !== null && !standalone; }
 export async function ExitGame() {
+  DisposeAudioFeedback();
   SendGameEvent('input-stop');
   if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
   if (port) SendGameEvent('exit'); else window.dispatchEvent(new Event('game:configure'));

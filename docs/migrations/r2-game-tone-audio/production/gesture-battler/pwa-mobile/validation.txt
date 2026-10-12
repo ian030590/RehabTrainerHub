@@ -1,0 +1,3 @@
+Hub iframe ready.
+Game settings ready.
+Gesture Brave passed: spotlight, settings, trusted consent, real MediaPipe hand inference, seven calibrations, combat, full numeric results, retry and camera cleanup.

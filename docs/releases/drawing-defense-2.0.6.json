@@ -1,0 +1,318 @@
+{
+  "gameId": "drawing-defense",
+  "version": "2.0.6",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.6/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.6/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/",
+  "verifiedAt": "2026-10-12T13:35:37.382Z",
+  "fileCount": 6,
+  "totalBytes": 5849165,
+  "files": [
+    {
+      "path": "assets/StarSky-COfhhfcH.png",
+      "size": 4650499,
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-BVAeTKyX.js",
+      "size": 1146792,
+      "sha256": "ed18f0d8a04055e7412338f9ed96c386e87291467abb604f4c346c23f8bfd9d0",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DCB82DCn.css",
+      "size": 15739,
+      "sha256": "53a151ef952a8276e9690a9d68d472139ed386698d8fcc3f01b7633184b3152a",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 489,
+      "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "ec9dfcd0643b4eed22203016b126e6f5b4e22054243670030fcbb2e2bc84e45f",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 35244,
+      "sha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1",
+      "contentType": "image/webp"
+    }
+  ],
+  "currentVersion": "2.0.6",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "1a072412d9220b7d285086d999829961f5b76e7ad88220382d3121295a312d97"
+    },
+    "2.0.1": {
+      "contentSha256": "95e1184b39ad916abd50789837495490f0580a5526fd4237d5be067ddbcb0db9"
+    },
+    "2.0.2": {
+      "contentSha256": "2490614c840e2bd69811c01d52e98c12c9f7d63b2dd03e5c26e2089a69fab9f3"
+    },
+    "2.0.3": {
+      "contentSha256": "0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24"
+    },
+    "2.0.4": {
+      "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c"
+    },
+    "2.0.5": {
+      "contentSha256": "dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86"
+    },
+    "2.0.6": {
+      "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "approvedAt": "2026-10-12T13:32:47.759Z",
+    "source": "Repository owner in this Codex conversation",
+    "message": "核准六款",
+    "scope": "Publish and activate the six exact version/contentSha256 tuples presented in the preceding assistant message",
+    "games": [
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.6",
+        "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.5",
+        "contentSha256": "efb1e5c3695108562f1a6810b0d29f9b295105d6c250edd068757e33cdf81d97"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.4",
+        "contentSha256": "a085169bab352192503c0050e7bdfe8780514bcedb5172b518cdcf13499b8e6e"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.2",
+        "contentSha256": "a3383733227715bc748ff49e9c034c31813e17c75e465823acf53f1e10b6af46"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.2",
+        "contentSha256": "8f683247f3abec9b7c39a68fbf98359d20250acf907db4b4c54c6cc1dda86fb2"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.0.1",
+        "contentSha256": "95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.5",
+    "contentSha256": "dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86",
+    "verifiedBeforePublishing": true,
+    "command": "node scripts/publish-official-game.mjs drawing-defense --activate-version 2.0.5",
+    "executed": false,
+    "previousCurrentRetained": true
+  },
+  "status": "published-and-verified",
+  "productionVerifiedAt": "2026-10-12T13:55:24.218Z",
+  "prefix": "releases/drawing-defense/2.0.6/",
+  "changes": [
+    "Use game-owned Tone.js 15.1.22 synthesis and preserve original feedback events/pitches and sound settings",
+    "Accept Tonejs/Midi JSON note seconds/duration/velocity, track waveforms, chords and loops through game-owned music configuration",
+    "Keep strict opaque sandbox and package CSP; timeout clock without Workers or runtime audio fetch; stop audio on cancellation, completion and exit"
+  ],
+  "sourceBaseCommit": "ae8f4f858b527244e286ae6bc80d0643472710f2",
+  "sourceState": "Owner-reviewed workspace changes and fixed build snapshot; no new Git commit or push requested",
+  "tdd": {
+    "firstFailure": "Migrated games lacked PlayMidiMusic/Tone interface; eye practice lacked soundManager; new gameplay/exit hooks and converter were missing",
+    "afterFix": "43 audio/fullscreen tests passed; complete game-architecture gate passed 139 tests",
+    "evidence": "docs/r2-game-tone-audio.md"
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate, not a new GitHub CI run"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate, not a new GitHub CI run"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate, not a new GitHub CI run"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate, not a new GitHub CI run"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate, not a new GitHub CI run"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate, not a new GitHub CI run"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate, not a new GitHub CI run"
+      }
+    ],
+    "builds": [
+      "All six game Vite builds and dry-run validations passed",
+      "Hub build passed 35 tasks with migrated bundle exclusion",
+      "Fixed runner build passed"
+    ],
+    "audioBrowser": "Six game-owned sound managers passed real Tone synthesis, chord/noise, loop, mute and cleanup under runner CSP in opaque Brave iframes"
+  },
+  "productionVerification": {
+    "gameId": "drawing-defense",
+    "version": "2.0.6",
+    "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f",
+    "checkedAt": "2026-10-12T13:39:58.239Z",
+    "publicApi": {
+      "status": 200,
+      "singleCurrent": true,
+      "title": "畫畫塔防",
+      "trainer": "motor",
+      "category": "upper-limb",
+      "previewUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.6/package/preview.webp",
+      "noSettingsUrl": true
+    },
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/drawing-defense/2.0.6/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "manifestScope": "/games/drawing-defense/2.0.6/",
+    "files": [
+      {
+        "path": "assets/StarSky-COfhhfcH.png",
+        "status": 200,
+        "size": 4650499,
+        "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/index-BVAeTKyX.js",
+        "status": 200,
+        "size": 1146792,
+        "sha256": "ed18f0d8a04055e7412338f9ed96c386e87291467abb604f4c346c23f8bfd9d0",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DCB82DCn.css",
+        "status": 200,
+        "size": 15739,
+        "sha256": "53a151ef952a8276e9690a9d68d472139ed386698d8fcc3f01b7633184b3152a",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 489,
+        "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 402,
+        "sha256": "ec9dfcd0643b4eed22203016b126e6f5b4e22054243670030fcbb2e2bc84e45f",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 35244,
+        "sha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1",
+        "contentType": "image/webp"
+      }
+    ],
+    "currentSessionApi": {
+      "status": 201,
+      "version": "2.0.6",
+      "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f",
+      "tokenRecorded": false
+    },
+    "productionRecordsCreated": false
+  },
+  "productionBrowser": [
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game drawing-defense --production-hub --lobby --wide --windowed --sound-on",
+      "status": "passed",
+      "checkedAt": "2026-10-12T13:38:22.702Z",
+      "source": "Deployed production Hub and actual production R2 runner",
+      "writeScope": "API/record writes intercepted to local SQLite and CSV fixtures; no production training records/accounts created",
+      "viewport": [
+        1320,
+        713
+      ],
+      "screenshots": [
+        "docs/migrations/r2-game-tone-audio/production/drawing-defense/hub-desktop/results-analysis.png",
+        "docs/migrations/r2-game-tone-audio/production/drawing-defense/hub-desktop/results-details.png",
+        "docs/migrations/r2-game-tone-audio/production/drawing-defense/hub-desktop/results.png"
+      ],
+      "evidence": "docs/migrations/r2-game-tone-audio/production/drawing-defense/hub-desktop/validation.txt"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game drawing-defense --production-hub --lobby --mobile --sound-on",
+      "status": "passed",
+      "checkedAt": "2026-10-12T13:39:45.522Z",
+      "source": "Deployed production Hub and actual production R2 runner",
+      "writeScope": "API/record writes intercepted to local SQLite and CSV fixtures; no production training records/accounts created",
+      "viewport": [
+        390,
+        844
+      ],
+      "screenshots": [
+        "docs/migrations/r2-game-tone-audio/production/drawing-defense/hub-mobile/results-analysis.png",
+        "docs/migrations/r2-game-tone-audio/production/drawing-defense/hub-mobile/results-details.png",
+        "docs/migrations/r2-game-tone-audio/production/drawing-defense/hub-mobile/results.png"
+      ],
+      "evidence": "docs/migrations/r2-game-tone-audio/production/drawing-defense/hub-mobile/validation.txt"
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game drawing-defense --remote --standalone --mobile --sound-on",
+      "status": "passed",
+      "checkedAt": "2026-10-12T13:41:36.096Z",
+      "source": "Actual production R2 versioned standalone PWA",
+      "writeScope": "API/record writes intercepted to local SQLite and CSV fixtures; no production training records/accounts created",
+      "viewport": [
+        390,
+        844
+      ],
+      "screenshots": [
+        "docs/migrations/r2-game-tone-audio/production/drawing-defense/pwa-mobile/results-analysis.png",
+        "docs/migrations/r2-game-tone-audio/production/drawing-defense/pwa-mobile/results-details.png",
+        "docs/migrations/r2-game-tone-audio/production/drawing-defense/pwa-mobile/results.png"
+      ],
+      "evidence": "docs/migrations/r2-game-tone-audio/production/drawing-defense/pwa-mobile/validation.txt"
+    }
+  ],
+  "platformDeployment": {
+    "required": false,
+    "performed": false,
+    "reason": "R2 game content update; existing production Hub and runner already support these capabilities/format"
+  },
+  "limitations": [
+    "Mobile checks use Brave emulation, not physical touch hardware; Safari/iOS and physical sound output were not verified.",
+    "Hand/eye tracking used real fixed models with hash-checked portrait/hand image streams, not physical cameras or real-person accuracy validation.",
+    "No music composition added: backgroundMusic remains null; MIDI CC/sustain pedal/pitch bend and GM instrument playback are not implemented.",
+    "Existing installed versioned PWAs keep their original version; the stable entry resolves new current."
+  ]
+}

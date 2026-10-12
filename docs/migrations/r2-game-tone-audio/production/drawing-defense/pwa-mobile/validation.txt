@@ -1,0 +1,4 @@
+Hub iframe ready.
+Game settings ready.
+Playing.
+Standalone R2 PWA passed: settings, tutorial, game, results, return to settings; no account data writes.

@@ -6,7 +6,8 @@ import { BuildGameScore, type MovingCardTrial } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
 import { MovingCardTutorial } from './rules/MovingCardTutorial';
 import { DestroyPixiTrainingRuntime, WarmUpPixiTrainingRuntime } from './runtime/pixiPool';
-import { PrepareAudioFeedback, SetSoundEnabled } from './runtime/soundManager';
+import { PrepareAudioFeedback, SetSoundEnabled, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { backgroundMusic, backgroundMusicOptions } from './music';
 import { ExitGame, IsHubGame, RetryGameSave, SendGameEvent, SendGameResult } from './runtime/hubBridge';
 import { BuildMovingCardTimeline } from './timeline/movingCardTimeline';
 
@@ -15,6 +16,11 @@ export function MovingCardGame() {
   const en = lang === 'en';
   const title = en ? 'Moving Card Training' : '移動卡片訓練';
   const [phase, setPhase] = useState<'menu' | 'rules' | 'running' | 'results'>('menu');
+  useEffect(() => {
+    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    return StopMidiMusic;
+  }, [phase]);
+  useEffect(() => DisposeAudioFeedback, []);
   const [settings, setSettings] = useState<MovingCardSettings>({ ...defaultSettings });
   const [results, setResults] = useState<MovingCardTrial[]>([]);
   const [ready, setReady] = useState(false);
