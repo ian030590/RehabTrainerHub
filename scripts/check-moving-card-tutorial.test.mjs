@@ -43,6 +43,9 @@ test('spotlight follows targets and resize; finishing, skipping, back and dispos
     dom.targets['.camera'].left = 160;
     dom.window.dispatchEvent({ type: 'resize' });
     assert.equal(spotlight.style.left, '152px');
+    dom.targets['.camera'].left = 200;
+    dom.window.dispatchEvent({ type: 'game:tutorial-layout' });
+    assert.equal(spotlight.style.left, '192px', 'Spotlight follows the tutorial after its responsive cards finish updating.');
     panel.children[2].onclick();
     assert.equal(panel.children[0].textContent, 'Moves');
     assert.equal(spotlight.style.left, '492px');

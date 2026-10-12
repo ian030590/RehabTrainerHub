@@ -14,8 +14,10 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
     await game(`window.allowRendererRetry = true; document.querySelector('.renderer-error button').click()`);
   }
   await until(() => game(`!document.querySelector('form .btn-primary').disabled`), 'real Pixi initialized');
+  const arrangementLabels = await game(`[...document.querySelectorAll('[name=difficulty] option')].map(option => option.textContent)`);
   assert.equal(await game(`document.querySelectorAll('.moving-card-options p').length`), 18);
   assert.equal(await game(`document.querySelector('.moving-card-target').textContent`), 'AB');
+  await CheckTutorialGeometry(game, english, arrangementLabels, { count: 18, calibration: 149, difficulty: 'medium' });
   assert.equal(await game(`Boolean(document.querySelector('.game-tour'))`), false);
   assert.ok(await game(`document.querySelector('dialog').matches(':modal')`));
   const calibrationBar = await game(`(() => {
@@ -39,7 +41,8 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
   await setInput('rounds', 5);
   await setInput('optionCount', 40);
   await setInput('optionMoveIntervalMs', 200);
-  await setInput('difficulty', process.argv.includes('--hard') ? 'hard' : process.argv.includes('--medium') ? 'medium' : 'easy');
+  const difficulty = process.argv.includes('--hard') ? 'hard' : process.argv.includes('--medium') ? 'medium' : 'easy';
+  await setInput('difficulty', difficulty);
   await setInput('calibrationLengthMm', 70);
   const soundOn = process.argv.includes('--sound-on');
   if (!soundOn) await game(`document.querySelector('[name=soundEnabled]').click()`);
@@ -55,9 +58,23 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
   assert.equal(await game(`Boolean(document.querySelector('.game-tour-spotlight'))`), false);
   await game(`document.querySelector('form .btn-primary').click()`);
   await until(() => game(`Boolean(document.querySelector('.game-tour'))`), 'restarted tutorial');
+  const tutorialGeometry = await CheckTutorialGeometry(game, english, arrangementLabels);
+  const originalViewport = await evaluate('[innerWidth, innerHeight]');
+  await send('Emulation.setDeviceMetricsOverride', { width: originalViewport[0] - 40, height: originalViewport[1] - 40,
+    deviceScaleFactor: 1, mobile: process.argv.includes('--mobile') }, session);
+  await until(() => game(`document.querySelector('.moving-card-tutorial').clientWidth !== ${tutorialGeometry.viewportWidth}`), 'resized tutorial scene');
+  await game('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  await CheckTutorialGeometry(game, english, arrangementLabels);
+  await checkSpotlight('.moving-card-target');
+  await send('Emulation.setDeviceMetricsOverride', { width: originalViewport[0], height: originalViewport[1],
+    deviceScaleFactor: 1, mobile: process.argv.includes('--mobile') }, session);
+  await until(() => game(`document.querySelector('.moving-card-tutorial').clientWidth === ${tutorialGeometry.viewportWidth}`), 'restored tutorial scene');
+  await game('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  await CheckTutorialGeometry(game, english, arrangementLabels);
   for (const target of ['.moving-card-target', '.moving-card-options', '.moving-card-round']) {
     await checkSpotlight(target);
     await capture('tutorial-' + target.split('-').at(-1));
+    if (target === '.moving-card-options') await capture('tutorial-options-' + difficulty);
     await game(`document.querySelector('.game-tour button').click()`);
   }
   await until(() => game(`Boolean(document.querySelector('.training-confirmation'))`), 'complete tutorial');
@@ -93,7 +110,21 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
   assert.equal(layout.scrollWidth, layout.clientWidth); assert.equal(layout.scrollHeight, layout.clientHeight);
   assert.equal(layout.right - layout.left, layout.width); assert.equal(layout.bottom - layout.top, layout.height);
   console.log('Moving-card gameplay viewport:', JSON.stringify(layout));
+  const gameGeometry = await game(`(() => {
+    const app = window.movingCardPixiApp;
+    const card = app.stage.children.at(-1).children[0];
+    const shape = card.children[0].context.instructions[0].data.path.instructions[0].data;
+    return {width: shape[2], height: shape[3], radius: shape[4], fontSize: card.children[1].style.fontSize,
+      targetFontSize: app.stage.children[6].style.fontSize};
+  })()`);
+  if (layout.width === tutorialGeometry.viewportWidth && layout.height === tutorialGeometry.viewportHeight) {
+    for (const key of ['width', 'height', 'radius', 'fontSize', 'targetFontSize']) {
+      assert.ok(Math.abs(gameGeometry[key] - tutorialGeometry[key]) < 0.1,
+        `Tutorial ${key} ${tutorialGeometry[key]} must match gameplay ${gameGeometry[key]}`);
+    }
+  }
   await capture('gameplay');
+  await capture('gameplay-' + difficulty);
   if (process.argv.includes('--stop')) {
     await click('.moving-card-stop');
     await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'stop without saving incomplete training');
@@ -111,7 +142,7 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
     const app=window.movingCardPixiApp;
     if (!app?.stage?.children[6]) return null;
     const target=app.stage.children[6].text;
-    const card=app.stage.children.at(-1).children.find(card => (card.children[1].text===target) === ${correct});
+    const card=app.stage.children.at(-1).children.findLast(card => (card.children[1].text===target) === ${correct});
     const rect=app.canvas.getBoundingClientRect();return {x:rect.left+card.x,y:rect.top+card.y,target};
   })()`);
   const selectCard = async correct => {
@@ -127,7 +158,13 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
     }
   };
   const firstTarget = (await cardPoint(true)).target;
-  await selectCard(false);
+  await until(async () => {
+    const wrongFeedback = await game(`window.movingCardPixiApp.stage.children.at(-1).children.some(card =>
+      card.children[0].context.instructions[0]?.data.style.color === 0x3D1A1A)`);
+    if (wrongFeedback) return true;
+    await selectCard(false);
+    return false;
+  }, 'a real wrong selection flashes red before retry');
   await new Promise(resolve => setTimeout(resolve, 400));
   assert.equal((await cardPoint(true)).target, firstTarget, 'Wrong selections allow retry in the same trial.');
   for (let round = 1; round <= 5; round++) {
@@ -179,4 +216,46 @@ export async function CheckMovingCard({ game, evaluate, send, until, standalone,
   await game(`document.querySelector('.score-return-button').click()`);
   await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'return to source');
   console.log('Moving-card settings, three spotlights, real pointer trials, results and save lifecycle passed.');
+}
+
+async function CheckTutorialGeometry(game, english, arrangementLabels, { count = 40, calibration = 175,
+  difficulty = process.argv.includes('--hard') ? 'hard' : process.argv.includes('--medium') ? 'medium' : 'easy' } = {}) {
+  const geometry = await game(`(() => {
+    const scene = document.querySelector('.moving-card-tutorial');
+    const cards = [...scene.querySelectorAll('.moving-card-preview-option')];
+    const styles = cards.map(card => getComputedStyle(card));
+    const number = value => parseFloat(value) || 0;
+    const radius = styles[0].borderRadius.includes('%') ? number(styles[0].width) / 2 : number(styles[0].borderRadius);
+    return {viewportWidth: scene.clientWidth, viewportHeight: scene.clientHeight,
+      width: number(styles[0].width), height: number(styles[0].height), radius,
+      fontSize: number(styles[0].fontSize), targetFontSize: number(getComputedStyle(scene.querySelector('.moving-card-target')).fontSize),
+      positions: cards.map(card => ({x:card.offsetLeft, y:card.offsetTop})),
+      rotations: styles.map(style => style.transform), count: cards.length};
+  })()`);
+  const hard = difficulty === 'hard';
+  const circle = difficulty !== 'easy';
+  const width = geometry.viewportWidth, height = geometry.viewportHeight;
+  const areaWidth = width * 0.94;
+  const areaTop = Math.max(height * 0.18, 72);
+  const areaHeight = height - Math.max(height * 0.05, 64) - areaTop;
+  const rows = Math.max(4, Math.ceil((count + 1) / 5));
+  const cardWidth = areaWidth / 5 * 0.8, cardHeight = areaHeight / rows * 0.8;
+  const diameter = Math.min(cardWidth, cardHeight, Math.sqrt(areaWidth * areaHeight / count) * 0.85);
+  const expected = {width: circle ? diameter : cardWidth, height: circle ? diameter : cardHeight,
+    radius: circle ? diameter / 2 : 4,
+    fontSize: Math.min(Math.max(12, 10 * 700 / calibration), Math.min(circle ? diameter : cardWidth, circle ? diameter : cardHeight) * 0.7),
+    targetFontSize: Math.max(16, Math.min(15 * 700 / calibration, height * 0.08, width * 0.1))};
+  const failures = [];
+  const expectedLabels = english ? ['Square grid', 'Scattered circles', 'Scattered circles with rotation']
+    : ['方形排列', '圓形散亂', '圓形散亂旋轉'];
+  if (JSON.stringify(arrangementLabels) !== JSON.stringify(expectedLabels)) failures.push(`Arrangement names: ${arrangementLabels.join(', ')}`);
+  for (const key of Object.keys(expected)) {
+    if (Math.abs(geometry[key] - expected[key]) >= 0.1) failures.push(`${key}: tutorial ${geometry[key]}, gameplay ${expected[key]}`);
+  }
+  const visibleRows = new Set(geometry.positions.map(position => position.y));
+  if (circle ? visibleRows.size <= Math.ceil(count / 5) : visibleRows.size !== Math.ceil(count / 5)) failures.push('Cards must use the selected grid or scattered arrangement.');
+  if (hard && new Set(geometry.rotations).size <= 2) failures.push('Rotated cards must show the gameplay range of angles.');
+  assert.deepEqual(failures, [], 'Tutorial cards must match the calibrated gameplay on this viewport.');
+  assert.equal(geometry.count, count);
+  return geometry;
 }

@@ -21,19 +21,32 @@ for (const fixture of cases) {
       const source = await readFile(resolve(gamesRoot, fixture.id, 'rules', `${fixture.tutorial}.tsx`), 'utf8');
       const module = { exports: {} };
       const dependencies = {
-        react: { ...React, useEffect() {}, useState: () => [true, () => {}], useRef: () => ({ current: null }) },
+        react: { ...React, useEffect() {}, useLayoutEffect() {}, useMemo: calculate => calculate(),
+          useState: initial => [fixture.id === 'moving-card' && typeof initial === 'object' ? initial : true, () => {}],
+          useRef: () => ({ current: null }) },
         'react/jsx-runtime': jsxRuntime,
         '../i18n/useT': { useT: () => ({ lang: language, t: key => key }) },
         '../runtime/tour': {}, '../runtime/tour.css': {}, './tutorialSteps': {},
         '../settings': { PixelFromMillimeter: value => value },
       };
-      new Function('require', 'module', 'exports', ts.transpileModule(
+      if (fixture.id === 'moving-card') {
+        const mathModule = { exports: {} }, layoutModule = { exports: {} };
+        new Function('module', 'exports', ts.transpileModule(await readFile(resolve(gamesRoot, fixture.id, 'gameUtils.ts'), 'utf8'), {
+          compilerOptions: { module: ts.ModuleKind.CommonJS },
+        }).outputText)(mathModule, mathModule.exports);
+        new Function('require', 'module', 'exports', ts.transpileModule(await readFile(resolve(gamesRoot, fixture.id, 'cardLayout.ts'), 'utf8'), {
+          compilerOptions: { module: ts.ModuleKind.CommonJS },
+        }).outputText)(() => mathModule.exports, layoutModule, layoutModule.exports);
+        dependencies['../cardLayout'] = layoutModule.exports;
+        dependencies['../runtime/theme'] = { typography: { fontSizeM: 16 } };
+      }
+      new Function('require', 'module', 'exports', 'window', ts.transpileModule(
         source.replaceAll('import.meta.url', JSON.stringify('https://runner.example/package/rules/tutorial.js')),
         { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } },
       ).outputText)(name => {
         assert.ok(name in dependencies, `Unexpected dependency: ${name}`);
         return dependencies[name];
-      }, module, module.exports);
+      }, module, module.exports, { innerWidth: 390, innerHeight: 844 });
       let starts = 0;
       let backs = 0;
       const tree = module.exports[fixture.tutorial]({

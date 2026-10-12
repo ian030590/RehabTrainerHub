@@ -1,0 +1,320 @@
+{
+  "gameId": "moving-card",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.1/package/index.html",
+  "contentSha256": "85197c5f6a4e41f6e53d5b2d307a5d0703c682a3b978a1103b26064e664318e3",
+  "verifiedAt": "2026-10-12T03:50:42.327Z",
+  "status": "published-and-verified",
+  "prefix": "releases/moving-card/2.0.1/",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.1/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/",
+  "fileCount": 5,
+  "totalBytes": 930694,
+  "files": [
+    {
+      "path": "assets/index-8cljK-Wc.js",
+      "size": 903364,
+      "sha256": "5b4e8fb08ce8e7fabee2db5125fb40e6e0cf0433c1739fb0c009e9e501fa11b2",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DWH2q_ey.css",
+      "size": 17853,
+      "sha256": "8d5604f63eeb8fcfc86b366e075fb541e7da6948fe812e13955823509aa8ae65",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 507,
+      "sha256": "f82ee8b03ffd539b0a84fa93c34f720a7b022d48217e223d7ab835ef91c71c84",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "b4a9dc025782ef8e9dc3e10328eafa0598d92c0413fea09f7ae954e8b46030c3",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8562,
+      "sha256": "e14346b7bef3fba14f82f9c377fde9d0709c529d75f5cc23ef5e81652180e2b6",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "approvedOn": "2026-10-12",
+    "source": "Repository owner in this Codex conversation",
+    "message": "核准",
+    "scope": "Publish the exact 2.0.1 candidate version and contentSha256 presented in the preceding assistant message",
+    "reviewedVersion": "2.0.1",
+    "reviewedContentSha256": "85197c5f6a4e41f6e53d5b2d307a5d0703c682a3b978a1103b26064e664318e3"
+  },
+  "changes": [
+    "Correct visual-search names in settings and final confirmation: 方形排列 / 圓形散亂 / 圓形散亂旋轉",
+    "Tutorial and Pixi gameplay use one game-owned card layout for grid, scattered circles and rotation",
+    "Match calibrated card/target letter sizes and scene geometry; keep spotlight aligned after responsive layout changes",
+    "Retain original settings, gameplay, scoring, private communication, strict sandbox, fullscreen and source-specific return"
+  ],
+  "sourceBaseCommit": "2fe8cc60a133c871593d834d845604719873c79b",
+  "sourceState": "Reviewed workspace changes; no new Git commit or push was requested",
+  "localValidation": {
+    "gates": [
+      {
+        "command": "npm run test:naming",
+        "status": "passed",
+        "scope": "Local validation before approval; not a new CI run"
+      },
+      {
+        "command": "npm run test:pwa",
+        "status": "passed",
+        "scope": "Local validation before approval; not a new CI run"
+      },
+      {
+        "command": "npm run test:game-architecture",
+        "status": "passed",
+        "scope": "Local validation before approval; not a new CI run"
+      },
+      {
+        "command": "npm run test:hub-functions",
+        "status": "passed",
+        "scope": "Local validation before approval; not a new CI run"
+      },
+      {
+        "command": "npm run test:gamerunner",
+        "status": "passed",
+        "scope": "Local validation before approval; not a new CI run"
+      },
+      {
+        "command": "npm run test:entrypoints",
+        "status": "passed",
+        "scope": "Local validation before approval; not a new CI run"
+      },
+      {
+        "command": "npm run test:cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local validation before approval; not a new CI run"
+      }
+    ],
+    "additional": [
+      "npm --prefix apps/rehabtrainerhub/games/moving-card run build",
+      "npm run build:hub",
+      "node scripts/publish-official-game.mjs moving-card --dry-run"
+    ],
+    "documentation": "docs/moving-card-visual-search-2.0.1.md"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-12T03:52:08.968Z",
+    "publicCatalog": {
+      "id": "moving-card",
+      "slug": "moving-card",
+      "title": "移動卡片訓練",
+      "summary": "在移動卡片中尋找目標，練習視覺搜尋與動態專注。",
+      "trainer": "vision",
+      "category": "vision",
+      "developerName": "居家訓練網",
+      "updatedAt": "2026-10-12T03:50:09.117Z",
+      "copy": {
+        "zh-TW": {
+          "title": "移動卡片訓練",
+          "description": "在移動卡片中尋找目標，練習視覺搜尋與動態專注。"
+        },
+        "en": {
+          "title": "Moving Card Training",
+          "description": "Find targets among moving cards to practise visual search and dynamic attention."
+        }
+      },
+      "previewUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.1/package/preview.webp",
+      "release": {
+        "id": "moving-card@2.0.1",
+        "version": "2.0.1",
+        "contentSha256": "85197c5f6a4e41f6e53d5b2d307a5d0703c682a3b978a1103b26064e664318e3",
+        "capabilities": [
+          "audio",
+          "fullscreen",
+          "keyboard",
+          "pointer",
+          "touch"
+        ],
+        "approvedAt": "2026-10-12T03:50:09.117Z",
+        "presentation": "game",
+        "launchUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.1/",
+        "installUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/"
+      }
+    },
+    "files": {
+      "count": 5,
+      "exactSha256AndSizesVerified": true,
+      "contentTypesAndCspVerified": true
+    },
+    "stableEntry": {
+      "status": 302,
+      "location": "/games/moving-card/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "officialSession": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "85197c5f6a4e41f6e53d5b2d307a5d0703c682a3b978a1103b26064e664318e3",
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "keyboard",
+        "pointer",
+        "touch"
+      ],
+      "tokenRedacted": true
+    },
+    "evidence": "docs/migrations/moving-card-visual-search-2.0.1/production/api-verification.json",
+    "productionTrainingRecordsCreated": false
+  },
+  "productionBrowserValidation": [
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --production-hub --lobby --wide --windowed",
+      "tag": "hub-desktop-grid",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:52:22.392Z",
+      "source": "Actual production Hub and runner; Hub /api/* intercepted to local SQLite",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": [
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-desktop-grid-tutorial.png",
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-desktop-grid-gameplay.png"
+      ]
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --production-hub --lobby --wide --windowed --medium",
+      "tag": "hub-desktop-circles",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:53:46.948Z",
+      "source": "Actual production Hub and runner; Hub /api/* intercepted to local SQLite",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": [
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-desktop-circles-tutorial.png",
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-desktop-circles-gameplay.png"
+      ]
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --production-hub --lobby --wide --windowed --hard",
+      "tag": "hub-desktop-rotation",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:55:22.315Z",
+      "source": "Actual production Hub and runner; Hub /api/* intercepted to local SQLite",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": [
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-desktop-rotation-tutorial.png",
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-desktop-rotation-gameplay.png"
+      ]
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --production-hub --lobby --mobile",
+      "tag": "hub-mobile-grid",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:56:43.091Z",
+      "source": "Actual production Hub and runner; Hub /api/* intercepted to local SQLite",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": [
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-mobile-grid-tutorial.png",
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-mobile-grid-gameplay.png"
+      ]
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --production-hub --lobby --mobile --medium",
+      "tag": "hub-mobile-circles",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:58:56.305Z",
+      "source": "Actual production Hub and runner; Hub /api/* intercepted to local SQLite",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": [
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-mobile-circles-tutorial.png",
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-mobile-circles-gameplay.png"
+      ]
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --production-hub --lobby --mobile --hard --english --signed-in",
+      "tag": "hub-mobile-rotation-en",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:59:58.952Z",
+      "source": "Actual production Hub and runner; Hub /api/* intercepted to local SQLite",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": [
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-mobile-rotation-en-tutorial.png",
+        "docs/migrations/moving-card-visual-search-2.0.1/production/hub-mobile-rotation-en-gameplay.png"
+      ]
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --remote --standalone --wide --windowed",
+      "tag": "pwa-desktop-grid",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:56:42.920Z",
+      "source": "Actual production runner and versioned standalone PWA",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": []
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --remote --standalone --wide --windowed --medium",
+      "tag": "pwa-desktop-circles",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:58:38.061Z",
+      "source": "Actual production runner and versioned standalone PWA",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": []
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --remote --standalone --wide --windowed --hard",
+      "tag": "pwa-desktop-rotation",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:59:56.623Z",
+      "source": "Actual production runner and versioned standalone PWA",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": []
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --remote --standalone --mobile",
+      "tag": "pwa-mobile-grid",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:52:18.812Z",
+      "source": "Actual production runner and versioned standalone PWA",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": []
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --remote --standalone --mobile --medium",
+      "tag": "pwa-mobile-circles",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:53:50.499Z",
+      "source": "Actual production runner and versioned standalone PWA",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": []
+    },
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game moving-card --remote --standalone --mobile --hard --english",
+      "tag": "pwa-mobile-rotation-en",
+      "status": "passed",
+      "checkedAt": "2026-10-12T03:55:21.999Z",
+      "source": "Actual production runner and versioned standalone PWA",
+      "writeScope": "Local SQLite only; no production training records or accounts created",
+      "screenshots": []
+    }
+  ],
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037",
+    "checkedAt": "2026-10-12T03:47:39.572Z",
+    "approvedManifestAndFivePublicFilesVerified": true,
+    "evidence": "docs/migrations/moving-card-visual-search-2.0.1/production/rollback-verification.json",
+    "command": "node scripts/publish-official-game.mjs moving-card --activate-version 2.0.0",
+    "executed": false
+  },
+  "platformDeployment": {
+    "required": false,
+    "performed": false,
+    "reason": "R2 game content update; existing production Hub and runner already support the new release"
+  },
+  "limitations": [
+    "Mobile validation uses Brave device emulation, not physical touch hardware.",
+    "Safari/iOS, ruler calibration and full-duration offline training were not verified.",
+    "Save retries and signed-in identity isolation use local SQLite and local test accounts; production records/accounts were not created.",
+    "Production rollback was verified without executing a current-version rollback."
+  ]
+}

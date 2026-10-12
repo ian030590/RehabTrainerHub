@@ -109,8 +109,8 @@ export function MovingCardGame() {
     }
     setPhase('running');
   };
-  const difficultyLabels = en ? ['Scattered relocation', 'Circular arrangement', 'Circular arrangement with rotation']
-    : ['散佈移位', '圓形排列', '圓形排列並旋轉'];
+  const difficultyLabels = en ? ['Square grid', 'Scattered circles', 'Scattered circles with rotation']
+    : ['方形排列', '圓形散亂', '圓形散亂旋轉'];
   const summaryItems = [
     { label: en ? 'Visual search arrangement' : '視覺搜尋排列', value: difficultyLabels[['easy', 'medium', 'hard'].indexOf(settings.difficulty)] },
     ...numericSettings.map(field => ({ label: en ? field.en : field.zh, value: String(settings[field.key]) })),

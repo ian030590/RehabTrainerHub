@@ -74,6 +74,7 @@ export function StartTour(steps: TourStep[], options: {
     if (disposed) return;
     disposed = true;
     window.removeEventListener('resize', position);
+    window.removeEventListener('game:tutorial-layout', position);
     window.removeEventListener('scroll', position, true);
     blocker.remove();
     overlay.remove();
@@ -96,6 +97,7 @@ export function StartTour(steps: TourStep[], options: {
   overlay.append(title, text, next, skip, back);
   document.body.append(blocker, spotlight, overlay);
   window.addEventListener('resize', position);
+  window.addEventListener('game:tutorial-layout', position);
   window.addEventListener('scroll', position, true);
   render();
   next.focus();

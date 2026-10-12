@@ -18,7 +18,8 @@ import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { pixiColors, typography } from './runtime/theme';
-import { ShuffleArray, GenerateRandomLetters, GenerateScatteredPositions } from './gameUtils';
+import { ShuffleArray, GenerateRandomLetters } from './gameUtils';
+import { ChooseMovingCardRotation, CreateMovingCardOptionLayout, GetMovingCardSearchBounds, type SafeAreaInsets } from './cardLayout';
 import { PixelFromMillimeter } from './settings';
 import { soundManager } from './runtime/soundManager';
 import {
@@ -89,17 +90,7 @@ interface GameOption {
   currentY: number;
 }
 
-interface SafeAreaInsets {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-}
-
 // ── Responsive Layout Constants ──
-const marginX = 0.03;
-const marginTop = 0.18;
-const marginBottom = 0.05;
 const gridCols = 5;
 const moveDurationMs = 300;
 const movingCardPixiScope = pixiRuntimeScopes.movingCard;
@@ -168,10 +159,11 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
       let safeInsets = ReadSafeAreaInsets(safeAreaProbe);
       const cx = () => safeInsets.left + (getWidth() - safeInsets.left - safeInsets.right) / 2;
 
-      const gameX = () => safeInsets.left + getWidth() * marginX;
-      const gameY = () => Math.max(getHeight() * marginTop, safeInsets.top + 72);
-      const gameW = () => Math.max(1, getWidth() - safeInsets.left - safeInsets.right - getWidth() * marginX * 2);
-      const gameH = () => Math.max(1, getHeight() - safeInsets.bottom - Math.max(getHeight() * marginBottom, 64) - gameY());
+      const searchBounds = () => GetMovingCardSearchBounds(getWidth(), getHeight(), safeInsets);
+      const gameX = () => searchBounds().x;
+      const gameY = () => searchBounds().y;
+      const gameW = () => searchBounds().w;
+      const gameH = () => searchBounds().h;
 
       // ── Build Scene ──
       const bgGfx = new Graphics();
@@ -276,45 +268,11 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
       const assignedRotations: number[] = [];
 
       const CreateOptionPositions = () => {
-        const gw = gameW();
-        const gh = gameH();
-        const cellW = gw / gridCols;
-        const cellH = gh / gridRows;
-        oW = cellW * 0.8;
-        oH = cellH * 0.8;
-
-        if (isCircle) {
-          const maxArea = (gw * gh) / optionCount;
-          const safeDiameter = Math.sqrt(maxArea) * 0.85;
-          const diameter = Math.min(oW, oH, safeDiameter);
-          oW = diameter;
-          oH = diameter;
-        }
-        minDist = Math.max(oW, oH) * 1.1;
-
-        const positions: { x: number; y: number }[] = [];
-        const gx = gameX();
-        const gy = gameY();
-
-        if (diff === 'beginner') {
-          for (let r = 0; r < gridRows; r++) {
-            for (let c = 0; c < gridCols; c++) {
-              positions.push({
-                x: gx + c * cellW + cellW * 0.1 + oW / 2,
-                y: gy + r * cellH + cellH * 0.1 + oH / 2,
-              });
-            }
-          }
-          return positions;
-        }
-
-        const safeW = Math.max(1, gw - oW);
-        const safeH = Math.max(1, gh - oH);
-        return GenerateScatteredPositions(
-          optionCount,
-          { x: gx + oW / 2, y: gy + oH / 2, w: safeW, h: safeH },
-          minDist
-        );
+        const layout = CreateMovingCardOptionLayout(optionCount, searchBounds(), isCircle);
+        oW = layout.width;
+        oH = layout.height;
+        minDist = layout.minDistance;
+        return layout.positions;
       };
 
       const positions = CreateOptionPositions();
@@ -341,32 +299,8 @@ class PixiMovingCardPlugin implements JsPsychPlugin<Info> {
         optContainer.y = pos.y;
 
         // Rotation for advanced difficulty
-        let chosenRotation = 0;
-        if (diff === 'advanced') {
-          let bestRotation = 0;
-          let maxScore = -1;
-          for (let cand = 0; cand < 12; cand++) {
-            const testRot = (Math.random() - 0.5) * Math.PI;
-            let score = Math.PI * 10;
-            for (let j = 0; j < i; j++) {
-              const dx = pos.x - positions[j].x;
-              const dy = pos.y - positions[j].y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              const threshold = Math.min(getWidth(), getHeight()) * 0.3;
-              if (dist < threshold) {
-                const angleDiff = Math.abs(testRot - assignedRotations[j]);
-                const weight = 1 - dist / threshold;
-                const weightedDiff = angleDiff / (weight + 0.01);
-                if (weightedDiff < score) score = weightedDiff;
-              }
-            }
-            if (score > maxScore) {
-              maxScore = score;
-              bestRotation = testRot;
-            }
-          }
-          chosenRotation = bestRotation;
-        }
+        const chosenRotation = diff === 'advanced'
+          ? ChooseMovingCardRotation(pos, positions, assignedRotations, getWidth(), getHeight()) : 0;
         assignedRotations.push(chosenRotation);
         optContainer.rotation = chosenRotation;
 

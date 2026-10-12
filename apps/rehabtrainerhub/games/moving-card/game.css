@@ -5,6 +5,8 @@
   --text-muted: #606970; --border: #d4d9de; --text-on-accent: #fff;
   --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --success: #005eb8; --error: #ba1a1a;
   --game-background: #f2f4f3;
+  --game-card-border: #c2c6d4; --game-card-text: #1a1c1e;
+  --game-header-background: #f9f9fc; --game-cross: #727783;
   color: var(--text); background: var(--game-background);
 }
 * { box-sizing: border-box; }
@@ -21,13 +23,17 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
 .renderer-error { color: var(--error); }
 .moving-card-calibration-bar { width: 280px; max-width: 100%; height: 12px; border: solid var(--primary); border-width: 0 2px 2px; }
-.moving-card-tutorial { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--game-background); overflow: hidden; }
-.moving-card-preview-hud { display: flex; justify-content: space-between; gap: 16px; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); font-weight: 700; }
-.moving-card-preview-hud p { margin: 0; }
-.moving-card-target { position: absolute; top: 9%; left: 50%; transform: translateX(-50%); color: var(--primary); font-weight: 700; letter-spacing: 4px; margin: 0; padding: 8px; }
-.moving-card-options { position: absolute; inset: 22% 3% 9%; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(6px, 2vmin, 20px); pointer-events: none; }
-.moving-card-preview-option { display: grid; place-items: center; min-height: 0; margin: 0; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-weight: 700; overflow: hidden; }
-.moving-card-options-medium .moving-card-preview-option, .moving-card-options-hard .moving-card-preview-option { border-radius: 50%; }
+.moving-card-tutorial { position: absolute; inset: 0; width: 100%; height: 100%; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); background: var(--game-background); overflow: hidden; }
+.moving-card-preview-hud { position: absolute; inset: 0 0 auto; background: var(--game-header-background); border-bottom: 1px solid var(--game-card-border); font-weight: 600; }
+.moving-card-preview-hud p { position: absolute; margin: 0; line-height: 1; }
+.moving-card-target { position: absolute; transform: translate(-50%, -50%); color: var(--primary); font-weight: 700; letter-spacing: 4px; line-height: 1; margin: 0; }
+.moving-card-preview-cross { position: absolute; width: 16px; height: 16px; transform: translate(-50%, -50%); }
+.moving-card-preview-cross::before, .moving-card-preview-cross::after { content: ''; position: absolute; background: var(--game-cross); }
+.moving-card-preview-cross::before { left: 0; top: 7px; width: 16px; height: 2px; }
+.moving-card-preview-cross::after { left: 7px; top: 0; width: 2px; height: 16px; }
+.moving-card-options { position: absolute; pointer-events: none; }
+.moving-card-options::before { content: ''; position: absolute; inset: 0; border: 1px solid var(--game-card-border); border-radius: var(--radius); opacity: 0.5; }
+.moving-card-preview-option { position: absolute; display: grid; place-items: center; margin: 0; border: 1px solid var(--game-card-border); background: var(--surface); color: var(--game-card-text); font-weight: 600; line-height: 1; }
 .game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
 .game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
 .game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-weight: 700; }

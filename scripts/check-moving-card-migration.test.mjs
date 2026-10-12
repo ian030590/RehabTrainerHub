@@ -79,7 +79,7 @@ test('moving card owns dependencies, UI and exact original preview and is exclud
   }
   for (const file of ['settings.json', 'score.json', 'exportCsv.ts', 'results/DefaultTrainingResults.tsx']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.0');
+  assert.equal(pkg.version, '2.0.1');
   assert.deepEqual(pkg.rehabTrainer?.capabilities, ['audio', 'fullscreen', 'keyboard', 'pointer', 'touch']);
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[name]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
@@ -90,7 +90,7 @@ test('moving card owns dependencies, UI and exact original preview and is exclud
   assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, 'public', metadata.preview))).digest('hex'), originalPreviewSha256);
 });
 
-async function LoadPlugin() {
+async function LoadPlugin(width = 390, height = 844) {
   const source = await readFile(resolve(gameRoot, 'pixi-moving-card.ts'), 'utf8');
   const timers = new Map(); const frames = new Map(); const listeners = new Map(); const finished = [];
   let nextId = 1; let now = 0;
@@ -103,22 +103,28 @@ async function LoadPlugin() {
   }
   class Graphics extends Container {
     clear() { return this; } rect() { return this; } fill() { return this; }
-    roundRect() { return this; } stroke() { return this; } moveTo() { return this; } lineTo() { return this; }
+    roundRect(x, y, width, height, radius) { this.shape = { x, y, width, height, radius }; return this; }
+    stroke() { return this; } moveTo() { return this; } lineTo() { return this; }
   }
   class Text extends Container {
     constructor(options = {}) { super(); Object.assign(this, { style: {}, ...options }); }
   }
-  const app = { stage: new Container(), screen: { width: 390, height: 844 }, renderer: { on(name, handler) { listeners.set(name, handler); }, off(name) { listeners.delete(name); } } };
+  const app = { stage: new Container(), screen: { width, height }, renderer: { on(name, handler) { listeners.set(name, handler); }, off(name) { listeners.delete(name); } } };
   const wrapper = { appendChild() {} };
   const pool = { pixiRuntimeScopes: { movingCard: 'moving-card' }, CreatePixiTrialContainer: () => wrapper,
     RunPixiTrial: (_scope, _display, run) => run(app), AttachPixiTrialCanvas() {}, CleanupPixiTrial() {} };
   const mathSource = await readFile(resolve(root, 'packages/ui/src/mathUtils.ts'), 'utf8');
   const mathModule = { exports: {} };
   new Function('module', 'exports', ts.transpileModule(mathSource, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText)(mathModule, mathModule.exports);
+  const layoutModule = { exports: {} };
+  new Function('require', 'module', 'exports', ts.transpileModule(await readFile(resolve(gameRoot, 'cardLayout.ts'), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS },
+  }).outputText)(() => mathModule.exports, layoutModule, layoutModule.exports);
   const dependencies = { jspsych: { ParameterType: {} }, 'pixi.js': { Container, Graphics, Text },
     '@rehab-trainer/ui/trainerTheme': { pixiColors: {}, typography: { fontSizeM: 18 } },
     './runtime/theme': { pixiColors: {}, typography: { fontSizeM: 18 } },
     '@rehab-trainer/ui/mathUtils': mathModule.exports, './gameUtils': mathModule.exports,
+    './cardLayout': layoutModule.exports,
     '@rehab-trainer/ui/spatialUtils': { PixelFromMillimeter: value => value * 700 / 149 },
     './settings': { PixelFromMillimeter: value => value * 700 / 149 },
     './runtime/soundManager': { soundManager: { playSuccess() {}, playFailure() {} } },
@@ -157,6 +163,34 @@ test('every allowed card count renders all choices and a reachable target at all
     const game = await LoadPlugin(); game.start(40, difficulty);
     assert.equal(game.options().length, 40, difficulty);
     assert.equal(game.options().filter(option => option.children[1].text === 'AB').length, 1);
+  }
+});
+
+test('card shapes and calibrated sizes retain the original gameplay geometry on desktop and phones, including resize', async () => {
+  for (const difficulty of ['beginner', 'intermediate', 'advanced']) {
+    for (const count of [4, 18, 40]) {
+      const game = await LoadPlugin(); game.start(count, difficulty);
+      for (const [width, height] of [[390, 844], [1320, 713]]) {
+        Object.assign(game.app.screen, { width, height });
+        game.listeners.get('resize')();
+        const rows = Math.max(4, Math.ceil((count + 1) / 5));
+        const areaWidth = width * 0.94;
+        const areaHeight = height - Math.max(height * 0.05, 64) - Math.max(height * 0.18, 72);
+        const gridWidth = areaWidth / 5 * 0.8, gridHeight = areaHeight / rows * 0.8;
+        const diameter = Math.min(gridWidth, gridHeight, Math.sqrt(areaWidth * areaHeight / count) * 0.85);
+        const expectedWidth = difficulty === 'beginner' ? gridWidth : diameter;
+        const expectedHeight = difficulty === 'beginner' ? gridHeight : diameter;
+        for (const card of game.options()) {
+          const shape = card.children[0].shape;
+          assert.ok(Math.abs(shape.width - expectedWidth) < 0.001);
+          assert.ok(Math.abs(shape.height - expectedHeight) < 0.001);
+          assert.ok(Math.abs(shape.radius - (difficulty === 'beginner' ? 4 : diameter / 2)) < 0.001);
+          assert.ok(Math.abs(card.children[1].style.fontSize - Math.min(10 * 700 / 149, Math.min(expectedWidth, expectedHeight) * 0.7)) < 0.001);
+          if (difficulty !== 'advanced') assert.equal(card.rotation, 0);
+        }
+      }
+      game.listeners.get('game:abort')();
+    }
   }
 });
 
