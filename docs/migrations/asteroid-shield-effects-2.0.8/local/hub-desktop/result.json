@@ -1,0 +1,11 @@
+{
+  "mode": "hub-desktop",
+  "command": "node scripts/check-r2-game-browser.mjs --game asteroid-shield --lobby --wide --windowed --sound-on",
+  "status": "passed",
+  "exitCode": 0,
+  "startedAt": "2026-10-12T19:41:53.664Z",
+  "checkedAt": "2026-10-12T19:42:25.075Z",
+  "source": "Frozen candidate and real runner/CSP with local API",
+  "writeScope": "Local SQLite only; no production accounts or training records",
+  "viewport": "1320x713 windowed"
+}

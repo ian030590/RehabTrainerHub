@@ -8,9 +8,11 @@ import { resolve } from 'node:path';
 import { build } from 'vite';
 import midiPackage from '@tonejs/midi';
 import { HandleRequest } from '../apps/usergamerunner/functions/[[path]].js';
+import { CheckAsteroidEffects } from './asteroid-effects-audio-browser.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-const gameIds = Object.keys(JSON.parse(await readFile(resolve(root, 'packages/ui/src/officialGameReleases.json'), 'utf8')));
+const effectsOnly = process.argv.includes('--effects-only');
+const gameIds = effectsOnly ? ['asteroid-shield'] : Object.keys(JSON.parse(await readFile(resolve(root, 'packages/ui/src/officialGameReleases.json'), 'utf8')));
 const browserPath = process.env.BRAVE_BIN || 'C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe';
 assert.ok(existsSync(browserPath), 'Brave or BRAVE_BIN is required.');
 const { Midi } = midiPackage;
@@ -31,8 +33,55 @@ for (const gameId of gameIds) {
     : `const score = ${JSON.stringify(midi.toJSON())}; const options = {waveforms:['square','white-noise'],loop:true,loopEnd:1};`;
   const source = `import * as audio from ${JSON.stringify(resolve(gameRoot, 'runtime/soundManager.ts').replaceAll('\\', '/'))};
 import { getContext } from 'tone/build/esm/core/Global.js';
+import { PolySynth, Synth } from 'tone/build/esm/classes.js';
+import { AUDIO_NODE_STORE, CONTEXT_STORE } from 'standardized-audio-context/build/es2019/globals.js';
 ${composition}
 window.audioUnderTest = audio; window.testScore = score; window.testOptions = options;
+window.captureEffect = async kind => {
+  audio.DisposeAudioFeedback(); audio.SetSoundEnabled(true); audio.PrepareAudioFeedback();
+  const context = getContext(); await context.resume();
+  // Tone wraps the native context; record its final native output without changing the package audio path.
+  const raw = CONTEXT_STORE.get(context.rawContext);
+  let output = context.destination.output;
+  while (output.output) output = output.output;
+  const finalOutput = AUDIO_NODE_STORE.get(output);
+  const highpass = raw.createBiquadFilter(); highpass.type = 'highpass'; highpass.frequency.value = 500;
+  const lowpass = raw.createBiquadFilter(); lowpass.type = 'lowpass'; lowpass.frequency.value = 3000;
+  const merger = raw.createChannelMerger(2);
+  const recorder = raw.createScriptProcessor(1024,2,2);
+  const silent = raw.createGain(); silent.gain.value = 0;
+  finalOutput.connect(merger,0,0);
+  finalOutput.connect(highpass); highpass.connect(lowpass); lowpass.connect(merger,0,1);
+  merger.connect(recorder); recorder.connect(silent); silent.connect(raw.destination);
+  const samples = [], band = [];
+  recorder.onaudioprocess = event => {
+    samples.push(...event.inputBuffer.getChannelData(0));
+    band.push(...event.inputBuffer.getChannelData(1));
+  };
+  let baseline;
+  if (kind === 'baseline') {
+    baseline = new PolySynth({context,voice:Synth,volume:-21,
+      options:{oscillator:{type:'sine'},envelope:{attack:.015,decay:.02,sustain:.8,release:.02}}}).connect(context.destination);
+    const start = context.now()+.01;
+    baseline.triggerAttackRelease(246.94,.11,start,1);
+    baseline.triggerAttackRelease(185,.16,start+.1,1);
+  } else if (kind === 'fall') audio.PlayAsteroidFallSound();
+  else if (kind === 'damage') audio.PlayFailureSound();
+  else if (kind === 'defeat') audio.PlayGameEndSound('Defeat');
+  else if (kind === 'mix') {
+    await audio.PlayMidiMusic(score,options);
+    audio.PlayAsteroidFallSound();
+    for (let index=0;index<20;index++) audio.PlayFailureSound();
+  }
+  await new Promise(resolve => setTimeout(resolve,950));
+  recorder.onaudioprocess = null;
+  finalOutput.disconnect(merger); finalOutput.disconnect(highpass);
+  highpass.disconnect(); lowpass.disconnect(); merger.disconnect(); recorder.disconnect(); silent.disconnect();
+  baseline?.dispose(); audio.DisposeAudioFeedback();
+  const rms = values => Math.sqrt(values.reduce((sum,value)=>sum+value*value,0)/values.length);
+  return {samples,sampleRate:context.sampleRate,peak:samples.reduce((peak,value)=>Math.max(peak,Math.abs(value)),0),
+    rms:rms(samples),speakerBandRms:rms(band)};
+};
 document.getElementById('play').onclick = async () => {
   audio.PrepareAudioFeedback();
   window.started = await audio.PlayMidiMusic(score, options);
@@ -149,7 +198,7 @@ addEventListener('securitypolicyviolation',event=>window.cspErrors.push(event.vi
       assert.deepEqual(await evaluate('[testScore.tracks.map(track=>track.notes.length),testOptions]', contextId),
         [[167,480,246,156], {loop:true,loopEnd:48,waveforms:['square','square','white-noise','triangle']}]);
       assert.deepEqual(await evaluate('[testScore.tracks[3].notes[0].midi,testScore.tracks[3].notes.at(-1).midi]', contextId), [57,61]);
-      await new Promise(resolveWait => setTimeout(resolveWait, 48200));
+      if (!effectsOnly) await new Promise(resolveWait => setTimeout(resolveWait, 48200));
     }
     const first = await evaluate('oscillators', contextId);
     await new Promise(resolveWait => setTimeout(resolveWait, 1200));
@@ -164,6 +213,7 @@ addEventListener('securitypolicyviolation',event=>window.cspErrors.push(event.vi
     await Until(() => evaluate('audioContexts.every(context=>context.state==="closed")', contextId));
     assert.deepEqual(await evaluate('[workerAttempts,cspErrors]', contextId), [0, []], `${gameId}: strict CSP without Workers`);
     console.log(`${gameId}: opaque sandbox, real Tone synthesis, chord/noise, loop, mute and cleanup passed.`);
+    if (gameId === 'asteroid-shield') await CheckAsteroidEffects({ evaluate, contextId, root });
   }
   assert.deepEqual(errors.map(error => error.exception?.description || error.text || String(error)), []);
 } finally {

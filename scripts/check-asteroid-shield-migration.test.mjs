@@ -37,9 +37,10 @@ async function LoadAsteroidGameplay() {
   const configRef = { current: { difficulty: 'beginner', durationSec: 30, maxHp: 10, shieldSizePercent: 95, controlMode: 'mouse' } };
   const records = [];
   const progress = [];
+  const falls = [];
   const options = { app, sceneRef: { current: scene }, metricsRef, configRef, shieldPositionRef,
     resultRecordsRef: { current: records }, onSuccess: () => {}, onFailure: () => {}, onComplete: () => {},
-    onProgress: (hp, remainingSec) => progress.push({ hp, remainingSec }) };
+    onProgress: (hp, remainingSec) => progress.push({ hp, remainingSec }), onFall: () => falls.push(metricsRef.current.elapsedMs) };
   let pointerDeclaration;
   const findPointer = node => {
     if (ts.isVariableDeclaration(node) && node.name.getText(syntax) === 'updateFromPointer') pointerDeclaration = node.getText(syntax);
@@ -61,7 +62,7 @@ async function LoadAsteroidGameplay() {
     } finally { Math.random = originalRandom; }
     return scene.threats.at(-1);
   };
-  return { ...runtime, app, scene, metricsRef, shieldPositionRef, configRef, records, progress, pointer, layout, spawn,
+  return { ...runtime, app, scene, metricsRef, shieldPositionRef, configRef, records, progress, falls, pointer, layout, spawn,
     tick: (deltaMS = 16) => runtime.UpdateAsteroidGame({ ...options, ticker: { deltaMS } }) };
 }
 
@@ -75,6 +76,18 @@ test('asteroid ship spans most of the bottom edge on desktop, tablet and phone',
     assert.ok(ship.y + ship.height / 2 <= height && ship.y + ship.height / 2 >= height * 0.95, 'Ship sits along the bottom edge.');
     assert.equal(ship.rotation, 0);
     assert.ok(game.scene.shield.y + game.scene.shield.height / 2 < ship.y - ship.height / 2);
+  }
+});
+
+test('gameplay plays a falling cue once per newly spawned meteor and leaves energy rocks silent', async () => {
+  for (const [roll, audible] of [[0, false], [.99, true]]) {
+    const game = await LoadAsteroidGameplay();
+    game.metricsRef.current.spawnTimerSec = 10;
+    const random = Math.random;
+    try { Math.random = () => roll; game.tick(16); } finally { Math.random = random; }
+    assert.equal(game.falls.length, audible ? 1 : 0);
+    game.tick(16);
+    assert.equal(game.falls.length, audible ? 1 : 0, 'Animating the same falling meteor must not retrigger its sound.');
   }
 });
 
@@ -205,7 +218,7 @@ test('asteroid release owns UI, dependencies, metadata and the exact original pr
   }
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.7');
+  assert.equal(pkg.version, '2.0.8');
   for (const dependency of ['react', 'react-dom', 'pixi.js', 'jspsych']) assert.ok(pkg.dependencies[dependency]);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
@@ -256,7 +269,7 @@ test('asteroid result analysis retains selectable metrics and excludes missing o
   assert.equal(CalculateScoreStatistics([2]).sampleSd, null);
 });
 
-test('asteroid preserves its original success, failure and end sound sequences and mute setting', async () => {
+test('asteroid preserves success/victory, raises damage/defeat into the midrange and retains mute', async () => {
   const frequencies = [];
   let contexts = 0;
   class Context {
@@ -271,10 +284,11 @@ test('asteroid preserves its original success, failure and end sound sequences a
     triggerAttackRelease(frequency) { frequencies.push(frequency); }
     dispose() {}
   }
+  class Limiter { connect() { return this; } dispose() {} }
   const module = { exports: {} };
   new Function('require', 'module', 'exports', ts.transpileModule(await readFile(resolve(gameRoot, 'runtime/soundManager.ts'), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText)(name => name.endsWith('classes.js') ? { Context, PolySynth, Synth: class {} } : { setContext() {} }, module, module.exports);
+  }).outputText)(name => name.endsWith('classes.js') ? { Context, PolySynth, Limiter, Synth: class {} } : { setContext() {} }, module, module.exports);
   const sound = module.exports;
   const source = { current: { pluginAPI: { audioContext: () => { throw new Error('jsPsych owns its context'); } } } };
   sound.SetSoundEnabled(false);
@@ -284,11 +298,11 @@ test('asteroid preserves its original success, failure and end sound sequences a
   sound.PrepareAudioFeedback(source);
   sound.PlaySuccessSound(source); sound.PlayFailureSound(source);
   sound.PlayGameEndSound('Victory', source); sound.PlayGameEndSound('Defeat', source);
-  assert.deepEqual(frequencies, [523.25, 659.25, 783.99, 246.94, 185,
-    523.25, 659.25, 783.99, 1046.5, 220, 164.81, 130.81]);
+  assert.deepEqual(frequencies, [523.25, 659.25, 783.99, 987.77, 739.99, 554.37,
+    523.25, 659.25, 783.99, 1046.5, 880, 659.25, 440]);
   assert.equal(contexts, 1, 'Reuse the game-owned Tone context without borrowing jsPsych audio.');
   sound.SetSoundEnabled(false); sound.PlayFailureSound(source);
-  assert.equal(frequencies.length, 12);
+  assert.equal(frequencies.length, 13);
 });
 
 test('asteroid bridge binds once to the parent private port and ignores forged initialization and acknowledgements', async () => {

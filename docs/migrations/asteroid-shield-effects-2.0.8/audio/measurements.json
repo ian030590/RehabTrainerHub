@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-10-12T19:47:58.259Z",
+  "method": "Actual Brave PCM output; high-pass 500 Hz plus low-pass 3000 Hz, not physical speaker acceptance",
+  "baseline": "Previous 2.0.7 sine warning at -21 dB, 246.94/185 Hz, reproduced with the same Tone envelope",
+  "measurements": {
+    "baseline": {
+      "sampleRate": 48000,
+      "peak": 0.10350099205970764,
+      "rms": 0.026243868781931398,
+      "speakerBandRms": 0.005551062990088007,
+      "sampleCount": 45056
+    },
+    "fall": {
+      "sampleRate": 48000,
+      "peak": 0.07411503046751022,
+      "rms": 0.006332959344145046,
+      "speakerBandRms": 0.006897053932806112,
+      "sampleCount": 45056
+    },
+    "damage": {
+      "sampleRate": 48000,
+      "peak": 0.49388083815574646,
+      "rms": 0.1476900317224762,
+      "speakerBandRms": 0.1779654214249789,
+      "sampleCount": 45056,
+      "speakerBandImprovementDb": 30.119189437555704
+    },
+    "defeat": {
+      "sampleRate": 48000,
+      "peak": 0.5668103098869324,
+      "rms": 0.18414978902400156,
+      "speakerBandRms": 0.20412132075243686,
+      "sampleCount": 45056,
+      "speakerBandImprovementDb": 31.310244285423252
+    },
+    "mix": {
+      "sampleRate": 48000,
+      "peak": 0.5600699186325073,
+      "rms": 0.15274995338272515,
+      "speakerBandRms": 0.181614425454584,
+      "sampleCount": 45056
+    }
+  }
+}

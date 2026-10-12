@@ -97,6 +97,82 @@ test('asteroid-shield: repeated percussion ticks do not double-trigger noise or 
   api.DisposeAudioFeedback();
 });
 
+test('asteroid-shield: falling meteors make a short descending midrange whoosh, with duplicate ticks coalesced', async () => {
+  const { api, state } = await LoadSound('asteroid-shield');
+  api.PlayAsteroidFallSound();
+  const noise = state.instruments.find(instrument => instrument.kind === 'noise');
+  assert.ok(noise, 'A falling meteor must have a synthesized whoosh.');
+  assert.ok(noise.options.volume > -24 && noise.options.volume <= -12);
+  assert.ok(noise.played[0][0] >= .2 && noise.played[0][0] <= .5);
+  const filter = state.nodes.find(node => node.kind === 'filter');
+  assert.equal(filter.options.type, 'bandpass');
+  const [start, end] = filter.frequency.events;
+  assert.ok(start.value >= 1000 && end.value >= 500 && end.value < start.value,
+    'Sweep the audible midrange down, rather than relying on sub-bass.');
+  api.PlayAsteroidFallSound();
+  assert.equal(noise.played.length, 1);
+  state.contexts[0].currentTime = .5;
+  api.PlayAsteroidFallSound();
+  assert.equal(noise.played.length, 2, 'The next meteor still makes a sound.');
+  api.StopMidiMusic();
+  assert.equal(noise.disposed, true, 'Leaving gameplay cancels a falling sound too.');
+  assert.equal(filter.disposed, true);
+  api.DisposeAudioFeedback();
+  assert.ok(state.nodes.every(node => node.disposed));
+});
+
+test('asteroid-shield: damage and defeat use louder bright descending alerts without overlapping duplicate damage', async () => {
+  const { api, state } = await LoadSound('asteroid-shield');
+  api.PlayFailureSound();
+  const alert = state.instruments.at(-1);
+  assert.equal(alert.options.options.oscillator.type, 'square', 'A bright warning must cut through the music.');
+  assert.ok(alert.options.volume >= -10 && alert.options.volume <= -6);
+  assert.ok(alert.played.length >= 3);
+  assert.ok(alert.played.every(([frequency]) => frequency >= 440 && frequency <= 1600));
+  assert.ok(alert.played.at(-1)[0] < alert.played[0][0]);
+  const count = alert.played.length;
+  api.PlayFailureSound();
+  assert.equal(alert.played.length, count, 'Several hits in one frame produce one warning.');
+  state.contexts[0].currentTime = .3;
+  api.PlayFailureSound();
+  assert.equal(alert.played.length, count * 2);
+  api.PlayGameEndSound('Defeat');
+  assert.equal(alert.disposed, true, 'The final defeat cue replaces a pending hit warning.');
+  const defeat = state.instruments.at(-1);
+  assert.ok(defeat.played.every(([frequency]) => frequency >= 440));
+  assert.ok(defeat.played.at(-1)[1] > alert.played.at(-1)[1]);
+  assert.equal(defeat.destination.kind, 'limiter');
+  assert.ok(defeat.destination.options.threshold <= -1);
+  api.SetSoundEnabled(false);
+  assert.ok(state.instruments.every(instrument => instrument.disposed));
+  assert.ok(state.nodes.every(node => node.disposed));
+  api.PlayAsteroidFallSound(); api.PlayFailureSound();
+  assert.equal(state.instruments.at(-1), defeat, 'Mute must not recreate effects.');
+});
+
+test('asteroid-shield: returning to settings clears warning effects but results can finish the ending cue', async () => {
+  const { api, state } = await LoadSound('asteroid-shield');
+  const source = await readFile(resolve(root, 'apps/rehabtrainerhub/games/asteroid-shield/AsteroidShieldGame.tsx'), 'utf8');
+  const ast = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let effect;
+  const visit = node => {
+    if (ts.isCallExpression(node) && node.expression.getText(ast) === 'useEffect'
+      && node.arguments[0].getText(ast).includes("phase === 'menu'")
+      && node.arguments[0].getText(ast).includes('DisposeAudioFeedback')) effect = node.arguments[0].getText(ast);
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  assert.ok(effect, 'Returning to settings must silence pending loud effects.');
+  api.PlayGameEndSound('Defeat');
+  const alert = state.instruments.at(-1);
+  const run = phase => new Function('phase', 'DisposeAudioFeedback', `(${effect})()`)(phase, api.DisposeAudioFeedback);
+  run('results');
+  assert.notEqual(alert.disposed, true, 'Let the final cue finish on the result screen.');
+  run('menu');
+  assert.ok(state.instruments.every(instrument => instrument.disposed));
+  assert.equal(state.contexts[0].closed, true);
+});
+
 test('MIDI converter produces unmodified Tonejs/Midi JSON that every migrated game can play', async () => {
   const { Midi } = midiPackage;
   const midi = new Midi();
@@ -230,7 +306,7 @@ for (const gameId of gameIds) {
 }
 
 async function LoadSound(gameId) {
-  const state = { contexts: [], instruments: [] };
+  const state = { contexts: [], instruments: [], nodes: [] };
   class Context {
     constructor(options) {
       this.options = options; this.currentTime = 0; this.destination = {};
@@ -240,18 +316,31 @@ async function LoadSound(gameId) {
       state.contexts.push(this);
     }
     resume() { return Promise.resolve(); }
-    now() { return 0; }
+    now() { return this.currentTime; }
     close() { this.closed = true; return Promise.resolve(); }
     dispose() { this.disposed = true; }
   }
   class PolySynth {
     constructor(options) { this.kind = 'poly'; this.options = options; this.played = []; state.instruments.push(this); }
-    connect() { return this; }
+    connect(destination) { this.destination = destination; return this; }
     triggerAttackRelease(...args) { this.played.push(args); }
     dispose() { this.disposed = true; return this; }
   }
   class NoiseSynth extends PolySynth { constructor(options) { super(options); this.kind = 'noise'; } }
-  const tone = { Context, PolySynth, NoiseSynth, Synth: class {} };
+  class Limiter {
+    constructor(options) { this.kind = 'limiter'; this.options = options; state.nodes.push(this); }
+    connect(destination) { this.destination = destination; return this; }
+    dispose() { this.disposed = true; }
+  }
+  class Filter extends Limiter {
+    constructor(options) {
+      super(options); this.kind = 'filter';
+      this.frequency = { events: [],
+        setValueAtTime(value, time) { this.events.push({ value, time }); },
+        exponentialRampToValueAtTime(value, time) { this.events.push({ value, time }); } };
+    }
+  }
+  const tone = { Context, PolySynth, NoiseSynth, Limiter, Filter, Synth: class {} };
   const source = await readFile(resolve(root, `apps/rehabtrainerhub/games/${gameId}/runtime/soundManager.ts`), 'utf8');
   const module = { exports: {} };
   new Function('require', 'module', 'exports', ts.transpileModule(source, {

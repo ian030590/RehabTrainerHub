@@ -2,7 +2,7 @@ import { useFullscreenTrainingRoot, useTrainingAbort } from './runtime/trainingL
 import { useT } from './i18n/useT';
 import { SendGameResult, RetryGameSave, IsHubGame } from './runtime/hubBridge';
 import { defaultSettings, BuildRuntimeConfig, BuildGameScore, type AsteroidSettings } from './settings';
-import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { PlayFailureSound, PlayAsteroidFallSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { initJsPsych } from 'jspsych';
 import { Application, Assets, Container, Sprite, Texture, TilingSprite, type Ticker } from 'pixi.js';
@@ -314,6 +314,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
       return StopMidiMusic;
     }, [phase]);
     useEffect(() => DisposeAudioFeedback, []);
+    useEffect(() => { if (phase === 'menu') DisposeAudioFeedback(); }, [phase]);
     const [result, setResult] = useState<SessionRecord | null>(null);
     const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error'>('saving');
     const [rendererReady, setRendererReady] = useState(false);
@@ -477,6 +478,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
                     resultRecordsRef,
                     onSuccess: () => PlaySuccessSound(jsPsychRef),
                     onFailure: () => PlayFailureSound(jsPsychRef),
+                    onFall: PlayAsteroidFallSound,
                     onComplete: finishGame,
                     onProgress: (hp, remainingSec) => setHud(previous => previous.hp === hp && previous.remainingSec === remainingSec
                         ? previous : { hp, remainingSec }),
@@ -691,7 +693,7 @@ function ClearAsteroidScene(scene: AsteroidScene | null): void {
     });
     scene.threats = [];
 }
-function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shieldPositionRef, resultRecordsRef, onSuccess, onFailure, onComplete, onProgress, }: {
+function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shieldPositionRef, resultRecordsRef, onSuccess, onFailure, onFall, onComplete, onProgress, }: {
     app: Application;
     ticker: Ticker;
     sceneRef: {
@@ -717,6 +719,7 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
     };
     onSuccess: () => void;
     onFailure: () => void;
+    onFall: () => void;
     onComplete: (result: GameResult) => void;
     onProgress: (hp: number, remainingSec: number) => void;
 }): void {
@@ -734,7 +737,8 @@ function UpdateAsteroidGame({ app, ticker, sceneRef, metricsRef, configRef, shie
     const activeInterval = Math.max(0.46, difficulty.spawnIntervalSec - (metrics.speedLevel - 1) * 0.045);
     if (metrics.spawnTimerSec >= activeInterval && scene.threats.length < difficulty.maxThreats) {
         metrics.spawnTimerSec = 0;
-        SpawnThreat(scene, app.screen.width, app.screen.height, difficulty, metrics);
+        const kind = SpawnThreat(scene, app.screen.width, app.screen.height, difficulty, metrics);
+        if (kind !== 'energy') onFall();
     }
     for (const threat of [...scene.threats]) {
         const previousY = threat.y;
@@ -850,7 +854,7 @@ function IntersectsFallingThreat(threat: Threat, previousY: number, x: number, y
         && previousY - threat.radius <= y + height / 2
         && threat.y + threat.radius >= y - height / 2;
 }
-function SpawnThreat(scene: AsteroidScene, width: number, height: number, difficulty: DifficultyDefinition, metrics: SessionMetrics): void {
+function SpawnThreat(scene: AsteroidScene, width: number, height: number, difficulty: DifficultyDefinition, metrics: SessionMetrics): ThreatKind {
     const kind = ChooseThreatKind(difficulty);
     const texture = GetThreatTexture(scene, kind);
     const size = GetThreatSize(kind, width, height);
@@ -882,6 +886,7 @@ function SpawnThreat(scene: AsteroidScene, width: number, height: number, diffic
     scene.objectsLayer.addChild(...trail, sprite);
     scene.threats.push(threat);
     metrics.spawned += 1;
+    return kind;
 }
 function GetThreatTexture(scene: AsteroidScene, kind: ThreatKind): Texture {
     if (kind === 'normal')

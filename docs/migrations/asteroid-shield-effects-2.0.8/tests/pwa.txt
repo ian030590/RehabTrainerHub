@@ -1,0 +1,38 @@
+node.exe : npm notice run rehab-workspace@1.0.0 test:pwa
+位於 C:\Users\ian\scoop\apps\nodejs-lts\current\bin\npm.ps1:24 字元:5
++     & "node$exe"  "$basedir/node_modules/npm/bin/npm-cli.js" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run ...@1.0.0 test:pwa:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+npm notice run node scripts/check-pwa-assets.mjs && npm run test:pwa-navigation
+Validated the Hub PWA manifest, icons, game directories, and isolated game runner.
+npm notice run rehab-workspace@1.0.0 test:pwa-navigation
+npm notice run node --test scripts/check-official-game-navigation.test.mjs
+▶ all ExpFactory runtime assets are precached without nested iframe documents
+  ✔ antisaccade (72.5099ms)
+  ✔ attention-network-task (19.4899ms)
+  ✔ digit-span (14.2536ms)
+  ✔ flanker (10.3969ms)
+  ✔ go-nogo (11.105ms)
+  ✔ keep-track (10.9616ms)
+  ✔ letter-memory (11.4347ms)
+  ✔ n-back (9.4108ms)
+  ✔ number-letter (9.1748ms)
+  ✔ plus-minus (12.0721ms)
+  ✔ spatial-span (8.7847ms)
+  ✔ stop-signal (10.3627ms)
+  ✔ stroop (9.3616ms)
+  ✔ tower-of-london (10.1827ms)
+✔ all ExpFactory runtime assets are precached without nested iframe documents (273.8471ms)
+✔ redirected precache responses remain usable for offline iframe navigation (36.229ms)
+✔ launcher falls back to its cached response offline and activation removes only obsolete game caches (23.9056ms)
+✔ both CI workflows retain the navigation regression through the pwa gate (3.2886ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 501.3172

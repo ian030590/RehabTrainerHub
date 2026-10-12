@@ -110,3 +110,5 @@ Wrangler 已刷新既有 OAuth；正式 `/api/games` 六款均僅一筆 current�
 精確摘要、TDD 與正式驗收見[發布紀錄](asteroid-shield-music-2.0.6.md)及[正式收據](releases/asteroid-shield-2.0.6.json)。本次 R2 發布沒有手動部署平台；commit／push 後由既有 workflow 執行驗證及依範圍部署。已安裝的版本化 PWA 保留原版，需從新版入口取得 2.0.6。
 
 目前小行星 current 已更新為 `2.0.7`，沿用上述四軌音樂，另修正教學物件／聚光燈、完整護盾素材及左上生命條／倒數。已依擁有者預先授權發布並驗證正式 API、12 檔 bytes 與三個正式 Hub／PWA 流程，2.0.6 保留為已核對回退版；見[2.0.7 發布紀錄](asteroid-shield-hud-2.0.7.md)。
+
+其後 current 切換至音效版 `2.0.8`：新增隕石下降呼嘯，依使用者要求將受擊／失敗改為較大聲的中頻方波，完整混音經 -3 dB Limiter；四軌歌曲與成功／勝利提示沿用。37 項音訊／147 項架構測試、七項 gate、真實 PCM／頻段量測與正式 API／12 檔 bytes／三個 Hub／PWA 流程通過，2.0.7 為已核對回退版。預聽、量測限制及收據見[2.0.8 音效紀錄](asteroid-shield-effects-2.0.8.md)；小喇叭頻段量測不代表實體硬體已驗收。

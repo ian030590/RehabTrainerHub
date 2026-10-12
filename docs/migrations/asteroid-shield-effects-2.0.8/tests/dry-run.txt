@@ -1,0 +1,1 @@
+Validated asteroid-shield@2.0.8: 12 files, digest 8b64ea45eea1eaab277dc1881fb1a86c2d085b90ab91d87e1d8a72746d53da65

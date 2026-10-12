@@ -1,0 +1,14 @@
+Publishing owner-approved asteroid-shield@2.0.8: 8b64ea45eea1eaab277dc1881fb1a86c2d085b90ab91d87e1d8a72746d53da65; rollback 2.0.7 verified.
+Verified releases/asteroid-shield/2.0.8/files/assets/asteroid-blue-CY-_A_BJ.png (14034 bytes)
+Verified releases/asteroid-shield/2.0.8/files/assets/asteroid-dark-CW7iRJ5o.png (11856 bytes)
+Verified releases/asteroid-shield/2.0.8/files/assets/asteroid-green-1XKYeWRA.png (9693 bytes)
+Verified releases/asteroid-shield/2.0.8/files/assets/background-NBhu4YAc.png (83041 bytes)
+Verified releases/asteroid-shield/2.0.8/files/assets/energy-rock-CT8hMT01.png (1792 bytes)
+Verified releases/asteroid-shield/2.0.8/files/assets/index-zvZHes-x.js (1338232 bytes)
+Verified releases/asteroid-shield/2.0.8/files/assets/shield-complete-B5wkC1qZ.png (198696 bytes)
+Verified releases/asteroid-shield/2.0.8/files/assets/ship-CrsWCvcK.png (78990 bytes)
+Verified releases/asteroid-shield/2.0.8/files/assets/style-BaNVeBlr.css (17117 bytes)
+Verified releases/asteroid-shield/2.0.8/files/game.json (471 bytes)
+Verified releases/asteroid-shield/2.0.8/files/index.html (411 bytes)
+Verified releases/asteroid-shield/2.0.8/files/preview.webp (20836 bytes)
+Published and verified asteroid-shield@2.0.8; current 2.0.8.
