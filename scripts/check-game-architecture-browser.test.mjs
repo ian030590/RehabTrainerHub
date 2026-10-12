@@ -28,6 +28,140 @@ const expFactoryGameIds = [
   'plus-minus',
 ];
 
+test('Brave smoke rejects asynchronous assertion failures', async context => {
+  assert.ok(bravePath, 'Brave is required for browser assertions.');
+  const server = createServer((_request, response) => {
+    response.writeHead(200, { 'Content-Type': 'text/html' }).end('<main id="main-content">Browser assertion fixture</main>');
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+  const result = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`, '--selector', '#main-content',
+    '--browserAssertion', 'Promise.reject(new Error("Rejected sheet assertion"))', '--timeoutMs', '100',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(result.exitCode, 1, 'An async assertion error must fail the smoke test.');
+  assert.match(result.stderr, /Browser assertion failed: Error: Rejected sheet assertion/);
+});
+
+test('Brave mobile filters resize, dismiss, preserve values and restore modal focus and scroll', async context => {
+  assert.ok(bravePath, 'Brave is required for mobile filter checks.');
+  const server = createServer((request, response) => {
+    if (request.url === '/api/games') {
+      response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ games: [] }));
+      return;
+    }
+    void ServeStaticOutput(request, response);
+  });
+  await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
+  context.after(() => new Promise(resolveClose => server.close(resolveClose)));
+  for (const [width, height, reducedMotion] of [[600, 844, false], [390, 844, false], [390, 844, true], [820, 844, false], [390, 390, false]]) {
+    const result = await Run(process.execPath, [browserSmokeScript,
+      '--url', `http://127.0.0.1:${server.address().port}/`, '--storage', 'rehab_hub_tour_seen=1',
+      '--viewportWidth', String(width), '--viewportHeight', String(height), '--viewportBeforeClick', 'true',
+      '--reducedMotion', String(reducedMotion),
+      '--allSelectors', '.module-grid,.filter-panel',
+      '--browserAssertion', `(async () => {
+        const check = (condition, message) => { if (!condition) throw new Error(message); };
+        const wait = () => new Promise(resolveWait => setTimeout(resolveWait, 700));
+        const panel = document.querySelector('.filter-panel');
+        const trigger = document.querySelector('.filter-mobile-trigger');
+        const grabber = document.querySelector('.filter-sheet-handle');
+        const content = document.querySelector('.filter-category-groups');
+        const input = content.querySelector('input');
+        const fullCount = document.querySelectorAll('.module-card').length;
+        check(innerWidth <= 720 || ${width} > 720, 'Mobile viewport does not expand horizontally');
+        check(matchMedia('(prefers-reduced-motion: reduce)').matches === ${reducedMotion}, 'Motion preference is applied');
+        if (innerWidth > 720) {
+          check(panel.open && !panel.matches(':modal'), 'Tablet keeps the inline filter');
+          input.click(); await wait();
+          check(document.querySelectorAll('.module-card').length < fullCount, 'Tablet filters still work');
+          check(document.documentElement.scrollWidth <= innerWidth, 'Tablet has no horizontal overflow');
+          return true;
+        }
+        const open = async () => { trigger.focus({ preventScroll: true }); trigger.click(); await wait(); };
+        const swipe = async (target, distance) => {
+          const bounds = target.getBoundingClientRect();
+          const x = bounds.left + bounds.width / 2;
+          const y = bounds.top + Math.min(22, bounds.height / 2);
+          const send = (type, offset) => {
+            const touch = new Touch({ identifier: 1, target, clientX: x, clientY: y + offset });
+            target.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true,
+              touches: type === 'touchend' ? [] : [touch], changedTouches: [touch] }));
+          };
+          send('touchstart', 0);
+          for (let step = 1; step <= 10; step++) {
+            send('touchmove', distance * step / 10);
+            await new Promise(resolveWait => setTimeout(resolveWait, 25));
+          }
+          await new Promise(resolveWait => setTimeout(resolveWait, 130));
+          send('touchend', distance); await wait();
+        };
+        check(!panel.open, 'Closed mobile filters leave no focusable hidden controls');
+        scrollTo({ top: 260, behavior: 'instant' }); await wait();
+        const scrollBefore = scrollY;
+        await open();
+        check(panel.matches(':modal') && panel.contains(document.activeElement), 'Native focus trap is active');
+        check(new DOMMatrix(getComputedStyle(document.querySelector('.hub-shell')).transform).a < 0.99 || matchMedia('(prefers-reduced-motion: reduce)').matches, 'Presenting page recedes behind the sheet');
+        check(document.body.style.position === 'fixed', 'Lobby is locked against iOS background scrolling');
+        check(panel.dataset.sheetDetent === 'medium', 'Sheet opens at medium height');
+        const mediumHeight = panel.getBoundingClientRect().height;
+        check(mediumHeight >= Math.min(320, innerHeight - 24) && mediumHeight < innerHeight - 12, 'Medium sheet height');
+        const footer = panel.querySelector('.filter-sheet-footer').getBoundingClientRect();
+        check(footer.bottom <= innerHeight && footer.top > 0, 'Action footer remains in the viewport');
+        input.click(); await wait();
+        check(input.checked && document.querySelectorAll('.module-card').length < fullCount, 'Live category filtering');
+        await swipe(input, -330);
+        const largeHeight = panel.getBoundingClientRect().height;
+        check(panel.dataset.sheetDetent === 'large' && largeHeight > mediumHeight + 20, 'Upward drag expands');
+        check(input.checked, 'Dragging a checkbox does not toggle its selection');
+        content.scrollTop = 100;
+        await swipe(content, 40);
+        check(panel.dataset.sheetDetent === 'large', 'Scrolling content does not dismiss the sheet');
+        content.scrollTop = 0;
+        await swipe(content, largeHeight - mediumHeight);
+        check(panel.dataset.sheetDetent === 'medium', 'Downward drag at content top collapses');
+        await swipe(grabber, 20);
+        check(panel.open && panel.dataset.sheetDetent === 'medium', 'Short drag springs back');
+        await swipe(grabber, 240);
+        check(!panel.open && document.body.style.position === '', 'Downward drag dismisses and unlocks');
+        check(new DOMMatrix(getComputedStyle(document.querySelector('.hub-shell')).transform).a === 1, 'Presenting page returns to full size');
+        check(document.activeElement === trigger && Math.abs(scrollY - scrollBefore) < 2, 'Focus and lobby scroll restored: ' + JSON.stringify({ focus: document.activeElement.className, actual: scrollY, expected: scrollBefore }));
+        await open();
+        check(input.checked, 'Selections survive dismissal');
+        grabber.click(); await wait();
+        check(panel.dataset.sheetDetent === 'large', 'Grabber supports keyboard and assistive technology');
+        panel.dispatchEvent(new Event('cancel', { cancelable: true })); await wait();
+        check(!panel.open, 'Escape dismisses');
+        await open();
+        panel.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 5, clientY: 5 })); await wait();
+        check(!panel.open, 'Backdrop dismisses');
+        await open();
+        panel.querySelector('.filter-header-actions button:not(.filter-sheet-close)').click(); await wait();
+        check(!input.checked && document.querySelectorAll('.module-card').length === fullCount, 'Clear preserves all games');
+        panel.querySelector('.filter-sheet-apply-btn').click();
+        await new Promise(resolveWait => setTimeout(resolveWait, 50));
+        grabber.click(); await wait();
+        check(!panel.open && document.activeElement === trigger, 'View results closes and restores focus');
+        check(document.documentElement.scrollWidth <= innerWidth, 'Mobile has no horizontal overflow');
+        return true;
+      })()`,
+      '--timeoutMs', '5000',
+    ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+    assert.equal(result.exitCode, 0, `${width}x${height}, reduced motion ${reducedMotion}: ${result.stdout}\n${result.stderr}`);
+  }
+  const touch = await Run(process.execPath, [browserSmokeScript,
+    '--url', `http://127.0.0.1:${server.address().port}/`, '--storage', 'rehab_hub_tour_seen=1',
+    '--viewportWidth', '390', '--viewportHeight', '700', '--viewportBeforeClick', 'true',
+    '--allSelectors', '.filter-panel', '--clickSelectors', '.filter-mobile-trigger,.filter-sheet-handle',
+    '--touchScrollSelector', '.filter-category-groups',
+    '--browserAssertion', `document.querySelector('.filter-panel').matches(':modal')
+      && document.querySelector('.filter-panel').dataset.sheetDetent === 'large'
+      && document.querySelector('.filter-category-groups').scrollTop > 0`,
+    '--timeoutMs', '5000',
+  ], { ...process.env, BROWSER_EXECUTABLE_PATH: bravePath, BRAVE_BIN: bravePath });
+  assert.equal(touch.exitCode, 0, `Native mouse grabber and touch scroll: ${touch.stdout}\n${touch.stderr}`);
+});
+
 test('Brave presents reviewed releases and all existing games in one grid on desktop and mobile', async context => {
   assert.ok(bravePath, 'Brave is required for local Hub UI browser checks.');
   const game = { id: 'reviewed-game', slug: 'reviewed-game', title: 'Reviewed game', summary: 'A practice activity.',

@@ -109,7 +109,7 @@ function HubShellContent({ children }: { children: ReactNode }) {
 
   return (
     <hubAuthContext.Provider value={{ user }}>
-      <div className={`hub-shell${isTrainingRoute ? ' hub-shell-training' : ''}`}>
+      <div className={`hub-shell${isTrainingRoute ? ' hub-shell-training' : ''}`} data-bottom-sheet-page>
         <PwaRegistration />
         {!isTrainingRoute && (
           <a className="hub-skip-link" href="#main-content">

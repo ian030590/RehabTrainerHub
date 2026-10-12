@@ -1067,7 +1067,6 @@ html:has(dialog.training-overlay[open]) {
 }
 
 .mobile-filter-bar,
-.filter-sheet-backdrop,
 .filter-sheet-handle,
 .filter-sheet-close,
 .filter-sheet-footer {
@@ -3076,22 +3075,6 @@ html:has(dialog.training-overlay[open]) {
     transform: scale(0.96);
   }
 
-  .filter-sheet-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 1100;
-    background: rgba(15, 23, 42, 0.5);
-    backdrop-filter: blur(4px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 260ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .filter-sheet-backdrop.is-open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
   .filter-panel {
     position: fixed;
     right: 0;
@@ -3110,24 +3093,6 @@ html:has(dialog.training-overlay[open]) {
     border-radius: 20px 20px 0 0;
     background: var(--surface);
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
-    transform: translateY(100%);
-    visibility: hidden;
-    transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), visibility 300ms ease;
-  }
-
-  .filter-panel.is-open {
-    transform: translateY(0);
-    visibility: visible;
-  }
-
-  .filter-sheet-handle {
-    display: block;
-    width: 40px;
-    height: 5px;
-    margin: 0 auto 12px;
-    border-radius: 9999px;
-    background: var(--border);
-    flex-shrink: 0;
   }
 
   .filter-heading,

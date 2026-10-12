@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
+import ts from 'typescript';
 
 const repoRoot = resolve(import.meta.dirname, '..');
 const lobbyPath = resolve(repoRoot, 'apps/rehabtrainerhub/app/TrainingLobby.tsx');
 const cssPath = resolve(repoRoot, 'apps/rehabtrainerhub/app/globals.css');
+const sheetCssPath = resolve(repoRoot, 'packages/ui/src/components/BottomSheet.css');
 const zhPath = resolve(repoRoot, 'apps/rehabtrainerhub/app/i18n/zh-TW.ts');
 const enPath = resolve(repoRoot, 'apps/rehabtrainerhub/app/i18n/en.ts');
 
@@ -30,8 +32,8 @@ test('TrainingLobby implements accessible mobile bottom sheet filter interaction
 
   // Bottom sheet elements
   assert.ok(
-    lobbySource.includes('filter-sheet-backdrop'),
-    'TrainingLobby must render a backdrop overlay (.filter-sheet-backdrop) for the bottom sheet.',
+    (await readFile(sheetCssPath, 'utf8')).includes('::backdrop'),
+    'Mobile filters must render the native modal backdrop.',
   );
   assert.ok(
     lobbySource.includes('filter-sheet-handle'),
@@ -50,14 +52,16 @@ test('TrainingLobby implements accessible mobile bottom sheet filter interaction
     'Bottom sheet footer must provide an apply/view results button (.filter-sheet-apply-btn).',
   );
 
-  // Keyboard and scroll lock
+  const sheetSource = await readFile(resolve(repoRoot, 'packages/ui/src/hooks/useBottomSheet.ts'), 'utf8');
+
+  // Native modal provides focus trapping and blocks background interaction.
   assert.ok(
-    lobbySource.includes("'Escape'") || lobbySource.includes('"Escape"'),
-    'Bottom sheet must handle Escape key to close on mobile.',
+    lobbySource.includes('<dialog') && sheetSource.includes('showModal()'),
+    'Mobile filters must use a native modal dialog for focus and background isolation.',
   );
   assert.ok(
-    lobbySource.includes('overflow = isMobileFilterOpen'),
-    'Bottom sheet must manage body overflow scroll lock while active.',
+    sheetSource.includes('scrollTo') && sheetSource.includes("position: 'fixed'"),
+    'Closing filters must restore the lobby scroll position, including on iOS.',
   );
 
   // Zero emojis in source
@@ -68,8 +72,64 @@ test('TrainingLobby implements accessible mobile bottom sheet filter interaction
   );
 });
 
+async function LoadSheetMotion() {
+  const source = await readFile(resolve(repoRoot, 'packages/ui/src/bottomSheetMotion.ts'), 'utf8');
+  const { outputText } = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  });
+  return import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`);
+}
+
+test('short drags return to the current detent; intentional drags expand, collapse or dismiss', async () => {
+  const { GetSheetDetents, ResolveSheetTarget } = await LoadSheetMotion();
+  const detents = GetSheetDetents(844);
+  assert.ok(detents.medium >= 400 && detents.medium < detents.large);
+  assert.ok(detents.large < 844);
+  assert.equal(ResolveSheetTarget(detents.medium - 20, 0, detents), detents.medium);
+  assert.equal(ResolveSheetTarget(detents.medium + 25, 0, detents), detents.medium);
+  assert.equal(ResolveSheetTarget(detents.large - 25, 0, detents), detents.large);
+  assert.equal(ResolveSheetTarget(detents.large, 0, detents), detents.large);
+  assert.equal(ResolveSheetTarget(detents.medium - 180, 0, detents), 0);
+  assert.equal(ResolveSheetTarget(detents.medium - 35, -1.2, detents), 0);
+  assert.equal(ResolveSheetTarget(detents.medium + 35, 1.2, detents), detents.large);
+  assert.equal(ResolveSheetTarget(detents.large - 35, -1.2, detents), detents.medium);
+});
+
+test('short landscape viewports keep the filter actions reachable', async () => {
+  const { GetSheetDetents } = await LoadSheetMotion();
+  for (const height of [320, 390, 600, 844]) {
+    const { medium, large } = GetSheetDetents(height);
+    assert.ok(medium <= large && large <= height - 12);
+    assert.ok(medium >= Math.min(320, large));
+  }
+  assert.equal(GetSheetDetents(844, 47).large, 785, 'Expanded sheet leaves room for the iPhone top safe area.');
+});
+
+test('spring settles exactly at the selected height after opening, dismissal and a fling', async () => {
+  const { StepSheetSpring } = await LoadSheetMotion();
+  for (const [position, velocity, target] of [[0, 0, 464], [464, -1200, 0], [500, 1200, 820]]) {
+    let motion = { position, velocity };
+    for (let frame = 0; frame < 180; frame += 1) {
+      motion = StepSheetSpring(motion, target, 1 / 60);
+      assert.ok(Number.isFinite(motion.position) && Number.isFinite(motion.velocity));
+    }
+    assert.equal(motion.position, target);
+    assert.equal(motion.velocity, 0);
+  }
+});
+
+test('spring motion has the same timing on 30, 60 and 120 Hz displays', async () => {
+  const { StepSheetSpring } = await LoadSheetMotion();
+  const positions = [30, 60, 120].map(rate => {
+    let motion = { position: 0, velocity: 0 };
+    for (let frame = 0; frame < rate / 2; frame++) motion = StepSheetSpring(motion, 464, 1 / rate);
+    return motion.position;
+  });
+  assert.ok(Math.max(...positions) - Math.min(...positions) < 2, 'Refresh rate must not change the speed of the sheet.');
+});
+
 test('globals.css provides high-taste bottom sheet layout and touch-ergonomic targets', async () => {
-  const css = await readFile(cssPath, 'utf8');
+  const css = (await readFile(cssPath, 'utf8')) + (await readFile(sheetCssPath, 'utf8'));
 
   // Mobile trigger styles
   assert.ok(
@@ -79,9 +139,10 @@ test('globals.css provides high-taste bottom sheet layout and touch-ergonomic ta
 
   // Bottom sheet backdrop
   assert.ok(
-    css.includes('.filter-sheet-backdrop'),
-    'globals.css must define styles for .filter-sheet-backdrop.',
+    css.includes('::backdrop'),
+    'The mobile modal must define native backdrop styles.',
   );
+  assert.ok(css.includes('--sheet-page-progress'), 'The presenting page must recede with the sheet and return during dismissal.');
   assert.ok(
     css.includes('.filter-sheet-handle'),
     'globals.css must define styles for .filter-sheet-handle.',
@@ -125,7 +186,7 @@ test('Lobby i18n dictionaries provide bottom sheet keys with exact parity and no
     readFile(enPath, 'utf8'),
   ]);
 
-  for (const requiredKey of ['closeFilters', 'viewResults']) {
+  for (const requiredKey of ['closeFilters', 'viewResults', 'resizeFilters']) {
     assert.ok(zh.includes(requiredKey), `zh-TW.ts must define ${requiredKey}`);
     assert.ok(en.includes(requiredKey), `en.ts must define ${requiredKey}`);
   }

@@ -27,6 +27,7 @@ export const en = {
       searchPlaceholder: 'Search training modules',
       filters: 'Filters',
       closeFilters: 'Close filters',
+      resizeFilters: 'Expand or collapse filters',
       clear: 'Clear',
       purposeLegend: 'Training goals',
       allModules: 'All training modules',

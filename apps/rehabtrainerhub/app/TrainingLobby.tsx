@@ -23,6 +23,7 @@ import {
   type TrainingVisualTheme,
 } from '@rehab-trainer/hub-modules/catalog';
 import { CardImagePlaceholder } from '@rehab-trainer/ui/components/CardImagePlaceholder';
+import { useBottomSheet } from '@rehab-trainer/ui/hooks/useBottomSheet';
 import { GetHubUiCopy } from './i18n';
 import { useHubLanguage } from './i18n/HubLanguage';
 import {
@@ -94,6 +95,8 @@ export function TrainingLobby() {
   const [query, setQuery] = useState('');
   const [selectedPurposes, setSelectedPurposes] = useState<TrainingPurposeId[]>([]);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const dismissFilters = useCallback(() => setIsMobileFilterOpen(false), []);
+  const { dialogRef, isMobile, isExpanded, toggleDetent } = useBottomSheet(isMobileFilterOpen, dismissFilters);
   const [activeGame, setActiveGame] = useState<HubGame | null>(null);
   const [publishedGames, setPublishedGames] = useState<PublishedGame[]>([]);
   const [publishedGamesError, setPublishedGamesError] = useState(false);
@@ -207,25 +210,6 @@ export function TrainingLobby() {
 
   const totalVisibleCount = visibleGames.length;
 
-  useEffect(() => {
-    if (!isMobileFilterOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsMobileFilterOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isMobileFilterOpen]);
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    document.body.style.overflow = isMobileFilterOpen ? 'hidden' : '';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isMobileFilterOpen]);
-
   return (
     <>
     {activeGame && (
@@ -280,20 +264,25 @@ export function TrainingLobby() {
           )}
         </div>
 
-        <div
-          aria-hidden="true"
-          className={`filter-sheet-backdrop${isMobileFilterOpen ? ' is-open' : ''}`}
-          onClick={() => setIsMobileFilterOpen(false)}
-        />
-
-        <aside
+        <dialog
           aria-labelledby="filter-title"
-          className={`filter-panel${isMobileFilterOpen ? ' is-open' : ''}`}
+          className="filter-panel"
+          data-bottom-sheet
           id="filter-panel"
+          open
+          ref={dialogRef}
+          role={isMobile ? 'dialog' : 'complementary'}
         >
-          <div aria-hidden="true" className="filter-sheet-handle" />
+          <button
+            aria-expanded={isExpanded}
+            aria-label={copy.resizeFilters}
+            className="filter-sheet-handle"
+            data-bottom-sheet-grabber
+            onClick={toggleDetent}
+            type="button"
+          />
 
-          <div className="filter-header">
+          <div className="filter-header" data-bottom-sheet-drag-region>
             <h2 id="filter-title">{copy.filters}</h2>
             <div className="filter-header-actions">
               {(selectedPurposes.length > 0 || query) && (
@@ -310,7 +299,7 @@ export function TrainingLobby() {
             </div>
           </div>
 
-          <div className="filter-category-groups">
+          <div className="filter-category-groups" data-bottom-sheet-content>
             {trainerCategoryTags.map((category) => {
               const subs = categorySubcategories[category.id] ?? [];
               const isCategoryChecked = subs.length > 0 && subs.every((subId) => selectedPurposes.includes(subId));
@@ -368,7 +357,7 @@ export function TrainingLobby() {
             })}
           </div>
 
-          <div className="filter-sheet-footer">
+          <div className="filter-sheet-footer" data-bottom-sheet-footer>
             <button
               className="filter-sheet-apply-btn"
               onClick={() => setIsMobileFilterOpen(false)}
@@ -377,7 +366,7 @@ export function TrainingLobby() {
               {copy.viewResults.replace('{count}', String(totalVisibleCount))}
             </button>
           </div>
-        </aside>
+        </dialog>
 
         <section className="module-results" aria-labelledby="result-title">
           <div className="result-header">

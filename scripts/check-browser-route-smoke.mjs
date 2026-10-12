@@ -121,6 +121,9 @@ try {
   await cdp.Send('Page.enable', undefined, sessionId);
   await cdp.Send('Network.enable', undefined, sessionId);
   await cdp.Send('Log.enable', undefined, sessionId);
+  if (args.reducedMotion !== undefined) {
+    await cdp.Send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: args.reducedMotion === 'true' ? 'reduce' : 'no-preference' }] }, sessionId);
+  }
   const bootstrapStatements = [];
   if (mockAuthUser) {
     const tokenPayload = Buffer.from(JSON.stringify({
@@ -234,6 +237,11 @@ try {
     ? await TouchScrollElement(cdp, sessionId, touchScrollSelector, timeoutMs)
     : { matched: true };
 
+  const assertionResult = browserAssertion ? await cdp.Send('Runtime.evaluate', {
+    expression: browserAssertion,
+    awaitPromise: true,
+    returnByValue: true,
+  }, sessionId) : null;
   const stateResult = await cdp.Send('Runtime.evaluate', {
     expression: `JSON.stringify({
       href: location.href,
@@ -296,7 +304,7 @@ try {
       })()` : 'true'},
       callOrder: ${requireFullscreenBeforeAudio ? 'window.__trainerSmokeCallOrder ?? []' : '[]'},
       textMatched: ${expectedText ? `document.body.innerText.includes(${JSON.stringify(expectedText)})` : 'true'},
-      browserAssertionMatched: ${browserAssertion ? `Boolean(${browserAssertion})` : 'true'}
+      browserAssertionMatched: ${assertionResult ? !assertionResult.exceptionDetails && Boolean(assertionResult.result?.value) : 'true'}
     })`,
     returnByValue: true,
   }, sessionId);
@@ -338,7 +346,7 @@ try {
     failures.push(`Missing expected text: ${expectedText}`);
   }
   if (!state.browserAssertionMatched) {
-    failures.push(`Browser assertion failed: ${browserAssertion}`);
+    failures.push(`Browser assertion failed: ${assertionResult?.exceptionDetails?.exception?.description ?? browserAssertion}`);
   }
   if (!state.fullscreenMatched) {
     failures.push(`Fullscreen element did not match: ${fullscreenSelector}`);

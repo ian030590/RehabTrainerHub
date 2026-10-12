@@ -27,6 +27,7 @@ export const zhTW = {
       searchPlaceholder: '搜尋訓練模組',
       filters: '篩選',
       closeFilters: '關閉篩選',
+      resizeFilters: '展開或收合篩選面板',
       clear: '清除',
       purposeLegend: '訓練目的',
       allModules: '所有訓練模組',

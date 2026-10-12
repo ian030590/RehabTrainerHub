@@ -1,0 +1,83 @@
+[data-bottom-sheet] {
+  --sheet-safe-top: env(safe-area-inset-top, 0px);
+  width: auto;
+  max-width: none;
+  color: inherit;
+}
+
+@media (max-width: 720px) {
+  body:has([data-bottom-sheet]:modal) {
+    background: var(--heading);
+  }
+
+  [data-bottom-sheet-page]:has([data-bottom-sheet]:modal) {
+    background: var(--background);
+    transform-origin: 50% var(--sheet-page-origin, 0px);
+    transform: translateY(calc(var(--sheet-page-progress, 0) * 10px)) scale(calc(1 - var(--sheet-page-progress, 0) * 0.04));
+    clip-path: inset(var(--sheet-page-origin, 0px) 0 0 round 14px 14px 0 0);
+  }
+
+  [data-bottom-sheet]:modal {
+    top: auto;
+    bottom: var(--sheet-bottom, 0px);
+    width: 100%;
+    height: var(--sheet-height, 55dvh);
+    max-height: none;
+    transform: translate3d(0, var(--sheet-offset, 0px), 0);
+    visibility: visible;
+    transition: none;
+    will-change: transform, height;
+  }
+
+  [data-bottom-sheet]:not(:modal) {
+    display: none;
+  }
+
+  [data-bottom-sheet]::backdrop {
+    background: color-mix(in srgb, var(--bg-overlay) calc(var(--sheet-scrim, 1) * 100%), transparent);
+  }
+
+  [data-bottom-sheet] [data-bottom-sheet-grabber] {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    min-height: 44px;
+    height: 44px;
+    padding: 0;
+    margin: 0 auto 4px;
+    border: 0;
+    background: transparent;
+    touch-action: none;
+    cursor: grab;
+    flex-shrink: 0;
+  }
+
+  [data-bottom-sheet-grabber]::before {
+    content: '';
+    width: 36px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--border-strong);
+  }
+
+  [data-bottom-sheet-drag-region] {
+    touch-action: none;
+  }
+
+  [data-bottom-sheet-content] {
+    min-height: 0;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  [data-bottom-sheet] [data-bottom-sheet-footer] {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-bottom-sheet-page]:has([data-bottom-sheet]:modal) {
+    transform: none;
+    clip-path: none;
+  }
+}
