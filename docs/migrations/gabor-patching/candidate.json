@@ -1,0 +1,62 @@
+{
+  "gameId": "gabor-patching",
+  "version": "2.0.0",
+  "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a",
+  "reviewStatus": "pending-owner-approval",
+  "publicationStatus": "not-published",
+  "sourceBaselineCommit": "51018eed98339cc14a9d58278e11f79db043ecd6",
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "touch"
+  ],
+  "totalBytes": 1157718,
+  "files": [
+    {
+      "path": "assets/index-B9bAahRo.js",
+      "size": 1138226,
+      "sha256": "9957ba678e5720ff5d69ca95a9ae826ea30cb3cce9474ee03573bfc30ca5633a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-LYCjcFSc.css",
+      "size": 17208,
+      "sha256": "23020620a043a65dc28d6fbd514dd780f88b6d36fedd81609afc542e70496e6e",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 508,
+      "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "e1d70a0baf9f1830aa3e85f13531f6e8c8d2065666fb17a0898e13052cec339b",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 1368,
+      "sha256": "b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8",
+      "contentType": "image/webp"
+    }
+  ],
+  "verification": {
+    "gameArchitectureTests": 171,
+    "hubFunctionTests": 121,
+    "runnerTests": 48,
+    "maximumDurationHighRefresh": {
+      "durationSeconds": 180,
+      "refreshHz": 240,
+      "patchRecords": 3488,
+      "truncated": false
+    },
+    "productionAccepted": false,
+    "localDatabaseOnly": true
+  }
+}

@@ -10,6 +10,10 @@ function Fixture(gameId = 'drawing-defense', version = '2.0.3') {
       'zh-TW': { title: '畫畫塔防', description: '上肢動作練習。' },
       en: { title: 'Drawing defense', description: 'Upper-limb practice.' },
     } };
+  if (gameId === 'gabor-patching') Object.assign(metadata, { trainer: 'vision', category: 'vision', copy: {
+    'zh-TW': { title: '蓋伯斑塊練習', description: '尋找逐漸浮現的蓋伯斑塊。' },
+    en: { title: 'Gabor Patching', description: 'Find emerging Gabor patches.' },
+  } });
   if (gameId === 'moving-card') Object.assign(metadata, { trainer: 'vision', category: 'vision', copy: {
     'zh-TW': { title: '移動卡片訓練', description: '在移動卡片中尋找目標，練習視覺搜尋與動態專注。' },
     en: { title: 'Moving Card Training', description: 'Find targets among moving cards to practise visual search and dynamic attention.' },
@@ -142,4 +146,18 @@ test('an older approved self-contained version keeps game-owned fallback tags wi
   assert.equal(game.category, 'upper-limb');
   assert.equal(game.release.presentation, 'game');
   assert.equal(game.previewUrl, undefined);
+});
+
+test('Gabor current replaces its same-slug old shell and fails closed for invalid metadata', async () => {
+  const fixture = Fixture('gabor-patching', '2.0.0');
+  const games = await List(fixture);
+  const matches = games.filter(game => game.slug === 'gabor-patching');
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].title, '蓋伯斑塊練習');
+  assert.equal(matches[0].trainer, 'vision'); assert.equal(matches[0].category, 'vision');
+  assert.equal(matches[0].release.presentation, 'game');
+  assert.equal(matches[0].release.settingsUrl, undefined);
+  assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.0/package/preview.webp');
+  fixture.objects.set('releases/gabor-patching/2.0.0/files/game.json', Buffer.from('{}'));
+  assert.equal((await List(fixture)).some(game => game.slug === 'gabor-patching'), false);
 });

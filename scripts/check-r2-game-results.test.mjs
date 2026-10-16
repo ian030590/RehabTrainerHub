@@ -8,6 +8,8 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'gabor-patching', defaultMetric: 'reactionMs', alternate: 'points',
+    row: { patch: 1, type: 0, outcome: 1, spawnedMs: 0, endedMs: 2, reactionMs: 2, points: 4, lifetimeMs: 4000 } },
   { id: 'moving-card', defaultMetric: 'searchMs', alternate: 'errors',
     row: { completed: 1, searchMs: 2, attempts: 1, errors: 0 } },
   { id: 'motor-cortex-rehab', defaultMetric: 'accuracy', alternate: 'holdSeconds',

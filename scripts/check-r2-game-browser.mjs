@@ -20,13 +20,14 @@ import { CheckMotorCortex } from './motor-cortex-browser.mjs';
 import { CheckOculomotor } from './oculomotor-browser.mjs';
 import { LoadEyeCameraFixture } from './eye-camera-fixtures.mjs';
 import { onRequestPost as saveCsv } from '../apps/rehabtrainerhub/functions/api/oculomotor-data.js';
+import { CheckGaborPatching } from './gabor-patching-browser.mjs';
 import { CheckMovingCard } from './moving-card-browser.mjs';
 import { LoadGestureCameraFixtures } from './gesture-camera-fixtures.mjs';
 import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 import { CheckSettingsPresentation, CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
-assert.ok(['drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId), 'Unknown browser game fixture');
+assert.ok(['gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId), 'Unknown browser game fixture');
 const handGame = ['gesture-battler', 'motor-cortex-rehab'].includes(gameId);
 const phasePrefix = gameId;
 const root = resolve(import.meta.dirname, '..');
@@ -55,7 +56,7 @@ const { manifest, files } = await BuildOfficialGameRelease(gameId);
 const handFixtures = handGame ? await LoadGestureCameraFixtures(root) : new Map();
 if (gameId === 'oculomotor-training' && process.argv.includes('--gaze')) handFixtures.set('/__eye-test/portrait.jpg', await LoadEyeCameraFixture(root));
 const unavailableTexture = rendererFailure ? manifest.files.find(file => file.path.startsWith('assets/ship-'))?.path : null;
-assert.ok(!rendererFailure || unavailableTexture || gameId === 'moving-card', 'Renderer failure fixture requires a supported game.');
+assert.ok(!rendererFailure || unavailableTexture || ['moving-card', 'gabor-patching'].includes(gameId), 'Renderer failure fixture requires a supported game.');
 const sqlite = new DatabaseSync(':memory:');
 const migrations = resolve(root, 'apps/rehabtrainerhub/migrations');
 for (const file of (await readdir(migrations)).filter(file => file.endsWith('.sql')).sort()) sqlite.exec(await readFile(resolve(migrations, file), 'utf8'));
@@ -145,8 +146,8 @@ try {
         return;
       }
       if (url.pathname.startsWith('/api/')) {
-        const oldGame = { id: ['motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
-          summary: 'Legacy publication', trainer: ['moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor', category: ['motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'general' : 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
+        const oldGame = { id: ['gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
+          summary: 'Legacy publication', trainer: ['gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor', category: ['gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'general' : 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
           release: { id: 'old-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['pointer'],
             approvedAt: '2026-10-08', launchUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
             installUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
@@ -213,8 +214,8 @@ try {
  };
 }`;
   const pixiProbe = `window.__PIXI_APP_INIT__ = app => {
-    window.${gameId === 'moving-card' ? 'movingCard' : 'asteroid'}PixiApp = app;
-    ${rendererFailure && gameId === 'moving-card' ? "if (!window.allowRendererRetry) throw new Error('Simulated Pixi initialization failure');" : ''}
+    window.${gameId === 'gabor-patching' ? 'gabor' : gameId === 'moving-card' ? 'movingCard' : 'asteroid'}PixiApp = app;
+    ${rendererFailure && ['moving-card', 'gabor-patching'].includes(gameId) ? "if (!window.allowRendererRetry) throw new Error('Simulated Pixi initialization failure');" : ''}
   };`;
   ws.addEventListener('message', event => {
     const message = JSON.parse(event.data);
@@ -253,7 +254,7 @@ try {
         const childSession = message.params.sessionId;
         await Promise.all([send('Runtime.enable', {}, childSession), send('Network.enable', {}, childSession)]);
         if (gameId === 'oculomotor-training' && process.argv.includes('--gaze')) await send('Fetch.enable', { patterns: [{urlPattern:'*/__eye-test/*',requestStage:'Request'}] }, childSession);
-        if (['asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) && message.params.targetInfo.type === 'iframe') {
+        if (['gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) && message.params.targetInfo.type === 'iframe') {
           await send('Page.enable', {}, childSession);
           await send('Page.addScriptToEvaluateOnNewDocument', {
             source: gameId === 'oculomotor-training' && process.argv.includes('--gaze') ? eyeProbe : pixiProbe, runImmediately: true,
@@ -266,8 +267,8 @@ try {
   const target = await send('Target.createTarget', { url: 'about:blank' });
   const attached = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
   const session = attached.sessionId;
-  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: ['asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId), flatten: true,
-    ...(['asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
+  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: ['gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId), flatten: true,
+    ...(['gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
   }, session);
   await send('Runtime.enable', {}, session);
   await send('Network.enable', {}, session);
@@ -292,7 +293,7 @@ try {
       };
     }
   ` }, session);
-  if (['asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId)) await send('Page.addScriptToEvaluateOnNewDocument', {
+  if (['gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId)) await send('Page.addScriptToEvaluateOnNewDocument', {
     source: gameId === 'oculomotor-training' && process.argv.includes('--gaze') ? eyeProbe : pixiProbe,
   }, session);
   if (remote || handGame || (gameId === 'oculomotor-training' && process.argv.includes('--gaze'))) await send('Fetch.enable', { patterns: [
@@ -320,7 +321,7 @@ try {
     localStorage.setItem('rehabtrainerhub.subject-id.v1', ${JSON.stringify(guestSubjectId)});
     ${signedIn ? `localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(accountToken)});` : ''}
   } catch {}` }, session);
-  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${['moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor'}%3A${gameId}`) }, session);
+  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${['gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor'}%3A${gameId}`) }, session);
   await send('Target.activateTarget', { targetId: target.targetId });
   const evaluate = async (expression, context) => {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture: true, ...(context ? { contextId: context.id } : {}) }, context?.session || session);
@@ -345,7 +346,7 @@ try {
   if (lobby && !standalone) {
     await until(() => evaluate('Boolean(document.querySelector(".module-card[data-runtime-id=reviewed-browser-game]"))'), 'reviewed catalog loaded');
     assert.equal(await evaluate(`document.querySelectorAll(".module-card[data-runtime-id=${gameId}]").length`), 1);
-    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), ['moving-card', 'oculomotor-training'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
+    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), ['gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
     await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}]").scrollIntoView()`);
     await until(() => evaluate(`(() => { const image = document.querySelector(".module-card[data-runtime-id=${gameId}] img"); return image?.complete && image.naturalWidth > 0; })()`), 'game-owned preview loaded');
     assert.equal(new URL(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] img").src`)).pathname,
@@ -424,6 +425,12 @@ try {
     await until(() => evaluate('!document.querySelector("dialog iframe") && Boolean(document.querySelector("dialog [role=alert]"))'), 'revoked game removed');
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     console.log('Revoked R2 release removed; no result saved.');
+  } else if (gameId === 'gabor-patching') {
+    const screenshots = resolve(root, '.tmp/gabor-patching-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}-${process.argv.includes('--hard') ? 'hard' : process.argv.includes('--medium') ? 'medium' : 'easy'}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
+    await mkdir(screenshots, { recursive: true });
+    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    await CheckGaborPatching({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
   } else if (gameId === 'oculomotor-training') {
     const screenshots = resolve(root, '.tmp/oculomotor-validation', `${standalone?'standalone':'lobby'}-${viewportMode}-${english?'en':'zh'}-${process.argv.includes('--gaze')?'gaze':'off'}-${process.argv.includes('--activity')?process.argv[process.argv.indexOf('--activity')+1]:'pursuit'}`);
     await mkdir(screenshots,{recursive:true});

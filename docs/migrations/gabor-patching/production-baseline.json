@@ -1,0 +1,65 @@
+{
+  "checkedAt": "2026-10-13T11:50:25.050Z",
+  "games": [
+    {
+      "id": "official-gabor-patching",
+      "slug": "gabor-patching",
+      "title": "蓋伯斑塊練習",
+      "summary": "蓋伯斑塊練習居家訓練網官方練習",
+      "trainer": "vision",
+      "category": "general",
+      "developerName": "居家訓練網官方",
+      "updatedAt": "2026-10-07T00:00:00.000Z",
+      "release": {
+        "id": "rel-gabor-patching-1.0.0",
+        "version": "1.0.0",
+        "contentSha256": "dbadf16ad47eeb464023ff38ca51562e695035d87fb5bd47cf6275cef9d21674",
+        "capabilities": [
+          "audio",
+          "fullscreen",
+          "keyboard",
+          "pointer"
+        ],
+        "approvedAt": "2026-10-07T00:00:00.000Z",
+        "launchUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/1.0.0/",
+        "installUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/1.0.0/",
+        "settingsUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/1.0.0/package/settings.json"
+      }
+    }
+  ],
+  "stableEntry": {
+    "status": 404,
+    "location": null,
+    "cacheControl": "no-store"
+  },
+  "legacyFiles": [
+    {
+      "path": "/games/gabor-patching/",
+      "status": 200,
+      "url": "https://trainerhub.cc/games/gabor-patching/",
+      "size": 5300,
+      "sha256": "fd6107e077ba665c0df1414f48714e88f7c302cea13bedc51605fcdbc4d9a1da"
+    },
+    {
+      "path": "/games/gabor-patching/settings.json",
+      "status": 200,
+      "url": "https://trainerhub.cc/games/gabor-patching/settings.json",
+      "size": 2100,
+      "sha256": "6777154ec28e1f41deb6efa15cc298523462e84c3b90a14630d5f70b335f36f6"
+    },
+    {
+      "path": "/games/gabor-patching/score.json",
+      "status": 200,
+      "url": "https://trainerhub.cc/games/gabor-patching/score.json",
+      "size": 1431,
+      "sha256": "37bdb0ce795bf397a97983a644088b490888c0b5ffd9bfacfcea965e64aa84ee"
+    },
+    {
+      "path": "/assets/training-modules/gabor-patching.webp",
+      "status": 200,
+      "url": "https://trainerhub.cc/assets/training-modules/gabor-patching.webp",
+      "size": 1368,
+      "sha256": "b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8"
+    }
+  ]
+}

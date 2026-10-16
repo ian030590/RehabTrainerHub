@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "gameId": "gabor-patching",
+  "trainer": "vision",
+  "category": "vision",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": {
+      "title": "蓋伯斑塊練習",
+      "description": "尋找逐漸浮現的蓋伯斑塊，練習對比辨識與視覺反應。"
+    },
+    "en": {
+      "title": "Gabor Patching",
+      "description": "Find emerging Gabor patches to practise contrast recognition and visual response."
+    }
+  }
+}

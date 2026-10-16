@@ -1,4 +1,4 @@
-// Canonical Hub-owned Gabor runtime.
+// Game-owned original Gabor stimulus, timing and scoring.
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Sprite, Texture, Text } from 'pixi.js';
@@ -9,7 +9,9 @@ import {
   RunPixiTrial,
   pixiRuntimeScopes,
 } from './runtime/pixiPool';
-import { typography } from '@rehab-trainer/ui/trainerTheme';
+import { cssColors, pixiColors, typography } from './runtime/theme';
+import { GetGaborTexture, gaborTextureSpecs } from './gaborTexture';
+import type { GaborPatchRecord } from './score';
 import { soundManager } from './runtime/soundManager';
 
 const info = {
@@ -42,8 +44,9 @@ const info = {
     },
     background_color: {
       type: ParameterType.STRING,
-      default: '#808080',
+      default: cssColors.gaborBackground,
     },
+    language: { type: ParameterType.STRING, default: 'zh' },
     difficulty: {
       type: ParameterType.STRING,
       default: 'beginner',
@@ -63,6 +66,7 @@ const info = {
 type Info = typeof info;
 
 interface GaborSpot {
+  patch: number;
   sprite: Sprite;
   targetSize: number;
   targetOpacity: number;
@@ -80,59 +84,7 @@ interface FloatingScore {
   lifetime: number;
 }
 
-const gaborTextureSpecs = [
-  { size: 256, freq: 0.05, angle: 0 },
-  { size: 256, freq: 0.08, angle: Math.PI / 4 },
-  { size: 256, freq: 0.03, angle: Math.PI / 2 },
-] as const;
 const gaborPatchingPixiScope = pixiRuntimeScopes.gaborPatching;
-
-const gaborTextureCache = new Map<string, Texture>();
-
-function GetGaborTexture(size: number, freq: number, angle: number): Texture {
-  const key = `${size}:${freq}:${angle}`;
-  const cached = gaborTextureCache.get(key);
-  if (cached) return cached;
-
-  const texture = CreateGaborTexture(size, freq, angle);
-  gaborTextureCache.set(key, texture);
-  return texture;
-}
-
-function CreateGaborTexture(size: number, freq: number, angle: number): Texture {
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return Texture.EMPTY;
-
-  const imgData = ctx.createImageData(size, size);
-  const data = imgData.data;
-  const cx = size / 2;
-  const cy = size / 2;
-  const sigma = size / 6;
-
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const dx = x - cx;
-      const dy = y - cy;
-      const gauss = Math.exp(-(dx * dx + dy * dy) / (2 * sigma * sigma));
-      const phase = dx * Math.cos(angle) + dy * Math.sin(angle);
-      const sine = Math.sin(2 * Math.PI * freq * phase);
-
-      const intensity = Math.round(128 + 127 * gauss * sine);
-      const alpha = Math.round(255 * gauss);
-
-      const i = (y * size + x) * 4;
-      data[i] = intensity;
-      data[i + 1] = intensity;
-      data[i + 2] = intensity;
-      data[i + 3] = alpha;
-    }
-  }
-  ctx.putImageData(imgData, 0, 0);
-  return Texture.from(canvas);
-}
 
 class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
   static info = info;
@@ -140,12 +92,14 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
   private textures: Texture[] = [];
   private spots: GaborSpot[] = [];
   private floatingScores: FloatingScore[] = [];
+  private patchRecords: GaborPatchRecord[] = [];
+  private spawned = 0;
+  private abortListener: (() => void) | null = null;
   private score = 0;
   private hits = 0;
   private gameStartTime = 0;
   private gameLoopRaf = 0;
   private isGameOver = false;
-  private keydownListener: ((e: KeyboardEvent) => void) | null = null;
   private resizeListener: (() => void) | null = null;
 
   constructor(private jsPsych: JsPsych) {}
@@ -153,11 +107,12 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
   trial(displayElement: HTMLElement, trial: TrialType<Info>) {
     const container = CreatePixiTrialContainer(
       displayElement,
-      'width:100%;height:100%;position:relative;overflow:hidden;cursor:default;',
+      'width:100%;height:100%;position:absolute;inset:0;overflow:hidden;cursor:default;',
       'gabor-patching-trial',
     );
 
     const hud = document.createElement('div');
+    hud.className = 'gabor-hud';
     hud.style.position = 'absolute';
     hud.style.top = 'max(12px, env(safe-area-inset-top))';
     hud.style.left = 'max(12px, env(safe-area-inset-left))';
@@ -170,25 +125,34 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     hud.style.fontSize = '20px';
     hud.style.fontWeight = 'bold';
     hud.style.whiteSpace = 'nowrap';
-    hud.style.color = '#FFFFFF';
-    hud.style.textShadow = '0 2px 4px rgba(0,0,0,0.5)';
+    hud.style.color = cssColors.white;
+    hud.style.textShadow = 'var(--game-text-shadow)';
 
     const timerEl = document.createElement('div');
     const scoreEl = document.createElement('div');
+    timerEl.className = 'gabor-timer';
+    scoreEl.className = 'gabor-score';
     hud.appendChild(timerEl);
     hud.appendChild(scoreEl);
     container.appendChild(hud);
 
+    this.patchRecords = [];
+    this.spawned = 0;
     this.score = 0;
     this.hits = 0;
     this.spots = [];
     this.floatingScores = [];
     this.isGameOver = false;
 
+    this.abortListener = () => this.stopGame(displayElement);
+    window.addEventListener('game:abort', this.abortListener);
+
     RunPixiTrial(gaborPatchingPixiScope, displayElement, (app) => {
+      if (this.isGameOver) return;
+      if (!displayElement.isConnected) { this.stopGame(displayElement); return; }
       this.app = app;
       AttachPixiTrialCanvas(gaborPatchingPixiScope, container);
-      app.renderer.background.color = trial.background_color ?? '#808080';
+      app.renderer.background.color = trial.background_color ?? cssColors.gaborBackground;
       this.resizeListener = () => this.clampActiveSpots();
       app.renderer.on('resize', this.resizeListener);
 
@@ -198,19 +162,12 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
 
       this.gameStartTime = performance.now();
 
-      this.keydownListener = (event: KeyboardEvent) => {
-        if (event.code === 'Escape') {
-          this.endGame(trial, displayElement);
-        }
-      };
-      window.addEventListener('keydown', this.keydownListener);
-
       const updateHUD = () => {
         const elapsed = performance.now() - this.gameStartTime;
         const duration = trial.duration_ms ?? 60000;
         const remaining = Math.max(0, Math.ceil((duration - elapsed) / 1000));
-        timerEl.textContent = `Time: ${remaining}s`;
-        scoreEl.textContent = `Score: ${this.score}`;
+        timerEl.textContent = `${trial.language === 'en' ? 'Time' : '時間'}: ${remaining}s`;
+        scoreEl.textContent = `${trial.language === 'en' ? 'Score' : '分數'}: ${this.score}`;
       };
 
       const spawnSpot = () => {
@@ -248,7 +205,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
           lifetime = 2000;
         }
 
-        const spotData = { sprite, targetSize, targetOpacity, type, spawnTime, maxScore, minSize, lifetime };
+        const spotData = { patch: ++this.spawned, sprite, targetSize, targetOpacity, type, spawnTime, maxScore, minSize, lifetime };
 
         sprite.on('pointerdown', (e: any) => {
           e.stopPropagation();
@@ -261,7 +218,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
 
       const loop = (time: number) => {
         if (!displayElement.isConnected) {
-          this.endGame(trial, displayElement);
+          this.stopGame(displayElement);
           return;
         }
         if (this.isGameOver || !this.app) return;
@@ -289,6 +246,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
           const currentScore = Math.ceil(spot.maxScore * (1 - progress));
 
           if (currentScore <= 0) {
+            this.recordSpot(spot, 0, 0);
             this.removeSpot(spot);
             this.spots.splice(i, 1);
           }
@@ -322,14 +280,15 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
       };
 
       // Initial spawn
-      for (let i = 0; i < 3; i++) spawnSpot();
+      for (let i = 0; i < Math.min(3, trial.max_spots ?? 10); i++) spawnSpot();
+      updateHUD();
 
       this.gameLoopRaf = requestAnimationFrame(loop);
     });
   }
 
   private handleSpotClick(spot: GaborSpot) {
-    if (this.isGameOver || !this.app) return;
+    if (this.isGameOver || !this.app || !this.spots.includes(spot)) return;
 
     const now = performance.now();
     const spotAge = now - spot.spawnTime;
@@ -338,6 +297,7 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
 
     if (finalPoints <= 0) return; // ignore clicks on dead spots
 
+    this.recordSpot(spot, 1, finalPoints);
     this.score += finalPoints;
     this.hits += 1;
     soundManager.playSuccess();
@@ -348,10 +308,10 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
         fontFamily: typography.fontFamily,
         fontSize: 24,
         fontWeight: 'bold',
-        fill: 0xFFFFFF,
+        fill: pixiColors.white,
         dropShadow: {
           alpha: 0.5,
-          color: 0x000000,
+          color: pixiColors.black,
           blur: 2,
           distance: 2,
         }
@@ -396,38 +356,40 @@ class PixiGaborPatchingPlugin implements JsPsychPlugin<Info> {
     }
   }
 
-  private endGame(trial: TrialType<Info>, displayElement: HTMLElement) {
+  private recordSpot(spot: GaborSpot, outcome: number, points: number) {
+    const now = performance.now();
+    this.patchRecords.push({ patch: spot.patch, type: spot.type, outcome,
+      spawnedMs: Math.max(0, Math.round(spot.spawnTime - this.gameStartTime)), endedMs: Math.max(0, Math.round(now - this.gameStartTime)),
+      reactionMs: outcome === 1 ? Math.max(0, Math.round(now - spot.spawnTime)) : null, points, lifetimeMs: spot.lifetime });
+  }
+
+  private stopGame(displayElement: HTMLElement) {
     if (this.isGameOver) return;
     this.isGameOver = true;
     cancelAnimationFrame(this.gameLoopRaf);
     this.gameLoopRaf = 0;
-
-    if (this.keydownListener) {
-      window.removeEventListener('keydown', this.keydownListener);
-      this.keydownListener = null;
-    }
-
+    if (this.abortListener) window.removeEventListener('game:abort', this.abortListener);
+    this.abortListener = null;
     if (this.app) {
       if (this.resizeListener) this.app.renderer.off('resize', this.resizeListener);
       CleanupPixiTrial(gaborPatchingPixiScope, displayElement);
       this.app = null;
     }
     this.resizeListener = null;
-
     this.textures = [];
     this.spots = [];
     this.floatingScores = [];
+  }
 
+  private endGame(trial: TrialType<Info>, displayElement: HTMLElement) {
+    if (this.isGameOver) return;
+    for (const spot of this.spots) this.recordSpot(spot, 2, 0);
     const trialData = {
-      rt: trial.duration_ms,
-      correct: true,
-      target: 'GaborPatching',
-      response: 'clicks',
-      acquired_targets: this.hits,
-      score: this.score,
-      duration_ms: trial.duration_ms,
+      rt: trial.duration_ms, correct: true, target: 'GaborPatching', response: 'clicks',
+      acquired_targets: this.hits, score: this.score, duration_ms: trial.duration_ms,
+      patchRecords: this.patchRecords.sort((first, second) => first.patch - second.patch),
     };
-
+    this.stopGame(displayElement);
     this.jsPsych.finishTrial(trialData);
   }
 }

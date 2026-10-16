@@ -4,14 +4,14 @@ import { HandleRequest } from '../functions/[[path]].js';
 
 const gameId = 'drawing-defense';
 const digest = 'a'.repeat(64);
-function Fixture() {
+function Fixture(gameId = 'drawing-defense') {
   const catalog = { schemaVersion: 1, gameId, currentVersion: '2.0.2', releases: {
     '2.0.1': { contentSha256: digest }, '2.0.2': { contentSha256: digest },
   } };
   const release = version => ({ schemaVersion: 1, status: 'approved', gameId, version,
     name: 'Game', runtime: { name: 'native', major: 1 }, presentation: 'game', entry: 'index.html',
     contentSha256: digest, files: [{ path: 'index.html', size: 10, sha256: digest }] });
-  const objects = new Map([['official-games/drawing-defense/current.json', catalog],
+  const objects = new Map([[`official-games/${gameId}/current.json`, catalog],
     ...['2.0.1', '2.0.2', '9.0.0'].map(version => [`releases/${gameId}/${version}/release.json`, release(version)])]);
   const bucket = { get: async key => {
     const value = objects.get(key);
@@ -21,6 +21,19 @@ function Fixture() {
   } };
   return { catalog, objects, bucket };
 }
+
+test('Gabor stable entry selects its approved current and rejects withdrawal without exposing other versions', async () => {
+  const fixture = Fixture('gabor-patching');
+  const request = path => HandleRequest({ request: new Request(`https://runner.example${path}`), env: { GAME_RELEASE_BUCKET: fixture.bucket } });
+  const response = await request('/games/gabor-patching/');
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get('Location'), '/games/gabor-patching/2.0.2/');
+  assert.match(response.headers.get('Cache-Control'), /no-store/);
+  fixture.objects.get('releases/gabor-patching/2.0.2/release.json').status = 'revoked';
+  assert.equal((await request('/games/gabor-patching/')).status, 404);
+  const { ReadOfficialGameRelease } = await import('../functions/_lib/officialCatalog.js');
+  assert.equal(await ReadOfficialGameRelease(fixture.bucket, 'gabor-patching', '9.0.0'), null);
+});
 
 test('official catalog permits approved history independently of current and rejects untrusted or revoked releases', async () => {
   const { ReadOfficialGameRelease, ValidateOfficialGameCatalog } = await import('../functions/_lib/officialCatalog.js');

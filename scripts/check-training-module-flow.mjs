@@ -308,15 +308,14 @@ const implementationGroups = [
       'MotorTutorial',
     ],
   },
+  { ids: ['vision:gabor-patching'], files: ['gabor-patching/GaborPatchingGame.tsx'], tokens: ["setPhase('rules')", "setPhase('running')", "setPhase('results')", 'SendGameResult', 'GaborTutorial'] },
   { ids: ['vision:moving-card'], files: ['moving-card/MovingCardGame.tsx'], tokens: ["setPhase('rules')", "setPhase('running')", "setPhase('results')", 'SendGameResult', 'MovingCardTutorial'] },
   {
     ids: [
-      'vision:gabor-patching',
       'vision:reading-training',
       'vision:driving-rehab',
     ],
     files: [
-      'gabor-patching/GaborPatchingGame.tsx',
       'reading-training/ReadingTrainingGame.tsx',
       'driving-rehab/DrivingRehabGame.tsx',
     ],
@@ -439,6 +438,7 @@ const jsPsychLifecycleGroups = [
     ],
     files: [
       'moving-card/MovingCardGame.tsx',
+      'gabor-patching/GaborPatchingGame.tsx',
       'moving-card/pixi-moving-card.ts',
       'gabor-patching/pixi-gabor-patching.ts',
       'reading-training/pixi-reading-training.ts',

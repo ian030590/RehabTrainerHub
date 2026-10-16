@@ -1,0 +1,49 @@
+{
+  "checkedAt": "2026-10-14T02:54:47.636Z",
+  "readOnly": true,
+  "deployments": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "8a4e84e4-6c40-4705-a9ef-c4dc8301ca38",
+      "url": "https://8a4e84e4.rehabtrainerhub.pages.dev",
+      "createdAt": "2026-10-12T20:52:41.694056Z",
+      "environment": "production",
+      "stage": "success",
+      "commit": "51018eed98339cc14a9d58278e11f79db043ecd6",
+      "branch": "main"
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "907e363d-9537-45f2-b3cd-0e934dc1e8e3",
+      "url": "https://907e363d.trainerhub-user-games.pages.dev",
+      "createdAt": "2026-10-12T20:52:51.849261Z",
+      "environment": "production",
+      "stage": "success",
+      "commit": "51018eed98339cc14a9d58278e11f79db043ecd6",
+      "branch": "main"
+    }
+  ],
+  "hubLegacyFiles": [
+    {
+      "path": "/games/gabor-patching/",
+      "url": "https://8a4e84e4.rehabtrainerhub.pages.dev/games/gabor-patching/",
+      "status": 200,
+      "size": 4827,
+      "sha256": "801b18067723967420d173fd8197a84f5e15fd4db3f33a6c908052be2009d98b"
+    },
+    {
+      "path": "/games/gabor-patching/settings.json",
+      "url": "https://8a4e84e4.rehabtrainerhub.pages.dev/games/gabor-patching/settings.json",
+      "status": 200,
+      "size": 2100,
+      "sha256": "6777154ec28e1f41deb6efa15cc298523462e84c3b90a14630d5f70b335f36f6"
+    },
+    {
+      "path": "/games/gabor-patching/score.json",
+      "url": "https://8a4e84e4.rehabtrainerhub.pages.dev/games/gabor-patching/score.json",
+      "status": 200,
+      "size": 1431,
+      "sha256": "37bdb0ce795bf397a97983a644088b490888c0b5ffd9bfacfcea965e64aa84ee"
+    }
+  ]
+}

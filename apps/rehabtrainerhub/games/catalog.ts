@@ -1,3 +1,4 @@
+import gaborPatchingCatalog from './gabor-patching/public/game.json';
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
@@ -252,12 +253,13 @@ const seeds: readonly TrainingCatalogSeed[] = [
   },
   {
     id: 'gabor-patching',
-    trainer: 'vision',
-    purpose: 'vision',
+    trainer: gaborPatchingCatalog.trainer as 'vision',
+    purpose: gaborPatchingCatalog.category as 'vision',
+    imagePath: `/assets/game-previews/gabor-patching/${gaborPatchingCatalog.preview}`,
     kind: 'vision',
     path: '/?module=gabor-patching',
-    zh: ['蓋伯斑塊練習', '尋找逐漸浮現的蓋伯斑塊，練習對比辨識與視覺反應。'],
-    en: ['Gabor Patching', 'Find emerging Gabor patches to practise contrast recognition and visual response.'],
+    zh: [gaborPatchingCatalog.copy['zh-TW'].title, gaborPatchingCatalog.copy['zh-TW'].description],
+    en: [gaborPatchingCatalog.copy.en.title, gaborPatchingCatalog.copy.en.description],
     titleKey: 'home.module.gaborPatching.title',
     descriptionKey: 'home.module.gaborPatching.desc',
   },

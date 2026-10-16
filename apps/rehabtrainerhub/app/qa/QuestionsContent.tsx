@@ -5,7 +5,7 @@ import { useHubLanguage } from '../i18n/HubLanguage';
 import { EducationArticles } from './EducationArticles';
 import type { Article } from '../articleTypes';
 
-const personalWebsiteUrl = 'https://ian030590.trainerhub.cc/';
+const personalWebsiteUrl = 'https://ian.trainerhub.cc/';
 
 export function QuestionsContent({ articles }: { articles: Article[] }) {
   const { language } = useHubLanguage();

@@ -9,6 +9,8 @@
 
 ## 專案結構與模組組織
 
+蓋伯斑塊練習 `gabor-patching@2.0.0` 為本機 R2 搬遷候選，尚待精確版本／摘要核准、R2 發布、Hub 正式切換及驗收；不得登記為正式完成。自有設定、三目標聚光燈、原 Gabor／Pixi／jsPsych、數值成績與私有 bridge 已完成；候選 registry 七款、Hub build 33 款舊 bundle，正式仍六款／34 款。審查、逐檔摘要、TDD、Brave 與回退見 `docs/gabor-patching-r2-migration.md`。禁止在核准 release／current 可讀前推送此 registry 至正式 Hub。
+
 npm workspace / Turborepo monorepo；目前只有兩個 app，App 程式碼位於 `apps/`：
 
 - `apps/rehabtrainerhub`：Next.js Hub + Cloudflare Pages Functions（主平台、大廳、內建訓練 runtime、API、審核後台、開發者入口）。
@@ -67,6 +69,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 驗證使用 Node.js 內建 `node:test`、assert 檢查腳本、TypeScript、針對性 build 與本機 Brave smoke；依變更範圍選用對應 gate。Hub API、runner、遊戲流程、assessment lifecycle 與 i18n 分別有 `test:hub-functions`、`test:gamerunner`、`test:training-flow`、`test:assessment-lifecycle`、`test:i18n`。
 
 ## CI/CD 維護
+
+- 蓋伯候選新增 `check-gabor-patching-migration.test.mjs` 與 `check-gabor-patching-tutorial.test.mjs` 至既有 `test:game-architecture`；驗證原設定／難度／計分、完整明細、取消／晚到 renderer、240 Hz 長紀錄、原圖、私有 bridge 與三目標聚光燈。既有 UI／結果／全螢幕／音訊測試加入此 gameId，Hub API／SQL／目錄／middleware 與 runner 穩定入口亦有回歸。兩份 workflow 沿用七項 matrix 與同一 root 命令，workflow 本身仍觸發驗證。本機 Brave 使用 `node scripts/check-r2-game-browser.mjs --game gabor-patching --lobby`，另驗 `--wide --windowed`、`--mobile --medium --session-failure`、`--tablet --hard`、`--signed-in --english --hard --sound-on --renderer-failure`、`--revoke`、`--standalone --mobile --medium` 及 `--standalone --tablet --hard --stop`；只寫本機 SQLite，不加入 Linux CI。尚未發布的候選不得當作正式驗收。
 
 - `npm run test:naming` 先執行命名檢查器回歸測試，再掃描原始碼；明確排除 `.dist-releases` 等建置產物，仍檢查原始碼的函式、參數與變數命名。兩份 workflow 的 `naming` matrix 均使用此命令。
 - `npm run test:pwa` 包含 `test:pwa-navigation`，以本機 HTTP 308 轉址及實際產生的 Service Worker 驗證內嵌頁面預快取、離線導航與舊快取清理；兩份 workflow 的 `pwa` matrix 均執行此命令，不依賴 Brave。

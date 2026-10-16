@@ -22,5 +22,9 @@
   "moving-card": {
     "origin": "https://trainerhub-user-games.pages.dev",
     "name": "移動卡片訓練"
+  },
+  "gabor-patching": {
+    "origin": "https://trainerhub-user-games.pages.dev",
+    "name": "蓋伯斑塊練習"
   }
 }

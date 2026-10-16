@@ -22,7 +22,7 @@ const websiteId = `${hubUrl}#website`;
 const hubApplicationId = `${hubUrl}#application`;
 const maintainerId = `${hubUrl}qa/#professional-background`;
 const repositoryUrl = 'https://github.com/ian030590/RehabTrainerHub';
-const maintainerPersonalWebsiteUrl = 'https://ian030590.trainerhub.cc/';
+const maintainerPersonalWebsiteUrl = 'https://ian.trainerhub.cc/';
 
 export const siteContentLastModified = '2026-09-02';
 

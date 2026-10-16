@@ -1,5 +1,7 @@
 # 內建遊戲逐步遷移至 R2：畫畫塔防試點
 
+2026-10-13 蓋伯斑塊練習 `gabor-patching@2.0.0` 已依第 7 節 A–D 完成本機自包含候選與三步聚光燈教學、原引擎／參數／原圖、完整數值成果、七項本機 gate、Hub build 與桌機／手機／平板／英文登入／獨立 PWA 試玩；**尚待精確摘要核准、R2 發布、Hub 正式切換及 E／F 驗收**。候選 source registry 七款／33 舊 bundle，正式仍六款／34 舊流程；審查與限制見 [蓋伯斑塊搬遷候選](gabor-patching-r2-migration.md)。不得在正式驗收與收據完成前將它計為完成。
+
 更新日期：2026-10-11。目前 R2 current 為 `asteroid-shield@2.0.4`、`gesture-battler@2.0.3`、`drawing-defense@2.0.5`、`motor-cortex-rehab@2.0.1`、`oculomotor-training@2.0.0`、`moving-card@2.0.0`，6 款完成、34 款保留舊流程。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
 
 2026-10-11 眼動練習 `oculomotor-training@2.0.0` 已按精確摘要核准、發布 R2、完成相容 runner／Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38094804766)與正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收。採原25項設定、四種原引擎／校正驗證、四目標聚光燈、十項成果與私人CSV；正式六款／34款舊流程。Pages轉址政策及發布順序修正、批准、原圖／分類與回退見 [眼動遷移驗收](oculomotor-r2-migration.md)及[正式收據](releases/oculomotor-training-2.0.0.json)。原模型在人像串流執行，真人／實體相機精度與Safari／iOS仍未驗收。
