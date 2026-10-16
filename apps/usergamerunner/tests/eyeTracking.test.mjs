@@ -10,7 +10,7 @@ import { ValidateRelease } from '../functions/_lib/release.js';
 
 test('Pages routes the exact eye input version through Functions while other input stays static', async () => {
   const routes=JSON.parse(await readFile(new URL('../public/_routes.json',import.meta.url),'utf8'));
-  assert.deepEqual(routes.include,['/games/*','/input/eye-tracking-1.0.0/*']);
+  assert.deepEqual(routes.include,['/games/*','/input/eye-tracking-1.0.0/*','/input/eye-tracking-1.1.0/*']);
   assert.deepEqual(routes.exclude,['/runtime/*']);
 });
 
@@ -20,7 +20,7 @@ test('the eye preview keeps its trusted policy after Pages redirects HTML to its
   const read=path=>HandleRequest({request:new Request(origin+path),env:{},next:async()=>path.endsWith('.html')
     ? new Response(null,{status:308,headers:{...staticHeaders,Location:path.slice(0,-5)}})
     : new Response('trusted input',{headers:staticHeaders})});
-  const redirect=await read('/input/eye-tracking-1.0.0/preview.html');
+  const redirect=await read('/input/eye-tracking-1.1.0/preview.html');
   assert.equal(redirect.status,308);
   assert.equal(redirect.headers.get('Referrer-Policy'),'strict-origin-when-cross-origin','The redirect must retain the trusted Hub parent origin for private-channel initialization');
   const preview=await read(redirect.headers.get('Location'));
@@ -56,6 +56,7 @@ test('only the trusted official eye launcher can delegate camera; the game remai
   assert.match(launcher.headers.get('Permissions-Policy'),/camera=\(self\)/);
   assert.doesNotMatch(launcher.headers.get('Content-Security-Policy'),/unsafe-eval/);
   const html=await launcher.text();assert.match(html,/sandbox="allow-scripts"/);assert.doesNotMatch(html,/allow-same-origin|allow="camera/);
+  assert.match(html,/src="\/input\/eye-tracking-1\.1\.0\/index\.js"/);
   const game=await read('package/index.html');assert.equal(game.status,200);
   assert.match(game.headers.get('Permissions-Policy'),/camera=\(\)/);
   assert.match(game.headers.get('Content-Security-Policy'),/connect-src 'none'/);
@@ -72,6 +73,20 @@ test('each eye inference clears the previous face state when the face disappears
   new Function('require','exports','window',code)(()=>({CreateEyeTrackingController:env=>{environment=env;return controller;}}),{},window);
   const engine=await environment.createEngine({getTracks:()=>[]});
   await engine.Predict();assert.equal(engine.FaceDetected(),false);
+});
+
+test('eye samples carry inference start on a clock shared by separate input and game documents', async () => {
+  const { CreateEyeTrackingController } = await import('../runtime/eyeTrackingController.js');
+  let next; const frames=[];
+  const controller=CreateEyeTrackingController({timeOrigin:1700000000000,now:()=>275,
+    getUserMedia:async()=>({getTracks:()=>[],getVideoTracks:()=>[{addEventListener(){}}]}),
+    requestFrame:callback=>{next=callback;return 1;},cancelFrame(){},
+    createEngine:async()=>({Predict:async()=>({x:500,y:500}),FaceDetected:()=>true,Dispose(){}})});
+  await controller.Start(frame=>frames.push(frame),()=>assert.fail('Inference failed'));
+  await next(250);
+  assert.equal(frames[0].timestamp,1700000000275);
+  assert.deepEqual(Object.keys(frames[0]).sort(),['faceDetected','timestamp','x','y']);
+  controller.Stop();
 });
 
 test('CSV retry keeps the original session and identity, and never falls back to guest after authorization fails', async () => {
@@ -113,7 +128,7 @@ test('native eye PWA retains the entire pinned proxy offline and keeps camera pe
   const sw = await RenderServiceWorker(release, '/games/oculomotor-training/2.0.0/');
   for (const path of ['preview.html', 'eyeTrackingEntry.js', 'eyeTrackingController.js', 'webgazer.js', 'preview.css', 'index.js',
     'models/facemesh/model.json', 'models/facemesh/group1-shard1of1.bin', 'models/blazeface/model.json', 'models/blazeface/group1-shard1of1.bin'])
-    assert.ok(sw.includes('/input/eye-tracking-1.0.0/' + path), path);
+    assert.ok(sw.includes('/input/eye-tracking-1.1.0/' + path), path);
   const response = await HandleRequest({ request: new Request('https://trainerhub-user-games.pages.dev/input/eye-tracking-1.0.0/preview.html'),
     env: {}, next: async () => new Response('trusted input') });
   assert.match(response.headers.get('Permissions-Policy'), /camera=\(self\)/);

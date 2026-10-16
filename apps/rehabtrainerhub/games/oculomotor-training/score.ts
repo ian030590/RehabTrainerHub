@@ -3,6 +3,8 @@ export interface ExperimentResult {
   valid_sec: number | null; in_threshold_sec: number | null; blink_sec: number | null;
   gaze_sample_count: number | null; threshold_deg: number | null; validation_error_deg: number | null;
   estimated_refresh_hz: number | null; end_reason: string; module: string; eye_tracking_source: 'webgazer' | 'off';
+  tff_mean_ms?: number | null; tff_detected_targets?: number | null; tff_total_targets?: number | null;
+  tff_analysis?: { targets: { target_number: number; direction: string; tff_ms: number | null; status: string }[] } | null;
 }
 export const scoreMetrics = [
   {
@@ -94,7 +96,9 @@ export const scoreMetrics = [
       "en": "Estimated display refresh rate"
     },
     "unit": "Hz"
-  }
+  },
+  { key: 'tffMeanMs', source: 'tff_mean_ms', label: { zh: '首次注視平均時間', en: 'Mean time to first fixation' }, unit: 'ms' },
+  { key: 'tffDetectedTargets', source: 'tff_detected_targets', label: { zh: '偵測首次注視目標數', en: 'Targets with detected fixation' }, unit: '' }
 ] as const;
 export function IsExperimentResult(value: unknown): value is ExperimentResult {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -104,12 +108,12 @@ export function IsExperimentResult(value: unknown): value is ExperimentResult {
     && typeof result.end_reason === 'string' && result.end_reason.length <= 80
     && typeof result.actual_duration_ms === 'number' && Number.isFinite(result.actual_duration_ms) && result.actual_duration_ms >= 0
     && Number.isSafeInteger(result.completed_targets) && Number(result.completed_targets) >= 0
-    && scoreMetrics.every(field => result[field.source] === null || (typeof result[field.source] === 'number'
+    && scoreMetrics.every(field => result[field.source] === null || (field.source.startsWith('tff_') && result[field.source] === undefined) || (typeof result[field.source] === 'number'
       && Number.isFinite(result[field.source]) && Number(result[field.source]) >= 0))
     && (result.accuracy_rate === null || Number(result.accuracy_rate) <= 100)
     && (result.gaze_sample_count === null || (Number.isSafeInteger(result.gaze_sample_count) && Number(result.gaze_sample_count) <= 36000));
 }
 export function BuildGameScore(result: ExperimentResult) {
-  const summary: Record<string, number | null> = Object.fromEntries(scoreMetrics.map(field => [field.key, result[field.source]]));
+  const summary: Record<string, number | null> = Object.fromEntries(scoreMetrics.map(field => [field.key, result[field.source] ?? null]));
   return { schema: 'rehab-trainer.game-score/v1', gameId: 'oculomotor-training', summary, rounds: [{ ...summary }] };
 }

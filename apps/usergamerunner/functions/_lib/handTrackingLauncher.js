@@ -18,7 +18,7 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
       button { font:inherit;padding:12px;margin:4px;cursor:pointer; } button:focus-visible { outline:3px solid var(--primary); }
       #install-button { position:fixed;top:8px;right:8px; } #runner-error { position:fixed;inset:0;padding:24px;background:var(--surface); }
     </style>
-    <script nonce="${cspNonce}" src="/input/${eyeTracking ? 'eye' : 'hand'}-tracking-1.0.0/index.js"></script>
+    <script nonce="${cspNonce}" src="/input/${eyeTracking ? 'eye-tracking-1.1.0' : 'hand-tracking-1.0.0'}/index.js"></script>
     <script nonce="${cspNonce}">
     document.addEventListener('DOMContentLoaded', () => {
       const config = ${configuration};

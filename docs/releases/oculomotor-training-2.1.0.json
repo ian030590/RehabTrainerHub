@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 1,
+  "gameId": "oculomotor-training",
+  "version": "2.1.0",
+  "status": "published-and-verified",
+  "bucket": "rehab-game-releases",
+  "prefix": "releases/oculomotor-training/2.1.0/",
+  "contentSha256": "a90903994c2a89b24ec9482e005874d54abbb09ce2f9720b37216a705259b7b9",
+  "files": [
+    {
+      "path": "assets/index-b_WfO-du.css",
+      "size": 18547,
+      "sha256": "3f299463b94bb0c81d6d6714ae33947550871b266d974cf747a98e3123eccaf3",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-f-b4V0V3.js",
+      "size": 491065,
+      "sha256": "db6a504da8657b50d69f03c34985ebb57cc97ce2dd61f92b4fb5af27d5ecb66a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 548,
+      "sha256": "c96e3fc01bb8d0b4ca689069199b6fec71855918e595107054bf1bf00a0bfe56",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 600,
+      "sha256": "929cea9fd9afc74db38a06efbc8ab37815e0145f37602e9d0389b6dc61ba796f",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 830,
+      "sha256": "82ac52eda37b58ef50ac78629bc8e9f1184ccfcdfccb5915d40f726f6899f091",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "reference/LICENSE-OcuTrain.txt",
+      "size": 35184,
+      "sha256": "e0eedba615d5cd1b986afb6c5b3a4b1ae33713e7e9dc74d19daec5e3221f9d2e",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "reference/experiment.js",
+      "size": 98779,
+      "sha256": "06ffa70988fb726961dceee2eb5a4a855c293aa11d4b6839c0b7b61cb726af58",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/gazeAdapter.js",
+      "size": 3763,
+      "sha256": "1065d911b6cabb4899e37701f8ba3e3c1fa882ff80f55ac305455a8e87c2cc35",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/index.html",
+      "size": 587,
+      "sha256": "42f09cd2b8191affbee3e7c5e7bfde79f3c709c95916eacfc36b30bdadfc3983",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "reference/jspsych.js",
+      "size": 80994,
+      "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/style.css",
+      "size": 32594,
+      "sha256": "53ed2f722070d7c04568c4753e0e9025fea32e47926c6266a464011817393600",
+      "contentType": "text/css; charset=utf-8"
+    }
+  ],
+  "currentVersion": "2.1.0",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "5148ebabb7a60d2f2f56094e97d3c45b4402d7968588dccecd3b42ed043374af"
+    },
+    "2.0.1": {
+      "contentSha256": "95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616"
+    },
+    "2.1.0": {
+      "contentSha256": "a90903994c2a89b24ec9482e005874d54abbb09ce2f9720b37216a705259b7b9"
+    }
+  },
+  "publishedAt": "2026-10-16T21:29:23.463Z",
+  "productionVerifiedAt": "2026-10-16T21:33:41.610Z",
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Codex conversation",
+    "message": "核准發佈",
+    "approvedAt": "2026-10-16T21:21:11.502Z",
+    "scope": "Publish the reviewed oculomotor-training@2.1.0 exact digest after required compatible platform deployment"
+  },
+  "changes": [
+    "Match OcuTrain 6676f24523a5bc857a7c28f68c520a45bfb8d167 settings interactions, WebGazer threshold allowance, validation and original stimulus/scoring/TFF functions",
+    "Use versioned first-party eye input 1.1.0 for inference-start timestamps across isolated documents; retain strict sandbox, private channels and the legacy input entry",
+    "Provide the original 25-column downloadable CSV and TFF results within the existing platform score/CSV contracts"
+  ],
+  "sourceBaseCommit": "51018eed98339cc14a9d58278e11f79db043ecd6",
+  "sourceState": "Owner-reviewed workspace overlay; compatible platform snapshot excludes the unapproved Gabor migration; no Git commit or push requested",
+  "platformDeployments": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "b4cf91d0-2041-4dd1-9427-490bb5bf85f8",
+      "url": "https://b4cf91d0.rehabtrainerhub.pages.dev",
+      "environment": "production",
+      "commit": "51018eed98339cc14a9d58278e11f79db043ecd6",
+      "createdOn": "2026-10-16T21:26:46.239949Z",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-16T21:26:48.722176Z",
+        "status": "success"
+      }
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "19b61771-923c-4191-82bb-7d8206a1f6a0",
+      "url": "https://19b61771.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "51018eed98339cc14a9d58278e11f79db043ecd6",
+      "createdOn": "2026-10-16T21:24:02.641447Z",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-16T21:24:05.28227Z",
+        "status": "success"
+      }
+    }
+  ],
+  "platformBefore": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "8a4e84e4-6c40-4705-a9ef-c4dc8301ca38",
+      "url": "https://8a4e84e4.rehabtrainerhub.pages.dev",
+      "environment": "production",
+      "commit": "51018eed98339cc14a9d58278e11f79db043ecd6",
+      "createdOn": "2026-10-12T20:52:41.694056Z",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-12T20:52:44.69828Z",
+        "status": "success"
+      }
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "907e363d-9537-45f2-b3cd-0e934dc1e8e3",
+      "url": "https://907e363d.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "51018eed98339cc14a9d58278e11f79db043ecd6",
+      "createdOn": "2026-10-12T20:52:51.849261Z",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-12T20:52:54.02373Z",
+        "status": "success"
+      }
+    }
+  ],
+  "platformScope": {
+    "officialR2Games": 6,
+    "legacyGames": 34,
+    "gaborMigrationPublished": false,
+    "eyeInputVersion": "1.1.0",
+    "legacyEyeInputRetained": true
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616",
+    "verifiedBeforePublishing": true,
+    "publicFilesVerified": 10,
+    "executed": false,
+    "previousCurrentRetained": true,
+    "command": "node scripts/publish-official-game.mjs oculomotor-training --activate-version 2.0.1"
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+        "testCount": 2,
+        "logSha256": "7085fff6cd85ea55a95e83508c4899159433a6b2ed6fc10bcdb33bb2cfc999e0"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+        "testCount": 18,
+        "logSha256": "d5d520aa61eaf9da93839d8363beaf0f2362162a2680722be00f39bea23e41ed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+        "testCount": 162,
+        "logSha256": "ca4a0c6041f18f7d2b6eec39b8575653a2c8b613bb97da7c1953a88a007a2e58"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+        "testCount": 117,
+        "logSha256": "9bc75add3c03049929ef4213fe494345dd7dd4e6573424fd14104d728db6156d"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+        "testCount": 48,
+        "logSha256": "0f7de3974693548122946fad3f31b188e6bc66988b49b7874dc957ce77df3c2d"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+        "testCount": 100,
+        "logSha256": "b9ed161f4b9fa5ef5581cbb8f91dba5b21ac4d1a14338afd157259042cf2c892"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+        "testCount": 4,
+        "logSha256": "df4b3760fba93c354438ffb1685c20fa7b4be4a06de733fccd1d9aad5e794fb1"
+      }
+    ],
+    "browsers": [
+      {
+        "name": "desktop-hub-pursuit",
+        "status": "passed",
+        "mode": "production Hub",
+        "activity": "pursuit",
+        "gaze": true,
+        "screenEvidence": [
+          {
+            "path": "production/desktop-hub-pursuit/settings.png",
+            "sha256": "0ee4921879dd67bc53204e9155a20f2928cbeedf39dbb1e8297da93c6aadc7dc"
+          },
+          {
+            "path": "production/desktop-hub-pursuit/results.png",
+            "sha256": "e56b8c705c9c1ba05e3b6027aa3481542eaa3d4d6487cf11c8789e45f668c00c"
+          },
+          {
+            "path": "production/desktop-hub-pursuit/validation.png",
+            "sha256": "202c243fb53679e2fce395071cbf4194d05231ee394a1f145be579c2ca5d6811"
+          }
+        ],
+        "productionRecordsCreated": false
+      },
+      {
+        "name": "tablet-hub-fixation",
+        "status": "passed",
+        "mode": "production Hub",
+        "activity": "fixation",
+        "gaze": false,
+        "screenEvidence": [
+          {
+            "path": "production/tablet-hub-fixation/settings.png",
+            "sha256": "59d08e7af32b6e83a80a3f3b1c23e59094c30e7067b1571ed03a87b815173c8b"
+          },
+          {
+            "path": "production/tablet-hub-fixation/results.png",
+            "sha256": "7baac17b66bfa103bc11e7a65a52aa1b189d2621ff28eb06f04c6467f3fd7eb8"
+          }
+        ],
+        "productionRecordsCreated": false
+      },
+      {
+        "name": "english-account-hub-vor",
+        "status": "passed",
+        "mode": "production Hub",
+        "activity": "vor",
+        "gaze": true,
+        "screenEvidence": [
+          {
+            "path": "production/english-account-hub-vor/settings.png",
+            "sha256": "a170ccf081b808b1dcedd7771dc9620fb158c60a478593651b107686eb49f3d8"
+          },
+          {
+            "path": "production/english-account-hub-vor/results.png",
+            "sha256": "9099067171140a80c678ba41d06053daa7ad2638087ea46de629b9bda439f112"
+          },
+          {
+            "path": "production/english-account-hub-vor/validation.png",
+            "sha256": "fb50f4e648c043673c162a002dd8efda448e1d55f51803ad453ba93719df7f9c"
+          }
+        ],
+        "productionRecordsCreated": false
+      },
+      {
+        "name": "mobile-pwa-saccade",
+        "status": "passed",
+        "mode": "production standalone PWA",
+        "activity": "saccade",
+        "gaze": true,
+        "screenEvidence": [
+          {
+            "path": "production/mobile-pwa-saccade/settings.png",
+            "sha256": "830f08803b77d3698ea93bb32010840eeb264278a1502448d866708d10abf60c"
+          },
+          {
+            "path": "production/mobile-pwa-saccade/results.png",
+            "sha256": "a4b35df1f13e73e30190324ab4e6792ff9b80928403a9347bf91b8fafa18618b"
+          },
+          {
+            "path": "production/mobile-pwa-saccade/validation.png",
+            "sha256": "98cefa69207f53d744e8d3edb8266f6e7ccabf1bd173ed33bc1f9548513c0ee1"
+          }
+        ],
+        "productionRecordsCreated": false
+      },
+      {
+        "name": "mobile-hub-retries-fixation",
+        "status": "passed",
+        "mode": "production Hub; session failure and camera denied/retry",
+        "activity": "fixation",
+        "gaze": true,
+        "screenEvidence": [
+          {
+            "path": "production/mobile-hub-retries-fixation/settings.png",
+            "sha256": "6b6615f07e20780bf7df5ebf7ab5a51214d1e4ce44a4c986677f2ed97f8b943d"
+          },
+          {
+            "path": "production/mobile-hub-retries-fixation/results.png",
+            "sha256": "fa0c648966f53388a4f73c1e08235cc18bb124a73593afe6b6cd7d1ccc399252"
+          },
+          {
+            "path": "production/mobile-hub-retries-fixation/validation.png",
+            "sha256": "ac8f2ab1d3a041b7b693b8956bf44a0bb3cd8fae4d956a828aa055e49e7d16c8"
+          }
+        ],
+        "productionRecordsCreated": false
+      }
+    ],
+    "currentSessionApi": {
+      "status": 201,
+      "version": "2.1.0",
+      "contentSha256": "a90903994c2a89b24ec9482e005874d54abbb09ce2f9720b37216a705259b7b9",
+      "tokenRecorded": false
+    },
+    "publicApi": {
+      "status": 200,
+      "title": "眼動練習",
+      "trainer": "vision",
+      "category": "vision",
+      "previewUrl": "https://trainerhub-user-games.pages.dev/games/oculomotor-training/2.1.0/package/preview.webp",
+      "singleSlug": true,
+      "officialCount": 6,
+      "gaborRemainsLegacy": true
+    },
+    "publicFilesVerified": 11,
+    "compatibleInputFilesVerified": 10,
+    "unchangedOriginalFunctionsVerified": 22,
+    "documentation": "docs/oculomotor-ocutrain-parity.md",
+    "evidence": "docs/migrations/oculomotor-ocutrain-parity/validation-summary.json"
+  },
+  "productionRecordsCreated": false,
+  "limits": [
+    "Camera source was a verified portrait image stream, not a human eye-tracking accuracy test",
+    "Physical camera/touch/display calibration and Safari/iOS were not validated",
+    "CSV and summary saving were exercised only against local SQLite; production current-session signing was verified without retaining tokens"
+  ]
+}

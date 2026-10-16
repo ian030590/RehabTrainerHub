@@ -3,6 +3,8 @@ const columns = [
   'gaze_valid', 'gaze_x_px', 'gaze_y_px', 'stimulus_x_px', 'stimulus_y_px',
   'distance_error_px', 'distance_error_deg', 'is_within_threshold', 'phase', 'direction',
 ];
+const referenceColumns = [...columns, 'browser_received_trial_time_ms', 'transport_delay_ms', 'stimulus_frame_time_ms',
+  'clock_mapping', 'target_number', 'accuracy_eligible', 'accuracy_delta_t_ms', 'gaze_velocity_deg_s', 'is_fixation', 'tff_ms'];
 const metadataKeys = [
   'mode', 'pattern', 'run_mode', 'stimulus_type', 'eye_tracking_source',
   'screen_width_px', 'screen_height_px', 'screen_width_cm', 'screen_height_cm',
@@ -13,7 +15,7 @@ const metadataKeys = [
   'fixation_radius_px', 'fixation_duration_ms',
 ];
 const textMetadataKeys = new Set(['mode', 'pattern', 'run_mode', 'stimulus_type', 'eye_tracking_source']);
-const phases = new Set(['training', 'saccade_latency', 'idle', 'cross', 'movement', 'arrival_frame', 'dwell', 'hold', 'vor']);
+const phases = new Set(['training', 'saccade_latency', 'idle', 'cross', 'movement', 'return', 'arrival_frame', 'dwell', 'hold', 'vor']);
 const directions = new Set([
   'center', 'right', 'down_right', 'down', 'down_left', 'left', 'up_left', 'up', 'up_right',
 ]);
@@ -53,11 +55,12 @@ export function IsReferenceCsvPayload(value) {
     || typeof value.fileName !== 'string' || !/^[A-Za-z0-9_.-]{1,160}\.csv$/.test(value.fileName)) return false;
   const lines = value.text.split('\r\n');
   const header = lines.findIndex(line => line.startsWith('sample_index,'));
-  return header > 0 && lines[header] === columns.join(',') && lines.slice(0, header).every(line => line.startsWith('# '))
+  const selectedColumns = lines[header] === referenceColumns.join(',') ? referenceColumns : columns;
+  return header > 0 && lines[header] === selectedColumns.join(',') && lines.slice(0, header).every(line => line.startsWith('# '))
     && lines.slice(header + 1).every((line, index) => {
       const row = line.split(',');
-      return row.length === 15 && Number(row[0]) === index + 1
-        && row.slice(0, 13).every(cell => cell === '' || /^-?\d+(?:\.\d+)?$/.test(cell))
-        && row.slice(13).every(cell => /^"[A-Za-z_ -]+"$/.test(cell));
+      return row.length === selectedColumns.length && Number(row[0]) === index + 1
+        && row.every((cell, at) => [13, 14, 18].includes(at)
+          ? /^"[A-Za-z_ -]+"$/.test(cell) : cell === '' || /^-?\d+(?:\.\d+)?$/.test(cell));
     });
 }

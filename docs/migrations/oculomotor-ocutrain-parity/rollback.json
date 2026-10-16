@@ -1,0 +1,82 @@
+{
+  "gameId": "oculomotor-training",
+  "version": "2.0.1",
+  "contentSha256": "95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616",
+  "verifiedAt": "2026-10-16T21:21:21.433Z",
+  "files": [
+    {
+      "path": "assets/index-DNDcsVEA.css",
+      "size": 17878,
+      "sha256": "b794691218fa1a9d030a9be1187d2fade53ee714313bf14cd3206c03d08bf4a8",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-DT9TQH_m.js",
+      "size": 486578,
+      "sha256": "c5a777b722cedaf093b2703805906629933318e8d77c038c18a13ebd311df093",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 548,
+      "sha256": "c96e3fc01bb8d0b4ca689069199b6fec71855918e595107054bf1bf00a0bfe56",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 600,
+      "sha256": "2e540d71f6babf820f59b0e837f7ec0780a45af4c1592adde43cf826c70efdd3",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 830,
+      "sha256": "82ac52eda37b58ef50ac78629bc8e9f1184ccfcdfccb5915d40f726f6899f091",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "reference/experiment.js",
+      "size": 86855,
+      "sha256": "176dccd9d3b26a1ca35182124abc07da92e87cc8bfc158ee8285df8d038c215a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/gazeAdapter.js",
+      "size": 3638,
+      "sha256": "6ef784bcc4acf85910e65119d396e3bf8cda808916a5badfc715972206e8bfc3",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/index.html",
+      "size": 587,
+      "sha256": "42f09cd2b8191affbee3e7c5e7bfde79f3c709c95916eacfc36b30bdadfc3983",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "reference/jspsych.js",
+      "size": 80994,
+      "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/style.css",
+      "size": 32594,
+      "sha256": "53ed2f722070d7c04568c4753e0e9025fea32e47926c6266a464011817393600",
+      "contentType": "text/css; charset=utf-8"
+    }
+  ],
+  "currentBefore": {
+    "schemaVersion": 1,
+    "gameId": "oculomotor-training",
+    "currentVersion": "2.0.1",
+    "releases": {
+      "2.0.0": {
+        "contentSha256": "5148ebabb7a60d2f2f56094e97d3c45b4402d7968588dccecd3b42ed043374af"
+      },
+      "2.0.1": {
+        "contentSha256": "95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616"
+      }
+    }
+  },
+  "executed": false
+}

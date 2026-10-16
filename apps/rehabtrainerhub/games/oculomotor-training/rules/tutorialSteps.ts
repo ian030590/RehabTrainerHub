@@ -2,14 +2,14 @@ export function GetOculomotorTutorialSteps(language: 'zh' | 'en', module: string
   const en = language === 'en';
   const instruction = en ? {
     vor: 'Keep looking at the central target as its color and number change.',
-    pursuit: 'Follow the target moving from the center toward the selected screen edges.',
+    pursuit: 'Follow the target from the center to the screen edge and back. Accuracy includes both movements and excludes the central cross.',
     saccade: 'Look toward the target as it jumps between positions in the three by three grid.',
-    fixation: 'Follow the target to the edge, then keep looking at it during the hold.',
+    fixation: 'Follow the target to the edge, then keep looking at it during the hold. Only the edge hold counts toward accuracy.',
   } : {
     vor: '持續看著中央目標，目標的顏色與數字會依設定間隔變化。',
-    pursuit: '跟隨目標，從中央往選定的螢幕邊緣移動。',
+    pursuit: '跟隨目標從中央移至選定邊緣，再連續返回中央。去程與回程皆計分，中央十字不計分。',
     saccade: '目標會在九宮格位置跳動，請將視線移向新的目標位置。',
-    fixation: '跟隨目標移向邊緣，停留期間持續看著目標。',
+    fixation: '跟隨目標移向邊緣，停留期間持續看著目標。只有邊緣停留計分，中央十字與移動途中不計分。',
   };
   return [
     { target: '.oculomotor-preview-target', title: en ? 'Watch the target' : '觀看目標', text: instruction[module as keyof typeof instruction], place: 'bottom' },

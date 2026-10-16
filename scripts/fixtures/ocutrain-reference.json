@@ -1,0 +1,29 @@
+{
+  "repository": "https://github.com/ian030590/OcuTrain",
+  "commit": "6676f24523a5bc857a7c28f68c520a45bfb8d167",
+  "source": "wwwroot/app.js",
+  "functions": {
+    "createCalibration": "4fb74c8c1a17f216222cb6169ded2437eadd40c5a8b31dfd8fa60b0e28cb63fe",
+    "stimulusPixels": "cde3a51bdaf2f5bd0a214b75b57db05bd780ef6de4203d711843632f3f26b4a1",
+    "gazeErrorDegrees": "0f0e90748c9517e42d8b82c044ddce2d47ac6925fa26ad069e9d3103101074bb",
+    "accuracyPhaseStart": "19eac8d5d2a7272e9b9c0ecfb3ad16616f92b352be55bed21dd8b233926c6c17",
+    "accuracyDurationMs": "f5ff611b8821f3cac2ac64715021d9430ff31af7f4e03ea661ed1374d300b036",
+    "saccadeFixationSummary": "0ec5a726dc9c586d84c5422c293db3703df5c0fb3088b921a81609ae9affbd1a",
+    "beginWebGazerTrial": "7a3157fd5358b020e452203a1f9eb605b16f77b94e7e8a3b06c42852d8c72a93",
+    "finishWebGazerTrial": "698e221509ec515086bb9cd5e54194437a0d8d163371607be4ed20fd7b0d1d67",
+    "edgePoint": "3f764f9e3ba6bad3891f286c17de5612754e87240316dfccf758fda0c739886d",
+    "gridPoint": "58e10966b08192e13315048f6b49c986805969ca2512e0326a8a82920bbbcc31",
+    "movementDurationMs": "f4a05a2ea0e01e3ad9114a728dd5f7ea0262cbfce83b473f33d2525300efce80",
+    "makePicker": "38dd88d016652ba1fdfc3c711331b9c019d70ab46e00efa60a538c41e3a4c505",
+    "buildSaccadeSequence": "4e898fc51c3c0acccc10e037956de7c4250ed33ad505990ba4d9dac14ef500ad",
+    "beginExcursion": "09fff2a45ce3b2bad57d8b90b6a90a64588de3d368fb055f07a2e177d477cff0",
+    "beginMovement": "ae5e52b2ded59ddf2ee7dd524ec8e196cded1f4d8afcb48d7beb907c3e1bd9e9",
+    "finishMovementAtEdge": "aecf8785d432745ea64a066a394e0e49f86f084777a9a37fc2d8e4a4b6728e74",
+    "showNextSaccadeTarget": "26e6f9e6655f8937ac3212fe36b27470c191b1913cc318ffdfe2f0a1b2609f01",
+    "tickVor": "6200cb8ca05e3edc5f15d395a6f6e6207a9c5c8ca955be067caf5c028676ae41",
+    "tickExcursion": "730918a30709dea1e8ad98d103caa0c43e81d06457002336e56d912d380cac94",
+    "tickSaccade": "861f6018ea613a47c529348a53718730ea626f7375781ed4905948f3f6b053ad",
+    "tick": "a6b13c6ddfc10bf3cf5c9b93df561284b9af9848326d473b49dee2a208149dd0",
+    "startSession": "5728be90c520cb6f4fd3578f882f1402ff71e5b66d2c5aa703fec31e948c0faf"
+  }
+}

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
+import './oculomotor-reference.test.mjs';
 
 const base = new URL('../apps/rehabtrainerhub/games/oculomotor-training/', import.meta.url);
 const read = file => readFile(new URL(file, base), 'utf8');
@@ -13,16 +14,24 @@ test('an untracked activity cannot display a previous session validation result'
   const messages=[];
   new Function('AppState','post','data',body)({eyeTracking:{lastValidation:{meanErrorDeg:1.2}},pending:{}},(_type,payload)=>messages.push(payload),{
     eye_tracking:{enabled:false,source:'off'},actual_duration_ms:5000,completed_targets:4,timing:{estimated_refresh_hz:60},end_reason:'duration_complete',module:'pursuit',gaze_records:[],
+    tff_mean_ms:80,tff_analysis:{targets:[]},
   });
   assert.equal(messages[0].result.validation_error_deg,null);
+  assert.equal(messages[0].result.tff_mean_ms,null);
+  assert.equal(messages[0].result.tff_analysis,null);
 });
 
 test('eye practice retains every original setting, default and boundary in its own form', async () => {
   const { settingsSections, defaultSettings, ValidateSettings } = await import(new URL('settings.ts', base));
-  assert.deepEqual(settingsSections, legacy.settings.sections);
+  assert.deepEqual(settingsSections.flatMap(section => section.fields).map(field => field.key), legacy.settings.sections.flatMap(section => section.fields).map(field => field.key));
   assert.deepEqual(defaultSettings, Object.fromEntries(legacy.settings.sections.flatMap(section => section.fields).map(field => [field.key, field.default])));
   assert.equal(ValidateSettings(defaultSettings), true);
   for (const field of settingsSections.flatMap(section => section.fields)) {
+    if (field.type === 'number') {
+      assert.equal(ValidateSettings({ ...defaultSettings, [field.key]: 0.1 }), true, field.key);
+      for (const value of [0, -1, Infinity, NaN, String(field.default)])
+        assert.equal(ValidateSettings({ ...defaultSettings, [field.key]: value }), false, field.key);
+    }
     if (field.type === 'slider') {
       assert.equal(ValidateSettings({ ...defaultSettings, [field.key]: field.min }), true, field.key);
       assert.equal(ValidateSettings({ ...defaultSettings, [field.key]: field.max }), true, field.key);

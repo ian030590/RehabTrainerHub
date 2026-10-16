@@ -1,0 +1,291 @@
+{
+  "checkedAt": "2026-10-16T21:33:41.608Z",
+  "gates": [
+    {
+      "name": "naming",
+      "status": "passed",
+      "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+      "testCount": 2,
+      "logSha256": "7085fff6cd85ea55a95e83508c4899159433a6b2ed6fc10bcdb33bb2cfc999e0"
+    },
+    {
+      "name": "pwa",
+      "status": "passed",
+      "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+      "testCount": 18,
+      "logSha256": "d5d520aa61eaf9da93839d8363beaf0f2362162a2680722be00f39bea23e41ed"
+    },
+    {
+      "name": "game-architecture",
+      "status": "passed",
+      "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+      "testCount": 162,
+      "logSha256": "ca4a0c6041f18f7d2b6eec39b8575653a2c8b613bb97da7c1953a88a007a2e58"
+    },
+    {
+      "name": "hub-functions",
+      "status": "passed",
+      "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+      "testCount": 117,
+      "logSha256": "9bc75add3c03049929ef4213fe494345dd7dd4e6573424fd14104d728db6156d"
+    },
+    {
+      "name": "gamerunner",
+      "status": "passed",
+      "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+      "testCount": 48,
+      "logSha256": "0f7de3974693548122946fad3f31b188e6bc66988b49b7874dc957ce77df3c2d"
+    },
+    {
+      "name": "trainer-entrypoints",
+      "status": "passed",
+      "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+      "testCount": 100,
+      "logSha256": "b9ed161f4b9fa5ef5581cbb8f91dba5b21ac4d1a14338afd157259042cf2c892"
+    },
+    {
+      "name": "cloudflare-deploy",
+      "status": "passed",
+      "scope": "Isolated production-compatible source; local gate, no new GitHub CI run",
+      "testCount": 4,
+      "logSha256": "df4b3760fba93c354438ffb1685c20fa7b4be4a06de733fccd1d9aad5e794fb1"
+    }
+  ],
+  "browsers": [
+    {
+      "name": "desktop-hub-pursuit",
+      "status": "passed",
+      "mode": "production Hub",
+      "activity": "pursuit",
+      "gaze": true,
+      "screenEvidence": [
+        {
+          "path": "production/desktop-hub-pursuit/settings.png",
+          "sha256": "0ee4921879dd67bc53204e9155a20f2928cbeedf39dbb1e8297da93c6aadc7dc"
+        },
+        {
+          "path": "production/desktop-hub-pursuit/results.png",
+          "sha256": "e56b8c705c9c1ba05e3b6027aa3481542eaa3d4d6487cf11c8789e45f668c00c"
+        },
+        {
+          "path": "production/desktop-hub-pursuit/validation.png",
+          "sha256": "202c243fb53679e2fce395071cbf4194d05231ee394a1f145be579c2ca5d6811"
+        }
+      ],
+      "productionRecordsCreated": false
+    },
+    {
+      "name": "tablet-hub-fixation",
+      "status": "passed",
+      "mode": "production Hub",
+      "activity": "fixation",
+      "gaze": false,
+      "screenEvidence": [
+        {
+          "path": "production/tablet-hub-fixation/settings.png",
+          "sha256": "59d08e7af32b6e83a80a3f3b1c23e59094c30e7067b1571ed03a87b815173c8b"
+        },
+        {
+          "path": "production/tablet-hub-fixation/results.png",
+          "sha256": "7baac17b66bfa103bc11e7a65a52aa1b189d2621ff28eb06f04c6467f3fd7eb8"
+        }
+      ],
+      "productionRecordsCreated": false
+    },
+    {
+      "name": "english-account-hub-vor",
+      "status": "passed",
+      "mode": "production Hub",
+      "activity": "vor",
+      "gaze": true,
+      "screenEvidence": [
+        {
+          "path": "production/english-account-hub-vor/settings.png",
+          "sha256": "a170ccf081b808b1dcedd7771dc9620fb158c60a478593651b107686eb49f3d8"
+        },
+        {
+          "path": "production/english-account-hub-vor/results.png",
+          "sha256": "9099067171140a80c678ba41d06053daa7ad2638087ea46de629b9bda439f112"
+        },
+        {
+          "path": "production/english-account-hub-vor/validation.png",
+          "sha256": "fb50f4e648c043673c162a002dd8efda448e1d55f51803ad453ba93719df7f9c"
+        }
+      ],
+      "productionRecordsCreated": false
+    },
+    {
+      "name": "mobile-pwa-saccade",
+      "status": "passed",
+      "mode": "production standalone PWA",
+      "activity": "saccade",
+      "gaze": true,
+      "screenEvidence": [
+        {
+          "path": "production/mobile-pwa-saccade/settings.png",
+          "sha256": "830f08803b77d3698ea93bb32010840eeb264278a1502448d866708d10abf60c"
+        },
+        {
+          "path": "production/mobile-pwa-saccade/results.png",
+          "sha256": "a4b35df1f13e73e30190324ab4e6792ff9b80928403a9347bf91b8fafa18618b"
+        },
+        {
+          "path": "production/mobile-pwa-saccade/validation.png",
+          "sha256": "98cefa69207f53d744e8d3edb8266f6e7ccabf1bd173ed33bc1f9548513c0ee1"
+        }
+      ],
+      "productionRecordsCreated": false
+    },
+    {
+      "name": "mobile-hub-retries-fixation",
+      "status": "passed",
+      "mode": "production Hub; session failure and camera denied/retry",
+      "activity": "fixation",
+      "gaze": true,
+      "screenEvidence": [
+        {
+          "path": "production/mobile-hub-retries-fixation/settings.png",
+          "sha256": "6b6615f07e20780bf7df5ebf7ab5a51214d1e4ce44a4c986677f2ed97f8b943d"
+        },
+        {
+          "path": "production/mobile-hub-retries-fixation/results.png",
+          "sha256": "fa0c648966f53388a4f73c1e08235cc18bb124a73593afe6b6cd7d1ccc399252"
+        },
+        {
+          "path": "production/mobile-hub-retries-fixation/validation.png",
+          "sha256": "ac8f2ab1d3a041b7b693b8956bf44a0bb3cd8fae4d956a828aa055e49e7d16c8"
+        }
+      ],
+      "productionRecordsCreated": false
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/OculomotorResults.tsx",
+      "sha256": "aec6a0d5c9f092a1d1f84e7187def0acace88b4173afb275ff76634973e4e3f6"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/game.css",
+      "sha256": "704f6b33c7dbfb22fffaa4565b33e3f37f83a572dc3d9fcbc9df7d0822f05f54"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/package.json",
+      "sha256": "43bf59ec7aec4bce8a2be3b58b45969f7ebe191d6f8ff6cce7f5d11dd101227e"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/public/reference/experiment.js",
+      "sha256": "06ffa70988fb726961dceee2eb5a4a855c293aa11d4b6839c0b7b61cb726af58"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/public/reference/gazeAdapter.js",
+      "sha256": "1065d911b6cabb4899e37701f8ba3e3c1fa882ff80f55ac305455a8e87c2cc35"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/rules/tutorialSteps.ts",
+      "sha256": "044fe0a7f4e6c47de032eb0799e2e7e4b57c125662e98b5a8197f584fe063742"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/runtime/experiment.ts",
+      "sha256": "7ce51ac5c57d1bf90c3e21702572935ed76f26d72bb20b77dbeac9f539215ffa"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/score.ts",
+      "sha256": "752a33ff2fad6787c895958c1484f4c4663e9ad43122491b58705b100d692455"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/settings.ts",
+      "sha256": "77dd42c388130f5e1cf11b031b0c6b9aaa7d155e89f75785bda0b75b409ac04c"
+    },
+    {
+      "path": "apps/usergamerunner/functions/[[path]].js",
+      "sha256": "898d0dd5381ef04a00eb3171d5cfe82dba03dbf342d81ef49aca9172a4351c0e"
+    },
+    {
+      "path": "apps/usergamerunner/functions/_lib/handTrackingLauncher.js",
+      "sha256": "c5d9cb65ce6f2ec3464e5e0dd9fab5687d3f8f48c2a602f5108aaa5a54078534"
+    },
+    {
+      "path": "apps/usergamerunner/functions/_lib/render.js",
+      "sha256": "b540ae2ec69e30b8c755dbf62ca7a8f5fd9e1a1bf66210719cf8ae9d26a5fa4d"
+    },
+    {
+      "path": "apps/usergamerunner/public/_routes.json",
+      "sha256": "453de6dc1e5c59edae6eec77c92e036db12fb49baf60733d8405d5b7d3c4ea2f"
+    },
+    {
+      "path": "apps/usergamerunner/runtime/eyeTrackingClient.js",
+      "sha256": "e3aab9626ed11951b307353cc9c44e64ef352937f29f616f295629a865bbfa83"
+    },
+    {
+      "path": "apps/usergamerunner/runtime/eyeTrackingController.js",
+      "sha256": "588315074a811c7453ee502de73236d3e55fc4fd7c7e2f459c9629846e5990eb"
+    },
+    {
+      "path": "apps/usergamerunner/runtime/eyeTrackingEntry.js",
+      "sha256": "af23aecd7aeb27a4461af378cf0795a29d2abd137d48db1a740d32270019dc1f"
+    },
+    {
+      "path": "apps/usergamerunner/scripts/buildEyeTracking.mjs",
+      "sha256": "52ff4e0a2933f2ac817262f3c735a2e2e6b5da628cd0f055f7e8aca4c9616622"
+    },
+    {
+      "path": "apps/usergamerunner/tests/eyeTracking.test.mjs",
+      "sha256": "5e0dd5dffda31ee5d17bb2fc5f1808d0717964594eb0187285612ba5103d184f"
+    },
+    {
+      "path": "packages/ui/src/eyeTrackingInput.ts",
+      "sha256": "d7d5f349739266eb8461aa628ba134dcacfa245d64e8c2f373ffba812a1c0355"
+    },
+    {
+      "path": "packages/ui/src/oculomotorCsv.js",
+      "sha256": "6f0fdd8a8b5287b7f401c75477eac513b5927711b87f04ae430f17e751514b77"
+    },
+    {
+      "path": "scripts/check-game-research-contract.test.mjs",
+      "sha256": "8b1a05549400ad3682197a49cf0aecabb1ddbabcd898efa96d6911900b26d951"
+    },
+    {
+      "path": "scripts/check-oculomotor-migration.test.mjs",
+      "sha256": "52b23ad3f3b47e71421c2061912c583e3522c0ac997c629ec6e60a29bbc12025"
+    },
+    {
+      "path": "scripts/check-r2-game-browser.mjs",
+      "sha256": "a24ce2319a48256e4de83f22e4ba2a0db1a64d6a90cb199af82ca20ea6158dc6"
+    },
+    {
+      "path": "scripts/check-webgazer-calibration.mjs",
+      "sha256": "1381503d4cb8bc330d0f5725305c1f47bc900f86941bdd8434a738b635586fa9"
+    },
+    {
+      "path": "scripts/check-webgazer-metrics.mjs",
+      "sha256": "9d44882de4fd9f7899c2b4d1b17a375aa1492e69ad84196665da1a0efdf5b30c"
+    },
+    {
+      "path": "scripts/oculomotor-browser.mjs",
+      "sha256": "56e6575dc2d01ddc62171213067ca72635723c12728850adbe798489b0bdac1d"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/OculomotorSettingsFields.tsx",
+      "sha256": "aaa4676c461750b409ab4060789b684cfc1d9add43213245a6044f309237f97a"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/OculomotorTrainingGame.tsx",
+      "sha256": "9a0a6a48c591628bfdf48aa9e460d6ae09d3eb03813a498fb1f062d8559891fd"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/oculomotor-training/public/reference/LICENSE-OcuTrain.txt",
+      "sha256": "e0eedba615d5cd1b986afb6c5b3a4b1ae33713e7e9dc74d19daec5e3221f9d2e"
+    },
+    {
+      "path": "scripts/fixtures/ocutrain-reference.json",
+      "sha256": "2b523f5b73e8242b30ffa2b1eb0e25ed96fc306c43f43046321968f6a6584e0e"
+    },
+    {
+      "path": "scripts/oculomotor-reference.test.mjs",
+      "sha256": "37844fb63ddd0c3cab31b365783823a8dc3e1eefb7b8fc33de10cbefab1f8f58"
+    }
+  ],
+  "productionRecordsCreated": false,
+  "manualCloudflareDeployment": true,
+  "noGitCommitOrPush": true
+}

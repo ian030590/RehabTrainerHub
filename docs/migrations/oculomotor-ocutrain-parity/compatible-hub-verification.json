@@ -1,0 +1,73 @@
+{
+  "verifiedAt": "2026-10-16T21:27:24.250Z",
+  "assets": [
+    {
+      "path": "/_next/static/chunks/3q5x-0k70x62n.js",
+      "size": 170252,
+      "sha256": "a4fe1f66d107b0def6912eebb66535055bb1598573e44f6d4b10a71b5a67a486"
+    },
+    {
+      "path": "/_next/static/chunks/3kmozkq6tgqnz.js",
+      "size": 228922,
+      "sha256": "5041f52530a4c19c096ff1fd24f890f17301ade46cf0b21a3a4f5b20d024eca4"
+    },
+    {
+      "path": "/_next/static/chunks/turbopack-11vya8xm5ndvl.js",
+      "size": 9688,
+      "sha256": "6dcba84b124fbfbdecc451e2ed47b3786d59976099993fc31e56a331f05b74db"
+    },
+    {
+      "path": "/_next/static/chunks/3fntmmi971322.js",
+      "size": 14377,
+      "sha256": "34ed6abf4c6d0d1bb3dc56d3f133d2a5dbc3a3c89c791deab314e27143ac14ce"
+    },
+    {
+      "path": "/_next/static/chunks/3g_1nyrrtya9o.js",
+      "size": 25456,
+      "sha256": "175d99c0ff97b82feefd818fe217a3356648e3927d2e6164db3204fb71207ea6"
+    },
+    {
+      "path": "/_next/static/chunks/0xhmph0n81jnb.js",
+      "size": 40409,
+      "sha256": "3cc2f8f47a36fce7076e9610c75427047db20876a0d0f0f2f3cf820880e3045a"
+    },
+    {
+      "path": "/_next/static/chunks/0kukrf9y9iw6z.js",
+      "size": 38052,
+      "sha256": "e952ab68fd23b803efb03b1165803313c55b50192a9e40515831a87475e0e418"
+    },
+    {
+      "path": "/_next/static/chunks/0z4-exl2qatyf.js",
+      "size": 32421,
+      "sha256": "4a12788cd669e79175ce1d94104c28a1fd9fc90eaecbc09a12f1be67339340a6"
+    },
+    {
+      "path": "/_next/static/chunks/44-glqsq36wdd.js",
+      "size": 46981,
+      "sha256": "e13db7a69f6a55894f888f53f0a301fe65060b9f6cc5a45373723895e1e193d8"
+    },
+    {
+      "path": "/_next/static/chunks/3wj5got08b68v.js",
+      "size": 33432,
+      "sha256": "29e2fb8d046d82deb398ee31be2fa9c295bd65285ceedc06820bc1931081219b"
+    },
+    {
+      "path": "/_next/static/chunks/0cz1d0mv5g_q7.js",
+      "size": 112594,
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683"
+    },
+    {
+      "path": "/_next/static/chunks/44tilj0ekn4_s.js",
+      "size": 29368,
+      "sha256": "9cde5d7ee6ce31ad05c118d1b8ce6438de94d58de1b38fb55414b6d01cc099b6"
+    }
+  ],
+  "newInputVersionReadable": true,
+  "legacyGabor": {
+    "status": 200,
+    "sha256": "371ff3d36c26718ea791acd644f8c6ebf3a7e1efdfdf5eeb6bae0d16d99ec158"
+  },
+  "officialRegistryCount": 6,
+  "eyeCurrentBeforePublish": "2.0.1",
+  "oldEyeAssetsGone": true
+}

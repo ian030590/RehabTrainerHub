@@ -8,7 +8,7 @@ export function LoadEyeTrackingInput(origin: string): Promise<EyeInputApi> {
   if (loading) return loading;
   loading = new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = new URL('/input/eye-tracking-1.0.0/index.js', origin).href;
+    script.src = new URL('/input/eye-tracking-1.1.0/index.js', origin).href;
     script.crossOrigin = 'anonymous';
     script.onload = () => {
       const api = (window as unknown as { TrainerHubEyeTracking?: EyeInputApi }).TrainerHubEyeTracking;

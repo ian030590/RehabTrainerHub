@@ -43,6 +43,12 @@ export function OculomotorResults({ result, summaryItems, language, saveState, o
         <tbody><tr>{scoreMetrics.map(field => <td key={field.key}>{valueText(score.summary[field.key])}</td>)}</tr></tbody>
       </table></div>
     </section>
+    {result.module === 'saccade' && result.tff_analysis && <section className="score-tff"><h2>{en ? 'Time to first fixation (TFF)' : '首次注視時間（TFF）'}</h2>
+      <p>{result.tff_detected_targets} / {result.tff_total_targets} {en ? 'targets detected' : '個目標偵測到首次注視'}</p>
+      <p>{en ? 'Measured from target onset to the first stable fixation after eye movement; a target hit is not required.' : '從目標出現到偵測眼動後首次穩定注視的時間，不要求注視落在目標範圍。'}</p>
+      <div className="results-scroll"><table><thead><tr><th>{en ? 'Target' : '目標'}</th><th>{en ? 'Direction' : '方向'}</th><th>TFF (ms)</th></tr></thead>
+        <tbody>{result.tff_analysis.targets.map(target => <tr key={target.target_number}><td>{target.target_number}</td><td>{target.direction}</td><td>{valueText(target.tff_ms)}</td></tr>)}</tbody></table></div>
+    </section>}
     <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local practice. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
       : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'CSV or result save failed. Retry with the same session.' : 'CSV 或成果保存失敗，請使用同一工作階段重試。') : (en ? 'Saving…' : '保存中…')}</p>
     {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={onRetry}>{en ? 'Retry save' : '重試保存'}</button>}

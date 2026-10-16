@@ -19,15 +19,14 @@ export const settingsSections: SettingSection[] = [
     "fields": [
       {
         "key": "screenWidthCm",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "可視螢幕寬度",
           "en": "Visible screen width"
         },
         "default": 53,
-        "min": 15,
-        "max": 150,
-        "step": 0.5,
+        "min": 0,
+        "step": 0.1,
         "unit": {
           "zh-TW": "公分",
           "en": "cm"
@@ -35,15 +34,14 @@ export const settingsSections: SettingSection[] = [
       },
       {
         "key": "screenHeightCm",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "可視螢幕高度",
           "en": "Visible screen height"
         },
         "default": 30,
-        "min": 10,
-        "max": 100,
-        "step": 0.5,
+        "min": 0,
+        "step": 0.1,
         "unit": {
           "zh-TW": "公分",
           "en": "cm"
@@ -51,15 +49,14 @@ export const settingsSections: SettingSection[] = [
       },
       {
         "key": "viewingDistanceCm",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "觀看距離",
           "en": "Viewing distance"
         },
         "default": 60,
-        "min": 20,
-        "max": 120,
-        "step": 1,
+        "min": 0,
+        "step": 0.1,
         "unit": {
           "zh-TW": "公分",
           "en": "cm"
@@ -214,9 +211,9 @@ export const settingsSections: SettingSection[] = [
           "en": "Target visual angle"
         },
         "default": 60,
-        "min": 10,
-        "max": 300,
-        "step": 5,
+        "min": 1,
+        "max": 600,
+        "step": 1,
         "unit": {
           "zh-TW": "角分",
           "en": "arcmin"
@@ -226,13 +223,13 @@ export const settingsSections: SettingSection[] = [
         "key": "distanceThresholdArcmin",
         "type": "slider",
         "label": {
-          "zh-TW": "未驗證時的距離閾值",
-          "en": "Distance threshold without validation"
+          "zh-TW": "命中距離閾值",
+          "en": "Hit distance threshold"
         },
         "default": 90,
-        "min": 30,
-        "max": 360,
-        "step": 5,
+        "min": 10,
+        "max": 600,
+        "step": 1,
         "unit": {
           "zh-TW": "角分",
           "en": "arcmin"
@@ -253,15 +250,14 @@ export const settingsSections: SettingSection[] = [
     "fields": [
       {
         "key": "vorTotalSec",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "中央辨識總時間",
           "en": "Central recognition duration"
         },
         "default": 30,
-        "min": 5,
-        "max": 300,
-        "step": 1,
+        "min": 0,
+        "step": 0.1,
         "unit": {
           "zh-TW": "秒",
           "en": "s"
@@ -269,15 +265,14 @@ export const settingsSections: SettingSection[] = [
       },
       {
         "key": "pursuitTotalSec",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "追視總時間",
           "en": "Pursuit duration"
         },
         "default": 45,
-        "min": 5,
-        "max": 300,
-        "step": 1,
+        "min": 0,
+        "step": 0.1,
         "unit": {
           "zh-TW": "秒",
           "en": "s"
@@ -285,15 +280,14 @@ export const settingsSections: SettingSection[] = [
       },
       {
         "key": "saccadeTotalSec",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "跳視總時間",
           "en": "Saccade duration"
         },
         "default": 45,
-        "min": 5,
-        "max": 300,
-        "step": 1,
+        "min": 0,
+        "step": 0.1,
         "unit": {
           "zh-TW": "秒",
           "en": "s"
@@ -301,15 +295,14 @@ export const settingsSections: SettingSection[] = [
       },
       {
         "key": "fixationTotalSec",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "定點注視總時間",
           "en": "Fixation duration"
         },
         "default": 60,
-        "min": 5,
-        "max": 300,
-        "step": 1,
+        "min": 0,
+        "step": 0.1,
         "unit": {
           "zh-TW": "秒",
           "en": "s"
@@ -317,15 +310,14 @@ export const settingsSections: SettingSection[] = [
       },
       {
         "key": "changeMs",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "中央目標變化間隔",
           "en": "Central target change interval"
         },
         "default": 500,
-        "min": 100,
-        "max": 3000,
-        "step": 50,
+        "min": 0,
+        "step": 1,
         "unit": {
           "zh-TW": "毫秒",
           "en": "ms"
@@ -333,15 +325,14 @@ export const settingsSections: SettingSection[] = [
       },
       {
         "key": "speedArcminSec",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "追視與定點移動速度",
           "en": "Pursuit and fixation speed"
         },
         "default": 300,
-        "min": 30,
-        "max": 1200,
-        "step": 10,
+        "min": 0,
+        "step": 0.1,
         "unit": {
           "zh-TW": "角分／秒",
           "en": "arcmin/s"
@@ -349,15 +340,14 @@ export const settingsSections: SettingSection[] = [
       },
       {
         "key": "dwellMs",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "跳視停留時間",
           "en": "Saccade target dwell"
         },
         "default": 500,
-        "min": 100,
-        "max": 3000,
-        "step": 50,
+        "min": 0,
+        "step": 1,
         "unit": {
           "zh-TW": "毫秒",
           "en": "ms"
@@ -365,15 +355,14 @@ export const settingsSections: SettingSection[] = [
       },
       {
         "key": "holdSec",
-        "type": "slider",
+        "type": "number",
         "label": {
           "zh-TW": "定點邊緣停留",
           "en": "Fixation edge hold"
         },
         "default": 2,
-        "min": 0.5,
-        "max": 10,
-        "step": 0.5,
+        "min": 0,
+        "step": 0.1,
         "unit": {
           "zh-TW": "秒",
           "en": "s"
@@ -468,11 +457,20 @@ export const settingsSections: SettingSection[] = [
   }
 ];
 export const defaultSettings: OculomotorSettings = Object.fromEntries(settingsSections.flatMap(section => section.fields).map(field => [field.key, field.default]));
+export function GetActiveSettingFields(settings: OculomotorSettings) {
+  const module = String(settings.module);
+  const visible = new Set(['screenWidthCm', 'screenHeightCm', 'viewingDistanceCm', 'eyeTrackingSource', 'module', 'ballArcmin', 'distanceThresholdArcmin', `${module}TotalSec`,
+    ...(module === 'vor' ? ['changeMs'] : ['testMode', 'stimulusType', ...Array.from({ length: 8 }, (_, index) => `axis${index}Enabled`)]),
+    ...(['pursuit', 'fixation'].includes(module) ? ['speedArcminSec'] : []),
+    ...(module === 'fixation' ? ['holdSec'] : []), ...(module === 'saccade' ? ['dwellMs'] : [])]);
+  return settingsSections.flatMap(section => section.fields).filter(field => visible.has(field.key));
+}
 export function ValidateSettings(settings: OculomotorSettings) {
   return settingsSections.flatMap(section => section.fields).every(field => {
     const value = settings[field.key];
     if (field.type === 'checkbox') return typeof value === 'boolean';
     if (field.type === 'list') return field.options?.some(option => option.value === value);
-    return typeof value === 'number' && Number.isFinite(value) && value >= field.min! && value <= field.max!;
+    return typeof value === 'number' && Number.isFinite(value) && (field.type === 'number' ? value > 0 : value >= field.min!) && value <= (field.max ?? 1e9)
+      && (!field.key.endsWith('TotalSec') || value <= 1200);
   }) && (settings.module === 'vor' || Array.from({ length: 8 }, (_, index) => settings[`axis${index}Enabled`]).some(value => value === true));
 }

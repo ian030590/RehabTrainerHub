@@ -1,5 +1,7 @@
 # 眼動練習 R2 遷移與發布驗收
 
+現行版本已於 2026-10-17 更新為 OcuTrain 對齊版 `2.1.0`：相容輸入代理／Hub 先部署、精確核准摘要發布與五個正式流程均完成，保留 `2.0.1` 回退。見[對齊與發布紀錄](oculomotor-ocutrain-parity.md)及[正式收據](releases/oculomotor-training-2.1.0.json)；以下保留首次 `2.0.0` 遷移的歷史規格與證據。
+
 更新：2026-10-11。**`oculomotor-training@2.0.0` 已精確核准、發布 R2、完成七項 CI／兩站部署及正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收。** 正式六款 R2／34 款舊流程；[正式收據](releases/oculomotor-training-2.0.0.json)保留逐檔摘要、核准、順序修正、部署及驗收證據。
 
 已核准版本為 `oculomotor-training@2.0.0`，10 個發布檔案，`contentSha256`：

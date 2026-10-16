@@ -203,7 +203,7 @@ try {
     pending.set(commandId, { resolve, reject, timer });
     ws.send(JSON.stringify({ id: commandId, method, params, ...(sessionId ? { sessionId } : {}) }));
   });
-  const eyeProbe = `if (location.pathname.startsWith('/input/eye-tracking-1.0.0/')) {
+  const eyeProbe = `if (location.pathname.startsWith('/input/eye-tracking-1.1.0/')) {
  const acquire=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
  navigator.mediaDevices.getUserMedia = async () => {
  const permitted=await acquire({video:true,audio:false});permitted.getTracks().forEach(track=>track.stop());window.nativeCameraPermissionVerified=true;

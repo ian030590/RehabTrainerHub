@@ -2,13 +2,13 @@ import { SendGameEvent } from './hubBridge';
 import type { OculomotorSettings } from '../settings';
 declare global {
   interface Window {
-    OculomotorInput: { Calibrate: (x: number, y: number) => void; Reset: () => void; Stop: () => void; FaceDetected: () => boolean; Prediction: () => { x: number; y: number } | null };
+    OculomotorInput: { Calibrate: (x: number, y: number) => void; Reset: () => void; Stop: () => void; FaceDetected: () => boolean; Prediction: () => { x: number | null; y: number | null; sample_performance_ms?: number } | null };
     OculomotorDownload: (fileName: string, text: string) => void;
     oculomotorExperiment: { Start: (settings: OculomotorSettings) => void; Stop: () => void };
   }
 }
 let loading: Promise<void> | null = null;
-let gaze: { x: number | null; y: number | null; faceDetected: boolean } | null = null;
+let gaze: { x: number | null; y: number | null; faceDetected: boolean; timestamp: number } | null = null;
 let receivedAt = -Infinity;
 export function InstallEyeInput() {
   window.addEventListener('game:input', (event: Event) => {
@@ -21,8 +21,12 @@ export function InstallEyeInput() {
     Reset: () => { gaze = null; SendGameEvent('input-reset'); },
     Stop: () => { gaze = null; receivedAt = -Infinity; SendGameEvent('input-stop'); },
     FaceDetected: () => performance.now() - receivedAt <= 500 && Boolean(gaze?.faceDetected),
-    Prediction: () => performance.now() - receivedAt <= 250 && gaze?.x !== null && gaze?.y !== null && gaze
-      ? { x: gaze.x * innerWidth, y: gaze.y * innerHeight } : null,
+    Prediction: () => {
+      if (!gaze || performance.now() - receivedAt > 250) return null;
+      const sourceTime = gaze.timestamp - performance.timeOrigin;
+      return { x: gaze.x === null ? null : gaze.x * innerWidth, y: gaze.y === null ? null : gaze.y * innerHeight,
+        ...(sourceTime >= 0 && sourceTime <= receivedAt ? { sample_performance_ms: sourceTime } : {}) };
+    },
   };
   window.OculomotorDownload = (fileName, text) => SendGameEvent('csv-file', { fileName, text });
 }

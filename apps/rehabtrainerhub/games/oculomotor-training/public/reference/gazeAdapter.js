@@ -4,7 +4,7 @@
   const prediction = () => enabled ? window.OculomotorInput.Prediction() : null;
   window.webgazer = { getCurrentPrediction: async () => prediction(), resume: () => { enabled = true; }, pause: () => { enabled = false; }, end: () => window.OculomotorInput.Stop() };
   class GazeExtension {
-    constructor() { this.gazeUpdateCallbacks = []; this.timer = null; }
+    constructor() { this.gazeUpdateCallbacks = []; this.listening = false; this.onFrame = event => { if (event.detail.type === 'frame') this.handleGazeDataUpdate(prediction()); }; }
     initialize() { return Promise.resolve(); }
     on_start() { this.resume(); }
     on_load() {}
@@ -17,11 +17,12 @@
     hidePredictions() {}
     resetCalibration() { window.OculomotorInput.Reset(); }
     calibratePoint(x, y) { window.OculomotorInput.Calibrate(x, y); }
-    pause() { clearInterval(this.timer); this.timer = null; enabled = false; }
+    pause() { window.removeEventListener('game:input', this.onFrame); this.listening = false; enabled = false; }
     resume() {
-      if (this.timer !== null) return;
+      if (this.listening) return;
       enabled = true;
-      this.timer = setInterval(() => this.handleGazeDataUpdate(prediction(), performance.now()), 34);
+      this.listening = true;
+      window.addEventListener('game:input', this.onFrame);
     }
     handleGazeDataUpdate(value) { if (value) this.gazeUpdateCallbacks.forEach(callback => callback(value)); }
     onGazeUpdate(callback) { this.gazeUpdateCallbacks.push(callback); return () => { this.gazeUpdateCallbacks = this.gazeUpdateCallbacks.filter(value => value !== callback); }; }

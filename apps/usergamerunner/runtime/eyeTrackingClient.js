@@ -3,6 +3,7 @@ import { CreateEyeTrackingBroker } from '../../../packages/ui/src/eyeTrackingBro
 import { IsReferenceCsvPayload } from '../../../packages/ui/src/oculomotorCsv.js';
 (() => {
   const inputOrigin = new URL(document.currentScript.src).origin;
+  const inputBase = new URL('.', document.currentScript.src);
   const createController = () => {
     let frame = null;
     let port = null;
@@ -47,7 +48,7 @@ import { IsReferenceCsvPayload } from '../../../packages/ui/src/oculomotorCsv.js
         frame.contentWindow.postMessage({ schema: 'trainerhub.eye-proxy/v1', type: 'init', sessionNonce: nonce }, inputOrigin, [channel.port2]);
       };
       timer = setTimeout(() => { Stop(); onError('initialization'); }, 30000);
-      frame.src = inputOrigin + '/input/eye-tracking-1.0.0/preview.html';
+      frame.src = new URL('preview.html', inputBase).href;
       (document.querySelector('dialog[open]') || document.body).append(frame);
     });
     return { Start, Stop, Calibrate: (x, y) => send('calibrate', { x, y }), Reset: () => send('reset') };

@@ -1,4 +1,4 @@
-// Based on TobiiOculomotor/wwwroot/app.js. The jsPsych experiment, timing,
+// Based on OcuTrain/wwwroot/app.js, commit 6676f24523a5bc857a7c28f68c520a45bfb8d167 (AGPL-3.0). The jsPsych experiment, timing,
 // calibration, validation, stimulus geometry and WebGazer sampling are retained.
 // Browser adaptation: the game owns the experiment; the private input adapter supplies coordinates.
 "use strict";
@@ -29,6 +29,11 @@
       lastError: null
     }
   };
+    const MAX_GAZE_SAMPLES_PER_TRIAL = 36000;
+    const WEBGAZER_ERROR_ALLOWANCE_DEG = 2;
+    const FIXATION_VELOCITY_DEG_SEC = 30;
+    const FIXATION_MIN_DURATION_MS = 100;
+    const FIXATION_MAX_GAP_MS = 100;
     const RAD_PER_ARCMIN = Math.PI / 10800;
     const ARCMIN_PER_RAD = 10800 / Math.PI;
     const RAD_PER_ARCSEC = Math.PI / 648000;
@@ -186,6 +191,134 @@
     }
 
 
+    function gazeErrorDegrees(dxPx, dyPx, calibration, screenPixels) {
+      const dxCm = dxPx * calibration.screenWidthCm / screenPixels.width;
+      const dyCm = dyPx * calibration.screenHeightCm / screenPixels.height;
+      return visualAngleArcmin(Math.hypot(dxCm, dyCm), calibration.viewingDistanceCm) / 60;
+    }
+
+    function gazeThresholds(source, settings, validation = AppState.eyeTracking.lastValidation) {
+      const baseDeg = (Number(settings.distanceThresholdArcmin) || 90) / 60;
+      const allowanceDeg = source === EYE_SOURCE_WEBGAZER ? WEBGAZER_ERROR_ALLOWANCE_DEG : 0;
+      const validationDeg = validation?.source === source && Number.isFinite(validation.dynamicThresholdDeg) && validation.dynamicThresholdDeg > 0
+        ? validation.dynamicThresholdDeg : null;
+      // Validation already includes tracker error; use the larger threshold to avoid adding it twice.
+      const effectiveDeg = Math.max(baseDeg + allowanceDeg, validationDeg || 0);
+      return { baseDeg: round(baseDeg, 2), allowanceDeg, validationDeg, effectiveDeg: round(effectiveDeg, 2) };
+    }
+
+    function accuracyPhaseStart(moduleKey, frame) {
+      if (moduleKey === "pursuit" && !["movement", "return"].includes(frame.phase)) return null;
+      if (moduleKey === "fixation" && frame.phase !== "hold") return null;
+      return frame.phase_started_ms + (moduleKey === "saccade" && frame.phase === "dwell" ? 200 : 0);
+    }
+
+    function accuracyDurationMs(moduleKey, frames, frameIndex, sampleTime, durationMs) {
+      const current = frames[frameIndex];
+      const intervalStart = Math.max(0, sampleTime - durationMs,
+        moduleKey === "saccade" ? current.phase_started_ms : 0);
+      let right = sampleTime;
+      let scoredMs = 0;
+      for (let index = frameIndex; index >= 0 && right > intervalStart; index--) {
+        const frame = frames[index];
+        const left = Math.max(intervalStart, frame.timestamp_ms);
+        const eligibleStart = accuracyPhaseStart(moduleKey, frame);
+        if (eligibleStart !== null) scoredMs += Math.max(0, right - Math.max(left, eligibleStart));
+        right = left;
+      }
+      return scoredMs;
+    }
+
+    function saccadeFixationSummary(records, events, calibration, screenPixels) {
+      const targets = events.filter(event => event.event === "saccade_onset").map(event => ({
+        target_number: event.target_number,
+        direction: event.direction,
+        target_onset_ms: event.actual_ms,
+        fixation_onset_ms: null,
+        fixation_confirmed_ms: null,
+        tff_ms: null,
+        status: "no_valid_samples"
+      }));
+      const byNumber = new Map(targets.map(target => [target.target_number, target]));
+      let target = null;
+      let previous = null;
+      let movementDetected = false;
+      let run = [];
+      let confirmed = false;
+
+      // I-VT-style classification: source-time velocity, not distance from the target.
+      for (const record of records) {
+        record.gaze_velocity_deg_s = "";
+        record.is_fixation = 0;
+        if (!["dwell", "saccade_latency"].includes(record.phase)) {
+          previous = record.gaze_valid ? record : null;
+          continue;
+        }
+        const nextTarget = byNumber.get(record.target_number);
+        if (!nextTarget) continue;
+        if (nextTarget !== target) {
+          target = nextTarget;
+          movementDetected = false;
+          run = [];
+          confirmed = false;
+        }
+        if (!record.gaze_valid) {
+          previous = null;
+          run = [];
+          confirmed = false;
+          continue;
+        }
+        if (target.status === "no_valid_samples") target.status = "no_movement_detected";
+        const deltaMs = previous ? (record.device_timestamp_us - previous.device_timestamp_us) / 1000 : null;
+        if (deltaMs === null || deltaMs <= 0 || deltaMs > FIXATION_MAX_GAP_MS) {
+          run = [record];
+          confirmed = false;
+        } else {
+          const velocity = gazeErrorDegrees(record.gaze_x_px - previous.gaze_x_px,
+            record.gaze_y_px - previous.gaze_y_px, calibration, screenPixels) * 1000 / deltaMs;
+          record.gaze_velocity_deg_s = round(velocity, 3);
+          if (velocity > FIXATION_VELOCITY_DEG_SEC) {
+            movementDetected = true;
+            if (target.tff_ms === null) target.status = "no_confirmed_fixation";
+            run = [record];
+            confirmed = false;
+          } else {
+            run.push(record);
+            if (run.length >= 3 && record.trial_time_ms - run[0].trial_time_ms >= FIXATION_MIN_DURATION_MS) {
+              if (!confirmed) {
+                run.forEach(sample => { sample.is_fixation = 1; });
+                confirmed = true;
+              }
+              record.is_fixation = 1;
+              if (movementDetected && target.tff_ms === null) {
+                target.fixation_onset_ms = run[0].trial_time_ms;
+                target.fixation_confirmed_ms = record.trial_time_ms;
+                target.tff_ms = round(target.fixation_onset_ms - target.target_onset_ms, 2);
+                target.status = "detected";
+              }
+            }
+          }
+        }
+        previous = record;
+      }
+      for (const record of records) {
+        record.tff_ms = ["dwell", "saccade_latency"].includes(record.phase)
+          ? byNumber.get(record.target_number)?.tff_ms ?? "" : "";
+      }
+      const detected = targets.filter(target => target.tff_ms !== null);
+      return {
+        mean_ms: detected.length ? round(detected.reduce((sum, target) => sum + target.tff_ms, 0) / detected.length, 2) : null,
+        detected_targets: detected.length,
+        total_targets: targets.length,
+        velocity_threshold_deg_s: FIXATION_VELOCITY_DEG_SEC,
+        minimum_duration_ms: FIXATION_MIN_DURATION_MS,
+        maximum_gap_ms: FIXATION_MAX_GAP_MS,
+        requires_movement: true,
+        requires_target_hit: false,
+        targets
+      };
+    }
+
     function currentViewportSignature() {
       return {
         width: Math.round(window.innerWidth),
@@ -252,6 +385,8 @@
         totalBlinkMs: 0,
         totalValidMs: 0,
         totalInThreshMs: 0,
+        missingDurationMs: 0,
+        rejectedTimestampSamples: 0,
         synchronousRecords: [],
         onSample: null
       };
@@ -262,11 +397,11 @@
       const active = AppState.webgazerActiveTrial;
       AppState.webgazerActiveTrial = null;
       if (!active || active.sessionId !== sessionId) {
-        return { samples: [], downsampled: 0, overflow: 0, synchronousRecords: [], totalBlinkMs: 0, totalValidMs: 0, totalInThreshMs: 0, accuracyRate: 0 };
+        return { samples: [], downsampled: 0, overflow: 0, synchronousRecords: [], totalBlinkMs: 0, totalValidMs: 0, totalInThreshMs: 0, accuracyRate: null };
       }
       const validMs = active.totalValidMs || 0;
       const inThreshMs = active.totalInThreshMs || 0;
-      const accRate = validMs > 0 ? round((inThreshMs / validMs) * 100, 2) : 0;
+      const accRate = validMs > 0 ? round((inThreshMs / validMs) * 100, 2) : null;
       return {
         samples: active.samples,
         downsampled: active.downsampled,
@@ -275,10 +410,11 @@
         totalBlinkMs: round(active.totalBlinkMs || 0, 2),
         totalValidMs: round(validMs, 2),
         totalInThreshMs: round(inThreshMs, 2),
+        missingDurationMs: round(active.missingDurationMs || 0, 2),
+        rejectedTimestampSamples: active.rejectedTimestampSamples || 0,
         accuracyRate: accRate
       };
     }
-
 
     function fullscreenElement() {
       return document.fullscreenElement || null;
@@ -504,9 +640,6 @@
         const extension = this.jsPsych.extensions && this.jsPsych.extensions.webgazer;
         const calibration = AppState.calibration || { screenWidthCm: 50, screenHeightCm: 28, viewingDistanceCm: 60 };
         const screenPixels = currentScreenPixels();
-        const cmPerPxX = calibration.screenWidthCm / screenPixels.width;
-        const cmPerPxY = calibration.screenHeightCm / screenPixels.height;
-        const viewingDist = calibration.viewingDistanceCm;
 
         if (isWebGazer) {
           try {
@@ -533,8 +666,7 @@
         let isCollecting = false;
         let countdownInterval = null;
         let ended = false;
-        let rafId = null;
-
+        let cancelled = false;
         let unsubscribe = null;
         if (isWebGazer && extension && typeof extension.onGazeUpdate === "function") {
           unsubscribe = extension.onGazeUpdate((prediction) => {
@@ -545,47 +677,42 @@
           });
         }
 
-        const pollGaze = async () => {
-          if (ended) return;
-          if (isWebGazer && isCollecting && window.webgazer) {
-            try {
-              const pred = await window.webgazer.getCurrentPrediction();
-              if (pred && Number.isFinite(pred.x) && Number.isFinite(pred.y)) {
-                currentSamples.push({ x: pred.x, y: pred.y });
-              }
-            } catch (e) {}
-          }
-          if (!ended) rafId = requestAnimationFrame(pollGaze);
-        };
-        if (isWebGazer) {
-          rafId = requestAnimationFrame(pollGaze);
-        }
+
 
         const cleanUp = () => {
-          window.removeEventListener("oculomotor:stop", cleanUp);
           ended = true;
           if (pointTimer !== null) clearTimeout(pointTimer);
           if (countdownInterval !== null) clearInterval(countdownInterval);
-          if (rafId !== null) cancelAnimationFrame(rafId);
+          if (isWebGazer && extension) {
+            try { extension.pause(); } catch (error) { /* Continue cleanup. */ }
+          }
           if (unsubscribe) {
             try { unsubscribe(); } catch (e) {}
             unsubscribe = null;
           }
+
           document.removeEventListener("keydown", onKeyDown);
         };
 
-        window.addEventListener("oculomotor:stop", cleanUp);
+        const stop = () => {
+          cancelled = true;
+          cleanUp();
+          window.removeEventListener("oculomotor:stop", stop);
+        };
+
         const onKeyDown = (e) => {
           if (e.key === "Escape") {
-            cleanUp();
+            stop();
             void exitFullscreenSafely();
             AppState.pending = null;
             AppState.eyeTracking.needsRecalibration = false;
-            this.jsPsych.finishTrial({ action: "validation_aborted", aborted: true });
+
             post("oculomotor:abort");
+            this.jsPsych.finishTrial({ action: "validation_aborted", aborted: true });
           }
         };
         document.addEventListener("keydown", onKeyDown);
+        window.addEventListener("oculomotor:stop", stop);
 
         const runPoint = (idx) => {
           if (idx >= validationPoints.length) {
@@ -602,7 +729,7 @@
           displayElement.innerHTML = `
             <div id="webgazer-validate-container">
               <div class="webgazer-validate-instruction">
-                ${Text("Gaze accuracy validation: look directly at the target", "眼動精度驗證：請注視目標")} (${idx + 1} / 5)
+                Gaze Accuracy Validation: Look directly at the target (${idx + 1} / 5)
               </div>
               <div class="webgazer-validate-target" style="left: ${tx}px; top: ${ty}px;">
                 <div class="webgazer-validate-target-inner"></div>
@@ -619,10 +746,7 @@
                 const medX = xs[Math.floor(xs.length / 2)];
                 const medY = ys[Math.floor(ys.length / 2)];
                 const distPx = Math.hypot(medX - tx, medY - ty);
-                const dxCm = Math.abs(medX - tx) * cmPerPxX;
-                const dyCm = Math.abs(medY - ty) * cmPerPxY;
-                const dCm = Math.hypot(dxCm, dyCm);
-                const distDeg = 2 * Math.atan(dCm / (2 * viewingDist)) * (180 / Math.PI);
+                const distDeg = gazeErrorDegrees(medX - tx, medY - ty, calibration, screenPixels);
                 pointResults.push({
                   label: pt.label,
                   tx,
@@ -641,7 +765,7 @@
                   medX: null,
                   medY: null,
                   distPx: null,
-                  distDeg: 9.9,
+                  distDeg: null,
                   sampleCount: 0
                 });
               }
@@ -653,13 +777,15 @@
         const showResults = () => {
           cleanUp();
           const validPoints = pointResults.filter((p) => p.sampleCount >= 3);
+          const hasEnoughData = validPoints.length >= 3;
           const meanErrorDeg = validPoints.length > 0
             ? round(validPoints.reduce((sum, p) => sum + p.distDeg, 0) / validPoints.length, 2)
-            : 9.99;
+            : null;
           const PASS_THRESHOLD_DEG = 3.5;
-          const passed = validPoints.length >= 3 && meanErrorDeg <= PASS_THRESHOLD_DEG;
-          const dynamicThresholdDeg = round(Math.max(0.5, meanErrorDeg * 2), 2);
-          const dynamicThresholdArcmin = round(dynamicThresholdDeg * 60, 1);
+          const passed = hasEnoughData && meanErrorDeg <= PASS_THRESHOLD_DEG;
+          const dynamicThresholdDeg = hasEnoughData ? round(Math.max(0.5, meanErrorDeg * 2), 2) : null;
+          const thresholdPreview = gazeThresholds(activeSource, AppState.pending?.settings || {}, { source: activeSource, dynamicThresholdDeg });
+          const effectiveThresholdArcmin = round(thresholdPreview.effectiveDeg * 60, 1);
 
           const isCalibrateOnly = Boolean(AppState.pending && AppState.pending.calibrateOnly);
           const sourceName = "WebGazer";
@@ -667,63 +793,68 @@
           let actionButtonsHtml = "";
           let noticeHtml = "";
 
-          if (isCalibrateOnly) {
+          if (!hasEnoughData) {
+            noticeHtml = `<p style="color:#f87171; font-size:14px; margin-bottom:18px;">Insufficient valid gaze data (${validPoints.length}/5 targets). Check that both eyes are detected in ${"the camera"}, then re-validate. Accuracy cannot be calculated.</p>`;
+            actionButtonsHtml = `
+              <button class="primary-button" type="button" data-val-action="recalib">Re-validate</button>
+              <button class="secondary-button" type="button" data-val-action="done">Return to Menu</button>`;
+          } else if (isCalibrateOnly) {
             if (passed) {
               noticeHtml = `<p style="color:var(--lime, #63e6ff); font-size:14px; margin-bottom:18px;">Validation passed. Gaze tracking precision verified and ready.</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="done">${Text("Complete & Return to Menu","完成並返回設定")}</button>
-                <button class="secondary-button" type="button" data-val-action="recalib">${Text("Recalibrate","重新校正")}</button>`;
+                <button class="primary-button" type="button" data-val-action="done">Complete & Return to Menu</button>
+                <button class="secondary-button" type="button" data-val-action="recalib">${"Recalibrate"}</button>`;
             } else {
               noticeHtml = `<p style="color:#f87171; font-size:14px; margin-bottom:18px;">Average angular error (${meanErrorDeg}°) exceeds target threshold (${PASS_THRESHOLD_DEG}°). Recalibration is recommended.</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="recalib">${Text("Recalibrate","重新校正")}</button>
-                <button class="secondary-button" type="button" data-val-action="done">${Text("Skip & Return to Menu","略過並返回設定")}</button>`;
+                <button class="primary-button" type="button" data-val-action="recalib">${"Recalibrate"}</button>
+                <button class="secondary-button" type="button" data-val-action="done">Skip & Return to Menu</button>`;
             }
           } else {
             if (passed) {
-              noticeHtml = `<p style="color:var(--lime, #63e6ff); font-size:14px; margin-bottom:18px;">${Text(`Validation passed. Dynamic hit threshold is 2× angular error (${dynamicThresholdDeg}°).`, `驗證通過，動態在標門檻為角度誤差的兩倍（${dynamicThresholdDeg}°）。`)}</p>`;
+              noticeHtml = `<p style="color:var(--lime, #63e6ff); font-size:14px; margin-bottom:18px;">Validation passed. Effective hit threshold: ${thresholdPreview.effectiveDeg}°, including a ${thresholdPreview.allowanceDeg}° ${sourceName} measurement-error allowance where needed. Starting training...</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="proceed">${Text("Start practice", "開始練習")} (<span id="val-cd-num">3</span>s)</button>
-                <button class="secondary-button" type="button" data-val-action="recalib">${Text("Recalibrate","重新校正")}</button>`;
+                <button class="primary-button" type="button" data-val-action="proceed">Start Training (<span id="val-cd-num">3</span>s)</button>
+                <button class="secondary-button" type="button" data-val-action="recalib">${"Recalibrate"}</button>`;
             } else {
-              noticeHtml = `<p style="color:#f87171; font-size:14px; margin-bottom:18px;">${Text(`Validation error higher than recommended (${meanErrorDeg}° > ${PASS_THRESHOLD_DEG}°). You may re-validate or proceed with the measured threshold.`, `驗證誤差高於參考值（${meanErrorDeg}° > ${PASS_THRESHOLD_DEG}°），可重新校正，或使用實測門檻繼續。`)}</p>`;
+              noticeHtml = `<p style="color:#f87171; font-size:14px; margin-bottom:18px;">Validation error higher than recommended (${meanErrorDeg}° > ${PASS_THRESHOLD_DEG}°). You may re-validate or proceed with the effective threshold (${thresholdPreview.effectiveDeg}°).</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="recalib">${Text("Recalibrate","重新校正")}</button>
-                <button class="secondary-button" type="button" data-val-action="proceed">${Text("Proceed Anyway","使用實測門檻繼續")}</button>`;
+                <button class="primary-button" type="button" data-val-action="recalib">${"Recalibrate"}</button>
+                <button class="secondary-button" type="button" data-val-action="proceed">Proceed Anyway</button>`;
             }
           }
 
           displayElement.innerHTML = `
             <div id="webgazer-validate-container">
               <div class="webgazer-validate-card">
-                <p class="eyebrow" style="color:var(--cyan, #63e6ff); text-transform:uppercase; font-size:12px; font-weight:700; letter-spacing:0.08em; margin-bottom:6px;">${sourceName} ${Text("Validation", "驗證")}</p>
-                <h2>${Text("Gaze Tracking Accuracy","眼動追蹤精度")}</h2>
-                <p style="margin-bottom:16px;">${Text("5-point fixation accuracy assessment completed:","五點凝視驗證已完成：")}</p>
+                <p class="eyebrow" style="color:var(--cyan, #63e6ff); text-transform:uppercase; font-size:12px; font-weight:700; letter-spacing:0.08em; margin-bottom:6px;">${sourceName} Validation</p>
+                <h2>Gaze Tracking Accuracy</h2>
+                <p style="margin-bottom:16px;">5-point fixation accuracy assessment completed:</p>
                 ${noticeHtml}
                 <div class="webgazer-validate-stat-grid">
                   <div class="webgazer-validate-stat-item">
-                    <span class="webgazer-validate-stat-label">${Text("Mean Angular Error","平均角度誤差")}</span>
-                    <span class="webgazer-validate-stat-value ${passed ? "pass" : "fail"}">${meanErrorDeg}°</span>
+                    <span class="webgazer-validate-stat-label">Mean Angular Error</span>
+                    <span class="webgazer-validate-stat-value ${passed ? "pass" : "fail"}">${meanErrorDeg === null ? "N/A" : meanErrorDeg + "°"}</span>
                   </div>
                   <div class="webgazer-validate-stat-item">
-                    <span class="webgazer-validate-stat-label">${Text("Dynamic Hit Threshold (2× Error)","動態在標門檻（誤差的兩倍）")}</span>
-                    <span class="webgazer-validate-stat-value pass">${dynamicThresholdDeg}° (${dynamicThresholdArcmin}')</span>
+                    <span class="webgazer-validate-stat-label">Effective Hit Threshold (includes ${thresholdPreview.allowanceDeg}° allowance)</span>
+                    <span class="webgazer-validate-stat-value ${hasEnoughData ? "pass" : "fail"}">${hasEnoughData ? `${thresholdPreview.effectiveDeg}° (${effectiveThresholdArcmin}')` : "N/A"}</span>
                   </div>
                   <div class="webgazer-validate-stat-item">
-                    <span class="webgazer-validate-stat-label">${Text("Accuracy Status","精度狀態")}</span>
-                    <span class="webgazer-validate-stat-value ${passed ? "pass" : "fail"}">${passed ? Text("Passed", "通過") : Text("Needs attention", "需要留意")}</span>
+                    <span class="webgazer-validate-stat-label">Accuracy Status</span>
+                    <span class="webgazer-validate-stat-value ${passed ? "pass" : "fail"}">${passed ? "Passed" : "Needs Attention"}</span>
                   </div>
                 </div>
 
                 <div style="font-size:13px; color:var(--muted, #94a3b8); margin-bottom:24px; background:rgba(255,255,255,0.03); padding:10px 14px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
                   <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
-                    <span>${Text("Center","中央")}: <strong>${pointResults[0] ? pointResults[0].distDeg + "°" : "-"}</strong></span>
-                    <span>${Text("Top-Left","左上")}: <strong>${pointResults[1] ? pointResults[1].distDeg + "°" : "-"}</strong></span>
-                    <span>${Text("Top-Right","右上")}: <strong>${pointResults[2] ? pointResults[2].distDeg + "°" : "-"}</strong></span>
+                    <span>Center: <strong>${pointResults[0]?.distDeg != null ? pointResults[0].distDeg + "°" : "No data"}</strong></span>
+                    <span>Top-Left: <strong>${pointResults[1]?.distDeg != null ? pointResults[1].distDeg + "°" : "No data"}</strong></span>
+                    <span>Top-Right: <strong>${pointResults[2]?.distDeg != null ? pointResults[2].distDeg + "°" : "No data"}</strong></span>
                   </div>
                   <div style="display:flex; justify-content:space-between; padding:4px 0;">
-                    <span>${Text("Bottom-Left","左下")}: <strong>${pointResults[3] ? pointResults[3].distDeg + "°" : "-"}</strong></span>
-                    <span>${Text("Bottom-Right","右下")}: <strong>${pointResults[4] ? pointResults[4].distDeg + "°" : "-"}</strong></span>
+                    <span>Bottom-Left: <strong>${pointResults[3]?.distDeg != null ? pointResults[3].distDeg + "°" : "No data"}</strong></span>
+                    <span>Bottom-Right: <strong>${pointResults[4]?.distDeg != null ? pointResults[4].distDeg + "°" : "No data"}</strong></span>
                     <span></span>
                   </div>
                 </div>
@@ -739,12 +870,17 @@
           const recalibBtn = displayElement.querySelector("[data-val-action='recalib']");
 
           const finishSuccess = async (action) => {
+            if (cancelled) return;
+            cancelled = true;
+            window.removeEventListener("oculomotor:stop", stop);
             if (countdownInterval !== null) clearInterval(countdownInterval);
-            AppState.eyeTracking.calibrated = true;
-            AppState.eyeTracking.needsRecalibration = false;
-            AppState.eyeTracking.calibrationRequested = false;
-            AppState.eyeTracking.calibratedAt = AppState.eyeTracking.calibratedAt || new Date().toISOString();
-            AppState.eyeTracking.calibrationViewport = currentViewportSignature();
+
+              AppState.eyeTracking.calibrated = hasEnoughData;
+              AppState.eyeTracking.needsRecalibration = false;
+              AppState.eyeTracking.calibrationRequested = false;
+              AppState.eyeTracking.calibratedAt = AppState.eyeTracking.calibratedAt || new Date().toISOString();
+              AppState.eyeTracking.calibrationViewport = currentViewportSignature();
+
             AppState.eyeTracking.lastValidation = {
               source: activeSource,
               meanErrorDeg,
@@ -752,8 +888,9 @@
               passed,
               timestamp: new Date().toISOString()
             };
-            if (isCalibrateOnly) {
+            if (isCalibrateOnly || !hasEnoughData) {
               AppState.pending = null;
+              post("oculomotor:abort");
               await exitFullscreenSafely();
             }
             this.jsPsych.finishTrial({
@@ -766,10 +903,15 @@
           };
 
           const requestRecalibration = () => {
+            if (cancelled) return;
+            cancelled = true;
+            window.removeEventListener("oculomotor:stop", stop);
             if (countdownInterval !== null) clearInterval(countdownInterval);
-            AppState.eyeTracking.calibrated = false;
-            AppState.eyeTracking.needsRecalibration = true;
-            AppState.eyeTracking.calibrationRequested = true;
+
+              AppState.eyeTracking.calibrated = false;
+              AppState.eyeTracking.needsRecalibration = true;
+              AppState.eyeTracking.calibrationRequested = true;
+
             this.jsPsych.finishTrial({
               action: "recalibration_requested",
               passed,
@@ -873,26 +1015,35 @@
       const moduleCode = (MODULES[moduleKey] && MODULES[moduleKey].code) ? MODULES[moduleKey].code : moduleKey.toUpperCase();
       const moduleName = (MODULES[moduleKey] && MODULES[moduleKey].name) || moduleKey;
 
+      const thresholdDetails = trialData.thresholdDetails || gazeThresholds(eyeTrackingSource, settings);
       const thresholdDeg = trialData.thresholdDeg !== undefined
         ? trialData.thresholdDeg
-        : round((Number(settings.distanceThresholdArcmin) || 90) / 60, 2);
+        : thresholdDetails.effectiveDeg;
       const thresholdArcmin = trialData.thresholdArcmin !== undefined
         ? trialData.thresholdArcmin
         : round(thresholdDeg * 60, 2);
       const thresholdPx = trialData.thresholdPx !== undefined
         ? trialData.thresholdPx
-        : round((thresholdArcmin / ballArcmin) * (geometry.targetWidth / 2), 1);
+        : round(physicalSizeForArcmin(thresholdArcmin, calibration.viewingDistanceCm) * screenPixels.width / calibration.screenWidthCm, 1);
       const actualDurationMs = sessionStart === null ? 0 : endedAt - sessionStart;
 
       const totalValidMs = gazeCapture.totalValidMs || 0;
       const totalInThreshMs = gazeCapture.totalInThreshMs || 0;
       const totalBlinkMs = gazeCapture.totalBlinkMs || 0;
-      const accuracyRate = gazeCapture.accuracyRate !== undefined ? gazeCapture.accuracyRate : 0;
+      const accuracyRate = gazeCapture.accuracyRate != null ? `${gazeCapture.accuracyRate} %` : "N/A (no valid gaze)";
       const records = gazeCapture.synchronousRecords || [];
+      const tff = trialData.tff;
+      const accuracyPhases = moduleKey === "pursuit" ? "Outward and return movement only; central cross excluded"
+        : moduleKey === "fixation" ? "Edge hold only; central cross and movement excluded"
+        : moduleKey === "saccade" ? "Existing scoring phases; first 200 ms of each target excluded" : "All valid tracking time";
 
-      const deviceName = eyeTrackingSource === EYE_SOURCE_WEBGAZER ? "WebGazer (Webcam Eye Tracking)" : "None (Untracked)";
+      const deviceName = eyeTrackingSource === EYE_SOURCE_WEBGAZER
+        ? "WebGazer (Webcam Eye Tracking)"
+        : "None (Untracked)";
 
-      const samplingRateText = eyeTrackingSource === EYE_SOURCE_WEBGAZER ? "~30 Hz (Dynamic Webcam Sampling)" : "N/A";
+      const samplingRateText = eyeTrackingSource === EYE_SOURCE_WEBGAZER
+        ? "~30 Hz (Dynamic Webcam Sampling)"
+        : "N/A";
 
       const sourceTag = eyeTrackingSource === EYE_SOURCE_WEBGAZER ? "WebGazer" : "Untracked";
 
@@ -920,11 +1071,28 @@
         `# Stimulus Size: ${round(ballArcmin, 2)} arcmin (${(ballArcmin / 60).toFixed(2)} deg)`,
         `# Movement Speed: ${settings.speedArcminSec ? settings.speedArcminSec + " arcmin/s" : "N/A"}`,
         `# Hit Distance Threshold: ${thresholdDeg} deg (${thresholdArcmin} arcmin / approx. ${thresholdPx} px screen radius)`,
+        `# GUI Distance Threshold: ${thresholdDetails.baseDeg} deg`,
+        `# ${sourceTag} Assumed Measurement-Error Allowance: ${thresholdDetails.allowanceDeg} deg`,
+        `# Validation Threshold (2x Mean Error): ${thresholdDetails.validationDeg ?? "N/A"} deg`,
         `# Total Test Duration: ${(actualDurationMs / 1000).toFixed(2)} s`,
         `# Valid Gaze Duration (Denominator): ${(totalValidMs / 1000).toFixed(2)} s`,
         `# Blink Duration (Excluded): ${(totalBlinkMs / 1000).toFixed(2)} s`,
         `# On-Target Duration (Numerator): ${(totalInThreshMs / 1000).toFixed(2)} s`,
-        `# Gaze Accuracy Rate: ${accuracyRate} %`,
+        `# Gaze Accuracy Rate: ${accuracyRate}`,
+        `# Accuracy Definition: On-target duration / valid gaze duration (not hardware calibration accuracy)`,
+        `# Accuracy Scoring Phases: ${accuracyPhases}`,
+        `# Accuracy Sample Weight: accuracy_delta_t_ms is the valid interval overlapping scoring phases; is_within_threshold reports raw spatial proximity even during excluded phases`,
+        ...(tff ? [
+          `# Mean Time To First Fixation (TFF): ${tff.mean_ms ?? "N/A"} ms`,
+          `# TFF Detected Targets: ${tff.detected_targets} / ${tff.total_targets}`,
+          `# TFF Definition: Target onset to first fixation onset AFTER detected eye movement; target hit not required; independent of the 200 ms accuracy grace window`,
+          `# TFF Fixation Classifier: I-VT-style; velocity <= ${tff.velocity_threshold_deg_s} deg/s for >= ${tff.minimum_duration_ms} ms and >= 3 valid samples; gaps > ${tff.maximum_gap_ms} ms or invalid samples break fixation`,
+          ...tff.targets.map(target => `# TFF Target ${target.target_number}: ${target.tff_ms ?? "N/A"} ms; direction=${target.direction}; status=${target.status}; target_onset_ms=${target.target_onset_ms}; fixation_onset_ms=${target.fixation_onset_ms ?? "N/A"}; fixation_confirmed_ms=${target.fixation_confirmed_ms ?? "N/A"}`)
+        ] : []),
+        `# Sample Timing Reference: ${eyeTrackingSource === EYE_SOURCE_WEBGAZER ? "WebGazer inference start on the browser performance clock (camera exposure timestamp unavailable); transport_delay_ms measures inference-start to callback delay, excluding camera capture and filtering delay" : "N/A (untracked)"}`,
+        `# Clock Sync Estimated Uncertainty (half RTT): ${gazeCapture.clockUncertaintyMs != null ? round(gazeCapture.clockUncertaintyMs, 3) + " ms" : eyeTrackingSource === EYE_SOURCE_WEBGAZER ? "N/A (same browser performance clock; camera capture delay not measured)" : "N/A (browser receipt time)"}`,
+        `# Excluded Missing-Sample Duration: ${((gazeCapture.missingDurationMs || 0) / 1000).toFixed(3)} s`,
+        `# Rejected Duplicate/Out-of-Order Timestamps: ${gazeCapture.rejectedTimestampSamples || 0}`,
         `# Enabled Directions: ${selectedDirectionLabels.join(", ") || "All"}`,
         `# Completed Targets: ${completedTargets}`,
         `# Test Termination Reason: ${reason}`,
@@ -949,7 +1117,17 @@
         "distance_error_deg",
         "is_within_threshold",
         "phase",
-        "direction"
+        "direction",
+        "browser_received_trial_time_ms",
+        "transport_delay_ms",
+        "stimulus_frame_time_ms",
+        "clock_mapping",
+        "target_number",
+        "accuracy_eligible",
+        "accuracy_delta_t_ms",
+        "gaze_velocity_deg_s",
+        "is_fixation",
+        "tff_ms"
       ];
 
       const rowLines = records.map(r => [
@@ -967,7 +1145,17 @@
         r.distance_error_deg,
         r.is_within_threshold,
         csvEscape(r.phase),
-        csvEscape(DIRECTION_ENGLISH_LABELS[r.direction] || r.direction)
+        csvEscape(DIRECTION_ENGLISH_LABELS[r.direction] || r.direction),
+        r.browser_received_trial_time_ms,
+        r.transport_delay_ms ?? "",
+        r.stimulus_frame_time_ms,
+        csvEscape(r.clock_mapping),
+        r.target_number,
+        r.accuracy_eligible,
+        r.accuracy_delta_t_ms,
+        r.gaze_velocity_deg_s ?? "",
+        r.is_fixation ?? "",
+        r.tff_ms ?? ""
       ].join(","));
 
       const fullCsvContent = [
@@ -975,6 +1163,8 @@
         tableHeaders.join(","),
         ...rowLines
       ].join("\r\n");
+
+
 
       triggerFileDownload(csvFilename, fullCsvContent);
     }
@@ -993,7 +1183,8 @@
         const sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
         const usesWebGazer = eyeTracking.source === EYE_SOURCE_WEBGAZER;
         const usesGazeTracking = usesWebGazer;
-        let activeTrialCapture = usesWebGazer ? beginWebGazerTrial(sessionId) : null;
+        let activeTrialCapture = null;
+        if (usesWebGazer) activeTrialCapture = beginWebGazerTrial(sessionId);
 
         let unsubscribeWebgazer = null;
         if (usesWebGazer) {
@@ -1016,26 +1207,31 @@
             if (typeof extension.onGazeUpdate === "function") {
               unsubscribeWebgazer = extension.onGazeUpdate((prediction) => {
                 if (ended || sessionStart === null || !activeTrialCapture || !activeTrialCapture.onSample) return;
-                const nowUs = Math.round(performance.now() * 1000);
-                if (prediction && Number.isFinite(prediction.x) && Number.isFinite(prediction.y)) {
-                  activeTrialCapture.onSample({
-                    valid: true,
-                    x: prediction.x,
-                    y: prediction.y,
-                    device_timestamp_us: nowUs
-                  });
-                } else {
-                  activeTrialCapture.onSample({
-                    valid: false,
-                    x: null,
-                    y: null,
-                    device_timestamp_us: nowUs
-                  });
+                if (activeTrialCapture.samples.length >= MAX_GAZE_SAMPLES_PER_TRIAL) {
+                  activeTrialCapture.overflow += 1;
+                  return;
                 }
+                const receivedAt = performance.now();
+                const sourceTime = prediction?.sample_performance_ms;
+                const hasSourceTime = Number.isFinite(sourceTime) && sourceTime >= 0 && sourceTime <= receivedAt;
+                const sampleTime = hasSourceTime ? sourceTime : receivedAt;
+                const valid = Boolean(prediction && Number.isFinite(prediction.x) && Number.isFinite(prediction.y));
+                const sample = {
+                  valid,
+                  x: valid ? prediction.x : null,
+                  y: valid ? prediction.y : null,
+                  device_timestamp_us: Math.round(sampleTime * 1000),
+                  sample_performance_ms: sampleTime,
+                  transport_delay_ms: hasSourceTime ? round(receivedAt - sampleTime, 3) : null,
+                  clock_mapping: hasSourceTime ? "webgazer_inference_start_to_browser_performance" : "browser_receipt_time"
+                };
+                activeTrialCapture.samples.push(sample);
+                activeTrialCapture.onSample(sample);
               });
             }
           }
         }
+        const stopController = new AbortController();
         const screenPixels = currentScreenPixels();
         const stimulusType = moduleKey === "vor" ? "numbers_dot" : (settings.stimulusType || "white_dot");
         const selectedDirs = (Array.isArray(settings.directions) && settings.directions.length > 0)
@@ -1087,18 +1283,10 @@
         const center = { x: geometry.viewportWidth / 2, y: geometry.viewportHeight / 2 };
         const currentCenter = { x: center.x, y: center.y };
 
-        let saccadeOnsetMs = null;
-        let thresholdDeg;
-        let thresholdArcmin;
-        if (usesGazeTracking && AppState.eyeTracking.lastValidation?.dynamicThresholdDeg) {
-          thresholdDeg = AppState.eyeTracking.lastValidation.dynamicThresholdDeg;
-          thresholdArcmin = round(thresholdDeg * 60, 2);
-        } else {
-          thresholdArcmin = Number(settings.distanceThresholdArcmin) || 90;
-          thresholdDeg = round(thresholdArcmin / 60, 2);
-        }
-        const thresholdRadiusPx = (thresholdArcmin / ballArcmin) * (geometry.targetWidth / 2);
-        const pxPerDeg = (geometry.targetWidth / ballArcmin) * 60;
+        const thresholdDetails = gazeThresholds(eyeTracking.source, settings);
+        const thresholdDeg = thresholdDetails.effectiveDeg;
+        const thresholdArcmin = round(thresholdDeg * 60, 2);
+        const thresholdRadiusPx = physicalSizeForArcmin(thresholdArcmin, calibration.viewingDistanceCm) * screenPixels.width / calibration.screenWidthCm;
 
         if (activeTrialCapture) {
           activeTrialCapture.onSample = (sample) => {
@@ -1107,23 +1295,38 @@
             const active = activeTrialCapture;
             if (!active) return;
 
-            const currentTsUs = sample.device_timestamp_us || (Math.round(sample.browser_received_unix_ms * 1000));
-            let deltaMs = 30.3;
-            if (active.lastSampleTsUs !== null && currentTsUs > active.lastSampleTsUs) {
-              deltaMs = (currentTsUs - active.lastSampleTsUs) / 1000;
+            const sampleTime = sample.sample_performance_ms ?? nowPerf;
+            const trialTime = sampleTime - sessionStart;
+            if (trialTime < 0) return;
+            const currentTsUs = sample.device_timestamp_us ?? Math.round(sampleTime * 1000);
+            if (active.lastSampleTsUs !== null && currentTsUs <= active.lastSampleTsUs) {
+              active.rejectedTimestampSamples = (active.rejectedTimestampSamples || 0) + 1;
+              return;
             }
+            const deltaMs = active.lastSampleTsUs === null ? 1000 / 33 : (currentTsUs - active.lastSampleTsUs) / 1000;
             active.lastSampleTsUs = currentTsUs;
 
-            // Frame loss protection (intervals > 100ms clamped to nominal 30.3ms)
-            const effectiveDeltaMs = deltaMs > 100 ? 30.3 : deltaMs;
-
-            // Saccade 200ms physiological latency grace window
-            let isSaccadeLatency = false;
-            if (moduleKey === "saccade" && phase === "dwell" && saccadeOnsetMs !== null) {
-              if (nowPerf - saccadeOnsetMs < 200) {
-                isSaccadeLatency = true;
-              }
+            // Match the sample's source timestamp to the displayed frame before its callback arrived.
+            let low = 0;
+            let high = frameCoordinates.length - 1;
+            let frame = null;
+            let frameIndex = -1;
+            while (low <= high) {
+              const mid = Math.floor((low + high) / 2);
+              if (frameCoordinates[mid].timestamp_ms <= trialTime) {
+                frame = frameCoordinates[mid];
+                frameIndex = mid;
+                low = mid + 1;
+              } else high = mid - 1;
             }
+            if (!frame) return;
+            const effectiveDeltaMs = Math.min(deltaMs > 100 ? 1000 / 33 : deltaMs, trialTime);
+            if (deltaMs > 100) active.missingDurationMs = (active.missingDurationMs || 0) + deltaMs - effectiveDeltaMs;
+            const isSaccadeLatency = moduleKey === "saccade" && frame.phase === "dwell" && trialTime - frame.phase_started_ms < 200;
+            const eligibleStart = accuracyPhaseStart(moduleKey, frame);
+            const accuracyEligible = eligibleStart !== null && trialTime >= eligibleStart;
+            const scoredDeltaMs = accuracyEligible
+              ? accuracyDurationMs(moduleKey, frameCoordinates, frameIndex, trialTime, effectiveDeltaMs) : 0;
 
             let isWithin = 0;
             let distPx = null;
@@ -1132,34 +1335,39 @@
             if (!sample.valid) {
               active.totalBlinkMs += effectiveDeltaMs;
             } else {
-              distPx = Math.hypot(sample.x - currentCenter.x, sample.y - currentCenter.y);
-              distDeg = pxPerDeg > 0 ? (distPx / pxPerDeg) : 0;
+              const dx = sample.x - frame.stimulus_center_x;
+              const dy = sample.y - frame.stimulus_center_y;
+              distPx = Math.hypot(dx, dy);
+              distDeg = gazeErrorDegrees(dx, dy, calibration, screenPixels);
+              isWithin = distDeg <= thresholdDeg ? 1 : 0;
 
-              if (!isSaccadeLatency) {
-                active.totalValidMs += effectiveDeltaMs;
-                if (distPx <= thresholdRadiusPx) {
-                  isWithin = 1;
-                  active.totalInThreshMs += effectiveDeltaMs;
-                }
-              }
+              active.totalValidMs += scoredDeltaMs;
+              if (isWithin) active.totalInThreshMs += scoredDeltaMs;
             }
 
             active.synchronousRecords.push({
               sample_index: active.synchronousRecords.length + 1,
-              trial_time_ms: round(nowPerf - sessionStart, 2),
+              trial_time_ms: round(trialTime, 2),
+              browser_received_trial_time_ms: round(nowPerf - sessionStart, 2),
+              transport_delay_ms: sample.transport_delay_ms ?? null,
+              stimulus_frame_time_ms: frame.timestamp_ms,
+              clock_mapping: sample.clock_mapping || "browser_performance_clock",
               device_timestamp_us: currentTsUs,
               delta_t_ms: round(deltaMs, 2),
               instant_hz: deltaMs > 0 ? round(1000 / deltaMs, 1) : 33.0,
               gaze_valid: sample.valid ? 1 : 0,
               gaze_x_px: sample.valid ? round(sample.x, 2) : "",
               gaze_y_px: sample.valid ? round(sample.y, 2) : "",
-              stimulus_x_px: round(currentCenter.x, 2),
-              stimulus_y_px: round(currentCenter.y, 2),
+              stimulus_x_px: round(frame.stimulus_center_x, 2),
+              stimulus_y_px: round(frame.stimulus_center_y, 2),
               distance_error_px: distPx !== null ? round(distPx, 2) : "",
               distance_error_deg: distDeg !== null ? round(distDeg, 3) : "",
               is_within_threshold: isWithin,
-              phase: isSaccadeLatency ? "saccade_latency" : phase,
-              direction: currentDirection || currentGridKey || "center"
+              accuracy_eligible: accuracyEligible ? 1 : 0,
+              accuracy_delta_t_ms: sample.valid ? round(scoredDeltaMs, 3) : 0,
+              phase: isSaccadeLatency ? "saccade_latency" : frame.phase,
+              target_number: frame.target_number,
+              direction: frame.direction
             });
           };
         }
@@ -1280,6 +1488,7 @@
         window.addEventListener("orientationchange", onViewportChange);
         if (window.visualViewport) window.visualViewport.addEventListener("resize", onViewportChange);
 
+        window.addEventListener("oculomotor:stop", () => endTrial("cancelled"), { once: true, signal: stopController.signal });
         const keyboardListener = this.jsPsych.pluginAPI.getKeyboardResponse({
           callback_function: () => endTrial("escape"),
           valid_responses: ["Escape"],
@@ -1302,12 +1511,10 @@
           void exitFullscreenSafely();
         };
 
-        const abort = () => endTrial("abort");
-        window.addEventListener("oculomotor:stop", abort);
         const endTrial = (reason) => {
           if (ended) return;
           ended = true;
-          window.removeEventListener("oculomotor:stop", abort);
+          stopController.abort();
           const endedAt = performance.now();
           if (rafId !== null) cancelAnimationFrame(rafId);
           this.jsPsych.pluginAPI.cancelKeyboardResponse(keyboardListener);
@@ -1325,14 +1532,15 @@
           if (usesWebGazer && window.webgazer) {
             try { window.webgazer.pause(); } catch (e) {}
           }
-          if (reason === "abort") { finishWebGazerTrial(sessionId); return; }
           const gazeCapture = usesWebGazer
-            ? finishWebGazerTrial(sessionId)
-            : { samples: [], downsampled: 0, overflow: 0, synchronousRecords: [], totalBlinkMs: 0, totalValidMs: 0, totalInThreshMs: 0, accuracyRate: 0 };
+              ? finishWebGazerTrial(sessionId)
+              : { samples: [], downsampled: 0, overflow: 0, synchronousRecords: [], totalBlinkMs: 0, totalValidMs: 0, totalInThreshMs: 0, accuracyRate: null };
           const normalFrameMedian = median(sampledFrameGaps.filter((gap) => gap > 4 && gap < 100));
+          const tff = moduleKey === "saccade"
+            ? saccadeFixationSummary(gazeCapture.synchronousRecords || [], events, calibration, screenPixels) : null;
 
           // Automatically export synchronous CSV record
-          exportTrialCsvs({
+          if (reason !== "cancelled") exportTrialCsvs({
             sessionId,
             subjectId,
             moduleKey,
@@ -1354,9 +1562,11 @@
             normalFrameMedian,
             eyeTrackingSource: eyeTracking.source,
             thresholdDeg,
+            thresholdDetails,
             thresholdArcmin,
             thresholdPx: round(thresholdRadiusPx, 1),
-            gazeCapture
+            gazeCapture,
+            tff
           });
 
           const data = {
@@ -1369,10 +1579,19 @@
             completed_targets: completedTargets,
             actual_duration_ms: round(sessionStart === null ? 0 : endedAt - sessionStart, 3),
             accuracy_rate: gazeCapture.accuracyRate,
+            ...(tff ? {
+              tff_mean_ms: tff.mean_ms,
+              tff_detected_targets: tff.detected_targets,
+              tff_total_targets: tff.total_targets,
+              tff_analysis: tff
+            } : {}),
             in_threshold_sec: round((gazeCapture.totalInThreshMs || 0) / 1000, 2),
             valid_sec: round((gazeCapture.totalValidMs || 0) / 1000, 2),
             blink_sec: round((gazeCapture.totalBlinkMs || 0) / 1000, 2),
             threshold_deg: thresholdDeg,
+            threshold_setting_deg: thresholdDetails.baseDeg,
+            tracker_error_allowance_deg: thresholdDetails.allowanceDeg,
+            validation_threshold_deg: thresholdDetails.validationDeg,
             threshold_arcmin: thresholdArcmin,
             planned_duration_ms: plannedDurationMs,
             fullscreen_entered: Boolean(trial.fullscreen_entered),
@@ -1381,16 +1600,22 @@
               enabled: eyeTracking.source !== EYE_SOURCE_OFF,
               calibrated: Boolean(eyeTracking.calibrated),
               calibrated_at: eyeTracking.calibratedAt || null,
-              library: usesWebGazer ? "WebGazer via jsPsych extension-webgazer" : null,
-              provider: usesWebGazer ? "WebGazer" : null,
-              provider_mode: usesWebGazer ? "webcam" : null,
-              sampling_interval_ms: usesWebGazer ? 34 : null
+              library: eyeTracking.source === EYE_SOURCE_WEBGAZER
+                ? "WebGazer via jsPsych extension-webgazer"
+                : null,
+              provider: (usesWebGazer ? "WebGazer" : null),
+              provider_mode: (usesWebGazer ? "webcam" : null),
+              sampling_interval_ms: eyeTracking.source === EYE_SOURCE_WEBGAZER ? 34 : null,
+              clock_sync_estimated_uncertainty_ms: null,
+              hardware_calibration_confirmed: null
             },
             gaze_path: JSON.stringify(gazeCapture.samples || []),
-            gaze_records: gazeCapture.synchronousRecords || [],
             gaze_sample_count: (gazeCapture.synchronousRecords || []).length,
+            gaze_records: gazeCapture.synchronousRecords || [],
             gaze_downsampled_count: gazeCapture.downsampled || 0,
             gaze_overflow_count: gazeCapture.overflow || 0,
+            gaze_rejected_timestamp_count: gazeCapture.rejectedTimestampSamples || 0,
+            gaze_missing_duration_ms: gazeCapture.missingDurationMs || 0,
             viewport: { width: geometry.viewportWidth, height: geometry.viewportHeight },
             stimulus: {
               arcsec: ballArcsec,
@@ -1414,16 +1639,18 @@
             interaction_log: [...AppState.interactions],
             ended_at: new Date().toISOString()
           };
-          finish(data);
+          if (reason !== "cancelled") finish(data);
         };
+
+
 
         let picker = null;
         let phaseStart = 0;
         let phaseEnd = 0;
-        let arrivalFrame = -1;
         let movementFrom = null;
         let movementTo = null;
         let movementDuration = 0;
+        let returnReachedCenter = false;
         let vorIndex = -1;
         let lastVorColor = null;
         let lastVorDigit = null;
@@ -1463,6 +1690,7 @@
         };
 
         const beginMovement = (now) => {
+          returnReachedCenter = false;
           phase = "movement";
           phaseStart = now;
           movementFrom = center;
@@ -1495,9 +1723,16 @@
               planned_hold_ms: settings.holdSec * 1000
             });
           } else {
-            completedTargets += 1;
-            phase = "arrival_frame";
-            arrivalFrame = frameCount;
+            phase = "return";
+            phaseStart = now;
+            movementFrom = { ...movementTo };
+            movementTo = { ...center };
+            phaseEnd = now + movementDuration;
+            logEvent("return_onset", now, {
+              target_number: completedTargets + 1,
+              direction: currentDirection,
+              duration_ms: round(movementDuration, 3)
+            });
           }
         };
 
@@ -1510,7 +1745,6 @@
           phase = "dwell";
           phaseStart = now;
           phaseEnd = now + settings.dwellMs;
-          saccadeOnsetMs = now;
           logEvent("saccade_onset", now, {
             target_number: completedTargets + 1,
             direction: nextKey,
@@ -1529,7 +1763,12 @@
             beginMovement(now);
             return;
           }
-          if (phase === "movement") {
+          if (phase === "return" && returnReachedCenter) {
+            if (settings.mode === EVALUATION && completedTargets >= picker.evaluationTotal) endTrial("evaluation_complete");
+            else beginExcursion(now);
+            return;
+          }
+          if (phase === "movement" || phase === "return") {
             const ratio = movementDuration <= 0 ? 1 : Math.min(1, Math.max(0, (now - phaseStart) / movementDuration));
             setPosition({
               x: movementFrom.x + (movementTo.x - movementFrom.x) * ratio,
@@ -1538,12 +1777,14 @@
             if (stimulusType === "numbers_dot") {
               updateDynamicNumber(now);
             }
-            if (ratio >= 1) finishMovementAtEdge(now);
-            return;
-          }
-          if (phase === "arrival_frame" && frameCount > arrivalFrame) {
-            if (settings.mode === EVALUATION && completedTargets >= picker.evaluationTotal) endTrial("evaluation_complete");
-            else beginExcursion(now);
+            if (ratio >= 1) {
+              if (phase === "movement") finishMovementAtEdge(now);
+              else {
+                completedTargets += 1;
+                returnReachedCenter = true;
+                logEvent("center_arrival", now, { target_number: completedTargets, direction: currentDirection });
+              }
+            }
             return;
           }
           if (phase === "hold" && now >= phaseEnd) {
@@ -1602,7 +1843,8 @@
               timestamp_ms: round(now - sessionStart, 3),
               time_sec: round((now - sessionStart) / 1000, 4),
               phase,
-              target_number: completedTargets + 1,
+              phase_started_ms: round(phaseStart - sessionStart, 3),
+              target_number: phase === "return" && returnReachedCenter ? completedTargets : completedTargets + 1,
               direction: currentDirection || currentGridKey || "center",
               direction_label: DIRECTION_ENGLISH_LABELS[currentDirection || currentGridKey] || currentDirection || currentGridKey || "Center",
               stimulus_center_x: round(currentCenter.x, 3),
@@ -1781,6 +2023,10 @@
             blink_sec: data.eye_tracking.enabled ? data.blink_sec : null,
             gaze_sample_count: data.eye_tracking.enabled ? data.gaze_sample_count : null,
             threshold_deg: data.eye_tracking.enabled ? data.threshold_deg : null,
+            tff_mean_ms: data.eye_tracking.enabled ? data.tff_mean_ms ?? null : null,
+            tff_detected_targets: data.eye_tracking.enabled ? data.tff_detected_targets ?? null : null,
+            tff_total_targets: data.eye_tracking.enabled ? data.tff_total_targets ?? null : null,
+            tff_analysis: data.eye_tracking.enabled ? data.tff_analysis ?? null : null,
             validation_error_deg: data.eye_tracking.enabled ? validation?.meanErrorDeg ?? null : null,
             estimated_refresh_hz: data.timing?.estimated_refresh_hz ?? null,
             end_reason: data.end_reason,

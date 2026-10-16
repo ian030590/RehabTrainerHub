@@ -500,7 +500,7 @@ export async function RenderServiceWorker(release, basePath) {
       'index.js', 'preview.html', 'preview.css', 'webgazer.js', 'eyeTrackingEntry.js', 'eyeTrackingController.js',
       'models/facemesh/model.json', 'models/facemesh/group1-shard1of1.bin',
       'models/blazeface/model.json', 'models/blazeface/group1-shard1of1.bin',
-    ].map(path => '/input/eye-tracking-1.0.0/' + path) : []),
+    ].map(path => '/input/eye-tracking-1.1.0/' + path) : []),
     ...releaseUrls,
   ];
 

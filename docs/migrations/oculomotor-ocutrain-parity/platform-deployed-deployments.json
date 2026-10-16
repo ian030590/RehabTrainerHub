@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-10-16T21:27:19.604Z",
+  "deployments": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "b4cf91d0-2041-4dd1-9427-490bb5bf85f8",
+      "url": "https://b4cf91d0.rehabtrainerhub.pages.dev",
+      "environment": "production",
+      "commit": "51018eed98339cc14a9d58278e11f79db043ecd6",
+      "createdOn": "2026-10-16T21:26:46.239949Z",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-16T21:26:48.722176Z",
+        "status": "success"
+      }
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "19b61771-923c-4191-82bb-7d8206a1f6a0",
+      "url": "https://19b61771.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "51018eed98339cc14a9d58278e11f79db043ecd6",
+      "createdOn": "2026-10-16T21:24:02.641447Z",
+      "stage": {
+        "name": "deploy",
+        "started_on": null,
+        "ended_on": "2026-10-16T21:24:05.28227Z",
+        "status": "success"
+      }
+    }
+  ]
+}

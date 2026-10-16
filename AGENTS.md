@@ -9,6 +9,8 @@
 
 ## 專案結構與模組組織
 
+眼動練習 `2.1.0` 已於 2026-10-17 依擁有者「核准發佈」完成 OcuTrain `6676f24523a5bc857a7c28f68c520a45bfb8d167` 對齊版的精確核准、相容 runner／Hub 先部署、R2 發布及 current 切換。22 段原碼摘要、七項 gate、正式 API／11 檔 bytes、桌機／平板／英文登入／手機 Hub 與手機 PWA 五流程通過；`2.0.1` 十檔已核對回退，無正式訓練紀錄。新代理 `eye-tracking-1.1.0` 傳跨文件推論開始時間，保留 `1.0.0` 相容入口。正式平台使用隔離的六款 registry／34 舊 bundle（含舊 Gabor），沒有發布蓋伯候選，也沒有新增 Git commit／push；不可直接部署含蓋伯候選的完整工作樹。版本摘要、部署、來源差異、私有 CSV 契約與硬體限制見 `docs/oculomotor-ocutrain-parity.md` 及 `docs/releases/oculomotor-training-2.1.0.json`。
+
 蓋伯斑塊練習 `gabor-patching@2.0.0` 為本機 R2 搬遷候選，尚待精確版本／摘要核准、R2 發布、Hub 正式切換及驗收；不得登記為正式完成。自有設定、三目標聚光燈、原 Gabor／Pixi／jsPsych、數值成績與私有 bridge 已完成；候選 registry 七款、Hub build 33 款舊 bundle，正式仍六款／34 款。審查、逐檔摘要、TDD、Brave 與回退見 `docs/gabor-patching-r2-migration.md`。禁止在核准 release／current 可讀前推送此 registry 至正式 Hub。
 
 npm workspace / Turborepo monorepo；目前只有兩個 app，App 程式碼位於 `apps/`：
@@ -69,6 +71,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 驗證使用 Node.js 內建 `node:test`、assert 檢查腳本、TypeScript、針對性 build 與本機 Brave smoke；依變更範圍選用對應 gate。Hub API、runner、遊戲流程、assessment lifecycle 與 i18n 分別有 `test:hub-functions`、`test:gamerunner`、`test:training-flow`、`test:assessment-lifecycle`、`test:i18n`。
 
 ## CI/CD 維護
+
+- OcuTrain 對齊的 `scripts/oculomotor-reference.test.mjs` 經既有眼動遷移測試引入 `test:game-architecture`，涵蓋 22 段原碼摘要、閾值／半徑、追視回程、凝視階段、TFF、來源時間、零資料驗證、取消倒數、設定與完整 CSV。新版輸入代理及兩版相機路由／PWA 由 `test:gamerunner` 覆蓋；兩份 workflow 沿用原七項 matrix 與相同 root 命令，不新增 Brave CI。詳細 RED／GREEN 與本機流程見 `docs/oculomotor-ocutrain-parity.md`。
 
 - 蓋伯候選新增 `check-gabor-patching-migration.test.mjs` 與 `check-gabor-patching-tutorial.test.mjs` 至既有 `test:game-architecture`；驗證原設定／難度／計分、完整明細、取消／晚到 renderer、240 Hz 長紀錄、原圖、私有 bridge 與三目標聚光燈。既有 UI／結果／全螢幕／音訊測試加入此 gameId，Hub API／SQL／目錄／middleware 與 runner 穩定入口亦有回歸。兩份 workflow 沿用七項 matrix 與同一 root 命令，workflow 本身仍觸發驗證。本機 Brave 使用 `node scripts/check-r2-game-browser.mjs --game gabor-patching --lobby`，另驗 `--wide --windowed`、`--mobile --medium --session-failure`、`--tablet --hard`、`--signed-in --english --hard --sound-on --renderer-failure`、`--revoke`、`--standalone --mobile --medium` 及 `--standalone --tablet --hard --stop`；只寫本機 SQLite，不加入 Linux CI。尚未發布的候選不得當作正式驗收。
 

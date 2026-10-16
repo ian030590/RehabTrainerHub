@@ -1,0 +1,68 @@
+{
+  "verifiedAt": "2026-10-16T21:25:43.580Z",
+  "files": [
+    {
+      "path": "index.js",
+      "size": 8874,
+      "sha256": "5c472ffbf2c2791abe2a09f8cf4262109f2d1e2932fdb643c6626f8e1a53f39e",
+      "status": 200
+    },
+    {
+      "path": "preview.html",
+      "size": 313,
+      "sha256": "45336fe2702979d6c92c578c2f0d95a22a716f181538cd24b814aa5d313fbd4f",
+      "status": 200
+    },
+    {
+      "path": "preview.css",
+      "size": 128,
+      "sha256": "82eae24fbe52e1cd79d7318c997cea3900f550026dc4fbb9980512733d83847f",
+      "status": 200
+    },
+    {
+      "path": "webgazer.js",
+      "size": 3470808,
+      "sha256": "1b7d24fad2687a423b0f540b7b5fa77f7c627a85c4d3c084c11be5bd83859d85",
+      "status": 200
+    },
+    {
+      "path": "eyeTrackingEntry.js",
+      "size": 3466,
+      "sha256": "af23aecd7aeb27a4461af378cf0795a29d2abd137d48db1a740d32270019dc1f",
+      "status": 200
+    },
+    {
+      "path": "eyeTrackingController.js",
+      "size": 2441,
+      "sha256": "588315074a811c7453ee502de73236d3e55fc4fd7c7e2f459c9629846e5990eb",
+      "status": 200
+    },
+    {
+      "path": "models/facemesh/model.json",
+      "size": 93029,
+      "sha256": "c922985d95e101e7fe56576a9a00366c72d3fab3604ce371cc9d85394abda99c",
+      "status": 200
+    },
+    {
+      "path": "models/facemesh/group1-shard1of1.bin",
+      "size": 2955780,
+      "sha256": "f4a7075c1fff12ceafd2cd6fc000a464da90b1e0c35236971ed5bb3b343366cb",
+      "status": 200
+    },
+    {
+      "path": "models/blazeface/model.json",
+      "size": 64036,
+      "sha256": "7b6bb6f35e5a7899232de51dda8bf514ef9664ca7ec58388c9fecc088c883b58",
+      "status": 200
+    },
+    {
+      "path": "models/blazeface/group1-shard1of1.bin",
+      "size": 401768,
+      "sha256": "60b481ab6c19352673cdb21e02e639f90883db1393ac52d07c7ea4e1e11cb2cd",
+      "status": 200
+    }
+  ],
+  "legacyInputAvailable": true,
+  "previousReleaseLauncherCompatible": true,
+  "gameSandboxUnchanged": true
+}

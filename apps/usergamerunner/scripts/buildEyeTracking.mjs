@@ -7,7 +7,7 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 export async function BuildEyeTracking(appRoot, outputDirectory) {
   const root = resolve(appRoot, '../..');
   const manifest = JSON.parse(await readFile(resolve(root, 'scripts/eye-tracking-assets.manifest.json'), 'utf8'));
-  const inputRoot = resolve(outputDirectory, 'input/eye-tracking-1.0.0');
+  const inputRoot = resolve(outputDirectory, 'input/eye-tracking-1.1.0');
   await mkdir(inputRoot, { recursive: true });
   const original = await readFile(resolve(appRoot, 'runtime/WEBGAZER-SOURCE.txt'));
   if (hash(original) !== manifest.vendorSha256) throw new Error('WebGazer vendor digest mismatch');
@@ -54,4 +54,8 @@ export async function BuildEyeTracking(appRoot, outputDirectory) {
     lib: { entry: resolve(appRoot, 'runtime/eyeTrackingClient.js'), name: 'TrainerHubEyeTracking', formats: ['iife'], fileName: () => 'index.js' } } });
   await writeFile(resolve(inputRoot, 'preview.html'), '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WebGazer camera</title><link rel="stylesheet" href="./preview.css"></head><body><script src="./webgazer.js"></script><script type="module" src="./eyeTrackingEntry.js"></script></body></html>');
   await writeFile(resolve(inputRoot, 'preview.css'), ':root{--camera-background:#202428}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--camera-background)}');
+  const legacyRoot = resolve(outputDirectory, 'input/eye-tracking-1.0.0');
+  await cp(inputRoot, legacyRoot, { recursive: true });
+  const legacyEntry = (await readFile(resolve(inputRoot, 'eyeTrackingEntry.js'), 'utf8')).replace('  timeOrigin: performance.timeOrigin,', '').replace('  now: () => performance.now(),', '');
+  await writeFile(resolve(legacyRoot, 'eyeTrackingEntry.js'), legacyEntry);
 }

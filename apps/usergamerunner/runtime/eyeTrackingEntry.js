@@ -6,6 +6,8 @@ let sequence = 0;
 let received = -1;
 const reply = (type, payload) => port?.postMessage({ schema: 'trainerhub.eye-proxy/v1', sessionNonce: nonce, sequence: sequence++, type, payload });
 const controller = CreateEyeTrackingController({
+  timeOrigin: performance.timeOrigin,
+  now: () => performance.now(),
   getUserMedia: constraints => navigator.mediaDevices.getUserMedia(constraints),
   requestFrame: callback => requestAnimationFrame(callback), cancelFrame: id => cancelAnimationFrame(id),
   createEngine: async stream => {

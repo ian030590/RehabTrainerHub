@@ -38,7 +38,8 @@ test('every game exposes bounded grading settings and exact numeric score source
         const settings = read(id, 'settings.ts');
         assert.match(source, /ValidateSettings\(settings\)/);
         assert.match(settings, /value >= field\.min!/);
-        assert.match(settings, /value <= field\.max!/);
+        assert.match(settings, /value <= \(field\.max \?\? 1e9\)/);
+        assert.match(settings, /value <= 1200/);
         assert.match(source, /BuildGameScore\(completed\)/);
         assert.match(source, /SendGameEvent\('result'/);
       } else if (id === 'gabor-patching') {

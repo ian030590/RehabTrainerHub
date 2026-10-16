@@ -33,10 +33,11 @@ export function CreateEyeTrackingController(environment) {
           last = timestamp;
           try {
             const current = engine;
+            const inferenceStart = environment.now?.() ?? timestamp;
             const prediction = await current.Predict();
             if (selected !== generation) return;
             const valid = prediction && [prediction.x, prediction.y].every(value => Number.isFinite(value) && Math.abs(value) <= 10000);
-            onFrame({ timestamp, x: valid ? prediction.x / 1000 : null, y: valid ? prediction.y / 1000 : null, faceDetected: Boolean(current.FaceDetected()) });
+            onFrame({ timestamp: (environment.timeOrigin || 0) + inferenceStart, x: valid ? prediction.x / 1000 : null, y: valid ? prediction.y / 1000 : null, faceDetected: Boolean(current.FaceDetected()) });
           } catch { fail('initialization'); return; }
         }
         if (selected === generation) frame = environment.requestFrame(process);

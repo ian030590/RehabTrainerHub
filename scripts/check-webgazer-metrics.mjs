@@ -34,7 +34,9 @@ assert.equal(IsGameScore(score, definition), true);
 assert.equal(score.summary.accuracy, 67.5);
 assert.equal(score.summary.samples, 1350);
 assert.equal(score.rounds[0].onTargetSec, 27);
-assert.deepEqual(BuildEyeScore(tracked), score);
+const expected = { ...score, summary: { ...score.summary, tffMeanMs: null, tffDetectedTargets: null },
+  rounds: score.rounds.map(round => ({ ...round, tffMeanMs: null, tffDetectedTargets: null })) };
+assert.deepEqual(BuildEyeScore(tracked), expected);
 
 const untracked = { actual_duration_ms: 30000, completed_targets: 7 };
 const untrackedScore = BuildGameScore(definition, { details: untracked, detailRows: [untracked] });
