@@ -79,3 +79,17 @@ sample_index,trial_time_ms,device_timestamp_us,delta_t_ms,instant_hz,gaze_valid,
 後續同回合擁有者另核准 Gabor：`gabor-patching@2.0.0` 已發布並完成正式驗收，既有 Hub 可啟動新格式入口；目前七款 R2／33 款舊流程，眼動 current 與摘要保持 `2.1.1`。見 [Gabor 正式收據](releases/gabor-patching-2.0.0.json)。上段的六款與 Gabor 尚未發布是眼動發布當時的歷史狀態。眼動提交 `f7a4350` 的 [七項 GitHub CI](https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288)全部通過，涵蓋既有 Gabor 測試。
 
 尚未驗真人／實體相機、實體螢幕尺量、實體觸控及 Safari／iOS；圖片串流與 Brave 尺寸模擬不能代替硬體驗收。沒有讀取私人 CSV 的逐筆內容。
+
+## 兩位小數輸入調查（尚未重現）
+
+2026-10-17 使用者回報一位小數正常、兩位小數時畫面異常。目前沒有取得實際輸入值與異常畫面的具體現象，因此尚未定位該回報的原因，沒有修改產品、發布新版本或調整換算／閾值。已增加 browser fixture 的 `--decimal-screen` 診斷參數，逐字經瀏覽器輸入數值，檢查失焦後的欄位有效性、模式往返後的保留值、引擎實收設定及刺激尺寸。
+
+命令前綴為 `node scripts/check-r2-game-browser.mjs --game oculomotor-training --production-hub --lobby --screen-3-2 --decimal-screen`，直接讀正式 `2.1.1` 的 Hub／R2 資產，只攔截 API 保存至本機：
+
+| 參數 | 結果 |
+| --- | --- |
+| `--activity vor` | 逐字輸入寬 47.1 → 47.13、高 31.4 → 31.42、距離 60.1 → 60.05，數值完整傳至引擎，刺激 32.015625×32.015625 px，成績與保存通過 |
+| `--gaze --activity saccade` | 同一組兩位小數，經眼動準備、校正及驗證後仍保持相同圓形，完整成果／私人測試 CSV 及摘要保存通過 |
+| `--incorrect-screen-height --activity pursuit` | 高度改填 62.84，刺激 32.015625×16 px，保留錯誤寬高比例造成變形的行為 |
+
+26 項 OcuTrain 回歸及命名檢查通過，22 段原始函式摘要仍相同。以上只表示這組數值未重現問題；仍需使用者實際的一位／兩位小數寬高，以及圓形、尺寸、位置或流程的具體異常，才能針對回報修正。沒有把尚未失敗的測試當作 bug 已修復的證據。

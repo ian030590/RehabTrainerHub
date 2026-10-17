@@ -25,14 +25,39 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
   const screenAspect = await evaluate(`innerHeight / innerWidth`);
   const incorrectScreenHeight = process.argv.includes('--incorrect-screen-height');
   const staleMeasurements = process.argv.includes('--measurements-16-9');
+  const decimalMeasurements = process.argv.includes('--decimal-screen');
   if (process.argv.includes('--screen-3-2')) {
     const expression = `({screenWidth:screen.width,screenHeight:screen.height,innerWidth,innerHeight,dpr:devicePixelRatio})`;
     console.log('3:2 screen report: '+JSON.stringify({container:await evaluate(expression),game:await game(expression)}));
     assert.ok(Math.abs(screenAspect - 2 / 3) < .0001, 'The emulated display area itself is 3:2');
   }
-  await setInput('screenWidthCm', 48);
+  const measuredWidth = decimalMeasurements ? 47.13 : 48;
   const measurementAspect = staleMeasurements ? 9 / 16 : screenAspect;
-  await setInput('screenHeightCm', 48 * measurementAspect * (incorrectScreenHeight ? 2 : 1));
+  const measuredHeight = measuredWidth * measurementAspect * (incorrectScreenHeight ? 2 : 1);
+  const viewingDistance = decimalMeasurements ? 60.05 : 60;
+  if (decimalMeasurements) {
+    const inputSession = gameContext.session || session;
+    for (const [name, values] of [['screenWidthCm', ['47.1', String(measuredWidth)]],
+      ['screenHeightCm', ['31.4', String(measuredHeight)]], ['viewingDistanceCm', ['60.1', String(viewingDistance)]]]) {
+      for (const value of values) {
+        await game(`document.querySelector('[name=${name}]').focus()`);
+        await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 }, inputSession);
+        await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 }, inputSession);
+        await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8 }, inputSession);
+        await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8 }, inputSession);
+        for (const character of value) await send('Input.insertText', { text: character }, inputSession);
+        await game(`document.querySelector('[name=${name}]').blur()`);
+        const input = await game(`(() => {const input=document.querySelector('[name=${name}]');return {value:input.valueAsNumber,valid:input.checkValidity(),step:input.step};})()`);
+        assert.equal(input.value, Number(value), `Keyboard input preserves ${name}=${value}`);
+        assert.equal(input.valid, true, `Decimal measurement ${name}=${value} is valid`);
+        assert.equal(input.step, 'any');
+      }
+    }
+    await game(`(() => {const start=window.oculomotorExperiment.Start;window.oculomotorExperiment.Start=settings=>{window.decimalExperimentSettings={...settings};return start(settings);};})()`);
+  } else {
+    await setInput('screenWidthCm', measuredWidth);
+    await setInput('screenHeightCm', measuredHeight);
+  }
   await setInput('distanceThresholdArcmin', 120);
   assert.equal(await game(`document.querySelector('#slider-threshold-arcmin').value`), '120');
   await game(`(() => { const slider=document.querySelector('#slider-threshold-arcmin'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(slider,'600'); slider.dispatchEvent(new Event('input',{bubbles:true})); })()`);
@@ -127,6 +152,16 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
   await until(() => game(`Boolean(document.querySelector('#training-stimulus'))`), 'original stimulus engine');
   assert.equal(await game(`document.fullscreenElement === document.querySelector('.oculomotor-game-root')`), true);
   const stimulusSize = await game(`(() => {const rect=document.querySelector('#training-stimulus').getBoundingClientRect();return {width:rect.width,height:rect.height};})()`);
+  if (decimalMeasurements) {
+    const config = await game('window.decimalExperimentSettings');
+    assert.equal(config.screenWidthCm, measuredWidth); assert.equal(config.screenHeightCm, measuredHeight);
+    assert.equal(config.viewingDistanceCm, viewingDistance);
+    const pixels = await game('({width:innerWidth,height:innerHeight})');
+    const diameterCm = 2 * viewingDistance * Math.tan(Number(config.ballArcmin) * Math.PI / 21600);
+    assert.ok(Math.abs(stimulusSize.width - diameterCm * pixels.width / measuredWidth) < .02);
+    assert.ok(Math.abs(stimulusSize.height - diameterCm * pixels.height / measuredHeight) < .02);
+    console.log('Typed decimal measurements preserved through experiment start: '+JSON.stringify({screenWidthCm:config.screenWidthCm,screenHeightCm:config.screenHeightCm,viewingDistanceCm:config.viewingDistanceCm,stimulusSize}));
+  }
   const expectedRatio = measurementAspect / screenAspect * (incorrectScreenHeight ? 2 : 1);
   assert.ok(Math.abs(stimulusSize.width / stimulusSize.height - expectedRatio) < .01,
     `Correct screen aspect renders a circle; incorrect aspect must deform: ${JSON.stringify(stimulusSize)}`);
