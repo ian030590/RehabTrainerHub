@@ -10,6 +10,10 @@ function Fixture(gameId = 'drawing-defense', version = '2.0.3') {
       'zh-TW': { title: '畫畫塔防', description: '上肢動作練習。' },
       en: { title: 'Drawing defense', description: 'Upper-limb practice.' },
     } };
+  if (gameId === 'reading-training') Object.assign(metadata, { trainer: 'vision', category: 'vision', copy: {
+    'zh-TW': { title: '閱讀訓練（RSVP）', description: '使用快速連續視覺呈現練習閱讀速度與文章理解。' },
+    en: { title: 'Reading Training (RSVP)', description: 'Use rapid serial visual presentation to practise reading speed and comprehension.' },
+  } });
   if (gameId === 'gabor-patching') Object.assign(metadata, { trainer: 'vision', category: 'vision', copy: {
     'zh-TW': { title: '蓋伯斑塊練習', description: '尋找逐漸浮現的蓋伯斑塊。' },
     en: { title: 'Gabor Patching', description: 'Find emerging Gabor patches.' },
@@ -160,4 +164,18 @@ test('Gabor current replaces its same-slug old shell and fails closed for invali
   assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.0/package/preview.webp');
   fixture.objects.set('releases/gabor-patching/2.0.0/files/game.json', Buffer.from('{}'));
   assert.equal((await List(fixture)).some(game => game.slug === 'gabor-patching'), false);
+});
+
+test('Reading current replaces its same-slug old shell and fails closed for invalid metadata', async () => {
+  const fixture = Fixture('reading-training', '2.0.0');
+  const games = await List(fixture);
+  const matches = games.filter(game => game.slug === 'reading-training');
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].title, '閱讀訓練（RSVP）');
+  assert.equal(matches[0].trainer, 'vision'); assert.equal(matches[0].category, 'vision');
+  assert.equal(matches[0].release.presentation, 'game');
+  assert.equal(matches[0].release.settingsUrl, undefined);
+  assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/reading-training/2.0.0/package/preview.webp');
+  fixture.objects.set('releases/reading-training/2.0.0/files/game.json', Buffer.from('{}'));
+  assert.equal((await List(fixture)).some(game => game.slug === 'reading-training'), false);
 });

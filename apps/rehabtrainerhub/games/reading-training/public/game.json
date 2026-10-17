@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "gameId": "reading-training",
+  "trainer": "vision",
+  "category": "vision",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": {
+      "title": "閱讀訓練（RSVP）",
+      "description": "使用快速連續視覺呈現練習閱讀速度與文章理解。"
+    },
+    "en": {
+      "title": "Reading Training (RSVP)",
+      "description": "Use rapid serial visual presentation to practise reading speed and comprehension."
+    }
+  }
+}

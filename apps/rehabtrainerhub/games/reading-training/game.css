@@ -1,0 +1,63 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --success: #005eb8; --error: #ba1a1a;
+  --game-background: #fff; --reading-font: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Microsoft JhengHei UI', Arial, sans-serif;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.reading-training-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.renderer-error { color: var(--error); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+
+/* Tutorial scene: the same white screen and centred text as the RSVP trial. */
+.reading-tutorial { position: absolute; inset: 0; overflow: hidden; background: var(--game-background); font-family: var(--reading-font); }
+.reading-preview-pace { position: absolute; top: max(12px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; margin: 0 auto; width: fit-content; max-width: calc(100% - 24px); padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--background); color: var(--heading); font-size: 1.1rem; font-weight: 700; }
+.reading-preview-pace p { margin: 0; }
+.reading-preview-word { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%); max-width: calc(100% - 32px); margin: 0; padding: 4px 12px; font-size: clamp(28px, min(9vw, 8vh), 48px); font-weight: 600; line-height: 1.2; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reading-preview-question { position: absolute; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(calc(100% - 32px), 40rem); padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--background); }
+.reading-preview-question .reading-qa-question { margin: 0 0 8px; font-size: 1.1rem; }
+.reading-preview-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.reading-preview-options li { padding: 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); text-align: center; font-weight: 700; overflow-wrap: anywhere; }
+
+/* RSVP and question trials run inside this game's own jsPsych display. */
+.reading-training-experiment { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--game-background); touch-action: manipulation; }
+/* jsPsych adds css_classes to the inner .jspsych-content element. */
+.reading-training-experiment .jspsych-content-wrapper { width: 100%; height: 100%; overflow: auto; }
+.reading-training-experiment .jspsych-content { width: 100%; height: 100%; }
+.reading-training-experiment .jspsych-content.reading-qa-trial { display: flex; flex-direction: column; justify-content: center; align-items: center; height: auto; min-height: 100%;
+  padding: 24px max(16px, env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); font-family: var(--reading-font); }
+.reading-qa-trial #jspsych-html-button-response-stimulus { width: min(100%, 40rem); }
+.reading-qa-question { margin: 0 0 24px; color: var(--heading); font-size: clamp(1.3rem, 4vw, 1.75rem); font-weight: 800; line-height: 1.5; text-align: center; overflow-wrap: anywhere; }
+.reading-qa-trial #jspsych-html-button-response-btngroup { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: min(100%, 40rem); }
+.reading-qa-btn { width: 100%; min-height: 56px; padding: 12px 16px; font-size: 1.15rem; line-height: 1.4; overflow-wrap: anywhere; }
+.reading-qa-btn:hover { border-color: var(--primary); color: var(--primary); }
+.reading-training-stop { position: absolute; bottom: max(8px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 50; }
+@media (max-width: 640px) { .reading-preview-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .reading-qa-trial #jspsych-html-button-response-btngroup { grid-template-columns: 1fr; } }
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; }
+.results-table { width: 100%; min-width: 48rem; border-collapse: collapse; }
+.results-table th, .results-table td { min-width: 3rem; padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.experiment-results .results-table .reading-question-text { min-width: 14rem; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }
+.reading-training-experiment:focus, .reading-training-experiment .jspsych-display-element:focus { outline: none; }

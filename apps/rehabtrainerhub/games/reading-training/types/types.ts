@@ -1,4 +1,4 @@
-// Types local to the Hub-owned reading module.
+// Story material owned by this game package.
 export interface ReadingQuestion {
   q_id: number;
   question: string;
@@ -13,3 +13,5 @@ export interface ReadingStory {
   content_array: string[];
   questions: ReadingQuestion[];
 }
+
+export type SelectedReadingStory = ReadingStory & { passageIndex: number };

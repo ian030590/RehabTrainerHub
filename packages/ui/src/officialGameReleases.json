@@ -26,5 +26,9 @@
   "gabor-patching": {
     "origin": "https://trainerhub-user-games.pages.dev",
     "name": "蓋伯斑塊練習"
+  },
+  "reading-training": {
+    "origin": "https://trainerhub-user-games.pages.dev",
+    "name": "閱讀訓練（RSVP）"
   }
 }

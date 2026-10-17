@@ -1,4 +1,5 @@
 import gaborPatchingCatalog from './gabor-patching/public/game.json';
+import readingTrainingCatalog from './reading-training/public/game.json';
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
@@ -265,12 +266,13 @@ const seeds: readonly TrainingCatalogSeed[] = [
   },
   {
     id: 'reading-training',
-    trainer: 'vision',
-    purpose: 'vision',
+    trainer: readingTrainingCatalog.trainer as 'vision',
+    purpose: readingTrainingCatalog.category as 'vision',
+    imagePath: `/assets/game-previews/reading-training/${readingTrainingCatalog.preview}`,
     kind: 'vision',
     path: '/?module=reading-training',
-    zh: ['閱讀訓練（RSVP）', '使用快速連續視覺呈現練習閱讀速度與文章理解。'],
-    en: ['Reading Training (RSVP)', 'Use rapid serial visual presentation to practise reading speed and comprehension.'],
+    zh: [readingTrainingCatalog.copy['zh-TW'].title, readingTrainingCatalog.copy['zh-TW'].description],
+    en: [readingTrainingCatalog.copy.en.title, readingTrainingCatalog.copy.en.description],
     titleKey: 'home.module.reading.title',
     descriptionKey: 'home.module.reading.desc',
   },

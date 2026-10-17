@@ -1,185 +1,184 @@
-import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
-import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
-import { GetHostedGameSetting, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { TrainingRulesPanel } from '@rehab-trainer/ui';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import {
-NotifyHubTrainingAbort,
-NotifyHubTrainingComplete,
-} from '@rehab-trainer/ui/embeddedTraining';
-import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { useT } from '@rehab-trainer/ui/i18n';
-import { GetSetting,getActiveUser } from '@rehab-trainer/ui/settings';
-import { soundManager } from './runtime/soundManager';
-import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
-import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
-import type { JsPsych } from 'jspsych';
-import { initJsPsych } from 'jspsych';
-import { useCallback,useEffect,useRef,useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { DownloadTrainingCsv } from './exportCsv';
-import { getRandomStory } from './reading/stories';
-import { ReadingResults } from './results/ReadingResults';
-import { DestroyPixiTrainingRuntime } from './runtime/pixiPool';
+import { initJsPsych, type JsPsych } from 'jspsych';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useT } from './i18n/useT';
+import { defaultSettings, numericSettings, ValidateSettings, type ReadingSettings } from './settings';
+import { BuildGameScore, type ReadingTrial } from './score';
+import { ScoreAnalysis } from './ScoreAnalysis';
+import { ReadingTutorial } from './rules/ReadingTutorial';
+import { DestroyPixiTrainingRuntime, WarmUpPixiTrainingRuntime } from './runtime/pixiPool';
+import { PrepareAudioFeedback, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { backgroundMusic, backgroundMusicOptions } from './music';
+import { ExitGame, IsHubGame, RetryGameSave, SendGameEvent, SendGameResult } from './runtime/hubBridge';
+import { GetStory } from './reading/stories';
 import { BuildReadingTimeline } from './timeline/readingTimeline';
 
 export function ReadingTrainingGame() {
-  const location = useLocation();
-  void IsTrainingFlowLaunchState(location?.state);
-  const { t, lang } = useT();
-  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
-  const [phase, setPhase] = useState<'rules' | 'running' | 'results'>('rules');
-  const [results, setResults] = useState<any[]>([]);
+  const { lang, t } = useT();
+  const en = lang === 'en';
+  const title = t('game.title');
+  const [phase, setPhase] = useState<'menu' | 'rules' | 'running' | 'results'>('menu');
+  useEffect(() => {
+    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    return StopMidiMusic;
+  }, [phase]);
+  useEffect(() => DisposeAudioFeedback, []);
+  const [settings, setSettings] = useState<ReadingSettings>({ ...defaultSettings });
+  const [results, setResults] = useState<ReadingTrial[]>([]);
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState(false);
+  const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error' | 'local'>('local');
+  const rootRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const jsPsychRef = useRef<JsPsych | null>(null);
+  const generationRef = useRef(0);
   const skipFinishRef = useRef(false);
-  const userName = getActiveUser() || 'guest';
-
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const stopRuntime = useCallback(() => {
+    generationRef.current++;
+    skipFinishRef.current = true;
+    window.dispatchEvent(new Event('game:abort'));
+    const experiment = jsPsychRef.current;
+    jsPsychRef.current = null;
+    experiment?.abortExperiment();
+    DestroyPixiTrainingRuntime('reading-training');
+    setReady(false);
+  }, []);
+  const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const backToSettings = useCallback(() => setPhase('menu'), []);
+  useEffect(() => {
+    const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
+    const configure = () => { setError(false); setResults([]); setPhase('menu'); };
+    const failed = () => { stopRuntime(); setError(true); setPhase('menu'); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && phaseRef.current === 'running') { event.preventDefault(); exit(); }
+    };
+    window.addEventListener('game:saved', saved);
+    window.addEventListener('game:configure', configure);
+    window.addEventListener('game:renderer-error', failed);
+    window.addEventListener('keydown', escape, true);
+    return () => {
+      window.removeEventListener('game:saved', saved);
+      window.removeEventListener('game:configure', configure);
+      window.removeEventListener('game:renderer-error', failed);
+      window.removeEventListener('keydown', escape, true);
+      stopRuntime();
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    };
+  }, [exit, stopRuntime]);
+  useEffect(() => {
+    if (phase !== 'menu') return;
+    let cancelled = false;
+    dialogRef.current?.showModal();
+    if (!error) void WarmUpPixiTrainingRuntime('reading-training').then(() => {
+      if (!cancelled) setReady(true);
+    }).catch(() => { if (!cancelled) setError(true); });
+    return () => { cancelled = true; dialogRef.current?.close(); };
+  }, [phase, error]);
   useEffect(() => {
     if (phase !== 'running') return;
-    let cancelled = false;
-
-    const setup = async () => {
-      const jsPsych = initJsPsych({
-        display_element: 'jspsych-target',
-        on_finish: () => {
-          if (skipFinishRef.current) return;
-          const data = jsPsych.data.get().values();
-          const questions = data.filter((row: any) => typeof row.correct === 'boolean');
-          const presentation = data.find((row: any) => typeof row.total_words === 'number');
-          SaveTrainingRecord({
-            id: String(Date.now()),
-            savedAt: new Date().toISOString(),
-            userName,
-            moduleId: 'reading-training',
-            gameId: 'reading-training',
-            gameTitle: t('home.module.reading.title'),
-            difficulty: 'normal',
-            results: data,
-            detailRows: questions,
-            details: {
-              questionCount: questions.length,
-              correctCount: questions.filter((row: any) => row.correct).length,
-              reading_time: presentation?.reading_time ?? null,
-              total_words: presentation?.total_words ?? null,
-              presented_segments: presentation?.presented_segments ?? null,
-              presentation_completed: presentation?.presentation_completed ?? null,
-              passage_index: presentation?.passage_index ?? null,
-              language_code: presentation?.language_code ?? null,
-              configuredWpm: GetHostedGameSetting<number>('wordsPerMinute'),
-            },
-          });
-
-          DestroyPixiTrainingRuntime('reading-training');
-          setResults(data);
-          jsPsychRef.current = null;
-          void ExitFullscreenIfActive();
-          setPhase('results');
-        },
-      });
-
-      const story = getRandomStory(lang, GetHostedGameSetting<number>('passage'));
-      const timeline = BuildReadingTimeline({
-        reading: {
-          story,
-          wps: (GetHostedGameSetting<number>('wordsPerMinute') / 60),
-          crowding: (GetHostedGameSetting<number>('crowding') / 100),
-          contrast: (GetHostedGameSetting<number>('contrast') / 100),
-        },
-      });
-
-      if (cancelled) return;
-      jsPsychRef.current = jsPsych;
-      jsPsych.run(timeline as any);
-    };
-
-    void setup();
-
-    return () => {
-      cancelled = true;
-
+    skipFinishRef.current = false;
+    const jsPsych = initJsPsych({ display_element: 'jspsych-target', on_finish: () => {
+      if (skipFinishRef.current) return;
+      const data = jsPsych.data.get().values() as ReadingTrial[];
+      const score = BuildGameScore(data, settings);
+      window.dispatchEvent(new Event('game:abort'));
       DestroyPixiTrainingRuntime('reading-training');
-      const active = jsPsychRef.current;
       jsPsychRef.current = null;
-      if (active) {
-        skipFinishRef.current = true;
-        active.abortExperiment();
-      }
-    };
-  }, [phase, lang]);
-
-  const abortTraining = useCallback(() => {
-    if (phase !== 'running') return;
-    skipFinishRef.current = true;
-
-    jsPsychRef.current?.abortExperiment();
-    jsPsychRef.current = null;
-    DestroyPixiTrainingRuntime('reading-training');
-    void ExitFullscreenIfActive();
-    NotifyHubTrainingAbort();
-  }, [phase]);
-
-  useTrainingAbort({ active: phase === 'running', onAbort: abortTraining });
-
-  const isZh = lang !== 'en';
-  const wordsPerMinute = GetHostedGameSetting<number>('wordsPerMinute');
-  const crowding = GetHostedGameSetting<number>('crowding');
-
-  return (
-    <div ref={fullscreenRootRef} className="reading-training-game-root" style={{ width: '100%', minHeight: '100dvh' }}>
-      {phase === 'rules' && (
-        <div className="training-panel">
-          <TrainingRulesPanel
-            title={isZh ? '動態閱讀視覺訓練' : 'Dynamic Reading Training'}
-            label={isZh ? '遊戲規則說明' : 'Game Rules'}
-            summaryTitle={isZh ? '動態閱讀訓練' : 'Reading Training'}
-            summaryItems={[
-              { label: isZh ? '呈現速度' : 'Speed', value: `${wordsPerMinute} ${isZh ? '字/分' : 'wpm'}` },
-              { label: isZh ? '文字間距' : 'Spacing', value: `${crowding}%` },
-            ]}
-            sections={isZh ? [
-              {
-                title: '操作與玩法',
-                description: '利用 RSVP 快速序列視覺呈現技術，訓練快速閱讀與視覺資訊擷取。',
-                items: [
-                  '注視螢幕中央，文字或詞句將以設定的速度逐一快速閃現。',
-                  '請在心裡默讀並理解文章故事的內容脈絡。',
-                  '閱讀結束後，請回答後續的閱讀理解測驗。',
-                ],
-              },
-              { title: '成績計算', description: '結算會記錄閱讀速度（WPM）與理解測驗答對率。' },
-            ] : [
-              {
-                title: 'How to Play',
-                description: 'Rapid Serial Visual Presentation (RSVP) training for reading speed and comprehension.',
-                items: [
-                  'Focus on the center of the screen as words flash sequentially.',
-                  'Silently read and follow the narrative of the story.',
-                  'Answer the comprehension questions presented after reading.',
-                ],
-              },
-              { title: 'Results', description: 'Records words-per-minute speed and quiz comprehension accuracy.' },
-            ]}
-            startLabel={isZh ? '開始訓練' : 'Start Training'}
-            backLabel={isZh ? '回設定' : 'Back to Settings'}
-            onStart={async () => {
-              await enterTrainingFullscreen();
-              setPhase('running');
-            }}
-            onBack={() => RequestHubTrainingConfiguration()}
-          />
+      setReady(false);
+      setResults(data);
+      setSaveState(IsHubGame() ? 'saving' : 'local');
+      SendGameResult({ ...settings }, score.summary, score.rounds);
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+      setPhase('results');
+    } });
+    jsPsychRef.current = jsPsych;
+    SendGameEvent('active');
+    void jsPsych.run(BuildReadingTimeline(settings, GetStory(lang, settings.passage)) as never).catch(() => {
+      if (!skipFinishRef.current) window.dispatchEvent(new Event('game:renderer-error'));
+    });
+    return () => { if (jsPsychRef.current === jsPsych) stopRuntime(); };
+  }, [phase, settings, lang, stopRuntime]);
+  const confirmSettings = () => {
+    if (!formRef.current?.reportValidity() || !ValidateSettings(settings) || !ready || error) return;
+    setPhase('rules');
+  };
+  const startTraining = async () => {
+    if (!ready || phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    const generation = generationRef.current;
+    PrepareAudioFeedback();
+    try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
+    if (generation !== generationRef.current || phaseRef.current !== 'rules') {
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+      return;
+    }
+    setPhase('running');
+  };
+  const passageLabel = (passage: number) => passage === 0 ? (en ? 'Random' : '隨機') : (en ? `Passage ${passage}` : `第 ${passage} 篇`);
+  const settingValue = (key: keyof ReadingSettings, value: number) => {
+    if (key === 'passage') return passageLabel(value);
+    const field = numericSettings.find(item => item.key === key)!;
+    const text = `${value}${field.unitZh === '%' ? '%' : ` ${en ? field.unitEn : field.unitZh}`}`;
+    return key === 'crowding' ? `${text}（${en ? `${value / 100} per display` : `每批 ${value / 100} 段`}）` : text;
+  };
+  const hints: Partial<Record<keyof ReadingSettings, string>> = en ? {
+    passage: '0 chooses a passage at random; 1–3 always use the same passage.',
+    crowding: '100% shows one text token at a time, 200% shows two, and so on.',
+    contrast: 'Higher values make the text darker.',
+  } : {
+    passage: '0 為隨機文章，1–3 為固定文章。',
+    crowding: '100% 為每批 1 段，200% 為每批 2 段，依此類推。',
+    contrast: '數值越大，文字越深。',
+  };
+  const summaryItems = numericSettings.map(field => ({ label: en ? field.en : field.zh, value: settingValue(field.key, settings[field.key]) }));
+  const score = BuildGameScore(results, settings);
+  const details = results.filter(row => typeof row.correct === 'boolean')
+    .map(row => ({ question: row.target ?? '', response: row.response_text ?? null, answer: row.correct_text ?? null }));
+  const seconds = (value: number | null) => value === null ? '—' : new Intl.NumberFormat(en ? 'en' : 'zh-TW', { maximumFractionDigits: 1 }).format(value / 1000);
+  return <div ref={rootRef} className="reading-training-game-root">
+    {(phase === 'menu' || phase === 'rules') && <ReadingTutorial active={phase === 'rules'} ready={ready} title={title}
+      settings={settings} summaryItems={summaryItems} onStart={startTraining} onBack={backToSettings} />}
+    {phase === 'menu' && <dialog ref={dialogRef} className="game-settings-dialog reading-training-phase-menu"
+      onCancel={event => { event.preventDefault(); exit(); }}>
+      <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
+        onKeyDown={event => { if (event.key === 'Enter' && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); confirmSettings(); } }}>
+        <header className="training-config-header"><h2>{title}</h2></header>
+        <div className="training-config-body">
+          <section className="training-setting"><h3>{en ? 'Reading settings' : '閱讀設定'}</h3>
+            {error && <p className="renderer-error" role="alert">{en ? 'The game could not load. Retry to continue.' : '遊戲無法載入，請重試。'}
+              <button type="button" onClick={() => setError(false)}>{en ? 'Retry' : '重試'}</button></p>}
+            {numericSettings.map(field => <label key={field.key}>{en ? field.en : field.zh}：<output>{settingValue(field.key, settings[field.key])}</output>
+              <input name={field.key} type="range" min={field.min} max={field.max} step={field.step} value={settings[field.key]}
+                onChange={event => setSettings({ ...settings, [field.key]: Number(event.target.value) })} />
+              {hints[field.key] && <small className="training-setting-description">{hints[field.key]}</small>}</label>)}
+          </section>
         </div>
-      )}
-
-      {phase === 'running' && (
-        <div id="jspsych-target" className="experiment-container" style={{ width: '100vw', height: '100vh' }} />
-      )}
-
-      {phase === 'results' && (
-        <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
-          <ReadingResults results={results} userName={userName} t={t} />
-          <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
-        </div>
-      )}
-    </div>
-  );
+        <footer className="config-actions"><div className="training-config-navigation-buttons">
+          <button className="btn btn-primary" type="button" disabled={!ready || error} onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
+          <button className="btn btn-ghost" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+        </div></footer>
+      </form>
+    </dialog>}
+    {phase === 'running' && <><div id="jspsych-target" className="reading-training-experiment" />
+      <button type="button" className="reading-training-stop" onClick={exit}>{en ? 'Stop training' : '停止訓練'}</button></>}
+    {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
+      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title}</p></header>
+      <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+        <div className="score-key-metric"><p>{en ? 'Correct answers' : '理解題答對'}</p><strong>{score.summary.correct} / {score.summary.questions}</strong></div>
+        <div className="score-key-metric"><p>{en ? 'Presentation time (incl. countdown)' : '文字呈現時間（含倒數）'}</p><strong>{seconds(score.summary.presentationMs)} s</strong></div>
+        <div className="score-key-metric"><p>{en ? 'Segments shown' : '已呈現片段'}</p><strong>{score.summary.presented ?? '—'} / {score.summary.wordCount ?? '—'}</strong></div>
+      </div></section>
+      <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
+        {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
+        <div className="score-context-item"><dt>{en ? 'Passage used' : '本次文章'}</dt><dd>{score.summary.passage === null ? '—' : passageLabel(score.summary.passage)}</dd></div>
+        <div className="score-context-item"><dt>{en ? 'Passage shown in full' : '文章完整呈現'}</dt><dd>{score.summary.finished === null ? '—' : score.summary.finished ? (en ? 'Yes' : '是') : (en ? 'No' : '否')}</dd></div>
+      </dl></section>
+      <ScoreAnalysis rounds={score.rounds} language={lang} details={details} />
+      <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+        : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+      {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+      <button className="btn btn-primary score-return-button" type="button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+    </section></div>}
+  </div>;
 }

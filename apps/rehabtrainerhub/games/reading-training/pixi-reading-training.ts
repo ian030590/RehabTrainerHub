@@ -1,8 +1,7 @@
-// Canonical Hub-owned reading runtime.
+// Game-owned original RSVP countdown, batching, timing and text contrast.
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { Application, Graphics, Text } from 'pixi.js';
-import { typography } from '@rehab-trainer/ui/trainerTheme';
 import {
   AttachPixiTrialCanvas,
   CleanupPixiTrial,
@@ -10,27 +9,16 @@ import {
   RunPixiTrial,
   pixiRuntimeScopes,
 } from './runtime/pixiPool';
+import { pixiColors, typography } from './runtime/theme';
 
 const info = {
   name: 'pixi-reading-training',
-  version: '1.0.0',
+  version: '2.0.0',
   parameters: {
-    content_array: {
-      type: ParameterType.COMPLEX,
-      default: [],
-    },
-    wps: {
-      type: ParameterType.FLOAT,
-      default: 4,
-    },
-    crowding: {
-      type: ParameterType.INT,
-      default: 1,
-    },
-    contrast: {
-      type: ParameterType.FLOAT,
-      default: 1.0,
-    },
+    content_array: { type: ParameterType.COMPLEX, default: [] },
+    wps: { type: ParameterType.FLOAT, default: 4 },
+    crowding: { type: ParameterType.INT, default: 1 },
+    contrast: { type: ParameterType.FLOAT, default: 1.0 },
   },
   data: {
     reading_time: { type: ParameterType.INT },
@@ -47,134 +35,96 @@ class PixiReadingTrainingPlugin implements JsPsychPlugin<Info> {
   constructor(private jsPsych: JsPsych) {}
 
   trial(displayElement: HTMLElement, trial: TrialType<Info>): void {
-    const self = this;
     const wrapper = CreatePixiTrialContainer(
       displayElement,
-      'width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden;background-color:#ffffff;',
+      'width:100%;height:100%;position:absolute;inset:0;overflow:hidden;background-color:var(--game-background);',
       'reading-training-trial',
     );
-
     const contentArray = trial.content_array as string[];
     const wps = trial.wps as number;
     const crowding = trial.crowding as number;
-    const logCS = trial.contrast as number;
-
-    // Convert logCS (log contrast sensitivity) to linear contrast.
-    // logCS = -log10(contrast), so contrast = 10^(-logCS).
-    // logCS 0 → contrast 1.0 (black text), logCS 1.3 → contrast ~0.05 (very faint).
-    const contrast = Math.pow(10, -logCS);
-    const grayVal = Math.round((1 - contrast) * 200);
-    const hex = grayVal.toString(16).padStart(2, '0');
-    const textColor = `#${hex}${hex}${hex}`;
+    // The timeline passes logCS = -log10(contrast); 0 is black text and larger values are lighter gray.
+    const contrast = Math.pow(10, -(trial.contrast as number));
+    const grayValue = Math.round((1 - contrast) * 200).toString(16).padStart(2, '0');
+    const textColor = `#${grayValue}${grayValue}${grayValue}`;
 
     let trialEnded = false;
     let timerId: ReturnType<typeof setTimeout> | null = null;
+    let chunkIndex = 0;
+    let detachRenderer: (() => void) | null = null;
     const startTime = performance.now();
 
+    const stop = () => {
+      if (trialEnded) return;
+      trialEnded = true;
+      if (timerId) clearTimeout(timerId);
+      timerId = null;
+      window.removeEventListener('game:abort', stop);
+      detachRenderer?.();
+    };
+    window.addEventListener('game:abort', stop);
+
     const runWithApp = (app: Application) => {
+      if (trialEnded || !displayElement.isConnected) { stop(); return; }
       AttachPixiTrialCanvas(readingPixiScope, wrapper);
+      const background = new Graphics();
+      const text = new Text();
+      app.stage.addChild(background, text);
+      text.style = { fontFamily: typography.fontFamily, fontSize: 48, fontWeight: '600', fill: textColor, align: 'center' };
+      text.anchor.set(0.5);
 
-      const getWidth = () => app.screen.width;
-      const getHeight = () => app.screen.height;
-
-      const bgGfx = new Graphics();
-      const textObj = new Text();
-      app.stage.addChild(bgGfx, textObj);
-
-      textObj.style = {
-        fontFamily: typography.fontFamily,
-        fontSize: 48,
-        fontWeight: '600',
-        fill: textColor,
-        align: 'center',
-      };
-      textObj.anchor.set(0.5);
-
-      function FitTextToViewport() {
+      const fitText = () => {
         const viewport = window.visualViewport;
         const viewportLeft = Math.max(0, viewport?.offsetLeft ?? 0);
-        const viewportWidth = Math.min(getWidth(), viewport?.width ?? getWidth());
+        const viewportWidth = Math.min(app.screen.width, viewport?.width ?? app.screen.width);
         const availableWidth = Math.max(1, viewportWidth - 32);
-        textObj.style.fontSize = 48;
-        const measuredWidth = Math.max(1, textObj.width);
-        textObj.style.fontSize = Math.min(48, 48 * availableWidth / measuredWidth);
-        textObj.x = viewportLeft + viewportWidth / 2;
-      }
-
-      function DrawLayout() {
-        const width = getWidth();
-        const height = getHeight();
-        bgGfx.clear().rect(0, 0, width, height).fill({ color: 0xffffff });
-        textObj.y = height / 2;
-        FitTextToViewport();
-      }
-      DrawLayout();
-
-      const handleResize = () => DrawLayout();
-      app.renderer.on('resize', handleResize);
-
-      const handleKeydown = (e: KeyboardEvent) => {
-        if (e.code === 'Escape') {
-          EndTrial();
-        }
+        text.style.fontSize = 48;
+        text.style.fontSize = Math.min(48, 48 * availableWidth / Math.max(1, text.width));
+        text.x = viewportLeft + viewportWidth / 2;
       };
-      window.addEventListener('keydown', handleKeydown);
-
-      function EndTrial(completed = false) {
-        if (trialEnded) return;
-        trialEnded = true;
-        if (timerId) clearTimeout(timerId);
-        app.renderer.off('resize', handleResize);
-        window.removeEventListener('keydown', handleKeydown);
+      const drawLayout = () => {
+        background.clear().rect(0, 0, app.screen.width, app.screen.height).fill({ color: pixiColors.white });
+        text.y = app.screen.height / 2;
+        fitText();
+      };
+      drawLayout();
+      app.renderer.on('resize', drawLayout);
+      detachRenderer = () => {
+        app.renderer.off('resize', drawLayout);
         CleanupPixiTrial(readingPixiScope, displayElement);
+      };
 
-        self.jsPsych.finishTrial({
+      const finish = () => {
+        if (trialEnded) return;
+        stop();
+        this.jsPsych.finishTrial({
           reading_time: Math.round(performance.now() - startTime),
           total_words: contentArray.length,
-          presented_segments: chunkIdx,
-          presentation_completed: completed,
+          presented_segments: chunkIndex,
+          presentation_completed: true,
         });
-      }
+      };
 
-      // Step 1: Countdown 3, 2, 1
-      const countdowns = ['3', '2', '1'];
-      let cIdx = 0;
-
-      function ShowCountdown() {
+      const showReading = () => {
         if (trialEnded) return;
-        if (cIdx < countdowns.length) {
-          textObj.text = countdowns[cIdx];
-          FitTextToViewport();
-          cIdx++;
-          timerId = setTimeout(ShowCountdown, 1000);
-        } else {
-          StartReading();
-        }
-      }
+        if (chunkIndex >= contentArray.length) { finish(); return; }
+        const count = Math.min(crowding, contentArray.length - chunkIndex);
+        text.text = contentArray.slice(chunkIndex, chunkIndex + count).join(' ');
+        fitText();
+        chunkIndex += count;
+        timerId = setTimeout(showReading, (count / wps) * 1000);
+      };
 
-      // Step 2: Reading RSVP
-      let chunkIdx = 0;
-      function StartReading() {
+      const countdown = ['3', '2', '1'];
+      let countdownIndex = 0;
+      const showCountdown = () => {
         if (trialEnded) return;
-        if (chunkIdx >= contentArray.length) {
-          EndTrial(true);
-          return;
-        }
-
-        const remaining = contentArray.length - chunkIdx;
-        const currentCrowding = Math.min(crowding, remaining);
-        const chunkWords = contentArray.slice(chunkIdx, chunkIdx + currentCrowding);
-
-        textObj.text = chunkWords.join(' ');
-        FitTextToViewport();
-
-        const displayTimeMs = (currentCrowding / wps) * 1000;
-        chunkIdx += currentCrowding;
-
-        timerId = setTimeout(StartReading, displayTimeMs);
-      }
-
-      ShowCountdown();
+        if (countdownIndex >= countdown.length) { showReading(); return; }
+        text.text = countdown[countdownIndex++];
+        fitText();
+        timerId = setTimeout(showCountdown, 1000);
+      };
+      showCountdown();
     };
 
     RunPixiTrial(readingPixiScope, displayElement, runWithApp);

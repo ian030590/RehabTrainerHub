@@ -1,15 +1,20 @@
-// Story loader local to the Hub-owned reading module.
-import type { ReadingStory } from '../types/types';
+// Passage numbers follow the original sorted file names in each language; they are not difficulty levels.
+import enStory01 from '../data/reading-stories/en-story/en_story_01.json';
+import enStory02 from '../data/reading-stories/en-story/en_story_02.json';
+import enStory03 from '../data/reading-stories/en-story/en_story_03.json';
+import zhStory01 from '../data/reading-stories/zh-story/zh_story_01.json';
+import zhStory02 from '../data/reading-stories/zh-story/zh_story_02.json';
+import zhStory03 from '../data/reading-stories/zh-story/zh_story_03.json';
+import type { ReadingStory, SelectedReadingStory } from '../types/types';
 
-// Use Vite's import.meta.glob to synchronously load all JSON files in the data directory
-const enStoryModules = import.meta.glob('../data/reading-stories/en-story/*.json', { eager: true });
-const zhStoryModules = import.meta.glob('../data/reading-stories/zh-story/*.json', { eager: true });
+const stories = {
+  en: [enStory01, enStory02, enStory03],
+  zh: [zhStory01, zhStory02, zhStory03],
+} as unknown as Record<'en' | 'zh', ReadingStory[]>;
 
-export const getRandomStory = (lang: string, passage = 0): (ReadingStory & { passageIndex: number }) | null => {
-  const modules = lang === 'en' ? enStoryModules : zhStoryModules;
-  const stories = Object.keys(modules).sort().map(key => (modules[key] as { default: ReadingStory }).default);
-  if (stories.length === 0) return null;
-  const index = passage === 0 ? Math.floor(Math.random() * stories.length) : passage - 1;
-  if (!Number.isInteger(index) || index < 0 || index >= stories.length) throw new RangeError('Invalid passage');
-  return { ...stories[index], passageIndex: index + 1 };
-};
+export function GetStory(language: string, passage = 0, random: () => number = Math.random): SelectedReadingStory {
+  const choices = stories[language === 'en' ? 'en' : 'zh'];
+  const index = passage === 0 ? Math.floor(random() * choices.length) : passage - 1;
+  if (!Number.isInteger(index) || index < 0 || index >= choices.length) throw new RangeError('Invalid passage');
+  return { ...choices[index], passageIndex: index + 1 };
+}

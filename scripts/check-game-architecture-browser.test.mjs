@@ -356,7 +356,7 @@ test('Brave shows shared score charts and uploads guest and signed-in sessions',
     const result = await Run(process.execPath, [browserSmokeScript,
       '--url', `http://127.0.0.1:${server.address().port}/`,
       '--storage', `rehab_hub_tour_seen=1,rehab-trainer-hub-language=zh,rehabtrainerhub.subject-id.v1=${guestSubjectId}`, '--mockAuthUser', String(signedIn),
-      '--clickSelectors', '.official-game-card[data-runtime-id="reading-training"] button,.game-settings-form button[type="submit"]',
+      '--clickSelectors', '.official-game-card[data-runtime-id="driving-rehab"] button,.game-settings-form button[type="submit"]',
       '--allSelectors', '.training-overlay-score table,.training-overlay-score [data-slot="chart"] svg,dialog.training-overlay-score:not(:has(iframe)),.training-score-priority,.training-score-quality,.training-score-stat-strip',
       ...(!signedIn ? [
         '--viewportWidth', '390', '--viewportHeight', '844',

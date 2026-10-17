@@ -604,10 +604,18 @@ const victimVisionCount = await onRequestGet({
 });
 assert.deepEqual(await victimVisionCount.json(), { count: 1 });
 
-const scoreRecord = { id: 'hub-score-record', savedAt: new Date().toISOString(), userName: '', moduleId: 'reading-training', gameId: 'reading-training', score: {
-  schema: 'rehab-trainer.game-score/v1', gameId: 'reading-training',
+// A still-unmigrated JSON-shell game keeps the legacy Hub score path.
+const scoreRecord = { id: 'hub-score-record', savedAt: new Date().toISOString(), userName: '', moduleId: 'driving-rehab', gameId: 'driving-rehab', score: {
+  schema: 'rehab-trainer.game-score/v1', gameId: 'driving-rehab',
   rounds: Array.from({ length: 1500 }, (_, index) => ({ score: index % 2, responseMs: 300 })), summary: { total: 750 },
 } };
+const migratedScoreRecord = { ...scoreRecord, id: 'unsigned-reading-record', moduleId: 'reading-training', gameId: 'reading-training',
+  score: { ...scoreRecord.score, gameId: 'reading-training' } };
+const migratedWrite = await onRequestPost({ request: new Request('https://trainerhub.cc/api/records', {
+  method: 'POST', headers: { Origin: 'https://trainerhub.cc', Authorization: `Bearer ${victimToken}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'hub', record: migratedScoreRecord }),
+}), env });
+assert.equal(migratedWrite.status, 400, 'A migrated R2 game cannot save through the legacy unsigned Hub path.');
 const scoreWrite = await onRequestPost({ request: new Request('https://trainerhub.cc/api/records', {
   method: 'POST', headers: { Origin: 'https://trainerhub.cc', Authorization: `Bearer ${victimToken}`, 'Content-Type': 'application/json' },
   body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'hub', record: scoreRecord }),

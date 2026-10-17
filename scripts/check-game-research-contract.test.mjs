@@ -31,7 +31,7 @@ test('every game exposes bounded grading settings and exact numeric score source
   for (const id of ids) {
     if (Object.hasOwn(migratedGames, id)) {
       const entry = { 'asteroid-shield': 'AsteroidShieldGame.tsx', 'drawing-defense': 'DrawingTowerDefenseGame.tsx',
-        'gesture-battler': 'GestureBattlerGame.tsx', 'motor-cortex-rehab': 'MotorCortexRehabGame.tsx', 'moving-card': 'MovingCardGame.tsx', 'oculomotor-training': 'OculomotorTrainingGame.tsx', 'gabor-patching': 'GaborPatchingGame.tsx' }[id];
+        'gesture-battler': 'GestureBattlerGame.tsx', 'motor-cortex-rehab': 'MotorCortexRehabGame.tsx', 'moving-card': 'MovingCardGame.tsx', 'oculomotor-training': 'OculomotorTrainingGame.tsx', 'gabor-patching': 'GaborPatchingGame.tsx', 'reading-training': 'ReadingTrainingGame.tsx' }[id];
       assert.ok(entry, `${id}: add game-owned bounds validation before migration`);
       const source = read(id, entry);
       if (id === 'oculomotor-training') {
@@ -42,6 +42,15 @@ test('every game exposes bounded grading settings and exact numeric score source
         assert.match(settings, /value <= 1200/);
         assert.match(source, /BuildGameScore\(completed\)/);
         assert.match(source, /SendGameEvent\('result'/);
+      } else if (id === 'reading-training') {
+        const settings = read(id, 'settings.ts');
+        assert.match(settings, /key: 'passage'.*min: 0, max: 3, step: 1/);
+        assert.match(settings, /key: 'wordsPerMinute'.*min: 60, max: 600, step: 20/);
+        assert.match(settings, /key: 'crowding'.*min: 100, max: 500, step: 100/);
+        assert.match(settings, /key: 'contrast'.*min: 20, max: 100, step: 10/);
+        assert.match(source, /ValidateSettings\(settings\)/);
+        const score = read(id, 'score.ts');
+        for (const key of ['reading_time', 'total_words', 'presented_segments', 'passage_index', 'language_code']) assert.match(score, new RegExp(`presentation\\?\\.${key}`));
       } else if (id === 'gabor-patching') {
         const settings = read(id, 'settings.ts');
         assert.match(settings, /key: 'durationSec'.*min: 30, max: 180, step: 15/);
@@ -288,33 +297,6 @@ test('React runtime retains missing RT as null and full precision in summaries',
     assert.equal(summary.meanRtMs, 100.875, id);
     assert.ok(Math.abs(summary.accuracyPercent - (200 / 3)) < 1e-12, id);
   }
-});
-
-test('reading timeline preserves material identity and scores question responses separately', () => {
-  const compiled = ts.transpileModule(read('reading-training', 'timeline/readingTimeline.ts'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
-  }).outputText;
-  const exports = {};
-  new Script(compiled).runInNewContext({ exports, require: () => ({ default: class {} }) });
-  const story = {
-    passageIndex: 2, language: 'en', content_array: ['one', 'two'],
-    questions: [{ question: 'Which?', options: ['A', 'B'], correct_index: 1 }],
-  };
-  const timeline = exports.BuildReadingTimeline({ reading: { story, wps: 4, crowding: 2, contrast: 0.5 } });
-  assert.equal(timeline[0].data.passage_index, 2);
-  assert.equal(timeline[0].data.language_code, 1);
-  assert.equal(timeline[0].contrast, -Math.log10(0.5));
-  const question = timeline[1];
-  const response = { ...question.data, response: 1, rt: 321 };
-  question.on_finish(response);
-  const definition = ParseGameScoreDefinition(JSON.parse(read('reading-training', 'score.json')));
-  const score = BuildGameScore(definition, { detailRows: [response], details: { questionCount: 1, correctCount: 1, reading_time: 4000 } });
-  assert.equal(score.rounds[0].question, 1);
-  assert.equal(score.rounds[0].correct, 1);
-  assert.equal(score.rounds[0].responseMs, 321);
-  assert.equal(score.rounds[0].options, 2);
-  assert.equal(score.summary.presentationMs, 4000);
-  assert.equal(score.summary.wordCount, null);
 });
 
 test('number-grid grading matches the actual rule, board and blank count', () => {

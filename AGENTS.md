@@ -9,6 +9,8 @@
 
 ## 專案結構與模組組織
 
+閱讀訓練（RSVP）`reading-training@2.0.0` 已於 2026-10-17 依「核准並發布到 R2」發布 R2 並切換 current（`contentSha256: 2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0`，5 檔，收據 `docs/releases/reading-training-2.0.0.json`）；**Hub 尚未切換**，正式 Hub 仍走舊 1.0.0 JSON 流程，不得登記為搬遷完成。自有設定、三步聚光燈（中央文字→速度與每批片段→理解題）、原 RSVP／jsPsych／Pixi、原數值成績欄位與私有 bridge 已完成；候選 registry 八款、Hub build 32 款舊 bundle，正式仍七款／33 款。current 已可讀，下一步為經擁有者同意後部署此 registry 並完成第 7 節 F 正式 Hub 驗收。見 `docs/reading-training-r2-migration.md`。
+
 蓋伯斑塊目前 current 為 `2.0.1` 玩家文案版（2026-10-17），依「核准發佈」發布精確五檔／`contentSha256: af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3`。移除中英文教學／成果的活動紀錄、非臨床量測、內部圖樣實作與冗餘設定說明；玩法、計分、完整成果與保存提示保留。七項本機 gate、正式 API／session／公開 bytes 與桌機／手機／英文登入／手機 PWA 四個完整流程通過；未部署 Hub／runner、未建正式紀錄，其他六款版本不變。後續依「git 推送出去」以 `fix/oculomotor-2.1.1` 專用分支交付，避免 `main` 的完整 Pages 部署。`2.0.0` 五檔已回讀核對為回退版，未實際回退；見 `docs/gabor-patching-player-copy-2.0.1.md` 與 `docs/releases/gabor-patching-2.0.1.json`。
 
 眼動練習目前 current 為 `2.1.1`，已於 2026-10-17 依「核准新的版本並git push到遠端」核准精確 11 檔／`contentSha256: 53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3`，發布 R2 並完成正式 API／session／公開 bytes／六個 Hub／PWA 流程；未部署 Hub／runner，未建正式訓練紀錄，`2.1.0` 已核對回退。保留寬高獨立換算，比例填錯會變形，同倍率填錯仍圓但尺寸錯誤，全部 22 段原碼摘要保留。3:2 測試重現可見區 1440×960、隔離 `screen` 卻回報 1280×800，故全螢幕採實際顯示區；開始校正前重取穩定尺寸，校正途中變動仍失效。補齊即時狀態／置中／中英驗證／Accuracy 與 TFF 優先成果。七項 gate、八個本機及六個正式瀏覽器流程、15 欄私人 R2／25 欄下載差異、既有 238 筆 CSV metadata 與硬體限制見 `docs/oculomotor-display-feedback-2.1.1.md`、`docs/releases/oculomotor-training-2.1.1.json`；尚未實測使用者筆電或讀取私人座標內容。Git 交付使用 `fix/oculomotor-2.1.1` 專用分支，避免 `main` 的完整 Pages 部署。
@@ -77,6 +79,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 驗證使用 Node.js 內建 `node:test`、assert 檢查腳本、TypeScript、針對性 build 與本機 Brave smoke；依變更範圍選用對應 gate。Hub API、runner、遊戲流程、assessment lifecycle 與 i18n 分別有 `test:hub-functions`、`test:gamerunner`、`test:training-flow`、`test:assessment-lifecycle`、`test:i18n`。
 
 ## CI/CD 維護
+
+- 閱讀訓練候選新增 `check-reading-training-migration.test.mjs` 與 `check-reading-training-tutorial.test.mjs` 至既有 `test:game-architecture`；共用 UI／結果／全螢幕／音訊／研究契約、Hub API／SQL／目錄／middleware 與 runner 穩定入口加入此 gameId。原本以 reading-training 代表未遷移 JSON 遊戲的 Brave 共用成績測試與 records 舊路徑 fixture 改用 `driving-rehab`。本機 Brave：`node scripts/check-r2-game-browser.mjs --game reading-training --lobby`（另 `--wide --windowed`、`--mobile --session-failure`、`--tablet`、`--signed-in --english --renderer-failure`、`--standalone --mobile`、`--standalone --tablet --stop`、`--revoke`），不加入 Linux CI。
 
 - OcuTrain 對齊的 `scripts/oculomotor-reference.test.mjs` 經既有眼動遷移測試引入 `test:game-architecture`，涵蓋全部 22 段原碼摘要、尺寸比例正確／單軸錯誤變形／同倍率錯誤大小、3:2 與等比例縮放、全螢幕實際尺寸／視窗整屏資料／跨比例校正失效、閾值／半徑、追視回程、凝視階段、TFF、來源時間、零資料驗證、取消倒數、設定、完整 CSV、即時偵測、雙語與成果排序。新版輸入代理及兩版相機路由／PWA 由 `test:gamerunner` 覆蓋；兩份 workflow 沿用原七項 matrix 與相同 root 命令，不新增 Brave CI。詳細 RED／GREEN 與本機流程見 `docs/oculomotor-ocutrain-parity.md` 及 `docs/oculomotor-display-feedback-2.1.1.md`。
 

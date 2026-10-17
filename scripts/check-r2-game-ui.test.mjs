@@ -9,6 +9,7 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'reading-training', component: 'ReadingTrainingGame', tutorial: 'ReadingTutorial' },
   { id: 'gabor-patching', component: 'GaborPatchingGame', tutorial: 'GaborTutorial' },
   { id: 'drawing-defense', component: 'DrawingTowerDefenseGame', tutorial: 'DrawingDefenseTutorial' },
   { id: 'asteroid-shield', component: 'AsteroidShieldGame', tutorial: 'AsteroidShieldTutorial' },
@@ -53,7 +54,7 @@ for (const fixture of cases) {
       let backs = 0;
       const tree = module.exports[fixture.tutorial]({
         title: 'Session', active: true, ready: true, shieldSizePercent: 75,
-        settings: { durationSec: 60, maxSpots: 8, rounds: 10, optionCount: 18, difficulty: 'medium', targetPhysicalSizeMm: 15, optionPhysicalSizeMm: 10, calibrationLengthMm: 149 },
+        settings: { passage: 0, wordsPerMinute: 240, crowding: 100, contrast: 100, durationSec: 60, maxSpots: 8, rounds: 10, optionCount: 18, difficulty: 'medium', targetPhysicalSizeMm: 15, optionPhysicalSizeMm: 10, calibrationLengthMm: 149 },
         summaryItems: [{ label: 'Duration', value: '30s' }, { label: 'Threshold', value: '65%' }],
         onStart: () => starts++, onBack: () => backs++,
       });
@@ -96,7 +97,7 @@ for (const fixture of cases) {
     for (const name of ['training-config-header', 'training-config-body', 'training-setting', 'config-actions', 'training-config-navigation-buttons']) {
       assert.ok(form.getText(syntax).includes(`className="${name}"`), `Settings need ${name}.`);
     }
-    if (['moving-card', 'gabor-patching'].includes(fixture.id)) {
+    if (['moving-card', 'gabor-patching', 'reading-training'].includes(fixture.id)) {
       assert.match(form.getText(syntax), /onSubmit={[\s\S]*confirmSettings\(\)/);
       assert.match(source, /const confirmSettings = \(\) => {[\s\S]*?reportValidity\(\)[\s\S]*?ValidateSettings\(settings\)[\s\S]*?setPhase\('rules'\)/);
     } else assert.match(form.getText(syntax), /reportValidity\(\)/);

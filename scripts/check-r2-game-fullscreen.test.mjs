@@ -150,7 +150,7 @@ test('gesture return during a pending fullscreen transition cannot leave its set
   assert.equal(context.calibrationCapturingRef.current, false);
 });
 
-for (const gameId of ['moving-card', 'gabor-patching']) {
+for (const gameId of ['moving-card', 'gabor-patching', 'reading-training']) {
 test(`${gameId} starts only after fullscreen settles and exits a late transition after cancellation`, async () => {
   for (const cancelled of [false, true]) {
     const fullscreen = Deferred();
@@ -162,7 +162,7 @@ test(`${gameId} starts only after fullscreen settles and exits a late transition
       document: { fullscreenElement: null, exitFullscreen: async () => actions.push('exit-fullscreen') },
       setPhase: phase => actions.push(phase),
     };
-    const start = await LoadFunction(`${games}/${gameId}/${gameId === 'moving-card' ? 'MovingCardGame' : 'GaborPatchingGame'}.tsx`, 'startTraining', context);
+    const start = await LoadFunction(`${games}/${gameId}/${{ 'moving-card': 'MovingCardGame', 'gabor-patching': 'GaborPatchingGame', 'reading-training': 'ReadingTrainingGame' }[gameId]}.tsx`, 'startTraining', context);
     const pending = start();
     assert.deepEqual(actions, []);
     if (cancelled) { context.generationRef.current++; context.phaseRef.current = 'menu'; }
@@ -175,7 +175,7 @@ test(`${gameId} starts only after fullscreen settles and exits a late transition
 
 }
 
-for (const gameId of ['gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card']) {
+for (const gameId of ['reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card']) {
   test(`${gameId} exits fullscreen before returning to Hub or its standalone entry`, async () => {
     for (const embedded of [false, true]) {
       const fullscreen = Deferred();

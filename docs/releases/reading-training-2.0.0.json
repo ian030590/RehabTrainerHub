@@ -1,0 +1,76 @@
+{
+  "gameId": "reading-training",
+  "version": "2.0.0",
+  "contentSha256": "2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0",
+  "bucket": "rehab-game-releases",
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "touch"
+  ],
+  "totalBytes": 1204453,
+  "files": [
+    {
+      "path": "assets/index-DjgfAKFQ.js",
+      "size": 1183223,
+      "sha256": "91bd541c8bd2cfad4ac6915ecd833b9d55c5aeb2853ce7db6bf311ec9e1164fd",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CcKz8cjW.css",
+      "size": 19471,
+      "sha256": "04e86c77b986d2add00063ee42561b68ebd30685d7ecd795a0d2f65ae33a3677",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 499,
+      "sha256": "f80da9beaa28312904c39fcf7ce6bc3193c9f2140c4dbdf2ea864aeaf860f726",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 412,
+      "sha256": "b1f6c2437a8f12d773dc94ae46f513b7c304c6aae7ab03103e7c594c7c90885a",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 848,
+      "sha256": "a4e3de855637556467ae4c7c1b5a1d2f5479c2fc09e3f9cce0c23d534ed38cb4",
+      "contentType": "image/webp"
+    }
+  ],
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "核准並發布到 R2",
+    "context": "Approval given after the candidate reading-training@2.0.0 with this digest was reported; published only after every local Brave check passed on these exact bytes.",
+    "gameId": "reading-training",
+    "version": "2.0.0",
+    "contentSha256": "2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0"
+  },
+  "published": {
+    "verifiedAt": "2026-10-17T07:02:44.127Z",
+    "launchUrl": "https://trainerhub-user-games.pages.dev/games/reading-training/2.0.0/package/index.html",
+    "publisherReadback": "all 5 files and approved manifest verified; current switched"
+  },
+  "productionChecks": {
+    "stableEntry": "302 no-store -> /games/reading-training/2.0.0/",
+    "versionedPwa": "200",
+    "publicBytes": "5/5 SHA-256 match",
+    "packageCsp": "default-src 'none'; connect-src 'none'; form-action 'none'",
+    "launcherSandbox": "allow-scripts",
+    "productionHub": "unchanged: /api/games still lists old reading-training 1.0.0 JSON shell; /games/reading-training/settings.json 200"
+  },
+  "hubSwitch": {
+    "status": "pending",
+    "reason": "Registry/bundle-exclusion change on branch feat/reading-training-r2 is not deployed; requires owner go-ahead to deploy the Hub."
+  },
+  "localValidation": "docs/migrations/reading-training/validation-summary.json",
+  "rollback": "First native release: no new-format rollback version. Hub keeps the old 1.0.0 JSON flow until the registry is deployed; to undo after switching, redeploy the verified Hub at 663091e.",
+  "trainingRecordsCreated": false
+}

@@ -296,7 +296,7 @@ for (const gameId of gameIds) {
   test(`${gameId}: configured music starts in gameplay and stops on results, settings and unmount`, async () => {
     const components = { 'asteroid-shield': ['AsteroidShieldGame.tsx', 'playing'], 'drawing-defense': ['DrawingTowerDefenseGame.tsx', 'playing'],
       'gesture-battler': ['GestureBattlerGame.tsx', 'combat'], 'motor-cortex-rehab': ['MotorCortexRehabGame.tsx', 'playing'],
-      'gabor-patching': ['GaborPatchingGame.tsx', 'running'], 'moving-card': ['MovingCardGame.tsx', 'running'], 'oculomotor-training': ['OculomotorTrainingGame.tsx', 'running'] };
+      'gabor-patching': ['GaborPatchingGame.tsx', 'running'], 'reading-training': ['ReadingTrainingGame.tsx', 'running'], 'moving-card': ['MovingCardGame.tsx', 'running'], 'oculomotor-training': ['OculomotorTrainingGame.tsx', 'running'] };
     const [file, playingPhase] = components[gameId];
     const source = await readFile(resolve(root, `apps/rehabtrainerhub/games/${gameId}/${file}`), 'utf8');
     const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);

@@ -1,0 +1,36 @@
+{
+  "gameId": "reading-training",
+  "version": "2.0.0",
+  "contentSha256": "2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0",
+  "commandPrefix": "node scripts/check-r2-game-browser.mjs --game reading-training",
+  "brave": {
+    "lobby": "pass",
+    "lobby --wide --windowed": "pass",
+    "lobby --mobile --session-failure": "pass",
+    "lobby --tablet": "pass",
+    "lobby --signed-in --english --renderer-failure": "pass (after tour fix; first run found panel covering target)",
+    "standalone --mobile": "pass",
+    "standalone --tablet --stop": "pass",
+    "lobby --revoke": "pass (rerun with HUB_OUTPUT_ROOT after sync tool renamed out/ files)",
+    "remote --standalone --mobile": "pass (real R2)",
+    "remote --lobby": "pass (real R2, candidate Hub)"
+  },
+  "localDatabaseOnly": true,
+  "gates": {
+    "test:naming": "pass",
+    "test:pwa": 18,
+    "test:game-architecture": 221,
+    "test:hub-functions": 125,
+    "test:gamerunner": 50,
+    "test:entrypoints": "pass",
+    "test:cloudflare-deploy": "pass"
+  },
+  "otherChecks": {
+    "tsc": "pass",
+    "gameBuild": "pass",
+    "build:hub": "pass (32 legacy bundles)",
+    "test:seo": "pass",
+    "test:game-architecture:browser": "6/7 in full batch; 'settings-driven config UI' (ufov, unrelated) timed out at ~215s and passed when rerun alone"
+  },
+  "screenshots": ".tmp/reading-training-validation/ (not committed)"
+}

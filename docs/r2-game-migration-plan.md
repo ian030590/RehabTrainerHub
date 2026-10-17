@@ -1,5 +1,7 @@
 # 內建遊戲逐步遷移至 R2：畫畫塔防試點
 
+2026-10-17 閱讀訓練（RSVP）`reading-training@2.0.0` 已依第 7 節 A–D 完成本機自包含候選：原設定／換算／RSVP 時序／抽題與數值成績欄位、三步聚光燈教學、原圖與分類、七項本機 gate、Hub build 與 Brave 流程；同日依擁有者核准發布 R2（`2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0`）並切換 current，**Hub 尚未切換與正式驗收**，正式仍七款／33 款。見 [閱讀訓練搬遷候選](reading-training-r2-migration.md)。
+
 2026-10-17 蓋伯斑塊練習 `gabor-patching@2.0.0` 已依擁有者「也核准gabor-patching，請同步幫我上傳」核准原候選精確摘要，完成第 7 節 E／F 的 R2 發布、current、正式 API／session／五檔 bytes 與桌機／手機／平板／英文登入／獨立 PWA 驗收。七項 CI、遊戲與 Hub build 通過，正式為七款 R2／33 舊流程。保留原演算法、設定、計分、三步聚光燈與完整明細；本次使用既有相容 Hub／runner，未另部署平台、未建立正式紀錄。首次 native 沒有另一核准回退版，已重驗舊 Hub 三個檔案；審查、既有提前部署的順序差異、驗收與限制見 [蓋伯斑塊搬遷](gabor-patching-r2-migration.md)及[正式收據](releases/gabor-patching-2.0.0.json)。
 
 更新日期：2026-10-17。目前 R2 current 為 `asteroid-shield@2.0.9`、`gesture-battler@2.0.4`、`drawing-defense@2.0.6`、`motor-cortex-rehab@2.0.2`、`oculomotor-training@2.1.1`、`moving-card@2.0.2`、`gabor-patching@2.0.0`，7 款完成、33 款保留舊流程。以下各版發布歷史的數量與版本保留當時基準。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。

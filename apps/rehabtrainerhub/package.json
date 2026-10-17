@@ -47,7 +47,6 @@
     "@rehab-trainer/game-number-letter": "*",
     "@rehab-trainer/game-plus-minus": "*",
     "@rehab-trainer/game-reaction-time": "*",
-    "@rehab-trainer/game-reading-training": "*",
     "@rehab-trainer/game-simon-says": "*",
     "@rehab-trainer/game-sliding-puzzle": "*",
     "@rehab-trainer/game-spatial-span": "*",
