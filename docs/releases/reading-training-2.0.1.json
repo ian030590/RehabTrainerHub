@@ -1,0 +1,232 @@
+{
+  "gameId": "reading-training",
+  "version": "2.0.1",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/reading-training/2.0.1/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/reading-training/2.0.1/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/reading-training/",
+  "verifiedAt": "2026-10-17T14:08:47.331Z",
+  "fileCount": 5,
+  "totalBytes": 1205891,
+  "files": [
+    {
+      "path": "assets/index-BqNQo77Z.js",
+      "size": 1184661,
+      "sha256": "91d2733faac49221ad52a59efccc819b7a971b1d24566ce3e6955129dab36992",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-CcKz8cjW.css",
+      "size": 19471,
+      "sha256": "04e86c77b986d2add00063ee42561b68ebd30685d7ecd795a0d2f65ae33a3677",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 499,
+      "sha256": "f80da9beaa28312904c39fcf7ce6bc3193c9f2140c4dbdf2ea864aeaf860f726",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 412,
+      "sha256": "e8fddb99e701bbe751ca0843f07206d612148396e5a69411ab953a0a76d76422",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 848,
+      "sha256": "a4e3de855637556467ae4c7c1b5a1d2f5479c2fc09e3f9cce0c23d534ed38cb4",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0"
+    },
+    "2.0.1": {
+      "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "approvedAt": "2026-10-17T14:08:44Z",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "確認，請執行",
+    "scope": "Push main to deploy Hub and runner, then publish and activate the eight exact version/contentSha256 tuples presented in the preceding assistant message",
+    "games": [
+      {
+        "gameId": "reading-training",
+        "version": "2.0.1",
+        "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.2",
+        "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.10",
+        "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.5",
+        "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.3",
+        "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.7",
+        "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.3",
+        "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.2",
+        "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0",
+    "command": "node scripts/publish-official-game.mjs reading-training --activate-version 2.0.0",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "Rolling back to a version without settings-storage keeps working with the deployed Hub and runner."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/reading-training/2.0.1/",
+  "changes": [
+    "Remember the last confirmed settings on this device: the Hub or the runner official standalone launcher stores them in its own localStorage and returns them on the private channel; the game validates and falls back to defaults (sandbox unchanged)",
+    "Declare settings-storage; standalone entry uses the official launcher with mode standalone",
+    "Settings controls match their data types (named dropdowns, sliders showing their value, fields shown only when they apply)"
+  ],
+  "sourceCommit": "00b894a1ea3c68a75d33d859d30005334ef90974",
+  "platformDeploy": {
+    "commit": "00b894a",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39037830871",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/r2-settings-controls-2026-10-17.md",
+    "tests": [
+      "scripts/check-r2-settings-memory.test.mjs",
+      "apps/usergamerunner/tests/settingsMemory.test.mjs",
+      "scripts/check-r2-settings-controls.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "localBrowser": "Local Brave settings-memory (Hub and standalone) and full play-through regression passed; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-17T14:08:47.331Z",
+    "files": [
+      {
+        "path": "assets/index-BqNQo77Z.js",
+        "status": 200,
+        "size": 1184661,
+        "sha256": "91d2733faac49221ad52a59efccc819b7a971b1d24566ce3e6955129dab36992",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-CcKz8cjW.css",
+        "status": 200,
+        "size": 19471,
+        "sha256": "04e86c77b986d2add00063ee42561b68ebd30685d7ecd795a0d2f65ae33a3677",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 499,
+        "sha256": "f80da9beaa28312904c39fcf7ce6bc3193c9f2140c4dbdf2ea864aeaf860f726",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 412,
+        "sha256": "e8fddb99e701bbe751ca0843f07206d612148396e5a69411ab953a0a76d76422",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 848,
+        "sha256": "a4e3de855637556467ae4c7c1b5a1d2f5479c2fc09e3f9cce0c23d534ed38cb4",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/reading-training/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "officialLauncherWithSettings": true,
+    "session": {
+      "version": "2.0.1",
+      "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1",
+      "settingsStorage": true
+    }
+  }
+}

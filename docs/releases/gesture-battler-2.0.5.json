@@ -1,0 +1,242 @@
+{
+  "gameId": "gesture-battler",
+  "version": "2.0.5",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.5/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/2.0.5/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/gesture-battler/",
+  "verifiedAt": "2026-10-17T14:08:54.546Z",
+  "fileCount": 5,
+  "totalBytes": 1139262,
+  "files": [
+    {
+      "path": "assets/index-DQB2JJsx.js",
+      "size": 1116548,
+      "sha256": "a00da99dcc16db41bc83ae6211065ffd04cdf7123abd68ea917de5749a6ef1b5",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BCYfgy-4.css",
+      "size": 19167,
+      "sha256": "4283ae0cb2fbe1db4570564f935dbcd63fcf83775821ecb4fc1902a38a1da5cb",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 477,
+      "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "82cc649b1fd0e979607449477beb9b00fb164d0996931f18cb5529add117d765",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 2662,
+      "sha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "hand-tracking",
+    "settings-storage"
+  ],
+  "currentVersion": "2.0.5",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "07559f7b08707675ea8e6faa343959bc859ce2fa60e133cb1737027855717bf1"
+    },
+    "2.0.1": {
+      "contentSha256": "e3cbd84ec1aa31dcdd7a6456a95e4528889f6734dab373c871c6d3e6563134e4"
+    },
+    "2.0.2": {
+      "contentSha256": "cbc35d319fd69922705fb9986831b10f3731de124a9be8b215f13b21bb0dca4c"
+    },
+    "2.0.3": {
+      "contentSha256": "35367a1833b3e8ff31ca3c6e13cc2767945525344b9ad0551a1d4188582259dc"
+    },
+    "2.0.4": {
+      "contentSha256": "a085169bab352192503c0050e7bdfe8780514bcedb5172b518cdcf13499b8e6e"
+    },
+    "2.0.5": {
+      "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "approvedAt": "2026-10-17T14:08:44Z",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "確認，請執行",
+    "scope": "Push main to deploy Hub and runner, then publish and activate the eight exact version/contentSha256 tuples presented in the preceding assistant message",
+    "games": [
+      {
+        "gameId": "reading-training",
+        "version": "2.0.1",
+        "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.2",
+        "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.10",
+        "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.5",
+        "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.3",
+        "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.7",
+        "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.3",
+        "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.2",
+        "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.4",
+    "contentSha256": "a085169bab352192503c0050e7bdfe8780514bcedb5172b518cdcf13499b8e6e",
+    "command": "node scripts/publish-official-game.mjs gesture-battler --activate-version 2.0.4",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "Rolling back to a version without settings-storage keeps working with the deployed Hub and runner."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/gesture-battler/2.0.5/",
+  "changes": [
+    "Remember the last confirmed settings on this device: the Hub or the runner official standalone launcher stores them in its own localStorage and returns them on the private channel; the game validates and falls back to defaults (sandbox unchanged)",
+    "Declare settings-storage; standalone entry uses the official launcher with mode standalone",
+    "Settings controls match their data types (named dropdowns, sliders showing their value, fields shown only when they apply)"
+  ],
+  "sourceCommit": "00b894a1ea3c68a75d33d859d30005334ef90974",
+  "platformDeploy": {
+    "commit": "00b894a",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39037830871",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/r2-settings-controls-2026-10-17.md",
+    "tests": [
+      "scripts/check-r2-settings-memory.test.mjs",
+      "apps/usergamerunner/tests/settingsMemory.test.mjs",
+      "scripts/check-r2-settings-controls.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "localBrowser": "Local Brave settings-memory (Hub and standalone) and full play-through regression passed; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-17T14:08:54.546Z",
+    "files": [
+      {
+        "path": "assets/index-DQB2JJsx.js",
+        "status": 200,
+        "size": 1116548,
+        "sha256": "a00da99dcc16db41bc83ae6211065ffd04cdf7123abd68ea917de5749a6ef1b5",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-BCYfgy-4.css",
+        "status": 200,
+        "size": 19167,
+        "sha256": "4283ae0cb2fbe1db4570564f935dbcd63fcf83775821ecb4fc1902a38a1da5cb",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 477,
+        "sha256": "bdf15efd74865dc980d194660f79d633bb4b6dd05d930ffe2552c521e8a9a2a7",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 408,
+        "sha256": "82cc649b1fd0e979607449477beb9b00fb164d0996931f18cb5529add117d765",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 2662,
+        "sha256": "e9a94f96668975638581ad4cf467bb9d8b38f26ce82512a9a54185a1f2d22a9b",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/gesture-battler/2.0.5/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "officialLauncherWithSettings": true,
+    "session": {
+      "version": "2.0.5",
+      "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887",
+      "settingsStorage": true
+    }
+  }
+}

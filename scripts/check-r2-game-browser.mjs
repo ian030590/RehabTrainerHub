@@ -410,7 +410,10 @@ try {
     })()`, gameContext);
     await until(() => evaluate(`${firstSelect}.value === ${JSON.stringify(chosen)}`, gameContext), 'setting changed');
     assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(storageKey)})`), null, 'Nothing is stored before confirming.');
-    await evaluate(`document.querySelector(".${phasePrefix}-phase-menu .config-actions .btn-primary, .${phasePrefix}-phase-menu form .btn-primary").click()`, gameContext);
+    const confirmButton = `document.querySelector(".${phasePrefix}-phase-menu .config-actions .btn-primary, .${phasePrefix}-phase-menu form .btn-primary")`;
+    // Some games enable confirm only after their resources load.
+    await until(() => evaluate(`!${confirmButton}.disabled`, gameContext), 'confirm enabled', 60000);
+    await evaluate(`${confirmButton}.click()`, gameContext);
     await until(() => evaluate(`localStorage.getItem(${JSON.stringify(storageKey)}) !== null`), 'confirmed settings stored by the container');
     const stored = JSON.parse(await evaluate(`localStorage.getItem(${JSON.stringify(storageKey)})`));
     assert.ok(Object.values(stored).map(String).includes(chosen), `Stored settings include the chosen value ${chosen}: ${JSON.stringify(stored)}`);

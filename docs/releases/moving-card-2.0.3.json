@@ -1,0 +1,237 @@
+{
+  "gameId": "moving-card",
+  "version": "2.0.3",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.3/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/2.0.3/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/moving-card/",
+  "verifiedAt": "2026-10-17T14:09:00.104Z",
+  "fileCount": 5,
+  "totalBytes": 1170998,
+  "files": [
+    {
+      "path": "assets/index-N4HHENhg.js",
+      "size": 1143668,
+      "sha256": "e48ee16446f5c07b9d2d14cad163e5bc01370710f87138493b1fd8437a7e3996",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DWH2q_ey.css",
+      "size": 17853,
+      "sha256": "8d5604f63eeb8fcfc86b366e075fb541e7da6948fe812e13955823509aa8ae65",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 507,
+      "sha256": "f82ee8b03ffd539b0a84fa93c34f720a7b022d48217e223d7ab835ef91c71c84",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "cc553bf7cca041fe7e9f3cd41dd1634cb938f435721eac902d7e6f7d4cf1a1c9",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 8562,
+      "sha256": "e14346b7bef3fba14f82f9c377fde9d0709c529d75f5cc23ef5e81652180e2b6",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.3",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "34915a0b84b4c83428b386cab8521351ddafa98d824c3fc46cb242f5c5a57037"
+    },
+    "2.0.1": {
+      "contentSha256": "85197c5f6a4e41f6e53d5b2d307a5d0703c682a3b978a1103b26064e664318e3"
+    },
+    "2.0.2": {
+      "contentSha256": "8f683247f3abec9b7c39a68fbf98359d20250acf907db4b4c54c6cc1dda86fb2"
+    },
+    "2.0.3": {
+      "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "approvedAt": "2026-10-17T14:08:44Z",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "確認，請執行",
+    "scope": "Push main to deploy Hub and runner, then publish and activate the eight exact version/contentSha256 tuples presented in the preceding assistant message",
+    "games": [
+      {
+        "gameId": "reading-training",
+        "version": "2.0.1",
+        "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.2",
+        "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.10",
+        "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.5",
+        "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.3",
+        "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.7",
+        "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.3",
+        "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.2",
+        "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.2",
+    "contentSha256": "8f683247f3abec9b7c39a68fbf98359d20250acf907db4b4c54c6cc1dda86fb2",
+    "command": "node scripts/publish-official-game.mjs moving-card --activate-version 2.0.2",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "Rolling back to a version without settings-storage keeps working with the deployed Hub and runner."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/moving-card/2.0.3/",
+  "changes": [
+    "Remember the last confirmed settings on this device: the Hub or the runner official standalone launcher stores them in its own localStorage and returns them on the private channel; the game validates and falls back to defaults (sandbox unchanged)",
+    "Declare settings-storage; standalone entry uses the official launcher with mode standalone"
+  ],
+  "sourceCommit": "00b894a1ea3c68a75d33d859d30005334ef90974",
+  "platformDeploy": {
+    "commit": "00b894a",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39037830871",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/r2-settings-controls-2026-10-17.md",
+    "tests": [
+      "scripts/check-r2-settings-memory.test.mjs",
+      "apps/usergamerunner/tests/settingsMemory.test.mjs",
+      "scripts/check-r2-settings-controls.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "localBrowser": "Local Brave settings-memory (Hub and standalone) and full play-through regression passed; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-17T14:09:00.104Z",
+    "files": [
+      {
+        "path": "assets/index-N4HHENhg.js",
+        "status": 200,
+        "size": 1143668,
+        "sha256": "e48ee16446f5c07b9d2d14cad163e5bc01370710f87138493b1fd8437a7e3996",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DWH2q_ey.css",
+        "status": 200,
+        "size": 17853,
+        "sha256": "8d5604f63eeb8fcfc86b366e075fb541e7da6948fe812e13955823509aa8ae65",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 507,
+        "sha256": "f82ee8b03ffd539b0a84fa93c34f720a7b022d48217e223d7ab835ef91c71c84",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 408,
+        "sha256": "cc553bf7cca041fe7e9f3cd41dd1634cb938f435721eac902d7e6f7d4cf1a1c9",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 8562,
+        "sha256": "e14346b7bef3fba14f82f9c377fde9d0709c529d75f5cc23ef5e81652180e2b6",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/moving-card/2.0.3/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "officialLauncherWithSettings": true,
+    "session": {
+      "version": "2.0.3",
+      "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912",
+      "settingsStorage": true
+    }
+  }
+}

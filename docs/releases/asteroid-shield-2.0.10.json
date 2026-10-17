@@ -1,0 +1,349 @@
+{
+  "gameId": "asteroid-shield",
+  "version": "2.0.10",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.10/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/2.0.10/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/asteroid-shield/",
+  "verifiedAt": "2026-10-17T14:08:52.419Z",
+  "fileCount": 12,
+  "totalBytes": 1774371,
+  "files": [
+    {
+      "path": "assets/asteroid-blue-CY-_A_BJ.png",
+      "size": 14034,
+      "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-dark-CW7iRJ5o.png",
+      "size": 11856,
+      "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/asteroid-green-1XKYeWRA.png",
+      "size": 9693,
+      "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/background-NBhu4YAc.png",
+      "size": 83041,
+      "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/energy-rock-CT8hMT01.png",
+      "size": 1792,
+      "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-B3GVF5V7.js",
+      "size": 1337434,
+      "sha256": "069c7ef66165582fc23c581686388e93b14e70b77f34e9b34909627961e2a88e",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/shield-complete-B5wkC1qZ.png",
+      "size": 198696,
+      "sha256": "616c50843eadbaaf1db4d7ba23878feb10fba10b0ce1698ce03fb5c2c15e06d7",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/ship-CrsWCvcK.png",
+      "size": 78990,
+      "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/style-BaNVeBlr.css",
+      "size": 17117,
+      "sha256": "29b38cb16f39a00ae447e869a93c7554d5cfef64703a5cc4daa36f56a8604128",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 471,
+      "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 411,
+      "sha256": "45babad23166c6e25b396452a58cc4c6254546603526196dd83904e31f182a66",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 20836,
+      "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.10",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "ea21aa905a9537eaac404f83b606d39c782b42987266f8762bd88f397dd1566e"
+    },
+    "2.0.1": {
+      "contentSha256": "18ecaab02f25132616a066bd24ac1de1f6e8d8f999e4e07e9788f8f196c7b1a3"
+    },
+    "2.0.2": {
+      "contentSha256": "7c533419ecd32cf07fa35b87557b67071c7f33a7c3cb122f91f00eb0ff102fe3"
+    },
+    "2.0.3": {
+      "contentSha256": "9d62f9eec8e0e98d5fdbfd02a67c9373cde5606fc649e47f2209f70a0d428f55"
+    },
+    "2.0.4": {
+      "contentSha256": "21e063f1ce4d22a456f2147c6e77b49b16aff6e50b2c63af8d75c13430eeb393"
+    },
+    "2.0.5": {
+      "contentSha256": "efb1e5c3695108562f1a6810b0d29f9b295105d6c250edd068757e33cdf81d97"
+    },
+    "2.0.6": {
+      "contentSha256": "226381bdf6a0537fc7fe7331f29ae6d8cd6291e8c7181215adfdb12580be0902"
+    },
+    "2.0.7": {
+      "contentSha256": "63dee846c20307797421d9f5bae473c4c5b38de4c22e0e833d211d49fef0f011"
+    },
+    "2.0.8": {
+      "contentSha256": "8b64ea45eea1eaab277dc1881fb1a86c2d085b90ab91d87e1d8a72746d53da65"
+    },
+    "2.0.9": {
+      "contentSha256": "ed8c281dc4f599bffb25fdf609dfb6051c09e050cbc349499649a49ff3477abe"
+    },
+    "2.0.10": {
+      "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "approvedAt": "2026-10-17T14:08:44Z",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "確認，請執行",
+    "scope": "Push main to deploy Hub and runner, then publish and activate the eight exact version/contentSha256 tuples presented in the preceding assistant message",
+    "games": [
+      {
+        "gameId": "reading-training",
+        "version": "2.0.1",
+        "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.2",
+        "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.10",
+        "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.5",
+        "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.3",
+        "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.7",
+        "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.3",
+        "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.2",
+        "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.9",
+    "contentSha256": "ed8c281dc4f599bffb25fdf609dfb6051c09e050cbc349499649a49ff3477abe",
+    "command": "node scripts/publish-official-game.mjs asteroid-shield --activate-version 2.0.9",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "Rolling back to a version without settings-storage keeps working with the deployed Hub and runner."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/asteroid-shield/2.0.10/",
+  "changes": [
+    "Remember the last confirmed settings on this device: the Hub or the runner official standalone launcher stores them in its own localStorage and returns them on the private channel; the game validates and falls back to defaults (sandbox unchanged)",
+    "Declare settings-storage; standalone entry uses the official launcher with mode standalone",
+    "Settings controls match their data types (named dropdowns, sliders showing their value, fields shown only when they apply)"
+  ],
+  "sourceCommit": "00b894a1ea3c68a75d33d859d30005334ef90974",
+  "platformDeploy": {
+    "commit": "00b894a",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39037830871",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/r2-settings-controls-2026-10-17.md",
+    "tests": [
+      "scripts/check-r2-settings-memory.test.mjs",
+      "apps/usergamerunner/tests/settingsMemory.test.mjs",
+      "scripts/check-r2-settings-controls.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "localBrowser": "Local Brave settings-memory (Hub and standalone) and full play-through regression passed; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-17T14:08:52.419Z",
+    "files": [
+      {
+        "path": "assets/asteroid-blue-CY-_A_BJ.png",
+        "status": 200,
+        "size": 14034,
+        "sha256": "7767157fb9827e6253fb727a7a1d3a08e67192ee7c55f750d47bd8d7558e6bbe",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/asteroid-dark-CW7iRJ5o.png",
+        "status": 200,
+        "size": 11856,
+        "sha256": "1cb5101a3d21765a2d59a873216580a8ee2dee2fd37cfdedc3dac22afced0511",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/asteroid-green-1XKYeWRA.png",
+        "status": 200,
+        "size": 9693,
+        "sha256": "6f9023e191a65a33e9061f9950e34176926abe70501e1991fb75ddf4713a6c13",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/background-NBhu4YAc.png",
+        "status": 200,
+        "size": 83041,
+        "sha256": "7aa53e6a3ae88ae3f00378fbdba698cb7d0397f12a0fc103294a574d474dcf81",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/energy-rock-CT8hMT01.png",
+        "status": 200,
+        "size": 1792,
+        "sha256": "46ff9b5003a471e7a52008805f00341ac31253e8b2e2aeb2ac392910d43431b8",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/index-B3GVF5V7.js",
+        "status": 200,
+        "size": 1337434,
+        "sha256": "069c7ef66165582fc23c581686388e93b14e70b77f34e9b34909627961e2a88e",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/shield-complete-B5wkC1qZ.png",
+        "status": 200,
+        "size": 198696,
+        "sha256": "616c50843eadbaaf1db4d7ba23878feb10fba10b0ce1698ce03fb5c2c15e06d7",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/ship-CrsWCvcK.png",
+        "status": 200,
+        "size": 78990,
+        "sha256": "b7f335f817d8792251d4b59e7f9ddc8da2e87b033a7314735584ea382f76618f",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/style-BaNVeBlr.css",
+        "status": 200,
+        "size": 17117,
+        "sha256": "29b38cb16f39a00ae447e869a93c7554d5cfef64703a5cc4daa36f56a8604128",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 471,
+        "sha256": "225f0ae581edc25beb8eed43ec4c7d2375c019f422e0d3b55f68cb62b426ab41",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 411,
+        "sha256": "45babad23166c6e25b396452a58cc4c6254546603526196dd83904e31f182a66",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 20836,
+        "sha256": "48580bdf2930ce1af7f9e71a8b3f29f294a7a61a0179e646f15ad61cca457a98",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/asteroid-shield/2.0.10/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "officialLauncherWithSettings": true,
+    "session": {
+      "version": "2.0.10",
+      "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9",
+      "settingsStorage": true
+    }
+  }
+}

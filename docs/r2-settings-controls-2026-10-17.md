@@ -1,6 +1,6 @@
 # R2 遊戲設定控制項 UI/UX 修正與設定值保存（2026-10-17 候選）
 
-狀態：**本機候選，尚待擁有者逐一核准精確 version／contentSha256 後發布**。未發布 R2、未提交、未推送。擁有者決定兩項需求合併在同一批新版本。
+狀態：**已發布並完成正式驗收（2026-10-17）**。擁有者以「確認，請執行」核准下表八組精確 version／contentSha256；先推送 `00b894a` 至 `main` 並部署 Hub 與 runner（[部署 run](https://github.com/ian030590/RehabTrainerHub/actions/runs/39037830871)），確認正式站已含新程式後才逐款發布 R2 並切換 current。收據：`docs/releases/<gameId>-<version>.json`（八份）。擁有者決定兩項需求合併在同一批新版本。
 
 ## 1. 設定控制項
 
@@ -62,4 +62,5 @@
 - 七項 CI gate 通過（`test:game-architecture` 246、`test:gamerunner` 53、`test:hub-functions` 125）。
 - 八款 build 與 dry-run 通過；Hub、runner build 通過；無 `conflicted` 檔案。
 - 本機 Brave `--settings-memory`：八款 × Hub／獨立 PWA 共 16 項通過（改設定→確認→容器 `localStorage` 有值、遊戲本身無法存取 storage→重新整理後還原）。
+- 正式站驗收：八款穩定入口 302 至新版、`/api/official-game-sessions` 綁定新版與 digest 且含 `settings-storage`、獨立啟動頁 200 並為官方啟動頁；每個發布檔案從正式站回讀，大小與 SHA-256 相符。正式 Brave `--settings-memory`：八款 × 正式 Hub／正式獨立 PWA 共 16 項通過（眼動練習需等確認按鈕在實驗資源載入後啟用，harness 已改為等待按鈕可按再點擊）。正式 Hub 完整流程八款通過（保存只寫本機 SQLite）。
 - 本機 Brave 完整流程回歸 17 項通過（非相機遊戲的獨立 PWA 已改走官方啟動頁）：閱讀（桌機、獨立 PWA、英文登入手機）、蓋伯（寬螢幕視窗、獨立手機 medium）、小行星（桌機、獨立手機）、畫畫塔防（桌機含保存失敗重試、獨立 PWA 返回設定）、移動卡片（桌機、獨立 PWA）、手部（桌機、獨立手機，實際 MediaPipe）、手勢（桌機、獨立手機英文，實際 MediaPipe）、眼動（桌機、獨立 PWA）。保存只寫本機 SQLite。

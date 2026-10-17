@@ -1,0 +1,262 @@
+{
+  "gameId": "drawing-defense",
+  "version": "2.0.7",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.7/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.7/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/",
+  "verifiedAt": "2026-10-17T14:08:58.367Z",
+  "fileCount": 6,
+  "totalBytes": 5851373,
+  "files": [
+    {
+      "path": "assets/StarSky-COfhhfcH.png",
+      "size": 4650499,
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-Njg4wso-.js",
+      "size": 1149000,
+      "sha256": "e514e47dd91c0f993094d228ba37a352ecc444bc6e6ffca478bd708fe39dc222",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DCB82DCn.css",
+      "size": 15739,
+      "sha256": "53a151ef952a8276e9690a9d68d472139ed386698d8fcc3f01b7633184b3152a",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 489,
+      "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "9f4ed5dff227882cfc5ec0ee7caa727f7c677403ade09132540b181b9b3ca292",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 35244,
+      "sha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.7",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "1a072412d9220b7d285086d999829961f5b76e7ad88220382d3121295a312d97"
+    },
+    "2.0.1": {
+      "contentSha256": "95e1184b39ad916abd50789837495490f0580a5526fd4237d5be067ddbcb0db9"
+    },
+    "2.0.2": {
+      "contentSha256": "2490614c840e2bd69811c01d52e98c12c9f7d63b2dd03e5c26e2089a69fab9f3"
+    },
+    "2.0.3": {
+      "contentSha256": "0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24"
+    },
+    "2.0.4": {
+      "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c"
+    },
+    "2.0.5": {
+      "contentSha256": "dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86"
+    },
+    "2.0.6": {
+      "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f"
+    },
+    "2.0.7": {
+      "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "approvedAt": "2026-10-17T14:08:44Z",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "確認，請執行",
+    "scope": "Push main to deploy Hub and runner, then publish and activate the eight exact version/contentSha256 tuples presented in the preceding assistant message",
+    "games": [
+      {
+        "gameId": "reading-training",
+        "version": "2.0.1",
+        "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.2",
+        "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.10",
+        "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.5",
+        "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.3",
+        "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.7",
+        "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.3",
+        "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.2",
+        "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.6",
+    "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f",
+    "command": "node scripts/publish-official-game.mjs drawing-defense --activate-version 2.0.6",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "Rolling back to a version without settings-storage keeps working with the deployed Hub and runner."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/drawing-defense/2.0.7/",
+  "changes": [
+    "Remember the last confirmed settings on this device: the Hub or the runner official standalone launcher stores them in its own localStorage and returns them on the private channel; the game validates and falls back to defaults (sandbox unchanged)",
+    "Declare settings-storage; standalone entry uses the official launcher with mode standalone",
+    "Settings controls match their data types (named dropdowns, sliders showing their value, fields shown only when they apply)"
+  ],
+  "sourceCommit": "00b894a1ea3c68a75d33d859d30005334ef90974",
+  "platformDeploy": {
+    "commit": "00b894a",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39037830871",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/r2-settings-controls-2026-10-17.md",
+    "tests": [
+      "scripts/check-r2-settings-memory.test.mjs",
+      "apps/usergamerunner/tests/settingsMemory.test.mjs",
+      "scripts/check-r2-settings-controls.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "localBrowser": "Local Brave settings-memory (Hub and standalone) and full play-through regression passed; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-17T14:08:58.367Z",
+    "files": [
+      {
+        "path": "assets/StarSky-COfhhfcH.png",
+        "status": 200,
+        "size": 4650499,
+        "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/index-Njg4wso-.js",
+        "status": 200,
+        "size": 1149000,
+        "sha256": "e514e47dd91c0f993094d228ba37a352ecc444bc6e6ffca478bd708fe39dc222",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DCB82DCn.css",
+        "status": 200,
+        "size": 15739,
+        "sha256": "53a151ef952a8276e9690a9d68d472139ed386698d8fcc3f01b7633184b3152a",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 489,
+        "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 402,
+        "sha256": "9f4ed5dff227882cfc5ec0ee7caa727f7c677403ade09132540b181b9b3ca292",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 35244,
+        "sha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/drawing-defense/2.0.7/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "officialLauncherWithSettings": true,
+    "session": {
+      "version": "2.0.7",
+      "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183",
+      "settingsStorage": true
+    }
+  }
+}

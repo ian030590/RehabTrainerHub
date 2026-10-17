@@ -1,0 +1,235 @@
+{
+  "gameId": "gabor-patching",
+  "version": "2.0.2",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.2/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.2/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/",
+  "verifiedAt": "2026-10-17T14:08:49.253Z",
+  "fileCount": 5,
+  "totalBytes": 1158105,
+  "files": [
+    {
+      "path": "assets/index-S3-R8Y83.js",
+      "size": 1138613,
+      "sha256": "896119879acf522389e0df56fbb73c59f0afb221a06777dab87a5a95e3330c75",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-LYCjcFSc.css",
+      "size": 17208,
+      "sha256": "23020620a043a65dc28d6fbd514dd780f88b6d36fedd81609afc542e70496e6e",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 508,
+      "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "b1049f2e9c88f2af9931780944ce98839dc64ed4b56c7399a69aa3c5cb846f39",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 1368,
+      "sha256": "b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.2",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a"
+    },
+    "2.0.1": {
+      "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3"
+    },
+    "2.0.2": {
+      "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "approvedAt": "2026-10-17T14:08:44Z",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "確認，請執行",
+    "scope": "Push main to deploy Hub and runner, then publish and activate the eight exact version/contentSha256 tuples presented in the preceding assistant message",
+    "games": [
+      {
+        "gameId": "reading-training",
+        "version": "2.0.1",
+        "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.2",
+        "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+      },
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.10",
+        "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.5",
+        "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.3",
+        "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.7",
+        "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.3",
+        "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.2",
+        "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3",
+    "command": "node scripts/publish-official-game.mjs gabor-patching --activate-version 2.0.1",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "Rolling back to a version without settings-storage keeps working with the deployed Hub and runner."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/gabor-patching/2.0.2/",
+  "changes": [
+    "Remember the last confirmed settings on this device: the Hub or the runner official standalone launcher stores them in its own localStorage and returns them on the private channel; the game validates and falls back to defaults (sandbox unchanged)",
+    "Declare settings-storage; standalone entry uses the official launcher with mode standalone",
+    "Settings controls match their data types (named dropdowns, sliders showing their value, fields shown only when they apply)"
+  ],
+  "sourceCommit": "00b894a1ea3c68a75d33d859d30005334ef90974",
+  "platformDeploy": {
+    "commit": "00b894a",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39037830871",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/r2-settings-controls-2026-10-17.md",
+    "tests": [
+      "scripts/check-r2-settings-memory.test.mjs",
+      "apps/usergamerunner/tests/settingsMemory.test.mjs",
+      "scripts/check-r2-settings-controls.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "localBrowser": "Local Brave settings-memory (Hub and standalone) and full play-through regression passed; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-17T14:08:49.254Z",
+    "files": [
+      {
+        "path": "assets/index-S3-R8Y83.js",
+        "status": 200,
+        "size": 1138613,
+        "sha256": "896119879acf522389e0df56fbb73c59f0afb221a06777dab87a5a95e3330c75",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-LYCjcFSc.css",
+        "status": 200,
+        "size": 17208,
+        "sha256": "23020620a043a65dc28d6fbd514dd780f88b6d36fedd81609afc542e70496e6e",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 508,
+        "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 408,
+        "sha256": "b1049f2e9c88f2af9931780944ce98839dc64ed4b56c7399a69aa3c5cb846f39",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 1368,
+        "sha256": "b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/gabor-patching/2.0.2/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "officialLauncherWithSettings": true,
+    "session": {
+      "version": "2.0.2",
+      "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83",
+      "settingsStorage": true
+    }
+  }
+}
