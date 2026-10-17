@@ -230,7 +230,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
         {error && <><button onClick={() => { inputRef.current?.Stop(); void ExitFullscreenIfActive(); portRef.current?.close(); portRef.current = null; sessionRef.current = null; resultRef.current = null; csvRef.current = null; csvFileRef.current = null; csvSaved.current = false; saving.current = false; saved.current = false; setSession(null); setUnavailable(false); setReady(false); setError(false); setGeneration(value => value + 1); }}>{language === 'en' ? 'Try again' : '重新載入'}</button><button onClick={() => void close()}>{language === 'en' ? 'Back to lobby' : '返回大廳'}</button></>}
       </div>}
       {!unavailable && source && <iframe key={generation} ref={frameRef} src={source} title={release.name} onLoad={initialize}
-        sandbox="allow-scripts" allow="autoplay; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
+        sandbox="allow-scripts" allow={`autoplay; fullscreen${session?.capabilities?.includes('gamepad') ? '; gamepad *' : ''}`} allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
       {cameraConsent && <div className="training-overlay-camera-consent" role="dialog" aria-modal="true" aria-labelledby="hand-input-consent-title"
         onKeyDown={event => {
           if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); answerConsent(false); }

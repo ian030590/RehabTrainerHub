@@ -1,0 +1,63 @@
+:root {
+  font-family: system-ui, sans-serif;
+  --primary: #005eb8; --primary-hover: #00478d; --primary-soft: #e8f2fc;
+  --background: #f6f7f9; --surface: #fff; --text: #202428; --heading: #14212b;
+  --text-muted: #606970; --border: #d4d9de; --text-on-accent: #fff;
+  --bg-overlay: rgba(20,24,28,.54); --radius: 8px; --success: #005eb8; --error: #ba1a1a;
+  --game-background: #fff; --reading-font: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Microsoft JhengHei UI', Arial, sans-serif;
+  color: var(--text); background: var(--game-background);
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); font-weight: 700; }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.btn-primary { color: var(--text-on-accent); background: var(--primary); }
+.driving-rehab-game-root { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--game-background); }
+.game-settings-dialog { width: calc(100% - 32px); max-width: 42rem; max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: hidden; border: 0; border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.game-settings-dialog::backdrop { background: var(--bg-overlay); backdrop-filter: blur(12px); }
+.game-settings-dialog .training-config { max-height: calc(100dvh - 32px); }
+.renderer-error { color: var(--error); }
+.training-config-body .training-setting-description { display: block; margin-top: 4px; color: var(--text-muted); font-size: 1rem; }
+
+.game-tour-blocker { position: fixed; inset: 0; z-index: 9997; }
+.game-tour-spotlight { position: fixed; z-index: 9998; border-radius: var(--radius); pointer-events: none; box-shadow: 0 0 0 100vmax var(--bg-overlay); outline: 2px solid var(--surface); }
+.game-tour { position: fixed; z-index: 9999; width: min(calc(100% - 16px), 30rem); max-height: calc(100dvh - 16px); overflow: auto; padding: 24px; border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1.6; }
+.game-tour h2 { margin: 0; }
+.game-tour p { line-height: 1.6; }
+.game-tour button { margin: 8px 8px 0 0; }
+.experiment-container, .experiment-results { position: absolute; z-index: 20; inset: 0; padding: 24px; background: var(--background); color: var(--text); overflow: auto; touch-action: auto; }
+.results-table { width: 100%; min-width: 48rem; border-collapse: collapse; }
+.results-table th, .results-table td { min-width: 3rem; padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.results-table th { white-space: nowrap; }
+.experiment-results .results-table .driving-event-label { min-width: 14rem; }
+.results-scroll { overflow-x: auto; }
+.experiment-results { margin: 0 auto; }
+.driving-training-experiment:focus, .driving-training-experiment .jspsych-display-element:focus { outline: none; }
+.driving-tutorial { position: absolute; inset: 0; overflow: hidden; background: #a9bcc3; }
+.driving-preview-sky { position: absolute; inset: 0 0 50%; background: #ccdee6; border-bottom: 32px solid #8a9f90; }
+.driving-preview-road { position: absolute; inset: 32% -20% 0; background: #465057; clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); }
+.driving-preview-divider { position: absolute; left: 49%; width: 2%; top: 0; bottom: 0; border-left: 6px dashed #f7f1c9; transform: rotate(-8deg); }
+.driving-preview-hazard, .driving-preview-player { position: absolute; width: 64px; height: 100px; border: 4px solid #202b34; border-radius: 16px; background: #d26743; box-shadow: -8px 10px 0 #172128; }
+.driving-preview-hazard { left: calc(50% - 38px); top: 35%; transform: rotate(-22deg); }
+.driving-preview-player { left: 60%; top: 61%; background: #e6edf0; }
+.driving-preview-car-window { display: block; margin: 12px 6px; height: 26px; background: #293f4c; border-radius: 6px; }
+.driving-preview-crossing { position: absolute; left: 80px; top: 28px; font-size: 48px; color: #fff; }
+.driving-preview-status { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); border-radius: 8px; padding: 12px 20px; background: #fffffff2; color: #14212b; font-weight: 700; }
+.driving-preview-status p, .driving-preview-controls p { margin: 4px 0; }
+.driving-preview-controls { position: absolute; left: 16px; right: 16px; bottom: 16px; margin: auto; width: fit-content; max-width: calc(100% - 32px); padding: 12px 20px; background: #fffffff2; border-radius: 8px; text-align: center; font-weight: 700; }
+.driving-preview-wheel { font-size: 40px; line-height: 1; }
+.driving-training-experiment, .driving-training-experiment .jspsych-content-wrapper, .driving-training-experiment .jspsych-content { width: 100%; height: 100%; padding: 0; margin: 0; max-width: none; }
+.driving-training-experiment { position: absolute; inset: 0; }
+.driving-training-stop { position: absolute; right: 12px; top: 12px; z-index: 80; }
+.training-option-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+.training-option { display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+.training-option:has(input:checked) { background: var(--primary-soft); border-color: var(--primary); }
+.training-option:has(input:disabled) { opacity: .5; }
+.training-option input, .driving-flash-option input { width: 20px; height: 20px; flex-shrink: 0; }
+.driving-flash-option { display: flex; align-items: center; gap: 10px; }
+.driving-wheel-setup { padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+@media (max-height: 500px) { .driving-preview-status { top: 8px; padding: 4px 12px; font-size: .85rem; } .driving-preview-controls { bottom: 8px; padding: 4px 12px; font-size: .85rem; } .driving-preview-wheel { display: none; } .driving-preview-hazard { top: 33%; height: 64px; } }
+
+.training-setting { min-width: 0; border: 0; padding: 0; }

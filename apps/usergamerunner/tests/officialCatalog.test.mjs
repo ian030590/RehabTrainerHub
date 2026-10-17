@@ -22,7 +22,7 @@ function Fixture(gameId = 'drawing-defense') {
   return { catalog, objects, bucket };
 }
 
-for (const migratedId of ['gabor-patching', 'reading-training']) test(`${migratedId} stable entry selects its approved current and rejects withdrawal without exposing other versions`, async () => {
+for (const migratedId of ['driving-rehab', 'gabor-patching', 'reading-training']) test(`${migratedId} stable entry selects its approved current and rejects withdrawal without exposing other versions`, async () => {
   const gameId = migratedId;
   const fixture = Fixture(gameId);
   const request = path => HandleRequest({ request: new Request(`https://runner.example${path}`), env: { GAME_RELEASE_BUCKET: fixture.bucket } });

@@ -1,5 +1,7 @@
 # 內建遊戲逐步遷移至 R2：畫畫塔防試點
 
+2026-10-18 駕駛注意力模擬練習 `driving-rehab@2.0.0` 已完成第 7 節 A–D 本機自包含候選：原四項設定、Three.js／jsPsych／模型與數值成果、自有設定及成績、三步聚光燈、原控制與方向盤校正。精確候選、TDD、沙盒貼圖處理、逐項驗收及發布順序見 [駕駛搬遷候選](driving-rehab-r2-migration.md)。**尚未取得精確摘要核准或發布／部署；正式仍為八款 R2／32 款舊流程，本機候選為九款／31 舊 bundle，不可提前部署候選 registry。**
+
 2026-10-17 閱讀訓練（RSVP）`reading-training@2.0.0` 已依第 7 節 A–D 完成本機自包含候選：原設定／換算／RSVP 時序／抽題與數值成績欄位、三步聚光燈教學、原圖與分類、七項本機 gate、Hub build 與 Brave 流程；同日依擁有者核准發布 R2（`2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0`）並切換 current；同日推送 `c329c5b` 至 `main`、部署 Hub 並完成正式驗收，正式為八款 R2／32 款舊流程。見 [閱讀訓練搬遷候選](reading-training-r2-migration.md)。
 
 2026-10-17 蓋伯斑塊練習 `gabor-patching@2.0.0` 已依擁有者「也核准gabor-patching，請同步幫我上傳」核准原候選精確摘要，完成第 7 節 E／F 的 R2 發布、current、正式 API／session／五檔 bytes 與桌機／手機／平板／英文登入／獨立 PWA 驗收。七項 CI、遊戲與 Hub build 通過，正式為七款 R2／33 舊流程。保留原演算法、設定、計分、三步聚光燈與完整明細；本次使用既有相容 Hub／runner，未另部署平台、未建立正式紀錄。首次 native 沒有另一核准回退版，已重驗舊 Hub 三個檔案；審查、既有提前部署的順序差異、驗收與限制見 [蓋伯斑塊搬遷](gabor-patching-r2-migration.md)及[正式收據](releases/gabor-patching-2.0.0.json)。

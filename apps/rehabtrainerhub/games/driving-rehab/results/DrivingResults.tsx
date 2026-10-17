@@ -1,73 +1,31 @@
-// Results view local to the Hub-owned driving module.
-import type { TFunction,TrialData } from '@rehab-trainer/ui';
-import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
+import { ScoreAnalysis } from '../ScoreAnalysis';
+import type { BuildGameScore, DrivingTrial } from '../score';
 
-interface DrivingResultsProps {
-  results: TrialData[];
-  userName: string;
-  t: TFunction;
-}
-
-export function DrivingResults({ results, userName, t }: DrivingResultsProps) {
-  const result = results[0];
-  const events: Record<string, any>[] = result?.driving_events ?? [];
-
-  return (
-    <>
-      <div className="results-score">
-        {result?.average_rt ?? 0} ms
-      </div>
-      <ResultSummary items={[
-        { label: t('exp.res.validEvents'), value: result?.valid_event_count ?? 0 },
-        { label: t('exp.res.collisions'), value: result?.collisions ?? 0 },
-        { label: t('exp.res.laneDeviations'), value: result?.lane_deviations ?? 0 },
-        { label: t('exp.res.fps'), value: result?.average_fps ?? '-' },
-        {
-          label: t('exp.res.refreshHz'),
-          value: result?.refresh_measurement_valid && result.display_refresh_hz
-            ? `${result.display_refresh_hz} Hz`
-            : t('exp.res.refreshUnknown'),
-        },
-        { label: 'Route:', value: result?.route_label ?? result?.route_id ?? '-', emphasize: false },
-        { label: t('exp.res.user'), value: userName, emphasize: false },
-      ]} />
-
-      <table className="results-table" style={{ maxWidth: 920 }}>
-        <thead>
-          <tr>
-            <th>{t('exp.res.thEvent')}</th>
-            <th>{t('exp.res.thRt')}</th>
-            <th>{t('exp.res.thRawRt')}</th>
-            <th>{t('exp.res.thFrames')}</th>
-            <th>{t('exp.res.thValid')}</th>
-            <th>{t('exp.res.thCollision')}</th>
-            <th>{t('exp.res.thAvoidance')}</th>
-            <th>{t('exp.res.thOtherCollision')}</th>
-            <th>{t('exp.res.thResp')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {events.map((event, i) => (
-            <tr key={`${event.event_id}-${i}`}>
-              <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{event.label}</td>
-              <td>{event.rt_ms ?? '-'}</td>
-              <td>{event.raw_rt_ms !== null && event.raw_rt_ms !== undefined
-                ? Math.round(event.raw_rt_ms * 10) / 10
-                : '-'}</td>
-              <td>{result?.refresh_measurement_valid ? event.reaction_frames ?? '-' : '-'}</td>
-              <td style={{ color: event.valid ? 'var(--success)' : 'var(--warning)' }}>
-                {event.valid ? '✓' : '✗'}
-              </td>
-              <td style={{ color: event.collision ? 'var(--error)' : 'var(--success)' }}>
-                {event.collision ? '✓' : '✗'}
-              </td>
-              <td>{event.avoidance_success === true ? '✓' : event.avoidance_success === false ? '✗' : '-'}</td>
-              <td>{event.other_vehicle_collision ? '✓' : '✗'}</td>
-              <td>{event.response}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
-  );
+export function DrivingResults({ results, score, settings, language }: {
+  results: DrivingTrial[]; score: ReturnType<typeof BuildGameScore>;
+  settings: { label: string; value: string }[]; language: 'zh' | 'en';
+}) {
+  const en = language === 'en';
+  const result = results.find(row => row.trial_type === 'three-driving-rehab');
+  const labels = {
+    durationMs: en ? 'Driving duration (ms)' : '模擬經過時間（ms）', meanRt: en ? 'Mean reaction time (ms)' : '平均反應時間（ms）',
+    medianRt: en ? 'Median reaction time (ms)' : '反應時間中位數（ms）', events: en ? 'Valid events' : '有效事件數',
+    responses: en ? 'Events with responses' : '有反應事件數', collisions: en ? 'Collisions' : '碰撞事件數',
+    deviations: en ? 'Lane departures' : '偏離車道次數', fps: en ? 'Mean frame rate (Hz)' : '平均畫面更新率（Hz）',
+    avoided: en ? 'Successful avoidance rounds' : '成功閃避回合數', rounds: en ? 'Event rounds' : '事件回合數',
+  };
+  const primary = ['meanRt', 'avoided', 'rounds', 'collisions'];
+  return <>
+    <section className="score-priority" aria-label={en ? 'Key results' : '主要成果'}><dl className="score-key-metrics">
+      {primary.map(key => <div className="score-key-metric" key={key}><dt>{labels[key as keyof typeof labels]}</dt><dd>{score.summary[key as keyof typeof score.summary] ?? '—'}</dd></div>)}
+    </dl></section>
+    <section className="score-context"><h3>{en ? 'Session context' : '當次概況'}</h3><dl className="score-context-list">
+      {Object.entries(score.summary).filter(([key]) => !primary.includes(key)).map(([key, value]) => <div className="score-context-item" key={key}><dt>{labels[key as keyof typeof labels]}</dt><dd>{value ?? '—'}</dd></div>)}
+      {settings.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
+      <div className="score-context-item"><dt>{en ? 'Route' : '路線'}</dt><dd>{String(result?.route_label ?? result?.route_id ?? '—')}</dd></div>
+      <div className="score-context-item"><dt>{en ? 'Completion' : '完成狀態'}</dt><dd>{result?.response === 'completed' ? (en ? 'Route completed' : '路線完成') : (en ? 'Time ended' : '時間結束')}</dd></div>
+      <div className="score-context-item"><dt>{en ? 'Measured display refresh rate' : '實測螢幕更新率'}</dt><dd>{result?.refresh_measurement_valid ? `${result.display_refresh_hz} Hz` : (en ? 'Unknown' : '未知')}</dd></div>
+    </dl></section>
+    <ScoreAnalysis rounds={score.rounds} language={language} details={(result?.driving_events ?? []).map(event => ({ ...event, reaction_frames: result?.refresh_measurement_valid ? event.reaction_frames : null }))} />
+  </>;
 }

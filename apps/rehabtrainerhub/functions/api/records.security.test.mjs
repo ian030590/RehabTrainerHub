@@ -605,8 +605,8 @@ const victimVisionCount = await onRequestGet({
 assert.deepEqual(await victimVisionCount.json(), { count: 1 });
 
 // A still-unmigrated JSON-shell game keeps the legacy Hub score path.
-const scoreRecord = { id: 'hub-score-record', savedAt: new Date().toISOString(), userName: '', moduleId: 'driving-rehab', gameId: 'driving-rehab', score: {
-  schema: 'rehab-trainer.game-score/v1', gameId: 'driving-rehab',
+const scoreRecord = { id: 'hub-score-record', savedAt: new Date().toISOString(), userName: '', moduleId: 'hart-chart', gameId: 'hart-chart', score: {
+  schema: 'rehab-trainer.game-score/v1', gameId: 'hart-chart',
   rounds: Array.from({ length: 1500 }, (_, index) => ({ score: index % 2, responseMs: 300 })), summary: { total: 750 },
 } };
 const migratedScoreRecord = { ...scoreRecord, id: 'unsigned-reading-record', moduleId: 'reading-training', gameId: 'reading-training',

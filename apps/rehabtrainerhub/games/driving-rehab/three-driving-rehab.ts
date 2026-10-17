@@ -1,10 +1,11 @@
-// Canonical Hub-owned driving runtime.
+// Game-owned driving runtime.
 import { JsPsych, ParameterType } from 'jspsych';
 import type { JsPsychPlugin, TrialType } from 'jspsych';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { CreateRuntimeAssetUrlCandidates } from '@rehab-trainer/ui/aiAssets';
-import { MeasureDisplayRefreshRate } from '@rehab-trainer/ui/displayTiming';
-import { typography } from '@rehab-trainer/ui/trainerTheme';
+import { TextureLoader } from 'three';
+import taipeiOsm from './scenes/taipei-xinyi-osm.json';
+import { MeasureDisplayRefreshRate } from './runtime/displayTiming';
+const typography = { fontFamily: 'system-ui, sans-serif' };
 import { soundManager } from './runtime/soundManager';
 import { difficultyPresets, hazardTemplates } from './hazards/driving-hazards';
 import {
@@ -278,6 +279,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private gamepadConnectedListener: ((event: GamepadEvent) => void) | null = null;
   private gamepadDisconnectedListener: ((event: GamepadEvent) => void) | null = null;
   private gamepadConnected = false;
+  private startupAbort = new AbortController();
   private controlMode: DrivingControlMode = 'arrow';
   private wheelCalibration: DrivingWheelCalibration | null = null;
   private language: DrivingLanguage = 'zh';
@@ -326,13 +328,6 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   private readonly trafficGreenMs = 6400;
   private readonly trafficYellowMs = 1800;
   private readonly trafficRedMs = 5400;
-  private readonly referenceVehicleUrls = CreateRuntimeAssetUrlCandidates(
-    import.meta.env.VITE_AI_ASSET_BASE_URL,
-    'game-assets/rehabtrainerhub/vision/reference-car/v1/car.glb',
-    new URL('./models/car.glb', import.meta.url).href,
-  );
-  private readonly taipeiOsmUrl = new URL('./scenes/taipei-xinyi-osm.json', import.meta.url).href;
-
   private route: RouteSegment[] = [...drivingRoute];
   private readonly hazardTemplates: HazardTemplate[] = [...hazardTemplates];
 
@@ -362,6 +357,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     this.unregisterRuntimeDisposer = RegisterDrivingRuntimeDisposer(() => {
       if (this.finished) return;
       this.finished = true;
+      this.startupAbort.abort();
       this.detachGlobalListeners();
       this.cleanupRenderResources();
     });
@@ -408,6 +404,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
         // warm-up render. Heavy startup work must not consume the sampling
         // timeout or make a fast display look like the 60 Hz fallback.
         const displayRefresh = await MeasureDisplayRefreshRate({
+          signal: this.startupAbort.signal,
           sampleCount: 48,
           minimumSampleCount: 12,
           minSampleMs: 1,
@@ -497,6 +494,8 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private resetTrialState(trial?: TrialType<Info>) {
+    this.startupAbort.abort();
+    this.startupAbort = new AbortController();
     this.cleanupRenderResources();
     this.selectedRouteVariant = PickRandomDrivingRoute();
     this.route = this.ensureRoute(BuildDrivingRoute(this.selectedRouteVariant));
@@ -2695,18 +2694,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private async loadTaipeiOsmCity() {
-    if (!this.renderQuality.useOsmCity) return;
-    if (!this.scene || typeof fetch === 'undefined') return;
-
-    try {
-      const response = await fetch(this.taipeiOsmUrl);
-      if (!response.ok) return;
-      const payload = await response.json();
-      if (!payload || !Array.isArray(payload.elements)) return;
-      this.addTaipeiOsmCity(payload.elements);
-    } catch (error) {
-      console.warn('Unable to load Taipei OSM city data.', error);
-    }
+    if (this.renderQuality.useOsmCity && this.scene) this.addTaipeiOsmCity(taipeiOsm.elements);
   }
 
   private addTaipeiOsmCity(elements: any[]) {
@@ -2959,9 +2947,14 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
     if (!root) return Promise.resolve(false);
 
     const loader = new GLTFLoader();
+    loader.register(parser => {
+      // ImageBitmapLoader fetches blob URLs; image elements keep embedded textures within img-src.
+      parser.textureLoader = new TextureLoader(parser.options.manager);
+      return { name: 'driving-embedded-textures' };
+    });
     return new Promise((resolve) => {
-      const loadCandidate = (candidateIndex: number) => loader.load(
-        this.referenceVehicleUrls[candidateIndex],
+      loader.parse(
+        Uint8Array.from(atob(window.DrivingRehabVehicleData), character => character.charCodeAt(0)).buffer, '',
         (gltf) => {
           if (this.finished || !this.vehicleRoot) {
             this.disposeObject(gltf.scene);
@@ -3007,21 +3000,11 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
           this.updateVehicleVisual(0);
           resolve(true);
         },
-        undefined,
         (error) => {
-          if (candidateIndex + 1 < this.referenceVehicleUrls.length) {
-            console.warn(
-              'Unable to load the reference vehicle from the configured CDN. Falling back locally.',
-              error,
-            );
-            loadCandidate(candidateIndex + 1);
-            return;
-          }
           console.warn('Unable to load reference driving vehicle model.', error);
           resolve(false);
         },
       );
-      loadCandidate(0);
     });
   }
 
@@ -5004,6 +4987,7 @@ class ThreeDrivingRehabPlugin implements JsPsychPlugin<Info> {
   }
 
   private detachGlobalListeners() {
+    this.startupAbort.abort();
     cancelAnimationFrame(this.raf);
     if (this.keydownListener) {
       window.removeEventListener('keydown', this.keydownListener);

@@ -10,6 +10,7 @@ import ts from 'typescript';
 const root = resolve(import.meta.dirname, '..');
 const gamesRoot = resolve(root, 'apps/rehabtrainerhub/games');
 const games = {
+  'driving-rehab': { version: '2.0.0', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },
   'reading-training': { version: '2.0.1', file: 'ReadingTrainingGame.tsx', settings: 'settings.ts' },
   'gabor-patching': { version: '2.0.2', file: 'GaborPatchingGame.tsx', settings: 'settings.ts' },
   'asteroid-shield': { version: '2.0.10', file: 'AsteroidShieldGame.tsx', settings: 'settings.ts' },
@@ -105,9 +106,9 @@ for (const [gameId, game] of Object.entries(games)) {
     const { IsGameSettings } = await import('../packages/ui/src/selfContainedGame.js');
     assert.equal(IsGameSettings(defaults), true, 'The full settings fit what the container may store.');
     assert.equal(RestoreSettings({ ...defaults, extra: 1 }, defaults, validate).extra, undefined, 'Unknown keys are dropped.');
-    const [key] = Object.keys(defaults).filter(item => typeof defaults[item] === 'number');
-    assert.equal(RestoreSettings({ [key]: -999999 }, defaults, validate), null, 'Out-of-range values are rejected.');
-    assert.equal(RestoreSettings({ [key]: 'text' }, defaults, validate)?.[key], defaults[key], 'Wrong types keep the default.');
+    const [key] = Object.keys(defaults).filter(item => typeof defaults[item] === 'number' || (gameId === 'driving-rehab' && item === 'difficulty'));
+    assert.equal(RestoreSettings({ [key]: gameId === 'driving-rehab' ? 'invalid' : -999999 }, defaults, validate), null, 'Out-of-range values are rejected.');
+    assert.equal(RestoreSettings({ [key]: gameId === 'driving-rehab' ? 123 : 'text' }, defaults, validate)?.[key], defaults[key], 'Wrong types keep the default.');
     assert.deepEqual(RestoreSettings({}, defaults, validate), defaults, 'Missing values use the defaults.');
   });
 }

@@ -9,6 +9,7 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'driving-rehab', component: 'DrivingRehabGame', tutorial: 'DrivingTutorial' },
   { id: 'reading-training', component: 'ReadingTrainingGame', tutorial: 'ReadingTutorial' },
   { id: 'gabor-patching', component: 'GaborPatchingGame', tutorial: 'GaborTutorial' },
   { id: 'drawing-defense', component: 'DrawingTowerDefenseGame', tutorial: 'DrawingDefenseTutorial' },
@@ -54,7 +55,7 @@ for (const fixture of cases) {
       let backs = 0;
       const tree = module.exports[fixture.tutorial]({
         title: 'Session', active: true, ready: true, shieldSizePercent: 75,
-        settings: { passage: 0, wordsPerMinute: 240, crowding: 100, contrast: 100, durationSec: 60, maxSpots: 8, rounds: 10, optionCount: 18, difficulty: 'medium', targetPhysicalSizeMm: 15, optionPhysicalSizeMm: 10, calibrationLengthMm: 149 },
+        settings: { controlMode: 'arrow', passage: 0, wordsPerMinute: 240, crowding: 100, contrast: 100, durationSec: 60, maxSpots: 8, rounds: 10, optionCount: 18, difficulty: 'medium', targetPhysicalSizeMm: 15, optionPhysicalSizeMm: 10, calibrationLengthMm: 149 },
         summaryItems: [{ label: 'Duration', value: '30s' }, { label: 'Threshold', value: '65%' }],
         onStart: () => starts++, onBack: () => backs++,
       });

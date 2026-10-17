@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-18",
+  "status": "local-validation",
+  "gameId": "driving-rehab",
+  "version": "2.0.0",
+  "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
+  "totalBytes": 10045727,
+  "files": 8,
+  "sourceCommit": "de8d01d7c32953df4f0b057c377633193b80386e",
+  "gatesAndBuilds": [
+    {
+      "command": "npm run test:naming",
+      "status": "passed",
+      "localLog": ".tmp/driving-gate-naming.log"
+    },
+    {
+      "command": "npm run test:pwa",
+      "status": "passed",
+      "localLog": ".tmp/driving-gate-pwa.log"
+    },
+    {
+      "command": "npm run test:game-architecture",
+      "status": "passed",
+      "localLog": ".tmp/driving-gate-game-architecture.log"
+    },
+    {
+      "command": "npm run test:hub-functions",
+      "status": "passed",
+      "localLog": ".tmp/driving-gate-hub-functions.log"
+    },
+    {
+      "command": "npm run test:gamerunner",
+      "status": "passed",
+      "localLog": ".tmp/driving-gate-gamerunner.log"
+    },
+    {
+      "command": "npm run test:entrypoints",
+      "status": "passed",
+      "localLog": ".tmp/driving-gate-entrypoints.log"
+    },
+    {
+      "command": "npm run test:cloudflare-deploy",
+      "status": "passed",
+      "localLog": ".tmp/driving-gate-cloudflare-deploy.log"
+    },
+    {
+      "command": "npm run build:hub",
+      "status": "passed",
+      "localLog": ".tmp/driving-hub-build.log"
+    },
+    {
+      "command": "npm run build:gamerunner",
+      "status": "passed",
+      "localLog": ".tmp/driving-runner-build.log"
+    },
+    {
+      "command": "npm run test:seo",
+      "status": "passed",
+      "localLog": ".tmp/driving-seo.log"
+    },
+    {
+      "command": "npm run test:game-architecture:browser",
+      "status": "passed",
+      "localLog": ".tmp/driving-platform-browser.log"
+    }
+  ],
+  "browser": [
+    {
+      "mode": "desktop",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby --wide --windowed --renderer-failure",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-desktop.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    },
+    {
+      "mode": "mobile",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby --mobile --medium --session-failure",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-mobile.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    },
+    {
+      "mode": "tablet",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby --tablet --medium --hard",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-tablet.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    },
+    {
+      "mode": "english",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby --signed-in --english --hard --low",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-english.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    },
+    {
+      "mode": "pwa",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --standalone --mobile --low",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-pwa.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    },
+    {
+      "mode": "pwa-high-stop",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --standalone --mobile --stop",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-pwa-high-stop.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    },
+    {
+      "mode": "pwa-stop",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --standalone --tablet --low --stop",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-pwa-stop.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    },
+    {
+      "mode": "wheel",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby --wide --low --wheel --stop",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-wheel.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    },
+    {
+      "mode": "memory",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby --settings-memory",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-memory.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    },
+    {
+      "mode": "pwa-memory",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --standalone --settings-memory",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-pwa-memory.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    },
+    {
+      "mode": "revoke",
+      "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby --revoke",
+      "status": "passed",
+      "localLog": ".tmp/driving-browser-revoke.log",
+      "screenshots": ".tmp/driving-rehab-validation/"
+    }
+  ],
+  "productionWrites": 0,
+  "published": false,
+  "deployed": false,
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Codex conversation",
+    "message": "核准並git push",
+    "approvedAt": "2026-10-17T22:55:41.747844+00:00",
+    "gameId": "driving-rehab",
+    "version": "2.0.0",
+    "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
+    "scope": "Publish the exact reviewed R2 release, deploy compatible runner first and Hub after R2 current, complete production acceptance, and commit/push to the dedicated Git branch."
+  },
+  "limits": [
+    "Brave CDP simulates mobile/tablet touch.",
+    "G29 wheel axes are virtual fixtures; no physical hardware or audio-output acceptance.",
+    "Safari/iOS and long complete offline sessions not tested.",
+    "First native migration has no approved native rollback version."
+  ]
+}

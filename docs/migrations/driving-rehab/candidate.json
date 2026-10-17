@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "gameId": "driving-rehab",
+  "version": "2.0.0",
+  "name": "駕駛注意力模擬練習",
+  "description": "在送貨任務中回應突發事件；紀錄僅反映當次操作，不判定駕駛能力。",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "gamepad",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
+  "files": [
+    {
+      "path": "assets/car-pedals-BXQENW7T.svg",
+      "size": 198908,
+      "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/index-DXp2CAsH.js",
+      "size": 1726866,
+      "sha256": "317b606beeefeb919728715e3b2e7eb36ca722ffe5c12e1c6173a43e4358d760",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/steering-wheel-5D4sTFY9.svg",
+      "size": 3316,
+      "sha256": "366798d41cceec6fbc0ae068b4673cf2284ba280ba461e6506d6507258e5c50f",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/style-B16Gsppv.css",
+      "size": 19145,
+      "sha256": "3e83b054a54b3c5ce5fd5f9c9155c15b14fe1134edfb78ca4971f8b2d6b925c2",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 552,
+      "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 464,
+      "sha256": "6f40f8916027e1960bbd6fbbc1f72cdd9ee8043b82198d94105a723848b00db2",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 13202,
+      "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "vehicle-data.js",
+      "size": 8083274,
+      "sha256": "4feb8b7d1c58c9b6af5f949c075dbeac3f6b54e4f7b64498b7a40afffcbd0207",
+      "contentType": "text/javascript; charset=utf-8"
+    }
+  ],
+  "status": "approved-awaiting-publication",
+  "sourceCommit": "de8d01d7c32953df4f0b057c377633193b80386e",
+  "totalBytes": 10045727,
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Codex conversation",
+    "message": "核准並git push",
+    "approvedAt": "2026-10-17T22:55:41.747844+00:00",
+    "gameId": "driving-rehab",
+    "version": "2.0.0",
+    "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
+    "scope": "Publish the exact reviewed R2 release, deploy compatible runner first and Hub after R2 current, complete production acceptance, and commit/push to the dedicated Git branch."
+  },
+  "published": false
+}

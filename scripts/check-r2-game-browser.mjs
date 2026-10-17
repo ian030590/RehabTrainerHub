@@ -21,6 +21,7 @@ import { CheckOculomotor } from './oculomotor-browser.mjs';
 import { LoadEyeCameraFixture } from './eye-camera-fixtures.mjs';
 import { onRequestPost as saveCsv } from '../apps/rehabtrainerhub/functions/api/oculomotor-data.js';
 import { CheckGaborPatching } from './gabor-patching-browser.mjs';
+import { CheckDrivingRehab } from './driving-rehab-r2-browser.mjs';
 import { CheckReadingTraining } from './reading-training-browser.mjs';
 import { CheckMovingCard } from './moving-card-browser.mjs';
 import { LoadGestureCameraFixtures } from './gesture-camera-fixtures.mjs';
@@ -28,7 +29,7 @@ import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 import { CheckSettingsPresentation, CheckConfirmationPresentation } from './r2-game-ui-browser.mjs';
 const gameIndex = process.argv.indexOf('--game');
 const gameId = gameIndex < 0 ? 'drawing-defense' : process.argv[gameIndex + 1];
-assert.ok(['reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId), 'Unknown browser game fixture');
+assert.ok(['driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId), 'Unknown browser game fixture');
 const handGame = ['gesture-battler', 'motor-cortex-rehab'].includes(gameId);
 const phasePrefix = gameId;
 const root = resolve(import.meta.dirname, '..');
@@ -58,7 +59,7 @@ const { manifest, files } = await BuildOfficialGameRelease(gameId);
 const handFixtures = handGame ? await LoadGestureCameraFixtures(root) : new Map();
 if (gameId === 'oculomotor-training' && process.argv.includes('--gaze')) handFixtures.set('/__eye-test/portrait.jpg', await LoadEyeCameraFixture(root));
 const unavailableTexture = rendererFailure ? manifest.files.find(file => file.path.startsWith('assets/ship-'))?.path : null;
-assert.ok(!rendererFailure || unavailableTexture || ['moving-card', 'gabor-patching', 'reading-training'].includes(gameId), 'Renderer failure fixture requires a supported game.');
+assert.ok(!rendererFailure || unavailableTexture || ['driving-rehab', 'moving-card', 'gabor-patching', 'reading-training'].includes(gameId), 'Renderer failure fixture requires a supported game.');
 const sqlite = new DatabaseSync(':memory:');
 const migrations = resolve(root, 'apps/rehabtrainerhub/migrations');
 for (const file of (await readdir(migrations)).filter(file => file.endsWith('.sql')).sort()) sqlite.exec(await readFile(resolve(migrations, file), 'utf8'));
@@ -148,8 +149,8 @@ try {
         return;
       }
       if (url.pathname.startsWith('/api/')) {
-        const oldGame = { id: ['reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
-          summary: 'Legacy publication', trainer: ['reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor', category: ['reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'general' : 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
+        const oldGame = { id: ['driving-rehab', 'reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? `official-${gameId}` : 'old-drawing-defense', slug: gameId, title: 'Obsolete settings shell',
+          summary: 'Legacy publication', trainer: ['driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor', category: ['driving-rehab', 'reading-training', 'gabor-patching', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'general' : 'upper-limb', developerName: 'Sample author', updatedAt: '2026-10-08',
           release: { id: 'old-release', version: '1.0.0', contentSha256: 'a'.repeat(64), capabilities: ['pointer'],
             approvedAt: '2026-10-08', launchUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
             installUrl: `${runnerOrigin}/games/${gameId}/1.0.0/`,
@@ -215,9 +216,13 @@ try {
  const stream=canvas.captureStream(30);window.eyeFixtureStream=stream;return stream;
  };
 }`;
-  const pixiProbe = `window.__PIXI_APP_INIT__ = app => {
+  const drivingProbe = `
+    window.drivingNativeGamepadCheck = (() => { try { navigator.getGamepads(); return 'allowed'; } catch(error) { return error.name; } })();
+    ${rendererFailure ? "const context = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function(type,...args) { if(type === 'webgl2' && !window.allowRendererRetry) throw new Error('Simulated WebGL failure'); return context.call(this,type,...args); };" : ''}
+  `;
+  const pixiProbe = gameId === 'driving-rehab' ? drivingProbe : `window.__PIXI_APP_INIT__ = app => {
     window.${gameId === 'reading-training' ? 'reading' : gameId === 'gabor-patching' ? 'gabor' : gameId === 'moving-card' ? 'movingCard' : 'asteroid'}PixiApp = app;
-    ${rendererFailure && ['moving-card', 'gabor-patching', 'reading-training'].includes(gameId) ? "if (!window.allowRendererRetry) throw new Error('Simulated Pixi initialization failure');" : ''}
+    ${rendererFailure && ['driving-rehab', 'moving-card', 'gabor-patching', 'reading-training'].includes(gameId) ? "if (!window.allowRendererRetry) throw new Error('Simulated Pixi initialization failure');" : ''}
   };`;
   ws.addEventListener('message', event => {
     const message = JSON.parse(event.data);
@@ -233,6 +238,10 @@ try {
     }
     if (message.method === 'Runtime.executionContextCreated') contexts.push({ ...message.params.context, session: message.sessionId });
     if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.exception?.description || message.params.exceptionDetails.text);
+    if (gameId === 'driving-rehab' && message.method === 'Runtime.consoleAPICalled') {
+      const text = message.params.args.map(argument => argument.value ?? argument.description ?? '').join(' ');
+      if (/Couldn't load texture|Unable to load reference driving vehicle model/.test(text)) errors.push(text);
+    }
     if (message.method === 'Network.requestWillBeSent') requests.push(message.params.request.url);
     if (message.method === 'Fetch.requestPaused') {
       void (async () => {
@@ -256,8 +265,11 @@ try {
         const childSession = message.params.sessionId;
         await Promise.all([send('Runtime.enable', {}, childSession), send('Network.enable', {}, childSession)]);
         if (gameId === 'oculomotor-training' && process.argv.includes('--gaze')) await send('Fetch.enable', { patterns: [{urlPattern:'*/__eye-test/*',requestStage:'Request'}] }, childSession);
-        if (['reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) && message.params.targetInfo.type === 'iframe') {
+        if (['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) && message.params.targetInfo.type === 'iframe') {
           await send('Page.enable', {}, childSession);
+          if (gameId === 'driving-rehab' && ['--mobile', '--tablet'].some(flag => process.argv.includes(flag))) {
+            await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, childSession);
+          }
           await send('Page.addScriptToEvaluateOnNewDocument', {
             source: gameId === 'oculomotor-training' && process.argv.includes('--gaze') ? eyeProbe : pixiProbe, runImmediately: true,
           }, childSession);
@@ -269,8 +281,8 @@ try {
   const target = await send('Target.createTarget', { url: 'about:blank' });
   const attached = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
   const session = attached.sessionId;
-  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: ['reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId), flatten: true,
-    ...(['reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
+  await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: ['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId), flatten: true,
+    ...(['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId) ? { filter: [{ type: 'iframe' }, { exclude: true }] } : {}),
   }, session);
   await send('Runtime.enable', {}, session);
   await send('Network.enable', {}, session);
@@ -295,7 +307,7 @@ try {
       };
     }
   ` }, session);
-  if (['reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId)) await send('Page.addScriptToEvaluateOnNewDocument', {
+  if (['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'moving-card', 'oculomotor-training'].includes(gameId)) await send('Page.addScriptToEvaluateOnNewDocument', {
     source: gameId === 'oculomotor-training' && process.argv.includes('--gaze') ? eyeProbe : pixiProbe,
   }, session);
   if (remote || handGame || (gameId === 'oculomotor-training' && process.argv.includes('--gaze'))) await send('Fetch.enable', { patterns: [
@@ -321,13 +333,16 @@ try {
   if (process.argv.includes('--screen-3-2')) await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 960, screenWidth: 1440, screenHeight: 960, deviceScaleFactor: 1, mobile: false }, session);
   if (process.argv.includes('--mobile')) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
   if (process.argv.includes('--tablet')) await send('Emulation.setDeviceMetricsOverride', { width: 820, height: 1180, deviceScaleFactor: 1, mobile: false }, session);
+  if (gameId === 'driving-rehab' && ['--mobile', '--tablet'].some(flag => process.argv.includes(flag))) {
+    await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }, session);
+  }
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `try {
     localStorage.setItem('rehab_hub_tour_seen','1');
     localStorage.setItem('rehab-trainer-hub-language', ${JSON.stringify(english ? 'en' : 'zh')});
     localStorage.setItem('rehabtrainerhub.subject-id.v1', ${JSON.stringify(guestSubjectId)});
     ${signedIn ? `localStorage.setItem('rehabtrainerhub.auth.token', ${JSON.stringify(accountToken)});` : ''}
   } catch {}` }, session);
-  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${['reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor'}%3A${gameId}`) }, session);
+  await send('Page.navigate', { url: standalone ? `${runnerOrigin}/games/${gameId}/${manifest.version}/${english ? '?lang=en' : ''}` : (remote ? 'https://trainerhub.cc' : hubOrigin) + (lobby ? '/' : `/train/?module=${['driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? 'vision' : 'motor'}%3A${gameId}`) }, session);
   await send('Target.activateTarget', { targetId: target.targetId });
   const evaluate = async (expression, context) => {
     const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture: true, ...(context ? { contextId: context.id } : {}) }, context?.session || session);
@@ -352,7 +367,7 @@ try {
   if (lobby && !standalone) {
     await until(() => evaluate('Boolean(document.querySelector(".module-card[data-runtime-id=reviewed-browser-game]"))'), 'reviewed catalog loaded');
     assert.equal(await evaluate(`document.querySelectorAll(".module-card[data-runtime-id=${gameId}]").length`), 1);
-    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), ['reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
+    assert.match(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] .module-subcategory-tag").textContent`), ['driving-rehab', 'reading-training', 'gabor-patching', 'moving-card', 'oculomotor-training'].includes(gameId) ? (english ? /vision/i : /視覺/) : (english ? /upper/i : /上肢動作/));
     await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}]").scrollIntoView()`);
     await until(() => evaluate(`(() => { const image = document.querySelector(".module-card[data-runtime-id=${gameId}] img"); return image?.complete && image.naturalWidth > 0; })()`), 'game-owned preview loaded');
     assert.equal(new URL(await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] img").src`)).pathname,
@@ -391,7 +406,7 @@ try {
   let gameContext;
   const findGameSettings = () => until(async () => {
     for (const context of contexts.filter(context => context.auxData?.isDefault)) {
-      try { if (await evaluate(`Boolean(document.querySelector(".${phasePrefix}-phase-menu form select"))`, context)) { gameContext = context; return true; } } catch {}
+      try { if (await evaluate(`Boolean(document.querySelector(".${phasePrefix}-phase-menu form ${gameId === 'driving-rehab' ? 'input' : 'select'}"))`, context)) { gameContext = context; return true; } } catch {}
     }
     return false;
   }, 'game-owned settings');
@@ -400,8 +415,18 @@ try {
   if (settingsMemory) {
     // The container (Hub page or standalone launcher) keeps confirmed settings in its own localStorage.
     const storageKey = `trainerhub.game-settings/v1:${gameId}`;
-    const firstSelect = `document.querySelector(".${phasePrefix}-phase-menu form select")`;
+    const firstSelect = gameId === 'driving-rehab' ? `document.querySelector('[name=renderQuality]:checked')` : `document.querySelector(".${phasePrefix}-phase-menu form select")`;
+    if (gameId === 'driving-rehab') {
+      await until(async () => {
+        if (await evaluate(`!document.querySelector('[name=controlMode][value=arrow]').disabled`, gameContext)) return true;
+        await evaluate(`document.querySelector('form .btn-ghost').focus()`, gameContext);
+        await send('Input.dispatchKeyEvent', { type:'keyDown',key:'k',code:'KeyK',windowsVirtualKeyCode:75 }, gameContext.session || session);
+        await send('Input.dispatchKeyEvent', { type:'keyUp',key:'k',code:'KeyK',windowsVirtualKeyCode:75 }, gameContext.session || session);
+        return false;
+      }, 'keyboard ready before remembering settings');
+    }
     const chosen = await evaluate(`(() => {
+      ${gameId === 'driving-rehab' ? "document.querySelector('[name=renderQuality][value=low]').click(); return 'low';" : ''}
       const select = ${firstSelect};
       const option = [...select.options].reverse().find(item => item.value !== select.value && !item.disabled);
       Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(select, option.value);
@@ -423,7 +448,7 @@ try {
     gameContext = null;
     await wait(500);
     if (lobby && !standalone) {
-      await until(() => evaluate(`Boolean(document.querySelector(".module-card[data-runtime-id=${gameId}] button"))`), 'lobby after reload');
+      await until(() => evaluate(`(() => {const button=document.querySelector('.module-card[data-runtime-id=${gameId}] button');const image=document.querySelector('.module-card[data-runtime-id=${gameId}] img');return button && !button.disabled && image?.src.includes('/games/${gameId}/${manifest.version}/package/preview.webp');})()`), 'approved lobby card after reload');
       await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] button").click()`);
     }
     await findGameSettings();
@@ -467,6 +492,12 @@ try {
     await until(() => evaluate('!document.querySelector("dialog iframe") && Boolean(document.querySelector("dialog [role=alert]"))'), 'revoked game removed');
     assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM training_records').get().count, 0);
     console.log('Revoked R2 release removed; no result saved.');
+  } else if (gameId === 'driving-rehab') {
+    const screenshots = resolve(root, '.tmp/driving-rehab-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
+    await mkdir(screenshots, { recursive: true });
+    const capture = async name => { const screenshot = await send('Page.captureScreenshot', { format: 'png' }, session); await writeFile(resolve(screenshots, `${name}.png`), Buffer.from(screenshot.data, 'base64')); };
+    await CheckDrivingRehab({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
+      gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
   } else if (gameId === 'reading-training') {
     const screenshots = resolve(root, '.tmp/reading-training-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
     await mkdir(screenshots, { recursive: true });

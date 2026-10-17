@@ -8,6 +8,7 @@ import ts from 'typescript';
 
 const gamesRoot = resolve(import.meta.dirname, '../apps/rehabtrainerhub/games');
 const cases = [
+  { id: 'driving-rehab', defaultMetric: 'rt', alternate: 'avoided', row: { rt: 2, avoided: 1, responded: 1, collision: 0, distance: 12, otherCollision: 0 } },
   { id: 'reading-training', defaultMetric: 'responseMs', alternate: 'correct',
     row: { question: 1, correct: 1, responseMs: 2, choice: 0, expectedChoice: 0, options: 4 } },
   { id: 'gabor-patching', defaultMetric: 'reactionMs', alternate: 'points',
@@ -31,6 +32,7 @@ for (const fixture of cases) {
         language, rounds: [fixture.row, { ...fixture.row, [fixture.defaultMetric]: 4 }],
       });
       const markup = view.render();
+      if (fixture.id === 'driving-rehab') assert.doesNotMatch(markup, /答對|題目|煮車/, 'Driving results use event and avoidance labels.');
       assert.match(markup, /<svg[^>]*role="img"[^>]*aria-label=/);
       assert.match(markup, /<h3[^>]*>.*(?:逐回合細節|Round details)/);
       assert.match(markup, /(?:中位數|Median)/);

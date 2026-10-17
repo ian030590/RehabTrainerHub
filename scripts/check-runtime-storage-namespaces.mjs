@@ -126,7 +126,9 @@ for (const fixture of [
 ]) {
   const source = readFileSync(resolve(repoRoot, fixture), 'utf8');
   assert.doesNotMatch(source, /vision[_-]trainer/);
-  assert.match(source, /rehabtrainerhub\.vision\./);
+  assert.doesNotMatch(source, /localStorage/, 'The R2 driving wrapper cannot access device storage.');
+  assert.match(source, /process\.argv\.push\('--game', 'driving-rehab'\)/);
+  assert.match(source, /import\('\.\/check-r2-game-browser\.mjs'\)/);
 }
 
 const hartChartSource = readFileSync(resolve(

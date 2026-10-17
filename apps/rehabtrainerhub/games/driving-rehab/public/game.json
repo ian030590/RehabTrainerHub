@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "gameId": "driving-rehab",
+  "trainer": "vision",
+  "category": "vision",
+  "author": "居家訓練網",
+  "preview": "preview.webp",
+  "copy": {
+    "zh-TW": { "title": "駕駛注意力模擬練習", "description": "在送貨任務中回應突發事件；紀錄僅反映當次操作，不判定駕駛能力。" },
+    "en": { "title": "Driving Attention Simulation Practice", "description": "Respond to hazards during a delivery route; records reflect only the current activity and do not determine driving ability." }
+  }
+}

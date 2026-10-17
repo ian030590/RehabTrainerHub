@@ -30,7 +30,7 @@ test('every game exposes bounded grading settings and exact numeric score source
   assert.equal(ids.length, 40);
   for (const id of ids) {
     if (Object.hasOwn(migratedGames, id)) {
-      const entry = { 'asteroid-shield': 'AsteroidShieldGame.tsx', 'drawing-defense': 'DrawingTowerDefenseGame.tsx',
+      const entry = { 'driving-rehab': 'DrivingRehabGame.tsx', 'asteroid-shield': 'AsteroidShieldGame.tsx', 'drawing-defense': 'DrawingTowerDefenseGame.tsx',
         'gesture-battler': 'GestureBattlerGame.tsx', 'motor-cortex-rehab': 'MotorCortexRehabGame.tsx', 'moving-card': 'MovingCardGame.tsx', 'oculomotor-training': 'OculomotorTrainingGame.tsx', 'gabor-patching': 'GaborPatchingGame.tsx', 'reading-training': 'ReadingTrainingGame.tsx' }[id];
       assert.ok(entry, `${id}: add game-owned bounds validation before migration`);
       const source = read(id, entry);
@@ -42,6 +42,10 @@ test('every game exposes bounded grading settings and exact numeric score source
         assert.match(settings, /value <= 1200/);
         assert.match(source, /BuildGameScore\(completed\)/);
         assert.match(source, /SendGameEvent\('result'/);
+      } else if (id === 'driving-rehab') {
+        assert.match(read(id, 'settings.ts'), /ValidateSettings/);
+        assert.match(source, /ValidateSettings\(settings\)/);
+        assert.match(read(id, 'score.ts'), /numeric\(result\?\.average_rt\)/);
       } else if (id === 'reading-training') {
         const settings = read(id, 'settings.ts');
         assert.match(settings, /key: 'passage'.*min: 0, max: 3, step: 1/);

@@ -1,174 +1,184 @@
-import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
-import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
-import { GetHostedGameSetting, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { TrainingRulesPanel } from '@rehab-trainer/ui';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import {
-NotifyHubTrainingAbort,
-NotifyHubTrainingComplete,
-} from '@rehab-trainer/ui/embeddedTraining';
-import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { useT } from '@rehab-trainer/ui/i18n';
-import { GetSetting,getActiveUser } from '@rehab-trainer/ui/settings';
-import { soundManager } from './runtime/soundManager';
-import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
-import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
-import type { JsPsych } from 'jspsych';
-import { initJsPsych } from 'jspsych';
-import { useCallback,useEffect,useRef,useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { ParseDrivingWheelCalibration } from './input/driving-input';
-import { DisposeDrivingRehabRuntime } from './lifecycle/driving-runtime-lifecycle';
-import { DownloadTrainingCsv } from './exportCsv';
+import { initJsPsych, type JsPsych } from 'jspsych';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useT } from './i18n/useT';
+import { defaultSettings, ValidateSettings, type DrivingSettings } from './settings';
+import { BuildGameScore, type DrivingTrial } from './score';
 import { DrivingResults } from './results/DrivingResults';
+import { DrivingTutorial } from './rules/DrivingTutorial';
+import { DrivingWheelSetup } from './input/DrivingWheelSetup';
+import { IsDrivingControlModeAvailable, IsDrivingWheelCalibrationUsable, useDrivingInputCapabilities, useDrivingWheelCalibration } from './input/drivingInputCapabilities';
+import { DisposeDrivingRehabRuntime } from './lifecycle/driving-runtime-lifecycle';
+import { PrepareAudioFeedback, DisposeAudioFeedback, PlayMidiMusic, StopMidiMusic } from './runtime/soundManager';
+import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
+import { backgroundMusic, backgroundMusicOptions } from './music';
+import { RestoreSettings } from './runtime/settingsMemory';
 import { BuildDrivingRehabTimeline } from './timeline/drivingRehabTimeline';
 
 export function DrivingRehabGame() {
-  const location = useLocation();
-  void IsTrainingFlowLaunchState(location?.state);
-  const { t, lang } = useT();
-  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
-  const [phase, setPhase] = useState<'rules' | 'running' | 'results'>('rules');
-  const [results, setResults] = useState<any[]>([]);
+  const { lang } = useT();
+  const en = lang === 'en';
+  const title = en ? 'Driving Attention Simulation Practice' : '駕駛注意力模擬練習';
+  const [phase, setPhase] = useState<'menu' | 'rules' | 'running' | 'results'>('menu');
+  useEffect(() => {
+    if (phase === 'running' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    return StopMidiMusic;
+  }, [phase]);
+  useEffect(() => DisposeAudioFeedback, []);
+  const [settings, setSettings] = useState<DrivingSettings>({ ...defaultSettings });
+  const [results, setResults] = useState<DrivingTrial[]>([]);
+  const [error, setError] = useState(false);
+  const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error' | 'local'>('local');
+  const capabilities = useDrivingInputCapabilities();
+  const calibration = useDrivingWheelCalibration(capabilities.wheelDevice);
+  const ready = IsDrivingControlModeAvailable(settings.controlMode, capabilities)
+    && (settings.controlMode !== 'wheel' || calibration.calibrated);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const jsPsychRef = useRef<JsPsych | null>(null);
+  const generationRef = useRef(0);
   const skipFinishRef = useRef(false);
-  const userName = getActiveUser() || 'guest';
-
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  useEffect(() => OnSavedSettings(saved => {
+    const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
+    if (restored && phaseRef.current === 'menu') setSettings(restored);
+  }), []);
+  const stopRuntime = useCallback(() => {
+    generationRef.current++;
+    skipFinishRef.current = true;
+    DisposeDrivingRehabRuntime();
+    const experiment = jsPsychRef.current;
+    jsPsychRef.current = null;
+    experiment?.abortExperiment();
+    DisposeAudioFeedback();
+  }, []);
+  const exit = useCallback(() => { stopRuntime(); void ExitGame(); }, [stopRuntime]);
+  const backToSettings = useCallback(() => { generationRef.current++; setPhase('menu'); }, []);
+  useEffect(() => {
+    const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
+    const configure = () => { stopRuntime(); setError(false); setResults([]); setPhase('menu'); };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && phaseRef.current === 'running') { event.preventDefault(); exit(); }
+    };
+    window.addEventListener('game:saved', saved);
+    window.addEventListener('game:configure', configure);
+    window.addEventListener('keydown', escape, true);
+    window.addEventListener('pagehide', stopRuntime);
+    return () => {
+      window.removeEventListener('game:saved', saved);
+      window.removeEventListener('game:configure', configure);
+      window.removeEventListener('keydown', escape, true);
+      window.removeEventListener('pagehide', stopRuntime);
+      stopRuntime();
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    };
+  }, [exit, stopRuntime]);
+  useEffect(() => {
+    if (phase !== 'menu') return;
+    dialogRef.current?.showModal();
+    return () => dialogRef.current?.close();
+  }, [phase]);
   useEffect(() => {
     if (phase !== 'running') return;
-    let cancelled = false;
-
-    const setup = async () => {
-      const jsPsych = initJsPsych({
-        display_element: 'jspsych-target',
-        on_finish: () => {
-          if (skipFinishRef.current) return;
-          const data = jsPsych.data.get().values();
-          SaveTrainingRecord({
-            id: String(Date.now()),
-            savedAt: new Date().toISOString(),
-            userName,
-            moduleId: 'driving-rehab',
-            gameId: 'driving-rehab',
-            gameTitle: t('home.module.driving.title'),
-            difficulty: (GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty')),
-            results: data,
-            detailRows: data.find((row: any) => row.trial_type === 'three-driving-rehab')?.driving_events ?? [],
-            details: data.find((row: any) => row.trial_type === 'three-driving-rehab') ?? {},
-          });
-
-          DisposeDrivingRehabRuntime();
-          setResults(data);
-          jsPsychRef.current = null;
-          void ExitFullscreenIfActive();
-          setPhase('results');
-        },
-      });
-
-      const timeline = await BuildDrivingRehabTimeline({
-        driving: {
-          redFlashEnabled: (GetHostedGameSetting<boolean>('redFlashEnabled')),
-          difficulty: ({ easy: 'beginner', medium: 'intermediate', hard: 'advanced' } as const)[GetHostedGameSetting<'easy' | 'medium' | 'hard'>('difficulty')],
-          controlMode: (GetHostedGameSetting<'arrow' | 'wasd' | 'wheel' | 'touch'>('controlMode')),
-          wheelCalibration: ParseDrivingWheelCalibration(localStorage.getItem('rehab_driving-rehab_wheelCalibration') ?? ''),
-          renderQuality: (GetHostedGameSetting<'low' | 'medium' | 'high'>('renderQuality')),
-          language: lang,
-        },
-      });
-
-      if (cancelled) return;
-      jsPsychRef.current = jsPsych;
-      jsPsych.run(timeline as any);
+    skipFinishRef.current = false;
+    const failed = () => {
+      stopRuntime(); setError(true); setPhase('menu');
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
     };
-
-    void setup();
-
-    return () => {
-      cancelled = true;
-
+    const jsPsych = initJsPsych({ display_element: 'jspsych-target', on_finish: () => {
+      if (skipFinishRef.current) return;
+      const data = jsPsych.data.get().values() as DrivingTrial[];
+      const result = data.find(row => row.trial_type === 'three-driving-rehab');
+      if (!result || result.response === 'load-error') { failed(); return; }
+      if (result.response === 'aborted') { exit(); return; }
+      const score = BuildGameScore(data);
       DisposeDrivingRehabRuntime();
-      const active = jsPsychRef.current;
+      DisposeAudioFeedback();
       jsPsychRef.current = null;
-      if (active) {
-        skipFinishRef.current = true;
-        active.abortExperiment();
-      }
-    };
-  }, [phase, lang]);
-
-  const abortTraining = useCallback(() => {
-    if (phase !== 'running') return;
-    skipFinishRef.current = true;
-
-    jsPsychRef.current?.abortExperiment();
-    jsPsychRef.current = null;
-    DisposeDrivingRehabRuntime();
-    void ExitFullscreenIfActive();
-    NotifyHubTrainingAbort();
-  }, [phase]);
-
-  useTrainingAbort({ active: phase === 'running', onAbort: abortTraining });
-
-  const isZh = lang !== 'en';
-
-  return (
-    <div ref={fullscreenRootRef} className="driving-rehab-game-root" style={{ width: '100%', minHeight: '100dvh' }}>
-      {phase === 'rules' && (
-        <div className="training-panel">
-          <TrainingRulesPanel
-            title={isZh ? '安全駕駛模擬訓練' : 'Driving Rehab Simulation'}
-            label={isZh ? '遊戲規則說明' : 'Game Rules'}
-            summaryTitle={isZh ? '安全駕駛模擬訓練' : 'Driving Rehab Simulation'}
-            summaryItems={[
-              { label: isZh ? '難度' : 'Difficulty', value: GetHostedGameSetting<string>('difficulty') },
-              { label: isZh ? '控制方式' : 'Control Mode', value: GetHostedGameSetting<string>('controlMode') },
-            ]}
-            sections={isZh ? [
-              {
-                title: '操作與玩法',
-                description: '控制車輛在車道內行駛，注意逆行車輛跨越車道；車種與車身顏色會隨機變換。',
-                items: [
-                  '依照選擇的控制方式操控車輛轉向與加速。',
-                  '行駛中注意車道維持，避免偏離道路或碰撞邊界。',
-                  '逆行車開始跨越車道時，踩下煞車或向左、向右轉向避讓。',
-                ],
-              },
-              { title: '成績計算', description: '每次逆行跨車道事件計為一回合，從車輛開始跨車道至首次煞車或左右轉向計算反應時間。預先持續按住的操作不算新反應；沒有反應的回合不填反應時間。' },
-              { title: '成功閃避', description: '未撞到逆行車且雙方已完全通過，才判定成功閃避。高級難度在閃避期間撞到其他車輛也算失敗；中級與初級不因此扣除閃避成功。尚未完成的事件不判定成功或失敗。' },
-            ] : [
-              {
-                title: 'How to Play',
-                description: 'Watch for oncoming vehicles crossing lanes. Vehicle types and body colors vary randomly.',
-                items: [
-                  'Control steering and acceleration using your configured mode.',
-                  'Maintain lane position and avoid running off the road.',
-                  'Brake or steer left or right when the oncoming vehicle starts crossing lanes.',
-                ],
-              },
-              { title: 'Results', description: 'Each lane-crossing event is one round. Reaction time runs from the start of crossing to the first brake or left/right steering response. Held controls are not new responses; unanswered rounds have no reaction time.' },
-              { title: 'Successful avoidance', description: 'Avoidance succeeds after both vehicles pass without hitting the oncoming vehicle. On advanced difficulty, hitting another vehicle during avoidance also counts as failure; beginner and intermediate still count as successful avoidance. Unfinished events have no outcome yet.' },
-            ]}
-            startLabel={isZh ? '開始訓練' : 'Start Training'}
-            backLabel={isZh ? '回設定' : 'Back to Settings'}
-            onStart={async () => {
-              await enterTrainingFullscreen();
-              setPhase('running');
-            }}
-            onBack={() => RequestHubTrainingConfiguration()}
-          />
+      setResults(data);
+      setSaveState(IsHubGame() ? 'saving' : 'local');
+      SendGameResult({ ...settings }, score.summary, score.rounds);
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+      setPhase('results');
+    } });
+    jsPsychRef.current = jsPsych;
+    SendGameEvent('active');
+    void jsPsych.run(BuildDrivingRehabTimeline(settings, lang, calibration.calibration) as never).catch(() => {
+      if (!skipFinishRef.current) failed();
+    });
+    return () => { if (jsPsychRef.current === jsPsych) stopRuntime(); };
+  }, [phase, settings, lang, stopRuntime, exit]);
+  const confirmSettings = () => {
+    if (!formRef.current?.reportValidity() || !ValidateSettings(settings) || !ready) return;
+    SaveGameSettings(settings);
+    setError(false);
+    setPhase('rules');
+  };
+  const startTraining = async () => {
+    if (!ready || phaseRef.current !== 'rules' || !ValidateSettings(settings)) return;
+    if (settings.controlMode === 'wheel' && !IsDrivingWheelCalibrationUsable(calibration.calibration)) return;
+    const generation = generationRef.current;
+    PrepareAudioFeedback();
+    try { await rootRef.current?.requestFullscreen?.(); } catch { /* Windowed play remains available. */ }
+    if (generation !== generationRef.current || phaseRef.current !== 'rules') {
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+      return;
+    }
+    setPhase('running');
+  };
+  const difficultyLabels = { easy: en ? 'Easy' : '簡單', medium: en ? 'Medium' : '中等', hard: en ? 'Hard' : '困難' };
+  const qualityLabels = { high: en ? 'High' : '高', medium: en ? 'Medium' : '中', low: en ? 'Low' : '低' };
+  const controlLabels = { arrow: en ? 'Arrow keys' : '方向鍵', wasd: en ? 'WASD keys' : 'WASD 鍵', wheel: en ? 'Steering wheel' : '方向盤', touch: en ? 'Touch' : '觸控' };
+  const summaryItems = [
+    { label: en ? 'Difficulty' : '難度', value: difficultyLabels[settings.difficulty] },
+    { label: en ? 'Rendering quality' : '畫面品質', value: qualityLabels[settings.renderQuality] },
+    { label: en ? 'Controls' : '控制方式', value: controlLabels[settings.controlMode] },
+    { label: en ? 'Red-flash cue' : '危險紅光提示', value: settings.redFlashEnabled ? (en ? 'On' : '開啟') : (en ? 'Off' : '關閉') },
+  ];
+  const score = BuildGameScore(results);
+  return <div ref={rootRef} className={`driving-rehab-game-root driving-rehab-phase-${phase}`}>
+    {(phase === 'menu' || phase === 'rules') && <DrivingTutorial active={phase === 'rules'} ready={ready} title={title} settings={settings}
+      summaryItems={summaryItems} onStart={startTraining} onBack={backToSettings} />}
+    {phase === 'menu' && <dialog ref={dialogRef} className="game-settings-dialog" aria-labelledby="driving-settings-title" onCancel={event => { event.preventDefault(); exit(); }}>
+      <form ref={formRef} className="training-config" onSubmit={event => event.preventDefault()} onKeyDown={event => {
+        if (event.key === 'Enter' && event.target instanceof HTMLInputElement) { event.preventDefault(); confirmSettings(); }
+      }}>
+        <header className="training-config-header"><h2 id="driving-settings-title">{title}</h2></header>
+        <div className="training-config-body">
+          <p>{en ? 'Respond to hazards during a delivery route. This practice does not determine real driving ability.' : '在送貨路線中回應突發事件，本練習不判定實際駕駛能力。'}</p>
+          {error && <p className="renderer-error" role="alert">{en ? 'Unable to load the driving scene. Try again or choose a lower rendering quality.' : '駕駛場景載入失敗，請重試或降低畫面品質。'}</p>}
+          {(['difficulty', 'renderQuality', 'controlMode'] as const).map(key => {
+            const labels = key === 'difficulty' ? difficultyLabels : key === 'renderQuality' ? qualityLabels : controlLabels;
+            return <fieldset className="training-setting" key={key}><legend><h3>{key === 'difficulty' ? (en ? 'Difficulty' : '難度') : key === 'renderQuality' ? (en ? 'Rendering quality' : '畫面品質') : (en ? 'Controls' : '控制方式')}</h3></legend>
+              <div className="training-option-grid">{Object.entries(labels).map(([value, label]) => <label className="training-option" key={value}>
+                <input type="radio" name={key} value={value} checked={settings[key] === value}
+                  disabled={key === 'controlMode' && !IsDrivingControlModeAvailable(value as DrivingSettings['controlMode'], capabilities)}
+                  onChange={() => setSettings(current => ({ ...current, [key]: value }))} />{label}
+              </label>)}</div>
+            </fieldset>;
+          })}
+          <p className="driving-input-status" role="status">{en ? 'Press any keyboard key to enable keyboard controls. Touch requires a touchscreen. Connect a supported steering wheel and press its button to detect it.' : '按下任一鍵以確認鍵盤。觸控需有觸控螢幕；方向盤需連接支援的裝置，並按下裝置按鈕以偵測。'}</p>
+          <button type="button" className="btn btn-ghost" onClick={capabilities.rescan}>{en ? 'Rescan devices' : '重新偵測裝置'}</button>
+          {settings.controlMode === 'wheel' && <DrivingWheelSetup capabilities={capabilities} calibration={calibration} />}
+          <label className="training-setting driving-flash-option"><input type="checkbox" checked={settings.redFlashEnabled}
+            onChange={event => setSettings(current => ({ ...current, redFlashEnabled: event.target.checked }))} />{en ? 'Hazard red-flash cue' : '危險紅光提示'}</label>
         </div>
-      )}
-
-      {phase === 'running' && (
-        <div id="jspsych-target" className="experiment-container" style={{ width: '100vw', height: '100vh' }} />
-      )}
-
-      {phase === 'results' && (
-        <div className="experiment-container results-container" style={{ minHeight: '100vh', padding: '2rem' }}>
-          <DrivingResults results={results} userName={userName} t={t} />
-          <TrainingResultActions onBackHome={() => window.location.reload()} backLabel="返回入口" hubLabel="返回大廳" />
-        </div>
-      )}
-    </div>
-  );
+        <footer className="config-actions"><div className="training-config-navigation-buttons">
+          <button type="button" className="btn btn-primary" disabled={!ready} onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
+          <button type="button" className="btn btn-ghost" onClick={exit}>{en ? 'Back' : '返回'}</button>
+        </div></footer>
+      </form>
+    </dialog>}
+    {phase === 'running' && <><div id="jspsych-target" className="driving-training-experiment" />
+      <button type="button" className="driving-training-stop btn btn-ghost" onClick={exit}>{en ? 'Stop' : '停止'}</button></>}
+    {phase === 'results' && <div className="experiment-results">
+      <header className="score-heading"><h2>{en ? 'Practice results' : '練習成果'}</h2><p>{en ? 'Results describe this practice session.' : '以下為本次練習成果。'}</p></header>
+      <DrivingResults results={results} score={score} settings={summaryItems} language={lang} />
+      <footer className="score-actions"><p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Shown on this device; no Hub record saved.' : '成果僅在此裝置顯示，未保存至 Hub。') : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+        {saveState === 'error' && <button type="button" className="btn btn-ghost score-retry-button" onClick={RetryGameSave}>{en ? 'Retry save' : '重試保存'}</button>}
+        <button type="button" className="btn btn-primary score-return-button" onClick={exit}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+      </footer>
+    </div>}
+  </div>;
 }

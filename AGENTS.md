@@ -9,6 +9,8 @@
 
 ## 專案結構與模組組織
 
+駕駛注意力模擬練習 `driving-rehab@2.0.0` 已於 2026-10-18 完成本機自包含搬遷候選（原四項設定、鍵盤／觸控／方向盤校正、原 Three.js／地圖／模型與數值成果、三步聚光燈、自有成績與私有 bridge）。精確候選與本機驗收見 `docs/driving-rehab-r2-migration.md`、`docs/migrations/driving-rehab/`。**尚未取得精確摘要核准、發布 R2 或部署 Hub／runner；正式仍是八款 R2／32 款舊流程。** 本機 registry 為九款／31 舊 bundle，不可提前將此 registry 部署正式。核准後先部署相容 runner 的 reviewed `gamepad` 權限傳遞，再發布 R2／current，最後部署 Hub 切換；嚴格 sandbox／CSP 不變。
+
 閱讀訓練（RSVP）`reading-training@2.0.0` 已於 2026-10-17 依「核准並發布到 R2」發布 R2 並切換 current（`contentSha256: 2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0`，5 檔，收據 `docs/releases/reading-training-2.0.0.json`）；同日推送 `c329c5b` 至 `main`、部署 Hub 並完成正式驗收（舊 JSON 410、`/api/games` 一筆 2.0.0、session 綁定 2.0.0），已完成搬遷。自有設定、三步聚光燈（中央文字→速度與每批片段→理解題）、原 RSVP／jsPsych／Pixi、原數值成績欄位與私有 bridge 已完成；正式為八款 R2、32 款舊 bundle。見 `docs/reading-training-r2-migration.md`。
 
 蓋伯斑塊目前 current 為 `2.0.1` 玩家文案版（2026-10-17），依「核准發佈」發布精確五檔／`contentSha256: af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3`。移除中英文教學／成果的活動紀錄、非臨床量測、內部圖樣實作與冗餘設定說明；玩法、計分、完整成果與保存提示保留。七項本機 gate、正式 API／session／公開 bytes 與桌機／手機／英文登入／手機 PWA 四個完整流程通過；未部署 Hub／runner、未建正式紀錄，其他六款版本不變。後續依「git 推送出去」以 `fix/oculomotor-2.1.1` 專用分支交付，避免 `main` 的完整 Pages 部署。`2.0.0` 五檔已回讀核對為回退版，未實際回退；見 `docs/gabor-patching-player-copy-2.0.1.md` 與 `docs/releases/gabor-patching-2.0.1.json`。
@@ -79,6 +81,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 驗證使用 Node.js 內建 `node:test`、assert 檢查腳本、TypeScript、針對性 build 與本機 Brave smoke；依變更範圍選用對應 gate。Hub API、runner、遊戲流程、assessment lifecycle 與 i18n 分別有 `test:hub-functions`、`test:gamerunner`、`test:training-flow`、`test:assessment-lifecycle`、`test:i18n`。
 
 ## CI/CD 維護
+
+- 駕駛搬遷候選將 `check-driving-rehab-migration.test.mjs`、`check-driving-rehab-tutorial.test.mjs` 納入既有 `test:game-architecture`；保留原 26 項 `test:driving-rehab` 核心測試，新增設定／原數值欄位、原模型與地圖 bytes、8 MiB 單檔限制、貼圖載入、啟動取消、私有 bridge、聚光燈與雙語驗證。共用 UI／結果／全螢幕／音訊／設定保存／研究契約、Hub API／SQL／目錄／middleware 及 runner 穩定入口加入此 gameId；兩份 workflow 沿用七項 matrix 與原 root 命令，workflow 自身仍觸發驗證。原本以 driving-rehab 代表未遷移遊戲的共用成績 Brave fixture 改用 `every-ball-response`，records 舊路徑 fixture 改用 `hart-chart`。本機 `npm run test:driving-rehab-browser` 現在轉交 R2 harness；亦可用 `node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby`，搭配 `--wide --windowed --renderer-failure`、`--mobile --medium --session-failure`、`--tablet --medium --hard`、`--signed-in --english --hard --low`、`--wheel --low --stop`、`--revoke`、`--settings-memory` 或 `--standalone --mobile`／`--standalone --tablet --low --stop`。觸控需在父頁及隔離 iframe 啟用 CDP touch emulation；方向盤只用虛擬裝置校正／斷線驗證，不代表實體硬體驗收。只寫本機 SQLite，不新增 Brave CI。
 
 - 閱讀訓練候選新增 `check-reading-training-migration.test.mjs` 與 `check-reading-training-tutorial.test.mjs` 至既有 `test:game-architecture`；共用 UI／結果／全螢幕／音訊／研究契約、Hub API／SQL／目錄／middleware 與 runner 穩定入口加入此 gameId。原本以 reading-training 代表未遷移 JSON 遊戲的 Brave 共用成績測試與 records 舊路徑 fixture 改用 `driving-rehab`。本機 Brave：`node scripts/check-r2-game-browser.mjs --game reading-training --lobby`（另 `--wide --windowed`、`--mobile --session-failure`、`--tablet`、`--signed-in --english --renderer-failure`、`--standalone --mobile`、`--standalone --tablet --stop`、`--revoke`），不加入 Linux CI。
 

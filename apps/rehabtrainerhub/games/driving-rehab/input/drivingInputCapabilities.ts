@@ -4,13 +4,12 @@ import {
   CreateDrivingWheelCalibration,
   FindDrivingWheelGamepad,
   IsDrivingWheelCalibrationCompatible,
-  ParseDrivingWheelCalibration,
   type DrivingInputCapabilitiesSnapshot,
   type DrivingGamepadSnapshot,
   type DrivingWheelCalibration,
   type DrivingWheelDevice,
 } from './driving-input';
-import { GetSetting, SetSetting } from '@rehab-trainer/ui/settings';
+let sessionCalibration: DrivingWheelCalibration | null = null;
 
 export {
   IsDrivingControlModeAvailable,
@@ -159,7 +158,7 @@ export function useDrivingWheelCalibration(wheelDevice: DrivingWheelDevice | nul
   const [phase, setPhase] = useState<DrivingWheelCalibrationPhase>('idle');
   const [error, setError] = useState<'steering' | 'throttle' | 'brake' | 'disconnected' | null>(null);
   const [calibration, setCalibration] = useState<DrivingWheelCalibration | null>(() => (
-    ParseDrivingWheelCalibration(localStorage.getItem('rehab_driving-rehab_wheelCalibration') ?? '')
+    sessionCalibration
   ));
   const neutralRef = useRef<DrivingGamepadSnapshot | null>(null);
   const samplesRef = useRef<DrivingGamepadSnapshot[]>([]);
@@ -171,7 +170,7 @@ export function useDrivingWheelCalibration(wheelDevice: DrivingWheelDevice | nul
   }, [wheelDevice?.id]);
 
   useEffect(() => {
-    const stored = ParseDrivingWheelCalibration(localStorage.getItem('rehab_driving-rehab_wheelCalibration') ?? '');
+    const stored = sessionCalibration;
     setCalibration(
       stored?.deviceId === wheelDevice?.id && IsDrivingWheelCalibrationUsable(stored)
         ? stored
@@ -262,7 +261,7 @@ export function useDrivingWheelCalibration(wheelDevice: DrivingWheelDevice | nul
       setPhase('error');
       return;
     }
-    localStorage.setItem('rehab_driving-rehab_wheelCalibration', JSON.stringify(result.calibration));
+    sessionCalibration = result.calibration;
     setCalibration(result.calibration);
     setError(null);
     setPhase('idle');

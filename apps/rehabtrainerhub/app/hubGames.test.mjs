@@ -113,10 +113,10 @@ test('an old drawing-defense publication cannot replace the R2 current session e
   assert.equal(game.installUrl, '/games/drawing-defense/');
 });
 
-for (const runtimeId of ['reading-training', 'gabor-patching', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training']) {
+for (const runtimeId of ['driving-rehab', 'reading-training', 'gabor-patching', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training']) {
 test(`${runtimeId} current metadata preserves its session entry despite a same-slug old settings shell`, async () => {
   const { BuildHubGameCatalog } = await ImportHubModule('./gameCatalog.ts');
-  const purpose = ['reading-training', 'gabor-patching','moving-card','oculomotor-training'].includes(runtimeId) ? 'vision' : 'upper-limb';
+  const purpose = ['driving-rehab', 'reading-training', 'gabor-patching','moving-card','oculomotor-training'].includes(runtimeId) ? 'vision' : 'upper-limb';
   const module = { runtimeId, trainer: purpose === 'vision' ? 'vision' : 'motor', category: purpose === 'vision' ? 'vision' : 'motor', purpose,
     imagePath: `/assets/game-previews/${runtimeId}/preview.webp`,
     copy: { en: { title: runtimeId, description: 'Upper-limb practice.' } } };

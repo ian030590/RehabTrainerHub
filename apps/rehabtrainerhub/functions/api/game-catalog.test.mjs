@@ -10,6 +10,7 @@ function Fixture(gameId = 'drawing-defense', version = '2.0.3') {
       'zh-TW': { title: '畫畫塔防', description: '上肢動作練習。' },
       en: { title: 'Drawing defense', description: 'Upper-limb practice.' },
     } };
+  if (gameId === 'driving-rehab') Object.assign(metadata, { trainer: 'vision', category: 'vision', copy: {"zh-TW": {"title": "\u99d5\u99db\u6ce8\u610f\u529b\u6a21\u64ec\u7df4\u7fd2", "description": "\u5728\u9001\u8ca8\u4efb\u52d9\u4e2d\u56de\u61c9\u7a81\u767c\u4e8b\u4ef6\uff1b\u7d00\u9304\u50c5\u53cd\u6620\u7576\u6b21\u64cd\u4f5c\uff0c\u4e0d\u5224\u5b9a\u99d5\u99db\u80fd\u529b\u3002"}, "en": {"title": "Driving Attention Simulation Practice", "description": "Respond to hazards during a delivery route; records reflect only the current activity and do not determine driving ability."}} });
   if (gameId === 'reading-training') Object.assign(metadata, { trainer: 'vision', category: 'vision', copy: {
     'zh-TW': { title: '閱讀訓練（RSVP）', description: '使用快速連續視覺呈現練習閱讀速度與文章理解。' },
     en: { title: 'Reading Training (RSVP)', description: 'Use rapid serial visual presentation to practise reading speed and comprehension.' },
@@ -178,4 +179,18 @@ test('Reading current replaces its same-slug old shell and fails closed for inva
   assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/reading-training/2.0.0/package/preview.webp');
   fixture.objects.set('releases/reading-training/2.0.0/files/game.json', Buffer.from('{}'));
   assert.equal((await List(fixture)).some(game => game.slug === 'reading-training'), false);
+});
+
+test('Driving current replaces its same-slug old shell and fails closed for invalid metadata', async () => {
+  const fixture = Fixture('driving-rehab', '2.0.0');
+  const games = await List(fixture);
+  const matches = games.filter(game => game.slug === 'driving-rehab');
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].title, '駕駛注意力模擬練習');
+  assert.equal(matches[0].trainer, 'vision'); assert.equal(matches[0].category, 'vision');
+  assert.equal(matches[0].release.presentation, 'game');
+  assert.equal(matches[0].release.settingsUrl, undefined);
+  assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/preview.webp');
+  fixture.objects.set('releases/driving-rehab/2.0.0/files/game.json', Buffer.from('{}'));
+  assert.equal((await List(fixture)).some(game => game.slug === 'driving-rehab'), false);
 });

@@ -319,9 +319,9 @@ const implementationGroups = [
       'driving-rehab/DrivingRehabGame.tsx',
     ],
     tokens: [
-      'IsTrainingFlowLaunchState',
+      'DrivingTutorial',
       "setPhase('results')",
-      'TrainingResultActions',
+      'SendGameResult',
     ],
   },
   {
@@ -442,6 +442,7 @@ const jsPsychLifecycleGroups = [
       'moving-card/pixi-moving-card.ts',
       'gabor-patching/pixi-gabor-patching.ts',
       'reading-training/pixi-reading-training.ts',
+      'driving-rehab/DrivingRehabGame.tsx',
       'driving-rehab/three-driving-rehab.ts',
     ],
     tokens: ['initJsPsych(', 'jsPsych.run(', 'finishTrial('],

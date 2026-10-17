@@ -145,7 +145,7 @@ test('wrong-way appearance randomization supports cars and scooters with differe
 
 test('driving score keeps each event including unanswered rounds', async () => {
   const { ParseGameScoreDefinition, BuildGameScore } = await ImportTypeScriptModule('../packages/ui/src/gameScore.ts');
-  const definition = ParseGameScoreDefinition(JSON.parse(await readFile(new URL('../apps/rehabtrainerhub/games/driving-rehab/score.json', import.meta.url), 'utf8')));
+  const definition = ParseGameScoreDefinition(JSON.parse(await readFile(new URL('./fixtures/driving-rehab-legacy.json', import.meta.url), 'utf8')).score);
   const score = BuildGameScore(definition, {
     detailRows: [{ rt_ms: 250, valid: true, collision: false, distance_m: 100, avoidance_success: true, other_vehicle_collision: true }, { rt_ms: null, valid: false, collision: true, distance_m: 200, avoidance_success: false }],
     details: { average_rt: 250 },

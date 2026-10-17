@@ -81,7 +81,7 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
       frame.src=config.basePath+'package/index.html';
     });</script>
     </head><body>
-      <iframe id="game-frame" title="${EscapeHtml(release.name ?? release.gameId)}" sandbox="allow-scripts" allow="fullscreen; autoplay" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <iframe id="game-frame" title="${EscapeHtml(release.name ?? release.gameId)}" sandbox="allow-scripts" allow="fullscreen; autoplay${release.capabilities.includes('gamepad') ? '; gamepad *' : ''}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
       <div id="camera-consent" hidden role="dialog" aria-modal="true" aria-labelledby="camera-consent-title"><section><h2 id="camera-consent-title">啟用相機 / Enable camera</h2><p>${eyeTracking ? '影像只在此裝置由 WebGazer 處理；遊戲只收到眼動座標，不會上傳影像。<br>WebGazer runs on this device. Only gaze coordinates reach the game.' : '影像只在此裝置由 MediaPipe 處理；遊戲只收到手部座標，不會上傳影像。<br>MediaPipe runs on this device. Only hand coordinates reach the game.'}</p><button id="camera-enable" type="button">允許相機 / Enable camera</button><button id="camera-cancel" type="button">取消 / Cancel</button></section></div>
       <button id="install-button" hidden type="button">安裝 / Install</button><p id="runner-error" hidden role="alert">此版本無法繼續使用，請返回遊戲入口。</p>
     </body></html>`;

@@ -30,5 +30,9 @@
   "reading-training": {
     "origin": "https://trainerhub-user-games.pages.dev",
     "name": "閱讀訓練（RSVP）"
+  },
+  "driving-rehab": {
+    "origin": "https://trainerhub-user-games.pages.dev",
+    "name": "駕駛注意力模擬練習"
   }
 }

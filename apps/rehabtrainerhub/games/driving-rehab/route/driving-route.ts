@@ -42,7 +42,6 @@ const keelung6Lane = RoadWidthFromLanes(6, 2.4);
 const cityHall4Lane = RoadWidthFromLanes(4, 1.8);
 const songshou4Lane = RoadWidthFromLanes(4, 1.8);
 const songzhi6Lane = RoadWidthFromLanes(6, 2.0);
-const lastRouteStorageKey = 'rehabtrainerhub.vision.driving.lastRouteId';
 
 const xinyi3Lane = xinyi6Lane;
 const xinyi4Lane = xinyi8Lane;
@@ -309,27 +308,12 @@ export function BuildDrivingRoute(variant: DrivingRouteVariant): RouteSegment[] 
 }
 
 export function PickRandomDrivingRoute(): DrivingRouteVariant {
-  let storedLastRouteId: string | null = null;
-  try {
-    if (typeof window !== 'undefined') {
-      storedLastRouteId = window.localStorage?.getItem(lastRouteStorageKey);
-    }
-  } catch {
-    storedLastRouteId = null;
-  }
-  const previousRouteId = lastPickedRouteId ?? storedLastRouteId;
+  const previousRouteId = lastPickedRouteId;
   const candidates = drivingRouteVariants.length > 1
     ? drivingRouteVariants.filter((route) => route.id !== previousRouteId)
     : drivingRouteVariants;
   const selected = candidates[Math.floor(Math.random() * candidates.length)] ?? drivingRouteVariants[0];
   lastPickedRouteId = selected.id;
-  try {
-    if (typeof window !== 'undefined') {
-      window.localStorage?.setItem(lastRouteStorageKey, selected.id);
-    }
-  } catch {
-    // Private browsing or storage policy can reject localStorage.
-  }
   return selected;
 }
 
