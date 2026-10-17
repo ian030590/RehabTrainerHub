@@ -1,0 +1,101 @@
+{
+  "checkedAt": "2026-10-17T04:37:20.347Z",
+  "gameId": "oculomotor-training",
+  "version": "2.1.1",
+  "contentSha256": "53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3",
+  "files": [
+    {
+      "path": "assets/index-B2a0_kFr.css",
+      "size": 21542,
+      "sha256": "374ebef1acb48eac7d8f59d1c5b14e23e2553b557e3854ef08eb1ef22e1565f3",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-aJEdQrR5.js",
+      "size": 493016,
+      "sha256": "826f731c2cec3deb98ef6286c7011907287517d1227b78b859c3b24a1c0ae3d0",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 548,
+      "sha256": "c96e3fc01bb8d0b4ca689069199b6fec71855918e595107054bf1bf00a0bfe56",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 600,
+      "sha256": "9a83d57b5e0e8a9d3e9ab3714decea7b6f55d948b250afd2cff04979c2324b06",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 830,
+      "sha256": "82ac52eda37b58ef50ac78629bc8e9f1184ccfcdfccb5915d40f726f6899f091",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "reference/LICENSE-OcuTrain.txt",
+      "size": 35184,
+      "sha256": "e0eedba615d5cd1b986afb6c5b3a4b1ae33713e7e9dc74d19daec5e3221f9d2e",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "reference/experiment.js",
+      "size": 100983,
+      "sha256": "92d211cc2186c7c2b066ab4c0c976dfb763aaa925de0b0d94bb455e720f09e31",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/gazeAdapter.js",
+      "size": 3763,
+      "sha256": "1065d911b6cabb4899e37701f8ba3e3c1fa882ff80f55ac305455a8e87c2cc35",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/index.html",
+      "size": 587,
+      "sha256": "42f09cd2b8191affbee3e7c5e7bfde79f3c709c95916eacfc36b30bdadfc3983",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "reference/jspsych.js",
+      "size": 80994,
+      "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/style.css",
+      "size": 32594,
+      "sha256": "53ed2f722070d7c04568c4753e0e9025fea32e47926c6266a464011817393600",
+      "contentType": "text/css; charset=utf-8"
+    }
+  ],
+  "platforms": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "4bdef687-cef7-4b92-a8cf-fa801f4ca6a2",
+      "url": "https://4bdef687.rehabtrainerhub.pages.dev",
+      "environment": "production",
+      "commit": "9ae05614c752b5174fabf1c4573780e7c3c9bb36"
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "2af33d05-6648-4aef-b806-cbacef7e4266",
+      "url": "https://2af33d05.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "9ae05614c752b5174fabf1c4573780e7c3c9bb36"
+    }
+  ],
+  "publicCatalog": {
+    "status": 200,
+    "officialCount": 6,
+    "gaborLegacyStatus": 410,
+    "gaborRemainsLegacy": false,
+    "preexistingGaborIssue": true,
+    "version": "2.1.0",
+    "contentSha256": "a90903994c2a89b24ec9482e005874d54abbb09ce2f9720b37216a705259b7b9",
+    "title": "眼動練習"
+  },
+  "rollbackVerifiedFiles": 11
+}

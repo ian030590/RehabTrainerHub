@@ -312,7 +312,11 @@ try {
       };
     }
   ` }, session);
+  // Use a fixed eye-game display: browser chrome must not turn the windowed viewport into a false monitor measurement.
+  if (gameId === 'oculomotor-training' && !['--wide', '--mobile', '--tablet', '--screen-3-2'].some(flag => process.argv.includes(flag)))
+    await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, screenWidth: 1280, screenHeight: 720, deviceScaleFactor: 1, mobile: false }, session);
   if (process.argv.includes('--wide')) await send('Emulation.setDeviceMetricsOverride', { width: 1320, height: 713, deviceScaleFactor: 1, mobile: false }, session);
+  if (process.argv.includes('--screen-3-2')) await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 960, screenWidth: 1440, screenHeight: 960, deviceScaleFactor: 1, mobile: false }, session);
   if (process.argv.includes('--mobile')) await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true }, session);
   if (process.argv.includes('--tablet')) await send('Emulation.setDeviceMetricsOverride', { width: 820, height: 1180, deviceScaleFactor: 1, mobile: false }, session);
   await send('Page.addScriptToEvaluateOnNewDocument', { source: `try {
@@ -432,7 +436,7 @@ try {
     await CheckGaborPatching({ game, evaluate, send, until, standalone, english, capture, checkSpotlight, sqlite,
       gameContext, session, getSaveAttempts: () => saveAttempts, requests, errors, version: manifest.version, accountId, guestSubjectId, rendererFailure });
   } else if (gameId === 'oculomotor-training') {
-    const screenshots = resolve(root, '.tmp/oculomotor-validation', `${standalone?'standalone':'lobby'}-${viewportMode}-${english?'en':'zh'}-${process.argv.includes('--gaze')?'gaze':'off'}-${process.argv.includes('--activity')?process.argv[process.argv.indexOf('--activity')+1]:'pursuit'}`);
+    const screenshots = resolve(root, '.tmp/oculomotor-validation', `${standalone?'standalone':'lobby'}-${viewportMode}-${english?'en':'zh'}-${process.argv.includes('--gaze')?'gaze':'off'}-${process.argv.includes('--activity')?process.argv[process.argv.indexOf('--activity')+1]:'pursuit'}${process.argv.includes('--incorrect-screen-height')?'-incorrect-screen-height':''}${process.argv.includes('--screen-3-2')?'-screen-3-2':''}${process.argv.includes('--measurements-16-9')?'-measurements-16-9':''}`);
     await mkdir(screenshots,{recursive:true});
     const capture=async name=>{const shot=await send('Page.captureScreenshot',{format:'png'},session);await writeFile(resolve(screenshots,name+'.png'),Buffer.from(shot.data,'base64'));};
     await CheckOculomotor({game,evaluate,send,until,standalone,english,capture,checkSpotlight,sqlite,gameContext,session,getSaveAttempts:()=>saveAttempts,getCsvAttempts:()=>csvAttempts,csvObjects,accountId,guestSubjectId,version:manifest.version,revokeRelease:()=>{revoked=true;},findEyeContext:async()=>{for(const context of contexts.filter(c=>c.auxData?.isDefault)){try{if(await evaluate("document.title==='WebGazer camera'",context))return context;}catch{}}return null;}});

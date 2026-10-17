@@ -1,5 +1,7 @@
 # 眼動練習與 OcuTrain 對齊
 
+後續保留原尺寸校正（比例填錯會變形）、修正 3:2 全螢幕尺寸來源、校正前偵測提示、中英雙語及 Accuracy／TFF 優先成果的 `2.1.1` 已核准、發布並驗收，見 [修正與驗證](oculomotor-display-feedback-2.1.1.md)。以下為 `2.1.0` 發布當時的歷史紀錄；目前平台的 Gabor 舊入口差異與 Git 專用分支交付見新版文件。
+
 狀態（2026-10-17）：`oculomotor-training@2.1.0` 已依擁有者「核准發佈」完成相容 runner／Hub 先部署、R2 發布及 current 切換、正式 API／逐檔 bytes／五個 Hub／PWA 瀏覽器流程驗收。正式仍為六款 R2／34 款舊流程，蓋伯候選沒有發布或切換；見[正式收據](releases/oculomotor-training-2.1.0.json)。
 
 擁有者核准並實際發布的版本為 `2.1.0`，11 檔，`contentSha256: a90903994c2a89b24ec9482e005874d54abbb09ce2f9720b37216a705259b7b9`。發布前再次核對相同摘要，逐檔上傳／回讀後才切換 current；`2.0.1` 保留為已核對回退版。

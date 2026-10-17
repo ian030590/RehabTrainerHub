@@ -1,0 +1,217 @@
+{
+  "checkedAt": "2026-10-17T04:41:31.660Z",
+  "gameId": "oculomotor-training",
+  "version": "2.1.1",
+  "contentSha256": "53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3",
+  "gates": [
+    {
+      "command": "npm run test:naming",
+      "status": "passed",
+      "testCounts": [
+        2
+      ]
+    },
+    {
+      "command": "npm run test:pwa",
+      "status": "passed",
+      "testCounts": [
+        18
+      ]
+    },
+    {
+      "command": "npm run test:game-architecture",
+      "status": "passed",
+      "testCounts": [
+        197
+      ]
+    },
+    {
+      "command": "npm run test:hub-functions",
+      "status": "passed",
+      "testCounts": [
+        121
+      ]
+    },
+    {
+      "command": "npm run test:gamerunner",
+      "status": "passed",
+      "testCounts": [
+        49
+      ]
+    },
+    {
+      "command": "npm run test:entrypoints",
+      "status": "passed",
+      "testCounts": [
+        22,
+        5,
+        15,
+        9,
+        6,
+        18,
+        26
+      ]
+    },
+    {
+      "command": "npm run test:cloudflare-deploy",
+      "status": "passed",
+      "testCounts": [
+        4
+      ]
+    }
+  ],
+  "localBrowserFlows": 8,
+  "productionBrowsers": [
+    {
+      "id": "desktop-16-9-hub",
+      "activity": "saccade",
+      "language": "zh",
+      "mode": "production Hub",
+      "gaze": true,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 27.921875,
+        "height": 27.921875
+      },
+      "images": [
+        {
+          "path": "production/desktop-16-9-hub/camera-position.png",
+          "sha256": "27fab5a440fcc5b229bf34fa7ef26b9e6e8fc86f28cbd43f53f7d1b33b306356"
+        },
+        {
+          "path": "production/desktop-16-9-hub/results.png",
+          "sha256": "804c993f76961e34aa68463d2bfe078940d70a93da761f8ec2fdb515b00b4470"
+        }
+      ],
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "desktop-3-2-hub",
+      "activity": "pursuit",
+      "language": "zh",
+      "mode": "production Hub; 3:2",
+      "gaze": true,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 31.40625,
+        "height": 31.40625
+      },
+      "images": [
+        {
+          "path": "production/desktop-3-2-hub/gameplay.png",
+          "sha256": "5698b9d74bcc243bd3da7f4e2a8c94ba9e5a1e5b655dacafec16cc543c4f0167"
+        }
+      ],
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "desktop-3-2-wrong-settings",
+      "activity": "vor",
+      "language": "zh",
+      "mode": "production Hub; 3:2 with 16:9 measurements",
+      "gaze": false,
+      "status": "passed",
+      "screenGeometry": "stale 16:9 measurements",
+      "stimulusPixels": {
+        "width": 31.40625,
+        "height": 37.234375
+      },
+      "images": [
+        {
+          "path": "production/desktop-3-2-wrong-settings/gameplay.png",
+          "sha256": "143bcb2f1506ce03156ecf3de22c58dcee09649c3c35c0057c412aa36a3d5625"
+        }
+      ],
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "mobile-hub-retries",
+      "activity": "fixation",
+      "language": "zh",
+      "mode": "production Hub; camera denied and session failure retry",
+      "gaze": true,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 8.5,
+        "height": 8.5
+      },
+      "images": [
+        {
+          "path": "production/mobile-hub-retries/validation.png",
+          "sha256": "3c7da7b6275c6d3656f95b34918fc59f91fc605748d1bd8b166445e2f772c0bc"
+        }
+      ],
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "english-account-tablet",
+      "activity": "pursuit",
+      "language": "en",
+      "mode": "production Hub; local signed-in account",
+      "gaze": true,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 17.875,
+        "height": 17.875
+      },
+      "images": [
+        {
+          "path": "production/english-account-tablet/validation.png",
+          "sha256": "b509e09e6dd74388c78d4b948072c5c874ed432041b17bc1cff8860c5b58ec39"
+        }
+      ],
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "mobile-standalone-pwa",
+      "activity": "vor",
+      "language": "zh",
+      "mode": "production standalone PWA",
+      "gaze": true,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 8.5,
+        "height": 8.5
+      },
+      "images": [
+        {
+          "path": "production/mobile-standalone-pwa/results.png",
+          "sha256": "b2bd1bf26e62c5ed3f0ac334e17a14606ec77b514bfa99877e14caff97a484ab"
+        }
+      ],
+      "productionRecordsCreated": false
+    }
+  ],
+  "publicApi": {
+    "status": 200,
+    "officialCount": 6,
+    "gaborLegacyStatus": 410,
+    "gaborRemainsLegacy": false,
+    "preexistingGaborIssue": true,
+    "version": "2.1.1",
+    "contentSha256": "53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3",
+    "title": "眼動練習"
+  },
+  "currentSessionApi": {
+    "status": 201,
+    "version": "2.1.1",
+    "contentSha256": "53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3",
+    "tokenRecorded": false
+  },
+  "publicFilesVerified": 11,
+  "rollback": {
+    "version": "2.1.0",
+    "contentSha256": "a90903994c2a89b24ec9482e005874d54abbb09ce2f9720b37216a705259b7b9",
+    "publicFilesVerified": 11,
+    "executed": false
+  },
+  "platformDeployed": false,
+  "productionRecordsCreated": false,
+  "branch": "fix/oculomotor-2.1.1",
+  "productionBranchTouched": false
+}

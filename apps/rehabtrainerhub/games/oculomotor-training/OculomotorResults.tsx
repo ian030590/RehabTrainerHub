@@ -6,7 +6,7 @@ export function OculomotorResults({ result, summaryItems, language, saveState, o
   result: ExperimentResult; summaryItems: { label: string; value: string }[]; language: 'zh' | 'en'; saveState: string; onRetry: () => void; onExit: () => void;
 }) {
   const en = language === 'en';
-  const [metricKey, setMetricKey] = useState('targets');
+  const [metricKey, setMetricKey] = useState('accuracy');
   const score = BuildGameScore(result);
   const metric = scoreMetrics.find(field => field.key === metricKey)!;
   const metricValue = score.summary[metricKey];
@@ -15,16 +15,29 @@ export function OculomotorResults({ result, summaryItems, language, saveState, o
   const barHeight = metricValue == null ? 0 : 105 * metricValue / axisMax;
   const missing = en ? 'Missing' : '缺測';
   const valueText = (value: number | null | undefined, unit = '') => value == null ? missing : `${value}${unit ? ' ' + unit : ''}`;
-  return <div className="experiment-container results-container"><section className="experiment-results">
+  const directionLabels: Record<string, string> = { center: en ? 'Center' : '中央',
+    leftUp: en ? 'Top left' : '左上', middleUp: en ? 'Up' : '上', rightUp: en ? 'Top right' : '右上',
+    leftMiddle: en ? 'Left' : '左', rightMiddle: en ? 'Right' : '右',
+    leftDown: en ? 'Bottom left' : '左下', middleDown: en ? 'Down' : '下', rightDown: en ? 'Bottom right' : '右下' };
+  const fixationStatuses: Record<string, string> = { detected: en ? 'Detected' : '已偵測',
+    no_valid_samples: en ? 'No valid samples' : '無有效樣本', no_movement_detected: en ? 'No movement detected' : '未偵測到移動',
+    no_confirmed_fixation: en ? 'No stable fixation detected' : '未偵測到穩定注視' };
+  return <div className={`experiment-container results-container${IsHubGame() ? '' : ' results-standalone'}`}><section className="experiment-results">
     <header className="score-header"><h1>{en ? 'Session results' : '當次成果'}</h1><p>{en ? 'These are session activity records, not diagnosis or treatment effects.' : '這些數值為當次活動紀錄，不代表診斷或療效。'}</p></header>
     <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
-      {scoreMetrics.filter(field => ['targets', 'durationMs', 'accuracy'].includes(field.key)).map(field => <div className="score-key-metric" key={field.key}><p>{field.label[language]}</p><strong>{valueText(score.summary[field.key], field.unit)}</strong></div>)}
-    </div></section>
-    <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
-      {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
-      <div className="score-context-item"><dt>{en ? 'Actual gaze source' : '實際眼動來源'}</dt><dd>{result.eye_tracking_source === 'webgazer' ? 'WebGazer' : (en ? 'Off' : '不記錄')}</dd></div>
-      <div className="score-context-item"><dt>{en ? 'End reason' : '結束原因'}</dt><dd>{result.end_reason === 'duration_complete' ? (en ? 'Configured duration completed' : '已完成設定時間') : result.end_reason === 'escape' ? (en ? 'Ended with Escape' : '按 Esc 結束') : result.end_reason}</dd></div>
-    </dl></section>
+      <div className="score-key-metric"><p>{en ? 'Accuracy' : '在標比例 Accuracy'}</p><strong>{valueText(result.accuracy_rate, '%')}</strong>
+        <p>{en ? 'On target duration / valid gaze duration' : '在標時間／有效眼動時間'}</p>
+        <p>{valueText(result.in_threshold_sec, 's')} / {valueText(result.valid_sec, 's')}</p></div>
+      <div className="score-key-metric"><p>{en ? 'Mean time to first fixation (TFF)' : '首次注視平均時間 TFF'}</p>
+        <strong>{result.module === 'saccade' ? valueText(result.tff_mean_ms, 'ms') : (en ? 'Not applicable' : '不適用')}</strong>
+        <p>{result.module === 'saccade' ? `${valueText(result.tff_detected_targets)} / ${valueText(result.tff_total_targets)} ${en ? 'targets detected' : '個目標偵測到首次注視'}` : (en ? 'Available for saccade practice' : '僅適用於跳視練習')}</p></div>
+    </div><p className="score-accuracy-definition">{en ? 'Accuracy uses the original activity scoring phases and hit threshold. Invalid gaze is excluded from valid duration; missing data is not zero.' : 'Accuracy 沿用原程式各活動的計分階段與在標門檻。無效眼動不計入有效時間；缺測不當作零分。'}</p></section>
+    {result.module === 'saccade' && <section className="score-tff"><h2>{en ? 'Time to first fixation (TFF)' : '首次注視時間統計（TFF）'}</h2>
+      <p>{en ? 'Measured from target onset to the first stable fixation after eye movement; a target hit is not required. The mean includes detected targets only.' : '從目標出現到眼動後首次穩定注視的時間，不要求注視落在目標範圍。平均值只計入已偵測的目標。'}</p>
+      {result.tff_analysis?.targets.length ? <div className="results-scroll" tabIndex={0} role="region" aria-label={en ? 'TFF target details' : 'TFF 逐目標明細'}><table className="tff-table"><thead><tr><th scope="col">{en ? 'Target' : '目標'}</th><th scope="col">{en ? 'Direction' : '方向'}</th><th scope="col">TFF (ms)</th><th scope="col">{en ? 'Status' : '狀態'}</th></tr></thead>
+        <tbody>{result.tff_analysis.targets.map(target => <tr key={target.target_number}><td>{target.target_number}</td><td>{directionLabels[target.direction] ?? (en ? 'Unknown' : '未知')}</td><td>{valueText(target.tff_ms)}</td><td>{fixationStatuses[target.status] ?? missing}</td></tr>)}</tbody></table></div>
+        : <p>{en ? 'No TFF observations. Enable gaze tracking and complete saccade practice to collect them.' : '沒有 TFF 觀測資料；需啟用眼動追蹤並完成跳視練習。'}</p>}
+    </section>}
     <section className="score-analysis"><div className="score-section-header"><div className="score-analysis-heading"><h2 className="score-section-title">{en ? 'Session analysis' : '活動數值分析'}</h2><p>{en ? 'One row represents one complete stimulus activity.' : '一筆資料代表完整的一次刺激活動。'}</p></div>
       <label>{en ? 'Metric' : '指標'}<select value={metricKey} onChange={event => setMetricKey(event.target.value)}>{scoreMetrics.map(field => <option key={field.key} value={field.key}>{field.label[language]}</option>)}</select></label></div>
       <dl className="score-statistics">
@@ -43,12 +56,11 @@ export function OculomotorResults({ result, summaryItems, language, saveState, o
         <tbody><tr>{scoreMetrics.map(field => <td key={field.key}>{valueText(score.summary[field.key])}</td>)}</tr></tbody>
       </table></div>
     </section>
-    {result.module === 'saccade' && result.tff_analysis && <section className="score-tff"><h2>{en ? 'Time to first fixation (TFF)' : '首次注視時間（TFF）'}</h2>
-      <p>{result.tff_detected_targets} / {result.tff_total_targets} {en ? 'targets detected' : '個目標偵測到首次注視'}</p>
-      <p>{en ? 'Measured from target onset to the first stable fixation after eye movement; a target hit is not required.' : '從目標出現到偵測眼動後首次穩定注視的時間，不要求注視落在目標範圍。'}</p>
-      <div className="results-scroll"><table><thead><tr><th>{en ? 'Target' : '目標'}</th><th>{en ? 'Direction' : '方向'}</th><th>TFF (ms)</th></tr></thead>
-        <tbody>{result.tff_analysis.targets.map(target => <tr key={target.target_number}><td>{target.target_number}</td><td>{target.direction}</td><td>{valueText(target.tff_ms)}</td></tr>)}</tbody></table></div>
-    </section>}
+    <section className="score-context"><h2>{en ? 'Session metadata and settings' : '當次設定與中繼資料'}</h2><dl className="score-context-list">
+      {summaryItems.map(item => <div className="score-context-item" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
+      <div className="score-context-item"><dt>{en ? 'Actual gaze source' : '實際眼動來源'}</dt><dd>{result.eye_tracking_source === 'webgazer' ? 'WebGazer' : (en ? 'Off' : '不記錄')}</dd></div>
+      <div className="score-context-item"><dt>{en ? 'End reason' : '結束原因'}</dt><dd>{result.end_reason === 'duration_complete' ? (en ? 'Configured duration completed' : '已完成設定時間') : result.end_reason === 'escape' ? (en ? 'Ended with Escape' : '按 Esc 結束') : (en ? 'Session interrupted' : '練習中斷')}</dd></div>
+    </dl></section>
     <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local practice. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
       : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'CSV or result save failed. Retry with the same session.' : 'CSV 或成果保存失敗，請使用同一工作階段重試。') : (en ? 'Saving…' : '保存中…')}</p>
     {saveState === 'error' && <button className="btn btn-ghost score-retry-button" type="button" onClick={onRetry}>{en ? 'Retry save' : '重試保存'}</button>}

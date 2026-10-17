@@ -1,0 +1,237 @@
+{
+  "checkedAt": "2026-10-17T03:52:02.332Z",
+  "gameId": "oculomotor-training",
+  "version": "2.1.1",
+  "contentSha256": "53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3",
+  "published": false,
+  "platformDeployed": false,
+  "createdProductionRecords": false,
+  "gates": [
+    {
+      "command": "npm run test:naming",
+      "status": "passed",
+      "testCounts": [
+        2
+      ]
+    },
+    {
+      "command": "npm run test:pwa",
+      "status": "passed",
+      "testCounts": [
+        18
+      ]
+    },
+    {
+      "command": "npm run test:game-architecture",
+      "status": "passed",
+      "testCounts": [
+        197
+      ]
+    },
+    {
+      "command": "npm run test:hub-functions",
+      "status": "passed",
+      "testCounts": [
+        121
+      ]
+    },
+    {
+      "command": "npm run test:gamerunner",
+      "status": "passed",
+      "testCounts": [
+        49
+      ]
+    },
+    {
+      "command": "npm run test:entrypoints",
+      "status": "passed",
+      "testCounts": [
+        22,
+        5,
+        15,
+        9,
+        6,
+        18,
+        26
+      ]
+    },
+    {
+      "command": "npm run test:cloudflare-deploy",
+      "status": "passed",
+      "testCounts": [
+        4
+      ]
+    }
+  ],
+  "builds": {
+    "game": "passed",
+    "hub": "passed; local candidate excludes 7 R2 games and retains 33 legacy bundles",
+    "dryRun": "passed; 11 files"
+  },
+  "browserHubOutput": ".tmp/ocutrain-platform-20261017/apps/rehabtrainerhub/out",
+  "browserFlows": [
+    {
+      "fixture": "desktop",
+      "activity": "saccade",
+      "language": "zh",
+      "mode": "Hub",
+      "tracking": true,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 27.921875,
+        "height": 27.921875
+      },
+      "writes": "local SQLite and in-memory R2 only"
+    },
+    {
+      "fixture": "mobile",
+      "activity": "fixation",
+      "language": "zh",
+      "mode": "Hub",
+      "tracking": true,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 8.5,
+        "height": 8.5
+      },
+      "writes": "local SQLite and in-memory R2 only"
+    },
+    {
+      "fixture": "tablet-en",
+      "activity": "pursuit",
+      "language": "en",
+      "mode": "Hub",
+      "tracking": true,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 17.875,
+        "height": 17.875
+      },
+      "writes": "local SQLite and in-memory R2 only"
+    },
+    {
+      "fixture": "off",
+      "activity": "fixation",
+      "language": "zh",
+      "mode": "Hub",
+      "tracking": false,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 17.875,
+        "height": 17.875
+      },
+      "writes": "local SQLite and in-memory R2 only"
+    },
+    {
+      "fixture": "pwa",
+      "activity": "vor",
+      "language": "zh",
+      "mode": "standalone PWA",
+      "tracking": true,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 8.5,
+        "height": 8.5
+      },
+      "writes": "local SQLite and in-memory R2 only"
+    },
+    {
+      "fixture": "incorrect-height",
+      "activity": "fixation",
+      "language": "zh",
+      "mode": "Hub",
+      "tracking": false,
+      "status": "passed",
+      "screenGeometry": "incorrect height",
+      "stimulusPixels": {
+        "width": 17.875,
+        "height": 8.9375
+      },
+      "writes": "local SQLite and in-memory R2 only"
+    },
+    {
+      "fixture": "screen-3-2",
+      "activity": "vor",
+      "language": "zh",
+      "mode": "Hub",
+      "tracking": false,
+      "status": "passed",
+      "screenGeometry": "matching aspect",
+      "stimulusPixels": {
+        "width": 31.40625,
+        "height": 31.40625
+      },
+      "displayReport": {
+        "container": {
+          "screenWidth": 1680,
+          "screenHeight": 1050,
+          "innerWidth": 1440,
+          "innerHeight": 960,
+          "dpr": 1
+        },
+        "game": {
+          "screenWidth": 1280,
+          "screenHeight": 800,
+          "innerWidth": 1440,
+          "innerHeight": 960,
+          "dpr": 1
+        }
+      },
+      "writes": "local SQLite and in-memory R2 only"
+    },
+    {
+      "fixture": "screen-3-2-stale",
+      "activity": "vor",
+      "language": "zh",
+      "mode": "Hub",
+      "tracking": false,
+      "status": "passed",
+      "screenGeometry": "stale 16:9 measurements",
+      "stimulusPixels": {
+        "width": 31.40625,
+        "height": 37.234375
+      },
+      "displayReport": {
+        "container": {
+          "screenWidth": 1680,
+          "screenHeight": 1050,
+          "innerWidth": 1440,
+          "innerHeight": 960,
+          "dpr": 1
+        },
+        "game": {
+          "screenWidth": 1280,
+          "screenHeight": 800,
+          "innerWidth": 1440,
+          "innerHeight": 960,
+          "dpr": 1
+        }
+      },
+      "writes": "local SQLite and in-memory R2 only"
+    }
+  ],
+  "screenshots": [
+    "desktop-camera.png",
+    "desktop-accuracy-tff.png",
+    "mobile-circular-stimulus.png",
+    "tablet-english-validation.png",
+    "mobile-camera.png",
+    "mobile-validation.png",
+    "mobile-pwa-results.png",
+    "incorrect-height-ellipse.png",
+    "screen-3-2-correct.png",
+    "screen-3-2-stale-16-9.png"
+  ],
+  "limits": [
+    "Image-stream camera fixture, not real people or physical camera",
+    "Brave device emulation, not physical touch or Safari/iOS",
+    "Emulated screen measurements, not physical screen measurement",
+    "Private production CSV metadata only; content read was rejected by automatic approval review"
+  ],
+  "phase": "prepublication-local-validation"
+}

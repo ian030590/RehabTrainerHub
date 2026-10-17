@@ -1,11 +1,18 @@
 /* Local result presentation: game packages remain independent of platform UI. */
 .experiment-container { padding: 24px; }
+.experiment-container.results-standalone { padding-top: 88px; }
 .experiment-results { max-width: 78rem; font-size: 1rem; font-weight: 700; line-height: 1.5; }
 .experiment-results h1 { margin: 0; color: var(--heading); font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.15; letter-spacing: -.035em; }
 .experiment-results h2, .experiment-results h3 { margin: 0 0 12px; color: var(--heading); font-size: 1.2rem; }
 .experiment-results .score-note { margin: 10px 0 28px; color: var(--text-muted); }
 .score-priority, .score-analysis, .score-gesture-summary { padding: 24px 0; border-top: 1px solid var(--border); }
-.score-key-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; gap: 0; }
+.score-key-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; gap: 0; }
+.score-key-metric { min-width: 0; overflow-wrap: anywhere; }
+.score-key-metric p + p, .score-key-metric strong + p { margin-top: 12px; }
+.score-accuracy-definition { color: var(--text-muted); }
+.score-tff { padding: 24px 0; border-top: 1px solid var(--border); }
+.tff-table { width: 100%; min-width: 28rem; border-collapse: collapse; text-align: left; }
+.tff-table th, .tff-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
 .score-key-grid > div { padding: 24px; border: 1px solid var(--border); background: var(--surface); }
 .score-key-grid > div:first-child { background: var(--primary); color: var(--text-on-accent); }
 .score-key-grid dt { font-size: 1rem; }
@@ -50,9 +57,9 @@
 @media (max-width: 600px) {
   .score-chart svg text { font-size: 24px; }
   .score-key-grid { grid-template-columns: 1fr; }
-  .score-key-grid > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px; }
+  .score-key-grid > div { padding: 20px; }
   .score-key-grid dd { margin: 0; text-align: right; }
-  .score-key-grid strong { margin: 0; text-align: right; }
+  .score-key-grid strong { margin: 12px 0; text-align: left; }
   .score-context dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .score-section-header { align-items: stretch; flex-direction: column; gap: 12px; }
   .score-section-header label { min-width: 0; }

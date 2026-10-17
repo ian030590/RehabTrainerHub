@@ -1,0 +1,10 @@
+{
+  "status": "approved",
+  "source": "Repository owner in this Codex conversation",
+  "message": "核准新的版本並git push到遠端",
+  "approvedAt": "2026-10-17T04:37:20.345Z",
+  "gameId": "oculomotor-training",
+  "version": "2.1.1",
+  "contentSha256": "53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3",
+  "scope": "Publish the reviewed exact R2 game; commit and push the eye changes to a dedicated branch to avoid deploying the unapproved Gabor registry"
+}

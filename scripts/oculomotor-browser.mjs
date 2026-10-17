@@ -21,6 +21,18 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
     input.dispatchEvent(new Event('input',{bubbles:true})); input.dispatchEvent(new Event('change',{bubbles:true}));
   })()`);
   await setInput('module', activity); await setInput(`${activity}TotalSec`, 5);
+  // The fixture supplies measurements for its emulated screen, not a physical monitor.
+  const screenAspect = await evaluate(`innerHeight / innerWidth`);
+  const incorrectScreenHeight = process.argv.includes('--incorrect-screen-height');
+  const staleMeasurements = process.argv.includes('--measurements-16-9');
+  if (process.argv.includes('--screen-3-2')) {
+    const expression = `({screenWidth:screen.width,screenHeight:screen.height,innerWidth,innerHeight,dpr:devicePixelRatio})`;
+    console.log('3:2 screen report: '+JSON.stringify({container:await evaluate(expression),game:await game(expression)}));
+    assert.ok(Math.abs(screenAspect - 2 / 3) < .0001, 'The emulated display area itself is 3:2');
+  }
+  await setInput('screenWidthCm', 48);
+  const measurementAspect = staleMeasurements ? 9 / 16 : screenAspect;
+  await setInput('screenHeightCm', 48 * measurementAspect * (incorrectScreenHeight ? 2 : 1));
   await setInput('distanceThresholdArcmin', 120);
   assert.equal(await game(`document.querySelector('#slider-threshold-arcmin').value`), '120');
   await game(`(() => { const slider=document.querySelector('#slider-threshold-arcmin'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(slider,'600'); slider.dispatchEvent(new Event('input',{bubbles:true})); })()`);
@@ -89,6 +101,11 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
   await game(`document.querySelector('.training-confirmation .btn-primary').click()`);
   if (tracking) {
     await until(() => game(`Boolean(document.querySelector('#webgazer-camera-continue')) && !document.querySelector('#webgazer-camera-continue').disabled`), 'face positioning ready',60000);
+    assert.match(await game(`document.querySelector('#webgazer-eye-status').textContent`), english ? /detected.*ready/i : /已偵測.*就緒/);
+    await capture('camera-position');
+    const positioning = await game(`(() => { const shell=document.querySelector('.webgazer-camera-page .app-shell'), rect=shell.getBoundingClientRect(); return { x:rect.left+rect.width/2-innerWidth/2, y:rect.top+rect.height/2-innerHeight/2, width:innerWidth, height:innerHeight, contentHeight:rect.height }; })()`);
+    assert.ok(Math.abs(positioning.x)<2 && Math.abs(positioning.y)<2,'Positioning text is centered in both axes: '+JSON.stringify(positioning));
+    await CheckTextLayout(game, '.webgazer-camera-page', 'h1,p,button');
     await capture('camera-position');
     await until(() => game(`(() => {
       const button=document.querySelector('#webgazer-camera-continue');
@@ -97,15 +114,23 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
     })()`), 'ready camera enters calibration',60000);
     for (let index=0;index<18;index++) {
       await until(() => game(`Boolean(document.querySelector('.gaze-calibration-point'))`), 'calibration point');
+      await CheckTextLayout(game, '.gaze-calibration', 'p,button');
       await game(`document.querySelector('.gaze-calibration-point').click()`);
       await new Promise(resolve=>setTimeout(resolve,120));
     }
     await until(() => game(`Boolean(document.querySelector('[data-val-action]'))`), 'five point validation',30000);
     await capture('validation');
+    await CheckTextLayout(game, '.webgazer-validate-card', 'h2,p,dt,dd,.webgazer-validate-stat-value,button');
+    assert.match(await game(`document.querySelector('.webgazer-validate-card').textContent`),english ? /Mean Angular Error/ : /平均角度誤差/);
     await game(`document.querySelector('[data-val-action=proceed], [data-val-action=done]').click()`);
   }
   await until(() => game(`Boolean(document.querySelector('#training-stimulus'))`), 'original stimulus engine');
   assert.equal(await game(`document.fullscreenElement === document.querySelector('.oculomotor-game-root')`), true);
+  const stimulusSize = await game(`(() => {const rect=document.querySelector('#training-stimulus').getBoundingClientRect();return {width:rect.width,height:rect.height};})()`);
+  const expectedRatio = measurementAspect / screenAspect * (incorrectScreenHeight ? 2 : 1);
+  assert.ok(Math.abs(stimulusSize.width / stimulusSize.height - expectedRatio) < .01,
+    `Correct screen aspect renders a circle; incorrect aspect must deform: ${JSON.stringify(stimulusSize)}`);
+  console.log(`Stimulus geometry (${incorrectScreenHeight ? 'incorrect height' : staleMeasurements ? 'stale 16:9 measurements' : 'matching aspect'}): ${JSON.stringify(stimulusSize)}`);
   const start = await game(`document.querySelector('#training-stimulus').style.transform`);
   await new Promise(resolve => setTimeout(resolve, 1200));
   const after = await game(`document.querySelector('#training-stimulus').style.transform`);
@@ -144,6 +169,14 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
   assert.equal(await game(`document.querySelectorAll('.results-table tbody td').length`), 12);
   assert.equal(await game(`(() => {const metric=document.querySelectorAll('.score-key-grid>div')[1]; return getComputedStyle(metric).color !== getComputedStyle(metric).backgroundColor;})()`), true, 'Result values must be readable on their surface');
   assert.equal(await game(`document.fullscreenElement`), null);
+  assert.equal(await game(`document.querySelector('.score-analysis select').value`),'accuracy','Accuracy is the default analysis');
+  assert.match(await game(`document.querySelector('.score-priority').textContent`), /Accuracy[\s\S]*TFF/);
+  assert.equal(await game(`Boolean(document.querySelector('.score-context').compareDocumentPosition(document.querySelector('.score-analysis')) & Node.DOCUMENT_POSITION_PRECEDING)`),true,'Metadata follows statistics');
+  await CheckTextLayout(game, '.score-priority', 'h2,p,strong');
+  if (standalone) {
+    const install = await evaluate(`(() => {const button=document.querySelector('#install-button');return button && !button.hidden ? button.getBoundingClientRect().toJSON() : null;})()`);
+    if (install) assert.ok((await game(`document.querySelector('.score-header').getBoundingClientRect().top`)) >= install.bottom,'PWA install control must not obscure the result title');
+  }
   if (!tracking) assert.match(await game(`document.querySelector('.score-key-grid').innerText`), english ? /Missing/ : /缺測/);
   await game(`document.querySelector('.score-analysis select').value='accuracy';document.querySelector('.score-analysis select').dispatchEvent(new Event('change',{bubbles:true}))`);
   if (!tracking) assert.match(await game(`document.querySelector('.score-chart').innerText`), english ? /Missing/ : /缺測/);
@@ -197,4 +230,22 @@ export async function CheckOculomotor({ game, evaluate, send, until, standalone,
   await until(() => standalone ? game(`Boolean(document.querySelector('form'))`) : evaluate(`!document.querySelector('dialog iframe')`), 'single return action');
   if (standalone) assert.equal(await game(`Boolean(document.querySelector('.game-tour'))`), false);
   console.log(`Oculomotor ${activity}: original activity, four spotlights, numerical results and private save passed.`);
+}
+
+async function CheckTextLayout(game, root, selector) {
+  const issue = await game(`(() => {
+    const root=document.querySelector(${JSON.stringify(root)});
+    const elements=[...root.querySelectorAll(${JSON.stringify(selector)})].filter(node=>node.getClientRects().length);
+    for(let index=0;index<elements.length;index++) {
+      const node=elements[index], rect=node.getBoundingClientRect();
+      if(node.scrollWidth>node.clientWidth+2) return 'Horizontal overflow: '+node.textContent;
+      for(const other of elements.slice(index+1)) {
+        if(node.contains(other)||other.contains(node)) continue;
+        const next=other.getBoundingClientRect();
+        if(Math.min(rect.right,next.right)-Math.max(rect.left,next.left)>2 && Math.min(rect.bottom,next.bottom)-Math.max(rect.top,next.top)>2) return 'Overlapping text: '+node.textContent+' / '+other.textContent;
+      }
+    }
+    return null;
+  })()`);
+  assert.equal(issue,null);
 }

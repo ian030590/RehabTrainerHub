@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-17T02:45:00.472Z",
+  "bucket": "oculomotor-data",
+  "exists": true,
+  "csvObjectsInFirstPage": 1,
+  "csv": {
+    "bytes": 22084,
+    "contentType": "text/csv; charset=utf-8",
+    "officialGameVersion": "2.1.0",
+    "gazeSampleCount": 238,
+    "source": "webgazer"
+  },
+  "privateContentRead": false,
+  "privateObjectKeysIncluded": false,
+  "createdProductionRecords": false
+}

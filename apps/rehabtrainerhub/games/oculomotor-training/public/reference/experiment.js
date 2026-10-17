@@ -154,10 +154,14 @@
     const physicalSizeForArcmin = (arcmin, distanceCm) =>
       2 * distanceCm * Math.tan((arcmin * RAD_PER_ARCMIN) / 2);
 
-    const currentScreenPixels = () => ({
-      width: Math.max(1, Number(window.screen && window.screen.width) || window.innerWidth || 1),
-      height: Math.max(1, Number(window.screen && window.screen.height) || window.innerHeight || 1)
-    });
+    const currentScreenPixels = () => {
+      // Isolated browser documents may report masked screen dimensions; fullscreen uses the actual display area.
+      const fullscreen = Boolean(fullscreenElement());
+      return {
+        width: Math.max(1, (fullscreen ? window.innerWidth : Number(window.screen && window.screen.width)) || window.innerWidth || 1),
+        height: Math.max(1, (fullscreen ? window.innerHeight : Number(window.screen && window.screen.height)) || window.innerHeight || 1)
+      };
+    };
 
     function createCalibration(values) {
       const screenPixels = currentScreenPixels();
@@ -320,11 +324,12 @@
     }
 
     function currentViewportSignature() {
+      const screenPixels = currentScreenPixels();
       return {
         width: Math.round(window.innerWidth),
         height: Math.round(window.innerHeight),
-        screenWidth: Math.round(Number(window.screen && window.screen.width) || 0),
-        screenHeight: Math.round(Number(window.screen && window.screen.height) || 0),
+        screenWidth: Math.round(screenPixels.width),
+        screenHeight: Math.round(screenPixels.height),
         devicePixelRatio: Number(window.devicePixelRatio) || 1,
         fullscreen: Boolean(fullscreenElement())
       };
@@ -565,11 +570,13 @@
         const showCamera = () => {
           if (finished) return;
           displayElement.innerHTML = `
-            <section class="app-page">
+            <section class="app-page webgazer-camera-page">
               <div class="app-shell" style="max-width:760px">
                 <p class="eyebrow">${Text("WebGazer setup","WebGazer 準備")}</p>
                 <h1>${Text("Camera positioning","相機位置確認")}</h1>
-                <p class="lede">${Text("Keep your head still and position your face until the camera guide indicates that tracking is ready. The next screen contains the calibration points.","請保持頭部穩定，調整臉部位置至追蹤就緒。下一步進行九點校正。")}</p>
+                <p class="lede">${Text("Keep your head still and both eyes visible to the camera. Use the live tracking status below to position yourself, then continue to nine-point calibration.","請保持頭部穩定，讓相機能看到雙眼。依下方即時追蹤狀態調整位置，就緒後進行九點校正。")}</p>
+                <p id="webgazer-eye-status" role="status" aria-live="polite"></p>
+                <p class="webgazer-camera-note">${Text("Tracking readiness comes from the eye model; no camera image is shown here. Calibration is still required.","此處以眼動模型回報的訊號顯示追蹤就緒狀態，不顯示相機影像；仍需完成校正。")}</p>
                 <div class="webgazer-camera-actions">
                   <button id="webgazer-camera-continue" class="primary-button" type="button" disabled>${Text("Continue to calibration","開始校正")}</button>
                   <button id="webgazer-camera-skip" class="secondary-button" type="button">${Text("Continue without eye tracking","不記錄眼動，繼續練習")}</button>
@@ -580,12 +587,18 @@
           try { extension.resume(); } catch (error) { finish(false, "Eye tracking could not be resumed."); return; }
           const continueButton = displayElement.querySelector("#webgazer-camera-continue");
           const skipButton = displayElement.querySelector("#webgazer-camera-skip");
+          const eyeStatus = displayElement.querySelector("#webgazer-eye-status");
           const updateFaceState = () => {
             let detected = false;
             try { detected = Boolean(extension.faceDetected()); } catch (error) { detected = false; }
             continueButton.disabled = !detected;
+            eyeStatus.dataset.detected = String(detected);
+            eyeStatus.textContent = detected
+              ? Text("Eye tracking detected — ready for calibration.", "已偵測到眼動追蹤訊號，可以開始校正（就緒）。")
+              : Text("Eye tracking not detected. Face the camera with both eyes visible.", "尚未偵測到眼動追蹤訊號，請面向相機並露出雙眼。");
+            return detected;
           };
-          continueButton.addEventListener("click", () => finish(true));
+          continueButton.addEventListener("click", () => { if (updateFaceState()) finish(true); });
           skipButton.addEventListener("click", () => finish(false, "Skipped by the user."));
           updateFaceState();
           faceTimer = window.setInterval(updateFaceState, 200);
@@ -596,7 +609,7 @@
           if (finished) return;
           const message = error && error.message ? error.message : String(error || "Camera access failed.");
           displayElement.innerHTML = `
-            <section class="app-page">
+            <section class="app-page webgazer-camera-page">
               <div class="app-shell" style="max-width:760px">
                 <p class="eyebrow">${Text("WebGazer setup","WebGazer 準備")}</p>
                 <h1>${Text("Eye tracking unavailable","無法使用眼動追蹤")}</h1>
@@ -729,7 +742,7 @@
           displayElement.innerHTML = `
             <div id="webgazer-validate-container">
               <div class="webgazer-validate-instruction">
-                Gaze Accuracy Validation: Look directly at the target (${idx + 1} / 5)
+                ${Text("Gaze validation: Look directly at the target", "眼動驗證：請注視目標")} (${idx + 1} / 5)
               </div>
               <div class="webgazer-validate-target" style="left: ${tx}px; top: ${ty}px;">
                 <div class="webgazer-validate-target-inner"></div>
@@ -794,70 +807,61 @@
           let noticeHtml = "";
 
           if (!hasEnoughData) {
-            noticeHtml = `<p style="color:#f87171; font-size:14px; margin-bottom:18px;">Insufficient valid gaze data (${validPoints.length}/5 targets). Check that both eyes are detected in ${"the camera"}, then re-validate. Accuracy cannot be calculated.</p>`;
+            noticeHtml = `<p class="validation-notice fail">${Text(`Insufficient valid gaze data (${validPoints.length}/5 targets). Face the camera with both eyes visible, then re-validate. Accuracy cannot be calculated.`, `有效眼動資料不足（${validPoints.length}/5 個目標）。請面向相機並露出雙眼，再重新驗證；目前無法計算準確率。`)}</p>`;
             actionButtonsHtml = `
-              <button class="primary-button" type="button" data-val-action="recalib">Re-validate</button>
-              <button class="secondary-button" type="button" data-val-action="done">Return to Menu</button>`;
+              <button class="primary-button" type="button" data-val-action="recalib">${Text("Re-validate", "重新驗證")}</button>
+              <button class="secondary-button" type="button" data-val-action="done">${Text("Return to Menu", "返回設定")}</button>`;
           } else if (isCalibrateOnly) {
             if (passed) {
-              noticeHtml = `<p style="color:var(--lime, #63e6ff); font-size:14px; margin-bottom:18px;">Validation passed. Gaze tracking precision verified and ready.</p>`;
+              noticeHtml = `<p class="validation-notice pass">${Text("Validation passed. Gaze tracking is ready.", "驗證通過，眼動追蹤已就緒。")}</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="done">Complete & Return to Menu</button>
-                <button class="secondary-button" type="button" data-val-action="recalib">${"Recalibrate"}</button>`;
+                <button class="primary-button" type="button" data-val-action="done">${Text("Complete & Return to Menu", "完成並返回設定")}</button>
+                <button class="secondary-button" type="button" data-val-action="recalib">${Text("Recalibrate", "重新校正")}</button>`;
             } else {
-              noticeHtml = `<p style="color:#f87171; font-size:14px; margin-bottom:18px;">Average angular error (${meanErrorDeg}°) exceeds target threshold (${PASS_THRESHOLD_DEG}°). Recalibration is recommended.</p>`;
+              noticeHtml = `<p class="validation-notice fail">${Text(`Average angular error (${meanErrorDeg}°) exceeds the validation threshold (${PASS_THRESHOLD_DEG}°). Recalibration is recommended.`, `平均角度誤差（${meanErrorDeg}°）超過驗證門檻（${PASS_THRESHOLD_DEG}°），建議重新校正。`)}</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="recalib">${"Recalibrate"}</button>
-                <button class="secondary-button" type="button" data-val-action="done">Skip & Return to Menu</button>`;
+                <button class="primary-button" type="button" data-val-action="recalib">${Text("Recalibrate", "重新校正")}</button>
+                <button class="secondary-button" type="button" data-val-action="done">${Text("Skip & Return to Menu", "略過並返回設定")}</button>`;
             }
           } else {
             if (passed) {
-              noticeHtml = `<p style="color:var(--lime, #63e6ff); font-size:14px; margin-bottom:18px;">Validation passed. Effective hit threshold: ${thresholdPreview.effectiveDeg}°, including a ${thresholdPreview.allowanceDeg}° ${sourceName} measurement-error allowance where needed. Starting training...</p>`;
+              noticeHtml = `<p class="validation-notice pass">${Text(`Validation passed. Effective hit threshold: ${thresholdPreview.effectiveDeg}°, including a ${thresholdPreview.allowanceDeg}° ${sourceName} measurement-error allowance where needed. Practice starts shortly.`, `驗證通過。當次在標門檻為 ${thresholdPreview.effectiveDeg}°，依原計算納入 ${thresholdPreview.allowanceDeg}° 的 ${sourceName} 誤差容許值。即將開始練習。`)}</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="proceed">Start Training (<span id="val-cd-num">3</span>s)</button>
-                <button class="secondary-button" type="button" data-val-action="recalib">${"Recalibrate"}</button>`;
+                <button class="primary-button" type="button" data-val-action="proceed">${Text("Start Practice", "開始練習")} (<span id="val-cd-num">3</span> ${Text("s", "秒")})</button>
+                <button class="secondary-button" type="button" data-val-action="recalib">${Text("Recalibrate", "重新校正")}</button>`;
             } else {
-              noticeHtml = `<p style="color:#f87171; font-size:14px; margin-bottom:18px;">Validation error higher than recommended (${meanErrorDeg}° > ${PASS_THRESHOLD_DEG}°). You may re-validate or proceed with the effective threshold (${thresholdPreview.effectiveDeg}°).</p>`;
+              noticeHtml = `<p class="validation-notice fail">${Text(`Validation error is higher than recommended (${meanErrorDeg}° > ${PASS_THRESHOLD_DEG}°). You may recalibrate or proceed with the effective threshold (${thresholdPreview.effectiveDeg}°).`, `驗證誤差高於建議值（${meanErrorDeg}° > ${PASS_THRESHOLD_DEG}°）。可重新校正，或以當次在標門檻（${thresholdPreview.effectiveDeg}°）繼續。`)}</p>`;
               actionButtonsHtml = `
-                <button class="primary-button" type="button" data-val-action="recalib">${"Recalibrate"}</button>
-                <button class="secondary-button" type="button" data-val-action="proceed">Proceed Anyway</button>`;
+                <button class="primary-button" type="button" data-val-action="recalib">${Text("Recalibrate", "重新校正")}</button>
+                <button class="secondary-button" type="button" data-val-action="proceed">${Text("Proceed Anyway", "仍要繼續")}</button>`;
             }
           }
 
           displayElement.innerHTML = `
             <div id="webgazer-validate-container">
               <div class="webgazer-validate-card">
-                <p class="eyebrow" style="color:var(--cyan, #63e6ff); text-transform:uppercase; font-size:12px; font-weight:700; letter-spacing:0.08em; margin-bottom:6px;">${sourceName} Validation</p>
-                <h2>Gaze Tracking Accuracy</h2>
-                <p style="margin-bottom:16px;">5-point fixation accuracy assessment completed:</p>
+                <p class="eyebrow">${Text(`${sourceName} Validation`, `${sourceName} 眼動驗證`)}</p>
+                <h2>${Text("Gaze Tracking Accuracy", "眼動追蹤驗證結果")}</h2>
+                <p>${Text("Five-point gaze validation completed:", "五點眼動驗證已完成：")}</p>
                 ${noticeHtml}
                 <div class="webgazer-validate-stat-grid">
                   <div class="webgazer-validate-stat-item">
-                    <span class="webgazer-validate-stat-label">Mean Angular Error</span>
+                    <p class="webgazer-validate-stat-label">${Text("Mean Angular Error", "平均角度誤差")}</p>
                     <span class="webgazer-validate-stat-value ${passed ? "pass" : "fail"}">${meanErrorDeg === null ? "N/A" : meanErrorDeg + "°"}</span>
                   </div>
                   <div class="webgazer-validate-stat-item">
-                    <span class="webgazer-validate-stat-label">Effective Hit Threshold (includes ${thresholdPreview.allowanceDeg}° allowance)</span>
+                    <p class="webgazer-validate-stat-label">${Text(`Effective Hit Threshold (includes ${thresholdPreview.allowanceDeg}° allowance)`, `當次在標門檻（含 ${thresholdPreview.allowanceDeg}° 誤差容許值）`)}</p>
                     <span class="webgazer-validate-stat-value ${hasEnoughData ? "pass" : "fail"}">${hasEnoughData ? `${thresholdPreview.effectiveDeg}° (${effectiveThresholdArcmin}')` : "N/A"}</span>
                   </div>
                   <div class="webgazer-validate-stat-item">
-                    <span class="webgazer-validate-stat-label">Accuracy Status</span>
-                    <span class="webgazer-validate-stat-value ${passed ? "pass" : "fail"}">${passed ? "Passed" : "Needs Attention"}</span>
+                    <p class="webgazer-validate-stat-label">${Text("Accuracy Status", "驗證狀態")}</p>
+                    <span class="webgazer-validate-stat-value ${passed ? "pass" : "fail"}">${passed ? Text("Passed", "通過") : Text("Needs Attention", "請留意")}</span>
                   </div>
                 </div>
 
-                <div style="font-size:13px; color:var(--muted, #94a3b8); margin-bottom:24px; background:rgba(255,255,255,0.03); padding:10px 14px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
-                  <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
-                    <span>Center: <strong>${pointResults[0]?.distDeg != null ? pointResults[0].distDeg + "°" : "No data"}</strong></span>
-                    <span>Top-Left: <strong>${pointResults[1]?.distDeg != null ? pointResults[1].distDeg + "°" : "No data"}</strong></span>
-                    <span>Top-Right: <strong>${pointResults[2]?.distDeg != null ? pointResults[2].distDeg + "°" : "No data"}</strong></span>
-                  </div>
-                  <div style="display:flex; justify-content:space-between; padding:4px 0;">
-                    <span>Bottom-Left: <strong>${pointResults[3]?.distDeg != null ? pointResults[3].distDeg + "°" : "No data"}</strong></span>
-                    <span>Bottom-Right: <strong>${pointResults[4]?.distDeg != null ? pointResults[4].distDeg + "°" : "No data"}</strong></span>
-                    <span></span>
-                  </div>
-                </div>
+                <dl class="webgazer-validate-points">${[
+                  Text("Center", "中央"), Text("Top-Left", "左上"), Text("Top-Right", "右上"), Text("Bottom-Left", "左下"), Text("Bottom-Right", "右下")
+                ].map((label, index) => `<div><dt>${label}</dt><dd>${pointResults[index]?.distDeg != null ? pointResults[index].distDeg + "°" : Text("No data", "無資料")}</dd></div>`).join("")}</dl>
 
                 <div class="webgazer-validate-actions">
                   ${actionButtonsHtml}
@@ -1257,9 +1261,9 @@
         const frameCoordinates = [];
 
         displayElement.innerHTML = `
-          <section id="training-stage" class="training-stage" role="application" aria-label="${module.code} ${module.name} training in progress">
+          <section id="training-stage" class="training-stage" role="application" aria-label="${Text(`${module.code} practice in progress`, `${module.code} 練習進行中`)}">
             <div id="training-stimulus" class="stimulus"><span id="stimulus-number" class="stimulus-number"></span></div>
-            <span class="sr-only">Training has started. Press Escape to stop.</span>
+            <span class="sr-only">${Text("Practice has started. Press Escape to stop.", "練習已開始，按 Esc 停止。")}</span>
           </section>`;
 
         const stage = displayElement.querySelector("#training-stage");
@@ -1951,9 +1955,10 @@
 
   function run(config) {
     if (AppState.pending || !config || typeof config !== "object") return;
+    window.oculomotorLanguage = config.language === "en" ? "en" : "zh";
     const moduleKey = config.module;
     if (!Object.hasOwn(MODULE_DEFAULTS, moduleKey)) {
-      post("oculomotor:error", { message: "Invalid activity mode." });
+      post("oculomotor:error", { message: Text("Invalid activity mode.", "活動模式無效，請重新選擇。") });
       return;
     }
     const settings = {
@@ -1972,19 +1977,18 @@
         .filter((_, index) => config[`axis${index}Enabled`])
     };
     if (moduleKey !== "vor" && !settings.directions.length) {
-      post("oculomotor:error", { message: "Choose at least one direction." });
+      post("oculomotor:error", { message: Text("Choose at least one direction.", "請至少選擇一個方位。") });
       return;
     }
     const source = config.eyeTrackingSource === EYE_SOURCE_WEBGAZER ? EYE_SOURCE_WEBGAZER : EYE_SOURCE_OFF;
     if (source === EYE_SOURCE_WEBGAZER && (!WEBGAZER_COMPONENTS_AVAILABLE || !window.OculomotorInput)) {
-      post("oculomotor:error", { message: "Camera eye tracking is unavailable in this browser." });
+      post("oculomotor:error", { message: Text("Camera eye tracking is unavailable in this browser.", "此瀏覽器無法使用相機眼動追蹤。") });
       return;
     }
     AppState.calibration = createCalibration(config);
     const fitError = targetFitError(moduleKey, settings, AppState.calibration);
     if (fitError) { post("oculomotor:error", { message: fitError }); return; }
     subjectId = "";
-    window.oculomotorLanguage = config.language === "en" ? "en" : "zh";
     AppState.eyeTracking.source = source;
     AppState.eyeTracking.enabled = source === EYE_SOURCE_WEBGAZER;
     AppState.eyeTracking.calibrationRequested = source === EYE_SOURCE_WEBGAZER;
@@ -2076,6 +2080,12 @@
     post("oculomotor:active");
     const setup = source === EYE_SOURCE_WEBGAZER ? [
       { type: OptionalWebGazerCameraPlugin, on_finish(data) {
+        if (data.ready && AppState.pending && (!AppState.pending.fullscreenEntered || fullscreenElement())) {
+          // Fullscreen dimensions may settle after setup; take the final geometry before any calibration points.
+          AppState.calibration = createCalibration(AppState.pending.calibration);
+          AppState.pending.calibration = AppState.calibration;
+          AppState.pending.setupViewport = currentViewportSignature();
+        }
         if (data.ready && pendingSessionGeometryIsValid()) {
           AppState.eyeTracking.initialized = true;
         } else {
@@ -2120,8 +2130,8 @@
   function targetFitError(moduleKey, settings, calibration) {
     const pixels = currentScreenPixels();
     const size = stimulusPixels(settings.ballArcmin, calibration, pixels);
-    if (moduleKey === "saccade" && (size.width > pixels.width / 3 || size.height > pixels.height / 3)) return "Saccade target is too large for a grid cell.";
-    if (size.width >= pixels.width || size.height >= pixels.height) return "Target is too large for the screen.";
+    if (moduleKey === "saccade" && (size.width > pixels.width / 3 || size.height > pixels.height / 3)) return Text("Saccade target is too large for a grid cell.", "跳視目標超過九宮格可用範圍，請縮小目標。");
+    if (size.width >= pixels.width || size.height >= pixels.height) return Text("Target is too large for the screen.", "目標超過螢幕可用範圍，請縮小目標。");
     return "";
   }
 
