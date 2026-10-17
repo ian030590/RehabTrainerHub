@@ -324,10 +324,11 @@
   "hashes": {
     "models/car.glb": "ee9867fc2208c53376e452d9c6009a8f7dc8b15d10f875d115d15ac6f61135cf",
     "scenes/taipei-xinyi-osm.json": "3da51f885b7686c8563ff280144ea3c33e2eae40d491e9b52060757b3a2a5c15",
-    "hazards/driving-hazards.ts": "5686988268c188e9e89d48d9fb7765ca0897e0cd05e742133c14fdd22fa9e1a0",
+    "hazards/driving-hazards.ts": "9bb1de080547a7414d21ac39fdd03c403fecc594f7547ca533c9631eecb58bf6",
     "timing/driving-timing.ts": "96111f43a5e70d2b3b48dcf0a4d5ddd123adff798e4e23b6425bde864063837c",
     "input/driving-input.ts": "8fe1fd6d355e3efa5b5458fd73f633a2cbdbf37d160a8a0a37f466a5941a4440",
     "camera/driving-camera.ts": "32d4e112cb928dad1b4c8527aad3bffac8b66f6ecf6ab54d52cefba407f2e7c6",
     "rendering/driving-rendering.ts": "a017b6465c365fe8aaa35130621bb599f4573713a4ad51e319ec24c4cf79cd81"
-  }
+  },
+  "textHashNormalization": "CRLF to LF only; binary assets and published package files use exact bytes"
 }

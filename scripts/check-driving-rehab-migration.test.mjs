@@ -58,7 +58,9 @@ test('driving keeps numeric results, unanswered events, zero latency and unfinis
 
 test('original driving physics, input calibration, timing, map and model bytes remain intact', async () => {
   for (const [file, digest] of Object.entries(legacy.hashes)) {
-    assert.equal(createHash('sha256').update(await readFile(resolve(gameRoot, file))).digest('hex'), digest, file);
+    const bytes = await readFile(resolve(gameRoot, file));
+    const content = /\.(ts|json)$/.test(file) ? bytes.toString('utf8').replaceAll('\r\n', '\n') : bytes;
+    assert.equal(createHash('sha256').update(content).digest('hex'), digest, file);
   }
 });
 

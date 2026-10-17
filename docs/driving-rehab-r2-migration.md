@@ -47,6 +47,7 @@
 | 啟動取消未傳 AbortSignal | 取消測量／不重啟場景行為測試通過 |
 | 預設模型貼圖使用 fetch loader | TextureLoader 選擇測試通過，Brave 會將貼圖／模型載入警告視為失敗 |
 | 成績模板殘留理解題標籤 | 雙語成果 render 測試通過，改為事件／閃避／煞車文案 |
+| 首次 Linux CI 272／273：Windows 原碼 CRLF 與 Git LF 摘要不同 | 文字原碼／JSON 僅統一 CRLF→LF 後核對完整摘要；GLB 與公開套件仍逐 byte 比對。沒有修改任何核准遊戲 bytes |
 
 七項 gate、遊戲／Hub／runner build、SEO、共用平台 Brave 與逐遊戲驗收的命令、結果見 [validation-summary.json](migrations/driving-rehab/validation-summary.json)。Brave 使用本機 R2 fixture、真實 Three.js／jsPsych／原生全螢幕，Hub 保存只寫本機 SQLite，不建立正式帳號或紀錄。截圖保留於 `.tmp/driving-rehab-validation/`；示意圖與真實 gameplay 分開驗證。
 
