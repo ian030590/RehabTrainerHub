@@ -1,0 +1,239 @@
+{
+  "checkedAt": "2026-10-17T05:39:45.848Z",
+  "gates": [
+    {
+      "command": "npm run test:naming",
+      "status": "passed",
+      "testCounts": [
+        2
+      ],
+      "logSha256": "444cbb85536e1690c24c110fee388c34fc3af86f02f5a58d2c4f266c8b2c5013"
+    },
+    {
+      "command": "npm run test:pwa",
+      "status": "passed",
+      "testCounts": [
+        18
+      ],
+      "logSha256": "edbd6e1c23372767f8b57e1cefcc40ddc29e9d7d84e4f767f208268c0f1faf90"
+    },
+    {
+      "command": "npm run test:game-architecture",
+      "status": "passed",
+      "testCounts": [
+        197
+      ],
+      "logSha256": "e36477300024aa899e454758192565aa29a8b792a8079d014b7f2da712fa74c9"
+    },
+    {
+      "command": "npm run test:hub-functions",
+      "status": "passed",
+      "testCounts": [
+        121
+      ],
+      "logSha256": "1a3aa704e2201f851f860b0aa9412b683fb8c885b562dfb257aa4456b90260e6"
+    },
+    {
+      "command": "npm run test:gamerunner",
+      "status": "passed",
+      "testCounts": [
+        49
+      ],
+      "logSha256": "5056904cb9eedf155cded1abf6cc9c81f79a29260d31c8920676cc52ca15bbbd"
+    },
+    {
+      "command": "npm run test:entrypoints",
+      "status": "passed",
+      "testCounts": [
+        22,
+        5,
+        15,
+        9,
+        6,
+        18,
+        26
+      ],
+      "logSha256": "8808c4b07bf9b3df0ba85b43a07d0ba5b3f5e526f05fe6d687b70490b038b3e1"
+    },
+    {
+      "command": "npm run test:cloudflare-deploy",
+      "status": "passed",
+      "testCounts": [
+        4
+      ],
+      "logSha256": "9063f46baac687439f8429bbd0e62fd556230ff2c6452a8c5f8f814e8fca9ac7"
+    }
+  ],
+  "builds": [
+    {
+      "command": "npm --prefix apps/rehabtrainerhub/games/gabor-patching run build",
+      "status": "passed"
+    },
+    {
+      "command": "node scripts/publish-official-game.mjs gabor-patching --dry-run",
+      "status": "passed",
+      "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3"
+    },
+    {
+      "command": "npm run build:hub",
+      "status": "passed-in-prior-turn",
+      "scope": "same player-copy changes; before patch version metadata update; R2 game excluded from Hub build"
+    }
+  ],
+  "browsers": [
+    {
+      "id": "hub-desktop",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby",
+      "status": "passed",
+      "realDurationSeconds": 30,
+      "productionAssets": true,
+      "apiWrites": "local SQLite only",
+      "viewport": {
+        "width": 752,
+        "height": 485,
+        "left": 0,
+        "right": 752,
+        "top": 0,
+        "bottom": 485
+      },
+      "logSha256": "d8897485f688e94e7d05bdfc03cf7a5c48be5dd1152a375b35cc86b6cbfbd360",
+      "images": [
+        {
+          "path": "hub-desktop/settings.png",
+          "sha256": "4e100e09d2211f3b2a5895c793013cd1db7ae08b0dd76632f5b1e53e097387f3"
+        },
+        {
+          "path": "hub-desktop/tutorial-score.png",
+          "sha256": "60baaf6429dc7efbaaffdb75a76b1643df95421be22c84d874d7f797fabb9e3b"
+        },
+        {
+          "path": "hub-desktop/results.png",
+          "sha256": "4dd309be633144db9a2ad5051f7afdc2008733a68c26538ffbaf17805d8db508"
+        }
+      ]
+    },
+    {
+      "id": "hub-mobile",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --mobile --medium --session-failure",
+      "status": "passed",
+      "realDurationSeconds": 30,
+      "productionAssets": true,
+      "apiWrites": "local SQLite only",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "left": 0,
+        "right": 390,
+        "top": 0,
+        "bottom": 844
+      },
+      "logSha256": "85e1d85d37bbc053d9b0e8a2a168435373a6e47553c3d2f630389579cbbd2c6c",
+      "images": [
+        {
+          "path": "hub-mobile/settings.png",
+          "sha256": "f41cffe88acdfc6d14308f64cbc34c79458227fdaecfa2472e11a5584285cd80"
+        },
+        {
+          "path": "hub-mobile/tutorial-score.png",
+          "sha256": "6d289e7f162abe4d00a6a5afe47d463c821c4d9194d0d5ccaea6fb196b34f708"
+        },
+        {
+          "path": "hub-mobile/results.png",
+          "sha256": "bf3e15d0e7471a0ebab26a0b485f1f2dd56d8d2e9a2f2d1784bedbbb2b355dae"
+        }
+      ]
+    },
+    {
+      "id": "hub-english",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --signed-in --english --hard --sound-on",
+      "status": "passed",
+      "realDurationSeconds": 30,
+      "productionAssets": true,
+      "apiWrites": "local SQLite only",
+      "viewport": {
+        "width": 752,
+        "height": 485,
+        "left": 0,
+        "right": 752,
+        "top": 0,
+        "bottom": 485
+      },
+      "logSha256": "8a6c2879bb3e3d9e3d3318c1c5095103f2affa6aa7a7dae7c334b3fa8f29b4a4",
+      "images": [
+        {
+          "path": "hub-english/settings.png",
+          "sha256": "eec339b63ba21e03cd5ea56eea4c25ad79c57920978ff1cd17619b53e6ad19c0"
+        },
+        {
+          "path": "hub-english/tutorial-score.png",
+          "sha256": "a5ef96d612f0ff38a86dc323bd271b96a487ea712c09c4542505f28e5b8ab9a8"
+        },
+        {
+          "path": "hub-english/results.png",
+          "sha256": "678f7adb02011a76e259bc4f490783b4155ec65d13641178f951f12831e8dab3"
+        }
+      ]
+    },
+    {
+      "id": "pwa-mobile",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --remote --standalone --mobile --medium",
+      "status": "passed",
+      "realDurationSeconds": 30,
+      "productionAssets": true,
+      "apiWrites": "local SQLite only",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "left": 0,
+        "right": 390,
+        "top": 0,
+        "bottom": 844
+      },
+      "logSha256": "c921049b80f7caaaadd92512eca3c4fa65f367825fb12beefc46699c3b031023",
+      "images": [
+        {
+          "path": "pwa-mobile/settings.png",
+          "sha256": "efc9565e9a5aba1921023315637da4bb86b87b850073fe2830cba3d83e339f0e"
+        },
+        {
+          "path": "pwa-mobile/tutorial-score.png",
+          "sha256": "75f3945ac54c1eb82b49eeb26dd0441adcddd0f0efde74098888867305fb78e8"
+        },
+        {
+          "path": "pwa-mobile/results.png",
+          "sha256": "b70c0f287fdc1b2d4cdc3483422cfcba8d4d0060d0386b37f4efd9ce9c619aa3"
+        }
+      ]
+    }
+  ],
+  "publicFilesVerified": 5,
+  "currentSessionApi": {
+    "status": 201,
+    "version": "2.0.1",
+    "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3",
+    "stateless": true,
+    "tokenRecorded": false,
+    "recordIdRecorded": false,
+    "subjectIdRecorded": false
+  },
+  "pwa": {
+    "status": 302,
+    "location": "/games/gabor-patching/2.0.1/",
+    "cacheControl": "no-store"
+  },
+  "otherSixGamesUnchanged": true,
+  "tdd": {
+    "red": "Existing package metadata test expected 2.0.1 while source package was 2.0.0; 1 failed as expected",
+    "green": "Updated game package and matching lockfile version; same metadata test passed, followed by all 197 architecture tests",
+    "copyAcceptance": "Before: tutorial/results include activity-record/clinical and internal-preview explanations. After: both language screenshots contain gameplay and scoring only; published JavaScript checked for removed wording."
+  },
+  "environmentRetries": [
+    "Runner gate initially hit esbuild sandbox read denial; same command passed outside sandbox",
+    "Read-only Cloudflare preflight initially returned 403; existing Wrangler OAuth refreshed by whoami and preflight passed"
+  ],
+  "documentation": "docs/gabor-patching-player-copy-2.0.1.md",
+  "evidence": "docs/migrations/gabor-patching-player-copy-2.0.1/production-verification.json",
+  "gameId": "gabor-patching",
+  "version": "2.0.1",
+  "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3"
+}

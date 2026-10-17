@@ -1,5 +1,7 @@
 # 蓋伯斑塊練習 R2 搬遷與發布
 
+目前 current 為玩家文案版 `2.0.1`（2026-10-17）：依「核准發佈」移除中英文教學／成果的活動紀錄、非臨床量測與內部實作說明。五檔精確摘要、七項本機 gate、正式 API／session／公開 bytes 與桌機／手機／英文登入／手機 PWA 四個完整流程通過；未部署平台，`2.0.0` 已逐檔核對回退。詳見 [2.0.1 發布紀錄](gabor-patching-player-copy-2.0.1.md) 與 [正式收據](releases/gabor-patching-2.0.1.json)。以下為首次遷移的歷史紀錄。
+
 2026-10-17：擁有者以「也核准gabor-patching，請同步幫我上傳」核准既有 `gabor-patching@2.0.0` 精確摘要。已發布 R2／切換 current，正式 API、五個公開檔案、桌機／手機／平板／英文登入／獨立 PWA 驗收通過；正式為七款 R2、33 款舊流程。完整核准與證據見 [正式收據](releases/gabor-patching-2.0.0.json)及[驗證摘要](migrations/gabor-patching/validation-summary.json)。此次沒有變更產品程式、重新部署平台或建立正式訓練紀錄。
 
 2026-10-13 的 A–D 本機候選與當時六款／34 款平台基準保留於下文；2026-10-17 完成 E／F，不能再把候選時的數量當作目前狀態。

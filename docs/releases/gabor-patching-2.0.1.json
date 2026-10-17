@@ -1,0 +1,411 @@
+{
+  "schemaVersion": 1,
+  "gameId": "gabor-patching",
+  "version": "2.0.1",
+  "status": "published-and-verified",
+  "bucket": "rehab-game-releases",
+  "prefix": "releases/gabor-patching/2.0.1/",
+  "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3",
+  "files": [
+    {
+      "path": "assets/index-Cx5LL7wT.js",
+      "size": 1137879,
+      "sha256": "ab50fc2e3e8f65b3a8f133477c355a6a525c4c7ef12af7aea696f7e08d6460e4",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-LYCjcFSc.css",
+      "size": 17208,
+      "sha256": "23020620a043a65dc28d6fbd514dd780f88b6d36fedd81609afc542e70496e6e",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 508,
+      "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "192100df7d73dc96212381cda876de962a3a0a16f67123a1ef18ddbe50b5149e",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 1368,
+      "sha256": "b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8",
+      "contentType": "image/webp"
+    }
+  ],
+  "totalBytes": 1157371,
+  "currentVersion": "2.0.1",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a"
+    },
+    "2.0.1": {
+      "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Codex conversation",
+    "message": "核准發佈",
+    "approvedAt": "2026-10-17T05:37:08.635Z",
+    "gameId": "gabor-patching",
+    "version": "2.0.1",
+    "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3",
+    "scope": "Publish the reviewed bilingual Gabor player-copy cleanup; create patch version and verify production. No platform deployment or Git push."
+  },
+  "publishedAt": "2026-10-17T05:37:45.225Z",
+  "productionVerifiedAt": "2026-10-17T05:38:00.900Z",
+  "changes": [
+    "Remove activity-record and clinical-measurement boilerplate from Chinese and English tutorial/results",
+    "Remove internal preview-texture implementation detail and redundant session-only settings text",
+    "Keep instructions, weighted scoring, settings, numeric outcomes and save/retry status unchanged"
+  ],
+  "sourceBaseCommit": "5c49b9f046751c343a4ba74d0b9cab505765a64f",
+  "sourceSnapshot": [
+    {
+      "path": "apps/rehabtrainerhub/games/gabor-patching/GaborPatchingGame.tsx",
+      "sha256": "39e7d7d253e376e7833b7f629718f5c51e72c2bc1b45627750f0a7a65ec8683e"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/gabor-patching/rules/tutorialSteps.ts",
+      "sha256": "7481e1735414ec97d3cb631832dd56bffa77bab7f70c513cd52d49f6f40c1446"
+    },
+    {
+      "path": "apps/rehabtrainerhub/games/gabor-patching/package.json",
+      "sha256": "4180fea23e90d6e85d9285ed4ead077eff430f28e275b9d1507616f62744ea66"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "149c24d9c863c27af058b3629cb0db8723534babfda6d04544808a0607eebbf0"
+    },
+    {
+      "path": "scripts/check-gabor-patching-migration.test.mjs",
+      "sha256": "e743be54d95a57ed4d3a7ca8ac84a4fa8fc91596f0411044dffe9f9f34739684"
+    }
+  ],
+  "git": {
+    "branch": "fix/oculomotor-2.1.1",
+    "pushAuthorized": true,
+    "authorizationMessage": "git 推送出去",
+    "productionBranchTouched": false
+  },
+  "platformDeployed": false,
+  "platformBefore": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "4bdef687-cef7-4b92-a8cf-fa801f4ca6a2",
+      "url": "https://4bdef687.rehabtrainerhub.pages.dev",
+      "environment": "production",
+      "commit": "9ae05614c752b5174fabf1c4573780e7c3c9bb36"
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "2af33d05-6648-4aef-b806-cbacef7e4266",
+      "url": "https://2af33d05.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "9ae05614c752b5174fabf1c4573780e7c3c9bb36"
+    }
+  ],
+  "platformAfter": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "4bdef687-cef7-4b92-a8cf-fa801f4ca6a2",
+      "url": "https://4bdef687.rehabtrainerhub.pages.dev",
+      "environment": "production",
+      "commit": "9ae05614c752b5174fabf1c4573780e7c3c9bb36"
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "2af33d05-6648-4aef-b806-cbacef7e4266",
+      "url": "https://2af33d05.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "9ae05614c752b5174fabf1c4573780e7c3c9bb36"
+    }
+  ],
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a",
+    "files": [
+      {
+        "path": "assets/index-B9bAahRo.js",
+        "size": 1138226,
+        "sha256": "9957ba678e5720ff5d69ca95a9ae826ea30cb3cce9474ee03573bfc30ca5633a",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-LYCjcFSc.css",
+        "size": 17208,
+        "sha256": "23020620a043a65dc28d6fbd514dd780f88b6d36fedd81609afc542e70496e6e",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "size": 508,
+        "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "size": 408,
+        "sha256": "e1d70a0baf9f1830aa3e85f13531f6e8c8d2065666fb17a0898e13052cec339b",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "size": 1368,
+        "sha256": "b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8",
+        "contentType": "image/webp"
+      }
+    ],
+    "verifiedAt": "2026-10-17T05:37:08.638Z",
+    "executed": false,
+    "command": "node scripts/publish-official-game.mjs gabor-patching --activate-version 2.0.0"
+  },
+  "validation": {
+    "gates": [
+      {
+        "command": "npm run test:naming",
+        "status": "passed",
+        "testCounts": [
+          2
+        ],
+        "logSha256": "444cbb85536e1690c24c110fee388c34fc3af86f02f5a58d2c4f266c8b2c5013"
+      },
+      {
+        "command": "npm run test:pwa",
+        "status": "passed",
+        "testCounts": [
+          18
+        ],
+        "logSha256": "edbd6e1c23372767f8b57e1cefcc40ddc29e9d7d84e4f767f208268c0f1faf90"
+      },
+      {
+        "command": "npm run test:game-architecture",
+        "status": "passed",
+        "testCounts": [
+          197
+        ],
+        "logSha256": "e36477300024aa899e454758192565aa29a8b792a8079d014b7f2da712fa74c9"
+      },
+      {
+        "command": "npm run test:hub-functions",
+        "status": "passed",
+        "testCounts": [
+          121
+        ],
+        "logSha256": "1a3aa704e2201f851f860b0aa9412b683fb8c885b562dfb257aa4456b90260e6"
+      },
+      {
+        "command": "npm run test:gamerunner",
+        "status": "passed",
+        "testCounts": [
+          49
+        ],
+        "logSha256": "5056904cb9eedf155cded1abf6cc9c81f79a29260d31c8920676cc52ca15bbbd"
+      },
+      {
+        "command": "npm run test:entrypoints",
+        "status": "passed",
+        "testCounts": [
+          22,
+          5,
+          15,
+          9,
+          6,
+          18,
+          26
+        ],
+        "logSha256": "8808c4b07bf9b3df0ba85b43a07d0ba5b3f5e526f05fe6d687b70490b038b3e1"
+      },
+      {
+        "command": "npm run test:cloudflare-deploy",
+        "status": "passed",
+        "testCounts": [
+          4
+        ],
+        "logSha256": "9063f46baac687439f8429bbd0e62fd556230ff2c6452a8c5f8f814e8fca9ac7"
+      }
+    ],
+    "builds": [
+      {
+        "command": "npm --prefix apps/rehabtrainerhub/games/gabor-patching run build",
+        "status": "passed"
+      },
+      {
+        "command": "node scripts/publish-official-game.mjs gabor-patching --dry-run",
+        "status": "passed",
+        "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3"
+      },
+      {
+        "command": "npm run build:hub",
+        "status": "passed-in-prior-turn",
+        "scope": "same player-copy changes; before patch version metadata update; R2 game excluded from Hub build"
+      }
+    ],
+    "browsers": [
+      {
+        "id": "hub-desktop",
+        "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby",
+        "status": "passed",
+        "realDurationSeconds": 30,
+        "productionAssets": true,
+        "apiWrites": "local SQLite only",
+        "viewport": {
+          "width": 752,
+          "height": 485,
+          "left": 0,
+          "right": 752,
+          "top": 0,
+          "bottom": 485
+        },
+        "logSha256": "d8897485f688e94e7d05bdfc03cf7a5c48be5dd1152a375b35cc86b6cbfbd360",
+        "images": [
+          {
+            "path": "hub-desktop/settings.png",
+            "sha256": "4e100e09d2211f3b2a5895c793013cd1db7ae08b0dd76632f5b1e53e097387f3"
+          },
+          {
+            "path": "hub-desktop/tutorial-score.png",
+            "sha256": "60baaf6429dc7efbaaffdb75a76b1643df95421be22c84d874d7f797fabb9e3b"
+          },
+          {
+            "path": "hub-desktop/results.png",
+            "sha256": "4dd309be633144db9a2ad5051f7afdc2008733a68c26538ffbaf17805d8db508"
+          }
+        ]
+      },
+      {
+        "id": "hub-mobile",
+        "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --mobile --medium --session-failure",
+        "status": "passed",
+        "realDurationSeconds": 30,
+        "productionAssets": true,
+        "apiWrites": "local SQLite only",
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "left": 0,
+          "right": 390,
+          "top": 0,
+          "bottom": 844
+        },
+        "logSha256": "85e1d85d37bbc053d9b0e8a2a168435373a6e47553c3d2f630389579cbbd2c6c",
+        "images": [
+          {
+            "path": "hub-mobile/settings.png",
+            "sha256": "f41cffe88acdfc6d14308f64cbc34c79458227fdaecfa2472e11a5584285cd80"
+          },
+          {
+            "path": "hub-mobile/tutorial-score.png",
+            "sha256": "6d289e7f162abe4d00a6a5afe47d463c821c4d9194d0d5ccaea6fb196b34f708"
+          },
+          {
+            "path": "hub-mobile/results.png",
+            "sha256": "bf3e15d0e7471a0ebab26a0b485f1f2dd56d8d2e9a2f2d1784bedbbb2b355dae"
+          }
+        ]
+      },
+      {
+        "id": "hub-english",
+        "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --signed-in --english --hard --sound-on",
+        "status": "passed",
+        "realDurationSeconds": 30,
+        "productionAssets": true,
+        "apiWrites": "local SQLite only",
+        "viewport": {
+          "width": 752,
+          "height": 485,
+          "left": 0,
+          "right": 752,
+          "top": 0,
+          "bottom": 485
+        },
+        "logSha256": "8a6c2879bb3e3d9e3d3318c1c5095103f2affa6aa7a7dae7c334b3fa8f29b4a4",
+        "images": [
+          {
+            "path": "hub-english/settings.png",
+            "sha256": "eec339b63ba21e03cd5ea56eea4c25ad79c57920978ff1cd17619b53e6ad19c0"
+          },
+          {
+            "path": "hub-english/tutorial-score.png",
+            "sha256": "a5ef96d612f0ff38a86dc323bd271b96a487ea712c09c4542505f28e5b8ab9a8"
+          },
+          {
+            "path": "hub-english/results.png",
+            "sha256": "678f7adb02011a76e259bc4f490783b4155ec65d13641178f951f12831e8dab3"
+          }
+        ]
+      },
+      {
+        "id": "pwa-mobile",
+        "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --remote --standalone --mobile --medium",
+        "status": "passed",
+        "realDurationSeconds": 30,
+        "productionAssets": true,
+        "apiWrites": "local SQLite only",
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "left": 0,
+          "right": 390,
+          "top": 0,
+          "bottom": 844
+        },
+        "logSha256": "c921049b80f7caaaadd92512eca3c4fa65f367825fb12beefc46699c3b031023",
+        "images": [
+          {
+            "path": "pwa-mobile/settings.png",
+            "sha256": "efc9565e9a5aba1921023315637da4bb86b87b850073fe2830cba3d83e339f0e"
+          },
+          {
+            "path": "pwa-mobile/tutorial-score.png",
+            "sha256": "75f3945ac54c1eb82b49eeb26dd0441adcddd0f0efde74098888867305fb78e8"
+          },
+          {
+            "path": "pwa-mobile/results.png",
+            "sha256": "b70c0f287fdc1b2d4cdc3483422cfcba8d4d0060d0386b37f4efd9ce9c619aa3"
+          }
+        ]
+      }
+    ],
+    "publicFilesVerified": 5,
+    "currentSessionApi": {
+      "status": 201,
+      "version": "2.0.1",
+      "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3",
+      "stateless": true,
+      "tokenRecorded": false,
+      "recordIdRecorded": false,
+      "subjectIdRecorded": false
+    },
+    "pwa": {
+      "status": 302,
+      "location": "/games/gabor-patching/2.0.1/",
+      "cacheControl": "no-store"
+    },
+    "otherSixGamesUnchanged": true,
+    "tdd": {
+      "red": "Existing package metadata test expected 2.0.1 while source package was 2.0.0; 1 failed as expected",
+      "green": "Updated game package and matching lockfile version; same metadata test passed, followed by all 197 architecture tests",
+      "copyAcceptance": "Before: tutorial/results include activity-record/clinical and internal-preview explanations. After: both language screenshots contain gameplay and scoring only; published JavaScript checked for removed wording."
+    },
+    "environmentRetries": [
+      "Runner gate initially hit esbuild sandbox read denial; same command passed outside sandbox",
+      "Read-only Cloudflare preflight initially returned 403; existing Wrangler OAuth refreshed by whoami and preflight passed"
+    ],
+    "documentation": "docs/gabor-patching-player-copy-2.0.1.md",
+    "evidence": "docs/migrations/gabor-patching-player-copy-2.0.1/production-verification.json"
+  },
+  "officialCount": 7,
+  "legacyGamesInHubBuild": 33,
+  "productionRecordsCreated": false,
+  "limits": [
+    "Mobile uses Brave emulation; physical touch, speaker output and Safari/iOS were not validated",
+    "PWA scope and cached assets verified; long-duration full offline training was not tested"
+  ]
+}

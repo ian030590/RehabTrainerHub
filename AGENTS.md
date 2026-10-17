@@ -9,6 +9,8 @@
 
 ## 專案結構與模組組織
 
+蓋伯斑塊目前 current 為 `2.0.1` 玩家文案版（2026-10-17），依「核准發佈」發布精確五檔／`contentSha256: af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3`。移除中英文教學／成果的活動紀錄、非臨床量測、內部圖樣實作與冗餘設定說明；玩法、計分、完整成果與保存提示保留。七項本機 gate、正式 API／session／公開 bytes 與桌機／手機／英文登入／手機 PWA 四個完整流程通過；未部署 Hub／runner、未建正式紀錄，其他六款版本不變。後續依「git 推送出去」以 `fix/oculomotor-2.1.1` 專用分支交付，避免 `main` 的完整 Pages 部署。`2.0.0` 五檔已回讀核對為回退版，未實際回退；見 `docs/gabor-patching-player-copy-2.0.1.md` 與 `docs/releases/gabor-patching-2.0.1.json`。
+
 眼動練習目前 current 為 `2.1.1`，已於 2026-10-17 依「核准新的版本並git push到遠端」核准精確 11 檔／`contentSha256: 53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3`，發布 R2 並完成正式 API／session／公開 bytes／六個 Hub／PWA 流程；未部署 Hub／runner，未建正式訓練紀錄，`2.1.0` 已核對回退。保留寬高獨立換算，比例填錯會變形，同倍率填錯仍圓但尺寸錯誤，全部 22 段原碼摘要保留。3:2 測試重現可見區 1440×960、隔離 `screen` 卻回報 1280×800，故全螢幕採實際顯示區；開始校正前重取穩定尺寸，校正途中變動仍失效。補齊即時狀態／置中／中英驗證／Accuracy 與 TFF 優先成果。七項 gate、八個本機及六個正式瀏覽器流程、15 欄私人 R2／25 欄下載差異、既有 238 筆 CSV metadata 與硬體限制見 `docs/oculomotor-display-feedback-2.1.1.md`、`docs/releases/oculomotor-training-2.1.1.json`；尚未實測使用者筆電或讀取私人座標內容。Git 交付使用 `fix/oculomotor-2.1.1` 專用分支，避免 `main` 的完整 Pages 部署。
 
 目前正式為七款 R2／33 款舊流程，蓋伯已在本回合另行核准、發布及驗收。先前 `main@9ae0561` 自動部署已提前帶入 Gabor registry，造成眼動 `2.1.1` 發布時 Gabor 舊資產 410、新 current 尚缺的狀態；本次核准 R2 發布後，既有 Hub 已可啟動蓋伯，舊 `settings.json` 維持預期的 410。未重部署或回退平台，眼動 current 仍 `2.1.1`。以下各版本「六款／34 款」為當時歷史數量，目前狀態以本段與蓋伯正式收據為準。

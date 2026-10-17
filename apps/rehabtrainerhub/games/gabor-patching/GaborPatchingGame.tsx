@@ -136,7 +136,6 @@ export function GaborPatchingGame() {
         <header className="training-config-header"><h2>{title}</h2></header>
         <div className="training-config-body">
           <section className="training-setting"><h3>{en ? 'Stimulus settings' : '刺激設定'}</h3>
-            <p>{en ? 'These values apply only to this session.' : '設定值只用於這次活動。'}</p>
             {error && <p className="renderer-error" role="alert">{en ? 'The game could not load. Retry to continue.' : '遊戲無法載入，請重試。'}
               <button type="button" onClick={() => setError(false)}>{en ? 'Retry' : '重試'}</button></p>}
             <label>{en ? 'Target lifetime and spawn probability' : '目標存續與生成機率'}<select name="difficulty" value={settings.difficulty}
@@ -160,7 +159,7 @@ export function GaborPatchingGame() {
     {phase === 'running' && <><div id="jspsych-target" className="gabor-patching-experiment" />
       <button type="button" className="gabor-patching-stop" onClick={exit}>{en ? 'Stop training' : '停止訓練'}</button></>}
     {phase === 'results' && <div className="experiment-container results-container"><section className="experiment-results">
-      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title} · {en ? 'Earlier clicks earn more points. These are activity records.' : '越早點擊得分越高；成果為活動紀錄。'}</p></header>
+      <header className="score-header"><h1>{en ? 'Training results' : '訓練成果'}</h1><p>{title} · {en ? 'Earlier clicks earn more points.' : '越早點擊得分越高。'}</p></header>
       <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
         <div className="score-key-metric"><p>{en ? 'Weighted points' : '加權積分'}</p><strong>{score.summary.score ?? '—'}</strong></div>
         <div className="score-key-metric"><p>{en ? 'Targets clicked' : '點擊目標數'}</p><strong>{score.summary.hits ?? '—'}</strong></div>

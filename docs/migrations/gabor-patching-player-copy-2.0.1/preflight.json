@@ -1,0 +1,145 @@
+{
+  "checkedAt": "2026-10-17T05:37:08.638Z",
+  "currentBefore": {
+    "schemaVersion": 1,
+    "gameId": "gabor-patching",
+    "currentVersion": "2.0.0",
+    "releases": {
+      "2.0.0": {
+        "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a"
+      }
+    }
+  },
+  "rollback": {
+    "version": "2.0.0",
+    "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a",
+    "files": [
+      {
+        "path": "assets/index-B9bAahRo.js",
+        "size": 1138226,
+        "sha256": "9957ba678e5720ff5d69ca95a9ae826ea30cb3cce9474ee03573bfc30ca5633a",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-LYCjcFSc.css",
+        "size": 17208,
+        "sha256": "23020620a043a65dc28d6fbd514dd780f88b6d36fedd81609afc542e70496e6e",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "size": 508,
+        "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "size": 408,
+        "sha256": "e1d70a0baf9f1830aa3e85f13531f6e8c8d2065666fb17a0898e13052cec339b",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "size": 1368,
+        "sha256": "b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8",
+        "contentType": "image/webp"
+      }
+    ],
+    "verifiedAt": "2026-10-17T05:37:08.638Z",
+    "executed": false
+  },
+  "platforms": [
+    {
+      "project": "rehabtrainerhub",
+      "id": "4bdef687-cef7-4b92-a8cf-fa801f4ca6a2",
+      "url": "https://4bdef687.rehabtrainerhub.pages.dev",
+      "environment": "production",
+      "commit": "9ae05614c752b5174fabf1c4573780e7c3c9bb36"
+    },
+    {
+      "project": "trainerhub-user-games",
+      "id": "2af33d05-6648-4aef-b806-cbacef7e4266",
+      "url": "https://2af33d05.trainerhub-user-games.pages.dev",
+      "environment": "production",
+      "commit": "9ae05614c752b5174fabf1c4573780e7c3c9bb36"
+    }
+  ],
+  "catalog": {
+    "status": 200,
+    "game": {
+      "id": "gabor-patching",
+      "slug": "gabor-patching",
+      "title": "蓋伯斑塊練習",
+      "summary": "尋找逐漸浮現的蓋伯斑塊，練習對比辨識與視覺反應。",
+      "trainer": "vision",
+      "category": "vision",
+      "developerName": "居家訓練網",
+      "updatedAt": "2026-10-17T04:48:19.211Z",
+      "copy": {
+        "zh-TW": {
+          "title": "蓋伯斑塊練習",
+          "description": "尋找逐漸浮現的蓋伯斑塊，練習對比辨識與視覺反應。"
+        },
+        "en": {
+          "title": "Gabor Patching",
+          "description": "Find emerging Gabor patches to practise contrast recognition and visual response."
+        }
+      },
+      "previewUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.0/package/preview.webp",
+      "release": {
+        "id": "gabor-patching@2.0.0",
+        "version": "2.0.0",
+        "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a",
+        "capabilities": [
+          "audio",
+          "fullscreen",
+          "keyboard",
+          "pointer",
+          "touch"
+        ],
+        "approvedAt": "2026-10-17T04:48:19.211Z",
+        "presentation": "game",
+        "launchUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.0/",
+        "installUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/"
+      }
+    },
+    "official": [
+      {
+        "slug": "asteroid-shield",
+        "version": "2.0.9",
+        "contentSha256": "ed8c281dc4f599bffb25fdf609dfb6051c09e050cbc349499649a49ff3477abe"
+      },
+      {
+        "slug": "drawing-defense",
+        "version": "2.0.6",
+        "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f"
+      },
+      {
+        "slug": "gabor-patching",
+        "version": "2.0.0",
+        "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a"
+      },
+      {
+        "slug": "gesture-battler",
+        "version": "2.0.4",
+        "contentSha256": "a085169bab352192503c0050e7bdfe8780514bcedb5172b518cdcf13499b8e6e"
+      },
+      {
+        "slug": "motor-cortex-rehab",
+        "version": "2.0.2",
+        "contentSha256": "a3383733227715bc748ff49e9c034c31813e17c75e465823acf53f1e10b6af46"
+      },
+      {
+        "slug": "moving-card",
+        "version": "2.0.2",
+        "contentSha256": "8f683247f3abec9b7c39a68fbf98359d20250acf907db4b4c54c6cc1dda86fb2"
+      },
+      {
+        "slug": "oculomotor-training",
+        "version": "2.1.1",
+        "contentSha256": "53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3"
+      }
+    ]
+  },
+  "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3"
+}

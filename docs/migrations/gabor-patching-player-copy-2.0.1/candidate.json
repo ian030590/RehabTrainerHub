@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "gameId": "gabor-patching",
+  "version": "2.0.1",
+  "name": "蓋伯斑塊練習",
+  "description": "尋找逐漸浮現的蓋伯斑塊，練習對比辨識與視覺反應。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/index-Cx5LL7wT.js",
+      "size": 1137879,
+      "sha256": "ab50fc2e3e8f65b3a8f133477c355a6a525c4c7ef12af7aea696f7e08d6460e4",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-LYCjcFSc.css",
+      "size": 17208,
+      "sha256": "23020620a043a65dc28d6fbd514dd780f88b6d36fedd81609afc542e70496e6e",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 508,
+      "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "192100df7d73dc96212381cda876de962a3a0a16f67123a1ef18ddbe50b5149e",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 1368,
+      "sha256": "b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8",
+      "contentType": "image/webp"
+    }
+  ],
+  "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3",
+  "approvedAt": "2026-10-17T05:37:03.652Z",
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Codex conversation",
+    "message": "核准發佈",
+    "approvedAt": "2026-10-17T05:37:08.635Z",
+    "gameId": "gabor-patching",
+    "version": "2.0.1",
+    "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3",
+    "scope": "Publish the reviewed bilingual Gabor player-copy cleanup; create patch version and verify production. No platform deployment or Git push."
+  }
+}
