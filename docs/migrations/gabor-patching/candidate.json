@@ -2,8 +2,8 @@
   "gameId": "gabor-patching",
   "version": "2.0.0",
   "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a",
-  "reviewStatus": "pending-owner-approval",
-  "publicationStatus": "not-published",
+  "reviewStatus": "owner-approved",
+  "publicationStatus": "published-and-verified",
   "sourceBaselineCommit": "51018eed98339cc14a9d58278e11f79db043ecd6",
   "presentation": "game",
   "capabilities": [
@@ -56,7 +56,20 @@
       "patchRecords": 3488,
       "truncated": false
     },
-    "productionAccepted": false,
-    "localDatabaseOnly": true
-  }
+    "productionAccepted": true,
+    "localDatabaseOnly": true,
+    "finalValidation": "validation-summary.json"
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Codex conversation",
+    "message": "也核准gabor-patching，請同步幫我上傳",
+    "approvedAt": "2026-10-17T04:48:04.522Z",
+    "gameId": "gabor-patching",
+    "version": "2.0.0",
+    "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a",
+    "scope": "Publish the existing reviewed exact Gabor candidate to R2, verify production and push release evidence"
+  },
+  "publishedAt": "2026-10-17T04:48:42.588Z",
+  "productionVerifiedAt": "2026-10-17T04:55:21.230Z"
 }

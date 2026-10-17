@@ -1,0 +1,28 @@
+{
+  "id": "english-account-audio-retry",
+  "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --signed-in --english --hard --sound-on --renderer-failure",
+  "status": "passed",
+  "localFixture": false,
+  "realDurationSeconds": 30,
+  "cleanupOnly": false,
+  "viewport": {
+    "width": 752,
+    "height": 485,
+    "left": 0,
+    "right": 752,
+    "top": 0,
+    "bottom": 485
+  },
+  "images": [
+    {
+      "path": "production/english-account-audio-retry/renderer-failure.png",
+      "sha256": "6718ce63b79717a6cf974453e58eb5693757986e209f1ffa2c0e78c30aa61219"
+    },
+    {
+      "path": "production/english-account-audio-retry/results.png",
+      "sha256": "810538184584d4382eec923397697c32afd89ccaf1de0ef84492205c7267b721"
+    }
+  ],
+  "logSha256": "1ea69443fc9b33308283fd2c838f5cc0e80c49b5942eec626961e43e927769e3",
+  "productionRecordsCreated": false
+}

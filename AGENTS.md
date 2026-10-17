@@ -11,11 +11,11 @@
 
 眼動練習目前 current 為 `2.1.1`，已於 2026-10-17 依「核准新的版本並git push到遠端」核准精確 11 檔／`contentSha256: 53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3`，發布 R2 並完成正式 API／session／公開 bytes／六個 Hub／PWA 流程；未部署 Hub／runner，未建正式訓練紀錄，`2.1.0` 已核對回退。保留寬高獨立換算，比例填錯會變形，同倍率填錯仍圓但尺寸錯誤，全部 22 段原碼摘要保留。3:2 測試重現可見區 1440×960、隔離 `screen` 卻回報 1280×800，故全螢幕採實際顯示區；開始校正前重取穩定尺寸，校正途中變動仍失效。補齊即時狀態／置中／中英驗證／Accuracy 與 TFF 優先成果。七項 gate、八個本機及六個正式瀏覽器流程、15 欄私人 R2／25 欄下載差異、既有 238 筆 CSV metadata 與硬體限制見 `docs/oculomotor-display-feedback-2.1.1.md`、`docs/releases/oculomotor-training-2.1.1.json`；尚未實測使用者筆電或讀取私人座標內容。Git 交付使用 `fix/oculomotor-2.1.1` 專用分支，避免 `main` 的完整 Pages 部署。
 
-目前平台存在發布前已發生的差異：`main@9ae0561` 的 GitHub 自動部署已帶入未核准 Gabor registry，正式目錄雖僅六個可讀 R2 遊戲，Gabor 舊 `settings.json` 已回 410，候選仍未發布。此狀態在眼動 `2.1.1` 發布前後不變；本次未部署或回退平台。下段「六 registry／34 舊 bundle／Gabor 舊入口」是 `2.1.0` 發布當時的歷史驗證，不能當作目前狀態。禁止再部署含 Gabor 候選的完整工作樹；後續修復需另行處理，不能把 Gabor 登記為正式完成。
+目前正式為七款 R2／33 款舊流程，蓋伯已在本回合另行核准、發布及驗收。先前 `main@9ae0561` 自動部署已提前帶入 Gabor registry，造成眼動 `2.1.1` 發布時 Gabor 舊資產 410、新 current 尚缺的狀態；本次核准 R2 發布後，既有 Hub 已可啟動蓋伯，舊 `settings.json` 維持預期的 410。未重部署或回退平台，眼動 current 仍 `2.1.1`。以下各版本「六款／34 款」為當時歷史數量，目前狀態以本段與蓋伯正式收據為準。
 
 眼動練習 `2.1.0` 已於 2026-10-17 依擁有者「核准發佈」完成 OcuTrain `6676f24523a5bc857a7c28f68c520a45bfb8d167` 對齊版的精確核准、相容 runner／Hub 先部署、R2 發布及 current 切換。22 段原碼摘要、七項 gate、正式 API／11 檔 bytes、桌機／平板／英文登入／手機 Hub 與手機 PWA 五流程通過；`2.0.1` 十檔已核對回退，無正式訓練紀錄。新代理 `eye-tracking-1.1.0` 傳跨文件推論開始時間，保留 `1.0.0` 相容入口。正式平台使用隔離的六款 registry／34 舊 bundle（含舊 Gabor），沒有發布蓋伯候選，也沒有新增 Git commit／push；不可直接部署含蓋伯候選的完整工作樹。版本摘要、部署、來源差異、私有 CSV 契約與硬體限制見 `docs/oculomotor-ocutrain-parity.md` 及 `docs/releases/oculomotor-training-2.1.0.json`。
 
-蓋伯斑塊練習 `gabor-patching@2.0.0` 為本機 R2 搬遷候選，尚待精確版本／摘要核准、R2 發布、Hub 正式切換及驗收；不得登記為正式完成。自有設定、三目標聚光燈、原 Gabor／Pixi／jsPsych、數值成績與私有 bridge 已完成；候選 registry 七款、Hub build 33 款舊 bundle，正式仍六款／34 款。審查、逐檔摘要、TDD、Brave 與回退見 `docs/gabor-patching-r2-migration.md`。禁止在核准 release／current 可讀前推送此 registry 至正式 Hub。
+蓋伯斑塊練習 `gabor-patching@2.0.0` 已於 2026-10-17 依「也核准gabor-patching，請同步幫我上傳」核准既有精確摘要 `fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a`，五檔／1,157,718 bytes 發布 R2／切換 current，正式 API／不指定版本 session／公開 bytes／桌機手機平板英文登入與手機 PWA 五個完整 30 秒流程均通過，另驗正式 PWA 停止與本機 fixture 撤回。七項 CI、遊戲／Hub build 通過；正式七款／33 款，無產品程式改動、平台部署或正式紀錄。原設定／演算法／計分／原圖、自有設定、三目標教學、完整數值與私有 bridge 保留。正式模式的 fixture 撤回命令曾逾時，原因與本機重驗均保留，未操作正式撤回。首次 native 無另一核准回退版，已重驗歷史 Hub 三個舊檔 bytes，只能針對 Gabor 還原並保留其他六款及眼動修正。審查、TDD、核准、CI、驗收與限制見 `docs/gabor-patching-r2-migration.md`、`docs/releases/gabor-patching-2.0.0.json`；實體觸控／小喇叭、Safari／iOS 與長時間完整離線未驗。
 
 npm workspace / Turborepo monorepo；目前只有兩個 app，App 程式碼位於 `apps/`：
 
@@ -26,7 +26,7 @@ npm workspace / Turborepo monorepo；目前只有兩個 app，App 程式碼位�
 - 移動卡片訓練 `moving-card@2.0.0` 已核准精確摘要並完成相容 runner 先部署／R2 回讀／Hub 切換、七項 CI／兩站部署與正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收。保留原參數、校正、jsPsych／Pixi 三難度、原圖及數值成果，採自有設定、三目標聚光燈與完整成績；詳見 `docs/moving-card-r2-migration.md` 與 `docs/releases/moving-card-2.0.0.json`。正式六款完成、34 款舊流程；首次新格式無另一核准回退版，原 Hub deployment／commit 保留。Safari／iOS、實體觸控與尺量校正尚未驗收。
 - 移動卡片視覺搜尋版 `2.0.1` 已核准精確摘要、發布 R2 並切換 current；三種名稱為方形排列、圓形散亂、圓形散亂旋轉，教學與正式 Pixi 使用遊戲自有同一套圖卡 geometry／旋轉與原校正字級，縮放後聚光燈同步更新。七項本機 gate、遊戲／Hub 建置、正式 API／逐檔公開 bytes 與 Hub／獨立 PWA 的手機／桌機三種排列共 12 個流程均通過；只寫本機 SQLite，未建立正式帳號或紀錄，未重新部署平台。`2.0.0` 已核對為回退版；見 `docs/moving-card-visual-search-2.0.1.md` 與 `docs/releases/moving-card-2.0.1.json`。手機為 Brave 模擬，Safari／iOS、實體觸控、尺量校正與長時間完整離線訓練尚未驗收。
 - 眼動練習 `oculomotor-training@2.0.0` 已精確核准、發布 R2、完成相容 runner 修正／Hub 切換、七項 CI／兩站部署與正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收。保留25項原設定、四種原刺激／校正驗證、四目標聚光燈、十項數值成果與原CSV；正式六款完成／34款舊流程。逐檔核准、Pages轉址政策／發布順序修正、驗收與回退見 `docs/oculomotor-r2-migration.md` 與 `docs/releases/oculomotor-training-2.0.0.json`。感測器為實際原模型的已核對人像串流，未驗真人／實體相機精度、Safari／iOS；首次新格式無另一核准回退版，保留原Hub deployment／commit。
-- `apps/rehabtrainerhub/games/{gameId}/`：目前有 40 個正式遊戲 workspace，擁有各自的 Vite entry、runtime、規則與 i18n。正式尚未遷移的 34 個遊戲仍依賴 `@rehab-trainer/ui` 的既有 `OfficialGameShell`、樣式、語言 provider 與設定橋樑，維持 `settings.json`／`score.json` 流程；這是尚待移除的遷移負債，不能宣稱所有遊戲已完全獨立。**新遊戲與 R2 遷移完成的遊戲嚴禁引入共用 UI 或跨遊戲程式碼；既有共用依賴不得擴張。** 登記於 `packages/ui/src/officialGameReleases.json` 的 R2 遊戲自行呈現設定、教學與成績，僅透過私有 MessageChannel 傳送成果，由 Hub 驗證後入庫。已遷移畫畫塔防、小行星護盾防衛、手勢指令對戰、手部目標追蹤練習、移動卡片訓練與眼動練習，詳見 `docs/r2-game-migration-plan.md`。
+- `apps/rehabtrainerhub/games/{gameId}/`：目前有 40 個正式遊戲 workspace，擁有各自的 Vite entry、runtime、規則與 i18n。正式尚未遷移的 33 個遊戲仍依賴 `@rehab-trainer/ui` 的既有 `OfficialGameShell`、樣式、語言 provider 與設定橋樑，維持 `settings.json`／`score.json` 流程；這是尚待移除的遷移負債，不能宣稱所有遊戲已完全獨立。**新遊戲與 R2 遷移完成的遊戲嚴禁引入共用 UI 或跨遊戲程式碼；既有共用依賴不得擴張。** 登記於 `packages/ui/src/officialGameReleases.json` 的 R2 遊戲自行呈現設定、教學與成績，僅透過私有 MessageChannel 傳送成果，由 Hub 驗證後入庫。已遷移畫畫塔防、小行星護盾防衛、手勢指令對戰、手部目標追蹤練習、移動卡片訓練、眼動練習與蓋伯斑塊練習，詳見 `docs/r2-game-migration-plan.md`。
   **新增遊戲與 Workspace 同步：** 加入 `apps/rehabtrainerhub/games/catalog.ts` 後執行 `npm run sync:games`；有 workspace／依賴異動時更新 lockfile。sync 依 registry 將未遷移遊戲加入 Hub 依賴樹，將 R2 遊戲排除。其舊模板仍會為缺少設定檔的遊戲產生共用 UI 依賴及 alias，並不驗證遊戲是否獨立；新遊戲與 R2 遊戲須先提供自有 `package.json`、Vite entry 及依賴，不能靠 sync 取得符合新架構的套件。
 
 Hub 的共用 UI、client auth、layout、storage、訊息協定位於 `packages/ui/src`；登入／session、授權及資料庫寫入位於 `apps/rehabtrainerhub/functions/`。`packages/game-settings` 提供 Hub 與 runner 使用的 JSON schema／validation，不是遊戲開發 SDK。R2 遊戲不得依賴這些平台套件。
@@ -43,8 +43,8 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 - `npm run dev:hub`：啟動 Hub。
 - `npm run build`：執行測試 gate，再由 `scripts/build-apps.mjs` 先建置全部遊戲 workspace、後建置兩個 app；不會自動發布 R2。
 - `npm run build:cloudflare`：執行本機完整 gate，並建置 Cloudflare Pages 輸出；已在 CI 驗證時使用 `build:cloudflare:only`。
-  Pages build 僅建置 34 個未遷移遊戲與兩個 app，排除 registry 登記的 R2 遊戲；R2 遊戲另行建置與發布。
-- `npm run build:hub`：Turbo 建置 Hub 及其 34 個未遷移遊戲依賴，產生 `apps/rehabtrainerhub/out/`；畫畫塔防、小行星護盾防衛、手勢指令對戰、手部目標追蹤練習、移動卡片訓練與眼動練習只留下導向 R2 PWA 的入口，不攜帶遊戲 bundle／JSON。
+  Pages build 僅建置 33 個未遷移遊戲與兩個 app，排除 registry 登記的 R2 遊戲；R2 遊戲另行建置與發布。
+- `npm run build:hub`：Turbo 建置 Hub 及其 33 個未遷移遊戲依賴，產生 `apps/rehabtrainerhub/out/`；畫畫塔防、小行星護盾防衛、手勢指令對戰、手部目標追蹤練習、移動卡片訓練、眼動練習與蓋伯斑塊練習只留下導向 R2 PWA 的入口，不攜帶遊戲 bundle／JSON。
 - `npm run build:gamerunner`：建置隔離站的靜態 runtime 到 `apps/usergamerunner/dist/`；遊戲版本仍由 Functions 從 R2 讀取。
 - `npm --prefix apps/rehabtrainerhub/games/drawing-defense run build`：單獨建置 R2 遊戲到其 `dist/`。發布腳本讀取既有輸出，不會先建置。
 - `npm run publish:game -- drawing-defense`：版本取自遊戲 package.json；檢查並發布至 R2。同版本不同內容禁止覆寫；逐檔比對、上傳並回讀 SHA-256，最後發布 release manifest，再更新 `official-games/{gameId}/current.json`。此官方 CLI 採每遊戲單一發布者，沒有第三方審核 API 的 Lease 鎖；同遊戲的發布與回退不可平行執行。
@@ -60,7 +60,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 
 修改 Asteroid Shield、全螢幕流程或 Pixi 尺寸後，至少執行 `npm run test:entrypoints` 與 `npm run build:hub`，驗證設定/rules 流程、原生全螢幕目標、全視窗 canvas。
 
-六款 R2 遊戲的全螢幕啟動／退出回歸由 `scripts/check-r2-game-fullscreen.test.mjs` 經既有 self-contained 測試納入 `test:game-architecture`，不新增 CI matrix。設定與教學保持視窗；手部目標追蹤先啟用相機，準備後以最後一次「開始訓練」點擊進入全螢幕；手勢對戰在相機就緒後的第一次校正點擊進入全螢幕（含手機）。六款返回 Hub／獨立入口前退出全螢幕，Hub 關閉、卸載與撤回亦清理並還原大廳捲動。驗證與發布限制見 `docs/r2-game-fullscreen-lifecycle.md`。
+七款 R2 遊戲的全螢幕啟動／退出回歸由 `scripts/check-r2-game-fullscreen.test.mjs` 經既有 self-contained 測試納入 `test:game-architecture`，不新增 CI matrix。設定與教學保持視窗；手部目標追蹤先啟用相機，準備後以最後一次「開始訓練」點擊進入全螢幕；手勢對戰在相機就緒後的第一次校正點擊進入全螢幕（含手機）。七款返回 Hub／獨立入口前退出全螢幕，Hub 關閉、卸載與撤回亦清理並還原大廳捲動。驗證與發布限制見 `docs/r2-game-fullscreen-lifecycle.md` 與 Gabor 正式收據。
 
 六款 R2 遊戲的音訊使用各遊戲自有 `tone@15.1.22`／soundManager 與 `music.ts`，直接接受 Tonejs/Midi 的秒數／力度 JSON，支援波形／白噪音、多軌和弦及循環；`@tonejs/midi` 僅作 root 開發時轉檔。譜面編入 bundle，不用外連、Worker 或錄音取樣；只在 gameplay 播放，取消／完成／退出／卸載清理。`scripts/check-r2-game-audio.test.mjs` 經 self-contained 測試納入既有 `test:game-architecture`，沿用七項 CI matrix／原命令，browser 音訊驗證留在本機 Brave。六款已於 2026-10-12 精確核准、發布及驗收：畫畫塔防 2.0.6、小行星 2.0.5、手勢 2.0.4、手部 2.0.2、移動卡片 2.0.2、眼動 2.0.1。七項本機 gate、正式 API／current session／43 檔 bytes 與桌機 Hub／手機 Hub／手機獨立 PWA 共 18 流程均通過，無平台部署、無正式訓練紀錄；回退／收據見 `docs/r2-game-tone-audio.md`、`docs/releases/` 與搬遷計畫第 7 節。歌曲預設仍為空；相機使用圖片串流，Safari／iOS 與實體相機／音訊輸出未驗收。
 
@@ -78,7 +78,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 
 - OcuTrain 對齊的 `scripts/oculomotor-reference.test.mjs` 經既有眼動遷移測試引入 `test:game-architecture`，涵蓋全部 22 段原碼摘要、尺寸比例正確／單軸錯誤變形／同倍率錯誤大小、3:2 與等比例縮放、全螢幕實際尺寸／視窗整屏資料／跨比例校正失效、閾值／半徑、追視回程、凝視階段、TFF、來源時間、零資料驗證、取消倒數、設定、完整 CSV、即時偵測、雙語與成果排序。新版輸入代理及兩版相機路由／PWA 由 `test:gamerunner` 覆蓋；兩份 workflow 沿用原七項 matrix 與相同 root 命令，不新增 Brave CI。詳細 RED／GREEN 與本機流程見 `docs/oculomotor-ocutrain-parity.md` 及 `docs/oculomotor-display-feedback-2.1.1.md`。
 
-- 蓋伯候選新增 `check-gabor-patching-migration.test.mjs` 與 `check-gabor-patching-tutorial.test.mjs` 至既有 `test:game-architecture`；驗證原設定／難度／計分、完整明細、取消／晚到 renderer、240 Hz 長紀錄、原圖、私有 bridge 與三目標聚光燈。既有 UI／結果／全螢幕／音訊測試加入此 gameId，Hub API／SQL／目錄／middleware 與 runner 穩定入口亦有回歸。兩份 workflow 沿用七項 matrix 與同一 root 命令，workflow 本身仍觸發驗證。本機 Brave 使用 `node scripts/check-r2-game-browser.mjs --game gabor-patching --lobby`，另驗 `--wide --windowed`、`--mobile --medium --session-failure`、`--tablet --hard`、`--signed-in --english --hard --sound-on --renderer-failure`、`--revoke`、`--standalone --mobile --medium` 及 `--standalone --tablet --hard --stop`；只寫本機 SQLite，不加入 Linux CI。尚未發布的候選不得當作正式驗收。
+- 蓋伯新增 `check-gabor-patching-migration.test.mjs` 與 `check-gabor-patching-tutorial.test.mjs` 至既有 `test:game-architecture`；驗證原設定／難度／計分、完整明細、取消／晚到 renderer、240 Hz 長紀錄、原圖、私有 bridge 與三目標聚光燈。既有 UI／結果／全螢幕／音訊測試加入此 gameId，Hub API／SQL／目錄／middleware 與 runner 穩定入口亦有回歸。兩份 workflow 沿用七項 matrix 與同一 root 命令，workflow 本身仍觸發驗證。本機 Brave 使用 `node scripts/check-r2-game-browser.mjs --game gabor-patching --lobby`，另驗 `--wide --windowed`、`--mobile --medium --session-failure`、`--tablet --hard`、`--signed-in --english --hard --sound-on --renderer-failure`、`--revoke`、`--standalone --mobile --medium` 及 `--standalone --tablet --hard --stop`；只寫本機 SQLite，不加入 Linux CI。`2.0.0` 已依相同摘要完成正式 Hub 四流程／PWA 完成與停止；撤回旗標只作用本機 fixture，不與正式模式合用。
 
 - `npm run test:naming` 先執行命名檢查器回歸測試，再掃描原始碼；明確排除 `.dist-releases` 等建置產物，仍檢查原始碼的函式、參數與變數命名。兩份 workflow 的 `naming` matrix 均使用此命令。
 - `npm run test:pwa` 包含 `test:pwa-navigation`，以本機 HTTP 308 轉址及實際產生的 Service Worker 驗證內嵌頁面預快取、離線導航與舊快取清理；兩份 workflow 的 `pwa` matrix 均執行此命令，不依賴 Brave。
@@ -122,7 +122,7 @@ R2 Buckets：`rehab-storage`（靜態素材）、`oculomotor-data`（私人眼�
 
 Hub 的共用邏輯、UI、樣式、auth、settings、routing helper、footer/navbar 放 `packages/ui/src` 或共用 helper；Hub app 組合共用元件，不分叉版本。
 
-遊戲隔離的目標是：**每個遊戲擁有完整設定、教學、game loop、renderer、i18n 與成績 UI，不引入 `packages/ui` 或任何跨遊戲共用元件**。目前已完成正式遷移的畫畫塔防、小行星護盾防衛、手勢指令對戰、手部目標追蹤練習、移動卡片訓練與眼動練習達到 R2 自包含格式；34 個舊遊戲仍使用共用 shell，其專屬引擎、字典與規則已放回遊戲內，剩餘平台 UI 依賴須在逐步遷移時移除。
+遊戲隔離的目標是：**每個遊戲擁有完整設定、教學、game loop、renderer、i18n 與成績 UI，不引入 `packages/ui` 或任何跨遊戲共用元件**。目前已完成正式遷移的畫畫塔防、小行星護盾防衛、手勢指令對戰、手部目標追蹤練習、移動卡片訓練、眼動練習與蓋伯斑塊練習達到 R2 自包含格式；33 個舊遊戲仍使用共用 shell，其專屬引擎、字典與規則已放回遊戲內，剩餘平台 UI 依賴須在逐步遷移時移除。
 
 | 流程 | 設定／結果 UI | Hub 入庫方式 |
 | --- | --- | --- |
@@ -150,7 +150,7 @@ Hub 禁止複製／分叉遊戲的 defaults、validation、rules 或 runtime。�
 
 官方遊戲成果經 Hub `/api/records` 寫入 D1；訪客使用 guest Subject ID，登入紀錄使用另一套帳號範圍 Subject ID 並附帳號。訪客紀錄不顯示於登入帳號的進度追蹤，遊戲嵌入 Hub 時不得自行重複寫入紀錄。`docs/game-score-contract.md` 的 JSON／Hub 結果 UI 契約適用未遷移遊戲；R2 新增／遷移遊戲不建立這兩份 JSON。舊格式契約由 `test:embedded-training` 驗證，R2 自包含契約由 `test:game-architecture` 驗證，後端沿用 `test:hub-functions`。
 
-Hub 大廳透過 `app/gameCatalog.ts` 合併 `games/catalog.ts` 與已核准發布版本；統一卡片、分類、搜尋與 `GameOverlay` 啟動入口。既有 catalog slug 保留自己的啟動契約，歷史投稿不能覆蓋已遷移的 R2 入口；畫畫塔防、小行星護盾防衛、手勢指令對戰、手部目標追蹤練習、移動卡片訓練與眼動練習由工作階段 API 選擇核准 current。34 個未遷移遊戲保持既有 runtime 與產物；內部依版本契約轉接既有 overlay，尚未完成儲存／成果契約整併。設定與 runtime 的來源維持由遊戲擁有。
+Hub 大廳透過 `app/gameCatalog.ts` 合併 `games/catalog.ts` 與已核准發布版本；統一卡片、分類、搜尋與 `GameOverlay` 啟動入口。既有 catalog slug 保留自己的啟動契約，歷史投稿不能覆蓋已遷移的 R2 入口；畫畫塔防、小行星護盾防衛、手勢指令對戰、手部目標追蹤練習、移動卡片訓練、眼動練習與蓋伯斑塊練習由工作階段 API 選擇核准 current。33 個未遷移遊戲保持既有 runtime 與產物；內部依版本契約轉接既有 overlay，尚未完成儲存／成果契約整併。設定與 runtime 的來源維持由遊戲擁有。
 
 R2 自包含遊戲以 `public/game.json` 宣告版本化目錄文案、作者、分類與套件內的預覽圖；Vite 複製到 dist，Publisher 驗證後與預覽圖一起納入逐檔 SHA-256 清單。公開 `/api/games` 只讀可信官方 current 的核准 manifest 與雜湊相符的宣告，回傳該版本的 R2 圖片 URL；Hub 的卡片與篩選採用它，啟動仍走固定版本 session。舊 `2.0.2` 尚無此宣告時，使用同一遊戲 source 宣告與由其預覽圖產生的 Hub 相容資產；不使用歷史 `1.0.0` 的標籤或 shell。新增宣告／圖片須使用新版本，不覆寫已發布檔案。
 

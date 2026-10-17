@@ -1,10 +1,12 @@
-# 蓋伯斑塊練習 R2 搬遷候選
+# 蓋伯斑塊練習 R2 搬遷與發布
 
-2026-10-13：`gabor-patching@2.0.0` 已完成本機自包含實作、測試及隔離試玩，**等待擁有者核准精確摘要，尚未發布 R2／切換正式 Hub／完成正式驗收**。正式仍是六款已遷移、34 款舊流程；此工作目錄的候選 registry 是七款，Hub build 保留 33 款舊 bundle。
+2026-10-17：擁有者以「也核准gabor-patching，請同步幫我上傳」核准既有 `gabor-patching@2.0.0` 精確摘要。已發布 R2／切換 current，正式 API、五個公開檔案、桌機／手機／平板／英文登入／獨立 PWA 驗收通過；正式為七款 R2、33 款舊流程。完整核准與證據見 [正式收據](releases/gabor-patching-2.0.0.json)及[驗證摘要](migrations/gabor-patching/validation-summary.json)。此次沒有變更產品程式、重新部署平台或建立正式訓練紀錄。
+
+2026-10-13 的 A–D 本機候選與當時六款／34 款平台基準保留於下文；2026-10-17 完成 E／F，不能再把候選時的數量當作目前狀態。
 
 2026-10-14 最後查核：dry-run 摘要維持相同，命名檢查通過；既有 Wrangler session 更新後，已唯讀取得正式 Hub／runner deployment 與舊 Gabor 回退產物，未執行發布或推送。
 
-候選 `contentSha256`：`fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a`。五個檔案共 1,157,718 bytes；完整逐檔清單見 [候選審查資料](migrations/gabor-patching/candidate.json)。`--dry-run` 生成的 manifest 雖含 `status: approved`，只是 Publisher 預備資料，並非擁有者核准或公開證據；未放入 `docs/releases/`。
+核准 `contentSha256`：`fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a`。五個檔案共 1,157,718 bytes；完整逐檔清單見 [審查資料](migrations/gabor-patching/candidate.json)。`--dry-run` 的 `status: approved` 本身不是核准證據；本次另保留擁有者核准、實際上傳／回讀、正式公開 bytes 與流程結果。
 
 ## 原流程與保留內容
 
@@ -67,19 +69,30 @@
 
 桌機：[設定](migrations/gabor-patching/local/desktop-settings.png)、[聚光燈](migrations/gabor-patching/local/desktop-tutorial.png)、[成績](migrations/gabor-patching/local/desktop-results.png)。手機：[設定](migrations/gabor-patching/local/mobile-settings.png)、[聚光燈](migrations/gabor-patching/local/mobile-tutorial.png)、[成績明細](migrations/gabor-patching/local/mobile-details.png)。平板：[成績](migrations/gabor-patching/local/tablet-results.png)。獨立 PWA：[成績](migrations/gabor-patching/local/pwa-results.png)。
 
-## 核准後發布與正式驗收
+## 核准發布與正式驗收
 
-依搬遷計畫第 7 節 E／F，核准本頁的 `2.0.0`／精確摘要後：
+發布前第一次 dry-run 因本機 `dist/index.html` 缺少而拒絕。從既有已審查原碼重新執行遊戲 build，五檔名稱、長度、逐檔 SHA-256 與整體摘要均與 10 月 13 日候選完全相同，才執行發布。沒有改動原碼、設定、閾值或安全檢查。上述候選 TDD RED／GREEN 保留；最新 [七項 CI](https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288)在 `f7a4350` 全部通過，包含 197 項架構、121 項 Hub functions、49 項 runner 測試及 Gabor 原有回歸。遊戲 build、Hub build（33 個舊遊戲）與 dry-run 通過。
 
-1. 再次 dry-run 核對同一摘要與五個檔案，確認 runner 既有 native／fullscreen／Tone 格式相容。若需平台相容修正，必須先測試並部署相容 runner。
-2. 單一發布者執行 `node scripts/publish-official-game.mjs gabor-patching`，逐檔上傳、回讀 SHA-256，再寫 approved manifest／current／官方歷史；不能當 staging 使用。
-3. 確認核准 R2 current 與實際 bytes 可讀後，才提交／部署本次 Hub registry 與 bundle 排除變更。此候選尚未推送或提前切換正式 Hub。
-4. 等待七項 CI 及所需 Pages 部署成功，讀正式 `/api/games`、不指定版本 session（不保存 token）、圖片、穩定 302／no-store 與五個 package 檔案；同 slug 必須唯一、`vision/vision`、`presentation: game`、無 `settingsUrl`。
-5. 重驗 `--remote --lobby`、`--production-hub --lobby --wide --windowed`、`--production-hub --lobby --mobile`、`--production-hub --lobby --tablet` 及 `--remote --standalone --mobile`；僅攔截 Hub API 至本機，禁止建立正式假帳號／成果。
-6. 將核准、current／歷史、兩站部署、正式 API／逐檔 bytes／桌機手機平板與 PWA 驗收保存在 `docs/releases/gabor-patching-2.0.0.json`，全部通過才把正式計數更新為七款／33 款。
+發布前唯讀核對發現平台順序已不同於原計畫：先前 `main@9ae0561` 自動部署已帶入七款 registry，Gabor 舊資產已 410，唯缺核准 R2 current。此事在眼動 `2.1.1` 發布前已存在。本次先核對既有相容平台，再由單一發布者發布核准的五檔、回讀 SHA-256、approved manifest 與 current；沒有另部署或回退 Pages。Hub deployment 為 `4bdef687-cef7-4b92-a8cf-fa801f4ca6a2`，runner 為 `2af33d05-6648-4aef-b806-cbacef7e4266`，前後相同。批准後原有入口已能啟動 Gabor；舊 `settings.json` 維持 410，是遷移後的預期阻擋。
+
+正式 `/api/games` 回傳七個 R2 遊戲，`gabor-patching` 只有一筆，分類 `vision/vision`、`presentation: game`、無 `settingsUrl`。不指定版本的 session 回 201，版本／摘要一致且 no-store；只驗證無狀態簽署，不記錄 token、recordId 或 Subject ID。五個 package 檔案與預覽圖的公開 bytes 全部核對，穩定 PWA 入口以 302／no-store 指向 `2.0.0`，仍使用 `sandbox="allow-scripts"` 與 camera 禁止；官方歷史只含新核准 `2.0.0`，沒有收編舊 `1.0.0` 投稿。眼動 current／摘要仍是 `2.1.1`。
+
+以下命令前綴均為 `node scripts/check-r2-game-browser.mjs --game gabor-patching`。前五項使用正式資產、真正 30 秒活動，Hub 保存僅攔截至本機 SQLite：
+
+| 參數 | 驗證結果 |
+| --- | --- |
+| `--production-hub --lobby --wide --windowed` | 桌機 1320×713：設定、三步教學、退出全螢幕後 canvas 滿版、成績／重試／單筆保存與捲動還原 |
+| `--production-hub --lobby --mobile --medium --session-failure` | 手機 390×844：session 503 不提前載入，重試、觸控、數值與完整明細、保存 |
+| `--production-hub --lobby --tablet --hard` | 平板 820×1180：hard、教學不擋目標、完整流程及內部捲動 |
+| `--production-hub --lobby --signed-in --english --hard --sound-on --renderer-failure` | 英文／本機登入：可見初始化錯誤及重試、真實 WebAudio、身份隔離與保存 |
+| `--remote --standalone --mobile --medium` | 手機 PWA：版本 scope、實際快取、觸控、數值與返回，零 Hub 寫入 |
+| `--remote --standalone --tablet --hard --stop` | 正式 PWA：停止、退出全螢幕且無完成成果／保存 |
+| `--lobby --revoke` | 本機 Hub／R2 fixture：撤回後卸載、顯示錯誤且零保存；沒有修改正式 R2 狀態 |
+
+曾以 `--production-hub --lobby --revoke` 補驗，但該旗標只變動記憶體 fixture，正式 Hub 的 HEAD 仍讀取未撤回的正式 R2，因此等待卸載逾時（exit 1）。改以支援的本機 fixture 完成同一清理測試；未改產品或放寬斷言。失敗原因、通過命令、截圖與雜湊保存在 [validation-summary.json](migrations/gabor-patching/validation-summary.json)，不將該次失敗稱為正式撤回驗收。
 
 ## 回退與限制
 
-這是首個 native 自包含 Gabor 候選，沒有另一個核准新格式回退版；不能用 `--activate-version 1.0.0` 切回舊 JSON 投稿。已於 2026-10-14 唯讀核對目前正式 Hub deployment [8a4e84e4](https://8a4e84e4.rehabtrainerhub.pages.dev)（完整 ID `8a4e84e4-6c40-4705-a9ef-c4dc8301ca38`）與 runner [907e363d](https://907e363d.trainerhub-user-games.pages.dev)（`907e363d-9537-45f2-b3cd-0e934dc1e8e3`），兩者 source commit 均為原碼基準 `51018eed98339cc14a9d58278e11f79db043ecd6`，stage success；Hub 快照的舊入口／設定／成績均 HTTP 200，[回退基準](migrations/gabor-patching/rollback-baseline.json)保留逐檔雜湊。正式發布前再確認該部署仍可回退，若驗收失敗恢復它；重建時從原碼基準還原 **Gabor workspace、registry、catalog、Hub 依賴、lockfile 與原兩份 JSON**，再跑 gates。保持其他六款 R2 登記、D1 歷史與所有 R2 不可變檔案；相容 runner 可保留。尚未實際執行回退。
+這是首個 native 自包含 Gabor 發布，沒有另一個核准新格式回退版；不能用 `--activate-version 1.0.0` 切回舊 JSON 投稿。2026-10-14 保留的歷史 Hub [8a4e84e4](https://8a4e84e4.rehabtrainerhub.pages.dev) 與 runner [907e363d](https://907e363d.trainerhub-user-games.pages.dev) source commit 均為 `51018eed98339cc14a9d58278e11f79db043ecd6`。本次發布前重新核對該 Hub 快照的舊入口／設定／成績，均 200 且長度與 SHA-256 與[回退基準](migrations/gabor-patching/rollback-baseline.json)相同。若需回退，從原碼基準只還原 **Gabor workspace、registry、catalog、Hub 依賴、lockfile 與原兩份 JSON**，保留其他六款 R2（含眼動 `2.1.1`）、D1 歷史與不可變檔案，重跑 gates 後部署。不可直接將整個 Hub 回到舊快照而移除後續其他遊戲修正。相容 runner 可保留；未實際回退。
 
 Brave 手機／平板為模擬，未做 Safari／iOS、實體觸控／小喇叭輸出或長時間完整離線訓練。PWA 驗證版本 scope 與實際快取，未宣稱離線硬體驗收。原生成機率仍按每幀計算，不同更新率／難度的活動條件應分開看待；紀錄只是當次活動數值。

@@ -1,0 +1,10 @@
+{
+  "status": "approved",
+  "source": "Repository owner in this Codex conversation",
+  "message": "也核准gabor-patching，請同步幫我上傳",
+  "approvedAt": "2026-10-17T04:48:04.522Z",
+  "gameId": "gabor-patching",
+  "version": "2.0.0",
+  "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a",
+  "scope": "Publish the existing reviewed exact Gabor candidate to R2, verify production and push release evidence"
+}

@@ -1,0 +1,24 @@
+{
+  "id": "mobile-standalone-pwa",
+  "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --remote --standalone --mobile --medium",
+  "status": "passed",
+  "localFixture": false,
+  "realDurationSeconds": 30,
+  "cleanupOnly": false,
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "left": 0,
+    "right": 390,
+    "top": 0,
+    "bottom": 844
+  },
+  "images": [
+    {
+      "path": "production/mobile-standalone-pwa/results.png",
+      "sha256": "b256fb44539f5d78098c4046cf5727b275ebf8da513bc306087a49375eedb6c9"
+    }
+  ],
+  "logSha256": "e41084591cc813ab998aa8e923286954e8e4452df9828c3f1ea666961db6fb8c",
+  "productionRecordsCreated": false
+}

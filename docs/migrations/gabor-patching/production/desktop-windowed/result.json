@@ -1,0 +1,32 @@
+{
+  "id": "desktop-windowed",
+  "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --wide --windowed",
+  "status": "passed",
+  "localFixture": false,
+  "realDurationSeconds": 30,
+  "cleanupOnly": false,
+  "viewport": {
+    "width": 1320,
+    "height": 713,
+    "left": 0,
+    "right": 1320,
+    "top": 0,
+    "bottom": 713
+  },
+  "images": [
+    {
+      "path": "production/desktop-windowed/settings.png",
+      "sha256": "f8ad0aa8476f90725b3b296f42eb2f6ef098899708d13b084f18a9d1e05c4b98"
+    },
+    {
+      "path": "production/desktop-windowed/tutorial-patch.png",
+      "sha256": "b319c8fa25ba78b92808c47103983cd5017f9ed446b0a26e4ddc9da5d89db6bf"
+    },
+    {
+      "path": "production/desktop-windowed/results.png",
+      "sha256": "160f4c91f774773c0d60b73a8176d746986a2056f4dbaae748682c496422767d"
+    }
+  ],
+  "logSha256": "122f0dedfca60b43f15c73ee55cde14b416e436d485e574f8b65090dddaa1290",
+  "productionRecordsCreated": false
+}

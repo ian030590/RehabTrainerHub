@@ -1,0 +1,24 @@
+{
+  "id": "tablet-hard",
+  "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --tablet --hard",
+  "status": "passed",
+  "localFixture": false,
+  "realDurationSeconds": 30,
+  "cleanupOnly": false,
+  "viewport": {
+    "width": 820,
+    "height": 1180,
+    "left": 0,
+    "right": 820,
+    "top": 0,
+    "bottom": 1180
+  },
+  "images": [
+    {
+      "path": "production/tablet-hard/results.png",
+      "sha256": "b6a356b88c7997c53bba72705b2668840e52617e1c80a626e833ca9537fce4c1"
+    }
+  ],
+  "logSha256": "332c05ffee9717bbe4ecf28fd8c5795ad81fd078ef8d715d235d0cf8ad75441d",
+  "productionRecordsCreated": false
+}

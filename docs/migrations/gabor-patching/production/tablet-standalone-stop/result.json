@@ -1,0 +1,19 @@
+{
+  "id": "tablet-standalone-stop",
+  "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --remote --standalone --tablet --hard --stop",
+  "status": "passed",
+  "localFixture": false,
+  "realDurationSeconds": null,
+  "cleanupOnly": true,
+  "viewport": {
+    "width": 820,
+    "height": 1180,
+    "left": 0,
+    "right": 820,
+    "top": 0,
+    "bottom": 1180
+  },
+  "images": [],
+  "logSha256": "9465c748f88cde1ca4ca2fd796d3c0e8a4dd4fbcfa363154fc4b20d926681ce8",
+  "productionRecordsCreated": false
+}

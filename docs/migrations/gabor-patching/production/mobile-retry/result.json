@@ -1,0 +1,28 @@
+{
+  "id": "mobile-retry",
+  "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --mobile --medium --session-failure",
+  "status": "passed",
+  "localFixture": false,
+  "realDurationSeconds": 30,
+  "cleanupOnly": false,
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "left": 0,
+    "right": 390,
+    "top": 0,
+    "bottom": 844
+  },
+  "images": [
+    {
+      "path": "production/mobile-retry/tutorial-score.png",
+      "sha256": "4d6b7f9065a60c3bb74d8941dd312f3c35df8bced428d7e8da16cc02f3236a3a"
+    },
+    {
+      "path": "production/mobile-retry/results-details.png",
+      "sha256": "e80518eeb60f0356b7113c16804253750b0915ca6272244608bcedf52453f371"
+    }
+  ],
+  "logSha256": "7ff46a660d17455e83c3e0bd3d3f90873fdcc3233d4004abdf6d3fcd5cc7cc4a",
+  "productionRecordsCreated": false
+}

@@ -1,0 +1,12 @@
+{
+  "id": "hub-revoke-fixture",
+  "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --lobby --revoke",
+  "status": "passed",
+  "localFixture": true,
+  "realDurationSeconds": null,
+  "cleanupOnly": true,
+  "viewport": null,
+  "images": [],
+  "logSha256": "2b2c87fa46cb30fb93fac1130ad40a268eb8ebf7b99f6aa0017fe93c3d20f565",
+  "productionRecordsCreated": false
+}

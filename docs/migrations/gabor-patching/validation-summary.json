@@ -1,0 +1,400 @@
+{
+  "checkedAt": "2026-10-17T04:55:21.230Z",
+  "gameId": "gabor-patching",
+  "version": "2.0.0",
+  "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a",
+  "ci": {
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288",
+    "commit": "f7a4350d5e9709a892c5d5f8093aeeaf0b57e2f7",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Verify (pwa)",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288/job/117311495815"
+      },
+      {
+        "name": "Verify (naming)",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288/job/117311495935"
+      },
+      {
+        "name": "Verify (trainer-entrypoints)",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288/job/117311495995"
+      },
+      {
+        "name": "Verify (cloudflare-deploy)",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288/job/117311495998"
+      },
+      {
+        "name": "Verify (gamerunner)",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288/job/117311496005"
+      },
+      {
+        "name": "Verify (hub-functions)",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288/job/117311496014"
+      },
+      {
+        "name": "Verify (game-architecture)",
+        "conclusion": "success",
+        "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288/job/117311496020"
+      }
+    ]
+  },
+  "gates": [
+    {
+      "command": "npm run test:naming",
+      "status": "passed",
+      "testCounts": [
+        2
+      ]
+    },
+    {
+      "command": "npm run test:pwa",
+      "status": "passed",
+      "testCounts": [
+        18
+      ]
+    },
+    {
+      "command": "npm run test:game-architecture",
+      "status": "passed",
+      "testCounts": [
+        197
+      ]
+    },
+    {
+      "command": "npm run test:hub-functions",
+      "status": "passed",
+      "testCounts": [
+        121
+      ]
+    },
+    {
+      "command": "npm run test:gamerunner",
+      "status": "passed",
+      "testCounts": [
+        49
+      ]
+    },
+    {
+      "command": "npm run test:entrypoints",
+      "status": "passed",
+      "testCounts": [
+        22,
+        5,
+        15,
+        9,
+        6,
+        18,
+        26
+      ]
+    },
+    {
+      "command": "npm run test:cloudflare-deploy",
+      "status": "passed",
+      "testCounts": [
+        4
+      ]
+    }
+  ],
+  "builds": [
+    {
+      "command": "npm --prefix apps/rehabtrainerhub/games/gabor-patching run build",
+      "status": "passed",
+      "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a"
+    },
+    {
+      "command": "npm run build:hub",
+      "status": "passed",
+      "successfulTasks": 34,
+      "legacyGameShells": 33,
+      "seoOutputPassed": true,
+      "logSha256": "44951f36331675af9f11bb7816a15db565cb158cff1604919a85a858d333fb17"
+    },
+    {
+      "command": "node scripts/publish-official-game.mjs gabor-patching --dry-run",
+      "status": "passed",
+      "files": 5,
+      "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a"
+    }
+  ],
+  "browsers": [
+    {
+      "id": "desktop-windowed",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --wide --windowed",
+      "status": "passed",
+      "localFixture": false,
+      "realDurationSeconds": 30,
+      "cleanupOnly": false,
+      "viewport": {
+        "width": 1320,
+        "height": 713,
+        "left": 0,
+        "right": 1320,
+        "top": 0,
+        "bottom": 713
+      },
+      "images": [
+        {
+          "path": "production/desktop-windowed/settings.png",
+          "sha256": "f8ad0aa8476f90725b3b296f42eb2f6ef098899708d13b084f18a9d1e05c4b98"
+        },
+        {
+          "path": "production/desktop-windowed/tutorial-patch.png",
+          "sha256": "b319c8fa25ba78b92808c47103983cd5017f9ed446b0a26e4ddc9da5d89db6bf"
+        },
+        {
+          "path": "production/desktop-windowed/results.png",
+          "sha256": "160f4c91f774773c0d60b73a8176d746986a2056f4dbaae748682c496422767d"
+        }
+      ],
+      "logSha256": "122f0dedfca60b43f15c73ee55cde14b416e436d485e574f8b65090dddaa1290",
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "mobile-retry",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --mobile --medium --session-failure",
+      "status": "passed",
+      "localFixture": false,
+      "realDurationSeconds": 30,
+      "cleanupOnly": false,
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "left": 0,
+        "right": 390,
+        "top": 0,
+        "bottom": 844
+      },
+      "images": [
+        {
+          "path": "production/mobile-retry/tutorial-score.png",
+          "sha256": "4d6b7f9065a60c3bb74d8941dd312f3c35df8bced428d7e8da16cc02f3236a3a"
+        },
+        {
+          "path": "production/mobile-retry/results-details.png",
+          "sha256": "e80518eeb60f0356b7113c16804253750b0915ca6272244608bcedf52453f371"
+        }
+      ],
+      "logSha256": "7ff46a660d17455e83c3e0bd3d3f90873fdcc3233d4004abdf6d3fcd5cc7cc4a",
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "tablet-hard",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --tablet --hard",
+      "status": "passed",
+      "localFixture": false,
+      "realDurationSeconds": 30,
+      "cleanupOnly": false,
+      "viewport": {
+        "width": 820,
+        "height": 1180,
+        "left": 0,
+        "right": 820,
+        "top": 0,
+        "bottom": 1180
+      },
+      "images": [
+        {
+          "path": "production/tablet-hard/results.png",
+          "sha256": "b6a356b88c7997c53bba72705b2668840e52617e1c80a626e833ca9537fce4c1"
+        }
+      ],
+      "logSha256": "332c05ffee9717bbe4ecf28fd8c5795ad81fd078ef8d715d235d0cf8ad75441d",
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "english-account-audio-retry",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --signed-in --english --hard --sound-on --renderer-failure",
+      "status": "passed",
+      "localFixture": false,
+      "realDurationSeconds": 30,
+      "cleanupOnly": false,
+      "viewport": {
+        "width": 752,
+        "height": 485,
+        "left": 0,
+        "right": 752,
+        "top": 0,
+        "bottom": 485
+      },
+      "images": [
+        {
+          "path": "production/english-account-audio-retry/renderer-failure.png",
+          "sha256": "6718ce63b79717a6cf974453e58eb5693757986e209f1ffa2c0e78c30aa61219"
+        },
+        {
+          "path": "production/english-account-audio-retry/results.png",
+          "sha256": "810538184584d4382eec923397697c32afd89ccaf1de0ef84492205c7267b721"
+        }
+      ],
+      "logSha256": "1ea69443fc9b33308283fd2c838f5cc0e80c49b5942eec626961e43e927769e3",
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "mobile-standalone-pwa",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --remote --standalone --mobile --medium",
+      "status": "passed",
+      "localFixture": false,
+      "realDurationSeconds": 30,
+      "cleanupOnly": false,
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "left": 0,
+        "right": 390,
+        "top": 0,
+        "bottom": 844
+      },
+      "images": [
+        {
+          "path": "production/mobile-standalone-pwa/results.png",
+          "sha256": "b256fb44539f5d78098c4046cf5727b275ebf8da513bc306087a49375eedb6c9"
+        }
+      ],
+      "logSha256": "e41084591cc813ab998aa8e923286954e8e4452df9828c3f1ea666961db6fb8c",
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "tablet-standalone-stop",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --remote --standalone --tablet --hard --stop",
+      "status": "passed",
+      "localFixture": false,
+      "realDurationSeconds": null,
+      "cleanupOnly": true,
+      "viewport": {
+        "width": 820,
+        "height": 1180,
+        "left": 0,
+        "right": 820,
+        "top": 0,
+        "bottom": 1180
+      },
+      "images": [],
+      "logSha256": "9465c748f88cde1ca4ca2fd796d3c0e8a4dd4fbcfa363154fc4b20d926681ce8",
+      "productionRecordsCreated": false
+    },
+    {
+      "id": "hub-revoke-fixture",
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --lobby --revoke",
+      "status": "passed",
+      "localFixture": true,
+      "realDurationSeconds": null,
+      "cleanupOnly": true,
+      "viewport": null,
+      "images": [],
+      "logSha256": "2b2c87fa46cb30fb93fac1130ad40a268eb8ebf7b99f6aa0017fe93c3d20f565",
+      "productionRecordsCreated": false
+    }
+  ],
+  "failedAttempts": [
+    {
+      "command": "node scripts/check-r2-game-browser.mjs --game gabor-patching --production-hub --lobby --revoke",
+      "exitCode": 1,
+      "reason": "Timed out: revoked game removed. The flag changes only the in-memory R2 fixture, whereas production-hub reads the unchanged approved live R2 for its HEAD availability check. No live R2 revocation was attempted. Retested the intended local fixture with --lobby --revoke.",
+      "logSha256": "168b525a780db43ab95e11fb31e85fb6deb725ac975fe8444d6c4e27eb913128",
+      "productChanged": false
+    }
+  ],
+  "publicFilesVerified": 5,
+  "officialCount": 7,
+  "legacyGamesInHubBuild": 33,
+  "publicApi": {
+    "status": 200,
+    "officialCount": 7,
+    "official": [
+      {
+        "slug": "asteroid-shield",
+        "version": "2.0.9",
+        "contentSha256": "ed8c281dc4f599bffb25fdf609dfb6051c09e050cbc349499649a49ff3477abe"
+      },
+      {
+        "slug": "gesture-battler",
+        "version": "2.0.4",
+        "contentSha256": "a085169bab352192503c0050e7bdfe8780514bcedb5172b518cdcf13499b8e6e"
+      },
+      {
+        "slug": "drawing-defense",
+        "version": "2.0.6",
+        "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f"
+      },
+      {
+        "slug": "motor-cortex-rehab",
+        "version": "2.0.2",
+        "contentSha256": "a3383733227715bc748ff49e9c034c31813e17c75e465823acf53f1e10b6af46"
+      },
+      {
+        "slug": "oculomotor-training",
+        "version": "2.1.1",
+        "contentSha256": "53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3"
+      },
+      {
+        "slug": "moving-card",
+        "version": "2.0.2",
+        "contentSha256": "8f683247f3abec9b7c39a68fbf98359d20250acf907db4b4c54c6cc1dda86fb2"
+      },
+      {
+        "slug": "gabor-patching",
+        "version": "2.0.0",
+        "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a"
+      }
+    ],
+    "gabor": {
+      "id": "gabor-patching",
+      "slug": "gabor-patching",
+      "title": "蓋伯斑塊練習",
+      "summary": "尋找逐漸浮現的蓋伯斑塊，練習對比辨識與視覺反應。",
+      "trainer": "vision",
+      "category": "vision",
+      "developerName": "居家訓練網",
+      "updatedAt": "2026-10-17T04:48:19.211Z",
+      "copy": {
+        "zh-TW": {
+          "title": "蓋伯斑塊練習",
+          "description": "尋找逐漸浮現的蓋伯斑塊，練習對比辨識與視覺反應。"
+        },
+        "en": {
+          "title": "Gabor Patching",
+          "description": "Find emerging Gabor patches to practise contrast recognition and visual response."
+        }
+      },
+      "previewUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.0/package/preview.webp",
+      "release": {
+        "id": "gabor-patching@2.0.0",
+        "version": "2.0.0",
+        "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a",
+        "capabilities": [
+          "audio",
+          "fullscreen",
+          "keyboard",
+          "pointer",
+          "touch"
+        ],
+        "approvedAt": "2026-10-17T04:48:19.211Z",
+        "presentation": "game",
+        "launchUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.0/",
+        "installUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/"
+      }
+    },
+    "retiredGaborSettingsStatus": 410,
+    "eyeCurrentUnchanged": true
+  },
+  "currentSessionApi": {
+    "status": 201,
+    "version": "2.0.0",
+    "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a",
+    "tokenRecorded": false,
+    "recordIdRecorded": false,
+    "subjectIdRecorded": false,
+    "stateless": true
+  },
+  "platformDeployed": false,
+  "eyeCurrentUnchanged": true,
+  "productionRecordsCreated": false
+}

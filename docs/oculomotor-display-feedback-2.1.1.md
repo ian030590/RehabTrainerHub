@@ -76,4 +76,6 @@ sample_index,trial_time_ms,device_timestamp_us,delta_t_ms,instant_hz,gaze_valid,
 
 發布前另發現既有平台差異：GitHub `main` 的 `9ae05614c752b5174fabf1c4573780e7c3c9bb36` 已成功自動部署（[workflow](https://github.com/ian030590/RehabTrainerHub/actions/runs/38974377389)），帶入尚未核准的 Gabor registry。正式目錄仍只有六個可讀 R2 發布，但 Gabor 舊 `settings.json` 已為 410、新 R2 候選仍未發布。此狀態在本次眼動發布前後相同，Hub deployment `4bdef687-cef7-4b92-a8cf-fa801f4ca6a2` 與 runner `2af33d05-6648-4aef-b806-cbacef7e4266` 皆未變更；不能再將 `2.1.0` 發布當時的「六 registry／34 舊 bundle／Gabor 舊入口正常」當成目前平台狀態。本次不發布 Gabor、不部署或回退平台，將眼動提交推到專用分支執行 CI，後續 Gabor 平台修復須另行處理。
 
+後續同回合擁有者另核准 Gabor：`gabor-patching@2.0.0` 已發布並完成正式驗收，既有 Hub 可啟動新格式入口；目前七款 R2／33 款舊流程，眼動 current 與摘要保持 `2.1.1`。見 [Gabor 正式收據](releases/gabor-patching-2.0.0.json)。上段的六款與 Gabor 尚未發布是眼動發布當時的歷史狀態。眼動提交 `f7a4350` 的 [七項 GitHub CI](https://github.com/ian030590/RehabTrainerHub/actions/runs/39003626288)全部通過，涵蓋既有 Gabor 測試。
+
 尚未驗真人／實體相機、實體螢幕尺量、實體觸控及 Safari／iOS；圖片串流與 Brave 尺寸模擬不能代替硬體驗收。沒有讀取私人 CSV 的逐筆內容。
