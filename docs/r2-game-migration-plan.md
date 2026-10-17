@@ -1,12 +1,12 @@
 # 內建遊戲逐步遷移至 R2：畫畫塔防試點
 
-2026-10-18 駕駛注意力模擬練習 `driving-rehab@2.0.0` 已完成第 7 節 A–D 本機自包含候選：原四項設定、Three.js／jsPsych／模型與數值成果、自有設定及成績、三步聚光燈、原控制與方向盤校正。精確候選、TDD、沙盒貼圖處理、逐項驗收及發布順序見 [駕駛搬遷候選](driving-rehab-r2-migration.md)。**尚未取得精確摘要核准或發布／部署；正式仍為八款 R2／32 款舊流程，本機候選為九款／31 舊 bundle，不可提前部署候選 registry。**
+2026-10-18 駕駛注意力模擬練習 `driving-rehab@2.0.0` 已依「核准並git push」核准精確摘要 `a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863`，完成第 7 節 A–F：相容 runner 先部署，R2 八檔發布／回讀／current 完備後才切換 Hub。保留原設定、引擎、模型、數值成果與方向盤校正，採自有 UI、三步聚光燈與私有 bridge；七項 CI、正式 API／八檔 bytes、Hub／PWA 九項瀏覽器流程全部通過，未建正式紀錄，其他八款 current 不變。正式九款 R2／31 款舊流程；詳見[駕駛搬遷驗收](driving-rehab-r2-migration.md)與[正式收據](releases/driving-rehab-2.0.0.json)。
 
 2026-10-17 閱讀訓練（RSVP）`reading-training@2.0.0` 已依第 7 節 A–D 完成本機自包含候選：原設定／換算／RSVP 時序／抽題與數值成績欄位、三步聚光燈教學、原圖與分類、七項本機 gate、Hub build 與 Brave 流程；同日依擁有者核准發布 R2（`2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0`）並切換 current；同日推送 `c329c5b` 至 `main`、部署 Hub 並完成正式驗收，正式為八款 R2／32 款舊流程。見 [閱讀訓練搬遷候選](reading-training-r2-migration.md)。
 
 2026-10-17 蓋伯斑塊練習 `gabor-patching@2.0.0` 已依擁有者「也核准gabor-patching，請同步幫我上傳」核准原候選精確摘要，完成第 7 節 E／F 的 R2 發布、current、正式 API／session／五檔 bytes 與桌機／手機／平板／英文登入／獨立 PWA 驗收。七項 CI、遊戲與 Hub build 通過，正式為七款 R2／33 舊流程。保留原演算法、設定、計分、三步聚光燈與完整明細；本次使用既有相容 Hub／runner，未另部署平台、未建立正式紀錄。首次 native 沒有另一核准回退版，已重驗舊 Hub 三個檔案；審查、既有提前部署的順序差異、驗收與限制見 [蓋伯斑塊搬遷](gabor-patching-r2-migration.md)及[正式收據](releases/gabor-patching-2.0.0.json)。
 
-更新日期：2026-10-17。目前 R2 current 為 `asteroid-shield@2.0.10`、`gesture-battler@2.0.5`、`drawing-defense@2.0.7`、`motor-cortex-rehab@2.0.3`、`oculomotor-training@2.1.2`、`moving-card@2.0.3`、`gabor-patching@2.0.2`、`reading-training@2.0.1`（設定控制項與設定值保存，見 [紀錄](r2-settings-controls-2026-10-17.md)），8 款完成、32 款保留舊流程。以下各版發布歷史的數量與版本保留當時基準。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
+更新日期：2026-10-18。目前 R2 current 為 `asteroid-shield@2.0.10`、`gesture-battler@2.0.5`、`drawing-defense@2.0.7`、`motor-cortex-rehab@2.0.3`、`oculomotor-training@2.1.2`、`moving-card@2.0.3`、`gabor-patching@2.0.2`、`reading-training@2.0.1`、`driving-rehab@2.0.0`（設定控制項與設定值保存，見 [紀錄](r2-settings-controls-2026-10-17.md)），9 款完成、31 款保留舊流程。以下各版發布歷史的數量與版本保留當時基準。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
 
 2026-10-11 眼動練習 `oculomotor-training@2.0.0` 已按精確摘要核准、發布 R2、完成相容 runner／Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38094804766)與正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收。採原25項設定、四種原引擎／校正驗證、四目標聚光燈、十項成果與私人CSV；正式六款／34款舊流程。Pages轉址政策及發布順序修正、批准、原圖／分類與回退見 [眼動遷移驗收](oculomotor-r2-migration.md)及[正式收據](releases/oculomotor-training-2.0.0.json)。原模型在人像串流執行，真人／實體相機精度與Safari／iOS仍未驗收。
 

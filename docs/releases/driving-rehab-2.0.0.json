@@ -1,0 +1,546 @@
+{
+  "schemaVersion": 1,
+  "status": "published-and-production-accepted",
+  "gameId": "driving-rehab",
+  "version": "2.0.0",
+  "name": "駕駛注意力模擬練習",
+  "description": "在送貨任務中回應突發事件；紀錄僅反映當次操作，不判定駕駛能力。",
+  "entry": "index.html",
+  "runtime": {
+    "name": "native",
+    "major": 1
+  },
+  "presentation": "game",
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "gamepad",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "files": [
+    {
+      "path": "assets/car-pedals-BXQENW7T.svg",
+      "size": 198908,
+      "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/index-DXp2CAsH.js",
+      "size": 1726866,
+      "sha256": "317b606beeefeb919728715e3b2e7eb36ca722ffe5c12e1c6173a43e4358d760",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/steering-wheel-5D4sTFY9.svg",
+      "size": 3316,
+      "sha256": "366798d41cceec6fbc0ae068b4673cf2284ba280ba461e6506d6507258e5c50f",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/style-B16Gsppv.css",
+      "size": 19145,
+      "sha256": "3e83b054a54b3c5ce5fd5f9c9155c15b14fe1134edfb78ca4971f8b2d6b925c2",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 552,
+      "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 464,
+      "sha256": "6f40f8916027e1960bbd6fbbc1f72cdd9ee8043b82198d94105a723848b00db2",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 13202,
+      "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "vehicle-data.js",
+      "size": 8083274,
+      "sha256": "4feb8b7d1c58c9b6af5f949c075dbeac3f6b54e4f7b64498b7a40afffcbd0207",
+      "contentType": "text/javascript; charset=utf-8"
+    }
+  ],
+  "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
+  "approvedAt": "2026-10-17T23:02:22.188Z",
+  "bucket": "rehab-game-releases",
+  "totalBytes": 10045727,
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Codex conversation",
+    "message": "核准並git push",
+    "approvedAt": "2026-10-17T22:55:41.747844+00:00",
+    "gameId": "driving-rehab",
+    "version": "2.0.0",
+    "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
+    "scope": "Publish the exact reviewed R2 release, deploy compatible runner first and Hub after R2 current, complete production acceptance, and commit/push to the dedicated Git branch."
+  },
+  "sourceCommit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+  "sourceBranch": "feat/driving-rehab-r2",
+  "published": {
+    "gameId": "driving-rehab",
+    "version": "2.0.0",
+    "bucket": "rehab-game-releases",
+    "launchUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/index.html",
+    "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
+    "verifiedAt": "2026-10-17T23:03:01.354Z",
+    "publisherReadback": "All 8 files and approved manifest verified before current switched",
+    "stableUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/"
+  },
+  "deploymentSequence": {
+    "method": "Scoped manual production deployment from frozen output after successful seven-job CI; branch push runs CI without premature main deployment",
+    "before": [
+      {
+        "project": "trainerhub-user-games",
+        "id": "5f76bb81-c5dc-4e7a-a5c5-972e580604bd",
+        "url": "https://5f76bb81.trainerhub-user-games.pages.dev",
+        "createdOn": "2026-10-17T14:15:39.512363Z",
+        "commit": "de8d01d7c32953df4f0b057c377633193b80386e",
+        "status": "success"
+      },
+      {
+        "project": "rehabtrainerhub",
+        "id": "8dccfbc8-9b51-4035-964e-464e85117009",
+        "url": "https://8dccfbc8.rehabtrainerhub.pages.dev",
+        "createdOn": "2026-10-17T14:15:30.80961Z",
+        "commit": "de8d01d7c32953df4f0b057c377633193b80386e",
+        "status": "success"
+      }
+    ],
+    "after": [
+      {
+        "project": "trainerhub-user-games",
+        "id": "56fca01e-67a6-4bbf-a24d-cce839752f15",
+        "url": "https://56fca01e.trainerhub-user-games.pages.dev",
+        "createdOn": "2026-10-17T23:02:06.011875Z",
+        "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+        "status": "success"
+      },
+      {
+        "project": "rehabtrainerhub",
+        "id": "4a27cfb9-bf6b-4a98-bf8d-e98caf8c353f",
+        "url": "https://4a27cfb9.rehabtrainerhub.pages.dev",
+        "createdOn": "2026-10-17T23:05:13.969563Z",
+        "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+        "status": "success"
+      }
+    ],
+    "order": [
+      "Deploy compatible runner with capability-gated gamepad delegation",
+      "Verify existing 8 stable current entries",
+      "Publish exact approved package, read back each SHA-256, then activate current",
+      "Verify exact public 8 files and launcher while old Hub settings still 200",
+      "Deploy Hub with 9-game registry and 31 legacy bundles",
+      "Verify production API, fixed session, bytes and Hub/PWA browser flows"
+    ],
+    "preHubVerification": {
+      "verifiedAt": "2026-10-17T23:03:10.041Z",
+      "checkedFiles": [
+        "assets/car-pedals-BXQENW7T.svg",
+        "assets/index-DXp2CAsH.js",
+        "assets/steering-wheel-5D4sTFY9.svg",
+        "assets/style-B16Gsppv.css",
+        "game.json",
+        "index.html",
+        "preview.webp",
+        "vehicle-data.js"
+      ],
+      "stableStatus": 302,
+      "oldHubSettingsStatus": 200,
+      "productionRecordsCreated": false
+    },
+    "retry": "Initial Hub snapshot omitted existing gameTags.js and drawing-defense/public/game.json; local Wrangler bundling failed before upload or deployment. Copied unchanged source dependencies into snapshot and redeployed successfully. No release bytes changed.",
+    "runnerBindings": {
+      "d1": [],
+      "kv": [],
+      "r2": [
+        "GAME_RELEASE_BUCKET"
+      ]
+    }
+  },
+  "ci": {
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39077259337",
+    "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Verify (hub-functions)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (cloudflare-deploy)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (trainer-entrypoints)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (naming)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (game-architecture)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (gamerunner)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Verify (pwa)",
+        "conclusion": "success"
+      }
+    ],
+    "initialFailure": {
+      "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39077148597",
+      "reason": "Frozen source text SHA used Windows CRLF while Linux checks out LF. Normalize only source text/JSON newlines. Binary and approved release digests remain exact.",
+      "fixedBy": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a"
+    }
+  },
+  "localValidation": "docs/migrations/driving-rehab/validation-summary.json",
+  "productionChecks": {
+    "verifiedAt": "2026-10-17T23:05:52.796Z",
+    "publicBytes": [
+      {
+        "path": "assets/car-pedals-BXQENW7T.svg",
+        "size": 198908,
+        "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+        "contentType": "image/svg+xml",
+        "status": 200,
+        "url": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/assets/car-pedals-BXQENW7T.svg"
+      },
+      {
+        "path": "assets/index-DXp2CAsH.js",
+        "size": 1726866,
+        "sha256": "317b606beeefeb919728715e3b2e7eb36ca722ffe5c12e1c6173a43e4358d760",
+        "contentType": "text/javascript; charset=utf-8",
+        "status": 200,
+        "url": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/assets/index-DXp2CAsH.js"
+      },
+      {
+        "path": "assets/steering-wheel-5D4sTFY9.svg",
+        "size": 3316,
+        "sha256": "366798d41cceec6fbc0ae068b4673cf2284ba280ba461e6506d6507258e5c50f",
+        "contentType": "image/svg+xml",
+        "status": 200,
+        "url": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/assets/steering-wheel-5D4sTFY9.svg"
+      },
+      {
+        "path": "assets/style-B16Gsppv.css",
+        "size": 19145,
+        "sha256": "3e83b054a54b3c5ce5fd5f9c9155c15b14fe1134edfb78ca4971f8b2d6b925c2",
+        "contentType": "text/css; charset=utf-8",
+        "status": 200,
+        "url": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/assets/style-B16Gsppv.css"
+      },
+      {
+        "path": "game.json",
+        "size": 552,
+        "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+        "contentType": "application/json; charset=utf-8",
+        "status": 200,
+        "url": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/game.json"
+      },
+      {
+        "path": "index.html",
+        "size": 464,
+        "sha256": "6f40f8916027e1960bbd6fbbc1f72cdd9ee8043b82198d94105a723848b00db2",
+        "contentType": "text/html; charset=utf-8",
+        "status": 200,
+        "url": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/index.html"
+      },
+      {
+        "path": "preview.webp",
+        "size": 13202,
+        "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+        "contentType": "image/webp",
+        "status": 200,
+        "url": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/preview.webp"
+      },
+      {
+        "path": "vehicle-data.js",
+        "size": 8083274,
+        "sha256": "4feb8b7d1c58c9b6af5f949c075dbeac3f6b54e4f7b64498b7a40afffcbd0207",
+        "contentType": "text/javascript; charset=utf-8",
+        "status": 200,
+        "url": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/package/vehicle-data.js"
+      }
+    ],
+    "stableEntry": {
+      "status": 302,
+      "location": "/games/driving-rehab/2.0.0/"
+    },
+    "unversionedSession": {
+      "status": 201,
+      "version": "2.0.0",
+      "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
+      "capabilities": [
+        "audio",
+        "fullscreen",
+        "gamepad",
+        "keyboard",
+        "pointer",
+        "settings-storage",
+        "touch"
+      ],
+      "tokenRedacted": true
+    },
+    "legacyAssets": [
+      {
+        "path": "settings.json",
+        "status": 410
+      },
+      {
+        "path": "score.json",
+        "status": 410
+      },
+      {
+        "path": "assets/legacy.js",
+        "status": 410
+      },
+      {
+        "path": "sw.js",
+        "status": 410
+      }
+    ],
+    "publicCatalog": {
+      "slug": "driving-rehab",
+      "category": "vision",
+      "release": {
+        "id": "driving-rehab@2.0.0",
+        "version": "2.0.0",
+        "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
+        "capabilities": [
+          "audio",
+          "fullscreen",
+          "gamepad",
+          "keyboard",
+          "pointer",
+          "settings-storage",
+          "touch"
+        ],
+        "approvedAt": "2026-10-17T23:02:22.188Z",
+        "presentation": "game",
+        "launchUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.0/",
+        "installUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/"
+      }
+    },
+    "officialCount": 9,
+    "legacyBundleCount": 31,
+    "otherEightCurrentUnchanged": [
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.10",
+        "contentSha256": "2ef64194e7b99caafda7bba7e7075a10b15d2443c7dfe775ab795d40004538b9"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.5",
+        "contentSha256": "3160d162c5621e25e2c22fa8165278be0955b659679188d912704d355b1f5887"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.7",
+        "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.3",
+        "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.2",
+        "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.3",
+        "contentSha256": "295a60da488c2d60b33d4659a4009fb7e77af8291c4d3c896ecbc6a43843f912"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.2",
+        "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+      },
+      {
+        "gameId": "reading-training",
+        "version": "2.0.1",
+        "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+      }
+    ],
+    "sandbox": "allow-scripts; opaque origin; camera denied; no allow-same-origin; connect-src none; gamepad delegation only for reviewed capability",
+    "browser": [
+      {
+        "name": "pwa-mobile",
+        "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --remote --standalone --mobile --low",
+        "startedAt": "2026-10-17T23:03:43.674Z",
+        "finishedAt": "2026-10-17T23:05:12.677Z",
+        "status": "passed",
+        "exitCode": 0,
+        "realProductionHub": false,
+        "productionR2": true,
+        "onlyLocalSqliteRecordWrites": true,
+        "screenshots": ".tmp/driving-release/production-browser/pwa-mobile"
+      },
+      {
+        "name": "pwa-tablet-stop",
+        "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --remote --standalone --tablet --low --stop",
+        "startedAt": "2026-10-17T23:03:59.521Z",
+        "finishedAt": "2026-10-17T23:04:16.707Z",
+        "status": "passed",
+        "exitCode": 0,
+        "realProductionHub": false,
+        "productionR2": true,
+        "onlyLocalSqliteRecordWrites": true,
+        "screenshots": ".tmp/driving-release/production-browser/pwa-tablet-stop"
+      },
+      {
+        "name": "hub-desktop",
+        "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --production-hub --lobby --wide --windowed",
+        "startedAt": "2026-10-17T23:06:00.053Z",
+        "finishedAt": "2026-10-17T23:07:39.641Z",
+        "status": "passed",
+        "exitCode": 0,
+        "realProductionHub": true,
+        "productionR2": true,
+        "onlyLocalSqliteRecordWrites": true,
+        "screenshots": ".tmp/driving-release/production-browser/hub-desktop"
+      },
+      {
+        "name": "hub-mobile",
+        "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --production-hub --lobby --mobile --medium --session-failure",
+        "startedAt": "2026-10-17T23:06:00.729Z",
+        "finishedAt": "2026-10-17T23:07:39.994Z",
+        "status": "passed",
+        "exitCode": 0,
+        "realProductionHub": true,
+        "productionR2": true,
+        "onlyLocalSqliteRecordWrites": true,
+        "screenshots": ".tmp/driving-release/production-browser/hub-mobile"
+      },
+      {
+        "name": "hub-tablet",
+        "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --production-hub --lobby --tablet --medium --hard",
+        "startedAt": "2026-10-17T23:07:58.720Z",
+        "finishedAt": "2026-10-17T23:09:53.241Z",
+        "status": "passed",
+        "exitCode": 0,
+        "realProductionHub": true,
+        "productionR2": true,
+        "onlyLocalSqliteRecordWrites": true,
+        "screenshots": ".tmp/driving-release/production-browser/hub-tablet"
+      },
+      {
+        "name": "hub-english",
+        "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --production-hub --lobby --signed-in --english --hard --low",
+        "startedAt": "2026-10-17T23:07:59.568Z",
+        "finishedAt": "2026-10-17T23:09:31.939Z",
+        "status": "passed",
+        "exitCode": 0,
+        "realProductionHub": true,
+        "productionR2": true,
+        "onlyLocalSqliteRecordWrites": true,
+        "screenshots": ".tmp/driving-release/production-browser/hub-english"
+      },
+      {
+        "name": "hub-wheel",
+        "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --production-hub --lobby --wide --low --wheel --stop",
+        "startedAt": "2026-10-17T23:07:00.527Z",
+        "finishedAt": "2026-10-17T23:07:38.988Z",
+        "status": "passed",
+        "exitCode": 0,
+        "realProductionHub": true,
+        "productionR2": true,
+        "onlyLocalSqliteRecordWrites": true,
+        "screenshots": ".tmp/driving-release/production-browser/hub-wheel"
+      },
+      {
+        "name": "hub-memory",
+        "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --production-hub --lobby --settings-memory",
+        "startedAt": "2026-10-17T23:08:20.554Z",
+        "finishedAt": "2026-10-17T23:09:08.503Z",
+        "status": "passed",
+        "exitCode": 0,
+        "realProductionHub": true,
+        "productionR2": true,
+        "onlyLocalSqliteRecordWrites": true,
+        "screenshots": null
+      },
+      {
+        "name": "pwa-memory",
+        "command": "node scripts/check-r2-game-browser.mjs --game driving-rehab --remote --standalone --settings-memory",
+        "startedAt": "2026-10-17T23:08:20.728Z",
+        "finishedAt": "2026-10-17T23:08:59.478Z",
+        "status": "passed",
+        "exitCode": 0,
+        "realProductionHub": false,
+        "productionR2": true,
+        "onlyLocalSqliteRecordWrites": true,
+        "screenshots": null
+      }
+    ],
+    "recordIsolation": "Actual deployed Hub HTML/JS and formal R2 bytes; production Hub /api/* intercepted to local SQLite. Real session API checked separately without saving results. No production accounts or records created."
+  },
+  "rollback": {
+    "firstNativeRelease": true,
+    "approvedNativeRollbackVersion": null,
+    "activated": false,
+    "previousHubDeployment": "8dccfbc8-9b51-4035-964e-464e85117009",
+    "sourceCommit": "de8d01d7c32953df4f0b057c377633193b80386e",
+    "checkedAt": "2026-10-17T23:05:28.905Z",
+    "legacyFiles": [
+      {
+        "path": "/games/driving-rehab/",
+        "status": 200,
+        "size": 4884,
+        "sha256": "3883e7a89e8216725da25c963ee5e977b2010b855730855b346a9327debec32b",
+        "baselineMatch": false,
+        "url": "https://8dccfbc8.rehabtrainerhub.pages.dev/games/driving-rehab/"
+      },
+      {
+        "path": "/games/driving-rehab/settings.json",
+        "status": 200,
+        "size": 3432,
+        "sha256": "d25f12b7e3ba373bb2db582a6812048f3f7c164de7a42cac61bdc30132165b0a",
+        "baselineMatch": true,
+        "url": "https://8dccfbc8.rehabtrainerhub.pages.dev/games/driving-rehab/settings.json"
+      },
+      {
+        "path": "/games/driving-rehab/score.json",
+        "status": 200,
+        "size": 3570,
+        "sha256": "e882f1156f8509a3c83abdc93084b78e6b5467582d9aba7e61864aada6dc3e89",
+        "baselineMatch": true,
+        "url": "https://8dccfbc8.rehabtrainerhub.pages.dev/games/driving-rehab/score.json"
+      },
+      {
+        "path": "/assets/training-modules/driving-rehab.webp",
+        "status": 200,
+        "size": 13202,
+        "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+        "baselineMatch": true,
+        "url": "https://8dccfbc8.rehabtrainerhub.pages.dev/assets/training-modules/driving-rehab.webp"
+      }
+    ],
+    "entryHtmlNote": "Prior deployment serves original legacy module/PWA entry. Whole HTML hash differs from custom-domain baseline; only the 3 immutable settings/score/preview bytes are asserted equal. Entry HTTP 200 and original bundle references were separately checked.",
+    "procedure": "Restore only driving-rehab legacy registry/dependencies/game/JSON flow from baseline source and deploy compatible Hub, retaining all other eight current releases. Keep published native version immutable. Do not activate legacy 1.0.0 as a native release or roll back unrelated current versions."
+  },
+  "environmentRecovery": "External sync renamed generated index.html to index [conflicted N].html. Recovered only after matching exact approved index SHA and revalidated entire 8-file digest; immutable package and deployment output frozen under .tmp. No manifest or limit changed.",
+  "limits": [
+    "Mobile/tablet use Brave CDP touch emulation.",
+    "Direction wheel uses virtual G29 axes and the original calibration/disconnect logic; physical wheel/touch/audio output not tested.",
+    "Safari/iOS and a long complete offline driving session not tested."
+  ],
+  "trainingRecordsCreated": false
+}

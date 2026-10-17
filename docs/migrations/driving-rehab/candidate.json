@@ -69,7 +69,7 @@
       "contentType": "text/javascript; charset=utf-8"
     }
   ],
-  "status": "approved-awaiting-publication",
+  "status": "published-and-production-accepted",
   "sourceCommit": "de8d01d7c32953df4f0b057c377633193b80386e",
   "totalBytes": 10045727,
   "ownerApproval": {
@@ -82,5 +82,6 @@
     "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
     "scope": "Publish the exact reviewed R2 release, deploy compatible runner first and Hub after R2 current, complete production acceptance, and commit/push to the dedicated Git branch."
   },
-  "published": false
+  "published": true,
+  "productionReceipt": "../../releases/driving-rehab-2.0.0.json"
 }

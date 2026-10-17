@@ -1,6 +1,6 @@
-# 駕駛注意力模擬練習 R2 搬遷候選
+# 駕駛注意力模擬練習 R2 搬遷驗收
 
-2026-10-18：依[搬遷計畫第 7 節 A–D](r2-game-migration-plan.md)完成本機候選，擁有者於回報此精確候選後明確回答「核准並git push」，已核准下列 `2.0.0`／contentSha256 及按序部署、發布、驗收與 Git 交付。**目前進行發布作業，尚未切換正式 Hub**；切換前正式仍為八款 R2／32 款舊流程，本機候選 registry 為九款／31 款舊 bundle。
+2026-10-18，依[搬遷計畫第 7 節 A–F](r2-game-migration-plan.md)完成搬遷。擁有者在收到精確候選後明確回覆「核准並git push」，核准 `driving-rehab@2.0.0`／`a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863`。已按相容 runner → R2 發布及 current → Hub 切換的順序完成，並通過正式 API、八檔 bytes 與九項 Hub／PWA 瀏覽器驗收；正式現為九款 R2／31 款舊流程。程式推送至 `feat/driving-rehab-r2`，沒有提前以 main 自動部署候選 registry。見[正式收據](releases/driving-rehab-2.0.0.json)。
 
 | 項目 | 值 |
 | --- | --- |
@@ -53,10 +53,36 @@
 
 手機／平板以 Brave CDP 模擬觸控，並在父頁和 OOP iframe 啟用 touch emulation；方向盤使用虛擬 G29 軸輸入跑原校正演算法與斷線暫停。這些不代表實體方向盤、觸控硬體、效能或音訊輸出的驗收。Safari／iOS 與長時間完整離線未驗。
 
-## 核准後的發布與回退
+## 正式發布、部署與驗收
 
-1. 依搬遷計畫第 7 節 E：「明確核准精確 version／contentSha256 後才執行發布」。本文件與 candidate 都是未發布候選，不是正式收據。
-2. 先部署相容 runner 的 reviewed gamepad 權限傳遞；此時保留舊 Hub 駕駛流程。再次 dry-run 比對本頁精確摘要，再由單一發布者執行 `node scripts/publish-official-game.mjs driving-rehab`，逐檔上傳／回讀後才切換 current。
-3. R2 current 完備後才部署本機候選的 Hub registry／bundle 排除及 gamepad iframe allow。不能提前部署含此 registry 的整份工作樹。Hub 只留下相容入口與原圖，沒有 bundle／settings.json／score.json。
-4. 依第 7 節 F 驗正式目錄唯一卡片／分類／原圖、未指定版本 session、8 檔公開 SHA-256、舊資產 410，以及正式 Hub／PWA 桌機、手機、平板、英文、方向盤權限及保存流程；完成後才在 `docs/releases/` 留正式收據、宣稱搬遷完成。
-5. 首次新格式沒有另一個已核准 native 回退版本。回退需針對 driving-rehab 還原基準 commit 的舊 Hub registry／依賴／遊戲與 JSON 流程，保留其他八款 current；不得使用 `--activate-version 1.0.0` 或回退整個平台覆蓋其他遊戲。正式舊 deployment／公開 bytes 的回讀核對留在發布前後作業，尚未執行。
+- [七項遠端 CI](https://github.com/ian030590/RehabTrainerHub/actions/runs/39077259337) 在 `4a278a358a316f89b6313aa60b2fbdbad1a4c12a` 全部成功。首次 Linux CI 的原碼文字換行差異只修正測試與 fixture，核准的遊戲 bytes 完全未變。
+- 相容 runner：[56fca01e](https://56fca01e.trainerhub-user-games.pages.dev)，先確認原有八款穩定入口不變，再發布八檔／10,045,727 bytes；發布工具逐檔回讀雜湊後發布 manifest、切換 current。切換 Hub 前再次核對八檔公開 bytes、gamepad launcher，當時舊 Hub settings 仍為 200。
+- 正式 Hub：[4a27cfb9](https://4a27cfb9.rehabtrainerhub.pages.dev)，只保留駕駛相容入口及原圖，不攜帶駕駛 bundle／JSON；保留 31 款舊遊戲。首次部署快照漏帶既有分類與相容目錄檔，Wrangler 在本機打包階段失敗，補齊原檔後重試成功，未改產品或核准套件。
+- 正式 `/api/games` 僅一筆 `driving-rehab@2.0.0`，分類 vision／vision、原 R2 預覽圖、無 settingsUrl；未指定版本 session 回覆 201 並固定本頁版本／摘要。舊 settings、score、JS、SW 均 410／no-store；其他八款 current 的版本與摘要和發布前完全一致。
+- [穩定獨立入口](https://trainerhub-user-games.pages.dev/games/driving-rehab/) 以不可快取 302 導向 2.0.0。原生 gamepad permission 在 Hub 與 PWA 均允許，sandbox 仍為 allow-scripts，無同源、相機或網路存取權限。
+
+正式 Brave 命令都以 `node scripts/check-r2-game-browser.mjs --game driving-rehab` 開頭，九項均通過：
+
+| 入口與模式 | 參數 | 驗收 |
+| --- | --- | --- |
+| 正式 Hub 桌機 | `--production-hub --lobby --wide --windowed` | 三步教學、視窗場景、完整成果、保存失敗重試與捲動還原 |
+| 正式 Hub 手機 | `--production-hub --lobby --mobile --medium --session-failure` | 啟動重試、觸控、視角切換、完整訓練與保存 |
+| 正式 Hub 平板 | `--production-hub --lobby --tablet --medium --hard` | 高難度、觸控、完整成果與保存 |
+| 正式 Hub 英文登入 | `--production-hub --lobby --signed-in --english --hard --low` | 英文文案、WASD、登入身份隔離與成果 |
+| 正式 Hub 方向盤 | `--production-hub --lobby --wide --low --wheel --stop` | 虛擬 G29 五階段校正、斷線暫停、停止清理 |
+| 正式 PWA 手機 | `--remote --standalone --mobile --low` | 完整訓練、成果與版本限定快取，包含模型資料 |
+| 正式 PWA 平板 | `--remote --standalone --tablet --low --stop` | 教學、全螢幕與停止不保存 |
+| 正式 Hub 設定保存 | `--production-hub --lobby --settings-memory` | 確認才保存、重開還原、遊戲仍無 localStorage 權限 |
+| 正式 PWA 設定保存 | `--remote --standalone --settings-memory` | 同上 |
+
+Hub 流程使用真正部署的 HTML／JS 與正式 R2；僅攔截 Hub `/api/*` 至本機 SQLite，以驗保存重試及身份隔離。正式 API 另行直接讀取與建立不保存成果的 session。沒有建立正式帳號或訓練紀錄。原始日誌及截圖分別保留在 `.tmp/driving-release/browser-*.log` 與 `.tmp/driving-release/production-browser/`，正式收據追蹤各命令、時間及結果。
+
+本機外部同步程序曾將產物 index.html 改名為 conflicted 檔；只在核對 index 精確 SHA 後還原原名，重新驗證八檔及完整摘要，再凍結套件和平台輸出；未調整 manifest、大小限制或核准內容。
+
+## 回退與限制
+
+首次 native 沒有另一個核准的新格式回退版本。舊 Hub deployment `8dccfbc8-9b51-4035-964e-464e85117009`／來源 `de8d01d7c32953df4f0b057c377633193b80386e` 已回讀：舊 settings、score、預覽圖 bytes 與發布前相同，舊入口 200 並保留原 module／PWA 引用。入口整份 HTML 雜湊與自有網域基準不同，未宣稱它逐 byte 相同。沒有實際回退。
+
+必要時只還原駕駛的舊 registry／依賴／遊戲及 JSON 流程，再部署相容 Hub；保留其他八款 current 和已發布不可變 native 版本。不可用 `--activate-version 1.0.0` 當 native 回退，或回退整站而覆蓋其他遊戲。
+
+手機／平板為 Brave 觸控模擬，方向盤為虛擬 G29；實體方向盤、觸控及音訊輸出、Safari／iOS、長時間完整離線訓練仍未驗收。

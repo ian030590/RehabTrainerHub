@@ -145,8 +145,8 @@
     }
   ],
   "productionWrites": 0,
-  "published": false,
-  "deployed": false,
+  "published": true,
+  "deployed": true,
   "ownerApproval": {
     "status": "approved",
     "source": "Repository owner in this Codex conversation",
@@ -162,5 +162,11 @@
     "G29 wheel axes are virtual fixtures; no physical hardware or audio-output acceptance.",
     "Safari/iOS and long complete offline sessions not tested.",
     "First native migration has no approved native rollback version."
-  ]
+  ],
+  "productionReceipt": "../../releases/driving-rehab-2.0.0.json",
+  "ci": {
+    "url": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39077259337",
+    "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+    "conclusion": "success"
+  }
 }
