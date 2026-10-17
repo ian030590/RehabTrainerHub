@@ -8,7 +8,8 @@ import { GaborTutorial } from './rules/GaborTutorial';
 import { DestroyPixiTrainingRuntime, WarmUpPixiTrainingRuntime } from './runtime/pixiPool';
 import { PrepareAudioFeedback, SetSoundEnabled, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
 import { backgroundMusic, backgroundMusicOptions } from './music';
-import { ExitGame, IsHubGame, RetryGameSave, SendGameEvent, SendGameResult } from './runtime/hubBridge';
+import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
+import { RestoreSettings } from './runtime/settingsMemory';
 import { DisposeGaborTextures } from './gaborTexture';
 import { BuildGaborPatchingTimeline } from './timeline/gaborPatchingTimeline';
 
@@ -35,6 +36,10 @@ export function GaborPatchingGame() {
   const skipFinishRef = useRef(false);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
+  useEffect(() => OnSavedSettings(saved => {
+    const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
+    if (restored && phaseRef.current === 'menu') setSettings(restored);
+  }), []);
   const stopRuntime = useCallback(() => {
     generationRef.current++;
     skipFinishRef.current = true;
@@ -105,6 +110,7 @@ export function GaborPatchingGame() {
   const confirmSettings = () => {
     if (!formRef.current?.reportValidity() || !ValidateSettings(settings) || !ready || error) return;
     SetSoundEnabled(settings.soundEnabled);
+    SaveGameSettings(settings);
     setPhase('rules');
   };
   const startTraining = async () => {
@@ -118,8 +124,8 @@ export function GaborPatchingGame() {
     }
     setPhase('running');
   };
-  const difficultyLabels = en ? ['4 s / 2% per frame', '3 s / 5% per frame', '2 s / 8% per frame']
-    : ['4 秒／每幀 2%', '3 秒／每幀 5%', '2 秒／每幀 8%'];
+  const difficultyLabels = en ? ['Easy (4 s / 2% per frame)', 'Medium (3 s / 5% per frame)', 'Hard (2 s / 8% per frame)']
+    : ['簡單（4 秒／每幀 2%）', '中等（3 秒／每幀 5%）', '困難（2 秒／每幀 8%）'];
   const summaryItems = [
     { label: en ? 'Target lifetime and spawn probability' : '目標存續與生成機率', value: difficultyLabels[['easy', 'medium', 'hard'].indexOf(settings.difficulty)] },
     ...numericSettings.map(field => ({ label: en ? field.en : field.zh, value: String(settings[field.key]) })),

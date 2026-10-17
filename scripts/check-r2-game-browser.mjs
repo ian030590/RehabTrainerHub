@@ -42,6 +42,7 @@ const english = process.argv.includes('--english');
 const viewportMode = process.argv.includes('--mobile') ? 'mobile' : process.argv.includes('--tablet') ? 'tablet' : 'desktop';
 const movingCardScreenshots = resolve(root, '.tmp/moving-card-validation', `${standalone ? 'standalone' : 'lobby'}-${viewportMode}-${signedIn ? 'account' : 'guest'}${english ? '-en' : ''}${process.argv.includes('--wide') ? '-wide' : ''}${process.argv.includes('--windowed') ? '-windowed' : ''}`);
 const rendererFailure = process.argv.includes('--renderer-failure');
+const settingsMemory = process.argv.includes('--settings-memory');
 const output = resolve(process.env.HUB_OUTPUT_ROOT || resolve(root, 'apps/rehabtrainerhub/out'));
 const runnerOutput = resolve(process.env.RUNNER_OUTPUT_ROOT || resolve(root, 'apps/usergamerunner/dist'));
 if (handGame && !remote) assert.ok(existsSync(resolve(runnerOutput, 'input/hand-tracking-1.0.0/index.js')),
@@ -388,14 +389,45 @@ try {
   if (!standalone) assert.equal(new URL(await evaluate('document.querySelector("iframe").src')).pathname,
     `/games/${gameId}/${manifest.version}/package/index.html`, 'Load the session-selected game directly without the legacy launcher.');
   let gameContext;
-  await until(async () => {
+  const findGameSettings = () => until(async () => {
     for (const context of contexts.filter(context => context.auxData?.isDefault)) {
-      try { if (await evaluate(`Boolean(document.querySelector(".${phasePrefix}-phase-menu"))`, context)) { gameContext = context; return true; } } catch {}
+      try { if (await evaluate(`Boolean(document.querySelector(".${phasePrefix}-phase-menu form select"))`, context)) { gameContext = context; return true; } } catch {}
     }
     return false;
   }, 'game-owned settings');
+  await findGameSettings();
   console.log('Game settings ready.');
-  if (!standalone) {
+  if (settingsMemory) {
+    // The container (Hub page or standalone launcher) keeps confirmed settings in its own localStorage.
+    const storageKey = `trainerhub.game-settings/v1:${gameId}`;
+    const firstSelect = `document.querySelector(".${phasePrefix}-phase-menu form select")`;
+    const chosen = await evaluate(`(() => {
+      const select = ${firstSelect};
+      const option = [...select.options].reverse().find(item => item.value !== select.value && !item.disabled);
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(select, option.value);
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      return option.value;
+    })()`, gameContext);
+    await until(() => evaluate(`${firstSelect}.value === ${JSON.stringify(chosen)}`, gameContext), 'setting changed');
+    assert.equal(await evaluate(`localStorage.getItem(${JSON.stringify(storageKey)})`), null, 'Nothing is stored before confirming.');
+    await evaluate(`document.querySelector(".${phasePrefix}-phase-menu .config-actions .btn-primary, .${phasePrefix}-phase-menu form .btn-primary").click()`, gameContext);
+    await until(() => evaluate(`localStorage.getItem(${JSON.stringify(storageKey)}) !== null`), 'confirmed settings stored by the container');
+    const stored = JSON.parse(await evaluate(`localStorage.getItem(${JSON.stringify(storageKey)})`));
+    assert.ok(Object.values(stored).map(String).includes(chosen), `Stored settings include the chosen value ${chosen}: ${JSON.stringify(stored)}`);
+    assert.equal(await evaluate('(() => { try { localStorage.length; return "available"; } catch { return "blocked"; } })()', gameContext), 'blocked',
+      'The sandboxed game itself has no storage access.');
+    await send('Page.reload', { ignoreCache: true }, session);
+    gameContext = null;
+    await wait(500);
+    if (lobby && !standalone) {
+      await until(() => evaluate(`Boolean(document.querySelector(".module-card[data-runtime-id=${gameId}] button"))`), 'lobby after reload');
+      await evaluate(`document.querySelector(".module-card[data-runtime-id=${gameId}] button").click()`);
+    }
+    await findGameSettings();
+    await until(() => evaluate(`${firstSelect}.value === ${JSON.stringify(chosen)}`, gameContext), 'saved setting restored after reload', 10000);
+    console.log(`Settings memory passed (${standalone ? 'standalone launcher' : 'Hub'}): ${JSON.stringify(stored)}`);
+  }
+  if (!standalone && !settingsMemory) {
     assert.equal(sessionAttempts, sessionFailure ? 2 : 1, 'Select and bind the approved version before presenting settings.');
     catalog.releases['9.0.0'] = { contentSha256: manifest.contentSha256 };
     catalog.currentVersion = '9.0.0';
@@ -424,7 +456,9 @@ try {
     assert.ok(state.panel.left >= 0 && state.panel.top >= 0 && state.panel.right <= state.width + 1 && state.panel.bottom <= state.height + 1, 'Tutorial controls must stay within the viewport.');
     return state;
   };
-  if (process.argv.includes('--revoke')) {
+  if (settingsMemory) {
+    console.log('Settings memory check complete.');
+  } else if (process.argv.includes('--revoke')) {
     revoked = true;
     await evaluate("window.dispatchEvent(new Event('online'))");
     await until(() => evaluate('!document.querySelector("dialog iframe") && Boolean(document.querySelector("dialog [role=alert]"))'), 'revoked game removed');
@@ -479,14 +513,18 @@ try {
   } else {
   assert.equal(await game('document.querySelectorAll("form input[type=range]").length'), 3);
   assert.ok(await game('document.documentElement.scrollWidth <= innerWidth'), 'Settings must not overflow horizontally.');
-  await game(`document.querySelector('input[type=number]').focus()`);
+  assert.equal(await game('Boolean(document.querySelector("[name=customGameDurationSec]"))'), false, 'Custom seconds stay hidden until custom is chosen.');
+  assert.equal(await game('Boolean(document.querySelector("[name=backgroundColor]")) || Boolean(document.querySelector("[name=backgroundImage]"))'), false, 'Starfield background hides the colour and image pickers.');
+  await game(`(() => { const select = document.querySelector('[name=gameDuration]'); select.value = 'custom'; select.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  await until(() => game('Boolean(document.querySelector("[name=customGameDurationSec]"))'), 'custom duration field');
+  await game(`document.querySelector('[name=customGameDurationSec]').focus()`);
   await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 }, session);
   await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 }, session);
   await send('Input.insertText', { text: '5' }, session);
   await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab' }, session);
   await wait(150);
-  assert.equal(await game('document.querySelector("input[type=number]").value'), '5');
-  assert.equal(await game('document.querySelectorAll("form select")[1].value'), '5', 'Duration selection must display the custom duration actually used.');
+  assert.equal(await game('document.querySelector("[name=customGameDurationSec]").value'), '5');
+  assert.equal(await game('document.querySelector("[name=gameDuration]").value'), 'custom', 'Duration selection shows that the custom value is used.');
   await game('document.querySelector("form .btn-primary").click()');
   await until(() => game('Boolean(document.querySelector(".game-tour"))'), 'tutorial');
   const firstStep = await checkSpotlight('.mock-enemy');

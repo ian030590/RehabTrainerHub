@@ -4,6 +4,8 @@ import { CheckResultsPresentation } from './r2-game-results-browser.mjs';
 
 // Fastest valid pace keeps the real passage short: 5 tokens per display at 600 tokens/min.
 const fastSettings = { passage: 1, wordsPerMinute: 600, crowding: 500, contrast: 50 };
+// The batch-size slider shows segments (1–5); it saves the original percent value.
+const controlValue = (name, value) => name === 'crowding' ? value / 100 : value;
 
 export async function CheckReadingTraining({ game, evaluate, send, until, standalone, english, capture, checkSpotlight,
   sqlite, gameContext, session, getSaveAttempts, requests, errors, version, accountId, guestSubjectId, rendererFailure }) {
@@ -22,10 +24,16 @@ export async function CheckReadingTraining({ game, evaluate, send, until, standa
   await capture('settings');
   const setInput = async (name, value) => game(`(() => {
     const input = document.querySelector('[name=${name}]');
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(String(value))});
+    const prototype = input.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+    Object.getOwnPropertyDescriptor(prototype, 'value').set.call(input, ${JSON.stringify(String(value))});
     input.dispatchEvent(new Event('input', {bubbles:true})); input.dispatchEvent(new Event('change', {bubbles:true}));
   })()`);
-  for (const [name, value] of Object.entries(fastSettings)) await setInput(name, value);
+  assert.equal(await game(`document.querySelector('[name=passage]').tagName`), 'SELECT', 'Passage material is a dropdown.');
+  assert.deepEqual(await game(`[...document.querySelectorAll('[name=passage] option')].map(option => option.textContent)`),
+    english ? ['Random', 'Passage 1', 'Passage 2', 'Passage 3'] : ['隨機', '第 1 篇', '第 2 篇', '第 3 篇']);
+  assert.deepEqual(await game(`['min','max','step'].map(name => document.querySelector('[name=crowding]').getAttribute(name))`), ['1', '5', '1'], 'Batch size is chosen as 1–5 segments.');
+  for (const [name, value] of Object.entries(fastSettings)) await setInput(name, controlValue(name, value));
+  assert.match(await game(`document.querySelector('[name=crowding]').closest('label').querySelector('output').textContent`), english ? /5 per display/ : /每批 5 段/);
   assert.match(await game(`document.querySelector('.reading-preview-word').textContent`), english ? /^Elara was a nineteen-year-old mechanic$/ : /^小 貓 白 白 在$/,
     'The preview shows the configured tokens per display.');
   assert.equal(await game(`getComputedStyle(document.querySelector('.reading-preview-word')).color`), 'rgb(100, 100, 100)', 'Preview contrast follows the renderer gray level.');
@@ -35,7 +43,7 @@ export async function CheckReadingTraining({ game, evaluate, send, until, standa
   await capture('tutorial-word');
   await game(`document.querySelector('.game-tour button:last-child').click()`);
   await until(() => game(`Boolean(document.querySelector('form'))`), 'tutorial return preserves settings');
-  for (const [name, value] of Object.entries(fastSettings)) assert.equal(await game(`document.querySelector('[name=${name}]').value`), String(value));
+  for (const [name, value] of Object.entries(fastSettings)) assert.equal(await game(`document.querySelector('[name=${name}]').value`), String(controlValue(name, value)));
   assert.equal(await game(`Boolean(document.querySelector('.game-tour-spotlight'))`), false);
   await game(`document.querySelector('form .btn-primary').click()`);
   await until(() => game(`Boolean(document.querySelector('.game-tour'))`), 'restarted tutorial');

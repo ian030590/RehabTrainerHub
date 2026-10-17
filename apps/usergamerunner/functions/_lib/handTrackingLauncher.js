@@ -1,8 +1,10 @@
-import { AcceptGameMessage, IsGameResult } from '../../../../packages/ui/src/selfContainedGame.js';
+import { AcceptGameMessage, AcceptGameSettingsMessage, IsGameResult, IsGameSettings, ReadSavedGameSettings, WriteSavedGameSettings } from '../../../../packages/ui/src/selfContainedGame.js';
 import { EscapeHtml } from './render.js';
 
 export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
+  // Official standalone launcher: camera input brokers when the game uses them, and the game's saved settings.
   const eyeTracking = release.capabilities.includes('eye-tracking');
+  const camera = eyeTracking || release.capabilities.includes('hand-tracking');
   const configuration = JSON.stringify({ gameId: release.gameId, version: release.version,
     capabilities: release.capabilities, basePath }).replaceAll('<', '\\u003c');
   return `<!doctype html><html lang="zh-TW"><head>
@@ -18,7 +20,7 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
       button { font:inherit;padding:12px;margin:4px;cursor:pointer; } button:focus-visible { outline:3px solid var(--primary); }
       #install-button { position:fixed;top:8px;right:8px; } #runner-error { position:fixed;inset:0;padding:24px;background:var(--surface); }
     </style>
-    <script nonce="${cspNonce}" src="/input/${eyeTracking ? 'eye-tracking-1.1.0' : 'hand-tracking-1.0.0'}/index.js"></script>
+    ${camera ? `<script nonce="${cspNonce}" src="/input/${eyeTracking ? 'eye-tracking-1.1.0' : 'hand-tracking-1.0.0'}/index.js"></script>` : ''}
     <script nonce="${cspNonce}">
     document.addEventListener('DOMContentLoaded', () => {
       const config = ${configuration};
@@ -30,15 +32,21 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
       const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value) && [Object.prototype,null].includes(Object.getPrototypeOf(value));
       const exact = (value, keys) => plain(value) && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value,key));
       const metrics = value => plain(value) && Object.keys(value).length <= 12 && Object.entries(value).every(([key,item]) => /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(key) && !sensitiveKey.test(key) && (item === null || (typeof item === 'number' && Number.isFinite(item) && Math.abs(item) <= 1e12)));
+      const IsGameSettings = ${IsGameSettings.toString()};
       const IsGameResult = ${IsGameResult.toString()};
+      const AcceptGameSettingsMessage = ${AcceptGameSettingsMessage.toString()};
+      const ReadSavedGameSettings = ${ReadSavedGameSettings.toString()};
+      const WriteSavedGameSettings = ${WriteSavedGameSettings.toString()};
       const accept = ${eyeTracking ? 'TrainerHubEyeTracking.AcceptGameMessage' : AcceptGameMessage.toString()};
+      let storage = null;
+      try { storage = window.localStorage; } catch { /* Blocked storage only means defaults next time. */ }
       let port = null; let initialized = false; let consentReply = null; let previousFocus = null;
       let csv = null;
-      const broker = ${eyeTracking ? 'TrainerHubEyeTracking' : 'TrainerHubHandTracking'}.CreateBroker({
+      const broker = ${camera ? `${eyeTracking ? 'TrainerHubEyeTracking' : 'TrainerHubHandTracking'}.CreateBroker({
         send: message => port?.postMessage({ ...message, sessionNonce:nonce }),
         requestConsent: () => new Promise(resolve => { consentReply = resolve; previousFocus = document.activeElement; consent.hidden=false; document.getElementById('camera-enable').focus(); }),
         cancelConsent: () => { consent.hidden=true; consentReply?.(false); consentReply=null; previousFocus?.focus(); },
-      });
+      })` : '{ Start() {}, Stop() {}, Calibrate() {}, Reset() {} }'};
       const answer = value => { const reply=consentReply; consentReply=null; consent.hidden=true; reply?.(value); previousFocus?.focus(); };
       document.getElementById('camera-enable').onclick=() => answer(true);
       document.getElementById('camera-cancel').onclick=() => answer(false);
@@ -49,6 +57,7 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
         initialized=true;
         const channel=new MessageChannel(); port=channel.port1;
         port.onmessage=({data}) => {
+          if(data?.type==='settings') { if(AcceptGameSettingsMessage(data,state))WriteSavedGameSettings(storage,config.gameId,data.payload); return; }
           if(!accept(data,state))return;
           if(data.type==='result')broker.Stop();
           if(data.type==='input-start')void broker.Start(data.payload.hand);
@@ -60,7 +69,8 @@ export function RenderHandTrackingLauncher(release, basePath, cspNonce) {
           if(data.type==='exit') { broker.Stop(); csv=null;state.complete=false;port.postMessage({schema:'trainerhub.game/v1',type:'configure',sessionNonce:nonce}); }
         };
         port.onmessageerror=stop;port.start();
-        frame.contentWindow.postMessage({schema:'trainerhub.game/v1',type:'init',gameId:config.gameId,version:config.version,sessionNonce:nonce,language:new URLSearchParams(location.search).get('lang')==='en'?'en':'zh',mode:'standalone'},'*',[channel.port2]);
+        const settings=config.capabilities.includes('settings-storage')?ReadSavedGameSettings(storage,config.gameId):null;
+        frame.contentWindow.postMessage({schema:'trainerhub.game/v1',type:'init',gameId:config.gameId,version:config.version,sessionNonce:nonce,language:new URLSearchParams(location.search).get('lang')==='en'?'en':'zh',mode:'standalone',...(settings?{settings}:{})},'*',[channel.port2]);
       });
       window.addEventListener('pagehide',stop);
       const health=async () => { if(!navigator.onLine)return;try{const response=await fetch(config.basePath,{method:'HEAD',cache:'no-store'});if([404,410].includes(response.status)){stop();frame.remove();document.getElementById('runner-error').hidden=false;}}catch{} };

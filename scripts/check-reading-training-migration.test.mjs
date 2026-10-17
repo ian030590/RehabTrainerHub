@@ -38,6 +38,33 @@ test('reading keeps every original setting, default and boundary', async () => {
   }
 });
 
+test('passage material is chosen from a dropdown of random and the three fixed passages, not a slider', async () => {
+  const { passageOptions, ValidateSettings, defaultSettings } = await LoadModule('settings.ts');
+  assert.deepEqual(passageOptions, [0, 1, 2, 3]);
+  for (const passage of passageOptions) assert.equal(ValidateSettings({ ...defaultSettings, passage }), true);
+  const source = await readFile(resolve(gameRoot, 'ReadingTrainingGame.tsx'), 'utf8');
+  const tree = ts.createSourceFile('game.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const elements = [];
+  const visit = node => { if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) elements.push(node); ts.forEachChild(node, visit); };
+  visit(tree);
+  const attribute = (node, name) => node.attributes.properties.find(item => item.name?.getText(tree) === name)?.initializer?.getText(tree);
+  const select = elements.find(node => node.tagName.getText(tree) === 'select' && attribute(node, 'name') === '"passage"');
+  assert.ok(select, 'Passage uses a native select.');
+  assert.match(select.parent.getText(tree), /passageOptions\.map/);
+  const ranges = elements.filter(node => node.tagName.getText(tree) === 'input' && attribute(node, 'type') === '"range"' && attribute(node, 'name') !== '"crowding"');
+  assert.equal(ranges.length, 1);
+  const { segmentsPerDisplay, crowdingFromSegments } = await LoadModule('settings.ts');
+  assert.deepEqual([1, 2, 3, 4, 5].map(crowdingFromSegments), [100, 200, 300, 400, 500], 'Saved values keep the original percent scale.');
+  assert.deepEqual([100, 300, 500].map(segmentsPerDisplay), [1, 3, 5]);
+  const crowding = elements.find(node => node.tagName.getText(tree) === 'input' && attribute(node, 'name') === '"crowding"');
+  assert.ok(crowding, 'Batch size is its own control.');
+  assert.equal(attribute(crowding, 'type'), '"range"');
+  assert.deepEqual(['min', 'max', 'step'].map(name => attribute(crowding, name)), ['{1}', '{5}', '{1}'], 'Players choose 1–5 segments, not 100–500%.');
+  assert.match(attribute(crowding, 'value'), /segmentsPerDisplay\(settings\.crowding\)/);
+  assert.match(ranges[0].parent.getText(tree) + source, /rangeSettings\.map/);
+  assert.doesNotMatch(source, /name="passage"[^>]*type="range"/);
+});
+
 test('reading selects the configured passage per language and random passage 0 among all three', async () => {
   const stories = Object.fromEntries(['en', 'zh'].flatMap(language => [1, 2, 3].map(index => [
     `../data/reading-stories/${language}-story/${language}_story_0${index}.json`, { default: { language, title: `${language}${index}` } }])));
@@ -128,9 +155,9 @@ test('reading owns UI, dependencies, metadata and the exact original preview; th
   }
   for (const file of ['settings.json', 'score.json', 'results/ReadingResults.tsx', 'exportCsv.ts']) await assert.rejects(access(resolve(gameRoot, file)), file);
   const pkg = JSON.parse(await readFile(resolve(gameRoot, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '2.0.0');
+  assert.equal(pkg.version, '2.0.1');
   for (const name of ['react', 'react-dom', 'pixi.js', 'jspsych', '@jspsych/plugin-html-button-response', 'tone']) assert.ok(pkg.dependencies[name], name);
-  assert.deepEqual(pkg.rehabTrainer.capabilities, ['audio', 'fullscreen', 'keyboard', 'pointer', 'touch']);
+  assert.deepEqual(pkg.rehabTrainer.capabilities, ['audio', 'fullscreen', 'keyboard', 'pointer', 'settings-storage', 'touch']);
   const hub = JSON.parse(await readFile(resolve(root, 'apps/rehabtrainerhub/package.json'), 'utf8'));
   assert.equal(hub.dependencies[pkg.name], undefined);
   const registry = JSON.parse(await readFile(resolve(root, 'packages/ui/src/officialGameReleases.json'), 'utf8'));

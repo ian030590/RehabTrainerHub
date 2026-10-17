@@ -17,10 +17,14 @@ export async function CheckMotorCortex({ game, evaluate, until, standalone, engl
   assert.equal(await game('document.activeElement.name'), 'drill');
   await capture('settings');
   assert.equal(await game('document.fullscreenElement'), null, 'Settings stay windowed.');
-  await choose('targetSizePercent', 74); await confirm();
-  assert.ok(await game('Boolean(document.querySelector("form"))'), 'Invalid settings cannot start the tour.');
-  await game('document.querySelector("[name=targetSizePercent]").dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true}))');
-  assert.ok(await game('Boolean(document.querySelector("form"))'), 'Enter retains invalid editable settings.');
+  for (const name of ['targetSizePercent', 'speedPercent']) {
+    assert.equal(await game(`document.querySelector('[name=${name}]').type`), 'range', `${name} is a slider.`);
+    assert.ok(await game(`Boolean(document.querySelector('[name=${name}]').closest('label').querySelector('output'))`), `${name} shows its value.`);
+  }
+  // A slider cannot hold an out-of-range value; it clamps to the bounds the game validates.
+  await choose('targetSizePercent', 74);
+  assert.equal(await game('document.querySelector("[name=targetSizePercent]").value'), '75');
+  assert.equal(await game('Boolean(document.querySelector(".game-tour"))'), false, 'Changing a setting does not start the tour.');
   const drill = process.argv.includes('--random') ? 'random' : process.argv.includes('--vertical') ? 'vertical' : process.argv.includes('--horizontal') ? 'horizontal' : 'bounce';
   const hand = process.argv.includes('--left') ? 'left' : process.argv.includes('--right') ? 'right' : 'any';
   await choose('targetSizePercent', 130); await choose('speedPercent', 70); await choose('difficulty', 'beginner'); await choose('durationSec', 45); await choose('drill', drill); await choose('handChoice', hand);

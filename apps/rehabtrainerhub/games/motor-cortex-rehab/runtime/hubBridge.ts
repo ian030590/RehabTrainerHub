@@ -9,6 +9,7 @@ let sequence = 0;
 let language: 'zh' | 'en' | null = null;
 let standalone = true;
 let resultPayload: unknown = null;
+let savedSettings: Record<string, unknown> | null = null;
 let cancelStart: (() => void) | null = null;
 
 export function GetGameLanguage() { return language; }
@@ -24,6 +25,7 @@ export function InstallHubBridge() {
     nonce = message.sessionNonce;
     port = event.ports[0];
     standalone = message.mode === 'standalone';
+    savedSettings = message.settings && typeof message.settings === 'object' && !Array.isArray(message.settings) ? message.settings : null;
     language = message.language === 'en' ? 'en' : 'zh';
     const inputState = { sessionNonce: nonce, sequence: -1 };
     window.dispatchEvent(new CustomEvent('game:language', { detail: language }));
@@ -40,6 +42,7 @@ export function InstallHubBridge() {
     };
     port.start();
     SendGameEvent('ready');
+    if (savedSettings) window.dispatchEvent(new Event('game:settings'));
     if (resultPayload) SendGameEvent('result', resultPayload);
     window.removeEventListener('message', initialize);
   };
@@ -76,3 +79,13 @@ export function StartHandInput(hand: 'any' | 'left' | 'right' = 'any'): Promise<
     SendGameEvent('input-start', { hand });
   });
 }
+
+// Delivers the device's last confirmed settings from the container, now or when they arrive.
+export function OnSavedSettings(listener: (settings: Record<string, unknown>) => void) {
+  const deliver = () => { if (savedSettings) listener(savedSettings); };
+  deliver();
+  window.addEventListener('game:settings', deliver);
+  return () => window.removeEventListener('game:settings', deliver);
+}
+// The container keeps confirmed settings on this device; the sandboxed game cannot use storage itself.
+export function SaveGameSettings(settings: object) { SendGameEvent('settings', { ...settings }); }

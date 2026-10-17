@@ -100,7 +100,11 @@ for (const fixture of cases) {
     if (['moving-card', 'gabor-patching', 'reading-training'].includes(fixture.id)) {
       assert.match(form.getText(syntax), /onSubmit={[\s\S]*confirmSettings\(\)/);
       assert.match(source, /const confirmSettings = \(\) => {[\s\S]*?reportValidity\(\)[\s\S]*?ValidateSettings\(settings\)[\s\S]*?setPhase\('rules'\)/);
-    } else assert.match(form.getText(syntax), /reportValidity\(\)/);
+    } else {
+      // Confirming validates the form before the tutorial (and before the settings are remembered).
+      assert.match(form.getText(syntax), /confirmSettings\(/);
+      assert.match(source, /const confirmSettings = \([^)]*\) => {[\s\S]*?reportValidity\(\)[\s\S]*?setPhase\('rules'\)/);
+    }
     const results = elements.find(node => node.openingElement.getText(syntax).includes('className="experiment-results"'));
     assert.ok(results);
     for (const node of elements.filter(node => node.pos >= results.pos && node.end <= results.end)) {

@@ -6,7 +6,8 @@ import { defaultSettings, GetActiveSettingFields, ValidateSettings, type Oculomo
 import { BuildGameScore, IsExperimentResult, type ExperimentResult } from './score';
 import { OculomotorTutorial } from './rules/OculomotorTutorial';
 import { OculomotorResults } from './OculomotorResults';
-import { ExitGame, IsHubGame, SendGameEvent } from './runtime/hubBridge';
+import { ExitGame, IsHubGame, OnSavedSettings, SaveGameSettings, SendGameEvent } from './runtime/hubBridge';
+import { RestoreSettings } from './runtime/settingsMemory';
 import { PrepareExperiment } from './runtime/experiment';
 import { BuildOculomotorCsvRows } from './oculomotorCsvRows';
 import { OculomotorSettingsFields } from './OculomotorSettingsFields';
@@ -34,6 +35,10 @@ export function OculomotorTrainingGame() {
   const completedRef = useRef(false);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
+  useEffect(() => OnSavedSettings(saved => {
+    const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
+    if (restored && phaseRef.current === 'menu') setSettings(restored);
+  }), []);
   const settingsRef = useRef(settings);
   const moduleSettings = useRef<Record<string, OculomotorSettings>>({});
   settingsRef.current = settings;
@@ -106,6 +111,7 @@ export function OculomotorTrainingGame() {
       if (!ValidateSettings(settings)) setError(en ? 'Check the values and select at least one direction.' : '請檢查數值，並選擇至少一個方位。');
       return;
     }
+    SaveGameSettings(settings);
     setError(''); setPhase('rules');
   };
   const start = async () => {

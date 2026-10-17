@@ -28,6 +28,7 @@ import { Button } from '@rehab-trainer/ui/components/ui/button';
 import { GetTrainerCategoryTheme } from '@rehab-trainer/hub-modules/catalog';
 import { BuildTrainingThemeStyle } from '../trainingThemeStyle';
 import { GameSettingsForm } from '@rehab-trainer/ui/components/GameSettingsForm';
+import { ApplySavedPackageSettings, DeviceStorage, SavePackageSettings } from './packageSettingsMemory';
 
 interface PackageGameOverlayProps {
   game: PublishedGame;
@@ -180,7 +181,7 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
         if (!response.ok) throw new Error(`Unable to load settings.json (${response.status}).`);
         return ParseGameSettingsDefinition(await response.json(), game.slug);
       })
-      .then(setDefinition)
+      .then(parsed => setDefinition(ApplySavedPackageSettings(DeviceStorage(), parsed)))
       .catch(() => {
         if (!controller.signal.aborted) setSettingsError(true);
       });
@@ -255,7 +256,7 @@ export function PackageGameOverlay({ game, onClose }: PackageGameOverlayProps) {
           definition={definition}
           language={language}
           onCancel={requestClose}
-          onSubmit={setConfiguredSettings}
+          onSubmit={values => { SavePackageSettings(DeviceStorage(), definition.gameId, values); setConfiguredSettings(values); }}
           title={game.title}
         />
       )}

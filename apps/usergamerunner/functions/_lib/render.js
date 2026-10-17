@@ -13,9 +13,14 @@ const maximumResultTrialCount = 100_000;
 const releaseHealthCheckIntervalMs = 60 * 1000;
 const runnerCacheRevision = '2026-10-10-self-contained-games-v5';
 
+export function UsesOfficialLauncher(release) {
+  return release.presentation === 'game' && ['hand-tracking', 'eye-tracking', 'settings-storage']
+    .some(capability => release.capabilities.includes(capability));
+}
+
 export function RenderLauncher(release, basePath, runnerOrigin, embedOptions = {}) {
   const cspNonce = RandomToken(18);
-  if (release.presentation === 'game' && (release.capabilities.includes('hand-tracking') || release.capabilities.includes('eye-tracking'))) {
+  if (UsesOfficialLauncher(release)) {
     return { body: RenderHandTrackingLauncher(release, basePath, cspNonce), cspNonce };
   }
   const entryUrl = `${basePath}package/${EncodePackagePath(release.entry)}`;

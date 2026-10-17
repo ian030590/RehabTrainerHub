@@ -7,7 +7,8 @@ import type { GamePhase, HandState, TargetState, SessionRecord, LiveState } from
 import { useT } from './i18n/useT';
 import { MotorTutorial } from './rules/MotorTutorial';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
-import { IsHubGame, StartHandInput, StopHandInput, SendGameEvent, SendGameResult, RetryGameSave } from './runtime/hubBridge';
+import { IsHubGame, OnSavedSettings, SaveGameSettings, StartHandInput, StopHandInput, SendGameEvent, SendGameResult, RetryGameSave } from './runtime/hubBridge';
+import { RestoreSettings } from './runtime/settingsMemory';
 import { PrepareAudioFeedback, PlaySuccessSound, PlayGameEndSound, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { BuildGameScore } from './score';
@@ -45,6 +46,10 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
     currentHoldPercent: 0, level: 1, targetX: 50, targetY: 42, targetRadius: 66, handX: 64, handY: 62, handVisible: false, insideTarget: false });
   const difficulty = difficulties.find(item => item.id === config.difficulty)!;
   const setPhase = useCallback((next: GamePhase) => { phaseRef.current = next; setPhaseState(next); }, []);
+  useEffect(() => OnSavedSettings(saved => {
+    const restored = RestoreSettings(saved, defaultConfig, IsMotorConfig);
+    if (restored && phaseRef.current === 'menu') setConfig(restored);
+  }), []);
   const stopInput = useCallback(() => {
     generationRef.current++;
     setHandInputReady(false);
@@ -108,6 +113,7 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
   ];
   const confirm = () => {
     if (!formRef.current?.reportValidity() || !IsMotorConfig(config)) return;
+    SaveGameSettings(config);
     setError(''); setLive(current => ({ ...current, timeRemaining: config.durationSec, targetRadius: difficulty.radius * config.targetSizePercent / 100 })); setPhase('rules');
   };
   const handleModalKey = (event: KeyboardEvent<HTMLElement>) => {
@@ -205,8 +211,8 @@ export function MotorCortexRehabGame({ onExit }: { onExit: () => void }) {
           <label>{labels.difficulty}<select name="difficulty" value={config.difficulty} onChange={event => setConfig({ ...config, difficulty: event.target.value as MotorConfig['difficulty'] })}>{difficulties.map(item => <option key={item.id} value={item.id}>{labels.difficultyNames[item.id]} · {item.radius}px / {item.speed}px/s / {item.holdMs}ms</option>)}</select></label>
           <label>{labels.duration}<select name="durationSec" value={config.durationSec} onChange={event => setConfig({ ...config, durationSec: Number(event.target.value) })}>{[45, 60, 90].map(value => <option key={value} value={value}>{value}s</option>)}</select></label>
           <label>{labels.hand}<select name="handChoice" value={config.handChoice} onChange={event => setConfig({ ...config, handChoice: event.target.value as MotorConfig['handChoice'] })}>{(['any', 'left', 'right'] as const).map(value => <option key={value} value={value}>{FormatHandChoice(value, labels)}</option>)}</select></label>
-          <label>{labels.targetSize} · {config.targetSizePercent}%<input name="targetSizePercent" type="number" required min={75} max={130} step={5} value={config.targetSizePercent} onChange={event => setConfig({ ...config, targetSizePercent: event.target.valueAsNumber })} /></label>
-          <label>{labels.speed} · {config.speedPercent}%<input name="speedPercent" type="number" required min={70} max={140} step={5} value={config.speedPercent} onChange={event => setConfig({ ...config, speedPercent: event.target.valueAsNumber })} /></label>
+          <label>{labels.targetSize}：<output>{config.targetSizePercent}%</output><input name="targetSizePercent" type="range" required min={75} max={130} step={5} value={config.targetSizePercent} onChange={event => setConfig({ ...config, targetSizePercent: event.target.valueAsNumber })} /></label>
+          <label>{labels.speed}：<output>{config.speedPercent}%</output><input name="speedPercent" type="range" required min={70} max={140} step={5} value={config.speedPercent} onChange={event => setConfig({ ...config, speedPercent: event.target.valueAsNumber })} /></label>
         </section><section className="training-setting"><h3>{labels.privacyTitle}</h3><p>{labels.privacyDesc}</p></section>{error && <p role="alert" className="motor-input-error">{error}</p>}</div>
         <footer className="config-actions"><div className="training-config-navigation-buttons"><button type="button" className="btn btn-primary" onClick={confirm}>{en ? 'Confirm settings' : '確認設定'}</button><button type="button" className="btn btn-ghost" onClick={exitGame}>{en ? 'Back' : '返回'}</button></div></footer>
       </form>

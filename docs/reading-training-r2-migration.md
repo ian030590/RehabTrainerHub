@@ -1,6 +1,6 @@
 # 閱讀訓練（RSVP）R2 搬遷
 
-狀態：**2026-10-17 已依擁有者「核准並發布到 R2」發布 `2.0.0` 至 R2 並切換 current；Hub 尚未切換**。R2 回讀、穩定入口、五檔公開 bytes 與真實 R2 的 Brave 流程通過，見[正式收據](releases/reading-training-2.0.0.json)。未部署 Hub／runner、未推送 `main`、未建立正式紀錄；正式 Hub 仍走舊 `1.0.0` JSON 流程（`/api/games` 仍列舊投稿、`settings.json` 200），正式數量仍為七款完成切換。候選 registry 已登記八款，Hub build 只剩 32 款舊 bundle，因此**在核准版本與 current 可讀之前，不得把這個分支部署到正式 Hub**（否則舊入口會 410、新入口尚無 current）。
+狀態：**2026-10-17 已依擁有者「核准並發布到 R2」發布 `2.0.0` 至 R2 並切換 current，並依「用 main git push 並部署 Hub」推送 `c329c5b` 至 `main`、部署 Hub 與 runner（[部署 run](https://github.com/ian030590/RehabTrainerHub/actions/runs/39013105047)）並完成正式驗收**：舊 `settings.json`／`score.json` 回 410、`/api/games` 只列一個 `reading-training` 2.0.0 遊戲（R2 共八款）、未指定版本的 session 綁定 2.0.0／`2876f304…`；正式 Hub Brave 桌機視窗、手機 session 失敗重試、平板、英文登入流程通過。見[正式收據](releases/reading-training-2.0.0.json)。
 
 | 項目 | 值 |
 | --- | --- |

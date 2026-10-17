@@ -1,6 +1,6 @@
 {
   "name": "@rehab-trainer/game-oculomotor-training",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -18,6 +18,7 @@
       "fullscreen",
       "keyboard",
       "pointer",
+      "settings-storage",
       "touch"
     ]
   },

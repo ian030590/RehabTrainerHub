@@ -8,6 +8,7 @@ let sequence = 0;
 let inputSequence = -1;
 let language: 'zh' | 'en' | null = null;
 let standalone = true;
+let savedSettings: Record<string, unknown> | null = null;
 
 export function InstallHubBridge() {
   if (window.parent === window) return;
@@ -19,6 +20,7 @@ export function InstallHubBridge() {
       || !/^[a-f0-9]{64}$/.test(data.sessionNonce)) return;
     port = event.ports[0]; nonce = data.sessionNonce; standalone = data.mode === 'standalone';
     language = data.language === 'en' ? 'en' : 'zh';
+    savedSettings = data.settings && typeof data.settings === 'object' && !Array.isArray(data.settings) ? data.settings : null;
     window.dispatchEvent(new CustomEvent('game:language', { detail: language }));
     port.onmessage = ({ data: message }) => {
       if (message?.sessionNonce !== nonce) return;
@@ -39,6 +41,7 @@ export function InstallHubBridge() {
     };
     port.onmessageerror = () => window.dispatchEvent(new CustomEvent('game:input', { detail: { type: 'error', payload: { reason: 'disconnected' } } }));
     port.start(); SendGameEvent('ready');
+    if (savedSettings) window.dispatchEvent(new Event('game:settings'));
     window.removeEventListener('message', initialize);
   };
   window.addEventListener('message', initialize);
@@ -54,3 +57,13 @@ export async function ExitGame() {
   if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
   if (port) SendGameEvent('exit'); else window.dispatchEvent(new Event('game:configure'));
 }
+
+// Delivers the device's last confirmed settings from the container, now or when they arrive.
+export function OnSavedSettings(listener: (settings: Record<string, unknown>) => void) {
+  const deliver = () => { if (savedSettings) listener(savedSettings); };
+  deliver();
+  window.addEventListener('game:settings', deliver);
+  return () => window.removeEventListener('game:settings', deliver);
+}
+// The container keeps confirmed settings on this device; the sandboxed game cannot use storage itself.
+export function SaveGameSettings(settings: object) { SendGameEvent('settings', { ...settings }); }

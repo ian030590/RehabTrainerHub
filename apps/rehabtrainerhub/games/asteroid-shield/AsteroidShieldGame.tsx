@@ -1,7 +1,8 @@
 import { useFullscreenTrainingRoot, useTrainingAbort } from './runtime/trainingLifecycle';
 import { useT } from './i18n/useT';
-import { SendGameResult, RetryGameSave, IsHubGame } from './runtime/hubBridge';
-import { defaultSettings, BuildRuntimeConfig, BuildGameScore, type AsteroidSettings } from './settings';
+import { SendGameResult, RetryGameSave, IsHubGame, OnSavedSettings, SaveGameSettings } from './runtime/hubBridge';
+import { RestoreSettings } from './runtime/settingsMemory';
+import { defaultSettings, BuildRuntimeConfig, BuildGameScore, ValidateSettings, type AsteroidSettings } from './settings';
 import { PlayFailureSound, PlayAsteroidFallSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, SetSoundEnabled, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { initJsPsych } from 'jspsych';
@@ -342,6 +343,15 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
         setPhaseState(nextPhase);
     }, []);
     const showConfiguration = useCallback(() => setPhase('menu'), [setPhase]);
+    useEffect(() => OnSavedSettings(saved => {
+        const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
+        if (restored && phaseRef.current === 'menu') setSettings(restored);
+    }), []);
+    const confirmSettings = (form: HTMLFormElement | null) => {
+        if (!form?.reportValidity() || !ValidateSettings(settingsRef.current)) return;
+        SaveGameSettings(settingsRef.current);
+        setPhase('rules');
+    };
     useEffect(() => {
         const host = jsPsychHostRef.current;
         if (!host)
@@ -560,7 +570,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
               event.preventDefault(); controls[event.shiftKey ? controls.length - 1 : 0]?.focus();
             }
           }
-          if (event.key === 'Enter') { event.preventDefault(); if (event.currentTarget.reportValidity()) setPhase('rules'); }
+          if (event.key === 'Enter') { event.preventDefault(); confirmSettings(event.currentTarget); }
         }} onSubmit={event => event.preventDefault()}>
           <header className="training-config-header"><h2 id="asteroid-settings-title">{labels.title}</h2></header>
           <div className="training-config-body">
@@ -569,7 +579,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
               <p>{lang === 'en' ? 'These values apply only to this session.' : '設定值只用於這次活動。'}</p>
               <label>{lang === 'en' ? 'Spawn interval / base speed' : '生成間隔／基礎速度'}
                 <select value={settings.difficulty} onChange={event => setSettings({ ...settings, difficulty: event.target.value as AsteroidSettings['difficulty'] })}>
-                  <option value="easy">1.35 s / 120 px/s</option><option value="medium">1.08 s / 165 px/s</option><option value="hard">0.82 s / 215 px/s</option>
+                  <option value="easy">{lang === 'en' ? 'Easy (1.35 s / 120 px/s)' : '簡單（1.35 s / 120 px/s）'}</option><option value="medium">{lang === 'en' ? 'Medium (1.08 s / 165 px/s)' : '中等（1.08 s / 165 px/s）'}</option><option value="hard">{lang === 'en' ? 'Hard (0.82 s / 215 px/s)' : '困難（0.82 s / 215 px/s）'}</option>
                 </select>
               </label>
               <p>{lang === 'en' ? 'Analyze different conditions separately.' : '不同條件應分開分析。'}</p>
@@ -584,7 +594,7 @@ export function AsteroidShieldGame({ onExit }: AsteroidShieldGameProps) {
             </section>
           </div>
           <footer className="config-actions"><div className="training-config-navigation-buttons">
-            <button type="button" className="btn btn-primary" onClick={event => { if (event.currentTarget.form?.reportValidity()) setPhase('rules'); }}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button>
+            <button type="button" className="btn btn-primary" onClick={event => confirmSettings(event.currentTarget.form)}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button>
             <button type="button" className="btn btn-ghost" onClick={onExit}>{IsHubGame() ? t('training.returnLobby') : t('training.returnHome')}</button>
           </div></footer>
         </form>

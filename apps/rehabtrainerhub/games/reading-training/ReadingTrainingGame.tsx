@@ -1,14 +1,15 @@
 import { initJsPsych, type JsPsych } from 'jspsych';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useT } from './i18n/useT';
-import { defaultSettings, numericSettings, ValidateSettings, type ReadingSettings } from './settings';
+import { defaultSettings, numericSettings, passageOptions, rangeSettings, segmentsPerDisplay, crowdingFromSegments, ValidateSettings, type ReadingSettings } from './settings';
 import { BuildGameScore, type ReadingTrial } from './score';
 import { ScoreAnalysis } from './ScoreAnalysis';
 import { ReadingTutorial } from './rules/ReadingTutorial';
 import { DestroyPixiTrainingRuntime, WarmUpPixiTrainingRuntime } from './runtime/pixiPool';
 import { PrepareAudioFeedback, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
 import { backgroundMusic, backgroundMusicOptions } from './music';
-import { ExitGame, IsHubGame, RetryGameSave, SendGameEvent, SendGameResult } from './runtime/hubBridge';
+import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
+import { RestoreSettings } from './runtime/settingsMemory';
 import { GetStory } from './reading/stories';
 import { BuildReadingTimeline } from './timeline/readingTimeline';
 
@@ -35,6 +36,10 @@ export function ReadingTrainingGame() {
   const skipFinishRef = useRef(false);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
+  useEffect(() => OnSavedSettings(saved => {
+    const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
+    if (restored && phaseRef.current === 'menu') setSettings(restored);
+  }), []);
   const stopRuntime = useCallback(() => {
     generationRef.current++;
     skipFinishRef.current = true;
@@ -102,6 +107,7 @@ export function ReadingTrainingGame() {
   }, [phase, settings, lang, stopRuntime]);
   const confirmSettings = () => {
     if (!formRef.current?.reportValidity() || !ValidateSettings(settings) || !ready || error) return;
+    SaveGameSettings(settings);
     setPhase('rules');
   };
   const startTraining = async () => {
@@ -120,15 +126,16 @@ export function ReadingTrainingGame() {
     if (key === 'passage') return passageLabel(value);
     const field = numericSettings.find(item => item.key === key)!;
     const text = `${value}${field.unitZh === '%' ? '%' : ` ${en ? field.unitEn : field.unitZh}`}`;
-    return key === 'crowding' ? `${text}（${en ? `${value / 100} per display` : `每批 ${value / 100} 段`}）` : text;
+    if (key === 'crowding') return en ? `${segmentsPerDisplay(value)} per display` : `每批 ${segmentsPerDisplay(value)} 段`;
+    return text;
   };
   const hints: Partial<Record<keyof ReadingSettings, string>> = en ? {
-    passage: '0 chooses a passage at random; 1–3 always use the same passage.',
-    crowding: '100% shows one text token at a time, 200% shows two, and so on.',
+    passage: 'Random picks one of the three passages; a numbered passage is always the same story.',
+    crowding: 'How many story segments appear together each time.',
     contrast: 'Higher values make the text darker.',
   } : {
-    passage: '0 為隨機文章，1–3 為固定文章。',
-    crowding: '100% 為每批 1 段，200% 為每批 2 段，依此類推。',
+    passage: '隨機會從三篇中挑一篇；指定篇號則固定使用同一篇故事。',
+    crowding: '每次同時出現幾段故事文字。',
     contrast: '數值越大，文字越深。',
   };
   const summaryItems = numericSettings.map(field => ({ label: en ? field.en : field.zh, value: settingValue(field.key, settings[field.key]) }));
@@ -148,7 +155,16 @@ export function ReadingTrainingGame() {
           <section className="training-setting"><h3>{en ? 'Reading settings' : '閱讀設定'}</h3>
             {error && <p className="renderer-error" role="alert">{en ? 'The game could not load. Retry to continue.' : '遊戲無法載入，請重試。'}
               <button type="button" onClick={() => setError(false)}>{en ? 'Retry' : '重試'}</button></p>}
-            {numericSettings.map(field => <label key={field.key}>{en ? field.en : field.zh}：<output>{settingValue(field.key, settings[field.key])}</output>
+            <label>{en ? 'Passage material' : '文章材料'}<select name="passage" value={settings.passage}
+              onChange={event => setSettings({ ...settings, passage: Number(event.target.value) })}>
+              {passageOptions.map(passage => <option key={passage} value={passage}>{passageLabel(passage)}</option>)}
+            </select>
+              <small className="training-setting-description">{hints.passage}</small></label>
+            <label>{en ? 'Segments per display' : '每批呈現文字片段數'}：<output>{settingValue('crowding', settings.crowding)}</output>
+              <input name="crowding" type="range" min={1} max={5} step={1} value={segmentsPerDisplay(settings.crowding)}
+                onChange={event => setSettings({ ...settings, crowding: crowdingFromSegments(Number(event.target.value)) })} />
+              <small className="training-setting-description">{hints.crowding}</small></label>
+            {rangeSettings.map(field => <label key={field.key}>{en ? field.en : field.zh}：<output>{settingValue(field.key, settings[field.key])}</output>
               <input name={field.key} type="range" min={field.min} max={field.max} step={field.step} value={settings[field.key]}
                 onChange={event => setSettings({ ...settings, [field.key]: Number(event.target.value) })} />
               {hints[field.key] && <small className="training-setting-description">{hints[field.key]}</small>}</label>)}

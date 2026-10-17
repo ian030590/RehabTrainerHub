@@ -1,6 +1,6 @@
 {
   "name": "@rehab-trainer/game-motor-cortex-rehab",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -21,7 +21,8 @@
     "capabilities": [
       "audio",
       "fullscreen",
-      "hand-tracking"
+      "hand-tracking",
+      "settings-storage"
     ]
   }
 }

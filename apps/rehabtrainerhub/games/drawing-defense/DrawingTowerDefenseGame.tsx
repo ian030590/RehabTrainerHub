@@ -2,7 +2,9 @@ import { PlayFailureSound, PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedb
 import { backgroundMusic, backgroundMusicOptions } from './music';
 import { useT, type TranslationKey } from './i18n/useT';
 import { useFullscreenTrainingRoot, useTrainingAbort } from './runtime/trainingLifecycle';
-import { SendGameResult, UploadSample, RetryGameSave, IsHubGame } from './runtime/hubBridge';
+import { SendGameResult, UploadSample, RetryGameSave, IsHubGame, OnSavedSettings, SaveGameSettings } from './runtime/hubBridge';
+import { RestoreSettings } from './runtime/settingsMemory';
+import { defaultSettings, ValidateSettings, type DrawingSettings } from './settings';
 import starSkyUrl from './textures/StarSky.png';
 import { initJsPsych } from 'jspsych';
 import { Application,Container,Graphics,Text,type Ticker } from 'pixi.js';
@@ -187,7 +189,8 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
     const activeConfig = difficulties[difficulty];
     const activeDifficultyLabel = t(activeConfig.labelKey);
     const activeDifficultyDescription = t(activeConfig.descriptionKey);
-    const isPresetGameDuration = gameDurationOptions.includes(gameDurationSec as typeof gameDurationOptions[number]);
+    // Custom seconds are a separate duration choice so the field appears only when it is used.
+    const [customDurationSelected, setCustomDurationSelected] = useState(() => !gameDurationOptions.includes(gameDurationSec as typeof gameDurationOptions[number]));
     const gameDurationLabel = FormatGameDuration(gameDurationSec, t);
     const backgroundSummary = backgroundMode === 'stars' ? t('drawing.background.stars') : backgroundMode === 'color' ? backgroundColor : t('drawing.background.customImage');
     const backgroundModeLabel = backgroundMode === 'stars' ? t('drawing.background.image') : backgroundMode === 'color' ? t('drawing.background.color') : t('drawing.background.customImage');
@@ -203,6 +206,22 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
         phaseRef.current = next;
         setPhaseState(next);
     }, []);
+    useEffect(() => OnSavedSettings(saved => {
+        const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
+        if (!restored || phaseRef.current !== 'menu') return;
+        setDifficulty(restored.difficulty); setCustomDurationSelected(restored.customDuration);
+        setCustomGameDurationSec(restored.customGameDurationSec); setGameDurationSec(restored.gameDurationSec || null);
+        setMaxHp(restored.maxHp); setSpeed(restored.speed); setStrictness(restored.strictness); setStrokeWaitMs(restored.strokeWaitMs);
+        setBackgroundMode(restored.backgroundMode); setBackgroundColor(restored.backgroundColor); setSoundEnabled(restored.soundEnabled);
+    }), []);
+    const confirmSettings = (form: HTMLFormElement | null | undefined) => {
+        if (!form?.reportValidity()) return;
+        const settings: DrawingSettings = { difficulty, gameDurationSec: gameDurationSec ?? 0, customDuration: customDurationSelected,
+            customGameDurationSec, maxHp, speed, strictness, strokeWaitMs,
+            backgroundMode: backgroundMode === 'image' ? 'stars' : backgroundMode, backgroundColor, soundEnabled };
+        if (ValidateSettings(settings)) SaveGameSettings(settings);
+        setPhase('rules');
+    };
     useEffect(() => {
         configRef.current = { difficulty, gameDurationSec, maxHp, speed, strictness, strokeWaitMs };
     }, [difficulty, gameDurationSec, maxHp, speed, strictness, strokeWaitMs]);
@@ -646,10 +665,10 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
       <div ref={overlayRef} className="drawing-defense-input"/>
 
       {phase === 'menu' && <section className="training-panel">
-        <form className="training-config" onSubmit={(event) => { event.preventDefault(); setPhase('rules'); }} onKeyDown={event => {
+        <form className="training-config" onSubmit={(event) => { event.preventDefault(); confirmSettings(event.currentTarget); }} onKeyDown={event => {
           if (event.key === 'Enter' && event.target instanceof HTMLInputElement && ['number', 'text'].includes(event.target.type)) {
             event.preventDefault();
-            if (event.currentTarget.reportValidity()) setPhase('rules');
+            confirmSettings(event.currentTarget);
           }
         }}>
           <header className="training-config-header"><h2>{t('training.drawing.title')}</h2></header>
@@ -657,21 +676,24 @@ export function DrawingTowerDefenseGame({ onExit }: DrawingTowerDefenseGameProps
             <section className="training-setting"><h3>{lang === 'en' ? 'Session settings' : '活動設定'}</h3>
               <label>{t('cognitive.config.difficulty')}<select value={difficulty} onChange={event => setDifficulty(event.target.value as Difficulty)}>{Object.entries(difficulties).map(([value, config]) => <option key={value} value={value}>{t(config.labelKey)}</option>)}</select></label>
               <p>{activeDifficultyDescription}</p>
-              <label>{t('drawing.config.gameDuration')}<select value={gameDurationSec ?? 0} onChange={event => setGameDurationSec(Number(event.target.value) || null)}>{!isPresetGameDuration && <option value={gameDurationSec ?? 0}>{gameDurationLabel}</option>}{gameDurationOptions.map(value => <option key={value ?? 0} value={value ?? 0}>{FormatGameDuration(value, t)}</option>)}</select></label>
-              <label>{lang === 'en' ? 'Custom duration (seconds)' : '自訂活動時間（秒）'}<input type="number" min="1" max="3600" value={customGameDurationSec} onChange={event => { const value = Clamp(Number(event.target.value), 1, 3600); setCustomGameDurationSec(value); setGameDurationSec(value); }} /></label>
-              <label>{t('drawing.config.hp')}<input type="number" min="1" max="20" value={maxHp} onChange={event => setMaxHp(Clamp(Number(event.target.value), 1, 20))} /></label>
+              <label>{t('drawing.config.gameDuration')}<select name="gameDuration" value={customDurationSelected ? 'custom' : gameDurationSec ?? 0} onChange={event => {
+                if (event.target.value === 'custom') { setCustomDurationSelected(true); setGameDurationSec(customGameDurationSec); return; }
+                setCustomDurationSelected(false); setGameDurationSec(Number(event.target.value) || null);
+              }}>{gameDurationOptions.map(value => <option key={value ?? 0} value={value ?? 0}>{FormatGameDuration(value, t)}</option>)}<option value="custom">{t('training.custom')}</option></select></label>
+              {customDurationSelected && <label>{lang === 'en' ? 'Custom duration (seconds)' : '自訂活動時間（秒）'}<input name="customGameDurationSec" type="number" required min="1" max="3600" step="1" value={Number.isNaN(customGameDurationSec) ? '' : customGameDurationSec} onChange={event => { setCustomGameDurationSec(event.target.valueAsNumber); setGameDurationSec(event.target.valueAsNumber); }} /></label>}
+              <label>{t('drawing.config.hp')}<input name="maxHp" type="number" required min="1" max="20" step="1" value={Number.isNaN(maxHp) ? '' : maxHp} onChange={event => setMaxHp(event.target.valueAsNumber)} /></label>
               <label>{t('drawing.config.enemySpeed')}<input type="range" min="1" max="20" value={speed} onChange={event => setSpeed(Number(event.target.value))} /><output>{speed}</output></label>
               <label>{t('drawing.config.strictness')}<input type="range" min={minRecognitionStrictness} max={maxRecognitionStrictness} value={strictness} onChange={event => setStrictness(Number(event.target.value))} /><output>{strictness}%</output></label>
               <label>{t('drawing.config.strokeWait')}<input type="range" min="100" max="2000" step="50" value={strokeWaitMs} onChange={event => setStrokeWaitMs(Number(event.target.value))} /><output>{strokeWaitMs} ms</output></label>
             </section>
             <section className="training-setting"><h3>{t('drawing.config.background')}</h3>
               <label>{t('drawing.config.background')}<select value={backgroundMode} onChange={event => setBackgroundMode(event.target.value as BackgroundMode)}><option value="stars">{t('drawing.background.stars')}</option><option value="color">{t('drawing.background.color')}</option><option value="image">{t('drawing.background.customImage')}</option></select></label>
-              <label>{t('drawing.background.color')}<input type="color" value={backgroundColor} onChange={event => setBackgroundColor(event.target.value)} /></label>
-              <label>{t('drawing.background.customImage')}<input type="file" accept="image/*" onChange={event => handleBackgroundImageUpload(event.target.files?.[0])} /></label><p>{uploadedBackgroundName}</p>
+              {backgroundMode === 'color' && <label>{t('drawing.background.color')}<input name="backgroundColor" type="color" value={backgroundColor} onChange={event => setBackgroundColor(event.target.value)} /></label>}
+              {backgroundMode === 'image' && <><label>{t('drawing.background.customImage')}<input name="backgroundImage" type="file" accept="image/*" onChange={event => handleBackgroundImageUpload(event.target.files?.[0])} /></label><p>{uploadedBackgroundName}</p></>}
               <label><input type="checkbox" checked={soundEnabled} onChange={event => setSoundEnabled(event.target.checked)} />{lang === 'en' ? 'Sound feedback' : '音效回饋'}</label>
             </section>
           </div>
-          <footer className="config-actions"><div className="training-config-navigation-buttons"><button className="btn btn-primary" type="button" onClick={event => { if (event.currentTarget.form?.reportValidity()) setPhase('rules'); }}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button><button className="btn btn-ghost" type="button" onClick={onExit}>{lang === 'en' ? 'Back' : '返回'}</button></div></footer>
+          <footer className="config-actions"><div className="training-config-navigation-buttons"><button className="btn btn-primary" type="button" onClick={event => confirmSettings(event.currentTarget.form)}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button><button className="btn btn-ghost" type="button" onClick={onExit}>{lang === 'en' ? 'Back' : '返回'}</button></div></footer>
         </form>
       </section>}
 

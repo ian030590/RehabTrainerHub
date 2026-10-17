@@ -9,13 +9,13 @@
 
 ## 專案結構與模組組織
 
-閱讀訓練（RSVP）`reading-training@2.0.0` 已於 2026-10-17 依「核准並發布到 R2」發布 R2 並切換 current（`contentSha256: 2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0`，5 檔，收據 `docs/releases/reading-training-2.0.0.json`）；**Hub 尚未切換**，正式 Hub 仍走舊 1.0.0 JSON 流程，不得登記為搬遷完成。自有設定、三步聚光燈（中央文字→速度與每批片段→理解題）、原 RSVP／jsPsych／Pixi、原數值成績欄位與私有 bridge 已完成；候選 registry 八款、Hub build 32 款舊 bundle，正式仍七款／33 款。current 已可讀，下一步為經擁有者同意後部署此 registry 並完成第 7 節 F 正式 Hub 驗收。見 `docs/reading-training-r2-migration.md`。
+閱讀訓練（RSVP）`reading-training@2.0.0` 已於 2026-10-17 依「核准並發布到 R2」發布 R2 並切換 current（`contentSha256: 2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0`，5 檔，收據 `docs/releases/reading-training-2.0.0.json`）；同日推送 `c329c5b` 至 `main`、部署 Hub 並完成正式驗收（舊 JSON 410、`/api/games` 一筆 2.0.0、session 綁定 2.0.0），已完成搬遷。自有設定、三步聚光燈（中央文字→速度與每批片段→理解題）、原 RSVP／jsPsych／Pixi、原數值成績欄位與私有 bridge 已完成；正式為八款 R2、32 款舊 bundle。見 `docs/reading-training-r2-migration.md`。
 
 蓋伯斑塊目前 current 為 `2.0.1` 玩家文案版（2026-10-17），依「核准發佈」發布精確五檔／`contentSha256: af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3`。移除中英文教學／成果的活動紀錄、非臨床量測、內部圖樣實作與冗餘設定說明；玩法、計分、完整成果與保存提示保留。七項本機 gate、正式 API／session／公開 bytes 與桌機／手機／英文登入／手機 PWA 四個完整流程通過；未部署 Hub／runner、未建正式紀錄，其他六款版本不變。後續依「git 推送出去」以 `fix/oculomotor-2.1.1` 專用分支交付，避免 `main` 的完整 Pages 部署。`2.0.0` 五檔已回讀核對為回退版，未實際回退；見 `docs/gabor-patching-player-copy-2.0.1.md` 與 `docs/releases/gabor-patching-2.0.1.json`。
 
 眼動練習目前 current 為 `2.1.1`，已於 2026-10-17 依「核准新的版本並git push到遠端」核准精確 11 檔／`contentSha256: 53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3`，發布 R2 並完成正式 API／session／公開 bytes／六個 Hub／PWA 流程；未部署 Hub／runner，未建正式訓練紀錄，`2.1.0` 已核對回退。保留寬高獨立換算，比例填錯會變形，同倍率填錯仍圓但尺寸錯誤，全部 22 段原碼摘要保留。3:2 測試重現可見區 1440×960、隔離 `screen` 卻回報 1280×800，故全螢幕採實際顯示區；開始校正前重取穩定尺寸，校正途中變動仍失效。補齊即時狀態／置中／中英驗證／Accuracy 與 TFF 優先成果。七項 gate、八個本機及六個正式瀏覽器流程、15 欄私人 R2／25 欄下載差異、既有 238 筆 CSV metadata 與硬體限制見 `docs/oculomotor-display-feedback-2.1.1.md`、`docs/releases/oculomotor-training-2.1.1.json`；尚未實測使用者筆電或讀取私人座標內容。Git 交付使用 `fix/oculomotor-2.1.1` 專用分支，避免 `main` 的完整 Pages 部署。
 
-目前正式為七款 R2／33 款舊流程，蓋伯已在本回合另行核准、發布及驗收。先前 `main@9ae0561` 自動部署已提前帶入 Gabor registry，造成眼動 `2.1.1` 發布時 Gabor 舊資產 410、新 current 尚缺的狀態；本次核准 R2 發布後，既有 Hub 已可啟動蓋伯，舊 `settings.json` 維持預期的 410。未重部署或回退平台，眼動 current 仍 `2.1.1`。以下各版本「六款／34 款」為當時歷史數量，目前狀態以本段與蓋伯正式收據為準。
+目前正式為八款 R2／32 款舊流程（閱讀訓練 2026-10-17 加入）；蓋伯當時另行核准、發布及驗收。先前 `main@9ae0561` 自動部署已提前帶入 Gabor registry，造成眼動 `2.1.1` 發布時 Gabor 舊資產 410、新 current 尚缺的狀態；本次核准 R2 發布後，既有 Hub 已可啟動蓋伯，舊 `settings.json` 維持預期的 410。未重部署或回退平台，眼動 current 仍 `2.1.1`。以下各版本「六款／34 款」為當時歷史數量，目前狀態以本段與蓋伯正式收據為準。
 
 眼動練習 `2.1.0` 已於 2026-10-17 依擁有者「核准發佈」完成 OcuTrain `6676f24523a5bc857a7c28f68c520a45bfb8d167` 對齊版的精確核准、相容 runner／Hub 先部署、R2 發布及 current 切換。22 段原碼摘要、七項 gate、正式 API／11 檔 bytes、桌機／平板／英文登入／手機 Hub 與手機 PWA 五流程通過；`2.0.1` 十檔已核對回退，無正式訓練紀錄。新代理 `eye-tracking-1.1.0` 傳跨文件推論開始時間，保留 `1.0.0` 相容入口。正式平台使用隔離的六款 registry／34 舊 bundle（含舊 Gabor），沒有發布蓋伯候選，也沒有新增 Git commit／push；不可直接部署含蓋伯候選的完整工作樹。版本摘要、部署、來源差異、私有 CSV 契約與硬體限制見 `docs/oculomotor-ocutrain-parity.md` 及 `docs/releases/oculomotor-training-2.1.0.json`。
 
@@ -141,6 +141,8 @@ R2 官方遊戲的 `rehab-trainer.game-score/v1` 為數值傳輸／入庫格式�
 `officialGameReleases.json` 只登記遊戲名稱、可信 origin 與遷移資格，不包含 current version。Hub 在 iframe 載入前請求 `/api/official-game-sessions`，由後端讀取 R2 官方 current／雜湊歷史與 approved manifest，回傳固定的 version、contentSha256、recordId 與 token。保存重試沿用該工作階段；current 切換不影響仍核准的舊版，撤回或雜湊不符時拒絕保存，R2 故障回覆 503。相容舊 Hub 可指定官方歷史版本；第三方上傳不得使用已登記的官方 slug，已提交的歷史投稿亦不得透過第三方審核 API 發布或撤回官方 slug。穩定 PWA 入口 `/games/{gameId}/` 以不可快取 302 選擇 current，已安裝的版本化 PWA 仍固定原版本。
 
 R2 遊戲與 Hub 分屬不同 origin。成果僅走交給指定 iframe window 的私有 MessageChannel；遊戲核對 init 的 parent source／origin，Hub 核對 nonce、game/version、sequence 與成果 schema，不接受一般 window message 的成果。獨立 PWA 只在新格式 release 明確宣告 fullscreen capability 時委派全螢幕，仍保持 `sandbox="allow-scripts"`。
+
+**設定值保存在本裝置（2026-10-17）：** 每款 R2 遊戲開啟時使用本裝置上次確認的設定，沒有或無效才用預設值。遊戲是不透明 origin、不能用 `localStorage`，也不得因此放寬沙盒；宣告 `settings-storage` 的官方版本由容器（Hub 或 runner 獨立 PWA 啟動頁）以 `trainerhub.game-settings/v1:<gameId>` 存在自己的 `localStorage`，經私有 port 的 `init.settings` 交回，遊戲確認設定後送 `settings` 訊息（與成果 config 相同限制）。遊戲以自身驗證還原。第三方投稿遊戲由 Hub 記住 `GameSettingsForm` 上次送出的值（`trainerhub.package-settings/v1:<slug>`，以該遊戲 `settings.json` 重新驗證）；未遷移官方遊戲不改動。不開放通用鍵值儲存。細節見 `docs/r2-game-migration-plan.md` 第 5 節。
 
 Hub 禁止複製／分叉遊戲的 defaults、validation、rules 或 runtime。現行未遷移流程依 catalog 的 `settingsPath` 讀取遊戲擁有的 JSON，交由統一 `GameSettingsForm` 呈現；沒有另載入 trainer-owned config entry。R2 遊戲的設定／結果都留在 iframe，Hub 不解讀 UI 描述檔。Pixi、jsPsych、Three、MediaPipe、TensorFlow runtime／lifecycle 均屬各遊戲。
 

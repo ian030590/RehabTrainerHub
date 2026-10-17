@@ -67,8 +67,21 @@
     "productionHub": "unchanged: /api/games still lists old reading-training 1.0.0 JSON shell; /games/reading-training/settings.json 200"
   },
   "hubSwitch": {
-    "status": "pending",
-    "reason": "Registry/bundle-exclusion change on branch feat/reading-training-r2 is not deployed; requires owner go-ahead to deploy the Hub."
+    "status": "deployed-and-verified",
+    "commit": "c329c5b",
+    "workflowRun": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39013105047",
+    "checks": {
+      "legacyAssets": "settings.json/score.json 410; compatibility entry and copied preview 200",
+      "apiGames": "one reading-training entry: 2.0.0, presentation game, vision/vision, no settingsUrl, R2 preview (original SHA-256); 8 R2 games",
+      "unversionedSession": "201 no-store, 2.0.0 / 2876f304…e6b0 (token not recorded)",
+      "productionHubBrave": {
+        "--production-hub --lobby --wide --windowed": "pass",
+        "--production-hub --lobby --mobile --session-failure": "pass",
+        "--production-hub --lobby --tablet": "pass",
+        "--production-hub --lobby --signed-in --english": "pass (rerun; first attempt invalid because package.json was bumped mid-run)"
+      }
+    },
+    "note": "Pushing main also delivered four earlier fix/oculomotor-2.1.1 commits (already-published Gabor 2.0.1 / eye 2.1.1 sources, docs, tests); the Hub build excludes R2 game sources."
   },
   "localValidation": "docs/migrations/reading-training/validation-summary.json",
   "rollback": "First native release: no new-format rollback version. Hub keeps the old 1.0.0 JSON flow until the registry is deployed; to undo after switching, redeploy the verified Hub at 663091e.",

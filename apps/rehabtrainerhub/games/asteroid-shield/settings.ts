@@ -9,6 +9,13 @@ export const defaultSettings: AsteroidSettings = {
   difficulty: 'medium', durationSec: 90, sensitivity: 5, soundEnabled: true,
 };
 
+export function ValidateSettings(settings: AsteroidSettings): boolean {
+  return ['easy', 'medium', 'hard'].includes(settings.difficulty)
+    && Number.isInteger(settings.durationSec) && settings.durationSec >= 30 && settings.durationSec <= 300 && (settings.durationSec - 30) % 15 === 0
+    && Number.isInteger(settings.sensitivity) && settings.sensitivity >= 1 && settings.sensitivity <= 10
+    && typeof settings.soundEnabled === 'boolean';
+}
+
 export function BuildRuntimeConfig(settings: AsteroidSettings) {
   const difficulties = { easy: 'beginner', medium: 'intermediate', hard: 'advanced' } as const;
   if (!Object.hasOwn(difficulties, settings.difficulty)

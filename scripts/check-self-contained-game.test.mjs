@@ -37,7 +37,8 @@ test('drawing defense owns its configuration and results without Hub dependencie
   for (const file of ['settings.json', 'score.json']) await assert.rejects(access(resolve(gameRoot, file)));
   const source = await readFile(resolve(gameRoot, 'DrawingTowerDefenseGame.tsx'), 'utf8');
   for (const label of ['maxHp', 'speed', 'strictness', 'strokeWaitMs', 'gameDurationSec', 'backgroundMode']) {
-    assert.match(source, new RegExp(`value=\\{${label}(?: \\?\\? 0)?\\}`));
+    // Each setting stays a controlled input whose value reads its own state.
+    assert.match(source, new RegExp(`value=\\{[^}]*\\b${label}\\b[^}]*\\}`), label);
   }
   assert.match(source, /SendGameResult/);
   assert.match(source, /<ScoreAnalysis rounds=\{BuildGameScore\(result\)\.rounds\}/);

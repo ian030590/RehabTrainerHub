@@ -1,7 +1,8 @@
 import { useT, type TranslationKey } from './i18n/useT';
 import { PlayGameEndSound, PlaySuccessSound, PrepareAudioFeedback, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
 import { backgroundMusic, backgroundMusicOptions } from './music';
-import { StartHandInput, StopHandInput, SendGameEvent, SendGameResult, RetryGameSave, IsHubGame } from './runtime/hubBridge';
+import { StartHandInput, StopHandInput, SendGameEvent, SendGameResult, RetryGameSave, IsHubGame, OnSavedSettings, SaveGameSettings } from './runtime/hubBridge';
+import { RestoreSettings } from './runtime/settingsMemory';
 import type { NormalizedLandmark, HandInputFrame } from './runtime/handInput';
 import { IsGestureConfig, defaultGestureConfig } from './config';
 import { initJsPsych } from 'jspsych';
@@ -209,6 +210,18 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
         setPhaseState(nextPhase);
     }, []);
     const showConfiguration = useCallback(() => { setPhase('menu'); }, [setPhase]);
+    useEffect(() => OnSavedSettings(saved => {
+        const restored = RestoreSettings(saved, defaultGestureConfig, IsGestureConfig);
+        if (!restored || phaseRef.current !== 'menu') return;
+        setEnemyMaxHp(restored.enemyMaxHp); setHoldDuration(restored.holdDurationSec);
+        setStrictnessThreshold(restored.strictnessPercent / 100); setTargetMode(restored.targetMode);
+    }), []);
+    const confirmSettings = () => {
+        const settings = { enemyMaxHp, holdDurationSec: holdDuration, strictnessPercent: Math.round(strictnessThreshold * 100), targetMode };
+        if (!formRef.current?.reportValidity() || !IsGestureConfig(settings)) return;
+        SaveGameSettings(settings);
+        setPhase('rules');
+    };
     useEffect(() => {
         configRef.current = { enemyMaxHp, holdDuration, strictnessThreshold, targetMode };
     }, [enemyMaxHp, holdDuration, strictnessThreshold, targetMode]);
@@ -750,19 +763,19 @@ export function GestureBattlerGame({ onExit }: GestureBattlerGameProps) {
 
       {phase === 'menu' && <section className="training-panel gesture-menu-panel">
         <form ref={formRef} className="training-config" onSubmit={event => event.preventDefault()}
-          onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (formRef.current?.reportValidity() && IsGestureConfig({ enemyMaxHp, holdDurationSec: holdDuration, strictnessPercent: Math.round(strictnessThreshold * 100), targetMode })) setPhase('rules'); } }}>
+          onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); confirmSettings(); } }}>
           <header className="training-config-header"><h2>{t('training.gesture.title')}</h2></header>
           <div className="training-config-body">
             <section className="training-setting"><h3>{lang === 'en' ? 'Session settings' : '活動設定'}</h3>
             <label>{t('gesture.config.enemyHp')}<input name="enemyMaxHp" type="number" required min="1" max="100" step="1" value={enemyMaxHp} onChange={event => setEnemyMaxHp(event.target.valueAsNumber)} /></label>
-            <label>{t('gesture.config.holdDuration')}<input name="holdDurationSec" type="number" required min="0.5" max="10" step="0.5" value={holdDuration} onChange={event => setHoldDuration(event.target.valueAsNumber)} /></label>
-            <label>{t('gesture.config.strictness')}<input name="strictnessPercent" type="number" required min="50" max="90" step="5" value={Math.round(strictnessThreshold * 100)} onChange={event => setStrictnessThreshold(event.target.valueAsNumber / 100)} /></label>
+            <label>{t('gesture.config.holdDuration')}：<output>{holdDuration} s</output><input name="holdDurationSec" type="range" required min="0.5" max="10" step="0.5" value={holdDuration} onChange={event => setHoldDuration(event.target.valueAsNumber)} /></label>
+            <label>{t('gesture.config.strictness')}：<output>{Math.round(strictnessThreshold * 100)}%</output><input name="strictnessPercent" type="range" required min="50" max="90" step="5" value={Math.round(strictnessThreshold * 100)} onChange={event => setStrictnessThreshold(event.target.valueAsNumber / 100)} /></label>
             <p>{lang === 'en' ? 'Similarity relative to your local calibration; this is not a joint angle.' : '相對於本機手勢校正的相似度門檻，不能換算成關節角度。'}</p>
             <label>{t('gesture.config.targetMode')}<select name="targetMode" value={targetMode} onChange={event => setTargetMode(event.target.value as TargetMode)}><option value="free">{t('gesture.config.free')}</option><option value="directed">{t('gesture.config.directed')}</option></select></label>
             </section>
           </div>
           <footer className="config-actions"><div className="training-config-navigation-buttons">
-            <button type="button" className="btn btn-primary" onClick={() => { if (formRef.current?.reportValidity() && IsGestureConfig({ enemyMaxHp, holdDurationSec: holdDuration, strictnessPercent: Math.round(strictnessThreshold * 100), targetMode })) setPhase('rules'); }}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button>
+            <button type="button" className="btn btn-primary" onClick={confirmSettings}>{lang === 'en' ? 'Game tutorial' : '遊戲教學'}</button>
             <button type="button" className="btn btn-ghost" onClick={exitGame}>{IsHubGame() ? t('training.returnLobby') : t('training.back')}</button>
           </div></footer>
         </form>

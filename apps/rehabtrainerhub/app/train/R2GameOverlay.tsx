@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import releases from '@rehab-trainer/ui/officialGameReleases.json';
-import { AcceptGameMessage } from '@rehab-trainer/ui/selfContainedGame.js';
+import { AcceptGameMessage, ReadSavedGameSettings, WriteSavedGameSettings } from '@rehab-trainer/ui/selfContainedGame.js';
 import { GetAuthToken, GetAuthUserIdFromToken, SaveRemoteTrainingRecord } from '@rehab-trainer/ui/auth/authClient';
 import { GetOrCreateSubjectIdForUser } from '@rehab-trainer/ui/storage/subjectId';
 import type { TrainingCatalogModule } from '@rehab-trainer/hub-modules/catalog';
@@ -16,6 +16,8 @@ import { SaveOculomotorCsv, type OculomotorCsvPayload } from '@rehab-trainer/ui/
 
 type Result = { config: Record<string, string | number | boolean>; score: GameScore };
 type Session = { recordId: string; token: string; version: string; contentSha256: string; capabilities?: string[] };
+// Each game's last confirmed settings stay in this device's storage; the opaque game cannot reach it.
+function DeviceStorage() { try { return window.localStorage; } catch { return null; } }
 export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModule; onClose: () => void }) {
   const release = releases[module.runtimeId as keyof typeof releases];
   const { language } = useHubLanguage();
@@ -152,6 +154,8 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
     portRef.current = channel.port1;
     const state = { gameId: module.runtimeId, version: session.version, sessionNonce: nonce, sequence: -1, complete: false,
       capabilities: session.capabilities ?? [] };
+    const settingsStorage = state.capabilities.includes('settings-storage') ? DeviceStorage() : null;
+    const savedSettings = ReadSavedGameSettings(settingsStorage, module.runtimeId);
     if (state.capabilities.includes('hand-tracking')) {
       inputRef.current = CreateHandTrackingBroker({
         createController: async () => (await LoadHandTrackingInput(release.origin)).CreateController(),
@@ -181,6 +185,7 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
       if (!AcceptGameMessage(event.data, state)) return;
       const message = event.data;
       if (message.type === 'ready') { setReady(true); setError(false); }
+      if (message.type === 'settings') WriteSavedGameSettings(settingsStorage, module.runtimeId, message.payload);
       if (message.type === 'result') { inputRef.current?.Stop(); resultRef.current = message.payload; void save(); }
       if (message.type === 'retry') void save();
       if (message.type === 'exit') void close();
@@ -207,7 +212,8 @@ export function R2GameOverlay({ module, onClose }: { module: TrainingCatalogModu
     // The iframe has an opaque origin. Transfer only to its captured window;
     // the game verifies the parent's source and origin before accepting this port.
     frameRef.current?.contentWindow?.postMessage({ schema: 'trainerhub.game/v1', type: 'init',
-      gameId: module.runtimeId, version: session.version, sessionNonce: nonce, language }, '*', [channel.port2]);
+      gameId: module.runtimeId, version: session.version, sessionNonce: nonce, language,
+      ...(savedSettings ? { settings: savedSettings } : {}) }, '*', [channel.port2]);
   };
   useEffect(() => { if (cameraConsent) consentButtonRef.current?.focus(); }, [cameraConsent]);
   const answerConsent = (allowed: boolean) => {

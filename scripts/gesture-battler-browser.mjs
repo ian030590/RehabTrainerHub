@@ -43,6 +43,10 @@ export async function CheckGestureBattler({ game, evaluate, send, until, session
   await set('enemyMaxHp', hp);
   await set('holdDurationSec', 0.5);
   await set('strictnessPercent', 65);
+  for (const [name, shown] of [['holdDurationSec', '0.5 s'], ['strictnessPercent', '65%']]) {
+    assert.equal(await game(`document.querySelector('[name=${name}]').type`), 'range', `${name} is a slider.`);
+    assert.equal(await game(`document.querySelector('[name=${name}]').closest('label').querySelector('output').textContent`), shown);
+  }
   if (directed) await game('(() => {const select=document.querySelector("[name=targetMode]");select.value="directed";select.dispatchEvent(new Event("change",{bubbles:true}));})()');
   await confirm();
   await until(() => game(`Boolean(document.querySelector('${tutorial}'))`), 'gesture spotlight');

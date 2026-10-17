@@ -1,10 +1,10 @@
 # 內建遊戲逐步遷移至 R2：畫畫塔防試點
 
-2026-10-17 閱讀訓練（RSVP）`reading-training@2.0.0` 已依第 7 節 A–D 完成本機自包含候選：原設定／換算／RSVP 時序／抽題與數值成績欄位、三步聚光燈教學、原圖與分類、七項本機 gate、Hub build 與 Brave 流程；同日依擁有者核准發布 R2（`2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0`）並切換 current，**Hub 尚未切換與正式驗收**，正式仍七款／33 款。見 [閱讀訓練搬遷候選](reading-training-r2-migration.md)。
+2026-10-17 閱讀訓練（RSVP）`reading-training@2.0.0` 已依第 7 節 A–D 完成本機自包含候選：原設定／換算／RSVP 時序／抽題與數值成績欄位、三步聚光燈教學、原圖與分類、七項本機 gate、Hub build 與 Brave 流程；同日依擁有者核准發布 R2（`2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0`）並切換 current；同日推送 `c329c5b` 至 `main`、部署 Hub 並完成正式驗收，正式為八款 R2／32 款舊流程。見 [閱讀訓練搬遷候選](reading-training-r2-migration.md)。
 
 2026-10-17 蓋伯斑塊練習 `gabor-patching@2.0.0` 已依擁有者「也核准gabor-patching，請同步幫我上傳」核准原候選精確摘要，完成第 7 節 E／F 的 R2 發布、current、正式 API／session／五檔 bytes 與桌機／手機／平板／英文登入／獨立 PWA 驗收。七項 CI、遊戲與 Hub build 通過，正式為七款 R2／33 舊流程。保留原演算法、設定、計分、三步聚光燈與完整明細；本次使用既有相容 Hub／runner，未另部署平台、未建立正式紀錄。首次 native 沒有另一核准回退版，已重驗舊 Hub 三個檔案；審查、既有提前部署的順序差異、驗收與限制見 [蓋伯斑塊搬遷](gabor-patching-r2-migration.md)及[正式收據](releases/gabor-patching-2.0.0.json)。
 
-更新日期：2026-10-17。目前 R2 current 為 `asteroid-shield@2.0.9`、`gesture-battler@2.0.4`、`drawing-defense@2.0.6`、`motor-cortex-rehab@2.0.2`、`oculomotor-training@2.1.1`、`moving-card@2.0.2`、`gabor-patching@2.0.0`，7 款完成、33 款保留舊流程。以下各版發布歷史的數量與版本保留當時基準。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
+更新日期：2026-10-17。目前 R2 current 為 `asteroid-shield@2.0.9`、`gesture-battler@2.0.4`、`drawing-defense@2.0.6`、`motor-cortex-rehab@2.0.2`、`oculomotor-training@2.1.1`、`moving-card@2.0.2`、`gabor-patching@2.0.0`、`reading-training@2.0.0`，8 款完成、32 款保留舊流程。以下各版發布歷史的數量與版本保留當時基準。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
 
 2026-10-11 眼動練習 `oculomotor-training@2.0.0` 已按精確摘要核准、發布 R2、完成相容 runner／Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38094804766)與正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收。採原25項設定、四種原引擎／校正驗證、四目標聚光燈、十項成果與私人CSV；正式六款／34款舊流程。Pages轉址政策及發布順序修正、批准、原圖／分類與回退見 [眼動遷移驗收](oculomotor-r2-migration.md)及[正式收據](releases/oculomotor-training-2.0.0.json)。原模型在人像串流執行，真人／實體相機精度與Safari／iOS仍未驗收。
 
@@ -152,6 +152,27 @@ sequenceDiagram
 - 相同 recordId 與相同成果重送回覆成功；修改成果或跨身份重用回覆 409／400。SQL `ON CONFLICT DO NOTHING` 防止同時提交覆寫。
 - 這是使用者端回報的活動紀錄，並非伺服器權威計分或防作弊證明；不可將簽章解讀為玩法或分數已由伺服器重算。
 
+### 設定值保存在本裝置（`settings-storage`）
+
+每款 R2 遊戲的設定值都要存在使用者這台裝置的 `localStorage`：開啟遊戲時先用上次確認的設定，沒有保存值或保存值無效時才用遊戲預設值。
+
+**平台統一規則：設定由容器保存，遊戲本身不碰 storage，不放寬沙盒。** 依設定畫面由誰呈現分三種接法，保存都只在本裝置瀏覽器，不經伺服器：
+
+| 情況 | 設定畫面 | 保存方式 | key | 狀態 |
+| --- | --- | --- | --- | --- |
+| R2 官方遊戲 | 遊戲自己 | 遊戲確認後經私有 port 回報 `settings`，容器保存並於 `init.settings` 交回（下列各點） | `trainerhub.game-settings/v1:<gameId>` | 已實作，隨 2026-10-17 候選版本發布 |
+| 第三方投稿遊戲 | Hub 依 `settings.json` 產生的 `GameSettingsForm`（`PackageGameOverlay`） | Hub 送出表單時保存；下次把保存值當成表單預設值，並用該遊戲 `settings.json` 的規則（`NormalizeGameSettingsValues`／`ParseGameSettingsDefinition`）重新驗證，不合法就用原預設值。遊戲與 runner 不需修改 | `trainerhub.package-settings/v1:<slug>` | 已實作（Hub `app/train/packageSettingsMemory.ts`） |
+| 未來自帶設定畫面的第三方遊戲 | 遊戲自己 | 須經新版 runner bridge（例如 `gameBridge-1.1.0`）提供與 R2 相同的回報／交回訊息與限制 | 同上 | 未實作 |
+
+**未遷移的官方遊戲不改動**：`TrainingOverlay`、共用 `GameSettingsForm`、`OfficialGameShell` 維持原行為，遷移到 R2 時再依第一列實作。不開放通用鍵值儲存給遊戲，以免第三方遊戲存放長期識別碼並夾帶於成績追蹤使用者。第三方的測試為 `scripts/check-package-settings-memory.test.mjs`（`test:entrypoints`）。
+
+- 遊戲在 `sandbox="allow-scripts"` 的不透明 origin 中執行，本身無法使用 `localStorage`；**不得**為此加入 `allow-same-origin` 或放寬 CSP。改由容器保存：Hub（`trainerhub.cc`）與獨立 PWA 啟動頁（runner origin）各自寫入自己的 `localStorage`，key 為 `trainerhub.game-settings/v1:<gameId>`。
+- 遊戲 `package.json` 的 `rehabTrainer.capabilities` 宣告 `settings-storage`；runner 只接受官方遊戲（`presentation: "game"`）宣告此能力，且宣告後獨立入口改用官方啟動頁（與相機遊戲相同，`init` 帶 `mode: "standalone"`）。未宣告的舊版本維持原流程，容器不送也不收設定。
+- 容器在私有 port 的 `init` 加入 `settings`（只有讀到有效保存值時）。遊戲按下確認且通過自身驗證後送出 `type: "settings"`，payload 為完整設定物件；容器用與成果 `config` 相同的規則檢查（最多 64 個短 primitive 欄位、拒絕敏感欄位名稱、字串 ≤80 字元），通過才寫入。`settings` 訊息同樣要求正確 gameId／version／nonce 與遞增 sequence。
+- 遊戲只還原自己定義的欄位、型別須與預設值相同，再用遊戲自己的驗證函式檢查整組設定；任何一項不合法就整組改用預設值。上傳的圖片、相機影像等不屬於可保存設定，不送給容器。
+- 保存只在本裝置、本瀏覽器；不同裝置或瀏覽器不同步，清除網站資料即回到預設值。同一台裝置的訪客與登入帳號共用同一份設定。設定不進入 D1、R2 或任何伺服器，因此不隨使用者數量增加伺服器負擔。
+- 測試：`scripts/check-r2-settings-memory.test.mjs`（容器訊息規則、儲存讀寫失敗、Hub 接線、每款遊戲的還原與預設值回退）、`apps/usergamerunner/tests/settingsMemory.test.mjs`（能力限制、官方啟動頁、實際打包後的啟動頁保存與回傳），以及本機 Brave `node scripts/check-r2-game-browser.mjs --game <gameId> --settings-memory [--standalone]`（改設定→確認→容器 `localStorage` 有值、遊戲本身無法存取 storage→重新整理後設定被還原）。
+
 ## 6. R2 套件與安全限制
 
 ```text
@@ -251,6 +272,7 @@ rehab-game-releases/
 
 後續遷移採畫畫塔防與小行星護盾防衛的方式：設定是遊戲內置中的前景視窗，背景在設定開啟時先 render 遊戲說明場景。設定、教學場景與樣式均由該遊戲擁有，不引入共用 UI 或跨遊戲程式碼。
 
+- 設定值依第 5 節「設定值保存在本裝置」由容器保存：開啟時還原上次確認的設定，沒有或無效才用預設值；按下確認並通過驗證後才回報容器保存。
 - 設定開啟時先呈現背景與必要圖片／場景，保留視窗周圍可見的背景；可加遮罩或模糊以維持表單可讀性。背景不可操作，教學導覽、聚光燈、活動計時及計分須等確認設定後才啟動。
 - 確認設定後關閉前景視窗，沿用已呈現的背景進入教學。返回設定保留所有值並清除教學遮罩／計時器，重新呈現設定視窗；不卸載 Hub 背景頁或另開 trainer 網站。
 - 視窗具備可識別的標題與 modal 語意，鍵盤焦點留在視窗內；Tab／Shift-Tab、Enter 欄位驗證及返回按鈕可操作。關閉／Escape 沿用遊戲既有 Hub 或獨立 PWA 退出契約，不依賴 native form submission。
@@ -460,6 +482,7 @@ Hub 的相容 PWA 連結指向 runner `/games/{gameId}/`，由不可快取 302 �
 | 分類與預覽 | 舊／新分類對照、自有 game.json、雙語文案、原圖 SHA-256、dist 清單與卡片／篩選截圖；刻意變更須說明並核准 |
 | 獨立性與安全 | 自有依賴／i18n／樣式／資產、無 shared UI／外連、正式 sandbox／CSP／私有 port 證據 |
 | 使用者行為 | 桌機／手機大廳點擊、前景設定視窗／預先呈現教學背景／焦點／載入失敗提示、設定 preset／自訂／邊界／往返、教學目標／縮放／清理、引擎／全螢幕、完整結果與返回 |
+| 設定值保存 | `settings-storage` 能力、還原／無效值回退預設的測試；Hub 與獨立 PWA 的 `--settings-memory` Brave 結果（確認後容器保存、重新整理後還原、遊戲本身無 storage 存取） |
 | UI 一致性與命名 | 設定 form／最終參數 div／training-panel gesture-tutorial-ready／結算的統一結構與樣式；有意義的 div class；DOM／computed style 對照、桌機／平板／手機無溢出、按鈕／Enter／返回／重試測試與截圖；確認 UI／CSS 均由遊戲自己擁有 |
 | 有效寬度、水平置中與捲軸 | 本機與正式站的桌機一般視窗／離開全螢幕、手機、平板：Hub／iframe 兩層可視尺寸與左右邊距（誤差 ≤1px）、Hub 背景捲軸寬 0、gameplay 根頁不溢出、設定／成績必要內部捲動可操作、返回後 overflow／原位置恢復；先失敗原因、修正後命令／數值／截圖。左右過寬或偏移、不必要頁面捲軸、內容裁切任一未解決即不通過 |
 | 成績結算呈現 | 自有主要統計／當次設定、指標圖表／平均線／描述統計／完整率及完整逐回合明細；數值與保存一致、零值／缺漏／單筆正確、彙總隔離、分頁／鍵盤／雙語測試；正式桌機與手機主要統計／圖表／明細截圖、平板尺寸驗證與獨立 PWA 結果 |

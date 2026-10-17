@@ -8,12 +8,16 @@ const metrics = value => plain(value) && Object.keys(value).length <= 12
   && Object.entries(value).every(([key, item]) => /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(key)
     && !sensitiveKey.test(key) && (item === null || (typeof item === 'number' && Number.isFinite(item) && Math.abs(item) <= 1e12)));
 
-export function IsGameResult(payload, gameId) {
-  if (!exact(payload, ['config', 'score']) || !plain(payload.config) || Object.keys(payload.config).length > 64) return false;
-  if (!Object.entries(payload.config).every(([key, item]) => /^[a-z][A-Za-z0-9_]{0,63}$/.test(key)
+/** Bounded primitive settings: at most 64 short, non-sensitive fields. Used for result config and saved settings. */
+export function IsGameSettings(value) {
+  return plain(value) && Object.keys(value).length <= 64 && Object.entries(value).every(([key, item]) => /^[a-z][A-Za-z0-9_]{0,63}$/.test(key)
     && !sensitiveKey.test(key) && (typeof item === 'boolean'
       || (typeof item === 'number' && Number.isFinite(item) && Math.abs(item) <= 1e9)
-      || (typeof item === 'string' && item.length > 0 && item.length <= 80 && !/[\u0000-\u001f\u007f]/.test(item))))) return false;
+      || (typeof item === 'string' && item.length > 0 && item.length <= 80 && !/[\u0000-\u001f\u007f]/.test(item))));
+}
+
+export function IsGameResult(payload, gameId) {
+  if (!exact(payload, ['config', 'score']) || !IsGameSettings(payload.config)) return false;
   const score = payload.score;
   return exact(score, ['schema', 'gameId', 'summary', 'rounds']) && score.schema === 'rehab-trainer.game-score/v1'
     && score.gameId === gameId && metrics(score.summary) && Array.isArray(score.rounds)
@@ -21,8 +25,38 @@ export function IsGameResult(payload, gameId) {
     && new TextEncoder().encode(JSON.stringify(payload)).byteLength <= 450 * 1024;
 }
 
+// The game's last confirmed settings, kept by its container (Hub or standalone launcher) on this device.
+// The launcher inlines these functions, so they only use helpers it also defines.
+export function ReadSavedGameSettings(storage, gameId) {
+  try {
+    const text = storage?.getItem('trainerhub.game-settings/v1:' + gameId);
+    if (typeof text !== 'string' || text.length > 16384) return null;
+    const value = JSON.parse(text);
+    return IsGameSettings(value) && Object.keys(value).length > 0 ? value : null;
+  } catch { return null; }
+}
+
+export function WriteSavedGameSettings(storage, gameId, settings) {
+  try {
+    if (IsGameSettings(settings) && Object.keys(settings).length > 0) storage?.setItem('trainerhub.game-settings/v1:' + gameId, JSON.stringify(settings));
+  } catch { /* Storage may be blocked or full; the game then starts from its defaults. */ }
+}
+
+/** A `settings` message from a game whose release declares settings storage. */
+export function AcceptGameSettingsMessage(message, state) {
+  if (!exact(message, ['schema', 'gameId', 'version', 'sessionNonce', 'sequence', 'type', 'payload'])
+    || message.schema !== 'trainerhub.game/v1' || message.type !== 'settings' || message.gameId !== state.gameId
+    || message.version !== state.version || message.sessionNonce !== state.sessionNonce
+    || !Number.isSafeInteger(message.sequence) || message.sequence <= state.sequence
+    || !state.capabilities?.includes('settings-storage')
+    || !IsGameSettings(message.payload) || Object.keys(message.payload).length === 0) return false;
+  state.sequence = message.sequence;
+  return true;
+}
+
 /** Called only on a port transferred to the exact sandboxed iframe window. */
 export function AcceptGameMessage(message, state) {
+  if (message?.type === 'settings') return AcceptGameSettingsMessage(message, state);
   if (!exact(message, ['schema', 'gameId', 'version', 'sessionNonce', 'sequence', 'type', 'payload'])
     || message.schema !== 'trainerhub.game/v1' || message.gameId !== state.gameId
     || message.version !== state.version || message.sessionNonce !== state.sessionNonce

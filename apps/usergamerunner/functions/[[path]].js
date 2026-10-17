@@ -13,6 +13,7 @@ import {
   RenderManifest,
   RenderServiceWorker,
   trustedPlatformOrigin,
+  UsesOfficialLauncher,
 } from './_lib/render.js';
 import {
   GetGameSettingsDefaults,
@@ -119,7 +120,9 @@ export async function HandleRequest(context) {
 
   if (route.kind === 'launcher') {
     const handTracking = release.presentation === 'game' && (release.capabilities.includes('hand-tracking') || release.capabilities.includes('eye-tracking'));
-    if (handTracking) {
+    // Official games that remember settings also use the official launcher, which owns the runner origin's storage.
+    const officialLauncher = UsesOfficialLauncher(release);
+    if (officialLauncher) {
       const official = await ReadOfficialGameRelease(context.env?.GAME_RELEASE_BUCKET, route.gameId, route.version);
       if (!official || official.contentSha256 !== release.contentSha256) return ErrorResponse(404, '找不到已核准的官方輸入版本。');
     }
