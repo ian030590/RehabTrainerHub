@@ -8,7 +8,7 @@
 
 2026-10-17 蓋伯斑塊練習 `gabor-patching@2.0.0` 已依擁有者「也核准gabor-patching，請同步幫我上傳」核准原候選精確摘要，完成第 7 節 E／F 的 R2 發布、current、正式 API／session／五檔 bytes 與桌機／手機／平板／英文登入／獨立 PWA 驗收。七項 CI、遊戲與 Hub build 通過，正式為七款 R2／33 舊流程。保留原演算法、設定、計分、三步聚光燈與完整明細；本次使用既有相容 Hub／runner，未另部署平台、未建立正式紀錄。首次 native 沒有另一核准回退版，已重驗舊 Hub 三個檔案；審查、既有提前部署的順序差異、驗收與限制見 [蓋伯斑塊搬遷](gabor-patching-r2-migration.md)及[正式收據](releases/gabor-patching-2.0.0.json)。
 
-更新日期：2026-10-18。目前 R2 current 為 `asteroid-shield@2.0.10`、`gesture-battler@2.0.5`、`drawing-defense@2.0.7`、`motor-cortex-rehab@2.0.3`、`oculomotor-training@2.1.2`、`moving-card@2.0.3`、`gabor-patching@2.0.2`、`reading-training@2.0.1`、`driving-rehab@2.0.0`（設定控制項與設定值保存，見 [紀錄](r2-settings-controls-2026-10-17.md)），9 款完成、31 款保留舊流程。以下各版發布歷史的數量與版本保留當時基準。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
+更新日期：2026-10-18。目前 R2 current 為 `asteroid-shield@2.0.11`、`gesture-battler@2.0.6`、`drawing-defense@2.0.8`、`motor-cortex-rehab@2.0.4`、`oculomotor-training@2.1.3`、`moving-card@2.0.4`、`gabor-patching@2.0.3`、`reading-training@2.0.2`、`driving-rehab@2.0.2`、`hart-chart@2.0.2`（缺值顯示、焦點外框與表單邊框，見 [紀錄](antislop-review-2026-10-18.md)），10 款完成、30 款保留舊流程。以下各版發布歷史的數量與版本保留當時基準。第 7 節是後續每個遊戲必須完成的遷移流程；第 11 節是逐遊戲審查單，不得只確認直接遊戲網址能開啟。
 
 2026-10-11 眼動練習 `oculomotor-training@2.0.0` 已按精確摘要核准、發布 R2、完成相容 runner／Hub 切換、[七項 CI／兩站部署](https://github.com/ian030590/RehabTrainerHub/actions/runs/38094804766)與正式 API／桌機／手機／平板／英文登入／獨立 PWA 驗收。採原25項設定、四種原引擎／校正驗證、四目標聚光燈、十項成果與私人CSV；正式六款／34款舊流程。Pages轉址政策及發布順序修正、批准、原圖／分類與回退見 [眼動遷移驗收](oculomotor-r2-migration.md)及[正式收據](releases/oculomotor-training-2.0.0.json)。原模型在人像串流執行，真人／實體相機精度與Safari／iOS仍未驗收。
 

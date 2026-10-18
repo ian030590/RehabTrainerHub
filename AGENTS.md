@@ -9,6 +9,8 @@
 
 ## 專案結構與模組組織
 
+2026-10-18 antislop 批次後，十款 R2 current 為 `asteroid-shield@2.0.11`、`drawing-defense@2.0.8`、`driving-rehab@2.0.2`、`gabor-patching@2.0.3`、`gesture-battler@2.0.6`、`hart-chart@2.0.2`、`motor-cortex-rehab@2.0.4`、`moving-card@2.0.4`、`oculomotor-training@2.1.3`、`reading-training@2.0.2`。擁有者以「R2核准全部發佈」核准精確 version／contentSha256；先推送 `e418196e` 並部署 Hub／runner，再逐款發布並驗證正式 bytes、current、session 與正式 Hub 流程。見 `docs/antislop-review-2026-10-18.md` 與 `docs/releases/<gameId>-<version>.json`；以下各段的 current 描述為當時狀態。
+
 哈特圖目前 current 為 `hart-chart@2.0.1` 教學對齊版，已於 2026-10-18 依「核准發佈」發布精確五檔／`contentSha256: d604b2e25963b90ed8d6ad2e39d230b2d87dad8f3204ae44d30c2301a4884366`。聚光燈直接使用實際字母表、完整解碼器與工具列，開始後保留教學字母／座標；教學 inert、playing 輸入檢查與原計時／五項數值成果保留。七項本機 gate、正式 API／session／公開 bytes 與九項 Hub／PWA 流程通過，未部署 Hub／runner、未建正式帳號或紀錄，也未新增 Git commit／push。`2.0.0` 五檔私人／公開 bytes 已核對為回退版，未實際回退。驗收期間駕駛由另一工作流程獨立發布 `2.0.1`，其發布收據／current／manifest 已核對，另外八款不變；哈特圖 publisher 未寫入其他遊戲。見 `docs/hart-chart-tutorial-parity.md`、`docs/releases/hart-chart-2.0.1.json`；下列 `2.0.0` 為首次遷移歷史。
 
 哈特圖訓練 `hart-chart@2.0.0` 已於 2026-10-18 依「核准，並請git push」核准精確五檔／`contentSha256: 67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec`，完成 R2 發布／回讀／current 後才部署 Hub。保留原設定、字母表／座標解碼／提示／停靠／縮放／QR 及五項數值成果，採自有設定／成績與三步聚光燈；沙盒／CSP 不變。七項 CI、正式 API／session／五檔 bytes 與九項 Hub／PWA 流程通過，沒有正式帳號或訓練紀錄。正式現為十款 R2／30 款舊流程，其他九款 current 不變；來源 `f8f5ccb9` 已推至 `feat/hart-chart-r2`，Hub `7ab7e21e`、runner 沿用 `56fca01e`。收據、首次 native 回退基準與硬體限制見 `docs/hart-chart-r2-migration.md`、`docs/releases/hart-chart-2.0.0.json`。下列九款／31 款為哈特圖之前的歷史狀態，現況以本段與最新收據為準。

@@ -1,0 +1,275 @@
+{
+  "gameId": "drawing-defense",
+  "version": "2.0.8",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.8/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/2.0.8/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/drawing-defense/",
+  "publishedAt": "2026-10-18T14:23:44.351Z",
+  "verifiedAt": "2026-10-18T14:28:06.685Z",
+  "fileCount": 6,
+  "totalBytes": 5851411,
+  "files": [
+    {
+      "path": "assets/StarSky-COfhhfcH.png",
+      "size": 4650499,
+      "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+      "contentType": "image/png"
+    },
+    {
+      "path": "assets/index-CNhVlI2W.js",
+      "size": 1149025,
+      "sha256": "50000f23c5bee58790e3dae2507bf45075a5385b604d410f4e1df0d7174417ef",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BGtIGjE0.css",
+      "size": 15752,
+      "sha256": "774fb35afa668f1046d6bcfda2983dcdde84cfb1d11ec4736d2de8015538c1b0",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 489,
+      "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 402,
+      "sha256": "7f3d8d0f0bae842c4f3dde3eca51dfd970800f2b6fe83de7e0825dff75e4f9de",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 35244,
+      "sha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.8",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "1a072412d9220b7d285086d999829961f5b76e7ad88220382d3121295a312d97"
+    },
+    "2.0.1": {
+      "contentSha256": "95e1184b39ad916abd50789837495490f0580a5526fd4237d5be067ddbcb0db9"
+    },
+    "2.0.2": {
+      "contentSha256": "2490614c840e2bd69811c01d52e98c12c9f7d63b2dd03e5c26e2089a69fab9f3"
+    },
+    "2.0.3": {
+      "contentSha256": "0eabb5457c9ada94b3ef5bd4da413f6182c4ce95b1fb78aaa18b88130a7e1e24"
+    },
+    "2.0.4": {
+      "contentSha256": "5b5ac8c06e408293743112ea364dee1488b6fe0f9cb5d98c166ff1733b0adb8c"
+    },
+    "2.0.5": {
+      "contentSha256": "dc3cc9a6ab5d9179e7a23b22b6dcb094adab77de0fdba74d4cdb80f3e84e6f86"
+    },
+    "2.0.6": {
+      "contentSha256": "3603daf7be2b238317eef68b8e2c0e793af3c7a67314a8d086588081758a986f"
+    },
+    "2.0.7": {
+      "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183"
+    },
+    "2.0.8": {
+      "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "R2核准全部發佈",
+    "recordedAt": "2026-10-18T14:34:34.776Z",
+    "scope": "Publish and activate the ten exact version/contentSha256 tuples listed in docs/antislop-review-2026-10-18.md section 5, after the Hub and runner deploy of e418196e",
+    "games": [
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.11",
+        "contentSha256": "2fe0c1e70a69924bd1feca6d30341a956a8a7f4113b435f58758b1932c74c7e6"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.8",
+        "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf"
+      },
+      {
+        "gameId": "driving-rehab",
+        "version": "2.0.2",
+        "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.3",
+        "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.6",
+        "contentSha256": "589f91f2d8589ecab4c9c884345c70df8fcde00610a0faca700eab88f170ea37"
+      },
+      {
+        "gameId": "hart-chart",
+        "version": "2.0.2",
+        "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.4",
+        "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.4",
+        "contentSha256": "53c01e6f33109f2de4e8795a5848f0f51af1046400efa9512d344bf5d6bef0aa"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.3",
+        "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d"
+      },
+      {
+        "gameId": "reading-training",
+        "version": "2.0.2",
+        "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.7",
+    "contentSha256": "a46e717fc8eac312be1c51c31be032b5eb8738e27d36cc9a5ae67fd2e270a183",
+    "command": "node scripts/publish-official-game.mjs drawing-defense --activate-version 2.0.7",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "The previous version needs no new Hub or runner capability."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/drawing-defense/2.0.8/",
+  "changes": [
+    "Missing values show 無 (zh) or N/A (en) instead of an em dash, with no unit after them",
+    "Settings Back/Start buttons keep a visible 3px focus-visible ring (outline: none removed)",
+    "Settings inputs and the results metric dropdown use --border-strong #7d868e (3.70:1 on white) instead of a 1.42:1 border"
+  ],
+  "sourceCommit": "e418196e4c3b563813408eb6df809f7942dcf3a6",
+  "platformDeploy": {
+    "commit": "e418196e",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39134563405",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/antislop-review-2026-10-18.md",
+    "tests": [
+      "scripts/check-antislop.test.mjs",
+      "scripts/check-r2-game-results.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "equivalence": "code-modernization compare.py: 269/269 cases identical apart from the approved missing-value placeholder",
+    "localBrowser": "node scripts/check-r2-game-browser.mjs --game drawing-defense --lobby passed before publishing; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-18T14:28:06.685Z",
+    "files": [
+      {
+        "path": "assets/StarSky-COfhhfcH.png",
+        "status": 200,
+        "size": 4650499,
+        "sha256": "21e2cef5f8bf18a6429599b02d18e976a8b5668de2d91b08f4e7af431121950d",
+        "contentType": "image/png"
+      },
+      {
+        "path": "assets/index-CNhVlI2W.js",
+        "status": 200,
+        "size": 1149025,
+        "sha256": "50000f23c5bee58790e3dae2507bf45075a5385b604d410f4e1df0d7174417ef",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-BGtIGjE0.css",
+        "status": 200,
+        "size": 15752,
+        "sha256": "774fb35afa668f1046d6bcfda2983dcdde84cfb1d11ec4736d2de8015538c1b0",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 489,
+        "sha256": "22ff5707acbabcef5af1411ee37439385756a829574bcb1174b76151a629958d",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 402,
+        "sha256": "7f3d8d0f0bae842c4f3dde3eca51dfd970800f2b6fe83de7e0825dff75e4f9de",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 35244,
+        "sha256": "cd3f26ce0701ea2f852821ce840be1a74341462fd42febdde65fbc663ce36df1",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/drawing-defense/2.0.8/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "version": "2.0.8",
+      "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game drawing-defense --lobby --production-hub passed: trainerhub.cc Hub front end and the runner's published R2 files, /api/* intercepted into local SQLite only. Brave R2 game passed: settings → tutorial → Pixi (752×485) → results → failed save → retry → one SQL row → lobby."
+  }
+}

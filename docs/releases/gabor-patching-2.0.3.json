@@ -1,0 +1,249 @@
+{
+  "gameId": "gabor-patching",
+  "version": "2.0.3",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.3/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.3/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/gabor-patching/",
+  "publishedAt": "2026-10-18T14:24:47.739Z",
+  "verifiedAt": "2026-10-18T14:28:11.876Z",
+  "fileCount": 5,
+  "totalBytes": 1158175,
+  "files": [
+    {
+      "path": "assets/index-Daoccgsk.js",
+      "size": 1138670,
+      "sha256": "e3b374f25305725d48298b514404ed4e9741c598ee80333a226372d41afc50dc",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-DbNRPcIJ.css",
+      "size": 17221,
+      "sha256": "391915b7a613d691ee63ac4a57cd311d82dcfeb990037f058b9c7f6fc226e7bf",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 508,
+      "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 408,
+      "sha256": "de969229af2e0d184738729c26f9640048f1eae9a7920b9eed8c4e71705bd88d",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 1368,
+      "sha256": "b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.3",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "fe2dfb2d0edba20f2706a9aa638c8a1fc1daffd2531fe1c74a925049b2a2429a"
+    },
+    "2.0.1": {
+      "contentSha256": "af68e6dff786e033e99bc9c311bdb6a3700efd08a6386b1cf268da2d53ee79e3"
+    },
+    "2.0.2": {
+      "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83"
+    },
+    "2.0.3": {
+      "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "R2核准全部發佈",
+    "recordedAt": "2026-10-18T14:34:34.776Z",
+    "scope": "Publish and activate the ten exact version/contentSha256 tuples listed in docs/antislop-review-2026-10-18.md section 5, after the Hub and runner deploy of e418196e",
+    "games": [
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.11",
+        "contentSha256": "2fe0c1e70a69924bd1feca6d30341a956a8a7f4113b435f58758b1932c74c7e6"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.8",
+        "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf"
+      },
+      {
+        "gameId": "driving-rehab",
+        "version": "2.0.2",
+        "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.3",
+        "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.6",
+        "contentSha256": "589f91f2d8589ecab4c9c884345c70df8fcde00610a0faca700eab88f170ea37"
+      },
+      {
+        "gameId": "hart-chart",
+        "version": "2.0.2",
+        "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.4",
+        "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.4",
+        "contentSha256": "53c01e6f33109f2de4e8795a5848f0f51af1046400efa9512d344bf5d6bef0aa"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.3",
+        "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d"
+      },
+      {
+        "gameId": "reading-training",
+        "version": "2.0.2",
+        "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.2",
+    "contentSha256": "780e71823bc5b5f5f229e49b14ad9e1a79a96df3e373da2e88582cdd43681b83",
+    "command": "node scripts/publish-official-game.mjs gabor-patching --activate-version 2.0.2",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "The previous version needs no new Hub or runner capability."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/gabor-patching/2.0.3/",
+  "changes": [
+    "Missing values show 無 (zh) or N/A (en) instead of an em dash, with no unit after them",
+    "Results summary shows 無 / N/A for missing score, hits or duration; present values unchanged (\"30 s\")",
+    "Settings Back/Start buttons keep a visible 3px focus-visible ring (outline: none removed)",
+    "Settings inputs and the results metric dropdown use --border-strong #7d868e (3.70:1 on white) instead of a 1.42:1 border"
+  ],
+  "sourceCommit": "e418196e4c3b563813408eb6df809f7942dcf3a6",
+  "platformDeploy": {
+    "commit": "e418196e",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39134563405",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/antislop-review-2026-10-18.md",
+    "tests": [
+      "scripts/check-antislop.test.mjs",
+      "scripts/check-r2-game-results.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "equivalence": "code-modernization compare.py: 269/269 cases identical apart from the approved missing-value placeholder",
+    "localBrowser": "node scripts/check-r2-game-browser.mjs --game gabor-patching --lobby passed before publishing; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-18T14:28:11.876Z",
+    "files": [
+      {
+        "path": "assets/index-Daoccgsk.js",
+        "status": 200,
+        "size": 1138670,
+        "sha256": "e3b374f25305725d48298b514404ed4e9741c598ee80333a226372d41afc50dc",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-DbNRPcIJ.css",
+        "status": 200,
+        "size": 17221,
+        "sha256": "391915b7a613d691ee63ac4a57cd311d82dcfeb990037f058b9c7f6fc226e7bf",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 508,
+        "sha256": "4642782d15a9c135c3508cce9da1bd9574dc06a9246f1bd6b96bb701a016de51",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 408,
+        "sha256": "de969229af2e0d184738729c26f9640048f1eae9a7920b9eed8c4e71705bd88d",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 1368,
+        "sha256": "b9045dbfdb81944472874e73bee32f2594003337806d88390293e30ad4885de8",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/gabor-patching/2.0.3/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "version": "2.0.3",
+      "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game gabor-patching --lobby --production-hub passed: trainerhub.cc Hub front end and the runner's published R2 files, /api/* intercepted into local SQLite only. Gabor settings, three spotlights, real 30-second gameplay, results and save lifecycle passed."
+  }
+}

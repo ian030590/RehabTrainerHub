@@ -1,0 +1,249 @@
+{
+  "gameId": "motor-cortex-rehab",
+  "version": "2.0.4",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.4/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/2.0.4/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/motor-cortex-rehab/",
+  "publishedAt": "2026-10-18T14:26:03.775Z",
+  "verifiedAt": "2026-10-18T14:28:18.476Z",
+  "fileCount": 5,
+  "totalBytes": 615334,
+  "files": [
+    {
+      "path": "assets/index-DxoRTNKw.js",
+      "size": 590031,
+      "sha256": "f71974be920dc36d45b34256ec09f0c5f7a9fa16783b855aa7ab28fb495dec22",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-MHjCLB8w.css",
+      "size": 18945,
+      "sha256": "79c853606889087859689970e51bd70f7b8690fd7245d18ef11cf6d8f373d5ff",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 522,
+      "sha256": "ca2322d252c30355ac320367cb8c8eead92c88f06aae6d31bb43bfc2a09135a6",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 414,
+      "sha256": "18956eb9c84df7362f02eca998d8d43e6786558ba43b4aede13e034d423d4495",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 5422,
+      "sha256": "6a6085136389ad1250b036fb13ad6505032d9033cf115b336e9c7ae8721e1455",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "hand-tracking",
+    "settings-storage"
+  ],
+  "currentVersion": "2.0.4",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "e4e449522ccbb99c5f9fa1a6b0845f8b0202d78df73025d01b779f8a1c4b5b09"
+    },
+    "2.0.1": {
+      "contentSha256": "fc24505f72d10baa68db2cb20d833e5e2ca6a77c1eac51ad44831193fa58dc5a"
+    },
+    "2.0.2": {
+      "contentSha256": "a3383733227715bc748ff49e9c034c31813e17c75e465823acf53f1e10b6af46"
+    },
+    "2.0.3": {
+      "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8"
+    },
+    "2.0.4": {
+      "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "R2核准全部發佈",
+    "recordedAt": "2026-10-18T14:34:34.776Z",
+    "scope": "Publish and activate the ten exact version/contentSha256 tuples listed in docs/antislop-review-2026-10-18.md section 5, after the Hub and runner deploy of e418196e",
+    "games": [
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.11",
+        "contentSha256": "2fe0c1e70a69924bd1feca6d30341a956a8a7f4113b435f58758b1932c74c7e6"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.8",
+        "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf"
+      },
+      {
+        "gameId": "driving-rehab",
+        "version": "2.0.2",
+        "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.3",
+        "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.6",
+        "contentSha256": "589f91f2d8589ecab4c9c884345c70df8fcde00610a0faca700eab88f170ea37"
+      },
+      {
+        "gameId": "hart-chart",
+        "version": "2.0.2",
+        "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.4",
+        "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.4",
+        "contentSha256": "53c01e6f33109f2de4e8795a5848f0f51af1046400efa9512d344bf5d6bef0aa"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.3",
+        "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d"
+      },
+      {
+        "gameId": "reading-training",
+        "version": "2.0.2",
+        "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.3",
+    "contentSha256": "a51a7a7045db9dcd167a3fba141b355da160729403f4e1d54637ebed966460c8",
+    "command": "node scripts/publish-official-game.mjs motor-cortex-rehab --activate-version 2.0.3",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "The previous version needs no new Hub or runner capability."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/motor-cortex-rehab/2.0.4/",
+  "changes": [
+    "Missing values show 無 (zh) or N/A (en) instead of an em dash, with no unit after them",
+    "Settings Back/Start buttons gain the 3px focus-visible ring the other games already had",
+    "Settings inputs and the results metric dropdown use --border-strong #7d868e (3.70:1 on white) instead of a 1.42:1 border"
+  ],
+  "sourceCommit": "e418196e4c3b563813408eb6df809f7942dcf3a6",
+  "platformDeploy": {
+    "commit": "e418196e",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39134563405",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/antislop-review-2026-10-18.md",
+    "tests": [
+      "scripts/check-antislop.test.mjs",
+      "scripts/check-r2-game-results.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "equivalence": "code-modernization compare.py: 269/269 cases identical apart from the approved missing-value placeholder",
+    "localBrowser": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --lobby passed before publishing; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-18T14:28:18.476Z",
+    "files": [
+      {
+        "path": "assets/index-DxoRTNKw.js",
+        "status": 200,
+        "size": 590031,
+        "sha256": "f71974be920dc36d45b34256ec09f0c5f7a9fa16783b855aa7ab28fb495dec22",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-MHjCLB8w.css",
+        "status": 200,
+        "size": 18945,
+        "sha256": "79c853606889087859689970e51bd70f7b8690fd7245d18ef11cf6d8f373d5ff",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 522,
+        "sha256": "ca2322d252c30355ac320367cb8c8eead92c88f06aae6d31bb43bfc2a09135a6",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 414,
+        "sha256": "18956eb9c84df7362f02eca998d8d43e6786558ba43b4aede13e034d423d4495",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 5422,
+        "sha256": "6a6085136389ad1250b036fb13ad6505032d9033cf115b336e9c7ae8721e1455",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/motor-cortex-rehab/2.0.4/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "version": "2.0.4",
+      "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game motor-cortex-rehab --lobby --production-hub passed: trainerhub.cc Hub front end and the runner's published R2 files, /api/* intercepted into local SQLite only. Motor tracking Brave passed: own modal, five spotlights, actual MediaPipe, 45-second gameplay, numeric events, chart, retry, identity and camera cleanup."
+  }
+}

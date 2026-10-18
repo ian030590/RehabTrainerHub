@@ -1,0 +1,246 @@
+{
+  "gameId": "reading-training",
+  "version": "2.0.2",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/reading-training/2.0.2/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/reading-training/2.0.2/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/reading-training/",
+  "publishedAt": "2026-10-18T14:27:36.728Z",
+  "verifiedAt": "2026-10-18T14:28:26.382Z",
+  "fileCount": 5,
+  "totalBytes": 1205946,
+  "files": [
+    {
+      "path": "assets/index-BqGxk1x0.js",
+      "size": 1184703,
+      "sha256": "533a3dfa15ff540a59e49497611ffb864df26ecd8cb613b96f97e0fd505cb285",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/style-BS_nbMed.css",
+      "size": 19484,
+      "sha256": "650c3184f86a3342fdc3882282e742f17cc5b45e1b8be0271f8b1c3fea4e1baa",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 499,
+      "sha256": "f80da9beaa28312904c39fcf7ce6bc3193c9f2140c4dbdf2ea864aeaf860f726",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 412,
+      "sha256": "f9645f7dec3cbdc8211f41e7b542621e07f8207dac20f33cc11be532020e6283",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 848,
+      "sha256": "a4e3de855637556467ae4c7c1b5a1d2f5479c2fc09e3f9cce0c23d534ed38cb4",
+      "contentType": "image/webp"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.2",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "2876f30409adf5f5c31e400431256b2737a977e8fb1d098a56123393941fe6b0"
+    },
+    "2.0.1": {
+      "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1"
+    },
+    "2.0.2": {
+      "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "R2核准全部發佈",
+    "recordedAt": "2026-10-18T14:34:34.776Z",
+    "scope": "Publish and activate the ten exact version/contentSha256 tuples listed in docs/antislop-review-2026-10-18.md section 5, after the Hub and runner deploy of e418196e",
+    "games": [
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.11",
+        "contentSha256": "2fe0c1e70a69924bd1feca6d30341a956a8a7f4113b435f58758b1932c74c7e6"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.8",
+        "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf"
+      },
+      {
+        "gameId": "driving-rehab",
+        "version": "2.0.2",
+        "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.3",
+        "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.6",
+        "contentSha256": "589f91f2d8589ecab4c9c884345c70df8fcde00610a0faca700eab88f170ea37"
+      },
+      {
+        "gameId": "hart-chart",
+        "version": "2.0.2",
+        "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.4",
+        "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.4",
+        "contentSha256": "53c01e6f33109f2de4e8795a5848f0f51af1046400efa9512d344bf5d6bef0aa"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.3",
+        "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d"
+      },
+      {
+        "gameId": "reading-training",
+        "version": "2.0.2",
+        "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "6beb58a5e70d165b3cf574af9cd22be09d998a929230fbc6feb886a3c53a87c1",
+    "command": "node scripts/publish-official-game.mjs reading-training --activate-version 2.0.1",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "The previous version needs no new Hub or runner capability."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/reading-training/2.0.2/",
+  "changes": [
+    "Missing values show 無 (zh) or N/A (en) instead of an em dash, with no unit after them",
+    "Results summary shows 無 / N/A for missing presentation time, segments, passage or completion; present values unchanged",
+    "Settings Back/Start buttons keep a visible 3px focus-visible ring (outline: none removed)",
+    "Settings inputs and the results metric dropdown use --border-strong #7d868e (3.70:1 on white) instead of a 1.42:1 border"
+  ],
+  "sourceCommit": "e418196e4c3b563813408eb6df809f7942dcf3a6",
+  "platformDeploy": {
+    "commit": "e418196e",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39134563405",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/antislop-review-2026-10-18.md",
+    "tests": [
+      "scripts/check-antislop.test.mjs",
+      "scripts/check-r2-game-results.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "equivalence": "code-modernization compare.py: 269/269 cases identical apart from the approved missing-value placeholder",
+    "localBrowser": "node scripts/check-r2-game-browser.mjs --game reading-training --lobby passed before publishing; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-18T14:28:26.382Z",
+    "files": [
+      {
+        "path": "assets/index-BqGxk1x0.js",
+        "status": 200,
+        "size": 1184703,
+        "sha256": "533a3dfa15ff540a59e49497611ffb864df26ecd8cb613b96f97e0fd505cb285",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/style-BS_nbMed.css",
+        "status": 200,
+        "size": 19484,
+        "sha256": "650c3184f86a3342fdc3882282e742f17cc5b45e1b8be0271f8b1c3fea4e1baa",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 499,
+        "sha256": "f80da9beaa28312904c39fcf7ce6bc3193c9f2140c4dbdf2ea864aeaf860f726",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 412,
+        "sha256": "f9645f7dec3cbdc8211f41e7b542621e07f8207dac20f33cc11be532020e6283",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 848,
+        "sha256": "a4e3de855637556467ae4c7c1b5a1d2f5479c2fc09e3f9cce0c23d534ed38cb4",
+        "contentType": "image/webp"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/reading-training/2.0.2/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "version": "2.0.2",
+      "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game reading-training --lobby --production-hub passed: trainerhub.cc Hub front end and the runner's published R2 files, /api/* intercepted into local SQLite only. Reading settings, three spotlights, real RSVP passage, ten questions, results and save lifecycle passed."
+  }
+}

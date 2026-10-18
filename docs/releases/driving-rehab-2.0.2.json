@@ -1,0 +1,288 @@
+{
+  "gameId": "driving-rehab",
+  "version": "2.0.2",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.2/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/2.0.2/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/driving-rehab/",
+  "publishedAt": "2026-10-18T14:24:22.685Z",
+  "verifiedAt": "2026-10-18T14:28:09.842Z",
+  "fileCount": 8,
+  "totalBytes": 10045606,
+  "files": [
+    {
+      "path": "assets/car-pedals-BXQENW7T.svg",
+      "size": 198908,
+      "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/index-BfWX9dsm.js",
+      "size": 1727321,
+      "sha256": "5d9a4b3e1e70825edd4f524b0059ca74f0f1244fb27a98305aff0c249a996e92",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "assets/steering-wheel-5D4sTFY9.svg",
+      "size": 3316,
+      "sha256": "366798d41cceec6fbc0ae068b4673cf2284ba280ba461e6506d6507258e5c50f",
+      "contentType": "image/svg+xml"
+    },
+    {
+      "path": "assets/style-R6ztmDRb.css",
+      "size": 18569,
+      "sha256": "d6d1d8cf83a0f32c4d89abf3df6c56a426b5751bf8394f38f5ee7bf1e1770000",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 552,
+      "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 464,
+      "sha256": "4f54888c39d1e5c2161884aca16af4635a2609b5f4d021fc9b8a17efb92ebefa",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 13202,
+      "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "vehicle-data.js",
+      "size": 8083274,
+      "sha256": "4feb8b7d1c58c9b6af5f949c075dbeac3f6b54e4f7b64498b7a40afffcbd0207",
+      "contentType": "text/javascript; charset=utf-8"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "fullscreen",
+    "gamepad",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.0.2",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863"
+    },
+    "2.0.1": {
+      "contentSha256": "d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9"
+    },
+    "2.0.2": {
+      "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "R2核准全部發佈",
+    "recordedAt": "2026-10-18T14:34:34.776Z",
+    "scope": "Publish and activate the ten exact version/contentSha256 tuples listed in docs/antislop-review-2026-10-18.md section 5, after the Hub and runner deploy of e418196e",
+    "games": [
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.11",
+        "contentSha256": "2fe0c1e70a69924bd1feca6d30341a956a8a7f4113b435f58758b1932c74c7e6"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.8",
+        "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf"
+      },
+      {
+        "gameId": "driving-rehab",
+        "version": "2.0.2",
+        "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.3",
+        "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.6",
+        "contentSha256": "589f91f2d8589ecab4c9c884345c70df8fcde00610a0faca700eab88f170ea37"
+      },
+      {
+        "gameId": "hart-chart",
+        "version": "2.0.2",
+        "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.4",
+        "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.4",
+        "contentSha256": "53c01e6f33109f2de4e8795a5848f0f51af1046400efa9512d344bf5d6bef0aa"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.3",
+        "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d"
+      },
+      {
+        "gameId": "reading-training",
+        "version": "2.0.2",
+        "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.0.1",
+    "contentSha256": "d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9",
+    "command": "node scripts/publish-official-game.mjs driving-rehab --activate-version 2.0.1",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "The previous version needs no new Hub or runner capability."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/driving-rehab/2.0.2/",
+  "changes": [
+    "Missing values show 無 (zh) or N/A (en) instead of an em dash, with no unit after them",
+    "Session summary and event details use the same missing-value text",
+    "English pause message reads \"Control device disconnected; training paused\"",
+    "Settings Back/Start buttons keep a visible 3px focus-visible ring (outline: none removed)",
+    "Settings inputs and the results metric dropdown use --border-strong #7d868e (3.70:1 on white) instead of a 1.42:1 border",
+    "three-driving-rehab.ts banner comments rewritten or removed; syntax tree unchanged"
+  ],
+  "sourceCommit": "e418196e4c3b563813408eb6df809f7942dcf3a6",
+  "platformDeploy": {
+    "commit": "e418196e",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39134563405",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/antislop-review-2026-10-18.md",
+    "tests": [
+      "scripts/check-antislop.test.mjs",
+      "scripts/check-r2-game-results.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "equivalence": "code-modernization compare.py: 269/269 cases identical apart from the approved missing-value placeholder",
+    "localBrowser": "node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby passed before publishing; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-18T14:28:09.842Z",
+    "files": [
+      {
+        "path": "assets/car-pedals-BXQENW7T.svg",
+        "status": 200,
+        "size": 198908,
+        "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+        "contentType": "image/svg+xml"
+      },
+      {
+        "path": "assets/index-BfWX9dsm.js",
+        "status": 200,
+        "size": 1727321,
+        "sha256": "5d9a4b3e1e70825edd4f524b0059ca74f0f1244fb27a98305aff0c249a996e92",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "assets/steering-wheel-5D4sTFY9.svg",
+        "status": 200,
+        "size": 3316,
+        "sha256": "366798d41cceec6fbc0ae068b4673cf2284ba280ba461e6506d6507258e5c50f",
+        "contentType": "image/svg+xml"
+      },
+      {
+        "path": "assets/style-R6ztmDRb.css",
+        "status": 200,
+        "size": 18569,
+        "sha256": "d6d1d8cf83a0f32c4d89abf3df6c56a426b5751bf8394f38f5ee7bf1e1770000",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 552,
+        "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 464,
+        "sha256": "4f54888c39d1e5c2161884aca16af4635a2609b5f4d021fc9b8a17efb92ebefa",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 13202,
+        "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+        "contentType": "image/webp"
+      },
+      {
+        "path": "vehicle-data.js",
+        "status": 200,
+        "size": 8083274,
+        "sha256": "4feb8b7d1c58c9b6af5f949c075dbeac3f6b54e4f7b64498b7a40afffcbd0207",
+        "contentType": "text/javascript; charset=utf-8"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/driving-rehab/2.0.2/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "version": "2.0.2",
+      "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game driving-rehab --lobby --production-hub passed: trainerhub.cc Hub front end and the runner's published R2 files, /api/* intercepted into local SQLite only. Driving controls, three spotlights, real Three session, full results and save lifecycle passed."
+  }
+}

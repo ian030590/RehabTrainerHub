@@ -1,0 +1,332 @@
+{
+  "gameId": "oculomotor-training",
+  "version": "2.1.3",
+  "bucket": "rehab-game-releases",
+  "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d",
+  "launchUrl": "https://trainerhub-user-games.pages.dev/games/oculomotor-training/2.1.3/package/index.html",
+  "pwaUrl": "https://trainerhub-user-games.pages.dev/games/oculomotor-training/2.1.3/",
+  "stablePwaUrl": "https://trainerhub-user-games.pages.dev/games/oculomotor-training/",
+  "publishedAt": "2026-10-18T14:27:14.005Z",
+  "verifiedAt": "2026-10-18T14:28:24.264Z",
+  "fileCount": 11,
+  "totalBytes": 771230,
+  "files": [
+    {
+      "path": "assets/index-C3iCQLta.css",
+      "size": 21576,
+      "sha256": "775d7512d0e8a7c2b1c0c5119e1c096dace09888939af3911b7c32bb120bb6be",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "path": "assets/index-vTIig7Ab.js",
+      "size": 493571,
+      "sha256": "84a5d094924715ed2f8cac40dac4cdd02e9639ce8cbae04bfd5be9c9e819ede1",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "game.json",
+      "size": 548,
+      "sha256": "c96e3fc01bb8d0b4ca689069199b6fec71855918e595107054bf1bf00a0bfe56",
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "path": "index.html",
+      "size": 600,
+      "sha256": "e1fa1198d6dd273d5a93883a1f229f6ec9eef8c26303e7cf2e607820bf7f9346",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "preview.webp",
+      "size": 830,
+      "sha256": "82ac52eda37b58ef50ac78629bc8e9f1184ccfcdfccb5915d40f726f6899f091",
+      "contentType": "image/webp"
+    },
+    {
+      "path": "reference/LICENSE-OcuTrain.txt",
+      "size": 35184,
+      "sha256": "e0eedba615d5cd1b986afb6c5b3a4b1ae33713e7e9dc74d19daec5e3221f9d2e",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "path": "reference/experiment.js",
+      "size": 100983,
+      "sha256": "92d211cc2186c7c2b066ab4c0c976dfb763aaa925de0b0d94bb455e720f09e31",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/gazeAdapter.js",
+      "size": 3763,
+      "sha256": "1065d911b6cabb4899e37701f8ba3e3c1fa882ff80f55ac305455a8e87c2cc35",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/index.html",
+      "size": 587,
+      "sha256": "42f09cd2b8191affbee3e7c5e7bfde79f3c709c95916eacfc36b30bdadfc3983",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "reference/jspsych.js",
+      "size": 80994,
+      "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "path": "reference/style.css",
+      "size": 32594,
+      "sha256": "53ed2f722070d7c04568c4753e0e9025fea32e47926c6266a464011817393600",
+      "contentType": "text/css; charset=utf-8"
+    }
+  ],
+  "capabilities": [
+    "audio",
+    "eye-tracking",
+    "fullscreen",
+    "keyboard",
+    "pointer",
+    "settings-storage",
+    "touch"
+  ],
+  "currentVersion": "2.1.3",
+  "officialHistory": {
+    "2.0.0": {
+      "contentSha256": "5148ebabb7a60d2f2f56094e97d3c45b4402d7968588dccecd3b42ed043374af"
+    },
+    "2.0.1": {
+      "contentSha256": "95204cb2199f9bce1036cb9b6c63dad40736627b98094065c6c8cb2b95a2a616"
+    },
+    "2.1.0": {
+      "contentSha256": "a90903994c2a89b24ec9482e005874d54abbb09ce2f9720b37216a705259b7b9"
+    },
+    "2.1.1": {
+      "contentSha256": "53c908e960adf358286c58d0b14d61ef62aebe441e7224373ed894337924ada3"
+    },
+    "2.1.2": {
+      "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a"
+    },
+    "2.1.3": {
+      "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d"
+    }
+  },
+  "ownerApproval": {
+    "status": "approved",
+    "source": "Repository owner in this Claude Code conversation",
+    "message": "R2核准全部發佈",
+    "recordedAt": "2026-10-18T14:34:34.776Z",
+    "scope": "Publish and activate the ten exact version/contentSha256 tuples listed in docs/antislop-review-2026-10-18.md section 5, after the Hub and runner deploy of e418196e",
+    "games": [
+      {
+        "gameId": "asteroid-shield",
+        "version": "2.0.11",
+        "contentSha256": "2fe0c1e70a69924bd1feca6d30341a956a8a7f4113b435f58758b1932c74c7e6"
+      },
+      {
+        "gameId": "drawing-defense",
+        "version": "2.0.8",
+        "contentSha256": "cb7c76624c2029b62303fdda9dc9b0b34032d8a61e2e8432f0fb82e6cf41cebf"
+      },
+      {
+        "gameId": "driving-rehab",
+        "version": "2.0.2",
+        "contentSha256": "ce11ccde2d798e3f309a34b8e4b7852e8866ff45d8283f3ced40d70a7e48bd46"
+      },
+      {
+        "gameId": "gabor-patching",
+        "version": "2.0.3",
+        "contentSha256": "ddaf7dce2e68cf219d47523f9df73e5d93bfa9eeee9333067077fd4cd0e6828d"
+      },
+      {
+        "gameId": "gesture-battler",
+        "version": "2.0.6",
+        "contentSha256": "589f91f2d8589ecab4c9c884345c70df8fcde00610a0faca700eab88f170ea37"
+      },
+      {
+        "gameId": "hart-chart",
+        "version": "2.0.2",
+        "contentSha256": "757498015e358c4d337feec08d6f7d099aa052c9f1286541f360eff1dc0051df"
+      },
+      {
+        "gameId": "motor-cortex-rehab",
+        "version": "2.0.4",
+        "contentSha256": "9991b8d2f583a48e167d27084f1c7caf117348a5a9654b45672b821a54e0b1e5"
+      },
+      {
+        "gameId": "moving-card",
+        "version": "2.0.4",
+        "contentSha256": "53c01e6f33109f2de4e8795a5848f0f51af1046400efa9512d344bf5d6bef0aa"
+      },
+      {
+        "gameId": "oculomotor-training",
+        "version": "2.1.3",
+        "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d"
+      },
+      {
+        "gameId": "reading-training",
+        "version": "2.0.2",
+        "contentSha256": "84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09"
+      }
+    ]
+  },
+  "rollback": {
+    "version": "2.1.2",
+    "contentSha256": "7e3cc574adb50a12632592cc9fd44921da1ff7c27540448285508d5ef5408f2a",
+    "command": "node scripts/publish-official-game.mjs oculomotor-training --activate-version 2.1.2",
+    "executed": false,
+    "previousCurrentRetained": true,
+    "note": "The previous version needs no new Hub or runner capability."
+  },
+  "status": "published-and-verified",
+  "prefix": "releases/oculomotor-training/2.1.3/",
+  "changes": [
+    "Settings Back/Start buttons keep a visible 3px focus-visible ring (outline: none removed)",
+    "Settings dropdowns, number inputs, direction compass and stimulus toggles, and the results metric dropdown use --border-strong #7d868e"
+  ],
+  "sourceCommit": "e418196e4c3b563813408eb6df809f7942dcf3a6",
+  "platformDeploy": {
+    "commit": "e418196e",
+    "run": "https://github.com/ian030590/RehabTrainerHub/actions/runs/39134563405",
+    "conclusion": "success",
+    "deployedBeforePublishing": true
+  },
+  "tdd": {
+    "evidence": "docs/antislop-review-2026-10-18.md",
+    "tests": [
+      "scripts/check-antislop.test.mjs",
+      "scripts/check-r2-game-results.test.mjs"
+    ]
+  },
+  "validation": {
+    "gates": [
+      {
+        "name": "naming",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "pwa",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "game-architecture",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "hub-functions",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "gamerunner",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "trainer-entrypoints",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      },
+      {
+        "name": "cloudflare-deploy",
+        "status": "passed",
+        "scope": "Local gate before push; deploy workflow verify matrix passed"
+      }
+    ],
+    "equivalence": "code-modernization compare.py: 269/269 cases identical apart from the approved missing-value placeholder",
+    "localBrowser": "node scripts/check-r2-game-browser.mjs --game oculomotor-training --lobby passed before publishing; saves only to local SQLite"
+  },
+  "productionVerification": {
+    "checkedAt": "2026-10-18T14:28:24.264Z",
+    "files": [
+      {
+        "path": "assets/index-C3iCQLta.css",
+        "status": 200,
+        "size": 21576,
+        "sha256": "775d7512d0e8a7c2b1c0c5119e1c096dace09888939af3911b7c32bb120bb6be",
+        "contentType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "assets/index-vTIig7Ab.js",
+        "status": 200,
+        "size": 493571,
+        "sha256": "84a5d094924715ed2f8cac40dac4cdd02e9639ce8cbae04bfd5be9c9e819ede1",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "game.json",
+        "status": 200,
+        "size": 548,
+        "sha256": "c96e3fc01bb8d0b4ca689069199b6fec71855918e595107054bf1bf00a0bfe56",
+        "contentType": "application/json; charset=utf-8"
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "size": 600,
+        "sha256": "e1fa1198d6dd273d5a93883a1f229f6ec9eef8c26303e7cf2e607820bf7f9346",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "preview.webp",
+        "status": 200,
+        "size": 830,
+        "sha256": "82ac52eda37b58ef50ac78629bc8e9f1184ccfcdfccb5915d40f726f6899f091",
+        "contentType": "image/webp"
+      },
+      {
+        "path": "reference/LICENSE-OcuTrain.txt",
+        "status": 200,
+        "size": 35184,
+        "sha256": "e0eedba615d5cd1b986afb6c5b3a4b1ae33713e7e9dc74d19daec5e3221f9d2e",
+        "contentType": "text/plain; charset=utf-8"
+      },
+      {
+        "path": "reference/experiment.js",
+        "status": 200,
+        "size": 100983,
+        "sha256": "92d211cc2186c7c2b066ab4c0c976dfb763aaa925de0b0d94bb455e720f09e31",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "reference/gazeAdapter.js",
+        "status": 200,
+        "size": 3763,
+        "sha256": "1065d911b6cabb4899e37701f8ba3e3c1fa882ff80f55ac305455a8e87c2cc35",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "reference/index.html",
+        "status": 200,
+        "size": 587,
+        "sha256": "42f09cd2b8191affbee3e7c5e7bfde79f3c709c95916eacfc36b30bdadfc3983",
+        "contentType": "text/html; charset=utf-8"
+      },
+      {
+        "path": "reference/jspsych.js",
+        "status": 200,
+        "size": 80994,
+        "sha256": "0ec03e513351fd0f2b59a192fea85aafe6ef1b21e0e2648f5ded475acdcc418c",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "path": "reference/style.css",
+        "status": 200,
+        "size": 32594,
+        "sha256": "53ed2f722070d7c04568c4753e0e9025fea32e47926c6266a464011817393600",
+        "contentType": "text/css; charset=utf-8"
+      }
+    ],
+    "stablePwa": {
+      "status": 302,
+      "location": "/games/oculomotor-training/2.1.3/",
+      "cacheControl": "no-store"
+    },
+    "launcherStatus": 200,
+    "session": {
+      "version": "2.1.3",
+      "contentSha256": "5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d"
+    },
+    "browser": "node scripts/check-r2-game-browser.mjs --game oculomotor-training --lobby --production-hub passed: trainerhub.cc Hub front end and the runner's published R2 files, /api/* intercepted into local SQLite only. Oculomotor pursuit: original activity, four spotlights, numerical results and private save passed."
+  }
+}

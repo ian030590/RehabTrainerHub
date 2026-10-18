@@ -1,6 +1,6 @@
 # Hub 與遊戲文案／UI／程式碼 antislop 檢查（2026-10-18 候選）
 
-狀態：**Hub 與未遷移遊戲的修改已推送 `main`；十款 R2 遊戲新版本尚未發布**，等擁有者核准第 5 節的精確 version／contentSha256。
+狀態：**已發布並完成正式驗收（2026-10-18）**。Hub 與未遷移遊戲的修改隨 `e418196e` 推送 `main` 並部署（[部署 run](https://github.com/ian030590/RehabTrainerHub/actions/runs/39134563405)）；擁有者以「R2核准全部發佈」核准第 5 節十組精確 version／contentSha256 後，逐款發布 R2 並切換 current。收據：`docs/releases/<gameId>-<version>.json`（十份）。
 
 擁有者要求用 antislop 規則檢查整個 Hub 與遊戲的文案、UI 與程式碼，並用 code-modernization 的等價比對確認輸入與輸出一致。擁有者選擇：作業中套用規則（DURING）；antislop 指引區塊加在 `CLAUDE.md` 結尾；R2 遊戲「全修，10 款升版」（焦點外框、缺值顯示、設定欄位邊框對比），只做 dry-run；完成後 commit 並 push 到 `main`。
 
@@ -72,7 +72,7 @@
 - Hub 靜態輸出在 390／820／1366px：大廳與進度頁沒有水平捲動；搜尋框邊框為 `#7d868e`，聚焦時顯示 3px 外框。
 - `scripts/check-game-architecture-browser.test.mjs`（未遷移遊戲設定表單、共用成績圖表、Hub 導覽與 44px 目標）：整檔 6／7 通過；失敗的設定表單項目是本機同步工具把 18 款舊遊戲輸出的 `index.html`、`sw.js` 改名為 `[conflicted]`，造成 404。把輸出複製到固定位置並還原檔名、以 `HUB_OUTPUT_ROOT` 指向後重跑：第一次 lights-out 等待送出按鈕逾時，再跑一次通過，程式未改。此測試不在 CI。
 
-## 5. R2 候選版本（尚未發布）
+## 5. R2 版本（已發布）
 
 | 遊戲 | 版本 | 檔案 | bytes | contentSha256 |
 | --- | --- | --- | --- | --- |
@@ -87,4 +87,13 @@
 | 眼動練習 | `2.1.3` | 11 | 771,230 | `5002743bf6ca64cc68e3530ad4ba0a9999091b335eed69b36e1ec1568430357d` |
 | 閱讀訓練（RSVP） | `2.0.2` | 5 | 1,205,946 | `84f5ca2dc5520ca10b7f82e1c6c39673ecddec2e70127b1cee385fcfa053df09` |
 
-每款由 `npm --prefix apps/rehabtrainerhub/games/<gameId> run build` 建置，再以 `node scripts/publish-official-game.mjs <gameId> --dry-run` 驗證。正式發布須擁有者核准上表精確值，逐款執行（同一款不可平行），發布後在 `docs/releases/` 補收據。這批版本不需要新的 Hub／runner 能力，現行正式 Hub 與 runner 即可載入。
+每款由 `npm --prefix apps/rehabtrainerhub/games/<gameId> run build` 建置，再以 `node scripts/publish-official-game.mjs <gameId> --dry-run` 驗證。這批版本不需要新的 Hub／runner 能力。
+
+### 發布
+
+- 發布前從 R2 讀取十款 current，分別是上表各版的前一版（例如 `hart-chart@2.0.1`、`oculomotor-training@2.1.2`）。
+- 本機同步工具曾把駕駛 `dist/index.html` 改名為 `index [conflicted 7].html`，dry-run 因缺 `index.html` 拒絕；重新建置後 digest 與核准值相同。為避免上傳前檔案再被改動，發布時以 `scripts/publish-official-game.mjs` 匯出的 `BuildOfficialGameRelease` 在記憶體中建立套件，比對 version 與 contentSha256 等於核准值後，才以同一份 bytes 呼叫匯出的 `PublishRelease`（上傳、回讀、最後寫 allowlist、切換 current 並回讀）。十款依序發布，沒有平行。
+- 正式驗證（公開端）：十款每個檔案從 runner `/games/<gameId>/<version>/package/` 回讀，大小與 SHA-256 全部相符；穩定入口 `/games/<gameId>/` 302 至新版；版本啟動頁 200；`/api/official-game-sessions` 回傳新版與核准 digest。
+- 回退：`node scripts/publish-official-game.mjs <gameId> --activate-version <前一版>`，前一版不需要新的 Hub／runner 能力。未執行。
+- 正式 Hub 流程：十款依序執行 `node scripts/check-r2-game-browser.mjs --game <gameId> --lobby --production-hub` 全部通過（rc=0）。前端為正式 `trainerhub.cc`，遊戲檔案由正式 runner 從 R2 提供新版；`/api/*` 在本機攔截，只寫本機 SQLite，沒有建立正式帳號或訓練紀錄。每款都從正式大廳開啟，走完設定、聚光燈教學、實際遊玩、成績與保存，再回到大廳；各款摘要寫在收據的 `productionVerification.browser`。
+- 收據：`docs/releases/<gameId>-<version>.json` 十份，記錄核准訊息、檔案清單、正式回讀結果、瀏覽器摘要與回退版本。
