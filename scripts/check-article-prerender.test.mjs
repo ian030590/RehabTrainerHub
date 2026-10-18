@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { createRequire } from 'node:module';
 import React from 'react';
@@ -17,27 +17,134 @@ async function Load(sourcePath, imports, fetch) {
   return exports;
 }
 
-test('published article bodies and author dates render before browser JavaScript', async () => {
-  const article = { id: 'sample', slug: 'sample', title: 'Example title', summary: 'Example summary', content: 'Full article body <safe>', category: 'Information', coverImageUrl: null, status: 'published', authorName: 'Example author', publishedAt: '2026-01-01', updatedAt: '2026-01-02', createdAt: '2026-01-01' };
-  let requests = 0;
-  const { LoadPublishedArticles } = await Load('apps/rehabtrainerhub/app/qa/loadPublishedArticles.ts', {
-    '../siteUrls': { siteUrls: { hub: 'https://example.test' } },
-  }, async () => {
-    requests++;
-    return Response.json(requests === 1 ? { articles: [article, { ...article, status: 'draft' }], nextCursor: null } : { article });
+const feedPath = 'apps/rehabtrainerhub/app/qa/educationFeed.ts';
+const feedXml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+  <item>
+    <title>凝視穩定運動 &amp; 生活目標</title>
+    <link>https://ian030590.trainerhub.cc/content/VisualRehab/030_%E5%87%9D%E8%A6%96</link>
+    <pubDate>Thu, 15 Oct 2026 08:00:00 +0800</pubDate>
+    <description><![CDATA[頭動時的視覺困難 <與練習>]]></description>
+    <author>owner@example.test (蔡泓恩 職能治療師)</author>
+    <category>視覺復健</category>
+    <category>動作復健</category>
+  </item>
+  <item>
+    <title>AI 產品軟體架構</title>
+    <link>https://ian030590.trainerhub.cc/content/DigitLearn/009_AI</link>
+    <pubDate>Sat, 12 Sep 2026 08:00:00 +0800</pubDate>
+    <description>軟體架構</description>
+    <category>AI應用</category>
+  </item>
+  <item>
+    <title>電子擴視科技</title>
+    <link>https://ian.trainerhub.cc/content/VisualRehab/025</link>
+    <pubDate>Sat, 12 Sep 2026 08:00:00 +0800</pubDate>
+    <description>擴視機&#x8207;&#33258;動朗讀</description>
+    <category>AI應用</category>
+    <category>視覺復健</category>
+  </item>
+  <item>
+    <title>偽造連結</title>
+    <link>javascript:alert(1)</link>
+    <category>中風復健</category>
+  </item>
+  <item>
+    <title>他站連結</title>
+    <link>https://example.test/content/a</link>
+    <category>中風復健</category>
+  </item>
+  <item>
+    <title>非加密連結</title>
+    <link>http://ian.trainerhub.cc/content/b</link>
+    <category>中風復健</category>
+  </item>
+</channel></rss>`;
+
+const expectedLink = {
+  title: '凝視穩定運動 & 生活目標',
+  summary: '頭動時的視覺困難 <與練習>',
+  url: 'https://ian030590.trainerhub.cc/content/VisualRehab/030_%E5%87%9D%E8%A6%96',
+  categories: ['視覺復健', '動作復健'],
+  authorName: '蔡泓恩',
+  publishedAt: '2026-10-15T00:00:00.000Z',
+};
+
+test('education feed keeps health articles from the personal site and drops unsafe links', async () => {
+  const { ParseEducationFeed } = await Load(feedPath, {});
+  assert.deepEqual(ParseEducationFeed(feedXml), [expectedLink, {
+    title: '電子擴視科技',
+    summary: '擴視機與自動朗讀',
+    url: 'https://ian.trainerhub.cc/content/VisualRehab/025',
+    categories: ['視覺復健'],
+    authorName: '',
+    publishedAt: '2026-09-12T00:00:00.000Z',
+  }]);
+  assert.deepEqual(ParseEducationFeed('<html>not a feed</html>'), []);
+});
+
+test('build-time loader reads the personal-site feed and survives an outage', async () => {
+  const requests = [];
+  const { LoadEducationLinks, educationFeedUrl } = await Load(feedPath, {}, async (url) => {
+    requests.push(String(url));
+    return new Response(feedXml, { headers: { 'Content-Type': 'application/xml' } });
   });
-  const initialArticles = await LoadPublishedArticles();
-  assert.equal(requests, 2);
-  assert.deepEqual(initialArticles, [article]);
+  assert.equal(educationFeedUrl, 'https://ian.trainerhub.cc/rss.xml');
+  assert.deepEqual((await LoadEducationLinks())[0], expectedLink);
+  assert.deepEqual(requests, [educationFeedUrl]);
+
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const offline = await Load(feedPath, {}, async () => new Response('down', { status: 503 }));
+    assert.deepEqual(await offline.LoadEducationLinks(), []);
+  } finally {
+    console.warn = warn;
+  }
+});
+
+test('education links render as outbound personal-site links before browser JavaScript', async () => {
+  const feed = await Load(feedPath, {});
   const { EducationArticles } = await Load('apps/rehabtrainerhub/app/qa/EducationArticles.tsx', {
-    '@rehab-trainer/ui/auth/authClient': { BuildApiUrl: (_, path) => path },
-    '@rehab-trainer/ui/components/CardImagePlaceholder': { CardImagePlaceholder: () => null },
-    '../i18n': { GetHubUiCopy: () => ({ educationArticles: {}, educationArticle: {} }) },
-    '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en', locale: 'en', t: key => key }) },
+    './educationFeed': feed,
+    '../i18n': { GetHubUiCopy: () => ({
+      educationArticles: { sourceNote: 'Source note', categories: { 視覺復健: 'Vision' } },
+      educationArticle: { author: 'By', published: 'Published', opensInNewTab: '(opens in a new tab)' },
+    }) },
+    '../i18n/HubLanguage': { useHubLanguage: () => ({ language: 'en', locale: 'en', t: (key) => key }) },
   });
-  const html = renderToStaticMarkup(React.createElement(EducationArticles, { initialArticles }));
-  assert.match(html, /Full article body &lt;safe&gt;/);
-  assert.match(html, /Example author/);
-  assert.match(html, /dateTime="2026-01-02"/);
+  const html = renderToStaticMarkup(React.createElement(EducationArticles, { initialArticles: [expectedLink] }));
+  assert.match(html, /href="https:\/\/ian030590\.trainerhub\.cc\/content\/VisualRehab\/030_%E5%87%9D%E8%A6%96"/);
+  assert.match(html, /target="_blank"/);
+  assert.match(html, /rel="noopener"/);
+  assert.match(html, /凝視穩定運動 &amp; 生活目標/);
+  assert.match(html, /頭動時的視覺困難 &lt;與練習&gt;/);
+  assert.match(html, /\(opens in a new tab\)/);
+  assert.match(html, />Vision</);
+  assert.match(html, />動作復健</);
+  assert.match(html, /href="#professional-background">蔡泓恩</);
+  assert.match(html, /dateTime="2026-10-15T00:00:00.000Z"/);
+  assert.match(html, /Source note/);
   assert.doesNotMatch(html, /minimal-loading-spinner/);
+  assert.doesNotMatch(html, /<details/);
+});
+
+test('the Hub no longer hosts its own article authoring', async () => {
+  const removed = [
+    'apps/rehabtrainerhub/functions/_lib/articles.js',
+    'apps/rehabtrainerhub/functions/api/articles.js',
+    'apps/rehabtrainerhub/functions/api/articles/[slug].js',
+    'apps/rehabtrainerhub/functions/api/admin/articles.js',
+    'apps/rehabtrainerhub/functions/api/admin/articles/[id].js',
+    'apps/rehabtrainerhub/functions/api/admin/assets.js',
+    'apps/rehabtrainerhub/app/admin/ArticleManager.tsx',
+    'apps/rehabtrainerhub/app/articleTypes.ts',
+  ];
+  for (const path of removed) {
+    await assert.rejects(access(new URL(`../${path}`, import.meta.url)), { code: 'ENOENT' }, path);
+  }
+  const dashboard = await readFile(new URL('../apps/rehabtrainerhub/app/admin/AdminDashboard.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(dashboard, /ArticleManager|衛教文章|'articles'/);
+  const adminApi = await readFile(new URL('../apps/rehabtrainerhub/app/admin/adminApi.ts', import.meta.url), 'utf8');
+  assert.doesNotMatch(adminApi, /\/api\/admin\/(articles|assets)/);
 });

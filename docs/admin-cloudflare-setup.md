@@ -9,13 +9,9 @@ Trainer -> /api/records -> D1 training_records
                               |
 Authorized staff -> /admin -> assigned user query -> JSON / CSV + audit
 
-Authorized staff -> article editor -> D1 education_articles
-                                  |
-                                  +-> ARTICLE_CACHE (published pages)
-                                           |
-User -> /qa -> /api/articles --------------+
+User -> /qa -> https://ian.trainerhub.cc/rss.xml (outbound education links)
 
-Article cover / AI assets -> R2 -> assets.trainerhub.cc -> Cloudflare CDN
+AI assets -> R2 -> assets.trainerhub.cc -> Cloudflare CDN
 ```
 
 - `app_users.role` 可為 `patient`、`therapist` 或 `admin`。
@@ -38,7 +34,7 @@ Hub Pages Functions 使用：
 
 ```text
 REHAB_DB       D1
-ARTICLE_CACHE  KV
+ARTICLE_CACHE  KV (retired; keeps old article cache data)
 ASSET_BUCKET   R2
 OCULOMOTOR_DATA R2 (private eye-tracking CSV)
 ```
@@ -154,18 +150,18 @@ ASSET_PUBLIC_BASE_URL=https://assets.trainerhub.cc
 ```
 
 - `AI_ASSET_BASE_URL`：MediaPipe WASM、`.task` 模型、WebGazer，以及大型遊戲圖片 / 3D 模型的主要來源。
-- `ASSET_PUBLIC_BASE_URL`：後台文章封面上傳後可公開存取的 base URL。
+- `ASSET_PUBLIC_BASE_URL`：原為後台文章封面的公開 base URL；文章編輯器與 `/api/admin/assets` 已移除，目前沒有 Function 讀取。
 - MediaPipe 載入失敗時會退回固定版本的官方 / jsDelivr 資源。
 - 需要眼動輸入的官方遊戲會先載入 R2 WebGazer，再由該遊戲目錄內的本地 loader 與固定版本資產退回。
 - 星空背景與 3D 車輛會優先使用 R2，失敗時保留 Pages 內的本地副本。
 
 只有 `main` production build 會注入 R2 AI base；未綁定 production custom domain 的 preview build 會使用 fallback，避免產生無法存取的 hash-preview 資產網址。
 
-## 5. KV 文章快取
+## 5. 衛教文章來源
 
-公開文章列表與文章內容會先讀 `ARTICLE_CACHE`；cache miss 才查 D1。新增、修改、刪除文章時會失效相關 key。KV 不作為權限或唯一資料來源，D1 仍是權威資料庫。
+衛教文章只在作者個人網站撰寫。`/qa` 由 `app/qa/educationFeed.ts` 讀取 `https://ian.trainerhub.cc/rss.xml`，列出中風／視覺／動作／認知復健分類的站外連結：Hub build 時預渲染，瀏覽器載入後再抓一次 RSS，個人網站新增文章不需重新部署 Hub。RSS 無法取得時，頁面其餘內容照常顯示。
 
-若 KV 暫時不可用，公開文章 API 仍可直接讀 D1；寫入流程不會因 cache 清除失敗而回報文章資料寫入失敗。
+後台文章編輯器、`/api/articles`、`/api/admin/articles` 與 `/api/admin/assets` 已移除。D1 `education_articles` 與 `ARTICLE_CACHE` KV 保留舊資料，不再讀寫；確認不需要後可另以 migration 與 Cloudflare 設定清除。
 
 ## 6. Cloudflare Web Analytics
 

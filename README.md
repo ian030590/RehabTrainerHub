@@ -140,7 +140,7 @@ This project provides general information and self-practice tools. It is not a m
 | R2 Bucket | `rehab-storage` (`ASSET_BUCKET`) | 一般後台靜態資產 |
 | R2 Bucket | `rehab-game-quarantine` (`GAME_QUARANTINE_BUCKET`) | 開發者上傳待審遊戲隔離暫存區 |
 | R2 Bucket | `rehab-game-releases` (`GAME_RELEASE_BUCKET`) | 已核准遊戲不可變發布版本 |
-| KV Namespace | `ARTICLE_CACHE` | 衛教文章快取 |
+| KV Namespace | `ARTICLE_CACHE` | 已停用（舊衛教文章快取，保留資料；衛教文章改連結作者個人網站） |
 
 ## 授權 / License
 

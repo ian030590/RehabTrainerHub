@@ -2,11 +2,6 @@ import {
   BuildApiUrl,
   GetAuthToken,
 } from '@rehab-trainer/ui/auth/authClient';
-import type {
-  Article,
-  ArticleCard,
-  ArticleInput,
-} from '../articleTypes';
 
 export interface AdminOverviewSummary {
   patientCount: number;
@@ -63,11 +58,6 @@ export interface AdminRecordFilters {
   runtimeId: string;
   dateFrom: string;
   dateTo: string;
-}
-
-export interface AdminAssetResponse {
-  url: string;
-  key: string;
 }
 
 export type GameReleaseReviewStatus = 'blocked' | 'pending_review' | 'publishing' | 'approved' | 'rejected' | 'revoked';
@@ -218,66 +208,6 @@ export async function FetchAdminRecordsCsv(
     rowLimit: Number(response.headers.get('X-Export-Row-Limit')) || 5000,
     truncated: response.headers.get('X-Export-Truncated') === 'true',
   };
-}
-
-export async function FetchAdminArticles(signal?: AbortSignal): Promise<ArticleCard[]> {
-  const payload = await ReadJson<{ articles: ArticleCard[] }>(
-    await AdminFetch('/api/admin/articles', { signal }),
-  );
-  return payload.articles;
-}
-
-export async function FetchAdminArticle(
-  articleId: string,
-  signal?: AbortSignal,
-): Promise<Article> {
-  const payload = await ReadJson<{ article: Article }>(
-    await AdminFetch(
-      `/api/admin/articles/${encodeURIComponent(articleId)}`,
-      { signal },
-    ),
-  );
-  return payload.article;
-}
-
-export async function CreateAdminArticle(input: ArticleInput): Promise<Article> {
-  const response = await AdminFetch('/api/admin/articles', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  });
-  const payload = await ReadJson<{ article: Article }>(response);
-  return payload.article;
-}
-
-export async function UpdateAdminArticle(
-  articleId: string,
-  input: Partial<ArticleInput>,
-): Promise<Article> {
-  const response = await AdminFetch(`/api/admin/articles/${encodeURIComponent(articleId)}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  });
-  const payload = await ReadJson<{ article: Article }>(response);
-  return payload.article;
-}
-
-export async function DeleteAdminArticle(articleId: string): Promise<void> {
-  await AdminFetch(`/api/admin/articles/${encodeURIComponent(articleId)}`, {
-    method: 'DELETE',
-  });
-}
-
-export async function UploadAdminAsset(file: File): Promise<AdminAssetResponse> {
-  const formData = new FormData();
-  formData.set('file', file);
-  return ReadJson<AdminAssetResponse>(
-    await AdminFetch('/api/admin/assets', {
-      method: 'POST',
-      body: formData,
-    }),
-  );
 }
 
 export async function FetchAdminGameReleases(

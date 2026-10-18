@@ -3,11 +3,11 @@
 import { GetHubUiCopy } from '../i18n';
 import { useHubLanguage } from '../i18n/HubLanguage';
 import { EducationArticles } from './EducationArticles';
-import type { Article } from '../articleTypes';
+import type { EducationLink } from './educationFeed';
 
 const personalWebsiteUrl = 'https://ian.trainerhub.cc/';
 
-export function QuestionsContent({ articles }: { articles: Article[] }) {
+export function QuestionsContent({ articles }: { articles: EducationLink[] }) {
   const { language } = useHubLanguage();
   const copy = GetHubUiCopy(language).questions;
 

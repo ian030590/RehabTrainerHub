@@ -8,7 +8,6 @@ import {
 } from 'react';
 import { DownloadFile } from '@rehab-trainer/ui/downloadFile';
 import { useHubAuth } from '../HubNavigation';
-import { ArticleManager } from './ArticleManager';
 import { GameReleaseManager } from './GameReleaseManager';
 import {
   FetchAdminOverview,
@@ -19,14 +18,13 @@ import {
   type AdminRecordsResponse,
 } from './adminApi';
 
-type AdminTab = 'overview' | 'records' | 'articles' | 'games';
+type AdminTab = 'overview' | 'records' | 'games';
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 type StaffRole = 'therapist' | 'admin';
 
 const tabItems: readonly { id: AdminTab; label: string; icon: string }[] = [
   { id: 'overview', label: '數據總覽', icon: 'monitoring' },
   { id: 'records', label: '訓練紀錄', icon: 'table_view' },
-  { id: 'articles', label: '衛教文章', icon: 'article' },
 ];
 const gameReviewTab = { id: 'games', label: '遊戲審核', icon: 'extension' } as const;
 
@@ -266,7 +264,7 @@ export function AdminDashboard() {
         <div>
           <p className="page-kicker">Administration</p>
           <h1>管理後台</h1>
-          <p>查看使用者訓練資料、下載紀錄，並維護問答中心的衛教文章。</p>
+          <p>查看使用者訓練資料與下載紀錄。</p>
         </div>
         <span className="admin-role-badge">
           <span className="material-symbols-outlined" aria-hidden="true">
@@ -645,17 +643,6 @@ export function AdminDashboard() {
             </nav>
           </>
         )}
-      </section>
-
-      <section
-        aria-labelledby="admin-tab-articles"
-        className="admin-tab-panel"
-        hidden={activeTab !== 'articles'}
-        id="admin-panel-articles"
-        role="tabpanel"
-        tabIndex={0}
-      >
-        <ArticleManager onArticlesChanged={() => setOverviewKey((current) => current + 1)} />
       </section>
 
       {role === 'admin' && (
