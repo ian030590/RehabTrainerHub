@@ -8,7 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **測試先行**：先寫能反映使用者行為的測試並確認它因需求未實作而失敗，再改產品碼；只寫讓測試通過的最小實作。不得刪除既有功能或放寬安全檢查來讓測試通過。
 - 發布 R2 遊戲（`publish:game`）會直接公開並切換 current，必須先取得擁有者對**精確 version／contentSha256** 的核准。未核准時只用 `--dry-run`。
-- 不要從含未發布遊戲候選的工作樹直接部署 Pages；`main` push 會觸發自動部署，Git 交付通常用專用分支。
+- **只在 `main` 進行**：commit 後直接 push 到 `main`，不開新的功能分支。舊 `feat/*`、`fix/*` 分支都已併入 `main`，留作歷史紀錄，不刪除也不再推送（見 `AGENTS.md`「分支政策」）。
+- `main` push 會觸發 Pages 自動部署（純文件變更不會）。若變更把新遊戲登記進 `officialGameReleases.json`，須先完成該版核准與 R2 發布，再 push；不要從含未發布遊戲候選的工作樹手動部署 Pages。
 - 對外文案遵守台灣醫療法規限制（用「練習／活動／當次紀錄」，不得宣稱治療、診斷、療效）；細節見 `AGENTS.md`。
 
 ## 常用指令
