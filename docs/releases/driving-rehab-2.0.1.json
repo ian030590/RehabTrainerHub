@@ -1,0 +1,158 @@
+{
+ "schemaVersion": 1,
+ "gameId": "driving-rehab",
+ "version": "2.0.1",
+ "status": "published-and-verified",
+ "bucket": "rehab-game-releases",
+ "prefix": "releases/driving-rehab/2.0.1/",
+ "contentSha256": "d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9",
+ "totalBytes": 10045587,
+ "currentVersion": "2.0.1",
+ "officialHistory": {
+  "2.0.0": {
+   "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863"
+  },
+  "2.0.1": {
+   "contentSha256": "d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9"
+  }
+ },
+ "ownerApproval": {
+  "status": "approved",
+  "source": "Repository owner in this Claude Code conversation",
+  "message": "核准發佈; then confirmed the exact digest via in-session prompt (\"Approve this hash\")",
+  "approvedAt": "2026-10-18T11:39:05Z",
+  "gameId": "driving-rehab",
+  "version": "2.0.1",
+  "contentSha256": "d2b1d8e8d40cb4535a4a16f99f2b1bb262531e13eb81975c120a4e25362a89f9",
+  "scope": "Publish the settings-panel style fix as a patch version and verify production. No platform deployment, Git commit or push."
+ },
+ "publishedAt": "2026-10-18T11:40:12.569Z",
+ "productionVerifiedAt": "2026-10-18T11:40:52.417Z",
+ "changes": [
+  "Settings use the shared training-setting cards with headings, matching the other R2 games",
+  "Difficulty, rendering quality and control method are dropdowns; undetected controls stay listed but disabled",
+  "Rescan button and red-flash checkbox sit inside the cards; wheel calibration is its own card",
+  "Remove game.css overrides that stripped card border/padding and the custom radio-grid styles",
+  "Settings values, validation, gameplay, scoring and results unchanged; capabilities unchanged so no runner/Hub deploy"
+ ],
+ "sourceBaseCommit": "682afd20e267f8567d093c18fce1b22a35538478",
+ "sourceSnapshot": [
+  {
+   "path": "apps/rehabtrainerhub/games/driving-rehab/DrivingRehabGame.tsx",
+   "sha256": "51bf5c14d14dc325dcf57be0a0cef5598785538714fbb2c4be6553c3ad1a3c75"
+  },
+  {
+   "path": "apps/rehabtrainerhub/games/driving-rehab/game.css",
+   "sha256": "f0bfa8832002cce49caf7bc26c8689860e669126ada65968e308251df589ad1e"
+  },
+  {
+   "path": "apps/rehabtrainerhub/games/driving-rehab/input/DrivingWheelSetup.tsx",
+   "sha256": "655d61f2e3ed15f3c979c86697fae9b2926f37bc449e15da14038d16fd0e5a7a"
+  },
+  {
+   "path": "apps/rehabtrainerhub/games/driving-rehab/package.json",
+   "sha256": "c552bb683633bab343e861368cb2d51cdb6ba8a5959af2806c0fbc24fecfd1b3"
+  },
+  {
+   "path": "scripts/check-r2-settings-controls.test.mjs",
+   "sha256": "3d44e547f5b48bb3f0b2c1f553514a1a887d677a882e9357f92431ed24c7e0c8"
+  },
+  {
+   "path": "scripts/check-driving-rehab-migration.test.mjs",
+   "sha256": "a736d36a141c333ca82fbca112fbe1c6d9d88ffbad90d701a02754d3416d3ef5"
+  },
+  {
+   "path": "scripts/check-r2-settings-memory.test.mjs",
+   "sha256": "48aedb9a188202b5e93fef3e2fa70b6a3e21ba54a37cdc0bbcc368acf87ce942"
+  },
+  {
+   "path": "scripts/driving-rehab-r2-browser.mjs",
+   "sha256": "a5cccb9e738d43ee0a14331dfa72db025a50437ad23937c3c040d68bd2adf378"
+  },
+  {
+   "path": "scripts/check-r2-game-browser.mjs",
+   "sha256": "f1abee080897c36703d27bb20272e2123a1e854ef0b7b4c6d394fa4a94cd0485"
+  }
+ ],
+ "verification": {
+  "localGates": [
+   "test:game-architecture (296 pass)",
+   "driving/R2 UI, results, fullscreen, settings tests (129 pass)"
+  ],
+  "localBrowser": [
+   "--game driving-rehab --lobby",
+   "--game driving-rehab --lobby --tablet"
+  ],
+  "publisherReadback": "All 8 files and approved manifest verified before current switched",
+  "publicBytes": "All 8 files fetched from runner package URL match size and sha256",
+  "stableEntry": "302 -> /games/driving-rehab/2.0.1/",
+  "productionBrowser": [
+   "--game driving-rehab --production-hub --lobby",
+   "--game driving-rehab --remote --standalone --mobile"
+  ],
+  "productionRecordsCreated": false
+ },
+ "git": {
+  "branch": "feat/hart-chart-r2",
+  "committed": false,
+  "pushAuthorized": false,
+  "productionBranchTouched": false
+ },
+ "platformDeployed": false,
+ "notes": "A file-sync tool renamed dist/index.html to 'index [conflicted 4].html' once; the first publish attempt failed validation before any upload. Rebuilt, re-ran dry-run, and published only after the digest matched the approved value.",
+ "files": [
+  {
+   "path": "assets/car-pedals-BXQENW7T.svg",
+   "size": 198908,
+   "sha256": "d862b0d7ed5117bd37778e0d2a9c8e7761efe33d54b7a395490865ea0c2bc235",
+   "contentType": "image/svg+xml"
+  },
+  {
+   "path": "assets/index-4Yu8TPlK.js",
+   "size": 1727315,
+   "sha256": "02a25587c88700a33c1944bec84d52f14a805a741f6f3bccb42e3eb7c45c7354",
+   "contentType": "text/javascript; charset=utf-8"
+  },
+  {
+   "path": "assets/steering-wheel-5D4sTFY9.svg",
+   "size": 3316,
+   "sha256": "366798d41cceec6fbc0ae068b4673cf2284ba280ba461e6506d6507258e5c50f",
+   "contentType": "image/svg+xml"
+  },
+  {
+   "path": "assets/style-Bis7b48m.css",
+   "size": 18556,
+   "sha256": "d5128a90b62fd99a4cbbc617173aaf830e52a704947190710801030aef58a10e",
+   "contentType": "text/css; charset=utf-8"
+  },
+  {
+   "path": "game.json",
+   "size": 552,
+   "sha256": "0bc726d555c7bd698ee4a274f15a82763ded62233afb646c79cc9ed733f50d8f",
+   "contentType": "application/json; charset=utf-8"
+  },
+  {
+   "path": "index.html",
+   "size": 464,
+   "sha256": "30a161bf6c84895db2775dc06cc907287351884cbfe1e14fc78b7c4f3f8223c3",
+   "contentType": "text/html; charset=utf-8"
+  },
+  {
+   "path": "preview.webp",
+   "size": 13202,
+   "sha256": "df427ffe8ad0712fa04073ef73f78d7502381432e4da1cc9c26c72c62653d76d",
+   "contentType": "image/webp"
+  },
+  {
+   "path": "vehicle-data.js",
+   "size": 8083274,
+   "sha256": "4feb8b7d1c58c9b6af5f949c075dbeac3f6b54e4f7b64498b7a40afffcbd0207",
+   "contentType": "text/javascript; charset=utf-8"
+  }
+ ],
+ "rollback": {
+  "version": "2.0.0",
+  "contentSha256": "a0b5dda08b2d1c4a48830619dedcf8fa360a83ea3e7da24a60ab1ad69b5dd863",
+  "command": "node scripts/publish-official-game.mjs driving-rehab --activate-version 2.0.0"
+ }
+}

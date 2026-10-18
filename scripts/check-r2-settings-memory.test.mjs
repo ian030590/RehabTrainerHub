@@ -11,7 +11,7 @@ const root = resolve(import.meta.dirname, '..');
 const gamesRoot = resolve(root, 'apps/rehabtrainerhub/games');
 const games = {
   'hart-chart': { version: '2.0.0', file: 'HartChartPage.tsx', settings: 'settings.ts' },
-  'driving-rehab': { version: '2.0.0', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },
+  'driving-rehab': { version: '2.0.1', file: 'DrivingRehabGame.tsx', settings: 'settings.ts' },
   'reading-training': { version: '2.0.1', file: 'ReadingTrainingGame.tsx', settings: 'settings.ts' },
   'gabor-patching': { version: '2.0.2', file: 'GaborPatchingGame.tsx', settings: 'settings.ts' },
   'asteroid-shield': { version: '2.0.10', file: 'AsteroidShieldGame.tsx', settings: 'settings.ts' },

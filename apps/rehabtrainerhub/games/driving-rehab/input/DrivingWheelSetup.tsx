@@ -17,7 +17,7 @@ export function DrivingWheelSetup({ capabilities, calibration }: {
     error: zh ? '未能完成校正。確認装置連接，重新校正。' : 'Calibration failed. Check the connection and calibrate again.',
   };
   return (
-    <section className="driving-wheel-setup">
+    <section className="training-setting driving-wheel-setup"><h3>{zh ? '方向盤校正' : 'Wheel calibration'}</h3>
         <p role="status">{capabilities.wheelDevice ? instructions[calibration.phase] : (zh ? '請連接方向盤，並按下裝置按鈕以讓瀏覽器辨識。' : 'Connect the wheel and press a device button so the browser can detect it.')}</p>
         {!capabilities.wheelDevice && <button type="button" onClick={capabilities.rescan}>{zh ? '重新偵測' : 'Rescan'}</button>}
         {capabilities.wheelDevice && <button type="button" onClick={calibration.phase === 'idle' || calibration.phase === 'error' ? calibration.begin : calibration.advance}>

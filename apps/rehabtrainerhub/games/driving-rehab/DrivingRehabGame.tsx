@@ -146,23 +146,30 @@ export function DrivingRehabGame() {
       }}>
         <header className="training-config-header"><h2 id="driving-settings-title">{title}</h2></header>
         <div className="training-config-body">
-          <p>{en ? 'Respond to hazards during a delivery route. This practice does not determine real driving ability.' : '在送貨路線中回應突發事件，本練習不判定實際駕駛能力。'}</p>
-          {error && <p className="renderer-error" role="alert">{en ? 'Unable to load the driving scene. Try again or choose a lower rendering quality.' : '駕駛場景載入失敗，請重試或降低畫面品質。'}</p>}
-          {(['difficulty', 'renderQuality', 'controlMode'] as const).map(key => {
-            const labels = key === 'difficulty' ? difficultyLabels : key === 'renderQuality' ? qualityLabels : controlLabels;
-            return <fieldset className="training-setting" key={key}><legend><h3>{key === 'difficulty' ? (en ? 'Difficulty' : '難度') : key === 'renderQuality' ? (en ? 'Rendering quality' : '畫面品質') : (en ? 'Controls' : '控制方式')}</h3></legend>
-              <div className="training-option-grid">{Object.entries(labels).map(([value, label]) => <label className="training-option" key={value}>
-                <input type="radio" name={key} value={value} checked={settings[key] === value}
-                  disabled={key === 'controlMode' && !IsDrivingControlModeAvailable(value as DrivingSettings['controlMode'], capabilities)}
-                  onChange={() => setSettings(current => ({ ...current, [key]: value }))} />{label}
-              </label>)}</div>
-            </fieldset>;
-          })}
-          <p className="driving-input-status" role="status">{en ? 'Press any keyboard key to enable keyboard controls. Touch requires a touchscreen. Connect a supported steering wheel and press its button to detect it.' : '按下任一鍵以確認鍵盤。觸控需有觸控螢幕；方向盤需連接支援的裝置，並按下裝置按鈕以偵測。'}</p>
-          <button type="button" className="btn btn-ghost" onClick={capabilities.rescan}>{en ? 'Rescan devices' : '重新偵測裝置'}</button>
+          <section className="training-setting"><h3>{en ? 'Practice settings' : '練習設定'}</h3>
+            <p>{en ? 'Respond to hazards during a delivery route. This practice does not determine real driving ability.' : '在送貨路線中回應突發事件，本練習不判定實際駕駛能力。'}</p>
+            {error && <p className="renderer-error" role="alert">{en ? 'Unable to load the driving scene. Try again or choose a lower rendering quality.' : '駕駛場景載入失敗，請重試或降低畫面品質。'}</p>}
+            <label>{en ? 'Difficulty' : '難度'}<select name="difficulty" value={settings.difficulty}
+              onChange={event => setSettings(current => ({ ...current, difficulty: event.target.value as DrivingSettings['difficulty'] }))}>
+              {Object.entries(difficultyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select></label>
+            <label>{en ? 'Rendering quality' : '畫面品質'}<select name="renderQuality" value={settings.renderQuality}
+              onChange={event => setSettings(current => ({ ...current, renderQuality: event.target.value as DrivingSettings['renderQuality'] }))}>
+              {Object.entries(qualityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select></label>
+            <label><input name="redFlashEnabled" type="checkbox" checked={settings.redFlashEnabled}
+              onChange={event => setSettings(current => ({ ...current, redFlashEnabled: event.target.checked }))} /> {en ? 'Hazard red-flash cue' : '危險紅光提示'}</label>
+          </section>
+          <section className="training-setting"><h3>{en ? 'Controls' : '控制方式'}</h3>
+            <p className="driving-input-status" role="status">{en ? 'Press any keyboard key to enable keyboard controls. Touch requires a touchscreen. Connect a supported steering wheel and press its button to detect it.' : '按下任一鍵以確認鍵盤。觸控需有觸控螢幕；方向盤需連接支援的裝置，並按下裝置按鈕以偵測。'}</p>
+            <label>{en ? 'Control method' : '操作裝置'}<select name="controlMode" value={settings.controlMode}
+              onChange={event => setSettings(current => ({ ...current, controlMode: event.target.value as DrivingSettings['controlMode'] }))}>
+              {Object.entries(controlLabels).map(([value, label]) => <option key={value} value={value}
+                disabled={!IsDrivingControlModeAvailable(value as DrivingSettings['controlMode'], capabilities)}>{label}</option>)}
+            </select></label>
+            <button type="button" className="btn btn-ghost driving-rescan-button" onClick={capabilities.rescan}>{en ? 'Rescan devices' : '重新偵測裝置'}</button>
+          </section>
           {settings.controlMode === 'wheel' && <DrivingWheelSetup capabilities={capabilities} calibration={calibration} />}
-          <label className="training-setting driving-flash-option"><input type="checkbox" checked={settings.redFlashEnabled}
-            onChange={event => setSettings(current => ({ ...current, redFlashEnabled: event.target.checked }))} />{en ? 'Hazard red-flash cue' : '危險紅光提示'}</label>
         </div>
         <footer className="config-actions"><div className="training-config-navigation-buttons">
           <button type="button" className="btn btn-primary" disabled={!ready} onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>

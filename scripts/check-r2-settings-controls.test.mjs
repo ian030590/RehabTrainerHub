@@ -88,3 +88,27 @@ test('drawing-defense: only the inputs for the current choice are shown and HP a
     assert.doesNotMatch(attribute(control, 'onChange'), /Clamp\(/, `${name} does not rewrite the value while typing.`);
   }
 });
+
+test('driving-rehab: settings use the same section cards and dropdowns as the other R2 games', async () => {
+  const { input, label, elements, attribute, tree, source } = await Load('driving-rehab', 'DrivingRehabGame.tsx');
+  assert.equal(await Version('driving-rehab'), '2.0.1');
+  const section = node => { let current = node; while (current && !(ts.isJsxElement(current) && current.openingElement.tagName.getText(tree) === 'section')) current = current.parent; return current; };
+  for (const name of ['difficulty', 'renderQuality', 'controlMode']) {
+    const control = input(name);
+    assert.equal(control?.tagName.getText(tree), 'select', `${name} is a dropdown.`);
+    assert.ok(label(control), `${name} has a visible label.`);
+    const card = section(control);
+    assert.equal(attribute(card?.openingElement, 'className'), '"training-setting"', `${name} sits in a settings card.`);
+    assert.match(card.getText(tree), /^<section className="training-setting"><h3>/, `${name} card starts with a heading.`);
+  }
+  assert.match(source, /<option key=\{value\} value=\{value\}\s+disabled=\{!IsDrivingControlModeAvailable\(/, 'Unavailable controls stay visible but cannot be chosen.');
+  assert.equal(attribute(input('redFlashEnabled'), 'type'), '"checkbox"');
+  assert.equal(attribute(section(input('redFlashEnabled'))?.openingElement, 'className'), '"training-setting"');
+  const rescan = elements.find(node => node.tagName.getText(tree) === 'button' && /rescan/.test(node.parent.getText(tree)));
+  assert.equal(attribute(section(rescan)?.openingElement, 'className'), '"training-setting"', 'Rescan stays inside the controls card.');
+  assert.doesNotMatch(source, /training-option|<fieldset|type="radio"/, 'No custom radio grid.');
+  const css = await readFile(resolve(gamesRoot, 'driving-rehab', 'game.css'), 'utf8');
+  assert.doesNotMatch(css, /training-option|\.training-setting \{[^}]*border: 0/, 'game.css does not override the shared card styles.');
+  const wheel = await readFile(resolve(gamesRoot, 'driving-rehab', 'input/DrivingWheelSetup.tsx'), 'utf8');
+  assert.match(wheel, /<section className="training-setting driving-wheel-setup"><h3>/, 'Wheel calibration uses a settings card with a heading.');
+});

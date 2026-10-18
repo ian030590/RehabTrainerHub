@@ -19,23 +19,23 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
   assert.equal(await game(`document.querySelectorAll('.game-tour, .driving-rehab-root canvas').length`), 0, 'Settings show the preview without starting tutorial or gameplay.');
   assert.ok(await game(`document.querySelector('.driving-preview-hazard').getBoundingClientRect().width > 0`));
   assert.equal(await game('window.drivingNativeGamepadCheck'), 'allowed', 'Reviewed gamepad permission reaches the opaque game.');
-  assert.equal(await game(`document.querySelector('[name=controlMode][value=arrow]').disabled`), true);
-  assert.equal(await game(`document.querySelector('[name=controlMode][value=wheel]').disabled`), true, 'No physical wheel is falsely reported.');
+  assert.equal(await game(`document.querySelector('[name=controlMode] option[value=arrow]').disabled`), true);
+  assert.equal(await game(`document.querySelector('[name=controlMode] option[value=wheel]').disabled`), true, 'No physical wheel is falsely reported.');
   await capture('settings');
   await game(`document.querySelector('form .btn-ghost').focus()`);
   await press('KeyK','k'); await press('KeyK','k','keyUp');
-  await until(() => game(`!document.querySelector('[name=controlMode][value=arrow]').disabled`), 'trusted keyboard input');
+  await until(() => game(`!document.querySelector('[name=controlMode] option[value=arrow]').disabled`), 'trusted keyboard input');
   const wheel = process.argv.includes('--wheel');
   if (wheel) {
     await game(`window.drivingFixtureWheel={connected:true,id:'Logitech G29 Driving Force Racing Wheel USB',index:0,axes:[0,1,1],buttons:[],timestamp:performance.now()};Object.defineProperty(navigator,'getGamepads',{value:()=>window.drivingFixtureWheel.connected?[window.drivingFixtureWheel]:[]});document.querySelector('form .btn-ghost').click()`);
-    await until(() => game(`!document.querySelector('[name=controlMode][value=wheel]').disabled`), 'supported wheel detected');
+    await until(() => game(`!document.querySelector('[name=controlMode] option[value=wheel]').disabled`), 'supported wheel detected');
   }
   const controlMode = wheel ? 'wheel' : mobile ? 'touch' : english ? 'wasd' : 'arrow';
-  assert.equal(await game(`document.querySelector('[name=controlMode][value=${controlMode}]').disabled`), false,
+  assert.equal(await game(`document.querySelector('[name=controlMode] option[value=${controlMode}]').disabled`), false,
     `The emulated input is available (touch points: ${await game('navigator.maxTouchPoints')}).`);
   const quality = process.argv.includes('--low') ? 'low' : process.argv.includes('--medium') ? 'medium' : 'high';
   const difficulty = process.argv.includes('--hard') ? 'hard' : 'easy';
-  await game(`document.querySelector('[name=controlMode][value=${controlMode}]').click();document.querySelector('[name=renderQuality][value=${quality}]').click();document.querySelector('[name=difficulty][value=${difficulty}]').click()`);
+  await game(`for (const [name,value] of ${JSON.stringify([['controlMode',controlMode],['renderQuality',quality],['difficulty',difficulty]])}) { const select=document.querySelector('[name='+name+']');Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value').set.call(select,value);select.dispatchEvent(new Event('change',{bubbles:true})); }`);
   if (wheel) {
     await until(() => game(`Boolean(document.querySelector('.driving-wheel-setup'))`), 'wheel calibration');
     assert.equal(await game(`document.querySelector('form .btn-primary').disabled`),true, 'Uncalibrated pedals cannot start.');
@@ -54,7 +54,7 @@ export async function CheckDrivingRehab({ game, evaluate, send, until, standalon
   await checkSpotlight('.driving-preview-hazard');
   await game(`document.querySelector('.game-tour button:last-child').click()`);
   await until(() => game(`Boolean(document.querySelector('dialog[open]'))`), 'return to settings');
-  assert.equal(await game(`document.querySelector('[name=controlMode]:checked').value`), controlMode);
+  assert.equal(await game(`document.querySelector('[name=controlMode]').value`), controlMode);
   assert.equal(await game(`Boolean(document.querySelector('.game-tour-spotlight'))`), false);
   await game(`document.querySelector('form .btn-primary').click()`);
   await until(() => game(`Boolean(document.querySelector('.game-tour'))`), 'restart tutorial');

@@ -416,10 +416,10 @@ try {
   if (settingsMemory) {
     // The container (Hub page or standalone launcher) keeps confirmed settings in its own localStorage.
     const storageKey = `trainerhub.game-settings/v1:${gameId}`;
-    const firstSelect = gameId === 'driving-rehab' ? `document.querySelector('[name=renderQuality]:checked')` : `document.querySelector(".${phasePrefix}-phase-menu form select")`;
+    const firstSelect = `document.querySelector(".${phasePrefix}-phase-menu form select")`;
     if (gameId === 'driving-rehab') {
       await until(async () => {
-        if (await evaluate(`!document.querySelector('[name=controlMode][value=arrow]').disabled`, gameContext)) return true;
+        if (await evaluate(`!document.querySelector('[name=controlMode] option[value=arrow]').disabled`, gameContext)) return true;
         await evaluate(`document.querySelector('form .btn-ghost').focus()`, gameContext);
         await send('Input.dispatchKeyEvent', { type:'keyDown',key:'k',code:'KeyK',windowsVirtualKeyCode:75 }, gameContext.session || session);
         await send('Input.dispatchKeyEvent', { type:'keyUp',key:'k',code:'KeyK',windowsVirtualKeyCode:75 }, gameContext.session || session);
@@ -427,7 +427,6 @@ try {
       }, 'keyboard ready before remembering settings');
     }
     const chosen = await evaluate(`(() => {
-      ${gameId === 'driving-rehab' ? "document.querySelector('[name=renderQuality][value=low]').click(); return 'low';" : ''}
       const select = ${firstSelect};
       const option = [...select.options].reverse().find(item => item.value !== select.value && !item.disabled);
       Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(select, option.value);
