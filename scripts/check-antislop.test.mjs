@@ -120,6 +120,21 @@ test('form control borders reach 3:1 against their surfaces in the Hub and every
   assert.match(toggles.body, /border\s*:\s*1px solid var\(--border-strong\)/, 'Oculomotor setting toggles need a 3:1 boundary.');
 });
 
+test('lobby card actions move to their own line when the labels do not fit side by side', () => {
+  // The card clips its overflow, so an action that cannot shrink below its label must wrap instead.
+  const rules = CssRules(read('apps/rehabtrainerhub/app/globals.css'));
+  const card = rules.find(rule => rule.selector === '.module-card');
+  assert.match(card.body, /overflow\s*:\s*hidden/);
+  const footer = rules.filter(rule => rule.selector === '.official-game-actions');
+  assert.ok(footer.some(rule => /flex-wrap\s*:\s*wrap/.test(rule.body)),
+    'English labels are wider than a three-column card on 3:2 screens; the actions must wrap.');
+  const actions = rules.filter(rule => /\.official-game-actions\s*>\s*(a|button)\b/.test(rule.selector));
+  assert.ok(actions.some(rule => /white-space\s*:\s*nowrap/.test(rule.body)), 'Labels stay on one line inside each button.');
+  for (const rule of actions) {
+    assert.doesNotMatch(rule.body, /min-width\s*:\s*0/, 'A zero min-width squeezes the label instead of wrapping the button.');
+  }
+});
+
 test('Hub copy states the scanner and credential facts that the code and AGENTS.md support', () => {
   const ruleCount = (read('apps/rehabtrainerhub/functions/_lib/gamePackages.js')
     .match(/const blockedSourcePatterns = \[([\s\S]*?)\n\];/)?.[1].match(/^\s*\['[a-z-]+',/gm) ?? []).length;

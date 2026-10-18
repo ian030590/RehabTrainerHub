@@ -1498,6 +1498,7 @@ html:has(dialog.training-overlay[open]) {
 }
 
 .official-game-actions {
+  flex-wrap: wrap;
   gap: 8px;
 }
 
