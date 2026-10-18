@@ -135,7 +135,8 @@ const hartChartSource = readFileSync(resolve(
   repoRoot,
   'apps/rehabtrainerhub/games/hart-chart/HartChartPage.tsx',
 ), 'utf8');
-assert.match(hartChartSource, /`\$\{storagePrefix\}hart\.decoderDock`/);
+assert.match(hartChartSource, /SaveGameSettings\(\{ \.\.\.settings, decoderDock: dock \}\)/);
+assert.doesNotMatch(hartChartSource, /localStorage|storagePrefix/);
 assert.doesNotMatch(hartChartSource, /vision[_-]trainer/);
 
 console.log('Official game adapter storage namespace check passed.');

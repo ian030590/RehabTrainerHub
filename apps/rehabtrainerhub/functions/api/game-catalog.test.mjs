@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { onRequestGet } from './games.js';
 
@@ -23,6 +24,7 @@ function Fixture(gameId = 'drawing-defense', version = '2.0.3') {
     'zh-TW': { title: '移動卡片訓練', description: '在移動卡片中尋找目標，練習視覺搜尋與動態專注。' },
     en: { title: 'Moving Card Training', description: 'Find targets among moving cards to practise visual search and dynamic attention.' },
   } });
+  if (gameId === 'hart-chart') Object.assign(metadata, JSON.parse(readFileSync(new URL('../../games/hart-chart/public/game.json', import.meta.url), 'utf8')));
   const bytes = Buffer.from(JSON.stringify(metadata));
   const manifest = { schemaVersion: 1, status: 'approved', gameId, version,
     name: 'Drawing defense', runtime: { name: 'native', major: 1 }, presentation: 'game', entry: 'index.html',
@@ -38,6 +40,9 @@ function Fixture(gameId = 'drawing-defense', version = '2.0.3') {
   const old = { id: 'old-game', slug: gameId, title: 'Obsolete title', summary: 'Old shell',
     trainer: 'brain', category: 'higher-cognition', developer_display_name: 'Old author',
     release_id: 'old-release', version: '1.0.0', capabilities_json: '[]' };
+  if (gameId === 'hart-chart') Object.assign(old, { id: 'official-hart-chart', title: '哈特圖訓練', trainer: 'vision', category: 'general',
+    release_id: 'rel-hart-chart-1.0.0', content_sha256: '1761ad2a1b1de91bf24501cc39e2a1f2388fcc00014ed58921fbad120763d53c',
+    capabilities_json: '["audio","fullscreen","keyboard","pointer"]' });
   if (gameId === 'moving-card') Object.assign(old, { id: 'official-moving-card', title: '移動卡片訓練',
     trainer: 'vision', category: 'general', release_id: 'rel-moving-card-1.0.0',
     content_sha256: '35083a8dfe0b9297cf642cd8066e9123237d48e2cf1eae3f68b763e2f27bf246' });
@@ -165,6 +170,19 @@ test('Gabor current replaces its same-slug old shell and fails closed for invali
   assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/gabor-patching/2.0.0/package/preview.webp');
   fixture.objects.set('releases/gabor-patching/2.0.0/files/game.json', Buffer.from('{}'));
   assert.equal((await List(fixture)).some(game => game.slug === 'gabor-patching'), false);
+});
+
+test('Hart current replaces its same-slug old shell and fails closed for invalid metadata', async () => {
+  const fixture = Fixture('hart-chart', '2.0.0');
+  const matches = (await List(fixture)).filter(game => game.slug === 'hart-chart');
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].title, '哈特圖訓練');
+  assert.equal(matches[0].trainer, 'vision'); assert.equal(matches[0].category, 'vision');
+  assert.equal(matches[0].release.presentation, 'game');
+  assert.equal(matches[0].release.settingsUrl, undefined);
+  assert.equal(matches[0].previewUrl, 'https://trainerhub-user-games.pages.dev/games/hart-chart/2.0.0/package/preview.webp');
+  fixture.objects.set('releases/hart-chart/2.0.0/files/game.json', Buffer.from('{}'));
+  assert.equal((await List(fixture)).some(game => game.slug === 'hart-chart'), false);
 });
 
 test('Reading current replaces its same-slug old shell and fails closed for invalid metadata', async () => {

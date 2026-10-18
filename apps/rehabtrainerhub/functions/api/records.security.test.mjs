@@ -605,8 +605,8 @@ const victimVisionCount = await onRequestGet({
 assert.deepEqual(await victimVisionCount.json(), { count: 1 });
 
 // A still-unmigrated JSON-shell game keeps the legacy Hub score path.
-const scoreRecord = { id: 'hub-score-record', savedAt: new Date().toISOString(), userName: '', moduleId: 'hart-chart', gameId: 'hart-chart', score: {
-  schema: 'rehab-trainer.game-score/v1', gameId: 'hart-chart',
+const scoreRecord = { id: 'hub-score-record', savedAt: new Date().toISOString(), userName: '', moduleId: 'every-ball-response', gameId: 'every-ball-response', score: {
+  schema: 'rehab-trainer.game-score/v1', gameId: 'every-ball-response',
   rounds: Array.from({ length: 1500 }, (_, index) => ({ score: index % 2, responseMs: 300 })), summary: { total: 750 },
 } };
 const migratedScoreRecord = { ...scoreRecord, id: 'unsigned-reading-record', moduleId: 'reading-training', gameId: 'reading-training',
@@ -616,6 +616,14 @@ const migratedWrite = await onRequestPost({ request: new Request('https://traine
   body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'hub', record: migratedScoreRecord }),
 }), env });
 assert.equal(migratedWrite.status, 400, 'A migrated R2 game cannot save through the legacy unsigned Hub path.');
+const unsignedHart = { ...scoreRecord, id: 'unsigned-hart-record', moduleId: 'hart-chart', gameId: 'hart-chart',
+  score: { ...scoreRecord.score, gameId: 'hart-chart' } };
+const hartWrite = await onRequestPost({ request: new Request('https://trainerhub.cc/api/records', {
+  method: 'POST', headers: { Origin: 'https://trainerhub.cc', Authorization: `Bearer ${victimToken}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'hub', record: unsignedHart }),
+}), env });
+assert.equal(hartWrite.status, 400, 'Hart results require their fixed official session.');
+assert.equal(env.REHAB_DB.rows.has(unsignedHart.id), false);
 const scoreWrite = await onRequestPost({ request: new Request('https://trainerhub.cc/api/records', {
   method: 'POST', headers: { Origin: 'https://trainerhub.cc', Authorization: `Bearer ${victimToken}`, 'Content-Type': 'application/json' },
   body: JSON.stringify({ appId: 'rehabtrainerhub', runtimeId: 'hub', record: scoreRecord }),

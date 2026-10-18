@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-10-18T02:58:52.101Z",
+  "base": "https://trainerhub.cc/games/hart-chart/",
+  "files": [
+    {
+      "path": "index.html",
+      "size": 5255,
+      "sha256": "03b92c19e628c7b575f0252313108098b77a080987d91b4e19a48b53c5d759fe"
+    },
+    {
+      "path": "./assets/index-DoZ_RwGt.js",
+      "size": 439536,
+      "sha256": "c52531b7501fe8063866a8ee5db99777ee2154c6f41a93386343a5928bd00edb"
+    },
+    {
+      "path": "./assets/index-CM8rtaCA.css",
+      "size": 93839,
+      "sha256": "db9ac385d8d51ba927a73f6ed448e55f1b2edf4c64a614478d9ee8eb74bf9e99"
+    },
+    {
+      "path": "settings.json",
+      "size": 2095,
+      "sha256": "862d6ca9dc307af3c8075b31b095d10017654ea48ee79a0c48f301445ba82fd0"
+    },
+    {
+      "path": "score.json",
+      "size": 2289,
+      "sha256": "aff2a0ab5c6d4e99e54c3ed6e3ae542705dbae8241236699eb94636534882610"
+    }
+  ]
+}

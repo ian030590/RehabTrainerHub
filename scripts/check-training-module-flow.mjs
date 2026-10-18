@@ -335,9 +335,9 @@ const implementationGroups = [
       'hart-chart/HartChartPage.tsx',
     ],
     tokens: [
-      'IsTrainingFlowLaunchState',
+      'ValidateSettings(settings)',
       "setPhase('results')",
-      'TrainingResultActions',
+      'SendGameResult',
     ],
   },
   {

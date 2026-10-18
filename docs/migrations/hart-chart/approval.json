@@ -1,0 +1,10 @@
+{
+  "status": "approved",
+  "source": "Repository owner in this conversation",
+  "message": "核准，並請git push",
+  "approvedAt": "2026-10-18T07:02:38Z",
+  "gameId": "hart-chart",
+  "version": "2.0.0",
+  "contentSha256": "67708380ebf0d31eefef4f0ff3070bc2fdc370c03478db6f2e206b4d45470aec",
+  "scope": "Publish the exact reviewed R2 package, verify all files before current and Hub cutover, complete production acceptance, commit and push the dedicated branch."
+}

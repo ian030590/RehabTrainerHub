@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-10-18T02:56:40.918Z",
+  "source": "D1 read-only SELECT",
+  "results": [
+    {
+      "id": "official-hart-chart",
+      "slug": "hart-chart",
+      "title": "哈特圖訓練",
+      "category": "general",
+      "status": "published",
+      "active_release_id": "rel-hart-chart-1.0.0",
+      "version": "1.0.0",
+      "release_status": "approved",
+      "content_sha256": "1761ad2a1b1de91bf24501cc39e2a1f2388fcc00014ed58921fbad120763d53c"
+    }
+  ]
+}

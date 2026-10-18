@@ -35,7 +35,7 @@ function CreateOfficialBucket(gameId = 'drawing-defense') {
   return { bucket, catalog, releases };
 }
 
-for (const gameId of ['driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training']) {
+for (const gameId of ['hart-chart', 'driving-rehab', 'reading-training', 'gabor-patching', 'drawing-defense', 'asteroid-shield', 'gesture-battler', 'motor-cortex-rehab', 'moving-card', 'oculomotor-training']) {
 test(`${gameId}: official sessions bind the result to a game version, record, account and subject`, async () => {
   const { VerifyOfficialGameSession } = await import('../_lib/officialGames.js');
   const environment = { ...env, GAME_RELEASE_BUCKET: CreateOfficialBucket(gameId).bucket };

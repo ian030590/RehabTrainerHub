@@ -1,5 +1,6 @@
 import gaborPatchingCatalog from './gabor-patching/public/game.json';
 import readingTrainingCatalog from './reading-training/public/game.json';
+import hartChartCatalog from './hart-chart/public/game.json';
 import { defaultSiteUrls } from '@rehab-trainer/ui/siteUrls';
 import officialGameReleases from '@rehab-trainer/ui/officialGameReleases.json';
 import drawingDefenseCatalog from './drawing-defense/public/game.json';
@@ -289,12 +290,13 @@ const seeds: readonly TrainingCatalogSeed[] = [
   },
   {
     id: 'hart-chart',
-    trainer: 'vision',
-    purpose: 'vision',
+    trainer: hartChartCatalog.trainer as 'vision',
+    purpose: hartChartCatalog.category as 'vision',
+    imagePath: `/assets/game-previews/hart-chart/${hartChartCatalog.preview}`,
     kind: 'vision',
     path: '/?module=hart-chart',
-    zh: ['哈特圖訓練', '透過遠近交替聚焦與座標解碼練習調焦、跳視與定位。'],
-    en: ['Hart Chart Training', 'Alternate near and far focus to practise accommodation, saccades, and localization.'],
+    zh: [hartChartCatalog.copy['zh-TW'].title, hartChartCatalog.copy['zh-TW'].description],
+    en: [hartChartCatalog.copy.en.title, hartChartCatalog.copy.en.description],
     titleKey: 'home.module.hartChart.title',
     descriptionKey: 'home.module.hartChart.desc',
   },

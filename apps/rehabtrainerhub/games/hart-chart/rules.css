@@ -3,13 +3,13 @@
 
 /* Match this game's Hub GameSettingsForm theme. */
 .training-panel {
-  --primary: #006c47;
-  --primary-hover: #005235;
-  --primary-soft: color-mix(in srgb, #006c47 8%, #ffffff);
+  --primary: #005eb8;
+  --primary-hover: #00478d;
+  --primary-soft: color-mix(in srgb, #005eb8 8%, #ffffff);
   position: fixed;
   inset: 0;
   z-index: 900;
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
   height: 100dvh;
@@ -26,8 +26,8 @@
 }
 
 /* Modal container matching .game-settings-form */
-.training-panel .training-config,
-.training-panel .training-rules {
+.training-config,
+.training-rules {
   width: 100%;
   max-width: 42rem; /* max-w-2xl */
   max-height: calc(100dvh - 32px);
@@ -46,7 +46,7 @@
 }
 
 /* Header matching .game-settings-form header */
-.training-panel .training-config-header {
+.training-config-header {
   border-bottom: 1px solid var(--border, #d4d9de);
   background: var(--surface, #ffffff);
   padding: 20px;
@@ -58,18 +58,18 @@
 }
 
 @media (min-width: 640px) {
-  .training-panel .training-config-header {
+  .training-config-header {
     padding: 24px 32px;
   }
 }
 
-.training-panel .training-config-title {
+.training-config-title {
   min-width: 0;
   flex: 1 1 auto;
 }
 
 /* Category/Subhead label matching .game-settings-form */
-.training-panel .training-config-label {
+.training-config-label {
   display: block;
   margin: 0 0 4px 0;
   font-size: calc(0.75rem * 1.15);
@@ -81,7 +81,7 @@
 }
 
 /* Title matching .game-settings-form h2 */
-.training-panel .training-config h2 {
+.training-config h2 {
   margin: 0;
   font-size: calc(1.5rem * 1.15);
   font-weight: 900;
@@ -92,13 +92,13 @@
 }
 
 @media (min-width: 640px) {
-  .training-panel .training-config h2 {
+  .training-config h2 {
     font-size: calc(1.875rem * 1.15);
   }
 }
 
 /* Header summary chips matching .game-settings-form badge output */
-.training-panel .training-config-header-side {
+.training-config-header-side {
   min-width: 0;
   max-width: 50%;
   display: flex;
@@ -108,8 +108,8 @@
   gap: 8px;
 }
 
-.training-panel .training-config .config-summary,
-.training-panel .training-config-header .config-summary {
+.training-config .config-summary,
+.training-config-header .config-summary {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -119,8 +119,8 @@
   text-align: right;
 }
 
-.training-panel .training-config .config-summary span,
-.training-panel .training-config .config-summary strong {
+.training-config .config-summary span,
+.training-config .config-summary strong {
   min-height: 26px;
   display: inline-flex;
   align-items: center;
@@ -138,8 +138,8 @@
 }
 
 /* Scrollable body matching .game-settings-form */
-.training-panel .training-config-body,
-.training-panel .training-rules-body {
+.training-config-body,
+.training-rules-body {
   min-height: 0;
   flex: 1 1 auto;
   overflow-y: auto;
@@ -152,15 +152,15 @@
 }
 
 @media (min-width: 640px) {
-  .training-panel .training-config-body,
-  .training-panel .training-rules-body {
+  .training-config-body,
+  .training-rules-body {
     padding: 24px 32px;
   }
 }
 
 /* Section card matching .game-settings-form section */
-.training-panel .training-setting,
-.training-panel .training-rule-section {
+.training-setting,
+.training-rule-section {
   position: static;
   border-radius: var(--radius, 8px);
   border: 1px solid var(--border, #d4d9de);
@@ -171,17 +171,17 @@
 }
 
 @media (min-width: 640px) {
-  .training-panel .training-setting,
-  .training-panel .training-rule-section {
+  .training-setting,
+  .training-rule-section {
     padding: 24px;
   }
 }
 
-.training-panel .training-rule-section::before {
+.training-rule-section::before {
   display: none;
 }
 
-.training-panel .training-setting-header {
+.training-setting-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -190,7 +190,7 @@
 }
 
 /* Section heading matching .game-settings-form h3 */
-.training-panel .training-setting-header h3 {
+.training-setting-header h3 {
   margin: 0 0 4px 0;
   font-size: calc(1.125rem * 1.15);
   font-weight: 900;
@@ -200,8 +200,8 @@
 }
 
 /* Section description matching .game-settings-form description */
-.training-panel .training-setting-header p,
-.training-panel .training-setting-description {
+.training-setting-header p,
+.training-setting-description {
   margin: 0;
   max-width: none;
   font-size: calc(0.875rem * 1.15);
@@ -209,7 +209,7 @@
   color: var(--text-muted, #606970);
 }
 
-.training-panel .training-setting-header > span {
+.training-setting-header > span {
   flex: 0 0 auto;
   min-height: 26px;
   display: inline-flex;
@@ -227,7 +227,7 @@
 }
 
 /* Rule items list */
-.training-panel .training-rule-list {
+.training-rule-list {
   counter-reset: training-rule;
   display: grid;
   gap: 10px;
@@ -236,7 +236,7 @@
   list-style: none;
 }
 
-.training-panel .training-rule-list li {
+.training-rule-list li {
   counter-increment: training-rule;
   display: grid;
   grid-template-columns: auto 1fr;
@@ -247,7 +247,7 @@
   line-height: 1.55;
 }
 
-.training-panel .training-rule-list li::before {
+.training-rule-list li::before {
   content: counter(training-rule);
   width: 24px;
   height: 24px;
@@ -262,7 +262,7 @@
   line-height: 1;
 }
 
-.training-panel .training-rule-note {
+.training-rule-note {
   margin: 10px 0 0;
   color: var(--text-muted, #606970);
   font-size: calc(0.8125rem * 1.15);
@@ -270,8 +270,8 @@
 }
 
 /* Footer actions matching .game-settings-form footer */
-.training-panel .config-actions,
-.training-panel .training-config > .config-actions {
+.config-actions,
+.training-config > .config-actions {
   flex: 0 0 auto;
   display: block;
   margin: 0;
@@ -282,25 +282,25 @@
 }
 
 @media (min-width: 640px) {
-  .training-panel .config-actions,
-  .training-panel .training-config > .config-actions {
+  .config-actions,
+  .training-config > .config-actions {
     padding: 16px 32px;
   }
 }
 
-.training-panel .training-config-navigation-actions {
+.training-config-navigation-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
 }
 
-.training-panel .training-config-action-feedback {
+.training-config-action-feedback {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.training-panel .training-config-navigation-buttons {
+.training-config-navigation-buttons {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -310,7 +310,7 @@
 }
 
 /* Outline button (Back/Cancel) matching Button variant="outline" */
-.training-panel .training-config-navigation-buttons .btn.btn-ghost {
+.training-config-navigation-buttons .btn.btn-ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -331,19 +331,19 @@
   white-space: nowrap;
 }
 
-.training-panel .training-config-navigation-buttons .btn.btn-ghost:hover {
+.training-config-navigation-buttons .btn.btn-ghost:hover {
   border-color: var(--primary, #146c5b);
   color: var(--primary, #146c5b);
   background: var(--surface, #ffffff);
 }
 
-.training-panel .training-config-navigation-buttons .btn.btn-ghost:active {
+.training-config-navigation-buttons .btn.btn-ghost:active {
   transform: translateY(1px);
 }
 
 /* Primary button (Start) matching Button size="lg" */
-.training-panel .training-config-navigation-buttons .btn.btn-primary,
-.training-panel .training-config-navigation-buttons .config-start-btn {
+.training-config-navigation-buttons .btn.btn-primary,
+.training-config-navigation-buttons .config-start-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -366,33 +366,44 @@
   box-shadow: none;
 }
 
-.training-panel .training-config-navigation-buttons .btn.btn-primary:hover,
-.training-panel .training-config-navigation-buttons .config-start-btn:hover {
+.training-config-navigation-buttons .btn.btn-primary:hover,
+.training-config-navigation-buttons .config-start-btn:hover {
   background: var(--primary-hover, #0d5547);
   border-color: var(--primary-hover, #0d5547);
   box-shadow: none;
 }
 
-.training-panel .training-config-navigation-buttons .btn.btn-primary:active,
-.training-panel .training-config-navigation-buttons .config-start-btn:active {
+.training-config-navigation-buttons .btn.btn-primary:active,
+.training-config-navigation-buttons .config-start-btn:active {
   transform: translateY(1px);
 }
 
-.training-panel .config-start-icon {
+.config-start-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
 }
 
 @media (max-width: 639px) {
-  .training-panel .training-config-navigation-buttons {
+  .training-config-navigation-buttons {
     flex-direction: column-reverse;
     width: 100%;
   }
 
-  .training-panel .training-config-navigation-buttons .btn.btn-ghost,
-  .training-panel .training-config-navigation-buttons .btn.btn-primary,
-  .training-panel .training-config-navigation-buttons .config-start-btn {
+  .training-config-navigation-buttons .btn.btn-ghost,
+  .training-config-navigation-buttons .btn.btn-primary,
+  .training-config-navigation-buttons .config-start-btn {
     width: 100%;
   }
 }
+
+/* Settings and the final confirmation follow the same game-owned layout. */
+.training-config { line-height: 1.6; }
+.training-setting > h3 { margin: 0 0 12px; color: var(--heading); font-size: calc(1.125rem * 1.15); font-weight: 900; line-height: 1.35; }
+.training-setting p { color: var(--text-muted); }
+.training-config-body label { display: block; margin-top: 16px; font-weight: 700; line-height: 1.6; }
+.training-config-body label > input:not([type=checkbox]), .training-config-body label > select { display: block; width: 100%; margin-top: 6px; min-height: 44px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); background: var(--surface); }
+.training-config-summary { display: grid; gap: 12px; }
+.training-config-summary-item { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; margin: 0; overflow-wrap: anywhere; font-weight: 700; }
+.training-config-summary-item strong { color: var(--heading); }
+.training-config-navigation-buttons .btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }

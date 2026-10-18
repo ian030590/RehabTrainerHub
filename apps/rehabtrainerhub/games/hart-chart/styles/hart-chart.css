@@ -1,17 +1,15 @@
-/* Canonical styles for the Hub-owned Hart Chart module. */
+/* The chart and decoder retain their original layout within the game. */
 .hart-page {
   position: fixed;
   inset: 0;
   z-index: 1000;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  width: 100vw;
+  width: 100%;
   height: 100dvh;
   overflow: hidden;
   padding: 12px;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 8%, transparent), transparent 34%),
-    var(--bg);
+  background: var(--bg);
 }
 
 .hart-topbar {
@@ -515,7 +513,7 @@
 }
 
 .hart-qr-dialog {
-  width: min(440px, 100%);
+  width: min(440px, calc(100% - 32px));
   max-height: calc(100vh - 40px);
   max-height: calc(100dvh - 40px);
   display: flex;
@@ -527,6 +525,9 @@
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+
+.hart-qr-dialog:not([open]) { display: none; }
+.hart-qr-dialog .hart-chart-grid { width: 100%; height: auto; flex-shrink: 0; }
 
 .hart-qr-dialog h2,
 .hart-qr-dialog p {

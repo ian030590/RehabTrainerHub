@@ -34,7 +34,6 @@
     "@rehab-trainer/game-every-ball-response": "*",
     "@rehab-trainer/game-flanker": "*",
     "@rehab-trainer/game-go-nogo": "*",
-    "@rehab-trainer/game-hart-chart": "*",
     "@rehab-trainer/game-hex": "*",
     "@rehab-trainer/game-keep-track": "*",
     "@rehab-trainer/game-letter-memory": "*",

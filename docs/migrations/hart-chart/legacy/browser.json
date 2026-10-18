@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-10-18T02:59:43.181Z",
+  "url": "https://trainerhub.cc/games/hart-chart/index.html",
+  "viewport": [
+    1320,
+    713
+  ],
+  "chartCells": 100,
+  "decoderTargets": 10,
+  "phases": [
+    "settings",
+    "rules",
+    "gameplay"
+  ],
+  "recordWritesBlocked": true,
+  "completed": false,
+  "errors": []
+}

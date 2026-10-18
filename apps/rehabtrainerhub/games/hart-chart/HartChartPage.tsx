@@ -1,16 +1,13 @@
-// Canonical Hub-owned Hart Chart runtime and results flow.
-import { useFullscreenTrainingRoot } from '@rehab-trainer/ui/hooks/useFullscreenTrainingRoot';
-import { ExitFullscreenIfActive } from '@rehab-trainer/ui/fullscreen';
-import { GetAuthUserNameFromToken } from '@rehab-trainer/ui/auth/authClient';
-import { ResultSummary } from '@rehab-trainer/ui/components/ResultSummary';
-import { TrainingResultActions } from '@rehab-trainer/ui/components/TrainingResultActions';
-import { TrainingRulesPanel } from '@rehab-trainer/ui';
-import { GetHostedGameSetting, NotifyHubTrainingAbort, RequestHubTrainingConfiguration } from '@rehab-trainer/ui/embeddedTraining';
-import { useTrainingAbort } from '@rehab-trainer/ui/hooks/useTrainingAbort';
-import { useT } from '@rehab-trainer/ui/i18n/games';
-import { storagePrefix } from '@rehab-trainer/ui/settings';
-import { SaveTrainingRecord } from '@rehab-trainer/ui/storage/trainingRecords';
-import { IsTrainingFlowLaunchState } from '@rehab-trainer/ui/trainingFlow';
+import { useT } from './i18n/useT';
+import { defaultSettings, ValidateSettings, ChartScale, type HartSettings } from './settings';
+import { BuildGameScore, type HartResult } from './score';
+import { ScoreAnalysis } from './ScoreAnalysis';
+import { ExitGame, IsHubGame, OnSavedSettings, RetryGameSave, SaveGameSettings, SendGameEvent, SendGameResult } from './runtime/hubBridge';
+import { RestoreSettings } from './runtime/settingsMemory';
+import { StartTour } from './runtime/tour';
+import { GetHartTutorialSteps } from './rules/tutorialSteps';
+import { PrepareAudioFeedback, PlayMidiMusic, StopMidiMusic, DisposeAudioFeedback } from './runtime/soundManager';
+import { backgroundMusic, backgroundMusicOptions } from './music';
 import { initJsPsych } from 'jspsych';
 import QRCode from 'qrcode';
 import type {
@@ -19,31 +16,20 @@ ChangeEvent,
 KeyboardEvent as ReactKeyboardEvent,
 PointerEvent as ReactPointerEvent,
 } from 'react';
-import { useEffect,useMemo,useRef,useState } from 'react';
-import { Navigate,useLocation,useNavigate } from 'react-router-dom';
+import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
 import type { HartCell,HartDecoderToken } from './logic/hartChart';
 import {
 ClampHartScale,
 CreateHartChart,
 CreateHartDecoder,
-CreateHartSeed
+CreateHartSeed,
+ParseHartSeed
 } from './logic/hartChart';
-import type { TrialData } from '@rehab-trainer/ui';
 import { JsPsychExternalLifecycle } from './runtime/jsPsychLifecycle';
 import './styles/hart-chart.css';
 
 type DecoderDock = 'left' | 'right' | 'top' | 'bottom';
-type HartTrainingPhase = 'rules' | 'playing' | 'results';
-
-interface HartTrainingResult {
-  completedAt: string;
-  durationMs: number;
-  attempts: number;
-  targetCount: number;
-  accuracy: number;
-  phrase: string;
-  hintsUsed: boolean;
-}
+type HartTrainingPhase = 'menu' | 'rules' | 'playing' | 'results';
 
 interface DecoderDragPreview {
   x: number;
@@ -52,18 +38,12 @@ interface DecoderDragPreview {
   height: number;
 }
 
-const decoderDockKey = `${storagePrefix}hart.decoderDock`;
 const decoderDocks: readonly DecoderDock[] = ['left', 'right', 'top', 'bottom'];
 
 function IsDecoderDock(value: string | null): value is DecoderDock {
   return value !== null && decoderDocks.includes(value as DecoderDock);
 }
 
-function GetInitialDecoderDock(): DecoderDock {
-  const savedDock = localStorage.getItem(decoderDockKey);
-  if (IsDecoderDock(savedDock)) return savedDock;
-  return window.matchMedia('(orientation: portrait)').matches ? 'bottom' : 'right';
-}
 
 interface HartChartGridProps {
   cells: HartCell[];
@@ -118,26 +98,42 @@ function HartChartGrid({
   );
 }
 
-export function HartChartPage({ standalone = false }: { standalone?: boolean } = {}) {
-  const location = useLocation();
+export function HartChartPage() {
+  return window.location.hash.startsWith('#/hart-chart/display?') ? <HartChartDisplay /> : <HartChartRuntime />;
+}
 
-  if (!standalone && !IsTrainingFlowLaunchState(location.state)) {
-    return <Navigate to="/?module=hart-chart" replace />;
-  }
-
-  return <HartChartRuntime />;
+function HartChartDisplay() {
+  const params = new URLSearchParams(window.location.hash.split('?')[1]);
+  const [seed] = useState(() => ParseHartSeed(params.get('seed')));
+  const chart = useMemo(() => CreateHartChart(seed), [seed]);
+  const scale = ClampHartScale(Number(params.get('scale') ?? 1));
+  return <main className="hart-display"><HartChartGrid cells={chart} scale={scale} chartOnly /></main>;
 }
 
 function HartChartRuntime() {
   const { t, lang } = useT();
-  const navigate = useNavigate();
-  const { fullscreenRootRef, enterTrainingFullscreen } = useFullscreenTrainingRoot<HTMLDivElement>();
-  const [phase, setPhase] = useState<HartTrainingPhase>('rules');
+  const fullscreenRootRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const qrDialogRef = useRef<HTMLDialogElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const confirmationRef = useRef<HTMLDivElement>(null);
+  const phaseRef = useRef<HartTrainingPhase>('menu');
+  const generationRef = useRef(0);
+  const [phase, setPhase] = useState<HartTrainingPhase>('menu');
+  phaseRef.current = phase;
+  useEffect(() => {
+    if (phase === 'playing' && backgroundMusic) void PlayMidiMusic(backgroundMusic, backgroundMusicOptions).catch(error => console.warn('Music unavailable.', error));
+    return StopMidiMusic;
+  }, [phase]);
+  useEffect(() => DisposeAudioFeedback, []);
+  const [settings, setSettings] = useState<HartSettings>({ ...defaultSettings });
+  const [tourFinished, setTourFinished] = useState(false);
+  const [saveState, setSaveState] = useState<'local' | 'saving' | 'saved' | 'error'>('local');
   const [seed, setSeed] = useState(CreateHartSeed);
-  const [scale, setScale] = useState(() => ({ small: 0.75, medium: 1, large: 1.25 })[GetHostedGameSetting<'small' | 'medium' | 'large'>('chartSize')]);
-  const rounds = GetHostedGameSetting<number>('rounds');
+  const [scale, setScale] = useState(1);
+  const rounds = settings.rounds;
   const [decoderOpen, setDecoderOpen] = useState(false);
-  const [decoderDock, setDecoderDock] = useState<DecoderDock>(GetInitialDecoderDock);
+  const [decoderDock, setDecoderDock] = useState<DecoderDock>(() => window.matchMedia('(orientation: portrait)').matches ? 'bottom' : 'right');
   const [decoderDragging, setDecoderDragging] = useState(false);
   const [decoderDragTarget, setDecoderDragTarget] = useState<DecoderDock>(decoderDock);
   const [decoderDragPreview, setDecoderDragPreview] = useState<DecoderDragPreview | null>(null);
@@ -146,9 +142,11 @@ function HartChartRuntime() {
   const [answers, setAnswers] = useState<string[]>([]);
   const [attempts, setAttempts] = useState(0);
   const [startedAt, setStartedAt] = useState(Date.now);
-  const [result, setResult] = useState<HartTrainingResult | null>(null);
+  const [result, setResult] = useState<HartResult | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
+  const [qrError, setQrError] = useState(false);
+  const [displayPreview, setDisplayPreview] = useState(false);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const jsPsychHostRef = useRef<HTMLDivElement | null>(null);
   const jsPsychLifecycleRef = useRef<JsPsychExternalLifecycle | null>(null);
@@ -160,7 +158,7 @@ function HartChartRuntime() {
   const chart = useMemo(() => CreateHartChart(seed), [seed]);
   const decoder = useMemo(() => CreateHartDecoder(chart, seed, rounds), [chart, seed, rounds]);
   const shareUrl = useMemo(() => {
-    const baseUrl = window.location.href.split('#')[0];
+    const baseUrl = window.location.href.split('#')[0].split('?')[0];
     const params = new URLSearchParams({
       seed: String(seed),
       scale: String(scale),
@@ -180,6 +178,7 @@ function HartChartRuntime() {
     && decodableIndexes.every((index) => answers[index] === decoder.tokens[index].char);
 
   useEffect(() => {
+    if (phase !== 'playing') return;
     const host = jsPsychHostRef.current;
     if (!host) return;
 
@@ -192,7 +191,26 @@ function HartChartRuntime() {
       lifecycle.dispose();
       if (jsPsychLifecycleRef.current === lifecycle) jsPsychLifecycleRef.current = null;
     };
-  }, []);
+  }, [phase]);
+
+  const backToSettings = useCallback(() => { generationRef.current++; setTourFinished(false); setPhase('menu'); }, []);
+  useEffect(() => OnSavedSettings(saved => {
+    if (phaseRef.current !== 'menu') return;
+    const restored = RestoreSettings(saved, defaultSettings, ValidateSettings);
+    if (restored) { setSettings(restored); setScale(ChartScale(restored.chartSize)); }
+    if (typeof saved.decoderDock === 'string' && IsDecoderDock(saved.decoderDock)) setDecoderDock(saved.decoderDock);
+  }), []);
+  useEffect(() => {
+    if (phase !== 'menu') return;
+    dialogRef.current?.showModal();
+    return () => dialogRef.current?.close();
+  }, [phase]);
+  useEffect(() => {
+    setTourFinished(false);
+    if (phase !== 'rules') return;
+    return StartTour(GetHartTutorialSteps(lang), { lang, onEvent: () => setTourFinished(true), onBack: backToSettings });
+  }, [phase, lang, backToSettings]);
+  useEffect(() => { if (tourFinished) confirmationRef.current?.querySelector<HTMLButtonElement>('button')?.focus(); }, [tourFinished]);
 
   useEffect(() => {
     setAnswers(Array(decoder.tokens.length).fill(''));
@@ -204,6 +222,8 @@ function HartChartRuntime() {
     if (!qrOpen) return;
 
     let cancelled = false;
+    setQrError(false);
+    qrDialogRef.current?.showModal();
     void QRCode.toDataURL(shareUrl, {
       width: 320,
       margin: 2,
@@ -214,10 +234,11 @@ function HartChartRuntime() {
       errorCorrectionLevel: 'M',
     }).then((dataUrl) => {
       if (!cancelled) setQrDataUrl(dataUrl);
-    });
+    }).catch(() => { if (!cancelled) setQrError(true); });
 
     return () => {
       cancelled = true;
+      qrDialogRef.current?.close();
     };
   }, [qrOpen, shareUrl]);
 
@@ -233,18 +254,36 @@ function HartChartRuntime() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [qrOpen]);
 
-  const exitTraining = () => {
+  const exitTraining = useCallback(() => {
+    generationRef.current++;
     jsPsychLifecycleRef.current?.abort({ abort_reason: 'exit-training' });
-    void ExitFullscreenIfActive();
-    NotifyHubTrainingAbort();
-    navigate('/');
-  };
-
-  useTrainingAbort({
-    active: phase === 'playing',
-    abortOnEscape: !qrOpen,
-    onAbort: exitTraining,
-  });
+    setQrOpen(false);
+    void ExitGame();
+  }, []);
+  useEffect(() => {
+    const configure = () => { setResult(null); setQrOpen(false); backToSettings(); };
+    const saved = (event: Event) => setSaveState((event as CustomEvent).detail);
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && phaseRef.current === 'playing' && !qrOpen) { event.preventDefault(); exitTraining(); }
+    };
+    window.addEventListener('game:configure', configure);
+    window.addEventListener('game:saved', saved);
+    window.addEventListener('keydown', escape);
+    return () => {
+      window.removeEventListener('game:configure', configure);
+      window.removeEventListener('game:saved', saved);
+      window.removeEventListener('keydown', escape);
+    };
+  }, [backToSettings, exitTraining, qrOpen]);
+  useEffect(() => {
+    const cleanup = () => {
+      generationRef.current++;
+      jsPsychLifecycleRef.current?.abort({ abort_reason: 'unload' });
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    };
+    window.addEventListener('pagehide', cleanup);
+    return () => { window.removeEventListener('pagehide', cleanup); cleanup(); };
+  }, []);
 
   const resetChart = () => {
     setSeed(CreateHartSeed());
@@ -258,7 +297,7 @@ function HartChartRuntime() {
     setDecoderDock(dock);
     setDecoderDragTarget(dock);
     decoderDragTargetRef.current = dock;
-    localStorage.setItem(decoderDockKey, dock);
+    SaveGameSettings({ ...settings, decoderDock: dock });
   };
 
   const getDockFromPointer = (clientX: number, clientY: number): DecoderDock => {
@@ -361,11 +400,12 @@ function HartChartRuntime() {
   };
 
   const finishTraining = () => {
-    if (!complete) return;
+    if (!complete || phaseRef.current !== 'playing') return;
+    phaseRef.current = 'results';
 
     const completedAt = new Date();
     const targetCount = decodableIndexes.length;
-    const nextResult: HartTrainingResult = {
+    const nextResult: HartResult = {
       completedAt: completedAt.toISOString(),
       durationMs: Math.max(0, completedAt.getTime() - startedAt),
       attempts,
@@ -374,21 +414,6 @@ function HartChartRuntime() {
       phrase: decoder.phrase,
       hintsUsed: showHints,
     };
-    const trial: TrialData = {
-      trial_index: 0,
-      rt: nextResult.durationMs,
-      correct: true,
-      target: nextResult.phrase,
-      response: nextResult.phrase,
-      duration_ms: nextResult.durationMs,
-      score: nextResult.accuracy,
-      trial_type: 'hart-chart-decoder',
-      attempts: nextResult.attempts,
-      target_count: nextResult.targetCount,
-      accuracy_percent: nextResult.accuracy,
-      hints_used: nextResult.hintsUsed,
-    };
-
     jsPsychLifecycleRef.current?.finish({
       duration_ms: nextResult.durationMs,
       attempts: nextResult.attempts,
@@ -396,96 +421,116 @@ function HartChartRuntime() {
       accuracy_percent: nextResult.accuracy,
       hints_used: nextResult.hintsUsed,
     });
-    void ExitFullscreenIfActive();
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
     setResult(nextResult);
     setPhase('results');
-    void SaveTrainingRecord({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), gameId: 'hart-chart', gameTitle: document.title,
-      userName: GetAuthUserNameFromToken() ?? '',
-      moduleId: 'hart-chart',
-      difficulty: 'decoder',
-      config: {
-        totalRounds: targetCount,
-      },
-      results: [trial],
-      details: { ...trial },
-    });
+    setSaveState(IsHubGame() ? 'saving' : 'local');
+    const score = BuildGameScore(nextResult);
+    SendGameResult({ ...settings }, score.summary, score.rounds);
   };
 
   const isZh = lang !== 'en';
-  const chartSize = GetHostedGameSetting<string>('chartSize');
+  const en = !isZh;
+  const sizeLabel = (size: HartSettings['chartSize']) => ({ small: en ? 'Small' : '小', medium: en ? 'Medium' : '中', large: en ? 'Large' : '大' })[size];
+  const confirmSettings = () => {
+    if (!formRef.current?.reportValidity() || !ValidateSettings(settings)) return;
+    SaveGameSettings({ ...settings, decoderDock });
+    setScale(ChartScale(settings.chartSize));
+    setPhase('rules');
+  };
+  const startTraining = async () => {
+    if (phaseRef.current !== 'rules' || !tourFinished || !ValidateSettings(settings)) return;
+    const generation = generationRef.current;
+    PrepareAudioFeedback();
+    try { await fullscreenRootRef.current?.requestFullscreen?.(); } catch { /* Continue in the current window. */ }
+    if (generation !== generationRef.current || phaseRef.current !== 'rules') {
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+      return;
+    }
+    resetChart();
+    setDecoderOpen(true);
+    setShowHints(false);
+    SendGameEvent('active');
+    setPhase('playing');
+  };
 
   return (
     <div ref={fullscreenRootRef} className="hart-chart-game-root" style={{ width: '100%', minHeight: '100dvh' }}>
       <div ref={jsPsychHostRef} style={{ display: 'none' }} aria-hidden="true" />
-      {phase === 'rules' && (
-        <div className="training-panel">
-          <TrainingRulesPanel
-            title={isZh ? 'Hart Chart 視覺調節訓練' : 'Hart Chart Saccadic Training'}
-            label={isZh ? '遊戲規則說明' : 'Game Rules'}
-            summaryTitle={isZh ? 'Hart 字母表訓練' : 'Hart Chart Training'}
-            summaryItems={[
-              { label: isZh ? '視標大小' : 'Chart Size', value: chartSize },
-              { label: isZh ? '往返次數' : 'Rounds', value: String(rounds) },
-            ]}
-            sections={isZh ? [
-              {
-                title: '操作與玩法',
-                description: '利用遠近 Hart 字母表訓練眼球快速跳視與對焦調節。',
-                items: [
-                  '依照上方或解碼器提示的座標（例如 A-3、C-5），在字母表中找出對應字母。',
-                  '依序在輸入框輸入正確的字母解開暗號。',
-                  '可開啟輔助提示或將圖表投影／分享至另一螢幕進行遠近交替對焦。',
-                ],
-              },
-              { title: '成績計算', description: '結算會記錄解碼完成耗時、嘗試次數、正確率與提示使用情形。' },
-            ] : [
-              {
-                title: 'How to Play',
-                description: 'Train saccades and accommodation facility using letter charts.',
-                items: [
-                  'Locate target letters in the chart based on coordinates (e.g., A-3, C-5).',
-                  'Type each decoded letter sequentially into the input boxes to uncover the phrase.',
-                  'Use hints if needed, or scan the QR code to project the chart onto a distant screen.',
-                ],
-              },
-              { title: 'Results', description: 'Records total completion time, attempt count, accuracy, and hint usage.' },
-            ]}
-            startLabel={isZh ? '開始訓練' : 'Start Training'}
-            backLabel={isZh ? '回設定' : 'Back to Settings'}
-            onStart={async () => {
-              await enterTrainingFullscreen();
-              setStartedAt(Date.now());
-              setPhase('playing');
-            }}
-            onBack={() => RequestHubTrainingConfiguration()}
-          />
-        </div>
-      )}
+      {(phase === 'menu' || phase === 'rules') && <section className="hart-tutorial" aria-label={en ? 'Game tutorial scene' : '遊戲說明場景'}>
+        <header className="hart-preview-tools"><h1>{t('hart.title')}</h1><p>{t('hart.fontSize')} · {t('hart.showHints')} · QR</p></header>
+        <section className="hart-preview-chart"><HartChartGrid cells={chart} scale={ChartScale(settings.chartSize)} /></section>
+        <section className="hart-preview-decoder"><h2>{t('hart.decoder')}</h2><div className="hart-preview-fields">
+          {decoder.tokens.filter(token => token.coordinate).slice(0, 5).map((token, index) => <span key={index}>[{token.coordinate!.row},{token.coordinate!.col}]</span>)}
+        </div><p>{t('hart.decoderPrompt')}</p></section>
+        {phase === 'rules' && tourFinished && <section className="training-panel hart-tutorial-ready" role="dialog" aria-modal="true" aria-label={t('hart.title')}
+          onKeyDown={event => {
+            if (event.key === 'Escape') { event.preventDefault(); backToSettings(); }
+            if (event.key === 'Tab') {
+              event.preventDefault();
+              const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button'));
+              const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+              buttons[(index + (event.shiftKey ? buttons.length - 1 : 1)) % buttons.length]?.focus();
+            }
+          }}>
+          <div ref={confirmationRef} className="training-config training-confirmation">
+            <header className="training-config-header"><h2>{t('hart.title')}</h2></header>
+            <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Confirm settings' : '確認設定'}</h3>
+              <div className="training-config-summary"><p className="training-config-summary-item">{en ? 'Requested decoder letters' : '要求解碼字母數'}：{rounds}</p>
+                <p className="training-config-summary-item">{en ? 'Chart size' : '視標大小'}：{sizeLabel(settings.chartSize)}</p></div>
+            </section></div>
+            <footer className="config-actions"><div className="training-config-navigation-buttons">
+              <button type="button" className="btn btn-primary" onClick={startTraining}>{en ? 'Start Training' : '開始訓練'}</button>
+              <button type="button" className="btn btn-ghost" onClick={backToSettings}>{en ? 'Back to settings' : '返回設定'}</button>
+            </div></footer>
+          </div>
+        </section>}
+      </section>}
+      {phase === 'menu' && <dialog ref={dialogRef} className="game-settings-dialog hart-chart-phase-menu" aria-labelledby="hart-settings-title"
+        onCancel={event => { event.preventDefault(); exitTraining(); }}>
+        <form ref={formRef} className="training-config" onSubmit={event => { event.preventDefault(); confirmSettings(); }}
+          onKeyDown={event => { if (event.key === 'Enter' && (event.target as HTMLElement).tagName !== 'BUTTON') { event.preventDefault(); confirmSettings(); } }}>
+          <header className="training-config-header"><h2 id="hart-settings-title">{en ? 'Hart Chart Training' : '哈特圖訓練'}</h2></header>
+          <div className="training-config-body"><section className="training-setting"><h3>{en ? 'Chart settings' : '視標設定'}</h3>
+            <label>{en ? 'Requested decoder letters' : '要求解碼字母數'}：<output>{settings.rounds}</output>
+              <input name="rounds" type="range" min={5} max={30} step={5} value={settings.rounds}
+                onChange={event => setSettings({ ...settings, rounds: Number(event.target.value) })} /></label>
+            <label>{en ? 'Chart size' : '視標大小'}<select name="chartSize" value={settings.chartSize}
+              onChange={event => setSettings({ ...settings, chartSize: event.target.value as HartSettings['chartSize'] })}>
+              {(['large', 'medium', 'small'] as const).map(size => <option value={size} key={size}>{sizeLabel(size)}</option>)}
+            </select></label>
+          </section></div>
+          <footer className="config-actions"><div className="training-config-navigation-buttons">
+            <button type="button" className="btn btn-primary" onClick={confirmSettings}>{en ? 'Confirm settings' : '確認設定'}</button>
+            <button type="button" className="btn btn-ghost" onClick={exitTraining}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
+          </div></footer>
+        </form>
+      </dialog>}
 
       {phase === 'results' && result && (
         <main className="experiment-container experiment-container-scrollable hart-results-container">
           <div className="experiment-results">
             <h1>{t('hart.results.title')}</h1>
-            <ResultSummary
-              items={[
-                { label: t('hart.results.accuracy'), value: `${result.accuracy}%` },
-                { label: t('hart.results.targets'), value: result.targetCount },
-                { label: t('hart.results.attempts'), value: result.attempts },
-                {
-                  label: t('hart.results.duration'),
-                  value: `${Math.round(result.durationMs / 1000)} ${t('hart.results.seconds')}`,
-                },
-              ]}
-            />
+            <section className="score-priority"><h2>{en ? 'Key results' : '主要成果'}</h2><div className="score-key-grid">
+              <div className="score-key-metric"><p>{en ? 'Target count / entry count' : '目標數／輸入次數'}</p><strong>{result.accuracy}%</strong></div>
+              <div className="score-key-metric"><p>{t('hart.results.duration')}</p><strong>{result.durationMs} ms</strong></div>
+              <div className="score-key-metric"><p>{t('hart.results.attempts')}</p><strong>{result.attempts}</strong></div>
+            </div></section>
+            <section className="score-context"><h2>{en ? 'Session settings' : '當次設定'}</h2><dl className="score-context-list">
+              <div className="score-context-item"><dt>{en ? 'Requested letters' : '要求字母數'}</dt><dd>{settings.rounds}</dd></div>
+              <div className="score-context-item"><dt>{en ? 'Chart size' : '視標大小'}</dt><dd>{sizeLabel(settings.chartSize)}</dd></div>
+              <div className="score-context-item"><dt>{t('hart.results.targets')}</dt><dd>{result.targetCount}</dd></div>
+              <div className="score-context-item"><dt>{en ? 'Hints enabled at finish (1/0)' : '結束時提示開啟（1／0）'}</dt><dd>{Number(result.hintsUsed)}</dd></div>
+            </dl></section>
             <p className="hart-results-phrase">
               <strong>{t('hart.results.phrase')}</strong>
               <span>{result.phrase}</span>
             </p>
-            <TrainingResultActions
-              backLabel={t('exp.backHome')}
-              onBackHome={() => navigate('/')}
-              hubLabel={t('exp.backLobby')}
-            />
+            <ScoreAnalysis rounds={BuildGameScore(result).rounds} language={lang} />
+            <p className="score-save-status" role="status">{saveState === 'local' ? (en ? 'Local play. Results are not saved to the Hub.' : '獨立練習，成果未保存至 Hub。')
+              : saveState === 'saved' ? (en ? 'Saved' : '已保存') : saveState === 'error' ? (en ? 'Save failed. Please retry.' : '保存失敗，請重試。') : (en ? 'Saving…' : '保存中…')}</p>
+            {saveState === 'error' && <button className="score-retry-button" type="button" onClick={() => { setSaveState('saving'); RetryGameSave(); }}>{en ? 'Retry save' : '重試保存'}</button>}
+            <button className="btn btn-primary score-return-button" type="button" onClick={exitTraining}>{IsHubGame() ? (en ? 'Back to lobby' : '返回大廳') : (en ? 'Back to entry' : '返回入口')}</button>
           </div>
         </main>
       )}
@@ -494,7 +539,7 @@ function HartChartRuntime() {
         <main className={`hart-page ${decoderOpen ? `hart-page-decoder-open hart-decoder-dock-${decoderDock}` : ''}`}>
           <header className="hart-topbar">
         <div className="hart-topbar-leading">
-          <button className="btn btn-ghost hart-back-button" type="button" onClick={exitTraining}>
+          <button className="btn btn-ghost hart-back-button" type="button" aria-label={en ? 'Stop training' : '停止訓練'} onClick={exitTraining}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="m15 18-6-6 6-6" />
             </svg>
@@ -663,23 +708,21 @@ function HartChartRuntime() {
       </div>
 
       {qrOpen && (
-        <div className="hart-modal-overlay" role="presentation" onClick={() => setQrOpen(false)}>
-          <div
+          <dialog ref={qrDialogRef}
             className="hart-qr-dialog"
-            role="dialog"
-            aria-modal="true"
             aria-labelledby="hart-qr-title"
-            onClick={(event) => event.stopPropagation()}
+            onCancel={event => { event.preventDefault(); setQrOpen(false); }}
           >
             <h2 id="hart-qr-title">{t('hart.qrTitle')}</h2>
             <p>{t('hart.qrDescription')}</p>
-            {qrDataUrl ? <img src={qrDataUrl} alt={t('hart.qrAlt')} /> : <div className="hart-qr-loading" />}
-            <a href={shareUrl} target="_blank" rel="noreferrer">{t('hart.openDisplay')}</a>
+            {qrError ? <p role="alert">{en ? 'QR code unavailable. Close and retry.' : 'QR 碼無法產生，請關閉後重試。'}</p> : qrDataUrl ? <img src={qrDataUrl} alt={t('hart.qrAlt')} /> : <p role="status">{en ? 'Loading QR code…' : '正在產生 QR 碼…'}</p>}
+            <p className="hart-share-url">{shareUrl}</p>
+            <button type="button" onClick={() => setDisplayPreview(open => !open)}>{en ? 'Preview chart' : '預覽字母表'}</button>
+            {displayPreview && <HartChartGrid cells={chart} scale={scale} chartOnly />}
             <button className="btn btn-primary" type="button" onClick={() => setQrOpen(false)}>
               {t('hart.close')}
             </button>
-          </div>
-        </div>
+          </dialog>
       )}
         </main>
       )}

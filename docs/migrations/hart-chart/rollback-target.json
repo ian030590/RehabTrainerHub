@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-10-18T02:56:41.761Z",
+  "deployments": {
+    "rehabtrainerhub": {
+      "id": "4a27cfb9-bf6b-4a98-bf8d-e98caf8c353f",
+      "url": "https://4a27cfb9.rehabtrainerhub.pages.dev",
+      "createdOn": "2026-10-17T23:05:13.969563Z",
+      "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+      "branch": "main"
+    },
+    "trainerhub-user-games": {
+      "id": "56fca01e-67a6-4bbf-a24d-cce839752f15",
+      "url": "https://56fca01e.trainerhub-user-games.pages.dev",
+      "createdOn": "2026-10-17T23:02:06.011875Z",
+      "commit": "4a278a358a316f89b6313aa60b2fbdbad1a4c12a",
+      "branch": "main"
+    }
+  }
+}
